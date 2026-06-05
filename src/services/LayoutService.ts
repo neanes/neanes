@@ -269,9 +269,15 @@ const noteVisualCollisionPairs: NoteVisualCollisionPair[] = [
   // Add dangerous directional pairs here. Examples:
   // Import additional neume enums from '@/models/Neumes' as needed.
   { left: VocalExpressionNeume.Antikenoma, right: Accidental.Sharp_2_Left },
+  { left: VocalExpressionNeume.Antikenoma, right: Accidental.Sharp_4_Left },
+  { left: VocalExpressionNeume.Antikenoma, right: Accidental.Sharp_6_Left },
+  { left: VocalExpressionNeume.Antikenoma, right: Accidental.Sharp_8_Left },
 
   // Using null will check the bounds in all cases.
   // { left: Accidental.Flat_2_Right, right: null },
+  // { left: Accidental.Flat_4_Right, right: null },
+  // { left: Accidental.Flat_6_Right, right: null },
+  // { left: Accidental.Flat_8_Right, right: null },
 ];
 
 interface LineBreakSolution {
@@ -4570,6 +4576,8 @@ export class LayoutService {
       noteElement.quantitativeNeume,
       noteElement.vocalExpressionNeume,
       noteElement.gorgonNeume,
+      noteElement.accidental,
+      noteElement.fthora,
     ].filter((x) => x != null);
   }
 

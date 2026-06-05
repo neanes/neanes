@@ -251,7 +251,7 @@ async function showReplaceOrSkipFileDialog(filePath: string) {
       )}" already exists. Do you want to replace it?`,
       buttons: ['Replace', 'Replace all', 'Skip', 'Skip all'],
       defaultId: 0,
-      cancelId: 0,
+      cancelId: 2,
     });
 
     return replaceFileResult.response as OnConflictChoice;

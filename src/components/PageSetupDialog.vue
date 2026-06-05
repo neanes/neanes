@@ -2234,7 +2234,7 @@ function changeNeumeColorInBulk() {
         form.value.measureBarDefaultColor = neumeBulkColor.value;
         break;
       case NeumeColorOptions.MeasureNumbers:
-        form.value.accidentalDefaultColor = neumeBulkColor.value;
+        form.value.measureNumberDefaultColor = neumeBulkColor.value;
         break;
       case NeumeColorOptions.NoteIndicators:
         form.value.noteIndicatorDefaultColor = neumeBulkColor.value;

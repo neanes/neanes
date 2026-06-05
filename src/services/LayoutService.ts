@@ -273,7 +273,7 @@ interface NoteVisualCollisionPair {
 
 const noteVisualCollisionPairs: NoteVisualCollisionPair[] = [
   // Add dangerous directional pairs here. Examples:
-  // Import additional neume enums from '@/models/Neumes' as needed.
+
   {
     left: VocalExpressionNeume.Antikenoma,
     right: [
@@ -363,6 +363,23 @@ const noteVisualCollisionPairs: NoteVisualCollisionPair[] = [
       Fthora.GeneralFlat_Top,
     ],
     right: [TimeNeume.Klasma_Top],
+  },
+
+  {
+    left: [
+      GorgonNeume.Gorgon_Top,
+      GorgonNeume.GorgonDottedLeft,
+      GorgonNeume.GorgonDottedRight,
+      GorgonNeume.Digorgon,
+      GorgonNeume.DigorgonDottedLeft1,
+      GorgonNeume.DigorgonDottedLeft2,
+      GorgonNeume.DigorgonDottedRight,
+      GorgonNeume.Trigorgon,
+      GorgonNeume.TrigorgonDottedLeft1,
+      GorgonNeume.TrigorgonDottedLeft2,
+      GorgonNeume.TrigorgonDottedRight,
+    ],
+    right: QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
   },
 ];
 

@@ -191,6 +191,27 @@ async function generateFilePath(filename: string) {
   return path.join(targetDirectory, filename);
 }
 
+// Returns the source path with its extension swapped for the given one,
+// keeping the same directory and base name (e.g. /scores/song.byz -> /scores/song.pdf).
+function replaceExtension(filePath: string, extension: string) {
+  const directory = path.dirname(filePath);
+  const baseName = path.basename(filePath, path.extname(filePath));
+  return path.join(directory, `${baseName}.${extension}`);
+}
+
+// Computes the default path for an export save dialog. When the score has been
+// saved, the export defaults to the score's own folder and base name with the
+// export's extension. Otherwise it falls back to the last-used directory.
+async function getExportDefaultPath(
+  sourceFilePath: string | null,
+  tempFileName: string,
+  extension: string,
+) {
+  return sourceFilePath != null
+    ? replaceExtension(sourceFilePath, extension)
+    : await generateFilePath(`${tempFileName}.${extension}`);
+}
+
 async function loadStore() {
   try {
     Object.assign(store, JSON.parse(await fs.readFile(storeFilePath, 'utf8')));
@@ -427,6 +448,7 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Save Score',
       defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: `${app.name} File`,
@@ -638,12 +660,7 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
           ),
           landscape: args.landscape,
         });
-        let newPath = args.filePath!.replace(/\.byzx?$/, '.pdf');
-
-        // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePath) {
-          newPath += '.pdf';
-        }
+        const newPath = replaceExtension(args.filePath!, 'pdf');
 
         await fs.writeFile(newPath, data);
         silentPdfSuccessCount++;
@@ -661,10 +678,12 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
     const dialogResult = await dialog.showSaveDialog(win, {
       title: 'Export Score as PDF',
       filters: [{ name: 'PDF File', extensions: ['pdf'] }],
-      defaultPath:
-        args.filePath != null
-          ? path.basename(args.filePath, path.extname(args.filePath))
-          : await generateFilePath(args.tempFileName),
+      properties: ['showOverwriteConfirmation'],
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        'pdf',
+      ),
     });
 
     if (!dialogResult.canceled) {
@@ -692,7 +711,12 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
         });
         await fs.writeFile(filePath, data);
 
-        await shell.openPath(filePath);
+        const openError = await shell.openPath(filePath);
+        if (openError) {
+          // The file has already been written successfully; failing to open it
+          // afterward is not an export failure, so just log it.
+          console.error(`Failed to open ${filePath}: ${openError}`);
+        }
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
@@ -724,19 +748,14 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
 
     if (silentHtml) {
       try {
-        let newPath = args.filePathFull!.replace(/\.byzx?$/, '.html');
-
-        // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePathFull) {
-          newPath += '.html';
-        }
+        const newPath = replaceExtension(args.filePath!, 'html');
 
         await fs.writeFile(newPath, args.data);
         silentHtmlSuccessCount++;
-        console.log(`DONE ${args.filePathFull} => ${newPath}`);
+        console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
         silentHtmlFailCount++;
-        console.error(`FAIL ${args.filePathFull} | ${error}`);
+        console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
       return;
@@ -746,7 +765,12 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as HTML',
-      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        'html',
+      ),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: `HTML File`,
@@ -771,7 +795,13 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
 
       if (doWrite) {
         await fs.writeFile(filePath, args.data);
-        await shell.openPath(filePath);
+
+        const openError = await shell.openPath(filePath);
+        if (openError) {
+          // The file has already been written successfully; failing to open it
+          // afterward is not an export failure, so just log it.
+          console.error(`Failed to open ${filePath}: ${openError}`);
+        }
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
@@ -804,7 +834,12 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as MusicXML',
-      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        extension,
+      ),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: args.compressed
@@ -866,19 +901,14 @@ async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
 
     if (silentLatex) {
       try {
-        let newPath = args.filePathFull!.replace(/\.byzx?$/, '.byztex');
-
-        // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePathFull) {
-          newPath += '.byztex';
-        }
+        const newPath = replaceExtension(args.filePath!, 'byztex');
 
         await fs.writeFile(newPath, args.data);
         silentLatexSuccessCount++;
-        console.log(`DONE ${args.filePathFull} => ${newPath}`);
+        console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
         silentLatexFailCount++;
-        console.error(`FAIL ${args.filePathFull} | ${error}`);
+        console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
       return;
@@ -888,7 +918,12 @@ async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as Latex',
-      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        'byztex',
+      ),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: 'neanestex File',
@@ -948,9 +983,11 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as Images',
-      defaultPath:
-        args.filePath?.replace(/\.byzx?$/, '') ||
-        (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        args.imageFormat,
+      ),
       filters: [
         {
           name: args.imageFormat === 'png' ? `PNG File` : `SVG File`,

@@ -5820,7 +5820,7 @@ function renderTabLabel(tab: Tab) {
               </template></Vue3TabsChrome
             >
           </ContextMenuTrigger>
-          <ContextMenuContent class="z-40 bg-legacy-chrome-menu-surface">
+          <ContextMenuContent class="bg-legacy-chrome-menu-surface">
             <ContextMenuItem
               @select="
                 closeContextMenuWorkspaces(CloseWorkspacesDisposition.SELF)

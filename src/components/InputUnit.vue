@@ -20,6 +20,7 @@
       <NumberFieldDecrement :class="buttonClass" />
       <NumberFieldInput
         :id="id"
+        ref="inputRef"
         v-bind="inputAttrs"
         :class="inputClasses"
         :style="inputStyle"
@@ -31,7 +32,7 @@
 
 <script setup lang="ts">
 import type { HTMLAttributes, StyleValue } from 'vue';
-import { computed, useAttrs } from 'vue';
+import { computed, nextTick, ref, useAttrs } from 'vue';
 
 import type { UnitOfMeasure } from '@/components/InputUnit.types';
 import { toDisplay, toStorage } from '@/components/InputUnit.types';
@@ -82,6 +83,8 @@ const props = withDefaults(
 
 const attrs = useAttrs();
 
+const inputRef = ref<InstanceType<typeof NumberFieldInput>>();
+
 const inputAttrs = computed(() => {
   const rest = { ...attrs };
   delete rest.style;
@@ -127,6 +130,29 @@ const displayValue = computed<number | undefined>({
   },
 });
 
+// When the resolved value matches the current model, emitValue suppresses the
+// update, so no new model flows back to reset the NumberField's text. Reka's
+// empty-input path (and Enter key) can leave the input visually blank in that
+// case, so re-sync the displayed text to the canonical value ourselves.
+function resyncInput() {
+  nextTick(() => {
+    const el = inputRef.value?.$el as HTMLInputElement | undefined;
+
+    if (el == null) {
+      return;
+    }
+
+    const value = displayValue.value;
+
+    el.value =
+      value == null
+        ? ''
+        : new Intl.NumberFormat(undefined, resolvedFormatOptions.value).format(
+            value,
+          );
+  });
+}
+
 const inputTextLength = computed(() => {
   const value = displayValue.value;
 
@@ -161,6 +187,8 @@ function clampDisplayValue(value: number) {
 function emitValue(value: number | null) {
   if (props.modelValue !== value) {
     emit('update:modelValue', value);
+  } else {
+    resyncInput();
   }
 }
 </script>

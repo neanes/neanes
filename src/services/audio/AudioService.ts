@@ -64,12 +64,15 @@ export class AudioService {
     synth: Tone.Synth | Tone.FMSynth;
     isonSynth: Tone.Synth | Tone.FMSynth;
   }> {
+    // Create the synths first so Tone's real AudioContext is materialized
+    // (getContext() swaps out the DummyContext), then resume that context.
+    // Resuming before any node exists would only resume the DummyContext.
+    const synth = this.getSynth();
+    const isonSynth = this.getIsonSynth();
+
     await Tone.start();
 
-    return {
-      synth: this.getSynth(),
-      isonSynth: this.getIsonSynth(),
-    };
+    return { synth, isonSynth };
   }
 
   dispose() {

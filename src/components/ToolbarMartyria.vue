@@ -1,250 +1,393 @@
 <template>
   <div class="martyria-toolbar">
-    <div class="row">
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicNiLow_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicNiLow_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicPa_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicPa_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-pa.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicVou_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicVou_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-vou.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicGa_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicGa_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-ga.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicThi_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicThi_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-di.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicKe_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicKe_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-ke.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicZo_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicZo_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-zo.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicNiHigh_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicNiHigh_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.SoftChromaticThi_Top)"
-        @click="$emit('update:fthora', Fthora.SoftChromaticThi_Top)"
-      >
-        <img src="@/assets/icons/fthora-soft-chromatic-di.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.SoftChromaticPa_Top)"
-        @click="$emit('update:fthora', Fthora.SoftChromaticPa_Top)"
-      >
-        <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.HardChromaticPa_Top)"
-        @click="$emit('update:fthora', Fthora.HardChromaticPa_Top)"
-      >
-        <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.HardChromaticThi_Top)"
-        @click="$emit('update:fthora', Fthora.HardChromaticThi_Top)"
-      >
-        <img src="@/assets/icons/fthora-hard-chromatic-di.svg" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :disabled="enharmonicDisabled"
-        :title="enharmonicTitle"
-        @click="$emit('update:fthora', Fthora.Enharmonic_Top)"
-      >
-        <img src="@/assets/icons/fthora-enharmonic.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="generalFlatDisabled"
-        :title="generalFlatTitle"
-        @click="$emit('update:fthora', Fthora.GeneralFlat_Top)"
-      >
-        <img src="@/assets/icons/fthora-general-flat.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="generalSharpDisabled"
-        :title="generalSharpTitle"
-        @click="$emit('update:fthora', Fthora.GeneralSharp_Top)"
-      >
-        <img src="@/assets/icons/fthora-general-sharp.svg" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :disabled="zygosDisabled"
-        :title="zygosTitle"
-        @click="$emit('update:fthora', Fthora.Zygos_Top)"
-      >
-        <img src="@/assets/icons/fthora-zygos.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="klitonDisabled"
-        :title="klitonTitle"
-        @click="$emit('update:fthora', Fthora.Kliton_Top)"
-      >
-        <img src="@/assets/icons/fthora-kliton.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="spathiDisabled"
-        :title="spathiTitle"
-        @click="$emit('update:fthora', Fthora.Spathi_Top)"
-      >
-        <img src="@/assets/icons/fthora-spathi.svg" />
-      </button>
-      <span class="space"></span>
+    <Toolbar class="row h-auto w-full gap-0 border-0 p-1" loop>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicNiLow_Top)">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-label="ariaLabel"
+            @click="$emit('update:fthora', Fthora.DiatonicNiLow_Top)"
+          >
+            <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicPa_Top)">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-label="ariaLabel"
+            @click="$emit('update:fthora', Fthora.DiatonicPa_Top)"
+          >
+            <img src="@/assets/icons/fthora-diatonic-pa.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicVou_Top)">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-label="ariaLabel"
+            @click="$emit('update:fthora', Fthora.DiatonicVou_Top)"
+          >
+            <img src="@/assets/icons/fthora-diatonic-vou.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicGa_Top)">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-label="ariaLabel"
+            @click="$emit('update:fthora', Fthora.DiatonicGa_Top)"
+          >
+            <img src="@/assets/icons/fthora-diatonic-ga.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicThi_Top)">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-label="ariaLabel"
+            @click="$emit('update:fthora', Fthora.DiatonicThi_Top)"
+          >
+            <img src="@/assets/icons/fthora-diatonic-di.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicKe_Top)">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-label="ariaLabel"
+            @click="$emit('update:fthora', Fthora.DiatonicKe_Top)"
+          >
+            <img src="@/assets/icons/fthora-diatonic-ke.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicZo_Top)">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-label="ariaLabel"
+            @click="$emit('update:fthora', Fthora.DiatonicZo_Top)"
+          >
+            <img src="@/assets/icons/fthora-diatonic-zo.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicNiHigh_Top)">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-label="ariaLabel"
+            @click="$emit('update:fthora', Fthora.DiatonicNiHigh_Top)"
+          >
+            <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="tooltip(Fthora.SoftChromaticThi_Top)">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-label="ariaLabel"
+            @click="$emit('update:fthora', Fthora.SoftChromaticThi_Top)"
+          >
+            <img src="@/assets/icons/fthora-soft-chromatic-di.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.SoftChromaticPa_Top)">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-label="ariaLabel"
+            @click="$emit('update:fthora', Fthora.SoftChromaticPa_Top)"
+          >
+            <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="tooltip(Fthora.HardChromaticPa_Top)">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-label="ariaLabel"
+            @click="$emit('update:fthora', Fthora.HardChromaticPa_Top)"
+          >
+            <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.HardChromaticThi_Top)">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-label="ariaLabel"
+            @click="$emit('update:fthora', Fthora.HardChromaticThi_Top)"
+          >
+            <img src="@/assets/icons/fthora-hard-chromatic-di.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="enharmonicTitle">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-disabled="enharmonicDisabled"
+            :aria-label="ariaLabel"
+            @click="
+              !enharmonicDisabled &&
+              $emit('update:fthora', Fthora.Enharmonic_Top)
+            "
+          >
+            <img src="@/assets/icons/fthora-enharmonic.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="generalFlatTitle">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-disabled="generalFlatDisabled"
+            :aria-label="ariaLabel"
+            @click="
+              !generalFlatDisabled &&
+              $emit('update:fthora', Fthora.GeneralFlat_Top)
+            "
+          >
+            <img src="@/assets/icons/fthora-general-flat.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="generalSharpTitle">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-disabled="generalSharpDisabled"
+            :aria-label="ariaLabel"
+            @click="
+              !generalSharpDisabled &&
+              $emit('update:fthora', Fthora.GeneralSharp_Top)
+            "
+          >
+            <img src="@/assets/icons/fthora-general-sharp.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="zygosTitle">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-disabled="zygosDisabled"
+            :aria-label="ariaLabel"
+            @click="!zygosDisabled && $emit('update:fthora', Fthora.Zygos_Top)"
+          >
+            <img src="@/assets/icons/fthora-zygos.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="klitonTitle">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-disabled="klitonDisabled"
+            :aria-label="ariaLabel"
+            @click="
+              !klitonDisabled && $emit('update:fthora', Fthora.Kliton_Top)
+            "
+          >
+            <img src="@/assets/icons/fthora-kliton.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <AppTooltip :tooltip="spathiTitle">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="neume-button"
+            :aria-disabled="spathiDisabled"
+            :aria-label="ariaLabel"
+            @click="
+              !spathiDisabled && $emit('update:fthora', Fthora.Spathi_Top)
+            "
+          >
+            <img src="@/assets/icons/fthora-spathi.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
+      <ToolbarSeparator />
       <ButtonWithMenu
         :options="barlineMenuOptions"
-        :title="tooltip(MeasureBar.MeasureBarRight)"
+        :tooltip="tooltip(MeasureBar.MeasureBarRight)"
         @select="$emit('update:measureBar', $event)"
       />
-      <span class="space" />
+      <ToolbarSeparator />
       <ButtonWithMenu
         class="btnMenuTempoLeft"
         :options="tempoMenuOptions"
-        :title="$t(($) => $.toolbar.martyria.tempoLeft, { ns: 'toolbar' })"
+        :tooltip="$t(($) => $.toolbar.martyria.tempoLeft, { ns: 'toolbar' })"
         @select="$emit('update:tempoLeft', $event)"
       />
       <ButtonWithMenu
         class="btnMenuTempoAbove"
         :options="tempoMenuOptionsAbove"
-        :title="$t(($) => $.toolbar.martyria.tempo, { ns: 'toolbar' })"
+        :tooltip="$t(($) => $.toolbar.martyria.tempo, { ns: 'toolbar' })"
         @select="$emit('update:tempo', $event)"
       />
       <ButtonWithMenu
         class="btnMenuTempoRight"
         :options="tempoMenuOptions"
-        :title="$t(($) => $.toolbar.martyria.tempoRight, { ns: 'toolbar' })"
+        :tooltip="$t(($) => $.toolbar.martyria.tempoRight, { ns: 'toolbar' })"
         @select="$emit('update:tempoRight', $event)"
       />
-      <span class="space"></span>
-      <button
-        class="icon-btn"
-        :class="{ selected: element.alignRight }"
-        :title="alignRightTooltip"
-        @click="
-          $emit('update', {
-            alignRight: !element.alignRight,
-          } as Partial<MartyriaElement>)
-        "
-      >
-        <img
-          src="@/assets/icons/alignright2.svg"
-          height="24"
-          width="24"
-          class="icon-btn-img"
-        />
-      </button>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="alignRightTooltip">
+        <template #default="{ ariaLabel }">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn icon-btn-small"
+            :class="{ selected: element.alignRight }"
+            :aria-label="ariaLabel"
+            @click="
+              $emit('update', {
+                alignRight: !element.alignRight,
+              } as Partial<MartyriaElement>)
+            "
+          >
+            <img src="@/assets/icons/alignright2.svg" />
+          </ToolbarButton>
+        </template>
+      </AppTooltip>
       <template v-if="element.alignRight">
-        <span class="space" />
+        <ToolbarSeparator />
         <ButtonWithMenu
           :options="quantitativeNeumeOptions"
-          :title="$t(($) => $.toolbar.common.neume, { ns: 'toolbar' })"
+          :tooltip="$t(($) => $.toolbar.common.neume, { ns: 'toolbar' })"
           @select="$emit('update:quantitativeNeume', $event)"
         />
       </template>
-      <span class="space" />
-      <div style="display: flex; align-items: center">
-        <input
-          id="toolbar:martyria-auto"
-          type="checkbox"
-          :checked="element.auto"
-          @change="
-            $emit('update', {
-              auto: ($event.target as HTMLInputElement).checked,
-            } as Partial<MartyriaElement>)
-          "
-        />
-        <label for="toolbar:martyria-auto">{{
-          $t(($) => $.toolbar.martyria.auto, { ns: 'toolbar' })
-        }}</label>
-      </div>
+    </Toolbar>
+    <div class="row">
+      <Checkbox
+        id="toolbar:martyria-auto"
+        class="bg-background"
+        :model-value="element.auto"
+        @update:model-value="
+          $emit('update', {
+            auto: $event === true,
+          } as Partial<MartyriaElement>)
+        "
+      />
+      <Label for="toolbar:martyria-auto" class="ml-2">{{
+        $t(($) => $.toolbar.martyria.auto, { ns: 'toolbar' })
+      }}</Label>
       <template v-if="!element.auto">
         <span class="space" />
-        <label class="right-space">{{
+        <Label for="toolbar-martyria-note" class="mr-2">{{
           $t(($) => $.toolbar.martyria.note, { ns: 'toolbar' })
-        }}</label>
-        <select
-          :value="element.note"
-          @change="
+        }}</Label>
+        <Select
+          :model-value="element.note"
+          @update:model-value="
             $emit('update', {
-              note: ($event.target as HTMLInputElement).value,
+              note: $event,
             } as Partial<MartyriaElement>)
           "
         >
-          <option v-for="note in notes" :key="note.key" :value="note.key">
-            {{ $t(note.displayName, { ns: 'model' }) }}
-          </option>
-        </select>
+          <SelectTrigger id="toolbar-martyria-note" class="bg-background">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem
+                v-for="note in notes"
+                :key="note.key"
+                :value="note.key"
+              >
+                {{ $t(note.displayName, { ns: 'model' }) }}
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
 
         <span class="space" />
-        <label class="right-space">{{
+        <Label for="toolbar-martyria-scale" class="mr-2">{{
           $t(($) => $.toolbar.martyria.scale, { ns: 'toolbar' })
-        }}</label>
-        <select
-          :value="element.scale"
-          @change="
+        }}</Label>
+        <Select
+          :model-value="element.scale"
+          @update:model-value="
             $emit('update', {
-              scale: ($event.target as HTMLInputElement).value,
+              scale: $event,
             } as Partial<MartyriaElement>)
           "
         >
-          <option v-for="scale in scales" :key="scale.key" :value="scale.key">
-            {{ $t(scale.displayName, { ns: 'model' }) }}
-          </option>
-        </select>
+          <SelectTrigger id="toolbar-martyria-scale" class="bg-background">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem
+                v-for="scale in scales"
+                :key="scale.key"
+                :value="scale.key"
+              >
+                {{ $t(scale.displayName, { ns: 'model' }) }}
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </template>
-    </div>
-    <div class="row">
-      <label class="right-space">{{
+      <span class="space" />
+      <Label for="toolbar-martyria-bpm" class="mr-2">{{
         $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
-      }}</label>
+      }}</Label>
       <InputBpm
+        id="toolbar-martyria-bpm"
         :disabled="
           element.tempo == null &&
           element.tempoLeft == null &&
@@ -260,16 +403,17 @@
 
       <span class="space" />
 
-      <label class="right-space">{{
+      <Label for="toolbar-martyria-vertical-offset" class="mr-2">{{
         $t(($) => $.toolbar.common.verticalOffset, { ns: 'toolbar' })
-      }}</label>
+      }}</Label>
 
       <InputUnit
+        id="toolbar-martyria-vertical-offset"
         unit="pt"
         :min="-spaceAfterMax"
         :max="spaceAfterMax"
         :step="0.5"
-        :precision="2"
+        :format-options="fraction2FormatOptions"
         :model-value="element.verticalOffset"
         @update:model-value="
           $emit('update', {
@@ -280,16 +424,17 @@
 
       <span class="space" />
 
-      <label class="right-space">{{
+      <Label for="toolbar-martyria-space-after" class="mr-2">{{
         $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
-      }}</label>
+      }}</Label>
 
       <InputUnit
+        id="toolbar-martyria-space-after"
         unit="pt"
         :min="-spaceAfterMax"
         :max="spaceAfterMax"
         :step="0.5"
-        :precision="2"
+        :format-options="fraction2FormatOptions"
         :model-value="element.spaceAfter"
         @update:model-value="
           $emit('update', {
@@ -300,71 +445,107 @@
 
       <template v-if="showChromaticFthoraNote">
         <span class="space" />
-        <label class="right-space">{{
+        <Label for="toolbar-martyria-fthora-note" class="mr-2">{{
           $t(($) => $.toolbar.common.fthoraNote, { ns: 'toolbar' })
-        }}</label>
-        <select
-          :value="element.chromaticFthoraNote"
-          @change="
+        }}</Label>
+        <Select
+          :model-value="element.chromaticFthoraNote"
+          @update:model-value="
             $emit('update', {
-              chromaticFthoraNote: ($event.target as HTMLInputElement).value,
+              chromaticFthoraNote: $event,
             } as Partial<MartyriaElement>)
           "
         >
-          <option
-            v-for="note in fthoraNotes"
-            :key="note.value"
-            :value="note.value"
+          <SelectTrigger
+            id="toolbar-martyria-fthora-note"
+            class="bg-background"
           >
-            {{ $t(note.label, { ns: 'model' }) }}
-          </option>
-        </select>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem
+                v-for="note in fthoraNotes"
+                :key="note.value"
+                :value="note.value"
+              >
+                {{ $t(note.label, { ns: 'model' }) }}
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </template>
       <span class="space" />
-      <label class="right-space">{{
+      <Label for="toolbar-martyria-root-sign-override" class="mr-2">{{
         $t(($) => $.toolbar.martyria.rootSignOverride, { ns: 'toolbar' })
-      }}</label>
-      <select
-        :value="element.rootSignOverride"
-        @change="
-          $emit('update', {
-            rootSignOverride: ($event.target as HTMLInputElement).value || null,
-          } as Partial<MartyriaElement>)
-        "
+      }}</Label>
+      <Select
+        :model-value="element.rootSignOverride ?? SELECT_NONE_VALUE"
+        @update:model-value="onRootSignOverrideChanged"
       >
-        <option value="">
-          {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
-        </option>
-        <option v-for="sign in rootSigns" :key="sign.value" :value="sign.value">
-          {{ $t(sign.name, { ns: 'model' }) }}
-        </option>
-      </select>
+        <SelectTrigger
+          id="toolbar-martyria-root-sign-override"
+          class="bg-background"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectItem :value="SELECT_NONE_VALUE">
+              {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
+            </SelectItem>
+            <SelectItem
+              v-for="sign in rootSigns"
+              :key="sign.value"
+              :value="sign.value"
+            >
+              {{ $t(sign.name, { ns: 'model' }) }}
+            </SelectItem>
+          </SelectGroup>
+        </SelectContent>
+      </Select>
 
       <span class="space"></span>
-      <div class="form-group">
-        <label class="right-space">{{
-          $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-        }}</label>
-        <input
-          type="text"
-          :value="element.sectionName"
-          @change="
-            $emit(
-              'update:sectionName',
-              ($event.target as HTMLInputElement).value,
-            )
-          "
-        />
-      </div>
+      <Label for="toolbar-martyria-section-name" class="mr-2">{{
+        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
+      }}</Label>
+      <Input
+        id="toolbar-martyria-section-name"
+        class="w-auto bg-background"
+        type="text"
+        :model-value="element.sectionName ?? ''"
+        @change="
+          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
+        "
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
+import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
+import type { AppTooltipValue } from '@/components/AppTooltip.types';
+import AppTooltip from '@/components/AppTooltip.vue';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Toolbar,
+  ToolbarButton,
+  ToolbarSeparator,
+} from '@/components/ui/toolbar';
 import type { MartyriaElement } from '@/models/Element';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import {
@@ -385,6 +566,7 @@ import type { PageSetup } from '@/models/PageSetup';
 import { Scale, ScaleNote } from '@/models/Scales';
 import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
 
 import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
@@ -600,7 +782,7 @@ const props = defineProps({
   },
 });
 
-defineEmits([
+const emit = defineEmits([
   'update',
   'update:fthora',
   'update:measureBar',
@@ -612,6 +794,13 @@ defineEmits([
 ]);
 
 const { t } = useTranslation();
+const SELECT_NONE_VALUE = '__none__';
+
+function onRootSignOverrideChanged(value: AcceptableValue) {
+  emit('update', {
+    rootSignOverride: value === SELECT_NONE_VALUE ? null : value,
+  } as Partial<MartyriaElement>);
+}
 
 const spaceAfterMax = computed(() =>
   Math.round(Unit.toPt(props.pageSetup.pageWidth)),
@@ -699,8 +888,10 @@ const showChromaticFthoraNote = computed(
 );
 
 const alignRightTooltip = computed(
-  () =>
-    `${t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })}(${props.neumeKeyboard.getMaryriaRightAlignTooltip()})`,
+  (): AppTooltipValue => ({
+    label: t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' }),
+    shortcut: props.neumeKeyboard.getMartyriaRightAlignTooltipKeys(),
+  }),
 );
 
 const fthoraNotes = computed((): FthoraNoteOption[] => {
@@ -801,11 +992,14 @@ function translateNeumeDisplayName(neume: Fthora | MeasureBar.MeasureBarRight) {
   return t(getFthoraLabelSelector(neume), { ns: 'model' });
 }
 
-function tooltip(neume: Fthora | MeasureBar.MeasureBarRight) {
+function tooltip(neume: Fthora | MeasureBar.MeasureBarRight): AppTooltipValue {
   const label = translateNeumeDisplayName(neume);
   const mapping = props.neumeKeyboard.findMappingForNeume(neume);
   if (mapping) {
-    return `${label} (${props.neumeKeyboard.generateTooltip(mapping)})`;
+    return {
+      label,
+      shortcut: props.neumeKeyboard.generateTooltipKeys(mapping),
+    };
   } else {
     return label;
   }
@@ -815,15 +1009,9 @@ function tooltip(neume: Fthora | MeasureBar.MeasureBarRight) {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .martyria-toolbar {
-  background-color: lightgray;
-
-  padding: 0.25rem;
+  background-color: var(--color-legacy-chrome-menu-surface);
 
   --btn-size: 32px;
-}
-
-label.right-space {
-  margin-right: 0.5rem;
 }
 
 .row {
@@ -832,9 +1020,18 @@ label.right-space {
   align-items: center;
 }
 
-.neume-button {
+.neume-button,
+:deep(.menu-container > .neume-button),
+.icon-btn {
+  box-sizing: border-box;
   height: var(--btn-size);
   width: var(--btn-size);
+  appearance: auto;
+  background: revert;
+  border: revert;
+  border-radius: revert;
+  box-shadow: revert;
+  font-weight: revert;
 
   position: relative;
 
@@ -843,28 +1040,50 @@ label.right-space {
   justify-content: center;
 
   overflow: hidden;
+  outline: revert;
+  padding: 0;
+  transition: revert;
 
   user-select: none;
+}
+
+.neume-button:hover,
+:deep(.menu-container > .neume-button:hover),
+.icon-btn:hover {
+  background: revert;
+}
+
+.neume-button[aria-disabled='true'],
+:deep(.menu-container > .neume-button:disabled),
+.icon-btn[aria-disabled='true'],
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.neume-button img,
+:deep(.menu-container > .neume-button img) {
+  height: var(--btn-size);
+  max-width: none;
+  width: var(--btn-size);
+}
+
+.icon-btn img {
+  height: var(--btn-icon-size, var(--btn-size));
+  max-width: none;
+  width: var(--btn-icon-size, var(--btn-size));
+}
+
+.icon-btn-small {
+  --btn-icon-size: 24px;
+}
+
+.icon-btn.selected {
+  background: var(--color-legacy-chrome-selected);
 }
 
 .space {
   width: 16px;
-}
-
-.icon-btn {
-  height: var(--btn-size);
-  width: var(--btn-size);
-  padding: 0;
-
-  user-select: none;
-}
-
-.icon-btn.selected {
-  background-color: var(--btn-color-selected);
-}
-
-.icon-btn-img {
-  vertical-align: middle;
 }
 
 .btnMenuTempoLeft :deep(.neume-button) {

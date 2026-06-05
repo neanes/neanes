@@ -29,4 +29,11 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
+  {
+    files: ['src/components/ui/**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+      'vue/require-default-prop': 'off',
+    },
+  },
 ];

@@ -32,6 +32,7 @@ export enum IpcMainChannels {
   FileMenuLyrics = 'FileMenuLyrics',
 
   FileMenuPreferences = 'FileMenuPreferences',
+  OpenAboutDialog = 'OpenAboutDialog',
 
   FileMenuInsertAnnotation = 'FileMenuInsertAnnotation',
   FileMenuInsertAlternateLine = 'FileMenuInsertAlternateLine',
@@ -77,8 +78,6 @@ export enum IpcRendererChannels {
 
   ExitApplication = 'ExitApplication',
   CancelExit = 'CancelExit',
-
-  OpenContextMenuForTab = 'OpenContextMenuForTab',
 
   Paste = 'Paste',
 
@@ -219,8 +218,4 @@ export enum CloseWorkspacesDisposition {
 export interface CloseWorkspacesArgs {
   disposition: CloseWorkspacesDisposition;
   workspaceId?: string;
-}
-
-export interface OpenContextMenuForTabArgs {
-  workspaceId: string;
 }

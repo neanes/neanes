@@ -128,6 +128,7 @@ const ambitusStyle = computed(() => {
 .mode-key-container {
   border: 1px dotted black;
   box-sizing: border-box;
+  line-height: normal;
   user-select: none;
 
   position: relative;

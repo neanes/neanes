@@ -1,34 +1,38 @@
 <template>
   <InputUnit
+    :id="props.id"
     unit="unitless"
     :min="5"
     :max="999"
     :step="1"
-    :round="round"
-    :model-value="modelValue"
-    :disabled="disabled"
-    @update:model-value="$emit('update:modelValue', $event)"
+    :model-value="props.modelValue"
+    :disabled="props.disabled"
+    @update:model-value="onModelValueChanged"
   />
 </template>
 
 <script setup lang="ts">
 import InputUnit from '@/components/InputUnit.vue';
 
-defineEmits(['update:modelValue']);
-defineProps({
-  modelValue: {
-    type: Number,
-    required: true,
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-});
+const emit = defineEmits<{
+  'update:modelValue': [value: number];
+}>();
 
-function round(value: number) {
-  return Math.round(value);
+const props = withDefaults(
+  defineProps<{
+    modelValue: number;
+    disabled?: boolean;
+    id?: string;
+  }>(),
+  {
+    disabled: false,
+    id: undefined,
+  },
+);
+
+function onModelValueChanged(value: number | null) {
+  if (value != null) {
+    emit('update:modelValue', value);
+  }
 }
 </script>
-
-<style scoped></style>

@@ -4,7 +4,7 @@
     :min="0"
     :max="strokeWidthMax"
     :step="strokeWidthStep"
-    :precision="strokeWidthPrecision"
+    :format-options="fraction2FormatOptions"
     :model-value="modelValue"
     @update:model-value="$emit('update:modelValue', $event)"
   />
@@ -12,10 +12,10 @@
 
 <script setup lang="ts">
 import InputUnit from '@/components/InputUnit.vue';
+import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
 
 const strokeWidthMax = 5;
 const strokeWidthStep = 0.1;
-const strokeWidthPrecision = 2;
 
 defineEmits(['update:modelValue']);
 defineProps({
@@ -25,5 +25,3 @@ defineProps({
   },
 });
 </script>
-
-<style scoped></style>

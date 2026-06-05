@@ -11,6 +11,7 @@
   },
   "export": {
     "root": "Export",
+    "description": "Choose an export format and configure its options.",
     "format": "Format",
     "pngImages": "PNG Images",
     "musicXml": "MusicXML",
@@ -29,10 +30,12 @@
     "export": "Export"
   },
   "modeKey": {
-    "root": "Select Mode Key"
+    "root": "Select Mode Key",
+    "description": "Choose a mode key."
   },
   "neumePositioning": {
     "root": "Neume Positioning",
+    "description": "Adjust supporting neume offsets and preview their positions.",
     "accidental": "Accidental",
     "accidental2": "Accidental 2",
     "accidental3": "Accidental 3",
@@ -55,6 +58,7 @@
   },
   "pageSetup": {
     "root": "Page Setup",
+    "description": "Configure page dimensions, margins, spacing, fonts, and default styling for the score.",
     "pageDimensions": "Page Dimensions",
     "pageSize": "Page Size",
     "in": "in",
@@ -159,11 +163,14 @@
     "marginTop": "Gap Above",
     "marginBottom": "Gap Below",
     "thickness": "Thickness",
+    "applyColor": "Apply Color",
     "neumeBulkColor": "Change Color of Multiple Neumes",
     "neumeBulkColorDescription": "To change the color of multiple neumes at once, select the neume types above, choose a color, and click the button to apply the color to all selected neumes."
   },
   "playbackSettings": {
     "root": "Playback Settings",
+    "description": "Configure playback tuning, volume, scales, and alteration behavior.",
+    "general": "General",
     "detune": "Detune",
     "test": "Test",
     "volume": "Volume",
@@ -184,6 +191,7 @@
     "zygosLegetos": "Zygos (Legetos)",
     "kliton": "Kliton",
     "spathi": "Spathi",
+    "alterations": "Alterations",
     "alterationMultipliersChrysanthine": "Alteration Multipliers (Chrysanthine)",
     "zeroCrossbeams": "Zero Crossbeams",
     "oneCrossbeam": "One Crossbeam",
@@ -199,8 +207,25 @@
     "flatWithThreeCrossbeams": "Flat with Three Crossbeams",
     "close": "Close"
   },
+  "about": {
+    "root": "About Neanes",
+    "description": "A Byzantine Chant Scorewriter",
+    "version": "Version",
+    "platform": "Platform",
+    "desktop": "Desktop",
+    "web": "Web",
+    "license": "License",
+    "project": "Project",
+    "projectDescription": "Neanes is open-source software for creating, editing, and exporting Byzantine chant scores.",
+    "sourceCode": "Source Code",
+    "guide": "Guide",
+    "requestFeature": "Request Feature",
+    "reportIssue": "Report Issue",
+    "close": "Close"
+  },
   "preferences": {
     "root": "Preferences",
+    "description": "Configure language, menu interaction, and default tempos.",
     "language": "Language",
     "languageSystemDefault": "System default",
     "helpTranslate": "Help translate Neanes",

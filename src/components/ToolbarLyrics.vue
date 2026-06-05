@@ -1,35 +1,31 @@
 <template>
   <div class="lyrics-toolbar">
-    <input
+    <Checkbox
       id="toolbar-lyrics-use-default-style"
-      type="checkbox"
-      :checked="element.lyricsUseDefaultStyle"
-      @change="
+      class="bg-background"
+      :model-value="element.lyricsUseDefaultStyle"
+      @update:model-value="
         $emit('update', {
-          lyricsUseDefaultStyle: ($event.target as HTMLInputElement).checked,
+          lyricsUseDefaultStyle: $event === true,
         } as Partial<NoteElement>)
       "
     />
-    <label for="toolbar-lyrics-use-default-style">{{
+    <Label for="toolbar-lyrics-use-default-style" class="ml-2">{{
       $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
-    }}</label>
+    }}</Label>
     <span class="divider" />
     <template v-if="!element.lyricsUseDefaultStyle">
-      <select
-        :value="element.lyricsFontFamily"
-        @change="
+      <FontCombobox
+        :model-value="element.lyricsFontFamily"
+        :options="lyricsFontFamilies"
+        @update:model-value="
           $emit('update', {
-            lyricsFontFamily: ($event.target as HTMLInputElement).value,
+            lyricsFontFamily: $event,
           } as Partial<NoteElement>)
         "
-      >
-        <option v-for="font in lyricsFontFamilies" :key="font" :value="font">
-          {{ font }}
-        </option>
-      </select>
+      />
       <span class="space"></span>
       <InputFontSize
-        class="lyrics-input"
         :model-value="element.lyricsFontSize"
         @update:model-value="
           $emit('update', {
@@ -50,6 +46,7 @@
       <button
         class="icon-btn"
         :class="{ selected: bold }"
+        aria-label="Bold"
         @click="
           $emit('update', {
             lyricsFontWeight: !bold ? '700' : '400',
@@ -61,6 +58,7 @@
       <button
         class="icon-btn"
         :class="{ selected: italic }"
+        aria-label="Italic"
         @click="
           $emit('update', {
             lyricsFontStyle: !italic ? 'italic' : 'normal',
@@ -72,6 +70,7 @@
       <button
         class="icon-btn"
         :class="{ selected: underline }"
+        aria-label="Underline"
         @click="
           $emit('update', {
             lyricsTextDecoration: !underline ? 'underline' : 'none',
@@ -81,9 +80,9 @@
         <u>U</u>
       </button>
       <span class="space"></span>
-      <label class="right-space">{{
+      <Label>{{
         $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-      }}</label>
+      }}</Label>
       <InputStrokeWidth
         :model-value="element.lyricsStrokeWidth"
         @update:model-value="
@@ -94,33 +93,38 @@
       />
     </template>
     <span class="space" />
-    <button
-      class="icon-btn"
-      @mousedown.prevent="$emit('insert:specialCharacter', PELASTIKON)"
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.common.insertPelastikon, { ns: 'toolbar' })"
     >
-      <img
-        src="@/assets/icons/letterPelastikon.svg"
-        width="32"
-        height="32"
-        :title="$t(($) => $.toolbar.common.insertPelastikon, { ns: 'toolbar' })"
-      />
-    </button>
-    <button
-      class="icon-btn"
-      @mousedown.prevent="$emit('insert:specialCharacter', GORTHMIKON)"
+      <template #default="{ ariaLabel }">
+        <button
+          class="icon-btn"
+          :aria-label="ariaLabel"
+          @mousedown.prevent="$emit('insert:specialCharacter', PELASTIKON)"
+        >
+          <img src="@/assets/icons/letterPelastikon.svg" />
+        </button>
+      </template>
+    </AppTooltip>
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.common.insertGorthmikon, { ns: 'toolbar' })"
     >
-      <img
-        src="@/assets/icons/letterGorthmikon.svg"
-        width="32"
-        height="32"
-        :title="$t(($) => $.toolbar.common.insertGorthmikon, { ns: 'toolbar' })"
-      />
-    </button>
+      <template #default="{ ariaLabel }">
+        <button
+          class="icon-btn"
+          :aria-label="ariaLabel"
+          @mousedown.prevent="$emit('insert:specialCharacter', GORTHMIKON)"
+        >
+          <img src="@/assets/icons/letterGorthmikon.svg" />
+        </button>
+      </template>
+    </AppTooltip>
     <span class="space" />
     <template v-for="character in specialCharacters" :key="character.value">
       <button
         class="icon-btn"
         :class="character.language"
+        :aria-label="character.value"
         @mousedown.prevent="$emit('insert:specialCharacter', character.value)"
       >
         {{ character.value }}
@@ -133,9 +137,13 @@
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
+import AppTooltip from '@/components/AppTooltip.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
+import FontCombobox from '@/components/FontCombobox.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import type { NoteElement } from '@/models/Element';
 import {
   E_MACRON,
@@ -192,28 +200,62 @@ const lyricsFontFamilies = computed(() => [
   align-items: center;
   flex-wrap: wrap;
 
-  background-color: lightgray;
+  background-color: var(--color-legacy-chrome-menu-surface);
 
   padding: 0.25rem;
+
+  --btn-size: 32px;
 }
 
 .icon-btn {
-  height: 32px;
-  width: 32px;
+  box-sizing: border-box;
+  height: var(--btn-size);
+  width: var(--btn-size);
+  appearance: auto;
+  background: revert;
+  border: revert;
+  border-radius: revert;
+  box-shadow: revert;
+  font-weight: revert;
+
+  position: relative;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  overflow: hidden;
+  outline: revert;
+  padding: 0;
+  transition: revert;
   font-size: 1.25rem;
+  user-select: none;
+}
+
+.icon-btn:hover {
+  background: revert;
 }
 
 .divider {
   height: 32px;
-  border-right: 1px solid #666;
+  border-right: 1px solid var(--color-legacy-chrome-divider);
   margin: 0 0.5rem;
 }
 
 .icon-btn.selected {
-  background-color: var(--btn-color-selected);
+  background: var(--color-legacy-chrome-selected);
+}
+
+.icon-btn img {
+  height: var(--btn-icon-size, var(--btn-size));
+  max-width: none;
+  width: var(--btn-icon-size, var(--btn-size));
+}
+
+.icon-btn[aria-disabled='true'],
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .space {

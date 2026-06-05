@@ -3,8 +3,7 @@
     unit="pt"
     :min="4"
     :max="max"
-    :step="1"
-    :round="round"
+    :step="0.5"
     :model-value="modelValue"
     @update:model-value="$emit('update:modelValue', $event)"
   />
@@ -24,10 +23,4 @@ defineProps({
     default: 100,
   },
 });
-
-function round(value: number) {
-  return Math.round(value * 2) / 2;
-}
 </script>
-
-<style scoped></style>

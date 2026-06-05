@@ -1,6 +1,5 @@
 import type {
   ExportWorkspaceAsImageReplyArgs,
-  OpenContextMenuForTabArgs,
   OpenWorkspaceFromArgvArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
@@ -39,8 +38,6 @@ export interface IIpcService {
   openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs>;
 
   showMessageBox(args: ShowMessageBoxArgs): Promise<ShowMessageBoxReplyArgs>;
-
-  openContextMenuForTab(args: OpenContextMenuForTabArgs): void;
 
   showItemInFolder(path: string): Promise<void>;
 

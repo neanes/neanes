@@ -5,7 +5,6 @@ import type {
   ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
-  OpenContextMenuForTabArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
@@ -151,10 +150,6 @@ export class IpcService implements IIpcService {
       IpcRendererChannels.ShowMessageBox,
       args,
     );
-  }
-
-  public openContextMenuForTab(args: OpenContextMenuForTabArgs): void {
-    window.ipcRenderer.send(IpcRendererChannels.OpenContextMenuForTab, args);
   }
 
   public async showItemInFolder(path: string) {

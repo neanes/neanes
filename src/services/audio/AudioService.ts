@@ -336,7 +336,9 @@ export class AudioService {
   }
 
   // For debugging
-  playScale(scale: number[]) {
+  async playScale(scale: number[]) {
+    await Tone.start();
+
     const synth = new Tone.Synth().toDestination();
 
     let currentFrequency = 261.63;

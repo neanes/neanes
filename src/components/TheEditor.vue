@@ -5,7 +5,6 @@ import { getFontEmbedCSS, toPng } from 'html-to-image';
 import i18next from 'i18next';
 import { useTranslation } from 'i18next-vue';
 import { debounce, throttle } from 'throttle-debounce';
-import type { StyleValue } from 'vue';
 import {
   computed,
   nextTick,
@@ -14,13 +13,16 @@ import {
   provide,
   reactive,
   ref,
+  type StyleValue,
   toRaw,
   useTemplateRef,
   watch,
 } from 'vue';
+import { toast } from 'vue-sonner';
 import type { Tab } from 'vue3-tabs-chrome';
 import Vue3TabsChrome from 'vue3-tabs-chrome';
 
+import AboutDialog from '@/components/AboutDialog.vue';
 import AlternateLine from '@/components/AlternateLine.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
@@ -40,7 +42,6 @@ import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
-import NeumeComboSelector from '@/components/NeumeComboSelector.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
@@ -60,6 +61,13 @@ import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
 import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import { Spinner } from '@/components/ui/spinner';
 import { useEditorServices } from '@/composables/useEditorServices';
 import { EventBus } from '@/eventBus';
 import { resolveLanguagePreference } from '@/i18n';
@@ -266,6 +274,7 @@ const showAdjustmentRatios = ref(false);
 const workspaces = ref<Workspace[]>([]);
 const selectedWorkspaceValue = ref(new Workspace());
 const tabs = ref<Tab[]>([]);
+const contextMenuWorkspaceId = ref<string | null>(null);
 const pages = ref<Page[]>([]);
 const currentPageNumber = ref(0);
 const modeKeyDialogIsOpen = ref(false);
@@ -273,8 +282,8 @@ const syllablePositioningDialogIsOpen = ref(false);
 const playbackSettingsDialogIsOpen = ref(false);
 const pageSetupDialogIsOpen = ref(false);
 const editorPreferencesDialogIsOpen = ref(false);
+const aboutDialogIsOpen = ref(false);
 const exportDialogIsOpen = ref(false);
-const neumeComboPanelIsExpanded = ref(false);
 const exportFormat = ref(ExportFormat.PNG);
 const clipboard = ref<ScoreElement[]>([]);
 const formatType = ref<ElementType | null>(null);
@@ -693,7 +702,8 @@ const dialogOpen = computed(() => {
     pageSetupDialogIsOpen.value ||
     playbackSettingsDialogIsOpen.value ||
     syllablePositioningDialogIsOpen.value ||
-    editorPreferencesDialogIsOpen.value
+    editorPreferencesDialogIsOpen.value ||
+    aboutDialogIsOpen.value
   );
 });
 
@@ -790,6 +800,12 @@ watch(hasUnsavedChanges, () => {
   window.document.title = windowTitle.value;
 });
 
+watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
+  if (!isOpen && wasOpen) {
+    saveAudioOptions();
+  }
+});
+
 onMounted(() => {
   const savedAudioOptions = localStorage.getItem('audioOptionsDefault');
 
@@ -847,6 +863,7 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuFind, onFileMenuFind);
   EventBus.$on(IpcMainChannels.FileMenuLyrics, onFileMenuLyrics);
   EventBus.$on(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
+  EventBus.$on(IpcMainChannels.OpenAboutDialog, onOpenAboutDialog);
   EventBus.$on(
     IpcMainChannels.FileMenuInsertAnnotation,
     onFileMenuInsertAnnotation,
@@ -926,6 +943,7 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuFind, onFileMenuFind);
   EventBus.$off(IpcMainChannels.FileMenuLyrics, onFileMenuLyrics);
   EventBus.$off(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
+  EventBus.$off(IpcMainChannels.OpenAboutDialog, onOpenAboutDialog);
   EventBus.$off(
     IpcMainChannels.FileMenuInsertAnnotation,
     onFileMenuInsertAnnotation,
@@ -1304,16 +1322,8 @@ function openModeKeyDialog() {
   modeKeyDialogIsOpen.value = true;
 }
 
-function closeModeKeyDialog() {
-  modeKeyDialogIsOpen.value = false;
-}
-
 function openSyllablePositioningDialog() {
   syllablePositioningDialogIsOpen.value = true;
-}
-
-function closeSyllablePositioningDialog() {
-  syllablePositioningDialogIsOpen.value = false;
 }
 
 function openPlaybackSettingsDialog() {
@@ -1322,14 +1332,8 @@ function openPlaybackSettingsDialog() {
   stopAudio();
 }
 
-function closePlaybackSettingsDialog() {
-  playbackSettingsDialogIsOpen.value = false;
-
-  saveAudioOptions();
-}
-
-function closePageSetupDialog() {
-  pageSetupDialogIsOpen.value = false;
+function updatePlaybackOptions(options: PlaybackOptions) {
+  Object.assign(audioOptions, options);
 }
 
 function closeExportDialog() {
@@ -1360,10 +1364,6 @@ function updateEditorPreferences(form: EditorPreferences) {
     EventBus.$emit(IpcRendererChannels.SetLanguage, form.language);
   }
 
-  editorPreferencesDialogIsOpen.value = false;
-}
-
-function closeEditorPreferencesDialog() {
   editorPreferencesDialogIsOpen.value = false;
 }
 
@@ -1817,6 +1817,26 @@ function isTextInputFocused() {
   );
 }
 
+const toolbarInteractionKeyCodes = new Set([
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowUp',
+  'End',
+  'Enter',
+  'Home',
+  'Space',
+  'Tab',
+]);
+
+function isToolbarInteraction(event: KeyboardEvent) {
+  return (
+    toolbarInteractionKeyCodes.has(event.code) &&
+    event.target instanceof Element &&
+    event.target.closest('[role="toolbar"], [data-slot="toolbar"]') != null
+  );
+}
+
 function onWindowResize() {
   if (zoomToFit.value) {
     performZoomToFit();
@@ -1828,6 +1848,10 @@ function onScroll() {
 }
 
 function onKeydown(event: KeyboardEvent) {
+  if (event.defaultPrevented || isToolbarInteraction(event)) {
+    return;
+  }
+
   // Handle undo / redo
   // See https://github.com/electron/electron/issues/3682.
   if (
@@ -4617,17 +4641,9 @@ function updateEntryMode(mode: EntryMode) {
 
 function updateZoom(newZoom: number) {
   if (newZoom < 0.5 || newZoom > 5) {
-    if (ipcService.isShowMessageBoxSupported()) {
-      ipcService.showMessageBox({
-        type: 'error',
-        title: 'Range overflow',
-        message: t(($) => $.toolbar.main.invalidZoom, {
-          ns: 'toolbar',
-        }),
-      });
-    } else {
-      alert(t(($) => $.toolbar.main.invalidZoom, { ns: 'toolbar' }));
-    }
+    toast.error('Range overflow', {
+      description: t(($) => $.toolbar.main.invalidZoom, { ns: 'toolbar' }),
+    });
   } else {
     zoom.value = newZoom;
     zoomToFit.value = false;
@@ -5485,6 +5501,10 @@ function onFileMenuPreferences() {
   }
 }
 
+function onOpenAboutDialog() {
+  aboutDialogIsOpen.value = true;
+}
+
 function onFileMenuGenerateTestFile(testFileType: TestFileType) {
   const workspace = new Workspace();
   workspace.tempFileName = getTempFilename();
@@ -5694,11 +5714,29 @@ function onTabClosed(tab: Tab) {
   }
 }
 
-function openContextMenuForTab(event: PointerEvent, tab: Tab) {
-  // TODO for browser version, show a custom (non-native) context menu.
-  if (!isBrowser.value) {
-    ipcService.openContextMenuForTab({ workspaceId: tab.key });
+function selectContextMenuWorkspace(_event: PointerEvent, tab: Tab) {
+  contextMenuWorkspaceId.value = tab.key;
+}
+
+function resetContextMenuWorkspace() {
+  contextMenuWorkspaceId.value = null;
+}
+
+function onWorkspaceTabContextMenu(event: PointerEvent) {
+  if (contextMenuWorkspaceId.value == null) {
+    event.preventDefault();
   }
+}
+
+function closeContextMenuWorkspaces(disposition: CloseWorkspacesDisposition) {
+  if (contextMenuWorkspaceId.value == null) {
+    return;
+  }
+
+  void onCloseWorkspaces({
+    disposition,
+    workspaceId: contextMenuWorkspaceId.value,
+  });
 }
 
 function renderTabLabel(tab: Tab) {
@@ -5711,9 +5749,9 @@ function renderTabLabel(tab: Tab) {
 <template>
   <div class="editor">
     <div v-if="isLoading" class="loading-overlay">
-      <img src="@/assets/icons/spinner.svg" />
+      <Spinner class="size-16" />
     </div>
-    <FileMenuBar v-if="showFileMenuBar" />
+    <FileMenuBar v-if="showFileMenuBar" class="no-print" />
     <ToolbarMain
       :entry-mode="entryMode"
       :zoom="zoom"
@@ -5749,46 +5787,70 @@ function renderTabLabel(tab: Tab) {
           class="neume-selector"
           :page-setup="score.pageSetup"
           :neume-keyboard="neumeKeyboard"
-          @select-quantitative-neume="addQuantitativeNeume"
-        />
-        <div
-          class="neume-combo-header"
-          @click="neumeComboPanelIsExpanded = !neumeComboPanelIsExpanded"
-        >
-          {{ $t(($) => $.editor.common.neumeComboHeader, { ns: 'editor' }) }}
-          <span class="neume-combo-expand-collapse">{{
-            neumeComboPanelIsExpanded ? '\u2796' : '\u2795'
-          }}</span>
-        </div>
-        <NeumeComboSelector
-          v-if="neumeComboPanelIsExpanded"
-          class="neume-combo-selector"
-          :page-setup="score.pageSetup"
           @select-neume-combo="addNeumeCombination"
+          @select-quantitative-neume="addQuantitativeNeume"
         />
       </div>
 
       <div class="page-container">
-        <!-- @vue-ignore -->
-        <Vue3TabsChrome
-          ref="tabsRef"
-          v-model="selectedWorkspaceId"
-          class="workspace-tab-container"
-          :tabs="tabs"
-          :gap="0"
-          :on-close="onTabClosed"
-          :render-label="renderTabLabel"
-          @contextmenu="openContextMenuForTab"
-        >
-          <template #after>
-            <button
-              class="workspace-tab-new-button"
-              @click="onFileMenuNewScore"
+        <ContextMenu>
+          <ContextMenuTrigger
+            as="div"
+            @contextmenu.capture="resetContextMenuWorkspace"
+            @contextmenu="onWorkspaceTabContextMenu"
+          >
+            <!-- @vue-ignore -->
+            <Vue3TabsChrome
+              ref="tabsRef"
+              v-model="selectedWorkspaceId"
+              class="workspace-tab-container"
+              :tabs="tabs"
+              :gap="0"
+              :on-close="onTabClosed"
+              :render-label="renderTabLabel"
+              @contextmenu="selectContextMenuWorkspace"
             >
-              +
-            </button>
-          </template></Vue3TabsChrome
-        >
+              <template #after>
+                <button
+                  class="workspace-tab-new-button"
+                  @click="onFileMenuNewScore"
+                >
+                  +
+                </button>
+              </template></Vue3TabsChrome
+            >
+          </ContextMenuTrigger>
+          <ContextMenuContent class="z-[9999] bg-legacy-chrome-menu-surface">
+            <ContextMenuItem
+              @select="
+                closeContextMenuWorkspaces(CloseWorkspacesDisposition.SELF)
+              "
+            >
+              {{ $t(($) => $.menu.tab.close, { ns: 'menu' }) }}
+            </ContextMenuItem>
+            <ContextMenuItem
+              @select="
+                closeContextMenuWorkspaces(CloseWorkspacesDisposition.OTHERS)
+              "
+            >
+              {{ $t(($) => $.menu.tab.closeOthers, { ns: 'menu' }) }}
+            </ContextMenuItem>
+            <ContextMenuItem
+              @select="
+                closeContextMenuWorkspaces(CloseWorkspacesDisposition.LEFT)
+              "
+            >
+              {{ $t(($) => $.menu.tab.closeToTheLeft, { ns: 'menu' }) }}
+            </ContextMenuItem>
+            <ContextMenuItem
+              @select="
+                closeContextMenuWorkspaces(CloseWorkspacesDisposition.RIGHT)
+              "
+            >
+              {{ $t(($) => $.menu.tab.closeToTheRight, { ns: 'menu' }) }}
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
         <SearchText
           v-if="searchTextPanelIsOpen"
           ref="searchTextRef"
@@ -6573,7 +6635,7 @@ function renderTabLabel(tab: Tab) {
       "
     >
       <ToolbarNeume
-        :key="`toolbar-neume-${selectedWorkspace.id}-${selectedElement.id}-${selectedElement.keyHelper}`"
+        :key="`toolbar-neume-${selectedWorkspace.id}-${selectedElement.id}`"
         :element="selectedElementForNeumeToolbar as NoteElement"
         :page-setup="score.pageSetup"
         :neume-keyboard="neumeKeyboard"
@@ -6725,6 +6787,7 @@ function renderTabLabel(tab: Tab) {
     ></ToolbarLyricManager>
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
+      v-model:open="modeKeyDialogIsOpen"
       :element="selectedElement as ModeKeyElement"
       :page-setup="score.pageSetup"
       @update="
@@ -6733,45 +6796,46 @@ function renderTabLabel(tab: Tab) {
       @update:use-optional-diatonic-fthoras="
         updatePageSetupUseOptionalDiatonicFthoras($event)
       "
-      @close="closeModeKeyDialog"
     />
     <SyllablePositioningDialog
       v-if="syllablePositioningDialogIsOpen"
+      v-model:open="syllablePositioningDialogIsOpen"
       :element="selectedElement as NoteElement"
       :previous-element="previousElementOnLine ?? undefined"
       :next-element="nextElementOnLine ?? undefined"
       :page-setup="score.pageSetup"
       @update="updateNoteAndSave(selectedElement as NoteElement, $event)"
-      @close="closeSyllablePositioningDialog"
     />
     <PlaybackSettingsDialog
       v-if="playbackSettingsDialogIsOpen"
+      v-model:open="playbackSettingsDialogIsOpen"
       :options="audioOptions"
-      @close="closePlaybackSettingsDialog"
+      @update:options="updatePlaybackOptions"
       @play-test-tone="playTestTone"
     />
     <EditorPreferencesDialog
       v-if="editorPreferencesDialogIsOpen"
+      v-model:open="editorPreferencesDialogIsOpen"
       :options="editorPreferences"
       :page-setup="score.pageSetup"
       @update="updateEditorPreferences"
-      @close="closeEditorPreferencesDialog"
     />
+    <AboutDialog v-if="aboutDialogIsOpen" v-model:open="aboutDialogIsOpen" />
     <PageSetupDialog
       v-if="pageSetupDialogIsOpen"
+      v-model:open="pageSetupDialogIsOpen"
       :page-setup="score.pageSetup"
       :fonts="fonts"
       @update="updatePageSetup($event)"
-      @close="closePageSetupDialog"
     />
     <ExportDialog
       v-if="exportDialogIsOpen"
+      v-model:open="exportDialogIsOpen"
       :loading="exportInProgress"
       :default-format="exportFormat"
       @export-as-png="exportAsPng"
       @export-as-music-xml="exportAsMusicXml"
       @export-as-latex="exportAsLatex"
-      @close="closeExportDialog"
     />
     <template v-if="richTextBoxCalculation">
       <TextBoxRich
@@ -6946,13 +7010,13 @@ function renderTabLabel(tab: Tab) {
 
 :deep(.vue3-tabs-chrome .tabs-main) {
   border-radius: 0;
-  background-color: silver;
+  background-color: var(--color-legacy-chrome-tab-list);
   margin: 0;
   padding: 0.5rem 0.5rem 0.5rem 1rem;
 }
 
 :deep(.vue3-tabs-chrome .tabs-item) {
-  border-right: 1px solid black;
+  border-right: 1px solid var(--color-legacy-chrome-border);
 }
 
 :deep(.vue3-tabs-chrome .tabs-item:last-of-type) {
@@ -6960,7 +7024,7 @@ function renderTabLabel(tab: Tab) {
 }
 
 :deep(.vue3-tabs-chrome .tabs-item.active .tabs-main) {
-  background-color: lightgray;
+  background-color: var(--color-legacy-chrome-menu-surface);
 }
 
 :deep(.vue3-tabs-chrome .tabs-item.active .tabs-close) {
@@ -6976,7 +7040,7 @@ function renderTabLabel(tab: Tab) {
 }
 
 .workspace-tab-container {
-  background-color: #b5b5b5;
+  background-color: var(--color-legacy-chrome-tab-strip);
 }
 
 .workspace-tab-new-button {
@@ -6988,7 +7052,7 @@ function renderTabLabel(tab: Tab) {
   font-size: 1.25rem;
   font-weight: bold;
 
-  background-color: darkgray;
+  background-color: var(--color-legacy-chrome-tab-action);
 
   border: none;
 
@@ -7038,31 +7102,8 @@ function renderTabLabel(tab: Tab) {
 }
 
 .neume-selector {
-  flex: 2;
-  overflow: auto;
-}
-
-.neume-combo-selector {
   flex: 1;
-  overflow: auto;
-}
-
-.neume-combo-header {
-  display: flex;
-  justify-content: center;
-  cursor: default;
-  user-select: none;
-  padding: 0.5rem 0.25rem;
-  background-color: #eee;
-}
-
-.neume-combo-header:hover {
-  background-color: #ddd;
-}
-
-.neume-combo-expand-collapse {
-  margin-left: auto;
-  margin-right: 0.25rem;
+  min-height: 0;
 }
 
 .mode-header {
@@ -7273,7 +7314,6 @@ function renderTabLabel(tab: Tab) {
     opacity: 1;
   }
 
-  .file-menu-bar,
   .left-panel,
   .workspace-tab-container,
   .lyrics-toolbar,

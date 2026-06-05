@@ -55,16 +55,16 @@ defineExpose({ focus });
 .search-text-container {
   display: flex;
   justify-content: right;
-  background-color: #ddd;
+  background-color: var(--muted);
 }
 
 .search-text-container button {
   border: none;
-  background-color: darkgray;
+  background-color: var(--color-legacy-chrome-tab-action);
 }
 
 .search-text-container button:hover {
-  background-color: lightgray;
+  background-color: var(--color-legacy-chrome-menu-surface);
 }
 
 .search-text-container button img {

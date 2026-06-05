@@ -36,7 +36,6 @@ import type {
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
-  OpenContextMenuForTabArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
@@ -1209,17 +1208,7 @@ function createMenu() {
               {
                 label: `About ${app.name}`,
                 click() {
-                  let detail = `Version: ${app.getVersion()}\n`;
-                  detail += `Electron: ${process.versions.electron}\n`;
-                  detail += `Chromium: ${process.versions.chrome}\n`;
-                  detail += `Node.js: ${process.version}`;
-
-                  dialog.showMessageBox(win!, {
-                    title: app.name,
-                    message: app.name,
-                    detail: detail,
-                    type: 'info',
-                  });
+                  void openAboutDialog();
                 },
               },
               { type: 'separator' },
@@ -1703,17 +1692,7 @@ function createMenu() {
               {
                 label: i18next.t(($) => $.menu.help.about),
                 click() {
-                  let detail = `Version: ${app.getVersion()}\n`;
-                  detail += `Electron: ${process.versions.electron}\n`;
-                  detail += `Chromium: ${process.versions.chrome}\n`;
-                  detail += `Node.js: ${process.version}`;
-
-                  dialog.showMessageBox(win!, {
-                    title: app.name,
-                    message: app.name,
-                    detail: detail,
-                    type: 'info',
-                  });
+                  void openAboutDialog();
                 },
               },
             ] as MenuItemConstructorOptions[])
@@ -1723,6 +1702,31 @@ function createMenu() {
   ]);
 
   Menu.setApplicationMenu(menu);
+}
+
+async function openAboutDialog() {
+  if (!win) {
+    await createWindow();
+  }
+
+  if (!win) {
+    return;
+  }
+
+  if (loaded) {
+    win.webContents.send(IpcMainChannels.OpenAboutDialog);
+  } else {
+    win.webContents.once('did-finish-load', () => {
+      win?.webContents.send(IpcMainChannels.OpenAboutDialog);
+    });
+  }
+
+  if (win.isMinimized()) {
+    win.restore();
+  }
+
+  win.show();
+  win.focus();
 }
 
 async function createWindow() {
@@ -1809,11 +1813,6 @@ async function createWindow() {
   creatingWindow = false;
 }
 
-app.setAboutPanelOptions({
-  applicationName: app.getName(),
-  applicationVersion: app.getVersion(),
-});
-
 ipcMain.on(IpcRendererChannels.SetLanguage, async (event, language: string) => {
   store.language = language || undefined;
   await saveStore();
@@ -1838,54 +1837,6 @@ ipcMain.on(IpcRendererChannels.OpenImageDialog, async () => {
     win?.webContents.send(IpcMainChannels.FileMenuInsertImage, data);
   }
 });
-
-ipcMain.on(
-  IpcRendererChannels.OpenContextMenuForTab,
-  async (event, args: OpenContextMenuForTabArgs) => {
-    const menu = Menu.buildFromTemplate([
-      {
-        label: i18next.t(($) => $.menu.tab.close),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.SELF,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-
-      {
-        label: i18next.t(($) => $.menu.tab.closeOthers),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.OTHERS,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-
-      {
-        label: i18next.t(($) => $.menu.tab.closeToTheLeft),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.LEFT,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-      {
-        label: i18next.t(($) => $.menu.tab.closeToTheRight),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.RIGHT,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-    ]);
-
-    menu.popup();
-  },
-);
 
 ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
   readyToExit = true;

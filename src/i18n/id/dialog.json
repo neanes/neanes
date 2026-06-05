@@ -11,6 +11,7 @@
   },
   "export": {
     "root": "Ekspor",
+    "description": "Pilih format ekspor dan konfigurasikan opsinya.",
     "format": "Format",
     "pngImages": "Gambar PNG",
     "musicXml": "MusicXML",
@@ -29,10 +30,12 @@
     "export": "Ekspor"
   },
   "modeKey": {
-    "root": "Pilih Kunci Mode"
+    "root": "Pilih Kunci Mode",
+    "description": "Pilih kunci mode."
   },
   "neumePositioning": {
     "root": "Penempatan Neuma",
+    "description": "Sesuaikan offset neuma pendukung dan pratinjau posisinya.",
     "accidental": "Tanda",
     "accidental2": "Tanda 2",
     "accidental3": "Tanda 3",
@@ -55,6 +58,7 @@
   },
   "pageSetup": {
     "root": "Pengaturan Halaman",
+    "description": "Atur dimensi halaman, margin, spasi, font, dan gaya default untuk partitur.",
     "pageDimensions": "Dimensi Halaman",
     "pageSize": "Ukuran Halaman",
     "in": "in",
@@ -159,11 +163,14 @@
     "marginTop": "Celah Atas",
     "marginBottom": "Celah Bawah",
     "thickness": "Ketebalan",
+    "applyColor": "Terapkan Warna",
     "neumeBulkColor": "Ubah Warna Beberapa Neuma",
     "neumeBulkColorDescription": "Untuk mengubah warna beberapa neuma sekaligus, pilih jenis neuma di atas, pilih warna, dan klik tombol untuk menerapkan warna ke semua neuma yang dipilih."
   },
   "playbackSettings": {
     "root": "Pengaturan Pemutaran",
+    "description": "Atur penyetelan, volume, tangga nada, dan perilaku tanda saat pemutaran.",
+    "general": "Umum",
     "detune": "Detune",
     "test": "Uji",
     "volume": "Volume",
@@ -184,6 +191,7 @@
     "zygosLegetos": "Zygos (Legetos)",
     "kliton": "Kliton",
     "spathi": "Spathi",
+    "alterations": "Alterasi",
     "alterationMultipliersChrysanthine": "Pengali Alterasi (Chrysanthine)",
     "zeroCrossbeams": "Nol Palang",
     "oneCrossbeam": "Satu Palang",
@@ -199,8 +207,25 @@
     "flatWithThreeCrossbeams": "Bemol dengan Tiga Palang",
     "close": "Tutup"
   },
+  "about": {
+    "root": "Tentang Neanes",
+    "description": "Penulis partitur nyanyian Bizantium",
+    "version": "Versi",
+    "platform": "Platform",
+    "desktop": "Desktop",
+    "web": "Web",
+    "license": "Lisensi",
+    "project": "Proyek",
+    "projectDescription": "Neanes adalah perangkat lunak sumber terbuka untuk membuat, mengedit, dan mengekspor partitur nyanyian Bizantium.",
+    "sourceCode": "Kode Sumber",
+    "guide": "Panduan",
+    "requestFeature": "Minta Fitur",
+    "reportIssue": "Laporkan Masalah",
+    "close": "Tutup"
+  },
   "preferences": {
     "root": "Preferensi",
+    "description": "Atur bahasa, interaksi menu, dan tempo default.",
     "language": "Bahasa",
     "languageSystemDefault": "Bawaan sistem",
     "helpTranslate": "Bantu terjemahkan Neanes",

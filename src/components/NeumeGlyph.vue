@@ -1,15 +1,34 @@
 <template>
-  <span class="neume" :style="style">{{ text }}</span>
+  <span v-if="!tooltip" v-bind="$attrs" class="neume" :style="style">{{
+    text
+  }}</span>
+  <AppTooltip v-else :tooltip="tooltip">
+    <template #default="{ ariaLabel }">
+      <span
+        v-bind="$attrs"
+        class="neume"
+        :style="style"
+        :aria-label="ariaLabel"
+        >{{ text }}</span
+      >
+    </template>
+  </AppTooltip>
 </template>
 
 <script setup lang="ts">
 import type { PropType, StyleValue } from 'vue';
 import { computed } from 'vue';
 
+import type { AppTooltipValue } from '@/components/AppTooltip.types';
+import AppTooltip from '@/components/AppTooltip.vue';
 import type { ScoreElementOffset } from '@/models/Element';
 import type { Neume as NeumeType } from '@/models/Neumes';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { withZoom } from '@/utils/withZoom';
+
+defineOptions({
+  inheritAttrs: false,
+});
 
 defineEmits(['update']);
 const props = defineProps({
@@ -23,6 +42,10 @@ const props = defineProps({
   },
   fontFamily: {
     type: String,
+    default: undefined,
+  },
+  tooltip: {
+    type: [String, Object] as PropType<AppTooltipValue>,
     default: undefined,
   },
 });

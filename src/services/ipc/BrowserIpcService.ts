@@ -105,12 +105,35 @@ export class BrowserIpcService implements IIpcService {
     a.click();
   }
 
-  public async exportWorkspaceAsImage(): Promise<ExportWorkspaceAsImageReplyArgs> {
-    throw 'exportWorkspaceAsImage is not available in the browser.';
+  public async exportWorkspaceAsImage(
+    workspace: Workspace,
+    imageFormat: 'png' | 'svg',
+  ): Promise<ExportWorkspaceAsImageReplyArgs> {
+    const fileName =
+      workspace.filePath != null
+        ? getFileNameFromPath(workspace.filePath)
+        : workspace.tempFileName;
+
+    return Promise.resolve({
+      success: true,
+      filePath: `${fileName}.${imageFormat}`,
+    });
   }
 
-  public async exportPageAsImage(): Promise<boolean> {
-    throw 'exportPageAsImage is not available in the browser.';
+  public async exportPageAsImage(
+    fileName: string,
+    data: string,
+  ): Promise<boolean> {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    const type = extension === 'svg' ? 'image/svg+xml' : 'image/png';
+    const file =
+      extension === 'svg'
+        ? new Blob([data], { type })
+        : await fetch(`data:${type};base64,${data}`).then((x) => x.blob());
+
+    this.downloadFile(fileName, file);
+
+    return Promise.resolve(true);
   }
 
   public async printWorkspace(): Promise<void> {
@@ -133,12 +156,8 @@ export class BrowserIpcService implements IIpcService {
     return Promise.resolve({ response: 0, checkboxChecked: false });
   }
 
-  public openContextMenuForTab(): void {
-    throw 'openContextMenuForTab is not available in the browser.';
-  }
-
   public async showItemInFolder(): Promise<void> {
-    throw 'showItemInFolder is not available in the browser.';
+    return Promise.resolve();
   }
 
   public isShowMessageBoxSupported(): boolean {
@@ -190,6 +209,17 @@ export class BrowserIpcService implements IIpcService {
     a.click();
 
     return downloadFileName;
+  }
+
+  private downloadFile(downloadFileName: string, file: Blob) {
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(file);
+
+    a.href = url;
+    a.download = downloadFileName;
+    a.click();
+
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
   public async paste(): Promise<void> {

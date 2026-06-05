@@ -1,35 +1,32 @@
 <template>
   <div class="drop-cap-toolbar">
-    <input
+    <Checkbox
       id="toolbar-drop-cap-use-default-style"
-      type="checkbox"
-      :checked="element.useDefaultStyle"
-      @change="
+      class="bg-background"
+      :model-value="element.useDefaultStyle"
+      @update:model-value="
         $emit('update', {
-          useDefaultStyle: ($event.target as HTMLInputElement).checked,
+          useDefaultStyle: $event === true,
         } as Partial<DropCapElement>)
       "
     />
-    <label for="toolbar-drop-cap-use-default-style">{{
+    <Label for="toolbar-drop-cap-use-default-style" class="ml-2">{{
       $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
-    }}</label>
+    }}</Label>
     <span class="divider" />
     <template v-if="!element.useDefaultStyle">
-      <select
-        :value="element.fontFamily"
-        @change="
+      <FontCombobox
+        :model-value="element.fontFamily"
+        :options="dropCapFontFamilies"
+        @update:model-value="
           $emit('update', {
-            fontFamily: ($event.target as HTMLInputElement).value,
+            fontFamily: $event,
           } as Partial<DropCapElement>)
         "
-      >
-        <option v-for="font in dropCapFontFamilies" :key="font" :value="font">
-          {{ font }}
-        </option>
-      </select>
+      />
       <span class="space"></span>
       <InputFontSize
-        class="drop-caps-input"
+        id="toolbar-drop-cap-font-size"
         :max="500"
         :model-value="element.fontSize"
         @update:model-value="
@@ -40,13 +37,13 @@
       />
       <span class="space" style="text-align: center">&#47;</span>
       <InputUnit
-        class="drop-caps-input"
+        id="toolbar-drop-cap-line-height"
         unit="unitless"
         :nullable="true"
         :min="0"
         :step="0.1"
         :model-value="element.lineHeight"
-        :precision="2"
+        :format-options="fraction2FormatOptions"
         placeholder="auto"
         @update:model-value="
           $emit('update', {
@@ -87,10 +84,11 @@
         <i>I</i>
       </button>
       <span class="space"></span>
-      <label class="right-space">{{
+      <Label for="toolbar-drop-cap-outline">{{
         $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-      }}</label>
+      }}</Label>
       <InputStrokeWidth
+        id="toolbar-drop-cap-outline"
         :model-value="element.strokeWidth"
         @update:model-value="
           $emit('update', {
@@ -99,17 +97,17 @@
         "
       />
       <span class="divider" />
-      <label class="right-space">{{
+      <Label for="toolbar-drop-cap-line-span" class="mr-2">{{
         $t(($) => $.toolbar.dropCap.lineSpan, { ns: 'toolbar' })
-      }}</label>
+      }}</Label>
       <InputUnit
-        class="drop-caps-input-width"
+        id="toolbar-drop-cap-line-span"
         unit="unitless"
         :min="1"
         :max="10"
         :step="1"
         :model-value="element.lineSpan"
-        :precision="0"
+        :format-options="fraction0FormatOptions"
         @update:model-value="
           $emit('update', {
             lineSpan: $event,
@@ -118,18 +116,18 @@
       />
       <span class="divider" />
     </template>
-    <label class="right-space">{{
+    <Label for="toolbar-drop-cap-width" class="mr-2">{{
       $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
-    }}</label>
+    }}</Label>
     <InputUnit
-      class="drop-caps-input-width"
+      id="toolbar-drop-cap-width"
       unit="pt"
       :nullable="true"
       :min="4"
       :max="maxWidth"
       :step="0.5"
       :model-value="element.customWidth"
-      :precision="1"
+      :format-options="fraction1FormatOptions"
       placeholder="auto"
       @update:model-value="
         $emit('update', {
@@ -139,18 +137,18 @@
     />
 
     <span class="space"></span>
-    <div class="form-group">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-      }}</label>
-      <input
-        type="text"
-        :value="element.sectionName"
-        @change="
-          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
-        "
-      />
-    </div>
+    <Label for="toolbar-drop-cap-section-name" class="mr-2">{{
+      $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
+    }}</Label>
+    <Input
+      id="toolbar-drop-cap-section-name"
+      class="w-auto bg-background"
+      type="text"
+      :model-value="element.sectionName ?? ''"
+      @change="
+        $emit('update:sectionName', ($event.target as HTMLInputElement).value)
+      "
+    />
   </div>
 </template>
 
@@ -159,11 +157,20 @@ import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
+import FontCombobox from '@/components/FontCombobox.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import type { DropCapElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
+import {
+  fraction0FormatOptions,
+  fraction1FormatOptions,
+  fraction2FormatOptions,
+} from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
 
 const props = defineProps({
@@ -204,34 +211,60 @@ const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
   align-items: center;
   flex-wrap: wrap;
 
-  background-color: lightgray;
+  background-color: var(--color-legacy-chrome-menu-surface);
 
   padding: 0.25rem;
-}
 
-.drop-caps-input-width {
-  width: 8ch;
+  --btn-size: 32px;
 }
 
 .icon-btn {
-  height: 32px;
-  width: 32px;
+  box-sizing: border-box;
+  height: var(--btn-size);
+  width: var(--btn-size);
+  appearance: auto;
+  background: revert;
+  border: revert;
+  border-radius: revert;
+  box-shadow: revert;
+  font-weight: revert;
+
+  position: relative;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  overflow: hidden;
+  outline: revert;
+  padding: 0;
+  transition: revert;
+  user-select: none;
+}
+
+.icon-btn:hover {
+  background: revert;
 }
 
 .icon-btn.selected {
-  background-color: var(--btn-color-selected);
+  background: var(--color-legacy-chrome-selected);
 }
 
-label.right-space {
-  margin-right: 0.5rem;
+.icon-btn img {
+  height: var(--btn-icon-size, var(--btn-size));
+  max-width: none;
+  width: var(--btn-icon-size, var(--btn-size));
+}
+
+.icon-btn[aria-disabled='true'],
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .divider {
   height: 32px;
-  border-right: 1px solid #666;
+  border-right: 1px solid var(--color-legacy-chrome-divider);
   margin: 0 0.5rem;
 }
 

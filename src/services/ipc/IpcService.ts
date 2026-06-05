@@ -17,7 +17,6 @@ import type {
 } from '@/ipc/ipcChannels';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
 import type { Workspace } from '@/models/Workspace';
-import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { Unit } from '@/utils/Unit';
 
 import { SaveService } from '../SaveService';
@@ -94,12 +93,8 @@ export class IpcService implements IIpcService {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsHtml,
       {
-        filePathFull: workspace.filePath,
-        filePath:
-          workspace.filePath != null
-            ? `${getFileNameFromPath(workspace.filePath)}.html`
-            : null,
-        tempFileName: `${workspace.tempFileName}.html`,
+        filePath: workspace.filePath,
+        tempFileName: workspace.tempFileName,
         data,
       } as ExportWorkspaceAsHtmlArgs,
     );
@@ -111,16 +106,11 @@ export class IpcService implements IIpcService {
     compressed: boolean,
     openFolder: boolean,
   ) {
-    const extension = compressed ? 'mxl' : 'musicxml';
-
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsMusicXml,
       {
-        filePath:
-          workspace.filePath != null
-            ? `${getFileNameFromPath(workspace.filePath)}.${extension}`
-            : null,
-        tempFileName: `${workspace.tempFileName}.${extension}`,
+        filePath: workspace.filePath,
+        tempFileName: workspace.tempFileName,
         data,
         compressed,
         openFolder,
@@ -132,12 +122,8 @@ export class IpcService implements IIpcService {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsLatex,
       {
-        filePathFull: workspace.filePath,
-        filePath:
-          workspace.filePath != null
-            ? `${getFileNameFromPath(workspace.filePath)}.byztex`
-            : null,
-        tempFileName: `${workspace.tempFileName}.byztex`,
+        filePath: workspace.filePath,
+        tempFileName: workspace.tempFileName,
         data,
       } as ExportWorkspaceAsLatexArgs,
     );

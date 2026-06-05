@@ -168,7 +168,6 @@ export interface ExportWorkspaceAsPdfArgs {
 
 export interface ExportWorkspaceAsHtmlArgs {
   filePath: string | null;
-  filePathFull: string | null;
   tempFileName: string;
   data: string;
 }
@@ -182,7 +181,6 @@ export interface ExportWorkspaceAsMusicXmlArgs {
 }
 
 export interface ExportWorkspaceAsLatexArgs {
-  filePathFull: string | null;
   filePath: string | null;
   tempFileName: string;
   data: string;

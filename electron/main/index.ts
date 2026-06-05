@@ -713,7 +713,9 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
 
         const openError = await shell.openPath(filePath);
         if (openError) {
-          throw new Error(`Failed to open ${filePath}: ${openError}`);
+          // The file has already been written successfully; failing to open it
+          // afterward is not an export failure, so just log it.
+          console.error(`Failed to open ${filePath}: ${openError}`);
         }
 
         store.lastDirectory = path.dirname(filePath);
@@ -796,7 +798,9 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
 
         const openError = await shell.openPath(filePath);
         if (openError) {
-          throw new Error(`Failed to open ${filePath}: ${openError}`);
+          // The file has already been written successfully; failing to open it
+          // afterward is not an export failure, so just log it.
+          console.error(`Failed to open ${filePath}: ${openError}`);
         }
 
         store.lastDirectory = path.dirname(filePath);

@@ -52,10 +52,7 @@ import {
   ScaleNote,
 } from '@/models/Scales';
 import type { Workspace } from '@/models/Workspace';
-import {
-  NeumeMappingService,
-  type SbmuflGlyphName,
-} from '@/services/NeumeMappingService';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
 import { Unit } from '@/utils/Unit';
 
@@ -3029,11 +3026,11 @@ export class LayoutService {
 
     noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
 
-    // Measure the glyph run that participates in contextual substitutions
-    // inside the note so width uses the actual replacement glyphs.
-    noteElement.neumeWidth = this.getGlyphSequenceWidthFromCache(
+    // Measure the full note run so the browser applies any contextual
+    // substitutions before we use the width for layout.
+    noteElement.neumeWidth = this.getNeumeSequenceWidthFromCache(
       neumeWidthCache,
-      this.getResolvedNoteGlyphNames(noteElement, pageSetup),
+      this.getNoteNeumesForMeasurement(noteElement),
       pageSetup,
     );
 
@@ -3913,9 +3910,9 @@ export class LayoutService {
               pageSetup,
             ) + note.vareiaInternalSpacing
           : 0;
-        const bodyWidth = this.getGlyphWidthFromCache(
+        const bodyWidth = this.getNeumeSequenceWidthFromCache(
           neumeWidthCache,
-          this.getResolvedQuantitativeGlyphName(note, pageSetup),
+          this.getNoteNeumesForMeasurement(note),
           pageSetup,
         );
 
@@ -4031,129 +4028,12 @@ export class LayoutService {
       : (owner as MartyriaElement).measureBarRight;
   }
 
-  private static getResolvedQuantitativeGlyphName(
-    noteElement: NoteElement,
-    pageSetup: PageSetup,
-  ) {
-    const { glyphNames, quantitativeIndex } = this.getResolvedNoteGlyphContext(
-      noteElement,
-      pageSetup,
-      true,
-    );
-
-    return glyphNames[quantitativeIndex];
-  }
-
-  private static getResolvedNoteGlyphNames(
-    noteElement: NoteElement,
-    pageSetup: PageSetup,
-  ) {
-    return this.getResolvedNoteGlyphContext(noteElement, pageSetup, false)
-      .glyphNames;
-  }
-
-  private static getResolvedNoteGlyphContext(
-    noteElement: NoteElement,
-    pageSetup: PageSetup,
-    includeVareia: boolean,
-  ) {
-    const glyphNames: SbmuflGlyphName[] = [];
-    let vareiaIndex: number | null = null;
-
-    if (includeVareia && noteElement.vareia) {
-      vareiaIndex = glyphNames.length;
-      glyphNames.push(
-        NeumeMappingService.getMapping(VocalExpressionNeume.Vareia).glyphName,
-      );
-    }
-
-    const quantitativeIndex = glyphNames.length;
-    glyphNames.push(
-      NeumeMappingService.getMapping(noteElement.quantitativeNeume).glyphName,
-    );
-
-    glyphNames.push(
-      ...[
-        noteElement.vocalExpressionNeume,
-        noteElement.timeNeume,
-        noteElement.gorgonNeume,
-        noteElement.secondaryGorgonNeume,
-      ]
-        .filter((neume) => neume != null)
-        .map((neume) => NeumeMappingService.getMapping(neume).glyphName),
-    );
-
-    return {
-      glyphNames: this.applyContextualSubstitutions(glyphNames, pageSetup),
-      vareiaIndex,
-      quantitativeIndex,
-    };
-  }
-
-  private static applyContextualSubstitutions(
-    glyphNames: SbmuflGlyphName[],
-    pageSetup: PageSetup,
-  ) {
-    const metadata = fontService.getMetadata(pageSetup.neumeDefaultFontFamily);
-    const substitutionRules = metadata?.contextualSubstitutions ?? [];
-
-    if (glyphNames.length === 0 || substitutionRules.length === 0) {
-      return glyphNames;
-    }
-
-    const resolvedGlyphNames = [...glyphNames];
-
-    for (let start = 0; start < resolvedGlyphNames.length; start++) {
-      for (const substitutionRule of substitutionRules) {
-        const backtrackLength = substitutionRule.backtrackGlyphs.length;
-        const inputLength = substitutionRule.inputGlyphs.length;
-        const lookaheadLength = substitutionRule.lookaheadGlyphs.length;
-
-        if (
-          start < backtrackLength ||
-          start + inputLength + lookaheadLength > resolvedGlyphNames.length
-        ) {
-          continue;
-        }
-
-        const matchesGlyphClass = (
-          glyphClass: SbmuflGlyphName[],
-          glyphName: SbmuflGlyphName,
-        ) => glyphClass.includes(glyphName);
-
-        const backtrackMatches = substitutionRule.backtrackGlyphs.every(
-          (glyphClass: SbmuflGlyphName[], index: number) =>
-            matchesGlyphClass(
-              glyphClass,
-              resolvedGlyphNames[start - backtrackLength + index],
-            ),
-        );
-        const inputMatches = substitutionRule.inputGlyphs.every(
-          (glyphClass: SbmuflGlyphName[], index: number) =>
-            matchesGlyphClass(glyphClass, resolvedGlyphNames[start + index]),
-        );
-        const lookaheadMatches = substitutionRule.lookaheadGlyphs.every(
-          (glyphClass: SbmuflGlyphName[], index: number) =>
-            matchesGlyphClass(
-              glyphClass,
-              resolvedGlyphNames[start + inputLength + index],
-            ),
-        );
-
-        if (!backtrackMatches || !inputMatches || !lookaheadMatches) {
-          continue;
-        }
-
-        for (const substitution of substitutionRule.substitutions) {
-          const targetIndex = start + substitution.index;
-          if (resolvedGlyphNames[targetIndex] === substitution.from) {
-            resolvedGlyphNames[targetIndex] = substitution.to;
-          }
-        }
-      }
-    }
-
-    return resolvedGlyphNames;
+  private static getNoteNeumesForMeasurement(noteElement: NoteElement) {
+    return [
+      noteElement.quantitativeNeume,
+      noteElement.vocalExpressionNeume,
+      noteElement.gorgonNeume,
+    ].filter((x) => x != null);
   }
 
   public static calculateMartyrias(
@@ -4882,43 +4762,22 @@ export class LayoutService {
     return width;
   }
 
-  private static getGlyphSequenceWidthFromCache(
+  private static getNeumeSequenceWidthFromCache(
     cache: Map<string, number>,
-    glyphNames: SbmuflGlyphName[],
+    neumes: Array<Neume>,
     pageSetup: PageSetup,
   ) {
-    const key = `${glyphNames.join(',')} | ${pageSetup.neumeDefaultFontSize} | ${pageSetup.neumeDefaultFontFamily}`;
+    const key = `${neumes.join(',')} | ${pageSetup.neumeDefaultFontSize} | ${pageSetup.neumeDefaultFontFamily}`;
 
     let width = cache.get(key);
 
     if (width == null) {
-      const text = glyphNames
-        .map((glyphName) => NeumeMappingService.getTextForGlyphName(glyphName))
+      const text = neumes
+        .map((neume) => NeumeMappingService.getMapping(neume).text)
         .join('');
 
       width = TextMeasurementService.getTextWidth(
         text,
-        `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-      );
-
-      cache.set(key, width);
-    }
-
-    return width;
-  }
-
-  private static getGlyphWidthFromCache(
-    cache: Map<string, number>,
-    glyphName: SbmuflGlyphName,
-    pageSetup: PageSetup,
-  ) {
-    const key = `${glyphName} | ${pageSetup.neumeDefaultFontSize} | ${pageSetup.neumeDefaultFontFamily}`;
-
-    let width = cache.get(key);
-
-    if (width == null) {
-      width = TextMeasurementService.getTextWidth(
-        NeumeMappingService.getTextForGlyphName(glyphName),
         `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
       );
 

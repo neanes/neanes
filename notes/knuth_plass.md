@@ -143,8 +143,8 @@ The 0.1 px stretch floor is a tiny positive epsilon rather than zero so that eve
 Without this floor, a line that contains no martyria would have a total stretch of zero, and `breakLines` could only treat its natural width as feasible.
 At 0.1 px per glue, the cumulative stretch across a typical line is far below the neume scale and so has no visible effect on the layout.
 
-The active font's `contextualSubstitutions` metadata is still resolved within each note before measuring width, so substituted glyphs contribute their actual rendered widths.
-It no longer contributes leading or trailing spacing to the layout.
+The active font's OpenType shaping is now applied implicitly when each note's neume text run is measured, so contextual substitutions contribute their actual rendered widths without a separate substitution-resolution pass in layout.
+Contextual substitutions affect measured glyph-run width only; inter-neume spacing comes from fixed inline spacing rather than substituted glyph leading or trailing metadata.
 A vareia contributes fixed internal spacing before the main neume; in right-to-left mode the visual order remains vareia followed by the main neume when read from right to left.
 
 Visible barlines also participate in spacing.

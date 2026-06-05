@@ -4655,7 +4655,7 @@ function performZoomToFit() {
   zoom.value = availableWidth / score.value.pageSetup.pageWidth;
 }
 
-function playAudio() {
+async function playAudio() {
   try {
     if (audioService.state === AudioState.Stopped) {
       playbackEvents.value = playbackService.computePlaybackSequence(
@@ -4672,7 +4672,7 @@ function playAudio() {
         (x) => x.elementIndex >= selectedElementIndex.value,
       );
 
-      audioService.play(playbackEvents.value, audioOptions, startAt);
+      await audioService.play(playbackEvents.value, audioOptions, startAt);
 
       if (startAt) {
         selectedWorkspace.value.playbackTime = startAt.absoluteTime;
@@ -4728,9 +4728,9 @@ function stopPlaybackClock() {
   }
 }
 
-function playTestTone() {
+async function playTestTone() {
   try {
-    audioService.playTestTone(audioOptions.frequencyDi);
+    await audioService.playTestTone(audioOptions.frequencyDi);
   } catch (error) {
     console.error(error);
   }

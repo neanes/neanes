@@ -132,12 +132,13 @@ The 19th-century publications also use several techniques to improve the quality
 Consider first a lyricless score of Byzantine music.
 Each neume group, for example a simple oligon or an ison with kentimata over a supporting oligon, and each martyria can be modeled as a box whose width is simply the width of the notated group itself.
 The space between ordinary neumes is modeled as fixed glue.
-Its natural width is `0.1 * neumeDefaultFontSize + neumeDefaultSpacing`, so the font-size-scaled term supplies the default gap and `neumeDefaultSpacing` remains a user-configurable adjustment.
-The resulting preferred width may stretch or shrink by up to one half.
+Its natural width is `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, where `standardGlue` comes from the active font's `engravingDefaults`.
+The font-size-scaled engraving default supplies the default gap, and `neumeDefaultSpacing` remains a user-configurable adjustment.
+The stretch and shrink budgets are also scaled from the active font's `standardGlue` defaults.
 Users may also set the inter-note spacing to a negative value, so that successive neumes visibly overlap and the layout becomes tighter.
 When the configured spacing is negative, the glue keeps its negative natural width so that the overlap remains visible, but the stretch and shrink budgets are floored at small non-negative values: stretch at 0.1 px and shrink at 0.
 The same floors apply uniformly to every glue derived from fixed inline spacing: the standard glue's stretch and shrink, note pre-break glue's stretch and shrink, martyria glue's shrink, and the right-martyria glue's shrink.
-Martyria glue also uses these floors, but its main stretch and shrink budget comes from the martyria bonus described below.
+Martyria glue also uses these floors, but its main width, stretch, and shrink come from the martyria engraving defaults described below.
 These floors preserve the Knuth-Plass invariants while keeping the user-chosen overlap intact, because ordinary glues no longer stretch enough to push neumes apart and any line-end slack is absorbed by the right-martyria glue's `MAX_COST` stretch instead.
 The 0.1 px stretch floor is a tiny positive epsilon rather than zero so that every line has at least some stretchability, which keeps the adjustment ratio finite and the line-breaking problem well-defined.
 Without this floor, a line that contains no martyria would have a total stretch of zero, and `breakLines` could only treat its natural width as feasible.
@@ -159,13 +160,13 @@ The trailing barline-to-$B$ clearance is modeled inside the box for a left-owned
 The remaining minimum is preserved during justification and after lyric tucking.
 When a right barline becomes terminal at a line break, at a paragraph ending, before an empty element, or before a right-aligned martyria, its clearance from the preceding neume is reserved as terminal width.
 
-Ordinary martyriae use fixed inline spacing with one application-level augmentation.
-When a boundary is adjacent to a martyria, the layout engine adds a generic martyria spacing bonus, currently `0.2 * neumeDefaultFontSize`, on top of fixed inline spacing.
-The bonus is part of the martyria glue width and gives martyriae more surrounding space than ordinary neumes.
-During justification, stretch and shrink are based on the martyria bonus while the same-line width is still protected by any fixed measure-bar minimum.
+Ordinary martyriae use the active font's `martyriaGlue` engraving defaults instead of standard fixed inline glue.
+Its natural width is `neumeDefaultFontSize * martyriaGlue.width + neumeDefaultSpacing`.
+This gives martyriae font-specific surrounding space that can differ from ordinary neume spacing.
+During justification, stretch and shrink are based on the martyria glue defaults while the same-line width is still protected by any fixed measure-bar minimum.
 Tempo-adjacent martyria boundaries are the exception: when a non-right-aligned martyria contains `tempoLeft` or `tempoRight`, or when a standalone tempo sign sits immediately beside a non-right-aligned martyria in the same paragraph, that side uses standard fixed inline glue instead of martyria glue.
 For standalone tempo-to-martyria and martyria-to-tempo boundaries, the lyric-collision spacer is also skipped; the explicit standard glue owns the boundary spacing, while the lyric bookkeeping is still advanced for the current element.
-After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single trailing glue whose preferred width is usually fixed inline spacing plus the martyria bonus, or standard fixed inline spacing for the tempo cases above.
+After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single trailing glue whose preferred width is usually martyria glue, or standard fixed inline glue for the tempo cases above.
 As a result, the full trailing spacing appears after the martyria only when it stays mid-line; if a break is taken there, that spacing becomes leading glue on the next line and is skipped.
 
 When a martyria has a transferable measure bar and is followed by a note, the bar transfers to the next line's first note at a break.
@@ -217,7 +218,7 @@ Instead, any part of the running melisma that still extends beyond the current n
 ### Paragraph encoding
 
 Let $B_i$ be the neume width, $c_i$ the break cost, $w_i$ the break-only reservation at breakpoint $i$, and $m_i$ the minimum same-line width between notes $i$ and $i{+}1$.
-Let $s_0$ be the fixed inline spacing between successive notes, `0.1 * neumeDefaultFontSize + neumeDefaultSpacing`, and let $s^+$ and $s^-$ be the stretch and shrink budgets for an inter-note gap.
+Let $s_0$ be the fixed inline spacing between successive notes, `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, and let $s^+$ and $s^-$ be the stretch and shrink budgets for an inter-note gap.
 
 Each note is encoded in the paragraph as
 

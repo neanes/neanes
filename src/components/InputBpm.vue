@@ -5,6 +5,7 @@
     :min="5"
     :max="999"
     :step="1"
+    :format-options="fraction0FormatOptions"
     :model-value="props.modelValue"
     :disabled="props.disabled"
     @update:model-value="onModelValueChanged"
@@ -13,6 +14,7 @@
 
 <script setup lang="ts">
 import InputUnit from '@/components/InputUnit.vue';
+import { fraction0FormatOptions } from '@/utils/numberFormatOptions';
 
 const emit = defineEmits<{
   'update:modelValue': [value: number];
@@ -32,7 +34,7 @@ const props = withDefaults(
 
 function onModelValueChanged(value: number | null) {
   if (value != null) {
-    emit('update:modelValue', value);
+    emit('update:modelValue', Math.round(value));
   }
 }
 </script>

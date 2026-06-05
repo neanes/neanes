@@ -157,7 +157,11 @@ export class BrowserIpcService implements IIpcService {
   }
 
   public async showItemInFolder(): Promise<void> {
-    return Promise.resolve();
+    throw 'showItemInFolder is not available in the browser.';
+  }
+
+  public isShowItemInFolderSupported(): boolean {
+    return false;
   }
 
   public isShowMessageBoxSupported(): boolean {

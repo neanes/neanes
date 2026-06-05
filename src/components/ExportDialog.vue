@@ -91,8 +91,15 @@
                 </FieldDescription>
               </Field>
               <FieldSeparator />
-              <Field orientation="horizontal">
-                <Checkbox id="export-dialog-open-folder" v-model="openFolder" />
+              <Field
+                orientation="horizontal"
+                :data-disabled="!showItemInFolderSupported"
+              >
+                <Checkbox
+                  id="export-dialog-open-folder"
+                  v-model="openFolder"
+                  :disabled="!showItemInFolderSupported"
+                />
                 <FieldLabel for="export-dialog-open-folder">
                   {{
                     $t(
@@ -151,8 +158,15 @@
                 </FieldLabel>
               </Field>
               <FieldSeparator />
-              <Field orientation="horizontal">
-                <Checkbox id="export-dialog-open-folder" v-model="openFolder" />
+              <Field
+                orientation="horizontal"
+                :data-disabled="!showItemInFolderSupported"
+              >
+                <Checkbox
+                  id="export-dialog-open-folder"
+                  v-model="openFolder"
+                  :disabled="!showItemInFolderSupported"
+                />
                 <FieldLabel for="export-dialog-open-folder">
                   {{
                     $t(
@@ -281,13 +295,17 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  showItemInFolderSupported: {
+    type: Boolean,
+    required: true,
+  },
 });
 
 const open = defineModel<boolean>('open', { required: true });
 const format = ref(props.defaultFormat);
 const dpi = ref(300);
 const transparentBackground = ref(false);
-const openFolder = ref(true);
+const openFolder = ref(props.showItemInFolderSupported);
 
 const musicXmlOptions = ref(new MusicXmlExporterOptions());
 const latexOptions = ref(new LatexExporterOptions());
@@ -297,19 +315,21 @@ const exportFormatIsImage = computed(() => {
 });
 
 function doExport() {
+  const shouldOpenFolder = props.showItemInFolderSupported && openFolder.value;
+
   if (format.value === ExportFormat.PNG) {
     emit('exportAsPng', {
       dpi: dpi.value,
-      openFolder: openFolder.value,
+      openFolder: shouldOpenFolder,
       transparentBackground: transparentBackground.value,
     });
   } else if (format.value === ExportFormat.SVG) {
-    emit('exportAsSvg', openFolder.value);
+    emit('exportAsSvg', shouldOpenFolder);
   } else if (format.value === ExportFormat.MusicXml) {
     emit('exportAsMusicXml', {
       options: musicXmlOptions.value,
       compressed: false,
-      openFolder: openFolder.value,
+      openFolder: shouldOpenFolder,
     });
   } else if (format.value === ExportFormat.Latex) {
     emit('exportAsLatex', {

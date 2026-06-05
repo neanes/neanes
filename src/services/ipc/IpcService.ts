@@ -159,6 +159,10 @@ export class IpcService implements IIpcService {
     );
   }
 
+  public isShowItemInFolderSupported(): boolean {
+    return true;
+  }
+
   public isShowMessageBoxSupported(): boolean {
     return true;
   }

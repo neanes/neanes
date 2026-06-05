@@ -5039,7 +5039,7 @@ async function exportAsPng(args: ExportAsPngSettings) {
         }
       }
 
-      if (args.openFolder) {
+      if (args.openFolder && ipcService.isShowItemInFolderSupported()) {
         await ipcService.showItemInFolder(
           reply.filePath.replace(/\.png$/, '-1.png'),
         );
@@ -5078,7 +5078,7 @@ async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
     selectedWorkspace.value,
     musicXmlExporter.export(score.value, args.options),
     args.compressed,
-    args.openFolder,
+    args.openFolder && ipcService.isShowItemInFolderSupported(),
   );
 
   closeExportDialog();
@@ -6833,6 +6833,7 @@ function renderTabLabel(tab: Tab) {
       v-model:open="exportDialogIsOpen"
       :loading="exportInProgress"
       :default-format="exportFormat"
+      :show-item-in-folder-supported="ipcService.isShowItemInFolderSupported()"
       @export-as-png="exportAsPng"
       @export-as-music-xml="exportAsMusicXml"
       @export-as-latex="exportAsLatex"

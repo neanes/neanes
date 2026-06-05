@@ -41,6 +41,8 @@ export interface IIpcService {
 
   showItemInFolder(path: string): Promise<void>;
 
+  isShowItemInFolderSupported(): boolean;
+
   isShowMessageBoxSupported(): boolean;
 
   getSystemFonts(): Promise<string[]>;

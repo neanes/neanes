@@ -155,22 +155,44 @@ function resyncInput() {
 
 const inputTextLength = computed(() => {
   const value = displayValue.value;
+  let length: number;
 
   if (value == null) {
-    return Math.max(String(attrs.placeholder ?? '').length, 1);
+    length = Math.max(String(attrs.placeholder ?? '').length, 1);
+  } else {
+    length = Math.max(formatDisplayValue(value).length, 1);
   }
 
-  return Math.max(
-    new Intl.NumberFormat(undefined, resolvedFormatOptions.value).format(value)
-      .length,
-    1,
-  );
+  if (negativeValuesAreAllowed.value && (value == null || value >= 0)) {
+    length += negativeSignLength.value;
+  }
+
+  return length;
 });
 
 const inputStyle = computed<StyleValue>(() => [
   attrs.style as StyleValue,
   { '--input-unit-width': `calc(${inputTextLength.value}ch + 3.5rem)` },
 ]);
+
+const negativeValuesAreAllowed = computed(
+  () => props.min == null || props.min < 0,
+);
+
+const negativeSignLength = computed(() => {
+  const formatter = new Intl.NumberFormat(
+    undefined,
+    resolvedFormatOptions.value,
+  );
+
+  return Math.max(formatter.format(-1).length - formatter.format(1).length, 0);
+});
+
+function formatDisplayValue(value: number) {
+  return new Intl.NumberFormat(undefined, resolvedFormatOptions.value).format(
+    value,
+  );
+}
 
 function clampDisplayValue(value: number) {
   if (props.min != null && value < props.min) {

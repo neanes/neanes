@@ -340,6 +340,30 @@ const noteVisualCollisionPairs: NoteVisualCollisionPair[] = [
       TimeNeume.Klasma_Top,
     ],
   },
+
+  {
+    left: [
+      Fthora.DiatonicNiLow_Top,
+      Fthora.DiatonicPa_Top,
+      Fthora.DiatonicVou_Top,
+      Fthora.DiatonicGa_Top,
+      Fthora.DiatonicThi_Top,
+      Fthora.DiatonicKe_Top,
+      Fthora.DiatonicZo_Top,
+      Fthora.DiatonicNiHigh_Top,
+      Fthora.HardChromaticPa_Top,
+      Fthora.HardChromaticThi_Top,
+      Fthora.SoftChromaticPa_Top,
+      Fthora.SoftChromaticThi_Top,
+      Fthora.Enharmonic_Top,
+      Fthora.Zygos_Top,
+      Fthora.Kliton_Top,
+      Fthora.Spathi_Top,
+      Fthora.GeneralSharp_Top,
+      Fthora.GeneralFlat_Top,
+    ],
+    right: [TimeNeume.Klasma_Top],
+  },
 ];
 
 interface LineBreakSolution {
@@ -2398,7 +2422,7 @@ export class LayoutService {
       pageSetup,
       measureBarWidthMap,
       rightMarks,
-      rightMarks.size === 0,
+      true,
     );
 
     return (

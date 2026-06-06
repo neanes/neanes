@@ -49,12 +49,18 @@
         :model-value="styleValues"
         @update:model-value="onStyleValuesChanged"
       >
-        <ToggleGroupItem value="bold" class="icon-btn" aria-label="Toggle bold">
+        <ToggleGroupItem
+          value="bold"
+          class="icon-btn"
+          :class="{ selected: bold }"
+          aria-label="Toggle bold"
+        >
           <PhTextB class="h-4 w-4" />
         </ToggleGroupItem>
         <ToggleGroupItem
           value="italic"
           class="icon-btn"
+          :class="{ selected: italic }"
           aria-label="Toggle italic"
         >
           <PhTextItalic class="h-4 w-4" />
@@ -62,6 +68,7 @@
         <ToggleGroupItem
           value="underline"
           class="icon-btn"
+          :class="{ selected: underline }"
           aria-label="Toggle underline"
         >
           <PhTextUnderline class="h-4 w-4" />
@@ -242,7 +249,8 @@ function onStyleValuesChanged(value: unknown) {
 }
 
 .icon-btn.selected,
-.icon-btn[data-state='on'] {
+.icon-btn[data-state='on'],
+.icon-btn[aria-pressed='true'] {
   background: var(--color-legacy-chrome-selected);
 }
 

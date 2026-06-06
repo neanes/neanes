@@ -65,6 +65,7 @@
         v-if="!element.useDefaultStyle"
         value="bold"
         class="icon-btn"
+        :class="{ selected: element.bold }"
         aria-label="Toggle bold"
       >
         <PhTextB class="h-4 w-4" />
@@ -73,6 +74,7 @@
         v-if="!element.useDefaultStyle"
         value="italic"
         class="icon-btn"
+        :class="{ selected: element.italic }"
         aria-label="Toggle italic"
       >
         <PhTextItalic class="h-4 w-4" />
@@ -80,6 +82,7 @@
       <ToggleGroupItem
         value="underline"
         class="icon-btn"
+        :class="{ selected: element.underline }"
         aria-label="Toggle underline"
       >
         <PhTextUnderline class="h-4 w-4" />
@@ -96,21 +99,39 @@
         <AppTooltip
           :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
         >
-          <ToggleGroupItem :value="TextBoxAlignment.Left" class="icon-btn">
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Left"
+            class="icon-btn"
+            :class="{
+              selected: element.alignment === TextBoxAlignment.Left,
+            }"
+          >
             <PhTextAlignLeft class="h-4 w-4" />
           </ToggleGroupItem>
         </AppTooltip>
         <AppTooltip
           :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
         >
-          <ToggleGroupItem :value="TextBoxAlignment.Center" class="icon-btn">
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Center"
+            class="icon-btn"
+            :class="{
+              selected: element.alignment === TextBoxAlignment.Center,
+            }"
+          >
             <PhTextAlignCenter class="h-4 w-4" />
           </ToggleGroupItem>
         </AppTooltip>
         <AppTooltip
           :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
         >
-          <ToggleGroupItem :value="TextBoxAlignment.Right" class="icon-btn">
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Right"
+            class="icon-btn"
+            :class="{
+              selected: element.alignment === TextBoxAlignment.Right,
+            }"
+          >
             <PhTextAlignRight class="h-4 w-4" />
           </ToggleGroupItem>
         </AppTooltip>
@@ -403,7 +424,9 @@ const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
   background: revert;
 }
 
-.icon-btn[data-state='on'] {
+.icon-btn.selected,
+.icon-btn[data-state='on'],
+.icon-btn[aria-pressed='true'] {
   background: var(--color-legacy-chrome-selected);
 }
 

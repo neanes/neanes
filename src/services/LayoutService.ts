@@ -382,7 +382,10 @@ const noteVisualCollisionPairs: NoteVisualCollisionPair[] = [
       GorgonNeume.TrigorgonDottedLeft2,
       GorgonNeume.TrigorgonDottedRight,
     ],
-    right: QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+    right: [
+      QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+      QuantitativeNeume.OligonPlusIsonPlusKentemata,
+    ],
   },
 ];
 

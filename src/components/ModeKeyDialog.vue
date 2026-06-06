@@ -27,6 +27,7 @@
               :value="mode.value"
               class="min-h-9 w-full flex-none justify-start whitespace-normal text-left"
             >
+              <component :is="mode.icon" />
               {{ $t(mode.labelSelector, { ns: 'model' }) }}
             </TabsTrigger>
           </TabsList>
@@ -104,6 +105,7 @@
           :disabled="selectedTemplateId == null"
           @click="updateModeKey"
         >
+          <PhCheck />
           {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
         </Button>
       </DialogFooter>
@@ -112,7 +114,18 @@
 </template>
 
 <script setup lang="ts">
-import type { PropType } from 'vue';
+import {
+  PhCheck,
+  PhNumberCircleEight,
+  PhNumberCircleFive,
+  PhNumberCircleFour,
+  PhNumberCircleOne,
+  PhNumberCircleSeven,
+  PhNumberCircleSix,
+  PhNumberCircleThree,
+  PhNumberCircleTwo,
+} from '@phosphor-icons/vue';
+import type { Component, PropType } from 'vue';
 import { computed, ref, watch } from 'vue';
 
 import ModeKey from '@/components/ModeKey.vue';
@@ -160,15 +173,47 @@ const props = defineProps({
 const open = defineModel<boolean>('open', { required: true });
 
 const modeOptions = [
-  { value: 1, labelSelector: ($) => $.model.mode.first },
-  { value: 2, labelSelector: ($) => $.model.mode.second },
-  { value: 3, labelSelector: ($) => $.model.mode.third },
-  { value: 4, labelSelector: ($) => $.model.mode.fourth },
-  { value: 5, labelSelector: ($) => $.model.mode.plagalFirst },
-  { value: 6, labelSelector: ($) => $.model.mode.plagalSecond },
-  { value: 7, labelSelector: ($) => $.model.mode.grave },
-  { value: 8, labelSelector: ($) => $.model.mode.plagalFourth },
-] satisfies { value: number; labelSelector: ModelSelector }[];
+  {
+    value: 1,
+    labelSelector: ($) => $.model.mode.first,
+    icon: PhNumberCircleOne,
+  },
+  {
+    value: 2,
+    labelSelector: ($) => $.model.mode.second,
+    icon: PhNumberCircleTwo,
+  },
+  {
+    value: 3,
+    labelSelector: ($) => $.model.mode.third,
+    icon: PhNumberCircleThree,
+  },
+  {
+    value: 4,
+    labelSelector: ($) => $.model.mode.fourth,
+    icon: PhNumberCircleFour,
+  },
+  {
+    value: 5,
+    labelSelector: ($) => $.model.mode.plagalFirst,
+    icon: PhNumberCircleFive,
+  },
+  {
+    value: 6,
+    labelSelector: ($) => $.model.mode.plagalSecond,
+    icon: PhNumberCircleSix,
+  },
+  {
+    value: 7,
+    labelSelector: ($) => $.model.mode.grave,
+    icon: PhNumberCircleSeven,
+  },
+  {
+    value: 8,
+    labelSelector: ($) => $.model.mode.plagalFourth,
+    icon: PhNumberCircleEight,
+  },
+] satisfies { value: number; labelSelector: ModelSelector; icon: Component }[];
 
 const selectedMode = ref(props.element.mode);
 const selectedTemplateId = ref<number | null>(null);

@@ -96,33 +96,21 @@
         <AppTooltip
           :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
         >
-          <ToggleGroupItem
-            :value="TextBoxAlignment.Left"
-            class="icon-btn"
-            :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-          >
+          <ToggleGroupItem :value="TextBoxAlignment.Left" class="icon-btn">
             <PhTextAlignLeft class="h-4 w-4" />
           </ToggleGroupItem>
         </AppTooltip>
         <AppTooltip
           :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
         >
-          <ToggleGroupItem
-            :value="TextBoxAlignment.Center"
-            class="icon-btn"
-            :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-          >
+          <ToggleGroupItem :value="TextBoxAlignment.Center" class="icon-btn">
             <PhTextAlignCenter class="h-4 w-4" />
           </ToggleGroupItem>
         </AppTooltip>
         <AppTooltip
           :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
         >
-          <ToggleGroupItem
-            :value="TextBoxAlignment.Right"
-            class="icon-btn"
-            :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-          >
+          <ToggleGroupItem :value="TextBoxAlignment.Right" class="icon-btn">
             <PhTextAlignRight class="h-4 w-4" />
           </ToggleGroupItem>
         </AppTooltip>
@@ -415,7 +403,6 @@ const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
   background: revert;
 }
 
-.icon-btn.selected,
 .icon-btn[data-state='on'] {
   background: var(--color-legacy-chrome-selected);
 }

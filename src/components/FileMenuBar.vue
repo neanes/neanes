@@ -13,9 +13,11 @@
         </MenubarTrigger>
         <MenubarContent class="bg-legacy-chrome-menu-surface">
           <MenubarItem @select="onClickNew">
+            <PhFilePlus />
             {{ $t(($) => $.menu.file.new, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickOpen">
+            <PhFolderOpen />
             {{ $t(($) => $.menu.file.open, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSub>
@@ -23,6 +25,7 @@
               :class="openRecentIsEnabled ? undefined : disabledSubmenuClass"
               :disabled="!openRecentIsEnabled"
             >
+              <PhClockCounterClockwise />
               {{ $t(($) => $.menu.file.openRecent, { ns: 'menu' }) }}
             </MenubarSubTrigger>
             <MenubarSubContent
@@ -40,51 +43,64 @@
           </MenubarSub>
           <MenubarSub>
             <MenubarSubTrigger>
+              <PhTrayArrowDown />
               {{ $t(($) => $.menu.file.import, { ns: 'menu' }) }}
             </MenubarSubTrigger>
             <MenubarSubContent class="bg-legacy-chrome-menu-surface">
               <MenubarItem @select="onClickImportOcr">
+                <PhFileText />
                 {{ $t(($) => $.menu.file.importFromOcr, { ns: 'menu' }) }}
               </MenubarItem>
             </MenubarSubContent>
           </MenubarSub>
           <MenubarItem @select="onClickSave">
+            <PhFloppyDisk />
             {{ $t(($) => $.menu.file.save, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickSaveAs">
+            <PhFloppyDiskBack />
             {{ $t(($) => $.menu.file.saveAs, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem @select="onClickPageSetup">
+            <PhScroll />
             {{ $t(($) => $.menu.file.pageSetup, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSub>
             <MenubarSubTrigger>
+              <PhExport />
               {{ $t(($) => $.menu.file.exportAs, { ns: 'menu' }) }}
             </MenubarSubTrigger>
             <MenubarSubContent class="bg-legacy-chrome-menu-surface">
               <MenubarItem @select="onClickExportAsHtml">
+                <PhFileHtml />
                 {{ $t(($) => $.menu.file.exportAsHtml, { ns: 'menu' }) }}
               </MenubarItem>
               <MenubarItem @select="onClickExportAsMusicXml">
+                <PhFileCode />
                 {{ $t(($) => $.menu.file.exportAsMusicXml, { ns: 'menu' }) }}
               </MenubarItem>
               <MenubarItem @select="onClickExportAsLatex">
+                <PhFileText />
                 {{ $t(($) => $.menu.file.exportAsLatex, { ns: 'menu' }) }}
               </MenubarItem>
               <MenubarItem @select="onClickExportAsImage">
+                <PhFileImage />
                 {{ $t(($) => $.menu.file.exportAsImage, { ns: 'menu' }) }}
               </MenubarItem>
             </MenubarSubContent>
           </MenubarSub>
           <MenubarItem @select="onClickPrint">
+            <PhPrinter />
             {{ $t(($) => $.menu.file.print, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem @select="onClickClose">
+            <PhX />
             {{ $t(($) => $.menu.file.close, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickCloseOthers">
+            <PhXCircle />
             {{ $t(($) => $.menu.file.closeOthers, { ns: 'menu' }) }}
           </MenubarItem>
         </MenubarContent>
@@ -96,22 +112,28 @@
         </MenubarTrigger>
         <MenubarContent class="bg-legacy-chrome-menu-surface">
           <MenubarItem @select="onClickUndo">
+            <PhArrowCounterClockwise />
             {{ $t(($) => $.menu.edit.undo, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickRedo">
+            <PhArrowClockwise />
             {{ $t(($) => $.menu.edit.redo, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem @select="onClickCut">
+            <PhScissors />
             {{ $t(($) => $.menu.edit.cut, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickCopy">
+            <PhCopy />
             {{ $t(($) => $.menu.edit.copy, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickCopyAsHtml">
+            <PhFileHtml />
             {{ $t(($) => $.menu.edit.copyAsHtml, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickPaste">
+            <PhClipboardText />
             {{ $t(($) => $.menu.edit.paste, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickPasteWithLyrics">
@@ -119,21 +141,26 @@
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem @select="onClickCopyFormat">
+            <PhPaintBrush />
             {{ $t(($) => $.menu.edit.copyFormat, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickPasteFormat">
+            <PhPaintBucket />
             {{ $t(($) => $.menu.edit.pasteFormat, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem @select="onClickFind">
+            <PhMagnifyingGlass />
             {{ $t(($) => $.menu.edit.find, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem @select="onClickLyrics">
+            <PhTextT />
             {{ $t(($) => $.menu.edit.lyrics, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem @select="onClickPreferences">
+            <PhGearFine />
             {{ $t(($) => $.menu.edit.preferences, { ns: 'menu' }) }}
           </MenubarItem>
         </MenubarContent>
@@ -145,42 +172,53 @@
         </MenubarTrigger>
         <MenubarContent class="bg-legacy-chrome-menu-surface">
           <MenubarItem @select="onClickAddAlternateLine">
+            <PhMusicNotesPlus />
             {{ $t(($) => $.menu.insert.alternateLine, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddAnnotation">
+            <PhNotePencil />
             {{ $t(($) => $.menu.insert.annotation, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddDropCapBefore">
+            <PhArticleNyTimes />
             {{ $t(($) => $.menu.insert.dropCapBefore, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddDropCapAfter">
+            <PhArticleNyTimes />
             {{ $t(($) => $.menu.insert.dropCapAfter, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddTextBox">
+            <PhTextbox />
             {{ $t(($) => $.menu.insert.textBox, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddRichTextBox">
+            <PhTextAa />
             {{ $t(($) => $.menu.insert.richTextBox, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddInlineTextBox">
             {{ $t(($) => $.menu.insert.inlineTextBox, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddModeKey">
+            <PhWaveSine />
             {{ $t(($) => $.menu.insert.modeKey, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddImage">
+            <PhImageSquare />
             {{ $t(($) => $.menu.insert.image, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
           <MenubarSub>
             <MenubarSubTrigger>
+              <PhBookOpenText />
               {{ $t(($) => $.menu.insert.headersAndFooters, { ns: 'menu' }) }}
             </MenubarSubTrigger>
             <MenubarSubContent class="bg-legacy-chrome-menu-surface">
               <MenubarItem @select="onClickAddHeader">
+                <PhRowsPlusTop />
                 {{ $t(($) => $.menu.insert.header, { ns: 'menu' }) }}
               </MenubarItem>
               <MenubarItem @select="onClickAddFooter">
+                <PhRowsPlusBottom />
                 {{ $t(($) => $.menu.insert.footer, { ns: 'menu' }) }}
               </MenubarItem>
             </MenubarSubContent>
@@ -194,6 +232,7 @@
         </MenubarTrigger>
         <MenubarContent class="bg-legacy-chrome-menu-surface">
           <MenubarItem @select="onClickCopyElementLink">
+            <PhLinkSimple />
             {{ $t(($) => $.menu.tools.copyElementLink, { ns: 'menu' }) }}
           </MenubarItem>
         </MenubarContent>
@@ -205,17 +244,21 @@
         </MenubarTrigger>
         <MenubarContent class="bg-legacy-chrome-menu-surface">
           <MenubarItem @select="onClickGuide">
+            <PhBookOpen />
             {{ $t(($) => $.menu.help.guide, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem @select="onClickRequestFeature">
+            <PhLightbulb />
             {{ $t(($) => $.menu.help.requestAFeature, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickReportIssue">
+            <PhBug />
             {{ $t(($) => $.menu.help.reportAnIssue, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem @select="onClickAbout">
+            <PhInfo />
             {{ $t(($) => $.menu.help.about, { ns: 'menu' }) }}
           </MenubarItem>
         </MenubarContent>
@@ -247,6 +290,48 @@
 </template>
 
 <script setup lang="ts">
+import {
+  PhArrowClockwise,
+  PhArrowCounterClockwise,
+  PhArticleNyTimes,
+  PhBookOpen,
+  PhBookOpenText,
+  PhBug,
+  PhClipboardText,
+  PhClockCounterClockwise,
+  PhCopy,
+  PhExport,
+  PhFileCode,
+  PhFileHtml,
+  PhFileImage,
+  PhFilePlus,
+  PhFileText,
+  PhFloppyDisk,
+  PhFloppyDiskBack,
+  PhFolderOpen,
+  PhGearFine,
+  PhImageSquare,
+  PhInfo,
+  PhLightbulb,
+  PhLinkSimple,
+  PhMagnifyingGlass,
+  PhMusicNotesPlus,
+  PhNotePencil,
+  PhPaintBrush,
+  PhPaintBucket,
+  PhPrinter,
+  PhRowsPlusBottom,
+  PhRowsPlusTop,
+  PhScissors,
+  PhScroll,
+  PhTextAa,
+  PhTextbox,
+  PhTextT,
+  PhTrayArrowDown,
+  PhWaveSine,
+  PhX,
+  PhXCircle,
+} from '@phosphor-icons/vue';
 import JSZip from 'jszip';
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 

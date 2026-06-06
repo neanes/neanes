@@ -183,6 +183,7 @@
           class="h-auto min-h-8 max-w-full whitespace-normal text-center"
           @click="resetToSystemDefaults"
         >
+          <PhArrowCounterClockwise />
           {{ $t(($) => $.dialog.common.useSystemDefault, { ns: 'dialog' }) }}
         </Button>
         <Button
@@ -190,6 +191,7 @@
           form="editor-preferences-form"
           class="h-auto min-h-8 max-w-full whitespace-normal text-center"
         >
+          <PhCheck />
           {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
         </Button>
       </DialogFooter>
@@ -198,6 +200,7 @@
 </template>
 
 <script setup lang="ts">
+import { PhArrowCounterClockwise, PhCheck } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';

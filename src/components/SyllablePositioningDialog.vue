@@ -349,6 +349,7 @@
           </Button>
         </DialogClose>
         <Button type="submit" form="syllable-positioning-form">
+          <PhCheck />
           {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
         </Button>
       </DialogFooter>
@@ -357,6 +358,7 @@
 </template>
 
 <script setup lang="ts">
+import { PhCheck } from '@phosphor-icons/vue';
 import type { SelectorParam } from 'i18next';
 import type { PropType, StyleValue } from 'vue';
 import { computed, ref } from 'vue';

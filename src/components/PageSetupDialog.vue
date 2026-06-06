@@ -32,6 +32,7 @@
                 :value="section.value"
                 class="min-h-9 w-full flex-none justify-start whitespace-normal text-left"
               >
+                <component :is="section.icon" />
                 {{ $t(section.labelSelector, { ns: 'dialog' }) }}
               </TabsTrigger>
             </TabsList>
@@ -1618,6 +1619,7 @@
                         variant="outline"
                         @click="changeNeumeColorInBulk"
                       >
+                        <PhPaintBucket />
                         {{
                           $t(($) => $.dialog.pageSetup.applyColor, {
                             ns: 'dialog',
@@ -1671,12 +1673,15 @@
           </Button>
         </DialogClose>
         <Button variant="outline" type="button" @click="saveAsDefault">
+          <PhFloppyDisk />
           {{ $t(($) => $.dialog.common.setAsDefault, { ns: 'dialog' }) }}
         </Button>
         <Button variant="outline" type="button" @click="resetToSystemDefaults">
+          <PhArrowCounterClockwise />
           {{ $t(($) => $.dialog.common.useSystemDefault, { ns: 'dialog' }) }}
         </Button>
         <Button type="submit" form="page-setup-form">
+          <PhCheck />
           {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
         </Button>
       </DialogFooter>
@@ -1685,8 +1690,25 @@
 </template>
 
 <script setup lang="ts">
+import {
+  PhArrowCounterClockwise,
+  PhArrowsInLineHorizontal,
+  PhArticleNyTimes,
+  PhBookOpenText,
+  PhCheck,
+  PhFile,
+  PhFloppyDisk,
+  PhGearFine,
+  PhMusicNotes,
+  PhPaintBucket,
+  PhPalette,
+  PhSplitHorizontal,
+  PhTextbox,
+  PhTextT,
+  PhWaveSine,
+} from '@phosphor-icons/vue';
 import type { SelectorParam } from 'i18next';
-import type { PropType } from 'vue';
+import type { Component, PropType } from 'vue';
 import { computed, ref } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
@@ -1882,29 +1904,65 @@ const props = defineProps({
 const open = defineModel<boolean>('open', { required: true });
 
 const sections = [
-  { value: 'pageSize', labelSelector: ($) => $.dialog.pageSetup.pageSize },
-  { value: 'margins', labelSelector: ($) => $.dialog.pageSetup.margins },
-  { value: 'spacing', labelSelector: ($) => $.dialog.pageSetup.spacing },
+  {
+    value: 'pageSize',
+    labelSelector: ($) => $.dialog.pageSetup.pageSize,
+    icon: PhFile,
+  },
+  {
+    value: 'margins',
+    labelSelector: ($) => $.dialog.pageSetup.margins,
+    icon: PhArrowsInLineHorizontal,
+  },
+  {
+    value: 'spacing',
+    labelSelector: ($) => $.dialog.pageSetup.spacing,
+    icon: PhSplitHorizontal,
+  },
   {
     value: 'headersAndFooters',
     labelSelector: ($) => $.dialog.pageSetup.headersAndFooters,
+    icon: PhBookOpenText,
   },
   {
     value: 'miscellaneous',
     labelSelector: ($) => $.dialog.pageSetup.miscellaneous,
+    icon: PhGearFine,
   },
-  { value: 'dropCaps', labelSelector: ($) => $.dialog.pageSetup.dropCaps },
-  { value: 'lyrics', labelSelector: ($) => $.dialog.pageSetup.lyrics },
-  { value: 'textBoxes', labelSelector: ($) => $.dialog.pageSetup.textBoxes },
-  { value: 'modeKeys', labelSelector: ($) => $.dialog.pageSetup.modeKeys },
-  { value: 'neumes', labelSelector: ($) => $.dialog.pageSetup.neumes },
+  {
+    value: 'dropCaps',
+    labelSelector: ($) => $.dialog.pageSetup.dropCaps,
+    icon: PhArticleNyTimes,
+  },
+  {
+    value: 'lyrics',
+    labelSelector: ($) => $.dialog.pageSetup.lyrics,
+    icon: PhTextT,
+  },
+  {
+    value: 'textBoxes',
+    labelSelector: ($) => $.dialog.pageSetup.textBoxes,
+    icon: PhTextbox,
+  },
+  {
+    value: 'modeKeys',
+    labelSelector: ($) => $.dialog.pageSetup.modeKeys,
+    icon: PhWaveSine,
+  },
+  {
+    value: 'neumes',
+    labelSelector: ($) => $.dialog.pageSetup.neumes,
+    icon: PhMusicNotes,
+  },
   {
     value: 'neumeStyles',
     labelSelector: ($) => $.dialog.pageSetup.neumeStyles,
+    icon: PhPalette,
   },
 ] as const satisfies ReadonlyArray<{
   value: string;
   labelSelector: DialogSelector;
+  icon: Component;
 }>;
 
 const pageSizeUnitOptions = [

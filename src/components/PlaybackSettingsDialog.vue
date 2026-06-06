@@ -29,6 +29,7 @@
               :value="section.value"
               class="min-h-9 w-full flex-none justify-start whitespace-normal text-left"
             >
+              <component :is="section.icon" />
               {{ $t(section.labelSelector, { ns: 'dialog' }) }}
             </TabsTrigger>
           </TabsList>
@@ -73,6 +74,7 @@
                   </div>
                 </FieldContent>
                 <Button variant="outline" type="button" @click="playTestTone">
+                  <PhSpeakerHigh />
                   {{
                     $t(($) => $.dialog.playbackSettings.test, { ns: 'dialog' })
                   }}
@@ -217,6 +219,7 @@
                           type="button"
                           @click="resetDefaultAttractionZoMoria"
                         >
+                          <PhArrowCounterClockwise />
                           {{
                             $t(($) => $.dialog.playbackSettings.reset, {
                               ns: 'dialog',
@@ -345,6 +348,7 @@
                     type="button"
                     @click="resetIntervals"
                   >
+                    <PhArrowCounterClockwise />
                     {{
                       $t(($) => $.dialog.playbackSettings.reset, {
                         ns: 'dialog',
@@ -419,6 +423,7 @@
                     type="button"
                     @click="resetAlterationMultipliers"
                   >
+                    <PhArrowCounterClockwise />
                     {{
                       $t(($) => $.dialog.playbackSettings.reset, {
                         ns: 'dialog',
@@ -489,6 +494,7 @@
                     type="button"
                     @click="resetAlterationMoria"
                   >
+                    <PhArrowCounterClockwise />
                     {{
                       $t(($) => $.dialog.playbackSettings.reset, {
                         ns: 'dialog',
@@ -514,8 +520,15 @@
 </template>
 
 <script setup lang="ts">
+import {
+  PhArrowCounterClockwise,
+  PhGearFine,
+  PhSlidersHorizontal,
+  PhSpeakerHigh,
+  PhWaveSine,
+} from '@phosphor-icons/vue';
 import type { SelectorParam } from 'i18next';
-import type { PropType } from 'vue';
+import type { Component, PropType } from 'vue';
 import { computed, ref } from 'vue';
 
 import { Button } from '@/components/ui/button';
@@ -573,18 +586,25 @@ const props = defineProps({
 const open = defineModel<boolean>('open', { required: true });
 
 const sections = [
-  { value: 'general', labelSelector: ($) => $.dialog.playbackSettings.general },
+  {
+    value: 'general',
+    labelSelector: ($) => $.dialog.playbackSettings.general,
+    icon: PhSlidersHorizontal,
+  },
   {
     value: 'intervals',
     labelSelector: ($) => $.dialog.playbackSettings.intervals,
+    icon: PhWaveSine,
   },
   {
     value: 'alterations',
     labelSelector: ($) => $.dialog.playbackSettings.alterations,
+    icon: PhGearFine,
   },
 ] as const satisfies ReadonlyArray<{
   value: string;
   labelSelector: DialogSelector;
+  icon: Component;
 }>;
 
 type DialogSelector = SelectorParam<'dialog'>;

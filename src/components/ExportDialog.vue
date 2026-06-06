@@ -27,12 +27,15 @@
                   <!-- <SelectItem :value="ExportFormat.HTML">HTML file</SelectItem>
                 <SelectItem :value="ExportFormat.PDF">PDF file</SelectItem> -->
                   <SelectItem :value="ExportFormat.PNG">
+                    <PhFilePng />
                     {{ $t(($) => $.dialog.export.pngImages, { ns: 'dialog' }) }}
                   </SelectItem>
                   <SelectItem :value="ExportFormat.MusicXml">
+                    <PhFileCode />
                     {{ $t(($) => $.dialog.export.musicXml, { ns: 'dialog' }) }}
                   </SelectItem>
                   <SelectItem :value="ExportFormat.Latex">
+                    <PhFileText />
                     {{ $t(($) => $.dialog.export.latex, { ns: 'dialog' }) }}
                   </SelectItem>
                   <!-- <SelectItem :value="ExportFormat.SVG">SVG images</SelectItem> -->
@@ -227,6 +230,7 @@
             </Button>
           </DialogClose>
           <Button type="submit" form="export-dialog-form">
+            <PhExport />
             {{ $t(($) => $.dialog.export.export, { ns: 'dialog' }) }}
           </Button>
         </template>
@@ -236,6 +240,12 @@
 </template>
 
 <script setup lang="ts">
+import {
+  PhExport,
+  PhFileCode,
+  PhFilePng,
+  PhFileText,
+} from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 

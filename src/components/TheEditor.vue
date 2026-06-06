@@ -2,10 +2,14 @@
 import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
 
 import {
+  PhArrowLineLeft,
+  PhArrowLineRight,
   PhFile,
   PhParagraph,
   PhTextAlignCenter,
   PhTextAlignJustify,
+  PhX,
+  PhXCircle,
 } from '@phosphor-icons/vue';
 import { getFontEmbedCSS, toPng } from 'html-to-image';
 import i18next from 'i18next';
@@ -5832,6 +5836,7 @@ function renderTabLabel(tab: Tab) {
                 closeContextMenuWorkspaces(CloseWorkspacesDisposition.SELF)
               "
             >
+              <PhX />
               {{ $t(($) => $.menu.tab.close, { ns: 'menu' }) }}
             </ContextMenuItem>
             <ContextMenuItem
@@ -5839,6 +5844,7 @@ function renderTabLabel(tab: Tab) {
                 closeContextMenuWorkspaces(CloseWorkspacesDisposition.OTHERS)
               "
             >
+              <PhXCircle />
               {{ $t(($) => $.menu.tab.closeOthers, { ns: 'menu' }) }}
             </ContextMenuItem>
             <ContextMenuItem
@@ -5846,6 +5852,7 @@ function renderTabLabel(tab: Tab) {
                 closeContextMenuWorkspaces(CloseWorkspacesDisposition.LEFT)
               "
             >
+              <PhArrowLineLeft />
               {{ $t(($) => $.menu.tab.closeToTheLeft, { ns: 'menu' }) }}
             </ContextMenuItem>
             <ContextMenuItem
@@ -5853,6 +5860,7 @@ function renderTabLabel(tab: Tab) {
                 closeContextMenuWorkspaces(CloseWorkspacesDisposition.RIGHT)
               "
             >
+              <PhArrowLineRight />
               {{ $t(($) => $.menu.tab.closeToTheRight, { ns: 'menu' }) }}
             </ContextMenuItem>
           </ContextMenuContent>

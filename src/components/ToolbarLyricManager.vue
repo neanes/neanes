@@ -27,7 +27,16 @@
         }}
       </Button>
 
-      <span class="close" @click="$emit('close')">&#x2715;</span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        class="close"
+        @click="$emit('close')"
+      >
+        <PhX />
+        <span class="sr-only">Close</span>
+      </Button>
     </div>
     <Textarea
       class="mt-1 bg-background"
@@ -40,6 +49,8 @@
 </template>
 
 <script setup lang="ts">
+import { PhX } from '@phosphor-icons/vue';
+
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -78,9 +89,7 @@ defineProps({
 
 .close {
   cursor: default;
-  line-height: 1;
   margin-left: auto;
-  padding: 0.25rem;
 }
 
 .close:hover {

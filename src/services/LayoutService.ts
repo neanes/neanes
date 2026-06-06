@@ -278,7 +278,7 @@ const noteVisualCollisionPairs: NoteVisualCollisionPair[] = [
   // each matched pair is measured independently.
 
   {
-    left: VocalExpressionNeume.Antikenoma,
+    left: [VocalExpressionNeume.Antikenoma, VocalExpressionNeume.Psifiston],
     right: [
       Accidental.Sharp_2_Left,
       Accidental.Sharp_4_Left,

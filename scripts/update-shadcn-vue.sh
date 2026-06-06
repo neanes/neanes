@@ -65,7 +65,6 @@ main() {
 		breadcrumb
 		button
 		button-group
-		calendar
 		card
 		checkbox
 		collapsible
@@ -87,11 +86,9 @@ main() {
 		navigation-menu
 		number-field
 		pagination
-		pin-input
 		popover
 		progress
 		radio-group
-		range-calendar
 		resizable
 		scroll-area
 		select

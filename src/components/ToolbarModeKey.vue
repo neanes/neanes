@@ -223,6 +223,7 @@
       variant="secondary"
       @click="$emit('open-mode-key-dialog')"
     >
+      <PhMusicNotes data-icon="inline-start" />
       {{ $t(($) => $.toolbar.modeKey.changeKey, { ns: 'toolbar' }) }}
     </Button>
 
@@ -246,6 +247,7 @@
 <script setup lang="ts">
 import {
   PhAlignRight,
+  PhMusicNotes,
   PhTextAlignCenter,
   PhTextAlignLeft,
   PhTextAlignRight,

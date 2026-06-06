@@ -20,6 +20,7 @@
         variant="secondary"
         @click="$emit('assignAcceptsLyrics')"
       >
+        <PhFloppyDisk data-icon="inline-start" />
         {{
           $t(($) => $.toolbar.lyricManager.assignAcceptsLyrics, {
             ns: 'toolbar',
@@ -49,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhX } from '@phosphor-icons/vue';
+import { PhFloppyDisk, PhX } from '@phosphor-icons/vue';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';

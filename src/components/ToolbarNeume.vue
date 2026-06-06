@@ -594,6 +594,7 @@
         variant="secondary"
         @click="$emit('open-syllable-positioning-dialog')"
       >
+        <PhCrosshair data-icon="inline-start" />
         {{ $t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' }) }}
       </Button>
       <span class="space" />
@@ -702,6 +703,7 @@
 </template>
 
 <script setup lang="ts">
+import { PhCrosshair } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
 import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';

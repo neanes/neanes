@@ -272,7 +272,10 @@ interface NoteVisualCollisionPair {
 }
 
 const noteVisualCollisionPairs: NoteVisualCollisionPair[] = [
-  // Add dangerous directional pairs here. Examples:
+  // Extra note spacing is opt-in so ordinary marks do not globally widen every
+  // note boundary. List only known-dangerous mark/body pairs that need their
+  // ink bounds checked. Array entries are shorthand for separate alternatives;
+  // each matched pair is measured independently.
 
   {
     left: VocalExpressionNeume.Antikenoma,

@@ -271,9 +271,11 @@
           <ScrollArea class="h-full min-h-0 border">
             <FieldGroup class="p-4">
               <FieldSet
-                :data-invalid="intervalError ? true : undefined"
-                :aria-invalid="intervalError ? true : undefined"
-                :aria-describedby="intervalError ? intervalsErrorId : undefined"
+                :data-invalid="hasIntervalErrors ? true : undefined"
+                :aria-invalid="hasIntervalErrors ? true : undefined"
+                :aria-describedby="
+                  hasIntervalErrors ? intervalsErrorId : undefined
+                "
               >
                 <FieldLegend>
                   {{
@@ -337,9 +339,9 @@
                     </FieldContent>
                   </Field>
                   <FieldError
-                    v-if="intervalError"
+                    v-if="hasIntervalErrors"
                     :id="intervalsErrorId"
-                    :errors="[intervalError.message]"
+                    :errors="intervalErrorMessages"
                   />
                   <Button
                     variant="outline"
@@ -795,11 +797,15 @@ const alterationMoriaRows = [
 
 const form = ref<PlaybackOptions>(clonePlaybackOptions(props.options));
 const tuning = ref(getTuningFromFrequency(form.value.frequencyDi));
-const intervalError = ref<IntervalError | null>(null);
+const intervalErrors = ref<IntervalError[]>([]);
 const intervalsErrorId = 'playback-settings-dialog-intervals-error';
 
 const visibleIntervalRows = computed(() =>
   intervalRows.filter((row) => !row.requiresLegetos || form.value.useLegetos),
+);
+const hasIntervalErrors = computed(() => intervalErrors.value.length > 0);
+const intervalErrorMessages = computed(() =>
+  intervalErrors.value.map((error) => error.message),
 );
 
 const volumeIson = computed({
@@ -894,41 +900,40 @@ function onIntervalChanged(
 }
 
 function validateIntervals() {
-  intervalError.value = null;
+  const errors: IntervalError[] = [];
 
   if (!validateTetrachord(form.value.diatonicIntervals)) {
-    intervalError.value = {
+    errors.push({
       intervalsKey: 'diatonicIntervals',
       message: 'The diatonic intervals do not sum to 30.',
-    };
-    return;
+    });
   }
 
   if (!validateTetrachord(form.value.softChromaticIntervals)) {
-    intervalError.value = {
+    errors.push({
       intervalsKey: 'softChromaticIntervals',
       message: 'The soft chromatic intervals do not sum to 30.',
-    };
-    return;
+    });
   }
 
   if (!validateTetrachord(form.value.hardChromaticIntervals)) {
-    intervalError.value = {
+    errors.push({
       intervalsKey: 'hardChromaticIntervals',
       message: 'The hard chromatic intervals do not sum to 30.',
-    };
-    return;
+    });
   }
 
   if (
     form.value.useLegetos &&
     !validateTetrachord(form.value.legetosIntervals)
   ) {
-    intervalError.value = {
+    errors.push({
       intervalsKey: 'legetosIntervals',
       message: 'The legetos intervals do not sum to 30.',
-    };
+    });
   }
+
+  intervalErrors.value = errors;
 }
 
 function validateTetrachord(intervals: number[]) {
@@ -1052,7 +1057,9 @@ function getIntervalNoteLabelId(row: IntervalRow, index: number) {
 }
 
 function isIntervalRowInvalid(row: IntervalRow) {
-  return intervalError.value?.intervalsKey === row.intervalsKey;
+  return intervalErrors.value.some(
+    (error) => error.intervalsKey === row.intervalsKey,
+  );
 }
 
 function getAlterationMultiplierInputId(row: AlterationMultiplierRow) {

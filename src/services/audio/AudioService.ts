@@ -336,8 +336,10 @@ export class AudioService {
   }
 
   // For debugging
-  playScale(scale: number[]) {
+  async playScale(scale: number[]) {
     const synth = new Tone.Synth().toDestination();
+
+    await Tone.start();
 
     let currentFrequency = 261.63;
     let now = Tone.now();
@@ -351,14 +353,14 @@ export class AudioService {
   }
 
   playDiatonicScale() {
-    this.playScale(this.diatonicScale);
+    return this.playScale(this.diatonicScale);
   }
 
   playHardChromaticScale() {
-    this.playScale(this.hardChromaticScale);
+    return this.playScale(this.hardChromaticScale);
   }
 
   playSoftChromaticScale() {
-    this.playScale(this.softChromaticScale);
+    return this.playScale(this.softChromaticScale);
   }
 }

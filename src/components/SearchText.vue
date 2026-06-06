@@ -16,18 +16,19 @@
         })
       "
     >
-      <img src="@/assets/icons/arrow-up.svg" />
+      <PhArrowUp />
     </button>
     <button @click="$emit('search', { query })">
-      <img src="@/assets/icons/arrow-down.svg" />
+      <PhArrowDown />
     </button>
     <button @click="$emit('close')">
-      <img src="@/assets/icons/x.svg" />
+      <PhX />
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { PhArrowDown, PhArrowUp, PhX } from '@phosphor-icons/vue';
 import { onMounted, useTemplateRef } from 'vue';
 
 defineEmits(['close', 'search', 'update:query']);
@@ -55,19 +56,19 @@ defineExpose({ focus });
 .search-text-container {
   display: flex;
   justify-content: right;
-  background-color: #ddd;
+  background-color: var(--muted);
 }
 
 .search-text-container button {
   border: none;
-  background-color: darkgray;
+  background-color: var(--color-legacy-chrome-tab-action);
 }
 
 .search-text-container button:hover {
-  background-color: lightgray;
+  background-color: var(--color-legacy-chrome-menu-surface);
 }
 
-.search-text-container button img {
+.search-text-container button > svg {
   width: 1rem;
   height: 1rem;
 }

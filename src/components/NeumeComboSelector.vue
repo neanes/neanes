@@ -55,6 +55,6 @@ const combos: NeumeCombination[] = [
 }
 
 .row:hover {
-  background-color: aliceblue;
+  background-color: var(--color-legacy-chrome-hover);
 }
 </style>

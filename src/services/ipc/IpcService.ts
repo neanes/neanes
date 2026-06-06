@@ -5,7 +5,6 @@ import type {
   ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
-  OpenContextMenuForTabArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
@@ -153,15 +152,15 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public openContextMenuForTab(args: OpenContextMenuForTabArgs): void {
-    window.ipcRenderer.send(IpcRendererChannels.OpenContextMenuForTab, args);
-  }
-
   public async showItemInFolder(path: string) {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ShowItemInFolder,
       path,
     );
+  }
+
+  public isShowItemInFolderSupported(): boolean {
+    return true;
   }
 
   public isShowMessageBoxSupported(): boolean {

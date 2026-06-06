@@ -322,7 +322,7 @@ function handleMouseUp() {
 .annotation-container {
   position: absolute;
   white-space: nowrap;
-  z-index: 1000;
+  z-index: 42;
   cursor: default;
   padding: 0 10px;
   transform-origin: 0 0;

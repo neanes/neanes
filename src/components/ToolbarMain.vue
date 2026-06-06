@@ -1,93 +1,121 @@
 <template>
-  <div class="main-toolbar">
-    <button
-      class="entry-mode-btn"
-      :class="{ on: entryMode === EntryMode.Auto }"
-      @click="$emit('update:entryMode', EntryMode.Auto)"
+  <Toolbar class="main-toolbar h-auto w-full gap-0 border-0 p-1" loop>
+    <ToolbarToggleGroup
+      type="single"
+      :model-value="entryMode"
+      @update:model-value="onEntryModeChanged"
     >
-      {{ $t(($) => $.toolbar.main.auto, { ns: 'toolbar' }) }}
-    </button>
-    <button
-      class="entry-mode-btn"
-      :class="{ on: entryMode === EntryMode.Insert }"
-      @click="$emit('update:entryMode', EntryMode.Insert)"
-    >
-      {{ $t(($) => $.toolbar.main.insert, { ns: 'toolbar' }) }}
-    </button>
-    <button
-      class="entry-mode-btn"
-      :class="{ on: entryMode === EntryMode.Edit }"
-      @click="$emit('update:entryMode', EntryMode.Edit)"
-    >
-      {{ $t(($) => $.toolbar.main.single, { ns: 'toolbar' }) }}
-    </button>
+      <ToolbarToggleItem class="entry-mode-btn" :value="EntryMode.Auto">
+        {{ $t(($) => $.toolbar.main.auto, { ns: 'toolbar' }) }}
+      </ToolbarToggleItem>
+      <ToolbarToggleItem class="entry-mode-btn" :value="EntryMode.Insert">
+        {{ $t(($) => $.toolbar.main.insert, { ns: 'toolbar' }) }}
+      </ToolbarToggleItem>
+      <ToolbarToggleItem class="entry-mode-btn" :value="EntryMode.Edit">
+        {{ $t(($) => $.toolbar.main.single, { ns: 'toolbar' }) }}
+      </ToolbarToggleItem>
+    </ToolbarToggleGroup>
     <span class="space"></span>
-    <button
-      :title="martyriaTooltip"
-      class="neume-button martyria"
-      @click="$emit('add-auto-martyria')"
-    >
-      <img src="@/assets/icons/martyria.svg" />
-    </button>
-    <span class="space"></span>
+    <AppTooltip :tooltip="martyriaTooltip">
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="neume-button"
+        @click="$emit('add-auto-martyria')"
+      >
+        <img src="@/assets/icons/martyria.svg" />
+      </ToolbarButton>
+    </AppTooltip>
+    <ToolbarSeparator />
     <ButtonWithMenu
       direction="down"
       :options="tempoOptions"
-      :title="tempoTooltip"
+      :tooltip="tempoTooltip"
       img-size="28px"
       @select="$emit('add-tempo', $event)"
     />
-    <span class="space"></span>
-    <button
-      :title="$t(($) => $.toolbar.main.insertDropCapBefore, { ns: 'toolbar' })"
-      class="icon-btn"
-      @click="$emit('add-drop-cap')"
+    <ToolbarSeparator />
+    <AppTooltip
+      :tooltip="
+        $t(($) => $.toolbar.main.insertDropCapBefore, { ns: 'toolbar' })
+      "
     >
-      <img src="@/assets/icons/drop-cap.svg" width="24" height="24" />
-    </button>
-    <button
-      :title="$t(($) => $.toolbar.main.insertTextBox, { ns: 'toolbar' })"
-      class="icon-btn"
-      @click="$emit('add-text-box')"
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('add-drop-cap')"
+      >
+        <img src="@/assets/icons/drop-cap.svg" />
+      </ToolbarButton>
+    </AppTooltip>
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.main.insertTextBox, { ns: 'toolbar' })"
     >
-      <img src="@/assets/icons/text-box.svg" width="24" height="24" />
-    </button>
-    <button
-      :title="$t(($) => $.toolbar.main.insertTextBoxRich, { ns: 'toolbar' })"
-      class="icon-btn"
-      @click="$emit('add-text-box-rich')"
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('add-text-box')"
+      >
+        <img src="@/assets/icons/text-box.svg" />
+      </ToolbarButton>
+    </AppTooltip>
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.main.insertTextBoxRich, { ns: 'toolbar' })"
     >
-      <img src="@/assets/icons/text-box-rich.svg" width="24" height="24" />
-    </button>
-    <button
-      :title="$t(($) => $.toolbar.main.insertModeKey, { ns: 'toolbar' })"
-      class="icon-btn"
-      @click="$emit('add-mode-key')"
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('add-text-box-rich')"
+      >
+        <img src="@/assets/icons/text-box-rich.svg" />
+      </ToolbarButton>
+    </AppTooltip>
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.main.insertModeKey, { ns: 'toolbar' })"
     >
-      <img src="@/assets/icons/mode-key.svg" width="24" height="24" />
-    </button>
-    <button
-      :title="$t(($) => $.toolbar.main.insertImage, { ns: 'toolbar' })"
-      class="icon-btn"
-      @click="$emit('add-image')"
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('add-mode-key')"
+      >
+        <img src="@/assets/icons/mode-key.svg" />
+      </ToolbarButton>
+    </AppTooltip>
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.main.insertImage, { ns: 'toolbar' })"
     >
-      <img src="@/assets/icons/image-add.svg" width="24" height="24" />
-    </button>
-    <span class="space"></span>
-    <button
-      class="icon-btn line-break-btn"
-      :title="
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('add-image')"
+      >
+        <PhImageSquare weight="fill" />
+      </ToolbarButton>
+    </AppTooltip>
+    <ToolbarSeparator />
+    <AppTooltip
+      :tooltip="
         $t(($) => $.toolbar.main.insertOrRemoveLineBreakAfterSelectedElement, {
           ns: 'toolbar',
         })
       "
-      @click="$emit('toggle-line-break', LineBreakType.Left)"
     >
-      <img src="@/assets/icons/line-break.svg" width="24" height="24" />
-    </button>
-    <button
-      class="icon-btn line-break-btn"
-      :title="
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('toggle-line-break', LineBreakType.Left)"
+      >
+        <PhParagraph weight="fill" />
+      </ToolbarButton>
+    </AppTooltip>
+    <AppTooltip
+      :tooltip="
         $t(
           ($) =>
             $.toolbar.main.insertOrRemoveJustifiedLineBreakAfterSelectedElement,
@@ -96,13 +124,25 @@
           },
         )
       "
-      @click="$emit('toggle-line-break', LineBreakType.Justify)"
     >
-      <img src="@/assets/icons/line-break-justify.svg" width="24" height="24" />
-    </button>
-    <button
-      class="icon-btn line-break-btn"
-      :title="
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('toggle-line-break', LineBreakType.Justify)"
+      >
+        <svg viewBox="0 0 24 24">
+          <PhParagraph
+            size="24"
+            weight="fill"
+            transform="matrix(0.75 0 0 1 -2 0)"
+          />
+          <PhTextAlignJustify size="12" x="12" y="12" />
+        </svg>
+      </ToolbarButton>
+    </AppTooltip>
+    <AppTooltip
+      :tooltip="
         $t(
           ($) =>
             $.toolbar.main.insertOrRemoveCenteredLineBreakAfterSelectedElement,
@@ -111,38 +151,60 @@
           },
         )
       "
-      @click="$emit('toggle-line-break', LineBreakType.Center)"
     >
-      <img src="@/assets/icons/line-break-center.svg" width="24" height="24" />
-    </button>
-    <button
-      class="icon-btn"
-      :title="
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('toggle-line-break', LineBreakType.Center)"
+      >
+        <svg viewBox="0 0 24 24">
+          <PhParagraph
+            size="24"
+            weight="fill"
+            transform="matrix(0.75 0 0 1 -2 0)"
+          />
+          <PhTextAlignCenter size="12" x="12" y="12" />
+        </svg>
+      </ToolbarButton>
+    </AppTooltip>
+    <AppTooltip
+      :tooltip="
         $t(($) => $.toolbar.main.insertOrRemovePageBreakAfterSelectedElement, {
           ns: 'toolbar',
         })
       "
-      @click="$emit('toggle-page-break')"
     >
-      <img src="@/assets/icons/page-break.svg" width="24" height="24" />
-    </button>
-    <span class="space"></span>
-    <button
-      class="red icon-btn"
-      :title="
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('toggle-page-break')"
+      >
+        <PhFile />
+      </ToolbarButton>
+    </AppTooltip>
+    <ToolbarSeparator />
+    <AppTooltip
+      :tooltip="
         $t(($) => $.toolbar.main.deleteSelectedElement, { ns: 'toolbar' })
       "
-      @click="$emit('delete-selected-element')"
     >
-      <img src="@/assets/icons/delete.svg" width="24" height="24" />
-    </button>
-    <span class="space"></span>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('delete-selected-element')"
+      >
+        <PhTrash class="delete-icon" weight="duotone" />
+      </ToolbarButton>
+    </AppTooltip>
+    <ToolbarSeparator />
     <div class="zoom-container" tabindex="-1" @focusout="showZoomMenu = false">
-      <input
-        ref="zoomInput"
-        class="zoom"
-        :value="zoomDisplay"
-        @change="updateZoom(($event.target as HTMLInputElement).value)"
+      <Input
+        v-model="zoomText"
+        class="w-20 bg-background"
+        @change="updateZoom(zoomText)"
       />
       <span class="zoom-arrow" @click="showZoomMenu = !showZoomMenu"
         >&#x25BE;</span
@@ -162,66 +224,63 @@
         </div>
       </div>
     </div>
-    <span class="space" />
-    <span class="space" />
+    <ToolbarSeparator />
     <div class="audio-container">
-      <button class="icon-btn" @click="$emit('play-audio')">
-        <img
-          v-if="audioState === AudioState.Playing"
-          src="@/assets/icons/audio-pause.svg"
-          width="24"
-          height="24"
-        />
-        <img
-          v-else
-          src="@/assets/icons/audio-play.svg"
-          width="24"
-          height="24"
-        />
-      </button>
-      <button class="icon-btn config" @click="$emit('open-playback-settings')">
-        <img src="@/assets/icons/config.svg" width="32" height="32" />
-      </button>
-      <span class="divider"></span>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        :aria-label="
+          audioState === AudioState.Playing ? 'Pause audio' : 'Play audio'
+        "
+        @click="$emit('play-audio')"
+      >
+        <PhPause v-if="audioState === AudioState.Playing" weight="fill" />
+        <PhPlay v-else weight="fill" />
+      </ToolbarButton>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        aria-label="Playback settings"
+        @click="$emit('open-playback-settings')"
+      >
+        <PhGearFine />
+      </ToolbarButton>
+      <ToolbarSeparator />
 
       <span class="playback-time">{{ playbackTimeDisplay }}</span>
-      <span class="space" />
+      <ToolbarSeparator />
       <span class="label-bpm">BPM = {{ playbackBpmDisplay }}</span>
 
-      <span class="space" />
-      <label class="right-space">{{
+      <ToolbarSeparator />
+      <Label for="audio-speed-slider" class="mr-2">{{
         $t(($) => $.toolbar.main.speed, { ns: 'toolbar' })
-      }}</label>
-      <input
-        class="audio-speed-slider"
-        type="range"
-        min=".1"
-        max="3"
-        step=".05"
+      }}</Label>
+      <Slider
+        id="audio-speed-slider"
+        class="m-0.5 w-16"
+        :min="0.1"
+        :max="3"
+        :step="0.05"
         :disabled="audioState === AudioState.Playing"
-        :value="audioOptions.speed"
-        @input="
-          $emit(
-            'update:audioOptionsSpeed',
-            ($event.target as HTMLInputElement).value,
-          )
-        "
+        :model-value="[audioOptions.speed]"
+        @update:model-value="onAudioOptionsSpeedChanged"
       />
       <InputUnit
-        class="audio-speed"
+        id="audio-speed-input"
         unit="percent"
         :min="10"
         :max="300"
         :step="1"
-        :precision="0"
+        :format-options="fraction0FormatOptions"
         :model-value="audioOptions.speed"
         :disabled="audioState === AudioState.Playing"
         @update:model-value="$emit('update:audioOptionsSpeed', $event)"
       />
       <span>%</span>
     </div>
-    <span class="space"></span>
-    <span class="space"></span>
+    <ToolbarSeparator />
     <div class="page-number-container">
       {{
         $t(($) => $.toolbar.main.pageNumber, {
@@ -231,21 +290,46 @@
         })
       }}
     </div>
-  </div>
+  </Toolbar>
 </template>
 
 <script setup lang="ts">
+import {
+  PhFile,
+  PhGearFine,
+  PhImageSquare,
+  PhParagraph,
+  PhPause,
+  PhPlay,
+  PhTextAlignCenter,
+  PhTextAlignJustify,
+  PhTrash,
+} from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
+import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
-import { computed, nextTick, ref, useTemplateRef } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 
+import type { AppTooltipValue } from '@/components/AppTooltip.types';
+import AppTooltip from '@/components/AppTooltip.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import {
+  Toolbar,
+  ToolbarButton,
+  ToolbarSeparator,
+  ToolbarToggleGroup,
+  ToolbarToggleItem,
+} from '@/components/ui/toolbar';
 import { LineBreakType } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import { TempoSign } from '@/models/Neumes';
 import { AudioState } from '@/services/audio/AudioService';
 import type { PlaybackOptions } from '@/services/audio/PlaybackService';
 import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import { fraction0FormatOptions } from '@/utils/numberFormatOptions';
 
 import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
 import ButtonWithMenu from './ButtonWithMenu.vue';
@@ -349,12 +433,16 @@ const emit = defineEmits([
 
 const { t } = useTranslation();
 const showZoomMenu = ref(false);
-const zoomInput = useTemplateRef<HTMLInputElement>('zoomInput');
+const zoomText = ref('');
 const zoomOptions = ['50', '75', '90', '100', '125', '150', '200', '500'];
 
 const zoomDisplay = computed(() =>
   props.zoomToFit ? 'Fit' : (props.zoom * 100).toFixed(0) + '%',
 );
+
+// Keep the editable zoom field in sync with the canonical zoom display
+// whenever the zoom changes (e.g. via the zoom menu or external controls).
+watch(zoomDisplay, (value) => (zoomText.value = value), { immediate: true });
 
 const playbackTimeDisplay = computed(() => {
   // Round to the nearest tenth to eliminate floating point errors
@@ -371,16 +459,39 @@ const playbackTimeDisplay = computed(() => {
 
 const playbackBpmDisplay = computed(() => props.playbackBpm.toFixed(0));
 
+function onEntryModeChanged(value: AcceptableValue | AcceptableValue[]) {
+  if (isEntryMode(value)) {
+    emit('update:entryMode', value);
+  }
+}
+
+function isEntryMode(
+  value: AcceptableValue | AcceptableValue[],
+): value is EntryMode {
+  return (
+    typeof value === 'string' &&
+    Object.values(EntryMode).includes(value as EntryMode)
+  );
+}
+
+function onAudioOptionsSpeedChanged(value: number[] | undefined) {
+  emit('update:audioOptionsSpeed', value?.[0] ?? 0.1);
+}
+
 const martyriaTooltip = computed(
-  () =>
-    `${t(($) => $.toolbar.main.martyria, { ns: 'toolbar' })} (${props.neumeKeyboard.getMartyriaKeyTooltip()})`,
+  (): AppTooltipValue => ({
+    label: t(($) => $.toolbar.main.martyria, { ns: 'toolbar' }),
+    shortcut: props.neumeKeyboard.getMartyriaKeyTooltipKeys(),
+  }),
 );
 
 const tempoTooltip = computed(
-  () =>
-    `${t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' })} (${props.neumeKeyboard.generateTooltip(
+  (): AppTooltipValue => ({
+    label: t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' }),
+    shortcut: props.neumeKeyboard.generateTooltipKeys(
       props.neumeKeyboard.findMappingForNeume(TempoSign.VerySlow)!,
-    )})`,
+    ),
+  }),
 );
 
 function updateZoom(value: string) {
@@ -405,10 +516,11 @@ function updateZoom(value: string) {
 }
 
 function resetZoomInput() {
+  // Restore the canonical display after a commit. The watcher already handles
+  // the case where the zoom actually changed; this covers the case where it
+  // didn't (e.g. invalid input), where the watcher wouldn't fire.
   nextTick(() => {
-    if (zoomInput.value != null) {
-      zoomInput.value.value = zoomDisplay.value;
-    }
+    zoomText.value = zoomDisplay.value;
   });
 }
 </script>
@@ -416,66 +528,91 @@ function resetZoomInput() {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .main-toolbar {
-  display: flex;
-  align-items: center;
   flex-wrap: wrap;
-
-  background-color: lightgray;
-
-  padding: 0.25rem;
+  font-size: 16px;
+  background-color: var(--color-legacy-chrome-menu-surface);
 
   --btn-size: 32px;
 }
 
-.entry-mode-btn.on {
-  background-color: var(--btn-color-selected);
-}
-
-.red {
-  color: red;
-}
-
-.neume {
-  font-size: 25px;
-}
-
-.icon-btn {
-  height: var(--btn-size);
-  width: var(--btn-size);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-}
-
-.neume-button {
-  height: var(--btn-size);
-  width: var(--btn-size);
-
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  overflow: hidden;
-
-  user-select: none;
+.main-toolbar :deep(button:not(.entry-mode-btn)) {
+  font-size: inherit;
+  font-weight: normal;
 }
 
 .space {
   width: 16px;
 }
 
-.divider {
-  height: 32px;
-  border-right: 1px solid #666;
-  margin: 0 0.5rem;
+.entry-mode-btn {
+  all: revert;
 }
 
-.zoom {
-  width: 40px;
-  padding: 1px 2px;
-  font-size: 13px;
+.entry-mode-btn[data-state='on'] {
+  background-color: var(--color-legacy-chrome-selected);
+}
+
+.icon-btn,
+.neume-button,
+:deep(.menu-container > .neume-button) {
+  box-sizing: border-box;
+  height: var(--btn-size);
+  width: var(--btn-size);
+  appearance: auto;
+  background: revert;
+  border: revert;
+  border-radius: revert;
+  box-shadow: revert;
+  font-weight: revert;
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+  outline: revert;
+  padding: 0;
+  transition: revert;
+  user-select: none;
+}
+
+.icon-btn {
+  --btn-icon-size: 24px;
+}
+
+.icon-btn:hover,
+.neume-button:hover,
+:deep(.menu-container > .neume-button:hover) {
+  background: revert;
+}
+
+.neume-button > img,
+.neume-button > svg,
+:deep(.menu-container > .neume-button > img),
+:deep(.menu-container > .neume-button > svg) {
+  height: var(--btn-size);
+  max-width: none;
+  width: var(--btn-size);
+}
+
+.icon-btn > img,
+.icon-btn > svg {
+  height: var(--btn-icon-size, var(--btn-size));
+  max-width: none;
+  width: var(--btn-icon-size, var(--btn-size));
+}
+
+.delete-icon {
+  color: red;
+}
+
+.icon-btn[aria-disabled='true'],
+.icon-btn:disabled,
+.neume-button[aria-disabled='true'],
+:deep(.menu-container > .neume-button:disabled) {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .zoom-container {
@@ -490,9 +627,9 @@ function resetZoomInput() {
 
 .zoom-menu {
   position: absolute;
-  z-index: 999;
-  background-color: white;
-  border: 1px solid black;
+  z-index: 40;
+  background-color: var(--color-legacy-chrome-surface);
+  border: 1px solid var(--color-legacy-chrome-border);
 }
 
 .zoom-menu-item {
@@ -503,28 +640,16 @@ function resetZoomInput() {
 }
 
 .zoom-menu-item:hover {
-  background-color: aliceblue;
+  background-color: var(--color-legacy-chrome-hover);
 }
 
 .zoom-menu-separator {
-  border-top: 1px solid #666;
-}
-
-label.right-space {
-  margin-right: 0.5rem;
+  border-top: 1px solid var(--color-legacy-chrome-divider);
 }
 
 .audio-container {
   display: flex;
   align-items: center;
-}
-
-.audio-speed {
-  width: 2.5rem;
-}
-
-.audio-speed-slider {
-  width: 58px;
 }
 
 .playback-time {

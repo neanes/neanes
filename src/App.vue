@@ -1,5 +1,8 @@
 <template>
-  <router-view />
+  <TooltipProvider :delay-duration="500" :skip-delay-duration="0">
+    <router-view />
+  </TooltipProvider>
+  <Toaster />
   <div v-if="updateExists" class="update-notification">
     An update is available.
     <button class="ok" @click="refreshApp">Update</button>
@@ -9,6 +12,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const registration = ref<ServiceWorkerRegistration | null>(null);
 const updateExists = ref(false);
@@ -44,8 +50,6 @@ function refreshApp() {
 <style>
 :root {
   --zoom: 1;
-
-  --btn-color-selected: lightsteelblue;
 }
 
 #app {
@@ -192,32 +196,7 @@ button,
 input,
 select,
 textarea {
-  font-family: system-ui, Helvetica, Arial, sans-serif;
-}
-
-.ok-btn {
-  padding: 0.5rem;
-  border: none;
-  background-color: rgb(66, 139, 202);
-  color: white;
-  border-radius: 4px;
-}
-
-.ok-btn:hover {
-  background-color: rgb(81, 157, 223);
-}
-
-.neutral-btn,
-.cancel-btn {
-  padding: 0.5rem;
-  border: 1px solid black;
-  background-color: white;
-  border-radius: 4px;
-}
-
-.neutral-btn:hover,
-.cancel-btn:hover {
-  background-color: #f8fbff;
+  font-family: var(--font-sans);
 }
 </style>
 

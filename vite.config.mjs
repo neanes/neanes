@@ -1,6 +1,7 @@
 import { rmSync } from 'node:fs';
 
 import eslintPlugin from '@nabla/vite-plugin-eslint';
+import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
@@ -105,6 +106,7 @@ export default defineConfig(({ command, mode }) => {
           })
         : undefined,
       vue(),
+      tailwindcss(),
       process.env.VITE_ENABLE_DEV_TOOLS === 'true' ? VueDevTools() : undefined,
       eslintPlugin({
         eslintOptions: {

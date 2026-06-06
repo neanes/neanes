@@ -182,7 +182,7 @@ function clampToPageBounds() {
 .alternate-line-container {
   position: absolute;
   white-space: nowrap;
-  z-index: 1000;
+  z-index: 42;
   cursor: default;
   min-width: 10px;
   min-height: 10px;

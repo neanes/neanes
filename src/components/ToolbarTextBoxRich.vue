@@ -1,35 +1,35 @@
 <template>
   <div class="text-box-toolbar">
     <div class="form-group">
-      <input
+      <Checkbox
         id="toolbar-text-box-inline"
-        type="checkbox"
-        :checked="element.inline"
-        @change="
+        class="bg-background"
+        :model-value="element.inline"
+        @update:model-value="
           $emit('update', {
-            inline: ($event.target as HTMLInputElement).checked,
+            inline: $event === true,
           } as Partial<RichTextBoxElement>)
         "
       />
-      <label for="toolbar-text-box-inline">{{
+      <Label for="toolbar-text-box-inline" class="ml-2">{{
         $t(($) => $.toolbar.common.inline, { ns: 'toolbar' })
-      }}</label>
+      }}</Label>
     </div>
     <template v-if="element.inline">
       <span class="space" />
       <div class="form-group">
-        <label class="right-space">{{
+        <Label for="toolbar-rich-text-box-width" class="mr-2">{{
           $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
-        }}</label>
+        }}</Label>
         <InputUnit
-          class="text-box-input-width"
+          id="toolbar-rich-text-box-width"
           unit="pt"
           :nullable="true"
           :min="0.5"
           :max="maxWidth"
           :step="0.5"
           :model-value="element.customWidth"
-          :precision="1"
+          :format-options="fraction1FormatOptions"
           placeholder="fill"
           @update:model-value="
             $emit('update', {
@@ -40,17 +40,17 @@
       </div>
       <span class="space" />
       <div class="form-group">
-        <label class="right-space">{{
+        <Label for="toolbar-rich-text-box-offset-y-top" class="mr-2">{{
           $t(($) => $.toolbar.textbox.offsetYTop, { ns: 'toolbar' })
-        }}</label>
+        }}</Label>
         <InputUnit
-          class="text-box-input-width"
+          id="toolbar-rich-text-box-offset-y-top"
           unit="pt"
           :min="-maxHeight"
           :max="maxHeight"
           :step="0.5"
           :model-value="element.offsetYTop"
-          :precision="1"
+          :format-options="fraction1FormatOptions"
           @update:model-value="
             $emit('update', {
               offsetYTop: $event,
@@ -60,17 +60,17 @@
       </div>
       <span class="space"></span>
       <div class="form-group">
-        <label class="right-space">{{
+        <Label for="toolbar-rich-text-box-offset-y-bottom" class="mr-2">{{
           $t(($) => $.toolbar.textbox.offsetYBottom, { ns: 'toolbar' })
-        }}</label>
+        }}</Label>
         <InputUnit
-          class="text-box-input-width"
+          id="toolbar-rich-text-box-offset-y-bottom"
           unit="pt"
           :min="-maxHeight"
           :max="maxHeight"
           :step="0.5"
           :model-value="element.offsetYBottom"
-          :precision="1"
+          :format-options="fraction1FormatOptions"
           @update:model-value="
             $emit('update', {
               offsetYBottom: $event,
@@ -80,139 +80,180 @@
       </div>
       <span class="space" />
       <div class="form-group">
-        <input
+        <Checkbox
           id="toolbar-text-box-center-on-page"
-          type="checkbox"
-          :checked="element.centerOnPage"
-          @change="
+          class="bg-background"
+          :model-value="element.centerOnPage"
+          @update:model-value="
             $emit('update', {
-              centerOnPage: ($event.target as HTMLInputElement).checked,
+              centerOnPage: $event === true,
             } as Partial<RichTextBoxElement>)
           "
         />
-        <label for="toolbar-text-box-center-on-page">{{
+        <Label for="toolbar-text-box-center-on-page" class="ml-2">{{
           $t(($) => $.toolbar.textbox.centerOnPage, { ns: 'toolbar' })
-        }}</label>
+        }}</Label>
       </div>
     </template>
     <span class="divider" />
-    <div class="form-group">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
-      }}</label>
-      <InputUnit
-        class="text-box-input-width"
-        unit="pt"
-        :min="0"
-        :max="maxHeight"
-        :step="0.5"
-        :model-value="element.marginTop"
-        :precision="1"
-        @update:model-value="
-          $emit('update', { marginTop: $event } as Partial<RichTextBoxElement>)
-        "
-      />
-    </div>
+    <Label for="toolbar-rich-text-box-margin-top" class="mr-2">{{
+      $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
+    }}</Label>
+    <InputUnit
+      id="toolbar-rich-text-box-margin-top"
+      unit="pt"
+      :min="0"
+      :max="maxHeight"
+      :step="0.5"
+      :model-value="element.marginTop"
+      :format-options="fraction1FormatOptions"
+      @update:model-value="
+        $emit('update', { marginTop: $event } as Partial<RichTextBoxElement>)
+      "
+    />
     <span class="space"></span>
-    <div class="form-group">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
-      }}</label>
-      <InputUnit
-        class="text-box-input-width"
-        unit="pt"
-        :min="0"
-        :max="maxHeight"
-        :step="0.5"
-        :model-value="element.marginBottom"
-        :precision="1"
-        @update:model-value="
-          $emit('update', {
-            marginBottom: $event,
-          } as Partial<RichTextBoxElement>)
-        "
-      />
-    </div>
+    <Label for="toolbar-rich-text-box-margin-bottom" class="mr-2">{{
+      $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
+    }}</Label>
+    <InputUnit
+      id="toolbar-rich-text-box-margin-bottom"
+      unit="pt"
+      :min="0"
+      :max="maxHeight"
+      :step="0.5"
+      :model-value="element.marginBottom"
+      :format-options="fraction1FormatOptions"
+      @update:model-value="
+        $emit('update', {
+          marginBottom: $event,
+        } as Partial<RichTextBoxElement>)
+      "
+    />
     <span class="divider"></span>
     <div class="form-group">
-      <input
+      <Checkbox
         id="toolbar-text-box-mode-change"
-        type="checkbox"
-        :checked="element.modeChange"
-        @change="
+        class="bg-background"
+        :model-value="element.modeChange"
+        @update:model-value="
           $emit('update', {
-            modeChange: ($event.target as HTMLInputElement).checked,
+            modeChange: $event === true,
           } as Partial<RichTextBoxElement>)
         "
       />
-      <label for="toolbar-text-box-mode-change">{{
+      <Label for="toolbar-text-box-mode-change" class="ml-2">{{
         $t(($) => $.toolbar.textbox.modeChange, { ns: 'toolbar' })
-      }}</label>
+      }}</Label>
     </div>
     <template v-if="element.modeChange">
       <span class="space"></span>
       <div class="form-group">
-        <label class="right-space">{{
-          $t(($) => $.toolbar.martyria.note, { ns: 'toolbar' })
-        }}</label>
-        <select
-          :value="element.modeChangePhysicalNote"
-          @change="
+        <Label
+          for="toolbar-rich-text-box-mode-change-physical-note"
+          class="mr-2"
+          >{{ $t(($) => $.toolbar.martyria.note, { ns: 'toolbar' }) }}</Label
+        >
+        <Select
+          :model-value="element.modeChangePhysicalNote"
+          @update:model-value="
             $emit('update', {
-              modeChangePhysicalNote: ($event.target as HTMLInputElement).value,
+              modeChangePhysicalNote: $event,
             } as Partial<RichTextBoxElement>)
           "
         >
-          <option v-for="note in notes" :key="note.key" :value="note.key">
-            {{ $t(note.displayName, { ns: 'model' }) }}
-          </option>
-        </select>
+          <SelectTrigger
+            id="toolbar-rich-text-box-mode-change-physical-note"
+            class="bg-background"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem
+                v-for="note in notes"
+                :key="note.key"
+                :value="note.key"
+              >
+                {{ $t(note.displayName, { ns: 'model' }) }}
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
       <span class="space"></span>
       <div class="form-group">
-        <label class="right-space">{{
+        <Label for="toolbar-rich-text-box-mode-change-scale" class="mr-2">{{
           $t(($) => $.toolbar.martyria.scale, { ns: 'toolbar' })
-        }}</label>
-        <select
-          :value="element.modeChangeScale"
-          @change="
+        }}</Label>
+        <Select
+          :model-value="element.modeChangeScale"
+          @update:model-value="
             $emit('update', {
-              modeChangeScale: ($event.target as HTMLInputElement).value,
+              modeChangeScale: $event,
             } as Partial<RichTextBoxElement>)
           "
         >
-          <option v-for="scale in scales" :key="scale.key" :value="scale.key">
-            {{ $t(scale.displayName, { ns: 'model' }) }}
-          </option>
-        </select>
+          <SelectTrigger
+            id="toolbar-rich-text-box-mode-change-scale"
+            class="bg-background"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem
+                v-for="scale in scales"
+                :key="scale.key"
+                :value="scale.key"
+              >
+                {{ $t(scale.displayName, { ns: 'model' }) }}
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
       <span class="space"></span>
       <div class="form-group">
-        <label class="right-space">{{
-          $t(($) => $.toolbar.textbox.virtualNote, { ns: 'toolbar' })
-        }}</label>
-        <select
-          :value="element.modeChangeVirtualNote"
-          @change="
-            $emit('update', {
-              modeChangeVirtualNote: ($event.target as HTMLInputElement).value,
-            } as Partial<RichTextBoxElement>)
-          "
+        <Label
+          for="toolbar-rich-text-box-mode-change-virtual-note"
+          class="mr-2"
+          >{{
+            $t(($) => $.toolbar.textbox.virtualNote, { ns: 'toolbar' })
+          }}</Label
         >
-          <option value="">
-            {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
-          </option>
-          <option v-for="note in notes" :key="note.key" :value="note.key">
-            {{ $t(note.displayName, { ns: 'model' }) }}
-          </option>
-        </select>
+        <Select
+          :model-value="element.modeChangeVirtualNote || SELECT_NONE_VALUE"
+          @update:model-value="onModeChangeVirtualNoteChanged"
+        >
+          <SelectTrigger
+            id="toolbar-rich-text-box-mode-change-virtual-note"
+            class="bg-background"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem :value="SELECT_NONE_VALUE">
+                {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
+              </SelectItem>
+              <SelectItem
+                v-for="note in notes"
+                :key="note.key"
+                :value="note.key"
+              >
+                {{ $t(note.displayName, { ns: 'model' }) }}
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
       <span class="space"></span>
       <div class="form-group">
-        <label class="right-space">{{
+        <Label for="toolbar-rich-text-box-bpm" class="mr-2">{{
           $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
-        }}</label>
+        }}</Label>
         <InputBpm
+          id="toolbar-rich-text-box-bpm"
           :model-value="element.modeChangeBpm"
           @update:model-value="
             $emit('update', {
@@ -223,94 +264,109 @@
       </div>
       <span class="space"></span>
       <div class="form-group">
-        <input
+        <Checkbox
           id="toolbar-rich-text-box-ignore-attractions"
-          type="checkbox"
-          :checked="element.modeChangeIgnoreAttractions"
-          @change="
+          class="bg-background"
+          :model-value="element.modeChangeIgnoreAttractions"
+          @update:model-value="
             $emit('update', {
-              modeChangeIgnoreAttractions: ($event.target as HTMLInputElement)
-                .checked,
+              modeChangeIgnoreAttractions: $event === true,
             } as Partial<RichTextBoxElement>)
           "
         />
-        <label for="toolbar-rich-text-box-ignore-attractions">{{
+        <Label for="toolbar-rich-text-box-ignore-attractions" class="ml-2">{{
           $t(($) => $.toolbar.common.ignoreAttractions, { ns: 'toolbar' })
-        }}</label>
+        }}</Label>
       </div>
       <span class="space"></span>
       <div class="form-group">
-        <input
+        <Checkbox
           id="toolbar-rich-text-box-permanent-enharmonic-zo"
-          type="checkbox"
-          :checked="element.modeChangePermanentEnharmonicZo"
-          @change="
+          class="bg-background"
+          :model-value="element.modeChangePermanentEnharmonicZo"
+          @update:model-value="
             $emit('update', {
-              modeChangePermanentEnharmonicZo: (
-                $event.target as HTMLInputElement
-              ).checked,
+              modeChangePermanentEnharmonicZo: $event === true,
             } as Partial<RichTextBoxElement>)
           "
         />
-        <label for="toolbar-rich-text-box-permanent-enharmonic-zo">{{
-          $t(($) => $.toolbar.modeKey.permanentEnharmonicZo, { ns: 'toolbar' })
-        }}</label>
+        <Label
+          for="toolbar-rich-text-box-permanent-enharmonic-zo"
+          class="ml-2"
+          >{{
+            $t(($) => $.toolbar.modeKey.permanentEnharmonicZo, {
+              ns: 'toolbar',
+            })
+          }}</Label
+        >
       </div>
     </template>
     <span class="divider"></span>
     <div class="form-group">
-      <input
+      <Checkbox
         id="toolbar-text-box-rtl"
-        type="checkbox"
-        :checked="element.rtl"
-        @change="
+        class="bg-background"
+        :model-value="element.rtl"
+        @update:model-value="
           $emit('update', {
-            rtl: ($event.target as HTMLInputElement).checked,
+            rtl: $event === true,
           } as Partial<RichTextBoxElement>)
         "
       />
-      <label for="toolbar-text-box-rtl">{{
+      <Label for="toolbar-text-box-rtl" class="ml-2">{{
         $t(($) => $.toolbar.textbox.rtl, { ns: 'toolbar' })
-      }}</label>
+      }}</Label>
     </div>
     <span class="divider"></span>
     <div class="form-group">
-      <input
+      <Checkbox
         id="toolbar-text-box-scrollable"
-        type="checkbox"
-        :checked="element.scrollable"
-        @change="
+        class="bg-background"
+        :model-value="element.scrollable"
+        @update:model-value="
           $emit('update', {
-            scrollable: ($event.target as HTMLInputElement).checked,
+            scrollable: $event === true,
           } as Partial<RichTextBoxElement>)
         "
       />
-      <label for="toolbar-text-box-scrollable">{{
+      <Label for="toolbar-text-box-scrollable" class="ml-2">{{
         $t(($) => $.toolbar.textbox.scrollable, { ns: 'toolbar' })
-      }}</label>
+      }}</Label>
     </div>
     <span class="divider"></span>
-    <div class="form-group">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-      }}</label>
-      <input
-        type="text"
-        :value="element.sectionName"
-        @change="
-          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
-        "
-      />
-    </div>
+    <Label for="toolbar-rich-text-box-section-name" class="mr-2">{{
+      $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
+    }}</Label>
+    <Input
+      id="toolbar-rich-text-box-section-name"
+      class="w-auto bg-background"
+      type="text"
+      :model-value="element.sectionName ?? ''"
+      @change="
+        $emit('update:sectionName', ($event.target as HTMLInputElement).value)
+      "
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { RichTextBoxElement } from '@/models/Element';
 import {
   getNoteLabelSelector,
@@ -318,6 +374,7 @@ import {
 } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
 import { Scale, ScaleNote } from '@/models/Scales';
+import { fraction1FormatOptions } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
 
 const notes = Object.values(ScaleNote).map((x) => ({
@@ -341,7 +398,15 @@ const props = defineProps({
   },
 });
 
-defineEmits(['update', 'update:sectionName']);
+const emit = defineEmits(['update', 'update:sectionName']);
+
+const SELECT_NONE_VALUE = '__none__';
+
+function onModeChangeVirtualNoteChanged(value: AcceptableValue) {
+  emit('update', {
+    modeChangeVirtualNote: value === SELECT_NONE_VALUE ? '' : value,
+  } as Partial<RichTextBoxElement>);
+}
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
@@ -354,38 +419,64 @@ const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
   align-items: center;
   flex-wrap: wrap;
 
-  background-color: lightgray;
+  background-color: var(--color-legacy-chrome-menu-surface);
 
   padding: 0.25rem;
+
+  --btn-size: 32px;
 }
 
 .icon-btn {
-  height: 32px;
-  width: 32px;
+  box-sizing: border-box;
+  height: var(--btn-size);
+  width: var(--btn-size);
+  appearance: auto;
+  background: revert;
+  border: revert;
+  border-radius: revert;
+  box-shadow: revert;
+  font-weight: revert;
+
+  position: relative;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  overflow: hidden;
+  outline: revert;
+  padding: 0;
+  transition: revert;
+  user-select: none;
+}
+
+.icon-btn:hover {
+  background: revert;
 }
 
 .icon-btn.selected {
-  background-color: var(--btn-color-selected);
+  background: var(--color-legacy-chrome-selected);
 }
 
-label.right-space {
-  margin-right: 0.5rem;
+.icon-btn img {
+  height: var(--btn-icon-size, var(--btn-size));
+  max-width: none;
+  width: var(--btn-icon-size, var(--btn-size));
+}
+
+.icon-btn[aria-disabled='true'],
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .divider {
   height: 32px;
-  border-right: 1px solid #666;
+  border-right: 1px solid var(--color-legacy-chrome-divider);
   margin: 0 0.5rem;
 }
 
 .space {
   width: 16px;
-}
-
-.text-box-input-width {
-  width: 8ch;
 }
 </style>

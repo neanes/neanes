@@ -1702,10 +1702,10 @@ import {
   PhMusicNotes,
   PhPaintBucket,
   PhPalette,
+  PhPlaylist,
   PhSplitHorizontal,
   PhTextbox,
   PhTextT,
-  PhWaveSine,
 } from '@phosphor-icons/vue';
 import type { SelectorParam } from 'i18next';
 import type { Component, PropType } from 'vue';
@@ -1947,7 +1947,7 @@ const sections = [
   {
     value: 'modeKeys',
     labelSelector: ($) => $.dialog.pageSetup.modeKeys,
-    icon: PhWaveSine,
+    icon: PhPlaylist,
   },
   {
     value: 'neumes',

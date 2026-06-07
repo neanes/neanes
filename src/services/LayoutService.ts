@@ -314,7 +314,7 @@ export class LayoutService {
       pageSetup,
       pendingParagraph: [],
       neumesEndPx: 0,
-      lyricsEndPx: -pageSetup.neumeDefaultSpacing,
+      lyricsEndPx: LayoutService.getInitialLyricsEndPx(pageSetup),
       melismaLyricsEndPx: null,
       completedParagraphs: [],
       pendingDropCapWidthPx: 0,
@@ -1591,6 +1591,10 @@ export class LayoutService {
         fontService.getStandardGlue(pageSetup.neumeDefaultFontFamily).width +
       pageSetup.neumeDefaultSpacing
     );
+  }
+
+  private static getInitialLyricsEndPx(pageSetup: PageSetup) {
+    return -this.getInlineSpacing(pageSetup);
   }
 
   private static shouldTerminateAfterFillWidthElement(
@@ -3218,7 +3222,7 @@ export class LayoutService {
     // Reset state
     workspace.pendingParagraph = [];
     workspace.neumesEndPx = 0;
-    workspace.lyricsEndPx = -workspace.pageSetup.neumeDefaultSpacing;
+    workspace.lyricsEndPx = LayoutService.getInitialLyricsEndPx(pageSetup);
     workspace.melismaLyricsEndPx = null;
     workspace.pendingDropCapWidthPx = 0;
     workspace.pendingDropCapContinuationLines = 0;

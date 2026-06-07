@@ -263,6 +263,15 @@ interface NoteGlyphBox {
   bottom: number;
 }
 
+interface NoteCollisionGlyph {
+  glyphName: SbmuflGlyphName;
+  kind: 'base' | 'mark' | 'inline';
+  x: number;
+  y: number;
+  offsetX?: number | null;
+  offsetY?: number | null;
+}
+
 type MeasureBarAnchorEdge = 'left' | 'right';
 
 interface LineBreakSolution {
@@ -2304,7 +2313,10 @@ export class LayoutService {
     return left.top < right.bottom && right.top < left.bottom;
   }
 
-  private static noteGlyphBoxesOverlap(left: NoteGlyphBox, right: NoteGlyphBox) {
+  private static noteGlyphBoxesOverlap(
+    left: NoteGlyphBox,
+    right: NoteGlyphBox,
+  ) {
     return (
       left.left < right.right &&
       right.left < left.right &&
@@ -2319,10 +2331,59 @@ export class LayoutService {
   ) {
     const fontFamily = pageSetup.neumeDefaultFontFamily;
     const fontSize = pageSetup.neumeDefaultFontSize;
-    const boxes: NoteGlyphBox[] = [];
-    const baseMapping = NeumeMappingService.getMapping(
-      noteElement.quantitativeNeume,
+    const glyphs = this.getNoteCollisionGlyphs(
+      noteElement,
+      pageSetup,
+      measureBarWidthMap,
     );
+    const resolvedGlyphNames = fontService.resolveContextualSubstitutions(
+      fontFamily,
+      glyphs.map((glyph) => glyph.glyphName),
+    );
+
+    const baseIndex = glyphs.findIndex((glyph) => glyph.kind === 'base');
+    const baseGlyphName = resolvedGlyphNames[baseIndex];
+
+    return glyphs.map((glyph, index) => {
+      const glyphName = resolvedGlyphNames[index];
+
+      if (glyph.kind !== 'mark') {
+        return this.getGlyphBox(
+          fontFamily,
+          glyphName,
+          glyph.x,
+          glyph.y,
+          fontSize,
+        );
+      }
+
+      const anchorOffset = fontService.getMarkOffset(
+        fontFamily,
+        baseGlyphName,
+        glyphName,
+      );
+
+      return this.getGlyphBox(
+        fontFamily,
+        glyphName,
+        glyph.x +
+          anchorOffset.x * fontSize +
+          this.emToPx(glyph.offsetX, fontSize),
+        glyph.y +
+          anchorOffset.y * fontSize +
+          this.emToPx(glyph.offsetY, fontSize),
+        fontSize,
+      );
+    });
+  }
+
+  private static getNoteCollisionGlyphs(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ): NoteCollisionGlyph[] {
+    const glyphs: NoteCollisionGlyph[] = [];
+    const fontSize = pageSetup.neumeDefaultFontSize;
     const leftBarReserve = this.getNoteLeftBarReserve(
       noteElement,
       measureBarWidthMap,
@@ -2338,59 +2399,59 @@ export class LayoutService {
         ? vareiaWidth + noteElement.vareiaInternalSpacing
         : 0);
 
-    boxes.push(
-      this.getGlyphBox(
-        fontFamily,
-        baseMapping.glyphName,
-        bodyLeft,
-        0,
-        fontSize,
-      ),
-    );
+    if (noteElement.vareia && !pageSetup.melkiteRtl) {
+      glyphs.push(
+        this.getVareiaCollisionGlyph(noteElement, leftBarReserve, fontSize),
+      );
+    }
 
-    if (noteElement.vareia) {
+    glyphs.push({
+      glyphName: NeumeMappingService.getMapping(noteElement.quantitativeNeume)
+        .glyphName,
+      kind: 'base',
+      x: bodyLeft,
+      y: 0,
+    });
+
+    for (const mark of this.getNoteCollisionMarks(noteElement)) {
+      glyphs.push({
+        glyphName: NeumeMappingService.getMapping(mark.neume).glyphName,
+        kind: 'mark',
+        x: bodyLeft,
+        y: 0,
+        offsetX: mark.offsetX,
+        offsetY: mark.offsetY,
+      });
+    }
+
+    if (noteElement.vareia && pageSetup.melkiteRtl) {
       const bodyWidth = this.getNeumeSequenceWidthFromCache(
         neumeWidthCache,
         this.getNoteNeumesForMeasurement(noteElement),
         pageSetup,
       );
-      const vareiaLeft = pageSetup.melkiteRtl
-        ? bodyLeft + bodyWidth + noteElement.vareiaInternalSpacing
-        : leftBarReserve;
-
-      boxes.push(
-        this.getGlyphBox(
-          fontFamily,
-          NeumeMappingService.getMapping(VocalExpressionNeume.Vareia).glyphName,
-          vareiaLeft + this.emToPx(noteElement.vareiaOffsetX, fontSize),
-          this.emToPx(noteElement.vareiaOffsetY, fontSize),
-          fontSize,
-        ),
+      const vareiaLeft =
+        bodyLeft + bodyWidth + noteElement.vareiaInternalSpacing;
+      glyphs.push(
+        this.getVareiaCollisionGlyph(noteElement, vareiaLeft, fontSize),
       );
     }
 
-    for (const mark of this.getNoteCollisionMarks(noteElement)) {
-      const mapping = NeumeMappingService.getMapping(mark.neume);
-      const anchorOffset = fontService.getMarkOffset(
-        fontFamily,
-        baseMapping.glyphName,
-        mapping.glyphName,
-      );
+    return glyphs;
+  }
 
-      boxes.push(
-        this.getGlyphBox(
-          fontFamily,
-          mapping.glyphName,
-          bodyLeft +
-            anchorOffset.x * fontSize +
-            this.emToPx(mark.offsetX, fontSize),
-          anchorOffset.y * fontSize + this.emToPx(mark.offsetY, fontSize),
-          fontSize,
-        ),
-      );
-    }
-
-    return boxes;
+  private static getVareiaCollisionGlyph(
+    noteElement: NoteElement,
+    x: number,
+    fontSize: number,
+  ): NoteCollisionGlyph {
+    return {
+      glyphName: NeumeMappingService.getMapping(VocalExpressionNeume.Vareia)
+        .glyphName,
+      kind: 'inline',
+      x: x + this.emToPx(noteElement.vareiaOffsetX, fontSize),
+      y: this.emToPx(noteElement.vareiaOffsetY, fontSize),
+    };
   }
 
   private static getNoteLeftBarReserve(

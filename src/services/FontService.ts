@@ -23,6 +23,17 @@ interface GlyphBBox {
   bBoxSW: [number, number];
 }
 
+interface ContextualSubstitution {
+  inputGlyphs: SbmuflGlyphName[][];
+  backtrackGlyphs: SbmuflGlyphName[][];
+  lookaheadGlyphs: SbmuflGlyphName[][];
+  substitutions: Array<{
+    index: number;
+    from: SbmuflGlyphName;
+    to: SbmuflGlyphName;
+  }>;
+}
+
 const metadataMap = new Map();
 metadataMap.set('Neanes', metadata);
 metadataMap.set('NeanesRTL', metadataRtl);
@@ -46,6 +57,74 @@ class FontService {
 
   getGlyphBBox(fontFamily: string, glyph: SbmuflGlyphName): GlyphBBox {
     return this.getMetadata(fontFamily).glyphBBoxes[glyph];
+  }
+
+  getContextualSubstitutions(fontFamily: string): ContextualSubstitution[] {
+    return this.getMetadata(fontFamily).contextualSubstitutions ?? [];
+  }
+
+  resolveContextualSubstitutions(
+    fontFamily: string,
+    glyphs: SbmuflGlyphName[],
+  ) {
+    const resolvedGlyphs = [...glyphs];
+
+    for (const rule of this.getContextualSubstitutions(fontFamily)) {
+      for (
+        let inputStart = 0;
+        inputStart <= resolvedGlyphs.length - rule.inputGlyphs.length;
+        inputStart++
+      ) {
+        if (
+          !this.contextualSubstitutionMatches(rule, resolvedGlyphs, inputStart)
+        ) {
+          continue;
+        }
+
+        for (const substitution of rule.substitutions) {
+          const glyphIndex = inputStart + substitution.index;
+          if (resolvedGlyphs[glyphIndex] === substitution.from) {
+            resolvedGlyphs[glyphIndex] = substitution.to;
+          }
+        }
+      }
+    }
+
+    return resolvedGlyphs;
+  }
+
+  private contextualSubstitutionMatches(
+    rule: ContextualSubstitution,
+    glyphs: SbmuflGlyphName[],
+    inputStart: number,
+  ) {
+    return (
+      this.glyphClassesMatch(
+        rule.backtrackGlyphs,
+        glyphs,
+        inputStart - rule.backtrackGlyphs.length,
+      ) &&
+      this.glyphClassesMatch(rule.inputGlyphs, glyphs, inputStart) &&
+      this.glyphClassesMatch(
+        rule.lookaheadGlyphs,
+        glyphs,
+        inputStart + rule.inputGlyphs.length,
+      )
+    );
+  }
+
+  private glyphClassesMatch(
+    glyphClasses: SbmuflGlyphName[][],
+    glyphs: SbmuflGlyphName[],
+    start: number,
+  ) {
+    if (start < 0 || start + glyphClasses.length > glyphs.length) {
+      return false;
+    }
+
+    return glyphClasses.every((glyphClass, index) =>
+      glyphClass.includes(glyphs[start + index]),
+    );
   }
 
   getEngravingDefaults(fontFamily: string): EngravingDefaults {

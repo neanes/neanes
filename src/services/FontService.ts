@@ -18,6 +18,11 @@ interface EngravingDefaults {
   vareiaGap: number;
 }
 
+interface GlyphBBox {
+  bBoxNE: [number, number];
+  bBoxSW: [number, number];
+}
+
 const metadataMap = new Map();
 metadataMap.set('Neanes', metadata);
 metadataMap.set('NeanesRTL', metadataRtl);
@@ -37,6 +42,10 @@ class FontService {
 
   getAdvanceWidth(fontFamily: string, glyph: SbmuflGlyphName) {
     return this.getMetadata(fontFamily).glyphAdvanceWidths[glyph];
+  }
+
+  getGlyphBBox(fontFamily: string, glyph: SbmuflGlyphName): GlyphBBox {
+    return this.getMetadata(fontFamily).glyphBBoxes[glyph];
   }
 
   getEngravingDefaults(fontFamily: string): EngravingDefaults {
@@ -61,9 +70,16 @@ class FontService {
     mark: SbmuflGlyphName,
   ) {
     const metadata = this.getMetadata(fontFamily);
+    const baseAnchors = metadata.glyphsWithAnchors[base];
+    const markAnchors = metadata.glyphsWithAnchors[mark];
 
-    const markAnchorName = Object.keys(metadata.glyphsWithAnchors[mark]).find(
-      (x) => metadata.glyphsWithAnchors[base][x] != null,
+    if (baseAnchors == null || markAnchors == null) {
+      console.warn(`Missing anchor for base: ${base} mark: ${mark}`);
+      return { x: 0, y: 0 };
+    }
+
+    const markAnchorName = Object.keys(markAnchors).find(
+      (x) => baseAnchors[x] != null,
     );
 
     if (markAnchorName == null) {
@@ -71,13 +87,9 @@ class FontService {
       return { x: 0, y: 0 };
     }
 
-    const markAnchor = metadata.glyphsWithAnchors[mark][
-      markAnchorName
-    ] as number[];
+    const markAnchor = markAnchors[markAnchorName] as number[];
 
-    const baseAnchor = metadata.glyphsWithAnchors[base][
-      markAnchorName
-    ] as number[];
+    const baseAnchor = baseAnchors[markAnchorName] as number[];
 
     return {
       x: baseAnchor[0] - markAnchor[0],

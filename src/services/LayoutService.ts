@@ -23,10 +23,8 @@ import { ElementType, EmptyElement, LineBreakType } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
 import { measureBarAboveToLeft } from '@/models/NeumeReplacements';
-import type { Neume } from '@/models/Neumes';
+import type { Fthora, Neume } from '@/models/Neumes';
 import {
-  Accidental,
-  Fthora,
   GorgonNeume,
   MeasureBar,
   NeumeSelection,
@@ -55,7 +53,10 @@ import {
   ScaleNote,
 } from '@/models/Scales';
 import type { Workspace } from '@/models/Workspace';
-import { NeumeMappingService } from '@/services/NeumeMappingService';
+import {
+  NeumeMappingService,
+  type SbmuflGlyphName,
+} from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
 import { Unit } from '@/utils/Unit';
 
@@ -255,139 +256,14 @@ interface LyricOverhangs {
   right: number;
 }
 
-interface NoteVisualBounds {
-  leftOverhang: number;
-  rightOverhang: number;
+interface NoteGlyphBox {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
 }
 
-type NoteVisualCollisionSide = Neume | Neume[];
-type NoteVisualCollisionRightSide = NoteVisualCollisionSide | null;
-
-interface NoteVisualCollisionPair {
-  left: NoteVisualCollisionSide;
-  // Use null when the left mark can collide with any following note body.
-  // Use a QuantitativeNeume when the left mark can collide with a specific
-  // following note body.
-  right: NoteVisualCollisionRightSide;
-}
-
-const noteVisualCollisionPairs: NoteVisualCollisionPair[] = [
-  // Extra note spacing is opt-in so ordinary marks do not globally widen every
-  // note boundary. List only known-dangerous mark/body pairs that need their
-  // ink bounds checked. Array entries are shorthand for separate alternatives;
-  // each matched pair is measured independently.
-
-  {
-    left: [VocalExpressionNeume.Antikenoma, VocalExpressionNeume.Psifiston],
-    right: [
-      Accidental.Sharp_2_Left,
-      Accidental.Sharp_4_Left,
-      Accidental.Sharp_6_Left,
-      Accidental.Sharp_8_Left,
-      Fthora.DiatonicNiLow_Bottom,
-      Fthora.DiatonicPa_Bottom,
-      Fthora.DiatonicVou_Bottom,
-      Fthora.DiatonicGa_Bottom,
-      Fthora.DiatonicThi_Bottom,
-      Fthora.DiatonicKe_Bottom,
-      Fthora.DiatonicZo_Bottom,
-      Fthora.DiatonicNiHigh_Bottom,
-      Fthora.HardChromaticPa_Bottom,
-      Fthora.HardChromaticThi_Bottom,
-      Fthora.SoftChromaticPa_Bottom,
-      Fthora.SoftChromaticThi_Bottom,
-      Fthora.Enharmonic_Bottom,
-      Fthora.Zygos_Bottom,
-      Fthora.Kliton_Bottom,
-      Fthora.Spathi_Bottom,
-      Fthora.GeneralSharp_Bottom,
-      Fthora.GeneralFlat_Bottom,
-    ],
-  },
-
-  {
-    left: [
-      Accidental.Flat_2_Right,
-      Accidental.Flat_4_Right,
-      Accidental.Flat_6_Right,
-      Accidental.Flat_8_Right,
-    ],
-    right: [
-      QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
-      QuantitativeNeume.OligonPlusIsonPlusKentemata,
-      QuantitativeNeume.OligonPlusElaphronPlusKentemata,
-      QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
-      QuantitativeNeume.OligonPlusHamiliPlusKentemata,
-      QuantitativeNeume.OligonPlusElaphron,
-      QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
-      QuantitativeNeume.OligonPlusHamili,
-      QuantitativeNeume.PetastiWithIson,
-      QuantitativeNeume.Hamili,
-      QuantitativeNeume.HamiliPlusApostrophos,
-      QuantitativeNeume.HamiliPlusElaphron,
-      QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
-      QuantitativeNeume.DoubleHamili,
-      QuantitativeNeume.DoubleHamiliApostrofos,
-      QuantitativeNeume.DoubleHamiliElafron,
-      QuantitativeNeume.DoubleHamiliElafronApostrofos,
-      QuantitativeNeume.TripleHamili,
-      QuantitativeNeume.PetastiPlusApostrophos,
-      QuantitativeNeume.PetastiPlusElaphron,
-      QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
-      QuantitativeNeume.PetastiHamili,
-      QuantitativeNeume.PetastiHamiliApostrofos,
-      QuantitativeNeume.PetastiHamiliElafron,
-      QuantitativeNeume.PetastiHamiliElafronApostrofos,
-      QuantitativeNeume.PetastiDoubleHamili,
-      QuantitativeNeume.PetastiDoubleHamiliApostrofos,
-      TimeNeume.Klasma_Top,
-    ],
-  },
-
-  {
-    left: [
-      Fthora.DiatonicNiLow_Top,
-      Fthora.DiatonicPa_Top,
-      Fthora.DiatonicVou_Top,
-      Fthora.DiatonicGa_Top,
-      Fthora.DiatonicThi_Top,
-      Fthora.DiatonicKe_Top,
-      Fthora.DiatonicZo_Top,
-      Fthora.DiatonicNiHigh_Top,
-      Fthora.HardChromaticPa_Top,
-      Fthora.HardChromaticThi_Top,
-      Fthora.SoftChromaticPa_Top,
-      Fthora.SoftChromaticThi_Top,
-      Fthora.Enharmonic_Top,
-      Fthora.Zygos_Top,
-      Fthora.Kliton_Top,
-      Fthora.Spathi_Top,
-      Fthora.GeneralSharp_Top,
-      Fthora.GeneralFlat_Top,
-    ],
-    right: [TimeNeume.Klasma_Top],
-  },
-
-  {
-    left: [
-      GorgonNeume.Gorgon_Top,
-      GorgonNeume.GorgonDottedLeft,
-      GorgonNeume.GorgonDottedRight,
-      GorgonNeume.Digorgon,
-      GorgonNeume.DigorgonDottedLeft1,
-      GorgonNeume.DigorgonDottedLeft2,
-      GorgonNeume.DigorgonDottedRight,
-      GorgonNeume.Trigorgon,
-      GorgonNeume.TrigorgonDottedLeft1,
-      GorgonNeume.TrigorgonDottedLeft2,
-      GorgonNeume.TrigorgonDottedRight,
-    ],
-    right: [
-      QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
-      QuantitativeNeume.OligonPlusIsonPlusKentemata,
-    ],
-  },
-];
+type MeasureBarAnchorEdge = 'left' | 'right';
 
 interface LineBreakSolution {
   breakpoints: number[];
@@ -1048,8 +924,10 @@ export class LayoutService {
             // and, for a right-aligned martyria, terminal barline clearance.
             // Ordinary lyric collision before a martyria is handled below
             // unless this is a tempo-to-martyria boundary.
-            const trailingNoteReservations =
-              this.getTrailingNoteReservations(layoutWorkspace);
+            const trailingNoteReservations = this.getTrailingNoteReservations(
+              layoutWorkspace,
+              measureBarWidthMap,
+            );
             const reservation =
               (trailingNoteReservations?.melismaOverhang ?? 0) +
               (martyriaElement.alignRight
@@ -1152,6 +1030,7 @@ export class LayoutService {
                   martyriaElement,
                   nextElement,
                   pageSetup,
+                  measureBarWidthMap,
                 ),
                 visualSpacing.requiredWidth,
               ),
@@ -1333,7 +1212,7 @@ export class LayoutService {
       // and the paragraph is about to end. In the latter case, endParagraph()
       // removes that trailing glue and replaces it with finishing glue.
       if (lineBreak) {
-        this.endParagraph(lineBreakType, layoutWorkspace);
+        this.endParagraph(lineBreakType, layoutWorkspace, measureBarWidthMap);
       }
     }
 
@@ -2234,11 +2113,12 @@ export class LayoutService {
     // glue(L_{i+1}).
     const leftTuck = leftProjection;
     const rightTuck = Math.min(rightProjection, nextOverhangs.left);
-    const minimumWidth = Math.max(
+    const minimumBoundaryWidth = Math.max(
       this.getMeasureBarMinimumGlueWidth(
         noteElement,
         nextNoteElement,
         workspace.pageSetup,
+        measureBarWidthMap,
       ),
       this.getNoteVisualMinimumSpacing(
         noteElement,
@@ -2247,6 +2127,10 @@ export class LayoutService {
         measureBarWidthMap,
       ),
     );
+    // Visual collision helpers measure the total same-line distance between
+    // note boxes. m_i intentionally excludes L_{i+1}, so convert that minimum
+    // into m_i space or long lyrics on the next note can no longer tuck left.
+    const minimumWidth = minimumBoundaryWidth - leftTuck;
     const baseWidth =
       this.getInlineSpacing(workspace.pageSetup) +
       rightProjection -
@@ -2370,293 +2254,287 @@ export class LayoutService {
       return 0;
     }
 
-    return this.getNoteVisualCollisionPairSpacing(
+    const leftBoxes = this.getNoteCollisionGlyphBoxes(
       left,
+      pageSetup,
+      measureBarWidthMap,
+    );
+    const rightBoxes = this.getNoteCollisionGlyphBoxes(
       right,
       pageSetup,
       measureBarWidthMap,
     );
+
+    return this.getMinimumSpacingForNoteGlyphBoxes(
+      left.neumeWidth,
+      leftBoxes,
+      rightBoxes,
+      this.getInlineSpacing(pageSetup),
+    );
   }
 
-  private static getNoteVisualCollisionPairSpacing(
-    left: NoteElement,
-    right: NoteElement,
-    pageSetup: PageSetup,
-    measureBarWidthMap: Map<MeasureBar, number>,
+  private static getMinimumSpacingForNoteGlyphBoxes(
+    leftAdvanceWidth: number,
+    leftBoxes: NoteGlyphBox[],
+    rightBoxes: NoteGlyphBox[],
+    clearance: number,
   ) {
-    const leftNeumes = this.getRenderedNoteNeumeSet(left);
-    const rightNeumes = this.getRenderedNoteNeumeSet(right);
     let spacing = 0;
 
-    for (const pair of noteVisualCollisionPairs) {
-      for (const leftNeume of this.getNoteVisualCollisionSideOptions(
-        pair.left,
-      )) {
-        if (!leftNeumes.has(leftNeume)) {
+    for (const leftBox of leftBoxes) {
+      for (const rightBox of rightBoxes) {
+        if (!this.noteGlyphBoxesVerticallyOverlap(leftBox, rightBox)) {
           continue;
         }
 
-        for (const rightNeume of this.getNoteVisualCollisionSideOptions(
-          pair.right,
-        )) {
-          if (rightNeume != null && !rightNeumes.has(rightNeume)) {
-            continue;
-          }
-
-          spacing = Math.max(
-            spacing,
-            this.getNoteVisualCollisionAlternativeSpacing(
-              left,
-              right,
-              pageSetup,
-              measureBarWidthMap,
-              leftNeume,
-              rightNeume,
-            ),
-          );
-        }
+        spacing = Math.max(
+          spacing,
+          leftBox.right + clearance - leftAdvanceWidth - rightBox.left,
+        );
       }
     }
 
-    return spacing;
+    return Math.max(0, spacing);
   }
 
-  private static getNoteVisualCollisionAlternativeSpacing(
-    left: NoteElement,
-    right: NoteElement,
-    pageSetup: PageSetup,
-    measureBarWidthMap: Map<MeasureBar, number>,
-    leftNeume: Neume,
-    rightNeume: Neume | null,
+  private static noteGlyphBoxesVerticallyOverlap(
+    left: NoteGlyphBox,
+    right: NoteGlyphBox,
   ) {
-    const leftBounds = this.getNoteVisualBounds(
-      left,
-      pageSetup,
-      measureBarWidthMap,
-      new Set([leftNeume]),
-      true,
-    );
-    const rightMarks =
-      rightNeume != null && rightNeume !== right.quantitativeNeume
-        ? new Set([rightNeume])
-        : new Set<Neume>();
-    const rightBounds = this.getNoteVisualBounds(
-      right,
-      pageSetup,
-      measureBarWidthMap,
-      rightMarks,
-      true,
-    );
+    return left.top < right.bottom && right.top < left.bottom;
+  }
 
+  private static noteGlyphBoxesOverlap(left: NoteGlyphBox, right: NoteGlyphBox) {
     return (
-      this.getInlineSpacing(pageSetup) / 2 +
-      leftBounds.rightOverhang +
-      rightBounds.leftOverhang
+      left.left < right.right &&
+      right.left < left.right &&
+      this.noteGlyphBoxesVerticallyOverlap(left, right)
     );
   }
 
-  private static getNoteVisualCollisionSideOptions(
-    side: NoteVisualCollisionSide,
-  ): Neume[];
-  private static getNoteVisualCollisionSideOptions(
-    side: NoteVisualCollisionRightSide,
-  ): Array<Neume | null>;
-  private static getNoteVisualCollisionSideOptions(
-    side: NoteVisualCollisionRightSide,
-  ): Array<Neume | null> {
-    return Array.isArray(side) ? side : [side];
-  }
-
-  private static getNoteVisualBounds(
+  private static getNoteCollisionGlyphBoxes(
     noteElement: NoteElement,
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
-    collisionMarks: Set<Neume>,
-    bodyOnly: boolean = false,
-  ): NoteVisualBounds {
-    const bodyBounds = this.getNoteBodyBounds(
+  ) {
+    const fontFamily = pageSetup.neumeDefaultFontFamily;
+    const fontSize = pageSetup.neumeDefaultFontSize;
+    const boxes: NoteGlyphBox[] = [];
+    const baseMapping = NeumeMappingService.getMapping(
+      noteElement.quantitativeNeume,
+    );
+    const leftBarReserve = this.getNoteLeftBarReserve(
       noteElement,
-      pageSetup,
       measureBarWidthMap,
     );
-    const bodyInkBounds = bodyOnly
-      ? this.getNeumeSequenceInkBoundsFromCache(
-          [noteElement.quantitativeNeume],
-          pageSetup,
-        )
-      : this.getNoteInkBoundsFromCache(noteElement, pageSetup);
-    let visualLeft = bodyBounds.left + bodyInkBounds.inkLeft;
-    let visualRight = bodyBounds.left + bodyInkBounds.inkRight;
+    const vareiaWidth = this.getNeumeWidthFromCache(
+      neumeWidthCache,
+      VocalExpressionNeume.Vareia,
+      pageSetup,
+    );
+    const bodyLeft =
+      leftBarReserve +
+      (!pageSetup.melkiteRtl && noteElement.vareia
+        ? vareiaWidth + noteElement.vareiaInternalSpacing
+        : 0);
 
-    for (const mark of collisionMarks) {
-      const markNeumes = this.getNoteNeumesForVisualMeasurement(
-        noteElement,
-        new Set([mark]),
-      );
-      const markInkBounds = this.getNeumeSequenceInkBoundsFromCache(
-        markNeumes,
-        pageSetup,
-      );
-      const offsetX =
-        this.getNoteMarkOffsetX(noteElement, mark) *
-        pageSetup.neumeDefaultFontSize;
-
-      visualLeft = Math.min(
-        visualLeft,
-        bodyBounds.left + markInkBounds.inkLeft + offsetX,
-      );
-      visualRight = Math.max(
-        visualRight,
-        bodyBounds.left + markInkBounds.inkRight + offsetX,
-      );
-    }
-
-    return {
-      leftOverhang: Math.max(0, -visualLeft),
-      rightOverhang: Math.max(0, visualRight - noteElement.neumeWidth),
-    };
-  }
-
-  private static getRenderedNoteNeumeSet(noteElement: NoteElement) {
-    return new Set(
-      this.getNoteNeumesForVisualMeasurement(noteElement, null).filter(
-        (x) => x != null,
+    boxes.push(
+      this.getGlyphBox(
+        fontFamily,
+        baseMapping.glyphName,
+        bodyLeft,
+        0,
+        fontSize,
       ),
     );
+
+    if (noteElement.vareia) {
+      const bodyWidth = this.getNeumeSequenceWidthFromCache(
+        neumeWidthCache,
+        this.getNoteNeumesForMeasurement(noteElement),
+        pageSetup,
+      );
+      const vareiaLeft = pageSetup.melkiteRtl
+        ? bodyLeft + bodyWidth + noteElement.vareiaInternalSpacing
+        : leftBarReserve;
+
+      boxes.push(
+        this.getGlyphBox(
+          fontFamily,
+          NeumeMappingService.getMapping(VocalExpressionNeume.Vareia).glyphName,
+          vareiaLeft + this.emToPx(noteElement.vareiaOffsetX, fontSize),
+          this.emToPx(noteElement.vareiaOffsetY, fontSize),
+          fontSize,
+        ),
+      );
+    }
+
+    for (const mark of this.getNoteCollisionMarks(noteElement)) {
+      const mapping = NeumeMappingService.getMapping(mark.neume);
+      const anchorOffset = fontService.getMarkOffset(
+        fontFamily,
+        baseMapping.glyphName,
+        mapping.glyphName,
+      );
+
+      boxes.push(
+        this.getGlyphBox(
+          fontFamily,
+          mapping.glyphName,
+          bodyLeft +
+            anchorOffset.x * fontSize +
+            this.emToPx(mark.offsetX, fontSize),
+          anchorOffset.y * fontSize + this.emToPx(mark.offsetY, fontSize),
+          fontSize,
+        ),
+      );
+    }
+
+    return boxes;
   }
 
-  private static getNoteNeumesForVisualMeasurement(
+  private static getNoteLeftBarReserve(
     noteElement: NoteElement,
-    collisionMarks: Set<Neume> | null,
-  ) {
-    const neumes: Neume[] = [];
-    const includeAllMarks = collisionMarks == null;
-    const add = (neume: Neume | null | undefined, include: boolean = false) => {
-      if (
-        neume != null &&
-        (include || includeAllMarks || collisionMarks?.has(neume))
-      ) {
-        neumes.push(neume);
-      }
-    };
-
-    add(noteElement.quantitativeNeume, true);
-    add(noteElement.stavros ? VocalExpressionNeume.Cross_Top : null);
-    add(noteElement.vocalExpressionNeume);
-    add(noteElement.timeNeume);
-    add(noteElement.koronis ? TimeNeume.Koronis : null);
-    add(noteElement.gorgonNeume);
-    add(noteElement.secondaryGorgonNeume);
-    add(noteElement.fthora);
-    add(noteElement.secondaryFthora);
-    add(noteElement.tertiaryFthora);
-    add(noteElement.accidental);
-    add(noteElement.secondaryAccidental);
-    add(noteElement.tertiaryAccidental);
-    add(noteElement.noteIndicator ? noteElement.noteIndicatorNeume : null);
-    add(noteElement.ison);
-    add(noteElement.measureNumber);
-    add(noteElement.tie);
-
-    return neumes;
-  }
-
-  private static getNoteMarkOffsetX(noteElement: NoteElement, mark: Neume) {
-    if (mark === noteElement.quantitativeNeume) {
-      return 0;
-    }
-
-    if (mark === VocalExpressionNeume.Cross_Top && noteElement.stavros) {
-      return noteElement.stavrosOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.vocalExpressionNeume) {
-      return noteElement.vocalExpressionNeumeOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.timeNeume) {
-      return noteElement.timeNeumeOffsetX ?? 0;
-    }
-
-    if (mark === TimeNeume.Koronis && noteElement.koronis) {
-      return noteElement.koronisOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.gorgonNeume) {
-      return noteElement.gorgonNeumeOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.secondaryGorgonNeume) {
-      return noteElement.secondaryGorgonNeumeOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.fthora) {
-      return noteElement.fthoraOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.secondaryFthora) {
-      return noteElement.secondaryFthoraOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.tertiaryFthora) {
-      return noteElement.tertiaryFthoraOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.accidental) {
-      return noteElement.accidentalOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.secondaryAccidental) {
-      return noteElement.secondaryAccidentalOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.tertiaryAccidental) {
-      return noteElement.tertiaryAccidentalOffsetX ?? 0;
-    }
-
-    if (noteElement.noteIndicator && mark === noteElement.noteIndicatorNeume) {
-      return noteElement.noteIndicatorOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.ison) {
-      return noteElement.isonOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.measureNumber) {
-      return noteElement.measureNumberOffsetX ?? 0;
-    }
-
-    if (mark === noteElement.tie) {
-      return noteElement.tieOffsetX ?? 0;
-    }
-
-    return 0;
-  }
-
-  private static getNoteBodyBounds(
-    noteElement: NoteElement,
-    pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
   ) {
     const measureBarLeft = this.getVisibleMeasureBarLeft(noteElement);
-    const leftBarWidth =
-      measureBarLeft != null
-        ? (measureBarWidthMap.get(measureBarLeft) ?? 0)
-        : 0;
-    const left =
-      leftBarWidth +
-      noteElement.computedMeasureBarLeftLeadingSpacing +
-      this.getVareiaPrefixWidth(noteElement, pageSetup);
-    const bodyWidth = this.getNeumeSequenceWidthFromCache(
-      neumeWidthCache,
-      this.getNoteNeumesForMeasurement(noteElement),
-      pageSetup,
+
+    if (measureBarLeft == null) {
+      return 0;
+    }
+
+    return (
+      (measureBarWidthMap.get(measureBarLeft) ?? 0) +
+      noteElement.computedMeasureBarLeftLeadingSpacing
     );
+  }
+
+  private static getNoteCollisionMarks(noteElement: NoteElement) {
+    const marks: Array<{
+      neume: Neume;
+      offsetX?: number | null;
+      offsetY?: number | null;
+    }> = [];
+
+    const add = (
+      neume: Neume | null | undefined,
+      offsetX?: number | null,
+      offsetY?: number | null,
+    ) => {
+      if (neume != null) {
+        marks.push({ neume, offsetX, offsetY });
+      }
+    };
+
+    add(
+      noteElement.stavros ? VocalExpressionNeume.Cross_Top : null,
+      noteElement.stavrosOffsetX,
+      noteElement.stavrosOffsetY,
+    );
+    add(
+      noteElement.vocalExpressionNeume,
+      noteElement.vocalExpressionNeumeOffsetX,
+      noteElement.vocalExpressionNeumeOffsetY,
+    );
+    add(
+      noteElement.timeNeume,
+      noteElement.timeNeumeOffsetX,
+      noteElement.timeNeumeOffsetY,
+    );
+    add(
+      noteElement.koronis ? TimeNeume.Koronis : null,
+      noteElement.koronisOffsetX,
+      noteElement.koronisOffsetY,
+    );
+    add(
+      noteElement.gorgonNeume,
+      noteElement.gorgonNeumeOffsetX,
+      noteElement.gorgonNeumeOffsetY,
+    );
+    add(
+      noteElement.secondaryGorgonNeume,
+      noteElement.secondaryGorgonNeumeOffsetX,
+      noteElement.secondaryGorgonNeumeOffsetY,
+    );
+    add(
+      noteElement.fthora,
+      noteElement.fthoraOffsetX,
+      noteElement.fthoraOffsetY,
+    );
+    add(
+      noteElement.secondaryFthora,
+      noteElement.secondaryFthoraOffsetX,
+      noteElement.secondaryFthoraOffsetY,
+    );
+    add(
+      noteElement.tertiaryFthora,
+      noteElement.tertiaryFthoraOffsetX,
+      noteElement.tertiaryFthoraOffsetY,
+    );
+    add(
+      noteElement.accidental,
+      noteElement.accidentalOffsetX,
+      noteElement.accidentalOffsetY,
+    );
+    add(
+      noteElement.secondaryAccidental,
+      noteElement.secondaryAccidentalOffsetX,
+      noteElement.secondaryAccidentalOffsetY,
+    );
+    add(
+      noteElement.tertiaryAccidental,
+      noteElement.tertiaryAccidentalOffsetX,
+      noteElement.tertiaryAccidentalOffsetY,
+    );
+    add(
+      noteElement.noteIndicator ? noteElement.noteIndicatorNeume : null,
+      noteElement.noteIndicatorOffsetX,
+      noteElement.noteIndicatorOffsetY,
+    );
+    add(
+      noteElement.ison,
+      noteElement.isonOffsetX,
+      noteElement.computedIsonOffsetY,
+    );
+    add(
+      noteElement.measureNumber,
+      noteElement.measureNumberOffsetX,
+      noteElement.measureNumberOffsetY,
+    );
+    add(noteElement.tie, noteElement.tieOffsetX, noteElement.tieOffsetY);
+
+    const measureBarLeft =
+      noteElement.measureBarLeft ?? noteElement.computedMeasureBarLeft;
+    if (measureBarLeft?.endsWith('Above')) {
+      add(
+        measureBarLeft,
+        noteElement.measureBarLeftOffsetX,
+        noteElement.measureBarLeftOffsetY,
+      );
+    }
+
+    return marks;
+  }
+
+  private static getGlyphBox(
+    fontFamily: string,
+    glyphName: SbmuflGlyphName,
+    x: number,
+    y: number,
+    fontSize: number,
+  ): NoteGlyphBox {
+    const bBox = fontService.getGlyphBBox(fontFamily, glyphName);
 
     return {
-      left,
-      right: left + bodyWidth,
+      left: x + bBox.bBoxSW[0] * fontSize,
+      right: x + bBox.bBoxNE[0] * fontSize,
+      top: y - bBox.bBoxNE[1] * fontSize,
+      bottom: y - bBox.bBoxSW[1] * fontSize,
     };
+  }
+
+  private static emToPx(value: number | null | undefined, fontSize: number) {
+    return (value ?? 0) * fontSize;
   }
 
   private static getVisualGlueSpacing(
@@ -2955,7 +2833,10 @@ export class LayoutService {
     return penaltyWidth;
   }
 
-  private static getTrailingNoteReservations(workspace: LayoutWorkspace) {
+  private static getTrailingNoteReservations(
+    workspace: LayoutWorkspace,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
     const { pendingParagraph } = workspace;
 
     let trailingGlueWidth = 0;
@@ -2992,6 +2873,7 @@ export class LayoutService {
       const terminalMeasureBarSpacing = this.getTerminalMeasureBarRightSpacing(
         noteElement,
         workspace.pageSetup,
+        measureBarWidthMap,
       );
 
       return {
@@ -3169,6 +3051,7 @@ export class LayoutService {
   private static endParagraph(
     lineBreakType: LineBreakType,
     workspace: LayoutWorkspace,
+    measureBarWidthMap: Map<MeasureBar, number>,
   ) {
     const { pageSetup, pendingParagraph, completedParagraphs } = workspace;
 
@@ -3180,8 +3063,10 @@ export class LayoutService {
     // cancellation glue contains that note's right-edge reservation.
     // removeGlue strips it, so materialize the reservation into the
     // finishing glue width instead.
-    const trailingNoteReservations =
-      this.getTrailingNoteReservations(workspace);
+    const trailingNoteReservations = this.getTrailingNoteReservations(
+      workspace,
+      measureBarWidthMap,
+    );
     const finishingGlueWidth = trailingNoteReservations
       ? trailingNoteReservations.finishingGlueWidth
       : 0;
@@ -4447,18 +4332,21 @@ export class LayoutService {
           );
           const nextElement =
             i + 1 < line.elements.length ? line.elements[i + 1] : null;
-          const ownerBounds = this.getMeasureBarAnchorBounds(
-            owner,
-            pageSetup,
-            measureBarWidthMap,
-          );
-
           const measureBarLeft = this.getVisibleMeasureBarLeft(owner);
           if (measureBarLeft && previousAnchor) {
             const previousBounds = this.getMeasureBarAnchorBounds(
               previousAnchor,
               pageSetup,
               measureBarWidthMap,
+              measureBarLeft,
+              'right',
+            );
+            const ownerBounds = this.getMeasureBarAnchorBounds(
+              owner,
+              pageSetup,
+              measureBarWidthMap,
+              measureBarLeft,
+              'left',
             );
             const barWidth = measureBarWidthMap.get(measureBarLeft) ?? 0;
             if (barWidth > 0) {
@@ -4492,6 +4380,15 @@ export class LayoutService {
                 nextAnchor,
                 pageSetup,
                 measureBarWidthMap,
+                measureBarRight,
+                'left',
+              );
+              const ownerBounds = this.getMeasureBarAnchorBounds(
+                owner,
+                pageSetup,
+                measureBarWidthMap,
+                measureBarRight,
+                'right',
               );
               const centeredLeft =
                 (ownerBounds.right + nextBounds.left - barWidth) / 2;
@@ -4509,7 +4406,11 @@ export class LayoutService {
               nextElement.elementType === ElementType.Empty)
           ) {
             owner.computedMeasureBarRightTrailingSpacing =
-              this.getTerminalMeasureBarRightSpacing(owner, pageSetup);
+              this.getTerminalMeasureBarRightSpacing(
+                owner,
+                pageSetup,
+                measureBarWidthMap,
+              );
           }
         }
       }
@@ -4557,6 +4458,8 @@ export class LayoutService {
     element: ScoreElement,
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
+    measureBar: MeasureBar | null = null,
+    edge: MeasureBarAnchorEdge | null = null,
   ) {
     if (
       element.elementType === ElementType.Note ||
@@ -4579,22 +4482,16 @@ export class LayoutService {
           : 0);
 
       if (element.elementType === ElementType.Note) {
-        const note = element as NoteElement;
-        const vareiaPrefixWidth = this.getVareiaPrefixWidth(note, pageSetup);
-        const bodyWidth = this.getNeumeSequenceWidthFromCache(
-          neumeWidthCache,
-          this.getNoteNeumesForMeasurement(note),
-          pageSetup,
-        );
-        const inkBounds = this.getNoteInkBoundsFromCache(note, pageSetup);
-        const bodyLeft = left + vareiaPrefixWidth;
-        const bodyRight = bodyLeft + bodyWidth;
-        const visualLeft = left - this.getNoteLeftInkOverhang(note, pageSetup);
-
-        return {
-          left: visualLeft,
-          right: bodyRight + inkBounds.rightOverhang,
-        };
+        return measureBar == null || edge == null
+          ? { left, right }
+          : this.getNoteBoundsForMeasureBar(
+              element as NoteElement,
+              { left, right },
+              measureBar,
+              edge,
+              pageSetup,
+              measureBarWidthMap,
+            );
       }
 
       return { left, right };
@@ -4603,6 +4500,121 @@ export class LayoutService {
     return {
       left: element.x,
       right: element.x + element.width,
+    };
+  }
+
+  private static getNoteBoundsForMeasureBar(
+    noteElement: NoteElement,
+    fallbackBounds: { left: number; right: number },
+    measureBar: MeasureBar,
+    edge: MeasureBarAnchorEdge,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const barBox = this.getMeasureBarClearanceBox(
+      measureBar,
+      edge,
+      fallbackBounds,
+      noteElement.x,
+      pageSetup,
+    );
+    const overlappingBoxes = this.getNoteCollisionGlyphBoxes(
+      noteElement,
+      pageSetup,
+      measureBarWidthMap,
+    )
+      .filter((box) => this.noteGlyphBoxesOverlap(box, barBox))
+      .map((box) => ({
+        left: noteElement.x + box.left,
+        right: noteElement.x + box.right,
+      }));
+
+    if (overlappingBoxes.length === 0) {
+      return fallbackBounds;
+    }
+
+    return {
+      left: Math.min(...overlappingBoxes.map((box) => box.left)),
+      right: Math.max(...overlappingBoxes.map((box) => box.right)),
+    };
+  }
+
+  private static getNoteLeftOverhangForMeasureBar(
+    noteElement: NoteElement,
+    measureBar: MeasureBar,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const fallbackBounds = this.getMeasureBarAnchorBounds(
+      noteElement,
+      pageSetup,
+      measureBarWidthMap,
+    );
+    const bounds = this.getNoteBoundsForMeasureBar(
+      noteElement,
+      fallbackBounds,
+      measureBar,
+      'left',
+      pageSetup,
+      measureBarWidthMap,
+    );
+
+    return Math.max(0, fallbackBounds.left - bounds.left);
+  }
+
+  private static getNoteRightOverhangForMeasureBar(
+    noteElement: NoteElement,
+    measureBar: MeasureBar,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const fallbackBounds = this.getMeasureBarAnchorBounds(
+      noteElement,
+      pageSetup,
+      measureBarWidthMap,
+    );
+    const bounds = this.getNoteBoundsForMeasureBar(
+      noteElement,
+      fallbackBounds,
+      measureBar,
+      'right',
+      pageSetup,
+      measureBarWidthMap,
+    );
+
+    return Math.max(0, bounds.right - fallbackBounds.right);
+  }
+
+  private static getMeasureBarClearanceBox(
+    measureBar: MeasureBar,
+    edge: MeasureBarAnchorEdge,
+    fallbackBounds: { left: number; right: number },
+    ownerX: number,
+    pageSetup: PageSetup,
+  ) {
+    const barBox = this.getGlyphBox(
+      pageSetup.neumeDefaultFontFamily,
+      NeumeMappingService.getMapping(measureBar).glyphName,
+      0,
+      0,
+      pageSetup.neumeDefaultFontSize,
+    );
+    const clearance = this.getInlineSpacing(pageSetup);
+    const barWidth = barBox.right - barBox.left;
+    const clearanceLeft =
+      edge === 'left'
+        ? fallbackBounds.left - ownerX - clearance - barWidth
+        : fallbackBounds.right - ownerX;
+    const clearanceRight =
+      edge === 'left'
+        ? fallbackBounds.left - ownerX
+        : fallbackBounds.right - ownerX + clearance + barWidth;
+
+    return {
+      left: clearanceLeft,
+      right: clearanceRight,
+      top: barBox.top,
+      bottom: barBox.bottom,
     };
   }
 
@@ -4619,6 +4631,7 @@ export class LayoutService {
   private static getTerminalMeasureBarRightSpacing(
     owner: NoteElement | MartyriaElement,
     pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
   ) {
     const measureBar = this.getVisibleMeasureBarRight(owner);
 
@@ -4628,8 +4641,12 @@ export class LayoutService {
 
     const inkOverhang =
       owner.elementType === ElementType.Note
-        ? this.getNoteInkBoundsFromCache(owner as NoteElement, pageSetup)
-            .rightOverhang
+        ? this.getNoteRightOverhangForMeasureBar(
+            owner as NoteElement,
+            measureBar,
+            pageSetup,
+            measureBarWidthMap,
+          )
         : 0;
 
     return this.getTerminalMeasureBarSpacing(pageSetup) + inkOverhang;
@@ -4650,19 +4667,22 @@ export class LayoutService {
     left: ScoreElement | null,
     right: ScoreElement | null,
     pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
   ) {
     let measureBarCount = 0;
+    let measureBarRight: MeasureBar | null = null;
+    let measureBarLeft: MeasureBar | null = null;
 
     if (left != null && this.isMeasureBarOwner(left)) {
-      const measureBar = this.getVisibleMeasureBarRight(left);
-      if (measureBar != null) {
+      measureBarRight = this.getVisibleMeasureBarRight(left);
+      if (measureBarRight != null) {
         measureBarCount++;
       }
     }
 
     if (right != null && this.isMeasureBarOwner(right)) {
-      const measureBar = this.getVisibleMeasureBarLeft(right);
-      if (measureBar != null) {
+      measureBarLeft = this.getVisibleMeasureBarLeft(right);
+      if (measureBarLeft != null) {
         measureBarCount++;
       }
     }
@@ -4671,14 +4691,25 @@ export class LayoutService {
       right != null && this.isMeasureBarOwner(right)
         ? this.getMeasureBarLeftLeadingSpacing(right, pageSetup)
         : 0;
+    const leftCollisionMeasureBar = measureBarLeft ?? measureBarRight;
+    const rightCollisionMeasureBar = measureBarRight ?? measureBarLeft;
     const rightInkOverhang =
-      measureBarCount > 0 && left?.elementType === ElementType.Note
-        ? this.getNoteInkBoundsFromCache(left as NoteElement, pageSetup)
-            .rightOverhang
+      rightCollisionMeasureBar != null && left?.elementType === ElementType.Note
+        ? this.getNoteRightOverhangForMeasureBar(
+            left as NoteElement,
+            rightCollisionMeasureBar,
+            pageSetup,
+            measureBarWidthMap,
+          )
         : 0;
     const leftInkOverhang =
-      measureBarCount > 0 && right?.elementType === ElementType.Note
-        ? this.getNoteLeftInkOverhang(right as NoteElement, pageSetup)
+      leftCollisionMeasureBar != null && right?.elementType === ElementType.Note
+        ? this.getNoteLeftOverhangForMeasureBar(
+            right as NoteElement,
+            leftCollisionMeasureBar,
+            pageSetup,
+            measureBarWidthMap,
+          )
         : 0;
 
     return Math.max(

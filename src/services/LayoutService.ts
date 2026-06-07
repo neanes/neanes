@@ -871,7 +871,7 @@ export class LayoutService {
             noteElement,
             rightProjection,
             layoutWorkspace,
-            nextNoteElement,
+            nextElement,
             measureBarWidthMap,
           );
 
@@ -2871,7 +2871,7 @@ export class LayoutService {
     noteElement: NoteElement,
     rightProjection: number,
     workspace: LayoutWorkspace,
-    nextNoteElement: NoteElement | null,
+    nextElement: ScoreElement | null,
     measureBarWidthMap: Map<MeasureBar, number>,
   ) {
     let penaltyWidth = Math.max(
@@ -2884,18 +2884,39 @@ export class LayoutService {
       penaltyWidth += this.getTerminalMeasureBarSpacing(workspace.pageSetup);
     }
 
-    if (
-      nextNoteElement?.measureBarLeft &&
-      !nextNoteElement.measureBarLeft.endsWith('Above')
-    ) {
-      penaltyWidth +=
-        measureBarWidthMap.get(nextNoteElement.measureBarLeft) ?? 0;
+    const transferredMeasureBarRight =
+      this.getMeasureBarTransferredFromLineStart(nextElement);
+
+    if (transferredMeasureBarRight != null) {
+      penaltyWidth += measureBarWidthMap.get(transferredMeasureBarRight) ?? 0;
       if (measureBarRight == null) {
         penaltyWidth += this.getTerminalMeasureBarSpacing(workspace.pageSetup);
       }
     }
 
     return penaltyWidth;
+  }
+
+  private static getMeasureBarTransferredFromLineStart(
+    element: ScoreElement | null,
+  ) {
+    if (element?.elementType === ElementType.Note) {
+      const measureBarLeft = (element as NoteElement).measureBarLeft;
+
+      return measureBarLeft != null && !measureBarLeft.endsWith('Above')
+        ? measureBarLeft
+        : null;
+    }
+
+    if (element?.elementType === ElementType.Martyria) {
+      const measureBarLeft = (element as MartyriaElement).measureBarLeft;
+
+      return measureBarLeft?.endsWith('Above')
+        ? (measureBarAboveToLeft.get(measureBarLeft) ?? null)
+        : (measureBarLeft ?? null);
+    }
+
+    return null;
   }
 
   private static getTrailingNoteReservations(
@@ -4476,6 +4497,25 @@ export class LayoutService {
                 pageSetup,
                 measureBarWidthMap,
               );
+            if (
+              !pageSetup.melkiteRtl &&
+              owner.elementType === ElementType.Note &&
+              (nextElement == null ||
+                nextElement.elementType === ElementType.Empty) &&
+              (owner as NoteElement).measureBarRight == null &&
+              (owner as NoteElement).computedMeasureBarRight != null
+            ) {
+              const barWidth = measureBarWidthMap.get(measureBarRight) ?? 0;
+              if (barWidth > 0) {
+                const naturalLeft =
+                  owner.x +
+                  this.getMeasureBarOwnerWidth(owner) +
+                  owner.computedMeasureBarRightTrailingSpacing;
+                const targetLeft =
+                  pageSetup.pageWidth - pageSetup.rightMargin - barWidth;
+                owner.computedMeasureBarRightOffsetX = targetLeft - naturalLeft;
+              }
+            }
           }
         }
       }

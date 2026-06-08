@@ -3611,6 +3611,10 @@ export class LayoutService {
         modeKey.computedHeightAdjustment;
       modeKey.computedColorPrevious = modeKey.computedColor;
       modeKey.computedStrokeWidthPrevious = modeKey.computedStrokeWidth;
+      modeKey.ambitusHighNotePrevious = modeKey.ambitusHighNote;
+      modeKey.ambitusHighRootSignPrevious = modeKey.ambitusHighRootSign;
+      modeKey.ambitusLowNotePrevious = modeKey.ambitusLowNote;
+      modeKey.ambitusLowRootSignPrevious = modeKey.ambitusLowRootSign;
     } else if (element.elementType === ElementType.DropCap) {
       const dropCap = element as DropCapElement;
       dropCap.computedFontFamilyPrevious = dropCap.computedFontFamily;
@@ -3696,7 +3700,11 @@ export class LayoutService {
         modeKey.computedHeightAdjustmentPrevious !==
           modeKey.computedHeightAdjustment ||
         modeKey.computedColorPrevious !== modeKey.computedColor ||
-        modeKey.computedStrokeWidthPrevious !== modeKey.computedStrokeWidth;
+        modeKey.computedStrokeWidthPrevious !== modeKey.computedStrokeWidth ||
+        modeKey.ambitusHighNote !== modeKey.ambitusHighNotePrevious ||
+        modeKey.ambitusHighRootSign !== modeKey.ambitusHighRootSignPrevious ||
+        modeKey.ambitusLowNote !== modeKey.ambitusLowNotePrevious ||
+        modeKey.ambitusLowRootSign !== modeKey.ambitusLowRootSignPrevious;
     }
 
     if (!element.updated && element.elementType === ElementType.DropCap) {

@@ -1032,6 +1032,10 @@ export class ModeKeyElement extends ScoreElement {
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
   public computedHeightAdjustmentPrevious: number = 0;
+  public ambitusLowNotePrevious: Note = Note.Pa;
+  public ambitusLowRootSignPrevious: RootSign = RootSign.Alpha;
+  public ambitusHighNotePrevious: Note = Note.Pa;
+  public ambitusHighRootSignPrevious: RootSign = RootSign.Alpha;
 
   public get isPlagal() {
     return this.mode > 4 && this.mode !== 7;

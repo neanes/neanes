@@ -843,6 +843,7 @@ export class LayoutService {
           const m_i = this.calculateInterNoteSpacing(
             noteElement,
             rightProjection,
+            nextElement,
             nextNoteElement,
             layoutWorkspace,
             minimumLyricGap,
@@ -2103,6 +2104,7 @@ export class LayoutService {
   private static calculateInterNoteSpacing(
     noteElement: NoteElement,
     rightProjection: number,
+    nextElement: ScoreElement | null,
     nextNoteElement: NoteElement | null,
     workspace: LayoutWorkspace,
     minimumLyricGap: number,
@@ -2113,7 +2115,22 @@ export class LayoutService {
     // glue absorbs much of L_{i+1}. The library supports negative
     // glue widths.
     if (nextNoteElement == null) {
-      return this.getInlineSpacing(workspace.pageSetup) + rightProjection;
+      const baseWidth =
+        this.getInlineSpacing(workspace.pageSetup) + rightProjection;
+
+      if (!this.shouldUseMeasureBarMinimumForNonNoteSpacing(nextElement)) {
+        return baseWidth;
+      }
+
+      return Math.max(
+        baseWidth,
+        this.getMeasureBarMinimumGlueWidth(
+          noteElement,
+          nextElement,
+          workspace.pageSetup,
+          measureBarWidthMap,
+        ),
+      );
     }
 
     const currentOverhangs = this.getNeumeOverhangs(
@@ -2194,6 +2211,29 @@ export class LayoutService {
     );
 
     return Math.max(baseWidth + collisionAdjustment, minimumWidth);
+  }
+
+  private static shouldUseMeasureBarMinimumForNonNoteSpacing(
+    element: ScoreElement | null,
+  ) {
+    if (element == null) {
+      return false;
+    }
+
+    switch (element.elementType) {
+      case ElementType.Empty:
+      case ElementType.Tempo:
+      case ElementType.DropCap:
+        return true;
+      case ElementType.TextBox:
+        return (element as TextBoxElement).inline;
+      case ElementType.RichTextBox:
+        return (element as RichTextBoxElement).inline;
+      case ElementType.ImageBox:
+        return (element as ImageBoxElement).inline;
+      default:
+        return false;
+    }
   }
 
   private static getMelismaOverhang(

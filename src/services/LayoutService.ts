@@ -4535,6 +4535,8 @@ export class LayoutService {
               owner.elementType === ElementType.Note &&
               (nextElement == null ||
                 nextElement.elementType === ElementType.Empty) &&
+              !(owner as NoteElement).lineBreak &&
+              !(owner as NoteElement).pageBreak &&
               (owner as NoteElement).measureBarRight == null &&
               (owner as NoteElement).computedMeasureBarRight != null
             ) {

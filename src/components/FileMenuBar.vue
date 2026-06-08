@@ -264,29 +264,29 @@
         </MenubarContent>
       </MenubarMenu>
     </Menubar>
-  </div>
 
-  <input
-    ref="file"
-    class="hidden"
-    type="file"
-    :accept="accept"
-    @change="onSelectFile"
-  />
-  <input
-    ref="imagefile"
-    class="hidden"
-    type="file"
-    :accept="acceptImage"
-    @change="onSelectImageFile"
-  />
-  <input
-    ref="ocrfile"
-    class="hidden"
-    type="file"
-    :accept="acceptOcr"
-    @change="onSelectOcrFile"
-  />
+    <input
+      ref="file"
+      class="hidden"
+      type="file"
+      :accept="accept"
+      @change="onSelectFile"
+    />
+    <input
+      ref="imagefile"
+      class="hidden"
+      type="file"
+      :accept="acceptImage"
+      @change="onSelectImageFile"
+    />
+    <input
+      ref="ocrfile"
+      class="hidden"
+      type="file"
+      :accept="acceptOcr"
+      @change="onSelectOcrFile"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">

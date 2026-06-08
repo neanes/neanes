@@ -32,7 +32,7 @@
   },
   "main": "dist-electron/main/index.js",
   "dependencies": {
-    "electron-updater": "^6.8.6",
+    "electron-updater": "^6.8.8",
     "i18next": "^26.3.0",
     "i18next-pseudo": "^2.2.1",
     "image-size": "^2.0.2",

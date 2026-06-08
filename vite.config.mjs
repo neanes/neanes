@@ -173,6 +173,13 @@ export default defineConfig(({ command, mode }) => {
           port: +url.port,
         };
       })(),
+    optimizeDeps: {
+      // Work around a Vite 8/Rolldown dep optimizer bug where Vue init helper
+      // calls are emitted without imports in pre-bundled chunks. This only
+      // affects dev mode; production builds do not use optimizeDeps.
+      // See https://github.com/rolldown/rolldown/issues/9502.
+      exclude: ['@ckeditor/ckeditor5-vue'],
+    },
     clearScreen: false,
   };
 });

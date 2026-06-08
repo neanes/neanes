@@ -8150,10 +8150,10 @@
     "pelastikon": 0.532,
     "barlineSingle": 0.032,
     "barlineDouble": 0.149,
-    "barlineTheseos": 0.407,
+    "barlineTheseos": 0.032,
     "barlineShortSingle": 0.032,
     "barlineShortDouble": 0.125,
-    "barlineShortTheseos": 0.294,
+    "barlineShortTheseos": 0.032,
     "breath": 0.138,
     "koronis": 0.0,
     "leimmaDot": 0.137,
@@ -11024,11 +11024,11 @@
     },
     "barlineTheseos": {
       "bBoxNE": [
-        0.407,
+        0.215,
         0.812
       ],
       "bBoxSW": [
-        0.0,
+        -0.192,
         0.004
       ]
     },
@@ -11054,11 +11054,11 @@
     },
     "barlineShortTheseos": {
       "bBoxNE": [
-        0.294,
+        0.161,
         0.989
       ],
       "bBoxSW": [
-        0.0,
+        -0.133,
         0.589
       ]
     },
@@ -12132,6 +12132,56 @@
         0.798
       ]
     }
+  },
+  "collisionRegions": {
+    "barlineTheseos": [
+      {
+        "name": "yfen",
+        "bBoxNE": [
+          0.215,
+          0.812
+        ],
+        "bBoxSW": [
+          -0.192,
+          0.703
+        ]
+      },
+      {
+        "name": "barline",
+        "bBoxNE": [
+          0.032,
+          0.706
+        ],
+        "bBoxSW": [
+          0.0,
+          0.003
+        ]
+      }
+    ],
+    "barlineShortTheseos": [
+      {
+        "name": "yfen",
+        "bBoxNE": [
+          0.161,
+          0.99
+        ],
+        "bBoxSW": [
+          -0.133,
+          0.903
+        ]
+      },
+      {
+        "name": "barline",
+        "bBoxNE": [
+          0.032,
+          0.896
+        ],
+        "bBoxSW": [
+          0.0,
+          0.588
+        ]
+      }
+    ]
   },
   "ligatures": {
     "oligonKentimaMiddleKentimata": {

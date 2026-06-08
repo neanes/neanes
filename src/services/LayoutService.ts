@@ -1461,8 +1461,11 @@ export class LayoutService {
                 const barlineWidth =
                   measureBarWidthMap.get(normalizedMeasureBar) ?? 0;
                 if (barlineWidth > 0) {
-                  const leadingSpacing =
-                    this.getTerminalMeasureBarSpacing(pageSetup);
+                  const leadingSpacing = this.getMeasureBarLeftLeadingSpacing(
+                    noteElement,
+                    pageSetup,
+                    measureBarWidthMap,
+                  );
                   const reservedWidth = barlineWidth + leadingSpacing;
                   noteElement.computedMeasureBarLeftLeadingSpacing =
                     leadingSpacing;
@@ -1591,6 +1594,10 @@ export class LayoutService {
         fontService.getStandardGlue(pageSetup.neumeDefaultFontFamily).width +
       pageSetup.neumeDefaultSpacing
     );
+  }
+
+  private static getMeasureBarCollisionSpacing(pageSetup: PageSetup) {
+    return this.getInlineSpacing(pageSetup);
   }
 
   private static getInitialLyricsEndPx(pageSetup: PageSetup) {
@@ -2332,6 +2339,7 @@ export class LayoutService {
     noteElement: NoteElement,
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
+    leftBarReserveOverride: number | null = null,
   ) {
     const fontFamily = pageSetup.neumeDefaultFontFamily;
     const fontSize = pageSetup.neumeDefaultFontSize;
@@ -2339,6 +2347,7 @@ export class LayoutService {
       noteElement,
       pageSetup,
       measureBarWidthMap,
+      leftBarReserveOverride,
     );
     const resolvedGlyphNames = fontService.resolveContextualSubstitutions(
       fontFamily,
@@ -2385,12 +2394,14 @@ export class LayoutService {
     noteElement: NoteElement,
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
+    leftBarReserveOverride: number | null = null,
   ): NoteCollisionGlyph[] {
     const glyphs: NoteCollisionGlyph[] = [];
     const fontSize = pageSetup.neumeDefaultFontSize;
     const leftBarReserve = this.getNoteLeftBarReserve(
       noteElement,
       measureBarWidthMap,
+      leftBarReserveOverride,
     );
     const vareiaWidth = this.getNeumeWidthFromCache(
       neumeWidthCache,
@@ -2461,7 +2472,12 @@ export class LayoutService {
   private static getNoteLeftBarReserve(
     noteElement: NoteElement,
     measureBarWidthMap: Map<MeasureBar, number>,
+    reserveOverride: number | null = null,
   ) {
+    if (reserveOverride != null) {
+      return reserveOverride;
+    }
+
     const measureBarLeft = this.getVisibleMeasureBarLeft(noteElement);
 
     if (measureBarLeft == null) {
@@ -2590,6 +2606,15 @@ export class LayoutService {
   ): NoteGlyphBox {
     const bBox = fontService.getGlyphBBox(fontFamily, glyphName);
 
+    return this.getGlyphBBoxBox(bBox, x, y, fontSize);
+  }
+
+  private static getGlyphBBoxBox(
+    bBox: { bBoxNE: [number, number]; bBoxSW: [number, number] },
+    x: number,
+    y: number,
+    fontSize: number,
+  ): NoteGlyphBox {
     return {
       left: x + bBox.bBoxSW[0] * fontSize,
       right: x + bBox.bBoxNE[0] * fontSize,
@@ -3734,7 +3759,11 @@ export class LayoutService {
 
     if (measureBarLeftWidth != null) {
       noteElement.computedMeasureBarLeftLeadingSpacing =
-        this.getMeasureBarLeftLeadingSpacing(noteElement, pageSetup);
+        this.getMeasureBarLeftLeadingSpacing(
+          noteElement,
+          pageSetup,
+          measureBarWidthMap,
+        );
       const reservedWidth =
         measureBarLeftWidth + noteElement.computedMeasureBarLeftLeadingSpacing;
       noteElement.lyricsHorizontalOffset += reservedWidth;
@@ -3850,7 +3879,7 @@ export class LayoutService {
     }
 
     martyriaElement.computedMeasureBarLeftLeadingSpacing =
-      this.getMeasureBarLeftLeadingSpacing(martyriaElement, pageSetup);
+      this.getMeasureBarBaseLeftLeadingSpacing(martyriaElement, pageSetup);
 
     if (martyriaElement.measureBarRight) {
       martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
@@ -4403,7 +4432,11 @@ export class LayoutService {
           owner.computedMeasureBarLeftOffsetX = 0;
           owner.computedMeasureBarRightOffsetX = 0;
           owner.computedMeasureBarLeftLeadingSpacing =
-            this.getMeasureBarLeftLeadingSpacing(owner, pageSetup);
+            this.getMeasureBarLeftLeadingSpacing(
+              owner,
+              pageSetup,
+              measureBarWidthMap,
+            );
           owner.computedMeasureBarRightTrailingSpacing = 0;
 
           const previousAnchor = this.findAdjacentMeasureBarAnchor(
@@ -4760,6 +4793,56 @@ export class LayoutService {
   private static getMeasureBarLeftLeadingSpacing(
     owner: NoteElement | MartyriaElement,
     pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const leadingSpacing = this.getMeasureBarBaseLeftLeadingSpacing(
+      owner,
+      pageSetup,
+    );
+
+    if (leadingSpacing === 0) {
+      return 0;
+    }
+
+    const measureBar = this.getVisibleMeasureBarLeft(owner);
+
+    if (measureBar == null) {
+      return 0;
+    }
+
+    if (owner.elementType !== ElementType.Note) {
+      return leadingSpacing;
+    }
+
+    const barWidth = measureBarWidthMap.get(measureBar) ?? 0;
+    const barBoxes = this.getMeasureBarCollisionBoxes(
+      measureBar,
+      'left',
+      { left: 0, right: 0 },
+      0,
+      pageSetup,
+    );
+    const noteBoxes = this.getNoteCollisionGlyphBoxes(
+      owner as NoteElement,
+      pageSetup,
+      measureBarWidthMap,
+      barWidth + leadingSpacing,
+    );
+
+    return (
+      leadingSpacing +
+      this.getMeasureBarCollisionDeficit(
+        noteBoxes,
+        barBoxes,
+        'left',
+        leadingSpacing,
+      )
+    );
+  }
+
+  private static getMeasureBarBaseLeftLeadingSpacing(
+    owner: NoteElement | MartyriaElement,
+    pageSetup: PageSetup,
   ) {
     const measureBar = this.getVisibleMeasureBarLeft(owner);
 
@@ -4794,7 +4877,7 @@ export class LayoutService {
 
     const internalLeftBarSpacing =
       right != null && this.isMeasureBarOwner(right)
-        ? this.getMeasureBarLeftLeadingSpacing(right, pageSetup)
+        ? this.getMeasureBarBaseLeftLeadingSpacing(right, pageSetup)
         : 0;
     const leftCollisionMeasureBar = measureBarLeft ?? measureBarRight;
     const rightCollisionMeasureBar = measureBarRight ?? measureBarLeft;
@@ -4823,7 +4906,147 @@ export class LayoutService {
         internalLeftBarSpacing +
         rightInkOverhang +
         leftInkOverhang,
+      this.getMeasureBarCollisionMinimumGlueWidth(
+        left,
+        right,
+        pageSetup,
+        measureBarWidthMap,
+      ),
     );
+  }
+
+  private static getMeasureBarCollisionDeficit(
+    noteBoxes: NoteGlyphBox[],
+    barBoxes: NoteGlyphBox[],
+    edge: MeasureBarAnchorEdge,
+    clearance: number,
+  ) {
+    let deficit = 0;
+
+    for (const noteBox of noteBoxes) {
+      for (const barBox of barBoxes) {
+        if (!this.noteGlyphBoxesVerticallyOverlap(noteBox, barBox)) {
+          continue;
+        }
+
+        deficit = Math.max(
+          deficit,
+          edge === 'left'
+            ? barBox.right + clearance - noteBox.left
+            : noteBox.right + clearance - barBox.left,
+        );
+      }
+    }
+
+    return Math.max(0, deficit);
+  }
+
+  private static getMeasureBarCollisionMinimumGlueWidth(
+    left: ScoreElement | null,
+    right: ScoreElement | null,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    if (
+      left?.elementType !== ElementType.Note ||
+      right?.elementType !== ElementType.Note
+    ) {
+      return 0;
+    }
+
+    const leftNote = left as NoteElement;
+    const rightNote = right as NoteElement;
+    const measureBarRight = this.getVisibleMeasureBarRight(leftNote);
+    const measureBarLeft = this.getVisibleMeasureBarLeft(rightNote);
+    const clearance = this.getMeasureBarCollisionSpacing(pageSetup);
+
+    if (measureBarRight != null) {
+      const fallbackBounds = this.getMeasureBarAnchorBounds(
+        leftNote,
+        pageSetup,
+        measureBarWidthMap,
+      );
+      const barBoxes = this.getMeasureBarCollisionBoxes(
+        measureBarRight,
+        'right',
+        fallbackBounds,
+        leftNote.x,
+        pageSetup,
+      );
+      const rightBoxes = this.getNoteCollisionGlyphBoxes(
+        rightNote,
+        pageSetup,
+        measureBarWidthMap,
+      );
+
+      return this.getMinimumSpacingForNoteGlyphBoxes(
+        leftNote.neumeWidth,
+        barBoxes,
+        rightBoxes,
+        clearance,
+      );
+    }
+
+    if (measureBarLeft != null) {
+      const leftBoxes = this.getNoteCollisionGlyphBoxes(
+        leftNote,
+        pageSetup,
+        measureBarWidthMap,
+      );
+      const barBoxes = this.getMeasureBarCollisionBoxes(
+        measureBarLeft,
+        'left',
+        { left: 0, right: 0 },
+        0,
+        pageSetup,
+      );
+
+      return this.getMinimumSpacingForNoteGlyphBoxes(
+        leftNote.neumeWidth,
+        leftBoxes,
+        barBoxes,
+        clearance,
+      );
+    }
+
+    return 0;
+  }
+
+  private static getMeasureBarCollisionBoxes(
+    measureBar: MeasureBar,
+    edge: MeasureBarAnchorEdge,
+    fallbackBounds: { left: number; right: number },
+    ownerX: number,
+    pageSetup: PageSetup,
+  ) {
+    const fontFamily = pageSetup.neumeDefaultFontFamily;
+    const glyphName = NeumeMappingService.getMapping(measureBar).glyphName;
+    const fontSize = pageSetup.neumeDefaultFontSize;
+    const regionBoxes = fontService
+      .getGlyphCollisionRegions(fontFamily, glyphName)
+      .map((region) => this.getGlyphBBoxBox(region, 0, 0, fontSize));
+    const barBoxes =
+      regionBoxes.length > 0
+        ? regionBoxes
+        : [this.getGlyphBox(fontFamily, glyphName, 0, 0, fontSize)];
+
+    return barBoxes.map((barBox) => {
+      const barLeft =
+        edge === 'left'
+          ? barBox.left
+          : fallbackBounds.right - ownerX + barBox.left;
+      const barRight =
+        edge === 'left'
+          ? barBox.right
+          : fallbackBounds.right - ownerX + barBox.right;
+
+      return {
+        left: barLeft,
+        right: barRight,
+        top: barBox.top,
+        bottom: barBox.bottom,
+      };
+    });
   }
 
   private static isMeasureBarOwner(

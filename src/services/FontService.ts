@@ -23,6 +23,10 @@ interface GlyphBBox {
   bBoxSW: [number, number];
 }
 
+interface CollisionRegion extends GlyphBBox {
+  name: string;
+}
+
 interface ContextualSubstitution {
   inputGlyphs: SbmuflGlyphName[][];
   backtrackGlyphs: SbmuflGlyphName[][];
@@ -57,6 +61,13 @@ class FontService {
 
   getGlyphBBox(fontFamily: string, glyph: SbmuflGlyphName): GlyphBBox {
     return this.getMetadata(fontFamily).glyphBBoxes[glyph];
+  }
+
+  getGlyphCollisionRegions(
+    fontFamily: string,
+    glyph: SbmuflGlyphName,
+  ): CollisionRegion[] {
+    return this.getMetadata(fontFamily).collisionRegions?.[glyph] ?? [];
   }
 
   getContextualSubstitutions(fontFamily: string): ContextualSubstitution[] {

@@ -8499,10 +8499,10 @@
     "yfesisGenikiTertiary": 0.0,
     "barlineSingle": 0.062,
     "barlineDouble": 0.171,
-    "barlineTheseos": 0.417,
+    "barlineTheseos": 0.06,
     "barlineShortSingle": 0.059,
     "barlineShortDouble": 0.152,
-    "barlineShortTheseos": 0.418,
+    "barlineShortTheseos": 0.062,
     "barlineSingleAbove": 0.0,
     "barlineDoubleAbove": 0.0,
     "barlineTheseosAbove": 0.0,
@@ -11529,11 +11529,11 @@
     },
     "barlineTheseos": {
       "bBoxNE": [
-        0.417,
+        0.236,
         0.81
       ],
       "bBoxSW": [
-        0.0,
+        -0.181,
         0.001
       ]
     },
@@ -11559,11 +11559,11 @@
     },
     "barlineShortTheseos": {
       "bBoxNE": [
-        0.418,
+        0.238,
         0.954
       ],
       "bBoxSW": [
-        0.0,
+        -0.18,
         0.657
       ]
     },
@@ -12507,6 +12507,56 @@
         0.176
       ]
     }
+  },
+  "collisionRegions": {
+    "barlineTheseos": [
+      {
+        "name": "yfen",
+        "bBoxNE": [
+          0.236,
+          0.811
+        ],
+        "bBoxSW": [
+          -0.181,
+          0.668
+        ]
+      },
+      {
+        "name": "barline",
+        "bBoxNE": [
+          0.06,
+          0.713
+        ],
+        "bBoxSW": [
+          0.0,
+          0.001
+        ]
+      }
+    ],
+    "barlineShortTheseos": [
+      {
+        "name": "yfen",
+        "bBoxNE": [
+          0.238,
+          0.956
+        ],
+        "bBoxSW": [
+          -0.18,
+          0.812
+        ]
+      },
+      {
+        "name": "barline",
+        "bBoxNE": [
+          0.062,
+          0.857
+        ],
+        "bBoxSW": [
+          0.0,
+          0.657
+        ]
+      }
+    ]
   },
   "ligatures": {
     "oligonKentimaMiddle": {

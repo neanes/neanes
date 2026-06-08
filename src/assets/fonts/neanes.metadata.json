@@ -12476,6 +12476,56 @@
       ]
     }
   },
+  "collisionRegions": {
+    "barlineTheseos": [
+      {
+        "name": "yfen",
+        "bBoxNE": [
+          0.306,
+          0.812
+        ],
+        "bBoxSW": [
+          -0.101,
+          0.703
+        ]
+      },
+      {
+        "name": "barline",
+        "bBoxNE": [
+          0.123,
+          0.706
+        ],
+        "bBoxSW": [
+          0.091,
+          0.003
+        ]
+      }
+    ],
+    "barlineShortTheseos": [
+      {
+        "name": "yfen",
+        "bBoxNE": [
+          0.232,
+          0.99
+        ],
+        "bBoxSW": [
+          -0.062,
+          0.903
+        ]
+      },
+      {
+        "name": "barline",
+        "bBoxNE": [
+          0.103,
+          0.896
+        ],
+        "bBoxSW": [
+          0.071,
+          0.588
+        ]
+      }
+    ]
+  },
   "ligatures": {
     "oligonKentimaMiddleKentimata": {
       "codepoint": "U+E085",

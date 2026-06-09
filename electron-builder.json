@@ -20,7 +20,9 @@
     }
   ],
   "mac": {
-    "category": "public.app-category.graphics-design"
+    "category": "public.app-category.graphics-design",
+    "hardenedRuntime": false,
+    "identity": "-"
   },
   "linux": {
     "target": ["AppImage"]

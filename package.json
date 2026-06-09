@@ -61,7 +61,7 @@
     "@vue/eslint-config-typescript": "^14.7.0",
     "@vuelor/picker": "^1.0.1",
     "@vueuse/core": "^14.3.0",
-    "ckeditor5": "^48.1.1",
+    "ckeditor5": "^48.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "electron": "^42.3.0",

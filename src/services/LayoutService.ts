@@ -2959,7 +2959,12 @@ export class LayoutService {
 
     const measureBarRight = this.getVisibleMeasureBarRight(noteElement);
     if (measureBarRight != null) {
-      penaltyWidth += this.getTerminalMeasureBarSpacing(workspace.pageSetup);
+      penaltyWidth += this.getTerminalMeasureBarRightSpacingForMeasureBar(
+        noteElement,
+        measureBarRight,
+        workspace.pageSetup,
+        measureBarWidthMap,
+      );
     }
 
     const transferredMeasureBarRight =
@@ -2968,7 +2973,12 @@ export class LayoutService {
     if (transferredMeasureBarRight != null) {
       penaltyWidth += measureBarWidthMap.get(transferredMeasureBarRight) ?? 0;
       if (measureBarRight == null) {
-        penaltyWidth += this.getTerminalMeasureBarSpacing(workspace.pageSetup);
+        penaltyWidth += this.getTerminalMeasureBarRightSpacingForMeasureBar(
+          noteElement,
+          transferredMeasureBarRight,
+          workspace.pageSetup,
+          measureBarWidthMap,
+        );
       }
     }
 
@@ -4840,6 +4850,20 @@ export class LayoutService {
       return 0;
     }
 
+    return this.getTerminalMeasureBarRightSpacingForMeasureBar(
+      owner,
+      measureBar,
+      pageSetup,
+      measureBarWidthMap,
+    );
+  }
+
+  private static getTerminalMeasureBarRightSpacingForMeasureBar(
+    owner: NoteElement | MartyriaElement,
+    measureBar: MeasureBar,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
     const inkOverhang =
       owner.elementType === ElementType.Note
         ? this.getNoteRightOverhangForMeasureBar(

@@ -442,7 +442,7 @@ const lyricManagerIsOpen = computed({
 });
 
 const pageCount = computed(() => {
-  return pages.value.length;
+  return filteredPages.value.length;
 });
 
 const commandService = computed(() => {

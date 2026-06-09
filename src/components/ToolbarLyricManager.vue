@@ -40,7 +40,7 @@
       </Button>
     </div>
     <Textarea
-      class="mt-1 bg-background"
+      class="mt-1 bg-background field-sizing-fixed"
       :model-value="lyrics"
       rows="5"
       dir="auto"

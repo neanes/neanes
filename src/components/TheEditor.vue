@@ -1043,7 +1043,7 @@ function getHeaderHorizontalRuleStyle(headerHeight: number) {
         headerHeight +
         score.value.pageSetup.headerHorizontalRuleMarginTop,
     ),
-    color: score.value.pageSetup.headerHorizontalRuleColor,
+    borderColor: score.value.pageSetup.headerHorizontalRuleColor,
     borderTopWidth: withZoom(
       score.value.pageSetup.headerHorizontalRuleThickness,
     ),
@@ -1059,7 +1059,7 @@ function getFooterHorizontalRuleStyle(footerHeight: number) {
         footerHeight +
         score.value.pageSetup.footerHorizontalRuleMarginBottom,
     ),
-    color: score.value.pageSetup.footerHorizontalRuleColor,
+    borderColor: score.value.pageSetup.footerHorizontalRuleColor,
     borderTopWidth: withZoom(
       score.value.pageSetup.footerHorizontalRuleThickness,
     ),

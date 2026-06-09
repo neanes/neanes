@@ -93,6 +93,16 @@ const tieSet = new Set<VocalExpressionNeume | Tie>([
   Tie.YfenBelow,
 ]);
 
+// These marks tie two notes together. So collisions should not cause
+// extra space between the neumes because that would ruin the position of the ties.
+const collisionSpacingIgnoredMarkSet = new Set<VocalExpressionNeume | Tie>([
+  VocalExpressionNeume.HeteronConnecting,
+  VocalExpressionNeume.HeteronConnectingLong,
+  VocalExpressionNeume.HomalonConnecting,
+  Tie.YfenAbove,
+  Tie.YfenBelow,
+]);
+
 const kentemataSet = new Set<QuantitativeNeume>([
   QuantitativeNeume.Kentemata,
   QuantitativeNeume.KentemataPlusOligon,
@@ -2542,7 +2552,10 @@ export class LayoutService {
       offsetX?: number | null,
       offsetY?: number | null,
     ) => {
-      if (neume != null) {
+      if (
+        neume != null &&
+        !collisionSpacingIgnoredMarkSet.has(neume as VocalExpressionNeume | Tie)
+      ) {
         marks.push({ neume, offsetX, offsetY });
       }
     };

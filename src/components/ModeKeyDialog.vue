@@ -1,131 +1,164 @@
 <template>
-  <ModalDialog>
-    <div class="container">
-      <div class="header">
-        {{ $t(($) => $.dialog.modeKey.root, { ns: 'dialog' }) }}
-      </div>
-      <div class="pane-container">
-        <div class="left-pane">
-          <ul class="mode-list">
-            <li
-              :class="{ selected: selectedMode === 1 }"
-              @click="selectMode(1)"
+  <Dialog v-model:open="open">
+    <DialogContent
+      class="h-[42rem] max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto_auto] overflow-hidden sm:max-w-3xl"
+    >
+      <DialogHeader>
+        <DialogTitle>
+          {{ $t(($) => $.dialog.modeKey.root, { ns: 'dialog' }) }}
+        </DialogTitle>
+        <DialogDescription>
+          {{ $t(($) => $.dialog.modeKey.description, { ns: 'dialog' }) }}
+        </DialogDescription>
+      </DialogHeader>
+      <Tabs
+        :model-value="selectedMode"
+        orientation="vertical"
+        class="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden sm:grid-cols-[13rem_minmax(0,1fr)] sm:grid-rows-[minmax(0,1fr)]"
+        @update:model-value="selectMode"
+      >
+        <ScrollArea class="col-start-1 row-start-1 min-h-0">
+          <TabsList
+            class="h-auto w-full flex-col items-stretch justify-start p-1"
+          >
+            <TabsTrigger
+              v-for="mode in modeOptions"
+              :key="mode.value"
+              :value="mode.value"
+              class="min-h-9 w-full flex-none justify-start whitespace-normal text-left"
             >
-              {{ $t(($) => $.model.mode.first, { ns: 'model' }) }}
-            </li>
-            <li
-              :class="{ selected: selectedMode === 2 }"
-              @click="selectMode(2)"
-            >
-              {{ $t(($) => $.model.mode.second, { ns: 'model' }) }}
-            </li>
-            <li
-              :class="{ selected: selectedMode === 3 }"
-              @click="selectMode(3)"
-            >
-              {{ $t(($) => $.model.mode.third, { ns: 'model' }) }}
-            </li>
-            <li
-              :class="{ selected: selectedMode === 4 }"
-              @click="selectMode(4)"
-            >
-              {{ $t(($) => $.model.mode.fourth, { ns: 'model' }) }}
-            </li>
-            <li
-              :class="{ selected: selectedMode === 5 }"
-              @click="selectMode(5)"
-            >
-              {{ $t(($) => $.model.mode.plagalFirst, { ns: 'model' }) }}
-            </li>
-            <li
-              :class="{ selected: selectedMode === 6 }"
-              @click="selectMode(6)"
-            >
-              {{ $t(($) => $.model.mode.plagalSecond, { ns: 'model' }) }}
-            </li>
-            <li
-              :class="{ selected: selectedMode === 7 }"
-              @click="selectMode(7)"
-            >
-              {{ $t(($) => $.model.mode.grave, { ns: 'model' }) }}
-            </li>
-            <li
-              :class="{ selected: selectedMode === 8 }"
-              @click="selectMode(8)"
-            >
-              {{ $t(($) => $.model.mode.plagalFourth, { ns: 'model' }) }}
-            </li>
-          </ul>
-        </div>
-        <div class="right-pane">
-          <ul class="mode-list">
-            <li
-              v-for="(template, index) in modeKeyTemplatesForSelectedMode"
-              :key="index"
-              :class="{
-                selected: selectedTemplateId === template.templateId,
-              }"
-              @click="selectedTemplateId = template.templateId"
-              @dblclick="updateModeKey"
-            >
-              <ModeKey :element="template" :page-setup="pageSetup" />
-              <div class="mode-key-description">
-                {{ $t(template.descriptionSelector, { ns: 'model' }) }}
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div class="options-container">
-        <input
-          id="mode-key-dialog:use-optional-diatonic-fthoras"
-          type="checkbox"
-          :checked="pageSetup.useOptionalDiatonicFthoras"
-          @change="
-            $emit(
-              'update:useOptionalDiatonicFthoras',
-              ($event.target as HTMLInputElement).checked,
-            )
-          "
+              <component :is="mode.icon" />
+              {{ $t(mode.labelSelector, { ns: 'model' }) }}
+            </TabsTrigger>
+          </TabsList>
+        </ScrollArea>
+        <TabsContent
+          v-for="mode in modeOptions"
+          :key="mode.value"
+          :value="mode.value"
+          class="col-start-1 row-start-2 min-h-0 min-w-0 overflow-hidden sm:col-start-2 sm:row-start-1"
+        >
+          <ScrollArea class="h-full min-h-0 border">
+            <ItemGroup>
+              <Item
+                v-for="(template, index) in getModeKeyTemplatesForMode(
+                  mode.value,
+                )"
+                :key="template.templateId ?? index"
+                as="div"
+                role="button"
+                tabindex="0"
+                :aria-pressed="selectedTemplateId === template.templateId"
+                class="w-full items-start text-left hover:bg-accent hover:text-accent-foreground"
+                :class="{
+                  'border-primary bg-primary/5 text-primary':
+                    selectedTemplateId === template.templateId,
+                }"
+                @click="selectedTemplateId = template.templateId"
+                @dblclick="updateModeKey"
+                @keydown.enter.prevent="
+                  selectedTemplateId = template.templateId
+                "
+                @keydown.space.prevent="
+                  selectedTemplateId = template.templateId
+                "
+              >
+                <ItemContent class="items-start">
+                  <div class="w-full px-2 py-1">
+                    <ModeKey
+                      class="!w-auto !border-0 [--zoom:1]"
+                      :element="template"
+                      :page-setup="pageSetup"
+                    />
+                  </div>
+                  <ItemDescription>
+                    {{ $t(template.descriptionSelector, { ns: 'model' }) }}
+                  </ItemDescription>
+                </ItemContent>
+              </Item>
+            </ItemGroup>
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
+      <Field orientation="horizontal">
+        <Checkbox
+          id="mode-key-dialog-use-optional-diatonic-fthoras"
+          :model-value="useOptionalDiatonicFthoras"
+          @update:model-value="onUseOptionalDiatonicFthorasChanged"
         />
-        <label for="mode-key-dialog:use-optional-diatonic-fthoras">{{
-          $t(($) => $.toolbar.modeKey.useOptionalDiatonicFthoras, {
-            ns: 'toolbar',
-          })
-        }}</label>
-      </div>
-      <div class="button-container">
-        <button
-          class="ok-btn"
+        <FieldLabel for="mode-key-dialog-use-optional-diatonic-fthoras">
+          {{
+            $t(($) => $.toolbar.modeKey.useOptionalDiatonicFthoras, {
+              ns: 'toolbar',
+            })
+          }}
+        </FieldLabel>
+      </Field>
+      <DialogFooter>
+        <DialogClose as-child>
+          <Button variant="outline" type="button">
+            {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
+          </Button>
+        </DialogClose>
+        <Button
+          type="button"
           :disabled="selectedTemplateId == null"
           @click="updateModeKey"
         >
+          <PhCheck />
           {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
-        </button>
-        <button class="cancel-btn" @click="$emit('close')">
-          {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
-        </button>
-      </div>
-    </div>
-  </ModalDialog>
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
-import type { PropType } from 'vue';
-import { computed, onBeforeUnmount, ref } from 'vue';
+import {
+  PhCheck,
+  PhNumberCircleEight,
+  PhNumberCircleFive,
+  PhNumberCircleFour,
+  PhNumberCircleOne,
+  PhNumberCircleSeven,
+  PhNumberCircleSix,
+  PhNumberCircleThree,
+  PhNumberCircleTwo,
+} from '@phosphor-icons/vue';
+import type { Component, PropType } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-import ModalDialog from '@/components/ModalDialog.vue';
 import ModeKey from '@/components/ModeKey.vue';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+} from '@/components/ui/item';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import { modeKeyTemplates } from '@/models/ModeKeys';
+import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 
-const emit = defineEmits([
-  'close',
-  'update',
-  'update:useOptionalDiatonicFthoras',
-]);
+const emit = defineEmits<{
+  update: [modeKey: ModeKeyElement];
+  'update:useOptionalDiatonicFthoras': [value: boolean];
+}>();
 const props = defineProps({
   element: {
     type: Object as PropType<ModeKeyElement>,
@@ -137,17 +170,69 @@ const props = defineProps({
   },
 });
 
-const selectedMode = ref<number | null>(null);
+const open = defineModel<boolean>('open', { required: true });
+
+const modeOptions = [
+  {
+    value: 1,
+    labelSelector: ($) => $.model.mode.first,
+    icon: PhNumberCircleOne,
+  },
+  {
+    value: 2,
+    labelSelector: ($) => $.model.mode.second,
+    icon: PhNumberCircleTwo,
+  },
+  {
+    value: 3,
+    labelSelector: ($) => $.model.mode.third,
+    icon: PhNumberCircleThree,
+  },
+  {
+    value: 4,
+    labelSelector: ($) => $.model.mode.fourth,
+    icon: PhNumberCircleFour,
+  },
+  {
+    value: 5,
+    labelSelector: ($) => $.model.mode.plagalFirst,
+    icon: PhNumberCircleFive,
+  },
+  {
+    value: 6,
+    labelSelector: ($) => $.model.mode.plagalSecond,
+    icon: PhNumberCircleSix,
+  },
+  {
+    value: 7,
+    labelSelector: ($) => $.model.mode.grave,
+    icon: PhNumberCircleSeven,
+  },
+  {
+    value: 8,
+    labelSelector: ($) => $.model.mode.plagalFourth,
+    icon: PhNumberCircleEight,
+  },
+] satisfies { value: number; labelSelector: ModelSelector; icon: Component }[];
+
+const selectedMode = ref(props.element.mode);
 const selectedTemplateId = ref<number | null>(null);
+const useOptionalDiatonicFthoras = ref(
+  props.pageSetup.useOptionalDiatonicFthoras,
+);
 
 const modeKeyTemplatesForSelectedMode = computed(() => {
+  return getModeKeyTemplatesForMode(selectedMode.value);
+});
+
+function getModeKeyTemplatesForMode(mode: number) {
   const elements = modeKeyTemplates
-    .filter((x) => x.mode === selectedMode.value)
+    .filter((x) => x.mode === mode)
     .map((x) =>
       Object.assign(
         ModeKeyElement.createFromTemplate(
           x,
-          props.pageSetup.useOptionalDiatonicFthoras,
+          useOptionalDiatonicFthoras.value,
           TextBoxAlignment.Left,
         ),
         { descriptionSelector: x.description },
@@ -164,28 +249,28 @@ const modeKeyTemplatesForSelectedMode = computed(() => {
   }
 
   return elements;
-});
+}
 
 selectMode(props.element.mode);
 
-window.addEventListener('keydown', onKeyDown);
+watch(
+  () => props.pageSetup.useOptionalDiatonicFthoras,
+  (value) => {
+    useOptionalDiatonicFthoras.value = value;
+  },
+);
 
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onKeyDown);
-});
-
-function onKeyDown(event: KeyboardEvent) {
-  if (event.code === 'Escape') {
-    emit('close');
-  }
-}
-
-function selectMode(mode: number) {
-  selectedMode.value = mode;
+function selectMode(mode: string | number) {
+  selectedMode.value = Number(mode);
   selectedTemplateId.value =
     modeKeyTemplatesForSelectedMode.value.find(
       (x) => x.templateId === props.element.templateId,
     )?.templateId || modeKeyTemplatesForSelectedMode.value[0].templateId;
+}
+
+function onUseOptionalDiatonicFthorasChanged(value: boolean | 'indeterminate') {
+  useOptionalDiatonicFthoras.value = value === true;
+  emit('update:useOptionalDiatonicFthoras', useOptionalDiatonicFthoras.value);
 }
 
 function updateModeKey() {
@@ -193,80 +278,11 @@ function updateModeKey() {
     (x) => x.templateId === selectedTemplateId.value,
   );
 
+  if (!modeKey) {
+    return;
+  }
+
   emit('update', modeKey);
-  emit('close');
+  open.value = false;
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-.pane-container {
-  display: flex;
-  width: 460px;
-  margin-bottom: 1.5rem;
-}
-
-.left-pane {
-  height: 290px;
-}
-
-.right-pane {
-  flex: 1;
-  overflow: auto;
-  height: 290px;
-}
-
-.mode-key-container {
-  border: none;
-  width: auto !important;
-
-  --zoom: 1;
-}
-
-.header {
-  font-size: 1.5rem;
-  text-align: center;
-}
-
-ul {
-  padding: 0;
-}
-
-ul li {
-  list-style: none;
-  cursor: default;
-}
-
-.left-pane {
-  margin-right: 2rem;
-}
-
-.button-container {
-  display: flex;
-  justify-content: center;
-}
-
-.mode-list li {
-  padding: 0.5rem;
-}
-
-li.selected {
-  background-color: lightblue;
-}
-
-.form-group.row {
-  display: flex;
-  align-items: center;
-}
-
-.options-container {
-  border-top: 1px solid lightgray;
-  border-bottom: 1px solid lightgray;
-  padding: 0.5rem 0;
-  margin-bottom: 1rem;
-}
-
-.ok-btn {
-  margin-right: 2rem;
-}
-</style>

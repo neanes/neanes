@@ -36,7 +36,6 @@ import type {
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
-  OpenContextMenuForTabArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
@@ -191,6 +190,27 @@ async function generateFilePath(filename: string) {
   return path.join(targetDirectory, filename);
 }
 
+// Returns the source path with its extension swapped for the given one,
+// keeping the same directory and base name (e.g. /scores/song.byz -> /scores/song.pdf).
+function replaceExtension(filePath: string, extension: string) {
+  const directory = path.dirname(filePath);
+  const baseName = path.basename(filePath, path.extname(filePath));
+  return path.join(directory, `${baseName}.${extension}`);
+}
+
+// Computes the default path for an export save dialog. When the score has been
+// saved, the export defaults to the score's own folder and base name with the
+// export's extension. Otherwise it falls back to the last-used directory.
+async function getExportDefaultPath(
+  sourceFilePath: string | null,
+  tempFileName: string,
+  extension: string,
+) {
+  return sourceFilePath != null
+    ? replaceExtension(sourceFilePath, extension)
+    : await generateFilePath(`${tempFileName}.${extension}`);
+}
+
 async function loadStore() {
   try {
     Object.assign(store, JSON.parse(await fs.readFile(storeFilePath, 'utf8')));
@@ -251,7 +271,7 @@ async function showReplaceOrSkipFileDialog(filePath: string) {
       )}" already exists. Do you want to replace it?`,
       buttons: ['Replace', 'Replace all', 'Skip', 'Skip all'],
       defaultId: 0,
-      cancelId: 0,
+      cancelId: 2,
     });
 
     return replaceFileResult.response as OnConflictChoice;
@@ -427,6 +447,7 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Save Score',
       defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: `${app.name} File`,
@@ -638,12 +659,7 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
           ),
           landscape: args.landscape,
         });
-        let newPath = args.filePath!.replace(/\.byzx?$/, '.pdf');
-
-        // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePath) {
-          newPath += '.pdf';
-        }
+        const newPath = replaceExtension(args.filePath!, 'pdf');
 
         await fs.writeFile(newPath, data);
         silentPdfSuccessCount++;
@@ -661,10 +677,12 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
     const dialogResult = await dialog.showSaveDialog(win, {
       title: 'Export Score as PDF',
       filters: [{ name: 'PDF File', extensions: ['pdf'] }],
-      defaultPath:
-        args.filePath != null
-          ? path.basename(args.filePath, path.extname(args.filePath))
-          : await generateFilePath(args.tempFileName),
+      properties: ['showOverwriteConfirmation'],
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        'pdf',
+      ),
     });
 
     if (!dialogResult.canceled) {
@@ -692,7 +710,12 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
         });
         await fs.writeFile(filePath, data);
 
-        await shell.openPath(filePath);
+        const openError = await shell.openPath(filePath);
+        if (openError) {
+          // The file has already been written successfully; failing to open it
+          // afterward is not an export failure, so just log it.
+          console.error(`Failed to open ${filePath}: ${openError}`);
+        }
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
@@ -724,19 +747,14 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
 
     if (silentHtml) {
       try {
-        let newPath = args.filePathFull!.replace(/\.byzx?$/, '.html');
-
-        // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePathFull) {
-          newPath += '.html';
-        }
+        const newPath = replaceExtension(args.filePath!, 'html');
 
         await fs.writeFile(newPath, args.data);
         silentHtmlSuccessCount++;
-        console.log(`DONE ${args.filePathFull} => ${newPath}`);
+        console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
         silentHtmlFailCount++;
-        console.error(`FAIL ${args.filePathFull} | ${error}`);
+        console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
       return;
@@ -746,7 +764,12 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as HTML',
-      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        'html',
+      ),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: `HTML File`,
@@ -771,7 +794,13 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
 
       if (doWrite) {
         await fs.writeFile(filePath, args.data);
-        await shell.openPath(filePath);
+
+        const openError = await shell.openPath(filePath);
+        if (openError) {
+          // The file has already been written successfully; failing to open it
+          // afterward is not an export failure, so just log it.
+          console.error(`Failed to open ${filePath}: ${openError}`);
+        }
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
@@ -804,7 +833,12 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as MusicXML',
-      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        extension,
+      ),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: args.compressed
@@ -866,19 +900,14 @@ async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
 
     if (silentLatex) {
       try {
-        let newPath = args.filePathFull!.replace(/\.byzx?$/, '.byztex');
-
-        // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePathFull) {
-          newPath += '.byztex';
-        }
+        const newPath = replaceExtension(args.filePath!, 'byztex');
 
         await fs.writeFile(newPath, args.data);
         silentLatexSuccessCount++;
-        console.log(`DONE ${args.filePathFull} => ${newPath}`);
+        console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
         silentLatexFailCount++;
-        console.error(`FAIL ${args.filePathFull} | ${error}`);
+        console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
       return;
@@ -888,7 +917,12 @@ async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as Latex',
-      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        'byztex',
+      ),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: 'neanestex File',
@@ -948,9 +982,11 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as Images',
-      defaultPath:
-        args.filePath?.replace(/\.byzx?$/, '') ||
-        (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        args.imageFormat,
+      ),
       filters: [
         {
           name: args.imageFormat === 'png' ? `PNG File` : `SVG File`,
@@ -1172,17 +1208,7 @@ function createMenu() {
               {
                 label: `About ${app.name}`,
                 click() {
-                  let detail = `Version: ${app.getVersion()}\n`;
-                  detail += `Electron: ${process.versions.electron}\n`;
-                  detail += `Chromium: ${process.versions.chrome}\n`;
-                  detail += `Node.js: ${process.version}`;
-
-                  dialog.showMessageBox(win!, {
-                    title: app.name,
-                    message: app.name,
-                    detail: detail,
-                    type: 'info',
-                  });
+                  void openAboutDialog();
                 },
               },
               { type: 'separator' },
@@ -1666,17 +1692,7 @@ function createMenu() {
               {
                 label: i18next.t(($) => $.menu.help.about),
                 click() {
-                  let detail = `Version: ${app.getVersion()}\n`;
-                  detail += `Electron: ${process.versions.electron}\n`;
-                  detail += `Chromium: ${process.versions.chrome}\n`;
-                  detail += `Node.js: ${process.version}`;
-
-                  dialog.showMessageBox(win!, {
-                    title: app.name,
-                    message: app.name,
-                    detail: detail,
-                    type: 'info',
-                  });
+                  void openAboutDialog();
                 },
               },
             ] as MenuItemConstructorOptions[])
@@ -1686,6 +1702,31 @@ function createMenu() {
   ]);
 
   Menu.setApplicationMenu(menu);
+}
+
+async function openAboutDialog() {
+  if (!win) {
+    await createWindow();
+  }
+
+  if (!win) {
+    return;
+  }
+
+  if (loaded) {
+    win.webContents.send(IpcMainChannels.OpenAboutDialog);
+  } else {
+    win.webContents.once('did-finish-load', () => {
+      win?.webContents.send(IpcMainChannels.OpenAboutDialog);
+    });
+  }
+
+  if (win.isMinimized()) {
+    win.restore();
+  }
+
+  win.show();
+  win.focus();
 }
 
 async function createWindow() {
@@ -1711,11 +1752,6 @@ async function createWindow() {
     minWidth,
     minHeight,
     webPreferences: {
-      // Use pluginOptions.nodeIntegration, leave this alone
-      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
-      nodeIntegration: process.env
-        .ELECTRON_NODE_INTEGRATION as unknown as boolean,
-      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
       preload,
       spellcheck: false,
     },
@@ -1777,11 +1813,6 @@ async function createWindow() {
   creatingWindow = false;
 }
 
-app.setAboutPanelOptions({
-  applicationName: app.getName(),
-  applicationVersion: app.getVersion(),
-});
-
 ipcMain.on(IpcRendererChannels.SetLanguage, async (event, language: string) => {
   store.language = language || undefined;
   await saveStore();
@@ -1806,54 +1837,6 @@ ipcMain.on(IpcRendererChannels.OpenImageDialog, async () => {
     win?.webContents.send(IpcMainChannels.FileMenuInsertImage, data);
   }
 });
-
-ipcMain.on(
-  IpcRendererChannels.OpenContextMenuForTab,
-  async (event, args: OpenContextMenuForTabArgs) => {
-    const menu = Menu.buildFromTemplate([
-      {
-        label: i18next.t(($) => $.menu.tab.close),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.SELF,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-
-      {
-        label: i18next.t(($) => $.menu.tab.closeOthers),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.OTHERS,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-
-      {
-        label: i18next.t(($) => $.menu.tab.closeToTheLeft),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.LEFT,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-      {
-        label: i18next.t(($) => $.menu.tab.closeToTheRight),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.RIGHT,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-    ]);
-
-    menu.popup();
-  },
-);
 
 ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
   readyToExit = true;

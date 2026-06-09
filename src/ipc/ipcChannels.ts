@@ -32,6 +32,7 @@ export enum IpcMainChannels {
   FileMenuLyrics = 'FileMenuLyrics',
 
   FileMenuPreferences = 'FileMenuPreferences',
+  OpenAboutDialog = 'OpenAboutDialog',
 
   FileMenuInsertAnnotation = 'FileMenuInsertAnnotation',
   FileMenuInsertAlternateLine = 'FileMenuInsertAlternateLine',
@@ -77,8 +78,6 @@ export enum IpcRendererChannels {
 
   ExitApplication = 'ExitApplication',
   CancelExit = 'CancelExit',
-
-  OpenContextMenuForTab = 'OpenContextMenuForTab',
 
   Paste = 'Paste',
 
@@ -168,7 +167,6 @@ export interface ExportWorkspaceAsPdfArgs {
 
 export interface ExportWorkspaceAsHtmlArgs {
   filePath: string | null;
-  filePathFull: string | null;
   tempFileName: string;
   data: string;
 }
@@ -182,7 +180,6 @@ export interface ExportWorkspaceAsMusicXmlArgs {
 }
 
 export interface ExportWorkspaceAsLatexArgs {
-  filePathFull: string | null;
   filePath: string | null;
   tempFileName: string;
   data: string;
@@ -221,8 +218,4 @@ export enum CloseWorkspacesDisposition {
 export interface CloseWorkspacesArgs {
   disposition: CloseWorkspacesDisposition;
   workspaceId?: string;
-}
-
-export interface OpenContextMenuForTabArgs {
-  workspaceId: string;
 }

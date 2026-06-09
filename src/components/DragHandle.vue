@@ -137,7 +137,7 @@ function getMapping(neume: Neume) {
 <style scoped>
 .handle {
   position: relative;
-  z-index: 999;
+  z-index: 40;
   background-color: lightskyblue;
   display: inline-block;
   opacity: 0.6;

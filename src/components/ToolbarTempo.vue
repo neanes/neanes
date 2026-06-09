@@ -2,10 +2,11 @@
   <div class="tempo-toolbar">
     <div class="row">
       <div class="form-group">
-        <label class="right-space">{{
+        <Label for="toolbar-tempo-bpm" class="mr-2">{{
           $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
-        }}</label>
+        }}</Label>
         <InputBpm
+          id="toolbar-tempo-bpm"
           :model-value="element.bpm"
           @update:model-value="
             $emit('update', { bpm: $event } as Partial<TempoElement>)
@@ -16,15 +17,16 @@
       <span class="space" />
 
       <div class="form-group">
-        <label class="right-space">{{
+        <Label for="toolbar-tempo-space-after" class="mr-2">{{
           $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
-        }}</label>
+        }}</Label>
         <InputUnit
+          id="toolbar-tempo-space-after"
           unit="pt"
           :min="-spaceAfterMax"
           :max="spaceAfterMax"
           :step="0.5"
-          :precision="2"
+          :format-options="fraction2FormatOptions"
           :model-value="element.spaceAfter"
           @update:model-value="
             $emit('update', { spaceAfter: $event } as Partial<TempoElement>)
@@ -32,21 +34,18 @@
         />
       </div>
       <span class="space"></span>
-      <div class="form-group">
-        <label class="right-space">{{
-          $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-        }}</label>
-        <input
-          type="text"
-          :value="element.sectionName"
-          @change="
-            $emit(
-              'update:sectionName',
-              ($event.target as HTMLInputElement).value,
-            )
-          "
-        />
-      </div>
+      <Label for="toolbar-tempo-section-name" class="mr-2">{{
+        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
+      }}</Label>
+      <Input
+        id="toolbar-tempo-section-name"
+        class="w-auto bg-background"
+        type="text"
+        :model-value="element.sectionName ?? ''"
+        @change="
+          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
+        "
+      />
     </div>
   </div>
 </template>
@@ -55,8 +54,11 @@
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import type { TempoElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
+import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
 
 import InputBpm from './InputBpm.vue';
@@ -83,7 +85,7 @@ const spaceAfterMax = computed(() =>
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .tempo-toolbar {
-  background-color: lightgray;
+  background-color: var(--color-legacy-chrome-menu-surface);
 
   padding: 0.25rem;
 
@@ -94,10 +96,6 @@ const spaceAfterMax = computed(() =>
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-}
-
-label.right-space {
-  margin-right: 0.5rem;
 }
 
 .space {

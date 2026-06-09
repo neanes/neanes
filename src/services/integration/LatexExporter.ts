@@ -475,12 +475,12 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               color:
                 !modeKey.useDefaultStyle &&
                 modeKey.color != pageSetup.modeKeyDefaultColor
-                  ? modeKey.color
+                  ? modeKey.color.substring(1)
                   : undefined,
               fontSize:
                 !modeKey.useDefaultStyle &&
                 modeKey.fontSize != pageSetup.modeKeyDefaultFontSize
-                  ? modeKey.fontSize
+                  ? toPt(modeKey.fontSize)
                   : undefined,
               isPlagal: modeKey.isPlagal || undefined,
               isVarys: modeKey.isVarys || undefined,

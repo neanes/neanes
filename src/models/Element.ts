@@ -888,6 +888,7 @@ export class TextBoxElement extends ScoreElement {
       alignment: this.alignment,
       color: this.color,
       content: this.content,
+      contentBottom: this.contentBottom,
       contentLeft: this.contentLeft,
       contentCenter: this.contentCenter,
       contentRight: this.contentRight,

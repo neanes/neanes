@@ -1000,6 +1000,7 @@ async function initialize() {
   (window as any)._editor = {
     elements,
     score,
+    selectedElement,
     selectedWorkspace,
     workspaces,
   };

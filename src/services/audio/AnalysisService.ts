@@ -1151,6 +1151,7 @@ const gorgonMap = new Map<GorgonNeume, number[]>([
   [GorgonNeume.TrigorgonSecondary, [0.75, 0.75, 0.75, 0.75]],
   // TODO handle trigorgon dotted
   [GorgonNeume.TrigorgonDottedLeft1Secondary, [0.75, 0.75, 0.75, 0.75]],
+  [GorgonNeume.TrigorgonDottedLeft2Secondary, [0.75, 0.75, 0.75, 0.75]],
   [GorgonNeume.TrigorgonDottedRightSecondary, [0.75, 0.75, 0.75, 0.75]],
 
   [GorgonNeume.Argon, [0.5, 0.5, -1]],

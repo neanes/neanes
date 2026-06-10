@@ -2,7 +2,9 @@
   <TooltipProvider :delay-duration="500" :skip-delay-duration="0">
     <router-view />
   </TooltipProvider>
-  <Toaster />
+  <div class="toaster-wrapper contents">
+    <Toaster />
+  </div>
   <div v-if="updateExists" class="update-notification">
     An update is available.
     <button class="ok" @click="refreshApp">Update</button>
@@ -70,6 +72,11 @@ function refreshApp() {
   }
 
   .ck-body-wrapper {
+    display: none !important;
+  }
+
+  .toaster-wrapper,
+  .toaster-wrapper * {
     display: none !important;
   }
 }

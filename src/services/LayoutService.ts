@@ -1800,9 +1800,7 @@ export class LayoutService {
 
     return {
       type: 'glue',
-      width:
-        pageSetup.neumeDefaultFontSize * martyriaGlue.width +
-        pageSetup.neumeDefaultSpacing,
+      width: pageSetup.neumeDefaultFontSize * martyriaGlue.width,
       stretch:
         stretch ??
         Math.max(

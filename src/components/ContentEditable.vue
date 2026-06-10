@@ -71,8 +71,12 @@ function getContent() {
   return escapeHtml(htmlElement.value.innerText);
 }
 
-function onBlur() {
-  emit('blur', getContent());
+function onBlur(event: FocusEvent) {
+  const el = event.currentTarget as HTMLElement | null;
+
+  if (el != null) {
+    emit('blur', escapeHtml(el.innerText));
+  }
 }
 
 function focus(selectAll: boolean) {

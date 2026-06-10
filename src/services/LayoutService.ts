@@ -505,17 +505,22 @@ export class LayoutService {
     const standardGlueDefaults = fontService.getStandardGlue(
       pageSetup.neumeDefaultFontFamily,
     );
+
+    const stretchRatio =
+      standardGlueDefaults.width !== 0
+        ? standardGlueDefaults.stretch / standardGlueDefaults.width
+        : 0.5;
+
+    const shrinkRatio =
+      standardGlueDefaults.width !== 0
+        ? standardGlueDefaults.shrink / standardGlueDefaults.width
+        : 1 / 3;
+
     const standardGlue: Glue = {
       type: 'glue',
       width: inlineSpacing,
-      stretch: Math.max(
-        pageSetup.neumeDefaultFontSize * standardGlueDefaults.stretch,
-        minGlueStretch,
-      ),
-      shrink: Math.max(
-        pageSetup.neumeDefaultFontSize * standardGlueDefaults.shrink,
-        minGlueShrink,
-      ),
+      stretch: Math.max(inlineSpacing * stretchRatio, minGlueStretch),
+      shrink: Math.max(inlineSpacing * shrinkRatio, minGlueShrink),
     };
 
     const martyriaGlue = this.createMartyriaGlue(pageSetup);

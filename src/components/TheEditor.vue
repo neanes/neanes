@@ -2284,11 +2284,15 @@ function onKeydownNeume(event: KeyboardEvent) {
           // because no keyboard mapping exist for it
           throttled.updateMartyria(martyriaElement, {
             note: martyriaConfigMapping.note,
+            auto: false,
           });
         } else if (martyriaConfigMapping.scale != null) {
-          throttled.updateMartyria(martyriaElement, {
-            scale: martyriaConfigMapping.scale,
-          });
+          if (martyriaElement.scale !== martyriaConfigMapping.scale) {
+            throttled.updateMartyria(martyriaElement, {
+              scale: martyriaConfigMapping.scale,
+              auto: false,
+            });
+          }
         } else if (martyriaConfigMapping.martyriaAlignmentToggle === true) {
           throttled.updateMartyria(martyriaElement, {
             alignRight: !martyriaElement.alignRight,
@@ -4237,10 +4241,16 @@ function updateMartyria(
   element: MartyriaElement,
   newValues: Partial<MartyriaElement>,
 ) {
+  const values =
+    newValues.alignRight !== undefined &&
+    newValues.alignRight !== element.alignRight
+      ? { ...newValues, quantitativeNeume: null }
+      : newValues;
+
   commandService.value.execute(
     martyriaCommandFactory.create('update-properties', {
       target: element,
-      newValues: newValues,
+      newValues: values,
     }),
   );
 

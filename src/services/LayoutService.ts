@@ -2158,6 +2158,12 @@ export class LayoutService {
       nextNoteElement,
       nextNoteElement.alignLeft,
     );
+    const exitsMelismaIntoCenteredLyric =
+      workspace.melismaLyricsEndPx != null &&
+      !noteElement.isHyphen &&
+      !nextNoteElement.isMelisma &&
+      !nextNoteElement.alignLeft &&
+      leftProjection > 0;
     // On the same line, T_i^left absorbs whatever left projection the
     // next note actually has. At a break that width reappears via
     // glue(L_{i+1}).
@@ -2181,11 +2187,15 @@ export class LayoutService {
     // note boxes. m_i intentionally excludes L_{i+1}, so convert that minimum
     // into m_i space or long lyrics on the next note can no longer tuck left.
     const minimumWidth = minimumBoundaryWidth - leftTuck;
-    const baseWidth =
+    const ordinaryBaseWidth =
       this.getInlineSpacing(workspace.pageSetup) +
       rightProjection -
       leftTuck -
       rightTuck;
+    // When a carried melisma ends at a centered lyric, align that lyric's
+    // left edge with the current cursor. The current cursor is already after
+    // noteElement.spaceAfter, so user-defined extra spacing is preserved.
+    const baseWidth = exitsMelismaIntoCenteredLyric ? 0 : ordinaryBaseWidth;
 
     if (nextNoteElement.lyricsWidth === 0) {
       return Math.max(baseWidth, minimumWidth);
@@ -2199,8 +2209,8 @@ export class LayoutService {
     // the absorbed-hyphen case it must reserve the hyphen width plus
     // the ordinary lyricsMinimumSpacing.
     //
-    // Also handles melisma-to-non-melisma transitions by measuring
-    // the carried lyric's signed distance from the current cursor.
+    // Also handles melisma transitions by measuring the carried lyric's
+    // signed distance from the current cursor.
     let collisionAdjustment = 0;
     if (noteElement.lyricsWidth > 0) {
       const lyricGap =

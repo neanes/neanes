@@ -159,6 +159,11 @@ const hasMeasureBarRight = computed(
     props.note.measureBarRight != null ||
     props.note.computedMeasureBarRight != null,
 );
+const hasTransferredMeasureBarRight = computed(
+  () =>
+    props.note.measureBarRight == null &&
+    props.note.computedMeasureBarRight != null,
+);
 const getMeasureBarLeft = computed(() =>
   props.note.measureBarLeft
     ? props.note.measureBarLeft
@@ -308,6 +313,32 @@ const measureBarLeftStyle = computed(() => {
 });
 
 const measureBarRightStyle = computed(() => {
+  const offsetX =
+    props.note.measureBarRightOffsetX != null
+      ? `${props.note.measureBarRightOffsetX}em`
+      : '0em';
+  const offsetY =
+    props.note.measureBarRightOffsetY != null
+      ? `${props.note.measureBarRightOffsetY}em`
+      : undefined;
+
+  if (hasTransferredMeasureBarRight.value) {
+    return {
+      color: props.pageSetup.measureBarDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        props.pageSetup.measureBarDefaultStrokeWidth,
+      ),
+      position: 'absolute',
+      insetInlineStart: `calc(100% + ${withZoom(
+        props.note.computedMeasureBarRightTrailingSpacing,
+      )})`,
+      top: offsetY,
+      transform: `translateX(calc(${withZoom(
+        props.note.computedMeasureBarRightOffsetX,
+      )} + ${offsetX}))`,
+    } as StyleValue;
+  }
+
   return {
     color: props.pageSetup.measureBarDefaultColor,
     webkitTextStrokeWidth: withZoom(
@@ -451,6 +482,7 @@ const tieStyle = computed(() => {
 <style scoped>
 .neume {
   cursor: default;
+  position: relative;
   user-select: none;
 }
 

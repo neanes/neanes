@@ -78,10 +78,10 @@ const idealMaxAdjustmentRatio = 1;
 const adjustmentRatioCapStep = 0.05;
 const maxAdjustmentRatioSearchLimit = 4096;
 const maxAdjustmentRatioSearchIterations = 24;
-// A tiny positive epsilon, used to floor the stretch of any glue that is
-// derived from a possibly non-positive `neumeDefaultSpacing`. Keeps the
-// adjustment ratio finite for paragraphs that contain no martyria, while
-// being far below the neume scale so it has no visible effect.
+// A tiny positive epsilon, used to floor the stretch of any glue derived from
+// possibly non-positive inline spacing. Keeps the adjustment ratio finite for
+// paragraphs that contain no martyria, while being far below the neume scale so
+// it has no visible effect.
 const minGlueStretch = 0.1;
 const minGlueShrink = 0;
 
@@ -497,8 +497,8 @@ export class LayoutService {
       this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
     }
 
-    // Knuth-Plass requires stretch >= 0 and shrink >= 0. Floor both so a
-    // negative `neumeDefaultSpacing` (which users set to overlap neumes)
+    // Knuth-Plass requires stretch >= 0 and shrink >= 0. Floor both so
+    // negative inline spacing (which users can create to overlap neumes)
     // doesn't break line breaking. `width` is left untouched so the overlap
     // itself is preserved.
     const inlineSpacing = this.getInlineSpacing(pageSetup);
@@ -906,7 +906,6 @@ export class LayoutService {
           this.addProtectedBreakpointEncoding(
             layoutWorkspace,
             preBreakGlue,
-            //{ ...standardGlue, width: 0 },
             breakCost,
             penaltyWidth,
             this.fixedGlue(m_i),
@@ -2881,8 +2880,8 @@ export class LayoutService {
     // Penalties are additive and clamped at MAX_COST. Some breakpoints
     // are prohibited outright with MAX_COST; combinations of softer
     // penalties can also saturate to MAX_COST and become prohibited.
-    // The three 0.15-level penalties can stack to at most 0.45 * MAX_COST,
-    // which stays below the strongly discouraged threshold.
+    // The three weaker penalties can stack to at most 0.45 * MAX_COST, which
+    // stays below the strongly discouraged threshold.
     let breakCost = 0;
 
     if (nextElement?.elementType === ElementType.Martyria) {

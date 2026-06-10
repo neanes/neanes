@@ -135,8 +135,8 @@ The space between ordinary neumes is modeled as fixed glue.
 Its natural width is `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, where `standardGlue` comes from the active font's `engravingDefaults`.
 The font-size-scaled engraving default supplies the default gap, and `neumeDefaultSpacing` remains a user-configurable adjustment.
 The stretch and shrink budgets are also scaled from the active font's `standardGlue` defaults.
-Users may also set the inter-note spacing to a negative value, so that successive neumes visibly overlap and the layout becomes tighter.
-When the configured spacing is negative, the glue keeps its negative natural width so that the overlap remains visible, but the stretch and shrink budgets are floored at small non-negative values: stretch at 0.1 px and shrink at 0.
+Users may also set the inter-note spacing adjustment to a negative value, so that successive neumes visibly overlap and the layout becomes tighter.
+When the computed inline spacing is negative, the glue keeps its negative natural width so that the overlap remains visible, but the stretch and shrink budgets are floored at small non-negative values: stretch at 0.1 px and shrink at 0.
 The same floors apply uniformly to every glue derived from fixed inline spacing: the standard glue's stretch and shrink, note pre-break glue's stretch and shrink, martyria glue's shrink, and the right-martyria glue's shrink.
 Martyria glue also uses these floors, but its main width, stretch, and shrink come from the martyria engraving defaults described below.
 These floors preserve the Knuth-Plass invariants while keeping the user-chosen overlap intact, because ordinary glues no longer stretch enough to push neumes apart and any line-end slack is absorbed by the right-martyria glue's `MAX_COST` stretch instead.
@@ -150,7 +150,7 @@ A vareia contributes fixed internal spacing before the main neume; in right-to-l
 
 Visible barlines also participate in spacing.
 In the following formulas, $s_0$ is the fixed inline spacing described above.
-For a barline between elements $A$ and $B$, the minimum boundary width is now based on fixed clearance rather than glyph bearings.
+For a barline between elements $A$ and $B$, the minimum boundary width starts from fixed clearance rather than glyph bearings, then grows if note ink or configured collision regions require more room.
 If a visible barline lies between two neume anchors, the boundary reserves one fixed inline space on each side of the barline:
 
 $$2s_0.$$
@@ -158,16 +158,18 @@ $$2s_0.$$
 The barline is centered in the available space while respecting that minimum.
 The trailing barline-to-$B$ clearance is modeled inside the box for a left-owned barline, so a barline at the start of a line keeps the same fixed clearance.
 The remaining minimum is preserved during justification and after lyric tucking.
-When a right barline becomes terminal at a line break, at a paragraph ending, before an empty element, or before a right-aligned martyria, its clearance from the preceding neume is reserved as terminal width.
+For note-to-note boundaries, the collision check uses glyph boxes for the notes, marks, and barline regions that vertically overlap; tie-like marks are ignored because adding space would break their intended connection.
+When a right barline becomes terminal at a line break, at a paragraph ending, before an empty element, or before a right-aligned martyria, its clearance from the preceding neume is reserved as terminal width, including any note ink overhang that overlaps the barline clearance region.
 
 Ordinary martyriae use the active font's `martyriaGlue` engraving defaults instead of standard fixed inline glue.
-Its natural width is `neumeDefaultFontSize * martyriaGlue.width + neumeDefaultSpacing`.
+Its natural width is `neumeDefaultFontSize * martyriaGlue.width`.
 This gives martyriae font-specific surrounding space that can differ from ordinary neume spacing.
-During justification, stretch and shrink are based on the martyria glue defaults while the same-line width is still protected by any fixed measure-bar minimum.
+During justification, stretch and shrink are based on the martyria glue defaults while the same-line width is still protected by any visual-ink and measure-bar minimums.
 Tempo-adjacent martyria boundaries are the exception: when a non-right-aligned martyria contains `tempoLeft` or `tempoRight`, or when a standalone tempo sign sits immediately beside a non-right-aligned martyria in the same paragraph, that side uses standard fixed inline glue instead of martyria glue.
-For standalone tempo-to-martyria and martyria-to-tempo boundaries, the lyric-collision spacer is also skipped; the explicit standard glue owns the boundary spacing, while the lyric bookkeeping is still advanced for the current element.
+For standalone tempo-to-martyria and martyria-to-tempo boundaries, the lyric-collision spacer is also skipped; the explicit standard glue owns the base boundary spacing, while the lyric bookkeeping is still advanced for the current element.
 After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single trailing glue whose preferred width is usually martyria glue, or standard fixed inline glue for the tempo cases above.
 As a result, the full trailing spacing appears after the martyria only when it stays mid-line; if a break is taken there, that spacing becomes leading glue on the next line and is skipped.
+Visible spacing around notes, martyriae, and standalone tempo signs may be widened beyond the base glue when shaped ink overhangs would otherwise collide.
 
 When a martyria has a transferable measure bar and is followed by a note, the bar transfers to the next line's first note at a break.
 To reserve space for this, the martyria's post-break glue is narrowed by the bar width plus fixed leading clearance, and an anonymous spacer box of the same width is inserted before the following note's box.
@@ -250,7 +252,7 @@ If a paragraph ends immediately after a note, `endParagraph` materializes that n
 It also reserves the clearance before a terminal right barline.
 It must do this because `removeGlue` strips the trailing cancellation glue, while the forced break itself contributes penalty width 0.
 
-When a martyria follows a note, the martyria path replaces the note's trailing post-break glue with martyria glue: shrinkable fixed-plus-bonus glue in the usual case, or the infinite-stretch right-martyria glue when the martyria is right-aligned.
+When a martyria follows a note, the martyria path replaces the note's trailing post-break glue with martyria glue: font-default martyria glue in the usual case, or the infinite-stretch right-martyria glue when the martyria is right-aligned.
 When a non-right-aligned martyria follows a standalone tempo sign, the same replacement path uses standard glue and skips the pre-martyria lyric-collision spacer.
 Ordinary note-to-martyria lyric collision is still handled by `addLyricReservation`.
 However, if a melisma lyric overhang extends past the last neume, that remaining overhang is first materialized into the replacement martyria glue width so that it is not lost when the note's cancellation glue is removed.
@@ -274,7 +276,7 @@ Second, if the resulting lyric gap is still too small, a collision correction is
 So the code does not reserve lyric overshoot mechanically.
 It reserves only the width that is actually needed on the same line after tuck opportunities have been taken into account.
 
-In code, the same-line width is computed as
+Before applying visual-ink and measure-bar floors, the same-line width is computed as
 
 $$m_i = s_0 + R_i - T_i^\text{left} - T_i^\text{right} + \ell_i,$$
 
@@ -291,6 +293,7 @@ If the hyphen extends past the current neume, it appears in the carried melisma 
 If the hyphen fits entirely inside a wide current neume, there is no positive line-end overhang to reserve, so the same-line collision correction must still reserve enough visible gap for the hyphen glyph plus the ordinary lyric spacing.
 The same mechanism also handles melisma-to-non-melisma transitions.
 For same-line spacing, the carried lyric end is treated as a signed distance from the current cursor, so the next syllable is pushed right only as much as necessary whether the carried lyric ends before or after that cursor.
+After this lyric calculation, the boundary is floored by any visible note collision minimum and by any visible measure-bar minimum, with the next note's absorbed left projection subtracted so that long lyrics can still tuck left on the same line.
 
 ### Break-only reservation
 

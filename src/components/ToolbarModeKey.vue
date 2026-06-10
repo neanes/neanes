@@ -112,7 +112,7 @@
     <ButtonWithMenu
       :options="tempoMenuOptions"
       :tooltip="$t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' })"
-      @select="$emit('update', { tempo: $event } as Partial<ModeKeyElement>)"
+      @select="$emit('update:tempo', $event)"
     />
     <span class="space" />
 

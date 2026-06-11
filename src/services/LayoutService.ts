@@ -2551,11 +2551,11 @@ export class LayoutService {
     const baseIndex = glyphs.findIndex((glyph) => glyph.kind === 'base');
     const baseGlyphName = resolvedGlyphNames[baseIndex];
 
-    return glyphs.map((glyph, index) => {
+    return glyphs.flatMap((glyph, index) => {
       const glyphName = resolvedGlyphNames[index];
 
       if (glyph.kind !== 'mark') {
-        return this.getGlyphBox(
+        return this.getGlyphCollisionBoxes(
           fontFamily,
           glyphName,
           glyph.x,
@@ -2570,7 +2570,7 @@ export class LayoutService {
         glyphName,
       );
 
-      return this.getGlyphBox(
+      return this.getGlyphCollisionBoxes(
         fontFamily,
         glyphName,
         glyph.x +
@@ -2804,6 +2804,22 @@ export class LayoutService {
     const bBox = fontService.getGlyphBBox(fontFamily, glyphName);
 
     return this.getGlyphBBoxBox(bBox, x, y, fontSize);
+  }
+
+  private static getGlyphCollisionBoxes(
+    fontFamily: string,
+    glyphName: SbmuflGlyphName,
+    x: number,
+    y: number,
+    fontSize: number,
+  ): NoteGlyphBox[] {
+    const regionBoxes = fontService
+      .getGlyphCollisionRegions(fontFamily, glyphName)
+      .map((region) => this.getGlyphBBoxBox(region, x, y, fontSize));
+
+    return regionBoxes.length > 0
+      ? regionBoxes
+      : [this.getGlyphBox(fontFamily, glyphName, x, y, fontSize)];
   }
 
   private static getGlyphBBoxBox(

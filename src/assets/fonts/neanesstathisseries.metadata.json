@@ -12556,6 +12556,419 @@
           0.657
         ]
       }
+    ],
+    "digorgon": [
+      {
+        "bBoxNE": [
+          0.092,
+          1.016
+        ],
+        "bBoxSW": [
+          -0.3012,
+          0.8909
+        ],
+        "name": "digorgon1"
+      },
+      {
+        "bBoxNE": [
+          0.323,
+          1.141
+        ],
+        "bBoxSW": [
+          -0.303,
+          1.016
+        ],
+        "name": "digorgon2"
+      }
+    ],
+    "digorgonDottedLeftBelow": [
+      {
+        "bBoxNE": [
+          0.079,
+          1.016
+        ],
+        "bBoxSW": [
+          -0.437,
+          0.8909
+        ],
+        "name": "digorgonDottedLeftBelow1"
+      },
+      {
+        "bBoxNE": [
+          0.31,
+          1.141
+        ],
+        "bBoxSW": [
+          -0.4245,
+          1.016
+        ],
+        "name": "digorgonDottedLeftBelow2"
+      }
+    ],
+    "digorgonDottedLeftAbove": [
+      {
+        "bBoxNE": [
+          0.09,
+          1.018
+        ],
+        "bBoxSW": [
+          -0.3043,
+          0.8929
+        ],
+        "name": "digorgonDottedLeftAbove1"
+      },
+      {
+        "bBoxNE": [
+          0.321,
+          1.143
+        ],
+        "bBoxSW": [
+          -0.306,
+          1.018
+        ],
+        "name": "digorgonDottedLeftAbove2"
+      }
+    ],
+    "digorgonDottedRight": [
+      {
+        "bBoxNE": [
+          0.082,
+          1.0144
+        ],
+        "bBoxSW": [
+          -0.3123,
+          0.8899
+        ],
+        "name": "digorgonDottedRight1"
+      },
+      {
+        "bBoxNE": [
+          0.433,
+          1.139
+        ],
+        "bBoxSW": [
+          -0.314,
+          1.0144
+        ],
+        "name": "digorgonDottedRight2"
+      }
+    ],
+    "digorgonSecondary": [
+      {
+        "bBoxNE": [
+          0.092,
+          1.016
+        ],
+        "bBoxSW": [
+          -0.3012,
+          0.8909
+        ],
+        "name": "digorgonSecondary1"
+      },
+      {
+        "bBoxNE": [
+          0.323,
+          1.141
+        ],
+        "bBoxSW": [
+          -0.303,
+          1.016
+        ],
+        "name": "digorgonSecondary2"
+      }
+    ],
+    "digorgonDottedLeftBelowSecondary": [
+      {
+        "bBoxNE": [
+          0.079,
+          1.016
+        ],
+        "bBoxSW": [
+          -0.437,
+          0.8909
+        ],
+        "name": "digorgonDottedLeftBelowSecondary1"
+      },
+      {
+        "bBoxNE": [
+          0.31,
+          1.141
+        ],
+        "bBoxSW": [
+          -0.4245,
+          1.016
+        ],
+        "name": "digorgonDottedLeftBelowSecondary2"
+      }
+    ],
+    "digorgonDottedRightSecondary": [
+      {
+        "bBoxNE": [
+          0.082,
+          1.0144
+        ],
+        "bBoxSW": [
+          -0.3123,
+          0.8899
+        ],
+        "name": "digorgonDottedRightSecondary1"
+      },
+      {
+        "bBoxNE": [
+          0.433,
+          1.139
+        ],
+        "bBoxSW": [
+          -0.314,
+          1.0144
+        ],
+        "name": "digorgonDottedRightSecondary2"
+      }
+    ],
+    "trigorgon": [
+      {
+        "bBoxNE": [
+          0.006,
+          0.9438
+        ],
+        "bBoxSW": [
+          -0.3677,
+          0.8328
+        ],
+        "name": "trigorgon1"
+      },
+      {
+        "bBoxNE": [
+          0.18,
+          1.0549
+        ],
+        "bBoxSW": [
+          -0.379,
+          0.9438
+        ],
+        "name": "trigorgon2"
+      },
+      {
+        "bBoxNE": [
+          0.386,
+          1.166
+        ],
+        "bBoxSW": [
+          -0.203,
+          1.0549
+        ],
+        "name": "trigorgon3"
+      }
+    ],
+    "trigorgonDottedLeftBelow": [
+      {
+        "bBoxNE": [
+          0.0,
+          0.9448
+        ],
+        "bBoxSW": [
+          -0.53,
+          0.8338
+        ],
+        "name": "trigorgonDottedLeftBelow1"
+      },
+      {
+        "bBoxNE": [
+          0.174,
+          1.0559
+        ],
+        "bBoxSW": [
+          -0.527,
+          0.9448
+        ],
+        "name": "trigorgonDottedLeftBelow2"
+      },
+      {
+        "bBoxNE": [
+          0.38,
+          1.167
+        ],
+        "bBoxSW": [
+          -0.209,
+          1.0559
+        ],
+        "name": "trigorgonDottedLeftBelow3"
+      }
+    ],
+    "trigorgonDottedLeftAbove": [
+      {
+        "bBoxNE": [
+          0.0,
+          0.9442
+        ],
+        "bBoxSW": [
+          -0.3816,
+          0.8258
+        ],
+        "name": "trigorgonDottedLeftAbove1"
+      },
+      {
+        "bBoxNE": [
+          0.174,
+          1.0626
+        ],
+        "bBoxSW": [
+          -0.384,
+          0.9442
+        ],
+        "name": "trigorgonDottedLeftAbove2"
+      },
+      {
+        "bBoxNE": [
+          0.38,
+          1.181
+        ],
+        "bBoxSW": [
+          -0.161,
+          1.0626
+        ],
+        "name": "trigorgonDottedLeftAbove3"
+      }
+    ],
+    "trigorgonDottedRight": [
+      {
+        "bBoxNE": [
+          0.0,
+          0.9478
+        ],
+        "bBoxSW": [
+          -0.3732,
+          0.8368
+        ],
+        "name": "trigorgonDottedRight1"
+      },
+      {
+        "bBoxNE": [
+          0.174,
+          1.0589
+        ],
+        "bBoxSW": [
+          -0.384,
+          0.9478
+        ],
+        "name": "trigorgonDottedRight2"
+      },
+      {
+        "bBoxNE": [
+          0.513,
+          1.17
+        ],
+        "bBoxSW": [
+          -0.209,
+          1.0589
+        ],
+        "name": "trigorgonDottedRight3"
+      }
+    ],
+    "trigorgonSecondary": [
+      {
+        "bBoxNE": [
+          0.006,
+          0.9438
+        ],
+        "bBoxSW": [
+          -0.3677,
+          0.8328
+        ],
+        "name": "trigorgonSecondary1"
+      },
+      {
+        "bBoxNE": [
+          0.18,
+          1.0549
+        ],
+        "bBoxSW": [
+          -0.379,
+          0.9438
+        ],
+        "name": "trigorgonSecondary2"
+      },
+      {
+        "bBoxNE": [
+          0.386,
+          1.166
+        ],
+        "bBoxSW": [
+          -0.203,
+          1.0549
+        ],
+        "name": "trigorgonSecondary3"
+      }
+    ],
+    "trigorgonDottedLeftBelowSecondary": [
+      {
+        "bBoxNE": [
+          0.0,
+          0.9448
+        ],
+        "bBoxSW": [
+          -0.53,
+          0.8338
+        ],
+        "name": "trigorgonDottedLeftBelowSecondary1"
+      },
+      {
+        "bBoxNE": [
+          0.174,
+          1.0559
+        ],
+        "bBoxSW": [
+          -0.527,
+          0.9448
+        ],
+        "name": "trigorgonDottedLeftBelowSecondary2"
+      },
+      {
+        "bBoxNE": [
+          0.38,
+          1.167
+        ],
+        "bBoxSW": [
+          -0.209,
+          1.0559
+        ],
+        "name": "trigorgonDottedLeftBelowSecondary3"
+      }
+    ],
+    "trigorgonDottedRightSecondary": [
+      {
+        "bBoxNE": [
+          0.0,
+          0.9478
+        ],
+        "bBoxSW": [
+          -0.3732,
+          0.8368
+        ],
+        "name": "trigorgonDottedRightSecondary1"
+      },
+      {
+        "bBoxNE": [
+          0.174,
+          1.0589
+        ],
+        "bBoxSW": [
+          -0.384,
+          0.9478
+        ],
+        "name": "trigorgonDottedRightSecondary2"
+      },
+      {
+        "bBoxNE": [
+          0.513,
+          1.17
+        ],
+        "bBoxSW": [
+          -0.209,
+          1.0589
+        ],
+        "name": "trigorgonDottedRightSecondary3"
+      }
     ]
   },
   "ligatures": {

@@ -2,6 +2,12 @@ import type { PageSize } from '@/models/PageSetup';
 import type { Score } from '@/models/save/v1/Score';
 
 export enum IpcMainChannels {
+  UpdateAvailable = 'UpdateAvailable',
+  UpdateDownloadStarted = 'UpdateDownloadStarted',
+  UpdateDownloadProgress = 'UpdateDownloadProgress',
+  UpdateDownloaded = 'UpdateDownloaded',
+  UpdateError = 'UpdateError',
+
   FileMenuNewScore = 'FileMenuNewScore',
   FileMenuOpenScore = 'FileMenuOpenScore',
   FileMenuPrint = 'FileMenuPrint',
@@ -56,6 +62,9 @@ export enum IpcMainChannels {
 }
 
 export enum IpcRendererChannels {
+  DownloadUpdate = 'DownloadUpdate',
+  RestartToInstallUpdate = 'RestartToInstallUpdate',
+
   SetCanUndo = 'SetCanUndo',
   SetCanRedo = 'SetCanRedo',
 
@@ -105,6 +114,20 @@ export interface FileMenuOpenImageArgs {
   imageHeight: number;
   filePath: string;
   success: boolean;
+}
+
+export interface UpdateAvailableArgs {
+  version?: string;
+}
+
+export interface UpdateDownloadProgressArgs {
+  percent: number;
+  transferred: number;
+  total: number;
+}
+
+export interface UpdateErrorArgs {
+  message: string;
 }
 
 export interface FileMenuImportOcrArgs {

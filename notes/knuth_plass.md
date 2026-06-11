@@ -176,7 +176,9 @@ For the ordinary non-right-aligned note-martyria-note case, where the martyria o
 The visible endpoint on a given side is whichever extends farther toward the martyria: the neume ink boundary or a lyric overhang.
 Thus a rightward lyric overhang on the left note replaces that note's right ink edge as the left balancing endpoint, and a leftward lyric overhang on the right note replaces that note's left ink edge as the right balancing endpoint.
 When neither lyric projects toward the martyria, the balancing endpoints are simply the neume ink boundaries on both sides.
-The two martyria-side glues are then assigned equal visible whitespace from those chosen endpoints to the martyria's own ink bounds, while still respecting the ordinary same-line minimums for ink collision, lyric clearance, and justification shrink.
+The two martyria-side glues are then assigned equal natural visible whitespace from those chosen endpoints to the martyria's own ink bounds.
+During compression they keep the same shrink, so the visual balance holds under justification, but that shrink is floored by hard ink, lyric, and measure-bar clearance rather than by the natural martyria glue width.
+For plain neighboring neumes, this lets each martyria glue shrink from `martyriaGlue.width` toward ordinary `standardGlue.width`; the shrink is reduced only when a visible collision floor actually binds.
 
 When a martyria has a transferable measure bar and is followed by a note, the bar transfers to the next line's first note at a break.
 To reserve space for this, the martyria's post-break glue is narrowed by the bar width plus fixed leading clearance, and an anonymous spacer box of the same width is inserted before the following note's box.

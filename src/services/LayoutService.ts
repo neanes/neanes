@@ -1038,6 +1038,19 @@ export class LayoutService {
                 0,
                 previousLyricsEndPx - martyriaBoundaryStart,
               );
+              // Natural balancing uses martyria glue width, but compression
+              // may continue down to the hard visual and lyric clearance floor.
+              const leftHardLyricMinimum = Math.max(
+                0,
+                previousLyricsEndPx -
+                  martyriaBoundaryStart +
+                  standardGlue.width,
+              );
+              const leftHardMinimum = Math.max(
+                0,
+                leadingVisualSpacing.requiredWidth,
+                leftHardLyricMinimum,
+              );
               const nextNoteLeftProjection = this.getLyricProjections(
                 nextNote!,
                 nextNote!.alignLeft,
@@ -1047,6 +1060,8 @@ export class LayoutService {
                   trailingGlue.width + trailingVisualSpacing.deficit,
                   rightSameLineMinimum,
                 ) + nextNoteLeftProjection;
+              const rightHardMinimum =
+                rightSameLineMinimum + nextNoteLeftProjection;
               const leftVisibleBoundaryWidth =
                 this.getMartyriaLeftInkOverhang(martyriaElement, pageSetup) +
                 Math.max(
@@ -1071,12 +1086,12 @@ export class LayoutService {
                 nextNoteLeftProjection;
               sharedBoundaryShrink = Math.min(
                 baseGlue.shrink,
-                Math.max(0, sharedLeadingBoundaryWidth - leftBoundaryMinimum),
+                Math.max(0, sharedLeadingBoundaryWidth - leftHardMinimum),
                 Math.max(
                   0,
                   sharedTrailingBoundaryWidth +
                     nextNoteLeftProjection -
-                    rightBoundaryMinimum,
+                    rightHardMinimum,
                 ),
               );
             }

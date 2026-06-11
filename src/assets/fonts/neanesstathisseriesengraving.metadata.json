@@ -12509,6 +12509,3603 @@
     }
   },
   "collisionRegions": {
+    "oligon": [
+      {
+        "name": "oligon1",
+        "bBoxNE": [
+          1.356,
+          0.392
+        ],
+        "bBoxSW": [
+          0.0,
+          0.226
+        ]
+      }
+    ],
+    "oligonKentimaMiddle": [
+      {
+        "name": "oligonKentimaMiddle1",
+        "bBoxNE": [
+          1.388,
+          0.388
+        ],
+        "bBoxSW": [
+          0.0,
+          0.223
+        ]
+      },
+      {
+        "name": "oligonKentimaMiddle2",
+        "bBoxNE": [
+          1.734,
+          0.413
+        ],
+        "bBoxSW": [
+          1.388,
+          0.208
+        ]
+      }
+    ],
+    "oligonKentimaBelow": [
+      {
+        "name": "oligonKentimaBelow1",
+        "bBoxNE": [
+          1.138,
+          0.183
+        ],
+        "bBoxSW": [
+          0.88,
+          0.005
+        ]
+      },
+      {
+        "name": "oligonKentimaBelow2",
+        "bBoxNE": [
+          1.356,
+          0.389
+        ],
+        "bBoxSW": [
+          0.0,
+          0.224
+        ]
+      }
+    ],
+    "oligonKentimaAbove": [
+      {
+        "name": "oligonKentimaAbove1",
+        "bBoxNE": [
+          1.356,
+          0.396
+        ],
+        "bBoxSW": [
+          0.0,
+          0.231
+        ]
+      },
+      {
+        "name": "oligonKentimaAbove2",
+        "bBoxNE": [
+          0.829,
+          0.717
+        ],
+        "bBoxSW": [
+          0.55,
+          0.514
+        ]
+      }
+    ],
+    "oligonYpsiliRight": [
+      {
+        "name": "oligonYpsiliRight1",
+        "bBoxNE": [
+          1.357,
+          0.395
+        ],
+        "bBoxSW": [
+          0.0,
+          0.229
+        ]
+      },
+      {
+        "bBoxNE": [
+          1.3157,
+          0.704
+        ],
+        "bBoxSW": [
+          0.927,
+          0.543
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          1.4853,
+          0.865
+        ],
+        "bBoxSW": [
+          1.2416,
+          0.704
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          1.571,
+          1.026
+        ],
+        "bBoxSW": [
+          1.3572,
+          0.865
+        ],
+        "name": "ypsili13"
+      }
+    ],
+    "oligonYpsiliLeft": [
+      {
+        "name": "oligonYpsiliLeft1",
+        "bBoxNE": [
+          1.357,
+          0.393
+        ],
+        "bBoxSW": [
+          0.0,
+          0.227
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.4595,
+          0.71
+        ],
+        "bBoxSW": [
+          0.07,
+          0.549
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.6283,
+          0.871
+        ],
+        "bBoxSW": [
+          0.3851,
+          0.71
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.715,
+          1.032
+        ],
+        "bBoxSW": [
+          0.5012,
+          0.871
+        ],
+        "name": "ypsili13"
+      }
+    ],
+    "oligonKentimaYpsiliRight": [
+      {
+        "name": "oligonKentimaYpsiliRight1",
+        "bBoxNE": [
+          1.356,
+          0.398
+        ],
+        "bBoxSW": [
+          0.0,
+          0.232
+        ]
+      },
+      {
+        "name": "oligonKentimaYpsiliRight2",
+        "bBoxNE": [
+          0.577,
+          0.758
+        ],
+        "bBoxSW": [
+          0.268,
+          0.506
+        ]
+      },
+      {
+        "bBoxNE": [
+          1.1252,
+          0.6633
+        ],
+        "bBoxSW": [
+          0.737,
+          0.502
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          1.2956,
+          0.8247
+        ],
+        "bBoxSW": [
+          1.0517,
+          0.6633
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          1.381,
+          0.986
+        ],
+        "bBoxSW": [
+          1.1678,
+          0.8247
+        ],
+        "name": "ypsili13"
+      }
+    ],
+    "oligonKentimaYpsiliMiddle": [
+      {
+        "name": "oligonKentimaYpsiliMiddle1",
+        "bBoxNE": [
+          1.356,
+          0.397
+        ],
+        "bBoxSW": [
+          0.0,
+          0.231
+        ]
+      },
+      {
+        "name": "oligonKentimaYpsiliMiddle2",
+        "bBoxNE": [
+          0.821,
+          0.713
+        ],
+        "bBoxSW": [
+          0.542,
+          0.519
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.8095,
+          0.95
+        ],
+        "bBoxSW": [
+          0.423,
+          0.792
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.9932,
+          1.108
+        ],
+        "bBoxSW": [
+          0.732,
+          0.95
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          1.085,
+          1.266
+        ],
+        "bBoxSW": [
+          0.8649,
+          1.108
+        ],
+        "name": "ypsili13"
+      }
+    ],
+    "oligonDoubleYpsili": [
+      {
+        "name": "oligonDoubleYpsili1",
+        "bBoxNE": [
+          1.357,
+          0.392
+        ],
+        "bBoxSW": [
+          0.0,
+          0.225
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.4607,
+          0.649
+        ],
+        "bBoxSW": [
+          0.073,
+          0.488
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.631,
+          0.81
+        ],
+        "bBoxSW": [
+          0.3871,
+          0.649
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.719,
+          0.971
+        ],
+        "bBoxSW": [
+          0.5037,
+          0.81
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          1.1255,
+          0.657
+        ],
+        "bBoxSW": [
+          0.737,
+          0.496
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          1.295,
+          0.818
+        ],
+        "bBoxSW": [
+          1.052,
+          0.657
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          1.381,
+          0.979
+        ],
+        "bBoxSW": [
+          1.1677,
+          0.818
+        ],
+        "name": "ypsili23"
+      }
+    ],
+    "oligonKentimataDoubleYpsili": [
+      {
+        "name": "oligonKentimataDoubleYpsili1",
+        "bBoxNE": [
+          1.356,
+          0.392
+        ],
+        "bBoxSW": [
+          0.0,
+          0.226
+        ]
+      },
+      {
+        "name": "oligonKentimataDoubleYpsili2",
+        "bBoxNE": [
+          0.425,
+          0.714
+        ],
+        "bBoxSW": [
+          0.134,
+          0.475
+        ]
+      },
+      {
+        "name": "oligonKentimataDoubleYpsili3",
+        "bBoxNE": [
+          0.644,
+          0.715
+        ],
+        "bBoxSW": [
+          0.375,
+          0.476
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.517,
+          0.9786
+        ],
+        "bBoxSW": [
+          0.129,
+          0.8179
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.6873,
+          1.1393
+        ],
+        "bBoxSW": [
+          0.4462,
+          0.9786
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.773,
+          1.3
+        ],
+        "bBoxSW": [
+          0.5598,
+          1.1393
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          1.1455,
+          0.725
+        ],
+        "bBoxSW": [
+          0.756,
+          0.564
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          1.3143,
+          0.886
+        ],
+        "bBoxSW": [
+          1.073,
+          0.725
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          1.401,
+          1.047
+        ],
+        "bBoxSW": [
+          1.1872,
+          0.886
+        ],
+        "name": "ypsili23"
+      }
+    ],
+    "oligonKentimaDoubleYpsiliRight": [
+      {
+        "name": "oligonKentimaDoubleYpsiliRight1",
+        "bBoxNE": [
+          1.356,
+          0.397
+        ],
+        "bBoxSW": [
+          0.0,
+          0.231
+        ]
+      },
+      {
+        "name": "oligonKentimaDoubleYpsiliRight2",
+        "bBoxNE": [
+          0.544,
+          0.73
+        ],
+        "bBoxSW": [
+          0.236,
+          0.478
+        ]
+      },
+      {
+        "bBoxNE": [
+          1.1315,
+          0.715
+        ],
+        "bBoxSW": [
+          0.742,
+          0.554
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          1.3013,
+          0.876
+        ],
+        "bBoxSW": [
+          1.058,
+          0.715
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          1.387,
+          1.037
+        ],
+        "bBoxSW": [
+          1.1732,
+          0.876
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          0.5185,
+          0.962
+        ],
+        "bBoxSW": [
+          0.129,
+          0.801
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          0.6873,
+          1.123
+        ],
+        "bBoxSW": [
+          0.445,
+          0.962
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          0.774,
+          1.284
+        ],
+        "bBoxSW": [
+          0.5602,
+          1.123
+        ],
+        "name": "ypsili23"
+      }
+    ],
+    "oligonKentimaDoubleYpsiliLeft": [
+      {
+        "name": "oligonKentimaDoubleYpsiliLeft1",
+        "bBoxNE": [
+          1.368,
+          0.399
+        ],
+        "bBoxSW": [
+          0.012,
+          0.233
+        ]
+      },
+      {
+        "name": "oligonKentimaDoubleYpsiliLeft2",
+        "bBoxNE": [
+          1.061,
+          0.731
+        ],
+        "bBoxSW": [
+          0.753,
+          0.479
+        ]
+      },
+      {
+        "bBoxNE": [
+          1.0344,
+          0.9629
+        ],
+        "bBoxSW": [
+          0.645,
+          0.8019
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          1.2047,
+          1.124
+        ],
+        "bBoxSW": [
+          0.9628,
+          0.9629
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          1.291,
+          1.285
+        ],
+        "bBoxSW": [
+          1.077,
+          1.124
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          0.3895,
+          0.717
+        ],
+        "bBoxSW": [
+          0.0,
+          0.556
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          0.5593,
+          0.878
+        ],
+        "bBoxSW": [
+          0.316,
+          0.717
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          0.645,
+          1.039
+        ],
+        "bBoxSW": [
+          0.4312,
+          0.878
+        ],
+        "name": "ypsili23"
+      }
+    ],
+    "oligonTripleYpsili": [
+      {
+        "name": "oligonTripleYpsili1",
+        "bBoxNE": [
+          1.357,
+          0.395
+        ],
+        "bBoxSW": [
+          0.0,
+          0.229
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.3895,
+          0.716
+        ],
+        "bBoxSW": [
+          0.0,
+          0.555
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.5592,
+          0.877
+        ],
+        "bBoxSW": [
+          0.3151,
+          0.716
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.645,
+          1.038
+        ],
+        "bBoxSW": [
+          0.4312,
+          0.877
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          0.8145,
+          0.716
+        ],
+        "bBoxSW": [
+          0.425,
+          0.555
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          0.9843,
+          0.877
+        ],
+        "bBoxSW": [
+          0.741,
+          0.716
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          1.07,
+          1.038
+        ],
+        "bBoxSW": [
+          0.8567,
+          0.877
+        ],
+        "name": "ypsili23"
+      },
+      {
+        "bBoxNE": [
+          1.2395,
+          0.716
+        ],
+        "bBoxSW": [
+          0.85,
+          0.555
+        ],
+        "name": "ypsili31"
+      },
+      {
+        "bBoxNE": [
+          1.4093,
+          0.877
+        ],
+        "bBoxSW": [
+          1.167,
+          0.716
+        ],
+        "name": "ypsili32"
+      },
+      {
+        "bBoxNE": [
+          1.496,
+          1.038
+        ],
+        "bBoxSW": [
+          1.2817,
+          0.877
+        ],
+        "name": "ypsili33"
+      }
+    ],
+    "oligonKentimataTripleYpsili": [
+      {
+        "name": "oligonKentimataTripleYpsili1",
+        "bBoxNE": [
+          1.508,
+          0.393
+        ],
+        "bBoxSW": [
+          0.152,
+          0.228
+        ]
+      },
+      {
+        "name": "oligonKentimataTripleYpsili2",
+        "bBoxNE": [
+          0.864,
+          0.683
+        ],
+        "bBoxSW": [
+          0.601,
+          0.468
+        ]
+      },
+      {
+        "name": "oligonKentimataTripleYpsili3",
+        "bBoxNE": [
+          1.074,
+          0.685
+        ],
+        "bBoxSW": [
+          0.828,
+          0.469
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.3885,
+          0.618
+        ],
+        "bBoxSW": [
+          -0.001,
+          0.457
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.5583,
+          0.779
+        ],
+        "bBoxSW": [
+          0.3136,
+          0.618
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.645,
+          0.94
+        ],
+        "bBoxSW": [
+          0.4307,
+          0.779
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          0.9945,
+          0.928
+        ],
+        "bBoxSW": [
+          0.605,
+          0.767
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          1.1643,
+          1.089
+        ],
+        "bBoxSW": [
+          0.9196,
+          0.928
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          1.251,
+          1.25
+        ],
+        "bBoxSW": [
+          1.0367,
+          1.089
+        ],
+        "name": "ypsili23"
+      },
+      {
+        "bBoxNE": [
+          1.5385,
+          0.617
+        ],
+        "bBoxSW": [
+          1.149,
+          0.456
+        ],
+        "name": "ypsili31"
+      },
+      {
+        "bBoxNE": [
+          1.7083,
+          0.778
+        ],
+        "bBoxSW": [
+          1.4636,
+          0.617
+        ],
+        "name": "ypsili32"
+      },
+      {
+        "bBoxNE": [
+          1.794,
+          0.939
+        ],
+        "bBoxSW": [
+          1.5802,
+          0.778
+        ],
+        "name": "ypsili33"
+      }
+    ],
+    "oligonKentimaTripleYpsili": [
+      {
+        "name": "oligonKentimaTripleYpsili1",
+        "bBoxNE": [
+          1.489,
+          0.393
+        ],
+        "bBoxSW": [
+          0.132,
+          0.227
+        ]
+      },
+      {
+        "name": "oligonKentimaTripleYpsili2",
+        "bBoxNE": [
+          0.972,
+          0.718
+        ],
+        "bBoxSW": [
+          0.696,
+          0.478
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.3692,
+          0.6099
+        ],
+        "bBoxSW": [
+          -0.001,
+          0.4489
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.5311,
+          0.771
+        ],
+        "bBoxSW": [
+          0.2968,
+          0.6099
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.614,
+          0.932
+        ],
+        "bBoxSW": [
+          0.4091,
+          0.771
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          1.4433,
+          0.641
+        ],
+        "bBoxSW": [
+          1.073,
+          0.48
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          1.6041,
+          0.802
+        ],
+        "bBoxSW": [
+          1.3698,
+          0.641
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          1.689,
+          0.963
+        ],
+        "bBoxSW": [
+          1.483,
+          0.802
+        ],
+        "name": "ypsili23"
+      },
+      {
+        "bBoxNE": [
+          1.0028,
+          0.911
+        ],
+        "bBoxSW": [
+          0.634,
+          0.753
+        ],
+        "name": "ypsili31"
+      },
+      {
+        "bBoxNE": [
+          1.1751,
+          1.069
+        ],
+        "bBoxSW": [
+          0.9279,
+          0.911
+        ],
+        "name": "ypsili32"
+      },
+      {
+        "bBoxNE": [
+          1.263,
+          1.227
+        ],
+        "bBoxSW": [
+          1.054,
+          1.069
+        ],
+        "name": "ypsili33"
+      }
+    ],
+    "oligonIson": [
+      {
+        "name": "oligonIson1",
+        "bBoxNE": [
+          1.4,
+          0.396
+        ],
+        "bBoxSW": [
+          0.044,
+          0.23
+        ]
+      },
+      {
+        "name": "oligonIson2",
+        "bBoxNE": [
+          1.367,
+          0.765
+        ],
+        "bBoxSW": [
+          0.0,
+          0.454
+        ]
+      }
+    ],
+    "oligonApostrofos": [
+      {
+        "name": "oligonApostrofos1",
+        "bBoxNE": [
+          0.861,
+          0.666
+        ],
+        "bBoxSW": [
+          0.275,
+          0.444
+        ]
+      },
+      {
+        "name": "oligonApostrofos2",
+        "bBoxNE": [
+          1.356,
+          0.394
+        ],
+        "bBoxSW": [
+          0.0,
+          0.228
+        ]
+      }
+    ],
+    "oligonYporroi": [
+      {
+        "name": "oligonYporroi1",
+        "bBoxNE": [
+          1.006,
+          0.716
+        ],
+        "bBoxSW": [
+          0.666,
+          0.452
+        ]
+      },
+      {
+        "name": "oligonYporroi2",
+        "bBoxNE": [
+          1.343,
+          0.395
+        ],
+        "bBoxSW": [
+          0.0,
+          0.229
+        ]
+      }
+    ],
+    "oligonElafron": [
+      {
+        "name": "oligonElafron1",
+        "bBoxNE": [
+          1.17,
+          0.86
+        ],
+        "bBoxSW": [
+          0.044,
+          0.498
+        ]
+      },
+      {
+        "name": "oligonElafron2",
+        "bBoxNE": [
+          1.356,
+          0.395
+        ],
+        "bBoxSW": [
+          0.0,
+          0.229
+        ]
+      }
+    ],
+    "oligonElafronApostrofos": [
+      {
+        "name": "oligonElafronApostrofos1",
+        "bBoxNE": [
+          1.356,
+          0.393
+        ],
+        "bBoxSW": [
+          0.0,
+          0.227
+        ]
+      },
+      {
+        "name": "oligonElafronApostrofos2",
+        "bBoxNE": [
+          1.188,
+          0.864
+        ],
+        "bBoxSW": [
+          0.062,
+          0.501
+        ]
+      },
+      {
+        "name": "oligonElafronApostrofos3",
+        "bBoxNE": [
+          0.925,
+          0.662
+        ],
+        "bBoxSW": [
+          0.339,
+          0.44
+        ]
+      }
+    ],
+    "oligonChamili": [
+      {
+        "name": "oligonChamili1",
+        "bBoxNE": [
+          1.357,
+          0.395
+        ],
+        "bBoxSW": [
+          0.0,
+          0.229
+        ]
+      },
+      {
+        "name": "oligonChamili2",
+        "bBoxNE": [
+          1.146,
+          0.911
+        ],
+        "bBoxSW": [
+          0.04,
+          0.448
+        ]
+      }
+    ],
+    "isonApostrofos": [
+      {
+        "name": "isonApostrofos1",
+        "bBoxNE": [
+          1.354,
+          0.137
+        ],
+        "bBoxSW": [
+          0.643,
+          -0.137
+        ]
+      },
+      {
+        "name": "isonApostrofos2",
+        "bBoxNE": [
+          1.096,
+          0.533
+        ],
+        "bBoxSW": [
+          -0.001,
+          0.222
+        ]
+      }
+    ],
+    "apostrofos": [
+      {
+        "name": "apostrofos1",
+        "bBoxNE": [
+          0.711,
+          0.421
+        ],
+        "bBoxSW": [
+          0.0,
+          0.146
+        ]
+      }
+    ],
+    "apostrofosSyndesmos": [
+      {
+        "name": "apostrofosSyndesmos1",
+        "bBoxNE": [
+          0.711,
+          0.461
+        ],
+        "bBoxSW": [
+          0.0,
+          0.188
+        ]
+      },
+      {
+        "name": "apostrofosSyndesmos2",
+        "bBoxNE": [
+          1.428,
+          0.186
+        ],
+        "bBoxSW": [
+          0.718,
+          -0.087
+        ]
+      }
+    ],
+    "yporroi": [
+      {
+        "name": "yporroi1",
+        "bBoxNE": [
+          0.339,
+          0.44
+        ],
+        "bBoxSW": [
+          -0.001,
+          0.176
+        ]
+      }
+    ],
+    "elafron": [
+      {
+        "name": "elafron1",
+        "bBoxNE": [
+          1.126,
+          0.482
+        ],
+        "bBoxSW": [
+          0.0,
+          0.12
+        ]
+      }
+    ],
+    "runningElafron": [
+      {
+        "name": "runningElafron1",
+        "bBoxNE": [
+          0.666,
+          0.437
+        ],
+        "bBoxSW": [
+          0.0,
+          0.177
+        ]
+      },
+      {
+        "name": "runningElafron2",
+        "bBoxNE": [
+          1.772,
+          0.472
+        ],
+        "bBoxSW": [
+          0.72,
+          0.11
+        ]
+      }
+    ],
+    "elafronApostrofos": [
+      {
+        "name": "elafronApostrofos1",
+        "bBoxNE": [
+          1.126,
+          0.488
+        ],
+        "bBoxSW": [
+          0.0,
+          0.125
+        ]
+      },
+      {
+        "name": "elafronApostrofos2",
+        "bBoxNE": [
+          0.871,
+          0.259
+        ],
+        "bBoxSW": [
+          0.284,
+          0.036
+        ]
+      }
+    ],
+    "chamili": [
+      {
+        "name": "chamili1",
+        "bBoxNE": [
+          1.106,
+          0.674
+        ],
+        "bBoxSW": [
+          0.0,
+          0.211
+        ]
+      }
+    ],
+    "chamiliApostrofos": [
+      {
+        "name": "chamiliApostrofos1",
+        "bBoxNE": [
+          0.723,
+          0.126
+        ],
+        "bBoxSW": [
+          0.012,
+          -0.148
+        ]
+      },
+      {
+        "name": "chamiliApostrofos2",
+        "bBoxNE": [
+          1.106,
+          0.659
+        ],
+        "bBoxSW": [
+          0.0,
+          0.196
+        ]
+      }
+    ],
+    "chamiliElafron": [
+      {
+        "name": "chamiliElafron1",
+        "bBoxNE": [
+          1.122,
+          0.462
+        ],
+        "bBoxSW": [
+          0.0,
+          0.083
+        ]
+      },
+      {
+        "name": "chamiliElafron2",
+        "bBoxNE": [
+          1.126,
+          0.958
+        ],
+        "bBoxSW": [
+          0.02,
+          0.496
+        ]
+      }
+    ],
+    "chamiliElafronApostrofos": [
+      {
+        "name": "chamiliElafronApostrofos1",
+        "bBoxNE": [
+          1.128,
+          0.958
+        ],
+        "bBoxSW": [
+          0.022,
+          0.495
+        ]
+      },
+      {
+        "name": "chamiliElafronApostrofos2",
+        "bBoxNE": [
+          1.126,
+          0.468
+        ],
+        "bBoxSW": [
+          0.0,
+          0.105
+        ]
+      },
+      {
+        "name": "chamiliElafronApostrofos3",
+        "bBoxNE": [
+          0.871,
+          0.237
+        ],
+        "bBoxSW": [
+          0.285,
+          0.016
+        ]
+      }
+    ],
+    "doubleChamili": [
+      {
+        "name": "doubleChamili1",
+        "bBoxNE": [
+          1.106,
+          0.662
+        ],
+        "bBoxSW": [
+          0.0,
+          0.198
+        ]
+      },
+      {
+        "name": "doubleChamili2",
+        "bBoxNE": [
+          1.151,
+          1.003
+        ],
+        "bBoxSW": [
+          0.044,
+          0.54
+        ]
+      }
+    ],
+    "doubleChamiliApostrofos": [
+      {
+        "name": "doubleChamiliApostrofos1",
+        "bBoxNE": [
+          0.724,
+          0.128
+        ],
+        "bBoxSW": [
+          0.013,
+          -0.145
+        ]
+      },
+      {
+        "name": "doubleChamiliApostrofos2",
+        "bBoxNE": [
+          1.107,
+          0.661
+        ],
+        "bBoxSW": [
+          0.0,
+          0.199
+        ]
+      },
+      {
+        "name": "doubleChamiliApostrofos3",
+        "bBoxNE": [
+          1.152,
+          1.002
+        ],
+        "bBoxSW": [
+          0.045,
+          0.539
+        ]
+      }
+    ],
+    "doubleChamiliElafron": [
+      {
+        "name": "doubleChamiliElafron1",
+        "bBoxNE": [
+          1.122,
+          0.158
+        ],
+        "bBoxSW": [
+          0.0,
+          -0.22
+        ]
+      },
+      {
+        "name": "doubleChamiliElafron2",
+        "bBoxNE": [
+          1.126,
+          0.655
+        ],
+        "bBoxSW": [
+          0.02,
+          0.192
+        ]
+      },
+      {
+        "name": "doubleChamiliElafron3",
+        "bBoxNE": [
+          1.172,
+          0.995
+        ],
+        "bBoxSW": [
+          0.065,
+          0.533
+        ]
+      }
+    ],
+    "doubleChamiliElafronApostrofos": [
+      {
+        "name": "doubleChamiliElafronApostrofos1",
+        "bBoxNE": [
+          1.127,
+          0.656
+        ],
+        "bBoxSW": [
+          0.021,
+          0.193
+        ]
+      },
+      {
+        "name": "doubleChamiliElafronApostrofos2",
+        "bBoxNE": [
+          1.173,
+          0.997
+        ],
+        "bBoxSW": [
+          0.066,
+          0.534
+        ]
+      },
+      {
+        "name": "doubleChamiliElafronApostrofos3",
+        "bBoxNE": [
+          1.125,
+          0.166
+        ],
+        "bBoxSW": [
+          0.0,
+          -0.197
+        ]
+      },
+      {
+        "name": "doubleChamiliElafronApostrofos4",
+        "bBoxNE": [
+          0.87,
+          -0.065
+        ],
+        "bBoxSW": [
+          0.284,
+          -0.286
+        ]
+      }
+    ],
+    "tripleChamili": [
+      {
+        "name": "tripleChamili1",
+        "bBoxNE": [
+          1.106,
+          0.921
+        ],
+        "bBoxSW": [
+          0.0,
+          0.458
+        ]
+      },
+      {
+        "name": "tripleChamili2",
+        "bBoxNE": [
+          1.152,
+          1.262
+        ],
+        "bBoxSW": [
+          0.045,
+          0.799
+        ]
+      },
+      {
+        "name": "tripleChamili3",
+        "bBoxNE": [
+          1.116,
+          0.558
+        ],
+        "bBoxSW": [
+          0.009,
+          0.095
+        ]
+      }
+    ],
+    "petastiIson": [
+      {
+        "name": "petastiIson1",
+        "bBoxNE": [
+          1.245,
+          0.513
+        ],
+        "bBoxSW": [
+          0.118,
+          0.219
+        ]
+      },
+      {
+        "name": "petastiIson2",
+        "bBoxNE": [
+          1.218,
+          0.88
+        ],
+        "bBoxSW": [
+          0.0,
+          0.569
+        ]
+      }
+    ],
+    "petasti": [
+      {
+        "name": "petasti1",
+        "bBoxNE": [
+          1.127,
+          0.459
+        ],
+        "bBoxSW": [
+          0.0,
+          0.165
+        ]
+      }
+    ],
+    "petastiOligon": [
+      {
+        "name": "petastiOligon1",
+        "bBoxNE": [
+          1.099,
+          0.735
+        ],
+        "bBoxSW": [
+          0.0,
+          0.603
+        ]
+      },
+      {
+        "name": "petastiOligon2",
+        "bBoxNE": [
+          1.133,
+          0.477
+        ],
+        "bBoxSW": [
+          0.006,
+          0.183
+        ]
+      }
+    ],
+    "petastiKentima": [
+      {
+        "name": "petastiKentima1",
+        "bBoxNE": [
+          1.127,
+          0.473
+        ],
+        "bBoxSW": [
+          0.0,
+          0.179
+        ]
+      },
+      {
+        "name": "petastiKentima2",
+        "bBoxNE": [
+          0.715,
+          0.739
+        ],
+        "bBoxSW": [
+          0.407,
+          0.487
+        ]
+      }
+    ],
+    "petastiYpsiliRight": [
+      {
+        "name": "petastiYpsiliRight1",
+        "bBoxNE": [
+          1.128,
+          0.464
+        ],
+        "bBoxSW": [
+          -0.001,
+          0.169
+        ]
+      },
+      {
+        "bBoxNE": [
+          1.0938,
+          0.732
+        ],
+        "bBoxSW": [
+          0.7051,
+          0.571
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          1.2644,
+          0.893
+        ],
+        "bBoxSW": [
+          1.0206,
+          0.732
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          1.3501,
+          1.054
+        ],
+        "bBoxSW": [
+          1.1363,
+          0.893
+        ],
+        "name": "ypsili13"
+      }
+    ],
+    "petastiYpsiliLeft": [
+      {
+        "name": "petastiYpsiliLeft1",
+        "bBoxNE": [
+          1.126,
+          0.462
+        ],
+        "bBoxSW": [
+          0.0,
+          0.168
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.4043,
+          0.7327
+        ],
+        "bBoxSW": [
+          0.017,
+          0.572
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.5751,
+          0.8933
+        ],
+        "bBoxSW": [
+          0.3324,
+          0.7327
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.661,
+          1.054
+        ],
+        "bBoxSW": [
+          0.4476,
+          0.8933
+        ],
+        "name": "ypsili13"
+      }
+    ],
+    "petastiKentimaYpsiliRight": [
+      {
+        "name": "petastiKentimaYpsiliRight1",
+        "bBoxNE": [
+          1.127,
+          0.468
+        ],
+        "bBoxSW": [
+          0.0,
+          0.174
+        ]
+      },
+      {
+        "name": "petastiKentimaYpsiliRight2",
+        "bBoxNE": [
+          0.651,
+          0.768
+        ],
+        "bBoxSW": [
+          0.405,
+          0.552
+        ]
+      },
+      {
+        "bBoxNE": [
+          1.1512,
+          0.7093
+        ],
+        "bBoxSW": [
+          0.762,
+          0.548
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          1.3216,
+          0.8707
+        ],
+        "bBoxSW": [
+          1.0754,
+          0.7093
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          1.407,
+          1.032
+        ],
+        "bBoxSW": [
+          1.1933,
+          0.8707
+        ],
+        "name": "ypsili13"
+      }
+    ],
+    "petastiKentimaYpsiliMiddle": [
+      {
+        "name": "petastiKentimaYpsiliMiddle1",
+        "bBoxNE": [
+          1.127,
+          0.466
+        ],
+        "bBoxSW": [
+          0.0,
+          0.172
+        ]
+      },
+      {
+        "name": "petastiKentimaYpsiliMiddle2",
+        "bBoxNE": [
+          0.668,
+          0.71
+        ],
+        "bBoxSW": [
+          0.423,
+          0.494
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.6765,
+          0.958
+        ],
+        "bBoxSW": [
+          0.287,
+          0.797
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.8453,
+          1.119
+        ],
+        "bBoxSW": [
+          0.603,
+          0.958
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.932,
+          1.28
+        ],
+        "bBoxSW": [
+          0.7182,
+          1.119
+        ],
+        "name": "ypsili13"
+      }
+    ],
+    "petastiDoubleYpsili": [
+      {
+        "name": "petastiDoubleYpsili1",
+        "bBoxNE": [
+          1.162,
+          0.463
+        ],
+        "bBoxSW": [
+          0.036,
+          0.169
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.3887,
+          0.704
+        ],
+        "bBoxSW": [
+          -0.001,
+          0.543
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.5593,
+          0.865
+        ],
+        "bBoxSW": [
+          0.3146,
+          0.704
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.645,
+          1.026
+        ],
+        "bBoxSW": [
+          0.4312,
+          0.865
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          1.2007,
+          0.704
+        ],
+        "bBoxSW": [
+          0.812,
+          0.543
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          1.3713,
+          0.865
+        ],
+        "bBoxSW": [
+          1.1266,
+          0.704
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          1.457,
+          1.026
+        ],
+        "bBoxSW": [
+          1.2437,
+          0.865
+        ],
+        "name": "ypsili23"
+      }
+    ],
+    "petastiKentimataDoubleYpsili": [
+      {
+        "name": "petastiKentimataDoubleYpsili1",
+        "bBoxNE": [
+          1.127,
+          0.464
+        ],
+        "bBoxSW": [
+          0.0,
+          0.17
+        ]
+      },
+      {
+        "name": "petastiKentimataDoubleYpsili2",
+        "bBoxNE": [
+          0.529,
+          0.767
+        ],
+        "bBoxSW": [
+          0.267,
+          0.551
+        ]
+      },
+      {
+        "name": "petastiKentimataDoubleYpsili3",
+        "bBoxNE": [
+          0.739,
+          0.769
+        ],
+        "bBoxSW": [
+          0.493,
+          0.553
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.6604,
+          1.0119
+        ],
+        "bBoxSW": [
+          0.271,
+          0.8509
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.8297,
+          1.173
+        ],
+        "bBoxSW": [
+          0.5874,
+          1.0119
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.916,
+          1.334
+        ],
+        "bBoxSW": [
+          0.7026,
+          1.173
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          1.203,
+          0.7006
+        ],
+        "bBoxSW": [
+          0.814,
+          0.5399
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          1.3734,
+          0.8613
+        ],
+        "bBoxSW": [
+          1.1297,
+          0.7006
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          1.459,
+          1.022
+        ],
+        "bBoxSW": [
+          1.2458,
+          0.8613
+        ],
+        "name": "ypsili23"
+      }
+    ],
+    "petastiKentimaDoubleYpsiliRight": [
+      {
+        "name": "petastiKentimaDoubleYpsiliRight1",
+        "bBoxNE": [
+          1.127,
+          0.46
+        ],
+        "bBoxSW": [
+          0.0,
+          0.166
+        ]
+      },
+      {
+        "name": "petastiKentimaDoubleYpsiliRight2",
+        "bBoxNE": [
+          0.668,
+          0.704
+        ],
+        "bBoxSW": [
+          0.423,
+          0.488
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.6765,
+          0.952
+        ],
+        "bBoxSW": [
+          0.287,
+          0.791
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.8453,
+          1.113
+        ],
+        "bBoxSW": [
+          0.603,
+          0.952
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.932,
+          1.274
+        ],
+        "bBoxSW": [
+          0.7182,
+          1.113
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          1.1455,
+          0.679
+        ],
+        "bBoxSW": [
+          0.756,
+          0.518
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          1.3143,
+          0.84
+        ],
+        "bBoxSW": [
+          1.071,
+          0.679
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          1.401,
+          1.001
+        ],
+        "bBoxSW": [
+          1.1867,
+          0.84
+        ],
+        "name": "ypsili23"
+      }
+    ],
+    "petastiKentimaDoubleYpsiliLeft": [
+      {
+        "name": "petastiKentimaDoubleYpsiliLeft1",
+        "bBoxNE": [
+          1.249,
+          0.462
+        ],
+        "bBoxSW": [
+          0.122,
+          0.168
+        ]
+      },
+      {
+        "name": "petastiKentimaDoubleYpsiliLeft2",
+        "bBoxNE": [
+          0.897,
+          0.723
+        ],
+        "bBoxSW": [
+          0.651,
+          0.507
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.9567,
+          0.963
+        ],
+        "bBoxSW": [
+          0.569,
+          0.802
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          1.1272,
+          1.124
+        ],
+        "bBoxSW": [
+          0.884,
+          0.963
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          1.216,
+          1.285
+        ],
+        "bBoxSW": [
+          0.9994,
+          1.124
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          0.3895,
+          0.735
+        ],
+        "bBoxSW": [
+          0.0,
+          0.574
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          0.5587,
+          0.896
+        ],
+        "bBoxSW": [
+          0.318,
+          0.735
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          0.645,
+          1.057
+        ],
+        "bBoxSW": [
+          0.4314,
+          0.896
+        ],
+        "name": "ypsili23"
+      }
+    ],
+    "petastiTripleYpsili": [
+      {
+        "name": "petastiTripleYpsili1",
+        "bBoxNE": [
+          1.141,
+          0.466
+        ],
+        "bBoxSW": [
+          0.014,
+          0.172
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.3885,
+          0.683
+        ],
+        "bBoxSW": [
+          -0.001,
+          0.522
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.5583,
+          0.844
+        ],
+        "bBoxSW": [
+          0.315,
+          0.683
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.644,
+          1.005
+        ],
+        "bBoxSW": [
+          0.4307,
+          0.844
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          1.1595,
+          0.685
+        ],
+        "bBoxSW": [
+          0.77,
+          0.524
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          1.3283,
+          0.846
+        ],
+        "bBoxSW": [
+          1.085,
+          0.685
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          1.415,
+          1.007
+        ],
+        "bBoxSW": [
+          1.2007,
+          0.846
+        ],
+        "name": "ypsili23"
+      },
+      {
+        "bBoxNE": [
+          0.774,
+          0.6836
+        ],
+        "bBoxSW": [
+          0.385,
+          0.5229
+        ],
+        "name": "ypsili31"
+      },
+      {
+        "bBoxNE": [
+          0.9444,
+          0.8443
+        ],
+        "bBoxSW": [
+          0.7022,
+          0.6836
+        ],
+        "name": "ypsili32"
+      },
+      {
+        "bBoxNE": [
+          1.03,
+          1.005
+        ],
+        "bBoxSW": [
+          0.8168,
+          0.8443
+        ],
+        "name": "ypsili33"
+      }
+    ],
+    "petastiKentimataTripleYpsili": [
+      {
+        "name": "petastiKentimataTripleYpsili1",
+        "bBoxNE": [
+          1.546,
+          0.444
+        ],
+        "bBoxSW": [
+          0.206,
+          0.144
+        ]
+      },
+      {
+        "name": "petastiKentimataTripleYpsili2",
+        "bBoxNE": [
+          0.915,
+          0.786
+        ],
+        "bBoxSW": [
+          0.626,
+          0.546
+        ]
+      },
+      {
+        "name": "petastiKentimataTripleYpsili3",
+        "bBoxNE": [
+          1.134,
+          0.786
+        ],
+        "bBoxSW": [
+          0.865,
+          0.547
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.3888,
+          0.677
+        ],
+        "bBoxSW": [
+          -0.001,
+          0.516
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.5583,
+          0.838
+        ],
+        "bBoxSW": [
+          0.311,
+          0.677
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.647,
+          0.999
+        ],
+        "bBoxSW": [
+          0.431,
+          0.838
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          1.6021,
+          0.7083
+        ],
+        "bBoxSW": [
+          1.214,
+          0.547
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          1.7717,
+          0.8697
+        ],
+        "bBoxSW": [
+          1.5255,
+          0.7083
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          1.861,
+          1.031
+        ],
+        "bBoxSW": [
+          1.6452,
+          0.8697
+        ],
+        "name": "ypsili23"
+      },
+      {
+        "bBoxNE": [
+          1.0268,
+          0.9907
+        ],
+        "bBoxSW": [
+          0.641,
+          0.833
+        ],
+        "name": "ypsili31"
+      },
+      {
+        "bBoxNE": [
+          1.2101,
+          1.1483
+        ],
+        "bBoxSW": [
+          0.9492,
+          0.9907
+        ],
+        "name": "ypsili32"
+      },
+      {
+        "bBoxNE": [
+          1.302,
+          1.306
+        ],
+        "bBoxSW": [
+          1.0818,
+          1.1483
+        ],
+        "name": "ypsili33"
+      }
+    ],
+    "petastiKentimaTripleYpsili": [
+      {
+        "name": "petastiKentimaTripleYpsili1",
+        "bBoxNE": [
+          1.58,
+          0.426
+        ],
+        "bBoxSW": [
+          0.241,
+          0.126
+        ]
+      },
+      {
+        "name": "petastiKentimaTripleYpsili2",
+        "bBoxNE": [
+          1.052,
+          0.762
+        ],
+        "bBoxSW": [
+          0.762,
+          0.523
+        ]
+      },
+      {
+        "bBoxNE": [
+          1.5644,
+          0.6853
+        ],
+        "bBoxSW": [
+          1.177,
+          0.524
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          1.735,
+          0.8467
+        ],
+        "bBoxSW": [
+          1.4869,
+          0.6853
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          1.824,
+          1.008
+        ],
+        "bBoxSW": [
+          1.6079,
+          0.8467
+        ],
+        "name": "ypsili13"
+      },
+      {
+        "bBoxNE": [
+          0.3874,
+          0.6543
+        ],
+        "bBoxSW": [
+          0.0,
+          0.493
+        ],
+        "name": "ypsili21"
+      },
+      {
+        "bBoxNE": [
+          0.5583,
+          0.8157
+        ],
+        "bBoxSW": [
+          0.3122,
+          0.6543
+        ],
+        "name": "ypsili22"
+      },
+      {
+        "bBoxNE": [
+          0.647,
+          0.977
+        ],
+        "bBoxSW": [
+          0.4322,
+          0.8157
+        ],
+        "name": "ypsili23"
+      },
+      {
+        "bBoxNE": [
+          1.0848,
+          0.9557
+        ],
+        "bBoxSW": [
+          0.697,
+          0.798
+        ],
+        "name": "ypsili31"
+      },
+      {
+        "bBoxNE": [
+          1.267,
+          1.1133
+        ],
+        "bBoxSW": [
+          1.0062,
+          0.9557
+        ],
+        "name": "ypsili32"
+      },
+      {
+        "bBoxNE": [
+          1.359,
+          1.271
+        ],
+        "bBoxSW": [
+          1.1387,
+          1.1133
+        ],
+        "name": "ypsili33"
+      }
+    ],
+    "petastiApostrofos": [
+      {
+        "name": "petastiApostrofos1",
+        "bBoxNE": [
+          1.127,
+          0.457
+        ],
+        "bBoxSW": [
+          0.0,
+          0.163
+        ]
+      },
+      {
+        "name": "petastiApostrofos2",
+        "bBoxNE": [
+          0.764,
+          0.662
+        ],
+        "bBoxSW": [
+          0.053,
+          0.388
+        ]
+      }
+    ],
+    "petastiYporroi": [
+      {
+        "name": "petastiYporroi1",
+        "bBoxNE": [
+          1.126,
+          0.446
+        ],
+        "bBoxSW": [
+          0.0,
+          0.153
+        ]
+      },
+      {
+        "name": "petastiYporroi2",
+        "bBoxNE": [
+          0.757,
+          0.644
+        ],
+        "bBoxSW": [
+          0.417,
+          0.38
+        ]
+      }
+    ],
+    "petastiElafron": [
+      {
+        "name": "petastiElafron1",
+        "bBoxNE": [
+          1.126,
+          0.868
+        ],
+        "bBoxSW": [
+          0.0,
+          0.505
+        ]
+      },
+      {
+        "name": "petastiElafron2",
+        "bBoxNE": [
+          1.14,
+          0.463
+        ],
+        "bBoxSW": [
+          0.013,
+          0.169
+        ]
+      }
+    ],
+    "petastiRunningElafron": [
+      {
+        "name": "petastiRunningElafron1",
+        "bBoxNE": [
+          1.828,
+          0.868
+        ],
+        "bBoxSW": [
+          0.702,
+          0.505
+        ]
+      },
+      {
+        "name": "petastiRunningElafron2",
+        "bBoxNE": [
+          1.847,
+          0.433
+        ],
+        "bBoxSW": [
+          0.721,
+          0.139
+        ]
+      },
+      {
+        "name": "petastiRunningElafron3",
+        "bBoxNE": [
+          0.668,
+          0.818
+        ],
+        "bBoxSW": [
+          0.0,
+          0.558
+        ]
+      }
+    ],
+    "petastiElafronApostrofos": [
+      {
+        "name": "petastiElafronApostrofos1",
+        "bBoxNE": [
+          1.125,
+          0.874
+        ],
+        "bBoxSW": [
+          0.0,
+          0.512
+        ]
+      },
+      {
+        "name": "petastiElafronApostrofos2",
+        "bBoxNE": [
+          1.2,
+          0.474
+        ],
+        "bBoxSW": [
+          0.073,
+          0.18
+        ]
+      },
+      {
+        "name": "petastiElafronApostrofos3",
+        "bBoxNE": [
+          0.863,
+          0.674
+        ],
+        "bBoxSW": [
+          0.276,
+          0.452
+        ]
+      }
+    ],
+    "petastiChamili": [
+      {
+        "name": "petastiChamili1",
+        "bBoxNE": [
+          1.128,
+          1.039
+        ],
+        "bBoxSW": [
+          0.021,
+          0.576
+        ]
+      },
+      {
+        "name": "petastiChamili2",
+        "bBoxNE": [
+          1.127,
+          0.465
+        ],
+        "bBoxSW": [
+          0.0,
+          0.171
+        ]
+      }
+    ],
+    "petastiChamiliApostrofos": [
+      {
+        "name": "petastiChamiliApostrofos1",
+        "bBoxNE": [
+          0.764,
+          0.645
+        ],
+        "bBoxSW": [
+          0.053,
+          0.371
+        ]
+      },
+      {
+        "name": "petastiChamiliApostrofos2",
+        "bBoxNE": [
+          1.148,
+          1.136
+        ],
+        "bBoxSW": [
+          0.041,
+          0.673
+        ]
+      },
+      {
+        "name": "petastiChamiliApostrofos3",
+        "bBoxNE": [
+          1.127,
+          0.441
+        ],
+        "bBoxSW": [
+          0.0,
+          0.147
+        ]
+      }
+    ],
+    "petastiChamiliElafron": [
+      {
+        "name": "petastiChamiliElafron1",
+        "bBoxNE": [
+          1.209,
+          1.318
+        ],
+        "bBoxSW": [
+          0.103,
+          0.856
+        ]
+      },
+      {
+        "name": "petastiChamiliElafron2",
+        "bBoxNE": [
+          1.126,
+          0.867
+        ],
+        "bBoxSW": [
+          0.0,
+          0.504
+        ]
+      },
+      {
+        "name": "petastiChamiliElafron3",
+        "bBoxNE": [
+          1.201,
+          0.465
+        ],
+        "bBoxSW": [
+          0.074,
+          0.171
+        ]
+      }
+    ],
+    "petastiChamiliElafronApostrofos": [
+      {
+        "name": "petastiChamiliElafronApostrofos1",
+        "bBoxNE": [
+          1.209,
+          1.322
+        ],
+        "bBoxSW": [
+          0.103,
+          0.86
+        ]
+      },
+      {
+        "name": "petastiChamiliElafronApostrofos2",
+        "bBoxNE": [
+          1.126,
+          0.871
+        ],
+        "bBoxSW": [
+          0.0,
+          0.508
+        ]
+      },
+      {
+        "name": "petastiChamiliElafronApostrofos3",
+        "bBoxNE": [
+          1.201,
+          0.469
+        ],
+        "bBoxSW": [
+          0.074,
+          0.175
+        ]
+      },
+      {
+        "name": "petastiChamiliElafronApostrofos4",
+        "bBoxNE": [
+          0.863,
+          0.669
+        ],
+        "bBoxSW": [
+          0.277,
+          0.447
+        ]
+      }
+    ],
+    "petastiDoubleChamili": [
+      {
+        "name": "petastiDoubleChamili1",
+        "bBoxNE": [
+          1.106,
+          0.889
+        ],
+        "bBoxSW": [
+          0.0,
+          0.427
+        ]
+      },
+      {
+        "name": "petastiDoubleChamili2",
+        "bBoxNE": [
+          1.176,
+          0.32
+        ],
+        "bBoxSW": [
+          0.05,
+          0.026
+        ]
+      },
+      {
+        "name": "petastiDoubleChamili3",
+        "bBoxNE": [
+          1.152,
+          1.219
+        ],
+        "bBoxSW": [
+          0.045,
+          0.757
+        ]
+      }
+    ],
+    "petastiDoubleChamiliApostrofos": [
+      {
+        "name": "petastiDoubleChamiliApostrofos1",
+        "bBoxNE": [
+          0.764,
+          0.529
+        ],
+        "bBoxSW": [
+          0.053,
+          0.255
+        ]
+      },
+      {
+        "name": "petastiDoubleChamiliApostrofos2",
+        "bBoxNE": [
+          1.147,
+          1.02
+        ],
+        "bBoxSW": [
+          0.041,
+          0.557
+        ]
+      },
+      {
+        "name": "petastiDoubleChamiliApostrofos3",
+        "bBoxNE": [
+          1.193,
+          1.36
+        ],
+        "bBoxSW": [
+          0.086,
+          0.898
+        ]
+      },
+      {
+        "name": "petastiDoubleChamiliApostrofos4",
+        "bBoxNE": [
+          1.127,
+          0.325
+        ],
+        "bBoxSW": [
+          0.0,
+          0.031
+        ]
+      }
+    ],
+    "kentima": [
+      {
+        "name": "kentima1",
+        "bBoxNE": [
+          0.306,
+          0.43
+        ],
+        "bBoxSW": [
+          -0.003,
+          0.178
+        ]
+      }
+    ],
+    "kentimata": [
+      {
+        "name": "kentimata1",
+        "bBoxNE": [
+          0.306,
+          0.432
+        ],
+        "bBoxSW": [
+          -0.002,
+          0.18
+        ]
+      },
+      {
+        "name": "kentimata2",
+        "bBoxNE": [
+          0.597,
+          0.432
+        ],
+        "bBoxSW": [
+          0.31,
+          0.18
+        ]
+      }
+    ],
+    "oligonKentimataBelow": [
+      {
+        "name": "oligonKentimataBelow1",
+        "bBoxNE": [
+          1.356,
+          0.388
+        ],
+        "bBoxSW": [
+          0.0,
+          0.223
+        ]
+      },
+      {
+        "name": "oligonKentimataBelow2",
+        "bBoxNE": [
+          1.128,
+          0.21
+        ],
+        "bBoxSW": [
+          0.866,
+          -0.005
+        ]
+      },
+      {
+        "name": "oligonKentimataBelow3",
+        "bBoxNE": [
+          1.337,
+          0.212
+        ],
+        "bBoxSW": [
+          1.094,
+          -0.004
+        ]
+      }
+    ],
+    "oligonKentimataAbove": [
+      {
+        "name": "oligonKentimataAbove1",
+        "bBoxNE": [
+          1.356,
+          0.396
+        ],
+        "bBoxSW": [
+          0.0,
+          0.23
+        ]
+      },
+      {
+        "name": "oligonKentimataAbove2",
+        "bBoxNE": [
+          0.701,
+          0.668
+        ],
+        "bBoxSW": [
+          0.439,
+          0.452
+        ]
+      },
+      {
+        "name": "oligonKentimataAbove3",
+        "bBoxNE": [
+          0.91,
+          0.671
+        ],
+        "bBoxSW": [
+          0.667,
+          0.454
+        ]
+      }
+    ],
+    "oligonIsonKentimata": [
+      {
+        "name": "oligonIsonKentimata1",
+        "bBoxNE": [
+          1.096,
+          0.746
+        ],
+        "bBoxSW": [
+          -0.001,
+          0.435
+        ]
+      },
+      {
+        "name": "oligonIsonKentimata2",
+        "bBoxNE": [
+          1.503,
+          0.682
+        ],
+        "bBoxSW": [
+          1.195,
+          0.43
+        ]
+      },
+      {
+        "name": "oligonIsonKentimata3",
+        "bBoxNE": [
+          1.736,
+          0.683
+        ],
+        "bBoxSW": [
+          1.449,
+          0.432
+        ]
+      },
+      {
+        "name": "oligonIsonKentimata4",
+        "bBoxNE": [
+          1.968,
+          0.377
+        ],
+        "bBoxSW": [
+          0.18,
+          0.212
+        ]
+      }
+    ],
+    "oligonKentimaMiddleKentimata": [
+      {
+        "name": "oligonKentimaMiddleKentimata1",
+        "bBoxNE": [
+          1.689,
+          0.405
+        ],
+        "bBoxSW": [
+          1.343,
+          0.2
+        ]
+      },
+      {
+        "name": "oligonKentimaMiddleKentimata2",
+        "bBoxNE": [
+          1.356,
+          0.396
+        ],
+        "bBoxSW": [
+          0.0,
+          0.23
+        ]
+      },
+      {
+        "name": "oligonKentimaMiddleKentimata3",
+        "bBoxNE": [
+          0.701,
+          0.668
+        ],
+        "bBoxSW": [
+          0.439,
+          0.452
+        ]
+      },
+      {
+        "name": "oligonKentimaMiddleKentimata4",
+        "bBoxNE": [
+          0.91,
+          0.671
+        ],
+        "bBoxSW": [
+          0.667,
+          0.454
+        ]
+      }
+    ],
+    "oligonYpsiliRightKentimata": [
+      {
+        "name": "oligonYpsiliRightKentimata1",
+        "bBoxNE": [
+          1.356,
+          0.395
+        ],
+        "bBoxSW": [
+          0.0,
+          0.229
+        ]
+      },
+      {
+        "name": "oligonYpsiliRightKentimata2",
+        "bBoxNE": [
+          0.513,
+          0.678
+        ],
+        "bBoxSW": [
+          0.251,
+          0.463
+        ]
+      },
+      {
+        "name": "oligonYpsiliRightKentimata3",
+        "bBoxNE": [
+          0.722,
+          0.679
+        ],
+        "bBoxSW": [
+          0.48,
+          0.464
+        ]
+      },
+      {
+        "bBoxNE": [
+          1.2229,
+          0.632
+        ],
+        "bBoxSW": [
+          0.834,
+          0.471
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          1.3923,
+          0.793
+        ],
+        "bBoxSW": [
+          1.151,
+          0.632
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          1.479,
+          0.954
+        ],
+        "bBoxSW": [
+          1.2652,
+          0.793
+        ],
+        "name": "ypsili13"
+      }
+    ],
+    "oligonYpsiliLeftKentimata": [
+      {
+        "name": "oligonYpsiliLeftKentimata1",
+        "bBoxNE": [
+          1.388,
+          0.393
+        ],
+        "bBoxSW": [
+          0.032,
+          0.228
+        ]
+      },
+      {
+        "name": "oligonYpsiliLeftKentimata2",
+        "bBoxNE": [
+          0.861,
+          0.7
+        ],
+        "bBoxSW": [
+          0.599,
+          0.484
+        ]
+      },
+      {
+        "name": "oligonYpsiliLeftKentimata3",
+        "bBoxNE": [
+          1.071,
+          0.702
+        ],
+        "bBoxSW": [
+          0.827,
+          0.486
+        ]
+      },
+      {
+        "bBoxNE": [
+          0.3889,
+          0.656
+        ],
+        "bBoxSW": [
+          0.0,
+          0.495
+        ],
+        "name": "ypsili11"
+      },
+      {
+        "bBoxNE": [
+          0.5583,
+          0.817
+        ],
+        "bBoxSW": [
+          0.316,
+          0.656
+        ],
+        "name": "ypsili12"
+      },
+      {
+        "bBoxNE": [
+          0.645,
+          0.978
+        ],
+        "bBoxSW": [
+          0.4307,
+          0.817
+        ],
+        "name": "ypsili13"
+      }
+    ],
+    "oligonApostrofosKentimata": [
+      {
+        "name": "oligonApostrofosKentimata1",
+        "bBoxNE": [
+          1.108,
+          0.716
+        ],
+        "bBoxSW": [
+          0.8,
+          0.464
+        ]
+      },
+      {
+        "name": "oligonApostrofosKentimata2",
+        "bBoxNE": [
+          1.341,
+          0.717
+        ],
+        "bBoxSW": [
+          1.054,
+          0.466
+        ]
+      },
+      {
+        "name": "oligonApostrofosKentimata3",
+        "bBoxNE": [
+          0.711,
+          0.749
+        ],
+        "bBoxSW": [
+          0.0,
+          0.475
+        ]
+      },
+      {
+        "name": "oligonApostrofosKentimata4",
+        "bBoxNE": [
+          1.498,
+          0.39
+        ],
+        "bBoxSW": [
+          0.05,
+          0.225
+        ]
+      }
+    ],
+    "oligonYporroiKentimata": [
+      {
+        "name": "oligonYporroiKentimata1",
+        "bBoxNE": [
+          0.466,
+          0.695
+        ],
+        "bBoxSW": [
+          0.127,
+          0.43
+        ]
+      },
+      {
+        "name": "oligonYporroiKentimata2",
+        "bBoxNE": [
+          1.492,
+          0.393
+        ],
+        "bBoxSW": [
+          0.0,
+          0.227
+        ]
+      },
+      {
+        "name": "oligonYporroiKentimata3",
+        "bBoxNE": [
+          0.983,
+          0.678
+        ],
+        "bBoxSW": [
+          0.693,
+          0.439
+        ]
+      },
+      {
+        "name": "oligonYporroiKentimata4",
+        "bBoxNE": [
+          1.202,
+          0.679
+        ],
+        "bBoxSW": [
+          0.933,
+          0.44
+        ]
+      }
+    ],
+    "oligonElafronKentimata": [
+      {
+        "name": "oligonElafronKentimata1",
+        "bBoxNE": [
+          1.872,
+          0.391
+        ],
+        "bBoxSW": [
+          0.063,
+          0.225
+        ]
+      },
+      {
+        "name": "oligonElafronKentimata2",
+        "bBoxNE": [
+          1.123,
+          0.862
+        ],
+        "bBoxSW": [
+          0.0,
+          0.483
+        ]
+      },
+      {
+        "name": "oligonElafronKentimata3",
+        "bBoxNE": [
+          1.463,
+          0.72
+        ],
+        "bBoxSW": [
+          1.173,
+          0.481
+        ]
+      },
+      {
+        "name": "oligonElafronKentimata4",
+        "bBoxNE": [
+          1.682,
+          0.721
+        ],
+        "bBoxSW": [
+          1.413,
+          0.482
+        ]
+      }
+    ],
+    "oligonRunningElafronKentimata": [
+      {
+        "name": "oligonRunningElafronKentimata1",
+        "bBoxNE": [
+          2.44,
+          0.356
+        ],
+        "bBoxSW": [
+          0.45,
+          0.19
+        ]
+      },
+      {
+        "name": "oligonRunningElafronKentimata2",
+        "bBoxNE": [
+          1.788,
+          0.816
+        ],
+        "bBoxSW": [
+          0.663,
+          0.454
+        ]
+      },
+      {
+        "name": "oligonRunningElafronKentimata3",
+        "bBoxNE": [
+          0.586,
+          0.752
+        ],
+        "bBoxSW": [
+          0.0,
+          0.53
+        ]
+      },
+      {
+        "name": "oligonRunningElafronKentimata4",
+        "bBoxNE": [
+          2.129,
+          0.685
+        ],
+        "bBoxSW": [
+          1.839,
+          0.446
+        ]
+      },
+      {
+        "name": "oligonRunningElafronKentimata5",
+        "bBoxNE": [
+          2.348,
+          0.686
+        ],
+        "bBoxSW": [
+          2.079,
+          0.447
+        ]
+      }
+    ],
+    "oligonElafronApostrofosKentimata": [
+      {
+        "name": "oligonElafronApostrofosKentimata1",
+        "bBoxNE": [
+          1.891,
+          0.392
+        ],
+        "bBoxSW": [
+          0.081,
+          0.226
+        ]
+      },
+      {
+        "name": "oligonElafronApostrofosKentimata2",
+        "bBoxNE": [
+          1.126,
+          0.854
+        ],
+        "bBoxSW": [
+          0.0,
+          0.491
+        ]
+      },
+      {
+        "name": "oligonElafronApostrofosKentimata3",
+        "bBoxNE": [
+          0.871,
+          0.624
+        ],
+        "bBoxSW": [
+          0.284,
+          0.402
+        ]
+      },
+      {
+        "name": "oligonElafronApostrofosKentimata4",
+        "bBoxNE": [
+          1.481,
+          0.721
+        ],
+        "bBoxSW": [
+          1.191,
+          0.482
+        ]
+      },
+      {
+        "name": "oligonElafronApostrofosKentimata5",
+        "bBoxNE": [
+          1.7,
+          0.722
+        ],
+        "bBoxSW": [
+          1.431,
+          0.483
+        ]
+      }
+    ],
+    "oligonChamiliKentimata": [
+      {
+        "name": "oligonChamiliKentimata1",
+        "bBoxNE": [
+          1.84,
+          0.39
+        ],
+        "bBoxSW": [
+          0.117,
+          0.224
+        ]
+      },
+      {
+        "name": "oligonChamiliKentimata2",
+        "bBoxNE": [
+          1.447,
+          0.68
+        ],
+        "bBoxSW": [
+          1.156,
+          0.441
+        ]
+      },
+      {
+        "name": "oligonChamiliKentimata3",
+        "bBoxNE": [
+          1.666,
+          0.681
+        ],
+        "bBoxSW": [
+          1.397,
+          0.442
+        ]
+      },
+      {
+        "name": "oligonChamiliKentimata4",
+        "bBoxNE": [
+          1.107,
+          0.891
+        ],
+        "bBoxSW": [
+          0.0,
+          0.415
+        ]
+      }
+    ],
     "barlineTheseos": [
       {
         "name": "yfen",
@@ -12554,6 +16151,111 @@
         "bBoxSW": [
           0.0,
           0.657
+        ]
+      }
+    ],
+    "oligonKentimataBelow.alt01": [
+      {
+        "name": "oligonKentimataBelow.alt011",
+        "bBoxNE": [
+          1.357,
+          0.388
+        ],
+        "bBoxSW": [
+          0.0,
+          0.224
+        ]
+      },
+      {
+        "name": "oligonKentimataBelow.alt012",
+        "bBoxNE": [
+          0.791,
+          0.196
+        ],
+        "bBoxSW": [
+          0.528,
+          -0.02
+        ]
+      },
+      {
+        "name": "oligonKentimataBelow.alt013",
+        "bBoxNE": [
+          1.0,
+          0.198
+        ],
+        "bBoxSW": [
+          0.756,
+          -0.018
+        ]
+      }
+    ],
+    "oligonKentimataAbove.alt01": [
+      {
+        "name": "oligonKentimataAbove.alt011",
+        "bBoxNE": [
+          0.945,
+          0.66
+        ],
+        "bBoxSW": [
+          0.647,
+          0.458
+        ]
+      },
+      {
+        "name": "oligonKentimataAbove.alt012",
+        "bBoxNE": [
+          0.669,
+          0.662
+        ],
+        "bBoxSW": [
+          0.401,
+          0.457
+        ]
+      },
+      {
+        "name": "oligonKentimataAbove.alt013",
+        "bBoxNE": [
+          1.298,
+          0.393
+        ],
+        "bBoxSW": [
+          -0.002,
+          0.218
+        ]
+      }
+    ],
+    "oligonKentimataBelow.alt02": [
+      {
+        "name": "oligonKentimataBelow.alt021",
+        "bBoxNE": [
+          1.238,
+          0.549
+        ],
+        "bBoxSW": [
+          0.971,
+          0.368
+        ]
+      },
+      {
+        "name": "oligonKentimataBelow.alt022",
+        "bBoxNE": [
+          0.939,
+          0.552
+        ],
+        "bBoxSW": [
+          0.699,
+          0.368
+        ]
+      },
+      {
+        "name": "oligonKentimataBelow.alt023",
+        "bBoxNE": [
+          1.308,
+          0.784
+        ],
+        "bBoxSW": [
+          -0.002,
+          0.613
         ]
       }
     ],

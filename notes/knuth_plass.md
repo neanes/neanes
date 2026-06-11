@@ -164,12 +164,19 @@ When a right barline becomes terminal at a line break, at a paragraph ending, be
 Ordinary martyriae use the active font's `martyriaGlue` engraving defaults instead of standard fixed inline glue.
 Its natural width is `neumeDefaultFontSize * martyriaGlue.width`.
 This gives martyriae font-specific surrounding space that can differ from ordinary neume spacing.
+An inline left martyria bar contributes to that box width, but a short left bar that has been converted into an above-style mark does not own horizontal side spacing.
+Above-style left bars and the central tempo mark are still measured as martyria body ink, in render order, so their visible protrusion can widen visual minimums without adding inline box width.
 During justification, stretch and shrink are based on the martyria glue defaults while the same-line width is still protected by any visual-ink and measure-bar minimums.
 Tempo-adjacent martyria boundaries are the exception: when a non-right-aligned martyria contains `tempoLeft` or `tempoRight`, or when a standalone tempo sign sits immediately beside a non-right-aligned martyria in the same paragraph, that side uses standard fixed inline glue instead of martyria glue.
 For standalone tempo-to-martyria and martyria-to-tempo boundaries, the lyric-collision spacer is also skipped; the explicit standard glue owns the base boundary spacing, while the lyric bookkeeping is still advanced for the current element.
 After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single trailing glue whose preferred width is usually martyria glue, or standard fixed inline glue for the tempo cases above.
 As a result, the full trailing spacing appears after the martyria only when it stays mid-line; if a break is taken there, that spacing becomes leading glue on the next line and is skipped.
 Visible spacing around notes, martyriae, and standalone tempo signs may be widened beyond the base glue when shaped ink overhangs would otherwise collide.
+For the ordinary non-right-aligned note-martyria-note case, where the martyria owns both sides of the boundary glue and no inline side measure bars or side tempo signs intervene, the code also balances the martyria between the nearest visible boundary on each side.
+The visible endpoint on a given side is whichever extends farther toward the martyria: the neume ink boundary or a lyric overhang.
+Thus a rightward lyric overhang on the left note replaces that note's right ink edge as the left balancing endpoint, and a leftward lyric overhang on the right note replaces that note's left ink edge as the right balancing endpoint.
+When neither lyric projects toward the martyria, the balancing endpoints are simply the neume ink boundaries on both sides.
+The two martyria-side glues are then assigned equal visible whitespace from those chosen endpoints to the martyria's own ink bounds, while still respecting the ordinary same-line minimums for ink collision, lyric clearance, and justification shrink.
 
 When a martyria has a transferable measure bar and is followed by a note, the bar transfers to the next line's first note at a break.
 To reserve space for this, the martyria's post-break glue is narrowed by the bar width plus fixed leading clearance, and an anonymous spacer box of the same width is inserted before the following note's box.

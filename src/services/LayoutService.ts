@@ -933,6 +933,49 @@ export class LayoutService {
           const leadingGlueWidth = useStandardLeadingGlue
             ? standardGlue.width
             : martyriaGlue.width;
+          const trailingGlue = useStandardTrailingGlue
+            ? standardGlue
+            : martyriaGlue;
+          const trailingVisualSpacing = this.getVisualGlueSpacing(
+            martyriaElement,
+            nextElement,
+            trailingGlue.width,
+            pageSetup,
+          );
+          const rightSameLineMinimum = Math.max(
+            this.getMeasureBarMinimumGlueWidth(
+              martyriaElement,
+              nextElement,
+              pageSetup,
+              measureBarWidthMap,
+            ),
+            trailingVisualSpacing.requiredWidth,
+          );
+          const previousNote =
+            previousElement?.elementType === ElementType.Note
+              ? (previousElement as NoteElement)
+              : null;
+          const nextNote =
+            nextElement?.elementType === ElementType.Note
+              ? (nextElement as NoteElement)
+              : null;
+          // This balancing pass is intentionally narrow. It applies only to
+          // the ordinary note-martyria-note case where the martyria owns both
+          // sides of the boundary glue and no inline measure bars or side
+          // tempo signs need their existing special-case spacing rules.
+          const isBalancedMartyriaBetweenNotes =
+            !martyriaElement.alignRight &&
+            previousNote != null &&
+            nextNote != null &&
+            !useStandardLeadingGlue &&
+            !useStandardTrailingGlue &&
+            LayoutService.getVisibleMeasureBarLeft(martyriaElement) == null &&
+            LayoutService.getVisibleMeasureBarRight(martyriaElement) == null &&
+            LayoutService.getVisibleMeasureBarRight(previousNote) == null &&
+            LayoutService.getVisibleMeasureBarLeft(nextNote) == null;
+          let sharedLeadingBoundaryWidth: number | null = null;
+          let sharedTrailingBoundaryWidth: number | null = null;
+          let sharedBoundaryShrink: number | null = null;
           const skipLyricCollision =
             !martyriaElement.alignRight &&
             layoutWorkspace.pendingParagraph.length > 0 &&
@@ -962,20 +1005,98 @@ export class LayoutService {
               : useStandardLeadingGlue
                 ? standardGlue
                 : martyriaGlue;
-            const visualSpacing = this.getVisualGlueSpacing(
+            const leadingVisualSpacing = this.getVisualGlueSpacing(
               previousElement,
               martyriaElement,
               baseGlue.width,
               pageSetup,
             );
-            const newGlue = this.createMartyriaLeadingGlue(
-              baseGlue,
-              Math.max(reservation, visualSpacing.deficit),
-              visualSpacing.requiredWidth > 0
-                ? visualSpacing.requiredWidth
-                : undefined,
-            );
             this.removeGlue(layoutWorkspace);
+            const martyriaBoundaryStart = layoutWorkspace.neumesEndPx;
+            const previousLyricsEndPx = Math.max(
+              layoutWorkspace.lyricsEndPx,
+              layoutWorkspace.melismaLyricsEndPx ?? Number.NEGATIVE_INFINITY,
+            );
+            const leftStructuralWidth =
+              baseGlue.width +
+              Math.max(reservation, leadingVisualSpacing.deficit);
+            const leftLyricMinimum = Math.max(
+              0,
+              previousLyricsEndPx - martyriaBoundaryStart + leadingGlueWidth,
+            );
+            const leftBoundaryMinimum = Math.max(
+              leftStructuralWidth,
+              leftLyricMinimum,
+            );
+
+            if (isBalancedMartyriaBetweenNotes) {
+              // Balance the martyria against the nearest visible boundary on
+              // each side. A lyric overhang toward the martyria replaces the
+              // neume ink edge for that side; otherwise the neume ink edge
+              // remains the visible boundary endpoint.
+              const previousLyricRightOverhang = Math.max(
+                0,
+                previousLyricsEndPx - martyriaBoundaryStart,
+              );
+              const nextNoteLeftProjection = this.getLyricProjections(
+                nextNote!,
+                nextNote!.alignLeft,
+              ).leftProjection;
+              const rightBoundaryMinimum =
+                Math.max(
+                  trailingGlue.width + trailingVisualSpacing.deficit,
+                  rightSameLineMinimum,
+                ) + nextNoteLeftProjection;
+              const leftVisibleBoundaryWidth =
+                this.getMartyriaLeftInkOverhang(martyriaElement, pageSetup) +
+                Math.max(
+                  previousLyricRightOverhang,
+                  this.getElementRightInkOverhang(previousNote!, pageSetup),
+                );
+              const rightVisibleBoundaryWidth =
+                this.getMartyriaRightInkOverhang(martyriaElement, pageSetup) +
+                Math.max(
+                  nextNoteLeftProjection,
+                  this.getElementLeftInkOverhang(nextNote!, pageSetup),
+                );
+              const sharedVisibleWhitespace = Math.max(
+                leftBoundaryMinimum - leftVisibleBoundaryWidth,
+                rightBoundaryMinimum - rightVisibleBoundaryWidth,
+              );
+              sharedLeadingBoundaryWidth =
+                sharedVisibleWhitespace + leftVisibleBoundaryWidth;
+              sharedTrailingBoundaryWidth =
+                sharedVisibleWhitespace +
+                rightVisibleBoundaryWidth -
+                nextNoteLeftProjection;
+              sharedBoundaryShrink = Math.min(
+                baseGlue.shrink,
+                Math.max(0, sharedLeadingBoundaryWidth - leftBoundaryMinimum),
+                Math.max(
+                  0,
+                  sharedTrailingBoundaryWidth +
+                    nextNoteLeftProjection -
+                    rightBoundaryMinimum,
+                ),
+              );
+            }
+            const newGlue =
+              sharedLeadingBoundaryWidth != null
+                ? {
+                    ...this.createMartyriaLeadingGlue(
+                      baseGlue,
+                      Math.max(0, sharedLeadingBoundaryWidth - baseGlue.width),
+                      leftBoundaryMinimum,
+                    ),
+                    shrink: sharedBoundaryShrink!,
+                  }
+                : this.createMartyriaLeadingGlue(
+                    baseGlue,
+                    Math.max(reservation, leadingVisualSpacing.deficit),
+                    leadingVisualSpacing.requiredWidth > 0
+                      ? leadingVisualSpacing.requiredWidth
+                      : undefined,
+                  );
             this.addGlue(newGlue, layoutWorkspace);
           } else if (martyriaElement.alignRight) {
             // A paragraph-start right martyria still needs its leading glue in
@@ -1031,34 +1152,30 @@ export class LayoutService {
           // When the quantitative neume is present, the renderer keeps its
           // fixed spacing inside the box as marginLeft.
 
-          const trailingGlue = useStandardTrailingGlue
-            ? standardGlue
-            : martyriaGlue;
-          const visualSpacing = this.getVisualGlueSpacing(
-            martyriaElement,
-            nextElement,
-            trailingGlue.width,
-            pageSetup,
-          );
           this.addProtectedBreakpointEncoding(
             layoutWorkspace,
             this.fixedGlue(0),
             0,
             0,
-            this.createMartyriaPostBreakGlue(
-              trailingGlue,
-              visualSpacing.deficit,
-              martyriaBarTransferWidth,
-              Math.max(
-                this.getMeasureBarMinimumGlueWidth(
-                  martyriaElement,
-                  nextElement,
-                  pageSetup,
-                  measureBarWidthMap,
+            sharedTrailingBoundaryWidth != null
+              ? {
+                  ...this.createMartyriaPostBreakGlue(
+                    trailingGlue,
+                    Math.max(
+                      0,
+                      sharedTrailingBoundaryWidth - trailingGlue.width,
+                    ),
+                    martyriaBarTransferWidth,
+                    rightSameLineMinimum,
+                  ),
+                  shrink: sharedBoundaryShrink!,
+                }
+              : this.createMartyriaPostBreakGlue(
+                  trailingGlue,
+                  trailingVisualSpacing.deficit,
+                  martyriaBarTransferWidth,
+                  rightSameLineMinimum,
                 ),
-                visualSpacing.requiredWidth,
-              ),
-            ),
           );
 
           // Must run even when lineBreak is already true (from pageBreak or
@@ -2857,11 +2974,7 @@ export class LayoutService {
       return martyriaElement.quantitativeNeume;
     }
 
-    if (martyriaElement.measureBarLeft?.endsWith('Above')) {
-      return martyriaElement.measureBarLeft;
-    }
-
-    return martyriaElement.tempo ?? null;
+    return null;
   }
 
   private static getBreakCost(
@@ -3953,10 +4066,13 @@ export class LayoutService {
       );
     }
 
-    if (martyriaElement.measureBarLeft) {
+    const hasInlineMeasureBarLeft =
+      this.hasInlineMeasureBarLeft(martyriaElement);
+
+    if (hasInlineMeasureBarLeft) {
       martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
         neumeWidthCache,
-        martyriaElement.measureBarLeft,
+        martyriaElement.measureBarLeft!,
         pageSetup,
       );
     }
@@ -3992,7 +4108,7 @@ export class LayoutService {
           mappingRoot.text,
           `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
         ) +
-        (mappingMeasureBarLeft
+        (hasInlineMeasureBarLeft && mappingMeasureBarLeft
           ? TextMeasurementService.getTextWidth(
               mappingMeasureBarLeft.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -6032,8 +6148,18 @@ export class LayoutService {
     const neumes =
       this.getMartyriaBodyNeumesForWidthMeasurement(martyriaElement);
 
+    // Keep this in the same order as the zero-advance marks rendered inside
+    // NeumeBoxMartyria after the note and root sign.
     if (!martyriaElement.error && martyriaElement.fthora != null) {
       neumes.push(martyriaElement.fthora);
+    }
+
+    if (martyriaElement.tempo != null) {
+      neumes.push(martyriaElement.tempo);
+    }
+
+    if (martyriaElement.measureBarLeft?.endsWith('Above')) {
+      neumes.push(martyriaElement.measureBarLeft);
     }
 
     return neumes;

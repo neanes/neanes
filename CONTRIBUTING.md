@@ -35,6 +35,12 @@ npm run dev
 
 This will launch the application in development mode. As changes are made to the source code, the app will reload automatically.
 
+To exercise the Electron update toast flow without publishing a release, set `FAKE_UPDATE_AVAILABLE=1` before starting the app. This simulates an available update, the download lifecycle, and the restart request without calling `electron-updater`.
+
+- macOS and Linux: `FAKE_UPDATE_AVAILABLE=1 npm run dev`
+- PowerShell: `$env:FAKE_UPDATE_AVAILABLE=1; npm run dev`
+- cmd.exe: `set FAKE_UPDATE_AVAILABLE=1 && npm run dev`
+
 The [Vue Devtools](https://devtools-next.vuejs.org/) extension is available in development mode.
 To enable it, add the following to `.env.local` and/or `.env.web.local`:
 

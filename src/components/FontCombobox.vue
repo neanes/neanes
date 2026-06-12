@@ -4,7 +4,8 @@
     v-model:open="open"
     :disabled="disabled"
     ignore-filter
-    reset-search-term-on-select
+    :reset-search-term-on-select="false"
+    :reset-search-term-on-blur="false"
     open-on-click
     open-on-focus
   >
@@ -27,14 +28,10 @@
         v-model="searchTerm"
         :placeholder="placeholder"
         auto-focus
-        :display-value="getSearchDisplayValue"
       />
-      <div
-        v-if="filteredOptions.length === 0"
-        class="text-muted-foreground flex w-full justify-center py-2 text-center text-xs"
-      >
+      <ComboboxEmpty v-if="filteredOptions.length === 0">
         {{ emptyText }}
-      </div>
+      </ComboboxEmpty>
       <ComboboxViewport v-else>
         <ComboboxVirtualizer
           v-slot="{ option }"
@@ -73,6 +70,7 @@ import { Button } from '@/components/ui/button';
 import {
   Combobox,
   ComboboxAnchor,
+  ComboboxEmpty,
   ComboboxInput,
   ComboboxItem,
   ComboboxItemIndicator,
@@ -200,10 +198,6 @@ const listClass = computed(() =>
 
 function getDisplayValue(value: string) {
   return optionByValue.value.get(value)?.label ?? value;
-}
-
-function getSearchDisplayValue() {
-  return '';
 }
 
 function getOptionFontFamily(value: string) {

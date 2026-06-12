@@ -136,6 +136,7 @@
         }}</FieldLabel>
         <InputUnit
           id="properties-mode-key-margin-top"
+          class="w-28"
           unit="pt"
           :min="0"
           :max="maxHeight"
@@ -154,6 +155,7 @@
         }}</FieldLabel>
         <InputUnit
           id="properties-mode-key-margin-bottom"
+          class="w-28"
           unit="pt"
           :min="0"
           :max="maxHeight"

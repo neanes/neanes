@@ -48,6 +48,7 @@
           }}</FieldLabel>
           <InputUnit
             id="properties-rich-text-box-offset-y-top"
+            class="w-28"
             unit="pt"
             :min="-maxHeight"
             :max="maxHeight"
@@ -68,6 +69,7 @@
           }}</FieldLabel>
           <InputUnit
             id="properties-rich-text-box-offset-y-bottom"
+            class="w-28"
             unit="pt"
             :min="-maxHeight"
             :max="maxHeight"
@@ -104,6 +106,7 @@
         }}</FieldLabel>
         <InputUnit
           id="properties-rich-text-box-margin-top"
+          class="w-28"
           unit="pt"
           :min="0"
           :max="maxHeight"
@@ -124,6 +127,7 @@
         }}</FieldLabel>
         <InputUnit
           id="properties-rich-text-box-margin-bottom"
+          class="w-28"
           unit="pt"
           :min="0"
           :max="maxHeight"

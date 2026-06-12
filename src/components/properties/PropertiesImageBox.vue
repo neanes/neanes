@@ -40,6 +40,7 @@
         }}</FieldLabel>
         <InputUnit
           id="properties-image-box-width"
+          class="w-28"
           :model-value="element.imageWidth"
           unit="unitless"
           :min="10"
@@ -56,6 +57,7 @@
         }}</FieldLabel>
         <InputUnit
           id="properties-image-box-height"
+          class="w-28"
           :model-value="element.imageHeight"
           unit="unitless"
           :min="10"

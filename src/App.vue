@@ -55,19 +55,6 @@ async function restartToInstallElectronUpdate() {
   }
 }
 
-async function installElectronUpdateOnExit() {
-  try {
-    await window.ipcRenderer?.invoke(IpcRendererChannels.InstallUpdateOnExit);
-  } catch (error) {
-    showElectronUpdateErrorToast({
-      message:
-        error instanceof Error
-          ? error.message
-          : 'Unable to schedule the update for app exit.',
-    });
-  }
-}
-
 function showElectronUpdateAvailableToast(args?: UpdateAvailableArgs) {
   toast.info('An update is available.', {
     id: electronUpdateAvailableToastId,
@@ -111,9 +98,6 @@ function showElectronUpdateDownloadedToast(args?: UpdateAvailableArgs) {
     },
     cancel: {
       label: 'Later',
-      onClick: () => {
-        void installElectronUpdateOnExit();
-      },
     },
   });
 }

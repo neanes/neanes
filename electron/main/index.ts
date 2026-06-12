@@ -171,7 +171,6 @@ enum OnConflictChoice {
 }
 
 let saving = false;
-let exporting = false;
 let loaded = false;
 
 let exportAsImageOnConflict: OnConflictChoice | null = null;
@@ -801,7 +800,7 @@ async function exportWorkspaceAsPdf(
 ): Promise<ExportWorkspaceReplyArgs> {
   const result: ExportWorkspaceReplyArgs = { success: false };
 
-  if (exporting) {
+  if (saving) {
     result.canceled = true;
     return result;
   }
@@ -811,6 +810,8 @@ async function exportWorkspaceAsPdf(
   }
 
   try {
+    saving = true;
+
     if (silentPdf) {
       try {
         const data = await win.webContents.printToPDF({
@@ -836,8 +837,6 @@ async function exportWorkspaceAsPdf(
 
       return result;
     }
-
-    exporting = true;
 
     const dialogResult = await dialog.showSaveDialog(win, {
       title: 'Export Score as PDF',
@@ -897,7 +896,7 @@ async function exportWorkspaceAsPdf(
     console.error(error);
     result.errorMessage = getErrorMessage(error);
   } finally {
-    exporting = false;
+    saving = false;
   }
 
   return result;

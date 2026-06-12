@@ -2308,6 +2308,17 @@ export class LayoutService {
       const baseWidth =
         this.getInlineSpacing(workspace.pageSetup) + rightProjection;
 
+      if (nextElement?.elementType === ElementType.Empty) {
+        return Math.max(
+          baseWidth,
+          this.getTerminalMeasureBarRightSpacing(
+            noteElement,
+            workspace.pageSetup,
+            measureBarWidthMap,
+          ),
+        );
+      }
+
       if (!this.shouldUseMeasureBarMinimumForNonNoteSpacing(nextElement)) {
         return baseWidth;
       }
@@ -2421,7 +2432,6 @@ export class LayoutService {
     }
 
     switch (element.elementType) {
-      case ElementType.Empty:
       case ElementType.Tempo:
       case ElementType.DropCap:
         return true;

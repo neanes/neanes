@@ -69,7 +69,7 @@ const style = computed(() => {
     top: withZoom(elementY.value),
     '--ck-content-font-family': getFontFamilyWithFallback(
       props.pageSetup.textBoxDefaultFontFamily,
-      props.pageSetup.neumeDefaultFontFamily,
+      props.pageSetup.neumeDefaultFontFamily + 'Legacy', // TODO what a terrible hack
     ),
     '--ck-content-font-size': `${props.pageSetup.lyricsDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
     '--ck-content-line-height': 'normal',

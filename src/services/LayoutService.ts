@@ -1150,6 +1150,7 @@ export class LayoutService {
               layoutWorkspace,
               leadingGlueWidth,
               lyricReservationParagraphStart,
+              trailingGlue.width,
             );
           }
           this.addBox(elementWidthPx, martyriaElement, layoutWorkspace);
@@ -1861,8 +1862,10 @@ export class LayoutService {
     workspace: LayoutWorkspace,
     glueWidth?: number,
     isParagraphStartOverride?: boolean,
+    lyricEndGlueWidth?: number,
   ) {
     glueWidth = glueWidth ?? this.getInlineSpacing(workspace.pageSetup);
+    lyricEndGlueWidth = lyricEndGlueWidth ?? glueWidth;
     // Skip lyric collision for non-inline block elements (TextBox, RichTextBox,
     // ImageBox, ModeKey), which occupy the full line width and have no lyrics
     // to collide with. Fill-width inline elements still need collision
@@ -1900,7 +1903,8 @@ export class LayoutService {
       }
     }
 
-    workspace.lyricsEndPx = workspace.neumesEndPx + elementWidthPx + glueWidth;
+    workspace.lyricsEndPx =
+      workspace.neumesEndPx + elementWidthPx + lyricEndGlueWidth;
   }
 
   private static isBlockElement(element: ScoreElement): boolean {

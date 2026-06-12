@@ -1,8 +1,11 @@
 <template>
   <Combobox
     v-model="selectedValue"
+    v-model:open="open"
     :disabled="disabled"
-    reset-search-term-on-select
+    ignore-filter
+    :reset-search-term-on-select="false"
+    :reset-search-term-on-blur="false"
     open-on-click
     open-on-focus
   >
@@ -22,25 +25,37 @@
     </ComboboxAnchor>
     <ComboboxList :class="listClass">
       <ComboboxInput
+        v-model="searchTerm"
         :placeholder="placeholder"
         auto-focus
-        :display-value="getDisplayValue"
       />
-      <ComboboxEmpty>{{ emptyText }}</ComboboxEmpty>
-      <ComboboxViewport>
-        <ComboboxGroup>
+      <ComboboxEmpty v-if="filteredOptions.length === 0">
+        {{ emptyText }}
+      </ComboboxEmpty>
+      <ComboboxViewport v-else>
+        <ComboboxVirtualizer
+          v-slot="{ option }"
+          :options="filteredOptionValues"
+          :estimate-size="32"
+          :overscan="8"
+          :text-content="getDisplayValue"
+        >
           <ComboboxItem
-            v-for="option in normalizedOptions"
-            :key="option.value"
-            :value="option.value"
-            :text-value="option.label"
+            :key="option"
+            :value="option"
+            :text-value="getDisplayValue(option)"
           >
-            <span class="truncate">{{ option.label }}</span>
+            <span
+              class="truncate"
+              :style="{ fontFamily: getOptionFontFamily(option) }"
+            >
+              {{ getDisplayValue(option) }}
+            </span>
             <ComboboxItemIndicator>
               <PhCheck class="size-4" />
             </ComboboxItemIndicator>
           </ComboboxItem>
-        </ComboboxGroup>
+        </ComboboxVirtualizer>
       </ComboboxViewport>
     </ComboboxList>
   </Combobox>
@@ -49,24 +64,31 @@
 <script setup lang="ts">
 import { PhCaretUpDown, PhCheck } from '@phosphor-icons/vue';
 import type { HTMLAttributes, PropType } from 'vue';
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import {
   Combobox,
   ComboboxAnchor,
   ComboboxEmpty,
-  ComboboxGroup,
   ComboboxInput,
   ComboboxItem,
   ComboboxItemIndicator,
   ComboboxList,
   ComboboxTrigger,
   ComboboxViewport,
+  ComboboxVirtualizer,
 } from '@/components/ui/combobox';
 import { cn } from '@/lib/utils';
 
 export type FontComboboxOption = string | { label: string; value: string };
+
+type NormalizedFontComboboxOption = {
+  label: string;
+  value: string;
+  fontFamily: string;
+  searchText: string;
+};
 
 const props = defineProps({
   id: {
@@ -104,13 +126,49 @@ const props = defineProps({
 });
 
 const selectedValue = defineModel<string>({ required: true });
+const open = ref(false);
+const searchTerm = ref('');
 
-const normalizedOptions = computed(() =>
-  props.options.map((option) =>
-    typeof option === 'string'
-      ? { label: option, value: option }
-      : { label: option.label, value: option.value },
-  ),
+watch(open, (isOpen) => {
+  if (isOpen) {
+    searchTerm.value = '';
+  }
+});
+
+const normalizedOptions = computed<NormalizedFontComboboxOption[]>(() =>
+  props.options.map((option) => {
+    const normalized =
+      typeof option === 'string'
+        ? { label: option, value: option }
+        : { label: option.label, value: option.value };
+
+    return {
+      ...normalized,
+      fontFamily: createFontFamily(normalized.value),
+      searchText: `${normalized.label} ${normalized.value}`.toLowerCase(),
+    };
+  }),
+);
+
+const filteredOptions = computed(() => {
+  const query = searchTerm.value.trim().toLowerCase();
+
+  if (query === '') {
+    return normalizedOptions.value;
+  }
+
+  return normalizedOptions.value.filter((option) =>
+    option.searchText.includes(query),
+  );
+});
+
+const filteredOptionValues = computed(() =>
+  filteredOptions.value.map((option) => option.value),
+);
+
+const optionByValue = computed(
+  () =>
+    new Map(normalizedOptions.value.map((option) => [option.value, option])),
 );
 
 const selectedLabel = computed(
@@ -126,12 +184,27 @@ const triggerClass = computed(() =>
   cn('w-full justify-between bg-background', props.triggerClass),
 );
 
-const listClass = computed(() => cn(props.listClass));
+const listClass = computed(() =>
+  cn(
+    '*:data-[slot=input-group]:m-0',
+    '*:data-[slot=input-group]:border-0',
+    '*:data-[slot=input-group]:border-b',
+    '*:data-[slot=input-group]:border-border',
+    '*:data-[slot=input-group]:bg-transparent',
+    '*:data-[slot=input-group]:focus-within:border-border',
+    props.listClass,
+  ),
+);
 
 function getDisplayValue(value: string) {
-  return (
-    normalizedOptions.value.find((option) => option.value === value)?.label ??
-    value
-  );
+  return optionByValue.value.get(value)?.label ?? value;
+}
+
+function getOptionFontFamily(value: string) {
+  return optionByValue.value.get(value)!.fontFamily;
+}
+
+function createFontFamily(value: string) {
+  return `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}", sans-serif`;
 }
 </script>

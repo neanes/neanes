@@ -134,7 +134,7 @@ const ambitusStyleLow = computed(() => {
   const bounds = TextMeasurementService.getInkBounds(text, font);
 
   const style = {
-    ...ambitusStyle,
+    ...ambitusStyle.value,
     marginLeft: `${4 - bounds.inkLeft}px`,
   } as CSSProperties;
 
@@ -153,7 +153,7 @@ const ambitusStyleHigh = computed(() => {
   const bounds = TextMeasurementService.getInkBounds(text, font);
 
   const style = {
-    ...ambitusStyle,
+    ...ambitusStyle.value,
     marginRight: `${4 - (bounds.advanceWidth - bounds.inkRight)}px`,
   } as CSSProperties;
 

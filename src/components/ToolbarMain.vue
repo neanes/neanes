@@ -15,7 +15,7 @@
         {{ $t(($) => $.toolbar.main.single, { ns: 'toolbar' }) }}
       </ToolbarToggleItem>
     </ToolbarToggleGroup>
-    <span class="space"></span>
+    <ToolbarSeparator />
     <AppTooltip :tooltip="martyriaTooltip">
       <ToolbarButton
         variant="secondary"
@@ -538,10 +538,6 @@ function resetZoomInput() {
 .main-toolbar :deep(button:not(.entry-mode-btn)) {
   font-size: inherit;
   font-weight: normal;
-}
-
-.space {
-  width: 16px;
 }
 
 .entry-mode-btn {

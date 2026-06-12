@@ -38,6 +38,7 @@
     "root": "Inserare",
     "alternateLine": "Linie alternativă",
     "annotation": "Adnotare",
+    "dropCap": "Majusculă decorativă",
     "dropCapBefore": "Majusculă înainte",
     "dropCapAfter": "Majusculă după",
     "textBox": "Casetă de text",
@@ -54,7 +55,12 @@
     "copyElementLink": "Copiază linkul elementului"
   },
   "view": {
-    "root": "Vizualizare (debugare)",
+    "root": "Vizualizare",
+    "neumeSelector": "Selector de neume",
+    "commonCombos": "Combinații frecvente",
+    "properties": "Proprietăți",
+    "selection": "Selecție",
+    "resetLayout": "Resetează aranjarea",
     "generateTestFiles": "Generează fișiere de test (debugare)"
   },
   "help": {

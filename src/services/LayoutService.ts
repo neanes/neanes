@@ -1140,7 +1140,8 @@ export class LayoutService {
           // reduced post-break glue is cancelled by an anonymous spacer box
           // inserted before the note, so the note's position is unchanged.
           // At a break, the post-break glue vanishes; the spacer remains at
-          // the start of the next line and reserves fixed leading space for the bar.
+          // the start of the next line and reserves collision-aware leading
+          // space for the bar.
           const nextNoteForBar = this.getNoteIfPresentAt(elements, i + 1);
           const martyriaTransferBar = martyriaElement.measureBarLeft?.endsWith(
             'Above',
@@ -1152,7 +1153,12 @@ export class LayoutService {
             nextNoteForBar &&
             !nextNoteForBar.measureBarLeft
               ? (measureBarWidthMap.get(martyriaTransferBar) ?? 0) +
-                this.getTerminalMeasureBarSpacing(pageSetup)
+                this.getMeasureBarLeftLeadingSpacingForMeasureBar(
+                  nextNoteForBar,
+                  martyriaTransferBar,
+                  pageSetup,
+                  measureBarWidthMap,
+                )
               : 0;
           layoutWorkspace.pendingMartyriaBarTransferWidth =
             martyriaBarTransferWidth;
@@ -5091,6 +5097,26 @@ export class LayoutService {
     const measureBar = this.getVisibleMeasureBarLeft(owner);
 
     if (measureBar == null) {
+      return 0;
+    }
+
+    return this.getMeasureBarLeftLeadingSpacingForMeasureBar(
+      owner,
+      measureBar,
+      pageSetup,
+      measureBarWidthMap,
+    );
+  }
+
+  private static getMeasureBarLeftLeadingSpacingForMeasureBar(
+    owner: NoteElement | MartyriaElement,
+    measureBar: MeasureBar,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const leadingSpacing = this.getTerminalMeasureBarSpacing(pageSetup);
+
+    if (leadingSpacing === 0) {
       return 0;
     }
 

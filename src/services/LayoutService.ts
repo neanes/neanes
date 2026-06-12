@@ -1167,11 +1167,17 @@ export class LayoutService {
           // When the quantitative neume is present, the renderer keeps its
           // fixed spacing inside the box as marginLeft.
 
+          const breakPenaltyWidth = this.getTerminalMeasureBarRightSpacing(
+            martyriaElement,
+            pageSetup,
+            measureBarWidthMap,
+          );
+
           this.addProtectedBreakpointEncoding(
             layoutWorkspace,
             this.fixedGlue(0),
             0,
-            0,
+            breakPenaltyWidth,
             sharedTrailingBoundaryWidth != null
               ? {
                   ...this.createMartyriaPostBreakGlue(
@@ -3163,7 +3169,7 @@ export class LayoutService {
     return null;
   }
 
-  private static getTrailingNoteReservations(
+  private static getTrailingElementReservations(
     workspace: LayoutWorkspace,
     measureBarWidthMap: Map<MeasureBar, number>,
   ) {
@@ -3185,8 +3191,28 @@ export class LayoutService {
 
       const element = (item as ElementBox).element;
 
-      if (element.elementType !== ElementType.Note) {
+      if (
+        element.elementType !== ElementType.Note &&
+        element.elementType !== ElementType.Martyria
+      ) {
         return null;
+      }
+
+      if (element.elementType === ElementType.Martyria) {
+        const martyriaElement = element as MartyriaElement;
+        const terminalMeasureBarSpacing =
+          this.getTerminalMeasureBarRightSpacing(
+            martyriaElement,
+            workspace.pageSetup,
+            measureBarWidthMap,
+          );
+
+        return {
+          elementType: ElementType.Martyria,
+          melismaOverhang: 0,
+          terminalMeasureBarSpacing,
+          finishingGlueWidth: terminalMeasureBarSpacing,
+        };
       }
 
       const noteElement = element as NoteElement;
@@ -3207,6 +3233,7 @@ export class LayoutService {
       );
 
       return {
+        elementType: ElementType.Note,
         melismaOverhang,
         terminalMeasureBarSpacing,
         finishingGlueWidth:
@@ -3216,6 +3243,18 @@ export class LayoutService {
     }
 
     return null;
+  }
+
+  private static getTrailingNoteReservations(
+    workspace: LayoutWorkspace,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const reservations = this.getTrailingElementReservations(
+      workspace,
+      measureBarWidthMap,
+    );
+
+    return reservations?.elementType === ElementType.Note ? reservations : null;
   }
 
   // Remove trailing glue from the paragraph. Only strips consecutive trailing
@@ -3389,16 +3428,15 @@ export class LayoutService {
       throw new Error('Cannot end an empty paragraph');
     }
 
-    // If the paragraph ends immediately after a note, the trailing
-    // cancellation glue contains that note's right-edge reservation.
-    // removeGlue strips it, so materialize the reservation into the
-    // finishing glue width instead.
-    const trailingNoteReservations = this.getTrailingNoteReservations(
+    // If the paragraph ends immediately after a note or martyria, the trailing
+    // glue can contain the element's right-edge reservation. removeGlue strips
+    // it, so materialize the reservation into the finishing glue width instead.
+    const trailingElementReservations = this.getTrailingElementReservations(
       workspace,
       measureBarWidthMap,
     );
-    const finishingGlueWidth = trailingNoteReservations
-      ? trailingNoteReservations.finishingGlueWidth
+    const finishingGlueWidth = trailingElementReservations
+      ? trailingElementReservations.finishingGlueWidth
       : 0;
 
     // Remove the existing glue so that we can apply finishing glue
@@ -3407,10 +3445,10 @@ export class LayoutService {
     // Prevent break before finishing glue
     this.preventBreak(workspace);
 
-    // Apply finishing glue. The width reserves space for the last
-    // note's right-edge lyric extent and any terminal barline clearance. The
-    // stretch absorbs remaining
-    // line slack (0 for justified paragraphs, `MAX_COST` otherwise).
+    // Apply finishing glue. The width reserves space for the last trailing
+    // element's right-edge lyric extent, when applicable, and any terminal
+    // barline clearance. The stretch absorbs remaining line slack (0 for
+    // justified paragraphs, `MAX_COST` otherwise).
     const finishingGlueStretch =
       lineBreakType === LineBreakType.Justify ? 0 : MAX_COST;
     this.addGlue(

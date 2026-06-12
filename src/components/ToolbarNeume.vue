@@ -1,12 +1,19 @@
 <template>
   <div class="neume-toolbar p-1">
-    <div v-if="secondaryNeume" class="row">
+    <Toolbar
+      v-if="secondaryNeume"
+      class="row h-auto w-full gap-0 border-0 p-0"
+      loop
+    >
       <span>{{
         $t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })
       }}</span>
-      <span class="space"></span>
-      <button
+      <ToolbarSeparator />
+      <ToolbarButton
         v-if="tertiaryNeume"
+        type="button"
+        variant="secondary"
+        size="icon-sm"
         class="btnNeumeSelect"
         :class="{ selected: innerNeume === 'Tertiary' }"
         :aria-label="$t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })"
@@ -16,8 +23,11 @@
           :neume="tertiaryNeume"
           :font-family="pageSetup.neumeDefaultFontFamily"
         />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
+        type="button"
+        variant="secondary"
+        size="icon-sm"
         class="btnNeumeSelect"
         :class="{ selected: innerNeume === 'Secondary' }"
         :aria-label="$t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })"
@@ -27,8 +37,11 @@
           :neume="secondaryNeume"
           :font-family="pageSetup.neumeDefaultFontFamily"
         />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
+        type="button"
+        variant="secondary"
+        size="icon-sm"
         class="btnNeumeSelect"
         :class="{ selected: innerNeume === 'Primary' }"
         :aria-label="$t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })"
@@ -38,8 +51,8 @@
           :neume="primaryNeume!"
           :font-family="pageSetup.neumeDefaultFontFamily"
         />
-      </button>
-    </div>
+      </ToolbarButton>
+    </Toolbar>
     <Toolbar class="row h-auto w-full gap-0 border-0 p-0" loop>
       <AppTooltip :tooltip="tooltip(TimeNeume.Klasma_Top)">
         <ToolbarButton
@@ -565,147 +578,13 @@
           <img src="@/assets/icons/fthora-spathi.svg" />
         </ToolbarButton>
       </AppTooltip>
-    </Toolbar>
-    <div class="row">
-      <span class="space" />
-
       <span class="note-name">{{ noteDisplay }}</span>
-
-      <span class="separator" />
-
-      <Label for="toolbar-neume-space-after" class="mr-2">{{
-        $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
-      }}</Label>
-
-      <InputUnit
-        id="toolbar-neume-space-after"
-        unit="pt"
-        :min="-spaceAfterMax"
-        :max="spaceAfterMax"
-        :step="0.5"
-        :format-options="fraction2FormatOptions"
-        :model-value="element.spaceAfter"
-        @update:model-value="$emit('update', { spaceAfter: $event })"
-      />
-      <span class="space"></span>
-
-      <Button
-        type="button"
-        variant="secondary"
-        @click="$emit('open-syllable-positioning-dialog')"
-      >
-        <PhCrosshair data-icon="inline-start" />
-        {{ $t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' }) }}
-      </Button>
-      <span class="space" />
-
-      <Checkbox
-        id="toolbar:neume-ignore-attractions"
-        class="bg-background"
-        :model-value="element.ignoreAttractions"
-        @update:model-value="
-          $emit('update', {
-            ignoreAttractions: $event === true,
-          } as Partial<NoteElement>)
-        "
-      />
-      <Label for="toolbar:neume-ignore-attractions" class="ml-2">{{
-        $t(($) => $.toolbar.common.ignoreAttractions, { ns: 'toolbar' })
-      }}</Label>
-
-      <span class="space" />
-
-      <Label for="toolbar:neume-accepts-lyrics" class="mr-2">{{
-        $t(($) => $.toolbar.neume.acceptsLyrics, { ns: 'toolbar' })
-      }}</Label>
-      <Select
-        :model-value="element.acceptsLyrics"
-        @update:model-value="
-          $emit('update', {
-            acceptsLyrics: $event,
-          } as Partial<NoteElement>)
-        "
-      >
-        <SelectTrigger id="toolbar:neume-accepts-lyrics" class="bg-background">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectItem :value="AcceptsLyricsOption.Default">
-              {{
-                $t(($) => $.toolbar.neume.acceptsLyricsDefault, {
-                  ns: 'toolbar',
-                })
-              }}
-            </SelectItem>
-            <SelectItem :value="AcceptsLyricsOption.Yes">
-              {{
-                $t(($) => $.toolbar.neume.acceptsLyricsYes, { ns: 'toolbar' })
-              }}
-            </SelectItem>
-            <SelectItem :value="AcceptsLyricsOption.No">
-              {{
-                $t(($) => $.toolbar.neume.acceptsLyricsNo, { ns: 'toolbar' })
-              }}
-            </SelectItem>
-            <SelectItem :value="AcceptsLyricsOption.MelismaOnly">
-              {{
-                $t(($) => $.toolbar.neume.acceptsLyricsMelismaOnly, {
-                  ns: 'toolbar',
-                })
-              }}
-            </SelectItem>
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-
-      <template v-if="showChromaticFthoraNote">
-        <span class="space" />
-        <Label for="toolbar-neume-fthora-note" class="mr-2">{{
-          $t(($) => $.toolbar.common.fthoraNote, { ns: 'toolbar' })
-        }}</Label>
-        <Select
-          :model-value="chromaticFthoraNote"
-          @update:model-value="updateChromaticFthoraNote"
-        >
-          <SelectTrigger id="toolbar-neume-fthora-note" class="bg-background">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem
-                v-for="note in notes"
-                :key="note.value"
-                :value="note.value"
-              >
-                {{ $t(note.label, { ns: 'model' }) }}
-              </SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </template>
-
-      <span class="space"></span>
-      <Label for="toolbar-neume-section-name" class="mr-2">{{
-        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-      }}</Label>
-      <Input
-        id="toolbar-neume-section-name"
-        class="w-auto bg-background"
-        type="text"
-        :model-value="element.sectionName ?? ''"
-        @change="
-          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
-        "
-      />
-    </div>
+    </Toolbar>
   </div>
 </template>
 
 <script setup lang="ts">
-import { PhCrosshair } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
-import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
@@ -713,27 +592,12 @@ import type { AppTooltipValue } from '@/components/AppTooltip.types';
 import AppTooltip from '@/components/AppTooltip.vue';
 import type { ButtonWithMenuOption } from '@/components/ButtonWithMenu.types';
 import ButtonWithMenu from '@/components/ButtonWithMenu.vue';
-import InputUnit from '@/components/InputUnit.vue';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Toolbar,
   ToolbarButton,
   ToolbarSeparator,
 } from '@/components/ui/toolbar';
 import type { NoteElement } from '@/models/Element';
-import { AcceptsLyricsOption } from '@/models/Element';
-import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import {
   getFthoraLabelSelector,
   getGorgonNeumeLabelSelector,
@@ -767,36 +631,8 @@ import {
 import type { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
 import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
-import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
-import { Unit } from '@/utils/Unit';
 
 import Neume from './NeumeGlyph.vue';
-
-const chromaticFthoras = [
-  Fthora.SoftChromaticPa_Top,
-  Fthora.SoftChromaticPa_Bottom,
-  Fthora.SoftChromaticThi_Top,
-  Fthora.SoftChromaticThi_Bottom,
-  Fthora.HardChromaticPa_Top,
-  Fthora.HardChromaticPa_Bottom,
-  Fthora.HardChromaticThi_Top,
-  Fthora.HardChromaticThi_Bottom,
-
-  Fthora.SoftChromaticPa_TopSecondary,
-  Fthora.SoftChromaticThi_TopSecondary,
-  Fthora.HardChromaticPa_TopSecondary,
-  Fthora.HardChromaticThi_TopSecondary,
-
-  Fthora.SoftChromaticPa_TopTertiary,
-  Fthora.SoftChromaticThi_TopTertiary,
-  Fthora.HardChromaticPa_TopTertiary,
-  Fthora.HardChromaticThi_TopTertiary,
-];
-
-type ChromaticFthoraNoteOption = {
-  label: ModelSelector;
-  value: ScaleNote;
-};
 
 type ToolbarNeumeTooltipNeume =
   | Fthora
@@ -1126,7 +962,6 @@ const props = defineProps({
 
 const emit = defineEmits([
   'update',
-  'open-syllable-positioning-dialog',
   'update:accidental',
   'update:expression',
   'update:fthora',
@@ -1139,7 +974,6 @@ const emit = defineEmits([
   'update:secondaryAccidental',
   'update:secondaryFthora',
   'update:secondaryGorgon',
-  'update:sectionName',
   'update:tertiaryAccidental',
   'update:tertiaryFthora',
   'update:tie',
@@ -1160,115 +994,10 @@ const tertiaryNeume = computed(() =>
   getTertiaryNeume(props.element.quantitativeNeume),
 );
 
-const notes = computed((): ChromaticFthoraNoteOption[] => {
-  if (
-    props.element.fthora === Fthora.SoftChromaticThi_Top ||
-    props.element.fthora === Fthora.SoftChromaticThi_Bottom ||
-    props.element.secondaryFthora === Fthora.SoftChromaticThi_TopSecondary ||
-    props.element.tertiaryFthora === Fthora.SoftChromaticThi_TopTertiary
-  ) {
-    return [
-      {
-        label: getNoteLabelSelector(ScaleNote.ZoHigh),
-        value: ScaleNote.ZoHigh,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Thi),
-        value: ScaleNote.Thi,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Vou),
-        value: ScaleNote.Vou,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Ni),
-        value: ScaleNote.Ni,
-      },
-    ];
-  } else if (
-    props.element.fthora === Fthora.SoftChromaticPa_Top ||
-    props.element.fthora === Fthora.SoftChromaticPa_Bottom ||
-    props.element.secondaryFthora === Fthora.SoftChromaticPa_TopSecondary ||
-    props.element.tertiaryFthora === Fthora.SoftChromaticPa_TopTertiary
-  ) {
-    return [
-      {
-        label: getNoteLabelSelector(ScaleNote.NiHigh),
-        value: ScaleNote.NiHigh,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Ke),
-        value: ScaleNote.Ke,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Ga),
-        value: ScaleNote.Ga,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Pa),
-        value: ScaleNote.Pa,
-      },
-    ];
-  } else if (
-    props.element.fthora === Fthora.HardChromaticThi_Top ||
-    props.element.fthora === Fthora.HardChromaticThi_Bottom ||
-    props.element.secondaryFthora === Fthora.HardChromaticThi_TopSecondary ||
-    props.element.tertiaryFthora === Fthora.HardChromaticThi_TopTertiary
-  ) {
-    return [
-      {
-        label: getNoteLabelSelector(ScaleNote.ZoHigh),
-        value: ScaleNote.ZoHigh,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Thi),
-        value: ScaleNote.Thi,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Vou),
-        value: ScaleNote.Vou,
-      },
-    ];
-  } else if (
-    props.element.fthora === Fthora.HardChromaticPa_Top ||
-    props.element.fthora === Fthora.HardChromaticPa_Bottom ||
-    props.element.secondaryFthora === Fthora.HardChromaticPa_TopSecondary ||
-    props.element.tertiaryFthora === Fthora.HardChromaticPa_TopTertiary
-  ) {
-    return [
-      {
-        label: getNoteLabelSelector(ScaleNote.NiHigh),
-        value: ScaleNote.NiHigh,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Ke),
-        value: ScaleNote.Ke,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Ga),
-        value: ScaleNote.Ga,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Pa),
-        value: ScaleNote.Pa,
-      },
-    ];
-  }
-
-  return [];
-});
-
-const showChromaticFthoraNote = computed(
-  () =>
-    (props.innerNeume === 'Primary' &&
-      props.element.fthora != null &&
-      chromaticFthoras.includes(props.element.fthora)) ||
-    (props.innerNeume === 'Secondary' &&
-      props.element.secondaryFthora != null &&
-      chromaticFthoras.includes(props.element.secondaryFthora)) ||
-    (props.innerNeume === 'Tertiary' &&
-      props.element.tertiaryFthora != null &&
-      chromaticFthoras.includes(props.element.tertiaryFthora)),
+const noteDisplay = computed(() =>
+  props.element.scaleNotes
+    .map((x) => t(getNoteLabelSelector(x), { ns: 'model' }))
+    .join(' - '),
 );
 
 const fthoresDisabled = computed(() =>
@@ -1395,26 +1124,6 @@ const generalSharpTitle = computed(() =>
     : tooltip(Fthora.GeneralSharp_Top),
 );
 
-const chromaticFthoraNote = computed(() => {
-  if (props.innerNeume === 'Secondary') {
-    return props.element.secondaryChromaticFthoraNote;
-  } else if (props.innerNeume === 'Tertiary') {
-    return props.element.tertiaryChromaticFthoraNote;
-  } else {
-    return props.element.chromaticFthoraNote;
-  }
-});
-
-const noteDisplay = computed(() =>
-  props.element.scaleNotes
-    .map((x) => t(getNoteLabelSelector(x), { ns: 'model' }))
-    .join(' - '),
-);
-
-const spaceAfterMax = computed(() =>
-  Math.round(Unit.toPt(props.pageSetup.pageWidth)),
-);
-
 function translateNeumeDisplayName(neume: ToolbarNeumeTooltipNeume) {
   switch (neume) {
     case Tie.YfenBelow:
@@ -1482,28 +1191,6 @@ function updateFthora(args: string[]) {
     emit('update:tertiaryFthora', args[0] + props.innerNeume);
   } else {
     emit('update:fthora', args);
-  }
-}
-
-function updateChromaticFthoraNote(value: AcceptableValue) {
-  if (typeof value !== 'string') {
-    return;
-  }
-
-  const note = value;
-
-  if (props.innerNeume === 'Secondary') {
-    emit('update', {
-      secondaryChromaticFthoraNote: note,
-    } as Partial<NoteElement>);
-  } else if (props.innerNeume === 'Tertiary') {
-    emit('update', {
-      tertiaryChromaticFthoraNote: note,
-    } as Partial<NoteElement>);
-  } else {
-    emit('update', {
-      chromaticFthoraNote: note,
-    } as Partial<NoteElement>);
   }
 }
 
@@ -1643,17 +1330,11 @@ function tooltip(neume: ToolbarNeumeTooltipNeume): AppTooltipValue {
 }
 
 .note-name {
-  width: 12ch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--btn-size);
+  margin-left: auto;
   text-align: center;
-}
-
-.space {
-  width: 16px;
-}
-
-.separator {
-  margin: 0 16px;
-  border-right: 1px solid var(--color-legacy-chrome-border);
-  height: 16px;
 }
 </style>

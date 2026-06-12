@@ -3,6 +3,7 @@
     "alignLeft": "Rata Kiri",
     "alignCenter": "Rata Tengah",
     "alignRight": "Rata Kanan",
+    "alignment": "Perataan",
     "bpm": "BPM",
     "chooseColor": "Pilih warna",
     "fthoraNote": "Nada Fthora",
@@ -52,6 +53,19 @@
   },
   "dropCap": {
     "lineSpan": "Baris untuk Turun"
+  },
+  "properties": {
+    "noProperties": "Tidak ada properti",
+    "nothingToEdit": "Tidak ada yang dapat diedit"
+  },
+  "selection": {
+    "elements": "Elemen",
+    "lineBreak": "Jeda Baris",
+    "center": "Tengah",
+    "justify": "Rata Penuh",
+    "pageBreak": "Jeda Halaman",
+    "noSelection": "Tidak ada pilihan",
+    "nothingSelected": "Tidak ada yang dipilih"
   },
   "imageBox": {
     "maintainAspectRatio": "Pertahankan Rasio Aspek",
@@ -105,5 +119,11 @@
     "offsetYTop": "Offset Y Atas",
     "offsetYBottom": "Offset Y Bawah",
     "fillWidth": "Isi Lebar"
+  },
+  "workspace": {
+    "dockPane": "Tambatkan Panel",
+    "floatPane": "Apungkan Panel",
+    "hidePane": "Sembunyikan Panel",
+    "showPane": "Tampilkan Panel"
   }
 }

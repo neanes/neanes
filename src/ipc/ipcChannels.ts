@@ -1,5 +1,6 @@
 import type { PageSize } from '@/models/PageSetup';
 import type { Score } from '@/models/save/v1/Score';
+import type { WorkspacePaneId } from '@/models/WorkspacePane';
 
 export enum IpcMainChannels {
   UpdateAvailable = 'UpdateAvailable',
@@ -35,7 +36,8 @@ export enum IpcMainChannels {
 
   FileMenuFind = 'FileMenuFind',
 
-  FileMenuLyrics = 'FileMenuLyrics',
+  FileMenuViewPaneVisibility = 'FileMenuViewPaneVisibility',
+  FileMenuViewResetPaneLayout = 'FileMenuViewResetPaneLayout',
 
   FileMenuPreferences = 'FileMenuPreferences',
   OpenAboutDialog = 'OpenAboutDialog',
@@ -68,6 +70,7 @@ export enum IpcRendererChannels {
 
   SetCanUndo = 'SetCanUndo',
   SetCanRedo = 'SetCanRedo',
+  SetWorkspacePaneVisibility = 'SetWorkspacePaneVisibility',
 
   ShowMessageBox = 'ShowMessageBox',
   ShowItemInFolder = 'ShowItemInFolder',
@@ -158,6 +161,11 @@ export interface ShowMessageBoxReplyArgs {
 
 export interface FileMenuInsertTextboxArgs {
   inline: boolean;
+}
+
+export interface FileMenuViewPaneVisibilityArgs {
+  paneId: WorkspacePaneId;
+  visible?: boolean;
 }
 
 export interface SaveWorkspaceArgs {

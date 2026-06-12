@@ -38,6 +38,7 @@
     "root": "Insert",
     "alternateLine": "Alternate Line",
     "annotation": "Annotation",
+    "dropCap": "Drop Cap",
     "dropCapBefore": "Drop Cap Before",
     "dropCapAfter": "Drop Cap After",
     "textBox": "Text Box",
@@ -54,7 +55,12 @@
     "copyElementLink": "Copy Element Link"
   },
   "view": {
-    "root": "View (Debug)",
+    "root": "View",
+    "neumeSelector": "Neume Selector",
+    "commonCombos": "Common Combinations",
+    "properties": "Properties",
+    "selection": "Selection",
+    "resetLayout": "Reset Layout",
     "generateTestFiles": "Generate Test Files (Debug)"
   },
   "help": {

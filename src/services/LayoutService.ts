@@ -922,6 +922,11 @@ export class LayoutService {
             martyriaElement,
             pageSetup,
           );
+          const isParagraphStartMartyria =
+            layoutWorkspace.pendingParagraph.length === 0;
+          const lineStartMartyriaShift = martyriaElement.alignRight
+            ? 0
+            : this.getLineStartMartyriaShift(martyriaElement, 0, pageSetup);
           const useStandardLeadingGlue =
             !martyriaElement.alignRight &&
             (!!martyriaElement.tempoLeft ||
@@ -1112,7 +1117,13 @@ export class LayoutService {
                       ? leadingVisualSpacing.requiredWidth
                       : undefined,
                   );
-            this.addGlue(newGlue, layoutWorkspace);
+            // Pair a fixed spacer with a matching leading-glue reduction. On the
+            // same line they cancel; at line start the leading glue is skipped
+            // and the spacer makes Phase 1 reserve the later ink-overhang shift.
+            this.addGlue(
+              this.offsetGlueWidth(newGlue, lineStartMartyriaShift),
+              layoutWorkspace,
+            );
           } else if (martyriaElement.alignRight) {
             // A paragraph-start right martyria still needs its leading glue in
             // the input stream, even though positionItems will skip it at line
@@ -1121,6 +1132,13 @@ export class LayoutService {
             layoutWorkspace.pendingParagraph.push(rightMartyriaGlue);
             layoutWorkspace.neumesEndPx += rightMartyriaGlue.width;
           }
+
+          if (lineStartMartyriaShift > 0) {
+            this.addAnonymousBox(lineStartMartyriaShift, layoutWorkspace);
+          }
+
+          const lyricReservationParagraphStart =
+            lineStartMartyriaShift > 0 ? isParagraphStartMartyria : undefined;
 
           if (skipLyricCollision) {
             layoutWorkspace.lyricsEndPx =
@@ -1131,6 +1149,7 @@ export class LayoutService {
               martyriaElement,
               layoutWorkspace,
               leadingGlueWidth,
+              lyricReservationParagraphStart,
             );
           }
           this.addBox(elementWidthPx, martyriaElement, layoutWorkspace);
@@ -1841,6 +1860,7 @@ export class LayoutService {
     element: ScoreElement,
     workspace: LayoutWorkspace,
     glueWidth?: number,
+    isParagraphStartOverride?: boolean,
   ) {
     glueWidth = glueWidth ?? this.getInlineSpacing(workspace.pageSetup);
     // Skip lyric collision for non-inline block elements (TextBox, RichTextBox,
@@ -1862,7 +1882,8 @@ export class LayoutService {
     if (workspace.neumesEndPx <= previousLyricsEndPx + glueWidth) {
       const adjustment =
         previousLyricsEndPx - workspace.neumesEndPx + glueWidth;
-      const isParagraphStart = workspace.pendingParagraph.length === 0;
+      const isParagraphStart =
+        isParagraphStartOverride ?? workspace.pendingParagraph.length === 0;
 
       // A zero-width spacer would only add a box to pendingParagraph without
       // advancing neumesEndPx. The immediately-following addBox call already
@@ -1936,6 +1957,15 @@ export class LayoutService {
       stretch: 0,
       shrink: 0,
     };
+  }
+
+  private static offsetGlueWidth(glue: Glue, offset: number): Glue {
+    return offset === 0
+      ? glue
+      : {
+          ...glue,
+          width: glue.width - offset,
+        };
   }
 
   private static createMartyriaGlue(

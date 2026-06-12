@@ -187,6 +187,11 @@ The post-break glue's shrink is capped so that justification cannot reduce that 
 At a break the post-break glue vanishes; the spacer remains at the start of the next line and reserves fixed leading space for the transferred bar.
 In Phase 2, when the break is actually taken, the note element is shifted left by the bar width plus fixed leading clearance so that the rendered barline glyph and spacing occupy the space reserved by the spacer rather than adding extra width.
 
+Line-start non-right-aligned martyriae use the same spacer-and-cancel pattern for left ink overhang.
+If the martyria's body, inline left bar, or left tempo sign would protrude past the left margin, Phase 1 inserts an anonymous spacer of that overhang width before the martyria and narrows the martyria's owned leading glue by the same amount.
+On the same line these widths cancel, so ordinary inline note-to-martyria spacing is unchanged.
+When the martyria starts a line, `positionItems` skips the leading glue but keeps the spacer, so the line breaker reserves the same width that Phase 2 later adds as indentation.
+
 When a right-aligned martyria follows existing content, its leading glue is a separate case: the code uses effectively infinite stretch (`MAX_COST`) so that this glue absorbs all remaining line slack.
 If a right-aligned martyria starts a paragraph, that leading glue is still encoded in the input stream, but `positionItems` skips it at line start, so Phase 2 places the martyria flush right explicitly.
 
@@ -294,6 +299,12 @@ where:
 - $T_i^\text{left}$ is the amount of the next note's left projection that can be absorbed on the same line.
 - $T_i^\text{right}$ is the amount of the current note's right projection that can tuck under the next neume.
 - $\ell_i$ is the collision correction needed to keep the actual visible lyric gap large enough on the same line: normally at least `lyricsMinimumSpacing`, but for a hyphenated melisma start at least $\texttt{lyricsMinimumSpacing} + \textit{hyphenWidth}$ when the hyphen is absorbed inside the current neume.
+
+There is one deliberate exception to the ordinary base expression.
+When `exitsMelismaIntoCenteredLyric` is true, a carried melisma is ending at a non-melisma note whose centered lyric has a positive left projection.
+In that case the current cursor is already after the previous note's `spaceAfter`, so the code starts from base width 0 instead of $s_0 + R_i - T_i^\text{left} - T_i^\text{right}$.
+This aligns the next centered lyric's left edge with that cursor while preserving the user-defined extra spacing already included in the cursor position.
+The collision correction $\ell_i$ still runs afterward, including the carried-melisma check against `melismaLyricsEndPx`, and the final result is still floored by the visible note and measure-bar minimums.
 
 The collision check is geometry-based.
 When both notes carry lyrics, the code computes the actual visual gap between them from the neume overhangs relative to their lyrics, then adds back only the missing amount.

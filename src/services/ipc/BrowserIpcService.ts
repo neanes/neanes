@@ -65,7 +65,7 @@ export class BrowserIpcService implements IIpcService {
   ): Promise<ExportWorkspaceReplyArgs> {
     return Promise.resolve({
       success: false,
-      errorMessage: 'exportWorkspaceAsPdf is not available in the browser.',
+      errorMessage: 'Export workspace as PDF is not available in the browser.',
     });
   }
 

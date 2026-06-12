@@ -63,10 +63,10 @@ export class BrowserIpcService implements IIpcService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     workspace: Workspace,
   ): Promise<ExportWorkspaceReplyArgs> {
-    return {
+    return Promise.resolve({
       success: false,
       errorMessage: 'exportWorkspaceAsPdf is not available in the browser.',
-    };
+    });
   }
 
   public async exportWorkspaceAsHtml(

@@ -1,0 +1,18 @@
+{
+  "update": {
+    "available": "Este disponibilă o actualizare.",
+    "update": "Actualizează",
+    "notNow": "Nu acum",
+    "download": "Descarcă",
+    "later": "Mai târziu",
+    "downloading": "Se descarcă actualizarea...",
+    "downloaded": "Actualizarea a fost descărcată. Reporniți pentru instalare.",
+    "failed": "Actualizarea a eșuat.",
+    "failedDescription": "Nu s-a putut actualiza.",
+    "downloadFailedDescription": "Nu s-a putut descărca actualizarea.",
+    "restartFailedDescription": "Nu s-a putut reporni pentru instalarea actualizării.",
+    "restartNow": "Repornește acum",
+    "versionAvailable": "Versiunea {{version}} este disponibilă.",
+    "versionReady": "Versiunea {{version}} este gata."
+  }
+}

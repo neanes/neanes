@@ -6,13 +6,19 @@
     <Toaster />
   </div>
   <div v-if="updateExists" class="update-notification">
-    An update is available.
-    <button class="ok" @click="refreshApp">Update</button>
-    <button class="cancel" @click="updateExists = false">Not now</button>
+    {{ tt(($) => $.app.update.available) }}
+    <button class="ok" @click="refreshApp">
+      {{ tt(($) => $.app.update.update) }}
+    </button>
+    <button class="cancel" @click="updateExists = false">
+      {{ tt(($) => $.app.update.notNow) }}
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { SelectorParam } from 'i18next';
+import { useTranslation } from 'i18next-vue';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -28,6 +34,11 @@ const electronUpdateAvailableToastId = 'electron-update-available';
 const electronUpdateDownloadingToastId = 'electron-update-downloading';
 const electronUpdateDownloadedToastId = 'electron-update-downloaded';
 const electronUpdateErrorToastId = 'electron-update-error';
+const { t } = useTranslation();
+
+function tt(selector: SelectorParam<'app'>, options?: Record<string, unknown>) {
+  return t(selector, { ns: 'app', ...options });
+}
 
 async function downloadElectronUpdate() {
   try {
@@ -35,7 +46,9 @@ async function downloadElectronUpdate() {
   } catch (error) {
     showElectronUpdateErrorToast({
       message:
-        error instanceof Error ? error.message : 'Unable to download update.',
+        error instanceof Error
+          ? error.message
+          : tt(($) => $.app.update.downloadFailedDescription),
     });
   }
 }
@@ -50,63 +63,79 @@ async function restartToInstallElectronUpdate() {
       message:
         error instanceof Error
           ? error.message
-          : 'Unable to restart to install the update.',
+          : tt(($) => $.app.update.restartFailedDescription),
     });
   }
 }
 
 function showElectronUpdateAvailableToast(args?: UpdateAvailableArgs) {
-  toast.info('An update is available.', {
-    id: electronUpdateAvailableToastId,
-    duration: Infinity,
-    description: args?.version
-      ? `Version ${args.version} is available.`
-      : undefined,
-    action: {
-      label: 'Download',
-      onClick: () => {
-        void downloadElectronUpdate();
+  toast.info(
+    tt(($) => $.app.update.available),
+    {
+      id: electronUpdateAvailableToastId,
+      duration: Infinity,
+      description: args?.version
+        ? tt(($) => $.app.update.versionAvailable, {
+            version: args.version,
+          })
+        : undefined,
+      action: {
+        label: tt(($) => $.app.update.download),
+        onClick: () => {
+          void downloadElectronUpdate();
+        },
+      },
+      cancel: {
+        label: tt(($) => $.app.update.later),
       },
     },
-    cancel: {
-      label: 'Later',
-    },
-  });
+  );
 }
 
 function showElectronUpdateDownloadingToast() {
-  toast.loading('Downloading update...', {
-    id: electronUpdateDownloadingToastId,
-    duration: Infinity,
-  });
+  toast.loading(
+    tt(($) => $.app.update.downloading),
+    {
+      id: electronUpdateDownloadingToastId,
+      duration: Infinity,
+    },
+  );
 }
 
 function showElectronUpdateDownloadedToast(args?: UpdateAvailableArgs) {
   toast.dismiss(electronUpdateDownloadingToastId);
 
-  toast.success('Update downloaded. Restart to install.', {
-    id: electronUpdateDownloadedToastId,
-    duration: Infinity,
-    description: args?.version
-      ? `Version ${args.version} is ready.`
-      : undefined,
-    action: {
-      label: 'Restart now',
-      onClick: () => {
-        void restartToInstallElectronUpdate();
+  toast.success(
+    tt(($) => $.app.update.downloaded),
+    {
+      id: electronUpdateDownloadedToastId,
+      duration: Infinity,
+      description: args?.version
+        ? tt(($) => $.app.update.versionReady, {
+            version: args.version,
+          })
+        : undefined,
+      action: {
+        label: tt(($) => $.app.update.restartNow),
+        onClick: () => {
+          void restartToInstallElectronUpdate();
+        },
+      },
+      cancel: {
+        label: tt(($) => $.app.update.later),
       },
     },
-    cancel: {
-      label: 'Later',
-    },
-  });
+  );
 }
 
 function showElectronUpdateErrorToast(args: UpdateErrorArgs) {
-  toast.error('Update failed.', {
-    id: electronUpdateErrorToastId,
-    description: args.message,
-  });
+  toast.error(
+    tt(($) => $.app.update.failed),
+    {
+      id: electronUpdateErrorToastId,
+      description: args.message,
+    },
+  );
 }
 
 if (navigator.serviceWorker) {
@@ -144,7 +173,9 @@ const onElectronUpdateDownloaded = (args?: UpdateAvailableArgs) =>
   showElectronUpdateDownloadedToast(args);
 const onElectronUpdateError = (args?: UpdateErrorArgs) => {
   toast.dismiss(electronUpdateDownloadingToastId);
-  showElectronUpdateErrorToast(args ?? { message: 'Unable to update.' });
+  showElectronUpdateErrorToast(
+    args ?? { message: tt(($) => $.app.update.failedDescription) },
+  );
 };
 
 onMounted(() => {

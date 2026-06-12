@@ -173,10 +173,21 @@ export interface SaveWorkspaceAsArgs {
 export interface SaveWorkspaceAsReplyArgs {
   filePath: string;
   success: boolean;
+  canceled?: boolean;
+  errorMessage?: string;
 }
 
 export interface SaveWorkspaceReplyArgs {
   success: boolean;
+  canceled?: boolean;
+  errorMessage?: string;
+}
+
+export interface ExportWorkspaceReplyArgs {
+  success: boolean;
+  canceled?: boolean;
+  filePath?: string;
+  errorMessage?: string;
 }
 
 export interface ExportWorkspaceAsPdfArgs {
@@ -217,11 +228,25 @@ export interface ExportWorkspaceAsImageArgs {
 export interface ExportWorkspaceAsImageReplyArgs {
   filePath: string;
   success: boolean;
+  canceled?: boolean;
+  errorMessage?: string;
 }
 
 export interface ExportPageAsImageArgs {
   filePath: string;
   data: string;
+}
+
+export interface ExportPageAsImageReplyArgs {
+  success: boolean;
+  canceled?: boolean;
+  skipped?: boolean;
+  errorMessage?: string;
+}
+
+export interface ClipboardReplyArgs {
+  success: boolean;
+  errorMessage?: string;
 }
 
 export interface PrintWorkspaceArgs {

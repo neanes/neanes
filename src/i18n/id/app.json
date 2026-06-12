@@ -1,0 +1,18 @@
+{
+  "update": {
+    "available": "Pembaruan tersedia.",
+    "update": "Perbarui",
+    "notNow": "Jangan sekarang",
+    "download": "Unduh",
+    "later": "Nanti",
+    "downloading": "Mengunduh pembaruan...",
+    "downloaded": "Pembaruan diunduh. Mulai ulang untuk menginstal.",
+    "failed": "Pembaruan gagal.",
+    "failedDescription": "Tidak dapat memperbarui.",
+    "downloadFailedDescription": "Tidak dapat mengunduh pembaruan.",
+    "restartFailedDescription": "Tidak dapat memulai ulang untuk menginstal pembaruan.",
+    "restartNow": "Mulai ulang sekarang",
+    "versionAvailable": "Versi {{version}} tersedia.",
+    "versionReady": "Versi {{version}} siap."
+  }
+}

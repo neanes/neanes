@@ -12,6 +12,7 @@ import {
   PhXCircle,
 } from '@phosphor-icons/vue';
 import { getFontEmbedCSS, toPng } from 'html-to-image';
+import type { SelectorParam } from 'i18next';
 import i18next from 'i18next';
 import { useTranslation } from 'i18next-vue';
 import { debounce, throttle } from 'throttle-debounce';
@@ -85,6 +86,7 @@ import { editorPreferencesKey } from '@/injectionKeys';
 import type {
   CloseWorkspacesArgs,
   ExportWorkspaceAsImageReplyArgs,
+  ExportWorkspaceReplyArgs,
   FileMenuImportOcrArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
@@ -246,6 +248,13 @@ const {
   textSearchService,
 } = useEditorServices();
 const { t } = useTranslation();
+
+function tt(
+  selector: SelectorParam<'editor'>,
+  options?: Record<string, unknown>,
+) {
+  return t(selector, { ns: 'editor', ...options });
+}
 
 const dynamicTemplateRefs = new Map<string, unknown[]>();
 const dynamicTemplateRefSetters = new Map<string, (value: unknown) => void>();
@@ -1210,6 +1219,59 @@ function getFileName(workspace: Workspace, showUnsavedChanges: boolean = true) {
   } else {
     return `${unsavedChangesMarker}${workspace.tempFileName}`;
   }
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return fallback;
+}
+
+function showErrorToast(
+  message: string,
+  error: unknown,
+  options: { id?: string | number; fallback: string },
+) {
+  toast.error(message, {
+    id: options.id,
+    description: getErrorMessage(error, options.fallback),
+  });
+}
+
+function showReplyErrorToast(
+  message: string,
+  reply: { errorMessage?: string },
+  fallback: string,
+) {
+  toast.error(message, {
+    description: reply.errorMessage ?? fallback,
+  });
+}
+
+function showExportReplyToast(
+  reply: ExportWorkspaceReplyArgs,
+  successMessage: string,
+  errorMessage: string,
+  fallbackErrorDescription: string,
+) {
+  if (reply.success) {
+    toast.success(successMessage, {
+      description: reply.filePath,
+    });
+    return true;
+  }
+
+  if (!reply.canceled) {
+    showReplyErrorToast(errorMessage, reply, fallbackErrorDescription);
+  }
+
+  return false;
 }
 
 function getHeaderForPageIndex(pageIndex: number) {
@@ -2574,7 +2636,7 @@ function onKeydownMac(event: KeyboardEvent) {
       handled = true;
       break;
     case 'KeyV':
-      ipcService.paste();
+      void pasteTextFromClipboard();
       handled = true;
       break;
     case 'KeyX':
@@ -3349,13 +3411,33 @@ async function closeWorkspace(workspace: Workspace) {
 
     if (dialogResult.response === 0) {
       // User chose "Save"
-      const saveResult =
-        workspace.filePath != null
-          ? await saveWorkspace(workspace)
-          : await saveWorkspaceAs(workspace);
+      try {
+        const saveResult =
+          workspace.filePath != null
+            ? await saveWorkspace(workspace)
+            : await saveWorkspaceAs(workspace);
 
-      // If they successfully saved, then we can close the workspacce
-      shouldClose = saveResult.success;
+        // If they successfully saved, then we can close the workspace
+        shouldClose = saveResult.success;
+
+        if (!saveResult.success && !saveResult.canceled) {
+          showReplyErrorToast(
+            tt(($) => $.editor.toast.saveFailed),
+            saveResult,
+            tt(($) => $.editor.toast.saveFailedDescription),
+          );
+        }
+      } catch (error) {
+        console.error(error);
+        shouldClose = false;
+        showErrorToast(
+          tt(($) => $.editor.toast.saveFailed),
+          error,
+          {
+            fallback: tt(($) => $.editor.toast.saveFailedDescription),
+          },
+        );
+      }
     } else if (dialogResult.response === 2) {
       // User chose "Cancel", so don't close the workspace.
       shouldClose = false;
@@ -4661,9 +4743,12 @@ function updateEntryMode(mode: EntryMode) {
 
 function updateZoom(newZoom: number) {
   if (newZoom < 0.5 || newZoom > 5) {
-    toast.error('Range overflow', {
-      description: t(($) => $.toolbar.main.invalidZoom, { ns: 'toolbar' }),
-    });
+    toast.error(
+      tt(($) => $.editor.toast.rangeOverflow),
+      {
+        description: t(($) => $.toolbar.main.invalidZoom, { ns: 'toolbar' }),
+      },
+    );
   } else {
     zoom.value = newZoom;
     zoomToFit.value = false;
@@ -4720,6 +4805,13 @@ async function playAudio() {
     }
   } catch (error) {
     console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.playbackFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.playbackStartFailed),
+      },
+    );
   }
 }
 
@@ -4732,6 +4824,13 @@ function stopAudio() {
     stopPlaybackClock();
   } catch (error) {
     console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.stopPlaybackFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.stopPlaybackFailedDescription),
+      },
+    );
   }
 }
 
@@ -4747,6 +4846,13 @@ function pauseAudio() {
     }
   } catch (error) {
     console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.playbackFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.playbackToggleFailed),
+      },
+    );
   }
 }
 
@@ -4769,6 +4875,13 @@ async function playTestTone() {
     await audioService.playTestTone(audioOptions.frequencyDi);
   } catch (error) {
     console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.testToneFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.testToneFailedDescription),
+      },
+    );
   }
 }
 
@@ -4935,17 +5048,13 @@ function onFileMenuImportOcr(args: FileMenuImportOcrArgs) {
     } catch (error) {
       console.error(error);
 
-      if (error instanceof Error) {
-        if (ipcService.isShowMessageBoxSupported()) {
-          ipcService.showMessageBox({
-            type: 'error',
-            title: 'OCR import failed',
-            message: error.message,
-          });
-        } else {
-          alert(error.message);
-        }
-      }
+      showErrorToast(
+        tt(($) => $.editor.toast.ocrImportFailed),
+        error,
+        {
+          fallback: tt(($) => $.editor.toast.unexpectedError),
+        },
+      );
     }
   }
 }
@@ -4984,13 +5093,34 @@ async function onFileMenuExportAsPdf() {
   const previousTitle = window.document.title;
   window.document.title = getFileName(selectedWorkspace.value, false);
 
-  await nextTick();
-  await ipcService.exportWorkspaceAsPdf(selectedWorkspace.value);
-  printMode.value = false;
-  window.document.title = previousTitle;
+  try {
+    await nextTick();
+    const reply = await ipcService.exportWorkspaceAsPdf(
+      selectedWorkspace.value,
+    );
 
-  // Re-focus the active element
-  focusElement(activeElement);
+    showExportReplyToast(
+      reply,
+      tt(($) => $.editor.toast.export.pdfSuccess),
+      tt(($) => $.editor.toast.export.pdfFailed),
+      tt(($) => $.editor.toast.export.pdfFailedDescription),
+    );
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.export.pdfFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.export.pdfFailedDescription),
+      },
+    );
+  } finally {
+    printMode.value = false;
+    window.document.title = previousTitle;
+
+    // Re-focus the active element
+    focusElement(activeElement);
+  }
 }
 
 async function onFileMenuExportAsImage() {
@@ -5008,79 +5138,160 @@ async function exportAsPng(args: ExportAsPngSettings) {
     );
 
     if (!reply.success) {
+      if (!reply.canceled) {
+        showReplyErrorToast(
+          tt(($) => $.editor.toast.export.pngFailed),
+          reply,
+          tt(($) => $.editor.toast.export.pngStartFailedDescription),
+        );
+      }
       return;
     }
   } catch (error) {
     console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.export.pngFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.export.pngStartFailedDescription),
+      },
+    );
     return;
   }
 
   printMode.value = true;
   exportInProgress.value = true;
+  const toastId = toast.loading(
+    tt(($) => $.editor.toast.export.pngLoading),
+    {
+      description: tt(($) => $.editor.toast.export.pngLoadingDescription),
+    },
+  );
 
   // Blur the active element so that focus outlines and
   // blinking cursors don't show up in the printed page
   const activeElement = blurActiveElement();
 
-  nextTick(async () => {
-    try {
-      const pages = pagesRef.value as HTMLElement[];
+  try {
+    await nextTick();
 
-      if (pages.length > 0) {
-        const fontEmbedCSS = await getFontEmbedCSS(pages[0]);
+    const pageElements = pagesRef.value as HTMLElement[];
+    let exportedPageCount = 0;
+    let firstExportedPagePath = '';
 
-        let pageNumber = 1;
+    if (pageElements.length > 0) {
+      const fontEmbedCSS = await getFontEmbedCSS(pageElements[0]);
 
-        for (const page of pages) {
-          const options = {
-            fontEmbedCSS,
-            pixelRatio: args.dpi / 96,
-            style: { margin: '0' },
-          } as any;
+      for (const [index, page] of pageElements.entries()) {
+        const options = {
+          fontEmbedCSS,
+          pixelRatio: args.dpi / 96,
+          style: { margin: '0' },
+        } as any;
 
-          if (args.transparentBackground) {
-            options.style.backgroundColor = 'transparent';
-          }
-
-          let data = await toPng(page, options);
-
-          if (data != null) {
-            const fileName = reply.filePath.replace(
-              /\.png$/,
-              `-${pageNumber++}.png`,
-            );
-
-            data = data.replace(/^data:image\/png;base64,/, '');
-
-            if (!(await ipcService.exportPageAsImage(fileName, data))) {
-              break;
-            }
-          }
+        if (args.transparentBackground) {
+          options.style.backgroundColor = 'transparent';
         }
-      }
 
-      if (args.openFolder && ipcService.isShowItemInFolderSupported()) {
-        await ipcService.showItemInFolder(
-          reply.filePath.replace(/\.png$/, '-1.png'),
+        const fileName = reply.filePath.replace(/\.png$/i, `-${index + 1}.png`);
+
+        const data = (await toPng(page, options)).replace(
+          /^data:image\/png;base64,/,
+          '',
         );
+
+        const pageReply = await ipcService.exportPageAsImage(fileName, data);
+
+        if (!pageReply.success) {
+          if (pageReply.skipped) {
+            continue;
+          }
+
+          if (pageReply.canceled) {
+            break;
+          }
+
+          throw new Error(
+            pageReply.errorMessage ??
+              tt(($) => $.editor.toast.export.pngFileFailedDescription),
+          );
+        }
+
+        if (!firstExportedPagePath) {
+          firstExportedPagePath = fileName;
+        }
+
+        exportedPageCount++;
       }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      printMode.value = false;
-      exportInProgress.value = false;
-      closeExportDialog();
-      // Re-focus the active element
-      focusElement(activeElement);
     }
-  });
+
+    if (exportedPageCount === 0) {
+      toast.info(
+        tt(($) => $.editor.toast.export.pngCanceled),
+        {
+          id: toastId,
+          description: tt(($) => $.editor.toast.export.pngCanceledDescription),
+        },
+      );
+      return;
+    }
+
+    if (args.openFolder && ipcService.isShowItemInFolderSupported()) {
+      await ipcService.showItemInFolder(firstExportedPagePath);
+    }
+
+    toast.success(
+      tt(($) => $.editor.toast.export.pngComplete),
+      {
+        id: toastId,
+        description: tt(($) => $.editor.toast.export.pngCompleteDescription, {
+          count: exportedPageCount,
+          path: firstExportedPagePath,
+        }),
+      },
+    );
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.export.pngFailed),
+      error,
+      {
+        id: toastId,
+        fallback: tt(($) => $.editor.toast.export.pngFilesFailedDescription),
+      },
+    );
+  } finally {
+    printMode.value = false;
+    exportInProgress.value = false;
+    closeExportDialog();
+    // Re-focus the active element
+    focusElement(activeElement);
+  }
 }
 
 async function onFileMenuExportAsHtml() {
-  await ipcService.exportWorkspaceAsHtml(
-    selectedWorkspace.value,
-    byzHtmlExporter.exportScore(score.value),
-  );
+  try {
+    const reply = await ipcService.exportWorkspaceAsHtml(
+      selectedWorkspace.value,
+      byzHtmlExporter.exportScore(score.value),
+    );
+
+    showExportReplyToast(
+      reply,
+      tt(($) => $.editor.toast.export.htmlSuccess),
+      tt(($) => $.editor.toast.export.htmlFailed),
+      tt(($) => $.editor.toast.export.htmlFailedDescription),
+    );
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.export.htmlFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.export.htmlFailedDescription),
+      },
+    );
+  }
 }
 
 function onFileMenuExportAsMusicXml() {
@@ -5094,27 +5305,67 @@ function onFileMenuExportAsLatex() {
 }
 
 async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
-  await ipcService.exportWorkspaceAsMusicXml(
-    selectedWorkspace.value,
-    musicXmlExporter.export(score.value, args.options),
-    args.compressed,
-    args.openFolder && ipcService.isShowItemInFolderSupported(),
-  );
+  try {
+    const reply = await ipcService.exportWorkspaceAsMusicXml(
+      selectedWorkspace.value,
+      musicXmlExporter.export(score.value, args.options),
+      args.compressed,
+      args.openFolder && ipcService.isShowItemInFolderSupported(),
+    );
 
-  closeExportDialog();
+    showExportReplyToast(
+      reply,
+      tt(($) => $.editor.toast.export.musicXmlSuccess),
+      tt(($) => $.editor.toast.export.musicXmlFailed),
+      tt(($) => $.editor.toast.export.musicXmlFailedDescription),
+    );
+
+    if (reply.success || reply.canceled) {
+      closeExportDialog();
+    }
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.export.musicXmlFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.export.musicXmlFailedDescription),
+      },
+    );
+  }
 }
 
 async function exportAsLatex(args: ExportAsLatexSettings) {
-  await ipcService.exportWorkspaceAsLatex(
-    selectedWorkspace.value,
-    JSON.stringify(
-      latexExporter.export(pages.value, score.value.pageSetup, args.options),
-      null,
-      2,
-    ),
-  );
+  try {
+    const reply = await ipcService.exportWorkspaceAsLatex(
+      selectedWorkspace.value,
+      JSON.stringify(
+        latexExporter.export(pages.value, score.value.pageSetup, args.options),
+        null,
+        2,
+      ),
+    );
 
-  closeExportDialog();
+    showExportReplyToast(
+      reply,
+      tt(($) => $.editor.toast.export.latexSuccess),
+      tt(($) => $.editor.toast.export.latexFailed),
+      tt(($) => $.editor.toast.export.latexFailedDescription),
+    );
+
+    if (reply.success || reply.canceled) {
+      closeExportDialog();
+    }
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.export.latexFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.export.latexFailedDescription),
+      },
+    );
+  }
 }
 
 function blurActiveElement() {
@@ -5266,38 +5517,108 @@ function onFileMenuInsertFooter() {
   updatePageSetup(score.value.pageSetup);
 }
 
-function onFileMenuToolsCopyElementLink() {
+async function onFileMenuToolsCopyElementLink() {
   if (selectedElement.value?.id != null) {
-    navigator.clipboard.writeText(
-      '#element-' + selectedElement.value.id.toString(),
-    );
+    try {
+      await navigator.clipboard.writeText(
+        '#element-' + selectedElement.value.id.toString(),
+      );
+      toast.success(tt(($) => $.editor.toast.copyElementLinkSuccess));
+    } catch (error) {
+      console.error(error);
+      showErrorToast(
+        tt(($) => $.editor.toast.copyFailed),
+        error,
+        {
+          fallback: tt(($) => $.editor.toast.clipboardWriteFailed),
+        },
+      );
+    }
   }
 }
 
 async function onFileMenuSave() {
   const workspace = selectedWorkspace.value;
 
-  if (workspace.filePath != null) {
-    const result = await saveWorkspace(workspace);
-    if (result.success) {
-      workspace.hasUnsavedChanges = false;
+  try {
+    if (workspace.filePath != null) {
+      const result = await saveWorkspace(workspace);
+      if (result.success) {
+        workspace.hasUnsavedChanges = false;
+        toast.success(
+          tt(($) => $.editor.toast.saveSuccess),
+          {
+            description: workspace.filePath,
+          },
+        );
+      } else if (!result.canceled) {
+        showReplyErrorToast(
+          tt(($) => $.editor.toast.saveFailed),
+          result,
+          tt(($) => $.editor.toast.saveFailedDescription),
+        );
+      }
+    } else {
+      const result = await saveWorkspaceAs(workspace);
+      if (result.success) {
+        workspace.filePath = result.filePath;
+        workspace.hasUnsavedChanges = false;
+        toast.success(
+          tt(($) => $.editor.toast.saveSuccess),
+          {
+            description: result.filePath,
+          },
+        );
+      } else if (!result.canceled) {
+        showReplyErrorToast(
+          tt(($) => $.editor.toast.saveFailed),
+          result,
+          tt(($) => $.editor.toast.saveFailedDescription),
+        );
+      }
     }
-  } else {
-    const result = await saveWorkspaceAs(workspace);
-    if (result.success) {
-      workspace.filePath = result.filePath;
-      workspace.hasUnsavedChanges = false;
-    }
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.saveFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.saveFailedDescription),
+      },
+    );
   }
 }
 
 async function onFileMenuSaveAs() {
   const workspace = selectedWorkspace.value;
 
-  const result = await saveWorkspaceAs(workspace);
-  if (result.success) {
-    workspace.filePath = result.filePath;
-    workspace.hasUnsavedChanges = false;
+  try {
+    const result = await saveWorkspaceAs(workspace);
+    if (result.success) {
+      workspace.filePath = result.filePath;
+      workspace.hasUnsavedChanges = false;
+      toast.success(
+        tt(($) => $.editor.toast.saveSuccess),
+        {
+          description: result.filePath,
+        },
+      );
+    } else if (!result.canceled) {
+      showReplyErrorToast(
+        tt(($) => $.editor.toast.saveFailed),
+        result,
+        tt(($) => $.editor.toast.saveFailedDescription),
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.saveFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.saveFailedDescription),
+      },
+    );
   }
 }
 
@@ -5413,7 +5734,7 @@ function onFileMenuCopyFormat() {
   }
 }
 
-function onFileMenuCopyAsHtml() {
+async function onFileMenuCopyAsHtml() {
   let copiedElements: ScoreElement[] = [];
 
   if (selectionRange.value != null) {
@@ -5433,22 +5754,57 @@ function onFileMenuCopyAsHtml() {
     true,
   );
 
-  navigator.clipboard.writeText(html);
-}
-
-function onFileMenuPaste() {
-  if (!isTextInputFocused() && !dialogOpen.value) {
-    onPasteScoreElements(false);
-  } else {
-    ipcService.paste();
+  try {
+    await navigator.clipboard.writeText(html);
+    toast.success(tt(($) => $.editor.toast.copyHtmlSuccess));
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.copyFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.clipboardWriteFailed),
+      },
+    );
   }
 }
 
-function onFileMenuPasteWithLyrics() {
+async function pasteTextFromClipboard() {
+  try {
+    const reply = await ipcService.paste();
+
+    if (!reply.success) {
+      showReplyErrorToast(
+        tt(($) => $.editor.toast.pasteFailed),
+        reply,
+        tt(($) => $.editor.toast.clipboardReadFailed),
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      tt(($) => $.editor.toast.pasteFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.clipboardReadFailed),
+      },
+    );
+  }
+}
+
+async function onFileMenuPaste() {
+  if (!isTextInputFocused() && !dialogOpen.value) {
+    onPasteScoreElements(false);
+  } else {
+    await pasteTextFromClipboard();
+  }
+}
+
+async function onFileMenuPasteWithLyrics() {
   if (!isTextInputFocused() && !dialogOpen.value) {
     onPasteScoreElements(true);
   } else {
-    ipcService.paste();
+    await pasteTextFromClipboard();
   }
 }
 
@@ -5675,17 +6031,13 @@ function openScore(args: FileMenuOpenScoreArgs) {
     args.success = false;
     console.error(error);
 
-    if (error instanceof Error) {
-      if (ipcService.isShowMessageBoxSupported()) {
-        ipcService.showMessageBox({
-          type: 'error',
-          title: 'Open failed',
-          message: error.message,
-        });
-      } else {
-        alert(error.message);
-      }
-    }
+    showErrorToast(
+      tt(($) => $.editor.toast.openFailed),
+      error,
+      {
+        fallback: tt(($) => $.editor.toast.openFailedDescription),
+      },
+    );
   }
 }
 

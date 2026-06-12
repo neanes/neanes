@@ -45,7 +45,7 @@
             $t(($) => $.dialog.pageSetup.type, { ns: 'dialog' })
           }}</FieldLabel>
           <FieldContent>
-            <Badge variant="secondary">
+            <Badge variant="secondary" class="ml-auto">
               {{ elementTypeLabel }}
             </Badge>
           </FieldContent>

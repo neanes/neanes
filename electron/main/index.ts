@@ -2053,6 +2053,7 @@ ipcMain.handle(IpcRendererChannels.DownloadUpdate, async () => {
   sendToRenderer(IpcMainChannels.UpdateDownloadStarted);
 
   try {
+    autoUpdater.autoInstallOnAppQuit = true;
     await autoUpdater.downloadUpdate();
   } catch (error) {
     updateDownloadInProgress = false;
@@ -2079,21 +2080,6 @@ ipcMain.handle(IpcRendererChannels.RestartToInstallUpdate, async () => {
 
   readyToExit = true;
   autoUpdater.quitAndInstall(false, true);
-});
-
-ipcMain.handle(IpcRendererChannels.InstallUpdateOnExit, async () => {
-  if (!updateDownloaded) {
-    return;
-  }
-
-  if (fakeUpdateMode) {
-    console.info(
-      'FAKE_UPDATE_AVAILABLE=1: install-on-exit requested; skipping autoInstallOnAppQuit.',
-    );
-    return;
-  }
-
-  autoUpdater.autoInstallOnAppQuit = true;
 });
 
 ipcMain.handle(IpcRendererChannels.CancelExit, async () => {

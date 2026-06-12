@@ -64,7 +64,6 @@ export enum IpcMainChannels {
 export enum IpcRendererChannels {
   DownloadUpdate = 'DownloadUpdate',
   RestartToInstallUpdate = 'RestartToInstallUpdate',
-  InstallUpdateOnExit = 'InstallUpdateOnExit',
 
   SetCanUndo = 'SetCanUndo',
   SetCanRedo = 'SetCanRedo',

@@ -37,14 +37,20 @@ jobs:
       - name: Lint Markdown
         uses: DavidAnson/markdownlint-cli2-action@v23.2.0
 
-      - name: Build Windows and Linux
-        if: runner.os != 'macOS'
-        run: npm run release
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        run: npm run release -- --win
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Build Linux
+        if: runner.os == 'Linux'
+        run: npm run release -- --linux --x64 --arm64
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Build macOS
         if: runner.os == 'macOS'
-        run: npm run release -- --x64 --arm64
+        run: npm run release -- --mac --x64 --arm64
         env:
           GH_TOKEN: ${{ github.token }}

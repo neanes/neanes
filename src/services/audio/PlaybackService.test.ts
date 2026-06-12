@@ -11,10 +11,12 @@ import {
 import {
   Accidental,
   Fthora,
+  GorgonNeume,
   Note,
   QuantitativeNeume,
+  TimeNeume,
 } from '../../models/Neumes';
-import { Scale, ScaleNote } from '../../models/Scales';
+import { getScaleNoteValue, Scale, ScaleNote } from '../../models/Scales';
 import type { PlaybackOptions } from './PlaybackService';
 import { PlaybackService } from './PlaybackService';
 expect.extend({ toBeDeepCloseTo, toMatchCloseTo });
@@ -763,140 +765,1024 @@ describe('PlaybackService', () => {
       },
     );
 
-    // it.each([
-    //   [
-    //     'nzkz',
-    //     Note.NiHigh,
-    //     [
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Oligon,
-    //     ],
-    //     [
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.Ke, 5),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //     ],
-    //   ],
-    //   [
-    //     'nzkzn',
-    //     Note.NiHigh,
-    //     [
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Oligon,
-    //       QuantitativeNeume.Oligon,
-    //     ],
-    //     [
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.Ke, 5),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //     ],
-    //   ],
-    //   [
-    //     // This is an unlikely case where zo was never hit
-    //     // before ni, so the attraction is not triggered.
-    //     // Perhaps additional logic should handle this case to sharpen ke?
-    //     'nkzn',
-    //     Note.NiHigh,
-    //     [
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Elaphron,
-    //       QuantitativeNeume.Oligon,
-    //       QuantitativeNeume.Oligon,
-    //     ],
-    //     [
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //       getDiatonicFrequency(ScaleNote.Ke),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //     ],
-    //   ],
-    //   [
-    //     'znkzn',
-    //     Note.ZoHigh,
-    //     [
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Oligon,
-    //       QuantitativeNeume.Elaphron,
-    //       QuantitativeNeume.Oligon,
-    //       QuantitativeNeume.Oligon,
-    //     ],
-    //     [
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //       getDiatonicFrequency(ScaleNote.Ke, 5),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //     ],
-    //   ],
-    //   [
-    //     'nzkkz',
-    //     Note.NiHigh,
-    //     [
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Oligon,
-    //     ],
-    //     [
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.Ke, 5),
-    //       getDiatonicFrequency(ScaleNote.Ke, 5),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //     ],
-    //   ],
-    //   [
-    //     'nzkn',
-    //     Note.NiHigh,
-    //     [
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.PetastiPlusOligon,
-    //     ],
-    //     [
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.Ke, 5),
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //     ],
-    //   ],
-    // ])(
-    //   'should calculate the correct ke attractions (%# - %s)',
-    //   (
-    //     name: string,
-    //     startingNote: Note,
-    //     notes: QuantitativeNeume[],
-    //     expectedFrequencies: number[],
-    //   ) => {
-    //     const service = new PlaybackService();
+    it.each([
+      [
+        'nzkz',
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+        ],
+      ],
+      [
+        'nzkzn',
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+      [
+        'nkzn',
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Elaphron,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+      [
+        'znkzn',
+        Note.ZoHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Elaphron,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+      [
+        'nzkkz',
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+        ],
+      ],
+      [
+        'nzkn',
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.PetastiPlusOligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+    ])(
+      'should calculate the correct ke attractions (%# - %s)',
+      (
+        name: string,
+        startingNote: Note,
+        notes: QuantitativeNeume[],
+        expectedFrequencies: number[],
+      ) => {
+        const service = new PlaybackService();
 
-    //     const options = getDefaultWorkspaceOptions();
-    //     options.diatonicIntervals = [12, 10, 8];
+        const options = getDefaultWorkspaceOptions();
+        options.diatonicIntervals = [12, 10, 8];
 
-    //     const elements: ScoreElement[] = [];
+        const elements: ScoreElement[] = [];
 
-    //     elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
-    //     elements.push(getMartyria({ auto: false, note: startingNote }));
+        elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+        elements.push(getMartyria({ auto: false, note: startingNote }));
 
-    //     notes.forEach((x) => elements.push(getNote(x)));
+        notes.forEach((x) => elements.push(getNote(x)));
 
-    //     const events = service.computePlaybackSequence(elements, options, true);
+        const events = service.computePlaybackSequence(elements, options, true);
 
-    //     expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
-    //       expectedFrequencies,
-    //       2,
-    //     );
-    //   },
-    // );
+        expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+          expectedFrequencies,
+          2,
+        );
+      },
+    );
+
+    it('should flatten zo and keep ke natural when the upper phrase closes into flat zo', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(3, Scale.Diatonic, ScaleNote.Thi));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(
+        getMartyria({
+          auto: false,
+          note: Note.Ke,
+          fthora: Fthora.GeneralFlat_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -5),
+        ],
+        2,
+      );
+    });
+
+    it('should flatten zo and keep ke natural when ke is held', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.NiHigh }));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(
+        getNote(QuantitativeNeume.Ison, { timeNeume: TimeNeume.Klasma_Top }),
+      );
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+        2,
+      );
+    });
+
+    it('should not treat a plain martyria after short ke as a rest signal', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.NiHigh }));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getMartyria({ auto: false, note: Note.Ke }));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+        ],
+        2,
+      );
+    });
+
+    it('should keep ke natural when it returns to a zo that classifies flat', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.NiHigh }));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+        2,
+      );
+    });
+
+    it('should require zo to be established before sharpening ke', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(1, Scale.Diatonic, ScaleNote.Pa));
+      elements.push(
+        getNote(QuantitativeNeume.OligonPlusKentimaAbove, {
+          timeNeume: TimeNeume.Klasma_Bottom,
+        }),
+      );
+      elements.push(
+        getNote(QuantitativeNeume.OligonPlusKentemata, {
+          gorgonNeume: GorgonNeume.Gorgon_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.OligonPlusKentemata));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(
+        getNote(QuantitativeNeume.OligonPlusApostrophosPlusKentemata, {
+          gorgonNeume: GorgonNeume.Gorgon_Top,
+        }),
+      );
+      elements.push(
+        getNote(QuantitativeNeume.Elaphron, {
+          timeNeume: TimeNeume.Klasma_Top,
+        }),
+      );
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+        2,
+      );
+    });
+
+    it('should keep held zo natural after a hyporoe dips below ke and returns', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(1, Scale.Diatonic, ScaleNote.Thi));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(
+        getNote(QuantitativeNeume.Oligon, {
+          timeNeume: TimeNeume.Klasma_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.PetastiPlusHyporoe));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(
+        getNote(QuantitativeNeume.Ison, { timeNeume: TimeNeume.Klasma_Top }),
+      );
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+        ],
+        2,
+      );
+    });
+
+    it('should calculate the third-mode default attraction interpretation from #213', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(1, Scale.Diatonic, ScaleNote.Thi));
+      pushStepwiseNotes(elements, ScaleNote.Thi, [
+        ScaleNote.Thi,
+        ScaleNote.Ke,
+        ScaleNote.ZoHigh,
+        ScaleNote.NiHigh,
+        ScaleNote.ZoHigh,
+        ScaleNote.Ke,
+        ScaleNote.ZoHigh,
+        ScaleNote.Ke,
+        ScaleNote.ZoHigh,
+        ScaleNote.NiHigh,
+        ScaleNote.ZoHigh,
+        ScaleNote.Ke,
+        ScaleNote.Thi,
+        ScaleNote.Thi,
+        ScaleNote.Ke,
+        ScaleNote.Thi,
+        ScaleNote.Ga,
+        ScaleNote.Vou,
+        ScaleNote.Ga,
+        ScaleNote.Thi,
+        ScaleNote.Ke,
+        ScaleNote.Ke,
+        ScaleNote.ZoHigh,
+        ScaleNote.ZoHigh,
+        ScaleNote.Ke,
+        ScaleNote.Ke,
+        ScaleNote.Ke,
+      ]);
+      elements.push(
+        getModeKey(3, Scale.Diatonic, ScaleNote.Ke, {
+          permanentEnharmonicZo: true,
+        }),
+      );
+      pushStepwiseNotes(elements, ScaleNote.Ke, [
+        ScaleNote.ZoHigh,
+        ScaleNote.NiHigh,
+        ScaleNote.PaHigh,
+        ScaleNote.NiHigh,
+        ScaleNote.ZoHigh,
+        ScaleNote.Ke,
+        ScaleNote.Thi,
+        ScaleNote.ZoHigh,
+        ScaleNote.Ke,
+      ]);
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ga),
+          getDiatonicFrequency(ScaleNote.Vou),
+          getDiatonicFrequency(ScaleNote.Ga),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.PaHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+        ],
+        2,
+      );
+    });
+
+    it('should flatten held zo when the melody wanders down without returning', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.ZoHigh }));
+      elements.push(
+        getNote(QuantitativeNeume.Ison, { timeNeume: TimeNeume.Klasma_Top }),
+      );
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ga),
+          getDiatonicFrequency(ScaleNote.Vou),
+        ],
+        2,
+      );
+    });
+
+    it('should keep held zo natural when the melody returns to the upper register', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.ZoHigh }));
+      elements.push(
+        getNote(QuantitativeNeume.Ison, { timeNeume: TimeNeume.Klasma_Top }),
+      );
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+        2,
+      );
+    });
+
+    it('should keep held zo natural when it ends the piece', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.ZoHigh }));
+      elements.push(
+        getNote(QuantitativeNeume.Ison, { timeNeume: TimeNeume.Klasma_Top }),
+      );
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [getDiatonicFrequency(ScaleNote.ZoHigh)],
+        2,
+      );
+    });
+
+    it('should classify a future held zo before it resolves an earlier short zo', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.ZoHigh }));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(
+        getNote(QuantitativeNeume.Ison, { timeNeume: TimeNeume.Klasma_Top }),
+      );
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ga),
+        ],
+        2,
+      );
+    });
+
+    it('should not sharpen a held resting ke', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.NiHigh }));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(
+        getNote(QuantitativeNeume.Elaphron, {
+          timeNeume: TimeNeume.Klasma_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.PetastiPlusOligon));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+        2,
+      );
+    });
+
+    it('should not sharpen a ke that leads into a held ke', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.NiHigh }));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Elaphron));
+      elements.push(
+        getNote(QuantitativeNeume.Ison, { timeNeume: TimeNeume.Klasma_Top }),
+      );
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+        ],
+        2,
+      );
+    });
+
+    it('should not establish the upper register across a held ke', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.NiHigh }));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(
+        getNote(QuantitativeNeume.Elaphron, {
+          timeNeume: TimeNeume.Klasma_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+        ],
+        2,
+      );
+    });
+
+    it('should flatten a held zo when the melody only returns to a flat zo', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.ZoHigh }));
+      elements.push(
+        getNote(QuantitativeNeume.Ison, { timeNeume: TimeNeume.Klasma_Top }),
+      );
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Elaphron));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+        2,
+      );
+    });
+
+    it('should keep zo natural before a sharpened ke', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.ZoHigh }));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(
+        getNote(QuantitativeNeume.Apostrophos, {
+          accidental: Accidental.Sharp_2_Left,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+        2,
+      );
+    });
+
+    it('should treat a sharpened ke as establishment of the upper register', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.ZoHigh }));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(
+        getNote(QuantitativeNeume.Apostrophos, {
+          accidental: Accidental.Sharp_2_Left,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+        ],
+        2,
+      );
+    });
+
+    it('should let explicit sharp ke outrank held-ke rest inference', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.ZoHigh }));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(
+        getNote(QuantitativeNeume.Apostrophos, {
+          accidental: Accidental.Sharp_2_Left,
+          timeNeume: TimeNeume.Klasma_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+        ],
+        2,
+      );
+    });
+
+    it('should keep ke natural in the third mode melody from #821', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(3, Scale.Diatonic, ScaleNote.Ga));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(
+        getNote(QuantitativeNeume.Ison, { timeNeume: TimeNeume.Klasma_Top }),
+      );
+      elements.push(
+        getNote(QuantitativeNeume.Oligon, {
+          gorgonNeume: GorgonNeume.Gorgon_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(
+        getNote(QuantitativeNeume.Apostrophos, {
+          timeNeume: TimeNeume.Klasma_Top,
+        }),
+      );
+      elements.push(
+        getNote(QuantitativeNeume.Oligon, { timeNeume: TimeNeume.Klasma_Top }),
+      );
+      elements.push(getNote(QuantitativeNeume.OligonPlusKentemata));
+      elements.push(
+        getNote(QuantitativeNeume.OligonPlusIsonPlusKentemata, {
+          gorgonNeume: GorgonNeume.Gorgon_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(
+        getNote(QuantitativeNeume.Apostrophos, {
+          gorgonNeume: GorgonNeume.Gorgon_Top,
+        }),
+      );
+      elements.push(
+        getNote(QuantitativeNeume.Ison, { timeNeume: TimeNeume.Klasma_Top }),
+      );
+      elements.push(getMartyria({}));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ga),
+          getDiatonicFrequency(ScaleNote.Vou),
+          getDiatonicFrequency(ScaleNote.Ga),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+        ],
+        2,
+      );
+    });
+
+    it('should keep the upper register established through a short passing dip below ke', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+      elements.push(getMartyria({ auto: false, note: Note.NiHigh }));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Elaphron));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+        2,
+      );
+    });
+
+    it('should keep zo natural after a passing dip in a first mode melody revolving around zo', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(1, Scale.Diatonic, ScaleNote.Pa));
+      elements.push(getNote(QuantitativeNeume.OligonPlusHypsiliLeft));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(
+        getNote(QuantitativeNeume.Oligon, { timeNeume: TimeNeume.Klasma_Top }),
+      );
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(
+        getNote(QuantitativeNeume.Apostrophos, {
+          timeNeume: TimeNeume.Klasma_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Elaphron));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(
+        getNote(QuantitativeNeume.Apostrophos, {
+          timeNeume: TimeNeume.Klasma_Top,
+        }),
+      );
+
+      const events = service.computePlaybackSequence(elements, options, true);
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        [
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.PaHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+        2,
+      );
+    });
   });
 
   it(`should not change frequency when on an ison`, () => {
@@ -995,6 +1881,35 @@ function getDefaultWorkspaceOptions() {
       [Accidental.Sharp_8_Left]: 8,
     },
   } as PlaybackOptions;
+}
+
+function pushStepwiseNotes(
+  elements: ScoreElement[],
+  currentNote: ScaleNote,
+  notes: ScaleNote[],
+) {
+  for (const note of notes) {
+    const neume = getStepwiseNeume(currentNote, note);
+    elements.push(getNote(neume));
+    currentNote = note;
+  }
+}
+
+function getStepwiseNeume(currentNote: ScaleNote, nextNote: ScaleNote) {
+  const step = getScaleNoteValue(nextNote) - getScaleNoteValue(currentNote);
+
+  switch (step) {
+    case -1:
+      return QuantitativeNeume.Apostrophos;
+    case 0:
+      return QuantitativeNeume.Ison;
+    case 1:
+      return QuantitativeNeume.Oligon;
+    case 2:
+      return QuantitativeNeume.OligonPlusKentimaBelow;
+    default:
+      throw new Error(`Unsupported stepwise movement: ${step}`);
+  }
 }
 
 function getModeKey(

@@ -68,7 +68,27 @@ import {
 interface FindNodesOutput {
   results: AnalysisNode[];
   index: number;
+  startIndex: number;
 }
+
+type AttractionScanClass =
+  | { kind: 'restSignal' }
+  | { kind: 'nonNote' }
+  | { kind: 'sharpKe'; node: NoteAtomNode }
+  | { kind: 'heldKe'; node: NoteAtomNode }
+  | { kind: 'heldBelowKe'; node: NoteAtomNode }
+  | { kind: 'belowKe'; node: NoteAtomNode }
+  | { kind: 'ke'; node: NoteAtomNode }
+  | { kind: 'heldZo'; node: NoteAtomNode }
+  | { kind: 'zo'; node: NoteAtomNode }
+  | { kind: 'aboveZo'; node: NoteAtomNode };
+
+/**
+ * The maximum number of nodes that may be examined while deciding the
+ * attraction of a single note. This bounds the lookahead/lookbehind so that
+ * pathological scores cannot cause quadratic scan times.
+ */
+const MAX_ATTRACTION_SCAN_NODES = 25;
 
 export enum PlaybackScaleName {
   Diatonic,
@@ -98,6 +118,8 @@ export interface DottedNote {
 export class MusicXmlExporterOptions {
   /** The target measure length if no barlines are present */
   measureLength: number = 8;
+  /** Indicates whether default Zo/Ke attractions should be exported. */
+  useDefaultAttractionZo: boolean = true;
   /** Indicates whether the MusicXML `<time>` element should be included in the measures. */
   calculateTimeSignatures: boolean = false;
   /** Indicates whether the time signature should be printed in each measure */
@@ -120,10 +142,6 @@ class MusicXmlExporterWorkspace {
   // State: Dynamic
   /////////////////
 
-  /** Indicates whether ZO should be attracted toward KE in the current phrase */
-  zoFlatPivotActivated: boolean = false;
-  /** Indicates whether KE should be attracted toward ZO in the current phrase */
-  zoNaturalPivotActivated: boolean = false;
   /**  Indicates whether we are processing a hyphenated, multi-syllable phrase */
   isSyllabic: boolean = false;
   /**  Indicates whether we are processing a non-hyphenated melismatic phrase */
@@ -308,6 +326,7 @@ export class MusicXmlExporter {
           const notes = this.buildNoteGroup(
             element as NoteElement,
             nodeGroup as NoteAtomNode[],
+            findResults.startIndex,
             workspace,
           );
 
@@ -600,6 +619,7 @@ export class MusicXmlExporter {
   buildNoteGroup(
     noteElement: Readonly<NoteElement>,
     nodes: readonly AnalysisNode[],
+    nodeStartIndex: number,
     workspace: MusicXmlExporterWorkspace,
   ) {
     const notes: Array<MusicXmlNote | MusicXmlHarmony> = [];
@@ -629,10 +649,11 @@ export class MusicXmlExporter {
 
         if (
           !noteNode.accidental &&
+          !this.hasCarriedAlteration(noteNode, workspace) &&
           !noteNode.ignoreAttractions &&
           !workspace.ignoreAttractions
         ) {
-          this.applyAttractions(noteNode, note, workspace);
+          this.applyAttractions(noteNode, note, nodeStartIndex + i, workspace);
         }
 
         if (
@@ -1069,6 +1090,16 @@ export class MusicXmlExporter {
     return 0;
   }
 
+  private hasCarriedAlteration(
+    node: NoteAtomNode,
+    workspace: MusicXmlExporterWorkspace,
+  ) {
+    return (
+      workspace.lastAlteration !== 0 &&
+      workspace.lastAlterationNote === node.physicalNote
+    );
+  }
+
   handleFthora(node: FthoraNode, workspace: MusicXmlExporterWorkspace) {
     // const transposition =
     //   getScaleNoteValue(node.physicalNote) -
@@ -1139,72 +1170,413 @@ export class MusicXmlExporter {
   applyAttractions(
     node: NoteAtomNode,
     note: MusicXmlNote,
+    nodeIndex: number,
     workspace: MusicXmlExporterWorkspace,
   ) {
-    // If melody descends after zo, flatten zo
+    const { scale } = workspace;
+
     if (
-      node.scale === Scale.Diatonic ||
-      node.scale === Scale.Kliton ||
-      node.scale === Scale.Zygos
+      workspace.options.useDefaultAttractionZo &&
+      !workspace.permanentEnharmonicZo &&
+      (scale.name === PlaybackScaleName.Diatonic ||
+        scale.name === PlaybackScaleName.Kliton ||
+        scale.name === PlaybackScaleName.Zygos) &&
+      this.canApplyDefaultAttraction(node)
     ) {
       if (node.virtualNote === ScaleNote.ZoHigh) {
-        // If we are not in a pivot, check to see if we need to pivot
-        if (!workspace.zoFlatPivotActivated) {
-          this.setPivots(node, workspace);
-        }
-
-        // If we are in a pivot, then flatten zo
-        if (workspace.zoFlatPivotActivated) {
+        if (this.zoIsFlattened(nodeIndex, workspace.nodes)) {
           note.pitch!.alter = new MusicXmlAlter(-1);
         }
-      } else {
-        // Clear zo flat pivot
-        workspace.zoFlatPivotActivated = false;
-      }
-
-      // Check whether ke is attracted toward zo
-      if (
-        node.virtualNote === ScaleNote.Ke &&
-        workspace.zoNaturalPivotActivated
-      ) {
-        note.pitch!.alter = new MusicXmlAlter(1);
-      }
-
-      // Clear the zo natural pivot if we descend below ke
-      if (
-        getScaleNoteValue(node.virtualNote) < getScaleNoteValue(ScaleNote.Ke)
-      ) {
-        workspace.zoNaturalPivotActivated = false;
+      } else if (node.virtualNote === ScaleNote.Ke) {
+        if (this.keIsSharpened(nodeIndex, workspace.nodes)) {
+          note.pitch!.alter = new MusicXmlAlter(1);
+        }
       }
     }
   }
 
-  setPivots(
-    noteAtomNode: Readonly<NoteAtomNode>,
-    workspace: MusicXmlExporterWorkspace,
-  ) {
-    const index: number = workspace.nodes.indexOf(noteAtomNode);
+  private canApplyDefaultAttraction(node: Readonly<NoteAtomNode>) {
+    return (
+      !node.ignoreAttractions &&
+      !node.accidental &&
+      (node.scale === Scale.Diatonic ||
+        node.scale === Scale.Kliton ||
+        node.scale === Scale.Zygos)
+    );
+  }
 
-    for (let i = index + 1; i < workspace.nodes.length; i++) {
-      const nextNoteAtomNode = workspace.nodes[i] as NoteAtomNode;
+  private isNoteAtomNode(node: AnalysisNode): node is NoteAtomNode {
+    return node.nodeType === NodeType.NoteAtomNode;
+  }
 
-      const next: number = getScaleNoteValue(nextNoteAtomNode.virtualNote);
+  private getAttractionScanClass(node: AnalysisNode): AttractionScanClass {
+    if (
+      node.nodeType === NodeType.RestNode ||
+      node.nodeType === NodeType.FthoraNode ||
+      node.nodeType === NodeType.ModeKeyNode
+    ) {
+      return { kind: 'restSignal' };
+    }
 
-      if (next <= getScaleNoteValue(ScaleNote.Ke)) {
-        workspace.zoFlatPivotActivated = true;
-        workspace.zoNaturalPivotActivated = false;
-        return;
+    if (!this.isNoteAtomNode(node)) {
+      return { kind: 'nonNote' };
+    }
+
+    const held = node.duration >= 2;
+    const noteValue = getScaleNoteValue(node.virtualNote);
+    const keValue = getScaleNoteValue(ScaleNote.Ke);
+    const zoHighValue = getScaleNoteValue(ScaleNote.ZoHigh);
+
+    if (noteValue < keValue) {
+      return {
+        kind: held ? 'heldBelowKe' : 'belowKe',
+        node,
+      };
+    }
+
+    if (noteValue === keValue) {
+      if (node.accidental != null && node.accidental.startsWith('Sharp')) {
+        return { kind: 'sharpKe', node };
       }
 
-      // TODO this is too simplistic. Disabling for now.
-      // if (next >= getScaleNoteValue(ScaleNote.ZoHigh)) {
-      //   workspace.zoNaturalPivotActivated = true;
-      // }
+      return { kind: held ? 'heldKe' : 'ke', node };
+    }
 
-      if (next > getScaleNoteValue(ScaleNote.ZoHigh)) {
-        return;
+    if (noteValue === zoHighValue) {
+      return { kind: held ? 'heldZo' : 'zo', node };
+    }
+
+    return { kind: 'aboveZo', node };
+  }
+
+  private zoIsFlattened(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number = MAX_ATTRACTION_SCAN_NODES,
+    assumeEstablished = false,
+  ): boolean {
+    const node = nodes[index] as NoteAtomNode;
+
+    if (node.duration >= 2) {
+      return this.heldZoIsFlattened(index, nodes, budget);
+    }
+
+    let dippedToKe = false;
+    let currentNote = ScaleNote.ZoHigh;
+
+    for (let i = index + 1; i < nodes.length; i++) {
+      if (budget <= 0) {
+        break;
+      }
+
+      budget--;
+
+      const token = this.getAttractionScanClass(nodes[i]);
+
+      if (token.kind === 'restSignal') {
+        break;
+      }
+
+      if (token.kind === 'nonNote') {
+        continue;
+      }
+
+      if (token.kind === 'sharpKe') {
+        return false;
+      }
+
+      if (token.kind === 'belowKe' || token.kind === 'heldBelowKe') {
+        return true;
+      }
+
+      if (token.kind === 'aboveZo') {
+        return this.naturalZoResolutionIsFlattened(
+          index,
+          nodes,
+          budget,
+          dippedToKe,
+          assumeEstablished,
+        );
+      }
+
+      if (token.kind === 'heldKe') {
+        return true;
+      }
+
+      if (token.kind === 'ke') {
+        dippedToKe = true;
+
+        currentNote = ScaleNote.Ke;
+        continue;
+      }
+
+      if (token.kind === 'heldZo') {
+        return (
+          this.zoIsFlattened(i, nodes, budget) ||
+          this.naturalZoResolutionIsFlattened(
+            index,
+            nodes,
+            budget,
+            dippedToKe,
+            assumeEstablished,
+          )
+        );
+      }
+
+      if (token.kind === 'zo') {
+        currentNote = ScaleNote.ZoHigh;
       }
     }
+
+    return (
+      currentNote === ScaleNote.Ke ||
+      this.naturalZoResolutionIsFlattened(
+        index,
+        nodes,
+        budget,
+        dippedToKe,
+        assumeEstablished,
+      )
+    );
+  }
+
+  private heldZoIsFlattened(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number,
+  ): boolean {
+    let heardNoteAfter = false;
+
+    for (let i = index + 1; i < nodes.length; i++) {
+      if (budget <= 0) {
+        break;
+      }
+
+      budget--;
+
+      const token = this.getAttractionScanClass(nodes[i]);
+
+      if (token.kind === 'restSignal') {
+        return heardNoteAfter;
+      }
+
+      if (token.kind === 'nonNote') {
+        continue;
+      }
+
+      if (token.kind === 'sharpKe') {
+        return false;
+      }
+
+      heardNoteAfter = true;
+
+      if (token.kind === 'aboveZo') {
+        return false;
+      }
+
+      if (token.kind === 'zo' || token.kind === 'heldZo') {
+        return (
+          token.node.accidental != null ||
+          this.zoIsFlattened(i, nodes, budget, true)
+        );
+      }
+
+      if (token.kind === 'heldKe') {
+        return true;
+      }
+    }
+
+    return heardNoteAfter;
+  }
+
+  private naturalZoResolutionIsFlattened(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number,
+    dippedToKe: boolean,
+    assumeEstablished: boolean,
+  ): boolean {
+    return (
+      dippedToKe &&
+      !assumeEstablished &&
+      !this.hasEstablishedUpperRegister(index, nodes, budget)
+    );
+  }
+
+  private hasEstablishedUpperRegister(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number,
+  ) {
+    for (let i = index - 1; i >= 0; i--) {
+      if (budget <= 0) {
+        break;
+      }
+
+      budget--;
+
+      const token = this.getAttractionScanClass(nodes[i]);
+
+      if (token.kind === 'restSignal') {
+        return false;
+      }
+
+      if (token.kind === 'nonNote') {
+        continue;
+      }
+
+      if (token.kind === 'sharpKe') {
+        return true;
+      }
+
+      if (token.kind === 'heldBelowKe') {
+        return false;
+      }
+
+      if (token.kind === 'belowKe') {
+        continue;
+      }
+
+      if (token.kind === 'aboveZo') {
+        return true;
+      }
+
+      if (token.kind === 'heldKe') {
+        return false;
+      }
+
+      if (token.kind === 'ke') {
+        continue;
+      }
+
+      if (token.kind === 'zo' || token.kind === 'heldZo') {
+        if (this.zoIsNatural(i, nodes, budget)) {
+          return true;
+        }
+
+        if (token.kind === 'heldZo') {
+          return false;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private keIsSharpened(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number = MAX_ATTRACTION_SCAN_NODES,
+  ) {
+    const node = nodes[index] as NoteAtomNode;
+
+    if (node.duration >= 2) {
+      return false;
+    }
+
+    return (
+      this.hasPreviousNaturalZo(index, nodes, budget) &&
+      this.hasFutureUpperReturn(index, nodes, budget)
+    );
+  }
+
+  private hasPreviousNaturalZo(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number,
+  ) {
+    for (let i = index - 1; i >= 0; i--) {
+      if (budget <= 0) {
+        break;
+      }
+
+      budget--;
+
+      const token = this.getAttractionScanClass(nodes[i]);
+
+      if (token.kind === 'restSignal') {
+        return false;
+      }
+
+      if (token.kind === 'nonNote' || token.kind === 'sharpKe') {
+        continue;
+      }
+
+      if (
+        token.kind === 'belowKe' ||
+        token.kind === 'heldBelowKe' ||
+        token.kind === 'heldKe'
+      ) {
+        return false;
+      }
+
+      if (token.kind === 'ke' || token.kind === 'aboveZo') {
+        continue;
+      }
+
+      if (token.kind === 'zo' || token.kind === 'heldZo') {
+        return this.zoIsNatural(i, nodes, budget);
+      }
+    }
+
+    return false;
+  }
+
+  private hasFutureUpperReturn(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number,
+  ) {
+    for (let i = index + 1; i < nodes.length; i++) {
+      if (budget <= 0) {
+        break;
+      }
+
+      budget--;
+
+      const token = this.getAttractionScanClass(nodes[i]);
+
+      if (token.kind === 'restSignal') {
+        return false;
+      }
+
+      if (token.kind === 'nonNote' || token.kind === 'sharpKe') {
+        continue;
+      }
+
+      if (
+        token.kind === 'belowKe' ||
+        token.kind === 'heldBelowKe' ||
+        token.kind === 'heldKe'
+      ) {
+        return false;
+      }
+
+      if (token.kind === 'aboveZo') {
+        return true;
+      }
+
+      if (token.kind === 'zo' || token.kind === 'heldZo') {
+        return this.zoIsNatural(i, nodes, budget);
+      }
+    }
+
+    return false;
+  }
+
+  private zoIsNatural(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number,
+  ): boolean {
+    const node = nodes[index];
+
+    return (
+      this.isNoteAtomNode(node) &&
+      node.virtualNote === ScaleNote.ZoHigh &&
+      !node.accidental &&
+      !this.zoIsFlattened(index, nodes, budget)
+    );
   }
 
   findNodes(
@@ -1215,9 +1587,13 @@ export class MusicXmlExporter {
     const results: AnalysisNode[] = [];
 
     let i = startIndex;
+    let resultStartIndex = -1;
 
     for (i = startIndex; i < nodes.length; i++) {
       if (nodes[i].elementIndex === elementIndex) {
+        if (resultStartIndex === -1) {
+          resultStartIndex = i;
+        }
         results.push(nodes[i]);
       }
 
@@ -1226,7 +1602,7 @@ export class MusicXmlExporter {
       }
     }
 
-    return { results, index: i };
+    return { results, index: i, startIndex: resultStartIndex };
   }
 
   getPlaybackScale(

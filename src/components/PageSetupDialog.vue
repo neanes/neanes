@@ -1640,7 +1640,12 @@
           {{ $t(($) => $.dialog.pageSetup.preview, { ns: 'dialog' }) }}
         </FieldTitle>
         <div class="flex justify-center">
-          <template v-for="(element, index) in previewNeumes" :key="index">
+          <div
+            v-for="(element, index) in previewNeumes"
+            :key="index"
+            class="inline-flex"
+            :style="getPreviewGapStyle(element, index)"
+          >
             <template v-if="isSyllableElement(element.elementType)">
               <NeumeBoxSyllable
                 class="syllable-box"
@@ -1662,7 +1667,7 @@
                 :page-setup="form"
               />
             </template>
-          </template>
+          </div>
         </div>
       </div>
 
@@ -1753,15 +1758,22 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import type {
-  MartyriaElement,
-  NoteElement,
-  TempoElement,
-} from '@/models/Element';
-import { ElementType } from '@/models/Element';
+import type { MartyriaElement, TempoElement } from '@/models/Element';
+import { ElementType, NoteElement } from '@/models/Element';
+import {
+  Accidental,
+  GorgonNeume,
+  Ison,
+  MeasureBar,
+  MeasureNumber,
+  QuantitativeNeume,
+  TimeNeume,
+  VocalExpressionNeume,
+} from '@/models/Neumes';
 import type { PageSize, PageSizeUnit } from '@/models/PageSetup';
 import { PageSetup, pageSizes } from '@/models/PageSetup';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
+import { fontService } from '@/services/FontService';
 import { SaveService } from '@/services/SaveService';
 import {
   fraction0FormatOptions,
@@ -1770,6 +1782,7 @@ import {
   fraction3FormatOptions,
 } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
+import { withZoom } from '@/utils/withZoom';
 
 type CheckboxValue = boolean | 'indeterminate';
 type DialogSelector = SelectorParam<'dialog'>;
@@ -1829,62 +1842,74 @@ enum NeumeColorOptions {
   Tempos = 'Tempos',
 }
 
-// TODO use actual class instances
-const previewNeumes = [
+const previewNoteConfigs = [
   {
-    elementType: ElementType.Tempo,
-    neume: 'Moderate',
+    quantitativeNeume: QuantitativeNeume.Ison,
+    gorgonNeume: GorgonNeume.Gorgon_Bottom,
+    ison: Ison.Ga,
   },
   {
-    elementType: ElementType.Note,
-    quantitativeNeume: 'Ison',
-    gorgonNeume: 'Gorgon_Bottom',
-    ison: 'Ison.Ga',
+    quantitativeNeume: QuantitativeNeume.Ison,
+    timeNeume: TimeNeume.Dipli,
+    measureBarLeft: MeasureBar.MeasureBarRight,
+    measureBarRight: MeasureBar.MeasureBarRight,
+    measureNumber: MeasureNumber.Three,
   },
   {
-    elementType: ElementType.Note,
-    quantitativeNeume: 'Ison',
-    timeNeume: 'Dipli',
-    measureBarLeft: 'MeasureBarRight',
-    measureBarRight: 'MeasureBarRight',
-    measureNumber: 'Three',
+    quantitativeNeume: QuantitativeNeume.Oligon,
+    vocalExpressionNeume: VocalExpressionNeume.Antikenoma,
+    ison: Ison.Ni,
   },
   {
-    elementType: ElementType.Note,
-    quantitativeNeume: 'Oligon',
-    vocalExpressionNeume: 'Antikenoma',
-    ison: 'Ison.Ni',
+    quantitativeNeume: QuantitativeNeume.Apostrophos,
   },
   {
-    elementType: ElementType.Note,
-    quantitativeNeume: 'Apostrophos',
+    quantitativeNeume: QuantitativeNeume.Oligon,
+    timeNeume: TimeNeume.Klasma_Top,
   },
   {
-    elementType: ElementType.Note,
-    quantitativeNeume: 'Oligon',
-    timeNeume: 'Klasma_Top',
+    quantitativeNeume: QuantitativeNeume.Oligon,
+    gorgonNeume: GorgonNeume.Gorgon_Top,
+    vocalExpressionNeume: VocalExpressionNeume.Psifiston,
+    accidental: Accidental.Flat_2_Right,
   },
   {
-    elementType: ElementType.Note,
-    quantitativeNeume: 'Oligon',
-    gorgonNeume: 'Gorgon_Top',
-    vocalExpressionNeume: 'Psifiston',
-    accidental: 'Flat_2_Right',
+    quantitativeNeume: QuantitativeNeume.Apostrophos,
   },
-  {
-    elementType: ElementType.Note,
-    quantitativeNeume: 'Apostrophos',
-  },
-  {
-    elementType: ElementType.Martyria,
-    auto: true,
-    note: 'Thi',
-    rootSign: 'DeltaDotted',
-    scale: 'Diatonic',
-    fthora: 'HardChromaticPa_Top',
-    verticalOffset: 0,
-  },
-] as any;
+];
+
+function createPreviewNote(
+  args: Partial<NoteElement>,
+  measureBarSpacing: number,
+): NoteElement {
+  const note = new NoteElement();
+  Object.assign(note, args);
+  note.computedMeasureBarLeftLeadingSpacing =
+    note.measureBarLeft != null ? measureBarSpacing : 0;
+  note.computedMeasureBarRightTrailingSpacing =
+    note.measureBarRight != null ? measureBarSpacing : 0;
+  return note;
+}
+
+function getPreviewGapStyle(
+  element: { elementType: ElementType } & Partial<NoteElement>,
+  index: number | string,
+) {
+  const numericIndex = Number(index);
+  const glue =
+    element.elementType === ElementType.Martyria
+      ? fontService.getMartyriaGlue(form.value.neumeDefaultFontFamily)
+      : fontService.getStandardGlue(form.value.neumeDefaultFontFamily);
+
+  const gapWidth = form.value.neumeDefaultFontSize * glue.width;
+
+  return {
+    marginInlineEnd:
+      numericIndex < previewNeumes.value.length - 1
+        ? withZoom(gapWidth)
+        : undefined,
+  };
+}
 
 const emit = defineEmits<{
   update: [pageSetup: PageSetup];
@@ -1978,6 +2003,31 @@ const pageSizeUnitOptions = [
 
 const form = ref(new PageSetup());
 const neumeBulkColor = ref('#000000');
+
+const previewNeumes = computed(() => {
+  const measureBarSpacing =
+    form.value.neumeDefaultFontSize *
+    fontService.getStandardGlue(form.value.neumeDefaultFontFamily).width;
+
+  return [
+    {
+      elementType: ElementType.Tempo,
+      neume: 'Moderate',
+    },
+    ...previewNoteConfigs.map((config) =>
+      createPreviewNote(config, measureBarSpacing),
+    ),
+    {
+      elementType: ElementType.Martyria,
+      auto: true,
+      note: 'Thi',
+      rootSign: 'DeltaDotted',
+      scale: 'Diatonic',
+      fthora: 'HardChromaticPa_Top',
+      verticalOffset: 0,
+    },
+  ] as any;
+});
 const selectedNeumeColorOptions = ref<NeumeColorOptions[]>([]);
 
 const dropCapFontFamilies = computed(() => [

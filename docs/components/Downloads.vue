@@ -66,8 +66,12 @@ export default {
 
       this.latestRelease = releases[0];
 
-      const linuxAsset = this.latestRelease.assets.find((x) =>
-        x.name.endsWith('.AppImage'),
+      const linuxAsset = this.latestRelease.assets.find(
+        (x) =>
+          x.name.endsWith('.AppImage') && !x.name.endsWith('arm64.AppImage'),
+      );
+      const linuxArm64Asset = this.latestRelease.assets.find((x) =>
+        x.name.endsWith('arm64.AppImage'),
       );
       const macAsset = this.latestRelease.assets.find(
         (x) => x.name.endsWith('.dmg') && !x.name.endsWith('arm64.dmg'),
@@ -79,7 +83,8 @@ export default {
         x.name.endsWith('.exe'),
       );
 
-      this.rows.push({ asset: linuxAsset, os: 'Linux' });
+      this.rows.push({ asset: linuxAsset, os: 'Linux (x86_64)' });
+      this.rows.push({ asset: linuxArm64Asset, os: 'Linux (arm64)' });
       this.rows.push({ asset: macArm64Asset, os: 'macOS on Apple Silicon' });
       this.rows.push({ asset: macAsset, os: 'macOS on Intel' });
       this.rows.push({ asset: windowsAsset, os: 'Windows' });

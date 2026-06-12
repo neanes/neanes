@@ -13,13 +13,101 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { toast } from 'vue-sonner';
 
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { EventBus } from '@/eventBus';
+import type { UpdateAvailableArgs, UpdateErrorArgs } from '@/ipc/ipcChannels';
+import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
 
 const registration = ref<ServiceWorkerRegistration | null>(null);
 const updateExists = ref(false);
+const electronUpdateAvailableToastId = 'electron-update-available';
+const electronUpdateDownloadingToastId = 'electron-update-downloading';
+const electronUpdateDownloadedToastId = 'electron-update-downloaded';
+const electronUpdateErrorToastId = 'electron-update-error';
+
+async function downloadElectronUpdate() {
+  try {
+    await window.ipcRenderer?.invoke(IpcRendererChannels.DownloadUpdate);
+  } catch (error) {
+    showElectronUpdateErrorToast({
+      message:
+        error instanceof Error ? error.message : 'Unable to download update.',
+    });
+  }
+}
+
+async function restartToInstallElectronUpdate() {
+  try {
+    await window.ipcRenderer?.invoke(
+      IpcRendererChannels.RestartToInstallUpdate,
+    );
+  } catch (error) {
+    showElectronUpdateErrorToast({
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Unable to restart to install the update.',
+    });
+  }
+}
+
+function showElectronUpdateAvailableToast(args?: UpdateAvailableArgs) {
+  toast.info('An update is available.', {
+    id: electronUpdateAvailableToastId,
+    duration: Infinity,
+    description: args?.version
+      ? `Version ${args.version} is available.`
+      : undefined,
+    action: {
+      label: 'Download',
+      onClick: () => {
+        void downloadElectronUpdate();
+      },
+    },
+    cancel: {
+      label: 'Later',
+    },
+  });
+}
+
+function showElectronUpdateDownloadingToast() {
+  toast.loading('Downloading update...', {
+    id: electronUpdateDownloadingToastId,
+    duration: Infinity,
+  });
+}
+
+function showElectronUpdateDownloadedToast(args?: UpdateAvailableArgs) {
+  toast.dismiss(electronUpdateDownloadingToastId);
+
+  toast.success('Update downloaded. Restart to install.', {
+    id: electronUpdateDownloadedToastId,
+    duration: Infinity,
+    description: args?.version
+      ? `Version ${args.version} is ready.`
+      : undefined,
+    action: {
+      label: 'Restart now',
+      onClick: () => {
+        void restartToInstallElectronUpdate();
+      },
+    },
+    cancel: {
+      label: 'Later',
+    },
+  });
+}
+
+function showElectronUpdateErrorToast(args: UpdateErrorArgs) {
+  toast.error('Update failed.', {
+    id: electronUpdateErrorToastId,
+    description: args.message,
+  });
+}
 
 if (navigator.serviceWorker) {
   document.addEventListener('swUpdated', onUpdateAvailable as EventListener, {
@@ -47,6 +135,41 @@ function refreshApp() {
     registration.value.waiting.postMessage({ type: 'SKIP_WAITING' });
   }
 }
+
+const onElectronUpdateAvailable = (args?: UpdateAvailableArgs) =>
+  showElectronUpdateAvailableToast(args);
+const onElectronUpdateDownloadStarted = () =>
+  showElectronUpdateDownloadingToast();
+const onElectronUpdateDownloaded = (args?: UpdateAvailableArgs) =>
+  showElectronUpdateDownloadedToast(args);
+const onElectronUpdateError = (args?: UpdateErrorArgs) => {
+  toast.dismiss(electronUpdateDownloadingToastId);
+  showElectronUpdateErrorToast(args ?? { message: 'Unable to update.' });
+};
+
+onMounted(() => {
+  if (window.ipcRenderer == null) {
+    return;
+  }
+
+  EventBus.$on(IpcMainChannels.UpdateAvailable, onElectronUpdateAvailable);
+  EventBus.$on(
+    IpcMainChannels.UpdateDownloadStarted,
+    onElectronUpdateDownloadStarted,
+  );
+  EventBus.$on(IpcMainChannels.UpdateDownloaded, onElectronUpdateDownloaded);
+  EventBus.$on(IpcMainChannels.UpdateError, onElectronUpdateError);
+});
+
+onBeforeUnmount(() => {
+  EventBus.$off(IpcMainChannels.UpdateAvailable, onElectronUpdateAvailable);
+  EventBus.$off(
+    IpcMainChannels.UpdateDownloadStarted,
+    onElectronUpdateDownloadStarted,
+  );
+  EventBus.$off(IpcMainChannels.UpdateDownloaded, onElectronUpdateDownloaded);
+  EventBus.$off(IpcMainChannels.UpdateError, onElectronUpdateError);
+});
 </script>
 
 <style>

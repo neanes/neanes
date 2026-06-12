@@ -98,11 +98,18 @@ const silentLatexIncludeTextBoxes = process.argv.includes(
 const silent = silentPdf || silentLatex || silentHtml;
 
 const disableUpdates = process.argv.includes('--no-update');
+const fakeUpdateMode = process.env.FAKE_UPDATE_AVAILABLE === '1';
 
 let win: BrowserWindow | null = null;
 let readyToExit = false;
 let creatingWindow = false;
 let quitting = false;
+let updateAvailable = false;
+let updateDownloaded = false;
+let updateDownloadInProgress = false;
+let pendingUpdateVersion: string | undefined;
+let didReportUpdateError = false;
+let fakeDownloadProgressTimer: NodeJS.Timeout | null = null;
 
 const minWidth = 800;
 const minHeight = 600;
@@ -155,6 +162,7 @@ let loaded = false;
 let exportAsImageOnConflict: OnConflictChoice | null = null;
 
 let darwinPath: string | null = null;
+let autoUpdaterInitialized = false;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -209,6 +217,144 @@ async function getExportDefaultPath(
   return sourceFilePath != null
     ? replaceExtension(sourceFilePath, extension)
     : await generateFilePath(`${tempFileName}.${extension}`);
+}
+
+function sendToRenderer(channel: IpcMainChannels, payload?: unknown) {
+  if (win == null || !loaded) {
+    return;
+  }
+
+  win.webContents.send(channel, payload);
+}
+
+function sendPendingUpdateState() {
+  if (updateDownloaded) {
+    sendToRenderer(IpcMainChannels.UpdateDownloaded, {
+      version: pendingUpdateVersion,
+    });
+    return;
+  }
+
+  if (updateDownloadInProgress) {
+    sendToRenderer(IpcMainChannels.UpdateDownloadStarted);
+    return;
+  }
+
+  if (updateAvailable) {
+    sendToRenderer(IpcMainChannels.UpdateAvailable, {
+      version: pendingUpdateVersion,
+    });
+  }
+}
+
+function clearFakeDownloadProgressTimer() {
+  if (fakeDownloadProgressTimer != null) {
+    clearInterval(fakeDownloadProgressTimer);
+    fakeDownloadProgressTimer = null;
+  }
+}
+
+function simulateFakeUpdateDownload() {
+  const progressSteps = [18, 42, 69, 91, 100];
+  const total = 100;
+  let stepIndex = 0;
+
+  clearFakeDownloadProgressTimer();
+
+  fakeDownloadProgressTimer = setInterval(() => {
+    if (win == null || !loaded || !updateDownloadInProgress) {
+      clearFakeDownloadProgressTimer();
+      return;
+    }
+
+    const percent = progressSteps[stepIndex] ?? 100;
+    const transferred = percent;
+
+    sendToRenderer(IpcMainChannels.UpdateDownloadProgress, {
+      percent,
+      transferred,
+      total,
+    });
+
+    stepIndex += 1;
+
+    if (percent >= 100) {
+      clearFakeDownloadProgressTimer();
+      updateDownloaded = true;
+      updateDownloadInProgress = false;
+      sendToRenderer(IpcMainChannels.UpdateDownloaded, {
+        version: pendingUpdateVersion,
+      });
+    }
+  }, 250);
+}
+
+function setupAutoUpdater() {
+  if (autoUpdaterInitialized) {
+    return;
+  }
+
+  autoUpdaterInitialized = true;
+
+  if (fakeUpdateMode) {
+    updateAvailable = true;
+    updateDownloaded = false;
+    updateDownloadInProgress = false;
+    pendingUpdateVersion = undefined;
+    didReportUpdateError = false;
+    return;
+  }
+
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = false;
+
+  autoUpdater.on('update-available', (info) => {
+    updateAvailable = true;
+    updateDownloaded = false;
+    updateDownloadInProgress = false;
+    pendingUpdateVersion = info.version;
+    didReportUpdateError = false;
+
+    sendToRenderer(IpcMainChannels.UpdateAvailable, {
+      version: info.version,
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    updateDownloaded = true;
+    updateDownloadInProgress = false;
+    pendingUpdateVersion = info.version;
+    didReportUpdateError = false;
+
+    sendToRenderer(IpcMainChannels.UpdateDownloaded, {
+      version: info.version,
+    });
+  });
+
+  autoUpdater.on('download-progress', (info) => {
+    sendToRenderer(IpcMainChannels.UpdateDownloadProgress, {
+      percent: info.percent,
+      transferred: info.transferred,
+      total: info.total,
+    });
+  });
+
+  autoUpdater.on('error', (error) => {
+    const shouldReportError =
+      updateDownloadInProgress || updateAvailable || updateDownloaded;
+
+    updateDownloadInProgress = false;
+
+    if (!shouldReportError || didReportUpdateError) {
+      return;
+    }
+
+    didReportUpdateError = true;
+
+    sendToRenderer(IpcMainChannels.UpdateError, {
+      message: error == null ? 'Unable to update.' : error.message,
+    });
+  });
 }
 
 async function loadStore() {
@@ -1776,7 +1922,10 @@ async function createWindow() {
     });
   }
 
-  win.webContents.once('did-finish-load', () => (loaded = true));
+  win.webContents.once('did-finish-load', () => {
+    loaded = true;
+    sendPendingUpdateState();
+  });
 
   // Prevent the user from accidentally
   // closing the app with unsaved changes
@@ -1791,6 +1940,7 @@ async function createWindow() {
     win = null;
     loaded = false;
     darwinPath = null;
+    clearFakeDownloadProgressTimer();
   });
 
   createMenu();
@@ -1803,8 +1953,8 @@ async function createWindow() {
     }
   } else {
     // Load the index.html when not in development
-    if (!silent && !disableUpdates) {
-      autoUpdater.checkForUpdatesAndNotify();
+    if (!silent && !disableUpdates && !fakeUpdateMode) {
+      autoUpdater.checkForUpdates();
     }
 
     await win.loadFile(indexHtml);
@@ -1871,6 +2021,65 @@ ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
   } else {
     win?.close();
   }
+});
+
+ipcMain.handle(IpcRendererChannels.DownloadUpdate, async () => {
+  if (updateDownloaded) {
+    sendPendingUpdateState();
+    return;
+  }
+
+  if (!updateAvailable || updateDownloadInProgress) {
+    return;
+  }
+
+  if (fakeUpdateMode) {
+    updateDownloadInProgress = true;
+    didReportUpdateError = false;
+    sendToRenderer(IpcMainChannels.UpdateDownloadStarted);
+    simulateFakeUpdateDownload();
+    return;
+  }
+
+  // MacOS requires code-signing in order for auto-update to work.
+  // Since we don't code sign, just send the user to the download URL.
+  if (isMac) {
+    shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL);
+    return;
+  }
+
+  updateDownloadInProgress = true;
+  didReportUpdateError = false;
+  sendToRenderer(IpcMainChannels.UpdateDownloadStarted);
+
+  try {
+    autoUpdater.autoInstallOnAppQuit = true;
+    await autoUpdater.downloadUpdate();
+  } catch (error) {
+    updateDownloadInProgress = false;
+    didReportUpdateError = true;
+
+    sendToRenderer(IpcMainChannels.UpdateError, {
+      message:
+        error instanceof Error ? error.message : 'Unable to download update.',
+    });
+  }
+});
+
+ipcMain.handle(IpcRendererChannels.RestartToInstallUpdate, async () => {
+  if (!updateDownloaded) {
+    return;
+  }
+
+  if (fakeUpdateMode) {
+    console.info(
+      'FAKE_UPDATE_AVAILABLE=1: restart-and-install requested; skipping quitAndInstall().',
+    );
+    return;
+  }
+
+  readyToExit = true;
+  autoUpdater.quitAndInstall(false, true);
 });
 
 ipcMain.handle(IpcRendererChannels.CancelExit, async () => {
@@ -2087,26 +2296,10 @@ app.on('ready', async () => {
     lng: resolveLanguagePreference(store.language, app.getLocale()),
   });
 
+  setupAutoUpdater();
+
   if (!win) {
     createWindow();
-  }
-
-  if (isMac) {
-    autoUpdater.once('update-available', async (info) => {
-      const result = await dialog.showMessageBox(win!, {
-        type: 'info',
-        title: 'Update Available',
-        message: 'An update is available.',
-        detail: `Version ${info.version} is available.`,
-        buttons: ['Download', 'Not now'],
-        defaultId: 0,
-        cancelId: 1,
-      });
-
-      if (result.response === 0) {
-        shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL);
-      }
-    });
   }
 });
 

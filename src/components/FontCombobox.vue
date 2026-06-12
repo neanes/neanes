@@ -186,7 +186,17 @@ const triggerClass = computed(() =>
   cn('w-full justify-between bg-background', props.triggerClass),
 );
 
-const listClass = computed(() => cn(props.listClass));
+const listClass = computed(() =>
+  cn(
+    '*:data-[slot=input-group]:m-0',
+    '*:data-[slot=input-group]:border-0',
+    '*:data-[slot=input-group]:border-b',
+    '*:data-[slot=input-group]:border-border',
+    '*:data-[slot=input-group]:bg-transparent',
+    '*:data-[slot=input-group]:focus-within:border-border',
+    props.listClass,
+  ),
+);
 
 function getDisplayValue(value: string) {
   return optionByValue.value.get(value)?.label ?? value;

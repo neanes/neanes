@@ -46,10 +46,14 @@ jobs:
       - name: Lint Markdown
         uses: DavidAnson/markdownlint-cli2-action@v23.2.0
 
-      - name: Build Windows and Linux
-        if: runner.os != 'macOS'
-        run: npm run build
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        run: npm run build -- --win
+
+      - name: Build Linux
+        if: runner.os == 'Linux'
+        run: npm run build -- --linux --x64 --arm64
 
       - name: Build macOS
         if: runner.os == 'macOS'
-        run: npm run build -- --x64 --arm64
+        run: npm run build -- --mac --x64 --arm64

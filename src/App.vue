@@ -33,7 +33,6 @@ async function downloadElectronUpdate() {
   try {
     await window.ipcRenderer?.invoke(IpcRendererChannels.DownloadUpdate);
   } catch (error) {
-    toast.dismiss(electronUpdateAvailableToastId);
     showElectronUpdateErrorToast({
       message:
         error instanceof Error ? error.message : 'Unable to download update.',
@@ -47,12 +46,24 @@ async function restartToInstallElectronUpdate() {
       IpcRendererChannels.RestartToInstallUpdate,
     );
   } catch (error) {
-    toast.dismiss(electronUpdateDownloadedToastId);
     showElectronUpdateErrorToast({
       message:
         error instanceof Error
           ? error.message
           : 'Unable to restart to install the update.',
+    });
+  }
+}
+
+async function installElectronUpdateOnExit() {
+  try {
+    await window.ipcRenderer?.invoke(IpcRendererChannels.InstallUpdateOnExit);
+  } catch (error) {
+    showElectronUpdateErrorToast({
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Unable to schedule the update for app exit.',
     });
   }
 }
@@ -72,16 +83,11 @@ function showElectronUpdateAvailableToast(args?: UpdateAvailableArgs) {
     },
     cancel: {
       label: 'Later',
-      onClick: () => {
-        toast.dismiss(electronUpdateAvailableToastId);
-      },
     },
   });
 }
 
 function showElectronUpdateDownloadingToast() {
-  toast.dismiss(electronUpdateAvailableToastId);
-
   toast.loading('Downloading update...', {
     id: electronUpdateDownloadingToastId,
     duration: Infinity,
@@ -106,7 +112,7 @@ function showElectronUpdateDownloadedToast(args?: UpdateAvailableArgs) {
     cancel: {
       label: 'Later',
       onClick: () => {
-        toast.dismiss(electronUpdateDownloadedToastId);
+        void installElectronUpdateOnExit();
       },
     },
   });

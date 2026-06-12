@@ -2033,16 +2033,26 @@ ipcMain.handle(IpcRendererChannels.DownloadUpdate, async () => {
     return;
   }
 
+  if (fakeUpdateMode) {
+    updateDownloadInProgress = true;
+    didReportUpdateError = false;
+    sendToRenderer(IpcMainChannels.UpdateDownloadStarted);
+    simulateFakeUpdateDownload();
+    return;
+  }
+
+  // MacOS requires code-signing in order for auto-update to work.
+  // Since we don't code sign, just send the user to the download URL.
+  if (isMac) {
+    shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL);
+    return;
+  }
+
   updateDownloadInProgress = true;
   didReportUpdateError = false;
   sendToRenderer(IpcMainChannels.UpdateDownloadStarted);
 
   try {
-    if (fakeUpdateMode) {
-      simulateFakeUpdateDownload();
-      return;
-    }
-
     await autoUpdater.downloadUpdate();
   } catch (error) {
     updateDownloadInProgress = false;
@@ -2069,6 +2079,21 @@ ipcMain.handle(IpcRendererChannels.RestartToInstallUpdate, async () => {
 
   readyToExit = true;
   autoUpdater.quitAndInstall(false, true);
+});
+
+ipcMain.handle(IpcRendererChannels.InstallUpdateOnExit, async () => {
+  if (!updateDownloaded) {
+    return;
+  }
+
+  if (fakeUpdateMode) {
+    console.info(
+      'FAKE_UPDATE_AVAILABLE=1: install-on-exit requested; skipping autoInstallOnAppQuit.',
+    );
+    return;
+  }
+
+  autoUpdater.autoInstallOnAppQuit = true;
 });
 
 ipcMain.handle(IpcRendererChannels.CancelExit, async () => {

@@ -94,12 +94,28 @@ export interface PlaybackWorkspace {
 
   permanentEnharmonicZo: boolean;
 
-  zoFlatPivotActivated: boolean;
-  zoNaturalPivotActivated: boolean;
-
   // debug
   loggingEnabled: boolean;
 }
+
+type AttractionScanClass =
+  | { kind: 'restSignal' }
+  | { kind: 'nonNote' }
+  | { kind: 'sharpKe'; node: NoteAtomNode }
+  | { kind: 'heldKe'; node: NoteAtomNode }
+  | { kind: 'heldBelowKe'; node: NoteAtomNode }
+  | { kind: 'belowKe'; node: NoteAtomNode }
+  | { kind: 'ke'; node: NoteAtomNode }
+  | { kind: 'heldZo'; node: NoteAtomNode }
+  | { kind: 'zo'; node: NoteAtomNode }
+  | { kind: 'aboveZo'; node: NoteAtomNode };
+
+/**
+ * The maximum number of nodes that may be examined while deciding the
+ * attraction of a single note. This bounds the lookahead/lookbehind so that
+ * pathological scores cannot cause quadratic scan times.
+ */
+const MAX_ATTRACTION_SCAN_NODES = 25;
 
 export enum PlaybackScaleName {
   Diatonic,
@@ -188,9 +204,6 @@ export class PlaybackService {
 
       permanentEnharmonicZo: false,
 
-      zoFlatPivotActivated: false,
-      zoNaturalPivotActivated: false,
-
       loggingEnabled:
         import.meta.env.VITE_PLAYBACK_SERVICE_LOGGING_ENABLED === 'true',
     };
@@ -207,9 +220,11 @@ export class PlaybackService {
       elements,
       chrysanthineAccidentals,
     );
-    for (const node of nodes) {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+
       if (node.nodeType === NodeType.NoteAtomNode) {
-        this.handleNoteAtom(node as NoteAtomNode, nodes, workspace);
+        this.handleNoteAtom(node as NoteAtomNode, nodes, i, workspace);
       } else if (node.nodeType === NodeType.RestNode) {
         this.handleRest(node as RestNode, workspace);
       } else if (node.nodeType === NodeType.ModeKeyNode) {
@@ -420,6 +435,7 @@ export class PlaybackService {
   applyAlterations(
     noteAtomNode: Readonly<NoteAtomNode>,
     nodes: AnalysisNode[],
+    nodeIndex: number,
     workspace: PlaybackWorkspace,
   ) {
     let alteredFrequency = workspace.frequency;
@@ -482,6 +498,7 @@ export class PlaybackService {
         alteredFrequency,
         noteAtomNode,
         nodes,
+        nodeIndex,
         workspace,
       );
     }
@@ -493,91 +510,427 @@ export class PlaybackService {
     frequency: number,
     noteAtomNode: Readonly<NoteAtomNode>,
     nodes: AnalysisNode[],
+    nodeIndex: number,
     workspace: PlaybackWorkspace,
   ) {
     const { scale } = workspace;
 
-    // If melody descends after zo, flatten zo
     if (
       workspace.options.useDefaultAttractionZo &&
       !workspace.permanentEnharmonicZo &&
       (scale.name === PlaybackScaleName.Diatonic ||
         scale.name === PlaybackScaleName.Kliton ||
-        scale.name === PlaybackScaleName.Zygos)
+        scale.name === PlaybackScaleName.Zygos) &&
+      this.canApplyDefaultAttraction(noteAtomNode)
     ) {
       if (noteAtomNode.virtualNote === ScaleNote.ZoHigh) {
-        // If we are not in a pivot, check to see if we need to pivot
-        if (!workspace.zoFlatPivotActivated) {
-          this.setPivots(noteAtomNode, nodes, workspace);
-        }
-
-        // If we are in a pivot, then flatten zo
-        if (workspace.zoFlatPivotActivated) {
+        if (this.zoIsFlattened(nodeIndex, nodes)) {
           frequency = this.changeFrequency(
             frequency,
             workspace.options.defaultAttractionZoMoria,
           );
         }
-      } else {
-        // Clear zo flat pivot
-        workspace.zoFlatPivotActivated = false;
-      }
-
-      // Check whether ke is attracted toward zo
-      if (
-        noteAtomNode.virtualNote === ScaleNote.Ke &&
-        workspace.zoNaturalPivotActivated
-      ) {
-        frequency = this.changeFrequency(
-          frequency,
-          workspace.options.defaultAttractionKeMoria,
-        );
-      }
-
-      // Clear the zo natural pivot if we descend below ke
-      if (
-        getScaleNoteValue(noteAtomNode.virtualNote) <
-        getScaleNoteValue(ScaleNote.Ke)
-      ) {
-        workspace.zoNaturalPivotActivated = false;
+      } else if (noteAtomNode.virtualNote === ScaleNote.Ke) {
+        if (this.keIsSharpened(nodeIndex, nodes)) {
+          frequency = this.changeFrequency(
+            frequency,
+            workspace.options.defaultAttractionKeMoria,
+          );
+        }
       }
     }
 
     return frequency;
   }
 
-  setPivots(
-    noteAtomNode: Readonly<NoteAtomNode>,
+  private canApplyDefaultAttraction(node: Readonly<NoteAtomNode>) {
+    return (
+      !node.ignoreAttractions &&
+      !node.accidental &&
+      (node.scale === Scale.Diatonic ||
+        node.scale === Scale.Kliton ||
+        node.scale === Scale.Zygos)
+    );
+  }
+
+  private isNoteAtomNode(node: AnalysisNode): node is NoteAtomNode {
+    return node.nodeType === NodeType.NoteAtomNode;
+  }
+
+  private getAttractionScanClass(node: AnalysisNode): AttractionScanClass {
+    if (
+      node.nodeType === NodeType.RestNode ||
+      node.nodeType === NodeType.FthoraNode ||
+      node.nodeType === NodeType.ModeKeyNode
+    ) {
+      return { kind: 'restSignal' };
+    }
+
+    if (!this.isNoteAtomNode(node)) {
+      return { kind: 'nonNote' };
+    }
+
+    const held = node.duration >= 2;
+    const noteValue = getScaleNoteValue(node.virtualNote);
+    const keValue = getScaleNoteValue(ScaleNote.Ke);
+    const zoHighValue = getScaleNoteValue(ScaleNote.ZoHigh);
+
+    if (noteValue < keValue) {
+      return {
+        kind: held ? 'heldBelowKe' : 'belowKe',
+        node,
+      };
+    }
+
+    if (noteValue === keValue) {
+      if (node.accidental != null && node.accidental.startsWith('Sharp')) {
+        return { kind: 'sharpKe', node };
+      }
+
+      return { kind: held ? 'heldKe' : 'ke', node };
+    }
+
+    if (noteValue === zoHighValue) {
+      return { kind: held ? 'heldZo' : 'zo', node };
+    }
+
+    return { kind: 'aboveZo', node };
+  }
+
+  private zoIsFlattened(
+    index: number,
     nodes: AnalysisNode[],
-    workspace: PlaybackWorkspace,
-  ) {
-    const index: number = nodes.indexOf(noteAtomNode);
+    budget: number = MAX_ATTRACTION_SCAN_NODES,
+    assumeEstablished = false,
+  ): boolean {
+    const node = nodes[index] as NoteAtomNode;
+
+    if (node.duration >= 2) {
+      return this.heldZoIsFlattened(index, nodes, budget);
+    }
+
+    let dippedToKe = false;
+    let currentNote = ScaleNote.ZoHigh;
 
     for (let i = index + 1; i < nodes.length; i++) {
-      const nextNoteAtomNode = nodes[i] as NoteAtomNode;
-
-      const next: number = getScaleNoteValue(nextNoteAtomNode.virtualNote);
-
-      if (next <= getScaleNoteValue(ScaleNote.Ke)) {
-        workspace.zoFlatPivotActivated = true;
-        workspace.zoNaturalPivotActivated = false;
-        return;
+      if (budget <= 0) {
+        break;
       }
 
-      // TODO this is too simplistic. Disabling for now.
-      // if (next >= getScaleNoteValue(ScaleNote.ZoHigh)) {
-      //   workspace.zoNaturalPivotActivated = true;
-      // }
+      budget--;
 
-      if (next > getScaleNoteValue(ScaleNote.ZoHigh)) {
-        return;
+      const token = this.getAttractionScanClass(nodes[i]);
+
+      if (token.kind === 'restSignal') {
+        break;
+      }
+
+      if (token.kind === 'nonNote') {
+        continue;
+      }
+
+      if (token.kind === 'sharpKe') {
+        return false;
+      }
+
+      if (token.kind === 'belowKe' || token.kind === 'heldBelowKe') {
+        return true;
+      }
+
+      if (token.kind === 'aboveZo') {
+        return this.naturalZoResolutionIsFlattened(
+          index,
+          nodes,
+          budget,
+          dippedToKe,
+          assumeEstablished,
+        );
+      }
+
+      if (token.kind === 'heldKe') {
+        return true;
+      }
+
+      if (token.kind === 'ke') {
+        dippedToKe = true;
+
+        currentNote = ScaleNote.Ke;
+        continue;
+      }
+
+      if (token.kind === 'heldZo') {
+        return (
+          this.zoIsFlattened(i, nodes, budget) ||
+          this.naturalZoResolutionIsFlattened(
+            index,
+            nodes,
+            budget,
+            dippedToKe,
+            assumeEstablished,
+          )
+        );
+      }
+
+      if (token.kind === 'zo') {
+        currentNote = ScaleNote.ZoHigh;
       }
     }
+
+    return (
+      currentNote === ScaleNote.Ke ||
+      this.naturalZoResolutionIsFlattened(
+        index,
+        nodes,
+        budget,
+        dippedToKe,
+        assumeEstablished,
+      )
+    );
+  }
+
+  private heldZoIsFlattened(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number,
+  ): boolean {
+    let heardNoteAfter = false;
+
+    for (let i = index + 1; i < nodes.length; i++) {
+      if (budget <= 0) {
+        break;
+      }
+
+      budget--;
+
+      const token = this.getAttractionScanClass(nodes[i]);
+
+      if (token.kind === 'restSignal') {
+        return heardNoteAfter;
+      }
+
+      if (token.kind === 'nonNote') {
+        continue;
+      }
+
+      if (token.kind === 'sharpKe') {
+        return false;
+      }
+
+      heardNoteAfter = true;
+
+      if (token.kind === 'aboveZo') {
+        return false;
+      }
+
+      if (token.kind === 'zo' || token.kind === 'heldZo') {
+        return (
+          token.node.accidental != null ||
+          this.zoIsFlattened(i, nodes, budget, true)
+        );
+      }
+
+      if (token.kind === 'heldKe') {
+        return true;
+      }
+    }
+
+    return heardNoteAfter;
+  }
+
+  private naturalZoResolutionIsFlattened(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number,
+    dippedToKe: boolean,
+    assumeEstablished: boolean,
+  ): boolean {
+    return (
+      dippedToKe &&
+      !assumeEstablished &&
+      !this.hasEstablishedUpperRegister(index, nodes, budget)
+    );
+  }
+
+  private hasEstablishedUpperRegister(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number,
+  ) {
+    for (let i = index - 1; i >= 0; i--) {
+      if (budget <= 0) {
+        break;
+      }
+
+      budget--;
+
+      const token = this.getAttractionScanClass(nodes[i]);
+
+      if (token.kind === 'restSignal') {
+        return false;
+      }
+
+      if (token.kind === 'nonNote') {
+        continue;
+      }
+
+      if (token.kind === 'sharpKe') {
+        return true;
+      }
+
+      if (token.kind === 'heldBelowKe') {
+        return false;
+      }
+
+      if (token.kind === 'belowKe') {
+        continue;
+      }
+
+      if (token.kind === 'aboveZo') {
+        return true;
+      }
+
+      if (token.kind === 'heldKe') {
+        return false;
+      }
+
+      if (token.kind === 'ke') {
+        continue;
+      }
+
+      if (token.kind === 'zo' || token.kind === 'heldZo') {
+        if (this.zoIsNatural(i, nodes, budget)) {
+          return true;
+        }
+
+        if (token.kind === 'heldZo') {
+          return false;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private keIsSharpened(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number = MAX_ATTRACTION_SCAN_NODES,
+  ) {
+    const node = nodes[index] as NoteAtomNode;
+
+    if (node.duration >= 2) {
+      return false;
+    }
+
+    return (
+      this.hasPreviousNaturalZo(index, nodes, budget) &&
+      this.hasFutureUpperReturn(index, nodes, budget)
+    );
+  }
+
+  private hasPreviousNaturalZo(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number,
+  ) {
+    for (let i = index - 1; i >= 0; i--) {
+      if (budget <= 0) {
+        break;
+      }
+
+      budget--;
+
+      const token = this.getAttractionScanClass(nodes[i]);
+
+      if (token.kind === 'restSignal') {
+        return false;
+      }
+
+      if (token.kind === 'nonNote' || token.kind === 'sharpKe') {
+        continue;
+      }
+
+      if (
+        token.kind === 'belowKe' ||
+        token.kind === 'heldBelowKe' ||
+        token.kind === 'heldKe'
+      ) {
+        return false;
+      }
+
+      if (token.kind === 'ke' || token.kind === 'aboveZo') {
+        continue;
+      }
+
+      if (token.kind === 'zo' || token.kind === 'heldZo') {
+        return this.zoIsNatural(i, nodes, budget);
+      }
+    }
+
+    return false;
+  }
+
+  private hasFutureUpperReturn(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number,
+  ) {
+    for (let i = index + 1; i < nodes.length; i++) {
+      if (budget <= 0) {
+        break;
+      }
+
+      budget--;
+
+      const token = this.getAttractionScanClass(nodes[i]);
+
+      if (token.kind === 'restSignal') {
+        return false;
+      }
+
+      if (token.kind === 'nonNote' || token.kind === 'sharpKe') {
+        continue;
+      }
+
+      if (
+        token.kind === 'belowKe' ||
+        token.kind === 'heldBelowKe' ||
+        token.kind === 'heldKe'
+      ) {
+        return false;
+      }
+
+      if (token.kind === 'aboveZo') {
+        return true;
+      }
+
+      if (token.kind === 'zo' || token.kind === 'heldZo') {
+        return this.zoIsNatural(i, nodes, budget);
+      }
+    }
+
+    return false;
+  }
+
+  private zoIsNatural(
+    index: number,
+    nodes: AnalysisNode[],
+    budget: number,
+  ): boolean {
+    const node = nodes[index];
+
+    return (
+      this.isNoteAtomNode(node) &&
+      node.virtualNote === ScaleNote.ZoHigh &&
+      !node.accidental &&
+      !this.zoIsFlattened(index, nodes, budget)
+    );
   }
 
   handleNoteAtom(
     noteAtomNode: Readonly<NoteAtomNode>,
     nodes: AnalysisNode[],
+    nodeIndex: number,
     workspace: PlaybackWorkspace,
   ) {
     const { events } = workspace;
@@ -611,6 +964,7 @@ export class PlaybackService {
     const alteredFrequency = this.applyAlterations(
       noteAtomNode,
       nodes,
+      nodeIndex,
       workspace,
     );
 

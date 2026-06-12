@@ -129,13 +129,14 @@ const ambitusStyleLow = computed(() => {
   const text = [props.element.ambitusLowNote, props.element.ambitusLowRootSign]
     .map((neume) => NeumeMappingService.getMapping(neume).text)
     .join('');
-  const font = `${props.pageSetup.neumeDefaultFontSize}px ${props.pageSetup.neumeDefaultFontFamily}`;
+  const font = `${props.element.computedFontSize}px ${props.element.computedFontFamily}`;
 
   const bounds = TextMeasurementService.getInkBounds(text, font);
 
   const style = {
     ...ambitusStyle.value,
-    marginLeft: `${4 - bounds.inkLeft}px`,
+    marginLeft: withZoom(4 - bounds.inkLeft),
+    marginRight: withZoom(10),
   } as CSSProperties;
 
   return style;
@@ -148,13 +149,14 @@ const ambitusStyleHigh = computed(() => {
   ]
     .map((neume) => NeumeMappingService.getMapping(neume).text)
     .join('');
-  const font = `${props.pageSetup.neumeDefaultFontSize}px ${props.pageSetup.neumeDefaultFontFamily}`;
+  const font = `${props.element.computedFontSize}px ${props.element.computedFontFamily}`;
 
   const bounds = TextMeasurementService.getInkBounds(text, font);
 
   const style = {
     ...ambitusStyle.value,
-    marginRight: `${4 - (bounds.advanceWidth - bounds.inkRight)}px`,
+    marginLeft: withZoom(10),
+    marginRight: withZoom(4 - (bounds.advanceWidth - bounds.inkRight)),
   } as CSSProperties;
 
   return style;
@@ -183,13 +185,5 @@ const ambitusStyleHigh = computed(() => {
 
 .ambitus-text {
   font-family: Arial, Helvetica, sans-serif;
-}
-
-.ambitus-low {
-  margin-right: 10px;
-}
-
-.ambitus-high {
-  margin-left: 10px;
 }
 </style>

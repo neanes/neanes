@@ -12,7 +12,8 @@ import {
   PhXCircle,
 } from '@phosphor-icons/vue';
 import { getFontEmbedCSS, toPng } from 'html-to-image';
-import i18next, { type SelectorParam } from 'i18next';
+import i18next from 'i18next';
+import type { SelectorParam } from 'i18next';
 import { useTranslation } from 'i18next-vue';
 import { debounce, throttle } from 'throttle-debounce';
 import {

@@ -1740,11 +1740,15 @@ watch(
 }
 
 .workspace-dock-layout,
-.workspace-dock-layout :deep(.dv-shell) {
+.workspace-dock-layout-container :deep(.dv-shell),
+.workspace-dock-layout-container :deep(.dv-floating-overlay-host),
+.workspace-dock-layout-container :deep(.dv-render-overlay),
+.workspace-dock-layout-container :deep(.dv-resize-container) {
   /*
    * Dockview defaults floating groups to z-index 999. Keep workspace panes above editor
    * adorners, but below app-level dialogs, menus, and tooltips at z-50. Dockview
-   * applies its theme class to the generated .dv-shell, so override that shell too.
+   * writes this token onto generated overlay/resize elements too, so set it directly
+   * on those elements instead of relying only on inheritance from the component host.
    */
   --dv-overlay-z-index: 35;
 }

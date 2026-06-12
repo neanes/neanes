@@ -67,7 +67,7 @@ export class BrowserIpcService implements IIpcService {
     workspace: Workspace,
     data: string,
   ): Promise<ExportWorkspaceReplyArgs> {
-    const file = new Blob([data], { type: 'application/json' });
+    const file = new Blob([data], { type: 'text/html' });
 
     const downloadFileName = getExportDownloadFileName(
       workspace.filePath,

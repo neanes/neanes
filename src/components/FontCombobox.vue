@@ -27,7 +27,7 @@
         v-model="searchTerm"
         :placeholder="placeholder"
         auto-focus
-        :display-value="getDisplayValue"
+        :display-value="getSearchDisplayValue"
       />
       <div
         v-if="filteredOptions.length === 0"
@@ -200,6 +200,10 @@ const listClass = computed(() =>
 
 function getDisplayValue(value: string) {
   return optionByValue.value.get(value)?.label ?? value;
+}
+
+function getSearchDisplayValue() {
+  return '';
 }
 
 function getOptionFontFamily(value: string) {

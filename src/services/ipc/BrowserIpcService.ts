@@ -1,7 +1,10 @@
 import JSZip from 'jszip';
 
 import type {
+  ClipboardReplyArgs,
+  ExportPageAsImageReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
+  ExportWorkspaceReplyArgs,
   OpenWorkspaceFromArgvArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
@@ -12,6 +15,18 @@ import { SaveService } from '@/services/SaveService';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 
 import type { IIpcService } from './IIpcService';
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return undefined;
+}
 
 function getExportDownloadFileName(
   sourceFilePath: string | null,
@@ -44,11 +59,14 @@ export class BrowserIpcService implements IIpcService {
     });
   }
 
-  public async exportWorkspaceAsPdf() {
-    throw 'exportWorkspaceAsPdf is not available in the browser.';
+  public async exportWorkspaceAsPdf(): Promise<ExportWorkspaceReplyArgs> {
+    return Promise.resolve({ success: false });
   }
 
-  public async exportWorkspaceAsHtml(workspace: Workspace, data: string) {
+  public async exportWorkspaceAsHtml(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs> {
     const file = new Blob([data], { type: 'application/json' });
 
     const downloadFileName = getExportDownloadFileName(
@@ -57,10 +75,9 @@ export class BrowserIpcService implements IIpcService {
       'html',
     );
 
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(file);
-    a.download = downloadFileName;
-    a.click();
+    this.downloadFile(downloadFileName, file);
+
+    return { success: true, filePath: downloadFileName };
   }
 
   public async exportWorkspaceAsMusicXml(
@@ -69,7 +86,7 @@ export class BrowserIpcService implements IIpcService {
     compressed: boolean,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     openFolder: boolean,
-  ) {
+  ): Promise<ExportWorkspaceReplyArgs> {
     const type = compressed
       ? 'application/vnd.recordare.musicxml'
       : 'application/vnd.recordare.musicxml+xml';
@@ -84,13 +101,15 @@ export class BrowserIpcService implements IIpcService {
       extension,
     );
 
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(file);
-    a.download = downloadFileName;
-    a.click();
+    this.downloadFile(downloadFileName, file);
+
+    return { success: true, filePath: downloadFileName };
   }
 
-  public async exportWorkspaceAsLatex(workspace: Workspace, data: string) {
+  public async exportWorkspaceAsLatex(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs> {
     const file = new Blob([data], { type: 'application/json' });
 
     const downloadFileName = getExportDownloadFileName(
@@ -99,10 +118,9 @@ export class BrowserIpcService implements IIpcService {
       'byztex',
     );
 
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(file);
-    a.download = downloadFileName;
-    a.click();
+    this.downloadFile(downloadFileName, file);
+
+    return { success: true, filePath: downloadFileName };
   }
 
   public async exportWorkspaceAsImage(
@@ -123,8 +141,10 @@ export class BrowserIpcService implements IIpcService {
   public async exportPageAsImage(
     fileName: string,
     data: string,
-  ): Promise<boolean> {
-    const extension = fileName.split('.').pop()?.toLowerCase();
+  ): Promise<ExportPageAsImageReplyArgs> {
+    const extension = fileName
+      .substring(fileName.lastIndexOf('.') + 1)
+      .toLowerCase();
     const type = extension === 'svg' ? 'image/svg+xml' : 'image/png';
     const file =
       extension === 'svg'
@@ -133,7 +153,7 @@ export class BrowserIpcService implements IIpcService {
 
     this.downloadFile(fileName, file);
 
-    return Promise.resolve(true);
+    return Promise.resolve({ success: true });
   }
 
   public async printWorkspace(): Promise<void> {
@@ -226,14 +246,14 @@ export class BrowserIpcService implements IIpcService {
     window.setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
-  public async paste(): Promise<void> {
+  public async paste(): Promise<ClipboardReplyArgs> {
     try {
       const text = await navigator.clipboard.readText();
 
       const selection = window.getSelection();
 
       if (!selection?.rangeCount) {
-        return;
+        return { success: true };
       }
 
       const range = selection.getRangeAt(0);
@@ -244,8 +264,14 @@ export class BrowserIpcService implements IIpcService {
       range.collapse(false);
       selection.removeAllRanges();
       selection.addRange(range);
+
+      return { success: true };
     } catch (error) {
       console.error('Failed to paste text from clipboard:', error);
+      return {
+        success: false,
+        errorMessage: getErrorMessage(error),
+      };
     }
   }
 }

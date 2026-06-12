@@ -1,0 +1,18 @@
+{
+  "update": {
+    "available": "An update is available.",
+    "update": "Update",
+    "notNow": "Not now",
+    "download": "Download",
+    "later": "Later",
+    "downloading": "Downloading update...",
+    "downloaded": "Update downloaded. Restart to install.",
+    "failed": "Update failed.",
+    "failedDescription": "Unable to update.",
+    "downloadFailedDescription": "Unable to download update.",
+    "restartFailedDescription": "Unable to restart to install the update.",
+    "restartNow": "Restart now",
+    "versionAvailable": "Version {{version}} is available.",
+    "versionReady": "Version {{version}} is ready."
+  }
+}

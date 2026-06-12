@@ -2126,7 +2126,17 @@ function onScroll() {
 }
 
 function onKeydown(event: KeyboardEvent) {
-  if (event.defaultPrevented || isEditorShortcutIgnored(event)) {
+  if (event.defaultPrevented) {
+    return;
+  }
+
+  const editorShortcutIgnored = isEditorShortcutIgnored(event);
+
+  if (platformService.isMac && isTextInputFocused() && !dialogOpen.value) {
+    onKeydownMac(event);
+  }
+
+  if (event.defaultPrevented || editorShortcutIgnored) {
     return;
   }
 
@@ -2193,10 +2203,6 @@ function onKeydown(event: KeyboardEvent) {
       }
       return;
     }
-  }
-
-  if (platformService.isMac && isTextInputFocused() && !dialogOpen.value) {
-    onKeydownMac(event);
   }
 
   if (selectedLyrics.value != null) {

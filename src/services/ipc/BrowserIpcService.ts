@@ -59,7 +59,10 @@ export class BrowserIpcService implements IIpcService {
     });
   }
 
-  public async exportWorkspaceAsPdf(): Promise<ExportWorkspaceReplyArgs> {
+  public async exportWorkspaceAsPdf(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    workspace: Workspace,
+  ): Promise<ExportWorkspaceReplyArgs> {
     return Promise.resolve({ success: false });
   }
 

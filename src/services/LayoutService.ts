@@ -6161,10 +6161,7 @@ export class LayoutService {
           nextClampExtents.right,
       );
 
-      return Math.max(
-        collisionMinimum,
-        centeredClampMinimum,
-      );
+      return Math.max(collisionMinimum, centeredClampMinimum);
     }
 
     if (measureBarLeft != null) {

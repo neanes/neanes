@@ -1347,12 +1347,18 @@ export class LayoutService {
           }
 
           const emptyElement = elements[i] as EmptyElement;
+          const previousElement = this.getElementAt(elements, i - 1);
+          const followsNonRightAlignedMartyria =
+            previousElement?.elementType === ElementType.Martyria &&
+            !(previousElement as MartyriaElement).alignRight;
           emptyElement.height = neumeHeight;
 
           this.addLyricReservation(
             emptyElementWidth,
             emptyElement,
             layoutWorkspace,
+            undefined,
+            followsNonRightAlignedMartyria ? true : undefined,
           );
           this.addBox(emptyElementWidth, emptyElement, layoutWorkspace);
           this.addGlue(standardGlue, layoutWorkspace);

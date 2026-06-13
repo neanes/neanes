@@ -2745,6 +2745,50 @@ export class LayoutService {
     };
   }
 
+  private static getVareiaCollisionBoxes(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    leftBarReserveOverride: number | null = null,
+  ) {
+    if (!noteElement.vareia) {
+      return [];
+    }
+
+    const fontFamily = pageSetup.neumeDefaultFontFamily;
+    const fontSize = pageSetup.neumeDefaultFontSize;
+    const leftBarReserve = this.getNoteLeftBarReserve(
+      noteElement,
+      measureBarWidthMap,
+      leftBarReserveOverride,
+    );
+    let vareiaLeft = leftBarReserve;
+
+    if (pageSetup.melkiteRtl) {
+      const bodyWidth = this.getNeumeSequenceWidthFromCache(
+        neumeWidthCache,
+        this.getNoteNeumesForMeasurement(noteElement),
+        pageSetup,
+      );
+      vareiaLeft =
+        leftBarReserve + bodyWidth + noteElement.vareiaInternalSpacing;
+    }
+
+    const glyph = this.getVareiaCollisionGlyph(
+      noteElement,
+      vareiaLeft,
+      fontSize,
+    );
+
+    return this.getGlyphCollisionBoxes(
+      fontFamily,
+      glyph.glyphName,
+      glyph.x,
+      glyph.y,
+      fontSize,
+    );
+  }
+
   private static getNoteLeftBarReserve(
     noteElement: NoteElement,
     measureBarWidthMap: Map<MeasureBar, number>,
@@ -5001,6 +5045,25 @@ export class LayoutService {
                     measureBarWidthMap,
                   ) ?? { left: 0, right: barWidth })
                 : { left: 0, right: barWidth };
+              const nextVareiaClampExtents =
+                nextAnchor.elementType === ElementType.Note
+                  ? this.getMeasureBarVareiaCollisionExtents(
+                      nextAnchor as NoteElement,
+                      measureBarRight,
+                      pageSetup,
+                      measureBarWidthMap,
+                    )
+                  : null;
+              if (nextVareiaClampExtents != null) {
+                nextClampExtents.left = Math.min(
+                  nextClampExtents.left,
+                  nextVareiaClampExtents.left,
+                );
+                nextClampExtents.right = Math.max(
+                  nextClampExtents.right,
+                  nextVareiaClampExtents.right,
+                );
+              }
               const ownerClampExtents = useCollisionExtents
                 ? (this.getMeasureBarCollisionExtentsForAnchor(
                     owner,
@@ -5585,11 +5648,22 @@ export class LayoutService {
 
     return (
       leadingSpacing +
-      this.getMeasureBarCollisionDeficit(
-        noteBoxes,
-        barBoxes,
-        'left',
-        leadingSpacing,
+      Math.max(
+        this.getMeasureBarCollisionDeficit(
+          noteBoxes,
+          barBoxes,
+          'left',
+          leadingSpacing,
+        ),
+        this.getMeasureBarVareiaCollisionDeficit(
+          owner as NoteElement,
+          barBoxes,
+          'left',
+          leadingSpacing,
+          pageSetup,
+          measureBarWidthMap,
+          barWidth + leadingSpacing,
+        ),
       )
     );
   }
@@ -5715,6 +5789,150 @@ export class LayoutService {
     }
 
     return Math.max(0, deficit);
+  }
+
+  private static getMeasureBarVareiaCollisionDeficit(
+    noteElement: NoteElement,
+    barBoxes: NoteGlyphBox[],
+    edge: MeasureBarAnchorEdge,
+    clearance: number,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    leftBarReserveOverride: number | null = null,
+  ) {
+    const vareiaBoxes = this.getVareiaCollisionBoxes(
+      noteElement,
+      pageSetup,
+      measureBarWidthMap,
+      leftBarReserveOverride,
+    );
+
+    return this.getMeasureBarCollisionDeficitForVerticalTolerance(
+      vareiaBoxes,
+      barBoxes,
+      edge,
+      clearance,
+      this.emToPx(0.01, pageSetup.neumeDefaultFontSize),
+    );
+  }
+
+  private static getMeasureBarVareiaCollisionExtents(
+    noteElement: NoteElement,
+    measureBar: MeasureBar,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const vareiaBoxes = this.getVareiaCollisionBoxes(
+      noteElement,
+      pageSetup,
+      measureBarWidthMap,
+    );
+    const verticalTolerance = this.emToPx(0.01, pageSetup.neumeDefaultFontSize);
+    const barBoxes = this.getMeasureBarCollisionBoxes(
+      measureBar,
+      'left',
+      { left: 0, right: 0 },
+      0,
+      pageSetup,
+    ).filter((barBox) =>
+      vareiaBoxes.some((vareiaBox) =>
+        this.noteGlyphBoxesVerticallyOverlapWithTolerance(
+          barBox,
+          vareiaBox,
+          verticalTolerance,
+        ),
+      ),
+    );
+
+    if (barBoxes.length === 0) {
+      return null;
+    }
+
+    return {
+      left: Math.min(...barBoxes.map((box) => box.left)),
+      right: Math.max(...barBoxes.map((box) => box.right)),
+    };
+  }
+
+  private static getMeasureBarCollisionDeficitForVerticalTolerance(
+    noteBoxes: NoteGlyphBox[],
+    barBoxes: NoteGlyphBox[],
+    edge: MeasureBarAnchorEdge,
+    clearance: number,
+    verticalTolerance: number,
+  ) {
+    let deficit = 0;
+
+    for (const noteBox of noteBoxes) {
+      for (const barBox of barBoxes) {
+        if (
+          !this.noteGlyphBoxesVerticallyOverlapWithTolerance(
+            noteBox,
+            barBox,
+            verticalTolerance,
+          )
+        ) {
+          continue;
+        }
+
+        deficit = Math.max(
+          deficit,
+          edge === 'left'
+            ? barBox.right + clearance - noteBox.left
+            : noteBox.right + clearance - barBox.left,
+        );
+      }
+    }
+
+    return Math.max(0, deficit);
+  }
+
+  private static getMinimumSpacingForMeasureBarVareiaBoxes(
+    leftAdvanceWidth: number,
+    barBoxes: NoteGlyphBox[],
+    noteElement: NoteElement,
+    clearance: number,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const vareiaBoxes = this.getVareiaCollisionBoxes(
+      noteElement,
+      pageSetup,
+      measureBarWidthMap,
+    );
+    let spacing = 0;
+    const verticalTolerance = this.emToPx(0.01, pageSetup.neumeDefaultFontSize);
+
+    for (const barBox of barBoxes) {
+      for (const vareiaBox of vareiaBoxes) {
+        if (
+          !this.noteGlyphBoxesVerticallyOverlapWithTolerance(
+            barBox,
+            vareiaBox,
+            verticalTolerance,
+          )
+        ) {
+          continue;
+        }
+
+        spacing = Math.max(
+          spacing,
+          barBox.right + clearance - leftAdvanceWidth - vareiaBox.left,
+        );
+      }
+    }
+
+    return Math.max(0, spacing);
+  }
+
+  private static noteGlyphBoxesVerticallyOverlapWithTolerance(
+    left: NoteGlyphBox,
+    right: NoteGlyphBox,
+    tolerance: number,
+  ) {
+    return (
+      left.top < right.bottom + tolerance && right.top < left.bottom + tolerance
+    );
   }
 
   private static getMeasureBarCollisionMinimumGlueWidth(
@@ -5868,11 +6086,21 @@ export class LayoutService {
         pageSetup,
         measureBarWidthMap,
       );
-      const collisionMinimum = this.getMinimumSpacingForNoteGlyphBoxes(
-        leftNote.neumeWidth,
-        barBoxes,
-        rightBoxes,
-        clearance,
+      const collisionMinimum = Math.max(
+        this.getMinimumSpacingForNoteGlyphBoxes(
+          leftNote.neumeWidth,
+          barBoxes,
+          rightBoxes,
+          clearance,
+        ),
+        this.getMinimumSpacingForMeasureBarVareiaBoxes(
+          leftNote.neumeWidth,
+          barBoxes,
+          rightNote,
+          clearance,
+          pageSetup,
+          measureBarWidthMap,
+        ),
       );
       if (!this.measureBarHasCollisionRegions(measureBarRight, pageSetup)) {
         return collisionMinimum;
@@ -5891,6 +6119,22 @@ export class LayoutService {
         pageSetup,
         measureBarWidthMap,
       ) ?? { left: 0, right: barWidth };
+      const nextVareiaClampExtents = this.getMeasureBarVareiaCollisionExtents(
+        rightNote,
+        measureBarRight,
+        pageSetup,
+        measureBarWidthMap,
+      );
+      if (nextVareiaClampExtents != null) {
+        nextClampExtents.left = Math.min(
+          nextClampExtents.left,
+          nextVareiaClampExtents.left,
+        );
+        nextClampExtents.right = Math.max(
+          nextClampExtents.right,
+          nextVareiaClampExtents.right,
+        );
+      }
       const ownerBounds = this.getMeasureBarAnchorBounds(
         leftNote,
         pageSetup,

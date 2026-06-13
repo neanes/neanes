@@ -1193,7 +1193,7 @@ export class LayoutService {
           // When the quantitative neume is present, the renderer keeps its
           // fixed spacing inside the box as marginLeft.
 
-          const breakPenaltyWidth = this.getTerminalMeasureBarRightSpacing(
+          const breakPenaltyWidth = this.getTerminalMartyriaRightSpacing(
             martyriaElement,
             pageSetup,
             measureBarWidthMap,
@@ -1692,8 +1692,16 @@ export class LayoutService {
           (element as MartyriaElement).alignRight &&
           currentLine.elements.length === 1
         ) {
+          const martyriaElement = element as MartyriaElement;
+          const rightInkReservation =
+            this.getVisibleMeasureBarRight(martyriaElement) == null
+              ? this.getMartyriaRightInkOverhang(martyriaElement, pageSetup)
+              : 0;
           element.x =
-            pageSetup.pageWidth - pageSetup.rightMargin - element.width;
+            pageSetup.pageWidth -
+            pageSetup.rightMargin -
+            element.width -
+            rightInkReservation;
         }
 
         // Special logic for centered lines
@@ -3257,7 +3265,7 @@ export class LayoutService {
       if (element.elementType === ElementType.Martyria) {
         const martyriaElement = element as MartyriaElement;
         const terminalMeasureBarSpacing =
-          this.getTerminalMeasureBarRightSpacing(
+          this.getTerminalMartyriaRightSpacing(
             martyriaElement,
             workspace.pageSetup,
             measureBarWidthMap,
@@ -5109,6 +5117,22 @@ export class LayoutService {
       pageSetup,
       measureBarWidthMap,
     );
+  }
+
+  private static getTerminalMartyriaRightSpacing(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    if (this.getVisibleMeasureBarRight(martyriaElement) != null) {
+      return this.getTerminalMeasureBarRightSpacing(
+        martyriaElement,
+        pageSetup,
+        measureBarWidthMap,
+      );
+    }
+
+    return this.getMartyriaRightInkOverhang(martyriaElement, pageSetup);
   }
 
   private static getTerminalMeasureBarRightSpacingForMeasureBar(

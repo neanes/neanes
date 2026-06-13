@@ -200,30 +200,39 @@
       </ToolbarButton>
     </AppTooltip>
     <ToolbarSeparator />
-    <div class="zoom-container" tabindex="-1" @focusout="showZoomMenu = false">
-      <Input
-        v-model="zoomText"
-        class="w-20 bg-background"
-        @change="updateZoom(zoomText)"
-      />
-      <span class="zoom-arrow" @click="showZoomMenu = !showZoomMenu"
-        >&#x25BE;</span
-      >
-      <div v-if="showZoomMenu" class="zoom-menu">
-        <div class="zoom-menu-item" @click="updateZoom('Fit')">
-          {{ $t(($) => $.toolbar.main.fit, { ns: 'toolbar' }) }}
-        </div>
-        <div class="zoom-menu-separator"></div>
-        <div
+    <DropdownMenu>
+      <InputGroup class="w-22 bg-background">
+        <InputGroupInput
+          v-model="zoomText"
+          aria-label="Zoom"
+          @change="updateZoom(zoomText)"
+          @keydown.enter="onZoomInputEnter"
+          @keydown.escape="onZoomInputEscape"
+        />
+        <DropdownMenuTrigger as-child>
+          <InputGroupButton
+            size="icon-sm"
+            class="h-full border-y-0 border-r-0 border-l border-input bg-transparent text-muted-foreground hover:text-muted-foreground"
+            aria-label="Show zoom options"
+          >
+            <PhCaretDown />
+          </InputGroupButton>
+        </DropdownMenuTrigger>
+      </InputGroup>
+      <DropdownMenuContent align="end" class="w-22 min-w-22">
+        <DropdownMenuItem @select="selectZoomToFit">
+          {{ zoomToFitLabel }}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
           v-for="option in zoomOptions"
           :key="option"
-          class="zoom-menu-item"
-          @click="updateZoom(option)"
+          @select="updateZoom(option)"
         >
           {{ option }}%
-        </div>
-      </div>
-    </div>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
     <ToolbarSeparator />
     <div class="audio-container">
       <ToolbarButton
@@ -295,6 +304,7 @@
 
 <script setup lang="ts">
 import {
+  PhCaretDown,
   PhFile,
   PhGearFine,
   PhImageSquare,
@@ -313,7 +323,18 @@ import { computed, nextTick, ref, watch } from 'vue';
 import type { AppTooltipValue } from '@/components/AppTooltip.types';
 import AppTooltip from '@/components/AppTooltip.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  InputGroup,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -432,12 +453,16 @@ const emit = defineEmits([
 ]);
 
 const { t } = useTranslation();
-const showZoomMenu = ref(false);
 const zoomText = ref('');
+const ZOOM_TO_FIT_VALUE = 'fit';
 const zoomOptions = ['50', '75', '90', '100', '125', '150', '200', '500'];
 
+const zoomToFitLabel = computed(() =>
+  t(($) => $.toolbar.main.fit, { ns: 'toolbar' }),
+);
+
 const zoomDisplay = computed(() =>
-  props.zoomToFit ? 'Fit' : (props.zoom * 100).toFixed(0) + '%',
+  props.zoomToFit ? zoomToFitLabel.value : `${(props.zoom * 100).toFixed(0)}%`,
 );
 
 // Keep the editable zoom field in sync with the canonical zoom display
@@ -478,6 +503,23 @@ function onAudioOptionsSpeedChanged(value: number[] | undefined) {
   emit('update:audioOptionsSpeed', value?.[0] ?? 0.1);
 }
 
+function onZoomInputEnter(event: KeyboardEvent) {
+  if (event.isComposing) {
+    return;
+  }
+
+  event.preventDefault();
+  updateZoom(zoomText.value);
+}
+
+function onZoomInputEscape(event: KeyboardEvent) {
+  if (event.isComposing) {
+    return;
+  }
+
+  resetZoomInput();
+}
+
 const martyriaTooltip = computed(
   (): AppTooltipValue => ({
     label: t(($) => $.toolbar.main.martyria, { ns: 'toolbar' }),
@@ -495,11 +537,8 @@ const tempoTooltip = computed(
 );
 
 function updateZoom(value: string) {
-  showZoomMenu.value = false;
-
-  if (value === 'Fit') {
-    emit('update:zoomToFit', true);
-    resetZoomInput();
+  if (isZoomToFitValue(value)) {
+    selectZoomToFit();
     return;
   }
 
@@ -511,8 +550,21 @@ function updateZoom(value: string) {
 
   emit('update:zoom', valueAsNumber / 100);
 
-  showZoomMenu.value = false;
   resetZoomInput();
+}
+
+function selectZoomToFit() {
+  emit('update:zoomToFit', true);
+  resetZoomInput();
+}
+
+function isZoomToFitValue(value: string) {
+  const normalizedValue = value.trim().toLowerCase();
+
+  return (
+    normalizedValue === ZOOM_TO_FIT_VALUE ||
+    normalizedValue === zoomToFitLabel.value.trim().toLowerCase()
+  );
 }
 
 function resetZoomInput() {
@@ -613,38 +665,6 @@ function resetZoomInput() {
 :deep(.menu-container > .neume-button:disabled) {
   cursor: not-allowed;
   opacity: 0.5;
-}
-
-.zoom-container {
-  position: relative;
-}
-
-.zoom-arrow {
-  display: inline-block;
-  cursor: default;
-  height: 21px;
-}
-
-.zoom-menu {
-  position: absolute;
-  z-index: 40;
-  background-color: var(--color-legacy-chrome-surface);
-  border: 1px solid var(--color-legacy-chrome-border);
-}
-
-.zoom-menu-item {
-  padding: 1px 4px;
-  font-size: 13px;
-  cursor: default;
-  width: 38px;
-}
-
-.zoom-menu-item:hover {
-  background-color: var(--color-legacy-chrome-hover);
-}
-
-.zoom-menu-separator {
-  border-top: 1px solid var(--color-legacy-chrome-divider);
 }
 
 .audio-container {

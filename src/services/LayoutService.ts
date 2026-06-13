@@ -1016,6 +1016,19 @@ export class LayoutService {
               baseGlue.width,
               pageSetup,
             );
+            const leadingSameLineMinimum = Math.max(
+              this.getMeasureBarMinimumGlueWidth(
+                previousElement,
+                martyriaElement,
+                pageSetup,
+                measureBarWidthMap,
+              ),
+              leadingVisualSpacing.requiredWidth,
+            );
+            const leadingStructuralDeficit = Math.max(
+              leadingVisualSpacing.deficit,
+              leadingSameLineMinimum - baseGlue.width,
+            );
             this.removeGlue(layoutWorkspace);
             const martyriaBoundaryStart = layoutWorkspace.neumesEndPx;
             const previousLyricsEndPx = Math.max(
@@ -1023,8 +1036,7 @@ export class LayoutService {
               layoutWorkspace.melismaLyricsEndPx ?? Number.NEGATIVE_INFINITY,
             );
             const leftStructuralWidth =
-              baseGlue.width +
-              Math.max(reservation, leadingVisualSpacing.deficit);
+              baseGlue.width + Math.max(reservation, leadingStructuralDeficit);
             const leftLyricMinimum = Math.max(
               0,
               previousLyricsEndPx - martyriaBoundaryStart + leadingGlueWidth,
@@ -1053,7 +1065,7 @@ export class LayoutService {
               );
               const leftHardMinimum = Math.max(
                 0,
-                leadingVisualSpacing.requiredWidth,
+                leadingSameLineMinimum,
                 leftHardLyricMinimum,
               );
               const nextNoteLeftProjection = this.getLyricProjections(
@@ -1112,9 +1124,9 @@ export class LayoutService {
                   }
                 : this.createMartyriaLeadingGlue(
                     baseGlue,
-                    Math.max(reservation, leadingVisualSpacing.deficit),
-                    leadingVisualSpacing.requiredWidth > 0
-                      ? leadingVisualSpacing.requiredWidth
+                    Math.max(reservation, leadingStructuralDeficit),
+                    leadingSameLineMinimum > 0
+                      ? leadingSameLineMinimum
                       : undefined,
                   );
             // Pair a fixed spacer with a matching leading-glue reduction. On the
@@ -2862,6 +2874,106 @@ export class LayoutService {
     }
 
     return marks;
+  }
+
+  private static getMartyriaCollisionGlyphBoxes(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+  ) {
+    const fontFamily = pageSetup.neumeDefaultFontFamily;
+    const fontSize = pageSetup.neumeDefaultFontSize;
+    const glyphs = this.getMartyriaCollisionGlyphs(martyriaElement, pageSetup);
+
+    return glyphs.flatMap((glyph) =>
+      this.getGlyphCollisionBoxes(
+        fontFamily,
+        glyph.glyphName,
+        glyph.x,
+        glyph.y,
+        fontSize,
+      ),
+    );
+  }
+
+  private static getMartyriaCollisionGlyphs(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+  ): NoteCollisionGlyph[] {
+    const glyphs: NoteCollisionGlyph[] = [];
+    const fontFamily = pageSetup.neumeDefaultFontFamily;
+    const fontSize = pageSetup.neumeDefaultFontSize;
+    let x = 0;
+
+    if (this.hasInlineMeasureBarLeft(martyriaElement)) {
+      x += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.measureBarLeft!,
+        pageSetup,
+      );
+      x += martyriaElement.computedMeasureBarLeftLeadingSpacing;
+    }
+
+    if (martyriaElement.tempoLeft) {
+      glyphs.push({
+        glyphName: NeumeMappingService.getMapping(martyriaElement.tempoLeft)
+          .glyphName,
+        kind: 'inline',
+        x: x + martyriaElement.computedTempoLeftOffsetX,
+        y: 0,
+      });
+      x += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.tempoLeft,
+        pageSetup,
+      );
+      x += martyriaElement.tempoLeftSpacing;
+    }
+
+    const bodyNeumes =
+      this.getMartyriaBodyNeumesForWidthMeasurement(martyriaElement);
+    const bodyStartX = x;
+    for (const neume of bodyNeumes) {
+      glyphs.push({
+        glyphName: NeumeMappingService.getMapping(neume).glyphName,
+        kind: 'inline',
+        x,
+        y: 0,
+      });
+      x += this.getNeumeWidthFromCache(neumeWidthCache, neume, pageSetup);
+    }
+
+    if (!martyriaElement.error && martyriaElement.fthora != null) {
+      const note = bodyNeumes[0];
+      const noteGlyphName = NeumeMappingService.getMapping(note).glyphName;
+      const fthoraGlyphName = NeumeMappingService.getMapping(
+        martyriaElement.fthora,
+      ).glyphName;
+      const anchorOffset = fontService.getMarkOffset(
+        fontFamily,
+        noteGlyphName,
+        fthoraGlyphName,
+      );
+
+      glyphs.push({
+        glyphName: fthoraGlyphName,
+        kind: 'inline',
+        x: bodyStartX + anchorOffset.x * fontSize,
+        y: anchorOffset.y * fontSize,
+      });
+    }
+
+    for (const neume of this.getMartyriaBodyOverlayNeumes(
+      martyriaElement,
+    ).filter((neume) => neume !== martyriaElement.fthora)) {
+      glyphs.push({
+        glyphName: NeumeMappingService.getMapping(neume).glyphName,
+        kind: 'inline',
+        x,
+        y: 0,
+      });
+    }
+
+    return glyphs;
   }
 
   private static getGlyphBox(
@@ -4823,9 +4935,14 @@ export class LayoutService {
           ) {
             const barWidth = measureBarWidthMap.get(measureBarRight) ?? 0;
             if (barWidth > 0) {
+              const barExtents = this.getMeasureBarCollisionExtents(
+                measureBarRight,
+                pageSetup,
+                measureBarWidthMap,
+              );
               const normalLeft =
                 owner.x + this.getMeasureBarOwnerWidth(owner) - barWidth;
-              const barSpacing = this.getInlineSpacing(pageSetup);
+              const barSpacing = this.getMeasureBarCollisionSpacing(pageSetup);
               const nextBounds = this.getMeasureBarAnchorBounds(
                 nextAnchor,
                 pageSetup,
@@ -4843,8 +4960,11 @@ export class LayoutService {
               const centeredLeft =
                 (ownerBounds.right + nextBounds.left - barWidth) / 2;
               const targetLeft = Math.min(
-                Math.max(centeredLeft, ownerBounds.right + barSpacing),
-                nextBounds.left - barWidth - barSpacing,
+                Math.max(
+                  centeredLeft,
+                  ownerBounds.right + barSpacing - barExtents.left,
+                ),
+                nextBounds.left - barExtents.right - barSpacing,
               );
               owner.computedMeasureBarRightOffsetX =
                 direction * (targetLeft - normalLeft);
@@ -4965,6 +5085,19 @@ export class LayoutService {
             );
       }
 
+      if (
+        measureBar != null &&
+        edge === 'left' &&
+        this.getVisibleMeasureBarLeft(owner) !== measureBar
+      ) {
+        return this.getMartyriaLeftBoundsForMeasureBar(
+          element as MartyriaElement,
+          { left, right },
+          measureBar,
+          pageSetup,
+        );
+      }
+
       return { left, right };
     }
 
@@ -5056,6 +5189,60 @@ export class LayoutService {
     return Math.max(0, bounds.right - fallbackBounds.right);
   }
 
+  private static getMartyriaLeftBoundsForMeasureBar(
+    martyriaElement: MartyriaElement,
+    fallbackBounds: { left: number; right: number },
+    measureBar: MeasureBar,
+    pageSetup: PageSetup,
+  ) {
+    const barBox = this.getMeasureBarClearanceBox(
+      measureBar,
+      'left',
+      fallbackBounds,
+      martyriaElement.x,
+      pageSetup,
+    );
+    const overlappingBoxes = this.getMartyriaCollisionGlyphBoxes(
+      martyriaElement,
+      pageSetup,
+    )
+      .filter((box) => this.noteGlyphBoxesVerticallyOverlap(box, barBox))
+      .map((box) => ({
+        left: martyriaElement.x + box.left,
+        right: martyriaElement.x + box.right,
+      }));
+
+    if (overlappingBoxes.length === 0) {
+      return fallbackBounds;
+    }
+
+    return {
+      left: Math.min(...overlappingBoxes.map((box) => box.left)),
+      right: Math.max(...overlappingBoxes.map((box) => box.right)),
+    };
+  }
+
+  private static getMartyriaLeftOverhangForMeasureBar(
+    martyriaElement: MartyriaElement,
+    measureBar: MeasureBar,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const fallbackBounds = this.getMeasureBarAnchorBounds(
+      martyriaElement,
+      pageSetup,
+      measureBarWidthMap,
+    );
+    const bounds = this.getMartyriaLeftBoundsForMeasureBar(
+      martyriaElement,
+      fallbackBounds,
+      measureBar,
+      pageSetup,
+    );
+
+    return Math.max(0, fallbackBounds.left - bounds.left);
+  }
+
   private static getMeasureBarClearanceBox(
     measureBar: MeasureBar,
     edge: MeasureBarAnchorEdge,
@@ -5070,7 +5257,7 @@ export class LayoutService {
       0,
       pageSetup.neumeDefaultFontSize,
     );
-    const clearance = this.getInlineSpacing(pageSetup);
+    const clearance = this.getMeasureBarCollisionSpacing(pageSetup);
     const barWidth = barBox.right - barBox.left;
     const clearanceLeft =
       edge === 'left'
@@ -5086,6 +5273,26 @@ export class LayoutService {
       right: clearanceRight,
       top: barBox.top,
       bottom: barBox.bottom,
+    };
+  }
+
+  private static getMeasureBarCollisionExtents(
+    measureBar: MeasureBar,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const barWidth = measureBarWidthMap.get(measureBar) ?? 0;
+    const barBoxes = this.getMeasureBarCollisionBoxes(
+      measureBar,
+      'left',
+      { left: 0, right: 0 },
+      0,
+      pageSetup,
+    );
+
+    return {
+      left: Math.min(0, ...barBoxes.map((box) => box.left)),
+      right: Math.max(barWidth, ...barBoxes.map((box) => box.right)),
     };
   }
 
@@ -5274,13 +5481,24 @@ export class LayoutService {
           )
         : 0;
     const leftInkOverhang =
-      leftCollisionMeasureBar != null && right?.elementType === ElementType.Note
-        ? this.getNoteLeftOverhangForMeasureBar(
-            right as NoteElement,
-            leftCollisionMeasureBar,
-            pageSetup,
-            measureBarWidthMap,
-          )
+      leftCollisionMeasureBar != null
+        ? right?.elementType === ElementType.Note
+          ? this.getNoteLeftOverhangForMeasureBar(
+              right as NoteElement,
+              leftCollisionMeasureBar,
+              pageSetup,
+              measureBarWidthMap,
+            )
+          : left?.elementType === ElementType.Note &&
+              right?.elementType === ElementType.Martyria &&
+              measureBarRight != null
+            ? this.getMartyriaLeftOverhangForMeasureBar(
+                right as MartyriaElement,
+                leftCollisionMeasureBar,
+                pageSetup,
+                measureBarWidthMap,
+              )
+            : 0
         : 0;
 
     return Math.max(
@@ -5330,6 +5548,43 @@ export class LayoutService {
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
   ) {
+    if (
+      left?.elementType === ElementType.Note &&
+      right?.elementType === ElementType.Martyria
+    ) {
+      const leftNote = left as NoteElement;
+      const rightMartyria = right as MartyriaElement;
+      const measureBarRight = this.getVisibleMeasureBarRight(leftNote);
+
+      if (measureBarRight == null) {
+        return 0;
+      }
+
+      const fallbackBounds = this.getMeasureBarAnchorBounds(
+        leftNote,
+        pageSetup,
+        measureBarWidthMap,
+      );
+      const barBoxes = this.getMeasureBarCollisionBoxes(
+        measureBarRight,
+        'right',
+        fallbackBounds,
+        leftNote.x,
+        pageSetup,
+      );
+      const rightBoxes = this.getMartyriaCollisionGlyphBoxes(
+        rightMartyria,
+        pageSetup,
+      );
+
+      return this.getMinimumSpacingForNoteGlyphBoxes(
+        leftNote.neumeWidth,
+        barBoxes,
+        rightBoxes,
+        this.getMeasureBarCollisionSpacing(pageSetup),
+      );
+    }
+
     if (
       left?.elementType !== ElementType.Note ||
       right?.elementType !== ElementType.Note
@@ -6335,6 +6590,16 @@ export class LayoutService {
 
     // Keep this in the same order as the zero-advance marks rendered inside
     // NeumeBoxMartyria after the note and root sign.
+    neumes.push(...this.getMartyriaBodyOverlayNeumes(martyriaElement));
+
+    return neumes;
+  }
+
+  private static getMartyriaBodyOverlayNeumes(
+    martyriaElement: MartyriaElement,
+  ): Neume[] {
+    const neumes: Neume[] = [];
+
     if (!martyriaElement.error && martyriaElement.fthora != null) {
       neumes.push(martyriaElement.fthora);
     }

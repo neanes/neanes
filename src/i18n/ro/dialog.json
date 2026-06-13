@@ -80,7 +80,7 @@
     "spacing": "Spațiere",
     "neumes": "Neume",
     "neumeSpacing": "Spațiere neume",
-    "neumeSpacingDescription": "Spațiul orizontal preferat între fiecare neumă pe o linie. Spațierea reală se poate micșora sau lărgi cu până la 50% pentru a justifica linia. Un număr mai mic rezultă într-o partitură mai compactă.",
+    "neumeSpacingDescription": "Spațiul orizontal preferat dintre neume. Măriți această valoare pentru a crea o partitură mai aerisită.",
     "lyricsV": "Versuri: distanță sub neume",
     "lyricsVDescription": "Poziția verticală a versurilor în raport cu neumele. Măriți acest număr pentru a coborî versurile.",
     "lyricsH": "Versuri: distanța minimă între versuri adiacente",

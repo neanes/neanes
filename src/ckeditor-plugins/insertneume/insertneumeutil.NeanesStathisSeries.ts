@@ -120,7 +120,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.DiatonicNiLow).glyphName,
       ),
     },
@@ -130,7 +130,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.DiatonicPa).glyphName,
       ),
     },
@@ -140,7 +140,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.DiatonicVou).glyphName,
       ),
     },
@@ -150,7 +150,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.DiatonicGa).glyphName,
       ),
     },
@@ -160,7 +160,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.DiatonicThi).glyphName,
       ),
     },
@@ -170,7 +170,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.DiatonicKe).glyphName,
       ),
     },
@@ -180,7 +180,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.DiatonicZo).glyphName,
       ),
     },
@@ -190,7 +190,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.DiatonicNiHigh).glyphName,
       ),
     },
@@ -200,7 +200,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.HardChromaticPa).glyphName,
       ),
     },
@@ -210,7 +210,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.HardChromaticThi).glyphName,
       ),
     },
@@ -220,7 +220,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.SoftChromaticThi).glyphName,
       ),
     },
@@ -230,7 +230,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.SoftChromaticPa).glyphName,
       ),
     },
@@ -240,7 +240,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.Enharmonic).glyphName,
       ),
     },
@@ -250,7 +250,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.Zygos).glyphName,
       ),
     },
@@ -260,7 +260,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.Kliton).glyphName,
       ),
     },
@@ -270,7 +270,7 @@ export const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
+        'NeanesStathisSeriesLegacy',
         NeumeMappingService.getMapping(Fthora.Spathi).glyphName,
       ),
     },

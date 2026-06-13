@@ -1000,6 +1000,7 @@ async function initialize() {
   (window as any)._editor = {
     elements,
     score,
+    selectedElement,
     selectedWorkspace,
     workspaces,
   };
@@ -1019,6 +1020,9 @@ async function initialize() {
       fontLoader.load('1rem Neanes'),
       fontLoader.load('1rem NeanesStathisSeries'),
       fontLoader.load('1rem NeanesRTL'),
+      fontLoader.load('1rem NeanesLegacy'),
+      fontLoader.load('1rem NeanesStathisSeriesLegacy'),
+      fontLoader.load('1rem NeanesRTLLegacy'),
       fontLoader.load('1rem "Noto Naskh Arabic"'),
       fontLoader.load('1rem "Old Standard"'),
       fontLoader.load('1rem "Source Serif"'),
@@ -6125,6 +6129,7 @@ function renderTabLabel(tab: Tab) {
                           :class="{
                             selectedLyrics: element === selectedLyrics,
                           }"
+                          :style="{ minWidth: withZoom(element.width) }"
                           :content="(element as NoteElement).lyrics"
                           :editable="!lyricsLocked"
                           white-space="nowrap"
@@ -6931,7 +6936,6 @@ function renderTabLabel(tab: Tab) {
 
 .lyrics {
   min-height: 1.6rem;
-  min-width: 1rem;
   text-align: center;
   position: relative;
 }

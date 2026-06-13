@@ -2973,6 +2973,17 @@ export class LayoutService {
       });
     }
 
+    if (martyriaElement.tempoRight) {
+      x += martyriaElement.tempoRightSpacing;
+      glyphs.push({
+        glyphName: NeumeMappingService.getMapping(martyriaElement.tempoRight)
+          .glyphName,
+        kind: 'inline',
+        x,
+        y: 0,
+      });
+    }
+
     return glyphs;
   }
 
@@ -4912,12 +4923,26 @@ export class LayoutService {
             );
             const barWidth = measureBarWidthMap.get(measureBarLeft) ?? 0;
             if (barWidth > 0) {
+              const followsMartyria =
+                previousAnchor.elementType === ElementType.Martyria;
+              const barExtents = followsMartyria
+                ? this.getMeasureBarCollisionExtents(
+                    measureBarLeft,
+                    pageSetup,
+                    measureBarWidthMap,
+                  )
+                : { left: 0, right: barWidth };
               const centeredLeft =
                 (previousBounds.right + ownerBounds.left - barWidth) / 2;
-              const barSpacing = this.getInlineSpacing(pageSetup);
+              const barSpacing = followsMartyria
+                ? this.getMeasureBarCollisionSpacing(pageSetup)
+                : this.getInlineSpacing(pageSetup);
               const targetLeft = Math.min(
-                Math.max(centeredLeft, previousBounds.right + barSpacing),
-                ownerBounds.left - barWidth - barSpacing,
+                Math.max(
+                  centeredLeft,
+                  previousBounds.right + barSpacing - barExtents.left,
+                ),
+                ownerBounds.left - barExtents.right - barSpacing,
               );
               owner.computedMeasureBarLeftOffsetX =
                 direction * (targetLeft - owner.x);
@@ -5098,6 +5123,19 @@ export class LayoutService {
         );
       }
 
+      if (
+        measureBar != null &&
+        edge === 'right' &&
+        this.getVisibleMeasureBarRight(owner) !== measureBar
+      ) {
+        return this.getMartyriaRightBoundsForMeasureBar(
+          element as MartyriaElement,
+          { left, right },
+          measureBar,
+          pageSetup,
+        );
+      }
+
       return { left, right };
     }
 
@@ -5241,6 +5279,60 @@ export class LayoutService {
     );
 
     return Math.max(0, fallbackBounds.left - bounds.left);
+  }
+
+  private static getMartyriaRightBoundsForMeasureBar(
+    martyriaElement: MartyriaElement,
+    fallbackBounds: { left: number; right: number },
+    measureBar: MeasureBar,
+    pageSetup: PageSetup,
+  ) {
+    const barBox = this.getMeasureBarClearanceBox(
+      measureBar,
+      'right',
+      fallbackBounds,
+      martyriaElement.x,
+      pageSetup,
+    );
+    const overlappingBoxes = this.getMartyriaCollisionGlyphBoxes(
+      martyriaElement,
+      pageSetup,
+    )
+      .filter((box) => this.noteGlyphBoxesVerticallyOverlap(box, barBox))
+      .map((box) => ({
+        left: martyriaElement.x + box.left,
+        right: martyriaElement.x + box.right,
+      }));
+
+    if (overlappingBoxes.length === 0) {
+      return fallbackBounds;
+    }
+
+    return {
+      left: Math.min(...overlappingBoxes.map((box) => box.left)),
+      right: Math.max(...overlappingBoxes.map((box) => box.right)),
+    };
+  }
+
+  private static getMartyriaRightOverhangForMeasureBar(
+    martyriaElement: MartyriaElement,
+    measureBar: MeasureBar,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const fallbackBounds = this.getMeasureBarAnchorBounds(
+      martyriaElement,
+      pageSetup,
+      measureBarWidthMap,
+    );
+    const bounds = this.getMartyriaRightBoundsForMeasureBar(
+      martyriaElement,
+      fallbackBounds,
+      measureBar,
+      pageSetup,
+    );
+
+    return Math.max(0, bounds.right - fallbackBounds.right);
   }
 
   private static getMeasureBarClearanceBox(
@@ -5472,13 +5564,24 @@ export class LayoutService {
     const leftCollisionMeasureBar = measureBarLeft ?? measureBarRight;
     const rightCollisionMeasureBar = measureBarRight ?? measureBarLeft;
     const rightInkOverhang =
-      rightCollisionMeasureBar != null && left?.elementType === ElementType.Note
-        ? this.getNoteRightOverhangForMeasureBar(
-            left as NoteElement,
-            rightCollisionMeasureBar,
-            pageSetup,
-            measureBarWidthMap,
-          )
+      rightCollisionMeasureBar != null
+        ? left?.elementType === ElementType.Note
+          ? this.getNoteRightOverhangForMeasureBar(
+              left as NoteElement,
+              rightCollisionMeasureBar,
+              pageSetup,
+              measureBarWidthMap,
+            )
+          : left?.elementType === ElementType.Martyria &&
+              right?.elementType === ElementType.Note &&
+              measureBarLeft != null
+            ? this.getMartyriaRightOverhangForMeasureBar(
+                left as MartyriaElement,
+                rightCollisionMeasureBar,
+                pageSetup,
+                measureBarWidthMap,
+              )
+            : 0
         : 0;
     const leftInkOverhang =
       leftCollisionMeasureBar != null
@@ -5581,6 +5684,38 @@ export class LayoutService {
         leftNote.neumeWidth,
         barBoxes,
         rightBoxes,
+        this.getMeasureBarCollisionSpacing(pageSetup),
+      );
+    }
+
+    if (
+      left?.elementType === ElementType.Martyria &&
+      right?.elementType === ElementType.Note
+    ) {
+      const leftMartyria = left as MartyriaElement;
+      const rightNote = right as NoteElement;
+      const measureBarLeft = this.getVisibleMeasureBarLeft(rightNote);
+
+      if (measureBarLeft == null) {
+        return 0;
+      }
+
+      const leftBoxes = this.getMartyriaCollisionGlyphBoxes(
+        leftMartyria,
+        pageSetup,
+      );
+      const barBoxes = this.getMeasureBarCollisionBoxes(
+        measureBarLeft,
+        'left',
+        { left: 0, right: 0 },
+        0,
+        pageSetup,
+      );
+
+      return this.getMinimumSpacingForNoteGlyphBoxes(
+        this.getMeasureBarOwnerWidth(leftMartyria),
+        leftBoxes,
+        barBoxes,
         this.getMeasureBarCollisionSpacing(pageSetup),
       );
     }

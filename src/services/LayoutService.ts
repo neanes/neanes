@@ -4990,7 +4990,10 @@ export class LayoutService {
                 measureBarRight,
                 'left',
               );
-              const nextClampExtents = nextIsMartyria
+              const useCollisionExtents =
+                nextIsMartyria ||
+                this.measureBarHasCollisionRegions(measureBarRight, pageSetup);
+              const nextClampExtents = useCollisionExtents
                 ? (this.getMeasureBarCollisionExtentsForAnchor(
                     nextAnchor,
                     measureBarRight,
@@ -4998,7 +5001,7 @@ export class LayoutService {
                     measureBarWidthMap,
                   ) ?? { left: 0, right: barWidth })
                 : { left: 0, right: barWidth };
-              const ownerClampExtents = nextIsMartyria
+              const ownerClampExtents = useCollisionExtents
                 ? (this.getMeasureBarCollisionExtentsForAnchor(
                     owner,
                     measureBarRight,
@@ -5865,12 +5868,58 @@ export class LayoutService {
         pageSetup,
         measureBarWidthMap,
       );
-
-      return this.getMinimumSpacingForNoteGlyphBoxes(
+      const collisionMinimum = this.getMinimumSpacingForNoteGlyphBoxes(
         leftNote.neumeWidth,
         barBoxes,
         rightBoxes,
         clearance,
+      );
+      if (!this.measureBarHasCollisionRegions(measureBarRight, pageSetup)) {
+        return collisionMinimum;
+      }
+
+      const barWidth = measureBarWidthMap.get(measureBarRight) ?? 0;
+      const ownerClampExtents = this.getMeasureBarCollisionExtentsForAnchor(
+        leftNote,
+        measureBarRight,
+        pageSetup,
+        measureBarWidthMap,
+      ) ?? { left: 0, right: barWidth };
+      const nextClampExtents = this.getMeasureBarCollisionExtentsForAnchor(
+        rightNote,
+        measureBarRight,
+        pageSetup,
+        measureBarWidthMap,
+      ) ?? { left: 0, right: barWidth };
+      const ownerBounds = this.getMeasureBarAnchorBounds(
+        leftNote,
+        pageSetup,
+        measureBarWidthMap,
+        measureBarRight,
+        'right',
+      );
+      const nextBounds = this.getMeasureBarAnchorBounds(
+        rightNote,
+        pageSetup,
+        measureBarWidthMap,
+        measureBarRight,
+        'left',
+      );
+      const ownerBoundsRight = ownerBounds.right - leftNote.x;
+      const nextBoundsLeft = nextBounds.left - rightNote.x;
+      const centeredClampMinimum = Math.max(
+        0,
+        ownerBoundsRight +
+          2 * clearance -
+          ownerClampExtents.left -
+          leftNote.neumeWidth -
+          nextBoundsLeft +
+          nextClampExtents.right,
+      );
+
+      return Math.max(
+        collisionMinimum,
+        centeredClampMinimum,
       );
     }
 
@@ -5934,6 +5983,19 @@ export class LayoutService {
         bottom: barBox.bottom,
       };
     });
+  }
+
+  private static measureBarHasCollisionRegions(
+    measureBar: MeasureBar,
+    pageSetup: PageSetup,
+  ) {
+    const glyphName = NeumeMappingService.getMapping(measureBar).glyphName;
+    return (
+      fontService.getGlyphCollisionRegions(
+        pageSetup.neumeDefaultFontFamily,
+        glyphName,
+      ).length > 0
+    );
   }
 
   private static isMeasureBarOwner(

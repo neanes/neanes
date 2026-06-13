@@ -5462,6 +5462,12 @@ export class LayoutService {
     ].filter((x) => x != null);
   }
 
+  private static getNoteNeumesForInkMeasurement(noteElement: NoteElement) {
+    return this.getNoteNeumesForMeasurement(noteElement).filter(
+      (neume) => !tieSet.has(neume as VocalExpressionNeume | Tie),
+    );
+  }
+
   public static calculateMartyrias(
     elements: ScoreElement[],
     pageSetup: PageSetup,
@@ -6217,7 +6223,7 @@ export class LayoutService {
     noteElement: NoteElement,
     pageSetup: PageSetup,
   ) {
-    const neumes = this.getNoteNeumesForMeasurement(noteElement);
+    const neumes = this.getNoteNeumesForInkMeasurement(noteElement);
     return this.getNeumeSequenceInkBoundsFromCache(neumes, pageSetup);
   }
 

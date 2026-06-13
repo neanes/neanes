@@ -159,6 +159,7 @@ The barline is centered in the available space while respecting that minimum.
 The trailing barline-to-$B$ clearance is modeled inside the box for a left-owned barline, so a barline at the start of a line keeps the same fixed clearance.
 The remaining minimum is preserved during justification and after lyric tucking.
 For note-to-note boundaries, the collision check uses glyph boxes for the notes, marks, and barline regions that vertically overlap; tie-like marks are ignored because adding space would break their intended connection.
+Vareia-to-barline clearance is checked separately, with a tiny vertical tolerance, so that a barline region and vareia that are effectively tangent in font metadata still reserve the normal barline spacing horizontally.
 When a right barline becomes terminal at a line break, at a paragraph ending, before an empty element, or before a right-aligned martyria, its clearance from the preceding neume is reserved as terminal width, including any note ink overhang that overlaps the barline clearance region.
 
 Ordinary martyriae use the active font's `martyriaGlue` engraving defaults instead of standard fixed inline glue.

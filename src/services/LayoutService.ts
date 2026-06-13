@@ -5444,10 +5444,21 @@ export class LayoutService {
   private static getNoteNeumesForMeasurement(noteElement: NoteElement) {
     return [
       noteElement.quantitativeNeume,
+      noteElement.stavros ? VocalExpressionNeume.Cross_Top : null,
       noteElement.vocalExpressionNeume,
+      noteElement.timeNeume,
+      noteElement.koronis ? TimeNeume.Koronis : null,
       noteElement.gorgonNeume,
-      noteElement.accidental,
+      noteElement.secondaryGorgonNeume,
       noteElement.fthora,
+      noteElement.secondaryFthora,
+      noteElement.tertiaryFthora,
+      noteElement.accidental,
+      noteElement.secondaryAccidental,
+      noteElement.tertiaryAccidental,
+      noteElement.noteIndicator ? noteElement.noteIndicatorNeume : null,
+      noteElement.ison,
+      noteElement.measureNumber,
     ].filter((x) => x != null);
   }
 

@@ -201,7 +201,7 @@
     </AppTooltip>
     <ToolbarSeparator />
     <DropdownMenu>
-      <InputGroup class="w-22 bg-background">
+      <InputGroup class="w-24 bg-background">
         <InputGroupInput
           v-model="zoomText"
           aria-label="Zoom"
@@ -219,7 +219,7 @@
           </InputGroupButton>
         </DropdownMenuTrigger>
       </InputGroup>
-      <DropdownMenuContent align="end" class="w-22 min-w-22">
+      <DropdownMenuContent align="end" class="w-24 min-w-24">
         <DropdownMenuItem @select="selectZoomToFit">
           {{ zoomToFitLabel }}
         </DropdownMenuItem>

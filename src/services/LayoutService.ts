@@ -3264,12 +3264,11 @@ export class LayoutService {
 
       if (element.elementType === ElementType.Martyria) {
         const martyriaElement = element as MartyriaElement;
-        const terminalMeasureBarSpacing =
-          this.getTerminalMartyriaRightSpacing(
-            martyriaElement,
-            workspace.pageSetup,
-            measureBarWidthMap,
-          );
+        const terminalMeasureBarSpacing = this.getTerminalMartyriaRightSpacing(
+          martyriaElement,
+          workspace.pageSetup,
+          measureBarWidthMap,
+        );
 
         return {
           elementType: ElementType.Martyria,

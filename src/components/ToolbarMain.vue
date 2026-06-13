@@ -209,15 +209,20 @@
           @keydown.enter="onZoomInputEnter"
           @keydown.escape="onZoomInputEscape"
         />
-        <DropdownMenuTrigger as-child>
-          <InputGroupButton
-            size="icon-sm"
-            class="h-full border-y-0 border-r-0 border-l border-input bg-transparent text-muted-foreground hover:text-muted-foreground"
-            aria-label="Show zoom options"
-          >
-            <PhCaretDown />
-          </InputGroupButton>
-        </DropdownMenuTrigger>
+        <InputGroupAddon
+          align="inline-end"
+          class="h-full border-l border-input p-0 has-[>button]:mr-0"
+        >
+          <DropdownMenuTrigger as-child>
+            <InputGroupButton
+              size="icon-sm"
+              class="h-full border-0"
+              aria-label="Show zoom options"
+            >
+              <PhCaretDown />
+            </InputGroupButton>
+          </DropdownMenuTrigger>
+        </InputGroupAddon>
       </InputGroup>
       <DropdownMenuContent align="end" class="w-24 min-w-24">
         <DropdownMenuItem @select="selectZoomToFit">
@@ -332,6 +337,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   InputGroup,
+  InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group';
@@ -453,9 +459,9 @@ const emit = defineEmits([
 ]);
 
 const { t } = useTranslation();
-const zoomText = ref('');
 const ZOOM_TO_FIT_VALUE = 'fit';
 const zoomOptions = ['50', '75', '90', '100', '125', '150', '200', '500'];
+const zoomText = ref('');
 
 const zoomToFitLabel = computed(() =>
   t(($) => $.toolbar.main.fit, { ns: 'toolbar' }),
@@ -509,6 +515,11 @@ function onZoomInputEnter(event: KeyboardEvent) {
   }
 
   event.preventDefault();
+  if (isCurrentZoomDisplay(zoomText.value)) {
+    resetZoomInput();
+    return;
+  }
+
   updateZoom(zoomText.value);
 }
 
@@ -565,6 +576,10 @@ function isZoomToFitValue(value: string) {
     normalizedValue === ZOOM_TO_FIT_VALUE ||
     normalizedValue === zoomToFitLabel.value.trim().toLowerCase()
   );
+}
+
+function isCurrentZoomDisplay(value: string) {
+  return value.trim() === zoomDisplay.value.trim();
 }
 
 function resetZoomInput() {

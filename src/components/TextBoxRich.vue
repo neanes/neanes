@@ -626,6 +626,22 @@ defineExpose({
   margin: 0;
 }
 
+/*
+ * CKEditor sizes inline spans but leaves the parent <p>/<li> at the editor's
+ * default line-height, so small inline text still reserves a default-size line
+ * box. When a block has explicit font-size spans, collapse the parent line box
+ * and let the sized children supply their own leading, so two 8pt lines stack
+ * like two 8pt lines. The :has() guard avoids collapsing plain text, which is a
+ * bare text node the child rule can't reach.
+ */
+:deep(.ck-content :is(p, li):has(span[style*='font-size'])) {
+  line-height: 0;
+}
+
+:deep(.ck-content :is(p, li):has(span[style*='font-size']) *) {
+  line-height: normal;
+}
+
 .ck.ck-editor__editable_inline > *:first-child {
   margin-top: 0;
 }

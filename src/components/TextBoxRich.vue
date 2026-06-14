@@ -642,6 +642,15 @@ defineExpose({
   line-height: normal;
 }
 
+/*
+ * The * reset above can't reach ::marker (a pseudo-element, not an element
+ * child), so a collapsed <li> would pass line-height: 0 down to its bullet or
+ * number and throw off marker alignment. Restore it explicitly.
+ */
+:deep(.ck-content li:has(span[style*='font-size'])::marker) {
+  line-height: normal;
+}
+
 .ck.ck-editor__editable_inline > *:first-child {
   margin-top: 0;
 }

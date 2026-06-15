@@ -5482,17 +5482,17 @@ async function onFileMenuExportAsPdf() {
 
     showExportReplyToast(
       reply,
-      t(($) => $.toast.editor.export.pdfSuccess, { ns: 'toast' }),
-      t(($) => $.toast.editor.export.pdfFailed, { ns: 'toast' }),
-      t(($) => $.toast.editor.export.pdfFailedDescription, { ns: 'toast' }),
+      t(($) => $.toast.export.pdfSuccess, { ns: 'toast' }),
+      t(($) => $.toast.export.pdfFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.pdfFailedDescription, { ns: 'toast' }),
     );
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.toast.editor.export.pdfFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.pdfFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.toast.editor.export.pdfFailedDescription, {
+        fallback: t(($) => $.toast.export.pdfFailedDescription, {
           ns: 'toast',
         }),
       },
@@ -5523,9 +5523,9 @@ async function exportAsPng(args: ExportAsPngSettings) {
     if (!reply.success) {
       if (!reply.canceled) {
         showReplyErrorToast(
-          t(($) => $.toast.editor.export.pngFailed, { ns: 'toast' }),
+          t(($) => $.toast.export.pngFailed, { ns: 'toast' }),
           reply,
-          t(($) => $.toast.editor.export.pngStartFailedDescription, {
+          t(($) => $.toast.export.pngStartFailedDescription, {
             ns: 'toast',
           }),
         );
@@ -5535,10 +5535,10 @@ async function exportAsPng(args: ExportAsPngSettings) {
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.toast.editor.export.pngFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.pngFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.toast.editor.export.pngStartFailedDescription, {
+        fallback: t(($) => $.toast.export.pngStartFailedDescription, {
           ns: 'toast',
         }),
       },
@@ -5549,9 +5549,9 @@ async function exportAsPng(args: ExportAsPngSettings) {
   printMode.value = true;
   exportInProgress.value = true;
   const toastId = toast.loading(
-    t(($) => $.toast.editor.export.pngLoading, { ns: 'toast' }),
+    t(($) => $.toast.export.pngLoading, { ns: 'toast' }),
     {
-      description: t(($) => $.toast.editor.export.pngLoadingDescription, {
+      description: t(($) => $.toast.export.pngLoadingDescription, {
         ns: 'toast',
       }),
     },
@@ -5602,7 +5602,7 @@ async function exportAsPng(args: ExportAsPngSettings) {
 
           throw new Error(
             pageReply.errorMessage ??
-              t(($) => $.toast.editor.export.pngFileFailedDescription, {
+              t(($) => $.toast.export.pngFileFailedDescription, {
                 ns: 'toast',
               }),
           );
@@ -5618,10 +5618,10 @@ async function exportAsPng(args: ExportAsPngSettings) {
 
     if (exportedPageCount === 0) {
       toast.info(
-        t(($) => $.toast.editor.export.pngCanceled, { ns: 'toast' }),
+        t(($) => $.toast.export.pngCanceled, { ns: 'toast' }),
         {
           id: toastId,
-          description: t(($) => $.toast.editor.export.pngCanceledDescription, {
+          description: t(($) => $.toast.export.pngCanceledDescription, {
             ns: 'toast',
           }),
         },
@@ -5634,10 +5634,10 @@ async function exportAsPng(args: ExportAsPngSettings) {
     }
 
     toast.success(
-      t(($) => $.toast.editor.export.pngComplete, { ns: 'toast' }),
+      t(($) => $.toast.export.pngComplete, { ns: 'toast' }),
       {
         id: toastId,
-        description: t(($) => $.toast.editor.export.pngCompleteDescription, {
+        description: t(($) => $.toast.export.pngCompleteDescription, {
           ns: 'toast',
           count: exportedPageCount,
           path: firstExportedPagePath,
@@ -5647,11 +5647,11 @@ async function exportAsPng(args: ExportAsPngSettings) {
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.toast.editor.export.pngFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.pngFailed, { ns: 'toast' }),
       error,
       {
         id: toastId,
-        fallback: t(($) => $.toast.editor.export.pngFilesFailedDescription, {
+        fallback: t(($) => $.toast.export.pngFilesFailedDescription, {
           ns: 'toast',
         }),
       },
@@ -5674,17 +5674,17 @@ async function onFileMenuExportAsHtml() {
 
     showExportReplyToast(
       reply,
-      t(($) => $.toast.editor.export.htmlSuccess, { ns: 'toast' }),
-      t(($) => $.toast.editor.export.htmlFailed, { ns: 'toast' }),
-      t(($) => $.toast.editor.export.htmlFailedDescription, { ns: 'toast' }),
+      t(($) => $.toast.export.htmlSuccess, { ns: 'toast' }),
+      t(($) => $.toast.export.htmlFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.htmlFailedDescription, { ns: 'toast' }),
     );
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.toast.editor.export.htmlFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.htmlFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.toast.editor.export.htmlFailedDescription, {
+        fallback: t(($) => $.toast.export.htmlFailedDescription, {
           ns: 'toast',
         }),
       },
@@ -5713,9 +5713,9 @@ async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
 
     showExportReplyToast(
       reply,
-      t(($) => $.toast.editor.export.musicXmlSuccess, { ns: 'toast' }),
-      t(($) => $.toast.editor.export.musicXmlFailed, { ns: 'toast' }),
-      t(($) => $.toast.editor.export.musicXmlFailedDescription, {
+      t(($) => $.toast.export.musicXmlSuccess, { ns: 'toast' }),
+      t(($) => $.toast.export.musicXmlFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.musicXmlFailedDescription, {
         ns: 'toast',
       }),
     );
@@ -5726,10 +5726,10 @@ async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.toast.editor.export.musicXmlFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.musicXmlFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.toast.editor.export.musicXmlFailedDescription, {
+        fallback: t(($) => $.toast.export.musicXmlFailedDescription, {
           ns: 'toast',
         }),
       },
@@ -5750,9 +5750,9 @@ async function exportAsLatex(args: ExportAsLatexSettings) {
 
     showExportReplyToast(
       reply,
-      t(($) => $.toast.editor.export.latexSuccess, { ns: 'toast' }),
-      t(($) => $.toast.editor.export.latexFailed, { ns: 'toast' }),
-      t(($) => $.toast.editor.export.latexFailedDescription, { ns: 'toast' }),
+      t(($) => $.toast.export.latexSuccess, { ns: 'toast' }),
+      t(($) => $.toast.export.latexFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.latexFailedDescription, { ns: 'toast' }),
     );
 
     if (reply.success || reply.canceled) {
@@ -5761,10 +5761,10 @@ async function exportAsLatex(args: ExportAsLatexSettings) {
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.toast.editor.export.latexFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.latexFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.toast.editor.export.latexFailedDescription, {
+        fallback: t(($) => $.toast.export.latexFailedDescription, {
           ns: 'toast',
         }),
       },

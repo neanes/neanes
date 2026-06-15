@@ -377,8 +377,10 @@ import {
   PhX,
   PhXCircle,
 } from '@phosphor-icons/vue';
+import { useTranslation } from 'i18next-vue';
 import JSZip from 'jszip';
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { toast } from 'vue-sonner';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -424,6 +426,7 @@ const fileSelector = useTemplateRef<HTMLInputElement>('file');
 const imageFileSelector = useTemplateRef<HTMLInputElement>('imagefile');
 const ocrFileSelector = useTemplateRef<HTMLInputElement>('ocrfile');
 const recentFilesService = new BrowserRecentFilesService();
+const { t } = useTranslation();
 
 const accept = '.byz,.byzx';
 const acceptImage = '.bmp,.jpg,.jpeg,.jpe,.png,.gif,.svg,.webp,.ico';
@@ -436,6 +439,18 @@ const recentFiles = ref<BrowserRecentFile[]>([]);
 const openRecentIsEnabled = computed(
   () => openRecentIsSupported && recentFiles.value.length > 0,
 );
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return fallback;
+}
 
 onMounted(() => {
   // If using the browser, then we need to hook into the key down
@@ -501,25 +516,51 @@ function onClickNew() {
 
 async function onClickOpen() {
   if (openRecentIsSupported) {
+    let handle: Awaited<
+      ReturnType<typeof recentFilesService.showOpenFilePicker>
+    > | null = null;
+
     try {
-      const handle = await recentFilesService.showOpenFilePicker();
-
-      if (handle == null) {
-        return;
-      }
-
-      const file = await handle.getFile();
-      await openScoreFile(file);
-      await recentFilesService.add(handle);
-      await loadRecentFiles();
-      return;
+      handle = await recentFilesService.showOpenFilePicker();
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         return;
       }
 
       console.error(error);
+      fileSelector.value!.click();
+      return;
     }
+
+    if (handle == null) {
+      return;
+    }
+
+    try {
+      const file = await handle.getFile();
+      await openScoreFile(file);
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
+        {
+          description: getErrorMessage(
+            error,
+            t(($) => $.toast.editor.openFailedDescription, { ns: 'toast' }),
+          ),
+        },
+      );
+      return;
+    }
+
+    try {
+      await recentFilesService.add(handle);
+      await loadRecentFiles();
+    } catch (error) {
+      console.error(error);
+    }
+
+    return;
   }
 
   fileSelector.value!.click();
@@ -531,9 +572,27 @@ async function onClickOpenRecent(id: string) {
 
     if (recentFile != null) {
       await openScoreFile(recentFile.file, recentFile.filePath);
+    } else {
+      toast.error(
+        t(($) => $.toast.editor.openRecentFailed, { ns: 'toast' }),
+        {
+          description: t(($) => $.toast.editor.openRecentUnavailable, {
+            ns: 'toast',
+          }),
+        },
+      );
     }
   } catch (error) {
     console.error(error);
+    toast.error(
+      t(($) => $.toast.editor.openRecentFailed, { ns: 'toast' }),
+      {
+        description: getErrorMessage(
+          error,
+          t(($) => $.toast.editor.openRecentReadFailed, { ns: 'toast' }),
+        ),
+      },
+    );
   } finally {
     await loadRecentFiles();
   }
@@ -595,6 +654,15 @@ async function onSelectFile() {
       await openScoreFile(files[0]);
     } catch (error) {
       console.error(error);
+      toast.error(
+        t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
+        {
+          description: getErrorMessage(
+            error,
+            t(($) => $.toast.editor.openFailedDescription, { ns: 'toast' }),
+          ),
+        },
+      );
     } finally {
       resetFileSelector(fileSelector.value);
     }

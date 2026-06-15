@@ -24,14 +24,17 @@ import type { PageSize } from '@/models/PageSetup';
 
 import { initializeI18n, resolveLanguagePreference } from '../../src/i18n';
 import type {
+  ClipboardReplyArgs,
   CloseWorkspacesArgs,
   ExportPageAsImageArgs,
+  ExportPageAsImageReplyArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
+  ExportWorkspaceReplyArgs,
   FileMenuImportOcrArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
@@ -101,6 +104,18 @@ const silentLatexIncludeModeKeys = process.argv.includes(
 const silentLatexIncludeTextBoxes = process.argv.includes(
   '--latex-include-text-boxes',
 );
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return undefined;
+}
 const silent = silentPdf || silentLatex || silentHtml;
 
 const disableUpdates = process.argv.includes('--no-update');
@@ -171,7 +186,6 @@ enum OnConflictChoice {
 }
 
 let saving = false;
-let exporting = false;
 let loaded = false;
 
 let exportAsImageOnConflict: OnConflictChoice | null = null;
@@ -568,11 +582,12 @@ async function openFileFromArgs(argv: string[]) {
 async function saveWorkspace(args: SaveWorkspaceArgs) {
   const result: SaveWorkspaceReplyArgs = { success: false };
 
-  try {
-    if (saving) {
-      return false;
-    }
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
 
+  try {
     saving = true;
 
     await writeScoreFile(args.filePath, args.data);
@@ -580,14 +595,7 @@ async function saveWorkspace(args: SaveWorkspaceArgs) {
     result.success = true;
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Save failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
@@ -598,11 +606,12 @@ async function saveWorkspace(args: SaveWorkspaceArgs) {
 async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
   const result: SaveWorkspaceAsReplyArgs = { success: false, filePath: '' };
 
-  try {
-    if (saving) {
-      return false;
-    }
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
 
+  try {
     saving = true;
 
     const dialogResult = await dialog.showSaveDialog(win!, {
@@ -648,18 +657,15 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
 
         store.lastDirectory = path.dirname(result.filePath);
         await saveStore();
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Save As failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
@@ -804,11 +810,22 @@ function getPageSize(pageSize: PageSize, width: number, height: number) {
 let silentPdfSuccessCount = 0;
 let silentPdfFailCount = 0;
 
-async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
+async function exportWorkspaceAsPdf(
+  args: ExportWorkspaceAsPdfArgs,
+): Promise<ExportWorkspaceReplyArgs> {
+  const result: ExportWorkspaceReplyArgs = { success: false };
+
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (!win) {
+    return result;
+  }
+
   try {
-    if (exporting || !win) {
-      return;
-    }
+    saving = true;
 
     if (silentPdf) {
       try {
@@ -823,17 +840,18 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
         const newPath = replaceExtension(args.filePath!, 'pdf');
 
         await fs.writeFile(newPath, data);
+        result.success = true;
+        result.filePath = newPath;
         silentPdfSuccessCount++;
         console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
+        result.errorMessage = getErrorMessage(error);
         silentPdfFailCount++;
         console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
-      return;
+      return result;
     }
-
-    exporting = true;
 
     const dialogResult = await dialog.showSaveDialog(win, {
       title: 'Export Score as PDF',
@@ -880,45 +898,59 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
+
+        result.success = true;
+        result.filePath = filePath;
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export to PDF failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
-    exporting = false;
+    saving = false;
   }
+
+  return result;
 }
 
 let silentHtmlSuccessCount = 0;
 let silentHtmlFailCount = 0;
 
-async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
-  try {
-    if (saving || !win) {
-      return false;
-    }
+async function exportWorkspaceAsHtml(
+  args: ExportWorkspaceAsHtmlArgs,
+): Promise<ExportWorkspaceReplyArgs> {
+  const result: ExportWorkspaceReplyArgs = { success: false };
 
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (!win) {
+    return result;
+  }
+
+  try {
     if (silentHtml) {
       try {
         const newPath = replaceExtension(args.filePath!, 'html');
 
         await fs.writeFile(newPath, args.data);
+        result.success = true;
+        result.filePath = newPath;
         silentHtmlSuccessCount++;
         console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
+        result.errorMessage = getErrorMessage(error);
         silentHtmlFailCount++;
         console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
-      return;
+      return result;
     }
 
     saving = true;
@@ -965,29 +997,40 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
+
+        result.success = true;
+        result.filePath = filePath;
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as HTML failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
+
+  return result;
 }
 
-async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
-  try {
-    if (saving) {
-      return false;
-    }
+async function exportWorkspaceAsMusicXml(
+  args: ExportWorkspaceAsMusicXmlArgs,
+): Promise<ExportWorkspaceReplyArgs> {
+  const result: ExportWorkspaceReplyArgs = { success: false };
 
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (!win) {
+    return result;
+  }
+
+  try {
     saving = true;
 
     const extension = args.compressed ? 'mxl' : 'musicxml';
@@ -1033,45 +1076,59 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
+
+        result.success = true;
+        result.filePath = filePath;
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as MusicXML failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
+
+  return result;
 }
 
 let silentLatexSuccessCount = 0;
 let silentLatexFailCount = 0;
 
-async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
-  try {
-    if (saving) {
-      return false;
-    }
+async function exportWorkspaceAsLatex(
+  args: ExportWorkspaceAsLatexArgs,
+): Promise<ExportWorkspaceReplyArgs> {
+  const result: ExportWorkspaceReplyArgs = { success: false };
 
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (!win) {
+    return result;
+  }
+
+  try {
     if (silentLatex) {
       try {
         const newPath = replaceExtension(args.filePath!, 'byztex');
 
         await fs.writeFile(newPath, args.data);
+        result.success = true;
+        result.filePath = newPath;
         silentLatexSuccessCount++;
         console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
+        result.errorMessage = getErrorMessage(error);
         silentLatexFailCount++;
         console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
-      return;
+      return result;
     }
 
     saving = true;
@@ -1111,34 +1168,41 @@ async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
+
+        result.success = true;
+        result.filePath = filePath;
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as Latex failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
+
+  return result;
 }
 
 async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
   const result = {
-    filePath: args.filePath,
+    filePath: '',
     success: false,
   } as ExportWorkspaceAsImageReplyArgs;
 
-  try {
-    if (saving) {
-      return result;
-    }
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
 
+  if (!win) {
+    return result;
+  }
+
+  try {
     saving = true;
 
     const dialogResult = await dialog.showSaveDialog(win!, {
@@ -1168,19 +1232,14 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
 
       store.lastDirectory = path.dirname(filePath);
       await saveStore();
+    } else {
+      result.canceled = true;
     }
 
     return result;
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as Image failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
 
     return result;
   } finally {
@@ -1188,12 +1247,22 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
   }
 }
 
-async function exportPageAsImage(args: ExportPageAsImageArgs) {
-  try {
-    if (saving || exportAsImageOnConflict === OnConflictChoice.SkipAll) {
-      return false;
-    }
+async function exportPageAsImage(
+  args: ExportPageAsImageArgs,
+): Promise<ExportPageAsImageReplyArgs> {
+  const result: ExportPageAsImageReplyArgs = { success: false };
 
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (exportAsImageOnConflict === OnConflictChoice.SkipAll) {
+    result.canceled = true;
+    return result;
+  }
+
+  try {
     saving = true;
 
     if (exportAsImageOnConflict !== OnConflictChoice.ReplaceAll) {
@@ -1202,7 +1271,13 @@ async function exportPageAsImage(args: ExportPageAsImageArgs) {
       );
 
       if (exportAsImageOnConflict === OnConflictChoice.SkipAll) {
-        return false;
+        result.canceled = true;
+        return result;
+      }
+
+      if (exportAsImageOnConflict === OnConflictChoice.Skip) {
+        result.skipped = true;
+        return result;
       }
     }
 
@@ -1213,17 +1288,12 @@ async function exportPageAsImage(args: ExportPageAsImageArgs) {
       await fs.writeFile(args.filePath, args.data, 'base64');
     }
 
-    return true;
+    result.success = true;
+    return result;
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as Image failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
+    return result;
   } finally {
     saving = false;
   }
@@ -2285,9 +2355,27 @@ ipcMain.handle(IpcRendererChannels.GetSystemFonts, async () => {
   return fonts;
 });
 
-ipcMain.handle(IpcRendererChannels.Paste, async () => {
-  return await win?.webContents.paste();
-});
+ipcMain.handle(
+  IpcRendererChannels.Paste,
+  async (): Promise<ClipboardReplyArgs> => {
+    try {
+      if (!win) {
+        return {
+          success: false,
+        };
+      }
+
+      await win.webContents.paste();
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      return {
+        success: false,
+        errorMessage: getErrorMessage(error),
+      };
+    }
+  },
+);
 
 // macOS-only
 // This is called in two cases:

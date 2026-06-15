@@ -1,5 +1,8 @@
 import type {
+  ClipboardReplyArgs,
+  ExportPageAsImageReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
+  ExportWorkspaceReplyArgs,
   OpenWorkspaceFromArgvArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
@@ -13,25 +16,34 @@ export interface IIpcService {
 
   saveWorkspaceAs(workspace: Workspace): Promise<SaveWorkspaceAsReplyArgs>;
 
-  exportWorkspaceAsPdf(workspace: Workspace): Promise<void>;
+  exportWorkspaceAsPdf(workspace: Workspace): Promise<ExportWorkspaceReplyArgs>;
 
-  exportWorkspaceAsHtml(workspace: Workspace, data: string): Promise<void>;
+  exportWorkspaceAsHtml(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs>;
 
   exportWorkspaceAsMusicXml(
     workspace: Workspace,
     data: string,
     compressed: boolean,
     openFolder: boolean,
-  ): Promise<void>;
+  ): Promise<ExportWorkspaceReplyArgs>;
 
-  exportWorkspaceAsLatex(workspace: Workspace, data: string): Promise<void>;
+  exportWorkspaceAsLatex(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs>;
 
   exportWorkspaceAsImage(
     workspace: Workspace,
     imageFormat: 'png' | 'svg',
   ): Promise<ExportWorkspaceAsImageReplyArgs>;
 
-  exportPageAsImage(fileName: string, data: string): Promise<boolean>;
+  exportPageAsImage(
+    fileName: string,
+    data: string,
+  ): Promise<ExportPageAsImageReplyArgs>;
 
   printWorkspace(workspace: Workspace): Promise<void>;
 
@@ -51,5 +63,5 @@ export interface IIpcService {
 
   cancelExit(): Promise<void>;
 
-  paste(): Promise<void>;
+  paste(): Promise<ClipboardReplyArgs>;
 }

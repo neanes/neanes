@@ -1661,6 +1661,15 @@ function refocusSelectedRichTextEditorAfterShowingPane(
   });
 }
 
+function showPropertiesPaneForRichTextNeume() {
+  if (paneVisibility.value.properties) {
+    return;
+  }
+
+  setPaneVisibility('properties', true);
+  refocusSelectedRichTextEditorAfterShowingPane('properties', true);
+}
+
 function resetLayout() {
   const defaultVisibility = createDefaultPaneVisibility();
 
@@ -7197,6 +7206,10 @@ function renderTabLabel(tab: Tab) {
                         "
                         :style="headerStyle"
                         @click="selectHeaderRichTextBox(pageIndex)"
+                        @select-neume="
+                          selectHeaderRichTextBox(pageIndex);
+                          showPropertiesPaneForRichTextNeume();
+                        "
                         @update="
                           updateRichTextBox(
                             getHeaderForPageIndex(
@@ -7376,6 +7389,10 @@ function renderTabLabel(tab: Tab) {
                                 annotation,
                                 true,
                               )
+                            "
+                            @select-neume="
+                              setSelectedAnnotation(element, annotation);
+                              showPropertiesPaneForRichTextNeume();
                             "
                             @mousedown="
                               setSelectedAnnotation(element, annotation)
@@ -7682,6 +7699,10 @@ function renderTabLabel(tab: Tab) {
                           :editor-language="ckeditorLanguage"
                           :selected="isSelected(element)"
                           @select-single="selectedElement = element"
+                          @select-neume="
+                            selectedElement = element;
+                            showPropertiesPaneForRichTextNeume();
+                          "
                           @update="
                             updateRichTextBox(
                               element as RichTextBoxElement,
@@ -7843,6 +7864,10 @@ function renderTabLabel(tab: Tab) {
                         "
                         :style="footerStyle"
                         @click="selectFooterRichTextBox(pageIndex)"
+                        @select-neume="
+                          selectFooterRichTextBox(pageIndex);
+                          showPropertiesPaneForRichTextNeume();
+                        "
                         @update="
                           updateRichTextBox(
                             getFooterForPageIndex(

@@ -20,6 +20,7 @@
         :model-value="contentLeft"
         :config="editorConfig"
         @blur="onBlur"
+        @select-neume="emit('select-neume')"
       />
       <RichTextEditor
         :key="`center-${editorLanguage}`"
@@ -30,6 +31,7 @@
         :config="editorConfig"
         @blur="onBlur"
         @ready="onEditorReady"
+        @select-neume="emit('select-neume')"
       />
       <RichTextEditor
         :key="`right-${editorLanguage}`"
@@ -39,6 +41,7 @@
         :model-value="contentRight"
         :config="editorConfig"
         @blur="onBlur"
+        @select-neume="emit('select-neume')"
       />
     </div>
     <div v-else-if="element.inline" class="inline-container">
@@ -57,6 +60,7 @@
             :config="editorConfig"
             @blur="onBlur"
             @ready="onEditorReadyInline"
+            @select-neume="emit('select-neume')"
           />
         </div>
       </div>
@@ -71,6 +75,7 @@
           :config="editorConfig"
           @blur="onBlur"
           @ready="onEditorReadyInlineBottom"
+          @select-neume="emit('select-neume')"
         />
       </div>
     </div>
@@ -85,6 +90,7 @@
       :style="textBoxStyle"
       @blur="onBlur"
       @ready="onEditorReady"
+      @select-neume="emit('select-neume')"
     />
     <RichTextEditor
       v-else
@@ -97,6 +103,7 @@
       :style="textBoxStyle"
       @blur="onBlur"
       @ready="onEditorReady"
+      @select-neume="emit('select-neume')"
     />
   </div>
 </template>
@@ -119,7 +126,12 @@ import type { TokenMetadata } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
-const emit = defineEmits(['update', 'update:height', 'select-single']);
+const emit = defineEmits([
+  'update',
+  'update:height',
+  'select-single',
+  'select-neume',
+]);
 const props = defineProps({
   element: {
     type: Object as PropType<RichTextBoxElement>,

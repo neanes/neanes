@@ -16,6 +16,7 @@
       :config="editorConfig"
       @ready="onEditorReady"
       @blur="handleEditorBlur"
+      @select-neume="emit('select-neume')"
     />
   </div>
 </template>
@@ -42,7 +43,7 @@ import { withZoom } from '@/utils/withZoom';
 
 const ANNOTATION_LOCK_ID = 'ANNOTATION_LOCK_ID';
 
-const emit = defineEmits(['update', 'delete']);
+const emit = defineEmits(['update', 'delete', 'select-neume']);
 const props = defineProps({
   element: {
     type: Object as PropType<AnnotationElement>,

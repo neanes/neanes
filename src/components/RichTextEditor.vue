@@ -18,6 +18,7 @@ import type { EditorConfig } from 'ckeditor5';
 import { computed, onBeforeUnmount, useTemplateRef, watch } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
+import { NEUME_ELEMENT } from '@/ckeditor-plugins/insertneume/insertneumeediting';
 import {
   registerEditor,
   unregisterEditor,
@@ -37,6 +38,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   blur: [editor: InlineEditor];
   ready: [editor: InlineEditor];
+  'select-neume': [];
 }>();
 
 const editorRef =
@@ -70,6 +72,7 @@ watch([() => props.modelValue, instance], ([next, editor]) => {
 
 let registeredEditor: InlineEditor | null = null;
 let unregisterFocusTracker: (() => void) | null = null;
+let unregisterViewClick: (() => void) | null = null;
 let editorIsFocused = false;
 
 watch(
@@ -113,6 +116,26 @@ function onReady(editor: InlineEditor) {
     editor.ui.focusTracker.off('change:isFocused', onFocusChanged);
   };
 
+  const onViewClick = () => {
+    window.setTimeout(() => {
+      if (registeredEditor !== editor) {
+        return;
+      }
+
+      const selectedElement =
+        editor.model.document.selection.getSelectedElement();
+
+      if (selectedElement?.name === NEUME_ELEMENT) {
+        emit('select-neume');
+      }
+    });
+  };
+
+  editor.editing.view.document.on('click', onViewClick);
+  unregisterViewClick = () => {
+    editor.editing.view.document.off('click', onViewClick);
+  };
+
   emit('ready', editor);
 }
 
@@ -123,6 +146,8 @@ function onDestroy(editor: InlineEditor) {
 }
 
 function unregisterRichTextEditor() {
+  unregisterViewClick?.();
+  unregisterViewClick = null;
   unregisterFocusTracker?.();
   unregisterFocusTracker = null;
   editorIsFocused = false;

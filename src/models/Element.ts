@@ -719,6 +719,7 @@ export class MartyriaElement extends ScoreElement {
   }
 
   // Re-render helpers
+  public errorPrevious: boolean = false;
   public notePrevious: Note = Note.Pa;
   public rootSignPrevious: RootSign = RootSign.Alpha;
   public computedTempoLeftOffsetXPrevious: number = 0;

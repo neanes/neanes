@@ -4010,6 +4010,7 @@ export class LayoutService {
 
     if (element.elementType === ElementType.Martyria) {
       const martyria = element as MartyriaElement;
+      martyria.errorPrevious = martyria.error;
       martyria.notePrevious = martyria.note;
       martyria.rootSignPrevious = martyria.rootSign;
       martyria.computedTempoLeftOffsetXPrevious =
@@ -4078,6 +4079,7 @@ export class LayoutService {
     if (!element.updated && element.elementType === ElementType.Martyria) {
       const martyria = element as MartyriaElement;
       martyria.updated =
+        martyria.errorPrevious !== martyria.error ||
         martyria.notePrevious !== martyria.note ||
         martyria.rootSignPrevious !== martyria.rootSign ||
         martyria.computedTempoLeftOffsetXPrevious !==

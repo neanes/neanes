@@ -1720,6 +1720,7 @@ watch(
       :get-tab-context-menu-items="onTabContextMenu"
       :right-header-actions-component="PaneHeaderActions"
       dnd-strategy="pointer"
+      scrollbars="native"
       :theme="themeLight"
       @ready="onDockviewReady"
       @will-drop="onDockviewWillDrop"

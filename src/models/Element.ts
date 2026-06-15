@@ -3,13 +3,13 @@ import type {
   Fthora,
   GorgonNeume,
   Ison,
-  MeasureBar,
   MeasureNumber,
   NoteIndicator,
   Tie,
   TimeNeume,
 } from '@/models/Neumes';
 import {
+  MeasureBar,
   ModeSign,
   Note,
   QuantitativeNeume,
@@ -37,6 +37,7 @@ import { Scale, ScaleNote } from './Scales';
 export enum ElementType {
   Note = 'Note',
   Martyria = 'Martyria',
+  MeasureBar = 'MeasureBar',
   Tempo = 'Tempo',
   Empty = 'Empty',
   TextBox = 'TextBox',
@@ -757,6 +758,37 @@ export class MartyriaElement extends ScoreElement {
       lineBreak: this.lineBreak,
       lineBreakType: this.lineBreakType,
     } as Partial<MartyriaElement>;
+  }
+}
+
+export type MeasureBarSourceSide = 'left' | 'right';
+
+export class MeasureBarElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.MeasureBar;
+  public measureBar: MeasureBar = MeasureBar.MeasureBarRight;
+  public sourceElement: NoteElement | MartyriaElement | null = null;
+  public sourceSide: MeasureBarSourceSide = 'right';
+  public isTransferred: boolean = false;
+  public transientKey: string = '';
+  public computedOffsetX: number = 0;
+  public computedOffsetY: number = 0;
+  public offsetX: number | null = null;
+  public offsetY: number | null = null;
+
+  public clone() {
+    const clone = new MeasureBarElement();
+    Object.assign(clone, {
+      measureBar: this.measureBar,
+      sourceElement: this.sourceElement,
+      sourceSide: this.sourceSide,
+      isTransferred: this.isTransferred,
+      transientKey: this.transientKey,
+      computedOffsetX: this.computedOffsetX,
+      computedOffsetY: this.computedOffsetY,
+      offsetX: this.offsetX,
+      offsetY: this.offsetY,
+    });
+    return clone;
   }
 }
 

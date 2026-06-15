@@ -8,12 +8,6 @@
     <template v-if="neume.error"> ? </template>
     <template v-else>
       <Neume
-        v-if="hasMeasureBarLeft && !isMeasureBarAbove"
-        :neume="neume.measureBarLeft!"
-        :style="measureBarLeftStyle"
-        class="measure-bar"
-      />
-      <Neume
         v-if="hasTempoLeft"
         :neume="neume.tempoLeft!"
         :style="tempoLeftStyle"
@@ -23,7 +17,7 @@
       <Neume v-if="hasFthora" :neume="neume.fthora!" :style="fthoraStyle" />
       <Neume v-if="hasTempo" :neume="neume.tempo!" :style="tempoStyle" />
       <Neume
-        v-if="hasMeasureBarLeft && isMeasureBarAbove"
+        v-if="hasMeasureBarLeft"
         :neume="neume.measureBarLeft!"
         :style="measureBarStyle"
       />
@@ -36,12 +30,6 @@
         v-if="hasTempoRight"
         :neume="neume.tempoRight!"
         :style="tempoRightStyle"
-      />
-      <Neume
-        v-if="hasMeasureBarRight"
-        :neume="neume.measureBarRight!"
-        :style="measureBarRightStyle"
-        class="measure-bar"
       />
     </template>
   </div>
@@ -73,13 +61,11 @@ const hasFthora = computed(() => props.neume.fthora != null);
 const hasTempoLeft = computed(() => props.neume.tempoLeft != null);
 const hasTempo = computed(() => props.neume.tempo != null);
 const hasTempoRight = computed(() => props.neume.tempoRight != null);
-const hasMeasureBarLeft = computed(() => props.neume.measureBarLeft != null);
-const hasMeasureBarRight = computed(() => props.neume.measureBarRight != null);
+const hasMeasureBarLeft = computed(
+  () => props.neume.measureBarLeft?.endsWith('Above') === true,
+);
 const hasQuantitativeNeume = computed(
   () => props.neume.quantitativeNeume != null && props.neume.alignRight,
-);
-const isMeasureBarAbove = computed(() =>
-  props.neume.measureBarLeft?.endsWith('Above'),
 );
 
 const style = computed(() => {
@@ -143,28 +129,6 @@ const getMeasureBarStyle = () => {
 };
 
 const measureBarStyle = computed(() => getMeasureBarStyle() as StyleValue);
-
-const measureBarLeftStyle = computed(() => {
-  return {
-    ...getMeasureBarStyle(),
-    transform: `translateX(${withZoom(
-      props.neume.computedMeasureBarLeftOffsetX,
-    )})`,
-    marginInlineEnd: withZoom(props.neume.computedMeasureBarLeftLeadingSpacing),
-  } as StyleValue;
-});
-
-const measureBarRightStyle = computed(() => {
-  return {
-    ...getMeasureBarStyle(),
-    transform: `translateX(${withZoom(
-      props.neume.computedMeasureBarRightOffsetX,
-    )})`,
-    marginInlineStart: withZoom(
-      props.neume.computedMeasureBarRightTrailingSpacing,
-    ),
-  } as StyleValue;
-});
 </script>
 
 <style scoped>

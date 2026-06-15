@@ -148,24 +148,26 @@ The active font's OpenType shaping is now applied implicitly when each note's ne
 Contextual substitutions affect measured glyph-run width only; inter-neume spacing comes from fixed inline spacing rather than substituted glyph leading or trailing metadata.
 A vareia contributes fixed internal spacing before the main neume; in right-to-left mode the visual order remains vareia followed by the main neume when read from right to left.
 
-Visible barlines also participate in spacing.
+Measure barlines are generated as transient layout elements from the saved note and martyria barline properties.
+The saved score remains compatible with older files, but the paragraph that Knuth-Plass sees contains explicit barline boxes rather than hiding barline width inside neighboring note or martyria boxes.
 In the following formulas, $s_0$ is the fixed inline spacing described above.
 For a barline between elements $A$ and $B$, the minimum boundary width starts from fixed clearance rather than glyph bearings, then grows if note ink or configured collision regions require more room.
-If a visible barline lies between two neume anchors, the boundary reserves one fixed inline space on each side of the barline:
+If a visible barline lies between two neume anchors, the barline box owns the glyph width and the surrounding glues reserve equal side spacing:
 
-$$2s_0.$$
+$$\frac{s_0}{2} \quad \text{barline box} \quad \frac{s_0}{2}.$$
 
-The barline is centered in the available space while respecting that minimum.
-The trailing barline-to-$B$ clearance is modeled inside the box for a left-owned barline, so a barline at the start of a line keeps the same fixed clearance.
-The remaining minimum is preserved during justification and after lyric tucking.
+The side glues have equal stretch and equal shrink, so justification keeps the barline centered between its neighboring elements.
+The side widths are widened only when the barline's collision regions or bounding box would otherwise violate the fixed barline clearance against adjacent element regions or boxes.
+Lyrics are not part of this collision check.
+If a barline lands first on a line, Phase 2 places its left ink boundary flush with the left page margin.
+If it lands last on a line, Phase 2 places its right ink boundary flush with the right page margin.
 For note-to-note boundaries, the collision check uses glyph boxes for the notes, marks, and barline regions that vertically overlap; tie-like marks are ignored because adding space would break their intended connection.
 Vareia-to-barline clearance is checked separately, with a tiny vertical tolerance, so that a barline region and vareia that are effectively tangent in font metadata still reserve the normal barline spacing horizontally.
-When a right barline becomes terminal at a line break, at a paragraph ending, before an empty element, or before a right-aligned martyria, its clearance from the preceding neume is reserved as terminal width, including any note ink overhang that overlaps the barline clearance region.
+Above-style left bars remain visually owner-anchored for now; they are still treated as marks in the owning note or martyria's rendered glyph order rather than as horizontal side-spacing boxes.
 
 Ordinary martyriae use the active font's `martyriaGlue` engraving defaults instead of standard fixed inline glue.
 Its natural width is `neumeDefaultFontSize * martyriaGlue.width`.
 This gives martyriae font-specific surrounding space that can differ from ordinary neume spacing.
-An inline left martyria bar contributes to that box width, but a short left bar that has been converted into an above-style mark does not own horizontal side spacing.
 Above-style left bars and the central tempo mark are still measured as martyria body ink, in render order, so their visible protrusion can widen visual minimums without adding inline box width.
 During justification, stretch and shrink are based on the martyria glue defaults while the same-line width is still protected by any visual-ink and measure-bar minimums.
 Tempo-adjacent martyria boundaries are the exception: when a non-right-aligned martyria contains `tempoLeft` or `tempoRight`, or when a standalone tempo sign sits immediately beside a non-right-aligned martyria in the same paragraph, that side uses standard fixed inline glue instead of martyria glue.
@@ -181,12 +183,9 @@ The two martyria-side glues are then assigned equal natural visible whitespace f
 During compression they keep the same shrink, so the visual balance holds under justification, but that shrink is floored by hard ink, lyric, and measure-bar clearance rather than by the natural martyria glue width.
 For plain neighboring neumes, this lets each martyria glue shrink from `martyriaGlue.width` toward ordinary `standardGlue.width`; the shrink is reduced only when a visible collision floor actually binds.
 
-When a martyria has a transferable measure bar and is followed by a note, the bar transfers to the next line's first note at a break.
-To reserve space for this, the martyria's post-break glue is narrowed by the bar width plus fixed leading clearance, and an anonymous spacer box of the same width is inserted before the following note's box.
-On the same line the reduced glue and the spacer cancel, leaving the note's own box position unchanged.
-The post-break glue's shrink is capped so that justification cannot reduce that same-line boundary below the fixed measure-bar clearance.
-At a break the post-break glue vanishes; the spacer remains at the start of the next line and reserves fixed leading space for the transferred bar.
-In Phase 2, when the break is actually taken, the note element is shifted left by the bar width plus fixed leading clearance so that the rendered barline glyph and spacing occupy the space reserved by the spacer rather than adding extra width.
+Transferred measure bars are represented by generated barline elements as well.
+The saved source still lives on the note or martyria, but the expanded layout sequence can place a barline before or after the neighboring element selected by the line break.
+This keeps transfer behavior in the same box/glue vocabulary as ordinary inline barlines instead of relying on anonymous spacer boxes plus later render offsets.
 
 Line-start non-right-aligned martyriae use the same spacer-and-cancel pattern for left ink overhang.
 If the martyria's body, inline left bar, or left tempo sign would protrude past the left margin, Phase 1 inserts an anonymous spacer of that overhang width before the martyria and narrows the martyria's owned leading glue by the same amount.
@@ -243,7 +242,7 @@ $$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(B_i) \qua
 
 Here:
 
-- $B_i$ is the neume width. When the preceding martyria has a transferable bar, an anonymous spacer box of the bar width plus fixed leading clearance is inserted before $B_i$ (see above); $B_i$ itself is unchanged.
+- $B_i$ is the neume width. Measure bars are no longer included in $B_i$; they are encoded as their own generated boxes with their own surrounding glue.
 - $L_i$ is the left projection, fixed and unbreakable, and omitted when zero.
 - $s_0$ is the fixed preferred spacing between successive notes.
 - $s^+$ and $s^-$ are the standard stretch and shrink budgets for an inter-note gap.

@@ -6,12 +6,6 @@
     @click.shift.exact="$emit('select-range')"
   >
     <Neume
-      v-if="hasMeasureBarLeft && !isMeasureBarAbove"
-      :neume="getMeasureBarLeft!"
-      :style="measureBarLeftStyle"
-      class="measure-bar"
-    />
-    <Neume
       v-if="note.vareia && !pageSetup.melkiteRtl"
       :neume="VocalExpressionNeume.Vareia"
       :style="vareiaStyle"
@@ -81,15 +75,9 @@
       :style="measureNumberStyle"
     />
     <Neume
-      v-if="hasMeasureBarLeft && isMeasureBarAbove"
+      v-if="hasMeasureBarLeft"
       :neume="getMeasureBarLeft!"
       :style="measureBarLeftStyle"
-    />
-    <Neume
-      v-if="hasMeasureBarRight"
-      :neume="getMeasureBarRight!"
-      :style="measureBarRightStyle"
-      class="measure-bar"
     />
     <Neume v-if="hasTie" :neume="note.tie!" :style="tieStyle" />
     <Neume
@@ -149,36 +137,11 @@ const hasSecondaryAccidental = computed(
 const hasTertiaryAccidental = computed(
   () => props.note.tertiaryAccidental != null,
 );
+const getMeasureBarLeft = computed(
+  () => props.note.measureBarLeft ?? props.note.computedMeasureBarLeft,
+);
 const hasMeasureBarLeft = computed(
-  () =>
-    props.note.measureBarLeft != null ||
-    props.note.computedMeasureBarLeft != null,
-);
-const hasMeasureBarRight = computed(
-  () =>
-    props.note.measureBarRight != null ||
-    props.note.computedMeasureBarRight != null,
-);
-const hasTransferredMeasureBarRight = computed(
-  () =>
-    props.note.measureBarRight == null &&
-    props.note.computedMeasureBarRight != null,
-);
-const getMeasureBarLeft = computed(() =>
-  props.note.measureBarLeft
-    ? props.note.measureBarLeft
-    : props.note.computedMeasureBarLeft,
-);
-const getMeasureBarRight = computed(() =>
-  props.note.measureBarRight
-    ? props.note.measureBarRight
-    : props.note.computedMeasureBarRight,
-);
-const isMeasureBarAbove = computed(() =>
-  (props.note.measureBarLeft
-    ? props.note.measureBarLeft
-    : props.note.computedMeasureBarLeft
-  )?.endsWith('Above'),
+  () => getMeasureBarLeft.value?.endsWith('Above') === true,
 );
 const hasMeasureNumber = computed(() => props.note.measureNumber != null);
 const hasIson = computed(() => props.note.ison != null);
@@ -301,58 +264,9 @@ const measureBarLeftStyle = computed(() => {
     webkitTextStrokeWidth: withZoom(
       props.pageSetup.measureBarDefaultStrokeWidth,
     ),
-    transform: `translateX(${withZoom(
-      props.note.computedMeasureBarLeftOffsetX,
-    )})`,
-    marginInlineEnd: withZoom(props.note.computedMeasureBarLeftLeadingSpacing),
     ...offsetStyle(
       props.note.measureBarLeftOffsetX,
       props.note.measureBarLeftOffsetY,
-    ),
-  } as StyleValue;
-});
-
-const measureBarRightStyle = computed(() => {
-  const offsetX =
-    props.note.measureBarRightOffsetX != null
-      ? `${props.note.measureBarRightOffsetX}em`
-      : '0em';
-  const offsetY =
-    props.note.measureBarRightOffsetY != null
-      ? `${props.note.measureBarRightOffsetY}em`
-      : undefined;
-
-  if (hasTransferredMeasureBarRight.value) {
-    return {
-      color: props.pageSetup.measureBarDefaultColor,
-      webkitTextStrokeWidth: withZoom(
-        props.pageSetup.measureBarDefaultStrokeWidth,
-      ),
-      position: 'absolute',
-      insetInlineStart: `calc(100% + ${withZoom(
-        props.note.computedMeasureBarRightTrailingSpacing,
-      )})`,
-      top: offsetY,
-      transform: `translateX(calc(${withZoom(
-        props.note.computedMeasureBarRightOffsetX,
-      )} + ${offsetX}))`,
-    } as StyleValue;
-  }
-
-  return {
-    color: props.pageSetup.measureBarDefaultColor,
-    webkitTextStrokeWidth: withZoom(
-      props.pageSetup.measureBarDefaultStrokeWidth,
-    ),
-    transform: `translateX(${withZoom(
-      props.note.computedMeasureBarRightOffsetX,
-    )})`,
-    marginInlineStart: withZoom(
-      props.note.computedMeasureBarRightTrailingSpacing,
-    ),
-    ...offsetStyle(
-      props.note.measureBarRightOffsetX,
-      props.note.measureBarRightOffsetY,
     ),
   } as StyleValue;
 });

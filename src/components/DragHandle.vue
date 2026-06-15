@@ -122,8 +122,7 @@ function getOffset(neume: Neume) {
     const glyphName = getMapping(props.note.measureBarLeft).glyphName;
 
     const width = fontService.getAdvanceWidth(props.fontFamily, glyphName);
-    offset.x +=
-      width + props.note.computedMeasureBarLeftLeadingSpacing / props.fontSize;
+    offset.x += width / props.fontSize;
   }
 
   return offset;

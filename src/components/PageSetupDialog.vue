@@ -1646,6 +1646,11 @@
             class="inline-flex"
             :style="getPreviewGapStyle(element, index)"
           >
+            <NeumeBoxBarLine
+              v-if="getPreviewMeasureBarLeft(element)"
+              :element="getPreviewMeasureBarLeft(element)!"
+              :page-setup="form"
+            />
             <template v-if="isSyllableElement(element.elementType)">
               <NeumeBoxSyllable
                 class="syllable-box"
@@ -1667,6 +1672,11 @@
                 :page-setup="form"
               />
             </template>
+            <NeumeBoxBarLine
+              v-if="getPreviewMeasureBarRight(element)"
+              :element="getPreviewMeasureBarRight(element)!"
+              :page-setup="form"
+            />
           </div>
         </div>
       </div>
@@ -1722,6 +1732,7 @@ import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import { toDisplay } from '@/components/InputUnit.types';
 import InputUnit from '@/components/InputUnit.vue';
+import NeumeBoxBarLine from '@/components/NeumeBoxBarLine.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
@@ -1759,7 +1770,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { MartyriaElement, TempoElement } from '@/models/Element';
-import { ElementType, NoteElement } from '@/models/Element';
+import { ElementType, MeasureBarElement, NoteElement } from '@/models/Element';
 import {
   Accidental,
   GorgonNeume,
@@ -1878,17 +1889,37 @@ const previewNoteConfigs = [
   },
 ];
 
-function createPreviewNote(
-  args: Partial<NoteElement>,
-  measureBarSpacing: number,
-): NoteElement {
+function createPreviewNote(args: Partial<NoteElement>): NoteElement {
   const note = new NoteElement();
   Object.assign(note, args);
-  note.computedMeasureBarLeftLeadingSpacing =
-    note.measureBarLeft != null ? measureBarSpacing : 0;
-  note.computedMeasureBarRightTrailingSpacing =
-    note.measureBarRight != null ? measureBarSpacing : 0;
   return note;
+}
+
+function createPreviewMeasureBar(measureBar: MeasureBar) {
+  const element = new MeasureBarElement();
+  element.measureBar = measureBar;
+  return element;
+}
+
+function getPreviewMeasureBarLeft(
+  element: { elementType: ElementType } & Partial<
+    NoteElement | MartyriaElement
+  >,
+) {
+  return element.measureBarLeft != null &&
+    !element.measureBarLeft.endsWith('Above')
+    ? createPreviewMeasureBar(element.measureBarLeft)
+    : null;
+}
+
+function getPreviewMeasureBarRight(
+  element: { elementType: ElementType } & Partial<
+    NoteElement | MartyriaElement
+  >,
+) {
+  return element.measureBarRight != null
+    ? createPreviewMeasureBar(element.measureBarRight)
+    : null;
 }
 
 function getPreviewGapStyle(
@@ -2005,18 +2036,12 @@ const form = ref(new PageSetup());
 const neumeBulkColor = ref('#000000');
 
 const previewNeumes = computed(() => {
-  const measureBarSpacing =
-    form.value.neumeDefaultFontSize *
-    fontService.getStandardGlue(form.value.neumeDefaultFontFamily).width;
-
   return [
     {
       elementType: ElementType.Tempo,
       neume: 'Moderate',
     },
-    ...previewNoteConfigs.map((config) =>
-      createPreviewNote(config, measureBarSpacing),
-    ),
+    ...previewNoteConfigs.map((config) => createPreviewNote(config)),
     {
       elementType: ElementType.Martyria,
       auto: true,

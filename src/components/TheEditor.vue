@@ -48,6 +48,7 @@ import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
+import MeasureBarNeumeBox from '@/components/NeumeBoxBarLine.vue';
 import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
@@ -97,7 +98,11 @@ import {
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
 import { EditorPreferences } from '@/models/EditorPreferences';
-import type { EmptyElement, ScoreElement } from '@/models/Element';
+import type {
+  EmptyElement,
+  MeasureBarElement,
+  ScoreElement,
+} from '@/models/Element';
 import {
   AlternateLineElement,
   AnnotationElement,
@@ -279,7 +284,7 @@ const isDevelopment = ref(import.meta.env.DEV);
 const isBrowser = ref(!isElectron());
 const isLoading = ref(true);
 const printMode = ref(false);
-const showGuides = ref(false);
+const showGuides = ref(true);
 const showAdjustmentRatios = ref(false);
 const workspaces = ref<Workspace[]>([]);
 const selectedWorkspaceValue = ref(new Workspace());
@@ -1792,6 +1797,31 @@ function isSyllableElement(element: ScoreElement) {
 
 function isMartyriaElement(element: ScoreElement) {
   return element.elementType == ElementType.Martyria;
+}
+
+function isMeasureBarElement(element: ScoreElement) {
+  return element.elementType == ElementType.MeasureBar;
+}
+
+function getElementDomId(element: ScoreElement) {
+  if (isMeasureBarElement(element)) {
+    return `element-measure-bar-${(element as MeasureBarElement).transientKey}`;
+  }
+
+  return `element-${element.id}`;
+}
+
+function getElementRenderKey(
+  element: ScoreElement,
+  pageIndex: number,
+  lineIndex: number,
+) {
+  if (isMeasureBarElement(element)) {
+    const measureBar = element as MeasureBarElement;
+    return `element-${selectedWorkspace.value.id}-measure-bar-${pageIndex}-${lineIndex}-${measureBar.transientKey}`;
+  }
+
+  return `element-${selectedWorkspace.value.id}-${element.id}-${element.keyHelper}`;
 }
 
 function isTempoElement(element: ScoreElement) {
@@ -6016,8 +6046,8 @@ function renderTabLabel(tab: Tab) {
               >
                 <div
                   v-for="element in line.elements"
-                  :id="`element-${element.id}`"
-                  :key="`element-${selectedWorkspace.id}-${element.id}-${element.keyHelper}`"
+                  :id="getElementDomId(element)"
+                  :key="getElementRenderKey(element, pageIndex, lineIndex)"
                   class="element-box"
                   :style="getElementStyle(element)"
                 >
@@ -6229,6 +6259,16 @@ function renderTabLabel(tab: Tab) {
                           ></span>
                         </template>
                       </div>
+                    </div>
+                  </template>
+                  <template v-else-if="isMeasureBarElement(element)">
+                    <div class="neume-box">
+                      <MeasureBarNeumeBox
+                        class="measure-bar-neume-box"
+                        :element="element as MeasureBarElement"
+                        :page-setup="score.pageSetup"
+                      />
+                      <div class="lyrics"></div>
                     </div>
                   </template>
                   <template v-else-if="isMartyriaElement(element)">

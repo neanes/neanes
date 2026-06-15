@@ -1,4 +1,10 @@
-import type { Box, Glue, InputItem, PositionedItem } from 'tex-linebreak';
+import type {
+  Box,
+  Glue,
+  InputItem,
+  Penalty,
+  PositionedItem,
+} from 'tex-linebreak';
 import {
   adjustmentRatios,
   breakLines,
@@ -12,6 +18,7 @@ import type {
   DropCapElement,
   ImageBoxElement,
   MartyriaElement,
+  MeasureBarElement,
   ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
@@ -19,7 +26,12 @@ import type {
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
-import { ElementType, EmptyElement, LineBreakType } from '@/models/Element';
+import {
+  ElementType,
+  EmptyElement,
+  LineBreakType,
+  MeasureBarElement as RuntimeMeasureBarElement,
+} from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
 import { measureBarAboveToLeft } from '@/models/NeumeReplacements';
@@ -214,6 +226,36 @@ interface ElementBox extends Box {
   element: ScoreElement;
 }
 
+type TransferredMeasureBarPlacement = 'line-start' | 'line-end';
+
+interface TransferredMeasureBarReservation {
+  measureBar: MeasureBar;
+  sourceElement: NoteElement | MartyriaElement;
+  sourceSide: 'left' | 'right';
+  targetElement: NoteElement;
+  placement: TransferredMeasureBarPlacement;
+}
+
+interface TransferredMeasureBarSpacerBox extends Box {
+  transferredMeasureBar: TransferredMeasureBarReservation;
+}
+
+interface TransferredMeasureBarPenalty extends Penalty {
+  transferredMeasureBar?: TransferredMeasureBarReservation;
+}
+
+function hasTransferredMeasureBarReservation(item: InputItem): item is (
+  | TransferredMeasureBarSpacerBox
+  | TransferredMeasureBarPenalty
+) & {
+  transferredMeasureBar: TransferredMeasureBarReservation;
+} {
+  return (
+    (item.type === 'box' || item.type === 'penalty') &&
+    'transferredMeasureBar' in item
+  );
+}
+
 interface CompletedParagraph {
   paragraph: InputItem[];
   positions: PositionedItem[];
@@ -255,7 +297,10 @@ interface LayoutWorkspace {
   // spacer cancel, leaving the note's own box position unchanged. At a break
   // the post-break glue vanishes; the spacer remains at the start of the next
   // line and reserves fixed leading space for the transferred bar.
-  pendingMartyriaBarTransferWidth: number;
+  pendingLineStartMeasureBarTransfer: {
+    width: number;
+    reservation: TransferredMeasureBarReservation;
+  } | null;
 
   // debug
   loggingEnabled: boolean;
@@ -295,9 +340,9 @@ export class LayoutService {
   public static processPages(workspace: Workspace): Page[] {
     const score = workspace.score;
     const pageSetup = score.pageSetup;
-    const elements = score.staff.elements;
+    const sourceElements = score.staff.elements;
 
-    elements.forEach((element, index) => {
+    sourceElements.forEach((element, index) => {
       element.index = index;
 
       if (element.id == null && element.elementType !== ElementType.Empty) {
@@ -311,14 +356,19 @@ export class LayoutService {
       this.saveElementState(element);
     });
 
-    this.calculateMartyrias(elements, pageSetup);
+    this.calculateMartyrias(sourceElements, pageSetup);
 
     // Always make sure this is an empty element at the end of the score.
     // If this case is true, we have a bug, but this will prevent
     // users corrupting their score.
-    if (elements[elements.length - 1].elementType !== ElementType.Empty) {
-      elements.push(new EmptyElement());
+    if (
+      sourceElements[sourceElements.length - 1].elementType !==
+      ElementType.Empty
+    ) {
+      sourceElements.push(new EmptyElement());
     }
+
+    const elements = this.createMeasureBarLayoutElements(sourceElements);
 
     const layoutWorkspace: LayoutWorkspace = {
       pageSetup,
@@ -329,7 +379,7 @@ export class LayoutService {
       completedParagraphs: [],
       pendingDropCapWidthPx: 0,
       pendingDropCapContinuationLines: 0,
-      pendingMartyriaBarTransferWidth: 0,
+      pendingLineStartMeasureBarTransfer: null,
       loggingEnabled: false,
     };
 
@@ -538,6 +588,16 @@ export class LayoutService {
       let lineBreakType: LineBreakType =
         elements[i].lineBreakType || LineBreakType.Left;
 
+      if (this.shouldDeferBreakToFollowingRightMeasureBar(elements, i)) {
+        lineBreak = false;
+      } else if (
+        this.shouldInheritBreakFromPreviousMeasureBarOwner(elements, i)
+      ) {
+        const previousElement = elements[i - 1];
+        lineBreak = previousElement.lineBreak || previousElement.pageBreak;
+        lineBreakType = previousElement.lineBreakType || LineBreakType.Left;
+      }
+
       switch (elements[i].elementType) {
         case ElementType.TextBox: {
           // PROCESS TEXTBOX
@@ -727,10 +787,10 @@ export class LayoutService {
           const elementWidthPx =
             noteElement.spaceAfter + noteElement.neumeWidth;
 
-          // Consume any pending martyria bar transfer width.
-          const martyriaBarTransferWidth =
-            layoutWorkspace.pendingMartyriaBarTransferWidth;
-          layoutWorkspace.pendingMartyriaBarTransferWidth = 0;
+          // Consume any pending line-start bar transfer reservation.
+          const martyriaBarTransfer =
+            layoutWorkspace.pendingLineStartMeasureBarTransfer;
+          layoutWorkspace.pendingLineStartMeasureBarTransfer = null;
 
           // Insert the anonymous spacer box immediately so that neumesEndPx
           // includes the bar transfer width before any lyric or projection
@@ -738,8 +798,12 @@ export class LayoutService {
           // post-break glue, leaving the note's position unchanged. At a
           // break the spacer remains at the start of the next line and
           // reserves fixed leading space for the transferred bar.
-          if (martyriaBarTransferWidth > 0) {
-            this.addAnonymousBox(martyriaBarTransferWidth, layoutWorkspace);
+          if (martyriaBarTransfer != null) {
+            this.addTransferredMeasureBarSpacerBox(
+              martyriaBarTransfer.width,
+              martyriaBarTransfer.reservation,
+              layoutWorkspace,
+            );
           }
 
           // Knuth-Plass encoding for notes with lyrics.
@@ -789,9 +853,13 @@ export class LayoutService {
               noteElement,
               noteElement.alignLeft,
             );
+          const previousElement = this.getElementAt(elements, i - 1);
 
           // Left projection (protected by infinity penalty)
-          if (leftProjection > 0) {
+          if (
+            leftProjection > 0 &&
+            previousElement?.elementType !== ElementType.MeasureBar
+          ) {
             this.preventBreak(layoutWorkspace);
             this.addGlue(this.fixedGlue(leftProjection), layoutWorkspace);
           }
@@ -852,6 +920,7 @@ export class LayoutService {
           this.addBox(elementWidthPx, noteElement, layoutWorkspace);
 
           const nextElement = this.getElementAt(elements, i + 1);
+          const afterNextElement = this.getElementAt(elements, i + 2);
           const nextNoteElement = this.getNoteIfPresentAt(elements, i + 1);
           const afterNextNoteElement = this.getNoteIfPresentAt(elements, i + 2);
 
@@ -871,6 +940,7 @@ export class LayoutService {
           const breakCost = this.getBreakCost(
             noteElement,
             nextElement,
+            afterNextElement,
             afterNextNoteElement,
           );
 
@@ -883,12 +953,19 @@ export class LayoutService {
           // 4. Terminal clearance before the current note's right barline.
           // These costs are break-conditional and cannot go in m_i (which
           // vanishes at breaks via the cancellation glue).
+          const lineEndMeasureBarTransfer =
+            this.getLineEndTransferredMeasureBarTransfer(
+              noteElement,
+              nextElement,
+              pageSetup,
+              measureBarWidthMap,
+            );
           const penaltyWidth = this.getBreakPenaltyWidth(
             noteElement,
             rightProjection,
             layoutWorkspace,
-            nextElement,
             measureBarWidthMap,
+            lineEndMeasureBarTransfer?.width ?? 0,
           );
 
           // A following martyria replaces this note's trailing glue with its own
@@ -909,6 +986,7 @@ export class LayoutService {
             breakCost,
             penaltyWidth,
             this.fixedGlue(m_i),
+            lineEndMeasureBarTransfer?.reservation ?? null,
           );
 
           break;
@@ -1175,25 +1253,26 @@ export class LayoutService {
           // the start of the next line and reserves collision-aware leading
           // space for the bar.
           const nextNoteForBar = this.getNoteIfPresentAt(elements, i + 1);
-          const martyriaTransferBar = martyriaElement.measureBarLeft?.endsWith(
-            'Above',
-          )
-            ? measureBarAboveToLeft.get(martyriaElement.measureBarLeft)
-            : martyriaElement.measureBarRight;
-          const martyriaBarTransferWidth =
-            martyriaTransferBar &&
+          const martyriaAboveTransferBar =
+            martyriaElement.measureBarRight == null &&
+            martyriaElement.measureBarLeft?.endsWith('Above')
+              ? measureBarAboveToLeft.get(martyriaElement.measureBarLeft)
+              : null;
+          const martyriaBarTransfer =
+            martyriaAboveTransferBar &&
             nextNoteForBar &&
             !nextNoteForBar.measureBarLeft
-              ? (measureBarWidthMap.get(martyriaTransferBar) ?? 0) +
-                this.getMeasureBarLeftLeadingSpacingForMeasureBar(
+              ? this.createLineStartMeasureBarTransfer(
+                  martyriaElement,
+                  martyriaAboveTransferBar,
+                  'left',
                   nextNoteForBar,
-                  martyriaTransferBar,
                   pageSetup,
                   measureBarWidthMap,
                 )
-              : 0;
-          layoutWorkspace.pendingMartyriaBarTransferWidth =
-            martyriaBarTransferWidth;
+              : null;
+          layoutWorkspace.pendingLineStartMeasureBarTransfer =
+            martyriaBarTransfer;
 
           // Martyria break opportunity. Keep the fixed martyria spacing after
           // the martyria when it stays mid-line, but make that spacing
@@ -1224,7 +1303,7 @@ export class LayoutService {
                       0,
                       sharedTrailingBoundaryWidth - trailingGlue.width,
                     ),
-                    martyriaBarTransferWidth,
+                    martyriaBarTransfer?.width ?? 0,
                     rightSameLineMinimum,
                   ),
                   shrink: sharedBoundaryShrink!,
@@ -1232,7 +1311,7 @@ export class LayoutService {
               : this.createMartyriaPostBreakGlue(
                   trailingGlue,
                   trailingVisualSpacing.deficit,
-                  martyriaBarTransferWidth,
+                  martyriaBarTransfer?.width ?? 0,
                   rightSameLineMinimum,
                 ),
           );
@@ -1244,6 +1323,237 @@ export class LayoutService {
           if (martyriaElement.alignRight) {
             lineBreak = true;
             lineBreakType = LineBreakType.Justify;
+          }
+
+          break;
+        }
+        case ElementType.MeasureBar: {
+          // PROCESS MEASURE BAR
+          const measureBarElement = elements[i] as MeasureBarElement;
+          const previousElement = this.getElementAt(elements, i - 1);
+          const nextElement = this.getElementAt(elements, i + 1);
+          const elementWidthPx =
+            measureBarWidthMap.get(measureBarElement.measureBar) ?? 0;
+          const baseGlue =
+            previousElement?.elementType === ElementType.Martyria ||
+            nextElement?.elementType === ElementType.Martyria
+              ? martyriaGlue
+              : standardGlue;
+          let leftSideGlue = this.createMeasureBarSideGlue(
+            previousElement,
+            measureBarElement,
+            nextElement,
+            'left',
+            baseGlue,
+            pageSetup,
+            measureBarWidthMap,
+          );
+          let rightSideGlue = this.createMeasureBarSideGlue(
+            previousElement,
+            measureBarElement,
+            nextElement,
+            'right',
+            baseGlue,
+            pageSetup,
+            measureBarWidthMap,
+          );
+          const balancedSideGlueWidth = Math.max(
+            leftSideGlue.width,
+            rightSideGlue.width,
+          );
+          leftSideGlue = {
+            ...leftSideGlue,
+            width: balancedSideGlueWidth,
+          };
+          rightSideGlue = {
+            ...rightSideGlue,
+            width: balancedSideGlueWidth,
+          };
+          if (
+            layoutWorkspace.pendingParagraph.length === 0 &&
+            nextElement?.elementType === ElementType.Note
+          ) {
+            const lineStartRightSideSpacing = Math.max(
+              this.getInlineSpacing(pageSetup),
+              this.getMeasureBarElementSideCollisionMinimum(
+                null,
+                measureBarElement,
+                nextElement,
+                'right',
+                pageSetup,
+                measureBarWidthMap,
+              ),
+            );
+            rightSideGlue = {
+              ...rightSideGlue,
+              width: lineStartRightSideSpacing,
+            };
+          }
+
+          const lineStartMeasureBarTransfer =
+            measureBarElement.sourceElement?.elementType ===
+              ElementType.Martyria &&
+            measureBarElement.sourceSide === 'right' &&
+            nextElement?.elementType === ElementType.Note &&
+            !(nextElement as NoteElement).measureBarLeft
+              ? this.createLineStartMeasureBarTransfer(
+                  measureBarElement.sourceElement as MartyriaElement,
+                  measureBarElement.measureBar,
+                  'right',
+                  nextElement as NoteElement,
+                  pageSetup,
+                  measureBarWidthMap,
+                )
+              : null;
+          if (lineStartMeasureBarTransfer != null) {
+            layoutWorkspace.pendingLineStartMeasureBarTransfer =
+              lineStartMeasureBarTransfer;
+            rightSideGlue = this.offsetGlueWidth(
+              rightSideGlue,
+              lineStartMeasureBarTransfer.width,
+            );
+          }
+
+          measureBarElement.computedOffsetX = this.emToPx(
+            measureBarElement.offsetX,
+            pageSetup.neumeDefaultFontSize,
+          );
+          measureBarElement.computedOffsetY = this.emToPx(
+            measureBarElement.offsetY,
+            pageSetup.neumeDefaultFontSize,
+          );
+
+          const keepMeasureBarWithPreviousOwner =
+            measureBarElement.sourceSide === 'right' &&
+            measureBarElement.sourceElement === previousElement;
+          const keepMeasureBarWithNextOwner =
+            measureBarElement.sourceSide === 'left' &&
+            measureBarElement.sourceElement === nextElement;
+          const keepRightMeasureBarWithFollowingMartyria =
+            this.shouldKeepRightMeasureBarWithFollowingMartyria(
+              measureBarElement,
+              previousElement,
+              nextElement,
+            );
+
+          if (layoutWorkspace.pendingParagraph.length === 0) {
+            this.addBox(elementWidthPx, measureBarElement, layoutWorkspace);
+            this.addGlue(rightSideGlue, layoutWorkspace);
+          } else {
+            let replacedTrailingGlueWidth = 0;
+            if (
+              layoutWorkspace.pendingParagraph[
+                layoutWorkspace.pendingParagraph.length - 1
+              ].type === 'glue'
+            ) {
+              replacedTrailingGlueWidth = (
+                layoutWorkspace.pendingParagraph[
+                  layoutWorkspace.pendingParagraph.length - 1
+                ] as Glue
+              ).width;
+              this.removeGlue(layoutWorkspace);
+            }
+
+            const barlineBoundaryWidth =
+              leftSideGlue.width + elementWidthPx + rightSideGlue.width;
+            const isLyricNoteBoundary =
+              previousElement?.elementType === ElementType.Note &&
+              nextElement?.elementType === ElementType.Note &&
+              (((previousElement as NoteElement).lyricsWidth ?? 0) > 0 ||
+                ((nextElement as NoteElement).lyricsWidth ?? 0) > 0);
+            const isMartyriaBoundary =
+              previousElement?.elementType === ElementType.Martyria ||
+              nextElement?.elementType === ElementType.Martyria;
+            const previousNoteRightProjection =
+              previousElement?.elementType === ElementType.Note &&
+              nextElement?.elementType === ElementType.Martyria
+                ? this.getLyricProjections(
+                    previousElement as NoteElement,
+                    (previousElement as NoteElement).alignLeft,
+                  ).rightProjection
+                : 0;
+            const nextNoteLeftProjection =
+              (previousElement?.elementType === ElementType.Note ||
+                previousElement?.elementType === ElementType.Martyria) &&
+              nextElement?.elementType === ElementType.Note
+                ? this.getLyricProjections(
+                    nextElement as NoteElement,
+                    (nextElement as NoteElement).alignLeft,
+                  ).leftProjection
+                : 0;
+            const replacedGlueBaseline =
+              previousElement != null
+                ? Math.max(
+                    barlineBoundaryWidth,
+                    this.getMeasureBarMinimumGlueWidth(
+                      previousElement,
+                      nextElement,
+                      pageSetup,
+                      measureBarWidthMap,
+                    ),
+                  )
+                : barlineBoundaryWidth;
+            const preservedBoundaryExtra = isMartyriaBoundary
+              ? 0
+              : replacedTrailingGlueWidth +
+                nextNoteLeftProjection -
+                (isLyricNoteBoundary
+                  ? barlineBoundaryWidth
+                  : replacedGlueBaseline);
+            if (preservedBoundaryExtra > 0) {
+              leftSideGlue = this.offsetGlueWidth(
+                leftSideGlue,
+                -preservedBoundaryExtra / 2,
+              );
+              rightSideGlue = this.offsetGlueWidth(
+                rightSideGlue,
+                -preservedBoundaryExtra / 2,
+              );
+            }
+            const centeringShift = isMartyriaBoundary
+              ? (previousNoteRightProjection - nextNoteLeftProjection) / 2
+              : 0;
+            if (centeringShift !== 0) {
+              leftSideGlue = this.offsetGlueWidth(
+                leftSideGlue,
+                -centeringShift,
+              );
+              rightSideGlue = this.offsetGlueWidth(
+                rightSideGlue,
+                centeringShift,
+              );
+            }
+            if (keepMeasureBarWithPreviousOwner) {
+              const lastItem =
+                layoutWorkspace.pendingParagraph[
+                  layoutWorkspace.pendingParagraph.length - 1
+                ];
+              if (lastItem?.type === 'penalty') {
+                layoutWorkspace.pendingParagraph.pop();
+              }
+              if (nextElement?.elementType === ElementType.Martyria) {
+                const previousItem =
+                  layoutWorkspace.pendingParagraph[
+                    layoutWorkspace.pendingParagraph.length - 1
+                  ];
+                if (
+                  previousItem?.type === 'glue' &&
+                  (previousItem as Glue).width === 0
+                ) {
+                  this.removeGlue(layoutWorkspace);
+                }
+              }
+              this.preventBreak(layoutWorkspace);
+            }
+            this.addGlue(leftSideGlue, layoutWorkspace);
+            this.addBox(elementWidthPx, measureBarElement, layoutWorkspace);
+            if (
+              keepMeasureBarWithNextOwner ||
+              keepRightMeasureBarWithFollowingMartyria
+            ) {
+              this.preventBreak(layoutWorkspace);
+            }
+            this.addGlue(rightSideGlue, layoutWorkspace);
           }
 
           break;
@@ -1418,7 +1728,22 @@ export class LayoutService {
       // and the paragraph is about to end. In the latter case, endParagraph()
       // removes that trailing glue and replaces it with finishing glue.
       if (lineBreak) {
-        this.endParagraph(lineBreakType, layoutWorkspace, measureBarWidthMap);
+        const nextElement = this.getElementAt(elements, i + 1);
+        const paragraphEndMeasureBarTransfer =
+          elements[i].elementType === ElementType.Note
+            ? this.getLineEndTransferredMeasureBarTransfer(
+                elements[i] as NoteElement,
+                nextElement,
+                pageSetup,
+                measureBarWidthMap,
+              )
+            : null;
+        this.endParagraph(
+          lineBreakType,
+          layoutWorkspace,
+          measureBarWidthMap,
+          paragraphEndMeasureBarTransfer,
+        );
       }
     }
 
@@ -1440,7 +1765,10 @@ export class LayoutService {
 
       for (const [posIndex, position] of positions.entries()) {
         const item = paragraph[position.item];
-        if (item.type !== 'box') {
+        if (
+          item.type !== 'box' &&
+          this.getTransferredMeasureBarReservation(item) == null
+        ) {
           // No need to position glue items
           continue;
         }
@@ -1515,12 +1843,36 @@ export class LayoutService {
             this.getExtraHeaderFooterHeight(score, pageSetup, pages.length));
         }
 
+        const currentLine = page.lines[page.lines.length - 1];
         if (!('element' in item)) {
+          const transferredMeasureBar =
+            this.getTransferredMeasureBarReservation(item);
+          if (transferredMeasureBar != null) {
+            const isLineStartTransfer =
+              transferredMeasureBar.placement === 'line-start';
+            if (!isLineStartTransfer || currentLine.elements.length === 0) {
+              const measureBarElement = this.createTransferredMeasureBarElement(
+                transferredMeasureBar,
+                measureBarWidthMap,
+              );
+              measureBarElement.x =
+                pageSetup.leftMargin +
+                position.xOffset +
+                currentLine.indentation;
+              measureBarElement.y =
+                pageSetup.topMargin +
+                extraHeaderHeightPx +
+                currentPageHeightPx -
+                lastLineHeightPx;
+              measureBarElement.line = page.lines.length;
+              measureBarElement.page = pages.length;
+              currentLine.elements.push(measureBarElement);
+            }
+          }
           continue;
         }
         const element = (item as ElementBox).element;
 
-        const currentLine = page.lines[page.lines.length - 1];
         const isFirstElementOnLine = currentLine.elements.length === 0;
 
         // Indent only the continuation lines covered by a multiline drop cap.
@@ -1611,85 +1963,42 @@ export class LayoutService {
           prevLine = prevPage.lines[prevPage.lines.length - 1];
         }
 
-        if (isFirstElementOnLine) {
-          if (element.elementType === ElementType.Note) {
-            const noteElement = element as NoteElement;
-            const previousElement = prevLine
-              ? prevLine.elements[prevLine.elements.length - 1]
-              : null;
-            if (previousElement?.elementType === ElementType.Note) {
-              // If the new line starts with a left measure, apply it to the
-              // right of the previous line
-              const previousNoteElement = previousElement as NoteElement;
-              if (
-                noteElement.measureBarLeft &&
-                !noteElement.measureBarLeft.endsWith('Above')
-              ) {
-                previousNoteElement.computedMeasureBarRight =
-                  noteElement.measureBarLeft;
-              }
-            } else if (
-              previousElement?.elementType === ElementType.Martyria &&
-              paragraphLineIndex > 0
-            ) {
-              // If the previous line ends with a martyria with a barline, apply
-              // it to the left of the new line. Only transfer within the same
-              // paragraph (paragraphLineIndex > 0); when a martyria ends a
-              // paragraph (right-aligned or explicit line break), no bar is
-              // transferred to the next paragraph's first note.
-              const previousMartyriaElement =
-                previousElement as MartyriaElement;
-              const normalizedMeasureBar =
-                previousMartyriaElement.measureBarLeft?.endsWith('Above')
-                  ? measureBarAboveToLeft.get(
-                      previousMartyriaElement.measureBarLeft,
-                    )
-                  : previousMartyriaElement.measureBarRight;
-              // Only transfer if the note doesn't already have its own
-              // measureBarLeft: getNoteWidth already accounted for the
-              // explicit one in Phase 1.
-              if (normalizedMeasureBar && !noteElement.measureBarLeft) {
-                noteElement.computedMeasureBarLeft = normalizedMeasureBar;
-                // Phase 1 reserved fixed leading space for this barline and its
-                // clearance via an anonymous spacer box before the note. Shift
-                // the note left so the rendered barline occupies that reserved
-                // space instead of adding extra width. Adjust neumeWidth and
-                // lyricsHorizontalOffset so lyrics center under the neume body.
-                const barlineWidth =
-                  measureBarWidthMap.get(normalizedMeasureBar) ?? 0;
-                if (barlineWidth > 0) {
-                  const leadingSpacing = this.getMeasureBarLeftLeadingSpacing(
-                    noteElement,
-                    pageSetup,
-                    measureBarWidthMap,
-                  );
-                  const reservedWidth = barlineWidth + leadingSpacing;
-                  noteElement.computedMeasureBarLeftLeadingSpacing =
-                    leadingSpacing;
-                  noteElement.neumeWidth += reservedWidth;
-                  noteElement.lyricsHorizontalOffset += reservedWidth;
-                  element.x -= reservedWidth;
-                }
-              }
-            }
-          } else if (element.elementType === ElementType.Martyria) {
-            // If the new line starts with a left measure, apply it to the right
-            // of the previous line
-            const martyriaElement = element as MartyriaElement;
-            const previousElement = prevLine
-              ? prevLine.elements[prevLine.elements.length - 1]
-              : null;
-            if (previousElement?.elementType === ElementType.Note) {
-              const previousNoteElement = previousElement as NoteElement;
-              const normalizedMeasureBar =
-                martyriaElement.measureBarLeft?.endsWith('Above')
-                  ? measureBarAboveToLeft.get(martyriaElement.measureBarLeft)
-                  : martyriaElement.measureBarLeft;
-              if (normalizedMeasureBar) {
-                previousNoteElement.computedMeasureBarRight =
-                  normalizedMeasureBar;
-              }
-            }
+        if (
+          isFirstElementOnLine &&
+          element.elementType === ElementType.MeasureBar
+        ) {
+          const measureBarElement = element as MeasureBarElement;
+          const previousElement = prevLine
+            ? prevLine.elements[prevLine.elements.length - 1]
+            : null;
+
+          if (
+            measureBarElement.sourceElement?.elementType ===
+              ElementType.Martyria &&
+            previousElement?.elementType === ElementType.Martyria
+          ) {
+            measureBarElement.isTransferred = true;
+          } else if (
+            measureBarElement.sourceElement?.elementType === ElementType.Note &&
+            measureBarElement.sourceSide === 'left' &&
+            previousElement?.elementType === ElementType.Note
+          ) {
+            const transferredMeasureBar =
+              this.createTransferredMeasureBarElement(
+                {
+                  measureBar: measureBarElement.measureBar,
+                  sourceElement: measureBarElement.sourceElement as NoteElement,
+                  sourceSide: 'left',
+                  targetElement: measureBarElement.sourceElement as NoteElement,
+                  placement: 'line-end',
+                },
+                measureBarWidthMap,
+              );
+            transferredMeasureBar.x = previousElement.x + previousElement.width;
+            transferredMeasureBar.y = previousElement.y;
+            transferredMeasureBar.line = previousElement.line;
+            transferredMeasureBar.page = previousElement.page;
+            prevLine?.elements.push(transferredMeasureBar);
           }
         }
 
@@ -1740,7 +2049,7 @@ export class LayoutService {
       }
     }
 
-    this.centerMeasureBars(pages, pageSetup, measureBarWidthMap);
+    this.alignTerminalMeasureBarElements(pages, pageSetup);
     this.addMelismas(pages, pageSetup);
 
     if (pageSetup.alignIsonIndicators) {
@@ -1748,7 +2057,7 @@ export class LayoutService {
     }
 
     // Record element updates
-    elements.forEach((element) => {
+    sourceElements.forEach((element) => {
       this.checkElementState(element);
     });
 
@@ -1779,6 +2088,128 @@ export class LayoutService {
     );
   }
 
+  private static createMeasureBarLayoutElements(
+    sourceElements: ScoreElement[],
+  ): ScoreElement[] {
+    const layoutElements: ScoreElement[] = [];
+
+    for (let i = 0; i < sourceElements.length; i++) {
+      const element = sourceElements[i];
+      if (this.isMeasureBarOwner(element)) {
+        const leftMeasureBar = this.getExplicitInlineMeasureBarLeft(element);
+        if (leftMeasureBar != null) {
+          layoutElements.push(
+            this.createMeasureBarElement(element, leftMeasureBar, 'left'),
+          );
+        }
+      }
+
+      layoutElements.push(element);
+
+      if (this.isMeasureBarOwner(element)) {
+        const rightMeasureBar = this.getExplicitMeasureBarRight(element);
+        if (rightMeasureBar != null) {
+          layoutElements.push(
+            this.createMeasureBarElement(element, rightMeasureBar, 'right'),
+          );
+        }
+      }
+    }
+
+    return layoutElements;
+  }
+
+  private static createMeasureBarElement(
+    sourceElement: NoteElement | MartyriaElement,
+    measureBar: MeasureBar,
+    sourceSide: 'left' | 'right',
+  ) {
+    const element = new RuntimeMeasureBarElement();
+    element.measureBar = measureBar;
+    element.sourceElement = sourceElement;
+    element.sourceSide = sourceSide;
+    element.transientKey = `${sourceElement.id ?? sourceElement.index}-${sourceSide}-${measureBar}`;
+
+    if (sourceElement.elementType === ElementType.Note) {
+      const note = sourceElement as NoteElement;
+      element.offsetX =
+        sourceSide === 'left'
+          ? note.measureBarLeftOffsetX
+          : note.measureBarRightOffsetX;
+      element.offsetY =
+        sourceSide === 'left'
+          ? note.measureBarLeftOffsetY
+          : note.measureBarRightOffsetY;
+    }
+
+    return element;
+  }
+
+  private static shouldDeferBreakToFollowingRightMeasureBar(
+    elements: ScoreElement[],
+    index: number,
+  ) {
+    const element = elements[index];
+    const nextElement = elements[index + 1];
+
+    return (
+      (element.lineBreak || element.pageBreak) &&
+      nextElement?.elementType === ElementType.MeasureBar &&
+      (nextElement as MeasureBarElement).sourceElement === element &&
+      (nextElement as MeasureBarElement).sourceSide === 'right'
+    );
+  }
+
+  private static shouldInheritBreakFromPreviousMeasureBarOwner(
+    elements: ScoreElement[],
+    index: number,
+  ) {
+    const element = elements[index];
+    const previousElement = elements[index - 1];
+
+    return (
+      element?.elementType === ElementType.MeasureBar &&
+      previousElement != null &&
+      (previousElement.lineBreak || previousElement.pageBreak) &&
+      (element as MeasureBarElement).sourceElement === previousElement &&
+      (element as MeasureBarElement).sourceSide === 'right'
+    );
+  }
+
+  private static shouldKeepRightMeasureBarWithFollowingMartyria(
+    measureBarElement: MeasureBarElement,
+    previousElement: ScoreElement | null,
+    nextElement: ScoreElement | null,
+  ) {
+    return (
+      nextElement?.elementType === ElementType.Martyria &&
+      this.isMeasureBarOwnedByPreviousRight(measureBarElement, previousElement)
+    );
+  }
+
+  private static createTransferredMeasureBarElement(
+    reservation: TransferredMeasureBarReservation,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const element = this.createMeasureBarElement(
+      reservation.sourceElement,
+      reservation.measureBar,
+      reservation.sourceSide,
+    );
+    element.isTransferred = true;
+    element.width = measureBarWidthMap.get(reservation.measureBar) ?? 0;
+    element.transientKey = `${element.transientKey}-transferred-${reservation.placement}`;
+    return element;
+  }
+
+  private static getTransferredMeasureBarReservation(
+    item: InputItem,
+  ): TransferredMeasureBarReservation | null {
+    return hasTransferredMeasureBarReservation(item)
+      ? item.transferredMeasureBar
+      : null;
+  }
+
   private static addFillWidthGlue(layoutWorkspace: LayoutWorkspace) {
     // Let the line breaker reserve the remaining line width for the fill-width
     // element without forcing justification elsewhere on the line.
@@ -1791,6 +2222,192 @@ export class LayoutService {
       },
       layoutWorkspace,
     );
+  }
+
+  private static createMeasureBarSideGlue(
+    previousElement: ScoreElement | null,
+    measureBarElement: MeasureBarElement,
+    nextElement: ScoreElement | null,
+    side: 'left' | 'right',
+    baseGlue: Glue,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ): Glue {
+    const barWidth = measureBarWidthMap.get(measureBarElement.measureBar) ?? 0;
+    const ordinarySideWidth = Math.max(0, (baseGlue.width - barWidth) / 2);
+    const collisionMinimum = this.getMeasureBarElementSideCollisionMinimum(
+      previousElement,
+      measureBarElement,
+      nextElement,
+      side,
+      pageSetup,
+      measureBarWidthMap,
+    );
+    const width = Math.max(ordinarySideWidth, collisionMinimum);
+
+    return {
+      type: 'glue',
+      width,
+      stretch: baseGlue.stretch / 2,
+      shrink: baseGlue.shrink / 2,
+    };
+  }
+
+  private static createLineStartMeasureBarTransfer(
+    sourceElement: NoteElement | MartyriaElement,
+    measureBar: MeasureBar,
+    sourceSide: 'left' | 'right',
+    nextNote: NoteElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const measureBarElement = this.createMeasureBarElement(
+      sourceElement,
+      measureBar,
+      sourceSide,
+    );
+    const barWidth = measureBarWidthMap.get(measureBar) ?? 0;
+    const rightSideSpacing = Math.max(
+      this.getInlineSpacing(pageSetup),
+      this.getMeasureBarElementSideCollisionMinimum(
+        null,
+        measureBarElement,
+        nextNote,
+        'right',
+        pageSetup,
+        measureBarWidthMap,
+      ),
+    );
+
+    return {
+      width: barWidth + rightSideSpacing,
+      reservation: {
+        measureBar,
+        sourceElement,
+        sourceSide,
+        targetElement: nextNote,
+        placement: 'line-start',
+      } satisfies TransferredMeasureBarReservation,
+    };
+  }
+
+  private static createLineEndMeasureBarTransfer(
+    sourceNote: NoteElement,
+    measureBar: MeasureBar,
+    targetNote: NoteElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const barWidth = measureBarWidthMap.get(measureBar) ?? 0;
+    const terminalSpacing = this.getTerminalMeasureBarRightSpacingForMeasureBar(
+      sourceNote,
+      measureBar,
+      pageSetup,
+      measureBarWidthMap,
+    );
+
+    return {
+      width: barWidth + terminalSpacing,
+      reservation: {
+        measureBar,
+        sourceElement: targetNote,
+        sourceSide: 'left',
+        targetElement: targetNote,
+        placement: 'line-end',
+      } satisfies TransferredMeasureBarReservation,
+    };
+  }
+
+  private static getMeasureBarElementSideCollisionMinimum(
+    previousElement: ScoreElement | null,
+    measureBarElement: MeasureBarElement,
+    nextElement: ScoreElement | null,
+    side: 'left' | 'right',
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const adjacentElement = side === 'left' ? previousElement : nextElement;
+    const adjacentBoxes = this.getMeasureBarAdjacentCollisionBoxes(
+      adjacentElement,
+      pageSetup,
+    );
+
+    if (adjacentElement == null || adjacentBoxes.length === 0) {
+      return 0;
+    }
+
+    const barBoxes = this.getMeasureBarCollisionBoxes(
+      measureBarElement.measureBar,
+      'left',
+      { left: 0, right: 0 },
+      0,
+      pageSetup,
+    );
+    const clearance = this.getMeasureBarCollisionSpacing(pageSetup);
+
+    return side === 'left'
+      ? this.getMinimumSpacingForNoteGlyphBoxes(
+          this.getElementAdvanceWidthForBarlineCollision(adjacentElement),
+          adjacentBoxes,
+          barBoxes,
+          clearance,
+        )
+      : this.getMinimumSpacingForNoteGlyphBoxes(
+          measureBarWidthMap.get(measureBarElement.measureBar) ?? 0,
+          barBoxes,
+          adjacentBoxes,
+          clearance,
+        );
+  }
+
+  private static getMeasureBarAdjacentCollisionBoxes(
+    element: ScoreElement | null,
+    pageSetup: PageSetup,
+  ) {
+    if (element?.elementType === ElementType.Note) {
+      return this.getNoteCollisionGlyphBoxes(element as NoteElement, pageSetup);
+    }
+
+    if (element?.elementType === ElementType.Martyria) {
+      return this.getMartyriaCollisionGlyphBoxes(
+        element as MartyriaElement,
+        pageSetup,
+      );
+    }
+
+    if (element?.elementType === ElementType.Tempo) {
+      const tempoElement = element as TempoElement;
+      const glyphName = NeumeMappingService.getMapping(
+        tempoElement.neume,
+      ).glyphName;
+      return this.getGlyphCollisionBoxes(
+        pageSetup.neumeDefaultFontFamily,
+        glyphName,
+        0,
+        0,
+        pageSetup.neumeDefaultFontSize,
+      );
+    }
+
+    return [];
+  }
+
+  private static getElementAdvanceWidthForBarlineCollision(
+    element: ScoreElement,
+  ) {
+    if (element.elementType === ElementType.Note) {
+      return (element as NoteElement).neumeWidth;
+    }
+
+    if (element.elementType === ElementType.Martyria) {
+      return (element as MartyriaElement).width;
+    }
+
+    if (element.elementType === ElementType.Tempo) {
+      return (element as TempoElement).neumeWidth;
+    }
+
+    return element.width;
   }
 
   private static getInlineSpacing(pageSetup: PageSetup) {
@@ -1963,6 +2580,20 @@ export class LayoutService {
     workspace.neumesEndPx += width;
   }
 
+  private static addTransferredMeasureBarSpacerBox(
+    width: number,
+    transferredMeasureBar: TransferredMeasureBarReservation,
+    workspace: LayoutWorkspace,
+  ) {
+    const box: TransferredMeasureBarSpacerBox = {
+      type: 'box',
+      width,
+      transferredMeasureBar,
+    };
+    workspace.pendingParagraph.push(box);
+    workspace.neumesEndPx += width;
+  }
+
   private static addAnonymousBox(width: number, workspace: LayoutWorkspace) {
     workspace.pendingParagraph.push({ type: 'box', width });
     workspace.neumesEndPx += width;
@@ -2059,13 +2690,17 @@ export class LayoutService {
     workspace: LayoutWorkspace,
     cost: number,
     width: number,
+    transferredMeasureBar?: TransferredMeasureBarReservation | null,
   ) {
-    workspace.pendingParagraph.push({
+    const penalty: TransferredMeasureBarPenalty = {
       type: 'penalty',
       cost,
       width,
       flagged: false,
-    });
+      ...(transferredMeasureBar ? { transferredMeasureBar } : {}),
+    };
+
+    workspace.pendingParagraph.push(penalty);
   }
 
   private static addProtectedBreakpointEncoding(
@@ -2074,12 +2709,13 @@ export class LayoutService {
     breakCost: number,
     breakWidth: number,
     postBreakGlue: Glue,
+    transferredMeasureBar?: TransferredMeasureBarReservation | null,
   ) {
     // The breakpoint must occur at the penalty, not immediately before the
     // pre-break glue, so the post-break glue is skipped on the next line.
     this.preventBreak(workspace);
     this.addGlue(preBreakGlue, workspace);
-    this.addPenalty(workspace, breakCost, breakWidth);
+    this.addPenalty(workspace, breakCost, breakWidth, transferredMeasureBar);
     this.addGlue(postBreakGlue, workspace);
   }
 
@@ -2185,7 +2821,12 @@ export class LayoutService {
     elements: ScoreElement[],
     index: number,
   ): NoteElement | null {
-    const element = this.getElementAt(elements, index);
+    let element = this.getElementAt(elements, index);
+    while (element?.elementType === ElementType.MeasureBar) {
+      index++;
+      element = this.getElementAt(elements, index);
+    }
+
     return element?.elementType === ElementType.Note
       ? (element as NoteElement)
       : null;
@@ -2394,9 +3035,9 @@ export class LayoutService {
         noteElement,
         nextNoteElement,
         workspace.pageSetup,
-        measureBarWidthMap,
       ),
     );
+
     // Visual collision helpers measure the total same-line distance between
     // note boxes. m_i intentionally excludes L_{i+1}, so convert that minimum
     // into m_i space or long lyrics on the next note can no longer tuck left.
@@ -2544,22 +3185,13 @@ export class LayoutService {
     left: NoteElement,
     right: NoteElement | null,
     pageSetup: PageSetup,
-    measureBarWidthMap: Map<MeasureBar, number>,
   ) {
     if (right == null) {
       return 0;
     }
 
-    const leftBoxes = this.getNoteCollisionGlyphBoxes(
-      left,
-      pageSetup,
-      measureBarWidthMap,
-    );
-    const rightBoxes = this.getNoteCollisionGlyphBoxes(
-      right,
-      pageSetup,
-      measureBarWidthMap,
-    );
+    const leftBoxes = this.getNoteCollisionGlyphBoxes(left, pageSetup);
+    const rightBoxes = this.getNoteCollisionGlyphBoxes(right, pageSetup);
 
     return this.getMinimumSpacingForNoteGlyphBoxes(
       left.neumeWidth,
@@ -2614,17 +3246,10 @@ export class LayoutService {
   private static getNoteCollisionGlyphBoxes(
     noteElement: NoteElement,
     pageSetup: PageSetup,
-    measureBarWidthMap: Map<MeasureBar, number>,
-    leftBarReserveOverride: number | null = null,
   ) {
     const fontFamily = pageSetup.neumeDefaultFontFamily;
     const fontSize = pageSetup.neumeDefaultFontSize;
-    const glyphs = this.getNoteCollisionGlyphs(
-      noteElement,
-      pageSetup,
-      measureBarWidthMap,
-      leftBarReserveOverride,
-    );
+    const glyphs = this.getNoteCollisionGlyphs(noteElement, pageSetup);
     const resolvedGlyphNames = fontService.resolveContextualSubstitutions(
       fontFamily,
       glyphs.map((glyph) => glyph.glyphName),
@@ -2669,31 +3294,21 @@ export class LayoutService {
   private static getNoteCollisionGlyphs(
     noteElement: NoteElement,
     pageSetup: PageSetup,
-    measureBarWidthMap: Map<MeasureBar, number>,
-    leftBarReserveOverride: number | null = null,
   ): NoteCollisionGlyph[] {
     const glyphs: NoteCollisionGlyph[] = [];
     const fontSize = pageSetup.neumeDefaultFontSize;
-    const leftBarReserve = this.getNoteLeftBarReserve(
-      noteElement,
-      measureBarWidthMap,
-      leftBarReserveOverride,
-    );
     const vareiaWidth = this.getNeumeWidthFromCache(
       neumeWidthCache,
       VocalExpressionNeume.Vareia,
       pageSetup,
     );
     const bodyLeft =
-      leftBarReserve +
-      (!pageSetup.melkiteRtl && noteElement.vareia
+      !pageSetup.melkiteRtl && noteElement.vareia
         ? vareiaWidth + noteElement.vareiaInternalSpacing
-        : 0);
+        : 0;
 
     if (noteElement.vareia && !pageSetup.melkiteRtl) {
-      glyphs.push(
-        this.getVareiaCollisionGlyph(noteElement, leftBarReserve, fontSize),
-      );
+      glyphs.push(this.getVareiaCollisionGlyph(noteElement, 0, fontSize));
     }
 
     glyphs.push({
@@ -2948,15 +3563,6 @@ export class LayoutService {
     const fontSize = pageSetup.neumeDefaultFontSize;
     let x = 0;
 
-    if (this.hasInlineMeasureBarLeft(martyriaElement)) {
-      x += this.getNeumeWidthFromCache(
-        neumeWidthCache,
-        martyriaElement.measureBarLeft!,
-        pageSetup,
-      );
-      x += martyriaElement.computedMeasureBarLeftLeadingSpacing;
-    }
-
     if (martyriaElement.tempoLeft) {
       glyphs.push({
         glyphName: NeumeMappingService.getMapping(martyriaElement.tempoLeft)
@@ -3171,34 +3777,15 @@ export class LayoutService {
     martyriaElement: MartyriaElement,
     pageSetup: PageSetup,
   ) {
-    const measureBarLeftWidth = this.hasInlineMeasureBarLeft(martyriaElement)
-      ? this.getNeumeWidthFromCache(
-          neumeWidthCache,
-          martyriaElement.measureBarLeft!,
-          pageSetup,
-        )
-      : 0;
-    const measureBarLeftOverhang = this.hasInlineMeasureBarLeft(martyriaElement)
-      ? this.getSingleNeumeLeftInkOverhang(
-          martyriaElement.measureBarLeft!,
-          pageSetup,
-        )
-      : 0;
     const tempoLeftOverhang = martyriaElement.tempoLeft
       ? Math.max(
           0,
           this.getSingleNeumeLeftInkOverhang(
             martyriaElement.tempoLeft,
             pageSetup,
-          ) -
-            measureBarLeftWidth -
-            martyriaElement.computedTempoLeftOffsetX,
+          ) - martyriaElement.computedTempoLeftOffsetX,
         )
       : 0;
-
-    if (this.hasInlineMeasureBarLeft(martyriaElement)) {
-      return Math.max(measureBarLeftOverhang, tempoLeftOverhang);
-    }
 
     if (martyriaElement.tempoLeft) {
       return tempoLeftOverhang;
@@ -3220,20 +3807,9 @@ export class LayoutService {
     return this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).right;
   }
 
-  private static hasInlineMeasureBarLeft(martyriaElement: MartyriaElement) {
-    return (
-      martyriaElement.measureBarLeft != null &&
-      !martyriaElement.measureBarLeft.endsWith('Above')
-    );
-  }
-
   private static getMartyriaTrailingNeume(
     martyriaElement: MartyriaElement,
   ): Neume | null {
-    if (martyriaElement.measureBarRight) {
-      return martyriaElement.measureBarRight;
-    }
-
     if (martyriaElement.tempoRight) {
       return martyriaElement.tempoRight;
     }
@@ -3248,6 +3824,7 @@ export class LayoutService {
   private static getBreakCost(
     noteElement: NoteElement,
     nextElement: ScoreElement | null,
+    afterNextElement: ScoreElement | null,
     afterNextNoteElement: NoteElement | null,
   ) {
     const noteTied =
@@ -3265,7 +3842,14 @@ export class LayoutService {
     // stays below the strongly discouraged threshold.
     let breakCost = 0;
 
-    if (nextElement?.elementType === ElementType.Martyria) {
+    if (
+      nextElement?.elementType === ElementType.Martyria ||
+      this.isMeasureBarBeforeMartyria(
+        noteElement,
+        nextElement,
+        afterNextElement,
+      )
+    ) {
       // Prohibit a break before a martyria.
       breakCost += MAX_COST;
     } else if (nextElement?.elementType === ElementType.Note) {
@@ -3338,12 +3922,52 @@ export class LayoutService {
     return Math.min(breakCost, MAX_COST);
   }
 
+  private static isMeasureBarBeforeMartyria(
+    owner: ScoreElement,
+    nextElement: ScoreElement | null,
+    afterNextElement: ScoreElement | null,
+  ) {
+    if (
+      nextElement?.elementType !== ElementType.MeasureBar ||
+      afterNextElement?.elementType !== ElementType.Martyria
+    ) {
+      return false;
+    }
+
+    const measureBarElement = nextElement as MeasureBarElement;
+
+    return (
+      this.isMeasureBarOwnedByPreviousRight(measureBarElement, owner) ||
+      this.isMeasureBarOwnedByNextLeft(measureBarElement, afterNextElement)
+    );
+  }
+
+  private static isMeasureBarOwnedByPreviousRight(
+    measureBarElement: MeasureBarElement,
+    previousElement: ScoreElement | null,
+  ) {
+    return (
+      measureBarElement.sourceSide === 'right' &&
+      measureBarElement.sourceElement === previousElement
+    );
+  }
+
+  private static isMeasureBarOwnedByNextLeft(
+    measureBarElement: MeasureBarElement,
+    nextElement: ScoreElement | null,
+  ) {
+    return (
+      measureBarElement.sourceSide === 'left' &&
+      measureBarElement.sourceElement === nextElement
+    );
+  }
+
   private static getBreakPenaltyWidth(
     noteElement: NoteElement,
     rightProjection: number,
     workspace: LayoutWorkspace,
-    nextElement: ScoreElement | null,
     measureBarWidthMap: Map<MeasureBar, number>,
+    transferredMeasureBarRightWidth: number,
   ) {
     let penaltyWidth = Math.max(
       rightProjection,
@@ -3360,22 +3984,43 @@ export class LayoutService {
       );
     }
 
-    const transferredMeasureBarRight =
-      this.getMeasureBarTransferredFromLineStart(nextElement);
-
-    if (transferredMeasureBarRight != null) {
-      penaltyWidth += measureBarWidthMap.get(transferredMeasureBarRight) ?? 0;
-      if (measureBarRight == null) {
-        penaltyWidth += this.getTerminalMeasureBarRightSpacingForMeasureBar(
-          noteElement,
-          transferredMeasureBarRight,
-          workspace.pageSetup,
-          measureBarWidthMap,
-        );
-      }
+    if (transferredMeasureBarRightWidth > 0) {
+      penaltyWidth += transferredMeasureBarRightWidth;
     }
 
     return penaltyWidth;
+  }
+
+  private static getLineEndTransferredMeasureBarTransfer(
+    noteElement: NoteElement,
+    nextElement: ScoreElement | null,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    if (nextElement?.elementType === ElementType.MeasureBar) {
+      const measureBarElement = nextElement as MeasureBarElement;
+      return measureBarElement.sourceElement?.elementType ===
+        ElementType.Note && measureBarElement.sourceSide === 'left'
+        ? this.createLineEndMeasureBarTransfer(
+            noteElement,
+            measureBarElement.measureBar,
+            measureBarElement.sourceElement as NoteElement,
+            pageSetup,
+            measureBarWidthMap,
+          )
+        : null;
+    }
+
+    const measureBar = this.getMeasureBarTransferredFromLineStart(nextElement);
+    return measureBar != null && nextElement?.elementType === ElementType.Note
+      ? this.createLineEndMeasureBarTransfer(
+          noteElement,
+          measureBar,
+          nextElement as NoteElement,
+          pageSetup,
+          measureBarWidthMap,
+        )
+      : null;
   }
 
   private static getMeasureBarTransferredFromLineStart(
@@ -3528,6 +4173,39 @@ export class LayoutService {
     return maxPositiveAdjustmentRatio;
   }
 
+  private static alignTerminalMeasureBarElements(
+    pages: Page[],
+    pageSetup: PageSetup,
+  ) {
+    for (const page of pages) {
+      for (const line of page.lines) {
+        const firstElement = line.elements[0];
+        if (firstElement?.elementType === ElementType.MeasureBar) {
+          const measureBarElement = firstElement as MeasureBarElement;
+          firstElement.x =
+            pageSetup.leftMargin +
+            this.getSingleNeumeLeftInkOverhang(
+              measureBarElement.measureBar,
+              pageSetup,
+            );
+        }
+
+        const lastElement = line.elements[line.elements.length - 1];
+        if (lastElement?.elementType === ElementType.MeasureBar) {
+          const measureBarElement = lastElement as MeasureBarElement;
+          lastElement.x =
+            pageSetup.pageWidth -
+            pageSetup.rightMargin -
+            lastElement.width -
+            this.getSingleNeumeRightInkOverhang(
+              measureBarElement.measureBar,
+              pageSetup,
+            );
+        }
+      }
+    }
+  }
+
   private static relaxMaxAdjustmentRatioCap(minimalCap: number) {
     if (minimalCap <= idealMaxAdjustmentRatio) {
       return idealMaxAdjustmentRatio;
@@ -3651,6 +4329,10 @@ export class LayoutService {
     lineBreakType: LineBreakType,
     workspace: LayoutWorkspace,
     measureBarWidthMap: Map<MeasureBar, number>,
+    forcedBreakMeasureBarTransfer?: {
+      width: number;
+      reservation: TransferredMeasureBarReservation;
+    } | null,
   ) {
     const { pageSetup, pendingParagraph, completedParagraphs } = workspace;
 
@@ -3692,7 +4374,7 @@ export class LayoutService {
     );
 
     // Force break and end paragraph
-    this.forceBreak(workspace);
+    this.forceBreak(workspace, forcedBreakMeasureBarTransfer);
 
     // Compute per-line widths for multiline drop caps
     let lineLengths: number | number[];
@@ -3759,12 +4441,27 @@ export class LayoutService {
     workspace.melismaLyricsEndPx = null;
     workspace.pendingDropCapWidthPx = 0;
     workspace.pendingDropCapContinuationLines = 0;
-    workspace.pendingMartyriaBarTransferWidth = 0;
   }
 
-  private static forceBreak(workspace: LayoutWorkspace) {
+  private static forceBreak(
+    workspace: LayoutWorkspace,
+    forcedBreakMeasureBarTransfer?: {
+      width: number;
+      reservation: TransferredMeasureBarReservation;
+    } | null,
+  ) {
     const { pendingParagraph } = workspace;
-    pendingParagraph.push(forcedBreak());
+    const penalty = forcedBreak();
+    if (forcedBreakMeasureBarTransfer != null) {
+      const transferredPenalty: TransferredMeasureBarPenalty = {
+        ...penalty,
+        width: forcedBreakMeasureBarTransfer.width,
+        transferredMeasureBar: forcedBreakMeasureBarTransfer.reservation,
+      };
+      pendingParagraph.push(transferredPenalty);
+    } else {
+      pendingParagraph.push(penalty);
+    }
   }
 
   private static getLineHeight(
@@ -3802,6 +4499,7 @@ export class LayoutService {
           }
           break;
         case ElementType.Martyria:
+        case ElementType.MeasureBar:
         case ElementType.Note:
         case ElementType.Tempo:
         case ElementType.DropCap:
@@ -4177,7 +4875,6 @@ export class LayoutService {
     const {
       lyricsVerticalOffset,
       vareiaWidth,
-      measureBarWidthMap,
       runningElaphronWidth,
       elaphronWidth,
     } = args;
@@ -4245,36 +4942,6 @@ export class LayoutService {
       noteElement.neumeWidth += vareiaPrefixWidth;
     }
 
-    // Handle special case for measure bars: adjust the lyric offset so that
-    // the lyrics remain centered beneath the main neume.
-    const measureBarLeft = noteElement.measureBarLeft;
-
-    const measureBarLeftWidth =
-      measureBarLeft != null ? measureBarWidthMap.get(measureBarLeft) : null;
-
-    if (measureBarLeftWidth != null) {
-      noteElement.computedMeasureBarLeftLeadingSpacing =
-        this.getMeasureBarLeftLeadingSpacing(
-          noteElement,
-          pageSetup,
-          measureBarWidthMap,
-        );
-      const reservedWidth =
-        measureBarLeftWidth + noteElement.computedMeasureBarLeftLeadingSpacing;
-      noteElement.lyricsHorizontalOffset += reservedWidth;
-      noteElement.neumeWidth += reservedWidth;
-    }
-
-    const measureBarRight = noteElement.measureBarRight;
-
-    const measureBarRightWidth =
-      measureBarRight != null ? measureBarWidthMap.get(measureBarRight) : null;
-
-    if (measureBarRightWidth != null) {
-      noteElement.lyricsHorizontalOffset -= measureBarRightWidth;
-      noteElement.neumeWidth += measureBarRightWidth;
-    }
-
     // Handle special case for running elaphron: shift the lyrics toward the
     // elaphron so that they remain centered beneath it.
     if (noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron) {
@@ -4303,12 +4970,6 @@ export class LayoutService {
     const mappingRoot = !martyriaElement.error
       ? NeumeMappingService.getMapping(martyriaElement.rootSign)
       : NeumeMappingService.getMapping(RootSign.Alpha);
-    const mappingMeasureBarLeft = martyriaElement.measureBarLeft
-      ? NeumeMappingService.getMapping(martyriaElement.measureBarLeft)
-      : null;
-    const mappingMeasureBarRight = martyriaElement.measureBarRight
-      ? NeumeMappingService.getMapping(martyriaElement.measureBarRight)
-      : null;
     const mappingTempoLeft = martyriaElement.tempoLeft
       ? NeumeMappingService.getMapping(martyriaElement.tempoLeft)
       : null;
@@ -4365,27 +5026,7 @@ export class LayoutService {
       );
     }
 
-    const hasInlineMeasureBarLeft =
-      this.hasInlineMeasureBarLeft(martyriaElement);
-
-    if (hasInlineMeasureBarLeft) {
-      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
-        neumeWidthCache,
-        martyriaElement.measureBarLeft!,
-        pageSetup,
-      );
-    }
-
-    martyriaElement.computedMeasureBarLeftLeadingSpacing =
-      this.getMeasureBarBaseLeftLeadingSpacing(martyriaElement, pageSetup);
-
-    if (martyriaElement.measureBarRight) {
-      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
-        neumeWidthCache,
-        martyriaElement.measureBarRight,
-        pageSetup,
-      );
-    }
+    martyriaElement.computedMeasureBarLeftLeadingSpacing = 0;
 
     if (martyriaElement.alignRight && martyriaElement.quantitativeNeume) {
       martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
@@ -4407,18 +5048,6 @@ export class LayoutService {
           mappingRoot.text,
           `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
         ) +
-        (hasInlineMeasureBarLeft && mappingMeasureBarLeft
-          ? TextMeasurementService.getTextWidth(
-              mappingMeasureBarLeft.text,
-              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-            )
-          : 0) +
-        (mappingMeasureBarRight
-          ? TextMeasurementService.getTextWidth(
-              mappingMeasureBarRight.text,
-              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-            )
-          : 0) +
         (mappingTempoLeft
           ? TextMeasurementService.getTextWidth(
               mappingTempoLeft.text,
@@ -4974,7 +5603,6 @@ export class LayoutService {
                     previousAnchor,
                     measureBarLeft,
                     pageSetup,
-                    measureBarWidthMap,
                   ) ?? { left: 0, right: barWidth })
                 : { left: 0, right: barWidth };
               const previousCenterBounds = this.getMeasureBarAnchorBounds(
@@ -5042,7 +5670,6 @@ export class LayoutService {
                     nextAnchor,
                     measureBarRight,
                     pageSetup,
-                    measureBarWidthMap,
                   ) ?? { left: 0, right: barWidth })
                 : { left: 0, right: barWidth };
               const nextVareiaClampExtents =
@@ -5069,7 +5696,6 @@ export class LayoutService {
                     owner,
                     measureBarRight,
                     pageSetup,
-                    measureBarWidthMap,
                   ) ?? { left: 0, right: barWidth })
                 : { left: 0, right: barWidth };
               const ownerBounds = this.getMeasureBarAnchorBounds(
@@ -5215,7 +5841,6 @@ export class LayoutService {
               measureBar,
               edge,
               pageSetup,
-              measureBarWidthMap,
             );
       }
 
@@ -5260,7 +5885,6 @@ export class LayoutService {
     measureBar: MeasureBar,
     edge: MeasureBarAnchorEdge,
     pageSetup: PageSetup,
-    measureBarWidthMap: Map<MeasureBar, number>,
   ) {
     const barBox = this.getMeasureBarClearanceBox(
       measureBar,
@@ -5272,7 +5896,6 @@ export class LayoutService {
     const overlappingBoxes = this.getNoteCollisionGlyphBoxes(
       noteElement,
       pageSetup,
-      measureBarWidthMap,
     )
       .filter((box) => this.noteGlyphBoxesOverlap(box, barBox))
       .map((box) => ({
@@ -5307,7 +5930,6 @@ export class LayoutService {
       measureBar,
       'left',
       pageSetup,
-      measureBarWidthMap,
     );
 
     return Math.max(0, fallbackBounds.left - bounds.left);
@@ -5330,7 +5952,6 @@ export class LayoutService {
       measureBar,
       'right',
       pageSetup,
-      measureBarWidthMap,
     );
 
     return Math.max(0, bounds.right - fallbackBounds.right);
@@ -5481,7 +6102,6 @@ export class LayoutService {
     anchor: ScoreElement,
     measureBar: MeasureBar,
     pageSetup: PageSetup,
-    measureBarWidthMap: Map<MeasureBar, number>,
   ) {
     if (
       anchor.elementType !== ElementType.Note &&
@@ -5492,11 +6112,7 @@ export class LayoutService {
 
     const anchorBoxes =
       anchor.elementType === ElementType.Note
-        ? this.getNoteCollisionGlyphBoxes(
-            anchor as NoteElement,
-            pageSetup,
-            measureBarWidthMap,
-          )
+        ? this.getNoteCollisionGlyphBoxes(anchor as NoteElement, pageSetup)
         : this.getMartyriaCollisionGlyphBoxes(
             anchor as MartyriaElement,
             pageSetup,
@@ -5642,8 +6258,6 @@ export class LayoutService {
     const noteBoxes = this.getNoteCollisionGlyphBoxes(
       owner as NoteElement,
       pageSetup,
-      measureBarWidthMap,
-      barWidth + leadingSpacing,
     );
 
     return (
@@ -5975,13 +6589,11 @@ export class LayoutService {
         leftNote,
         measureBarRight,
         pageSetup,
-        measureBarWidthMap,
       ) ?? { left: 0, right: barWidth };
       const nextClampExtents = this.getMeasureBarCollisionExtentsForAnchor(
         rightMartyria,
         measureBarRight,
         pageSetup,
-        measureBarWidthMap,
       ) ?? { left: 0, right: barWidth };
       const ownerBounds = this.getMeasureBarAnchorBounds(
         leftNote,
@@ -6081,11 +6693,7 @@ export class LayoutService {
         leftNote.x,
         pageSetup,
       );
-      const rightBoxes = this.getNoteCollisionGlyphBoxes(
-        rightNote,
-        pageSetup,
-        measureBarWidthMap,
-      );
+      const rightBoxes = this.getNoteCollisionGlyphBoxes(rightNote, pageSetup);
       const collisionMinimum = Math.max(
         this.getMinimumSpacingForNoteGlyphBoxes(
           leftNote.neumeWidth,
@@ -6111,13 +6719,11 @@ export class LayoutService {
         leftNote,
         measureBarRight,
         pageSetup,
-        measureBarWidthMap,
       ) ?? { left: 0, right: barWidth };
       const nextClampExtents = this.getMeasureBarCollisionExtentsForAnchor(
         rightNote,
         measureBarRight,
         pageSetup,
-        measureBarWidthMap,
       ) ?? { left: 0, right: barWidth };
       const nextVareiaClampExtents = this.getMeasureBarVareiaCollisionExtents(
         rightNote,
@@ -6165,11 +6771,7 @@ export class LayoutService {
     }
 
     if (measureBarLeft != null) {
-      const leftBoxes = this.getNoteCollisionGlyphBoxes(
-        leftNote,
-        pageSetup,
-        measureBarWidthMap,
-      );
+      const leftBoxes = this.getNoteCollisionGlyphBoxes(leftNote, pageSetup);
       const barBoxes = this.getMeasureBarCollisionBoxes(
         measureBarLeft,
         'left',
@@ -6260,6 +6862,27 @@ export class LayoutService {
     return measureBar != null && !measureBar.endsWith('Above')
       ? measureBar
       : null;
+  }
+
+  private static getExplicitInlineMeasureBarLeft(
+    owner: NoteElement | MartyriaElement,
+  ) {
+    const measureBar =
+      owner.elementType === ElementType.Note
+        ? (owner as NoteElement).measureBarLeft
+        : (owner as MartyriaElement).measureBarLeft;
+
+    return measureBar != null && !measureBar.endsWith('Above')
+      ? measureBar
+      : null;
+  }
+
+  private static getExplicitMeasureBarRight(
+    owner: NoteElement | MartyriaElement,
+  ) {
+    return owner.elementType === ElementType.Note
+      ? (owner as NoteElement).measureBarRight
+      : (owner as MartyriaElement).measureBarRight;
   }
 
   private static getVisibleMeasureBarRight(

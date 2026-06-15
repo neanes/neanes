@@ -6,18 +6,17 @@
     <Toaster />
   </div>
   <div v-if="updateExists" class="update-notification">
-    {{ tt(($) => $.toast.update.available) }}
+    {{ t(($) => $.toast.update.available, { ns: 'toast' }) }}
     <button class="ok" @click="refreshApp">
-      {{ tt(($) => $.toast.update.update) }}
+      {{ t(($) => $.toast.update.update, { ns: 'toast' }) }}
     </button>
     <button class="cancel" @click="updateExists = false">
-      {{ tt(($) => $.toast.update.notNow) }}
+      {{ t(($) => $.toast.update.notNow, { ns: 'toast' }) }}
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { SelectorParam } from 'i18next';
 import { useTranslation } from 'i18next-vue';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { toast } from 'vue-sonner';
@@ -36,13 +35,6 @@ const electronUpdateDownloadedToastId = 'electron-update-downloaded';
 const electronUpdateErrorToastId = 'electron-update-error';
 const { t } = useTranslation();
 
-function tt(
-  selector: SelectorParam<'toast'>,
-  options?: Record<string, unknown>,
-) {
-  return t(selector, { ns: 'toast', ...options });
-}
-
 async function downloadElectronUpdate() {
   try {
     await window.ipcRenderer?.invoke(IpcRendererChannels.DownloadUpdate);
@@ -51,7 +43,9 @@ async function downloadElectronUpdate() {
       message:
         error instanceof Error
           ? error.message
-          : tt(($) => $.toast.update.downloadFailedDescription),
+          : t(($) => $.toast.update.downloadFailedDescription, {
+              ns: 'toast',
+            }),
     });
   }
 }
@@ -66,30 +60,33 @@ async function restartToInstallElectronUpdate() {
       message:
         error instanceof Error
           ? error.message
-          : tt(($) => $.toast.update.restartFailedDescription),
+          : t(($) => $.toast.update.restartFailedDescription, {
+              ns: 'toast',
+            }),
     });
   }
 }
 
 function showElectronUpdateAvailableToast(args?: UpdateAvailableArgs) {
   toast.info(
-    tt(($) => $.toast.update.available),
+    t(($) => $.toast.update.available, { ns: 'toast' }),
     {
       id: electronUpdateAvailableToastId,
       duration: Infinity,
       description: args?.version
-        ? tt(($) => $.toast.update.versionAvailable, {
+        ? t(($) => $.toast.update.versionAvailable, {
+            ns: 'toast',
             version: args.version,
           })
         : undefined,
       action: {
-        label: tt(($) => $.toast.update.download),
+        label: t(($) => $.toast.update.download, { ns: 'toast' }),
         onClick: () => {
           void downloadElectronUpdate();
         },
       },
       cancel: {
-        label: tt(($) => $.toast.update.later),
+        label: t(($) => $.toast.update.later, { ns: 'toast' }),
       },
     },
   );
@@ -97,7 +94,7 @@ function showElectronUpdateAvailableToast(args?: UpdateAvailableArgs) {
 
 function showElectronUpdateDownloadingToast() {
   toast.loading(
-    tt(($) => $.toast.update.downloading),
+    t(($) => $.toast.update.downloading, { ns: 'toast' }),
     {
       id: electronUpdateDownloadingToastId,
       duration: Infinity,
@@ -109,23 +106,24 @@ function showElectronUpdateDownloadedToast(args?: UpdateAvailableArgs) {
   toast.dismiss(electronUpdateDownloadingToastId);
 
   toast.success(
-    tt(($) => $.toast.update.downloaded),
+    t(($) => $.toast.update.downloaded, { ns: 'toast' }),
     {
       id: electronUpdateDownloadedToastId,
       duration: Infinity,
       description: args?.version
-        ? tt(($) => $.toast.update.versionReady, {
+        ? t(($) => $.toast.update.versionReady, {
+            ns: 'toast',
             version: args.version,
           })
         : undefined,
       action: {
-        label: tt(($) => $.toast.update.restartNow),
+        label: t(($) => $.toast.update.restartNow, { ns: 'toast' }),
         onClick: () => {
           void restartToInstallElectronUpdate();
         },
       },
       cancel: {
-        label: tt(($) => $.toast.update.later),
+        label: t(($) => $.toast.update.later, { ns: 'toast' }),
       },
     },
   );
@@ -133,7 +131,7 @@ function showElectronUpdateDownloadedToast(args?: UpdateAvailableArgs) {
 
 function showElectronUpdateErrorToast(args: UpdateErrorArgs) {
   toast.error(
-    tt(($) => $.toast.update.failed),
+    t(($) => $.toast.update.failed, { ns: 'toast' }),
     {
       id: electronUpdateErrorToastId,
       description: args.message,
@@ -177,7 +175,9 @@ const onElectronUpdateDownloaded = (args?: UpdateAvailableArgs) =>
 const onElectronUpdateError = (args?: UpdateErrorArgs) => {
   toast.dismiss(electronUpdateDownloadingToastId);
   showElectronUpdateErrorToast(
-    args ?? { message: tt(($) => $.toast.update.failedDescription) },
+    args ?? {
+      message: t(($) => $.toast.update.failedDescription, { ns: 'toast' }),
+    },
   );
 };
 

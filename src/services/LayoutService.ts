@@ -368,7 +368,7 @@ export class LayoutService {
       sourceElements.push(new EmptyElement());
     }
 
-    const elements = this.createMeasureBarLayoutElements(sourceElements);
+    const elements = sourceElements;
 
     const layoutWorkspace: LayoutWorkspace = {
       pageSetup,
@@ -587,16 +587,6 @@ export class LayoutService {
       let lineBreak: boolean = elements[i].lineBreak || elements[i].pageBreak;
       let lineBreakType: LineBreakType =
         elements[i].lineBreakType || LineBreakType.Left;
-
-      if (this.shouldDeferBreakToFollowingRightMeasureBar(elements, i)) {
-        lineBreak = false;
-      } else if (
-        this.shouldInheritBreakFromPreviousMeasureBarOwner(elements, i)
-      ) {
-        const previousElement = elements[i - 1];
-        lineBreak = previousElement.lineBreak || previousElement.pageBreak;
-        lineBreakType = previousElement.lineBreakType || LineBreakType.Left;
-      }
 
       switch (elements[i].elementType) {
         case ElementType.TextBox: {
@@ -855,11 +845,16 @@ export class LayoutService {
             );
           const previousElement = this.getElementAt(elements, i - 1);
 
+          this.lowerCurrentLeftMeasureBarBoundary(
+            previousElement,
+            noteElement,
+            pageSetup,
+            measureBarWidthMap,
+            layoutWorkspace,
+          );
+
           // Left projection (protected by infinity penalty)
-          if (
-            leftProjection > 0 &&
-            previousElement?.elementType !== ElementType.MeasureBar
-          ) {
+          if (leftProjection > 0) {
             this.preventBreak(layoutWorkspace);
             this.addGlue(this.fixedGlue(leftProjection), layoutWorkspace);
           }
@@ -988,6 +983,16 @@ export class LayoutService {
             this.fixedGlue(m_i),
             lineEndMeasureBarTransfer?.reservation ?? null,
           );
+
+          if (nextElement?.elementType !== ElementType.Martyria) {
+            this.lowerCurrentRightMeasureBarBoundary(
+              noteElement,
+              nextElement,
+              pageSetup,
+              measureBarWidthMap,
+              layoutWorkspace,
+            );
+          }
 
           break;
         }
@@ -1214,6 +1219,13 @@ export class LayoutService {
               this.offsetGlueWidth(newGlue, lineStartMartyriaShift),
               layoutWorkspace,
             );
+            this.lowerCurrentLeftMeasureBarBoundary(
+              previousElement,
+              martyriaElement,
+              pageSetup,
+              measureBarWidthMap,
+              layoutWorkspace,
+            );
           } else if (martyriaElement.alignRight) {
             // A paragraph-start right martyria still needs its leading glue in
             // the input stream, even though positionItems will skip it at line
@@ -1316,6 +1328,14 @@ export class LayoutService {
                 ),
           );
 
+          this.lowerCurrentRightMeasureBarBoundary(
+            martyriaElement,
+            nextElement,
+            pageSetup,
+            measureBarWidthMap,
+            layoutWorkspace,
+          );
+
           // Must run even when lineBreak is already true (from pageBreak or
           // an explicit lineBreak): endParagraph reads lineBreakType to pick
           // the finishing-glue stretch, and Left's MAX_COST stretch would
@@ -1323,237 +1343,6 @@ export class LayoutService {
           if (martyriaElement.alignRight) {
             lineBreak = true;
             lineBreakType = LineBreakType.Justify;
-          }
-
-          break;
-        }
-        case ElementType.MeasureBar: {
-          // PROCESS MEASURE BAR
-          const measureBarElement = elements[i] as MeasureBarElement;
-          const previousElement = this.getElementAt(elements, i - 1);
-          const nextElement = this.getElementAt(elements, i + 1);
-          const elementWidthPx =
-            measureBarWidthMap.get(measureBarElement.measureBar) ?? 0;
-          const baseGlue =
-            previousElement?.elementType === ElementType.Martyria ||
-            nextElement?.elementType === ElementType.Martyria
-              ? martyriaGlue
-              : standardGlue;
-          let leftSideGlue = this.createMeasureBarSideGlue(
-            previousElement,
-            measureBarElement,
-            nextElement,
-            'left',
-            baseGlue,
-            pageSetup,
-            measureBarWidthMap,
-          );
-          let rightSideGlue = this.createMeasureBarSideGlue(
-            previousElement,
-            measureBarElement,
-            nextElement,
-            'right',
-            baseGlue,
-            pageSetup,
-            measureBarWidthMap,
-          );
-          const balancedSideGlueWidth = Math.max(
-            leftSideGlue.width,
-            rightSideGlue.width,
-          );
-          leftSideGlue = {
-            ...leftSideGlue,
-            width: balancedSideGlueWidth,
-          };
-          rightSideGlue = {
-            ...rightSideGlue,
-            width: balancedSideGlueWidth,
-          };
-          if (
-            layoutWorkspace.pendingParagraph.length === 0 &&
-            nextElement?.elementType === ElementType.Note
-          ) {
-            const lineStartRightSideSpacing = Math.max(
-              this.getInlineSpacing(pageSetup),
-              this.getMeasureBarElementSideCollisionMinimum(
-                null,
-                measureBarElement,
-                nextElement,
-                'right',
-                pageSetup,
-                measureBarWidthMap,
-              ),
-            );
-            rightSideGlue = {
-              ...rightSideGlue,
-              width: lineStartRightSideSpacing,
-            };
-          }
-
-          const lineStartMeasureBarTransfer =
-            measureBarElement.sourceElement?.elementType ===
-              ElementType.Martyria &&
-            measureBarElement.sourceSide === 'right' &&
-            nextElement?.elementType === ElementType.Note &&
-            !(nextElement as NoteElement).measureBarLeft
-              ? this.createLineStartMeasureBarTransfer(
-                  measureBarElement.sourceElement as MartyriaElement,
-                  measureBarElement.measureBar,
-                  'right',
-                  nextElement as NoteElement,
-                  pageSetup,
-                  measureBarWidthMap,
-                )
-              : null;
-          if (lineStartMeasureBarTransfer != null) {
-            layoutWorkspace.pendingLineStartMeasureBarTransfer =
-              lineStartMeasureBarTransfer;
-            rightSideGlue = this.offsetGlueWidth(
-              rightSideGlue,
-              lineStartMeasureBarTransfer.width,
-            );
-          }
-
-          measureBarElement.computedOffsetX = this.emToPx(
-            measureBarElement.offsetX,
-            pageSetup.neumeDefaultFontSize,
-          );
-          measureBarElement.computedOffsetY = this.emToPx(
-            measureBarElement.offsetY,
-            pageSetup.neumeDefaultFontSize,
-          );
-
-          const keepMeasureBarWithPreviousOwner =
-            measureBarElement.sourceSide === 'right' &&
-            measureBarElement.sourceElement === previousElement;
-          const keepMeasureBarWithNextOwner =
-            measureBarElement.sourceSide === 'left' &&
-            measureBarElement.sourceElement === nextElement;
-          const keepRightMeasureBarWithFollowingMartyria =
-            this.shouldKeepRightMeasureBarWithFollowingMartyria(
-              measureBarElement,
-              previousElement,
-              nextElement,
-            );
-
-          if (layoutWorkspace.pendingParagraph.length === 0) {
-            this.addBox(elementWidthPx, measureBarElement, layoutWorkspace);
-            this.addGlue(rightSideGlue, layoutWorkspace);
-          } else {
-            let replacedTrailingGlueWidth = 0;
-            if (
-              layoutWorkspace.pendingParagraph[
-                layoutWorkspace.pendingParagraph.length - 1
-              ].type === 'glue'
-            ) {
-              replacedTrailingGlueWidth = (
-                layoutWorkspace.pendingParagraph[
-                  layoutWorkspace.pendingParagraph.length - 1
-                ] as Glue
-              ).width;
-              this.removeGlue(layoutWorkspace);
-            }
-
-            const barlineBoundaryWidth =
-              leftSideGlue.width + elementWidthPx + rightSideGlue.width;
-            const isLyricNoteBoundary =
-              previousElement?.elementType === ElementType.Note &&
-              nextElement?.elementType === ElementType.Note &&
-              (((previousElement as NoteElement).lyricsWidth ?? 0) > 0 ||
-                ((nextElement as NoteElement).lyricsWidth ?? 0) > 0);
-            const isMartyriaBoundary =
-              previousElement?.elementType === ElementType.Martyria ||
-              nextElement?.elementType === ElementType.Martyria;
-            const previousNoteRightProjection =
-              previousElement?.elementType === ElementType.Note &&
-              nextElement?.elementType === ElementType.Martyria
-                ? this.getLyricProjections(
-                    previousElement as NoteElement,
-                    (previousElement as NoteElement).alignLeft,
-                  ).rightProjection
-                : 0;
-            const nextNoteLeftProjection =
-              (previousElement?.elementType === ElementType.Note ||
-                previousElement?.elementType === ElementType.Martyria) &&
-              nextElement?.elementType === ElementType.Note
-                ? this.getLyricProjections(
-                    nextElement as NoteElement,
-                    (nextElement as NoteElement).alignLeft,
-                  ).leftProjection
-                : 0;
-            const replacedGlueBaseline =
-              previousElement != null
-                ? Math.max(
-                    barlineBoundaryWidth,
-                    this.getMeasureBarMinimumGlueWidth(
-                      previousElement,
-                      nextElement,
-                      pageSetup,
-                      measureBarWidthMap,
-                    ),
-                  )
-                : barlineBoundaryWidth;
-            const preservedBoundaryExtra = isMartyriaBoundary
-              ? 0
-              : replacedTrailingGlueWidth +
-                nextNoteLeftProjection -
-                (isLyricNoteBoundary
-                  ? barlineBoundaryWidth
-                  : replacedGlueBaseline);
-            if (preservedBoundaryExtra > 0) {
-              leftSideGlue = this.offsetGlueWidth(
-                leftSideGlue,
-                -preservedBoundaryExtra / 2,
-              );
-              rightSideGlue = this.offsetGlueWidth(
-                rightSideGlue,
-                -preservedBoundaryExtra / 2,
-              );
-            }
-            const centeringShift = isMartyriaBoundary
-              ? (previousNoteRightProjection - nextNoteLeftProjection) / 2
-              : 0;
-            if (centeringShift !== 0) {
-              leftSideGlue = this.offsetGlueWidth(
-                leftSideGlue,
-                -centeringShift,
-              );
-              rightSideGlue = this.offsetGlueWidth(
-                rightSideGlue,
-                centeringShift,
-              );
-            }
-            if (keepMeasureBarWithPreviousOwner) {
-              const lastItem =
-                layoutWorkspace.pendingParagraph[
-                  layoutWorkspace.pendingParagraph.length - 1
-                ];
-              if (lastItem?.type === 'penalty') {
-                layoutWorkspace.pendingParagraph.pop();
-              }
-              if (nextElement?.elementType === ElementType.Martyria) {
-                const previousItem =
-                  layoutWorkspace.pendingParagraph[
-                    layoutWorkspace.pendingParagraph.length - 1
-                  ];
-                if (
-                  previousItem?.type === 'glue' &&
-                  (previousItem as Glue).width === 0
-                ) {
-                  this.removeGlue(layoutWorkspace);
-                }
-              }
-              this.preventBreak(layoutWorkspace);
-            }
-            this.addGlue(leftSideGlue, layoutWorkspace);
-            this.addBox(elementWidthPx, measureBarElement, layoutWorkspace);
-            if (
-              keepMeasureBarWithNextOwner ||
-              keepRightMeasureBarWithFollowingMartyria
-            ) {
-              this.preventBreak(layoutWorkspace);
-            }
-            this.addGlue(rightSideGlue, layoutWorkspace);
           }
 
           break;
@@ -2088,37 +1877,6 @@ export class LayoutService {
     );
   }
 
-  private static createMeasureBarLayoutElements(
-    sourceElements: ScoreElement[],
-  ): ScoreElement[] {
-    const layoutElements: ScoreElement[] = [];
-
-    for (let i = 0; i < sourceElements.length; i++) {
-      const element = sourceElements[i];
-      if (this.isMeasureBarOwner(element)) {
-        const leftMeasureBar = this.getExplicitInlineMeasureBarLeft(element);
-        if (leftMeasureBar != null) {
-          layoutElements.push(
-            this.createMeasureBarElement(element, leftMeasureBar, 'left'),
-          );
-        }
-      }
-
-      layoutElements.push(element);
-
-      if (this.isMeasureBarOwner(element)) {
-        const rightMeasureBar = this.getExplicitMeasureBarRight(element);
-        if (rightMeasureBar != null) {
-          layoutElements.push(
-            this.createMeasureBarElement(element, rightMeasureBar, 'right'),
-          );
-        }
-      }
-    }
-
-    return layoutElements;
-  }
-
   private static createMeasureBarElement(
     sourceElement: NoteElement | MartyriaElement,
     measureBar: MeasureBar,
@@ -2130,61 +1888,7 @@ export class LayoutService {
     element.sourceSide = sourceSide;
     element.transientKey = `${sourceElement.id ?? sourceElement.index}-${sourceSide}-${measureBar}`;
 
-    if (sourceElement.elementType === ElementType.Note) {
-      const note = sourceElement as NoteElement;
-      element.offsetX =
-        sourceSide === 'left'
-          ? note.measureBarLeftOffsetX
-          : note.measureBarRightOffsetX;
-      element.offsetY =
-        sourceSide === 'left'
-          ? note.measureBarLeftOffsetY
-          : note.measureBarRightOffsetY;
-    }
-
     return element;
-  }
-
-  private static shouldDeferBreakToFollowingRightMeasureBar(
-    elements: ScoreElement[],
-    index: number,
-  ) {
-    const element = elements[index];
-    const nextElement = elements[index + 1];
-
-    return (
-      (element.lineBreak || element.pageBreak) &&
-      nextElement?.elementType === ElementType.MeasureBar &&
-      (nextElement as MeasureBarElement).sourceElement === element &&
-      (nextElement as MeasureBarElement).sourceSide === 'right'
-    );
-  }
-
-  private static shouldInheritBreakFromPreviousMeasureBarOwner(
-    elements: ScoreElement[],
-    index: number,
-  ) {
-    const element = elements[index];
-    const previousElement = elements[index - 1];
-
-    return (
-      element?.elementType === ElementType.MeasureBar &&
-      previousElement != null &&
-      (previousElement.lineBreak || previousElement.pageBreak) &&
-      (element as MeasureBarElement).sourceElement === previousElement &&
-      (element as MeasureBarElement).sourceSide === 'right'
-    );
-  }
-
-  private static shouldKeepRightMeasureBarWithFollowingMartyria(
-    measureBarElement: MeasureBarElement,
-    previousElement: ScoreElement | null,
-    nextElement: ScoreElement | null,
-  ) {
-    return (
-      nextElement?.elementType === ElementType.Martyria &&
-      this.isMeasureBarOwnedByPreviousRight(measureBarElement, previousElement)
-    );
   }
 
   private static createTransferredMeasureBarElement(
@@ -2210,6 +1914,177 @@ export class LayoutService {
       : null;
   }
 
+  private static lowerCurrentLeftMeasureBarBoundary(
+    previousElement: ScoreElement | null,
+    owner: NoteElement | MartyriaElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    workspace: LayoutWorkspace,
+  ) {
+    if (
+      previousElement != null &&
+      this.isMeasureBarOwner(previousElement) &&
+      this.getVisibleMeasureBarRight(previousElement) != null
+    ) {
+      if (
+        owner.elementType === ElementType.Martyria &&
+        previousElement.elementType === ElementType.Note
+      ) {
+        this.lowerMeasureBarBoundary(
+          previousElement,
+          owner,
+          previousElement,
+          this.getVisibleMeasureBarRight(previousElement)!,
+          'right',
+          pageSetup,
+          measureBarWidthMap,
+          workspace,
+        );
+      }
+
+      return;
+    }
+
+    const measureBar = this.getExplicitInlineMeasureBarLeft(owner);
+
+    if (measureBar == null) {
+      return;
+    }
+
+    this.lowerMeasureBarBoundary(
+      previousElement,
+      owner,
+      owner,
+      measureBar,
+      'left',
+      pageSetup,
+      measureBarWidthMap,
+      workspace,
+    );
+  }
+
+  private static lowerCurrentRightMeasureBarBoundary(
+    owner: NoteElement | MartyriaElement,
+    nextElement: ScoreElement | null,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    workspace: LayoutWorkspace,
+  ) {
+    const measureBar = this.getExplicitMeasureBarRight(owner);
+
+    if (measureBar == null) {
+      return;
+    }
+
+    this.lowerMeasureBarBoundary(
+      owner,
+      nextElement,
+      owner,
+      measureBar,
+      'right',
+      pageSetup,
+      measureBarWidthMap,
+      workspace,
+    );
+  }
+
+  private static lowerMeasureBarBoundary(
+    previousElement: ScoreElement | null,
+    nextElement: ScoreElement | null,
+    owner: NoteElement | MartyriaElement,
+    measureBar: MeasureBar,
+    sourceSide: 'left' | 'right',
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    workspace: LayoutWorkspace,
+  ) {
+    const measureBarElement = this.createMeasureBarElement(
+      owner,
+      measureBar,
+      sourceSide,
+    );
+    const lineStartMeasureBarTransfer =
+      owner.elementType === ElementType.Martyria &&
+      sourceSide === 'right' &&
+      nextElement?.elementType === ElementType.Note &&
+      !(nextElement as NoteElement).measureBarLeft
+        ? this.createLineStartMeasureBarTransfer(
+            owner,
+            measureBar,
+            sourceSide,
+            nextElement as NoteElement,
+            pageSetup,
+            measureBarWidthMap,
+          )
+        : null;
+
+    const elementWidthPx = measureBarWidthMap.get(measureBar) ?? 0;
+
+    if (workspace.pendingParagraph.length === 0) {
+      let rightSideGlue = this.fixedGlue(this.getInlineSpacing(pageSetup));
+
+      if (lineStartMeasureBarTransfer != null) {
+        workspace.pendingLineStartMeasureBarTransfer =
+          lineStartMeasureBarTransfer;
+        rightSideGlue = this.offsetGlueWidth(
+          rightSideGlue,
+          lineStartMeasureBarTransfer.width,
+        );
+      }
+
+      console.log('lower', measureBarElement);
+
+      this.addBox(elementWidthPx, measureBarElement, workspace);
+      this.addGlue(rightSideGlue, workspace);
+      return;
+    }
+
+    let replacedGlue: Glue | null = null;
+    if (
+      workspace.pendingParagraph[workspace.pendingParagraph.length - 1].type ===
+      'glue'
+    ) {
+      replacedGlue = workspace.pendingParagraph[
+        workspace.pendingParagraph.length - 1
+      ] as Glue;
+      this.removeGlue(workspace);
+    }
+
+    if (replacedGlue == null) {
+      return;
+    }
+
+    const replacedGlueWidth = replacedGlue.width;
+    const naturalSideGlueWidth = Math.max(
+      0,
+      (replacedGlueWidth - elementWidthPx) / 2,
+    );
+    const sideGlueWidth = naturalSideGlueWidth;
+    const leftSideGlue = this.createMeasureBarSideGlue(
+      replacedGlue,
+      sideGlueWidth,
+    );
+    let rightSideGlue = this.createMeasureBarSideGlue(
+      replacedGlue,
+      sideGlueWidth,
+    );
+
+    if (lineStartMeasureBarTransfer != null) {
+      workspace.pendingLineStartMeasureBarTransfer =
+        lineStartMeasureBarTransfer;
+      rightSideGlue = this.offsetGlueWidth(
+        rightSideGlue,
+        lineStartMeasureBarTransfer.width,
+      );
+    }
+
+    this.preventBreak(workspace);
+    this.addGlue(leftSideGlue, workspace);
+    this.addBox(elementWidthPx, measureBarElement, workspace);
+    this.preventBreak(workspace);
+    this.addGlue(rightSideGlue, workspace);
+  }
+
   private static addFillWidthGlue(layoutWorkspace: LayoutWorkspace) {
     // Let the line breaker reserve the remaining line width for the fill-width
     // element without forcing justification elsewhere on the line.
@@ -2225,31 +2100,14 @@ export class LayoutService {
   }
 
   private static createMeasureBarSideGlue(
-    previousElement: ScoreElement | null,
-    measureBarElement: MeasureBarElement,
-    nextElement: ScoreElement | null,
-    side: 'left' | 'right',
-    baseGlue: Glue,
-    pageSetup: PageSetup,
-    measureBarWidthMap: Map<MeasureBar, number>,
+    replacedGlue: Glue,
+    width: number,
   ): Glue {
-    const barWidth = measureBarWidthMap.get(measureBarElement.measureBar) ?? 0;
-    const ordinarySideWidth = Math.max(0, (baseGlue.width - barWidth) / 2);
-    const collisionMinimum = this.getMeasureBarElementSideCollisionMinimum(
-      previousElement,
-      measureBarElement,
-      nextElement,
-      side,
-      pageSetup,
-      measureBarWidthMap,
-    );
-    const width = Math.max(ordinarySideWidth, collisionMinimum);
-
     return {
       type: 'glue',
       width,
-      stretch: baseGlue.stretch / 2,
-      shrink: baseGlue.shrink / 2,
+      stretch: replacedGlue.stretch / 2,
+      shrink: replacedGlue.shrink / 2,
     };
   }
 
@@ -2821,12 +2679,7 @@ export class LayoutService {
     elements: ScoreElement[],
     index: number,
   ): NoteElement | null {
-    let element = this.getElementAt(elements, index);
-    while (element?.elementType === ElementType.MeasureBar) {
-      index++;
-      element = this.getElementAt(elements, index);
-    }
-
+    const element = this.getElementAt(elements, index);
     return element?.elementType === ElementType.Note
       ? (element as NoteElement)
       : null;
@@ -3842,14 +3695,7 @@ export class LayoutService {
     // stays below the strongly discouraged threshold.
     let breakCost = 0;
 
-    if (
-      nextElement?.elementType === ElementType.Martyria ||
-      this.isMeasureBarBeforeMartyria(
-        noteElement,
-        nextElement,
-        afterNextElement,
-      )
-    ) {
+    if (nextElement?.elementType === ElementType.Martyria) {
       // Prohibit a break before a martyria.
       breakCost += MAX_COST;
     } else if (nextElement?.elementType === ElementType.Note) {
@@ -3922,46 +3768,6 @@ export class LayoutService {
     return Math.min(breakCost, MAX_COST);
   }
 
-  private static isMeasureBarBeforeMartyria(
-    owner: ScoreElement,
-    nextElement: ScoreElement | null,
-    afterNextElement: ScoreElement | null,
-  ) {
-    if (
-      nextElement?.elementType !== ElementType.MeasureBar ||
-      afterNextElement?.elementType !== ElementType.Martyria
-    ) {
-      return false;
-    }
-
-    const measureBarElement = nextElement as MeasureBarElement;
-
-    return (
-      this.isMeasureBarOwnedByPreviousRight(measureBarElement, owner) ||
-      this.isMeasureBarOwnedByNextLeft(measureBarElement, afterNextElement)
-    );
-  }
-
-  private static isMeasureBarOwnedByPreviousRight(
-    measureBarElement: MeasureBarElement,
-    previousElement: ScoreElement | null,
-  ) {
-    return (
-      measureBarElement.sourceSide === 'right' &&
-      measureBarElement.sourceElement === previousElement
-    );
-  }
-
-  private static isMeasureBarOwnedByNextLeft(
-    measureBarElement: MeasureBarElement,
-    nextElement: ScoreElement | null,
-  ) {
-    return (
-      measureBarElement.sourceSide === 'left' &&
-      measureBarElement.sourceElement === nextElement
-    );
-  }
-
   private static getBreakPenaltyWidth(
     noteElement: NoteElement,
     rightProjection: number,
@@ -3997,20 +3803,6 @@ export class LayoutService {
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
   ) {
-    if (nextElement?.elementType === ElementType.MeasureBar) {
-      const measureBarElement = nextElement as MeasureBarElement;
-      return measureBarElement.sourceElement?.elementType ===
-        ElementType.Note && measureBarElement.sourceSide === 'left'
-        ? this.createLineEndMeasureBarTransfer(
-            noteElement,
-            measureBarElement.measureBar,
-            measureBarElement.sourceElement as NoteElement,
-            pageSetup,
-            measureBarWidthMap,
-          )
-        : null;
-    }
-
     const measureBar = this.getMeasureBarTransferredFromLineStart(nextElement);
     return measureBar != null && nextElement?.elementType === ElementType.Note
       ? this.createLineEndMeasureBarTransfer(
@@ -5528,238 +5320,6 @@ export class LayoutService {
 
               for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
                 element.melismaText += TATWEEL;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  private static centerMeasureBars(
-    pages: Page[],
-    pageSetup: PageSetup,
-    measureBarWidthMap: Map<MeasureBar, number>,
-  ) {
-    const direction = pageSetup.melkiteRtl ? -1 : 1;
-
-    for (const page of pages) {
-      for (const line of page.lines) {
-        for (let i = 0; i < line.elements.length; i++) {
-          const element = line.elements[i];
-
-          if (
-            element.elementType !== ElementType.Note &&
-            element.elementType !== ElementType.Martyria
-          ) {
-            continue;
-          }
-
-          const owner = element as NoteElement | MartyriaElement;
-          owner.computedMeasureBarLeftOffsetX = 0;
-          owner.computedMeasureBarRightOffsetX = 0;
-          owner.computedMeasureBarLeftLeadingSpacing =
-            this.getMeasureBarLeftLeadingSpacing(
-              owner,
-              pageSetup,
-              measureBarWidthMap,
-            );
-          owner.computedMeasureBarRightTrailingSpacing = 0;
-
-          const previousAnchor = this.findAdjacentMeasureBarAnchor(
-            line.elements,
-            i,
-            -1,
-          );
-          const nextAnchor = this.findAdjacentMeasureBarAnchor(
-            line.elements,
-            i,
-            1,
-          );
-          const nextElement =
-            i + 1 < line.elements.length ? line.elements[i + 1] : null;
-          const measureBarLeft = this.getVisibleMeasureBarLeft(owner);
-          if (measureBarLeft && previousAnchor) {
-            const previousBounds = this.getMeasureBarAnchorBounds(
-              previousAnchor,
-              pageSetup,
-              measureBarWidthMap,
-              measureBarLeft,
-              'right',
-            );
-            const ownerBounds = this.getMeasureBarAnchorBounds(
-              owner,
-              pageSetup,
-              measureBarWidthMap,
-              measureBarLeft,
-              'left',
-            );
-            const barWidth = measureBarWidthMap.get(measureBarLeft) ?? 0;
-            if (barWidth > 0) {
-              const followsMartyria =
-                previousAnchor.elementType === ElementType.Martyria;
-              const previousClampExtents = followsMartyria
-                ? (this.getMeasureBarCollisionExtentsForAnchor(
-                    previousAnchor,
-                    measureBarLeft,
-                    pageSetup,
-                  ) ?? { left: 0, right: barWidth })
-                : { left: 0, right: barWidth };
-              const previousCenterBounds = this.getMeasureBarAnchorBounds(
-                previousAnchor,
-                pageSetup,
-                measureBarWidthMap,
-              );
-              const ownerCenterBounds = this.getMeasureBarAnchorBounds(
-                owner,
-                pageSetup,
-                measureBarWidthMap,
-              );
-              const centeredLeft = followsMartyria
-                ? (previousCenterBounds.right +
-                    ownerCenterBounds.left -
-                    barWidth) /
-                  2
-                : (previousBounds.right + ownerBounds.left - barWidth) / 2;
-              const barSpacing = followsMartyria
-                ? this.getMeasureBarCollisionSpacing(pageSetup)
-                : this.getInlineSpacing(pageSetup);
-              const rightLimit = ownerBounds.left - barWidth - barSpacing;
-              const targetLeft = Math.min(
-                Math.max(
-                  centeredLeft,
-                  previousBounds.right + barSpacing - previousClampExtents.left,
-                ),
-                rightLimit,
-              );
-              owner.computedMeasureBarLeftOffsetX =
-                direction * (targetLeft - owner.x);
-            }
-          }
-
-          const measureBarRight = this.getVisibleMeasureBarRight(owner);
-          const followedByRightAlignedMartyria =
-            nextAnchor?.elementType === ElementType.Martyria &&
-            (nextAnchor as MartyriaElement).alignRight;
-          if (
-            measureBarRight &&
-            nextAnchor &&
-            !followedByRightAlignedMartyria
-          ) {
-            const barWidth = measureBarWidthMap.get(measureBarRight) ?? 0;
-            if (barWidth > 0) {
-              const normalLeft =
-                owner.x + this.getMeasureBarOwnerWidth(owner) - barWidth;
-              const nextIsMartyria =
-                nextAnchor.elementType === ElementType.Martyria;
-              const barSpacing = nextIsMartyria
-                ? this.getMeasureBarCollisionSpacing(pageSetup)
-                : this.getInlineSpacing(pageSetup);
-              const nextBounds = this.getMeasureBarAnchorBounds(
-                nextAnchor,
-                pageSetup,
-                measureBarWidthMap,
-                measureBarRight,
-                'left',
-              );
-              const useCollisionExtents =
-                nextIsMartyria ||
-                this.measureBarHasCollisionRegions(measureBarRight, pageSetup);
-              const nextClampExtents = useCollisionExtents
-                ? (this.getMeasureBarCollisionExtentsForAnchor(
-                    nextAnchor,
-                    measureBarRight,
-                    pageSetup,
-                  ) ?? { left: 0, right: barWidth })
-                : { left: 0, right: barWidth };
-              const nextVareiaClampExtents =
-                nextAnchor.elementType === ElementType.Note
-                  ? this.getMeasureBarVareiaCollisionExtents(
-                      nextAnchor as NoteElement,
-                      measureBarRight,
-                      pageSetup,
-                      measureBarWidthMap,
-                    )
-                  : null;
-              if (nextVareiaClampExtents != null) {
-                nextClampExtents.left = Math.min(
-                  nextClampExtents.left,
-                  nextVareiaClampExtents.left,
-                );
-                nextClampExtents.right = Math.max(
-                  nextClampExtents.right,
-                  nextVareiaClampExtents.right,
-                );
-              }
-              const ownerClampExtents = useCollisionExtents
-                ? (this.getMeasureBarCollisionExtentsForAnchor(
-                    owner,
-                    measureBarRight,
-                    pageSetup,
-                  ) ?? { left: 0, right: barWidth })
-                : { left: 0, right: barWidth };
-              const ownerBounds = this.getMeasureBarAnchorBounds(
-                owner,
-                pageSetup,
-                measureBarWidthMap,
-                measureBarRight,
-                'right',
-              );
-              const ownerCenterBounds = this.getMeasureBarAnchorBounds(
-                owner,
-                pageSetup,
-                measureBarWidthMap,
-              );
-              const nextCenterBounds = this.getMeasureBarAnchorBounds(
-                nextAnchor,
-                pageSetup,
-                measureBarWidthMap,
-              );
-              const centeredLeft = nextIsMartyria
-                ? (ownerCenterBounds.right + nextCenterBounds.left - barWidth) /
-                  2
-                : (ownerBounds.right + nextBounds.left - barWidth) / 2;
-              const targetLeft = Math.min(
-                Math.max(
-                  centeredLeft,
-                  ownerBounds.right + barSpacing - ownerClampExtents.left,
-                ),
-                nextBounds.left - nextClampExtents.right - barSpacing,
-              );
-              owner.computedMeasureBarRightOffsetX =
-                direction * (targetLeft - normalLeft);
-            }
-          } else if (
-            measureBarRight &&
-            (followedByRightAlignedMartyria ||
-              nextElement == null ||
-              nextElement.elementType === ElementType.Empty)
-          ) {
-            owner.computedMeasureBarRightTrailingSpacing =
-              this.getTerminalMeasureBarRightSpacing(
-                owner,
-                pageSetup,
-                measureBarWidthMap,
-              );
-            if (
-              !pageSetup.melkiteRtl &&
-              owner.elementType === ElementType.Note &&
-              (nextElement == null ||
-                nextElement.elementType === ElementType.Empty) &&
-              !(owner as NoteElement).lineBreak &&
-              !(owner as NoteElement).pageBreak &&
-              (owner as NoteElement).measureBarRight == null &&
-              (owner as NoteElement).computedMeasureBarRight != null
-            ) {
-              const barWidth = measureBarWidthMap.get(measureBarRight) ?? 0;
-              if (barWidth > 0) {
-                const naturalLeft =
-                  owner.x +
-                  this.getMeasureBarOwnerWidth(owner) +
-                  owner.computedMeasureBarRightTrailingSpacing;
-                const targetLeft =
-                  pageSetup.pageWidth - pageSetup.rightMargin - barWidth;
-                owner.computedMeasureBarRightOffsetX = targetLeft - naturalLeft;
               }
             }
           }

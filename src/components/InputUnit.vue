@@ -20,14 +20,21 @@
     @focusout="onWidgetFocusOut"
   >
     <NumberFieldContent class="w-full max-w-full">
-      <NumberFieldDecrement :class="buttonClass" />
+      <NumberFieldDecrement
+        :class="buttonClass"
+        @pointerdown.capture="primeEmptyStepBase"
+      />
       <NumberFieldInput
         :id="id"
         ref="inputRef"
         v-bind="inputAttrs"
         :class="inputClasses"
+        @keydown.capture="onInputKeyDownCapture"
       />
-      <NumberFieldIncrement :class="buttonClass" />
+      <NumberFieldIncrement
+        :class="buttonClass"
+        @pointerdown.capture="primeEmptyStepBase"
+      />
     </NumberFieldContent>
   </NumberField>
 </template>
@@ -69,6 +76,7 @@ const props = withDefaults(
     stepSnapping?: boolean;
     formatOptions?: Intl.NumberFormatOptions;
     defaultValue?: number;
+    emptyStepBaseValue?: number;
     nullable?: boolean;
     disabled?: boolean;
     buttonClass?: HTMLAttributes['class'];
@@ -81,6 +89,7 @@ const props = withDefaults(
     stepSnapping: false,
     formatOptions: undefined,
     defaultValue: 0,
+    emptyStepBaseValue: undefined,
     nullable: false,
     disabled: false,
     buttonClass: undefined,
@@ -222,6 +231,32 @@ function emitValue(value: number | null) {
   } else {
     resyncInput();
   }
+}
+
+const emptyStepKeys = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown']);
+
+function onInputKeyDownCapture(event: KeyboardEvent) {
+  if (emptyStepKeys.has(event.key)) {
+    primeEmptyStepBase();
+  }
+}
+
+function primeEmptyStepBase() {
+  if (
+    !props.nullable ||
+    props.modelValue != null ||
+    props.emptyStepBaseValue == null
+  ) {
+    return;
+  }
+
+  const el = inputRef.value?.$el as HTMLInputElement | undefined;
+
+  if (el == null || el.value.trim() !== '') {
+    return;
+  }
+
+  el.value = formatDisplayValue(clampDisplayValue(props.emptyStepBaseValue));
 }
 
 // Track focus across the whole widget so the rich-text consumer can show/hide

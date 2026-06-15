@@ -41,6 +41,7 @@
         class="w-full max-w-full"
         :model-value="fontFamilyValue"
         :options="fontFamilyOptions"
+        :placeholder-value="RICH_TEXT_DEFAULT_FONT_FAMILY"
         :disabled="!isCommandEnabled('fontFamily')"
         rich-text-portal
         @update:model-value="onFontFamilyChanged"
@@ -64,6 +65,7 @@
           :disabled="!isCommandEnabled('fontSize')"
           nullable
           :placeholder="fontSizePlaceholder"
+          :empty-step-base-value="defaultFontSize"
           @update:model-value="onFontSizeChanged"
           @focuscapture="beginSelectionGuard(element)"
           @blurcapture="endSelectionGuard(element, { refocus: false })"

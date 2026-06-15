@@ -8,6 +8,7 @@
     :disabled="disabled"
     :nullable="nullable"
     :placeholder="placeholder"
+    :empty-step-base-value="emptyStepBaseDisplayValue"
     :model-value="modelValue"
     @update:model-value="onModelValueChanged"
     @focuscapture="$emit('focuscapture')"
@@ -17,6 +18,7 @@
 
 <script setup lang="ts">
 import type { PropType } from 'vue';
+import { computed } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 import { fraction1FormatOptions } from '@/utils/numberFormatOptions';
@@ -48,11 +50,23 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Storage-unit font size to use as the starting point when an empty nullable
+  // field is stepped. The inner InputUnit converts it to the displayed pt value.
+  emptyStepBaseValue: {
+    type: Number,
+    default: undefined,
+  },
   placeholder: {
     type: String,
     default: undefined,
   },
 });
+
+const emptyStepBaseDisplayValue = computed(() =>
+  props.emptyStepBaseValue == null
+    ? undefined
+    : Unit.toPt(props.emptyStepBaseValue),
+);
 
 function onModelValueChanged(value: number | null) {
   if (value == null) {

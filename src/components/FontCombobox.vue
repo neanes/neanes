@@ -19,7 +19,7 @@
           :class="triggerClass"
           @mousedown="onTriggerMousedown"
         >
-          <span class="truncate">{{ selectedLabel }}</span>
+          <span :class="selectedLabelClass">{{ selectedLabel }}</span>
           <PhCaretUpDown class="ml-auto size-4 shrink-0 opacity-50" />
         </Button>
       </ComboboxTrigger>
@@ -125,6 +125,10 @@ const props = defineProps({
     type: [String, Array, Object] as PropType<HTMLAttributes['class']>,
     default: undefined,
   },
+  placeholderValue: {
+    type: String,
+    default: undefined,
+  },
   richTextPortal: {
     type: Boolean,
     default: false,
@@ -184,6 +188,12 @@ const selectedLabel = computed(
     normalizedOptions.value.find(
       (option) => option.value === selectedValue.value,
     )?.label ?? selectedValue.value,
+);
+
+const selectedLabelClass = computed(() =>
+  cn('truncate', {
+    'text-muted-foreground': selectedValue.value === props.placeholderValue,
+  }),
 );
 
 const anchorClass = computed(() => cn('w-72', props.class));

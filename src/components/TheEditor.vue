@@ -5945,14 +5945,30 @@ async function onFileMenuToolsCopyElementLink() {
   }
 }
 
-function copyInspectorSelectionElementLink() {
+async function copyInspectorSelectionElementLink() {
   const element = getInspectorSelectionElement();
 
   if (element?.id == null) {
     return;
   }
 
-  navigator.clipboard.writeText('#element-' + element.id.toString());
+  try {
+    await navigator.clipboard.writeText('#element-' + element.id.toString());
+    toast.success(
+      t(($) => $.toast.editor.copyElementLinkSuccess, { ns: 'toast' }),
+    );
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      t(($) => $.toast.editor.copyFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.editor.clipboardWriteFailed, {
+          ns: 'toast',
+        }),
+      },
+    );
+  }
 }
 
 async function onFileMenuSave() {

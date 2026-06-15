@@ -4,7 +4,6 @@ import { Plugin } from 'ckeditor5';
 
 import InsertNeumeCommand, { INSERT_NEUME_COMMAND } from './insertneumecommand';
 import InsertNeumeEditing from './insertneumeediting';
-import InsertNeumeUI from './insertneumeui';
 import {
   INSERT_NEUME_DEFAULT_ATTRIBUTES,
   INSERT_NEUME_DEFAULT_ATTRIBUTES_MARTYRIA,
@@ -19,7 +18,7 @@ export default class InsertNeume extends Plugin {
   }
 
   static get requires() {
-    return [InsertNeumeEditing, InsertNeumeUI];
+    return [InsertNeumeEditing];
   }
 
   init() {
@@ -29,7 +28,6 @@ export default class InsertNeume extends Plugin {
       defaultFontSize: 16,
       defaultFontFamily: 'Source Serif',
       neumeDefaultFontFamily: 'Neanes',
-      fthoraDefaultColor: 'red',
       defaultAttributes: INSERT_NEUME_DEFAULT_ATTRIBUTES,
       defaultAttributesMartyria: INSERT_NEUME_DEFAULT_ATTRIBUTES_MARTYRIA,
     });

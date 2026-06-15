@@ -14,16 +14,18 @@
     :step-snapping="stepSnapping"
     :format-options="resolvedFormatOptions"
     :disabled="disabled"
-    class="w-fit max-w-full"
+    :class="rootClasses"
+    :style="rootStyle"
+    @focusin="onWidgetFocusIn"
+    @focusout="onWidgetFocusOut"
   >
-    <NumberFieldContent class="w-fit max-w-full">
+    <NumberFieldContent class="w-full max-w-full">
       <NumberFieldDecrement :class="buttonClass" />
       <NumberFieldInput
         :id="id"
         ref="inputRef"
         v-bind="inputAttrs"
         :class="inputClasses"
-        :style="inputStyle"
       />
       <NumberFieldIncrement :class="buttonClass" />
     </NumberFieldContent>
@@ -32,7 +34,7 @@
 
 <script setup lang="ts">
 import type { HTMLAttributes, StyleValue } from 'vue';
-import { computed, nextTick, ref, useAttrs } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, useAttrs } from 'vue';
 
 import type { UnitOfMeasure } from '@/components/InputUnit.types';
 import { toDisplay, toStorage } from '@/components/InputUnit.types';
@@ -46,6 +48,10 @@ import {
 
 const emit = defineEmits<{
   'update:modelValue': [value: number | null];
+  // Focus entered / truly left the whole widget (input + stepper buttons),
+  // debounced so intra-widget focus moves don't fire a spurious blur.
+  focuscapture: [];
+  blurcapture: [];
 }>();
 
 defineOptions({
@@ -98,13 +104,17 @@ const resolvedFormatOptions = computed<Intl.NumberFormatOptions>(() => ({
   ...props.formatOptions,
 }));
 
-const inputClasses = computed(() => [
-  'bg-background',
+// The widget sizes to its content by default via --input-unit-width on the
+// root. A width class passed by the consumer (e.g. w-28, w-36, w-full) lands
+// here too and overrides it, so call sites control width with plain Tailwind.
+const rootClasses = computed(() => [
   'w-[var(--input-unit-width)]',
   'min-w-20',
   'max-w-full',
   attrs.class as HTMLAttributes['class'],
 ]);
+
+const inputClasses = 'bg-background w-full min-w-0';
 
 const displayValue = computed<number | undefined>({
   get() {
@@ -170,7 +180,7 @@ const inputTextLength = computed(() => {
   return length;
 });
 
-const inputStyle = computed<StyleValue>(() => [
+const rootStyle = computed<StyleValue>(() => [
   attrs.style as StyleValue,
   { '--input-unit-width': `calc(${inputTextLength.value}ch + 3.5rem)` },
 ]);
@@ -213,4 +223,59 @@ function emitValue(value: number | null) {
     resyncInput();
   }
 }
+
+// Track focus across the whole widget so the rich-text consumer can show/hide
+// the selection marker. focusin/focusout bubble, so the handler on the
+// NumberField root sees the input and stepper buttons; relatedTarget + an rAF
+// re-check distinguish a real blur from intra-widget focus churn (steppers
+// re-focus the input on click).
+let widgetHasFocus = false;
+let pendingBlurFrame: number | null = null;
+
+function onWidgetFocusIn() {
+  if (pendingBlurFrame != null) {
+    cancelAnimationFrame(pendingBlurFrame);
+    pendingBlurFrame = null;
+  }
+
+  if (!widgetHasFocus) {
+    widgetHasFocus = true;
+    emit('focuscapture');
+  }
+}
+
+function onWidgetFocusOut(event: FocusEvent) {
+  const container = event.currentTarget as HTMLElement | null;
+  const next = event.relatedTarget as Node | null;
+
+  if (next != null && container != null && container.contains(next)) {
+    return;
+  }
+
+  if (pendingBlurFrame != null) {
+    cancelAnimationFrame(pendingBlurFrame);
+  }
+
+  pendingBlurFrame = requestAnimationFrame(() => {
+    pendingBlurFrame = null;
+
+    const active = document.activeElement;
+
+    if (container != null && active != null && container.contains(active)) {
+      return;
+    }
+
+    if (widgetHasFocus) {
+      widgetHasFocus = false;
+      emit('blurcapture');
+    }
+  });
+}
+
+onBeforeUnmount(() => {
+  if (pendingBlurFrame != null) {
+    cancelAnimationFrame(pendingBlurFrame);
+    pendingBlurFrame = null;
+  }
+});
 </script>

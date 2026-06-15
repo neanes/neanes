@@ -1,0 +1,322 @@
+import { useTranslation } from 'i18next-vue';
+import { computed } from 'vue';
+
+import type { FontComboboxOption } from '@/components/FontCombobox.vue';
+import {
+  execForOwner,
+  useActiveEditorForOwner,
+  useEditorCommandStates,
+} from '@/composables/useRichTextEditorRegistry';
+import type { PageSetup } from '@/models/PageSetup';
+import { Unit } from '@/utils/Unit';
+
+// The combobox value that represents "no explicit font family" (i.e. inherit the
+// text box's default). Selecting it clears the fontFamily attribute, and the
+// clear (X) button resets to it.
+export const RICH_TEXT_DEFAULT_FONT_FAMILY = 'default';
+
+// Placeholder/label numbers track the field's pt display but drop trailing
+// zeros so the default reads "Default (20)" rather than "Default (20.0)".
+const defaultSizeFormat = new Intl.NumberFormat(undefined, {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 1,
+  useGrouping: false,
+});
+
+const STYLE_COMMAND_NAMES = [
+  'fontFamily',
+  'fontSize',
+  'fontColor',
+  'bold',
+  'italic',
+  'underline',
+  'alignment',
+];
+
+export function useRichTextStyleCommands(
+  props: {
+    element: object;
+    pageSetup: PageSetup;
+    fonts: string[];
+    defaultFontFamily: string;
+    defaultFontSize: number;
+    defaultFontColor: string;
+  },
+  extraCommandNames: string[] = [],
+) {
+  const { t } = useTranslation();
+  const scopedEditor = useActiveEditorForOwner(() => props.element);
+
+  const commandStates = useEditorCommandStates(scopedEditor, [
+    ...STYLE_COMMAND_NAMES,
+    ...extraCommandNames,
+  ]);
+
+  const fontFamilyValue = computed(() =>
+    fromRichTextFontFamilyModelValue(commandValue('fontFamily')),
+  );
+
+  const defaultLabel = computed(() =>
+    t(($) => $.toolbar.richTextBox.default, { ns: 'toolbar' }),
+  );
+
+  const fontFamilyOptions = computed<FontComboboxOption[]>(() => {
+    const resolvedDefault = props.defaultFontFamily.trim();
+
+    return [
+      {
+        label: resolvedDefault
+          ? `${defaultLabel.value} (${resolvedDefault})`
+          : defaultLabel.value,
+        value: RICH_TEXT_DEFAULT_FONT_FAMILY,
+      },
+      'Source Serif',
+      'GFS Didot',
+      'Noto Naskh Arabic',
+      'Old Standard',
+      'Neanes',
+      'NeanesStathisSeries',
+      ...props.fonts,
+    ];
+  });
+
+  // null when no explicit size is set, so the field can render its "Default"
+  // placeholder instead of silently showing the resolved default as a value.
+  const fontSizeValue = computed(() =>
+    fromRichTextFontSizeModelValue(commandValue('fontSize')),
+  );
+
+  const fontSizePlaceholder = computed(
+    () =>
+      `${defaultLabel.value} (${defaultSizeFormat.format(Unit.toPt(props.defaultFontSize))})`,
+  );
+
+  const fontColorValue = computed(() => {
+    const value = commandValue('fontColor');
+    return typeof value === 'string' ? value : props.defaultFontColor;
+  });
+
+  const fontColorHasExplicitValue = computed(
+    () => typeof commandValue('fontColor') === 'string',
+  );
+
+  const styleValues = computed(() =>
+    ['bold', 'italic', 'underline'].filter((commandName) =>
+      isCommandActive(commandName),
+    ),
+  );
+
+  const alignmentValue = computed(() => {
+    const value = commandValue('alignment');
+    return typeof value === 'string' && isAlignmentValue(value)
+      ? value
+      : 'left';
+  });
+
+  function isCommandEnabled(commandName: string) {
+    return scopedEditor.value != null && commandStates[commandName]?.isEnabled;
+  }
+
+  function isCommandActive(commandName: string) {
+    return commandStates[commandName]?.value === true;
+  }
+
+  function commandValue(commandName: string) {
+    return commandStates[commandName]?.value;
+  }
+
+  function runCommand(commandName: string, ...args: unknown[]) {
+    if (!isCommandEnabled(commandName)) {
+      return;
+    }
+
+    execForOwner(props.element, commandName, ...args);
+  }
+
+  function onFontFamilyChanged(value: string) {
+    if (!isCommandEnabled('fontFamily')) {
+      return;
+    }
+
+    const modelValue = toRichTextFontFamilyModelValue(
+      value,
+      props.pageSetup.neumeDefaultFontFamily,
+    );
+
+    if (modelValue == null) {
+      runCommand('fontFamily');
+    } else {
+      runCommand('fontFamily', { value: modelValue });
+    }
+  }
+
+  function onFontSizeChanged(value: number | null) {
+    if (!isCommandEnabled('fontSize')) {
+      return;
+    }
+
+    // Clearing the field removes the attribute, falling back to the text box's
+    // default size -- the same "Default" state the placeholder represents.
+    if (value == null) {
+      runCommand('fontSize');
+      return;
+    }
+
+    runCommand('fontSize', {
+      value: `${Math.round(Unit.toPt(value) * 2) / 2}pt`,
+    });
+  }
+
+  function onFontColorChanged(value: string | null) {
+    if (!isCommandEnabled('fontColor')) {
+      return;
+    }
+
+    if (value == null) {
+      runCommand('fontColor');
+      return;
+    }
+
+    runCommand('fontColor', { value });
+  }
+
+  function onStyleValuesChanged(value: unknown) {
+    executeChangedToggleCommands(
+      ['bold', 'italic', 'underline'],
+      styleValues.value,
+      value,
+    );
+  }
+
+  function onAlignmentChanged(value: unknown) {
+    if (typeof value === 'string' && isAlignmentValue(value)) {
+      runCommand('alignment', { value });
+    }
+  }
+
+  function executeChangedToggleCommands(
+    commandNames: string[],
+    previousValues: string[],
+    nextValue: unknown,
+  ) {
+    const nextValues = Array.isArray(nextValue) ? nextValue : [];
+
+    for (const commandName of commandNames) {
+      if (
+        nextValues.includes(commandName) !==
+        previousValues.includes(commandName)
+      ) {
+        runCommand(commandName);
+      }
+    }
+  }
+
+  return {
+    commandStates,
+    fontFamilyValue,
+    fontFamilyOptions,
+    fontSizeValue,
+    fontSizePlaceholder,
+    fontColorValue,
+    fontColorHasExplicitValue,
+    styleValues,
+    alignmentValue,
+    isCommandEnabled,
+    isCommandActive,
+    commandValue,
+    runCommand,
+    onFontFamilyChanged,
+    onFontSizeChanged,
+    onFontColorChanged,
+    onStyleValuesChanged,
+    onAlignmentChanged,
+    executeChangedToggleCommands,
+  };
+}
+
+function fromRichTextFontSizeModelValue(value: unknown) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const match = value.trim().match(/^([\d.]+)(pt|px)$/);
+
+  if (match == null) {
+    return null;
+  }
+
+  const size = Number(match[1]);
+
+  if (!Number.isFinite(size)) {
+    return null;
+  }
+
+  return match[2] === 'pt' ? Unit.fromPt(size) : size;
+}
+
+function fromRichTextFontFamilyModelValue(value: unknown) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return RICH_TEXT_DEFAULT_FONT_FAMILY;
+  }
+
+  const fontFamilies = splitFontFamilyList(value)
+    .map((fontFamily) => normalizeFontFamily(fontFamily))
+    .filter((fontFamily) => fontFamily !== '');
+
+  return fontFamilies[0] ?? RICH_TEXT_DEFAULT_FONT_FAMILY;
+}
+
+function toRichTextFontFamilyModelValue(
+  fontFamily: string,
+  neumeFallback: string,
+) {
+  const normalizedFontFamily = normalizeFontFamily(fontFamily);
+
+  if (normalizedFontFamily === RICH_TEXT_DEFAULT_FONT_FAMILY) {
+    return undefined;
+  }
+
+  if (
+    normalizedFontFamily === 'Neanes' ||
+    normalizedFontFamily === 'NeanesStathisSeries' ||
+    normalizedFontFamily === normalizeFontFamily(neumeFallback)
+  ) {
+    return normalizedFontFamily;
+  }
+
+  return `${normalizedFontFamily},${neumeFallback}`;
+}
+
+function normalizeFontFamily(fontFamily: string) {
+  return fontFamily.trim().replace(/^['"]|['"]$/g, '');
+}
+
+function splitFontFamilyList(value: string) {
+  const fontFamilies: string[] = [];
+  let current = '';
+  let quote: '"' | "'" | null = null;
+
+  for (const character of value) {
+    if ((character === '"' || character === "'") && quote == null) {
+      quote = character;
+    } else if (character === quote) {
+      quote = null;
+    }
+
+    if (character === ',' && quote == null) {
+      fontFamilies.push(current);
+      current = '';
+    } else {
+      current += character;
+    }
+  }
+
+  fontFamilies.push(current);
+  return fontFamilies;
+}
+
+function isAlignmentValue(
+  value: string,
+): value is 'left' | 'center' | 'right' | 'justify' {
+  return ['left', 'center', 'right', 'justify'].includes(value);
+}

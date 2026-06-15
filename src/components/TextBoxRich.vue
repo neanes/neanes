@@ -12,32 +12,32 @@
       class="rich-text-box-multipanel-container"
       :style="multipanelContainerStyle"
     >
-      <ckeditor
+      <RichTextEditor
+        :key="`left-${editorLanguage}`"
         ref="editorLeft"
         class="rich-text-editor multipanel left"
-        :editor="ckeditorEditor"
+        :owner="element"
         :model-value="contentLeft"
         :config="editorConfig"
-        :disable-watchdog="true"
         @blur="onBlur"
       />
-      <ckeditor
+      <RichTextEditor
+        :key="`center-${editorLanguage}`"
         ref="editorCenter"
         class="rich-text-editor multipanel center"
-        :editor="ckeditorEditor"
+        :owner="element"
         :model-value="contentCenter"
         :config="editorConfig"
-        :disable-watchdog="true"
         @blur="onBlur"
         @ready="onEditorReady"
       />
-      <ckeditor
+      <RichTextEditor
+        :key="`right-${editorLanguage}`"
         ref="editorRight"
         class="rich-text-editor multipanel right"
-        :editor="ckeditorEditor"
+        :owner="element"
         :model-value="contentRight"
         :config="editorConfig"
-        :disable-watchdog="true"
         @blur="onBlur"
       />
     </div>
@@ -47,53 +47,53 @@
           class="inline-top-inner-container"
           :style="textBoxTopInnerContainerStyle"
         >
-          <ckeditor
+          <RichTextEditor
+            :key="`inline-top-${editorLanguage}`"
             ref="editor"
             class="rich-text-editor inline-top"
             :style="textBoxStyleTop"
-            :editor="ckeditorEditor"
+            :owner="element"
             :model-value="content"
             :config="editorConfig"
-            :disable-watchdog="true"
             @blur="onBlur"
             @ready="onEditorReadyInline"
           />
         </div>
       </div>
       <div class="inline-bottom-container" :style="textBoxBottomContainerStyle">
-        <ckeditor
+        <RichTextEditor
+          :key="`inline-bottom-${editorLanguage}`"
           ref="editorBottom"
           class="rich-text-editor inline-bottom"
           :style="textBoxStyleBottom"
-          :editor="ckeditorEditor"
+          :owner="element"
           :model-value="contentBottom"
           :config="editorConfig"
-          :disable-watchdog="true"
           @blur="onBlur"
           @ready="onEditorReadyInlineBottom"
         />
       </div>
     </div>
-    <ckeditor
+    <RichTextEditor
       v-else-if="element.scrollable"
+      :key="`scrollable-${editorLanguage}`"
       ref="editor"
       class="rich-text-editor single scrollable"
-      :editor="ckeditorEditor"
+      :owner="element"
       :model-value="content"
       :config="editorConfig"
-      :disable-watchdog="true"
       :style="textBoxStyle"
       @blur="onBlur"
       @ready="onEditorReady"
     />
-    <ckeditor
+    <RichTextEditor
       v-else
+      :key="`single-${editorLanguage}`"
       ref="editor"
       class="rich-text-editor single"
-      :editor="ckeditorEditor"
+      :owner="element"
       :model-value="content"
       :config="editorConfig"
-      :disable-watchdog="true"
       :style="textBoxStyle"
       @blur="onBlur"
       @ready="onEditorReady"
@@ -102,16 +102,15 @@
 </template>
 
 <script setup lang="ts">
-import type { FontSizeOption } from '@ckeditor/ckeditor5-font';
-import { Ckeditor } from '@ckeditor/ckeditor5-vue';
-import type { Editor, EditorConfig } from 'ckeditor5';
+import type { Editor, EditorConfig, FontSizeOption } from 'ckeditor5';
 import { debounce, throttle } from 'throttle-debounce';
 import type { PropType, StyleValue } from 'vue';
 import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
+import RichTextEditor from '@/components/RichTextEditor.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
-import InlineEditor from '@/customEditor';
+import type InlineEditor from '@/customEditor';
 import type { RichTextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
@@ -150,20 +149,23 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  editorLanguage: {
+    type: String,
+    default: 'en',
+  },
 });
 
-const ckeditorEditor = InlineEditor;
-
 const container = useTemplateRef<HTMLElement>('container');
-const editorRef = useTemplateRef<ComponentExposed<typeof Ckeditor>>('editor');
+const editorRef =
+  useTemplateRef<ComponentExposed<typeof RichTextEditor>>('editor');
 const editorBottom =
-  useTemplateRef<ComponentExposed<typeof Ckeditor>>('editorBottom');
+  useTemplateRef<ComponentExposed<typeof RichTextEditor>>('editorBottom');
 const editorLeft =
-  useTemplateRef<ComponentExposed<typeof Ckeditor>>('editorLeft');
+  useTemplateRef<ComponentExposed<typeof RichTextEditor>>('editorLeft');
 const editorCenter =
-  useTemplateRef<ComponentExposed<typeof Ckeditor>>('editorCenter');
+  useTemplateRef<ComponentExposed<typeof RichTextEditor>>('editorCenter');
 const editorRight =
-  useTemplateRef<ComponentExposed<typeof Ckeditor>>('editorRight');
+  useTemplateRef<ComponentExposed<typeof RichTextEditor>>('editorRight');
 
 const focusOnReady = ref(false);
 const unmounting = ref(false);
@@ -209,6 +211,7 @@ const editorConfig = computed((): EditorConfig => {
       options: ['default', ...fontSizeOptions],
     },
     language: {
+      ui: props.editorLanguage,
       content: props.element.rtl ? 'ar' : 'en',
     },
     licenseKey: 'GPL',
@@ -220,7 +223,6 @@ const editorConfig = computed((): EditorConfig => {
       defaultFontFamily: props.element.inline
         ? props.pageSetup.lyricsDefaultFontFamily
         : props.pageSetup.textBoxDefaultFontFamily,
-      fthoraDefaultColor: props.pageSetup.fthoraDefaultColor,
     },
   };
 });
@@ -286,6 +288,9 @@ const containerStyle = computed(() => {
     '--ck-content-font-size': props.element.inline
       ? `${props.pageSetup.lyricsDefaultFontSize}px`
       : `${props.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
+    '--ck-content-font-color': props.element.inline
+      ? props.pageSetup.lyricsDefaultColor
+      : props.pageSetup.textBoxDefaultColor,
     '--ck-content-line-height': 'normal',
   };
 
@@ -434,7 +439,18 @@ function onEditorReady(editor: InlineEditor) {
         if (props.recalc) {
           debouncedPhoneHome(resizedHeight);
         } else {
-          emit('update', { height: resizedHeight });
+          // A resize is pure geometry -- there is no pending edit to persist. Route
+          // through `update:height` (-> updateRichTextBoxHeight, which only sets
+          // the height), not `update` (-> updateRichTextBox), which merges
+          // getPendingRichTextBoxUpdates() and would inject the editor's getData()
+          // into this height-only change. element.content is stale while editing
+          // (the focus-zone suppresses the blur that would flush it), so that merge
+          // makes the update two-keyed, breaking the single-key `noHistory` guard
+          // -> a spurious undo entry + full save on every height-changing font/size
+          // change. (The injected content also echoes back through `:model-value`
+          // to editor.data.set(); the selection collapse that once caused is now
+          // prevented by RichTextEditor's own echo guard, but the churn is not.)
+          emit('update:height', resizedHeight);
         }
       }
     }),
@@ -483,50 +499,37 @@ function onBlur() {
 }
 
 function update() {
+  const updates = getPendingUpdates();
+
+  if (updates != null) {
+    emit('update', updates);
+  }
+}
+
+function getPendingUpdates() {
   const updates: Partial<RichTextBoxElement> = {};
 
   let updated = false;
 
   const height = getHeight();
 
-  const currentContent = getEditorInstance()?.getData() ?? '';
-  const currentContentBottom = getEditorInstanceBottom()?.getData() ?? '';
-  const currentContentLeft = getEditorInstanceLeft()?.getData() ?? '';
-  const currentContentCenter = getEditorInstanceCenter()?.getData() ?? '';
-  const currentContentRight = getEditorInstanceRight()?.getData() ?? '';
-
-  // This should never happen, but if it does, we don't want
-  // to save garbage values.
-  if (height == null) {
-    return;
-  }
-
-  if (props.editMode && props.element.content !== currentContent) {
-    updates.content = currentContent;
-    updated = true;
-  }
-
-  if (props.editMode && props.element.contentBottom !== currentContentBottom) {
-    updates.contentBottom = currentContentBottom;
-    updated = true;
-  }
-
-  if (props.editMode && props.element.contentLeft !== currentContentLeft) {
-    updates.contentLeft = currentContentLeft;
-    updated = true;
-  }
-
-  if (props.editMode && props.element.contentCenter !== currentContentCenter) {
-    updates.contentCenter = currentContentCenter;
-    updated = true;
-  }
-
-  if (props.editMode && props.element.contentRight !== currentContentRight) {
-    updates.contentRight = currentContentRight;
-    updated = true;
-  }
+  updated =
+    addPendingEditorData(updates, 'content', getEditorInstance()) || updated;
+  updated =
+    addPendingEditorData(updates, 'contentBottom', getEditorInstanceBottom()) ||
+    updated;
+  updated =
+    addPendingEditorData(updates, 'contentLeft', getEditorInstanceLeft()) ||
+    updated;
+  updated =
+    addPendingEditorData(updates, 'contentCenter', getEditorInstanceCenter()) ||
+    updated;
+  updated =
+    addPendingEditorData(updates, 'contentRight', getEditorInstanceRight()) ||
+    updated;
 
   if (
+    height != null &&
     !props.element.inline &&
     Math.abs(props.element.height - height) > 0.001
   ) {
@@ -540,8 +543,34 @@ function update() {
   }
 
   if (updated) {
-    emit('update', updates);
+    return updates;
   }
+
+  return null;
+}
+
+function addPendingEditorData(
+  updates: Partial<RichTextBoxElement>,
+  propertyName:
+    | 'content'
+    | 'contentBottom'
+    | 'contentLeft'
+    | 'contentCenter'
+    | 'contentRight',
+  editor: Editor | undefined,
+) {
+  if (!props.editMode || editor == null) {
+    return false;
+  }
+
+  const currentContent = editor.getData();
+
+  if (props.element[propertyName] === currentContent) {
+    return false;
+  }
+
+  updates[propertyName] = currentContent;
+  return true;
 }
 
 function getHeight() {
@@ -601,25 +630,32 @@ function setPadding(editor: Editor | undefined) {
 }
 
 function focus() {
-  focusOnReady.value = true;
+  const editor =
+    (props.element.multipanel
+      ? getEditorInstanceCenter()
+      : props.element.inline
+        ? getEditorInstanceBottom()
+        : getEditorInstance()) ??
+    getEditorInstance() ??
+    getEditorInstanceCenter() ??
+    getEditorInstanceBottom() ??
+    getEditorInstanceLeft() ??
+    getEditorInstanceRight();
+
+  if (editor == null) {
+    focusOnReady.value = true;
+    return;
+  }
+
+  editor.editing.view.focus();
 }
 
 defineExpose({
   focus,
+  getPendingUpdates,
   htmlElement,
 });
 </script>
-
-<style>
-/* https://github.com/ckeditor/ckeditor5/issues/952 */
-.ck.ck-font-family-dropdown,
-.ck.ck-font-size-dropdown {
-  .ck.ck-dropdown__panel {
-    max-height: 150px !important;
-    overflow-y: auto !important;
-  }
-}
-</style>
 
 <style scoped>
 :deep(p) {
@@ -644,6 +680,7 @@ defineExpose({
   padding: 0;
   box-sizing: border-box;
   overflow: visible;
+  color: var(--ck-content-font-color);
   transform-origin: 0 0;
   transform: scale(var(--zoom, 1));
   border: none !important;

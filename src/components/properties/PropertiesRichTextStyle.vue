@@ -266,17 +266,16 @@
       </ToggleGroup>
     </Field>
 
-    <span class="inline-flex" @mousedown.prevent>
-      <Button
-        type="button"
-        variant="secondary"
-        :disabled="!isCommandEnabled('removeFormat')"
-        @click="runCommand('removeFormat')"
-      >
-        <PhEraser data-icon="inline-start" />
-        {{ $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' }) }}
-      </Button>
-    </span>
+    <Button
+      type="button"
+      variant="secondary"
+      :disabled="!isCommandEnabled('removeFormat')"
+      @mousedown.prevent
+      @click="runCommand('removeFormat')"
+    >
+      <PhEraser data-icon="inline-start" />
+      {{ $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' }) }}
+    </Button>
 
     <template v-if="isNeumeSelected">
       <FieldSeparator />

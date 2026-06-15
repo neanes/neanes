@@ -6,13 +6,18 @@
     <Toaster />
   </div>
   <div v-if="updateExists" class="update-notification">
-    An update is available.
-    <button class="ok" @click="refreshApp">Update</button>
-    <button class="cancel" @click="updateExists = false">Not now</button>
+    {{ t(($) => $.toast.update.available, { ns: 'toast' }) }}
+    <button class="ok" @click="refreshApp">
+      {{ t(($) => $.toast.update.update, { ns: 'toast' }) }}
+    </button>
+    <button class="cancel" @click="updateExists = false">
+      {{ t(($) => $.toast.update.notNow, { ns: 'toast' }) }}
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useTranslation } from 'i18next-vue';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -28,6 +33,7 @@ const electronUpdateAvailableToastId = 'electron-update-available';
 const electronUpdateDownloadingToastId = 'electron-update-downloading';
 const electronUpdateDownloadedToastId = 'electron-update-downloaded';
 const electronUpdateErrorToastId = 'electron-update-error';
+const { t } = useTranslation();
 
 async function downloadElectronUpdate() {
   try {
@@ -35,7 +41,11 @@ async function downloadElectronUpdate() {
   } catch (error) {
     showElectronUpdateErrorToast({
       message:
-        error instanceof Error ? error.message : 'Unable to download update.',
+        error instanceof Error
+          ? error.message
+          : t(($) => $.toast.update.downloadFailedDescription, {
+              ns: 'toast',
+            }),
     });
   }
 }
@@ -50,63 +60,83 @@ async function restartToInstallElectronUpdate() {
       message:
         error instanceof Error
           ? error.message
-          : 'Unable to restart to install the update.',
+          : t(($) => $.toast.update.restartFailedDescription, {
+              ns: 'toast',
+            }),
     });
   }
 }
 
 function showElectronUpdateAvailableToast(args?: UpdateAvailableArgs) {
-  toast.info('An update is available.', {
-    id: electronUpdateAvailableToastId,
-    duration: Infinity,
-    description: args?.version
-      ? `Version ${args.version} is available.`
-      : undefined,
-    action: {
-      label: 'Download',
-      onClick: () => {
-        void downloadElectronUpdate();
+  toast.info(
+    t(($) => $.toast.update.available, { ns: 'toast' }),
+    {
+      id: electronUpdateAvailableToastId,
+      duration: Infinity,
+      description: args?.version
+        ? t(($) => $.toast.update.versionAvailable, {
+            ns: 'toast',
+            version: args.version,
+          })
+        : undefined,
+      action: {
+        label: t(($) => $.toast.update.download, { ns: 'toast' }),
+        onClick: () => {
+          void downloadElectronUpdate();
+        },
+      },
+      cancel: {
+        label: t(($) => $.toast.update.later, { ns: 'toast' }),
       },
     },
-    cancel: {
-      label: 'Later',
-    },
-  });
+  );
 }
 
 function showElectronUpdateDownloadingToast() {
-  toast.loading('Downloading update...', {
-    id: electronUpdateDownloadingToastId,
-    duration: Infinity,
-  });
+  toast.loading(
+    t(($) => $.toast.update.downloading, { ns: 'toast' }),
+    {
+      id: electronUpdateDownloadingToastId,
+      duration: Infinity,
+    },
+  );
 }
 
 function showElectronUpdateDownloadedToast(args?: UpdateAvailableArgs) {
   toast.dismiss(electronUpdateDownloadingToastId);
 
-  toast.success('Update downloaded. Restart to install.', {
-    id: electronUpdateDownloadedToastId,
-    duration: Infinity,
-    description: args?.version
-      ? `Version ${args.version} is ready.`
-      : undefined,
-    action: {
-      label: 'Restart now',
-      onClick: () => {
-        void restartToInstallElectronUpdate();
+  toast.success(
+    t(($) => $.toast.update.downloaded, { ns: 'toast' }),
+    {
+      id: electronUpdateDownloadedToastId,
+      duration: Infinity,
+      description: args?.version
+        ? t(($) => $.toast.update.versionReady, {
+            ns: 'toast',
+            version: args.version,
+          })
+        : undefined,
+      action: {
+        label: t(($) => $.toast.update.restartNow, { ns: 'toast' }),
+        onClick: () => {
+          void restartToInstallElectronUpdate();
+        },
+      },
+      cancel: {
+        label: t(($) => $.toast.update.later, { ns: 'toast' }),
       },
     },
-    cancel: {
-      label: 'Later',
-    },
-  });
+  );
 }
 
 function showElectronUpdateErrorToast(args: UpdateErrorArgs) {
-  toast.error('Update failed.', {
-    id: electronUpdateErrorToastId,
-    description: args.message,
-  });
+  toast.error(
+    t(($) => $.toast.update.failed, { ns: 'toast' }),
+    {
+      id: electronUpdateErrorToastId,
+      description: args.message,
+    },
+  );
 }
 
 if (navigator.serviceWorker) {
@@ -144,7 +174,11 @@ const onElectronUpdateDownloaded = (args?: UpdateAvailableArgs) =>
   showElectronUpdateDownloadedToast(args);
 const onElectronUpdateError = (args?: UpdateErrorArgs) => {
   toast.dismiss(electronUpdateDownloadingToastId);
-  showElectronUpdateErrorToast(args ?? { message: 'Unable to update.' });
+  showElectronUpdateErrorToast(
+    args ?? {
+      message: t(($) => $.toast.update.failedDescription, { ns: 'toast' }),
+    },
+  );
 };
 
 onMounted(() => {
@@ -192,6 +226,15 @@ onBeforeUnmount(() => {
 
   body {
     overflow: visible !important;
+  }
+
+  /*
+   * Reka/Vue portal components leave teleport anchor elements as direct body
+   * children. If any remain after #app, Blink may honor the final printed
+   * page's break-after and keep a blank trailing page alive.
+   */
+  body > :not(#app) {
+    display: none !important;
   }
 
   .ck-body-wrapper {

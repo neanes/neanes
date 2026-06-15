@@ -46,31 +46,32 @@ import { ExportFormat } from '@/components/ExportDialog.types';
 import ExportDialog from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
+import LyricsPane from '@/components/LyricsPane.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
+import NeumeComboSelector from '@/components/NeumeComboSelector.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
+import type { InspectorContext } from '@/components/properties/InspectorContext';
+import PropertiesPane from '@/components/properties/PropertiesPane.vue';
 import SearchText from '@/components/SearchText.vue';
+import SelectionPane from '@/components/SelectionPane.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import Annotation from '@/components/TextAnnotation.vue';
 import TextBox from '@/components/TextBox.vue';
 import TextBoxRich from '@/components/TextBoxRich.vue';
 import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
-import ToolbarImageBox from '@/components/ToolbarImageBox.vue';
-import ToolbarLyricManager from '@/components/ToolbarLyricManager.vue';
 import ToolbarLyrics from '@/components/ToolbarLyrics.vue';
 import ToolbarMain from '@/components/ToolbarMain.vue';
 import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
 import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
 import ToolbarNeume from '@/components/ToolbarNeume.vue';
-import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
-import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -78,6 +79,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { Spinner } from '@/components/ui/spinner';
+import WorkspaceDockLayout from '@/components/WorkspaceDockLayout.vue';
 import { useEditorServices } from '@/composables/useEditorServices';
 import { EventBus } from '@/eventBus';
 import { resolveLanguagePreference } from '@/i18n';
@@ -85,10 +87,12 @@ import { editorPreferencesKey } from '@/injectionKeys';
 import type {
   CloseWorkspacesArgs,
   ExportWorkspaceAsImageReplyArgs,
+  ExportWorkspaceReplyArgs,
   FileMenuImportOcrArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
+  FileMenuViewPaneVisibilityArgs,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
 import {
@@ -147,6 +151,11 @@ import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import type { WorkspaceLocalStorage } from '@/models/Workspace';
 import { Workspace } from '@/models/Workspace';
+import {
+  createDefaultPaneVisibility,
+  type WorkspacePaneId,
+  type WorkspacePaneVisibility,
+} from '@/models/WorkspacePane';
 import {
   AudioServiceEventNames,
   AudioState,
@@ -275,6 +284,8 @@ function setTemplateRef(name: string) {
 const searchTextQuery = ref('');
 const searchTextPanelIsOpen = ref(false);
 const showFileMenuBar = ref(!isElectron());
+const paneLayoutResetCounter = ref(0);
+const paneVisibility = ref(createDefaultPaneVisibility());
 const isDevelopment = ref(import.meta.env.DEV);
 const isBrowser = ref(!isElectron());
 const isLoading = ref(true);
@@ -283,6 +294,7 @@ const showGuides = ref(false);
 const showAdjustmentRatios = ref(false);
 const workspaces = ref<Workspace[]>([]);
 const selectedWorkspaceValue = ref(new Workspace());
+const pendingLyricsAssignmentTimers = new Map<string, number>();
 const tabs = ref<Tab[]>([]);
 const contextMenuWorkspaceId = ref<string | null>(null);
 const pages = ref<Page[]>([]);
@@ -347,6 +359,99 @@ const editorPreferences = ref(new EditorPreferences());
 const byzHtmlExporter = new ByzHtmlExporter();
 const exportInProgress = ref(false);
 
+const inspectorContext = computed<InspectorContext>(() => {
+  const currentSelectedElement = selectedElement.value;
+  const currentSelectedElementForNeumeToolbar =
+    selectedElementForNeumeToolbar.value;
+  const currentSelectedElementType = currentSelectedElement?.elementType;
+
+  if (selectedTextBoxElement.value != null) {
+    return {
+      kind: 'text-box',
+      element: selectedTextBoxElement.value,
+      source:
+        currentSelectedElement === selectedTextBoxElement.value
+          ? 'score'
+          : 'header-footer',
+    };
+  }
+
+  if (selectedRichTextBoxElement.value != null) {
+    return {
+      kind: 'rich-text-box',
+      element: selectedRichTextBoxElement.value,
+      source:
+        currentSelectedElement === selectedRichTextBoxElement.value
+          ? 'score'
+          : 'header-footer',
+    };
+  }
+
+  if (
+    currentSelectedElement != null &&
+    currentSelectedElementType === ElementType.DropCap &&
+    isDropCapElement(currentSelectedElement)
+  ) {
+    return { kind: 'drop-cap', element: currentSelectedElement };
+  }
+
+  if (
+    currentSelectedElement != null &&
+    currentSelectedElementType === ElementType.ImageBox &&
+    isImageBoxElement(currentSelectedElement)
+  ) {
+    return { kind: 'image-box', element: currentSelectedElement };
+  }
+
+  if (selectedLyrics.value != null) {
+    return { kind: 'lyrics', element: selectedLyrics.value };
+  }
+
+  if (
+    currentSelectedElement != null &&
+    currentSelectedElementType === ElementType.ModeKey &&
+    isModeKeyElement(currentSelectedElement)
+  ) {
+    return { kind: 'mode-key', element: currentSelectedElement };
+  }
+
+  if (
+    currentSelectedElement != null &&
+    currentSelectedElementForNeumeToolbar != null &&
+    isSyllableElement(currentSelectedElementForNeumeToolbar)
+  ) {
+    return { kind: 'neume', element: currentSelectedElementForNeumeToolbar };
+  }
+
+  if (
+    currentSelectedElement != null &&
+    currentSelectedElementType === ElementType.Martyria &&
+    isMartyriaElement(currentSelectedElement)
+  ) {
+    return { kind: 'martyria', element: currentSelectedElement };
+  }
+
+  if (
+    currentSelectedElement != null &&
+    currentSelectedElementType === ElementType.Tempo &&
+    isTempoElement(currentSelectedElement)
+  ) {
+    return { kind: 'tempo', element: currentSelectedElement };
+  }
+
+  if (selectionRange.value != null) {
+    const start = Math.min(
+      selectionRange.value.start,
+      selectionRange.value.end,
+    );
+    const end = Math.max(selectionRange.value.start, selectionRange.value.end);
+
+    return { kind: 'range', elements: elements.value.slice(start, end + 1) };
+  }
+
+  return { kind: 'none' };
+});
+
 const selectedWorkspaceId = computed({
   get: () => {
     return selectedWorkspace.value.id;
@@ -367,10 +472,15 @@ const selectedWorkspace = computed({
     return selectedWorkspaceValue.value as Workspace;
   },
   set: (value: Workspace) => {
+    flushLyricsAssignment(selectedWorkspace.value);
+
     // Save the scroll position
-    const pageBackgroundElement = pageBackgroundRef.value!;
-    selectedWorkspace.value.scrollLeft = pageBackgroundElement.scrollLeft;
-    selectedWorkspace.value.scrollTop = pageBackgroundElement.scrollTop;
+    const pageBackgroundElement = pageBackgroundRef.value;
+
+    if (pageBackgroundElement != null) {
+      selectedWorkspace.value.scrollLeft = pageBackgroundElement.scrollLeft;
+      selectedWorkspace.value.scrollTop = pageBackgroundElement.scrollTop;
+    }
 
     selectedWorkspaceValue.value = value;
     selectedWorkspace.value.commandService.notify();
@@ -379,7 +489,7 @@ const selectedWorkspace = computed({
     // Scroll to the new workspace's saved scroll position
     // Use nextTick to scroll after the DOM has refreshed
     nextTick(() => {
-      pageBackgroundElement.scrollTo(
+      pageBackgroundRef.value?.scrollTo(
         selectedWorkspace.value.scrollLeft,
         selectedWorkspace.value.scrollTop,
       );
@@ -432,13 +542,8 @@ const lyricsLocked = computed({
   },
 });
 
-const lyricManagerIsOpen = computed({
-  get: () => {
-    return selectedWorkspace.value.lyricManagerIsOpen;
-  },
-  set: (value: boolean) => {
-    selectedWorkspace.value.lyricManagerIsOpen = value;
-  },
+const isLyricsManagerOpen = computed(() => {
+  return paneVisibility.value.lyrics;
 });
 
 const pageCount = computed(() => {
@@ -727,7 +832,6 @@ provide(
 );
 
 const throttled = {
-  assignLyrics: throttle(keydownThrottleIntervalMs, assignLyrics),
   moveToPreviousLyricBox: throttle(
     keydownThrottleIntervalMs,
     moveToPreviousLyricBox,
@@ -804,6 +908,28 @@ watch(currentFilePath, () => {
 
 watch(selectedWorkspaceId, () => {
   window.document.title = windowTitle.value;
+
+  if (paneVisibility.value.lyrics) {
+    refreshStaffLyrics();
+  }
+});
+
+watch(
+  paneVisibility,
+  () => {
+    const visibility: WorkspacePaneVisibility = {
+      ...paneVisibility.value,
+    };
+
+    EventBus.$emit(IpcRendererChannels.SetWorkspacePaneVisibility, visibility);
+  },
+  { deep: true, immediate: true },
+);
+
+watch(isLyricsManagerOpen, (isOpen, wasOpen) => {
+  if (isOpen && !wasOpen) {
+    refreshStaffLyrics();
+  }
 });
 
 watch(hasUnsavedChanges, () => {
@@ -871,7 +997,14 @@ onMounted(() => {
   );
   EventBus.$on(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$on(IpcMainChannels.FileMenuFind, onFileMenuFind);
-  EventBus.$on(IpcMainChannels.FileMenuLyrics, onFileMenuLyrics);
+  EventBus.$on(
+    IpcMainChannels.FileMenuViewPaneVisibility,
+    onFileMenuViewPaneVisibility,
+  );
+  EventBus.$on(
+    IpcMainChannels.FileMenuViewResetPaneLayout,
+    onFileMenuViewResetPaneLayout,
+  );
   EventBus.$on(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
   EventBus.$on(IpcMainChannels.OpenAboutDialog, onOpenAboutDialog);
   EventBus.$on(
@@ -951,7 +1084,14 @@ onBeforeUnmount(() => {
   );
   EventBus.$off(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$off(IpcMainChannels.FileMenuFind, onFileMenuFind);
-  EventBus.$off(IpcMainChannels.FileMenuLyrics, onFileMenuLyrics);
+  EventBus.$off(
+    IpcMainChannels.FileMenuViewPaneVisibility,
+    onFileMenuViewPaneVisibility,
+  );
+  EventBus.$off(
+    IpcMainChannels.FileMenuViewResetPaneLayout,
+    onFileMenuViewResetPaneLayout,
+  );
   EventBus.$off(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
   EventBus.$off(IpcMainChannels.OpenAboutDialog, onOpenAboutDialog);
   EventBus.$off(
@@ -991,6 +1131,8 @@ onBeforeUnmount(() => {
   EventBus.$off(AudioServiceEventNames.EventPlay, onAudioServiceEventPlay);
 
   EventBus.$off(AudioServiceEventNames.Stop, onAudioServiceStop);
+
+  clearPendingLyricsAssignments();
 
   audioService.dispose();
 });
@@ -1216,6 +1358,59 @@ function getFileName(workspace: Workspace, showUnsavedChanges: boolean = true) {
   }
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return fallback;
+}
+
+function showErrorToast(
+  message: string,
+  error: unknown,
+  options: { id?: string | number; fallback: string },
+) {
+  toast.error(message, {
+    id: options.id,
+    description: getErrorMessage(error, options.fallback),
+  });
+}
+
+function showReplyErrorToast(
+  message: string,
+  reply: { errorMessage?: string },
+  fallback: string,
+) {
+  toast.error(message, {
+    description: reply.errorMessage ?? fallback,
+  });
+}
+
+function showExportReplyToast(
+  reply: ExportWorkspaceReplyArgs,
+  successMessage: string,
+  errorMessage: string,
+  fallbackErrorDescription: string,
+) {
+  if (reply.success) {
+    toast.success(successMessage, {
+      description: reply.filePath,
+    });
+    return true;
+  }
+
+  if (!reply.canceled) {
+    showReplyErrorToast(errorMessage, reply, fallbackErrorDescription);
+  }
+
+  return false;
+}
+
 function getHeaderForPageIndex(pageIndex: number) {
   const pageNumber = pageIndex + 1;
 
@@ -1354,13 +1549,25 @@ function closeExportDialog() {
   exportDialogIsOpen.value = false;
 }
 
-function openLyricManager() {
-  lyricManagerIsOpen.value = true;
-  refreshStaffLyrics();
+function setPaneVisibility(paneId: WorkspacePaneId, isVisible: boolean) {
+  const visibility = paneVisibility.value;
+
+  if (visibility[paneId] === isVisible) {
+    return;
+  }
+
+  visibility[paneId] = isVisible;
 }
 
-function closeLyricManager() {
-  lyricManagerIsOpen.value = false;
+function resetLayout() {
+  const defaultVisibility = createDefaultPaneVisibility();
+
+  Object.assign(paneVisibility.value, defaultVisibility);
+  paneLayoutResetCounter.value += 1;
+}
+
+function onPaneVisibilityChange(paneId: WorkspacePaneId, isVisible: boolean) {
+  setPaneVisibility(paneId, isVisible);
 }
 
 function updateEditorPreferences(form: EditorPreferences) {
@@ -1391,6 +1598,54 @@ function saveEditorPreferences() {
 function isLastElement(element: ScoreElement) {
   return elements.value.indexOf(element) === elements.value.length - 1;
 }
+
+function getInspectorSelectionElement() {
+  const context = inspectorContext.value;
+
+  switch (context.kind) {
+    case 'none':
+    case 'range':
+    case 'lyrics':
+      return null;
+    case 'text-box':
+    case 'rich-text-box':
+      return context.source === 'score' ? context.element : null;
+    case 'neume':
+      return selectedElementForNeumeToolbar.value;
+    default:
+      return context.element;
+  }
+}
+
+function getInspectorSelectionElementCollection(element: ScoreElement) {
+  const alternateLine = selectedWorkspace.value.selectedAlternateLineElement;
+
+  if (alternateLine?.elements.includes(element)) {
+    return alternateLine.elements;
+  }
+
+  return elements.value;
+}
+
+function canApplyInspectorBreakToElement(
+  element: ScoreElement,
+  collection: ScoreElement[],
+) {
+  return collection === elements.value && !isLastElement(element);
+}
+
+const canApplyInspectorBreak = computed(() => {
+  const element = getInspectorSelectionElement();
+
+  if (element == null) {
+    return false;
+  }
+
+  return canApplyInspectorBreakToElement(
+    element,
+    getInspectorSelectionElementCollection(element),
+  );
+});
 
 function insertPelastikon() {
   document.execCommand('insertText', false, PELASTIKON);
@@ -1689,6 +1944,32 @@ function togglePageBreak() {
   }
 }
 
+function toggleInspectorPageBreak() {
+  const element = getInspectorSelectionElement();
+
+  if (element == null) {
+    return;
+  }
+
+  const collection = getInspectorSelectionElementCollection(element);
+
+  if (!canApplyInspectorBreakToElement(element, collection)) {
+    return;
+  }
+
+  commandService.value.execute(
+    scoreElementCommandFactory.create('update-properties', {
+      target: element,
+      newValues: {
+        pageBreak: !element.pageBreak,
+        lineBreak: false,
+      },
+    }),
+  );
+
+  save();
+}
+
 function toggleLineBreak(lineBreakType: LineBreakType | null) {
   if (selectedElement.value && !isLastElement(selectedElement.value)) {
     let lineBreak = !selectedElement.value.lineBreak;
@@ -1714,6 +1995,43 @@ function toggleLineBreak(lineBreakType: LineBreakType | null) {
 
     save();
   }
+}
+
+function toggleInspectorLineBreak(lineBreakType: LineBreakType | null) {
+  const element = getInspectorSelectionElement();
+
+  if (element == null) {
+    return;
+  }
+
+  const collection = getInspectorSelectionElementCollection(element);
+
+  if (!canApplyInspectorBreakToElement(element, collection)) {
+    return;
+  }
+
+  let lineBreak = !element.lineBreak;
+
+  if (lineBreakType != element.lineBreakType) {
+    lineBreak = true;
+  }
+
+  if (!lineBreak) {
+    lineBreakType = null;
+  }
+
+  commandService.value.execute(
+    scoreElementCommandFactory.create('update-properties', {
+      target: element,
+      newValues: {
+        lineBreak,
+        pageBreak: false,
+        lineBreakType,
+      },
+    }),
+  );
+
+  save();
 }
 
 function updateScoreElementSectionName(
@@ -1786,39 +2104,41 @@ function setLyrics(index: number, lyrics: string) {
   }
 }
 
-function isSyllableElement(element: ScoreElement) {
+function isSyllableElement(element: ScoreElement): element is NoteElement {
   return element.elementType == ElementType.Note;
 }
 
-function isMartyriaElement(element: ScoreElement) {
+function isMartyriaElement(element: ScoreElement): element is MartyriaElement {
   return element.elementType == ElementType.Martyria;
 }
 
-function isTempoElement(element: ScoreElement) {
+function isTempoElement(element: ScoreElement): element is TempoElement {
   return element.elementType == ElementType.Tempo;
 }
 
-function isEmptyElement(element: ScoreElement) {
+function isEmptyElement(element: ScoreElement): element is EmptyElement {
   return element.elementType == ElementType.Empty;
 }
 
-function isTextBoxElement(element: ScoreElement) {
+function isTextBoxElement(element: ScoreElement): element is TextBoxElement {
   return element.elementType == ElementType.TextBox;
 }
 
-function isRichTextBoxElement(element: ScoreElement) {
+function isRichTextBoxElement(
+  element: ScoreElement,
+): element is RichTextBoxElement {
   return element.elementType == ElementType.RichTextBox;
 }
 
-function isDropCapElement(element: ScoreElement) {
+function isDropCapElement(element: ScoreElement): element is DropCapElement {
   return element.elementType == ElementType.DropCap;
 }
 
-function isModeKeyElement(element: ScoreElement) {
+function isModeKeyElement(element: ScoreElement): element is ModeKeyElement {
   return element.elementType == ElementType.ModeKey;
 }
 
-function isImageBoxElement(element: ScoreElement) {
+function isImageBoxElement(element: ScoreElement): element is ImageBoxElement {
   return element.elementType == ElementType.ImageBox;
 }
 
@@ -1843,11 +2163,13 @@ const toolbarInteractionKeyCodes = new Set([
   'Tab',
 ]);
 
-function isToolbarInteraction(event: KeyboardEvent) {
+function isEditorShortcutIgnored(event: KeyboardEvent) {
   return (
-    toolbarInteractionKeyCodes.has(event.code) &&
     event.target instanceof Element &&
-    event.target.closest('[role="toolbar"], [data-slot="toolbar"]') != null
+    (event.target.closest('[data-editor-shortcuts="ignore"]') != null ||
+      (toolbarInteractionKeyCodes.has(event.code) &&
+        event.target.closest('[role="toolbar"], [data-slot="toolbar"]') !=
+          null))
   );
 }
 
@@ -1862,7 +2184,17 @@ function onScroll() {
 }
 
 function onKeydown(event: KeyboardEvent) {
-  if (event.defaultPrevented || isToolbarInteraction(event)) {
+  if (event.defaultPrevented) {
+    return;
+  }
+
+  const editorShortcutIgnored = isEditorShortcutIgnored(event);
+
+  if (platformService.isMac && isTextInputFocused() && !dialogOpen.value) {
+    onKeydownMac(event);
+  }
+
+  if (event.defaultPrevented || editorShortcutIgnored) {
     return;
   }
 
@@ -1929,10 +2261,6 @@ function onKeydown(event: KeyboardEvent) {
       }
       return;
     }
-  }
-
-  if (platformService.isMac && isTextInputFocused() && !dialogOpen.value) {
-    onKeydownMac(event);
   }
 
   if (selectedLyrics.value != null) {
@@ -2578,7 +2906,7 @@ function onKeydownMac(event: KeyboardEvent) {
       handled = true;
       break;
     case 'KeyV':
-      ipcService.paste();
+      void pasteTextFromClipboard();
       handled = true;
       break;
     case 'KeyX':
@@ -3300,22 +3628,20 @@ async function load() {
 }
 
 async function saveWorkspace(workspace: Workspace) {
-  if (!lyricsLocked.value) {
-    lyrics.value = lyricService.extractLyrics(
-      elements.value,
-      score.value.pageSetup.disableGreekMelismata,
-    );
+  flushLyricsAssignment(workspace);
+
+  if (!workspace.score.staff.lyrics.locked) {
+    extractStaffLyrics(workspace);
   }
 
   return await ipcService.saveWorkspace(workspace);
 }
 
 async function saveWorkspaceAs(workspace: Workspace) {
-  if (!lyricsLocked.value) {
-    lyrics.value = lyricService.extractLyrics(
-      elements.value,
-      score.value.pageSetup.disableGreekMelismata,
-    );
+  flushLyricsAssignment(workspace);
+
+  if (!workspace.score.staff.lyrics.locked) {
+    extractStaffLyrics(workspace);
   }
 
   return await ipcService.saveWorkspaceAs(workspace);
@@ -3353,13 +3679,35 @@ async function closeWorkspace(workspace: Workspace) {
 
     if (dialogResult.response === 0) {
       // User chose "Save"
-      const saveResult =
-        workspace.filePath != null
-          ? await saveWorkspace(workspace)
-          : await saveWorkspaceAs(workspace);
+      try {
+        const saveResult =
+          workspace.filePath != null
+            ? await saveWorkspace(workspace)
+            : await saveWorkspaceAs(workspace);
 
-      // If they successfully saved, then we can close the workspacce
-      shouldClose = saveResult.success;
+        // If they successfully saved, then we can close the workspace
+        shouldClose = saveResult.success;
+
+        if (!saveResult.success && !saveResult.canceled) {
+          showReplyErrorToast(
+            t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
+            saveResult,
+            t(($) => $.toast.editor.saveFailedDescription, { ns: 'toast' }),
+          );
+        }
+      } catch (error) {
+        console.error(error);
+        shouldClose = false;
+        showErrorToast(
+          t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
+          error,
+          {
+            fallback: t(($) => $.toast.editor.saveFailedDescription, {
+              ns: 'toast',
+            }),
+          },
+        );
+      }
     } else if (dialogResult.response === 2) {
       // User chose "Cancel", so don't close the workspace.
       shouldClose = false;
@@ -3577,6 +3925,14 @@ function setMartyriaTempoRight(element: MartyriaElement, neume: TempoSign) {
   }
 }
 
+function setModeKeyTempo(element: ModeKeyElement, neume: TempoSign) {
+  if (element.tempo === neume) {
+    updateModeKeyTempo(element, null);
+  } else {
+    updateModeKeyTempo(element, neume);
+  }
+}
+
 function setMartyriaQuantitativeNeume(
   element: MartyriaElement,
   neume: QuantitativeNeume,
@@ -3585,14 +3941,6 @@ function setMartyriaQuantitativeNeume(
     updateMartyria(element, { quantitativeNeume: null });
   } else {
     updateMartyria(element, { quantitativeNeume: neume });
-  }
-}
-
-function setModeKeyTempo(element: ModeKeyElement, neume: TempoSign) {
-  if (element.tempo === neume) {
-    updateModeKeyTempo(element, null);
-  } else {
-    updateModeKeyTempo(element, neume);
   }
 }
 
@@ -3778,6 +4126,8 @@ function addScoreElements(newElements: ScoreElement[], insertAtIndex?: number) {
 }
 
 function replaceScoreElement(element: ScoreElement, replaceAtIndex: number) {
+  const previousElement = elements.value[replaceAtIndex];
+
   commandService.value.execute(
     scoreElementCommandFactory.create('replace-element-in-collection', {
       element,
@@ -3785,6 +4135,10 @@ function replaceScoreElement(element: ScoreElement, replaceAtIndex: number) {
       replaceAtIndex,
     }),
   );
+
+  if (selectedElement.value === previousElement) {
+    selectedElement.value = element;
+  }
 
   refreshStaffLyrics();
 }
@@ -3943,20 +4297,69 @@ function updateLyricsLocked(locked: boolean) {
 }
 
 function updateStaffLyrics(staffLyrics: string) {
-  lyrics.value = staffLyrics;
-  throttled.assignLyrics();
+  const workspace = selectedWorkspace.value;
+
+  workspace.score.staff.lyrics.text = staffLyrics;
+  scheduleLyricsAssignment(workspace);
   hasUnsavedChanges.value = true;
 }
 
-function assignLyrics() {
+function scheduleLyricsAssignment(workspace: Workspace) {
+  cancelLyricsAssignment(workspace);
+
+  pendingLyricsAssignmentTimers.set(
+    workspace.id,
+    window.setTimeout(() => {
+      pendingLyricsAssignmentTimers.delete(workspace.id);
+      assignLyrics(workspace);
+    }, keydownThrottleIntervalMs),
+  );
+}
+
+function flushLyricsAssignment(workspace: Workspace) {
+  if (!pendingLyricsAssignmentTimers.has(workspace.id)) {
+    return;
+  }
+
+  cancelLyricsAssignment(workspace);
+  assignLyrics(workspace);
+}
+
+function cancelLyricsAssignment(workspace: Workspace) {
+  const timer = pendingLyricsAssignmentTimers.get(workspace.id);
+
+  if (timer == null) {
+    return;
+  }
+
+  window.clearTimeout(timer);
+  pendingLyricsAssignmentTimers.delete(workspace.id);
+}
+
+function clearPendingLyricsAssignments() {
+  for (const timer of pendingLyricsAssignmentTimers.values()) {
+    window.clearTimeout(timer);
+  }
+
+  pendingLyricsAssignmentTimers.clear();
+}
+
+function assignLyrics(workspace: Workspace = selectedWorkspace.value) {
+  const workspaceScore = workspace.score;
+  const workspaceElements = workspaceScore.staff.elements;
+  const workspaceIsSelected = workspace === selectedWorkspace.value;
   const updateCommands: Command[] = [];
 
   lyricService.assignLyrics(
-    lyrics.value,
-    elements.value,
-    rtl.value,
-    score.value.pageSetup.disableGreekMelismata,
-    (note, lyrics) => setLyrics(getElementIndex(note), lyrics),
+    workspaceScore.staff.lyrics.text,
+    workspaceElements,
+    workspaceScore.pageSetup.melkiteRtl,
+    workspaceScore.pageSetup.disableGreekMelismata,
+    (note, lyrics) => {
+      if (workspaceIsSelected) {
+        setLyrics(getElementIndex(note), lyrics);
+      }
+    },
     (note, newValues) => {
       note.updated = true;
       updateCommands.push(
@@ -3976,10 +4379,28 @@ function assignLyrics() {
     },
   );
 
-  if (updateCommands.length > 0) {
-    commandService.value.executeAsBatch(updateCommands, lyricsLocked.value);
-    save();
+  if (updateCommands.length === 0) {
+    return;
   }
+
+  workspace.commandService.executeAsBatch(
+    updateCommands,
+    workspaceScore.staff.lyrics.locked,
+  );
+
+  if (workspaceIsSelected) {
+    save();
+  } else {
+    workspace.hasUnsavedChanges = true;
+    selectedWorkspace.value.commandService.notify();
+  }
+}
+
+function extractStaffLyrics(workspace: Workspace) {
+  workspace.score.staff.lyrics.text = lyricService.extractLyrics(
+    workspace.score.staff.elements,
+    workspace.score.pageSetup.disableGreekMelismata,
+  );
 }
 
 function assignAcceptsLyricsFromCurrentLyrics() {
@@ -4034,13 +4455,12 @@ function updateLyrics(
 }
 
 function refreshStaffLyrics() {
+  flushLyricsAssignment(selectedWorkspace.value);
+
   if (lyricsLocked.value) {
     assignLyrics();
-  } else if (lyricManagerIsOpen.value) {
-    lyrics.value = lyricService.extractLyrics(
-      elements.value,
-      score.value.pageSetup.disableGreekMelismata,
-    );
+  } else if (isLyricsManagerOpen.value) {
+    extractStaffLyrics(selectedWorkspace.value);
   }
 }
 
@@ -4484,6 +4904,37 @@ function deleteSelectedElement() {
   }
 }
 
+function deleteInspectorSelectionElement() {
+  if (inspectorContext.value.kind === 'range') {
+    deleteSelectedElement();
+    return;
+  }
+
+  const element = getInspectorSelectionElement();
+
+  if (element == null) {
+    return;
+  }
+
+  const alternateLine = selectedWorkspace.value.selectedAlternateLineElement;
+
+  if (alternateLine?.elements.includes(element)) {
+    if (
+      alternateLine.elements.length === 1 &&
+      selectedElement.value?.elementType === ElementType.Note
+    ) {
+      removeAlternateLine(selectedElement.value as NoteElement, alternateLine);
+    } else {
+      removeScoreElement(element, alternateLine.elements);
+      save();
+    }
+
+    return;
+  }
+
+  deleteSelectedElement();
+}
+
 function deletePreviousElement() {
   if (selectedWorkspace.value.selectedAlternateLineElement) {
     const alternateLineElements =
@@ -4665,9 +5116,12 @@ function updateEntryMode(mode: EntryMode) {
 
 function updateZoom(newZoom: number) {
   if (newZoom < 0.5 || newZoom > 5) {
-    toast.error('Range overflow', {
-      description: t(($) => $.toolbar.main.invalidZoom, { ns: 'toolbar' }),
-    });
+    toast.error(
+      t(($) => $.toast.editor.rangeOverflow, { ns: 'toast' }),
+      {
+        description: t(($) => $.toolbar.main.invalidZoom, { ns: 'toolbar' }),
+      },
+    );
   } else {
     zoom.value = newZoom;
     zoomToFit.value = false;
@@ -4683,7 +5137,11 @@ function updateZoomToFit(value: boolean) {
 }
 
 function performZoomToFit() {
-  const pageBackgroundElement = pageBackgroundRef.value!;
+  const pageBackgroundElement = pageBackgroundRef.value;
+
+  if (pageBackgroundElement == null) {
+    return;
+  }
 
   const computedStyle = getComputedStyle(pageBackgroundElement);
 
@@ -4724,6 +5182,15 @@ async function playAudio() {
     }
   } catch (error) {
     console.error(error);
+    showErrorToast(
+      t(($) => $.toast.editor.playbackFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.editor.playbackStartFailed, {
+          ns: 'toast',
+        }),
+      },
+    );
   }
 }
 
@@ -4736,6 +5203,15 @@ function stopAudio() {
     stopPlaybackClock();
   } catch (error) {
     console.error(error);
+    showErrorToast(
+      t(($) => $.toast.editor.stopPlaybackFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.editor.stopPlaybackFailedDescription, {
+          ns: 'toast',
+        }),
+      },
+    );
   }
 }
 
@@ -4751,6 +5227,15 @@ function pauseAudio() {
     }
   } catch (error) {
     console.error(error);
+    showErrorToast(
+      t(($) => $.toast.editor.playbackFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.editor.playbackToggleFailed, {
+          ns: 'toast',
+        }),
+      },
+    );
   }
 }
 
@@ -4773,6 +5258,15 @@ async function playTestTone() {
     await audioService.playTestTone(audioOptions.frequencyDi);
   } catch (error) {
     console.error(error);
+    showErrorToast(
+      t(($) => $.toast.editor.testToneFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.editor.testToneFailedDescription, {
+          ns: 'toast',
+        }),
+      },
+    );
   }
 }
 
@@ -4939,17 +5433,13 @@ function onFileMenuImportOcr(args: FileMenuImportOcrArgs) {
     } catch (error) {
       console.error(error);
 
-      if (error instanceof Error) {
-        if (ipcService.isShowMessageBoxSupported()) {
-          ipcService.showMessageBox({
-            type: 'error',
-            title: 'OCR import failed',
-            message: error.message,
-          });
-        } else {
-          alert(error.message);
-        }
-      }
+      showErrorToast(
+        t(($) => $.toast.editor.ocrImportFailed, { ns: 'toast' }),
+        error,
+        {
+          fallback: t(($) => $.toast.editor.unexpectedError, { ns: 'toast' }),
+        },
+      );
     }
   }
 }
@@ -4988,13 +5478,36 @@ async function onFileMenuExportAsPdf() {
   const previousTitle = window.document.title;
   window.document.title = getFileName(selectedWorkspace.value, false);
 
-  await nextTick();
-  await ipcService.exportWorkspaceAsPdf(selectedWorkspace.value);
-  printMode.value = false;
-  window.document.title = previousTitle;
+  try {
+    await nextTick();
+    const reply = await ipcService.exportWorkspaceAsPdf(
+      selectedWorkspace.value,
+    );
 
-  // Re-focus the active element
-  focusElement(activeElement);
+    showExportReplyToast(
+      reply,
+      t(($) => $.toast.export.pdfSuccess, { ns: 'toast' }),
+      t(($) => $.toast.export.pdfFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.pdfFailedDescription, { ns: 'toast' }),
+    );
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      t(($) => $.toast.export.pdfFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.export.pdfFailedDescription, {
+          ns: 'toast',
+        }),
+      },
+    );
+  } finally {
+    printMode.value = false;
+    window.document.title = previousTitle;
+
+    // Re-focus the active element
+    focusElement(activeElement);
+  }
 }
 
 async function onFileMenuExportAsImage() {
@@ -5012,79 +5525,175 @@ async function exportAsPng(args: ExportAsPngSettings) {
     );
 
     if (!reply.success) {
+      if (!reply.canceled) {
+        showReplyErrorToast(
+          t(($) => $.toast.export.pngFailed, { ns: 'toast' }),
+          reply,
+          t(($) => $.toast.export.pngStartFailedDescription, {
+            ns: 'toast',
+          }),
+        );
+      }
       return;
     }
   } catch (error) {
     console.error(error);
+    showErrorToast(
+      t(($) => $.toast.export.pngFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.export.pngStartFailedDescription, {
+          ns: 'toast',
+        }),
+      },
+    );
     return;
   }
 
   printMode.value = true;
   exportInProgress.value = true;
+  const toastId = toast.loading(
+    t(($) => $.toast.export.pngLoading, { ns: 'toast' }),
+    {
+      description: t(($) => $.toast.export.pngLoadingDescription, {
+        ns: 'toast',
+      }),
+    },
+  );
 
   // Blur the active element so that focus outlines and
   // blinking cursors don't show up in the printed page
   const activeElement = blurActiveElement();
 
-  nextTick(async () => {
-    try {
-      const pages = pagesRef.value as HTMLElement[];
+  try {
+    await nextTick();
 
-      if (pages.length > 0) {
-        const fontEmbedCSS = await getFontEmbedCSS(pages[0]);
+    const pageElements = pagesRef.value as HTMLElement[];
+    let exportedPageCount = 0;
+    let firstExportedPagePath = '';
 
-        let pageNumber = 1;
+    if (pageElements.length > 0) {
+      const fontEmbedCSS = await getFontEmbedCSS(pageElements[0]);
 
-        for (const page of pages) {
-          const options = {
-            fontEmbedCSS,
-            pixelRatio: args.dpi / 96,
-            style: { margin: '0' },
-          } as any;
+      for (const [index, page] of pageElements.entries()) {
+        const options = {
+          fontEmbedCSS,
+          pixelRatio: args.dpi / 96,
+          style: { margin: '0' },
+        } as any;
 
-          if (args.transparentBackground) {
-            options.style.backgroundColor = 'transparent';
-          }
-
-          let data = await toPng(page, options);
-
-          if (data != null) {
-            const fileName = reply.filePath.replace(
-              /\.png$/,
-              `-${pageNumber++}.png`,
-            );
-
-            data = data.replace(/^data:image\/png;base64,/, '');
-
-            if (!(await ipcService.exportPageAsImage(fileName, data))) {
-              break;
-            }
-          }
+        if (args.transparentBackground) {
+          options.style.backgroundColor = 'transparent';
         }
-      }
 
-      if (args.openFolder && ipcService.isShowItemInFolderSupported()) {
-        await ipcService.showItemInFolder(
-          reply.filePath.replace(/\.png$/, '-1.png'),
+        const fileName = reply.filePath.replace(/\.png$/i, `-${index + 1}.png`);
+
+        const data = (await toPng(page, options)).replace(
+          /^data:image\/png;base64,/,
+          '',
         );
+
+        const pageReply = await ipcService.exportPageAsImage(fileName, data);
+
+        if (!pageReply.success) {
+          if (pageReply.skipped) {
+            continue;
+          }
+
+          if (pageReply.canceled) {
+            break;
+          }
+
+          throw new Error(
+            pageReply.errorMessage ??
+              t(($) => $.toast.export.pngFileFailedDescription, {
+                ns: 'toast',
+              }),
+          );
+        }
+
+        if (!firstExportedPagePath) {
+          firstExportedPagePath = fileName;
+        }
+
+        exportedPageCount++;
       }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      printMode.value = false;
-      exportInProgress.value = false;
-      closeExportDialog();
-      // Re-focus the active element
-      focusElement(activeElement);
     }
-  });
+
+    if (exportedPageCount === 0) {
+      toast.info(
+        t(($) => $.toast.export.pngCanceled, { ns: 'toast' }),
+        {
+          id: toastId,
+          description: t(($) => $.toast.export.pngCanceledDescription, {
+            ns: 'toast',
+          }),
+        },
+      );
+      return;
+    }
+
+    if (args.openFolder && ipcService.isShowItemInFolderSupported()) {
+      await ipcService.showItemInFolder(firstExportedPagePath);
+    }
+
+    toast.success(
+      t(($) => $.toast.export.pngComplete, { ns: 'toast' }),
+      {
+        id: toastId,
+        description: t(($) => $.toast.export.pngCompleteDescription, {
+          ns: 'toast',
+          count: exportedPageCount,
+          path: firstExportedPagePath,
+        }),
+      },
+    );
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      t(($) => $.toast.export.pngFailed, { ns: 'toast' }),
+      error,
+      {
+        id: toastId,
+        fallback: t(($) => $.toast.export.pngFilesFailedDescription, {
+          ns: 'toast',
+        }),
+      },
+    );
+  } finally {
+    printMode.value = false;
+    exportInProgress.value = false;
+    closeExportDialog();
+    // Re-focus the active element
+    focusElement(activeElement);
+  }
 }
 
 async function onFileMenuExportAsHtml() {
-  await ipcService.exportWorkspaceAsHtml(
-    selectedWorkspace.value,
-    byzHtmlExporter.exportScore(score.value),
-  );
+  try {
+    const reply = await ipcService.exportWorkspaceAsHtml(
+      selectedWorkspace.value,
+      byzHtmlExporter.exportScore(score.value),
+    );
+
+    showExportReplyToast(
+      reply,
+      t(($) => $.toast.export.htmlSuccess, { ns: 'toast' }),
+      t(($) => $.toast.export.htmlFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.htmlFailedDescription, { ns: 'toast' }),
+    );
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      t(($) => $.toast.export.htmlFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.export.htmlFailedDescription, {
+          ns: 'toast',
+        }),
+      },
+    );
+  }
 }
 
 function onFileMenuExportAsMusicXml() {
@@ -5098,27 +5707,73 @@ function onFileMenuExportAsLatex() {
 }
 
 async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
-  await ipcService.exportWorkspaceAsMusicXml(
-    selectedWorkspace.value,
-    musicXmlExporter.export(score.value, args.options),
-    args.compressed,
-    args.openFolder && ipcService.isShowItemInFolderSupported(),
-  );
+  try {
+    const reply = await ipcService.exportWorkspaceAsMusicXml(
+      selectedWorkspace.value,
+      musicXmlExporter.export(score.value, args.options),
+      args.compressed,
+      args.openFolder && ipcService.isShowItemInFolderSupported(),
+    );
 
-  closeExportDialog();
+    showExportReplyToast(
+      reply,
+      t(($) => $.toast.export.musicXmlSuccess, { ns: 'toast' }),
+      t(($) => $.toast.export.musicXmlFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.musicXmlFailedDescription, {
+        ns: 'toast',
+      }),
+    );
+
+    if (reply.success || reply.canceled) {
+      closeExportDialog();
+    }
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      t(($) => $.toast.export.musicXmlFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.export.musicXmlFailedDescription, {
+          ns: 'toast',
+        }),
+      },
+    );
+  }
 }
 
 async function exportAsLatex(args: ExportAsLatexSettings) {
-  await ipcService.exportWorkspaceAsLatex(
-    selectedWorkspace.value,
-    JSON.stringify(
-      latexExporter.export(pages.value, score.value.pageSetup, args.options),
-      null,
-      2,
-    ),
-  );
+  try {
+    const reply = await ipcService.exportWorkspaceAsLatex(
+      selectedWorkspace.value,
+      JSON.stringify(
+        latexExporter.export(pages.value, score.value.pageSetup, args.options),
+        null,
+        2,
+      ),
+    );
 
-  closeExportDialog();
+    showExportReplyToast(
+      reply,
+      t(($) => $.toast.export.latexSuccess, { ns: 'toast' }),
+      t(($) => $.toast.export.latexFailed, { ns: 'toast' }),
+      t(($) => $.toast.export.latexFailedDescription, { ns: 'toast' }),
+    );
+
+    if (reply.success || reply.canceled) {
+      closeExportDialog();
+    }
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      t(($) => $.toast.export.latexFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.export.latexFailedDescription, {
+          ns: 'toast',
+        }),
+      },
+    );
+  }
 }
 
 function blurActiveElement() {
@@ -5270,10 +5925,52 @@ function onFileMenuInsertFooter() {
   updatePageSetup(score.value.pageSetup);
 }
 
-function onFileMenuToolsCopyElementLink() {
+async function onFileMenuToolsCopyElementLink() {
   if (selectedElement.value?.id != null) {
-    navigator.clipboard.writeText(
-      '#element-' + selectedElement.value.id.toString(),
+    try {
+      await navigator.clipboard.writeText(
+        '#element-' + selectedElement.value.id.toString(),
+      );
+      toast.success(
+        t(($) => $.toast.editor.copyElementLinkSuccess, { ns: 'toast' }),
+      );
+    } catch (error) {
+      console.error(error);
+      showErrorToast(
+        t(($) => $.toast.editor.copyFailed, { ns: 'toast' }),
+        error,
+        {
+          fallback: t(($) => $.toast.editor.clipboardWriteFailed, {
+            ns: 'toast',
+          }),
+        },
+      );
+    }
+  }
+}
+
+async function copyInspectorSelectionElementLink() {
+  const element = getInspectorSelectionElement();
+
+  if (element?.id == null) {
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText('#element-' + element.id.toString());
+    toast.success(
+      t(($) => $.toast.editor.copyElementLinkSuccess, { ns: 'toast' }),
+    );
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      t(($) => $.toast.editor.copyFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.editor.clipboardWriteFailed, {
+          ns: 'toast',
+        }),
+      },
     );
   }
 }
@@ -5281,27 +5978,89 @@ function onFileMenuToolsCopyElementLink() {
 async function onFileMenuSave() {
   const workspace = selectedWorkspace.value;
 
-  if (workspace.filePath != null) {
-    const result = await saveWorkspace(workspace);
-    if (result.success) {
-      workspace.hasUnsavedChanges = false;
+  try {
+    if (workspace.filePath != null) {
+      const result = await saveWorkspace(workspace);
+      if (result.success) {
+        workspace.hasUnsavedChanges = false;
+        toast.success(
+          t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
+          {
+            description: workspace.filePath,
+          },
+        );
+      } else if (!result.canceled) {
+        showReplyErrorToast(
+          t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
+          result,
+          t(($) => $.toast.editor.saveFailedDescription, { ns: 'toast' }),
+        );
+      }
+    } else {
+      const result = await saveWorkspaceAs(workspace);
+      if (result.success) {
+        workspace.filePath = result.filePath;
+        workspace.hasUnsavedChanges = false;
+        toast.success(
+          t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
+          {
+            description: result.filePath,
+          },
+        );
+      } else if (!result.canceled) {
+        showReplyErrorToast(
+          t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
+          result,
+          t(($) => $.toast.editor.saveFailedDescription, { ns: 'toast' }),
+        );
+      }
     }
-  } else {
-    const result = await saveWorkspaceAs(workspace);
-    if (result.success) {
-      workspace.filePath = result.filePath;
-      workspace.hasUnsavedChanges = false;
-    }
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.editor.saveFailedDescription, {
+          ns: 'toast',
+        }),
+      },
+    );
   }
 }
 
 async function onFileMenuSaveAs() {
   const workspace = selectedWorkspace.value;
 
-  const result = await saveWorkspaceAs(workspace);
-  if (result.success) {
-    workspace.filePath = result.filePath;
-    workspace.hasUnsavedChanges = false;
+  try {
+    const result = await saveWorkspaceAs(workspace);
+    if (result.success) {
+      workspace.filePath = result.filePath;
+      workspace.hasUnsavedChanges = false;
+      toast.success(
+        t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
+        {
+          description: result.filePath,
+        },
+      );
+    } else if (!result.canceled) {
+      showReplyErrorToast(
+        t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
+        result,
+        t(($) => $.toast.editor.saveFailedDescription, { ns: 'toast' }),
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.editor.saveFailedDescription, {
+          ns: 'toast',
+        }),
+      },
+    );
   }
 }
 
@@ -5327,8 +6086,7 @@ function onFileMenuUndo() {
       selectedElement.value = elements.value[clampedIndex];
     }
 
-    // Undo/redo could affect the note display in the neume toolbar (among other things),
-    // so we force a refresh here
+    // Undo can affect the note display in the neume toolbar, so force a refresh here.
     selectedElement.value.keyHelper++;
   }
 
@@ -5367,8 +6125,7 @@ function onFileMenuRedo() {
       selectedElement.value = elements.value[clampedIndex];
     }
 
-    // Undo/redo could affect the note display in the neume toolbar (among other things),
-    // so we force a refresh here
+    // Redo can affect the note display in the neume toolbar, so force a refresh here.
     selectedElement.value.keyHelper++;
   }
 
@@ -5417,7 +6174,7 @@ function onFileMenuCopyFormat() {
   }
 }
 
-function onFileMenuCopyAsHtml() {
+async function onFileMenuCopyAsHtml() {
   let copiedElements: ScoreElement[] = [];
 
   if (selectionRange.value != null) {
@@ -5437,22 +6194,61 @@ function onFileMenuCopyAsHtml() {
     true,
   );
 
-  navigator.clipboard.writeText(html);
-}
-
-function onFileMenuPaste() {
-  if (!isTextInputFocused() && !dialogOpen.value) {
-    onPasteScoreElements(false);
-  } else {
-    ipcService.paste();
+  try {
+    await navigator.clipboard.writeText(html);
+    toast.success(t(($) => $.toast.editor.copyHtmlSuccess, { ns: 'toast' }));
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      t(($) => $.toast.editor.copyFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.editor.clipboardWriteFailed, {
+          ns: 'toast',
+        }),
+      },
+    );
   }
 }
 
-function onFileMenuPasteWithLyrics() {
+async function pasteTextFromClipboard() {
+  try {
+    const reply = await ipcService.paste();
+
+    if (!reply.success) {
+      showReplyErrorToast(
+        t(($) => $.toast.editor.pasteFailed, { ns: 'toast' }),
+        reply,
+        t(($) => $.toast.editor.clipboardReadFailed, { ns: 'toast' }),
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      t(($) => $.toast.editor.pasteFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.editor.clipboardReadFailed, {
+          ns: 'toast',
+        }),
+      },
+    );
+  }
+}
+
+async function onFileMenuPaste() {
+  if (!isTextInputFocused() && !dialogOpen.value) {
+    onPasteScoreElements(false);
+  } else {
+    await pasteTextFromClipboard();
+  }
+}
+
+async function onFileMenuPasteWithLyrics() {
   if (!isTextInputFocused() && !dialogOpen.value) {
     onPasteScoreElements(true);
   } else {
-    ipcService.paste();
+    await pasteTextFromClipboard();
   }
 }
 
@@ -5509,13 +6305,18 @@ function onFileMenuFind() {
   }
 }
 
-function onFileMenuLyrics() {
+function onFileMenuViewPaneVisibility({
+  paneId,
+  visible,
+}: FileMenuViewPaneVisibilityArgs) {
   if (!dialogOpen.value) {
-    if (lyricManagerIsOpen.value) {
-      closeLyricManager();
-    } else {
-      openLyricManager();
-    }
+    setPaneVisibility(paneId, visible ?? !paneVisibility.value[paneId]);
+  }
+}
+
+function onFileMenuViewResetPaneLayout() {
+  if (!dialogOpen.value) {
+    resetLayout();
   }
 }
 
@@ -5679,35 +6480,49 @@ function openScore(args: FileMenuOpenScoreArgs) {
     args.success = false;
     console.error(error);
 
-    if (error instanceof Error) {
-      if (ipcService.isShowMessageBoxSupported()) {
-        ipcService.showMessageBox({
-          type: 'error',
-          title: 'Open failed',
-          message: error.message,
-        });
-      } else {
-        alert(error.message);
-      }
-    }
+    showErrorToast(
+      t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.editor.openFailedDescription, {
+          ns: 'toast',
+        }),
+      },
+    );
   }
 }
 
 function addWorkspace(workspace: Workspace) {
   workspaces.value.push(workspace);
 
-  tabsRef.value!.addTab({
+  const tab = {
     label: getFileName(workspace),
     key: workspace.id,
-  });
+  };
+
+  if (tabsRef.value != null) {
+    tabsRef.value.addTab(tab);
+  } else {
+    tabs.value.push(tab);
+  }
 }
 
 function removeWorkspace(workspace: Workspace) {
+  cancelLyricsAssignment(workspace);
+
   const index = workspaces.value.indexOf(workspace);
 
   workspaces.value.splice(index, 1);
 
-  tabsRef.value!.removeTab(workspace.id);
+  if (tabsRef.value != null) {
+    tabsRef.value.removeTab(workspace.id);
+  } else {
+    const tabIndex = tabs.value.findIndex((tab) => tab.key === workspace.id);
+
+    if (tabIndex >= 0) {
+      tabs.value.splice(tabIndex, 1);
+    }
+  }
 
   if (selectedWorkspace.value === workspace) {
     if (workspaces.value.length > 0) {
@@ -5775,7 +6590,11 @@ function renderTabLabel(tab: Tab) {
     <div v-if="isLoading" class="loading-overlay">
       <Spinner class="size-16" />
     </div>
-    <FileMenuBar v-if="showFileMenuBar" class="no-print" />
+    <FileMenuBar
+      v-if="showFileMenuBar"
+      class="no-print"
+      :pane-visibility="paneVisibility"
+    />
     <ToolbarMain
       :entry-mode="entryMode"
       :zoom="zoom"
@@ -5806,1028 +6625,1027 @@ function renderTabLabel(tab: Tab) {
       @open-playback-settings="openPlaybackSettingsDialog"
     />
     <div class="content">
-      <div class="left-panel">
-        <NeumeSelector
-          class="neume-selector"
-          :page-setup="score.pageSetup"
-          :neume-keyboard="neumeKeyboard"
-          @select-neume-combo="addNeumeCombination"
-          @select-quantitative-neume="addQuantitativeNeume"
-        />
-      </div>
+      <WorkspaceDockLayout
+        :pane-visibility="paneVisibility"
+        :pane-layout-reset-counter="paneLayoutResetCounter"
+        @pane-visibility-change="onPaneVisibilityChange"
+      >
+        <template #neume-selector>
+          <NeumeSelector
+            class="neume-selector"
+            :page-setup="score.pageSetup"
+            :neume-keyboard="neumeKeyboard"
+            @select-quantitative-neume="addQuantitativeNeume"
+          />
+        </template>
 
-      <div class="page-container">
-        <ContextMenu>
-          <ContextMenuTrigger
-            as="div"
-            @contextmenu.capture="resetContextMenuWorkspace"
-            @contextmenu="onWorkspaceTabContextMenu"
-          >
-            <!-- @vue-ignore -->
-            <Vue3TabsChrome
-              ref="tabsRef"
-              v-model="selectedWorkspaceId"
-              class="workspace-tab-container"
-              :tabs="tabs"
-              :gap="0"
-              :on-close="onTabClosed"
-              :render-label="renderTabLabel"
-              @contextmenu="selectContextMenuWorkspace"
-            >
-              <template #after>
-                <button
-                  class="workspace-tab-new-button"
-                  @click="onFileMenuNewScore"
+        <template #common-combos>
+          <NeumeComboSelector
+            class="neume-combo-selector"
+            :page-setup="score.pageSetup"
+            @select-neume-combo="addNeumeCombination"
+          />
+        </template>
+
+        <template #properties>
+          <PropertiesPane
+            :context="inspectorContext"
+            :fonts="fonts"
+            :inner-neume="toolbarInnerNeume"
+            :page-setup="score.pageSetup"
+            @update:text-box="updateTextBox"
+            @update:rich-text-box="updateRichTextBox"
+            @update:drop-cap="updateDropCap"
+            @update:image-box="updateImageBox"
+            @update:lyrics="updateNoteAndSave"
+            @update:mode-key="updateModeKey"
+            @update:neume="updateNoteAndSave"
+            @update:martyria="updateMartyria"
+            @update:tempo="updateTempo"
+            @open-mode-key-dialog="openModeKeyDialog"
+            @open-syllable-positioning-dialog="openSyllablePositioningDialog"
+          />
+        </template>
+
+        <template #selection>
+          <SelectionPane
+            :context="inspectorContext"
+            :can-apply-break="canApplyInspectorBreak"
+            @copy-element-link="copyInspectorSelectionElementLink"
+            @toggle-page-break="toggleInspectorPageBreak"
+            @toggle-line-break="toggleInspectorLineBreak"
+            @delete-selected-element="deleteInspectorSelectionElement"
+            @update:score-element-section-name="
+              (element, sectionName) =>
+                updateScoreElementSectionName(element, sectionName)
+            "
+          />
+        </template>
+
+        <template #lyrics>
+          <LyricsPane
+            :locked="lyricsLocked"
+            :lyrics="lyrics"
+            @activate-staff-lyrics="
+              selectedElement = null;
+              selectedLyrics = null;
+            "
+            @update:locked="updateLyricsLocked"
+            @update:lyrics="updateStaffLyrics"
+            @assign-accepts-lyrics="assignAcceptsLyricsFromCurrentLyrics"
+          />
+        </template>
+
+        <template #center>
+          <div class="page-container">
+            <ContextMenu>
+              <ContextMenuTrigger
+                as="div"
+                @contextmenu.capture="resetContextMenuWorkspace"
+                @contextmenu="onWorkspaceTabContextMenu"
+              >
+                <!-- @vue-ignore -->
+                <Vue3TabsChrome
+                  ref="tabsRef"
+                  v-model="selectedWorkspaceId"
+                  class="workspace-tab-container"
+                  :tabs="tabs"
+                  :gap="0"
+                  :on-close="onTabClosed"
+                  :render-label="renderTabLabel"
+                  @contextmenu="selectContextMenuWorkspace"
                 >
-                  +
-                </button>
-              </template></Vue3TabsChrome
-            >
-          </ContextMenuTrigger>
-          <ContextMenuContent class="bg-legacy-chrome-menu-surface">
-            <ContextMenuItem
-              @select="
-                closeContextMenuWorkspaces(CloseWorkspacesDisposition.SELF)
-              "
-            >
-              <PhX />
-              {{ $t(($) => $.menu.tab.close, { ns: 'menu' }) }}
-            </ContextMenuItem>
-            <ContextMenuItem
-              @select="
-                closeContextMenuWorkspaces(CloseWorkspacesDisposition.OTHERS)
-              "
-            >
-              <PhXCircle />
-              {{ $t(($) => $.menu.tab.closeOthers, { ns: 'menu' }) }}
-            </ContextMenuItem>
-            <ContextMenuItem
-              @select="
-                closeContextMenuWorkspaces(CloseWorkspacesDisposition.LEFT)
-              "
-            >
-              <PhArrowLineLeft />
-              {{ $t(($) => $.menu.tab.closeToTheLeft, { ns: 'menu' }) }}
-            </ContextMenuItem>
-            <ContextMenuItem
-              @select="
-                closeContextMenuWorkspaces(CloseWorkspacesDisposition.RIGHT)
-              "
-            >
-              <PhArrowLineRight />
-              {{ $t(($) => $.menu.tab.closeToTheRight, { ns: 'menu' }) }}
-            </ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
-        <SearchText
-          v-if="searchTextPanelIsOpen"
-          ref="searchTextRef"
-          v-model:query="searchTextQuery"
-          @search="onSearchText"
-          @close="searchTextPanelIsOpen = false"
-        />
-        <div
-          ref="pageBackgroundRef"
-          class="page-background"
-          @scroll="throttled.onScroll"
-        >
-          <div
-            v-for="(page, pageIndex) in filteredPages"
-            :key="`page-${pageIndex}`"
-            ref="pagesRef"
-            v-observe-visibility="{
-              callback: (isVisible: boolean) =>
-                updatePageVisibility(page, isVisible),
-              intersection: pageVisibilityIntersection,
-            }"
-            class="page"
-            :style="pageStyle"
-            :class="{ print: printMode }"
-          >
-            <template v-if="page.isVisible || printMode">
-              <template v-if="showGuides">
-                <span class="guide-line-vl" :style="guideStyleLeft" />
-                <span class="guide-line-vr" :style="guideStyleRight" />
-                <span class="guide-line-ht" :style="guideStyleTop" />
-                <span class="guide-line-hb" :style="guideStyleBottom" />
-              </template>
-              <template v-if="score.pageSetup.showHeader">
-                <template
-                  v-if="isRichTextBoxElement(getHeaderForPageIndex(pageIndex))"
+                  <template #after>
+                    <button
+                      class="workspace-tab-new-button"
+                      type="button"
+                      @click="onFileMenuNewScore"
+                    >
+                      +
+                    </button>
+                  </template>
+                </Vue3TabsChrome>
+              </ContextMenuTrigger>
+              <ContextMenuContent class="bg-legacy-chrome-menu-surface">
+                <ContextMenuItem
+                  @select="
+                    closeContextMenuWorkspaces(CloseWorkspacesDisposition.SELF)
+                  "
                 >
-                  <TextBoxRich
-                    :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
-                      getHeaderForPageIndex(pageIndex).keyHelper
-                    }`"
-                    :ref="setTemplateRef(`header-${pageIndex}`)"
-                    class="element-box"
-                    :element="
-                      getHeaderForPageIndex(pageIndex) as RichTextBoxElement
-                    "
-                    :edit-mode="
-                      !printMode &&
-                      getHeaderForPageIndex(pageIndex) ==
-                        selectedHeaderFooterElement
-                    "
-                    :metadata="getTokenMetadata(pageIndex)"
-                    :page-setup="score.pageSetup"
-                    :fonts="fonts"
-                    :selected="
-                      getHeaderForPageIndex(pageIndex) ==
-                      selectedHeaderFooterElement
-                    "
-                    :style="headerStyle"
-                    @click="
-                      selectedHeaderFooterElement =
-                        getHeaderForPageIndex(pageIndex)
-                    "
-                    @update="
-                      updateRichTextBox(
-                        getHeaderForPageIndex(pageIndex) as RichTextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:height="
-                      updateRichTextBoxHeight(
-                        getHeaderForPageIndex(pageIndex) as RichTextBoxElement,
-                        $event,
-                      )
-                    "
-                  />
-                </template>
-                <template
-                  v-else-if="isTextBoxElement(getHeaderForPageIndex(pageIndex))"
-                >
-                  <TextBox
-                    :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
-                      getHeaderForPageIndex(pageIndex).keyHelper
-                    }`"
-                    :ref="setTemplateRef(`header-${pageIndex}`)"
-                    class="element-box"
-                    :element="
-                      getHeaderForPageIndex(pageIndex) as TextBoxElement
-                    "
-                    :edit-mode="
-                      !printMode &&
-                      getHeaderForPageIndex(pageIndex) ==
-                        selectedHeaderFooterElement
-                    "
-                    :metadata="getTokenMetadata(pageIndex)"
-                    :page-setup="score.pageSetup"
-                    :selected="
-                      getHeaderForPageIndex(pageIndex) ==
-                      selectedHeaderFooterElement
-                    "
-                    :class="[
-                      {
-                        selectedTextbox:
-                          getHeaderForPageIndex(pageIndex) ==
-                          selectedHeaderFooterElement,
-                      },
-                    ]"
-                    :style="headerStyle"
-                    @click="
-                      selectedHeaderFooterElement =
-                        getHeaderForPageIndex(pageIndex)
-                    "
-                    @update="
-                      updateTextBox(
-                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                  />
-                </template>
-                <div
-                  v-if="shouldShowHeaderForPageIndex(pageIndex)"
-                  class="header-footer-hr"
-                  :style="
-                    getHeaderHorizontalRuleStyle(
-                      getHeaderForPageIndex(pageIndex).height,
+                  <PhX />
+                  {{ $t(($) => $.menu.tab.close, { ns: 'menu' }) }}
+                </ContextMenuItem>
+                <ContextMenuItem
+                  @select="
+                    closeContextMenuWorkspaces(
+                      CloseWorkspacesDisposition.OTHERS,
                     )
                   "
-                ></div>
-              </template>
-              <div
-                v-for="(line, lineIndex) in page.lines"
-                :key="`line-${pageIndex}-${lineIndex}`"
-                :ref="`line-${lineIndex}`"
-                class="line"
-              >
-                <div
-                  v-for="element in line.elements"
-                  :id="`element-${element.id}`"
-                  :key="`element-${selectedWorkspace.id}-${element.id}-${element.keyHelper}`"
-                  class="element-box"
-                  :style="getElementStyle(element)"
                 >
-                  <template v-if="isSyllableElement(element)">
-                    <div
-                      :ref="
-                        setTemplateRef(`element-${getElementIndex(element)}`)
+                  <PhXCircle />
+                  {{ $t(($) => $.menu.tab.closeOthers, { ns: 'menu' }) }}
+                </ContextMenuItem>
+                <ContextMenuItem
+                  @select="
+                    closeContextMenuWorkspaces(CloseWorkspacesDisposition.LEFT)
+                  "
+                >
+                  <PhArrowLineLeft />
+                  {{ $t(($) => $.menu.tab.closeToTheLeft, { ns: 'menu' }) }}
+                </ContextMenuItem>
+                <ContextMenuItem
+                  @select="
+                    closeContextMenuWorkspaces(CloseWorkspacesDisposition.RIGHT)
+                  "
+                >
+                  <PhArrowLineRight />
+                  {{ $t(($) => $.menu.tab.closeToTheRight, { ns: 'menu' }) }}
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
+            <SearchText
+              v-if="searchTextPanelIsOpen"
+              ref="searchTextRef"
+              v-model:query="searchTextQuery"
+              @search="onSearchText"
+              @close="searchTextPanelIsOpen = false"
+            />
+            <div
+              ref="pageBackgroundRef"
+              class="page-background"
+              @scroll="throttled.onScroll"
+            >
+              <div
+                v-for="(page, pageIndex) in filteredPages"
+                :key="`page-${pageIndex}`"
+                ref="pagesRef"
+                v-observe-visibility="{
+                  callback: (isVisible: boolean) =>
+                    updatePageVisibility(page, isVisible),
+                  intersection: pageVisibilityIntersection,
+                }"
+                class="page"
+                :style="pageStyle"
+                :class="{ print: printMode }"
+              >
+                <template v-if="page.isVisible || printMode">
+                  <template v-if="showGuides">
+                    <span class="guide-line-vl" :style="guideStyleLeft" />
+                    <span class="guide-line-vr" :style="guideStyleRight" />
+                    <span class="guide-line-ht" :style="guideStyleTop" />
+                    <span class="guide-line-hb" :style="guideStyleBottom" />
+                  </template>
+                  <template v-if="score.pageSetup.showHeader">
+                    <template
+                      v-if="
+                        isRichTextBoxElement(getHeaderForPageIndex(pageIndex))
                       "
-                      class="neume-box"
                     >
-                      <span
-                        v-if="
-                          element.sectionName != '' &&
-                          element.sectionName != null
+                      <TextBoxRich
+                        :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
+                          getHeaderForPageIndex(pageIndex).keyHelper
+                        }`"
+                        :ref="setTemplateRef(`header-${pageIndex}`)"
+                        class="element-box"
+                        :element="
+                          getHeaderForPageIndex(pageIndex) as RichTextBoxElement
                         "
-                        class="section-name"
-                        >§</span
-                      >
-                      <span v-if="element.pageBreak" class="page-break"
-                        ><PhFile
-                      /></span>
-                      <span v-if="element.lineBreak" class="line-break"
-                        ><svg
-                          v-if="element.lineBreakType === LineBreakType.Justify"
-                          viewBox="0 0 24 24"
-                        >
-                          <PhParagraph
-                            size="24"
-                            weight="fill"
-                            transform="matrix(0.75 0 0 1 -2 0)"
-                          />
-                          <PhTextAlignJustify size="12" x="12" y="12" /></svg
-                        ><svg
-                          v-else-if="
-                            element.lineBreakType === LineBreakType.Center
-                          "
-                          viewBox="0 0 24 24"
-                        >
-                          <PhParagraph
-                            size="24"
-                            weight="fill"
-                            transform="matrix(0.75 0 0 1 -2 0)"
-                          />
-                          <PhTextAlignCenter size="12" x="12" y="12" /></svg
-                        ><PhParagraph v-else weight="fill"
-                      /></span>
-                      <AlternateLine
-                        v-for="(alternateLine, index) in (
-                          element as NoteElement
-                        ).alternateLines"
-                        :key="index"
-                        :element="alternateLine"
-                        :page-setup="score.pageSetup"
-                        :class="{
-                          selectedAlternateLine:
-                            selectedWorkspace.selectedAlternateLineElement ===
-                            alternateLine,
-                        }"
-                        @update="updateAlternateLine(alternateLine, $event)"
-                        @mousedown="
-                          setSelectedAlternateLine(element, alternateLine)
+                        :edit-mode="
+                          !printMode &&
+                          getHeaderForPageIndex(pageIndex) ==
+                            selectedHeaderFooterElement
                         "
-                      />
-                      <Annotation
-                        v-for="(annotation, index) in (element as NoteElement)
-                          .annotations"
-                        :key="index"
-                        :element="annotation"
+                        :metadata="getTokenMetadata(pageIndex)"
                         :page-setup="score.pageSetup"
                         :fonts="fonts"
                         :selected="
-                          selectedWorkspace.selectedAnnotationElement ===
-                          annotation
+                          getHeaderForPageIndex(pageIndex) ==
+                          selectedHeaderFooterElement
                         "
-                        @update="updateAnnotation(annotation, $event)"
-                        @delete="
-                          removeAnnotation(
-                            element as NoteElement,
-                            annotation,
-                            true,
+                        :style="headerStyle"
+                        @click="
+                          selectedHeaderFooterElement =
+                            getHeaderForPageIndex(pageIndex)
+                        "
+                        @update="
+                          updateRichTextBox(
+                            getHeaderForPageIndex(
+                              pageIndex,
+                            ) as RichTextBoxElement,
+                            $event,
                           )
                         "
-                        @mousedown="setSelectedAnnotation(element, annotation)"
+                        @update:height="
+                          updateRichTextBoxHeight(
+                            getHeaderForPageIndex(
+                              pageIndex,
+                            ) as RichTextBoxElement,
+                            $event,
+                          )
+                        "
                       />
-                      <SyllableNeumeBox
-                        class="syllable-box"
-                        :note="element as NoteElement"
+                    </template>
+                    <template
+                      v-else-if="
+                        isTextBoxElement(getHeaderForPageIndex(pageIndex))
+                      "
+                    >
+                      <TextBox
+                        :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
+                          getHeaderForPageIndex(pageIndex).keyHelper
+                        }`"
+                        :ref="setTemplateRef(`header-${pageIndex}`)"
+                        class="element-box"
+                        :element="
+                          getHeaderForPageIndex(pageIndex) as TextBoxElement
+                        "
+                        :edit-mode="
+                          !printMode &&
+                          getHeaderForPageIndex(pageIndex) ==
+                            selectedHeaderFooterElement
+                        "
+                        :metadata="getTokenMetadata(pageIndex)"
                         :page-setup="score.pageSetup"
+                        :selected="
+                          getHeaderForPageIndex(pageIndex) ==
+                          selectedHeaderFooterElement
+                        "
                         :class="[
                           {
-                            selected: isSelected(element),
-                            'audio-selected': isAudioSelected(element),
+                            selectedTextbox:
+                              getHeaderForPageIndex(pageIndex) ==
+                              selectedHeaderFooterElement,
                           },
                         ]"
-                        @select-single="selectedElement = element"
-                        @select-range="setSelectionRange(element)"
-                        @dblclick="openSyllablePositioningDialog"
-                      />
-                      <div
-                        class="lyrics-container"
-                        dir="auto"
-                        :style="getLyricStyle(element as NoteElement)"
-                      >
-                        <ContentEditable
-                          :ref="
-                            setTemplateRef(`lyrics-${getElementIndex(element)}`)
-                          "
-                          class="lyrics"
-                          :class="{
-                            selectedLyrics: element === selectedLyrics,
-                          }"
-                          :style="{ minWidth: withZoom(element.width) }"
-                          :content="(element as NoteElement).lyrics"
-                          :editable="!lyricsLocked"
-                          white-space="nowrap"
-                          @click="focusLyrics(element.index)"
-                          @focus="selectedLyrics = element as NoteElement"
-                          @blur="updateLyrics(element as NoteElement, $event)"
-                        />
-                        <template
-                          v-if="
-                            isMelisma(element as NoteElement) &&
-                            (element as NoteElement).isHyphen &&
-                            (element as NoteElement).melismaText === ''
-                          "
-                        >
-                          <div
-                            class="melisma"
-                            :class="{
-                              full: (element as NoteElement).isFullMelisma,
-                            }"
-                            :style="getMelismaStyle(element as NoteElement)"
-                          >
-                            <span
-                              v-for="(offset, index) in (element as NoteElement)
-                                .hyphenOffsets"
-                              :key="index"
-                              class="melisma-hyphen"
-                              :style="
-                                getMelismaHyphenStyle(
-                                  element as NoteElement,
-                                  index,
-                                )
-                              "
-                              >-</span
-                            >
-                          </div>
-                        </template>
-                        <template
-                          v-else-if="
-                            isMelisma(element as NoteElement) &&
-                            !(element as NoteElement).isHyphen &&
-                            !rtl &&
-                            (element as NoteElement).melismaText === ''
-                          "
-                        >
-                          <div
-                            class="melisma-underscore"
-                            :class="{
-                              full: (element as NoteElement).isFullMelisma,
-                            }"
-                            :style="
-                              getMelismaUnderscoreStyleOuter(
-                                element as NoteElement,
-                              )
-                            "
-                          >
-                            <div
-                              class="melisma-inner"
-                              :style="
-                                getMelismaUnderscoreStyleInner(
-                                  element as NoteElement,
-                                )
-                              "
-                            ></div>
-                          </div>
-                        </template>
-                        <template
-                          v-else-if="
-                            isMelisma(element as NoteElement) &&
-                            !(element as NoteElement).isHyphen &&
-                            rtl
-                          "
-                        >
-                          <div
-                            class="melisma"
-                            :class="{
-                              fullRtl: (element as NoteElement).isFullMelisma,
-                            }"
-                            :style="getMelismaStyle(element as NoteElement)"
-                            v-text="(element as NoteElement).melismaText"
-                          ></div>
-                        </template>
-                        <template
-                          v-else-if="
-                            (element as NoteElement).isMelisma &&
-                            (element as NoteElement).melismaText !== '' &&
-                            !rtl
-                          "
-                        >
-                          <span
-                            class="melisma-text"
-                            :class="{
-                              selectedMelisma: element === selectedLyrics,
-                            }"
-                            @click="focusLyrics(element.index)"
-                            @focus="selectedLyrics = element as NoteElement"
-                            v-text="(element as NoteElement).melismaText"
-                          ></span>
-                        </template>
-                      </div>
-                    </div>
-                  </template>
-                  <template v-else-if="isMartyriaElement(element)">
-                    <div class="neume-box">
-                      <span
-                        v-if="
-                          element.sectionName != '' &&
-                          element.sectionName != null
+                        :style="headerStyle"
+                        @click="
+                          selectedHeaderFooterElement =
+                            getHeaderForPageIndex(pageIndex)
                         "
-                        class="section-name"
-                        >§</span
-                      >
-                      <span v-if="element.pageBreak" class="page-break">
-                        <PhFile
-                      /></span>
-                      <span v-if="element.lineBreak" class="line-break"
-                        ><PhParagraph weight="fill"
-                      /></span>
-                      <MartyriaNeumeBox
-                        :ref="
-                          setTemplateRef(`element-${getElementIndex(element)}`)
+                        @update="
+                          updateTextBox(
+                            getHeaderForPageIndex(pageIndex)! as TextBoxElement,
+                            $event,
+                          )
                         "
-                        class="marytria-neume-box"
-                        :neume="element as MartyriaElement"
-                        :page-setup="score.pageSetup"
-                        :class="[
-                          {
-                            selected: isSelected(element),
-                          },
-                        ]"
-                        @select-single="selectedElement = element"
-                        @select-range="setSelectionRange(element)"
                       />
-                      <div class="lyrics"></div>
-                    </div>
-                  </template>
-                  <template v-else-if="isTempoElement(element)">
+                    </template>
                     <div
-                      :ref="
-                        setTemplateRef(`element-${getElementIndex(element)}`)
-                      "
-                      class="neume-box"
-                    >
-                      <span
-                        v-if="
-                          element.sectionName != '' &&
-                          element.sectionName != null
-                        "
-                        class="section-name"
-                        >§</span
-                      >
-                      <span v-if="element.pageBreak" class="page-break">
-                        <PhFile
-                      /></span>
-                      <span v-if="element.lineBreak" class="line-break"
-                        ><PhParagraph weight="fill"
-                      /></span>
-                      <TempoNeumeBox
-                        class="tempo-neume-box"
-                        :neume="element as TempoElement"
-                        :page-setup="score.pageSetup"
-                        :class="[{ selected: isSelected(element) }]"
-                        @select-single="selectedElement = element"
-                        @select-range="setSelectionRange(element)"
-                      />
-                      <div class="lyrics"></div>
-                    </div>
-                  </template>
-                  <template v-else-if="isEmptyElement(element)">
-                    <div
-                      :ref="
-                        setTemplateRef(`element-${getElementIndex(element)}`)
-                      "
-                      class="neume-box"
-                    >
-                      <span
-                        v-if="
-                          element.sectionName != '' &&
-                          element.sectionName != null
-                        "
-                        class="section-name"
-                        >§</span
-                      >
-                      <span v-if="element.pageBreak" class="page-break">
-                        <PhFile
-                      /></span>
-                      <span v-if="element.lineBreak" class="line-break"
-                        ><PhParagraph weight="fill"
-                      /></span>
-                      <EmptyNeumeBox
-                        class="empty-neume-box"
-                        :class="[{ selected: isSelected(element) }]"
-                        :style="getEmptyBoxStyle(element as EmptyElement)"
-                        @select-single="selectedElement = element"
-                      ></EmptyNeumeBox>
-                      <div class="lyrics"></div>
-                    </div>
-                  </template>
-                  <template v-else-if="isTextBoxElement(element)">
-                    <span
-                      v-if="
-                        element.sectionName != '' && element.sectionName != null
-                      "
-                      class="section-name-2"
-                      >§</span
-                    >
-                    <span v-if="element.pageBreak" class="page-break-2"
-                      ><PhFile
-                    /></span>
-                    <span v-if="element.lineBreak" class="line-break-2"
-                      ><PhParagraph weight="fill"
-                    /></span>
-                    <TextBox
-                      :ref="
-                        setTemplateRef(`element-${getElementIndex(element)}`)
-                      "
-                      :element="element as TextBoxElement"
-                      :edit-mode="true"
-                      :metadata="getTokenMetadata(pageIndex)"
-                      :page-setup="score.pageSetup"
-                      :selected="isSelected(element)"
-                      @select-single="selectedElement = element"
-                      @update="updateTextBox(element as TextBoxElement, $event)"
-                      @update:height="
-                        updateTextBoxHeight(element as TextBoxElement, $event)
-                      "
-                    />
-                  </template>
-                  <template v-else-if="isRichTextBoxElement(element)">
-                    <span
-                      v-if="
-                        element.sectionName != '' && element.sectionName != null
-                      "
-                      class="section-name-2"
-                      >§</span
-                    >
-                    <span v-if="element.pageBreak" class="page-break-2"
-                      ><PhFile
-                    /></span>
-                    <span v-if="element.lineBreak" class="line-break-2"
-                      ><PhParagraph weight="fill"
-                    /></span>
-                    <TextBoxRich
-                      :ref="
-                        setTemplateRef(`element-${getElementIndex(element)}`)
-                      "
-                      :element="element as RichTextBoxElement"
-                      :page-setup="score.pageSetup"
-                      :fonts="fonts"
-                      :selected="isSelected(element)"
-                      @select-single="selectedElement = element"
-                      @update="
-                        updateRichTextBox(element as RichTextBoxElement, $event)
-                      "
-                      @update:height="
-                        updateRichTextBoxHeight(
-                          element as RichTextBoxElement,
-                          $event,
+                      v-if="shouldShowHeaderForPageIndex(pageIndex)"
+                      class="header-footer-hr"
+                      :style="
+                        getHeaderHorizontalRuleStyle(
+                          getHeaderForPageIndex(pageIndex).height,
                         )
                       "
-                    />
+                    ></div>
                   </template>
-                  <template v-else-if="isModeKeyElement(element)">
+                  <div
+                    v-for="(line, lineIndex) in page.lines"
+                    :key="`line-${pageIndex}-${lineIndex}`"
+                    :ref="`line-${lineIndex}`"
+                    class="line"
+                  >
+                    <div
+                      v-for="element in line.elements"
+                      :id="`element-${element.id}`"
+                      :key="`element-${selectedWorkspace.id}-${element.id}-${element.keyHelper}`"
+                      class="element-box"
+                      :style="getElementStyle(element)"
+                    >
+                      <template v-if="isSyllableElement(element)">
+                        <div
+                          :ref="
+                            setTemplateRef(
+                              `element-${getElementIndex(element)}`,
+                            )
+                          "
+                          class="neume-box"
+                        >
+                          <span
+                            v-if="
+                              element.sectionName != '' &&
+                              element.sectionName != null
+                            "
+                            class="section-name"
+                            >§</span
+                          >
+                          <span v-if="element.pageBreak" class="page-break"
+                            ><PhFile
+                          /></span>
+                          <span v-if="element.lineBreak" class="line-break"
+                            ><svg
+                              v-if="
+                                element.lineBreakType === LineBreakType.Justify
+                              "
+                              viewBox="0 0 24 24"
+                            >
+                              <PhParagraph
+                                size="24"
+                                weight="fill"
+                                transform="matrix(0.75 0 0 1 -2 0)"
+                              />
+                              <PhTextAlignJustify
+                                size="12"
+                                x="12"
+                                y="12"
+                              /></svg
+                            ><svg
+                              v-else-if="
+                                element.lineBreakType === LineBreakType.Center
+                              "
+                              viewBox="0 0 24 24"
+                            >
+                              <PhParagraph
+                                size="24"
+                                weight="fill"
+                                transform="matrix(0.75 0 0 1 -2 0)"
+                              />
+                              <PhTextAlignCenter size="12" x="12" y="12" /></svg
+                            ><PhParagraph v-else weight="fill"
+                          /></span>
+                          <AlternateLine
+                            v-for="(alternateLine, index) in (
+                              element as NoteElement
+                            ).alternateLines"
+                            :key="index"
+                            :element="alternateLine"
+                            :page-setup="score.pageSetup"
+                            :class="{
+                              selectedAlternateLine:
+                                selectedWorkspace.selectedAlternateLineElement ===
+                                alternateLine,
+                            }"
+                            @update="updateAlternateLine(alternateLine, $event)"
+                            @mousedown="
+                              setSelectedAlternateLine(element, alternateLine)
+                            "
+                          />
+                          <Annotation
+                            v-for="(annotation, index) in (
+                              element as NoteElement
+                            ).annotations"
+                            :key="index"
+                            :element="annotation"
+                            :page-setup="score.pageSetup"
+                            :fonts="fonts"
+                            :selected="
+                              selectedWorkspace.selectedAnnotationElement ===
+                              annotation
+                            "
+                            @update="updateAnnotation(annotation, $event)"
+                            @delete="
+                              removeAnnotation(
+                                element as NoteElement,
+                                annotation,
+                                true,
+                              )
+                            "
+                            @mousedown="
+                              setSelectedAnnotation(element, annotation)
+                            "
+                          />
+                          <SyllableNeumeBox
+                            class="syllable-box"
+                            :note="element as NoteElement"
+                            :page-setup="score.pageSetup"
+                            :class="[
+                              {
+                                selected: isSelected(element),
+                                'audio-selected': isAudioSelected(element),
+                              },
+                            ]"
+                            @select-single="selectedElement = element"
+                            @select-range="setSelectionRange(element)"
+                            @dblclick="openSyllablePositioningDialog"
+                          />
+                          <div
+                            class="lyrics-container"
+                            dir="auto"
+                            :style="getLyricStyle(element as NoteElement)"
+                          >
+                            <ContentEditable
+                              :ref="
+                                setTemplateRef(
+                                  `lyrics-${getElementIndex(element)}`,
+                                )
+                              "
+                              class="lyrics"
+                              :class="{
+                                selectedLyrics: element === selectedLyrics,
+                              }"
+                              :style="{ minWidth: withZoom(element.width) }"
+                              :content="(element as NoteElement).lyrics"
+                              :editable="!lyricsLocked"
+                              white-space="nowrap"
+                              @click="focusLyrics(element.index)"
+                              @focus="selectedLyrics = element as NoteElement"
+                              @blur="
+                                updateLyrics(element as NoteElement, $event)
+                              "
+                            />
+                            <template
+                              v-if="
+                                isMelisma(element as NoteElement) &&
+                                (element as NoteElement).isHyphen &&
+                                (element as NoteElement).melismaText === ''
+                              "
+                            >
+                              <div
+                                class="melisma"
+                                :class="{
+                                  full: (element as NoteElement).isFullMelisma,
+                                }"
+                                :style="getMelismaStyle(element as NoteElement)"
+                              >
+                                <span
+                                  v-for="(offset, index) in (
+                                    element as NoteElement
+                                  ).hyphenOffsets"
+                                  :key="index"
+                                  class="melisma-hyphen"
+                                  :style="
+                                    getMelismaHyphenStyle(
+                                      element as NoteElement,
+                                      index,
+                                    )
+                                  "
+                                  >-</span
+                                >
+                              </div>
+                            </template>
+                            <template
+                              v-else-if="
+                                isMelisma(element as NoteElement) &&
+                                !(element as NoteElement).isHyphen &&
+                                !rtl &&
+                                (element as NoteElement).melismaText === ''
+                              "
+                            >
+                              <div
+                                class="melisma-underscore"
+                                :class="{
+                                  full: (element as NoteElement).isFullMelisma,
+                                }"
+                                :style="
+                                  getMelismaUnderscoreStyleOuter(
+                                    element as NoteElement,
+                                  )
+                                "
+                              >
+                                <div
+                                  class="melisma-inner"
+                                  :style="
+                                    getMelismaUnderscoreStyleInner(
+                                      element as NoteElement,
+                                    )
+                                  "
+                                ></div>
+                              </div>
+                            </template>
+                            <template
+                              v-else-if="
+                                isMelisma(element as NoteElement) &&
+                                !(element as NoteElement).isHyphen &&
+                                rtl
+                              "
+                            >
+                              <div
+                                class="melisma"
+                                :class="{
+                                  fullRtl: (element as NoteElement)
+                                    .isFullMelisma,
+                                }"
+                                :style="getMelismaStyle(element as NoteElement)"
+                                v-text="(element as NoteElement).melismaText"
+                              ></div>
+                            </template>
+                            <template
+                              v-else-if="
+                                (element as NoteElement).isMelisma &&
+                                (element as NoteElement).melismaText !== '' &&
+                                !rtl
+                              "
+                            >
+                              <span
+                                class="melisma-text"
+                                :class="{
+                                  selectedMelisma: element === selectedLyrics,
+                                }"
+                                @click="focusLyrics(element.index)"
+                                @focus="selectedLyrics = element as NoteElement"
+                                v-text="(element as NoteElement).melismaText"
+                              ></span>
+                            </template>
+                          </div>
+                        </div>
+                      </template>
+                      <template v-else-if="isMartyriaElement(element)">
+                        <div class="neume-box">
+                          <span
+                            v-if="
+                              element.sectionName != '' &&
+                              element.sectionName != null
+                            "
+                            class="section-name"
+                            >§</span
+                          >
+                          <span v-if="element.pageBreak" class="page-break">
+                            <PhFile
+                          /></span>
+                          <span v-if="element.lineBreak" class="line-break"
+                            ><PhParagraph weight="fill"
+                          /></span>
+                          <MartyriaNeumeBox
+                            :ref="
+                              setTemplateRef(
+                                `element-${getElementIndex(element)}`,
+                              )
+                            "
+                            class="marytria-neume-box"
+                            :neume="element as MartyriaElement"
+                            :page-setup="score.pageSetup"
+                            :class="[
+                              {
+                                selected: isSelected(element),
+                              },
+                            ]"
+                            @select-single="selectedElement = element"
+                            @select-range="setSelectionRange(element)"
+                          />
+                          <div class="lyrics"></div>
+                        </div>
+                      </template>
+                      <template v-else-if="isTempoElement(element)">
+                        <div
+                          :ref="
+                            setTemplateRef(
+                              `element-${getElementIndex(element)}`,
+                            )
+                          "
+                          class="neume-box"
+                        >
+                          <span
+                            v-if="
+                              element.sectionName != '' &&
+                              element.sectionName != null
+                            "
+                            class="section-name"
+                            >§</span
+                          >
+                          <span v-if="element.pageBreak" class="page-break">
+                            <PhFile
+                          /></span>
+                          <span v-if="element.lineBreak" class="line-break"
+                            ><PhParagraph weight="fill"
+                          /></span>
+                          <TempoNeumeBox
+                            class="tempo-neume-box"
+                            :neume="element as TempoElement"
+                            :page-setup="score.pageSetup"
+                            :class="[{ selected: isSelected(element) }]"
+                            @select-single="selectedElement = element"
+                            @select-range="setSelectionRange(element)"
+                          />
+                          <div class="lyrics"></div>
+                        </div>
+                      </template>
+                      <template v-else-if="isEmptyElement(element)">
+                        <div
+                          :ref="
+                            setTemplateRef(
+                              `element-${getElementIndex(element)}`,
+                            )
+                          "
+                          class="neume-box"
+                        >
+                          <span
+                            v-if="
+                              element.sectionName != '' &&
+                              element.sectionName != null
+                            "
+                            class="section-name"
+                            >§</span
+                          >
+                          <span v-if="element.pageBreak" class="page-break">
+                            <PhFile
+                          /></span>
+                          <span v-if="element.lineBreak" class="line-break"
+                            ><PhParagraph weight="fill"
+                          /></span>
+                          <EmptyNeumeBox
+                            class="empty-neume-box"
+                            :class="[{ selected: isSelected(element) }]"
+                            :style="getEmptyBoxStyle(element as EmptyElement)"
+                            @select-single="selectedElement = element"
+                          ></EmptyNeumeBox>
+                          <div class="lyrics"></div>
+                        </div>
+                      </template>
+                      <template v-else-if="isTextBoxElement(element)">
+                        <span
+                          v-if="
+                            element.sectionName != '' &&
+                            element.sectionName != null
+                          "
+                          class="section-name-2"
+                          >§</span
+                        >
+                        <span v-if="element.pageBreak" class="page-break-2"
+                          ><PhFile
+                        /></span>
+                        <span v-if="element.lineBreak" class="line-break-2"
+                          ><PhParagraph weight="fill"
+                        /></span>
+                        <TextBox
+                          :ref="
+                            setTemplateRef(
+                              `element-${getElementIndex(element)}`,
+                            )
+                          "
+                          :element="element as TextBoxElement"
+                          :edit-mode="true"
+                          :metadata="getTokenMetadata(pageIndex)"
+                          :page-setup="score.pageSetup"
+                          :selected="isSelected(element)"
+                          @select-single="selectedElement = element"
+                          @update="
+                            updateTextBox(element as TextBoxElement, $event)
+                          "
+                          @update:height="
+                            updateTextBoxHeight(
+                              element as TextBoxElement,
+                              $event,
+                            )
+                          "
+                        />
+                      </template>
+                      <template v-else-if="isRichTextBoxElement(element)">
+                        <span
+                          v-if="
+                            element.sectionName != '' &&
+                            element.sectionName != null
+                          "
+                          class="section-name-2"
+                          >§</span
+                        >
+                        <span v-if="element.pageBreak" class="page-break-2"
+                          ><PhFile
+                        /></span>
+                        <span v-if="element.lineBreak" class="line-break-2"
+                          ><PhParagraph weight="fill"
+                        /></span>
+                        <TextBoxRich
+                          :ref="
+                            setTemplateRef(
+                              `element-${getElementIndex(element)}`,
+                            )
+                          "
+                          :element="element as RichTextBoxElement"
+                          :page-setup="score.pageSetup"
+                          :fonts="fonts"
+                          :selected="isSelected(element)"
+                          @select-single="selectedElement = element"
+                          @update="
+                            updateRichTextBox(
+                              element as RichTextBoxElement,
+                              $event,
+                            )
+                          "
+                          @update:height="
+                            updateRichTextBoxHeight(
+                              element as RichTextBoxElement,
+                              $event,
+                            )
+                          "
+                        />
+                      </template>
+                      <template v-else-if="isModeKeyElement(element)">
+                        <span
+                          v-if="
+                            element.sectionName != '' &&
+                            element.sectionName != null
+                          "
+                          class="section-name-2"
+                          >§</span
+                        >
+                        <span v-if="element.pageBreak" class="page-break-2"
+                          ><PhFile
+                        /></span>
+                        <span v-if="element.lineBreak" class="line-break-2"
+                          ><PhParagraph weight="fill"
+                        /></span>
+                        <ModeKey
+                          :ref="
+                            setTemplateRef(
+                              `element-${getElementIndex(element)}`,
+                            )
+                          "
+                          :element="element as ModeKeyElement"
+                          :page-setup="score.pageSetup"
+                          :class="[
+                            {
+                              selectedTextbox: isSelected(element),
+                            },
+                          ]"
+                          @select-single="selectedElement = element"
+                          @dblclick="openModeKeyDialog"
+                        />
+                      </template>
+                      <template v-else-if="isDropCapElement(element)">
+                        <span
+                          v-if="
+                            element.sectionName != '' &&
+                            element.sectionName != null
+                          "
+                          class="section-name"
+                          >§</span
+                        >
+                        <span v-if="element.pageBreak" class="page-break"
+                          ><PhFile
+                        /></span>
+                        <span v-if="element.lineBreak" class="line-break"
+                          ><PhParagraph weight="fill"
+                        /></span>
+                        <DropCap
+                          :ref="
+                            setTemplateRef(
+                              `element-${getElementIndex(element)}`,
+                            )
+                          "
+                          :element="element as DropCapElement"
+                          :page-setup="score.pageSetup"
+                          :editable="!lyricsLocked"
+                          :class="[
+                            {
+                              selectedTextbox: isSelected(element),
+                            },
+                          ]"
+                          @select-single="selectedElement = element"
+                          @update:content="
+                            updateDropCapContent(
+                              element as DropCapElement,
+                              $event,
+                            )
+                          "
+                        />
+                      </template>
+                      <template v-else-if="isImageBoxElement(element)">
+                        <span v-if="element.pageBreak" class="page-break-2"
+                          ><PhFile
+                        /></span>
+                        <span v-if="element.lineBreak" class="line-break-2"
+                          ><PhParagraph weight="fill"
+                        /></span>
+                        <ImageBox
+                          :ref="
+                            setTemplateRef(
+                              `element-${getElementIndex(element)}`,
+                            )
+                          "
+                          :element="element as ImageBoxElement"
+                          :zoom="zoom"
+                          :print-mode="printMode"
+                          :class="[{ selectedImagebox: isSelected(element) }]"
+                          @select-single="selectedElement = element"
+                          @update:size="
+                            updateImageBox(selectedElement as ImageBoxElement, {
+                              imageWidth: $event.width,
+                              imageHeight: $event.height,
+                            })
+                          "
+                        />
+                      </template>
+                    </div>
                     <span
                       v-if="
-                        element.sectionName != '' && element.sectionName != null
+                        showAdjustmentRatios &&
+                        line.adjustmentRatio != null &&
+                        line.elements.length > 0
                       "
-                      class="section-name-2"
-                      >§</span
+                      class="adjustment-ratio"
+                      :style="getAdjustmentRatioStyle(line)"
+                      >{{ line.adjustmentRatio.toFixed(2) }}</span
                     >
-                    <span v-if="element.pageBreak" class="page-break-2"
-                      ><PhFile
-                    /></span>
-                    <span v-if="element.lineBreak" class="line-break-2"
-                      ><PhParagraph weight="fill"
-                    /></span>
-                    <ModeKey
-                      :ref="
-                        setTemplateRef(`element-${getElementIndex(element)}`)
+                  </div>
+                  <template v-if="score.pageSetup.showFooter">
+                    <div
+                      v-if="shouldShowFooterForPageIndex(pageIndex)"
+                      class="header-footer-hr"
+                      :style="
+                        getFooterHorizontalRuleStyle(
+                          getFooterForPageIndex(pageIndex).height,
+                        )
                       "
-                      :element="element as ModeKeyElement"
-                      :page-setup="score.pageSetup"
-                      :class="[
-                        {
-                          selectedTextbox: isSelected(element),
-                        },
-                      ]"
-                      @select-single="selectedElement = element"
-                      @dblclick="openModeKeyDialog"
-                    />
-                  </template>
-                  <template v-else-if="isDropCapElement(element)">
-                    <span
+                    ></div>
+                    <template
                       v-if="
-                        element.sectionName != '' && element.sectionName != null
+                        isRichTextBoxElement(getFooterForPageIndex(pageIndex))
                       "
-                      class="section-name"
-                      >§</span
                     >
-                    <span v-if="element.pageBreak" class="page-break"
-                      ><PhFile
-                    /></span>
-                    <span v-if="element.lineBreak" class="line-break"
-                      ><PhParagraph weight="fill"
-                    /></span>
-                    <DropCap
-                      :ref="
-                        setTemplateRef(`element-${getElementIndex(element)}`)
-                      "
-                      :element="element as DropCapElement"
-                      :page-setup="score.pageSetup"
-                      :editable="!lyricsLocked"
-                      :class="[
-                        {
-                          selectedTextbox: isSelected(element),
-                        },
-                      ]"
-                      @select-single="selectedElement = element"
-                      @update:content="
-                        updateDropCapContent(element as DropCapElement, $event)
-                      "
-                    />
-                  </template>
-                  <template v-else-if="isImageBoxElement(element)">
-                    <span v-if="element.pageBreak" class="page-break-2"
-                      ><PhFile
-                    /></span>
-                    <span v-if="element.lineBreak" class="line-break-2"
-                      ><PhParagraph weight="fill"
-                    /></span>
-                    <ImageBox
-                      :ref="
-                        setTemplateRef(`element-${getElementIndex(element)}`)
-                      "
-                      :element="element as ImageBoxElement"
-                      :zoom="zoom"
-                      :print-mode="printMode"
-                      :class="[{ selectedImagebox: isSelected(element) }]"
-                      @select-single="selectedElement = element"
-                      @update:size="
-                        updateImageBox(selectedElement as ImageBoxElement, {
-                          imageWidth: $event.width,
-                          imageHeight: $event.height,
-                        })
-                      "
-                    />
-                  </template>
-                </div>
-                <span
-                  v-if="
-                    showAdjustmentRatios &&
-                    line.adjustmentRatio != null &&
-                    line.elements.length > 0
-                  "
-                  class="adjustment-ratio"
-                  :style="getAdjustmentRatioStyle(line)"
-                  >{{ line.adjustmentRatio.toFixed(2) }}</span
-                >
-              </div>
-              <template v-if="score.pageSetup.showFooter">
-                <div
-                  v-if="shouldShowFooterForPageIndex(pageIndex)"
-                  class="header-footer-hr"
-                  :style="
-                    getFooterHorizontalRuleStyle(
-                      getFooterForPageIndex(pageIndex).height,
-                    )
-                  "
-                ></div>
-                <template
-                  v-if="isRichTextBoxElement(getFooterForPageIndex(pageIndex))"
-                >
-                  <TextBoxRich
-                    :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
-                      getFooterForPageIndex(pageIndex).keyHelper
-                    }`"
-                    :ref="setTemplateRef(`footer-${pageIndex}`)"
-                    class="element-box"
-                    :element="
-                      getFooterForPageIndex(pageIndex) as RichTextBoxElement
-                    "
-                    :edit-mode="
-                      !printMode &&
-                      getFooterForPageIndex(pageIndex) ==
-                        selectedHeaderFooterElement
-                    "
-                    :metadata="getTokenMetadata(pageIndex)"
-                    :page-setup="score.pageSetup"
-                    :fonts="fonts"
-                    :selected="
-                      getFooterForPageIndex(pageIndex) ==
-                      selectedHeaderFooterElement
-                    "
-                    :style="footerStyle"
-                    @click="
-                      selectedHeaderFooterElement =
-                        getFooterForPageIndex(pageIndex)
-                    "
-                    @update="
-                      updateRichTextBox(
-                        getFooterForPageIndex(pageIndex) as RichTextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:height="
-                      updateRichTextBoxHeight(
-                        getFooterForPageIndex(pageIndex) as RichTextBoxElement,
-                        $event,
-                      )
-                    "
-                  />
-                </template>
-                <template
-                  v-else-if="isTextBoxElement(getFooterForPageIndex(pageIndex))"
-                >
-                  <TextBox
-                    :ref="setTemplateRef(`footer-${pageIndex}`)"
-                    :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
-                      getFooterForPageIndex(pageIndex).keyHelper
-                    }`"
-                    class="element-box"
-                    :element="
-                      getFooterForPageIndex(pageIndex) as TextBoxElement
-                    "
-                    :edit-mode="
-                      !printMode &&
-                      getFooterForPageIndex(pageIndex) ==
-                        selectedHeaderFooterElement
-                    "
-                    :metadata="getTokenMetadata(pageIndex)"
-                    :page-setup="score.pageSetup"
-                    :selected="
-                      getFooterForPageIndex(pageIndex) ==
-                      selectedHeaderFooterElement
-                    "
-                    :class="[
-                      {
-                        selectedTextbox:
+                      <TextBoxRich
+                        :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
+                          getFooterForPageIndex(pageIndex).keyHelper
+                        }`"
+                        :ref="setTemplateRef(`footer-${pageIndex}`)"
+                        class="element-box"
+                        :element="
+                          getFooterForPageIndex(pageIndex) as RichTextBoxElement
+                        "
+                        :edit-mode="
+                          !printMode &&
                           getFooterForPageIndex(pageIndex) ==
-                          selectedHeaderFooterElement,
-                      },
-                    ]"
-                    :style="footerStyle"
-                    @click="
-                      selectedHeaderFooterElement =
-                        getFooterForPageIndex(pageIndex)
-                    "
-                    @update="
-                      updateTextBox(
-                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                /></template>
-              </template>
-            </template>
+                            selectedHeaderFooterElement
+                        "
+                        :metadata="getTokenMetadata(pageIndex)"
+                        :page-setup="score.pageSetup"
+                        :fonts="fonts"
+                        :selected="
+                          getFooterForPageIndex(pageIndex) ==
+                          selectedHeaderFooterElement
+                        "
+                        :style="footerStyle"
+                        @click="
+                          selectedHeaderFooterElement =
+                            getFooterForPageIndex(pageIndex)
+                        "
+                        @update="
+                          updateRichTextBox(
+                            getFooterForPageIndex(
+                              pageIndex,
+                            ) as RichTextBoxElement,
+                            $event,
+                          )
+                        "
+                        @update:height="
+                          updateRichTextBoxHeight(
+                            getFooterForPageIndex(
+                              pageIndex,
+                            ) as RichTextBoxElement,
+                            $event,
+                          )
+                        "
+                      />
+                    </template>
+                    <template
+                      v-else-if="
+                        isTextBoxElement(getFooterForPageIndex(pageIndex))
+                      "
+                    >
+                      <TextBox
+                        :ref="setTemplateRef(`footer-${pageIndex}`)"
+                        :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
+                          getFooterForPageIndex(pageIndex).keyHelper
+                        }`"
+                        class="element-box"
+                        :element="
+                          getFooterForPageIndex(pageIndex) as TextBoxElement
+                        "
+                        :edit-mode="
+                          !printMode &&
+                          getFooterForPageIndex(pageIndex) ==
+                            selectedHeaderFooterElement
+                        "
+                        :metadata="getTokenMetadata(pageIndex)"
+                        :page-setup="score.pageSetup"
+                        :selected="
+                          getFooterForPageIndex(pageIndex) ==
+                          selectedHeaderFooterElement
+                        "
+                        :class="[
+                          {
+                            selectedTextbox:
+                              getFooterForPageIndex(pageIndex) ==
+                              selectedHeaderFooterElement,
+                          },
+                        ]"
+                        :style="footerStyle"
+                        @click="
+                          selectedHeaderFooterElement =
+                            getFooterForPageIndex(pageIndex)
+                        "
+                        @update="
+                          updateTextBox(
+                            getFooterForPageIndex(pageIndex)! as TextBoxElement,
+                            $event,
+                          )
+                        "
+                    /></template>
+                  </template>
+                </template>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </template>
+      </WorkspaceDockLayout>
     </div>
-    <template v-if="selectedTextBoxElement">
-      <ToolbarTextBox
-        :element="selectedTextBoxElement as TextBoxElement"
-        :fonts="fonts"
-        :page-setup="score.pageSetup"
-        @update="updateTextBox(selectedTextBoxElement, $event)"
-        @update:section-name="
-          updateScoreElementSectionName(
-            selectedTextBoxElement as TextBoxElement,
-            $event,
-          )
-        "
-        @insert:gorthmikon="insertGorthmikon"
-        @insert:pelastikon="insertPelastikon"
-      />
-    </template>
-    <template v-if="selectedRichTextBoxElement != null">
-      <ToolbarTextBoxRich
-        :element="selectedRichTextBoxElement"
-        :page-setup="score.pageSetup"
-        @update="updateRichTextBox(selectedRichTextBoxElement, $event)"
-        @update:section-name="
-          updateScoreElementSectionName(
-            selectedRichTextBoxElement as RichTextBoxElement,
-            $event,
-          )
-        "
-      />
-    </template>
-    <template
-      v-if="selectedElement != null && isDropCapElement(selectedElement)"
-    >
-      <ToolbarDropCap
-        :element="selectedElement as DropCapElement"
-        :fonts="fonts"
-        :page-setup="score.pageSetup"
-        @update="updateDropCap(selectedElement as DropCapElement, $event)"
-        @update:section-name="
-          updateScoreElementSectionName(
-            selectedElement as DropCapElement,
-            $event,
-          )
-        "
-      />
-    </template>
-    <template
-      v-if="selectedElement != null && isImageBoxElement(selectedElement)"
-    >
-      <ToolbarImageBox
-        :element="selectedElement as ImageBoxElement"
-        :page-setup="score.pageSetup"
-        @update="updateImageBox(selectedElement as ImageBoxElement, $event)"
-      />
-    </template>
-    <template v-if="selectedLyrics != null">
-      <ToolbarLyrics
-        :element="selectedLyrics"
-        :fonts="fonts"
-        @update="updateNoteAndSave(selectedLyrics as NoteElement, $event)"
-        @insert:special-character="insertSpecialCharacter"
-      />
-    </template>
-    <template
-      v-if="selectedElement != null && isModeKeyElement(selectedElement)"
-    >
-      <ToolbarModeKey
-        :element="selectedElement as ModeKeyElement"
-        :page-setup="score.pageSetup"
-        @update="updateModeKey(selectedElement as ModeKeyElement, $event)"
-        @update:tempo="
-          setModeKeyTempo(selectedElement as ModeKeyElement, $event)
-        "
-        @update:section-name="
-          updateScoreElementSectionName(
-            selectedElement as ModeKeyElement,
-            $event,
-          )
-        "
-        @open-mode-key-dialog="openModeKeyDialog"
-      />
-    </template>
-    <template
+    <div
       v-if="
-        selectedElement != null &&
-        selectedElementForNeumeToolbar != null &&
-        isSyllableElement(selectedElementForNeumeToolbar)
+        inspectorContext.kind === 'neume' ||
+        inspectorContext.kind === 'martyria' ||
+        inspectorContext.kind === 'mode-key' ||
+        inspectorContext.kind === 'lyrics' ||
+        inspectorContext.kind === 'text-box' ||
+        inspectorContext.kind === 'drop-cap'
       "
+      class="contextual-toolbar-panel"
     >
-      <ToolbarNeume
-        :key="`toolbar-neume-${selectedWorkspace.id}-${selectedElement.id}`"
-        :element="selectedElementForNeumeToolbar as NoteElement"
-        :page-setup="score.pageSetup"
-        :neume-keyboard="neumeKeyboard"
-        :inner-neume="toolbarInnerNeume"
-        @update="
-          updateNoteAndSave(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:inner-neume="toolbarInnerNeume = $event"
-        @update:accidental="
-          setAccidental(selectedElementForNeumeToolbar as NoteElement, $event)
-        "
-        @update:secondary-accidental="
-          setSecondaryAccidental(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:tertiary-accidental="
-          setTertiaryAccidental(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:fthora="
-          setFthoraNote(selectedElementForNeumeToolbar as NoteElement, $event)
-        "
-        @update:secondary-fthora="
-          setSecondaryFthora(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:tertiary-fthora="
-          setTertiaryFthora(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:gorgon="
-          setGorgon(selectedElementForNeumeToolbar as NoteElement, $event)
-        "
-        @update:secondary-gorgon="
-          setSecondaryGorgon(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:klasma="
-          setKlasma(selectedElementForNeumeToolbar as NoteElement)
-        "
-        @update:time="
-          setTimeNeume(selectedElementForNeumeToolbar as NoteElement, $event)
-        "
-        @update:expression="
-          setVocalExpression(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:measure-bar="
-          setMeasureBarNote(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:measure-number="
-          setMeasureNumber(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:ison="
-          setIson(selectedElementForNeumeToolbar as NoteElement, $event)
-        "
-        @update:tie="
-          setTie(selectedElementForNeumeToolbar as NoteElement, $event)
-        "
-        @update:section-name="
-          updateScoreElementSectionName(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @open-syllable-positioning-dialog="openSyllablePositioningDialog"
-      />
-    </template>
-    <template
-      v-if="selectedElement != null && isMartyriaElement(selectedElement)"
-    >
-      <ToolbarMartyria
-        :element="selectedElement as MartyriaElement"
-        :page-setup="score.pageSetup"
-        :neume-keyboard="neumeKeyboard"
-        @update="updateMartyria(selectedElement as MartyriaElement, $event)"
-        @update:fthora="
-          setFthoraMartyria(selectedElement as MartyriaElement, $event)
-        "
-        @update:tempo-left="
-          setMartyriaTempoLeft(selectedElement as MartyriaElement, $event)
-        "
-        @update:tempo="
-          setMartyriaTempo(selectedElement as MartyriaElement, $event)
-        "
-        @update:tempo-right="
-          setMartyriaTempoRight(selectedElement as MartyriaElement, $event)
-        "
-        @update:measure-bar="
-          setMeasureBarMartyria(selectedElement as MartyriaElement, $event)
-        "
-        @update:quantitative-neume="
-          setMartyriaQuantitativeNeume(
-            selectedElement as MartyriaElement,
-            $event,
-          )
-        "
-        @update:section-name="
-          updateScoreElementSectionName(
-            selectedElement as MartyriaElement,
-            $event,
-          )
-        "
-      />
-    </template>
-    <template v-if="selectedElement != null && isTempoElement(selectedElement)">
-      <ToolbarTempo
-        :element="selectedElement as TempoElement"
-        :page-setup="score.pageSetup"
-        @update="updateTempo(selectedElement as TempoElement, $event)"
-        @update:section-name="
-          updateScoreElementSectionName(selectedElement as TempoElement, $event)
-        "
-      />
-    </template>
-    <ToolbarLyricManager
-      v-if="lyricManagerIsOpen"
-      :lyrics="lyrics"
-      :locked="lyricsLocked"
-      @update:locked="updateLyricsLocked"
-      @update:lyrics="updateStaffLyrics"
-      @assign-accepts-lyrics="assignAcceptsLyricsFromCurrentLyrics"
-      @close="closeLyricManager"
-      @click="
-        selectedElement = null;
-        selectedLyrics = null;
-      "
-    ></ToolbarLyricManager>
+      <template v-if="inspectorContext.kind === 'neume'">
+        <ToolbarNeume
+          :key="`toolbar-neume-${selectedWorkspace.id}-${inspectorContext.element.id}`"
+          :element="inspectorContext.element"
+          :page-setup="score.pageSetup"
+          :neume-keyboard="neumeKeyboard"
+          :inner-neume="toolbarInnerNeume"
+          @update="updateNoteAndSave(inspectorContext.element, $event)"
+          @update:inner-neume="toolbarInnerNeume = $event"
+          @update:accidental="setAccidental(inspectorContext.element, $event)"
+          @update:secondary-accidental="
+            setSecondaryAccidental(inspectorContext.element, $event)
+          "
+          @update:tertiary-accidental="
+            setTertiaryAccidental(inspectorContext.element, $event)
+          "
+          @update:fthora="setFthoraNote(inspectorContext.element, $event)"
+          @update:secondary-fthora="
+            setSecondaryFthora(inspectorContext.element, $event)
+          "
+          @update:tertiary-fthora="
+            setTertiaryFthora(inspectorContext.element, $event)
+          "
+          @update:gorgon="setGorgon(inspectorContext.element, $event)"
+          @update:secondary-gorgon="
+            setSecondaryGorgon(inspectorContext.element, $event)
+          "
+          @update:klasma="setKlasma(inspectorContext.element)"
+          @update:time="setTimeNeume(inspectorContext.element, $event)"
+          @update:expression="
+            setVocalExpression(inspectorContext.element, $event)
+          "
+          @update:measure-bar="
+            setMeasureBarNote(inspectorContext.element, $event)
+          "
+          @update:measure-number="
+            setMeasureNumber(inspectorContext.element, $event)
+          "
+          @update:ison="setIson(inspectorContext.element, $event)"
+          @update:tie="setTie(inspectorContext.element, $event)"
+        />
+      </template>
+      <template v-else-if="inspectorContext.kind === 'martyria'">
+        <ToolbarMartyria
+          :element="inspectorContext.element"
+          :page-setup="score.pageSetup"
+          :neume-keyboard="neumeKeyboard"
+          @update="updateMartyria(inspectorContext.element, $event)"
+          @update:fthora="setFthoraMartyria(inspectorContext.element, $event)"
+          @update:tempo-left="
+            setMartyriaTempoLeft(inspectorContext.element, $event)
+          "
+          @update:tempo="setMartyriaTempo(inspectorContext.element, $event)"
+          @update:tempo-right="
+            setMartyriaTempoRight(inspectorContext.element, $event)
+          "
+          @update:measure-bar="
+            setMeasureBarMartyria(inspectorContext.element, $event)
+          "
+          @update:quantitative-neume="
+            setMartyriaQuantitativeNeume(inspectorContext.element, $event)
+          "
+        />
+      </template>
+      <template v-else-if="inspectorContext.kind === 'mode-key'">
+        <ToolbarModeKey
+          :element="inspectorContext.element"
+          @update="updateModeKey(inspectorContext.element, $event)"
+          @update:tempo="setModeKeyTempo(inspectorContext.element, $event)"
+        />
+      </template>
+      <template v-else-if="inspectorContext.kind === 'lyrics'">
+        <ToolbarLyrics
+          :element="inspectorContext.element"
+          :fonts="fonts"
+          @update="updateNoteAndSave(inspectorContext.element, $event)"
+          @insert:special-character="insertSpecialCharacter"
+        />
+      </template>
+      <template v-else-if="inspectorContext.kind === 'text-box'">
+        <ToolbarTextBox
+          :element="inspectorContext.element"
+          :fonts="fonts"
+          @update="updateTextBox(inspectorContext.element, $event)"
+          @insert:gorthmikon="insertGorthmikon"
+          @insert:pelastikon="insertPelastikon"
+        />
+      </template>
+      <template v-else-if="inspectorContext.kind === 'drop-cap'">
+        <ToolbarDropCap
+          :element="inspectorContext.element"
+          :fonts="fonts"
+          @update="updateDropCap(inspectorContext.element, $event)"
+        />
+      </template>
+    </div>
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
       v-model:open="modeKeyDialogIsOpen"
@@ -7039,8 +7857,12 @@ function renderTabLabel(tab: Tab) {
 .page-container {
   display: flex;
   flex-direction: column;
-  overflow: auto;
-  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background-color: #ddd;
 }
 
 :deep(.vue3-tabs-chrome) {
@@ -7079,7 +7901,13 @@ function renderTabLabel(tab: Tab) {
 }
 
 :deep(.vue3-tabs-chrome .tabs-after) {
+  position: relative;
+  z-index: 1;
+  display: inline-flex !important;
+  right: auto !important;
+  width: max-content !important;
   height: 100%;
+  overflow: visible;
 }
 
 .workspace-tab-container {
@@ -7087,24 +7915,37 @@ function renderTabLabel(tab: Tab) {
 }
 
 .workspace-tab-new-button {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   min-width: 2rem;
+  height: 100%;
 
+  color: inherit;
   font-size: 1.25rem;
   font-weight: bold;
-
   background-color: var(--color-legacy-chrome-tab-action);
-
   border: none;
-
   cursor: default;
+}
+
+.workspace-tab-new-button:hover {
+  background-color: var(--color-legacy-chrome-hover);
+}
+
+.contextual-toolbar-panel {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  background-color: var(--color-legacy-chrome-menu-surface);
 }
 
 .page-background {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: 2rem 1rem;
   background-color: #ddd;
 
@@ -7135,18 +7976,22 @@ function renderTabLabel(tab: Tab) {
 
 .content {
   display: flex;
+  position: relative;
   flex: 1;
-  overflow: auto;
-}
-
-.left-panel {
-  display: flex;
-  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .neume-selector {
   flex: 1;
   min-height: 0;
+}
+
+.neume-combo-selector {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 
 .mode-header {
@@ -7306,6 +8151,12 @@ function renderTabLabel(tab: Tab) {
 }
 
 @media print {
+  .content {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
   .page,
   .page * {
     visibility: visible;
@@ -7314,6 +8165,16 @@ function renderTabLabel(tab: Tab) {
   .page-background {
     display: block;
     padding: 0;
+  }
+
+  .page-container {
+    position: static !important;
+    z-index: auto;
+    display: block;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible;
+    visibility: visible !important;
   }
 
   .page {
@@ -7357,18 +8218,10 @@ function renderTabLabel(tab: Tab) {
     opacity: 1;
   }
 
-  .left-panel,
   .workspace-tab-container,
-  .lyrics-toolbar,
-  .lyric-manager-toolbar,
+  .workspace-tab-new-button,
+  .contextual-toolbar-panel,
   .main-toolbar,
-  .martyria-toolbar,
-  .mode-key-toolbar,
-  .neume-toolbar,
-  .drop-cap-toolbar,
-  .tempo-toolbar,
-  .text-box-toolbar,
-  .image-box-toolbar,
   .search-text-container,
   .section-name,
   .section-name-2,

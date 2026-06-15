@@ -3,6 +3,7 @@
     "alignLeft": "Στοίχιση Αριστερά",
     "alignCenter": "Στοίχιση στο Κέντρο",
     "alignRight": "Στοίχιση Δεξιά",
+    "alignment": "Στοίχιση",
     "bpm": "BPM",
     "chooseColor": "Επιλογή χρώματος",
     "fthoraNote": "Φθόγγος Φθοράς",
@@ -52,6 +53,19 @@
   },
   "dropCap": {
     "lineSpan": "Έκταση Γραμμών"
+  },
+  "properties": {
+    "noProperties": "Δεν υπάρχουν ιδιότητες",
+    "nothingToEdit": "Δεν υπάρχει τίποτα για επεξεργασία"
+  },
+  "selection": {
+    "elements": "Στοιχεία",
+    "lineBreak": "Αλλαγή Γραμμής",
+    "center": "Κέντρο",
+    "justify": "Πλήρης Στοίχιση",
+    "pageBreak": "Αλλαγή Σελίδας",
+    "noSelection": "Καμία επιλογή",
+    "nothingSelected": "Δεν έχει επιλεγεί τίποτα"
   },
   "imageBox": {
     "maintainAspectRatio": "Διατήρηση Αναλογίας",
@@ -105,5 +119,11 @@
     "offsetYTop": "Άνω Μετατόπιση Y",
     "offsetYBottom": "Κάτω Μετατόπιση Y",
     "fillWidth": "Πλήρες Πλάτος"
+  },
+  "workspace": {
+    "dockPane": "Προσάρτηση Πλαισίου",
+    "floatPane": "Αποδέσμευση Πλαισίου",
+    "hidePane": "Απόκρυψη Πλαισίου",
+    "showPane": "Εμφάνιση Πλαισίου"
   }
 }

@@ -154,11 +154,6 @@
             {{ $t(($) => $.menu.edit.find, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
-          <MenubarItem @select="onClickLyrics">
-            <PhTextT />
-            {{ $t(($) => $.menu.edit.lyrics, { ns: 'menu' }) }}
-          </MenubarItem>
-          <MenubarSeparator />
           <MenubarItem @select="onClickPreferences">
             <PhGearFine />
             {{ $t(($) => $.menu.edit.preferences, { ns: 'menu' }) }}
@@ -223,6 +218,57 @@
               </MenubarItem>
             </MenubarSubContent>
           </MenubarSub>
+        </MenubarContent>
+      </MenubarMenu>
+
+      <MenubarMenu>
+        <MenubarTrigger>
+          {{ $t(($) => $.menu.view.root, { ns: 'menu' }) }}
+        </MenubarTrigger>
+        <MenubarContent class="bg-legacy-chrome-menu-surface">
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility['neume-selector']"
+            @update:model-value="
+              onTogglePaneClick('neume-selector', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.neumeSelector, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility['common-combos']"
+            @update:model-value="
+              onTogglePaneClick('common-combos', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.commonCombos, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility.properties"
+            @update:model-value="
+              onTogglePaneClick('properties', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.properties, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility.selection"
+            @update:model-value="
+              onTogglePaneClick('selection', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.selection, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility.lyrics"
+            @update:model-value="onTogglePaneClick('lyrics', $event === true)"
+          >
+            {{ $t(($) => $.menu.view.lyrics, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarSeparator />
+          <MenubarItem @select="onResetPaneLayoutClick">
+            <PhArrowCounterClockwise />
+            {{ $t(($) => $.menu.view.resetLayout, { ns: 'menu' }) }}
+          </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
 
@@ -326,18 +372,20 @@ import {
   PhScroll,
   PhTextAa,
   PhTextbox,
-  PhTextT,
   PhTrayArrowDown,
   PhWaveSine,
   PhX,
   PhXCircle,
 } from '@phosphor-icons/vue';
+import { useTranslation } from 'i18next-vue';
 import JSZip from 'jszip';
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { toast } from 'vue-sonner';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Menubar,
+  MenubarCheckboxItem,
   MenubarContent,
   MenubarItem,
   MenubarMenu,
@@ -354,21 +402,31 @@ import type {
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
+  FileMenuViewPaneVisibilityArgs,
 } from '@/ipc/ipcChannels';
 import {
   CloseWorkspacesDisposition,
   IpcMainChannels,
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
+import type {
+  WorkspacePaneId,
+  WorkspacePaneVisibility,
+} from '@/models/WorkspacePane';
 import {
   type BrowserRecentFile,
   BrowserRecentFilesService,
 } from '@/services/BrowserRecentFilesService';
 
+const props = defineProps<{
+  paneVisibility: WorkspacePaneVisibility;
+}>();
+
 const fileSelector = useTemplateRef<HTMLInputElement>('file');
 const imageFileSelector = useTemplateRef<HTMLInputElement>('imagefile');
 const ocrFileSelector = useTemplateRef<HTMLInputElement>('ocrfile');
 const recentFilesService = new BrowserRecentFilesService();
+const { t } = useTranslation();
 
 const accept = '.byz,.byzx';
 const acceptImage = '.bmp,.jpg,.jpeg,.jpe,.png,.gif,.svg,.webp,.ico';
@@ -381,6 +439,18 @@ const recentFiles = ref<BrowserRecentFile[]>([]);
 const openRecentIsEnabled = computed(
   () => openRecentIsSupported && recentFiles.value.length > 0,
 );
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return fallback;
+}
 
 onMounted(() => {
   // If using the browser, then we need to hook into the key down
@@ -432,6 +502,10 @@ function onKeyDown(event: KeyboardEvent) {
       onClickPreferences();
       event.preventDefault();
       return;
+    } else if (event.code === 'KeyL') {
+      onTogglePaneClick('lyrics');
+      event.preventDefault();
+      return;
     }
   }
 }
@@ -442,25 +516,51 @@ function onClickNew() {
 
 async function onClickOpen() {
   if (openRecentIsSupported) {
+    let handle: Awaited<
+      ReturnType<typeof recentFilesService.showOpenFilePicker>
+    > | null = null;
+
     try {
-      const handle = await recentFilesService.showOpenFilePicker();
-
-      if (handle == null) {
-        return;
-      }
-
-      const file = await handle.getFile();
-      await openScoreFile(file);
-      await recentFilesService.add(handle);
-      await loadRecentFiles();
-      return;
+      handle = await recentFilesService.showOpenFilePicker();
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         return;
       }
 
       console.error(error);
+      fileSelector.value!.click();
+      return;
     }
+
+    if (handle == null) {
+      return;
+    }
+
+    try {
+      const file = await handle.getFile();
+      await openScoreFile(file);
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
+        {
+          description: getErrorMessage(
+            error,
+            t(($) => $.toast.editor.openFailedDescription, { ns: 'toast' }),
+          ),
+        },
+      );
+      return;
+    }
+
+    try {
+      await recentFilesService.add(handle);
+      await loadRecentFiles();
+    } catch (error) {
+      console.error(error);
+    }
+
+    return;
   }
 
   fileSelector.value!.click();
@@ -472,9 +572,27 @@ async function onClickOpenRecent(id: string) {
 
     if (recentFile != null) {
       await openScoreFile(recentFile.file, recentFile.filePath);
+    } else {
+      toast.error(
+        t(($) => $.toast.editor.openRecentFailed, { ns: 'toast' }),
+        {
+          description: t(($) => $.toast.editor.openRecentUnavailable, {
+            ns: 'toast',
+          }),
+        },
+      );
     }
   } catch (error) {
     console.error(error);
+    toast.error(
+      t(($) => $.toast.editor.openRecentFailed, { ns: 'toast' }),
+      {
+        description: getErrorMessage(
+          error,
+          t(($) => $.toast.editor.openRecentReadFailed, { ns: 'toast' }),
+        ),
+      },
+    );
   } finally {
     await loadRecentFiles();
   }
@@ -536,6 +654,15 @@ async function onSelectFile() {
       await openScoreFile(files[0]);
     } catch (error) {
       console.error(error);
+      toast.error(
+        t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
+        {
+          description: getErrorMessage(
+            error,
+            t(($) => $.toast.editor.openFailedDescription, { ns: 'toast' }),
+          ),
+        },
+      );
     } finally {
       resetFileSelector(fileSelector.value);
     }
@@ -668,8 +795,15 @@ function onClickFind() {
   EventBus.$emit(IpcMainChannels.FileMenuFind);
 }
 
-function onClickLyrics() {
-  EventBus.$emit(IpcMainChannels.FileMenuLyrics);
+function onTogglePaneClick(paneId: WorkspacePaneId, visible?: boolean) {
+  EventBus.$emit(IpcMainChannels.FileMenuViewPaneVisibility, {
+    paneId,
+    visible,
+  } as FileMenuViewPaneVisibilityArgs);
+}
+
+function onResetPaneLayoutClick() {
+  EventBus.$emit(IpcMainChannels.FileMenuViewResetPaneLayout);
 }
 
 function onClickPreferences() {

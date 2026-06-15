@@ -1,66 +1,22 @@
 <template>
-  <div class="drop-cap-toolbar">
-    <Checkbox
-      id="toolbar-drop-cap-use-default-style"
-      class="bg-background"
-      :model-value="element.useDefaultStyle"
-      @update:model-value="
-        $emit('update', {
-          useDefaultStyle: $event === true,
-        } as Partial<DropCapElement>)
-      "
-    />
-    <Label for="toolbar-drop-cap-use-default-style" class="ml-2">{{
-      $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
-    }}</Label>
-    <span class="divider" />
+  <Toolbar class="drop-cap-toolbar h-auto w-full gap-0 border-0 p-1" loop>
     <template v-if="!element.useDefaultStyle">
       <FontCombobox
         :model-value="element.fontFamily"
         :options="dropCapFontFamilies"
         @update:model-value="
-          $emit('update', {
-            fontFamily: $event,
-          } as Partial<DropCapElement>)
+          $emit('update', { fontFamily: $event } as Partial<DropCapElement>)
         "
       />
-      <span class="space"></span>
       <InputFontSize
         id="toolbar-drop-cap-font-size"
         :max="500"
         :model-value="element.fontSize"
         @update:model-value="
-          $emit('update', {
-            fontSize: $event,
-          } as Partial<DropCapElement>)
+          $emit('update', { fontSize: $event } as Partial<DropCapElement>)
         "
       />
-      <span class="space" style="text-align: center">&#47;</span>
-      <InputUnit
-        id="toolbar-drop-cap-line-height"
-        unit="unitless"
-        :nullable="true"
-        :min="0"
-        :step="0.1"
-        :model-value="element.lineHeight"
-        :format-options="fraction2FormatOptions"
-        placeholder="auto"
-        @update:model-value="
-          $emit('update', {
-            lineHeight: $event,
-          } as Partial<DropCapElement>)
-        "
-      />
-      <span class="space"></span>
-      <ColorPicker
-        :model-value="element.color"
-        @update:model-value="
-          $emit('update', {
-            color: $event,
-          } as Partial<DropCapElement>)
-        "
-      />
-      <span class="space"></span>
+      <ToolbarSeparator />
       <ToggleGroup
         type="multiple"
         variant="outline"
@@ -84,73 +40,8 @@
           <PhTextItalic class="h-4 w-4" />
         </ToggleGroupItem>
       </ToggleGroup>
-      <span class="space"></span>
-      <Label for="toolbar-drop-cap-outline" class="mr-2">{{
-        $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-      }}</Label>
-      <InputStrokeWidth
-        id="toolbar-drop-cap-outline"
-        :model-value="element.strokeWidth"
-        @update:model-value="
-          $emit('update', {
-            strokeWidth: $event,
-          } as Partial<DropCapElement>)
-        "
-      />
-      <span class="divider" />
-      <Label for="toolbar-drop-cap-line-span" class="mr-2">{{
-        $t(($) => $.toolbar.dropCap.lineSpan, { ns: 'toolbar' })
-      }}</Label>
-      <InputUnit
-        id="toolbar-drop-cap-line-span"
-        unit="unitless"
-        :min="1"
-        :max="10"
-        :step="1"
-        :model-value="element.lineSpan"
-        :format-options="fraction0FormatOptions"
-        @update:model-value="
-          $emit('update', {
-            lineSpan: $event,
-          } as Partial<DropCapElement>)
-        "
-      />
-      <span class="divider" />
     </template>
-    <Label for="toolbar-drop-cap-width" class="mr-2">{{
-      $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
-    }}</Label>
-    <InputUnit
-      id="toolbar-drop-cap-width"
-      unit="pt"
-      :nullable="true"
-      :min="4"
-      :max="maxWidth"
-      :step="0.5"
-      :model-value="element.customWidth"
-      :format-options="fraction1FormatOptions"
-      placeholder="auto"
-      @update:model-value="
-        $emit('update', {
-          customWidth: $event,
-        } as Partial<DropCapElement>)
-      "
-    />
-
-    <span class="space"></span>
-    <Label for="toolbar-drop-cap-section-name" class="mr-2">{{
-      $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-    }}</Label>
-    <Input
-      id="toolbar-drop-cap-section-name"
-      class="w-auto bg-background"
-      type="text"
-      :model-value="element.sectionName ?? ''"
-      @change="
-        $emit('update:sectionName', ($event.target as HTMLInputElement).value)
-      "
-    />
-  </div>
+  </Toolbar>
 </template>
 
 <script setup lang="ts">
@@ -158,31 +49,15 @@ import { PhTextB, PhTextItalic } from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
-import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
-import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import InputUnit from '@/components/InputUnit.vue';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Toolbar, ToolbarSeparator } from '@/components/ui/toolbar';
 import type { DropCapElement } from '@/models/Element';
-import type { PageSetup } from '@/models/PageSetup';
-import {
-  fraction0FormatOptions,
-  fraction1FormatOptions,
-  fraction2FormatOptions,
-} from '@/utils/numberFormatOptions';
-import { Unit } from '@/utils/Unit';
 
 const props = defineProps({
   element: {
     type: Object as PropType<DropCapElement>,
-    required: true,
-  },
-  pageSetup: {
-    type: Object as PropType<PageSetup>,
     required: true,
   },
   fonts: {
@@ -191,7 +66,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['update', 'update:sectionName']);
+const emit = defineEmits(['update']);
 
 const bold = computed(() => props.element.fontWeight === '700');
 const italic = computed(() => props.element.fontStyle === 'italic');
@@ -208,8 +83,6 @@ const dropCapFontFamilies = computed(() => [
   ...props.fonts,
 ]);
 
-const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
-
 function onStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
@@ -223,13 +96,8 @@ function onStyleValuesChanged(value: unknown) {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .drop-cap-toolbar {
-  display: flex;
-  align-items: center;
   flex-wrap: wrap;
-
   background-color: var(--color-legacy-chrome-menu-surface);
-
-  padding: 0.25rem;
 
   --btn-size: 32px;
 }
@@ -269,24 +137,14 @@ function onStyleValuesChanged(value: unknown) {
 }
 
 .icon-btn img {
-  height: var(--btn-icon-size, var(--btn-size));
+  height: var(--btn-size);
   max-width: none;
-  width: var(--btn-icon-size, var(--btn-size));
+  width: var(--btn-size);
 }
 
 .icon-btn[aria-disabled='true'],
 .icon-btn:disabled {
   cursor: not-allowed;
   opacity: 0.5;
-}
-
-.divider {
-  height: 32px;
-  border-right: 1px solid var(--color-legacy-chrome-divider);
-  margin: 0 0.5rem;
-}
-
-.space {
-  width: 16px;
 }
 </style>

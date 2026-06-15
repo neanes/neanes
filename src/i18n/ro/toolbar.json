@@ -3,6 +3,7 @@
     "alignLeft": "Aliniere stânga",
     "alignCenter": "Aliniere centru",
     "alignRight": "Aliniere dreapta",
+    "alignment": "Aliniere",
     "bpm": "BPM",
     "chooseColor": "Alege culoarea",
     "fthoraNote": "Nota ftoralei",
@@ -52,6 +53,19 @@
   },
   "dropCap": {
     "lineSpan": "Linii de coborâre"
+  },
+  "properties": {
+    "noProperties": "Nicio proprietate",
+    "nothingToEdit": "Nimic de editat"
+  },
+  "selection": {
+    "elements": "Elemente",
+    "lineBreak": "Întrerupere de linie",
+    "center": "Centru",
+    "justify": "Justificat",
+    "pageBreak": "Întrerupere de pagină",
+    "noSelection": "Nicio selecție",
+    "nothingSelected": "Nimic selectat"
   },
   "imageBox": {
     "maintainAspectRatio": "Menține raportul de aspect",
@@ -105,5 +119,11 @@
     "offsetYTop": "Offset Y sus",
     "offsetYBottom": "Offset Y jos",
     "fillWidth": "Umple lățimea"
+  },
+  "workspace": {
+    "dockPane": "Andochează panoul",
+    "floatPane": "Mută panoul în fereastră flotantă",
+    "hidePane": "Ascunde panoul",
+    "showPane": "Afișează panoul"
   }
 }

@@ -31,13 +31,13 @@
     "copyFormat": "Salin Format",
     "pasteFormat": "Tempel Format",
     "find": "Cari",
-    "lyrics": "Lirik",
     "preferences": "Preferensi"
   },
   "insert": {
     "root": "Sisipkan",
     "alternateLine": "Baris Alternatif",
     "annotation": "Anotasi",
+    "dropCap": "Huruf Awal Besar",
     "dropCapBefore": "Huruf Awal Besar Sebelum",
     "dropCapAfter": "Huruf Awal Besar Setelah",
     "textBox": "Kotak Teks",
@@ -54,7 +54,13 @@
     "copyElementLink": "Salin Tautan Elemen"
   },
   "view": {
-    "root": "Tampilan (Debug)",
+    "root": "Tampilan",
+    "neumeSelector": "Pemilih Neuma",
+    "commonCombos": "Kombinasi Umum",
+    "properties": "Properti",
+    "selection": "Pilihan",
+    "lyrics": "Lirik",
+    "resetLayout": "Atur Ulang Tata Letak",
     "generateTestFiles": "Hasilkan File Uji (Debug)"
   },
   "help": {

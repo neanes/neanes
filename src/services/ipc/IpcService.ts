@@ -1,10 +1,13 @@
 import type {
+  ClipboardReplyArgs,
   ExportPageAsImageArgs,
+  ExportPageAsImageReplyArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
+  ExportWorkspaceReplyArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
@@ -45,7 +48,9 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public async exportWorkspaceAsPdf(workspace: Workspace) {
+  public async exportWorkspaceAsPdf(
+    workspace: Workspace,
+  ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsPdf,
       {
@@ -78,7 +83,7 @@ export class IpcService implements IIpcService {
   public async exportPageAsImage(
     filePath: string,
     data: string,
-  ): Promise<boolean> {
+  ): Promise<ExportPageAsImageReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportPageAsImage,
       {
@@ -88,7 +93,10 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public async exportWorkspaceAsHtml(workspace: Workspace, data: string) {
+  public async exportWorkspaceAsHtml(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsHtml,
       {
@@ -104,7 +112,7 @@ export class IpcService implements IIpcService {
     data: string,
     compressed: boolean,
     openFolder: boolean,
-  ) {
+  ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsMusicXml,
       {
@@ -117,7 +125,10 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public async exportWorkspaceAsLatex(workspace: Workspace, data: string) {
+  public async exportWorkspaceAsLatex(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsLatex,
       {
@@ -179,7 +190,7 @@ export class IpcService implements IIpcService {
     return await window.ipcRenderer.invoke(IpcRendererChannels.CancelExit);
   }
 
-  public async paste(): Promise<void> {
+  public async paste(): Promise<ClipboardReplyArgs> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.Paste);
   }
 }

@@ -1,5 +1,6 @@
 import type { PageSize } from '@/models/PageSetup';
 import type { Score } from '@/models/save/v1/Score';
+import type { WorkspacePaneId } from '@/models/WorkspacePane';
 
 export enum IpcMainChannels {
   UpdateAvailable = 'UpdateAvailable',
@@ -35,7 +36,8 @@ export enum IpcMainChannels {
 
   FileMenuFind = 'FileMenuFind',
 
-  FileMenuLyrics = 'FileMenuLyrics',
+  FileMenuViewPaneVisibility = 'FileMenuViewPaneVisibility',
+  FileMenuViewResetPaneLayout = 'FileMenuViewResetPaneLayout',
 
   FileMenuPreferences = 'FileMenuPreferences',
   OpenAboutDialog = 'OpenAboutDialog',
@@ -67,6 +69,7 @@ export enum IpcRendererChannels {
 
   SetCanUndo = 'SetCanUndo',
   SetCanRedo = 'SetCanRedo',
+  SetWorkspacePaneVisibility = 'SetWorkspacePaneVisibility',
 
   ShowMessageBox = 'ShowMessageBox',
   ShowItemInFolder = 'ShowItemInFolder',
@@ -159,6 +162,11 @@ export interface FileMenuInsertTextboxArgs {
   inline: boolean;
 }
 
+export interface FileMenuViewPaneVisibilityArgs {
+  paneId: WorkspacePaneId;
+  visible?: boolean;
+}
+
 export interface SaveWorkspaceArgs {
   filePath: string;
   data: Score;
@@ -173,10 +181,21 @@ export interface SaveWorkspaceAsArgs {
 export interface SaveWorkspaceAsReplyArgs {
   filePath: string;
   success: boolean;
+  canceled?: boolean;
+  errorMessage?: string;
 }
 
 export interface SaveWorkspaceReplyArgs {
   success: boolean;
+  canceled?: boolean;
+  errorMessage?: string;
+}
+
+export interface ExportWorkspaceReplyArgs {
+  success: boolean;
+  canceled?: boolean;
+  filePath?: string;
+  errorMessage?: string;
 }
 
 export interface ExportWorkspaceAsPdfArgs {
@@ -217,11 +236,25 @@ export interface ExportWorkspaceAsImageArgs {
 export interface ExportWorkspaceAsImageReplyArgs {
   filePath: string;
   success: boolean;
+  canceled?: boolean;
+  errorMessage?: string;
 }
 
 export interface ExportPageAsImageArgs {
   filePath: string;
   data: string;
+}
+
+export interface ExportPageAsImageReplyArgs {
+  success: boolean;
+  canceled?: boolean;
+  skipped?: boolean;
+  errorMessage?: string;
+}
+
+export interface ClipboardReplyArgs {
+  success: boolean;
+  errorMessage?: string;
 }
 
 export interface PrintWorkspaceArgs {

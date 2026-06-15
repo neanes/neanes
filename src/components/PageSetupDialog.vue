@@ -1901,13 +1901,12 @@ function getPreviewGapStyle(
       ? fontService.getMartyriaGlue(form.value.neumeDefaultFontFamily)
       : fontService.getStandardGlue(form.value.neumeDefaultFontFamily);
 
-  const gapWidth = form.value.neumeDefaultFontSize * glue.width;
+  const gapWidth =
+    form.value.neumeDefaultFontSize * glue.width +
+    form.value.neumeDefaultSpacing;
 
   return {
-    marginInlineEnd:
-      numericIndex < previewNeumes.value.length - 1
-        ? withZoom(gapWidth)
-        : undefined,
+    marginInlineStart: numericIndex > 0 ? withZoom(gapWidth) : undefined,
   };
 }
 
@@ -2007,7 +2006,8 @@ const neumeBulkColor = ref('#000000');
 const previewNeumes = computed(() => {
   const measureBarSpacing =
     form.value.neumeDefaultFontSize *
-    fontService.getStandardGlue(form.value.neumeDefaultFontFamily).width;
+      fontService.getStandardGlue(form.value.neumeDefaultFontFamily).width +
+    form.value.neumeDefaultSpacing;
 
   return [
     {
@@ -2024,7 +2024,7 @@ const previewNeumes = computed(() => {
       rootSign: 'DeltaDotted',
       scale: 'Diatonic',
       fthora: 'HardChromaticPa_Top',
-      verticalOffset: 0,
+      verticalOffset: form.value.martyriaVerticalOffset,
     },
   ] as any;
 });

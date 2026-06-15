@@ -31,7 +31,6 @@
     "copyFormat": "Αντιγραφή Μορφής",
     "pasteFormat": "Επικόλληση Μορφής",
     "find": "Αναζήτηση",
-    "lyrics": "Στίχοι",
     "preferences": "Προτιμήσεις"
   },
   "insert": {
@@ -60,6 +59,7 @@
     "commonCombos": "Συνήθεις Συνδυασμοί",
     "properties": "Ιδιότητες",
     "selection": "Επιλογή",
+    "lyrics": "Στίχοι",
     "resetLayout": "Επαναφορά Διάταξης",
     "generateTestFiles": "Δημιουργία Αρχείων Δοκιμής (Εντοπισμός Σφαλμάτων)"
   },

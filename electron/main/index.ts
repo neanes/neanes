@@ -1837,7 +1837,7 @@ function createMenu() {
         ),
         createPaneMenuItem(
           'lyrics',
-          i18next.t(($) => $.menu.edit.lyrics),
+          i18next.t(($) => $.menu.view.lyrics),
           'CmdOrCtrl+L',
         ),
         { type: 'separator' },

@@ -31,7 +31,6 @@
     "copyFormat": "Copiază formatul",
     "pasteFormat": "Lipește formatul",
     "find": "Căutare",
-    "lyrics": "Versuri",
     "preferences": "Preferințe"
   },
   "insert": {
@@ -60,6 +59,7 @@
     "commonCombos": "Combinații frecvente",
     "properties": "Proprietăți",
     "selection": "Selecție",
+    "lyrics": "Versuri",
     "resetLayout": "Resetează aranjarea",
     "generateTestFiles": "Generează fișiere de test (debugare)"
   },

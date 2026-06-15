@@ -4,7 +4,7 @@
   >
     <FieldSet class="min-h-0 flex-1 overflow-hidden">
       <FieldLegend class="sr-only">{{
-        $t(($) => $.menu.edit.lyrics, { ns: 'menu' })
+        $t(($) => $.menu.view.lyrics, { ns: 'menu' })
       }}</FieldLegend>
       <FieldGroup class="min-h-0 flex-1 overflow-hidden">
         <Field orientation="horizontal">
@@ -33,7 +33,7 @@
 
         <Field class="min-h-0 flex-1 overflow-hidden">
           <FieldLabel for="lyrics-pane-text">{{
-            $t(($) => $.menu.edit.lyrics, { ns: 'menu' })
+            $t(($) => $.menu.view.lyrics, { ns: 'menu' })
           }}</FieldLabel>
           <Textarea
             id="lyrics-pane-text"

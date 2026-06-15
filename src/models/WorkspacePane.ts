@@ -54,7 +54,7 @@ export const workspacePaneDefinitions = [
     defaultVisible: false,
     homeEdge: 'right',
     id: 'lyrics',
-    titleSelector: ($) => $.menu.edit.lyrics,
+    titleSelector: ($) => $.menu.view.lyrics,
   },
 ] as const satisfies readonly WorkspacePaneConfig[];
 

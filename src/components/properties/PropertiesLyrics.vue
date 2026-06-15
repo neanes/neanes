@@ -1,7 +1,7 @@
 <template>
   <FieldSet class="min-h-0 flex-1 overflow-auto">
     <FieldLegend class="sr-only">{{
-      $t(($) => $.menu.edit.lyrics, { ns: 'menu' })
+      $t(($) => $.menu.view.lyrics, { ns: 'menu' })
     }}</FieldLegend>
     <FieldGroup>
       <Field orientation="horizontal">

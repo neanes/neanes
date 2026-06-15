@@ -31,7 +31,6 @@
     "copyFormat": "Salin Format",
     "pasteFormat": "Tempel Format",
     "find": "Cari",
-    "lyrics": "Lirik",
     "preferences": "Preferensi"
   },
   "insert": {
@@ -60,6 +59,7 @@
     "commonCombos": "Kombinasi Umum",
     "properties": "Properti",
     "selection": "Pilihan",
+    "lyrics": "Lirik",
     "resetLayout": "Atur Ulang Tata Letak",
     "generateTestFiles": "Hasilkan File Uji (Debug)"
   },

@@ -31,7 +31,6 @@
     "copyFormat": "Copy Format",
     "pasteFormat": "Paste Format",
     "find": "Find",
-    "lyrics": "Lyrics",
     "preferences": "Preferences"
   },
   "insert": {
@@ -60,6 +59,7 @@
     "commonCombos": "Common Combinations",
     "properties": "Properties",
     "selection": "Selection",
+    "lyrics": "Lyrics",
     "resetLayout": "Reset Layout",
     "generateTestFiles": "Generate Test Files (Debug)"
   },

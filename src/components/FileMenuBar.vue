@@ -262,7 +262,7 @@
             :model-value="props.paneVisibility.lyrics"
             @update:model-value="onTogglePaneClick('lyrics', $event === true)"
           >
-            {{ $t(($) => $.menu.edit.lyrics, { ns: 'menu' }) }}
+            {{ $t(($) => $.menu.view.lyrics, { ns: 'menu' }) }}
           </MenubarCheckboxItem>
           <MenubarSeparator />
           <MenubarItem @select="onResetPaneLayoutClick">

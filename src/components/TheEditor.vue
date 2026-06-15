@@ -3686,20 +3686,20 @@ async function closeWorkspace(workspace: Workspace) {
 
         if (!saveResult.success && !saveResult.canceled) {
           showReplyErrorToast(
-            t(($) => $.editor.toast.saveFailed, { ns: 'editor' }),
+            t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
             saveResult,
-            t(($) => $.editor.toast.saveFailedDescription, { ns: 'editor' }),
+            t(($) => $.toast.editor.saveFailedDescription, { ns: 'toast' }),
           );
         }
       } catch (error) {
         console.error(error);
         shouldClose = false;
         showErrorToast(
-          t(($) => $.editor.toast.saveFailed, { ns: 'editor' }),
+          t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
           error,
           {
-            fallback: t(($) => $.editor.toast.saveFailedDescription, {
-              ns: 'editor',
+            fallback: t(($) => $.toast.editor.saveFailedDescription, {
+              ns: 'toast',
             }),
           },
         );
@@ -5113,7 +5113,7 @@ function updateEntryMode(mode: EntryMode) {
 function updateZoom(newZoom: number) {
   if (newZoom < 0.5 || newZoom > 5) {
     toast.error(
-      t(($) => $.editor.toast.rangeOverflow, { ns: 'editor' }),
+      t(($) => $.toast.editor.rangeOverflow, { ns: 'toast' }),
       {
         description: t(($) => $.toolbar.main.invalidZoom, { ns: 'toolbar' }),
       },
@@ -5179,11 +5179,11 @@ async function playAudio() {
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.playbackFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.playbackFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.playbackStartFailed, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.playbackStartFailed, {
+          ns: 'toast',
         }),
       },
     );
@@ -5200,11 +5200,11 @@ function stopAudio() {
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.stopPlaybackFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.stopPlaybackFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.stopPlaybackFailedDescription, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.stopPlaybackFailedDescription, {
+          ns: 'toast',
         }),
       },
     );
@@ -5224,11 +5224,11 @@ function pauseAudio() {
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.playbackFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.playbackFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.playbackToggleFailed, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.playbackToggleFailed, {
+          ns: 'toast',
         }),
       },
     );
@@ -5255,11 +5255,11 @@ async function playTestTone() {
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.testToneFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.testToneFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.testToneFailedDescription, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.testToneFailedDescription, {
+          ns: 'toast',
         }),
       },
     );
@@ -5430,10 +5430,10 @@ function onFileMenuImportOcr(args: FileMenuImportOcrArgs) {
       console.error(error);
 
       showErrorToast(
-        t(($) => $.editor.toast.ocrImportFailed, { ns: 'editor' }),
+        t(($) => $.toast.editor.ocrImportFailed, { ns: 'toast' }),
         error,
         {
-          fallback: t(($) => $.editor.toast.unexpectedError, { ns: 'editor' }),
+          fallback: t(($) => $.toast.editor.unexpectedError, { ns: 'toast' }),
         },
       );
     }
@@ -5482,18 +5482,18 @@ async function onFileMenuExportAsPdf() {
 
     showExportReplyToast(
       reply,
-      t(($) => $.editor.toast.export.pdfSuccess, { ns: 'editor' }),
-      t(($) => $.editor.toast.export.pdfFailed, { ns: 'editor' }),
-      t(($) => $.editor.toast.export.pdfFailedDescription, { ns: 'editor' }),
+      t(($) => $.toast.editor.export.pdfSuccess, { ns: 'toast' }),
+      t(($) => $.toast.editor.export.pdfFailed, { ns: 'toast' }),
+      t(($) => $.toast.editor.export.pdfFailedDescription, { ns: 'toast' }),
     );
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.export.pdfFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.export.pdfFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.export.pdfFailedDescription, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.export.pdfFailedDescription, {
+          ns: 'toast',
         }),
       },
     );
@@ -5523,10 +5523,10 @@ async function exportAsPng(args: ExportAsPngSettings) {
     if (!reply.success) {
       if (!reply.canceled) {
         showReplyErrorToast(
-          t(($) => $.editor.toast.export.pngFailed, { ns: 'editor' }),
+          t(($) => $.toast.editor.export.pngFailed, { ns: 'toast' }),
           reply,
-          t(($) => $.editor.toast.export.pngStartFailedDescription, {
-            ns: 'editor',
+          t(($) => $.toast.editor.export.pngStartFailedDescription, {
+            ns: 'toast',
           }),
         );
       }
@@ -5535,11 +5535,11 @@ async function exportAsPng(args: ExportAsPngSettings) {
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.export.pngFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.export.pngFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.export.pngStartFailedDescription, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.export.pngStartFailedDescription, {
+          ns: 'toast',
         }),
       },
     );
@@ -5549,10 +5549,10 @@ async function exportAsPng(args: ExportAsPngSettings) {
   printMode.value = true;
   exportInProgress.value = true;
   const toastId = toast.loading(
-    t(($) => $.editor.toast.export.pngLoading, { ns: 'editor' }),
+    t(($) => $.toast.editor.export.pngLoading, { ns: 'toast' }),
     {
-      description: t(($) => $.editor.toast.export.pngLoadingDescription, {
-        ns: 'editor',
+      description: t(($) => $.toast.editor.export.pngLoadingDescription, {
+        ns: 'toast',
       }),
     },
   );
@@ -5602,8 +5602,8 @@ async function exportAsPng(args: ExportAsPngSettings) {
 
           throw new Error(
             pageReply.errorMessage ??
-              t(($) => $.editor.toast.export.pngFileFailedDescription, {
-                ns: 'editor',
+              t(($) => $.toast.editor.export.pngFileFailedDescription, {
+                ns: 'toast',
               }),
           );
         }
@@ -5618,11 +5618,11 @@ async function exportAsPng(args: ExportAsPngSettings) {
 
     if (exportedPageCount === 0) {
       toast.info(
-        t(($) => $.editor.toast.export.pngCanceled, { ns: 'editor' }),
+        t(($) => $.toast.editor.export.pngCanceled, { ns: 'toast' }),
         {
           id: toastId,
-          description: t(($) => $.editor.toast.export.pngCanceledDescription, {
-            ns: 'editor',
+          description: t(($) => $.toast.editor.export.pngCanceledDescription, {
+            ns: 'toast',
           }),
         },
       );
@@ -5634,11 +5634,11 @@ async function exportAsPng(args: ExportAsPngSettings) {
     }
 
     toast.success(
-      t(($) => $.editor.toast.export.pngComplete, { ns: 'editor' }),
+      t(($) => $.toast.editor.export.pngComplete, { ns: 'toast' }),
       {
         id: toastId,
-        description: t(($) => $.editor.toast.export.pngCompleteDescription, {
-          ns: 'editor',
+        description: t(($) => $.toast.editor.export.pngCompleteDescription, {
+          ns: 'toast',
           count: exportedPageCount,
           path: firstExportedPagePath,
         }),
@@ -5647,12 +5647,12 @@ async function exportAsPng(args: ExportAsPngSettings) {
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.export.pngFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.export.pngFailed, { ns: 'toast' }),
       error,
       {
         id: toastId,
-        fallback: t(($) => $.editor.toast.export.pngFilesFailedDescription, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.export.pngFilesFailedDescription, {
+          ns: 'toast',
         }),
       },
     );
@@ -5674,18 +5674,18 @@ async function onFileMenuExportAsHtml() {
 
     showExportReplyToast(
       reply,
-      t(($) => $.editor.toast.export.htmlSuccess, { ns: 'editor' }),
-      t(($) => $.editor.toast.export.htmlFailed, { ns: 'editor' }),
-      t(($) => $.editor.toast.export.htmlFailedDescription, { ns: 'editor' }),
+      t(($) => $.toast.editor.export.htmlSuccess, { ns: 'toast' }),
+      t(($) => $.toast.editor.export.htmlFailed, { ns: 'toast' }),
+      t(($) => $.toast.editor.export.htmlFailedDescription, { ns: 'toast' }),
     );
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.export.htmlFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.export.htmlFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.export.htmlFailedDescription, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.export.htmlFailedDescription, {
+          ns: 'toast',
         }),
       },
     );
@@ -5713,10 +5713,10 @@ async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
 
     showExportReplyToast(
       reply,
-      t(($) => $.editor.toast.export.musicXmlSuccess, { ns: 'editor' }),
-      t(($) => $.editor.toast.export.musicXmlFailed, { ns: 'editor' }),
-      t(($) => $.editor.toast.export.musicXmlFailedDescription, {
-        ns: 'editor',
+      t(($) => $.toast.editor.export.musicXmlSuccess, { ns: 'toast' }),
+      t(($) => $.toast.editor.export.musicXmlFailed, { ns: 'toast' }),
+      t(($) => $.toast.editor.export.musicXmlFailedDescription, {
+        ns: 'toast',
       }),
     );
 
@@ -5726,11 +5726,11 @@ async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.export.musicXmlFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.export.musicXmlFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.export.musicXmlFailedDescription, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.export.musicXmlFailedDescription, {
+          ns: 'toast',
         }),
       },
     );
@@ -5750,9 +5750,9 @@ async function exportAsLatex(args: ExportAsLatexSettings) {
 
     showExportReplyToast(
       reply,
-      t(($) => $.editor.toast.export.latexSuccess, { ns: 'editor' }),
-      t(($) => $.editor.toast.export.latexFailed, { ns: 'editor' }),
-      t(($) => $.editor.toast.export.latexFailedDescription, { ns: 'editor' }),
+      t(($) => $.toast.editor.export.latexSuccess, { ns: 'toast' }),
+      t(($) => $.toast.editor.export.latexFailed, { ns: 'toast' }),
+      t(($) => $.toast.editor.export.latexFailedDescription, { ns: 'toast' }),
     );
 
     if (reply.success || reply.canceled) {
@@ -5761,11 +5761,11 @@ async function exportAsLatex(args: ExportAsLatexSettings) {
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.export.latexFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.export.latexFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.export.latexFailedDescription, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.export.latexFailedDescription, {
+          ns: 'toast',
         }),
       },
     );
@@ -5928,16 +5928,16 @@ async function onFileMenuToolsCopyElementLink() {
         '#element-' + selectedElement.value.id.toString(),
       );
       toast.success(
-        t(($) => $.editor.toast.copyElementLinkSuccess, { ns: 'editor' }),
+        t(($) => $.toast.editor.copyElementLinkSuccess, { ns: 'toast' }),
       );
     } catch (error) {
       console.error(error);
       showErrorToast(
-        t(($) => $.editor.toast.copyFailed, { ns: 'editor' }),
+        t(($) => $.toast.editor.copyFailed, { ns: 'toast' }),
         error,
         {
-          fallback: t(($) => $.editor.toast.clipboardWriteFailed, {
-            ns: 'editor',
+          fallback: t(($) => $.toast.editor.clipboardWriteFailed, {
+            ns: 'toast',
           }),
         },
       );
@@ -5964,16 +5964,16 @@ async function onFileMenuSave() {
       if (result.success) {
         workspace.hasUnsavedChanges = false;
         toast.success(
-          t(($) => $.editor.toast.saveSuccess, { ns: 'editor' }),
+          t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
           {
             description: workspace.filePath,
           },
         );
       } else if (!result.canceled) {
         showReplyErrorToast(
-          t(($) => $.editor.toast.saveFailed, { ns: 'editor' }),
+          t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
           result,
-          t(($) => $.editor.toast.saveFailedDescription, { ns: 'editor' }),
+          t(($) => $.toast.editor.saveFailedDescription, { ns: 'toast' }),
         );
       }
     } else {
@@ -5982,27 +5982,27 @@ async function onFileMenuSave() {
         workspace.filePath = result.filePath;
         workspace.hasUnsavedChanges = false;
         toast.success(
-          t(($) => $.editor.toast.saveSuccess, { ns: 'editor' }),
+          t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
           {
             description: result.filePath,
           },
         );
       } else if (!result.canceled) {
         showReplyErrorToast(
-          t(($) => $.editor.toast.saveFailed, { ns: 'editor' }),
+          t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
           result,
-          t(($) => $.editor.toast.saveFailedDescription, { ns: 'editor' }),
+          t(($) => $.toast.editor.saveFailedDescription, { ns: 'toast' }),
         );
       }
     }
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.saveFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.saveFailedDescription, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.saveFailedDescription, {
+          ns: 'toast',
         }),
       },
     );
@@ -6018,26 +6018,26 @@ async function onFileMenuSaveAs() {
       workspace.filePath = result.filePath;
       workspace.hasUnsavedChanges = false;
       toast.success(
-        t(($) => $.editor.toast.saveSuccess, { ns: 'editor' }),
+        t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
         {
           description: result.filePath,
         },
       );
     } else if (!result.canceled) {
       showReplyErrorToast(
-        t(($) => $.editor.toast.saveFailed, { ns: 'editor' }),
+        t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
         result,
-        t(($) => $.editor.toast.saveFailedDescription, { ns: 'editor' }),
+        t(($) => $.toast.editor.saveFailedDescription, { ns: 'toast' }),
       );
     }
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.saveFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.saveFailedDescription, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.saveFailedDescription, {
+          ns: 'toast',
         }),
       },
     );
@@ -6176,15 +6176,15 @@ async function onFileMenuCopyAsHtml() {
 
   try {
     await navigator.clipboard.writeText(html);
-    toast.success(t(($) => $.editor.toast.copyHtmlSuccess, { ns: 'editor' }));
+    toast.success(t(($) => $.toast.editor.copyHtmlSuccess, { ns: 'toast' }));
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.copyFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.copyFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.clipboardWriteFailed, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.clipboardWriteFailed, {
+          ns: 'toast',
         }),
       },
     );
@@ -6197,19 +6197,19 @@ async function pasteTextFromClipboard() {
 
     if (!reply.success) {
       showReplyErrorToast(
-        t(($) => $.editor.toast.pasteFailed, { ns: 'editor' }),
+        t(($) => $.toast.editor.pasteFailed, { ns: 'toast' }),
         reply,
-        t(($) => $.editor.toast.clipboardReadFailed, { ns: 'editor' }),
+        t(($) => $.toast.editor.clipboardReadFailed, { ns: 'toast' }),
       );
     }
   } catch (error) {
     console.error(error);
     showErrorToast(
-      t(($) => $.editor.toast.pasteFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.pasteFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.clipboardReadFailed, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.clipboardReadFailed, {
+          ns: 'toast',
         }),
       },
     );
@@ -6461,11 +6461,11 @@ function openScore(args: FileMenuOpenScoreArgs) {
     console.error(error);
 
     showErrorToast(
-      t(($) => $.editor.toast.openFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
       error,
       {
-        fallback: t(($) => $.editor.toast.openFailedDescription, {
-          ns: 'editor',
+        fallback: t(($) => $.toast.editor.openFailedDescription, {
+          ns: 'toast',
         }),
       },
     );

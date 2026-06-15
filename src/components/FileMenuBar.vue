@@ -542,11 +542,11 @@ async function onClickOpen() {
     } catch (error) {
       console.error(error);
       toast.error(
-        t(($) => $.editor.toast.openFailed, { ns: 'editor' }),
+        t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
         {
           description: getErrorMessage(
             error,
-            t(($) => $.editor.toast.openFailedDescription, { ns: 'editor' }),
+            t(($) => $.toast.editor.openFailedDescription, { ns: 'toast' }),
           ),
         },
       );
@@ -574,10 +574,10 @@ async function onClickOpenRecent(id: string) {
       await openScoreFile(recentFile.file, recentFile.filePath);
     } else {
       toast.error(
-        t(($) => $.editor.toast.openRecentFailed, { ns: 'editor' }),
+        t(($) => $.toast.editor.openRecentFailed, { ns: 'toast' }),
         {
-          description: t(($) => $.editor.toast.openRecentUnavailable, {
-            ns: 'editor',
+          description: t(($) => $.toast.editor.openRecentUnavailable, {
+            ns: 'toast',
           }),
         },
       );
@@ -585,11 +585,11 @@ async function onClickOpenRecent(id: string) {
   } catch (error) {
     console.error(error);
     toast.error(
-      t(($) => $.editor.toast.openRecentFailed, { ns: 'editor' }),
+      t(($) => $.toast.editor.openRecentFailed, { ns: 'toast' }),
       {
         description: getErrorMessage(
           error,
-          t(($) => $.editor.toast.openRecentReadFailed, { ns: 'editor' }),
+          t(($) => $.toast.editor.openRecentReadFailed, { ns: 'toast' }),
         ),
       },
     );
@@ -655,11 +655,11 @@ async function onSelectFile() {
     } catch (error) {
       console.error(error);
       toast.error(
-        t(($) => $.editor.toast.openFailed, { ns: 'editor' }),
+        t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
         {
           description: getErrorMessage(
             error,
-            t(($) => $.editor.toast.openFailedDescription, { ns: 'editor' }),
+            t(($) => $.toast.editor.openFailedDescription, { ns: 'toast' }),
           ),
         },
       );

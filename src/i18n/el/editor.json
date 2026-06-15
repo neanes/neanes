@@ -1,7 +1,4 @@
 {
-  "common": {
-    "neumeComboHeader": "Συχνά Συμπλέγματα"
-  },
   "toast": {
     "unexpectedError": "Παρουσιάστηκε απρόσμενο σφάλμα.",
     "rangeOverflow": "Υπέρβαση εύρους",

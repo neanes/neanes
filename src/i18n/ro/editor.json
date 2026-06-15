@@ -1,7 +1,4 @@
 {
-  "common": {
-    "neumeComboHeader": "Combinații frecvente"
-  },
   "toast": {
     "unexpectedError": "A apărut o eroare neașteptată.",
     "rangeOverflow": "Interval depășit",

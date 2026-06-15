@@ -39,6 +39,7 @@ import type {
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
+  FileMenuViewPaneVisibilityArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
@@ -53,6 +54,11 @@ import {
   IpcRendererChannels,
 } from '../../src/ipc/ipcChannels';
 import type { Score } from '../../src/models/save/v1/Score';
+import {
+  createDefaultPaneVisibility,
+  type WorkspacePaneId,
+  type WorkspacePaneVisibility,
+} from '../../src/models/WorkspacePane';
 import { getSystemFonts } from '../../src/utils/getSystemFonts';
 import { TestFileType } from '../../src/utils/TestFileType';
 
@@ -119,6 +125,15 @@ let win: BrowserWindow | null = null;
 let readyToExit = false;
 let creatingWindow = false;
 let quitting = false;
+let paneMenuVisibility = createDefaultPaneVisibility();
+
+const paneMenuItemIds: Record<WorkspacePaneId, string> = {
+  'common-combos': 'view-pane-common-combos',
+  'neume-selector': 'view-pane-neume-selector',
+  lyrics: 'view-pane-lyrics',
+  properties: 'view-pane-properties',
+  selection: 'view-pane-selection',
+};
 let updateAvailable = false;
 let updateDownloaded = false;
 let updateDownloadInProgress = false;
@@ -1414,6 +1429,52 @@ function ensureVisibleOnSomeDisplay(windowState: WindowState) {
   return windowState;
 }
 
+function syncPaneMenuItems(visibility: WorkspacePaneVisibility) {
+  paneMenuVisibility = {
+    ...paneMenuVisibility,
+    ...visibility,
+  };
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  (Object.entries(visibility) as Array<[WorkspacePaneId, boolean]>).forEach(
+    ([paneId, isVisible]) => {
+      const item = menu.getMenuItemById(paneMenuItemIds[paneId]);
+
+      if (item != null) {
+        item.checked = isVisible;
+      }
+    },
+  );
+}
+
+function createPaneMenuItem(
+  paneId: WorkspacePaneId,
+  label: string,
+  accelerator?: string,
+): MenuItemConstructorOptions {
+  return {
+    accelerator,
+    checked: paneMenuVisibility[paneId],
+    id: paneMenuItemIds[paneId],
+    label,
+    type: 'checkbox',
+    click(menuItem) {
+      const requestedVisibility = menuItem.checked;
+
+      menuItem.checked = paneMenuVisibility[paneId];
+      win?.webContents.send(IpcMainChannels.FileMenuViewPaneVisibility, {
+        paneId,
+        visible: requestedVisibility,
+      } as FileMenuViewPaneVisibilityArgs);
+    },
+  };
+}
+
 function createMenu() {
   const menu = Menu.buildFromTemplate([
     ...(isMac
@@ -1730,14 +1791,6 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t(($) => $.menu.edit.lyrics),
-          accelerator: 'CmdOrCtrl+L',
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuLyrics);
-          },
-        },
-        { type: 'separator' },
-        {
           label: i18next.t(($) => $.menu.edit.preferences),
           accelerator: 'CmdOrCtrl+,',
           click() {
@@ -1834,6 +1887,53 @@ function createMenu() {
       ],
     },
     {
+      label: i18next.t(($) => $.menu.view.root),
+      submenu: [
+        createPaneMenuItem(
+          'neume-selector',
+          i18next.t(($) => $.menu.view.neumeSelector),
+        ),
+        createPaneMenuItem(
+          'common-combos',
+          i18next.t(($) => $.menu.view.commonCombos),
+        ),
+        createPaneMenuItem(
+          'properties',
+          i18next.t(($) => $.menu.view.properties),
+        ),
+        createPaneMenuItem(
+          'selection',
+          i18next.t(($) => $.menu.view.selection),
+        ),
+        createPaneMenuItem(
+          'lyrics',
+          i18next.t(($) => $.menu.view.lyrics),
+          'CmdOrCtrl+L',
+        ),
+        { type: 'separator' },
+        {
+          label: i18next.t(($) => $.menu.view.resetLayout),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuViewResetPaneLayout);
+          },
+        },
+        ...(isDevelopment
+          ? ([
+              { type: 'separator' },
+              { role: 'reload' },
+              { role: 'forceReload' },
+              { role: 'toggleDevTools' },
+              { type: 'separator' },
+              { role: 'resetZoom' },
+              { role: 'zoomIn' },
+              { role: 'zoomOut' },
+              { type: 'separator' },
+              { role: 'togglefullscreen' },
+            ] as MenuItemConstructorOptions[])
+          : []),
+      ],
+    },
+    {
       label: i18next.t(($) => $.menu.tools.root),
       submenu: [
         {
@@ -1846,20 +1946,6 @@ function createMenu() {
     },
     ...(isDevelopment
       ? [
-          {
-            label: i18next.t(($) => $.menu.view.root),
-            submenu: [
-              { role: 'reload' },
-              { role: 'forceReload' },
-              { role: 'toggleDevTools' },
-              { type: 'separator' },
-              { role: 'resetZoom' },
-              { role: 'zoomIn' },
-              { role: 'zoomOut' },
-              { type: 'separator' },
-              { role: 'togglefullscreen' },
-            ],
-          } as MenuItemConstructorOptions,
           {
             label: i18next.t(($) => $.menu.view.generateTestFiles),
             submenu: Object.values(TestFileType).map((testFileType) => ({
@@ -2049,6 +2135,13 @@ ipcMain.on(IpcRendererChannels.SetCanUndo, async (event, data) => {
 ipcMain.on(IpcRendererChannels.SetCanRedo, async (event, data) => {
   Menu.getApplicationMenu()!.getMenuItemById('redo')!.enabled = data;
 });
+
+ipcMain.on(
+  IpcRendererChannels.SetWorkspacePaneVisibility,
+  (event, visibility: WorkspacePaneVisibility) => {
+    syncPaneMenuItems(visibility);
+  },
+);
 
 ipcMain.on(IpcRendererChannels.OpenImageDialog, async () => {
   const data = await openImage();

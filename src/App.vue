@@ -225,6 +225,15 @@ onBeforeUnmount(() => {
     overflow: visible !important;
   }
 
+  /*
+   * Reka/Vue portal components leave teleport anchor elements as direct body
+   * children. If any remain after #app, Blink may honor the final printed
+   * page's break-after and keep a blank trailing page alive.
+   */
+  body > :not(#app) {
+    display: none !important;
+  }
+
   .ck-body-wrapper {
     display: none !important;
   }

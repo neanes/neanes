@@ -1,7 +1,4 @@
 {
-  "common": {
-    "neumeComboHeader": "Common Combos"
-  },
   "toast": {
     "unexpectedError": "An unexpected error occurred.",
     "rangeOverflow": "Range overflow",

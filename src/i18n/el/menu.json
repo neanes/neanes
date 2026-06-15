@@ -31,13 +31,13 @@
     "copyFormat": "Αντιγραφή Μορφής",
     "pasteFormat": "Επικόλληση Μορφής",
     "find": "Αναζήτηση",
-    "lyrics": "Στίχοι",
     "preferences": "Προτιμήσεις"
   },
   "insert": {
     "root": "Εισαγωγή",
     "alternateLine": "Επεξήγηση",
     "annotation": "Επισήμανση",
+    "dropCap": "Αρχίγραμμα",
     "dropCapBefore": "Αρχίγραμμα Πριν",
     "dropCapAfter": "Αρχίγραμμα Μετά",
     "textBox": "Πλαίσιο Κειμένου",
@@ -54,7 +54,13 @@
     "copyElementLink": "Αντιγραφή Συνδέσμου Στοιχείου"
   },
   "view": {
-    "root": "Προβολή (Εντοπισμός Σφαλμάτων)",
+    "root": "Προβολή",
+    "neumeSelector": "Επιλογέας Νευμάτων",
+    "commonCombos": "Συνήθεις Συνδυασμοί",
+    "properties": "Ιδιότητες",
+    "selection": "Επιλογή",
+    "lyrics": "Στίχοι",
+    "resetLayout": "Επαναφορά Διάταξης",
     "generateTestFiles": "Δημιουργία Αρχείων Δοκιμής (Εντοπισμός Σφαλμάτων)"
   },
   "help": {

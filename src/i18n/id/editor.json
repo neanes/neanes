@@ -1,7 +1,4 @@
 {
-  "common": {
-    "neumeComboHeader": "Kombinasi Umum"
-  },
   "toast": {
     "unexpectedError": "Terjadi kesalahan tak terduga.",
     "rangeOverflow": "Rentang melampaui batas",

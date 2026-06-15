@@ -154,11 +154,6 @@
             {{ $t(($) => $.menu.edit.find, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
-          <MenubarItem @select="onClickLyrics">
-            <PhTextT />
-            {{ $t(($) => $.menu.edit.lyrics, { ns: 'menu' }) }}
-          </MenubarItem>
-          <MenubarSeparator />
           <MenubarItem @select="onClickPreferences">
             <PhGearFine />
             {{ $t(($) => $.menu.edit.preferences, { ns: 'menu' }) }}
@@ -223,6 +218,57 @@
               </MenubarItem>
             </MenubarSubContent>
           </MenubarSub>
+        </MenubarContent>
+      </MenubarMenu>
+
+      <MenubarMenu>
+        <MenubarTrigger>
+          {{ $t(($) => $.menu.view.root, { ns: 'menu' }) }}
+        </MenubarTrigger>
+        <MenubarContent class="bg-legacy-chrome-menu-surface">
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility['neume-selector']"
+            @update:model-value="
+              onTogglePaneClick('neume-selector', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.neumeSelector, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility['common-combos']"
+            @update:model-value="
+              onTogglePaneClick('common-combos', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.commonCombos, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility.properties"
+            @update:model-value="
+              onTogglePaneClick('properties', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.properties, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility.selection"
+            @update:model-value="
+              onTogglePaneClick('selection', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.selection, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility.lyrics"
+            @update:model-value="onTogglePaneClick('lyrics', $event === true)"
+          >
+            {{ $t(($) => $.menu.view.lyrics, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarSeparator />
+          <MenubarItem @select="onResetPaneLayoutClick">
+            <PhArrowCounterClockwise />
+            {{ $t(($) => $.menu.view.resetLayout, { ns: 'menu' }) }}
+          </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
 
@@ -326,7 +372,6 @@ import {
   PhScroll,
   PhTextAa,
   PhTextbox,
-  PhTextT,
   PhTrayArrowDown,
   PhWaveSine,
   PhX,
@@ -340,6 +385,7 @@ import { toast } from 'vue-sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Menubar,
+  MenubarCheckboxItem,
   MenubarContent,
   MenubarItem,
   MenubarMenu,
@@ -356,16 +402,25 @@ import type {
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
+  FileMenuViewPaneVisibilityArgs,
 } from '@/ipc/ipcChannels';
 import {
   CloseWorkspacesDisposition,
   IpcMainChannels,
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
+import type {
+  WorkspacePaneId,
+  WorkspacePaneVisibility,
+} from '@/models/WorkspacePane';
 import {
   type BrowserRecentFile,
   BrowserRecentFilesService,
 } from '@/services/BrowserRecentFilesService';
+
+const props = defineProps<{
+  paneVisibility: WorkspacePaneVisibility;
+}>();
 
 const fileSelector = useTemplateRef<HTMLInputElement>('file');
 const imageFileSelector = useTemplateRef<HTMLInputElement>('imagefile');
@@ -445,6 +500,10 @@ function onKeyDown(event: KeyboardEvent) {
       return;
     } else if (event.code === 'Comma') {
       onClickPreferences();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'KeyL') {
+      onTogglePaneClick('lyrics');
       event.preventDefault();
       return;
     }
@@ -736,8 +795,15 @@ function onClickFind() {
   EventBus.$emit(IpcMainChannels.FileMenuFind);
 }
 
-function onClickLyrics() {
-  EventBus.$emit(IpcMainChannels.FileMenuLyrics);
+function onTogglePaneClick(paneId: WorkspacePaneId, visible?: boolean) {
+  EventBus.$emit(IpcMainChannels.FileMenuViewPaneVisibility, {
+    paneId,
+    visible,
+  } as FileMenuViewPaneVisibilityArgs);
+}
+
+function onResetPaneLayoutClick() {
+  EventBus.$emit(IpcMainChannels.FileMenuViewResetPaneLayout);
 }
 
 function onClickPreferences() {

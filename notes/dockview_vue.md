@@ -359,16 +359,24 @@ single Vue `computed` -- `inspectorContext` -- derives its value centrally:
 ```ts
 type InspectorContext =
   | { kind: 'none' }
-  | { kind: 'text-box';      element: TextBoxElement;     source: 'score' | 'header-footer' }
-  | { kind: 'rich-text-box'; element: RichTextBoxElement; source: 'score' | 'header-footer' }
-  | { kind: 'drop-cap';   element: DropCapElement }
-  | { kind: 'image-box';  element: ImageBoxElement }
-  | { kind: 'lyrics';     element: NoteElement }
-  | { kind: 'mode-key';   element: ModeKeyElement }
-  | { kind: 'neume';      element: NoteElement }
-  | { kind: 'martyria';   element: MartyriaElement }
-  | { kind: 'tempo';      element: TempoElement }
-  | { kind: 'range';      elements: ScoreElement[] }
+  | {
+      kind: 'text-box';
+      element: TextBoxElement;
+      source: 'score' | 'header-footer';
+    }
+  | {
+      kind: 'rich-text-box';
+      element: RichTextBoxElement;
+      source: 'score' | 'header-footer';
+    }
+  | { kind: 'drop-cap'; element: DropCapElement }
+  | { kind: 'image-box'; element: ImageBoxElement }
+  | { kind: 'lyrics'; element: NoteElement }
+  | { kind: 'mode-key'; element: ModeKeyElement }
+  | { kind: 'neume'; element: NoteElement }
+  | { kind: 'martyria'; element: MartyriaElement }
+  | { kind: 'tempo'; element: TempoElement }
+  | { kind: 'range'; elements: ScoreElement[] };
 ```
 
 The computed is a **priority cascade** (first match wins): text-box, then

@@ -356,7 +356,7 @@ state changed first); the host records the new state and re-emits the menu sync,
 (in `InspectorContext.ts`) collapses all of them into one discriminated union, and a
 single Vue `computed` -- `inspectorContext` -- derives its value centrally:
 
-```
+```ts
 type InspectorContext =
   | { kind: 'none' }
   | { kind: 'text-box';      element: TextBoxElement;     source: 'score' | 'header-footer' }
@@ -386,7 +386,8 @@ decides "what is selected," and everything downstream is derived solely from it.
 into nine per-kind computed null-guards (`const neumeElement = computed(() =>
 ctx.kind === 'neume' ? ctx.element : null)`), renders exactly one `Properties*` child
 via a `v-if`/`v-else-if` chain (with an `Empty` placeholder for `none`/`range`), and
-keys each child `:key="`<kind>-${element.id}`"` so switching the selected element
+keys each child by the inspector kind and `element.id`, e.g. `neume-${element.id}`,
+so switching the selected element
 **remounts** the form rather than reusing stale derived state.
 
 Each `Properties*.vue` follows one shape: it takes `:element` (concrete type) plus

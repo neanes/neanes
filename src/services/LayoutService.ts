@@ -2926,6 +2926,8 @@ export class LayoutService {
   ) {
     const fontFamily = pageSetup.neumeDefaultFontFamily;
     const fontSize = pageSetup.neumeDefaultFontSize;
+    const verticalOffset =
+      pageSetup.martyriaVerticalOffset + martyriaElement.verticalOffset;
     const glyphs = this.getMartyriaCollisionGlyphs(martyriaElement, pageSetup);
 
     return glyphs.flatMap((glyph) =>
@@ -2933,7 +2935,7 @@ export class LayoutService {
         fontFamily,
         glyph.glyphName,
         glyph.x,
-        glyph.y,
+        glyph.y + verticalOffset,
         fontSize,
       ),
     );

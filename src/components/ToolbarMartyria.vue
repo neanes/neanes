@@ -249,346 +249,37 @@
         />
       </template>
     </Toolbar>
-    <div class="row">
-      <Checkbox
-        id="toolbar:martyria-auto"
-        class="bg-background"
-        :model-value="element.auto"
-        @update:model-value="
-          $emit('update', {
-            auto: $event === true,
-          } as Partial<MartyriaElement>)
-        "
-      />
-      <Label for="toolbar:martyria-auto" class="ml-2">{{
-        $t(($) => $.toolbar.martyria.auto, { ns: 'toolbar' })
-      }}</Label>
-      <template v-if="!element.auto">
-        <span class="space" />
-        <Label for="toolbar-martyria-note" class="mr-2">{{
-          $t(($) => $.toolbar.martyria.note, { ns: 'toolbar' })
-        }}</Label>
-        <Select
-          :model-value="element.note"
-          @update:model-value="
-            $emit('update', {
-              note: $event,
-            } as Partial<MartyriaElement>)
-          "
-        >
-          <SelectTrigger id="toolbar-martyria-note" class="bg-background">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem
-                v-for="note in notes"
-                :key="note.key"
-                :value="note.key"
-              >
-                {{ $t(note.displayName, { ns: 'model' }) }}
-              </SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-
-        <span class="space" />
-        <Label for="toolbar-martyria-scale" class="mr-2">{{
-          $t(($) => $.toolbar.martyria.scale, { ns: 'toolbar' })
-        }}</Label>
-        <Select
-          :model-value="element.scale"
-          @update:model-value="
-            $emit('update', {
-              scale: $event,
-            } as Partial<MartyriaElement>)
-          "
-        >
-          <SelectTrigger id="toolbar-martyria-scale" class="bg-background">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem
-                v-for="scale in scales"
-                :key="scale.key"
-                :value="scale.key"
-              >
-                {{ $t(scale.displayName, { ns: 'model' }) }}
-              </SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </template>
-      <span class="space" />
-      <Label for="toolbar-martyria-bpm" class="mr-2">{{
-        $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
-      }}</Label>
-      <InputBpm
-        id="toolbar-martyria-bpm"
-        :disabled="
-          element.tempo == null &&
-          element.tempoLeft == null &&
-          element.tempoRight == null
-        "
-        :model-value="element.bpm"
-        @update:model-value="
-          $emit('update', {
-            bpm: $event,
-          } as Partial<MartyriaElement>)
-        "
-      />
-
-      <span class="space" />
-
-      <Label for="toolbar-martyria-vertical-offset" class="mr-2">{{
-        $t(($) => $.toolbar.common.verticalOffset, { ns: 'toolbar' })
-      }}</Label>
-
-      <InputUnit
-        id="toolbar-martyria-vertical-offset"
-        unit="pt"
-        :min="-spaceAfterMax"
-        :max="spaceAfterMax"
-        :step="0.5"
-        :format-options="fraction2FormatOptions"
-        :model-value="element.verticalOffset"
-        @update:model-value="
-          $emit('update', {
-            verticalOffset: $event,
-          } as Partial<MartyriaElement>)
-        "
-      />
-
-      <span class="space" />
-
-      <Label for="toolbar-martyria-space-after" class="mr-2">{{
-        $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
-      }}</Label>
-
-      <InputUnit
-        id="toolbar-martyria-space-after"
-        unit="pt"
-        :min="-spaceAfterMax"
-        :max="spaceAfterMax"
-        :step="0.5"
-        :format-options="fraction2FormatOptions"
-        :model-value="element.spaceAfter"
-        @update:model-value="
-          $emit('update', {
-            spaceAfter: $event,
-          } as Partial<MartyriaElement>)
-        "
-      />
-
-      <template v-if="showChromaticFthoraNote">
-        <span class="space" />
-        <Label for="toolbar-martyria-fthora-note" class="mr-2">{{
-          $t(($) => $.toolbar.common.fthoraNote, { ns: 'toolbar' })
-        }}</Label>
-        <Select
-          :model-value="element.chromaticFthoraNote"
-          @update:model-value="
-            $emit('update', {
-              chromaticFthoraNote: $event,
-            } as Partial<MartyriaElement>)
-          "
-        >
-          <SelectTrigger
-            id="toolbar-martyria-fthora-note"
-            class="bg-background"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem
-                v-for="note in fthoraNotes"
-                :key="note.value"
-                :value="note.value"
-              >
-                {{ $t(note.label, { ns: 'model' }) }}
-              </SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </template>
-      <span class="space" />
-      <Label for="toolbar-martyria-root-sign-override" class="mr-2">{{
-        $t(($) => $.toolbar.martyria.rootSignOverride, { ns: 'toolbar' })
-      }}</Label>
-      <Select
-        :model-value="element.rootSignOverride ?? SELECT_NONE_VALUE"
-        @update:model-value="onRootSignOverrideChanged"
-      >
-        <SelectTrigger
-          id="toolbar-martyria-root-sign-override"
-          class="bg-background"
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectItem :value="SELECT_NONE_VALUE">
-              {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
-            </SelectItem>
-            <SelectItem
-              v-for="sign in rootSigns"
-              :key="sign.value"
-              :value="sign.value"
-            >
-              {{ $t(sign.name, { ns: 'model' }) }}
-            </SelectItem>
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-
-      <span class="space"></span>
-      <Label for="toolbar-martyria-section-name" class="mr-2">{{
-        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-      }}</Label>
-      <Input
-        id="toolbar-martyria-section-name"
-        class="w-auto bg-background"
-        type="text"
-        :model-value="element.sectionName ?? ''"
-        @change="
-          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
-        "
-      />
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { PhAlignRight } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
-import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import type { AppTooltipValue } from '@/components/AppTooltip.types';
 import AppTooltip from '@/components/AppTooltip.vue';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Toolbar,
   ToolbarButton,
   ToolbarSeparator,
 } from '@/components/ui/toolbar';
 import type { MartyriaElement } from '@/models/Element';
-import type { ModelSelector } from '@/models/NeumeI18nMappings';
-import {
-  getFthoraLabelSelector,
-  getNoteLabelSelector,
-  getScaleLabelSelector,
-  ROOT_SIGN_LABEL_SELECTORS,
-} from '@/models/NeumeI18nMappings';
+import { getFthoraLabelSelector } from '@/models/NeumeI18nMappings';
 import {
   Fthora,
   MeasureBar,
   Note,
   QuantitativeNeume,
-  RootSign,
   TempoSign,
 } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
-import { Scale, ScaleNote } from '@/models/Scales';
 import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
-import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
-import { Unit } from '@/utils/Unit';
 
 import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
 import ButtonWithMenu from './ButtonWithMenu.vue';
-import InputBpm from './InputBpm.vue';
-import InputUnit from './InputUnit.vue';
-
-const notes = Object.values(Note).map((x) => ({
-  key: x,
-  displayName: getNoteLabelSelector(x),
-}));
-
-const scales = Object.values(Scale).map((x) => ({
-  key: x,
-  displayName: getScaleLabelSelector(x),
-}));
-
-const chromaticFthoras = [
-  Fthora.SoftChromaticPa_Top,
-  Fthora.SoftChromaticPa_Bottom,
-  Fthora.SoftChromaticThi_Top,
-  Fthora.SoftChromaticThi_Bottom,
-  Fthora.HardChromaticPa_Top,
-  Fthora.HardChromaticPa_Bottom,
-  Fthora.HardChromaticThi_Top,
-  Fthora.HardChromaticThi_Bottom,
-];
-
-type FthoraNoteOption = {
-  label: ModelSelector;
-  value: ScaleNote;
-};
-
-const rootSigns = [
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Alpha],
-    value: RootSign.Alpha,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.SoftChromaticSquiggle],
-    value: RootSign.SoftChromaticSquiggle,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.SoftChromaticPaRootSign],
-    value: RootSign.SoftChromaticPaRootSign,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Nana],
-    value: RootSign.Nana,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Legetos],
-    value: RootSign.Legetos,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.DeltaDotted],
-    value: RootSign.DeltaDotted,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Zygos],
-    value: RootSign.Zygos,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.AlphaDotted],
-    value: RootSign.AlphaDotted,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Squiggle],
-    value: RootSign.Squiggle,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Tilt],
-    value: RootSign.Tilt,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Zo],
-    value: RootSign.Zo,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Delta],
-    value: RootSign.Delta,
-  },
-];
 
 const quantitativeNeumeOptionsList = [
   QuantitativeNeume.Elaphron,
@@ -721,29 +412,17 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits([
+defineEmits([
   'update',
   'update:fthora',
   'update:measureBar',
   'update:quantitativeNeume',
-  'update:sectionName',
   'update:tempoLeft',
   'update:tempo',
   'update:tempoRight',
 ]);
 
 const { t } = useTranslation();
-const SELECT_NONE_VALUE = '__none__';
-
-function onRootSignOverrideChanged(value: AcceptableValue) {
-  emit('update', {
-    rootSignOverride: value === SELECT_NONE_VALUE ? null : value,
-  } as Partial<MartyriaElement>);
-}
-
-const spaceAfterMax = computed(() =>
-  Math.round(Unit.toPt(props.pageSetup.pageWidth)),
-);
 
 const spathiDisabled = computed(
   () =>
@@ -820,108 +499,12 @@ const generalSharpTitle = computed(() =>
     : tooltip(Fthora.GeneralSharp_Top),
 );
 
-const showChromaticFthoraNote = computed(
-  () =>
-    props.element.fthora != null &&
-    chromaticFthoras.includes(props.element.fthora),
-);
-
 const alignRightTooltip = computed(
   (): AppTooltipValue => ({
     label: t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' }),
     shortcut: props.neumeKeyboard.getMartyriaRightAlignTooltipKeys(),
   }),
 );
-
-const fthoraNotes = computed((): FthoraNoteOption[] => {
-  if (
-    props.element.fthora === Fthora.SoftChromaticThi_Top ||
-    props.element.fthora === Fthora.SoftChromaticThi_Bottom
-  ) {
-    return [
-      {
-        label: getNoteLabelSelector(ScaleNote.ZoHigh),
-        value: ScaleNote.ZoHigh,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Thi),
-        value: ScaleNote.Thi,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Vou),
-        value: ScaleNote.Vou,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Ni),
-        value: ScaleNote.Ni,
-      },
-    ];
-  } else if (
-    props.element.fthora === Fthora.SoftChromaticPa_Top ||
-    props.element.fthora === Fthora.SoftChromaticPa_Bottom
-  ) {
-    return [
-      {
-        label: getNoteLabelSelector(ScaleNote.NiHigh),
-        value: ScaleNote.NiHigh,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Ke),
-        value: ScaleNote.Ke,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Ga),
-        value: ScaleNote.Ga,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Pa),
-        value: ScaleNote.Pa,
-      },
-    ];
-  } else if (
-    props.element.fthora === Fthora.HardChromaticThi_Top ||
-    props.element.fthora === Fthora.HardChromaticThi_Bottom
-  ) {
-    return [
-      {
-        label: getNoteLabelSelector(ScaleNote.ZoHigh),
-        value: ScaleNote.ZoHigh,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Thi),
-        value: ScaleNote.Thi,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Vou),
-        value: ScaleNote.Vou,
-      },
-    ];
-  } else if (
-    props.element.fthora === Fthora.HardChromaticPa_Top ||
-    props.element.fthora === Fthora.HardChromaticPa_Bottom
-  ) {
-    return [
-      {
-        label: getNoteLabelSelector(ScaleNote.NiHigh),
-        value: ScaleNote.NiHigh,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Ke),
-        value: ScaleNote.Ke,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Ga),
-        value: ScaleNote.Ga,
-      },
-      {
-        label: getNoteLabelSelector(ScaleNote.Pa),
-        value: ScaleNote.Pa,
-      },
-    ];
-  }
-
-  return [];
-});
 
 function translateNeumeDisplayName(neume: Fthora | MeasureBar.MeasureBarRight) {
   if (neume === MeasureBar.MeasureBarRight) {
@@ -1015,10 +598,6 @@ function tooltip(neume: Fthora | MeasureBar.MeasureBarRight): AppTooltipValue {
 
 .icon-btn.selected {
   background: var(--color-legacy-chrome-selected);
-}
-
-.space {
-  width: 16px;
 }
 
 .btnMenuTempoLeft :deep(.neume-button) {

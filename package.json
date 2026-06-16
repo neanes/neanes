@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.29.7",
-    "@ckeditor/ckeditor5-vue": "^8.1.0",
+    "@ckeditor/ckeditor5-vue": "^8.1.1",
     "@fontsource-variable/inter": "^5.2.8",
     "@nabla/vite-plugin-eslint": "^3.0.1",
     "@phosphor-icons/vue": "^2.2.1",

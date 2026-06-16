@@ -73,6 +73,7 @@ import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
 import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
 import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
+import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -126,6 +127,7 @@ import {
 import { EntryMode } from '@/models/EntryMode';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
+import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
 import {
   areVocalExpressionsEquivalent,
   getSecondaryNeume,
@@ -587,6 +589,8 @@ const pageCount = computed(() => {
   return filteredPages.value.length;
 });
 
+const statusPageCount = computed(() => Math.max(1, pageCount.value));
+
 const commandService = computed(() => {
   return selectedWorkspace.value.commandService;
 });
@@ -756,6 +760,77 @@ const zoomToFit = computed({
   set: (value: boolean) => {
     selectedWorkspace.value.zoomToFit = value;
   },
+});
+
+const statusScrollPageNumber = computed(() =>
+  clamp(currentPageNumber.value, 1, statusPageCount.value),
+);
+
+const statusPositionElement = computed(
+  () =>
+    selectedLyrics.value ??
+    selectedElement.value ??
+    getFirstElementForPage(statusScrollPageNumber.value),
+);
+
+const statusPageNumber = computed(() => {
+  const elementPage = statusPositionElement.value?.page ?? 0;
+
+  return elementPage > 0
+    ? clamp(elementPage, 1, statusPageCount.value)
+    : statusScrollPageNumber.value;
+});
+
+const statusSectionNumber = computed(() =>
+  getSectionNumberForPage(statusPageNumber.value),
+);
+
+const statusSectionCount = computed(() => getSectionCount());
+
+const statusPositionElementOnPage = computed(() => {
+  const element = statusPositionElement.value;
+
+  return element?.page === statusPageNumber.value
+    ? element
+    : getFirstElementForPage(statusPageNumber.value);
+});
+
+const statusLinePosition = computed(() => {
+  const page = filteredPages.value[statusPageNumber.value - 1];
+  const lineCount = Math.max(page?.lines.length ?? 0, 1);
+  const lineNumber =
+    statusPositionElementOnPage.value?.line ??
+    getFirstLineNumberForPage(page) ??
+    1;
+
+  return {
+    lineNumber: clamp(lineNumber, 1, lineCount),
+    lineCount,
+  };
+});
+
+const statusColumnPosition = computed(() => {
+  const page = filteredPages.value[statusPageNumber.value - 1];
+  const line = page?.lines[statusLinePosition.value.lineNumber - 1];
+  const lineElements = line?.elements ?? [];
+  const columnCount = Math.max(lineElements.length, 1);
+  const element = statusPositionElementOnPage.value;
+  const elementIndex = element != null ? lineElements.indexOf(element) : -1;
+
+  return {
+    columnNumber: elementIndex >= 0 ? elementIndex + 1 : 1,
+    columnCount,
+  };
+});
+
+const statusNeumeNoteDisplay = computed(() => {
+  if (inspectorContext.value.kind !== 'neume') {
+    return '';
+  }
+
+  return inspectorContext.value.element.scaleNotes
+    .map((note) => t(getNoteLabelSelector(note), { ns: 'model' }))
+    .join(' - ');
 });
 
 const entryMode = computed({
@@ -1526,6 +1601,105 @@ function getTokenMetadata(pageIndex: number): TokenMetadata {
 
 function getElementIndex(element: ScoreElement) {
   return element.index;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getFirstElementForPage(pageNumber: number) {
+  const page = filteredPages.value[pageNumber - 1];
+
+  return page?.lines.flatMap((line) => line.elements).at(0) ?? null;
+}
+
+function getFirstLineNumberForPage(page: Page | undefined) {
+  if (!page) {
+    return null;
+  }
+
+  const lineIndex = page.lines.findIndex((line) => line.elements.length > 0);
+
+  return lineIndex >= 0 ? lineIndex + 1 : null;
+}
+
+function getSectionNumberForPage(pageNumber: number) {
+  const anchorIndex = getSectionAnchorIndexForPage(pageNumber);
+
+  return getSectionNumberForElementIndex(anchorIndex);
+}
+
+function getSectionAnchorIndexForPage(pageNumber: number) {
+  const page = filteredPages.value[pageNumber - 1];
+
+  if (page == null) {
+    return 0;
+  }
+
+  const firstPageElement = getPageElements(page).find(
+    (element) => element.elementType !== ElementType.Empty,
+  );
+
+  if (firstPageElement) {
+    return firstPageElement.index;
+  }
+
+  const previousPageElements = filteredPages.value
+    .slice(0, pageNumber - 1)
+    .flatMap(getPageElements)
+    .filter((element) => element.elementType !== ElementType.Empty);
+
+  return previousPageElements.at(-1)?.index ?? 0;
+}
+
+function getPageElements(page: Page) {
+  return page.lines.flatMap((line) => line.elements);
+}
+
+function getSectionNumberForElementIndex(elementIndex: number) {
+  const scoreElements = elements.value
+    .filter((element) => element.elementType !== ElementType.Empty)
+    .sort((a, b) => a.index - b.index);
+  const sectionMarkers = scoreElements.filter(hasSectionName);
+
+  if (sectionMarkers.length === 0) {
+    return 1;
+  }
+
+  const firstScoreElementIndex = scoreElements[0].index;
+  const hasDefaultSectionBeforeFirstMarker =
+    sectionMarkers[0].index > firstScoreElementIndex;
+  const markersAtOrBeforeElement = sectionMarkers.filter(
+    (element) => element.index <= elementIndex,
+  ).length;
+
+  if (markersAtOrBeforeElement === 0) {
+    return 1;
+  }
+
+  return (
+    markersAtOrBeforeElement + (hasDefaultSectionBeforeFirstMarker ? 1 : 0)
+  );
+}
+
+function getSectionCount() {
+  const scoreElements = elements.value
+    .filter((element) => element.elementType !== ElementType.Empty)
+    .sort((a, b) => a.index - b.index);
+  const sectionMarkers = scoreElements.filter(hasSectionName);
+
+  if (sectionMarkers.length === 0) {
+    return 1;
+  }
+
+  return (
+    sectionMarkers.length +
+    (sectionMarkers[0].index > scoreElements[0].index ? 1 : 0)
+  );
+}
+
+function hasSectionName(element: ScoreElement) {
+  return (element.sectionName ?? '').trim().length > 0;
 }
 
 function setSelectionRange(element: ScoreElement) {
@@ -6983,8 +7157,6 @@ function renderTabLabel(tab: Tab) {
       :audio-options="audioOptions"
       :playback-time="selectedWorkspace.playbackTime"
       :playback-bpm="selectedWorkspace.playbackBpm"
-      :current-page-number="currentPageNumber"
-      :page-count="pageCount"
       :neume-keyboard="neumeKeyboard"
       @update:zoom="updateZoom"
       @update:zoom-to-fit="updateZoomToFit"
@@ -8075,6 +8247,53 @@ function renderTabLabel(tab: Tab) {
         />
       </template>
     </div>
+    <div
+      class="status-bar flex w-full flex-none items-center gap-2 bg-legacy-chrome-menu-surface p-1"
+    >
+      <ButtonGroup>
+        <ButtonGroupText>
+          {{
+            $t(($) => $.toolbar.status.pageNumber, {
+              ns: 'toolbar',
+              currentPageNumber: statusPageNumber,
+              pageCount: statusPageCount,
+            })
+          }}
+        </ButtonGroupText>
+        <ButtonGroupText>
+          {{
+            $t(($) => $.toolbar.status.section, {
+              ns: 'toolbar',
+              sectionNumber: statusSectionNumber,
+              sectionCount: statusSectionCount,
+            })
+          }}
+        </ButtonGroupText>
+      </ButtonGroup>
+      <ButtonGroup>
+        <ButtonGroupText>
+          {{
+            $t(($) => $.toolbar.status.line, {
+              ns: 'toolbar',
+              lineNumber: statusLinePosition.lineNumber,
+              lineCount: statusLinePosition.lineCount,
+            })
+          }}
+        </ButtonGroupText>
+        <ButtonGroupText>
+          {{
+            $t(($) => $.toolbar.status.column, {
+              ns: 'toolbar',
+              columnNumber: statusColumnPosition.columnNumber,
+              columnCount: statusColumnPosition.columnCount,
+            })
+          }}
+        </ButtonGroupText>
+        <ButtonGroupText v-if="statusNeumeNoteDisplay">
+          {{ statusNeumeNoteDisplay }}
+        </ButtonGroupText>
+      </ButtonGroup>
+    </div>
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
       v-model:open="modeKeyDialogIsOpen"
@@ -8652,6 +8871,7 @@ function renderTabLabel(tab: Tab) {
   .workspace-tab-container,
   .workspace-tab-new-button,
   .contextual-toolbar-panel,
+  .status-bar,
   .main-toolbar,
   .search-text-container,
   .section-name,

@@ -48,8 +48,13 @@
     "deleteSelectedElement": "Șterge elementul selectat",
     "fit": "Potrivire",
     "speed": "Viteză",
-    "pageNumber": "Pagina {{ currentPageNumber }} din {{ pageCount }}",
     "invalidZoom": "Valoarea trebuie să fie între 50% și 500%."
+  },
+  "status": {
+    "section": "Secțiune {{ sectionNumber }} din {{ sectionCount }}",
+    "pageNumber": "Pagina {{ currentPageNumber }} din {{ pageCount }}",
+    "line": "Linie {{ lineNumber }} din {{ lineCount }}",
+    "column": "Coloană {{ columnNumber }} din {{ columnCount }}"
   },
   "dropCap": {
     "lineSpan": "Linii de coborâre"

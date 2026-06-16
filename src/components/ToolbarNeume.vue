@@ -578,7 +578,6 @@
           <img src="@/assets/icons/fthora-spathi.svg" />
         </ToolbarButton>
       </AppTooltip>
-      <span class="note-name">{{ noteDisplay }}</span>
     </Toolbar>
   </div>
 </template>
@@ -604,7 +603,6 @@ import {
   getIsonLabelSelector,
   getMeasureBarLabelSelector,
   getNoteIndicatorLabelSelector,
-  getNoteLabelSelector,
   getTimeNeumeLabelSelector,
   getVocalExpressionNeumeLabelSelector,
 } from '@/models/NeumeI18nMappings';
@@ -994,12 +992,6 @@ const tertiaryNeume = computed(() =>
   getTertiaryNeume(props.element.quantitativeNeume),
 );
 
-const noteDisplay = computed(() =>
-  props.element.scaleNotes
-    .map((x) => t(getNoteLabelSelector(x), { ns: 'model' }))
-    .join(' - '),
-);
-
 const fthoresDisabled = computed(() =>
   restNeumes.includes(props.element.quantitativeNeume),
 );
@@ -1327,14 +1319,5 @@ function tooltip(neume: ToolbarNeumeTooltipNeume): AppTooltipValue {
 
 .btnNeumeSelect.selected {
   background: var(--color-legacy-chrome-selected);
-}
-
-.note-name {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--btn-size);
-  margin-left: auto;
-  text-align: center;
 }
 </style>

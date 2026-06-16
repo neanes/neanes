@@ -1667,8 +1667,12 @@ function getSectionNumberForElementIndex(elementIndex: number) {
   const scoreElements = elements.value
     .filter((element) => element.elementType !== ElementType.Empty)
     .sort((a, b) => a.index - b.index);
-  const sectionMarkers = scoreElements.filter(hasSectionName);
 
+  if (scoreElements.length === 0) {
+    return 1;
+  }
+
+  const sectionMarkers = scoreElements.filter(hasSectionName);
   if (sectionMarkers.length === 0) {
     return 1;
   }

@@ -1625,7 +1625,9 @@ function getFirstLineNumberForPage(page: Page | undefined) {
     return null;
   }
 
-  const lineIndex = page.lines.findIndex((line) => line.elements.length > 0);
+  const lineIndex = page.lines.findIndex((line) =>
+    line.elements.some((element) => element.elementType !== ElementType.Empty),
+  );
 
   return lineIndex >= 0 ? lineIndex + 1 : null;
 }

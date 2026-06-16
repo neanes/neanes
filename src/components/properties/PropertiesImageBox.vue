@@ -5,7 +5,7 @@
     }}</FieldLegend>
     <FieldGroup>
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-image-box-inline"
           :model-value="element.inline"
           @update:model-value="
@@ -20,7 +20,7 @@
       </Field>
 
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-image-box-lock-aspect-ratio"
           :model-value="element.lockAspectRatio"
           @update:model-value="
@@ -117,7 +117,6 @@ import type { PropType } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
   FieldGroup,
@@ -125,6 +124,7 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field';
+import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { ImageBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';

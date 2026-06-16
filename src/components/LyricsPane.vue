@@ -8,7 +8,7 @@
       }}</FieldLegend>
       <FieldGroup class="min-h-0 flex-1 overflow-hidden">
         <Field orientation="horizontal">
-          <Checkbox
+          <Switch
             id="lyrics-pane-locked"
             :model-value="locked"
             @update:model-value="emit('update:locked', $event === true)"
@@ -54,7 +54,6 @@
 import { PhFloppyDisk } from '@phosphor-icons/vue';
 
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
   FieldGroup,
@@ -62,6 +61,7 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 
 defineProps({

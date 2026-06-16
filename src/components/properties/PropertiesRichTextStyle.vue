@@ -386,7 +386,7 @@
           </template>
 
           <Field orientation="horizontal">
-            <Checkbox
+            <Switch
               :id="neumeFieldId('align-right')"
               :model-value="neumeAlignRight"
               @mousedown.prevent
@@ -577,7 +577,6 @@ import InputFontSize from '@/components/InputFontSize.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
   FieldGroup,
@@ -593,6 +592,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   execForOwner,

@@ -5,7 +5,7 @@
     }}</FieldLegend>
     <FieldGroup>
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-martyria-auto"
           :model-value="element.auto"
           @update:model-value="
@@ -234,7 +234,6 @@ import { computed } from 'vue';
 
 import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
   FieldGroup,
@@ -250,6 +249,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import type { MartyriaElement } from '@/models/Element';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import {

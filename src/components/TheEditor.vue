@@ -1656,7 +1656,11 @@ function getSectionAnchorIndexForPage(pageNumber: number) {
   for (let pageIndex = pageNumber - 2; pageIndex >= 0; pageIndex--) {
     const prevPage = filteredPages.value[pageIndex];
 
-    for (let lineIndex = prevPage.lines.length - 1; lineIndex >= 0; lineIndex--) {
+    for (
+      let lineIndex = prevPage.lines.length - 1;
+      lineIndex >= 0;
+      lineIndex--
+    ) {
       const line = prevPage.lines[lineIndex];
 
       for (
@@ -1681,9 +1685,9 @@ function getPageElements(page: Page) {
 }
 
 function getSectionNumberForElementIndex(elementIndex: number) {
-  const scoreElements = elements.value
-    .filter((element) => element.elementType !== ElementType.Empty)
-    .sort((a, b) => a.index - b.index);
+  const scoreElements = elements.value.filter(
+    (element) => element.elementType !== ElementType.Empty,
+  );
 
   if (scoreElements.length === 0) {
     return 1;
@@ -1711,9 +1715,9 @@ function getSectionNumberForElementIndex(elementIndex: number) {
 }
 
 function getSectionCount() {
-  const scoreElements = elements.value
-    .filter((element) => element.elementType !== ElementType.Empty)
-    .sort((a, b) => a.index - b.index);
+  const scoreElements = elements.value.filter(
+    (element) => element.elementType !== ElementType.Empty,
+  );
 
   if (scoreElements.length === 0) {
     return 1;

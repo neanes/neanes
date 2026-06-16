@@ -1617,7 +1617,15 @@ function clamp(value: number, min: number, max: number) {
 function getFirstElementForPage(pageNumber: number) {
   const page = filteredPages.value[pageNumber - 1];
 
-  return page?.lines.flatMap((line) => line.elements).at(0) ?? null;
+  if (!page) {
+    return null;
+  }
+
+  return (
+    page.lines
+      .flatMap((line) => line.elements)
+      .find((element) => element.elementType !== ElementType.Empty) ?? null
+  );
 }
 
 function getFirstLineNumberForPage(page: Page | undefined) {

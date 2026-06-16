@@ -170,6 +170,7 @@ import type {
   PlaybackOptions,
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
+import { fontCatalog } from '@/services/FontCatalog';
 import type { Command } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
@@ -178,6 +179,7 @@ import { LayoutService } from '@/services/LayoutService';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
+import { resolveFontStyle } from '@/utils/fontStyle';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
@@ -228,6 +230,36 @@ const scoreElementCommandFactory: CommandFactory<ScoreElement> =
 
 const pageSetupCommandFactory: CommandFactory<PageSetup> =
   new CommandFactory<PageSetup>();
+
+function createFontLoadDescriptor(
+  fontFamily: string,
+  fontStyle: string | null = null,
+) {
+  const resolved = resolveFontStyle(fontFamily, fontStyle);
+  const cssFontFamily = `"${resolved.cssFontFamily.replace(/["\\]/g, '\\$&')}"`;
+
+  return [
+    resolved.cssFontStyle,
+    'normal',
+    resolved.cssFontWeight,
+    '1rem',
+    cssFontFamily,
+  ].join(' ');
+}
+
+function getBundledFontLoadDescriptors() {
+  const descriptors = new Set<string>();
+
+  for (const family of fontCatalog.bundledFamilies()) {
+    for (const style of fontCatalog.getStyles(family)) {
+      descriptors.add(createFontLoadDescriptor(family, style));
+    }
+  }
+
+  descriptors.add(createFontLoadDescriptor('NeanesRTL'));
+
+  return [...descriptors];
+}
 
 let untitledIndex = 1;
 
@@ -1224,21 +1256,18 @@ async function initialize() {
   try {
     const fontLoader = (document as any).fonts;
 
-    const loadSystemFontsPromise = ipcService
-      .getSystemFonts()
-      .then((systemFonts) => (fonts.value = systemFonts));
+    const loadSystemFontsPromise = fontCatalog
+      .init()
+      .then(() => (fonts.value = fontCatalog.systemFamilies()));
+    const bundledFontLoadPromises = getBundledFontLoadDescriptors().map(
+      (descriptor) => fontLoader.load(descriptor),
+    );
 
-    // Must load all fonts before loading any documents,
-    // otherwise the text measurements will be wrong
+    // Must load all bundled faces before loading any documents, otherwise the
+    // first text measurements can use fallback metrics.
     await Promise.all([
       loadSystemFontsPromise,
-      fontLoader.load('1rem "GFS Didot"'),
-      fontLoader.load('1rem Neanes'),
-      fontLoader.load('1rem NeanesStathisSeries'),
-      fontLoader.load('1rem NeanesRTL'),
-      fontLoader.load('1rem "Noto Naskh Arabic"'),
-      fontLoader.load('1rem "Old Standard"'),
-      fontLoader.load('1rem "Source Serif"'),
+      ...bundledFontLoadPromises,
       fontLoader.ready,
     ]);
 
@@ -1285,6 +1314,15 @@ function getFooterHorizontalRuleStyle(footerHeight: number) {
 }
 
 function getLyricStyle(element: NoteElement) {
+  const resolvedLyricsFont = resolveFontStyle(
+    element.lyricsUseDefaultStyle
+      ? score.value.pageSetup.lyricsDefaultFontFamily
+      : element.lyricsFontFamily,
+    element.lyricsUseDefaultStyle
+      ? score.value.pageSetup.lyricsDefaultFontStyle
+      : element.lyricsFontStyle,
+  );
+
   return {
     top: withZoom(element.lyricsVerticalOffset),
     paddingLeft:
@@ -1302,21 +1340,12 @@ function getLyricStyle(element: NoteElement) {
     fontSize: element.lyricsUseDefaultStyle
       ? withZoom(score.value.pageSetup.lyricsDefaultFontSize)
       : withZoom(element.lyricsFontSize),
-    fontFamily: element.lyricsUseDefaultStyle
-      ? getFontFamilyWithFallback(
-          score.value.pageSetup.lyricsDefaultFontFamily,
-          score.value.pageSetup.neumeDefaultFontFamily,
-        )
-      : getFontFamilyWithFallback(
-          element.lyricsFontFamily,
-          score.value.pageSetup.neumeDefaultFontFamily,
-        ),
-    fontWeight: element.lyricsUseDefaultStyle
-      ? score.value.pageSetup.lyricsDefaultFontWeight
-      : element.lyricsFontWeight,
-    fontStyle: element.lyricsUseDefaultStyle
-      ? score.value.pageSetup.lyricsDefaultFontStyle
-      : element.lyricsFontStyle,
+    fontFamily: getFontFamilyWithFallback(
+      resolvedLyricsFont.cssFontFamily,
+      score.value.pageSetup.neumeDefaultFontFamily,
+    ),
+    fontWeight: resolvedLyricsFont.cssFontWeight,
+    fontStyle: resolvedLyricsFont.cssFontStyle,
     textDecoration: element.lyricsUseDefaultStyle
       ? undefined
       : element.lyricsTextDecoration,
@@ -1786,7 +1815,6 @@ function addQuantitativeNeume(
   element.lyricsFontFamily = score.value.pageSetup.lyricsDefaultFontFamily;
   element.lyricsFontSize = score.value.pageSetup.lyricsDefaultFontSize;
   element.lyricsFontStyle = score.value.pageSetup.lyricsDefaultFontStyle;
-  element.lyricsFontWeight = score.value.pageSetup.lyricsDefaultFontWeight;
   element.lyricsStrokeWidth = score.value.pageSetup.lyricsDefaultStrokeWidth;
 
   element.quantitativeNeume = quantitativeNeume;
@@ -2017,7 +2045,6 @@ function addDropCap(after: boolean) {
   element.fontFamily = score.value.pageSetup.dropCapDefaultFontFamily;
   element.fontSize = score.value.pageSetup.dropCapDefaultFontSize;
   element.strokeWidth = score.value.pageSetup.dropCapDefaultStrokeWidth;
-  element.fontWeight = score.value.pageSetup.dropCapDefaultFontWeight;
   element.fontStyle = score.value.pageSetup.dropCapDefaultFontStyle;
   element.lineHeight = score.value.pageSetup.dropCapDefaultLineHeight;
   element.lineSpan = score.value.pageSetup.dropCapDefaultLineSpan;
@@ -5329,12 +5356,30 @@ function deletePreviousElement() {
   }
 }
 
+function getResizableTextDefaultSnapshot(pageSetup: PageSetup) {
+  return {
+    lyricsDefaultFontFamily: pageSetup.lyricsDefaultFontFamily,
+    lyricsDefaultFontSize: pageSetup.lyricsDefaultFontSize,
+    lyricsDefaultFontStyle: pageSetup.lyricsDefaultFontStyle,
+    textBoxDefaultFontFamily: pageSetup.textBoxDefaultFontFamily,
+    textBoxDefaultFontSize: pageSetup.textBoxDefaultFontSize,
+    textBoxDefaultFontStyle: pageSetup.textBoxDefaultFontStyle,
+    textBoxDefaultLineHeight: pageSetup.textBoxDefaultLineHeight,
+  };
+}
+
+function resizableTextDefaultsChanged(previous: PageSetup, current: PageSetup) {
+  return !shallowEquals(
+    getResizableTextDefaultSnapshot(previous),
+    getResizableTextDefaultSnapshot(current),
+  );
+}
+
 function updatePageSetup(pageSetup: PageSetup) {
-  const needToRecalcRichTextBoxes =
-    pageSetup.textBoxDefaultFontFamily !=
-      score.value.pageSetup.textBoxDefaultFontFamily ||
-    pageSetup.textBoxDefaultFontSize !=
-      score.value.pageSetup.textBoxDefaultFontSize;
+  const needToRecalcRichTextBoxes = resizableTextDefaultsChanged(
+    score.value.pageSetup,
+    pageSetup,
+  );
 
   const updateCommands: Command[] = [
     pageSetupCommandFactory.create('update-properties', {
@@ -6210,16 +6255,14 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
     element.fontFamily = score.value.pageSetup.lyricsDefaultFontFamily;
     element.fontSize = score.value.pageSetup.lyricsDefaultFontSize;
     element.strokeWidth = score.value.pageSetup.lyricsDefaultStrokeWidth;
-    element.bold = score.value.pageSetup.lyricsDefaultFontWeight === '700';
-    element.italic = score.value.pageSetup.lyricsDefaultFontStyle === 'italic';
+    element.fontStyle = score.value.pageSetup.lyricsDefaultFontStyle;
   } else {
     element.color = score.value.pageSetup.textBoxDefaultColor;
     element.fontFamily = score.value.pageSetup.textBoxDefaultFontFamily;
     element.fontSize = score.value.pageSetup.textBoxDefaultFontSize;
     element.strokeWidth = score.value.pageSetup.textBoxDefaultStrokeWidth;
     element.lineHeight = score.value.pageSetup.textBoxDefaultLineHeight;
-    element.bold = score.value.pageSetup.textBoxDefaultFontWeight === '700';
-    element.italic = score.value.pageSetup.textBoxDefaultFontStyle === 'italic';
+    element.fontStyle = score.value.pageSetup.textBoxDefaultFontStyle;
   }
 
   addScoreElement(element, selectedElementIndex.value);
@@ -6441,11 +6484,9 @@ async function onFileMenuSaveAs() {
 
 function onFileMenuUndo() {
   const currentIndex = selectedElementIndex.value;
-
-  const textBoxDefaultFontFamilyPrevious =
-    score.value.pageSetup.textBoxDefaultFontFamily;
-  const textBoxDefaultFontSizePrevious =
-    score.value.pageSetup.textBoxDefaultFontSize;
+  const pageSetupPrevious = getResizableTextDefaultSnapshot(
+    score.value.pageSetup,
+  );
 
   commandService.value.undo();
 
@@ -6466,10 +6507,10 @@ function onFileMenuUndo() {
   }
 
   if (
-    textBoxDefaultFontFamilyPrevious !=
-      score.value.pageSetup.textBoxDefaultFontFamily ||
-    textBoxDefaultFontSizePrevious !=
-      score.value.pageSetup.textBoxDefaultFontSize
+    !shallowEquals(
+      pageSetupPrevious,
+      getResizableTextDefaultSnapshot(score.value.pageSetup),
+    )
   ) {
     recalculateRichTextBoxHeights();
     recalculateTextBoxHeights();
@@ -6480,11 +6521,9 @@ function onFileMenuUndo() {
 
 function onFileMenuRedo() {
   const currentIndex = selectedElementIndex.value;
-
-  const textBoxDefaultFontFamilyPrevious =
-    score.value.pageSetup.textBoxDefaultFontFamily;
-  const textBoxDefaultFontSizePrevious =
-    score.value.pageSetup.textBoxDefaultFontSize;
+  const pageSetupPrevious = getResizableTextDefaultSnapshot(
+    score.value.pageSetup,
+  );
 
   commandService.value.redo();
 
@@ -6505,10 +6544,10 @@ function onFileMenuRedo() {
   }
 
   if (
-    textBoxDefaultFontFamilyPrevious !=
-      score.value.pageSetup.textBoxDefaultFontFamily ||
-    textBoxDefaultFontSizePrevious !=
-      score.value.pageSetup.textBoxDefaultFontSize
+    !shallowEquals(
+      pageSetupPrevious,
+      getResizableTextDefaultSnapshot(score.value.pageSetup),
+    )
   ) {
     recalculateRichTextBoxHeights();
     recalculateTextBoxHeights();
@@ -6804,8 +6843,7 @@ function createDefaultScore() {
   title.fontSize = score.pageSetup.textBoxDefaultFontSize;
   title.strokeWidth = score.pageSetup.textBoxDefaultStrokeWidth;
   title.lineHeight = score.pageSetup.textBoxDefaultLineHeight;
-  title.bold = score.pageSetup.textBoxDefaultFontWeight === '700';
-  title.italic = score.pageSetup.textBoxDefaultFontStyle === 'italic';
+  title.fontStyle = score.pageSetup.textBoxDefaultFontStyle;
   title.height = Math.round(
     TextMeasurementService.getFontHeight(title.computedFont) * 1.2,
   );
@@ -8054,7 +8092,11 @@ function renderTabLabel(tab: Tab) {
               ? score.pageSetup.lyricsDefaultFontSize
               : score.pageSetup.textBoxDefaultFontSize
           "
-          :default-font-family="score.pageSetup.textBoxDefaultFontFamily"
+          :default-font-family="
+            inspectorContext.element.inline
+              ? score.pageSetup.lyricsDefaultFontFamily
+              : score.pageSetup.textBoxDefaultFontFamily
+          "
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'annotation'">

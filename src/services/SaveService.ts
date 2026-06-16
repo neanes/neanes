@@ -43,9 +43,128 @@ import type { LyricSetup as LyricSetup_v1 } from '@/models/save/v1/Score';
 import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
 import { Score } from '@/models/Score';
 import { Staff } from '@/models/Staff';
+import { fontCatalog } from '@/services/FontCatalog';
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
+import { applyLegacyStyle, normalizeFontStyle } from '@/utils/fontStyle';
+import { applyAxes } from '@/utils/fontStyleAxes';
 
 interface IScore {
   version: string;
+}
+
+function readLegacyCssFontStyle(fontStyle: string | null | undefined) {
+  const trimmed = fontStyle?.trim();
+
+  if (trimmed == null || trimmed === '') {
+    return undefined;
+  }
+
+  if (trimmed === 'normal' || trimmed === 'italic' || trimmed === 'oblique') {
+    return trimmed;
+  }
+
+  return undefined;
+}
+
+function normalizeSavedFontSubfamily(fontSubfamily: string | null | undefined) {
+  const trimmed = fontSubfamily?.trim();
+
+  return trimmed == null || trimmed === ''
+    ? undefined
+    : normalizeFontStyle(trimmed);
+}
+
+function loadFontFaceFromWeightFields({
+  savedFontFamily,
+  fallbackFontFamily,
+  fontSubfamily,
+  legacyFontWeight,
+  legacyCssFontStyle,
+  fallbackStyle = DEFAULT_FONT_STYLE,
+}: {
+  savedFontFamily: string | null | undefined;
+  fallbackFontFamily: string;
+  fontSubfamily?: string | null;
+  legacyFontWeight?: string | null;
+  legacyCssFontStyle?: string | null;
+  fallbackStyle?: string;
+}) {
+  const face = splitSavedFontFamily(savedFontFamily, fallbackFontFamily);
+  const savedStyle = normalizeSavedFontSubfamily(fontSubfamily);
+  const cssFontStyle = readLegacyCssFontStyle(legacyCssFontStyle);
+
+  if (savedStyle != null) {
+    return { fontFamily: face.fontFamily, fontStyle: savedStyle };
+  }
+
+  if (legacyFontWeight != null || cssFontStyle != null) {
+    return {
+      fontFamily: face.fontFamily,
+      fontStyle: applyLegacyStyle(
+        face.fontStyle,
+        { weight: legacyFontWeight, cssFontStyle },
+        fontCatalog.getStyles(face.fontFamily),
+      ),
+    };
+  }
+
+  return {
+    fontFamily: face.fontFamily,
+    fontStyle:
+      face.fontStyle !== DEFAULT_FONT_STYLE
+        ? face.fontStyle
+        : normalizeFontStyle(fallbackStyle),
+  };
+}
+
+function loadFontFaceFromToggleFields({
+  savedFontFamily,
+  fallbackFontFamily,
+  fontSubfamily,
+  legacyBold,
+  legacyItalic,
+  fallbackStyle = DEFAULT_FONT_STYLE,
+}: {
+  savedFontFamily: string | null | undefined;
+  fallbackFontFamily: string;
+  fontSubfamily?: string | null;
+  legacyBold?: boolean | null;
+  legacyItalic?: boolean | null;
+  fallbackStyle?: string;
+}) {
+  const face = splitSavedFontFamily(savedFontFamily, fallbackFontFamily);
+  const savedStyle = normalizeSavedFontSubfamily(fontSubfamily);
+
+  if (savedStyle != null) {
+    return { fontFamily: face.fontFamily, fontStyle: savedStyle };
+  }
+
+  const baseStyle =
+    face.fontStyle !== DEFAULT_FONT_STYLE
+      ? face.fontStyle
+      : normalizeFontStyle(fallbackStyle);
+
+  return {
+    fontFamily: face.fontFamily,
+    fontStyle: applyAxes(
+      baseStyle,
+      { bold: legacyBold || undefined, italic: legacyItalic || undefined },
+      fontCatalog.getStyles(face.fontFamily),
+    ),
+  };
+}
+
+function splitSavedFontFamily(
+  fontFamily: string | null | undefined,
+  fallbackFontFamily: string,
+) {
+  const family = fontFamily?.trim() || fallbackFontFamily;
+  const split = fontCatalog.splitFace(family);
+
+  return {
+    fontFamily: split.family || family,
+    fontStyle: normalizeFontStyle(split.style),
+  };
 }
 
 export class SaveService {
@@ -160,8 +279,7 @@ export class SaveService {
     pageSetup.dropCapDefaultColor = p.dropCapDefaultColor;
     pageSetup.dropCapDefaultFontFamily = p.dropCapDefaultFontFamily;
     pageSetup.dropCapDefaultFontSize = p.dropCapDefaultFontSize;
-    pageSetup.dropCapDefaultFontWeight = p.dropCapDefaultFontWeight;
-    pageSetup.dropCapDefaultFontStyle = p.dropCapDefaultFontStyle;
+    pageSetup.dropCapDefaultFontSubfamily = p.dropCapDefaultFontStyle;
     pageSetup.dropCapDefaultStrokeWidth = p.dropCapDefaultStrokeWidth;
     pageSetup.dropCapDefaultLineHeight =
       p.dropCapDefaultLineHeight ?? undefined;
@@ -173,8 +291,7 @@ export class SaveService {
     pageSetup.lyricsDefaultColor = p.lyricsDefaultColor;
     pageSetup.lyricsDefaultFontFamily = p.lyricsDefaultFontFamily;
     pageSetup.lyricsDefaultFontSize = p.lyricsDefaultFontSize;
-    pageSetup.lyricsDefaultFontWeight = p.lyricsDefaultFontWeight;
-    pageSetup.lyricsDefaultFontStyle = p.lyricsDefaultFontStyle;
+    pageSetup.lyricsDefaultFontSubfamily = p.lyricsDefaultFontStyle;
     pageSetup.lyricsDefaultStrokeWidth = p.lyricsDefaultStrokeWidth;
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
     pageSetup.lyricsMinimumSpacing = p.lyricsMinimumSpacing;
@@ -183,8 +300,7 @@ export class SaveService {
     pageSetup.textBoxDefaultColor = p.textBoxDefaultColor;
     pageSetup.textBoxDefaultFontFamily = p.textBoxDefaultFontFamily;
     pageSetup.textBoxDefaultFontSize = p.textBoxDefaultFontSize;
-    pageSetup.textBoxDefaultFontWeight = p.textBoxDefaultFontWeight;
-    pageSetup.textBoxDefaultFontStyle = p.textBoxDefaultFontStyle;
+    pageSetup.textBoxDefaultFontSubfamily = p.textBoxDefaultFontStyle;
     pageSetup.textBoxDefaultStrokeWidth = p.textBoxDefaultStrokeWidth;
     pageSetup.textBoxDefaultLineHeight =
       p.textBoxDefaultLineHeight ?? undefined;
@@ -353,8 +469,7 @@ export class SaveService {
     element.content = e.content;
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
-    element.fontWeight = e.fontWeight;
-    element.fontStyle = e.fontStyle;
+    element.fontSubfamily = e.fontStyle;
     element.lineHeight = e.lineHeight ?? undefined;
     element.strokeWidth = e.strokeWidth;
     element.customWidth = e.customWidth ?? undefined;
@@ -542,8 +657,7 @@ export class SaveService {
     if (!e.lyricsUseDefaultStyle) {
       element.lyricsUseDefaultStyle = e.lyricsUseDefaultStyle;
       element.lyricsColor = e.lyricsColor;
-      element.lyricsFontStyle = e.lyricsFontStyle;
-      element.lyricsFontWeight = e.lyricsFontWeight;
+      element.lyricsFontSubfamily = e.lyricsFontStyle;
       element.lyricsFontFamily = e.lyricsFontFamily;
       element.lyricsFontSize = e.lyricsFontSize;
       element.lyricsTextDecoration = e.lyricsTextDecoration;
@@ -608,8 +722,7 @@ export class SaveService {
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth;
-    element.bold = e.bold || undefined;
-    element.italic = e.italic || undefined;
+    element.fontSubfamily = e.fontStyle;
     element.underline = e.underline || undefined;
     element.lineHeight = e.lineHeight ?? undefined;
     element.height = e.height;
@@ -922,12 +1035,17 @@ export class SaveService {
 
     pageSetup.dropCapDefaultColor =
       p.dropCapDefaultColor ?? pageSetup.dropCapDefaultColor;
-    pageSetup.dropCapDefaultFontFamily = p.dropCapDefaultFontFamily;
+    const dropCapDefaultFont = loadFontFaceFromWeightFields({
+      savedFontFamily: p.dropCapDefaultFontFamily,
+      fallbackFontFamily: pageSetup.dropCapDefaultFontFamily,
+      fontSubfamily: p.dropCapDefaultFontSubfamily,
+      legacyFontWeight: p.dropCapDefaultFontWeight,
+      legacyCssFontStyle: p.dropCapDefaultFontStyle,
+      fallbackStyle: pageSetup.dropCapDefaultFontStyle,
+    });
+    pageSetup.dropCapDefaultFontFamily = dropCapDefaultFont.fontFamily;
     pageSetup.dropCapDefaultFontSize = p.dropCapDefaultFontSize;
-    pageSetup.dropCapDefaultFontWeight =
-      p.dropCapDefaultFontWeight ?? pageSetup.dropCapDefaultFontWeight;
-    pageSetup.dropCapDefaultFontStyle =
-      p.dropCapDefaultFontStyle ?? pageSetup.dropCapDefaultFontStyle;
+    pageSetup.dropCapDefaultFontStyle = dropCapDefaultFont.fontStyle;
     pageSetup.dropCapDefaultStrokeWidth =
       p.dropCapDefaultStrokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
     pageSetup.dropCapDefaultLineHeight =
@@ -937,14 +1055,18 @@ export class SaveService {
 
     pageSetup.textBoxDefaultColor =
       p.textBoxDefaultColor ?? pageSetup.textBoxDefaultColor;
-    pageSetup.textBoxDefaultFontFamily =
-      p.textBoxDefaultFontFamily ?? pageSetup.textBoxDefaultFontFamily;
+    const textBoxDefaultFont = loadFontFaceFromWeightFields({
+      savedFontFamily: p.textBoxDefaultFontFamily,
+      fallbackFontFamily: pageSetup.textBoxDefaultFontFamily,
+      fontSubfamily: p.textBoxDefaultFontSubfamily,
+      legacyFontWeight: p.textBoxDefaultFontWeight,
+      legacyCssFontStyle: p.textBoxDefaultFontStyle,
+      fallbackStyle: pageSetup.textBoxDefaultFontStyle,
+    });
+    pageSetup.textBoxDefaultFontFamily = textBoxDefaultFont.fontFamily;
     pageSetup.textBoxDefaultFontSize =
       p.textBoxDefaultFontSize ?? pageSetup.textBoxDefaultFontSize;
-    pageSetup.textBoxDefaultFontWeight =
-      p.textBoxDefaultFontWeight ?? pageSetup.textBoxDefaultFontWeight;
-    pageSetup.textBoxDefaultFontStyle =
-      p.textBoxDefaultFontStyle ?? pageSetup.textBoxDefaultFontStyle;
+    pageSetup.textBoxDefaultFontStyle = textBoxDefaultFont.fontStyle;
     pageSetup.textBoxDefaultStrokeWidth =
       p.textBoxDefaultStrokeWidth ?? pageSetup.textBoxDefaultStrokeWidth;
     pageSetup.textBoxDefaultLineHeight =
@@ -952,12 +1074,17 @@ export class SaveService {
 
     pageSetup.lyricsDefaultColor =
       p.lyricsDefaultColor ?? pageSetup.lyricsDefaultColor;
-    pageSetup.lyricsDefaultFontFamily = p.lyricsDefaultFontFamily;
+    const lyricsDefaultFont = loadFontFaceFromWeightFields({
+      savedFontFamily: p.lyricsDefaultFontFamily,
+      fallbackFontFamily: pageSetup.lyricsDefaultFontFamily,
+      fontSubfamily: p.lyricsDefaultFontSubfamily,
+      legacyFontWeight: p.lyricsDefaultFontWeight,
+      legacyCssFontStyle: p.lyricsDefaultFontStyle,
+      fallbackStyle: pageSetup.lyricsDefaultFontStyle,
+    });
+    pageSetup.lyricsDefaultFontFamily = lyricsDefaultFont.fontFamily;
     pageSetup.lyricsDefaultFontSize = p.lyricsDefaultFontSize;
-    pageSetup.lyricsDefaultFontWeight =
-      p.lyricsDefaultFontWeight ?? pageSetup.lyricsDefaultFontWeight;
-    pageSetup.lyricsDefaultFontStyle =
-      p.lyricsDefaultFontStyle ?? pageSetup.lyricsDefaultFontStyle;
+    pageSetup.lyricsDefaultFontStyle = lyricsDefaultFont.fontStyle;
     pageSetup.lyricsDefaultStrokeWidth =
       p.lyricsDefaultStrokeWidth ?? pageSetup.lyricsDefaultStrokeWidth;
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
@@ -1151,11 +1278,18 @@ export class SaveService {
     // Due to model changes, these values may be null for older files
     element.color = e.color ?? pageSetup.dropCapDefaultColor;
     element.content = e.content;
-    element.fontFamily = e.fontFamily ?? pageSetup.dropCapDefaultFontFamily;
+    const font = loadFontFaceFromWeightFields({
+      savedFontFamily: e.fontFamily,
+      fallbackFontFamily: pageSetup.dropCapDefaultFontFamily,
+      fontSubfamily: e.fontSubfamily,
+      legacyFontWeight: e.fontWeight,
+      legacyCssFontStyle: e.fontStyle,
+      fallbackStyle: pageSetup.dropCapDefaultFontStyle,
+    });
+    element.fontFamily = font.fontFamily;
     element.fontSize = e.fontSize ?? pageSetup.dropCapDefaultFontSize;
     element.lineHeight = e.lineHeight ?? pageSetup.dropCapDefaultLineHeight;
-    element.fontWeight = e.fontWeight ?? pageSetup.dropCapDefaultFontWeight;
-    element.fontStyle = e.fontStyle ?? pageSetup.dropCapDefaultFontStyle;
+    element.fontStyle = font.fontStyle;
     element.strokeWidth = e.strokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
     element.lineSpan = e.lineSpan ?? pageSetup.dropCapDefaultLineSpan;
     element.customWidth = e.customWidth ?? null;
@@ -1382,10 +1516,17 @@ export class SaveService {
     if (e.lyricsUseDefaultStyle != null) {
       element.lyricsUseDefaultStyle = e.lyricsUseDefaultStyle;
       element.lyricsColor = e.lyricsColor ?? element.lyricsColor;
-      element.lyricsFontStyle = e.lyricsFontStyle ?? element.lyricsFontStyle;
-      element.lyricsFontWeight = e.lyricsFontWeight ?? element.lyricsFontWeight;
-      element.lyricsFontFamily = e.lyricsFontFamily ?? element.lyricsFontFamily;
+      const lyricsFont = loadFontFaceFromWeightFields({
+        savedFontFamily: e.lyricsFontFamily,
+        fallbackFontFamily: element.lyricsFontFamily,
+        fontSubfamily: e.lyricsFontSubfamily,
+        legacyFontWeight: e.lyricsFontWeight,
+        legacyCssFontStyle: e.lyricsFontStyle,
+        fallbackStyle: element.lyricsFontStyle,
+      });
+      element.lyricsFontFamily = lyricsFont.fontFamily;
       element.lyricsFontSize = e.lyricsFontSize ?? element.lyricsFontSize;
+      element.lyricsFontStyle = lyricsFont.fontStyle;
       element.lyricsTextDecoration =
         e.lyricsTextDecoration ?? element.lyricsTextDecoration;
       element.lyricsStrokeWidth =
@@ -1460,11 +1601,17 @@ export class SaveService {
 
     element.multipanel = e.multipanel === true;
 
-    element.fontFamily = e.fontFamily;
+    const font = loadFontFaceFromToggleFields({
+      savedFontFamily: e.fontFamily,
+      fallbackFontFamily: element.fontFamily,
+      fontSubfamily: e.fontSubfamily,
+      legacyBold: e.bold,
+      legacyItalic: e.italic,
+    });
+    element.fontFamily = font.fontFamily;
     element.fontSize = e.fontSize;
     element.inline = e.inline === true;
-    element.bold = e.bold === true;
-    element.italic = e.italic === true;
+    element.fontStyle = font.fontStyle;
     element.underline = e.underline === true;
     element.height = e.height;
     element.strokeWidth = e.strokeWidth ?? element.strokeWidth;

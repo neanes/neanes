@@ -29,9 +29,23 @@
             class="w-full max-w-full"
             :model-value="element.fontFamily"
             :options="textBoxFontFamilies"
+            @update:model-value="onFontFamilyChanged"
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel for="properties-text-box-font-style">{{
+            $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
+          }}</FieldLabel>
+          <FontStyleSelect
+            id="properties-text-box-font-style"
+            class="w-full max-w-full"
+            :model-value="element.fontStyle"
+            :options="fontStyleOptions"
+            :disabled="fontStyleOptions.length <= 1"
             @update:model-value="
               $emit('update', {
-                fontFamily: $event,
+                fontStyle: $event,
               } as Partial<TextBoxElement>)
             "
           />
@@ -91,10 +105,18 @@
             :model-value="styleValues"
             @update:model-value="onStyleValuesChanged"
           >
-            <ToggleGroupItem value="bold" aria-label="Toggle bold">
+            <ToggleGroupItem
+              value="bold"
+              aria-label="Toggle bold"
+              :disabled="!isFontStyleAxisToggleEnabled('bold')"
+            >
               <PhTextB />
             </ToggleGroupItem>
-            <ToggleGroupItem value="italic" aria-label="Toggle italic">
+            <ToggleGroupItem
+              value="italic"
+              aria-label="Toggle italic"
+              :disabled="!isFontStyleAxisToggleEnabled('italic')"
+            >
               <PhTextItalic />
             </ToggleGroupItem>
             <ToggleGroupItem value="underline" aria-label="Toggle underline">
@@ -305,6 +327,7 @@ import { computed } from 'vue';
 import AppTooltip from '@/components/AppTooltip.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
@@ -317,9 +340,11 @@ import {
   FieldSet,
 } from '@/components/ui/field';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
+import { fontCatalog } from '@/services/FontCatalog';
 import {
   fraction1FormatOptions,
   fraction2FormatOptions,
@@ -343,17 +368,24 @@ const props = defineProps({
 
 const emit = defineEmits(['update']);
 
+const {
+  fontStyleOptions,
+  activeStyleAxisValues,
+  isFontStyleAxisToggleEnabled,
+  applyStyleAxisToggles,
+  remapStyleForFamily,
+} = useFontStyleControls(
+  () => props.element.fontFamily,
+  () => props.element.fontStyle,
+);
+
 const styleValues = computed(() => [
-  ...(!props.element.useDefaultStyle && props.element.bold ? ['bold'] : []),
-  ...(!props.element.useDefaultStyle && props.element.italic ? ['italic'] : []),
+  ...(props.element.useDefaultStyle ? [] : activeStyleAxisValues.value),
   ...(props.element.underline ? ['underline'] : []),
 ]);
 
 const textBoxFontFamilies = computed(() => [
-  'Source Serif',
-  'GFS Didot',
-  'Noto Naskh Arabic',
-  'Old Standard',
+  ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 
@@ -367,11 +399,17 @@ function onStyleValuesChanged(value: unknown) {
   };
 
   if (!props.element.useDefaultStyle) {
-    update.bold = values.includes('bold');
-    update.italic = values.includes('italic');
+    update.fontStyle = applyStyleAxisToggles(values);
   }
 
   emit('update', update);
+}
+
+function onFontFamilyChanged(fontFamily: string) {
+  emit('update', {
+    fontFamily,
+    fontStyle: remapStyleForFamily(fontFamily),
+  } as Partial<TextBoxElement>);
 }
 
 function onAlignmentChanged(value: unknown) {

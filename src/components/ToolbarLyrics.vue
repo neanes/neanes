@@ -4,9 +4,16 @@
       <FontCombobox
         :model-value="element.lyricsFontFamily"
         :options="lyricsFontFamilies"
+        @update:model-value="onFontFamilyChanged"
+      />
+      <FontStyleSelect
+        class="w-40"
+        :model-value="element.lyricsFontStyle"
+        :options="fontStyleOptions"
+        :disabled="fontStyleOptions.length <= 1"
         @update:model-value="
           $emit('update', {
-            lyricsFontFamily: $event,
+            lyricsFontStyle: $event,
           } as Partial<NoteElement>)
         "
       />
@@ -29,7 +36,8 @@
         <ToggleGroupItem
           value="bold"
           class="icon-btn"
-          :class="{ selected: bold }"
+          :class="{ selected: isFontStyleAxisActive('bold') }"
+          :disabled="!isFontStyleAxisToggleEnabled('bold')"
           aria-label="Toggle bold"
         >
           <PhTextB class="h-4 w-4" />
@@ -37,7 +45,8 @@
         <ToggleGroupItem
           value="italic"
           class="icon-btn"
-          :class="{ selected: italic }"
+          :class="{ selected: isFontStyleAxisActive('italic') }"
+          :disabled="!isFontStyleAxisToggleEnabled('italic')"
           aria-label="Toggle italic"
         >
           <PhTextItalic class="h-4 w-4" />
@@ -100,6 +109,7 @@ import { computed } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
@@ -107,7 +117,9 @@ import {
   ToolbarButton,
   ToolbarSeparator,
 } from '@/components/ui/toolbar';
+import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { NoteElement } from '@/models/Element';
+import { fontCatalog } from '@/services/FontCatalog';
 import {
   E_MACRON,
   E_MACRON_SMALL,
@@ -141,22 +153,28 @@ const props = defineProps({
 
 const emit = defineEmits(['insert:specialCharacter', 'update']);
 
-const bold = computed(() => props.element.lyricsFontWeight === '700');
-const italic = computed(() => props.element.lyricsFontStyle === 'italic');
+const {
+  fontStyleOptions,
+  activeStyleAxisValues,
+  isFontStyleAxisActive,
+  isFontStyleAxisToggleEnabled,
+  applyStyleAxisToggles,
+  remapStyleForFamily,
+} = useFontStyleControls(
+  () => props.element.lyricsFontFamily,
+  () => props.element.lyricsFontStyle,
+);
+
 const underline = computed(
   () => props.element.lyricsTextDecoration === 'underline',
 );
 const styleValues = computed(() => [
-  ...(bold.value ? ['bold'] : []),
-  ...(italic.value ? ['italic'] : []),
+  ...activeStyleAxisValues.value,
   ...(underline.value ? ['underline'] : []),
 ]);
 
 const lyricsFontFamilies = computed(() => [
-  'Source Serif',
-  'GFS Didot',
-  'Noto Naskh Arabic',
-  'Old Standard',
+  ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 
@@ -164,9 +182,15 @@ function onStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {
-    lyricsFontWeight: values.includes('bold') ? '700' : '400',
-    lyricsFontStyle: values.includes('italic') ? 'italic' : 'normal',
+    lyricsFontStyle: applyStyleAxisToggles(values),
     lyricsTextDecoration: values.includes('underline') ? 'underline' : 'none',
+  } as Partial<NoteElement>);
+}
+
+function onFontFamilyChanged(lyricsFontFamily: string) {
+  emit('update', {
+    lyricsFontFamily,
+    lyricsFontStyle: remapStyleForFamily(lyricsFontFamily),
   } as Partial<NoteElement>);
 }
 
@@ -226,6 +250,7 @@ function getCharacterLanguage(character: string) {
 }
 
 .icon-btn[aria-disabled='true'],
+.icon-btn[data-disabled],
 .icon-btn:disabled {
   cursor: not-allowed;
   opacity: 0.5;

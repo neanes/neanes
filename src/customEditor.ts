@@ -5,7 +5,6 @@ import {
   AutoImage,
   AutoLink,
   Base64UploadAdapter,
-  BoldEditing,
   Clipboard,
   DecoupledEditor,
   Enter,
@@ -23,7 +22,6 @@ import {
   ImageUpload,
   IndentBlock,
   IndentEditing,
-  ItalicEditing,
   Link,
   ListEditing,
   Paragraph,
@@ -50,6 +48,7 @@ import elTranslations from 'ckeditor5/translations/el.js';
 import idTranslations from 'ckeditor5/translations/id.js';
 import roTranslations from 'ckeditor5/translations/ro.js';
 
+import FontStyle from './ckeditor-plugins/fontstyle/fontstyle';
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
 import NeanesFakeSelectionEditing from './ckeditor-plugins/richtextselection/richtextselection';
 
@@ -78,7 +77,6 @@ InlineEditor.builtinPlugins = [
   AutoImage,
   AutoLink,
   Base64UploadAdapter,
-  BoldEditing,
   Clipboard,
   DisableWidgetTypeAround,
   Enter,
@@ -96,8 +94,8 @@ InlineEditor.builtinPlugins = [
   ImageUpload,
   IndentEditing,
   IndentBlock,
+  FontStyle,
   InsertNeume,
-  ItalicEditing,
   Link,
   ListEditing,
   NeanesFakeSelectionEditing,

@@ -290,11 +290,14 @@ const contentRight = computed(() => {
 });
 
 const containerStyle = computed(() => {
+  const defaultFontFamily = props.element.inline
+    ? props.pageSetup.lyricsDefaultFontFamily
+    : props.pageSetup.textBoxDefaultFontFamily;
   const style: StyleValue = {
     width: withZoom(props.element.width),
     height: withZoom(props.element.height),
     '--ck-content-font-family': getFontFamilyWithFallback(
-      props.pageSetup.textBoxDefaultFontFamily,
+      defaultFontFamily,
       props.pageSetup.neumeDefaultFontFamily,
     ),
     '--ck-content-font-size': props.element.inline
@@ -693,6 +696,9 @@ defineExpose({
   box-sizing: border-box;
   overflow: visible;
   color: var(--ck-content-font-color);
+  font-family: var(--ck-content-font-family);
+  font-size: var(--ck-content-font-size);
+  line-height: var(--ck-content-line-height);
   transform-origin: 0 0;
   transform: scale(var(--zoom, 1));
   border: none !important;

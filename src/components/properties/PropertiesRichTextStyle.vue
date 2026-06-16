@@ -57,6 +57,26 @@
       />
     </Field>
 
+    <Field>
+      <FieldLabel :for="`${idPrefix}-font-style`">{{
+        $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
+      }}</FieldLabel>
+      <FontStyleSelect
+        :id="`${idPrefix}-font-style`"
+        class="w-full max-w-full"
+        :model-value="fontStyleValue"
+        :options="fontStyleOptions"
+        :disabled="fontStyleDisabled"
+        rich-text-portal
+        @update:model-value="onFontStyleChanged"
+        @update:open="
+          $event
+            ? beginSelectionGuard(element)
+            : endSelectionGuard(element, { refocus: true })
+        "
+      />
+    </Field>
+
     <Field orientation="horizontal">
       <FieldLabel :for="`${idPrefix}-font-size`">{{
         $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
@@ -155,7 +175,7 @@
           <ToggleGroupItem
             value="bold"
             :aria-label="$t(($) => $.dialog.pageSetup.bold, { ns: 'dialog' })"
-            :disabled="!isCommandEnabled('bold')"
+            :disabled="!isStyleToggleEnabled('bold')"
             @mousedown.prevent
           >
             <PhTextB />
@@ -163,7 +183,7 @@
           <ToggleGroupItem
             value="italic"
             :aria-label="$t(($) => $.dialog.pageSetup.italic, { ns: 'dialog' })"
-            :disabled="!isCommandEnabled('italic')"
+            :disabled="!isStyleToggleEnabled('italic')"
             @mousedown.prevent
           >
             <PhTextItalic />
@@ -173,7 +193,7 @@
             :aria-label="
               $t(($) => $.toolbar.richTextBox.underline, { ns: 'toolbar' })
             "
-            :disabled="!isCommandEnabled('underline')"
+            :disabled="!isStyleToggleEnabled('underline')"
             @mousedown.prevent
           >
             <PhTextUnderline />
@@ -277,7 +297,7 @@
       variant="secondary"
       :disabled="!isCommandEnabled('removeFormat')"
       @mousedown.prevent
-      @click="runCommand('removeFormat')"
+      @click="onRemoveFormat"
     >
       <PhEraser data-icon="inline-start" />
       {{ $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' }) }}
@@ -573,6 +593,7 @@ import { UPDATE_NEUME_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertneume/
 import AppTooltip from '@/components/AppTooltip.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
@@ -604,10 +625,7 @@ import {
   beginSelectionGuard,
   endSelectionGuard,
 } from '@/composables/useRichTextSelectionGuard';
-import {
-  RICH_TEXT_DEFAULT_FONT_FAMILY,
-  useRichTextStyleCommands,
-} from '@/composables/useRichTextStyleCommands';
+import { useRichTextStyleCommands } from '@/composables/useRichTextStyleCommands';
 import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
 import {
   getNoteLabelSelector,
@@ -616,6 +634,7 @@ import {
 import { Note, RootSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
 import { fraction3FormatOptions } from '@/utils/numberFormatOptions';
 
 const props = defineProps<{
@@ -631,6 +650,9 @@ const props = defineProps<{
 const {
   fontFamilyValue,
   fontFamilyOptions,
+  fontStyleValue,
+  fontStyleOptions,
+  fontStyleDisabled,
   fontSizeValue,
   fontSizePlaceholder,
   fontColorValue,
@@ -639,12 +661,15 @@ const {
   alignmentValue,
   isCommandEnabled,
   isCommandActive,
+  isStyleToggleEnabled,
   runCommand,
   onFontFamilyChanged,
+  onFontStyleChanged,
   onFontSizeChanged,
   onFontColorChanged,
   onStyleValuesChanged,
   onAlignmentChanged,
+  onRemoveFormat,
 } = useRichTextStyleCommands(props, [
   'subscript',
   'superscript',

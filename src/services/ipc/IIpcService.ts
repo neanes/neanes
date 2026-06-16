@@ -57,8 +57,6 @@ export interface IIpcService {
 
   isShowMessageBoxSupported(): boolean;
 
-  getSystemFonts(): Promise<string[]>;
-
   exitApplication(): Promise<void>;
 
   cancelExit(): Promise<void>;

@@ -4,8 +4,15 @@
       <FontCombobox
         :model-value="element.fontFamily"
         :options="dropCapFontFamilies"
+        @update:model-value="onFontFamilyChanged"
+      />
+      <FontStyleSelect
+        class="w-40"
+        :model-value="element.fontStyle"
+        :options="fontStyleOptions"
+        :disabled="fontStyleOptions.length <= 1"
         @update:model-value="
-          $emit('update', { fontFamily: $event } as Partial<DropCapElement>)
+          $emit('update', { fontStyle: $event } as Partial<DropCapElement>)
         "
       />
       <InputFontSize
@@ -26,7 +33,8 @@
         <ToggleGroupItem
           value="bold"
           class="icon-btn"
-          :class="{ selected: bold }"
+          :class="{ selected: isFontStyleAxisActive('bold') }"
+          :disabled="!isFontStyleAxisToggleEnabled('bold')"
           aria-label="Toggle bold"
         >
           <PhTextB class="h-4 w-4" />
@@ -34,7 +42,8 @@
         <ToggleGroupItem
           value="italic"
           class="icon-btn"
-          :class="{ selected: italic }"
+          :class="{ selected: isFontStyleAxisActive('italic') }"
+          :disabled="!isFontStyleAxisToggleEnabled('italic')"
           aria-label="Toggle italic"
         >
           <PhTextItalic class="h-4 w-4" />
@@ -50,10 +59,13 @@ import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Toolbar, ToolbarSeparator } from '@/components/ui/toolbar';
+import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { DropCapElement } from '@/models/Element';
+import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
   element: {
@@ -68,18 +80,22 @@ const props = defineProps({
 
 const emit = defineEmits(['update']);
 
-const bold = computed(() => props.element.fontWeight === '700');
-const italic = computed(() => props.element.fontStyle === 'italic');
-const styleValues = computed(() => [
-  ...(bold.value ? ['bold'] : []),
-  ...(italic.value ? ['italic'] : []),
-]);
+const {
+  fontStyleOptions,
+  activeStyleAxisValues,
+  isFontStyleAxisActive,
+  isFontStyleAxisToggleEnabled,
+  applyStyleAxisToggles,
+  remapStyleForFamily,
+} = useFontStyleControls(
+  () => props.element.fontFamily,
+  () => props.element.fontStyle,
+);
+
+const styleValues = computed(() => [...activeStyleAxisValues.value]);
 
 const dropCapFontFamilies = computed(() => [
-  'Source Serif',
-  'GFS Didot',
-  'Noto Naskh Arabic',
-  'Old Standard',
+  ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 
@@ -87,8 +103,14 @@ function onStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {
-    fontWeight: values.includes('bold') ? '700' : '400',
-    fontStyle: values.includes('italic') ? 'italic' : 'normal',
+    fontStyle: applyStyleAxisToggles(values),
+  } as Partial<DropCapElement>);
+}
+
+function onFontFamilyChanged(fontFamily: string) {
+  emit('update', {
+    fontFamily,
+    fontStyle: remapStyleForFamily(fontFamily),
   } as Partial<DropCapElement>);
 }
 </script>
@@ -143,6 +165,7 @@ function onStyleValuesChanged(value: unknown) {
 }
 
 .icon-btn[aria-disabled='true'],
+.icon-btn[data-disabled],
 .icon-btn:disabled {
   cursor: not-allowed;
   opacity: 0.5;

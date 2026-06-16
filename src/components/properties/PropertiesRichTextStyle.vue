@@ -41,7 +41,11 @@
         class="w-full max-w-full"
         :model-value="fontFamilyValue"
         :options="fontFamilyOptions"
-        :placeholder-value="RICH_TEXT_DEFAULT_FONT_FAMILY"
+        :selected-label-class="
+          fontFamilyValue === RICH_TEXT_DEFAULT_FONT_FAMILY
+            ? 'text-muted-foreground'
+            : undefined
+        "
         :disabled="!isCommandEnabled('fontFamily')"
         rich-text-portal
         @update:model-value="onFontFamilyChanged"
@@ -65,10 +69,10 @@
           :disabled="!isCommandEnabled('fontSize')"
           nullable
           :placeholder="fontSizePlaceholder"
-          :empty-step-base-value="defaultFontSize"
+          :default-value="defaultFontSize"
           @update:model-value="onFontSizeChanged"
-          @focuscapture="beginSelectionGuard(element)"
-          @blurcapture="endSelectionGuard(element, { refocus: false })"
+          @focus-within="beginSelectionGuard(element)"
+          @blur-within="endSelectionGuard(element, { refocus: false })"
         />
         <AppTooltip
           :tooltip="

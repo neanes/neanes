@@ -3,10 +3,12 @@
     <PopoverTrigger as-child>
       <Button
         v-bind="$attrs"
+        :id="id"
         type="button"
         variant="outline"
+        :disabled="disabled"
         :aria-label="$t(($) => $.toolbar.common.chooseColor, { ns: 'toolbar' })"
-        class="h-6 w-[46px] rounded-[1px] bg-background p-[5px] hover:bg-background"
+        :class="triggerClass"
         @mousedown="onTriggerMousedown"
       >
         <span class="block size-full rounded-sm" :style="colorStyle" />
@@ -15,7 +17,7 @@
     <component
       :is="popoverContentComponent"
       align="start"
-      class="w-auto border-0 bg-transparent p-0 shadow-none"
+      :class="contentClass"
       @close-auto-focus="onContentCloseAutoFocus"
     >
       <ColorPickerRoot v-model="color" format="hex">
@@ -42,7 +44,7 @@ import {
   ColorPickerSliderHue,
   ColorPickerSwatch,
 } from '@vuelor/picker';
-import type { PropType } from 'vue';
+import type { HTMLAttributes, PropType } from 'vue';
 import { computed, ref, watch } from 'vue';
 
 import RichTextPopoverContent from '@/components/RichTextPopoverContent.vue';
@@ -52,14 +54,23 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 defineOptions({ inheritAttrs: false });
 
 const emit = defineEmits(['update:modelValue', 'update:open']);
 const props = defineProps({
+  id: {
+    type: String,
+    default: undefined,
+  },
   modelValue: {
     type: String,
     required: true,
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
   },
   historyKey: {
     type: String,
@@ -73,6 +84,14 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     default: () => ['#000000', '#800000', '#FF0000'],
   },
+  class: {
+    type: [String, Array, Object] as PropType<HTMLAttributes['class']>,
+    default: undefined,
+  },
+  contentClass: {
+    type: [String, Array, Object] as PropType<HTMLAttributes['class']>,
+    default: undefined,
+  },
 });
 
 const isOpen = ref(false);
@@ -82,6 +101,17 @@ const color = ref(props.modelValue);
 
 const popoverContentComponent = computed(() =>
   props.richTextPortal ? RichTextPopoverContent : PopoverContent,
+);
+
+const triggerClass = computed(() =>
+  cn(
+    'h-6 w-[46px] rounded-[1px] bg-background p-[5px] hover:bg-background',
+    props.class,
+  ),
+);
+
+const contentClass = computed(() =>
+  cn('w-auto border-0 bg-transparent p-0 shadow-none', props.contentClass),
 );
 
 const colorStyle = computed(() => {

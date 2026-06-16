@@ -315,7 +315,8 @@
             </div>
             <InputUnit
               :id="getOffsetInputId(row, 'x')"
-              class="h-7 min-w-16 px-2"
+              class="min-w-16"
+              input-class="h-7 px-2"
               button-class="p-1 [&>svg]:h-3 [&>svg]:w-3"
               :aria-labelledby="`${getOffsetRowLabelId(row)} ${leftOffsetHeaderId}`"
               :model-value="getOffsetValue(row.xKey)"
@@ -328,7 +329,8 @@
             />
             <InputUnit
               :id="getOffsetInputId(row, 'y')"
-              class="h-7 min-w-16 px-2"
+              class="min-w-16"
+              input-class="h-7 px-2"
               button-class="p-1 [&>svg]:h-3 [&>svg]:w-3"
               :aria-labelledby="`${getOffsetRowLabelId(row)} ${topOffsetHeaderId}`"
               :model-value="getOffsetValue(row.yKey)"

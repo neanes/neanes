@@ -19,7 +19,7 @@
           :class="triggerClass"
           @mousedown="onTriggerMousedown"
         >
-          <span :class="selectedLabelClass">{{ selectedLabel }}</span>
+          <span :class="selectedLabelClasses">{{ selectedLabel }}</span>
           <PhCaretUpDown class="ml-auto size-4 shrink-0 opacity-50" />
         </Button>
       </ComboboxTrigger>
@@ -125,13 +125,13 @@ const props = defineProps({
     type: [String, Array, Object] as PropType<HTMLAttributes['class']>,
     default: undefined,
   },
-  placeholderValue: {
-    type: String,
-    default: undefined,
-  },
   richTextPortal: {
     type: Boolean,
     default: false,
+  },
+  selectedLabelClass: {
+    type: [String, Array, Object] as PropType<HTMLAttributes['class']>,
+    default: undefined,
   },
 });
 
@@ -185,15 +185,11 @@ const optionByValue = computed(
 
 const selectedLabel = computed(
   () =>
-    normalizedOptions.value.find(
-      (option) => option.value === selectedValue.value,
-    )?.label ?? selectedValue.value,
+    optionByValue.value.get(selectedValue.value)?.label ?? selectedValue.value,
 );
 
-const selectedLabelClass = computed(() =>
-  cn('truncate', {
-    'text-muted-foreground': selectedValue.value === props.placeholderValue,
-  }),
+const selectedLabelClasses = computed(() =>
+  cn('truncate', props.selectedLabelClass),
 );
 
 const anchorClass = computed(() => cn('w-72', props.class));
@@ -225,7 +221,7 @@ function onTriggerMousedown(event: MouseEvent) {
 }
 
 function getDisplayValue(value: string) {
-  return optionByValue.value.get(value)?.label ?? value;
+  return optionByValue.value.get(value)!.label;
 }
 
 function getOptionFontFamily(value: string) {

@@ -1,5 +1,6 @@
 <template>
   <InputUnit
+    :id="props.id"
     unit="pt"
     :min="4"
     :max="max"
@@ -8,17 +9,19 @@
     :disabled="disabled"
     :nullable="nullable"
     :placeholder="placeholder"
-    :empty-step-base-value="emptyStepBaseDisplayValue"
+    :default-value="defaultValue"
     :model-value="modelValue"
+    :class="props.class"
+    :input-class="props.inputClass"
+    :button-class="props.buttonClass"
     @update:model-value="onModelValueChanged"
-    @focuscapture="$emit('focuscapture')"
-    @blurcapture="$emit('blurcapture')"
+    @focus-within="$emit('focus-within')"
+    @blur-within="$emit('blur-within')"
   />
 </template>
 
 <script setup lang="ts">
-import type { PropType } from 'vue';
-import { computed } from 'vue';
+import type { HTMLAttributes } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 import { fraction1FormatOptions } from '@/utils/numberFormatOptions';
@@ -26,46 +29,40 @@ import { Unit } from '@/utils/Unit';
 
 const emit = defineEmits<{
   'update:modelValue': [value: number | null];
-  focuscapture: [];
-  blurcapture: [];
+  'focus-within': [];
+  'blur-within': [];
 }>();
-const props = defineProps({
-  // Accepts null only for nullable usages (rich text), where an empty field
-  // represents "Default". Non-nullable callers always pass a number.
-  modelValue: {
-    type: Number as PropType<number | null>,
-    default: null,
-  },
-  max: {
-    type: Number,
-    default: 100,
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-  // When true, clearing the field emits null (rather than being ignored) so the
-  // consumer can fall back to its default. Mirrors InputUnit's nullable mode.
-  nullable: {
-    type: Boolean,
-    default: false,
-  },
-  // Storage-unit font size to use as the starting point when an empty nullable
-  // field is stepped. The inner InputUnit converts it to the displayed pt value.
-  emptyStepBaseValue: {
-    type: Number,
-    default: undefined,
-  },
-  placeholder: {
-    type: String,
-    default: undefined,
-  },
-});
 
-const emptyStepBaseDisplayValue = computed(() =>
-  props.emptyStepBaseValue == null
-    ? undefined
-    : Unit.toPt(props.emptyStepBaseValue),
+const props = withDefaults(
+  defineProps<{
+    id?: string;
+    // Accepts null only for nullable usages, where an empty field represents a
+    // caller-defined fallback such as "default", "auto", or "normal".
+    modelValue: number | null;
+    max?: number;
+    disabled?: boolean;
+    // When true, clearing the field emits null (rather than being ignored) so the
+    // consumer can fall back to its default. Mirrors InputUnit's nullable mode.
+    nullable?: boolean;
+    // Model-unit fallback. Nullable empty fields stay blank, but step from this
+    // value when the user presses an arrow key or stepper.
+    defaultValue?: number;
+    placeholder?: string;
+    class?: HTMLAttributes['class'];
+    inputClass?: HTMLAttributes['class'];
+    buttonClass?: HTMLAttributes['class'];
+  }>(),
+  {
+    id: undefined,
+    max: 100,
+    disabled: false,
+    nullable: false,
+    defaultValue: undefined,
+    placeholder: undefined,
+    class: undefined,
+    inputClass: undefined,
+    buttonClass: undefined,
+  },
 );
 
 function onModelValueChanged(value: number | null) {

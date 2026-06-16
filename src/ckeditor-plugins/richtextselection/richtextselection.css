@@ -1,0 +1,17 @@
+/*
+ * Fake visual-selection marker shown while a Reka toolbar control owns DOM
+ * focus. Must be inert: it only decorates, never receives pointer/focus, and
+ * must not intercept the click that places the caret back in the editable.
+ */
+.ck-content .ck-fake-neanes-selection {
+  pointer-events: none;
+  background: var(--ck-color-link-fake-selection, hsla(201, 100%, 56%, 0.3));
+}
+
+.ck-content .ck-fake-neanes-selection_collapsed {
+  pointer-events: none;
+  display: inline-block;
+  width: 0;
+  /* A thin caret so the insertion point stays visible when collapsed. */
+  border-right: 1px solid currentColor;
+}

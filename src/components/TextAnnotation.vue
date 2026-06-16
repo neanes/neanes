@@ -7,26 +7,35 @@
     @mousedown="handleMouseDown"
     @dblclick="handleDoubleClick"
   >
-    <ckeditor
+    <RichTextEditor
+      :key="editorLanguage"
       ref="editor"
       class="rich-text-editor"
-      :editor="ckeditorEditor"
+      :owner="element"
       :model-value="element.text"
       :config="editorConfig"
-      :disable-watchdog="true"
       @ready="onEditorReady"
+      @blur="handleEditorBlur"
+      @select-neume="emit('select-neume')"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { Ckeditor } from '@ckeditor/ckeditor5-vue';
 import type { EditorConfig, FontSizeOption } from 'ckeditor5';
 import type { PropType } from 'vue';
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useTemplateRef,
+  watch,
+} from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
-import InlineEditor from '@/customEditor';
+import RichTextEditor from '@/components/RichTextEditor.vue';
+import type InlineEditor from '@/customEditor';
 import type { AnnotationElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
@@ -34,7 +43,7 @@ import { withZoom } from '@/utils/withZoom';
 
 const ANNOTATION_LOCK_ID = 'ANNOTATION_LOCK_ID';
 
-const emit = defineEmits(['update', 'delete']);
+const emit = defineEmits(['update', 'delete', 'select-neume']);
 const props = defineProps({
   element: {
     type: Object as PropType<AnnotationElement>,
@@ -48,18 +57,23 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
+  editorLanguage: {
+    type: String,
+    default: 'en',
+  },
   selected: Boolean,
 });
 
 const container = useTemplateRef<HTMLElement>('container');
-const editorRef = useTemplateRef<ComponentExposed<typeof Ckeditor>>('editor');
+const editorRef =
+  useTemplateRef<ComponentExposed<typeof RichTextEditor>>('editor');
 
 const offsetX = ref(0);
 const offsetY = ref(0);
 const elementX = ref(0);
 const elementY = ref(0);
+const focusOnReady = ref(false);
 const zoom = ref(1);
-const ckeditorEditor = InlineEditor;
 
 let clampingInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -72,6 +86,7 @@ const style = computed(() => {
       props.pageSetup.neumeDefaultFontFamily,
     ),
     '--ck-content-font-size': `${props.pageSetup.lyricsDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
+    '--ck-content-font-color': props.pageSetup.textBoxDefaultColor,
     '--ck-content-line-height': 'normal',
   };
 });
@@ -108,37 +123,14 @@ const editorConfig = computed((): EditorConfig => {
       supportAllValues: true,
       options: ['default', ...fontSizeOptions],
     },
-    // TODO support rtl
-    // language: {
-    //   content: props.element.rtl ? 'ar' : 'en',
-    // },
+    language: {
+      ui: props.editorLanguage,
+    },
     licenseKey: 'GPL',
     insertNeume: {
       neumeDefaultFontFamily: props.pageSetup.neumeDefaultFontFamily,
       defaultFontSize: props.pageSetup.lyricsDefaultFontSize,
       defaultFontFamily: props.pageSetup.lyricsDefaultFontFamily,
-      fthoraDefaultColor: props.pageSetup.fthoraDefaultColor,
-    },
-    toolbar: {
-      items: [
-        'fontFamily',
-        'fontSize',
-        '|',
-        'bold',
-        'italic',
-        'underline',
-        '|',
-        'fontColor',
-        '|',
-        'link',
-        '|',
-        'removeFormat',
-        '|',
-        'insertNeume',
-        'insertMartyria',
-        'insertPlagal',
-      ],
-      shouldNotGroupWhenFull: true,
     },
   };
 });
@@ -148,6 +140,20 @@ onMounted(() => {
   elementY.value = props.element.y;
   clampingInterval = setInterval(clampToPageBounds, 250);
 });
+
+watch(
+  () => props.element.x,
+  (x) => {
+    elementX.value = x;
+  },
+);
+
+watch(
+  () => props.element.y,
+  (y) => {
+    elementY.value = y;
+  },
+);
 
 onBeforeUnmount(() => {
   document.removeEventListener('mouseup', handleMouseUp);
@@ -163,32 +169,23 @@ function getEditorInstance() {
 }
 
 function onEditorReady(editor: InlineEditor) {
-  // If the text is empty, we want to focus the editor
-  // because this is a new annotation
-  if (props.element.text.trim() === '') {
-    editor.editing.view.focus();
+  if (focusOnReady.value || props.element.text.trim() === '') {
+    focusOnReady.value = false;
+    focusEditor(editor);
   } else {
-    // Otherwise, we want to enable read-only mode
+    // Existing annotations stay read-only until selected or double-clicked.
     editor.enableReadOnlyMode(ANNOTATION_LOCK_ID);
   }
+}
 
-  editor.ui.focusTracker.on('change:isFocused', (evt, name, isFocused) => {
-    if (!isFocused) {
-      editor.enableReadOnlyMode(ANNOTATION_LOCK_ID);
+function handleEditorBlur(editor: InlineEditor) {
+  editor.enableReadOnlyMode(ANNOTATION_LOCK_ID);
+  const text = editor.getData();
 
-      const text = editor.getData();
-
-      if (text.trim() === '') {
-        emit('delete');
-      } else if (props.element.text !== text) {
-        emit('update', { text });
-      }
-    }
-  });
-
-  const toolbarEl = editor.ui.view.toolbar.element;
-  if (toolbarEl) {
-    toolbarEl.style.maxWidth = '400px';
+  if (text.trim() === '') {
+    emit('delete');
+  } else if (props.element.text !== text) {
+    emit('update', { text });
   }
 }
 
@@ -199,10 +196,7 @@ async function handleDoubleClick() {
     return;
   }
 
-  if (editor.isReadOnly) {
-    editor.disableReadOnlyMode(ANNOTATION_LOCK_ID);
-    editor.editing.view.focus();
-  }
+  focusEditor(editor);
 }
 
 function handleMouseDown(e: MouseEvent) {
@@ -227,13 +221,33 @@ function handleMouseDown(e: MouseEvent) {
   document.addEventListener('mousemove', handleMouseMove);
 }
 
+function focus() {
+  const editor = getEditorInstance();
+
+  if (editor == null) {
+    focusOnReady.value = true;
+    return;
+  }
+
+  focusEditor(editor);
+}
+
+function focusEditor(editor: InlineEditor) {
+  if (editor.isReadOnly) {
+    editor.disableReadOnlyMode(ANNOTATION_LOCK_ID);
+  }
+
+  editor.editing.view.focus();
+}
+
 function handleMouseMove(e: MouseEvent) {
   e.preventDefault();
 
   const draggedEl = container.value!;
-  const pageEl = draggedEl.closest('.page') as HTMLElement;
-  if (!draggedEl || !pageEl) {
-    console.warn('Could not find dragged element or page element');
+  const pageEl = draggedEl.closest('.page') as HTMLElement | null;
+
+  if (pageEl == null) {
+    console.warn('Could not find page element');
     return;
   }
 
@@ -279,8 +293,8 @@ function clampToPageBounds() {
     return;
   }
 
-  const pageEl = el.closest('.page') as HTMLElement;
-  const offsetParent = el.offsetParent as HTMLElement;
+  const pageEl = el.closest('.page') as HTMLElement | null;
+  const offsetParent = el.offsetParent as HTMLElement | null;
 
   if (!pageEl || !offsetParent) {
     return;
@@ -316,6 +330,15 @@ function handleMouseUp() {
   document.removeEventListener('mouseup', handleMouseUp);
   document.removeEventListener('mousemove', handleMouseMove);
 }
+
+function getCurrentText() {
+  return getEditorInstance()?.getData() ?? props.element.text;
+}
+
+defineExpose({
+  focus,
+  getCurrentText,
+});
 </script>
 
 <style scoped>
@@ -337,6 +360,7 @@ function handleMouseUp() {
   padding: 0;
   box-sizing: border-box;
   overflow: visible;
+  color: var(--ck-content-font-color);
 
   border: none !important;
 }

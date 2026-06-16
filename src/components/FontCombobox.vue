@@ -17,13 +17,14 @@
           variant="outline"
           :disabled="disabled"
           :class="triggerClass"
+          @mousedown="onTriggerMousedown"
         >
-          <span class="truncate">{{ selectedLabel }}</span>
+          <span :class="selectedLabelClasses">{{ selectedLabel }}</span>
           <PhCaretUpDown class="ml-auto size-4 shrink-0 opacity-50" />
         </Button>
       </ComboboxTrigger>
     </ComboboxAnchor>
-    <ComboboxList :class="listClass">
+    <component :is="listComponent" :class="listClass">
       <ComboboxInput
         v-model="searchTerm"
         :placeholder="placeholder"
@@ -57,7 +58,7 @@
           </ComboboxItem>
         </ComboboxVirtualizer>
       </ComboboxViewport>
-    </ComboboxList>
+    </component>
   </Combobox>
 </template>
 
@@ -66,6 +67,7 @@ import { PhCaretUpDown, PhCheck } from '@phosphor-icons/vue';
 import type { HTMLAttributes, PropType } from 'vue';
 import { computed, ref, watch } from 'vue';
 
+import RichTextComboboxList from '@/components/RichTextComboboxList.vue';
 import { Button } from '@/components/ui/button';
 import {
   Combobox,
@@ -123,10 +125,20 @@ const props = defineProps({
     type: [String, Array, Object] as PropType<HTMLAttributes['class']>,
     default: undefined,
   },
+  richTextPortal: {
+    type: Boolean,
+    default: false,
+  },
+  selectedLabelClass: {
+    type: [String, Array, Object] as PropType<HTMLAttributes['class']>,
+    default: undefined,
+  },
 });
 
 const selectedValue = defineModel<string>({ required: true });
-const open = ref(false);
+// Surfaced to the parent so rich-text consumers can show/hide the selection
+// marker and restore editor focus on open/close.
+const open = defineModel<boolean>('open', { default: false });
 const searchTerm = ref('');
 
 watch(open, (isOpen) => {
@@ -173,9 +185,11 @@ const optionByValue = computed(
 
 const selectedLabel = computed(
   () =>
-    normalizedOptions.value.find(
-      (option) => option.value === selectedValue.value,
-    )?.label ?? selectedValue.value,
+    optionByValue.value.get(selectedValue.value)?.label ?? selectedValue.value,
+);
+
+const selectedLabelClasses = computed(() =>
+  cn('truncate', props.selectedLabelClass),
 );
 
 const anchorClass = computed(() => cn('w-72', props.class));
@@ -196,8 +210,18 @@ const listClass = computed(() =>
   ),
 );
 
+const listComponent = computed(() =>
+  props.richTextPortal ? RichTextComboboxList : ComboboxList,
+);
+
+function onTriggerMousedown(event: MouseEvent) {
+  if (props.richTextPortal) {
+    event.preventDefault();
+  }
+}
+
 function getDisplayValue(value: string) {
-  return optionByValue.value.get(value)?.label ?? value;
+  return optionByValue.value.get(value)!.label;
 }
 
 function getOptionFontFamily(value: string) {

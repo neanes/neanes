@@ -1,35 +1,39 @@
 import 'ckeditor5/ckeditor5.css';
 
 import {
-  Alignment,
+  AlignmentEditing,
   AutoImage,
   AutoLink,
   Base64UploadAdapter,
-  Bold,
-  Essentials,
+  BoldEditing,
+  Clipboard,
+  DecoupledEditor,
+  Enter,
   FindAndReplace,
-  FontColor,
-  FontFamily,
-  FontSize,
+  FontColorEditing,
+  FontFamilyEditing,
+  FontSizeEditing,
   GeneralHtmlSupport,
   Image,
   ImageCaption,
   ImageResize,
   ImageStyle,
+  ImageTextAlternative,
   ImageToolbar,
   ImageUpload,
-  Indent,
   IndentBlock,
-  InlineEditor as InlineEditorBase,
-  Italic,
+  IndentEditing,
+  ItalicEditing,
   Link,
-  List,
+  ListEditing,
   Paragraph,
   PasteFromOffice,
-  RemoveFormat,
-  SelectAll,
-  Subscript,
-  Superscript,
+  Plugin,
+  RemoveFormatEditing,
+  SelectAllEditing,
+  ShiftEnter,
+  SubscriptEditing,
+  SuperscriptEditing,
   Table,
   TableCaption,
   TableCellProperties,
@@ -37,44 +41,73 @@ import {
   TableProperties,
   TableToolbar,
   TextTransformation,
-  Underline,
-  Undo,
+  Typing,
+  UnderlineEditing,
+  UndoEditing,
+  WidgetTypeAround,
 } from 'ckeditor5';
+import elTranslations from 'ckeditor5/translations/el.js';
+import idTranslations from 'ckeditor5/translations/id.js';
+import roTranslations from 'ckeditor5/translations/ro.js';
 
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
+import NeanesFakeSelectionEditing from './ckeditor-plugins/richtextselection/richtextselection';
 
-export default class InlineEditor extends InlineEditorBase {}
+export default class InlineEditor extends DecoupledEditor {}
+
+// Widget is required by images, tables, and neumes, but CKEditor's type-around
+// UI adds block-widget insertion handles and keyboard behavior we do not want.
+class DisableWidgetTypeAround extends Plugin {
+  public static get pluginName() {
+    return 'DisableWidgetTypeAround' as const;
+  }
+
+  public static get requires() {
+    return [WidgetTypeAround] as const;
+  }
+
+  public init() {
+    this.editor.plugins
+      .get(WidgetTypeAround)
+      .forceDisabled('NeanesHeadlessRichText');
+  }
+}
 
 InlineEditor.builtinPlugins = [
-  Alignment,
+  AlignmentEditing,
   AutoImage,
   AutoLink,
   Base64UploadAdapter,
-  Bold,
-  Essentials,
+  BoldEditing,
+  Clipboard,
+  DisableWidgetTypeAround,
+  Enter,
   FindAndReplace,
-  FontColor,
-  FontFamily,
-  FontSize,
+  FontColorEditing,
+  FontFamilyEditing,
+  FontSizeEditing,
   GeneralHtmlSupport,
   Image,
   ImageCaption,
   ImageResize,
   ImageStyle,
+  ImageTextAlternative,
   ImageToolbar,
   ImageUpload,
-  Indent,
+  IndentEditing,
   IndentBlock,
   InsertNeume,
-  Italic,
+  ItalicEditing,
   Link,
-  List,
+  ListEditing,
+  NeanesFakeSelectionEditing,
   Paragraph,
   PasteFromOffice,
-  RemoveFormat,
-  SelectAll,
-  Subscript,
-  Superscript,
+  RemoveFormatEditing,
+  SelectAllEditing,
+  ShiftEnter,
+  SubscriptEditing,
+  SuperscriptEditing,
   Table,
   TableCaption,
   TableCellProperties,
@@ -82,54 +115,29 @@ InlineEditor.builtinPlugins = [
   TableProperties,
   TableToolbar,
   TextTransformation,
-  Underline,
-  Undo,
+  Typing,
+  UnderlineEditing,
+  UndoEditing,
 ];
 
 InlineEditor.defaultConfig = {
   toolbar: {
-    items: [
-      'fontFamily',
-      'fontSize',
-      '|',
-      'bold',
-      'italic',
-      'underline',
-      '|',
-      'alignment:left',
-      'alignment:center',
-      'alignment:right',
-      'alignment:justify',
-      '|',
-      'bulletedList',
-      'numberedList',
-      'outdent',
-      'indent',
-      '|',
-      'fontColor',
-      '|',
-      'subscript',
-      'superscript',
-      '|',
-      'undo',
-      'redo',
-      '|',
-      'link',
-      'imageUpload',
-      'insertTable',
-      '|',
-      'findAndReplace',
-      'selectAll',
-      '|',
-      'removeFormat',
-      '|',
-      'insertNeume',
-      'insertMartyria',
-      'insertPlagal',
-    ],
-    shouldNotGroupWhenFull: true,
+    items: [],
   },
-  language: 'en',
+  menuBar: {
+    isVisible: false,
+  },
+  language: {
+    ui: 'en',
+    content: 'en',
+  },
+  translations: [elTranslations, idTranslations, roTranslations],
+  fontFamily: {
+    supportAllValues: true,
+  },
+  fontSize: {
+    supportAllValues: true,
+  },
   image: {
     toolbar: [
       'imageTextAlternative',

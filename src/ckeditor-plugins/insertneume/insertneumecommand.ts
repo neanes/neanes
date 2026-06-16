@@ -24,9 +24,7 @@ export default class InsertNeumeCommand extends Command {
         NEUME_ELEMENT,
         attributes as unknown as Record<string, unknown>,
       );
-      const insertPosition = editor.model.document.selection.getFirstPosition();
-
-      editor.model.insertContent(element, insertPosition);
+      editor.model.insertContent(element);
       editor.focus();
     });
   }

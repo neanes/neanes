@@ -180,19 +180,44 @@
             id="properties-martyria-root-sign-override"
             class="w-full"
           >
-            <SelectValue />
+            <SelectValue>
+              <span v-if="selectedRootSignOverride" class="root-sign-option">
+                <span class="root-sign-glyph" :style="rootSignGlyphStyle">{{
+                  selectedRootSignOverride.glyph
+                }}</span>
+                <span class="root-sign-name">{{
+                  $t(selectedRootSignOverride.name, { ns: 'model' })
+                }}</span>
+              </span>
+              <span v-else>
+                {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
+              </span>
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem :value="SELECT_NONE_VALUE">
+              <SelectItem
+                :value="SELECT_NONE_VALUE"
+                :text-value="
+                  $t(($) => $.toolbar.common.none, { ns: 'toolbar' })
+                "
+              >
                 {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
               </SelectItem>
               <SelectItem
                 v-for="sign in rootSigns"
                 :key="sign.value"
                 :value="sign.value"
+                :text-value="$t(sign.name, { ns: 'model' })"
               >
-                {{ $t(sign.name, { ns: 'model' }) }}
+                <span class="root-sign-option">
+                  <span class="root-sign-glyph" :style="rootSignGlyphStyle">{{
+                    sign.glyph
+                  }}</span>
+                  <span class="root-sign-name">{{
+                    $t(sign.name, { ns: 'model' })
+                  }}</span>
+                </span>
               </SelectItem>
             </SelectGroup>
           </SelectContent>
@@ -235,6 +260,7 @@ import {
 import { Fthora, Note, RootSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import { Scale, ScaleNote } from '@/models/Scales';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
 
@@ -264,56 +290,28 @@ type FthoraNoteOption = {
   value: ScaleNote;
 };
 
-const rootSigns = [
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Alpha],
-    value: RootSign.Alpha,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.SoftChromaticSquiggle],
-    value: RootSign.SoftChromaticSquiggle,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.SoftChromaticPaRootSign],
-    value: RootSign.SoftChromaticPaRootSign,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Nana],
-    value: RootSign.Nana,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Legetos],
-    value: RootSign.Legetos,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.DeltaDotted],
-    value: RootSign.DeltaDotted,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Zygos],
-    value: RootSign.Zygos,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.AlphaDotted],
-    value: RootSign.AlphaDotted,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Squiggle],
-    value: RootSign.Squiggle,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Tilt],
-    value: RootSign.Tilt,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Zo],
-    value: RootSign.Zo,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Delta],
-    value: RootSign.Delta,
-  },
+const ROOT_SIGN_OPTIONS: RootSign[] = [
+  RootSign.Alpha,
+  RootSign.SoftChromaticSquiggle,
+  RootSign.SoftChromaticPaRootSign,
+  RootSign.Nana,
+  RootSign.Legetos,
+  RootSign.DeltaDotted,
+  RootSign.Zygos,
+  RootSign.AlphaDotted,
+  RootSign.Squiggle,
+  RootSign.Tilt,
+  RootSign.Zo,
+  RootSign.Delta,
 ];
+
+const rootSigns = ROOT_SIGN_OPTIONS.map((rootSign) => ({
+  glyph:
+    NeumeMappingService.getMapping((rootSign + 'Low') as RootSign)?.text ??
+    rootSign,
+  name: ROOT_SIGN_LABEL_SELECTORS[rootSign],
+  value: rootSign,
+}));
 
 const props = defineProps({
   element: {
@@ -331,6 +329,14 @@ const SELECT_NONE_VALUE = '__none__';
 
 const spaceAfterMax = computed(() =>
   Math.round(Unit.toPt(props.pageSetup.pageWidth)),
+);
+
+const rootSignGlyphStyle = computed(() => ({
+  fontFamily: props.pageSetup.neumeDefaultFontFamily,
+}));
+
+const selectedRootSignOverride = computed(() =>
+  rootSigns.find((sign) => sign.value === props.element.rootSignOverride),
 );
 
 const showChromaticFthoraNote = computed(
@@ -435,3 +441,29 @@ function onRootSignOverrideChanged(value: AcceptableValue) {
   } as Partial<MartyriaElement>);
 }
 </script>
+
+<style scoped>
+.root-sign-option {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.root-sign-glyph {
+  position: relative;
+  top: -0.33em;
+  display: inline-block;
+  width: 1.75rem;
+  flex: none;
+  font-size: 20pt;
+  line-height: 20pt;
+  text-align: center;
+}
+
+.root-sign-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>

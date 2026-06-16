@@ -14,25 +14,34 @@
     :step-snapping="stepSnapping"
     :format-options="resolvedFormatOptions"
     :disabled="disabled"
-    class="w-fit max-w-full"
+    :class="rootClasses"
+    :style="rootStyle"
+    @focusin="onWidgetFocusIn"
+    @focusout="onWidgetFocusOut"
   >
-    <NumberFieldContent class="w-fit max-w-full">
-      <NumberFieldDecrement :class="buttonClass" />
+    <NumberFieldContent class="w-full max-w-full">
+      <NumberFieldDecrement
+        :class="buttonClass"
+        @pointerdown.capture="primeStepBaseWhenEmpty"
+      />
       <NumberFieldInput
         :id="id"
         ref="inputRef"
         v-bind="inputAttrs"
         :class="inputClasses"
-        :style="inputStyle"
+        @keydown.capture="onStepKeyDownCapture"
       />
-      <NumberFieldIncrement :class="buttonClass" />
+      <NumberFieldIncrement
+        :class="buttonClass"
+        @pointerdown.capture="primeStepBaseWhenEmpty"
+      />
     </NumberFieldContent>
   </NumberField>
 </template>
 
 <script setup lang="ts">
 import type { HTMLAttributes, StyleValue } from 'vue';
-import { computed, nextTick, ref, useAttrs } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, useAttrs } from 'vue';
 
 import type { UnitOfMeasure } from '@/components/InputUnit.types';
 import { toDisplay, toStorage } from '@/components/InputUnit.types';
@@ -43,9 +52,14 @@ import {
   NumberFieldIncrement,
   NumberFieldInput,
 } from '@/components/ui/number-field';
+import { cn } from '@/lib/utils';
 
 const emit = defineEmits<{
   'update:modelValue': [value: number | null];
+  // Focus entered / truly left the whole widget (input + stepper buttons),
+  // debounced so intra-widget focus moves don't fire a spurious blur.
+  'focus-within': [];
+  'blur-within': [];
 }>();
 
 defineOptions({
@@ -62,9 +76,12 @@ const props = withDefaults(
     step?: number;
     stepSnapping?: boolean;
     formatOptions?: Intl.NumberFormatOptions;
+    // Model-unit fallback. Non-nullable empty values resolve to this (or 0
+    // when omitted); nullable empty values use it as the step base when supplied.
     defaultValue?: number;
     nullable?: boolean;
     disabled?: boolean;
+    inputClass?: HTMLAttributes['class'];
     buttonClass?: HTMLAttributes['class'];
   }>(),
   {
@@ -74,9 +91,10 @@ const props = withDefaults(
     step: undefined,
     stepSnapping: false,
     formatOptions: undefined,
-    defaultValue: 0,
+    defaultValue: undefined,
     nullable: false,
     disabled: false,
+    inputClass: undefined,
     buttonClass: undefined,
   },
 );
@@ -98,20 +116,36 @@ const resolvedFormatOptions = computed<Intl.NumberFormatOptions>(() => ({
   ...props.formatOptions,
 }));
 
-const inputClasses = computed(() => [
-  'bg-background',
-  'w-[var(--input-unit-width)]',
-  'min-w-20',
-  'max-w-full',
-  attrs.class as HTMLAttributes['class'],
-]);
+// The widget sizes to its content by default via --input-unit-width on the
+// root. A width class passed by the consumer (e.g. w-28, w-36, w-full) lands
+// here too and overrides it, so call sites control width with plain Tailwind.
+const rootClasses = computed(() =>
+  cn(
+    'w-[var(--input-unit-width)]',
+    'min-w-20',
+    'max-w-full',
+    attrs.class as HTMLAttributes['class'],
+  ),
+);
+
+const inputClasses = computed(() =>
+  cn('bg-background w-full min-w-0', props.inputClass),
+);
+
+const defaultDisplayValue = computed(() => {
+  if (props.defaultValue == null) {
+    return 0;
+  }
+
+  return toDisplay(props.defaultValue, props.unit) ?? 0;
+});
 
 const displayValue = computed<number | undefined>({
   get() {
     const value = toDisplay(props.modelValue, props.unit);
 
     if (value == null) {
-      return props.nullable ? undefined : props.defaultValue;
+      return props.nullable ? undefined : defaultDisplayValue.value;
     }
 
     return value;
@@ -121,7 +155,7 @@ const displayValue = computed<number | undefined>({
       emitValue(
         props.nullable
           ? null
-          : toStorage(clampDisplayValue(props.defaultValue), props.unit),
+          : toStorage(clampDisplayValue(defaultDisplayValue.value), props.unit),
       );
       return;
     }
@@ -170,7 +204,7 @@ const inputTextLength = computed(() => {
   return length;
 });
 
-const inputStyle = computed<StyleValue>(() => [
+const rootStyle = computed<StyleValue>(() => [
   attrs.style as StyleValue,
   { '--input-unit-width': `calc(${inputTextLength.value}ch + 3.5rem)` },
 ]);
@@ -213,4 +247,87 @@ function emitValue(value: number | null) {
     resyncInput();
   }
 }
+
+const stepKeys = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown']);
+
+function onStepKeyDownCapture(event: KeyboardEvent) {
+  if (stepKeys.has(event.key)) {
+    primeStepBaseWhenEmpty();
+  }
+}
+
+function primeStepBaseWhenEmpty() {
+  if (
+    !props.nullable ||
+    props.modelValue != null ||
+    props.defaultValue == null
+  ) {
+    return;
+  }
+
+  const el = inputRef.value?.$el as HTMLInputElement | undefined;
+
+  if (el == null || el.value.trim() !== '') {
+    return;
+  }
+
+  el.value = formatDisplayValue(clampDisplayValue(defaultDisplayValue.value));
+}
+
+// Track focus across the whole widget so consumers can react to focus entering
+// or leaving the input plus stepper buttons as one control.
+let widgetHasFocus = false;
+let pendingBlurFrame: number | null = null;
+
+function onWidgetFocusIn() {
+  if (pendingBlurFrame != null) {
+    cancelAnimationFrame(pendingBlurFrame);
+    pendingBlurFrame = null;
+  }
+
+  if (!widgetHasFocus) {
+    widgetHasFocus = true;
+    emit('focus-within');
+  }
+}
+
+function onWidgetFocusOut(event: FocusEvent) {
+  const container = event.currentTarget as HTMLElement;
+  const next = event.relatedTarget as Node | null;
+
+  if (next != null && container.contains(next)) {
+    return;
+  }
+
+  if (pendingBlurFrame != null) {
+    cancelAnimationFrame(pendingBlurFrame);
+  }
+
+  pendingBlurFrame = requestAnimationFrame(() => {
+    pendingBlurFrame = null;
+
+    const active = document.activeElement;
+
+    if (active != null && container.contains(active)) {
+      return;
+    }
+
+    if (widgetHasFocus) {
+      widgetHasFocus = false;
+      emit('blur-within');
+    }
+  });
+}
+
+onBeforeUnmount(() => {
+  if (pendingBlurFrame != null) {
+    cancelAnimationFrame(pendingBlurFrame);
+    pendingBlurFrame = null;
+  }
+
+  if (widgetHasFocus) {
+    widgetHasFocus = false;
+    emit('blur-within');
+  }
+});
 </script>

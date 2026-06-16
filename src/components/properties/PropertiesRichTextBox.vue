@@ -25,7 +25,7 @@
       <FieldSeparator />
 
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-rich-text-box-inline"
           :model-value="element.inline"
           @update:model-value="updateBooleanProperty('inline', $event)"
@@ -93,7 +93,7 @@
         </Field>
 
         <Field orientation="horizontal">
-          <Checkbox
+          <Switch
             id="properties-rich-text-box-center-on-page"
             :model-value="element.centerOnPage"
             @update:model-value="updateBooleanProperty('centerOnPage', $event)"
@@ -141,7 +141,7 @@
       <FieldSeparator />
 
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-rich-text-box-mode-change"
           :model-value="element.modeChange"
           @update:model-value="updateBooleanProperty('modeChange', $event)"
@@ -258,7 +258,7 @@
         </Field>
 
         <Field orientation="horizontal">
-          <Checkbox
+          <Switch
             id="properties-rich-text-box-ignore-attractions"
             :model-value="element.modeChangeIgnoreAttractions"
             @update:model-value="
@@ -271,7 +271,7 @@
         </Field>
 
         <Field orientation="horizontal">
-          <Checkbox
+          <Switch
             id="properties-rich-text-box-permanent-enharmonic-zo"
             :model-value="element.modeChangePermanentEnharmonicZo"
             @update:model-value="
@@ -289,7 +289,7 @@
       <FieldSeparator />
 
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-rich-text-box-rtl"
           :model-value="element.rtl"
           @update:model-value="updateBooleanProperty('rtl', $event)"
@@ -300,7 +300,7 @@
       </Field>
 
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-rich-text-box-scrollable"
           :model-value="element.scrollable"
           @update:model-value="updateBooleanProperty('scrollable', $event)"
@@ -321,7 +321,6 @@ import { computed } from 'vue';
 import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
   FieldGroup,
@@ -337,6 +336,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import type { RichTextBoxElement } from '@/models/Element';
 import {
   getNoteLabelSelector,

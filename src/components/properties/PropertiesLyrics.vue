@@ -5,7 +5,7 @@
     }}</FieldLegend>
     <FieldGroup>
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-lyrics-use-default-style"
           :model-value="element.lyricsUseDefaultStyle"
           @update:model-value="
@@ -115,7 +115,6 @@ import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
   FieldGroup,
@@ -123,6 +122,7 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field';
+import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { NoteElement } from '@/models/Element';
 

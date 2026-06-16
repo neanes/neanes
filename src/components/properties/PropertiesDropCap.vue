@@ -5,7 +5,7 @@
     }}</FieldLegend>
     <FieldGroup>
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-drop-cap-use-default-style"
           :model-value="element.useDefaultStyle"
           @update:model-value="
@@ -168,7 +168,6 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
   FieldGroup,
@@ -176,6 +175,7 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field';
+import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { DropCapElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';

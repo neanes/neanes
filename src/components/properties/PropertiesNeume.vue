@@ -30,7 +30,7 @@
       </Button>
 
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-neume-ignore-attractions"
           :model-value="element.ignoreAttractions"
           @update:model-value="
@@ -126,7 +126,6 @@ import { computed } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
   FieldGroup,
@@ -142,6 +141,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import type { NoteElement } from '@/models/Element';
 import { AcceptsLyricsOption } from '@/models/Element';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';

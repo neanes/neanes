@@ -5,7 +5,7 @@
     }}</FieldLegend>
     <FieldGroup>
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-mode-key-use-default-style"
           :model-value="element.useDefaultStyle"
           @update:model-value="
@@ -169,7 +169,7 @@
       </Field>
 
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-mode-key-ignore-attractions"
           :model-value="element.ignoreAttractions"
           @update:model-value="
@@ -184,7 +184,7 @@
       </Field>
 
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-mode-key-show-ambitus"
           :model-value="element.showAmbitus"
           @update:model-value="
@@ -202,7 +202,7 @@
         v-if="element.mode === 3 || element.mode === 7"
         orientation="horizontal"
       >
-        <Checkbox
+        <Switch
           id="properties-mode-key-permanent-enharmonic-zo"
           :model-value="element.permanentEnharmonicZo"
           @update:model-value="
@@ -247,7 +247,6 @@ import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
   FieldGroup,
@@ -255,6 +254,7 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field';
+import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';

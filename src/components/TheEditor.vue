@@ -766,10 +766,13 @@ const statusScrollPageNumber = computed(() =>
   clamp(currentPageNumber.value, 1, statusPageCount.value),
 );
 
+const statusActiveElement = computed(
+  () => selectedLyrics.value ?? selectedElement.value,
+);
+
 const statusPositionElement = computed(
   () =>
-    selectedLyrics.value ??
-    selectedElement.value ??
+    statusActiveElement.value ??
     getFirstElementForPage(statusScrollPageNumber.value),
 );
 
@@ -781,12 +784,6 @@ const statusPageNumber = computed(() => {
     : statusScrollPageNumber.value;
 });
 
-const statusSectionNumber = computed(() =>
-  getSectionNumberForPage(statusPageNumber.value),
-);
-
-const statusSectionCount = computed(() => getSectionCount());
-
 const statusPositionElementOnPage = computed(() => {
   const element = statusPositionElement.value;
 
@@ -794,6 +791,16 @@ const statusPositionElementOnPage = computed(() => {
     ? element
     : getFirstElementForPage(statusPageNumber.value);
 });
+
+const statusSectionNumber = computed(() => {
+  const element = statusActiveElement.value;
+
+  return element?.page === statusPageNumber.value
+    ? getSectionNumberForElementIndex(element.index)
+    : getSectionNumberForPage(statusPageNumber.value);
+});
+
+const statusSectionCount = computed(() => getSectionCount());
 
 const statusLinePosition = computed(() => {
   const page = filteredPages.value[statusPageNumber.value - 1];

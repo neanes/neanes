@@ -1653,12 +1653,27 @@ function getSectionAnchorIndexForPage(pageNumber: number) {
     return firstPageElement.index;
   }
 
-  const previousPageElements = filteredPages.value
-    .slice(0, pageNumber - 1)
-    .flatMap(getPageElements)
-    .filter((element) => element.elementType !== ElementType.Empty);
+  for (let pageIndex = pageNumber - 2; pageIndex >= 0; pageIndex--) {
+    const prevPage = filteredPages.value[pageIndex];
 
-  return previousPageElements.at(-1)?.index ?? 0;
+    for (let lineIndex = prevPage.lines.length - 1; lineIndex >= 0; lineIndex--) {
+      const line = prevPage.lines[lineIndex];
+
+      for (
+        let elementIndex = line.elements.length - 1;
+        elementIndex >= 0;
+        elementIndex--
+      ) {
+        const element = line.elements[elementIndex];
+
+        if (element.elementType !== ElementType.Empty) {
+          return element.index;
+        }
+      }
+    }
+  }
+
+  return 0;
 }
 
 function getPageElements(page: Page) {

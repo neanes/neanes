@@ -345,6 +345,8 @@ const isDevelopment = ref(import.meta.env.DEV);
 const isBrowser = ref(!isElectron());
 const isLoading = ref(true);
 const printMode = ref(false);
+const canUndo = ref(false);
+const canRedo = ref(false);
 const showGuides = ref(false);
 const showAdjustmentRatios = ref(false);
 const workspaces = ref<Workspace[]>([]);
@@ -1157,6 +1159,8 @@ onMounted(() => {
 
   EventBus.$on(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$on(IpcMainChannels.CloseApplication, onCloseApplication);
+  EventBus.$on(IpcRendererChannels.SetCanUndo, onSetCanUndo);
+  EventBus.$on(IpcRendererChannels.SetCanRedo, onSetCanRedo);
 
   EventBus.$on(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
   EventBus.$on(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
@@ -1233,6 +1237,7 @@ onMounted(() => {
   EventBus.$on(AudioServiceEventNames.EventPlay, onAudioServiceEventPlay);
 
   EventBus.$on(AudioServiceEventNames.Stop, onAudioServiceStop);
+  selectedWorkspace.value.commandService.notify();
 });
 
 onBeforeUnmount(() => {
@@ -1245,6 +1250,8 @@ onBeforeUnmount(() => {
 
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
+  EventBus.$off(IpcRendererChannels.SetCanUndo, onSetCanUndo);
+  EventBus.$off(IpcRendererChannels.SetCanRedo, onSetCanRedo);
 
   EventBus.$off(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
   EventBus.$off(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
@@ -2285,6 +2292,26 @@ function addDropCap(after: boolean) {
 
 function onClickAddImage() {
   EventBus.$emit(IpcRendererChannels.OpenImageDialog);
+}
+
+function onClickOpenScore() {
+  EventBus.$emit(IpcRendererChannels.OpenScoreDialog);
+}
+
+function onClickPrintScore() {
+  if (isBrowser.value) {
+    window.print();
+  } else {
+    void onFileMenuPrint();
+  }
+}
+
+function onSetCanUndo(value: boolean) {
+  canUndo.value = value;
+}
+
+function onSetCanRedo(value: boolean) {
+  canRedo.value = value;
 }
 
 function togglePageBreak() {
@@ -7240,6 +7267,17 @@ function renderTabLabel(tab: Tab) {
       :playback-time="selectedWorkspace.playbackTime"
       :playback-bpm="selectedWorkspace.playbackBpm"
       :neume-keyboard="neumeKeyboard"
+      :can-undo="canUndo"
+      :can-redo="canRedo"
+      @new-score="onFileMenuNewScore"
+      @open-score="onClickOpenScore"
+      @save-score="onFileMenuSave"
+      @print-score="onClickPrintScore"
+      @cut="onFileMenuCut"
+      @copy="onFileMenuCopy"
+      @paste="onFileMenuPaste"
+      @undo="onFileMenuUndo"
+      @redo="onFileMenuRedo"
       @update:zoom="updateZoom"
       @update:zoom-to-fit="updateZoomToFit"
       @update:audio-options-speed="updateAudioOptionsSpeed"
@@ -7248,6 +7286,8 @@ function renderTabLabel(tab: Tab) {
       @toggle-page-break="togglePageBreak"
       @toggle-line-break="toggleLineBreak($event)"
       @add-tempo="addTempo"
+      @add-alternate-line="onFileMenuInsertAlternateLine"
+      @add-annotation="onFileMenuInsertAnnotation"
       @add-drop-cap="addDropCap(false)"
       @add-mode-key="onFileMenuInsertModeKey"
       @add-text-box="onFileMenuInsertTextBox"
@@ -7256,6 +7296,8 @@ function renderTabLabel(tab: Tab) {
       @delete-selected-element="deleteSelectedElement"
       @click="selectedLyrics = null"
       @play-audio="playAudio"
+      @open-page-setup="onFileMenuPageSetup"
+      @find="onFileMenuFind"
       @open-playback-settings="openPlaybackSettingsDialog"
     />
     <div class="content">

@@ -1,323 +1,524 @@
 <template>
-  <Toolbar class="main-toolbar h-auto w-full gap-0 border-0 p-1" loop>
-    <ToolbarToggleGroup
-      type="single"
-      :model-value="entryMode"
-      @update:model-value="onEntryModeChanged"
-    >
-      <ToolbarToggleItem class="entry-mode-btn" :value="EntryMode.Auto">
-        {{ $t(($) => $.toolbar.main.auto, { ns: 'toolbar' }) }}
-      </ToolbarToggleItem>
-      <ToolbarToggleItem class="entry-mode-btn" :value="EntryMode.Insert">
-        {{ $t(($) => $.toolbar.main.insert, { ns: 'toolbar' }) }}
-      </ToolbarToggleItem>
-      <ToolbarToggleItem class="entry-mode-btn" :value="EntryMode.Edit">
-        {{ $t(($) => $.toolbar.main.single, { ns: 'toolbar' }) }}
-      </ToolbarToggleItem>
-    </ToolbarToggleGroup>
-    <ToolbarSeparator />
-    <AppTooltip :tooltip="martyriaTooltip">
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="neume-button"
-        @click="$emit('add-auto-martyria')"
-      >
-        <img src="@/assets/icons/martyria.svg" />
-      </ToolbarButton>
-    </AppTooltip>
-    <ToolbarSeparator />
-    <ButtonWithMenu
-      direction="down"
-      :options="tempoOptions"
-      :tooltip="tempoTooltip"
-      img-size="28px"
-      @select="$emit('add-tempo', $event)"
-    />
-    <ToolbarSeparator />
-    <AppTooltip
-      :tooltip="
-        $t(($) => $.toolbar.main.insertDropCapBefore, { ns: 'toolbar' })
-      "
-    >
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
-        @click="$emit('add-drop-cap')"
-      >
-        <img src="@/assets/icons/drop-cap.svg" />
-      </ToolbarButton>
-    </AppTooltip>
-    <AppTooltip
-      :tooltip="$t(($) => $.toolbar.main.insertTextBox, { ns: 'toolbar' })"
-    >
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
-        @click="$emit('add-text-box')"
-      >
-        <img src="@/assets/icons/text-box.svg" />
-      </ToolbarButton>
-    </AppTooltip>
-    <AppTooltip
-      :tooltip="$t(($) => $.toolbar.main.insertTextBoxRich, { ns: 'toolbar' })"
-    >
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
-        @click="$emit('add-text-box-rich')"
-      >
-        <img src="@/assets/icons/text-box-rich.svg" />
-      </ToolbarButton>
-    </AppTooltip>
-    <AppTooltip
-      :tooltip="$t(($) => $.toolbar.main.insertModeKey, { ns: 'toolbar' })"
-    >
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
-        @click="$emit('add-mode-key')"
-      >
-        <img src="@/assets/icons/mode-key.svg" />
-      </ToolbarButton>
-    </AppTooltip>
-    <AppTooltip
-      :tooltip="$t(($) => $.toolbar.main.insertImage, { ns: 'toolbar' })"
-    >
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
-        @click="$emit('add-image')"
-      >
-        <PhImageSquare weight="fill" />
-      </ToolbarButton>
-    </AppTooltip>
-    <ToolbarSeparator />
-    <AppTooltip
-      :tooltip="
-        $t(($) => $.toolbar.main.insertOrRemoveLineBreakAfterSelectedElement, {
-          ns: 'toolbar',
-        })
-      "
-    >
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
-        @click="$emit('toggle-line-break', LineBreakType.Left)"
-      >
-        <PhParagraph weight="fill" />
-      </ToolbarButton>
-    </AppTooltip>
-    <AppTooltip
-      :tooltip="
-        $t(
-          ($) =>
-            $.toolbar.main.insertOrRemoveJustifiedLineBreakAfterSelectedElement,
-          {
-            ns: 'toolbar',
-          },
-        )
-      "
-    >
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
-        @click="$emit('toggle-line-break', LineBreakType.Justify)"
-      >
-        <svg viewBox="0 0 24 24">
-          <PhParagraph
-            size="24"
-            weight="fill"
-            transform="matrix(0.75 0 0 1 -2 0)"
-          />
-          <PhTextAlignJustify size="12" x="12" y="12" />
-        </svg>
-      </ToolbarButton>
-    </AppTooltip>
-    <AppTooltip
-      :tooltip="
-        $t(
-          ($) =>
-            $.toolbar.main.insertOrRemoveCenteredLineBreakAfterSelectedElement,
-          {
-            ns: 'toolbar',
-          },
-        )
-      "
-    >
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
-        @click="$emit('toggle-line-break', LineBreakType.Center)"
-      >
-        <svg viewBox="0 0 24 24">
-          <PhParagraph
-            size="24"
-            weight="fill"
-            transform="matrix(0.75 0 0 1 -2 0)"
-          />
-          <PhTextAlignCenter size="12" x="12" y="12" />
-        </svg>
-      </ToolbarButton>
-    </AppTooltip>
-    <AppTooltip
-      :tooltip="
-        $t(($) => $.toolbar.main.insertOrRemovePageBreakAfterSelectedElement, {
-          ns: 'toolbar',
-        })
-      "
-    >
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
-        @click="$emit('toggle-page-break')"
-      >
-        <PhFile />
-      </ToolbarButton>
-    </AppTooltip>
-    <ToolbarSeparator />
-    <AppTooltip
-      :tooltip="
-        $t(($) => $.toolbar.main.deleteSelectedElement, { ns: 'toolbar' })
-      "
-    >
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
-        @click="$emit('delete-selected-element')"
-      >
-        <PhTrash class="delete-icon" weight="duotone" />
-      </ToolbarButton>
-    </AppTooltip>
-    <ToolbarSeparator />
-    <DropdownMenu>
-      <InputGroup class="w-24 bg-background">
-        <InputGroupInput
-          v-model="zoomText"
-          aria-label="Zoom"
-          @change="updateZoom(zoomText)"
-          @keydown.enter="onZoomInputEnter"
-          @keydown.escape="onZoomInputEscape"
-        />
-        <InputGroupAddon
-          align="inline-end"
-          class="h-full border-l border-input p-0 has-[>button]:mr-0"
-        >
-          <DropdownMenuTrigger as-child>
-            <InputGroupButton
+  <div class="main-toolbar p-1">
+    <Toolbar class="row h-auto w-full gap-0 border-0 p-0" loop>
+      <div class="toolbar-leading-group">
+        <div class="toolbar-leading-section">
+          <AppTooltip :tooltip="$t(($) => $.menu.file.new, { ns: 'menu' })">
+            <ToolbarButton
+              variant="secondary"
               size="icon-sm"
-              class="h-full border-0"
-              aria-label="Show zoom options"
+              class="icon-btn"
+              @click="$emit('new-score')"
             >
-              <PhCaretDown />
-            </InputGroupButton>
-          </DropdownMenuTrigger>
-        </InputGroupAddon>
-      </InputGroup>
-      <DropdownMenuContent align="end" class="w-24 min-w-24">
-        <DropdownMenuItem @select="selectZoomToFit">
-          {{ zoomToFitLabel }}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          v-for="option in zoomOptions"
-          :key="option"
-          @select="updateZoom(option)"
+              <PhFilePlus weight="duotone" />
+            </ToolbarButton>
+          </AppTooltip>
+          <AppTooltip :tooltip="$t(($) => $.menu.file.open, { ns: 'menu' })">
+            <ToolbarButton
+              variant="secondary"
+              size="icon-sm"
+              class="icon-btn"
+              @click="$emit('open-score')"
+            >
+              <PhFolderOpen weight="duotone" />
+            </ToolbarButton>
+          </AppTooltip>
+          <AppTooltip :tooltip="$t(($) => $.menu.file.save, { ns: 'menu' })">
+            <ToolbarButton
+              variant="secondary"
+              size="icon-sm"
+              class="icon-btn"
+              @click="$emit('save-score')"
+            >
+              <PhFloppyDisk weight="duotone" />
+            </ToolbarButton>
+          </AppTooltip>
+          <AppTooltip :tooltip="$t(($) => $.menu.file.print, { ns: 'menu' })">
+            <ToolbarButton
+              variant="secondary"
+              size="icon-sm"
+              class="icon-btn"
+              @click="$emit('print-score')"
+            >
+              <PhPrinter weight="duotone" />
+            </ToolbarButton>
+          </AppTooltip>
+        </div>
+        <ToolbarSeparator class="toolbar-leading-separator" />
+        <div class="toolbar-leading-section toolbar-leading-section-right">
+          <AppTooltip :tooltip="$t(($) => $.menu.edit.cut, { ns: 'menu' })">
+            <ToolbarButton
+              variant="secondary"
+              size="icon-sm"
+              class="icon-btn"
+              @click="$emit('cut')"
+            >
+              <PhScissors weight="duotone" />
+            </ToolbarButton>
+          </AppTooltip>
+          <AppTooltip :tooltip="$t(($) => $.menu.edit.copy, { ns: 'menu' })">
+            <ToolbarButton
+              variant="secondary"
+              size="icon-sm"
+              class="icon-btn"
+              @click="$emit('copy')"
+            >
+              <PhCopy weight="duotone" />
+            </ToolbarButton>
+          </AppTooltip>
+          <AppTooltip :tooltip="$t(($) => $.menu.edit.paste, { ns: 'menu' })">
+            <ToolbarButton
+              variant="secondary"
+              size="icon-sm"
+              class="icon-btn"
+              @click="$emit('paste')"
+            >
+              <PhClipboardText weight="duotone" />
+            </ToolbarButton>
+          </AppTooltip>
+        </div>
+      </div>
+      <div class="toolbar-aligned-group">
+        <ToolbarSeparator />
+        <AppTooltip :tooltip="$t(($) => $.menu.edit.undo, { ns: 'menu' })">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            :disabled="!canUndo"
+            @click="$emit('undo')"
+          >
+            <PhArrowCounterClockwise />
+          </ToolbarButton>
+        </AppTooltip>
+        <AppTooltip :tooltip="$t(($) => $.menu.edit.redo, { ns: 'menu' })">
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            :disabled="!canRedo"
+            @click="$emit('redo')"
+          >
+            <PhArrowClockwise />
+          </ToolbarButton>
+        </AppTooltip>
+      </div>
+      <div class="toolbar-primary-group toolbar-primary-group-zoom">
+        <ToolbarSeparator />
+        <AppTooltip
+          :tooltip="
+            $t(($) => $.toolbar.main.deleteSelectedElement, {
+              ns: 'toolbar',
+            })
+          "
         >
-          {{ option }}%
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-    <ToolbarSeparator />
-    <div class="audio-container">
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
-        :aria-label="
-          audioState === AudioState.Playing ? 'Pause audio' : 'Play audio'
-        "
-        @click="$emit('play-audio')"
-      >
-        <PhPause v-if="audioState === AudioState.Playing" weight="fill" />
-        <PhPlay v-else weight="fill" />
-      </ToolbarButton>
-      <ToolbarButton
-        variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
-        aria-label="Playback settings"
-        @click="$emit('open-playback-settings')"
-      >
-        <PhGearFine />
-      </ToolbarButton>
-      <ToolbarSeparator />
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            @click="$emit('delete-selected-element')"
+          >
+            <PhTrash class="delete-icon" weight="duotone" />
+          </ToolbarButton>
+        </AppTooltip>
+        <ToolbarSeparator />
+        <div class="zoom-control">
+          <DropdownMenu>
+            <InputGroup class="w-full bg-background">
+              <InputGroupInput
+                v-model="zoomText"
+                aria-label="Zoom"
+                @change="updateZoom(zoomText)"
+                @keydown.enter="onZoomInputEnter"
+                @keydown.escape="onZoomInputEscape"
+              />
+              <InputGroupAddon
+                align="inline-end"
+                class="h-full border-l border-input p-0 has-[>button]:mr-0"
+              >
+                <DropdownMenuTrigger as-child>
+                  <InputGroupButton
+                    size="icon-sm"
+                    class="h-full border-0"
+                    aria-label="Show zoom options"
+                  >
+                    <PhCaretDown />
+                  </InputGroupButton>
+                </DropdownMenuTrigger>
+              </InputGroupAddon>
+            </InputGroup>
+            <DropdownMenuContent align="end" class="w-24 min-w-24">
+              <DropdownMenuItem @select="selectZoomToFit">
+                {{ zoomToFitLabel }}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                v-for="option in zoomOptions"
+                :key="option"
+                @select="updateZoom(option)"
+              >
+                {{ option }}%
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      <div class="toolbar-playback-section">
+        <div class="toolbar-zoom-adjacent-actions">
+          <ToolbarSeparator />
+          <AppTooltip
+            :tooltip="$t(($) => $.menu.file.pageSetup, { ns: 'menu' })"
+          >
+            <ToolbarButton
+              variant="secondary"
+              size="icon-sm"
+              class="icon-btn"
+              @click="$emit('open-page-setup')"
+            >
+              <PhScroll weight="duotone" />
+            </ToolbarButton>
+          </AppTooltip>
+          <AppTooltip :tooltip="$t(($) => $.menu.edit.find, { ns: 'menu' })">
+            <ToolbarButton
+              variant="secondary"
+              size="icon-sm"
+              class="icon-btn"
+              @click="$emit('find')"
+            >
+              <PhMagnifyingGlass weight="duotone" />
+            </ToolbarButton>
+          </AppTooltip>
+        </div>
+        <div class="toolbar-playback-controls">
+          <div class="audio-container">
+            <ToolbarButton
+              variant="secondary"
+              size="icon-sm"
+              class="icon-btn"
+              :aria-label="
+                audioState === AudioState.Playing ? 'Pause audio' : 'Play audio'
+              "
+              @click="$emit('play-audio')"
+            >
+              <PhPause v-if="audioState === AudioState.Playing" weight="fill" />
+              <PhPlay v-else weight="fill" />
+            </ToolbarButton>
+            <ToolbarButton
+              variant="secondary"
+              size="icon-sm"
+              class="icon-btn"
+              aria-label="Playback settings"
+              @click="$emit('open-playback-settings')"
+            >
+              <PhGearFine />
+            </ToolbarButton>
+            <ToolbarSeparator />
 
-      <span class="playback-time">{{ playbackTimeDisplay }}</span>
-      <ToolbarSeparator />
-      <span class="label-bpm">BPM = {{ playbackBpmDisplay }}</span>
+            <span class="playback-time">{{ playbackTimeDisplay }}</span>
+            <ToolbarSeparator />
+            <span class="label-bpm">BPM = {{ playbackBpmDisplay }}</span>
 
-      <ToolbarSeparator />
-      <Label for="audio-speed-slider" class="mr-2">{{
-        $t(($) => $.toolbar.main.speed, { ns: 'toolbar' })
-      }}</Label>
-      <Slider
-        id="audio-speed-slider"
-        class="m-0.5 w-16"
-        :min="0.1"
-        :max="3"
-        :step="0.05"
-        :disabled="audioState === AudioState.Playing"
-        :model-value="[audioOptions.speed]"
-        @update:model-value="onAudioOptionsSpeedChanged"
-      />
-      <InputUnit
-        id="audio-speed-input"
-        unit="percent"
-        :min="10"
-        :max="300"
-        :step="1"
-        :format-options="fraction0FormatOptions"
-        :model-value="audioOptions.speed"
-        :disabled="audioState === AudioState.Playing"
-        @update:model-value="$emit('update:audioOptionsSpeed', $event)"
-      />
-      <span>%</span>
-    </div>
-    <ToolbarSeparator />
-    <div class="page-number-container">
-      {{
-        $t(($) => $.toolbar.main.pageNumber, {
-          ns: 'toolbar',
-          currentPageNumber,
-          pageCount,
-        })
-      }}
-    </div>
-  </Toolbar>
+            <ToolbarSeparator />
+            <Label for="audio-speed-slider" class="mr-2">{{
+              $t(($) => $.toolbar.main.speed, { ns: 'toolbar' })
+            }}</Label>
+            <Slider
+              id="audio-speed-slider"
+              class="m-0.5 w-16"
+              :min="0.1"
+              :max="3"
+              :step="0.05"
+              :disabled="audioState === AudioState.Playing"
+              :model-value="[audioOptions.speed]"
+              @update:model-value="onAudioOptionsSpeedChanged"
+            />
+            <InputUnit
+              id="audio-speed-input"
+              unit="percent"
+              :min="10"
+              :max="300"
+              :step="1"
+              :format-options="fraction0FormatOptions"
+              :model-value="audioOptions.speed"
+              :disabled="audioState === AudioState.Playing"
+              @update:model-value="$emit('update:audioOptionsSpeed', $event)"
+            />
+            <span>%</span>
+          </div>
+          <ToolbarSeparator />
+          <div class="page-number-container">
+            {{
+              $t(($) => $.toolbar.main.pageNumber, {
+                ns: 'toolbar',
+                currentPageNumber,
+                pageCount,
+              })
+            }}
+          </div>
+        </div>
+      </div>
+    </Toolbar>
+    <Toolbar class="row h-auto w-full gap-0 border-0 p-0" loop>
+      <div class="toolbar-leading-group">
+        <div class="toolbar-leading-section">
+          <ToolbarToggleGroup
+            type="single"
+            :model-value="entryMode"
+            @update:model-value="onEntryModeChanged"
+          >
+            <ToolbarToggleItem class="entry-mode-btn" :value="EntryMode.Auto">
+              {{ $t(($) => $.toolbar.main.auto, { ns: 'toolbar' }) }}
+            </ToolbarToggleItem>
+            <ToolbarToggleItem class="entry-mode-btn" :value="EntryMode.Insert">
+              {{ $t(($) => $.toolbar.main.insert, { ns: 'toolbar' }) }}
+            </ToolbarToggleItem>
+            <ToolbarToggleItem class="entry-mode-btn" :value="EntryMode.Edit">
+              {{ $t(($) => $.toolbar.main.single, { ns: 'toolbar' }) }}
+            </ToolbarToggleItem>
+          </ToolbarToggleGroup>
+        </div>
+        <ToolbarSeparator class="toolbar-leading-separator" />
+        <div class="toolbar-leading-section toolbar-leading-section-right">
+          <AppTooltip :tooltip="martyriaTooltip">
+            <ToolbarButton
+              variant="secondary"
+              size="icon-sm"
+              class="neume-button"
+              @click="$emit('add-auto-martyria')"
+            >
+              <img src="@/assets/icons/martyria.svg" />
+            </ToolbarButton>
+          </AppTooltip>
+          <ButtonWithMenu
+            direction="down"
+            :options="tempoOptions"
+            :tooltip="tempoTooltip"
+            img-size="28px"
+            @select="$emit('add-tempo', $event)"
+          />
+        </div>
+      </div>
+      <div class="toolbar-aligned-group">
+        <ToolbarSeparator />
+        <AppTooltip
+          :tooltip="$t(($) => $.menu.insert.alternateLine, { ns: 'menu' })"
+        >
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            @click="$emit('add-alternate-line')"
+          >
+            <PhMusicNotesPlus weight="duotone" />
+          </ToolbarButton>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="$t(($) => $.menu.insert.annotation, { ns: 'menu' })"
+        >
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            @click="$emit('add-annotation')"
+          >
+            <PhNotePencil weight="duotone" />
+          </ToolbarButton>
+        </AppTooltip>
+      </div>
+      <div class="toolbar-primary-group">
+        <ToolbarSeparator />
+        <AppTooltip
+          :tooltip="
+            $t(($) => $.toolbar.main.insertDropCapBefore, { ns: 'toolbar' })
+          "
+        >
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            @click="$emit('add-drop-cap')"
+          >
+            <PhArticleNyTimes weight="duotone" />
+          </ToolbarButton>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.main.insertTextBox, { ns: 'toolbar' })"
+        >
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            @click="$emit('add-text-box')"
+          >
+            <PhTextbox weight="duotone" />
+          </ToolbarButton>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="
+            $t(($) => $.toolbar.main.insertTextBoxRich, { ns: 'toolbar' })
+          "
+        >
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            @click="$emit('add-text-box-rich')"
+          >
+            <PhTextbox class="rich-text-box-icon" weight="duotone" />
+          </ToolbarButton>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.main.insertModeKey, { ns: 'toolbar' })"
+        >
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            @click="$emit('add-mode-key')"
+          >
+            <img src="@/assets/icons/mode-key.svg" />
+          </ToolbarButton>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.main.insertImage, { ns: 'toolbar' })"
+        >
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            @click="$emit('add-image')"
+          >
+            <PhImageSquare weight="duotone" />
+          </ToolbarButton>
+        </AppTooltip>
+      </div>
+      <div class="toolbar-rest">
+        <ToolbarSeparator />
+        <AppTooltip
+          :tooltip="
+            $t(
+              ($) => $.toolbar.main.insertOrRemoveLineBreakAfterSelectedElement,
+              {
+                ns: 'toolbar',
+              },
+            )
+          "
+        >
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            @click="$emit('toggle-line-break', LineBreakType.Left)"
+          >
+            <PhParagraph weight="duotone" />
+          </ToolbarButton>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="
+            $t(
+              ($) =>
+                $.toolbar.main
+                  .insertOrRemoveJustifiedLineBreakAfterSelectedElement,
+              {
+                ns: 'toolbar',
+              },
+            )
+          "
+        >
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            @click="$emit('toggle-line-break', LineBreakType.Justify)"
+          >
+            <svg viewBox="0 0 24 24">
+              <PhParagraph
+                size="24"
+                weight="duotone"
+                transform="matrix(0.75 0 0 1 -2 0)"
+              />
+              <PhTextAlignJustify size="12" x="12" y="12" />
+            </svg>
+          </ToolbarButton>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="
+            $t(
+              ($) =>
+                $.toolbar.main
+                  .insertOrRemoveCenteredLineBreakAfterSelectedElement,
+              {
+                ns: 'toolbar',
+              },
+            )
+          "
+        >
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            @click="$emit('toggle-line-break', LineBreakType.Center)"
+          >
+            <svg viewBox="0 0 24 24">
+              <PhParagraph
+                size="24"
+                weight="duotone"
+                transform="matrix(0.75 0 0 1 -2 0)"
+              />
+              <PhTextAlignCenter size="12" x="12" y="12" />
+            </svg>
+          </ToolbarButton>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="
+            $t(
+              ($) => $.toolbar.main.insertOrRemovePageBreakAfterSelectedElement,
+              {
+                ns: 'toolbar',
+              },
+            )
+          "
+        >
+          <ToolbarButton
+            variant="secondary"
+            size="icon-sm"
+            class="icon-btn"
+            @click="$emit('toggle-page-break')"
+          >
+            <PhFile />
+          </ToolbarButton>
+        </AppTooltip>
+      </div>
+    </Toolbar>
+  </div>
 </template>
 
 <script setup lang="ts">
 import {
+  PhArrowClockwise,
+  PhArrowCounterClockwise,
+  PhArticleNyTimes,
   PhCaretDown,
+  PhClipboardText,
+  PhCopy,
   PhFile,
+  PhFilePlus,
+  PhFloppyDisk,
+  PhFolderOpen,
   PhGearFine,
   PhImageSquare,
+  PhMagnifyingGlass,
+  PhMusicNotesPlus,
+  PhNotePencil,
   PhParagraph,
   PhPause,
   PhPlay,
+  PhPrinter,
+  PhScissors,
+  PhScroll,
   PhTextAlignCenter,
   PhTextAlignJustify,
+  PhTextbox,
   PhTrash,
 } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
@@ -437,9 +638,19 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  canUndo: {
+    type: Boolean,
+    required: true,
+  },
+  canRedo: {
+    type: Boolean,
+    required: true,
+  },
 });
 
 const emit = defineEmits([
+  'add-alternate-line',
+  'add-annotation',
   'add-auto-martyria',
   'add-drop-cap',
   'add-image',
@@ -447,11 +658,22 @@ const emit = defineEmits([
   'add-tempo',
   'add-text-box',
   'add-text-box-rich',
+  'copy',
+  'cut',
   'delete-selected-element',
+  'find',
+  'new-score',
+  'open-score',
+  'open-page-setup',
   'open-playback-settings',
+  'paste',
   'play-audio',
+  'print-score',
+  'redo',
+  'save-score',
   'toggle-line-break',
   'toggle-page-break',
+  'undo',
   'update:audioOptionsSpeed',
   'update:entryMode',
   'update:zoom',
@@ -595,11 +817,88 @@ function resetZoomInput() {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .main-toolbar {
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: max-content max-content max-content minmax(0, 1fr);
+  align-items: center;
   font-size: 16px;
   background-color: var(--color-legacy-chrome-menu-surface);
 
   --btn-size: 32px;
+}
+
+.row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+}
+
+.toolbar-leading-group,
+.toolbar-aligned-group,
+.toolbar-primary-group,
+.toolbar-rest,
+.toolbar-zoom-adjacent-actions,
+.toolbar-playback-controls,
+.toolbar-playback-section {
+  align-items: center;
+}
+
+.toolbar-leading-group {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+}
+
+.toolbar-leading-section {
+  display: flex;
+  align-items: center;
+}
+
+.toolbar-leading-section-right {
+  justify-self: end;
+}
+
+.toolbar-leading-separator {
+  justify-self: center;
+}
+
+.toolbar-aligned-group,
+.toolbar-primary-group,
+.toolbar-rest,
+.toolbar-zoom-adjacent-actions,
+.toolbar-playback-controls,
+.toolbar-playback-section {
+  display: flex;
+}
+
+.toolbar-leading-group,
+.toolbar-aligned-group,
+.toolbar-primary-group,
+.toolbar-zoom-adjacent-actions,
+.toolbar-playback-controls,
+.toolbar-playback-section {
+  flex-wrap: nowrap;
+}
+
+.toolbar-primary-group {
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.zoom-control {
+  min-width: 0;
+  width: 0;
+  flex: 1 1 0;
+}
+
+.toolbar-playback-section {
+  min-width: 0;
+  justify-content: space-between;
+  justify-self: stretch;
+}
+
+.toolbar-rest {
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .main-toolbar :deep(button:not(.entry-mode-btn)) {
@@ -666,7 +965,8 @@ function resetZoomInput() {
   width: var(--btn-icon-size, var(--btn-size));
 }
 
-.delete-icon {
+.delete-icon,
+.rich-text-box-icon {
   color: red;
 }
 

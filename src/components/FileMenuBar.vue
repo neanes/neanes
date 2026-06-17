@@ -457,12 +457,14 @@ onMounted(() => {
   // to listen for Ctrl+O for open, Ctrl+S for save, etc.
   window.addEventListener('keydown', onKeyDown);
 
+  EventBus.$on(IpcRendererChannels.OpenScoreDialog, onClickOpen);
   EventBus.$on(IpcRendererChannels.OpenImageDialog, onClickAddImage);
   void loadRecentFiles();
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeyDown);
+  EventBus.$off(IpcRendererChannels.OpenScoreDialog, onClickOpen);
   EventBus.$off(IpcRendererChannels.OpenImageDialog, onClickAddImage);
 });
 

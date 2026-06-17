@@ -2151,6 +2151,16 @@ ipcMain.on(IpcRendererChannels.OpenImageDialog, async () => {
   }
 });
 
+ipcMain.on(IpcRendererChannels.OpenScoreDialog, async () => {
+  const workspaces = await openWorkspaces();
+
+  for (const workspace of workspaces) {
+    if (workspace.success) {
+      win?.webContents.send(IpcMainChannels.FileMenuOpenScore, workspace);
+    }
+  }
+});
+
 ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
   readyToExit = true;
 

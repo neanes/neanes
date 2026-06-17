@@ -35,7 +35,7 @@ export const workspacePaneDefinitions = [
   {
     allowedEdges: ['left', 'right'],
     defaultSize: rightPaneDefaultSize,
-    defaultVisible: false,
+    defaultVisible: true,
     homeEdge: 'right',
     id: 'properties',
     titleSelector: ($) => $.menu.view.properties,

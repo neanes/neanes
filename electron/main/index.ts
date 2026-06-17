@@ -888,12 +888,21 @@ async function exportWorkspaceAsPdf(
         });
         await fs.writeFile(filePath, data);
 
-        const openError = await shell.openPath(filePath);
-        if (openError) {
-          // The file has already been written successfully; failing to open it
-          // afterward is not an export failure, so just log it.
-          console.error(`Failed to open ${filePath}: ${openError}`);
-        }
+        // On Linux, shell.openPath() may not resolve until the external viewer
+        // exits. Opening the written export is a non-critical side effect, so
+        // do not let it hold the shared `saving` lock.
+        void shell
+          .openPath(filePath)
+          .then((openError) => {
+            if (openError) {
+              console.error(`Failed to open ${filePath}: ${openError}`);
+            }
+          })
+          .catch((error) => {
+            console.error(
+              `Failed to open ${filePath}: ${getErrorMessage(error)}`,
+            );
+          });
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
@@ -987,12 +996,21 @@ async function exportWorkspaceAsHtml(
       if (doWrite) {
         await fs.writeFile(filePath, args.data);
 
-        const openError = await shell.openPath(filePath);
-        if (openError) {
-          // The file has already been written successfully; failing to open it
-          // afterward is not an export failure, so just log it.
-          console.error(`Failed to open ${filePath}: ${openError}`);
-        }
+        // On Linux, shell.openPath() may not resolve until the external viewer
+        // exits. Opening the written export is a non-critical side effect, so
+        // do not let it hold the shared `saving` lock.
+        void shell
+          .openPath(filePath)
+          .then((openError) => {
+            if (openError) {
+              console.error(`Failed to open ${filePath}: ${openError}`);
+            }
+          })
+          .catch((error) => {
+            console.error(
+              `Failed to open ${filePath}: ${getErrorMessage(error)}`,
+            );
+          });
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();

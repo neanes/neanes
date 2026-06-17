@@ -294,16 +294,6 @@
       />
       <span>%</span>
     </div>
-    <ToolbarSeparator />
-    <div class="page-number-container">
-      {{
-        $t(($) => $.toolbar.main.pageNumber, {
-          ns: 'toolbar',
-          currentPageNumber,
-          pageCount,
-        })
-      }}
-    </div>
   </Toolbar>
 </template>
 
@@ -419,14 +409,6 @@ const props = defineProps({
   },
   zoomToFit: {
     type: Boolean,
-    required: true,
-  },
-  currentPageNumber: {
-    type: Number,
-    required: true,
-  },
-  pageCount: {
-    type: Number,
     required: true,
   },
   playbackTime: {

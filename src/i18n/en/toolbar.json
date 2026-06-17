@@ -48,8 +48,13 @@
     "deleteSelectedElement": "Delete selected element",
     "fit": "Fit",
     "speed": "Speed",
-    "pageNumber": "Page {{ currentPageNumber }} of {{ pageCount }}",
     "invalidZoom": "The value must be between 50% and 500%."
+  },
+  "status": {
+    "section": "Section {{ sectionNumber }} of {{ sectionCount }}",
+    "pageNumber": "Page {{ currentPageNumber }} of {{ pageCount }}",
+    "line": "Line {{ lineNumber }} of {{ lineCount }}",
+    "column": "Column {{ columnNumber }} of {{ columnCount }}"
   },
   "dropCap": {
     "lineSpan": "Lines to Drop"

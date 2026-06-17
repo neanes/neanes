@@ -48,8 +48,13 @@
     "deleteSelectedElement": "Διαγραφή Επιλεγμένου Στοιχείου",
     "fit": "Προσαρμογή",
     "speed": "Ταχύτητα",
-    "pageNumber": "Σελίδα {{ currentPageNumber }} από {{ pageCount }}",
     "invalidZoom": "Η τιμή πρέπει να είναι μεταξύ 50% και 500%."
+  },
+  "status": {
+    "section": "Ενότητα {{ sectionNumber }} από {{ sectionCount }}",
+    "pageNumber": "Σελίδα {{ currentPageNumber }} από {{ pageCount }}",
+    "line": "Γραμμή {{ lineNumber }} από {{ lineCount }}",
+    "column": "Στήλη {{ columnNumber }} από {{ columnCount }}"
   },
   "dropCap": {
     "lineSpan": "Έκταση Γραμμών"

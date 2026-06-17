@@ -184,6 +184,28 @@ class FontCatalog {
   private injectedFaces = new Set<string>();
   private styleElement: HTMLStyleElement | null = null;
 
+  // Resolve once the document is visible. queryLocalFonts() throws
+  // "SecurityError: Page needs to be visible" when the document is hidden.
+  private waitUntilVisible(): Promise<void> {
+    if (
+      typeof document === 'undefined' ||
+      document.visibilityState === 'visible'
+    ) {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve) => {
+      const onVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          document.removeEventListener('visibilitychange', onVisibilityChange);
+          resolve();
+        }
+      };
+
+      document.addEventListener('visibilitychange', onVisibilityChange);
+    });
+  }
+
   // Load the system font list (Electron only). Idempotent and safe to call
   // repeatedly; if a query fails (e.g. it needs a user gesture) it leaves the
   // catalog unloaded so a later call can retry.
@@ -213,6 +235,10 @@ class FontCatalog {
       this.loaded = true;
       return;
     }
+
+    // queryLocalFonts() requires a visible document, so defer it until the
+    // renderer reports that condition.
+    await this.waitUntilVisible();
 
     try {
       const fonts = await window.queryLocalFonts();

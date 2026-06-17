@@ -179,6 +179,7 @@ export class NoteElement extends ScoreElement {
   public computedMeasureBarLeftLeadingSpacingPrevious: number = 0;
   public computedMeasureBarRightTrailingSpacingPrevious: number = 0;
   public computedIsonOffsetYPrevious: number | null = null;
+  public vareiaInternalSpacingPrevious: number = 0;
 
   // Fthora helper
   public fthoraCarry: Fthora | null = null;

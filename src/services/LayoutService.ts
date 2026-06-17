@@ -4043,6 +4043,7 @@ export class LayoutService {
       note.computedMeasureBarRightTrailingSpacingPrevious =
         note.computedMeasureBarRightTrailingSpacing;
       note.computedIsonOffsetYPrevious = note.computedIsonOffsetY;
+      note.vareiaInternalSpacingPrevious = note.vareiaInternalSpacing;
     } else if (element.elementType === ElementType.TextBox) {
       const textbox = element as TextBoxElement;
       textbox.heightPrevious = textbox.height;
@@ -4118,7 +4119,8 @@ export class LayoutService {
           note.computedMeasureBarLeftLeadingSpacing ||
         note.computedMeasureBarRightTrailingSpacingPrevious !==
           note.computedMeasureBarRightTrailingSpacing ||
-        note.computedIsonOffsetYPrevious !== note.computedIsonOffsetY;
+        note.computedIsonOffsetYPrevious !== note.computedIsonOffsetY ||
+        note.vareiaInternalSpacingPrevious !== note.vareiaInternalSpacing;
     }
 
     if (!element.updated && element.elementType === ElementType.TextBox) {

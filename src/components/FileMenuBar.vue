@@ -139,6 +139,10 @@
           <MenubarItem @select="onClickPasteWithLyrics">
             {{ $t(($) => $.menu.edit.pasteWithLyrics, { ns: 'menu' }) }}
           </MenubarItem>
+          <MenubarItem @select="onClickSelectAll">
+            <PhSelectionAll />
+            {{ $t(($) => $.menu.edit.selectAll, { ns: 'menu' }) }}
+          </MenubarItem>
           <MenubarSeparator />
           <MenubarItem @select="onClickCopyFormat">
             <PhPaintBrush />
@@ -370,6 +374,7 @@ import {
   PhRowsPlusTop,
   PhScissors,
   PhScroll,
+  PhSelectionAll,
   PhTextAa,
   PhTextbox,
   PhTrayArrowDown,
@@ -787,6 +792,10 @@ function onClickPaste() {
 
 function onClickPasteWithLyrics() {
   EventBus.$emit(IpcMainChannels.FileMenuPasteWithLyrics);
+}
+
+function onClickSelectAll() {
+  EventBus.$emit(IpcMainChannels.FileMenuSelectAll);
 }
 
 function onClickPasteFormat() {

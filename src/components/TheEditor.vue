@@ -2,10 +2,18 @@
 import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
 
 import {
+  PhAlignRight,
   PhArrowLineLeft,
   PhArrowLineRight,
+  PhClipboardText,
+  PhCopy,
+  PhCrosshair,
   PhFile,
+  PhMusicNotes,
   PhParagraph,
+  PhScissors,
+  PhSelectionAll,
+  PhSlidersHorizontal,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhX,
@@ -76,8 +84,10 @@ import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
 import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
 import {
   ContextMenu,
+  ContextMenuCheckboxItem,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { Spinner } from '@/components/ui/spinner';
@@ -354,6 +364,8 @@ const selectedWorkspaceValue = ref(new Workspace());
 const pendingLyricsAssignmentTimers = new Map<string, number>();
 const tabs = ref<Tab[]>([]);
 const contextMenuWorkspaceId = ref<string | null>(null);
+const scoreContextMenuTarget = ref<ScoreElement | null>(null);
+const scoreMenuPointerDownInside = ref(false);
 const pages = ref<Page[]>([]);
 const currentPageNumber = ref(0);
 const modeKeyDialogIsOpen = ref(false);
@@ -1014,6 +1026,10 @@ const throttled = {
     keydownThrottleIntervalMs,
     onPasteScoreElements,
   ),
+  onSelectAllScoreElements: throttle(
+    keydownThrottleIntervalMs,
+    onSelectAllScoreElements,
+  ),
   addQuantitativeNeume: throttle(
     keydownThrottleIntervalMs,
     addQuantitativeNeume,
@@ -1188,6 +1204,7 @@ onMounted(() => {
     IpcMainChannels.FileMenuPasteWithLyrics,
     onFileMenuPasteWithLyrics,
   );
+  EventBus.$on(IpcMainChannels.FileMenuSelectAll, onFileMenuSelectAll);
   EventBus.$on(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$on(IpcMainChannels.FileMenuFind, onFileMenuFind);
   EventBus.$on(
@@ -1278,6 +1295,7 @@ onBeforeUnmount(() => {
     IpcMainChannels.FileMenuPasteWithLyrics,
     onFileMenuPasteWithLyrics,
   );
+  EventBus.$off(IpcMainChannels.FileMenuSelectAll, onFileMenuSelectAll);
   EventBus.$off(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$off(IpcMainChannels.FileMenuFind, onFileMenuFind);
   EventBus.$off(
@@ -1795,6 +1813,24 @@ function setSelectionRange(element: ScoreElement) {
   } else if (selectionRange.value != null) {
     selectionRange.value.end = elementIndex;
   }
+}
+
+function onSelectAllScoreElements() {
+  const firstElementIndex = elements.value.findIndex(
+    (element) => element.elementType !== ElementType.Empty,
+  );
+  const lastElementIndex = elements.value.findLastIndex(
+    (element) => element.elementType !== ElementType.Empty,
+  );
+
+  if (firstElementIndex < 0 || lastElementIndex < 0) {
+    return;
+  }
+
+  selectedElement.value = null;
+  selectedLyrics.value = null;
+  selectedHeaderFooterElement.value = null;
+  selectionRange.value = { start: firstElementIndex, end: lastElementIndex };
 }
 
 function getNormalizedSelectionRange() {
@@ -2754,6 +2790,10 @@ function onKeydown(event: KeyboardEvent) {
       throttled.onPasteScoreElements(includeLyrics);
       event.preventDefault();
       return;
+    } else if (event.code === 'KeyA' && !event.shiftKey) {
+      throttled.onSelectAllScoreElements();
+      event.preventDefault();
+      return;
     } else if (event.code === 'KeyI' && !event.shiftKey) {
       switch (entryMode.value) {
         case EntryMode.Auto:
@@ -3478,6 +3518,36 @@ function flushAndCloneForClipboard(
   return elementsToClone.map((x) => x.clone());
 }
 
+const canCutCopySelected = computed(
+  () => getSelectedNonEmptyElements().length > 0,
+);
+
+const canPasteSelected = computed(
+  () => clipboard.value.length > 0 && selectedElement.value != null,
+);
+
+const canSelectAllElements = computed(() =>
+  elements.value.some((element) => element.elementType !== ElementType.Empty),
+);
+
+function getSelectedNonEmptyElements() {
+  if (selectionRange.value != null) {
+    return elements.value.filter(
+      (element) =>
+        element.elementType !== ElementType.Empty && isSelected(element),
+    );
+  }
+
+  if (
+    selectedElement.value != null &&
+    selectedElement.value.elementType !== ElementType.Empty
+  ) {
+    return [selectedElement.value];
+  }
+
+  return [];
+}
+
 function onCutScoreElements() {
   if (selectionRange.value != null) {
     const start = Math.min(
@@ -3485,9 +3555,7 @@ function onCutScoreElements() {
       selectionRange.value.end,
     );
 
-    const elementsToCut = elements.value.filter(
-      (x) => x.elementType != ElementType.Empty && isSelected(x),
-    );
+    const elementsToCut = getSelectedNonEmptyElements();
 
     clipboard.value = flushAndCloneForClipboard(elementsToCut);
 
@@ -3524,17 +3592,10 @@ function onCutScoreElements() {
 }
 
 function onCopyScoreElements() {
-  if (selectionRange.value != null) {
-    clipboard.value = flushAndCloneForClipboard(
-      elements.value.filter(
-        (x) => x.elementType != ElementType.Empty && isSelected(x),
-      ),
-    );
-  } else if (
-    selectedElement.value != null &&
-    selectedElement.value.elementType !== ElementType.Empty
-  ) {
-    clipboard.value = flushAndCloneForClipboard([selectedElement.value]);
+  const elementsToCopy = getSelectedNonEmptyElements();
+
+  if (elementsToCopy.length > 0) {
+    clipboard.value = flushAndCloneForClipboard(elementsToCopy);
   }
 }
 
@@ -5518,9 +5579,7 @@ function deleteSelectedElement() {
 
     save();
   } else if (selectionRange.value != null) {
-    const elementsToDelete = elements.value.filter(
-      (x) => x.elementType != ElementType.Empty && isSelected(x),
-    );
+    const elementsToDelete = getSelectedNonEmptyElements();
 
     commandService.value.executeAsBatch(
       elementsToDelete.map((element) =>
@@ -6838,12 +6897,10 @@ async function onFileMenuCopyAsHtml() {
 
   let copiedElements: ScoreElement[] = [];
 
-  if (selectionRange.value != null) {
-    copiedElements = elements.value.filter(
-      (x) => x.elementType != ElementType.Empty && isSelected(x),
-    );
-  } else if (selectedElement.value != null) {
-    copiedElements = [selectedElement.value];
+  const selectedScoreElements = getSelectedNonEmptyElements();
+
+  if (selectedScoreElements.length > 0) {
+    copiedElements = selectedScoreElements;
   } else if (selectedLyrics.value != null) {
     copiedElements = [selectedLyrics.value];
   }
@@ -6910,6 +6967,14 @@ async function onFileMenuPasteWithLyrics() {
     onPasteScoreElements(true);
   } else {
     await pasteTextFromClipboard();
+  }
+}
+
+function onFileMenuSelectAll() {
+  if (!isTextInputFocused() && !dialogOpen.value) {
+    onSelectAllScoreElements();
+  } else {
+    document.execCommand('selectAll');
   }
 }
 
@@ -7230,6 +7295,184 @@ function onWorkspaceTabContextMenu(event: PointerEvent) {
   }
 }
 
+function isEditableContextMenuTarget(event: MouseEvent) {
+  // True when the right-click landed inside editable text (a lyric, text box,
+  // rich text box, header, or footer), where the native context menu should be
+  // used instead of the score menu.
+  const target = event.target;
+  const element =
+    target instanceof Element
+      ? target
+      : target instanceof Node
+        ? target.parentElement
+        : null;
+
+  return (
+    element != null &&
+    ((element instanceof HTMLElement && element.isContentEditable) ||
+      element.closest(
+        'input, textarea, [contenteditable="true"], [contenteditable="plaintext-only"]',
+      ) != null)
+  );
+}
+
+function onScoreElementContextMenu(element: ScoreElement) {
+  scoreContextMenuTarget.value = element;
+
+  // Select the right-clicked element unless it is already part of the current
+  // selection, so the menu actions operate on it. The selectedElement setter
+  // clears any active range and clears the lyrics selection.
+  if (!isSelected(element)) {
+    selectedElement.value = element;
+  }
+}
+
+function resetScoreContextMenu(event: MouseEvent) {
+  scoreContextMenuTarget.value = null;
+  scoreMenuPointerDownInside.value = false;
+
+  // Right-clicks inside editable text keep the native context menu: stop the
+  // event in the capture phase so reka's trigger on .page-background never opens
+  // the score menu, and do NOT preventDefault so the browser's own menu shows.
+  if (isEditableContextMenuTarget(event)) {
+    event.stopImmediatePropagation();
+  }
+}
+
+function onScoreContextMenu(event: MouseEvent) {
+  // Suppress the score menu on empty canvas (a right-click that was not on an
+  // element). Editable-text right-clicks are handled in the capture phase above
+  // and never reach here.
+  if (scoreContextMenuTarget.value == null) {
+    event.preventDefault();
+  }
+}
+
+function onScoreContextMenuOpenChange(open: boolean) {
+  if (!open) {
+    scoreContextMenuTarget.value = null;
+    scoreMenuPointerDownInside.value = false;
+  }
+}
+
+function onScoreMenuContentPointerDown() {
+  scoreMenuPointerDownInside.value = true;
+}
+
+function onScoreMenuContentPointerUp(event: PointerEvent) {
+  // The right-click that opens the menu finishes with a pointerup over the
+  // item under the cursor. Because that gesture's pointerdown happened outside
+  // the menu, reka's MenuItem treats the release as a click and fires the first
+  // item (Cut). Swallow a release whose press did not start inside the menu;
+  // genuine clicks press down on the item first, so they are unaffected.
+  if (!scoreMenuPointerDownInside.value) {
+    event.preventDefault();
+  }
+  scoreMenuPointerDownInside.value = false;
+}
+
+const contextMenuNote = computed(() => {
+  return getContextMenuTargetForHomogeneousSelection(isSyllableElement);
+});
+
+const contextMenuMartyria = computed(() => {
+  return getContextMenuTargetForHomogeneousSelection(isMartyriaElement);
+});
+
+const contextMenuTextBox = computed(() => {
+  return getContextMenuTargetForHomogeneousSelection(isTextBoxElement);
+});
+
+const contextMenuModeKey = computed(() => {
+  return getContextMenuTargetForHomogeneousSelection(isModeKeyElement);
+});
+
+const contextMenuDropCap = computed(() => {
+  return getContextMenuTargetForHomogeneousSelection(isDropCapElement);
+});
+
+const contextMenuImageBox = computed(() => {
+  return getContextMenuTargetForHomogeneousSelection(isImageBoxElement);
+});
+
+function getContextMenuSelectedNonEmptyElements() {
+  const element = scoreContextMenuTarget.value;
+
+  if (element == null) {
+    return [];
+  }
+
+  if (selectionRange.value != null && isSelected(element)) {
+    return getSelectedNonEmptyElements();
+  }
+
+  return element.elementType !== ElementType.Empty ? [element] : [];
+}
+
+function getContextMenuTargetForHomogeneousSelection<T extends ScoreElement>(
+  predicate: (element: ScoreElement) => element is T,
+) {
+  const element = scoreContextMenuTarget.value;
+
+  if (element == null || !predicate(element)) {
+    return null;
+  }
+
+  const selectedElements = getContextMenuSelectedNonEmptyElements();
+
+  return selectedElements.length > 0 && selectedElements.every(predicate)
+    ? element
+    : null;
+}
+
+// The `useDefaultStyle` property exists on text boxes, mode keys, and drop caps.
+const contextMenuUseDefaultStyleTarget = computed(
+  () =>
+    contextMenuTextBox.value ??
+    contextMenuModeKey.value ??
+    contextMenuDropCap.value,
+);
+
+const contextMenuHasElementProperties = computed(
+  () =>
+    contextMenuMartyria.value != null ||
+    contextMenuUseDefaultStyleTarget.value != null ||
+    contextMenuImageBox.value != null,
+);
+
+function setContextMenuUseDefaultStyle(
+  element: TextBoxElement | ModeKeyElement | DropCapElement,
+  value: boolean,
+) {
+  const wasUsingDefaultStyle = element.useDefaultStyle;
+
+  if (isTextBoxElement(element)) {
+    updateTextBox(element, { useDefaultStyle: value });
+  } else if (isModeKeyElement(element)) {
+    updateModeKey(element, { useDefaultStyle: value });
+  } else {
+    updateDropCap(element, { useDefaultStyle: value });
+  }
+
+  if (wasUsingDefaultStyle && !value) {
+    setPaneVisibility('properties', true);
+  }
+}
+
+function openContextMenuPositioning(element: NoteElement) {
+  // Make sure the dialog targets the right-clicked note (it reads the
+  // selected element), then open it as the Properties pane button does.
+  selectedElement.value = element;
+  openSyllablePositioningDialog();
+}
+
+function openContextMenuChangeKey(element: ModeKeyElement) {
+  // Make sure the dialog targets the right-clicked mode key (it reads the
+  // selected element), then open it as the Properties pane button does.
+  selectedElement.value = element;
+  openModeKeyDialog();
+}
+
 function closeContextMenuWorkspaces(disposition: CloseWorkspacesDisposition) {
   if (contextMenuWorkspaceId.value == null) {
     return;
@@ -7447,789 +7690,977 @@ function renderTabLabel(tab: Tab) {
               @search="onSearchText"
               @close="searchTextPanelIsOpen = false"
             />
-            <div
-              ref="pageBackgroundRef"
-              class="page-background"
-              @scroll="throttled.onScroll"
-            >
-              <div
-                v-for="(page, pageIndex) in filteredPages"
-                :key="`page-${pageIndex}`"
-                ref="pagesRef"
-                v-observe-visibility="{
-                  callback: (isVisible: boolean) =>
-                    updatePageVisibility(page, isVisible),
-                  intersection: pageVisibilityIntersection,
-                }"
-                class="page"
-                :style="pageStyle"
-                :class="{ print: printMode }"
+            <ContextMenu @update:open="onScoreContextMenuOpenChange">
+              <ContextMenuTrigger
+                as-child
+                class="select-auto"
+                @contextmenu.capture="resetScoreContextMenu"
+                @contextmenu="onScoreContextMenu"
               >
-                <template v-if="page.isVisible || printMode">
-                  <template v-if="showGuides">
-                    <span class="guide-line-vl" :style="guideStyleLeft" />
-                    <span class="guide-line-vr" :style="guideStyleRight" />
-                    <span class="guide-line-ht" :style="guideStyleTop" />
-                    <span class="guide-line-hb" :style="guideStyleBottom" />
-                  </template>
-                  <template v-if="score.pageSetup.showHeader">
-                    <template
-                      v-if="
-                        isRichTextBoxElement(getHeaderForPageIndex(pageIndex))
-                      "
-                    >
-                      <TextBoxRich
-                        :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
-                          getHeaderForPageIndex(pageIndex).keyHelper
-                        }`"
-                        :ref="setTemplateRef(`header-${pageIndex}`)"
-                        class="element-box"
-                        :element="
-                          getHeaderForPageIndex(pageIndex) as RichTextBoxElement
-                        "
-                        :edit-mode="
-                          !printMode &&
-                          getHeaderForPageIndex(pageIndex) ==
-                            selectedHeaderFooterElement
-                        "
-                        :metadata="getTokenMetadata(pageIndex)"
-                        :page-setup="score.pageSetup"
-                        :fonts="fonts"
-                        :editor-language="ckeditorLanguage"
-                        :selected="
-                          getHeaderForPageIndex(pageIndex) ==
-                          selectedHeaderFooterElement
-                        "
-                        :style="headerStyle"
-                        @click="selectHeaderRichTextBox(pageIndex)"
-                        @select-neume="
-                          selectHeaderRichTextBox(pageIndex);
-                          showPropertiesPaneForRichTextNeume();
-                        "
-                        @update="
-                          updateRichTextBox(
-                            getHeaderForPageIndex(
-                              pageIndex,
-                            ) as RichTextBoxElement,
-                            $event,
-                          )
-                        "
-                        @update:height="
-                          updateRichTextBoxHeight(
-                            getHeaderForPageIndex(
-                              pageIndex,
-                            ) as RichTextBoxElement,
-                            $event,
-                          )
-                        "
-                      />
-                    </template>
-                    <template
-                      v-else-if="
-                        isTextBoxElement(getHeaderForPageIndex(pageIndex))
-                      "
-                    >
-                      <TextBox
-                        :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
-                          getHeaderForPageIndex(pageIndex).keyHelper
-                        }`"
-                        :ref="setTemplateRef(`header-${pageIndex}`)"
-                        class="element-box"
-                        :element="
-                          getHeaderForPageIndex(pageIndex) as TextBoxElement
-                        "
-                        :edit-mode="
-                          !printMode &&
-                          getHeaderForPageIndex(pageIndex) ==
-                            selectedHeaderFooterElement
-                        "
-                        :metadata="getTokenMetadata(pageIndex)"
-                        :page-setup="score.pageSetup"
-                        :selected="
-                          getHeaderForPageIndex(pageIndex) ==
-                          selectedHeaderFooterElement
-                        "
-                        :class="[
-                          {
-                            selectedTextbox:
-                              getHeaderForPageIndex(pageIndex) ==
-                              selectedHeaderFooterElement,
-                          },
-                        ]"
-                        :style="headerStyle"
-                        @click="
-                          selectedHeaderFooterElement =
-                            getHeaderForPageIndex(pageIndex)
-                        "
-                        @update="
-                          updateTextBox(
-                            getHeaderForPageIndex(pageIndex)! as TextBoxElement,
-                            $event,
-                          )
-                        "
-                      />
-                    </template>
-                    <div
-                      v-if="shouldShowHeaderForPageIndex(pageIndex)"
-                      class="header-footer-hr"
-                      :style="
-                        getHeaderHorizontalRuleStyle(
-                          getHeaderForPageIndex(pageIndex).height,
-                        )
-                      "
-                    ></div>
-                  </template>
+                <div
+                  ref="pageBackgroundRef"
+                  class="page-background"
+                  @scroll="throttled.onScroll"
+                >
                   <div
-                    v-for="(line, lineIndex) in page.lines"
-                    :key="`line-${pageIndex}-${lineIndex}`"
-                    :ref="`line-${lineIndex}`"
-                    class="line"
+                    v-for="(page, pageIndex) in filteredPages"
+                    :key="`page-${pageIndex}`"
+                    ref="pagesRef"
+                    v-observe-visibility="{
+                      callback: (isVisible: boolean) =>
+                        updatePageVisibility(page, isVisible),
+                      intersection: pageVisibilityIntersection,
+                    }"
+                    class="page"
+                    :style="pageStyle"
+                    :class="{ print: printMode }"
                   >
-                    <div
-                      v-for="element in line.elements"
-                      :id="`element-${element.id}`"
-                      :key="`element-${selectedWorkspace.id}-${element.id}-${element.keyHelper}`"
-                      class="element-box"
-                      :style="getElementStyle(element)"
-                    >
-                      <template v-if="isSyllableElement(element)">
-                        <div
-                          :ref="
-                            setTemplateRef(
-                              `element-${getElementIndex(element)}`,
+                    <template v-if="page.isVisible || printMode">
+                      <template v-if="showGuides">
+                        <span class="guide-line-vl" :style="guideStyleLeft" />
+                        <span class="guide-line-vr" :style="guideStyleRight" />
+                        <span class="guide-line-ht" :style="guideStyleTop" />
+                        <span class="guide-line-hb" :style="guideStyleBottom" />
+                      </template>
+                      <template v-if="score.pageSetup.showHeader">
+                        <template
+                          v-if="
+                            isRichTextBoxElement(
+                              getHeaderForPageIndex(pageIndex),
                             )
                           "
-                          class="neume-box"
                         >
-                          <span
-                            v-if="
-                              element.sectionName != '' &&
-                              element.sectionName != null
+                          <TextBoxRich
+                            :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
+                              getHeaderForPageIndex(pageIndex).keyHelper
+                            }`"
+                            :ref="setTemplateRef(`header-${pageIndex}`)"
+                            class="element-box"
+                            :element="
+                              getHeaderForPageIndex(
+                                pageIndex,
+                              ) as RichTextBoxElement
                             "
-                            class="section-name"
-                            >§</span
-                          >
-                          <span v-if="element.pageBreak" class="page-break"
-                            ><PhFile
-                          /></span>
-                          <span v-if="element.lineBreak" class="line-break"
-                            ><svg
-                              v-if="
-                                element.lineBreakType === LineBreakType.Justify
-                              "
-                              viewBox="0 0 24 24"
-                            >
-                              <PhParagraph
-                                size="24"
-                                weight="fill"
-                                transform="matrix(0.75 0 0 1 -2 0)"
-                              />
-                              <PhTextAlignJustify
-                                size="12"
-                                x="12"
-                                y="12"
-                              /></svg
-                            ><svg
-                              v-else-if="
-                                element.lineBreakType === LineBreakType.Center
-                              "
-                              viewBox="0 0 24 24"
-                            >
-                              <PhParagraph
-                                size="24"
-                                weight="fill"
-                                transform="matrix(0.75 0 0 1 -2 0)"
-                              />
-                              <PhTextAlignCenter size="12" x="12" y="12" /></svg
-                            ><PhParagraph v-else weight="fill"
-                          /></span>
-                          <AlternateLine
-                            v-for="(alternateLine, index) in (
-                              element as NoteElement
-                            ).alternateLines"
-                            :key="index"
-                            :element="alternateLine"
-                            :page-setup="score.pageSetup"
-                            :class="{
-                              selectedAlternateLine:
-                                selectedWorkspace.selectedAlternateLineElement ===
-                                alternateLine,
-                            }"
-                            @update="updateAlternateLine(alternateLine, $event)"
-                            @mousedown="
-                              setSelectedAlternateLine(element, alternateLine)
+                            :edit-mode="
+                              !printMode &&
+                              getHeaderForPageIndex(pageIndex) ==
+                                selectedHeaderFooterElement
                             "
-                          />
-                          <Annotation
-                            v-for="(annotation, index) in (
-                              element as NoteElement
-                            ).annotations"
-                            :key="index"
-                            :ref="
-                              setTemplateRef(
-                                `annotation-${getElementIndex(element)}-${index}`,
-                              )
-                            "
-                            :element="annotation"
+                            :metadata="getTokenMetadata(pageIndex)"
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
                             :editor-language="ckeditorLanguage"
                             :selected="
-                              selectedWorkspace.selectedAnnotationElement ===
-                              annotation
+                              getHeaderForPageIndex(pageIndex) ==
+                              selectedHeaderFooterElement
                             "
-                            @update="updateAnnotation(annotation, $event)"
-                            @delete="
-                              removeAnnotation(
-                                element as NoteElement,
-                                annotation,
-                                true,
-                              )
-                            "
+                            :style="headerStyle"
+                            @click="selectHeaderRichTextBox(pageIndex)"
                             @select-neume="
-                              setSelectedAnnotation(element, annotation);
+                              selectHeaderRichTextBox(pageIndex);
                               showPropertiesPaneForRichTextNeume();
                             "
-                            @mousedown="
-                              setSelectedAnnotation(element, annotation)
-                            "
-                          />
-                          <SyllableNeumeBox
-                            class="syllable-box"
-                            :note="element as NoteElement"
-                            :page-setup="score.pageSetup"
-                            :class="[
-                              {
-                                selected: isSelected(element),
-                                'audio-selected': isAudioSelected(element),
-                              },
-                            ]"
-                            @select-single="selectedElement = element"
-                            @select-range="setSelectionRange(element)"
-                            @dblclick="openSyllablePositioningDialog"
-                          />
-                          <div
-                            class="lyrics-container"
-                            dir="auto"
-                            :style="getLyricStyle(element as NoteElement)"
-                          >
-                            <ContentEditable
-                              :ref="
-                                setTemplateRef(
-                                  `lyrics-${getElementIndex(element)}`,
-                                )
-                              "
-                              class="lyrics"
-                              :class="{
-                                selectedLyrics: element === selectedLyrics,
-                              }"
-                              :content="(element as NoteElement).lyrics"
-                              :editable="!lyricsLocked"
-                              white-space="nowrap"
-                              @click="focusLyrics(element.index)"
-                              @focus="selectedLyrics = element as NoteElement"
-                              @blur="
-                                updateLyrics(element as NoteElement, $event)
-                              "
-                            />
-                            <template
-                              v-if="
-                                isMelisma(element as NoteElement) &&
-                                (element as NoteElement).isHyphen &&
-                                (element as NoteElement).melismaText === ''
-                              "
-                            >
-                              <div
-                                class="melisma"
-                                :class="{
-                                  full: (element as NoteElement).isFullMelisma,
-                                }"
-                                :style="getMelismaStyle(element as NoteElement)"
-                              >
-                                <span
-                                  v-for="(offset, index) in (
-                                    element as NoteElement
-                                  ).hyphenOffsets"
-                                  :key="index"
-                                  class="melisma-hyphen"
-                                  :style="
-                                    getMelismaHyphenStyle(
-                                      element as NoteElement,
-                                      index,
-                                    )
-                                  "
-                                  >-</span
-                                >
-                              </div>
-                            </template>
-                            <template
-                              v-else-if="
-                                isMelisma(element as NoteElement) &&
-                                !(element as NoteElement).isHyphen &&
-                                !rtl &&
-                                (element as NoteElement).melismaText === ''
-                              "
-                            >
-                              <div
-                                class="melisma-underscore"
-                                :class="{
-                                  full: (element as NoteElement).isFullMelisma,
-                                }"
-                                :style="
-                                  getMelismaUnderscoreStyleOuter(
-                                    element as NoteElement,
-                                  )
-                                "
-                              >
-                                <div
-                                  class="melisma-inner"
-                                  :style="
-                                    getMelismaUnderscoreStyleInner(
-                                      element as NoteElement,
-                                    )
-                                  "
-                                ></div>
-                              </div>
-                            </template>
-                            <template
-                              v-else-if="
-                                isMelisma(element as NoteElement) &&
-                                !(element as NoteElement).isHyphen &&
-                                rtl
-                              "
-                            >
-                              <div
-                                class="melisma"
-                                :class="{
-                                  fullRtl: (element as NoteElement)
-                                    .isFullMelisma,
-                                }"
-                                :style="getMelismaStyle(element as NoteElement)"
-                                v-text="(element as NoteElement).melismaText"
-                              ></div>
-                            </template>
-                            <template
-                              v-else-if="
-                                (element as NoteElement).isMelisma &&
-                                (element as NoteElement).melismaText !== '' &&
-                                !rtl
-                              "
-                            >
-                              <span
-                                class="melisma-text"
-                                :class="{
-                                  selectedMelisma: element === selectedLyrics,
-                                }"
-                                @click="focusLyrics(element.index)"
-                                @focus="selectedLyrics = element as NoteElement"
-                                v-text="(element as NoteElement).melismaText"
-                              ></span>
-                            </template>
-                          </div>
-                        </div>
-                      </template>
-                      <template v-else-if="isMartyriaElement(element)">
-                        <div class="neume-box">
-                          <span
-                            v-if="
-                              element.sectionName != '' &&
-                              element.sectionName != null
-                            "
-                            class="section-name"
-                            >§</span
-                          >
-                          <span v-if="element.pageBreak" class="page-break">
-                            <PhFile
-                          /></span>
-                          <span v-if="element.lineBreak" class="line-break"
-                            ><PhParagraph weight="fill"
-                          /></span>
-                          <MartyriaNeumeBox
-                            :ref="
-                              setTemplateRef(
-                                `element-${getElementIndex(element)}`,
+                            @update="
+                              updateRichTextBox(
+                                getHeaderForPageIndex(
+                                  pageIndex,
+                                ) as RichTextBoxElement,
+                                $event,
                               )
                             "
-                            class="marytria-neume-box"
-                            :neume="element as MartyriaElement"
+                            @update:height="
+                              updateRichTextBoxHeight(
+                                getHeaderForPageIndex(
+                                  pageIndex,
+                                ) as RichTextBoxElement,
+                                $event,
+                              )
+                            "
+                          />
+                        </template>
+                        <template
+                          v-else-if="
+                            isTextBoxElement(getHeaderForPageIndex(pageIndex))
+                          "
+                        >
+                          <TextBox
+                            :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
+                              getHeaderForPageIndex(pageIndex).keyHelper
+                            }`"
+                            :ref="setTemplateRef(`header-${pageIndex}`)"
+                            class="element-box"
+                            :element="
+                              getHeaderForPageIndex(pageIndex) as TextBoxElement
+                            "
+                            :edit-mode="
+                              !printMode &&
+                              getHeaderForPageIndex(pageIndex) ==
+                                selectedHeaderFooterElement
+                            "
+                            :metadata="getTokenMetadata(pageIndex)"
                             :page-setup="score.pageSetup"
+                            :selected="
+                              getHeaderForPageIndex(pageIndex) ==
+                              selectedHeaderFooterElement
+                            "
                             :class="[
                               {
-                                selected: isSelected(element),
+                                selectedTextbox:
+                                  getHeaderForPageIndex(pageIndex) ==
+                                  selectedHeaderFooterElement,
                               },
                             ]"
-                            @select-single="selectedElement = element"
-                            @select-range="setSelectionRange(element)"
-                          />
-                          <div class="lyrics"></div>
-                        </div>
-                      </template>
-                      <template v-else-if="isTempoElement(element)">
-                        <div
-                          :ref="
-                            setTemplateRef(
-                              `element-${getElementIndex(element)}`,
-                            )
-                          "
-                          class="neume-box"
-                        >
-                          <span
-                            v-if="
-                              element.sectionName != '' &&
-                              element.sectionName != null
+                            :style="headerStyle"
+                            @click="
+                              selectedHeaderFooterElement =
+                                getHeaderForPageIndex(pageIndex)
                             "
-                            class="section-name"
-                            >§</span
-                          >
-                          <span v-if="element.pageBreak" class="page-break">
-                            <PhFile
-                          /></span>
-                          <span v-if="element.lineBreak" class="line-break"
-                            ><PhParagraph weight="fill"
-                          /></span>
-                          <TempoNeumeBox
-                            class="tempo-neume-box"
-                            :neume="element as TempoElement"
-                            :page-setup="score.pageSetup"
-                            :class="[{ selected: isSelected(element) }]"
-                            @select-single="selectedElement = element"
-                            @select-range="setSelectionRange(element)"
-                          />
-                          <div class="lyrics"></div>
-                        </div>
-                      </template>
-                      <template v-else-if="isEmptyElement(element)">
-                        <div
-                          :ref="
-                            setTemplateRef(
-                              `element-${getElementIndex(element)}`,
-                            )
-                          "
-                          class="neume-box"
-                        >
-                          <span
-                            v-if="
-                              element.sectionName != '' &&
-                              element.sectionName != null
+                            @update="
+                              updateTextBox(
+                                getHeaderForPageIndex(
+                                  pageIndex,
+                                )! as TextBoxElement,
+                                $event,
+                              )
                             "
-                            class="section-name"
-                            >§</span
-                          >
-                          <span v-if="element.pageBreak" class="page-break">
-                            <PhFile
-                          /></span>
-                          <span v-if="element.lineBreak" class="line-break"
-                            ><PhParagraph weight="fill"
-                          /></span>
-                          <EmptyNeumeBox
-                            class="empty-neume-box"
-                            :class="[{ selected: isSelected(element) }]"
-                            :style="getEmptyBoxStyle(element as EmptyElement)"
-                            @select-single="selectedElement = element"
-                          ></EmptyNeumeBox>
-                          <div class="lyrics"></div>
+                          />
+                        </template>
+                        <div
+                          v-if="shouldShowHeaderForPageIndex(pageIndex)"
+                          class="header-footer-hr"
+                          :style="
+                            getHeaderHorizontalRuleStyle(
+                              getHeaderForPageIndex(pageIndex).height,
+                            )
+                          "
+                        ></div>
+                      </template>
+                      <div
+                        v-for="(line, lineIndex) in page.lines"
+                        :key="`line-${pageIndex}-${lineIndex}`"
+                        :ref="`line-${lineIndex}`"
+                        class="line"
+                      >
+                        <div
+                          v-for="element in line.elements"
+                          :id="`element-${element.id}`"
+                          :key="`element-${selectedWorkspace.id}-${element.id}-${element.keyHelper}`"
+                          class="element-box"
+                          :style="getElementStyle(element)"
+                          @contextmenu="onScoreElementContextMenu(element)"
+                        >
+                          <template v-if="isSyllableElement(element)">
+                            <div
+                              :ref="
+                                setTemplateRef(
+                                  `element-${getElementIndex(element)}`,
+                                )
+                              "
+                              class="neume-box"
+                            >
+                              <span
+                                v-if="
+                                  element.sectionName != '' &&
+                                  element.sectionName != null
+                                "
+                                class="section-name"
+                                >§</span
+                              >
+                              <span v-if="element.pageBreak" class="page-break"
+                                ><PhFile
+                              /></span>
+                              <span v-if="element.lineBreak" class="line-break"
+                                ><svg
+                                  v-if="
+                                    element.lineBreakType ===
+                                    LineBreakType.Justify
+                                  "
+                                  viewBox="0 0 24 24"
+                                >
+                                  <PhParagraph
+                                    size="24"
+                                    weight="fill"
+                                    transform="matrix(0.75 0 0 1 -2 0)"
+                                  />
+                                  <PhTextAlignJustify
+                                    size="12"
+                                    x="12"
+                                    y="12"
+                                  /></svg
+                                ><svg
+                                  v-else-if="
+                                    element.lineBreakType ===
+                                    LineBreakType.Center
+                                  "
+                                  viewBox="0 0 24 24"
+                                >
+                                  <PhParagraph
+                                    size="24"
+                                    weight="fill"
+                                    transform="matrix(0.75 0 0 1 -2 0)"
+                                  />
+                                  <PhTextAlignCenter
+                                    size="12"
+                                    x="12"
+                                    y="12"
+                                  /></svg
+                                ><PhParagraph v-else weight="fill"
+                              /></span>
+                              <AlternateLine
+                                v-for="(alternateLine, index) in (
+                                  element as NoteElement
+                                ).alternateLines"
+                                :key="index"
+                                :element="alternateLine"
+                                :page-setup="score.pageSetup"
+                                :class="{
+                                  selectedAlternateLine:
+                                    selectedWorkspace.selectedAlternateLineElement ===
+                                    alternateLine,
+                                }"
+                                @update="
+                                  updateAlternateLine(alternateLine, $event)
+                                "
+                                @mousedown="
+                                  setSelectedAlternateLine(
+                                    element,
+                                    alternateLine,
+                                  )
+                                "
+                              />
+                              <Annotation
+                                v-for="(annotation, index) in (
+                                  element as NoteElement
+                                ).annotations"
+                                :key="index"
+                                :ref="
+                                  setTemplateRef(
+                                    `annotation-${getElementIndex(element)}-${index}`,
+                                  )
+                                "
+                                :element="annotation"
+                                :page-setup="score.pageSetup"
+                                :fonts="fonts"
+                                :editor-language="ckeditorLanguage"
+                                :selected="
+                                  selectedWorkspace.selectedAnnotationElement ===
+                                  annotation
+                                "
+                                @update="updateAnnotation(annotation, $event)"
+                                @delete="
+                                  removeAnnotation(
+                                    element as NoteElement,
+                                    annotation,
+                                    true,
+                                  )
+                                "
+                                @select-neume="
+                                  setSelectedAnnotation(element, annotation);
+                                  showPropertiesPaneForRichTextNeume();
+                                "
+                                @mousedown="
+                                  setSelectedAnnotation(element, annotation)
+                                "
+                              />
+                              <SyllableNeumeBox
+                                class="syllable-box"
+                                :note="element as NoteElement"
+                                :page-setup="score.pageSetup"
+                                :class="[
+                                  {
+                                    selected: isSelected(element),
+                                    'audio-selected': isAudioSelected(element),
+                                  },
+                                ]"
+                                @select-single="selectedElement = element"
+                                @select-range="setSelectionRange(element)"
+                                @dblclick="openSyllablePositioningDialog"
+                              />
+                              <div
+                                class="lyrics-container"
+                                dir="auto"
+                                :style="getLyricStyle(element as NoteElement)"
+                              >
+                                <ContentEditable
+                                  :ref="
+                                    setTemplateRef(
+                                      `lyrics-${getElementIndex(element)}`,
+                                    )
+                                  "
+                                  class="lyrics"
+                                  :class="{
+                                    selectedLyrics: element === selectedLyrics,
+                                  }"
+                                  :content="(element as NoteElement).lyrics"
+                                  :editable="!lyricsLocked"
+                                  white-space="nowrap"
+                                  @click="focusLyrics(element.index)"
+                                  @focus="
+                                    selectedLyrics = element as NoteElement
+                                  "
+                                  @blur="
+                                    updateLyrics(element as NoteElement, $event)
+                                  "
+                                />
+                                <template
+                                  v-if="
+                                    isMelisma(element as NoteElement) &&
+                                    (element as NoteElement).isHyphen &&
+                                    (element as NoteElement).melismaText === ''
+                                  "
+                                >
+                                  <div
+                                    class="melisma"
+                                    :class="{
+                                      full: (element as NoteElement)
+                                        .isFullMelisma,
+                                    }"
+                                    :style="
+                                      getMelismaStyle(element as NoteElement)
+                                    "
+                                  >
+                                    <span
+                                      v-for="(offset, index) in (
+                                        element as NoteElement
+                                      ).hyphenOffsets"
+                                      :key="index"
+                                      class="melisma-hyphen"
+                                      :style="
+                                        getMelismaHyphenStyle(
+                                          element as NoteElement,
+                                          index,
+                                        )
+                                      "
+                                      >-</span
+                                    >
+                                  </div>
+                                </template>
+                                <template
+                                  v-else-if="
+                                    isMelisma(element as NoteElement) &&
+                                    !(element as NoteElement).isHyphen &&
+                                    !rtl &&
+                                    (element as NoteElement).melismaText === ''
+                                  "
+                                >
+                                  <div
+                                    class="melisma-underscore"
+                                    :class="{
+                                      full: (element as NoteElement)
+                                        .isFullMelisma,
+                                    }"
+                                    :style="
+                                      getMelismaUnderscoreStyleOuter(
+                                        element as NoteElement,
+                                      )
+                                    "
+                                  >
+                                    <div
+                                      class="melisma-inner"
+                                      :style="
+                                        getMelismaUnderscoreStyleInner(
+                                          element as NoteElement,
+                                        )
+                                      "
+                                    ></div>
+                                  </div>
+                                </template>
+                                <template
+                                  v-else-if="
+                                    isMelisma(element as NoteElement) &&
+                                    !(element as NoteElement).isHyphen &&
+                                    rtl
+                                  "
+                                >
+                                  <div
+                                    class="melisma"
+                                    :class="{
+                                      fullRtl: (element as NoteElement)
+                                        .isFullMelisma,
+                                    }"
+                                    :style="
+                                      getMelismaStyle(element as NoteElement)
+                                    "
+                                    v-text="
+                                      (element as NoteElement).melismaText
+                                    "
+                                  ></div>
+                                </template>
+                                <template
+                                  v-else-if="
+                                    (element as NoteElement).isMelisma &&
+                                    (element as NoteElement).melismaText !==
+                                      '' &&
+                                    !rtl
+                                  "
+                                >
+                                  <span
+                                    class="melisma-text"
+                                    :class="{
+                                      selectedMelisma:
+                                        element === selectedLyrics,
+                                    }"
+                                    @click="focusLyrics(element.index)"
+                                    @focus="
+                                      selectedLyrics = element as NoteElement
+                                    "
+                                    v-text="
+                                      (element as NoteElement).melismaText
+                                    "
+                                  ></span>
+                                </template>
+                              </div>
+                            </div>
+                          </template>
+                          <template v-else-if="isMartyriaElement(element)">
+                            <div class="neume-box">
+                              <span
+                                v-if="
+                                  element.sectionName != '' &&
+                                  element.sectionName != null
+                                "
+                                class="section-name"
+                                >§</span
+                              >
+                              <span v-if="element.pageBreak" class="page-break">
+                                <PhFile
+                              /></span>
+                              <span v-if="element.lineBreak" class="line-break"
+                                ><PhParagraph weight="fill"
+                              /></span>
+                              <MartyriaNeumeBox
+                                :ref="
+                                  setTemplateRef(
+                                    `element-${getElementIndex(element)}`,
+                                  )
+                                "
+                                class="marytria-neume-box"
+                                :neume="element as MartyriaElement"
+                                :page-setup="score.pageSetup"
+                                :class="[
+                                  {
+                                    selected: isSelected(element),
+                                  },
+                                ]"
+                                @select-single="selectedElement = element"
+                                @select-range="setSelectionRange(element)"
+                              />
+                              <div class="lyrics"></div>
+                            </div>
+                          </template>
+                          <template v-else-if="isTempoElement(element)">
+                            <div
+                              :ref="
+                                setTemplateRef(
+                                  `element-${getElementIndex(element)}`,
+                                )
+                              "
+                              class="neume-box"
+                            >
+                              <span
+                                v-if="
+                                  element.sectionName != '' &&
+                                  element.sectionName != null
+                                "
+                                class="section-name"
+                                >§</span
+                              >
+                              <span v-if="element.pageBreak" class="page-break">
+                                <PhFile
+                              /></span>
+                              <span v-if="element.lineBreak" class="line-break"
+                                ><PhParagraph weight="fill"
+                              /></span>
+                              <TempoNeumeBox
+                                class="tempo-neume-box"
+                                :neume="element as TempoElement"
+                                :page-setup="score.pageSetup"
+                                :class="[{ selected: isSelected(element) }]"
+                                @select-single="selectedElement = element"
+                                @select-range="setSelectionRange(element)"
+                              />
+                              <div class="lyrics"></div>
+                            </div>
+                          </template>
+                          <template v-else-if="isEmptyElement(element)">
+                            <div
+                              :ref="
+                                setTemplateRef(
+                                  `element-${getElementIndex(element)}`,
+                                )
+                              "
+                              class="neume-box"
+                            >
+                              <span
+                                v-if="
+                                  element.sectionName != '' &&
+                                  element.sectionName != null
+                                "
+                                class="section-name"
+                                >§</span
+                              >
+                              <span v-if="element.pageBreak" class="page-break">
+                                <PhFile
+                              /></span>
+                              <span v-if="element.lineBreak" class="line-break"
+                                ><PhParagraph weight="fill"
+                              /></span>
+                              <EmptyNeumeBox
+                                class="empty-neume-box"
+                                :class="[{ selected: isSelected(element) }]"
+                                :style="
+                                  getEmptyBoxStyle(element as EmptyElement)
+                                "
+                                @select-single="selectedElement = element"
+                              ></EmptyNeumeBox>
+                              <div class="lyrics"></div>
+                            </div>
+                          </template>
+                          <template v-else-if="isTextBoxElement(element)">
+                            <span
+                              v-if="
+                                element.sectionName != '' &&
+                                element.sectionName != null
+                              "
+                              class="section-name-2"
+                              >§</span
+                            >
+                            <span v-if="element.pageBreak" class="page-break-2"
+                              ><PhFile
+                            /></span>
+                            <span v-if="element.lineBreak" class="line-break-2"
+                              ><PhParagraph weight="fill"
+                            /></span>
+                            <TextBox
+                              :ref="
+                                setTemplateRef(
+                                  `element-${getElementIndex(element)}`,
+                                )
+                              "
+                              :element="element as TextBoxElement"
+                              :edit-mode="true"
+                              :metadata="getTokenMetadata(pageIndex)"
+                              :page-setup="score.pageSetup"
+                              :selected="isSelected(element)"
+                              @select-single="selectedElement = element"
+                              @update="
+                                updateTextBox(element as TextBoxElement, $event)
+                              "
+                              @update:height="
+                                updateTextBoxHeight(
+                                  element as TextBoxElement,
+                                  $event,
+                                )
+                              "
+                            />
+                          </template>
+                          <template v-else-if="isRichTextBoxElement(element)">
+                            <span
+                              v-if="
+                                element.sectionName != '' &&
+                                element.sectionName != null
+                              "
+                              class="section-name-2"
+                              >§</span
+                            >
+                            <span v-if="element.pageBreak" class="page-break-2"
+                              ><PhFile
+                            /></span>
+                            <span v-if="element.lineBreak" class="line-break-2"
+                              ><PhParagraph weight="fill"
+                            /></span>
+                            <TextBoxRich
+                              :ref="
+                                setTemplateRef(
+                                  `element-${getElementIndex(element)}`,
+                                )
+                              "
+                              :element="element as RichTextBoxElement"
+                              :page-setup="score.pageSetup"
+                              :fonts="fonts"
+                              :editor-language="ckeditorLanguage"
+                              :selected="isSelected(element)"
+                              @select-single="selectedElement = element"
+                              @select-neume="
+                                selectedElement = element;
+                                showPropertiesPaneForRichTextNeume();
+                              "
+                              @update="
+                                updateRichTextBox(
+                                  element as RichTextBoxElement,
+                                  $event,
+                                )
+                              "
+                              @update:height="
+                                updateRichTextBoxHeight(
+                                  element as RichTextBoxElement,
+                                  $event,
+                                )
+                              "
+                            />
+                          </template>
+                          <template v-else-if="isModeKeyElement(element)">
+                            <span
+                              v-if="
+                                element.sectionName != '' &&
+                                element.sectionName != null
+                              "
+                              class="section-name-2"
+                              >§</span
+                            >
+                            <span v-if="element.pageBreak" class="page-break-2"
+                              ><PhFile
+                            /></span>
+                            <span v-if="element.lineBreak" class="line-break-2"
+                              ><PhParagraph weight="fill"
+                            /></span>
+                            <ModeKey
+                              :ref="
+                                setTemplateRef(
+                                  `element-${getElementIndex(element)}`,
+                                )
+                              "
+                              :element="element as ModeKeyElement"
+                              :page-setup="score.pageSetup"
+                              :class="[
+                                {
+                                  selectedTextbox: isSelected(element),
+                                },
+                              ]"
+                              @select-single="selectedElement = element"
+                              @dblclick="openModeKeyDialog"
+                            />
+                          </template>
+                          <template v-else-if="isDropCapElement(element)">
+                            <span
+                              v-if="
+                                element.sectionName != '' &&
+                                element.sectionName != null
+                              "
+                              class="section-name"
+                              >§</span
+                            >
+                            <span v-if="element.pageBreak" class="page-break"
+                              ><PhFile
+                            /></span>
+                            <span v-if="element.lineBreak" class="line-break"
+                              ><PhParagraph weight="fill"
+                            /></span>
+                            <DropCap
+                              :ref="
+                                setTemplateRef(
+                                  `element-${getElementIndex(element)}`,
+                                )
+                              "
+                              :element="element as DropCapElement"
+                              :page-setup="score.pageSetup"
+                              :editable="!lyricsLocked"
+                              :class="[
+                                {
+                                  selectedTextbox: isSelected(element),
+                                },
+                              ]"
+                              @select-single="selectedElement = element"
+                              @update:content="
+                                updateDropCapContent(
+                                  element as DropCapElement,
+                                  $event,
+                                )
+                              "
+                            />
+                          </template>
+                          <template v-else-if="isImageBoxElement(element)">
+                            <span v-if="element.pageBreak" class="page-break-2"
+                              ><PhFile
+                            /></span>
+                            <span v-if="element.lineBreak" class="line-break-2"
+                              ><PhParagraph weight="fill"
+                            /></span>
+                            <ImageBox
+                              :ref="
+                                setTemplateRef(
+                                  `element-${getElementIndex(element)}`,
+                                )
+                              "
+                              :element="element as ImageBoxElement"
+                              :zoom="zoom"
+                              :print-mode="printMode"
+                              :class="[
+                                { selectedImagebox: isSelected(element) },
+                              ]"
+                              @select-single="selectedElement = element"
+                              @update:size="
+                                updateImageBox(
+                                  selectedElement as ImageBoxElement,
+                                  {
+                                    imageWidth: $event.width,
+                                    imageHeight: $event.height,
+                                  },
+                                )
+                              "
+                            />
+                          </template>
                         </div>
-                      </template>
-                      <template v-else-if="isTextBoxElement(element)">
                         <span
                           v-if="
-                            element.sectionName != '' &&
-                            element.sectionName != null
+                            showAdjustmentRatios &&
+                            line.adjustmentRatio != null &&
+                            line.elements.length > 0
                           "
-                          class="section-name-2"
-                          >§</span
+                          class="adjustment-ratio"
+                          :style="getAdjustmentRatioStyle(line)"
+                          >{{ line.adjustmentRatio.toFixed(2) }}</span
                         >
-                        <span v-if="element.pageBreak" class="page-break-2"
-                          ><PhFile
-                        /></span>
-                        <span v-if="element.lineBreak" class="line-break-2"
-                          ><PhParagraph weight="fill"
-                        /></span>
-                        <TextBox
-                          :ref="
-                            setTemplateRef(
-                              `element-${getElementIndex(element)}`,
+                      </div>
+                      <template v-if="score.pageSetup.showFooter">
+                        <div
+                          v-if="shouldShowFooterForPageIndex(pageIndex)"
+                          class="header-footer-hr"
+                          :style="
+                            getFooterHorizontalRuleStyle(
+                              getFooterForPageIndex(pageIndex).height,
                             )
                           "
-                          :element="element as TextBoxElement"
-                          :edit-mode="true"
-                          :metadata="getTokenMetadata(pageIndex)"
-                          :page-setup="score.pageSetup"
-                          :selected="isSelected(element)"
-                          @select-single="selectedElement = element"
-                          @update="
-                            updateTextBox(element as TextBoxElement, $event)
-                          "
-                          @update:height="
-                            updateTextBoxHeight(
-                              element as TextBoxElement,
-                              $event,
-                            )
-                          "
-                        />
-                      </template>
-                      <template v-else-if="isRichTextBoxElement(element)">
-                        <span
+                        ></div>
+                        <template
                           v-if="
-                            element.sectionName != '' &&
-                            element.sectionName != null
+                            isRichTextBoxElement(
+                              getFooterForPageIndex(pageIndex),
+                            )
                           "
-                          class="section-name-2"
-                          >§</span
                         >
-                        <span v-if="element.pageBreak" class="page-break-2"
-                          ><PhFile
-                        /></span>
-                        <span v-if="element.lineBreak" class="line-break-2"
-                          ><PhParagraph weight="fill"
-                        /></span>
-                        <TextBoxRich
-                          :ref="
-                            setTemplateRef(
-                              `element-${getElementIndex(element)}`,
-                            )
-                          "
-                          :element="element as RichTextBoxElement"
-                          :page-setup="score.pageSetup"
-                          :fonts="fonts"
-                          :editor-language="ckeditorLanguage"
-                          :selected="isSelected(element)"
-                          @select-single="selectedElement = element"
-                          @select-neume="
-                            selectedElement = element;
-                            showPropertiesPaneForRichTextNeume();
-                          "
-                          @update="
-                            updateRichTextBox(
-                              element as RichTextBoxElement,
-                              $event,
-                            )
-                          "
-                          @update:height="
-                            updateRichTextBoxHeight(
-                              element as RichTextBoxElement,
-                              $event,
-                            )
-                          "
-                        />
-                      </template>
-                      <template v-else-if="isModeKeyElement(element)">
-                        <span
-                          v-if="
-                            element.sectionName != '' &&
-                            element.sectionName != null
-                          "
-                          class="section-name-2"
-                          >§</span
-                        >
-                        <span v-if="element.pageBreak" class="page-break-2"
-                          ><PhFile
-                        /></span>
-                        <span v-if="element.lineBreak" class="line-break-2"
-                          ><PhParagraph weight="fill"
-                        /></span>
-                        <ModeKey
-                          :ref="
-                            setTemplateRef(
-                              `element-${getElementIndex(element)}`,
-                            )
-                          "
-                          :element="element as ModeKeyElement"
-                          :page-setup="score.pageSetup"
-                          :class="[
-                            {
-                              selectedTextbox: isSelected(element),
-                            },
-                          ]"
-                          @select-single="selectedElement = element"
-                          @dblclick="openModeKeyDialog"
-                        />
-                      </template>
-                      <template v-else-if="isDropCapElement(element)">
-                        <span
-                          v-if="
-                            element.sectionName != '' &&
-                            element.sectionName != null
-                          "
-                          class="section-name"
-                          >§</span
-                        >
-                        <span v-if="element.pageBreak" class="page-break"
-                          ><PhFile
-                        /></span>
-                        <span v-if="element.lineBreak" class="line-break"
-                          ><PhParagraph weight="fill"
-                        /></span>
-                        <DropCap
-                          :ref="
-                            setTemplateRef(
-                              `element-${getElementIndex(element)}`,
-                            )
-                          "
-                          :element="element as DropCapElement"
-                          :page-setup="score.pageSetup"
-                          :editable="!lyricsLocked"
-                          :class="[
-                            {
-                              selectedTextbox: isSelected(element),
-                            },
-                          ]"
-                          @select-single="selectedElement = element"
-                          @update:content="
-                            updateDropCapContent(
-                              element as DropCapElement,
-                              $event,
-                            )
-                          "
-                        />
-                      </template>
-                      <template v-else-if="isImageBoxElement(element)">
-                        <span v-if="element.pageBreak" class="page-break-2"
-                          ><PhFile
-                        /></span>
-                        <span v-if="element.lineBreak" class="line-break-2"
-                          ><PhParagraph weight="fill"
-                        /></span>
-                        <ImageBox
-                          :ref="
-                            setTemplateRef(
-                              `element-${getElementIndex(element)}`,
-                            )
-                          "
-                          :element="element as ImageBoxElement"
-                          :zoom="zoom"
-                          :print-mode="printMode"
-                          :class="[{ selectedImagebox: isSelected(element) }]"
-                          @select-single="selectedElement = element"
-                          @update:size="
-                            updateImageBox(selectedElement as ImageBoxElement, {
-                              imageWidth: $event.width,
-                              imageHeight: $event.height,
-                            })
-                          "
-                        />
-                      </template>
-                    </div>
-                    <span
-                      v-if="
-                        showAdjustmentRatios &&
-                        line.adjustmentRatio != null &&
-                        line.elements.length > 0
-                      "
-                      class="adjustment-ratio"
-                      :style="getAdjustmentRatioStyle(line)"
-                      >{{ line.adjustmentRatio.toFixed(2) }}</span
-                    >
-                  </div>
-                  <template v-if="score.pageSetup.showFooter">
-                    <div
-                      v-if="shouldShowFooterForPageIndex(pageIndex)"
-                      class="header-footer-hr"
-                      :style="
-                        getFooterHorizontalRuleStyle(
-                          getFooterForPageIndex(pageIndex).height,
-                        )
-                      "
-                    ></div>
-                    <template
-                      v-if="
-                        isRichTextBoxElement(getFooterForPageIndex(pageIndex))
-                      "
-                    >
-                      <TextBoxRich
-                        :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
-                          getFooterForPageIndex(pageIndex).keyHelper
-                        }`"
-                        :ref="setTemplateRef(`footer-${pageIndex}`)"
-                        class="element-box"
-                        :element="
-                          getFooterForPageIndex(pageIndex) as RichTextBoxElement
-                        "
-                        :edit-mode="
-                          !printMode &&
-                          getFooterForPageIndex(pageIndex) ==
-                            selectedHeaderFooterElement
-                        "
-                        :metadata="getTokenMetadata(pageIndex)"
-                        :page-setup="score.pageSetup"
-                        :fonts="fonts"
-                        :editor-language="ckeditorLanguage"
-                        :selected="
-                          getFooterForPageIndex(pageIndex) ==
-                          selectedHeaderFooterElement
-                        "
-                        :style="footerStyle"
-                        @click="selectFooterRichTextBox(pageIndex)"
-                        @select-neume="
-                          selectFooterRichTextBox(pageIndex);
-                          showPropertiesPaneForRichTextNeume();
-                        "
-                        @update="
-                          updateRichTextBox(
-                            getFooterForPageIndex(
-                              pageIndex,
-                            ) as RichTextBoxElement,
-                            $event,
-                          )
-                        "
-                        @update:height="
-                          updateRichTextBoxHeight(
-                            getFooterForPageIndex(
-                              pageIndex,
-                            ) as RichTextBoxElement,
-                            $event,
-                          )
-                        "
-                      />
-                    </template>
-                    <template
-                      v-else-if="
-                        isTextBoxElement(getFooterForPageIndex(pageIndex))
-                      "
-                    >
-                      <TextBox
-                        :ref="setTemplateRef(`footer-${pageIndex}`)"
-                        :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
-                          getFooterForPageIndex(pageIndex).keyHelper
-                        }`"
-                        class="element-box"
-                        :element="
-                          getFooterForPageIndex(pageIndex) as TextBoxElement
-                        "
-                        :edit-mode="
-                          !printMode &&
-                          getFooterForPageIndex(pageIndex) ==
-                            selectedHeaderFooterElement
-                        "
-                        :metadata="getTokenMetadata(pageIndex)"
-                        :page-setup="score.pageSetup"
-                        :selected="
-                          getFooterForPageIndex(pageIndex) ==
-                          selectedHeaderFooterElement
-                        "
-                        :class="[
-                          {
-                            selectedTextbox:
+                          <TextBoxRich
+                            :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
+                              getFooterForPageIndex(pageIndex).keyHelper
+                            }`"
+                            :ref="setTemplateRef(`footer-${pageIndex}`)"
+                            class="element-box"
+                            :element="
+                              getFooterForPageIndex(
+                                pageIndex,
+                              ) as RichTextBoxElement
+                            "
+                            :edit-mode="
+                              !printMode &&
                               getFooterForPageIndex(pageIndex) ==
-                              selectedHeaderFooterElement,
-                          },
-                        ]"
-                        :style="footerStyle"
-                        @click="
-                          selectedHeaderFooterElement =
-                            getFooterForPageIndex(pageIndex)
-                        "
-                        @update="
-                          updateTextBox(
-                            getFooterForPageIndex(pageIndex)! as TextBoxElement,
-                            $event,
-                          )
-                        "
-                    /></template>
-                  </template>
+                                selectedHeaderFooterElement
+                            "
+                            :metadata="getTokenMetadata(pageIndex)"
+                            :page-setup="score.pageSetup"
+                            :fonts="fonts"
+                            :editor-language="ckeditorLanguage"
+                            :selected="
+                              getFooterForPageIndex(pageIndex) ==
+                              selectedHeaderFooterElement
+                            "
+                            :style="footerStyle"
+                            @click="selectFooterRichTextBox(pageIndex)"
+                            @select-neume="
+                              selectFooterRichTextBox(pageIndex);
+                              showPropertiesPaneForRichTextNeume();
+                            "
+                            @update="
+                              updateRichTextBox(
+                                getFooterForPageIndex(
+                                  pageIndex,
+                                ) as RichTextBoxElement,
+                                $event,
+                              )
+                            "
+                            @update:height="
+                              updateRichTextBoxHeight(
+                                getFooterForPageIndex(
+                                  pageIndex,
+                                ) as RichTextBoxElement,
+                                $event,
+                              )
+                            "
+                          />
+                        </template>
+                        <template
+                          v-else-if="
+                            isTextBoxElement(getFooterForPageIndex(pageIndex))
+                          "
+                        >
+                          <TextBox
+                            :ref="setTemplateRef(`footer-${pageIndex}`)"
+                            :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
+                              getFooterForPageIndex(pageIndex).keyHelper
+                            }`"
+                            class="element-box"
+                            :element="
+                              getFooterForPageIndex(pageIndex) as TextBoxElement
+                            "
+                            :edit-mode="
+                              !printMode &&
+                              getFooterForPageIndex(pageIndex) ==
+                                selectedHeaderFooterElement
+                            "
+                            :metadata="getTokenMetadata(pageIndex)"
+                            :page-setup="score.pageSetup"
+                            :selected="
+                              getFooterForPageIndex(pageIndex) ==
+                              selectedHeaderFooterElement
+                            "
+                            :class="[
+                              {
+                                selectedTextbox:
+                                  getFooterForPageIndex(pageIndex) ==
+                                  selectedHeaderFooterElement,
+                              },
+                            ]"
+                            :style="footerStyle"
+                            @click="
+                              selectedHeaderFooterElement =
+                                getFooterForPageIndex(pageIndex)
+                            "
+                            @update="
+                              updateTextBox(
+                                getFooterForPageIndex(
+                                  pageIndex,
+                                )! as TextBoxElement,
+                                $event,
+                              )
+                            "
+                        /></template>
+                      </template>
+                    </template>
+                  </div>
+                </div>
+              </ContextMenuTrigger>
+              <ContextMenuContent
+                class="bg-legacy-chrome-menu-surface"
+                @pointerdown.capture="onScoreMenuContentPointerDown"
+                @pointerup.capture="onScoreMenuContentPointerUp"
+              >
+                <ContextMenuItem
+                  :disabled="!canCutCopySelected"
+                  @select="onCutScoreElements"
+                >
+                  <PhScissors />
+                  {{ $t(($) => $.menu.edit.cut, { ns: 'menu' }) }}
+                </ContextMenuItem>
+                <ContextMenuItem
+                  :disabled="!canCutCopySelected"
+                  @select="onCopyScoreElements"
+                >
+                  <PhCopy />
+                  {{ $t(($) => $.menu.edit.copy, { ns: 'menu' }) }}
+                </ContextMenuItem>
+                <ContextMenuItem
+                  :disabled="!canPasteSelected"
+                  @select="onPasteScoreElements(false)"
+                >
+                  <PhClipboardText />
+                  {{ $t(($) => $.menu.edit.paste, { ns: 'menu' }) }}
+                </ContextMenuItem>
+                <ContextMenuItem
+                  :disabled="!canPasteSelected"
+                  @select="onPasteScoreElements(true)"
+                >
+                  <PhClipboardText />
+                  {{ $t(($) => $.menu.edit.pasteWithLyrics, { ns: 'menu' }) }}
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem
+                  :disabled="!canSelectAllElements"
+                  @select="onSelectAllScoreElements"
+                >
+                  <PhSelectionAll />
+                  {{ $t(($) => $.menu.edit.selectAll, { ns: 'menu' }) }}
+                </ContextMenuItem>
+                <template v-if="contextMenuHasElementProperties">
+                  <ContextMenuSeparator />
+                  <ContextMenuCheckboxItem
+                    v-if="contextMenuMartyria != null"
+                    :model-value="contextMenuMartyria.alignRight"
+                    @update:model-value="
+                      updateMartyria(contextMenuMartyria, {
+                        alignRight: $event === true,
+                      })
+                    "
+                  >
+                    <PhAlignRight class="h-4 w-4" weight="duotone" />
+                    {{
+                      $t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })
+                    }}
+                  </ContextMenuCheckboxItem>
+                  <ContextMenuCheckboxItem
+                    v-if="contextMenuUseDefaultStyleTarget != null"
+                    :model-value="
+                      contextMenuUseDefaultStyleTarget.useDefaultStyle
+                    "
+                    @update:model-value="
+                      setContextMenuUseDefaultStyle(
+                        contextMenuUseDefaultStyleTarget,
+                        $event === true,
+                      )
+                    "
+                  >
+                    {{
+                      $t(($) => $.toolbar.common.useDefaultStyle, {
+                        ns: 'toolbar',
+                      })
+                    }}
+                  </ContextMenuCheckboxItem>
+                  <ContextMenuCheckboxItem
+                    v-if="contextMenuModeKey != null"
+                    :model-value="contextMenuModeKey.showAmbitus"
+                    @update:model-value="
+                      updateModeKey(contextMenuModeKey, {
+                        showAmbitus: $event === true,
+                      })
+                    "
+                  >
+                    {{
+                      $t(($) => $.toolbar.modeKey.showAmbitus, {
+                        ns: 'toolbar',
+                      })
+                    }}
+                  </ContextMenuCheckboxItem>
+                  <ContextMenuCheckboxItem
+                    v-if="contextMenuImageBox != null"
+                    :model-value="contextMenuImageBox.lockAspectRatio"
+                    @update:model-value="
+                      updateImageBox(contextMenuImageBox, {
+                        lockAspectRatio: $event === true,
+                      })
+                    "
+                  >
+                    {{
+                      $t(($) => $.toolbar.imageBox.maintainAspectRatio, {
+                        ns: 'toolbar',
+                      })
+                    }}
+                  </ContextMenuCheckboxItem>
                 </template>
-              </div>
-            </div>
+                <ContextMenuSeparator />
+                <ContextMenuItem
+                  v-if="contextMenuNote != null"
+                  @select="openContextMenuPositioning(contextMenuNote)"
+                >
+                  <PhCrosshair />
+                  {{
+                    $t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })
+                  }}
+                </ContextMenuItem>
+                <ContextMenuItem
+                  v-if="contextMenuModeKey != null"
+                  @select="openContextMenuChangeKey(contextMenuModeKey)"
+                >
+                  <PhMusicNotes />
+                  {{
+                    $t(($) => $.toolbar.modeKey.changeKey, { ns: 'toolbar' })
+                  }}
+                </ContextMenuItem>
+                <ContextMenuItem
+                  @select="setPaneVisibility('properties', true)"
+                >
+                  <PhSlidersHorizontal />
+                  {{ $t(($) => $.menu.view.properties, { ns: 'menu' }) }}
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
           </div>
         </template>
       </WorkspaceDockLayout>

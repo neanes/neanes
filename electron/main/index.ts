@@ -1783,6 +1783,21 @@ function createMenu() {
             }
           },
         },
+        {
+          label: i18next.t(($) => $.menu.edit.selectAll),
+          accelerator: 'CmdOrCtrl+A',
+          click(menuItem, browserWindow, event) {
+            if (win?.webContents?.isDevToolsFocused()) {
+              win.webContents.devToolsWebContents?.selectAll();
+            }
+
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win?.webContents.send(IpcMainChannels.FileMenuSelectAll);
+            }
+          },
+        },
         { type: 'separator' },
         {
           label: i18next.t(($) => $.menu.edit.copyFormat),

@@ -59,6 +59,7 @@ import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
 import type { InspectorContext } from '@/components/properties/InspectorContext';
 import PropertiesPane from '@/components/properties/PropertiesPane.vue';
+import RichTextToolbar from '@/components/RichTextToolbar.vue';
 import SearchText from '@/components/SearchText.vue';
 import SelectionPane from '@/components/SelectionPane.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
@@ -81,6 +82,11 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import WorkspaceDockLayout from '@/components/WorkspaceDockLayout.vue';
 import { useEditorServices } from '@/composables/useEditorServices';
+import {
+  clearActiveEditor,
+  focusLastActiveEditorForOwner,
+  isActiveEditorForOwner,
+} from '@/composables/useRichTextEditorRegistry';
 import { EventBus } from '@/eventBus';
 import { resolveLanguagePreference } from '@/i18n';
 import { editorPreferencesKey } from '@/injectionKeys';
@@ -281,6 +287,21 @@ function setTemplateRef(name: string) {
   return setter;
 }
 
+type RichTextBoxComponent = {
+  focus: () => void;
+  getPendingUpdates: () => Partial<RichTextBoxElement> | null;
+};
+
+type AnnotationComponent = {
+  focus: () => void;
+  getCurrentText: () => string;
+};
+
+const preferredRichTextBoxFocusTarget = ref<{
+  element: RichTextBoxElement;
+  refName: string;
+} | null>(null);
+
 const searchTextQuery = ref('');
 const searchTextPanelIsOpen = ref(false);
 const showFileMenuBar = ref(!isElectron());
@@ -359,11 +380,26 @@ const editorPreferences = ref(new EditorPreferences());
 const byzHtmlExporter = new ByzHtmlExporter();
 const exportInProgress = ref(false);
 
+const ckeditorLanguage = computed(() => {
+  return (
+    resolveLanguagePreference(
+      editorPreferences.value.language,
+      navigator.language,
+    ) ?? 'en'
+  );
+});
+
 const inspectorContext = computed<InspectorContext>(() => {
   const currentSelectedElement = selectedElement.value;
   const currentSelectedElementForNeumeToolbar =
     selectedElementForNeumeToolbar.value;
   const currentSelectedElementType = currentSelectedElement?.elementType;
+  const currentSelectedAnnotation =
+    selectedWorkspace.value.selectedAnnotationElement;
+
+  if (currentSelectedAnnotation != null) {
+    return { kind: 'annotation', element: currentSelectedAnnotation };
+  }
 
   if (selectedTextBoxElement.value != null) {
     return {
@@ -472,6 +508,7 @@ const selectedWorkspace = computed({
     return selectedWorkspaceValue.value as Workspace;
   },
   set: (value: Workspace) => {
+    flushPendingRichTextEditors(selectedWorkspace.value);
     flushLyricsAssignment(selectedWorkspace.value);
 
     // Save the scroll position
@@ -913,6 +950,44 @@ watch(selectedWorkspaceId, () => {
     refreshStaffLyrics();
   }
 });
+
+// Keep this before the annotation post-flush watcher; handoff focus depends on declaration order.
+watch(
+  selectedRichTextBoxElement,
+  (element) => {
+    if (element == null) {
+      clearActiveEditor();
+      clearPreferredRichTextBoxFocusTarget();
+      return;
+    }
+
+    if (preferredRichTextBoxFocusTarget.value?.element !== element) {
+      clearPreferredRichTextBoxFocusTarget();
+    }
+
+    if (!isActiveEditorForOwner(element)) {
+      focusSelectedRichTextBoxEditor(element);
+    }
+  },
+  { flush: 'post' },
+);
+
+// Keep previous-annotation cleanup owner-scoped so handoff does not clear a new rich-text editor.
+watch(
+  () => selectedWorkspace.value.selectedAnnotationElement,
+  (annotation, previousAnnotation) => {
+    if (previousAnnotation != null) {
+      clearActiveEditor(previousAnnotation);
+    }
+
+    if (annotation != null && !isActiveEditorForOwner(annotation)) {
+      // Single-click selection should not enter annotation editing; double-click
+      // and new empty annotations manage their own focus paths.
+      clearActiveEditor();
+    }
+  },
+  { flush: 'post' },
+);
 
 watch(
   paneVisibility,
@@ -1559,6 +1634,46 @@ function setPaneVisibility(paneId: WorkspacePaneId, isVisible: boolean) {
   visibility[paneId] = isVisible;
 }
 
+function getSelectedRichTextOwner() {
+  return (
+    selectedWorkspace.value.selectedAnnotationElement ??
+    selectedRichTextBoxElement.value
+  );
+}
+
+function refocusSelectedRichTextEditorAfterShowingPane(
+  paneId: WorkspacePaneId,
+  isVisible: boolean,
+) {
+  if (paneId !== 'properties' || !isVisible) {
+    return;
+  }
+
+  const owner = getSelectedRichTextOwner();
+
+  if (owner == null) {
+    return;
+  }
+
+  void nextTick(() => {
+    if (
+      paneVisibility.value.properties &&
+      getSelectedRichTextOwner() === owner
+    ) {
+      focusLastActiveEditorForOwner(owner);
+    }
+  });
+}
+
+function showPropertiesPaneForRichTextNeume() {
+  if (paneVisibility.value.properties) {
+    return;
+  }
+
+  setPaneVisibility('properties', true);
+  refocusSelectedRichTextEditorAfterShowingPane('properties', true);
+}
+
 function resetLayout() {
   const defaultVisibility = createDefaultPaneVisibility();
 
@@ -1568,6 +1683,7 @@ function resetLayout() {
 
 function onPaneVisibilityChange(paneId: WorkspacePaneId, isVisible: boolean) {
   setPaneVisibility(paneId, isVisible);
+  refocusSelectedRichTextEditorAfterShowingPane(paneId, isVisible);
 }
 
 function updateEditorPreferences(form: EditorPreferences) {
@@ -1610,6 +1726,8 @@ function getInspectorSelectionElement() {
     case 'text-box':
     case 'rich-text-box':
       return context.source === 'score' ? context.element : null;
+    case 'annotation':
+      return selectedElement.value;
     case 'neume':
       return selectedElementForNeumeToolbar.value;
     default:
@@ -2128,6 +2246,140 @@ function isRichTextBoxElement(
   element: ScoreElement,
 ): element is RichTextBoxElement {
   return element.elementType == ElementType.RichTextBox;
+}
+
+function selectHeaderRichTextBox(pageIndex: number) {
+  const element = getHeaderForPageIndex(pageIndex);
+
+  if (isRichTextBoxElement(element)) {
+    selectHeaderFooterRichTextBox(element, `header-${pageIndex}`);
+  }
+}
+
+function selectFooterRichTextBox(pageIndex: number) {
+  const element = getFooterForPageIndex(pageIndex);
+
+  if (isRichTextBoxElement(element)) {
+    selectHeaderFooterRichTextBox(element, `footer-${pageIndex}`);
+  }
+}
+
+function selectHeaderFooterRichTextBox(
+  element: RichTextBoxElement,
+  refName: string,
+) {
+  const alreadySelected = selectedRichTextBoxElement.value === element;
+
+  preferredRichTextBoxFocusTarget.value = { element, refName };
+  selectedHeaderFooterElement.value = element;
+
+  if (alreadySelected) {
+    focusSelectedRichTextBoxEditor(element);
+  }
+}
+
+function focusSelectedRichTextBoxEditor(element: RichTextBoxElement) {
+  nextTick(() => {
+    if (
+      selectedRichTextBoxElement.value !== element ||
+      isActiveEditorForOwner(element)
+    ) {
+      return;
+    }
+
+    const component = getRichTextBoxComponentRef(element);
+
+    clearPreferredRichTextBoxFocusTarget(element);
+    component?.focus();
+  });
+}
+
+function getRichTextBoxComponentRef(element: RichTextBoxElement) {
+  return (
+    getPreferredRichTextBoxComponentRef(element) ??
+    getRichTextBoxComponentRefs(element)[0]
+  );
+}
+
+function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
+  const components: RichTextBoxComponent[] = [];
+  const scoreElementIndex = getElementIndex(element);
+
+  if (elements.value[scoreElementIndex] === element) {
+    components.push(
+      ...getTemplateRef<RichTextBoxComponent[]>(`element-${scoreElementIndex}`),
+    );
+  }
+
+  for (let pageIndex = 0; pageIndex < filteredPages.value.length; pageIndex++) {
+    const page = filteredPages.value[pageIndex];
+
+    if (!page.isVisible && !printMode.value) {
+      continue;
+    }
+
+    if (
+      shouldShowHeaderForPageIndex(pageIndex) &&
+      getHeaderForPageIndex(pageIndex) === element
+    ) {
+      components.push(
+        ...getTemplateRef<RichTextBoxComponent[]>(`header-${pageIndex}`),
+      );
+    }
+
+    if (
+      shouldShowFooterForPageIndex(pageIndex) &&
+      getFooterForPageIndex(pageIndex) === element
+    ) {
+      components.push(
+        ...getTemplateRef<RichTextBoxComponent[]>(`footer-${pageIndex}`),
+      );
+    }
+  }
+
+  return components;
+}
+
+function getPreferredRichTextBoxComponentRef(element: RichTextBoxElement) {
+  const target = preferredRichTextBoxFocusTarget.value;
+
+  if (target == null || target.element !== element) {
+    return undefined;
+  }
+
+  return getTemplateRef<RichTextBoxComponent[]>(target.refName)[0];
+}
+
+function clearPreferredRichTextBoxFocusTarget(element?: RichTextBoxElement) {
+  const target = preferredRichTextBoxFocusTarget.value;
+
+  if (target == null || element == null || target.element === element) {
+    preferredRichTextBoxFocusTarget.value = null;
+  }
+}
+
+function getAnnotationComponentRef(annotation: AnnotationElement) {
+  return getAnnotationContext(annotation)?.component;
+}
+
+function getAnnotationContext(annotation: AnnotationElement) {
+  for (const element of elements.value) {
+    if (!isSyllableElement(element)) {
+      continue;
+    }
+
+    const annotationIndex = element.annotations.indexOf(annotation);
+
+    if (annotationIndex >= 0) {
+      const component = getTemplateRef<AnnotationComponent[]>(
+        `annotation-${getElementIndex(element)}-${annotationIndex}`,
+      )[0];
+
+      return { component, parent: element };
+    }
+  }
+
+  return undefined;
 }
 
 function isDropCapElement(element: ScoreElement): element is DropCapElement {
@@ -2941,6 +3193,23 @@ function onKeyup(event: KeyboardEvent) {
   }
 }
 
+/**
+ * THE gate for putting score elements on the clipboard.
+ *
+ * Rich-text box content lives in the live CKEditor instance and is only synced
+ * into `element.content` by an explicit flush (see `flushPendingRichTextEditors`).
+ * `clone()` reads `element.content`, so we MUST flush before cloning or the
+ * clipboard captures pre-edit content whenever the editor was never blurred.
+ * Routing every copy/cut clone through here keeps the flush and the clone
+ * inseparable -- a new clipboard path cannot forget the flush.
+ */
+function flushAndCloneForClipboard(
+  elementsToClone: ScoreElement[],
+): ScoreElement[] {
+  flushPendingRichTextEditors(selectedWorkspace.value);
+  return elementsToClone.map((x) => x.clone());
+}
+
 function onCutScoreElements() {
   if (selectionRange.value != null) {
     const start = Math.min(
@@ -2952,7 +3221,7 @@ function onCutScoreElements() {
       (x) => x.elementType != ElementType.Empty && isSelected(x),
     );
 
-    clipboard.value = elementsToCut.map((x) => x.clone());
+    clipboard.value = flushAndCloneForClipboard(elementsToCut);
 
     commandService.value.executeAsBatch(
       elementsToCut.map((element) =>
@@ -2975,7 +3244,7 @@ function onCutScoreElements() {
   ) {
     const currentIndex = selectedElementIndex.value;
 
-    clipboard.value = [selectedElement.value.clone()];
+    clipboard.value = flushAndCloneForClipboard([selectedElement.value]);
 
     removeScoreElement(selectedElement.value);
 
@@ -2988,14 +3257,16 @@ function onCutScoreElements() {
 
 function onCopyScoreElements() {
   if (selectionRange.value != null) {
-    clipboard.value = elements.value
-      .filter((x) => x.elementType != ElementType.Empty && isSelected(x))
-      .map((x) => x.clone());
+    clipboard.value = flushAndCloneForClipboard(
+      elements.value.filter(
+        (x) => x.elementType != ElementType.Empty && isSelected(x),
+      ),
+    );
   } else if (
     selectedElement.value != null &&
     selectedElement.value.elementType !== ElementType.Empty
   ) {
-    clipboard.value = [selectedElement.value.clone()];
+    clipboard.value = flushAndCloneForClipboard([selectedElement.value]);
   }
 }
 
@@ -3477,7 +3748,14 @@ function save(markUnsavedChanges: boolean = true) {
 
   pages.value = processedPages;
 
-  // If using the browser, save the workspace to local storage
+  // Auto-persist to local/dev storage. This deliberately serializes WITHOUT
+  // flushing the live rich-text editors: `save()` runs frequently -- often via the
+  // 250 ms-debounced `saveDebounced` (e.g. on every height change while editing) --
+  // and flushing here would force a getData() + full layout round-trip each time
+  // (updateRichTextBox calls save(), so it would also re-enter). The trade is
+  // intentional -- the snapshot may lag the in-editor text by one flush, which is
+  // corrected on the next blur or explicit save; the authoritative save
+  // (saveWorkspace -> prepareWorkspaceForSerialization) always flushes first.
   if (isBrowser.value) {
     const workspaceLocalStorage = {
       id: selectedWorkspace.value.id,
@@ -3570,6 +3848,7 @@ async function load() {
       options.includeTextBoxes =
         openWorkspaceResults.silentLatexIncludeTextBoxes ?? false;
       openScore(file);
+      await nextTick();
       await ipcService.exportWorkspaceAsLatex(
         selectedWorkspace.value,
         JSON.stringify(
@@ -3627,28 +3906,40 @@ async function load() {
   pages.value = LayoutService.processPages(selectedWorkspace.value);
 }
 
-async function saveWorkspace(workspace: Workspace) {
+/**
+ * THE gate for explicit serialization -- save, save-as, print, and the
+ * PDF/PNG/HTML/MusicXML/LaTeX exporters all route through here. Rich-text content
+ * is live in the editor and stale in `element.content` until flushed, so any path
+ * that serializes the score for persistence or export MUST call this first.
+ *
+ * The debounced autosave in `save()` deliberately does NOT come through here -- see
+ * the comment there.
+ */
+function prepareWorkspaceForSerialization(workspace: Workspace) {
+  flushPendingRichTextEditors(workspace);
   flushLyricsAssignment(workspace);
 
   if (!workspace.score.staff.lyrics.locked) {
     extractStaffLyrics(workspace);
   }
+}
+
+async function saveWorkspace(workspace: Workspace) {
+  prepareWorkspaceForSerialization(workspace);
 
   return await ipcService.saveWorkspace(workspace);
 }
 
 async function saveWorkspaceAs(workspace: Workspace) {
-  flushLyricsAssignment(workspace);
-
-  if (!workspace.score.staff.lyrics.locked) {
-    extractStaffLyrics(workspace);
-  }
+  prepareWorkspaceForSerialization(workspace);
 
   return await ipcService.saveWorkspaceAs(workspace);
 }
 
 async function closeWorkspace(workspace: Workspace) {
   let shouldClose = true;
+
+  flushPendingRichTextEditors(workspace);
 
   if (workspace.hasUnsavedChanges) {
     const fileName =
@@ -3764,6 +4055,8 @@ async function onCloseWorkspaces(args: CloseWorkspacesArgs) {
 }
 
 async function onCloseApplication() {
+  flushPendingRichTextEditors(selectedWorkspace.value);
+
   // Give the user a chance to save their changes before exiting
   const unsavedWorkspaces = workspaces.value.filter(
     (x) => x.hasUnsavedChanges,
@@ -4468,6 +4761,24 @@ function updateAnnotation(
   element: AnnotationElement,
   newValues: Partial<AnnotationElement>,
 ) {
+  const annotationContext = getAnnotationContext(element);
+
+  if (newValues.text == null && annotationContext?.component != null) {
+    const currentText = annotationContext.component.getCurrentText();
+
+    if (currentText.trim() === '') {
+      removeAnnotation(annotationContext.parent, element);
+      return;
+    }
+
+    if (element.text !== currentText) {
+      newValues = {
+        ...newValues,
+        text: currentText,
+      };
+    }
+  }
+
   commandService.value.execute(
     annotationCommandFactory.create('update-properties', {
       target: element,
@@ -4532,6 +4843,11 @@ function updateRichTextBox(
   element: RichTextBoxElement,
   newValues: Partial<RichTextBoxElement>,
 ) {
+  newValues = {
+    ...getPendingRichTextBoxUpdates(element),
+    ...newValues,
+  };
+
   if (newValues.rtl != null) {
     element.keyHelper++;
   }
@@ -4556,6 +4872,63 @@ function updateRichTextBox(
   }
 
   save(!noHistory);
+}
+
+function getPendingRichTextBoxUpdates(element: RichTextBoxElement) {
+  const updates: Partial<RichTextBoxElement> = {};
+
+  for (const component of getRichTextBoxComponentRefs(element)) {
+    Object.assign(updates, component.getPendingUpdates() ?? {});
+  }
+
+  return updates;
+}
+
+/**
+ * Low-level flush primitive: sync the live editors' content into the model for
+ * the selected workspace. Prefer the gates that wrap it --
+ * `prepareWorkspaceForSerialization` (serialize/export) and
+ * `flushAndCloneForClipboard` (copy/cut). Only the selected workspace has live
+ * editors; a non-selected one was already flushed when it was switched away.
+ */
+function flushPendingRichTextEditors(workspace: Workspace) {
+  if (workspace !== selectedWorkspace.value) {
+    return;
+  }
+
+  flushPendingRichTextBoxEditor();
+  flushPendingAnnotationEditor();
+}
+
+function flushPendingRichTextBoxEditor() {
+  const element = selectedRichTextBoxElement.value;
+
+  if (element == null) {
+    return;
+  }
+
+  const updates = getPendingRichTextBoxUpdates(element);
+
+  if (Object.keys(updates).length > 0) {
+    updateRichTextBox(element, updates);
+  }
+}
+
+function flushPendingAnnotationEditor() {
+  const annotation = selectedWorkspace.value.selectedAnnotationElement;
+
+  if (annotation == null) {
+    return;
+  }
+
+  const currentText = getAnnotationComponentRef(annotation)?.getCurrentText();
+
+  if (
+    currentText != null &&
+    (currentText.trim() === '' || annotation.text !== currentText)
+  ) {
+    updateAnnotation(annotation, {});
+  }
 }
 
 function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
@@ -5449,6 +5822,8 @@ function onFileMenuPageSetup() {
 }
 
 async function onFileMenuPrint() {
+  prepareWorkspaceForSerialization(selectedWorkspace.value);
+
   printMode.value = true;
 
   // Blur the active element so that focus outlines and
@@ -5469,6 +5844,8 @@ async function onFileMenuPrint() {
 }
 
 async function onFileMenuExportAsPdf() {
+  prepareWorkspaceForSerialization(selectedWorkspace.value);
+
   printMode.value = true;
 
   // Blur the active element so that focus outlines and
@@ -5517,6 +5894,8 @@ async function onFileMenuExportAsImage() {
 
 async function exportAsPng(args: ExportAsPngSettings) {
   let reply: ExportWorkspaceAsImageReplyArgs;
+
+  prepareWorkspaceForSerialization(selectedWorkspace.value);
 
   try {
     reply = await ipcService.exportWorkspaceAsImage(
@@ -5671,6 +6050,8 @@ async function exportAsPng(args: ExportAsPngSettings) {
 
 async function onFileMenuExportAsHtml() {
   try {
+    prepareWorkspaceForSerialization(selectedWorkspace.value);
+
     const reply = await ipcService.exportWorkspaceAsHtml(
       selectedWorkspace.value,
       byzHtmlExporter.exportScore(score.value),
@@ -5708,6 +6089,8 @@ function onFileMenuExportAsLatex() {
 
 async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
   try {
+    prepareWorkspaceForSerialization(selectedWorkspace.value);
+
     const reply = await ipcService.exportWorkspaceAsMusicXml(
       selectedWorkspace.value,
       musicXmlExporter.export(score.value, args.options),
@@ -5743,6 +6126,8 @@ async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
 
 async function exportAsLatex(args: ExportAsLatexSettings) {
   try {
+    prepareWorkspaceForSerialization(selectedWorkspace.value);
+
     const reply = await ipcService.exportWorkspaceAsLatex(
       selectedWorkspace.value,
       JSON.stringify(
@@ -5863,12 +6248,6 @@ function onFileMenuInsertRichTextBox() {
   selectedElement.value = element;
 
   save();
-
-  nextTick(() => {
-    const index = elements.value.indexOf(element);
-
-    getTemplateRef<any[]>(`element-${index}`)[0].focus();
-  });
 }
 
 function onFileMenuInsertModeKey() {
@@ -6175,6 +6554,8 @@ function onFileMenuCopyFormat() {
 }
 
 async function onFileMenuCopyAsHtml() {
+  prepareWorkspaceForSerialization(selectedWorkspace.value);
+
   let copiedElements: ScoreElement[] = [];
 
   if (selectionRange.value != null) {
@@ -6310,7 +6691,10 @@ function onFileMenuViewPaneVisibility({
   visible,
 }: FileMenuViewPaneVisibilityArgs) {
   if (!dialogOpen.value) {
-    setPaneVisibility(paneId, visible ?? !paneVisibility.value[paneId]);
+    const isVisible = visible ?? !paneVisibility.value[paneId];
+
+    setPaneVisibility(paneId, isVisible);
+    refocusSelectedRichTextEditorAfterShowingPane(paneId, isVisible);
   }
 }
 
@@ -6653,6 +7037,7 @@ function renderTabLabel(tab: Tab) {
             :fonts="fonts"
             :inner-neume="toolbarInnerNeume"
             :page-setup="score.pageSetup"
+            @update:annotation="updateAnnotation"
             @update:text-box="updateTextBox"
             @update:rich-text-box="updateRichTextBox"
             @update:drop-cap="updateDropCap"
@@ -6818,14 +7203,16 @@ function renderTabLabel(tab: Tab) {
                         :metadata="getTokenMetadata(pageIndex)"
                         :page-setup="score.pageSetup"
                         :fonts="fonts"
+                        :editor-language="ckeditorLanguage"
                         :selected="
                           getHeaderForPageIndex(pageIndex) ==
                           selectedHeaderFooterElement
                         "
                         :style="headerStyle"
-                        @click="
-                          selectedHeaderFooterElement =
-                            getHeaderForPageIndex(pageIndex)
+                        @click="selectHeaderRichTextBox(pageIndex)"
+                        @select-neume="
+                          selectHeaderRichTextBox(pageIndex);
+                          showPropertiesPaneForRichTextNeume();
                         "
                         @update="
                           updateRichTextBox(
@@ -6986,9 +7373,15 @@ function renderTabLabel(tab: Tab) {
                               element as NoteElement
                             ).annotations"
                             :key="index"
+                            :ref="
+                              setTemplateRef(
+                                `annotation-${getElementIndex(element)}-${index}`,
+                              )
+                            "
                             :element="annotation"
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
+                            :editor-language="ckeditorLanguage"
                             :selected="
                               selectedWorkspace.selectedAnnotationElement ===
                               annotation
@@ -7000,6 +7393,10 @@ function renderTabLabel(tab: Tab) {
                                 annotation,
                                 true,
                               )
+                            "
+                            @select-neume="
+                              setSelectedAnnotation(element, annotation);
+                              showPropertiesPaneForRichTextNeume();
                             "
                             @mousedown="
                               setSelectedAnnotation(element, annotation)
@@ -7304,8 +7701,13 @@ function renderTabLabel(tab: Tab) {
                           :element="element as RichTextBoxElement"
                           :page-setup="score.pageSetup"
                           :fonts="fonts"
+                          :editor-language="ckeditorLanguage"
                           :selected="isSelected(element)"
                           @select-single="selectedElement = element"
+                          @select-neume="
+                            selectedElement = element;
+                            showPropertiesPaneForRichTextNeume();
+                          "
                           @update="
                             updateRichTextBox(
                               element as RichTextBoxElement,
@@ -7460,14 +7862,16 @@ function renderTabLabel(tab: Tab) {
                         :metadata="getTokenMetadata(pageIndex)"
                         :page-setup="score.pageSetup"
                         :fonts="fonts"
+                        :editor-language="ckeditorLanguage"
                         :selected="
                           getFooterForPageIndex(pageIndex) ==
                           selectedHeaderFooterElement
                         "
                         :style="footerStyle"
-                        @click="
-                          selectedHeaderFooterElement =
-                            getFooterForPageIndex(pageIndex)
+                        @click="selectFooterRichTextBox(pageIndex)"
+                        @select-neume="
+                          selectFooterRichTextBox(pageIndex);
+                          showPropertiesPaneForRichTextNeume();
                         "
                         @update="
                           updateRichTextBox(
@@ -7546,6 +7950,8 @@ function renderTabLabel(tab: Tab) {
         inspectorContext.kind === 'mode-key' ||
         inspectorContext.kind === 'lyrics' ||
         inspectorContext.kind === 'text-box' ||
+        inspectorContext.kind === 'rich-text-box' ||
+        inspectorContext.kind === 'annotation' ||
         inspectorContext.kind === 'drop-cap'
       "
       class="contextual-toolbar-panel"
@@ -7638,6 +8044,34 @@ function renderTabLabel(tab: Tab) {
           @insert:pelastikon="insertPelastikon"
         />
       </template>
+      <template v-else-if="inspectorContext.kind === 'rich-text-box'">
+        <RichTextToolbar
+          :element="inspectorContext.element"
+          :page-setup="score.pageSetup"
+          :fonts="fonts"
+          :default-font-color="
+            inspectorContext.element.inline
+              ? score.pageSetup.lyricsDefaultColor
+              : score.pageSetup.textBoxDefaultColor
+          "
+          :default-font-size="
+            inspectorContext.element.inline
+              ? score.pageSetup.lyricsDefaultFontSize
+              : score.pageSetup.textBoxDefaultFontSize
+          "
+          :default-font-family="score.pageSetup.textBoxDefaultFontFamily"
+        />
+      </template>
+      <template v-else-if="inspectorContext.kind === 'annotation'">
+        <RichTextToolbar
+          :element="inspectorContext.element"
+          :page-setup="score.pageSetup"
+          :fonts="fonts"
+          :default-font-color="score.pageSetup.textBoxDefaultColor"
+          :default-font-size="score.pageSetup.lyricsDefaultFontSize"
+          :default-font-family="score.pageSetup.textBoxDefaultFontFamily"
+        />
+      </template>
       <template v-else-if="inspectorContext.kind === 'drop-cap'">
         <ToolbarDropCap
           :element="inspectorContext.element"
@@ -7707,6 +8141,7 @@ function renderTabLabel(tab: Tab) {
         :element="element as RichTextBoxElement"
         :page-setup="score.pageSetup"
         :fonts="fonts"
+        :editor-language="ckeditorLanguage"
         :recalc="true"
         @update:height="
           updateRichTextBoxHeight(element as RichTextBoxElement, $event)

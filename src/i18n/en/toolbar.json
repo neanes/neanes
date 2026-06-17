@@ -120,6 +120,27 @@
     "offsetYBottom": "Bottom Y Offset",
     "fillWidth": "Fill Width"
   },
+  "richTextBox": {
+    "default": "Default",
+    "underline": "Underline",
+    "bulletedList": "Bulleted List",
+    "numberedList": "Numbered List",
+    "outdent": "Outdent",
+    "indent": "Indent",
+    "script": "Script",
+    "subscript": "Subscript",
+    "superscript": "Superscript",
+    "removeFormat": "Remove Format",
+    "insertNeume": "Insert Neume",
+    "insertMartyria": "Insert Martyria",
+    "insertPlagal": "Insert Plagal",
+    "neumeAttributes": "Neume Attributes",
+    "kerningLeft": "Left Kerning",
+    "kerningRight": "Right Kerning",
+    "neumeFontSize": "Font Size",
+    "martyriaNote": "Martyria Note",
+    "martyriaRootSign": "Martyria Root Sign"
+  },
   "workspace": {
     "dockPane": "Dock Pane",
     "floatPane": "Float Pane",

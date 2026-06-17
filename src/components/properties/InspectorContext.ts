@@ -1,4 +1,5 @@
 import type {
+  AnnotationElement,
   DropCapElement,
   ImageBoxElement,
   MartyriaElement,
@@ -12,6 +13,7 @@ import type {
 
 export type InspectorContext =
   | { kind: 'none' }
+  | { kind: 'annotation'; element: AnnotationElement }
   | {
       kind: 'text-box';
       element: TextBoxElement;

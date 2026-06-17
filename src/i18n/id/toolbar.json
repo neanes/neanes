@@ -120,6 +120,27 @@
     "offsetYBottom": "Offset Y Bawah",
     "fillWidth": "Isi Lebar"
   },
+  "richTextBox": {
+    "default": "Bawaan",
+    "underline": "Garis bawah",
+    "bulletedList": "Daftar berpoin",
+    "numberedList": "Daftar bernomor",
+    "outdent": "Kurangi inden",
+    "indent": "Inden",
+    "script": "Posisi teks",
+    "subscript": "Subskrip",
+    "superscript": "Superskrip",
+    "removeFormat": "Hapus Format",
+    "insertNeume": "Sisipkan Neume",
+    "insertMartyria": "Sisipkan Martyria",
+    "insertPlagal": "Sisipkan Plagal",
+    "neumeAttributes": "Atribut Neume",
+    "kerningLeft": "Kerning Kiri",
+    "kerningRight": "Kerning Kanan",
+    "neumeFontSize": "Ukuran Font",
+    "martyriaNote": "Nada Martyria",
+    "martyriaRootSign": "Tanda Akar Martyria"
+  },
   "workspace": {
     "dockPane": "Tambatkan Panel",
     "floatPane": "Apungkan Panel",

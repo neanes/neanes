@@ -1,20 +1,48 @@
+import type { Editor } from 'ckeditor5';
 import { Command } from 'ckeditor5';
 
+import type { Note, RootSign } from '@/models/Neumes';
+
+import type { InsertNeumeType } from './insertneumeediting';
 import { NEUME_ELEMENT } from './insertneumeediting';
 
 export const UPDATE_NEUME_ATTRIBUTES_COMMAND = 'updateNeumeAttributes';
 
+const DEFAULT_OBSERVABLE_VALUES = {
+  top: 0,
+  left: 0,
+  right: 0,
+  alignRight: false,
+  kerningLeft: 0,
+  kerningRight: 0,
+  neumeFontSize: 1,
+  neumeLineHeight: 1,
+  width: null,
+  color: null,
+  neumeType: null,
+  martyriaNote: null,
+  martyriaRootSign: null,
+};
+
 export default class UpdateNeumeAttributesCommand extends Command {
-  top: number = 0;
-  left: number = 0;
-  right: number = 0;
-  alignRight: boolean = false;
-  kerningLeft: number = 0;
-  kerningRight: number = 0;
-  neumeFontSize: number = 1;
-  neumeLineHeight: number = 1;
-  width: number | null = null;
-  color: string | null = null;
+  declare top: number;
+  declare left: number;
+  declare right: number;
+  declare alignRight: boolean;
+  declare kerningLeft: number;
+  declare kerningRight: number;
+  declare neumeFontSize: number;
+  declare neumeLineHeight: number;
+  declare width: number | null;
+  declare color: string | null;
+  declare neumeType: InsertNeumeType | null;
+  declare martyriaNote: Note | null;
+  declare martyriaRootSign: RootSign | null;
+
+  constructor(editor: Editor) {
+    super(editor);
+    this.set(DEFAULT_OBSERVABLE_VALUES);
+  }
 
   override execute(attributes: Record<string, unknown>) {
     const model = this.editor.model;
@@ -41,31 +69,32 @@ export default class UpdateNeumeAttributesCommand extends Command {
   override refresh() {
     const neume = this._findSelectedNeume();
 
-    this.isEnabled = !!neume;
-
     if (neume) {
-      this.top = (neume.getAttribute('top') as number) ?? 0;
-      this.left = (neume.getAttribute('left') as number) ?? 0;
-      this.right = (neume.getAttribute('right') as number) ?? 0;
-      this.kerningLeft = (neume.getAttribute('kerningLeft') as number) ?? 0;
-      this.kerningRight = (neume.getAttribute('kerningRight') as number) ?? 0;
-      this.neumeFontSize = (neume.getAttribute('neumeFontSize') as number) ?? 1;
-      this.neumeLineHeight =
-        (neume.getAttribute('neumeLineHeight') as number) ?? 1;
-      this.width = (neume.getAttribute('width') as number) ?? null;
-      this.color = (neume.getAttribute('color') as string) ?? null;
+      this.top = coerceNumber(neume.getAttribute('top'), 0);
+      this.left = coerceNumber(neume.getAttribute('left'), 0);
+      this.right = coerceNumber(neume.getAttribute('right'), 0);
+      this.kerningLeft = coerceNumber(neume.getAttribute('kerningLeft'), 0);
+      this.kerningRight = coerceNumber(neume.getAttribute('kerningRight'), 0);
+      this.neumeFontSize = coerceNumber(neume.getAttribute('neumeFontSize'), 1);
+      this.neumeLineHeight = coerceNumber(
+        neume.getAttribute('neumeLineHeight'),
+        1,
+      );
+      this.width = coerceNullableNumber(neume.getAttribute('width'));
+      this.color = (neume.getAttribute('color') as string) || null;
       this.alignRight = (neume.getAttribute('alignRight') as boolean) ?? false;
+      this.neumeType =
+        (neume.getAttribute('neumeType') as InsertNeumeType | undefined) ??
+        null;
+      this.martyriaNote =
+        (neume.getAttribute('martyriaNote') as Note | undefined) ?? null;
+      this.martyriaRootSign =
+        (neume.getAttribute('martyriaRootSign') as RootSign | undefined) ??
+        null;
+      this.isEnabled = true;
     } else {
-      this.top = 0;
-      this.left = 0;
-      this.right = 0;
-      this.alignRight = false;
-      this.kerningLeft = 0;
-      this.kerningRight = 0;
-      this.neumeFontSize = 1;
-      this.neumeLineHeight = 1;
-      this.width = null;
-      this.color = null;
+      Object.assign(this, DEFAULT_OBSERVABLE_VALUES);
+      this.isEnabled = false;
     }
   }
 
@@ -79,4 +108,20 @@ export default class UpdateNeumeAttributesCommand extends Command {
 
     return null;
   }
+}
+
+function coerceNumber(value: unknown, fallback: number) {
+  const parsed = typeof value === 'number' ? value : Number(value);
+
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function coerceNullableNumber(value: unknown) {
+  if (value == null || value === '') {
+    return null;
+  }
+
+  const parsed = typeof value === 'number' ? value : Number(value);
+
+  return Number.isFinite(parsed) ? parsed : null;
 }

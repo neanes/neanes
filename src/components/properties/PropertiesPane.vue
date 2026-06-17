@@ -23,6 +23,15 @@
       @update="emit('update:tempo', tempoElement, $event)"
     />
 
+    <PropertiesAnnotation
+      v-else-if="annotationElement != null"
+      :key="`annotation-${annotationElement.id}`"
+      :element="annotationElement"
+      :fonts="fonts"
+      :page-setup="pageSetup"
+      @update="emit('update:annotation', annotationElement, $event)"
+    />
+
     <PropertiesTextBox
       v-else-if="textBoxElement != null"
       :key="`text-box-${textBoxElement.id}`"
@@ -36,6 +45,7 @@
       v-else-if="richTextBoxElement != null"
       :key="`rich-text-box-${richTextBoxElement.id}`"
       :element="richTextBoxElement"
+      :fonts="fonts"
       :page-setup="pageSetup"
       @update="emit('update:rich-text-box', richTextBoxElement, $event)"
     />
@@ -109,6 +119,7 @@ import {
 import type { PageSetup } from '@/models/PageSetup';
 
 import type { InspectorContext } from './InspectorContext';
+import PropertiesAnnotation from './PropertiesAnnotation.vue';
 import PropertiesDropCap from './PropertiesDropCap.vue';
 import PropertiesImageBox from './PropertiesImageBox.vue';
 import PropertiesLyrics from './PropertiesLyrics.vue';
@@ -141,6 +152,7 @@ const props = defineProps({
 const emit = defineEmits([
   'open-mode-key-dialog',
   'open-syllable-positioning-dialog',
+  'update:annotation',
   'update:drop-cap',
   'update:image-box',
   'update:lyrics',
@@ -154,6 +166,9 @@ const emit = defineEmits([
 
 const textBoxElement = computed(() =>
   props.context.kind === 'text-box' ? props.context.element : null,
+);
+const annotationElement = computed(() =>
+  props.context.kind === 'annotation' ? props.context.element : null,
 );
 const richTextBoxElement = computed(() =>
   props.context.kind === 'rich-text-box' ? props.context.element : null,

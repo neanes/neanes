@@ -4,22 +4,38 @@
       $t(($) => $.menu.insert.richTextBox, { ns: 'menu' })
     }}</FieldLegend>
     <FieldGroup>
+      <PropertiesRichTextStyle
+        id-prefix="properties-rich-text-box"
+        :element="element"
+        :fonts="fonts"
+        :page-setup="pageSetup"
+        :default-font-color="
+          element.inline
+            ? pageSetup.lyricsDefaultColor
+            : pageSetup.textBoxDefaultColor
+        "
+        :default-font-size="
+          element.inline
+            ? pageSetup.lyricsDefaultFontSize
+            : pageSetup.textBoxDefaultFontSize
+        "
+        :default-font-family="pageSetup.textBoxDefaultFontFamily"
+      />
+
+      <FieldSeparator />
+
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-rich-text-box-inline"
           :model-value="element.inline"
-          @update:model-value="
-            $emit('update', {
-              inline: $event === true,
-            } as Partial<RichTextBoxElement>)
-          "
+          @update:model-value="updateBooleanProperty('inline', $event)"
         />
         <FieldLabel for="properties-rich-text-box-inline">
           {{ $t(($) => $.toolbar.common.inline, { ns: 'toolbar' }) }}
         </FieldLabel>
       </Field>
 
-      <template v-if="element.inline">
+      <FieldGroup v-if="element.inline">
         <Field orientation="horizontal">
           <FieldLabel for="properties-rich-text-box-width">{{
             $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
@@ -35,9 +51,9 @@
             :format-options="fraction1FormatOptions"
             placeholder="fill"
             @update:model-value="
-              $emit('update', {
+              updateElement({
                 customWidth: $event,
-              } as Partial<RichTextBoxElement>)
+              })
             "
           />
         </Field>
@@ -55,11 +71,7 @@
             :step="0.5"
             :model-value="element.offsetYTop"
             :format-options="fraction1FormatOptions"
-            @update:model-value="
-              $emit('update', {
-                offsetYTop: $event,
-              } as Partial<RichTextBoxElement>)
-            "
+            @update:model-value="updateNumberProperty('offsetYTop', $event)"
           />
         </Field>
 
@@ -76,29 +88,21 @@
             :step="0.5"
             :model-value="element.offsetYBottom"
             :format-options="fraction1FormatOptions"
-            @update:model-value="
-              $emit('update', {
-                offsetYBottom: $event,
-              } as Partial<RichTextBoxElement>)
-            "
+            @update:model-value="updateNumberProperty('offsetYBottom', $event)"
           />
         </Field>
 
         <Field orientation="horizontal">
-          <Checkbox
+          <Switch
             id="properties-rich-text-box-center-on-page"
             :model-value="element.centerOnPage"
-            @update:model-value="
-              $emit('update', {
-                centerOnPage: $event === true,
-              } as Partial<RichTextBoxElement>)
-            "
+            @update:model-value="updateBooleanProperty('centerOnPage', $event)"
           />
           <FieldLabel for="properties-rich-text-box-center-on-page">{{
             $t(($) => $.toolbar.textbox.centerOnPage, { ns: 'toolbar' })
           }}</FieldLabel>
         </Field>
-      </template>
+      </FieldGroup>
 
       <Field orientation="horizontal">
         <FieldLabel for="properties-rich-text-box-margin-top">{{
@@ -113,11 +117,7 @@
           :step="0.5"
           :model-value="element.marginTop"
           :format-options="fraction1FormatOptions"
-          @update:model-value="
-            $emit('update', {
-              marginTop: $event,
-            } as Partial<RichTextBoxElement>)
-          "
+          @update:model-value="updateNumberProperty('marginTop', $event)"
         />
       </Field>
 
@@ -134,30 +134,24 @@
           :step="0.5"
           :model-value="element.marginBottom"
           :format-options="fraction1FormatOptions"
-          @update:model-value="
-            $emit('update', {
-              marginBottom: $event,
-            } as Partial<RichTextBoxElement>)
-          "
+          @update:model-value="updateNumberProperty('marginBottom', $event)"
         />
       </Field>
 
+      <FieldSeparator />
+
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-rich-text-box-mode-change"
           :model-value="element.modeChange"
-          @update:model-value="
-            $emit('update', {
-              modeChange: $event === true,
-            } as Partial<RichTextBoxElement>)
-          "
+          @update:model-value="updateBooleanProperty('modeChange', $event)"
         />
         <FieldLabel for="properties-rich-text-box-mode-change">{{
           $t(($) => $.toolbar.textbox.modeChange, { ns: 'toolbar' })
         }}</FieldLabel>
       </Field>
 
-      <template v-if="element.modeChange">
+      <FieldGroup v-if="element.modeChange">
         <Field>
           <FieldLabel
             for="properties-rich-text-box-mode-change-physical-note"
@@ -167,11 +161,7 @@
           >
           <Select
             :model-value="element.modeChangePhysicalNote"
-            @update:model-value="
-              $emit('update', {
-                modeChangePhysicalNote: $event,
-              } as Partial<RichTextBoxElement>)
-            "
+            @update:model-value="onModeChangePhysicalNoteChanged"
           >
             <SelectTrigger
               id="properties-rich-text-box-mode-change-physical-note"
@@ -179,7 +169,7 @@
             >
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <RichTextSelectContent>
               <SelectGroup>
                 <SelectItem
                   v-for="note in notes"
@@ -189,7 +179,7 @@
                   {{ $t(note.displayName, { ns: 'model' }) }}
                 </SelectItem>
               </SelectGroup>
-            </SelectContent>
+            </RichTextSelectContent>
           </Select>
         </Field>
 
@@ -199,11 +189,7 @@
           }}</FieldLabel>
           <Select
             :model-value="element.modeChangeScale"
-            @update:model-value="
-              $emit('update', {
-                modeChangeScale: $event,
-              } as Partial<RichTextBoxElement>)
-            "
+            @update:model-value="onModeChangeScaleChanged"
           >
             <SelectTrigger
               id="properties-rich-text-box-mode-change-scale"
@@ -211,7 +197,7 @@
             >
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <RichTextSelectContent>
               <SelectGroup>
                 <SelectItem
                   v-for="scale in scales"
@@ -221,7 +207,7 @@
                   {{ $t(scale.displayName, { ns: 'model' }) }}
                 </SelectItem>
               </SelectGroup>
-            </SelectContent>
+            </RichTextSelectContent>
           </Select>
         </Field>
 
@@ -239,7 +225,7 @@
             >
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <RichTextSelectContent>
               <SelectGroup>
                 <SelectItem :value="SELECT_NONE_VALUE">
                   {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
@@ -252,7 +238,7 @@
                   {{ $t(note.displayName, { ns: 'model' }) }}
                 </SelectItem>
               </SelectGroup>
-            </SelectContent>
+            </RichTextSelectContent>
           </Select>
         </Field>
 
@@ -264,21 +250,19 @@
             id="properties-rich-text-box-bpm"
             :model-value="element.modeChangeBpm"
             @update:model-value="
-              $emit('update', {
+              updateElement({
                 modeChangeBpm: $event,
-              } as Partial<RichTextBoxElement>)
+              })
             "
           />
         </Field>
 
         <Field orientation="horizontal">
-          <Checkbox
+          <Switch
             id="properties-rich-text-box-ignore-attractions"
             :model-value="element.modeChangeIgnoreAttractions"
             @update:model-value="
-              $emit('update', {
-                modeChangeIgnoreAttractions: $event === true,
-              } as Partial<RichTextBoxElement>)
+              updateBooleanProperty('modeChangeIgnoreAttractions', $event)
             "
           />
           <FieldLabel for="properties-rich-text-box-ignore-attractions">{{
@@ -287,13 +271,11 @@
         </Field>
 
         <Field orientation="horizontal">
-          <Checkbox
+          <Switch
             id="properties-rich-text-box-permanent-enharmonic-zo"
             :model-value="element.modeChangePermanentEnharmonicZo"
             @update:model-value="
-              $emit('update', {
-                modeChangePermanentEnharmonicZo: $event === true,
-              } as Partial<RichTextBoxElement>)
+              updateBooleanProperty('modeChangePermanentEnharmonicZo', $event)
             "
           />
           <FieldLabel for="properties-rich-text-box-permanent-enharmonic-zo">{{
@@ -302,17 +284,15 @@
             })
           }}</FieldLabel>
         </Field>
-      </template>
+      </FieldGroup>
+
+      <FieldSeparator />
 
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-rich-text-box-rtl"
           :model-value="element.rtl"
-          @update:model-value="
-            $emit('update', {
-              rtl: $event === true,
-            } as Partial<RichTextBoxElement>)
-          "
+          @update:model-value="updateBooleanProperty('rtl', $event)"
         />
         <FieldLabel for="properties-rich-text-box-rtl">
           {{ $t(($) => $.toolbar.textbox.rtl, { ns: 'toolbar' }) }}
@@ -320,14 +300,10 @@
       </Field>
 
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-rich-text-box-scrollable"
           :model-value="element.scrollable"
-          @update:model-value="
-            $emit('update', {
-              scrollable: $event === true,
-            } as Partial<RichTextBoxElement>)
-          "
+          @update:model-value="updateBooleanProperty('scrollable', $event)"
         />
         <FieldLabel for="properties-rich-text-box-scrollable">{{
           $t(($) => $.toolbar.textbox.scrollable, { ns: 'toolbar' })
@@ -344,22 +320,23 @@ import { computed } from 'vue';
 
 import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { Checkbox } from '@/components/ui/checkbox';
+import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import {
   Field,
   FieldGroup,
   FieldLabel,
   FieldLegend,
+  FieldSeparator,
   FieldSet,
 } from '@/components/ui/field';
 import {
   Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import type { RichTextBoxElement } from '@/models/Element';
 import {
   getNoteLabelSelector,
@@ -369,6 +346,19 @@ import type { PageSetup } from '@/models/PageSetup';
 import { Scale, ScaleNote } from '@/models/Scales';
 import { fraction1FormatOptions } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
+
+import PropertiesRichTextStyle from './PropertiesRichTextStyle.vue';
+
+type BooleanRichTextBoxProperty = {
+  [K in keyof RichTextBoxElement]: RichTextBoxElement[K] extends boolean
+    ? K
+    : never;
+}[keyof RichTextBoxElement];
+type NumberRichTextBoxProperty = {
+  [K in keyof RichTextBoxElement]: RichTextBoxElement[K] extends number
+    ? K
+    : never;
+}[keyof RichTextBoxElement];
 
 const notes = Object.values(ScaleNote).map((x) => ({
   key: x,
@@ -385,22 +375,89 @@ const props = defineProps({
     type: Object as PropType<RichTextBoxElement>,
     required: true,
   },
+  fonts: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
   },
 });
 
-const emit = defineEmits(['update']);
+const emit = defineEmits<{
+  update: [value: Partial<RichTextBoxElement>];
+}>();
 
 const SELECT_NONE_VALUE = '__none__';
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 
-function onModeChangeVirtualNoteChanged(value: AcceptableValue) {
-  emit('update', {
-    modeChangeVirtualNote: value === SELECT_NONE_VALUE ? '' : value,
+function updateElement(value: Partial<RichTextBoxElement>) {
+  emit('update', value);
+}
+
+function updateBooleanProperty(
+  propertyName: BooleanRichTextBoxProperty,
+  value: boolean | 'indeterminate',
+) {
+  updateElement({
+    [propertyName]: value === true,
   } as Partial<RichTextBoxElement>);
+}
+
+function updateNumberProperty(
+  propertyName: NumberRichTextBoxProperty,
+  value: number | null,
+) {
+  if (value == null) {
+    return;
+  }
+
+  updateElement({
+    [propertyName]: value,
+  } as Partial<RichTextBoxElement>);
+}
+
+function onModeChangePhysicalNoteChanged(value: AcceptableValue) {
+  if (isScaleNote(value)) {
+    updateElement({
+      modeChangePhysicalNote: value,
+    });
+  }
+}
+
+function onModeChangeScaleChanged(value: AcceptableValue) {
+  if (isScale(value)) {
+    updateElement({
+      modeChangeScale: value,
+    });
+  }
+}
+
+function onModeChangeVirtualNoteChanged(value: AcceptableValue) {
+  if (value === SELECT_NONE_VALUE) {
+    updateElement({
+      modeChangeVirtualNote: null,
+    });
+  } else if (isScaleNote(value)) {
+    updateElement({
+      modeChangeVirtualNote: value,
+    });
+  }
+}
+
+function isScale(value: unknown): value is Scale {
+  return (
+    typeof value === 'string' && Object.values(Scale).includes(value as Scale)
+  );
+}
+
+function isScaleNote(value: unknown): value is ScaleNote {
+  return (
+    typeof value === 'string' &&
+    Object.values(ScaleNote).includes(value as ScaleNote)
+  );
 }
 </script>

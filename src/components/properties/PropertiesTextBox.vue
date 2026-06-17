@@ -5,7 +5,7 @@
     }}</FieldLegend>
     <FieldGroup>
       <Field orientation="horizontal">
-        <Checkbox
+        <Switch
           id="properties-text-box-use-default-style"
           :model-value="element.useDefaultStyle"
           @update:model-value="
@@ -173,7 +173,7 @@
 
       <template v-if="!element.inline">
         <Field orientation="horizontal">
-          <Checkbox
+          <Switch
             id="properties-text-box-multipanel"
             :model-value="element.multipanel"
             @update:model-value="
@@ -234,7 +234,7 @@
         </Field>
 
         <Field orientation="horizontal">
-          <Checkbox
+          <Switch
             id="properties-text-box-fill-width"
             :model-value="element.fillWidth"
             @update:model-value="
@@ -308,7 +308,6 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
   FieldGroup,
@@ -316,6 +315,7 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field';
+import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';

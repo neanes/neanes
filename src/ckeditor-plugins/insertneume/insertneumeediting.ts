@@ -44,8 +44,7 @@ export default class InsertNeumeEditing extends Plugin {
         'martyriaNote',
         'martyriaRootSign',
         'fontFamily',
-        'bold',
-        'italic',
+        'fontStyle',
       ],
     });
 

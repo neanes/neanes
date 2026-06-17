@@ -17,6 +17,8 @@ import {
   TempoSign,
   VocalExpressionNeume,
 } from '@/models/Neumes';
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
+import { resolveFontStyle } from '@/utils/fontStyle';
 import { Unit } from '@/utils/Unit';
 
 import type { ModeKeyTemplate } from './ModeKeys';
@@ -112,8 +114,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontSize: number = Unit.fromPt(12);
   public lyricsStrokeWidth: number = 0;
   public lyricsUseDefaultStyle: boolean = true;
-  public lyricsFontStyle: string = 'normal';
-  public lyricsFontWeight: string = '400';
+  public lyricsFontStyle: string = DEFAULT_FONT_STYLE;
   public lyricsTextDecoration: string = 'none';
   public acceptsLyrics: AcceptsLyricsOption = AcceptsLyricsOption.Default;
   public isMelisma: boolean = false;
@@ -182,7 +183,12 @@ export class NoteElement extends ScoreElement {
   public tertiaryFthoraCarry: Fthora | null = null;
 
   public get lyricsFont() {
-    return `${this.lyricsFontStyle} normal ${this.lyricsFontWeight} ${this.lyricsFontSize}px "${this.lyricsFontFamily}"`;
+    const resolved = resolveFontStyle(
+      this.lyricsFontFamily,
+      this.lyricsFontStyle,
+    );
+
+    return `${resolved.cssFontStyle} normal ${resolved.cssFontWeight} ${this.lyricsFontSize}px "${resolved.cssFontFamily}"`;
   }
 
   public clone(args?: ElementCloneArgs) {
@@ -208,6 +214,7 @@ export class NoteElement extends ScoreElement {
             lyricsColor: this.lyricsColor,
             lyricsFontFamily: this.lyricsFontFamily,
             lyricsFontSize: this.lyricsFontSize,
+            lyricsFontStyle: this.lyricsFontStyle,
             lyricsStrokeWidth: this.lyricsStrokeWidth,
           }
         : null),
@@ -286,7 +293,6 @@ export class NoteElement extends ScoreElement {
       lyricsStrokeWidth: this.lyricsStrokeWidth,
       lyricsUseDefaultStyle: this.lyricsUseDefaultStyle,
       lyricsFontStyle: this.lyricsFontStyle,
-      lyricsFontWeight: this.lyricsFontWeight,
       lyricsTextDecoration: this.lyricsTextDecoration,
     };
   }
@@ -816,8 +822,7 @@ export class TextBoxElement extends ScoreElement {
   public strokeWidth: number = 0;
   public multipanel: boolean = false;
   public inline: boolean = false;
-  public bold: boolean = false;
-  public italic: boolean = false;
+  public fontStyle: string = DEFAULT_FONT_STYLE;
   public underline: boolean = false;
   public lineHeight: number | null = null;
   public useDefaultStyle: boolean = true;
@@ -878,8 +883,7 @@ export class TextBoxElement extends ScoreElement {
       marginTop: this.marginTop,
       marginBottom: this.marginBottom,
       inline: this.inline,
-      bold: this.bold,
-      italic: this.italic,
+      fontStyle: this.fontStyle,
       underline: this.underline,
       useDefaultStyle: this.useDefaultStyle,
       multipanel: this.multipanel,
@@ -1143,8 +1147,7 @@ export class DropCapElement extends ScoreElement {
   public content: string = 'A';
   public fontFamily: string = 'Source Serif';
   public fontSize: number = Unit.fromPt(60);
-  public fontWeight: string = '400';
-  public fontStyle: string = 'normal';
+  public fontStyle: string = DEFAULT_FONT_STYLE;
   public lineHeight: number | null = null;
   public strokeWidth: number = 0;
   public color: string = '#000000';
@@ -1189,9 +1192,8 @@ export class DropCapElement extends ScoreElement {
       color: this.color,
       content: this.content,
       fontSize: this.fontSize,
-      fontStyle: this.fontStyle,
       fontFamily: this.fontFamily,
-      fontWeight: this.fontWeight,
+      fontStyle: this.fontStyle,
       lineHeight: this.lineHeight,
       strokeWidth: this.strokeWidth,
       customWidth: this.customWidth,

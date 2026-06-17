@@ -46,6 +46,19 @@
             : endSelectionGuard(element, { refocus: true })
         "
       />
+      <FontStyleSelect
+        class="w-40"
+        :model-value="fontStyleValue"
+        :options="fontStyleOptions"
+        :disabled="fontStyleDisabled"
+        rich-text-portal
+        @update:model-value="onFontStyleChanged"
+        @update:open="
+          $event
+            ? beginSelectionGuard(element)
+            : endSelectionGuard(element, { refocus: true })
+        "
+      />
       <InputFontSize
         id="toolbar-rich-text-font-size"
         class="w-36"
@@ -71,7 +84,7 @@
           <ToolbarToggleItem
             value="bold"
             class="legacy-toolbar-button"
-            :disabled="!isCommandEnabled('bold')"
+            :disabled="!isStyleToggleEnabled('bold')"
             @mousedown.prevent
           >
             <PhTextB class="h-4 w-4" />
@@ -83,7 +96,7 @@
           <ToolbarToggleItem
             value="italic"
             class="legacy-toolbar-button"
-            :disabled="!isCommandEnabled('italic')"
+            :disabled="!isStyleToggleEnabled('italic')"
             @mousedown.prevent
           >
             <PhTextItalic class="h-4 w-4" />
@@ -97,7 +110,7 @@
           <ToolbarToggleItem
             value="underline"
             class="legacy-toolbar-button"
-            :disabled="!isCommandEnabled('underline')"
+            :disabled="!isStyleToggleEnabled('underline')"
             @mousedown.prevent
           >
             <PhTextUnderline class="h-4 w-4" />
@@ -372,6 +385,7 @@ import {
 } from '@/ckeditor-plugins/insertneume/insertneumeutil';
 import AppTooltip from '@/components/AppTooltip.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import RichTextPopoverContent from '@/components/RichTextPopoverContent.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
@@ -398,16 +412,14 @@ import {
   beginSelectionGuard,
   endSelectionGuard,
 } from '@/composables/useRichTextSelectionGuard';
-import {
-  RICH_TEXT_DEFAULT_FONT_FAMILY,
-  useRichTextStyleCommands,
-} from '@/composables/useRichTextStyleCommands';
+import { useRichTextStyleCommands } from '@/composables/useRichTextStyleCommands';
 import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
 import type { Neume } from '@/models/Neumes';
 import { Note, RootSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
+import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
 
 const EXTRA_COMMAND_NAMES = [
   'bulletedList',
@@ -449,14 +461,19 @@ const props = defineProps({
 const {
   fontFamilyValue,
   fontFamilyOptions,
+  fontStyleValue,
+  fontStyleOptions,
+  fontStyleDisabled,
   fontSizeValue,
   fontSizePlaceholder,
   styleValues,
   alignmentValue,
   isCommandEnabled,
   isCommandActive,
+  isStyleToggleEnabled,
   runCommand,
   onFontFamilyChanged,
+  onFontStyleChanged,
   onFontSizeChanged,
   onStyleValuesChanged,
   onAlignmentChanged,

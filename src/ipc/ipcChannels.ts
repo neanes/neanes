@@ -87,8 +87,6 @@ export enum IpcRendererChannels {
   OpenScoreDialog = 'OpenScoreDialog',
   OpenImageDialog = 'OpenImageDialog',
 
-  GetSystemFonts = 'GetSystemFonts',
-
   ExitApplication = 'ExitApplication',
   CancelExit = 'CancelExit',
 

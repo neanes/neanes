@@ -19,7 +19,11 @@
             ? pageSetup.lyricsDefaultFontSize
             : pageSetup.textBoxDefaultFontSize
         "
-        :default-font-family="pageSetup.textBoxDefaultFontFamily"
+        :default-font-family="
+          element.inline
+            ? pageSetup.lyricsDefaultFontFamily
+            : pageSetup.textBoxDefaultFontFamily
+        "
       />
 
       <FieldSeparator />

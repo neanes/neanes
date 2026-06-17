@@ -48,8 +48,13 @@
     "deleteSelectedElement": "Hapus elemen yang dipilih",
     "fit": "Paskan",
     "speed": "Kecepatan",
-    "pageNumber": "Halaman {{ currentPageNumber }} dari {{ pageCount }}",
     "invalidZoom": "Nilai harus antara 50% dan 500%."
+  },
+  "status": {
+    "section": "Bagian {{ sectionNumber }} dari {{ sectionCount }}",
+    "pageNumber": "Halaman {{ currentPageNumber }} dari {{ pageCount }}",
+    "line": "Baris {{ lineNumber }} dari {{ lineCount }}",
+    "column": "Kolom {{ columnNumber }} dari {{ columnCount }}"
   },
   "dropCap": {
     "lineSpan": "Baris untuk Turun"

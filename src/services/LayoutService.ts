@@ -54,6 +54,7 @@ import {
 import type { Workspace } from '@/models/Workspace';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
+import { resolveFontStyle } from '@/utils/fontStyle';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
@@ -982,10 +983,16 @@ export class LayoutService {
         }
         case ElementType.DropCap: {
           const dropCapElement = elements[i] as DropCapElement;
+          const resolvedDropCapFont = resolveFontStyle(
+            dropCapElement.useDefaultStyle
+              ? pageSetup.dropCapDefaultFontFamily
+              : dropCapElement.fontFamily,
+            dropCapElement.useDefaultStyle
+              ? pageSetup.dropCapDefaultFontStyle
+              : dropCapElement.fontStyle,
+          );
 
-          dropCapElement.computedFontFamily = dropCapElement.useDefaultStyle
-            ? pageSetup.dropCapDefaultFontFamily
-            : dropCapElement.fontFamily;
+          dropCapElement.computedFontFamily = resolvedDropCapFont.cssFontFamily;
 
           dropCapElement.computedFontSize = dropCapElement.useDefaultStyle
             ? pageSetup.dropCapDefaultFontSize
@@ -999,13 +1006,8 @@ export class LayoutService {
             ? pageSetup.dropCapDefaultStrokeWidth
             : dropCapElement.strokeWidth;
 
-          dropCapElement.computedFontWeight = dropCapElement.useDefaultStyle
-            ? pageSetup.dropCapDefaultFontWeight
-            : dropCapElement.fontWeight;
-
-          dropCapElement.computedFontStyle = dropCapElement.useDefaultStyle
-            ? pageSetup.dropCapDefaultFontStyle
-            : dropCapElement.fontStyle;
+          dropCapElement.computedFontWeight = resolvedDropCapFont.cssFontWeight;
+          dropCapElement.computedFontStyle = resolvedDropCapFont.cssFontStyle;
 
           dropCapElement.computedLineHeight = dropCapElement.useDefaultStyle
             ? pageSetup.dropCapDefaultLineHeight
@@ -2601,9 +2603,16 @@ export class LayoutService {
     let elementWidthPx = 0;
 
     if (textBoxElement.inline) {
-      textBoxElement.computedFontFamily = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultFontFamily
-        : textBoxElement.fontFamily;
+      const resolvedTextBoxFont = resolveFontStyle(
+        textBoxElement.useDefaultStyle
+          ? pageSetup.lyricsDefaultFontFamily
+          : textBoxElement.fontFamily,
+        textBoxElement.useDefaultStyle
+          ? pageSetup.lyricsDefaultFontStyle
+          : textBoxElement.fontStyle,
+      );
+
+      textBoxElement.computedFontFamily = resolvedTextBoxFont.cssFontFamily;
 
       textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
         ? pageSetup.lyricsDefaultFontSize
@@ -2617,17 +2626,8 @@ export class LayoutService {
         ? pageSetup.lyricsDefaultStrokeWidth
         : textBoxElement.strokeWidth;
 
-      textBoxElement.computedFontWeight = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultFontWeight
-        : textBoxElement.bold
-          ? '700'
-          : '400';
-
-      textBoxElement.computedFontStyle = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultFontStyle
-        : textBoxElement.italic
-          ? 'italic'
-          : 'normal';
+      textBoxElement.computedFontWeight = resolvedTextBoxFont.cssFontWeight;
+      textBoxElement.computedFontStyle = resolvedTextBoxFont.cssFontStyle;
 
       if (textBoxElement.fillWidth) {
         // Width is computed in Phase 2 after line breaking. During Phase 1 we
@@ -2648,9 +2648,16 @@ export class LayoutService {
     } else {
       elementWidthPx = pageSetup.innerPageWidth;
 
-      textBoxElement.computedFontFamily = textBoxElement.useDefaultStyle
-        ? pageSetup.textBoxDefaultFontFamily
-        : textBoxElement.fontFamily;
+      const resolvedTextBoxFont = resolveFontStyle(
+        textBoxElement.useDefaultStyle
+          ? pageSetup.textBoxDefaultFontFamily
+          : textBoxElement.fontFamily,
+        textBoxElement.useDefaultStyle
+          ? pageSetup.textBoxDefaultFontStyle
+          : textBoxElement.fontStyle,
+      );
+
+      textBoxElement.computedFontFamily = resolvedTextBoxFont.cssFontFamily;
 
       textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
         ? pageSetup.textBoxDefaultFontSize
@@ -2664,17 +2671,8 @@ export class LayoutService {
         ? pageSetup.textBoxDefaultStrokeWidth
         : textBoxElement.strokeWidth;
 
-      textBoxElement.computedFontWeight = textBoxElement.useDefaultStyle
-        ? pageSetup.textBoxDefaultFontWeight
-        : textBoxElement.bold
-          ? '700'
-          : '400';
-
-      textBoxElement.computedFontStyle = textBoxElement.useDefaultStyle
-        ? pageSetup.textBoxDefaultFontStyle
-        : textBoxElement.italic
-          ? 'italic'
-          : 'normal';
+      textBoxElement.computedFontWeight = resolvedTextBoxFont.cssFontWeight;
+      textBoxElement.computedFontStyle = resolvedTextBoxFont.cssFontStyle;
 
       textBoxElement.computedLineHeight = textBoxElement.useDefaultStyle
         ? pageSetup.textBoxDefaultLineHeight
@@ -3340,9 +3338,56 @@ export class LayoutService {
                 widthOfHyphenForThisElement,
               );
 
-              let numberOfHyphensNeeded = Math.floor(
-                element.melismaWidth / hyphenSpacing,
-              );
+              /*
+               * Hyphens are laid out as a centered "comb" with fixed spacing P.
+               *
+               *   <------------------- total gap L ------------------->
+               *
+               *   |<- C ->|<------ P ------>|<------ P ------>|<- C ->|
+               *   ────────────-─────────────────-────────────────-────────────
+               *           -                 -                 -
+               *           ^                 ^                 ^
+               *       hyphen 0          hyphen 1          hyphen 2
+               *
+               * where:
+               *   L = available width for the melisma
+               *   P = center-to-center spacing between adjacent hyphens
+               *   d = hyphen width
+               *   C = minimum clearance from each end to the nearest hyphen
+               *
+               * The number of hyphens is:
+               *
+               *   n = floor((L - d - 2*C) / P) + 1
+               *
+               * The comb width is:
+               *
+               *   combWidth = (n - 1) * P + d
+               *
+               * The comb is then centered:
+               *
+               *   startOffset = (L - combWidth) / 2
+               *
+               * Hyphen i (0-based) is placed at:
+               *
+               *   offset_i = startOffset + i * P
+               *
+               * This guarantees:
+               *   - Uniform interior spacing (P).
+               *   - Equal end gaps.
+               *   - End gaps are always >= C (assuming n was computed by the formula above).
+               *   - A single hyphen (n = 1) is automatically centered.
+               */
+
+              let L = element.melismaWidth;
+              const P = hyphenSpacing;
+              const C = pageSetup.minimumSyllableToHyphenClearance;
+              const d = widthOfHyphenForThisElement;
+
+              const availableWidth = L - d - 2 * C;
+
+              let numberOfHyphensNeeded =
+                availableWidth < 0 ? 0 : Math.floor(availableWidth / P) + 1;
+
               // If this is the last note on the page, always show the hyphen
               if (numberOfHyphensNeeded == 0 && nextElement == null) {
                 numberOfHyphensNeeded = 1;
@@ -3350,7 +3395,11 @@ export class LayoutService {
                   element.melismaWidth,
                   widthOfHyphenForThisElement + widthOfSpace,
                 );
+
+                L = element.melismaWidth;
               }
+
+              element.hyphenOffsets = [];
 
               if (
                 numberOfHyphensNeeded == 0 &&
@@ -3359,11 +3408,13 @@ export class LayoutService {
                 numberOfHyphensNeeded = 1;
               }
 
-              for (let i = 1; i <= numberOfHyphensNeeded; i++) {
-                element.hyphenOffsets.push(
-                  element.melismaWidth * (i / (numberOfHyphensNeeded + 1)) -
-                    widthOfHyphenForThisElement / 2,
-                );
+              if (numberOfHyphensNeeded > 0) {
+                const combWidth = (numberOfHyphensNeeded - 1) * P + d;
+                const startOffset = (L - combWidth) / 2;
+
+                for (let i = 0; i < numberOfHyphensNeeded; i++) {
+                  element.hyphenOffsets.push(startOffset + i * P);
+                }
               }
             } else if (!pageSetup.melkiteRtl) {
               // Else not a hyphen, so an underscore

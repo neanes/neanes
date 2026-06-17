@@ -8,12 +8,22 @@ import {
   useEditorCommandStates,
 } from '@/composables/useRichTextEditorRegistry';
 import type { PageSetup } from '@/models/PageSetup';
+import { fontCatalog } from '@/services/FontCatalog';
+import {
+  DEFAULT_FONT_STYLE,
+  RICH_TEXT_DEFAULT_FONT_FAMILY,
+} from '@/utils/fontConstants';
+import {
+  fromRichTextFontFamilyModelValue,
+  normalizeFontFamily,
+  toRichTextFontFamilyModelValue,
+} from '@/utils/fontFamily';
+import {
+  remapFontStyleAxesForOptions,
+  remapFontStyleForOptions,
+} from '@/utils/fontStyle';
+import { fontStyleNeedsExplicitFamily } from '@/utils/fontStyleAxes';
 import { Unit } from '@/utils/Unit';
-
-// The combobox value that represents "no explicit font family" (i.e. inherit the
-// text box's default). Selecting it clears the fontFamily attribute, and the
-// clear (X) button resets to it.
-export const RICH_TEXT_DEFAULT_FONT_FAMILY = 'default';
 
 // Placeholder/label numbers track the field's pt display but drop trailing
 // zeros so the default reads "Default (20)" rather than "Default (20.0)".
@@ -23,15 +33,26 @@ const defaultSizeFormat = new Intl.NumberFormat(undefined, {
   useGrouping: false,
 });
 
+// 'fontStyle' carries the chosen style; the toggle commands drive the Bold and
+// Italic shortcut buttons (which now flip an axis of the font style). Underline
+// stays a standalone command.
 const STYLE_COMMAND_NAMES = [
   'fontFamily',
   'fontSize',
   'fontColor',
-  'bold',
-  'italic',
+  'fontStyle',
+  'fontStyleToggleBold',
+  'fontStyleToggleItalic',
   'underline',
   'alignment',
 ];
+
+// Maps a Bold/Italic/Underline toggle value to the command that backs it.
+const STYLE_TOGGLE_COMMANDS: Record<string, string> = {
+  bold: 'fontStyleToggleBold',
+  italic: 'fontStyleToggleItalic',
+  underline: 'underline',
+};
 
 export function useRichTextStyleCommands(
   props: {
@@ -70,15 +91,36 @@ export function useRichTextStyleCommands(
           : defaultLabel.value,
         value: RICH_TEXT_DEFAULT_FONT_FAMILY,
       },
-      'Source Serif',
-      'GFS Didot',
-      'Noto Naskh Arabic',
-      'Old Standard',
-      'Neanes',
-      'NeanesStathisSeries',
+      ...fontCatalog.bundledFamilies(),
       ...props.fonts,
     ];
   });
+
+  const fontStyleValue = computed(() => {
+    const value = commandValue('fontStyle');
+
+    return typeof value === 'string' && value !== ''
+      ? value
+      : DEFAULT_FONT_STYLE;
+  });
+
+  const fontStyleFamilyValue = computed(() => {
+    if (fontFamilyValue.value !== RICH_TEXT_DEFAULT_FONT_FAMILY) {
+      return fontFamilyValue.value;
+    }
+
+    return normalizeFontFamily(props.defaultFontFamily);
+  });
+
+  const fontStyleOptions = computed(() =>
+    fontStyleFamilyValue.value === ''
+      ? []
+      : fontCatalog.getStyles(fontStyleFamilyValue.value),
+  );
+
+  const fontStyleDisabled = computed(
+    () => !isCommandEnabled('fontStyle') || fontStyleOptions.value.length <= 1,
+  );
 
   // null when no explicit size is set, so the field can render its "Default"
   // placeholder instead of silently showing the resolved default as a value.
@@ -101,8 +143,8 @@ export function useRichTextStyleCommands(
   );
 
   const styleValues = computed(() =>
-    ['bold', 'italic', 'underline'].filter((commandName) =>
-      isCommandActive(commandName),
+    Object.keys(STYLE_TOGGLE_COMMANDS).filter((style) =>
+      isCommandActive(STYLE_TOGGLE_COMMANDS[style]),
     ),
   );
 
@@ -133,21 +175,67 @@ export function useRichTextStyleCommands(
     execForOwner(props.element, commandName, ...args);
   }
 
+  function isStyleToggleEnabled(style: string) {
+    return isCommandEnabled(STYLE_TOGGLE_COMMANDS[style] ?? style);
+  }
+
   function onFontFamilyChanged(value: string) {
     if (!isCommandEnabled('fontFamily')) {
       return;
     }
 
+    const family = normalizeFontFamily(value);
+
+    if (family === RICH_TEXT_DEFAULT_FONT_FAMILY) {
+      // Clearing the family returns to inherited text. Only basic axes remain
+      // valid without an explicit family; non-basic styles fall back to the
+      // nearest basic style the inherited family offers.
+      const inheritedFamily = normalizeFontFamily(props.defaultFontFamily);
+      const inheritedStyle = remapFontStyleAxesForOptions(
+        fontStyleValue.value,
+        inheritedFamily === '' ? [] : fontCatalog.getStyles(inheritedFamily),
+      );
+
+      runCommand('fontFamily');
+
+      if (inheritedStyle === DEFAULT_FONT_STYLE) {
+        runCommand('fontStyle');
+      } else {
+        runCommand('fontStyle', { value: inheritedStyle });
+      }
+      return;
+    }
+
     const modelValue = toRichTextFontFamilyModelValue(
-      value,
+      family,
       props.pageSetup.neumeDefaultFontFamily,
     );
 
-    if (modelValue == null) {
-      runCommand('fontFamily');
-    } else {
-      runCommand('fontFamily', { value: modelValue });
+    // Carry the current font style to the new family where it exists, preserving
+    // the bold/italic axes when an exact match is unavailable.
+    const remapped = remapFontStyleForOptions(
+      fontStyleValue.value,
+      fontCatalog.getStyles(family),
+    );
+
+    runCommand('fontFamily', { value: modelValue });
+    runCommand('fontStyle', { value: remapped });
+  }
+
+  function onFontStyleChanged(value: string) {
+    if (
+      fontFamilyValue.value === RICH_TEXT_DEFAULT_FONT_FAMILY &&
+      fontStyleNeedsExplicitFamily(value)
+    ) {
+      runCommand('fontFamily', {
+        value: toRichTextFontFamilyModelValue(
+          fontStyleFamilyValue.value,
+          props.pageSetup.neumeDefaultFontFamily,
+        ),
+      });
     }
+
+    runCommand('fontStyle', { value });
   }
 
   function onFontSizeChanged(value: number | null) {
@@ -181,17 +269,32 @@ export function useRichTextStyleCommands(
   }
 
   function onStyleValuesChanged(value: unknown) {
-    executeChangedToggleCommands(
-      ['bold', 'italic', 'underline'],
-      styleValues.value,
-      value,
-    );
+    const next = Array.isArray(value) ? value : [];
+    const previous = styleValues.value;
+
+    for (const style of Object.keys(STYLE_TOGGLE_COMMANDS)) {
+      if (next.includes(style) !== previous.includes(style)) {
+        runCommand(STYLE_TOGGLE_COMMANDS[style]);
+      }
+    }
   }
 
   function onAlignmentChanged(value: unknown) {
     if (typeof value === 'string' && isAlignmentValue(value)) {
       runCommand('alignment', { value });
     }
+  }
+
+  function onRemoveFormat() {
+    if (!isCommandEnabled('removeFormat')) {
+      return;
+    }
+
+    if (isCommandEnabled('fontStyle')) {
+      execForOwner(props.element, 'fontStyle');
+    }
+
+    execForOwner(props.element, 'removeFormat');
   }
 
   function executeChangedToggleCommands(
@@ -215,6 +318,9 @@ export function useRichTextStyleCommands(
     commandStates,
     fontFamilyValue,
     fontFamilyOptions,
+    fontStyleValue,
+    fontStyleOptions,
+    fontStyleDisabled,
     fontSizeValue,
     fontSizePlaceholder,
     fontColorValue,
@@ -223,13 +329,16 @@ export function useRichTextStyleCommands(
     alignmentValue,
     isCommandEnabled,
     isCommandActive,
+    isStyleToggleEnabled,
     commandValue,
     runCommand,
     onFontFamilyChanged,
+    onFontStyleChanged,
     onFontSizeChanged,
     onFontColorChanged,
     onStyleValuesChanged,
     onAlignmentChanged,
+    onRemoveFormat,
     executeChangedToggleCommands,
   };
 }
@@ -252,67 +361,6 @@ function fromRichTextFontSizeModelValue(value: unknown) {
   }
 
   return match[2] === 'pt' ? Unit.fromPt(size) : size;
-}
-
-function fromRichTextFontFamilyModelValue(value: unknown) {
-  if (typeof value !== 'string' || value.trim() === '') {
-    return RICH_TEXT_DEFAULT_FONT_FAMILY;
-  }
-
-  const fontFamilies = splitFontFamilyList(value)
-    .map((fontFamily) => normalizeFontFamily(fontFamily))
-    .filter((fontFamily) => fontFamily !== '');
-
-  return fontFamilies[0] ?? RICH_TEXT_DEFAULT_FONT_FAMILY;
-}
-
-function toRichTextFontFamilyModelValue(
-  fontFamily: string,
-  neumeFallback: string,
-) {
-  const normalizedFontFamily = normalizeFontFamily(fontFamily);
-
-  if (normalizedFontFamily === RICH_TEXT_DEFAULT_FONT_FAMILY) {
-    return undefined;
-  }
-
-  if (
-    normalizedFontFamily === 'Neanes' ||
-    normalizedFontFamily === 'NeanesStathisSeries' ||
-    normalizedFontFamily === normalizeFontFamily(neumeFallback)
-  ) {
-    return normalizedFontFamily;
-  }
-
-  return `${normalizedFontFamily},${neumeFallback}`;
-}
-
-function normalizeFontFamily(fontFamily: string) {
-  return fontFamily.trim().replace(/^['"]|['"]$/g, '');
-}
-
-function splitFontFamilyList(value: string) {
-  const fontFamilies: string[] = [];
-  let current = '';
-  let quote: '"' | "'" | null = null;
-
-  for (const character of value) {
-    if ((character === '"' || character === "'") && quote == null) {
-      quote = character;
-    } else if (character === quote) {
-      quote = null;
-    }
-
-    if (character === ',' && quote == null) {
-      fontFamilies.push(current);
-      current = '';
-    } else {
-      current += character;
-    }
-  }
-
-  fontFamilies.push(current);
-  return fontFamilies;
 }
 
 function isAlignmentValue(

@@ -54,6 +54,7 @@ import {
 import type { Workspace } from '@/models/Workspace';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
+import { resolveFontStyle } from '@/utils/fontStyle';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
@@ -982,10 +983,16 @@ export class LayoutService {
         }
         case ElementType.DropCap: {
           const dropCapElement = elements[i] as DropCapElement;
+          const resolvedDropCapFont = resolveFontStyle(
+            dropCapElement.useDefaultStyle
+              ? pageSetup.dropCapDefaultFontFamily
+              : dropCapElement.fontFamily,
+            dropCapElement.useDefaultStyle
+              ? pageSetup.dropCapDefaultFontStyle
+              : dropCapElement.fontStyle,
+          );
 
-          dropCapElement.computedFontFamily = dropCapElement.useDefaultStyle
-            ? pageSetup.dropCapDefaultFontFamily
-            : dropCapElement.fontFamily;
+          dropCapElement.computedFontFamily = resolvedDropCapFont.cssFontFamily;
 
           dropCapElement.computedFontSize = dropCapElement.useDefaultStyle
             ? pageSetup.dropCapDefaultFontSize
@@ -999,13 +1006,8 @@ export class LayoutService {
             ? pageSetup.dropCapDefaultStrokeWidth
             : dropCapElement.strokeWidth;
 
-          dropCapElement.computedFontWeight = dropCapElement.useDefaultStyle
-            ? pageSetup.dropCapDefaultFontWeight
-            : dropCapElement.fontWeight;
-
-          dropCapElement.computedFontStyle = dropCapElement.useDefaultStyle
-            ? pageSetup.dropCapDefaultFontStyle
-            : dropCapElement.fontStyle;
+          dropCapElement.computedFontWeight = resolvedDropCapFont.cssFontWeight;
+          dropCapElement.computedFontStyle = resolvedDropCapFont.cssFontStyle;
 
           dropCapElement.computedLineHeight = dropCapElement.useDefaultStyle
             ? pageSetup.dropCapDefaultLineHeight
@@ -2601,9 +2603,16 @@ export class LayoutService {
     let elementWidthPx = 0;
 
     if (textBoxElement.inline) {
-      textBoxElement.computedFontFamily = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultFontFamily
-        : textBoxElement.fontFamily;
+      const resolvedTextBoxFont = resolveFontStyle(
+        textBoxElement.useDefaultStyle
+          ? pageSetup.lyricsDefaultFontFamily
+          : textBoxElement.fontFamily,
+        textBoxElement.useDefaultStyle
+          ? pageSetup.lyricsDefaultFontStyle
+          : textBoxElement.fontStyle,
+      );
+
+      textBoxElement.computedFontFamily = resolvedTextBoxFont.cssFontFamily;
 
       textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
         ? pageSetup.lyricsDefaultFontSize
@@ -2617,17 +2626,8 @@ export class LayoutService {
         ? pageSetup.lyricsDefaultStrokeWidth
         : textBoxElement.strokeWidth;
 
-      textBoxElement.computedFontWeight = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultFontWeight
-        : textBoxElement.bold
-          ? '700'
-          : '400';
-
-      textBoxElement.computedFontStyle = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultFontStyle
-        : textBoxElement.italic
-          ? 'italic'
-          : 'normal';
+      textBoxElement.computedFontWeight = resolvedTextBoxFont.cssFontWeight;
+      textBoxElement.computedFontStyle = resolvedTextBoxFont.cssFontStyle;
 
       if (textBoxElement.fillWidth) {
         // Width is computed in Phase 2 after line breaking. During Phase 1 we
@@ -2648,9 +2648,16 @@ export class LayoutService {
     } else {
       elementWidthPx = pageSetup.innerPageWidth;
 
-      textBoxElement.computedFontFamily = textBoxElement.useDefaultStyle
-        ? pageSetup.textBoxDefaultFontFamily
-        : textBoxElement.fontFamily;
+      const resolvedTextBoxFont = resolveFontStyle(
+        textBoxElement.useDefaultStyle
+          ? pageSetup.textBoxDefaultFontFamily
+          : textBoxElement.fontFamily,
+        textBoxElement.useDefaultStyle
+          ? pageSetup.textBoxDefaultFontStyle
+          : textBoxElement.fontStyle,
+      );
+
+      textBoxElement.computedFontFamily = resolvedTextBoxFont.cssFontFamily;
 
       textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
         ? pageSetup.textBoxDefaultFontSize
@@ -2664,17 +2671,8 @@ export class LayoutService {
         ? pageSetup.textBoxDefaultStrokeWidth
         : textBoxElement.strokeWidth;
 
-      textBoxElement.computedFontWeight = textBoxElement.useDefaultStyle
-        ? pageSetup.textBoxDefaultFontWeight
-        : textBoxElement.bold
-          ? '700'
-          : '400';
-
-      textBoxElement.computedFontStyle = textBoxElement.useDefaultStyle
-        ? pageSetup.textBoxDefaultFontStyle
-        : textBoxElement.italic
-          ? 'italic'
-          : 'normal';
+      textBoxElement.computedFontWeight = resolvedTextBoxFont.cssFontWeight;
+      textBoxElement.computedFontStyle = resolvedTextBoxFont.cssFontStyle;
 
       textBoxElement.computedLineHeight = textBoxElement.useDefaultStyle
         ? pageSetup.textBoxDefaultLineHeight

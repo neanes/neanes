@@ -4,8 +4,15 @@
       <FontCombobox
         :model-value="element.fontFamily"
         :options="textBoxFontFamilies"
+        @update:model-value="onFontFamilyChanged"
+      />
+      <FontStyleSelect
+        class="w-40"
+        :model-value="element.fontStyle"
+        :options="fontStyleOptions"
+        :disabled="fontStyleOptions.length <= 1"
         @update:model-value="
-          $emit('update', { fontFamily: $event } as Partial<TextBoxElement>)
+          $emit('update', { fontStyle: $event } as Partial<TextBoxElement>)
         "
       />
       <InputFontSize
@@ -27,7 +34,8 @@
         v-if="!element.useDefaultStyle"
         value="bold"
         class="icon-btn"
-        :class="{ selected: element.bold }"
+        :class="{ selected: isFontStyleAxisActive('bold') }"
+        :disabled="!isFontStyleAxisToggleEnabled('bold')"
         aria-label="Toggle bold"
       >
         <PhTextB class="h-4 w-4" />
@@ -36,7 +44,8 @@
         v-if="!element.useDefaultStyle"
         value="italic"
         class="icon-btn"
-        :class="{ selected: element.italic }"
+        :class="{ selected: isFontStyleAxisActive('italic') }"
+        :disabled="!isFontStyleAxisToggleEnabled('italic')"
         aria-label="Toggle italic"
       >
         <PhTextItalic class="h-4 w-4" />
@@ -135,6 +144,7 @@ import { computed } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
@@ -142,8 +152,10 @@ import {
   ToolbarButton,
   ToolbarSeparator,
 } from '@/components/ui/toolbar';
+import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
+import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
   element: {
@@ -158,17 +170,25 @@ const props = defineProps({
 
 const emit = defineEmits(['insert:gorthmikon', 'insert:pelastikon', 'update']);
 
+const {
+  fontStyleOptions,
+  activeStyleAxisValues,
+  isFontStyleAxisActive,
+  isFontStyleAxisToggleEnabled,
+  applyStyleAxisToggles,
+  remapStyleForFamily,
+} = useFontStyleControls(
+  () => props.element.fontFamily,
+  () => props.element.fontStyle,
+);
+
 const styleValues = computed(() => [
-  ...(!props.element.useDefaultStyle && props.element.bold ? ['bold'] : []),
-  ...(!props.element.useDefaultStyle && props.element.italic ? ['italic'] : []),
+  ...(props.element.useDefaultStyle ? [] : activeStyleAxisValues.value),
   ...(props.element.underline ? ['underline'] : []),
 ]);
 
 const textBoxFontFamilies = computed(() => [
-  'Source Serif',
-  'GFS Didot',
-  'Noto Naskh Arabic',
-  'Old Standard',
+  ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 
@@ -179,11 +199,17 @@ function onStyleValuesChanged(value: unknown) {
   };
 
   if (!props.element.useDefaultStyle) {
-    update.bold = values.includes('bold');
-    update.italic = values.includes('italic');
+    update.fontStyle = applyStyleAxisToggles(values);
   }
 
   emit('update', update);
+}
+
+function onFontFamilyChanged(fontFamily: string) {
+  emit('update', {
+    fontFamily,
+    fontStyle: remapStyleForFamily(fontFamily),
+  } as Partial<TextBoxElement>);
 }
 
 function onAlignmentChanged(value: unknown) {
@@ -252,8 +278,10 @@ function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
 }
 
 .neume-button[aria-disabled='true'],
+.neume-button[data-disabled],
 .neume-button:disabled,
 .icon-btn[aria-disabled='true'],
+.icon-btn[data-disabled],
 .icon-btn:disabled {
   cursor: not-allowed;
   opacity: 0.5;

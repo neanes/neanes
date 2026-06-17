@@ -325,30 +325,6 @@ onBeforeUnmount(() => {
   font-weight: bold;
 }
 
-@font-face {
-  font-family: 'Source Serif';
-  src: url('./assets/fonts/SourceSerif4-Regular.otf');
-}
-
-@font-face {
-  font-family: 'Source Serif';
-  src: url('./assets/fonts/SourceSerif4-Bold.otf');
-  font-weight: bold;
-}
-
-@font-face {
-  font-family: 'Source Serif';
-  src: url('./assets/fonts/SourceSerif4-It.otf');
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Source Serif';
-  src: url('./assets/fonts/SourceSerif4-BoldIt.otf');
-  font-weight: bold;
-  font-style: italic;
-}
-
 html {
   height: 100vh;
 }

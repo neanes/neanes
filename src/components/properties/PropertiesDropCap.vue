@@ -29,9 +29,23 @@
             class="w-full max-w-full"
             :model-value="element.fontFamily"
             :options="dropCapFontFamilies"
+            @update:model-value="onFontFamilyChanged"
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel for="properties-drop-cap-font-style">{{
+            $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
+          }}</FieldLabel>
+          <FontStyleSelect
+            id="properties-drop-cap-font-style"
+            class="w-full max-w-full"
+            :model-value="element.fontStyle"
+            :options="fontStyleOptions"
+            :disabled="fontStyleOptions.length <= 1"
             @update:model-value="
               $emit('update', {
-                fontFamily: $event,
+                fontStyle: $event,
               } as Partial<DropCapElement>)
             "
           />
@@ -92,10 +106,18 @@
             :model-value="styleValues"
             @update:model-value="onStyleValuesChanged"
           >
-            <ToggleGroupItem value="bold" aria-label="Toggle bold">
+            <ToggleGroupItem
+              value="bold"
+              aria-label="Toggle bold"
+              :disabled="!isFontStyleAxisToggleEnabled('bold')"
+            >
               <PhTextB />
             </ToggleGroupItem>
-            <ToggleGroupItem value="italic" aria-label="Toggle italic">
+            <ToggleGroupItem
+              value="italic"
+              aria-label="Toggle italic"
+              :disabled="!isFontStyleAxisToggleEnabled('italic')"
+            >
               <PhTextItalic />
             </ToggleGroupItem>
           </ToggleGroup>
@@ -165,6 +187,7 @@ import { computed } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
@@ -177,8 +200,10 @@ import {
 } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { DropCapElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
+import { fontCatalog } from '@/services/FontCatalog';
 import {
   fraction0FormatOptions,
   fraction1FormatOptions,
@@ -203,18 +228,21 @@ const props = defineProps({
 
 const emit = defineEmits(['update']);
 
-const bold = computed(() => props.element.fontWeight === '700');
-const italic = computed(() => props.element.fontStyle === 'italic');
-const styleValues = computed(() => [
-  ...(bold.value ? ['bold'] : []),
-  ...(italic.value ? ['italic'] : []),
-]);
+const {
+  fontStyleOptions,
+  activeStyleAxisValues,
+  isFontStyleAxisToggleEnabled,
+  applyStyleAxisToggles,
+  remapStyleForFamily,
+} = useFontStyleControls(
+  () => props.element.fontFamily,
+  () => props.element.fontStyle,
+);
+
+const styleValues = computed(() => [...activeStyleAxisValues.value]);
 
 const dropCapFontFamilies = computed(() => [
-  'Source Serif',
-  'GFS Didot',
-  'Noto Naskh Arabic',
-  'Old Standard',
+  ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 
@@ -224,8 +252,14 @@ function onStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {
-    fontWeight: values.includes('bold') ? '700' : '400',
-    fontStyle: values.includes('italic') ? 'italic' : 'normal',
+    fontStyle: applyStyleAxisToggles(values),
+  } as Partial<DropCapElement>);
+}
+
+function onFontFamilyChanged(fontFamily: string) {
+  emit('update', {
+    fontFamily,
+    fontStyle: remapStyleForFamily(fontFamily),
   } as Partial<DropCapElement>);
 }
 </script>

@@ -4732,9 +4732,56 @@ export class LayoutService {
                 widthOfHyphenForThisElement,
               );
 
-              let numberOfHyphensNeeded = Math.floor(
-                element.melismaWidth / hyphenSpacing,
-              );
+              /*
+               * Hyphens are laid out as a centered "comb" with fixed spacing P.
+               *
+               *   <------------------- total gap L ------------------->
+               *
+               *   |<- C ->|<------ P ------>|<------ P ------>|<- C ->|
+               *   ────────────-─────────────────-────────────────-────────────
+               *           -                 -                 -
+               *           ^                 ^                 ^
+               *       hyphen 0          hyphen 1          hyphen 2
+               *
+               * where:
+               *   L = available width for the melisma
+               *   P = center-to-center spacing between adjacent hyphens
+               *   d = hyphen width
+               *   C = minimum clearance from each end to the nearest hyphen
+               *
+               * The number of hyphens is:
+               *
+               *   n = floor((L - d - 2*C) / P) + 1
+               *
+               * The comb width is:
+               *
+               *   combWidth = (n - 1) * P + d
+               *
+               * The comb is then centered:
+               *
+               *   startOffset = (L - combWidth) / 2
+               *
+               * Hyphen i (0-based) is placed at:
+               *
+               *   offset_i = startOffset + i * P
+               *
+               * This guarantees:
+               *   - Uniform interior spacing (P).
+               *   - Equal end gaps.
+               *   - End gaps are always >= C (assuming n was computed by the formula above).
+               *   - A single hyphen (n = 1) is automatically centered.
+               */
+
+              let L = element.melismaWidth;
+              const P = hyphenSpacing;
+              const C = pageSetup.minimumSyllableToHyphenClearance;
+              const d = widthOfHyphenForThisElement;
+
+              const availableWidth = L - d - 2 * C;
+
+              let numberOfHyphensNeeded =
+                availableWidth < 0 ? 0 : Math.floor(availableWidth / P) + 1;
+
               // If this is the last note on the page, always show the hyphen
               if (numberOfHyphensNeeded == 0 && nextElement == null) {
                 numberOfHyphensNeeded = 1;
@@ -4742,7 +4789,11 @@ export class LayoutService {
                   element.melismaWidth,
                   widthOfHyphenForThisElement + widthOfSpace,
                 );
+
+                L = element.melismaWidth;
               }
+
+              element.hyphenOffsets = [];
 
               if (
                 numberOfHyphensNeeded == 0 &&
@@ -4751,11 +4802,13 @@ export class LayoutService {
                 numberOfHyphensNeeded = 1;
               }
 
-              for (let i = 1; i <= numberOfHyphensNeeded; i++) {
-                element.hyphenOffsets.push(
-                  element.melismaWidth * (i / (numberOfHyphensNeeded + 1)) -
-                    widthOfHyphenForThisElement / 2,
-                );
+              if (numberOfHyphensNeeded > 0) {
+                const combWidth = (numberOfHyphensNeeded - 1) * P + d;
+                const startOffset = (L - combWidth) / 2;
+
+                for (let i = 0; i < numberOfHyphensNeeded; i++) {
+                  element.hyphenOffsets.push(startOffset + i * P);
+                }
               }
             } else if (!pageSetup.melkiteRtl) {
               // Else not a hyphen, so an underscore

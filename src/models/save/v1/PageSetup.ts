@@ -126,7 +126,8 @@ export class PageSetup {
   public textBoxDefaultStrokeWidth = 0;
   public textBoxDefaultLineHeight: number | undefined = undefined;
 
-  public hyphenSpacing: number = Unit.fromInch(0.75);
+  public hyphenSpacing: number = Unit.fromMm(13.125);
+  public minimumSyllableToHyphenClearance: number = Unit.fromMm(3.5);
 
   public martyriaVerticalOffset: number = Unit.fromPt(3);
 

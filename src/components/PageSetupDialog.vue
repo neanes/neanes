@@ -368,38 +368,6 @@
 
                   <Field orientation="horizontal">
                     <FieldContent>
-                      <FieldLabel for="page-setup-dialog-line-height">
-                        {{
-                          $t(($) => $.dialog.pageSetup.line, { ns: 'dialog' })
-                        }}
-                      </FieldLabel>
-                      <FieldDescription>
-                        {{
-                          $t(($) => $.dialog.pageSetup.lineSpacingDescription, {
-                            ns: 'dialog',
-                          })
-                        }}
-                      </FieldDescription>
-                    </FieldContent>
-                    <div class="flex items-center gap-2">
-                      <InputUnit
-                        id="page-setup-dialog-line-height"
-                        :model-value="form.lineHeight"
-                        :unit="form.pageSizeUnit"
-                        :min="0"
-                        :max="lineHeightMax"
-                        :step="spacingStep"
-                        :format-options="fraction3FormatOptions"
-                        @update:model-value="updateLineHeight"
-                      />
-                      <span class="text-xs text-muted-foreground">
-                        {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
-                      </span>
-                    </div>
-                  </Field>
-
-                  <Field orientation="horizontal">
-                    <FieldContent>
                       <FieldLabel for="page-setup-dialog-hyphen-spacing">
                         {{
                           $t(($) => $.dialog.pageSetup.hyphens, {
@@ -428,6 +396,84 @@
                         :step="spacingStep"
                         :format-options="fraction3FormatOptions"
                         @update:model-value="updateHyphenSpacing"
+                      />
+                      <span class="text-xs text-muted-foreground">
+                        {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
+                      </span>
+                    </div>
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-hyphen-clearance">
+                        {{
+                          $t(
+                            ($) =>
+                              $.dialog.pageSetup
+                                .minimumSyllableToHyphenClearance,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(
+                            ($) =>
+                              $.dialog.pageSetup
+                                .minimumSyllableToHyphenClearanceDescription,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <div class="flex items-center gap-2">
+                      <InputUnit
+                        id="page-setup-dialog-hyphen-clearance"
+                        :model-value="form.minimumSyllableToHyphenClearance"
+                        :unit="form.pageSizeUnit"
+                        :min="0"
+                        :max="minimumSyllableToHyphenClearanceMax"
+                        :step="spacingStep"
+                        :format-options="fraction3FormatOptions"
+                        @update:model-value="
+                          updateMinimumSyllableToHyphenClearance
+                        "
+                      />
+                      <span class="text-xs text-muted-foreground">
+                        {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
+                      </span>
+                    </div>
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-line-height">
+                        {{
+                          $t(($) => $.dialog.pageSetup.line, { ns: 'dialog' })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(($) => $.dialog.pageSetup.lineSpacingDescription, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <div class="flex items-center gap-2">
+                      <InputUnit
+                        id="page-setup-dialog-line-height"
+                        :model-value="form.lineHeight"
+                        :unit="form.pageSizeUnit"
+                        :min="0"
+                        :max="lineHeightMax"
+                        :step="spacingStep"
+                        :format-options="fraction3FormatOptions"
+                        @update:model-value="updateLineHeight"
                       />
                       <span class="text-xs text-muted-foreground">
                         {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
@@ -2184,6 +2230,10 @@ const hyphenSpacingMax = computed(() =>
   toPositiveDisplay(form.value.innerPageWidth),
 );
 
+const minimumSyllableToHyphenClearanceMax = computed(() =>
+  toPositiveDisplay(form.value.innerPageWidth),
+);
+
 const marginRows = [
   {
     id: 'page-setup-dialog-top-margin',
@@ -2518,6 +2568,13 @@ function updateLineHeight(value: number | null) {
 
 function updateHyphenSpacing(value: number | null) {
   form.value.hyphenSpacing = Math.min(
+    Math.max(storageValue(value), 0),
+    form.value.innerPageWidth,
+  );
+}
+
+function updateMinimumSyllableToHyphenClearance(value: number | null) {
+  form.value.minimumSyllableToHyphenClearance = Math.min(
     Math.max(storageValue(value), 0),
     form.value.innerPageWidth,
   );

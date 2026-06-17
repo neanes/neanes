@@ -293,6 +293,8 @@ export class SaveService {
     pageSetup.landscape = p.landscape || undefined;
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
+    pageSetup.minimumSyllableToHyphenClearance =
+      p.minimumSyllableToHyphenClearance;
     pageSetup.martyriaVerticalOffset = p.martyriaVerticalOffset;
 
     pageSetup.chrysanthineAccidentals = p.chrysanthineAccidentals;
@@ -1051,6 +1053,8 @@ export class SaveService {
     pageSetup.landscape = p.landscape === true;
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
+    pageSetup.minimumSyllableToHyphenClearance =
+      p.minimumSyllableToHyphenClearance ?? (pageSetup.hyphenSpacing * 4) / 15;
     pageSetup.martyriaVerticalOffset = p.martyriaVerticalOffset ?? 0; // for old files, use 0 so that we don't change the them
 
     pageSetup.chrysanthineAccidentals =

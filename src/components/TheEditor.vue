@@ -17,6 +17,7 @@ import { useTranslation } from 'i18next-vue';
 import { debounce, throttle } from 'throttle-debounce';
 import {
   computed,
+  type CSSProperties,
   nextTick,
   onBeforeUnmount,
   onMounted,
@@ -1451,7 +1452,15 @@ function getLyricStyle(element: NoteElement) {
       ? withZoom(Math.min(0, element.lyricsHorizontalOffset))
       : undefined,
     textAlign: element.alignLeft ? 'left' : undefined,
-  } as StyleValue;
+  } as CSSProperties;
+}
+
+function getLeadingLyricHyphenStyle(element: NoteElement) {
+  return {
+    ...getLyricStyle(element),
+    top: 0,
+    left: withZoom(element.leadingLyricHyphenOffset),
+  } as CSSProperties;
 }
 
 function getEmptyBoxStyle(element: EmptyElement) {
@@ -7715,6 +7724,20 @@ function renderTabLabel(tab: Tab) {
                             dir="auto"
                             :style="getLyricStyle(element as NoteElement)"
                           >
+                            <span
+                              v-if="
+                                (element as NoteElement).showLeadingLyricHyphen
+                              "
+                              class="leading-lyric-hyphen"
+                              contenteditable="false"
+                              aria-hidden="true"
+                              :style="
+                                getLeadingLyricHyphenStyle(
+                                  element as NoteElement,
+                                )
+                              "
+                              >-</span
+                            >
                             <ContentEditable
                               :ref="
                                 setTemplateRef(
@@ -8785,6 +8808,11 @@ function renderTabLabel(tab: Tab) {
   text-align: center;
   position: absolute;
   white-space: nowrap;
+}
+
+.leading-lyric-hyphen {
+  position: absolute;
+  pointer-events: none;
 }
 
 .melisma {

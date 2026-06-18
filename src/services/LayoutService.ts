@@ -883,11 +883,20 @@ export class LayoutService {
             nextNoteElement != null &&
             nextNoteElement.lyricsWidth > 0
           ) {
+            const leadingLyricHyphenWidth =
+              nextNoteElement.lyricsUseDefaultStyle
+                ? widthOfHyphen
+                : this.getTextWidthFromCache(
+                    textWidthCache,
+                    nextNoteElement,
+                    pageSetup,
+                    '-',
+                  );
             const leadingLyricHyphenGeometry =
               this.getLeadingLyricHyphenGeometry(
                 nextNoteElement,
                 pageSetup,
-                hyphenWidthForThisElement,
+                leadingLyricHyphenWidth,
               );
             nextNoteElement.leadingLyricHyphenOffset =
               leadingLyricHyphenGeometry.hyphenOffset;
@@ -2367,15 +2376,25 @@ export class LayoutService {
     hyphenWidth: number,
   ): LeadingLyricHyphenGeometry {
     const gap = pageSetup.lyricsMinimumSpacing;
+    const rawLyricTextStartOffset = noteElement.alignLeft
+      ? noteElement.lyricsHorizontalOffset
+      : (noteElement.neumeWidth +
+          noteElement.lyricsHorizontalOffset -
+          noteElement.lyricsWidth) /
+        2;
+
     const lyricTextStartOffset =
-      noteElement.lyricsWidth === 0
-        ? 0
-        : Math.max(0, (noteElement.neumeWidth - noteElement.lyricsWidth) / 2);
+      noteElement.lyricsWidth === 0 ? 0 : rawLyricTextStartOffset;
+
     const hyphenOffset = lyricTextStartOffset - gap - hyphenWidth;
+    const leftProjection = this.getLyricProjections(
+      noteElement,
+      noteElement.alignLeft,
+    ).leftProjection;
 
     return {
       hyphenOffset,
-      reservationWidth: Math.max(0, -hyphenOffset),
+      reservationWidth: Math.max(0, -(leftProjection + hyphenOffset)),
     };
   }
 

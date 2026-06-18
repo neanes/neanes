@@ -1474,10 +1474,37 @@ function getLyricStyle(element: NoteElement) {
 }
 
 function getLeadingLyricHyphenStyle(element: NoteElement) {
+  const resolvedLyricsFont = resolveFontStyle(
+    element.lyricsUseDefaultStyle
+      ? score.value.pageSetup.lyricsDefaultFontFamily
+      : element.lyricsFontFamily,
+    element.lyricsUseDefaultStyle
+      ? score.value.pageSetup.lyricsDefaultFontStyle
+      : element.lyricsFontStyle,
+  );
+
   return {
-    ...getLyricStyle(element),
-    top: 0,
+    top: withZoom(element.lyricsVerticalOffset),
     left: withZoom(element.leadingLyricHyphenOffset),
+    fontSize: element.lyricsUseDefaultStyle
+      ? withZoom(score.value.pageSetup.lyricsDefaultFontSize)
+      : withZoom(element.lyricsFontSize),
+    fontFamily: getFontFamilyWithFallback(
+      resolvedLyricsFont.cssFontFamily,
+      score.value.pageSetup.neumeDefaultFontFamily,
+    ),
+    fontWeight: resolvedLyricsFont.cssFontWeight,
+    fontStyle: resolvedLyricsFont.cssFontStyle,
+    textDecoration: element.lyricsUseDefaultStyle
+      ? undefined
+      : element.lyricsTextDecoration,
+    color: element.lyricsUseDefaultStyle
+      ? score.value.pageSetup.lyricsDefaultColor
+      : element.lyricsColor,
+    webkitTextStrokeWidth: element.lyricsUseDefaultStyle
+      ? withZoom(score.value.pageSetup.lyricsDefaultStrokeWidth)
+      : withZoom(element.lyricsStrokeWidth),
+    lineHeight: withZoom(element.lyricsFontHeight),
   } as CSSProperties;
 }
 
@@ -7987,26 +8014,26 @@ function renderTabLabel(tab: Tab) {
                                 @select-range="setSelectionRange(element)"
                                 @dblclick="openSyllablePositioningDialog"
                               />
+                              <span
+                                v-if="
+                                  (element as NoteElement)
+                                    .showLeadingLyricHyphen
+                                "
+                                class="leading-lyric-hyphen"
+                                contenteditable="false"
+                                aria-hidden="true"
+                                :style="
+                                  getLeadingLyricHyphenStyle(
+                                    element as NoteElement,
+                                  )
+                                "
+                                >-</span
+                              >
                               <div
                                 class="lyrics-container"
                                 dir="auto"
                                 :style="getLyricStyle(element as NoteElement)"
                               >
-                                <span
-                                  v-if="
-                                    (element as NoteElement)
-                                      .showLeadingLyricHyphen
-                                  "
-                                  class="leading-lyric-hyphen"
-                                  contenteditable="false"
-                                  aria-hidden="true"
-                                  :style="
-                                    getLeadingLyricHyphenStyle(
-                                      element as NoteElement,
-                                    )
-                                  "
-                                  >-</span
-                                >
                                 <ContentEditable
                                   :ref="
                                     setTemplateRef(

@@ -11,6 +11,7 @@ import type { Neume } from '@/models/Neumes';
 import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import type { Page } from '@/models/Page';
 import type { PageSetup } from '@/models/PageSetup';
+import { resolveFontStyle } from '@/utils/fontStyle';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from '../FontService';
@@ -130,6 +131,22 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
 */
     const lyricsVerticalOffset =
       pageSetup.lyricsVerticalOffset + neumeDescent + lyricAscent;
+    // TODO: Extend the LaTeX export schema to carry exact font face styles
+    // such as Semibold, Caption, and Display. Until then, preserve the v2
+    // output contract by projecting document styles onto CSS font-style and
+    // font-weight, even though that loses non-CSS face information.
+    const defaultDropCapFont = resolveFontStyle(
+      pageSetup.dropCapDefaultFontFamily,
+      pageSetup.dropCapDefaultFontStyle,
+    );
+    const defaultLyricsFont = resolveFontStyle(
+      pageSetup.lyricsDefaultFontFamily,
+      pageSetup.lyricsDefaultFontStyle,
+    );
+    const defaultTextBoxFont = resolveFontStyle(
+      pageSetup.textBoxDefaultFontFamily,
+      pageSetup.textBoxDefaultFontStyle,
+    );
 
     const result: LatexScore = {
       appVersion: APP_VERSION,
@@ -161,28 +178,28 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           textBox: toPt(pageSetup.textBoxDefaultFontSize),
         },
         dropCapDefaultFontWeight:
-          pageSetup.dropCapDefaultFontWeight != '400'
-            ? pageSetup.dropCapDefaultFontWeight
+          defaultDropCapFont.cssFontWeight != '400'
+            ? defaultDropCapFont.cssFontWeight
             : undefined,
         lyricsDefaultFontWeight:
-          pageSetup.lyricsDefaultFontWeight != '400'
-            ? pageSetup.lyricsDefaultFontWeight
+          defaultLyricsFont.cssFontWeight != '400'
+            ? defaultLyricsFont.cssFontWeight
             : undefined,
         textBoxDefaultFontWeight:
-          pageSetup.textBoxDefaultFontWeight != '400'
-            ? pageSetup.textBoxDefaultFontWeight
+          defaultTextBoxFont.cssFontWeight != '400'
+            ? defaultTextBoxFont.cssFontWeight
             : undefined,
         dropCapDefaultFontStyle:
-          pageSetup.dropCapDefaultFontStyle != 'normal'
-            ? pageSetup.dropCapDefaultFontStyle
+          defaultDropCapFont.cssFontStyle != 'normal'
+            ? defaultDropCapFont.cssFontStyle
             : undefined,
         lyricsDefaultFontStyle:
-          pageSetup.lyricsDefaultFontStyle != 'normal'
-            ? pageSetup.lyricsDefaultFontStyle
+          defaultLyricsFont.cssFontStyle != 'normal'
+            ? defaultLyricsFont.cssFontStyle
             : undefined,
         textBoxDefaultFontStyle:
-          pageSetup.textBoxDefaultFontStyle != 'normal'
-            ? pageSetup.textBoxDefaultFontStyle
+          defaultTextBoxFont.cssFontStyle != 'normal'
+            ? defaultTextBoxFont.cssFontStyle
             : undefined,
         lyricsVerticalOffset: toPt(lyricsVerticalOffset),
         lyricsMelismaSpacing: toPt(pageSetup.lyricsMelismaSpacing),
@@ -342,6 +359,11 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             } as LatexNoteElement;
 
             if (note.lyrics != '' || note.melismaText != '') {
+              const lyricsFont = resolveFontStyle(
+                note.lyricsFontFamily,
+                note.lyricsFontStyle,
+              );
+
               noteInfo.lyrics =
                 note.lyrics != '' ? note.lyrics : note.melismaText;
               noteInfo.lyricsLeftAlign = note.alignLeft || undefined;
@@ -366,13 +388,13 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   : undefined;
               noteInfo.lyricsFontStyle =
                 !note.lyricsUseDefaultStyle &&
-                note.lyricsFontStyle != pageSetup.lyricsDefaultFontStyle
-                  ? note.lyricsFontStyle
+                lyricsFont.cssFontStyle != defaultLyricsFont.cssFontStyle
+                  ? lyricsFont.cssFontStyle
                   : undefined;
               noteInfo.lyricsFontWeight =
                 !note.lyricsUseDefaultStyle &&
-                note.lyricsFontWeight != pageSetup.lyricsDefaultFontWeight
-                  ? note.lyricsFontWeight
+                lyricsFont.cssFontWeight != defaultLyricsFont.cssFontWeight
+                  ? lyricsFont.cssFontWeight
                   : undefined;
             }
 
@@ -442,12 +464,12 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   : undefined,
               fontStyle:
                 !dropCap.useDefaultStyle &&
-                dropCap.computedFontStyle != pageSetup.dropCapDefaultFontStyle
+                dropCap.computedFontStyle != defaultDropCapFont.cssFontStyle
                   ? dropCap.computedFontStyle
                   : undefined,
               fontWeight:
                 !dropCap.useDefaultStyle &&
-                dropCap.computedFontWeight != pageSetup.dropCapDefaultFontWeight
+                dropCap.computedFontWeight != defaultDropCapFont.cssFontWeight
                   ? dropCap.computedFontWeight
                   : undefined,
               color:
@@ -520,6 +542,19 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             options.includeTextBoxes
           ) {
             const textBox = element as TextBoxElement;
+            const defaultFontFamily = textBox.inline
+              ? pageSetup.lyricsDefaultFontFamily
+              : pageSetup.textBoxDefaultFontFamily;
+            const defaultFontSize = textBox.inline
+              ? pageSetup.lyricsDefaultFontSize
+              : pageSetup.textBoxDefaultFontSize;
+            const defaultFont = textBox.inline
+              ? defaultLyricsFont
+              : defaultTextBoxFont;
+            const defaultColor = textBox.inline
+              ? pageSetup.lyricsDefaultColor
+              : pageSetup.textBoxDefaultColor;
+
             resultLine.elements.push({
               type: 'textbox',
               x: toPt(element.x - pageSetup.leftMargin),
@@ -546,27 +581,25 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   : undefined,
               fontFamily:
                 !textBox.useDefaultStyle &&
-                textBox.fontFamily != pageSetup.textBoxDefaultFontFamily
+                textBox.fontFamily != defaultFontFamily
                   ? convertFontName(textBox.fontFamily)
                   : undefined,
               fontSize:
-                !textBox.useDefaultStyle &&
-                textBox.fontSize != pageSetup.textBoxDefaultFontSize
+                !textBox.useDefaultStyle && textBox.fontSize != defaultFontSize
                   ? toPt(textBox.fontSize)
                   : undefined,
               fontStyle:
                 !textBox.useDefaultStyle &&
-                textBox.computedFontStyle != pageSetup.textBoxDefaultFontStyle
+                textBox.computedFontStyle != defaultFont.cssFontStyle
                   ? textBox.computedFontStyle
                   : undefined,
               fontWeight:
                 !textBox.useDefaultStyle &&
-                textBox.computedFontWeight != pageSetup.textBoxDefaultFontWeight
+                textBox.computedFontWeight != defaultFont.cssFontWeight
                   ? textBox.computedFontWeight
                   : undefined,
               color:
-                !textBox.useDefaultStyle &&
-                textBox.color != pageSetup.textBoxDefaultColor
+                !textBox.useDefaultStyle && textBox.color != defaultColor
                   ? textBox.color.substring(1)
                   : undefined,
             } as LatexTextBoxElement);

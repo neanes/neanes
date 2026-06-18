@@ -1,0 +1,379 @@
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./SourceSerif4-Regular.otf');
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./SourceSerif4-ExtraLight.otf');
+  font-weight: 200;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./SourceSerif4-ExtraLightIt.otf');
+  font-weight: 200;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./SourceSerif4-Light.otf');
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./SourceSerif4-LightIt.otf');
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./SourceSerif4-It.otf');
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./SourceSerif4-Semibold.otf');
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./SourceSerif4-SemiboldIt.otf');
+  font-weight: 600;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./SourceSerif4-Bold.otf');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./SourceSerif4-BoldIt.otf');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./SourceSerif4-Black.otf');
+  font-weight: 900;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./SourceSerif4-BlackIt.otf');
+  font-weight: 900;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Caption';
+  src: url('./SourceSerif4Caption-Regular.otf');
+}
+
+@font-face {
+  font-family: 'Source Serif Caption';
+  src: url('./SourceSerif4Caption-ExtraLight.otf');
+  font-weight: 200;
+}
+
+@font-face {
+  font-family: 'Source Serif Caption';
+  src: url('./SourceSerif4Caption-ExtraLightIt.otf');
+  font-weight: 200;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Caption';
+  src: url('./SourceSerif4Caption-Light.otf');
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: 'Source Serif Caption';
+  src: url('./SourceSerif4Caption-LightIt.otf');
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Caption';
+  src: url('./SourceSerif4Caption-It.otf');
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Caption';
+  src: url('./SourceSerif4Caption-Semibold.otf');
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: 'Source Serif Caption';
+  src: url('./SourceSerif4Caption-SemiboldIt.otf');
+  font-weight: 600;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Caption';
+  src: url('./SourceSerif4Caption-Bold.otf');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Source Serif Caption';
+  src: url('./SourceSerif4Caption-BoldIt.otf');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Caption';
+  src: url('./SourceSerif4Caption-Black.otf');
+  font-weight: 900;
+}
+
+@font-face {
+  font-family: 'Source Serif Caption';
+  src: url('./SourceSerif4Caption-BlackIt.otf');
+  font-weight: 900;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Display';
+  src: url('./SourceSerif4Display-Regular.otf');
+}
+
+@font-face {
+  font-family: 'Source Serif Display';
+  src: url('./SourceSerif4Display-ExtraLight.otf');
+  font-weight: 200;
+}
+
+@font-face {
+  font-family: 'Source Serif Display';
+  src: url('./SourceSerif4Display-ExtraLightIt.otf');
+  font-weight: 200;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Display';
+  src: url('./SourceSerif4Display-Light.otf');
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: 'Source Serif Display';
+  src: url('./SourceSerif4Display-LightIt.otf');
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Display';
+  src: url('./SourceSerif4Display-It.otf');
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Display';
+  src: url('./SourceSerif4Display-Semibold.otf');
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: 'Source Serif Display';
+  src: url('./SourceSerif4Display-SemiboldIt.otf');
+  font-weight: 600;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Display';
+  src: url('./SourceSerif4Display-Bold.otf');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Source Serif Display';
+  src: url('./SourceSerif4Display-BoldIt.otf');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Display';
+  src: url('./SourceSerif4Display-Black.otf');
+  font-weight: 900;
+}
+
+@font-face {
+  font-family: 'Source Serif Display';
+  src: url('./SourceSerif4Display-BlackIt.otf');
+  font-weight: 900;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif SmText';
+  src: url('./SourceSerif4SmText-Regular.otf');
+}
+
+@font-face {
+  font-family: 'Source Serif SmText';
+  src: url('./SourceSerif4SmText-ExtraLight.otf');
+  font-weight: 200;
+}
+
+@font-face {
+  font-family: 'Source Serif SmText';
+  src: url('./SourceSerif4SmText-ExtraLightIt.otf');
+  font-weight: 200;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif SmText';
+  src: url('./SourceSerif4SmText-Light.otf');
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: 'Source Serif SmText';
+  src: url('./SourceSerif4SmText-LightIt.otf');
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif SmText';
+  src: url('./SourceSerif4SmText-It.otf');
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif SmText';
+  src: url('./SourceSerif4SmText-Semibold.otf');
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: 'Source Serif SmText';
+  src: url('./SourceSerif4SmText-SemiboldIt.otf');
+  font-weight: 600;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif SmText';
+  src: url('./SourceSerif4SmText-Bold.otf');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Source Serif SmText';
+  src: url('./SourceSerif4SmText-BoldIt.otf');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif SmText';
+  src: url('./SourceSerif4SmText-Black.otf');
+  font-weight: 900;
+}
+
+@font-face {
+  font-family: 'Source Serif SmText';
+  src: url('./SourceSerif4SmText-BlackIt.otf');
+  font-weight: 900;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Subhead';
+  src: url('./SourceSerif4Subhead-Regular.otf');
+}
+
+@font-face {
+  font-family: 'Source Serif Subhead';
+  src: url('./SourceSerif4Subhead-ExtraLight.otf');
+  font-weight: 200;
+}
+
+@font-face {
+  font-family: 'Source Serif Subhead';
+  src: url('./SourceSerif4Subhead-ExtraLightIt.otf');
+  font-weight: 200;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Subhead';
+  src: url('./SourceSerif4Subhead-Light.otf');
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: 'Source Serif Subhead';
+  src: url('./SourceSerif4Subhead-LightIt.otf');
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Subhead';
+  src: url('./SourceSerif4Subhead-It.otf');
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Subhead';
+  src: url('./SourceSerif4Subhead-Semibold.otf');
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: 'Source Serif Subhead';
+  src: url('./SourceSerif4Subhead-SemiboldIt.otf');
+  font-weight: 600;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Subhead';
+  src: url('./SourceSerif4Subhead-Bold.otf');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Source Serif Subhead';
+  src: url('./SourceSerif4Subhead-BoldIt.otf');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif Subhead';
+  src: url('./SourceSerif4Subhead-Black.otf');
+  font-weight: 900;
+}
+
+@font-face {
+  font-family: 'Source Serif Subhead';
+  src: url('./SourceSerif4Subhead-BlackIt.otf');
+  font-weight: 900;
+  font-style: italic;
+}

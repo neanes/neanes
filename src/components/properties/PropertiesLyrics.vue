@@ -29,9 +29,23 @@
             class="w-full max-w-full"
             :model-value="element.lyricsFontFamily"
             :options="lyricsFontFamilies"
+            @update:model-value="onFontFamilyChanged"
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel for="properties-lyrics-font-style">{{
+            $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
+          }}</FieldLabel>
+          <FontStyleSelect
+            id="properties-lyrics-font-style"
+            class="w-full max-w-full"
+            :model-value="element.lyricsFontStyle"
+            :options="fontStyleOptions"
+            :disabled="fontStyleOptions.length <= 1"
             @update:model-value="
               $emit('update', {
-                lyricsFontFamily: $event,
+                lyricsFontStyle: $event,
               } as Partial<NoteElement>)
             "
           />
@@ -76,10 +90,18 @@
             :model-value="styleValues"
             @update:model-value="onStyleValuesChanged"
           >
-            <ToggleGroupItem value="bold" aria-label="Toggle bold">
+            <ToggleGroupItem
+              value="bold"
+              aria-label="Toggle bold"
+              :disabled="!isFontStyleAxisToggleEnabled('bold')"
+            >
               <PhTextB />
             </ToggleGroupItem>
-            <ToggleGroupItem value="italic" aria-label="Toggle italic">
+            <ToggleGroupItem
+              value="italic"
+              aria-label="Toggle italic"
+              :disabled="!isFontStyleAxisToggleEnabled('italic')"
+            >
               <PhTextItalic />
             </ToggleGroupItem>
             <ToggleGroupItem value="underline" aria-label="Toggle underline">
@@ -113,6 +135,7 @@ import { computed } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import {
@@ -124,7 +147,9 @@ import {
 } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { NoteElement } from '@/models/Element';
+import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
   element: {
@@ -139,22 +164,27 @@ const props = defineProps({
 
 const emit = defineEmits(['update']);
 
-const bold = computed(() => props.element.lyricsFontWeight === '700');
-const italic = computed(() => props.element.lyricsFontStyle === 'italic');
+const {
+  fontStyleOptions,
+  activeStyleAxisValues,
+  isFontStyleAxisToggleEnabled,
+  applyStyleAxisToggles,
+  remapStyleForFamily,
+} = useFontStyleControls(
+  () => props.element.lyricsFontFamily,
+  () => props.element.lyricsFontStyle,
+);
+
 const underline = computed(
   () => props.element.lyricsTextDecoration === 'underline',
 );
 const styleValues = computed(() => [
-  ...(bold.value ? ['bold'] : []),
-  ...(italic.value ? ['italic'] : []),
+  ...activeStyleAxisValues.value,
   ...(underline.value ? ['underline'] : []),
 ]);
 
 const lyricsFontFamilies = computed(() => [
-  'Source Serif',
-  'GFS Didot',
-  'Noto Naskh Arabic',
-  'Old Standard',
+  ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 
@@ -162,9 +192,15 @@ function onStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {
-    lyricsFontWeight: values.includes('bold') ? '700' : '400',
-    lyricsFontStyle: values.includes('italic') ? 'italic' : 'normal',
+    lyricsFontStyle: applyStyleAxisToggles(values),
     lyricsTextDecoration: values.includes('underline') ? 'underline' : 'none',
+  } as Partial<NoteElement>);
+}
+
+function onFontFamilyChanged(lyricsFontFamily: string) {
+  emit('update', {
+    lyricsFontFamily,
+    lyricsFontStyle: remapStyleForFamily(lyricsFontFamily),
   } as Partial<NoteElement>);
 }
 </script>

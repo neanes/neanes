@@ -1009,59 +1009,31 @@
                         </FieldLabel>
                         <FontCombobox
                           id="page-setup-dialog-drop-cap-font"
-                          v-model="form.dropCapDefaultFontFamily"
+                          :model-value="form.dropCapDefaultFontFamily"
                           :options="dropCapFontFamilies"
+                          @update:model-value="
+                            updateDefaultFontFamily(
+                              'dropCapDefaultFontFamily',
+                              'dropCapDefaultFontStyle',
+                              $event,
+                            )
+                          "
                         />
                       </Field>
                       <Field orientation="horizontal">
-                        <FieldLabel>
+                        <FieldLabel for="page-setup-dialog-drop-cap-font-style">
                           {{
                             $t(($) => $.dialog.pageSetup.style, {
                               ns: 'dialog',
                             })
                           }}
                         </FieldLabel>
-                        <div class="flex flex-wrap items-center gap-4">
-                          <div class="flex items-center gap-2">
-                            <Checkbox
-                              id="page-setup-dialog-drop-cap-bold"
-                              :model-value="
-                                form.dropCapDefaultFontWeight === '700'
-                              "
-                              @update:model-value="
-                                setFontWeight(
-                                  'dropCapDefaultFontWeight',
-                                  $event,
-                                )
-                              "
-                            />
-                            <Label for="page-setup-dialog-drop-cap-bold">
-                              {{
-                                $t(($) => $.dialog.pageSetup.bold, {
-                                  ns: 'dialog',
-                                })
-                              }}
-                            </Label>
-                          </div>
-                          <div class="flex items-center gap-2">
-                            <Checkbox
-                              id="page-setup-dialog-drop-cap-italic"
-                              :model-value="
-                                form.dropCapDefaultFontStyle === 'italic'
-                              "
-                              @update:model-value="
-                                setFontStyle('dropCapDefaultFontStyle', $event)
-                              "
-                            />
-                            <Label for="page-setup-dialog-drop-cap-italic">
-                              {{
-                                $t(($) => $.dialog.pageSetup.italic, {
-                                  ns: 'dialog',
-                                })
-                              }}
-                            </Label>
-                          </div>
-                        </div>
+                        <FontStyleSelect
+                          id="page-setup-dialog-drop-cap-font-style"
+                          v-model="form.dropCapDefaultFontStyle"
+                          class="w-72 max-w-full"
+                          :options="dropCapFontStyleOptions"
+                        />
                       </Field>
                       <Field orientation="horizontal">
                         <FieldLabel>
@@ -1126,56 +1098,31 @@
                         </FieldLabel>
                         <FontCombobox
                           id="page-setup-dialog-lyrics-font"
-                          v-model="form.lyricsDefaultFontFamily"
+                          :model-value="form.lyricsDefaultFontFamily"
                           :options="lyricsFontFamilies"
+                          @update:model-value="
+                            updateDefaultFontFamily(
+                              'lyricsDefaultFontFamily',
+                              'lyricsDefaultFontStyle',
+                              $event,
+                            )
+                          "
                         />
                       </Field>
                       <Field orientation="horizontal">
-                        <FieldLabel>
+                        <FieldLabel for="page-setup-dialog-lyrics-font-style">
                           {{
                             $t(($) => $.dialog.pageSetup.style, {
                               ns: 'dialog',
                             })
                           }}
                         </FieldLabel>
-                        <div class="flex flex-wrap items-center gap-4">
-                          <div class="flex items-center gap-2">
-                            <Checkbox
-                              id="page-setup-dialog-lyrics-bold"
-                              :model-value="
-                                form.lyricsDefaultFontWeight === '700'
-                              "
-                              @update:model-value="
-                                setFontWeight('lyricsDefaultFontWeight', $event)
-                              "
-                            />
-                            <Label for="page-setup-dialog-lyrics-bold">
-                              {{
-                                $t(($) => $.dialog.pageSetup.bold, {
-                                  ns: 'dialog',
-                                })
-                              }}
-                            </Label>
-                          </div>
-                          <div class="flex items-center gap-2">
-                            <Checkbox
-                              id="page-setup-dialog-lyrics-italic"
-                              :model-value="
-                                form.lyricsDefaultFontStyle === 'italic'
-                              "
-                              @update:model-value="
-                                setFontStyle('lyricsDefaultFontStyle', $event)
-                              "
-                            />
-                            <Label for="page-setup-dialog-lyrics-italic">
-                              {{
-                                $t(($) => $.dialog.pageSetup.italic, {
-                                  ns: 'dialog',
-                                })
-                              }}
-                            </Label>
-                          </div>
-                        </div>
+                        <FontStyleSelect
+                          id="page-setup-dialog-lyrics-font-style"
+                          v-model="form.lyricsDefaultFontStyle"
+                          class="w-72 max-w-full"
+                          :options="lyricsFontStyleOptions"
+                        />
                       </Field>
                       <Field orientation="horizontal">
                         <FieldLabel>
@@ -1333,59 +1280,31 @@
                         </FieldLabel>
                         <FontCombobox
                           id="page-setup-dialog-text-box-font"
-                          v-model="form.textBoxDefaultFontFamily"
-                          :options="lyricsFontFamilies"
+                          :model-value="form.textBoxDefaultFontFamily"
+                          :options="textBoxFontFamilies"
+                          @update:model-value="
+                            updateDefaultFontFamily(
+                              'textBoxDefaultFontFamily',
+                              'textBoxDefaultFontStyle',
+                              $event,
+                            )
+                          "
                         />
                       </Field>
                       <Field orientation="horizontal">
-                        <FieldLabel>
+                        <FieldLabel for="page-setup-dialog-text-box-font-style">
                           {{
                             $t(($) => $.dialog.pageSetup.style, {
                               ns: 'dialog',
                             })
                           }}
                         </FieldLabel>
-                        <div class="flex flex-wrap items-center gap-4">
-                          <div class="flex items-center gap-2">
-                            <Checkbox
-                              id="page-setup-dialog-text-box-bold"
-                              :model-value="
-                                form.textBoxDefaultFontWeight === '700'
-                              "
-                              @update:model-value="
-                                setFontWeight(
-                                  'textBoxDefaultFontWeight',
-                                  $event,
-                                )
-                              "
-                            />
-                            <Label for="page-setup-dialog-text-box-bold">
-                              {{
-                                $t(($) => $.dialog.pageSetup.bold, {
-                                  ns: 'dialog',
-                                })
-                              }}
-                            </Label>
-                          </div>
-                          <div class="flex items-center gap-2">
-                            <Checkbox
-                              id="page-setup-dialog-text-box-italic"
-                              :model-value="
-                                form.textBoxDefaultFontStyle === 'italic'
-                              "
-                              @update:model-value="
-                                setFontStyle('textBoxDefaultFontStyle', $event)
-                              "
-                            />
-                            <Label for="page-setup-dialog-text-box-italic">
-                              {{
-                                $t(($) => $.dialog.pageSetup.italic, {
-                                  ns: 'dialog',
-                                })
-                              }}
-                            </Label>
-                          </div>
-                        </div>
+                        <FontStyleSelect
+                          id="page-setup-dialog-text-box-font-style"
+                          v-model="form.textBoxDefaultFontStyle"
+                          class="w-72 max-w-full"
+                          :options="textBoxFontStyleOptions"
+                        />
                       </Field>
                       <Field orientation="horizontal">
                         <FieldLabel>
@@ -1764,6 +1683,7 @@ import { computed, ref } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import { toDisplay } from '@/components/InputUnit.types';
@@ -1792,7 +1712,6 @@ import {
   FieldSet,
   FieldTitle,
 } from '@/components/ui/field';
-import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
@@ -1819,8 +1738,13 @@ import {
 import type { PageSize, PageSizeUnit } from '@/models/PageSetup';
 import { PageSetup, pageSizes } from '@/models/PageSetup';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
+import { fontCatalog } from '@/services/FontCatalog';
 import { fontService } from '@/services/FontService';
 import { SaveService } from '@/services/SaveService';
+import {
+  getFontStyleOptions,
+  remapFontStyleForFamily,
+} from '@/utils/fontStyle';
 import {
   fraction0FormatOptions,
   fraction1FormatOptions,
@@ -1835,11 +1759,11 @@ type DialogSelector = SelectorParam<'dialog'>;
 type BooleanPageSetupKey = {
   [K in keyof PageSetup]: PageSetup[K] extends boolean ? K : never;
 }[keyof PageSetup];
-type FontWeightKey =
-  | 'dropCapDefaultFontWeight'
-  | 'lyricsDefaultFontWeight'
-  | 'textBoxDefaultFontWeight';
-type FontStyleKey =
+type DefaultFontFamilyKey =
+  | 'dropCapDefaultFontFamily'
+  | 'lyricsDefaultFontFamily'
+  | 'textBoxDefaultFontFamily';
+type DefaultFontStyleKey =
   | 'dropCapDefaultFontStyle'
   | 'lyricsDefaultFontStyle'
   | 'textBoxDefaultFontStyle';
@@ -2077,19 +2001,26 @@ const previewNeumes = computed(() => {
 const selectedNeumeColorOptions = ref<NeumeColorOptions[]>([]);
 
 const dropCapFontFamilies = computed(() => [
-  'Source Serif',
-  'GFS Didot',
-  'Noto Naskh Arabic',
-  'Old Standard',
+  ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 const lyricsFontFamilies = computed(() => [
-  'Source Serif',
-  'GFS Didot',
-  'Noto Naskh Arabic',
-  'Old Standard',
+  ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
+const textBoxFontFamilies = computed(() => [
+  ...fontCatalog.bundledTextFamilies(),
+  ...props.fonts,
+]);
+const dropCapFontStyleOptions = computed(() =>
+  getFontStyleOptions(form.value.dropCapDefaultFontFamily),
+);
+const lyricsFontStyleOptions = computed(() =>
+  getFontStyleOptions(form.value.lyricsDefaultFontFamily),
+);
+const textBoxFontStyleOptions = computed(() =>
+  getFontStyleOptions(form.value.textBoxDefaultFontFamily),
+);
 const neumeFontFamilies = computed(() => {
   if (form.value.melkiteRtl) {
     return [{ label: 'EZ Psaltica RTL', value: 'NeanesRTL' }];
@@ -2465,12 +2396,16 @@ function setBoolean(key: BooleanPageSetupKey, value: CheckboxValue) {
   form.value[key] = value === true;
 }
 
-function setFontWeight(key: FontWeightKey, value: CheckboxValue) {
-  form.value[key] = value === true ? '700' : '400';
-}
-
-function setFontStyle(key: FontStyleKey, value: CheckboxValue) {
-  form.value[key] = value === true ? 'italic' : 'normal';
+function updateDefaultFontFamily(
+  familyKey: DefaultFontFamilyKey,
+  fontStyleKey: DefaultFontStyleKey,
+  family: string,
+) {
+  form.value[familyKey] = family;
+  form.value[fontStyleKey] = remapFontStyleForFamily(
+    form.value[fontStyleKey],
+    family,
+  );
 }
 
 function toggleNeumeColorOption(

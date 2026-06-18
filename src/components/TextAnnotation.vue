@@ -130,7 +130,7 @@ const editorConfig = computed((): EditorConfig => {
     insertNeume: {
       neumeDefaultFontFamily: props.pageSetup.neumeDefaultFontFamily,
       defaultFontSize: props.pageSetup.lyricsDefaultFontSize,
-      defaultFontFamily: props.pageSetup.lyricsDefaultFontFamily,
+      defaultFontFamily: props.pageSetup.textBoxDefaultFontFamily,
     },
   };
 });
@@ -361,6 +361,9 @@ defineExpose({
   box-sizing: border-box;
   overflow: visible;
   color: var(--ck-content-font-color);
+  font-family: var(--ck-content-font-family);
+  font-size: var(--ck-content-font-size);
+  line-height: var(--ck-content-line-height);
 
   border: none !important;
 }

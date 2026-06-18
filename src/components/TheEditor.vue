@@ -73,6 +73,7 @@ import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
 import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
 import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
+import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -126,6 +127,7 @@ import {
 import { EntryMode } from '@/models/EntryMode';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
+import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
 import {
   areVocalExpressionsEquivalent,
   getSecondaryNeume,
@@ -170,6 +172,7 @@ import type {
   PlaybackOptions,
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
+import { fontCatalog } from '@/services/FontCatalog';
 import type { Command } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
@@ -178,6 +181,7 @@ import { LayoutService } from '@/services/LayoutService';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
+import { resolveFontStyle } from '@/utils/fontStyle';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
@@ -228,6 +232,37 @@ const scoreElementCommandFactory: CommandFactory<ScoreElement> =
 
 const pageSetupCommandFactory: CommandFactory<PageSetup> =
   new CommandFactory<PageSetup>();
+
+function createFontLoadDescriptor(
+  fontFamily: string,
+  fontStyle: string | null = null,
+) {
+  const resolved = resolveFontStyle(fontFamily, fontStyle);
+  const cssFontFamily = `"${resolved.cssFontFamily.replace(/["\\]/g, '\\$&')}"`;
+
+  return [
+    resolved.cssFontStyle,
+    'normal',
+    resolved.cssFontWeight,
+    '1rem',
+    cssFontFamily,
+  ].join(' ');
+}
+
+function getBundledFontLoadDescriptors() {
+  const descriptors = new Set<string>();
+
+  for (const family of fontCatalog.bundledFamilies()) {
+    for (const style of fontCatalog.getStyles(family)) {
+      descriptors.add(createFontLoadDescriptor(family, style));
+    }
+  }
+
+  descriptors.add(createFontLoadDescriptor('NeanesRTL'));
+  descriptors.add(createFontLoadDescriptor('NeanesRTLLegacy'));
+
+  return [...descriptors];
+}
 
 let untitledIndex = 1;
 
@@ -311,6 +346,8 @@ const isDevelopment = ref(import.meta.env.DEV);
 const isBrowser = ref(!isElectron());
 const isLoading = ref(true);
 const printMode = ref(false);
+const canUndo = ref(false);
+const canRedo = ref(false);
 const showGuides = ref(false);
 const showAdjustmentRatios = ref(false);
 const workspaces = ref<Workspace[]>([]);
@@ -587,6 +624,8 @@ const pageCount = computed(() => {
   return filteredPages.value.length;
 });
 
+const statusPageCount = computed(() => Math.max(1, pageCount.value));
+
 const commandService = computed(() => {
   return selectedWorkspace.value.commandService;
 });
@@ -756,6 +795,84 @@ const zoomToFit = computed({
   set: (value: boolean) => {
     selectedWorkspace.value.zoomToFit = value;
   },
+});
+
+const statusScrollPageNumber = computed(() =>
+  clamp(currentPageNumber.value, 1, statusPageCount.value),
+);
+
+const statusActiveElement = computed(
+  () => selectedLyrics.value ?? selectedElement.value,
+);
+
+const statusPositionElement = computed(
+  () =>
+    statusActiveElement.value ??
+    getFirstElementForPage(statusScrollPageNumber.value),
+);
+
+const statusPageNumber = computed(() => {
+  const elementPage = statusPositionElement.value?.page ?? 0;
+
+  return elementPage > 0
+    ? clamp(elementPage, 1, statusPageCount.value)
+    : statusScrollPageNumber.value;
+});
+
+const statusPositionElementOnPage = computed(() => {
+  const element = statusPositionElement.value;
+
+  return element?.page === statusPageNumber.value
+    ? element
+    : getFirstElementForPage(statusPageNumber.value);
+});
+
+const statusSectionNumber = computed(() => {
+  const element = statusActiveElement.value;
+
+  return element?.page === statusPageNumber.value
+    ? getSectionNumberForElementIndex(element.index)
+    : getSectionNumberForPage(statusPageNumber.value);
+});
+
+const statusSectionCount = computed(() => getSectionCount());
+
+const statusLinePosition = computed(() => {
+  const page = filteredPages.value[statusPageNumber.value - 1];
+  const lineCount = Math.max(page?.lines.length ?? 0, 1);
+  const lineNumber =
+    statusPositionElementOnPage.value?.line ??
+    getFirstLineNumberForPage(page) ??
+    1;
+
+  return {
+    lineNumber: clamp(lineNumber, 1, lineCount),
+    lineCount,
+  };
+});
+
+const statusColumnPosition = computed(() => {
+  const page = filteredPages.value[statusPageNumber.value - 1];
+  const line = page?.lines[statusLinePosition.value.lineNumber - 1];
+  const lineElements = line?.elements ?? [];
+  const columnCount = Math.max(lineElements.length, 1);
+  const element = statusPositionElementOnPage.value;
+  const elementIndex = element != null ? lineElements.indexOf(element) : -1;
+
+  return {
+    columnNumber: elementIndex >= 0 ? elementIndex + 1 : 1,
+    columnCount,
+  };
+});
+
+const statusNeumeNoteDisplay = computed(() => {
+  if (inspectorContext.value.kind !== 'neume') {
+    return '';
+  }
+
+  return inspectorContext.value.element.scaleNotes
+    .map((note) => t(getNoteLabelSelector(note), { ns: 'model' }))
+    .join(' - ');
 });
 
 const entryMode = computed({
@@ -1043,6 +1160,8 @@ onMounted(() => {
 
   EventBus.$on(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$on(IpcMainChannels.CloseApplication, onCloseApplication);
+  EventBus.$on(IpcRendererChannels.SetCanUndo, onSetCanUndo);
+  EventBus.$on(IpcRendererChannels.SetCanRedo, onSetCanRedo);
 
   EventBus.$on(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
   EventBus.$on(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
@@ -1119,6 +1238,7 @@ onMounted(() => {
   EventBus.$on(AudioServiceEventNames.EventPlay, onAudioServiceEventPlay);
 
   EventBus.$on(AudioServiceEventNames.Stop, onAudioServiceStop);
+  selectedWorkspace.value.commandService.notify();
 });
 
 onBeforeUnmount(() => {
@@ -1131,6 +1251,8 @@ onBeforeUnmount(() => {
 
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
+  EventBus.$off(IpcRendererChannels.SetCanUndo, onSetCanUndo);
+  EventBus.$off(IpcRendererChannels.SetCanRedo, onSetCanRedo);
 
   EventBus.$off(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
   EventBus.$off(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
@@ -1225,24 +1347,18 @@ async function initialize() {
   try {
     const fontLoader = (document as any).fonts;
 
-    const loadSystemFontsPromise = ipcService
-      .getSystemFonts()
-      .then((systemFonts) => (fonts.value = systemFonts));
+    const loadSystemFontsPromise = fontCatalog
+      .init()
+      .then(() => (fonts.value = fontCatalog.systemFamilies()));
+    const bundledFontLoadPromises = getBundledFontLoadDescriptors().map(
+      (descriptor) => fontLoader.load(descriptor),
+    );
 
-    // Must load all fonts before loading any documents,
-    // otherwise the text measurements will be wrong
+    // Must load all bundled faces before loading any documents, otherwise the
+    // first text measurements can use fallback metrics.
     await Promise.all([
       loadSystemFontsPromise,
-      fontLoader.load('1rem "GFS Didot"'),
-      fontLoader.load('1rem Neanes'),
-      fontLoader.load('1rem NeanesStathisSeries'),
-      fontLoader.load('1rem NeanesRTL'),
-      fontLoader.load('1rem NeanesLegacy'),
-      fontLoader.load('1rem NeanesStathisSeriesLegacy'),
-      fontLoader.load('1rem NeanesRTLLegacy'),
-      fontLoader.load('1rem "Noto Naskh Arabic"'),
-      fontLoader.load('1rem "Old Standard"'),
-      fontLoader.load('1rem "Source Serif"'),
+      ...bundledFontLoadPromises,
       fontLoader.ready,
     ]);
 
@@ -1289,6 +1405,15 @@ function getFooterHorizontalRuleStyle(footerHeight: number) {
 }
 
 function getLyricStyle(element: NoteElement) {
+  const resolvedLyricsFont = resolveFontStyle(
+    element.lyricsUseDefaultStyle
+      ? score.value.pageSetup.lyricsDefaultFontFamily
+      : element.lyricsFontFamily,
+    element.lyricsUseDefaultStyle
+      ? score.value.pageSetup.lyricsDefaultFontStyle
+      : element.lyricsFontStyle,
+  );
+
   return {
     top: withZoom(element.lyricsVerticalOffset),
     paddingLeft:
@@ -1306,21 +1431,12 @@ function getLyricStyle(element: NoteElement) {
     fontSize: element.lyricsUseDefaultStyle
       ? withZoom(score.value.pageSetup.lyricsDefaultFontSize)
       : withZoom(element.lyricsFontSize),
-    fontFamily: element.lyricsUseDefaultStyle
-      ? getFontFamilyWithFallback(
-          score.value.pageSetup.lyricsDefaultFontFamily,
-          score.value.pageSetup.neumeDefaultFontFamily,
-        )
-      : getFontFamilyWithFallback(
-          element.lyricsFontFamily,
-          score.value.pageSetup.neumeDefaultFontFamily,
-        ),
-    fontWeight: element.lyricsUseDefaultStyle
-      ? score.value.pageSetup.lyricsDefaultFontWeight
-      : element.lyricsFontWeight,
-    fontStyle: element.lyricsUseDefaultStyle
-      ? score.value.pageSetup.lyricsDefaultFontStyle
-      : element.lyricsFontStyle,
+    fontFamily: getFontFamilyWithFallback(
+      resolvedLyricsFont.cssFontFamily,
+      score.value.pageSetup.neumeDefaultFontFamily,
+    ),
+    fontWeight: resolvedLyricsFont.cssFontWeight,
+    fontStyle: resolvedLyricsFont.cssFontStyle,
     textDecoration: element.lyricsUseDefaultStyle
       ? undefined
       : element.lyricsTextDecoration,
@@ -1530,6 +1646,142 @@ function getTokenMetadata(pageIndex: number): TokenMetadata {
 
 function getElementIndex(element: ScoreElement) {
   return element.index;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getFirstElementForPage(pageNumber: number) {
+  const page = filteredPages.value[pageNumber - 1];
+
+  if (!page) {
+    return null;
+  }
+
+  return (
+    page.lines
+      .flatMap((line) => line.elements)
+      .find((element) => element.elementType !== ElementType.Empty) ?? null
+  );
+}
+
+function getFirstLineNumberForPage(page: Page | undefined) {
+  if (!page) {
+    return null;
+  }
+
+  const lineIndex = page.lines.findIndex((line) =>
+    line.elements.some((element) => element.elementType !== ElementType.Empty),
+  );
+
+  return lineIndex >= 0 ? lineIndex + 1 : null;
+}
+
+function getSectionNumberForPage(pageNumber: number) {
+  const anchorIndex = getSectionAnchorIndexForPage(pageNumber);
+
+  return getSectionNumberForElementIndex(anchorIndex);
+}
+
+function getSectionAnchorIndexForPage(pageNumber: number) {
+  const page = filteredPages.value[pageNumber - 1];
+
+  if (page == null) {
+    return 0;
+  }
+
+  const firstPageElement = getPageElements(page).find(
+    (element) => element.elementType !== ElementType.Empty,
+  );
+
+  if (firstPageElement) {
+    return firstPageElement.index;
+  }
+
+  for (let pageIndex = pageNumber - 2; pageIndex >= 0; pageIndex--) {
+    const prevPage = filteredPages.value[pageIndex];
+
+    for (
+      let lineIndex = prevPage.lines.length - 1;
+      lineIndex >= 0;
+      lineIndex--
+    ) {
+      const line = prevPage.lines[lineIndex];
+
+      for (
+        let elementIndex = line.elements.length - 1;
+        elementIndex >= 0;
+        elementIndex--
+      ) {
+        const element = line.elements[elementIndex];
+
+        if (element.elementType !== ElementType.Empty) {
+          return element.index;
+        }
+      }
+    }
+  }
+
+  return 0;
+}
+
+function getPageElements(page: Page) {
+  return page.lines.flatMap((line) => line.elements);
+}
+
+function getSectionNumberForElementIndex(elementIndex: number) {
+  const scoreElements = elements.value.filter(
+    (element) => element.elementType !== ElementType.Empty,
+  );
+
+  if (scoreElements.length === 0) {
+    return 1;
+  }
+
+  const sectionMarkers = scoreElements.filter(hasSectionName);
+  if (sectionMarkers.length === 0) {
+    return 1;
+  }
+
+  const firstScoreElementIndex = scoreElements[0].index;
+  const hasDefaultSectionBeforeFirstMarker =
+    sectionMarkers[0].index > firstScoreElementIndex;
+  const markersAtOrBeforeElement = sectionMarkers.filter(
+    (element) => element.index <= elementIndex,
+  ).length;
+
+  if (markersAtOrBeforeElement === 0) {
+    return 1;
+  }
+
+  return (
+    markersAtOrBeforeElement + (hasDefaultSectionBeforeFirstMarker ? 1 : 0)
+  );
+}
+
+function getSectionCount() {
+  const scoreElements = elements.value.filter(
+    (element) => element.elementType !== ElementType.Empty,
+  );
+
+  if (scoreElements.length === 0) {
+    return 1;
+  }
+
+  const sectionMarkers = scoreElements.filter(hasSectionName);
+  if (sectionMarkers.length === 0) {
+    return 1;
+  }
+
+  return (
+    sectionMarkers.length +
+    (sectionMarkers[0].index > scoreElements[0].index ? 1 : 0)
+  );
+}
+
+function hasSectionName(element: ScoreElement) {
+  return (element.sectionName ?? '').trim().length > 0;
 }
 
 function setSelectionRange(element: ScoreElement) {
@@ -1790,7 +2042,6 @@ function addQuantitativeNeume(
   element.lyricsFontFamily = score.value.pageSetup.lyricsDefaultFontFamily;
   element.lyricsFontSize = score.value.pageSetup.lyricsDefaultFontSize;
   element.lyricsFontStyle = score.value.pageSetup.lyricsDefaultFontStyle;
-  element.lyricsFontWeight = score.value.pageSetup.lyricsDefaultFontWeight;
   element.lyricsStrokeWidth = score.value.pageSetup.lyricsDefaultStrokeWidth;
 
   element.quantitativeNeume = quantitativeNeume;
@@ -2021,7 +2272,6 @@ function addDropCap(after: boolean) {
   element.fontFamily = score.value.pageSetup.dropCapDefaultFontFamily;
   element.fontSize = score.value.pageSetup.dropCapDefaultFontSize;
   element.strokeWidth = score.value.pageSetup.dropCapDefaultStrokeWidth;
-  element.fontWeight = score.value.pageSetup.dropCapDefaultFontWeight;
   element.fontStyle = score.value.pageSetup.dropCapDefaultFontStyle;
   element.lineHeight = score.value.pageSetup.dropCapDefaultLineHeight;
   element.lineSpan = score.value.pageSetup.dropCapDefaultLineSpan;
@@ -2044,6 +2294,26 @@ function addDropCap(after: boolean) {
 
 function onClickAddImage() {
   EventBus.$emit(IpcRendererChannels.OpenImageDialog);
+}
+
+function onClickOpenScore() {
+  EventBus.$emit(IpcRendererChannels.OpenScoreDialog);
+}
+
+function onClickPrintScore() {
+  if (isBrowser.value) {
+    window.print();
+  } else {
+    void onFileMenuPrint();
+  }
+}
+
+function onSetCanUndo(value: boolean) {
+  canUndo.value = value;
+}
+
+function onSetCanRedo(value: boolean) {
+  canRedo.value = value;
 }
 
 function togglePageBreak() {
@@ -5333,12 +5603,30 @@ function deletePreviousElement() {
   }
 }
 
+function getResizableTextDefaultSnapshot(pageSetup: PageSetup) {
+  return {
+    lyricsDefaultFontFamily: pageSetup.lyricsDefaultFontFamily,
+    lyricsDefaultFontSize: pageSetup.lyricsDefaultFontSize,
+    lyricsDefaultFontStyle: pageSetup.lyricsDefaultFontStyle,
+    textBoxDefaultFontFamily: pageSetup.textBoxDefaultFontFamily,
+    textBoxDefaultFontSize: pageSetup.textBoxDefaultFontSize,
+    textBoxDefaultFontStyle: pageSetup.textBoxDefaultFontStyle,
+    textBoxDefaultLineHeight: pageSetup.textBoxDefaultLineHeight,
+  };
+}
+
+function resizableTextDefaultsChanged(previous: PageSetup, current: PageSetup) {
+  return !shallowEquals(
+    getResizableTextDefaultSnapshot(previous),
+    getResizableTextDefaultSnapshot(current),
+  );
+}
+
 function updatePageSetup(pageSetup: PageSetup) {
-  const needToRecalcRichTextBoxes =
-    pageSetup.textBoxDefaultFontFamily !=
-      score.value.pageSetup.textBoxDefaultFontFamily ||
-    pageSetup.textBoxDefaultFontSize !=
-      score.value.pageSetup.textBoxDefaultFontSize;
+  const needToRecalcRichTextBoxes = resizableTextDefaultsChanged(
+    score.value.pageSetup,
+    pageSetup,
+  );
 
   const updateCommands: Command[] = [
     pageSetupCommandFactory.create('update-properties', {
@@ -6214,16 +6502,14 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
     element.fontFamily = score.value.pageSetup.lyricsDefaultFontFamily;
     element.fontSize = score.value.pageSetup.lyricsDefaultFontSize;
     element.strokeWidth = score.value.pageSetup.lyricsDefaultStrokeWidth;
-    element.bold = score.value.pageSetup.lyricsDefaultFontWeight === '700';
-    element.italic = score.value.pageSetup.lyricsDefaultFontStyle === 'italic';
+    element.fontStyle = score.value.pageSetup.lyricsDefaultFontStyle;
   } else {
     element.color = score.value.pageSetup.textBoxDefaultColor;
     element.fontFamily = score.value.pageSetup.textBoxDefaultFontFamily;
     element.fontSize = score.value.pageSetup.textBoxDefaultFontSize;
     element.strokeWidth = score.value.pageSetup.textBoxDefaultStrokeWidth;
     element.lineHeight = score.value.pageSetup.textBoxDefaultLineHeight;
-    element.bold = score.value.pageSetup.textBoxDefaultFontWeight === '700';
-    element.italic = score.value.pageSetup.textBoxDefaultFontStyle === 'italic';
+    element.fontStyle = score.value.pageSetup.textBoxDefaultFontStyle;
   }
 
   addScoreElement(element, selectedElementIndex.value);
@@ -6445,11 +6731,9 @@ async function onFileMenuSaveAs() {
 
 function onFileMenuUndo() {
   const currentIndex = selectedElementIndex.value;
-
-  const textBoxDefaultFontFamilyPrevious =
-    score.value.pageSetup.textBoxDefaultFontFamily;
-  const textBoxDefaultFontSizePrevious =
-    score.value.pageSetup.textBoxDefaultFontSize;
+  const pageSetupPrevious = getResizableTextDefaultSnapshot(
+    score.value.pageSetup,
+  );
 
   commandService.value.undo();
 
@@ -6470,10 +6754,10 @@ function onFileMenuUndo() {
   }
 
   if (
-    textBoxDefaultFontFamilyPrevious !=
-      score.value.pageSetup.textBoxDefaultFontFamily ||
-    textBoxDefaultFontSizePrevious !=
-      score.value.pageSetup.textBoxDefaultFontSize
+    !shallowEquals(
+      pageSetupPrevious,
+      getResizableTextDefaultSnapshot(score.value.pageSetup),
+    )
   ) {
     recalculateRichTextBoxHeights();
     recalculateTextBoxHeights();
@@ -6484,11 +6768,9 @@ function onFileMenuUndo() {
 
 function onFileMenuRedo() {
   const currentIndex = selectedElementIndex.value;
-
-  const textBoxDefaultFontFamilyPrevious =
-    score.value.pageSetup.textBoxDefaultFontFamily;
-  const textBoxDefaultFontSizePrevious =
-    score.value.pageSetup.textBoxDefaultFontSize;
+  const pageSetupPrevious = getResizableTextDefaultSnapshot(
+    score.value.pageSetup,
+  );
 
   commandService.value.redo();
 
@@ -6509,10 +6791,10 @@ function onFileMenuRedo() {
   }
 
   if (
-    textBoxDefaultFontFamilyPrevious !=
-      score.value.pageSetup.textBoxDefaultFontFamily ||
-    textBoxDefaultFontSizePrevious !=
-      score.value.pageSetup.textBoxDefaultFontSize
+    !shallowEquals(
+      pageSetupPrevious,
+      getResizableTextDefaultSnapshot(score.value.pageSetup),
+    )
   ) {
     recalculateRichTextBoxHeights();
     recalculateTextBoxHeights();
@@ -6808,8 +7090,7 @@ function createDefaultScore() {
   title.fontSize = score.pageSetup.textBoxDefaultFontSize;
   title.strokeWidth = score.pageSetup.textBoxDefaultStrokeWidth;
   title.lineHeight = score.pageSetup.textBoxDefaultLineHeight;
-  title.bold = score.pageSetup.textBoxDefaultFontWeight === '700';
-  title.italic = score.pageSetup.textBoxDefaultFontStyle === 'italic';
+  title.fontStyle = score.pageSetup.textBoxDefaultFontStyle;
   title.height = Math.round(
     TextMeasurementService.getFontHeight(title.computedFont) * 1.2,
   );
@@ -6987,9 +7268,18 @@ function renderTabLabel(tab: Tab) {
       :audio-options="audioOptions"
       :playback-time="selectedWorkspace.playbackTime"
       :playback-bpm="selectedWorkspace.playbackBpm"
-      :current-page-number="currentPageNumber"
-      :page-count="pageCount"
       :neume-keyboard="neumeKeyboard"
+      :can-undo="canUndo"
+      :can-redo="canRedo"
+      @new-score="onFileMenuNewScore"
+      @open-score="onClickOpenScore"
+      @save-score="onFileMenuSave"
+      @print-score="onClickPrintScore"
+      @cut="onFileMenuCut"
+      @copy="onFileMenuCopy"
+      @paste="onFileMenuPaste"
+      @undo="onFileMenuUndo"
+      @redo="onFileMenuRedo"
       @update:zoom="updateZoom"
       @update:zoom-to-fit="updateZoomToFit"
       @update:audio-options-speed="updateAudioOptionsSpeed"
@@ -6998,6 +7288,8 @@ function renderTabLabel(tab: Tab) {
       @toggle-page-break="togglePageBreak"
       @toggle-line-break="toggleLineBreak($event)"
       @add-tempo="addTempo"
+      @add-alternate-line="onFileMenuInsertAlternateLine"
+      @add-annotation="onFileMenuInsertAnnotation"
       @add-drop-cap="addDropCap(false)"
       @add-mode-key="onFileMenuInsertModeKey"
       @add-text-box="onFileMenuInsertTextBox"
@@ -7006,6 +7298,8 @@ function renderTabLabel(tab: Tab) {
       @delete-selected-element="deleteSelectedElement"
       @click="selectedLyrics = null"
       @play-audio="playAudio"
+      @open-page-setup="onFileMenuPageSetup"
+      @find="onFileMenuFind"
       @open-playback-settings="openPlaybackSettingsDialog"
     />
     <div class="content">
@@ -8059,7 +8353,11 @@ function renderTabLabel(tab: Tab) {
               ? score.pageSetup.lyricsDefaultFontSize
               : score.pageSetup.textBoxDefaultFontSize
           "
-          :default-font-family="score.pageSetup.textBoxDefaultFontFamily"
+          :default-font-family="
+            inspectorContext.element.inline
+              ? score.pageSetup.lyricsDefaultFontFamily
+              : score.pageSetup.textBoxDefaultFontFamily
+          "
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'annotation'">
@@ -8079,6 +8377,53 @@ function renderTabLabel(tab: Tab) {
           @update="updateDropCap(inspectorContext.element, $event)"
         />
       </template>
+    </div>
+    <div
+      class="status-bar flex w-full flex-none items-center gap-2 bg-legacy-chrome-menu-surface p-1"
+    >
+      <ButtonGroup>
+        <ButtonGroupText>
+          {{
+            $t(($) => $.toolbar.status.pageNumber, {
+              ns: 'toolbar',
+              currentPageNumber: statusPageNumber,
+              pageCount: statusPageCount,
+            })
+          }}
+        </ButtonGroupText>
+        <ButtonGroupText>
+          {{
+            $t(($) => $.toolbar.status.section, {
+              ns: 'toolbar',
+              sectionNumber: statusSectionNumber,
+              sectionCount: statusSectionCount,
+            })
+          }}
+        </ButtonGroupText>
+      </ButtonGroup>
+      <ButtonGroup>
+        <ButtonGroupText>
+          {{
+            $t(($) => $.toolbar.status.line, {
+              ns: 'toolbar',
+              lineNumber: statusLinePosition.lineNumber,
+              lineCount: statusLinePosition.lineCount,
+            })
+          }}
+        </ButtonGroupText>
+        <ButtonGroupText>
+          {{
+            $t(($) => $.toolbar.status.column, {
+              ns: 'toolbar',
+              columnNumber: statusColumnPosition.columnNumber,
+              columnCount: statusColumnPosition.columnCount,
+            })
+          }}
+        </ButtonGroupText>
+        <ButtonGroupText v-if="statusNeumeNoteDisplay">
+          {{ statusNeumeNoteDisplay }}
+        </ButtonGroupText>
+      </ButtonGroup>
     </div>
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
@@ -8656,6 +9001,7 @@ function renderTabLabel(tab: Tab) {
   .workspace-tab-container,
   .workspace-tab-new-button,
   .contextual-toolbar-panel,
+  .status-bar,
   .main-toolbar,
   .search-text-container,
   .section-name,

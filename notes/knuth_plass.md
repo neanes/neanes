@@ -137,15 +137,15 @@ The font-size-scaled engraving default supplies the default gap, and `neumeDefau
 The stretch and shrink budgets are also scaled from the active font's `standardGlue` defaults.
 Users may also set the inter-note spacing adjustment to a negative value, so that successive neumes visibly overlap and the layout becomes tighter.
 When the computed inline spacing is negative, the glue keeps its negative natural width so that the overlap remains visible, but the stretch and shrink budgets are floored at small non-negative values: stretch at 0.1 px and shrink at 0.
-The same floors apply uniformly to every glue derived from fixed inline spacing: the standard glue's stretch and shrink, note pre-break glue's stretch and shrink, martyria glue's shrink, and the right-martyria glue's shrink.
-Martyria glue also uses these floors, but its main width, stretch, and shrink come from the martyria engraving defaults described below.
+The same floors apply uniformly to every inter-element spacing glue: the standard glue's stretch and shrink, the note pre-break glue's stretch and shrink, the martyria glue's stretch and shrink, and the right-martyria glue's shrink.
+The martyria glue's base width, stretch, and shrink come from the martyria engraving defaults described below rather than from the inline spacing.
 These floors preserve the Knuth-Plass invariants while keeping the user-chosen overlap intact, because ordinary glues no longer stretch enough to push neumes apart and any line-end slack is absorbed by the right-martyria glue's `MAX_COST` stretch instead.
 The 0.1 px stretch floor is a tiny positive epsilon rather than zero so that every line has at least some stretchability, which keeps the adjustment ratio finite and the line-breaking problem well-defined.
 Without this floor, a line that contains no martyria would have a total stretch of zero, and `breakLines` could only treat its natural width as feasible.
 At 0.1 px per glue, the cumulative stretch across a typical line is far below the neume scale and so has no visible effect on the layout.
 
-The active font's OpenType shaping is now applied implicitly when each note's neume text run is measured, so contextual substitutions contribute their actual rendered widths without a separate substitution-resolution pass in layout.
-Contextual substitutions affect measured glyph-run width only; inter-neume spacing comes from fixed inline spacing rather than substituted glyph leading or trailing metadata.
+The active font's OpenType shaping is applied implicitly when each note's neume text run is measured, so contextual substitutions contribute their actual rendered widths without separately resolving the substitutions first.
+Layout resolves contextual substitutions explicitly where it needs the substituted glyph identities themselves, for example when measuring collision ink, but inter-neume spacing comes from the fixed inline spacing rather than from substituted glyph leading or trailing metadata.
 A vareia contributes fixed internal spacing before the main neume; in right-to-left mode the visual order remains vareia followed by the main neume when read from right to left.
 
 Visible barlines also participate in spacing.
@@ -243,7 +243,7 @@ $$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(B_i) \qua
 
 Here:
 
-- $B_i$ is the neume width. When the preceding martyria has a transferable bar, an anonymous spacer box of the bar width plus fixed leading clearance is inserted before $B_i$ (see above); $B_i$ itself is unchanged.
+- $B_i$ is the neume width. An anonymous spacer box may be inserted before $B_i$ to hold a break-only leading reservation: the bar width plus fixed leading clearance when the preceding martyria has a transferable bar (see above), and a leading-hyphen reservation when the preceding note is hyphenated (see below). $B_i$ itself is unchanged.
 - $L_i$ is the left projection, fixed and unbreakable, and omitted when zero.
 - $s_0$ is the fixed preferred spacing between successive notes.
 - $s^+$ and $s^-$ are the standard stretch and shrink budgets for an inter-note gap.
@@ -262,6 +262,14 @@ The vanishing stretch glue stays on the current line and contributes $s^+$ of st
 The left projection $\text{glue}(L_{i+1}, 0, 0)$ of the next note protects the left edge of the new line.
 The penalty width $w_i$ remains the break-only quantity: it cannot live in the cancellation glue, because that glue disappears at breaks.
 Its job is to reserve space for the right projection, melisma lyric overhang, terminal right-barline clearance, and measure-bar transfers that matter only at line end.
+
+When a hyphenated note is immediately followed by a note that carries lyrics, and a break is taken between them, a lyric hyphen is drawn at the start of the next line, before that lyric.
+Like the measure-bar transfer, this reserves space at the start of the next line rather than at the end of the current one, so it uses a spacer-and-cancel pattern rather than the penalty width $w_i$.
+The boundary's cancellation glue is narrowed by the extra leading width the line-start hyphen needs, and an anonymous spacer box of that width is inserted before the next note's box.
+On the same line the narrowed glue and the spacer cancel, leaving the note's position unchanged.
+At a break the cancellation glue is skipped at line start while the spacer survives, reserving fixed leading room for the hyphen.
+The reserved width is $\max(0,\ \texttt{lyricsMinimumSpacing} + \textit{hyphenWidth} - L_{i+1} - \sigma_{i+1})$, where $\sigma_{i+1}$ is the next lyric's text-start offset from the neume's left edge.
+Nothing is reserved when $L_{i+1}$ and that offset already leave room for the hyphen and its minimum spacing.
 
 If a paragraph ends immediately after a note, `endParagraph` materializes that note's right-edge reservation, the larger of the right projection and the melisma overhang, into the finishing glue width.
 It also reserves the clearance before a terminal right barline.

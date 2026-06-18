@@ -232,6 +232,12 @@ $$L_i = \max(0, -h_i), \qquad R_i = 0.$$
 This means that the lyric may continue under later melisma neumes, so the full overhang is _not_ placed in $R_i$.
 Instead, any part of the running melisma that still extends beyond the current neume is tracked separately in `melismaLyricsEndPx`.
 
+The coefficient on $h_i$ differs between the two modes by design, because $h_i$ is the horizontal padding applied to the lyric box rather than the lyric's net displacement.
+For centered lyrics the box is centered under the neume, so a padding of $h_i$ moves the lyric center by only $h_i/2$; the centered projections above therefore keep $h_i$ inside the same $/2$ as $W^\ell_i - W^n_i$, and a positive $h_i$ shifts the lyric right.
+For left-aligned melisma starts the box is left-aligned, so the same padding moves the lyric's left edge by the full $h_i$, which is why $L_i = \max(0, -h_i)$ carries no factor of two.
+The code paths that accumulate $h_i$ -- vareia, measure bars, running elaphron, and the punctuation adjustments -- all add the full prefix or punctuation width and rely on the readers to apply the centering halving.
+Rewriting the centered projections to apply $h_i$ at full width (for example $L_i = \max(0, (W^\ell_i - W^n_i)/2 - h_i)$) would therefore double every one of those corrections rather than fix a discrepancy.
+
 ### Paragraph encoding
 
 Let $B_i$ be the neume width, $c_i$ the break cost, $w_i$ the break-only reservation at breakpoint $i$, and $m_i$ the minimum same-line width between notes $i$ and $i{+}1$.
@@ -245,6 +251,7 @@ Here:
 
 - $B_i$ is the neume width. An anonymous spacer box may be inserted before $B_i$ to hold a break-only leading reservation: the bar width plus fixed leading clearance when the preceding martyria has a transferable bar (see above), and a leading-hyphen reservation when the preceding note is hyphenated (see below). $B_i$ itself is unchanged.
 - $L_i$ is the left projection, fixed and unbreakable, and omitted when zero.
+- The two $\text{penalty}(\infty)$ items are unbreakable barriers. The leading one protects $L_i$ at a line start. `positionItems` discards leading glue after a break only up to the first box or forbidden ($\infty$) penalty, so the leading penalty keeps $\text{glue}(L_i, 0, 0)$ out of the discarded region and it is counted rather than skipped. It is emitted together with $L_i$ and omitted when $L_i$ is zero; the note's first box then stops the discard scan instead. The second $\text{penalty}(\infty)$, after $\text{box}(B_i)$, forces the only candidate break in the boundary to be $\text{penalty}(c_i, w_i)$ rather than the glue that immediately follows the box.
 - $s_0$ is the fixed preferred spacing between successive notes.
 - $s^+$ and $s^-$ are the standard stretch and shrink budgets for an inter-note gap.
 - $c_i$ is the break cost: 0 for a normal break, $\infty$ to prohibit a break, or an intermediate value to discourage one.
@@ -257,9 +264,9 @@ The current implementation allows negative values only in the width $m_i$, when 
 In other words, all stretchability lives in the first glue, while the second glue cancels width only.
 The implementation does not use a second glue of the form $\text{glue}(m_i, -s^+, -s^-)$.
 
-At a break, the cancellation glue becomes leading glue on the next line and is skipped by `positionItems`, so $m_i$ vanishes.
+At a break, the cancellation glue becomes leading glue on the next line. It lies before the next note's leading $\text{penalty}(\infty)$ barrier, so it falls within the discarded region and is skipped by `positionItems`, and $m_i$ vanishes.
 The vanishing stretch glue stays on the current line and contributes $s^+$ of stretch at line end.
-The left projection $\text{glue}(L_{i+1}, 0, 0)$ of the next note protects the left edge of the new line.
+The next note's left projection $\text{glue}(L_{i+1}, 0, 0)$ lies past that barrier, so it is not discarded and protects the left edge of the new line.
 The penalty width $w_i$ remains the break-only quantity: it cannot live in the cancellation glue, because that glue disappears at breaks.
 Its job is to reserve space for the right projection, melisma lyric overhang, terminal right-barline clearance, and measure-bar transfers that matter only at line end.
 

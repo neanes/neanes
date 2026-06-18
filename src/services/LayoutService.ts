@@ -258,6 +258,13 @@ interface LayoutWorkspace {
   // line and reserves fixed leading space for the transferred bar.
   pendingMartyriaBarTransferWidth: number;
 
+  // When a hyphenated note is followed immediately by a note with lyrics, the
+  // previous note's post-break glue is reduced by any extra leading room
+  // needed to render a line-start lyric hyphen before the next lyric.
+  // An anonymous spacer box of the same width is inserted before the next
+  // note so same-line positions cancel while a broken line keeps the room.
+  pendingLeadingLyricHyphenReservationWidth: number;
+
   // debug
   loggingEnabled: boolean;
 }
@@ -265,6 +272,11 @@ interface LayoutWorkspace {
 interface LyricOverhangs {
   left: number;
   right: number;
+}
+
+interface LeadingLyricHyphenGeometry {
+  hyphenOffset: number;
+  reservationWidth: number;
 }
 
 interface NoteGlyphBox {
@@ -331,6 +343,7 @@ export class LayoutService {
       pendingDropCapWidthPx: 0,
       pendingDropCapContinuationLines: 0,
       pendingMartyriaBarTransferWidth: 0,
+      pendingLeadingLyricHyphenReservationWidth: 0,
       loggingEnabled: false,
     };
 
@@ -732,15 +745,20 @@ export class LayoutService {
           const martyriaBarTransferWidth =
             layoutWorkspace.pendingMartyriaBarTransferWidth;
           layoutWorkspace.pendingMartyriaBarTransferWidth = 0;
+          const leadingLyricHyphenReservationWidth =
+            layoutWorkspace.pendingLeadingLyricHyphenReservationWidth;
+          layoutWorkspace.pendingLeadingLyricHyphenReservationWidth = 0;
 
           // Insert the anonymous spacer box immediately so that neumesEndPx
-          // includes the bar transfer width before any lyric or projection
-          // math. On the same line the spacer cancels the martyria's reduced
-          // post-break glue, leaving the note's position unchanged. At a
-          // break the spacer remains at the start of the next line and
-          // reserves fixed leading space for the transferred bar.
-          if (martyriaBarTransferWidth > 0) {
-            this.addAnonymousBox(martyriaBarTransferWidth, layoutWorkspace);
+          // includes any pending break-only leading reservation before lyric
+          // or projection math. On the same line these spacers cancel equal
+          // reductions in the previous boundary's post-break glue, leaving the
+          // note's position unchanged. At a break the spacer remains at the
+          // start of the next line and reserves real room.
+          const lineStartReservationWidth =
+            martyriaBarTransferWidth + leadingLyricHyphenReservationWidth;
+          if (lineStartReservationWidth > 0) {
+            this.addAnonymousBox(lineStartReservationWidth, layoutWorkspace);
           }
 
           // Knuth-Plass encoding for notes with lyrics.
@@ -855,6 +873,31 @@ export class LayoutService {
           const nextElement = this.getElementAt(elements, i + 1);
           const nextNoteElement = this.getNoteIfPresentAt(elements, i + 1);
           const afterNextNoteElement = this.getNoteIfPresentAt(elements, i + 2);
+          let nextLeadingLyricHyphenReservation = 0;
+          if (nextNoteElement != null) {
+            nextNoteElement.leadingLyricHyphenOffset = 0;
+            nextNoteElement.leadingLyricHyphenReservationWidth = 0;
+          }
+          if (
+            noteElement.isHyphen &&
+            nextNoteElement != null &&
+            nextNoteElement.lyricsWidth > 0
+          ) {
+            const leadingLyricHyphenGeometry =
+              this.getLeadingLyricHyphenGeometry(
+                nextNoteElement,
+                pageSetup,
+                hyphenWidthForThisElement,
+              );
+            nextNoteElement.leadingLyricHyphenOffset =
+              leadingLyricHyphenGeometry.hyphenOffset;
+            nextNoteElement.leadingLyricHyphenReservationWidth =
+              leadingLyricHyphenGeometry.reservationWidth;
+            nextLeadingLyricHyphenReservation =
+              leadingLyricHyphenGeometry.reservationWidth;
+          }
+          layoutWorkspace.pendingLeadingLyricHyphenReservationWidth =
+            nextLeadingLyricHyphenReservation;
 
           const m_i = this.calculateInterNoteSpacing(
             noteElement,
@@ -909,7 +952,7 @@ export class LayoutService {
             preBreakGlue,
             breakCost,
             penaltyWidth,
-            this.fixedGlue(m_i),
+            this.fixedGlue(m_i - nextLeadingLyricHyphenReservation),
           );
 
           break;
@@ -2130,6 +2173,9 @@ export class LayoutService {
       noteElement.computedMeasureBarRightOffsetX = 0;
       noteElement.computedMeasureBarLeftLeadingSpacing = 0;
       noteElement.computedMeasureBarRightTrailingSpacing = 0;
+      noteElement.showLeadingLyricHyphen = false;
+      noteElement.leadingLyricHyphenOffset = 0;
+      noteElement.leadingLyricHyphenReservationWidth = 0;
 
       noteElement.computedIsonOffsetY = noteElement.isonOffsetY;
       noteElement.lyricsFontHeight = this.getNoteLyricsFontHeightFromCache(
@@ -2312,6 +2358,24 @@ export class LayoutService {
     return {
       leftProjection: Math.max(0, (w - n - h) / 2),
       rightProjection: Math.max(0, (w - n + h) / 2),
+    };
+  }
+
+  private static getLeadingLyricHyphenGeometry(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    hyphenWidth: number,
+  ): LeadingLyricHyphenGeometry {
+    const gap = pageSetup.lyricsMinimumSpacing;
+    const lyricTextStartOffset =
+      noteElement.lyricsWidth === 0
+        ? 0
+        : Math.max(0, (noteElement.neumeWidth - noteElement.lyricsWidth) / 2);
+    const hyphenOffset = lyricTextStartOffset - gap - hyphenWidth;
+
+    return {
+      hyphenOffset,
+      reservationWidth: Math.max(0, -hyphenOffset),
     };
   }
 
@@ -3764,6 +3828,7 @@ export class LayoutService {
     workspace.pendingDropCapWidthPx = 0;
     workspace.pendingDropCapContinuationLines = 0;
     workspace.pendingMartyriaBarTransferWidth = 0;
+    workspace.pendingLeadingLyricHyphenReservationWidth = 0;
   }
 
   private static forceBreak(workspace: LayoutWorkspace) {
@@ -4521,6 +4586,24 @@ export class LayoutService {
           firstElementOnNextLine = pages[pageIndex + 1].lines[0].elements[0];
         }
 
+        let lastElementOnPreviousLine: ScoreElement | null = null;
+
+        if (lineIndex > 0 && page.lines[lineIndex - 1].elements.length > 0) {
+          const previousLine = page.lines[lineIndex - 1];
+          lastElementOnPreviousLine =
+            previousLine.elements[previousLine.elements.length - 1];
+        } else if (
+          lineIndex === 0 &&
+          pageIndex > 0 &&
+          pages[pageIndex - 1].lines.length > 0
+        ) {
+          const previousPage = pages[pageIndex - 1];
+          const previousLine =
+            previousPage.lines[previousPage.lines.length - 1];
+          lastElementOnPreviousLine =
+            previousLine.elements[previousLine.elements.length - 1];
+        }
+
         const noteElements = line.elements.filter(
           (x) => x.elementType === ElementType.Note,
         ) as NoteElement[];
@@ -4544,8 +4627,21 @@ export class LayoutService {
           // they may be stale
           element.melismaText = '';
           element.hyphenOffsets = [];
+          element.showLeadingLyricHyphen = false;
           element.melismaWidth = 0;
           element.isFullMelisma = isIntermediateMelismaAtStartOfLine;
+
+          if (
+            index === indexOfFirstNote &&
+            element.lyricsWidth > 0 &&
+            lastElementOnPreviousLine?.elementType === ElementType.Note
+          ) {
+            const previousNoteElement =
+              lastElementOnPreviousLine as NoteElement;
+            if (previousNoteElement.isHyphen) {
+              element.showLeadingLyricHyphen = true;
+            }
+          }
 
           if (
             !pageSetup.disableGreekMelismata &&

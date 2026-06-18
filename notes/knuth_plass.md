@@ -127,6 +127,8 @@ The 19th-century publications also use several techniques to improve the quality
 
 ## Box/glue/penalty algebra
 
+Layout proceeds in two phases. In Phase 1, the code builds the box/glue/penalty encoding described in this section -- inserting spacers and adjusting glue widths -- and the line breaker chooses the breakpoints. In Phase 2, once the breakpoints have been chosen, the code positions the items for rendering: shifting a note left to absorb a transferred measure bar, adding line-start indentation, or placing a right-aligned martyria flush right.
+
 ### Lyricless scores
 
 Consider first a lyricless score of Byzantine music.
@@ -219,7 +221,7 @@ The paragraph encoding itself is fixed.
 Only $m_i$, $w_i$, and the break cost vary from one boundary to the next.
 
 For each note, the code first computes the lyric geometry.
-Let $W^n$ be the neume width, $W^\ell$ the lyric width, and $h$ the lyric horizontal offset.
+Let $W^n$ be the neume width, $W^\ell$ the lyric width, and $h$ the lyric horizontal padding.
 
 For centered lyrics, the projections are
 
@@ -235,12 +237,12 @@ Instead, any part of the running melisma that still extends beyond the current n
 The coefficient on $h_i$ differs between the two modes by design, because $h_i$ is the horizontal padding applied to the lyric box rather than the lyric's net displacement.
 For centered lyrics the box is centered under the neume, so a padding of $h_i$ moves the lyric center by only $h_i/2$; the centered projections above therefore keep $h_i$ inside the same $/2$ as $W^\ell_i - W^n_i$, and a positive $h_i$ shifts the lyric right.
 For left-aligned melisma starts the box is left-aligned, so the same padding moves the lyric's left edge by the full $h_i$, which is why $L_i = \max(0, -h_i)$ carries no factor of two.
-The code paths that accumulate $h_i$ -- vareia, measure bars, running elaphron, and the punctuation adjustments -- all add the full prefix or punctuation width and rely on the readers to apply the centering halving.
+The code paths that accumulate $h_i$ -- vareia, measure bars, running elaphron, and the punctuation adjustments -- all add the full prefix or punctuation width and rely on the centered projections to apply the centering halving.
 Rewriting the centered projections to apply $h_i$ at full width (for example $L_i = \max(0, (W^\ell_i - W^n_i)/2 - h_i)$) would therefore double every one of those corrections rather than fix a discrepancy.
 
 ### Paragraph encoding
 
-Let $B_i$ be the neume width, $c_i$ the break cost, $w_i$ the break-only reservation at breakpoint $i$, and $m_i$ the minimum same-line width between notes $i$ and $i{+}1$.
+Let $B_i = W^n_i$ be the neume width, $c_i$ the break cost, $w_i$ the break-only reservation at breakpoint $i$, and $m_i$ the minimum same-line width between notes $i$ and $i{+}1$.
 Let $s_0$ be the fixed inline spacing between successive notes, `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, and let $s^+$ and $s^-$ be the stretch and shrink budgets for an inter-note gap.
 
 Each note is encoded in the paragraph as
@@ -252,7 +254,6 @@ Here:
 - $B_i$ is the neume width. An anonymous spacer box may be inserted before $B_i$ to hold a break-only leading reservation: the bar width plus fixed leading clearance when the preceding martyria has a transferable bar (see above), and a leading-hyphen reservation when the preceding note is hyphenated (see below). $B_i$ itself is unchanged.
 - $L_i$ is the left projection, fixed and unbreakable, and omitted when zero.
 - The two $\text{penalty}(\infty)$ items are unbreakable barriers. The leading one protects $L_i$ at a line start. `positionItems` discards leading glue after a break only up to the first box or forbidden ($\infty$) penalty, so the leading penalty keeps $\text{glue}(L_i, 0, 0)$ out of the discarded region and it is counted rather than skipped. It is emitted together with $L_i$ and omitted when $L_i$ is zero; the note's first box then stops the discard scan instead. The second $\text{penalty}(\infty)$, after $\text{box}(B_i)$, forces the only candidate break in the boundary to be $\text{penalty}(c_i, w_i)$ rather than the glue that immediately follows the box.
-- $s_0$ is the fixed preferred spacing between successive notes.
 - $s^+$ and $s^-$ are the standard stretch and shrink budgets for an inter-note gap.
 - $c_i$ is the break cost: 0 for a normal break, $\infty$ to prohibit a break, or an intermediate value to discourage one.
 - $w_i$ is the penalty width, a conditional width counted only when a break occurs at this point. It reserves space for the current note's right projection, any melisma overhang that would extend past the right margin, terminal right-barline clearance, and measure-bar transfers, when the next note's left measure bar moves to this note's right side at a line break.
@@ -376,7 +377,7 @@ The optimization is therefore lexicographic:
 1. Minimize the worst positive adjustment ratio in the paragraph.
 2. Subject to that minimal cap, minimize the ordinary Knuth-Plass demerits.
 
-In code, we first ask whether the paragraph can be broken with `r \le 1` by setting
+In code, we first ask whether the paragraph can be broken with $r \le 1$ by setting
 `maxAdjustmentRatio = 1` and `initialMaxAdjustmentRatio = 1`.
 If that fails, we search for the smallest finite cap $R > 1$ for which the paragraph becomes feasible.
 We do this by doubling upward until a feasible cap is found and then binary-searching that interval.

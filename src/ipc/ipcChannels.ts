@@ -34,6 +34,8 @@ export enum IpcMainChannels {
   FileMenuPasteWithLyrics = 'FileMenuPasteWithLyrics',
   FileMenuPasteFormat = 'FileMenuPasteFormat',
 
+  FileMenuSelectAll = 'FileMenuSelectAll',
+
   FileMenuFind = 'FileMenuFind',
 
   FileMenuViewPaneVisibility = 'FileMenuViewPaneVisibility',

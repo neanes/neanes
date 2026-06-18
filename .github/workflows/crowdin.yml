@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v6.0.3
 
       - name: Synchronize with Crowdin
-        uses: crowdin/github-action@v2.16.2
+        uses: crowdin/github-action@v2.16.3
         with:
           # Upload source strings (en/*.json) to Crowdin when they change.
           upload_sources: true

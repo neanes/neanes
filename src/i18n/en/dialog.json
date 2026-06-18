@@ -80,7 +80,7 @@
     "spacing": "Spacing",
     "neumes": "Neumes",
     "neumeSpacing": "Neume Spacing",
-    "neumeSpacingDescription": "The preferred amount of horizontal space between each neume on a line. The actual spacing may shrink or stretch by up to 50% to justify the line. A smaller number results in a more compact score.",
+    "neumeSpacingDescription": "The preferred horizontal space between neumes. Increase this number to create a more open score.",
     "lyricsV": "Lyrics: Distance Below Neumes",
     "lyricsVDescription": "The vertical position of lyrics in relation to the neumes. Increase this number to lower the lyrics.",
     "lyricsH": "Lyrics: Minimum Distance Between Adjacent Lyrics",

@@ -80,7 +80,7 @@
     "spacing": "Spasi",
     "neumes": "Neuma",
     "neumeSpacing": "Spasi Neuma",
-    "neumeSpacingDescription": "Jumlah ruang horizontal yang diinginkan antar setiap neuma pada satu baris. Spasi sebenarnya dapat menyusut atau melebar hingga 50% untuk meratakan baris. Angka yang lebih kecil menghasilkan partitur yang lebih rapat.",
+    "neumeSpacingDescription": "Jarak horizontal yang diinginkan antara neuma. Tingkatkan nilai ini untuk membuat tata letak notasi menjadi lebih renggang.",
     "lyricsV": "Lirik: Jarak Bawah Neuma",
     "lyricsVDescription": "Posisi vertikal lirik terhadap neuma. Tingkatkan angka ini untuk menurunkan lirik.",
     "lyricsH": "Lirik: Jarak Minimum Antara Lirik Berdampingan",

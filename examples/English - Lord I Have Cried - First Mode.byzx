@@ -1,6 +1,6 @@
 {
   "version": "1.1",
-  "appVersion": "0.5.5",
+  "appVersion": "0.5.27",
   "pageSetup": {
     "pageSize": "Letter",
     "pageSizeUnit": "in",
@@ -25,7 +25,7 @@
     "neumeDefaultFontFamily": "Neanes",
     "neumeDefaultFontSize": 26.666666666666668,
     "neumeDefaultColor": "#000000",
-    "neumeDefaultSpacing": 2.88,
+    "neumeDefaultSpacing": 0,
     "neumeDefaultStrokeWidth": 0,
     "alternateLineDefaultFontSize": 16,
     "alternateLineDefaultColor": "#ED0000",
@@ -70,9 +70,11 @@
     "textBoxDefaultFontSubfamily": "Regular",
     "textBoxDefaultColor": "#000000",
     "textBoxDefaultStrokeWidth": 0,
-    "hyphenSpacing": 72,
-    "martyriaVerticalOffset": 0,
-    "chrysanthineAccidentals": false,
+    "hyphenSpacing": 49.632000000000005,
+    "minimumSyllableToHyphenClearance": 13.228346456692915,
+    "martyriaVerticalOffset": 4,
+    "chrysanthineAccidentals": true,
+    "alignIsonIndicators": true,
     "ignorePunctuationWhenPositioningLyrics": true
   },
   "headers": {
@@ -263,7 +265,7 @@
         "fontFamily": "Source Serif",
         "strokeWidth": 0,
         "fontSubfamily": "Display Bold",
-        "height": 37,
+        "height": 36.9969482421875,
         "marginTop": 0,
         "marginBottom": 0
       },

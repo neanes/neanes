@@ -25,6 +25,7 @@ import { useTranslation } from 'i18next-vue';
 import { debounce, throttle } from 'throttle-debounce';
 import {
   computed,
+  type CSSProperties,
   nextTick,
   onBeforeUnmount,
   onMounted,
@@ -269,6 +270,7 @@ function getBundledFontLoadDescriptors() {
   }
 
   descriptors.add(createFontLoadDescriptor('NeanesRTL'));
+  descriptors.add(createFontLoadDescriptor('NeanesRTLLegacy'));
 
   return [...descriptors];
 }
@@ -1356,6 +1358,7 @@ async function initialize() {
   (window as any)._editor = {
     elements,
     score,
+    selectedElement,
     selectedWorkspace,
     workspaces,
   };
@@ -1467,7 +1470,15 @@ function getLyricStyle(element: NoteElement) {
       ? withZoom(Math.min(0, element.lyricsHorizontalOffset))
       : undefined,
     textAlign: element.alignLeft ? 'left' : undefined,
-  } as StyleValue;
+  } as CSSProperties;
+}
+
+function getLeadingLyricHyphenStyle(element: NoteElement) {
+  return {
+    ...getLyricStyle(element),
+    top: 0,
+    left: withZoom(element.leadingLyricHyphenOffset),
+  } as CSSProperties;
 }
 
 function getEmptyBoxStyle(element: EmptyElement) {
@@ -7981,6 +7992,21 @@ function renderTabLabel(tab: Tab) {
                                 dir="auto"
                                 :style="getLyricStyle(element as NoteElement)"
                               >
+                                <span
+                                  v-if="
+                                    (element as NoteElement)
+                                      .showLeadingLyricHyphen
+                                  "
+                                  class="leading-lyric-hyphen"
+                                  contenteditable="false"
+                                  aria-hidden="true"
+                                  :style="
+                                    getLeadingLyricHyphenStyle(
+                                      element as NoteElement,
+                                    )
+                                  "
+                                  >-</span
+                                >
                                 <ContentEditable
                                   :ref="
                                     setTemplateRef(
@@ -7991,6 +8017,7 @@ function renderTabLabel(tab: Tab) {
                                   :class="{
                                     selectedLyrics: element === selectedLyrics,
                                   }"
+                                  :style="{ minWidth: withZoom(element.width) }"
                                   :content="(element as NoteElement).lyrics"
                                   :editable="!lyricsLocked"
                                   white-space="nowrap"
@@ -8962,7 +8989,6 @@ function renderTabLabel(tab: Tab) {
 
 .lyrics {
   min-height: 1.6rem;
-  min-width: 1rem;
   text-align: center;
   position: relative;
 }
@@ -9214,6 +9240,11 @@ function renderTabLabel(tab: Tab) {
   text-align: center;
   position: absolute;
   white-space: nowrap;
+}
+
+.leading-lyric-hyphen {
+  position: absolute;
+  pointer-events: none;
 }
 
 .melisma {

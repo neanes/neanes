@@ -50,6 +50,7 @@ import roTranslations from 'ckeditor5/translations/ro.js';
 
 import FontStyle from './ckeditor-plugins/fontstyle/fontstyle';
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
+import OpenType from './ckeditor-plugins/opentype/opentype';
 import NeanesFakeSelectionEditing from './ckeditor-plugins/richtextselection/richtextselection';
 
 export default class InlineEditor extends DecoupledEditor {}
@@ -95,6 +96,7 @@ InlineEditor.builtinPlugins = [
   IndentEditing,
   IndentBlock,
   FontStyle,
+  OpenType,
   InsertNeume,
   Link,
   ListEditing,
@@ -160,6 +162,20 @@ InlineEditor.defaultConfig = {
         name: 'span',
         styles: true,
         attributes: true,
+      },
+    ],
+    // The OpenType plugin is the sole owner of these three properties: it upcasts
+    // the values it models and drops the rest. Keep GeneralHtmlSupport from also
+    // capturing them, which would otherwise leave a competing inner declaration
+    // that overrides the plugin's own span.
+    disallow: [
+      {
+        name: 'span',
+        styles: [
+          'font-variant-numeric',
+          'font-variant-ligatures',
+          'font-variant-caps',
+        ],
       },
     ],
   },

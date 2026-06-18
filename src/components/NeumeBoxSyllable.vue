@@ -9,6 +9,7 @@
       v-if="hasMeasureBarLeft && !isMeasureBarAbove"
       :neume="getMeasureBarLeft!"
       :style="measureBarLeftStyle"
+      class="measure-bar"
     />
     <Neume
       v-if="note.vareia && !pageSetup.melkiteRtl"
@@ -88,6 +89,7 @@
       v-if="hasMeasureBarRight"
       :neume="getMeasureBarRight!"
       :style="measureBarRightStyle"
+      class="measure-bar"
     />
     <Neume v-if="hasTie" :neume="note.tie!" :style="tieStyle" />
     <Neume
@@ -155,6 +157,11 @@ const hasMeasureBarLeft = computed(
 const hasMeasureBarRight = computed(
   () =>
     props.note.measureBarRight != null ||
+    props.note.computedMeasureBarRight != null,
+);
+const hasTransferredMeasureBarRight = computed(
+  () =>
+    props.note.measureBarRight == null &&
     props.note.computedMeasureBarRight != null,
 );
 const getMeasureBarLeft = computed(() =>
@@ -294,6 +301,10 @@ const measureBarLeftStyle = computed(() => {
     webkitTextStrokeWidth: withZoom(
       props.pageSetup.measureBarDefaultStrokeWidth,
     ),
+    transform: `translateX(${withZoom(
+      props.note.computedMeasureBarLeftOffsetX,
+    )})`,
+    marginInlineEnd: withZoom(props.note.computedMeasureBarLeftLeadingSpacing),
     ...offsetStyle(
       props.note.measureBarLeftOffsetX,
       props.note.measureBarLeftOffsetY,
@@ -302,10 +313,42 @@ const measureBarLeftStyle = computed(() => {
 });
 
 const measureBarRightStyle = computed(() => {
+  const offsetX =
+    props.note.measureBarRightOffsetX != null
+      ? `${props.note.measureBarRightOffsetX}em`
+      : '0em';
+  const offsetY =
+    props.note.measureBarRightOffsetY != null
+      ? `${props.note.measureBarRightOffsetY}em`
+      : undefined;
+
+  if (hasTransferredMeasureBarRight.value) {
+    return {
+      color: props.pageSetup.measureBarDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        props.pageSetup.measureBarDefaultStrokeWidth,
+      ),
+      position: 'absolute',
+      insetInlineStart: `calc(100% + ${withZoom(
+        props.note.computedMeasureBarRightTrailingSpacing,
+      )})`,
+      top: offsetY,
+      transform: `translateX(calc(${withZoom(
+        props.note.computedMeasureBarRightOffsetX,
+      )} + ${offsetX}))`,
+    } as StyleValue;
+  }
+
   return {
     color: props.pageSetup.measureBarDefaultColor,
     webkitTextStrokeWidth: withZoom(
       props.pageSetup.measureBarDefaultStrokeWidth,
+    ),
+    transform: `translateX(${withZoom(
+      props.note.computedMeasureBarRightOffsetX,
+    )})`,
+    marginInlineStart: withZoom(
+      props.note.computedMeasureBarRightTrailingSpacing,
     ),
     ...offsetStyle(
       props.note.measureBarRightOffsetX,
@@ -388,10 +431,20 @@ const stavrosStyle = computed(() => {
 });
 
 const vareiaStyle = computed(() => {
-  return offsetStyle(
+  const style = offsetStyle(
     props.note.vareiaOffsetX,
     props.note.vareiaOffsetY,
-  ) as StyleValue;
+  ) as Partial<CSSStyleDeclaration>;
+
+  return {
+    ...style,
+    marginRight: !props.pageSetup.melkiteRtl
+      ? withZoom(props.note.vareiaInternalSpacing)
+      : undefined,
+    marginLeft: props.pageSetup.melkiteRtl
+      ? withZoom(props.note.vareiaInternalSpacing)
+      : undefined,
+  } as StyleValue;
 });
 
 const vocalExpressionStyle = computed(() => {
@@ -429,6 +482,11 @@ const tieStyle = computed(() => {
 <style scoped>
 .neume {
   cursor: default;
+  position: relative;
   user-select: none;
+}
+
+.measure-bar {
+  display: inline-block;
 }
 </style>

@@ -252,18 +252,33 @@ onBeforeUnmount(() => {
 }
 
 @font-face {
-  font-family: Neanes;
+  font-family: NeanesLegacy;
   src: url('./assets/fonts/Neanes.otf');
 }
 
 @font-face {
-  font-family: NeanesStathisSeries;
+  font-family: Neanes;
+  src: url('./assets/fonts/NeanesEngraving.otf');
+}
+
+@font-face {
+  font-family: NeanesStathisSeriesLegacy;
   src: url('./assets/fonts/NeanesStathisSeries.otf');
 }
 
 @font-face {
-  font-family: NeanesRTL;
+  font-family: NeanesStathisSeries;
+  src: url('./assets/fonts/NeanesStathisSeriesEngraving.otf');
+}
+
+@font-face {
+  font-family: NeanesRTLLegacy;
   src: url('./assets/fonts/NeanesRTL.otf');
+}
+
+@font-face {
+  font-family: NeanesRTL;
+  src: url('./assets/fonts/NeanesRTLEngraving.otf');
 }
 
 @font-face {

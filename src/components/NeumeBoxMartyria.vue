@@ -10,12 +10,13 @@
       <Neume
         v-if="hasMeasureBarLeft && !isMeasureBarAbove"
         :neume="neume.measureBarLeft!"
-        :style="measureBarStyle"
+        :style="measureBarLeftStyle"
+        class="measure-bar"
       />
       <Neume
         v-if="hasTempoLeft"
         :neume="neume.tempoLeft!"
-        :style="tempoStyle"
+        :style="tempoLeftStyle"
       />
       <Neume :neume="neume.note" />
       <Neume :neume="neume.rootSign" />
@@ -34,19 +35,20 @@
       <Neume
         v-if="hasTempoRight"
         :neume="neume.tempoRight!"
-        :style="tempoStyle"
+        :style="tempoRightStyle"
       />
       <Neume
         v-if="hasMeasureBarRight"
         :neume="neume.measureBarRight!"
-        :style="measureBarStyle"
+        :style="measureBarRightStyle"
+        class="measure-bar"
       />
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { PropType, StyleValue } from 'vue';
+import type { CSSProperties, PropType, StyleValue } from 'vue';
 import { computed } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
@@ -113,14 +115,53 @@ const tempoStyle = computed(() => {
   return {
     color: props.pageSetup.tempoDefaultColor,
     webkitTextStrokeWidth: withZoom(props.pageSetup.tempoDefaultStrokeWidth),
+  } as CSSProperties;
+});
+
+const tempoLeftStyle = computed(() => {
+  return {
+    ...tempoStyle.value,
+    left: withZoom(props.neume.computedTempoLeftOffsetX),
+    marginInlineEnd: withZoom(props.neume.tempoLeftSpacing),
   } as StyleValue;
 });
 
-const measureBarStyle = computed(() => {
+const tempoRightStyle = computed(() => {
+  return {
+    ...tempoStyle.value,
+    marginInlineStart: withZoom(props.neume.tempoRightSpacing),
+  } as StyleValue;
+});
+
+const getMeasureBarStyle = () => {
   return {
     color: props.pageSetup.measureBarDefaultColor,
     webkitTextStrokeWidth: withZoom(
       props.pageSetup.measureBarDefaultStrokeWidth,
+    ),
+  };
+};
+
+const measureBarStyle = computed(() => getMeasureBarStyle() as StyleValue);
+
+const measureBarLeftStyle = computed(() => {
+  return {
+    ...getMeasureBarStyle(),
+    transform: `translateX(${withZoom(
+      props.neume.computedMeasureBarLeftOffsetX,
+    )})`,
+    marginInlineEnd: withZoom(props.neume.computedMeasureBarLeftLeadingSpacing),
+  } as StyleValue;
+});
+
+const measureBarRightStyle = computed(() => {
+  return {
+    ...getMeasureBarStyle(),
+    transform: `translateX(${withZoom(
+      props.neume.computedMeasureBarRightOffsetX,
+    )})`,
+    marginInlineStart: withZoom(
+      props.neume.computedMeasureBarRightTrailingSpacing,
     ),
   } as StyleValue;
 });
@@ -130,5 +171,9 @@ const measureBarStyle = computed(() => {
 .neume {
   cursor: default;
   user-select: none;
+}
+
+.measure-bar {
+  display: inline-block;
 }
 </style>

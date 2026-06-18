@@ -43,6 +43,8 @@ const BUNDLED_FAMILIES = [
   'Old Standard',
   'Neanes',
   'NeanesStathisSeries',
+  'NeanesLegacy',
+  'NeanesStathisSeriesLegacy',
 ];
 
 // The standard four-face set shared by our bundled text families, matching the

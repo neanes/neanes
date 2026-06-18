@@ -18,7 +18,7 @@ While editing the title, a toolbar will appear at the bottom of the window with 
 
 ## Updating the mode key
 
-To update the mode key, double click the current mode key to open the mode key dialog. You can also open `View -> Properties`, select the mode key, and press `Change Key`.
+To update the mode key, double click the current mode key to open the mode key dialog. You can also right-click the mode key and choose `Change Key`, or open `View -> Properties`, select the mode key, and press `Change Key`.
 
 ![Mode Key Dialog](./images/guide-mode-key-dialog.png)
 

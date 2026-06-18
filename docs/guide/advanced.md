@@ -74,7 +74,7 @@ The link feature in the rich text editor can be used to insert hyperlinks to qui
 
 ## Fine-tuning Neume Positions
 
-Sometimes the font is unable to properly position neumes when there are multiple supporting neumes. To fix collisions, either double-click the neume or open `View -> Properties` and click the `Positioning` button.
+Sometimes the font is unable to properly position neumes when there are multiple supporting neumes. To fix collisions, either double-click the neume, right-click the neume and choose `Positioning`, or open `View -> Properties` and click the `Positioning` button.
 
 This will open the neume positioning dialog.
 

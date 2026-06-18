@@ -42,12 +42,12 @@
     <span class="right-container">
       <span v-if="element.showAmbitus" class="ambitus">
         <span class="ambitus-text">(</span>
-        <span class="ambitus-low" :style="ambitusStyle">
+        <span class="ambitus-low" :style="ambitusStyleLow">
           <Neume :neume="element.ambitusLowNote" />
           <Neume :neume="element.ambitusLowRootSign" />
         </span>
         <span class="ambitus-text">-</span>
-        <span class="ambitus-high" :style="ambitusStyle">
+        <span class="ambitus-high" :style="ambitusStyleHigh">
           <Neume :neume="element.ambitusHighNote" />
           <Neume :neume="element.ambitusHighRootSign" />
         </span>
@@ -64,13 +64,15 @@
 </template>
 
 <script setup lang="ts">
-import type { PropType, StyleValue } from 'vue';
+import type { CSSProperties, PropType, StyleValue } from 'vue';
 import { computed } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
 import type { ModeKeyElement } from '@/models/Element';
 import { ModeSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { withZoom } from '@/utils/withZoom';
 
 defineEmits(['select-single']);
@@ -118,7 +120,44 @@ const ambitusStyle = computed(() => {
     webkitTextStrokeWidth: withZoom(props.pageSetup.martyriaDefaultStrokeWidth),
     position: 'relative',
     top: '-0.45em',
-  } as StyleValue;
+  } as CSSProperties;
+
+  return style;
+});
+
+const ambitusStyleLow = computed(() => {
+  const text = [props.element.ambitusLowNote, props.element.ambitusLowRootSign]
+    .map((neume) => NeumeMappingService.getMapping(neume).text)
+    .join('');
+  const font = `${props.element.computedFontSize}px ${props.element.computedFontFamily}`;
+
+  const bounds = TextMeasurementService.getInkBounds(text, font);
+
+  const style = {
+    ...ambitusStyle.value,
+    marginLeft: withZoom(4 - bounds.inkLeft),
+    marginRight: withZoom(10),
+  } as CSSProperties;
+
+  return style;
+});
+
+const ambitusStyleHigh = computed(() => {
+  const text = [
+    props.element.ambitusHighNote,
+    props.element.ambitusHighRootSign,
+  ]
+    .map((neume) => NeumeMappingService.getMapping(neume).text)
+    .join('');
+  const font = `${props.element.computedFontSize}px ${props.element.computedFontFamily}`;
+
+  const bounds = TextMeasurementService.getInkBounds(text, font);
+
+  const style = {
+    ...ambitusStyle.value,
+    marginLeft: withZoom(10),
+    marginRight: withZoom(4 - (bounds.advanceWidth - bounds.inkRight)),
+  } as CSSProperties;
 
   return style;
 });
@@ -146,14 +185,5 @@ const ambitusStyle = computed(() => {
 
 .ambitus-text {
   font-family: Arial, Helvetica, sans-serif;
-}
-
-.ambitus-low {
-  margin-right: 10px;
-}
-
-.ambitus-high {
-  margin-left: 2px;
-  margin-right: 4px;
 }
 </style>

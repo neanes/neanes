@@ -175,7 +175,12 @@ export class NoteElement extends ScoreElement {
   public tertiaryFthoraPrevious: Fthora | null = null;
   public computedMeasureBarLeftPrevious: MeasureBar | null = null;
   public computedMeasureBarRightPrevious: MeasureBar | null = null;
+  public computedMeasureBarLeftOffsetXPrevious: number = 0;
+  public computedMeasureBarRightOffsetXPrevious: number = 0;
+  public computedMeasureBarLeftLeadingSpacingPrevious: number = 0;
+  public computedMeasureBarRightTrailingSpacingPrevious: number = 0;
   public computedIsonOffsetYPrevious: number | null = null;
+  public vareiaInternalSpacingPrevious: number = 0;
 
   // Fthora helper
   public fthoraCarry: Fthora | null = null;
@@ -448,11 +453,16 @@ export class NoteElement extends ScoreElement {
   public lyricsLeadingPunctuationWidth: number = 0;
   public lyricsTrailingPunctuationWidth: number = 0;
   public alignLeft: boolean = false;
+  public vareiaInternalSpacing: number = 0;
   public noteIndicatorNeume: NoteIndicator | null = null;
   public scaleNotes: ScaleNote[] = [];
   public scaleNotesVirtual: ScaleNote[] = [];
   public computedMeasureBarLeft: MeasureBar | null = null;
   public computedMeasureBarRight: MeasureBar | null = null;
+  public computedMeasureBarLeftOffsetX: number = 0;
+  public computedMeasureBarRightOffsetX: number = 0;
+  public computedMeasureBarLeftLeadingSpacing: number = 0;
+  public computedMeasureBarRightTrailingSpacing: number = 0;
   public computedIsonOffsetY: number | null = null;
   public isonOffsetYBeforeAdjustment: number = 0;
 
@@ -688,6 +698,13 @@ export class MartyriaElement extends ScoreElement {
   // Used for display
   public neumeWidth: number = 0;
   public padding: number = 0;
+  public tempoLeftSpacing: number = 0;
+  public tempoRightSpacing: number = 0;
+  public computedTempoLeftOffsetX: number = 0;
+  public computedMeasureBarLeftOffsetX: number = 0;
+  public computedMeasureBarRightOffsetX: number = 0;
+  public computedMeasureBarLeftLeadingSpacing: number = 0;
+  public computedMeasureBarRightTrailingSpacing: number = 0;
 
   private _measureBarLeft: MeasureBar | null = null;
   private _measureBarRight: MeasureBar | null = null;
@@ -709,8 +726,16 @@ export class MartyriaElement extends ScoreElement {
   }
 
   // Re-render helpers
+  public errorPrevious: boolean = false;
   public notePrevious: Note = Note.Pa;
   public rootSignPrevious: RootSign = RootSign.Alpha;
+  public computedTempoLeftOffsetXPrevious: number = 0;
+  public computedMeasureBarLeftOffsetXPrevious: number = 0;
+  public computedMeasureBarRightOffsetXPrevious: number = 0;
+  public tempoLeftSpacingPrevious: number = 0;
+  public tempoRightSpacingPrevious: number = 0;
+  public computedMeasureBarLeftLeadingSpacingPrevious: number = 0;
+  public computedMeasureBarRightTrailingSpacingPrevious: number = 0;
 
   // Fthora helper
   public fthoraCarry: Fthora | null = null;
@@ -1014,6 +1039,10 @@ export class ModeKeyElement extends ScoreElement {
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
   public computedHeightAdjustmentPrevious: number = 0;
+  public ambitusLowNotePrevious: Note = Note.Pa;
+  public ambitusLowRootSignPrevious: RootSign = RootSign.Alpha;
+  public ambitusHighNotePrevious: Note = Note.Pa;
+  public ambitusHighRootSignPrevious: RootSign = RootSign.Alpha;
 
   public get isPlagal() {
     return this.mode > 4 && this.mode !== 7;

@@ -298,7 +298,7 @@ const containerStyle = computed(() => {
     height: withZoom(props.element.height),
     '--ck-content-font-family': getFontFamilyWithFallback(
       defaultFontFamily,
-      props.pageSetup.neumeDefaultFontFamily,
+      props.pageSetup.neumeDefaultFontFamily + 'Legacy', // TODO what a terrible hack
     ),
     '--ck-content-font-size': props.element.inline
       ? `${props.pageSetup.lyricsDefaultFontSize}px`

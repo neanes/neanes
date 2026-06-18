@@ -259,6 +259,7 @@ function getBundledFontLoadDescriptors() {
   }
 
   descriptors.add(createFontLoadDescriptor('NeanesRTL'));
+  descriptors.add(createFontLoadDescriptor('NeanesRTLLegacy'));
 
   return [...descriptors];
 }
@@ -1338,6 +1339,7 @@ async function initialize() {
   (window as any)._editor = {
     elements,
     score,
+    selectedElement,
     selectedWorkspace,
     workspaces,
   };
@@ -7723,6 +7725,7 @@ function renderTabLabel(tab: Tab) {
                               :class="{
                                 selectedLyrics: element === selectedLyrics,
                               }"
+                              :style="{ minWidth: withZoom(element.width) }"
                               :content="(element as NoteElement).lyrics"
                               :editable="!lyricsLocked"
                               white-space="nowrap"
@@ -8531,7 +8534,6 @@ function renderTabLabel(tab: Tab) {
 
 .lyrics {
   min-height: 1.6rem;
-  min-width: 1rem;
   text-align: center;
   position: relative;
 }

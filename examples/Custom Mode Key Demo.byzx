@@ -26,7 +26,7 @@
     "neumeDefaultFontFamily": "Neanes",
     "neumeDefaultFontSize": 26.666666666666668,
     "neumeDefaultColor": "#000000",
-    "neumeDefaultSpacing": 2.88,
+    "neumeDefaultSpacing": 0,
     "neumeDefaultStrokeWidth": 0,
     "modeKeyDefaultColor": "#ED0000",
     "modeKeyDefaultStrokeWidth": 0,
@@ -71,9 +71,12 @@
     "textBoxDefaultFontStyle": "normal",
     "textBoxDefaultColor": "#000000",
     "textBoxDefaultStrokeWidth": 0,
-    "hyphenSpacing": 72,
+    "hyphenSpacing": 49.632000000000005,
+    "minimumSyllableToHyphenClearance": 13.228346456692915,
     "martyriaVerticalOffset": 10,
-    "chrysanthineAccidentals": true
+    "chrysanthineAccidentals": true,
+    "alignIsonIndicators": true,
+    "ignorePunctuationWhenPositioningLyrics": true
   },
   "headers": {
     "default": {

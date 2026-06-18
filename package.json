@@ -50,7 +50,7 @@
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/vue-table": "^8.21.3",
     "@types/mime-types": "^3.0.1",
-    "@types/node": "^25.9.2",
+    "@types/node": "^25.9.3",
     "@types/semver": "^7.7.1",
     "@types/throttle-debounce": "^5.0.2",
     "@types/web-bluetooth": "^0.0.21",

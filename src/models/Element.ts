@@ -444,9 +444,6 @@ export class NoteElement extends ScoreElement {
   public melismaOffsetTop: number = 0;
   public lyricsFontHeight: number = 0;
   public hyphenOffsets: number[] = [];
-  public showLeadingLyricHyphen: boolean = false;
-  public leadingLyricHyphenOffset: number = 0;
-  public leadingLyricHyphenReservationWidth: number = 0;
   public isFullMelisma: boolean = false;
   public melismaWidth: number = 0;
   public lyricsVerticalOffset: number = 0;

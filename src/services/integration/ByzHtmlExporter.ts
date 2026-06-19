@@ -23,6 +23,7 @@ import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { resolvePageMargins } from '@/utils/PageMargins';
 import { Unit } from '@/utils/Unit';
 
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
@@ -166,6 +167,8 @@ export class ByzHtmlExporter {
 
   exportPageSetup(pageSetup: PageSetup) {
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
+    const firstPageMargins = resolvePageMargins(pageSetup, 1);
+    const secondPageMargins = resolvePageMargins(pageSetup, 2);
 
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
     const defaultLyricsFont = resolveFontStyle(
@@ -232,19 +235,40 @@ export class ByzHtmlExporter {
       
       body {
         margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
-          pageSetup.rightMargin,
+          firstPageMargins.right,
         )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
-          pageSetup.leftMargin,
+          firstPageMargins.left,
         )}pt;
       }
 
       @page {
         margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
-          pageSetup.rightMargin,
+          firstPageMargins.right,
         )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
-          pageSetup.leftMargin,
+          firstPageMargins.left,
         )}pt;
         size: ${pageSetup.pageSize} ${orientation}
+      }
+
+      ${
+        pageSetup.facingPages
+          ? `
+      @page :left {
+        margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
+          secondPageMargins.right,
+        )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
+          secondPageMargins.left,
+        )}pt;
+      }
+
+      @page :right {
+        margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
+          firstPageMargins.right,
+        )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
+          firstPageMargins.left,
+        )}pt;
+      }`
+          : ''
       }
 
       @media print {

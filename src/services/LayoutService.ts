@@ -59,6 +59,7 @@ import {
 } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
 import { resolveFontStyle } from '@/utils/fontStyle';
+import { resolvePageMargins } from '@/utils/PageMargins';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
@@ -351,6 +352,7 @@ export class LayoutService {
     const pages: Page[] = [];
 
     let page: Page = new Page();
+    page.physicalPageNumber = 1;
 
     pages.push(page);
 
@@ -1554,6 +1556,7 @@ export class LayoutService {
           const lastLine = page.lines.pop()!;
 
           page = new Page();
+          page.physicalPageNumber = pages.length + 1;
           page.lines.push(lastLine);
           pages.push(page);
           currentPageHeightPx = lastLineHeightPx;
@@ -1574,6 +1577,13 @@ export class LayoutService {
           continue;
         }
         const element = (item as ElementBox).element;
+        const resolvedMargins = resolvePageMargins(
+          pageSetup,
+          page.physicalPageNumber,
+        );
+        const contentStart = pageSetup.melkiteRtl
+          ? resolvedMargins.right
+          : resolvedMargins.contentLeft;
 
         const currentLine = page.lines[page.lines.length - 1];
         const isFirstElementOnLine = currentLine.elements.length === 0;
@@ -1599,8 +1609,7 @@ export class LayoutService {
           );
         }
 
-        element.x =
-          pageSetup.leftMargin + position.xOffset + currentLine.indentation;
+        element.x = contentStart + position.xOffset + currentLine.indentation;
 
         // marginTop offsets the element within its line's allocated space
         // (whose height already includes marginTop + marginBottom).
@@ -1642,7 +1651,7 @@ export class LayoutService {
           }
           if (fillWidth == null) {
             const lineWidth =
-              pageSetup.innerPageWidth - currentLine.indentation;
+              resolvedMargins.contentWidth - currentLine.indentation;
             fillWidth = lineWidth - position.xOffset;
           }
           element.width = fillWidth;
@@ -1764,11 +1773,12 @@ export class LayoutService {
             this.getVisibleMeasureBarRight(martyriaElement) == null
               ? this.getMartyriaRightInkOverhang(martyriaElement, pageSetup)
               : 0;
-          element.x =
-            pageSetup.pageWidth -
-            pageSetup.rightMargin -
-            element.width -
-            rightInkReservation;
+          element.x = pageSetup.melkiteRtl
+            ? resolvedMargins.right + rightInkReservation
+            : pageSetup.pageWidth -
+              resolvedMargins.right -
+              element.width -
+              rightInkReservation;
         }
 
         // Special logic for centered lines
@@ -1782,7 +1792,7 @@ export class LayoutService {
           }
 
           const centerOffsetPx =
-            (pageSetup.innerPageWidth -
+            (resolvedMargins.contentWidth -
               currentLine.indentation -
               (position.xOffset + position.width)) /
             2;
@@ -5319,12 +5329,16 @@ export class LayoutService {
             ) {
               const barWidth = measureBarWidthMap.get(measureBarRight) ?? 0;
               if (barWidth > 0) {
+                const resolvedMargins = resolvePageMargins(
+                  pageSetup,
+                  page.physicalPageNumber,
+                );
                 const naturalLeft =
                   owner.x +
                   this.getMeasureBarOwnerWidth(owner) +
                   owner.computedMeasureBarRightTrailingSpacing;
                 const targetLeft =
-                  pageSetup.pageWidth - pageSetup.rightMargin - barWidth;
+                  pageSetup.pageWidth - resolvedMargins.right - barWidth;
                 owner.computedMeasureBarRightOffsetX = targetLeft - naturalLeft;
               }
             }

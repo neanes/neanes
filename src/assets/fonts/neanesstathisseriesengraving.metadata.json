@@ -229,7 +229,7 @@
         0.676
       ],
       "omalonConnecting": [
-        1.408,
+        1.618,
         0.133
       ],
       "omalon": [
@@ -16749,6 +16749,15 @@
       "stretch": 0.065,
       "shrink": 0.043
     },
-    "vareiaGap": -0.523
+    "vareiaGap": -0.523,
+    "kerning": {
+      "notePairs": [
+        {
+          "left": "oligonKentimaMiddle",
+          "right": "ison",
+          "adjustment": -0.1
+        }
+      ]
+    }
   }
 }

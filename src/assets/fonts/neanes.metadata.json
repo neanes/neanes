@@ -1,6 +1,6 @@
 {
   "fontName": "Neanes",
-  "fontVersion": "1.0.6",
+  "fontVersion": "1.0.7",
   "metrics": {
     "winAscent": 1.4,
     "winDescent": 0.466,
@@ -5419,7 +5419,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        1.681,
         0.133
       ],
       "antikenoma": [

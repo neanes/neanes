@@ -284,6 +284,7 @@ interface NoteGlyphBox {
   right: number;
   top: number;
   bottom: number;
+  collisionKind?: NoteCollisionGlyph['kind'];
 }
 
 interface NoteCollisionGlyph {
@@ -2468,29 +2469,44 @@ export class LayoutService {
     // glue(L_{i+1}).
     const leftTuck = leftProjection;
     const rightTuck = Math.min(rightProjection, nextOverhangs.left);
-    const minimumBoundaryWidth = Math.max(
-      this.getMeasureBarMinimumGlueWidth(
-        noteElement,
-        nextNoteElement,
-        workspace.pageSetup,
-        measureBarWidthMap,
-      ),
-      this.getNoteVisualMinimumSpacing(
-        noteElement,
-        nextNoteElement,
-        workspace.pageSetup,
-        measureBarWidthMap,
-      ),
+    const notePairKerning = fontService.getNotePairKerning(
+      workspace.pageSetup.neumeDefaultFontFamily,
+      NeumeMappingService.getMapping(noteElement.quantitativeNeume).glyphName,
+      NeumeMappingService.getMapping(nextNoteElement.quantitativeNeume)
+        .glyphName,
     );
+    const inlineSpacing = this.getInlineSpacing(workspace.pageSetup);
+    const kerningPx =
+      workspace.pageSetup.neumeDefaultFontSize *
+      (notePairKerning?.adjustment ?? 0);
+    const noteVisualMinimumWidth = this.getNoteVisualMinimumSpacing(
+      noteElement,
+      nextNoteElement,
+      workspace.pageSetup,
+      measureBarWidthMap,
+      inlineSpacing,
+    );
+    const minimumBoundaryWidth = this.hasVisibleMeasureBarAtBoundary(
+      noteElement,
+      nextNoteElement,
+    )
+      ? Math.max(
+          this.getMeasureBarMinimumGlueWidth(
+            noteElement,
+            nextNoteElement,
+            workspace.pageSetup,
+            measureBarWidthMap,
+          ),
+          noteVisualMinimumWidth,
+        )
+      : noteVisualMinimumWidth;
     // Visual collision helpers measure the total same-line distance between
     // note boxes. m_i intentionally excludes L_{i+1}, so convert that minimum
     // into m_i space or long lyrics on the next note can no longer tuck left.
     const minimumWidth = minimumBoundaryWidth - leftTuck;
     const ordinaryBaseWidth =
-      this.getInlineSpacing(workspace.pageSetup) +
-      rightProjection -
-      leftTuck -
-      rightTuck;
+      inlineSpacing + kerningPx + rightProjection - leftTuck - rightTuck;
+
     // When a carried melisma ends at a centered lyric, align that lyric's
     // left edge with the current cursor. The current cursor is already after
     // noteElement.spaceAfter, so user-defined extra spacing is preserved.
@@ -2630,6 +2646,7 @@ export class LayoutService {
     right: NoteElement | null,
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
+    clearance: number,
   ) {
     if (right == null) {
       return 0;
@@ -2650,7 +2667,8 @@ export class LayoutService {
       left.neumeWidth,
       leftBoxes,
       rightBoxes,
-      this.getInlineSpacing(pageSetup),
+      clearance,
+      true,
     );
   }
 
@@ -2659,11 +2677,20 @@ export class LayoutService {
     leftBoxes: NoteGlyphBox[],
     rightBoxes: NoteGlyphBox[],
     clearance: number,
+    skipPrimaryBasePairs: boolean = false,
   ) {
     let spacing = 0;
 
     for (const leftBox of leftBoxes) {
       for (const rightBox of rightBoxes) {
+        if (
+          skipPrimaryBasePairs &&
+          leftBox.collisionKind === 'base' &&
+          rightBox.collisionKind === 'base'
+        ) {
+          continue;
+        }
+
         if (!this.noteGlyphBoxesVerticallyOverlap(leftBox, rightBox)) {
           continue;
         }
@@ -2720,34 +2747,27 @@ export class LayoutService {
 
     return glyphs.flatMap((glyph, index) => {
       const glyphName = resolvedGlyphNames[index];
+      let x = glyph.x;
+      let y = glyph.y;
 
-      if (glyph.kind !== 'mark') {
-        return this.getGlyphCollisionBoxes(
+      if (glyph.kind === 'mark') {
+        const anchorOffset = fontService.getMarkOffset(
           fontFamily,
+          baseGlyphName,
           glyphName,
-          glyph.x,
-          glyph.y,
-          fontSize,
         );
-      }
 
-      const anchorOffset = fontService.getMarkOffset(
-        fontFamily,
-        baseGlyphName,
-        glyphName,
-      );
+        x += anchorOffset.x * fontSize + this.emToPx(glyph.offsetX, fontSize);
+        y += anchorOffset.y * fontSize + this.emToPx(glyph.offsetY, fontSize);
+      }
 
       return this.getGlyphCollisionBoxes(
         fontFamily,
         glyphName,
-        glyph.x +
-          anchorOffset.x * fontSize +
-          this.emToPx(glyph.offsetX, fontSize),
-        glyph.y +
-          anchorOffset.y * fontSize +
-          this.emToPx(glyph.offsetY, fontSize),
+        x,
+        y,
         fontSize,
-      );
+      ).map((box) => ({ ...box, collisionKind: glyph.kind }));
     });
   }
 
@@ -6432,6 +6452,16 @@ export class LayoutService {
     return measureBar != null && !measureBar.endsWith('Above')
       ? measureBar
       : null;
+  }
+
+  private static hasVisibleMeasureBarAtBoundary(
+    left: NoteElement,
+    right: NoteElement,
+  ) {
+    return (
+      this.getVisibleMeasureBarRight(left) != null ||
+      this.getVisibleMeasureBarLeft(right) != null
+    );
   }
 
   private static getVisibleMeasureBarRight(

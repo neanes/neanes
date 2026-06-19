@@ -1,6 +1,6 @@
 {
   "fontName": "NeanesEngraving",
-  "fontVersion": "1.0.6",
+  "fontVersion": "1.0.7",
   "metrics": {
     "winAscent": 1.4,
     "winDescent": 0.466,
@@ -5419,7 +5419,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.389,
+        1.599,
         0.133
       ],
       "antikenoma": [
@@ -16717,6 +16717,15 @@
       "stretch": 0.065,
       "shrink": 0.043
     },
-    "vareiaGap": 0.03
+    "vareiaGap": 0.03,
+    "kerning": {
+      "notePairs": [
+        {
+          "left": "oligonKentimaMiddle",
+          "right": "ison",
+          "adjustment": -0.13
+        }
+      ]
+    }
   }
 }

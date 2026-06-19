@@ -284,6 +284,7 @@ interface NoteGlyphBox {
   right: number;
   top: number;
   bottom: number;
+  collisionKind?: NoteCollisionGlyph['kind'];
 }
 
 interface NoteCollisionGlyph {
@@ -2474,19 +2475,16 @@ export class LayoutService {
       NeumeMappingService.getMapping(nextNoteElement.quantitativeNeume)
         .glyphName,
     );
+    const inlineSpacing = this.getInlineSpacing(workspace.pageSetup);
     const kerningPx =
       workspace.pageSetup.neumeDefaultFontSize *
       (notePairKerning?.adjustment ?? 0);
-    const kernedVisualClearance = Math.max(
-      0,
-      this.getInlineSpacing(workspace.pageSetup) + kerningPx,
-    );
     const noteVisualMinimumWidth = this.getNoteVisualMinimumSpacing(
       noteElement,
       nextNoteElement,
       workspace.pageSetup,
       measureBarWidthMap,
-      kernedVisualClearance,
+      inlineSpacing,
     );
     const minimumBoundaryWidth = this.hasVisibleMeasureBarAtBoundary(
       noteElement,
@@ -2507,11 +2505,7 @@ export class LayoutService {
     // into m_i space or long lyrics on the next note can no longer tuck left.
     const minimumWidth = minimumBoundaryWidth - leftTuck;
     const ordinaryBaseWidth =
-      this.getInlineSpacing(workspace.pageSetup) +
-      kerningPx +
-      rightProjection -
-      leftTuck -
-      rightTuck;
+      inlineSpacing + kerningPx + rightProjection - leftTuck - rightTuck;
 
     // When a carried melisma ends at a centered lyric, align that lyric's
     // left edge with the current cursor. The current cursor is already after
@@ -2674,6 +2668,7 @@ export class LayoutService {
       leftBoxes,
       rightBoxes,
       clearance,
+      true,
     );
   }
 
@@ -2682,11 +2677,20 @@ export class LayoutService {
     leftBoxes: NoteGlyphBox[],
     rightBoxes: NoteGlyphBox[],
     clearance: number,
+    skipPrimaryBasePairs: boolean = false,
   ) {
     let spacing = 0;
 
     for (const leftBox of leftBoxes) {
       for (const rightBox of rightBoxes) {
+        if (
+          skipPrimaryBasePairs &&
+          leftBox.collisionKind === 'base' &&
+          rightBox.collisionKind === 'base'
+        ) {
+          continue;
+        }
+
         if (!this.noteGlyphBoxesVerticallyOverlap(leftBox, rightBox)) {
           continue;
         }
@@ -2743,34 +2747,27 @@ export class LayoutService {
 
     return glyphs.flatMap((glyph, index) => {
       const glyphName = resolvedGlyphNames[index];
+      let x = glyph.x;
+      let y = glyph.y;
 
-      if (glyph.kind !== 'mark') {
-        return this.getGlyphCollisionBoxes(
+      if (glyph.kind === 'mark') {
+        const anchorOffset = fontService.getMarkOffset(
           fontFamily,
+          baseGlyphName,
           glyphName,
-          glyph.x,
-          glyph.y,
-          fontSize,
         );
-      }
 
-      const anchorOffset = fontService.getMarkOffset(
-        fontFamily,
-        baseGlyphName,
-        glyphName,
-      );
+        x += anchorOffset.x * fontSize + this.emToPx(glyph.offsetX, fontSize);
+        y += anchorOffset.y * fontSize + this.emToPx(glyph.offsetY, fontSize);
+      }
 
       return this.getGlyphCollisionBoxes(
         fontFamily,
         glyphName,
-        glyph.x +
-          anchorOffset.x * fontSize +
-          this.emToPx(glyph.offsetX, fontSize),
-        glyph.y +
-          anchorOffset.y * fontSize +
-          this.emToPx(glyph.offsetY, fontSize),
+        x,
+        y,
         fontSize,
-      );
+      ).map((box) => ({ ...box, collisionKind: glyph.kind }));
     });
   }
 

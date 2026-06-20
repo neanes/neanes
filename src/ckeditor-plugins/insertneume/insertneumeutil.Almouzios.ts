@@ -7,7 +7,7 @@ import {
 import { fontService } from '@/services/FontService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 
-import { InsertNeumeAttributeSet } from './insertneumeutil';
+import type { InsertNeumeAttributeSet } from './insertneumeutil';
 
 const defaultFontSizeAdjustment = 1.7;
 

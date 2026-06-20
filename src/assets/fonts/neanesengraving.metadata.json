@@ -16717,9 +16717,6 @@
       "stretch": 0.065,
       "shrink": 0.043
     },
-    "vareiaGap": 0.03,
-    "kerning": {
-      "notePairs": []
-    }
+    "vareiaGap": 0.03
   }
 }

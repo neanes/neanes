@@ -1,290 +1,108 @@
 <template>
-  <div class="mode-key-toolbar">
-    <input
-      id="toolbar-mode-key-use-default-style"
-      type="checkbox"
-      :checked="element.useDefaultStyle"
-      @change="
-        $emit('update', {
-          useDefaultStyle: ($event.target as HTMLInputElement).checked,
-        } as Partial<ModeKeyElement>)
-      "
-    />
-    <label for="toolbar-mode-key-use-default-style">{{
-      $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
-    }}</label>
-    <span class="divider" />
-
+  <Toolbar class="mode-key-toolbar h-auto w-full gap-0 border-0 p-1" loop>
     <template v-if="!element.useDefaultStyle">
-      <label class="right-space">{{
+      <Label for="toolbar-mode-key-font-size">{{
         $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
-      }}</label>
+      }}</Label>
       <InputFontSize
+        id="toolbar-mode-key-font-size"
         :model-value="element.fontSize"
         @update:model-value="
           $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
         "
       />
-      <span class="space"></span>
-      <ColorPicker
-        :model-value="element.color"
-        @update:model-value="
-          $emit('update', { color: $event } as Partial<ModeKeyElement>)
-        "
-      />
-      <span class="space"></span>
+      <ToolbarSeparator />
     </template>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-      @click="
-        $emit('update', {
-          alignment: TextBoxAlignment.Left,
-        } as Partial<ModeKeyElement>)
-      "
+    <ToggleGroup
+      type="single"
+      variant="outline"
+      :model-value="element.alignment"
+      @update:model-value="onAlignmentChanged"
     >
-      <img
-        class="icon-btn-img"
-        src="@/assets/icons/alignleft.svg"
-        width="32"
-        height="32"
-        :title="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
-      />
-    </button>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-      @click="
-        $emit('update', {
-          alignment: TextBoxAlignment.Center,
-        } as Partial<ModeKeyElement>)
-      "
-    >
-      <img
-        class="icon-btn-img"
-        src="@/assets/icons/aligncenter.svg"
-        width="32"
-        height="32"
-        :title="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
-      />
-    </button>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-      @click="
-        $emit('update', {
-          alignment: TextBoxAlignment.Right,
-        } as Partial<ModeKeyElement>)
-      "
-    >
-      <img
-        class="icon-btn-img"
-        src="@/assets/icons/alignright.svg"
-        width="32"
-        height="32"
-        :title="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
-      />
-    </button>
-    <span class="space" />
-    <template v-if="!element.useDefaultStyle">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-      }}</label>
-      <InputStrokeWidth
-        :model-value="element.strokeWidth"
-        @update:model-value="
-          $emit('update', { strokeWidth: $event } as Partial<ModeKeyElement>)
-        "
-      />
-      <span class="space" />
-
-      <label class="right-space">{{
-        $t(($) => $.toolbar.modeKey.heightAdjustment, { ns: 'toolbar' })
-      }}</label>
-
-      <InputUnit
-        class="short-input"
-        unit="pt"
-        :min="heightAdjustmentMin"
-        :max="heightAdjustmentMax"
-        :step="0.5"
-        :precision="2"
-        :model-value="element.heightAdjustment"
-        @update:model-value="
-          $emit('update', {
-            heightAdjustment: $event,
-          } as Partial<ModeKeyElement>)
-        "
-      />
-      <span class="space" />
-    </template>
+      <AppTooltip
+        :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
+      >
+        <ToggleGroupItem
+          :value="TextBoxAlignment.Left"
+          class="icon-btn"
+          :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+        >
+          <PhTextAlignLeft class="h-4 w-4" />
+        </ToggleGroupItem>
+      </AppTooltip>
+      <AppTooltip
+        :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
+      >
+        <ToggleGroupItem
+          :value="TextBoxAlignment.Center"
+          class="icon-btn"
+          :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+        >
+          <PhTextAlignCenter class="h-4 w-4" />
+        </ToggleGroupItem>
+      </AppTooltip>
+      <AppTooltip
+        :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
+      >
+        <ToggleGroupItem
+          :value="TextBoxAlignment.Right"
+          class="icon-btn"
+          :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+        >
+          <PhTextAlignRight class="h-4 w-4" />
+        </ToggleGroupItem>
+      </AppTooltip>
+    </ToggleGroup>
+    <ToolbarSeparator />
     <ButtonWithMenu
       :options="tempoMenuOptions"
-      @select="$emit('update', { tempo: $event } as Partial<ModeKeyElement>)"
+      :tooltip="$t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' })"
+      @select="$emit('update:tempo', $event)"
     />
-    <span class="space" />
-
-    <button
-      class="icon-btn"
-      :class="{ selected: element.tempoAlignRight }"
-      @click="
-        $emit('update', {
-          tempoAlignRight: !element.tempoAlignRight,
-        } as Partial<ModeKeyElement>)
-      "
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.modeKey.rightAlignTempo, { ns: 'toolbar' })"
     >
-      <img
-        :title="$t(($) => $.toolbar.modeKey.rightAlignTempo, { ns: 'toolbar' })"
-        src="@/assets/icons/alignright2.svg"
-        height="24"
-        width="24"
-        class="icon-btn-img"
-      />
-    </button>
-
-    <span class="space" />
-
-    <label class="right-space">{{
-      $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
-    }}</label>
-    <InputBpm
-      :model-value="element.bpm"
-      @update:model-value="
-        $emit('update', { bpm: $event } as Partial<ModeKeyElement>)
-      "
-    />
-
-    <span class="space" />
-
-    <div class="form-group">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
-      }}</label>
-      <InputUnit
-        class="text-box-input-width"
-        unit="pt"
-        :min="0"
-        :max="maxHeight"
-        :step="0.5"
-        :model-value="element.marginTop"
-        :precision="1"
-        @update:model-value="
-          $emit('update', { marginTop: $event } as Partial<ModeKeyElement>)
-        "
-      />
-    </div>
-    <span class="space"></span>
-    <div class="form-group">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
-      }}</label>
-      <InputUnit
-        class="text-box-input-width"
-        unit="pt"
-        :min="0"
-        :max="maxHeight"
-        :step="0.5"
-        :model-value="element.marginBottom"
-        :precision="1"
-        @update:model-value="
-          $emit('update', { marginBottom: $event } as Partial<ModeKeyElement>)
-        "
-      />
-    </div>
-
-    <span class="space" />
-
-    <div style="display: flex; align-items: center">
-      <input
-        id="toolbar-mode-key-ignore-attractions"
-        type="checkbox"
-        :checked="element.ignoreAttractions"
-        @change="
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="neume-button"
+        :class="{ selected: element.tempoAlignRight }"
+        @click="
           $emit('update', {
-            ignoreAttractions: ($event.target as HTMLInputElement).checked,
+            tempoAlignRight: !element.tempoAlignRight,
           } as Partial<ModeKeyElement>)
         "
-      />
-      <label for="toolbar-mode-key-ignore-attractions">{{
-        $t(($) => $.toolbar.common.ignoreAttractions, { ns: 'toolbar' })
-      }}</label>
-    </div>
-
-    <span class="space" />
-
-    <div style="display: flex; align-items: center">
-      <input
-        id="toolbar-mode-key-show-ambitus"
-        type="checkbox"
-        :checked="element.showAmbitus"
-        @change="
-          $emit('update', {
-            showAmbitus: ($event.target as HTMLInputElement).checked,
-          } as Partial<ModeKeyElement>)
-        "
-      />
-      <label for="toolbar-mode-key-show-ambitus">{{
-        $t(($) => $.toolbar.modeKey.showAmbitus, { ns: 'toolbar' })
-      }}</label>
-    </div>
-
-    <span class="space" />
-
-    <div
-      v-if="element.mode === 3 || element.mode === 7"
-      style="display: flex; align-items: center"
-    >
-      <input
-        id="toolbar-mode-key-permanent-enharmonic-zo"
-        type="checkbox"
-        :checked="element.permanentEnharmonicZo"
-        @change="
-          $emit('update', {
-            permanentEnharmonicZo: ($event.target as HTMLInputElement).checked,
-          } as Partial<ModeKeyElement>)
-        "
-      />
-      <label for="toolbar-mode-key-permanent-enharmonic-zo">{{
-        $t(($) => $.toolbar.modeKey.permanentEnharmonicZo, { ns: 'toolbar' })
-      }}</label>
-    </div>
-    <span class="space" />
-
-    <button @click="$emit('open-mode-key-dialog')">
-      {{ $t(($) => $.toolbar.modeKey.changeKey, { ns: 'toolbar' }) }}
-    </button>
-
-    <span class="space" />
-
-    <div class="form-group">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-      }}</label>
-      <input
-        type="text"
-        :value="element.sectionName"
-        @change="
-          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
-        "
-      />
-    </div>
-  </div>
+      >
+        <PhAlignRight class="h-4 w-4" weight="duotone" />
+      </ToolbarButton>
+    </AppTooltip>
+  </Toolbar>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import {
+  PhAlignRight,
+  PhTextAlignCenter,
+  PhTextAlignLeft,
+  PhTextAlignRight,
+} from '@phosphor-icons/vue';
+import type { PropType } from 'vue';
 
-import ColorPicker from '@/components/ColorPicker.vue';
-import InputBpm from '@/components/InputBpm.vue';
+import AppTooltip from '@/components/AppTooltip.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
-import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import InputUnit from '@/components/InputUnit.vue';
-import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
+import { Label } from '@/components/ui/label';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  Toolbar,
+  ToolbarButton,
+  ToolbarSeparator,
+} from '@/components/ui/toolbar';
+import type { ModeKeyElement } from '@/models/Element';
+import { TextBoxAlignment } from '@/models/Element';
 import { TempoSign } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
-import { Unit } from '@/utils/Unit';
 
-import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
+import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
+import ButtonWithMenu from './ButtonWithMenu.vue';
 
 const tempoMenuOptions: ButtonWithMenuOption[] = [
   {
@@ -321,74 +139,49 @@ const tempoMenuOptions: ButtonWithMenuOption[] = [
   },
 ];
 
-export default defineComponent({
-  components: {
-    ColorPicker,
-    InputUnit,
-    InputBpm,
-    InputFontSize,
-    InputStrokeWidth,
-    ButtonWithMenu,
+defineProps({
+  element: {
+    type: Object as PropType<ModeKeyElement>,
+    required: true,
   },
-  props: {
-    element: {
-      type: Object as PropType<ModeKeyElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-  },
-  emits: [
-    'open-mode-key-dialog',
-    'update',
-    'update:sectionName',
-    'update:tempo',
-  ],
-
-  data() {
-    return {
-      TextBoxAlignment,
-      tempoMenuOptions,
-    };
-  },
-
-  computed: {
-    heightAdjustmentMin() {
-      return -Math.round(Unit.fromPt(this.element.height));
-    },
-
-    heightAdjustmentMax() {
-      return Unit.toPt(this.pageSetup.pageHeight);
-    },
-
-    maxHeight() {
-      return Unit.toPt(this.pageSetup.innerPageHeight);
-    },
-  },
-
-  methods: {},
 });
+
+const emit = defineEmits(['update', 'update:tempo']);
+
+function onAlignmentChanged(value: unknown) {
+  if (isTextBoxAlignment(value)) {
+    emit('update', {
+      alignment: value,
+    } as Partial<ModeKeyElement>);
+  }
+}
+
+function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
+  return Object.values(TextBoxAlignment).includes(value as TextBoxAlignment);
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .mode-key-toolbar {
-  display: flex;
-  align-items: center;
   flex-wrap: wrap;
-
-  background-color: lightgray;
-
-  padding: 0.25rem;
+  background-color: var(--color-legacy-chrome-menu-surface);
 
   --btn-size: 32px;
 }
 
-.neume-button {
+.neume-button,
+:deep(.menu-container > .neume-button),
+.icon-btn {
+  box-sizing: border-box;
   height: var(--btn-size);
   width: var(--btn-size);
+  appearance: auto;
+  background: revert;
+  border: revert;
+  border-radius: revert;
+  box-shadow: revert;
+  font-weight: revert;
 
   position: relative;
 
@@ -397,37 +190,41 @@ export default defineComponent({
   justify-content: center;
 
   overflow: hidden;
-
+  outline: revert;
+  padding: 0;
+  transition: revert;
   user-select: none;
 }
 
-.icon-btn {
-  height: 32px;
-  width: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.neume-button:hover,
+:deep(.menu-container > .neume-button:hover),
+.icon-btn:hover {
+  background: revert;
 }
 
-.icon-btn.selected {
-  background-color: var(--btn-color-selected);
+.neume-button.selected,
+.neume-button[data-state='on'],
+.neume-button[aria-pressed='true'],
+.icon-btn.selected,
+.icon-btn[data-state='on'],
+.icon-btn[aria-pressed='true'] {
+  background: var(--color-legacy-chrome-selected);
 }
 
-.space {
-  width: 16px;
+.neume-button > img,
+:deep(.menu-container > .neume-button > img),
+.icon-btn img {
+  height: var(--btn-size);
+  max-width: none;
+  width: var(--btn-size);
 }
 
-label.right-space {
-  margin-right: 0.5rem;
-}
-
-.divider {
-  height: 32px;
-  border-right: 1px solid #666;
-  margin: 0 0.5rem;
-}
-
-.short-input {
-  width: 4rem;
+.neume-button[aria-disabled='true'],
+.neume-button:disabled,
+:deep(.menu-container > .neume-button:disabled),
+.icon-btn[aria-disabled='true'],
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 </style>

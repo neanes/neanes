@@ -1,38 +1,49 @@
-import {
+import type {
+  ClipboardReplyArgs,
+  ExportPageAsImageReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
-  OpenContextMenuForTabArgs,
+  ExportWorkspaceReplyArgs,
   OpenWorkspaceFromArgvArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxArgs,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
-import { Workspace } from '@/models/Workspace';
+import type { Workspace } from '@/models/Workspace';
 
 export interface IIpcService {
   saveWorkspace(workspace: Workspace): Promise<SaveWorkspaceReplyArgs>;
 
   saveWorkspaceAs(workspace: Workspace): Promise<SaveWorkspaceAsReplyArgs>;
 
-  exportWorkspaceAsPdf(workspace: Workspace): Promise<void>;
+  exportWorkspaceAsPdf(workspace: Workspace): Promise<ExportWorkspaceReplyArgs>;
 
-  exportWorkspaceAsHtml(workspace: Workspace, data: string): Promise<void>;
+  exportWorkspaceAsHtml(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs>;
 
   exportWorkspaceAsMusicXml(
     workspace: Workspace,
     data: string,
     compressed: boolean,
     openFolder: boolean,
-  ): Promise<void>;
+  ): Promise<ExportWorkspaceReplyArgs>;
 
-  exportWorkspaceAsLatex(workspace: Workspace, data: string): Promise<void>;
+  exportWorkspaceAsLatex(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs>;
 
   exportWorkspaceAsImage(
     workspace: Workspace,
     imageFormat: 'png' | 'svg',
   ): Promise<ExportWorkspaceAsImageReplyArgs>;
 
-  exportPageAsImage(fileName: string, data: string): Promise<boolean>;
+  exportPageAsImage(
+    fileName: string,
+    data: string,
+  ): Promise<ExportPageAsImageReplyArgs>;
 
   printWorkspace(workspace: Workspace): Promise<void>;
 
@@ -40,17 +51,15 @@ export interface IIpcService {
 
   showMessageBox(args: ShowMessageBoxArgs): Promise<ShowMessageBoxReplyArgs>;
 
-  openContextMenuForTab(args: OpenContextMenuForTabArgs): void;
-
   showItemInFolder(path: string): Promise<void>;
 
-  isShowMessageBoxSupported(): boolean;
+  isShowItemInFolderSupported(): boolean;
 
-  getSystemFonts(): Promise<string[]>;
+  isShowMessageBoxSupported(): boolean;
 
   exitApplication(): Promise<void>;
 
   cancelExit(): Promise<void>;
 
-  paste(): Promise<void>;
+  paste(): Promise<ClipboardReplyArgs>;
 }

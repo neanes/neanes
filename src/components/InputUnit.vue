@@ -1,206 +1,333 @@
 <template>
-  <input
-    ref="input"
-    :value="displayValue"
-    type="number"
+  <!--
+    Intentionally no :default-value: this wrapper resolves its own defaults in
+    the displayValue computed. For nullable fields, displayValue is undefined
+    when empty, which makes NumberField initialize in uncontrolled mode; a
+    default-value here would render that initial value (e.g. 0) instead of the
+    placeholder.
+  -->
+  <NumberField
+    v-model="displayValue"
     :min="min"
     :max="max"
     :step="step"
+    :step-snapping="stepSnapping"
+    :format-options="resolvedFormatOptions"
     :disabled="disabled"
-    @change="onChange(($event.target as HTMLInputElement).value)"
-  />
+    :class="rootClasses"
+    :style="rootStyle"
+    @focusin="onWidgetFocusIn"
+    @focusout="onWidgetFocusOut"
+  >
+    <NumberFieldContent class="w-full max-w-full">
+      <NumberFieldDecrement
+        :class="buttonClass"
+        @pointerdown.capture="primeStepBaseWhenEmpty"
+      />
+      <NumberFieldInput
+        :id="id"
+        ref="inputRef"
+        v-bind="inputAttrs"
+        :class="inputClasses"
+        @keydown.capture="onStepKeyDownCapture"
+      />
+      <NumberFieldIncrement
+        :class="buttonClass"
+        @pointerdown.capture="primeStepBaseWhenEmpty"
+      />
+    </NumberFieldContent>
+  </NumberField>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import type { HTMLAttributes, StyleValue } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, useAttrs } from 'vue';
 
-import { Unit } from '@/utils/Unit';
+import type { UnitOfMeasure } from '@/components/InputUnit.types';
+import { toDisplay, toStorage } from '@/components/InputUnit.types';
+import {
+  NumberField,
+  NumberFieldContent,
+  NumberFieldDecrement,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from '@/components/ui/number-field';
+import { cn } from '@/lib/utils';
 
-export type UnitOfMeasure =
-  | 'pc'
-  | 'pt'
-  | 'in'
-  | 'cm'
-  | 'mm'
-  | 'percent'
-  | 'unitless';
+const emit = defineEmits<{
+  'update:modelValue': [value: number | null];
+  // Focus entered / truly left the whole widget (input + stepper buttons),
+  // debounced so intra-widget focus moves don't fire a spurious blur.
+  'focus-within': [];
+  'blur-within': [];
+}>();
 
-export default defineComponent({
-  components: {},
-  props: {
-    modelValue: {
-      type: [Number, null],
-      required: true,
-    },
-    unit: {
-      type: String as PropType<UnitOfMeasure>,
-      required: true,
-    },
-    nullable: {
-      type: Boolean,
-      default: false,
-    },
-    /**
-     * The minimum value allowed, in display units.
-     */
-    min: {
-      type: Number,
-      default: undefined,
-    },
-    /**
-     * The maximum value allowed, in display units.
-     */
-    max: {
-      type: Number,
-      default: undefined,
-    },
-    /**
-     * The step size, in display units.
-     */
-    step: {
-      type: Number,
-      default: undefined,
-    },
-    /**
-     * The number of decimal places that will be displayed.
-     */
-    precision: {
-      type: Number,
-      default: undefined,
-    },
-    /**
-     * The default value if the value is cleared
-     */
-    defaultValue: {
-      type: Number,
-      default: 0,
-    },
-    /**
-     * Whether the input is disabled
-     */
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    /**
-     * A special rounding function applied to the display value
-     * before it is converted to the stored value.
-     */
-    round: {
-      type: Function as PropType<(x: number) => number>,
-      default: undefined,
-    },
+defineOptions({
+  inheritAttrs: false,
+});
+
+const props = withDefaults(
+  defineProps<{
+    id?: string;
+    modelValue: number | null;
+    unit: UnitOfMeasure;
+    min?: number;
+    max?: number;
+    step?: number;
+    stepSnapping?: boolean;
+    formatOptions?: Intl.NumberFormatOptions;
+    // Model-unit fallback. Non-nullable empty values resolve to this (or 0
+    // when omitted); nullable empty values use it as the step base when supplied.
+    defaultValue?: number;
+    nullable?: boolean;
+    disabled?: boolean;
+    inputClass?: HTMLAttributes['class'];
+    buttonClass?: HTMLAttributes['class'];
+  }>(),
+  {
+    id: undefined,
+    min: undefined,
+    max: undefined,
+    step: undefined,
+    stepSnapping: false,
+    formatOptions: undefined,
+    defaultValue: undefined,
+    nullable: false,
+    disabled: false,
+    inputClass: undefined,
+    buttonClass: undefined,
   },
-  emits: ['update:modelValue'],
+);
 
-  data() {
-    return {};
+const attrs = useAttrs();
+
+const inputRef = ref<InstanceType<typeof NumberFieldInput>>();
+
+const inputAttrs = computed(() => {
+  const rest = { ...attrs };
+  delete rest.style;
+  delete rest.class;
+
+  return rest;
+});
+
+const resolvedFormatOptions = computed<Intl.NumberFormatOptions>(() => ({
+  useGrouping: false,
+  ...props.formatOptions,
+}));
+
+// The widget sizes to its content by default via --input-unit-width on the
+// root. A width class passed by the consumer (e.g. w-28, w-36, w-full) lands
+// here too and overrides it, so call sites control width with plain Tailwind.
+const rootClasses = computed(() =>
+  cn(
+    'w-[var(--input-unit-width)]',
+    'min-w-20',
+    'max-w-full',
+    attrs.class as HTMLAttributes['class'],
+  ),
+);
+
+const inputClasses = computed(() =>
+  cn('bg-background w-full min-w-0', props.inputClass),
+);
+
+const defaultDisplayValue = computed(() => {
+  if (props.defaultValue == null) {
+    return 0;
+  }
+
+  return toDisplay(props.defaultValue, props.unit) ?? 0;
+});
+
+const displayValue = computed<number | undefined>({
+  get() {
+    const value = toDisplay(props.modelValue, props.unit);
+
+    if (value == null) {
+      return props.nullable ? undefined : defaultDisplayValue.value;
+    }
+
+    return value;
   },
+  set(value) {
+    if (value == null) {
+      emitValue(
+        props.nullable
+          ? null
+          : toStorage(clampDisplayValue(defaultDisplayValue.value), props.unit),
+      );
+      return;
+    }
 
-  computed: {
-    htmlElement() {
-      return this.$refs.input as HTMLInputElement;
-    },
-
-    displayValue() {
-      const convertedValue = this.toDisplay(this.modelValue);
-
-      if (convertedValue == null) {
-        return this.nullable ? '' : this.defaultValue.toString();
-      }
-
-      return this.precision != null
-        ? convertedValue.toFixed(this.precision)
-        : convertedValue.toString();
-    },
-  },
-
-  methods: {
-    emitValue(v: number | null) {
-      if (this.modelValue !== v) {
-        this.$emit('update:modelValue', v);
-      } else {
-        this.htmlElement.value = this.displayValue;
-      }
-    },
-
-    onChange(input: string) {
-      if (input.trim() === '' && this.nullable) {
-        return this.emitValue(null);
-      }
-
-      let newValue = parseFloat(input);
-
-      if (isNaN(newValue)) {
-        newValue = this.defaultValue;
-      }
-
-      if (this.round != null) {
-        newValue = this.round(newValue);
-      }
-
-      let storageValue = this.toStorage(newValue);
-
-      if (this.min != null) {
-        storageValue = Math.max(this.toStorage(this.min), storageValue);
-      }
-
-      if (this.max != null) {
-        storageValue = Math.min(this.toStorage(this.max), storageValue);
-      }
-
-      this.emitValue(storageValue);
-    },
-
-    toStorage(value: number) {
-      switch (this.unit) {
-        case 'pc':
-          return Unit.fromPc(value);
-        case 'pt':
-          return Unit.fromPt(value);
-        case 'in':
-          return Unit.fromInch(value);
-        case 'cm':
-          return Unit.fromCm(value);
-        case 'mm':
-          return Unit.fromMm(value);
-        case 'percent':
-          return Unit.fromPercent(value);
-        case 'unitless':
-          return value;
-        default:
-          console.error(`Unsupported unit ${this.unit}`);
-          return value;
-      }
-    },
-
-    toDisplay(value: number | null) {
-      if (value == null) {
-        return null;
-      }
-
-      switch (this.unit) {
-        case 'pc':
-          return Unit.toPc(value);
-        case 'pt':
-          return Unit.toPt(value);
-        case 'in':
-          return Unit.toInch(value);
-        case 'cm':
-          return Unit.toCm(value);
-        case 'mm':
-          return Unit.toMm(value);
-        case 'percent':
-          return Unit.toPercent(value);
-        case 'unitless':
-          return value;
-        default:
-          console.error(`Unsupported unit ${this.unit}`);
-          return value;
-      }
-    },
+    emitValue(toStorage(clampDisplayValue(value), props.unit));
   },
 });
-</script>
 
-<style scoped></style>
+// When the resolved value matches the current model, emitValue suppresses the
+// update, so no new model flows back to reset the NumberField's text. Reka's
+// empty-input path (and Enter key) can leave the input visually blank in that
+// case, so re-sync the displayed text to the canonical value ourselves.
+function resyncInput() {
+  nextTick(() => {
+    const el = inputRef.value?.$el as HTMLInputElement | undefined;
+
+    if (el == null) {
+      return;
+    }
+
+    const value = displayValue.value;
+
+    el.value =
+      value == null
+        ? ''
+        : new Intl.NumberFormat(undefined, resolvedFormatOptions.value).format(
+            value,
+          );
+  });
+}
+
+const inputTextLength = computed(() => {
+  const value = displayValue.value;
+  let length: number;
+
+  if (value == null) {
+    length = Math.max(String(attrs.placeholder ?? '').length, 1);
+  } else {
+    length = Math.max(formatDisplayValue(value).length, 1);
+  }
+
+  if (negativeValuesAreAllowed.value && (value == null || value >= 0)) {
+    length += negativeSignLength.value;
+  }
+
+  return length;
+});
+
+const rootStyle = computed<StyleValue>(() => [
+  attrs.style as StyleValue,
+  { '--input-unit-width': `calc(${inputTextLength.value}ch + 3.5rem)` },
+]);
+
+const negativeValuesAreAllowed = computed(
+  () => props.min == null || props.min < 0,
+);
+
+const negativeSignLength = computed(() => {
+  const formatter = new Intl.NumberFormat(
+    undefined,
+    resolvedFormatOptions.value,
+  );
+
+  return Math.max(formatter.format(-1).length - formatter.format(1).length, 0);
+});
+
+function formatDisplayValue(value: number) {
+  return new Intl.NumberFormat(undefined, resolvedFormatOptions.value).format(
+    value,
+  );
+}
+
+function clampDisplayValue(value: number) {
+  if (props.min != null && value < props.min) {
+    return props.min;
+  }
+
+  if (props.max != null && value > props.max) {
+    return props.max;
+  }
+
+  return value;
+}
+
+function emitValue(value: number | null) {
+  if (props.modelValue !== value) {
+    emit('update:modelValue', value);
+  } else {
+    resyncInput();
+  }
+}
+
+const stepKeys = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown']);
+
+function onStepKeyDownCapture(event: KeyboardEvent) {
+  if (stepKeys.has(event.key)) {
+    primeStepBaseWhenEmpty();
+  }
+}
+
+function primeStepBaseWhenEmpty() {
+  if (
+    !props.nullable ||
+    props.modelValue != null ||
+    props.defaultValue == null
+  ) {
+    return;
+  }
+
+  const el = inputRef.value?.$el as HTMLInputElement | undefined;
+
+  if (el == null || el.value.trim() !== '') {
+    return;
+  }
+
+  el.value = formatDisplayValue(clampDisplayValue(defaultDisplayValue.value));
+}
+
+// Track focus across the whole widget so consumers can react to focus entering
+// or leaving the input plus stepper buttons as one control.
+let widgetHasFocus = false;
+let pendingBlurFrame: number | null = null;
+
+function onWidgetFocusIn() {
+  if (pendingBlurFrame != null) {
+    cancelAnimationFrame(pendingBlurFrame);
+    pendingBlurFrame = null;
+  }
+
+  if (!widgetHasFocus) {
+    widgetHasFocus = true;
+    emit('focus-within');
+  }
+}
+
+function onWidgetFocusOut(event: FocusEvent) {
+  const container = event.currentTarget as HTMLElement;
+  const next = event.relatedTarget as Node | null;
+
+  if (next != null && container.contains(next)) {
+    return;
+  }
+
+  if (pendingBlurFrame != null) {
+    cancelAnimationFrame(pendingBlurFrame);
+  }
+
+  pendingBlurFrame = requestAnimationFrame(() => {
+    pendingBlurFrame = null;
+
+    const active = document.activeElement;
+
+    if (active != null && container.contains(active)) {
+      return;
+    }
+
+    if (widgetHasFocus) {
+      widgetHasFocus = false;
+      emit('blur-within');
+    }
+  });
+}
+
+onBeforeUnmount(() => {
+  if (pendingBlurFrame != null) {
+    cancelAnimationFrame(pendingBlurFrame);
+    pendingBlurFrame = null;
+  }
+
+  if (widgetHasFocus) {
+    widgetHasFocus = false;
+    emit('blur-within');
+  }
+});
+</script>

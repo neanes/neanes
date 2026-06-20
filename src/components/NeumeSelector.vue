@@ -13,7 +13,7 @@
               class="neume"
               :neume="QuantitativeNeume.VareiaDotted"
               :font-family="pageSetup.neumeDefaultFontFamily"
-              :title="tooltip(neume)"
+              :tooltip="tooltip(neume)"
             />
 
             <div v-if="showVareiaDottedMenu" class="menu">
@@ -27,7 +27,7 @@
                   class="neume"
                   :neume="menuItem"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
               </div>
             </div>
@@ -39,7 +39,7 @@
             class="neume"
             :neume="neume"
             :font-family="pageSetup.neumeDefaultFontFamily"
-            :title="tooltip(neume)"
+            :tooltip="tooltip(neume)"
             @click="$emit('select-quantitative-neume', neume)"
           />
         </template>
@@ -52,7 +52,7 @@
         class="neume"
         :neume="neume"
         :font-family="pageSetup.neumeDefaultFontFamily"
-        :title="tooltip(neume)"
+        :tooltip="tooltip(neume)"
         @click="$emit('select-quantitative-neume', neume)"
       />
     </div>
@@ -63,7 +63,7 @@
         class="neume"
         :neume="neume"
         :font-family="pageSetup.neumeDefaultFontFamily"
-        :title="tooltip(neume)"
+        :tooltip="tooltip(neume)"
         @click="$emit('select-quantitative-neume', neume)"
       />
     </div>
@@ -82,7 +82,7 @@
               class="neume"
               :neume="QuantitativeNeume.OligonPlusHyporoePlusKentemata"
               :font-family="pageSetup.neumeDefaultFontFamily"
-              :title="tooltip(neume)"
+              :tooltip="tooltip(neume)"
             />
 
             <div v-if="showHyporoeKentemataMenu" class="menu">
@@ -96,14 +96,14 @@
                   class="neume"
                   :neume="QuantitativeNeume.OligonPlusHyporoePlusKentemata"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
                 <Neume
                   v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
               </div>
             </div>
@@ -122,7 +122,7 @@
               class="neume"
               :neume="QuantitativeNeume.OligonPlusIsonPlusKentemata"
               :font-family="pageSetup.neumeDefaultFontFamily"
-              :title="tooltip(neume)"
+              :tooltip="tooltip(neume)"
             />
 
             <div v-if="showIsonKentemataMenu" class="menu down">
@@ -136,14 +136,14 @@
                   class="neume"
                   :neume="QuantitativeNeume.OligonPlusIsonPlusKentemata"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
                 <Neume
                   v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
               </div>
             </div>
@@ -164,7 +164,7 @@
               class="neume"
               :neume="QuantitativeNeume.OligonPlusApostrophosPlusKentemata"
               :font-family="pageSetup.neumeDefaultFontFamily"
-              :title="tooltip(neume)"
+              :tooltip="tooltip(neume)"
             />
 
             <div v-if="showApostrophosKentemataMenu" class="menu">
@@ -178,14 +178,14 @@
                   class="neume"
                   :neume="QuantitativeNeume.OligonPlusApostrophosPlusKentemata"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
                 <Neume
                   v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
               </div>
             </div>
@@ -206,7 +206,7 @@
               class="neume"
               :neume="QuantitativeNeume.OligonPlusElaphronPlusKentemata"
               :font-family="pageSetup.neumeDefaultFontFamily"
-              :title="tooltip(neume)"
+              :tooltip="tooltip(neume)"
             />
 
             <div v-if="showElaphronKentemataMenu" class="menu">
@@ -220,14 +220,14 @@
                   class="neume"
                   :neume="QuantitativeNeume.OligonPlusElaphronPlusKentemata"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
                 <Neume
                   v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
               </div>
             </div>
@@ -251,7 +251,7 @@
                 QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
               "
               :font-family="pageSetup.neumeDefaultFontFamily"
-              :title="tooltip(neume)"
+              :tooltip="tooltip(neume)"
             />
 
             <div v-if="showElaphronApostrophosKentemataMenu" class="menu">
@@ -267,14 +267,14 @@
                     QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
                   "
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
                 <Neume
                   v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
               </div>
             </div>
@@ -293,7 +293,7 @@
               class="neume"
               :neume="QuantitativeNeume.OligonPlusHamiliPlusKentemata"
               :font-family="pageSetup.neumeDefaultFontFamily"
-              :title="tooltip(neume)"
+              :tooltip="tooltip(neume)"
             />
 
             <div v-if="showHamiliKentemataMenu" class="menu">
@@ -307,14 +307,14 @@
                   class="neume"
                   :neume="QuantitativeNeume.OligonPlusHamiliPlusKentemata"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
                 <Neume
                   v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
               </div>
             </div>
@@ -335,7 +335,7 @@
               class="neume"
               :neume="QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata"
               :font-family="pageSetup.neumeDefaultFontFamily"
-              :title="tooltip(neume)"
+              :tooltip="tooltip(neume)"
             />
 
             <div v-if="showRunningElaphronKentemataMenu" class="menu">
@@ -351,14 +351,14 @@
                     QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
                   "
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
                 <Neume
                   v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
                   :font-family="pageSetup.neumeDefaultFontFamily"
-                  :title="tooltip(neume)"
+                  :tooltip="tooltip(neume)"
                 />
               </div>
             </div>
@@ -370,7 +370,7 @@
             class="neume"
             :neume="neume"
             :font-family="pageSetup.neumeDefaultFontFamily"
-            :title="tooltip(neume)"
+            :tooltip="tooltip(neume)"
             @click="$emit('select-quantitative-neume', neume)"
           />
         </template>
@@ -379,14 +379,17 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { useTranslation } from 'i18next-vue';
+import type { PropType } from 'vue';
+import { ref } from 'vue';
 
+import type { AppTooltipValue } from '@/components/AppTooltip.types';
 import Neume from '@/components/NeumeGlyph.vue';
 import { getQuantitativeNeumeLabelSelector } from '@/models/NeumeI18nMappings';
 import { GorgonNeume, QuantitativeNeume } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
-import { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import type { PageSetup } from '@/models/PageSetup';
+import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
 
 interface SecondaryGorgonMenuItem {
   gorgon: GorgonNeume | null;
@@ -506,227 +509,206 @@ const vareiaDottedMenuItems: QuantitativeNeume[] = [
   QuantitativeNeume.VareiaDotted,
 ];
 
-export default defineComponent({
-  components: { Neume },
-  props: {
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    neumeKeyboard: {
-      type: Object as PropType<NeumeKeyboard>,
-      required: true,
-    },
+const props = defineProps({
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-  emits: ['select-quantitative-neume'],
-
-  data() {
-    return {
-      QuantitativeNeume,
-
-      ascendingNeumes,
-      descendingNeumes,
-      ascendingNeumesWithPetasti,
-      combinationNeumes,
-      vareiaDottedMenuItems,
-      secondaryGorgonMenuItems,
-      secondaryGorgonMenuItemsDown,
-
-      showHyporoeKentemataMenu: false,
-      showIsonKentemataMenu: false,
-      showApostrophosKentemataMenu: false,
-      showElaphronKentemataMenu: false,
-      showElaphronApostrophosKentemataMenu: false,
-      showRunningElaphronKentemataMenu: false,
-      showHamiliKentemataMenu: false,
-      showVareiaDottedMenu: false,
-      selectedSecondaryGorgon: null as SecondaryGorgonMenuItem | null,
-      selectedVareiaDotted: null as QuantitativeNeume | null,
-    };
-  },
-
-  computed: {},
-
-  methods: {
-    openHyporoeKentemataMenu() {
-      this.showHyporoeKentemataMenu = true;
-      window.addEventListener('mouseup', this.onHyporoeMouseUp);
-    },
-
-    openIsonKentemataMenu() {
-      this.showIsonKentemataMenu = true;
-      window.addEventListener('mouseup', this.onIsonKentemataMouseUp);
-    },
-
-    openApostrophosKentemataMenu() {
-      this.showApostrophosKentemataMenu = true;
-      window.addEventListener('mouseup', this.onApostrophosKentemataMouseUp);
-    },
-
-    openElaphronKentemataMenu() {
-      this.showElaphronKentemataMenu = true;
-      window.addEventListener('mouseup', this.onElaphronKentemataMouseUp);
-    },
-
-    openElaphronApostrophosKentemataMenu() {
-      this.showElaphronApostrophosKentemataMenu = true;
-      window.addEventListener(
-        'mouseup',
-        this.onElaphronApostrophosKentemataMouseUp,
-      );
-    },
-
-    openRunningElaphronKentemataMenu() {
-      this.showRunningElaphronKentemataMenu = true;
-      window.addEventListener(
-        'mouseup',
-        this.onRunningElaphronKentemataMouseUp,
-      );
-    },
-
-    openHamiliKentemataMenu() {
-      this.showHamiliKentemataMenu = true;
-      window.addEventListener('mouseup', this.onHamiliKentemataMouseUp);
-    },
-
-    onHyporoeMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusHyporoePlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showHyporoeKentemataMenu = false;
-
-      window.removeEventListener('mouseup', this.onHyporoeMouseUp);
-    },
-
-    onIsonKentemataMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusIsonPlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showIsonKentemataMenu = false;
-
-      window.removeEventListener('mouseup', this.onIsonKentemataMouseUp);
-    },
-
-    onApostrophosKentemataMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showApostrophosKentemataMenu = false;
-
-      window.removeEventListener('mouseup', this.onApostrophosKentemataMouseUp);
-    },
-
-    onElaphronKentemataMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusElaphronPlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showElaphronKentemataMenu = false;
-
-      window.removeEventListener('mouseup', this.onElaphronKentemataMouseUp);
-    },
-
-    onElaphronApostrophosKentemataMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showElaphronApostrophosKentemataMenu = false;
-
-      window.removeEventListener(
-        'mouseup',
-        this.onElaphronApostrophosKentemataMouseUp,
-      );
-    },
-
-    onRunningElaphronKentemataMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showRunningElaphronKentemataMenu = false;
-
-      window.removeEventListener(
-        'mouseup',
-        this.onRunningElaphronKentemataMouseUp,
-      );
-    },
-
-    onHamiliKentemataMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusHamiliPlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showHamiliKentemataMenu = false;
-
-      window.removeEventListener('mouseup', this.onHamiliKentemataMouseUp);
-    },
-
-    openVareiaDottedMenu() {
-      this.showVareiaDottedMenu = true;
-      window.addEventListener('mouseup', this.onVareiaDottedMouseUp);
-    },
-
-    onVareiaDottedMouseUp() {
-      if (this.selectedVareiaDotted) {
-        this.$emit('select-quantitative-neume', this.selectedVareiaDotted);
-      }
-
-      this.showVareiaDottedMenu = false;
-
-      window.removeEventListener('mouseup', this.onVareiaDottedMouseUp);
-    },
-
-    tooltip(neume: QuantitativeNeume) {
-      const displayName = getQuantitativeNeumeLabelSelector(neume);
-      const mapping = this.neumeKeyboard.findMappingForNeume(neume);
-      if (mapping) {
-        return `${this.$t(displayName, { ns: 'model' })} (${this.neumeKeyboard.generateTooltip(
-          mapping,
-        )})`;
-      } else {
-        return `${this.$t(displayName, { ns: 'model' })}`;
-      }
-    },
+  neumeKeyboard: {
+    type: Object as PropType<NeumeKeyboard>,
+    required: true,
   },
 });
+
+const emit = defineEmits<{
+  'select-quantitative-neume': [
+    neume: QuantitativeNeume,
+    secondaryGorgon?: GorgonNeume | null,
+  ];
+}>();
+const { t } = useTranslation();
+
+const showHyporoeKentemataMenu = ref(false);
+const showIsonKentemataMenu = ref(false);
+const showApostrophosKentemataMenu = ref(false);
+const showElaphronKentemataMenu = ref(false);
+const showElaphronApostrophosKentemataMenu = ref(false);
+const showRunningElaphronKentemataMenu = ref(false);
+const showHamiliKentemataMenu = ref(false);
+const showVareiaDottedMenu = ref(false);
+const selectedSecondaryGorgon = ref<SecondaryGorgonMenuItem | null>(null);
+const selectedVareiaDotted = ref<QuantitativeNeume | null>(null);
+
+function openHyporoeKentemataMenu() {
+  showHyporoeKentemataMenu.value = true;
+  window.addEventListener('mouseup', onHyporoeMouseUp);
+}
+
+function openIsonKentemataMenu() {
+  showIsonKentemataMenu.value = true;
+  window.addEventListener('mouseup', onIsonKentemataMouseUp);
+}
+
+function openApostrophosKentemataMenu() {
+  showApostrophosKentemataMenu.value = true;
+  window.addEventListener('mouseup', onApostrophosKentemataMouseUp);
+}
+
+function openElaphronKentemataMenu() {
+  showElaphronKentemataMenu.value = true;
+  window.addEventListener('mouseup', onElaphronKentemataMouseUp);
+}
+
+function openElaphronApostrophosKentemataMenu() {
+  showElaphronApostrophosKentemataMenu.value = true;
+  window.addEventListener('mouseup', onElaphronApostrophosKentemataMouseUp);
+}
+
+function openRunningElaphronKentemataMenu() {
+  showRunningElaphronKentemataMenu.value = true;
+  window.addEventListener('mouseup', onRunningElaphronKentemataMouseUp);
+}
+
+function openHamiliKentemataMenu() {
+  showHamiliKentemataMenu.value = true;
+  window.addEventListener('mouseup', onHamiliKentemataMouseUp);
+}
+
+function onHyporoeMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showHyporoeKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onHyporoeMouseUp);
+}
+
+function onIsonKentemataMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusIsonPlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showIsonKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onIsonKentemataMouseUp);
+}
+
+function onApostrophosKentemataMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showApostrophosKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onApostrophosKentemataMouseUp);
+}
+
+function onElaphronKentemataMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showElaphronKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onElaphronKentemataMouseUp);
+}
+
+function onElaphronApostrophosKentemataMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showElaphronApostrophosKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onElaphronApostrophosKentemataMouseUp);
+}
+
+function onRunningElaphronKentemataMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showRunningElaphronKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onRunningElaphronKentemataMouseUp);
+}
+
+function onHamiliKentemataMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showHamiliKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onHamiliKentemataMouseUp);
+}
+
+function openVareiaDottedMenu() {
+  showVareiaDottedMenu.value = true;
+  window.addEventListener('mouseup', onVareiaDottedMouseUp);
+}
+
+function onVareiaDottedMouseUp() {
+  if (selectedVareiaDotted.value) {
+    emit('select-quantitative-neume', selectedVareiaDotted.value);
+  }
+
+  showVareiaDottedMenu.value = false;
+
+  window.removeEventListener('mouseup', onVareiaDottedMouseUp);
+}
+
+function tooltip(neume: QuantitativeNeume): AppTooltipValue {
+  const displayName = getQuantitativeNeumeLabelSelector(neume);
+  const label = t(displayName, { ns: 'model' });
+  const mapping = props.neumeKeyboard.findMappingForNeume(neume);
+  if (mapping) {
+    return {
+      label,
+      shortcut: props.neumeKeyboard.generateTooltipKeys(mapping),
+    };
+  } else {
+    return label;
+  }
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .neume-selector-panel {
   display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 
   --neume-height: 2.5rem;
 }
@@ -736,7 +718,7 @@ export default defineComponent({
   flex-direction: column;
 }
 
-.neume {
+.neume-selector-panel :deep(.neume) {
   font-size: 1.6rem;
 
   text-align: center;
@@ -749,8 +731,8 @@ export default defineComponent({
   width: 100%;
 }
 
-.neume:hover {
-  background-color: aliceblue;
+.neume-selector-panel :deep(.neume:hover) {
+  background-color: var(--color-legacy-chrome-hover);
 }
 
 .menu-container {
@@ -762,9 +744,9 @@ export default defineComponent({
 
 .menu {
   position: absolute;
-  z-index: 999;
-  background-color: white;
-  border: 1px solid black;
+  z-index: 40;
+  background-color: var(--color-legacy-chrome-surface);
+  border: 1px solid var(--color-legacy-chrome-border);
   box-sizing: border-box;
   bottom: 0;
   width: 100%;
@@ -787,6 +769,6 @@ export default defineComponent({
 }
 
 .menu-item:hover {
-  background-color: aliceblue;
+  background-color: var(--color-legacy-chrome-hover);
 }
 </style>

@@ -28,16 +28,17 @@
     "copyAsHtml": "Copy as HTML",
     "paste": "Paste",
     "pasteWithLyrics": "Paste with Lyrics",
+    "selectAll": "Select All",
     "copyFormat": "Copy Format",
     "pasteFormat": "Paste Format",
     "find": "Find",
-    "lyrics": "Lyrics",
     "preferences": "Preferences"
   },
   "insert": {
     "root": "Insert",
     "alternateLine": "Alternate Line",
     "annotation": "Annotation",
+    "dropCap": "Drop Cap",
     "dropCapBefore": "Drop Cap Before",
     "dropCapAfter": "Drop Cap After",
     "textBox": "Text Box",
@@ -54,7 +55,13 @@
     "copyElementLink": "Copy Element Link"
   },
   "view": {
-    "root": "View (Debug)",
+    "root": "View",
+    "neumeSelector": "Neume Selector",
+    "commonCombos": "Common Combinations",
+    "properties": "Properties",
+    "selection": "Selection",
+    "lyrics": "Lyrics",
+    "resetLayout": "Reset Layout",
     "generateTestFiles": "Generate Test Files (Debug)"
   },
   "help": {

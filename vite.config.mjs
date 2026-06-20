@@ -1,6 +1,7 @@
 import { rmSync } from 'node:fs';
 
 import eslintPlugin from '@nabla/vite-plugin-eslint';
+import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
@@ -37,7 +38,7 @@ export default defineConfig(({ command, mode }) => {
         ? VitePWA({
             registerType: null, // We'll inject the service worker ourselves
             workbox: {
-              maximumFileSizeToCacheInBytes: 3000000,
+              maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
             },
             includeAssets: [
               'favicon-32.png',
@@ -105,6 +106,7 @@ export default defineConfig(({ command, mode }) => {
           })
         : undefined,
       vue(),
+      tailwindcss(),
       process.env.VITE_ENABLE_DEV_TOOLS === 'true' ? VueDevTools() : undefined,
       eslintPlugin({
         eslintOptions: {
@@ -171,6 +173,13 @@ export default defineConfig(({ command, mode }) => {
           port: +url.port,
         };
       })(),
+    optimizeDeps: {
+      // Work around a Vite 8/Rolldown dep optimizer bug where Vue init helper
+      // calls are emitted without imports in pre-bundled chunks. This only
+      // affects dev mode; production builds do not use optimizeDeps.
+      // See https://github.com/rolldown/rolldown/issues/9502.
+      exclude: ['@ckeditor/ckeditor5-vue'],
+    },
     clearScreen: false,
   };
 });

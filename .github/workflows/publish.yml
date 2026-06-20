@@ -14,10 +14,10 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Check out
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.4.0
         with:
           node-version: 22
           cache: 'npm'
@@ -35,16 +35,22 @@ jobs:
         run: npm run lint
 
       - name: Lint Markdown
-        uses: DavidAnson/markdownlint-cli2-action@v23
+        uses: DavidAnson/markdownlint-cli2-action@v23.2.0
 
-      - name: Build Windows and Linux
-        if: runner.os != 'macOS'
-        run: npm run release
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        run: npm run release -- --win
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Build Linux
+        if: runner.os == 'Linux'
+        run: npm run release -- --linux --x64 --arm64
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Build macOS
         if: runner.os == 'macOS'
-        run: npm run release -- --x64 --arm64
+        run: npm run release -- --mac --x64 --arm64
         env:
           GH_TOKEN: ${{ github.token }}

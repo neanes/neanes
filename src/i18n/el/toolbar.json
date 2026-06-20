@@ -3,7 +3,9 @@
     "alignLeft": "Στοίχιση Αριστερά",
     "alignCenter": "Στοίχιση στο Κέντρο",
     "alignRight": "Στοίχιση Δεξιά",
+    "alignment": "Στοίχιση",
     "bpm": "BPM",
+    "chooseColor": "Επιλογή χρώματος",
     "fthoraNote": "Φθόγγος Φθοράς",
     "ignoreAttractions": "Αγνόηση Έλξεων",
     "insertGorthmikon": "Εισαγωγή Γορθμικού",
@@ -46,11 +48,29 @@
     "deleteSelectedElement": "Διαγραφή Επιλεγμένου Στοιχείου",
     "fit": "Προσαρμογή",
     "speed": "Ταχύτητα",
-    "pageNumber": "Σελίδα {{ currentPageNumber }} από {{ pageCount }}",
     "invalidZoom": "Η τιμή πρέπει να είναι μεταξύ 50% και 500%."
+  },
+  "status": {
+    "section": "Ενότητα {{ sectionNumber }} από {{ sectionCount }}",
+    "pageNumber": "Σελίδα {{ currentPageNumber }} από {{ pageCount }}",
+    "line": "Γραμμή {{ lineNumber }} από {{ lineCount }}",
+    "column": "Στήλη {{ columnNumber }} από {{ columnCount }}"
   },
   "dropCap": {
     "lineSpan": "Έκταση Γραμμών"
+  },
+  "properties": {
+    "noProperties": "Δεν υπάρχουν ιδιότητες",
+    "nothingToEdit": "Δεν υπάρχει τίποτα για επεξεργασία"
+  },
+  "selection": {
+    "elements": "Στοιχεία",
+    "lineBreak": "Αλλαγή Γραμμής",
+    "center": "Κέντρο",
+    "justify": "Πλήρης Στοίχιση",
+    "pageBreak": "Αλλαγή Σελίδας",
+    "noSelection": "Καμία επιλογή",
+    "nothingSelected": "Δεν έχει επιλεγεί τίποτα"
   },
   "imageBox": {
     "maintainAspectRatio": "Διατήρηση Αναλογίας",
@@ -104,5 +124,47 @@
     "offsetYTop": "Άνω Μετατόπιση Y",
     "offsetYBottom": "Κάτω Μετατόπιση Y",
     "fillWidth": "Πλήρες Πλάτος"
+  },
+  "richTextBox": {
+    "default": "Προεπιλογή",
+    "underline": "Υπογράμμιση",
+    "bulletedList": "Λίστα με κουκκίδες",
+    "numberedList": "Αριθμημένη λίστα",
+    "outdent": "Μείωση εσοχής",
+    "indent": "Αύξηση εσοχής",
+    "position": "Θέση",
+    "subscript": "Δείκτης",
+    "superscript": "Εκθέτης",
+    "numbers": "Αριθμοί",
+    "numbersTabularLining": "Ευθυγραμμισμένοι ισοπλατείς",
+    "numbersTabularOldstyle": "Παλαιού τύπου ισοπλατείς",
+    "numbersProportionalOldstyle": "Παλαιού τύπου αναλογικοί",
+    "numbersProportionalLining": "Ευθυγραμμισμένοι αναλογικοί",
+    "case": "Κεφαλαία",
+    "caseSmallCaps": "Μικρά κεφαλαία",
+    "caseAllSmallCaps": "Όλα μικρά κεφαλαία",
+    "fractions": "Κλάσματα",
+    "slashedZero": "Διαγραμμισμένο μηδέν",
+    "ordinals": "Τακτικά αριθμητικά",
+    "commonLigatures": "Κοινά συμπλέγματα",
+    "discretionaryLigatures": "Προαιρετικά συμπλέγματα",
+    "historicalLigatures": "Ιστορικά συμπλέγματα",
+    "contextualAlternates": "Συμφραστικές εναλλακτικές",
+    "removeFormat": "Αφαίρεση μορφοποίησης",
+    "insertNeume": "Εισαγωγή νεύματος",
+    "insertMartyria": "Εισαγωγή μαρτυρίας",
+    "insertPlagal": "Εισαγωγή πλαγίου",
+    "neumeAttributes": "Ιδιότητες νεύματος",
+    "kerningLeft": "Αριστερή διαστοιχείωση",
+    "kerningRight": "Δεξιά διαστοιχείωση",
+    "neumeFontSize": "Μέγεθος νεύματος",
+    "martyriaNote": "Φθόγγος μαρτυρίας",
+    "martyriaRootSign": "Ριζικό σημάδι μαρτυρίας"
+  },
+  "workspace": {
+    "dockPane": "Προσάρτηση Πλαισίου",
+    "floatPane": "Αποδέσμευση Πλαισίου",
+    "hidePane": "Απόκρυψη Πλαισίου",
+    "showPane": "Εμφάνιση Πλαισίου"
   }
 }

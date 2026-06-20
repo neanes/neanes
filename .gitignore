@@ -29,7 +29,7 @@ yarn-error.log*
 # Vitest coverage output
 /coverage/
 
-#Electron-builder output
+# Electron-builder output
 /dist
 /dist-electron
 /release

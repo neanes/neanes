@@ -1,23 +1,27 @@
-import {
+import type {
   Accidental,
   Fthora,
   GorgonNeume,
   Ison,
   MeasureBar,
   MeasureNumber,
+  NoteIndicator,
+  Tie,
+  TimeNeume,
+} from '@/models/Neumes';
+import {
   ModeSign,
   Note,
-  NoteIndicator,
   QuantitativeNeume,
   RootSign,
   TempoSign,
-  Tie,
-  TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
+import { resolveFontStyle } from '@/utils/fontStyle';
 import { Unit } from '@/utils/Unit';
 
-import { ModeKeyTemplate } from './ModeKeys';
+import type { ModeKeyTemplate } from './ModeKeys';
 import {
   getFthoraReplacements,
   getGorgonReplacements,
@@ -110,8 +114,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontSize: number = Unit.fromPt(12);
   public lyricsStrokeWidth: number = 0;
   public lyricsUseDefaultStyle: boolean = true;
-  public lyricsFontStyle: string = 'normal';
-  public lyricsFontWeight: string = '400';
+  public lyricsFontStyle: string = DEFAULT_FONT_STYLE;
   public lyricsTextDecoration: string = 'none';
   public acceptsLyrics: AcceptsLyricsOption = AcceptsLyricsOption.Default;
   public isMelisma: boolean = false;
@@ -172,7 +175,12 @@ export class NoteElement extends ScoreElement {
   public tertiaryFthoraPrevious: Fthora | null = null;
   public computedMeasureBarLeftPrevious: MeasureBar | null = null;
   public computedMeasureBarRightPrevious: MeasureBar | null = null;
+  public computedMeasureBarLeftOffsetXPrevious: number = 0;
+  public computedMeasureBarRightOffsetXPrevious: number = 0;
+  public computedMeasureBarLeftLeadingSpacingPrevious: number = 0;
+  public computedMeasureBarRightTrailingSpacingPrevious: number = 0;
   public computedIsonOffsetYPrevious: number | null = null;
+  public vareiaInternalSpacingPrevious: number = 0;
 
   // Fthora helper
   public fthoraCarry: Fthora | null = null;
@@ -180,7 +188,12 @@ export class NoteElement extends ScoreElement {
   public tertiaryFthoraCarry: Fthora | null = null;
 
   public get lyricsFont() {
-    return `${this.lyricsFontStyle} normal ${this.lyricsFontWeight} ${this.lyricsFontSize}px "${this.lyricsFontFamily}"`;
+    const resolved = resolveFontStyle(
+      this.lyricsFontFamily,
+      this.lyricsFontStyle,
+    );
+
+    return `${resolved.cssFontStyle} normal ${resolved.cssFontWeight} ${this.lyricsFontSize}px "${resolved.cssFontFamily}"`;
   }
 
   public clone(args?: ElementCloneArgs) {
@@ -206,6 +219,7 @@ export class NoteElement extends ScoreElement {
             lyricsColor: this.lyricsColor,
             lyricsFontFamily: this.lyricsFontFamily,
             lyricsFontSize: this.lyricsFontSize,
+            lyricsFontStyle: this.lyricsFontStyle,
             lyricsStrokeWidth: this.lyricsStrokeWidth,
           }
         : null),
@@ -284,7 +298,6 @@ export class NoteElement extends ScoreElement {
       lyricsStrokeWidth: this.lyricsStrokeWidth,
       lyricsUseDefaultStyle: this.lyricsUseDefaultStyle,
       lyricsFontStyle: this.lyricsFontStyle,
-      lyricsFontWeight: this.lyricsFontWeight,
       lyricsTextDecoration: this.lyricsTextDecoration,
     };
   }
@@ -431,6 +444,9 @@ export class NoteElement extends ScoreElement {
   public melismaOffsetTop: number = 0;
   public lyricsFontHeight: number = 0;
   public hyphenOffsets: number[] = [];
+  public showLeadingLyricHyphen: boolean = false;
+  public leadingLyricHyphenOffset: number = 0;
+  public leadingLyricHyphenReservationWidth: number = 0;
   public isFullMelisma: boolean = false;
   public melismaWidth: number = 0;
   public lyricsVerticalOffset: number = 0;
@@ -440,11 +456,16 @@ export class NoteElement extends ScoreElement {
   public lyricsLeadingPunctuationWidth: number = 0;
   public lyricsTrailingPunctuationWidth: number = 0;
   public alignLeft: boolean = false;
+  public vareiaInternalSpacing: number = 0;
   public noteIndicatorNeume: NoteIndicator | null = null;
   public scaleNotes: ScaleNote[] = [];
   public scaleNotesVirtual: ScaleNote[] = [];
   public computedMeasureBarLeft: MeasureBar | null = null;
   public computedMeasureBarRight: MeasureBar | null = null;
+  public computedMeasureBarLeftOffsetX: number = 0;
+  public computedMeasureBarRightOffsetX: number = 0;
+  public computedMeasureBarLeftLeadingSpacing: number = 0;
+  public computedMeasureBarRightTrailingSpacing: number = 0;
   public computedIsonOffsetY: number | null = null;
   public isonOffsetYBeforeAdjustment: number = 0;
 
@@ -680,6 +701,13 @@ export class MartyriaElement extends ScoreElement {
   // Used for display
   public neumeWidth: number = 0;
   public padding: number = 0;
+  public tempoLeftSpacing: number = 0;
+  public tempoRightSpacing: number = 0;
+  public computedTempoLeftOffsetX: number = 0;
+  public computedMeasureBarLeftOffsetX: number = 0;
+  public computedMeasureBarRightOffsetX: number = 0;
+  public computedMeasureBarLeftLeadingSpacing: number = 0;
+  public computedMeasureBarRightTrailingSpacing: number = 0;
 
   private _measureBarLeft: MeasureBar | null = null;
   private _measureBarRight: MeasureBar | null = null;
@@ -701,8 +729,16 @@ export class MartyriaElement extends ScoreElement {
   }
 
   // Re-render helpers
+  public errorPrevious: boolean = false;
   public notePrevious: Note = Note.Pa;
   public rootSignPrevious: RootSign = RootSign.Alpha;
+  public computedTempoLeftOffsetXPrevious: number = 0;
+  public computedMeasureBarLeftOffsetXPrevious: number = 0;
+  public computedMeasureBarRightOffsetXPrevious: number = 0;
+  public tempoLeftSpacingPrevious: number = 0;
+  public tempoRightSpacingPrevious: number = 0;
+  public computedMeasureBarLeftLeadingSpacingPrevious: number = 0;
+  public computedMeasureBarRightTrailingSpacingPrevious: number = 0;
 
   // Fthora helper
   public fthoraCarry: Fthora | null = null;
@@ -814,8 +850,7 @@ export class TextBoxElement extends ScoreElement {
   public strokeWidth: number = 0;
   public multipanel: boolean = false;
   public inline: boolean = false;
-  public bold: boolean = false;
-  public italic: boolean = false;
+  public fontStyle: string = DEFAULT_FONT_STYLE;
   public underline: boolean = false;
   public lineHeight: number | null = null;
   public useDefaultStyle: boolean = true;
@@ -863,6 +898,7 @@ export class TextBoxElement extends ScoreElement {
       alignment: this.alignment,
       color: this.color,
       content: this.content,
+      contentBottom: this.contentBottom,
       contentLeft: this.contentLeft,
       contentCenter: this.contentCenter,
       contentRight: this.contentRight,
@@ -875,8 +911,7 @@ export class TextBoxElement extends ScoreElement {
       marginTop: this.marginTop,
       marginBottom: this.marginBottom,
       inline: this.inline,
-      bold: this.bold,
-      italic: this.italic,
+      fontStyle: this.fontStyle,
       underline: this.underline,
       useDefaultStyle: this.useDefaultStyle,
       multipanel: this.multipanel,
@@ -1007,6 +1042,10 @@ export class ModeKeyElement extends ScoreElement {
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
   public computedHeightAdjustmentPrevious: number = 0;
+  public ambitusLowNotePrevious: Note = Note.Pa;
+  public ambitusLowRootSignPrevious: RootSign = RootSign.Alpha;
+  public ambitusHighNotePrevious: Note = Note.Pa;
+  public ambitusHighRootSignPrevious: RootSign = RootSign.Alpha;
 
   public get isPlagal() {
     return this.mode > 4 && this.mode !== 7;
@@ -1140,8 +1179,7 @@ export class DropCapElement extends ScoreElement {
   public content: string = 'A';
   public fontFamily: string = 'Source Serif';
   public fontSize: number = Unit.fromPt(60);
-  public fontWeight: string = '400';
-  public fontStyle: string = 'normal';
+  public fontStyle: string = DEFAULT_FONT_STYLE;
   public lineHeight: number | null = null;
   public strokeWidth: number = 0;
   public color: string = '#000000';
@@ -1186,9 +1224,8 @@ export class DropCapElement extends ScoreElement {
       color: this.color,
       content: this.content,
       fontSize: this.fontSize,
-      fontStyle: this.fontStyle,
       fontFamily: this.fontFamily,
-      fontWeight: this.fontWeight,
+      fontStyle: this.fontStyle,
       lineHeight: this.lineHeight,
       strokeWidth: this.strokeWidth,
       customWidth: this.customWidth,

@@ -1,6 +1,7 @@
-import { Plugin, toWidget, ViewNode } from 'ckeditor5';
+import type { ViewNode } from 'ckeditor5';
+import { Plugin, toWidget } from 'ckeditor5';
 
-import { Neume, Note, RootSign } from '@/models/Neumes';
+import type { Neume, Note, RootSign } from '@/models/Neumes';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { normalizeRootSign } from '@/utils/NeumeUtils';
 
@@ -8,7 +9,6 @@ export const NEUME_ELEMENT = 'neume';
 export const NEUME_CLASS = 'neanes-ck-neume';
 export const NEUME_PLAGAL_CLASS = 'neanes-ck-neume-plagal';
 export const NEUME_ALIGN_RIGHT_CLASS = 'neanes-ck-neume-align-right';
-export const NEUME_CUSTOM_PROPERTY = 'neume';
 
 export type InsertNeumeType = 'single' | 'martyria' | 'plagal';
 
@@ -44,8 +44,7 @@ export default class InsertNeumeEditing extends Plugin {
         'martyriaNote',
         'martyriaRootSign',
         'fontFamily',
-        'bold',
-        'italic',
+        'fontStyle',
       ],
     });
 
@@ -64,32 +63,40 @@ export default class InsertNeumeEditing extends Plugin {
 
         let style = '';
 
-        if (modelElement.getAttribute('top') != null) {
-          style += `top: ${modelElement.getAttribute('top') ?? 0}em;`;
+        const top = modelElement.getAttribute('top');
+
+        if (top != null) {
+          style += `top: ${top}em;`;
         }
 
         const alignRight = modelElement.getAttribute('alignRight') as boolean;
+        const left = modelElement.getAttribute('left');
+        const right = modelElement.getAttribute('right');
 
-        if (!alignRight && modelElement.getAttribute('left') != null) {
-          style += `left: ${modelElement.getAttribute('left') ?? 0}em;`;
+        if (!alignRight && left != null) {
+          style += `left: ${left}em;`;
         }
 
-        if (alignRight && modelElement.getAttribute('right') != null) {
-          style += `right: ${modelElement.getAttribute('right') ?? 0}em;`;
+        if (alignRight && right != null) {
+          style += `right: ${right}em;`;
         }
 
-        if (modelElement.getAttribute('kerningLeft') != null) {
-          style += `margin-left: ${modelElement.getAttribute('kerningLeft') ?? 0}em;`;
+        const kerningLeft = modelElement.getAttribute('kerningLeft');
+
+        if (kerningLeft != null) {
+          style += `margin-left: ${kerningLeft}em;`;
         }
 
-        if (modelElement.getAttribute('kerningRight') != null) {
-          style += `margin-right: ${modelElement.getAttribute('kerningRight') ?? 0}em;`;
+        const kerningRight = modelElement.getAttribute('kerningRight');
+
+        if (kerningRight != null) {
+          style += `margin-right: ${kerningRight}em;`;
         }
 
         const width = modelElement.getAttribute('width');
 
         if (width != null && width !== '') {
-          style += `width: ${modelElement.getAttribute('width') ?? 0}em;`;
+          style += `width: ${width}em;`;
         }
 
         const color = modelElement.getAttribute('color');
@@ -174,8 +181,6 @@ export default class InsertNeumeEditing extends Plugin {
           attributes,
           children,
         );
-
-        writer.setCustomProperty(NEUME_CUSTOM_PROPERTY, true, element);
 
         return toWidget(element, writer);
       },

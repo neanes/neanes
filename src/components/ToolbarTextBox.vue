@@ -1,396 +1,289 @@
 <template>
-  <div class="text-box-toolbar">
-    <input
-      id="toolbar-text-box-use-default-style"
-      type="checkbox"
-      :checked="element.useDefaultStyle"
-      @change="
-        $emit('update', {
-          useDefaultStyle: ($event.target as HTMLInputElement).checked,
-        } as Partial<TextBoxElement>)
-      "
-    />
-    <label for="toolbar-text-box-use-default-style">{{
-      $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
-    }}</label>
-    <span class="divider" />
+  <Toolbar class="text-box-toolbar h-auto w-full gap-0 border-0 p-1" loop>
     <template v-if="!element.useDefaultStyle">
-      <select
-        :value="element.fontFamily"
-        @change="
-          $emit('update', {
-            fontFamily: ($event.target as HTMLInputElement).value,
-          } as Partial<TextBoxElement>)
+      <FontCombobox
+        :model-value="element.fontFamily"
+        :options="textBoxFontFamilies"
+        @update:model-value="onFontFamilyChanged"
+      />
+      <FontStyleSelect
+        class="w-40"
+        :model-value="element.fontStyle"
+        :options="fontStyleOptions"
+        :disabled="fontStyleOptions.length <= 1"
+        @update:model-value="
+          $emit('update', { fontStyle: $event } as Partial<TextBoxElement>)
         "
-      >
-        <option>Source Serif</option>
-        <option>GFS Didot</option>
-        <option>Noto Naskh Arabic</option>
-        <option>Old Standard</option>
-
-        <option v-for="font in fonts" :key="font" :value="font">
-          {{ font }}
-        </option>
-      </select>
-      <span class="space"></span>
+      />
       <InputFontSize
-        class="drop-caps-input"
+        id="toolbar-text-box-font-size"
         :model-value="element.fontSize"
         @update:model-value="
           $emit('update', { fontSize: $event } as Partial<TextBoxElement>)
         "
       />
-      <span class="space" style="text-align: center">&#47;</span>
-      <InputUnit
-        class="drop-caps-input"
-        unit="unitless"
-        :nullable="true"
-        :min="0"
-        :step="0.1"
-        :model-value="element.lineHeight"
-        :precision="2"
-        placeholder="normal"
-        @update:model-value="
-          $emit('update', { lineHeight: $event } as Partial<TextBoxElement>)
-        "
-      />
-      <span class="space"></span>
-      <ColorPicker
-        :model-value="element.color"
-        @update:model-value="
-          $emit('update', { color: $event } as Partial<TextBoxElement>)
-        "
-      />
-      <span class="space"></span>
-      <button
-        class="icon-btn"
-        :class="{ selected: element.bold }"
-        @click="
-          $emit('update', { bold: !element.bold } as Partial<TextBoxElement>)
-        "
-      >
-        <b>B</b>
-      </button>
-      <button
-        class="icon-btn"
-        :class="{ selected: element.italic }"
-        @click="
-          $emit('update', {
-            italic: !element.italic,
-          } as Partial<TextBoxElement>)
-        "
-      >
-        <i>I</i>
-      </button>
+      <ToolbarSeparator />
     </template>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.underline }"
-      @click="
-        $emit('update', {
-          underline: !element.underline,
-        } as Partial<TextBoxElement>)
-      "
+    <ToggleGroup
+      type="multiple"
+      variant="outline"
+      :model-value="styleValues"
+      @update:model-value="onStyleValuesChanged"
     >
-      <u>U</u>
-    </button>
+      <ToggleGroupItem
+        v-if="!element.useDefaultStyle"
+        value="bold"
+        class="icon-btn"
+        :class="{ selected: isFontStyleAxisActive('bold') }"
+        :disabled="!isFontStyleAxisToggleEnabled('bold')"
+        aria-label="Toggle bold"
+      >
+        <PhTextB class="h-4 w-4" />
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        v-if="!element.useDefaultStyle"
+        value="italic"
+        class="icon-btn"
+        :class="{ selected: isFontStyleAxisActive('italic') }"
+        :disabled="!isFontStyleAxisToggleEnabled('italic')"
+        aria-label="Toggle italic"
+      >
+        <PhTextItalic class="h-4 w-4" />
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="underline"
+        class="icon-btn"
+        :class="{ selected: element.underline }"
+        aria-label="Toggle underline"
+      >
+        <PhTextUnderline class="h-4 w-4" />
+      </ToggleGroupItem>
+    </ToggleGroup>
     <template v-if="!element.multipanel">
-      <span class="space"></span>
-      <button
-        class="icon-btn"
-        :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-        @click="
-          $emit('update', {
-            alignment: TextBoxAlignment.Left,
-          } as Partial<TextBoxElement>)
-        "
+      <ToolbarSeparator />
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        :model-value="element.alignment"
+        @update:model-value="onAlignmentChanged"
       >
-        <img
-          src="@/assets/icons/alignleft.svg"
-          width="32"
-          height="32"
-          :title="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
-        />
-      </button>
-      <button
-        class="icon-btn"
-        :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-        @click="
-          $emit('update', {
-            alignment: TextBoxAlignment.Center,
-          } as Partial<TextBoxElement>)
-        "
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
+        >
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Left"
+            class="icon-btn"
+            :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+          >
+            <PhTextAlignLeft class="h-4 w-4" />
+          </ToggleGroupItem>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
+        >
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Center"
+            class="icon-btn"
+            :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+          >
+            <PhTextAlignCenter class="h-4 w-4" />
+          </ToggleGroupItem>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
+        >
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Right"
+            class="icon-btn"
+            :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+          >
+            <PhTextAlignRight class="h-4 w-4" />
+          </ToggleGroupItem>
+        </AppTooltip>
+      </ToggleGroup>
+    </template>
+    <ToolbarSeparator />
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.common.insertPelastikon, { ns: 'toolbar' })"
+    >
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="neume-button"
+        @mousedown.prevent="$emit('insert:pelastikon')"
       >
-        <img
-          src="@/assets/icons/aligncenter.svg"
-          width="32"
-          height="32"
-          :title="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
-        />
-      </button>
-      <button
-        class="icon-btn"
-        :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-        @click="
-          $emit('update', {
-            alignment: TextBoxAlignment.Right,
-          } as Partial<TextBoxElement>)
-        "
+        <img src="@/assets/icons/letterPelastikon.svg" />
+      </ToolbarButton>
+    </AppTooltip>
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.common.insertGorthmikon, { ns: 'toolbar' })"
+    >
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="neume-button"
+        @mousedown.prevent="$emit('insert:gorthmikon')"
       >
-        <img
-          src="@/assets/icons/alignright.svg"
-          width="32"
-          height="32"
-          :title="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
-        />
-      </button>
-    </template>
-    <template v-if="!element.useDefaultStyle">
-      <span class="space" />
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-      }}</label>
-      <InputStrokeWidth
-        :model-value="element.strokeWidth"
-        @update:model-value="
-          $emit('update', { strokeWidth: $event } as Partial<TextBoxElement>)
-        "
-      />
-    </template>
-    <span class="space" />
-    <button class="icon-btn" @mousedown.prevent="$emit('insert:pelastikon')">
-      <img
-        src="@/assets/icons/letterPelastikon.svg"
-        width="32"
-        height="32"
-        :title="$t(($) => $.toolbar.common.insertPelastikon, { ns: 'toolbar' })"
-      />
-    </button>
-    <button class="icon-btn" @mousedown.prevent="$emit('insert:gorthmikon')">
-      <img
-        src="@/assets/icons/letterGorthmikon.svg"
-        width="32"
-        height="32"
-        :title="$t(($) => $.toolbar.common.insertGorthmikon, { ns: 'toolbar' })"
-      />
-    </button>
-
-    <template v-if="!element.inline">
-      <span class="divider" />
-
-      <input
-        id="toolbar-text-box-multipanel"
-        type="checkbox"
-        :checked="element.multipanel"
-        @change="
-          $emit('update', {
-            multipanel: ($event.target as HTMLInputElement).checked,
-          } as Partial<TextBoxElement>)
-        "
-      />
-      <label for="toolbar-text-box-multipanel">{{
-        $t(($) => $.toolbar.textbox.multipanel, { ns: 'toolbar' })
-      }}</label>
-      <span class="divider" />
-
-      <template v-if="!element.multipanel">
-        <label class="right-space">{{
-          $t(($) => $.toolbar.common.height, { ns: 'toolbar' })
-        }}</label>
-        <InputUnit
-          class="text-box-input-width"
-          unit="pt"
-          :nullable="true"
-          :min="0.5"
-          :max="maxWidth"
-          :step="0.5"
-          :model-value="element.customHeight"
-          :precision="1"
-          placeholder="auto"
-          @update:model-value="
-            $emit('update', { customHeight: $event } as Partial<TextBoxElement>)
-          "
-        />
-      </template>
-    </template>
-    <template v-else>
-      <span class="divider" />
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
-      }}</label>
-      <InputUnit
-        class="text-box-input-width"
-        unit="pt"
-        :nullable="true"
-        :min="0.5"
-        :max="maxWidth"
-        :step="0.5"
-        :model-value="element.customWidth"
-        :precision="1"
-        placeholder="auto"
-        @update:model-value="
-          $emit('update', { customWidth: $event } as Partial<TextBoxElement>)
-        "
-      />
-      <input
-        id="toolbar-text-box-fill-width"
-        type="checkbox"
-        :checked="element.fillWidth"
-        @change="
-          $emit('update', {
-            fillWidth: ($event.target as HTMLInputElement).checked,
-          } as Partial<TextBoxElement>)
-        "
-      />
-      <label for="toolbar-text-box-fill-width">{{
-        $t(($) => $.toolbar.textbox.fillWidth, { ns: 'toolbar' })
-      }}</label>
-    </template>
-    <span class="space"></span>
-    <div class="form-group">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
-      }}</label>
-      <InputUnit
-        class="text-box-input-width"
-        unit="pt"
-        :min="-maxHeight"
-        :max="maxHeight"
-        :step="0.5"
-        :model-value="element.marginTop"
-        :precision="1"
-        @update:model-value="
-          $emit('update', { marginTop: $event } as Partial<TextBoxElement>)
-        "
-      />
-    </div>
-    <span class="space"></span>
-    <div class="form-group">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
-      }}</label>
-      <InputUnit
-        class="text-box-input-width"
-        unit="pt"
-        :min="0"
-        :max="maxHeight"
-        :step="0.5"
-        :model-value="element.marginBottom"
-        :precision="1"
-        @update:model-value="
-          $emit('update', { marginBottom: $event } as Partial<TextBoxElement>)
-        "
-      />
-    </div>
-    <span class="space"></span>
-    <div class="form-group">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-      }}</label>
-      <input
-        type="text"
-        :value="element.sectionName"
-        @change="
-          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
-        "
-      />
-    </div>
-  </div>
+        <img src="@/assets/icons/letterGorthmikon.svg" />
+      </ToolbarButton>
+    </AppTooltip>
+  </Toolbar>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import {
+  PhTextAlignCenter,
+  PhTextAlignLeft,
+  PhTextAlignRight,
+  PhTextB,
+  PhTextItalic,
+  PhTextUnderline,
+} from '@phosphor-icons/vue';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 
-import ColorPicker from '@/components/ColorPicker.vue';
+import AppTooltip from '@/components/AppTooltip.vue';
+import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
-import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import InputUnit from '@/components/InputUnit.vue';
-import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
-import { Unit } from '@/utils/Unit';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  Toolbar,
+  ToolbarButton,
+  ToolbarSeparator,
+} from '@/components/ui/toolbar';
+import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import type { TextBoxElement } from '@/models/Element';
+import { TextBoxAlignment } from '@/models/Element';
+import { fontCatalog } from '@/services/FontCatalog';
 
-export default defineComponent({
-  components: { ColorPicker, InputFontSize, InputUnit, InputStrokeWidth },
-  props: {
-    element: {
-      type: Object as PropType<TextBoxElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    fonts: {
-      type: Array as PropType<string[]>,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<TextBoxElement>,
+    required: true,
   },
-  emits: [
-    'insert:gorthmikon',
-    'insert:pelastikon',
-    'update',
-    'update:sectionName',
-  ],
-
-  data() {
-    return {
-      TextBoxAlignment,
-    };
+  fonts: {
+    type: Array as PropType<string[]>,
+    required: true,
   },
-
-  computed: {
-    maxWidth() {
-      return Unit.toPt(this.pageSetup.innerPageWidth);
-    },
-
-    maxHeight() {
-      return Unit.toPt(this.pageSetup.innerPageHeight);
-    },
-  },
-
-  methods: {},
 });
+
+const emit = defineEmits(['insert:gorthmikon', 'insert:pelastikon', 'update']);
+
+const {
+  fontStyleOptions,
+  activeStyleAxisValues,
+  isFontStyleAxisActive,
+  isFontStyleAxisToggleEnabled,
+  applyStyleAxisToggles,
+  remapStyleForFamily,
+} = useFontStyleControls(
+  () => props.element.fontFamily,
+  () => props.element.fontStyle,
+);
+
+const styleValues = computed(() => [
+  ...(props.element.useDefaultStyle ? [] : activeStyleAxisValues.value),
+  ...(props.element.underline ? ['underline'] : []),
+]);
+
+const textBoxFontFamilies = computed(() => [
+  ...fontCatalog.bundledTextFamilies(),
+  ...props.fonts,
+]);
+
+function onStyleValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+  const update: Partial<TextBoxElement> = {
+    underline: values.includes('underline'),
+  };
+
+  if (!props.element.useDefaultStyle) {
+    update.fontStyle = applyStyleAxisToggles(values);
+  }
+
+  emit('update', update);
+}
+
+function onFontFamilyChanged(fontFamily: string) {
+  emit('update', {
+    fontFamily,
+    fontStyle: remapStyleForFamily(fontFamily),
+  } as Partial<TextBoxElement>);
+}
+
+function onAlignmentChanged(value: unknown) {
+  if (isTextBoxAlignment(value)) {
+    emit('update', {
+      alignment: value,
+    } as Partial<TextBoxElement>);
+  }
+}
+
+function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
+  return Object.values(TextBoxAlignment).includes(value as TextBoxAlignment);
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .text-box-toolbar {
-  display: flex;
-  align-items: center;
   flex-wrap: wrap;
+  background-color: var(--color-legacy-chrome-menu-surface);
 
-  background-color: lightgray;
-
-  padding: 0.25rem;
+  --btn-size: 32px;
 }
 
+.neume-button,
 .icon-btn {
-  height: 32px;
-  width: 32px;
+  box-sizing: border-box;
+  height: var(--btn-size);
+  width: var(--btn-size);
+  appearance: auto;
+  background: revert;
+  border: revert;
+  border-radius: revert;
+  box-shadow: revert;
+  font-weight: revert;
+
+  position: relative;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  overflow: hidden;
+  outline: revert;
+  padding: 0;
+  transition: revert;
+  user-select: none;
 }
 
-.icon-btn.selected {
-  background-color: var(--btn-color-selected);
+.neume-button:hover,
+.icon-btn:hover {
+  background: revert;
 }
 
-label.right-space {
-  margin-right: 0.5rem;
+.icon-btn.selected,
+.icon-btn[data-state='on'],
+.icon-btn[aria-pressed='true'] {
+  background: var(--color-legacy-chrome-selected);
 }
 
-.divider {
-  height: 32px;
-  border-right: 1px solid #666;
-  margin: 0 0.5rem;
+.neume-button > img,
+.icon-btn img {
+  height: var(--btn-size);
+  max-width: none;
+  width: var(--btn-size);
 }
 
-.space {
-  width: 16px;
-}
-
-.text-box-input-width {
-  width: 8ch;
+.neume-button[aria-disabled='true'],
+.neume-button[data-disabled],
+.neume-button:disabled,
+.icon-btn[aria-disabled='true'],
+.icon-btn[data-disabled],
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 </style>

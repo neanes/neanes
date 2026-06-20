@@ -1,6 +1,6 @@
 import { Fthora, ModeSign, QuantitativeNeume } from '@/models/Neumes';
 
-import { ModelSelector } from './NeumeI18nMappings';
+import type { ModelSelector } from './NeumeI18nMappings';
 import { Scale, ScaleNote } from './Scales';
 
 export interface ModeKeyTemplate {

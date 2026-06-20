@@ -28,101 +28,92 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import 'vue-draggable-resizable/style.css';
 
-import { defineComponent, PropType, StyleValue } from 'vue';
+import type { PropType, StyleValue } from 'vue';
+import { computed, ref, watch } from 'vue';
 import VueDraggableResizable from 'vue-draggable-resizable';
 
-import { ImageBoxElement } from '@/models/Element';
+import type { ImageBoxElement } from '@/models/Element';
 import { withZoom } from '@/utils/withZoom';
 
-export default defineComponent({
-  components: { VueDraggableResizable },
-  props: {
-    element: {
-      type: Object as PropType<ImageBoxElement>,
-      required: true,
-    },
-    zoom: {
-      type: Number,
-      required: true,
-    },
-    printMode: {
-      type: Boolean,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<ImageBoxElement>,
+    required: true,
   },
-  emits: ['update:size', 'select-single'],
-
-  data() {
-    return {
-      imageWidth: 0,
-      imageHeight: 0,
-    };
+  zoom: {
+    type: Number,
+    required: true,
   },
-
-  computed: {
-    imageWidthZoomed() {
-      return this.imageWidth * this.zoom;
-    },
-
-    imageHeightZoomed() {
-      return this.imageHeight * this.zoom;
-    },
-
-    containerStyle() {
-      const style = {
-        justifyContent: this.element.alignment,
-        width: withZoom(this.element.width),
-        height: withZoom(this.imageHeight),
-      } as Partial<CSSStyleDeclaration>;
-
-      if (this.element.inline) {
-        style.border = 'none';
-      }
-
-      return style as StyleValue;
-    },
-
-    imageStyle() {
-      const style: any = {
-        width: withZoom(this.imageWidth),
-        height: withZoom(this.imageHeight),
-      };
-
-      return style;
-    },
-  },
-
-  watch: {
-    'element.imageWidth'(newValue: number) {
-      this.imageWidth = newValue;
-    },
-    'element.imageHeight'(newValue: number) {
-      this.imageHeight = newValue;
-    },
-  },
-
-  created() {
-    this.imageWidth = this.element.imageWidth;
-    this.imageHeight = this.element.imageHeight;
-  },
-
-  methods: {
-    onResize(x: number, y: number, width: number, height: number) {
-      this.imageWidth = width / this.zoom;
-      this.imageHeight = height / this.zoom;
-    },
-
-    onResizeStop(left: number, top: number, width: number, height: number) {
-      this.$emit('update:size', {
-        width: width / this.zoom,
-        height: height / this.zoom,
-      });
-    },
+  printMode: {
+    type: Boolean,
+    required: true,
   },
 });
+
+const emit = defineEmits(['update:size', 'select-single']);
+
+const imageWidth = ref(props.element.imageWidth);
+const imageHeight = ref(props.element.imageHeight);
+
+const imageWidthZoomed = computed(() => imageWidth.value * props.zoom);
+const imageHeightZoomed = computed(() => imageHeight.value * props.zoom);
+
+const containerStyle = computed(() => {
+  const style = {
+    justifyContent: props.element.alignment,
+    width: withZoom(props.element.width),
+    height: withZoom(imageHeight.value),
+  } as Partial<CSSStyleDeclaration>;
+
+  if (props.element.inline) {
+    style.border = 'none';
+  }
+
+  return style as StyleValue;
+});
+
+const imageStyle = computed(() => {
+  const style: any = {
+    width: withZoom(imageWidth.value),
+    height: withZoom(imageHeight.value),
+  };
+
+  return style;
+});
+
+watch(
+  () => props.element.imageWidth,
+  (newValue) => {
+    imageWidth.value = newValue;
+  },
+);
+
+watch(
+  () => props.element.imageHeight,
+  (newValue) => {
+    imageHeight.value = newValue;
+  },
+);
+
+function onResize(x: number, y: number, width: number, height: number) {
+  imageWidth.value = width / props.zoom;
+  imageHeight.value = height / props.zoom;
+}
+
+function onResizeStop(
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+) {
+  emit('update:size', {
+    width: width / props.zoom,
+    height: height / props.zoom,
+  });
+}
 </script>
 
 <style scoped>

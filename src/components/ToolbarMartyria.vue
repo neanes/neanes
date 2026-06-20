@@ -1,470 +1,285 @@
 <template>
   <div class="martyria-toolbar">
-    <div class="row">
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicNiLow_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicNiLow_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicPa_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicPa_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-pa.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicVou_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicVou_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-vou.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicGa_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicGa_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-ga.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicThi_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicThi_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-di.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicKe_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicKe_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-ke.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicZo_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicZo_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-zo.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.DiatonicNiHigh_Top)"
-        @click="$emit('update:fthora', Fthora.DiatonicNiHigh_Top)"
-      >
-        <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.SoftChromaticThi_Top)"
-        @click="$emit('update:fthora', Fthora.SoftChromaticThi_Top)"
-      >
-        <img src="@/assets/icons/fthora-soft-chromatic-di.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.SoftChromaticPa_Top)"
-        @click="$emit('update:fthora', Fthora.SoftChromaticPa_Top)"
-      >
-        <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.HardChromaticPa_Top)"
-        @click="$emit('update:fthora', Fthora.HardChromaticPa_Top)"
-      >
-        <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :title="tooltip(Fthora.HardChromaticThi_Top)"
-        @click="$emit('update:fthora', Fthora.HardChromaticThi_Top)"
-      >
-        <img src="@/assets/icons/fthora-hard-chromatic-di.svg" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :disabled="enharmonicDisabled"
-        :title="enharmonicTitle"
-        @click="$emit('update:fthora', Fthora.Enharmonic_Top)"
-      >
-        <img src="@/assets/icons/fthora-enharmonic.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="generalFlatDisabled"
-        :title="generalFlatTitle"
-        @click="$emit('update:fthora', Fthora.GeneralFlat_Top)"
-      >
-        <img src="@/assets/icons/fthora-general-flat.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="generalSharpDisabled"
-        :title="generalSharpTitle"
-        @click="$emit('update:fthora', Fthora.GeneralSharp_Top)"
-      >
-        <img src="@/assets/icons/fthora-general-sharp.svg" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :disabled="zygosDisabled"
-        :title="zygosTitle"
-        @click="$emit('update:fthora', Fthora.Zygos_Top)"
-      >
-        <img src="@/assets/icons/fthora-zygos.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="klitonDisabled"
-        :title="klitonTitle"
-        @click="$emit('update:fthora', Fthora.Kliton_Top)"
-      >
-        <img src="@/assets/icons/fthora-kliton.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="spathiDisabled"
-        :title="spathiTitle"
-        @click="$emit('update:fthora', Fthora.Spathi_Top)"
-      >
-        <img src="@/assets/icons/fthora-spathi.svg" />
-      </button>
-      <span class="space"></span>
+    <Toolbar class="row h-auto w-full gap-0 border-0 p-1" loop>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicNiLow_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicNiLow_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicPa_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicPa_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-pa.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicVou_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicVou_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-vou.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicGa_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicGa_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-ga.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicThi_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicThi_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-di.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicKe_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicKe_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-ke.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicZo_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicZo_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-zo.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicNiHigh_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicNiHigh_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="tooltip(Fthora.SoftChromaticThi_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.SoftChromaticThi_Top)"
+        >
+          <img src="@/assets/icons/fthora-soft-chromatic-di.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.SoftChromaticPa_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.SoftChromaticPa_Top)"
+        >
+          <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="tooltip(Fthora.HardChromaticPa_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.HardChromaticPa_Top)"
+        >
+          <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.HardChromaticThi_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.HardChromaticThi_Top)"
+        >
+          <img src="@/assets/icons/fthora-hard-chromatic-di.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="enharmonicTitle">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="enharmonicDisabled"
+          @click="
+            !enharmonicDisabled && $emit('update:fthora', Fthora.Enharmonic_Top)
+          "
+        >
+          <img src="@/assets/icons/fthora-enharmonic.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="generalFlatTitle">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="generalFlatDisabled"
+          @click="
+            !generalFlatDisabled &&
+            $emit('update:fthora', Fthora.GeneralFlat_Top)
+          "
+        >
+          <img src="@/assets/icons/fthora-general-flat.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="generalSharpTitle">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="generalSharpDisabled"
+          @click="
+            !generalSharpDisabled &&
+            $emit('update:fthora', Fthora.GeneralSharp_Top)
+          "
+        >
+          <img src="@/assets/icons/fthora-general-sharp.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="zygosTitle">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="zygosDisabled"
+          @click="!zygosDisabled && $emit('update:fthora', Fthora.Zygos_Top)"
+        >
+          <img src="@/assets/icons/fthora-zygos.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="klitonTitle">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="klitonDisabled"
+          @click="!klitonDisabled && $emit('update:fthora', Fthora.Kliton_Top)"
+        >
+          <img src="@/assets/icons/fthora-kliton.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="spathiTitle">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="spathiDisabled"
+          @click="!spathiDisabled && $emit('update:fthora', Fthora.Spathi_Top)"
+        >
+          <img src="@/assets/icons/fthora-spathi.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
       <ButtonWithMenu
         :options="barlineMenuOptions"
-        :title="tooltip(MeasureBar.MeasureBarRight)"
+        :tooltip="tooltip(MeasureBar.MeasureBarRight)"
         @select="$emit('update:measureBar', $event)"
       />
-      <span class="space" />
+      <ToolbarSeparator />
       <ButtonWithMenu
         class="btnMenuTempoLeft"
         :options="tempoMenuOptions"
-        :title="$t(($) => $.toolbar.martyria.tempoLeft, { ns: 'toolbar' })"
+        :tooltip="$t(($) => $.toolbar.martyria.tempoLeft, { ns: 'toolbar' })"
         @select="$emit('update:tempoLeft', $event)"
       />
       <ButtonWithMenu
         class="btnMenuTempoAbove"
         :options="tempoMenuOptionsAbove"
-        :title="$t(($) => $.toolbar.martyria.tempo, { ns: 'toolbar' })"
+        :tooltip="$t(($) => $.toolbar.martyria.tempo, { ns: 'toolbar' })"
         @select="$emit('update:tempo', $event)"
       />
       <ButtonWithMenu
         class="btnMenuTempoRight"
         :options="tempoMenuOptions"
-        :title="$t(($) => $.toolbar.martyria.tempoRight, { ns: 'toolbar' })"
+        :tooltip="$t(($) => $.toolbar.martyria.tempoRight, { ns: 'toolbar' })"
         @select="$emit('update:tempoRight', $event)"
       />
-      <span class="space"></span>
-      <button
-        class="icon-btn"
-        :class="{ selected: element.alignRight }"
-        :title="alignRightTooltip"
-        @click="
-          $emit('update', {
-            alignRight: !element.alignRight,
-          } as Partial<MartyriaElement>)
-        "
-      >
-        <img
-          src="@/assets/icons/alignright2.svg"
-          height="24"
-          width="24"
-          class="icon-btn-img"
-        />
-      </button>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="alignRightTooltip">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="icon-btn"
+          :class="{ selected: element.alignRight }"
+          @click="
+            $emit('update', {
+              alignRight: !element.alignRight,
+            } as Partial<MartyriaElement>)
+          "
+        >
+          <PhAlignRight class="h-4 w-4" weight="duotone" />
+        </ToolbarButton>
+      </AppTooltip>
       <template v-if="element.alignRight">
-        <span class="space" />
+        <ToolbarSeparator />
         <ButtonWithMenu
           :options="quantitativeNeumeOptions"
-          :title="$t(($) => $.toolbar.common.neume, { ns: 'toolbar' })"
+          :tooltip="$t(($) => $.toolbar.common.neume, { ns: 'toolbar' })"
           @select="$emit('update:quantitativeNeume', $event)"
         />
       </template>
-      <span class="space" />
-      <div style="display: flex; align-items: center">
-        <input
-          id="toolbar:martyria-auto"
-          type="checkbox"
-          :checked="element.auto"
-          @change="
-            $emit('update', {
-              auto: ($event.target as HTMLInputElement).checked,
-            } as Partial<MartyriaElement>)
-          "
-        />
-        <label for="toolbar:martyria-auto">{{
-          $t(($) => $.toolbar.martyria.auto, { ns: 'toolbar' })
-        }}</label>
-      </div>
-      <template v-if="!element.auto">
-        <span class="space" />
-        <label class="right-space">{{
-          $t(($) => $.toolbar.martyria.note, { ns: 'toolbar' })
-        }}</label>
-        <select
-          :value="element.note"
-          @change="
-            $emit('update', {
-              note: ($event.target as HTMLInputElement).value,
-            } as Partial<MartyriaElement>)
-          "
-        >
-          <option v-for="note in notes" :key="note.key" :value="note.key">
-            {{ $t(note.displayName, { ns: 'model' }) }}
-          </option>
-        </select>
-
-        <span class="space" />
-        <label class="right-space">{{
-          $t(($) => $.toolbar.martyria.scale, { ns: 'toolbar' })
-        }}</label>
-        <select
-          :value="element.scale"
-          @change="
-            $emit('update', {
-              scale: ($event.target as HTMLInputElement).value,
-            } as Partial<MartyriaElement>)
-          "
-        >
-          <option v-for="scale in scales" :key="scale.key" :value="scale.key">
-            {{ $t(scale.displayName, { ns: 'model' }) }}
-          </option>
-        </select>
-      </template>
-    </div>
-    <div class="row">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
-      }}</label>
-      <InputBpm
-        :disabled="
-          element.tempo == null &&
-          element.tempoLeft == null &&
-          element.tempoRight == null
-        "
-        :model-value="element.bpm"
-        @update:model-value="
-          $emit('update', {
-            bpm: $event,
-          } as Partial<MartyriaElement>)
-        "
-      />
-
-      <span class="space" />
-
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.verticalOffset, { ns: 'toolbar' })
-      }}</label>
-
-      <InputUnit
-        unit="pt"
-        :min="-spaceAfterMax"
-        :max="spaceAfterMax"
-        :step="0.5"
-        :precision="2"
-        :model-value="element.verticalOffset"
-        @update:model-value="
-          $emit('update', {
-            verticalOffset: $event,
-          } as Partial<MartyriaElement>)
-        "
-      />
-
-      <span class="space" />
-
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
-      }}</label>
-
-      <InputUnit
-        unit="pt"
-        :min="-spaceAfterMax"
-        :max="spaceAfterMax"
-        :step="0.5"
-        :precision="2"
-        :model-value="element.spaceAfter"
-        @update:model-value="
-          $emit('update', {
-            spaceAfter: $event,
-          } as Partial<MartyriaElement>)
-        "
-      />
-
-      <template v-if="showChromaticFthoraNote">
-        <span class="space" />
-        <label class="right-space">{{
-          $t(($) => $.toolbar.common.fthoraNote, { ns: 'toolbar' })
-        }}</label>
-        <select
-          :value="element.chromaticFthoraNote"
-          @change="
-            $emit('update', {
-              chromaticFthoraNote: ($event.target as HTMLInputElement).value,
-            } as Partial<MartyriaElement>)
-          "
-        >
-          <option
-            v-for="note in fthoraNotes"
-            :key="note.value"
-            :value="note.value"
-          >
-            {{ $t(note.label, { ns: 'model' }) }}
-          </option>
-        </select>
-      </template>
-      <span class="space" />
-      <label class="right-space">{{
-        $t(($) => $.toolbar.martyria.rootSignOverride, { ns: 'toolbar' })
-      }}</label>
-      <select
-        :value="element.rootSignOverride"
-        @change="
-          $emit('update', {
-            rootSignOverride: ($event.target as HTMLInputElement).value || null,
-          } as Partial<MartyriaElement>)
-        "
-      >
-        <option value="">
-          {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
-        </option>
-        <option v-for="sign in rootSigns" :key="sign.value" :value="sign.value">
-          {{ $t(sign.name, { ns: 'model' }) }}
-        </option>
-      </select>
-
-      <span class="space"></span>
-      <div class="form-group">
-        <label class="right-space">{{
-          $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-        }}</label>
-        <input
-          type="text"
-          :value="element.sectionName"
-          @change="
-            $emit(
-              'update:sectionName',
-              ($event.target as HTMLInputElement).value,
-            )
-          "
-        />
-      </div>
-    </div>
+    </Toolbar>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { PhAlignRight } from '@phosphor-icons/vue';
+import { useTranslation } from 'i18next-vue';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 
-import { MartyriaElement } from '@/models/Element';
+import type { AppTooltipValue } from '@/components/AppTooltip.types';
+import AppTooltip from '@/components/AppTooltip.vue';
 import {
-  getFthoraLabelSelector,
-  getNoteLabelSelector,
-  getScaleLabelSelector,
-  ModelSelector,
-  ROOT_SIGN_LABEL_SELECTORS,
-} from '@/models/NeumeI18nMappings';
+  Toolbar,
+  ToolbarButton,
+  ToolbarSeparator,
+} from '@/components/ui/toolbar';
+import type { MartyriaElement } from '@/models/Element';
+import { getFthoraLabelSelector } from '@/models/NeumeI18nMappings';
 import {
   Fthora,
   MeasureBar,
   Note,
   QuantitativeNeume,
-  RootSign,
   TempoSign,
 } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
-import { Scale, ScaleNote } from '@/models/Scales';
-import { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import type { PageSetup } from '@/models/PageSetup';
+import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
-import { Unit } from '@/utils/Unit';
 
-import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
-import InputBpm from './InputBpm.vue';
-import InputUnit from './InputUnit.vue';
-
-const notes = Object.values(Note).map((x) => ({
-  key: x,
-  displayName: getNoteLabelSelector(x),
-}));
-
-const scales = Object.values(Scale).map((x) => ({
-  key: x,
-  displayName: getScaleLabelSelector(x),
-}));
-
-const chromaticFthoras = [
-  Fthora.SoftChromaticPa_Top,
-  Fthora.SoftChromaticPa_Bottom,
-  Fthora.SoftChromaticThi_Top,
-  Fthora.SoftChromaticThi_Bottom,
-  Fthora.HardChromaticPa_Top,
-  Fthora.HardChromaticPa_Bottom,
-  Fthora.HardChromaticThi_Top,
-  Fthora.HardChromaticThi_Bottom,
-];
-
-type FthoraNoteOption = {
-  label: ModelSelector;
-  value: ScaleNote;
-};
-
-const rootSigns = [
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Alpha],
-    value: RootSign.Alpha,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.SoftChromaticSquiggle],
-    value: RootSign.SoftChromaticSquiggle,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.SoftChromaticPaRootSign],
-    value: RootSign.SoftChromaticPaRootSign,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Nana],
-    value: RootSign.Nana,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Legetos],
-    value: RootSign.Legetos,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.DeltaDotted],
-    value: RootSign.DeltaDotted,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Zygos],
-    value: RootSign.Zygos,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.AlphaDotted],
-    value: RootSign.AlphaDotted,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Squiggle],
-    value: RootSign.Squiggle,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Tilt],
-    value: RootSign.Tilt,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Zo],
-    value: RootSign.Zo,
-  },
-  {
-    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Delta],
-    value: RootSign.Delta,
-  },
-];
+import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
+import ButtonWithMenu from './ButtonWithMenu.vue';
 
 const quantitativeNeumeOptionsList = [
   QuantitativeNeume.Elaphron,
@@ -582,272 +397,143 @@ const barlineMenuOptions: ButtonWithMenuOption[] = [
   },
 ];
 
-export default defineComponent({
-  components: { InputUnit, InputBpm, ButtonWithMenu },
-  props: {
-    element: {
-      type: Object as PropType<MartyriaElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    neumeKeyboard: {
-      type: Object as PropType<NeumeKeyboard>,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<MartyriaElement>,
+    required: true,
   },
-  emits: [
-    'update',
-    'update:fthora',
-    'update:measureBar',
-    'update:quantitativeNeume',
-    'update:sectionName',
-    'update:tempoLeft',
-    'update:tempo',
-    'update:tempoRight',
-  ],
-
-  data() {
-    return {
-      Fthora,
-      MeasureBar,
-      TempoSign,
-      rootSigns,
-      notes,
-      scales,
-      chromaticFthoras,
-      quantitativeNeumeOptions,
-      tempoMenuOptions,
-      tempoMenuOptionsAbove,
-      barlineMenuOptions,
-    };
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-
-  computed: {
-    spaceAfterMax() {
-      return Math.round(Unit.toPt(this.pageSetup.pageWidth));
-    },
-    spathiDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions &&
-        this.element.note !== Note.Ke &&
-        this.element.note !== Note.Ga
-      );
-    },
-
-    spathiTitle() {
-      return this.spathiDisabled
-        ? this.$t(($) => $.toolbar.common.spathiDisabled, { ns: 'toolbar' })
-        : this.tooltip(Fthora.Spathi_Top);
-    },
-
-    klitonDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Thi
-      );
-    },
-
-    klitonTitle() {
-      return this.klitonDisabled
-        ? this.$t(($) => $.toolbar.common.klitonDisabled, { ns: 'toolbar' })
-        : this.tooltip(Fthora.Kliton_Top);
-    },
-
-    zygosDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Thi
-      );
-    },
-
-    zygosTitle() {
-      return this.zygosDisabled
-        ? this.$t(($) => $.toolbar.common.zygosDisabled, { ns: 'toolbar' })
-        : this.tooltip(Fthora.Zygos_Top);
-    },
-
-    enharmonicDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions &&
-        this.element.note !== Note.Zo &&
-        this.element.note !== Note.ZoHigh &&
-        this.element.note !== Note.Vou &&
-        this.element.note !== Note.VouHigh &&
-        this.element.note !== Note.Ga
-      );
-    },
-
-    enharmonicTitle() {
-      return this.enharmonicDisabled
-        ? this.$t(($) => $.toolbar.common.enharmonicDisabled, { ns: 'toolbar' })
-        : this.tooltip(Fthora.Enharmonic_Top);
-    },
-
-    generalFlatDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Ke
-      );
-    },
-
-    generalFlatTitle() {
-      return this.generalFlatDisabled
-        ? this.$t(($) => $.toolbar.common.generalFlatDisabled, {
-            ns: 'toolbar',
-          })
-        : this.tooltip(Fthora.GeneralFlat_Top);
-    },
-
-    generalSharpDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Ga
-      );
-    },
-
-    generalSharpTitle() {
-      return this.generalSharpDisabled
-        ? this.$t(($) => $.toolbar.common.generalSharpDisabled, {
-            ns: 'toolbar',
-          })
-        : this.tooltip(Fthora.GeneralSharp_Top);
-    },
-
-    showChromaticFthoraNote() {
-      return (
-        this.element.fthora != null &&
-        this.chromaticFthoras.includes(this.element.fthora)
-      );
-    },
-
-    alignRightTooltip() {
-      return `${this.$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })}(${this.neumeKeyboard.getMaryriaRightAlignTooltip()})`;
-    },
-
-    fthoraNotes(): FthoraNoteOption[] {
-      if (
-        this.element.fthora === Fthora.SoftChromaticThi_Top ||
-        this.element.fthora === Fthora.SoftChromaticThi_Bottom
-      ) {
-        return [
-          {
-            label: getNoteLabelSelector(ScaleNote.ZoHigh),
-            value: ScaleNote.ZoHigh,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Thi),
-            value: ScaleNote.Thi,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Vou),
-            value: ScaleNote.Vou,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ni),
-            value: ScaleNote.Ni,
-          },
-        ];
-      } else if (
-        this.element.fthora === Fthora.SoftChromaticPa_Top ||
-        this.element.fthora === Fthora.SoftChromaticPa_Bottom
-      ) {
-        return [
-          {
-            label: getNoteLabelSelector(ScaleNote.NiHigh),
-            value: ScaleNote.NiHigh,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ke),
-            value: ScaleNote.Ke,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ga),
-            value: ScaleNote.Ga,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Pa),
-            value: ScaleNote.Pa,
-          },
-        ];
-      } else if (
-        this.element.fthora === Fthora.HardChromaticThi_Top ||
-        this.element.fthora === Fthora.HardChromaticThi_Bottom
-      ) {
-        return [
-          {
-            label: getNoteLabelSelector(ScaleNote.ZoHigh),
-            value: ScaleNote.ZoHigh,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Thi),
-            value: ScaleNote.Thi,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Vou),
-            value: ScaleNote.Vou,
-          },
-        ];
-      } else if (
-        this.element.fthora === Fthora.HardChromaticPa_Top ||
-        this.element.fthora === Fthora.HardChromaticPa_Bottom
-      ) {
-        return [
-          {
-            label: getNoteLabelSelector(ScaleNote.NiHigh),
-            value: ScaleNote.NiHigh,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ke),
-            value: ScaleNote.Ke,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ga),
-            value: ScaleNote.Ga,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Pa),
-            value: ScaleNote.Pa,
-          },
-        ];
-      }
-
-      return [];
-    },
-  },
-
-  methods: {
-    translateNeumeDisplayName(neume: Fthora | MeasureBar.MeasureBarRight) {
-      if (neume === MeasureBar.MeasureBarRight) {
-        return this.$t(($) => $.toolbar.common.measureBar, { ns: 'toolbar' });
-      }
-
-      return this.$t(getFthoraLabelSelector(neume), { ns: 'model' });
-    },
-
-    tooltip(neume: Fthora | MeasureBar.MeasureBarRight) {
-      const label = this.translateNeumeDisplayName(neume);
-      const mapping = this.neumeKeyboard.findMappingForNeume(neume);
-      if (mapping) {
-        return `${label} (${this.neumeKeyboard.generateTooltip(mapping)})`;
-      } else {
-        return label;
-      }
-    },
+  neumeKeyboard: {
+    type: Object as PropType<NeumeKeyboard>,
+    required: true,
   },
 });
+
+defineEmits([
+  'update',
+  'update:fthora',
+  'update:measureBar',
+  'update:quantitativeNeume',
+  'update:tempoLeft',
+  'update:tempo',
+  'update:tempoRight',
+]);
+
+const { t } = useTranslation();
+
+const spathiDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions &&
+    props.element.note !== Note.Ke &&
+    props.element.note !== Note.Ga,
+);
+
+const spathiTitle = computed(() =>
+  spathiDisabled.value
+    ? t(($) => $.toolbar.common.spathiDisabled, { ns: 'toolbar' })
+    : tooltip(Fthora.Spathi_Top),
+);
+
+const klitonDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions && props.element.note !== Note.Thi,
+);
+
+const klitonTitle = computed(() =>
+  klitonDisabled.value
+    ? t(($) => $.toolbar.common.klitonDisabled, { ns: 'toolbar' })
+    : tooltip(Fthora.Kliton_Top),
+);
+
+const zygosDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions && props.element.note !== Note.Thi,
+);
+
+const zygosTitle = computed(() =>
+  zygosDisabled.value
+    ? t(($) => $.toolbar.common.zygosDisabled, { ns: 'toolbar' })
+    : tooltip(Fthora.Zygos_Top),
+);
+
+const enharmonicDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions &&
+    props.element.note !== Note.Zo &&
+    props.element.note !== Note.ZoHigh &&
+    props.element.note !== Note.Vou &&
+    props.element.note !== Note.VouHigh &&
+    props.element.note !== Note.Ga,
+);
+
+const enharmonicTitle = computed(() =>
+  enharmonicDisabled.value
+    ? t(($) => $.toolbar.common.enharmonicDisabled, { ns: 'toolbar' })
+    : tooltip(Fthora.Enharmonic_Top),
+);
+
+const generalFlatDisabled = computed(
+  () => !props.pageSetup.noFthoraRestrictions && props.element.note !== Note.Ke,
+);
+
+const generalFlatTitle = computed(() =>
+  generalFlatDisabled.value
+    ? t(($) => $.toolbar.common.generalFlatDisabled, {
+        ns: 'toolbar',
+      })
+    : tooltip(Fthora.GeneralFlat_Top),
+);
+
+const generalSharpDisabled = computed(
+  () => !props.pageSetup.noFthoraRestrictions && props.element.note !== Note.Ga,
+);
+
+const generalSharpTitle = computed(() =>
+  generalSharpDisabled.value
+    ? t(($) => $.toolbar.common.generalSharpDisabled, {
+        ns: 'toolbar',
+      })
+    : tooltip(Fthora.GeneralSharp_Top),
+);
+
+const alignRightTooltip = computed(
+  (): AppTooltipValue => ({
+    label: t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' }),
+    shortcut: props.neumeKeyboard.getMartyriaRightAlignTooltipKeys(),
+  }),
+);
+
+function translateNeumeDisplayName(neume: Fthora | MeasureBar.MeasureBarRight) {
+  if (neume === MeasureBar.MeasureBarRight) {
+    return t(($) => $.toolbar.common.measureBar, { ns: 'toolbar' });
+  }
+
+  return t(getFthoraLabelSelector(neume), { ns: 'model' });
+}
+
+function tooltip(neume: Fthora | MeasureBar.MeasureBarRight): AppTooltipValue {
+  const label = translateNeumeDisplayName(neume);
+  const mapping = props.neumeKeyboard.findMappingForNeume(neume);
+  if (mapping) {
+    return {
+      label,
+      shortcut: props.neumeKeyboard.generateTooltipKeys(mapping),
+    };
+  } else {
+    return label;
+  }
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .martyria-toolbar {
-  background-color: lightgray;
-
-  padding: 0.25rem;
+  background-color: var(--color-legacy-chrome-menu-surface);
 
   --btn-size: 32px;
-}
-
-label.right-space {
-  margin-right: 0.5rem;
 }
 
 .row {
@@ -856,9 +542,18 @@ label.right-space {
   align-items: center;
 }
 
-.neume-button {
+.neume-button,
+:deep(.menu-container > .neume-button),
+.icon-btn {
+  box-sizing: border-box;
   height: var(--btn-size);
   width: var(--btn-size);
+  appearance: auto;
+  background: revert;
+  border: revert;
+  border-radius: revert;
+  box-shadow: revert;
+  font-weight: revert;
 
   position: relative;
 
@@ -867,28 +562,42 @@ label.right-space {
   justify-content: center;
 
   overflow: hidden;
-
-  user-select: none;
-}
-
-.space {
-  width: 16px;
-}
-
-.icon-btn {
-  height: var(--btn-size);
-  width: var(--btn-size);
+  outline: revert;
   padding: 0;
+  transition: revert;
 
   user-select: none;
+}
+
+.neume-button:hover,
+:deep(.menu-container > .neume-button:hover),
+.icon-btn:hover {
+  background: revert;
+}
+
+.neume-button[aria-disabled='true'],
+:deep(.menu-container > .neume-button:disabled),
+.icon-btn[aria-disabled='true'],
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.neume-button img,
+:deep(.menu-container > .neume-button img) {
+  height: var(--btn-size);
+  max-width: none;
+  width: var(--btn-size);
+}
+
+.icon-btn img {
+  height: var(--btn-icon-size, var(--btn-size));
+  max-width: none;
+  width: var(--btn-icon-size, var(--btn-size));
 }
 
 .icon-btn.selected {
-  background-color: var(--btn-color-selected);
-}
-
-.icon-btn-img {
-  vertical-align: middle;
+  background: var(--color-legacy-chrome-selected);
 }
 
 .btnMenuTempoLeft :deep(.neume-button) {

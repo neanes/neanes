@@ -74,380 +74,378 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { debounce, throttle } from 'throttle-debounce';
-import { defineComponent, PropType, StyleValue } from 'vue';
+import type { PropType, StyleValue } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useTemplateRef,
+  watch,
+} from 'vue';
+import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import ContentEditable from '@/components/ContentEditable.vue';
-import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import { useResizeObserver } from '@/composables/useResizeObserver';
+import type { TextBoxElement } from '@/models/Element';
+import { TextBoxAlignment } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
-import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
+import type { TokenMetadata } from '@/utils/replaceTokens';
+import { replaceTokens } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
-export default defineComponent({
-  components: { ContentEditable },
-  props: {
-    element: {
-      type: Object as PropType<TextBoxElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    editMode: {
-      type: Boolean,
-      default: true,
-    },
-    selected: {
-      type: Boolean,
-      default: false,
-    },
-    metadata: {
-      type: Object as PropType<TokenMetadata>,
-      default: undefined,
-    },
+const emit = defineEmits(['update', 'update:height', 'select-single']);
+const props = defineProps({
+  element: {
+    type: Object as PropType<TextBoxElement>,
+    required: true,
   },
-  emits: ['update', 'update:height', 'select-single'],
-
-  data() {
-    return {
-      resizeObserver: null as ResizeObserver | null,
-      unmounting: false,
-      setupResizeObserverDebounced: null as (() => void) | null,
-    };
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-
-  computed: {
-    htmlElement() {
-      return this.$refs.container as HTMLElement;
-    },
-
-    content() {
-      return this.editMode || this.metadata == null
-        ? this.element.content
-        : replaceTokens(
-            this.element.content,
-            this.metadata,
-            this.element.alignment,
-          );
-    },
-
-    contentBottom() {
-      return this.editMode || this.metadata == null
-        ? this.element.contentBottom
-        : replaceTokens(
-            this.element.contentBottom,
-            this.metadata,
-            this.element.alignment,
-          );
-    },
-
-    contentLeft() {
-      return this.editMode || this.metadata == null
-        ? this.element.contentLeft
-        : replaceTokens(
-            this.element.contentLeft,
-            this.metadata,
-            TextBoxAlignment.Left,
-          );
-    },
-
-    contentCenter() {
-      return this.editMode || this.metadata == null
-        ? this.element.contentCenter
-        : replaceTokens(
-            this.element.contentCenter,
-            this.metadata,
-            TextBoxAlignment.Center,
-          );
-    },
-
-    contentRight() {
-      return this.editMode || this.metadata == null
-        ? this.element.contentRight
-        : replaceTokens(
-            this.element.contentRight,
-            this.metadata,
-            TextBoxAlignment.Right,
-          );
-    },
-
-    width() {
-      return withZoom(this.element.width);
-    },
-
-    containerStyle() {
-      const style = {
-        color: this.element.computedColor,
-        fontFamily: getFontFamilyWithFallback(this.element.computedFontFamily),
-        fontSize: withZoom(this.element.computedFontSize),
-        fontWeight: this.element.computedFontWeight,
-        fontStyle: this.element.computedFontStyle,
-        textAlign: this.element.alignment,
-        width: this.width,
-        height: withZoom(this.element.height),
-        minHeight: withZoom(this.element.minHeight),
-        webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-        lineHeight: `${this.element.computedLineHeight ?? 'normal'}`,
-      } as StyleValue;
-
-      return style;
-    },
-
-    textBoxStyle() {
-      const style: any = {
-        width: !this.element.multipanel ? this.width : undefined,
-        height:
-          this.element.inline || this.element.customHeight
-            ? withZoom(this.element.height)
-            : undefined,
-        minHeight: withZoom(this.element.minHeight),
-        textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
-      };
-
-      return style;
-    },
-
-    textBoxStyleTop() {
-      const style: any = {
-        width: this.width,
-        height: withZoom(this.element.height),
-        textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
-      };
-
-      return style;
-    },
-
-    textBoxStyleBottom() {
-      const style: any = {
-        width: this.width,
-        textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
-        top: withZoom(this.pageSetup.lyricsVerticalOffset),
-      };
-
-      return style;
-    },
-
-    textBoxClass() {
-      return {
-        underline: this.element.underline,
-      };
-    },
+  editMode: {
+    type: Boolean,
+    default: true,
   },
-
-  watch: {
-    'element.customHeight'(newVal) {
-      if (newVal == null) {
-        this.update();
-      }
-    },
+  selected: {
+    type: Boolean,
+    default: false,
   },
-
-  created() {
-    this.setupResizeObserverDebounced = debounce(100, this.setupResizeObserver);
+  metadata: {
+    type: Object as PropType<TokenMetadata>,
+    default: undefined,
   },
+});
 
-  mounted() {
-    const height = this.getHeight();
+const container = useTemplateRef<HTMLElement>('container');
+const text = useTemplateRef<ComponentExposed<typeof ContentEditable>>('text');
+const textLeft =
+  useTemplateRef<ComponentExposed<typeof ContentEditable>>('textLeft');
+const textRight =
+  useTemplateRef<ComponentExposed<typeof ContentEditable>>('textRight');
+const textCenter =
+  useTemplateRef<ComponentExposed<typeof ContentEditable>>('textCenter');
+const textBottom =
+  useTemplateRef<ComponentExposed<typeof ContentEditable>>('textBottom');
 
-    if (height != null && Math.abs(this.element.height - height) > 0.001) {
-      this.$emit('update:height', height);
-    }
+const unmounting = ref(false);
+const { observe: observeResize } = useResizeObserver();
+const setupResizeObserverDebounced = debounce(100, setupResizeObserver);
 
-    this.setupResizeObserver();
-  },
+const htmlElement = computed(() => container.value!);
 
-  beforeUnmount() {
-    this.unmounting = true;
-    this.update();
+const content = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.content
+    : replaceTokens(
+        props.element.content,
+        props.metadata,
+        props.element.alignment,
+      );
+});
 
-    if (this.resizeObserver != null) {
-      this.resizeObserver.disconnect();
+const contentBottom = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentBottom
+    : replaceTokens(
+        props.element.contentBottom,
+        props.metadata,
+        props.element.alignment,
+      );
+});
+
+const contentLeft = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentLeft
+    : replaceTokens(
+        props.element.contentLeft,
+        props.metadata,
+        TextBoxAlignment.Left,
+      );
+});
+
+const contentCenter = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentCenter
+    : replaceTokens(
+        props.element.contentCenter,
+        props.metadata,
+        TextBoxAlignment.Center,
+      );
+});
+
+const contentRight = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentRight
+    : replaceTokens(
+        props.element.contentRight,
+        props.metadata,
+        TextBoxAlignment.Right,
+      );
+});
+
+const width = computed(() => withZoom(props.element.width));
+
+const containerStyle = computed(() => {
+  const style = {
+    color: props.element.computedColor,
+    fontFamily: getFontFamilyWithFallback(props.element.computedFontFamily),
+    fontSize: withZoom(props.element.computedFontSize),
+    fontWeight: props.element.computedFontWeight,
+    fontStyle: props.element.computedFontStyle,
+    textAlign: props.element.alignment,
+    width: width.value,
+    height: withZoom(props.element.height),
+    minHeight: withZoom(props.element.minHeight),
+    webkitTextStrokeWidth: withZoom(props.element.computedStrokeWidth),
+    lineHeight: `${props.element.computedLineHeight ?? 'normal'}`,
+  } as StyleValue;
+
+  return style;
+});
+
+const textBoxStyle = computed(() => {
+  const style: any = {
+    width: !props.element.multipanel ? width.value : undefined,
+    height:
+      props.element.inline || props.element.customHeight
+        ? withZoom(props.element.height)
+        : undefined,
+    minHeight: withZoom(props.element.minHeight),
+    textWrap: props.element.alignment === 'center' ? 'balance' : 'pretty',
+  };
+
+  return style;
+});
+
+const textBoxStyleTop = computed(() => {
+  const style: any = {
+    width: width.value,
+    height: withZoom(props.element.height),
+    textWrap: props.element.alignment === 'center' ? 'balance' : 'pretty',
+  };
+
+  return style;
+});
+
+const textBoxStyleBottom = computed(() => {
+  const style: any = {
+    width: width.value,
+    textWrap: props.element.alignment === 'center' ? 'balance' : 'pretty',
+    top: withZoom(props.pageSetup.lyricsVerticalOffset),
+  };
+
+  return style;
+});
+
+const textBoxClass = computed(() => {
+  return {
+    underline: props.element.underline,
+  };
+});
+
+watch(
+  () => props.element.customHeight,
+  (newVal) => {
+    if (newVal == null) {
+      update();
     }
   },
+);
 
-  methods: {
-    getTextElement() {
-      return this.$refs.text as InstanceType<typeof ContentEditable>;
-    },
+onMounted(() => {
+  const height = getHeight();
 
-    getTextElementLeft() {
-      return this.$refs.textLeft as InstanceType<typeof ContentEditable>;
-    },
+  if (height != null && Math.abs(props.element.height - height) > 0.001) {
+    emit('update:height', height);
+  }
 
-    getTextElementRight() {
-      return this.$refs.textRight as InstanceType<typeof ContentEditable>;
-    },
+  setupResizeObserver();
+});
 
-    getTextElementCenter() {
-      return this.$refs.textCenter as InstanceType<typeof ContentEditable>;
-    },
+onBeforeUnmount(() => {
+  unmounting.value = true;
+  update();
+  // Observer is disconnected automatically by useResizeObserver's own
+  // onBeforeUnmount hook.
+});
 
-    getTextElementBottom() {
-      return this.$refs.textBottom as InstanceType<typeof ContentEditable>;
-    },
+function getTextElement() {
+  return text.value!;
+}
 
-    onEditorReady() {
-      this.setupResizeObserverDebounced!();
-    },
+function getTextElementLeft() {
+  return textLeft.value!;
+}
 
-    update() {
-      const updates: Partial<TextBoxElement> = {};
+function getTextElementRight() {
+  return textRight.value!;
+}
 
-      let updated = false;
+function getTextElementCenter() {
+  return textCenter.value!;
+}
 
-      const height = this.getHeight();
+function getTextElementBottom() {
+  return textBottom.value!;
+}
 
-      const content = this.getTextElement()?.getContent() ?? '';
-      const contentBottom = this.getTextElementBottom()?.getContent() ?? '';
-      const contentLeft = this.getTextElementLeft()?.getContent() ?? '';
-      const contentRight = this.getTextElementRight()?.getContent() ?? '';
-      const contentCenter = this.getTextElementCenter()?.getContent() ?? '';
+function onEditorReady() {
+  setupResizeObserverDebounced();
+}
 
-      // This should never happen, but if it does, we don't want
-      // to save garbage values.
-      if (height == null) {
-        return;
-      }
+function update() {
+  const updates: Partial<TextBoxElement> = {};
 
-      // Nothing actually changed, so do nothing
-      if (this.editMode && this.element.content !== content) {
-        updates.content = content;
-        updated = true;
-      }
+  let updated = false;
 
-      if (this.editMode && this.element.contentBottom !== contentBottom) {
-        updates.contentBottom = contentBottom;
-        updated = true;
-      }
+  const height = getHeight();
 
-      if (this.editMode && this.element.contentLeft !== contentLeft) {
-        updates.contentLeft = contentLeft;
-        updated = true;
-      }
+  const currentContent = getTextElement()?.getContent() ?? '';
+  const currentContentBottom = getTextElementBottom()?.getContent() ?? '';
+  const currentContentLeft = getTextElementLeft()?.getContent() ?? '';
+  const currentContentRight = getTextElementRight()?.getContent() ?? '';
+  const currentContentCenter = getTextElementCenter()?.getContent() ?? '';
 
-      if (this.editMode && this.element.contentRight !== contentRight) {
-        updates.contentRight = contentRight;
-        updated = true;
-      }
+  // This should never happen, but if it does, we don't want
+  // to save garbage values.
+  if (height == null) {
+    return;
+  }
 
-      if (this.editMode && this.element.contentCenter !== contentCenter) {
-        updates.contentCenter = contentCenter;
-        updated = true;
-      }
+  // Nothing actually changed, so do nothing
+  if (props.editMode && props.element.content !== currentContent) {
+    updates.content = currentContent;
+    updated = true;
+  }
 
-      if (
-        !this.element.inline &&
-        Math.abs(this.element.height - height) > 0.001
-      ) {
-        updates.height = height;
-        updated = true;
-      }
+  if (props.editMode && props.element.contentBottom !== currentContentBottom) {
+    updates.contentBottom = currentContentBottom;
+    updated = true;
+  }
 
-      if (updated) {
-        this.$emit('update', updates);
-      }
-    },
+  if (props.editMode && props.element.contentLeft !== currentContentLeft) {
+    updates.contentLeft = currentContentLeft;
+    updated = true;
+  }
 
-    blur() {
-      this.getTextElement()?.blur();
-    },
+  if (props.editMode && props.element.contentRight !== currentContentRight) {
+    updates.contentRight = currentContentRight;
+    updated = true;
+  }
 
-    focus() {
-      this.getTextElement()?.focus(true);
-    },
+  if (props.editMode && props.element.contentCenter !== currentContentCenter) {
+    updates.contentCenter = currentContentCenter;
+    updated = true;
+  }
 
-    setupResizeObserver() {
-      if (
-        this.getTextElement() ||
-        (this.getTextElementLeft() &&
-          this.getTextElementCenter() &&
-          this.getTextElementRight())
-      ) {
-        if (this.resizeObserver != null) {
-          this.resizeObserver.disconnect();
-        }
+  if (
+    !props.element.inline &&
+    Math.abs(props.element.height - height) > 0.001
+  ) {
+    updates.height = height;
+    updated = true;
+  }
 
-        this.resizeObserver = new ResizeObserver(
-          throttle(100, () => {
-            const resizedHeight = this.getHeight();
+  if (updated) {
+    emit('update', updates);
+  }
+}
 
-            if (
-              resizedHeight != null &&
-              Math.abs(this.element.height - resizedHeight) > 0.001
-            ) {
-              this.$emit('update', { height: resizedHeight });
-            }
-          }),
-        );
+function blur() {
+  getTextElement()?.blur();
+}
 
-        if (this.getTextElement()) {
-          this.resizeObserver.observe(this.getTextElement().htmlElement);
-        }
+function focus() {
+  getTextElement()?.focus(true);
+}
 
-        if (this.getTextElementLeft()) {
-          this.resizeObserver.observe(this.getTextElementLeft().htmlElement);
-        }
-        if (this.getTextElementCenter()) {
-          this.resizeObserver.observe(this.getTextElementCenter().htmlElement);
-        }
-        if (this.getTextElementRight()) {
-          this.resizeObserver.observe(this.getTextElementRight().htmlElement);
-        }
-      }
-    },
+function setupResizeObserver() {
+  const textElement = getTextElement();
+  const textElementLeft = getTextElementLeft();
+  const textElementCenter = getTextElementCenter();
+  const textElementRight = getTextElementRight();
 
-    getHeight() {
-      if (this.element.multipanel) {
+  if (
+    textElement ||
+    (textElementLeft && textElementCenter && textElementRight)
+  ) {
+    const elements = [
+      textElement,
+      textElementLeft,
+      textElementCenter,
+      textElementRight,
+    ]
+      .filter((element) => element != null)
+      .map((element) => element.htmlElement);
+
+    observeResize(
+      elements,
+      throttle(100, () => {
+        const resizedHeight = getHeight();
+
         if (
-          this.getTextElementLeft() == null ||
-          this.getTextElementCenter() == null ||
-          this.getTextElementRight() == null
+          resizedHeight != null &&
+          Math.abs(props.element.height - resizedHeight) > 0.001
         ) {
-          return null;
+          emit('update', { height: resizedHeight });
         }
+      }),
+    );
+  }
+}
 
-        const zoom = Number(
-          getComputedStyle(
-            this.getTextElementCenter().htmlElement,
-          ).getPropertyValue('--zoom'),
-        );
+function getHeight() {
+  if (props.element.multipanel) {
+    if (
+      getTextElementLeft() == null ||
+      getTextElementCenter() == null ||
+      getTextElementRight() == null
+    ) {
+      return null;
+    }
 
-        return (
-          Math.max(
-            this.getTextElementLeft().htmlElement.getBoundingClientRect()
-              .height,
-            this.getTextElementCenter().htmlElement.getBoundingClientRect()
-              .height,
-            this.getTextElementRight().htmlElement.getBoundingClientRect()
-              .height,
-          ) / zoom
-        );
-      }
+    const zoom = Number(
+      getComputedStyle(getTextElementCenter()!.htmlElement).getPropertyValue(
+        '--zoom',
+      ),
+    );
 
-      if (this.getTextElement() == null) {
-        return null;
-      }
+    return (
+      Math.max(
+        getTextElementLeft()!.htmlElement.getBoundingClientRect().height,
+        getTextElementCenter()!.htmlElement.getBoundingClientRect().height,
+        getTextElementRight()!.htmlElement.getBoundingClientRect().height,
+      ) / zoom
+    );
+  }
 
-      const zoom = Number(
-        getComputedStyle(this.getTextElement().htmlElement).getPropertyValue(
-          '--zoom',
-        ),
-      );
+  if (getTextElement() == null) {
+    return null;
+  }
 
-      return (
-        this.getTextElement().htmlElement.getBoundingClientRect().height / zoom
-      );
-    },
+  const zoom = Number(
+    getComputedStyle(getTextElement()!.htmlElement).getPropertyValue('--zoom'),
+  );
 
-    onBlur() {
-      if (!this.unmounting) {
-        this.update();
-      }
-    },
-  },
+  return getTextElement()!.htmlElement.getBoundingClientRect().height / zoom;
+}
+
+function onBlur() {
+  if (!unmounting.value) {
+    update();
+  }
+}
+
+defineExpose({
+  blur,
+  focus,
+  getTextElement,
+  htmlElement,
 });
 </script>
 

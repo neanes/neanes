@@ -1,8 +1,6 @@
-import {
+import type {
   DropCapElement,
-  ElementType,
   ImageBoxElement,
-  LineBreakType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
@@ -11,21 +9,25 @@ import {
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
+import { ElementType, LineBreakType } from '@/models/Element';
+import type { Neume } from '@/models/Neumes';
 import {
   MeasureBar,
   ModeSign,
-  Neume,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
-import { Score } from '@/models/Score';
+import type { PageSetup } from '@/models/PageSetup';
+import type { Score } from '@/models/Score';
+import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
+import { resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { Unit } from '@/utils/Unit';
 
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
-import { NeumeMappingService, SbmuflGlyphName } from '../NeumeMappingService';
+import type { SbmuflGlyphName } from '../NeumeMappingService';
+import { NeumeMappingService } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
 interface NeumeOffset {
@@ -121,6 +123,7 @@ export class ByzHtmlExporter {
     const style = this.exportPageSetup(score.pageSetup);
 
     const body = this.exportElements(score.staff.elements, score.pageSetup, 4);
+    const fontFaceCss = fontCatalog.getRegisteredFontFaceCss();
 
     let injectRtl = '';
 
@@ -149,6 +152,7 @@ export class ByzHtmlExporter {
     <meta charset="UTF-8">
 
     <style>
+      ${fontFaceCss}
       ${style}
     </style>
   </head>
@@ -164,17 +168,47 @@ export class ByzHtmlExporter {
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
 
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
+    const defaultLyricsFont = resolveFontStyle(
+      pageSetup.lyricsDefaultFontFamily,
+      pageSetup.lyricsDefaultFontStyle,
+    );
+    const defaultDropCapFont = resolveFontStyle(
+      pageSetup.dropCapDefaultFontFamily,
+      pageSetup.dropCapDefaultFontStyle,
+    );
+    const defaultTextBoxFont = resolveFontStyle(
+      pageSetup.textBoxDefaultFontFamily,
+      pageSetup.textBoxDefaultFontStyle,
+    );
+    const defaultLyricsFontFamily = getFontFamilyWithFallback(
+      defaultLyricsFont.cssFontFamily,
+      pageSetup.neumeDefaultFontFamily,
+    ).replaceAll('"', "'");
+    const defaultDropCapFontFamily = getFontFamilyWithFallback(
+      defaultDropCapFont.cssFontFamily,
+    ).replaceAll('"', "'");
+    const defaultTextBoxFontFamily = getFontFamilyWithFallback(
+      defaultTextBoxFont.cssFontFamily,
+    ).replaceAll('"', "'");
+    const defaultRichTextBoxFontFamily = getFontFamilyWithFallback(
+      pageSetup.textBoxDefaultFontFamily,
+      pageSetup.neumeDefaultFontFamily,
+    ).replaceAll('"', "'");
+    const defaultInlineRichTextBoxFontFamily = getFontFamilyWithFallback(
+      pageSetup.lyricsDefaultFontFamily,
+      pageSetup.neumeDefaultFontFamily,
+    ).replaceAll('"', "'");
 
     const style = `:root {
         --byz-neume-font-family: ${pageSetup.neumeDefaultFontFamily};
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
-        --byz-lyric-font-family: ${pageSetup.lyricsDefaultFontFamily};
+        --byz-lyric-font-family: ${defaultLyricsFontFamily};
         --byz-lyric-font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
         --byz-lyric-offset-h: ${lyricOffsetH};
         --byz-lyric-offset-v: ${Unit.toPt(pageSetup.lyricsVerticalOffset)}pt;
 
-        --byz-drop-cap-font-family: ${pageSetup.dropCapDefaultFontFamily};
+        --byz-drop-cap-font-family: ${defaultDropCapFontFamily};
         --byz-drop-cap-font-size: ${Unit.toPt(
           pageSetup.dropCapDefaultFontSize,
         )}pt;
@@ -227,11 +261,13 @@ export class ByzHtmlExporter {
 
       ${this.config.tagLyric} {
         color: ${pageSetup.lyricsDefaultColor};
+        font-weight: ${defaultLyricsFont.cssFontWeight};
+        font-style: ${defaultLyricsFont.cssFontStyle};
       }
 
       ${this.config.tagDropCap} {
-        font-weight: ${pageSetup.dropCapDefaultFontWeight};
-        font-style: ${pageSetup.dropCapDefaultFontStyle};
+        font-weight: ${defaultDropCapFont.cssFontWeight};
+        font-style: ${defaultDropCapFont.cssFontStyle};
         -webkit-text-stroke-width: ${pageSetup.dropCapDefaultStrokeWidth};
       }
 
@@ -250,10 +286,10 @@ export class ByzHtmlExporter {
 
       .${this.config.classTextBox} {
         white-space: break-spaces;
-        font-family: ${pageSetup.textBoxDefaultFontFamily};
+        font-family: ${defaultTextBoxFontFamily};
         font-size: ${Unit.toPt(pageSetup.textBoxDefaultFontSize)}pt;
-        font-weight: ${pageSetup.textBoxDefaultFontWeight};
-        font-style: ${pageSetup.textBoxDefaultFontStyle};
+        font-weight: ${defaultTextBoxFont.cssFontWeight};
+        font-style: ${defaultTextBoxFont.cssFontStyle};
         color: ${pageSetup.textBoxDefaultColor};
         -webkit-text-stroke-width: ${pageSetup.textBoxDefaultStrokeWidth};
       }
@@ -263,9 +299,29 @@ export class ByzHtmlExporter {
         align-items: center;
       }
 
+      .${this.config.classTextBox}.${this.config.classTextBoxInline} {
+        font-family: ${defaultLyricsFontFamily};
+        font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+        font-weight: ${defaultLyricsFont.cssFontWeight};
+        font-style: ${defaultLyricsFont.cssFontStyle};
+        color: ${pageSetup.lyricsDefaultColor};
+        -webkit-text-stroke-width: ${pageSetup.lyricsDefaultStrokeWidth};
+      }
+
       .${this.config.classRichTextBox} {
-        font-family: ${pageSetup.textBoxDefaultFontFamily};
+        font-family: ${defaultRichTextBoxFontFamily};
         font-size: ${Unit.toPt(pageSetup.textBoxDefaultFontSize)}pt;
+        font-weight: 400;
+        font-style: normal;
+        color: ${pageSetup.textBoxDefaultColor};
+      }
+
+      .${this.config.classRichTextBox}.${this.config.classTextBoxInline} {
+        font-family: ${defaultInlineRichTextBoxFontFamily};
+        font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+        font-weight: 400;
+        font-style: normal;
+        color: ${pageSetup.lyricsDefaultColor};
       }
 
       .${this.config.classImageBox} {
@@ -473,6 +529,39 @@ export class ByzHtmlExporter {
     return result;
   }
 
+  // Inline typography for a note whose lyrics override the page-setup default.
+  // Returns '' for notes that use the default style, so those keep inheriting the
+  // x-ly defaults. Mirrors the family+style resolution used for the defaults.
+  private getCustomLyricStyleAttribute(
+    element: NoteElement,
+    pageSetup: PageSetup,
+  ): string {
+    if (element.lyricsUseDefaultStyle) {
+      return '';
+    }
+
+    const font = resolveFontStyle(
+      element.lyricsFontFamily,
+      element.lyricsFontStyle,
+    );
+    const fontFamily = getFontFamilyWithFallback(
+      font.cssFontFamily,
+      pageSetup.neumeDefaultFontFamily,
+    ).replaceAll('"', "'");
+
+    let style = `color: ${element.lyricsColor};`;
+    style += `font-family: ${fontFamily};`;
+    style += `font-size: ${Unit.toPt(element.lyricsFontSize)}pt;`;
+    style += `font-weight: ${font.cssFontWeight};`;
+    style += `font-style: ${font.cssFontStyle};`;
+
+    if (element.lyricsTextDecoration !== 'none') {
+      style += `text-decoration: ${element.lyricsTextDecoration};`;
+    }
+
+    return ` style="${style}"`;
+  }
+
   exportNote(element: NoteElement, pageSetup: PageSetup, indentation: number) {
     let inner = '';
 
@@ -606,6 +695,11 @@ export class ByzHtmlExporter {
       });
     }
 
+    const lyricStyleAttribute = this.getCustomLyricStyleAttribute(
+      element,
+      pageSetup,
+    );
+
     if (element.lyrics.trim() != '') {
       const lyrics = element.lyrics
         .replaceAll(
@@ -617,7 +711,7 @@ export class ByzHtmlExporter {
           `<${this.getTag('gorthmikon')}></${this.getTag('gorthmikon')}>`,
         );
 
-      inner += `<${this.config.tagLyric}>${lyrics}</${
+      inner += `<${this.config.tagLyric}${lyricStyleAttribute}>${lyrics}</${
         this.config.tagLyric
       }\n${this.getIndentationString(indentation)}>`;
 
@@ -637,9 +731,9 @@ export class ByzHtmlExporter {
         }\n${this.getIndentationString(indentation)}>`;
       }
     } else if (element.melismaText.trim() != '') {
-      inner += `<${this.config.tagLyric}>${element.melismaText}</${
-        this.config.tagLyric
-      }\n${this.getIndentationString(indentation)}>`;
+      inner += `<${this.config.tagLyric}${lyricStyleAttribute}>${
+        element.melismaText
+      }</${this.config.tagLyric}\n${this.getIndentationString(indentation)}>`;
     }
 
     return `<${this.config.tagNote}\n${this.getIndentationString(
@@ -779,10 +873,14 @@ export class ByzHtmlExporter {
   }
 
   exportRichTextBox(element: RichTextBoxElement, indentation: number) {
-    const className = this.config.classRichTextBox;
+    let className = this.config.classRichTextBox;
 
     let styleAttribute = '';
     let style = '';
+
+    if (element.inline) {
+      className += ` ${this.config.classTextBoxInline}`;
+    }
 
     if (element.rtl) {
       style += 'direction: rtl;';
@@ -1077,11 +1175,15 @@ export class ByzHtmlExporter {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
-    const font = `${pageSetup.dropCapDefaultFontStyle} normal ${
-      pageSetup.dropCapDefaultFontWeight
+    const defaultDropCapFont = resolveFontStyle(
+      pageSetup.dropCapDefaultFontFamily,
+      pageSetup.dropCapDefaultFontStyle,
+    );
+    const font = `${defaultDropCapFont.cssFontStyle} normal ${
+      defaultDropCapFont.cssFontWeight
     } ${pageSetup.dropCapDefaultFontSize}px/${
       pageSetup.dropCapDefaultLineHeight ?? 'normal'
-    } "${pageSetup.dropCapDefaultFontFamily}"`;
+    } "${defaultDropCapFont.cssFontFamily}"`;
 
     const fontBoundingBoxDescent =
       TextMeasurementService.getFontBoundingBoxDescent(font);

@@ -42,12 +42,12 @@
     <span class="right-container">
       <span v-if="element.showAmbitus" class="ambitus">
         <span class="ambitus-text">(</span>
-        <span class="ambitus-low" :style="ambitusStyle">
+        <span class="ambitus-low" :style="ambitusStyleLow">
           <Neume :neume="element.ambitusLowNote" />
           <Neume :neume="element.ambitusLowRootSign" />
         </span>
         <span class="ambitus-text">-</span>
-        <span class="ambitus-high" :style="ambitusStyle">
+        <span class="ambitus-high" :style="ambitusStyleHigh">
           <Neume :neume="element.ambitusHighNote" />
           <Neume :neume="element.ambitusHighRootSign" />
         </span>
@@ -63,78 +63,103 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType, StyleValue } from 'vue';
+<script setup lang="ts">
+import type { CSSProperties, PropType, StyleValue } from 'vue';
+import { computed } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
-import { ModeKeyElement } from '@/models/Element';
+import type { ModeKeyElement } from '@/models/Element';
 import { ModeSign } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { withZoom } from '@/utils/withZoom';
 
-export default defineComponent({
-  components: { Neume },
-  props: {
-    element: {
-      type: Object as PropType<ModeKeyElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
+defineEmits(['select-single']);
+const props = defineProps({
+  element: {
+    type: Object as PropType<ModeKeyElement>,
+    required: true,
   },
-  emits: ['select-single'],
-
-  data() {
-    return {
-      ModeSign,
-    };
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
+});
 
-  computed: {
-    style() {
-      return {
-        color: this.element.computedColor,
-        fontFamily: this.element.computedFontFamily,
-        fontSize: withZoom(this.element.computedFontSize),
-        textAlign: this.element.alignment,
-        width: withZoom(this.element.width),
-        height: withZoom(this.element.height),
-        webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-      } as StyleValue;
-    },
+const style = computed(() => {
+  return {
+    color: props.element.computedColor,
+    fontFamily: props.element.computedFontFamily,
+    fontSize: withZoom(props.element.computedFontSize),
+    textAlign: props.element.alignment,
+    width: withZoom(props.element.width),
+    height: withZoom(props.element.height),
+    webkitTextStrokeWidth: withZoom(props.element.computedStrokeWidth),
+  } as StyleValue;
+});
 
-    tempoStyle() {
-      // TODO figure out a way to remove the hard-coded -.45em
-      // maybe put it in the font metadata json?
-      const style = {
-        color: this.pageSetup.tempoDefaultColor,
-        webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
-        top: '-0.45em',
-        marginLeft: withZoom(8),
-      } as StyleValue;
+const tempoStyle = computed(() => {
+  // TODO figure out a way to remove the hard-coded -.45em
+  // maybe put it in the font metadata json?
+  const style = {
+    color: props.pageSetup.tempoDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.tempoDefaultStrokeWidth),
+    top: '-0.45em',
+    marginLeft: withZoom(8),
+  } as StyleValue;
 
-      return style;
-    },
+  return style;
+});
 
-    ambitusStyle() {
-      // TODO figure out a way to remove the hard-coded -.45em
-      // maybe put it in the font metadata json?
-      const style = {
-        color: this.pageSetup.martyriaDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.martyriaDefaultStrokeWidth,
-        ),
-        position: 'relative',
-        top: '-0.45em',
-      } as StyleValue;
+const ambitusStyle = computed(() => {
+  // TODO figure out a way to remove the hard-coded -.45em
+  // maybe put it in the font metadata json?
+  const style = {
+    color: props.pageSetup.martyriaDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.martyriaDefaultStrokeWidth),
+    position: 'relative',
+    top: '-0.45em',
+  } as CSSProperties;
 
-      return style;
-    },
-  },
+  return style;
+});
 
-  methods: {},
+const ambitusStyleLow = computed(() => {
+  const text = [props.element.ambitusLowNote, props.element.ambitusLowRootSign]
+    .map((neume) => NeumeMappingService.getMapping(neume).text)
+    .join('');
+  const font = `${props.element.computedFontSize}px ${props.element.computedFontFamily}`;
+
+  const bounds = TextMeasurementService.getInkBounds(text, font);
+
+  const style = {
+    ...ambitusStyle.value,
+    marginLeft: withZoom(4 - bounds.inkLeft),
+    marginRight: withZoom(10),
+  } as CSSProperties;
+
+  return style;
+});
+
+const ambitusStyleHigh = computed(() => {
+  const text = [
+    props.element.ambitusHighNote,
+    props.element.ambitusHighRootSign,
+  ]
+    .map((neume) => NeumeMappingService.getMapping(neume).text)
+    .join('');
+  const font = `${props.element.computedFontSize}px ${props.element.computedFontFamily}`;
+
+  const bounds = TextMeasurementService.getInkBounds(text, font);
+
+  const style = {
+    ...ambitusStyle.value,
+    marginLeft: withZoom(10),
+    marginRight: withZoom(4 - (bounds.advanceWidth - bounds.inkRight)),
+  } as CSSProperties;
+
+  return style;
 });
 </script>
 
@@ -142,6 +167,7 @@ export default defineComponent({
 .mode-key-container {
   border: 1px dotted black;
   box-sizing: border-box;
+  line-height: normal;
   user-select: none;
 
   position: relative;
@@ -159,14 +185,5 @@ export default defineComponent({
 
 .ambitus-text {
   font-family: Arial, Helvetica, sans-serif;
-}
-
-.ambitus-low {
-  margin-right: 10px;
-}
-
-.ambitus-high {
-  margin-left: 2px;
-  margin-right: 4px;
 }
 </style>

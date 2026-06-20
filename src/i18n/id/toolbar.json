@@ -3,7 +3,9 @@
     "alignLeft": "Rata Kiri",
     "alignCenter": "Rata Tengah",
     "alignRight": "Rata Kanan",
+    "alignment": "Perataan",
     "bpm": "BPM",
+    "chooseColor": "Pilih warna",
     "fthoraNote": "Nada Fthora",
     "ignoreAttractions": "Abaikan Tarikan",
     "insertGorthmikon": "Sisipkan Gorthmikon",
@@ -46,11 +48,29 @@
     "deleteSelectedElement": "Hapus elemen yang dipilih",
     "fit": "Paskan",
     "speed": "Kecepatan",
-    "pageNumber": "Halaman {{ currentPageNumber }} dari {{ pageCount }}",
     "invalidZoom": "Nilai harus antara 50% dan 500%."
+  },
+  "status": {
+    "section": "Bagian {{ sectionNumber }} dari {{ sectionCount }}",
+    "pageNumber": "Halaman {{ currentPageNumber }} dari {{ pageCount }}",
+    "line": "Baris {{ lineNumber }} dari {{ lineCount }}",
+    "column": "Kolom {{ columnNumber }} dari {{ columnCount }}"
   },
   "dropCap": {
     "lineSpan": "Baris untuk Turun"
+  },
+  "properties": {
+    "noProperties": "Tidak ada properti",
+    "nothingToEdit": "Tidak ada yang dapat diedit"
+  },
+  "selection": {
+    "elements": "Elemen",
+    "lineBreak": "Jeda Baris",
+    "center": "Tengah",
+    "justify": "Rata Penuh",
+    "pageBreak": "Jeda Halaman",
+    "noSelection": "Tidak ada pilihan",
+    "nothingSelected": "Tidak ada yang dipilih"
   },
   "imageBox": {
     "maintainAspectRatio": "Pertahankan Rasio Aspek",
@@ -104,5 +124,47 @@
     "offsetYTop": "Offset Y Atas",
     "offsetYBottom": "Offset Y Bawah",
     "fillWidth": "Isi Lebar"
+  },
+  "richTextBox": {
+    "default": "Bawaan",
+    "underline": "Garis bawah",
+    "bulletedList": "Daftar berpoin",
+    "numberedList": "Daftar bernomor",
+    "outdent": "Kurangi inden",
+    "indent": "Inden",
+    "position": "Posisi teks",
+    "subscript": "Subskrip",
+    "superscript": "Superskrip",
+    "numbers": "Angka",
+    "numbersTabularLining": "Lining tabular",
+    "numbersTabularOldstyle": "Oldstyle tabular",
+    "numbersProportionalOldstyle": "Oldstyle proporsional",
+    "numbersProportionalLining": "Lining proporsional",
+    "case": "Kapitalisasi",
+    "caseSmallCaps": "Kapital kecil",
+    "caseAllSmallCaps": "Semua kapital kecil",
+    "fractions": "Pecahan",
+    "slashedZero": "Nol bergaris miring",
+    "ordinals": "Ordinal",
+    "commonLigatures": "Ligatur umum",
+    "discretionaryLigatures": "Ligatur opsional",
+    "historicalLigatures": "Ligatur historis",
+    "contextualAlternates": "Alternatif kontekstual",
+    "removeFormat": "Hapus Format",
+    "insertNeume": "Sisipkan Neume",
+    "insertMartyria": "Sisipkan Martyria",
+    "insertPlagal": "Sisipkan Plagal",
+    "neumeAttributes": "Atribut Neume",
+    "kerningLeft": "Kerning Kiri",
+    "kerningRight": "Kerning Kanan",
+    "neumeFontSize": "Ukuran Font",
+    "martyriaNote": "Nada Martyria",
+    "martyriaRootSign": "Tanda Akar Martyria"
+  },
+  "workspace": {
+    "dockPane": "Tambatkan Panel",
+    "floatPane": "Apungkan Panel",
+    "hidePane": "Sembunyikan Panel",
+    "showPane": "Tampilkan Panel"
   }
 }

@@ -11,6 +11,7 @@
   },
   "export": {
     "root": "Exportă",
+    "description": "Alegeți un format de export și configurați opțiunile acestuia.",
     "format": "Format",
     "pngImages": "Imagini PNG",
     "musicXml": "MusicXML",
@@ -29,10 +30,12 @@
     "export": "Exportă"
   },
   "modeKey": {
-    "root": "Selectează mărturia inițială"
+    "root": "Selectează mărturia inițială",
+    "description": "Alege mărturia inițială."
   },
   "neumePositioning": {
     "root": "Poziționarea neumei",
+    "description": "Ajustează decalajele neumelor de sprijin și previzualizează pozițiile lor.",
     "accidental": "Alterație",
     "accidental2": "Alterație 2",
     "accidental3": "Alterație 3",
@@ -55,6 +58,7 @@
   },
   "pageSetup": {
     "root": "Configurare pagină",
+    "description": "Configurați dimensiunile paginii, marginile, spațierea, fonturile și stilizarea implicită pentru partitură.",
     "pageDimensions": "Dimensiuni pagină",
     "pageSize": "Dimensiune pagină",
     "in": "in",
@@ -76,7 +80,7 @@
     "spacing": "Spațiere",
     "neumes": "Neume",
     "neumeSpacing": "Spațiere neume",
-    "neumeSpacingDescription": "Spațiul orizontal preferat între fiecare neumă pe o linie. Spațierea reală se poate micșora sau lărgi cu până la 50% pentru a justifica linia. Un număr mai mic rezultă într-o partitură mai compactă.",
+    "neumeSpacingDescription": "Spațiul orizontal preferat dintre neume. Măriți această valoare pentru a crea o partitură mai aerisită.",
     "lyricsV": "Versuri: distanță sub neume",
     "lyricsVDescription": "Poziția verticală a versurilor în raport cu neumele. Măriți acest număr pentru a coborî versurile.",
     "lyricsH": "Versuri: distanța minimă între versuri adiacente",
@@ -85,8 +89,10 @@
     "martyriaVerticalOffsetDescription": "Poziția verticală a mărturiilor în raport cu restul neumelor. Măriți acest număr pentru a coborî mărturiile.",
     "line": "Spațiere linii",
     "lineSpacingDescription": "Spațiul minim între fiecare linie. Spațiul real între linii poate fi mai mare pentru a evita suprapunerea între neume și versuri pe linii adiacente.",
-    "hyphens": "Spațiere cratime",
+    "hyphens": "Versuri: Spațiere cratime",
     "hyphenSpacingDescription": "Distanța minimă între cratimele adiacente. Micșorați acest număr pentru a crește numărul de cratime care apar între silabe.",
+    "minimumSyllableToHyphenClearance": "Versuri: Distanța Silabă-Cratimă",
+    "minimumSyllableToHyphenClearanceDescription": "Distanța minimă dintre o silabă și cea mai apropiată cratimă. Măriți această valoare pentru a păstra cratimele mai departe de silabe.",
     "headersAndFooters": "Antete și subsoluri",
     "headerHorizontalRule": "Linie antet",
     "footerHorizontalRule": "Linie subsol",
@@ -159,11 +165,14 @@
     "marginTop": "Spațiu sus",
     "marginBottom": "Spațiu jos",
     "thickness": "Grosime",
+    "applyColor": "Aplică culoarea",
     "neumeBulkColor": "Schimbă culoarea mai multor neume",
     "neumeBulkColorDescription": "Pentru a schimba culoarea mai multor neume simultan, selectați tipurile de neume de mai sus, alegeți o culoare și apăsați butonul pentru a aplica culoarea tuturor neumelor selectate."
   },
   "playbackSettings": {
     "root": "Setări de redare",
+    "description": "Configurează acordajul, volumul, scările și comportamentul alterațiilor la redare.",
+    "general": "General",
     "detune": "Dezacord",
     "test": "Test",
     "volume": "Volum",
@@ -184,6 +193,7 @@
     "zygosLegetos": "Muștar (leghetos)",
     "kliton": "Nisabur",
     "spathi": "Hisar",
+    "alterations": "Alterații",
     "alterationMultipliersChrysanthine": "Multiplicatori alterație (chrysanthine)",
     "zeroCrossbeams": "Fără traverse",
     "oneCrossbeam": "O traversă",
@@ -199,10 +209,28 @@
     "flatWithThreeCrossbeams": "Ifes cu trei traverse",
     "close": "Închide"
   },
+  "about": {
+    "root": "Despre Neanes",
+    "description": "Un editor de partituri de cânt bizantin",
+    "version": "Versiune",
+    "platform": "Platformă",
+    "desktop": "Desktop",
+    "web": "Web",
+    "license": "Licență",
+    "project": "Proiect",
+    "projectDescription": "Neanes este software open source pentru crearea, editarea și exportul partiturilor de cânt bizantin.",
+    "sourceCode": "Cod sursă",
+    "guide": "Ghid",
+    "requestFeature": "Solicită o funcție",
+    "reportIssue": "Raportează o problemă",
+    "close": "Închide"
+  },
   "preferences": {
     "root": "Preferințe",
+    "description": "Configurează limba, interacțiunea meniului și tempourile implicite.",
     "language": "Limbă",
     "languageSystemDefault": "Implicit (sistem)",
+    "helpTranslate": "Ajută la traducerea Neanes",
     "menuInteraction": "Interacțiune meniu",
     "menuInteractionHold": "Apasă și menține pentru a selecta",
     "menuInteractionClick": "Click pentru a deschide meniul",

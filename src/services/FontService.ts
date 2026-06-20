@@ -1,13 +1,51 @@
 import metadataAlmouzios from '@/assets/fonts/almouzios.metadata.json';
-import metadata from '@/assets/fonts/neanes.metadata.json';
-import metadataRtl from '@/assets/fonts/neanesrtl.metadata.json';
-import metadataStathis from '@/assets/fonts/neanesstathisseries.metadata.json';
-import { SbmuflGlyphName } from '@/services/NeumeMappingService';
+import metadataLegacy from '@/assets/fonts/neanes.metadata.json';
+import metadata from '@/assets/fonts/neanesengraving.metadata.json';
+import metadataRtlLegacy from '@/assets/fonts/neanesrtl.metadata.json';
+import metadataRtl from '@/assets/fonts/neanesrtlengraving.metadata.json';
+import metadataStathisLegacy from '@/assets/fonts/neanesstathisseries.metadata.json';
+import metadataStathis from '@/assets/fonts/neanesstathisseriesengraving.metadata.json';
+import type { SbmuflGlyphName } from '@/services/NeumeMappingService';
+
+interface EngravingGlue {
+  width: number;
+  stretch: number;
+  shrink: number;
+}
+
+interface EngravingDefaults {
+  martyriaGlue: EngravingGlue;
+  standardGlue: EngravingGlue;
+  vareiaGap: number;
+}
+
+interface GlyphBBox {
+  bBoxNE: [number, number];
+  bBoxSW: [number, number];
+}
+
+interface CollisionRegion extends GlyphBBox {
+  name: string;
+}
+
+interface ContextualSubstitution {
+  inputGlyphs: SbmuflGlyphName[][];
+  backtrackGlyphs: SbmuflGlyphName[][];
+  lookaheadGlyphs: SbmuflGlyphName[][];
+  substitutions: Array<{
+    index: number;
+    from: SbmuflGlyphName;
+    to: SbmuflGlyphName;
+  }>;
+}
 
 const metadataMap = new Map();
 metadataMap.set('Neanes', metadata);
 metadataMap.set('NeanesRTL', metadataRtl);
 metadataMap.set('NeanesStathisSeries', metadataStathis);
+metadataMap.set('NeanesLegacy', metadataLegacy);
+metadataMap.set('NeanesRTLLegacy', metadataRtlLegacy);
+metadataMap.set('NeanesStathisSeriesLegacy', metadataStathisLegacy);
 metadataMap.set('Almouzios', metadataAlmouzios);
 
 class FontService {
@@ -23,15 +61,117 @@ class FontService {
     return this.getMetadata(fontFamily).glyphAdvanceWidths[glyph];
   }
 
+  getGlyphBBox(fontFamily: string, glyph: SbmuflGlyphName): GlyphBBox {
+    return this.getMetadata(fontFamily).glyphBBoxes[glyph];
+  }
+
+  getGlyphCollisionRegions(
+    fontFamily: string,
+    glyph: SbmuflGlyphName,
+  ): CollisionRegion[] {
+    return this.getMetadata(fontFamily).collisionRegions?.[glyph] ?? [];
+  }
+
+  getContextualSubstitutions(fontFamily: string): ContextualSubstitution[] {
+    return this.getMetadata(fontFamily).contextualSubstitutions ?? [];
+  }
+
+  resolveContextualSubstitutions(
+    fontFamily: string,
+    glyphs: SbmuflGlyphName[],
+  ) {
+    const resolvedGlyphs = [...glyphs];
+
+    for (const rule of this.getContextualSubstitutions(fontFamily)) {
+      for (
+        let inputStart = 0;
+        inputStart <= resolvedGlyphs.length - rule.inputGlyphs.length;
+        inputStart++
+      ) {
+        if (
+          !this.contextualSubstitutionMatches(rule, resolvedGlyphs, inputStart)
+        ) {
+          continue;
+        }
+
+        for (const substitution of rule.substitutions) {
+          const glyphIndex = inputStart + substitution.index;
+          if (resolvedGlyphs[glyphIndex] === substitution.from) {
+            resolvedGlyphs[glyphIndex] = substitution.to;
+          }
+        }
+      }
+    }
+
+    return resolvedGlyphs;
+  }
+
+  private contextualSubstitutionMatches(
+    rule: ContextualSubstitution,
+    glyphs: SbmuflGlyphName[],
+    inputStart: number,
+  ) {
+    return (
+      this.glyphClassesMatch(
+        rule.backtrackGlyphs,
+        glyphs,
+        inputStart - rule.backtrackGlyphs.length,
+      ) &&
+      this.glyphClassesMatch(rule.inputGlyphs, glyphs, inputStart) &&
+      this.glyphClassesMatch(
+        rule.lookaheadGlyphs,
+        glyphs,
+        inputStart + rule.inputGlyphs.length,
+      )
+    );
+  }
+
+  private glyphClassesMatch(
+    glyphClasses: SbmuflGlyphName[][],
+    glyphs: SbmuflGlyphName[],
+    start: number,
+  ) {
+    if (start < 0 || start + glyphClasses.length > glyphs.length) {
+      return false;
+    }
+
+    return glyphClasses.every((glyphClass, index) =>
+      glyphClass.includes(glyphs[start + index]),
+    );
+  }
+
+  getEngravingDefaults(fontFamily: string): EngravingDefaults {
+    return this.getMetadata(fontFamily).engravingDefaults;
+  }
+
+  getStandardGlue(fontFamily: string) {
+    return this.getEngravingDefaults(fontFamily).standardGlue;
+  }
+
+  getMartyriaGlue(fontFamily: string) {
+    return this.getEngravingDefaults(fontFamily).martyriaGlue;
+  }
+
+  getVareiaGap(fontFamily: string) {
+    return this.getEngravingDefaults(fontFamily).vareiaGap;
+  }
+
   getMarkOffset(
     fontFamily: string,
     base: SbmuflGlyphName,
     mark: SbmuflGlyphName,
   ) {
     const metadata = this.getMetadata(fontFamily);
+    const baseAnchors = metadata.glyphsWithAnchors[base];
+    const markAnchors = metadata.glyphsWithAnchors[mark];
 
-    const markAnchorName = Object.keys(metadata.glyphsWithAnchors[mark]).find(
-      (x) => metadata.glyphsWithAnchors[base][x] != null,
+    if (baseAnchors == null || markAnchors == null) {
+      console.warn(`Missing anchor for base: ${base} mark: ${mark}`);
+      return { x: 0, y: 0 };
+    }
+
+    const markAnchorName = Object.keys(markAnchors).find(
+      (x) => baseAnchors[x] != null,
     );
 
     if (markAnchorName == null) {
@@ -39,13 +179,9 @@ class FontService {
       return { x: 0, y: 0 };
     }
 
-    const markAnchor = metadata.glyphsWithAnchors[mark][
-      markAnchorName
-    ] as number[];
+    const markAnchor = markAnchors[markAnchorName] as number[];
 
-    const baseAnchor = metadata.glyphsWithAnchors[base][
-      markAnchorName
-    ] as number[];
+    const baseAnchor = baseAnchors[markAnchorName] as number[];
 
     return {
       x: baseAnchor[0] - markAnchor[0],

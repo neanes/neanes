@@ -1,12 +1,8 @@
 import YAML from 'yaml';
 
-import {
-  MartyriaElement,
-  NoteElement,
-  ScoreElement,
-  TempoElement,
-} from '@/models/Element';
-import {
+import type { ScoreElement } from '@/models/Element';
+import { MartyriaElement, NoteElement, TempoElement } from '@/models/Element';
+import type {
   Accidental,
   Fthora,
   GorgonNeume,
@@ -16,7 +12,8 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 
-import { NeumeMappingService, SbmuflGlyphName } from '../NeumeMappingService';
+import type { SbmuflGlyphName } from '../NeumeMappingService';
+import { NeumeMappingService } from '../NeumeMappingService';
 
 export class OcrImporter {
   public import(data: string) {

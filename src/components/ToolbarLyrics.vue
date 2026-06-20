@@ -1,35 +1,24 @@
 <template>
-  <div class="lyrics-toolbar">
-    <input
-      id="toolbar-lyrics-use-default-style"
-      type="checkbox"
-      :checked="element.lyricsUseDefaultStyle"
-      @change="
-        $emit('update', {
-          lyricsUseDefaultStyle: ($event.target as HTMLInputElement).checked,
-        } as Partial<NoteElement>)
-      "
-    />
-    <label for="toolbar-lyrics-use-default-style">{{
-      $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
-    }}</label>
-    <span class="divider" />
+  <Toolbar class="lyrics-toolbar h-auto w-full gap-0 border-0 p-1" loop>
     <template v-if="!element.lyricsUseDefaultStyle">
-      <select
-        :value="element.lyricsFontFamily"
-        @change="
+      <FontCombobox
+        :model-value="element.lyricsFontFamily"
+        :options="lyricsFontFamilies"
+        @update:model-value="onFontFamilyChanged"
+      />
+      <FontStyleSelect
+        class="w-40"
+        :model-value="element.lyricsFontStyle"
+        :options="fontStyleOptions"
+        :disabled="fontStyleOptions.length <= 1"
+        @update:model-value="
           $emit('update', {
-            lyricsFontFamily: ($event.target as HTMLInputElement).value,
+            lyricsFontStyle: $event,
           } as Partial<NoteElement>)
         "
-      >
-        <option v-for="font in lyricsFontFamilies" :key="font" :value="font">
-          {{ font }}
-        </option>
-      </select>
-      <span class="space"></span>
+      />
       <InputFontSize
-        class="lyrics-input"
+        id="toolbar-lyrics-font-size"
         :model-value="element.lyricsFontSize"
         @update:model-value="
           $emit('update', {
@@ -37,105 +26,100 @@
           } as Partial<NoteElement>)
         "
       />
-      <span class="space"></span>
-      <ColorPicker
-        :model-value="element.lyricsColor"
-        @update:model-value="
-          $emit('update', {
-            lyricsColor: $event,
-          } as Partial<NoteElement>)
-        "
-      />
-      <span class="space"></span>
-      <button
-        class="icon-btn"
-        :class="{ selected: bold }"
-        @click="
-          $emit('update', {
-            lyricsFontWeight: !bold ? '700' : '400',
-          } as Partial<NoteElement>)
-        "
+      <ToolbarSeparator />
+      <ToggleGroup
+        type="multiple"
+        variant="outline"
+        :model-value="styleValues"
+        @update:model-value="onStyleValuesChanged"
       >
-        <b>B</b>
-      </button>
-      <button
-        class="icon-btn"
-        :class="{ selected: italic }"
-        @click="
-          $emit('update', {
-            lyricsFontStyle: !italic ? 'italic' : 'normal',
-          } as Partial<NoteElement>)
-        "
-      >
-        <i>I</i>
-      </button>
-      <button
-        class="icon-btn"
-        :class="{ selected: underline }"
-        @click="
-          $emit('update', {
-            lyricsTextDecoration: !underline ? 'underline' : 'none',
-          } as Partial<NoteElement>)
-        "
-      >
-        <u>U</u>
-      </button>
-      <span class="space"></span>
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-      }}</label>
-      <InputStrokeWidth
-        :model-value="element.lyricsStrokeWidth"
-        @update:model-value="
-          $emit('update', {
-            lyricsStrokeWidth: $event,
-          } as Partial<NoteElement>)
-        "
-      />
+        <ToggleGroupItem
+          value="bold"
+          class="icon-btn"
+          :class="{ selected: isFontStyleAxisActive('bold') }"
+          :disabled="!isFontStyleAxisToggleEnabled('bold')"
+          aria-label="Toggle bold"
+        >
+          <PhTextB class="h-4 w-4" />
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="italic"
+          class="icon-btn"
+          :class="{ selected: isFontStyleAxisActive('italic') }"
+          :disabled="!isFontStyleAxisToggleEnabled('italic')"
+          aria-label="Toggle italic"
+        >
+          <PhTextItalic class="h-4 w-4" />
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="underline"
+          class="icon-btn"
+          :class="{ selected: underline }"
+          aria-label="Toggle underline"
+        >
+          <PhTextUnderline class="h-4 w-4" />
+        </ToggleGroupItem>
+      </ToggleGroup>
+      <ToolbarSeparator />
     </template>
-    <span class="space" />
-    <button
-      class="icon-btn"
-      @mousedown.prevent="$emit('insert:specialCharacter', PELASTIKON)"
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.common.insertPelastikon, { ns: 'toolbar' })"
     >
-      <img
-        src="@/assets/icons/letterPelastikon.svg"
-        width="32"
-        height="32"
-        :title="$t(($) => $.toolbar.common.insertPelastikon, { ns: 'toolbar' })"
-      />
-    </button>
-    <button
-      class="icon-btn"
-      @mousedown.prevent="$emit('insert:specialCharacter', GORTHMIKON)"
-    >
-      <img
-        src="@/assets/icons/letterGorthmikon.svg"
-        width="32"
-        height="32"
-        :title="$t(($) => $.toolbar.common.insertGorthmikon, { ns: 'toolbar' })"
-      />
-    </button>
-    <span class="space" />
-    <template v-for="character in specialCharacters" :key="character.value">
-      <button
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
         class="icon-btn"
-        :class="character.language"
-        @mousedown.prevent="$emit('insert:specialCharacter', character.value)"
+        @mousedown.prevent="$emit('insert:specialCharacter', PELASTIKON)"
       >
-        {{ character.value }}
-      </button>
-    </template>
-  </div>
+        <img src="@/assets/icons/letterPelastikon.svg" />
+      </ToolbarButton>
+    </AppTooltip>
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.common.insertGorthmikon, { ns: 'toolbar' })"
+    >
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @mousedown.prevent="$emit('insert:specialCharacter', GORTHMIKON)"
+      >
+        <img src="@/assets/icons/letterGorthmikon.svg" />
+      </ToolbarButton>
+    </AppTooltip>
+    <ToolbarSeparator />
+    <ToolbarButton
+      v-for="character in specialCharacters"
+      :key="character"
+      variant="secondary"
+      size="icon-sm"
+      class="icon-btn character-button"
+      :class="getCharacterLanguage(character)"
+      :aria-label="character"
+      @mousedown.prevent="$emit('insert:specialCharacter', character)"
+    >
+      {{ character }}
+    </ToolbarButton>
+  </Toolbar>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { PhTextB, PhTextItalic, PhTextUnderline } from '@phosphor-icons/vue';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 
-import ColorPicker from '@/components/ColorPicker.vue';
+import AppTooltip from '@/components/AppTooltip.vue';
+import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
-import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import { NoteElement } from '@/models/Element';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  Toolbar,
+  ToolbarButton,
+  ToolbarSeparator,
+} from '@/components/ui/toolbar';
+import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import type { NoteElement } from '@/models/Element';
+import { fontCatalog } from '@/services/FontCatalog';
 import {
   E_MACRON,
   E_MACRON_SMALL,
@@ -148,97 +132,132 @@ import {
 } from '@/utils/constants';
 
 const specialCharacters = [
-  { value: E_MACRON_SMALL, language: 'english' },
-  { value: E_MACRON, language: 'english' },
-  { value: STIGMA_SMALL, language: 'greek' },
-  { value: STIGMA, language: 'greek' },
-  { value: GREEK_OU_SMALL, language: 'greek' },
-  { value: GREEK_OU, language: 'greek' },
+  E_MACRON_SMALL,
+  E_MACRON,
+  STIGMA_SMALL,
+  STIGMA,
+  GREEK_OU_SMALL,
+  GREEK_OU,
 ];
 
-export default defineComponent({
-  components: { ColorPicker, InputFontSize, InputStrokeWidth },
-  props: {
-    element: {
-      type: Object as PropType<NoteElement>,
-      required: true,
-    },
-    fonts: {
-      type: Array as PropType<string[]>,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<NoteElement>,
+    required: true,
   },
-  emits: ['insert:specialCharacter', 'update'],
-
-  data() {
-    return {
-      GORTHMIKON,
-      PELASTIKON,
-      specialCharacters,
-    };
+  fonts: {
+    type: Array as PropType<string[]>,
+    required: true,
   },
-
-  computed: {
-    bold() {
-      return this.element.lyricsFontWeight === '700';
-    },
-
-    italic() {
-      return this.element.lyricsFontStyle === 'italic';
-    },
-
-    underline() {
-      return this.element.lyricsTextDecoration === 'underline';
-    },
-
-    lyricsFontFamilies() {
-      return [
-        'Source Serif',
-        'GFS Didot',
-        'Noto Naskh Arabic',
-        'Old Standard',
-        ...this.fonts,
-      ];
-    },
-  },
-
-  methods: {},
 });
+
+const emit = defineEmits(['insert:specialCharacter', 'update']);
+
+const {
+  fontStyleOptions,
+  activeStyleAxisValues,
+  isFontStyleAxisActive,
+  isFontStyleAxisToggleEnabled,
+  applyStyleAxisToggles,
+  remapStyleForFamily,
+} = useFontStyleControls(
+  () => props.element.lyricsFontFamily,
+  () => props.element.lyricsFontStyle,
+);
+
+const underline = computed(
+  () => props.element.lyricsTextDecoration === 'underline',
+);
+const styleValues = computed(() => [
+  ...activeStyleAxisValues.value,
+  ...(underline.value ? ['underline'] : []),
+]);
+
+const lyricsFontFamilies = computed(() => [
+  ...fontCatalog.bundledTextFamilies(),
+  ...props.fonts,
+]);
+
+function onStyleValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
+    lyricsFontStyle: applyStyleAxisToggles(values),
+    lyricsTextDecoration: values.includes('underline') ? 'underline' : 'none',
+  } as Partial<NoteElement>);
+}
+
+function onFontFamilyChanged(lyricsFontFamily: string) {
+  emit('update', {
+    lyricsFontFamily,
+    lyricsFontStyle: remapStyleForFamily(lyricsFontFamily),
+  } as Partial<NoteElement>);
+}
+
+function getCharacterLanguage(character: string) {
+  return character === E_MACRON_SMALL || character === E_MACRON
+    ? 'english'
+    : 'greek';
+}
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .lyrics-toolbar {
-  display: flex;
-  align-items: center;
   flex-wrap: wrap;
+  background-color: var(--color-legacy-chrome-menu-surface);
 
-  background-color: lightgray;
-
-  padding: 0.25rem;
+  --btn-size: 32px;
 }
 
 .icon-btn {
-  height: 32px;
-  width: 32px;
+  box-sizing: border-box;
+  height: var(--btn-size);
+  width: var(--btn-size);
+  appearance: auto;
+  background: revert;
+  border: revert;
+  border-radius: revert;
+  box-shadow: revert;
+  font-weight: revert;
+
+  position: relative;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  overflow: hidden;
+  outline: revert;
+  padding: 0;
+  transition: revert;
+  user-select: none;
+}
+
+.icon-btn:hover {
+  background: revert;
+}
+
+.icon-btn.selected,
+.icon-btn[data-state='on'],
+.icon-btn[aria-pressed='true'] {
+  background: var(--color-legacy-chrome-selected);
+}
+
+.icon-btn > img {
+  height: var(--btn-size);
+  max-width: none;
+  width: var(--btn-size);
+}
+
+.icon-btn[aria-disabled='true'],
+.icon-btn[data-disabled],
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.character-button {
   font-size: 1.25rem;
-}
-
-.divider {
-  height: 32px;
-  border-right: 1px solid #666;
-  margin: 0 0.5rem;
-}
-
-.icon-btn.selected {
-  background-color: var(--btn-color-selected);
-}
-
-.space {
-  width: 16px;
 }
 
 .english {

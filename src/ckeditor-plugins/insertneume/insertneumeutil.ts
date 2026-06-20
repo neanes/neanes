@@ -1,8 +1,8 @@
+import type { Neume } from '@/models/Neumes';
 import {
   Fthora,
   Letter,
   ModeSign,
-  Neume,
   QuantitativeNeume,
   TempoSign,
 } from '@/models/Neumes';

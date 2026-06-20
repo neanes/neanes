@@ -16,65 +16,59 @@
         })
       "
     >
-      <img src="@/assets/icons/arrow-up.svg" />
+      <PhArrowUp />
     </button>
     <button @click="$emit('search', { query })">
-      <img src="@/assets/icons/arrow-down.svg" />
+      <PhArrowDown />
     </button>
     <button @click="$emit('close')">
-      <img src="@/assets/icons/x.svg" />
+      <PhX />
     </button>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
+<script setup lang="ts">
+import { PhArrowDown, PhArrowUp, PhX } from '@phosphor-icons/vue';
+import { onMounted, useTemplateRef } from 'vue';
 
-export default defineComponent({
-  components: {},
-  props: {
-    query: {
-      type: String,
-      required: true,
-    },
-  },
-  emits: ['close', 'search', 'update:query'],
-
-  data() {
-    return {};
-  },
-
-  computed: {},
-
-  mounted() {
-    this.focus();
-  },
-
-  methods: {
-    focus() {
-      (this.$refs.input as HTMLInputElement).select();
-    },
+defineEmits(['close', 'search', 'update:query']);
+defineProps({
+  query: {
+    type: String,
+    required: true,
   },
 });
+
+const input = useTemplateRef<HTMLInputElement>('input');
+
+onMounted(() => {
+  focus();
+});
+
+function focus() {
+  input.value!.select();
+}
+
+defineExpose({ focus });
 </script>
 
 <style scoped>
 .search-text-container {
   display: flex;
   justify-content: right;
-  background-color: #ddd;
+  background-color: var(--muted);
 }
 
 .search-text-container button {
   border: none;
-  background-color: darkgray;
+  background-color: var(--color-legacy-chrome-tab-action);
 }
 
 .search-text-container button:hover {
-  background-color: lightgray;
+  background-color: var(--color-legacy-chrome-menu-surface);
 }
 
-.search-text-container button img {
+.search-text-container button > svg {
   width: 1rem;
   height: 1rem;
 }

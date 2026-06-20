@@ -14,7 +14,7 @@ jobs:
       APPIMAGE_EXTRACT_AND_RUN: 1
     steps:
       - name: Check out
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.3
         with:
           fetch-depth: 0
 
@@ -33,7 +33,7 @@ jobs:
         run: find ./examples -type f -name '*.byzx' -print0 | xargs -0 ./neanes-cli --no-sandbox --silent-pdf
 
       - name: Archive PDFs
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: PDFs
           path: examples/*.pdf

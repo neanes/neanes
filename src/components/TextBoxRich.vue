@@ -12,33 +12,36 @@
       class="rich-text-box-multipanel-container"
       :style="multipanelContainerStyle"
     >
-      <ckeditor
+      <RichTextEditor
+        :key="`left-${editorLanguage}`"
         ref="editorLeft"
         class="rich-text-editor multipanel left"
-        :editor="editor"
+        :owner="element"
         :model-value="contentLeft"
         :config="editorConfig"
-        :disable-watchdog="true"
         @blur="onBlur"
+        @select-neume="emit('select-neume')"
       />
-      <ckeditor
+      <RichTextEditor
+        :key="`center-${editorLanguage}`"
         ref="editorCenter"
         class="rich-text-editor multipanel center"
-        :editor="editor"
+        :owner="element"
         :model-value="contentCenter"
         :config="editorConfig"
-        :disable-watchdog="true"
         @blur="onBlur"
         @ready="onEditorReady"
+        @select-neume="emit('select-neume')"
       />
-      <ckeditor
+      <RichTextEditor
+        :key="`right-${editorLanguage}`"
         ref="editorRight"
         class="rich-text-editor multipanel right"
-        :editor="editor"
+        :owner="element"
         :model-value="contentRight"
         :config="editorConfig"
-        :disable-watchdog="true"
         @blur="onBlur"
+        @select-neume="emit('select-neume')"
       />
     </div>
     <div v-else-if="element.inline" class="inline-container">
@@ -47,609 +50,628 @@
           class="inline-top-inner-container"
           :style="textBoxTopInnerContainerStyle"
         >
-          <ckeditor
+          <RichTextEditor
+            :key="`inline-top-${editorLanguage}`"
             ref="editor"
             class="rich-text-editor inline-top"
             :style="textBoxStyleTop"
-            :editor="editor"
+            :owner="element"
             :model-value="content"
             :config="editorConfig"
-            :disable-watchdog="true"
             @blur="onBlur"
             @ready="onEditorReadyInline"
+            @select-neume="emit('select-neume')"
           />
         </div>
       </div>
       <div class="inline-bottom-container" :style="textBoxBottomContainerStyle">
-        <ckeditor
+        <RichTextEditor
+          :key="`inline-bottom-${editorLanguage}`"
           ref="editorBottom"
           class="rich-text-editor inline-bottom"
           :style="textBoxStyleBottom"
-          :editor="editor"
+          :owner="element"
           :model-value="contentBottom"
           :config="editorConfig"
-          :disable-watchdog="true"
           @blur="onBlur"
           @ready="onEditorReadyInlineBottom"
+          @select-neume="emit('select-neume')"
         />
       </div>
     </div>
-    <ckeditor
+    <RichTextEditor
       v-else-if="element.scrollable"
+      :key="`scrollable-${editorLanguage}`"
       ref="editor"
       class="rich-text-editor single scrollable"
-      :editor="editor"
+      :owner="element"
       :model-value="content"
       :config="editorConfig"
-      :disable-watchdog="true"
       :style="textBoxStyle"
       @blur="onBlur"
       @ready="onEditorReady"
+      @select-neume="emit('select-neume')"
     />
-    <ckeditor
+    <RichTextEditor
       v-else
+      :key="`single-${editorLanguage}`"
       ref="editor"
       class="rich-text-editor single"
-      :editor="editor"
+      :owner="element"
       :model-value="content"
       :config="editorConfig"
-      :disable-watchdog="true"
       :style="textBoxStyle"
       @blur="onBlur"
       @ready="onEditorReady"
+      @select-neume="emit('select-neume')"
     />
   </div>
 </template>
 
-<script lang="ts">
-import { FontSizeOption } from '@ckeditor/ckeditor5-font';
-import { Ckeditor } from '@ckeditor/ckeditor5-vue';
-import { Editor, EditorConfig } from 'ckeditor5';
+<script setup lang="ts">
+import type { Editor, EditorConfig, FontSizeOption } from 'ckeditor5';
 import { debounce, throttle } from 'throttle-debounce';
-import { defineComponent, PropType, StyleValue } from 'vue';
+import type { PropType, StyleValue } from 'vue';
+import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
-import InlineEditor from '@/customEditor';
-import { RichTextBoxElement, TextBoxAlignment } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import RichTextEditor from '@/components/RichTextEditor.vue';
+import { useResizeObserver } from '@/composables/useResizeObserver';
+import type InlineEditor from '@/customEditor';
+import type { RichTextBoxElement } from '@/models/Element';
+import { TextBoxAlignment } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
-import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
+import type { TokenMetadata } from '@/utils/replaceTokens';
+import { replaceTokens } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
-export default defineComponent({
-  components: {},
-  props: {
-    element: {
-      type: Object as PropType<RichTextBoxElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    fonts: {
-      type: Array as PropType<string[]>,
-      required: true,
-    },
-    editMode: {
-      type: Boolean,
-      default: true,
-    },
-    selected: {
-      type: Boolean,
-      default: false,
-    },
-    metadata: {
-      type: Object as PropType<TokenMetadata>,
-      default: undefined,
-    },
-    recalc: {
-      type: Boolean,
-      default: false,
-    },
+const emit = defineEmits([
+  'update',
+  'update:height',
+  'select-single',
+  'select-neume',
+]);
+const props = defineProps({
+  element: {
+    type: Object as PropType<RichTextBoxElement>,
+    required: true,
   },
-  emits: ['update', 'update:height', 'select-single'],
-
-  data() {
-    return {
-      editor: InlineEditor,
-      editorData: '',
-
-      focusOnReady: false,
-      unmounting: false,
-
-      heightBottom: 0,
-      heightTop: 0,
-      resizeObserver: null as ResizeObserver | null,
-      inlineBottomObserver: null as ResizeObserver | null,
-      inlineTopObserver: null as ResizeObserver | null,
-      debouncedPhoneHome: null as ((x: number) => void) | null,
-    };
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-
-  computed: {
-    editorConfig(): EditorConfig {
-      const fontSizeOptions: FontSizeOption[] = [];
-
-      for (let i = 8; i <= 72; i++) {
-        fontSizeOptions.push({
-          title: `${i}`,
-          model: `${i}pt`,
-        });
-      }
-
-      // Add a fall back font to each font so that neumes "just work"
-      const fonts = this.fonts.map(
-        (x) => x + ',' + this.pageSetup.neumeDefaultFontFamily,
-      );
-
-      return {
-        fontFamily: {
-          options: [
-            'default',
-            'Source Serif' + ',' + this.pageSetup.neumeDefaultFontFamily,
-            'GFS Didot' + ',' + this.pageSetup.neumeDefaultFontFamily,
-            'Noto Naskh Arabic' + ',' + this.pageSetup.neumeDefaultFontFamily,
-            'Old Standard' + ',' + this.pageSetup.neumeDefaultFontFamily,
-            'Neanes',
-            'NeanesStathisSeries',
-            'Almouzios',
-            ...fonts,
-          ],
-        },
-        fontSize: {
-          supportAllValues: true,
-          options: ['default', ...fontSizeOptions],
-        },
-        language: {
-          content: this.element.rtl ? 'ar' : 'en',
-        },
-        licenseKey: 'GPL',
-        insertNeume: {
-          neumeDefaultFontFamily: this.pageSetup.neumeDefaultFontFamily,
-          defaultFontSize: this.element.inline
-            ? this.pageSetup.lyricsDefaultFontSize
-            : this.pageSetup.textBoxDefaultFontSize,
-          defaultFontFamily: this.element.inline
-            ? this.pageSetup.lyricsDefaultFontFamily
-            : this.pageSetup.textBoxDefaultFontFamily,
-          fthoraDefaultColor: this.pageSetup.fthoraDefaultColor,
-        },
-      };
-    },
-
-    content() {
-      return this.editMode || this.metadata == null
-        ? this.element.content
-        : replaceTokens(
-            this.element.content,
-            this.metadata,
-            TextBoxAlignment.Center,
-          );
-    },
-
-    contentBottom() {
-      return this.editMode || this.metadata == null
-        ? this.element.contentBottom
-        : replaceTokens(
-            this.element.contentBottom,
-            this.metadata,
-            TextBoxAlignment.Center,
-          );
-    },
-
-    contentLeft() {
-      return this.editMode || this.metadata == null
-        ? this.element.contentLeft
-        : replaceTokens(
-            this.element.contentLeft,
-            this.metadata,
-            TextBoxAlignment.Left,
-          );
-    },
-
-    contentCenter() {
-      return this.editMode || this.metadata == null
-        ? this.element.contentCenter
-        : replaceTokens(
-            this.element.contentCenter,
-            this.metadata,
-            TextBoxAlignment.Center,
-          );
-    },
-
-    contentRight() {
-      return this.editMode || this.metadata == null
-        ? this.element.contentRight
-        : replaceTokens(
-            this.element.contentRight,
-            this.metadata,
-            TextBoxAlignment.Right,
-          );
-    },
-
-    containerStyle() {
-      const style: StyleValue = {
-        width: withZoom(this.element.width),
-        height: withZoom(this.element.height),
-        '--ck-content-font-family': getFontFamilyWithFallback(
-          this.pageSetup.textBoxDefaultFontFamily,
-          this.pageSetup.neumeDefaultFontFamily,
-        ),
-        '--ck-content-font-size': this.element.inline
-          ? `${this.pageSetup.lyricsDefaultFontSize}px`
-          : `${this.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
-        '--ck-content-line-height': 'normal',
-      };
-
-      return style;
-    },
-
-    textBoxStyle() {
-      const style: StyleValue = {
-        width: `${this.element.width}px`, // no zoom because we scale with the transform
-        maxHeight: withZoom(
-          this.pageSetup.pageHeight -
-            this.element.y -
-            this.pageSetup.bottomMargin,
-        ),
-      };
-
-      return style;
-    },
-
-    textBoxTopInnerContainerStyle() {
-      // The top text box is aligned such that the middle of the oligon sits in middle of the font.
-      const style: any = {
-        top: withZoom(
-          this.element.defaultNeumeFontAscent -
-            this.pageSetup.neumeDefaultFontSize * this.element.oligonMidpoint -
-            this.element.defaultLyricsFontHeight / 2 -
-            (this.heightTop - this.element.defaultLyricsFontHeight) +
-            this.element.offsetYTop,
-        ),
-        lineHeight: this.element.defaultLyricsFontHeight + 'px',
-      };
-
-      return style;
-    },
-
-    textBoxStyleTop() {
-      const style: any = {
-        width: `${this.element.width}px`, // no zoom because we scale with the transform
-      };
-
-      return style;
-    },
-
-    textBoxStyleBottom() {
-      const style: any = {
-        width: `${this.element.width}px`, // no zoom because we scale with the transform
-      };
-
-      return style;
-    },
-
-    textBoxTopContainerStyle() {
-      const style: any = {
-        height: withZoom(this.element.height),
-      };
-
-      return style;
-    },
-
-    textBoxBottomContainerStyle() {
-      // The bottom text box is aligned so that the baseline of the font is aligned with the lyrics baseline.
-      const style: any = {
-        top: withZoom(
-          this.pageSetup.lyricsVerticalOffset -
-            (this.heightBottom - this.element.defaultLyricsFontHeight) +
-            this.element.offsetYBottom,
-        ),
-        lineHeight: this.element.defaultLyricsFontHeight + 'px',
-      };
-
-      return style;
-    },
-
-    multipanelContainerStyle() {
-      const style: StyleValue = {
-        width: `${this.element.width}px`, // no zoom because we scale with the transform
-      };
-
-      return style;
-    },
+  fonts: {
+    type: Array as PropType<string[]>,
+    required: true,
   },
-
-  watch: {
-    'element.centerOnPage'() {
-      this.setPadding(this.getEditorInstance());
-      this.setPadding(this.getEditorInstanceBottom());
-    },
+  editMode: {
+    type: Boolean,
+    default: true,
   },
-
-  created() {
-    this.debouncedPhoneHome = debounce(100, this.phoneHome);
+  selected: {
+    type: Boolean,
+    default: false,
   },
-
-  beforeUnmount() {
-    this.unmounting = true;
-    this.update();
-
-    if (this.inlineTopObserver != null) {
-      this.inlineTopObserver.disconnect();
-    }
-
-    if (this.inlineBottomObserver != null) {
-      this.inlineBottomObserver.disconnect();
-    }
-
-    if (this.resizeObserver != null) {
-      this.resizeObserver.disconnect();
-    }
+  metadata: {
+    type: Object as PropType<TokenMetadata>,
+    default: undefined,
   },
-
-  methods: {
-    getEditorInstance() {
-      return (this.$refs.editor as ComponentExposed<typeof Ckeditor>)?.instance;
-    },
-
-    getEditorInstanceBottom() {
-      return (this.$refs.editorBottom as ComponentExposed<typeof Ckeditor>)
-        ?.instance;
-    },
-
-    getEditorInstanceLeft() {
-      return (this.$refs.editorLeft as ComponentExposed<typeof Ckeditor>)
-        ?.instance;
-    },
-
-    getEditorInstanceCenter() {
-      return (this.$refs.editorCenter as ComponentExposed<typeof Ckeditor>)
-        ?.instance;
-    },
-
-    getEditorInstanceRight() {
-      return (this.$refs.editorRight as ComponentExposed<typeof Ckeditor>)
-        ?.instance;
-    },
-
-    phoneHome(height: number) {
-      this.$emit('update:height', height);
-    },
-
-    onEditorReady(editor: InlineEditor) {
-      if (this.recalc) {
-        const height = this.getHeight();
-
-        if (height != null && Math.abs(this.element.height - height) > 0.001) {
-          this.debouncedPhoneHome!(height);
-        }
-      }
-
-      if (this.focusOnReady) {
-        editor.editing.view.focus();
-        this.focusOnReady = false;
-      }
-
-      const element = editor.sourceElement;
-
-      if (this.resizeObserver != null) {
-        this.resizeObserver.disconnect();
-      }
-
-      this.resizeObserver = new ResizeObserver(
-        debounce(100, () => {
-          const resizedHeight = this.getHeight();
-
-          if (
-            resizedHeight != null &&
-            Math.abs(this.element.height - resizedHeight) > 0.001
-          ) {
-            if (this.recalc) {
-              this.debouncedPhoneHome!(resizedHeight);
-            } else {
-              this.$emit('update', { height: resizedHeight });
-            }
-          }
-        }),
-      );
-
-      this.resizeObserver.observe(element!);
-    },
-
-    onEditorReadyInline(editor: InlineEditor) {
-      this.heightTop = this.getHeightTop() ?? 0;
-
-      const element = editor.sourceElement;
-
-      if (this.inlineTopObserver != null) {
-        this.inlineTopObserver.disconnect();
-      }
-
-      this.inlineTopObserver = new ResizeObserver(
-        throttle(100, () => {
-          this.heightTop = this.getHeightTop() ?? 0;
-        }),
-      );
-
-      this.inlineTopObserver.observe(element!);
-
-      this.setPadding(editor);
-    },
-
-    onEditorReadyInlineBottom(editor: InlineEditor) {
-      if (this.focusOnReady) {
-        editor.editing.view.focus();
-        this.focusOnReady = false;
-      }
-
-      this.heightBottom = this.getHeightBottom() ?? 0;
-
-      const element = editor.sourceElement;
-
-      if (this.inlineBottomObserver != null) {
-        this.inlineBottomObserver.disconnect();
-      }
-
-      this.inlineBottomObserver = new ResizeObserver(
-        throttle(100, () => {
-          this.heightBottom = this.getHeightBottom() ?? 0;
-        }),
-      );
-
-      this.inlineBottomObserver.observe(element!);
-
-      this.setPadding(editor);
-    },
-
-    onBlur() {
-      if (!this.unmounting) {
-        this.update();
-      }
-    },
-
-    update() {
-      const updates: Partial<RichTextBoxElement> = {};
-
-      let updated = false;
-
-      const height = this.getHeight();
-
-      const content = this.getEditorInstance()?.getData() ?? '';
-      const contentBottom = this.getEditorInstanceBottom()?.getData() ?? '';
-      const contentLeft = this.getEditorInstanceLeft()?.getData() ?? '';
-      const contentCenter = this.getEditorInstanceCenter()?.getData() ?? '';
-      const contentRight = this.getEditorInstanceRight()?.getData() ?? '';
-
-      // This should never happen, but if it does, we don't want
-      // to save garbage values.
-      if (height == null) {
-        return;
-      }
-
-      if (this.editMode && this.element.content !== content) {
-        updates.content = content;
-        updated = true;
-      }
-
-      if (this.editMode && this.element.contentBottom !== contentBottom) {
-        updates.contentBottom = contentBottom;
-        updated = true;
-      }
-
-      if (this.editMode && this.element.contentLeft !== contentLeft) {
-        updates.contentLeft = contentLeft;
-        updated = true;
-      }
-
-      if (this.editMode && this.element.contentCenter !== contentCenter) {
-        updates.contentCenter = contentCenter;
-        updated = true;
-      }
-
-      if (this.editMode && this.element.contentRight !== contentRight) {
-        updates.contentRight = contentRight;
-        updated = true;
-      }
-
-      if (
-        !this.element.inline &&
-        Math.abs(this.element.height - height) > 0.001
-      ) {
-        updates.height = height;
-        updated = true;
-      }
-
-      if (this.element.inline) {
-        this.heightBottom = this.getHeightBottom() ?? 0;
-        this.heightTop = this.getHeightTop() ?? 0;
-      }
-
-      if (updated) {
-        this.$emit('update', updates);
-      }
-    },
-
-    getHeight() {
-      const element = (this.$refs.container as HTMLElement).querySelector(
-        '.ck-content',
-      );
-
-      if (element == null) {
-        return null;
-      }
-
-      const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
-
-      return element.getBoundingClientRect().height / zoom;
-    },
-
-    getHeightBottom() {
-      const element = (this.$refs.container as HTMLElement).querySelector(
-        '.ck-content.inline-bottom',
-      );
-
-      if (element == null) {
-        return null;
-      }
-
-      const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
-
-      return element.getBoundingClientRect().height / zoom;
-    },
-
-    getHeightTop() {
-      const element = (this.$refs.container as HTMLElement).querySelector(
-        '.ck-content.inline-top',
-      );
-
-      if (element == null) {
-        return null;
-      }
-
-      const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
-
-      return element.getBoundingClientRect().height / zoom;
-    },
-
-    setPadding(editor: Editor | undefined) {
-      if (editor == null) {
-        return;
-      }
-
-      editor.editing.view.change((writer) => {
-        const editable = editor.editing.view.document.getRoot();
-
-        if (this.element.centerOnPage) {
-          writer.setStyle(
-            'padding-right',
-            `${this.pageSetup.innerPageWidth - this.element.width}px`,
-            editable!,
-          );
-        } else {
-          writer.removeStyle('padding-right', editable!);
-        }
-      });
-    },
-
-    focus() {
-      this.focusOnReady = true;
-    },
+  recalc: {
+    type: Boolean,
+    default: false,
+  },
+  editorLanguage: {
+    type: String,
+    default: 'en',
   },
 });
-</script>
 
-<style>
-/* https://github.com/ckeditor/ckeditor5/issues/952 */
-.ck.ck-font-family-dropdown,
-.ck.ck-font-size-dropdown {
-  .ck.ck-dropdown__panel {
-    max-height: 150px !important;
-    overflow-y: auto !important;
+const container = useTemplateRef<HTMLElement>('container');
+const editorRef =
+  useTemplateRef<ComponentExposed<typeof RichTextEditor>>('editor');
+const editorBottom =
+  useTemplateRef<ComponentExposed<typeof RichTextEditor>>('editorBottom');
+const editorLeft =
+  useTemplateRef<ComponentExposed<typeof RichTextEditor>>('editorLeft');
+const editorCenter =
+  useTemplateRef<ComponentExposed<typeof RichTextEditor>>('editorCenter');
+const editorRight =
+  useTemplateRef<ComponentExposed<typeof RichTextEditor>>('editorRight');
+
+const focusOnReady = ref(false);
+const unmounting = ref(false);
+const heightBottom = ref(0);
+const heightTop = ref(0);
+const debouncedPhoneHome = debounce(100, phoneHome);
+const { observe: observeResize } = useResizeObserver();
+const { observe: observeInlineTop } = useResizeObserver();
+const { observe: observeInlineBottom } = useResizeObserver();
+
+const htmlElement = computed(() => container.value!);
+
+const editorConfig = computed((): EditorConfig => {
+  const fontSizeOptions: FontSizeOption[] = [];
+
+  for (let i = 8; i <= 72; i++) {
+    fontSizeOptions.push({
+      title: `${i}`,
+      model: `${i}pt`,
+    });
+  }
+
+  // Add a fall back font to each font so that neumes "just work"
+  const fonts = props.fonts.map(
+    (x) => x + ',' + props.pageSetup.neumeDefaultFontFamily,
+  );
+
+  return {
+    fontFamily: {
+      options: [
+        'default',
+        'Source Serif' + ',' + props.pageSetup.neumeDefaultFontFamily,
+        'GFS Didot' + ',' + props.pageSetup.neumeDefaultFontFamily,
+        'Noto Naskh Arabic' + ',' + props.pageSetup.neumeDefaultFontFamily,
+        'Old Standard' + ',' + props.pageSetup.neumeDefaultFontFamily,
+        'Neanes',
+        'NeanesStathisSeries',
+        'Almouzios',
+        ...fonts,
+      ],
+    },
+    fontSize: {
+      supportAllValues: true,
+      options: ['default', ...fontSizeOptions],
+    },
+    language: {
+      ui: props.editorLanguage,
+      content: props.element.rtl ? 'ar' : 'en',
+    },
+    licenseKey: 'GPL',
+    insertNeume: {
+      neumeDefaultFontFamily: props.pageSetup.neumeDefaultFontFamily,
+      defaultFontSize: props.element.inline
+        ? props.pageSetup.lyricsDefaultFontSize
+        : props.pageSetup.textBoxDefaultFontSize,
+      defaultFontFamily: props.element.inline
+        ? props.pageSetup.lyricsDefaultFontFamily
+        : props.pageSetup.textBoxDefaultFontFamily,
+    },
+  };
+});
+
+const content = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.content
+    : replaceTokens(
+        props.element.content,
+        props.metadata,
+        TextBoxAlignment.Center,
+      );
+});
+
+const contentBottom = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentBottom
+    : replaceTokens(
+        props.element.contentBottom,
+        props.metadata,
+        TextBoxAlignment.Center,
+      );
+});
+
+const contentLeft = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentLeft
+    : replaceTokens(
+        props.element.contentLeft,
+        props.metadata,
+        TextBoxAlignment.Left,
+      );
+});
+
+const contentCenter = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentCenter
+    : replaceTokens(
+        props.element.contentCenter,
+        props.metadata,
+        TextBoxAlignment.Center,
+      );
+});
+
+const contentRight = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentRight
+    : replaceTokens(
+        props.element.contentRight,
+        props.metadata,
+        TextBoxAlignment.Right,
+      );
+});
+
+const containerStyle = computed(() => {
+  const defaultFontFamily = props.element.inline
+    ? props.pageSetup.lyricsDefaultFontFamily
+    : props.pageSetup.textBoxDefaultFontFamily;
+  const style: StyleValue = {
+    width: withZoom(props.element.width),
+    height: withZoom(props.element.height),
+    '--ck-content-font-family': getFontFamilyWithFallback(
+      defaultFontFamily,
+      props.pageSetup.neumeDefaultFontFamily + 'Legacy', // TODO what a terrible hack
+    ),
+    '--ck-content-font-size': props.element.inline
+      ? `${props.pageSetup.lyricsDefaultFontSize}px`
+      : `${props.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
+    '--ck-content-font-color': props.element.inline
+      ? props.pageSetup.lyricsDefaultColor
+      : props.pageSetup.textBoxDefaultColor,
+    '--ck-content-line-height': 'normal',
+  };
+
+  return style;
+});
+
+const textBoxStyle = computed(() => {
+  const style: StyleValue = {
+    width: `${props.element.width}px`, // no zoom because we scale with the transform
+    maxHeight: withZoom(
+      props.pageSetup.pageHeight -
+        props.element.y -
+        props.pageSetup.bottomMargin,
+    ),
+  };
+
+  return style;
+});
+
+const textBoxTopInnerContainerStyle = computed(() => {
+  // The top text box is aligned such that the middle of the oligon sits in middle of the font.
+  const style: any = {
+    top: withZoom(
+      props.element.defaultNeumeFontAscent -
+        props.pageSetup.neumeDefaultFontSize * props.element.oligonMidpoint -
+        props.element.defaultLyricsFontHeight / 2 -
+        (heightTop.value - props.element.defaultLyricsFontHeight) +
+        props.element.offsetYTop,
+    ),
+    lineHeight: props.element.defaultLyricsFontHeight + 'px',
+  };
+
+  return style;
+});
+
+const textBoxStyleTop = computed(() => {
+  const style: any = {
+    width: `${props.element.width}px`, // no zoom because we scale with the transform
+  };
+
+  return style;
+});
+
+const textBoxStyleBottom = computed(() => {
+  const style: any = {
+    width: `${props.element.width}px`, // no zoom because we scale with the transform
+  };
+
+  return style;
+});
+
+const textBoxTopContainerStyle = computed(() => {
+  const style: any = {
+    height: withZoom(props.element.height),
+  };
+
+  return style;
+});
+
+const textBoxBottomContainerStyle = computed(() => {
+  // The bottom text box is aligned so that the baseline of the font is aligned with the lyrics baseline.
+  const style: any = {
+    top: withZoom(
+      props.pageSetup.lyricsVerticalOffset -
+        (heightBottom.value - props.element.defaultLyricsFontHeight) +
+        props.element.offsetYBottom,
+    ),
+    lineHeight: props.element.defaultLyricsFontHeight + 'px',
+  };
+
+  return style;
+});
+
+const multipanelContainerStyle = computed(() => {
+  const style: StyleValue = {
+    width: `${props.element.width}px`, // no zoom because we scale with the transform
+  };
+
+  return style;
+});
+
+watch(
+  () => props.element.centerOnPage,
+  () => {
+    setPadding(getEditorInstance());
+    setPadding(getEditorInstanceBottom());
+  },
+);
+
+onBeforeUnmount(() => {
+  unmounting.value = true;
+  update();
+  // Observers are disconnected automatically by useResizeObserver's own
+  // onBeforeUnmount hook.
+});
+
+function getEditorInstance() {
+  return editorRef.value?.instance;
+}
+
+function getEditorInstanceBottom() {
+  return editorBottom.value?.instance;
+}
+
+function getEditorInstanceLeft() {
+  return editorLeft.value?.instance;
+}
+
+function getEditorInstanceCenter() {
+  return editorCenter.value?.instance;
+}
+
+function getEditorInstanceRight() {
+  return editorRight.value?.instance;
+}
+
+function phoneHome(height: number) {
+  emit('update:height', height);
+}
+
+function onEditorReady(editor: InlineEditor) {
+  if (props.recalc) {
+    const height = getHeight();
+
+    if (height != null && Math.abs(props.element.height - height) > 0.001) {
+      debouncedPhoneHome(height);
+    }
+  }
+
+  if (focusOnReady.value) {
+    editor.editing.view.focus();
+    focusOnReady.value = false;
+  }
+
+  const element = editor.sourceElement;
+
+  observeResize(
+    element!,
+    debounce(100, () => {
+      const resizedHeight = getHeight();
+
+      if (
+        resizedHeight != null &&
+        Math.abs(props.element.height - resizedHeight) > 0.001
+      ) {
+        if (props.recalc) {
+          debouncedPhoneHome(resizedHeight);
+        } else {
+          // A resize is pure geometry -- there is no pending edit to persist. Route
+          // through `update:height` (-> updateRichTextBoxHeight, which only sets
+          // the height), not `update` (-> updateRichTextBox), which merges
+          // getPendingRichTextBoxUpdates() and would inject the editor's getData()
+          // into this height-only change. element.content is stale while editing
+          // (the focus-zone suppresses the blur that would flush it), so that merge
+          // makes the update two-keyed, breaking the single-key `noHistory` guard
+          // -> a spurious undo entry + full save on every height-changing font/size
+          // change. (The injected content also echoes back through `:model-value`
+          // to editor.data.set(); the selection collapse that once caused is now
+          // prevented by RichTextEditor's own echo guard, but the churn is not.)
+          emit('update:height', resizedHeight);
+        }
+      }
+    }),
+  );
+}
+
+function onEditorReadyInline(editor: InlineEditor) {
+  heightTop.value = getHeightTop() ?? 0;
+
+  const element = editor.sourceElement;
+
+  observeInlineTop(
+    element!,
+    throttle(100, () => {
+      heightTop.value = getHeightTop() ?? 0;
+    }),
+  );
+
+  setPadding(editor);
+}
+
+function onEditorReadyInlineBottom(editor: InlineEditor) {
+  if (focusOnReady.value) {
+    editor.editing.view.focus();
+    focusOnReady.value = false;
+  }
+
+  heightBottom.value = getHeightBottom() ?? 0;
+
+  const element = editor.sourceElement;
+
+  observeInlineBottom(
+    element!,
+    throttle(100, () => {
+      heightBottom.value = getHeightBottom() ?? 0;
+    }),
+  );
+
+  setPadding(editor);
+}
+
+function onBlur() {
+  if (!unmounting.value) {
+    update();
   }
 }
-</style>
+
+function update() {
+  const updates = getPendingUpdates();
+
+  if (updates != null) {
+    emit('update', updates);
+  }
+}
+
+function getPendingUpdates() {
+  const updates: Partial<RichTextBoxElement> = {};
+
+  let updated = false;
+
+  const height = getHeight();
+
+  updated =
+    addPendingEditorData(updates, 'content', getEditorInstance()) || updated;
+  updated =
+    addPendingEditorData(updates, 'contentBottom', getEditorInstanceBottom()) ||
+    updated;
+  updated =
+    addPendingEditorData(updates, 'contentLeft', getEditorInstanceLeft()) ||
+    updated;
+  updated =
+    addPendingEditorData(updates, 'contentCenter', getEditorInstanceCenter()) ||
+    updated;
+  updated =
+    addPendingEditorData(updates, 'contentRight', getEditorInstanceRight()) ||
+    updated;
+
+  if (
+    height != null &&
+    !props.element.inline &&
+    Math.abs(props.element.height - height) > 0.001
+  ) {
+    updates.height = height;
+    updated = true;
+  }
+
+  if (props.element.inline) {
+    heightBottom.value = getHeightBottom() ?? 0;
+    heightTop.value = getHeightTop() ?? 0;
+  }
+
+  if (updated) {
+    return updates;
+  }
+
+  return null;
+}
+
+function addPendingEditorData(
+  updates: Partial<RichTextBoxElement>,
+  propertyName:
+    | 'content'
+    | 'contentBottom'
+    | 'contentLeft'
+    | 'contentCenter'
+    | 'contentRight',
+  editor: Editor | undefined,
+) {
+  if (!props.editMode || editor == null) {
+    return false;
+  }
+
+  const currentContent = editor.getData();
+
+  if (props.element[propertyName] === currentContent) {
+    return false;
+  }
+
+  updates[propertyName] = currentContent;
+  return true;
+}
+
+function getHeight() {
+  const element = container.value?.querySelector('.ck-content');
+
+  if (element == null) {
+    return null;
+  }
+
+  const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+  return element.getBoundingClientRect().height / zoom;
+}
+
+function getHeightBottom() {
+  const element = container.value?.querySelector('.ck-content.inline-bottom');
+
+  if (element == null) {
+    return null;
+  }
+
+  const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+  return element.getBoundingClientRect().height / zoom;
+}
+
+function getHeightTop() {
+  const element = container.value?.querySelector('.ck-content.inline-top');
+
+  if (element == null) {
+    return null;
+  }
+
+  const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+  return element.getBoundingClientRect().height / zoom;
+}
+
+function setPadding(editor: Editor | undefined) {
+  if (editor == null) {
+    return;
+  }
+
+  editor.editing.view.change((writer) => {
+    const editable = editor.editing.view.document.getRoot();
+
+    if (props.element.centerOnPage) {
+      writer.setStyle(
+        'padding-right',
+        `${props.pageSetup.innerPageWidth - props.element.width}px`,
+        editable!,
+      );
+    } else {
+      writer.removeStyle('padding-right', editable!);
+    }
+  });
+}
+
+function focus() {
+  const editor =
+    (props.element.multipanel
+      ? getEditorInstanceCenter()
+      : props.element.inline
+        ? getEditorInstanceBottom()
+        : getEditorInstance()) ??
+    getEditorInstance() ??
+    getEditorInstanceCenter() ??
+    getEditorInstanceBottom() ??
+    getEditorInstanceLeft() ??
+    getEditorInstanceRight();
+
+  if (editor == null) {
+    focusOnReady.value = true;
+    return;
+  }
+
+  editor.editing.view.focus();
+}
+
+defineExpose({
+  focus,
+  getPendingUpdates,
+  htmlElement,
+});
+</script>
 
 <style scoped>
 :deep(p) {
@@ -674,6 +696,10 @@ export default defineComponent({
   padding: 0;
   box-sizing: border-box;
   overflow: visible;
+  color: var(--ck-content-font-color);
+  font-family: var(--ck-content-font-family);
+  font-size: var(--ck-content-font-size);
+  line-height: var(--ck-content-line-height);
   transform-origin: 0 0;
   transform: scale(var(--zoom, 1));
   border: none !important;

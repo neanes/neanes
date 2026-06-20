@@ -1,12 +1,12 @@
 'use strict';
 
+import type { MenuItemConstructorOptions } from 'electron';
 import {
   app,
   BrowserWindow,
   dialog,
   ipcMain,
   Menu,
-  MenuItemConstructorOptions,
   protocol,
   screen,
   shell,
@@ -20,26 +20,26 @@ import mimetypes from 'mime-types';
 import path from 'path';
 import { debounce } from 'throttle-debounce';
 
-import { PageSize } from '@/models/PageSetup';
+import type { PageSize } from '@/models/PageSetup';
 
 import { initializeI18n, resolveLanguagePreference } from '../../src/i18n';
-import {
+import type {
+  ClipboardReplyArgs,
   CloseWorkspacesArgs,
-  CloseWorkspacesDisposition,
   ExportPageAsImageArgs,
+  ExportPageAsImageReplyArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
+  ExportWorkspaceReplyArgs,
   FileMenuImportOcrArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
-  IpcMainChannels,
-  IpcRendererChannels,
-  OpenContextMenuForTabArgs,
+  FileMenuViewPaneVisibilityArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
@@ -48,8 +48,17 @@ import {
   SaveWorkspaceReplyArgs,
   ShowMessageBoxArgs,
 } from '../../src/ipc/ipcChannels';
-import { Score } from '../../src/models/save/v1/Score';
-import { getSystemFonts } from '../../src/utils/getSystemFonts';
+import {
+  CloseWorkspacesDisposition,
+  IpcMainChannels,
+  IpcRendererChannels,
+} from '../../src/ipc/ipcChannels';
+import type { Score } from '../../src/models/save/v1/Score';
+import {
+  createDefaultPaneVisibility,
+  type WorkspacePaneId,
+  type WorkspacePaneVisibility,
+} from '../../src/models/WorkspacePane';
 import { TestFileType } from '../../src/utils/TestFileType';
 
 // The built directory structure
@@ -94,14 +103,42 @@ const silentLatexIncludeModeKeys = process.argv.includes(
 const silentLatexIncludeTextBoxes = process.argv.includes(
   '--latex-include-text-boxes',
 );
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return undefined;
+}
 const silent = silentPdf || silentLatex || silentHtml;
 
 const disableUpdates = process.argv.includes('--no-update');
+const fakeUpdateMode = process.env.FAKE_UPDATE_AVAILABLE === '1';
 
 let win: BrowserWindow | null = null;
 let readyToExit = false;
 let creatingWindow = false;
 let quitting = false;
+let paneMenuVisibility = createDefaultPaneVisibility();
+
+const paneMenuItemIds: Record<WorkspacePaneId, string> = {
+  'common-combos': 'view-pane-common-combos',
+  'neume-selector': 'view-pane-neume-selector',
+  lyrics: 'view-pane-lyrics',
+  properties: 'view-pane-properties',
+  selection: 'view-pane-selection',
+};
+let updateAvailable = false;
+let updateDownloaded = false;
+let updateDownloadInProgress = false;
+let pendingUpdateVersion: string | undefined;
+let didReportUpdateError = false;
+let fakeDownloadProgressTimer: NodeJS.Timeout | null = null;
 
 const minWidth = 800;
 const minHeight = 600;
@@ -148,12 +185,12 @@ enum OnConflictChoice {
 }
 
 let saving = false;
-let exporting = false;
 let loaded = false;
 
 let exportAsImageOnConflict: OnConflictChoice | null = null;
 
 let darwinPath: string | null = null;
+let autoUpdaterInitialized = false;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -187,6 +224,165 @@ async function generateFilePath(filename: string) {
   }
 
   return path.join(targetDirectory, filename);
+}
+
+// Returns the source path with its extension swapped for the given one,
+// keeping the same directory and base name (e.g. /scores/song.byz -> /scores/song.pdf).
+function replaceExtension(filePath: string, extension: string) {
+  const directory = path.dirname(filePath);
+  const baseName = path.basename(filePath, path.extname(filePath));
+  return path.join(directory, `${baseName}.${extension}`);
+}
+
+// Computes the default path for an export save dialog. When the score has been
+// saved, the export defaults to the score's own folder and base name with the
+// export's extension. Otherwise it falls back to the last-used directory.
+async function getExportDefaultPath(
+  sourceFilePath: string | null,
+  tempFileName: string,
+  extension: string,
+) {
+  return sourceFilePath != null
+    ? replaceExtension(sourceFilePath, extension)
+    : await generateFilePath(`${tempFileName}.${extension}`);
+}
+
+function sendToRenderer(channel: IpcMainChannels, payload?: unknown) {
+  if (win == null || !loaded) {
+    return;
+  }
+
+  win.webContents.send(channel, payload);
+}
+
+function sendPendingUpdateState() {
+  if (updateDownloaded) {
+    sendToRenderer(IpcMainChannels.UpdateDownloaded, {
+      version: pendingUpdateVersion,
+    });
+    return;
+  }
+
+  if (updateDownloadInProgress) {
+    sendToRenderer(IpcMainChannels.UpdateDownloadStarted);
+    return;
+  }
+
+  if (updateAvailable) {
+    sendToRenderer(IpcMainChannels.UpdateAvailable, {
+      version: pendingUpdateVersion,
+    });
+  }
+}
+
+function clearFakeDownloadProgressTimer() {
+  if (fakeDownloadProgressTimer != null) {
+    clearInterval(fakeDownloadProgressTimer);
+    fakeDownloadProgressTimer = null;
+  }
+}
+
+function simulateFakeUpdateDownload() {
+  const progressSteps = [18, 42, 69, 91, 100];
+  const total = 100;
+  let stepIndex = 0;
+
+  clearFakeDownloadProgressTimer();
+
+  fakeDownloadProgressTimer = setInterval(() => {
+    if (win == null || !loaded || !updateDownloadInProgress) {
+      clearFakeDownloadProgressTimer();
+      return;
+    }
+
+    const percent = progressSteps[stepIndex] ?? 100;
+    const transferred = percent;
+
+    sendToRenderer(IpcMainChannels.UpdateDownloadProgress, {
+      percent,
+      transferred,
+      total,
+    });
+
+    stepIndex += 1;
+
+    if (percent >= 100) {
+      clearFakeDownloadProgressTimer();
+      updateDownloaded = true;
+      updateDownloadInProgress = false;
+      sendToRenderer(IpcMainChannels.UpdateDownloaded, {
+        version: pendingUpdateVersion,
+      });
+    }
+  }, 250);
+}
+
+function setupAutoUpdater() {
+  if (autoUpdaterInitialized) {
+    return;
+  }
+
+  autoUpdaterInitialized = true;
+
+  if (fakeUpdateMode) {
+    updateAvailable = true;
+    updateDownloaded = false;
+    updateDownloadInProgress = false;
+    pendingUpdateVersion = undefined;
+    didReportUpdateError = false;
+    return;
+  }
+
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = false;
+
+  autoUpdater.on('update-available', (info) => {
+    updateAvailable = true;
+    updateDownloaded = false;
+    updateDownloadInProgress = false;
+    pendingUpdateVersion = info.version;
+    didReportUpdateError = false;
+
+    sendToRenderer(IpcMainChannels.UpdateAvailable, {
+      version: info.version,
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    updateDownloaded = true;
+    updateDownloadInProgress = false;
+    pendingUpdateVersion = info.version;
+    didReportUpdateError = false;
+
+    sendToRenderer(IpcMainChannels.UpdateDownloaded, {
+      version: info.version,
+    });
+  });
+
+  autoUpdater.on('download-progress', (info) => {
+    sendToRenderer(IpcMainChannels.UpdateDownloadProgress, {
+      percent: info.percent,
+      transferred: info.transferred,
+      total: info.total,
+    });
+  });
+
+  autoUpdater.on('error', (error) => {
+    const shouldReportError =
+      updateDownloadInProgress || updateAvailable || updateDownloaded;
+
+    updateDownloadInProgress = false;
+
+    if (!shouldReportError || didReportUpdateError) {
+      return;
+    }
+
+    didReportUpdateError = true;
+
+    sendToRenderer(IpcMainChannels.UpdateError, {
+      message: error == null ? 'Unable to update.' : error.message,
+    });
+  });
 }
 
 async function loadStore() {
@@ -249,7 +445,7 @@ async function showReplaceOrSkipFileDialog(filePath: string) {
       )}" already exists. Do you want to replace it?`,
       buttons: ['Replace', 'Replace all', 'Skip', 'Skip all'],
       defaultId: 0,
-      cancelId: 0,
+      cancelId: 2,
     });
 
     return replaceFileResult.response as OnConflictChoice;
@@ -385,11 +581,12 @@ async function openFileFromArgs(argv: string[]) {
 async function saveWorkspace(args: SaveWorkspaceArgs) {
   const result: SaveWorkspaceReplyArgs = { success: false };
 
-  try {
-    if (saving) {
-      return false;
-    }
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
 
+  try {
     saving = true;
 
     await writeScoreFile(args.filePath, args.data);
@@ -397,14 +594,7 @@ async function saveWorkspace(args: SaveWorkspaceArgs) {
     result.success = true;
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Save failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
@@ -415,16 +605,18 @@ async function saveWorkspace(args: SaveWorkspaceArgs) {
 async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
   const result: SaveWorkspaceAsReplyArgs = { success: false, filePath: '' };
 
-  try {
-    if (saving) {
-      return false;
-    }
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
 
+  try {
     saving = true;
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Save Score',
       defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: `${app.name} File`,
@@ -464,18 +656,15 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
 
         store.lastDirectory = path.dirname(result.filePath);
         await saveStore();
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Save As failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
@@ -620,11 +809,22 @@ function getPageSize(pageSize: PageSize, width: number, height: number) {
 let silentPdfSuccessCount = 0;
 let silentPdfFailCount = 0;
 
-async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
+async function exportWorkspaceAsPdf(
+  args: ExportWorkspaceAsPdfArgs,
+): Promise<ExportWorkspaceReplyArgs> {
+  const result: ExportWorkspaceReplyArgs = { success: false };
+
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (!win) {
+    return result;
+  }
+
   try {
-    if (exporting || !win) {
-      return;
-    }
+    saving = true;
 
     if (silentPdf) {
       try {
@@ -636,33 +836,31 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
           ),
           landscape: args.landscape,
         });
-        let newPath = args.filePath!.replace(/\.byzx?$/, '.pdf');
-
-        // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePath) {
-          newPath += '.pdf';
-        }
+        const newPath = replaceExtension(args.filePath!, 'pdf');
 
         await fs.writeFile(newPath, data);
+        result.success = true;
+        result.filePath = newPath;
         silentPdfSuccessCount++;
         console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
+        result.errorMessage = getErrorMessage(error);
         silentPdfFailCount++;
         console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
-      return;
+      return result;
     }
-
-    exporting = true;
 
     const dialogResult = await dialog.showSaveDialog(win, {
       title: 'Export Score as PDF',
       filters: [{ name: 'PDF File', extensions: ['pdf'] }],
-      defaultPath:
-        args.filePath != null
-          ? path.basename(args.filePath, path.extname(args.filePath))
-          : await generateFilePath(args.tempFileName),
+      properties: ['showOverwriteConfirmation'],
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        'pdf',
+      ),
     });
 
     if (!dialogResult.canceled) {
@@ -690,61 +888,89 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
         });
         await fs.writeFile(filePath, data);
 
-        await shell.openPath(filePath);
+        // On Linux, shell.openPath() may not resolve until the external viewer
+        // exits. Opening the written export is a non-critical side effect, so
+        // do not let it hold the shared `saving` lock.
+        void shell
+          .openPath(filePath)
+          .then((openError) => {
+            if (openError) {
+              console.error(`Failed to open ${filePath}: ${openError}`);
+            }
+          })
+          .catch((error) => {
+            console.error(
+              `Failed to open ${filePath}: ${getErrorMessage(error)}`,
+            );
+          });
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
+
+        result.success = true;
+        result.filePath = filePath;
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export to PDF failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
-    exporting = false;
+    saving = false;
   }
+
+  return result;
 }
 
 let silentHtmlSuccessCount = 0;
 let silentHtmlFailCount = 0;
 
-async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
-  try {
-    if (saving || !win) {
-      return false;
-    }
+async function exportWorkspaceAsHtml(
+  args: ExportWorkspaceAsHtmlArgs,
+): Promise<ExportWorkspaceReplyArgs> {
+  const result: ExportWorkspaceReplyArgs = { success: false };
 
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (!win) {
+    return result;
+  }
+
+  try {
     if (silentHtml) {
       try {
-        let newPath = args.filePathFull!.replace(/\.byzx?$/, '.html');
-
-        // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePathFull) {
-          newPath += '.html';
-        }
+        const newPath = replaceExtension(args.filePath!, 'html');
 
         await fs.writeFile(newPath, args.data);
+        result.success = true;
+        result.filePath = newPath;
         silentHtmlSuccessCount++;
-        console.log(`DONE ${args.filePathFull} => ${newPath}`);
+        console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
+        result.errorMessage = getErrorMessage(error);
         silentHtmlFailCount++;
-        console.error(`FAIL ${args.filePathFull} | ${error}`);
+        console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
-      return;
+      return result;
     }
 
     saving = true;
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as HTML',
-      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        'html',
+      ),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: `HTML File`,
@@ -769,40 +995,71 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
 
       if (doWrite) {
         await fs.writeFile(filePath, args.data);
-        await shell.openPath(filePath);
+
+        // On Linux, shell.openPath() may not resolve until the external viewer
+        // exits. Opening the written export is a non-critical side effect, so
+        // do not let it hold the shared `saving` lock.
+        void shell
+          .openPath(filePath)
+          .then((openError) => {
+            if (openError) {
+              console.error(`Failed to open ${filePath}: ${openError}`);
+            }
+          })
+          .catch((error) => {
+            console.error(
+              `Failed to open ${filePath}: ${getErrorMessage(error)}`,
+            );
+          });
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
+
+        result.success = true;
+        result.filePath = filePath;
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as HTML failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
+
+  return result;
 }
 
-async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
-  try {
-    if (saving) {
-      return false;
-    }
+async function exportWorkspaceAsMusicXml(
+  args: ExportWorkspaceAsMusicXmlArgs,
+): Promise<ExportWorkspaceReplyArgs> {
+  const result: ExportWorkspaceReplyArgs = { success: false };
 
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (!win) {
+    return result;
+  }
+
+  try {
     saving = true;
 
     const extension = args.compressed ? 'mxl' : 'musicxml';
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as MusicXML',
-      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        extension,
+      ),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: args.compressed
@@ -836,57 +1093,71 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
+
+        result.success = true;
+        result.filePath = filePath;
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as MusicXML failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
+
+  return result;
 }
 
 let silentLatexSuccessCount = 0;
 let silentLatexFailCount = 0;
 
-async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
-  try {
-    if (saving) {
-      return false;
-    }
+async function exportWorkspaceAsLatex(
+  args: ExportWorkspaceAsLatexArgs,
+): Promise<ExportWorkspaceReplyArgs> {
+  const result: ExportWorkspaceReplyArgs = { success: false };
 
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (!win) {
+    return result;
+  }
+
+  try {
     if (silentLatex) {
       try {
-        let newPath = args.filePathFull!.replace(/\.byzx?$/, '.byztex');
-
-        // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePathFull) {
-          newPath += '.byztex';
-        }
+        const newPath = replaceExtension(args.filePath!, 'byztex');
 
         await fs.writeFile(newPath, args.data);
+        result.success = true;
+        result.filePath = newPath;
         silentLatexSuccessCount++;
-        console.log(`DONE ${args.filePathFull} => ${newPath}`);
+        console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
+        result.errorMessage = getErrorMessage(error);
         silentLatexFailCount++;
-        console.error(`FAIL ${args.filePathFull} | ${error}`);
+        console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
-      return;
+      return result;
     }
 
     saving = true;
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as Latex',
-      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        'byztex',
+      ),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: 'neanestex File',
@@ -914,41 +1185,50 @@ async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
+
+        result.success = true;
+        result.filePath = filePath;
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as Latex failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
+
+  return result;
 }
 
 async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
   const result = {
-    filePath: args.filePath,
+    filePath: '',
     success: false,
   } as ExportWorkspaceAsImageReplyArgs;
 
-  try {
-    if (saving) {
-      return result;
-    }
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
 
+  if (!win) {
+    return result;
+  }
+
+  try {
     saving = true;
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as Images',
-      defaultPath:
-        args.filePath?.replace(/\.byzx?$/, '') ||
-        (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        args.imageFormat,
+      ),
       filters: [
         {
           name: args.imageFormat === 'png' ? `PNG File` : `SVG File`,
@@ -969,19 +1249,14 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
 
       store.lastDirectory = path.dirname(filePath);
       await saveStore();
+    } else {
+      result.canceled = true;
     }
 
     return result;
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as Image failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
 
     return result;
   } finally {
@@ -989,12 +1264,22 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
   }
 }
 
-async function exportPageAsImage(args: ExportPageAsImageArgs) {
-  try {
-    if (saving || exportAsImageOnConflict === OnConflictChoice.SkipAll) {
-      return false;
-    }
+async function exportPageAsImage(
+  args: ExportPageAsImageArgs,
+): Promise<ExportPageAsImageReplyArgs> {
+  const result: ExportPageAsImageReplyArgs = { success: false };
 
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (exportAsImageOnConflict === OnConflictChoice.SkipAll) {
+    result.canceled = true;
+    return result;
+  }
+
+  try {
     saving = true;
 
     if (exportAsImageOnConflict !== OnConflictChoice.ReplaceAll) {
@@ -1003,7 +1288,13 @@ async function exportPageAsImage(args: ExportPageAsImageArgs) {
       );
 
       if (exportAsImageOnConflict === OnConflictChoice.SkipAll) {
-        return false;
+        result.canceled = true;
+        return result;
+      }
+
+      if (exportAsImageOnConflict === OnConflictChoice.Skip) {
+        result.skipped = true;
+        return result;
       }
     }
 
@@ -1014,17 +1305,12 @@ async function exportPageAsImage(args: ExportPageAsImageArgs) {
       await fs.writeFile(args.filePath, args.data, 'base64');
     }
 
-    return true;
+    result.success = true;
+    return result;
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as Image failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
+    return result;
   } finally {
     saving = false;
   }
@@ -1160,6 +1446,52 @@ function ensureVisibleOnSomeDisplay(windowState: WindowState) {
   return windowState;
 }
 
+function syncPaneMenuItems(visibility: WorkspacePaneVisibility) {
+  paneMenuVisibility = {
+    ...paneMenuVisibility,
+    ...visibility,
+  };
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  (Object.entries(visibility) as Array<[WorkspacePaneId, boolean]>).forEach(
+    ([paneId, isVisible]) => {
+      const item = menu.getMenuItemById(paneMenuItemIds[paneId]);
+
+      if (item != null) {
+        item.checked = isVisible;
+      }
+    },
+  );
+}
+
+function createPaneMenuItem(
+  paneId: WorkspacePaneId,
+  label: string,
+  accelerator?: string,
+): MenuItemConstructorOptions {
+  return {
+    accelerator,
+    checked: paneMenuVisibility[paneId],
+    id: paneMenuItemIds[paneId],
+    label,
+    type: 'checkbox',
+    click(menuItem) {
+      const requestedVisibility = menuItem.checked;
+
+      menuItem.checked = paneMenuVisibility[paneId];
+      win?.webContents.send(IpcMainChannels.FileMenuViewPaneVisibility, {
+        paneId,
+        visible: requestedVisibility,
+      } as FileMenuViewPaneVisibilityArgs);
+    },
+  };
+}
+
 function createMenu() {
   const menu = Menu.buildFromTemplate([
     ...(isMac
@@ -1170,17 +1502,7 @@ function createMenu() {
               {
                 label: `About ${app.name}`,
                 click() {
-                  let detail = `Version: ${app.getVersion()}\n`;
-                  detail += `Electron: ${process.versions.electron}\n`;
-                  detail += `Chromium: ${process.versions.chrome}\n`;
-                  detail += `Node.js: ${process.version}`;
-
-                  dialog.showMessageBox(win!, {
-                    title: app.name,
-                    message: app.name,
-                    detail: detail,
-                    type: 'info',
-                  });
+                  void openAboutDialog();
                 },
               },
               { type: 'separator' },
@@ -1461,6 +1783,21 @@ function createMenu() {
             }
           },
         },
+        {
+          label: i18next.t(($) => $.menu.edit.selectAll),
+          accelerator: 'CmdOrCtrl+A',
+          click(menuItem, browserWindow, event) {
+            if (win?.webContents?.isDevToolsFocused()) {
+              win.webContents.devToolsWebContents?.selectAll();
+            }
+
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win?.webContents.send(IpcMainChannels.FileMenuSelectAll);
+            }
+          },
+        },
         { type: 'separator' },
         {
           label: i18next.t(($) => $.menu.edit.copyFormat),
@@ -1482,14 +1819,6 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+F',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuFind);
-          },
-        },
-        { type: 'separator' },
-        {
-          label: i18next.t(($) => $.menu.edit.lyrics),
-          accelerator: 'CmdOrCtrl+L',
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuLyrics);
           },
         },
         { type: 'separator' },
@@ -1590,6 +1919,53 @@ function createMenu() {
       ],
     },
     {
+      label: i18next.t(($) => $.menu.view.root),
+      submenu: [
+        createPaneMenuItem(
+          'neume-selector',
+          i18next.t(($) => $.menu.view.neumeSelector),
+        ),
+        createPaneMenuItem(
+          'common-combos',
+          i18next.t(($) => $.menu.view.commonCombos),
+        ),
+        createPaneMenuItem(
+          'properties',
+          i18next.t(($) => $.menu.view.properties),
+        ),
+        createPaneMenuItem(
+          'selection',
+          i18next.t(($) => $.menu.view.selection),
+        ),
+        createPaneMenuItem(
+          'lyrics',
+          i18next.t(($) => $.menu.view.lyrics),
+          'CmdOrCtrl+L',
+        ),
+        { type: 'separator' },
+        {
+          label: i18next.t(($) => $.menu.view.resetLayout),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuViewResetPaneLayout);
+          },
+        },
+        ...(isDevelopment
+          ? ([
+              { type: 'separator' },
+              { role: 'reload' },
+              { role: 'forceReload' },
+              { role: 'toggleDevTools' },
+              { type: 'separator' },
+              { role: 'resetZoom' },
+              { role: 'zoomIn' },
+              { role: 'zoomOut' },
+              { type: 'separator' },
+              { role: 'togglefullscreen' },
+            ] as MenuItemConstructorOptions[])
+          : []),
+      ],
+    },
+    {
       label: i18next.t(($) => $.menu.tools.root),
       submenu: [
         {
@@ -1602,20 +1978,6 @@ function createMenu() {
     },
     ...(isDevelopment
       ? [
-          {
-            label: i18next.t(($) => $.menu.view.root),
-            submenu: [
-              { role: 'reload' },
-              { role: 'forceReload' },
-              { role: 'toggleDevTools' },
-              { type: 'separator' },
-              { role: 'resetZoom' },
-              { role: 'zoomIn' },
-              { role: 'zoomOut' },
-              { type: 'separator' },
-              { role: 'togglefullscreen' },
-            ],
-          } as MenuItemConstructorOptions,
           {
             label: i18next.t(($) => $.menu.view.generateTestFiles),
             submenu: Object.values(TestFileType).map((testFileType) => ({
@@ -1664,17 +2026,7 @@ function createMenu() {
               {
                 label: i18next.t(($) => $.menu.help.about),
                 click() {
-                  let detail = `Version: ${app.getVersion()}\n`;
-                  detail += `Electron: ${process.versions.electron}\n`;
-                  detail += `Chromium: ${process.versions.chrome}\n`;
-                  detail += `Node.js: ${process.version}`;
-
-                  dialog.showMessageBox(win!, {
-                    title: app.name,
-                    message: app.name,
-                    detail: detail,
-                    type: 'info',
-                  });
+                  void openAboutDialog();
                 },
               },
             ] as MenuItemConstructorOptions[])
@@ -1684,6 +2036,31 @@ function createMenu() {
   ]);
 
   Menu.setApplicationMenu(menu);
+}
+
+async function openAboutDialog() {
+  if (!win) {
+    await createWindow();
+  }
+
+  if (!win) {
+    return;
+  }
+
+  if (loaded) {
+    win.webContents.send(IpcMainChannels.OpenAboutDialog);
+  } else {
+    win.webContents.once('did-finish-load', () => {
+      win?.webContents.send(IpcMainChannels.OpenAboutDialog);
+    });
+  }
+
+  if (win.isMinimized()) {
+    win.restore();
+  }
+
+  win.show();
+  win.focus();
 }
 
 async function createWindow() {
@@ -1709,11 +2086,6 @@ async function createWindow() {
     minWidth,
     minHeight,
     webPreferences: {
-      // Use pluginOptions.nodeIntegration, leave this alone
-      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
-      nodeIntegration: process.env
-        .ELECTRON_NODE_INTEGRATION as unknown as boolean,
-      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
       preload,
       spellcheck: false,
     },
@@ -1738,7 +2110,10 @@ async function createWindow() {
     });
   }
 
-  win.webContents.once('did-finish-load', () => (loaded = true));
+  win.webContents.once('did-finish-load', () => {
+    loaded = true;
+    sendPendingUpdateState();
+  });
 
   // Prevent the user from accidentally
   // closing the app with unsaved changes
@@ -1753,6 +2128,7 @@ async function createWindow() {
     win = null;
     loaded = false;
     darwinPath = null;
+    clearFakeDownloadProgressTimer();
   });
 
   createMenu();
@@ -1765,8 +2141,8 @@ async function createWindow() {
     }
   } else {
     // Load the index.html when not in development
-    if (!silent && !disableUpdates) {
-      autoUpdater.checkForUpdatesAndNotify();
+    if (!silent && !disableUpdates && !fakeUpdateMode) {
+      autoUpdater.checkForUpdates();
     }
 
     await win.loadFile(indexHtml);
@@ -1774,11 +2150,6 @@ async function createWindow() {
 
   creatingWindow = false;
 }
-
-app.setAboutPanelOptions({
-  applicationName: app.getName(),
-  applicationVersion: app.getVersion(),
-});
 
 ipcMain.on(IpcRendererChannels.SetLanguage, async (event, language: string) => {
   store.language = language || undefined;
@@ -1797,6 +2168,13 @@ ipcMain.on(IpcRendererChannels.SetCanRedo, async (event, data) => {
   Menu.getApplicationMenu()!.getMenuItemById('redo')!.enabled = data;
 });
 
+ipcMain.on(
+  IpcRendererChannels.SetWorkspacePaneVisibility,
+  (event, visibility: WorkspacePaneVisibility) => {
+    syncPaneMenuItems(visibility);
+  },
+);
+
 ipcMain.on(IpcRendererChannels.OpenImageDialog, async () => {
   const data = await openImage();
 
@@ -1805,53 +2183,15 @@ ipcMain.on(IpcRendererChannels.OpenImageDialog, async () => {
   }
 });
 
-ipcMain.on(
-  IpcRendererChannels.OpenContextMenuForTab,
-  async (event, args: OpenContextMenuForTabArgs) => {
-    const menu = Menu.buildFromTemplate([
-      {
-        label: i18next.t(($) => $.menu.tab.close),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.SELF,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
+ipcMain.on(IpcRendererChannels.OpenScoreDialog, async () => {
+  const workspaces = await openWorkspaces();
 
-      {
-        label: i18next.t(($) => $.menu.tab.closeOthers),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.OTHERS,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-
-      {
-        label: i18next.t(($) => $.menu.tab.closeToTheLeft),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.LEFT,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-      {
-        label: i18next.t(($) => $.menu.tab.closeToTheRight),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.RIGHT,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-    ]);
-
-    menu.popup();
-  },
-);
+  for (const workspace of workspaces) {
+    if (workspace.success) {
+      win?.webContents.send(IpcMainChannels.FileMenuOpenScore, workspace);
+    }
+  }
+});
 
 ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
   readyToExit = true;
@@ -1886,6 +2226,65 @@ ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
   } else {
     win?.close();
   }
+});
+
+ipcMain.handle(IpcRendererChannels.DownloadUpdate, async () => {
+  if (updateDownloaded) {
+    sendPendingUpdateState();
+    return;
+  }
+
+  if (!updateAvailable || updateDownloadInProgress) {
+    return;
+  }
+
+  if (fakeUpdateMode) {
+    updateDownloadInProgress = true;
+    didReportUpdateError = false;
+    sendToRenderer(IpcMainChannels.UpdateDownloadStarted);
+    simulateFakeUpdateDownload();
+    return;
+  }
+
+  // MacOS requires code-signing in order for auto-update to work.
+  // Since we don't code sign, just send the user to the download URL.
+  if (isMac) {
+    shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL);
+    return;
+  }
+
+  updateDownloadInProgress = true;
+  didReportUpdateError = false;
+  sendToRenderer(IpcMainChannels.UpdateDownloadStarted);
+
+  try {
+    autoUpdater.autoInstallOnAppQuit = true;
+    await autoUpdater.downloadUpdate();
+  } catch (error) {
+    updateDownloadInProgress = false;
+    didReportUpdateError = true;
+
+    sendToRenderer(IpcMainChannels.UpdateError, {
+      message:
+        error instanceof Error ? error.message : 'Unable to download update.',
+    });
+  }
+});
+
+ipcMain.handle(IpcRendererChannels.RestartToInstallUpdate, async () => {
+  if (!updateDownloaded) {
+    return;
+  }
+
+  if (fakeUpdateMode) {
+    console.info(
+      'FAKE_UPDATE_AVAILABLE=1: restart-and-install requested; skipping quitAndInstall().',
+    );
+    return;
+  }
+
+  readyToExit = true;
+  autoUpdater.quitAndInstall(false, true);
 });
 
 ipcMain.handle(IpcRendererChannels.CancelExit, async () => {
@@ -1986,21 +2385,27 @@ ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
   }
 });
 
-ipcMain.handle(IpcRendererChannels.GetSystemFonts, async () => {
-  let fonts: string[] = [];
+ipcMain.handle(
+  IpcRendererChannels.Paste,
+  async (): Promise<ClipboardReplyArgs> => {
+    try {
+      if (!win) {
+        return {
+          success: false,
+        };
+      }
 
-  try {
-    fonts = await getSystemFonts();
-  } catch (error) {
-    console.error(error);
-  }
-
-  return fonts;
-});
-
-ipcMain.handle(IpcRendererChannels.Paste, async () => {
-  return await win?.webContents.paste();
-});
+      await win.webContents.paste();
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      return {
+        success: false,
+        errorMessage: getErrorMessage(error),
+      };
+    }
+  },
+);
 
 // macOS-only
 // This is called in two cases:
@@ -2102,26 +2507,10 @@ app.on('ready', async () => {
     lng: resolveLanguagePreference(store.language, app.getLocale()),
   });
 
+  setupAutoUpdater();
+
   if (!win) {
     createWindow();
-  }
-
-  if (isMac) {
-    autoUpdater.once('update-available', async (info) => {
-      const result = await dialog.showMessageBox(win!, {
-        type: 'info',
-        title: 'Update Available',
-        message: 'An update is available.',
-        detail: `Version ${info.version} is available.`,
-        buttons: ['Download', 'Not now'],
-        defaultId: 0,
-        cancelId: 1,
-      });
-
-      if (result.response === 0) {
-        shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL);
-      }
-    });
   }
 });
 

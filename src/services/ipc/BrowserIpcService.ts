@@ -1,17 +1,43 @@
 import JSZip from 'jszip';
 
-import {
+import type {
+  ClipboardReplyArgs,
+  ExportPageAsImageReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
+  ExportWorkspaceReplyArgs,
   OpenWorkspaceFromArgvArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
-import { Workspace } from '@/models/Workspace';
+import type { Workspace } from '@/models/Workspace';
 import { SaveService } from '@/services/SaveService';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 
-import { IIpcService } from './IIpcService';
+import type { IIpcService } from './IIpcService';
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return undefined;
+}
+
+function getExportDownloadFileName(
+  sourceFilePath: string | null,
+  tempFileName: string,
+  extension: string,
+) {
+  const baseName =
+    sourceFilePath != null ? getFileNameFromPath(sourceFilePath) : tempFileName;
+
+  return `${baseName}.${extension}`;
+}
 
 export class BrowserIpcService implements IIpcService {
   public async saveWorkspace(
@@ -33,22 +59,31 @@ export class BrowserIpcService implements IIpcService {
     });
   }
 
-  public async exportWorkspaceAsPdf() {
-    throw 'exportWorkspaceAsPdf is not available in the browser.';
+  public async exportWorkspaceAsPdf(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    workspace: Workspace,
+  ): Promise<ExportWorkspaceReplyArgs> {
+    return Promise.resolve({
+      success: false,
+      errorMessage: 'Export workspace as PDF is not available in the browser.',
+    });
   }
 
-  public async exportWorkspaceAsHtml(workspace: Workspace, data: string) {
-    const file = new Blob([data], { type: 'application/json' });
+  public async exportWorkspaceAsHtml(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs> {
+    const file = new Blob([data], { type: 'text/html' });
 
-    const downloadFileName =
-      workspace.filePath != null
-        ? `${getFileNameFromPath(workspace.filePath)}.html`
-        : `${workspace.tempFileName}.html`;
+    const downloadFileName = getExportDownloadFileName(
+      workspace.filePath,
+      workspace.tempFileName,
+      'html',
+    );
 
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(file);
-    a.download = downloadFileName;
-    a.click();
+    this.downloadFile(downloadFileName, file);
+
+    return { success: true, filePath: downloadFileName };
   }
 
   public async exportWorkspaceAsMusicXml(
@@ -57,7 +92,7 @@ export class BrowserIpcService implements IIpcService {
     compressed: boolean,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     openFolder: boolean,
-  ) {
+  ): Promise<ExportWorkspaceReplyArgs> {
     const type = compressed
       ? 'application/vnd.recordare.musicxml'
       : 'application/vnd.recordare.musicxml+xml';
@@ -66,37 +101,65 @@ export class BrowserIpcService implements IIpcService {
 
     const file = new Blob([data], { type });
 
-    const downloadFileName =
-      workspace.filePath != null
-        ? `${getFileNameFromPath(workspace.filePath)}.${extension}`
-        : `${workspace.tempFileName}.${extension}`;
+    const downloadFileName = getExportDownloadFileName(
+      workspace.filePath,
+      workspace.tempFileName,
+      extension,
+    );
 
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(file);
-    a.download = downloadFileName;
-    a.click();
+    this.downloadFile(downloadFileName, file);
+
+    return { success: true, filePath: downloadFileName };
   }
 
-  public async exportWorkspaceAsLatex(workspace: Workspace, data: string) {
+  public async exportWorkspaceAsLatex(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs> {
     const file = new Blob([data], { type: 'application/json' });
 
-    const downloadFileName =
+    const downloadFileName = getExportDownloadFileName(
+      workspace.filePath,
+      workspace.tempFileName,
+      'byztex',
+    );
+
+    this.downloadFile(downloadFileName, file);
+
+    return { success: true, filePath: downloadFileName };
+  }
+
+  public async exportWorkspaceAsImage(
+    workspace: Workspace,
+    imageFormat: 'png' | 'svg',
+  ): Promise<ExportWorkspaceAsImageReplyArgs> {
+    const fileName =
       workspace.filePath != null
-        ? `${getFileNameFromPath(workspace.filePath)}.byztex`
-        : `${workspace.tempFileName}.byztex`;
+        ? getFileNameFromPath(workspace.filePath)
+        : workspace.tempFileName;
 
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(file);
-    a.download = downloadFileName;
-    a.click();
+    return Promise.resolve({
+      success: true,
+      filePath: `${fileName}.${imageFormat}`,
+    });
   }
 
-  public async exportWorkspaceAsImage(): Promise<ExportWorkspaceAsImageReplyArgs> {
-    throw 'exportWorkspaceAsImage is not available in the browser.';
-  }
+  public async exportPageAsImage(
+    fileName: string,
+    data: string,
+  ): Promise<ExportPageAsImageReplyArgs> {
+    const extension = fileName
+      .substring(fileName.lastIndexOf('.') + 1)
+      .toLowerCase();
+    const type = extension === 'svg' ? 'image/svg+xml' : 'image/png';
+    const file =
+      extension === 'svg'
+        ? new Blob([data], { type })
+        : await fetch(`data:${type};base64,${data}`).then((x) => x.blob());
 
-  public async exportPageAsImage(): Promise<boolean> {
-    throw 'exportPageAsImage is not available in the browser.';
+    this.downloadFile(fileName, file);
+
+    return Promise.resolve({ success: true });
   }
 
   public async printWorkspace(): Promise<void> {
@@ -119,20 +182,16 @@ export class BrowserIpcService implements IIpcService {
     return Promise.resolve({ response: 0, checkboxChecked: false });
   }
 
-  public openContextMenuForTab(): void {
-    throw 'openContextMenuForTab is not available in the browser.';
-  }
-
   public async showItemInFolder(): Promise<void> {
     throw 'showItemInFolder is not available in the browser.';
   }
 
-  public isShowMessageBoxSupported(): boolean {
+  public isShowItemInFolderSupported(): boolean {
     return false;
   }
 
-  public async getSystemFonts(): Promise<string[]> {
-    return Promise.resolve([]);
+  public isShowMessageBoxSupported(): boolean {
+    return false;
   }
 
   public async exitApplication(): Promise<void> {
@@ -178,14 +237,25 @@ export class BrowserIpcService implements IIpcService {
     return downloadFileName;
   }
 
-  public async paste(): Promise<void> {
+  private downloadFile(downloadFileName: string, file: Blob) {
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(file);
+
+    a.href = url;
+    a.download = downloadFileName;
+    a.click();
+
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+
+  public async paste(): Promise<ClipboardReplyArgs> {
     try {
       const text = await navigator.clipboard.readText();
 
       const selection = window.getSelection();
 
       if (!selection?.rangeCount) {
-        return;
+        return { success: true };
       }
 
       const range = selection.getRangeAt(0);
@@ -196,8 +266,14 @@ export class BrowserIpcService implements IIpcService {
       range.collapse(false);
       selection.removeAllRanges();
       selection.addRange(range);
+
+      return { success: true };
     } catch (error) {
       console.error('Failed to paste text from clipboard:', error);
+      return {
+        success: false,
+        errorMessage: getErrorMessage(error),
+      };
     }
   }
 }

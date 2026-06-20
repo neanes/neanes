@@ -17,8 +17,7 @@
     "lineHeight": 72,
     "lyricsDefaultFontFamily": "Source Serif",
     "lyricsDefaultFontSize": 16,
-    "lyricsDefaultFontWeight": "400",
-    "lyricsDefaultFontStyle": "normal",
+    "lyricsDefaultFontSubfamily": "Regular",
     "lyricsDefaultColor": "#000000",
     "lyricsDefaultStrokeWidth": 0,
     "lyricsVerticalOffset": -5.76,
@@ -26,7 +25,7 @@
     "neumeDefaultFontFamily": "Neanes",
     "neumeDefaultFontSize": 26.666666666666668,
     "neumeDefaultColor": "#000000",
-    "neumeDefaultSpacing": 2.88,
+    "neumeDefaultSpacing": 0,
     "neumeDefaultStrokeWidth": 0,
     "modeKeyDefaultColor": "#800000",
     "modeKeyDefaultStrokeWidth": 0,
@@ -56,18 +55,19 @@
     "tempoDefaultStrokeWidth": 0,
     "dropCapDefaultFontFamily": "Source Serif",
     "dropCapDefaultFontSize": 80,
-    "dropCapDefaultFontWeight": "400",
-    "dropCapDefaultFontStyle": "normal",
+    "dropCapDefaultFontSubfamily": "Display Semibold",
     "dropCapDefaultColor": "#800000",
     "dropCapDefaultStrokeWidth": 0,
     "textBoxDefaultFontFamily": "Source Serif",
-    "textBoxDefaultFontSize": 26.666666666666668,
-    "textBoxDefaultFontWeight": "400",
-    "textBoxDefaultFontStyle": "normal",
+    "textBoxDefaultFontSize": 16,
+    "textBoxDefaultFontSubfamily": "Regular",
     "textBoxDefaultColor": "#000000",
     "textBoxDefaultStrokeWidth": 0,
-    "hyphenSpacing": 72,
+    "hyphenSpacing": 49.632000000000005,
+    "minimumSyllableToHyphenClearance": 13.228346456692915,
+    "martyriaVerticalOffset": 4,
     "chrysanthineAccidentals": true,
+    "alignIsonIndicators": true,
     "ignorePunctuationWhenPositioningLyrics": true
   },
   "headers": {
@@ -84,7 +84,10 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 19
+          "fontSubfamily": "Regular",
+          "height": 19,
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     },
@@ -101,7 +104,10 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 19
+          "fontSubfamily": "Regular",
+          "height": 19,
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     },
@@ -118,7 +124,10 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 19
+          "fontSubfamily": "Regular",
+          "height": 19,
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     },
@@ -135,7 +144,10 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 19
+          "fontSubfamily": "Regular",
+          "height": 19,
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     }
@@ -151,10 +163,13 @@
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
-          "fontSize": 13.333333333333334,
+          "fontSize": 10.666666666666666,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 36
+          "fontSubfamily": "Caption",
+          "height": 29.33333396911621,
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     },
@@ -171,7 +186,10 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 19
+          "fontSubfamily": "Regular",
+          "height": 19,
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     },
@@ -188,7 +206,10 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 19
+          "fontSubfamily": "Regular",
+          "height": 19,
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     },
@@ -205,7 +226,10 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 19
+          "fontSubfamily": "Regular",
+          "height": 19,
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     }
@@ -223,8 +247,10 @@
         "fontSize": 26.666666666666668,
         "fontFamily": "Source Serif",
         "strokeWidth": 0,
+        "fontSubfamily": "Display Bold",
         "height": 37,
-        "useDefaultStyle": true
+        "marginTop": 0,
+        "marginBottom": 0
       },
       {
         "elementType": "TextBox",

@@ -1,1001 +1,1076 @@
-<!-- eslint-disable vue/no-mutating-props -->
 <template>
-  <ModalDialog>
-    <div class="container">
-      <div class="header">
-        {{ $t(($) => $.dialog.playbackSettings.root, { ns: 'dialog' }) }}
-      </div>
-      <div class="pane-container">
-        <div class="form-group row">
-          <label>{{
-            $t(($) => $.dialog.playbackSettings.detune, { ns: 'dialog' })
-          }}</label>
-          <input
-            type="number"
-            class="detune"
-            min="-2400"
-            max="2400"
-            step="1"
-            :value="tuning"
-            @change="
-              onTuningChanged(Number(($event.target as HTMLInputElement).value))
-            "
-          />
-          <span class="unit-label">cents</span>
-          <span class="label-g3">Di = G3 = {{ options.frequencyDi }} Hz </span>
-          <button class="btnTestTone" @click="$emit('play-test-tone')">
-            {{ $t(($) => $.dialog.playbackSettings.test, { ns: 'dialog' }) }}
-          </button>
-        </div>
+  <Dialog v-model:open="open">
+    <DialogContent
+      class="h-[38rem] max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-3xl"
+    >
+      <DialogHeader>
+        <DialogTitle>
+          {{ $t(($) => $.dialog.playbackSettings.root, { ns: 'dialog' }) }}
+        </DialogTitle>
+        <DialogDescription>
+          {{
+            $t(($) => $.dialog.playbackSettings.description, { ns: 'dialog' })
+          }}
+        </DialogDescription>
+      </DialogHeader>
 
-        <div class="form-group subheader">
-          {{ $t(($) => $.dialog.playbackSettings.volume, { ns: 'dialog' }) }}
-        </div>
-        <div class="form-group row">
-          <span class="volume-label">{{
-            $t(($) => $.dialog.playbackSettings.melody, { ns: 'dialog' })
-          }}</span>
-          <input
-            v-model="volumeMelody"
-            type="range"
-            class="volume-slider"
-            min="0"
-            max="100"
-          />
-          <span class="db-label">{{ options.volumeMelody.toFixed(1) }} dB</span>
-        </div>
-
-        <div class="form-group row">
-          <span class="volume-label">{{
-            $t(($) => $.dialog.playbackSettings.ison, { ns: 'dialog' })
-          }}</span>
-          <input
-            v-model="volumeIson"
-            type="range"
-            class="volume-slider"
-            min="0"
-            max="100"
-          />
-          <span class="db-label">{{ options.volumeIson.toFixed(1) }} dB</span>
-        </div>
-
-        <div class="separator" />
-
-        <div class="form-group">
-          <input
-            id="playback-settings-dialog-diatonic-zo"
-            v-model="options.useDefaultAttractionZo"
-            type="checkbox"
-          />
-          <label for="playback-settings-dialog-diatonic-zo">{{
-            $t(($) => $.dialog.playbackSettings.diatonicZoAttraction, {
-              ns: 'dialog',
-            })
-          }}</label>
-          <p>
-            {{
-              $t(
-                ($) =>
-                  $.dialog.playbackSettings.diatonicZoAttractionDescription,
-                {
-                  ns: 'dialog',
-                },
-              )
-            }}
-          </p>
-          {{ $t(($) => $.dialog.playbackSettings.moria, { ns: 'dialog' }) }}
-          <input
-            type="number"
-            class="interval"
-            min="-72"
-            max="0"
-            step="1"
-            :value="options.defaultAttractionZoMoria"
-            @change="
-              onDefaultAttractionZoMoriaChanged(
-                Number(($event.target as HTMLInputElement).value),
-              )
-            "
-          />
-          <button
-            class="btnResetDefaultAttractionZoMoria"
-            @click="resetDefaultAttractionZoMoria"
+      <Tabs
+        default-value="general"
+        orientation="vertical"
+        class="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden sm:grid-cols-[13rem_minmax(0,1fr)] sm:grid-rows-[minmax(0,1fr)]"
+      >
+        <ScrollArea class="col-start-1 row-start-1 min-h-0">
+          <TabsList
+            class="h-auto w-full flex-col items-stretch justify-start p-1"
           >
-            {{ $t(($) => $.dialog.playbackSettings.reset, { ns: 'dialog' }) }}
-          </button>
-        </div>
+            <TabsTrigger
+              v-for="section in sections"
+              :key="section.value"
+              :value="section.value"
+              class="min-h-9 w-full flex-none justify-start whitespace-normal text-left"
+            >
+              <component :is="section.icon" />
+              {{ $t(section.labelSelector, { ns: 'dialog' }) }}
+            </TabsTrigger>
+          </TabsList>
+        </ScrollArea>
 
-        <div class="form-group">
-          <input
-            id="playback-settings-dialog-legetos"
-            v-model="options.useLegetos"
-            type="checkbox"
-          />
-          <label for="playback-settings-dialog-legetos">{{
-            $t(($) => $.dialog.playbackSettings.classicLegetos, {
-              ns: 'dialog',
-            })
-          }}</label>
-          <p>
-            {{
-              $t(($) => $.dialog.playbackSettings.classicLegetosDescription, {
-                ns: 'dialog',
-              })
-            }}
-          </p>
-        </div>
+        <TabsContent
+          value="general"
+          class="col-start-1 row-start-2 min-h-0 min-w-0 overflow-hidden sm:col-start-2 sm:row-start-1"
+        >
+          <ScrollArea class="h-full min-h-0 border">
+            <FieldGroup class="p-4">
+              <Field orientation="horizontal">
+                <FieldLabel for="playback-settings-dialog-detune">
+                  {{
+                    $t(($) => $.dialog.playbackSettings.detune, {
+                      ns: 'dialog',
+                    })
+                  }}
+                </FieldLabel>
+                <FieldContent>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <NumberField
+                      :min="-2400"
+                      :max="2400"
+                      :step="1"
+                      :format-options="fraction0FormatOptions"
+                      :model-value="tuning"
+                      @update:model-value="onTuningChanged"
+                    >
+                      <NumberFieldContent>
+                        <NumberFieldDecrement />
+                        <NumberFieldInput
+                          id="playback-settings-dialog-detune"
+                        />
+                        <NumberFieldIncrement />
+                      </NumberFieldContent>
+                    </NumberField>
+                    <span>cents</span>
+                    <FieldDescription>
+                      Di = G3 = {{ form.frequencyDi }} Hz
+                    </FieldDescription>
+                  </div>
+                </FieldContent>
+                <Button variant="outline" type="button" @click="playTestTone">
+                  <PhSpeakerHigh />
+                  {{
+                    $t(($) => $.dialog.playbackSettings.test, { ns: 'dialog' })
+                  }}
+                </Button>
+              </Field>
 
-        <div class="separator" />
+              <FieldSeparator />
 
-        <div class="row">
-          <span class="subheader">{{
-            $t(($) => $.dialog.playbackSettings.intervals, { ns: 'dialog' })
-          }}</span
-          ><button class="btnResetIntervals" @click="resetIntervals">
-            {{ $t(($) => $.dialog.playbackSettings.reset, { ns: 'dialog' }) }}
-          </button>
-        </div>
+              <FieldSet>
+                <FieldLegend>
+                  {{
+                    $t(($) => $.dialog.playbackSettings.volume, {
+                      ns: 'dialog',
+                    })
+                  }}
+                </FieldLegend>
+                <FieldGroup>
+                  <Field orientation="horizontal">
+                    <FieldTitle class="w-32 shrink-0 flex-none!">
+                      {{
+                        $t(($) => $.dialog.playbackSettings.melody, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldTitle>
+                    <FieldContent class="min-w-0">
+                      <div class="flex w-full items-center gap-3">
+                        <Slider
+                          class="min-w-40 flex-1"
+                          :aria-label="
+                            $t(($) => $.dialog.playbackSettings.melody, {
+                              ns: 'dialog',
+                            })
+                          "
+                          :model-value="[volumeMelody]"
+                          :min="0"
+                          :max="100"
+                          @update:model-value="onVolumeMelodyChanged"
+                        />
+                        <span class="w-20 shrink-0 text-right tabular-nums"
+                          >{{ form.volumeMelody.toFixed(1) }} dB</span
+                        >
+                      </div>
+                    </FieldContent>
+                  </Field>
 
-        <div class="vertical-spacer" />
+                  <Field orientation="horizontal">
+                    <FieldTitle class="w-32 shrink-0 flex-none!">
+                      {{
+                        $t(($) => $.dialog.playbackSettings.ison, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldTitle>
+                    <FieldContent class="min-w-0">
+                      <div class="flex w-full items-center gap-3">
+                        <Slider
+                          class="min-w-40 flex-1"
+                          :aria-label="
+                            $t(($) => $.dialog.playbackSettings.ison, {
+                              ns: 'dialog',
+                            })
+                          "
+                          :model-value="[volumeIson]"
+                          :min="0"
+                          :max="100"
+                          @update:model-value="onVolumeIsonChanged"
+                        />
+                        <span class="w-20 shrink-0 text-right tabular-nums"
+                          >{{ form.volumeIson.toFixed(1) }} dB</span
+                        >
+                      </div>
+                    </FieldContent>
+                  </Field>
+                </FieldGroup>
+              </FieldSet>
 
-        <div class="form-group row">
-          <span class="scale-name">{{
-            $t(($) => $.dialog.playbackSettings.diatonic, { ns: 'dialog' })
-          }}</span>
-          <div
-            v-for="(note, index) in ['Ni', 'Pa', 'Vou']"
-            :key="index"
-            class="row"
-          >
-            <span class="interval-label">{{ note }}</span>
-            <input
-              type="number"
-              class="interval"
-              min="1"
-              max="27"
-              step="1"
-              :value="options.diatonicIntervals[index]"
-              @change="
-                onIntervalChanged(
-                  options.diatonicIntervals,
-                  index,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">Ga</span>
-        </div>
+              <FieldSeparator />
 
-        <div v-if="options.useLegetos" class="form-group row">
-          <span class="scale-name">{{
-            $t(($) => $.dialog.playbackSettings.legetos, { ns: 'dialog' })
-          }}</span>
-          <div
-            v-for="(note, index) in ['Pa', 'Vou', 'Ga']"
-            :key="index"
-            class="row"
-          >
-            <span class="interval-label">{{ note }}</span>
-            <input
-              type="number"
-              class="interval"
-              min="1"
-              max="27"
-              step="1"
-              :value="options.legetosIntervals[index]"
-              @change="
-                onIntervalChanged(
-                  options.legetosIntervals,
-                  index,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">Di</span>
-        </div>
+              <FieldSet>
+                <FieldGroup>
+                  <Field orientation="horizontal">
+                    <Checkbox
+                      id="playback-settings-dialog-diatonic-zo"
+                      :model-value="form.useDefaultAttractionZo"
+                      @update:model-value="onUseDefaultAttractionZoChanged"
+                    />
+                    <FieldContent>
+                      <FieldLabel for="playback-settings-dialog-diatonic-zo">
+                        {{
+                          $t(
+                            ($) =>
+                              $.dialog.playbackSettings.diatonicZoAttraction,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(
+                            ($) =>
+                              $.dialog.playbackSettings
+                                .diatonicZoAttractionDescription,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldDescription>
+                      <div class="flex flex-wrap items-center gap-2 pt-1">
+                        <FieldLabel
+                          for="playback-settings-dialog-diatonic-zo-moria"
+                        >
+                          {{
+                            $t(($) => $.dialog.playbackSettings.moria, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </FieldLabel>
+                        <NumberField
+                          :min="-72"
+                          :max="0"
+                          :step="1"
+                          :format-options="fraction0FormatOptions"
+                          :model-value="form.defaultAttractionZoMoria"
+                          @update:model-value="
+                            onDefaultAttractionZoMoriaChanged
+                          "
+                        >
+                          <NumberFieldContent>
+                            <NumberFieldDecrement />
+                            <NumberFieldInput
+                              id="playback-settings-dialog-diatonic-zo-moria"
+                            />
+                            <NumberFieldIncrement />
+                          </NumberFieldContent>
+                        </NumberField>
+                        <Button
+                          variant="outline"
+                          type="button"
+                          @click="resetDefaultAttractionZoMoria"
+                        >
+                          <PhArrowCounterClockwise />
+                          {{
+                            $t(($) => $.dialog.playbackSettings.reset, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </Button>
+                      </div>
+                    </FieldContent>
+                  </Field>
 
-        <div class="form-group row">
-          <span class="scale-name">{{
-            $t(($) => $.dialog.playbackSettings.softChromatic, { ns: 'dialog' })
-          }}</span>
-          <div
-            v-for="(note, index) in ['Ni', 'Pa', 'Vou']"
-            :key="index"
-            class="row"
-          >
-            <span class="interval-label">{{ note }}</span>
-            <input
-              type="number"
-              class="interval"
-              min="1"
-              max="27"
-              step="1"
-              :value="options.softChromaticIntervals[index]"
-              @change="
-                onIntervalChanged(
-                  options.softChromaticIntervals,
-                  index,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">Ga</span>
-        </div>
+                  <Field orientation="horizontal">
+                    <Checkbox
+                      id="playback-settings-dialog-legetos"
+                      :model-value="form.useLegetos"
+                      @update:model-value="onUseLegetosChanged"
+                    />
+                    <FieldContent>
+                      <FieldLabel for="playback-settings-dialog-legetos">
+                        {{
+                          $t(($) => $.dialog.playbackSettings.classicLegetos, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(
+                            ($) =>
+                              $.dialog.playbackSettings
+                                .classicLegetosDescription,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                  </Field>
+                </FieldGroup>
+              </FieldSet>
+            </FieldGroup>
+          </ScrollArea>
+        </TabsContent>
 
-        <div class="form-group row">
-          <span class="scale-name">{{
-            $t(($) => $.dialog.playbackSettings.hardChromatic, { ns: 'dialog' })
-          }}</span>
-          <div
-            v-for="(note, index) in ['Pa', 'Vou', 'Ga']"
-            :key="index"
-            class="row"
-          >
-            <span class="interval-label">{{ note }}</span>
-            <input
-              type="number"
-              class="interval"
-              min="1"
-              max="27"
-              step="1"
-              :value="options.hardChromaticIntervals[index]"
-              @change="
-                onIntervalChanged(
-                  options.hardChromaticIntervals,
-                  index,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">Di</span>
-        </div>
+        <TabsContent
+          value="intervals"
+          class="col-start-1 row-start-2 min-h-0 min-w-0 overflow-hidden sm:col-start-2 sm:row-start-1"
+        >
+          <ScrollArea class="h-full min-h-0 border">
+            <FieldGroup class="p-4">
+              <FieldSet
+                :data-invalid="hasIntervalErrors ? true : undefined"
+                :aria-invalid="hasIntervalErrors ? true : undefined"
+                :aria-describedby="
+                  hasIntervalErrors ? intervalsErrorId : undefined
+                "
+              >
+                <FieldLegend>
+                  {{
+                    $t(($) => $.dialog.playbackSettings.intervals, {
+                      ns: 'dialog',
+                    })
+                  }}
+                </FieldLegend>
+                <FieldGroup class="gap-4">
+                  <Field
+                    v-for="row in visibleIntervalRows"
+                    :key="row.id"
+                    class="gap-1"
+                    :data-invalid="isIntervalRowInvalid(row) ? true : undefined"
+                  >
+                    <FieldTitle :id="getIntervalRowLabelId(row)">
+                      {{ $t(row.label, { ns: 'dialog' }) }}
+                    </FieldTitle>
+                    <FieldContent>
+                      <div class="flex flex-wrap items-center gap-1">
+                        <template
+                          v-for="(note, index) in row.notes"
+                          :key="`${row.id}-${note}`"
+                        >
+                          <span
+                            :id="getIntervalNoteLabelId(row, index)"
+                            class="w-6"
+                            >{{ note }}</span
+                          >
+                          <NumberField
+                            :min="1"
+                            :max="27"
+                            :step="1"
+                            :format-options="fraction0FormatOptions"
+                            :model-value="form[row.intervalsKey][index]"
+                            @update:model-value="
+                              onIntervalRowChanged(row, index, $event)
+                            "
+                          >
+                            <NumberFieldContent>
+                              <NumberFieldDecrement />
+                              <NumberFieldInput
+                                :id="getIntervalInputId(row, index)"
+                                class="w-18"
+                                :aria-labelledby="`${getIntervalNoteLabelId(row, index)} ${getIntervalRowLabelId(row)}`"
+                                :aria-invalid="
+                                  isIntervalRowInvalid(row) ? true : undefined
+                                "
+                                :aria-describedby="
+                                  isIntervalRowInvalid(row)
+                                    ? intervalsErrorId
+                                    : undefined
+                                "
+                              />
+                              <NumberFieldIncrement />
+                            </NumberFieldContent>
+                          </NumberField>
+                        </template>
+                        <span class="w-6">{{ row.endNote }}</span>
+                      </div>
+                    </FieldContent>
+                  </Field>
+                  <FieldError
+                    v-if="hasIntervalErrors"
+                    :id="intervalsErrorId"
+                    :errors="intervalErrorMessages"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="w-fit"
+                    type="button"
+                    @click="resetIntervals"
+                  >
+                    <PhArrowCounterClockwise />
+                    {{
+                      $t(($) => $.dialog.playbackSettings.reset, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </Button>
+                </FieldGroup>
+              </FieldSet>
+            </FieldGroup>
+          </ScrollArea>
+        </TabsContent>
 
-        <div class="form-group row">
-          <span class="scale-name">{{
-            $t(($) => $.dialog.playbackSettings.zygos, { ns: 'dialog' })
-          }}</span>
-          <div
-            v-for="(note, index) in ['Ni', 'Pa', 'Vou', 'Ga']"
-            :key="index"
-            class="row"
-          >
-            <span class="interval-label">{{ note }}</span>
-            <input
-              type="number"
-              class="interval"
-              min="1"
-              max="27"
-              step="1"
-              :value="options.zygosIntervals[index]"
-              @change="
-                onIntervalChanged(
-                  options.zygosIntervals,
-                  index,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">Di</span>
-        </div>
+        <TabsContent
+          value="alterations"
+          class="col-start-1 row-start-2 min-h-0 min-w-0 overflow-hidden sm:col-start-2 sm:row-start-1"
+        >
+          <ScrollArea class="h-full min-h-0 border">
+            <FieldGroup class="p-4">
+              <FieldSet>
+                <FieldLegend>
+                  {{
+                    $t(
+                      ($) =>
+                        $.dialog.playbackSettings
+                          .alterationMultipliersChrysanthine,
+                      {
+                        ns: 'dialog',
+                      },
+                    )
+                  }}
+                </FieldLegend>
+                <FieldGroup class="gap-4">
+                  <Field
+                    v-for="row in alterationMultiplierRows"
+                    :key="row.id"
+                    orientation="horizontal"
+                  >
+                    <FieldLabel
+                      :for="getAlterationMultiplierInputId(row)"
+                      class="w-72 shrink-0 flex-none!"
+                    >
+                      {{ $t(row.label, { ns: 'dialog' }) }}
+                    </FieldLabel>
+                    <FieldContent>
+                      <div class="flex items-center gap-2">
+                        <NumberField
+                          :min="0"
+                          :max="1"
+                          :step="0.05"
+                          :format-options="fraction2FormatOptions"
+                          :model-value="form.alterationMultipliers[row.index]"
+                          @update:model-value="
+                            onAlterationMultiplierChanged(row.index, $event)
+                          "
+                        >
+                          <NumberFieldContent>
+                            <NumberFieldDecrement />
+                            <NumberFieldInput
+                              :id="getAlterationMultiplierInputId(row)"
+                            />
+                            <NumberFieldIncrement />
+                          </NumberFieldContent>
+                        </NumberField>
+                        <span>&times;</span>
+                      </div>
+                    </FieldContent>
+                  </Field>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="w-fit"
+                    type="button"
+                    @click="resetAlterationMultipliers"
+                  >
+                    <PhArrowCounterClockwise />
+                    {{
+                      $t(($) => $.dialog.playbackSettings.reset, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </Button>
+                </FieldGroup>
+              </FieldSet>
 
-        <div v-if="options.useLegetos" class="form-group row">
-          <span class="scale-name">{{
-            $t(($) => $.dialog.playbackSettings.zygosLegetos, { ns: 'dialog' })
-          }}</span>
-          <div
-            v-for="(note, index) in ['Ni', 'Pa', 'Vou', 'Ga']"
-            :key="index"
-            class="row"
-          >
-            <span class="interval-label">{{ note }}</span>
-            <input
-              type="number"
-              class="interval"
-              min="1"
-              max="27"
-              step="1"
-              :value="options.zygosLegetosIntervals[index]"
-              @change="
-                onIntervalChanged(
-                  options.zygosLegetosIntervals,
-                  index,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">Di</span>
-        </div>
+              <FieldSeparator />
 
-        <div class="form-group row">
-          <span class="scale-name">{{
-            $t(($) => $.dialog.playbackSettings.kliton, { ns: 'dialog' })
-          }}</span>
-          <div
-            v-for="(note, index) in ['Pa', 'Vou', 'Ga']"
-            :key="index"
-            class="row"
-          >
-            <span class="interval-label">{{ note }}</span>
-            <input
-              type="number"
-              class="interval"
-              min="1"
-              max="27"
-              step="1"
-              :value="options.klitonIntervals[index]"
-              @change="
-                onIntervalChanged(
-                  options.klitonIntervals,
-                  index,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">Di</span>
-        </div>
+              <FieldSet>
+                <FieldLegend>
+                  {{
+                    $t(
+                      ($) =>
+                        $.dialog.playbackSettings.alterationMoria1881Committee,
+                      {
+                        ns: 'dialog',
+                      },
+                    )
+                  }}
+                </FieldLegend>
+                <FieldGroup class="gap-4">
+                  <Field
+                    v-for="row in alterationMoriaRows"
+                    :key="row.id"
+                    orientation="horizontal"
+                  >
+                    <FieldLabel
+                      :for="getAlterationMoriaInputId(row)"
+                      class="w-72 shrink-0 flex-none!"
+                    >
+                      {{ $t(row.label, { ns: 'dialog' }) }}
+                    </FieldLabel>
+                    <FieldContent>
+                      <div class="flex items-center gap-2">
+                        <NumberField
+                          :min="row.min"
+                          :max="row.max"
+                          :step="1"
+                          :format-options="fraction0FormatOptions"
+                          :model-value="form.alterationMoriaMap[row.accidental]"
+                          @update:model-value="
+                            onAlterationMoriaRowChanged(row, $event)
+                          "
+                        >
+                          <NumberFieldContent>
+                            <NumberFieldDecrement />
+                            <NumberFieldInput
+                              :id="getAlterationMoriaInputId(row)"
+                            />
+                            <NumberFieldIncrement />
+                          </NumberFieldContent>
+                        </NumberField>
+                        <span>{{
+                          $t(($) => $.dialog.playbackSettings.moria, {
+                            ns: 'dialog',
+                          })
+                        }}</span>
+                      </div>
+                    </FieldContent>
+                  </Field>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="w-fit"
+                    type="button"
+                    @click="resetAlterationMoria"
+                  >
+                    <PhArrowCounterClockwise />
+                    {{
+                      $t(($) => $.dialog.playbackSettings.reset, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </Button>
+                </FieldGroup>
+              </FieldSet>
+            </FieldGroup>
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
 
-        <div class="form-group row">
-          <span class="scale-name">{{
-            $t(($) => $.dialog.playbackSettings.spathi, { ns: 'dialog' })
-          }}</span>
-          <div
-            v-for="(note, index) in ['Ga', 'Di', 'Ke', 'Zo']"
-            :key="index"
-            class="row"
-          >
-            <span class="interval-label">{{ note }}</span>
-            <input
-              type="number"
-              class="interval"
-              min="1"
-              max="27"
-              step="1"
-              :value="options.spathiIntervals[index]"
-              @change="
-                onIntervalChanged(
-                  options.spathiIntervals,
-                  index,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">Ni</span>
-        </div>
-
-        <div class="separator" />
-
-        <div class="row">
-          <span class="subheader">{{
-            $t(
-              ($) =>
-                $.dialog.playbackSettings.alterationMultipliersChrysanthine,
-              {
-                ns: 'dialog',
-              },
-            )
-          }}</span
-          ><button
-            class="btnResetIntervals"
-            @click="resetAlterationMultipliers"
-          >
-            {{ $t(($) => $.dialog.playbackSettings.reset, { ns: 'dialog' }) }}
-          </button>
-        </div>
-
-        <div class="vertical-spacer" />
-
-        <div class="form-group row">
-          <span class="alteration-name">{{
-            $t(($) => $.dialog.playbackSettings.zeroCrossbeams, {
-              ns: 'dialog',
-            })
-          }}</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="0"
-              max="1"
-              step="0.05"
-              :value="options.alterationMultipliers[0]"
-              @change="
-                onAlterationMultiplierChanged(
-                  0,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">&#215;</span>
-        </div>
-        <div class="form-group row">
-          <span class="alteration-name">{{
-            $t(($) => $.dialog.playbackSettings.oneCrossbeam, { ns: 'dialog' })
-          }}</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="0"
-              max="1"
-              step="0.05"
-              :value="options.alterationMultipliers[1]"
-              @change="
-                onAlterationMultiplierChanged(
-                  1,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">&#215;</span>
-        </div>
-        <div class="form-group row">
-          <span class="alteration-name">{{
-            $t(($) => $.dialog.playbackSettings.twoCrossbeams, { ns: 'dialog' })
-          }}</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="0"
-              max="1"
-              step="0.05"
-              :value="options.alterationMultipliers[2]"
-              @change="
-                onAlterationMultiplierChanged(
-                  2,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">&#215;</span>
-        </div>
-
-        <div class="separator" />
-
-        <div class="row">
-          <span class="subheader">{{
-            $t(($) => $.dialog.playbackSettings.alterationMoria1881Committee, {
-              ns: 'dialog',
-            })
-          }}</span
-          ><button class="btnResetIntervals" @click="resetAlterationMoria">
-            Reset
-          </button>
-        </div>
-
-        <div class="vertical-spacer" />
-        <div class="form-group row">
-          <span class="alteration-name">{{
-            $t(($) => $.dialog.playbackSettings.sharpWithZeroCrossbeams, {
-              ns: 'dialog',
-            })
-          }}</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="0"
-              max="72"
-              step="1"
-              :value="options.alterationMoriaMap[Accidental.Sharp_2_Left]"
-              @change="
-                onDiesisChanged(
-                  Accidental.Sharp_2_Left,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">moria</span>
-        </div>
-        <div class="form-group row">
-          <span class="alteration-name">{{
-            $t(($) => $.dialog.playbackSettings.sharpWithOneCrossbeam, {
-              ns: 'dialog',
-            })
-          }}</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="0"
-              max="72"
-              step="1"
-              :value="options.alterationMoriaMap[Accidental.Sharp_4_Left]"
-              @change="
-                onDiesisChanged(
-                  Accidental.Sharp_4_Left,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">moria</span>
-        </div>
-        <div class="form-group row">
-          <span class="alteration-name">{{
-            $t(($) => $.dialog.playbackSettings.sharpWithTwoCrossbeams, {
-              ns: 'dialog',
-            })
-          }}</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="0"
-              max="72"
-              step="1"
-              :value="options.alterationMoriaMap[Accidental.Sharp_6_Left]"
-              @change="
-                onDiesisChanged(
-                  Accidental.Sharp_6_Left,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">moria</span>
-        </div>
-        <div class="form-group row">
-          <span class="alteration-name">{{
-            $t(($) => $.dialog.playbackSettings.sharpWithThreeCrossbeams, {
-              ns: 'dialog',
-            })
-          }}</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="0"
-              max="72"
-              step="1"
-              :value="options.alterationMoriaMap[Accidental.Sharp_8_Left]"
-              @change="
-                onDiesisChanged(
-                  Accidental.Sharp_8_Left,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">moria</span>
-        </div>
-        <div class="form-group row">
-          <span class="alteration-name">{{
-            $t(($) => $.dialog.playbackSettings.flatWithZeroCrossbeams, {
-              ns: 'dialog',
-            })
-          }}</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="-72"
-              max="0"
-              step="1"
-              :value="options.alterationMoriaMap[Accidental.Flat_2_Right]"
-              @change="
-                onYfesisChanged(
-                  Accidental.Flat_2_Right,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">moria</span>
-        </div>
-        <div class="form-group row">
-          <span class="alteration-name">{{
-            $t(($) => $.dialog.playbackSettings.flatWithOneCrossbeam, {
-              ns: 'dialog',
-            })
-          }}</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="-72"
-              max="0"
-              step="1"
-              :value="options.alterationMoriaMap[Accidental.Flat_4_Right]"
-              @change="
-                onYfesisChanged(
-                  Accidental.Flat_4_Right,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">moria</span>
-        </div>
-        <div class="form-group row">
-          <span class="alteration-name">{{
-            $t(($) => $.dialog.playbackSettings.flatWithTwoCrossbeams, {
-              ns: 'dialog',
-            })
-          }}</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="-72"
-              max="0"
-              step="1"
-              :value="options.alterationMoriaMap[Accidental.Flat_6_Right]"
-              @change="
-                onYfesisChanged(
-                  Accidental.Flat_6_Right,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">moria</span>
-        </div>
-        <div class="form-group row">
-          <span class="alteration-name">{{
-            $t(($) => $.dialog.playbackSettings.flatWithThreeCrossbeams, {
-              ns: 'dialog',
-            })
-          }}</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="-72"
-              max="0"
-              step="1"
-              :value="options.alterationMoriaMap[Accidental.Flat_8_Right]"
-              @change="
-                onYfesisChanged(
-                  Accidental.Flat_8_Right,
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">moria</span>
-        </div>
-      </div>
-      <div class="error">{{ error }}</div>
-      <div class="button-container">
-        <button class="cancel-btn" @click="close">
-          {{ $t(($) => $.dialog.playbackSettings.close, { ns: 'dialog' }) }}
-        </button>
-      </div>
-    </div>
-  </ModalDialog>
+      <DialogFooter>
+        <DialogClose as-child>
+          <Button variant="outline" type="button">
+            {{ $t(($) => $.dialog.playbackSettings.close, { ns: 'dialog' }) }}
+          </Button>
+        </DialogClose>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
 
-<script lang="ts">
-/* eslint-disable vue/no-mutating-props */
-// TODO don't rely on this eslint-disable line
-// Instead, make a copy of the options prop (a la Page Setup Dialog)
-// and have TheEditor update the actual options.
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import {
+  PhArrowCounterClockwise,
+  PhGearFine,
+  PhSlidersHorizontal,
+  PhSpeakerHigh,
+  PhWaveSine,
+} from '@phosphor-icons/vue';
+import type { SelectorParam } from 'i18next';
+import type { Component, PropType } from 'vue';
+import { computed, ref } from 'vue';
 
-import ModalDialog from '@/components/ModalDialog.vue';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSeparator,
+  FieldSet,
+  FieldTitle,
+} from '@/components/ui/field';
+import {
+  NumberField,
+  NumberFieldContent,
+  NumberFieldDecrement,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from '@/components/ui/number-field';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accidental } from '@/models/Neumes';
-import { PlaybackOptions } from '@/services/audio/PlaybackService';
+import type { PlaybackOptions } from '@/services/audio/PlaybackService';
+import {
+  fraction0FormatOptions,
+  fraction2FormatOptions,
+} from '@/utils/numberFormatOptions';
 
 const FREQUENCY_G3 = 196;
 
-export default defineComponent({
-  components: { ModalDialog },
-  props: {
-    options: {
-      type: Object as PropType<PlaybackOptions>,
-      required: true,
-    },
-  },
-  emits: ['close', 'play-test-tone'],
-
-  data() {
-    return {
-      Accidental,
-
-      tuning: 0,
-
-      error: null as string | null,
-    };
-  },
-
-  computed: {
-    volumeIson: {
-      get() {
-        return 100 * Math.pow(10, this.options.volumeIson / 20);
-      },
-      set(value: number) {
-        this.options.volumeIson = 20 * Math.log10(value / 100);
-      },
-    },
-
-    volumeMelody: {
-      get() {
-        return 100 * Math.pow(10, this.options.volumeMelody / 20);
-      },
-      set(value: number) {
-        this.options.volumeMelody = 20 * Math.log10(value / 100);
-      },
-    },
-  },
-
-  mounted() {
-    window.addEventListener('keydown', this.onKeyDown);
-
-    this.tuning = Math.round(
-      1200 * Math.log2(this.options.frequencyDi / FREQUENCY_G3),
-    );
-  },
-
-  beforeUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-  },
-
-  methods: {
-    onKeyDown(event: KeyboardEvent) {
-      if (event.code === 'Escape') {
-        this.close();
-      }
-    },
-
-    onIntervalChanged(intervals: number[], index: number, value: number) {
-      value = Math.max(1, value);
-      value = Math.min(27, value);
-      value = Math.round(value);
-
-      intervals[index] = value;
-
-      this.validateIntervals();
-
-      this.$forceUpdate();
-    },
-
-    validateIntervals() {
-      this.error = null;
-
-      if (!this.validateTetrachord(this.options.diatonicIntervals)) {
-        this.error = 'The diatonic intervals do not sum to 30.';
-      }
-
-      if (!this.validateTetrachord(this.options.softChromaticIntervals)) {
-        this.error = 'The soft chromatic intervals do not sum to 30.';
-      }
-
-      if (!this.validateTetrachord(this.options.hardChromaticIntervals)) {
-        this.error = 'The hard chromatic intervals do not sum to 30.';
-      }
-
-      if (!this.validateTetrachord(this.options.legetosIntervals)) {
-        this.error = 'The legetos intervals do not sum to 30.';
-      }
-    },
-
-    validateTetrachord(intervals: number[]) {
-      let sum = 0;
-
-      intervals.map((x) => (sum += x));
-
-      return sum === 30;
-    },
-
-    resetIntervals() {
-      this.options.diatonicIntervals = [12, 10, 8];
-      this.options.hardChromaticIntervals = [6, 20, 4];
-      this.options.softChromaticIntervals = [8, 14, 8];
-      this.options.legetosIntervals = [8, 10, 12];
-      this.options.zygosIntervals = [18, 4, 16, 4];
-      this.options.zygosLegetosIntervals = [18, 4, 20, 4];
-      this.options.spathiIntervals = [20, 4, 4, 14];
-      this.options.klitonIntervals = [14, 12, 4];
-    },
-
-    resetAlterationMultipliers() {
-      this.options.alterationMultipliers = [0.5, 0.25, 0.75];
-    },
-
-    resetAlterationMoria() {
-      this.options.alterationMoriaMap = {
-        [Accidental.Flat_2_Right]: -2,
-        [Accidental.Flat_4_Right]: -4,
-        [Accidental.Flat_6_Right]: -6,
-        [Accidental.Flat_8_Right]: -8,
-        [Accidental.Sharp_2_Left]: 2,
-        [Accidental.Sharp_4_Left]: 4,
-        [Accidental.Sharp_6_Left]: 6,
-        [Accidental.Sharp_8_Left]: 8,
-      };
-    },
-
-    resetDefaultAttractionZoMoria() {
-      this.options.defaultAttractionZoMoria = -4;
-    },
-
-    onDiesisChanged(neume: Accidental, moria: number) {
-      moria = Math.round(moria);
-
-      moria = Math.max(0, moria);
-      moria = Math.min(72, moria);
-
-      this.options.alterationMoriaMap[neume] = moria;
-
-      this.$forceUpdate();
-    },
-
-    onYfesisChanged(neume: Accidental, moria: number) {
-      moria = Math.round(moria);
-
-      moria = Math.max(-72, moria);
-      moria = Math.min(0, moria);
-
-      this.options.alterationMoriaMap[neume] = moria;
-
-      this.$forceUpdate();
-    },
-
-    onDefaultAttractionZoMoriaChanged(value: number) {
-      value = Math.max(-72, value);
-      value = Math.min(0, value);
-      value = Math.round(value);
-
-      this.options.defaultAttractionZoMoria = value;
-
-      this.$forceUpdate();
-    },
-
-    onTuningChanged(value: number) {
-      this.tuning = Math.max(-2400, value);
-      this.tuning = Math.min(2400, this.tuning);
-      this.tuning = Math.round(this.tuning);
-      this.options.frequencyDi = +(
-        FREQUENCY_G3 * Math.pow(2, this.tuning / 1200)
-      ).toFixed(1);
-
-      this.$forceUpdate();
-    },
-
-    onAlterationMultiplierChanged(index: number, multiplier: number) {
-      multiplier = Math.max(0, multiplier);
-      multiplier = Math.min(1, multiplier);
-
-      this.options.alterationMultipliers[index] = multiplier;
-
-      this.$forceUpdate();
-    },
-
-    close() {
-      this.$emit('close');
-    },
+const emit = defineEmits<{
+  'play-test-tone': [];
+  'update:options': [options: PlaybackOptions];
+}>();
+const props = defineProps({
+  options: {
+    type: Object as PropType<PlaybackOptions>,
+    required: true,
   },
 });
+const open = defineModel<boolean>('open', { required: true });
+
+const sections = [
+  {
+    value: 'general',
+    labelSelector: ($) => $.dialog.playbackSettings.general,
+    icon: PhSlidersHorizontal,
+  },
+  {
+    value: 'intervals',
+    labelSelector: ($) => $.dialog.playbackSettings.intervals,
+    icon: PhWaveSine,
+  },
+  {
+    value: 'alterations',
+    labelSelector: ($) => $.dialog.playbackSettings.alterations,
+    icon: PhGearFine,
+  },
+] as const satisfies ReadonlyArray<{
+  value: string;
+  labelSelector: DialogSelector;
+  icon: Component;
+}>;
+
+type DialogSelector = SelectorParam<'dialog'>;
+type IntervalKey =
+  | 'diatonicIntervals'
+  | 'softChromaticIntervals'
+  | 'hardChromaticIntervals'
+  | 'legetosIntervals'
+  | 'zygosIntervals'
+  | 'zygosLegetosIntervals'
+  | 'spathiIntervals'
+  | 'klitonIntervals';
+
+type IntervalRow = {
+  id: string;
+  label: DialogSelector;
+  intervalsKey: IntervalKey;
+  notes: string[];
+  endNote: string;
+  requiresLegetos?: boolean;
+};
+
+type IntervalError = {
+  intervalsKey: IntervalKey;
+  message: string;
+};
+
+type AlterationMultiplierRow = {
+  id: string;
+  label: DialogSelector;
+  index: number;
+};
+
+type AlterationMoriaRow = {
+  id: string;
+  label: DialogSelector;
+  accidental: Accidental;
+  min: number;
+  max: number;
+  kind: 'diesis' | 'yfesis';
+};
+
+const intervalRows = [
+  {
+    id: 'diatonic',
+    label: ($) => $.dialog.playbackSettings.diatonic,
+    intervalsKey: 'diatonicIntervals',
+    notes: ['Ni', 'Pa', 'Vou'],
+    endNote: 'Ga',
+  },
+  {
+    id: 'legetos',
+    label: ($) => $.dialog.playbackSettings.legetos,
+    intervalsKey: 'legetosIntervals',
+    notes: ['Pa', 'Vou', 'Ga'],
+    endNote: 'Di',
+    requiresLegetos: true,
+  },
+  {
+    id: 'soft-chromatic',
+    label: ($) => $.dialog.playbackSettings.softChromatic,
+    intervalsKey: 'softChromaticIntervals',
+    notes: ['Ni', 'Pa', 'Vou'],
+    endNote: 'Ga',
+  },
+  {
+    id: 'hard-chromatic',
+    label: ($) => $.dialog.playbackSettings.hardChromatic,
+    intervalsKey: 'hardChromaticIntervals',
+    notes: ['Pa', 'Vou', 'Ga'],
+    endNote: 'Di',
+  },
+  {
+    id: 'zygos',
+    label: ($) => $.dialog.playbackSettings.zygos,
+    intervalsKey: 'zygosIntervals',
+    notes: ['Ni', 'Pa', 'Vou', 'Ga'],
+    endNote: 'Di',
+  },
+  {
+    id: 'zygos-legetos',
+    label: ($) => $.dialog.playbackSettings.zygosLegetos,
+    intervalsKey: 'zygosLegetosIntervals',
+    notes: ['Ni', 'Pa', 'Vou', 'Ga'],
+    endNote: 'Di',
+    requiresLegetos: true,
+  },
+  {
+    id: 'kliton',
+    label: ($) => $.dialog.playbackSettings.kliton,
+    intervalsKey: 'klitonIntervals',
+    notes: ['Pa', 'Vou', 'Ga'],
+    endNote: 'Di',
+  },
+  {
+    id: 'spathi',
+    label: ($) => $.dialog.playbackSettings.spathi,
+    intervalsKey: 'spathiIntervals',
+    notes: ['Ga', 'Di', 'Ke', 'Zo'],
+    endNote: 'Ni',
+  },
+] satisfies IntervalRow[];
+
+const alterationMultiplierRows = [
+  {
+    id: 'zero-crossbeams',
+    label: ($) => $.dialog.playbackSettings.zeroCrossbeams,
+    index: 0,
+  },
+  {
+    id: 'one-crossbeam',
+    label: ($) => $.dialog.playbackSettings.oneCrossbeam,
+    index: 1,
+  },
+  {
+    id: 'two-crossbeams',
+    label: ($) => $.dialog.playbackSettings.twoCrossbeams,
+    index: 2,
+  },
+] satisfies AlterationMultiplierRow[];
+
+const alterationMoriaRows = [
+  {
+    id: 'sharp-zero-crossbeams',
+    label: ($) => $.dialog.playbackSettings.sharpWithZeroCrossbeams,
+    accidental: Accidental.Sharp_2_Left,
+    min: 0,
+    max: 72,
+    kind: 'diesis',
+  },
+  {
+    id: 'sharp-one-crossbeam',
+    label: ($) => $.dialog.playbackSettings.sharpWithOneCrossbeam,
+    accidental: Accidental.Sharp_4_Left,
+    min: 0,
+    max: 72,
+    kind: 'diesis',
+  },
+  {
+    id: 'sharp-two-crossbeams',
+    label: ($) => $.dialog.playbackSettings.sharpWithTwoCrossbeams,
+    accidental: Accidental.Sharp_6_Left,
+    min: 0,
+    max: 72,
+    kind: 'diesis',
+  },
+  {
+    id: 'sharp-three-crossbeams',
+    label: ($) => $.dialog.playbackSettings.sharpWithThreeCrossbeams,
+    accidental: Accidental.Sharp_8_Left,
+    min: 0,
+    max: 72,
+    kind: 'diesis',
+  },
+  {
+    id: 'flat-zero-crossbeams',
+    label: ($) => $.dialog.playbackSettings.flatWithZeroCrossbeams,
+    accidental: Accidental.Flat_2_Right,
+    min: -72,
+    max: 0,
+    kind: 'yfesis',
+  },
+  {
+    id: 'flat-one-crossbeam',
+    label: ($) => $.dialog.playbackSettings.flatWithOneCrossbeam,
+    accidental: Accidental.Flat_4_Right,
+    min: -72,
+    max: 0,
+    kind: 'yfesis',
+  },
+  {
+    id: 'flat-two-crossbeams',
+    label: ($) => $.dialog.playbackSettings.flatWithTwoCrossbeams,
+    accidental: Accidental.Flat_6_Right,
+    min: -72,
+    max: 0,
+    kind: 'yfesis',
+  },
+  {
+    id: 'flat-three-crossbeams',
+    label: ($) => $.dialog.playbackSettings.flatWithThreeCrossbeams,
+    accidental: Accidental.Flat_8_Right,
+    min: -72,
+    max: 0,
+    kind: 'yfesis',
+  },
+] satisfies AlterationMoriaRow[];
+
+const form = ref<PlaybackOptions>(clonePlaybackOptions(props.options));
+const tuning = ref(getTuningFromFrequency(form.value.frequencyDi));
+const intervalErrors = ref<IntervalError[]>([]);
+const intervalsErrorId = 'playback-settings-dialog-intervals-error';
+
+const visibleIntervalRows = computed(() =>
+  intervalRows.filter((row) => !row.requiresLegetos || form.value.useLegetos),
+);
+const hasIntervalErrors = computed(() => intervalErrors.value.length > 0);
+const intervalErrorMessages = computed(() =>
+  intervalErrors.value.map((error) => error.message),
+);
+
+const volumeIson = computed({
+  get() {
+    return 100 * Math.pow(10, form.value.volumeIson / 20);
+  },
+  set(value: number) {
+    form.value.volumeIson = 20 * Math.log10(value / 100);
+    emitPlaybackOptionsChanged();
+  },
+});
+
+const volumeMelody = computed({
+  get() {
+    return 100 * Math.pow(10, form.value.volumeMelody / 20);
+  },
+  set(value: number) {
+    form.value.volumeMelody = 20 * Math.log10(value / 100);
+    emitPlaybackOptionsChanged();
+  },
+});
+
+function onVolumeIsonChanged(value: number[] | undefined) {
+  volumeIson.value = value?.[0] ?? 0;
+}
+
+function onVolumeMelodyChanged(value: number[] | undefined) {
+  volumeMelody.value = value?.[0] ?? 0;
+}
+
+function clonePlaybackOptions(options: PlaybackOptions): PlaybackOptions {
+  return {
+    ...options,
+    diatonicIntervals: [...options.diatonicIntervals],
+    hardChromaticIntervals: [...options.hardChromaticIntervals],
+    softChromaticIntervals: [...options.softChromaticIntervals],
+    legetosIntervals: [...options.legetosIntervals],
+    zygosIntervals: [...options.zygosIntervals],
+    zygosLegetosIntervals: [...options.zygosLegetosIntervals],
+    spathiIntervals: [...options.spathiIntervals],
+    klitonIntervals: [...options.klitonIntervals],
+    alterationMultipliers: [...options.alterationMultipliers],
+    alterationMoriaMap: { ...options.alterationMoriaMap },
+  };
+}
+
+function emitPlaybackOptionsChanged() {
+  emit('update:options', clonePlaybackOptions(form.value));
+}
+
+function getTuningFromFrequency(frequency: number) {
+  return Math.round(1200 * Math.log2(frequency / FREQUENCY_G3));
+}
+
+function onUseDefaultAttractionZoChanged(value: boolean | 'indeterminate') {
+  form.value.useDefaultAttractionZo = value === true;
+  emitPlaybackOptionsChanged();
+}
+
+function onUseLegetosChanged(value: boolean | 'indeterminate') {
+  form.value.useLegetos = value === true;
+  validateIntervals();
+  emitPlaybackOptionsChanged();
+}
+
+function normalizeNumberFieldValue(value: number | undefined) {
+  return value ?? 0;
+}
+
+function onIntervalRowChanged(
+  row: IntervalRow,
+  index: number,
+  value: number | undefined,
+) {
+  onIntervalChanged(form.value[row.intervalsKey], index, value);
+}
+
+function onIntervalChanged(
+  intervals: number[],
+  index: number,
+  value: number | undefined,
+) {
+  value = normalizeNumberFieldValue(value);
+  value = Math.max(1, value);
+  value = Math.min(27, value);
+  value = Math.round(value);
+
+  intervals[index] = value;
+
+  validateIntervals();
+  emitPlaybackOptionsChanged();
+}
+
+function validateIntervals() {
+  const errors: IntervalError[] = [];
+
+  if (!validateTetrachord(form.value.diatonicIntervals)) {
+    errors.push({
+      intervalsKey: 'diatonicIntervals',
+      message: 'The diatonic intervals do not sum to 30.',
+    });
+  }
+
+  if (!validateTetrachord(form.value.softChromaticIntervals)) {
+    errors.push({
+      intervalsKey: 'softChromaticIntervals',
+      message: 'The soft chromatic intervals do not sum to 30.',
+    });
+  }
+
+  if (!validateTetrachord(form.value.hardChromaticIntervals)) {
+    errors.push({
+      intervalsKey: 'hardChromaticIntervals',
+      message: 'The hard chromatic intervals do not sum to 30.',
+    });
+  }
+
+  if (
+    form.value.useLegetos &&
+    !validateTetrachord(form.value.legetosIntervals)
+  ) {
+    errors.push({
+      intervalsKey: 'legetosIntervals',
+      message: 'The legetos intervals do not sum to 30.',
+    });
+  }
+
+  intervalErrors.value = errors;
+}
+
+function validateTetrachord(intervals: number[]) {
+  const sum = intervals.reduce((total, interval) => total + interval, 0);
+  return sum === 30;
+}
+
+function resetIntervals() {
+  form.value.diatonicIntervals = [12, 10, 8];
+  form.value.hardChromaticIntervals = [6, 20, 4];
+  form.value.softChromaticIntervals = [8, 14, 8];
+  form.value.legetosIntervals = [8, 10, 12];
+  form.value.zygosIntervals = [18, 4, 16, 4];
+  form.value.zygosLegetosIntervals = [18, 4, 20, 4];
+  form.value.spathiIntervals = [20, 4, 4, 14];
+  form.value.klitonIntervals = [14, 12, 4];
+  validateIntervals();
+  emitPlaybackOptionsChanged();
+}
+
+function resetAlterationMultipliers() {
+  form.value.alterationMultipliers = [0.5, 0.25, 0.75];
+  emitPlaybackOptionsChanged();
+}
+
+function resetAlterationMoria() {
+  form.value.alterationMoriaMap = {
+    [Accidental.Flat_2_Right]: -2,
+    [Accidental.Flat_4_Right]: -4,
+    [Accidental.Flat_6_Right]: -6,
+    [Accidental.Flat_8_Right]: -8,
+    [Accidental.Sharp_2_Left]: 2,
+    [Accidental.Sharp_4_Left]: 4,
+    [Accidental.Sharp_6_Left]: 6,
+    [Accidental.Sharp_8_Left]: 8,
+  };
+  emitPlaybackOptionsChanged();
+}
+
+function resetDefaultAttractionZoMoria() {
+  form.value.defaultAttractionZoMoria = -4;
+  emitPlaybackOptionsChanged();
+}
+
+function onAlterationMoriaRowChanged(
+  row: AlterationMoriaRow,
+  moria: number | undefined,
+) {
+  if (row.kind === 'diesis') {
+    onDiesisChanged(row.accidental, moria);
+  } else {
+    onYfesisChanged(row.accidental, moria);
+  }
+}
+
+function onDiesisChanged(neume: Accidental, moria: number | undefined) {
+  moria = normalizeNumberFieldValue(moria);
+  moria = Math.round(moria);
+
+  moria = Math.max(0, moria);
+  moria = Math.min(72, moria);
+
+  form.value.alterationMoriaMap[neume] = moria;
+  emitPlaybackOptionsChanged();
+}
+
+function onYfesisChanged(neume: Accidental, moria: number | undefined) {
+  moria = normalizeNumberFieldValue(moria);
+  moria = Math.round(moria);
+
+  moria = Math.max(-72, moria);
+  moria = Math.min(0, moria);
+
+  form.value.alterationMoriaMap[neume] = moria;
+  emitPlaybackOptionsChanged();
+}
+
+function onDefaultAttractionZoMoriaChanged(value: number | undefined) {
+  value = normalizeNumberFieldValue(value);
+  value = Math.max(-72, value);
+  value = Math.min(0, value);
+  value = Math.round(value);
+
+  form.value.defaultAttractionZoMoria = value;
+  emitPlaybackOptionsChanged();
+}
+
+function onTuningChanged(value: number | undefined) {
+  value = normalizeNumberFieldValue(value);
+  tuning.value = Math.max(-2400, value);
+  tuning.value = Math.min(2400, tuning.value);
+  tuning.value = Math.round(tuning.value);
+  form.value.frequencyDi = +(
+    FREQUENCY_G3 * Math.pow(2, tuning.value / 1200)
+  ).toFixed(1);
+  emitPlaybackOptionsChanged();
+}
+
+function onAlterationMultiplierChanged(
+  index: number,
+  multiplier: number | undefined,
+) {
+  multiplier = normalizeNumberFieldValue(multiplier);
+  multiplier = Math.max(0, multiplier);
+  multiplier = Math.min(1, multiplier);
+
+  form.value.alterationMultipliers[index] = multiplier;
+  emitPlaybackOptionsChanged();
+}
+
+function getIntervalInputId(row: IntervalRow, index: number) {
+  return `playback-settings-dialog-${row.id}-interval-${index}`;
+}
+
+function getIntervalRowLabelId(row: IntervalRow) {
+  return `playback-settings-dialog-${row.id}-interval-label`;
+}
+
+function getIntervalNoteLabelId(row: IntervalRow, index: number) {
+  return `playback-settings-dialog-${row.id}-interval-${index}-note`;
+}
+
+function isIntervalRowInvalid(row: IntervalRow) {
+  return intervalErrors.value.some(
+    (error) => error.intervalsKey === row.intervalsKey,
+  );
+}
+
+function getAlterationMultiplierInputId(row: AlterationMultiplierRow) {
+  return `playback-settings-dialog-alteration-multiplier-${row.id}`;
+}
+
+function getAlterationMoriaInputId(row: AlterationMoriaRow) {
+  return `playback-settings-dialog-alteration-moria-${row.id}`;
+}
+
+function playTestTone() {
+  emit('play-test-tone');
+}
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-.dialog-content {
-  display: flex;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  height: 80vh;
-}
-
-.pane-container {
-  display: flex;
-  flex-direction: column;
-  width: 550px;
-  margin-bottom: 1.5rem;
-  margin-top: 1.5rem;
-  overflow: auto;
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.row {
-  display: flex;
-}
-
-.form-group label {
-  display: inline-block;
-  font-weight: bold;
-}
-
-input.detune {
-  width: 3.5rem;
-  margin-left: 1rem;
-  margin-right: 0.5rem;
-}
-
-.header {
-  font-size: 1.5rem;
-  text-align: center;
-}
-
-.subheader {
-  font-weight: bold;
-}
-
-.vertical-spacer {
-  margin-bottom: 1rem;
-}
-
-.scale-name {
-  width: 8rem;
-}
-
-.alteration-name {
-  width: 16rem;
-}
-
-.interval-label {
-  margin: 0 0.5rem;
-  width: 3ch;
-}
-
-input.interval {
-  width: 2.5rem;
-}
-
-.volume-slider {
-  margin: 0 1rem;
-}
-
-.volume-label {
-  width: 3rem;
-}
-
-.button-container {
-  display: flex;
-  justify-content: center;
-}
-
-.ok-btn {
-  margin-right: 2rem;
-}
-
-.label-g3 {
-  margin-left: 2rem;
-}
-
-.separator {
-  border-bottom: 1px solid lightgray;
-  margin-bottom: 1rem;
-  width: 100%;
-}
-
-.btnTestTone {
-  display: inline-block;
-  margin-left: auto;
-}
-
-.btnResetIntervals {
-  display: inline-block;
-  margin-left: auto;
-}
-
-.btnResetDefaultAttractionZoMoria {
-  margin-left: 1rem;
-}
-
-.error {
-  color: red;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-</style>

@@ -1,3 +1,5 @@
+import { DEFAULT_FONT_STYLE } from '../utils/fontConstants';
+import { resolveFontStyle } from '../utils/fontStyle';
 import { Unit } from '../utils/Unit';
 
 export type PageSize =
@@ -116,8 +118,7 @@ export class PageSetup {
 
   public lyricsDefaultFontFamily = 'Source Serif';
   public lyricsDefaultFontSize = Unit.fromPt(12);
-  public lyricsDefaultFontWeight = '400';
-  public lyricsDefaultFontStyle = 'normal';
+  public lyricsDefaultFontStyle = DEFAULT_FONT_STYLE;
   public lyricsDefaultColor = '#000000';
   public lyricsDefaultStrokeWidth = 0;
   public lyricsVerticalOffset = -Unit.fromInch(0.05);
@@ -127,16 +128,20 @@ export class PageSetup {
   // These properties are currently not exposed in the UI or saved as part of the byzx format.
   public lyricsMelismaSpacing = Unit.fromInch(0.025);
   public lyricsMelismaThickness = 1;
-  public spaceAfterMartyriaFactor = 0.148;
 
   public get lyricsFont() {
-    return `${this.lyricsDefaultFontStyle} normal ${this.lyricsDefaultFontWeight} ${this.lyricsDefaultFontSize}px "${this.lyricsDefaultFontFamily}"`;
+    const resolved = resolveFontStyle(
+      this.lyricsDefaultFontFamily,
+      this.lyricsDefaultFontStyle,
+    );
+
+    return `${resolved.cssFontStyle} normal ${resolved.cssFontWeight} ${this.lyricsDefaultFontSize}px "${resolved.cssFontFamily}"`;
   }
 
   public neumeDefaultFontFamily = 'Neanes';
   public neumeDefaultFontSize = Unit.fromPt(20);
   public neumeDefaultColor = '#000000';
-  public neumeDefaultSpacing = Unit.fromInch(0.03);
+  public neumeDefaultSpacing = 0;
   public neumeDefaultStrokeWidth = 0;
 
   public alternateLineDefaultFontSize = Unit.fromPt(12);
@@ -176,8 +181,7 @@ export class PageSetup {
 
   public dropCapDefaultFontFamily = 'Source Serif';
   public dropCapDefaultFontSize = Unit.fromPt(60);
-  public dropCapDefaultFontWeight = '400';
-  public dropCapDefaultFontStyle = 'normal';
+  public dropCapDefaultFontStyle = DEFAULT_FONT_STYLE;
   public dropCapDefaultColor = '#000000';
   public dropCapDefaultStrokeWidth = 0;
   public dropCapDefaultLineHeight: number | null = null;
@@ -185,13 +189,13 @@ export class PageSetup {
 
   public textBoxDefaultFontFamily = 'Source Serif';
   public textBoxDefaultFontSize = Unit.fromPt(20);
-  public textBoxDefaultFontWeight = '400';
-  public textBoxDefaultFontStyle = 'normal';
+  public textBoxDefaultFontStyle = DEFAULT_FONT_STYLE;
   public textBoxDefaultColor = '#000000';
   public textBoxDefaultStrokeWidth = 0;
   public textBoxDefaultLineHeight: number | null = null;
 
-  public hyphenSpacing: number = Unit.fromInch(0.75);
+  public hyphenSpacing: number = Unit.fromMm(13.125);
+  public minimumSyllableToHyphenClearance: number = Unit.fromMm(3.5);
 
   public martyriaVerticalOffset: number = Unit.fromPt(3);
 

@@ -18,81 +18,77 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType, StyleValue } from 'vue';
+<script setup lang="ts">
+import type { PropType, StyleValue } from 'vue';
+import { computed, useTemplateRef } from 'vue';
+import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import ContentEditable from '@/components/ContentEditable.vue';
-import { DropCapElement } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import type { DropCapElement } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { withZoom } from '@/utils/withZoom';
 
-export default defineComponent({
-  components: { ContentEditable },
-  props: {
-    element: {
-      type: Object as PropType<DropCapElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    editable: {
-      type: Boolean,
-      required: true,
-    },
+const emit = defineEmits(['update:content', 'select-single']);
+const props = defineProps({
+  element: {
+    type: Object as PropType<DropCapElement>,
+    required: true,
   },
-  emits: ['update:content', 'select-single'],
-
-  data() {
-    return {};
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-
-  computed: {
-    htmlElement() {
-      return this.$refs.container as HTMLElement;
-    },
-
-    textElement() {
-      return this.$refs.text as InstanceType<typeof ContentEditable>;
-    },
-
-    style() {
-      const style = {
-        color: this.element.computedColor,
-        fontFamily: getFontFamilyWithFallback(this.element.computedFontFamily),
-        fontSize: withZoom(this.element.computedFontSize),
-        fontWeight: this.element.computedFontWeight,
-        fontStyle: this.element.computedFontStyle,
-        lineHeight: `${this.element.computedLineHeight ?? 'normal'}`,
-        webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-      } as StyleValue;
-
-      return style;
-    },
+  editable: {
+    type: Boolean,
+    required: true,
   },
+});
 
-  methods: {
-    focus() {
-      if (this.editable) {
-        this.textElement.focus(true);
-      }
-    },
+const container = useTemplateRef<HTMLElement>('container');
+const text = useTemplateRef<ComponentExposed<typeof ContentEditable>>('text');
 
-    blur() {
-      this.textElement.blur();
-    },
+const htmlElement = computed(() => container.value!);
+const textElement = computed(() => text.value!);
 
-    updateContent(content: string) {
-      // Nothing actually changed, so do nothing
-      if (this.element.content === content) {
-        return;
-      }
+const style = computed(() => {
+  const style = {
+    color: props.element.computedColor,
+    fontFamily: getFontFamilyWithFallback(props.element.computedFontFamily),
+    fontSize: withZoom(props.element.computedFontSize),
+    fontWeight: props.element.computedFontWeight,
+    fontStyle: props.element.computedFontStyle,
+    lineHeight: `${props.element.computedLineHeight ?? 'normal'}`,
+    webkitTextStrokeWidth: withZoom(props.element.computedStrokeWidth),
+  } as StyleValue;
 
-      this.$emit('update:content', content);
-    },
-  },
+  return style;
+});
+
+function focus() {
+  if (props.editable) {
+    textElement.value.focus(true);
+  }
+}
+
+function blur() {
+  textElement.value.blur();
+}
+
+function updateContent(content: string) {
+  // Nothing actually changed, so do nothing
+  if (props.element.content === content) {
+    return;
+  }
+
+  emit('update:content', content);
+}
+
+defineExpose({
+  blur,
+  focus,
+  htmlElement,
+  textElement,
 });
 </script>
 

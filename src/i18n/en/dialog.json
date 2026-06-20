@@ -11,6 +11,7 @@
   },
   "export": {
     "root": "Export",
+    "description": "Choose an export format and configure its options.",
     "format": "Format",
     "pngImages": "PNG Images",
     "musicXml": "MusicXML",
@@ -29,10 +30,12 @@
     "export": "Export"
   },
   "modeKey": {
-    "root": "Select Mode Key"
+    "root": "Select Mode Key",
+    "description": "Choose a mode key."
   },
   "neumePositioning": {
     "root": "Neume Positioning",
+    "description": "Adjust supporting neume offsets and preview their positions.",
     "accidental": "Accidental",
     "accidental2": "Accidental 2",
     "accidental3": "Accidental 3",
@@ -55,6 +58,7 @@
   },
   "pageSetup": {
     "root": "Page Setup",
+    "description": "Configure page dimensions, margins, spacing, fonts, and default styling for the score.",
     "pageDimensions": "Page Dimensions",
     "pageSize": "Page Size",
     "in": "in",
@@ -76,7 +80,7 @@
     "spacing": "Spacing",
     "neumes": "Neumes",
     "neumeSpacing": "Neume Spacing",
-    "neumeSpacingDescription": "The preferred amount of horizontal space between each neume on a line. The actual spacing may shrink or stretch by up to 50% to justify the line. A smaller number results in a more compact score.",
+    "neumeSpacingDescription": "The preferred horizontal space between neumes. Increase this number to create a more open score.",
     "lyricsV": "Lyrics: Distance Below Neumes",
     "lyricsVDescription": "The vertical position of lyrics in relation to the neumes. Increase this number to lower the lyrics.",
     "lyricsH": "Lyrics: Minimum Distance Between Adjacent Lyrics",
@@ -85,8 +89,10 @@
     "martyriaVerticalOffsetDescription": "The vertical position of martyriae in relation to the rest of the neumes. Increase this number to lower the martyriae.",
     "line": "Line Spacing",
     "lineSpacingDescription": "The minimum space between each line. The actual space between lines may be larger than this in order to avoid collisions between neumes and lyrics on adjacent lines.",
-    "hyphens": "Hyphen Spacing",
+    "hyphens": "Lyrics: Hyphen Spacing",
     "hyphenSpacingDescription": "The minimum distance between adjacent hyphens. Decrease this number to increase the number of hyphens that appear between syllables.",
+    "minimumSyllableToHyphenClearance": "Lyrics: Syllable-Hyphen Clearance",
+    "minimumSyllableToHyphenClearanceDescription": "The minimum distance between a syllable and the nearest hyphen. Increase this number to keep hyphens farther away from the syllables.",
     "headersAndFooters": "Headers and Footers",
     "headerHorizontalRule": "Header Rule",
     "footerHorizontalRule": "Footer Rule",
@@ -159,11 +165,14 @@
     "marginTop": "Gap Above",
     "marginBottom": "Gap Below",
     "thickness": "Thickness",
+    "applyColor": "Apply Color",
     "neumeBulkColor": "Change Color of Multiple Neumes",
     "neumeBulkColorDescription": "To change the color of multiple neumes at once, select the neume types above, choose a color, and click the button to apply the color to all selected neumes."
   },
   "playbackSettings": {
     "root": "Playback Settings",
+    "description": "Configure playback tuning, volume, scales, and alteration behavior.",
+    "general": "General",
     "detune": "Detune",
     "test": "Test",
     "volume": "Volume",
@@ -184,6 +193,7 @@
     "zygosLegetos": "Zygos (Legetos)",
     "kliton": "Kliton",
     "spathi": "Spathi",
+    "alterations": "Alterations",
     "alterationMultipliersChrysanthine": "Alteration Multipliers (Chrysanthine)",
     "zeroCrossbeams": "Zero Crossbeams",
     "oneCrossbeam": "One Crossbeam",
@@ -199,10 +209,28 @@
     "flatWithThreeCrossbeams": "Flat with Three Crossbeams",
     "close": "Close"
   },
+  "about": {
+    "root": "About Neanes",
+    "description": "A Byzantine Chant Scorewriter",
+    "version": "Version",
+    "platform": "Platform",
+    "desktop": "Desktop",
+    "web": "Web",
+    "license": "License",
+    "project": "Project",
+    "projectDescription": "Neanes is open-source software for creating, editing, and exporting Byzantine chant scores.",
+    "sourceCode": "Source Code",
+    "guide": "Guide",
+    "requestFeature": "Request Feature",
+    "reportIssue": "Report Issue",
+    "close": "Close"
+  },
   "preferences": {
     "root": "Preferences",
+    "description": "Configure language, menu interaction, and default tempos.",
     "language": "Language",
     "languageSystemDefault": "System default",
+    "helpTranslate": "Help translate Neanes",
     "menuInteraction": "Menu Interaction",
     "menuInteractionHold": "Press and hold to select",
     "menuInteractionClick": "Click to open menu",

@@ -1,259 +1,173 @@
 <template>
-  <div class="drop-cap-toolbar">
-    <input
-      id="toolbar-drop-cap-use-default-style"
-      type="checkbox"
-      :checked="element.useDefaultStyle"
-      @change="
-        $emit('update', {
-          useDefaultStyle: ($event.target as HTMLInputElement).checked,
-        } as Partial<DropCapElement>)
-      "
-    />
-    <label for="toolbar-drop-cap-use-default-style">{{
-      $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
-    }}</label>
-    <span class="divider" />
+  <Toolbar class="drop-cap-toolbar h-auto w-full gap-0 border-0 p-1" loop>
     <template v-if="!element.useDefaultStyle">
-      <select
-        :value="element.fontFamily"
-        @change="
-          $emit('update', {
-            fontFamily: ($event.target as HTMLInputElement).value,
-          } as Partial<DropCapElement>)
+      <FontCombobox
+        :model-value="element.fontFamily"
+        :options="dropCapFontFamilies"
+        @update:model-value="onFontFamilyChanged"
+      />
+      <FontStyleSelect
+        class="w-40"
+        :model-value="element.fontStyle"
+        :options="fontStyleOptions"
+        :disabled="fontStyleOptions.length <= 1"
+        @update:model-value="
+          $emit('update', { fontStyle: $event } as Partial<DropCapElement>)
         "
-      >
-        <option v-for="font in dropCapFontFamilies" :key="font" :value="font">
-          {{ font }}
-        </option>
-      </select>
-      <span class="space"></span>
+      />
       <InputFontSize
-        class="drop-caps-input"
+        id="toolbar-drop-cap-font-size"
         :max="500"
         :model-value="element.fontSize"
         @update:model-value="
-          $emit('update', {
-            fontSize: $event,
-          } as Partial<DropCapElement>)
+          $emit('update', { fontSize: $event } as Partial<DropCapElement>)
         "
       />
-      <span class="space" style="text-align: center">&#47;</span>
-      <InputUnit
-        class="drop-caps-input"
-        unit="unitless"
-        :nullable="true"
-        :min="0"
-        :step="0.1"
-        :model-value="element.lineHeight"
-        :precision="2"
-        placeholder="auto"
-        @update:model-value="
-          $emit('update', {
-            lineHeight: $event,
-          } as Partial<DropCapElement>)
-        "
-      />
-      <span class="space"></span>
-      <ColorPicker
-        :model-value="element.color"
-        @update:model-value="
-          $emit('update', {
-            color: $event,
-          } as Partial<DropCapElement>)
-        "
-      />
-      <span class="space"></span>
-      <button
-        class="icon-btn"
-        :class="{ selected: bold }"
-        @click="
-          $emit('update', {
-            fontWeight: !bold ? '700' : '400',
-          } as Partial<DropCapElement>)
-        "
+      <ToolbarSeparator />
+      <ToggleGroup
+        type="multiple"
+        variant="outline"
+        :model-value="styleValues"
+        @update:model-value="onStyleValuesChanged"
       >
-        <b>B</b>
-      </button>
-      <button
-        class="icon-btn"
-        :class="{ selected: italic }"
-        @click="
-          $emit('update', {
-            fontStyle: !italic ? 'italic' : 'normal',
-          } as Partial<DropCapElement>)
-        "
-      >
-        <i>I</i>
-      </button>
-      <span class="space"></span>
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-      }}</label>
-      <InputStrokeWidth
-        :model-value="element.strokeWidth"
-        @update:model-value="
-          $emit('update', {
-            strokeWidth: $event,
-          } as Partial<DropCapElement>)
-        "
-      />
-      <span class="divider" />
-      <label class="right-space">{{
-        $t(($) => $.toolbar.dropCap.lineSpan, { ns: 'toolbar' })
-      }}</label>
-      <InputUnit
-        class="drop-caps-input-width"
-        unit="unitless"
-        :min="1"
-        :max="10"
-        :step="1"
-        :model-value="element.lineSpan"
-        :precision="0"
-        @update:model-value="
-          $emit('update', {
-            lineSpan: $event,
-          } as Partial<DropCapElement>)
-        "
-      />
-      <span class="divider" />
+        <ToggleGroupItem
+          value="bold"
+          class="icon-btn"
+          :class="{ selected: isFontStyleAxisActive('bold') }"
+          :disabled="!isFontStyleAxisToggleEnabled('bold')"
+          aria-label="Toggle bold"
+        >
+          <PhTextB class="h-4 w-4" />
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="italic"
+          class="icon-btn"
+          :class="{ selected: isFontStyleAxisActive('italic') }"
+          :disabled="!isFontStyleAxisToggleEnabled('italic')"
+          aria-label="Toggle italic"
+        >
+          <PhTextItalic class="h-4 w-4" />
+        </ToggleGroupItem>
+      </ToggleGroup>
     </template>
-    <label class="right-space">{{
-      $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
-    }}</label>
-    <InputUnit
-      class="drop-caps-input-width"
-      unit="pt"
-      :nullable="true"
-      :min="4"
-      :max="maxWidth"
-      :step="0.5"
-      :model-value="element.customWidth"
-      :precision="1"
-      placeholder="auto"
-      @update:model-value="
-        $emit('update', {
-          customWidth: $event,
-        } as Partial<DropCapElement>)
-      "
-    />
-
-    <span class="space"></span>
-    <div class="form-group">
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-      }}</label>
-      <input
-        type="text"
-        :value="element.sectionName"
-        @change="
-          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
-        "
-      />
-    </div>
-  </div>
+  </Toolbar>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { PhTextB, PhTextItalic } from '@phosphor-icons/vue';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 
-import ColorPicker from '@/components/ColorPicker.vue';
+import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
-import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import InputUnit from '@/components/InputUnit.vue';
-import { DropCapElement } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
-import { Unit } from '@/utils/Unit';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Toolbar, ToolbarSeparator } from '@/components/ui/toolbar';
+import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import type { DropCapElement } from '@/models/Element';
+import { fontCatalog } from '@/services/FontCatalog';
 
-export default defineComponent({
-  components: { ColorPicker, InputFontSize, InputStrokeWidth, InputUnit },
-  props: {
-    element: {
-      type: Object as PropType<DropCapElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    fonts: {
-      type: Array as PropType<string[]>,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<DropCapElement>,
+    required: true,
   },
-  emits: ['update', 'update:sectionName'],
-
-  data() {
-    return {};
+  fonts: {
+    type: Array as PropType<string[]>,
+    required: true,
   },
-
-  computed: {
-    bold() {
-      return this.element.fontWeight === '700';
-    },
-
-    italic() {
-      return this.element.fontStyle === 'italic';
-    },
-
-    dropCapFontFamilies() {
-      return [
-        'Source Serif',
-        'GFS Didot',
-        'Noto Naskh Arabic',
-        'Old Standard',
-        ...this.fonts,
-      ];
-    },
-
-    maxWidth() {
-      return Unit.toPt(this.pageSetup.innerPageWidth);
-    },
-  },
-
-  methods: {},
 });
+
+const emit = defineEmits(['update']);
+
+const {
+  fontStyleOptions,
+  activeStyleAxisValues,
+  isFontStyleAxisActive,
+  isFontStyleAxisToggleEnabled,
+  applyStyleAxisToggles,
+  remapStyleForFamily,
+} = useFontStyleControls(
+  () => props.element.fontFamily,
+  () => props.element.fontStyle,
+);
+
+const styleValues = computed(() => [...activeStyleAxisValues.value]);
+
+const dropCapFontFamilies = computed(() => [
+  ...fontCatalog.bundledTextFamilies(),
+  ...props.fonts,
+]);
+
+function onStyleValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
+    fontStyle: applyStyleAxisToggles(values),
+  } as Partial<DropCapElement>);
+}
+
+function onFontFamilyChanged(fontFamily: string) {
+  emit('update', {
+    fontFamily,
+    fontStyle: remapStyleForFamily(fontFamily),
+  } as Partial<DropCapElement>);
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .drop-cap-toolbar {
-  display: flex;
-  align-items: center;
   flex-wrap: wrap;
+  background-color: var(--color-legacy-chrome-menu-surface);
 
-  background-color: lightgray;
-
-  padding: 0.25rem;
-}
-
-.drop-caps-input-width {
-  width: 8ch;
+  --btn-size: 32px;
 }
 
 .icon-btn {
-  height: 32px;
-  width: 32px;
+  box-sizing: border-box;
+  height: var(--btn-size);
+  width: var(--btn-size);
+  appearance: auto;
+  background: revert;
+  border: revert;
+  border-radius: revert;
+  box-shadow: revert;
+  font-weight: revert;
+
+  position: relative;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  overflow: hidden;
+  outline: revert;
+  padding: 0;
+  transition: revert;
+  user-select: none;
 }
 
-.icon-btn.selected {
-  background-color: var(--btn-color-selected);
+.icon-btn:hover {
+  background: revert;
 }
 
-label.right-space {
-  margin-right: 0.5rem;
+.icon-btn.selected,
+.icon-btn[data-state='on'],
+.icon-btn[aria-pressed='true'] {
+  background: var(--color-legacy-chrome-selected);
 }
 
-.divider {
-  height: 32px;
-  border-right: 1px solid #666;
-  margin: 0 0.5rem;
+.icon-btn img {
+  height: var(--btn-size);
+  max-width: none;
+  width: var(--btn-size);
 }
 
-.space {
-  width: 16px;
+.icon-btn[aria-disabled='true'],
+.icon-btn[data-disabled],
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 </style>

@@ -2,7 +2,7 @@ import * as Tone from 'tone';
 import { ToneEvent } from 'tone';
 
 import { EventBus } from '@/eventBus';
-import {
+import type {
   PlaybackOptions,
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
@@ -24,8 +24,8 @@ export class AudioService {
   hardChromaticScale = [6, 20, 4, 12, 6, 20, 4];
   softChromaticScale = [8, 14, 8, 12, 8, 14, 8];
 
-  synth: Tone.Synth | Tone.FMSynth;
-  isonSynth: Tone.Synth | Tone.FMSynth;
+  synth: Tone.Synth | Tone.FMSynth | null = null;
+  isonSynth: Tone.Synth | Tone.FMSynth | null = null;
 
   part: Tone.Part | null = null;
 
@@ -39,30 +39,55 @@ export class AudioService {
     import.meta.env.VITE_AUDIO_SERVICE_LOGGING_ENABLED === 'true';
 
   constructor() {
-    this.synth = new Tone.Synth().toDestination();
-    this.isonSynth = new Tone.Synth().toDestination();
+    // Synths are created lazily after a user gesture so browsers do not block
+    // Tone's AudioContext during app startup.
+  }
 
-    //this.synth = this.createVoiceSynth();
-    //this.isonSynth = this.createVoiceSynth();
+  private getSynth(): Tone.Synth | Tone.FMSynth {
+    if (this.synth == null) {
+      this.synth = new Tone.Synth().toDestination();
+    }
 
-    this.isonSynth.volume.value = -4;
-    //this.synth.sync();
+    return this.synth;
+  }
+
+  private getIsonSynth(): Tone.Synth | Tone.FMSynth {
+    if (this.isonSynth == null) {
+      this.isonSynth = new Tone.Synth().toDestination();
+      this.isonSynth.volume.value = -4;
+    }
+
+    return this.isonSynth;
+  }
+
+  private async initializeAudio(): Promise<{
+    synth: Tone.Synth | Tone.FMSynth;
+    isonSynth: Tone.Synth | Tone.FMSynth;
+  }> {
+    // Create the synths first so Tone's real AudioContext is materialized
+    // (getContext() swaps out the DummyContext), then resume that context.
+    // Resuming before any node exists would only resume the DummyContext.
+    const synth = this.getSynth();
+    const isonSynth = this.getIsonSynth();
+
+    await Tone.start();
+
+    return { synth, isonSynth };
   }
 
   dispose() {
     this.stop();
 
-    this.synth.dispose();
-    this.isonSynth.dispose();
+    this.synth?.dispose();
+    this.isonSynth?.dispose();
   }
 
-  play(
+  async play(
     events: PlaybackSequenceEvent[],
     options: PlaybackOptions,
     startAt: PlaybackSequenceEvent | undefined,
   ) {
-    const synth = this.synth;
-    const isonSynth = this.isonSynth;
+    const { synth, isonSynth } = await this.initializeAudio();
 
     this.stop();
 
@@ -166,8 +191,8 @@ export class AudioService {
 
       Tone.getTransport().stop();
 
-      this.isonSynth.triggerRelease('+0.1');
-      this.synth.triggerRelease('+0.1');
+      isonSynth.triggerRelease('+0.1');
+      synth.triggerRelease('+0.1');
 
       EventBus.$emit(AudioServiceEventNames.Stop);
 
@@ -193,17 +218,23 @@ export class AudioService {
       console.log('AudioService', 'stop');
     }
 
-    // Reset the transport
-    Tone.getTransport().stop();
-    Tone.getTransport().position = 0;
-    Tone.getTransport().cancel();
+    if (
+      this.synth != null ||
+      this.isonSynth != null ||
+      this.toneEvents.length > 0
+    ) {
+      // Reset the transport
+      Tone.getTransport().stop();
+      Tone.getTransport().position = 0;
+      Tone.getTransport().cancel();
 
-    // Stop the synths
-    this.isonSynth.triggerRelease('+0.1');
-    this.synth.triggerRelease('+0.1');
+      // Stop the synths
+      this.isonSynth?.triggerRelease('+0.1');
+      this.synth?.triggerRelease('+0.1');
 
-    this.toneEvents.forEach((e) => e.dispose());
-    this.toneEvents = [];
+      this.toneEvents.forEach((e) => e.dispose());
+      this.toneEvents = [];
+    }
 
     EventBus.$emit(AudioServiceEventNames.Stop);
     this.state = AudioState.Stopped;
@@ -219,8 +250,8 @@ export class AudioService {
 
       Tone.getTransport().stop();
 
-      this.isonSynth.triggerRelease('+0.1');
-      this.synth.triggerRelease('+0.1');
+      this.isonSynth?.triggerRelease('+0.1');
+      this.synth?.triggerRelease('+0.1');
 
       this.state = AudioState.Paused;
     }
@@ -294,17 +325,21 @@ export class AudioService {
     });
   }
 
-  playTestTone(frequency: number) {
-    this.synth.volume.value = 0;
+  async playTestTone(frequency: number) {
+    const { synth } = await this.initializeAudio();
+
+    synth.volume.value = 0;
     Tone.getTransport().bpm.value = 120;
     const now = Tone.now();
 
-    this.synth.triggerAttackRelease(frequency, '2n', now);
+    synth.triggerAttackRelease(frequency, '2n', now);
   }
 
   // For debugging
-  playScale(scale: number[]) {
+  async playScale(scale: number[]) {
     const synth = new Tone.Synth().toDestination();
+
+    await Tone.start();
 
     let currentFrequency = 261.63;
     let now = Tone.now();
@@ -318,14 +353,14 @@ export class AudioService {
   }
 
   playDiatonicScale() {
-    this.playScale(this.diatonicScale);
+    return this.playScale(this.diatonicScale);
   }
 
   playHardChromaticScale() {
-    this.playScale(this.hardChromaticScale);
+    return this.playScale(this.hardChromaticScale);
   }
 
   playSoftChromaticScale() {
-    this.playScale(this.softChromaticScale);
+    return this.playScale(this.softChromaticScale);
   }
 }

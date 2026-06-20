@@ -1,12 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import type { ScoreElement } from '@/models/Element';
 import {
   DropCapElement,
   LineBreakType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
-  ScoreElement,
 } from '@/models/Element';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
@@ -48,6 +48,8 @@ export abstract class TestFileGenerator {
         return this.generateTestFile_NoteIndicators();
       case TestFileType.Ison:
         return this.generateTestFile_Isons();
+      case TestFileType.Koronis:
+        return this.generateTestFile_Koronis();
       case TestFileType.ModeKey:
         return this.generateTestFile_ModeKey();
       case TestFileType.Random:
@@ -706,9 +708,29 @@ export abstract class TestFileGenerator {
   }
 
   private static generateTestFile_Isons() {
+    return this.generateTestFile_WithGorgonVariants((note) => {
+      note.ison = Ison.Unison;
+    });
+  }
+
+  private static generateTestFile_Koronis() {
+    return this.generateTestFile_WithGorgonVariants((note) => {
+      note.koronis = true;
+    });
+  }
+
+  private static generateTestFile_WithGorgonVariants(
+    applyNeume: (note: NoteElement) => void,
+  ) {
     const elements: ScoreElement[] = [];
 
     let counter = 1;
+    const gorgonVariants = [
+      null,
+      GorgonNeume.Gorgon_Top,
+      GorgonNeume.Digorgon,
+      GorgonNeume.Trigorgon,
+    ];
 
     for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
@@ -726,14 +748,34 @@ export abstract class TestFileGenerator {
         continue;
       }
 
-      const note = new NoteElement();
-      note.quantitativeNeume = quantitativeNeume;
-      note.ison = Ison.Unison;
-      note.lyrics = (counter++).toString();
-      elements.push(note);
+      for (const gorgonNeume of gorgonVariants.filter((gorgonNeume) =>
+        this.canDisplayGorgonVariant(quantitativeNeume, gorgonNeume),
+      )) {
+        const note = new NoteElement();
+        note.quantitativeNeume = quantitativeNeume;
+        note.gorgonNeume = gorgonNeume;
+        applyNeume(note);
+        note.lyrics = (counter++).toString();
+        elements.push(note);
+      }
     }
 
     return elements;
+  }
+
+  private static canDisplayGorgonVariant(
+    quantitativeNeume: QuantitativeNeume,
+    gorgonNeume: GorgonNeume | null,
+  ) {
+    if (gorgonNeume == null) {
+      return true;
+    }
+
+    const note = new NoteElement();
+    note.quantitativeNeume = quantitativeNeume;
+    note.gorgonNeume = gorgonNeume;
+
+    return note.gorgonNeume === gorgonNeume;
   }
 
   private static generateTestFile_ModeKey() {

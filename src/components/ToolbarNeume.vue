@@ -1,543 +1,610 @@
 <template>
-  <div class="neume-toolbar">
-    <div v-if="secondaryNeume" class="row">
+  <div class="neume-toolbar p-1">
+    <Toolbar
+      v-if="secondaryNeume"
+      class="row h-auto w-full gap-0 border-0 p-0"
+      loop
+    >
       <span>{{
         $t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })
       }}</span>
-      <span class="space"></span>
-      <button
+      <ToolbarSeparator />
+      <ToolbarButton
         v-if="tertiaryNeume"
+        type="button"
+        variant="secondary"
+        size="icon-sm"
         class="btnNeumeSelect"
         :class="{ selected: innerNeume === 'Tertiary' }"
+        :aria-label="$t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })"
         @click="$emit('update:innerNeume', 'Tertiary')"
       >
         <Neume
           :neume="tertiaryNeume"
           :font-family="pageSetup.neumeDefaultFontFamily"
         />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
+        type="button"
+        variant="secondary"
+        size="icon-sm"
         class="btnNeumeSelect"
         :class="{ selected: innerNeume === 'Secondary' }"
+        :aria-label="$t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })"
         @click="$emit('update:innerNeume', 'Secondary')"
       >
         <Neume
           :neume="secondaryNeume"
           :font-family="pageSetup.neumeDefaultFontFamily"
         />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
+        type="button"
+        variant="secondary"
+        size="icon-sm"
         class="btnNeumeSelect"
         :class="{ selected: innerNeume === 'Primary' }"
+        :aria-label="$t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })"
         @click="$emit('update:innerNeume', 'Primary')"
       >
         <Neume
           :neume="primaryNeume!"
           :font-family="pageSetup.neumeDefaultFontFamily"
         />
-      </button>
-    </div>
-    <div class="row">
-      <button
-        class="neume-button"
-        :disabled="klasmaDisabled"
-        :title="tooltip(TimeNeume.Klasma_Top)"
-        @click="$emit('update:klasma')"
-      >
-        <img src="@/assets/icons/time-klasma.svg" />
-      </button>
+      </ToolbarButton>
+    </Toolbar>
+    <Toolbar class="row h-auto w-full gap-0 border-0 p-0" loop>
+      <AppTooltip :tooltip="tooltip(TimeNeume.Klasma_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="klasmaDisabled"
+          @click="!klasmaDisabled && $emit('update:klasma')"
+        >
+          <img src="@/assets/icons/time-klasma.svg" />
+        </ToolbarButton>
+      </AppTooltip>
       <ButtonWithMenu
         :options="apliMenuOptions"
         :disabled="apleDisabled"
-        :title="tooltip(TimeNeume.Hapli)"
+        :tooltip="tooltip(TimeNeume.Hapli)"
         @select="$emit('update:time', $event)"
       />
-      <button
-        class="neume-button"
-        :disabled="koronisDisabled"
-        :title="tooltip(TimeNeume.Koronis)"
-        @click="$emit('update', { koronis: !element.koronis })"
-      >
-        <img src="@/assets/icons/time-koronis.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="stavrosDisabled"
-        :title="tooltip(VocalExpressionNeume.Cross_Top)"
-        @click="$emit('update', { stavros: !element.stavros })"
-      >
-        <img src="@/assets/icons/time-stavros.svg" />
-      </button>
-      <span class="space"></span>
+      <AppTooltip :tooltip="tooltip(TimeNeume.Koronis)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="koronisDisabled"
+          @click="
+            !koronisDisabled && $emit('update', { koronis: !element.koronis })
+          "
+        >
+          <img src="@/assets/icons/time-koronis.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(VocalExpressionNeume.Cross_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="stavrosDisabled"
+          @click="
+            !stavrosDisabled && $emit('update', { stavros: !element.stavros })
+          "
+        >
+          <img src="@/assets/icons/time-stavros.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
 
       <ButtonWithMenu
         :options="gorgonMenuOptions"
-        :title="tooltip(GorgonNeume.Gorgon_Top)"
+        :tooltip="tooltip(GorgonNeume.Gorgon_Top)"
         @select="updateGorgon($event)"
       />
       <ButtonWithMenu
         :options="digorgonMenuOptions"
-        :title="tooltip(GorgonNeume.Digorgon)"
+        :tooltip="tooltip(GorgonNeume.Digorgon)"
         @select="updateGorgon($event)"
       />
       <ButtonWithMenu
         :options="trigorgonMenuOptions"
-        :title="tooltip(GorgonNeume.Trigorgon)"
+        :tooltip="tooltip(GorgonNeume.Trigorgon)"
         @select="updateGorgon($event)"
       />
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :disabled="expressionsDisabled"
-        :title="tooltip(VocalExpressionNeume.Vareia)"
-        @click="$emit('update', { vareia: !element.vareia })"
-      >
-        <img src="@/assets/icons/quality-vareia.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="expressionsDisabled"
-        :title="tooltip(VocalExpressionNeume.Homalon)"
-        @click="$emit('update:expression', VocalExpressionNeume.Homalon)"
-      >
-        <img src="@/assets/icons/quality-omalon.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="expressionsDisabled"
-        :title="tooltip(VocalExpressionNeume.HomalonConnecting)"
-        @click="
-          $emit('update:expression', VocalExpressionNeume.HomalonConnecting)
-        "
-      >
-        <img src="@/assets/icons/quality-omalon-connecting.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="expressionsDisabled"
-        :title="tooltip(VocalExpressionNeume.Antikenoma)"
-        @click="$emit('update:expression', VocalExpressionNeume.Antikenoma)"
-      >
-        <img src="@/assets/icons/quality-antikenoma.svg" />
-      </button>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="tooltip(VocalExpressionNeume.Vareia)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="expressionsDisabled"
+          @click="
+            !expressionsDisabled && $emit('update', { vareia: !element.vareia })
+          "
+        >
+          <img src="@/assets/icons/quality-vareia.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(VocalExpressionNeume.Homalon)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="expressionsDisabled"
+          @click="
+            !expressionsDisabled &&
+            $emit('update:expression', VocalExpressionNeume.Homalon)
+          "
+        >
+          <img src="@/assets/icons/quality-omalon.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(VocalExpressionNeume.HomalonConnecting)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="expressionsDisabled"
+          @click="
+            !expressionsDisabled &&
+            $emit('update:expression', VocalExpressionNeume.HomalonConnecting)
+          "
+        >
+          <img src="@/assets/icons/quality-omalon-connecting.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(VocalExpressionNeume.Antikenoma)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="expressionsDisabled"
+          @click="
+            !expressionsDisabled &&
+            $emit('update:expression', VocalExpressionNeume.Antikenoma)
+          "
+        >
+          <img src="@/assets/icons/quality-antikenoma.svg" />
+        </ToolbarButton>
+      </AppTooltip>
       <ButtonWithMenu
         :options="psifistonMenuOptions"
         :disabled="expressionsDisabled"
-        :title="tooltip(VocalExpressionNeume.Psifiston)"
+        :tooltip="tooltip(VocalExpressionNeume.Psifiston)"
         @select="$emit('update:expression', $event)"
       />
-      <button
-        class="neume-button"
-        :disabled="expressionsDisabled"
-        :title="tooltip(VocalExpressionNeume.Heteron)"
-        @click="$emit('update:expression', VocalExpressionNeume.Heteron)"
-      >
-        <img src="@/assets/icons/quality-heteron.svg" />
-      </button>
+      <AppTooltip :tooltip="tooltip(VocalExpressionNeume.Heteron)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="expressionsDisabled"
+          @click="
+            !expressionsDisabled &&
+            $emit('update:expression', VocalExpressionNeume.Heteron)
+          "
+        >
+          <img src="@/assets/icons/quality-heteron.svg" />
+        </ToolbarButton>
+      </AppTooltip>
       <ButtonWithMenu
         :options="heteronConnectingMenuOptions"
         :disabled="expressionsDisabled"
-        :title="tooltip(VocalExpressionNeume.HeteronConnecting)"
+        :tooltip="tooltip(VocalExpressionNeume.HeteronConnecting)"
         @select="$emit('update:expression', $event)"
       />
-      <button
-        class="neume-button"
-        :disabled="expressionsDisabled"
-        :title="tooltip(VocalExpressionNeume.Endofonon)"
-        @click="$emit('update:expression', VocalExpressionNeume.Endofonon)"
-      >
-        <img src="@/assets/icons/quality-endofonon.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="expressionsDisabled"
-        :title="tooltip(Tie.YfenBelow)"
-        @click="$emit('update:tie', [Tie.YfenBelow, Tie.YfenAbove])"
-      >
-        <img src="@/assets/icons/tie-yfen-below.svg" />
-      </button>
-      <span class="space"></span>
+      <AppTooltip :tooltip="tooltip(VocalExpressionNeume.Endofonon)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="expressionsDisabled"
+          @click="
+            !expressionsDisabled &&
+            $emit('update:expression', VocalExpressionNeume.Endofonon)
+          "
+        >
+          <img src="@/assets/icons/quality-endofonon.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Tie.YfenBelow)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="expressionsDisabled"
+          @click="
+            !expressionsDisabled &&
+            $emit('update:tie', [Tie.YfenBelow, Tie.YfenAbove])
+          "
+        >
+          <img src="@/assets/icons/tie-yfen-below.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
       <ButtonWithMenu
         :options="flatMenuOptions"
         :disabled="accidentalsDisabled"
-        :title="tooltip(Accidental.Flat_2_Right)"
+        :tooltip="tooltip(Accidental.Flat_2_Right)"
         @select="updateAccidental($event)"
       />
       <ButtonWithMenu
         :options="sharpMenuOptions"
         :disabled="accidentalsDisabled"
-        :title="tooltip(Accidental.Sharp_2_Left)"
+        :tooltip="tooltip(Accidental.Sharp_2_Left)"
         @select="updateAccidental($event)"
       />
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :disabled="argonDisabled"
-        :title="tooltip(GorgonNeume.Argon)"
-        @click="$emit('update:gorgon', [GorgonNeume.Argon])"
-      >
-        <img src="@/assets/icons/time-argon.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="argonDisabled"
-        :title="tooltip(GorgonNeume.Hemiolion)"
-        @click="$emit('update:gorgon', [GorgonNeume.Hemiolion])"
-      >
-        <img src="@/assets/icons/time-diargon.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="argonDisabled"
-        :title="tooltip(GorgonNeume.Diargon)"
-        @click="$emit('update:gorgon', [GorgonNeume.Diargon])"
-      >
-        <img src="@/assets/icons/time-triargon.svg" />
-      </button>
-      <span class="space"></span>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="tooltip(GorgonNeume.Argon)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="argonDisabled"
+          @click="!argonDisabled && $emit('update:gorgon', [GorgonNeume.Argon])"
+        >
+          <img src="@/assets/icons/time-argon.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(GorgonNeume.Hemiolion)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="argonDisabled"
+          @click="
+            !argonDisabled && $emit('update:gorgon', [GorgonNeume.Hemiolion])
+          "
+        >
+          <img src="@/assets/icons/time-diargon.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(GorgonNeume.Diargon)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="argonDisabled"
+          @click="
+            !argonDisabled && $emit('update:gorgon', [GorgonNeume.Diargon])
+          "
+        >
+          <img src="@/assets/icons/time-triargon.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
       <ButtonWithMenu
         :options="barlineMenuOptions"
-        :title="tooltip(MeasureBar.MeasureBarRight)"
+        :tooltip="tooltip(MeasureBar.MeasureBarRight)"
         @select="$emit('update:measureBar', $event)"
       />
       <ButtonWithMenu
         :options="measureNumberMenuOptions"
-        :title="tooltip(MeasureNumber.Two)"
+        :tooltip="tooltip(MeasureNumber.Two)"
         @select="$emit('update:measureNumber', $event)"
       />
-      <button
-        class="neume-button"
-        :title="tooltip(NoteIndicator.Pa)"
-        @click="$emit('update', { noteIndicator: !element.noteIndicator })"
-      >
-        <img draggable="false" src="@/assets/icons/note-ni.svg" />
-      </button>
+      <AppTooltip :tooltip="tooltip(NoteIndicator.Pa)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update', { noteIndicator: !element.noteIndicator })"
+        >
+          <img draggable="false" src="@/assets/icons/note-ni.svg" />
+        </ToolbarButton>
+      </AppTooltip>
       <ButtonWithMenu
         :options="isonMenuOptions"
         :disabled="isonDisabled"
-        :title="tooltip(Ison.Unison)"
+        :tooltip="tooltip(Ison.Unison)"
         @select="$emit('update:ison', $event)"
       />
-    </div>
-    <div class="row">
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled"
-        :title="tooltip(Fthora.DiatonicNiLow_Top)"
-        @click="
-          updateFthora([Fthora.DiatonicNiLow_Top, Fthora.DiatonicNiLow_Bottom])
-        "
-      >
-        <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled"
-        :title="tooltip(Fthora.DiatonicPa_Top)"
-        @click="updateFthora([Fthora.DiatonicPa_Top, Fthora.DiatonicPa_Bottom])"
-      >
-        <img src="@/assets/icons/fthora-diatonic-pa.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled"
-        :title="tooltip(Fthora.DiatonicVou_Top)"
-        @click="
-          updateFthora([Fthora.DiatonicVou_Top, Fthora.DiatonicVou_Bottom])
-        "
-      >
-        <img src="@/assets/icons/fthora-diatonic-vou.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled"
-        :title="tooltip(Fthora.DiatonicGa_Top)"
-        @click="updateFthora([Fthora.DiatonicGa_Top, Fthora.DiatonicGa_Bottom])"
-      >
-        <img src="@/assets/icons/fthora-diatonic-ga.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled"
-        :title="tooltip(Fthora.DiatonicThi_Top)"
-        @click="
-          updateFthora([Fthora.DiatonicThi_Top, Fthora.DiatonicThi_Bottom])
-        "
-      >
-        <img src="@/assets/icons/fthora-diatonic-di.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled"
-        :title="tooltip(Fthora.DiatonicKe_Top)"
-        @click="updateFthora([Fthora.DiatonicKe_Top, Fthora.DiatonicKe_Bottom])"
-      >
-        <img src="@/assets/icons/fthora-diatonic-ke.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled"
-        :title="tooltip(Fthora.DiatonicZo_Top)"
-        @click="updateFthora([Fthora.DiatonicZo_Top, Fthora.DiatonicZo_Bottom])"
-      >
-        <img src="@/assets/icons/fthora-diatonic-zo.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled"
-        :title="tooltip(Fthora.DiatonicNiHigh_Top)"
-        @click="
-          updateFthora([
-            Fthora.DiatonicNiHigh_Top,
-            Fthora.DiatonicNiHigh_Bottom,
-          ])
-        "
-      >
-        <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled"
-        :title="tooltip(Fthora.SoftChromaticThi_Top)"
-        @click="
-          updateFthora([
-            Fthora.SoftChromaticThi_Top,
-            Fthora.SoftChromaticThi_Bottom,
-          ])
-        "
-      >
-        <img src="@/assets/icons/fthora-soft-chromatic-di.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled"
-        :title="tooltip(Fthora.SoftChromaticPa_Top)"
-        @click="
-          updateFthora([
-            Fthora.SoftChromaticPa_Top,
-            Fthora.SoftChromaticPa_Bottom,
-          ])
-        "
-      >
-        <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled"
-        :title="tooltip(Fthora.HardChromaticPa_Top)"
-        @click="
-          updateFthora([
-            Fthora.HardChromaticPa_Top,
-            Fthora.HardChromaticPa_Bottom,
-          ])
-        "
-      >
-        <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled"
-        :title="tooltip(Fthora.HardChromaticThi_Top)"
-        @click="
-          updateFthora([
-            Fthora.HardChromaticThi_Top,
-            Fthora.HardChromaticThi_Bottom,
-          ])
-        "
-      >
-        <img src="@/assets/icons/fthora-hard-chromatic-di.svg" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled || enharmonicDisabled"
-        :title="enharmonicTitle"
-        @click="updateFthora([Fthora.Enharmonic_Top, Fthora.Enharmonic_Bottom])"
-      >
-        <img src="@/assets/icons/fthora-enharmonic.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled || generalFlatDisabled"
-        :title="generalFlatTitle"
-        @click="
-          updateFthora([Fthora.GeneralFlat_Top, Fthora.GeneralFlat_Bottom])
-        "
-      >
-        <img src="@/assets/icons/fthora-general-flat.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled || generalSharpDisabled"
-        :title="generalSharpTitle"
-        @click="
-          updateFthora([Fthora.GeneralSharp_Top, Fthora.GeneralSharp_Bottom])
-        "
-      >
-        <img src="@/assets/icons/fthora-general-sharp.svg" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled || zygosDisabled"
-        :title="zygosTitle"
-        @click="updateFthora([Fthora.Zygos_Top, Fthora.Zygos_Bottom])"
-      >
-        <img src="@/assets/icons/fthora-zygos.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled || klitonDisabled"
-        :title="klitonTitle"
-        @click="updateFthora([Fthora.Kliton_Top, Fthora.Kliton_Bottom])"
-      >
-        <img src="@/assets/icons/fthora-kliton.svg" />
-      </button>
-      <button
-        class="neume-button"
-        :disabled="fthoresDisabled || spathiDisabled"
-        :title="spathiTitle"
-        @click="updateFthora([Fthora.Spathi_Top, Fthora.Spathi_Bottom])"
-      >
-        <img src="@/assets/icons/fthora-spathi.svg" />
-      </button>
-    </div>
-    <div class="row">
-      <span class="space" />
-
-      <span class="note-name">{{ noteDisplay }}</span>
-
-      <span class="separator" />
-
-      <label class="right-space">{{
-        $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
-      }}</label>
-
-      <InputUnit
-        unit="pt"
-        :min="-spaceAfterMax"
-        :max="spaceAfterMax"
-        :step="0.5"
-        :precision="2"
-        :model-value="element.spaceAfter"
-        @update:model-value="$emit('update', { spaceAfter: $event })"
-      />
-      <span class="space"></span>
-
-      <button @click="$emit('open-syllable-positioning-dialog')">
-        {{ $t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' }) }}
-      </button>
-      <span class="space" />
-
-      <div style="display: flex; align-items: center">
-        <input
-          id="toolbar:neume-ignore-attractions"
-          type="checkbox"
-          :checked="element.ignoreAttractions"
-          @change="
-            $emit('update', {
-              ignoreAttractions: ($event.target as HTMLInputElement).checked,
-            } as Partial<NoteElement>)
-          "
-        />
-        <label for="toolbar:neume-ignore-attractions">{{
-          $t(($) => $.toolbar.common.ignoreAttractions, { ns: 'toolbar' })
-        }}</label>
-      </div>
-
-      <span class="space" />
-
-      <div style="display: flex; align-items: center">
-        <label class="right-space" for="toolbar:neume-accepts-lyrics">{{
-          $t(($) => $.toolbar.neume.acceptsLyrics, { ns: 'toolbar' })
-        }}</label>
-        <select
-          id="toolbar:neume-accepts-lyrics"
-          :value="element.acceptsLyrics"
-          @change="
-            $emit('update', {
-              acceptsLyrics: ($event.target as HTMLSelectElement).value,
-            } as Partial<NoteElement>)
+    </Toolbar>
+    <Toolbar class="row h-auto w-full gap-0 border-0 p-0" loop>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicNiLow_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled"
+          @click="
+            !fthoresDisabled &&
+            updateFthora([
+              Fthora.DiatonicNiLow_Top,
+              Fthora.DiatonicNiLow_Bottom,
+            ])
           "
         >
-          <option :value="AcceptsLyricsOption.Default">
-            {{
-              $t(($) => $.toolbar.neume.acceptsLyricsDefault, { ns: 'toolbar' })
-            }}
-          </option>
-          <option :value="AcceptsLyricsOption.Yes">
-            {{ $t(($) => $.toolbar.neume.acceptsLyricsYes, { ns: 'toolbar' }) }}
-          </option>
-          <option :value="AcceptsLyricsOption.No">
-            {{ $t(($) => $.toolbar.neume.acceptsLyricsNo, { ns: 'toolbar' }) }}
-          </option>
-          <option :value="AcceptsLyricsOption.MelismaOnly">
-            {{
-              $t(($) => $.toolbar.neume.acceptsLyricsMelismaOnly, {
-                ns: 'toolbar',
-              })
-            }}
-          </option>
-        </select>
-      </div>
-
-      <template v-if="showChromaticFthoraNote">
-        <span class="space" />
-        <label class="right-space">{{
-          $t(($) => $.toolbar.common.fthoraNote, { ns: 'toolbar' })
-        }}</label>
-        <select
-          :value="chromaticFthoraNote"
-          @change="
-            updateChromaticFthoraNote(($event.target as HTMLInputElement).value)
+          <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicPa_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled"
+          @click="
+            !fthoresDisabled &&
+            updateFthora([Fthora.DiatonicPa_Top, Fthora.DiatonicPa_Bottom])
           "
         >
-          <option v-for="note in notes" :key="note.value" :value="note.value">
-            {{ $t(note.label, { ns: 'model' }) }}
-          </option>
-        </select>
-      </template>
-
-      <span class="space"></span>
-      <div class="form-group">
-        <label class="right-space">{{
-          $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-        }}</label>
-        <input
-          type="text"
-          :value="element.sectionName"
-          @change="
-            $emit(
-              'update:sectionName',
-              ($event.target as HTMLInputElement).value,
-            )
+          <img src="@/assets/icons/fthora-diatonic-pa.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicVou_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled"
+          @click="
+            !fthoresDisabled &&
+            updateFthora([Fthora.DiatonicVou_Top, Fthora.DiatonicVou_Bottom])
           "
-        />
-      </div>
-    </div>
+        >
+          <img src="@/assets/icons/fthora-diatonic-vou.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicGa_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled"
+          @click="
+            !fthoresDisabled &&
+            updateFthora([Fthora.DiatonicGa_Top, Fthora.DiatonicGa_Bottom])
+          "
+        >
+          <img src="@/assets/icons/fthora-diatonic-ga.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicThi_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled"
+          @click="
+            !fthoresDisabled &&
+            updateFthora([Fthora.DiatonicThi_Top, Fthora.DiatonicThi_Bottom])
+          "
+        >
+          <img src="@/assets/icons/fthora-diatonic-di.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicKe_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled"
+          @click="
+            !fthoresDisabled &&
+            updateFthora([Fthora.DiatonicKe_Top, Fthora.DiatonicKe_Bottom])
+          "
+        >
+          <img src="@/assets/icons/fthora-diatonic-ke.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicZo_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled"
+          @click="
+            !fthoresDisabled &&
+            updateFthora([Fthora.DiatonicZo_Top, Fthora.DiatonicZo_Bottom])
+          "
+        >
+          <img src="@/assets/icons/fthora-diatonic-zo.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.DiatonicNiHigh_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled"
+          @click="
+            !fthoresDisabled &&
+            updateFthora([
+              Fthora.DiatonicNiHigh_Top,
+              Fthora.DiatonicNiHigh_Bottom,
+            ])
+          "
+        >
+          <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="tooltip(Fthora.SoftChromaticThi_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled"
+          @click="
+            !fthoresDisabled &&
+            updateFthora([
+              Fthora.SoftChromaticThi_Top,
+              Fthora.SoftChromaticThi_Bottom,
+            ])
+          "
+        >
+          <img src="@/assets/icons/fthora-soft-chromatic-di.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.SoftChromaticPa_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled"
+          @click="
+            !fthoresDisabled &&
+            updateFthora([
+              Fthora.SoftChromaticPa_Top,
+              Fthora.SoftChromaticPa_Bottom,
+            ])
+          "
+        >
+          <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="tooltip(Fthora.HardChromaticPa_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled"
+          @click="
+            !fthoresDisabled &&
+            updateFthora([
+              Fthora.HardChromaticPa_Top,
+              Fthora.HardChromaticPa_Bottom,
+            ])
+          "
+        >
+          <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="tooltip(Fthora.HardChromaticThi_Top)">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled"
+          @click="
+            !fthoresDisabled &&
+            updateFthora([
+              Fthora.HardChromaticThi_Top,
+              Fthora.HardChromaticThi_Bottom,
+            ])
+          "
+        >
+          <img src="@/assets/icons/fthora-hard-chromatic-di.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="enharmonicTitle">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled || enharmonicDisabled"
+          @click="
+            !(fthoresDisabled || enharmonicDisabled) &&
+            updateFthora([Fthora.Enharmonic_Top, Fthora.Enharmonic_Bottom])
+          "
+        >
+          <img src="@/assets/icons/fthora-enharmonic.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="generalFlatTitle">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled || generalFlatDisabled"
+          @click="
+            !(fthoresDisabled || generalFlatDisabled) &&
+            updateFthora([Fthora.GeneralFlat_Top, Fthora.GeneralFlat_Bottom])
+          "
+        >
+          <img src="@/assets/icons/fthora-general-flat.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="generalSharpTitle">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled || generalSharpDisabled"
+          @click="
+            !(fthoresDisabled || generalSharpDisabled) &&
+            updateFthora([Fthora.GeneralSharp_Top, Fthora.GeneralSharp_Bottom])
+          "
+        >
+          <img src="@/assets/icons/fthora-general-sharp.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip :tooltip="zygosTitle">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled || zygosDisabled"
+          @click="
+            !(fthoresDisabled || zygosDisabled) &&
+            updateFthora([Fthora.Zygos_Top, Fthora.Zygos_Bottom])
+          "
+        >
+          <img src="@/assets/icons/fthora-zygos.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="klitonTitle">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled || klitonDisabled"
+          @click="
+            !(fthoresDisabled || klitonDisabled) &&
+            updateFthora([Fthora.Kliton_Top, Fthora.Kliton_Bottom])
+          "
+        >
+          <img src="@/assets/icons/fthora-kliton.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip :tooltip="spathiTitle">
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="fthoresDisabled || spathiDisabled"
+          @click="
+            !(fthoresDisabled || spathiDisabled) &&
+            updateFthora([Fthora.Spathi_Top, Fthora.Spathi_Bottom])
+          "
+        >
+          <img src="@/assets/icons/fthora-spathi.svg" />
+        </ToolbarButton>
+      </AppTooltip>
+    </Toolbar>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { useTranslation } from 'i18next-vue';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 
-import ButtonWithMenu, {
-  ButtonWithMenuOption,
-} from '@/components/ButtonWithMenu.vue';
-import InputUnit from '@/components/InputUnit.vue';
-import { AcceptsLyricsOption, NoteElement } from '@/models/Element';
+import type { AppTooltipValue } from '@/components/AppTooltip.types';
+import AppTooltip from '@/components/AppTooltip.vue';
+import type { ButtonWithMenuOption } from '@/components/ButtonWithMenu.types';
+import ButtonWithMenu from '@/components/ButtonWithMenu.vue';
+import {
+  Toolbar,
+  ToolbarButton,
+  ToolbarSeparator,
+} from '@/components/ui/toolbar';
+import type { NoteElement } from '@/models/Element';
 import {
   getFthoraLabelSelector,
   getGorgonNeumeLabelSelector,
   getIsonLabelSelector,
   getMeasureBarLabelSelector,
   getNoteIndicatorLabelSelector,
-  getNoteLabelSelector,
   getTimeNeumeLabelSelector,
   getVocalExpressionNeumeLabelSelector,
-  ModelSelector,
 } from '@/models/NeumeI18nMappings';
 import {
   getPrimaryNeume,
@@ -559,38 +626,11 @@ import {
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
-import { NeumeKeyboard } from '@/services/NeumeKeyboard';
-import { Unit } from '@/utils/Unit';
+import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
 
-import NeumeVue from './NeumeGlyph.vue';
-
-const chromaticFthoras = [
-  Fthora.SoftChromaticPa_Top,
-  Fthora.SoftChromaticPa_Bottom,
-  Fthora.SoftChromaticThi_Top,
-  Fthora.SoftChromaticThi_Bottom,
-  Fthora.HardChromaticPa_Top,
-  Fthora.HardChromaticPa_Bottom,
-  Fthora.HardChromaticThi_Top,
-  Fthora.HardChromaticThi_Bottom,
-
-  Fthora.SoftChromaticPa_TopSecondary,
-  Fthora.SoftChromaticThi_TopSecondary,
-  Fthora.HardChromaticPa_TopSecondary,
-  Fthora.HardChromaticThi_TopSecondary,
-
-  Fthora.SoftChromaticPa_TopTertiary,
-  Fthora.SoftChromaticThi_TopTertiary,
-  Fthora.HardChromaticPa_TopTertiary,
-  Fthora.HardChromaticThi_TopTertiary,
-];
-
-type ChromaticFthoraNoteOption = {
-  label: ModelSelector;
-  value: ScaleNote;
-};
+import Neume from './NeumeGlyph.vue';
 
 type ToolbarNeumeTooltipNeume =
   | Fthora
@@ -899,511 +939,320 @@ const isonMenuOptions: ButtonWithMenuOption[] = [
   },
 ];
 
-export default defineComponent({
-  components: { InputUnit, ButtonWithMenu, Neume: NeumeVue },
-  props: {
-    element: {
-      type: Object as PropType<NoteElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    innerNeume: {
-      type: String,
-      required: true,
-    },
-    neumeKeyboard: {
-      type: Object as PropType<NeumeKeyboard>,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<NoteElement>,
+    required: true,
   },
-  emits: [
-    'update',
-    'open-syllable-positioning-dialog',
-    'update:accidental',
-    'update:expression',
-    'update:fthora',
-    'update:gorgon',
-    'update:innerNeume',
-    'update:ison',
-    'update:klasma',
-    'update:measureBar',
-    'update:measureNumber',
-    'update:secondaryAccidental',
-    'update:secondaryFthora',
-    'update:secondaryGorgon',
-    'update:sectionName',
-    'update:tertiaryAccidental',
-    'update:tertiaryFthora',
-    'update:tie',
-    'update:time',
-  ],
-
-  data() {
-    return {
-      Accidental,
-      GorgonNeume,
-      Fthora,
-      MeasureBar,
-      MeasureNumber,
-      NoteIndicator,
-      Ison,
-      Tie,
-      TimeNeume,
-      VocalExpressionNeume,
-
-      AcceptsLyricsOption,
-
-      chromaticFthoras,
-      apliMenuOptions,
-      gorgonMenuOptions,
-      digorgonMenuOptions,
-      trigorgonMenuOptions,
-      sharpMenuOptions,
-      flatMenuOptions,
-      isonMenuOptions,
-      psifistonMenuOptions,
-      heteronConnectingMenuOptions,
-      barlineMenuOptions,
-      measureNumberMenuOptions,
-    };
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-
-  computed: {
-    primaryNeume() {
-      return getPrimaryNeume(this.element.quantitativeNeume);
-    },
-
-    secondaryNeume() {
-      return getSecondaryNeume(this.element.quantitativeNeume);
-    },
-
-    tertiaryNeume() {
-      return getTertiaryNeume(this.element.quantitativeNeume);
-    },
-
-    notes(): ChromaticFthoraNoteOption[] {
-      if (
-        this.element.fthora === Fthora.SoftChromaticThi_Top ||
-        this.element.fthora === Fthora.SoftChromaticThi_Bottom ||
-        this.element.secondaryFthora === Fthora.SoftChromaticThi_TopSecondary ||
-        this.element.tertiaryFthora === Fthora.SoftChromaticThi_TopTertiary
-      ) {
-        return [
-          {
-            label: getNoteLabelSelector(ScaleNote.ZoHigh),
-            value: ScaleNote.ZoHigh,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Thi),
-            value: ScaleNote.Thi,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Vou),
-            value: ScaleNote.Vou,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ni),
-            value: ScaleNote.Ni,
-          },
-        ];
-      } else if (
-        this.element.fthora === Fthora.SoftChromaticPa_Top ||
-        this.element.fthora === Fthora.SoftChromaticPa_Bottom ||
-        this.element.secondaryFthora === Fthora.SoftChromaticPa_TopSecondary ||
-        this.element.tertiaryFthora === Fthora.SoftChromaticPa_TopTertiary
-      ) {
-        return [
-          {
-            label: getNoteLabelSelector(ScaleNote.NiHigh),
-            value: ScaleNote.NiHigh,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ke),
-            value: ScaleNote.Ke,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ga),
-            value: ScaleNote.Ga,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Pa),
-            value: ScaleNote.Pa,
-          },
-        ];
-      } else if (
-        this.element.fthora === Fthora.HardChromaticThi_Top ||
-        this.element.fthora === Fthora.HardChromaticThi_Bottom ||
-        this.element.secondaryFthora === Fthora.HardChromaticThi_TopSecondary ||
-        this.element.tertiaryFthora === Fthora.HardChromaticThi_TopTertiary
-      ) {
-        return [
-          {
-            label: getNoteLabelSelector(ScaleNote.ZoHigh),
-            value: ScaleNote.ZoHigh,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Thi),
-            value: ScaleNote.Thi,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Vou),
-            value: ScaleNote.Vou,
-          },
-        ];
-      } else if (
-        this.element.fthora === Fthora.HardChromaticPa_Top ||
-        this.element.fthora === Fthora.HardChromaticPa_Bottom ||
-        this.element.secondaryFthora === Fthora.HardChromaticPa_TopSecondary ||
-        this.element.tertiaryFthora === Fthora.HardChromaticPa_TopTertiary
-      ) {
-        return [
-          {
-            label: getNoteLabelSelector(ScaleNote.NiHigh),
-            value: ScaleNote.NiHigh,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ke),
-            value: ScaleNote.Ke,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ga),
-            value: ScaleNote.Ga,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Pa),
-            value: ScaleNote.Pa,
-          },
-        ];
-      }
-
-      return [];
-    },
-
-    showChromaticFthoraNote() {
-      return (
-        (this.innerNeume === 'Primary' &&
-          this.element.fthora != null &&
-          this.chromaticFthoras.includes(this.element.fthora)) ||
-        (this.innerNeume === 'Secondary' &&
-          this.element.secondaryFthora != null &&
-          this.chromaticFthoras.includes(this.element.secondaryFthora)) ||
-        (this.innerNeume === 'Tertiary' &&
-          this.element.tertiaryFthora != null &&
-          this.chromaticFthoras.includes(this.element.tertiaryFthora))
-      );
-    },
-
-    fthoresDisabled() {
-      return restNeumes.includes(this.element.quantitativeNeume);
-    },
-
-    expressionsDisabled() {
-      return restNeumes.includes(this.element.quantitativeNeume);
-    },
-
-    accidentalsDisabled() {
-      return restNeumes.includes(this.element.quantitativeNeume);
-    },
-
-    klasmaDisabled() {
-      return (
-        restNeumes.includes(this.element.quantitativeNeume) ||
-        kentemataNeumes.includes(this.element.quantitativeNeume)
-      );
-    },
-
-    apleDisabled() {
-      return (
-        restNeumes.includes(this.element.quantitativeNeume) ||
-        kentemataNeumes.includes(this.element.quantitativeNeume)
-      );
-    },
-
-    koronisDisabled() {
-      return (
-        restNeumes.includes(this.element.quantitativeNeume) ||
-        kentemataNeumes.includes(this.element.quantitativeNeume)
-      );
-    },
-
-    stavrosDisabled() {
-      return (
-        this.element.quantitativeNeume !== QuantitativeNeume.RunningElaphron
-      );
-    },
-
-    argonDisabled() {
-      return (
-        this.element.quantitativeNeume !== QuantitativeNeume.KentemataPlusOligon
-      );
-    },
-
-    isonDisabled() {
-      return restNeumes.includes(this.element.quantitativeNeume);
-    },
-
-    spathiDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions &&
-        !this.element.scaleNotesVirtual.includes(ScaleNote.Ke) &&
-        !this.element.scaleNotesVirtual.includes(ScaleNote.Ga)
-      );
-    },
-
-    spathiTitle() {
-      return this.spathiDisabled
-        ? this.$t(($) => $.toolbar.common.spathiDisabled, { ns: 'toolbar' })
-        : this.tooltip(Fthora.Spathi_Top);
-    },
-
-    klitonDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions &&
-        !this.element.scaleNotesVirtual.includes(ScaleNote.Thi)
-      );
-    },
-
-    klitonTitle() {
-      return this.klitonDisabled
-        ? this.$t(($) => $.toolbar.common.klitonDisabled, { ns: 'toolbar' })
-        : this.tooltip(Fthora.Kliton_Top);
-    },
-
-    zygosDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions &&
-        !this.element.scaleNotesVirtual.includes(ScaleNote.Thi)
-      );
-    },
-
-    zygosTitle() {
-      return this.zygosDisabled
-        ? this.$t(($) => $.toolbar.common.zygosDisabled, { ns: 'toolbar' })
-        : this.tooltip(Fthora.Zygos_Top);
-    },
-
-    enharmonicDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions &&
-        !this.element.scaleNotesVirtual.includes(ScaleNote.Zo) &&
-        !this.element.scaleNotesVirtual.includes(ScaleNote.ZoHigh) &&
-        !this.element.scaleNotesVirtual.includes(ScaleNote.Vou) &&
-        !this.element.scaleNotesVirtual.includes(ScaleNote.VouHigh) &&
-        !this.element.scaleNotesVirtual.includes(ScaleNote.Ga)
-      );
-    },
-
-    enharmonicTitle() {
-      return this.enharmonicDisabled
-        ? this.$t(($) => $.toolbar.common.enharmonicDisabled, { ns: 'toolbar' })
-        : this.tooltip(Fthora.Enharmonic_Top);
-    },
-
-    generalFlatDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions &&
-        !this.element.scaleNotesVirtual.includes(ScaleNote.Ke)
-      );
-    },
-
-    generalFlatTitle() {
-      return this.generalFlatDisabled
-        ? this.$t(($) => $.toolbar.common.generalFlatDisabled, {
-            ns: 'toolbar',
-          })
-        : this.tooltip(Fthora.GeneralFlat_Top);
-    },
-
-    generalSharpDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions &&
-        !this.element.scaleNotesVirtual.includes(ScaleNote.Ga)
-      );
-    },
-
-    generalSharpTitle() {
-      return this.generalSharpDisabled
-        ? this.$t(($) => $.toolbar.common.generalSharpDisabled, {
-            ns: 'toolbar',
-          })
-        : this.tooltip(Fthora.GeneralSharp_Top);
-    },
-
-    chromaticFthoraNote() {
-      if (this.innerNeume === 'Secondary') {
-        return this.element.secondaryChromaticFthoraNote;
-      } else if (this.innerNeume === 'Tertiary') {
-        return this.element.tertiaryChromaticFthoraNote;
-      } else {
-        return this.element.chromaticFthoraNote;
-      }
-    },
-
-    noteDisplay() {
-      return this.element.scaleNotes
-        .map((x) => this.$t(getNoteLabelSelector(x), { ns: 'model' }))
-        .join(' - ');
-    },
-    spaceAfterMax() {
-      return Math.round(Unit.toPt(this.pageSetup.pageWidth));
-    },
+  innerNeume: {
+    type: String,
+    required: true,
   },
-
-  methods: {
-    translateNeumeDisplayName(neume: ToolbarNeumeTooltipNeume) {
-      switch (neume) {
-        case Tie.YfenBelow:
-          return this.$t(($) => $.toolbar.neume.yfen, { ns: 'toolbar' });
-        case Accidental.Flat_2_Right:
-          return this.$t(($) => $.toolbar.neume.flat, { ns: 'toolbar' });
-        case Accidental.Sharp_2_Left:
-          return this.$t(($) => $.toolbar.neume.sharp, { ns: 'toolbar' });
-        case MeasureBar.MeasureBarRight:
-          return this.$t(($) => $.toolbar.common.measureBar, { ns: 'toolbar' });
-        case MeasureNumber.Two:
-          return this.$t(($) => $.toolbar.neume.measureNumber, {
-            ns: 'toolbar',
-          });
-        case NoteIndicator.Pa:
-          return this.$t(($) => $.toolbar.neume.noteIndicator, {
-            ns: 'toolbar',
-          });
-        case Ison.Unison:
-          return this.$t(($) => $.toolbar.neume.isonIndicator, {
-            ns: 'toolbar',
-          });
-      }
-
-      if (enumHas(fthoraValues, neume)) {
-        return this.$t(getFthoraLabelSelector(neume), { ns: 'model' });
-      }
-
-      if (enumHas(timeNeumeValues, neume)) {
-        return this.$t(getTimeNeumeLabelSelector(neume), { ns: 'model' });
-      }
-
-      if (enumHas(vocalExpressionNeumeValues, neume)) {
-        return this.$t(getVocalExpressionNeumeLabelSelector(neume), {
-          ns: 'model',
-        });
-      }
-
-      if (enumHas(gorgonNeumeValues, neume)) {
-        return this.$t(getGorgonNeumeLabelSelector(neume), { ns: 'model' });
-      }
-
-      if (enumHas(measureBarValues, neume)) {
-        return this.$t(getMeasureBarLabelSelector(neume), { ns: 'model' });
-      }
-
-      if (enumHas(noteIndicatorValues, neume)) {
-        return this.$t(getNoteIndicatorLabelSelector(neume), { ns: 'model' });
-      }
-
-      if (enumHas(isonValues, neume)) {
-        const displayName = getIsonLabelSelector(neume);
-        return displayName == null
-          ? String(neume)
-          : this.$t(displayName, { ns: 'model' });
-      }
-
-      return String(neume);
-    },
-
-    updateFthora(args: string[]) {
-      if (this.innerNeume === 'Secondary') {
-        this.$emit('update:secondaryFthora', args[0] + this.innerNeume);
-      } else if (this.innerNeume === 'Tertiary') {
-        this.$emit('update:tertiaryFthora', args[0] + this.innerNeume);
-      } else {
-        this.$emit('update:fthora', args);
-      }
-    },
-
-    updateChromaticFthoraNote(note: string) {
-      if (this.innerNeume === 'Secondary') {
-        this.$emit('update', {
-          secondaryChromaticFthoraNote: note,
-        } as Partial<NoteElement>);
-      } else if (this.innerNeume === 'Tertiary') {
-        this.$emit('update', {
-          tertiaryChromaticFthoraNote: note,
-        } as Partial<NoteElement>);
-      } else {
-        this.$emit('update', {
-          chromaticFthoraNote: note,
-        } as Partial<NoteElement>);
-      }
-    },
-
-    updateGorgon(args: string | string[]) {
-      if (
-        this.innerNeume === 'Secondary' &&
-        this.element.quantitativeNeume !== QuantitativeNeume.Hyporoe
-      ) {
-        if (Array.isArray(args)) {
-          this.$emit('update:secondaryGorgon', GorgonNeume.GorgonSecondary);
-        } else {
-          this.$emit('update:secondaryGorgon', args + this.innerNeume);
-        }
-      } else {
-        this.$emit('update:gorgon', args);
-      }
-    },
-
-    updateAccidental(args: string) {
-      // There is some admittedly confusing logic here regarding the hyporoe.
-      // Compare to handleHyporoe in the Analysis Service.
-
-      if (this.innerNeume === 'Secondary') {
-        if (
-          this.element.quantitativeNeume == QuantitativeNeume.Hyporoe &&
-          args.startsWith('Flat')
-        ) {
-          this.$emit('update:accidental', args);
-        } else {
-          this.$emit('update:secondaryAccidental', args + this.innerNeume);
-        }
-      } else if (this.innerNeume === 'Tertiary') {
-        this.$emit('update:tertiaryAccidental', args + this.innerNeume);
-      } else {
-        if (
-          this.element.quantitativeNeume == QuantitativeNeume.Hyporoe &&
-          args.startsWith('Flat')
-        ) {
-          this.$emit('update:secondaryAccidental', args + 'Secondary');
-        } else {
-          this.$emit('update:accidental', args);
-        }
-      }
-    },
-
-    tooltip(neume: ToolbarNeumeTooltipNeume) {
-      const label = this.translateNeumeDisplayName(neume);
-      const mapping = this.neumeKeyboard.findMappingForNeume(neume);
-      if (mapping) {
-        return `${label} (${this.neumeKeyboard.generateTooltip(mapping)})`;
-      } else if (neume === TimeNeume.Klasma_Top) {
-        return `${label} (${this.neumeKeyboard.getKlasmaKeyTooltip()})`;
-      } else if (neume === NoteIndicator.Pa) {
-        return `${label} (${this.neumeKeyboard.getNoteIndicatorKeyTooltip()})`;
-      } else {
-        return label;
-      }
-    },
+  neumeKeyboard: {
+    type: Object as PropType<NeumeKeyboard>,
+    required: true,
   },
 });
+
+const emit = defineEmits([
+  'update',
+  'update:accidental',
+  'update:expression',
+  'update:fthora',
+  'update:gorgon',
+  'update:innerNeume',
+  'update:ison',
+  'update:klasma',
+  'update:measureBar',
+  'update:measureNumber',
+  'update:secondaryAccidental',
+  'update:secondaryFthora',
+  'update:secondaryGorgon',
+  'update:tertiaryAccidental',
+  'update:tertiaryFthora',
+  'update:tie',
+  'update:time',
+]);
+
+const { t } = useTranslation();
+
+const primaryNeume = computed(() =>
+  getPrimaryNeume(props.element.quantitativeNeume),
+);
+
+const secondaryNeume = computed(() =>
+  getSecondaryNeume(props.element.quantitativeNeume),
+);
+
+const tertiaryNeume = computed(() =>
+  getTertiaryNeume(props.element.quantitativeNeume),
+);
+
+const fthoresDisabled = computed(() =>
+  restNeumes.includes(props.element.quantitativeNeume),
+);
+
+const expressionsDisabled = computed(() =>
+  restNeumes.includes(props.element.quantitativeNeume),
+);
+
+const accidentalsDisabled = computed(() =>
+  restNeumes.includes(props.element.quantitativeNeume),
+);
+
+const klasmaDisabled = computed(
+  () =>
+    restNeumes.includes(props.element.quantitativeNeume) ||
+    kentemataNeumes.includes(props.element.quantitativeNeume),
+);
+
+const apleDisabled = computed(
+  () =>
+    restNeumes.includes(props.element.quantitativeNeume) ||
+    kentemataNeumes.includes(props.element.quantitativeNeume),
+);
+
+const koronisDisabled = computed(
+  () =>
+    restNeumes.includes(props.element.quantitativeNeume) ||
+    kentemataNeumes.includes(props.element.quantitativeNeume),
+);
+
+const stavrosDisabled = computed(
+  () => props.element.quantitativeNeume !== QuantitativeNeume.RunningElaphron,
+);
+
+const argonDisabled = computed(
+  () =>
+    props.element.quantitativeNeume !== QuantitativeNeume.KentemataPlusOligon,
+);
+
+const isonDisabled = computed(() =>
+  restNeumes.includes(props.element.quantitativeNeume),
+);
+
+const spathiDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions &&
+    !props.element.scaleNotesVirtual.includes(ScaleNote.Ke) &&
+    !props.element.scaleNotesVirtual.includes(ScaleNote.Ga),
+);
+
+const spathiTitle = computed(() =>
+  spathiDisabled.value
+    ? t(($) => $.toolbar.common.spathiDisabled, { ns: 'toolbar' })
+    : tooltip(Fthora.Spathi_Top),
+);
+
+const klitonDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions &&
+    !props.element.scaleNotesVirtual.includes(ScaleNote.Thi),
+);
+
+const klitonTitle = computed(() =>
+  klitonDisabled.value
+    ? t(($) => $.toolbar.common.klitonDisabled, { ns: 'toolbar' })
+    : tooltip(Fthora.Kliton_Top),
+);
+
+const zygosDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions &&
+    !props.element.scaleNotesVirtual.includes(ScaleNote.Thi),
+);
+
+const zygosTitle = computed(() =>
+  zygosDisabled.value
+    ? t(($) => $.toolbar.common.zygosDisabled, { ns: 'toolbar' })
+    : tooltip(Fthora.Zygos_Top),
+);
+
+const enharmonicDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions &&
+    !props.element.scaleNotesVirtual.includes(ScaleNote.Zo) &&
+    !props.element.scaleNotesVirtual.includes(ScaleNote.ZoHigh) &&
+    !props.element.scaleNotesVirtual.includes(ScaleNote.Vou) &&
+    !props.element.scaleNotesVirtual.includes(ScaleNote.VouHigh) &&
+    !props.element.scaleNotesVirtual.includes(ScaleNote.Ga),
+);
+
+const enharmonicTitle = computed(() =>
+  enharmonicDisabled.value
+    ? t(($) => $.toolbar.common.enharmonicDisabled, { ns: 'toolbar' })
+    : tooltip(Fthora.Enharmonic_Top),
+);
+
+const generalFlatDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions &&
+    !props.element.scaleNotesVirtual.includes(ScaleNote.Ke),
+);
+
+const generalFlatTitle = computed(() =>
+  generalFlatDisabled.value
+    ? t(($) => $.toolbar.common.generalFlatDisabled, {
+        ns: 'toolbar',
+      })
+    : tooltip(Fthora.GeneralFlat_Top),
+);
+
+const generalSharpDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions &&
+    !props.element.scaleNotesVirtual.includes(ScaleNote.Ga),
+);
+
+const generalSharpTitle = computed(() =>
+  generalSharpDisabled.value
+    ? t(($) => $.toolbar.common.generalSharpDisabled, {
+        ns: 'toolbar',
+      })
+    : tooltip(Fthora.GeneralSharp_Top),
+);
+
+function translateNeumeDisplayName(neume: ToolbarNeumeTooltipNeume) {
+  switch (neume) {
+    case Tie.YfenBelow:
+      return t(($) => $.toolbar.neume.yfen, { ns: 'toolbar' });
+    case Accidental.Flat_2_Right:
+      return t(($) => $.toolbar.neume.flat, { ns: 'toolbar' });
+    case Accidental.Sharp_2_Left:
+      return t(($) => $.toolbar.neume.sharp, { ns: 'toolbar' });
+    case MeasureBar.MeasureBarRight:
+      return t(($) => $.toolbar.common.measureBar, { ns: 'toolbar' });
+    case MeasureNumber.Two:
+      return t(($) => $.toolbar.neume.measureNumber, {
+        ns: 'toolbar',
+      });
+    case NoteIndicator.Pa:
+      return t(($) => $.toolbar.neume.noteIndicator, {
+        ns: 'toolbar',
+      });
+    case Ison.Unison:
+      return t(($) => $.toolbar.neume.isonIndicator, {
+        ns: 'toolbar',
+      });
+  }
+
+  if (enumHas(fthoraValues, neume)) {
+    return t(getFthoraLabelSelector(neume), { ns: 'model' });
+  }
+
+  if (enumHas(timeNeumeValues, neume)) {
+    return t(getTimeNeumeLabelSelector(neume), { ns: 'model' });
+  }
+
+  if (enumHas(vocalExpressionNeumeValues, neume)) {
+    return t(getVocalExpressionNeumeLabelSelector(neume), {
+      ns: 'model',
+    });
+  }
+
+  if (enumHas(gorgonNeumeValues, neume)) {
+    return t(getGorgonNeumeLabelSelector(neume), { ns: 'model' });
+  }
+
+  if (enumHas(measureBarValues, neume)) {
+    return t(getMeasureBarLabelSelector(neume), { ns: 'model' });
+  }
+
+  if (enumHas(noteIndicatorValues, neume)) {
+    return t(getNoteIndicatorLabelSelector(neume), { ns: 'model' });
+  }
+
+  if (enumHas(isonValues, neume)) {
+    const displayName = getIsonLabelSelector(neume);
+    return displayName == null
+      ? String(neume)
+      : t(displayName, { ns: 'model' });
+  }
+
+  return String(neume);
+}
+
+function updateFthora(args: string[]) {
+  if (props.innerNeume === 'Secondary') {
+    emit('update:secondaryFthora', args[0] + props.innerNeume);
+  } else if (props.innerNeume === 'Tertiary') {
+    emit('update:tertiaryFthora', args[0] + props.innerNeume);
+  } else {
+    emit('update:fthora', args);
+  }
+}
+
+function updateGorgon(args: string | string[]) {
+  if (
+    props.innerNeume === 'Secondary' &&
+    props.element.quantitativeNeume !== QuantitativeNeume.Hyporoe
+  ) {
+    if (Array.isArray(args)) {
+      emit('update:secondaryGorgon', GorgonNeume.GorgonSecondary);
+    } else {
+      emit('update:secondaryGorgon', args + props.innerNeume);
+    }
+  } else {
+    emit('update:gorgon', args);
+  }
+}
+
+function updateAccidental(args: string) {
+  // There is some admittedly confusing logic here regarding the hyporoe.
+  // Compare to handleHyporoe in the Analysis Service.
+
+  if (props.innerNeume === 'Secondary') {
+    if (
+      props.element.quantitativeNeume == QuantitativeNeume.Hyporoe &&
+      args.startsWith('Flat')
+    ) {
+      emit('update:accidental', args);
+    } else {
+      emit('update:secondaryAccidental', args + props.innerNeume);
+    }
+  } else if (props.innerNeume === 'Tertiary') {
+    emit('update:tertiaryAccidental', args + props.innerNeume);
+  } else {
+    if (
+      props.element.quantitativeNeume == QuantitativeNeume.Hyporoe &&
+      args.startsWith('Flat')
+    ) {
+      emit('update:secondaryAccidental', args + 'Secondary');
+    } else {
+      emit('update:accidental', args);
+    }
+  }
+}
+
+function tooltip(neume: ToolbarNeumeTooltipNeume): AppTooltipValue {
+  const label = translateNeumeDisplayName(neume);
+  const mapping = props.neumeKeyboard.findMappingForNeume(neume);
+  if (mapping) {
+    return {
+      label,
+      shortcut: props.neumeKeyboard.generateTooltipKeys(mapping),
+    };
+  } else if (neume === TimeNeume.Klasma_Top) {
+    return { label, shortcut: props.neumeKeyboard.getKlasmaKeyTooltipKeys() };
+  } else if (neume === NoteIndicator.Pa) {
+    return {
+      label,
+      shortcut: props.neumeKeyboard.getNoteIndicatorKeyTooltipKeys(),
+    };
+  } else {
+    return label;
+  }
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .neume-toolbar {
-  background-color: lightgray;
-
-  padding: 0.25rem;
+  background-color: var(--color-legacy-chrome-menu-surface);
 
   --btn-size: 32px;
 }
@@ -1414,9 +1263,18 @@ export default defineComponent({
   align-items: center;
 }
 
-.neume-button {
+.neume-button,
+:deep(.menu-container > .neume-button),
+.btnNeumeSelect {
+  box-sizing: border-box;
   height: var(--btn-size);
   width: var(--btn-size);
+  appearance: auto;
+  background: revert;
+  border: revert;
+  border-radius: revert;
+  box-shadow: revert;
+  font-weight: revert;
 
   position: relative;
 
@@ -1425,43 +1283,41 @@ export default defineComponent({
   justify-content: center;
 
   overflow: hidden;
+  outline: revert;
+  padding: 0;
+  transition: revert;
 
   user-select: none;
 }
 
-.neume-button img {
+.neume-button:hover,
+:deep(.menu-container > .neume-button:hover),
+.btnNeumeSelect:hover {
+  background: revert;
+}
+
+.neume-button > img,
+.neume-button > svg,
+:deep(.menu-container > .neume-button > img),
+:deep(.menu-container > .neume-button > svg) {
   height: var(--btn-size);
+  max-width: none;
   width: var(--btn-size);
 }
 
-.note-name {
-  width: 12ch;
-  text-align: center;
-}
-
-label.right-space {
-  margin-right: 0.5rem;
-}
-
-.space {
-  width: 16px;
-}
-
-.separator {
-  margin: 0 16px;
-  border-right: 1px solid black;
-  height: 16px;
+.neume-button[aria-disabled='true'],
+:deep(.menu-container > .neume-button:disabled),
+.btnNeumeSelect[aria-disabled='true'],
+.btnNeumeSelect:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .btnNeumeSelect {
   font-size: 24px;
-  height: 32px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .btnNeumeSelect.selected {
-  background-color: var(--btn-color-selected);
+  background: var(--color-legacy-chrome-selected);
 }
 </style>

@@ -60,8 +60,9 @@ export class PageSetup {
 
   public lyricsDefaultFontFamily = 'Source Serif';
   public lyricsDefaultFontSize = Unit.fromPt(12);
-  public lyricsDefaultFontWeight = '400';
-  public lyricsDefaultFontStyle = 'normal';
+  public lyricsDefaultFontSubfamily: string | undefined = undefined;
+  public lyricsDefaultFontStyle: string | undefined = undefined;
+  public lyricsDefaultFontWeight: string | undefined = undefined;
   public lyricsDefaultColor = '#000000';
   public lyricsDefaultStrokeWidth = 0;
   public lyricsVerticalOffset = -Unit.fromInch(0.05);
@@ -71,7 +72,7 @@ export class PageSetup {
   public neumeDefaultFontFamily = 'Neanes';
   public neumeDefaultFontSize = Unit.fromPt(20);
   public neumeDefaultColor = '#000000';
-  public neumeDefaultSpacing = Unit.fromInch(0.03);
+  public neumeDefaultSpacing = 0;
   public neumeDefaultStrokeWidth = 0;
 
   public alternateLineDefaultFontSize = Unit.fromPt(12);
@@ -111,8 +112,9 @@ export class PageSetup {
 
   public dropCapDefaultFontFamily = 'Source Serif';
   public dropCapDefaultFontSize = Unit.fromPt(60);
-  public dropCapDefaultFontWeight = '400';
-  public dropCapDefaultFontStyle = 'normal';
+  public dropCapDefaultFontSubfamily: string | undefined = undefined;
+  public dropCapDefaultFontStyle: string | undefined = undefined;
+  public dropCapDefaultFontWeight: string | undefined = undefined;
   public dropCapDefaultColor = '#000000';
   public dropCapDefaultStrokeWidth = 0;
   public dropCapDefaultLineHeight: number | undefined = undefined;
@@ -120,13 +122,15 @@ export class PageSetup {
 
   public textBoxDefaultFontFamily = 'Source Serif';
   public textBoxDefaultFontSize = Unit.fromPt(20);
-  public textBoxDefaultFontWeight = '400';
-  public textBoxDefaultFontStyle = 'normal';
+  public textBoxDefaultFontSubfamily: string | undefined = undefined;
+  public textBoxDefaultFontStyle: string | undefined = undefined;
+  public textBoxDefaultFontWeight: string | undefined = undefined;
   public textBoxDefaultColor = '#000000';
   public textBoxDefaultStrokeWidth = 0;
   public textBoxDefaultLineHeight: number | undefined = undefined;
 
-  public hyphenSpacing: number = Unit.fromInch(0.75);
+  public hyphenSpacing: number = Unit.fromMm(13.125);
+  public minimumSyllableToHyphenClearance: number = Unit.fromMm(3.5);
 
   public martyriaVerticalOffset: number = Unit.fromPt(3);
 

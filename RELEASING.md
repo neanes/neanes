@@ -22,6 +22,10 @@ The biggest source of regressions is Electron version changes, especially major 
 The checklist above catches the worst problems these bumps introduce, usually a change in how Chromium interprets some CSS rule.
 This is infrequent.
 
+## Local update testing
+
+For renderer-only testing, start the app with `FAKE_UPDATE_AVAILABLE=1`. This bypasses `electron-updater` and simulates the same update IPC flow that the toast UI listens for.
+
 ## Bump and tag
 
 ```sh

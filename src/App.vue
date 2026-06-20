@@ -1,71 +1,214 @@
 <template>
-  <router-view />
+  <TooltipProvider :delay-duration="500" :skip-delay-duration="0">
+    <router-view />
+  </TooltipProvider>
+  <div class="toaster-wrapper contents">
+    <Toaster />
+  </div>
   <div v-if="updateExists" class="update-notification">
-    An update is available.
-    <button class="ok" @click="refreshApp">Update</button>
-    <button class="cancel" @click="updateExists = false">Not now</button>
+    {{ t(($) => $.toast.update.available, { ns: 'toast' }) }}
+    <button class="ok" @click="refreshApp">
+      {{ t(($) => $.toast.update.update, { ns: 'toast' }) }}
+    </button>
+    <button class="cancel" @click="updateExists = false">
+      {{ t(($) => $.toast.update.notNow, { ns: 'toast' }) }}
+    </button>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
+<script setup lang="ts">
+import { useTranslation } from 'i18next-vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { toast } from 'vue-sonner';
 
-export default defineComponent({
-  components: {},
-  props: {},
-  emits: [],
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { EventBus } from '@/eventBus';
+import type { UpdateAvailableArgs, UpdateErrorArgs } from '@/ipc/ipcChannels';
+import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
 
-  data() {
-    return {
-      registration: null as ServiceWorkerRegistration | null,
-      updateExists: false,
-    };
-  },
+const registration = ref<ServiceWorkerRegistration | null>(null);
+const updateExists = ref(false);
+const electronUpdateAvailableToastId = 'electron-update-available';
+const electronUpdateDownloadingToastId = 'electron-update-downloading';
+const electronUpdateDownloadedToastId = 'electron-update-downloaded';
+const electronUpdateErrorToastId = 'electron-update-error';
+const { t } = useTranslation();
 
-  computed: {},
+async function downloadElectronUpdate() {
+  try {
+    await window.ipcRenderer?.invoke(IpcRendererChannels.DownloadUpdate);
+  } catch (error) {
+    showElectronUpdateErrorToast({
+      message:
+        error instanceof Error
+          ? error.message
+          : t(($) => $.toast.update.downloadFailedDescription, {
+              ns: 'toast',
+            }),
+    });
+  }
+}
 
-  created() {
-    if (navigator.serviceWorker) {
-      document.addEventListener(
-        'swUpdated',
-        this.onUpdateAvailable as EventListener,
-        {
-          once: true,
+async function restartToInstallElectronUpdate() {
+  try {
+    await window.ipcRenderer?.invoke(
+      IpcRendererChannels.RestartToInstallUpdate,
+    );
+  } catch (error) {
+    showElectronUpdateErrorToast({
+      message:
+        error instanceof Error
+          ? error.message
+          : t(($) => $.toast.update.restartFailedDescription, {
+              ns: 'toast',
+            }),
+    });
+  }
+}
+
+function showElectronUpdateAvailableToast(args?: UpdateAvailableArgs) {
+  toast.info(
+    t(($) => $.toast.update.available, { ns: 'toast' }),
+    {
+      id: electronUpdateAvailableToastId,
+      duration: Infinity,
+      description: args?.version
+        ? t(($) => $.toast.update.versionAvailable, {
+            ns: 'toast',
+            version: args.version,
+          })
+        : undefined,
+      action: {
+        label: t(($) => $.toast.update.download, { ns: 'toast' }),
+        onClick: () => {
+          void downloadElectronUpdate();
         },
-      );
+      },
+      cancel: {
+        label: t(($) => $.toast.update.later, { ns: 'toast' }),
+      },
+    },
+  );
+}
 
-      let refreshing = false;
+function showElectronUpdateDownloadingToast() {
+  toast.loading(
+    t(($) => $.toast.update.downloading, { ns: 'toast' }),
+    {
+      id: electronUpdateDownloadingToastId,
+      duration: Infinity,
+    },
+  );
+}
 
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-          window.location.reload();
-          refreshing = true;
-        }
-      });
+function showElectronUpdateDownloadedToast(args?: UpdateAvailableArgs) {
+  toast.dismiss(electronUpdateDownloadingToastId);
+
+  toast.success(
+    t(($) => $.toast.update.downloaded, { ns: 'toast' }),
+    {
+      id: electronUpdateDownloadedToastId,
+      duration: Infinity,
+      description: args?.version
+        ? t(($) => $.toast.update.versionReady, {
+            ns: 'toast',
+            version: args.version,
+          })
+        : undefined,
+      action: {
+        label: t(($) => $.toast.update.restartNow, { ns: 'toast' }),
+        onClick: () => {
+          void restartToInstallElectronUpdate();
+        },
+      },
+      cancel: {
+        label: t(($) => $.toast.update.later, { ns: 'toast' }),
+      },
+    },
+  );
+}
+
+function showElectronUpdateErrorToast(args: UpdateErrorArgs) {
+  toast.error(
+    t(($) => $.toast.update.failed, { ns: 'toast' }),
+    {
+      id: electronUpdateErrorToastId,
+      description: args.message,
+    },
+  );
+}
+
+if (navigator.serviceWorker) {
+  document.addEventListener('swUpdated', onUpdateAvailable as EventListener, {
+    once: true,
+  });
+
+  let refreshing = false;
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      window.location.reload();
+      refreshing = true;
     }
-  },
+  });
+}
 
-  methods: {
-    onUpdateAvailable(event: CustomEvent) {
-      this.registration = event.detail;
-      this.updateExists = true;
-    },
+function onUpdateAvailable(event: CustomEvent) {
+  registration.value = event.detail;
+  updateExists.value = true;
+}
 
-    refreshApp() {
-      this.updateExists = false;
-      if (this.registration && this.registration.waiting) {
-        this.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      }
+function refreshApp() {
+  updateExists.value = false;
+  if (registration.value?.waiting) {
+    registration.value.waiting.postMessage({ type: 'SKIP_WAITING' });
+  }
+}
+
+const onElectronUpdateAvailable = (args?: UpdateAvailableArgs) =>
+  showElectronUpdateAvailableToast(args);
+const onElectronUpdateDownloadStarted = () =>
+  showElectronUpdateDownloadingToast();
+const onElectronUpdateDownloaded = (args?: UpdateAvailableArgs) =>
+  showElectronUpdateDownloadedToast(args);
+const onElectronUpdateError = (args?: UpdateErrorArgs) => {
+  toast.dismiss(electronUpdateDownloadingToastId);
+  showElectronUpdateErrorToast(
+    args ?? {
+      message: t(($) => $.toast.update.failedDescription, { ns: 'toast' }),
     },
-  },
+  );
+};
+
+onMounted(() => {
+  if (window.ipcRenderer == null) {
+    return;
+  }
+
+  EventBus.$on(IpcMainChannels.UpdateAvailable, onElectronUpdateAvailable);
+  EventBus.$on(
+    IpcMainChannels.UpdateDownloadStarted,
+    onElectronUpdateDownloadStarted,
+  );
+  EventBus.$on(IpcMainChannels.UpdateDownloaded, onElectronUpdateDownloaded);
+  EventBus.$on(IpcMainChannels.UpdateError, onElectronUpdateError);
+});
+
+onBeforeUnmount(() => {
+  EventBus.$off(IpcMainChannels.UpdateAvailable, onElectronUpdateAvailable);
+  EventBus.$off(
+    IpcMainChannels.UpdateDownloadStarted,
+    onElectronUpdateDownloadStarted,
+  );
+  EventBus.$off(IpcMainChannels.UpdateDownloaded, onElectronUpdateDownloaded);
+  EventBus.$off(IpcMainChannels.UpdateError, onElectronUpdateError);
 });
 </script>
 
 <style>
 :root {
   --zoom: 1;
-
-  --btn-color-selected: lightsteelblue;
 }
 
 #app {
@@ -85,7 +228,21 @@ export default defineComponent({
     overflow: visible !important;
   }
 
+  /*
+   * Reka/Vue portal components leave teleport anchor elements as direct body
+   * children. If any remain after #app, Blink may honor the final printed
+   * page's break-after and keep a blank trailing page alive.
+   */
+  body > :not(#app) {
+    display: none !important;
+  }
+
   .ck-body-wrapper {
+    display: none !important;
+  }
+
+  .toaster-wrapper,
+  .toaster-wrapper * {
     display: none !important;
   }
 }
@@ -95,18 +252,33 @@ export default defineComponent({
 }
 
 @font-face {
-  font-family: Neanes;
+  font-family: NeanesLegacy;
   src: url('./assets/fonts/Neanes.otf');
 }
 
 @font-face {
-  font-family: NeanesRTL;
-  src: url('./assets/fonts/NeanesRTL.otf');
+  font-family: Neanes;
+  src: url('./assets/fonts/NeanesEngraving.otf');
+}
+
+@font-face {
+  font-family: NeanesStathisSeriesLegacy;
+  src: url('./assets/fonts/NeanesStathisSeries.otf');
 }
 
 @font-face {
   font-family: NeanesStathisSeries;
-  src: url('./assets/fonts/NeanesStathisSeries.otf');
+  src: url('./assets/fonts/NeanesStathisSeriesEngraving.otf');
+}
+
+@font-face {
+  font-family: NeanesRTLLegacy;
+  src: url('./assets/fonts/NeanesRTL.otf');
+}
+
+@font-face {
+  font-family: NeanesRTL;
+  src: url('./assets/fonts/NeanesRTLEngraving.otf');
 }
 
 @font-face {
@@ -173,30 +345,6 @@ export default defineComponent({
   font-weight: bold;
 }
 
-@font-face {
-  font-family: 'Source Serif';
-  src: url('./assets/fonts/SourceSerif4-Regular.otf');
-}
-
-@font-face {
-  font-family: 'Source Serif';
-  src: url('./assets/fonts/SourceSerif4-Bold.otf');
-  font-weight: bold;
-}
-
-@font-face {
-  font-family: 'Source Serif';
-  src: url('./assets/fonts/SourceSerif4-It.otf');
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Source Serif';
-  src: url('./assets/fonts/SourceSerif4-BoldIt.otf');
-  font-weight: bold;
-  font-style: italic;
-}
-
 html {
   height: 100vh;
 }
@@ -217,32 +365,7 @@ button,
 input,
 select,
 textarea {
-  font-family: system-ui, Helvetica, Arial, sans-serif;
-}
-
-.ok-btn {
-  padding: 0.5rem;
-  border: none;
-  background-color: rgb(66, 139, 202);
-  color: white;
-  border-radius: 4px;
-}
-
-.ok-btn:hover {
-  background-color: rgb(81, 157, 223);
-}
-
-.neutral-btn,
-.cancel-btn {
-  padding: 0.5rem;
-  border: 1px solid black;
-  background-color: white;
-  border-radius: 4px;
-}
-
-.neutral-btn:hover,
-.cancel-btn:hover {
-  background-color: #f8fbff;
+  font-family: var(--font-sans);
 }
 </style>
 

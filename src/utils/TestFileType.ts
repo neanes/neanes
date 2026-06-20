@@ -10,6 +10,7 @@ export enum TestFileType {
   Measures = 'Measures',
   NoteIndicators = 'NoteIndicators',
   Ison = 'Ison',
+  Koronis = 'Koronis',
   ModeKey = 'ModeKey',
   Random = 'Random',
   DropCaps = 'DropCaps',

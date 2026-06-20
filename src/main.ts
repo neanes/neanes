@@ -1,4 +1,5 @@
 import './registerServiceWorker';
+import './assets/main.css';
 
 import { CkeditorPlugin } from '@ckeditor/ckeditor5-vue';
 import i18next from 'i18next';

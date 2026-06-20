@@ -18,14 +18,12 @@
 </template>
 
 <script setup lang="ts">
-import { PropType } from 'vue';
+import type { PropType } from 'vue';
 
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
-import {
-  NeumeCombination,
-  NeumeCommonCombinations,
-} from '@/models/NeumeCommonCombinations';
-import { PageSetup } from '@/models/PageSetup';
+import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
+import { NeumeCommonCombinations } from '@/models/NeumeCommonCombinations';
+import type { PageSetup } from '@/models/PageSetup';
 
 defineEmits(['select-neume-combo']);
 defineProps({
@@ -57,6 +55,6 @@ const combos: NeumeCombination[] = [
 }
 
 .row:hover {
-  background-color: aliceblue;
+  background-color: var(--color-legacy-chrome-hover);
 }
 </style>

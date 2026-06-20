@@ -1,7 +1,14 @@
-import { PageSize } from '@/models/PageSetup';
-import { Score } from '@/models/save/v1/Score';
+import type { PageSize } from '@/models/PageSetup';
+import type { Score } from '@/models/save/v1/Score';
+import type { WorkspacePaneId } from '@/models/WorkspacePane';
 
 export enum IpcMainChannels {
+  UpdateAvailable = 'UpdateAvailable',
+  UpdateDownloadStarted = 'UpdateDownloadStarted',
+  UpdateDownloadProgress = 'UpdateDownloadProgress',
+  UpdateDownloaded = 'UpdateDownloaded',
+  UpdateError = 'UpdateError',
+
   FileMenuNewScore = 'FileMenuNewScore',
   FileMenuOpenScore = 'FileMenuOpenScore',
   FileMenuPrint = 'FileMenuPrint',
@@ -27,11 +34,15 @@ export enum IpcMainChannels {
   FileMenuPasteWithLyrics = 'FileMenuPasteWithLyrics',
   FileMenuPasteFormat = 'FileMenuPasteFormat',
 
+  FileMenuSelectAll = 'FileMenuSelectAll',
+
   FileMenuFind = 'FileMenuFind',
 
-  FileMenuLyrics = 'FileMenuLyrics',
+  FileMenuViewPaneVisibility = 'FileMenuViewPaneVisibility',
+  FileMenuViewResetPaneLayout = 'FileMenuViewResetPaneLayout',
 
   FileMenuPreferences = 'FileMenuPreferences',
+  OpenAboutDialog = 'OpenAboutDialog',
 
   FileMenuInsertAnnotation = 'FileMenuInsertAnnotation',
   FileMenuInsertAlternateLine = 'FileMenuInsertAlternateLine',
@@ -55,8 +66,12 @@ export enum IpcMainChannels {
 }
 
 export enum IpcRendererChannels {
+  DownloadUpdate = 'DownloadUpdate',
+  RestartToInstallUpdate = 'RestartToInstallUpdate',
+
   SetCanUndo = 'SetCanUndo',
   SetCanRedo = 'SetCanRedo',
+  SetWorkspacePaneVisibility = 'SetWorkspacePaneVisibility',
 
   ShowMessageBox = 'ShowMessageBox',
   ShowItemInFolder = 'ShowItemInFolder',
@@ -71,14 +86,11 @@ export enum IpcRendererChannels {
   ExportPageAsImage = 'ExportPageAsImage',
   PrintWorkspace = 'PrintWorkspace',
   OpenWorkspaceFromArgv = 'OpenWorkspaceFromArgv',
+  OpenScoreDialog = 'OpenScoreDialog',
   OpenImageDialog = 'OpenImageDialog',
-
-  GetSystemFonts = 'GetSystemFonts',
 
   ExitApplication = 'ExitApplication',
   CancelExit = 'CancelExit',
-
-  OpenContextMenuForTab = 'OpenContextMenuForTab',
 
   Paste = 'Paste',
 
@@ -106,6 +118,20 @@ export interface FileMenuOpenImageArgs {
   imageHeight: number;
   filePath: string;
   success: boolean;
+}
+
+export interface UpdateAvailableArgs {
+  version?: string;
+}
+
+export interface UpdateDownloadProgressArgs {
+  percent: number;
+  transferred: number;
+  total: number;
+}
+
+export interface UpdateErrorArgs {
+  message: string;
 }
 
 export interface FileMenuImportOcrArgs {
@@ -137,6 +163,11 @@ export interface FileMenuInsertTextboxArgs {
   inline: boolean;
 }
 
+export interface FileMenuViewPaneVisibilityArgs {
+  paneId: WorkspacePaneId;
+  visible?: boolean;
+}
+
 export interface SaveWorkspaceArgs {
   filePath: string;
   data: Score;
@@ -151,10 +182,21 @@ export interface SaveWorkspaceAsArgs {
 export interface SaveWorkspaceAsReplyArgs {
   filePath: string;
   success: boolean;
+  canceled?: boolean;
+  errorMessage?: string;
 }
 
 export interface SaveWorkspaceReplyArgs {
   success: boolean;
+  canceled?: boolean;
+  errorMessage?: string;
+}
+
+export interface ExportWorkspaceReplyArgs {
+  success: boolean;
+  canceled?: boolean;
+  filePath?: string;
+  errorMessage?: string;
 }
 
 export interface ExportWorkspaceAsPdfArgs {
@@ -168,7 +210,6 @@ export interface ExportWorkspaceAsPdfArgs {
 
 export interface ExportWorkspaceAsHtmlArgs {
   filePath: string | null;
-  filePathFull: string | null;
   tempFileName: string;
   data: string;
 }
@@ -182,7 +223,6 @@ export interface ExportWorkspaceAsMusicXmlArgs {
 }
 
 export interface ExportWorkspaceAsLatexArgs {
-  filePathFull: string | null;
   filePath: string | null;
   tempFileName: string;
   data: string;
@@ -197,11 +237,25 @@ export interface ExportWorkspaceAsImageArgs {
 export interface ExportWorkspaceAsImageReplyArgs {
   filePath: string;
   success: boolean;
+  canceled?: boolean;
+  errorMessage?: string;
 }
 
 export interface ExportPageAsImageArgs {
   filePath: string;
   data: string;
+}
+
+export interface ExportPageAsImageReplyArgs {
+  success: boolean;
+  canceled?: boolean;
+  skipped?: boolean;
+  errorMessage?: string;
+}
+
+export interface ClipboardReplyArgs {
+  success: boolean;
+  errorMessage?: string;
 }
 
 export interface PrintWorkspaceArgs {
@@ -221,8 +275,4 @@ export enum CloseWorkspacesDisposition {
 export interface CloseWorkspacesArgs {
   disposition: CloseWorkspacesDisposition;
   workspaceId?: string;
-}
-
-export interface OpenContextMenuForTabArgs {
-  workspaceId: string;
 }

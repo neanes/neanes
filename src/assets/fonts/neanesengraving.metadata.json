@@ -16719,13 +16719,7 @@
     },
     "vareiaGap": 0.03,
     "kerning": {
-      "notePairs": [
-        {
-          "left": "oligonKentimaMiddle",
-          "right": "ison",
-          "adjustment": -0.13
-        }
-      ]
+      "notePairs": []
     }
   }
 }

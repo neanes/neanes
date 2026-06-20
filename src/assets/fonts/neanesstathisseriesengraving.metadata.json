@@ -16749,15 +16749,6 @@
       "stretch": 0.065,
       "shrink": 0.043
     },
-    "vareiaGap": -0.523,
-    "kerning": {
-      "notePairs": [
-        {
-          "left": "oligonKentimaMiddle",
-          "right": "ison",
-          "adjustment": -0.1
-        }
-      ]
-    }
+    "vareiaGap": -0.523
   }
 }

@@ -12,19 +12,10 @@ interface EngravingGlue {
   shrink: number;
 }
 
-interface EngravingKerningNotePair {
-  left: SbmuflGlyphName;
-  right: SbmuflGlyphName;
-  adjustment: number;
-}
-
 interface EngravingDefaults {
   martyriaGlue: EngravingGlue;
   standardGlue: EngravingGlue;
   vareiaGap: number;
-  kerning?: {
-    notePairs: EngravingKerningNotePair[];
-  };
 }
 
 interface GlyphBBox {
@@ -56,11 +47,6 @@ metadataMap.set('NeanesRTLLegacy', metadataRtlLegacy);
 metadataMap.set('NeanesStathisSeriesLegacy', metadataStathisLegacy);
 
 class FontService {
-  private notePairKerningCache = new Map<
-    string,
-    Map<string, EngravingKerningNotePair>
-  >();
-
   getMetadata(fontFamily: string) {
     return metadataMap.get(fontFamily);
   }
@@ -166,27 +152,6 @@ class FontService {
 
   getVareiaGap(fontFamily: string) {
     return this.getEngravingDefaults(fontFamily).vareiaGap;
-  }
-
-  getNotePairKerning(
-    fontFamily: string,
-    leftGlyph: SbmuflGlyphName,
-    rightGlyph: SbmuflGlyphName,
-  ): EngravingKerningNotePair | null {
-    let pairMap = this.notePairKerningCache.get(fontFamily);
-
-    if (pairMap == null) {
-      pairMap = new Map<string, EngravingKerningNotePair>();
-
-      for (const pair of this.getEngravingDefaults(fontFamily).kerning
-        ?.notePairs ?? []) {
-        pairMap.set(`${pair.left}\u0000${pair.right}`, pair);
-      }
-
-      this.notePairKerningCache.set(fontFamily, pairMap);
-    }
-
-    return pairMap.get(`${leftGlyph}\u0000${rightGlyph}`) ?? null;
   }
 
   getMarkOffset(

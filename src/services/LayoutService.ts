@@ -2063,10 +2063,7 @@ export class LayoutService {
         };
   }
 
-  private static createMartyriaGlue(
-    pageSetup: PageSetup,
-    stretch?: number,
-  ): Glue {
+  private static createMartyriaGlue(pageSetup: PageSetup): Glue {
     const martyriaGlue = fontService.getMartyriaGlue(
       pageSetup.neumeDefaultFontFamily,
     );
@@ -2074,12 +2071,10 @@ export class LayoutService {
     return {
       type: 'glue',
       width: pageSetup.neumeDefaultFontSize * martyriaGlue.width,
-      stretch:
-        stretch ??
-        Math.max(
-          pageSetup.neumeDefaultFontSize * martyriaGlue.stretch,
-          minGlueStretch,
-        ),
+      stretch: Math.max(
+        pageSetup.neumeDefaultFontSize * martyriaGlue.stretch,
+        minGlueStretch,
+      ),
       shrink: Math.max(
         minGlueShrink,
         pageSetup.neumeDefaultFontSize * martyriaGlue.shrink,
@@ -2479,16 +2474,7 @@ export class LayoutService {
     // glue(L_{i+1}).
     const leftTuck = leftProjection;
     const rightTuck = Math.min(rightProjection, nextOverhangs.left);
-    const notePairKerning = fontService.getNotePairKerning(
-      workspace.pageSetup.neumeDefaultFontFamily,
-      NeumeMappingService.getMapping(noteElement.quantitativeNeume).glyphName,
-      NeumeMappingService.getMapping(nextNoteElement.quantitativeNeume)
-        .glyphName,
-    );
     const inlineSpacing = this.getInlineSpacing(workspace.pageSetup);
-    const kerningPx =
-      workspace.pageSetup.neumeDefaultFontSize *
-      (notePairKerning?.adjustment ?? 0);
     const noteVisualMinimumWidth = this.getNoteVisualMinimumSpacing(
       noteElement,
       nextNoteElement,
@@ -2515,7 +2501,7 @@ export class LayoutService {
     // into m_i space or long lyrics on the next note can no longer tuck left.
     const minimumWidth = minimumBoundaryWidth - leftTuck;
     const ordinaryBaseWidth =
-      inlineSpacing + kerningPx + rightProjection - leftTuck - rightTuck;
+      inlineSpacing + rightProjection - leftTuck - rightTuck;
 
     // When a carried melisma ends at a centered lyric, align that lyric's
     // left edge with the current cursor. The current cursor is already after

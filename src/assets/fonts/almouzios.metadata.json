@@ -11827,5 +11827,18 @@
         "martyriaTick"
       ]
     }
+  },
+  "engravingDefaults": {
+    "martyriaGlue": {
+      "width": 0,
+      "stretch": 0,
+      "shrink": 0
+    },
+    "standardGlue": {
+      "width": 0,
+      "stretch": 0,
+      "shrink": 0
+    },
+    "vareiaGap": 0
   }
 }

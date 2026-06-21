@@ -62,6 +62,7 @@
     "properties": "Ιδιότητες",
     "selection": "Επιλογή",
     "lyrics": "Στίχοι",
+    "showDeveloperPanels": "Εμφάνιση Πινάκων Προγραμματιστή",
     "resetLayout": "Επαναφορά Διάταξης",
     "generateTestFiles": "Δημιουργία Αρχείων Δοκιμής (Εντοπισμός Σφαλμάτων)"
   },

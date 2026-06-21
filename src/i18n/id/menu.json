@@ -62,6 +62,7 @@
     "properties": "Properti",
     "selection": "Pilihan",
     "lyrics": "Lirik",
+    "showDeveloperPanels": "Tampilkan Panel Pengembang",
     "resetLayout": "Atur Ulang Tata Letak",
     "generateTestFiles": "Hasilkan File Uji (Debug)"
   },

@@ -4,6 +4,8 @@ import { ElementType } from '@/models/Element';
 export class Page {
   public lines: Line[] = [];
 
+  public physicalPageNumber = 1;
+
   public isVisible: boolean = false;
 
   // A page is empty if it contains only one line

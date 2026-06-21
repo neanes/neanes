@@ -234,6 +234,7 @@
     "menuInteraction": "Interaksi Menu",
     "menuInteractionHold": "Tekan dan tahan untuk memilih",
     "menuInteractionClick": "Klik untuk membuka menu",
+    "enableDeveloperPanel": "Aktifkan Panel Pengembang",
     "tempoDefaults": "Default Tempo",
     "bpm": "BPM"
   }

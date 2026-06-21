@@ -56,11 +56,13 @@
   },
   "view": {
     "root": "Vizualizare",
+    "developer": "Dezvoltator",
     "neumeSelector": "Selector de neume",
     "commonCombos": "Combinații frecvente",
     "properties": "Proprietăți",
     "selection": "Selecție",
     "lyrics": "Versuri",
+    "showDeveloperPanels": "Arată panourile pentru dezvoltatori",
     "resetLayout": "Resetează aranjarea",
     "generateTestFiles": "Generează fișiere de test (debugare)"
   },

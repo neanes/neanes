@@ -234,6 +234,7 @@
     "menuInteraction": "Interacțiune meniu",
     "menuInteractionHold": "Apasă și menține pentru a selecta",
     "menuInteractionClick": "Click pentru a deschide meniul",
+    "enableDeveloperPanel": "Activează panoul pentru dezvoltatori",
     "tempoDefaults": "Tempouri implicite",
     "bpm": "BPM"
   }

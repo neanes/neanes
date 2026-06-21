@@ -268,6 +268,15 @@
           >
             {{ $t(($) => $.menu.view.lyrics, { ns: 'menu' }) }}
           </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            v-if="props.showDeveloperPanels"
+            :model-value="props.paneVisibility.developer"
+            @update:model-value="
+              onTogglePaneClick('developer', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.developer, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
           <MenubarSeparator />
           <MenubarItem @select="onResetPaneLayoutClick">
             <PhArrowCounterClockwise />
@@ -425,6 +434,7 @@ import {
 
 const props = defineProps<{
   paneVisibility: WorkspacePaneVisibility;
+  showDeveloperPanels: boolean;
 }>();
 
 const fileSelector = useTemplateRef<HTMLInputElement>('file');

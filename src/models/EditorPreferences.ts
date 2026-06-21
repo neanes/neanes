@@ -11,12 +11,26 @@ export interface IEditorPreferences {
   buttonMenuMode: ButtonMenuMode;
   // Empty string means "follow the system / browser locale".
   language: string;
+  showDeveloperPanels: boolean;
+  showGuides: boolean;
+  showAdjustmentRatios: boolean;
+  showInkBoundingBoxes: boolean;
+  showLyricBoundingBoxes: boolean;
+  showNeumeBoundingBoxes: boolean;
+  showCollisionRegions: boolean;
 }
 
 export class EditorPreferences implements IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
   buttonMenuMode = ButtonMenuMode.Hold;
   language = '';
+  showDeveloperPanels = false;
+  showGuides = false;
+  showAdjustmentRatios = false;
+  showInkBoundingBoxes = false;
+  showLyricBoundingBoxes = false;
+  showNeumeBoundingBoxes = false;
+  showCollisionRegions = false;
 
   constructor() {
     this.tempoDefaults = {
@@ -31,7 +45,7 @@ export class EditorPreferences implements IEditorPreferences {
     };
   }
 
-  static createFrom(data: IEditorPreferences) {
+  static createFrom(data: Partial<IEditorPreferences>) {
     return Object.assign(new EditorPreferences(), data);
   }
 

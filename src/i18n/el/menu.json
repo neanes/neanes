@@ -56,6 +56,7 @@
   },
   "view": {
     "root": "Προβολή",
+    "developer": "Προγραμματιστής",
     "neumeSelector": "Επιλογέας Νευμάτων",
     "commonCombos": "Συνήθεις Συνδυασμοί",
     "properties": "Ιδιότητες",

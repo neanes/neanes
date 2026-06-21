@@ -1,5 +1,6 @@
 import type { ScoreElement } from '@/models/Element';
 import { ElementType } from '@/models/Element';
+import type { LineLayoutDiagnostics } from '@/models/LayoutDiagnostics';
 
 export class Page {
   public lines: Line[] = [];
@@ -17,6 +18,7 @@ export class Line {
   public elements: ScoreElement[] = [];
   public indentation = 0;
   public adjustmentRatio: number | null = null;
+  public diagnostics: LineLayoutDiagnostics | null = null;
 
   // A line is empty if it contains only the empty element
   public get isEmpty() {

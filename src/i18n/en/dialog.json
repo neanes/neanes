@@ -234,6 +234,7 @@
     "menuInteraction": "Menu Interaction",
     "menuInteractionHold": "Press and hold to select",
     "menuInteractionClick": "Click to open menu",
+    "enableDeveloperPanel": "Enable Developer Panel",
     "tempoDefaults": "Tempo Defaults",
     "bpm": "BPM"
   }

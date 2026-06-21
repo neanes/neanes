@@ -3,8 +3,10 @@ import {
   adjustmentRatios,
   breakLines,
   forcedBreak,
+  lineContentStart,
   MAX_COST,
   MaxAdjustmentExceededError,
+  PARAGRAPH_START,
   positionItems,
 } from 'tex-linebreak';
 
@@ -22,6 +24,12 @@ import type {
 import { ElementType, EmptyElement, LineBreakType } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
+import type {
+  ElementOverlayDiagnostics,
+  LayoutDiagnosticItem,
+  LayoutDiagnosticsOptions,
+  LineLayoutDiagnostics,
+} from '@/models/LayoutDiagnostics';
 import { measureBarAboveToLeft } from '@/models/NeumeReplacements';
 import type { Fthora, Neume } from '@/models/Neumes';
 import {
@@ -211,16 +219,28 @@ interface GetNoteWidthArgs {
   elaphronWidth: number;
 }
 
+export interface OverlayDiagnosticsContext {
+  measureBarWidthMap: Map<MeasureBar, number>;
+  neumeFontAscent: number;
+  neumeFontHeight: number;
+}
+
 interface ElementBox extends Box {
   element: ScoreElement;
 }
 
 interface CompletedParagraph {
+  diagnostics: LineLayoutDiagnostics[] | null;
   paragraph: InputItem[];
   positions: PositionedItem[];
   ratios: number[];
   dropCapWidthPx: number;
   dropCapContinuationLines: number;
+}
+
+interface LayoutDiagnosticsCollector {
+  currentOwner: ScoreElement | null;
+  items: LayoutDiagnosticItem[];
 }
 
 interface LayoutWorkspace {
@@ -265,6 +285,8 @@ interface LayoutWorkspace {
   // note so same-line positions cancel while a broken line keeps the room.
   pendingLeadingLyricHyphenReservationWidth: number;
 
+  diagnostics: LayoutDiagnosticsCollector | null;
+
   // debug
   loggingEnabled: boolean;
 }
@@ -306,7 +328,10 @@ interface LineBreakSolution {
 }
 
 export class LayoutService {
-  public static processPages(workspace: Workspace): Page[] {
+  public static processPages(
+    workspace: Workspace,
+    options?: LayoutDiagnosticsOptions,
+  ): Page[] {
     const score = workspace.score;
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
@@ -345,6 +370,10 @@ export class LayoutService {
       pendingDropCapContinuationLines: 0,
       pendingMartyriaBarTransferWidth: 0,
       pendingLeadingLyricHyphenReservationWidth: 0,
+      diagnostics:
+        options?.collectDiagnostics === true
+          ? { currentOwner: null, items: [] }
+          : null,
       loggingEnabled: false,
     };
 
@@ -400,70 +429,7 @@ export class LayoutService {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
-    const measureBarRightMapping = NeumeMappingService.getMapping(
-      MeasureBar.MeasureBarRight,
-    );
-    const measureBarRightWidth = TextMeasurementService.getTextWidth(
-      measureBarRightMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-    );
-
-    const measureBarTopMapping = NeumeMappingService.getMapping(
-      MeasureBar.MeasureBarTop,
-    );
-    const measureBarTopWidth = TextMeasurementService.getTextWidth(
-      measureBarTopMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-    );
-
-    const measureBarDoubleMapping = NeumeMappingService.getMapping(
-      MeasureBar.MeasureBarDouble,
-    );
-    const measureBarDoubleWidth = TextMeasurementService.getTextWidth(
-      measureBarDoubleMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-    );
-
-    const measureBarTheseosMapping = NeumeMappingService.getMapping(
-      MeasureBar.MeasureBarTheseos,
-    );
-    const measureBarTheseosWidth = TextMeasurementService.getTextWidth(
-      measureBarTheseosMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-    );
-
-    const measureBarShortDoubleMapping = NeumeMappingService.getMapping(
-      MeasureBar.MeasureBarShortDouble,
-    );
-    const measureBarShortDoubleWidth = TextMeasurementService.getTextWidth(
-      measureBarShortDoubleMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-    );
-
-    const measureBarShortTheseosMapping = NeumeMappingService.getMapping(
-      MeasureBar.MeasureBarShortTheseos,
-    );
-    const measureBarShortTheseosWidth = TextMeasurementService.getTextWidth(
-      measureBarShortTheseosMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-    );
-
-    const measureBarWidthMap = new Map<MeasureBar, number>();
-    measureBarWidthMap.set(MeasureBar.MeasureBarRight, measureBarRightWidth);
-    measureBarWidthMap.set(MeasureBar.MeasureBarTop, measureBarTopWidth);
-    measureBarWidthMap.set(MeasureBar.MeasureBarDouble, measureBarDoubleWidth);
-    measureBarWidthMap.set(
-      MeasureBar.MeasureBarTheseos,
-      measureBarTheseosWidth,
-    );
-    measureBarWidthMap.set(
-      MeasureBar.MeasureBarShortDouble,
-      measureBarShortDoubleWidth,
-    );
-    measureBarWidthMap.set(
-      MeasureBar.MeasureBarShortTheseos,
-      measureBarShortTheseosWidth,
-    );
+    const measureBarWidthMap = this.getMeasureBarWidthMap(pageSetup);
 
     const elaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.Elaphron,
@@ -549,6 +515,10 @@ export class LayoutService {
 
     // Phase 1: Build paragraphs as sequences of boxes, glue, and penalties
     for (let i = 0; i < elements.length; i++) {
+      if (layoutWorkspace.diagnostics != null) {
+        layoutWorkspace.diagnostics.currentOwner = elements[i];
+      }
+
       let lineBreak: boolean = elements[i].lineBreak || elements[i].pageBreak;
       let lineBreakType: LineBreakType =
         elements[i].lineBreakType || LineBreakType.Left;
@@ -582,7 +552,7 @@ export class LayoutService {
               layoutWorkspace,
             );
             this.addBox(elementWidthPx, textBoxElement, layoutWorkspace);
-            this.addGlue(standardGlue, layoutWorkspace);
+            this.addGlue(standardGlue, layoutWorkspace, 'standard');
           }
 
           if (!textBoxElement.inline && !lineBreak) {
@@ -647,7 +617,7 @@ export class LayoutService {
           if (isFillWidthRichTextBox) {
             this.addFillWidthGlue(layoutWorkspace);
           } else {
-            this.addGlue(standardGlue, layoutWorkspace);
+            this.addGlue(standardGlue, layoutWorkspace, 'standard');
           }
 
           if (!richTextBoxElement.inline && !lineBreak) {
@@ -684,7 +654,7 @@ export class LayoutService {
             layoutWorkspace,
           );
           this.addBox(elementWidthPx, imageBoxElement, layoutWorkspace);
-          this.addGlue(standardGlue, layoutWorkspace);
+          this.addGlue(standardGlue, layoutWorkspace, 'standard');
 
           if (!imageBoxElement.inline && !lineBreak) {
             lineBreak = true;
@@ -727,7 +697,7 @@ export class LayoutService {
             modeKeyElement,
             layoutWorkspace,
           );
-          this.addGlue(standardGlue, layoutWorkspace);
+          this.addGlue(standardGlue, layoutWorkspace, 'standard');
 
           if (!lineBreak) {
             lineBreak = true;
@@ -759,7 +729,11 @@ export class LayoutService {
           const lineStartReservationWidth =
             martyriaBarTransferWidth + leadingLyricHyphenReservationWidth;
           if (lineStartReservationWidth > 0) {
-            this.addAnonymousBox(lineStartReservationWidth, layoutWorkspace);
+            this.addAnonymousBox(
+              lineStartReservationWidth,
+              layoutWorkspace,
+              'line-start-reservation',
+            );
           }
 
           // Knuth-Plass encoding for notes with lyrics.
@@ -813,7 +787,11 @@ export class LayoutService {
           // Left projection (protected by infinity penalty)
           if (leftProjection > 0) {
             this.preventBreak(layoutWorkspace);
-            this.addGlue(this.fixedGlue(leftProjection), layoutWorkspace);
+            this.addGlue(
+              this.fixedGlue(leftProjection),
+              layoutWorkspace,
+              'left-projection',
+            );
           }
 
           // Compute lyric and neume end positions in the idealized layout.
@@ -1189,18 +1167,25 @@ export class LayoutService {
             this.addGlue(
               this.offsetGlueWidth(newGlue, lineStartMartyriaShift),
               layoutWorkspace,
+              'martyria-leading',
             );
           } else if (martyriaElement.alignRight) {
             // A paragraph-start right martyria still needs its leading glue in
             // the input stream, even though positionItems will skip it at line
             // start. Phase 2 supplies the explicit flush-right placement.
-            // Cannot use addGlue() here because the paragraph is empty.
-            layoutWorkspace.pendingParagraph.push(rightMartyriaGlue);
-            layoutWorkspace.neumesEndPx += rightMartyriaGlue.width;
+            this.addLeadingGlue(
+              rightMartyriaGlue,
+              layoutWorkspace,
+              'martyria-leading',
+            );
           }
 
           if (lineStartMartyriaShift > 0) {
-            this.addAnonymousBox(lineStartMartyriaShift, layoutWorkspace);
+            this.addAnonymousBox(
+              lineStartMartyriaShift,
+              layoutWorkspace,
+              'martyria-shift',
+            );
           }
 
           const lyricReservationParagraphStart =
@@ -1331,7 +1316,7 @@ export class LayoutService {
             );
           }
           this.addBox(elementWidthPx, tempoElement, layoutWorkspace);
-          this.addGlue(standardGlue, layoutWorkspace);
+          this.addGlue(standardGlue, layoutWorkspace, 'standard');
 
           break;
         }
@@ -1404,7 +1389,7 @@ export class LayoutService {
             layoutWorkspace,
           );
           this.addBox(elementWidthPx, dropCapElement, layoutWorkspace);
-          this.addGlue(standardGlue, layoutWorkspace);
+          this.addGlue(standardGlue, layoutWorkspace, 'standard');
 
           break;
         }
@@ -1428,7 +1413,7 @@ export class LayoutService {
             followsNonRightAlignedMartyria ? true : undefined,
           );
           this.addBox(emptyElementWidth, emptyElement, layoutWorkspace);
-          this.addGlue(standardGlue, layoutWorkspace);
+          this.addGlue(standardGlue, layoutWorkspace, 'standard');
 
           lineBreak = true;
 
@@ -1475,6 +1460,10 @@ export class LayoutService {
       if (lineBreak) {
         this.endParagraph(lineBreakType, layoutWorkspace, measureBarWidthMap);
       }
+
+      if (layoutWorkspace.diagnostics != null) {
+        layoutWorkspace.diagnostics.currentOwner = null;
+      }
     }
 
     // Phase 2: Place completed paragraphs onto pages
@@ -1483,6 +1472,7 @@ export class LayoutService {
       completedParagraph,
     ] of layoutWorkspace.completedParagraphs.entries()) {
       const {
+        diagnostics,
         paragraph,
         positions,
         ratios,
@@ -1524,6 +1514,7 @@ export class LayoutService {
             );
           }
           newLine.adjustmentRatio = adjustmentRatio;
+          newLine.diagnostics = diagnostics?.[nextLineIndex] ?? null;
           page.lines.push(newLine);
 
           paragraphLineIndex += 1;
@@ -1823,6 +1814,206 @@ export class LayoutService {
     return pages;
   }
 
+  public static getElementOverlayDiagnostics(
+    element: ScoreElement,
+    nextElement: ScoreElement | null,
+    pageSetup: PageSetup,
+    context: OverlayDiagnosticsContext,
+  ): ElementOverlayDiagnostics {
+    const { measureBarWidthMap, neumeFontAscent, neumeFontHeight } = context;
+
+    if (element.elementType === ElementType.Note) {
+      const noteElement = element as NoteElement;
+      const projections = this.getLyricProjections(
+        noteElement,
+        noteElement.alignLeft,
+      );
+      const nextNoteElement =
+        nextElement?.elementType === ElementType.Note
+          ? (nextElement as NoteElement)
+          : null;
+      const nextLeftProjection =
+        nextNoteElement == null
+          ? 0
+          : this.getLyricProjections(nextNoteElement, nextNoteElement.alignLeft)
+              .leftProjection;
+      const nextOverhangs =
+        nextNoteElement == null
+          ? null
+          : this.getNeumeOverhangs(nextNoteElement, nextNoteElement.alignLeft);
+      const collisionBoxes = this.getNoteCollisionGlyphBoxes(
+        noteElement,
+        pageSetup,
+        measureBarWidthMap,
+      );
+
+      const noteInkBox = this.getOverlayBoundsFromBoxes(collisionBoxes);
+      const noteAdvanceBox = this.getNoteOverlayAdvanceBox(
+        noteElement,
+        measureBarWidthMap,
+        neumeFontHeight,
+      );
+
+      if (noteInkBox) {
+        noteInkBox.top =
+          neumeFontAscent +
+          noteInkBox.top +
+          (neumeFontAscent - neumeFontHeight) / 2 +
+          1;
+      }
+
+      return {
+        advanceBox: noteAdvanceBox,
+        collisionBoxes: collisionBoxes.map((box) => ({
+          height: box.bottom - box.top,
+          kind: box.collisionKind,
+          left: box.left,
+          top:
+            neumeFontAscent +
+            box.top +
+            (neumeFontAscent - neumeFontHeight) / 2 +
+            1,
+          width: box.right - box.left,
+        })),
+        glyph: noteElement.quantitativeNeume,
+        inkBox: noteInkBox,
+        leftProjection: projections.leftProjection,
+        leftTuck: nextNoteElement == null ? null : nextLeftProjection,
+        lyricBox:
+          noteElement.lyricsWidth > 0
+            ? {
+                height: noteElement.lyricsFontHeight,
+                left: this.getLyricTextLeft(noteElement),
+                top: noteElement.lyricsVerticalOffset,
+                width: noteElement.lyricsWidth,
+              }
+            : null,
+        rightProjection: projections.rightProjection,
+        rightTuck:
+          nextNoteElement == null || nextOverhangs == null
+            ? null
+            : Math.min(projections.rightProjection, nextOverhangs.left),
+        rootNeume: null,
+      };
+    }
+
+    if (element.elementType === ElementType.Martyria) {
+      const martyriaElement = element as MartyriaElement;
+      const verticalOffset = 0; //pageSetup.martyriaVerticalOffset + martyriaElement.verticalOffset;
+      const collisionBoxes = this.getMartyriaCollisionGlyphBoxes(
+        martyriaElement,
+        pageSetup,
+      );
+
+      const martyriaBaselineOffset = neumeFontAscent + verticalOffset;
+
+      const martyriaInkBox = this.getOverlayBoundsFromBoxes(collisionBoxes);
+      const martyriaAdvanceBox = this.getMartyriaOverlayAdvanceBox(
+        martyriaElement,
+        pageSetup,
+        measureBarWidthMap,
+        neumeFontHeight,
+      );
+
+      if (martyriaInkBox) {
+        martyriaInkBox.top =
+          martyriaBaselineOffset +
+          martyriaInkBox.top +
+          (martyriaBaselineOffset - neumeFontHeight) / 2 +
+          1;
+      }
+
+      return {
+        advanceBox: martyriaAdvanceBox,
+        collisionBoxes: collisionBoxes.map((box) => ({
+          height: box.bottom - box.top,
+          left: box.left,
+          top:
+            martyriaBaselineOffset +
+            box.top +
+            (martyriaBaselineOffset - neumeFontHeight) / 2 +
+            2,
+          width: box.right - box.left,
+        })),
+        glyph: martyriaElement.note,
+        inkBox: martyriaInkBox,
+        leftProjection: null,
+        leftTuck: null,
+        lyricBox: null,
+        rightProjection: null,
+        rightTuck: null,
+        rootNeume: martyriaElement.rootSign,
+      };
+    }
+
+    if (element.elementType === ElementType.Tempo) {
+      const tempoElement = element as TempoElement;
+
+      return {
+        advanceBox: {
+          height: neumeFontHeight,
+          left: 0,
+          top: 0,
+          width: tempoElement.neumeWidth,
+        },
+        collisionBoxes: [],
+        glyph: tempoElement.neume,
+        inkBox: null,
+        leftProjection: null,
+        leftTuck: null,
+        lyricBox: null,
+        rightProjection: null,
+        rightTuck: null,
+        rootNeume: null,
+      };
+    }
+
+    if (element.elementType === ElementType.Empty) {
+      return {
+        advanceBox: {
+          height: (element as EmptyElement).height,
+          left: 0,
+          top: 0,
+          width: element.width,
+        },
+        collisionBoxes: [],
+        glyph: null,
+        inkBox: null,
+        leftProjection: null,
+        leftTuck: null,
+        lyricBox: null,
+        rightProjection: null,
+        rightTuck: null,
+        rootNeume: null,
+      };
+    }
+
+    return {
+      advanceBox: null,
+      collisionBoxes: [],
+      glyph: null,
+      inkBox: null,
+      leftProjection: null,
+      leftTuck: null,
+      lyricBox: null,
+      rightProjection: null,
+      rightTuck: null,
+      rootNeume: null,
+    };
+  }
+
+  public static createOverlayDiagnosticsContext(
+    pageSetup: PageSetup,
+  ): OverlayDiagnosticsContext {
+    const font = `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`;
+
+    return {
+      measureBarWidthMap: this.getMeasureBarWidthMap(pageSetup),
+      neumeFontAscent: TextMeasurementService.getFontBoundingBoxAscent(font),
+      neumeFontHeight: TextMeasurementService.getFontHeight(font),
+    };
+  }
+
   private static isFillWidthElement(element: ScoreElement): boolean {
     return (
       (element.elementType === ElementType.RichTextBox &&
@@ -1845,7 +2036,48 @@ export class LayoutService {
         shrink: 0,
       },
       layoutWorkspace,
+      'fill-width',
     );
+  }
+
+  private static getDiagnosticBoxLabel(element: ScoreElement) {
+    switch (element.elementType) {
+      case ElementType.Note: {
+        const note = element as NoteElement;
+        return this.getDiagnosticGlyphLabel(note.quantitativeNeume);
+      }
+      case ElementType.Martyria: {
+        const martyria = element as MartyriaElement;
+        const note = this.getDiagnosticGlyphLabel(martyria.note);
+        const rootSign = this.getDiagnosticGlyphLabel(martyria.rootSign);
+        return `${note}/${rootSign}`;
+      }
+      case ElementType.TextBox:
+        return 'text-box';
+      case ElementType.RichTextBox:
+        return 'rich-text-box';
+      case ElementType.ImageBox:
+        return 'image';
+      case ElementType.ModeKey: {
+        const modeKey = element as ModeKeyElement;
+        const martyria = this.getDiagnosticGlyphLabel(modeKey.martyria);
+        return `mode-key:${martyria}`;
+      }
+      case ElementType.Tempo: {
+        const tempo = element as TempoElement;
+        return this.getDiagnosticGlyphLabel(tempo.neume);
+      }
+      case ElementType.DropCap:
+        return 'drop-cap';
+      case ElementType.Empty:
+        return 'empty';
+      default:
+        return String(element.elementType);
+    }
+  }
+
+  private static getDiagnosticGlyphLabel(neume: Neume) {
+    return NeumeMappingService.getMapping(neume).glyphName;
   }
 
   private static getInlineSpacing(pageSetup: PageSetup) {
@@ -1980,7 +2212,7 @@ export class LayoutService {
       // let the element's own box be the first paragraph item instead of
       // prepending an anonymous spacer box that positionItems would place at x=0.
       if (adjustment > 0 && !isParagraphStart) {
-        this.addAnonymousBox(adjustment, workspace);
+        this.addAnonymousBox(adjustment, workspace, 'lyric-collision');
       }
     }
 
@@ -2005,33 +2237,52 @@ export class LayoutService {
     element: ScoreElement,
     workspace: LayoutWorkspace,
   ) {
-    const { pendingParagraph } = workspace;
-
     const box: ElementBox = {
       type: 'box',
       width,
       element,
     };
 
-    pendingParagraph.push(box);
-
+    this.pushParagraphItem(
+      box,
+      workspace,
+      element,
+      false,
+      this.getDiagnosticBoxLabel(element),
+    );
     workspace.neumesEndPx += width;
   }
 
-  private static addAnonymousBox(width: number, workspace: LayoutWorkspace) {
-    workspace.pendingParagraph.push({ type: 'box', width });
+  private static addAnonymousBox(
+    width: number,
+    workspace: LayoutWorkspace,
+    label?: string,
+  ) {
+    this.pushAnonymousParagraphItem({ type: 'box', width }, workspace, label);
     workspace.neumesEndPx += width;
   }
 
-  private static addGlue(glue: Glue, workspace: LayoutWorkspace) {
+  private static addGlue(
+    glue: Glue,
+    workspace: LayoutWorkspace,
+    label?: string,
+  ) {
     const { pendingParagraph } = workspace;
 
     if (pendingParagraph.length === 0) {
       throw new Error('Cannot add glue to the beginning of a paragraph');
     }
 
-    pendingParagraph.push(glue);
+    this.pushParagraphItem(glue, workspace, undefined, false, label);
+    workspace.neumesEndPx += glue.width;
+  }
 
+  private static addLeadingGlue(
+    glue: Glue,
+    workspace: LayoutWorkspace,
+    label?: string,
+  ) {
+    this.pushParagraphItem(glue, workspace, undefined, false, label);
     workspace.neumesEndPx += glue.width;
   }
 
@@ -2051,6 +2302,28 @@ export class LayoutService {
           ...glue,
           width: glue.width - offset,
         };
+  }
+
+  private static getMeasureBarWidthMap(pageSetup: PageSetup) {
+    const font = `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`;
+    const measureBars = [
+      MeasureBar.MeasureBarRight,
+      MeasureBar.MeasureBarTop,
+      MeasureBar.MeasureBarDouble,
+      MeasureBar.MeasureBarTheseos,
+      MeasureBar.MeasureBarShortDouble,
+      MeasureBar.MeasureBarShortTheseos,
+    ];
+
+    return new Map(
+      measureBars.map((measureBar) => [
+        measureBar,
+        TextMeasurementService.getTextWidth(
+          NeumeMappingService.getMapping(measureBar).text,
+          font,
+        ),
+      ]),
+    );
   }
 
   private static createMartyriaGlue(pageSetup: PageSetup): Glue {
@@ -2109,13 +2382,264 @@ export class LayoutService {
     workspace: LayoutWorkspace,
     cost: number,
     width: number,
+    anonymous = false,
+    label?: string,
   ) {
-    workspace.pendingParagraph.push({
-      type: 'penalty',
+    const penalty = {
+      type: 'penalty' as const,
       cost,
       width,
       flagged: false,
-    });
+    };
+
+    if (anonymous) {
+      this.pushAnonymousParagraphItem(penalty, workspace, label);
+      return;
+    }
+
+    this.pushParagraphItem(penalty, workspace, undefined, false, label);
+  }
+
+  private static pushAnonymousParagraphItem(
+    item: InputItem,
+    workspace: LayoutWorkspace,
+    label?: string,
+  ) {
+    this.pushParagraphItem(item, workspace, null, true, label);
+  }
+
+  private static pushParagraphItem(
+    item: InputItem,
+    workspace: LayoutWorkspace,
+    ownerOverride?: ScoreElement | null,
+    anonymous = false,
+    label?: string,
+  ) {
+    workspace.pendingParagraph.push(item);
+    this.recordDiagnosticItem(workspace, item, ownerOverride, anonymous, label);
+  }
+
+  private static recordDiagnosticItem(
+    workspace: LayoutWorkspace,
+    item: InputItem,
+    ownerOverride?: ScoreElement | null,
+    anonymous = false,
+    label?: string,
+  ) {
+    const diagnostics = workspace.diagnostics;
+
+    if (diagnostics == null) {
+      return;
+    }
+
+    const owner = anonymous
+      ? null
+      : ownerOverride === undefined
+        ? diagnostics.currentOwner
+        : ownerOverride;
+
+    const diagnosticItem: LayoutDiagnosticItem = {
+      anonymous,
+      ownerElementId: owner?.id ?? null,
+      ownerElementIndex: owner?.index ?? null,
+      ownerElementType: owner?.elementType ?? null,
+      type: item.type,
+      width: item.width,
+      label,
+    };
+
+    if (item.type === 'glue') {
+      diagnosticItem.stretch = item.stretch;
+      diagnosticItem.shrink = item.shrink;
+    } else if (item.type === 'penalty') {
+      diagnosticItem.cost = item.cost;
+      diagnosticItem.flagged = item.flagged;
+      diagnosticItem.forcedBreak = item.cost <= -MAX_COST;
+      diagnosticItem.infinitePenalty = item.cost >= MAX_COST;
+    }
+
+    diagnostics.items.push(diagnosticItem);
+  }
+
+  private static computeLineDiagnostics(
+    items: InputItem[],
+    diagnosticItems: LayoutDiagnosticItem[],
+    lineLengths: number | number[],
+    breakpoints: number[],
+    ratios: number[],
+    paragraphIndex: number,
+  ): LineLayoutDiagnostics[] {
+    const lines: LineLayoutDiagnostics[] = [];
+
+    for (let lineIndex = 0; lineIndex < breakpoints.length - 1; lineIndex++) {
+      const breakpoint = breakpoints[lineIndex + 1];
+      const previousBreakpoint =
+        lineIndex === 0 ? PARAGRAPH_START : breakpoints[lineIndex];
+      const contentStart = lineContentStart(
+        items,
+        previousBreakpoint,
+        breakpoint,
+      );
+      const targetWidth = Array.isArray(lineLengths)
+        ? lineLengths[lineIndex]
+        : lineLengths;
+      const adjustmentRatio = ratios[lineIndex] ?? 0;
+
+      let naturalContentWidth = 0;
+      let totalStretch = 0;
+      let totalShrink = 0;
+
+      for (let itemIndex = contentStart; itemIndex <= breakpoint; itemIndex++) {
+        const item = items[itemIndex];
+
+        if (item.type === 'box') {
+          naturalContentWidth += item.width;
+        } else if (
+          item.type === 'glue' &&
+          itemIndex !== contentStart &&
+          itemIndex !== breakpoint
+        ) {
+          naturalContentWidth += item.width;
+          totalStretch += item.stretch;
+          totalShrink += item.shrink;
+        } else if (
+          item.type === 'penalty' &&
+          itemIndex === breakpoint &&
+          item.width > 0
+        ) {
+          naturalContentWidth += item.width;
+        }
+      }
+
+      const stretchUsed =
+        adjustmentRatio > 0 ? adjustmentRatio * totalStretch : 0;
+      const shrinkUsed =
+        adjustmentRatio < 0 ? Math.abs(adjustmentRatio) * totalShrink : 0;
+
+      lines.push({
+        actualContentWidth: naturalContentWidth + stretchUsed - shrinkUsed,
+        adjustmentRatio,
+        itemGroups: this.groupDiagnosticItems(
+          diagnosticItems.slice(contentStart, breakpoint + 1),
+        ),
+        naturalContentWidth,
+        paragraphIndex,
+        paragraphLineIndex: lineIndex,
+        recomputedBadness: Number.isFinite(adjustmentRatio)
+          ? 100 * Math.abs(adjustmentRatio) ** 3
+          : null,
+        shrinkUsed,
+        stretchUsed,
+        targetWidth,
+      });
+    }
+
+    return lines;
+  }
+
+  private static groupDiagnosticItems(items: LayoutDiagnosticItem[]) {
+    const groups: LineLayoutDiagnostics['itemGroups'] = [];
+
+    for (const item of items) {
+      const previousGroup = groups[groups.length - 1];
+
+      if (
+        previousGroup != null &&
+        previousGroup.anonymous === item.anonymous &&
+        previousGroup.ownerElementId === item.ownerElementId &&
+        previousGroup.ownerElementIndex === item.ownerElementIndex &&
+        previousGroup.ownerElementType === item.ownerElementType
+      ) {
+        previousGroup.items.push(item);
+        continue;
+      }
+
+      groups.push({
+        anonymous: item.anonymous,
+        items: [item],
+        ownerElementId: item.ownerElementId,
+        ownerElementIndex: item.ownerElementIndex,
+        ownerElementType: item.ownerElementType,
+      });
+    }
+
+    return groups;
+  }
+
+  private static getNoteOverlayAdvanceBox(
+    noteElement: NoteElement,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    height: number,
+  ) {
+    const left = this.getNoteLeftBarReserve(noteElement, measureBarWidthMap);
+    const rightMeasureBarWidth = this.getVisibleMeasureBarRightWidth(
+      noteElement,
+      measureBarWidthMap,
+    );
+
+    return {
+      height,
+      left,
+      top: 0,
+      width: Math.max(0, noteElement.neumeWidth - left - rightMeasureBarWidth),
+    };
+  }
+
+  private static getMartyriaOverlayAdvanceBox(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    height: number,
+  ) {
+    const left = this.hasInlineMeasureBarLeft(martyriaElement)
+      ? (measureBarWidthMap.get(martyriaElement.measureBarLeft!) ?? 0) +
+        martyriaElement.computedMeasureBarLeftLeadingSpacing
+      : 0;
+    const rightMeasureBarWidth = this.getVisibleMeasureBarRightWidth(
+      martyriaElement,
+      measureBarWidthMap,
+    );
+
+    return {
+      height,
+      left,
+      top: pageSetup.martyriaVerticalOffset + martyriaElement.verticalOffset,
+      width: Math.max(
+        0,
+        martyriaElement.neumeWidth - left - rightMeasureBarWidth,
+      ),
+    };
+  }
+
+  private static getVisibleMeasureBarRightWidth(
+    owner: NoteElement | MartyriaElement,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const measureBarRight = this.getVisibleMeasureBarRight(owner);
+
+    return measureBarRight == null
+      ? 0
+      : (measureBarWidthMap.get(measureBarRight) ?? 0);
+  }
+
+  private static getOverlayBoundsFromBoxes(
+    boxes: Array<{ left: number; right: number; top: number; bottom: number }>,
+  ) {
+    if (boxes.length === 0) {
+      return null;
+    }
+
+    const left = Math.min(...boxes.map((box) => box.left));
+    const right = Math.max(...boxes.map((box) => box.right));
+    const top = Math.min(...boxes.map((box) => box.top));
+    const bottom = Math.max(...boxes.map((box) => box.bottom));
+
+    return {
+      height: bottom - top,
+      left,
+      top,
+      width: right - left,
+    };
   }
 
   private static addProtectedBreakpointEncoding(
@@ -2128,9 +2652,9 @@ export class LayoutService {
     // The breakpoint must occur at the penalty, not immediately before the
     // pre-break glue, so the post-break glue is skipped on the next line.
     this.preventBreak(workspace);
-    this.addGlue(preBreakGlue, workspace);
-    this.addPenalty(workspace, breakCost, breakWidth);
-    this.addGlue(postBreakGlue, workspace);
+    this.addGlue(preBreakGlue, workspace, 'pre-break');
+    this.addPenalty(workspace, breakCost, breakWidth, false, 'break-penalty');
+    this.addGlue(postBreakGlue, workspace, 'post-break');
   }
 
   private static shouldAlignLeft(
@@ -2366,18 +2890,22 @@ export class LayoutService {
     };
   }
 
+  private static getLyricTextLeft(noteElement: NoteElement) {
+    return noteElement.alignLeft
+      ? noteElement.lyricsHorizontalOffset
+      : (noteElement.neumeWidth -
+          noteElement.lyricsWidth +
+          noteElement.lyricsHorizontalOffset) /
+          2;
+  }
+
   private static getLeadingLyricHyphenGeometry(
     noteElement: NoteElement,
     pageSetup: PageSetup,
     hyphenWidth: number,
   ): LeadingLyricHyphenGeometry {
     const gap = pageSetup.lyricsMinimumSpacing;
-    const rawLyricTextStartOffset = noteElement.alignLeft
-      ? noteElement.lyricsHorizontalOffset
-      : (noteElement.neumeWidth +
-          noteElement.lyricsHorizontalOffset -
-          noteElement.lyricsWidth) /
-        2;
+    const rawLyricTextStartOffset = this.getLyricTextLeft(noteElement);
 
     const lyricTextStartOffset =
       noteElement.lyricsWidth === 0 ? 0 : rawLyricTextStartOffset;
@@ -2395,7 +2923,7 @@ export class LayoutService {
   }
 
   private static preventBreak(workspace: LayoutWorkspace) {
-    this.addPenalty(workspace, MAX_COST, 0);
+    this.addPenalty(workspace, MAX_COST, 0, false, 'prevent-break');
   }
 
   private static calculateInterNoteSpacing(
@@ -3069,6 +3597,9 @@ export class LayoutService {
     const bodyNeumes =
       this.getMartyriaBodyNeumesForWidthMeasurement(martyriaElement);
     const bodyStartX = x;
+    const noteGlyphName = NeumeMappingService.getMapping(
+      bodyNeumes[0],
+    ).glyphName;
     for (const neume of bodyNeumes) {
       glyphs.push({
         glyphName: NeumeMappingService.getMapping(neume).glyphName,
@@ -3079,9 +3610,25 @@ export class LayoutService {
       x += this.getNeumeWidthFromCache(neumeWidthCache, neume, pageSetup);
     }
 
+    if (!martyriaElement.error) {
+      const rootSignGlyphName = NeumeMappingService.getMapping(
+        martyriaElement.rootSign,
+      ).glyphName;
+      const anchorOffset = fontService.getMarkOffset(
+        fontFamily,
+        noteGlyphName,
+        rootSignGlyphName,
+      );
+
+      glyphs.push({
+        glyphName: rootSignGlyphName,
+        kind: 'mark',
+        x: bodyStartX + anchorOffset.x * fontSize,
+        y: anchorOffset.y * fontSize,
+      });
+    }
+
     if (!martyriaElement.error && martyriaElement.fthora != null) {
-      const note = bodyNeumes[0];
-      const noteGlyphName = NeumeMappingService.getMapping(note).glyphName;
       const fthoraGlyphName = NeumeMappingService.getMapping(
         martyriaElement.fthora,
       ).glyphName;
@@ -3101,7 +3648,10 @@ export class LayoutService {
 
     for (const neume of this.getMartyriaBodyOverlayNeumes(
       martyriaElement,
-    ).filter((neume) => neume !== martyriaElement.fthora)) {
+    ).filter(
+      (neume) =>
+        neume !== martyriaElement.rootSign && neume !== martyriaElement.fthora,
+    )) {
       glyphs.push({
         glyphName: NeumeMappingService.getMapping(neume).glyphName,
         kind: 'inline',
@@ -3602,6 +4152,7 @@ export class LayoutService {
     ) {
       const removed = pendingParagraph.pop()!;
       workspace.neumesEndPx -= (removed as Glue).width;
+      workspace.diagnostics?.items.pop();
     }
   }
 
@@ -3782,10 +4333,11 @@ export class LayoutService {
         shrink: 0,
       },
       workspace,
+      'finishing',
     );
 
     // Force break and end paragraph
-    this.forceBreak(workspace);
+    this.forceBreak(workspace, true);
 
     // Compute per-line widths for multiline drop caps
     let lineLengths: number | number[];
@@ -3838,6 +4390,17 @@ export class LayoutService {
     }
 
     completedParagraphs.push({
+      diagnostics:
+        workspace.diagnostics != null
+          ? this.computeLineDiagnostics(
+              pendingParagraph,
+              workspace.diagnostics.items,
+              lineLengths,
+              breakpoints,
+              ratios,
+              completedParagraphs.length,
+            )
+          : null,
       paragraph: pendingParagraph,
       positions,
       ratios,
@@ -3854,11 +4417,25 @@ export class LayoutService {
     workspace.pendingDropCapContinuationLines = 0;
     workspace.pendingMartyriaBarTransferWidth = 0;
     workspace.pendingLeadingLyricHyphenReservationWidth = 0;
+    if (workspace.diagnostics != null) {
+      workspace.diagnostics.items = [];
+      workspace.diagnostics.currentOwner = null;
+    }
   }
 
-  private static forceBreak(workspace: LayoutWorkspace) {
-    const { pendingParagraph } = workspace;
-    pendingParagraph.push(forcedBreak());
+  private static forceBreak(workspace: LayoutWorkspace, anonymous = false) {
+    if (anonymous) {
+      this.pushAnonymousParagraphItem(forcedBreak(), workspace, 'forced-break');
+      return;
+    }
+
+    this.pushParagraphItem(
+      forcedBreak(),
+      workspace,
+      undefined,
+      false,
+      'forced-break',
+    );
   }
 
   private static getLineHeight(
@@ -4394,9 +4971,6 @@ export class LayoutService {
     const mappingNote = !martyriaElement.error
       ? NeumeMappingService.getMapping(martyriaElement.note)
       : NeumeMappingService.getMapping(Note.Pa);
-    const mappingRoot = !martyriaElement.error
-      ? NeumeMappingService.getMapping(martyriaElement.rootSign)
-      : NeumeMappingService.getMapping(RootSign.Alpha);
     const mappingMeasureBarLeft = martyriaElement.measureBarLeft
       ? NeumeMappingService.getMapping(martyriaElement.measureBarLeft)
       : null;
@@ -4495,10 +5069,6 @@ export class LayoutService {
       (martyriaElement.padding +
         TextMeasurementService.getTextWidth(
           mappingNote.text,
-          `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-        ) +
-        TextMeasurementService.getTextWidth(
-          mappingRoot.text,
           `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
         ) +
         (hasInlineMeasureBarLeft && mappingMeasureBarLeft
@@ -7328,8 +7898,12 @@ export class LayoutService {
     const neumes =
       this.getMartyriaBodyNeumesForWidthMeasurement(martyriaElement);
 
+    if (!martyriaElement.error) {
+      neumes.push(martyriaElement.rootSign);
+    }
+
     // Keep this in the same order as the zero-advance marks rendered inside
-    // NeumeBoxMartyria after the note and root sign.
+    // NeumeBoxMartyria after the note/root-sign stack.
     neumes.push(...this.getMartyriaBodyOverlayNeumes(martyriaElement));
 
     return neumes;
@@ -7340,12 +7914,12 @@ export class LayoutService {
   ): Neume[] {
     const neumes: Neume[] = [];
 
-    if (!martyriaElement.error && martyriaElement.fthora != null) {
-      neumes.push(martyriaElement.fthora);
-    }
-
     if (martyriaElement.tempo != null) {
       neumes.push(martyriaElement.tempo);
+    }
+
+    if (!martyriaElement.error && martyriaElement.fthora != null) {
+      neumes.push(martyriaElement.fthora);
     }
 
     if (martyriaElement.measureBarLeft?.endsWith('Above')) {
@@ -7358,10 +7932,7 @@ export class LayoutService {
   private static getMartyriaBodyNeumesForWidthMeasurement(
     martyriaElement: MartyriaElement,
   ): Neume[] {
-    return [
-      !martyriaElement.error ? martyriaElement.note : Note.Pa,
-      !martyriaElement.error ? martyriaElement.rootSign : RootSign.Alpha,
-    ];
+    return [!martyriaElement.error ? martyriaElement.note : Note.Pa];
   }
 
   private static getSingleNeumeLeftInkOverhang(

@@ -234,6 +234,7 @@
     "menuInteraction": "Αλληλεπίδραση Μενού",
     "menuInteractionHold": "Πατήστε Παρατεταμένα για Επιλογή",
     "menuInteractionClick": "Κλικ για Άνοιγμα Μενού",
+    "enableDeveloperPanel": "Ενεργοποίηση Πίνακα Προγραμματιστή",
     "tempoDefaults": "Προεπιλογές Χρονικής Αγωγής",
     "bpm": "BPM"
   }

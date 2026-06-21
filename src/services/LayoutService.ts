@@ -770,20 +770,20 @@ export class LayoutService {
           //   glue(L_i, 0, 0)      fixed left projection
           //   box(B_i)             the neume
           //   penalty(inf)         protect the neume
-          //   glue(0, s^+, s^-)    stretch that remains at line end
+          //   glue(0, 0, 0)        protect the breakpoint
           //   penalty(cost, w_i)   candidate breakpoint
-          //   glue(m_i, 0, 0)      same-line spacing that vanishes at breaks
+          //   glue(m_i, s^+, s^-)  same-line spacing that vanishes at breaks
           //
           // On the same line, each note boundary contributes m_i of width plus
           // s^+ of stretch for justification.
           //
           // At a break, the final glue becomes leading glue on the next line
-          // and is skipped by positionItems, so m_i disappears. The stretch
-          // glue stays on the current line. L_{i+1} then protects the left edge
-          // of the next line, and the penalty width w_i reserves break-only
-          // space for the right projection, melisma overhang, and measure-bar
-          // transfers. Terminal right-barline clearance is also reserved when
-          // the current note's barline remains at line end.
+          // and is skipped by positionItems, so m_i and its elasticity
+          // disappear. L_{i+1} then protects the left edge of the next line,
+          // and the penalty width w_i reserves break-only space for the right
+          // projection, melisma overhang, and measure-bar transfers. Terminal
+          // right-barline clearance is also reserved when the current note's
+          // barline remains at line end.
           //
           // m_i = s_0 + R_i - T_i^left - T_i^right + ell_i, where s_0 is the
           // fixed inline spacing, floored by any fixed measure-bar clearance.
@@ -950,19 +950,23 @@ export class LayoutService {
           const martyriaOwnsBoundaryGlue =
             nextElement?.elementType === ElementType.Martyria;
 
-          const preBreakGlue = martyriaOwnsBoundaryGlue
-            ? this.fixedGlue(0)
-            : { ...standardGlue, width: 0 };
+          const postBreakGlue = martyriaOwnsBoundaryGlue
+            ? this.fixedGlue(m_i - nextLeadingLyricHyphenReservation)
+            : {
+                ...standardGlue,
+                width: m_i - nextLeadingLyricHyphenReservation,
+              };
 
-          // Break opportunity after the neume. The pre-break glue stays on the
-          // current line; the post-break glue becomes leading glue on the next
-          // line and is skipped by positionItems.
+          // Break opportunity after the neume. The fixed pre-break glue keeps
+          // the breakpoint at the penalty. The post-break glue contributes
+          // same-line spacing and elasticity, but becomes leading glue on the
+          // next line and is skipped by positionItems when a break is taken.
           this.addProtectedBreakpointEncoding(
             layoutWorkspace,
-            preBreakGlue,
+            this.fixedGlue(0),
             breakCost,
             penaltyWidth,
-            this.fixedGlue(m_i - nextLeadingLyricHyphenReservation),
+            postBreakGlue,
           );
 
           break;

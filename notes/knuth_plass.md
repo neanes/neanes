@@ -139,7 +139,7 @@ The font-size-scaled engraving default supplies the default gap, and `neumeDefau
 The stretch and shrink budgets are also scaled from the active font's `standardGlue` defaults.
 Users may also set the inter-note spacing adjustment to a negative value, so that successive neumes visibly overlap and the layout becomes tighter.
 When the computed inline spacing is negative, the glue keeps its negative natural width so that the overlap remains visible, but the stretch and shrink budgets are floored at small non-negative values: stretch at 0.1 px and shrink at 0.
-The same floors apply uniformly to every inter-element spacing glue: the standard glue's stretch and shrink, the note pre-break glue's stretch and shrink, the martyria glue's stretch and shrink, and the right-martyria glue's shrink.
+The same floors apply uniformly to every inter-element spacing glue: the standard glue's stretch and shrink, the note post-break glue's stretch and shrink, the martyria glue's stretch and shrink, and the right-martyria glue's shrink.
 The martyria glue's base width, stretch, and shrink come from the martyria engraving defaults described below rather than from the inline spacing.
 These floors preserve the Knuth-Plass invariants while keeping the user-chosen overlap intact, because ordinary glues no longer stretch enough to push neumes apart and any line-end slack is absorbed by the right-martyria glue's `MAX_COST` stretch instead.
 The 0.1 px stretch floor is a tiny positive epsilon rather than zero so that every line has at least some stretchability, which keeps the adjustment ratio finite and the line-breaking problem well-defined.
@@ -247,26 +247,26 @@ Let $s_0$ be the fixed inline spacing between successive notes, `neumeDefaultFon
 
 Each note is encoded in the paragraph as
 
-$$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(B_i) \quad \text{penalty}(\infty) \quad \text{glue}(0, s^+, s^-) \quad \text{penalty}(c_i, w_i) \quad \text{glue}(m_i, 0, 0).$$
+$$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(B_i) \quad \text{penalty}(\infty) \quad \text{glue}(0, 0, 0) \quad \text{penalty}(c_i, w_i) \quad \text{glue}(m_i, s^+, s^-).$$
 
 Here:
 
 - $B_i$ is the neume width. An anonymous spacer box may be inserted before $B_i$ to hold a break-only leading reservation: the bar width plus fixed leading clearance when the preceding martyria has a transferable bar (see above), and a leading-hyphen reservation when the preceding note is hyphenated (see below). $B_i$ itself is unchanged.
 - $L_i$ is the left projection, fixed and unbreakable, and omitted when zero.
-- The two $\text{penalty}(\infty)$ items are unbreakable barriers. The leading one protects $L_i$ at a line start. `positionItems` discards leading glue after a break only up to the first box or forbidden ($\infty$) penalty, so the leading penalty keeps $\text{glue}(L_i, 0, 0)$ out of the discarded region and it is counted rather than skipped. It is emitted together with $L_i$ and omitted when $L_i$ is zero; the note's first box then stops the discard scan instead. The second $\text{penalty}(\infty)$, after $\text{box}(B_i)$, forces the only candidate break in the boundary to be $\text{penalty}(c_i, w_i)$ rather than the glue that immediately follows the box.
+- The two $\text{penalty}(\infty)$ items are unbreakable barriers. The leading one protects $L_i$ at a line start. `positionItems` discards leading glue after a break only up to the first box or forbidden ($\infty$) penalty, so the leading penalty keeps $\text{glue}(L_i, 0, 0)$ out of the discarded region and it is counted rather than skipped. It is emitted together with $L_i$ and omitted when $L_i$ is zero; the note's first box then stops the discard scan instead. The second $\text{penalty}(\infty)$, after $\text{box}(B_i)$, forces the only candidate break in the boundary to be $\text{penalty}(c_i, w_i)$ rather than the zero-width glue that immediately follows the box.
 - $s^+$ and $s^-$ are the standard stretch and shrink budgets for an inter-note gap.
 - $c_i$ is the break cost: 0 for a normal break, $\infty$ to prohibit a break, or an intermediate value to discourage one.
 - $w_i$ is the penalty width, a conditional width counted only when a break occurs at this point. It reserves space for the current note's right projection, any melisma overhang that would extend past the right margin, terminal right-barline clearance, and measure-bar transfers, when the next note's left measure bar moves to this note's right side at a line break.
 - $m_i$ is the minimum same-line width required between notes $i$ and $i{+}1$.
 
 On the same line, each inter-note gap contributes $m_i$ of width plus $s^+$ of stretch for distributed justification.
-The stretch comes from the vanishing glue $\text{glue}(0, s^+, s^-)$; the cancellation glue $\text{glue}(m_i, 0, 0)$ contributes only the fixed minimum distance.
+The zero-width glue after the neume protects the breakpoint; the post-break glue $\text{glue}(m_i, s^+, s^-)$ contributes both the fixed minimum distance and the stretch or shrink budget.
 The current implementation allows negative values only in the width $m_i$, when tuck absorption exceeds the base spacing; stretch and shrink are never negative.
-In other words, all stretchability lives in the first glue, while the second glue cancels width only.
+In other words, all stretchability lives in the same glue that carries the same-line boundary width.
 The implementation does not use a second glue of the form $\text{glue}(m_i, -s^+, -s^-)$.
 
-At a break, the cancellation glue becomes leading glue on the next line. It lies before the next note's leading $\text{penalty}(\infty)$ barrier, so it falls within the discarded region and is skipped by `positionItems`, and $m_i$ vanishes.
-The vanishing stretch glue stays on the current line and contributes $s^+$ of stretch at line end.
+At a break, the post-break glue becomes leading glue on the next line. It lies before the next note's leading $\text{penalty}(\infty)$ barrier, so it falls within the discarded region and is skipped by `positionItems`, and both $m_i$ and its elasticity vanish.
+This prevents positive adjustment ratio from being spent as invisible stretch after the last visible note on the previous line.
 The next note's left projection $\text{glue}(L_{i+1}, 0, 0)$ lies past that barrier, so it is not discarded and protects the left edge of the new line.
 The penalty width $w_i$ remains the break-only quantity: it cannot live in the cancellation glue, because that glue disappears at breaks.
 Its job is to reserve space for the right projection, melisma lyric overhang, terminal right-barline clearance, and measure-bar transfers that matter only at line end.

@@ -1854,12 +1854,10 @@ export class LayoutService {
         neumeFontHeight,
       );
 
+      const neumeFontDescent = neumeFontHeight - neumeFontAscent;
+
       if (noteInkBox) {
-        noteInkBox.top =
-          neumeFontAscent +
-          noteInkBox.top +
-          (neumeFontAscent - neumeFontHeight) / 2 +
-          1;
+        noteInkBox.top += neumeFontAscent - neumeFontDescent / 2 + 1;
       }
 
       return {
@@ -1868,11 +1866,7 @@ export class LayoutService {
           height: box.bottom - box.top,
           kind: box.collisionKind,
           left: box.left,
-          top:
-            neumeFontAscent +
-            box.top +
-            (neumeFontAscent - neumeFontHeight) / 2 +
-            1,
+          top: neumeFontAscent + box.top - neumeFontDescent / 2 + 1,
           width: box.right - box.left,
         })),
         glyph: noteElement.quantitativeNeume,
@@ -1899,13 +1893,10 @@ export class LayoutService {
 
     if (element.elementType === ElementType.Martyria) {
       const martyriaElement = element as MartyriaElement;
-      const verticalOffset = 0; //pageSetup.martyriaVerticalOffset + martyriaElement.verticalOffset;
       const collisionBoxes = this.getMartyriaCollisionGlyphBoxes(
         martyriaElement,
         pageSetup,
       );
-
-      const martyriaBaselineOffset = neumeFontAscent + verticalOffset;
 
       const martyriaInkBox = this.getOverlayBoundsFromBoxes(collisionBoxes);
       const martyriaAdvanceBox = this.getMartyriaOverlayAdvanceBox(
@@ -1915,12 +1906,11 @@ export class LayoutService {
         neumeFontHeight,
       );
 
+      const neumeFontDescent = neumeFontHeight - neumeFontAscent;
+
       if (martyriaInkBox) {
         martyriaInkBox.top =
-          martyriaBaselineOffset +
-          martyriaInkBox.top +
-          (martyriaBaselineOffset - neumeFontHeight) / 2 +
-          1;
+          neumeFontAscent + martyriaInkBox.top - neumeFontDescent / 2 + 1;
       }
 
       return {
@@ -1928,11 +1918,7 @@ export class LayoutService {
         collisionBoxes: collisionBoxes.map((box) => ({
           height: box.bottom - box.top,
           left: box.left,
-          top:
-            martyriaBaselineOffset +
-            box.top +
-            (martyriaBaselineOffset - neumeFontHeight) / 2 +
-            2,
+          top: neumeFontAscent + box.top - neumeFontDescent / 2 + 1,
           width: box.right - box.left,
         })),
         glyph: martyriaElement.note,

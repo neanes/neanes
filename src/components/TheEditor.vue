@@ -891,10 +891,6 @@ const developerPaneGeneratedItemGroups = computed(() => {
   }
 
   return diagnostics.itemGroups.filter((group) => {
-    if (group.anonymous) {
-      return true;
-    }
-
     return (
       group.ownerElementId === element.id &&
       group.ownerElementType === element.elementType

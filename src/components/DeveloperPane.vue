@@ -67,7 +67,8 @@
                       <dt>{{ item.label }}</dt>
                       <dd
                         :class="{
-                          'developer-pane-grid-multiline': item.value.includes('\n'),
+                          'developer-pane-grid-multiline':
+                            item.value.includes('\n'),
                         }"
                       >
                         {{ item.value }}
@@ -257,12 +258,10 @@ function formatPenaltyCost(item: LayoutDiagnosticItem) {
 }
 
 function getGroupLabel(group: LayoutDiagnosticItemGroup) {
-  if (group.anonymous) {
-    return 'Anonymous';
-  }
-
   return group.ownerElementType == null
-    ? 'Unowned'
+    ? group.anonymous
+      ? 'Anonymous'
+      : 'Unowned'
     : `${group.ownerElementType} #${group.ownerElementId ?? group.ownerElementIndex ?? '?'}`;
 }
 

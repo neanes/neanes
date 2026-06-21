@@ -10,6 +10,7 @@ export default [
       'dist-electron/**/*',
       'release/**/*',
       '**/.vitepress/cache/**/*',
+      '**/.vitepress/dist/**/*',
     ],
   },
   ...pluginVue.configs['flat/recommended'],

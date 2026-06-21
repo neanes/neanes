@@ -2391,7 +2391,7 @@ export class LayoutService {
     workspace: LayoutWorkspace,
     label?: string,
   ) {
-    this.pushParagraphItem(item, workspace, null, true, label);
+    this.pushParagraphItem(item, workspace, undefined, true, label);
   }
 
   private static pushParagraphItem(
@@ -2418,11 +2418,8 @@ export class LayoutService {
       return;
     }
 
-    const owner = anonymous
-      ? null
-      : ownerOverride === undefined
-        ? diagnostics.currentOwner
-        : ownerOverride;
+    const owner =
+      ownerOverride === undefined ? diagnostics.currentOwner : ownerOverride;
 
     const diagnosticItem: LayoutDiagnosticItem = {
       anonymous,
@@ -2531,11 +2528,11 @@ export class LayoutService {
 
       if (
         previousGroup != null &&
-        previousGroup.anonymous === item.anonymous &&
         previousGroup.ownerElementId === item.ownerElementId &&
         previousGroup.ownerElementIndex === item.ownerElementIndex &&
         previousGroup.ownerElementType === item.ownerElementType
       ) {
+        previousGroup.anonymous = previousGroup.anonymous && item.anonymous;
         previousGroup.items.push(item);
         continue;
       }

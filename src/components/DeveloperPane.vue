@@ -65,7 +65,13 @@
                       :key="`${item.label}-${item.value}`"
                     >
                       <dt>{{ item.label }}</dt>
-                      <dd>{{ item.value }}</dd>
+                      <dd
+                        :class="{
+                          'developer-pane-grid-multiline': item.value.includes('\n'),
+                        }"
+                      >
+                        {{ item.value }}
+                      </dd>
                     </template>
                   </dl>
 
@@ -297,6 +303,11 @@ function getGroupLabelToken(
   margin: 0;
   overflow-wrap: anywhere;
   text-align: right;
+}
+
+.developer-pane-grid-multiline {
+  text-align: left;
+  white-space: pre-line;
 }
 
 .developer-pane-empty {

@@ -137,7 +137,10 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
-import type { ElementOverlayDiagnostics } from '@/models/LayoutDiagnostics';
+import type {
+  ElementOverlayBox,
+  ElementOverlayDiagnostics,
+} from '@/models/LayoutDiagnostics';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
@@ -926,22 +929,22 @@ const developerInspectorRows = computed(() => {
 
   if (overlayDiagnostics?.advanceBox != null) {
     rows.push({
-      label: 'Advance Width',
-      value: formatDeveloperNumber(overlayDiagnostics.advanceBox.width),
+      label: 'Advance Box',
+      value: formatDeveloperPageBox(element, overlayDiagnostics.advanceBox),
     });
   }
 
   if (overlayDiagnostics?.inkBox != null) {
     rows.push({
       label: 'Ink BBox',
-      value: formatDeveloperBox(overlayDiagnostics.inkBox),
+      value: formatDeveloperPageBox(element, overlayDiagnostics.inkBox),
     });
   }
 
   if (overlayDiagnostics?.lyricBox != null) {
     rows.push({
       label: 'Lyric BBox',
-      value: formatDeveloperBox(overlayDiagnostics.lyricBox),
+      value: formatDeveloperPageBox(element, overlayDiagnostics.lyricBox),
     });
   }
 
@@ -976,7 +979,10 @@ const developerInspectorRows = computed(() => {
   if (overlayDiagnostics != null) {
     rows.push({
       label: 'Collision Boxes',
-      value: `${overlayDiagnostics.collisionBoxes.length}`,
+      value: formatDeveloperCollisionBoxes(
+        element,
+        overlayDiagnostics.collisionBoxes,
+      ),
     });
   }
 
@@ -1718,17 +1724,50 @@ function getEmptyBoxStyle(element: EmptyElement) {
   } as StyleValue;
 }
 
-function formatDeveloperBox(box: {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}) {
-  return `x=${formatDeveloperNumber(box.left)} y=${formatDeveloperNumber(
-    box.top,
-  )} w=${formatDeveloperNumber(box.width)} h=${formatDeveloperNumber(
-    box.height,
-  )}`;
+function formatDeveloperBox(box: ElementOverlayBox) {
+  const lines = [
+    `x=${formatDeveloperNumber(box.left)}`,
+    `y=${formatDeveloperNumber(box.top)}`,
+    `height=${formatDeveloperNumber(box.height)}`,
+    `width=${formatDeveloperNumber(box.width)}`,
+  ];
+
+  if (box.kind != null) {
+    lines.push(`type=${box.kind}`);
+  }
+
+  return lines.join('\n');
+}
+
+function formatDeveloperPageBox(element: ScoreElement, box: ElementOverlayBox) {
+  return formatDeveloperBox(getDeveloperPageBox(element, box));
+}
+
+function formatDeveloperCollisionBoxes(
+  element: ScoreElement,
+  boxes: ElementOverlayBox[],
+) {
+  if (boxes.length === 0) {
+    return '0';
+  }
+
+  return boxes
+    .map((box, index) => {
+      return `box ${index + 1}\n${formatDeveloperPageBox(element, box)}`;
+    })
+    .join('\n\n');
+}
+
+function getDeveloperPageBox(element: ScoreElement, box: ElementOverlayBox) {
+  const elementLeft = rtl.value
+    ? score.value.pageSetup.pageWidth - element.x - element.width
+    : element.x;
+
+  return {
+    ...box,
+    left: elementLeft + box.left,
+    top: element.y + box.top,
+  };
 }
 
 function formatDeveloperNumber(value: number) {

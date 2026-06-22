@@ -1859,7 +1859,7 @@ export class LayoutService {
       const neumeFontDescent = neumeFontHeight - neumeFontAscent;
 
       if (noteInkBox) {
-        noteInkBox.top += neumeFontAscent - neumeFontDescent / 2 + 1;
+        noteInkBox.top += neumeFontAscent - neumeFontDescent / 2 + 2;
       }
 
       return {
@@ -1868,7 +1868,7 @@ export class LayoutService {
           height: box.bottom - box.top,
           kind: box.collisionKind,
           left: box.left,
-          top: neumeFontAscent + box.top - neumeFontDescent / 2 + 1,
+          top: neumeFontAscent + box.top - neumeFontDescent / 2 + 2,
           width: box.right - box.left,
         })),
         glyph: noteElement.quantitativeNeume,
@@ -1912,7 +1912,7 @@ export class LayoutService {
 
       if (martyriaInkBox) {
         martyriaInkBox.top =
-          neumeFontAscent + martyriaInkBox.top - neumeFontDescent / 2 + 1;
+          neumeFontAscent + martyriaInkBox.top - neumeFontDescent / 2 + 2;
       }
 
       return {
@@ -1920,7 +1920,7 @@ export class LayoutService {
         collisionBoxes: collisionBoxes.map((box) => ({
           height: box.bottom - box.top,
           left: box.left,
-          top: neumeFontAscent + box.top - neumeFontDescent / 2 + 1,
+          top: neumeFontAscent + box.top - neumeFontDescent / 2 + 2,
           width: box.right - box.left,
         })),
         glyph: martyriaElement.note,

@@ -2029,14 +2029,10 @@ export class LayoutService {
   private static getDiagnosticBoxLabel(element: ScoreElement) {
     switch (element.elementType) {
       case ElementType.Note: {
-        const note = element as NoteElement;
-        return this.getDiagnosticGlyphLabel(note.quantitativeNeume);
+        return 'note';
       }
       case ElementType.Martyria: {
-        const martyria = element as MartyriaElement;
-        const note = this.getDiagnosticGlyphLabel(martyria.note);
-        const rootSign = this.getDiagnosticGlyphLabel(martyria.rootSign);
-        return `${note}/${rootSign}`;
+        return 'martyria';
       }
       case ElementType.TextBox:
         return 'text-box';
@@ -2045,13 +2041,10 @@ export class LayoutService {
       case ElementType.ImageBox:
         return 'image';
       case ElementType.ModeKey: {
-        const modeKey = element as ModeKeyElement;
-        const martyria = this.getDiagnosticGlyphLabel(modeKey.martyria);
-        return `mode-key:${martyria}`;
+        return 'mode-key';
       }
       case ElementType.Tempo: {
-        const tempo = element as TempoElement;
-        return this.getDiagnosticGlyphLabel(tempo.neume);
+        return 'tempo';
       }
       case ElementType.DropCap:
         return 'drop-cap';
@@ -2060,10 +2053,6 @@ export class LayoutService {
       default:
         return String(element.elementType);
     }
-  }
-
-  private static getDiagnosticGlyphLabel(neume: Neume) {
-    return NeumeMappingService.getMapping(neume).glyphName;
   }
 
   private static getInlineSpacing(pageSetup: PageSetup) {

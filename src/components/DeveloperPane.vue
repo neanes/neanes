@@ -222,7 +222,7 @@ function emitOpenSections(value: string | string[] | undefined) {
 
 function formatDiagnosticItem(item: LayoutDiagnosticItem) {
   if (item.type === 'box') {
-    const label = item.label ?? getGroupLabelToken(item.ownerElementType);
+    const label = item.label;
     return label != null
       ? `b(${label}:${formatNumber(item.width)})`
       : `b(${formatNumber(item.width)})`;
@@ -265,11 +265,6 @@ function getGroupLabel(group: LayoutDiagnosticItemGroup) {
     : `${group.ownerElementType} #${group.ownerElementId ?? group.ownerElementIndex ?? '?'}`;
 }
 
-function getGroupLabelToken(
-  ownerElementType: LayoutDiagnosticItemGroup['ownerElementType'],
-) {
-  return ownerElementType == null ? null : String(ownerElementType);
-}
 </script>
 
 <style scoped>

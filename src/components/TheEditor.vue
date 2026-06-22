@@ -1266,14 +1266,14 @@ const pageStyle = computed(() => {
 
 const guideStyleTop = computed(() => {
   return {
-    top: withZoom(score.value.pageSetup.topMargin - 1),
+    top: withZoom(score.value.pageSetup.topMargin),
     width: withZoom(score.value.pageSetup.pageWidth),
   } as StyleValue;
 });
 
 const guideStyleBottom = computed(() => {
   return {
-    bottom: withZoom(score.value.pageSetup.bottomMargin - 1),
+    bottom: withZoom(score.value.pageSetup.bottomMargin),
     width: withZoom(score.value.pageSetup.pageWidth),
   } as StyleValue;
 });
@@ -1730,7 +1730,7 @@ function getGuideStyleLeft(page: Page) {
   const margins = getResolvedMarginsForPage(page);
 
   return {
-    left: withZoom(margins.left - 1),
+    left: withZoom(margins.left),
     height: withZoom(score.value.pageSetup.pageHeight),
   } as StyleValue;
 }
@@ -1739,7 +1739,7 @@ function getGuideStyleRight(page: Page) {
   const margins = getResolvedMarginsForPage(page);
 
   return {
-    right: withZoom(margins.right - 1),
+    right: withZoom(margins.right),
     height: withZoom(score.value.pageSetup.pageHeight),
   } as StyleValue;
 }

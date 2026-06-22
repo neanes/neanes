@@ -168,6 +168,7 @@ import type {
 } from '@/models/LayoutDiagnostics';
 
 type DeveloperToggleKey =
+  | 'printOverlays'
   | 'showAdjustmentRatios'
   | 'showAnonymousBoxes'
   | 'showCollisionRegions'
@@ -199,6 +200,7 @@ const emit = defineEmits<{
 }>();
 
 const displayToggles: Array<{ key: DeveloperToggleKey; label: string }> = [
+  { key: 'printOverlays', label: 'Print Overlays' },
   { key: 'showGuides', label: 'Show guides' },
   { key: 'showAdjustmentRatios', label: 'Show adjustment ratios' },
   { key: 'showAnonymousBoxes', label: 'Show anonymous boxes' },

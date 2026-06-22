@@ -746,6 +746,8 @@ const showDeveloperPanels = computed(
   () => editorPreferences.value.showDeveloperPanels,
 );
 
+const printOverlays = computed(() => editorPreferences.value.printOverlays);
+
 const showGuides = computed(() => editorPreferences.value.showGuides);
 
 const showAdjustmentRatios = computed(
@@ -776,6 +778,10 @@ const showCollisionRegions = computed(
 
 const shouldCollectLayoutDiagnostics = computed(
   () => showDeveloperPanels.value,
+);
+
+const shouldRenderDeveloperOverlaysInPrint = computed(
+  () => showDeveloperPanels.value && printOverlays.value,
 );
 
 const selectedLyrics = computed({
@@ -2486,6 +2492,7 @@ function syncDeveloperPanelsFromPreferencesOnStartup() {
 
 function updateDeveloperToggle(
   key:
+    | 'printOverlays'
     | 'showAdjustmentRatios'
     | 'showAnonymousBoxes'
     | 'showCollisionRegions'
@@ -8235,6 +8242,7 @@ function renderTabLabel(tab: Tab) {
             :open-sections="developerPaneOpenSections"
             :selected-element="developerSelectedElement"
             :toggles="{
+              printOverlays,
               showAdjustmentRatios,
               showAnonymousBoxes,
               showCollisionRegions,
@@ -8349,13 +8357,25 @@ function renderTabLabel(tab: Tab) {
                     :class="{ print: printMode }"
                   >
                     <template v-if="page.isVisible || printMode">
-                      <template v-if="showDeveloperPanels && showGuides">
+                      <template
+                        v-if="
+                          showDeveloperPanels &&
+                          showGuides &&
+                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
+                        "
+                      >
                         <span class="guide-line-vl" :style="guideStyleLeft" />
                         <span class="guide-line-vr" :style="guideStyleRight" />
                         <span class="guide-line-ht" :style="guideStyleTop" />
                         <span class="guide-line-hb" :style="guideStyleBottom" />
                       </template>
-                      <template v-if="showDeveloperPanels && showGlueWidths">
+                      <template
+                        v-if="
+                          showDeveloperPanels &&
+                          showGlueWidths &&
+                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
+                        "
+                      >
                         <div
                           v-for="(line, lineIndex) in page.lines"
                           :key="`developer-glue-line-${pageIndex}-${lineIndex}`"
@@ -8392,7 +8412,11 @@ function renderTabLabel(tab: Tab) {
                         </div>
                       </template>
                       <template
-                        v-if="showDeveloperPanels && showAnonymousBoxes"
+                        v-if="
+                          showDeveloperPanels &&
+                          showAnonymousBoxes &&
+                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
+                        "
                       >
                         <div
                           v-for="(line, lineIndex) in page.lines"
@@ -9110,6 +9134,9 @@ function renderTabLabel(tab: Tab) {
                               element,
                             )"
                             :key="`developer-overlay-${element.id}-${boxIndex}`"
+                            v-show="
+                              !printMode || shouldRenderDeveloperOverlaysInPrint
+                            "
                             class="developer-overlay-box"
                             :class="{
                               collision: box.kind === 'collision',
@@ -9124,6 +9151,7 @@ function renderTabLabel(tab: Tab) {
                           v-if="
                             showDeveloperPanels &&
                             showAdjustmentRatios &&
+                            (!printMode || shouldRenderDeveloperOverlaysInPrint) &&
                             line.adjustmentRatio != null &&
                             line.elements.length > 0
                           "

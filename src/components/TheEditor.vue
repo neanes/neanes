@@ -972,7 +972,13 @@ function getDeveloperAnonymousBoxOverlays(line: Line, lineIndex: number) {
     kind: getDeveloperAnonymousBoxKind(overlay),
     label: overlay.label,
     style: getDeveloperOverlayStyle(
-      getDeveloperGlueOverlayFrame(line, overlay.left, top, overlay.width, height),
+      getDeveloperGlueOverlayFrame(
+        line,
+        overlay.left,
+        top,
+        overlay.width,
+        height,
+      ),
     ),
   }));
 }
@@ -9133,10 +9139,10 @@ function renderTabLabel(tab: Tab) {
                             v-for="(box, boxIndex) in getDeveloperOverlayBoxes(
                               element,
                             )"
-                            :key="`developer-overlay-${element.id}-${boxIndex}`"
                             v-show="
                               !printMode || shouldRenderDeveloperOverlaysInPrint
                             "
+                            :key="`developer-overlay-${element.id}-${boxIndex}`"
                             class="developer-overlay-box"
                             :class="{
                               collision: box.kind === 'collision',
@@ -9151,7 +9157,8 @@ function renderTabLabel(tab: Tab) {
                           v-if="
                             showDeveloperPanels &&
                             showAdjustmentRatios &&
-                            (!printMode || shouldRenderDeveloperOverlaysInPrint) &&
+                            (!printMode ||
+                              shouldRenderDeveloperOverlaysInPrint) &&
                             line.adjustmentRatio != null &&
                             line.elements.length > 0
                           "
@@ -9853,7 +9860,10 @@ function renderTabLabel(tab: Tab) {
       transparent 0 4px,
       rgb(255 255 255 / 45%) 4px 7px
     ),
-    linear-gradient(var(--developer-glue-actual-fill), var(--developer-glue-actual-fill));
+    linear-gradient(
+      var(--developer-glue-actual-fill),
+      var(--developer-glue-actual-fill)
+    );
 }
 
 .developer-anonymous-box-overlay {

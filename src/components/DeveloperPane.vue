@@ -56,7 +56,7 @@
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="glue" v-if="props.toggles.showGlueWidths">
+          <AccordionItem v-if="props.toggles.showGlueWidths" value="glue">
             <AccordionTrigger>Glue Overlays</AccordionTrigger>
             <AccordionContent>
               <div class="developer-pane-section pt-2">

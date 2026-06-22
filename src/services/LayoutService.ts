@@ -772,21 +772,19 @@ export class LayoutService {
           //   penalty(inf)         protect the left projection
           //   glue(L_i, 0, 0)      fixed left projection
           //   box(B_i)             the neume
-          //   penalty(inf)         protect the neume
-          //   glue(0, s^+, s^-)    stretch that remains at line end
           //   penalty(cost, w_i)   candidate breakpoint
-          //   glue(m_i, 0, 0)      same-line spacing that vanishes at breaks
+          //   glue(m_i, s^+, s^-)  same-line spacing that vanishes at breaks
           //
           // On the same line, each note boundary contributes m_i of width plus
           // s^+ of stretch for justification.
           //
           // At a break, the final glue becomes leading glue on the next line
-          // and is skipped by positionItems, so m_i disappears. The stretch
-          // glue stays on the current line. L_{i+1} then protects the left edge
-          // of the next line, and the penalty width w_i reserves break-only
-          // space for the right projection, melisma overhang, and measure-bar
-          // transfers. Terminal right-barline clearance is also reserved when
-          // the current note's barline remains at line end.
+          // and is skipped by positionItems, so m_i and its elasticity
+          // disappear. L_{i+1} then protects the left edge of the next line,
+          // and the penalty width w_i reserves break-only space for the right
+          // projection, melisma overhang, and measure-bar transfers. Terminal
+          // right-barline clearance is also reserved when the current note's
+          // barline remains at line end.
           //
           // m_i = s_0 + R_i - T_i^left - T_i^right + ell_i, where s_0 is the
           // fixed inline spacing, floored by any fixed measure-bar clearance.
@@ -950,7 +948,7 @@ export class LayoutService {
           //    note's right side at a break).
           // 4. Terminal clearance before the current note's right barline.
           // These costs are break-conditional and cannot go in m_i (which
-          // vanishes at breaks via the cancellation glue).
+          // vanishes at breaks via the post-break glue).
           const penaltyWidth = this.getBreakPenaltyWidth(
             noteElement,
             rightProjection,
@@ -964,20 +962,20 @@ export class LayoutService {
           const martyriaOwnsBoundaryGlue =
             nextElement?.elementType === ElementType.Martyria;
 
-          const preBreakGlue = martyriaOwnsBoundaryGlue
-            ? this.fixedGlue(0)
-            : { ...standardGlue, width: 0 };
+          const postBreakGlue = martyriaOwnsBoundaryGlue
+            ? this.fixedGlue(m_i - nextLeadingLyricHyphenReservation)
+            : {
+                ...standardGlue,
+                width: m_i - nextLeadingLyricHyphenReservation,
+              };
 
-          // Break opportunity after the neume. The pre-break glue stays on the
-          // current line; the post-break glue becomes leading glue on the next
-          // line and is skipped by positionItems.
-          this.addProtectedBreakpointEncoding(
-            layoutWorkspace,
-            preBreakGlue,
-            breakCost,
-            penaltyWidth,
-            this.fixedGlue(m_i - nextLeadingLyricHyphenReservation),
-          );
+          // Break opportunity after the neume. The candidate penalty sits
+          // immediately after the box, and the post-break glue contributes
+          // same-line spacing and elasticity. When a break is taken, that glue
+          // becomes leading glue on the next line and is skipped by
+          // positionItems.
+          this.addPenalty(layoutWorkspace, breakCost, penaltyWidth);
+          this.addGlue(postBreakGlue, layoutWorkspace);
 
           break;
         }
@@ -1481,8 +1479,8 @@ export class LayoutService {
       }
 
       // Invariant: After processing each element, there should be trailing glue
-      // at the end of the paragraph (for example a note's post-break fixed
-      // glue, martyria spacing glue, or ordinary spacing after another
+      // at the end of the paragraph (for example a note's post-break glue,
+      // martyria spacing glue, or ordinary spacing after another
       // element), even if the element has an (explicit or implicit) line break
       // and the paragraph is about to end. In the latter case, endParagraph()
       // removes that trailing glue and replaces it with finishing glue.
@@ -3646,9 +3644,10 @@ export class LayoutService {
   }
 
   // Remove trailing glue from the paragraph. Only strips consecutive trailing
-  // glue items, such as note cancellation glue, martyria spacing glue, or the
-  // ordinary spacing left by other elements. The note's breakpoint penalty and
-  // vanishing stretch glue are preserved.
+  // glue items, such as the note's post-break glue, martyria spacing glue, or
+  // the ordinary spacing left by other elements. The note's breakpoint penalty
+  // is preserved; its trailing post-break glue, which now carries the stretch
+  // and shrink budget, is among the glue removed.
   private static removeGlue(workspace: LayoutWorkspace) {
     const { pendingParagraph } = workspace;
 

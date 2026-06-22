@@ -67,6 +67,9 @@
     "pt": "pt",
     "pc": "pc",
     "margins": "Περιθώρια",
+    "facingPages": "Αντικριστές Σελίδες",
+    "inside": "Εσωτερικό",
+    "outside": "Εξωτερικό",
     "header": "Κεφαλίδα",
     "footer": "Υποσέλιδο",
     "orientation": "Προσανατολισμός",
@@ -234,6 +237,7 @@
     "menuInteraction": "Αλληλεπίδραση Μενού",
     "menuInteractionHold": "Πατήστε Παρατεταμένα για Επιλογή",
     "menuInteractionClick": "Κλικ για Άνοιγμα Μενού",
+    "enableDeveloperPanel": "Ενεργοποίηση Πίνακα Προγραμματιστή",
     "tempoDefaults": "Προεπιλογές Χρονικής Αγωγής",
     "bpm": "BPM"
   }

@@ -7,6 +7,14 @@ import metadataStathisLegacy from '@/assets/fonts/neanesstathisseries.metadata.j
 import metadataStathis from '@/assets/fonts/neanesstathisseriesengraving.metadata.json';
 import type { SbmuflGlyphName } from '@/services/NeumeMappingService';
 
+interface Metrics {
+  ascent: number;
+  descent: number;
+  winAscent: number;
+  winDescent: number;
+  oligonMidpoint: number;
+}
+
 interface EngravingGlue {
   width: number;
   stretch: number;
@@ -54,7 +62,7 @@ class FontService {
   }
 
   getMetrics(fontFamily: string) {
-    return this.getMetadata(fontFamily).metrics;
+    return this.getMetadata(fontFamily).metrics as Metrics;
   }
 
   getAdvanceWidth(fontFamily: string, glyph: SbmuflGlyphName) {

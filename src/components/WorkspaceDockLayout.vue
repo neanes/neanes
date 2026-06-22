@@ -83,6 +83,7 @@ interface PaneContentParams {
 }
 
 const props = defineProps<{
+  developerPaneEnabled: boolean;
   paneLayoutResetCounter: number;
   paneVisibility: WorkspacePaneVisibility;
 }>();
@@ -728,8 +729,9 @@ function addToolPane(
   pane: PaneDefinition,
   api: DockviewApi,
   centerPanel: IDockviewPanel,
+  edge: EdgeGroupPosition = pane.homeEdge,
 ) {
-  const group = ensureEdgeGroup(pane.homeEdge, api);
+  const group = ensureEdgeGroup(edge, api);
 
   const addInactive = group.activePanel != null;
 
@@ -747,13 +749,42 @@ function addToolPane(
     title: pane.title,
   });
 
-  if (pane.defaultVisible) {
+  if (pane.defaultVisible && edge === pane.homeEdge) {
     group.api.expand();
   }
 
   // addPanel can activate the edge group; restore the editor surface as the active
   // Dockview panel after drawer initialization.
   centerPanel.api.setActive();
+}
+
+function syncDeveloperPanePresence(enabled: boolean, api: DockviewApi) {
+  const developerPane = paneRegistry.byId.get('workspace-developer');
+
+  if (developerPane == null) {
+    return;
+  }
+
+  const existingPanel = api.getPanel(developerPane.id);
+
+  if (!enabled) {
+    if (existingPanel != null) {
+      rememberPanelCurrentOrPreviousDockedEdge(existingPanel);
+      api.removePanel(existingPanel);
+    }
+    return;
+  }
+
+  if (existingPanel != null) {
+    return;
+  }
+
+  addToolPane(
+    developerPane,
+    api,
+    ensureCenterEditorPanel(api),
+    developerPane.homeEdge,
+  );
 }
 
 function activateSiblingPane(group: DockviewGroupPanel, panelId: string) {
@@ -962,6 +993,14 @@ function installStateListeners(api: DockviewApi) {
 }
 
 function applyPaneVisibility(visibility: WorkspacePaneVisibility) {
+  const api = dockviewApi.value;
+
+  if (api == null) {
+    return;
+  }
+
+  syncDeveloperPanePresence(props.developerPaneEnabled, api);
+
   const visibleAtStart = computePaneVisibility();
   const panesToShow = paneRegistry.panes.filter(
     (pane) => visibility[pane.paneId] && !visibleAtStart[pane.paneId],
@@ -987,8 +1026,14 @@ function resetLayout() {
     return;
   }
 
+  syncDeveloperPanePresence(props.developerPaneEnabled, api);
+
   paneRegistry.panes.forEach((paneDefinition) => {
-    const panel = requireDockviewPanel(api, paneDefinition.id);
+    const panel = api.getPanel(paneDefinition.id);
+
+    if (panel == null) {
+      return;
+    }
 
     const homeGroup = ensureEdgeGroup(paneDefinition.homeEdge, api);
     const homeIndex = paneRegistry.homeIndexById.get(paneDefinition.id);
@@ -1126,7 +1171,13 @@ function initializeLayout(api: DockviewApi) {
   paneRegistry.configuredEdges.forEach((direction) =>
     ensureEdgeGroup(direction, api),
   );
-  paneRegistry.panes.forEach((panel) => addToolPane(panel, api, centerPanel));
+  paneRegistry.panes.forEach((panel) => {
+    if (panel.paneId === 'developer' && !props.developerPaneEnabled) {
+      return;
+    }
+
+    addToolPane(panel, api, centerPanel);
+  });
 }
 
 function onDockviewReady(event: DockviewReadyEvent) {

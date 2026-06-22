@@ -286,6 +286,7 @@ export class SaveService {
     pageSetup.dropCapDefaultLineSpan = p.dropCapDefaultLineSpan;
 
     pageSetup.leftMargin = p.leftMargin;
+    pageSetup.facingPages = p.facingPages || undefined;
     pageSetup.lineHeight = p.lineHeight;
 
     pageSetup.lyricsDefaultColor = p.lyricsDefaultColor;
@@ -973,6 +974,7 @@ export class SaveService {
     pageSetup.bottomMargin = p.bottomMargin;
     pageSetup.leftMargin = p.leftMargin;
     pageSetup.rightMargin = p.rightMargin;
+    pageSetup.facingPages = p.facingPages === true;
 
     if (p.headerMargin != null) {
       pageSetup.headerMargin = p.headerMargin;

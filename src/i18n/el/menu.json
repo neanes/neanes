@@ -56,11 +56,13 @@
   },
   "view": {
     "root": "Προβολή",
+    "developer": "Προγραμματιστής",
     "neumeSelector": "Επιλογέας Νευμάτων",
     "commonCombos": "Συνήθεις Συνδυασμοί",
     "properties": "Ιδιότητες",
     "selection": "Επιλογή",
     "lyrics": "Στίχοι",
+    "showDeveloperPanels": "Εμφάνιση Πινάκων Προγραμματιστή",
     "resetLayout": "Επαναφορά Διάταξης",
     "generateTestFiles": "Δημιουργία Αρχείων Δοκιμής (Εντοπισμός Σφαλμάτων)"
   },

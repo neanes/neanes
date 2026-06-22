@@ -12,6 +12,7 @@ import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import type { Page } from '@/models/Page';
 import type { PageSetup } from '@/models/PageSetup';
 import { resolveFontStyle } from '@/utils/fontStyle';
+import { resolvePageMargins } from '@/utils/PageMargins';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from '../FontService';
@@ -233,6 +234,10 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
     let section: LatexSection = { default: true, lines: [] };
 
     for (const page of pages) {
+      const resolvedMargins = resolvePageMargins(
+        pageSetup,
+        page.physicalPageNumber,
+      );
       for (const line of page.lines) {
         const resultLine: LatexLine = { elements: [] };
 
@@ -251,7 +256,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             const note = element as NoteElement;
             const noteInfo = {
               type: 'note',
-              x: toPt(element.x - pageSetup.leftMargin),
+              x: toPt(element.x - resolvedMargins.left),
               width: toPt(note.neumeWidth),
               quantitativeNeume: glyphName(note.quantitativeNeume),
               vareia: note.vareia || undefined,
@@ -405,7 +410,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
 
             resultLine.elements.push({
               type: 'martyria',
-              x: toPt(element.x - pageSetup.leftMargin),
+              x: toPt(element.x - resolvedMargins.left),
               width: toPt(martyria.neumeWidth),
               verticalOffset:
                 martyria.verticalOffset != 0
@@ -424,7 +429,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             const tempo = element as TempoElement;
             resultLine.elements.push({
               type: 'tempo',
-              x: toPt(element.x - pageSetup.leftMargin),
+              x: toPt(element.x - resolvedMargins.left),
               width: toPt(tempo.neumeWidth),
               neume: glyphName(tempo.neume),
             } as LatexTempoElement);
@@ -448,7 +453,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
 
             resultLine.elements.push({
               type: 'dropcap',
-              x: toPt(element.x - pageSetup.leftMargin),
+              x: toPt(element.x - resolvedMargins.left),
               width: toPt(dropCap.contentWidth),
               verticalAdjustment:
                 verticalAdjustment != 0 ? toPt(verticalAdjustment) : undefined,
@@ -558,7 +563,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
 
             resultLine.elements.push({
               type: 'textbox',
-              x: toPt(element.x - pageSetup.leftMargin),
+              x: toPt(element.x - resolvedMargins.left),
               width: toPt(textBox.width),
               height: toPt(textBox.height),
               alignment: !textBox.multipanel

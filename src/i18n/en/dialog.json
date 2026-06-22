@@ -67,6 +67,9 @@
     "pt": "pt",
     "pc": "pc",
     "margins": "Margins",
+    "facingPages": "Facing Pages",
+    "inside": "Inside",
+    "outside": "Outside",
     "header": "Header",
     "footer": "Footer",
     "orientation": "Orientation",
@@ -234,6 +237,7 @@
     "menuInteraction": "Menu Interaction",
     "menuInteractionHold": "Press and hold to select",
     "menuInteractionClick": "Click to open menu",
+    "enableDeveloperPanel": "Enable Developer Panel",
     "tempoDefaults": "Tempo Defaults",
     "bpm": "BPM"
   }

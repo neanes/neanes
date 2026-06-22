@@ -948,7 +948,7 @@ export class LayoutService {
           //    note's right side at a break).
           // 4. Terminal clearance before the current note's right barline.
           // These costs are break-conditional and cannot go in m_i (which
-          // vanishes at breaks via the cancellation glue).
+          // vanishes at breaks via the post-break glue).
           const penaltyWidth = this.getBreakPenaltyWidth(
             noteElement,
             rightProjection,
@@ -1479,8 +1479,8 @@ export class LayoutService {
       }
 
       // Invariant: After processing each element, there should be trailing glue
-      // at the end of the paragraph (for example a note's post-break fixed
-      // glue, martyria spacing glue, or ordinary spacing after another
+      // at the end of the paragraph (for example a note's post-break glue,
+      // martyria spacing glue, or ordinary spacing after another
       // element), even if the element has an (explicit or implicit) line break
       // and the paragraph is about to end. In the latter case, endParagraph()
       // removes that trailing glue and replaces it with finishing glue.
@@ -3644,9 +3644,10 @@ export class LayoutService {
   }
 
   // Remove trailing glue from the paragraph. Only strips consecutive trailing
-  // glue items, such as note cancellation glue, martyria spacing glue, or the
-  // ordinary spacing left by other elements. The note's breakpoint penalty and
-  // vanishing stretch glue are preserved.
+  // glue items, such as the note's post-break glue, martyria spacing glue, or
+  // the ordinary spacing left by other elements. The note's breakpoint penalty
+  // is preserved; its trailing post-break glue, which now carries the stretch
+  // and shrink budget, is among the glue removed.
   private static removeGlue(workspace: LayoutWorkspace) {
     const { pendingParagraph } = workspace;
 

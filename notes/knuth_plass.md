@@ -200,7 +200,7 @@ If a right-aligned martyria starts a paragraph, that leading glue is still encod
 
 As in Knuth & Plass, each paragraph ends with finishing glue, preceded by a maximum-cost penalty to forbid an earlier break and followed by a minimum-cost penalty to force the paragraph break.
 When a paragraph does not end immediately after a note, the finishing glue has width 0.
-If a paragraph does end immediately after a note, `endParagraph` first materializes that note's trailing reservation into the finishing glue before removing the trailing cancellation glue.
+If a paragraph does end immediately after a note, `endParagraph` first materializes that note's trailing reservation into the finishing glue before removing the trailing post-break glue.
 For non-justified endings the finishing glue uses effectively infinite stretch (`MAX_COST`); for justified endings it uses stretch 0. In all cases its shrink is 0.
 
 ### Lyrics
@@ -268,25 +268,25 @@ The implementation does not use a second glue of the form $\text{glue}(m_i, -s^+
 At a break, the post-break glue becomes leading glue on the next line. It lies before the next note's leading $\text{penalty}(\infty)$ barrier, so it falls within the discarded region and is skipped by `positionItems`, and both $m_i$ and its elasticity vanish.
 This prevents positive adjustment ratio from being spent as invisible stretch after the last visible note on the previous line.
 The next note's left projection $\text{glue}(L_{i+1}, 0, 0)$ lies past that barrier, so it is not discarded and protects the left edge of the new line.
-The penalty width $w_i$ remains the break-only quantity: it cannot live in the cancellation glue, because that glue disappears at breaks.
+The penalty width $w_i$ remains the break-only quantity: it cannot live in the post-break glue, because that glue disappears at breaks.
 Its job is to reserve space for the right projection, melisma lyric overhang, terminal right-barline clearance, and measure-bar transfers that matter only at line end.
 
 When a hyphenated note is immediately followed by a note that carries lyrics, and a break is taken between them, a lyric hyphen is drawn at the start of the next line, before that lyric.
 Like the measure-bar transfer, this reserves space at the start of the next line rather than at the end of the current one, so it uses a spacer-and-cancel pattern rather than the penalty width $w_i$.
-The boundary's cancellation glue is narrowed by the extra leading width the line-start hyphen needs, and an anonymous spacer box of that width is inserted before the next note's box.
+The boundary's post-break glue is narrowed by the extra leading width the line-start hyphen needs, and an anonymous spacer box of that width is inserted before the next note's box.
 On the same line the narrowed glue and the spacer cancel, leaving the note's position unchanged.
-At a break the cancellation glue is skipped at line start while the spacer survives, reserving fixed leading room for the hyphen.
+At a break the post-break glue is skipped at line start while the spacer survives, reserving fixed leading room for the hyphen.
 The reserved width is $\max(0,\ \texttt{lyricsMinimumSpacing} + \textit{hyphenWidth} - L_{i+1} - \sigma_{i+1})$, where $\sigma_{i+1}$ is the next lyric's text-start offset from the neume's left edge.
 Nothing is reserved when $L_{i+1}$ and that offset already leave room for the hyphen and its minimum spacing.
 
 If a paragraph ends immediately after a note, `endParagraph` materializes that note's right-edge reservation, the larger of the right projection and the melisma overhang, into the finishing glue width.
 It also reserves the clearance before a terminal right barline.
-It must do this because `removeGlue` strips the trailing cancellation glue, while the forced break itself contributes penalty width 0.
+It must do this because `removeGlue` strips the trailing post-break glue, while the forced break itself contributes penalty width 0.
 
 When a martyria follows a note, the martyria path replaces the note's trailing post-break glue with martyria glue: font-default martyria glue in the usual case, or the infinite-stretch right-martyria glue when the martyria is right-aligned.
 When a non-right-aligned martyria follows a standalone tempo sign, the same replacement path uses standard glue and skips the pre-martyria lyric-collision spacer.
 Ordinary note-to-martyria lyric collision is still handled by `addLyricReservation`.
-However, if a melisma lyric overhang extends past the last neume, that remaining overhang is first materialized into the replacement martyria glue width so that it is not lost when the note's cancellation glue is removed.
+However, if a melisma lyric overhang extends past the last neume, that remaining overhang is first materialized into the replacement martyria glue width so that it is not lost when the note's post-break glue is removed.
 A right-aligned martyria also preserves terminal right-barline clearance when it replaces the note's trailing glue.
 
 ### Computing the minimum same-line width
@@ -300,7 +300,7 @@ The same-line reservation starts from the current note's right projection and is
 
 First, some reservation can be _reclaimed_ when lyrics tuck under neighboring neumes:
 
-- The next note's left projection can be absorbed into the cancellation glue, so on the same line we do not always need the full $L_{i+1}$.
+- The next note's left projection can be absorbed into the post-break glue, so on the same line we do not always need the full $L_{i+1}$.
 - If the next neume is wider than its lyric, some of the current note's right projection can tuck under that neume.
 
 Second, if the resulting lyric gap is still too small, a collision correction is added back.

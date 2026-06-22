@@ -18,6 +18,7 @@ export interface IEditorPreferences {
   showLyricBoundingBoxes: boolean;
   showNeumeBoundingBoxes: boolean;
   showCollisionRegions: boolean;
+  showGlueWidths: boolean;
 }
 
 export class EditorPreferences implements IEditorPreferences {
@@ -31,6 +32,7 @@ export class EditorPreferences implements IEditorPreferences {
   showLyricBoundingBoxes = false;
   showNeumeBoundingBoxes = false;
   showCollisionRegions = false;
+  showGlueWidths = false;
 
   constructor() {
     this.tempoDefaults = {

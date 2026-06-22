@@ -755,6 +755,8 @@ const showInkBoundingBoxes = computed(
   () => editorPreferences.value.showInkBoundingBoxes,
 );
 
+const showGlueWidths = computed(() => editorPreferences.value.showGlueWidths);
+
 const showLyricBoundingBoxes = computed(
   () => editorPreferences.value.showLyricBoundingBoxes,
 );
@@ -861,6 +863,81 @@ const selectedLineDiagnostics = computed(() =>
     ? (selectedDeveloperLine.value?.diagnostics ?? null)
     : null,
 );
+
+function getDeveloperGlueOverlays(
+  line: Line,
+  lineIndex: number,
+  pageIndex: number,
+) {
+  const diagnostics = line.diagnostics;
+
+  if (
+    !showDeveloperPanels.value ||
+    !showGlueWidths.value ||
+    diagnostics == null ||
+    line.elements.length === 0
+  ) {
+    return [];
+  }
+
+  const barHeight = Math.max(3, score.value.pageSetup.lineHeight * 0.06);
+  const barGap = Math.max(2, score.value.pageSetup.lineHeight * 0.03);
+  const stackHeight = barHeight * 2 + barGap;
+  const stackTop =
+    line.elements[0].y +
+    score.value.pageSetup.lineHeight * 0.45 -
+    stackHeight / 2;
+  const preferredTop = stackTop + barHeight + barGap;
+
+  return diagnostics.glueOverlays.map((overlay, overlayIndex) => {
+    const delta = overlay.actualWidth - overlay.preferredWidth;
+    const actualFrame = getDeveloperGlueOverlayFrame(
+      line,
+      overlay.left,
+      stackTop,
+      overlay.actualWidth,
+      barHeight,
+    );
+    const preferredFrame = getDeveloperGlueOverlayFrame(
+      line,
+      overlay.left,
+      preferredTop,
+      overlay.preferredWidth,
+      barHeight,
+    );
+    const wrapperLeft = Math.min(actualFrame.left, preferredFrame.left);
+    const wrapperTop = Math.min(actualFrame.top, preferredFrame.top);
+    const wrapperRight = Math.max(
+      actualFrame.left + actualFrame.width,
+      preferredFrame.left + preferredFrame.width,
+    );
+    const wrapperBottom = Math.max(
+      actualFrame.top + actualFrame.height,
+      preferredFrame.top + preferredFrame.height,
+    );
+
+    return {
+      actualStyle: getDeveloperGlueOverlayStyle(
+        actualFrame,
+        wrapperLeft,
+        wrapperTop,
+      ),
+      delta,
+      key: `${pageIndex}-${lineIndex}-${overlay.ownerElementId ?? 'anon'}-${overlayIndex}`,
+      preferredStyle: getDeveloperGlueOverlayStyle(
+        preferredFrame,
+        wrapperLeft,
+        wrapperTop,
+      ),
+      wrapperStyle: getDeveloperGlueOverlayWrapperStyle({
+        height: wrapperBottom - wrapperTop,
+        left: wrapperLeft,
+        top: wrapperTop,
+        width: wrapperRight - wrapperLeft,
+      }),
+    };
+  });
+}
 
 const overlayDiagnosticsContext = computed<OverlayDiagnosticsContext>(() =>
   LayoutService.createOverlayDiagnosticsContext(score.value.pageSetup),
@@ -1836,6 +1913,61 @@ function getDeveloperOverlayStyle(box: {
   } as StyleValue;
 }
 
+function getDeveloperGlueOverlayFrame(
+  line: Line,
+  logicalLeft: number,
+  top: number,
+  width: number,
+  height: number,
+) {
+  const logicalRight = logicalLeft + width;
+  const normalizedLogicalLeft = Math.min(logicalLeft, logicalRight);
+  const normalizedLogicalRight = Math.max(logicalLeft, logicalRight);
+  const normalizedWidth = normalizedLogicalRight - normalizedLogicalLeft;
+  const physicalLeft = rtl.value
+    ? score.value.pageSetup.pageWidth -
+      score.value.pageSetup.rightMargin -
+      line.indentation -
+      normalizedLogicalRight
+    : score.value.pageSetup.leftMargin +
+      line.indentation +
+      normalizedLogicalLeft;
+
+  return {
+    height,
+    left: physicalLeft,
+    top,
+    width: normalizedWidth,
+  };
+}
+
+function getDeveloperGlueOverlayWrapperStyle(frame: {
+  height: number;
+  left: number;
+  top: number;
+  width: number;
+}) {
+  return {
+    left: withZoom(frame.left),
+    top: withZoom(frame.top),
+    width: withZoom(frame.width),
+    height: withZoom(frame.height),
+  } as StyleValue;
+}
+
+function getDeveloperGlueOverlayStyle(
+  frame: { height: number; left: number; top: number; width: number },
+  wrapperLeft: number,
+  wrapperTop: number,
+) {
+  return {
+    left: withZoom(frame.left - wrapperLeft),
+    top: withZoom(frame.top - wrapperTop),
+    width: withZoom(frame.width),
+    height: withZoom(frame.height),
+  } as StyleValue;
+}
+
 function getNextElementOnSameLine(element: ScoreElement) {
   const index = elements.value.indexOf(element);
 
@@ -2312,6 +2444,7 @@ function updateDeveloperToggle(
     | 'showAdjustmentRatios'
     | 'showCollisionRegions'
     | 'showGuides'
+    | 'showGlueWidths'
     | 'showInkBoundingBoxes'
     | 'showLyricBoundingBoxes'
     | 'showNeumeBoundingBoxes',
@@ -8059,6 +8192,7 @@ function renderTabLabel(tab: Tab) {
               showAdjustmentRatios,
               showCollisionRegions,
               showGuides,
+              showGlueWidths,
               showInkBoundingBoxes,
               showLyricBoundingBoxes,
               showNeumeBoundingBoxes,
@@ -8173,6 +8307,36 @@ function renderTabLabel(tab: Tab) {
                         <span class="guide-line-vr" :style="guideStyleRight" />
                         <span class="guide-line-ht" :style="guideStyleTop" />
                         <span class="guide-line-hb" :style="guideStyleBottom" />
+                      </template>
+                      <template v-if="showDeveloperPanels && showGlueWidths">
+                        <div
+                          v-for="(line, lineIndex) in page.lines"
+                          :key="`developer-glue-line-${pageIndex}-${lineIndex}`"
+                        >
+                          <div
+                            v-for="overlay in getDeveloperGlueOverlays(
+                              line,
+                              lineIndex,
+                              pageIndex,
+                            )"
+                            :key="`developer-glue-${overlay.key}`"
+                            class="developer-glue-overlay"
+                            :class="{
+                              shrink: overlay.delta < 0,
+                              stretch: overlay.delta > 0,
+                            }"
+                            :style="overlay.wrapperStyle"
+                          >
+                            <div
+                              class="developer-glue-preferred"
+                              :style="overlay.preferredStyle"
+                            ></div>
+                            <div
+                              class="developer-glue-actual"
+                              :style="overlay.actualStyle"
+                            ></div>
+                          </div>
+                        </div>
                       </template>
                       <template v-if="score.pageSetup.showHeader">
                         <template
@@ -9534,6 +9698,40 @@ function renderTabLabel(tab: Tab) {
   position: absolute;
   pointer-events: none;
   border: 1px dashed #2563eb;
+}
+
+.developer-glue-overlay {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.developer-glue-preferred {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid rgb(14 116 144 / 80%);
+}
+
+.developer-glue-actual {
+  position: absolute;
+  border: 1px solid rgb(14 116 144 / 55%);
+  background: rgb(14 116 144 / 35%);
+}
+
+.developer-glue-overlay.stretch .developer-glue-preferred {
+  border-color: rgb(3 105 161 / 85%);
+}
+
+.developer-glue-overlay.stretch .developer-glue-actual {
+  background: rgb(3 105 161 / 28%);
+}
+
+.developer-glue-overlay.shrink .developer-glue-preferred {
+  border-color: rgb(180 83 9 / 85%);
+}
+
+.developer-glue-overlay.shrink .developer-glue-actual {
+  background: rgb(217 119 6 / 24%);
 }
 
 .developer-overlay-box.ink {

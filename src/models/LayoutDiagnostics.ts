@@ -47,9 +47,23 @@ export interface ElementOverlayDiagnostics {
   rootNeume: string | null;
 }
 
+export interface GlueOverlayDiagnostics {
+  actualWidth: number;
+  anonymous: boolean;
+  label?: string;
+  left: number;
+  ownerElementId: number | null;
+  ownerElementIndex: number | null;
+  ownerElementType: ElementType | null;
+  preferredWidth: number;
+  shrink: number;
+  stretch: number;
+}
+
 export interface LineLayoutDiagnostics {
   actualContentWidth: number;
   adjustmentRatio: number;
+  glueOverlays: GlueOverlayDiagnostics[];
   itemGroups: LayoutDiagnosticItemGroup[];
   naturalContentWidth: number;
   paragraphIndex: number;

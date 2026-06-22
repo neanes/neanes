@@ -38,17 +38,51 @@
             <AccordionTrigger>Line Diagnostics</AccordionTrigger>
             <AccordionContent>
               <div class="developer-pane-section pt-2">
-                <dl v-if="lineDiagnostics != null" class="developer-pane-grid">
-                  <template
-                    v-for="item in lineDiagnosticRows"
-                    :key="item.label"
-                  >
-                    <dt>{{ item.label }}</dt>
-                    <dd>{{ item.value }}</dd>
-                  </template>
-                </dl>
+                <template v-if="lineDiagnostics != null">
+                  <dl class="developer-pane-grid">
+                    <template
+                      v-for="item in lineDiagnosticRows"
+                      :key="item.label"
+                    >
+                      <dt>{{ item.label }}</dt>
+                      <dd>{{ item.value }}</dd>
+                    </template>
+                  </dl>
+                </template>
                 <p v-else class="developer-pane-empty">
                   Layout diagnostics are unavailable for the current selection.
+                </p>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="glue" v-if="props.toggles.showGlueWidths">
+            <AccordionTrigger>Glue Overlays</AccordionTrigger>
+            <AccordionContent>
+              <div class="developer-pane-section pt-2">
+                <p class="developer-pane-empty">
+                  Top bar = actual justified width. Bottom bar = preferred
+                  width. Delta = actual minus preferred.
+                </p>
+                <ul
+                  v-if="lineDiagnostics != null && glueOverlayRows.length > 0"
+                  class="developer-pane-list pt-2"
+                >
+                  <li
+                    v-for="(row, index) in glueOverlayRows"
+                    :key="`glue-overlay-${index}`"
+                  >
+                    <code>{{ row }}</code>
+                  </li>
+                </ul>
+                <p
+                  v-else-if="lineDiagnostics != null"
+                  class="developer-pane-empty pt-2"
+                >
+                  No anchored glue overlays were found for the selected line.
+                </p>
+                <p v-else class="developer-pane-empty pt-2">
+                  Select a line-owned element to inspect its glue overlays.
                 </p>
               </div>
             </AccordionContent>
@@ -127,6 +161,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import type { ScoreElement } from '@/models/Element';
 import type {
+  GlueOverlayDiagnostics,
   LayoutDiagnosticItem,
   LayoutDiagnosticItemGroup,
   LineLayoutDiagnostics,
@@ -136,6 +171,7 @@ type DeveloperToggleKey =
   | 'showAdjustmentRatios'
   | 'showCollisionRegions'
   | 'showGuides'
+  | 'showGlueWidths'
   | 'showInkBoundingBoxes'
   | 'showLyricBoundingBoxes'
   | 'showNeumeBoundingBoxes';
@@ -164,6 +200,7 @@ const emit = defineEmits<{
 const displayToggles: Array<{ key: DeveloperToggleKey; label: string }> = [
   { key: 'showGuides', label: 'Show guides' },
   { key: 'showAdjustmentRatios', label: 'Show adjustment ratios' },
+  { key: 'showGlueWidths', label: 'Show glue widths' },
   { key: 'showInkBoundingBoxes', label: 'Show ink bounding boxes' },
   { key: 'showLyricBoundingBoxes', label: 'Show lyric bounding boxes' },
   { key: 'showNeumeBoundingBoxes', label: 'Show neume bounding boxes' },
@@ -213,6 +250,16 @@ const lineDiagnosticRows = computed(() => {
   ];
 });
 
+const glueOverlayRows = computed(() => {
+  const diagnostics = props.lineDiagnostics;
+
+  if (diagnostics == null) {
+    return [];
+  }
+
+  return diagnostics.glueOverlays.map(formatGlueOverlay);
+});
+
 function emitOpenSections(value: string | string[] | undefined) {
   emit(
     'update:open-sections',
@@ -245,6 +292,27 @@ function formatNumber(value: number) {
   return Number.isFinite(value) ? value.toFixed(2) : String(value);
 }
 
+function formatSignedNumber(value: number) {
+  if (value > 0) {
+    return `+${formatNumber(value)}`;
+  }
+
+  if (value < 0) {
+    return `-${formatNumber(Math.abs(value))}`;
+  }
+
+  return formatNumber(value);
+}
+
+function formatGlueOverlay(glue: GlueOverlayDiagnostics) {
+  const label = glue.label ?? getGlueOwnerLabel(glue) ?? 'glue';
+  const delta = glue.actualWidth - glue.preferredWidth;
+
+  return `${label}: pref ${formatNumber(glue.preferredWidth)}, actual ${formatNumber(
+    glue.actualWidth,
+  )}, delta ${formatSignedNumber(delta)}`;
+}
+
 function formatPenaltyCost(item: LayoutDiagnosticItem) {
   if (item.forcedBreak) {
     return '-∞';
@@ -265,6 +333,11 @@ function getGroupLabel(group: LayoutDiagnosticItemGroup) {
     : `${group.ownerElementType} #${group.ownerElementId ?? group.ownerElementIndex ?? '?'}`;
 }
 
+function getGlueOwnerLabel(glue: GlueOverlayDiagnostics) {
+  return glue.ownerElementType == null
+    ? null
+    : `${glue.ownerElementType} #${glue.ownerElementId ?? glue.ownerElementIndex ?? '?'}`;
+}
 </script>
 
 <style scoped>

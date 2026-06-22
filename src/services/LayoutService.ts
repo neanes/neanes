@@ -26,6 +26,7 @@ import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
 import type {
   ElementOverlayDiagnostics,
+  GlueOverlayDiagnostics,
   LayoutDiagnosticItem,
   LayoutDiagnosticsOptions,
   LineLayoutDiagnostics,
@@ -2440,6 +2441,7 @@ export class LayoutService {
     breakpoints: number[],
     ratios: number[],
     paragraphIndex: number,
+    positions: PositionedItem[],
   ): LineLayoutDiagnostics[] {
     const lines: LineLayoutDiagnostics[] = [];
 
@@ -2491,6 +2493,14 @@ export class LayoutService {
       lines.push({
         actualContentWidth: naturalContentWidth + stretchUsed - shrinkUsed,
         adjustmentRatio,
+        glueOverlays: this.getGlueOverlayDiagnosticsForLine(
+          items,
+          diagnosticItems,
+          positions,
+          contentStart,
+          breakpoint,
+          lineIndex,
+        ),
         itemGroups: this.groupDiagnosticItems(
           diagnosticItems.slice(contentStart, breakpoint + 1),
         ),
@@ -2507,6 +2517,92 @@ export class LayoutService {
     }
 
     return lines;
+  }
+
+  private static getGlueOverlayDiagnosticsForLine(
+    items: InputItem[],
+    diagnosticItems: LayoutDiagnosticItem[],
+    positions: PositionedItem[],
+    contentStart: number,
+    breakpoint: number,
+    lineIndex: number,
+  ) {
+    const positionsByItem = new Map<number, PositionedItem>();
+
+    for (const position of positions) {
+      if (position.line === lineIndex) {
+        positionsByItem.set(position.item, position);
+      }
+    }
+
+    const overlays: GlueOverlayDiagnostics[] = [];
+
+    for (let itemIndex = contentStart; itemIndex <= breakpoint; itemIndex++) {
+      const item = items[itemIndex];
+      const diagnosticItem = diagnosticItems[itemIndex];
+      const position = positionsByItem.get(itemIndex);
+
+      if (
+        item.type !== 'glue' ||
+        diagnosticItem?.type !== 'glue' ||
+        position == null ||
+        !this.hasAnchoredBoxesAroundItem(
+          items,
+          positionsByItem,
+          contentStart,
+          breakpoint,
+          itemIndex,
+        )
+      ) {
+        continue;
+      }
+
+      overlays.push({
+        actualWidth: position.width,
+        anonymous: diagnosticItem.anonymous,
+        label: diagnosticItem.label,
+        left: position.xOffset,
+        ownerElementId: diagnosticItem.ownerElementId,
+        ownerElementIndex: diagnosticItem.ownerElementIndex,
+        ownerElementType: diagnosticItem.ownerElementType,
+        preferredWidth: diagnosticItem.width,
+        shrink: diagnosticItem.shrink ?? 0,
+        stretch: diagnosticItem.stretch ?? 0,
+      });
+    }
+
+    return overlays;
+  }
+
+  private static hasAnchoredBoxesAroundItem(
+    items: InputItem[],
+    positionsByItem: Map<number, PositionedItem>,
+    contentStart: number,
+    breakpoint: number,
+    itemIndex: number,
+  ) {
+    let hasPreviousBox = false;
+    let hasNextBox = false;
+
+    for (let i = itemIndex - 1; i >= contentStart; i--) {
+      if (items[i].type !== 'box') {
+        continue;
+      }
+
+      hasPreviousBox = positionsByItem.has(i);
+      break;
+    }
+
+    for (let i = itemIndex + 1; i <= breakpoint; i++) {
+      if (items[i].type !== 'box') {
+        continue;
+      }
+
+      hasNextBox = positionsByItem.has(i);
+      break;
+    }
+
+    return hasPreviousBox && hasNextBox;
   }
 
   private static groupDiagnosticItems(items: LayoutDiagnosticItem[]) {
@@ -4356,6 +4452,12 @@ export class LayoutService {
       lineLengths,
       breakpoints,
     );
+    const diagnosticPositions =
+      workspace.diagnostics != null
+        ? positionItems(pendingParagraph, lineLengths, breakpoints, {
+            includeGlue: true,
+          })
+        : null;
     if (workspace.loggingEnabled) {
       console.log('Positions', positions);
       console.log('Adjustment ratios', ratios);
@@ -4371,6 +4473,7 @@ export class LayoutService {
               breakpoints,
               ratios,
               completedParagraphs.length,
+              diagnosticPositions ?? positions,
             )
           : null,
       paragraph: pendingParagraph,

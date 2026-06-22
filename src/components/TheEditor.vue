@@ -206,6 +206,7 @@ import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { isElectron } from '@/utils/isElectron';
+import { resolvePageMargins } from '@/utils/PageMargins';
 import type { TokenMetadata } from '@/utils/replaceTokens';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
@@ -1263,34 +1264,6 @@ const pageStyle = computed(() => {
   } as StyleValue;
 });
 
-const headerStyle = computed(() => {
-  return {
-    left: withZoom(score.value.pageSetup.leftMargin),
-    top: withZoom(score.value.pageSetup.headerMargin),
-  } as StyleValue;
-});
-
-const footerStyle = computed(() => {
-  return {
-    left: withZoom(score.value.pageSetup.leftMargin),
-    bottom: withZoom(score.value.pageSetup.footerMargin),
-  } as StyleValue;
-});
-
-const guideStyleLeft = computed(() => {
-  return {
-    left: withZoom(score.value.pageSetup.leftMargin - 1),
-    height: withZoom(score.value.pageSetup.pageHeight),
-  } as StyleValue;
-});
-
-const guideStyleRight = computed(() => {
-  return {
-    right: withZoom(score.value.pageSetup.rightMargin - 1),
-    height: withZoom(score.value.pageSetup.pageHeight),
-  } as StyleValue;
-});
-
 const guideStyleTop = computed(() => {
   return {
     top: withZoom(score.value.pageSetup.topMargin - 1),
@@ -1731,9 +1704,51 @@ async function initialize() {
 
 void initialize();
 
-function getHeaderHorizontalRuleStyle(headerHeight: number) {
+function getResolvedMarginsForPage(page: Page) {
+  return resolvePageMargins(score.value.pageSetup, page.physicalPageNumber);
+}
+
+function getHeaderStyle(page: Page) {
+  const margins = getResolvedMarginsForPage(page);
+
   return {
-    left: withZoom(score.value.pageSetup.leftMargin),
+    left: withZoom(margins.left),
+    top: withZoom(score.value.pageSetup.headerMargin),
+  } as StyleValue;
+}
+
+function getFooterStyle(page: Page) {
+  const margins = getResolvedMarginsForPage(page);
+
+  return {
+    left: withZoom(margins.left),
+    bottom: withZoom(score.value.pageSetup.footerMargin),
+  } as StyleValue;
+}
+
+function getGuideStyleLeft(page: Page) {
+  const margins = getResolvedMarginsForPage(page);
+
+  return {
+    left: withZoom(margins.left - 1),
+    height: withZoom(score.value.pageSetup.pageHeight),
+  } as StyleValue;
+}
+
+function getGuideStyleRight(page: Page) {
+  const margins = getResolvedMarginsForPage(page);
+
+  return {
+    right: withZoom(margins.right - 1),
+    height: withZoom(score.value.pageSetup.pageHeight),
+  } as StyleValue;
+}
+
+function getHeaderHorizontalRuleStyle(page: Page, headerHeight: number) {
+  const margins = getResolvedMarginsForPage(page);
+
+  return {
+    left: withZoom(margins.left),
     top: withZoom(
       score.value.pageSetup.headerMargin +
         headerHeight +
@@ -1743,13 +1758,15 @@ function getHeaderHorizontalRuleStyle(headerHeight: number) {
     borderTopWidth: withZoom(
       score.value.pageSetup.headerHorizontalRuleThickness,
     ),
-    width: withZoom(score.value.pageSetup.innerPageWidth),
+    width: withZoom(margins.contentWidth),
   } as StyleValue;
 }
 
-function getFooterHorizontalRuleStyle(footerHeight: number) {
+function getFooterHorizontalRuleStyle(page: Page, footerHeight: number) {
+  const margins = getResolvedMarginsForPage(page);
+
   return {
-    left: withZoom(score.value.pageSetup.leftMargin),
+    left: withZoom(margins.left),
     bottom: withZoom(
       score.value.pageSetup.footerMargin +
         footerHeight +
@@ -1759,7 +1776,7 @@ function getFooterHorizontalRuleStyle(footerHeight: number) {
     borderTopWidth: withZoom(
       score.value.pageSetup.footerHorizontalRuleThickness,
     ),
-    width: withZoom(score.value.pageSetup.innerPageWidth),
+    width: withZoom(margins.contentWidth),
   } as StyleValue;
 }
 
@@ -2059,17 +2076,17 @@ function getElementStyle(element: ScoreElement) {
   } as StyleValue;
 }
 
-function getAdjustmentRatioStyle(line: Line) {
+function getAdjustmentRatioStyle(line: Line, page: Page) {
   const fontSize = score.value.pageSetup.lyricsDefaultFontSize * 0.8;
   const gap = fontSize * 0.5;
+  const margins = getResolvedMarginsForPage(page);
+
   return {
     position: 'absolute',
     left: withZoom(
       rtl.value
-        ? score.value.pageSetup.leftMargin - gap - fontSize * 3
-        : score.value.pageSetup.pageWidth -
-            score.value.pageSetup.rightMargin +
-            gap,
+        ? margins.left - gap - fontSize * 3
+        : score.value.pageSetup.pageWidth - margins.right + gap,
     ),
     width: withZoom(fontSize * 3),
     textAlign: 'right',
@@ -2193,7 +2210,7 @@ function showExportReplyToast(
 }
 
 function getHeaderForPageIndex(pageIndex: number) {
-  const pageNumber = pageIndex + 1;
+  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
 
   const header = score.value.getHeaderForPage(pageNumber);
 
@@ -2202,7 +2219,7 @@ function getHeaderForPageIndex(pageIndex: number) {
 }
 
 function getFooterForPageIndex(pageIndex: number) {
-  const pageNumber = pageIndex + 1;
+  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
 
   const footer = score.value.getFooterForPage(pageNumber);
 
@@ -2211,13 +2228,13 @@ function getFooterForPageIndex(pageIndex: number) {
 }
 
 function shouldShowHeaderForPageIndex(pageIndex: number) {
-  const pageNumber = pageIndex + 1;
+  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
 
   return score.value.shouldShowHeaderOnPage(pageNumber);
 }
 
 function shouldShowFooterForPageIndex(pageIndex: number) {
-  const pageNumber = pageIndex + 1;
+  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
 
   return score.value.shouldShowFooterOnPage(pageNumber);
 }
@@ -8388,8 +8405,14 @@ function renderTabLabel(tab: Tab) {
                           (!printMode || shouldRenderDeveloperOverlaysInPrint)
                         "
                       >
-                        <span class="guide-line-vl" :style="guideStyleLeft" />
-                        <span class="guide-line-vr" :style="guideStyleRight" />
+                        <span
+                          class="guide-line-vl"
+                          :style="getGuideStyleLeft(page)"
+                        />
+                        <span
+                          class="guide-line-vr"
+                          :style="getGuideStyleRight(page)"
+                        />
                         <span class="guide-line-ht" :style="guideStyleTop" />
                         <span class="guide-line-hb" :style="guideStyleBottom" />
                       </template>
@@ -8491,7 +8514,7 @@ function renderTabLabel(tab: Tab) {
                               getHeaderForPageIndex(pageIndex) ==
                               selectedHeaderFooterElement
                             "
-                            :style="headerStyle"
+                            :style="getHeaderStyle(page)"
                             @click="selectHeaderRichTextBox(pageIndex)"
                             @select-neume="
                               selectHeaderRichTextBox(pageIndex);
@@ -8547,7 +8570,7 @@ function renderTabLabel(tab: Tab) {
                                   selectedHeaderFooterElement,
                               },
                             ]"
-                            :style="headerStyle"
+                            :style="getHeaderStyle(page)"
                             @click="
                               selectedHeaderFooterElement =
                                 getHeaderForPageIndex(pageIndex)
@@ -8567,6 +8590,7 @@ function renderTabLabel(tab: Tab) {
                           class="header-footer-hr"
                           :style="
                             getHeaderHorizontalRuleStyle(
+                              page,
                               getHeaderForPageIndex(pageIndex).height,
                             )
                           "
@@ -9181,7 +9205,7 @@ function renderTabLabel(tab: Tab) {
                             line.elements.length > 0
                           "
                           class="adjustment-ratio"
-                          :style="getAdjustmentRatioStyle(line)"
+                          :style="getAdjustmentRatioStyle(line, page)"
                           >{{ line.adjustmentRatio.toFixed(2) }}</span
                         >
                       </div>
@@ -9191,6 +9215,7 @@ function renderTabLabel(tab: Tab) {
                           class="header-footer-hr"
                           :style="
                             getFooterHorizontalRuleStyle(
+                              page,
                               getFooterForPageIndex(pageIndex).height,
                             )
                           "
@@ -9226,7 +9251,7 @@ function renderTabLabel(tab: Tab) {
                               getFooterForPageIndex(pageIndex) ==
                               selectedHeaderFooterElement
                             "
-                            :style="footerStyle"
+                            :style="getFooterStyle(page)"
                             @click="selectFooterRichTextBox(pageIndex)"
                             @select-neume="
                               selectFooterRichTextBox(pageIndex);
@@ -9282,7 +9307,7 @@ function renderTabLabel(tab: Tab) {
                                   selectedHeaderFooterElement,
                               },
                             ]"
-                            :style="footerStyle"
+                            :style="getFooterStyle(page)"
                             @click="
                               selectedHeaderFooterElement =
                                 getFooterForPageIndex(pageIndex)

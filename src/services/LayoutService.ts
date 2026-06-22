@@ -69,6 +69,7 @@ import {
 } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
 import { resolveFontStyle } from '@/utils/fontStyle';
+import { resolvePageMargins } from '@/utils/PageMargins';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
@@ -382,6 +383,7 @@ export class LayoutService {
     const pages: Page[] = [];
 
     let page: Page = new Page();
+    page.physicalPageNumber = 1;
 
     pages.push(page);
 
@@ -516,6 +518,7 @@ export class LayoutService {
     };
 
     // Phase 1: Build paragraphs as sequences of boxes, glue, and penalties
+    let phase1GreekMelismaIsActive = false;
     for (let i = 0; i < elements.length; i++) {
       if (layoutWorkspace.diagnostics != null) {
         layoutWorkspace.diagnostics.currentOwner = elements[i];
@@ -745,21 +748,19 @@ export class LayoutService {
           //   penalty(inf)         protect the left projection
           //   glue(L_i, 0, 0)      fixed left projection
           //   box(B_i)             the neume
-          //   penalty(inf)         protect the neume
-          //   glue(0, s^+, s^-)    stretch that remains at line end
           //   penalty(cost, w_i)   candidate breakpoint
-          //   glue(m_i, 0, 0)      same-line spacing that vanishes at breaks
+          //   glue(m_i, s^+, s^-)  same-line spacing that vanishes at breaks
           //
           // On the same line, each note boundary contributes m_i of width plus
           // s^+ of stretch for justification.
           //
           // At a break, the final glue becomes leading glue on the next line
-          // and is skipped by positionItems, so m_i disappears. The stretch
-          // glue stays on the current line. L_{i+1} then protects the left edge
-          // of the next line, and the penalty width w_i reserves break-only
-          // space for the right projection, melisma overhang, and measure-bar
-          // transfers. Terminal right-barline clearance is also reserved when
-          // the current note's barline remains at line end.
+          // and is skipped by positionItems, so m_i and its elasticity
+          // disappear. L_{i+1} then protects the left edge of the next line,
+          // and the penalty width w_i reserves break-only space for the right
+          // projection, melisma overhang, and measure-bar transfers. Terminal
+          // right-barline clearance is also reserved when the current note's
+          // barline remains at line end.
           //
           // m_i = s_0 + R_i - T_i^left - T_i^right + ell_i, where s_0 is the
           // fixed inline spacing, floored by any fixed measure-bar clearance.
@@ -862,7 +863,12 @@ export class LayoutService {
           if (
             noteElement.isHyphen &&
             nextNoteElement != null &&
-            nextNoteElement.lyricsWidth > 0
+            nextNoteElement.lyricsWidth > 0 &&
+            LayoutService.mayShowLeadingLyricHyphen(
+              noteElement,
+              pageSetup,
+              phase1GreekMelismaIsActive,
+            )
           ) {
             const leadingLyricHyphenWidth =
               nextNoteElement.lyricsUseDefaultStyle
@@ -888,6 +894,12 @@ export class LayoutService {
           }
           layoutWorkspace.pendingLeadingLyricHyphenReservationWidth =
             nextLeadingLyricHyphenReservation;
+          phase1GreekMelismaIsActive =
+            LayoutService.getGreekMelismaIsActiveAfterNote(
+              noteElement,
+              pageSetup,
+              phase1GreekMelismaIsActive,
+            );
 
           const m_i = this.calculateInterNoteSpacing(
             noteElement,
@@ -916,7 +928,7 @@ export class LayoutService {
           //    note's right side at a break).
           // 4. Terminal clearance before the current note's right barline.
           // These costs are break-conditional and cannot go in m_i (which
-          // vanishes at breaks via the cancellation glue).
+          // vanishes at breaks via the post-break glue).
           const penaltyWidth = this.getBreakPenaltyWidth(
             noteElement,
             rightProjection,
@@ -930,20 +942,20 @@ export class LayoutService {
           const martyriaOwnsBoundaryGlue =
             nextElement?.elementType === ElementType.Martyria;
 
-          const preBreakGlue = martyriaOwnsBoundaryGlue
-            ? this.fixedGlue(0)
-            : { ...standardGlue, width: 0 };
+          const postBreakGlue = martyriaOwnsBoundaryGlue
+            ? this.fixedGlue(m_i - nextLeadingLyricHyphenReservation)
+            : {
+                ...standardGlue,
+                width: m_i - nextLeadingLyricHyphenReservation,
+              };
 
-          // Break opportunity after the neume. The pre-break glue stays on the
-          // current line; the post-break glue becomes leading glue on the next
-          // line and is skipped by positionItems.
-          this.addProtectedBreakpointEncoding(
-            layoutWorkspace,
-            preBreakGlue,
-            breakCost,
-            penaltyWidth,
-            this.fixedGlue(m_i - nextLeadingLyricHyphenReservation),
-          );
+          // Break opportunity after the neume. The candidate penalty sits
+          // immediately after the box, and the post-break glue contributes
+          // same-line spacing and elasticity. When a break is taken, that glue
+          // becomes leading glue on the next line and is skipped by
+          // positionItems.
+          this.addPenalty(layoutWorkspace, breakCost, penaltyWidth);
+          this.addGlue(postBreakGlue, layoutWorkspace);
 
           break;
         }
@@ -1454,8 +1466,8 @@ export class LayoutService {
       }
 
       // Invariant: After processing each element, there should be trailing glue
-      // at the end of the paragraph (for example a note's post-break fixed
-      // glue, martyria spacing glue, or ordinary spacing after another
+      // at the end of the paragraph (for example a note's post-break glue,
+      // martyria spacing glue, or ordinary spacing after another
       // element), even if the element has an (explicit or implicit) line break
       // and the paragraph is about to end. In the latter case, endParagraph()
       // removes that trailing glue and replaces it with finishing glue.
@@ -1547,6 +1559,7 @@ export class LayoutService {
           const lastLine = page.lines.pop()!;
 
           page = new Page();
+          page.physicalPageNumber = pages.length + 1;
           page.lines.push(lastLine);
           pages.push(page);
           currentPageHeightPx = lastLineHeightPx;
@@ -1567,6 +1580,13 @@ export class LayoutService {
           continue;
         }
         const element = (item as ElementBox).element;
+        const resolvedMargins = resolvePageMargins(
+          pageSetup,
+          page.physicalPageNumber,
+        );
+        const contentStart = pageSetup.melkiteRtl
+          ? resolvedMargins.right
+          : resolvedMargins.contentLeft;
 
         const currentLine = page.lines[page.lines.length - 1];
         const isFirstElementOnLine = currentLine.elements.length === 0;
@@ -1592,8 +1612,7 @@ export class LayoutService {
           );
         }
 
-        element.x =
-          pageSetup.leftMargin + position.xOffset + currentLine.indentation;
+        element.x = contentStart + position.xOffset + currentLine.indentation;
 
         // marginTop offsets the element within its line's allocated space
         // (whose height already includes marginTop + marginBottom).
@@ -1635,7 +1654,7 @@ export class LayoutService {
           }
           if (fillWidth == null) {
             const lineWidth =
-              pageSetup.innerPageWidth - currentLine.indentation;
+              resolvedMargins.contentWidth - currentLine.indentation;
             fillWidth = lineWidth - position.xOffset;
           }
           element.width = fillWidth;
@@ -1757,11 +1776,12 @@ export class LayoutService {
             this.getVisibleMeasureBarRight(martyriaElement) == null
               ? this.getMartyriaRightInkOverhang(martyriaElement, pageSetup)
               : 0;
-          element.x =
-            pageSetup.pageWidth -
-            pageSetup.rightMargin -
-            element.width -
-            rightInkReservation;
+          element.x = pageSetup.melkiteRtl
+            ? resolvedMargins.right + rightInkReservation
+            : pageSetup.pageWidth -
+              resolvedMargins.right -
+              element.width -
+              rightInkReservation;
         }
 
         // Special logic for centered lines
@@ -1775,7 +1795,7 @@ export class LayoutService {
           }
 
           const centerOffsetPx =
-            (pageSetup.innerPageWidth -
+            (resolvedMargins.contentWidth -
               currentLine.indentation -
               (position.xOffset + position.width)) /
             2;
@@ -3049,6 +3069,49 @@ export class LayoutService {
     };
   }
 
+  public static mayShowLeadingLyricHyphen(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    greekMelismaIsActive: boolean = false,
+  ): boolean {
+    if (!noteElement.isHyphen) {
+      return false;
+    }
+
+    if (pageSetup.disableGreekMelismata) {
+      return true;
+    }
+
+    if (noteElement.isMelismaStart) {
+      return !MelismaHelperGreek.isGreek(noteElement.lyrics);
+    }
+
+    if (noteElement.isMelisma && greekMelismaIsActive) {
+      return false;
+    }
+
+    return (
+      !MelismaHelperGreek.isGreek(noteElement.lyrics) &&
+      !MelismaHelperGreek.isGreek(noteElement.melismaText)
+    );
+  }
+
+  private static getGreekMelismaIsActiveAfterNote(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    greekMelismaIsActive: boolean,
+  ) {
+    if (pageSetup.disableGreekMelismata) {
+      return false;
+    }
+
+    if (noteElement.isMelismaStart) {
+      return MelismaHelperGreek.isGreek(noteElement.lyrics);
+    }
+
+    return noteElement.isMelisma && greekMelismaIsActive;
+  }
+
   private static preventBreak(workspace: LayoutWorkspace) {
     this.addPenalty(workspace, MAX_COST, 0, false, 'prevent-break');
   }
@@ -4258,9 +4321,10 @@ export class LayoutService {
   }
 
   // Remove trailing glue from the paragraph. Only strips consecutive trailing
-  // glue items, such as note cancellation glue, martyria spacing glue, or the
-  // ordinary spacing left by other elements. The note's breakpoint penalty and
-  // vanishing stretch glue are preserved.
+  // glue items, such as the note's post-break glue, martyria spacing glue, or
+  // the ordinary spacing left by other elements. The note's breakpoint penalty
+  // is preserved; its trailing post-break glue, which now carries the stretch
+  // and shrink budget, is among the glue removed.
   private static removeGlue(workspace: LayoutWorkspace) {
     const { pendingParagraph } = workspace;
 
@@ -5291,6 +5355,8 @@ export class LayoutService {
 
     let melismaSyllables: MelismaSyllables | null = null;
     let melismaLyricsEnd: number | null = null;
+    let phase2GreekMelismaIsActive = false;
+    let previousLineEndingMayShowLeadingLyricHyphen = false;
 
     for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
       const page = pages[pageIndex];
@@ -5315,24 +5381,6 @@ export class LayoutService {
           firstElementOnNextLine = pages[pageIndex + 1].lines[0].elements[0];
         }
 
-        let lastElementOnPreviousLine: ScoreElement | null = null;
-
-        if (lineIndex > 0 && page.lines[lineIndex - 1].elements.length > 0) {
-          const previousLine = page.lines[lineIndex - 1];
-          lastElementOnPreviousLine =
-            previousLine.elements[previousLine.elements.length - 1];
-        } else if (
-          lineIndex === 0 &&
-          pageIndex > 0 &&
-          pages[pageIndex - 1].lines.length > 0
-        ) {
-          const previousPage = pages[pageIndex - 1];
-          const previousLine =
-            previousPage.lines[previousPage.lines.length - 1];
-          lastElementOnPreviousLine =
-            previousLine.elements[previousLine.elements.length - 1];
-        }
-
         const noteElements = line.elements.filter(
           (x) => x.elementType === ElementType.Note,
         ) as NoteElement[];
@@ -5340,6 +5388,7 @@ export class LayoutService {
         const indexOfFirstNote = line.elements.findIndex(
           (x) => x.elementType === ElementType.Note,
         );
+        let lineEndingMayShowLeadingLyricHyphen = false;
 
         for (const element of noteElements) {
           const index = line.elements.indexOf(element);
@@ -5351,6 +5400,12 @@ export class LayoutService {
             index === indexOfFirstNote &&
             element.isMelisma &&
             !element.isMelismaStart;
+          const mayShowLeadingLyricHyphen =
+            LayoutService.mayShowLeadingLyricHyphen(
+              element,
+              pageSetup,
+              phase2GreekMelismaIsActive,
+            );
 
           // First, clear melisma fields, since
           // they may be stale
@@ -5363,14 +5418,21 @@ export class LayoutService {
           if (
             index === indexOfFirstNote &&
             element.lyricsWidth > 0 &&
-            lastElementOnPreviousLine?.elementType === ElementType.Note
+            previousLineEndingMayShowLeadingLyricHyphen
           ) {
-            const previousNoteElement =
-              lastElementOnPreviousLine as NoteElement;
-            if (previousNoteElement.isHyphen) {
-              element.showLeadingLyricHyphen = true;
-            }
+            element.showLeadingLyricHyphen = true;
           }
+
+          if (line.elements[line.elements.length - 1] === element) {
+            lineEndingMayShowLeadingLyricHyphen = mayShowLeadingLyricHyphen;
+          }
+
+          phase2GreekMelismaIsActive =
+            LayoutService.getGreekMelismaIsActiveAfterNote(
+              element,
+              pageSetup,
+              phase2GreekMelismaIsActive,
+            );
 
           if (
             !pageSetup.disableGreekMelismata &&
@@ -5785,6 +5847,9 @@ export class LayoutService {
             }
           }
         }
+
+        previousLineEndingMayShowLeadingLyricHyphen =
+          lineEndingMayShowLeadingLyricHyphen;
       }
     }
   }
@@ -6009,12 +6074,16 @@ export class LayoutService {
             ) {
               const barWidth = measureBarWidthMap.get(measureBarRight) ?? 0;
               if (barWidth > 0) {
+                const resolvedMargins = resolvePageMargins(
+                  pageSetup,
+                  page.physicalPageNumber,
+                );
                 const naturalLeft =
                   owner.x +
                   this.getMeasureBarOwnerWidth(owner) +
                   owner.computedMeasureBarRightTrailingSpacing;
                 const targetLeft =
-                  pageSetup.pageWidth - pageSetup.rightMargin - barWidth;
+                  pageSetup.pageWidth - resolvedMargins.right - barWidth;
                 owner.computedMeasureBarRightOffsetX = targetLeft - naturalLeft;
               }
             }

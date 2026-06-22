@@ -193,13 +193,33 @@
                 </template>
 
                 <template v-else-if="section.value === 'margins'">
+                  <Field orientation="horizontal">
+                    <Checkbox
+                      id="page-setup-dialog-facing-pages"
+                      :model-value="form.facingPages"
+                      @update:model-value="form.facingPages = $event === true"
+                    />
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-facing-pages">
+                        {{
+                          $t(($) => $.dialog.pageSetup.facingPages, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                    </FieldContent>
+                  </Field>
                   <Field
                     v-for="row in marginRows"
                     :key="row.id"
                     orientation="horizontal"
                   >
                     <FieldLabel :for="row.id">
-                      {{ $t(row.labelSelector, { ns: 'dialog' }) }}
+                      {{
+                        $t(row.labelSelector(form.facingPages), {
+                          ns: 'dialog',
+                        })
+                      }}
                     </FieldLabel>
                     <div class="flex items-center gap-2">
                       <InputUnit
@@ -2168,49 +2188,55 @@ const minimumSyllableToHyphenClearanceMax = computed(() =>
 const marginRows = [
   {
     id: 'page-setup-dialog-top-margin',
-    labelSelector: ($) => $.dialog.common.top,
+    labelSelector: () => ($) => $.dialog.common.top,
     modelKey: 'topMargin',
     max: topMarginMax,
     update: updateTopMargin,
   },
   {
     id: 'page-setup-dialog-bottom-margin',
-    labelSelector: ($) => $.dialog.common.bottom,
+    labelSelector: () => ($) => $.dialog.common.bottom,
     modelKey: 'bottomMargin',
     max: bottomMarginMax,
     update: updateBottomMargin,
   },
   {
     id: 'page-setup-dialog-left-margin',
-    labelSelector: ($) => $.dialog.common.left,
+    labelSelector: (facingPages: boolean) =>
+      facingPages
+        ? ($) => $.dialog.pageSetup.inside
+        : ($) => $.dialog.common.left,
     modelKey: 'leftMargin',
     max: leftMarginMax,
     update: updateLeftMargin,
   },
   {
     id: 'page-setup-dialog-right-margin',
-    labelSelector: ($) => $.dialog.common.right,
+    labelSelector: (facingPages: boolean) =>
+      facingPages
+        ? ($) => $.dialog.pageSetup.outside
+        : ($) => $.dialog.common.right,
     modelKey: 'rightMargin',
     max: rightMarginMax,
     update: updateRightMargin,
   },
   {
     id: 'page-setup-dialog-header-margin',
-    labelSelector: ($) => $.dialog.pageSetup.header,
+    labelSelector: () => ($) => $.dialog.pageSetup.header,
     modelKey: 'headerMargin',
     max: headerMarginMax,
     update: updateHeaderMargin,
   },
   {
     id: 'page-setup-dialog-footer-margin',
-    labelSelector: ($) => $.dialog.pageSetup.footer,
+    labelSelector: () => ($) => $.dialog.pageSetup.footer,
     modelKey: 'footerMargin',
     max: footerMarginMax,
     update: updateFooterMargin,
   },
 ] as const satisfies ReadonlyArray<{
   id: string;
-  labelSelector: DialogSelector;
+  labelSelector: (facingPages: boolean) => DialogSelector;
   modelKey:
     | 'topMargin'
     | 'bottomMargin'

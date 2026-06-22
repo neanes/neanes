@@ -2624,14 +2624,7 @@ export class LayoutService {
       if (
         item.type !== 'glue' ||
         diagnosticItem?.type !== 'glue' ||
-        position == null ||
-        !this.hasAnchoredBoxesAroundItem(
-          items,
-          positionsByItem,
-          contentStart,
-          breakpoint,
-          itemIndex,
-        )
+        position == null
       ) {
         continue;
       }
@@ -2652,38 +2645,6 @@ export class LayoutService {
 
     return overlays;
   }
-
-  private static hasAnchoredBoxesAroundItem(
-    items: InputItem[],
-    positionsByItem: Map<number, PositionedItem>,
-    contentStart: number,
-    breakpoint: number,
-    itemIndex: number,
-  ) {
-    let hasPreviousBox = false;
-    let hasNextBox = false;
-
-    for (let i = itemIndex - 1; i >= contentStart; i--) {
-      if (items[i].type !== 'box') {
-        continue;
-      }
-
-      hasPreviousBox = positionsByItem.has(i);
-      break;
-    }
-
-    for (let i = itemIndex + 1; i <= breakpoint; i++) {
-      if (items[i].type !== 'box') {
-        continue;
-      }
-
-      hasNextBox = positionsByItem.has(i);
-      break;
-    }
-
-    return hasPreviousBox && hasNextBox;
-  }
-
   private static groupDiagnosticItems(items: LayoutDiagnosticItem[]) {
     const groups: LineLayoutDiagnostics['itemGroups'] = [];
 

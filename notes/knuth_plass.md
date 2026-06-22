@@ -247,20 +247,20 @@ Let $s_0$ be the fixed inline spacing between successive notes, `neumeDefaultFon
 
 Each note is encoded in the paragraph as
 
-$$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(B_i) \quad \text{penalty}(\infty) \quad \text{glue}(0, 0, 0) \quad \text{penalty}(c_i, w_i) \quad \text{glue}(m_i, s^+, s^-).$$
+$$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(B_i) \quad \text{penalty}(c_i, w_i) \quad \text{glue}(m_i, s^+, s^-).$$
 
 Here:
 
 - $B_i$ is the neume width. An anonymous spacer box may be inserted before $B_i$ to hold a break-only leading reservation: the bar width plus fixed leading clearance when the preceding martyria has a transferable bar (see above), and a leading-hyphen reservation when the preceding note is hyphenated (see below). $B_i$ itself is unchanged.
 - $L_i$ is the left projection, fixed and unbreakable, and omitted when zero.
-- The two $\text{penalty}(\infty)$ items are unbreakable barriers. The leading one protects $L_i$ at a line start. `positionItems` discards leading glue after a break only up to the first box or forbidden ($\infty$) penalty, so the leading penalty keeps $\text{glue}(L_i, 0, 0)$ out of the discarded region and it is counted rather than skipped. It is emitted together with $L_i$ and omitted when $L_i$ is zero; the note's first box then stops the discard scan instead. The second $\text{penalty}(\infty)$, after $\text{box}(B_i)$, forces the only candidate break in the boundary to be $\text{penalty}(c_i, w_i)$ rather than the zero-width glue that immediately follows the box.
+- The leading $\text{penalty}(\infty)$ is an unbreakable barrier that protects $L_i$ at a line start. `positionItems` discards leading glue after a break only up to the first box or forbidden ($\infty$) penalty, so the leading penalty keeps $\text{glue}(L_i, 0, 0)$ out of the discarded region and it is counted rather than skipped. It is emitted together with $L_i$ and omitted when $L_i$ is zero; the note's first box then stops the discard scan instead.
 - $s^+$ and $s^-$ are the standard stretch and shrink budgets for an inter-note gap.
 - $c_i$ is the break cost: 0 for a normal break, $\infty$ to prohibit a break, or an intermediate value to discourage one.
 - $w_i$ is the penalty width, a conditional width counted only when a break occurs at this point. It reserves space for the current note's right projection, any melisma overhang that would extend past the right margin, terminal right-barline clearance, and measure-bar transfers, when the next note's left measure bar moves to this note's right side at a line break.
 - $m_i$ is the minimum same-line width required between notes $i$ and $i{+}1$.
 
 On the same line, each inter-note gap contributes $m_i$ of width plus $s^+$ of stretch for distributed justification.
-The zero-width glue after the neume protects the breakpoint; the post-break glue $\text{glue}(m_i, s^+, s^-)$ contributes both the fixed minimum distance and the stretch or shrink budget.
+The candidate penalty sits immediately after the neume; the post-break glue $\text{glue}(m_i, s^+, s^-)$ contributes both the fixed minimum distance and the stretch or shrink budget.
 The current implementation allows negative values only in the width $m_i$, when tuck absorption exceeds the base spacing; stretch and shrink are never negative.
 In other words, all stretchability lives in the same glue that carries the same-line boundary width.
 The implementation does not use a second glue of the form $\text{glue}(m_i, -s^+, -s^-)$.

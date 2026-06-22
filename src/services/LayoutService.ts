@@ -769,8 +769,6 @@ export class LayoutService {
           //   penalty(inf)         protect the left projection
           //   glue(L_i, 0, 0)      fixed left projection
           //   box(B_i)             the neume
-          //   penalty(inf)         protect the neume
-          //   glue(0, 0, 0)        protect the breakpoint
           //   penalty(cost, w_i)   candidate breakpoint
           //   glue(m_i, s^+, s^-)  same-line spacing that vanishes at breaks
           //
@@ -957,17 +955,13 @@ export class LayoutService {
                 width: m_i - nextLeadingLyricHyphenReservation,
               };
 
-          // Break opportunity after the neume. The fixed pre-break glue keeps
-          // the breakpoint at the penalty. The post-break glue contributes
-          // same-line spacing and elasticity, but becomes leading glue on the
-          // next line and is skipped by positionItems when a break is taken.
-          this.addProtectedBreakpointEncoding(
-            layoutWorkspace,
-            this.fixedGlue(0),
-            breakCost,
-            penaltyWidth,
-            postBreakGlue,
-          );
+          // Break opportunity after the neume. The candidate penalty sits
+          // immediately after the box, and the post-break glue contributes
+          // same-line spacing and elasticity. When a break is taken, that glue
+          // becomes leading glue on the next line and is skipped by
+          // positionItems.
+          this.addPenalty(layoutWorkspace, breakCost, penaltyWidth);
+          this.addGlue(postBreakGlue, layoutWorkspace);
 
           break;
         }

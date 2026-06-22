@@ -133,7 +133,7 @@ Layout proceeds in two phases. In Phase 1, the code builds the box/glue/penalty 
 
 Consider first a lyricless score of Byzantine music.
 Each neume group, for example a simple oligon or an ison with kentimata over a supporting oligon, and each martyria can be modeled as a box whose width is simply the width of the notated group itself.
-The space between ordinary neumes is modeled as fixed glue.
+The space between ordinary neumes is modeled as glue.
 Its natural width is `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, where `standardGlue` comes from the active font's `engravingDefaults`.
 The font-size-scaled engraving default supplies the default gap, and `neumeDefaultSpacing` remains a user-configurable adjustment.
 The stretch and shrink budgets are also scaled from the active font's `standardGlue` defaults.

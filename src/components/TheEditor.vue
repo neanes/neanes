@@ -875,6 +875,20 @@ const selectedLineDiagnostics = computed(() =>
     : null,
 );
 
+const developerPaneHasMissingDiagnostics = computed(() => {
+  if (!shouldCollectLayoutDiagnostics.value || pages.value.length === 0) {
+    return false;
+  }
+
+  return pages.value.some((page) =>
+    page.lines.some((line) => line.diagnostics == null),
+  );
+});
+
+function reloadDeveloperPaneDiagnostics() {
+  save(false);
+}
+
 function getDeveloperGlueOverlays(
   line: Line,
   lineIndex: number,
@@ -8247,6 +8261,9 @@ function renderTabLabel(tab: Tab) {
             :line-diagnostics="selectedLineDiagnostics"
             :open-sections="developerPaneOpenSections"
             :selected-element="developerSelectedElement"
+            :show-missing-diagnostics-notice="
+              developerPaneHasMissingDiagnostics
+            "
             :toggles="{
               printOverlays,
               showAdjustmentRatios,
@@ -8258,6 +8275,7 @@ function renderTabLabel(tab: Tab) {
               showLyricBoundingBoxes,
               showNeumeBoundingBoxes,
             }"
+            @reload-diagnostics="reloadDeveloperPaneDiagnostics"
             @update:open-sections="developerPaneOpenSections = $event"
             @update:toggle="updateDeveloperToggle"
           />

@@ -2,6 +2,18 @@
   <div
     class="flex size-full min-h-0 flex-col overflow-hidden bg-background p-3"
   >
+    <div
+      v-if="showMissingDiagnosticsNotice"
+      class="developer-pane-notice mb-3 shrink-0"
+    >
+      <p class="developer-pane-notice-copy">
+        Layout diagnostics have not been collected for the current pages yet.
+        Reload the layout to collect the current developer stats.
+      </p>
+      <Button size="sm" variant="outline" @click="emit('reload-diagnostics')">
+        Reload Layout Diagnostics
+      </Button>
+    </div>
     <ScrollArea class="developer-pane-scroll min-h-0 flex-1">
       <div class="developer-pane-scroll-content pr-4">
         <Accordion
@@ -154,6 +166,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
+import { Button } from '@/components/ui/button';
 import {
   Accordion,
   AccordionContent,
@@ -195,10 +208,12 @@ const props = defineProps<{
   lineDiagnostics: LineLayoutDiagnostics | null;
   openSections: string[];
   selectedElement: ScoreElement | null;
+  showMissingDiagnosticsNotice: boolean;
   toggles: DeveloperToggles;
 }>();
 
 const emit = defineEmits<{
+  (event: 'reload-diagnostics'): void;
   (event: 'update:open-sections', value: string[]): void;
   (event: 'update:toggle', key: DeveloperToggleKey, value: boolean): void;
 }>();
@@ -361,6 +376,18 @@ function getGlueOwnerLabel(glue: GlueOverlayDiagnostics) {
 }
 
 .developer-pane-section {
+  font-size: 0.75rem;
+}
+
+.developer-pane-notice {
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 70%, transparent);
+  padding: 0.75rem;
+}
+
+.developer-pane-notice-copy {
+  margin: 0 0 0.75rem;
+  color: var(--muted-foreground);
   font-size: 0.75rem;
 }
 

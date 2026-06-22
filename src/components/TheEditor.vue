@@ -922,6 +922,7 @@ function getDeveloperGlueOverlays(
     );
 
     return {
+      actualNegative: overlay.actualWidth < 0,
       actualStyle: getDeveloperGlueOverlayStyle(
         actualFrame,
         wrapperLeft,
@@ -929,6 +930,7 @@ function getDeveloperGlueOverlays(
       ),
       delta,
       key: `${pageIndex}-${lineIndex}-${overlay.ownerElementId ?? 'anon'}-${overlayIndex}`,
+      preferredNegative: overlay.preferredWidth < 0,
       preferredStyle: getDeveloperGlueOverlayStyle(
         preferredFrame,
         wrapperLeft,
@@ -8374,10 +8376,16 @@ function renderTabLabel(tab: Tab) {
                           >
                             <div
                               class="developer-glue-preferred"
+                              :class="{
+                                negative: overlay.preferredNegative,
+                              }"
                               :style="overlay.preferredStyle"
                             ></div>
                             <div
                               class="developer-glue-actual"
+                              :class="{
+                                negative: overlay.actualNegative,
+                              }"
                               :style="overlay.actualStyle"
                             ></div>
                           </div>
@@ -9772,31 +9780,52 @@ function renderTabLabel(tab: Tab) {
 }
 
 .developer-glue-preferred {
+  --developer-glue-preferred-border: rgb(14 116 144 / 80%);
   position: absolute;
   box-sizing: border-box;
-  border: 1px solid rgb(14 116 144 / 80%);
+  border: 1px solid var(--developer-glue-preferred-border);
+  background-size: 100% 100%;
 }
 
 .developer-glue-actual {
+  --developer-glue-actual-fill: rgb(14 116 144 / 35%);
   position: absolute;
   border: 1px solid rgb(14 116 144 / 55%);
-  background: rgb(14 116 144 / 35%);
+  background: var(--developer-glue-actual-fill);
 }
 
 .developer-glue-overlay.stretch .developer-glue-preferred {
-  border-color: rgb(3 105 161 / 85%);
+  --developer-glue-preferred-border: rgb(3 105 161 / 85%);
 }
 
 .developer-glue-overlay.stretch .developer-glue-actual {
-  background: rgb(3 105 161 / 28%);
+  --developer-glue-actual-fill: rgb(3 105 161 / 28%);
 }
 
 .developer-glue-overlay.shrink .developer-glue-preferred {
-  border-color: rgb(180 83 9 / 85%);
+  --developer-glue-preferred-border: rgb(180 83 9 / 85%);
 }
 
 .developer-glue-overlay.shrink .developer-glue-actual {
-  background: rgb(217 119 6 / 24%);
+  --developer-glue-actual-fill: rgb(217 119 6 / 24%);
+}
+
+.developer-glue-preferred.negative {
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 4px,
+    var(--developer-glue-preferred-border) 4px 7px
+  );
+}
+
+.developer-glue-actual.negative {
+  background-image:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 4px,
+      rgb(255 255 255 / 45%) 4px 7px
+    ),
+    linear-gradient(var(--developer-glue-actual-fill), var(--developer-glue-actual-fill));
 }
 
 .developer-anonymous-box-overlay {

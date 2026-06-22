@@ -60,10 +60,14 @@
             <AccordionTrigger>Glue Overlays</AccordionTrigger>
             <AccordionContent>
               <div class="developer-pane-section pt-2">
-                <p class="developer-pane-empty">
-                  Top bar = actual justified width. Bottom bar = preferred
-                  width. Delta = actual minus preferred.
-                </p>
+                <ul class="developer-pane-list">
+                  <li>Top bar = actual justified width.</li>
+                  <li>Bottom bar = preferred width.</li>
+                  <li>Blue = glue that stretched.</li>
+                  <li>Red = glue that shrunk.</li>
+                  <li>Hatched boxes = glue w/ negative width.</li>
+                  <li>Delta = actual minus preferred.</li>
+                </ul>
                 <ul
                   v-if="lineDiagnostics != null && glueOverlayRows.length > 0"
                   class="developer-pane-list pt-2"

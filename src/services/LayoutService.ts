@@ -1856,10 +1856,12 @@ export class LayoutService {
         neumeFontHeight,
       );
 
-      const neumeFontDescent = neumeFontHeight - neumeFontAscent;
+      const baselineOffset =
+        neumeFontAscent +
+        (neumeFontHeight - pageSetup.neumeDefaultFontSize) / 2;
 
       if (noteInkBox) {
-        noteInkBox.top += neumeFontAscent - neumeFontDescent / 2 + 2;
+        noteInkBox.top += baselineOffset;
       }
 
       return {
@@ -1868,7 +1870,7 @@ export class LayoutService {
           height: box.bottom - box.top,
           kind: box.collisionKind,
           left: box.left,
-          top: neumeFontAscent + box.top - neumeFontDescent / 2 + 2,
+          top: box.top + baselineOffset,
           width: box.right - box.left,
         })),
         glyph: noteElement.quantitativeNeume,
@@ -1908,11 +1910,12 @@ export class LayoutService {
         neumeFontHeight,
       );
 
-      const neumeFontDescent = neumeFontHeight - neumeFontAscent;
+      const baselineOffset =
+        neumeFontAscent +
+        (neumeFontHeight - pageSetup.neumeDefaultFontSize) / 2;
 
       if (martyriaInkBox) {
-        martyriaInkBox.top =
-          neumeFontAscent + martyriaInkBox.top - neumeFontDescent / 2 + 2;
+        martyriaInkBox.top += baselineOffset;
       }
 
       return {
@@ -1920,7 +1923,7 @@ export class LayoutService {
         collisionBoxes: collisionBoxes.map((box) => ({
           height: box.bottom - box.top,
           left: box.left,
-          top: neumeFontAscent + box.top - neumeFontDescent / 2 + 2,
+          top: box.top + baselineOffset,
           width: box.right - box.left,
         })),
         glyph: martyriaElement.note,
@@ -1997,7 +2000,9 @@ export class LayoutService {
 
     return {
       measureBarWidthMap: this.getMeasureBarWidthMap(pageSetup),
-      neumeFontAscent: TextMeasurementService.getFontBoundingBoxAscent(font),
+      neumeFontAscent:
+        fontService.getMetrics(pageSetup.neumeDefaultFontFamily).ascent *
+        pageSetup.neumeDefaultFontSize,
       neumeFontHeight: TextMeasurementService.getFontHeight(font),
     };
   }

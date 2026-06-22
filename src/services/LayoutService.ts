@@ -25,6 +25,7 @@ import { ElementType, EmptyElement, LineBreakType } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
 import type {
+  AnonymousBoxOverlayDiagnostics,
   ElementOverlayDiagnostics,
   GlueOverlayDiagnostics,
   LayoutDiagnosticItem,
@@ -2493,6 +2494,14 @@ export class LayoutService {
       lines.push({
         actualContentWidth: naturalContentWidth + stretchUsed - shrinkUsed,
         adjustmentRatio,
+        anonymousBoxOverlays: this.getAnonymousBoxOverlayDiagnosticsForLine(
+          items,
+          diagnosticItems,
+          positions,
+          contentStart,
+          breakpoint,
+          lineIndex,
+        ),
         glueOverlays: this.getGlueOverlayDiagnosticsForLine(
           items,
           diagnosticItems,
@@ -2517,6 +2526,51 @@ export class LayoutService {
     }
 
     return lines;
+  }
+
+  private static getAnonymousBoxOverlayDiagnosticsForLine(
+    items: InputItem[],
+    diagnosticItems: LayoutDiagnosticItem[],
+    positions: PositionedItem[],
+    contentStart: number,
+    breakpoint: number,
+    lineIndex: number,
+  ) {
+    const positionsByItem = new Map<number, PositionedItem>();
+
+    for (const position of positions) {
+      if (position.line === lineIndex) {
+        positionsByItem.set(position.item, position);
+      }
+    }
+
+    const overlays: AnonymousBoxOverlayDiagnostics[] = [];
+
+    for (let itemIndex = contentStart; itemIndex <= breakpoint; itemIndex++) {
+      const item = items[itemIndex];
+      const diagnosticItem = diagnosticItems[itemIndex];
+      const position = positionsByItem.get(itemIndex);
+
+      if (
+        item.type !== 'box' ||
+        diagnosticItem?.type !== 'box' ||
+        !diagnosticItem.anonymous ||
+        position == null
+      ) {
+        continue;
+      }
+
+      overlays.push({
+        label: diagnosticItem.label,
+        left: position.xOffset,
+        ownerElementId: diagnosticItem.ownerElementId,
+        ownerElementIndex: diagnosticItem.ownerElementIndex,
+        ownerElementType: diagnosticItem.ownerElementType,
+        width: position.width,
+      });
+    }
+
+    return overlays;
   }
 
   private static getGlueOverlayDiagnosticsForLine(

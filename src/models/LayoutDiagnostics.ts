@@ -60,9 +60,19 @@ export interface GlueOverlayDiagnostics {
   stretch: number;
 }
 
+export interface AnonymousBoxOverlayDiagnostics {
+  label?: string;
+  left: number;
+  ownerElementId: number | null;
+  ownerElementIndex: number | null;
+  ownerElementType: ElementType | null;
+  width: number;
+}
+
 export interface LineLayoutDiagnostics {
   actualContentWidth: number;
   adjustmentRatio: number;
+  anonymousBoxOverlays: AnonymousBoxOverlayDiagnostics[];
   glueOverlays: GlueOverlayDiagnostics[];
   itemGroups: LayoutDiagnosticItemGroup[];
   naturalContentWidth: number;

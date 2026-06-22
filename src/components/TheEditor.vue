@@ -138,6 +138,7 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import type {
+  AnonymousBoxOverlayDiagnostics,
   ElementOverlayBox,
   ElementOverlayDiagnostics,
 } from '@/models/LayoutDiagnostics';
@@ -751,6 +752,10 @@ const showAdjustmentRatios = computed(
   () => editorPreferences.value.showAdjustmentRatios,
 );
 
+const showAnonymousBoxes = computed(
+  () => editorPreferences.value.showAnonymousBoxes,
+);
+
 const showInkBoundingBoxes = computed(
   () => editorPreferences.value.showInkBoundingBoxes,
 );
@@ -937,6 +942,31 @@ function getDeveloperGlueOverlays(
       }),
     };
   });
+}
+
+function getDeveloperAnonymousBoxOverlays(line: Line, lineIndex: number) {
+  const diagnostics = line.diagnostics;
+
+  if (
+    !showDeveloperPanels.value ||
+    !showAnonymousBoxes.value ||
+    diagnostics == null ||
+    line.elements.length === 0
+  ) {
+    return [];
+  }
+
+  const height = Math.max(4, score.value.pageSetup.lineHeight * 0.08);
+  const top = line.elements[0].y + score.value.pageSetup.lineHeight * 0.2;
+
+  return diagnostics.anonymousBoxOverlays.map((overlay, overlayIndex) => ({
+    key: `${lineIndex}-${overlay.ownerElementId ?? 'anon'}-${overlay.label ?? 'box'}-${overlayIndex}`,
+    kind: getDeveloperAnonymousBoxKind(overlay),
+    label: overlay.label,
+    style: getDeveloperOverlayStyle(
+      getDeveloperGlueOverlayFrame(line, overlay.left, top, overlay.width, height),
+    ),
+  }));
 }
 
 const overlayDiagnosticsContext = computed<OverlayDiagnosticsContext>(() =>
@@ -1847,6 +1877,19 @@ function formatDeveloperNumber(value: number) {
   return Number.isFinite(value) ? value.toFixed(2) : String(value);
 }
 
+function getDeveloperAnonymousBoxKind(overlay: AnonymousBoxOverlayDiagnostics) {
+  switch (overlay.label) {
+    case 'line-start-reservation':
+      return 'line-start-reservation';
+    case 'martyria-shift':
+      return 'martyria-shift';
+    case 'lyric-collision':
+      return 'lyric-collision';
+    default:
+      return 'anonymous';
+  }
+}
+
 function getDeveloperOverlayBoxes(element: ScoreElement) {
   if (!showDeveloperPanels.value) {
     return [];
@@ -2442,6 +2485,7 @@ function syncDeveloperPanelsFromPreferencesOnStartup() {
 function updateDeveloperToggle(
   key:
     | 'showAdjustmentRatios'
+    | 'showAnonymousBoxes'
     | 'showCollisionRegions'
     | 'showGuides'
     | 'showGlueWidths'
@@ -8190,6 +8234,7 @@ function renderTabLabel(tab: Tab) {
             :selected-element="developerSelectedElement"
             :toggles="{
               showAdjustmentRatios,
+              showAnonymousBoxes,
               showCollisionRegions,
               showGuides,
               showGlueWidths,
@@ -8336,6 +8381,26 @@ function renderTabLabel(tab: Tab) {
                               :style="overlay.actualStyle"
                             ></div>
                           </div>
+                        </div>
+                      </template>
+                      <template
+                        v-if="showDeveloperPanels && showAnonymousBoxes"
+                      >
+                        <div
+                          v-for="(line, lineIndex) in page.lines"
+                          :key="`developer-anonymous-line-${pageIndex}-${lineIndex}`"
+                        >
+                          <div
+                            v-for="overlay in getDeveloperAnonymousBoxOverlays(
+                              line,
+                              lineIndex,
+                            )"
+                            :key="`developer-anonymous-${pageIndex}-${overlay.key}`"
+                            class="developer-anonymous-box-overlay"
+                            :class="overlay.kind"
+                            :style="overlay.style"
+                            :title="overlay.label"
+                          ></div>
                         </div>
                       </template>
                       <template v-if="score.pageSetup.showHeader">
@@ -9732,6 +9797,28 @@ function renderTabLabel(tab: Tab) {
 
 .developer-glue-overlay.shrink .developer-glue-actual {
   background: rgb(217 119 6 / 24%);
+}
+
+.developer-anonymous-box-overlay {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid rgb(190 24 93 / 75%);
+  background: rgb(244 114 182 / 16%);
+}
+
+.developer-anonymous-box-overlay.line-start-reservation {
+  border-color: rgb(147 51 234 / 75%);
+  background: rgb(192 132 252 / 16%);
+}
+
+.developer-anonymous-box-overlay.martyria-shift {
+  border-color: rgb(217 119 6 / 80%);
+  background: rgb(251 191 36 / 16%);
+}
+
+.developer-anonymous-box-overlay.lyric-collision {
+  border-color: rgb(22 163 74 / 80%);
+  background: rgb(74 222 128 / 16%);
 }
 
 .developer-overlay-box.ink {

@@ -14,6 +14,7 @@ export interface IEditorPreferences {
   showDeveloperPanels: boolean;
   showGuides: boolean;
   showAdjustmentRatios: boolean;
+  showAnonymousBoxes: boolean;
   showInkBoundingBoxes: boolean;
   showLyricBoundingBoxes: boolean;
   showNeumeBoundingBoxes: boolean;
@@ -28,6 +29,7 @@ export class EditorPreferences implements IEditorPreferences {
   showDeveloperPanels = false;
   showGuides = false;
   showAdjustmentRatios = false;
+  showAnonymousBoxes = false;
   showInkBoundingBoxes = false;
   showLyricBoundingBoxes = false;
   showNeumeBoundingBoxes = false;

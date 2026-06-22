@@ -169,6 +169,7 @@ import type {
 
 type DeveloperToggleKey =
   | 'showAdjustmentRatios'
+  | 'showAnonymousBoxes'
   | 'showCollisionRegions'
   | 'showGuides'
   | 'showGlueWidths'
@@ -200,6 +201,7 @@ const emit = defineEmits<{
 const displayToggles: Array<{ key: DeveloperToggleKey; label: string }> = [
   { key: 'showGuides', label: 'Show guides' },
   { key: 'showAdjustmentRatios', label: 'Show adjustment ratios' },
+  { key: 'showAnonymousBoxes', label: 'Show anonymous boxes' },
   { key: 'showGlueWidths', label: 'Show glue widths' },
   { key: 'showInkBoundingBoxes', label: 'Show ink bounding boxes' },
   { key: 'showLyricBoundingBoxes', label: 'Show lyric bounding boxes' },

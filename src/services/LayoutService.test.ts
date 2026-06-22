@@ -412,6 +412,93 @@ describe('LayoutService.alignIsonIndicators', () => {
   });
 });
 
+describe('LayoutService.mayShowLeadingLyricHyphen', () => {
+  it('suppresses Greek start hyphens when Greek melismata are enabled', () => {
+    const pageSetup = getMockPageSetup();
+
+    const note = new NoteElement();
+    note.isHyphen = true;
+    note.lyrics = 'τω';
+
+    expect(LayoutService.mayShowLeadingLyricHyphen(note, pageSetup)).toBe(
+      false,
+    );
+  });
+
+  it('suppresses Greek continuation hyphens when Greek melismata are enabled', () => {
+    const pageSetup = getMockPageSetup();
+
+    const note = new NoteElement();
+    note.isHyphen = true;
+    note.isMelisma = true;
+    note.lyrics = '';
+
+    expect(LayoutService.mayShowLeadingLyricHyphen(note, pageSetup, true)).toBe(
+      false,
+    );
+  });
+
+  it('allows non-Greek hyphens', () => {
+    const pageSetup = getMockPageSetup();
+
+    const note = new NoteElement();
+    note.isHyphen = true;
+    note.lyrics = 'test';
+
+    expect(LayoutService.mayShowLeadingLyricHyphen(note, pageSetup)).toBe(true);
+  });
+
+  it('allows Greek hyphens when Greek melismata are disabled', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.disableGreekMelismata = true;
+
+    const note = new NoteElement();
+    note.isHyphen = true;
+    note.lyrics = 'τω';
+
+    expect(LayoutService.mayShowLeadingLyricHyphen(note, pageSetup)).toBe(true);
+  });
+
+  it('does not allow non-hyphen notes', () => {
+    const pageSetup = getMockPageSetup();
+
+    const note = new NoteElement();
+    note.isHyphen = false;
+    note.lyrics = 'τω';
+
+    expect(LayoutService.mayShowLeadingLyricHyphen(note, pageSetup)).toBe(
+      false,
+    );
+  });
+
+  it('allows non-Greek continuation hyphens outside active Greek melismas', () => {
+    const pageSetup = getMockPageSetup();
+
+    const note = new NoteElement();
+    note.isHyphen = true;
+    note.isMelisma = true;
+    note.lyrics = '';
+
+    expect(
+      LayoutService.mayShowLeadingLyricHyphen(note, pageSetup, false),
+    ).toBe(true);
+  });
+
+  it('allows Greek continuation hyphens when Greek melismata are disabled', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.disableGreekMelismata = true;
+
+    const note = new NoteElement();
+    note.isHyphen = true;
+    note.isMelisma = true;
+    note.lyrics = '';
+
+    expect(LayoutService.mayShowLeadingLyricHyphen(note, pageSetup, true)).toBe(
+      true,
+    );
+  });
+});
+
 function getInlineTextBox() {
   const inlineTextBox = new TextBoxElement();
   inlineTextBox.inline = true;

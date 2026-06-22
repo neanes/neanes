@@ -550,6 +550,7 @@ export class LayoutService {
     };
 
     // Phase 1: Build paragraphs as sequences of boxes, glue, and penalties
+    let phase1GreekMelismaIsActive = false;
     for (let i = 0; i < elements.length; i++) {
       let lineBreak: boolean = elements[i].lineBreak || elements[i].pageBreak;
       let lineBreakType: LineBreakType =
@@ -884,7 +885,12 @@ export class LayoutService {
           if (
             noteElement.isHyphen &&
             nextNoteElement != null &&
-            nextNoteElement.lyricsWidth > 0
+            nextNoteElement.lyricsWidth > 0 &&
+            LayoutService.mayShowLeadingLyricHyphen(
+              noteElement,
+              pageSetup,
+              phase1GreekMelismaIsActive,
+            )
           ) {
             const leadingLyricHyphenWidth =
               nextNoteElement.lyricsUseDefaultStyle
@@ -910,6 +916,12 @@ export class LayoutService {
           }
           layoutWorkspace.pendingLeadingLyricHyphenReservationWidth =
             nextLeadingLyricHyphenReservation;
+          phase1GreekMelismaIsActive =
+            LayoutService.getGreekMelismaIsActiveAfterNote(
+              noteElement,
+              pageSetup,
+              phase1GreekMelismaIsActive,
+            );
 
           const m_i = this.calculateInterNoteSpacing(
             noteElement,
@@ -2402,6 +2414,49 @@ export class LayoutService {
       hyphenOffset,
       reservationWidth: Math.max(0, -(leftProjection + hyphenOffset)),
     };
+  }
+
+  public static mayShowLeadingLyricHyphen(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    greekMelismaIsActive: boolean = false,
+  ): boolean {
+    if (!noteElement.isHyphen) {
+      return false;
+    }
+
+    if (pageSetup.disableGreekMelismata) {
+      return true;
+    }
+
+    if (noteElement.isMelismaStart) {
+      return !MelismaHelperGreek.isGreek(noteElement.lyrics);
+    }
+
+    if (noteElement.isMelisma && greekMelismaIsActive) {
+      return false;
+    }
+
+    return (
+      !MelismaHelperGreek.isGreek(noteElement.lyrics) &&
+      !MelismaHelperGreek.isGreek(noteElement.melismaText)
+    );
+  }
+
+  private static getGreekMelismaIsActiveAfterNote(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    greekMelismaIsActive: boolean,
+  ) {
+    if (pageSetup.disableGreekMelismata) {
+      return false;
+    }
+
+    if (noteElement.isMelismaStart) {
+      return MelismaHelperGreek.isGreek(noteElement.lyrics);
+    }
+
+    return noteElement.isMelisma && greekMelismaIsActive;
   }
 
   private static preventBreak(workspace: LayoutWorkspace) {
@@ -4597,6 +4652,8 @@ export class LayoutService {
 
     let melismaSyllables: MelismaSyllables | null = null;
     let melismaLyricsEnd: number | null = null;
+    let phase2GreekMelismaIsActive = false;
+    let previousLineEndingMayShowLeadingLyricHyphen = false;
 
     for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
       const page = pages[pageIndex];
@@ -4621,24 +4678,6 @@ export class LayoutService {
           firstElementOnNextLine = pages[pageIndex + 1].lines[0].elements[0];
         }
 
-        let lastElementOnPreviousLine: ScoreElement | null = null;
-
-        if (lineIndex > 0 && page.lines[lineIndex - 1].elements.length > 0) {
-          const previousLine = page.lines[lineIndex - 1];
-          lastElementOnPreviousLine =
-            previousLine.elements[previousLine.elements.length - 1];
-        } else if (
-          lineIndex === 0 &&
-          pageIndex > 0 &&
-          pages[pageIndex - 1].lines.length > 0
-        ) {
-          const previousPage = pages[pageIndex - 1];
-          const previousLine =
-            previousPage.lines[previousPage.lines.length - 1];
-          lastElementOnPreviousLine =
-            previousLine.elements[previousLine.elements.length - 1];
-        }
-
         const noteElements = line.elements.filter(
           (x) => x.elementType === ElementType.Note,
         ) as NoteElement[];
@@ -4646,6 +4685,7 @@ export class LayoutService {
         const indexOfFirstNote = line.elements.findIndex(
           (x) => x.elementType === ElementType.Note,
         );
+        let lineEndingMayShowLeadingLyricHyphen = false;
 
         for (const element of noteElements) {
           const index = line.elements.indexOf(element);
@@ -4657,6 +4697,12 @@ export class LayoutService {
             index === indexOfFirstNote &&
             element.isMelisma &&
             !element.isMelismaStart;
+          const mayShowLeadingLyricHyphen =
+            LayoutService.mayShowLeadingLyricHyphen(
+              element,
+              pageSetup,
+              phase2GreekMelismaIsActive,
+            );
 
           // First, clear melisma fields, since
           // they may be stale
@@ -4669,14 +4715,21 @@ export class LayoutService {
           if (
             index === indexOfFirstNote &&
             element.lyricsWidth > 0 &&
-            lastElementOnPreviousLine?.elementType === ElementType.Note
+            previousLineEndingMayShowLeadingLyricHyphen
           ) {
-            const previousNoteElement =
-              lastElementOnPreviousLine as NoteElement;
-            if (previousNoteElement.isHyphen) {
-              element.showLeadingLyricHyphen = true;
-            }
+            element.showLeadingLyricHyphen = true;
           }
+
+          if (line.elements[line.elements.length - 1] === element) {
+            lineEndingMayShowLeadingLyricHyphen = mayShowLeadingLyricHyphen;
+          }
+
+          phase2GreekMelismaIsActive =
+            LayoutService.getGreekMelismaIsActiveAfterNote(
+              element,
+              pageSetup,
+              phase2GreekMelismaIsActive,
+            );
 
           if (
             !pageSetup.disableGreekMelismata &&
@@ -5091,6 +5144,9 @@ export class LayoutService {
             }
           }
         }
+
+        previousLineEndingMayShowLeadingLyricHyphen =
+          lineEndingMayShowLeadingLyricHyphen;
       }
     }
   }

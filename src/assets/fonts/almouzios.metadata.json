@@ -2,6 +2,8 @@
   "fontName": "Almouzios",
   "fontVersion": "1.0.3",
   "metrics": {
+    "ascent": 0.8,
+    "descent": 0.2,
     "winAscent": 0.88,
     "winDescent": 0.44,
     "oligonMidpoint": 0.113

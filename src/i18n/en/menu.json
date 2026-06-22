@@ -56,11 +56,13 @@
   },
   "view": {
     "root": "View",
+    "developer": "Developer",
     "neumeSelector": "Neume Selector",
     "commonCombos": "Common Combinations",
     "properties": "Properties",
     "selection": "Selection",
     "lyrics": "Lyrics",
+    "showDeveloperPanels": "Show Developer Panels",
     "resetLayout": "Reset Layout",
     "generateTestFiles": "Generate Test Files (Debug)"
   },

@@ -1,6 +1,6 @@
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="sm:max-w-md">
+    <DialogContent class="flex max-h-[90vh] flex-col sm:max-w-md">
       <DialogHeader>
         <DialogTitle>
           {{ $t(($) => $.dialog.preferences.root, { ns: 'dialog' }) }}
@@ -10,8 +10,12 @@
         </DialogDescription>
       </DialogHeader>
 
-      <form id="editor-preferences-form" @submit.prevent="submit">
-        <FieldGroup>
+      <form
+        id="editor-preferences-form"
+        class="min-h-0 flex-1 overflow-y-auto pr-1"
+        @submit.prevent="submit"
+      >
+        <FieldGroup class="pb-1">
           <Field>
             <FieldLabel for="editor-preferences-language">
               {{ $t(($) => $.dialog.preferences.language, { ns: 'dialog' }) }}
@@ -126,6 +130,21 @@
             </Select>
           </Field>
 
+          <Field orientation="horizontal">
+            <Switch
+              id="editor-preferences-enable-developer-panel"
+              :model-value="form.showDeveloperPanels"
+              @update:model-value="form.showDeveloperPanels = $event === true"
+            />
+            <FieldLabel for="editor-preferences-enable-developer-panel">
+              {{
+                $t(($) => $.dialog.preferences.enableDeveloperPanel, {
+                  ns: 'dialog',
+                })
+              }}
+            </FieldLabel>
+          </Field>
+
           <FieldSet class="gap-2">
             <FieldLegend variant="label" class="mb-0">
               {{
@@ -232,6 +251,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { supportedLocales } from '@/i18n';
 import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
 import { getTempoSignLabelSelector } from '@/models/NeumeI18nMappings';

@@ -2,6 +2,8 @@
   "fontName": "NeanesRTLEngraving",
   "fontVersion": "1.0.4",
   "metrics": {
+    "ascent": 0.8,
+    "descent": 0.2,
     "winAscent": 1.4,
     "winDescent": 0.466,
     "oligonMidpoint": 0.307

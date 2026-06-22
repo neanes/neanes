@@ -124,10 +124,12 @@ let win: BrowserWindow | null = null;
 let readyToExit = false;
 let creatingWindow = false;
 let quitting = false;
+let developerPaneEnabled = false;
 let paneMenuVisibility = createDefaultPaneVisibility();
 
 const paneMenuItemIds: Record<WorkspacePaneId, string> = {
   'common-combos': 'view-pane-common-combos',
+  developer: 'view-pane-developer',
   'neume-selector': 'view-pane-neume-selector',
   lyrics: 'view-pane-lyrics',
   properties: 'view-pane-properties',
@@ -1479,6 +1481,7 @@ function createPaneMenuItem(
     checked: paneMenuVisibility[paneId],
     id: paneMenuItemIds[paneId],
     label,
+    visible: paneId !== 'developer' || developerPaneEnabled,
     type: 'checkbox',
     click(menuItem) {
       const requestedVisibility = menuItem.checked;
@@ -1490,6 +1493,22 @@ function createPaneMenuItem(
       } as FileMenuViewPaneVisibilityArgs);
     },
   };
+}
+
+function syncDeveloperPaneMenuItemEnabled(isEnabled: boolean) {
+  developerPaneEnabled = isEnabled;
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  const item = menu.getMenuItemById(paneMenuItemIds.developer);
+
+  if (item != null) {
+    item.visible = isEnabled;
+  }
 }
 
 function createMenu() {
@@ -1942,6 +1961,10 @@ function createMenu() {
           i18next.t(($) => $.menu.view.lyrics),
           'CmdOrCtrl+L',
         ),
+        createPaneMenuItem(
+          'developer',
+          i18next.t(($) => $.menu.view.developer),
+        ),
         { type: 'separator' },
         {
           label: i18next.t(($) => $.menu.view.resetLayout),
@@ -2167,6 +2190,13 @@ ipcMain.on(IpcRendererChannels.SetCanUndo, async (event, data) => {
 ipcMain.on(IpcRendererChannels.SetCanRedo, async (event, data) => {
   Menu.getApplicationMenu()!.getMenuItemById('redo')!.enabled = data;
 });
+
+ipcMain.on(
+  IpcRendererChannels.SetDeveloperPaneEnabled,
+  (event, isEnabled: boolean) => {
+    syncDeveloperPaneMenuItemEnabled(isEnabled);
+  },
+);
 
 ipcMain.on(
   IpcRendererChannels.SetWorkspacePaneVisibility,

@@ -56,6 +56,14 @@ export const workspacePaneDefinitions = [
     id: 'lyrics',
     titleSelector: ($) => $.menu.view.lyrics,
   },
+  {
+    allowedEdges: ['left', 'right'],
+    defaultSize: rightPaneDefaultSize,
+    defaultVisible: false,
+    homeEdge: 'right',
+    id: 'developer',
+    titleSelector: ($) => $.menu.view.developer,
+  },
 ] as const satisfies readonly WorkspacePaneConfig[];
 
 export type WorkspacePane = (typeof workspacePaneDefinitions)[number];

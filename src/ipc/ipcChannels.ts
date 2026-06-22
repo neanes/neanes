@@ -71,6 +71,7 @@ export enum IpcRendererChannels {
 
   SetCanUndo = 'SetCanUndo',
   SetCanRedo = 'SetCanRedo',
+  SetDeveloperPaneEnabled = 'SetDeveloperPaneEnabled',
   SetWorkspacePaneVisibility = 'SetWorkspacePaneVisibility',
 
   ShowMessageBox = 'ShowMessageBox',

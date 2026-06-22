@@ -44,6 +44,7 @@ import Vue3TabsChrome from 'vue3-tabs-chrome';
 import AboutDialog from '@/components/AboutDialog.vue';
 import AlternateLine from '@/components/AlternateLine.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
+import DeveloperPane from '@/components/DeveloperPane.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import type {
@@ -136,6 +137,11 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
+import type {
+  AnonymousBoxOverlayDiagnostics,
+  ElementOverlayBox,
+  ElementOverlayDiagnostics,
+} from '@/models/LayoutDiagnostics';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
@@ -188,7 +194,10 @@ import type { Command } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import { LatexExporterOptions } from '@/services/integration/LatexExporter';
-import { LayoutService } from '@/services/LayoutService';
+import {
+  LayoutService,
+  type OverlayDiagnosticsContext,
+} from '@/services/LayoutService';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
@@ -354,14 +363,14 @@ const searchTextPanelIsOpen = ref(false);
 const showFileMenuBar = ref(!isElectron());
 const paneLayoutResetCounter = ref(0);
 const paneVisibility = ref(createDefaultPaneVisibility());
+const editorPreferencesHydrated = ref(false);
 const isDevelopment = ref(import.meta.env.DEV);
 const isBrowser = ref(!isElectron());
 const isLoading = ref(true);
 const printMode = ref(false);
 const canUndo = ref(false);
 const canRedo = ref(false);
-const showGuides = ref(false);
-const showAdjustmentRatios = ref(false);
+const developerPaneOpenSections = ref(['display', 'line', 'inspector']);
 const workspaces = ref<Workspace[]>([]);
 const selectedWorkspaceValue = ref(new Workspace());
 const pendingLyricsAssignmentTimers = new Map<string, number>();
@@ -734,6 +743,48 @@ const nextElementOnLine = computed(() => {
     : null;
 });
 
+const showDeveloperPanels = computed(
+  () => editorPreferences.value.showDeveloperPanels,
+);
+
+const printOverlays = computed(() => editorPreferences.value.printOverlays);
+
+const showGuides = computed(() => editorPreferences.value.showGuides);
+
+const showAdjustmentRatios = computed(
+  () => editorPreferences.value.showAdjustmentRatios,
+);
+
+const showAnonymousBoxes = computed(
+  () => editorPreferences.value.showAnonymousBoxes,
+);
+
+const showInkBoundingBoxes = computed(
+  () => editorPreferences.value.showInkBoundingBoxes,
+);
+
+const showGlueWidths = computed(() => editorPreferences.value.showGlueWidths);
+
+const showLyricBoundingBoxes = computed(
+  () => editorPreferences.value.showLyricBoundingBoxes,
+);
+
+const showNeumeBoundingBoxes = computed(
+  () => editorPreferences.value.showNeumeBoundingBoxes,
+);
+
+const showCollisionRegions = computed(
+  () => editorPreferences.value.showCollisionRegions,
+);
+
+const shouldCollectLayoutDiagnostics = computed(
+  () => showDeveloperPanels.value,
+);
+
+const shouldRenderDeveloperOverlaysInPrint = computed(
+  () => showDeveloperPanels.value && printOverlays.value,
+);
+
 const selectedLyrics = computed({
   get: () => {
     return selectedWorkspace.value.selectedLyrics;
@@ -782,6 +833,292 @@ const selectedRichTextBoxElement = computed(() => {
     isRichTextBoxElement(currentSelectedElement)
     ? (currentSelectedElement as RichTextBoxElement)
     : null;
+});
+
+const developerSelectedElement = computed(
+  () =>
+    selectedElement.value ??
+    selectedLyrics.value ??
+    selectedHeaderFooterElement.value,
+);
+
+const developerNextElementOnLine = computed(() => {
+  const element = developerSelectedElement.value;
+
+  if (element == null) {
+    return null;
+  }
+
+  const index = elements.value.indexOf(element);
+
+  if (index < 0 || index + 1 >= elements.value.length) {
+    return null;
+  }
+
+  return elements.value[index + 1].line === element.line
+    ? elements.value[index + 1]
+    : null;
+});
+
+const selectedDeveloperLine = computed(() => {
+  const element = developerSelectedElement.value;
+
+  if (element == null || element.page <= 0 || element.line <= 0) {
+    return null;
+  }
+
+  return pages.value[element.page - 1]?.lines[element.line - 1] ?? null;
+});
+
+const selectedLineDiagnostics = computed(() =>
+  shouldCollectLayoutDiagnostics.value
+    ? (selectedDeveloperLine.value?.diagnostics ?? null)
+    : null,
+);
+
+const developerPaneHasMissingDiagnostics = computed(() => {
+  if (!shouldCollectLayoutDiagnostics.value || pages.value.length === 0) {
+    return false;
+  }
+
+  return pages.value.some((page) =>
+    page.lines.some((line) => line.diagnostics == null),
+  );
+});
+
+function reloadDeveloperPaneDiagnostics() {
+  save(false);
+}
+
+function getDeveloperGlueOverlays(
+  line: Line,
+  lineIndex: number,
+  pageIndex: number,
+) {
+  const diagnostics = line.diagnostics;
+
+  if (
+    !showDeveloperPanels.value ||
+    !showGlueWidths.value ||
+    diagnostics == null ||
+    line.elements.length === 0
+  ) {
+    return [];
+  }
+
+  const barHeight = Math.max(3, score.value.pageSetup.lineHeight * 0.06);
+  const barGap = Math.max(2, score.value.pageSetup.lineHeight * 0.03);
+  const stackHeight = barHeight * 2 + barGap;
+  const stackTop =
+    line.elements[0].y +
+    score.value.pageSetup.lineHeight * 0.45 -
+    stackHeight / 2;
+  const preferredTop = stackTop + barHeight + barGap;
+
+  return diagnostics.glueOverlays.map((overlay, overlayIndex) => {
+    const delta = overlay.actualWidth - overlay.preferredWidth;
+    const actualFrame = getDeveloperGlueOverlayFrame(
+      line,
+      overlay.left,
+      stackTop,
+      overlay.actualWidth,
+      barHeight,
+    );
+    const preferredFrame = getDeveloperGlueOverlayFrame(
+      line,
+      overlay.left,
+      preferredTop,
+      overlay.preferredWidth,
+      barHeight,
+    );
+    const wrapperLeft = Math.min(actualFrame.left, preferredFrame.left);
+    const wrapperTop = Math.min(actualFrame.top, preferredFrame.top);
+    const wrapperRight = Math.max(
+      actualFrame.left + actualFrame.width,
+      preferredFrame.left + preferredFrame.width,
+    );
+    const wrapperBottom = Math.max(
+      actualFrame.top + actualFrame.height,
+      preferredFrame.top + preferredFrame.height,
+    );
+
+    return {
+      actualNegative: overlay.actualWidth < 0,
+      actualStyle: getDeveloperGlueOverlayStyle(
+        actualFrame,
+        wrapperLeft,
+        wrapperTop,
+      ),
+      delta,
+      key: `${pageIndex}-${lineIndex}-${overlay.ownerElementId ?? 'anon'}-${overlayIndex}`,
+      preferredNegative: overlay.preferredWidth < 0,
+      preferredStyle: getDeveloperGlueOverlayStyle(
+        preferredFrame,
+        wrapperLeft,
+        wrapperTop,
+      ),
+      wrapperStyle: getDeveloperGlueOverlayWrapperStyle({
+        height: wrapperBottom - wrapperTop,
+        left: wrapperLeft,
+        top: wrapperTop,
+        width: wrapperRight - wrapperLeft,
+      }),
+    };
+  });
+}
+
+function getDeveloperAnonymousBoxOverlays(line: Line, lineIndex: number) {
+  const diagnostics = line.diagnostics;
+
+  if (
+    !showDeveloperPanels.value ||
+    !showAnonymousBoxes.value ||
+    diagnostics == null ||
+    line.elements.length === 0
+  ) {
+    return [];
+  }
+
+  const height = Math.max(4, score.value.pageSetup.lineHeight * 0.08);
+  const top = line.elements[0].y + score.value.pageSetup.lineHeight * 0.2;
+
+  return diagnostics.anonymousBoxOverlays.map((overlay, overlayIndex) => ({
+    key: `${lineIndex}-${overlay.ownerElementId ?? 'anon'}-${overlay.label ?? 'box'}-${overlayIndex}`,
+    kind: getDeveloperAnonymousBoxKind(overlay),
+    label: overlay.label,
+    style: getDeveloperOverlayStyle(
+      getDeveloperGlueOverlayFrame(
+        line,
+        overlay.left,
+        top,
+        overlay.width,
+        height,
+      ),
+    ),
+  }));
+}
+
+const overlayDiagnosticsContext = computed<OverlayDiagnosticsContext>(() =>
+  LayoutService.createOverlayDiagnosticsContext(score.value.pageSetup),
+);
+
+const selectedElementOverlayDiagnostics =
+  computed<ElementOverlayDiagnostics | null>(() => {
+    const element = developerSelectedElement.value;
+
+    if (element == null) {
+      return null;
+    }
+
+    return LayoutService.getElementOverlayDiagnostics(
+      element,
+      developerNextElementOnLine.value,
+      score.value.pageSetup,
+      overlayDiagnosticsContext.value,
+    );
+  });
+
+const developerPaneGeneratedItemGroups = computed(() => {
+  const diagnostics = selectedLineDiagnostics.value;
+  const element = developerSelectedElement.value;
+
+  if (diagnostics == null || element == null) {
+    return [];
+  }
+
+  return diagnostics.itemGroups.filter((group) => {
+    return (
+      group.ownerElementId === element.id &&
+      group.ownerElementType === element.elementType
+    );
+  });
+});
+
+const developerInspectorRows = computed(() => {
+  const element = developerSelectedElement.value;
+  const overlayDiagnostics = selectedElementOverlayDiagnostics.value;
+
+  if (element == null) {
+    return [];
+  }
+
+  const rows = [
+    { label: 'Type', value: element.elementType },
+    { label: 'Page', value: `${element.page || 0}` },
+    { label: 'Line', value: `${element.line || 0}` },
+    { label: 'Width', value: formatDeveloperNumber(element.width) },
+    { label: 'X', value: formatDeveloperNumber(element.x) },
+    { label: 'Y', value: formatDeveloperNumber(element.y) },
+  ];
+
+  if (overlayDiagnostics?.glyph != null) {
+    rows.push({ label: 'Glyph', value: overlayDiagnostics.glyph });
+  }
+
+  if (overlayDiagnostics?.rootNeume != null) {
+    rows.push({ label: 'Root Neume', value: overlayDiagnostics.rootNeume });
+  }
+
+  if (overlayDiagnostics?.advanceBox != null) {
+    rows.push({
+      label: 'Advance Box',
+      value: formatDeveloperPageBox(element, overlayDiagnostics.advanceBox),
+    });
+  }
+
+  if (overlayDiagnostics?.inkBox != null) {
+    rows.push({
+      label: 'Ink BBox',
+      value: formatDeveloperPageBox(element, overlayDiagnostics.inkBox),
+    });
+  }
+
+  if (overlayDiagnostics?.lyricBox != null) {
+    rows.push({
+      label: 'Lyric BBox',
+      value: formatDeveloperPageBox(element, overlayDiagnostics.lyricBox),
+    });
+  }
+
+  if (overlayDiagnostics?.leftProjection != null) {
+    rows.push({
+      label: 'Left Projection',
+      value: formatDeveloperNumber(overlayDiagnostics.leftProjection),
+    });
+  }
+
+  if (overlayDiagnostics?.rightProjection != null) {
+    rows.push({
+      label: 'Right Projection',
+      value: formatDeveloperNumber(overlayDiagnostics.rightProjection),
+    });
+  }
+
+  if (overlayDiagnostics?.leftTuck != null) {
+    rows.push({
+      label: 'Left Tuck',
+      value: formatDeveloperNumber(overlayDiagnostics.leftTuck),
+    });
+  }
+
+  if (overlayDiagnostics?.rightTuck != null) {
+    rows.push({
+      label: 'Right Tuck',
+      value: formatDeveloperNumber(overlayDiagnostics.rightTuck),
+    });
+  }
+
+  if (overlayDiagnostics != null) {
+    rows.push({
+      label: 'Collision Boxes',
+      value: formatDeveloperCollisionBoxes(
+        element,
+        overlayDiagnostics.collisionBoxes,
+      ),
+    });
+  }
+
+  return rows;
 });
 
 const selectionRange = computed({
@@ -1143,6 +1480,9 @@ onMounted(() => {
       JSON.parse(savedEditorPreferences),
     );
   }
+
+  syncDeveloperPanelsFromPreferencesOnStartup();
+  editorPreferencesHydrated.value = true;
 
   window.addEventListener('keydown', onKeydown);
   window.addEventListener('keyup', onKeyup);
@@ -1530,6 +1870,202 @@ function getEmptyBoxStyle(element: EmptyElement) {
     width: withZoom(element.width),
     height: withZoom(element.height),
   } as StyleValue;
+}
+
+function formatDeveloperBox(box: ElementOverlayBox) {
+  const lines = [
+    `x=${formatDeveloperNumber(box.left)}`,
+    `y=${formatDeveloperNumber(box.top)}`,
+    `height=${formatDeveloperNumber(box.height)}`,
+    `width=${formatDeveloperNumber(box.width)}`,
+  ];
+
+  if (box.kind != null) {
+    lines.push(`type=${box.kind}`);
+  }
+
+  return lines.join('\n');
+}
+
+function formatDeveloperPageBox(element: ScoreElement, box: ElementOverlayBox) {
+  return formatDeveloperBox(getDeveloperPageBox(element, box));
+}
+
+function formatDeveloperCollisionBoxes(
+  element: ScoreElement,
+  boxes: ElementOverlayBox[],
+) {
+  if (boxes.length === 0) {
+    return '0';
+  }
+
+  return boxes
+    .map((box, index) => {
+      return `box ${index + 1}\n${formatDeveloperPageBox(element, box)}`;
+    })
+    .join('\n\n');
+}
+
+function getDeveloperPageBox(element: ScoreElement, box: ElementOverlayBox) {
+  const elementLeft = rtl.value
+    ? score.value.pageSetup.pageWidth - element.x - element.width
+    : element.x;
+
+  return {
+    ...box,
+    left: elementLeft + box.left,
+    top: element.y + box.top,
+  };
+}
+
+function formatDeveloperNumber(value: number) {
+  return Number.isFinite(value) ? value.toFixed(2) : String(value);
+}
+
+function getDeveloperAnonymousBoxKind(overlay: AnonymousBoxOverlayDiagnostics) {
+  switch (overlay.label) {
+    case 'line-start-reservation':
+      return 'line-start-reservation';
+    case 'martyria-shift':
+      return 'martyria-shift';
+    case 'lyric-collision':
+      return 'lyric-collision';
+    default:
+      return 'anonymous';
+  }
+}
+
+function getDeveloperOverlayBoxes(element: ScoreElement) {
+  if (!showDeveloperPanels.value) {
+    return [];
+  }
+
+  if (
+    !showInkBoundingBoxes.value &&
+    !showLyricBoundingBoxes.value &&
+    !showNeumeBoundingBoxes.value &&
+    !showCollisionRegions.value
+  ) {
+    return [];
+  }
+
+  const diagnostics = LayoutService.getElementOverlayDiagnostics(
+    element,
+    getNextElementOnSameLine(element),
+    score.value.pageSetup,
+    overlayDiagnosticsContext.value,
+  );
+  const boxes: Array<{
+    height: number;
+    kind: string;
+    left: number;
+    top: number;
+    width: number;
+  }> = [];
+
+  if (showNeumeBoundingBoxes.value && diagnostics.advanceBox != null) {
+    boxes.push({ ...diagnostics.advanceBox, kind: 'neume' });
+  }
+
+  if (showInkBoundingBoxes.value && diagnostics.inkBox != null) {
+    boxes.push({ ...diagnostics.inkBox, kind: 'ink' });
+  }
+
+  if (showLyricBoundingBoxes.value && diagnostics.lyricBox != null) {
+    boxes.push({ ...diagnostics.lyricBox, kind: 'lyric' });
+  }
+
+  if (showCollisionRegions.value) {
+    boxes.push(
+      ...diagnostics.collisionBoxes.map((box) => ({
+        ...box,
+        kind: 'collision',
+      })),
+    );
+  }
+
+  return boxes;
+}
+
+function getDeveloperOverlayStyle(box: {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}) {
+  return {
+    left: withZoom(box.left),
+    top: withZoom(box.top),
+    width: withZoom(box.width),
+    height: withZoom(box.height),
+  } as StyleValue;
+}
+
+function getDeveloperGlueOverlayFrame(
+  line: Line,
+  logicalLeft: number,
+  top: number,
+  width: number,
+  height: number,
+) {
+  const logicalRight = logicalLeft + width;
+  const normalizedLogicalLeft = Math.min(logicalLeft, logicalRight);
+  const normalizedLogicalRight = Math.max(logicalLeft, logicalRight);
+  const normalizedWidth = normalizedLogicalRight - normalizedLogicalLeft;
+  const physicalLeft = rtl.value
+    ? score.value.pageSetup.pageWidth -
+      score.value.pageSetup.rightMargin -
+      line.indentation -
+      normalizedLogicalRight
+    : score.value.pageSetup.leftMargin +
+      line.indentation +
+      normalizedLogicalLeft;
+
+  return {
+    height,
+    left: physicalLeft,
+    top,
+    width: normalizedWidth,
+  };
+}
+
+function getDeveloperGlueOverlayWrapperStyle(frame: {
+  height: number;
+  left: number;
+  top: number;
+  width: number;
+}) {
+  return {
+    left: withZoom(frame.left),
+    top: withZoom(frame.top),
+    width: withZoom(frame.width),
+    height: withZoom(frame.height),
+  } as StyleValue;
+}
+
+function getDeveloperGlueOverlayStyle(
+  frame: { height: number; left: number; top: number; width: number },
+  wrapperLeft: number,
+  wrapperTop: number,
+) {
+  return {
+    left: withZoom(frame.left - wrapperLeft),
+    top: withZoom(frame.top - wrapperTop),
+    width: withZoom(frame.width),
+    height: withZoom(frame.height),
+  } as StyleValue;
+}
+
+function getNextElementOnSameLine(element: ScoreElement) {
+  const index = elements.value.indexOf(element);
+
+  if (index < 0 || index + 1 >= elements.value.length) {
+    return null;
+  }
+
+  return elements.value[index + 1].line === element.line
+    ? elements.value[index + 1]
+    : null;
 }
 
 function getElementStyle(element: ScoreElement) {
@@ -1975,6 +2511,39 @@ function setPaneVisibility(paneId: WorkspacePaneId, isVisible: boolean) {
   visibility[paneId] = isVisible;
 }
 
+function syncDeveloperPanelsMenuState() {
+  EventBus.$emit(
+    IpcRendererChannels.SetDeveloperPaneEnabled,
+    editorPreferences.value.showDeveloperPanels,
+  );
+
+  EventBus.$emit(IpcRendererChannels.SetWorkspacePaneVisibility, {
+    developer: paneVisibility.value.developer,
+  });
+}
+
+function syncDeveloperPanelsFromPreferencesOnStartup() {
+  setPaneVisibility('developer', editorPreferences.value.showDeveloperPanels);
+  syncDeveloperPanelsMenuState();
+}
+
+function updateDeveloperToggle(
+  key:
+    | 'printOverlays'
+    | 'showAdjustmentRatios'
+    | 'showAnonymousBoxes'
+    | 'showCollisionRegions'
+    | 'showGuides'
+    | 'showGlueWidths'
+    | 'showInkBoundingBoxes'
+    | 'showLyricBoundingBoxes'
+    | 'showNeumeBoundingBoxes',
+  value: boolean,
+) {
+  editorPreferences.value[key] = value;
+  saveEditorPreferences();
+}
+
 function getSelectedRichTextOwner() {
   return (
     selectedWorkspace.value.selectedAnnotationElement ??
@@ -2019,20 +2588,39 @@ function resetLayout() {
   const defaultVisibility = createDefaultPaneVisibility();
 
   Object.assign(paneVisibility.value, defaultVisibility);
+  paneVisibility.value.developer = editorPreferences.value.showDeveloperPanels;
   paneLayoutResetCounter.value += 1;
 }
 
 function onPaneVisibilityChange(paneId: WorkspacePaneId, isVisible: boolean) {
+  if (paneId === 'developer') {
+    if (!editorPreferencesHydrated.value) {
+      setPaneVisibility('developer', isVisible);
+      return;
+    }
+
+    setPaneVisibility('developer', isVisible);
+    return;
+  }
+
   setPaneVisibility(paneId, isVisible);
   refocusSelectedRichTextEditorAfterShowingPane(paneId, isVisible);
 }
 
 function updateEditorPreferences(form: EditorPreferences) {
   const languageChanged = editorPreferences.value.language !== form.language;
+  const developerPanelsChanged =
+    editorPreferences.value.showDeveloperPanels !== form.showDeveloperPanels;
 
   Object.assign(editorPreferences.value, form);
 
-  saveEditorPreferences();
+  if (developerPanelsChanged) {
+    setPaneVisibility('developer', form.showDeveloperPanels);
+    saveEditorPreferences();
+    syncDeveloperPanelsMenuState();
+  } else {
+    saveEditorPreferences();
+  }
 
   if (languageChanged) {
     // An empty string means "fall back to the auto-detected locale".
@@ -2390,6 +2978,10 @@ function onClickOpenScore() {
 }
 
 function onClickPrintScore() {
+  if (isLoading.value) {
+    return;
+  }
+
   if (isBrowser.value) {
     window.print();
   } else {
@@ -4103,6 +4695,9 @@ function save(markUnsavedChanges: boolean = true) {
 
   const processedPages = LayoutService.processPages(
     toRaw(selectedWorkspace.value),
+    shouldCollectLayoutDiagnostics.value
+      ? { collectDiagnostics: true }
+      : undefined,
   );
 
   // Set page visibility for the newly processed pages
@@ -4287,7 +4882,12 @@ async function load() {
   selectedElement.value =
     score.value.staff.elements[score.value.staff.elements.length - 1];
 
-  pages.value = LayoutService.processPages(selectedWorkspace.value);
+  pages.value = LayoutService.processPages(
+    selectedWorkspace.value,
+    shouldCollectLayoutDiagnostics.value
+      ? { collectDiagnostics: true }
+      : undefined,
+  );
 }
 
 /**
@@ -7092,9 +7692,7 @@ function onFileMenuViewPaneVisibility({
 }: FileMenuViewPaneVisibilityArgs) {
   if (!dialogOpen.value) {
     const isVisible = visible ?? !paneVisibility.value[paneId];
-
-    setPaneVisibility(paneId, isVisible);
-    refocusSelectedRichTextEditorAfterShowingPane(paneId, isVisible);
+    onPaneVisibilityChange(paneId, isVisible);
   }
 }
 
@@ -7555,6 +8153,7 @@ function renderTabLabel(tab: Tab) {
       v-if="showFileMenuBar"
       class="no-print"
       :pane-visibility="paneVisibility"
+      :show-developer-panels="showDeveloperPanels"
     />
     <ToolbarMain
       :entry-mode="entryMode"
@@ -7600,6 +8199,7 @@ function renderTabLabel(tab: Tab) {
     />
     <div class="content">
       <WorkspaceDockLayout
+        :developer-pane-enabled="showDeveloperPanels"
         :pane-visibility="paneVisibility"
         :pane-layout-reset-counter="paneLayoutResetCounter"
         @pane-visibility-change="onPaneVisibilityChange"
@@ -7668,6 +8268,33 @@ function renderTabLabel(tab: Tab) {
             @update:locked="updateLyricsLocked"
             @update:lyrics="updateStaffLyrics"
             @assign-accepts-lyrics="assignAcceptsLyricsFromCurrentLyrics"
+          />
+        </template>
+
+        <template #developer>
+          <DeveloperPane
+            :generated-item-groups="developerPaneGeneratedItemGroups"
+            :inspector-rows="developerInspectorRows"
+            :line-diagnostics="selectedLineDiagnostics"
+            :open-sections="developerPaneOpenSections"
+            :selected-element="developerSelectedElement"
+            :show-missing-diagnostics-notice="
+              developerPaneHasMissingDiagnostics
+            "
+            :toggles="{
+              printOverlays,
+              showAdjustmentRatios,
+              showAnonymousBoxes,
+              showCollisionRegions,
+              showGuides,
+              showGlueWidths,
+              showInkBoundingBoxes,
+              showLyricBoundingBoxes,
+              showNeumeBoundingBoxes,
+            }"
+            @reload-diagnostics="reloadDeveloperPaneDiagnostics"
+            @update:open-sections="developerPaneOpenSections = $event"
+            @update:toggle="updateDeveloperToggle"
           />
         </template>
 
@@ -7771,7 +8398,13 @@ function renderTabLabel(tab: Tab) {
                     :class="{ print: printMode }"
                   >
                     <template v-if="page.isVisible || printMode">
-                      <template v-if="showGuides">
+                      <template
+                        v-if="
+                          showDeveloperPanels &&
+                          showGuides &&
+                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
+                        "
+                      >
                         <span
                           class="guide-line-vl"
                           :style="getGuideStyleLeft(page)"
@@ -7782,6 +8415,72 @@ function renderTabLabel(tab: Tab) {
                         />
                         <span class="guide-line-ht" :style="guideStyleTop" />
                         <span class="guide-line-hb" :style="guideStyleBottom" />
+                      </template>
+                      <template
+                        v-if="
+                          showDeveloperPanels &&
+                          showGlueWidths &&
+                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
+                        "
+                      >
+                        <div
+                          v-for="(line, lineIndex) in page.lines"
+                          :key="`developer-glue-line-${pageIndex}-${lineIndex}`"
+                        >
+                          <div
+                            v-for="overlay in getDeveloperGlueOverlays(
+                              line,
+                              lineIndex,
+                              pageIndex,
+                            )"
+                            :key="`developer-glue-${overlay.key}`"
+                            class="developer-glue-overlay"
+                            :class="{
+                              shrink: overlay.delta < 0,
+                              stretch: overlay.delta > 0,
+                            }"
+                            :style="overlay.wrapperStyle"
+                          >
+                            <div
+                              class="developer-glue-preferred"
+                              :class="{
+                                negative: overlay.preferredNegative,
+                              }"
+                              :style="overlay.preferredStyle"
+                            ></div>
+                            <div
+                              class="developer-glue-actual"
+                              :class="{
+                                negative: overlay.actualNegative,
+                              }"
+                              :style="overlay.actualStyle"
+                            ></div>
+                          </div>
+                        </div>
+                      </template>
+                      <template
+                        v-if="
+                          showDeveloperPanels &&
+                          showAnonymousBoxes &&
+                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
+                        "
+                      >
+                        <div
+                          v-for="(line, lineIndex) in page.lines"
+                          :key="`developer-anonymous-line-${pageIndex}-${lineIndex}`"
+                        >
+                          <div
+                            v-for="overlay in getDeveloperAnonymousBoxOverlays(
+                              line,
+                              lineIndex,
+                            )"
+                            :key="`developer-anonymous-${pageIndex}-${overlay.key}`"
+                            class="developer-anonymous-box-overlay"
+                            :class="overlay.kind"
+                            :style="overlay.style"
+                            :title="overlay.label"
+                          ></div>
+                        </div>
                       </template>
                       <template v-if="score.pageSetup.showHeader">
                         <template
@@ -8478,10 +9177,30 @@ function renderTabLabel(tab: Tab) {
                               "
                             />
                           </template>
+                          <div
+                            v-for="(box, boxIndex) in getDeveloperOverlayBoxes(
+                              element,
+                            )"
+                            v-show="
+                              !printMode || shouldRenderDeveloperOverlaysInPrint
+                            "
+                            :key="`developer-overlay-${element.id}-${boxIndex}`"
+                            class="developer-overlay-box"
+                            :class="{
+                              collision: box.kind === 'collision',
+                              ink: box.kind === 'ink',
+                              lyric: box.kind === 'lyric',
+                              neume: box.kind === 'neume',
+                            }"
+                            :style="getDeveloperOverlayStyle(box)"
+                          ></div>
                         </div>
                         <span
                           v-if="
+                            showDeveloperPanels &&
                             showAdjustmentRatios &&
+                            (!printMode ||
+                              shouldRenderDeveloperOverlaysInPrint) &&
                             line.adjustmentRatio != null &&
                             line.elements.length > 0
                           "
@@ -9124,6 +9843,104 @@ function renderTabLabel(tab: Tab) {
 
 .element-box {
   position: absolute;
+}
+
+.developer-overlay-box {
+  position: absolute;
+  pointer-events: none;
+  border: 1px dashed #2563eb;
+}
+
+.developer-glue-overlay {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.developer-glue-preferred {
+  --developer-glue-preferred-border: rgb(14 116 144 / 80%);
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid var(--developer-glue-preferred-border);
+  background-size: 100% 100%;
+}
+
+.developer-glue-actual {
+  --developer-glue-actual-fill: rgb(14 116 144 / 35%);
+  position: absolute;
+  border: 1px solid rgb(14 116 144 / 55%);
+  background: var(--developer-glue-actual-fill);
+}
+
+.developer-glue-overlay.stretch .developer-glue-preferred {
+  --developer-glue-preferred-border: rgb(3 105 161 / 85%);
+}
+
+.developer-glue-overlay.stretch .developer-glue-actual {
+  --developer-glue-actual-fill: rgb(3 105 161 / 28%);
+}
+
+.developer-glue-overlay.shrink .developer-glue-preferred {
+  --developer-glue-preferred-border: rgb(180 83 9 / 85%);
+}
+
+.developer-glue-overlay.shrink .developer-glue-actual {
+  --developer-glue-actual-fill: rgb(217 119 6 / 24%);
+}
+
+.developer-glue-preferred.negative {
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 4px,
+    var(--developer-glue-preferred-border) 4px 7px
+  );
+}
+
+.developer-glue-actual.negative {
+  background-image:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 4px,
+      rgb(255 255 255 / 45%) 4px 7px
+    ),
+    linear-gradient(
+      var(--developer-glue-actual-fill),
+      var(--developer-glue-actual-fill)
+    );
+}
+
+.developer-anonymous-box-overlay {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid rgb(190 24 93 / 75%);
+  background: rgb(244 114 182 / 16%);
+}
+
+.developer-anonymous-box-overlay.line-start-reservation {
+  border-color: rgb(147 51 234 / 75%);
+  background: rgb(192 132 252 / 16%);
+}
+
+.developer-anonymous-box-overlay.martyria-shift {
+  border-color: rgb(217 119 6 / 80%);
+  background: rgb(251 191 36 / 16%);
+}
+
+.developer-anonymous-box-overlay.lyric-collision {
+  border-color: rgb(22 163 74 / 80%);
+  background: rgb(74 222 128 / 16%);
+}
+
+.developer-overlay-box.ink {
+  border-color: #ef4444;
+}
+
+.developer-overlay-box.lyric {
+  border-color: #16a34a;
+}
+
+.developer-overlay-box.collision {
+  border-color: #f59e0b;
 }
 
 .adjustment-ratio {

@@ -12,6 +12,7 @@ export interface IEditorPreferences {
   // Empty string means "follow the system / browser locale".
   language: string;
   showDeveloperPanels: boolean;
+  overlaysEnabled: boolean;
   printOverlays: boolean;
   showGuides: boolean;
   showAdjustmentRatios: boolean;
@@ -28,6 +29,7 @@ export class EditorPreferences implements IEditorPreferences {
   buttonMenuMode = ButtonMenuMode.Hold;
   language = '';
   showDeveloperPanels = false;
+  overlaysEnabled = true;
   printOverlays = false;
   showGuides = false;
   showAdjustmentRatios = false;

@@ -27,12 +27,30 @@
             <AccordionContent>
               <FieldGroup class="pt-2">
                 <Field
+                  v-for="toggle in utilityDisplayToggles"
+                  :key="toggle.key"
+                  orientation="horizontal"
+                >
+                  <Switch
+                    :id="`developer-pane-${toggle.key}`"
+                    :model-value="props.toggles[toggle.key]"
+                    @update:model-value="
+                      emit('update:toggle', toggle.key, $event === true)
+                    "
+                  />
+                  <FieldLabel :for="`developer-pane-${toggle.key}`">
+                    {{ toggle.label }}
+                  </FieldLabel>
+                </Field>
+                <Separator class="my-3" />
+                <Field
                   v-for="toggle in displayToggles"
                   :key="toggle.key"
                   orientation="horizontal"
                 >
                   <Switch
                     :id="`developer-pane-${toggle.key}`"
+                    :disabled="!props.toggles.overlaysEnabled"
                     :model-value="props.toggles[toggle.key]"
                     @update:model-value="
                       emit('update:toggle', toggle.key, $event === true)
@@ -175,6 +193,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import type { ScoreElement } from '@/models/Element';
 import type {
@@ -185,6 +204,7 @@ import type {
 } from '@/models/LayoutDiagnostics';
 
 type DeveloperToggleKey =
+  | 'overlaysEnabled'
   | 'printOverlays'
   | 'showAdjustmentRatios'
   | 'showAnonymousBoxes'
@@ -218,8 +238,15 @@ const emit = defineEmits<{
   (event: 'update:toggle', key: DeveloperToggleKey, value: boolean): void;
 }>();
 
-const displayToggles: Array<{ key: DeveloperToggleKey; label: string }> = [
+const utilityDisplayToggles: Array<{
+  key: 'overlaysEnabled' | 'printOverlays';
+  label: string;
+}> = [
+  { key: 'overlaysEnabled', label: 'Enable overlays' },
   { key: 'printOverlays', label: 'Print Overlays' },
+];
+
+const displayToggles: Array<{ key: DeveloperToggleKey; label: string }> = [
   { key: 'showGuides', label: 'Show guides' },
   { key: 'showAdjustmentRatios', label: 'Show adjustment ratios' },
   { key: 'showAnonymousBoxes', label: 'Show anonymous boxes' },

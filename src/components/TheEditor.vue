@@ -747,6 +747,8 @@ const showDeveloperPanels = computed(
   () => editorPreferences.value.showDeveloperPanels,
 );
 
+const overlaysEnabled = computed(() => editorPreferences.value.overlaysEnabled);
+
 const printOverlays = computed(() => editorPreferences.value.printOverlays);
 
 const showGuides = computed(() => editorPreferences.value.showGuides);
@@ -899,6 +901,7 @@ function getDeveloperGlueOverlays(
 
   if (
     !showDeveloperPanels.value ||
+    !overlaysEnabled.value ||
     !showGlueWidths.value ||
     diagnostics == null ||
     line.elements.length === 0
@@ -972,6 +975,7 @@ function getDeveloperAnonymousBoxOverlays(line: Line, lineIndex: number) {
 
   if (
     !showDeveloperPanels.value ||
+    !overlaysEnabled.value ||
     !showAnonymousBoxes.value ||
     diagnostics == null ||
     line.elements.length === 0
@@ -1936,7 +1940,7 @@ function getDeveloperAnonymousBoxKind(overlay: AnonymousBoxOverlayDiagnostics) {
 }
 
 function getDeveloperOverlayBoxes(element: ScoreElement) {
-  if (!showDeveloperPanels.value) {
+  if (!showDeveloperPanels.value || !overlaysEnabled.value) {
     return [];
   }
 
@@ -2529,6 +2533,7 @@ function syncDeveloperPanelsFromPreferencesOnStartup() {
 
 function updateDeveloperToggle(
   key:
+    | 'overlaysEnabled'
     | 'printOverlays'
     | 'showAdjustmentRatios'
     | 'showAnonymousBoxes'
@@ -8282,6 +8287,7 @@ function renderTabLabel(tab: Tab) {
               developerPaneHasMissingDiagnostics
             "
             :toggles="{
+              overlaysEnabled,
               printOverlays,
               showAdjustmentRatios,
               showAnonymousBoxes,
@@ -8401,6 +8407,7 @@ function renderTabLabel(tab: Tab) {
                       <template
                         v-if="
                           showDeveloperPanels &&
+                          overlaysEnabled &&
                           showGuides &&
                           (!printMode || shouldRenderDeveloperOverlaysInPrint)
                         "
@@ -8419,6 +8426,7 @@ function renderTabLabel(tab: Tab) {
                       <template
                         v-if="
                           showDeveloperPanels &&
+                          overlaysEnabled &&
                           showGlueWidths &&
                           (!printMode || shouldRenderDeveloperOverlaysInPrint)
                         "
@@ -8461,6 +8469,7 @@ function renderTabLabel(tab: Tab) {
                       <template
                         v-if="
                           showDeveloperPanels &&
+                          overlaysEnabled &&
                           showAnonymousBoxes &&
                           (!printMode || shouldRenderDeveloperOverlaysInPrint)
                         "
@@ -9198,6 +9207,7 @@ function renderTabLabel(tab: Tab) {
                         <span
                           v-if="
                             showDeveloperPanels &&
+                            overlaysEnabled &&
                             showAdjustmentRatios &&
                             (!printMode ||
                               shouldRenderDeveloperOverlaysInPrint) &&

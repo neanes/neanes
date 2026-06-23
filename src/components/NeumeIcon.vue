@@ -68,8 +68,7 @@ const RAW_MULTITONE_SVG_BY_NAME = {
   'quality-heteron': qualityHeteronSvg,
   'quality-heteron-connecting': qualityHeteronConnectingSvg,
   'quality-heteron-connecting-long': qualityHeteronConnectingLongSvg,
-};
-type RawMultitoneIconName = keyof typeof RAW_MULTITONE_SVG_BY_NAME;
+} satisfies Record<string, string>;
 
 const props = defineProps<{
   // Icon basename, without the .svg extension (e.g. "martyria").
@@ -82,9 +81,7 @@ const tone = computed(() =>
   FOREGROUND_ICONS.has(props.name) ? 'foreground' : 'destructive',
 );
 
-const inlineSvg = computed(() =>
-  isRawMultitoneIconName(props.name) ? getInlineSvg(props.name) : null,
-);
+const inlineSvg = computed(() => getInlineSvg(props.name));
 
 function getIconUrl(name: string) {
   const url = urlByName[name];
@@ -96,14 +93,8 @@ function getIconUrl(name: string) {
   return url;
 }
 
-function isRawMultitoneIconName(name: string): name is RawMultitoneIconName {
-  return Object.prototype.hasOwnProperty.call(RAW_MULTITONE_SVG_BY_NAME, name);
-}
-
-function getInlineSvg(name: RawMultitoneIconName) {
-  const svg = RAW_MULTITONE_SVG_BY_NAME[name];
-
-  return svg
+function getInlineSvg(name: string) {
+  return RAW_MULTITONE_SVG_BY_NAME[name]
     .replace(/<\?xml[^>]*>\s*/, '')
     .replace(/<!--[\s\S]*?-->\s*/, '')
     .replace('<svg ', '<svg aria-hidden="true" focusable="false" ')

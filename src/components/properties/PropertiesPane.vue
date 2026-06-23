@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="flex size-full min-h-0 flex-col overflow-hidden bg-background p-3"
-  >
+  <div class="flex size-full min-h-0 flex-col overflow-hidden p-3">
     <template v-if="context.kind === 'none' || context.kind === 'range'">
       <Empty class="min-h-40 border bg-muted/20">
         <EmptyHeader>

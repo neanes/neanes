@@ -1,5 +1,5 @@
 <template>
-  <span ref="root" class="rich-text-toolbar-item"></span>
+  <span ref="root" class="rich-text-toolbar-item ckeditor-native-ui"></span>
 </template>
 
 <script setup lang="ts">

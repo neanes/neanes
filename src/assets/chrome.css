@@ -1,0 +1,574 @@
+/*
+ * chrome.css -- the desktop "chrome" layer (toolbars, buttons, menus, the menu
+ * bar, document tabs, and the dock).
+ *
+ * Follows the same token discipline shadcn-vue uses in main.css: semantic tokens
+ * are declared in :root (light) and re-declared in .dark (dark); component
+ * classes consume tokens only and carry no per-mode overrides. var() is
+ * substituted at the declaring element, so every token whose value differs
+ * between modes is declared in BOTH blocks (a token defined only in :root keeps
+ * its light value under .dark).
+ */
+
+:root {
+  /* Surfaces */
+  --chrome-canvas: #ddd; /* deepest backdrop behind panes/tabs */
+  --chrome-surface: lightgray; /* lower chrome recesses; light also backs toolbars/status bar/menubar dropdown via --chrome-toolbar-surface */
+  --chrome-toolbar-surface: var(--chrome-surface);
+  --chrome-panel: var(--card); /* panes, list surfaces (white) */
+  --chrome-menubar: #aaa; /* the menu bar itself */
+
+  /* Text */
+  --chrome-foreground: var(--foreground);
+  --chrome-foreground-muted: rgba(51, 51, 51, 0.7);
+
+  /* Lines */
+  --chrome-border: #adadad; /* control / menu outline */
+  --chrome-separator: #666; /* toolbar + menubar dividers, menubar border */
+
+  /* Interactive */
+  --chrome-hover: var(--accent); /* generic hover background */
+  --chrome-selection: color-mix(
+    in oklch,
+    var(--accent) 35%,
+    lightsteelblue
+  ); /* selected control background */
+  --chrome-on-selection: var(
+    --chrome-foreground
+  ); /* text/icon on a selection */
+  --chrome-focus: var(--ring); /* focus ring */
+  --chrome-toolbar-edge-shadow: none;
+
+  /* Button */
+  --chrome-button-size: 32px;
+  --chrome-button-foreground: var(--chrome-foreground);
+  --chrome-button-foreground-disabled: var(--muted-foreground);
+  --chrome-button-border: var(--chrome-border);
+  --chrome-button-bg: #ececec;
+  --chrome-button-bg-hover: #f5f5f5;
+  --chrome-button-bg-disabled: gainsboro;
+  --chrome-button-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 1px rgba(0, 0, 0, 0.18);
+  --chrome-button-shadow-active: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+
+  /* Menu -- button dropdowns and both right-click context menus share one look */
+  --chrome-menu-bg: var(--card);
+  --chrome-menu-foreground: var(--chrome-foreground);
+  --chrome-menu-border: var(--chrome-border);
+  --chrome-menu-hover-bg: var(--chrome-hover);
+  --chrome-menu-hover-foreground: var(--chrome-foreground);
+  --chrome-menu-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  --chrome-menubar-content-bg: var(--chrome-surface);
+  --chrome-menubar-content-foreground: var(--chrome-foreground);
+
+  /* Document page -- the paper itself stays white in both modes */
+  --chrome-paper: white;
+  --chrome-paper-foreground: oklch(0.148 0.004 228.8);
+  --chrome-paper-hover: var(--accent);
+  --chrome-paper-canvas: var(--chrome-canvas);
+
+  /* Adapter palette: dockview (library-specific light theme) */
+  --chrome-dock-strip: #f3f3f3;
+  --chrome-dock-tab-active: #ffffff;
+  --chrome-dock-tab-inactive: #ececec;
+  --chrome-dock-tab-divider: #ffffff;
+  --chrome-dock-separator: rgba(128, 128, 128, 0.35);
+  --chrome-dock-header-border: rgb(51, 51, 51);
+  --chrome-dock-scrollbar-track: rgba(0, 0, 0, 0.25);
+  --chrome-dock-scrollbar-thumb: #888;
+  --chrome-dock-focus: dodgerblue;
+  --chrome-dock-hover: rgba(90, 93, 94, 0.31);
+  --chrome-dock-drop-target: rgba(83, 89, 93, 0.5);
+  --chrome-dock-group-edge: transparent;
+  --chrome-dock-active-group-edge: transparent;
+  --chrome-dock-group-shadow: inset 0 0 0 1px var(--chrome-dock-group-edge);
+  --chrome-dock-active-group-shadow: inset 0 0 0 1px
+    var(--chrome-dock-active-group-edge);
+  --chrome-dock-floating-group-shadow: var(--chrome-dock-active-group-shadow);
+
+  /* Adapter palette: vue3-tabs-chrome (library-specific light theme) */
+  --chrome-tab-strip: #b5b5b5;
+  --chrome-tab-rest: silver;
+  --chrome-tab-active: lightgray;
+  --chrome-tab-divider: black;
+  --chrome-tab-new: darkgray;
+  --chrome-tab-hover: var(--chrome-tab-rest);
+  --chrome-tab-action-hover: var(--chrome-hover);
+  --chrome-tab-close-hover: #e8eaed;
+  --chrome-tab-active-border: transparent;
+}
+
+.dark {
+  /* App chrome uses its own low-chroma ramp instead of shadcn card/secondary
+   * levels: persistent dock panes should sit above toolbars, mirroring light
+   * mode. Transient menus still use Lyra/shadcn popover/accent semantics below. */
+  --chrome-canvas: oklch(0.17 0.01 264);
+  --chrome-menubar: oklch(0.2 0.012 264);
+  --chrome-surface: oklch(0.235 0.014 264);
+  --chrome-toolbar-surface: oklch(0.255 0.016 264);
+  --chrome-panel: oklch(0.315 0.02 264);
+
+  /* Text -- the shadcn foreground scale */
+  --chrome-foreground: var(--foreground);
+  --chrome-foreground-muted: var(--muted-foreground);
+
+  /* Lines -- separators read crisper than control borders so regions separate
+   * without needing high-contrast fills everywhere. */
+  --chrome-border: oklch(1 0 0 / 20%);
+  --chrome-separator: oklch(1 0 0 / 32%);
+
+  /* Interactive */
+  --chrome-hover: oklch(0.365 0.024 264);
+  --chrome-selection: oklch(0.49 0.055 230);
+  --chrome-on-selection: var(--foreground);
+  --chrome-focus: var(--ring);
+  --chrome-toolbar-edge-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 18%), inset 0 -1px 0 oklch(0 0 0 / 70%),
+    0 1px 2px oklch(0 0 0 / 60%);
+
+  /* Button */
+  --chrome-button-foreground: var(--chrome-foreground);
+  --chrome-button-foreground-disabled: var(--muted-foreground);
+  --chrome-button-border: oklch(0 0 0 / 38%);
+  --chrome-button-bg: color-mix(
+    in oklch,
+    var(--chrome-toolbar-surface) 35%,
+    var(--chrome-panel)
+  );
+  --chrome-button-bg-hover: var(--chrome-hover);
+  --chrome-button-bg-disabled: var(--chrome-surface);
+  --chrome-button-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 18%), inset 1px 0 0 oklch(1 0 0 / 8%),
+    inset -1px 0 0 oklch(0 0 0 / 26%), inset 0 -1px 0 oklch(0 0 0 / 38%),
+    0 1px 1px oklch(0 0 0 / 35%);
+  --chrome-button-shadow-active:
+    inset 0 1px 2px oklch(0 0 0 / 58%), inset 0 -1px 0 oklch(1 0 0 / 9%);
+
+  /* Chrome menus use the same popover/accent levels as Reka Lyra overlays. */
+  --chrome-menu-bg: var(--popover);
+  --chrome-menu-foreground: var(--popover-foreground);
+  --chrome-menu-border: var(--border);
+  --chrome-menu-hover-bg: var(--accent);
+  --chrome-menu-hover-foreground: var(--accent-foreground);
+  --chrome-menu-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.55), 0 0 0 1px oklch(1 0 0 / 8%);
+  --chrome-menubar-content-bg: var(--chrome-menu-bg);
+  --chrome-menubar-content-foreground: var(--chrome-menu-foreground);
+  /* The page canvas cushions white paper with a slightly quieter version of the
+   * blue-violet chrome ramp. It is a pasteboard for the document, not a generic
+   * dock pane surface. */
+  --chrome-paper-canvas: oklch(0.36 0.018 264);
+
+  /* Adapter: dockview -- active tabs still merge into the pane body, but the
+   * surrounding group and inactive tabs now have enough tonal separation. */
+  --chrome-dock-strip: var(--chrome-canvas);
+  --chrome-dock-tab-active: var(--chrome-panel);
+  --chrome-dock-tab-inactive: var(--chrome-surface);
+  --chrome-dock-tab-divider: var(--chrome-border);
+  --chrome-dock-separator: var(--chrome-separator);
+  --chrome-dock-header-border: var(--chrome-separator);
+  --chrome-dock-scrollbar-track: transparent;
+  --chrome-dock-scrollbar-thumb: color-mix(
+    in oklch,
+    var(--muted-foreground) 40%,
+    transparent
+  );
+  --chrome-dock-focus: var(--chrome-focus);
+  --chrome-dock-hover: var(--chrome-hover);
+  --chrome-dock-drop-target: color-mix(in oklch, var(--ring) 40%, transparent);
+  --chrome-dock-group-edge: var(--chrome-border);
+  --chrome-dock-active-group-edge: var(--chrome-separator);
+  --chrome-dock-group-shadow:
+    inset 0 0 0 1px var(--chrome-dock-group-edge), 0 1px 2px rgba(0, 0, 0, 0.18);
+  --chrome-dock-active-group-shadow:
+    inset 0 0 0 1px var(--chrome-dock-active-group-edge),
+    0 1px 3px rgba(0, 0, 0, 0.28);
+  --chrome-dock-floating-group-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.55),
+    0 0 0 1px var(--chrome-dock-active-group-edge);
+
+  /* Adapter: vue3-tabs-chrome -- a distinct, recessed document-tab bar (its own
+   * design language). */
+  --chrome-tab-strip: var(--chrome-canvas);
+  --chrome-tab-rest: var(--chrome-surface);
+  --chrome-tab-active: var(--chrome-panel);
+  --chrome-tab-divider: var(--chrome-border);
+  --chrome-tab-new: var(--chrome-menubar);
+  --chrome-tab-hover: var(--chrome-hover);
+  --chrome-tab-action-hover: var(--chrome-hover);
+  --chrome-tab-close-hover: var(--chrome-hover);
+  --chrome-tab-active-border: oklch(1 0 0 / 20%);
+
+  /* Adapter: CKEditor 5 -- dark palette for native CKEditor UI chrome.
+   * RichTextEditor.vue maps CKEditor's library-specific --ck-* variables onto
+   * these tokens. */
+  --chrome-ckeditor-custom-foreground: var(--chrome-toolbar-surface);
+  --chrome-ckeditor-custom-background: var(--chrome-menu-bg);
+  --chrome-ckeditor-custom-border: var(--chrome-menu-border);
+  --chrome-ckeditor-custom-white: white;
+  --chrome-ckeditor-base-foreground: var(--chrome-canvas);
+  --chrome-ckeditor-base-background: var(--chrome-ckeditor-custom-background);
+  --chrome-ckeditor-base-border: var(--chrome-ckeditor-custom-border);
+  --chrome-ckeditor-base-action: #4d9d30;
+  --chrome-ckeditor-base-focus: var(--chrome-focus);
+  --chrome-ckeditor-base-text: var(--chrome-menu-foreground);
+  --chrome-ckeditor-base-active: var(--chrome-focus);
+  --chrome-ckeditor-base-active-focus: color-mix(
+    in oklch,
+    var(--chrome-focus) 75%,
+    var(--chrome-ckeditor-custom-white)
+  );
+  --chrome-ckeditor-base-error: var(--destructive);
+  --chrome-ckeditor-focus-border: var(--chrome-focus);
+  --chrome-ckeditor-focus-outer-shadow: color-mix(
+    in oklch,
+    var(--chrome-focus) 30%,
+    transparent
+  );
+  --chrome-ckeditor-focus-disabled-shadow: color-mix(
+    in oklch,
+    var(--muted-foreground) 24%,
+    transparent
+  );
+  --chrome-ckeditor-focus-error-shadow: color-mix(
+    in oklch,
+    var(--destructive) 30%,
+    transparent
+  );
+  --chrome-ckeditor-text: var(--chrome-ckeditor-base-text);
+  --chrome-ckeditor-shadow-drop: rgba(0, 0, 0, 0.55);
+  --chrome-ckeditor-shadow-drop-active: rgba(0, 0, 0, 0.7);
+  --chrome-ckeditor-shadow-inner: rgba(0, 0, 0, 0.4);
+  --chrome-ckeditor-button-default-hover-background: var(
+    --chrome-menu-hover-bg
+  );
+  --chrome-ckeditor-button-default-active-background: var(--chrome-selection);
+  --chrome-ckeditor-button-on-background: var(--chrome-selection);
+  --chrome-ckeditor-button-on-hover-background: color-mix(
+    in oklch,
+    var(--chrome-selection) 80%,
+    var(--chrome-ckeditor-custom-white)
+  );
+  --chrome-ckeditor-button-on-active-background: var(
+    --chrome-ckeditor-button-on-hover-background
+  );
+  --chrome-ckeditor-button-on-disabled-background: var(
+    --chrome-button-bg-disabled
+  );
+  --chrome-ckeditor-button-on-color: var(--chrome-on-selection);
+  --chrome-ckeditor-button-action-background: var(
+    --chrome-ckeditor-base-action
+  );
+  --chrome-ckeditor-button-action-hover-background: #5cad3e;
+  --chrome-ckeditor-button-action-active-background: #5cad3e;
+  --chrome-ckeditor-button-action-disabled-background: #2f6f1e;
+  --chrome-ckeditor-button-action-text: var(--chrome-ckeditor-custom-white);
+  --chrome-ckeditor-button-save: #7ac77b;
+  --chrome-ckeditor-button-cancel: var(--destructive);
+  --chrome-ckeditor-dropdown-panel-background: var(
+    --chrome-ckeditor-custom-background
+  );
+  --chrome-ckeditor-dropdown-panel-border: var(--chrome-ckeditor-custom-border);
+  --chrome-ckeditor-dialog-background: var(--chrome-ckeditor-custom-background);
+  --chrome-ckeditor-dialog-form-header-border: var(
+    --chrome-ckeditor-custom-border
+  );
+  --chrome-ckeditor-split-button-hover-background: var(
+    --chrome-ckeditor-button-default-hover-background
+  );
+  --chrome-ckeditor-split-button-hover-border: var(
+    --chrome-ckeditor-custom-border
+  );
+  --chrome-ckeditor-input-background: color-mix(
+    in oklch,
+    var(--popover) 80%,
+    var(--background)
+  );
+  --chrome-ckeditor-input-border: var(--input);
+  --chrome-ckeditor-input-text: var(--chrome-menu-foreground);
+  --chrome-ckeditor-input-disabled-background: color-mix(
+    in oklch,
+    var(--card) 70%,
+    var(--background)
+  );
+  --chrome-ckeditor-input-disabled-border: var(--chrome-border);
+  --chrome-ckeditor-input-disabled-text: var(--muted-foreground);
+  --chrome-ckeditor-list-background: var(--chrome-ckeditor-custom-background);
+  --chrome-ckeditor-list-button-hover-background: var(--chrome-menu-hover-bg);
+  --chrome-ckeditor-list-button-on-background: var(--chrome-selection);
+  --chrome-ckeditor-list-button-on-background-focus: var(--chrome-selection);
+  --chrome-ckeditor-list-button-on-text: var(--chrome-on-selection);
+  --chrome-ckeditor-panel-background: var(--chrome-ckeditor-custom-background);
+  --chrome-ckeditor-panel-border: var(--chrome-ckeditor-custom-border);
+  --chrome-ckeditor-toolbar-background: var(--chrome-toolbar-surface);
+  --chrome-ckeditor-toolbar-border: var(--chrome-border);
+  --chrome-ckeditor-tooltip-background: var(--foreground);
+  --chrome-ckeditor-tooltip-text: var(--background);
+  --chrome-ckeditor-labeled-field-label-background: var(
+    --chrome-ckeditor-input-background
+  );
+  --chrome-ckeditor-link-default: color-mix(
+    in oklch,
+    var(--chrome-focus) 72%,
+    var(--chrome-ckeditor-custom-white)
+  );
+  --chrome-ckeditor-light-red: color-mix(
+    in oklch,
+    var(--destructive) 24%,
+    transparent
+  );
+  --chrome-ckeditor-dialog-overlay-background: rgba(0, 0, 0, 0.65);
+  --chrome-ckeditor-dialog-drop-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* Toolbars */
+.chrome-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  height: auto;
+  width: 100%;
+  gap: 3px 0;
+  border: 0;
+  background: var(--chrome-toolbar-surface);
+  box-shadow: var(--chrome-toolbar-edge-shadow);
+  padding: 4px;
+}
+
+.chrome-toolbar-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  height: auto;
+  width: 100%;
+  gap: 4px 0;
+  border: 0;
+  padding: 0;
+}
+
+.chrome-toolbar-row-fit {
+  width: auto;
+}
+
+.chrome-toolbar-surface {
+  background: var(--chrome-toolbar-surface);
+  box-shadow: var(--chrome-toolbar-edge-shadow);
+}
+
+@media print {
+  .chrome-menubar,
+  .chrome-toolbar,
+  .chrome-toolbar-surface {
+    display: none !important;
+  }
+}
+
+/* Overlays */
+.chrome-menu,
+.chrome-menubar-content {
+  /*
+   * Reka/shadcn menu wrappers use bg-popover and focus:bg-accent internally.
+   * Re-scope Tailwind's generated color variables at the chrome surface so
+   * every item variant (plain, checkbox, radio, submenu) shares the same
+   * desktop chrome palette.
+   */
+  --color-popover: var(--chrome-menu-bg);
+  --color-popover-foreground: var(--chrome-menu-foreground);
+  --color-accent: var(--chrome-menu-hover-bg);
+  --color-accent-foreground: var(--chrome-menu-hover-foreground);
+  --color-border: var(--chrome-menu-border);
+  --tw-ring-shadow: 0 0 #0000;
+
+  box-shadow: var(--chrome-menu-shadow);
+}
+
+/* Menus (button dropdowns + context menus) */
+.chrome-menu {
+  box-sizing: border-box;
+  border: 1px solid var(--chrome-menu-border);
+  background: var(--chrome-menu-bg);
+  color: var(--chrome-menu-foreground);
+}
+
+.chrome-menu-item {
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  user-select: none;
+}
+
+.chrome-menu-item:is(
+  :hover,
+  :focus,
+  :focus-visible,
+  [data-highlighted],
+  [data-open],
+  [data-state='open']
+) {
+  background: var(--chrome-menu-hover-bg);
+  color: var(--chrome-menu-hover-foreground);
+}
+
+.chrome-list-item:hover {
+  background: var(--chrome-hover);
+}
+
+/* Dock pane */
+.chrome-dock-pane {
+  background: var(--chrome-dock-tab-active);
+  color: var(--chrome-foreground);
+}
+
+/* Printed-document surfaces */
+.chrome-paper-canvas {
+  background: var(--chrome-paper-canvas);
+}
+
+.chrome-paper-surface {
+  --chrome-hover: var(--chrome-paper-hover);
+
+  background: var(--chrome-paper);
+  color: var(--chrome-paper-foreground);
+}
+
+/* Menu bar */
+.chrome-menubar {
+  border-color: var(--chrome-separator);
+  background: var(--chrome-menubar);
+  color: var(--chrome-foreground);
+}
+
+.chrome-menubar-content {
+  background: var(--chrome-menubar-content-bg);
+  color: var(--chrome-menubar-content-foreground);
+}
+
+.chrome-menubar
+  [data-slot='menubar-trigger']:is(
+    :hover,
+    [aria-expanded='true'],
+    [data-state='open']
+  ) {
+  background: var(--chrome-hover);
+  color: var(--chrome-foreground);
+}
+
+.chrome-menubar-content
+  :is(
+    [data-slot='menubar-item'],
+    [data-slot='menubar-checkbox-item'],
+    [data-slot='menubar-radio-item'],
+    [data-slot='menubar-sub-trigger']
+  ):is(:focus, [data-open], [data-state='open']) {
+  background: var(--chrome-menu-hover-bg);
+  color: var(--chrome-menu-hover-foreground);
+}
+
+.chrome-menubar-content
+  :is(
+    [data-slot='menubar-item'],
+    [data-slot='menubar-checkbox-item'],
+    [data-slot='menubar-radio-item'],
+    [data-slot='menubar-sub-trigger']
+  ):focus
+  * {
+  color: inherit;
+}
+
+/* Separators */
+.chrome-menubar-content [data-slot='menubar-separator'],
+.chrome-toolbar [data-slot='toolbar-separator'],
+.chrome-toolbar-row [data-slot='toolbar-separator'],
+.chrome-separator {
+  background: var(--chrome-separator);
+}
+
+/* Toolbar labels */
+.chrome-toolbar-label {
+  color: var(--chrome-foreground-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  padding: 0 0.25rem;
+  white-space: nowrap;
+}
+
+/* Buttons */
+.chrome-button {
+  box-sizing: border-box;
+  height: var(--chrome-button-size);
+  width: var(--chrome-button-size);
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  appearance: none;
+  border: 1px solid var(--chrome-button-border);
+  border-radius: 3px;
+  background: var(--chrome-button-bg);
+  color: var(--chrome-button-foreground);
+  box-shadow: var(--chrome-button-shadow);
+
+  font-weight: normal;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  transition:
+    background-color 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.chrome-button.is-text {
+  height: 1.5rem;
+  width: auto;
+  padding: 0 0.625rem;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.chrome-button:hover {
+  background: var(--chrome-button-bg-hover);
+}
+
+.chrome-button:active {
+  box-shadow: var(--chrome-button-shadow-active);
+}
+
+.chrome-button:is(.selected, [data-state='on'], [aria-pressed='true']) {
+  background: var(--chrome-selection);
+  color: var(--chrome-on-selection);
+  /* Re-point the button foreground so masked neume glyphs (NeumeIcon's
+   * .foreground tone uses var(--chrome-button-foreground)) flip with the text. */
+  --chrome-button-foreground: var(--chrome-on-selection);
+}
+
+.chrome-button:is(:disabled, [aria-disabled='true'], [data-disabled]) {
+  cursor: not-allowed;
+  background: var(--chrome-button-bg-disabled);
+  color: var(--chrome-button-foreground-disabled);
+  box-shadow: var(--chrome-button-shadow);
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.chrome-button:is(:disabled, [aria-disabled='true'], [data-disabled]) > * {
+  opacity: 0.5;
+}
+
+.chrome-button:focus-visible {
+  outline: 2px solid var(--chrome-focus);
+  outline-offset: -2px;
+}
+
+/* Dark-only patch over the shadcn status-bar button-group text: it has no light
+ * counterpart (light uses the shadcn default), so it stays a .dark exception. */
+.dark .status-bar [data-slot='button-group-text'] {
+  border-color: var(--chrome-border);
+  background: var(--chrome-button-bg);
+  color: var(--chrome-foreground);
+}

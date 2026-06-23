@@ -8,6 +8,7 @@ import {
   PhEye,
   PhX,
 } from '@phosphor-icons/vue';
+import { useColorMode } from '@vueuse/core';
 import type {
   ContextMenuItem,
   DockviewGroupPanel,
@@ -28,9 +29,10 @@ import type {
   IDockviewPanelProps,
   VueComponent,
 } from 'dockview-vue';
-import { DockviewVue, themeLight } from 'dockview-vue';
+import { DockviewVue, themeDark, themeLight } from 'dockview-vue';
 import { useTranslation } from 'i18next-vue';
 import {
+  computed,
   defineComponent,
   h,
   onBeforeUnmount,
@@ -187,6 +189,10 @@ const maxFloatingPaneHeightRatio = 0.75;
 // single center overlay/drop, instead of edge split zones around the perimeter.
 const centerOnlyDropTargetZones: Position[] = ['center'];
 const { i18next, t } = useTranslation();
+const colorMode = useColorMode();
+const dockviewTheme = computed(() =>
+  colorMode.state.value === 'dark' ? themeDark : themeLight,
+);
 const paneDefinitions = workspacePaneDefinitions.map((pane) => ({
   allowedEdges: pane.allowedEdges,
   defaultSize: pane.defaultSize,
@@ -291,7 +297,11 @@ const PaneContent = asDockComponent(
                 'div',
                 {
                   ref: contentElement,
-                  class: 'workspace-pane-content',
+                  class: [
+                    'workspace-pane-content chrome-dock-pane',
+                    paneId === 'common-combos' && 'chrome-paper-surface',
+                  ],
+                  'data-pane-id': paneId,
                   'data-editor-shortcuts': 'ignore',
                 },
                 slots[paneId]?.(),
@@ -1772,7 +1782,7 @@ watch(
       :right-header-actions-component="PaneHeaderActions"
       dnd-strategy="pointer"
       scrollbars="native"
-      :theme="themeLight"
+      :theme="dockviewTheme"
       @ready="onDockviewReady"
       @will-drop="onDockviewWillDrop"
     />
@@ -1789,6 +1799,73 @@ watch(
   flex: 1;
   min-width: 0;
   min-height: 0;
+}
+
+.workspace-dock-layout-container :deep(.dockview-theme-light),
+.workspace-dock-layout-container :deep(.dockview-theme-dark) {
+  --dv-group-view-background-color: var(--chrome-panel);
+  --dv-tabs-and-actions-container-background-color: var(--chrome-dock-strip);
+  --dv-scrollbar-background-color: var(--chrome-dock-scrollbar-track);
+  --dv-tabs-container-scrollbar-color: var(--chrome-dock-scrollbar-thumb);
+
+  --dv-activegroup-visiblepanel-tab-background-color: var(
+    --chrome-dock-tab-active
+  );
+  --dv-activegroup-visiblepanel-tab-color: var(--chrome-foreground);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(
+    --chrome-dock-tab-inactive
+  );
+  --dv-activegroup-hiddenpanel-tab-color: var(--chrome-foreground-muted);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(
+    --chrome-dock-tab-active
+  );
+  --dv-inactivegroup-visiblepanel-tab-color: var(--chrome-foreground);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(
+    --chrome-dock-tab-inactive
+  );
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--chrome-foreground-muted);
+
+  --dv-tab-divider-color: var(--chrome-dock-tab-divider);
+  --dv-separator-border: var(--chrome-dock-separator);
+  --dv-paneview-header-border-color: var(--chrome-dock-header-border);
+  --dv-border-radius: 0;
+  --dv-tab-border-radius: 0;
+
+  --dv-paneview-active-outline-color: var(--chrome-dock-focus);
+  --dv-icon-hover-background-color: var(--chrome-dock-hover);
+  --dv-drag-over-background-color: var(--chrome-dock-drop-target);
+
+  --dv-context-menu-background-color: var(--chrome-menu-bg);
+  --dv-context-menu-color: var(--chrome-menu-foreground);
+}
+
+.workspace-dock-layout-container :deep(.dv-context-menu) {
+  border: 1px solid var(--chrome-menu-border);
+  box-shadow: var(--chrome-menu-shadow);
+}
+
+.workspace-dock-layout-container :deep(.dv-context-menu-item:hover) {
+  background: var(--chrome-menu-hover-bg);
+  color: var(--chrome-menu-hover-foreground);
+}
+
+.workspace-dock-layout-container :deep(.dv-groupview) {
+  box-shadow: var(--chrome-dock-group-shadow);
+}
+
+.workspace-dock-layout-container :deep(.dv-groupview.dv-active-group) {
+  box-shadow: var(--chrome-dock-active-group-shadow);
+}
+
+.workspace-dock-layout-container :deep(.dv-groupview-floating) {
+  box-shadow: var(--chrome-dock-floating-group-shadow);
+}
+
+.workspace-dock-layout-container
+  :deep(.dockview-theme-dark .dv-tab:focus-within::after),
+.workspace-dock-layout-container
+  :deep(.dockview-theme-dark .dv-tab:focus::after) {
+  outline: none !important;
 }
 
 .workspace-dock-layout,

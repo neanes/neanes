@@ -1,5 +1,5 @@
 <template>
-  <Toolbar class="text-box-toolbar h-auto w-full gap-0 border-0 p-1" loop>
+  <Toolbar class="chrome-toolbar" loop>
     <template v-if="!element.useDefaultStyle">
       <FontCombobox
         :model-value="element.fontFamily"
@@ -33,30 +33,30 @@
       <ToggleGroupItem
         v-if="!element.useDefaultStyle"
         value="bold"
-        class="icon-btn"
+        class="chrome-button"
         :class="{ selected: isFontStyleAxisActive('bold') }"
         :disabled="!isFontStyleAxisToggleEnabled('bold')"
         aria-label="Toggle bold"
       >
-        <PhTextB class="h-4 w-4" />
+        <PhTextB class="size-4" />
       </ToggleGroupItem>
       <ToggleGroupItem
         v-if="!element.useDefaultStyle"
         value="italic"
-        class="icon-btn"
+        class="chrome-button"
         :class="{ selected: isFontStyleAxisActive('italic') }"
         :disabled="!isFontStyleAxisToggleEnabled('italic')"
         aria-label="Toggle italic"
       >
-        <PhTextItalic class="h-4 w-4" />
+        <PhTextItalic class="size-4" />
       </ToggleGroupItem>
       <ToggleGroupItem
         value="underline"
-        class="icon-btn"
+        class="chrome-button"
         :class="{ selected: element.underline }"
         aria-label="Toggle underline"
       >
-        <PhTextUnderline class="h-4 w-4" />
+        <PhTextUnderline class="size-4" />
       </ToggleGroupItem>
     </ToggleGroup>
     <template v-if="!element.multipanel">
@@ -72,10 +72,10 @@
         >
           <ToggleGroupItem
             :value="TextBoxAlignment.Left"
-            class="icon-btn"
+            class="chrome-button"
             :class="{ selected: element.alignment === TextBoxAlignment.Left }"
           >
-            <PhTextAlignLeft class="h-4 w-4" />
+            <PhTextAlignLeft class="size-4" />
           </ToggleGroupItem>
         </AppTooltip>
         <AppTooltip
@@ -83,10 +83,10 @@
         >
           <ToggleGroupItem
             :value="TextBoxAlignment.Center"
-            class="icon-btn"
+            class="chrome-button"
             :class="{ selected: element.alignment === TextBoxAlignment.Center }"
           >
-            <PhTextAlignCenter class="h-4 w-4" />
+            <PhTextAlignCenter class="size-4" />
           </ToggleGroupItem>
         </AppTooltip>
         <AppTooltip
@@ -94,10 +94,10 @@
         >
           <ToggleGroupItem
             :value="TextBoxAlignment.Right"
-            class="icon-btn"
+            class="chrome-button"
             :class="{ selected: element.alignment === TextBoxAlignment.Right }"
           >
-            <PhTextAlignRight class="h-4 w-4" />
+            <PhTextAlignRight class="size-4" />
           </ToggleGroupItem>
         </AppTooltip>
       </ToggleGroup>
@@ -108,11 +108,10 @@
     >
       <ToolbarButton
         variant="secondary"
-        size="icon-sm"
-        class="neume-button"
+        class="chrome-button"
         @mousedown.prevent="$emit('insert:pelastikon')"
       >
-        <img src="@/assets/icons/letterPelastikon.svg" />
+        <NeumeIcon name="letterPelastikon" />
       </ToolbarButton>
     </AppTooltip>
     <AppTooltip
@@ -120,11 +119,10 @@
     >
       <ToolbarButton
         variant="secondary"
-        size="icon-sm"
-        class="neume-button"
+        class="chrome-button"
         @mousedown.prevent="$emit('insert:gorthmikon')"
       >
-        <img src="@/assets/icons/letterGorthmikon.svg" />
+        <NeumeIcon name="letterGorthmikon" />
       </ToolbarButton>
     </AppTooltip>
   </Toolbar>
@@ -146,6 +144,7 @@ import AppTooltip from '@/components/AppTooltip.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
+import NeumeIcon from '@/components/NeumeIcon.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Toolbar,
@@ -224,66 +223,3 @@ function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
   return Object.values(TextBoxAlignment).includes(value as TextBoxAlignment);
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-.text-box-toolbar {
-  flex-wrap: wrap;
-  background-color: var(--color-legacy-chrome-menu-surface);
-
-  --btn-size: 32px;
-}
-
-.neume-button,
-.icon-btn {
-  box-sizing: border-box;
-  height: var(--btn-size);
-  width: var(--btn-size);
-  appearance: auto;
-  background: revert;
-  border: revert;
-  border-radius: revert;
-  box-shadow: revert;
-  font-weight: revert;
-
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-  outline: revert;
-  padding: 0;
-  transition: revert;
-  user-select: none;
-}
-
-.neume-button:hover,
-.icon-btn:hover {
-  background: revert;
-}
-
-.icon-btn.selected,
-.icon-btn[data-state='on'],
-.icon-btn[aria-pressed='true'] {
-  background: var(--color-legacy-chrome-selected);
-}
-
-.neume-button > img,
-.icon-btn img {
-  height: var(--btn-size);
-  max-width: none;
-  width: var(--btn-size);
-}
-
-.neume-button[aria-disabled='true'],
-.neume-button[data-disabled],
-.neume-button:disabled,
-.icon-btn[aria-disabled='true'],
-.icon-btn[data-disabled],
-.icon-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-</style>

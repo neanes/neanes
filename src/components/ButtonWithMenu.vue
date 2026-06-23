@@ -10,34 +10,23 @@
         <ToolbarButton
           type="button"
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-label="ariaLabel"
           :disabled="disabled"
           @click="handleButtonClick"
         >
-          <img
-            v-if="mainIcon"
-            draggable="false"
-            :src="mainIcon"
-            :style="imgStyle"
-          />
+          <NeumeIcon v-if="mainIcon" :name="mainIcon" :size="imgSize" />
           <span v-if="mainText" :style="textStyle">{{ mainText }}</span>
         </ToolbarButton>
-        <div v-if="showMenu" class="menu" :class="direction">
+        <div v-if="showMenu" class="menu chrome-menu" :class="direction">
           <div
             v-for="option in options"
             :key="getKey(option)"
-            class="menu-item"
+            class="menu-item chrome-menu-item"
             @click="handleChoiceClick(option.neume)"
             @mouseenter="handleMouseEnter(option.neume)"
           >
-            <img
-              v-if="option.icon"
-              draggable="false"
-              :src="option.icon"
-              :style="imgStyle"
-            />
+            <NeumeIcon v-if="option.icon" :name="option.icon" :size="imgSize" />
             <span v-if="option.text" :style="textStyle">{{ option.text }}</span>
           </div>
         </div>
@@ -64,6 +53,7 @@ import type { Neume } from '@/models/Neumes';
 import type { AppTooltipValue } from './AppTooltip.types';
 import AppTooltip from './AppTooltip.vue';
 import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
+import NeumeIcon from './NeumeIcon.vue';
 import { ToolbarButton } from './ui/toolbar';
 
 const emit = defineEmits(['select']);
@@ -117,13 +107,6 @@ const mainText = computed(() => {
 const textStyle = computed(() => {
   return {
     fontFamily: props.fontFamily,
-  } as StyleValue;
-});
-
-const imgStyle = computed(() => {
-  return {
-    height: props.imgSize ?? undefined,
-    width: props.imgSize ?? undefined,
   } as StyleValue;
 });
 
@@ -203,60 +186,16 @@ function onMouseUp() {
 </script>
 
 <style scoped>
-.neume-button {
-  box-sizing: border-box;
-  height: var(--btn-size);
-  width: var(--btn-size);
-  appearance: auto;
-  background: revert;
-  border: revert;
-  border-radius: revert;
-  box-shadow: revert;
-  font-weight: revert;
-
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-  outline: revert;
-  padding: 0;
-  transition: revert;
-
-  user-select: none;
-}
-
-.neume-button:hover {
-  background: revert;
-}
-
-.neume-button:disabled,
-.neume-button[aria-disabled='true'] {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.neume-button img {
-  height: var(--btn-size);
-  max-width: none;
-  width: var(--btn-size);
-}
-
 .menu-container {
   display: flex;
   position: relative;
-  height: var(--btn-size);
+  height: var(--chrome-button-size);
 }
 
 .menu {
   position: absolute;
   z-index: 40;
-  background-color: var(--color-legacy-chrome-surface);
-  border: 1px solid var(--color-legacy-chrome-border);
-  box-sizing: border-box;
-  width: var(--btn-size);
+  width: var(--chrome-button-size);
 }
 
 .menu.up {
@@ -268,17 +207,8 @@ function onMouseUp() {
 }
 
 .menu-item {
-  height: var(--btn-size);
+  height: var(--chrome-button-size);
   width: 100%;
   padding: 1px 0;
-  box-sizing: border-box;
-  text-align: center;
-  user-select: none;
-  overflow: hidden;
-  position: relative;
-}
-
-.menu-item:hover {
-  background-color: var(--color-legacy-chrome-hover);
 }
 </style>

@@ -209,6 +209,7 @@ type DeveloperToggleKey =
   | 'showAdjustmentRatios'
   | 'showAnonymousBoxes'
   | 'showCollisionRegions'
+  | 'showElementBoxes'
   | 'showGuides'
   | 'showGlueWidths'
   | 'showInkBoundingBoxes'
@@ -249,6 +250,7 @@ const utilityDisplayToggles: Array<{
 const displayToggles: Array<{ key: DeveloperToggleKey; label: string }> = [
   { key: 'showGuides', label: 'Show guides' },
   { key: 'showAdjustmentRatios', label: 'Show adjustment ratios' },
+  { key: 'showElementBoxes', label: 'Show element boxes' },
   { key: 'showAnonymousBoxes', label: 'Show anonymous boxes' },
   { key: 'showGlueWidths', label: 'Show glue widths' },
   { key: 'showInkBoundingBoxes', label: 'Show ink bounding boxes' },

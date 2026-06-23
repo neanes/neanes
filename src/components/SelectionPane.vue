@@ -94,6 +94,18 @@
           </Select>
         </Field>
 
+        <Field v-if="canShowSectionBreakToggle" orientation="horizontal">
+          <Switch
+            id="properties-section-break"
+            :model-value="selectionElement.sectionBreak"
+            :disabled="!canApplyBreak"
+            @update:model-value="emit('toggle-section-break')"
+          />
+          <FieldLabel for="properties-section-break">{{
+            $t(($) => $.toolbar.selection.sectionBreak, { ns: 'toolbar' })
+          }}</FieldLabel>
+        </Field>
+
         <Button
           type="button"
           :variant="selectionElement.pageBreak ? 'secondary' : 'outline'"
@@ -124,6 +136,81 @@
             $t(($) => $.toolbar.main.deleteSelectedElement, { ns: 'toolbar' })
           }}
         </Button>
+      </FieldGroup>
+    </FieldSet>
+
+    <FieldSet
+      v-else-if="headerFooterSelection != null"
+      class="min-h-0 flex-1 overflow-auto"
+    >
+      <FieldLegend class="sr-only">{{
+        $t(($) => $.menu.view.selection, { ns: 'menu' })
+      }}</FieldLegend>
+      <FieldGroup>
+        <Field orientation="horizontal">
+          <FieldLabel>{{
+            $t(($) => $.dialog.pageSetup.type, { ns: 'dialog' })
+          }}</FieldLabel>
+          <FieldContent>
+            <Badge variant="secondary" class="ml-auto">
+              {{
+                headerFooterSelection.kind === 'header'
+                  ? $t(($) => $.menu.insert.header, { ns: 'menu' })
+                  : $t(($) => $.menu.insert.footer, { ns: 'menu' })
+              }}
+            </Badge>
+          </FieldContent>
+        </Field>
+
+        <Field
+          v-if="headerFooterSelection.sectionIndex > 0"
+          orientation="horizontal"
+        >
+          <FieldLabel>{{
+            $t(($) => $.toolbar.selection.variant, { ns: 'toolbar' })
+          }}</FieldLabel>
+          <FieldContent>
+            {{ activeHeaderFooterVariantLabel }}
+          </FieldContent>
+        </Field>
+
+        <Field
+          v-if="headerFooterSelection.sectionIndex > 0"
+          orientation="horizontal"
+        >
+          <Switch
+            id="properties-header-footer-link-to-previous"
+            :model-value="headerFooterSelection.linkedToPrevious"
+            @update:model-value="emit('toggle-header-footer-link-to-previous')"
+          />
+          <FieldLabel for="properties-header-footer-link-to-previous">{{
+            headerFooterSelection.kind === 'header'
+              ? $t(($) => $.toolbar.selection.linkHeaderToPrevious, {
+                  ns: 'toolbar',
+                })
+              : $t(($) => $.toolbar.selection.linkFooterToPrevious, {
+                  ns: 'toolbar',
+                })
+          }}</FieldLabel>
+        </Field>
+
+        <Field
+          v-if="headerFooterSelection.sectionIndex > 0"
+          orientation="horizontal"
+        >
+          <Switch
+            id="properties-header-footer-different-first-page"
+            :model-value="headerFooterSelection.headerDifferentFirstPage"
+            @update:model-value="
+              emit('toggle-header-footer-different-first-page')
+            "
+          />
+          <FieldLabel for="properties-header-footer-different-first-page">{{
+            $t(($) => $.toolbar.selection.differentFirstPage, {
+              ns: 'toolbar',
+            })
+          }}</FieldLabel>
+        </Field>
       </FieldGroup>
     </FieldSet>
 
@@ -174,6 +261,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import type { ScoreElement } from '@/models/Element';
 import { ElementType, LineBreakType } from '@/models/Element';
 
@@ -186,13 +274,28 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  selectedHeaderFooterSection: {
+    type: Object as PropType<{
+      activeVariant: 'default' | 'odd' | 'even' | 'firstPage';
+      headerDifferentFirstPage: boolean;
+      kind: 'header' | 'footer';
+      linkedToPrevious: boolean;
+      pageNumberInSection: number;
+      sectionIndex: number;
+      sourceSectionIndex: number;
+    } | null>,
+    default: null,
+  },
 });
 
 const emit = defineEmits([
   'copy-element-link',
   'delete-selected-element',
+  'toggle-header-footer-different-first-page',
+  'toggle-header-footer-link-to-previous',
   'toggle-line-break',
   'toggle-page-break',
+  'toggle-section-break',
   'update:score-element-section-name',
 ]);
 
@@ -274,6 +377,32 @@ const selectionElement = computed<ScoreElement | null>(() => {
   return props.context.element;
 });
 
+const headerFooterSelection = computed(() => {
+  if (
+    (props.context.kind !== 'text-box' &&
+      props.context.kind !== 'rich-text-box') ||
+    props.context.source !== 'header-footer'
+  ) {
+    return null;
+  }
+
+  return props.selectedHeaderFooterSection;
+});
+
+const activeHeaderFooterVariantLabel = computed(() => {
+  switch (headerFooterSelection.value?.activeVariant) {
+    case 'even':
+      return t(($) => $.toolbar.selection.evenPage, { ns: 'toolbar' });
+    case 'odd':
+      return t(($) => $.toolbar.selection.oddPage, { ns: 'toolbar' });
+    case 'firstPage':
+      return t(($) => $.toolbar.selection.firstPage, { ns: 'toolbar' });
+    case 'default':
+    default:
+      return t(($) => $.toolbar.selection.defaultVariant, { ns: 'toolbar' });
+  }
+});
+
 const elementTypeLabel = computed(() => {
   const element = selectionElement.value;
 
@@ -292,6 +421,12 @@ const lineBreakValue = computed(() => {
   return element?.lineBreak
     ? (element.lineBreakType ?? LineBreakType.Left)
     : LINE_BREAK_NONE_VALUE;
+});
+
+const canShowSectionBreakToggle = computed(() => {
+  const element = selectionElement.value;
+
+  return element != null && (props.canApplyBreak || element.pageBreak);
 });
 
 function translateElementTypeLabel(label: ElementTypeLabelSelector) {

@@ -37,11 +37,21 @@ import {
   TextBoxElement as TextBoxElement_v1,
 } from '@/models/save/v1/Element';
 import type { Footer as Footer_v1 } from '@/models/save/v1/Footer';
+import { Footers as Footers_v1 } from '@/models/save/v1/Footers';
 import type { Header as Header_v1 } from '@/models/save/v1/Header';
+import { Headers as Headers_v1 } from '@/models/save/v1/Headers';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import type { LyricSetup as LyricSetup_v1 } from '@/models/save/v1/Score';
 import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
+import {
+  ScoreSection as ScoreSection_v1,
+  ScoreSectionHeaderFooterLinks as ScoreSectionHeaderFooterLinks_v1,
+} from '@/models/save/v1/Section';
 import { Score } from '@/models/Score';
+import {
+  ScoreSection,
+  ScoreSectionHeaderFooterLinks,
+} from '@/models/ScoreSection';
 import { Staff } from '@/models/Staff';
 import { fontCatalog } from '@/services/FontCatalog';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
@@ -187,6 +197,8 @@ export class SaveService {
   public static SaveScoreToJson(s: Score) {
     const score = new Score_v1();
 
+    s.ensureMinimumSectionCount();
+
     score.staff = new Staff_v1();
     score.staff.elements = [];
 
@@ -204,6 +216,14 @@ export class SaveService {
     this.SaveFooter(score.footers.even, s.footers.even);
     this.SaveFooter(score.footers.odd, s.footers.odd);
     this.SaveFooter(score.footers.firstPage, s.footers.firstPage);
+
+    if (s.sections.length > 0) {
+      score.sections = s.sections.map((section) => {
+        const savedSection = new ScoreSection_v1();
+        this.SaveSection(savedSection, section);
+        return savedSection;
+      });
+    }
 
     for (const e of s.staff.elements) {
       let element: ScoreElement_v1 = new EmptyElement_v1();
@@ -265,6 +285,8 @@ export class SaveService {
       }
 
       element.pageBreak = e.pageBreak || undefined;
+      element.sectionBreak =
+        e.pageBreak && e.sectionBreak ? e.sectionBreak : undefined;
       element.sectionName = e.sectionName || undefined;
 
       score.staff.elements.push(element);
@@ -465,6 +487,38 @@ export class SaveService {
 
       footer.elements[0] = element;
     }
+  }
+
+  public static SaveSection(section: ScoreSection_v1, s: ScoreSection) {
+    section.headers = new Headers_v1();
+    section.footers = new Footers_v1();
+
+    this.SaveHeader(section.headers.default, s.headers.default);
+    this.SaveHeader(section.headers.even, s.headers.even);
+    this.SaveHeader(section.headers.odd, s.headers.odd);
+    this.SaveHeader(section.headers.firstPage, s.headers.firstPage);
+
+    this.SaveFooter(section.footers.default, s.footers.default);
+    this.SaveFooter(section.footers.even, s.footers.even);
+    this.SaveFooter(section.footers.odd, s.footers.odd);
+    this.SaveFooter(section.footers.firstPage, s.footers.firstPage);
+
+    section.headerDifferentFirstPage =
+      s.headerDifferentFirstPage === true ? true : undefined;
+    section.headerLinks = new ScoreSectionHeaderFooterLinks_v1();
+    section.headerLinks.default =
+      s.headerLinks.default === false ? false : undefined;
+    section.headerLinks.odd = s.headerLinks.odd === false ? false : undefined;
+    section.headerLinks.even = s.headerLinks.even === false ? false : undefined;
+    section.headerLinks.firstPage =
+      s.headerLinks.firstPage === false ? false : undefined;
+    section.footerLinks = new ScoreSectionHeaderFooterLinks_v1();
+    section.footerLinks.default =
+      s.footerLinks.default === false ? false : undefined;
+    section.footerLinks.odd = s.footerLinks.odd === false ? false : undefined;
+    section.footerLinks.even = s.footerLinks.even === false ? false : undefined;
+    section.footerLinks.firstPage =
+      s.footerLinks.firstPage === false ? false : undefined;
   }
 
   public static SaveDropCap(element: DropCapElement_v1, e: DropCapElement) {
@@ -881,6 +935,14 @@ export class SaveService {
       );
     }
 
+    if (s.sections) {
+      score.sections = s.sections.map((savedSection) => {
+        const section = new ScoreSection();
+        this.LoadSection_v1(s.version, section, savedSection, score.pageSetup);
+        return section;
+      });
+    }
+
     for (const e of s.staff.elements) {
       let element: ScoreElement = new EmptyElement();
 
@@ -954,10 +1016,13 @@ export class SaveService {
       element.lineBreak = e.lineBreak === true;
       element.lineBreakType = e.lineBreakType ?? LineBreakType.Left;
       element.pageBreak = e.pageBreak === true;
+      element.sectionBreak = e.pageBreak === true && e.sectionBreak === true;
       element.sectionName = e.sectionName ?? null;
 
       score.staff.elements.push(element);
     }
+
+    score.ensureMinimumSectionCount();
 
     return score;
   }
@@ -1274,6 +1339,77 @@ export class SaveService {
 
       footer.elements[0] = element;
     }
+  }
+
+  public static LoadSection_v1(
+    scoreVersion: string,
+    section: ScoreSection,
+    s: ScoreSection_v1,
+    pageSetup: PageSetup,
+  ) {
+    this.LoadHeader_v1(
+      scoreVersion,
+      section.headers.default,
+      s.headers.default,
+      pageSetup,
+    );
+    this.LoadHeader_v1(
+      scoreVersion,
+      section.headers.even,
+      s.headers.even,
+      pageSetup,
+    );
+    this.LoadHeader_v1(
+      scoreVersion,
+      section.headers.odd,
+      s.headers.odd,
+      pageSetup,
+    );
+    this.LoadHeader_v1(
+      scoreVersion,
+      section.headers.firstPage,
+      s.headers.firstPage,
+      pageSetup,
+    );
+
+    this.LoadFooter_v1(
+      scoreVersion,
+      section.footers.default,
+      s.footers.default,
+      pageSetup,
+    );
+    this.LoadFooter_v1(
+      scoreVersion,
+      section.footers.even,
+      s.footers.even,
+      pageSetup,
+    );
+    this.LoadFooter_v1(
+      scoreVersion,
+      section.footers.odd,
+      s.footers.odd,
+      pageSetup,
+    );
+    this.LoadFooter_v1(
+      scoreVersion,
+      section.footers.firstPage,
+      s.footers.firstPage,
+      pageSetup,
+    );
+
+    section.headerDifferentFirstPage = s.headerDifferentFirstPage === true;
+
+    section.headerLinks = new ScoreSectionHeaderFooterLinks();
+    section.headerLinks.default = s.headerLinks?.default ?? true;
+    section.headerLinks.odd = s.headerLinks?.odd ?? true;
+    section.headerLinks.even = s.headerLinks?.even ?? true;
+    section.headerLinks.firstPage = s.headerLinks?.firstPage ?? true;
+
+    section.footerLinks = new ScoreSectionHeaderFooterLinks();
+    section.footerLinks.default = s.footerLinks?.default ?? true;
+    section.footerLinks.odd = s.footerLinks?.odd ?? true;
+    section.footerLinks.even = s.footerLinks?.even ?? true;
+    section.footerLinks.firstPage = s.footerLinks?.firstPage ?? true;
   }
 
   public static LoadDropCap_v1(

@@ -339,6 +339,8 @@ export class LayoutService {
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
 
+    score.ensureMinimumSectionCount();
+
     elements.forEach((element, index) => {
       element.index = index;
 
@@ -469,17 +471,21 @@ export class LayoutService {
     // Process Header and Footers
     // Only a single text box is supported right now
     if (score.pageSetup.showHeader) {
-      this.processHeader(score.headers.default, pageSetup, neumeHeight);
-      this.processHeader(score.headers.odd, pageSetup, neumeHeight);
-      this.processHeader(score.headers.even, pageSetup, neumeHeight);
-      this.processHeader(score.headers.firstPage, pageSetup, neumeHeight);
+      score.getHeaderCollections().forEach((headers) => {
+        this.processHeader(headers.default, pageSetup, neumeHeight);
+        this.processHeader(headers.odd, pageSetup, neumeHeight);
+        this.processHeader(headers.even, pageSetup, neumeHeight);
+        this.processHeader(headers.firstPage, pageSetup, neumeHeight);
+      });
     }
 
     if (score.pageSetup.showFooter) {
-      this.processFooter(score.footers.default, pageSetup, neumeHeight);
-      this.processFooter(score.footers.odd, pageSetup, neumeHeight);
-      this.processFooter(score.footers.even, pageSetup, neumeHeight);
-      this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
+      score.getFooterCollections().forEach((footers) => {
+        this.processFooter(footers.default, pageSetup, neumeHeight);
+        this.processFooter(footers.odd, pageSetup, neumeHeight);
+        this.processFooter(footers.even, pageSetup, neumeHeight);
+        this.processFooter(footers.firstPage, pageSetup, neumeHeight);
+      });
     }
 
     // Knuth-Plass requires stretch >= 0 and shrink >= 0. Floor both so

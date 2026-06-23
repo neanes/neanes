@@ -172,8 +172,10 @@ import {
 import type { Line, Page } from '@/models/Page';
 import type { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
+import type { HeaderFooterVariant } from '@/models/Score';
 import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
+import type { ScoreSection } from '@/models/ScoreSection';
 import type { WorkspaceLocalStorage } from '@/models/Workspace';
 import { Workspace } from '@/models/Workspace';
 import {
@@ -253,6 +255,9 @@ const scoreElementCommandFactory: CommandFactory<ScoreElement> =
 
 const pageSetupCommandFactory: CommandFactory<PageSetup> =
   new CommandFactory<PageSetup>();
+
+const scoreSectionCommandFactory: CommandFactory<ScoreSection> =
+  new CommandFactory<ScoreSection>();
 
 function createFontLoadDescriptor(
   fontFamily: string,
@@ -811,7 +816,26 @@ const selectedHeaderFooterElement = computed({
       selectionRange.value = null;
     }
 
+    if (element == null) {
+      selectedHeaderFooterKind.value = null;
+      selectedHeaderFooterPageNumber.value = null;
+    }
+
     selectedWorkspace.value.selectedHeaderFooterElement = element;
+  },
+});
+
+const selectedHeaderFooterKind = computed({
+  get: () => selectedWorkspace.value.selectedHeaderFooterKind,
+  set: (kind: 'header' | 'footer' | null) => {
+    selectedWorkspace.value.selectedHeaderFooterKind = kind;
+  },
+});
+
+const selectedHeaderFooterPageNumber = computed({
+  get: () => selectedWorkspace.value.selectedHeaderFooterPageNumber,
+  set: (pageNumber: number | null) => {
+    selectedWorkspace.value.selectedHeaderFooterPageNumber = pageNumber;
   },
 });
 
@@ -2239,6 +2263,21 @@ function shouldShowFooterForPageIndex(pageIndex: number) {
   return score.value.shouldShowFooterOnPage(pageNumber);
 }
 
+function getPhysicalPageNumberForPageIndex(pageIndex: number) {
+  return filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+}
+
+function selectHeaderFooterElementForPage(
+  element: TextBoxElement | RichTextBoxElement,
+  kind: 'header' | 'footer',
+  pageIndex: number,
+) {
+  selectedHeaderFooterKind.value = kind;
+  selectedHeaderFooterPageNumber.value =
+    getPhysicalPageNumberForPageIndex(pageIndex);
+  selectedHeaderFooterElement.value = element;
+}
+
 function getTokenMetadata(pageIndex: number): TokenMetadata {
   return {
     pageNumber: pageIndex + score.value.pageSetup.firstPageNumber,
@@ -2286,109 +2325,15 @@ function getFirstLineNumberForPage(page: Page | undefined) {
 }
 
 function getSectionNumberForPage(pageNumber: number) {
-  const anchorIndex = getSectionAnchorIndexForPage(pageNumber);
-
-  return getSectionNumberForElementIndex(anchorIndex);
-}
-
-function getSectionAnchorIndexForPage(pageNumber: number) {
-  const page = filteredPages.value[pageNumber - 1];
-
-  if (page == null) {
-    return 0;
-  }
-
-  const firstPageElement = getPageElements(page).find(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-
-  if (firstPageElement) {
-    return firstPageElement.index;
-  }
-
-  for (let pageIndex = pageNumber - 2; pageIndex >= 0; pageIndex--) {
-    const prevPage = filteredPages.value[pageIndex];
-
-    for (
-      let lineIndex = prevPage.lines.length - 1;
-      lineIndex >= 0;
-      lineIndex--
-    ) {
-      const line = prevPage.lines[lineIndex];
-
-      for (
-        let elementIndex = line.elements.length - 1;
-        elementIndex >= 0;
-        elementIndex--
-      ) {
-        const element = line.elements[elementIndex];
-
-        if (element.elementType !== ElementType.Empty) {
-          return element.index;
-        }
-      }
-    }
-  }
-
-  return 0;
-}
-
-function getPageElements(page: Page) {
-  return page.lines.flatMap((line) => line.elements);
+  return score.value.getSectionIndexForPhysicalPage(pageNumber) + 1;
 }
 
 function getSectionNumberForElementIndex(elementIndex: number) {
-  const scoreElements = elements.value.filter(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-
-  if (scoreElements.length === 0) {
-    return 1;
-  }
-
-  const sectionMarkers = scoreElements.filter(hasSectionName);
-  if (sectionMarkers.length === 0) {
-    return 1;
-  }
-
-  const firstScoreElementIndex = scoreElements[0].index;
-  const hasDefaultSectionBeforeFirstMarker =
-    sectionMarkers[0].index > firstScoreElementIndex;
-  const markersAtOrBeforeElement = sectionMarkers.filter(
-    (element) => element.index <= elementIndex,
-  ).length;
-
-  if (markersAtOrBeforeElement === 0) {
-    return 1;
-  }
-
-  return (
-    markersAtOrBeforeElement + (hasDefaultSectionBeforeFirstMarker ? 1 : 0)
-  );
+  return score.value.getSectionIndexForElementIndex(elementIndex) + 1;
 }
 
 function getSectionCount() {
-  const scoreElements = elements.value.filter(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-
-  if (scoreElements.length === 0) {
-    return 1;
-  }
-
-  const sectionMarkers = scoreElements.filter(hasSectionName);
-  if (sectionMarkers.length === 0) {
-    return 1;
-  }
-
-  return (
-    sectionMarkers.length +
-    (sectionMarkers[0].index > scoreElements[0].index ? 1 : 0)
-  );
-}
-
-function hasSectionName(element: ScoreElement) {
-  return (element.sectionName ?? '').trim().length > 0;
+  return score.value.getSectionCount();
 }
 
 function setSelectionRange(element: ScoreElement) {
@@ -3004,6 +2949,9 @@ function togglePageBreak() {
         target: selectedElement.value,
         newValues: {
           pageBreak: !selectedElement.value.pageBreak,
+          sectionBreak: selectedElement.value.pageBreak
+            ? false
+            : selectedElement.value.sectionBreak,
           lineBreak: false,
         },
       }),
@@ -3031,6 +2979,7 @@ function toggleInspectorPageBreak() {
       target: element,
       newValues: {
         pageBreak: !element.pageBreak,
+        sectionBreak: element.pageBreak ? false : element.sectionBreak,
         lineBreak: false,
       },
     }),
@@ -3057,6 +3006,7 @@ function toggleLineBreak(lineBreakType: LineBreakType | null) {
         newValues: {
           lineBreak,
           pageBreak: false,
+          sectionBreak: false,
           lineBreakType,
         },
       }),
@@ -3095,7 +3045,37 @@ function toggleInspectorLineBreak(lineBreakType: LineBreakType | null) {
       newValues: {
         lineBreak,
         pageBreak: false,
+        sectionBreak: false,
         lineBreakType,
+      },
+    }),
+  );
+
+  save();
+}
+
+function toggleInspectorSectionBreak() {
+  const element = getInspectorSelectionElement();
+
+  if (element == null) {
+    return;
+  }
+
+  const collection = getInspectorSelectionElementCollection(element);
+
+  if (!canApplyInspectorBreakToElement(element, collection)) {
+    return;
+  }
+
+  const nextSectionBreak = !element.sectionBreak;
+
+  commandService.value.execute(
+    scoreElementCommandFactory.create('update-properties', {
+      target: element,
+      newValues: {
+        pageBreak: nextSectionBreak ? true : element.pageBreak,
+        sectionBreak: nextSectionBreak,
+        lineBreak: nextSectionBreak ? false : element.lineBreak,
       },
     }),
   );
@@ -3123,11 +3103,216 @@ function updateScoreElementSectionName(
   save();
 }
 
+function cloneHeaderFooterElement(
+  element: TextBoxElement | RichTextBoxElement,
+) {
+  const clone = element.clone() as TextBoxElement | RichTextBoxElement;
+
+  if (isTextBoxElement(element) && isTextBoxElement(clone)) {
+    clone.height = element.height;
+    clone.minHeight = element.minHeight;
+    clone.computedColor = element.computedColor;
+    clone.computedFontFamily = element.computedFontFamily;
+    clone.computedFontSize = element.computedFontSize;
+    clone.computedFontStyle = element.computedFontStyle;
+    clone.computedFontWeight = element.computedFontWeight;
+    clone.computedLineHeight = element.computedLineHeight;
+    clone.computedStrokeWidth = element.computedStrokeWidth;
+  }
+
+  return clone;
+}
+
+function getSectionHeaderFooterCollection(
+  section: ScoreSection,
+  kind: 'header' | 'footer',
+  variant: HeaderFooterVariant,
+) {
+  const collections = kind === 'header' ? section.headers : section.footers;
+
+  switch (variant) {
+    case 'even':
+      return collections.even.elements;
+    case 'odd':
+      return collections.odd.elements;
+    case 'firstPage':
+      return collections.firstPage.elements;
+    case 'default':
+    default:
+      return collections.default.elements;
+  }
+}
+
+function getSourceHeaderFooterElement(
+  kind: 'header' | 'footer',
+  variant: HeaderFooterVariant,
+  sourceSectionIndex: number,
+) {
+  const sourceSection =
+    sourceSectionIndex === 0
+      ? null
+      : score.value.getExplicitSection(sourceSectionIndex);
+  const collections =
+    kind === 'header'
+      ? (sourceSection?.headers ?? score.value.headers)
+      : (sourceSection?.footers ?? score.value.footers);
+
+  switch (variant) {
+    case 'even':
+      return collections.even.elements[0] as
+        | TextBoxElement
+        | RichTextBoxElement;
+    case 'odd':
+      return collections.odd.elements[0] as TextBoxElement | RichTextBoxElement;
+    case 'firstPage':
+      return collections.firstPage.elements[0] as
+        | TextBoxElement
+        | RichTextBoxElement;
+    case 'default':
+    default:
+      return collections.default.elements[0] as
+        | TextBoxElement
+        | RichTextBoxElement;
+  }
+}
+
+const selectedHeaderFooterSectionInfo = computed(() => {
+  const pageNumber = selectedHeaderFooterPageNumber.value;
+  const kind = selectedHeaderFooterKind.value;
+
+  if (
+    selectedHeaderFooterElement.value == null ||
+    pageNumber == null ||
+    kind == null
+  ) {
+    return null;
+  }
+
+  return kind === 'header'
+    ? { kind, ...score.value.resolveHeaderSectionForPage(pageNumber) }
+    : { kind, ...score.value.resolveFooterSectionForPage(pageNumber) };
+});
+
+function toggleSelectedHeaderFooterLinkToPrevious() {
+  const sectionInfo = selectedHeaderFooterSectionInfo.value;
+
+  if (sectionInfo == null || sectionInfo.sectionIndex === 0) {
+    return;
+  }
+
+  const section = score.value.getOrCreateExplicitSection(
+    sectionInfo.sectionIndex,
+  );
+
+  if (section == null) {
+    return;
+  }
+
+  const isLinkedToPrevious = sectionInfo.linkedToPrevious;
+  const { activeVariant, kind } = sectionInfo;
+
+  const updateCommands: Command[] = [];
+
+  if (isLinkedToPrevious) {
+    updateCommands.push(
+      scoreElementCommandFactory.create('replace-element-in-collection', {
+        collection: getSectionHeaderFooterCollection(
+          section,
+          kind,
+          activeVariant,
+        ),
+        element: cloneHeaderFooterElement(
+          getSourceHeaderFooterElement(
+            kind,
+            activeVariant,
+            sectionInfo.sourceSectionIndex,
+          ),
+        ),
+        replaceAtIndex: 0,
+      }),
+    );
+  }
+
+  updateCommands.push(
+    scoreSectionCommandFactory.create('update-properties', {
+      target: section,
+      newValues:
+        kind === 'header'
+          ? {
+              headerLinks: {
+                ...section.headerLinks,
+                [activeVariant]: !isLinkedToPrevious,
+              },
+            }
+          : {
+              footerLinks: {
+                ...section.footerLinks,
+                [activeVariant]: !isLinkedToPrevious,
+              },
+            },
+    }),
+  );
+
+  commandService.value.executeAsBatch(updateCommands);
+
+  if (selectedHeaderFooterPageNumber.value != null) {
+    const resolvedElement =
+      kind === 'header'
+        ? (score.value.getHeaderForPage(selectedHeaderFooterPageNumber.value)
+            .elements[0] as TextBoxElement | RichTextBoxElement)
+        : (score.value.getFooterForPage(selectedHeaderFooterPageNumber.value)
+            .elements[0] as TextBoxElement | RichTextBoxElement);
+    selectedHeaderFooterElement.value = resolvedElement;
+  }
+
+  recalculateTextBoxHeights();
+  recalculateRichTextBoxHeights();
+  save();
+}
+
+function toggleSelectedHeaderFooterDifferentFirstPage() {
+  const sectionInfo = selectedHeaderFooterSectionInfo.value;
+
+  if (sectionInfo == null || sectionInfo.sectionIndex === 0) {
+    return;
+  }
+
+  const section = score.value.getOrCreateExplicitSection(
+    sectionInfo.sectionIndex,
+  );
+
+  if (section == null) {
+    return;
+  }
+
+  commandService.value.execute(
+    scoreSectionCommandFactory.create('update-properties', {
+      target: section,
+      newValues: {
+        headerDifferentFirstPage: !sectionInfo.headerDifferentFirstPage,
+      },
+    }),
+  );
+
+  if (selectedHeaderFooterPageNumber.value != null) {
+    const resolvedElement =
+      sectionInfo.kind === 'header'
+        ? (score.value.getHeaderForPage(selectedHeaderFooterPageNumber.value)
+            .elements[0] as TextBoxElement | RichTextBoxElement)
+        : (score.value.getFooterForPage(selectedHeaderFooterPageNumber.value)
+            .elements[0] as TextBoxElement | RichTextBoxElement);
+    selectedHeaderFooterElement.value = resolvedElement;
+  }
+
+  save();
+}
+
 function switchToMartyria(element: ScoreElement) {
   const index = elements.value.indexOf(element);
 
   const newElement = new MartyriaElement();
   newElement.pageBreak = element.pageBreak;
+  newElement.sectionBreak = element.sectionBreak;
   newElement.lineBreak = element.lineBreak;
 
   replaceScoreElement(newElement, index);
@@ -3139,6 +3324,7 @@ function switchToTempo(oldElement: ScoreElement, newElement: TempoElement) {
   const index = elements.value.indexOf(oldElement);
 
   newElement.pageBreak = oldElement.pageBreak;
+  newElement.sectionBreak = oldElement.sectionBreak;
   newElement.lineBreak = oldElement.lineBreak;
 
   replaceScoreElement(newElement, index);
@@ -3150,6 +3336,7 @@ function switchToSyllable(oldElement: ScoreElement, newElement: NoteElement) {
   const index = elements.value.indexOf(oldElement);
 
   newElement.pageBreak = oldElement.pageBreak;
+  newElement.sectionBreak = oldElement.sectionBreak;
   newElement.lineBreak = oldElement.lineBreak;
 
   replaceScoreElement(newElement, index);
@@ -3203,7 +3390,7 @@ function selectHeaderRichTextBox(pageIndex: number) {
   const element = getHeaderForPageIndex(pageIndex);
 
   if (isRichTextBoxElement(element)) {
-    selectHeaderFooterRichTextBox(element, `header-${pageIndex}`);
+    selectHeaderFooterRichTextBox(element, `header-${pageIndex}`, pageIndex);
   }
 }
 
@@ -3211,18 +3398,23 @@ function selectFooterRichTextBox(pageIndex: number) {
   const element = getFooterForPageIndex(pageIndex);
 
   if (isRichTextBoxElement(element)) {
-    selectHeaderFooterRichTextBox(element, `footer-${pageIndex}`);
+    selectHeaderFooterRichTextBox(element, `footer-${pageIndex}`, pageIndex);
   }
 }
 
 function selectHeaderFooterRichTextBox(
   element: RichTextBoxElement,
   refName: string,
+  pageIndex: number,
 ) {
   const alreadySelected = selectedRichTextBoxElement.value === element;
 
   preferredRichTextBoxFocusTarget.value = { element, refName };
-  selectedHeaderFooterElement.value = element;
+  selectHeaderFooterElementForPage(
+    element,
+    refName.startsWith('header-') ? 'header' : 'footer',
+    pageIndex,
+  );
 
   if (alreadySelected) {
     focusSelectedRichTextBoxEditor(element);
@@ -6334,6 +6526,69 @@ function resizableTextDefaultsChanged(previous: PageSetup, current: PageSetup) {
   );
 }
 
+function createHeaderFooterModeReplacementCommands(
+  useRichText: boolean,
+): Command[] {
+  const createHeaderFooter = useRichText
+    ? createRichHeaderFooter
+    : createRegularHeaderFooter;
+  const commands: Command[] = [];
+
+  score.value.ensureMinimumSectionCount();
+
+  for (const headers of score.value.getHeaderCollections()) {
+    commands.push(
+      scoreElementCommandFactory.create('replace-element-in-collection', {
+        collection: headers.default.elements,
+        element: createHeaderFooter('', 'Title', '$p'),
+        replaceAtIndex: 0,
+      }),
+      scoreElementCommandFactory.create('replace-element-in-collection', {
+        collection: headers.even.elements,
+        element: createHeaderFooter('$p', 'Title', ''),
+        replaceAtIndex: 0,
+      }),
+      scoreElementCommandFactory.create('replace-element-in-collection', {
+        collection: headers.firstPage.elements,
+        element: createHeaderFooter('', 'Title', '$p'),
+        replaceAtIndex: 0,
+      }),
+      scoreElementCommandFactory.create('replace-element-in-collection', {
+        collection: headers.odd.elements,
+        element: createHeaderFooter('', 'Title', '$p'),
+        replaceAtIndex: 0,
+      }),
+    );
+  }
+
+  for (const footers of score.value.getFooterCollections()) {
+    commands.push(
+      scoreElementCommandFactory.create('replace-element-in-collection', {
+        collection: footers.default.elements,
+        element: createHeaderFooter('', 'Footer', '$p'),
+        replaceAtIndex: 0,
+      }),
+      scoreElementCommandFactory.create('replace-element-in-collection', {
+        collection: footers.even.elements,
+        element: createHeaderFooter('$p', 'Footer', ''),
+        replaceAtIndex: 0,
+      }),
+      scoreElementCommandFactory.create('replace-element-in-collection', {
+        collection: footers.firstPage.elements,
+        element: createHeaderFooter('', 'Footer', '$p'),
+        replaceAtIndex: 0,
+      }),
+      scoreElementCommandFactory.create('replace-element-in-collection', {
+        collection: footers.odd.elements,
+        element: createHeaderFooter('', 'Footer', '$p'),
+        replaceAtIndex: 0,
+      }),
+    );
+  }
+
+  return commands;
+}
+
 function updatePageSetup(pageSetup: PageSetup) {
   const needToRecalcRichTextBoxes = resizableTextDefaultsChanged(
     score.value.pageSetup,
@@ -6348,94 +6603,12 @@ function updatePageSetup(pageSetup: PageSetup) {
   ];
 
   if (pageSetup.richHeaderFooter && !score.value.pageSetup.richHeaderFooter) {
-    updateCommands.push(
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.default.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.even.elements,
-        element: createRichHeaderFooter('$p', 'Title', ''),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.firstPage.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.odd.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.default.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.even.elements,
-        element: createRichHeaderFooter('$p', 'Footer', ''),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.firstPage.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.odd.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-    );
+    updateCommands.push(...createHeaderFooterModeReplacementCommands(true));
   } else if (
     !pageSetup.richHeaderFooter &&
     score.value.pageSetup.richHeaderFooter
   ) {
-    updateCommands.push(
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.default.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.even.elements,
-        element: createRegularHeaderFooter('$p', 'Title', ''),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.firstPage.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.odd.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.default.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.even.elements,
-        element: createRegularHeaderFooter('$p', 'Footer', ''),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.firstPage.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.odd.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-    );
+    updateCommands.push(...createHeaderFooterModeReplacementCommands(false));
   }
 
   commandService.value.executeAsBatch(updateCommands);
@@ -8246,8 +8419,16 @@ function renderTabLabel(tab: Tab) {
           <SelectionPane
             :context="inspectorContext"
             :can-apply-break="canApplyInspectorBreak"
+            :selected-header-footer-section="selectedHeaderFooterSectionInfo"
             @copy-element-link="copyInspectorSelectionElementLink"
+            @toggle-header-footer-different-first-page="
+              toggleSelectedHeaderFooterDifferentFirstPage
+            "
             @toggle-page-break="toggleInspectorPageBreak"
+            @toggle-section-break="toggleInspectorSectionBreak"
+            @toggle-header-footer-link-to-previous="
+              toggleSelectedHeaderFooterLinkToPrevious
+            "
             @toggle-line-break="toggleInspectorLineBreak"
             @delete-selected-element="deleteInspectorSelectionElement"
             @update:score-element-section-name="
@@ -8572,8 +8753,11 @@ function renderTabLabel(tab: Tab) {
                             ]"
                             :style="getHeaderStyle(page)"
                             @click="
-                              selectedHeaderFooterElement =
-                                getHeaderForPageIndex(pageIndex)
+                              selectHeaderFooterElementForPage(
+                                getHeaderForPageIndex(pageIndex),
+                                'header',
+                                pageIndex,
+                              )
                             "
                             @update="
                               updateTextBox(
@@ -9309,8 +9493,11 @@ function renderTabLabel(tab: Tab) {
                             ]"
                             :style="getFooterStyle(page)"
                             @click="
-                              selectedHeaderFooterElement =
-                                getFooterForPageIndex(pageIndex)
+                              selectHeaderFooterElementForPage(
+                                getFooterForPageIndex(pageIndex),
+                                'footer',
+                                pageIndex,
+                              )
                             "
                             @update="
                               updateTextBox(

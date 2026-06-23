@@ -23,6 +23,8 @@ export class Workspace {
   public selectedAnnotationElement: AnnotationElement | null = null;
   public selectedAlternateLineElement: AlternateLineElement | null = null;
   public selectedHeaderFooterElement: ScoreElement | null = null;
+  public selectedHeaderFooterKind: 'header' | 'footer' | null = null;
+  public selectedHeaderFooterPageNumber: number | null = null;
   public selectedLyrics: NoteElement | null = null;
   public selectionRange: ScoreElementSelectionRange | null = null;
   public zoom: number = 1;

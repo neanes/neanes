@@ -9,4 +9,10 @@ export class Header {
     textbox.multipanel = true;
     this.elements = [textbox];
   }
+
+  public clone() {
+    const clone = new Header();
+    clone.elements = this.elements.map((element) => element.clone());
+    return clone;
+  }
 }

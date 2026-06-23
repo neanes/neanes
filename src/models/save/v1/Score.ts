@@ -4,6 +4,7 @@ import { EmptyElement } from '@/models/save/v1/Element';
 import { Footers } from './Footers';
 import { Headers } from './Headers';
 import { PageSetup } from './PageSetup';
+import type { ScoreSection } from './Section';
 
 const ScoreVersion: string = '1.1';
 
@@ -15,6 +16,7 @@ export class Score {
   public pageSetup: PageSetup = new PageSetup();
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
+  public sections: ScoreSection[] | undefined = undefined;
   public staff: Staff = new Staff();
 }
 

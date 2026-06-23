@@ -9,4 +9,10 @@ export class Footer {
     textbox.multipanel = true;
     this.elements = [textbox];
   }
+
+  public clone() {
+    const clone = new Footer();
+    clone.elements = this.elements.map((element) => element.clone());
+    return clone;
+  }
 }

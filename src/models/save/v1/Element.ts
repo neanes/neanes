@@ -45,6 +45,7 @@ export abstract class ScoreElement {
   public id: number | undefined = undefined;
   public lineBreak: boolean | undefined = undefined;
   public pageBreak: boolean | undefined = undefined;
+  public sectionBreak: boolean | undefined = undefined;
   public lineBreakType: LineBreakType | undefined = undefined;
   public sectionName: string | undefined = undefined;
 }

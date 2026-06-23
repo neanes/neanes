@@ -1,10 +1,10 @@
 <template>
   <!-- eslint-disable vue/no-v-html -->
   <span
-    v-if="inlineSvg"
+    v-if="rawMultitoneSvg"
     class="neume-icon multitone"
     :style="style"
-    v-html="inlineSvg"
+    v-html="rawMultitoneSvg"
   />
   <span v-else class="neume-icon" :class="tone" :style="style" />
   <!-- eslint-enable vue/no-v-html -->
@@ -64,11 +64,11 @@ const FOREGROUND_ICONS = new Set([
   'time-tripli',
 ]);
 
-const RAW_MULTITONE_SVG_BY_NAME = {
+const RAW_MULTITONE_SVG_BY_NAME: Record<string, string> = {
   'quality-heteron': qualityHeteronSvg,
   'quality-heteron-connecting': qualityHeteronConnectingSvg,
   'quality-heteron-connecting-long': qualityHeteronConnectingLongSvg,
-} satisfies Record<string, string>;
+};
 
 const props = defineProps<{
   // Icon basename, without the .svg extension (e.g. "martyria").
@@ -81,7 +81,7 @@ const tone = computed(() =>
   FOREGROUND_ICONS.has(props.name) ? 'foreground' : 'destructive',
 );
 
-const inlineSvg = computed(() => getInlineSvg(props.name));
+const rawMultitoneSvg = computed(() => getRawMultitoneSvg(props.name));
 
 function getIconUrl(name: string) {
   const url = urlByName[name];
@@ -93,8 +93,14 @@ function getIconUrl(name: string) {
   return url;
 }
 
-function getInlineSvg(name: string) {
-  return RAW_MULTITONE_SVG_BY_NAME[name]
+function getRawMultitoneSvg(name: string) {
+  const svg = RAW_MULTITONE_SVG_BY_NAME[name];
+
+  if (typeof svg !== 'string') {
+    return null;
+  }
+
+  return svg
     .replace(/<\?xml[^>]*>\s*/, '')
     .replace(/<!--[\s\S]*?-->\s*/, '')
     .replace('<svg ', '<svg aria-hidden="true" focusable="false" ')
@@ -104,7 +110,7 @@ function getInlineSvg(name: string) {
 const style = computed(
   () =>
     ({
-      ...(inlineSvg.value
+      ...(rawMultitoneSvg.value
         ? {}
         : { '--neume-icon-url': `url("${getIconUrl(props.name)}")` }),
       ...(props.size ? { height: props.size, width: props.size } : {}),

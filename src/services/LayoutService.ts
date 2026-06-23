@@ -3345,7 +3345,6 @@ export class LayoutService {
       leftBoxes,
       rightBoxes,
       clearance,
-      true,
     );
   }
 
@@ -3354,20 +3353,11 @@ export class LayoutService {
     leftBoxes: NoteGlyphBox[],
     rightBoxes: NoteGlyphBox[],
     clearance: number,
-    skipPrimaryBasePairs: boolean = false,
   ) {
     let spacing = 0;
 
     for (const leftBox of leftBoxes) {
       for (const rightBox of rightBoxes) {
-        if (
-          skipPrimaryBasePairs &&
-          leftBox.collisionKind === 'base' &&
-          rightBox.collisionKind === 'base'
-        ) {
-          continue;
-        }
-
         if (!this.noteGlyphBoxesVerticallyOverlap(leftBox, rightBox)) {
           continue;
         }

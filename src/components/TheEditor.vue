@@ -147,6 +147,7 @@ import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
 import {
   areVocalExpressionsEquivalent,
+  getSecondaryGorgonNeume,
   getSecondaryNeume,
   measureBarAboveToLeft,
   onlyTakesBottomKlasma,
@@ -158,7 +159,6 @@ import type {
   MeasureBar,
   MeasureNumber,
   Note,
-  QuantitativeNeume,
   TempoSign,
   Tie,
 } from '@/models/Neumes';
@@ -166,6 +166,7 @@ import {
   Accidental,
   Fthora,
   GorgonNeume,
+  QuantitativeNeume,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
@@ -1369,6 +1370,7 @@ const throttled = {
   updateNoteAndSave: throttle(keydownThrottleIntervalMs, updateNoteAndSave),
   setKlasma: throttle(keydownThrottleIntervalMs, setKlasma),
   setGorgon: throttle(keydownThrottleIntervalMs, setGorgon),
+  setSecondaryGorgon: throttle(keydownThrottleIntervalMs, setSecondaryGorgon),
   setFthoraNote: throttle(keydownThrottleIntervalMs, setFthoraNote),
   setFthoraMartyria: throttle(keydownThrottleIntervalMs, setFthoraMartyria),
   setMartyriaTempo: throttle(keydownThrottleIntervalMs, setMartyriaTempo),
@@ -3657,7 +3659,19 @@ function onKeydownNeume(event: KeyboardEvent) {
 
       if (gorgonMapping != null) {
         handled = true;
-        throttled.setGorgon(noteElement, gorgonMapping.neumes as GorgonNeume[]);
+        const gorgonNeumes = gorgonMapping.neumes as GorgonNeume[];
+        const secondaryGorgonNeume = getSecondaryGorgonNeume(gorgonNeumes);
+
+        if (
+          toolbarInnerNeume.value === 'Secondary' &&
+          noteElement.quantitativeNeume !== QuantitativeNeume.Hyporoe &&
+          getSecondaryNeume(noteElement.quantitativeNeume) != null &&
+          secondaryGorgonNeume != null
+        ) {
+          throttled.setSecondaryGorgon(noteElement, secondaryGorgonNeume);
+        } else {
+          throttled.setGorgon(noteElement, gorgonNeumes);
+        }
       }
 
       const vocalExpressionMapping = neumeKeyboard.findVocalExpressionMapping(

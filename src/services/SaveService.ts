@@ -196,6 +196,7 @@ export class SaveService {
 
   public static SaveScoreToJson(s: Score) {
     const score = new Score_v1();
+    const savedSectionCount = s.getRequiredSectionArrayLength();
 
     s.ensureMinimumSectionCount();
 
@@ -217,8 +218,8 @@ export class SaveService {
     this.SaveFooter(score.footers.odd, s.footers.odd);
     this.SaveFooter(score.footers.firstPage, s.footers.firstPage);
 
-    if (s.sections.length > 0) {
-      score.sections = s.sections.map((section) => {
+    if (savedSectionCount > 0) {
+      score.sections = s.sections.slice(0, savedSectionCount).map((section) => {
         const savedSection = new ScoreSection_v1();
         this.SaveSection(savedSection, section);
         return savedSection;

@@ -4,7 +4,7 @@ export type PaneEdge = 'top' | 'left' | 'right' | 'bottom';
 export type MenuSelector = SelectorParam<'menu'>;
 
 const leftPaneDefaultSize = 240;
-const rightPaneDefaultSize = 300;
+const rightPaneDefaultSize = 320;
 
 type WorkspacePaneConfig = {
   allowedEdges: readonly PaneEdge[];

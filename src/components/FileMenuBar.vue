@@ -6,12 +6,12 @@
       </AlertDescription>
     </Alert>
 
-    <Menubar class="rounded-none bg-legacy-chrome-menubar">
+    <Menubar class="chrome-menubar">
       <MenubarMenu>
         <MenubarTrigger>
           {{ $t(($) => $.menu.file.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="bg-legacy-chrome-menu-surface">
+        <MenubarContent class="chrome-menubar-content">
           <MenubarItem @select="onClickNew">
             <PhFilePlus />
             {{ $t(($) => $.menu.file.new, { ns: 'menu' }) }}
@@ -30,7 +30,7 @@
             </MenubarSubTrigger>
             <MenubarSubContent
               v-if="openRecentIsEnabled"
-              class="bg-legacy-chrome-menu-surface"
+              class="chrome-menubar-content"
             >
               <MenubarItem
                 v-for="(recentFile, index) in recentFiles"
@@ -46,7 +46,7 @@
               <PhTrayArrowDown />
               {{ $t(($) => $.menu.file.import, { ns: 'menu' }) }}
             </MenubarSubTrigger>
-            <MenubarSubContent class="bg-legacy-chrome-menu-surface">
+            <MenubarSubContent class="chrome-menubar-content">
               <MenubarItem @select="onClickImportOcr">
                 <PhFileText />
                 {{ $t(($) => $.menu.file.importFromOcr, { ns: 'menu' }) }}
@@ -71,7 +71,7 @@
               <PhExport />
               {{ $t(($) => $.menu.file.exportAs, { ns: 'menu' }) }}
             </MenubarSubTrigger>
-            <MenubarSubContent class="bg-legacy-chrome-menu-surface">
+            <MenubarSubContent class="chrome-menubar-content">
               <MenubarItem @select="onClickExportAsHtml">
                 <PhFileHtml />
                 {{ $t(($) => $.menu.file.exportAsHtml, { ns: 'menu' }) }}
@@ -110,7 +110,7 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.edit.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="bg-legacy-chrome-menu-surface">
+        <MenubarContent class="chrome-menubar-content">
           <MenubarItem @select="onClickUndo">
             <PhArrowCounterClockwise />
             {{ $t(($) => $.menu.edit.undo, { ns: 'menu' }) }}
@@ -169,7 +169,7 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.insert.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="bg-legacy-chrome-menu-surface">
+        <MenubarContent class="chrome-menubar-content">
           <MenubarItem @select="onClickAddAlternateLine">
             <PhMusicNotesPlus />
             {{ $t(($) => $.menu.insert.alternateLine, { ns: 'menu' }) }}
@@ -211,7 +211,7 @@
               <PhBookOpenText />
               {{ $t(($) => $.menu.insert.headersAndFooters, { ns: 'menu' }) }}
             </MenubarSubTrigger>
-            <MenubarSubContent class="bg-legacy-chrome-menu-surface">
+            <MenubarSubContent class="chrome-menubar-content">
               <MenubarItem @select="onClickAddHeader">
                 <PhRowsPlusTop />
                 {{ $t(($) => $.menu.insert.header, { ns: 'menu' }) }}
@@ -229,7 +229,7 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.view.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="bg-legacy-chrome-menu-surface">
+        <MenubarContent class="chrome-menubar-content">
           <MenubarCheckboxItem
             :model-value="props.paneVisibility['neume-selector']"
             @update:model-value="
@@ -289,7 +289,7 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.tools.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="bg-legacy-chrome-menu-surface">
+        <MenubarContent class="chrome-menubar-content">
           <MenubarItem @select="onClickCopyElementLink">
             <PhLinkSimple />
             {{ $t(($) => $.menu.tools.copyElementLink, { ns: 'menu' }) }}
@@ -301,7 +301,7 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.help.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="bg-legacy-chrome-menu-surface">
+        <MenubarContent class="chrome-menubar-content">
           <MenubarItem @select="onClickGuide">
             <PhBookOpen />
             {{ $t(($) => $.menu.help.guide, { ns: 'menu' }) }}

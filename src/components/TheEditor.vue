@@ -166,6 +166,7 @@ import {
   Accidental,
   Fthora,
   GorgonNeume,
+  NeumeSelection,
   QuantitativeNeume,
   TimeNeume,
   VocalExpressionNeume,
@@ -399,7 +400,7 @@ const richTextBoxCalculationCount = ref(0);
 const textBoxCalculation = ref(false);
 const textBoxCalculationCount = ref(0);
 const fonts = ref<string[]>([]);
-const toolbarInnerNeume = ref('Primary');
+const toolbarInnerNeume = ref<NeumeSelection>(NeumeSelection.Primary);
 const keyboardModifier = ref<string | null>(null);
 const audioElement = ref<ScoreElement | null>(null);
 const playbackEvents = ref<PlaybackSequenceEvent[]>([]);
@@ -676,7 +677,7 @@ const selectedElement = computed({
       selectedLyrics.value = null;
       selectionRange.value = null;
       selectedHeaderFooterElement.value = null;
-      toolbarInnerNeume.value = 'Primary';
+      toolbarInnerNeume.value = NeumeSelection.Primary;
 
       if (audioService.state === AudioState.Playing) {
         const event = playbackEvents.value.find(
@@ -8453,7 +8454,7 @@ function renderTabLabel(tab: Tab) {
         </template>
 
         <template #center>
-          <div class="page-container">
+          <div class="page-container chrome-paper-canvas">
             <ContextMenu>
               <ContextMenuTrigger
                 as="div"
@@ -8482,7 +8483,7 @@ function renderTabLabel(tab: Tab) {
                   </template>
                 </Vue3TabsChrome>
               </ContextMenuTrigger>
-              <ContextMenuContent class="bg-legacy-chrome-menu-surface">
+              <ContextMenuContent class="chrome-menu">
                 <ContextMenuItem
                   @select="
                     closeContextMenuWorkspaces(CloseWorkspacesDisposition.SELF)
@@ -8535,7 +8536,7 @@ function renderTabLabel(tab: Tab) {
               >
                 <div
                   ref="pageBackgroundRef"
-                  class="page-background"
+                  class="page-background chrome-paper-canvas"
                   @scroll="throttled.onScroll"
                 >
                   <div
@@ -9485,7 +9486,7 @@ function renderTabLabel(tab: Tab) {
                 </div>
               </ContextMenuTrigger>
               <ContextMenuContent
-                class="bg-legacy-chrome-menu-surface"
+                class="chrome-menu"
                 @pointerdown.capture="onScoreMenuContentPointerDown"
                 @pointerup.capture="onScoreMenuContentPointerUp"
               >
@@ -9632,7 +9633,7 @@ function renderTabLabel(tab: Tab) {
         inspectorContext.kind === 'annotation' ||
         inspectorContext.kind === 'drop-cap'
       "
-      class="contextual-toolbar-panel"
+      class="contextual-toolbar-panel flex-none w-full min-w-0"
     >
       <template v-if="inspectorContext.kind === 'neume'">
         <ToolbarNeume
@@ -9763,10 +9764,10 @@ function renderTabLabel(tab: Tab) {
       </template>
     </div>
     <div
-      class="status-bar flex w-full flex-none items-center gap-2 bg-legacy-chrome-menu-surface p-1"
+      class="status-bar flex w-full flex-none items-center gap-2 chrome-toolbar-surface p-1"
     >
       <ButtonGroup>
-        <ButtonGroupText>
+        <ButtonGroupText data-slot="button-group-text">
           {{
             $t(($) => $.toolbar.status.pageNumber, {
               ns: 'toolbar',
@@ -9775,7 +9776,7 @@ function renderTabLabel(tab: Tab) {
             })
           }}
         </ButtonGroupText>
-        <ButtonGroupText>
+        <ButtonGroupText data-slot="button-group-text">
           {{
             $t(($) => $.toolbar.status.section, {
               ns: 'toolbar',
@@ -9786,7 +9787,7 @@ function renderTabLabel(tab: Tab) {
         </ButtonGroupText>
       </ButtonGroup>
       <ButtonGroup>
-        <ButtonGroupText>
+        <ButtonGroupText data-slot="button-group-text">
           {{
             $t(($) => $.toolbar.status.line, {
               ns: 'toolbar',
@@ -9795,7 +9796,7 @@ function renderTabLabel(tab: Tab) {
             })
           }}
         </ButtonGroupText>
-        <ButtonGroupText>
+        <ButtonGroupText data-slot="button-group-text">
           {{
             $t(($) => $.toolbar.status.column, {
               ns: 'toolbar',
@@ -9804,7 +9805,10 @@ function renderTabLabel(tab: Tab) {
             })
           }}
         </ButtonGroupText>
-        <ButtonGroupText v-if="statusNeumeNoteDisplay">
+        <ButtonGroupText
+          v-if="statusNeumeNoteDisplay"
+          data-slot="button-group-text"
+        >
           {{ statusNeumeNoteDisplay }}
         </ButtonGroupText>
       </ButtonGroup>
@@ -9948,10 +9952,6 @@ function renderTabLabel(tab: Tab) {
 .header-footer-hr {
   position: absolute;
   border-top-style: solid;
-}
-
-.red {
-  color: #ed0000;
 }
 
 .neume-box .selected {
@@ -10129,26 +10129,53 @@ function renderTabLabel(tab: Tab) {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background-color: #ddd;
 }
 
+/*
+ * vue3-tabs-chrome -> chrome tokens. The library ships compile-time hex with
+ * no theming surface, so we override its compiled rules here. The tab component
+ * is nested under TheEditor's scoped root, so these deep selectors match the
+ * library DOM while staying local to the editor.
+ */
 :deep(.vue3-tabs-chrome) {
   padding: 0;
 }
 
-:deep(.vue3-tabs-chrome .tabs-background) {
-  display: none;
-}
-
 :deep(.vue3-tabs-chrome .tabs-main) {
   border-radius: 0;
-  background-color: var(--color-legacy-chrome-tab-list);
   margin: 0;
   padding: 0.5rem 0.5rem 0.5rem 1rem;
 }
 
+:deep(.vue3-tabs-chrome .tabs-background) {
+  padding: 0;
+}
+
+:deep(.vue3-tabs-chrome .tabs-background-divider) {
+  display: none;
+}
+
+:deep(.vue3-tabs-chrome .tabs-background-content) {
+  border-radius: 0;
+  background-color: var(--chrome-tab-rest);
+}
+
+:deep(.vue3-tabs-chrome .tabs-background-before),
+:deep(.vue3-tabs-chrome .tabs-background-after) {
+  fill: var(--chrome-tab-rest);
+}
+
+:deep(.vue3-tabs-chrome .tabs-item:hover .tabs-background-content) {
+  background-color: var(--chrome-tab-hover);
+}
+
+:deep(.vue3-tabs-chrome .tabs-item:hover .tabs-background-before),
+:deep(.vue3-tabs-chrome .tabs-item:hover .tabs-background-after) {
+  fill: var(--chrome-tab-hover);
+}
+
 :deep(.vue3-tabs-chrome .tabs-item) {
-  border-right: 1px solid var(--color-legacy-chrome-border);
+  border-right: 1px solid var(--chrome-tab-divider);
 }
 
 :deep(.vue3-tabs-chrome .tabs-item:last-of-type) {
@@ -10156,7 +10183,17 @@ function renderTabLabel(tab: Tab) {
 }
 
 :deep(.vue3-tabs-chrome .tabs-item.active .tabs-main) {
-  background-color: var(--color-legacy-chrome-menu-surface);
+  background-color: transparent;
+}
+
+:deep(.vue3-tabs-chrome .tabs-item.active .tabs-background-content) {
+  border-top: 1px solid var(--chrome-tab-active-border);
+  background-color: var(--chrome-tab-active);
+}
+
+:deep(.vue3-tabs-chrome .tabs-item.active .tabs-background-before),
+:deep(.vue3-tabs-chrome .tabs-item.active .tabs-background-after) {
+  fill: var(--chrome-tab-active);
 }
 
 :deep(.vue3-tabs-chrome .tabs-item.active .tabs-close) {
@@ -10165,6 +10202,15 @@ function renderTabLabel(tab: Tab) {
 
 :deep(.vue3-tabs-chrome .tabs-close) {
   right: 0.5rem;
+}
+
+:deep(.vue3-tabs-chrome .tabs-close-icon) {
+  stroke: var(--muted-foreground);
+}
+
+:deep(.vue3-tabs-chrome .tabs-close-icon:hover) {
+  stroke: var(--foreground);
+  background-color: var(--chrome-tab-close-hover);
 }
 
 :deep(.vue3-tabs-chrome .tabs-after) {
@@ -10178,7 +10224,7 @@ function renderTabLabel(tab: Tab) {
 }
 
 .workspace-tab-container {
-  background-color: var(--color-legacy-chrome-tab-strip);
+  background-color: var(--chrome-tab-strip);
 }
 
 .workspace-tab-new-button {
@@ -10193,20 +10239,13 @@ function renderTabLabel(tab: Tab) {
   color: inherit;
   font-size: 1.25rem;
   font-weight: bold;
-  background-color: var(--color-legacy-chrome-tab-action);
+  background-color: var(--chrome-tab-new);
   border: none;
   cursor: default;
 }
 
 .workspace-tab-new-button:hover {
-  background-color: var(--color-legacy-chrome-hover);
-}
-
-.contextual-toolbar-panel {
-  flex: 0 0 auto;
-  width: 100%;
-  min-width: 0;
-  background-color: var(--color-legacy-chrome-menu-surface);
+  background-color: var(--chrome-tab-action-hover);
 }
 
 .page-background {
@@ -10214,7 +10253,6 @@ function renderTabLabel(tab: Tab) {
   flex-direction: column;
   min-width: 0;
   padding: 2rem 1rem;
-  background-color: #ddd;
 
   overflow: auto;
   flex: 1;
@@ -10493,9 +10531,6 @@ function renderTabLabel(tab: Tab) {
   .workspace-tab-container,
   .workspace-tab-new-button,
   .contextual-toolbar-panel,
-  .status-bar,
-  .main-toolbar,
-  .search-text-container,
   .section-name,
   .section-name-2,
   .page-break,

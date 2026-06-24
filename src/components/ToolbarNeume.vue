@@ -1,68 +1,14 @@
 <template>
-  <div class="neume-toolbar p-1">
-    <Toolbar
-      v-if="secondaryNeume"
-      class="row h-auto w-full gap-0 border-0 p-0"
-      loop
-    >
-      <span>{{
-        $t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })
-      }}</span>
-      <ToolbarSeparator />
-      <ToolbarButton
-        v-if="tertiaryNeume"
-        type="button"
-        variant="secondary"
-        size="icon-sm"
-        class="btnNeumeSelect"
-        :class="{ selected: innerNeume === 'Tertiary' }"
-        :aria-label="$t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })"
-        @click="$emit('update:innerNeume', 'Tertiary')"
-      >
-        <Neume
-          :neume="tertiaryNeume"
-          :font-family="pageSetup.neumeDefaultFontFamily"
-        />
-      </ToolbarButton>
-      <ToolbarButton
-        type="button"
-        variant="secondary"
-        size="icon-sm"
-        class="btnNeumeSelect"
-        :class="{ selected: innerNeume === 'Secondary' }"
-        :aria-label="$t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })"
-        @click="$emit('update:innerNeume', 'Secondary')"
-      >
-        <Neume
-          :neume="secondaryNeume"
-          :font-family="pageSetup.neumeDefaultFontFamily"
-        />
-      </ToolbarButton>
-      <ToolbarButton
-        type="button"
-        variant="secondary"
-        size="icon-sm"
-        class="btnNeumeSelect"
-        :class="{ selected: innerNeume === 'Primary' }"
-        :aria-label="$t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })"
-        @click="$emit('update:innerNeume', 'Primary')"
-      >
-        <Neume
-          :neume="primaryNeume!"
-          :font-family="pageSetup.neumeDefaultFontFamily"
-        />
-      </ToolbarButton>
-    </Toolbar>
-    <Toolbar class="row h-auto w-full gap-0 border-0 p-0" loop>
+  <div class="chrome-toolbar">
+    <Toolbar class="chrome-toolbar-row" loop>
       <AppTooltip :tooltip="tooltip(TimeNeume.Klasma_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="klasmaDisabled"
           @click="!klasmaDisabled && $emit('update:klasma')"
         >
-          <img src="@/assets/icons/time-klasma.svg" />
+          <NeumeIcon name="time-klasma" />
         </ToolbarButton>
       </AppTooltip>
       <ButtonWithMenu
@@ -74,27 +20,25 @@
       <AppTooltip :tooltip="tooltip(TimeNeume.Koronis)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="koronisDisabled"
           @click="
             !koronisDisabled && $emit('update', { koronis: !element.koronis })
           "
         >
-          <img src="@/assets/icons/time-koronis.svg" />
+          <NeumeIcon name="time-koronis" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(VocalExpressionNeume.Cross_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="stavrosDisabled"
           @click="
             !stavrosDisabled && $emit('update', { stavros: !element.stavros })
           "
         >
-          <img src="@/assets/icons/time-stavros.svg" />
+          <NeumeIcon name="time-stavros" />
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
@@ -118,56 +62,52 @@
       <AppTooltip :tooltip="tooltip(VocalExpressionNeume.Vareia)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="expressionsDisabled"
           @click="
             !expressionsDisabled && $emit('update', { vareia: !element.vareia })
           "
         >
-          <img src="@/assets/icons/quality-vareia.svg" />
+          <NeumeIcon name="quality-vareia" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(VocalExpressionNeume.Homalon)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="expressionsDisabled"
           @click="
             !expressionsDisabled &&
             $emit('update:expression', VocalExpressionNeume.Homalon)
           "
         >
-          <img src="@/assets/icons/quality-omalon.svg" />
+          <NeumeIcon name="quality-omalon" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(VocalExpressionNeume.HomalonConnecting)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="expressionsDisabled"
           @click="
             !expressionsDisabled &&
             $emit('update:expression', VocalExpressionNeume.HomalonConnecting)
           "
         >
-          <img src="@/assets/icons/quality-omalon-connecting.svg" />
+          <NeumeIcon name="quality-omalon-connecting" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(VocalExpressionNeume.Antikenoma)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="expressionsDisabled"
           @click="
             !expressionsDisabled &&
             $emit('update:expression', VocalExpressionNeume.Antikenoma)
           "
         >
-          <img src="@/assets/icons/quality-antikenoma.svg" />
+          <NeumeIcon name="quality-antikenoma" />
         </ToolbarButton>
       </AppTooltip>
       <ButtonWithMenu
@@ -179,15 +119,14 @@
       <AppTooltip :tooltip="tooltip(VocalExpressionNeume.Heteron)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="expressionsDisabled"
           @click="
             !expressionsDisabled &&
             $emit('update:expression', VocalExpressionNeume.Heteron)
           "
         >
-          <img src="@/assets/icons/quality-heteron.svg" />
+          <NeumeIcon name="quality-heteron" />
         </ToolbarButton>
       </AppTooltip>
       <ButtonWithMenu
@@ -199,29 +138,27 @@
       <AppTooltip :tooltip="tooltip(VocalExpressionNeume.Endofonon)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="expressionsDisabled"
           @click="
             !expressionsDisabled &&
             $emit('update:expression', VocalExpressionNeume.Endofonon)
           "
         >
-          <img src="@/assets/icons/quality-endofonon.svg" />
+          <NeumeIcon name="quality-endofonon" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Tie.YfenBelow)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="expressionsDisabled"
           @click="
             !expressionsDisabled &&
             $emit('update:tie', [Tie.YfenBelow, Tie.YfenAbove])
           "
         >
-          <img src="@/assets/icons/tie-yfen-below.svg" />
+          <NeumeIcon name="tie-yfen-below" />
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
@@ -241,38 +178,35 @@
       <AppTooltip :tooltip="tooltip(GorgonNeume.Argon)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="argonDisabled"
           @click="!argonDisabled && $emit('update:gorgon', [GorgonNeume.Argon])"
         >
-          <img src="@/assets/icons/time-argon.svg" />
+          <NeumeIcon name="time-argon" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(GorgonNeume.Hemiolion)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="argonDisabled"
           @click="
             !argonDisabled && $emit('update:gorgon', [GorgonNeume.Hemiolion])
           "
         >
-          <img src="@/assets/icons/time-diargon.svg" />
+          <NeumeIcon name="time-diargon" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(GorgonNeume.Diargon)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="argonDisabled"
           @click="
             !argonDisabled && $emit('update:gorgon', [GorgonNeume.Diargon])
           "
         >
-          <img src="@/assets/icons/time-triargon.svg" />
+          <NeumeIcon name="time-triargon" />
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
@@ -289,11 +223,10 @@
       <AppTooltip :tooltip="tooltip(NoteIndicator.Pa)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           @click="$emit('update', { noteIndicator: !element.noteIndicator })"
         >
-          <img draggable="false" src="@/assets/icons/note-ni.svg" />
+          <NeumeIcon name="note-ni" />
         </ToolbarButton>
       </AppTooltip>
       <ButtonWithMenu
@@ -303,12 +236,11 @@
         @select="$emit('update:ison', $event)"
       />
     </Toolbar>
-    <Toolbar class="row h-auto w-full gap-0 border-0 p-0" loop>
+    <Toolbar class="chrome-toolbar-row" loop>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicNiLow_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled"
           @click="
             !fthoresDisabled &&
@@ -318,98 +250,91 @@
             ])
           "
         >
-          <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
+          <NeumeIcon name="fthora-diatonic-ni-low" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicPa_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled"
           @click="
             !fthoresDisabled &&
             updateFthora([Fthora.DiatonicPa_Top, Fthora.DiatonicPa_Bottom])
           "
         >
-          <img src="@/assets/icons/fthora-diatonic-pa.svg" />
+          <NeumeIcon name="fthora-diatonic-pa" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicVou_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled"
           @click="
             !fthoresDisabled &&
             updateFthora([Fthora.DiatonicVou_Top, Fthora.DiatonicVou_Bottom])
           "
         >
-          <img src="@/assets/icons/fthora-diatonic-vou.svg" />
+          <NeumeIcon name="fthora-diatonic-vou" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicGa_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled"
           @click="
             !fthoresDisabled &&
             updateFthora([Fthora.DiatonicGa_Top, Fthora.DiatonicGa_Bottom])
           "
         >
-          <img src="@/assets/icons/fthora-diatonic-ga.svg" />
+          <NeumeIcon name="fthora-diatonic-ga" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicThi_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled"
           @click="
             !fthoresDisabled &&
             updateFthora([Fthora.DiatonicThi_Top, Fthora.DiatonicThi_Bottom])
           "
         >
-          <img src="@/assets/icons/fthora-diatonic-di.svg" />
+          <NeumeIcon name="fthora-diatonic-di" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicKe_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled"
           @click="
             !fthoresDisabled &&
             updateFthora([Fthora.DiatonicKe_Top, Fthora.DiatonicKe_Bottom])
           "
         >
-          <img src="@/assets/icons/fthora-diatonic-ke.svg" />
+          <NeumeIcon name="fthora-diatonic-ke" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicZo_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled"
           @click="
             !fthoresDisabled &&
             updateFthora([Fthora.DiatonicZo_Top, Fthora.DiatonicZo_Bottom])
           "
         >
-          <img src="@/assets/icons/fthora-diatonic-zo.svg" />
+          <NeumeIcon name="fthora-diatonic-zo" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicNiHigh_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled"
           @click="
             !fthoresDisabled &&
@@ -419,15 +344,14 @@
             ])
           "
         >
-          <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
+          <NeumeIcon name="fthora-diatonic-ni-high" />
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
       <AppTooltip :tooltip="tooltip(Fthora.SoftChromaticThi_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled"
           @click="
             !fthoresDisabled &&
@@ -437,14 +361,13 @@
             ])
           "
         >
-          <img src="@/assets/icons/fthora-soft-chromatic-di.svg" />
+          <NeumeIcon name="fthora-soft-chromatic-di" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.SoftChromaticPa_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled"
           @click="
             !fthoresDisabled &&
@@ -454,15 +377,14 @@
             ])
           "
         >
-          <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
+          <NeumeIcon name="fthora-soft-chromatic-ke" />
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
       <AppTooltip :tooltip="tooltip(Fthora.HardChromaticPa_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled"
           @click="
             !fthoresDisabled &&
@@ -472,14 +394,13 @@
             ])
           "
         >
-          <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
+          <NeumeIcon name="fthora-hard-chromatic-pa" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.HardChromaticThi_Top)">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled"
           @click="
             !fthoresDisabled &&
@@ -489,95 +410,133 @@
             ])
           "
         >
-          <img src="@/assets/icons/fthora-hard-chromatic-di.svg" />
+          <NeumeIcon name="fthora-hard-chromatic-di" />
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
       <AppTooltip :tooltip="enharmonicTitle">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled || enharmonicDisabled"
           @click="
             !(fthoresDisabled || enharmonicDisabled) &&
             updateFthora([Fthora.Enharmonic_Top, Fthora.Enharmonic_Bottom])
           "
         >
-          <img src="@/assets/icons/fthora-enharmonic.svg" />
+          <NeumeIcon name="fthora-enharmonic" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="generalFlatTitle">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled || generalFlatDisabled"
           @click="
             !(fthoresDisabled || generalFlatDisabled) &&
             updateFthora([Fthora.GeneralFlat_Top, Fthora.GeneralFlat_Bottom])
           "
         >
-          <img src="@/assets/icons/fthora-general-flat.svg" />
+          <NeumeIcon name="fthora-general-flat" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="generalSharpTitle">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled || generalSharpDisabled"
           @click="
             !(fthoresDisabled || generalSharpDisabled) &&
             updateFthora([Fthora.GeneralSharp_Top, Fthora.GeneralSharp_Bottom])
           "
         >
-          <img src="@/assets/icons/fthora-general-sharp.svg" />
+          <NeumeIcon name="fthora-general-sharp" />
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
       <AppTooltip :tooltip="zygosTitle">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled || zygosDisabled"
           @click="
             !(fthoresDisabled || zygosDisabled) &&
             updateFthora([Fthora.Zygos_Top, Fthora.Zygos_Bottom])
           "
         >
-          <img src="@/assets/icons/fthora-zygos.svg" />
+          <NeumeIcon name="fthora-zygos" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="klitonTitle">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled || klitonDisabled"
           @click="
             !(fthoresDisabled || klitonDisabled) &&
             updateFthora([Fthora.Kliton_Top, Fthora.Kliton_Bottom])
           "
         >
-          <img src="@/assets/icons/fthora-kliton.svg" />
+          <NeumeIcon name="fthora-kliton" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="spathiTitle">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="neume-button"
+          class="chrome-button"
           :aria-disabled="fthoresDisabled || spathiDisabled"
           @click="
             !(fthoresDisabled || spathiDisabled) &&
             updateFthora([Fthora.Spathi_Top, Fthora.Spathi_Bottom])
           "
         >
-          <img src="@/assets/icons/fthora-spathi.svg" />
+          <NeumeIcon name="fthora-spathi" />
         </ToolbarButton>
       </AppTooltip>
+      <template v-if="secondaryNeume">
+        <ToolbarSeparator />
+        <span :id="neumeSelectLabelId" class="chrome-toolbar-label">{{
+          $t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })
+        }}</span>
+        <ToolbarToggleGroup
+          type="single"
+          :model-value="innerNeume"
+          :aria-labelledby="neumeSelectLabelId"
+          @update:model-value="updateInnerNeume"
+        >
+          <ToolbarToggleItem
+            v-if="tertiaryNeume"
+            :value="NeumeSelection.Tertiary"
+            class="chrome-button neume-select-button"
+            :aria-label="NeumeSelection.Tertiary"
+          >
+            <Neume
+              :neume="tertiaryNeume"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+            />
+          </ToolbarToggleItem>
+          <ToolbarToggleItem
+            :value="NeumeSelection.Secondary"
+            class="chrome-button neume-select-button"
+            :aria-label="NeumeSelection.Secondary"
+          >
+            <Neume
+              :neume="secondaryNeume"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+            />
+          </ToolbarToggleItem>
+          <ToolbarToggleItem
+            :value="NeumeSelection.Primary"
+            class="chrome-button neume-select-button"
+            :aria-label="NeumeSelection.Primary"
+          >
+            <Neume
+              :neume="primaryNeume!"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+            />
+          </ToolbarToggleItem>
+        </ToolbarToggleGroup>
+      </template>
     </Toolbar>
   </div>
 </template>
@@ -585,7 +544,7 @@
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
-import { computed } from 'vue';
+import { computed, useId } from 'vue';
 
 import type { AppTooltipValue } from '@/components/AppTooltip.types';
 import AppTooltip from '@/components/AppTooltip.vue';
@@ -595,6 +554,8 @@ import {
   Toolbar,
   ToolbarButton,
   ToolbarSeparator,
+  ToolbarToggleGroup,
+  ToolbarToggleItem,
 } from '@/components/ui/toolbar';
 import type { NoteElement } from '@/models/Element';
 import {
@@ -620,6 +581,7 @@ import {
   Ison,
   MeasureBar,
   MeasureNumber,
+  NeumeSelection,
   NoteIndicator,
   QuantitativeNeume,
   restNeumes,
@@ -632,6 +594,7 @@ import { ScaleNote } from '@/models/Scales';
 import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
 
 import Neume from './NeumeGlyph.vue';
+import NeumeIcon from './NeumeIcon.vue';
 
 type ToolbarNeumeTooltipNeume =
   | Fthora
@@ -660,283 +623,242 @@ const gorgonNeumeValues = Object.values(GorgonNeume);
 const measureBarValues = Object.values(MeasureBar);
 const noteIndicatorValues = Object.values(NoteIndicator);
 const isonValues = Object.values(Ison);
+const neumeSelectionValues = Object.values(NeumeSelection);
 
 const apliMenuOptions: ButtonWithMenuOption[] = [
   {
     neume: TimeNeume.Tetrapli,
-    icon: new URL('@/assets/icons/time-tetrapli.svg', import.meta.url).href,
+    icon: 'time-tetrapli',
   },
   {
     neume: TimeNeume.Tripli,
-    icon: new URL('@/assets/icons/time-tripli.svg', import.meta.url).href,
+    icon: 'time-tripli',
   },
   {
     neume: TimeNeume.Dipli,
-    icon: new URL('@/assets/icons/time-dipli.svg', import.meta.url).href,
+    icon: 'time-dipli',
   },
   {
     neume: TimeNeume.Hapli,
-    icon: new URL('@/assets/icons/time-apli.svg', import.meta.url).href,
+    icon: 'time-apli',
   },
 ];
 
 const gorgonMenuOptions: ButtonWithMenuOption[] = [
   {
     neume: GorgonNeume.GorgonDottedRight,
-    icon: new URL(
-      '@/assets/icons/time-gorgon-dotted-right.svg',
-      import.meta.url,
-    ).href,
+    icon: 'time-gorgon-dotted-right',
   },
   {
     neume: GorgonNeume.GorgonDottedLeft,
-    icon: new URL('@/assets/icons/time-gorgon-dotted-left.svg', import.meta.url)
-      .href,
+    icon: 'time-gorgon-dotted-left',
   },
   {
     neume: [GorgonNeume.Gorgon_Top, GorgonNeume.Gorgon_Bottom],
-    icon: new URL('@/assets/icons/time-gorgon.svg', import.meta.url).href,
+    icon: 'time-gorgon',
   },
 ];
 
 const digorgonMenuOptions: ButtonWithMenuOption[] = [
   {
     neume: GorgonNeume.DigorgonDottedRight,
-    icon: new URL(
-      '@/assets/icons/time-digorgon-dotted-right.svg',
-      import.meta.url,
-    ).href,
+    icon: 'time-digorgon-dotted-right',
   },
   {
     neume: GorgonNeume.DigorgonDottedLeft2,
-    icon: new URL(
-      '@/assets/icons/time-digorgon-dotted-left-above.svg',
-      import.meta.url,
-    ).href,
+    icon: 'time-digorgon-dotted-left-above',
   },
   {
     neume: GorgonNeume.DigorgonDottedLeft1,
-    icon: new URL(
-      '@/assets/icons/time-digorgon-dotted-left-below.svg',
-      import.meta.url,
-    ).href,
+    icon: 'time-digorgon-dotted-left-below',
   },
   {
     neume: GorgonNeume.Digorgon,
-    icon: new URL('@/assets/icons/time-digorgon.svg', import.meta.url).href,
+    icon: 'time-digorgon',
   },
 ];
 
 const trigorgonMenuOptions: ButtonWithMenuOption[] = [
   {
     neume: GorgonNeume.TrigorgonDottedRight,
-    icon: new URL(
-      '@/assets/icons/time-trigorgon-dotted-right.svg',
-      import.meta.url,
-    ).href,
+    icon: 'time-trigorgon-dotted-right',
   },
   {
     neume: GorgonNeume.TrigorgonDottedLeft2,
-    icon: new URL(
-      '@/assets/icons/time-trigorgon-dotted-left-above.svg',
-      import.meta.url,
-    ).href,
+    icon: 'time-trigorgon-dotted-left-above',
   },
   {
     neume: GorgonNeume.TrigorgonDottedLeft1,
-    icon: new URL(
-      '@/assets/icons/time-trigorgon-dotted-left-below.svg',
-      import.meta.url,
-    ).href,
+    icon: 'time-trigorgon-dotted-left-below',
   },
   {
     neume: GorgonNeume.Trigorgon,
-    icon: new URL('@/assets/icons/time-trigorgon.svg', import.meta.url).href,
+    icon: 'time-trigorgon',
   },
 ];
 
 const psifistonMenuOptions: ButtonWithMenuOption[] = [
   {
     neume: VocalExpressionNeume.PsifistonSlanted,
-    icon: new URL(
-      '@/assets/icons/quality-psifiston-slanted.svg',
-      import.meta.url,
-    ).href,
+    icon: 'quality-psifiston-slanted',
   },
   {
     neume: VocalExpressionNeume.Psifiston,
-    icon: new URL('@/assets/icons/quality-psifiston.svg', import.meta.url).href,
+    icon: 'quality-psifiston',
   },
 ];
 
 const heteronConnectingMenuOptions: ButtonWithMenuOption[] = [
   {
     neume: VocalExpressionNeume.HeteronConnectingLong,
-    icon: new URL(
-      '@/assets/icons/quality-heteron-connecting-long.svg',
-      import.meta.url,
-    ).href,
+    icon: 'quality-heteron-connecting-long',
   },
   {
     neume: VocalExpressionNeume.HeteronConnecting,
-    icon: new URL(
-      '@/assets/icons/quality-heteron-connecting.svg',
-      import.meta.url,
-    ).href,
+    icon: 'quality-heteron-connecting',
   },
 ];
 
 const flatMenuOptions: ButtonWithMenuOption[] = [
   {
     neume: Accidental.Flat_8_Right,
-    icon: new URL('@/assets/icons/alteration-yfesis8.svg', import.meta.url)
-      .href,
+    icon: 'alteration-yfesis8',
   },
   {
     neume: Accidental.Flat_6_Right,
-    icon: new URL('@/assets/icons/alteration-yfesis6.svg', import.meta.url)
-      .href,
+    icon: 'alteration-yfesis6',
   },
   {
     neume: Accidental.Flat_4_Right,
-    icon: new URL('@/assets/icons/alteration-yfesis4.svg', import.meta.url)
-      .href,
+    icon: 'alteration-yfesis4',
   },
   {
     neume: Accidental.Flat_2_Right,
-    icon: new URL('@/assets/icons/alteration-yfesis2.svg', import.meta.url)
-      .href,
+    icon: 'alteration-yfesis2',
   },
 ];
 
 const sharpMenuOptions: ButtonWithMenuOption[] = [
   {
     neume: Accidental.Sharp_8_Left,
-    icon: new URL('@/assets/icons/alteration-diesis8.svg', import.meta.url)
-      .href,
+    icon: 'alteration-diesis8',
   },
   {
     neume: Accidental.Sharp_6_Left,
-    icon: new URL('@/assets/icons/alteration-diesis6.svg', import.meta.url)
-      .href,
+    icon: 'alteration-diesis6',
   },
   {
     neume: Accidental.Sharp_4_Left,
-    icon: new URL('@/assets/icons/alteration-diesis4.svg', import.meta.url)
-      .href,
+    icon: 'alteration-diesis4',
   },
   {
     neume: Accidental.Sharp_2_Left,
-    icon: new URL('@/assets/icons/alteration-diesis2.svg', import.meta.url)
-      .href,
+    icon: 'alteration-diesis2',
   },
 ];
 
 const barlineMenuOptions: ButtonWithMenuOption[] = [
   {
     neume: MeasureBar.MeasureBarShortTheseos,
-    icon: new URL('@/assets/icons/barline-short-theseos.svg', import.meta.url)
-      .href,
+    icon: 'barline-short-theseos',
   },
   {
     neume: MeasureBar.MeasureBarShortDouble,
-    icon: new URL('@/assets/icons/barline-short-double.svg', import.meta.url)
-      .href,
+    icon: 'barline-short-double',
   },
   {
     neume: MeasureBar.MeasureBarTop,
-    icon: new URL('@/assets/icons/barline-short-single.svg', import.meta.url)
-      .href,
+    icon: 'barline-short-single',
   },
   {
     neume: MeasureBar.MeasureBarTheseos,
-    icon: new URL('@/assets/icons/barline-theseos.svg', import.meta.url).href,
+    icon: 'barline-theseos',
   },
   {
     neume: MeasureBar.MeasureBarDouble,
-    icon: new URL('@/assets/icons/barline-double.svg', import.meta.url).href,
+    icon: 'barline-double',
   },
   {
     neume: MeasureBar.MeasureBarRight,
-    icon: new URL('@/assets/icons/barline-single.svg', import.meta.url).href,
+    icon: 'barline-single',
   },
 ];
 
 const measureNumberMenuOptions: ButtonWithMenuOption[] = [
   {
     neume: MeasureNumber.Eight,
-    icon: new URL('@/assets/icons/measure-number-8.svg', import.meta.url).href,
+    icon: 'measure-number-8',
   },
   {
     neume: MeasureNumber.Seven,
-    icon: new URL('@/assets/icons/measure-number-7.svg', import.meta.url).href,
+    icon: 'measure-number-7',
   },
   {
     neume: MeasureNumber.Six,
-    icon: new URL('@/assets/icons/measure-number-6.svg', import.meta.url).href,
+    icon: 'measure-number-6',
   },
   {
     neume: MeasureNumber.Five,
-    icon: new URL('@/assets/icons/measure-number-5.svg', import.meta.url).href,
+    icon: 'measure-number-5',
   },
   {
     neume: MeasureNumber.Four,
-    icon: new URL('@/assets/icons/measure-number-4.svg', import.meta.url).href,
+    icon: 'measure-number-4',
   },
   {
     neume: MeasureNumber.Three,
-    icon: new URL('@/assets/icons/measure-number-3.svg', import.meta.url).href,
+    icon: 'measure-number-3',
   },
   {
     neume: MeasureNumber.Two,
-    icon: new URL('@/assets/icons/measure-number-2.svg', import.meta.url).href,
+    icon: 'measure-number-2',
   },
 ];
 
 const isonMenuOptions: ButtonWithMenuOption[] = [
   {
     neume: Ison.ZoHigh,
-    icon: new URL('@/assets/icons/ison-zo-high.svg', import.meta.url).href,
+    icon: 'ison-zo-high',
   },
   {
     neume: Ison.Ke,
-    icon: new URL('@/assets/icons/ison-ke.svg', import.meta.url).href,
+    icon: 'ison-ke',
   },
   {
     neume: Ison.Thi,
-    icon: new URL('@/assets/icons/ison-di.svg', import.meta.url).href,
+    icon: 'ison-di',
   },
   {
     neume: Ison.Ga,
-    icon: new URL('@/assets/icons/ison-ga.svg', import.meta.url).href,
+    icon: 'ison-ga',
   },
   {
     neume: Ison.Vou,
-    icon: new URL('@/assets/icons/ison-vou.svg', import.meta.url).href,
+    icon: 'ison-vou',
   },
   {
     neume: Ison.Pa,
-    icon: new URL('@/assets/icons/ison-pa.svg', import.meta.url).href,
+    icon: 'ison-pa',
   },
   {
     neume: Ison.Ni,
-    icon: new URL('@/assets/icons/ison-ni.svg', import.meta.url).href,
+    icon: 'ison-ni',
   },
   {
     neume: Ison.Zo,
-    icon: new URL('@/assets/icons/ison-zo.svg', import.meta.url).href,
+    icon: 'ison-zo',
   },
   {
     neume: Ison.KeLow,
-    icon: new URL('@/assets/icons/ison-ke-low.svg', import.meta.url).href,
+    icon: 'ison-ke-low',
   },
   {
     neume: Ison.ThiLow,
-    icon: new URL('@/assets/icons/ison-di-low.svg', import.meta.url).href,
+    icon: 'ison-di-low',
   },
   {
     neume: Ison.Unison,
-    icon: new URL('@/assets/icons/ison-unison.svg', import.meta.url).href,
+    icon: 'ison-unison',
   },
 ];
 
@@ -950,7 +872,7 @@ const props = defineProps({
     required: true,
   },
   innerNeume: {
-    type: String,
+    type: String as PropType<NeumeSelection>,
     required: true,
   },
   neumeKeyboard: {
@@ -979,7 +901,15 @@ const emit = defineEmits([
   'update:time',
 ]);
 
+const neumeSelectLabelId = useId();
+
 const { t } = useTranslation();
+
+function updateInnerNeume(value: unknown) {
+  if (typeof value === 'string' && enumHas(neumeSelectionValues, value)) {
+    emit('update:innerNeume', value);
+  }
+}
 
 const primaryNeume = computed(() =>
   getPrimaryNeume(props.element.quantitativeNeume),
@@ -1178,9 +1108,9 @@ function translateNeumeDisplayName(neume: ToolbarNeumeTooltipNeume) {
 }
 
 function updateFthora(args: string[]) {
-  if (props.innerNeume === 'Secondary') {
+  if (props.innerNeume === NeumeSelection.Secondary) {
     emit('update:secondaryFthora', args[0] + props.innerNeume);
-  } else if (props.innerNeume === 'Tertiary') {
+  } else if (props.innerNeume === NeumeSelection.Tertiary) {
     emit('update:tertiaryFthora', args[0] + props.innerNeume);
   } else {
     emit('update:fthora', args);
@@ -1189,7 +1119,7 @@ function updateFthora(args: string[]) {
 
 function updateGorgon(args: GorgonNeume | GorgonNeume[]) {
   if (
-    props.innerNeume === 'Secondary' &&
+    props.innerNeume === NeumeSelection.Secondary &&
     props.element.quantitativeNeume !== QuantitativeNeume.Hyporoe
   ) {
     const secondaryGorgonNeume = getSecondaryGorgonNeume(args);
@@ -1207,23 +1137,23 @@ function updateAccidental(args: string) {
   // There is some admittedly confusing logic here regarding the hyporoe.
   // Compare to handleHyporoe in the Analysis Service.
 
-  if (props.innerNeume === 'Secondary') {
+  if (props.innerNeume === NeumeSelection.Secondary) {
     if (
-      props.element.quantitativeNeume == QuantitativeNeume.Hyporoe &&
+      props.element.quantitativeNeume === QuantitativeNeume.Hyporoe &&
       args.startsWith('Flat')
     ) {
       emit('update:accidental', args);
     } else {
       emit('update:secondaryAccidental', args + props.innerNeume);
     }
-  } else if (props.innerNeume === 'Tertiary') {
+  } else if (props.innerNeume === NeumeSelection.Tertiary) {
     emit('update:tertiaryAccidental', args + props.innerNeume);
   } else {
     if (
-      props.element.quantitativeNeume == QuantitativeNeume.Hyporoe &&
+      props.element.quantitativeNeume === QuantitativeNeume.Hyporoe &&
       args.startsWith('Flat')
     ) {
-      emit('update:secondaryAccidental', args + 'Secondary');
+      emit('update:secondaryAccidental', args + NeumeSelection.Secondary);
     } else {
       emit('update:accidental', args);
     }
@@ -1251,75 +1181,8 @@ function tooltip(neume: ToolbarNeumeTooltipNeume): AppTooltipValue {
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.neume-toolbar {
-  background-color: var(--color-legacy-chrome-menu-surface);
-
-  --btn-size: 32px;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.neume-button,
-:deep(.menu-container > .neume-button),
-.btnNeumeSelect {
-  box-sizing: border-box;
-  height: var(--btn-size);
-  width: var(--btn-size);
-  appearance: auto;
-  background: revert;
-  border: revert;
-  border-radius: revert;
-  box-shadow: revert;
-  font-weight: revert;
-
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-  outline: revert;
-  padding: 0;
-  transition: revert;
-
-  user-select: none;
-}
-
-.neume-button:hover,
-:deep(.menu-container > .neume-button:hover),
-.btnNeumeSelect:hover {
-  background: revert;
-}
-
-.neume-button > img,
-.neume-button > svg,
-:deep(.menu-container > .neume-button > img),
-:deep(.menu-container > .neume-button > svg) {
-  height: var(--btn-size);
-  max-width: none;
-  width: var(--btn-size);
-}
-
-.neume-button[aria-disabled='true'],
-:deep(.menu-container > .neume-button:disabled),
-.btnNeumeSelect[aria-disabled='true'],
-.btnNeumeSelect:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.btnNeumeSelect {
+.neume-select-button {
   font-size: 24px;
-}
-
-.btnNeumeSelect.selected {
-  background: var(--color-legacy-chrome-selected);
 }
 </style>

@@ -17,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+import { useColorMode } from '@vueuse/core';
 import { useTranslation } from 'i18next-vue';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { toast } from 'vue-sonner';
@@ -34,6 +35,8 @@ const electronUpdateDownloadingToastId = 'electron-update-downloading';
 const electronUpdateDownloadedToastId = 'electron-update-downloaded';
 const electronUpdateErrorToastId = 'electron-update-error';
 const { t } = useTranslation();
+
+useColorMode();
 
 async function downloadElectronUpdate() {
   try {

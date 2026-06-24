@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="flex size-full min-h-0 flex-col overflow-hidden bg-background p-3"
-  >
+  <div class="flex size-full min-h-0 flex-col overflow-hidden p-3">
     <div
       v-if="showMissingDiagnosticsNotice"
       class="developer-pane-notice mb-3 shrink-0"

@@ -64,7 +64,7 @@
                 "
               >
                 <ItemContent class="items-start">
-                  <div class="w-full px-2 py-1">
+                  <div class="mode-key-preview w-full px-2 py-1">
                     <ModeKey
                       class="!w-auto !border-0 [--zoom:1]"
                       :element="template"
@@ -286,3 +286,14 @@ function updateModeKey() {
   open.value = false;
 }
 </script>
+
+<style scoped>
+.mode-key-preview {
+  color: var(--muted-foreground);
+}
+
+.mode-key-preview :deep(.mode-key-container),
+.mode-key-preview :deep(.mode-key-container *) {
+  color: inherit !important;
+}
+</style>

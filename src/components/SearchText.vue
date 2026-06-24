@@ -1,14 +1,18 @@
 <template>
-  <div class="search-text-container" @keydown.esc="$emit('close')">
+  <div
+    class="flex justify-end chrome-toolbar-surface"
+    @keydown.esc="$emit('close')"
+  >
     <input
       ref="input"
-      :query="query"
+      :value="query"
       @keydown.enter="
         $emit('search', { query: ($event.target as HTMLInputElement).value })
       "
-      @change="$emit('update:query', ($event.target as HTMLInputElement).value)"
+      @input="$emit('update:query', ($event.target as HTMLInputElement).value)"
     />
     <button
+      class="chrome-button"
       @click="
         $emit('search', {
           query,
@@ -16,13 +20,13 @@
         })
       "
     >
-      <PhArrowUp />
+      <PhArrowUp class="size-4" />
     </button>
-    <button @click="$emit('search', { query })">
-      <PhArrowDown />
+    <button class="chrome-button" @click="$emit('search', { query })">
+      <PhArrowDown class="size-4" />
     </button>
-    <button @click="$emit('close')">
-      <PhX />
+    <button class="chrome-button" @click="$emit('close')">
+      <PhX class="size-4" />
     </button>
   </div>
 </template>
@@ -51,25 +55,3 @@ function focus() {
 
 defineExpose({ focus });
 </script>
-
-<style scoped>
-.search-text-container {
-  display: flex;
-  justify-content: right;
-  background-color: var(--muted);
-}
-
-.search-text-container button {
-  border: none;
-  background-color: var(--color-legacy-chrome-tab-action);
-}
-
-.search-text-container button:hover {
-  background-color: var(--color-legacy-chrome-menu-surface);
-}
-
-.search-text-container button > svg {
-  width: 1rem;
-  height: 1rem;
-}
-</style>

@@ -1,5 +1,5 @@
 <template>
-  <Toolbar class="mode-key-toolbar h-auto w-full gap-0 border-0 p-1" loop>
+  <Toolbar class="chrome-toolbar" loop>
     <template v-if="!element.useDefaultStyle">
       <Label for="toolbar-mode-key-font-size">{{
         $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
@@ -24,10 +24,10 @@
       >
         <ToggleGroupItem
           :value="TextBoxAlignment.Left"
-          class="icon-btn"
+          class="chrome-button"
           :class="{ selected: element.alignment === TextBoxAlignment.Left }"
         >
-          <PhTextAlignLeft class="h-4 w-4" />
+          <PhTextAlignLeft class="size-4" />
         </ToggleGroupItem>
       </AppTooltip>
       <AppTooltip
@@ -35,10 +35,10 @@
       >
         <ToggleGroupItem
           :value="TextBoxAlignment.Center"
-          class="icon-btn"
+          class="chrome-button"
           :class="{ selected: element.alignment === TextBoxAlignment.Center }"
         >
-          <PhTextAlignCenter class="h-4 w-4" />
+          <PhTextAlignCenter class="size-4" />
         </ToggleGroupItem>
       </AppTooltip>
       <AppTooltip
@@ -46,10 +46,10 @@
       >
         <ToggleGroupItem
           :value="TextBoxAlignment.Right"
-          class="icon-btn"
+          class="chrome-button"
           :class="{ selected: element.alignment === TextBoxAlignment.Right }"
         >
-          <PhTextAlignRight class="h-4 w-4" />
+          <PhTextAlignRight class="size-4" />
         </ToggleGroupItem>
       </AppTooltip>
     </ToggleGroup>
@@ -64,8 +64,7 @@
     >
       <ToolbarButton
         variant="secondary"
-        size="icon-sm"
-        class="neume-button"
+        class="chrome-button"
         :class="{ selected: element.tempoAlignRight }"
         @click="
           $emit('update', {
@@ -73,7 +72,7 @@
           } as Partial<ModeKeyElement>)
         "
       >
-        <PhAlignRight class="h-4 w-4" weight="duotone" />
+        <PhAlignRight class="size-4" weight="duotone" />
       </ToolbarButton>
     </AppTooltip>
   </Toolbar>
@@ -107,35 +106,35 @@ import ButtonWithMenu from './ButtonWithMenu.vue';
 const tempoMenuOptions: ButtonWithMenuOption[] = [
   {
     neume: TempoSign.VeryQuick,
-    icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url).href,
+    icon: 'agogi-poli-gorgi',
   },
   {
     neume: TempoSign.Quicker,
-    icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
+    icon: 'agogi-gorgoteri',
   },
   {
     neume: TempoSign.Quick,
-    icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
+    icon: 'agogi-gorgi',
   },
   {
     neume: TempoSign.Medium,
-    icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
+    icon: 'agogi-mesi',
   },
   {
     neume: TempoSign.Moderate,
-    icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
+    icon: 'agogi-metria',
   },
   {
     neume: TempoSign.Slow,
-    icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
+    icon: 'agogi-argi',
   },
   {
     neume: TempoSign.Slower,
-    icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
+    icon: 'agogi-argoteri',
   },
   {
     neume: TempoSign.VerySlow,
-    icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
+    icon: 'agogi-poli-argi',
   },
 ];
 
@@ -160,71 +159,3 @@ function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
   return Object.values(TextBoxAlignment).includes(value as TextBoxAlignment);
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-.mode-key-toolbar {
-  flex-wrap: wrap;
-  background-color: var(--color-legacy-chrome-menu-surface);
-
-  --btn-size: 32px;
-}
-
-.neume-button,
-:deep(.menu-container > .neume-button),
-.icon-btn {
-  box-sizing: border-box;
-  height: var(--btn-size);
-  width: var(--btn-size);
-  appearance: auto;
-  background: revert;
-  border: revert;
-  border-radius: revert;
-  box-shadow: revert;
-  font-weight: revert;
-
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-  outline: revert;
-  padding: 0;
-  transition: revert;
-  user-select: none;
-}
-
-.neume-button:hover,
-:deep(.menu-container > .neume-button:hover),
-.icon-btn:hover {
-  background: revert;
-}
-
-.neume-button.selected,
-.neume-button[data-state='on'],
-.neume-button[aria-pressed='true'],
-.icon-btn.selected,
-.icon-btn[data-state='on'],
-.icon-btn[aria-pressed='true'] {
-  background: var(--color-legacy-chrome-selected);
-}
-
-.neume-button > img,
-:deep(.menu-container > .neume-button > img),
-.icon-btn img {
-  height: var(--btn-size);
-  max-width: none;
-  width: var(--btn-size);
-}
-
-.neume-button[aria-disabled='true'],
-.neume-button:disabled,
-:deep(.menu-container > .neume-button:disabled),
-.icon-btn[aria-disabled='true'],
-.icon-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-</style>

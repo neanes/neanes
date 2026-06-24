@@ -756,6 +756,35 @@ export const onlyTakesBottomKlasma = (neume: QuantitativeNeume) =>
 export const onlyTakesTopGorgon = (neume: QuantitativeNeume) =>
   !bottomAllowedGorgonNeumes.includes(neume);
 
+const secondaryGorgonNeumeMap = new Map<GorgonNeume, GorgonNeume>([
+  [GorgonNeume.Gorgon_Top, GorgonNeume.GorgonSecondary],
+  [GorgonNeume.Gorgon_Bottom, GorgonNeume.GorgonSecondary],
+  [GorgonNeume.GorgonDottedLeft, GorgonNeume.GorgonDottedLeftSecondary],
+  [GorgonNeume.GorgonDottedRight, GorgonNeume.GorgonDottedRightSecondary],
+  [GorgonNeume.Digorgon, GorgonNeume.DigorgonSecondary],
+  [GorgonNeume.DigorgonDottedLeft1, GorgonNeume.DigorgonDottedLeft1Secondary],
+  [GorgonNeume.DigorgonDottedLeft2, GorgonNeume.DigorgonDottedLeft2Secondary],
+  [GorgonNeume.DigorgonDottedRight, GorgonNeume.DigorgonDottedRightSecondary],
+  [GorgonNeume.Trigorgon, GorgonNeume.TrigorgonSecondary],
+  [GorgonNeume.TrigorgonDottedLeft1, GorgonNeume.TrigorgonDottedLeft1Secondary],
+  [GorgonNeume.TrigorgonDottedLeft2, GorgonNeume.TrigorgonDottedLeft2Secondary],
+  [GorgonNeume.TrigorgonDottedRight, GorgonNeume.TrigorgonDottedRightSecondary],
+]);
+
+export const getSecondaryGorgonNeume = (neume: GorgonNeume | GorgonNeume[]) => {
+  const neumes = Array.isArray(neume) ? neume : [neume];
+
+  for (const item of neumes) {
+    const secondaryNeume = secondaryGorgonNeumeMap.get(item);
+
+    if (secondaryNeume != null) {
+      return secondaryNeume;
+    }
+  }
+
+  return null;
+};
+
 export const getPrimaryNeume = (neume: QuantitativeNeume) =>
   primaryNeumeMap.get(neume) ?? null;
 

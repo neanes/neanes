@@ -138,7 +138,7 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import type {
-  AnonymousBoxOverlayDiagnostics,
+  BoxOverlayDiagnostics,
   ElementOverlayBox,
   ElementOverlayDiagnostics,
 } from '@/models/LayoutDiagnostics';
@@ -147,6 +147,7 @@ import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
 import {
   areVocalExpressionsEquivalent,
+  getSecondaryGorgonNeume,
   getSecondaryNeume,
   measureBarAboveToLeft,
   onlyTakesBottomKlasma,
@@ -158,7 +159,6 @@ import type {
   MeasureBar,
   MeasureNumber,
   Note,
-  QuantitativeNeume,
   TempoSign,
   Tie,
 } from '@/models/Neumes';
@@ -166,6 +166,7 @@ import {
   Accidental,
   Fthora,
   GorgonNeume,
+  QuantitativeNeume,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
@@ -752,6 +753,8 @@ const showDeveloperPanels = computed(
   () => editorPreferences.value.showDeveloperPanels,
 );
 
+const overlaysEnabled = computed(() => editorPreferences.value.overlaysEnabled);
+
 const printOverlays = computed(() => editorPreferences.value.printOverlays);
 
 const showGuides = computed(() => editorPreferences.value.showGuides);
@@ -762,6 +765,10 @@ const showAdjustmentRatios = computed(
 
 const showAnonymousBoxes = computed(
   () => editorPreferences.value.showAnonymousBoxes,
+);
+
+const showElementBoxes = computed(
+  () => editorPreferences.value.showElementBoxes,
 );
 
 const showInkBoundingBoxes = computed(
@@ -923,6 +930,7 @@ function getDeveloperGlueOverlays(
 
   if (
     !showDeveloperPanels.value ||
+    !overlaysEnabled.value ||
     !showGlueWidths.value ||
     diagnostics == null ||
     line.elements.length === 0
@@ -991,12 +999,13 @@ function getDeveloperGlueOverlays(
   });
 }
 
-function getDeveloperAnonymousBoxOverlays(line: Line, lineIndex: number) {
+function getDeveloperBoxOverlays(line: Line, lineIndex: number) {
   const diagnostics = line.diagnostics;
 
   if (
     !showDeveloperPanels.value ||
-    !showAnonymousBoxes.value ||
+    !overlaysEnabled.value ||
+    (!showAnonymousBoxes.value && !showElementBoxes.value) ||
     diagnostics == null ||
     line.elements.length === 0
   ) {
@@ -1006,9 +1015,19 @@ function getDeveloperAnonymousBoxOverlays(line: Line, lineIndex: number) {
   const height = Math.max(4, score.value.pageSetup.lineHeight * 0.08);
   const top = line.elements[0].y + score.value.pageSetup.lineHeight * 0.2;
 
-  return diagnostics.anonymousBoxOverlays.map((overlay, overlayIndex) => ({
-    key: `${lineIndex}-${overlay.ownerElementId ?? 'anon'}-${overlay.label ?? 'box'}-${overlayIndex}`,
-    kind: getDeveloperAnonymousBoxKind(overlay),
+  const overlays: BoxOverlayDiagnostics[] = [];
+
+  if (showAnonymousBoxes.value) {
+    overlays.push(...diagnostics.anonymousBoxOverlays);
+  }
+
+  if (showElementBoxes.value) {
+    overlays.push(...diagnostics.nonAnonymousBoxOverlays);
+  }
+
+  return overlays.map((overlay, overlayIndex) => ({
+    key: `${lineIndex}-${overlay.anonymous ? 'anon' : 'owned'}-${overlay.ownerElementId ?? 'none'}-${overlay.label ?? 'box'}-${overlayIndex}`,
+    kind: getDeveloperBoxOverlayKind(overlay),
     label: overlay.label,
     style: getDeveloperOverlayStyle(
       getDeveloperGlueOverlayFrame(
@@ -1375,6 +1394,7 @@ const throttled = {
   updateNoteAndSave: throttle(keydownThrottleIntervalMs, updateNoteAndSave),
   setKlasma: throttle(keydownThrottleIntervalMs, setKlasma),
   setGorgon: throttle(keydownThrottleIntervalMs, setGorgon),
+  setSecondaryGorgon: throttle(keydownThrottleIntervalMs, setSecondaryGorgon),
   setFthoraNote: throttle(keydownThrottleIntervalMs, setFthoraNote),
   setFthoraMartyria: throttle(keydownThrottleIntervalMs, setFthoraMartyria),
   setMartyriaTempo: throttle(keydownThrottleIntervalMs, setMartyriaTempo),
@@ -1946,7 +1966,7 @@ function formatDeveloperNumber(value: number) {
   return Number.isFinite(value) ? value.toFixed(2) : String(value);
 }
 
-function getDeveloperAnonymousBoxKind(overlay: AnonymousBoxOverlayDiagnostics) {
+function getDeveloperBoxOverlayKind(overlay: BoxOverlayDiagnostics) {
   switch (overlay.label) {
     case 'line-start-reservation':
       return 'line-start-reservation';
@@ -1955,12 +1975,12 @@ function getDeveloperAnonymousBoxKind(overlay: AnonymousBoxOverlayDiagnostics) {
     case 'lyric-collision':
       return 'lyric-collision';
     default:
-      return 'anonymous';
+      return overlay.anonymous ? 'anonymous' : 'owned';
   }
 }
 
 function getDeveloperOverlayBoxes(element: ScoreElement) {
-  if (!showDeveloperPanels.value) {
+  if (!showDeveloperPanels.value || !overlaysEnabled.value) {
     return [];
   }
 
@@ -2474,10 +2494,12 @@ function syncDeveloperPanelsFromPreferencesOnStartup() {
 
 function updateDeveloperToggle(
   key:
+    | 'overlaysEnabled'
     | 'printOverlays'
     | 'showAdjustmentRatios'
     | 'showAnonymousBoxes'
     | 'showCollisionRegions'
+    | 'showElementBoxes'
     | 'showGuides'
     | 'showGlueWidths'
     | 'showInkBoundingBoxes'
@@ -3829,7 +3851,19 @@ function onKeydownNeume(event: KeyboardEvent) {
 
       if (gorgonMapping != null) {
         handled = true;
-        throttled.setGorgon(noteElement, gorgonMapping.neumes as GorgonNeume[]);
+        const gorgonNeumes = gorgonMapping.neumes as GorgonNeume[];
+        const secondaryGorgonNeume = getSecondaryGorgonNeume(gorgonNeumes);
+
+        if (
+          toolbarInnerNeume.value === 'Secondary' &&
+          noteElement.quantitativeNeume !== QuantitativeNeume.Hyporoe &&
+          getSecondaryNeume(noteElement.quantitativeNeume) != null &&
+          secondaryGorgonNeume != null
+        ) {
+          throttled.setSecondaryGorgon(noteElement, secondaryGorgonNeume);
+        } else {
+          throttled.setGorgon(noteElement, gorgonNeumes);
+        }
       }
 
       const vocalExpressionMapping = neumeKeyboard.findVocalExpressionMapping(
@@ -8463,6 +8497,7 @@ function renderTabLabel(tab: Tab) {
               developerPaneHasMissingDiagnostics
             "
             :toggles="{
+              overlaysEnabled,
               printOverlays,
               showAdjustmentRatios,
               showAnonymousBoxes,
@@ -8471,6 +8506,7 @@ function renderTabLabel(tab: Tab) {
               showGlueWidths,
               showInkBoundingBoxes,
               showLyricBoundingBoxes,
+              showElementBoxes,
               showNeumeBoundingBoxes,
             }"
             @reload-diagnostics="reloadDeveloperPaneDiagnostics"
@@ -8582,6 +8618,7 @@ function renderTabLabel(tab: Tab) {
                       <template
                         v-if="
                           showDeveloperPanels &&
+                          overlaysEnabled &&
                           showGuides &&
                           (!printMode || shouldRenderDeveloperOverlaysInPrint)
                         "
@@ -8600,6 +8637,7 @@ function renderTabLabel(tab: Tab) {
                       <template
                         v-if="
                           showDeveloperPanels &&
+                          overlaysEnabled &&
                           showGlueWidths &&
                           (!printMode || shouldRenderDeveloperOverlaysInPrint)
                         "
@@ -8642,7 +8680,8 @@ function renderTabLabel(tab: Tab) {
                       <template
                         v-if="
                           showDeveloperPanels &&
-                          showAnonymousBoxes &&
+                          overlaysEnabled &&
+                          (showAnonymousBoxes || showElementBoxes) &&
                           (!printMode || shouldRenderDeveloperOverlaysInPrint)
                         "
                       >
@@ -8651,12 +8690,12 @@ function renderTabLabel(tab: Tab) {
                           :key="`developer-anonymous-line-${pageIndex}-${lineIndex}`"
                         >
                           <div
-                            v-for="overlay in getDeveloperAnonymousBoxOverlays(
+                            v-for="overlay in getDeveloperBoxOverlays(
                               line,
                               lineIndex,
                             )"
                             :key="`developer-anonymous-${pageIndex}-${overlay.key}`"
-                            class="developer-anonymous-box-overlay"
+                            class="developer-box-overlay"
                             :class="overlay.kind"
                             :style="overlay.style"
                             :title="overlay.label"
@@ -9382,6 +9421,7 @@ function renderTabLabel(tab: Tab) {
                         <span
                           v-if="
                             showDeveloperPanels &&
+                            overlaysEnabled &&
                             showAdjustmentRatios &&
                             (!printMode ||
                               shouldRenderDeveloperOverlaysInPrint) &&
@@ -10096,24 +10136,29 @@ function renderTabLabel(tab: Tab) {
     );
 }
 
-.developer-anonymous-box-overlay {
+.developer-box-overlay {
   position: absolute;
   pointer-events: none;
   border: 1px solid rgb(190 24 93 / 75%);
   background: rgb(244 114 182 / 16%);
 }
 
-.developer-anonymous-box-overlay.line-start-reservation {
+.developer-box-overlay.owned {
+  border-color: rgb(37 99 235 / 75%);
+  background: rgb(96 165 250 / 16%);
+}
+
+.developer-box-overlay.line-start-reservation {
   border-color: rgb(147 51 234 / 75%);
   background: rgb(192 132 252 / 16%);
 }
 
-.developer-anonymous-box-overlay.martyria-shift {
+.developer-box-overlay.martyria-shift {
   border-color: rgb(217 119 6 / 80%);
   background: rgb(251 191 36 / 16%);
 }
 
-.developer-anonymous-box-overlay.lyric-collision {
+.developer-box-overlay.lyric-collision {
   border-color: rgb(22 163 74 / 80%);
   background: rgb(74 222 128 / 16%);
 }

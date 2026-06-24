@@ -287,6 +287,8 @@ export class SaveService {
 
     pageSetup.leftMargin = p.leftMargin;
     pageSetup.facingPages = p.facingPages || undefined;
+    pageSetup.direction =
+      p.facingPages && p.direction !== 'ltr' ? p.direction : undefined;
     pageSetup.lineHeight = p.lineHeight;
 
     pageSetup.lyricsDefaultColor = p.lyricsDefaultColor;
@@ -379,6 +381,8 @@ export class SaveService {
     }
 
     pageSetup.firstPageNumber = p.firstPageNumber;
+    pageSetup.numerals =
+      p.numerals !== 'westernArabic' ? p.numerals : undefined;
 
     pageSetup.accidentalDefaultColor = p.accidentalDefaultColor;
     pageSetup.accidentalDefaultStrokeWidth = p.accidentalDefaultStrokeWidth;
@@ -975,6 +979,8 @@ export class SaveService {
     pageSetup.leftMargin = p.leftMargin;
     pageSetup.rightMargin = p.rightMargin;
     pageSetup.facingPages = p.facingPages === true;
+    pageSetup.direction =
+      p.facingPages === true && p.direction === 'rtl' ? 'rtl' : 'ltr';
 
     if (p.headerMargin != null) {
       pageSetup.headerMargin = p.headerMargin;
@@ -992,6 +998,8 @@ export class SaveService {
     pageSetup.showFooter = p.showFooter === true;
     pageSetup.richHeaderFooter = p.richHeaderFooter === true;
     pageSetup.firstPageNumber = p.firstPageNumber ?? pageSetup.firstPageNumber;
+    pageSetup.numerals =
+      p.numerals === 'easternArabic' ? 'easternArabic' : 'westernArabic';
 
     if (p.showHeaderHorizontalRule === true) {
       pageSetup.showHeaderHorizontalRule = p.showHeaderHorizontalRule;

@@ -85,6 +85,7 @@ export class PageSetup {
   public leftMargin = Unit.fromInch(1);
   public rightMargin = Unit.fromInch(1);
   public facingPages = false;
+  public direction: 'ltr' | 'rtl' = 'ltr';
 
   public headerMargin = Unit.fromInch(0.5);
   public footerMargin = Unit.fromInch(0.5);
@@ -94,6 +95,7 @@ export class PageSetup {
   public showFooter = false;
   public richHeaderFooter = false;
   public firstPageNumber = 1;
+  public numerals: 'westernArabic' | 'easternArabic' = 'westernArabic';
 
   public showHeaderHorizontalRule = false;
   public excludeHeaderHorizontalRuleFirstPage = false;

@@ -197,7 +197,7 @@
                     <Checkbox
                       id="page-setup-dialog-facing-pages"
                       :model-value="form.facingPages"
-                      @update:model-value="form.facingPages = $event === true"
+                      @update:model-value="updateFacingPages"
                     />
                     <FieldContent>
                       <FieldLabel for="page-setup-dialog-facing-pages">
@@ -208,6 +208,45 @@
                         }}
                       </FieldLabel>
                     </FieldContent>
+                  </Field>
+                  <Field v-if="form.facingPages" orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-page-layout-direction">
+                        {{
+                          $t(($) => $.dialog.pageSetup.direction, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(($) => $.dialog.pageSetup.directionDescription, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <Select v-model="form.direction">
+                      <SelectTrigger
+                        id="page-setup-dialog-page-layout-direction"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem
+                            v-for="[
+                              direction,
+                              labelSelector,
+                            ] in directionOptions"
+                            :key="direction"
+                            :value="direction"
+                          >
+                            {{ $t(labelSelector, { ns: 'dialog' }) }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
                   </Field>
                   <Field
                     v-for="row in marginRows"
@@ -547,6 +586,41 @@
                       :format-options="fraction0FormatOptions"
                       :default-value="1"
                     />
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-page-number-format">
+                        {{
+                          $t(($) => $.dialog.pageSetup.numerals, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(($) => $.dialog.pageSetup.numeralsDescription, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <Select v-model="form.numerals">
+                      <SelectTrigger id="page-setup-dialog-page-number-format">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem
+                            v-for="[numerals, labelSelector] in numeralsOptions"
+                            :key="numerals"
+                            :value="numerals"
+                          >
+                            {{ $t(labelSelector, { ns: 'dialog' }) }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
                   </Field>
 
                   <FieldSet>
@@ -1815,6 +1889,8 @@ type NeumeStrokeKey =
   | 'measureNumberDefaultStrokeWidth'
   | 'noteIndicatorDefaultStrokeWidth'
   | 'tempoDefaultStrokeWidth';
+type PageDirection = PageSetup['direction'];
+type PageNumerals = PageSetup['numerals'];
 
 enum NeumeColorOptions {
   Accidentals = 'Accidentals',
@@ -1989,6 +2065,16 @@ const pageSizeUnitOptions = [
   value: PageSizeUnit;
   labelSelector: DialogSelector;
 }>;
+
+const directionOptions = new Map<PageDirection, DialogSelector>([
+  ['ltr', ($) => $.dialog.pageSetup.leftToRight],
+  ['rtl', ($) => $.dialog.pageSetup.rightToLeft],
+]);
+
+const numeralsOptions = new Map<PageNumerals, DialogSelector>([
+  ['westernArabic', ($) => $.dialog.pageSetup.westernArabicNumerals],
+  ['easternArabic', ($) => $.dialog.pageSetup.easternArabicNumerals],
+]);
 
 const form = ref(new PageSetup());
 const neumeBulkColor = ref('#000000');
@@ -2409,6 +2495,7 @@ const neumeColorRows = [
 }>;
 
 Object.assign(form.value, props.pageSetup);
+normalizeDirection();
 
 function toPositiveDisplay(value: number) {
   return Math.max(0, toDisplay(value, form.value.pageSizeUnit) ?? 0);
@@ -2420,6 +2507,17 @@ function storageValue(value: number | null) {
 
 function setBoolean(key: BooleanPageSetupKey, value: CheckboxValue) {
   form.value[key] = value === true;
+}
+
+function updateFacingPages(value: CheckboxValue) {
+  form.value.facingPages = value === true;
+  normalizeDirection();
+}
+
+function normalizeDirection() {
+  if (!form.value.facingPages) {
+    form.value.direction = 'ltr';
+  }
 }
 
 function updateDefaultFontFamily(
@@ -2589,11 +2687,13 @@ function updatePageSize() {
 }
 
 function updatePageSetup() {
+  normalizeDirection();
   emit('update', form.value);
   open.value = false;
 }
 
 function saveAsDefault() {
+  normalizeDirection();
   const defaults = new PageSetup_v1();
   SaveService.SavePageSetup(defaults, form.value);
 

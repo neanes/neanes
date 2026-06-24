@@ -24,6 +24,7 @@ import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { resolvePageMargins } from '@/utils/PageMargins';
+import { isRightHandPage } from '@/utils/PageNumbering';
 import { Unit } from '@/utils/Unit';
 
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
@@ -169,6 +170,17 @@ export class ByzHtmlExporter {
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
     const firstPageMargins = resolvePageMargins(pageSetup, 1);
     const secondPageMargins = resolvePageMargins(pageSetup, 2);
+    const firstPageIsRight = isRightHandPage(pageSetup, 1);
+    const leftPageMargins = firstPageIsRight
+      ? secondPageMargins
+      : firstPageMargins;
+    const rightPageMargins = firstPageIsRight
+      ? firstPageMargins
+      : secondPageMargins;
+    const pageProgressionCss = this.getPageProgressionCss(
+      pageSetup,
+      firstPageIsRight,
+    );
 
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
     const defaultLyricsFont = resolveFontStyle(
@@ -203,6 +215,7 @@ export class ByzHtmlExporter {
     ).replaceAll('"', "'");
 
     const style = `:root {
+        ${pageProgressionCss.root}
         --byz-neume-font-family: ${pageSetup.neumeDefaultFontFamily};
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
@@ -234,12 +247,15 @@ export class ByzHtmlExporter {
       }
       
       body {
+        ${pageProgressionCss.body}
         margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
           firstPageMargins.right,
         )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
           firstPageMargins.left,
         )}pt;
       }
+
+      ${pageProgressionCss.leadingBlankPage}
 
       @page {
         margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
@@ -255,17 +271,17 @@ export class ByzHtmlExporter {
           ? `
       @page :left {
         margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
-          secondPageMargins.right,
+          leftPageMargins.right,
         )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
-          secondPageMargins.left,
+          leftPageMargins.left,
         )}pt;
       }
 
       @page :right {
         margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
-          firstPageMargins.right,
+          rightPageMargins.right,
         )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
-          firstPageMargins.left,
+          rightPageMargins.left,
         )}pt;
       }`
           : ''
@@ -415,6 +431,42 @@ export class ByzHtmlExporter {
 `;
 
     return style;
+  }
+
+  private getPageProgressionCss(
+    pageSetup: PageSetup,
+    firstPageIsRight: boolean,
+  ) {
+    const rootDeclarations: string[] = [];
+    const bodyDeclarations: string[] = [];
+    let leadingBlankPage = '';
+
+    if (pageSetup.facingPages) {
+      // CSS :left/:right follows page progression, not displayed page numbers.
+      const progression = pageSetup.direction;
+      const defaultFirstPageSide = progression === 'rtl' ? 'left' : 'right';
+      const firstPageSide = firstPageIsRight ? 'right' : 'left';
+
+      if (progression === 'rtl') {
+        rootDeclarations.push('direction: rtl;');
+        bodyDeclarations.push('direction: ltr;');
+      }
+
+      if (firstPageSide !== defaultFirstPageSide) {
+        leadingBlankPage = `body::before {
+        content: '';
+        display: block;
+        break-after: page;
+        page-break-after: always;
+      }`;
+      }
+    }
+
+    return {
+      root: rootDeclarations.join('\n        '),
+      body: bodyDeclarations.join('\n        '),
+      leadingBlankPage,
+    };
   }
 
   exportElements(

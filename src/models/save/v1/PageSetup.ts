@@ -27,6 +27,7 @@ export class PageSetup {
   public leftMargin = Unit.fromInch(1);
   public rightMargin = Unit.fromInch(1);
   public facingPages: boolean | undefined = undefined;
+  public direction: 'ltr' | 'rtl' | undefined = undefined;
 
   public headerMargin = Unit.fromInch(0.5);
   public footerMargin = Unit.fromInch(0.5);
@@ -36,6 +37,7 @@ export class PageSetup {
   public showFooter: boolean | undefined = undefined;
   public richHeaderFooter: boolean | undefined = undefined;
   public firstPageNumber = 1;
+  public numerals: 'westernArabic' | 'easternArabic' | undefined = undefined;
 
   public showHeaderHorizontalRule: boolean | undefined = undefined;
   public excludeHeaderHorizontalRuleFirstPage: boolean | undefined = undefined;

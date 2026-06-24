@@ -1,3 +1,5 @@
+import { isDisplayedPageNumberOdd } from '@/utils/PageNumbering';
+
 import type { Footer } from './Footer';
 import { Footers } from './Footers';
 import type { Header } from './Header';
@@ -24,15 +26,19 @@ export class Score {
     ];
   }
 
-  getHeaderForPage(pageNumber: number) {
+  getHeaderForPage(physicalPageNumber: number) {
     let header: Header;
+    const isOddDisplayedPage = isDisplayedPageNumberOdd(
+      this.pageSetup,
+      physicalPageNumber,
+    );
 
-    if (this.pageSetup.headerDifferentFirstPage && pageNumber === 1) {
+    if (this.pageSetup.headerDifferentFirstPage && physicalPageNumber === 1) {
       header = this.headers.firstPage;
-    } else if (this.pageSetup.headerDifferentOddEven && pageNumber % 2 === 0) {
-      header = this.headers.even;
-    } else if (this.pageSetup.headerDifferentOddEven && pageNumber % 2 !== 0) {
+    } else if (this.pageSetup.headerDifferentOddEven && isOddDisplayedPage) {
       header = this.headers.odd;
+    } else if (this.pageSetup.headerDifferentOddEven) {
+      header = this.headers.even;
     } else {
       header = this.headers.default;
     }
@@ -40,15 +46,19 @@ export class Score {
     return header;
   }
 
-  getFooterForPage(pageNumber: number) {
+  getFooterForPage(physicalPageNumber: number) {
     let footer: Footer;
+    const isOddDisplayedPage = isDisplayedPageNumberOdd(
+      this.pageSetup,
+      physicalPageNumber,
+    );
 
-    if (this.pageSetup.headerDifferentFirstPage && pageNumber === 1) {
+    if (this.pageSetup.headerDifferentFirstPage && physicalPageNumber === 1) {
       footer = this.footers.firstPage;
-    } else if (this.pageSetup.headerDifferentOddEven && pageNumber % 2 === 0) {
-      footer = this.footers.even;
-    } else if (this.pageSetup.headerDifferentOddEven && pageNumber % 2 !== 0) {
+    } else if (this.pageSetup.headerDifferentOddEven && isOddDisplayedPage) {
       footer = this.footers.odd;
+    } else if (this.pageSetup.headerDifferentOddEven) {
+      footer = this.footers.even;
     } else {
       footer = this.footers.default;
     }
@@ -56,18 +66,23 @@ export class Score {
     return footer;
   }
 
-  public shouldShowHeaderOnPage(pageNumber: number): boolean {
+  public shouldShowHeaderOnPage(physicalPageNumber: number): boolean {
     if (this.pageSetup.showHeaderHorizontalRule) {
+      const isOddDisplayedPage = isDisplayedPageNumberOdd(
+        this.pageSetup,
+        physicalPageNumber,
+      );
+
       if (
         (this.pageSetup.headerDifferentFirstPage &&
           this.pageSetup.excludeHeaderHorizontalRuleFirstPage &&
-          pageNumber === 1) ||
+          physicalPageNumber === 1) ||
         (this.pageSetup.headerDifferentOddEven &&
           this.pageSetup.excludeHeaderHorizontalRuleEvenPage &&
-          pageNumber % 2 === 0) ||
+          !isOddDisplayedPage) ||
         (this.pageSetup.headerDifferentOddEven &&
           this.pageSetup.excludeHeaderHorizontalRuleOddPage &&
-          pageNumber % 2 !== 0)
+          isOddDisplayedPage)
       ) {
         return false;
       }
@@ -77,18 +92,23 @@ export class Score {
     return false;
   }
 
-  public shouldShowFooterOnPage(pageNumber: number): boolean {
+  public shouldShowFooterOnPage(physicalPageNumber: number): boolean {
     if (this.pageSetup.showFooterHorizontalRule) {
+      const isOddDisplayedPage = isDisplayedPageNumberOdd(
+        this.pageSetup,
+        physicalPageNumber,
+      );
+
       if (
         (this.pageSetup.headerDifferentFirstPage &&
           this.pageSetup.excludeFooterHorizontalRuleFirstPage &&
-          pageNumber === 1) ||
+          physicalPageNumber === 1) ||
         (this.pageSetup.headerDifferentOddEven &&
           this.pageSetup.excludeFooterHorizontalRuleEvenPage &&
-          pageNumber % 2 === 0) ||
+          !isOddDisplayedPage) ||
         (this.pageSetup.headerDifferentOddEven &&
           this.pageSetup.excludeFooterHorizontalRuleOddPage &&
-          pageNumber % 2 !== 0)
+          isOddDisplayedPage)
       ) {
         return false;
       }

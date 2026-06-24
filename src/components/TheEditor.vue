@@ -208,6 +208,7 @@ import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { isElectron } from '@/utils/isElectron';
 import { resolvePageMargins } from '@/utils/PageMargins';
+import { getDisplayedPageNumber, isRightHandPage } from '@/utils/PageNumbering';
 import type { TokenMetadata } from '@/utils/replaceTokens';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
@@ -2260,9 +2261,20 @@ function shouldShowFooterForPageIndex(pageIndex: number) {
 }
 
 function getTokenMetadata(pageIndex: number): TokenMetadata {
+  const physicalPageNumber = filteredPages.value[pageIndex].physicalPageNumber;
+  const lastPhysicalPageNumber =
+    filteredPages.value[filteredPages.value.length - 1].physicalPageNumber;
+
   return {
-    pageNumber: pageIndex + score.value.pageSetup.firstPageNumber,
-    numberOfPages: pageCount.value + score.value.pageSetup.firstPageNumber - 1,
+    pageNumber: getDisplayedPageNumber(
+      score.value.pageSetup,
+      physicalPageNumber,
+    ),
+    numberOfPages: getDisplayedPageNumber(
+      score.value.pageSetup,
+      lastPhysicalPageNumber,
+    ),
+    numerals: score.value.pageSetup.numerals,
     fileName:
       selectedWorkspace.value.filePath != null
         ? getFileNameFromPath(selectedWorkspace.value.filePath)
@@ -6385,42 +6397,74 @@ function updatePageSetup(pageSetup: PageSetup) {
     updateCommands.push(
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.default.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'default',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.even.elements,
-        element: createRichHeaderFooter('$p', 'Title', ''),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'even',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.firstPage.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'firstPage',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.odd.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'odd',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.default.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'default',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.even.elements,
-        element: createRichHeaderFooter('$p', 'Footer', ''),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'even',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.firstPage.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'firstPage',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.odd.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'odd',
+        ),
         replaceAtIndex: 0,
       }),
     );
@@ -6431,42 +6475,74 @@ function updatePageSetup(pageSetup: PageSetup) {
     updateCommands.push(
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.default.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'default',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.even.elements,
-        element: createRegularHeaderFooter('$p', 'Title', ''),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'even',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.firstPage.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'firstPage',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.odd.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'odd',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.default.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'default',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.even.elements,
-        element: createRegularHeaderFooter('$p', 'Footer', ''),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'even',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.firstPage.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'firstPage',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.odd.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'odd',
+        ),
         replaceAtIndex: 0,
       }),
     );
@@ -6508,6 +6584,39 @@ function createRegularHeaderFooter(
   return textbox;
 }
 
+function getDefaultHeaderFooterPanels(
+  pageSetup: PageSetup,
+  center: string,
+  page: 'default' | 'firstPage' | 'odd' | 'even',
+) {
+  let isRightHandTemplatePage: boolean;
+
+  if (page === 'default' || page === 'firstPage') {
+    isRightHandTemplatePage = isRightHandPage(pageSetup, 1);
+  } else if (!pageSetup.facingPages) {
+    isRightHandTemplatePage = page === 'odd';
+  } else if (pageSetup.direction === 'rtl') {
+    isRightHandTemplatePage = page === 'even';
+  } else {
+    isRightHandTemplatePage = page === 'odd';
+  }
+
+  return {
+    left: isRightHandTemplatePage ? '' : '$p',
+    center,
+    right: isRightHandTemplatePage ? '$p' : '',
+  };
+}
+
+function createRegularHeaderFooterWithPageNumber(
+  pageSetup: PageSetup,
+  center: string,
+  page: 'default' | 'firstPage' | 'odd' | 'even',
+) {
+  const panel = getDefaultHeaderFooterPanels(pageSetup, center, page);
+  return createRegularHeaderFooter(panel.left, panel.center, panel.right);
+}
+
 function createRichHeaderFooter(left: string, center: string, right: string) {
   const textbox = new RichTextBoxElement();
   textbox.multipanel = true;
@@ -6515,6 +6624,15 @@ function createRichHeaderFooter(left: string, center: string, right: string) {
   textbox.contentCenter = `<p style="text-align:center;">${center}</p>`;
   textbox.contentRight = `<p style="text-align:right;">${right}</p>`;
   return textbox;
+}
+
+function createRichHeaderFooterWithPageNumber(
+  pageSetup: PageSetup,
+  center: string,
+  page: 'default' | 'firstPage' | 'odd' | 'even',
+) {
+  const panel = getDefaultHeaderFooterPanels(pageSetup, center, page);
+  return createRichHeaderFooter(panel.left, panel.center, panel.right);
 }
 
 function updateEntryMode(mode: EntryMode) {

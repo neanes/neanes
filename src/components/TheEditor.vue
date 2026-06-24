@@ -900,6 +900,7 @@ function reloadDeveloperPaneDiagnostics() {
 }
 
 function getDeveloperGlueOverlays(
+  page: Page,
   line: Line,
   lineIndex: number,
   pageIndex: number,
@@ -924,10 +925,12 @@ function getDeveloperGlueOverlays(
     score.value.pageSetup.lineHeight * 0.45 -
     stackHeight / 2;
   const preferredTop = stackTop + barHeight + barGap;
+  const resolvedMargins = getResolvedMarginsForPage(page);
 
   return diagnostics.glueOverlays.map((overlay, overlayIndex) => {
     const delta = overlay.actualWidth - overlay.preferredWidth;
     const actualFrame = getDeveloperGlueOverlayFrame(
+      resolvedMargins,
       line,
       overlay.left,
       stackTop,
@@ -935,6 +938,7 @@ function getDeveloperGlueOverlays(
       barHeight,
     );
     const preferredFrame = getDeveloperGlueOverlayFrame(
+      resolvedMargins,
       line,
       overlay.left,
       preferredTop,
@@ -977,7 +981,7 @@ function getDeveloperGlueOverlays(
   });
 }
 
-function getDeveloperBoxOverlays(line: Line, lineIndex: number) {
+function getDeveloperBoxOverlays(page: Page, line: Line, lineIndex: number) {
   const diagnostics = line.diagnostics;
 
   if (
@@ -992,6 +996,7 @@ function getDeveloperBoxOverlays(line: Line, lineIndex: number) {
 
   const height = Math.max(4, score.value.pageSetup.lineHeight * 0.08);
   const top = line.elements[0].y + score.value.pageSetup.lineHeight * 0.2;
+  const resolvedMargins = getResolvedMarginsForPage(page);
 
   const overlays: BoxOverlayDiagnostics[] = [];
 
@@ -1009,6 +1014,7 @@ function getDeveloperBoxOverlays(line: Line, lineIndex: number) {
     label: overlay.label,
     style: getDeveloperOverlayStyle(
       getDeveloperGlueOverlayFrame(
+        resolvedMargins,
         line,
         overlay.left,
         top,
@@ -2024,6 +2030,7 @@ function getDeveloperOverlayStyle(box: {
 }
 
 function getDeveloperGlueOverlayFrame(
+  resolvedMargins: ReturnType<typeof resolvePageMargins>,
   line: Line,
   logicalLeft: number,
   top: number,
@@ -2035,13 +2042,8 @@ function getDeveloperGlueOverlayFrame(
   const normalizedLogicalRight = Math.max(logicalLeft, logicalRight);
   const normalizedWidth = normalizedLogicalRight - normalizedLogicalLeft;
   const physicalLeft = rtl.value
-    ? score.value.pageSetup.pageWidth -
-      score.value.pageSetup.rightMargin -
-      line.indentation -
-      normalizedLogicalRight
-    : score.value.pageSetup.leftMargin +
-      line.indentation +
-      normalizedLogicalLeft;
+    ? resolvedMargins.contentRight - line.indentation - normalizedLogicalRight
+    : resolvedMargins.contentLeft + line.indentation + normalizedLogicalLeft;
 
   return {
     height,
@@ -8586,6 +8588,7 @@ function renderTabLabel(tab: Tab) {
                         >
                           <div
                             v-for="overlay in getDeveloperGlueOverlays(
+                              page,
                               line,
                               lineIndex,
                               pageIndex,
@@ -8629,6 +8632,7 @@ function renderTabLabel(tab: Tab) {
                         >
                           <div
                             v-for="overlay in getDeveloperBoxOverlays(
+                              page,
                               line,
                               lineIndex,
                             )"

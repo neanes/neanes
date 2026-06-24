@@ -2072,8 +2072,8 @@ const directionOptions = new Map<PageDirection, DialogSelector>([
 ]);
 
 const numeralsOptions = new Map<PageNumerals, DialogSelector>([
-  ['westernArabic', ($) => $.dialog.pageSetup.westernArabicNumerals],
-  ['easternArabic', ($) => $.dialog.pageSetup.easternArabicNumerals],
+  ['westernArabic', ($) => $.dialog.pageSetup.westernArabic],
+  ['easternArabic', ($) => $.dialog.pageSetup.easternArabic],
 ]);
 
 const form = ref(new PageSetup());

@@ -31,7 +31,6 @@ export function resolvePageMargins(
 ): ResolvedPageMargins {
   const inside = pageSetup.leftMargin;
   const outside = pageSetup.rightMargin;
-  const isFacingPage = pageSetup.facingPages;
   const isRightPage = isRightHandPage(pageSetup, physicalPageNumber);
   const left = isRightPage ? inside : outside;
   const right = isRightPage ? outside : inside;
@@ -48,6 +47,6 @@ export function resolvePageMargins(
     contentWidth: pageSetup.pageWidth - left - right,
     contentHeight:
       pageSetup.pageHeight - pageSetup.topMargin - pageSetup.bottomMargin,
-    isFacingPage,
+    isFacingPage: pageSetup.facingPages,
   };
 }

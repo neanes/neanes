@@ -569,6 +569,7 @@ import {
 } from '@/models/NeumeI18nMappings';
 import {
   getPrimaryNeume,
+  getSecondaryGorgonNeume,
   getSecondaryNeume,
   getTertiaryNeume,
   kentemataNeumes,
@@ -1116,19 +1117,20 @@ function updateFthora(args: string[]) {
   }
 }
 
-function updateGorgon(args: string | string[]) {
+function updateGorgon(args: GorgonNeume | GorgonNeume[]) {
   if (
     props.innerNeume === NeumeSelection.Secondary &&
     props.element.quantitativeNeume !== QuantitativeNeume.Hyporoe
   ) {
-    if (Array.isArray(args)) {
-      emit('update:secondaryGorgon', GorgonNeume.GorgonSecondary);
-    } else {
-      emit('update:secondaryGorgon', args + props.innerNeume);
+    const secondaryGorgonNeume = getSecondaryGorgonNeume(args);
+
+    if (secondaryGorgonNeume != null) {
+      emit('update:secondaryGorgon', secondaryGorgonNeume);
+      return;
     }
-  } else {
-    emit('update:gorgon', args);
   }
+
+  emit('update:gorgon', args);
 }
 
 function updateAccidental(args: string) {

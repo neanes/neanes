@@ -138,7 +138,7 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import type {
-  AnonymousBoxOverlayDiagnostics,
+  BoxOverlayDiagnostics,
   ElementOverlayBox,
   ElementOverlayDiagnostics,
 } from '@/models/LayoutDiagnostics';
@@ -147,6 +147,7 @@ import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
 import {
   areVocalExpressionsEquivalent,
+  getSecondaryGorgonNeume,
   getSecondaryNeume,
   measureBarAboveToLeft,
   onlyTakesBottomKlasma,
@@ -158,7 +159,6 @@ import type {
   MeasureBar,
   MeasureNumber,
   Note,
-  QuantitativeNeume,
   TempoSign,
   Tie,
 } from '@/models/Neumes';
@@ -167,6 +167,7 @@ import {
   Fthora,
   GorgonNeume,
   NeumeSelection,
+  QuantitativeNeume,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
@@ -208,6 +209,7 @@ import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { isElectron } from '@/utils/isElectron';
 import { resolvePageMargins } from '@/utils/PageMargins';
+import { getDisplayedPageNumber, isRightHandPage } from '@/utils/PageNumbering';
 import type { TokenMetadata } from '@/utils/replaceTokens';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
@@ -762,6 +764,10 @@ const showAnonymousBoxes = computed(
   () => editorPreferences.value.showAnonymousBoxes,
 );
 
+const showElementBoxes = computed(
+  () => editorPreferences.value.showElementBoxes,
+);
+
 const showInkBoundingBoxes = computed(
   () => editorPreferences.value.showInkBoundingBoxes,
 );
@@ -971,13 +977,13 @@ function getDeveloperGlueOverlays(
   });
 }
 
-function getDeveloperAnonymousBoxOverlays(line: Line, lineIndex: number) {
+function getDeveloperBoxOverlays(line: Line, lineIndex: number) {
   const diagnostics = line.diagnostics;
 
   if (
     !showDeveloperPanels.value ||
     !overlaysEnabled.value ||
-    !showAnonymousBoxes.value ||
+    (!showAnonymousBoxes.value && !showElementBoxes.value) ||
     diagnostics == null ||
     line.elements.length === 0
   ) {
@@ -987,9 +993,19 @@ function getDeveloperAnonymousBoxOverlays(line: Line, lineIndex: number) {
   const height = Math.max(4, score.value.pageSetup.lineHeight * 0.08);
   const top = line.elements[0].y + score.value.pageSetup.lineHeight * 0.2;
 
-  return diagnostics.anonymousBoxOverlays.map((overlay, overlayIndex) => ({
-    key: `${lineIndex}-${overlay.ownerElementId ?? 'anon'}-${overlay.label ?? 'box'}-${overlayIndex}`,
-    kind: getDeveloperAnonymousBoxKind(overlay),
+  const overlays: BoxOverlayDiagnostics[] = [];
+
+  if (showAnonymousBoxes.value) {
+    overlays.push(...diagnostics.anonymousBoxOverlays);
+  }
+
+  if (showElementBoxes.value) {
+    overlays.push(...diagnostics.nonAnonymousBoxOverlays);
+  }
+
+  return overlays.map((overlay, overlayIndex) => ({
+    key: `${lineIndex}-${overlay.anonymous ? 'anon' : 'owned'}-${overlay.ownerElementId ?? 'none'}-${overlay.label ?? 'box'}-${overlayIndex}`,
+    kind: getDeveloperBoxOverlayKind(overlay),
     label: overlay.label,
     style: getDeveloperOverlayStyle(
       getDeveloperGlueOverlayFrame(
@@ -1356,6 +1372,7 @@ const throttled = {
   updateNoteAndSave: throttle(keydownThrottleIntervalMs, updateNoteAndSave),
   setKlasma: throttle(keydownThrottleIntervalMs, setKlasma),
   setGorgon: throttle(keydownThrottleIntervalMs, setGorgon),
+  setSecondaryGorgon: throttle(keydownThrottleIntervalMs, setSecondaryGorgon),
   setFthoraNote: throttle(keydownThrottleIntervalMs, setFthoraNote),
   setFthoraMartyria: throttle(keydownThrottleIntervalMs, setFthoraMartyria),
   setMartyriaTempo: throttle(keydownThrottleIntervalMs, setMartyriaTempo),
@@ -1927,7 +1944,7 @@ function formatDeveloperNumber(value: number) {
   return Number.isFinite(value) ? value.toFixed(2) : String(value);
 }
 
-function getDeveloperAnonymousBoxKind(overlay: AnonymousBoxOverlayDiagnostics) {
+function getDeveloperBoxOverlayKind(overlay: BoxOverlayDiagnostics) {
   switch (overlay.label) {
     case 'line-start-reservation':
       return 'line-start-reservation';
@@ -1936,7 +1953,7 @@ function getDeveloperAnonymousBoxKind(overlay: AnonymousBoxOverlayDiagnostics) {
     case 'lyric-collision':
       return 'lyric-collision';
     default:
-      return 'anonymous';
+      return overlay.anonymous ? 'anonymous' : 'owned';
   }
 }
 
@@ -2245,9 +2262,20 @@ function shouldShowFooterForPageIndex(pageIndex: number) {
 }
 
 function getTokenMetadata(pageIndex: number): TokenMetadata {
+  const physicalPageNumber = filteredPages.value[pageIndex].physicalPageNumber;
+  const lastPhysicalPageNumber =
+    filteredPages.value[filteredPages.value.length - 1].physicalPageNumber;
+
   return {
-    pageNumber: pageIndex + score.value.pageSetup.firstPageNumber,
-    numberOfPages: pageCount.value + score.value.pageSetup.firstPageNumber - 1,
+    pageNumber: getDisplayedPageNumber(
+      score.value.pageSetup,
+      physicalPageNumber,
+    ),
+    numberOfPages: getDisplayedPageNumber(
+      score.value.pageSetup,
+      lastPhysicalPageNumber,
+    ),
+    numerals: score.value.pageSetup.numerals,
     fileName:
       selectedWorkspace.value.filePath != null
         ? getFileNameFromPath(selectedWorkspace.value.filePath)
@@ -2539,6 +2567,7 @@ function updateDeveloperToggle(
     | 'showAdjustmentRatios'
     | 'showAnonymousBoxes'
     | 'showCollisionRegions'
+    | 'showElementBoxes'
     | 'showGuides'
     | 'showGlueWidths'
     | 'showInkBoundingBoxes'
@@ -3643,7 +3672,19 @@ function onKeydownNeume(event: KeyboardEvent) {
 
       if (gorgonMapping != null) {
         handled = true;
-        throttled.setGorgon(noteElement, gorgonMapping.neumes as GorgonNeume[]);
+        const gorgonNeumes = gorgonMapping.neumes as GorgonNeume[];
+        const secondaryGorgonNeume = getSecondaryGorgonNeume(gorgonNeumes);
+
+        if (
+          toolbarInnerNeume.value === 'Secondary' &&
+          noteElement.quantitativeNeume !== QuantitativeNeume.Hyporoe &&
+          getSecondaryNeume(noteElement.quantitativeNeume) != null &&
+          secondaryGorgonNeume != null
+        ) {
+          throttled.setSecondaryGorgon(noteElement, secondaryGorgonNeume);
+        } else {
+          throttled.setGorgon(noteElement, gorgonNeumes);
+        }
       }
 
       const vocalExpressionMapping = neumeKeyboard.findVocalExpressionMapping(
@@ -6357,42 +6398,74 @@ function updatePageSetup(pageSetup: PageSetup) {
     updateCommands.push(
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.default.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'default',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.even.elements,
-        element: createRichHeaderFooter('$p', 'Title', ''),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'even',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.firstPage.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'firstPage',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.odd.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'odd',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.default.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'default',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.even.elements,
-        element: createRichHeaderFooter('$p', 'Footer', ''),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'even',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.firstPage.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'firstPage',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.odd.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
+        element: createRichHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'odd',
+        ),
         replaceAtIndex: 0,
       }),
     );
@@ -6403,42 +6476,74 @@ function updatePageSetup(pageSetup: PageSetup) {
     updateCommands.push(
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.default.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'default',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.even.elements,
-        element: createRegularHeaderFooter('$p', 'Title', ''),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'even',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.firstPage.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'firstPage',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.headers.odd.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Title',
+          'odd',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.default.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'default',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.even.elements,
-        element: createRegularHeaderFooter('$p', 'Footer', ''),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'even',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.firstPage.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'firstPage',
+        ),
         replaceAtIndex: 0,
       }),
       scoreElementCommandFactory.create('replace-element-in-collection', {
         collection: score.value.footers.odd.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
+        element: createRegularHeaderFooterWithPageNumber(
+          pageSetup,
+          'Footer',
+          'odd',
+        ),
         replaceAtIndex: 0,
       }),
     );
@@ -6480,6 +6585,39 @@ function createRegularHeaderFooter(
   return textbox;
 }
 
+function getDefaultHeaderFooterPanels(
+  pageSetup: PageSetup,
+  center: string,
+  page: 'default' | 'firstPage' | 'odd' | 'even',
+) {
+  let isRightHandTemplatePage: boolean;
+
+  if (page === 'default' || page === 'firstPage') {
+    isRightHandTemplatePage = isRightHandPage(pageSetup, 1);
+  } else if (!pageSetup.facingPages) {
+    isRightHandTemplatePage = page === 'odd';
+  } else if (pageSetup.direction === 'rtl') {
+    isRightHandTemplatePage = page === 'even';
+  } else {
+    isRightHandTemplatePage = page === 'odd';
+  }
+
+  return {
+    left: isRightHandTemplatePage ? '' : '$p',
+    center,
+    right: isRightHandTemplatePage ? '$p' : '',
+  };
+}
+
+function createRegularHeaderFooterWithPageNumber(
+  pageSetup: PageSetup,
+  center: string,
+  page: 'default' | 'firstPage' | 'odd' | 'even',
+) {
+  const panel = getDefaultHeaderFooterPanels(pageSetup, center, page);
+  return createRegularHeaderFooter(panel.left, panel.center, panel.right);
+}
+
 function createRichHeaderFooter(left: string, center: string, right: string) {
   const textbox = new RichTextBoxElement();
   textbox.multipanel = true;
@@ -6487,6 +6625,15 @@ function createRichHeaderFooter(left: string, center: string, right: string) {
   textbox.contentCenter = `<p style="text-align:center;">${center}</p>`;
   textbox.contentRight = `<p style="text-align:right;">${right}</p>`;
   return textbox;
+}
+
+function createRichHeaderFooterWithPageNumber(
+  pageSetup: PageSetup,
+  center: string,
+  page: 'default' | 'firstPage' | 'odd' | 'even',
+) {
+  const panel = getDefaultHeaderFooterPanels(pageSetup, center, page);
+  return createRichHeaderFooter(panel.left, panel.center, panel.right);
 }
 
 function updateEntryMode(mode: EntryMode) {
@@ -8297,6 +8444,7 @@ function renderTabLabel(tab: Tab) {
               showGlueWidths,
               showInkBoundingBoxes,
               showLyricBoundingBoxes,
+              showElementBoxes,
               showNeumeBoundingBoxes,
             }"
             @reload-diagnostics="reloadDeveloperPaneDiagnostics"
@@ -8471,7 +8619,7 @@ function renderTabLabel(tab: Tab) {
                         v-if="
                           showDeveloperPanels &&
                           overlaysEnabled &&
-                          showAnonymousBoxes &&
+                          (showAnonymousBoxes || showElementBoxes) &&
                           (!printMode || shouldRenderDeveloperOverlaysInPrint)
                         "
                       >
@@ -8480,12 +8628,12 @@ function renderTabLabel(tab: Tab) {
                           :key="`developer-anonymous-line-${pageIndex}-${lineIndex}`"
                         >
                           <div
-                            v-for="overlay in getDeveloperAnonymousBoxOverlays(
+                            v-for="overlay in getDeveloperBoxOverlays(
                               line,
                               lineIndex,
                             )"
                             :key="`developer-anonymous-${pageIndex}-${overlay.key}`"
-                            class="developer-anonymous-box-overlay"
+                            class="developer-box-overlay"
                             :class="overlay.kind"
                             :style="overlay.style"
                             :title="overlay.label"
@@ -9919,24 +10067,29 @@ function renderTabLabel(tab: Tab) {
     );
 }
 
-.developer-anonymous-box-overlay {
+.developer-box-overlay {
   position: absolute;
   pointer-events: none;
   border: 1px solid rgb(190 24 93 / 75%);
   background: rgb(244 114 182 / 16%);
 }
 
-.developer-anonymous-box-overlay.line-start-reservation {
+.developer-box-overlay.owned {
+  border-color: rgb(37 99 235 / 75%);
+  background: rgb(96 165 250 / 16%);
+}
+
+.developer-box-overlay.line-start-reservation {
   border-color: rgb(147 51 234 / 75%);
   background: rgb(192 132 252 / 16%);
 }
 
-.developer-anonymous-box-overlay.martyria-shift {
+.developer-box-overlay.martyria-shift {
   border-color: rgb(217 119 6 / 80%);
   background: rgb(251 191 36 / 16%);
 }
 
-.developer-anonymous-box-overlay.lyric-collision {
+.developer-box-overlay.lyric-collision {
   border-color: rgb(22 163 74 / 80%);
   background: rgb(74 222 128 / 16%);
 }

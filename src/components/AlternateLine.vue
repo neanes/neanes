@@ -19,7 +19,14 @@
 
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useTemplateRef,
+  watch,
+} from 'vue';
 
 import type { AlternateLineElement, NoteElement } from '@/models/Element';
 import { ElementType } from '@/models/Element';
@@ -61,6 +68,20 @@ onMounted(() => {
   elementY.value = props.element.y;
   clampingInterval.value = setInterval(clampToPageBounds, 250);
 });
+
+watch(
+  () => props.element.x,
+  (x) => {
+    elementX.value = x;
+  },
+);
+
+watch(
+  () => props.element.y,
+  (y) => {
+    elementY.value = y;
+  },
+);
 
 onBeforeUnmount(() => {
   document.removeEventListener('mouseup', handleMouseUp);

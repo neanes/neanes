@@ -1,5 +1,7 @@
 import type { PageSetup } from '@/models/PageSetup';
 
+import { isRightHandPage } from './PageNumbering';
+
 export interface ResolvedPageMargins {
   top: number;
   bottom: number;
@@ -25,14 +27,13 @@ export interface ResolvedPageMargins {
 // derived from those margins.
 export function resolvePageMargins(
   pageSetup: PageSetup,
-  pageNumber: number,
+  physicalPageNumber: number,
 ): ResolvedPageMargins {
   const inside = pageSetup.leftMargin;
   const outside = pageSetup.rightMargin;
-  const isFacingPage = pageSetup.facingPages;
-  const isOddPage = pageNumber % 2 !== 0;
-  const left = isFacingPage && !isOddPage ? outside : inside;
-  const right = isFacingPage && !isOddPage ? inside : outside;
+  const isRightPage = isRightHandPage(pageSetup, physicalPageNumber);
+  const left = isRightPage ? inside : outside;
+  const right = isRightPage ? outside : inside;
 
   return {
     top: pageSetup.topMargin,
@@ -46,6 +47,6 @@ export function resolvePageMargins(
     contentWidth: pageSetup.pageWidth - left - right,
     contentHeight:
       pageSetup.pageHeight - pageSetup.topMargin - pageSetup.bottomMargin,
-    isFacingPage,
+    isFacingPage: pageSetup.facingPages,
   };
 }

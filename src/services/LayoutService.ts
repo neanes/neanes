@@ -25,7 +25,7 @@ import { ElementType, EmptyElement, LineBreakType } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
 import type {
-  AnonymousBoxOverlayDiagnostics,
+  BoxOverlayDiagnostics,
   ElementOverlayDiagnostics,
   GlueOverlayDiagnostics,
   LayoutDiagnosticItem,
@@ -2519,13 +2519,14 @@ export class LayoutService {
       lines.push({
         actualContentWidth: naturalContentWidth + stretchUsed - shrinkUsed,
         adjustmentRatio,
-        anonymousBoxOverlays: this.getAnonymousBoxOverlayDiagnosticsForLine(
+        anonymousBoxOverlays: this.getBoxOverlayDiagnosticsForLine(
           items,
           diagnosticItems,
           positions,
           contentStart,
           breakpoint,
           lineIndex,
+          true,
         ),
         glueOverlays: this.getGlueOverlayDiagnosticsForLine(
           items,
@@ -2539,6 +2540,15 @@ export class LayoutService {
           diagnosticItems.slice(contentStart, breakpoint + 1),
         ),
         naturalContentWidth,
+        nonAnonymousBoxOverlays: this.getBoxOverlayDiagnosticsForLine(
+          items,
+          diagnosticItems,
+          positions,
+          contentStart,
+          breakpoint,
+          lineIndex,
+          false,
+        ),
         paragraphIndex,
         paragraphLineIndex: lineIndex,
         recomputedBadness: Number.isFinite(adjustmentRatio)
@@ -2553,13 +2563,14 @@ export class LayoutService {
     return lines;
   }
 
-  private static getAnonymousBoxOverlayDiagnosticsForLine(
+  private static getBoxOverlayDiagnosticsForLine(
     items: InputItem[],
     diagnosticItems: LayoutDiagnosticItem[],
     positions: PositionedItem[],
     contentStart: number,
     breakpoint: number,
     lineIndex: number,
+    anonymous: boolean,
   ) {
     const positionsByItem = new Map<number, PositionedItem>();
 
@@ -2569,7 +2580,7 @@ export class LayoutService {
       }
     }
 
-    const overlays: AnonymousBoxOverlayDiagnostics[] = [];
+    const overlays: BoxOverlayDiagnostics[] = [];
 
     for (let itemIndex = contentStart; itemIndex <= breakpoint; itemIndex++) {
       const item = items[itemIndex];
@@ -2579,13 +2590,14 @@ export class LayoutService {
       if (
         item.type !== 'box' ||
         diagnosticItem?.type !== 'box' ||
-        !diagnosticItem.anonymous ||
+        diagnosticItem.anonymous !== anonymous ||
         position == null
       ) {
         continue;
       }
 
       overlays.push({
+        anonymous: diagnosticItem.anonymous,
         label: diagnosticItem.label,
         left: position.xOffset,
         ownerElementId: diagnosticItem.ownerElementId,
@@ -3333,7 +3345,6 @@ export class LayoutService {
       leftBoxes,
       rightBoxes,
       clearance,
-      true,
     );
   }
 
@@ -3342,20 +3353,11 @@ export class LayoutService {
     leftBoxes: NoteGlyphBox[],
     rightBoxes: NoteGlyphBox[],
     clearance: number,
-    skipPrimaryBasePairs: boolean = false,
   ) {
     let spacing = 0;
 
     for (const leftBox of leftBoxes) {
       for (const rightBox of rightBoxes) {
-        if (
-          skipPrimaryBasePairs &&
-          leftBox.collisionKind === 'base' &&
-          rightBox.collisionKind === 'base'
-        ) {
-          continue;
-        }
-
         if (!this.noteGlyphBoxesVerticallyOverlap(leftBox, rightBox)) {
           continue;
         }

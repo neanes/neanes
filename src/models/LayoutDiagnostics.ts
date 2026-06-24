@@ -60,7 +60,8 @@ export interface GlueOverlayDiagnostics {
   stretch: number;
 }
 
-export interface AnonymousBoxOverlayDiagnostics {
+export interface BoxOverlayDiagnostics {
+  anonymous: boolean;
   label?: string;
   left: number;
   ownerElementId: number | null;
@@ -72,10 +73,11 @@ export interface AnonymousBoxOverlayDiagnostics {
 export interface LineLayoutDiagnostics {
   actualContentWidth: number;
   adjustmentRatio: number;
-  anonymousBoxOverlays: AnonymousBoxOverlayDiagnostics[];
+  anonymousBoxOverlays: BoxOverlayDiagnostics[];
   glueOverlays: GlueOverlayDiagnostics[];
   itemGroups: LayoutDiagnosticItemGroup[];
   naturalContentWidth: number;
+  nonAnonymousBoxOverlays: BoxOverlayDiagnostics[];
   paragraphIndex: number;
   paragraphLineIndex: number;
   recomputedBadness: number | null;

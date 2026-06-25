@@ -6735,8 +6735,12 @@ function zoomToNearestStep(direction: 1 | -1) {
 }
 
 function updateZoomFitMode(mode: ZoomFitMode) {
+  if (zoomFitMode.value === mode) {
+    performZoomToFit();
+    return;
+  }
+
   zoomFitMode.value = mode;
-  performZoomToFit();
 }
 
 function performZoomToFit() {

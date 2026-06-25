@@ -10268,7 +10268,8 @@ function renderTabLabel(tab: Tab) {
   margin-left: auto;
   margin-right: auto;
 
-  background-color: white;
+  background-color: var(--chrome-paper);
+  color: var(--chrome-paper-foreground);
   overflow: clip;
 
   position: relative;
@@ -10443,6 +10444,8 @@ function renderTabLabel(tab: Tab) {
 .page.print .line-break,
 .page.print .page-break-2,
 .page.print .line-break-2,
+.page.print .section-name,
+.page.print .section-name-2,
 .page.print :deep(.handle),
 .page.print :deep(.ck-widget__type-around) {
   display: none !important;

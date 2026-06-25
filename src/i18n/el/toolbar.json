@@ -123,7 +123,13 @@
     "centerOnPage": "Κέντρο στη Σελίδα",
     "offsetYTop": "Άνω Μετατόπιση Y",
     "offsetYBottom": "Κάτω Μετατόπιση Y",
-    "fillWidth": "Πλήρες Πλάτος"
+    "fillWidth": "Πλήρες Πλάτος",
+    "runningMarker": "Δείκτης Κεφαλίδας",
+    "runningMarkerRole": "Ρόλος",
+    "runningMarkerChapter": "Κεφάλαιο",
+    "runningMarkerSection": "Ενότητα",
+    "runningMarkerText": "Κείμενο Παράκαμψης",
+    "runningMarkerTextPlaceholder": "Χρήση ορατού κειμένου"
   },
   "richTextBox": {
     "default": "Προεπιλογή",

@@ -123,7 +123,13 @@
     "centerOnPage": "Tengah di Halaman",
     "offsetYTop": "Offset Y Atas",
     "offsetYBottom": "Offset Y Bawah",
-    "fillWidth": "Isi Lebar"
+    "fillWidth": "Isi Lebar",
+    "runningMarker": "Penanda Berjalan",
+    "runningMarkerRole": "Peran",
+    "runningMarkerChapter": "Bab",
+    "runningMarkerSection": "Bagian",
+    "runningMarkerText": "Teks Pengganti",
+    "runningMarkerTextPlaceholder": "Gunakan teks yang terlihat"
   },
   "richTextBox": {
     "default": "Bawaan",

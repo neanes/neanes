@@ -36,6 +36,7 @@ export class PageSetup {
   public showHeader: boolean | undefined = undefined;
   public showFooter: boolean | undefined = undefined;
   public richHeaderFooter: boolean | undefined = undefined;
+  public useBookStyleChapterOpenings: boolean | undefined = undefined;
   public firstPageNumber = 1;
   public numerals: 'westernArabic' | 'easternArabic' | undefined = undefined;
 

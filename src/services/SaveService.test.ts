@@ -1,13 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
-import { DropCapElement, NoteElement, TextBoxElement } from '@/models/Element';
+import {
+  DropCapElement,
+  NoteElement,
+  RichTextBoxElement,
+  TextBoxElement,
+} from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import {
   DropCapElement as DropCapElement_v1,
   NoteElement as NoteElement_v1,
+  RichTextBoxElement as RichTextBoxElement_v1,
   TextBoxElement as TextBoxElement_v1,
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
+import { Score } from '@/models/Score';
 
 import { SaveService } from './SaveService';
 
@@ -178,5 +185,66 @@ describe('SaveService font styles', () => {
     expect(saved.fontSubfamily).toBe('Semibold');
     expect(saved.bold).toBeUndefined();
     expect(saved.italic).toBeUndefined();
+  });
+
+  it('saves document properties and omits default book-style chapter openings', () => {
+    const score = new Score();
+    const savedPageSetup = new PageSetup_v1();
+    const savedDocumentProperties = {
+      title: undefined as string | undefined,
+      author: undefined as string | undefined,
+    };
+
+    score.documentProperties.title = 'Great Canon';
+    score.documentProperties.author = 'St. Andrew of Crete';
+
+    SaveService.SaveDocumentProperties(
+      savedDocumentProperties,
+      score.documentProperties,
+    );
+    SaveService.SavePageSetup(savedPageSetup, score.pageSetup);
+
+    expect(savedDocumentProperties.title).toBe('Great Canon');
+    expect(savedDocumentProperties.author).toBe('St. Andrew of Crete');
+    expect(savedPageSetup.useBookStyleChapterOpenings).toBeUndefined();
+  });
+
+  it('loads and saves running marker fields and book-style chapter openings', () => {
+    const pageSetup = new PageSetup();
+    const legacyPageSetup = new PageSetup_v1();
+    const textBox = new TextBoxElement();
+    const textBoxSave = new TextBoxElement_v1();
+    const richTextBox = new RichTextBoxElement();
+    const richTextBoxSave = new RichTextBoxElement_v1();
+
+    legacyPageSetup.useBookStyleChapterOpenings = false;
+    textBoxSave.runningMarkerRole = 'chapter';
+    textBoxSave.runningMarkerText = ' Chapter 1 ';
+    richTextBoxSave.runningMarkerRole = 'section';
+    richTextBoxSave.runningMarkerText = ' Section A ';
+
+    SaveService.LoadPageSetup_v1(pageSetup, legacyPageSetup);
+    SaveService.LoadTextBox_v1('1.1', textBox, textBoxSave, pageSetup);
+    SaveService.LoadRichTextBox_v1(richTextBox, richTextBoxSave);
+
+    expect(pageSetup.useBookStyleChapterOpenings).toBe(false);
+    expect(textBox.runningMarkerRole).toBe('chapter');
+    expect(textBox.runningMarkerText).toBe('Chapter 1');
+    expect(richTextBox.runningMarkerRole).toBe('section');
+    expect(richTextBox.runningMarkerText).toBe('Section A');
+
+    const savedTextBox = new TextBoxElement_v1();
+    const savedRichTextBox = new RichTextBoxElement_v1();
+    const savedPageSetup = new PageSetup_v1();
+
+    SaveService.SaveTextBox(savedTextBox, textBox);
+    SaveService.SaveRichTextBox(savedRichTextBox, richTextBox);
+    SaveService.SavePageSetup(savedPageSetup, pageSetup);
+
+    expect(savedTextBox.runningMarkerRole).toBe('chapter');
+    expect(savedTextBox.runningMarkerText).toBe('Chapter 1');
+    expect(savedRichTextBox.runningMarkerRole).toBe('section');
+    expect(savedRichTextBox.runningMarkerText).toBe('Section A');
+    expect(savedPageSetup.useBookStyleChapterOpenings).toBe(false);
   });
 });

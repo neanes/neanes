@@ -94,6 +94,7 @@ export class PageSetup {
   public showHeader = false;
   public showFooter = false;
   public richHeaderFooter = false;
+  public useBookStyleChapterOpenings = true;
   public firstPageNumber = 1;
   public numerals: 'westernArabic' | 'easternArabic' = 'westernArabic';
 

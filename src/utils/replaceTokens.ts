@@ -6,7 +6,14 @@ export interface TokenMetadata {
   fileName: string;
   filePath: string;
   numerals: 'westernArabic' | 'easternArabic';
+  title: string;
+  author: string;
+  chapter: string;
+  section: string;
+  isBookStyleChapterOpening: boolean;
 }
+
+export type TokenScope = 'body' | 'header' | 'footer';
 
 const easternArabicNumerals = [
   '٠',
@@ -41,18 +48,25 @@ export function replaceTokens(
   text: string,
   metadata: TokenMetadata,
   alignment: TextBoxAlignment,
+  scope: TokenScope = 'body',
 ) {
+  const suppressRunningMatter =
+    metadata.isBookStyleChapterOpening &&
+    (scope === 'header' || scope === 'footer');
+
   let pageNumber =
-    metadata.pageNumber > 0
-      ? formatNumber(metadata.pageNumber, metadata.numerals)
-      : '';
+    scope === 'header' && metadata.isBookStyleChapterOpening
+      ? ''
+      : metadata.pageNumber > 0
+        ? formatNumber(metadata.pageNumber, metadata.numerals)
+        : '';
 
   // This is a hack to add in an extra space
   // if the page number is less than the length of
   // the replacement token $p. The extra space helps
   // keep the position of other text in the text box
   // in the correct place.
-  if (pageNumber.length < 2) {
+  if (pageNumber !== '' && pageNumber.length < 2) {
     if (alignment === TextBoxAlignment.Left) {
       pageNumber += ' ';
     } else if (alignment === TextBoxAlignment.Right) {
@@ -61,6 +75,10 @@ export function replaceTokens(
   }
 
   return text
+    .replace(/\$:author/g, suppressRunningMatter ? '' : metadata.author)
+    .replace(/\$:title/g, suppressRunningMatter ? '' : metadata.title)
+    .replace(/\$:chapter/g, suppressRunningMatter ? '' : metadata.chapter)
+    .replace(/\$:section/g, suppressRunningMatter ? '' : metadata.section)
     .replace(/\$p/g, pageNumber)
     .replace(/\$n/g, formatNumber(metadata.numberOfPages, metadata.numerals))
     .replace(/\$f/g, metadata.fileName)

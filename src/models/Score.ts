@@ -7,7 +7,13 @@ import { Headers } from './Headers';
 import { PageSetup } from './PageSetup';
 import { Staff } from './Staff';
 
+export class DocumentProperties {
+  public title: string = '';
+  public author: string = '';
+}
+
 export class Score {
+  public documentProperties: DocumentProperties = new DocumentProperties();
   public pageSetup: PageSetup = new PageSetup();
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
@@ -66,7 +72,7 @@ export class Score {
     return footer;
   }
 
-  public shouldShowHeaderOnPage(physicalPageNumber: number): boolean {
+  public shouldShowHeaderRuleForPageIndex(physicalPageNumber: number): boolean {
     if (this.pageSetup.showHeaderHorizontalRule) {
       const isOddDisplayedPage = isDisplayedPageNumberOdd(
         this.pageSetup,

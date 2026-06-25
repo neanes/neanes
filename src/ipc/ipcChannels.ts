@@ -22,6 +22,7 @@ export enum IpcMainChannels {
   FileMenuExportAsImage = 'FileMenuExportAsImage',
 
   FileMenuPageSetup = 'FileMenuPageSetup',
+  FileMenuDocumentProperties = 'FileMenuDocumentProperties',
 
   FileMenuUndo = 'FileMenuUndo',
   FileMenuRedo = 'FileMenuRedo',

@@ -33,6 +33,12 @@
     "root": "Pilih Kunci Mode",
     "description": "Pilih kunci mode."
   },
+  "documentProperties": {
+    "root": "Properti Dokumen",
+    "description": "Atur metadata dokumen untuk kepala berjalan dan token lainnya.",
+    "title": "Judul",
+    "author": "Penulis"
+  },
   "neumePositioning": {
     "root": "Penempatan Neuma",
     "description": "Sesuaikan offset neuma pendukung dan pratinjau posisinya.",
@@ -113,6 +119,7 @@
     "differentFirstPage": "Halaman Pertama Berbeda",
     "differentOddAndEven": "Halaman Ganjil dan Genap Berbeda",
     "richHeaderFooter": "Gunakan Teks Kaya",
+    "useBookStyleChapterOpenings": "Gunakan halaman pembuka bab bergaya buku",
     "firstPageNumber": "Nomor Halaman Pertama",
     "firstPageNumberDescription": "Nomor halaman pertama dalam partitur. Gunakan $p di header atau footer untuk menyisipkan nomor halaman.",
     "numerals": "Angka",

@@ -122,7 +122,7 @@ import type { RichTextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
-import type { TokenMetadata } from '@/utils/replaceTokens';
+import type { TokenMetadata, TokenScope } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
@@ -156,6 +156,10 @@ const props = defineProps({
   metadata: {
     type: Object as PropType<TokenMetadata>,
     default: undefined,
+  },
+  tokenScope: {
+    type: String as PropType<TokenScope>,
+    default: 'body',
   },
   recalc: {
     type: Boolean,
@@ -246,6 +250,7 @@ const content = computed(() => {
         props.element.content,
         props.metadata,
         TextBoxAlignment.Center,
+        props.tokenScope,
       );
 });
 
@@ -256,6 +261,7 @@ const contentBottom = computed(() => {
         props.element.contentBottom,
         props.metadata,
         TextBoxAlignment.Center,
+        props.tokenScope,
       );
 });
 
@@ -266,6 +272,7 @@ const contentLeft = computed(() => {
         props.element.contentLeft,
         props.metadata,
         TextBoxAlignment.Left,
+        props.tokenScope,
       );
 });
 
@@ -276,6 +283,7 @@ const contentCenter = computed(() => {
         props.element.contentCenter,
         props.metadata,
         TextBoxAlignment.Center,
+        props.tokenScope,
       );
 });
 
@@ -286,6 +294,7 @@ const contentRight = computed(() => {
         props.element.contentRight,
         props.metadata,
         TextBoxAlignment.Right,
+        props.tokenScope,
       );
 });
 

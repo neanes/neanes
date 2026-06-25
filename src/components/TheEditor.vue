@@ -45,6 +45,7 @@ import AboutDialog from '@/components/AboutDialog.vue';
 import AlternateLine from '@/components/AlternateLine.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
+import DocumentPropertiesDialog from '@/components/DocumentPropertiesDialog.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import type {
@@ -174,6 +175,7 @@ import {
 import type { Line, Page } from '@/models/Page';
 import type { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
+import type { DocumentProperties } from '@/models/Score';
 import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import type { WorkspaceLocalStorage } from '@/models/Workspace';
@@ -211,6 +213,7 @@ import { isElectron } from '@/utils/isElectron';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { getDisplayedPageNumber, isRightHandPage } from '@/utils/PageNumbering';
 import type { TokenMetadata } from '@/utils/replaceTokens';
+import { resolveRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
@@ -256,6 +259,9 @@ const scoreElementCommandFactory: CommandFactory<ScoreElement> =
 
 const pageSetupCommandFactory: CommandFactory<PageSetup> =
   new CommandFactory<PageSetup>();
+
+const documentPropertiesCommandFactory: CommandFactory<DocumentProperties> =
+  new CommandFactory<DocumentProperties>();
 
 function createFontLoadDescriptor(
   fontFamily: string,
@@ -387,6 +393,7 @@ const modeKeyDialogIsOpen = ref(false);
 const syllablePositioningDialogIsOpen = ref(false);
 const playbackSettingsDialogIsOpen = ref(false);
 const pageSetupDialogIsOpen = ref(false);
+const documentPropertiesDialogIsOpen = ref(false);
 const editorPreferencesDialogIsOpen = ref(false);
 const aboutDialogIsOpen = ref(false);
 const exportDialogIsOpen = ref(false);
@@ -1319,6 +1326,7 @@ const dialogOpen = computed(() => {
   return (
     modeKeyDialogIsOpen.value ||
     pageSetupDialogIsOpen.value ||
+    documentPropertiesDialogIsOpen.value ||
     playbackSettingsDialogIsOpen.value ||
     syllablePositioningDialogIsOpen.value ||
     editorPreferencesDialogIsOpen.value ||
@@ -1329,6 +1337,10 @@ const dialogOpen = computed(() => {
 const filteredPages = computed(() => {
   return printMode.value ? pages.value.filter((x) => !x.isEmpty) : pages.value;
 });
+
+const runningMarkerPageMetadata = computed(() =>
+  resolveRunningMarkerPageMetadata(filteredPages.value),
+);
 
 provide(
   editorPreferencesKey,
@@ -1527,6 +1539,10 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuSave, onFileMenuSave);
   EventBus.$on(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
   EventBus.$on(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
+  EventBus.$on(
+    IpcMainChannels.FileMenuDocumentProperties,
+    onFileMenuDocumentProperties,
+  );
   EventBus.$on(IpcMainChannels.FileMenuImportOcr, onFileMenuImportOcr);
   EventBus.$on(IpcMainChannels.FileMenuExportAsPdf, onFileMenuExportAsPdf);
   EventBus.$on(IpcMainChannels.FileMenuExportAsHtml, onFileMenuExportAsHtml);
@@ -1619,6 +1635,10 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuSave, onFileMenuSave);
   EventBus.$off(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
   EventBus.$off(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
+  EventBus.$off(
+    IpcMainChannels.FileMenuDocumentProperties,
+    onFileMenuDocumentProperties,
+  );
   EventBus.$off(IpcMainChannels.FileMenuExportAsPdf, onFileMenuExportAsPdf);
   EventBus.$off(IpcMainChannels.FileMenuExportAsHtml, onFileMenuExportAsHtml);
   EventBus.$off(
@@ -2251,13 +2271,16 @@ function getFooterForPageIndex(pageIndex: number) {
   return footer.elements[0] as TextBoxElement | RichTextBoxElement;
 }
 
-function shouldShowHeaderForPageIndex(pageIndex: number) {
+function shouldShowHeaderRuleForPageIndex(pageIndex: number) {
   const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
 
-  return score.value.shouldShowHeaderOnPage(pageNumber);
+  return (
+    score.value.shouldShowHeaderRuleForPageIndex(pageNumber) &&
+    !getTokenMetadata(pageIndex).isBookStyleChapterOpening
+  );
 }
 
-function shouldShowFooterForPageIndex(pageIndex: number) {
+function shouldShowFooterRuleForPageIndex(pageIndex: number) {
   const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
 
   return score.value.shouldShowFooterOnPage(pageNumber);
@@ -2267,6 +2290,7 @@ function getTokenMetadata(pageIndex: number): TokenMetadata {
   const physicalPageNumber = filteredPages.value[pageIndex].physicalPageNumber;
   const lastPhysicalPageNumber =
     filteredPages.value[filteredPages.value.length - 1].physicalPageNumber;
+  const runningMarkers = runningMarkerPageMetadata.value[pageIndex];
 
   return {
     pageNumber: getDisplayedPageNumber(
@@ -2283,6 +2307,13 @@ function getTokenMetadata(pageIndex: number): TokenMetadata {
         ? getFileNameFromPath(selectedWorkspace.value.filePath)
         : selectedWorkspace.value.tempFileName,
     filePath: currentFilePath.value || '',
+    title: score.value.documentProperties.title,
+    author: score.value.documentProperties.author,
+    chapter: runningMarkers?.chapter ?? '',
+    section: runningMarkers?.section ?? '',
+    isBookStyleChapterOpening:
+      score.value.pageSetup.useBookStyleChapterOpenings &&
+      (runningMarkers?.isChapterOpening ?? false),
   };
 }
 
@@ -3307,7 +3338,7 @@ function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
     }
 
     if (
-      shouldShowHeaderForPageIndex(pageIndex) &&
+      score.value.pageSetup.showHeader &&
       getHeaderForPageIndex(pageIndex) === element
     ) {
       components.push(
@@ -3316,7 +3347,7 @@ function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
     }
 
     if (
-      shouldShowFooterForPageIndex(pageIndex) &&
+      score.value.pageSetup.showFooter &&
       getFooterForPageIndex(pageIndex) === element
     ) {
       components.push(
@@ -6561,6 +6592,17 @@ function updatePageSetup(pageSetup: PageSetup) {
   save();
 }
 
+function updateDocumentProperties(documentProperties: DocumentProperties) {
+  commandService.value.execute(
+    documentPropertiesCommandFactory.create('update-properties', {
+      target: score.value.documentProperties,
+      newValues: documentProperties,
+    }),
+  );
+
+  save();
+}
+
 function updatePageSetupUseOptionalDiatonicFthoras(
   useOptionalDiatonicFthoras: boolean,
 ) {
@@ -6974,6 +7016,10 @@ function onFileMenuImportOcr(args: FileMenuImportOcrArgs) {
 
 function onFileMenuPageSetup() {
   pageSetupDialogIsOpen.value = true;
+}
+
+function onFileMenuDocumentProperties() {
+  documentPropertiesDialogIsOpen.value = true;
 }
 
 async function onFileMenuPrint() {
@@ -8669,6 +8715,7 @@ function renderTabLabel(tab: Tab) {
                                 selectedHeaderFooterElement
                             "
                             :metadata="getTokenMetadata(pageIndex)"
+                            token-scope="header"
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
                             :editor-language="ckeditorLanguage"
@@ -8720,6 +8767,7 @@ function renderTabLabel(tab: Tab) {
                                 selectedHeaderFooterElement
                             "
                             :metadata="getTokenMetadata(pageIndex)"
+                            token-scope="header"
                             :page-setup="score.pageSetup"
                             :selected="
                               getHeaderForPageIndex(pageIndex) ==
@@ -8748,7 +8796,7 @@ function renderTabLabel(tab: Tab) {
                           />
                         </template>
                         <div
-                          v-if="shouldShowHeaderForPageIndex(pageIndex)"
+                          v-if="shouldShowHeaderRuleForPageIndex(pageIndex)"
                           class="header-footer-hr"
                           :style="
                             getHeaderHorizontalRuleStyle(
@@ -9374,7 +9422,7 @@ function renderTabLabel(tab: Tab) {
                       </div>
                       <template v-if="score.pageSetup.showFooter">
                         <div
-                          v-if="shouldShowFooterForPageIndex(pageIndex)"
+                          v-if="shouldShowFooterRuleForPageIndex(pageIndex)"
                           class="header-footer-hr"
                           :style="
                             getFooterHorizontalRuleStyle(
@@ -9407,6 +9455,7 @@ function renderTabLabel(tab: Tab) {
                                 selectedHeaderFooterElement
                             "
                             :metadata="getTokenMetadata(pageIndex)"
+                            token-scope="footer"
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
                             :editor-language="ckeditorLanguage"
@@ -9458,6 +9507,7 @@ function renderTabLabel(tab: Tab) {
                                 selectedHeaderFooterElement
                             "
                             :metadata="getTokenMetadata(pageIndex)"
+                            token-scope="footer"
                             :page-setup="score.pageSetup"
                             :selected="
                               getFooterForPageIndex(pageIndex) ==
@@ -9859,6 +9909,12 @@ function renderTabLabel(tab: Tab) {
       :page-setup="score.pageSetup"
       :fonts="fonts"
       @update="updatePageSetup($event)"
+    />
+    <DocumentPropertiesDialog
+      v-if="documentPropertiesDialogIsOpen"
+      v-model:open="documentPropertiesDialogIsOpen"
+      :document-properties="score.documentProperties"
+      @update="updateDocumentProperties($event)"
     />
     <ExportDialog
       v-if="exportDialogIsOpen"

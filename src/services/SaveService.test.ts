@@ -289,12 +289,10 @@ describe('SaveService font styles', () => {
 
     (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
 
-    (
-      score.headers.default.elements[0] as TextBoxElement
-    ).contentCenter = 'Default Header';
-    (
-      score.footers.default.elements[0] as TextBoxElement
-    ).contentCenter = 'Default Footer';
+    (score.headers.default.elements[0] as TextBoxElement).contentCenter =
+      'Default Header';
+    (score.footers.default.elements[0] as TextBoxElement).contentCenter =
+      'Default Footer';
 
     const saved = SaveService.SaveScoreToJson(score);
 

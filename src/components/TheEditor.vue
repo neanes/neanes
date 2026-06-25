@@ -6540,7 +6540,10 @@ type HeaderFooterSlot = {
 };
 type HeaderFooterTemplateElement = TextBoxElement | RichTextBoxElement;
 type HeaderFooterTemplateGroup<T> = Record<HeaderFooterVariant, T>;
-type HeaderFooterTemplates<T> = Record<HeaderFooterKind, HeaderFooterTemplateGroup<T>>;
+type HeaderFooterTemplates<T> = Record<
+  HeaderFooterKind,
+  HeaderFooterTemplateGroup<T>
+>;
 
 const headerFooterVariants: HeaderFooterVariant[] = [
   'default',

@@ -95,6 +95,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import WorkspaceDockLayout from '@/components/WorkspaceDockLayout.vue';
 import { useEditorServices } from '@/composables/useEditorServices';
+import { useResizeObserver } from '@/composables/useResizeObserver';
 import {
   clearActiveEditor,
   focusLastActiveEditorForOwner,
@@ -112,7 +113,9 @@ import type {
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
   FileMenuViewPaneVisibilityArgs,
+  FileMenuViewZoomArgs,
   ShowMessageBoxReplyArgs,
+  WorkspaceZoomState,
 } from '@/ipc/ipcChannels';
 import {
   CloseWorkspacesDisposition,
@@ -176,8 +179,14 @@ import type { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
 import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
-import type { WorkspaceLocalStorage } from '@/models/Workspace';
-import { Workspace } from '@/models/Workspace';
+import type { WorkspaceLocalStorage, ZoomFitMode } from '@/models/Workspace';
+import {
+  formatZoomPercent,
+  MAX_ZOOM,
+  MIN_ZOOM,
+  Workspace,
+  ZOOM_LEVELS,
+} from '@/models/Workspace';
 import {
   createDefaultPaneVisibility,
   type WorkspacePaneId,
@@ -320,6 +329,7 @@ const {
   textSearchService,
 } = useEditorServices();
 const { t } = useTranslation();
+const { observe: observePageBackgroundResize } = useResizeObserver();
 
 const dynamicTemplateRefs = new Map<string, unknown[]>();
 const dynamicTemplateRefSetters = new Map<string, (value: unknown) => void>();
@@ -1166,12 +1176,12 @@ const zoom = computed({
   },
 });
 
-const zoomToFit = computed({
+const zoomFitMode = computed({
   get: () => {
-    return selectedWorkspace.value.zoomToFit;
+    return selectedWorkspace.value.zoomFitMode;
   },
-  set: (value: boolean) => {
-    selectedWorkspace.value.zoomToFit = value;
+  set: (value: ZoomFitMode | null) => {
+    selectedWorkspace.value.zoomFitMode = value;
   },
 });
 
@@ -1394,7 +1404,7 @@ const throttled = {
   setTie: throttle(keydownThrottleIntervalMs, setTie),
   setVocalExpression: throttle(keydownThrottleIntervalMs, setVocalExpression),
   updateMartyria: throttle(keydownThrottleIntervalMs, updateMartyria),
-  onWindowResize: throttle(250, onWindowResize),
+  onEditorViewportResize: throttle(250, onEditorViewportResize),
   onScroll: throttle(250, onScroll),
 };
 const saveDebounced = debounce(250, save);
@@ -1410,6 +1420,36 @@ if (isDevelopment.value) {
 watch(zoom, () => {
   document.documentElement.style.setProperty('--zoom', zoom.value.toString());
 });
+
+watch(
+  () => [
+    zoomFitMode.value,
+    score.value.pageSetup.pageWidth,
+    score.value.pageSetup.pageHeight,
+    score.value.pageSetup.innerPageWidth,
+    score.value.pageSetup.leftMargin,
+    score.value.pageSetup.rightMargin,
+    score.value.pageSetup.facingPages,
+    score.value.pageSetup.direction,
+    score.value.pageSetup.firstPageNumber,
+  ],
+  () => {
+    if (zoomFitMode.value != null) {
+      nextTick(performZoomToFit);
+    }
+  },
+  { flush: 'post' },
+);
+
+watch(
+  () => getCurrentPhysicalPageNumber(),
+  () => {
+    if (zoomFitMode.value === 'text-width') {
+      alignZoomFitScroll(zoomFitMode.value, zoom.value);
+    }
+  },
+  { flush: 'post' },
+);
 
 watch(currentFilePath, () => {
   window.document.title = windowTitle.value;
@@ -1473,6 +1513,18 @@ watch(
   { deep: true, immediate: true },
 );
 
+watch(
+  () =>
+    ({
+      zoom: zoom.value,
+      zoomFitMode: zoomFitMode.value,
+    }) as WorkspaceZoomState,
+  (state) => {
+    EventBus.$emit(IpcRendererChannels.SetWorkspaceZoomState, state);
+  },
+  { immediate: true },
+);
+
 watch(isLyricsManagerOpen, (isOpen, wasOpen) => {
   if (isOpen && !wasOpen) {
     refreshStaffLyrics();
@@ -1514,7 +1566,13 @@ onMounted(() => {
 
   window.addEventListener('keydown', onKeydown);
   window.addEventListener('keyup', onKeyup);
-  window.addEventListener('resize', throttled.onWindowResize);
+  window.addEventListener('resize', throttled.onEditorViewportResize);
+
+  if (pageBackgroundRef.value != null) {
+    observePageBackgroundResize(pageBackgroundRef.value, () => {
+      throttled.onEditorViewportResize();
+    });
+  }
 
   EventBus.$on(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$on(IpcMainChannels.CloseApplication, onCloseApplication);
@@ -1558,6 +1616,7 @@ onMounted(() => {
     IpcMainChannels.FileMenuViewResetPaneLayout,
     onFileMenuViewResetPaneLayout,
   );
+  EventBus.$on(IpcMainChannels.FileMenuViewZoom, onFileMenuViewZoom);
   EventBus.$on(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
   EventBus.$on(IpcMainChannels.OpenAboutDialog, onOpenAboutDialog);
   EventBus.$on(
@@ -1606,7 +1665,7 @@ onBeforeUnmount(() => {
 
   window.removeEventListener('keydown', onKeydown);
   window.removeEventListener('keyup', onKeyup);
-  window.removeEventListener('resize', throttled.onWindowResize);
+  window.removeEventListener('resize', throttled.onEditorViewportResize);
 
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
@@ -1649,6 +1708,7 @@ onBeforeUnmount(() => {
     IpcMainChannels.FileMenuViewResetPaneLayout,
     onFileMenuViewResetPaneLayout,
   );
+  EventBus.$off(IpcMainChannels.FileMenuViewZoom, onFileMenuViewZoom);
   EventBus.$off(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
   EventBus.$off(IpcMainChannels.OpenAboutDialog, onOpenAboutDialog);
   EventBus.$off(
@@ -3413,8 +3473,8 @@ function isEditorShortcutIgnored(event: KeyboardEvent) {
   );
 }
 
-function onWindowResize() {
-  if (zoomToFit.value) {
+function onEditorViewportResize() {
+  if (zoomFitMode.value != null) {
     performZoomToFit();
   }
 }
@@ -6643,28 +6703,49 @@ function updateEntryMode(mode: EntryMode) {
 }
 
 function updateZoom(newZoom: number) {
-  if (newZoom < 0.5 || newZoom > 5) {
+  if (newZoom < MIN_ZOOM || newZoom > MAX_ZOOM) {
     toast.error(
       t(($) => $.toast.editor.rangeOverflow, { ns: 'toast' }),
       {
-        description: t(($) => $.toolbar.main.invalidZoom, { ns: 'toolbar' }),
+        description: t(($) => $.toolbar.main.invalidZoom, {
+          ns: 'toolbar',
+          minZoom: formatZoomPercent(MIN_ZOOM),
+          maxZoom: formatZoomPercent(MAX_ZOOM),
+        }),
       },
     );
   } else {
     zoom.value = newZoom;
-    zoomToFit.value = false;
+    zoomFitMode.value = null;
   }
 }
 
-function updateZoomToFit(value: boolean) {
-  zoomToFit.value = value;
+function zoomToNearestStep(direction: 1 | -1) {
+  const zoomStepEpsilon = 0.000001;
+  const zoomStep =
+    direction > 0
+      ? ZOOM_LEVELS.find((option) => option > zoom.value + zoomStepEpsilon)
+      : [...ZOOM_LEVELS]
+          .reverse()
+          .find((option) => option < zoom.value - zoomStepEpsilon);
 
-  if (value) {
-    performZoomToFit();
+  if (zoomStep != null) {
+    updateZoom(zoomStep);
   }
+}
+
+function updateZoomFitMode(mode: ZoomFitMode) {
+  zoomFitMode.value = mode;
+  performZoomToFit();
 }
 
 function performZoomToFit() {
+  const mode = zoomFitMode.value;
+
+  if (mode == null) {
+    return;
+  }
+
   const pageBackgroundElement = pageBackgroundRef.value;
 
   if (pageBackgroundElement == null) {
@@ -6677,8 +6758,56 @@ function performZoomToFit() {
     pageBackgroundElement.clientWidth -
     parseFloat(computedStyle.paddingLeft) -
     parseFloat(computedStyle.paddingRight);
+  const availableHeight =
+    pageBackgroundElement.clientHeight -
+    parseFloat(computedStyle.paddingTop) -
+    parseFloat(computedStyle.paddingBottom);
 
-  zoom.value = availableWidth / score.value.pageSetup.pageWidth;
+  const pageSetup = score.value.pageSetup;
+  const zoomForPageWidth = availableWidth / pageSetup.pageWidth;
+  const fitZoom =
+    mode === 'text-width'
+      ? availableWidth / pageSetup.innerPageWidth
+      : mode === 'whole-page'
+        ? Math.min(zoomForPageWidth, availableHeight / pageSetup.pageHeight)
+        : zoomForPageWidth;
+
+  if (!Number.isFinite(fitZoom) || fitZoom <= 0) {
+    return;
+  }
+
+  const newZoom = clamp(fitZoom, MIN_ZOOM, MAX_ZOOM);
+  zoom.value = newZoom;
+  alignZoomFitScroll(mode, newZoom);
+}
+
+function getCurrentPhysicalPageNumber() {
+  if (filteredPages.value.length === 0) {
+    return 1;
+  }
+
+  const pageIndex =
+    clamp(currentPageNumber.value, 1, filteredPages.value.length) - 1;
+
+  return filteredPages.value[pageIndex].physicalPageNumber;
+}
+
+function alignZoomFitScroll(mode: ZoomFitMode, zoomValue: number) {
+  nextTick(() => {
+    const pageBackgroundElement = pageBackgroundRef.value;
+
+    if (pageBackgroundElement == null) {
+      return;
+    }
+
+    pageBackgroundElement.scrollLeft =
+      mode === 'text-width'
+        ? resolvePageMargins(
+            score.value.pageSetup,
+            getCurrentPhysicalPageNumber(),
+          ).contentLeft * zoomValue
+        : 0;
+  });
 }
 
 async function playAudio() {
@@ -7857,6 +7986,27 @@ function onFileMenuViewResetPaneLayout() {
   }
 }
 
+function onFileMenuViewZoom(args: FileMenuViewZoomArgs) {
+  if (dialogOpen.value) {
+    return;
+  }
+
+  switch (args.type) {
+    case 'zoom-in':
+      zoomToNearestStep(1);
+      break;
+    case 'zoom-out':
+      zoomToNearestStep(-1);
+      break;
+    case 'actual-size':
+      updateZoom(1);
+      break;
+    case 'fit':
+      updateZoomFitMode(args.mode);
+      break;
+  }
+}
+
 function onFileMenuPreferences() {
   if (!dialogOpen.value) {
     editorPreferencesDialogIsOpen.value = true;
@@ -8309,11 +8459,13 @@ function renderTabLabel(tab: Tab) {
       class="no-print"
       :pane-visibility="paneVisibility"
       :show-developer-panels="showDeveloperPanels"
+      :zoom="zoom"
+      :zoom-fit-mode="zoomFitMode"
     />
     <ToolbarMain
       :entry-mode="entryMode"
       :zoom="zoom"
-      :zoom-to-fit="zoomToFit"
+      :zoom-fit-mode="zoomFitMode"
       :audio-state="audioService.state"
       :audio-options="audioOptions"
       :playback-time="selectedWorkspace.playbackTime"
@@ -8331,7 +8483,7 @@ function renderTabLabel(tab: Tab) {
       @undo="onFileMenuUndo"
       @redo="onFileMenuRedo"
       @update:zoom="updateZoom"
-      @update:zoom-to-fit="updateZoomToFit"
+      @update:zoom-fit-mode="updateZoomFitMode"
       @update:audio-options-speed="updateAudioOptionsSpeed"
       @add-auto-martyria="addAutoMartyria"
       @update:entry-mode="updateEntryMode"

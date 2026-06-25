@@ -40,6 +40,7 @@ import type {
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
   FileMenuViewPaneVisibilityArgs,
+  FileMenuViewZoomArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
@@ -47,6 +48,7 @@ import type {
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxArgs,
+  WorkspaceZoomState,
 } from '../../src/ipc/ipcChannels';
 import {
   CloseWorkspacesDisposition,
@@ -54,6 +56,7 @@ import {
   IpcRendererChannels,
 } from '../../src/ipc/ipcChannels';
 import type { Score } from '../../src/models/save/v1/Score';
+import type { ZoomFitMode } from '../../src/models/Workspace';
 import {
   createDefaultPaneVisibility,
   type WorkspacePaneId,
@@ -126,6 +129,10 @@ let creatingWindow = false;
 let quitting = false;
 let developerPaneEnabled = false;
 let paneMenuVisibility = createDefaultPaneVisibility();
+let zoomMenuState: WorkspaceZoomState = {
+  zoom: 1,
+  zoomFitMode: null,
+};
 
 const paneMenuItemIds: Record<WorkspacePaneId, string> = {
   'common-combos': 'view-pane-common-combos',
@@ -134,6 +141,14 @@ const paneMenuItemIds: Record<WorkspacePaneId, string> = {
   lyrics: 'view-pane-lyrics',
   properties: 'view-pane-properties',
   selection: 'view-pane-selection',
+};
+const zoomMenuItemIds = {
+  actualSize: 'view-zoom-actual-size',
+} as const;
+const zoomFitMenuItemIds: Record<ZoomFitMode, string> = {
+  'page-width': 'view-zoom-page-width',
+  'text-width': 'view-zoom-text-width',
+  'whole-page': 'view-zoom-whole-page',
 };
 let updateAvailable = false;
 let updateDownloaded = false;
@@ -1471,6 +1486,63 @@ function syncPaneMenuItems(visibility: WorkspacePaneVisibility) {
   );
 }
 
+const ZOOM_COMPARISON_EPSILON = 0.000001;
+
+function zoomMenuStateIsActualSize() {
+  return (
+    zoomMenuState.zoomFitMode == null &&
+    Math.abs(zoomMenuState.zoom - 1) <= ZOOM_COMPARISON_EPSILON
+  );
+}
+
+function sendViewZoomCommand(args: FileMenuViewZoomArgs) {
+  win?.webContents.send(IpcMainChannels.FileMenuViewZoom, args);
+}
+
+function syncZoomMenuItems(state: WorkspaceZoomState) {
+  zoomMenuState = {
+    ...state,
+  };
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  const actualSizeItem = menu.getMenuItemById(zoomMenuItemIds.actualSize);
+
+  if (actualSizeItem != null) {
+    actualSizeItem.checked = zoomMenuStateIsActualSize();
+  }
+
+  (Object.entries(zoomFitMenuItemIds) as Array<[ZoomFitMode, string]>).forEach(
+    ([mode, id]) => {
+      const item = menu.getMenuItemById(id);
+
+      if (item != null) {
+        item.checked = zoomMenuState.zoomFitMode === mode;
+      }
+    },
+  );
+}
+
+function createZoomFitMenuItem(
+  mode: ZoomFitMode,
+  label: string,
+): MenuItemConstructorOptions {
+  return {
+    checked: zoomMenuState.zoomFitMode === mode,
+    id: zoomFitMenuItemIds[mode],
+    label,
+    type: 'checkbox',
+    click(menuItem) {
+      menuItem.checked = zoomMenuState.zoomFitMode === mode;
+      sendViewZoomCommand({ type: 'fit', mode });
+    },
+  };
+}
+
 function createPaneMenuItem(
   paneId: WorkspacePaneId,
   label: string,
@@ -1940,6 +2012,59 @@ function createMenu() {
     {
       label: i18next.t(($) => $.menu.view.root),
       submenu: [
+        {
+          label: i18next.t(($) => $.menu.view.zoom.root),
+          submenu: [
+            {
+              label: i18next.t(($) => $.menu.view.zoom.zoomIn),
+              accelerator: 'CmdOrCtrl+Plus',
+              click() {
+                sendViewZoomCommand({ type: 'zoom-in' });
+              },
+            },
+            {
+              label: i18next.t(($) => $.menu.view.zoom.zoomIn),
+              accelerator: 'CmdOrCtrl+=',
+              visible: false,
+              click() {
+                sendViewZoomCommand({ type: 'zoom-in' });
+              },
+            },
+            {
+              label: i18next.t(($) => $.menu.view.zoom.zoomOut),
+              accelerator: 'CmdOrCtrl+-',
+              click() {
+                sendViewZoomCommand({ type: 'zoom-out' });
+              },
+            },
+            { type: 'separator' },
+            {
+              checked: zoomMenuStateIsActualSize(),
+              id: zoomMenuItemIds.actualSize,
+              label: i18next.t(($) => $.menu.view.zoom.actualSize),
+              accelerator: 'CmdOrCtrl+0',
+              type: 'checkbox',
+              click(menuItem) {
+                menuItem.checked = zoomMenuStateIsActualSize();
+                sendViewZoomCommand({ type: 'actual-size' });
+              },
+            },
+            { type: 'separator' },
+            createZoomFitMenuItem(
+              'page-width',
+              i18next.t(($) => $.menu.view.zoom.pageWidth),
+            ),
+            createZoomFitMenuItem(
+              'text-width',
+              i18next.t(($) => $.menu.view.zoom.textWidth),
+            ),
+            createZoomFitMenuItem(
+              'whole-page',
+              i18next.t(($) => $.menu.view.zoom.wholePage),
+            ),
+          ],
+        },
+        { type: 'separator' },
         createPaneMenuItem(
           'neume-selector',
           i18next.t(($) => $.menu.view.neumeSelector),
@@ -1978,10 +2103,6 @@ function createMenu() {
               { role: 'reload' },
               { role: 'forceReload' },
               { role: 'toggleDevTools' },
-              { type: 'separator' },
-              { role: 'resetZoom' },
-              { role: 'zoomIn' },
-              { role: 'zoomOut' },
               { type: 'separator' },
               { role: 'togglefullscreen' },
             ] as MenuItemConstructorOptions[])
@@ -2202,6 +2323,13 @@ ipcMain.on(
   IpcRendererChannels.SetWorkspacePaneVisibility,
   (event, visibility: WorkspacePaneVisibility) => {
     syncPaneMenuItems(visibility);
+  },
+);
+
+ipcMain.on(
+  IpcRendererChannels.SetWorkspaceZoomState,
+  (event, state: WorkspaceZoomState) => {
+    syncZoomMenuItems(state);
   },
 );
 

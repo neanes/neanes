@@ -63,6 +63,15 @@
     "selection": "Selection",
     "lyrics": "Lyrics",
     "showDeveloperPanels": "Show Developer Panels",
+    "zoom": {
+      "root": "Zoom",
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out",
+      "actualSize": "Actual Size",
+      "pageWidth": "Page Width",
+      "textWidth": "Text Width",
+      "wholePage": "Whole Page"
+    },
     "resetLayout": "Reset Layout",
     "generateTestFiles": "Generate Test Files (Debug)"
   },

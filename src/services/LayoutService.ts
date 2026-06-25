@@ -5344,17 +5344,27 @@ export class LayoutService {
           firstElementOnNextLine = pages[pageIndex + 1].lines[0].elements[0];
         }
 
-        const noteElements = line.elements.filter(
-          (x) => x.elementType === ElementType.Note,
-        ) as NoteElement[];
-
         const indexOfFirstNote = line.elements.findIndex(
           (x) => x.elementType === ElementType.Note,
         );
         let lineEndingMayShowLeadingLyricHyphen = false;
 
-        for (const element of noteElements) {
-          const index = line.elements.indexOf(element);
+        for (let index = 0; index < line.elements.length; index++) {
+          const currentElement = line.elements[index];
+
+          if (this.isBreakElement(currentElement)) {
+            melismaSyllables = null;
+            phase2GreekMelismaIsActive = false;
+            previousLineEndingMayShowLeadingLyricHyphen = false;
+            lineEndingMayShowLeadingLyricHyphen = false;
+            continue;
+          }
+
+          if (currentElement.elementType !== ElementType.Note) {
+            continue;
+          }
+
+          const element = currentElement as NoteElement;
 
           // We do not simply check for index === 0 because we also want
           // to include the case where the first letter of the melisma

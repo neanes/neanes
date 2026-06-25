@@ -5870,62 +5870,73 @@ export class LayoutService {
           const nextElement =
             i + 1 < line.elements.length ? line.elements[i + 1] : null;
           const measureBarLeft = this.getVisibleMeasureBarLeft(owner);
-          if (measureBarLeft && previousAnchor) {
-            const previousBounds = this.getMeasureBarAnchorBounds(
-              previousAnchor,
-              pageSetup,
-              measureBarWidthMap,
-              measureBarLeft,
-              'right',
-            );
-            const ownerBounds = this.getMeasureBarAnchorBounds(
-              owner,
-              pageSetup,
-              measureBarWidthMap,
-              measureBarLeft,
-              'left',
-            );
+          if (measureBarLeft) {
             const barWidth = measureBarWidthMap.get(measureBarLeft) ?? 0;
             if (barWidth > 0) {
-              const followsMartyria =
-                previousAnchor.elementType === ElementType.Martyria;
-              const previousClampExtents = followsMartyria
-                ? (this.getMeasureBarCollisionExtentsForAnchor(
-                    previousAnchor,
-                    measureBarLeft,
-                    pageSetup,
-                    measureBarWidthMap,
-                  ) ?? { left: 0, right: barWidth })
-                : { left: 0, right: barWidth };
-              const previousCenterBounds = this.getMeasureBarAnchorBounds(
-                previousAnchor,
-                pageSetup,
-                measureBarWidthMap,
-              );
-              const ownerCenterBounds = this.getMeasureBarAnchorBounds(
-                owner,
-                pageSetup,
-                measureBarWidthMap,
-              );
-              const centeredLeft = followsMartyria
-                ? (previousCenterBounds.right +
-                    ownerCenterBounds.left -
-                    barWidth) /
-                  2
-                : (previousBounds.right + ownerBounds.left - barWidth) / 2;
-              const barSpacing = followsMartyria
-                ? this.getMeasureBarCollisionSpacing(pageSetup)
-                : this.getInlineSpacing(pageSetup);
-              const rightLimit = ownerBounds.left - barWidth - barSpacing;
-              const targetLeft = Math.min(
-                Math.max(
-                  centeredLeft,
-                  previousBounds.right + barSpacing - previousClampExtents.left,
-                ),
-                rightLimit,
-              );
-              owner.computedMeasureBarLeftOffsetX =
-                direction * (targetLeft - owner.x);
+              if (!pageSetup.melkiteRtl && !previousAnchor) {
+                const resolvedMargins = resolvePageMargins(
+                  pageSetup,
+                  page.physicalPageNumber,
+                );
+                owner.computedMeasureBarLeftOffsetX =
+                  resolvedMargins.left - owner.x;
+              } else if (previousAnchor) {
+                const previousBounds = this.getMeasureBarAnchorBounds(
+                  previousAnchor,
+                  pageSetup,
+                  measureBarWidthMap,
+                  measureBarLeft,
+                  'right',
+                );
+                const ownerBounds = this.getMeasureBarAnchorBounds(
+                  owner,
+                  pageSetup,
+                  measureBarWidthMap,
+                  measureBarLeft,
+                  'left',
+                );
+                const followsMartyria =
+                  previousAnchor.elementType === ElementType.Martyria;
+                const previousClampExtents = followsMartyria
+                  ? (this.getMeasureBarCollisionExtentsForAnchor(
+                      previousAnchor,
+                      measureBarLeft,
+                      pageSetup,
+                      measureBarWidthMap,
+                    ) ?? { left: 0, right: barWidth })
+                  : { left: 0, right: barWidth };
+                const previousCenterBounds = this.getMeasureBarAnchorBounds(
+                  previousAnchor,
+                  pageSetup,
+                  measureBarWidthMap,
+                );
+                const ownerCenterBounds = this.getMeasureBarAnchorBounds(
+                  owner,
+                  pageSetup,
+                  measureBarWidthMap,
+                );
+                const centeredLeft = followsMartyria
+                  ? (previousCenterBounds.right +
+                      ownerCenterBounds.left -
+                      barWidth) /
+                    2
+                  : (previousBounds.right + ownerBounds.left - barWidth) / 2;
+                const barSpacing = followsMartyria
+                  ? this.getMeasureBarCollisionSpacing(pageSetup)
+                  : this.getInlineSpacing(pageSetup);
+                const rightLimit = ownerBounds.left - barWidth - barSpacing;
+                const targetLeft = Math.min(
+                  Math.max(
+                    centeredLeft,
+                    previousBounds.right +
+                      barSpacing -
+                      previousClampExtents.left,
+                  ),
+                  rightLimit,
+                );
+                owner.computedMeasureBarLeftOffsetX =
+                  direction * (targetLeft - owner.x);
+              }
             }
           }
 

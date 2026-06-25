@@ -87,9 +87,7 @@ function toPt(value: number) {
   return Number(Unit.toPt(value).toFixed(4));
 }
 
-function getSectionMarkerName(
-  element: LatexExporterElement,
-): string | null {
+function getSectionMarkerName(element: LatexExporterElement): string | null {
   if (
     element.elementType !== ElementType.TextBox &&
     element.elementType !== ElementType.RichTextBox

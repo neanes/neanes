@@ -1021,7 +1021,8 @@ export class SaveService {
           );
       }
 
-      const legacyElement = e as ScoreElement_v1 & LegacySectionNameCompatibility;
+      const legacyElement = e as ScoreElement_v1 &
+        LegacySectionNameCompatibility;
 
       element.id = e.id ?? null;
       element.lineBreak = e.lineBreak === true;

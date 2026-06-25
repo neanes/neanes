@@ -56,6 +56,10 @@ interface IScore {
   version: string;
 }
 
+interface LegacySectionNameCompatibility {
+  sectionName?: string | null;
+}
+
 function readLegacyCssFontStyle(fontStyle: string | null | undefined) {
   const trimmed = fontStyle?.trim();
 
@@ -76,6 +80,12 @@ function normalizeSavedFontSubfamily(fontSubfamily: string | null | undefined) {
   return trimmed == null || trimmed === ''
     ? undefined
     : normalizeFontStyle(trimmed);
+}
+
+function normalizeLegacySectionName(value: string | null | undefined) {
+  const trimmed = value?.trim();
+
+  return trimmed == null || trimmed === '' ? null : trimmed;
 }
 
 function loadFontFaceFromWeightFields({
@@ -279,7 +289,6 @@ export class SaveService {
       }
 
       element.pageBreak = e.pageBreak || undefined;
-      element.sectionName = e.sectionName || undefined;
 
       score.staff.elements.push(element);
     }
@@ -1012,11 +1021,16 @@ export class SaveService {
           );
       }
 
+      const legacyElement = e as ScoreElement_v1 & LegacySectionNameCompatibility;
+
       element.id = e.id ?? null;
       element.lineBreak = e.lineBreak === true;
       element.lineBreakType = e.lineBreakType ?? LineBreakType.Left;
       element.pageBreak = e.pageBreak === true;
-      element.sectionName = e.sectionName ?? null;
+      this.applyLegacySectionNameToRunningMarker(
+        element,
+        normalizeLegacySectionName(legacyElement.sectionName),
+      );
 
       score.staff.elements.push(element);
     }
@@ -1749,6 +1763,29 @@ export class SaveService {
     element.scrollable = e.scrollable === true;
     element.runningMarkerRole = e.runningMarkerRole ?? null;
     element.runningMarkerText = e.runningMarkerText?.trim() || null;
+  }
+
+  private static applyLegacySectionNameToRunningMarker(
+    element: ScoreElement,
+    legacySectionName: string | null,
+  ) {
+    if (legacySectionName == null) {
+      return;
+    }
+
+    if (
+      element.elementType !== ElementType.TextBox &&
+      element.elementType !== ElementType.RichTextBox
+    ) {
+      return;
+    }
+
+    const runningMarkerElement = element as TextBoxElement | RichTextBoxElement;
+    runningMarkerElement.runningMarkerRole = 'section';
+
+    if ((runningMarkerElement.runningMarkerText?.trim() ?? '') === '') {
+      runningMarkerElement.runningMarkerText = legacySectionName;
+    }
   }
 
   public static LoadDocumentProperties_v1(

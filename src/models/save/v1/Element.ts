@@ -46,7 +46,6 @@ export abstract class ScoreElement {
   public lineBreak: boolean | undefined = undefined;
   public pageBreak: boolean | undefined = undefined;
   public lineBreakType: LineBreakType | undefined = undefined;
-  public sectionName: string | undefined = undefined;
 }
 
 export enum AcceptsLyricsOption {

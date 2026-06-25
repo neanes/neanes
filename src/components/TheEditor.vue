@@ -213,7 +213,10 @@ import { isElectron } from '@/utils/isElectron';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { getDisplayedPageNumber, isRightHandPage } from '@/utils/PageNumbering';
 import type { TokenMetadata } from '@/utils/replaceTokens';
-import { resolveRunningMarkerPageMetadata } from '@/utils/runningMarkers';
+import {
+  resolveRunningMarkerPageMetadata,
+  resolveRunningMarkerText,
+} from '@/utils/runningMarkers';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
@@ -2410,7 +2413,7 @@ function getSectionNumberForElementIndex(elementIndex: number) {
     return 1;
   }
 
-  const sectionMarkers = scoreElements.filter(hasSectionName);
+  const sectionMarkers = scoreElements.filter(isSectionMarker);
   if (sectionMarkers.length === 0) {
     return 1;
   }
@@ -2440,7 +2443,7 @@ function getSectionCount() {
     return 1;
   }
 
-  const sectionMarkers = scoreElements.filter(hasSectionName);
+  const sectionMarkers = scoreElements.filter(isSectionMarker);
   if (sectionMarkers.length === 0) {
     return 1;
   }
@@ -2451,8 +2454,21 @@ function getSectionCount() {
   );
 }
 
-function hasSectionName(element: ScoreElement) {
-  return (element.sectionName ?? '').trim().length > 0;
+function isSectionMarker(element: ScoreElement) {
+  if (
+    element.elementType !== ElementType.TextBox &&
+    element.elementType !== ElementType.RichTextBox
+  ) {
+    return false;
+  }
+
+  const runningMarkerElement = element as TextBoxElement | RichTextBoxElement;
+
+  if (runningMarkerElement.runningMarkerRole !== 'section') {
+    return false;
+  }
+
+  return resolveRunningMarkerText(runningMarkerElement) != null;
 }
 
 function setSelectionRange(element: ScoreElement) {
@@ -3162,26 +3178,6 @@ function toggleInspectorLineBreak(lineBreakType: LineBreakType | null) {
         lineBreak,
         pageBreak: false,
         lineBreakType,
-      },
-    }),
-  );
-
-  save();
-}
-
-function updateScoreElementSectionName(
-  element: ScoreElement,
-  sectionName: string | null,
-) {
-  if (sectionName != null && sectionName.trim() == '') {
-    sectionName = null;
-  }
-
-  commandService.value.execute(
-    scoreElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: {
-        sectionName,
       },
     }),
   );
@@ -8601,10 +8597,6 @@ function renderTabLabel(tab: Tab) {
             @toggle-page-break="toggleInspectorPageBreak"
             @toggle-line-break="toggleInspectorLineBreak"
             @delete-selected-element="deleteInspectorSelectionElement"
-            @update:score-element-section-name="
-              (element, sectionName) =>
-                updateScoreElementSectionName(element, sectionName)
-            "
           />
         </template>
 
@@ -8979,14 +8971,6 @@ function renderTabLabel(tab: Tab) {
                               "
                               class="neume-box"
                             >
-                              <span
-                                v-if="
-                                  element.sectionName != '' &&
-                                  element.sectionName != null
-                                "
-                                class="section-name"
-                                >§</span
-                              >
                               <span v-if="element.pageBreak" class="page-break"
                                 ><PhFile
                               /></span>
@@ -9251,14 +9235,6 @@ function renderTabLabel(tab: Tab) {
                           </template>
                           <template v-else-if="isMartyriaElement(element)">
                             <div class="neume-box">
-                              <span
-                                v-if="
-                                  element.sectionName != '' &&
-                                  element.sectionName != null
-                                "
-                                class="section-name"
-                                >§</span
-                              >
                               <span v-if="element.pageBreak" class="page-break">
                                 <PhFile
                               /></span>
@@ -9294,14 +9270,6 @@ function renderTabLabel(tab: Tab) {
                               "
                               class="neume-box"
                             >
-                              <span
-                                v-if="
-                                  element.sectionName != '' &&
-                                  element.sectionName != null
-                                "
-                                class="section-name"
-                                >§</span
-                              >
                               <span v-if="element.pageBreak" class="page-break">
                                 <PhFile
                               /></span>
@@ -9328,14 +9296,6 @@ function renderTabLabel(tab: Tab) {
                               "
                               class="neume-box"
                             >
-                              <span
-                                v-if="
-                                  element.sectionName != '' &&
-                                  element.sectionName != null
-                                "
-                                class="section-name"
-                                >§</span
-                              >
                               <span v-if="element.pageBreak" class="page-break">
                                 <PhFile
                               /></span>
@@ -9354,14 +9314,6 @@ function renderTabLabel(tab: Tab) {
                             </div>
                           </template>
                           <template v-else-if="isTextBoxElement(element)">
-                            <span
-                              v-if="
-                                element.sectionName != '' &&
-                                element.sectionName != null
-                              "
-                              class="section-name-2"
-                              >§</span
-                            >
                             <span v-if="element.pageBreak" class="page-break-2"
                               ><PhFile
                             /></span>
@@ -9392,14 +9344,6 @@ function renderTabLabel(tab: Tab) {
                             />
                           </template>
                           <template v-else-if="isRichTextBoxElement(element)">
-                            <span
-                              v-if="
-                                element.sectionName != '' &&
-                                element.sectionName != null
-                              "
-                              class="section-name-2"
-                              >§</span
-                            >
                             <span v-if="element.pageBreak" class="page-break-2"
                               ><PhFile
                             /></span>
@@ -9437,14 +9381,6 @@ function renderTabLabel(tab: Tab) {
                             />
                           </template>
                           <template v-else-if="isModeKeyElement(element)">
-                            <span
-                              v-if="
-                                element.sectionName != '' &&
-                                element.sectionName != null
-                              "
-                              class="section-name-2"
-                              >§</span
-                            >
                             <span v-if="element.pageBreak" class="page-break-2"
                               ><PhFile
                             /></span>
@@ -9469,14 +9405,6 @@ function renderTabLabel(tab: Tab) {
                             />
                           </template>
                           <template v-else-if="isDropCapElement(element)">
-                            <span
-                              v-if="
-                                element.sectionName != '' &&
-                                element.sectionName != null
-                              "
-                              class="section-name"
-                              >§</span
-                            >
                             <span v-if="element.pageBreak" class="page-break"
                               ><PhFile
                             /></span>
@@ -10607,22 +10535,6 @@ function renderTabLabel(tab: Tab) {
   width: calc(16px * var(--zoom, 1));
 }
 
-.section-name {
-  position: absolute;
-  top: calc(-20px * var(--zoom, 1));
-  height: 100%;
-  font-weight: bold;
-}
-
-.section-name-2 {
-  position: absolute;
-  font-weight: bold;
-  left: calc(-22px * var(--zoom, 1));
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
 .print-only {
   display: none;
 }
@@ -10650,8 +10562,6 @@ function renderTabLabel(tab: Tab) {
 .page.print .line-break,
 .page.print .page-break-2,
 .page.print .line-break-2,
-.page.print .section-name,
-.page.print .section-name-2,
 .page.print :deep(.handle),
 .page.print :deep(.ck-widget__type-around) {
   display: none !important;
@@ -10744,8 +10654,6 @@ function renderTabLabel(tab: Tab) {
   .workspace-tab-container,
   .workspace-tab-new-button,
   .contextual-toolbar-panel,
-  .section-name,
-  .section-name-2,
   .page-break,
   .line-break,
   .page-break-2,

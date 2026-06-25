@@ -67,7 +67,6 @@ export abstract class ScoreElement {
   public lineBreak: boolean = false;
   public lineBreakType: LineBreakType | null = null;
   public pageBreak: boolean = false;
-  public sectionName: string | null = null;
 
   public x: number = 0;
   public y: number = 0;

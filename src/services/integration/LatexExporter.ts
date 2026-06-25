@@ -3,6 +3,7 @@ import type {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RichTextBoxElement,
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
@@ -13,6 +14,7 @@ import type { Page } from '@/models/Page';
 import type { PageSetup } from '@/models/PageSetup';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
+import { resolveRunningMarkerText } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from '../FontService';
@@ -83,6 +85,25 @@ function convertFontName(fontFamily: string) {
 
 function toPt(value: number) {
   return Number(Unit.toPt(value).toFixed(4));
+}
+
+function getSectionMarkerName(
+  element: LatexExporterElement,
+): string | null {
+  if (
+    element.elementType !== ElementType.TextBox &&
+    element.elementType !== ElementType.RichTextBox
+  ) {
+    return null;
+  }
+
+  const runningMarkerElement = element as TextBoxElement | RichTextBoxElement;
+
+  if (runningMarkerElement.runningMarkerRole !== 'section') {
+    return null;
+  }
+
+  return resolveRunningMarkerText(runningMarkerElement);
 }
 
 export class LatexExporter {
@@ -229,8 +250,8 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
       sections: [],
     };
 
-    // Create the default section
     let section: LatexSection = { default: true, lines: [] };
+    let pendingSectionName: string | null = null;
 
     for (const page of pages) {
       const resolvedMargins = resolvePageMargins(
@@ -238,17 +259,49 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
         page.physicalPageNumber,
       );
       for (const line of page.lines) {
-        const resultLine: LatexLine = { elements: [] };
+        let resultLine: LatexLine = { elements: [] };
+
+        const pushCurrentLine = () => {
+          if (resultLine.elements.length > 0) {
+            section.lines.push(resultLine);
+            resultLine = { elements: [] };
+          }
+        };
+
+        const startSection = (name: string) => {
+          pushCurrentLine();
+
+          if (section.lines.length > 0) {
+            result.sections.push(section);
+          }
+
+          section = { name, lines: [] };
+        };
+
+        const pushExportedElement = (latexElement: LatexElement) => {
+          if (pendingSectionName != null) {
+            startSection(pendingSectionName);
+            pendingSectionName = null;
+          }
+
+          resultLine.elements.push(latexElement);
+        };
 
         for (const element of line.elements) {
-          // Check for the start of a new section
-          if (element.sectionName != null) {
-            // If the previous section has lines, add it to the results
-            if (section.lines.length > 0) {
-              result.sections.push(section);
-            }
+          const sectionMarkerName = getSectionMarkerName(
+            element as LatexExporterElement,
+          );
+          const emitsTextBox =
+            element.elementType === ElementType.TextBox &&
+            options.includeTextBoxes;
 
-            section = { name: element.sectionName, lines: [] };
+          if (sectionMarkerName != null) {
+            if (emitsTextBox) {
+              startSection(sectionMarkerName);
+              pendingSectionName = null;
+            } else {
+              pendingSectionName = sectionMarkerName;
+            }
           }
 
           if (element.elementType === ElementType.Note) {
@@ -403,11 +456,11 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   : undefined;
             }
 
-            resultLine.elements.push(noteInfo);
+            pushExportedElement(noteInfo);
           } else if (element.elementType === ElementType.Martyria) {
             const martyria = element as MartyriaElement;
 
-            resultLine.elements.push({
+            pushExportedElement({
               type: 'martyria',
               x: toPt(element.x - resolvedMargins.left),
               width: toPt(martyria.neumeWidth),
@@ -426,7 +479,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             } as LatexMartyriaElement);
           } else if (element.elementType === ElementType.Tempo) {
             const tempo = element as TempoElement;
-            resultLine.elements.push({
+            pushExportedElement({
               type: 'tempo',
               x: toPt(element.x - resolvedMargins.left),
               width: toPt(tempo.neumeWidth),
@@ -450,7 +503,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 2;
             }
 
-            resultLine.elements.push({
+            pushExportedElement({
               type: 'dropcap',
               x: toPt(element.x - resolvedMargins.left),
               width: toPt(dropCap.contentWidth),
@@ -488,7 +541,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             options.includeModeKeys
           ) {
             const modeKey = element as ModeKeyElement;
-            resultLine.elements.push({
+            pushExportedElement({
               type: 'modekey',
               width: toPt(modeKey.width),
               height: toPt(modeKey.height),
@@ -560,7 +613,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               ? pageSetup.lyricsDefaultColor
               : pageSetup.textBoxDefaultColor;
 
-            resultLine.elements.push({
+            pushExportedElement({
               type: 'textbox',
               x: toPt(element.x - resolvedMargins.left),
               width: toPt(textBox.width),
@@ -611,9 +664,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           }
         }
 
-        if (resultLine.elements.length > 0) {
-          section.lines.push(resultLine);
-        }
+        pushCurrentLine();
       }
     }
 
@@ -700,6 +751,15 @@ interface LatexOffset {
   x: number;
   y: number;
 }
+
+type LatexExporterElement =
+  | NoteElement
+  | MartyriaElement
+  | TempoElement
+  | DropCapElement
+  | ModeKeyElement
+  | TextBoxElement
+  | RichTextBoxElement;
 
 type LatexElement =
   | LatexNoteElement

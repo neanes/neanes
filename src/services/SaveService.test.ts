@@ -187,7 +187,7 @@ describe('SaveService font styles', () => {
     expect(saved.italic).toBeUndefined();
   });
 
-  it('saves document properties and omits default book-style chapter openings', () => {
+  it('saves document properties and omits default chapter-opening headers/footers flag', () => {
     const score = new Score();
     const savedPageSetup = new PageSetup_v1();
     const savedDocumentProperties = {
@@ -206,10 +206,10 @@ describe('SaveService font styles', () => {
 
     expect(savedDocumentProperties.title).toBe('Great Canon');
     expect(savedDocumentProperties.author).toBe('St. Andrew of Crete');
-    expect(savedPageSetup.useBookStyleChapterOpenings).toBeUndefined();
+    expect(savedPageSetup.headerFooterDifferentChapterOpening).toBeUndefined();
   });
 
-  it('loads and saves running marker fields and book-style chapter openings', () => {
+  it('loads and saves running marker fields and chapter-opening headers/footers flag', () => {
     const pageSetup = new PageSetup();
     const legacyPageSetup = new PageSetup_v1();
     const textBox = new TextBoxElement();
@@ -217,7 +217,7 @@ describe('SaveService font styles', () => {
     const richTextBox = new RichTextBoxElement();
     const richTextBoxSave = new RichTextBoxElement_v1();
 
-    legacyPageSetup.useBookStyleChapterOpenings = false;
+    legacyPageSetup.headerFooterDifferentChapterOpening = false;
     textBoxSave.runningMarkerRole = 'chapter';
     textBoxSave.runningMarkerText = ' Chapter 1 ';
     richTextBoxSave.runningMarkerRole = 'section';
@@ -227,7 +227,7 @@ describe('SaveService font styles', () => {
     SaveService.LoadTextBox_v1('1.1', textBox, textBoxSave, pageSetup);
     SaveService.LoadRichTextBox_v1(richTextBox, richTextBoxSave);
 
-    expect(pageSetup.useBookStyleChapterOpenings).toBe(false);
+    expect(pageSetup.headerFooterDifferentChapterOpening).toBe(false);
     expect(textBox.runningMarkerRole).toBe('chapter');
     expect(textBox.runningMarkerText).toBe('Chapter 1');
     expect(richTextBox.runningMarkerRole).toBe('section');
@@ -245,6 +245,71 @@ describe('SaveService font styles', () => {
     expect(savedTextBox.runningMarkerText).toBe('Chapter 1');
     expect(savedRichTextBox.runningMarkerRole).toBe('section');
     expect(savedRichTextBox.runningMarkerText).toBe('Section A');
-    expect(savedPageSetup.useBookStyleChapterOpenings).toBe(false);
+    expect(savedPageSetup.headerFooterDifferentChapterOpening).toBe(false);
+  });
+
+  it('loads and saves chapter-opening header and footer variants', () => {
+    const score = new Score();
+    const chapterHeader = new TextBoxElement();
+    const chapterFooter = new RichTextBoxElement();
+
+    (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+
+    chapterHeader.multipanel = true;
+    chapterHeader.contentCenter = '$:chapter';
+    chapterFooter.multipanel = true;
+    chapterFooter.contentCenter = '<p style="text-align:center;">$p</p>';
+
+    score.headers.chapterOpening.elements[0] = chapterHeader;
+    score.footers.chapterOpening.elements[0] = chapterFooter;
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(
+      (saved.headers.chapterOpening.elements[0] as TextBoxElement_v1)
+        .contentCenter,
+    ).toBe('$:chapter');
+    expect(
+      (saved.footers.chapterOpening.elements[0] as RichTextBoxElement_v1)
+        .contentCenter,
+    ).toBe('<p style="text-align:center;">$p</p>');
+    expect(
+      (loaded.headers.chapterOpening.elements[0] as TextBoxElement)
+        .contentCenter,
+    ).toBe('$:chapter');
+    expect(
+      (loaded.footers.chapterOpening.elements[0] as RichTextBoxElement)
+        .contentCenter,
+    ).toBe('<p style="text-align:center;">$p</p>');
+  });
+
+  it('falls back to default header/footer when chapter-opening save data has no element', () => {
+    const score = new Score();
+
+    (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+
+    (
+      score.headers.default.elements[0] as TextBoxElement
+    ).contentCenter = 'Default Header';
+    (
+      score.footers.default.elements[0] as TextBoxElement
+    ).contentCenter = 'Default Footer';
+
+    const saved = SaveService.SaveScoreToJson(score);
+
+    saved.headers.chapterOpening.elements = [];
+    saved.footers.chapterOpening.elements = [];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(
+      (loaded.headers.chapterOpening.elements[0] as TextBoxElement)
+        .contentCenter,
+    ).toBe('Default Header');
+    expect(
+      (loaded.footers.chapterOpening.elements[0] as TextBoxElement)
+        .contentCenter,
+    ).toBe('Default Footer');
   });
 });

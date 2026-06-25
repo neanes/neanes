@@ -91,10 +91,10 @@ export class PageSetup {
   public footerMargin = Unit.fromInch(0.5);
   public headerDifferentFirstPage = false;
   public headerDifferentOddEven = false;
+  public headerFooterDifferentChapterOpening = true;
   public showHeader = false;
   public showFooter = false;
   public richHeaderFooter = false;
-  public useBookStyleChapterOpenings = true;
   public firstPageNumber = 1;
   public numerals: 'westernArabic' | 'easternArabic' = 'westernArabic';
 

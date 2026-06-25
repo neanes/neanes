@@ -208,11 +208,13 @@ export class SaveService {
     this.SaveLyricSetup(score.staff.lyrics, s.staff.lyrics);
 
     this.SaveHeader(score.headers.default, s.headers.default);
+    this.SaveHeader(score.headers.chapterOpening, s.headers.chapterOpening);
     this.SaveHeader(score.headers.even, s.headers.even);
     this.SaveHeader(score.headers.odd, s.headers.odd);
     this.SaveHeader(score.headers.firstPage, s.headers.firstPage);
 
     this.SaveFooter(score.footers.default, s.footers.default);
+    this.SaveFooter(score.footers.chapterOpening, s.footers.chapterOpening);
     this.SaveFooter(score.footers.even, s.footers.even);
     this.SaveFooter(score.footers.odd, s.footers.odd);
     this.SaveFooter(score.footers.firstPage, s.footers.firstPage);
@@ -357,12 +359,12 @@ export class SaveService {
     pageSetup.headerDifferentFirstPage =
       p.headerDifferentFirstPage || undefined;
     pageSetup.headerDifferentOddEven = p.headerDifferentOddEven || undefined;
+    pageSetup.headerFooterDifferentChapterOpening =
+      p.headerFooterDifferentChapterOpening === false ? false : undefined;
 
     pageSetup.showHeader = p.showHeader || undefined;
     pageSetup.showFooter = p.showFooter || undefined;
     pageSetup.richHeaderFooter = p.richHeaderFooter || undefined;
-    pageSetup.useBookStyleChapterOpenings =
-      p.useBookStyleChapterOpenings === false ? false : undefined;
 
     if (p.showHeaderHorizontalRule) {
       pageSetup.showHeaderHorizontalRule = p.showHeaderHorizontalRule;
@@ -866,10 +868,21 @@ export class SaveService {
     );
 
     if (s.headers) {
+      const savedChapterOpeningHeader =
+        s.headers.chapterOpening?.elements[0] != null
+          ? s.headers.chapterOpening
+          : s.headers.default;
+
       this.LoadHeader_v1(
         s.version,
         score.headers.default,
         s.headers.default,
+        score.pageSetup,
+      );
+      this.LoadHeader_v1(
+        s.version,
+        score.headers.chapterOpening,
+        savedChapterOpeningHeader,
         score.pageSetup,
       );
       this.LoadHeader_v1(
@@ -893,10 +906,21 @@ export class SaveService {
     }
 
     if (s.footers) {
+      const savedChapterOpeningFooter =
+        s.footers.chapterOpening?.elements[0] != null
+          ? s.footers.chapterOpening
+          : s.footers.default;
+
       this.LoadFooter_v1(
         s.version,
         score.footers.default,
         s.footers.default,
+        score.pageSetup,
+      );
+      this.LoadFooter_v1(
+        s.version,
+        score.footers.chapterOpening,
+        savedChapterOpeningFooter,
         score.pageSetup,
       );
       this.LoadFooter_v1(
@@ -1028,11 +1052,11 @@ export class SaveService {
 
     pageSetup.headerDifferentFirstPage = p.headerDifferentFirstPage === true;
     pageSetup.headerDifferentOddEven = p.headerDifferentOddEven === true;
+    pageSetup.headerFooterDifferentChapterOpening =
+      p.headerFooterDifferentChapterOpening !== false;
     pageSetup.showHeader = p.showHeader === true;
     pageSetup.showFooter = p.showFooter === true;
     pageSetup.richHeaderFooter = p.richHeaderFooter === true;
-    pageSetup.useBookStyleChapterOpenings =
-      p.useBookStyleChapterOpenings !== false;
     pageSetup.firstPageNumber = p.firstPageNumber ?? pageSetup.firstPageNumber;
     pageSetup.numerals =
       p.numerals === 'easternArabic' ? 'easternArabic' : 'westernArabic';

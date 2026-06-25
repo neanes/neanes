@@ -10,7 +10,6 @@ export interface TokenMetadata {
   author: string;
   chapter: string;
   section: string;
-  isBookStyleChapterOpening: boolean;
 }
 
 export type TokenScope = 'body' | 'header' | 'footer';
@@ -48,18 +47,11 @@ export function replaceTokens(
   text: string,
   metadata: TokenMetadata,
   alignment: TextBoxAlignment,
-  scope: TokenScope = 'body',
 ) {
-  const suppressRunningMatter =
-    metadata.isBookStyleChapterOpening &&
-    (scope === 'header' || scope === 'footer');
-
   let pageNumber =
-    scope === 'header' && metadata.isBookStyleChapterOpening
-      ? ''
-      : metadata.pageNumber > 0
-        ? formatNumber(metadata.pageNumber, metadata.numerals)
-        : '';
+    metadata.pageNumber > 0
+      ? formatNumber(metadata.pageNumber, metadata.numerals)
+      : '';
 
   // This is a hack to add in an extra space
   // if the page number is less than the length of
@@ -75,10 +67,10 @@ export function replaceTokens(
   }
 
   return text
-    .replace(/\$:author/g, suppressRunningMatter ? '' : metadata.author)
-    .replace(/\$:title/g, suppressRunningMatter ? '' : metadata.title)
-    .replace(/\$:chapter/g, suppressRunningMatter ? '' : metadata.chapter)
-    .replace(/\$:section/g, suppressRunningMatter ? '' : metadata.section)
+    .replace(/\$:author/g, metadata.author)
+    .replace(/\$:title/g, metadata.title)
+    .replace(/\$:chapter/g, metadata.chapter)
+    .replace(/\$:section/g, metadata.section)
     .replace(/\$p/g, pageNumber)
     .replace(/\$n/g, formatNumber(metadata.numberOfPages, metadata.numerals))
     .replace(/\$f/g, metadata.fileName)

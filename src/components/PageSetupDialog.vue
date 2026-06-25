@@ -2361,9 +2361,9 @@ const headerFooterCheckboxRows = [
     modelKey: 'richHeaderFooter',
   },
   {
-    id: 'page-setup-dialog-use-book-style-chapter-openings',
-    labelSelector: ($) => $.dialog.pageSetup.useBookStyleChapterOpenings,
-    modelKey: 'useBookStyleChapterOpenings',
+    id: 'page-setup-dialog-different-chapter-opening',
+    labelSelector: ($) => $.dialog.pageSetup.differentChapterOpening,
+    modelKey: 'headerFooterDifferentChapterOpening',
   },
 ] as const satisfies ReadonlyArray<{
   id: string;

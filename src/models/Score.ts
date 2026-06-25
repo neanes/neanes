@@ -22,17 +22,19 @@ export class Score {
   public get headersAndFooters() {
     return [
       ...this.headers.default.elements,
+      ...this.headers.chapterOpening.elements,
       ...this.headers.even.elements,
       ...this.headers.firstPage.elements,
       ...this.headers.odd.elements,
       ...this.footers.default.elements,
+      ...this.footers.chapterOpening.elements,
       ...this.footers.even.elements,
       ...this.footers.firstPage.elements,
       ...this.footers.odd.elements,
     ];
   }
 
-  getHeaderForPage(physicalPageNumber: number) {
+  getHeaderForPage(physicalPageNumber: number, isChapterOpening = false) {
     let header: Header;
     const isOddDisplayedPage = isDisplayedPageNumberOdd(
       this.pageSetup,
@@ -41,6 +43,11 @@ export class Score {
 
     if (this.pageSetup.headerDifferentFirstPage && physicalPageNumber === 1) {
       header = this.headers.firstPage;
+    } else if (
+      this.pageSetup.headerFooterDifferentChapterOpening &&
+      isChapterOpening
+    ) {
+      header = this.headers.chapterOpening;
     } else if (this.pageSetup.headerDifferentOddEven && isOddDisplayedPage) {
       header = this.headers.odd;
     } else if (this.pageSetup.headerDifferentOddEven) {
@@ -52,7 +59,7 @@ export class Score {
     return header;
   }
 
-  getFooterForPage(physicalPageNumber: number) {
+  getFooterForPage(physicalPageNumber: number, isChapterOpening = false) {
     let footer: Footer;
     const isOddDisplayedPage = isDisplayedPageNumberOdd(
       this.pageSetup,
@@ -61,6 +68,11 @@ export class Score {
 
     if (this.pageSetup.headerDifferentFirstPage && physicalPageNumber === 1) {
       footer = this.footers.firstPage;
+    } else if (
+      this.pageSetup.headerFooterDifferentChapterOpening &&
+      isChapterOpening
+    ) {
+      footer = this.footers.chapterOpening;
     } else if (this.pageSetup.headerDifferentOddEven && isOddDisplayedPage) {
       footer = this.footers.odd;
     } else if (this.pageSetup.headerDifferentOddEven) {

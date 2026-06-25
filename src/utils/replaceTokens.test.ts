@@ -14,7 +14,6 @@ const metadata: TokenMetadata = {
   author: 'Author',
   chapter: 'Chapter 1',
   section: 'Section A',
-  isBookStyleChapterOpening: false,
 };
 
 describe('replaceTokens', () => {
@@ -28,28 +27,21 @@ describe('replaceTokens', () => {
     ).toBe('Author|Title|Chapter 1|Section A|1|12|score.byzx|/tmp/score.byzx');
   });
 
-  it('suppresses book-style opening header tokens and keeps footer folios', () => {
-    const chapterOpeningMetadata: TokenMetadata = {
-      ...metadata,
-      isBookStyleChapterOpening: true,
-    };
+  it('replaces tokens the same way in header/footer scope', () => {
+    expect(
+      replaceTokens(
+        '$:author|$:title|$:chapter|$:section|$p',
+        metadata,
+        TextBoxAlignment.Center,
+      ),
+    ).toBe('Author|Title|Chapter 1|Section A|1');
 
     expect(
       replaceTokens(
         '$:author|$:title|$:chapter|$:section|$p',
-        chapterOpeningMetadata,
+        metadata,
         TextBoxAlignment.Center,
-        'header',
       ),
-    ).toBe('||||');
-
-    expect(
-      replaceTokens(
-        '$:author|$:title|$:chapter|$:section|$p',
-        chapterOpeningMetadata,
-        TextBoxAlignment.Center,
-        'footer',
-      ),
-    ).toBe('||||1');
+    ).toBe('Author|Title|Chapter 1|Section A|1');
   });
 });

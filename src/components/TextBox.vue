@@ -149,7 +149,6 @@ const content = computed(() => {
         props.element.content,
         props.metadata,
         props.element.alignment,
-        props.tokenScope,
       );
 });
 
@@ -160,7 +159,6 @@ const contentBottom = computed(() => {
         props.element.contentBottom,
         props.metadata,
         props.element.alignment,
-        props.tokenScope,
       );
 });
 
@@ -171,7 +169,6 @@ const contentLeft = computed(() => {
         props.element.contentLeft,
         props.metadata,
         TextBoxAlignment.Left,
-        props.tokenScope,
       );
 });
 
@@ -182,7 +179,6 @@ const contentCenter = computed(() => {
         props.element.contentCenter,
         props.metadata,
         TextBoxAlignment.Center,
-        props.tokenScope,
       );
 });
 
@@ -193,7 +189,6 @@ const contentRight = computed(() => {
         props.element.contentRight,
         props.metadata,
         TextBoxAlignment.Right,
-        props.tokenScope,
       );
 });
 

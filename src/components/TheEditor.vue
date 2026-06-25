@@ -173,7 +173,7 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import type { Line, Page } from '@/models/Page';
-import type { PageSetup } from '@/models/PageSetup';
+import { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
 import type { DocumentProperties } from '@/models/Score';
 import { Score } from '@/models/Score';
@@ -2255,8 +2255,10 @@ function showExportReplyToast(
 
 function getHeaderForPageIndex(pageIndex: number) {
   const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
-  const header = score.value.getHeaderForPage(pageNumber);
+  const header = score.value.getHeaderForPage(pageNumber, isChapterOpening);
 
   // Currently, headers only support a single text box element.
   return header.elements[0] as TextBoxElement | RichTextBoxElement;
@@ -2264,8 +2266,10 @@ function getHeaderForPageIndex(pageIndex: number) {
 
 function getFooterForPageIndex(pageIndex: number) {
   const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
-  const footer = score.value.getFooterForPage(pageNumber);
+  const footer = score.value.getFooterForPage(pageNumber, isChapterOpening);
 
   // Currently, footers only support a single text box element.
   return footer.elements[0] as TextBoxElement | RichTextBoxElement;
@@ -2274,10 +2278,7 @@ function getFooterForPageIndex(pageIndex: number) {
 function shouldShowHeaderRuleForPageIndex(pageIndex: number) {
   const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
 
-  return (
-    score.value.shouldShowHeaderRuleForPageIndex(pageNumber) &&
-    !getTokenMetadata(pageIndex).isBookStyleChapterOpening
-  );
+  return score.value.shouldShowHeaderRuleForPageIndex(pageNumber);
 }
 
 function shouldShowFooterRuleForPageIndex(pageIndex: number) {
@@ -2311,9 +2312,6 @@ function getTokenMetadata(pageIndex: number): TokenMetadata {
     author: score.value.documentProperties.author,
     chapter: runningMarkers?.chapter ?? '',
     section: runningMarkers?.section ?? '',
-    isBookStyleChapterOpening:
-      score.value.pageSetup.useBookStyleChapterOpenings &&
-      (runningMarkers?.isChapterOpening ?? false),
   };
 }
 
@@ -6415,171 +6413,71 @@ function resizableTextDefaultsChanged(previous: PageSetup, current: PageSetup) {
 }
 
 function updatePageSetup(pageSetup: PageSetup) {
-  const needToRecalcRichTextBoxes = resizableTextDefaultsChanged(
-    score.value.pageSetup,
+  const currentPageSetup = score.value.pageSetup;
+  const nextPageSetup = normalizePageSetupForGeneratedHeaderFooterDefaults(
     pageSetup,
+    shouldAutoEnableDifferentOddEvenForFacingPages(
+      score.value,
+      currentPageSetup,
+      pageSetup,
+    ),
+  );
+  const needToRecalcRichTextBoxes = resizableTextDefaultsChanged(
+    currentPageSetup,
+    nextPageSetup,
   );
 
   const updateCommands: Command[] = [
     pageSetupCommandFactory.create('update-properties', {
-      target: score.value.pageSetup,
-      newValues: pageSetup,
+      target: currentPageSetup,
+      newValues: nextPageSetup,
     }),
   ];
 
-  if (pageSetup.richHeaderFooter && !score.value.pageSetup.richHeaderFooter) {
-    updateCommands.push(
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.default.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'default',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.even.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'even',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.firstPage.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'firstPage',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.odd.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'odd',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.default.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'default',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.even.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'even',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.firstPage.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'firstPage',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.odd.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'odd',
-        ),
-        replaceAtIndex: 0,
-      }),
+  if (nextPageSetup.richHeaderFooter !== currentPageSetup.richHeaderFooter) {
+    pushHeaderFooterReplacementCommands(
+      updateCommands,
+      score.value,
+      createGeneratedHeaderFooterTemplates(
+        nextPageSetup,
+        nextPageSetup.richHeaderFooter,
+      ),
     );
   } else if (
-    !pageSetup.richHeaderFooter &&
-    score.value.pageSetup.richHeaderFooter
+    generatedHeaderFooterDefaultsChanged(currentPageSetup, nextPageSetup)
   ) {
-    updateCommands.push(
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.default.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'default',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.even.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'even',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.firstPage.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'firstPage',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.odd.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'odd',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.default.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'default',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.even.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'even',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.firstPage.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'firstPage',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.odd.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'odd',
-        ),
-        replaceAtIndex: 0,
-      }),
+    const oldGeneratedTemplates = createGeneratedHeaderFooterTemplates(
+      currentPageSetup,
+      currentPageSetup.richHeaderFooter,
     );
+    const newGeneratedTemplates = createGeneratedHeaderFooterTemplates(
+      nextPageSetup,
+      nextPageSetup.richHeaderFooter,
+    );
+
+    for (const slot of headerFooterSlots) {
+      const currentElement = getHeaderFooterSlotElement(score.value, slot);
+      const oldGeneratedElement = getHeaderFooterTemplateSlotElement(
+        oldGeneratedTemplates,
+        slot,
+      );
+
+      if (
+        currentElement != null &&
+        areGeneratedHeaderFooterElementsEqual(
+          currentElement,
+          oldGeneratedElement,
+        )
+      ) {
+        updateCommands.push(
+          createHeaderFooterReplacementCommand(
+            score.value,
+            slot,
+            getHeaderFooterTemplateSlotElement(newGeneratedTemplates, slot),
+          ),
+        );
+      }
+    }
   }
 
   commandService.value.executeAsBatch(updateCommands);
@@ -6629,37 +6527,89 @@ function createRegularHeaderFooter(
   return textbox;
 }
 
+type HeaderFooterKind = 'header' | 'footer';
+type HeaderFooterVariant =
+  | 'default'
+  | 'firstPage'
+  | 'odd'
+  | 'even'
+  | 'chapterOpening';
+type HeaderFooterSlot = {
+  kind: HeaderFooterKind;
+  variant: HeaderFooterVariant;
+};
+type HeaderFooterTemplateElement = TextBoxElement | RichTextBoxElement;
+type HeaderFooterTemplateGroup<T> = Record<HeaderFooterVariant, T>;
+type HeaderFooterTemplates<T> = Record<HeaderFooterKind, HeaderFooterTemplateGroup<T>>;
+
+const headerFooterVariants: HeaderFooterVariant[] = [
+  'default',
+  'firstPage',
+  'odd',
+  'even',
+  'chapterOpening',
+];
+
+const headerFooterSlots: HeaderFooterSlot[] = [
+  { kind: 'header', variant: 'default' },
+  { kind: 'header', variant: 'firstPage' },
+  { kind: 'header', variant: 'odd' },
+  { kind: 'header', variant: 'even' },
+  { kind: 'header', variant: 'chapterOpening' },
+  { kind: 'footer', variant: 'default' },
+  { kind: 'footer', variant: 'firstPage' },
+  { kind: 'footer', variant: 'odd' },
+  { kind: 'footer', variant: 'even' },
+  { kind: 'footer', variant: 'chapterOpening' },
+];
+
+const nonChapterOddEvenAffectedSlots: HeaderFooterSlot[] = [
+  { kind: 'header', variant: 'default' },
+  { kind: 'header', variant: 'odd' },
+  { kind: 'header', variant: 'even' },
+  { kind: 'footer', variant: 'default' },
+  { kind: 'footer', variant: 'odd' },
+  { kind: 'footer', variant: 'even' },
+];
+
 function getDefaultHeaderFooterPanels(
   pageSetup: PageSetup,
-  center: string,
-  page: 'default' | 'firstPage' | 'odd' | 'even',
+  kind: HeaderFooterKind,
+  variant: HeaderFooterVariant,
 ) {
+  if (!pageSetup.facingPages) {
+    return kind === 'header'
+      ? { left: '', center: '', right: '' }
+      : { left: '', center: '$p', right: '' };
+  }
+
+  if (variant === 'chapterOpening') {
+    return kind === 'header'
+      ? { left: '', center: '', right: '' }
+      : { left: '', center: '$p', right: '' };
+  }
+
+  if (kind === 'footer') {
+    return { left: '', center: '', right: '' };
+  }
+
   let isRightHandTemplatePage: boolean;
 
-  if (page === 'default' || page === 'firstPage') {
+  if (variant === 'default' || variant === 'firstPage') {
     isRightHandTemplatePage = isRightHandPage(pageSetup, 1);
   } else if (!pageSetup.facingPages) {
-    isRightHandTemplatePage = page === 'odd';
+    isRightHandTemplatePage = variant === 'odd';
   } else if (pageSetup.direction === 'rtl') {
-    isRightHandTemplatePage = page === 'even';
+    isRightHandTemplatePage = variant === 'even';
   } else {
-    isRightHandTemplatePage = page === 'odd';
+    isRightHandTemplatePage = variant === 'odd';
   }
 
   return {
     left: isRightHandTemplatePage ? '' : '$p',
-    center,
+    center: isRightHandTemplatePage ? '$:section' : '$:chapter',
     right: isRightHandTemplatePage ? '$p' : '',
   };
-}
-
-function createRegularHeaderFooterWithPageNumber(
-  pageSetup: PageSetup,
-  center: string,
-  page: 'default' | 'firstPage' | 'odd' | 'even',
-) {
-  const panel = getDefaultHeaderFooterPanels(pageSetup, center, page);
-  return createRegularHeaderFooter(panel.left, panel.center, panel.right);
 }
 
 function createRichHeaderFooter(left: string, center: string, right: string) {
@@ -6671,13 +6621,204 @@ function createRichHeaderFooter(left: string, center: string, right: string) {
   return textbox;
 }
 
-function createRichHeaderFooterWithPageNumber(
+function createDefaultRegularHeaderFooter(
   pageSetup: PageSetup,
-  center: string,
-  page: 'default' | 'firstPage' | 'odd' | 'even',
+  kind: HeaderFooterKind,
+  variant: HeaderFooterVariant,
 ) {
-  const panel = getDefaultHeaderFooterPanels(pageSetup, center, page);
+  const panel = getDefaultHeaderFooterPanels(pageSetup, kind, variant);
+  return createRegularHeaderFooter(panel.left, panel.center, panel.right);
+}
+
+function createDefaultRichHeaderFooter(
+  pageSetup: PageSetup,
+  kind: HeaderFooterKind,
+  variant: HeaderFooterVariant,
+) {
+  const panel = getDefaultHeaderFooterPanels(pageSetup, kind, variant);
   return createRichHeaderFooter(panel.left, panel.center, panel.right);
+}
+
+function createDefaultHeaderFooterElement(
+  pageSetup: PageSetup,
+  richHeaderFooter: boolean,
+  kind: HeaderFooterKind,
+  variant: HeaderFooterVariant,
+) {
+  return richHeaderFooter
+    ? createDefaultRichHeaderFooter(pageSetup, kind, variant)
+    : createDefaultRegularHeaderFooter(pageSetup, kind, variant);
+}
+
+function createGeneratedHeaderFooterTemplates(
+  pageSetup: PageSetup,
+  richHeaderFooter: boolean,
+): HeaderFooterTemplates<HeaderFooterTemplateElement> {
+  return {
+    header: Object.fromEntries(
+      headerFooterVariants.map((variant) => [
+        variant,
+        createDefaultHeaderFooterElement(
+          pageSetup,
+          richHeaderFooter,
+          'header',
+          variant,
+        ),
+      ]),
+    ) as HeaderFooterTemplateGroup<HeaderFooterTemplateElement>,
+    footer: Object.fromEntries(
+      headerFooterVariants.map((variant) => [
+        variant,
+        createDefaultHeaderFooterElement(
+          pageSetup,
+          richHeaderFooter,
+          'footer',
+          variant,
+        ),
+      ]),
+    ) as HeaderFooterTemplateGroup<HeaderFooterTemplateElement>,
+  };
+}
+
+function getHeaderFooterSlotCollection(score: Score, slot: HeaderFooterSlot) {
+  return slot.kind === 'header'
+    ? score.headers[slot.variant].elements
+    : score.footers[slot.variant].elements;
+}
+
+function getHeaderFooterSlotElement(score: Score, slot: HeaderFooterSlot) {
+  return getHeaderFooterSlotCollection(score, slot)[0] as
+    | HeaderFooterTemplateElement
+    | undefined;
+}
+
+function getHeaderFooterTemplateSlotElement(
+  templates: HeaderFooterTemplates<HeaderFooterTemplateElement>,
+  slot: HeaderFooterSlot,
+) {
+  return templates[slot.kind][slot.variant];
+}
+
+function createHeaderFooterReplacementCommand(
+  score: Score,
+  slot: HeaderFooterSlot,
+  element: HeaderFooterTemplateElement,
+) {
+  return scoreElementCommandFactory.create('replace-element-in-collection', {
+    collection: getHeaderFooterSlotCollection(score, slot),
+    element,
+    replaceAtIndex: 0,
+  });
+}
+
+function pushHeaderFooterReplacementCommands(
+  updateCommands: Command[],
+  score: Score,
+  templates: HeaderFooterTemplates<HeaderFooterTemplateElement>,
+) {
+  for (const slot of headerFooterSlots) {
+    updateCommands.push(
+      createHeaderFooterReplacementCommand(
+        score,
+        slot,
+        getHeaderFooterTemplateSlotElement(templates, slot),
+      ),
+    );
+  }
+}
+
+function areGeneratedHeaderFooterElementsEqual(
+  left: HeaderFooterTemplateElement,
+  right: HeaderFooterTemplateElement,
+) {
+  if (left.elementType !== right.elementType) {
+    return false;
+  }
+
+  return (
+    left.multipanel === right.multipanel &&
+    left.contentLeft === right.contentLeft &&
+    left.contentCenter === right.contentCenter &&
+    left.contentRight === right.contentRight
+  );
+}
+
+function generatedHeaderFooterDefaultsChanged(
+  previous: PageSetup,
+  current: PageSetup,
+) {
+  return !shallowEquals(
+    {
+      facingPages: previous.facingPages,
+      direction: previous.direction,
+      headerDifferentOddEven: previous.headerDifferentOddEven,
+      headerFooterDifferentChapterOpening:
+        previous.headerFooterDifferentChapterOpening,
+      richHeaderFooter: previous.richHeaderFooter,
+    },
+    {
+      facingPages: current.facingPages,
+      direction: current.direction,
+      headerDifferentOddEven: current.headerDifferentOddEven,
+      headerFooterDifferentChapterOpening:
+        current.headerFooterDifferentChapterOpening,
+      richHeaderFooter: current.richHeaderFooter,
+    },
+  );
+}
+
+function shouldAutoEnableDifferentOddEvenForFacingPages(
+  score: Score,
+  previous: PageSetup,
+  current: PageSetup,
+) {
+  if (
+    previous.facingPages ||
+    !current.facingPages ||
+    current.headerDifferentOddEven
+  ) {
+    return false;
+  }
+
+  const oldGeneratedTemplates = createGeneratedHeaderFooterTemplates(
+    previous,
+    previous.richHeaderFooter,
+  );
+
+  return nonChapterOddEvenAffectedSlots.every((slot) => {
+    const currentElement = getHeaderFooterSlotElement(score, slot);
+
+    return (
+      currentElement != null &&
+      areGeneratedHeaderFooterElementsEqual(
+        currentElement,
+        getHeaderFooterTemplateSlotElement(oldGeneratedTemplates, slot),
+      )
+    );
+  });
+}
+
+function normalizePageSetupForGeneratedHeaderFooterDefaults(
+  pageSetup: PageSetup,
+  autoEnableDifferentOddEven: boolean,
+) {
+  return autoEnableDifferentOddEven
+    ? Object.assign(new PageSetup(), pageSetup, {
+        headerDifferentOddEven: true,
+      })
+    : pageSetup;
+}
+
+function initializeDefaultHeaderFooters(score: Score) {
+  const templates = createGeneratedHeaderFooterTemplates(
+    score.pageSetup,
+    score.pageSetup.richHeaderFooter,
+  );
+
+  for (const slot of headerFooterSlots) {
+    getHeaderFooterSlotCollection(score, slot)[0] =
+      getHeaderFooterTemplateSlotElement(templates, slot);
+  }
 }
 
 function updateEntryMode(mode: EntryMode) {
@@ -7994,10 +8135,16 @@ function createDefaultScore() {
         score.pageSetup,
         JSON.parse(pageSetupDefault),
       );
+      score.pageSetup = normalizePageSetupForGeneratedHeaderFooterDefaults(
+        score.pageSetup,
+        score.pageSetup.facingPages && !score.pageSetup.headerDifferentOddEven,
+      );
     }
   } catch (error) {
     console.error(error);
   }
+
+  initializeDefaultHeaderFooters(score);
 
   const title = new TextBoxElement();
   title.content = 'Title';

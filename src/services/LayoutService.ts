@@ -470,6 +470,7 @@ export class LayoutService {
     // Only a single text box is supported right now
     if (score.pageSetup.showHeader) {
       this.processHeader(score.headers.default, pageSetup, neumeHeight);
+      this.processHeader(score.headers.chapterOpening, pageSetup, neumeHeight);
       this.processHeader(score.headers.odd, pageSetup, neumeHeight);
       this.processHeader(score.headers.even, pageSetup, neumeHeight);
       this.processHeader(score.headers.firstPage, pageSetup, neumeHeight);
@@ -477,6 +478,7 @@ export class LayoutService {
 
     if (score.pageSetup.showFooter) {
       this.processFooter(score.footers.default, pageSetup, neumeHeight);
+      this.processFooter(score.footers.chapterOpening, pageSetup, neumeHeight);
       this.processFooter(score.footers.odd, pageSetup, neumeHeight);
       this.processFooter(score.footers.even, pageSetup, neumeHeight);
       this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);

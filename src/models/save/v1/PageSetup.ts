@@ -33,10 +33,10 @@ export class PageSetup {
   public footerMargin = Unit.fromInch(0.5);
   public headerDifferentFirstPage: boolean | undefined = undefined;
   public headerDifferentOddEven: boolean | undefined = undefined;
+  public headerFooterDifferentChapterOpening: boolean | undefined = undefined;
   public showHeader: boolean | undefined = undefined;
   public showFooter: boolean | undefined = undefined;
   public richHeaderFooter: boolean | undefined = undefined;
-  public useBookStyleChapterOpenings: boolean | undefined = undefined;
   public firstPageNumber = 1;
   public numerals: 'westernArabic' | 'easternArabic' | undefined = undefined;
 

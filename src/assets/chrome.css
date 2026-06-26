@@ -415,6 +415,27 @@
   background: var(--chrome-hover);
 }
 
+/* Toasts */
+.dark
+  .toaster
+  [data-sonner-toast][data-styled='true']:not([data-rich-colors='true'])
+  [data-description] {
+  color: var(--muted-foreground);
+}
+
+.dark .toaster [data-sonner-toast][data-styled='true'] [data-cancel] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.dark
+  .toaster
+  [data-sonner-toast][data-styled='true']:not([data-rich-colors='true']):hover
+  [data-close-button]:hover {
+  background: var(--accent);
+  border-color: var(--border);
+}
+
 /* Dock pane */
 .chrome-dock-pane {
   background: var(--chrome-dock-tab-active);

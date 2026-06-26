@@ -227,11 +227,11 @@ import {
   isRightHandPage,
 } from '@/utils/PageNumbering';
 import type { TokenMetadata } from '@/utils/replaceTokens';
+import { setRichTextLanguage } from '@/utils/richTextLanguage';
 import {
   resolveRunningMarkerPageMetadata,
   resolveRunningMarkerText,
 } from '@/utils/runningMarkers';
-import { setRichTextLanguage } from '@/utils/richTextLanguage';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';

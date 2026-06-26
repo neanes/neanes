@@ -33,6 +33,7 @@
     "copyFormat": "Copy Format",
     "pasteFormat": "Paste Format",
     "find": "Find",
+    "copyElementLink": "Copy Element Link",
     "preferences": "Preferences"
   },
   "insert": {
@@ -51,10 +52,6 @@
     "header": "Header",
     "footer": "Footer"
   },
-  "tools": {
-    "root": "Tools",
-    "copyElementLink": "Copy Element Link"
-  },
   "view": {
     "root": "View",
     "developer": "Developer",
@@ -63,6 +60,7 @@
     "properties": "Properties",
     "selection": "Selection",
     "lyrics": "Lyrics",
+    "statusBar": "Status Bar",
     "showDeveloperPanels": "Show Developer Panels",
     "zoom": {
       "root": "Zoom",
@@ -75,6 +73,11 @@
     },
     "resetLayout": "Reset Layout",
     "generateTestFiles": "Generate Test Files (Debug)"
+  },
+  "window": {
+    "root": "Window",
+    "previousTab": "Previous Tab",
+    "nextTab": "Next Tab"
   },
   "help": {
     "root": "Help",

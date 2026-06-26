@@ -33,6 +33,7 @@
     "copyFormat": "Copiază formatul",
     "pasteFormat": "Lipește formatul",
     "find": "Căutare",
+    "copyElementLink": "Copiază linkul elementului",
     "preferences": "Preferințe"
   },
   "insert": {
@@ -51,10 +52,6 @@
     "header": "Antet",
     "footer": "Subsol"
   },
-  "tools": {
-    "root": "Unelte",
-    "copyElementLink": "Copiază linkul elementului"
-  },
   "view": {
     "root": "Vizualizare",
     "developer": "Dezvoltator",
@@ -63,6 +60,7 @@
     "properties": "Proprietăți",
     "selection": "Selecție",
     "lyrics": "Versuri",
+    "statusBar": "Bară de stare",
     "showDeveloperPanels": "Arată panourile pentru dezvoltatori",
     "zoom": {
       "root": "Zoom",
@@ -75,6 +73,11 @@
     },
     "resetLayout": "Resetează aranjarea",
     "generateTestFiles": "Generează fișiere de test (debugare)"
+  },
+  "window": {
+    "root": "Fereastră",
+    "previousTab": "Fila precedentă",
+    "nextTab": "Fila următoare"
   },
   "help": {
     "root": "Ajutor",

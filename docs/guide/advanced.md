@@ -200,9 +200,19 @@ By default, an inline text box is centered relative to its own width—which may
 A sample file demonstrating various mode key configurations is available here:  
 [byzx](http://github.com/neanes/neanes/blob/master/examples/Custom%20Mode%20Key%20Demo.byzx) | [PDF](http://github.com/neanes/neanes/blob/master/examples/Custom%20Mode%20Key%20Demo.pdf)
 
-## Hyperlinks
+## Rich Text Features
 
-The link feature in the rich text editor can be used to insert hyperlinks to quickly jump to other sections of the exported PDF. To insert a hyperlink, click on the element you want to jump to, then choose `Tools -> Copy Element Link` in the file menu. This places the link URL on the clipboard. Next, create a link in the rich text editor by clicking the link button in the rich text editor's toolbar, and then paste the copied link URL into the `Link URL` field.
+### Hyperlinks
+
+The link feature in the rich text editor can be used to insert hyperlinks to quickly jump to other sections of the exported PDF. To insert a hyperlink, click on the element you want to jump to, then choose `Edit -> Copy Element Link` in the file menu. This places the link URL on the clipboard. Next, create a link in the rich text editor by clicking the link button in the rich text editor's toolbar, and then paste the copied link URL into the `Link URL` field.
+
+### Lists
+
+Use the bulleted list and numbered list buttons in the rich text toolbar to create lists. List options support multiple bullet and numbering styles. Numbered lists can also use a custom starting number or be reversed.
+
+### Horizontal Lines
+
+Use the horizontal line button in the rich text toolbar to insert a divider line in a rich text box.
 
 ## Fine-tuning Neume Positions
 

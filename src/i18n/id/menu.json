@@ -33,6 +33,7 @@
     "copyFormat": "Salin Format",
     "pasteFormat": "Tempel Format",
     "find": "Cari",
+    "copyElementLink": "Salin Tautan Elemen",
     "preferences": "Preferensi"
   },
   "insert": {
@@ -51,10 +52,6 @@
     "header": "Header",
     "footer": "Footer"
   },
-  "tools": {
-    "root": "Alat",
-    "copyElementLink": "Salin Tautan Elemen"
-  },
   "view": {
     "root": "Tampilan",
     "developer": "Pengembang",
@@ -63,6 +60,7 @@
     "properties": "Properti",
     "selection": "Pilihan",
     "lyrics": "Lirik",
+    "statusBar": "Bilah Status",
     "showDeveloperPanels": "Tampilkan Panel Pengembang",
     "zoom": {
       "root": "Zoom",
@@ -75,6 +73,11 @@
     },
     "resetLayout": "Atur Ulang Tata Letak",
     "generateTestFiles": "Hasilkan File Uji (Debug)"
+  },
+  "window": {
+    "root": "Jendela",
+    "previousTab": "Tab Sebelumnya",
+    "nextTab": "Tab Berikutnya"
   },
   "help": {
     "root": "Bantuan",

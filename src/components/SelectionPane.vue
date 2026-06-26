@@ -97,7 +97,7 @@
           @click="emit('copy-element-link')"
         >
           <PhLinkSimple data-icon="inline-start" />
-          {{ $t(($) => $.menu.tools.copyElementLink, { ns: 'menu' }) }}
+          {{ $t(($) => $.menu.edit.copyElementLink, { ns: 'menu' }) }}
         </Button>
 
         <Button

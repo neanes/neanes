@@ -1,13 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
-import { DropCapElement, NoteElement, TextBoxElement } from '@/models/Element';
+import {
+  DropCapElement,
+  NoteElement,
+  RichTextBoxElement,
+  TextBoxElement,
+} from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import {
   DropCapElement as DropCapElement_v1,
   NoteElement as NoteElement_v1,
+  RichTextBoxElement as RichTextBoxElement_v1,
   TextBoxElement as TextBoxElement_v1,
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
+import { Score } from '@/models/Score';
 
 import { SaveService } from './SaveService';
 
@@ -178,5 +185,151 @@ describe('SaveService font styles', () => {
     expect(saved.fontSubfamily).toBe('Semibold');
     expect(saved.bold).toBeUndefined();
     expect(saved.italic).toBeUndefined();
+  });
+
+  it('saves document properties and omits default chapter-opening headers/footers flag', () => {
+    const score = new Score();
+    const savedPageSetup = new PageSetup_v1();
+    const savedDocumentProperties = {
+      title: undefined as string | undefined,
+      author: undefined as string | undefined,
+    };
+
+    score.documentProperties.title = 'Great Canon';
+    score.documentProperties.author = 'St. Andrew of Crete';
+
+    SaveService.SaveDocumentProperties(
+      savedDocumentProperties,
+      score.documentProperties,
+    );
+    SaveService.SavePageSetup(savedPageSetup, score.pageSetup);
+
+    expect(savedDocumentProperties.title).toBe('Great Canon');
+    expect(savedDocumentProperties.author).toBe('St. Andrew of Crete');
+    expect(savedPageSetup.headerFooterDifferentChapterOpening).toBeUndefined();
+  });
+
+  it('loads and saves running marker fields and chapter-opening headers/footers flag', () => {
+    const pageSetup = new PageSetup();
+    const legacyPageSetup = new PageSetup_v1();
+    const textBox = new TextBoxElement();
+    const textBoxSave = new TextBoxElement_v1();
+    const richTextBox = new RichTextBoxElement();
+    const richTextBoxSave = new RichTextBoxElement_v1();
+
+    legacyPageSetup.headerFooterDifferentChapterOpening = false;
+    textBoxSave.runningMarkerRole = 'chapter';
+    textBoxSave.runningMarkerText = ' Chapter 1 ';
+    richTextBoxSave.runningMarkerRole = 'section';
+    richTextBoxSave.runningMarkerText = ' Section A ';
+
+    SaveService.LoadPageSetup_v1(pageSetup, legacyPageSetup);
+    SaveService.LoadTextBox_v1('1.1', textBox, textBoxSave, pageSetup);
+    SaveService.LoadRichTextBox_v1(richTextBox, richTextBoxSave);
+
+    expect(pageSetup.headerFooterDifferentChapterOpening).toBe(false);
+    expect(textBox.runningMarkerRole).toBe('chapter');
+    expect(textBox.runningMarkerText).toBe('Chapter 1');
+    expect(richTextBox.runningMarkerRole).toBe('section');
+    expect(richTextBox.runningMarkerText).toBe('Section A');
+
+    const savedTextBox = new TextBoxElement_v1();
+    const savedRichTextBox = new RichTextBoxElement_v1();
+    const savedPageSetup = new PageSetup_v1();
+
+    SaveService.SaveTextBox(savedTextBox, textBox);
+    SaveService.SaveRichTextBox(savedRichTextBox, richTextBox);
+    SaveService.SavePageSetup(savedPageSetup, pageSetup);
+
+    expect(savedTextBox.runningMarkerRole).toBe('chapter');
+    expect(savedTextBox.runningMarkerText).toBe('Chapter 1');
+    expect(savedRichTextBox.runningMarkerRole).toBe('section');
+    expect(savedRichTextBox.runningMarkerText).toBe('Section A');
+    expect(savedPageSetup.headerFooterDifferentChapterOpening).toBe(false);
+  });
+
+  it('loads and saves chapter-opening horizontal-rule exclusions', () => {
+    const pageSetup = new PageSetup();
+    const legacyPageSetup = new PageSetup_v1();
+
+    legacyPageSetup.showHeaderHorizontalRule = true;
+    legacyPageSetup.excludeHeaderHorizontalRuleChapterOpening = true;
+    legacyPageSetup.showFooterHorizontalRule = true;
+    legacyPageSetup.excludeFooterHorizontalRuleChapterOpening = true;
+
+    SaveService.LoadPageSetup_v1(pageSetup, legacyPageSetup);
+
+    expect(pageSetup.excludeHeaderHorizontalRuleChapterOpening).toBe(true);
+    expect(pageSetup.excludeFooterHorizontalRuleChapterOpening).toBe(true);
+
+    const savedPageSetup = new PageSetup_v1();
+
+    SaveService.SavePageSetup(savedPageSetup, pageSetup);
+
+    expect(savedPageSetup.excludeHeaderHorizontalRuleChapterOpening).toBe(true);
+    expect(savedPageSetup.excludeFooterHorizontalRuleChapterOpening).toBe(true);
+  });
+
+  it('loads and saves chapter-opening header and footer variants', () => {
+    const score = new Score();
+    const chapterHeader = new TextBoxElement();
+    const chapterFooter = new RichTextBoxElement();
+
+    (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+
+    chapterHeader.multipanel = true;
+    chapterHeader.contentCenter = '$:chapter';
+    chapterFooter.multipanel = true;
+    chapterFooter.contentCenter = '<p style="text-align:center;">$p</p>';
+
+    score.headers.chapterOpening.elements[0] = chapterHeader;
+    score.footers.chapterOpening.elements[0] = chapterFooter;
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(
+      (saved.headers.chapterOpening.elements[0] as TextBoxElement_v1)
+        .contentCenter,
+    ).toBe('$:chapter');
+    expect(
+      (saved.footers.chapterOpening.elements[0] as RichTextBoxElement_v1)
+        .contentCenter,
+    ).toBe('<p style="text-align:center;">$p</p>');
+    expect(
+      (loaded.headers.chapterOpening.elements[0] as TextBoxElement)
+        .contentCenter,
+    ).toBe('$:chapter');
+    expect(
+      (loaded.footers.chapterOpening.elements[0] as RichTextBoxElement)
+        .contentCenter,
+    ).toBe('<p style="text-align:center;">$p</p>');
+  });
+
+  it('falls back to default header/footer when chapter-opening save data has no element', () => {
+    const score = new Score();
+
+    (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+
+    (score.headers.default.elements[0] as TextBoxElement).contentCenter =
+      'Default Header';
+    (score.footers.default.elements[0] as TextBoxElement).contentCenter =
+      'Default Footer';
+
+    const saved = SaveService.SaveScoreToJson(score);
+
+    saved.headers.chapterOpening.elements = [];
+    saved.footers.chapterOpening.elements = [];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(
+      (loaded.headers.chapterOpening.elements[0] as TextBoxElement)
+        .contentCenter,
+    ).toBe('Default Header');
+    expect(
+      (loaded.footers.chapterOpening.elements[0] as TextBoxElement)
+        .contentCenter,
+    ).toBe('Default Footer');
   });
 });

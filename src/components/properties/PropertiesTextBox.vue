@@ -308,6 +308,74 @@
           "
         />
       </Field>
+
+      <template v-if="source === 'score'">
+        <FieldSeparator />
+
+        <FieldSet>
+          <FieldLegend variant="label">{{
+            $t(($) => $.toolbar.textbox.runningMarker, { ns: 'toolbar' })
+          }}</FieldLegend>
+          <FieldGroup>
+            <Field>
+              <FieldLabel for="properties-text-box-running-marker-role">{{
+                $t(($) => $.toolbar.textbox.runningMarkerRole, {
+                  ns: 'toolbar',
+                })
+              }}</FieldLabel>
+              <Select
+                :model-value="
+                  element.runningMarkerRole ?? RUNNING_MARKER_NONE_VALUE
+                "
+                @update:model-value="onRunningMarkerRoleChanged"
+              >
+                <SelectTrigger id="properties-text-box-running-marker-role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem :value="RUNNING_MARKER_NONE_VALUE">
+                      {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
+                    </SelectItem>
+                    <SelectItem value="chapter">
+                      {{
+                        $t(($) => $.toolbar.textbox.runningMarkerChapter, {
+                          ns: 'toolbar',
+                        })
+                      }}
+                    </SelectItem>
+                    <SelectItem value="section">
+                      {{
+                        $t(($) => $.toolbar.textbox.runningMarkerSection, {
+                          ns: 'toolbar',
+                        })
+                      }}
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <Field>
+              <FieldLabel for="properties-text-box-running-marker-text">{{
+                $t(($) => $.toolbar.textbox.runningMarkerText, {
+                  ns: 'toolbar',
+                })
+              }}</FieldLabel>
+              <Input
+                id="properties-text-box-running-marker-text"
+                :model-value="element.runningMarkerText ?? ''"
+                :placeholder="
+                  $t(($) => $.toolbar.textbox.runningMarkerTextPlaceholder, {
+                    ns: 'toolbar',
+                  })
+                "
+                @update:model-value="onRunningMarkerTextChanged"
+              />
+            </Field>
+          </FieldGroup>
+        </FieldSet>
+      </template>
     </FieldGroup>
   </FieldSet>
 </template>
@@ -321,6 +389,7 @@ import {
   PhTextItalic,
   PhTextUnderline,
 } from '@phosphor-icons/vue';
+import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
@@ -336,8 +405,18 @@ import {
   FieldGroup,
   FieldLabel,
   FieldLegend,
+  FieldSeparator,
   FieldSet,
 } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
@@ -362,6 +441,10 @@ const props = defineProps({
   },
   pageSetup: {
     type: Object as PropType<PageSetup>,
+    required: true,
+  },
+  source: {
+    type: String as PropType<'score' | 'header-footer'>,
     required: true,
   },
 });
@@ -391,6 +474,7 @@ const textBoxFontFamilies = computed(() => [
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
+const RUNNING_MARKER_NONE_VALUE = '__none__';
 
 function onStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
@@ -418,6 +502,23 @@ function onAlignmentChanged(value: unknown) {
       alignment: value,
     } as Partial<TextBoxElement>);
   }
+}
+
+function onRunningMarkerRoleChanged(value: AcceptableValue) {
+  emit('update', {
+    runningMarkerRole:
+      value === RUNNING_MARKER_NONE_VALUE || value == null
+        ? null
+        : (value as TextBoxElement['runningMarkerRole']),
+  } as Partial<TextBoxElement>);
+}
+
+function onRunningMarkerTextChanged(value: string | number) {
+  const text = String(value);
+
+  emit('update', {
+    runningMarkerText: text.trim() === '' ? null : text,
+  } as Partial<TextBoxElement>);
 }
 
 function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {

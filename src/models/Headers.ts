@@ -5,4 +5,5 @@ export class Headers {
   public odd: Header = new Header();
   public even: Header = new Header();
   public firstPage: Header = new Header();
+  public chapterOpening: Header = new Header();
 }

@@ -9,9 +9,15 @@ const ScoreVersion: string = '1.1';
 
 export { ScoreVersion };
 
+export class DocumentProperties {
+  public title: string | undefined = undefined;
+  public author: string | undefined = undefined;
+}
+
 export class Score {
   public version: string = ScoreVersion;
   public appVersion: string = APP_VERSION;
+  public documentProperties: DocumentProperties | undefined = undefined;
   public pageSetup: PageSetup = new PageSetup();
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();

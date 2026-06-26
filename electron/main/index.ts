@@ -1643,6 +1643,12 @@ function createMenu() {
           },
         },
         {
+          label: i18next.t(($) => $.menu.file.documentProperties),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuDocumentProperties);
+          },
+        },
+        {
           label: i18next.t(($) => $.menu.file.exportAsPdf),
           accelerator: 'CmdOrCtrl+E',
           click() {

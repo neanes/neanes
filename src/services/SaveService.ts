@@ -39,9 +39,13 @@ import {
 import type { Footer as Footer_v1 } from '@/models/save/v1/Footer';
 import type { Header as Header_v1 } from '@/models/save/v1/Header';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
-import type { LyricSetup as LyricSetup_v1 } from '@/models/save/v1/Score';
-import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
-import { Score } from '@/models/Score';
+import {
+  DocumentProperties as DocumentProperties_v1,
+  type LyricSetup as LyricSetup_v1,
+  Score as Score_v1,
+  Staff as Staff_v1,
+} from '@/models/save/v1/Score';
+import { DocumentProperties, Score } from '@/models/Score';
 import { Staff } from '@/models/Staff';
 import { fontCatalog } from '@/services/FontCatalog';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
@@ -50,6 +54,10 @@ import { applyAxes } from '@/utils/fontStyleAxes';
 
 interface IScore {
   version: string;
+}
+
+interface LegacySectionNameCompatibility {
+  sectionName?: string | null;
 }
 
 function readLegacyCssFontStyle(fontStyle: string | null | undefined) {
@@ -72,6 +80,12 @@ function normalizeSavedFontSubfamily(fontSubfamily: string | null | undefined) {
   return trimmed == null || trimmed === ''
     ? undefined
     : normalizeFontStyle(trimmed);
+}
+
+function normalizeLegacySectionName(value: string | null | undefined) {
+  const trimmed = value?.trim();
+
+  return trimmed == null || trimmed === '' ? null : trimmed;
 }
 
 function loadFontFaceFromWeightFields({
@@ -189,18 +203,28 @@ export class SaveService {
 
     score.staff = new Staff_v1();
     score.staff.elements = [];
+    score.documentProperties = new DocumentProperties_v1();
 
     score.pageSetup = new PageSetup_v1();
 
+    this.SaveDocumentProperties(score.documentProperties, s.documentProperties);
+    if (
+      score.documentProperties.title == null &&
+      score.documentProperties.author == null
+    ) {
+      score.documentProperties = undefined;
+    }
     this.SavePageSetup(score.pageSetup, s.pageSetup);
     this.SaveLyricSetup(score.staff.lyrics, s.staff.lyrics);
 
     this.SaveHeader(score.headers.default, s.headers.default);
+    this.SaveHeader(score.headers.chapterOpening, s.headers.chapterOpening);
     this.SaveHeader(score.headers.even, s.headers.even);
     this.SaveHeader(score.headers.odd, s.headers.odd);
     this.SaveHeader(score.headers.firstPage, s.headers.firstPage);
 
     this.SaveFooter(score.footers.default, s.footers.default);
+    this.SaveFooter(score.footers.chapterOpening, s.footers.chapterOpening);
     this.SaveFooter(score.footers.even, s.footers.even);
     this.SaveFooter(score.footers.odd, s.footers.odd);
     this.SaveFooter(score.footers.firstPage, s.footers.firstPage);
@@ -265,7 +289,6 @@ export class SaveService {
       }
 
       element.pageBreak = e.pageBreak || undefined;
-      element.sectionName = e.sectionName || undefined;
 
       score.staff.elements.push(element);
     }
@@ -345,6 +368,8 @@ export class SaveService {
     pageSetup.headerDifferentFirstPage =
       p.headerDifferentFirstPage || undefined;
     pageSetup.headerDifferentOddEven = p.headerDifferentOddEven || undefined;
+    pageSetup.headerFooterDifferentChapterOpening =
+      p.headerFooterDifferentChapterOpening === false ? false : undefined;
 
     pageSetup.showHeader = p.showHeader || undefined;
     pageSetup.showFooter = p.showFooter || undefined;
@@ -352,6 +377,8 @@ export class SaveService {
 
     if (p.showHeaderHorizontalRule) {
       pageSetup.showHeaderHorizontalRule = p.showHeaderHorizontalRule;
+      pageSetup.excludeHeaderHorizontalRuleChapterOpening =
+        p.excludeHeaderHorizontalRuleChapterOpening;
       pageSetup.excludeHeaderHorizontalRuleEvenPage =
         p.excludeHeaderHorizontalRuleEvenPage;
       pageSetup.excludeHeaderHorizontalRuleFirstPage =
@@ -367,6 +394,8 @@ export class SaveService {
 
     if (p.showFooterHorizontalRule) {
       pageSetup.showFooterHorizontalRule = p.showFooterHorizontalRule;
+      pageSetup.excludeFooterHorizontalRuleChapterOpening =
+        p.excludeFooterHorizontalRuleChapterOpening;
       pageSetup.excludeFooterHorizontalRuleEvenPage =
         p.excludeFooterHorizontalRuleEvenPage;
       pageSetup.excludeFooterHorizontalRuleFirstPage =
@@ -431,6 +460,17 @@ export class SaveService {
   public static SaveLyricSetup(lyricSetup: LyricSetup_v1, l: LyricSetup) {
     lyricSetup.locked = l.locked || undefined;
     lyricSetup.text = l.text;
+  }
+
+  public static SaveDocumentProperties(
+    documentProperties: DocumentProperties_v1,
+    p: DocumentProperties,
+  ) {
+    const title = p.title.trim();
+    const author = p.author.trim();
+
+    documentProperties.title = title === '' ? undefined : title;
+    documentProperties.author = author === '' ? undefined : author;
   }
 
   public static SaveHeader(header: Header_v1, h: Header) {
@@ -739,6 +779,8 @@ export class SaveService {
     element.marginTop = e.marginTop ?? undefined;
     element.marginBottom = e.marginBottom ?? undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
+    element.runningMarkerRole = e.runningMarkerRole ?? undefined;
+    element.runningMarkerText = e.runningMarkerText?.trim() || undefined;
   }
 
   public static SaveRichTextBox(
@@ -780,6 +822,8 @@ export class SaveService {
     element.marginBottom = e.marginBottom ?? undefined;
     element.rtl = e.rtl || undefined;
     element.scrollable = e.scrollable || undefined;
+    element.runningMarkerRole = e.runningMarkerRole ?? undefined;
+    element.runningMarkerText = e.runningMarkerText?.trim() || undefined;
   }
 
   public static SaveModeKey(element: ModeKeyElement_v1, e: ModeKeyElement) {
@@ -822,9 +866,14 @@ export class SaveService {
 
     score.staff = new Staff();
     score.staff.elements = [];
+    score.documentProperties = new DocumentProperties();
 
     score.pageSetup = new PageSetup();
 
+    this.LoadDocumentProperties_v1(
+      score.documentProperties,
+      s.documentProperties ?? new DocumentProperties_v1(),
+    );
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
     this.LoadLyricSetup_v1(
       score.staff.lyrics,
@@ -832,10 +881,21 @@ export class SaveService {
     );
 
     if (s.headers) {
+      const savedChapterOpeningHeader =
+        s.headers.chapterOpening?.elements[0] != null
+          ? s.headers.chapterOpening
+          : s.headers.default;
+
       this.LoadHeader_v1(
         s.version,
         score.headers.default,
         s.headers.default,
+        score.pageSetup,
+      );
+      this.LoadHeader_v1(
+        s.version,
+        score.headers.chapterOpening,
+        savedChapterOpeningHeader,
         score.pageSetup,
       );
       this.LoadHeader_v1(
@@ -859,10 +919,21 @@ export class SaveService {
     }
 
     if (s.footers) {
+      const savedChapterOpeningFooter =
+        s.footers.chapterOpening?.elements[0] != null
+          ? s.footers.chapterOpening
+          : s.footers.default;
+
       this.LoadFooter_v1(
         s.version,
         score.footers.default,
         s.footers.default,
+        score.pageSetup,
+      );
+      this.LoadFooter_v1(
+        s.version,
+        score.footers.chapterOpening,
+        savedChapterOpeningFooter,
         score.pageSetup,
       );
       this.LoadFooter_v1(
@@ -954,11 +1025,17 @@ export class SaveService {
           );
       }
 
+      const legacyElement = e as ScoreElement_v1 &
+        LegacySectionNameCompatibility;
+
       element.id = e.id ?? null;
       element.lineBreak = e.lineBreak === true;
       element.lineBreakType = e.lineBreakType ?? LineBreakType.Left;
       element.pageBreak = e.pageBreak === true;
-      element.sectionName = e.sectionName ?? null;
+      this.applyLegacySectionNameToRunningMarker(
+        element,
+        normalizeLegacySectionName(legacyElement.sectionName),
+      );
 
       score.staff.elements.push(element);
     }
@@ -994,6 +1071,8 @@ export class SaveService {
 
     pageSetup.headerDifferentFirstPage = p.headerDifferentFirstPage === true;
     pageSetup.headerDifferentOddEven = p.headerDifferentOddEven === true;
+    pageSetup.headerFooterDifferentChapterOpening =
+      p.headerFooterDifferentChapterOpening !== false;
     pageSetup.showHeader = p.showHeader === true;
     pageSetup.showFooter = p.showFooter === true;
     pageSetup.richHeaderFooter = p.richHeaderFooter === true;
@@ -1003,6 +1082,8 @@ export class SaveService {
 
     if (p.showHeaderHorizontalRule === true) {
       pageSetup.showHeaderHorizontalRule = p.showHeaderHorizontalRule;
+      pageSetup.excludeHeaderHorizontalRuleChapterOpening =
+        p.excludeHeaderHorizontalRuleChapterOpening === true;
       pageSetup.excludeHeaderHorizontalRuleEvenPage =
         p.excludeHeaderHorizontalRuleEvenPage === true;
       pageSetup.excludeHeaderHorizontalRuleFirstPage =
@@ -1024,6 +1105,8 @@ export class SaveService {
 
     if (p.showFooterHorizontalRule === true) {
       pageSetup.showFooterHorizontalRule = p.showFooterHorizontalRule;
+      pageSetup.excludeFooterHorizontalRuleChapterOpening =
+        p.excludeFooterHorizontalRuleChapterOpening === true;
       pageSetup.excludeFooterHorizontalRuleEvenPage =
         p.excludeFooterHorizontalRuleEvenPage === true;
       pageSetup.excludeFooterHorizontalRuleFirstPage =
@@ -1635,6 +1718,8 @@ export class SaveService {
     element.customHeight = e.customHeight ?? null;
     element.marginTop = e.marginTop ?? 0;
     element.marginBottom = e.marginBottom ?? 0;
+    element.runningMarkerRole = e.runningMarkerRole ?? null;
+    element.runningMarkerText = e.runningMarkerText?.trim() || null;
 
     if (scoreVersion === '1.0') {
       // In this version, use default was incorrectly set to true
@@ -1685,6 +1770,39 @@ export class SaveService {
     element.multipanel = e.multipanel === true;
     element.rtl = e.rtl === true;
     element.scrollable = e.scrollable === true;
+    element.runningMarkerRole = e.runningMarkerRole ?? null;
+    element.runningMarkerText = e.runningMarkerText?.trim() || null;
+  }
+
+  private static applyLegacySectionNameToRunningMarker(
+    element: ScoreElement,
+    legacySectionName: string | null,
+  ) {
+    if (legacySectionName == null) {
+      return;
+    }
+
+    if (
+      element.elementType !== ElementType.TextBox &&
+      element.elementType !== ElementType.RichTextBox
+    ) {
+      return;
+    }
+
+    const runningMarkerElement = element as TextBoxElement | RichTextBoxElement;
+    runningMarkerElement.runningMarkerRole = 'section';
+
+    if ((runningMarkerElement.runningMarkerText?.trim() ?? '') === '') {
+      runningMarkerElement.runningMarkerText = legacySectionName;
+    }
+  }
+
+  public static LoadDocumentProperties_v1(
+    documentProperties: DocumentProperties,
+    p: DocumentProperties_v1,
+  ) {
+    documentProperties.title = p.title?.trim() ?? '';
+    documentProperties.author = p.author?.trim() ?? '';
   }
 
   public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {

@@ -50,18 +50,6 @@
         </Field>
 
         <Field>
-          <FieldLabel for="properties-section-name">{{
-            $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
-          }}</FieldLabel>
-          <Input
-            id="properties-section-name"
-            type="text"
-            :model-value="selectionElement.sectionName ?? ''"
-            @change="onSectionNameChanged"
-          />
-        </Field>
-
-        <Field>
           <FieldLabel for="properties-line-break">{{
             $t(($) => $.toolbar.selection.lineBreak, { ns: 'toolbar' })
           }}</FieldLabel>
@@ -163,7 +151,6 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -191,7 +178,6 @@ const emit = defineEmits([
   'delete-selected-element',
   'toggle-line-break',
   'toggle-page-break',
-  'update:score-element-section-name',
 ]);
 
 const LINE_BREAK_NONE_VALUE = '__none__';
@@ -299,20 +285,6 @@ function translateElementTypeLabel(label: ElementTypeLabelSelector) {
     case 'toolbar':
       return t(label.selector, { ns: 'toolbar' });
   }
-}
-
-function onSectionNameChanged(event: Event) {
-  const element = selectionElement.value;
-
-  if (element == null) {
-    return;
-  }
-
-  emit(
-    'update:score-element-section-name',
-    element,
-    (event.target as HTMLInputElement).value,
-  );
 }
 
 function onLineBreakChanged(value: AcceptableValue) {

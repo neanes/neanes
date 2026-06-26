@@ -45,6 +45,7 @@ import AboutDialog from '@/components/AboutDialog.vue';
 import AlternateLine from '@/components/AlternateLine.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
+import DocumentPropertiesDialog from '@/components/DocumentPropertiesDialog.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import type {
@@ -83,6 +84,7 @@ import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
 import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
 import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
+import { Badge } from '@/components/ui/badge';
 import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
 import {
   ContextMenu,
@@ -172,8 +174,9 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import type { Line, Page } from '@/models/Page';
-import type { PageSetup } from '@/models/PageSetup';
+import { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
+import type { DocumentProperties } from '@/models/Score';
 import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import type { WorkspaceLocalStorage } from '@/models/Workspace';
@@ -209,8 +212,16 @@ import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { isElectron } from '@/utils/isElectron';
 import { resolvePageMargins } from '@/utils/PageMargins';
-import { getDisplayedPageNumber, isRightHandPage } from '@/utils/PageNumbering';
+import {
+  getDisplayedPageNumber,
+  isDisplayedPageNumberOdd,
+  isRightHandPage,
+} from '@/utils/PageNumbering';
 import type { TokenMetadata } from '@/utils/replaceTokens';
+import {
+  resolveRunningMarkerPageMetadata,
+  resolveRunningMarkerText,
+} from '@/utils/runningMarkers';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
@@ -256,6 +267,9 @@ const scoreElementCommandFactory: CommandFactory<ScoreElement> =
 
 const pageSetupCommandFactory: CommandFactory<PageSetup> =
   new CommandFactory<PageSetup>();
+
+const documentPropertiesCommandFactory: CommandFactory<DocumentProperties> =
+  new CommandFactory<DocumentProperties>();
 
 function createFontLoadDescriptor(
   fontFamily: string,
@@ -387,6 +401,7 @@ const modeKeyDialogIsOpen = ref(false);
 const syllablePositioningDialogIsOpen = ref(false);
 const playbackSettingsDialogIsOpen = ref(false);
 const pageSetupDialogIsOpen = ref(false);
+const documentPropertiesDialogIsOpen = ref(false);
 const editorPreferencesDialogIsOpen = ref(false);
 const aboutDialogIsOpen = ref(false);
 const exportDialogIsOpen = ref(false);
@@ -1319,6 +1334,7 @@ const dialogOpen = computed(() => {
   return (
     modeKeyDialogIsOpen.value ||
     pageSetupDialogIsOpen.value ||
+    documentPropertiesDialogIsOpen.value ||
     playbackSettingsDialogIsOpen.value ||
     syllablePositioningDialogIsOpen.value ||
     editorPreferencesDialogIsOpen.value ||
@@ -1329,6 +1345,10 @@ const dialogOpen = computed(() => {
 const filteredPages = computed(() => {
   return printMode.value ? pages.value.filter((x) => !x.isEmpty) : pages.value;
 });
+
+const runningMarkerPageMetadata = computed(() =>
+  resolveRunningMarkerPageMetadata(filteredPages.value),
+);
 
 provide(
   editorPreferencesKey,
@@ -1527,6 +1547,10 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuSave, onFileMenuSave);
   EventBus.$on(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
   EventBus.$on(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
+  EventBus.$on(
+    IpcMainChannels.FileMenuDocumentProperties,
+    onFileMenuDocumentProperties,
+  );
   EventBus.$on(IpcMainChannels.FileMenuImportOcr, onFileMenuImportOcr);
   EventBus.$on(IpcMainChannels.FileMenuExportAsPdf, onFileMenuExportAsPdf);
   EventBus.$on(IpcMainChannels.FileMenuExportAsHtml, onFileMenuExportAsHtml);
@@ -1619,6 +1643,10 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuSave, onFileMenuSave);
   EventBus.$off(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
   EventBus.$off(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
+  EventBus.$off(
+    IpcMainChannels.FileMenuDocumentProperties,
+    onFileMenuDocumentProperties,
+  );
   EventBus.$off(IpcMainChannels.FileMenuExportAsPdf, onFileMenuExportAsPdf);
   EventBus.$off(IpcMainChannels.FileMenuExportAsHtml, onFileMenuExportAsHtml);
   EventBus.$off(
@@ -2235,8 +2263,10 @@ function showExportReplyToast(
 
 function getHeaderForPageIndex(pageIndex: number) {
   const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
-  const header = score.value.getHeaderForPage(pageNumber);
+  const header = score.value.getHeaderForPage(pageNumber, isChapterOpening);
 
   // Currently, headers only support a single text box element.
   return header.elements[0] as TextBoxElement | RichTextBoxElement;
@@ -2244,29 +2274,126 @@ function getHeaderForPageIndex(pageIndex: number) {
 
 function getFooterForPageIndex(pageIndex: number) {
   const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
-  const footer = score.value.getFooterForPage(pageNumber);
+  const footer = score.value.getFooterForPage(pageNumber, isChapterOpening);
 
   // Currently, footers only support a single text box element.
   return footer.elements[0] as TextBoxElement | RichTextBoxElement;
 }
 
-function shouldShowHeaderForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+function getHeaderFooterVariantForPageIndex(
+  pageIndex: number,
+): HeaderFooterVariant {
+  const physicalPageNumber =
+    filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
+  const isOddDisplayedPage = isDisplayedPageNumberOdd(
+    score.value.pageSetup,
+    physicalPageNumber,
+  );
 
-  return score.value.shouldShowHeaderOnPage(pageNumber);
+  if (
+    score.value.pageSetup.headerDifferentFirstPage &&
+    physicalPageNumber === 1
+  ) {
+    return 'firstPage';
+  }
+
+  if (
+    score.value.pageSetup.headerFooterDifferentChapterOpening &&
+    isChapterOpening
+  ) {
+    return 'chapterOpening';
+  }
+
+  if (score.value.pageSetup.headerDifferentOddEven) {
+    return isOddDisplayedPage ? 'odd' : 'even';
+  }
+
+  return 'default';
 }
 
-function shouldShowFooterForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+function getHeaderFooterVariantLabel(variant: HeaderFooterVariant) {
+  switch (variant) {
+    case 'firstPage':
+      return t(($) => $.dialog.pageSetup.firstPage, { ns: 'dialog' });
+    case 'chapterOpening':
+      return t(($) => $.dialog.pageSetup.chapterOpening, { ns: 'dialog' });
+    case 'odd':
+      return t(($) => $.dialog.pageSetup.oddPages, { ns: 'dialog' });
+    case 'even':
+      return t(($) => $.dialog.pageSetup.evenPages, { ns: 'dialog' });
+    default:
+      return t(($) => $.dialog.pageSetup.defaultVariant, { ns: 'dialog' });
+  }
+}
 
-  return score.value.shouldShowFooterOnPage(pageNumber);
+function getHeaderFooterBadgeLabel(pageIndex: number, kind: HeaderFooterKind) {
+  const kindLabel =
+    kind === 'header'
+      ? t(($) => $.dialog.pageSetup.header, { ns: 'dialog' })
+      : t(($) => $.dialog.pageSetup.footer, { ns: 'dialog' });
+
+  return `${kindLabel}: ${getHeaderFooterVariantLabel(
+    getHeaderFooterVariantForPageIndex(pageIndex),
+  )}`;
+}
+
+function getHeaderFooterBadgeStyle(
+  pageIndex: number,
+  page: Page,
+  kind: HeaderFooterKind,
+): StyleValue {
+  const margins = getResolvedMarginsForPage(page);
+  const badgeGap = 4;
+  const style: CSSProperties = {
+    left: withZoom(margins.left),
+  };
+
+  if (kind === 'header') {
+    style.top = withZoom(
+      score.value.pageSetup.headerMargin +
+        getHeaderForPageIndex(pageIndex).height +
+        badgeGap,
+    );
+  } else {
+    style.bottom = withZoom(
+      score.value.pageSetup.footerMargin +
+        getFooterForPageIndex(pageIndex).height +
+        badgeGap,
+    );
+  }
+
+  return style;
+}
+
+function shouldShowHeaderRuleForPageIndex(pageIndex: number) {
+  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
+
+  return score.value.shouldShowHeaderRuleForPageIndex(
+    pageNumber,
+    isChapterOpening,
+  );
+}
+
+function shouldShowFooterRuleForPageIndex(pageIndex: number) {
+  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
+
+  return score.value.shouldShowFooterRuleOnPage(pageNumber, isChapterOpening);
 }
 
 function getTokenMetadata(pageIndex: number): TokenMetadata {
   const physicalPageNumber = filteredPages.value[pageIndex].physicalPageNumber;
   const lastPhysicalPageNumber =
     filteredPages.value[filteredPages.value.length - 1].physicalPageNumber;
+  const runningMarkers = runningMarkerPageMetadata.value[pageIndex];
 
   return {
     pageNumber: getDisplayedPageNumber(
@@ -2283,6 +2410,10 @@ function getTokenMetadata(pageIndex: number): TokenMetadata {
         ? getFileNameFromPath(selectedWorkspace.value.filePath)
         : selectedWorkspace.value.tempFileName,
     filePath: currentFilePath.value || '',
+    title: score.value.documentProperties.title,
+    author: score.value.documentProperties.author,
+    chapter: runningMarkers?.chapter ?? '',
+    section: runningMarkers?.section ?? '',
   };
 }
 
@@ -2381,7 +2512,7 @@ function getSectionNumberForElementIndex(elementIndex: number) {
     return 1;
   }
 
-  const sectionMarkers = scoreElements.filter(hasSectionName);
+  const sectionMarkers = scoreElements.filter(isSectionMarker);
   if (sectionMarkers.length === 0) {
     return 1;
   }
@@ -2411,7 +2542,7 @@ function getSectionCount() {
     return 1;
   }
 
-  const sectionMarkers = scoreElements.filter(hasSectionName);
+  const sectionMarkers = scoreElements.filter(isSectionMarker);
   if (sectionMarkers.length === 0) {
     return 1;
   }
@@ -2422,8 +2553,21 @@ function getSectionCount() {
   );
 }
 
-function hasSectionName(element: ScoreElement) {
-  return (element.sectionName ?? '').trim().length > 0;
+function isSectionMarker(element: ScoreElement) {
+  if (
+    element.elementType !== ElementType.TextBox &&
+    element.elementType !== ElementType.RichTextBox
+  ) {
+    return false;
+  }
+
+  const runningMarkerElement = element as TextBoxElement | RichTextBoxElement;
+
+  if (runningMarkerElement.runningMarkerRole !== 'section') {
+    return false;
+  }
+
+  return resolveRunningMarkerText(runningMarkerElement) != null;
 }
 
 function setSelectionRange(element: ScoreElement) {
@@ -3140,26 +3284,6 @@ function toggleInspectorLineBreak(lineBreakType: LineBreakType | null) {
   save();
 }
 
-function updateScoreElementSectionName(
-  element: ScoreElement,
-  sectionName: string | null,
-) {
-  if (sectionName != null && sectionName.trim() == '') {
-    sectionName = null;
-  }
-
-  commandService.value.execute(
-    scoreElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: {
-        sectionName,
-      },
-    }),
-  );
-
-  save();
-}
-
 function switchToMartyria(element: ScoreElement) {
   const index = elements.value.indexOf(element);
 
@@ -3307,7 +3431,7 @@ function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
     }
 
     if (
-      shouldShowHeaderForPageIndex(pageIndex) &&
+      score.value.pageSetup.showHeader &&
       getHeaderForPageIndex(pageIndex) === element
     ) {
       components.push(
@@ -3316,7 +3440,7 @@ function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
     }
 
     if (
-      shouldShowFooterForPageIndex(pageIndex) &&
+      score.value.pageSetup.showFooter &&
       getFooterForPageIndex(pageIndex) === element
     ) {
       components.push(
@@ -6384,171 +6508,71 @@ function resizableTextDefaultsChanged(previous: PageSetup, current: PageSetup) {
 }
 
 function updatePageSetup(pageSetup: PageSetup) {
-  const needToRecalcRichTextBoxes = resizableTextDefaultsChanged(
-    score.value.pageSetup,
+  const currentPageSetup = score.value.pageSetup;
+  const nextPageSetup = normalizePageSetupForGeneratedHeaderFooterDefaults(
     pageSetup,
+    shouldAutoEnableDifferentOddEvenForFacingPages(
+      score.value,
+      currentPageSetup,
+      pageSetup,
+    ),
+  );
+  const needToRecalcRichTextBoxes = resizableTextDefaultsChanged(
+    currentPageSetup,
+    nextPageSetup,
   );
 
   const updateCommands: Command[] = [
     pageSetupCommandFactory.create('update-properties', {
-      target: score.value.pageSetup,
-      newValues: pageSetup,
+      target: currentPageSetup,
+      newValues: nextPageSetup,
     }),
   ];
 
-  if (pageSetup.richHeaderFooter && !score.value.pageSetup.richHeaderFooter) {
-    updateCommands.push(
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.default.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'default',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.even.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'even',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.firstPage.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'firstPage',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.odd.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'odd',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.default.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'default',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.even.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'even',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.firstPage.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'firstPage',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.odd.elements,
-        element: createRichHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'odd',
-        ),
-        replaceAtIndex: 0,
-      }),
+  if (nextPageSetup.richHeaderFooter !== currentPageSetup.richHeaderFooter) {
+    pushHeaderFooterReplacementCommands(
+      updateCommands,
+      score.value,
+      createGeneratedHeaderFooterTemplates(
+        nextPageSetup,
+        nextPageSetup.richHeaderFooter,
+      ),
     );
   } else if (
-    !pageSetup.richHeaderFooter &&
-    score.value.pageSetup.richHeaderFooter
+    generatedHeaderFooterDefaultsChanged(currentPageSetup, nextPageSetup)
   ) {
-    updateCommands.push(
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.default.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'default',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.even.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'even',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.firstPage.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'firstPage',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.odd.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Title',
-          'odd',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.default.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'default',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.even.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'even',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.firstPage.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'firstPage',
-        ),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.odd.elements,
-        element: createRegularHeaderFooterWithPageNumber(
-          pageSetup,
-          'Footer',
-          'odd',
-        ),
-        replaceAtIndex: 0,
-      }),
+    const oldGeneratedTemplates = createGeneratedHeaderFooterTemplates(
+      currentPageSetup,
+      currentPageSetup.richHeaderFooter,
     );
+    const newGeneratedTemplates = createGeneratedHeaderFooterTemplates(
+      nextPageSetup,
+      nextPageSetup.richHeaderFooter,
+    );
+
+    for (const slot of headerFooterSlots) {
+      const currentElement = getHeaderFooterSlotElement(score.value, slot);
+      const oldGeneratedElement = getHeaderFooterTemplateSlotElement(
+        oldGeneratedTemplates,
+        slot,
+      );
+
+      if (
+        currentElement != null &&
+        areGeneratedHeaderFooterElementsEqual(
+          currentElement,
+          oldGeneratedElement,
+        )
+      ) {
+        updateCommands.push(
+          createHeaderFooterReplacementCommand(
+            score.value,
+            slot,
+            getHeaderFooterTemplateSlotElement(newGeneratedTemplates, slot),
+          ),
+        );
+      }
+    }
   }
 
   commandService.value.executeAsBatch(updateCommands);
@@ -6557,6 +6581,17 @@ function updatePageSetup(pageSetup: PageSetup) {
     recalculateRichTextBoxHeights();
     recalculateTextBoxHeights();
   }
+
+  save();
+}
+
+function updateDocumentProperties(documentProperties: DocumentProperties) {
+  commandService.value.execute(
+    documentPropertiesCommandFactory.create('update-properties', {
+      target: score.value.documentProperties,
+      newValues: documentProperties,
+    }),
+  );
 
   save();
 }
@@ -6587,37 +6622,92 @@ function createRegularHeaderFooter(
   return textbox;
 }
 
+type HeaderFooterKind = 'header' | 'footer';
+type HeaderFooterVariant =
+  | 'default'
+  | 'firstPage'
+  | 'odd'
+  | 'even'
+  | 'chapterOpening';
+type HeaderFooterSlot = {
+  kind: HeaderFooterKind;
+  variant: HeaderFooterVariant;
+};
+type HeaderFooterTemplateElement = TextBoxElement | RichTextBoxElement;
+type HeaderFooterTemplateGroup<T> = Record<HeaderFooterVariant, T>;
+type HeaderFooterTemplates<T> = Record<
+  HeaderFooterKind,
+  HeaderFooterTemplateGroup<T>
+>;
+
+const headerFooterVariants: HeaderFooterVariant[] = [
+  'default',
+  'firstPage',
+  'odd',
+  'even',
+  'chapterOpening',
+];
+
+const headerFooterSlots: HeaderFooterSlot[] = [
+  { kind: 'header', variant: 'default' },
+  { kind: 'header', variant: 'firstPage' },
+  { kind: 'header', variant: 'odd' },
+  { kind: 'header', variant: 'even' },
+  { kind: 'header', variant: 'chapterOpening' },
+  { kind: 'footer', variant: 'default' },
+  { kind: 'footer', variant: 'firstPage' },
+  { kind: 'footer', variant: 'odd' },
+  { kind: 'footer', variant: 'even' },
+  { kind: 'footer', variant: 'chapterOpening' },
+];
+
+const nonChapterOddEvenAffectedSlots: HeaderFooterSlot[] = [
+  { kind: 'header', variant: 'default' },
+  { kind: 'header', variant: 'odd' },
+  { kind: 'header', variant: 'even' },
+  { kind: 'footer', variant: 'default' },
+  { kind: 'footer', variant: 'odd' },
+  { kind: 'footer', variant: 'even' },
+];
+
 function getDefaultHeaderFooterPanels(
   pageSetup: PageSetup,
-  center: string,
-  page: 'default' | 'firstPage' | 'odd' | 'even',
+  kind: HeaderFooterKind,
+  variant: HeaderFooterVariant,
 ) {
+  if (!pageSetup.facingPages) {
+    return kind === 'header'
+      ? { left: '', center: '', right: '' }
+      : { left: '', center: '$p', right: '' };
+  }
+
+  if (variant === 'chapterOpening') {
+    return kind === 'header'
+      ? { left: '', center: '', right: '' }
+      : { left: '', center: '$p', right: '' };
+  }
+
+  if (kind === 'footer') {
+    return { left: '', center: '', right: '' };
+  }
+
   let isRightHandTemplatePage: boolean;
 
-  if (page === 'default' || page === 'firstPage') {
+  if (variant === 'default' || variant === 'firstPage') {
     isRightHandTemplatePage = isRightHandPage(pageSetup, 1);
   } else if (!pageSetup.facingPages) {
-    isRightHandTemplatePage = page === 'odd';
+    isRightHandTemplatePage = variant === 'odd';
   } else if (pageSetup.direction === 'rtl') {
-    isRightHandTemplatePage = page === 'even';
+    isRightHandTemplatePage = variant === 'even';
   } else {
-    isRightHandTemplatePage = page === 'odd';
+    isRightHandTemplatePage = variant === 'odd';
   }
 
   return {
     left: isRightHandTemplatePage ? '' : '$p',
-    center,
+    center: isRightHandTemplatePage ? '$:section' : '$:chapter',
     right: isRightHandTemplatePage ? '$p' : '',
   };
-}
-
-function createRegularHeaderFooterWithPageNumber(
-  pageSetup: PageSetup,
-  center: string,
-  page: 'default' | 'firstPage' | 'odd' | 'even',
-) {
-  const panel = getDefaultHeaderFooterPanels(pageSetup, center, page);
-  return createRegularHeaderFooter(panel.left, panel.center, panel.right);
 }
 
 function createRichHeaderFooter(left: string, center: string, right: string) {
@@ -6629,13 +6719,204 @@ function createRichHeaderFooter(left: string, center: string, right: string) {
   return textbox;
 }
 
-function createRichHeaderFooterWithPageNumber(
+function createDefaultRegularHeaderFooter(
   pageSetup: PageSetup,
-  center: string,
-  page: 'default' | 'firstPage' | 'odd' | 'even',
+  kind: HeaderFooterKind,
+  variant: HeaderFooterVariant,
 ) {
-  const panel = getDefaultHeaderFooterPanels(pageSetup, center, page);
+  const panel = getDefaultHeaderFooterPanels(pageSetup, kind, variant);
+  return createRegularHeaderFooter(panel.left, panel.center, panel.right);
+}
+
+function createDefaultRichHeaderFooter(
+  pageSetup: PageSetup,
+  kind: HeaderFooterKind,
+  variant: HeaderFooterVariant,
+) {
+  const panel = getDefaultHeaderFooterPanels(pageSetup, kind, variant);
   return createRichHeaderFooter(panel.left, panel.center, panel.right);
+}
+
+function createDefaultHeaderFooterElement(
+  pageSetup: PageSetup,
+  richHeaderFooter: boolean,
+  kind: HeaderFooterKind,
+  variant: HeaderFooterVariant,
+) {
+  return richHeaderFooter
+    ? createDefaultRichHeaderFooter(pageSetup, kind, variant)
+    : createDefaultRegularHeaderFooter(pageSetup, kind, variant);
+}
+
+function createGeneratedHeaderFooterTemplates(
+  pageSetup: PageSetup,
+  richHeaderFooter: boolean,
+): HeaderFooterTemplates<HeaderFooterTemplateElement> {
+  return {
+    header: Object.fromEntries(
+      headerFooterVariants.map((variant) => [
+        variant,
+        createDefaultHeaderFooterElement(
+          pageSetup,
+          richHeaderFooter,
+          'header',
+          variant,
+        ),
+      ]),
+    ) as HeaderFooterTemplateGroup<HeaderFooterTemplateElement>,
+    footer: Object.fromEntries(
+      headerFooterVariants.map((variant) => [
+        variant,
+        createDefaultHeaderFooterElement(
+          pageSetup,
+          richHeaderFooter,
+          'footer',
+          variant,
+        ),
+      ]),
+    ) as HeaderFooterTemplateGroup<HeaderFooterTemplateElement>,
+  };
+}
+
+function getHeaderFooterSlotCollection(score: Score, slot: HeaderFooterSlot) {
+  return slot.kind === 'header'
+    ? score.headers[slot.variant].elements
+    : score.footers[slot.variant].elements;
+}
+
+function getHeaderFooterSlotElement(score: Score, slot: HeaderFooterSlot) {
+  return getHeaderFooterSlotCollection(score, slot)[0] as
+    | HeaderFooterTemplateElement
+    | undefined;
+}
+
+function getHeaderFooterTemplateSlotElement(
+  templates: HeaderFooterTemplates<HeaderFooterTemplateElement>,
+  slot: HeaderFooterSlot,
+) {
+  return templates[slot.kind][slot.variant];
+}
+
+function createHeaderFooterReplacementCommand(
+  score: Score,
+  slot: HeaderFooterSlot,
+  element: HeaderFooterTemplateElement,
+) {
+  return scoreElementCommandFactory.create('replace-element-in-collection', {
+    collection: getHeaderFooterSlotCollection(score, slot),
+    element,
+    replaceAtIndex: 0,
+  });
+}
+
+function pushHeaderFooterReplacementCommands(
+  updateCommands: Command[],
+  score: Score,
+  templates: HeaderFooterTemplates<HeaderFooterTemplateElement>,
+) {
+  for (const slot of headerFooterSlots) {
+    updateCommands.push(
+      createHeaderFooterReplacementCommand(
+        score,
+        slot,
+        getHeaderFooterTemplateSlotElement(templates, slot),
+      ),
+    );
+  }
+}
+
+function areGeneratedHeaderFooterElementsEqual(
+  left: HeaderFooterTemplateElement,
+  right: HeaderFooterTemplateElement,
+) {
+  if (left.elementType !== right.elementType) {
+    return false;
+  }
+
+  return (
+    left.multipanel === right.multipanel &&
+    left.contentLeft === right.contentLeft &&
+    left.contentCenter === right.contentCenter &&
+    left.contentRight === right.contentRight
+  );
+}
+
+function generatedHeaderFooterDefaultsChanged(
+  previous: PageSetup,
+  current: PageSetup,
+) {
+  return !shallowEquals(
+    {
+      facingPages: previous.facingPages,
+      direction: previous.direction,
+      headerDifferentOddEven: previous.headerDifferentOddEven,
+      headerFooterDifferentChapterOpening:
+        previous.headerFooterDifferentChapterOpening,
+      richHeaderFooter: previous.richHeaderFooter,
+    },
+    {
+      facingPages: current.facingPages,
+      direction: current.direction,
+      headerDifferentOddEven: current.headerDifferentOddEven,
+      headerFooterDifferentChapterOpening:
+        current.headerFooterDifferentChapterOpening,
+      richHeaderFooter: current.richHeaderFooter,
+    },
+  );
+}
+
+function shouldAutoEnableDifferentOddEvenForFacingPages(
+  score: Score,
+  previous: PageSetup,
+  current: PageSetup,
+) {
+  if (
+    previous.facingPages ||
+    !current.facingPages ||
+    current.headerDifferentOddEven
+  ) {
+    return false;
+  }
+
+  const oldGeneratedTemplates = createGeneratedHeaderFooterTemplates(
+    previous,
+    previous.richHeaderFooter,
+  );
+
+  return nonChapterOddEvenAffectedSlots.every((slot) => {
+    const currentElement = getHeaderFooterSlotElement(score, slot);
+
+    return (
+      currentElement != null &&
+      areGeneratedHeaderFooterElementsEqual(
+        currentElement,
+        getHeaderFooterTemplateSlotElement(oldGeneratedTemplates, slot),
+      )
+    );
+  });
+}
+
+function normalizePageSetupForGeneratedHeaderFooterDefaults(
+  pageSetup: PageSetup,
+  autoEnableDifferentOddEven: boolean,
+) {
+  return autoEnableDifferentOddEven
+    ? Object.assign(new PageSetup(), pageSetup, {
+        headerDifferentOddEven: true,
+      })
+    : pageSetup;
+}
+
+function initializeDefaultHeaderFooters(score: Score) {
+  const templates = createGeneratedHeaderFooterTemplates(
+    score.pageSetup,
+    score.pageSetup.richHeaderFooter,
+  );
+
+  for (const slot of headerFooterSlots) {
+    getHeaderFooterSlotCollection(score, slot)[0] =
+      getHeaderFooterTemplateSlotElement(templates, slot);
+  }
 }
 
 function updateEntryMode(mode: EntryMode) {
@@ -6974,6 +7255,10 @@ function onFileMenuImportOcr(args: FileMenuImportOcrArgs) {
 
 function onFileMenuPageSetup() {
   pageSetupDialogIsOpen.value = true;
+}
+
+function onFileMenuDocumentProperties() {
+  documentPropertiesDialogIsOpen.value = true;
 }
 
 async function onFileMenuPrint() {
@@ -7948,10 +8233,16 @@ function createDefaultScore() {
         score.pageSetup,
         JSON.parse(pageSetupDefault),
       );
+      score.pageSetup = normalizePageSetupForGeneratedHeaderFooterDefaults(
+        score.pageSetup,
+        score.pageSetup.facingPages && !score.pageSetup.headerDifferentOddEven,
+      );
     }
   } catch (error) {
     console.error(error);
   }
+
+  initializeDefaultHeaderFooters(score);
 
   const title = new TextBoxElement();
   title.content = 'Title';
@@ -8405,10 +8696,6 @@ function renderTabLabel(tab: Tab) {
             @toggle-page-break="toggleInspectorPageBreak"
             @toggle-line-break="toggleInspectorLineBreak"
             @delete-selected-element="deleteInspectorSelectionElement"
-            @update:score-element-section-name="
-              (element, sectionName) =>
-                updateScoreElementSectionName(element, sectionName)
-            "
           />
         </template>
 
@@ -8645,6 +8932,20 @@ function renderTabLabel(tab: Tab) {
                         </div>
                       </template>
                       <template v-if="score.pageSetup.showHeader">
+                        <Badge
+                          v-if="
+                            !printMode &&
+                            getHeaderForPageIndex(pageIndex) ==
+                              selectedHeaderFooterElement
+                          "
+                          variant="outline"
+                          :style="
+                            getHeaderFooterBadgeStyle(pageIndex, page, 'header')
+                          "
+                          class="pointer-events-none absolute z-20 h-auto bg-background/95 px-2 py-0.5 text-[11px]"
+                        >
+                          {{ getHeaderFooterBadgeLabel(pageIndex, 'header') }}
+                        </Badge>
                         <template
                           v-if="
                             isRichTextBoxElement(
@@ -8669,6 +8970,7 @@ function renderTabLabel(tab: Tab) {
                                 selectedHeaderFooterElement
                             "
                             :metadata="getTokenMetadata(pageIndex)"
+                            token-scope="header"
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
                             :editor-language="ckeditorLanguage"
@@ -8720,6 +9022,7 @@ function renderTabLabel(tab: Tab) {
                                 selectedHeaderFooterElement
                             "
                             :metadata="getTokenMetadata(pageIndex)"
+                            token-scope="header"
                             :page-setup="score.pageSetup"
                             :selected="
                               getHeaderForPageIndex(pageIndex) ==
@@ -8748,7 +9051,7 @@ function renderTabLabel(tab: Tab) {
                           />
                         </template>
                         <div
-                          v-if="shouldShowHeaderForPageIndex(pageIndex)"
+                          v-if="shouldShowHeaderRuleForPageIndex(pageIndex)"
                           class="header-footer-hr"
                           :style="
                             getHeaderHorizontalRuleStyle(
@@ -8781,14 +9084,6 @@ function renderTabLabel(tab: Tab) {
                               "
                               class="neume-box"
                             >
-                              <span
-                                v-if="
-                                  element.sectionName != '' &&
-                                  element.sectionName != null
-                                "
-                                class="section-name"
-                                >§</span
-                              >
                               <span v-if="element.pageBreak" class="page-break"
                                 ><PhFile
                               /></span>
@@ -9053,14 +9348,6 @@ function renderTabLabel(tab: Tab) {
                           </template>
                           <template v-else-if="isMartyriaElement(element)">
                             <div class="neume-box">
-                              <span
-                                v-if="
-                                  element.sectionName != '' &&
-                                  element.sectionName != null
-                                "
-                                class="section-name"
-                                >§</span
-                              >
                               <span v-if="element.pageBreak" class="page-break">
                                 <PhFile
                               /></span>
@@ -9096,14 +9383,6 @@ function renderTabLabel(tab: Tab) {
                               "
                               class="neume-box"
                             >
-                              <span
-                                v-if="
-                                  element.sectionName != '' &&
-                                  element.sectionName != null
-                                "
-                                class="section-name"
-                                >§</span
-                              >
                               <span v-if="element.pageBreak" class="page-break">
                                 <PhFile
                               /></span>
@@ -9130,14 +9409,6 @@ function renderTabLabel(tab: Tab) {
                               "
                               class="neume-box"
                             >
-                              <span
-                                v-if="
-                                  element.sectionName != '' &&
-                                  element.sectionName != null
-                                "
-                                class="section-name"
-                                >§</span
-                              >
                               <span v-if="element.pageBreak" class="page-break">
                                 <PhFile
                               /></span>
@@ -9156,14 +9427,6 @@ function renderTabLabel(tab: Tab) {
                             </div>
                           </template>
                           <template v-else-if="isTextBoxElement(element)">
-                            <span
-                              v-if="
-                                element.sectionName != '' &&
-                                element.sectionName != null
-                              "
-                              class="section-name-2"
-                              >§</span
-                            >
                             <span v-if="element.pageBreak" class="page-break-2"
                               ><PhFile
                             /></span>
@@ -9194,14 +9457,6 @@ function renderTabLabel(tab: Tab) {
                             />
                           </template>
                           <template v-else-if="isRichTextBoxElement(element)">
-                            <span
-                              v-if="
-                                element.sectionName != '' &&
-                                element.sectionName != null
-                              "
-                              class="section-name-2"
-                              >§</span
-                            >
                             <span v-if="element.pageBreak" class="page-break-2"
                               ><PhFile
                             /></span>
@@ -9239,14 +9494,6 @@ function renderTabLabel(tab: Tab) {
                             />
                           </template>
                           <template v-else-if="isModeKeyElement(element)">
-                            <span
-                              v-if="
-                                element.sectionName != '' &&
-                                element.sectionName != null
-                              "
-                              class="section-name-2"
-                              >§</span
-                            >
                             <span v-if="element.pageBreak" class="page-break-2"
                               ><PhFile
                             /></span>
@@ -9271,14 +9518,6 @@ function renderTabLabel(tab: Tab) {
                             />
                           </template>
                           <template v-else-if="isDropCapElement(element)">
-                            <span
-                              v-if="
-                                element.sectionName != '' &&
-                                element.sectionName != null
-                              "
-                              class="section-name"
-                              >§</span
-                            >
                             <span v-if="element.pageBreak" class="page-break"
                               ><PhFile
                             /></span>
@@ -9373,8 +9612,22 @@ function renderTabLabel(tab: Tab) {
                         >
                       </div>
                       <template v-if="score.pageSetup.showFooter">
+                        <Badge
+                          v-if="
+                            !printMode &&
+                            getFooterForPageIndex(pageIndex) ==
+                              selectedHeaderFooterElement
+                          "
+                          variant="outline"
+                          :style="
+                            getHeaderFooterBadgeStyle(pageIndex, page, 'footer')
+                          "
+                          class="pointer-events-none absolute z-20 h-auto bg-background/95 px-2 py-0.5 text-[11px]"
+                        >
+                          {{ getHeaderFooterBadgeLabel(pageIndex, 'footer') }}
+                        </Badge>
                         <div
-                          v-if="shouldShowFooterForPageIndex(pageIndex)"
+                          v-if="shouldShowFooterRuleForPageIndex(pageIndex)"
                           class="header-footer-hr"
                           :style="
                             getFooterHorizontalRuleStyle(
@@ -9407,6 +9660,7 @@ function renderTabLabel(tab: Tab) {
                                 selectedHeaderFooterElement
                             "
                             :metadata="getTokenMetadata(pageIndex)"
+                            token-scope="footer"
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
                             :editor-language="ckeditorLanguage"
@@ -9458,6 +9712,7 @@ function renderTabLabel(tab: Tab) {
                                 selectedHeaderFooterElement
                             "
                             :metadata="getTokenMetadata(pageIndex)"
+                            token-scope="footer"
                             :page-setup="score.pageSetup"
                             :selected="
                               getFooterForPageIndex(pageIndex) ==
@@ -9859,6 +10114,12 @@ function renderTabLabel(tab: Tab) {
       :page-setup="score.pageSetup"
       :fonts="fonts"
       @update="updatePageSetup($event)"
+    />
+    <DocumentPropertiesDialog
+      v-if="documentPropertiesDialogIsOpen"
+      v-model:open="documentPropertiesDialogIsOpen"
+      :document-properties="score.documentProperties"
+      @update="updateDocumentProperties($event)"
     />
     <ExportDialog
       v-if="exportDialogIsOpen"
@@ -10401,22 +10662,6 @@ function renderTabLabel(tab: Tab) {
   width: calc(16px * var(--zoom, 1));
 }
 
-.section-name {
-  position: absolute;
-  top: calc(-20px * var(--zoom, 1));
-  height: 100%;
-  font-weight: bold;
-}
-
-.section-name-2 {
-  position: absolute;
-  font-weight: bold;
-  left: calc(-22px * var(--zoom, 1));
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
 .print-only {
   display: none;
 }
@@ -10444,8 +10689,6 @@ function renderTabLabel(tab: Tab) {
 .page.print .line-break,
 .page.print .page-break-2,
 .page.print .line-break-2,
-.page.print .section-name,
-.page.print .section-name-2,
 .page.print :deep(.handle),
 .page.print :deep(.ck-widget__type-around) {
   display: none !important;
@@ -10538,8 +10781,6 @@ function renderTabLabel(tab: Tab) {
   .workspace-tab-container,
   .workspace-tab-new-button,
   .contextual-toolbar-panel,
-  .section-name,
-  .section-name-2,
   .page-break,
   .line-break,
   .page-break-2,

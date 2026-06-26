@@ -33,6 +33,12 @@
     "root": "Επιλογή Αρκτικής Μαρτυρίας",
     "description": "Επιλέξτε αρκτική μαρτυρία."
   },
+  "documentProperties": {
+    "root": "Ιδιότητες Εγγράφου",
+    "description": "Ορίστε μεταδεδομένα εγγράφου για τρέχουσες κεφαλίδες και άλλα σύμβολα.",
+    "title": "Τίτλος",
+    "author": "Συγγραφέας"
+  },
   "neumePositioning": {
     "root": "Τοποθέτηση Σημείου",
     "description": "Ρυθμίστε τις μετατοπίσεις των βοηθητικών σημείων και προεπισκοπήστε τις θέσεις τους.",
@@ -106,12 +112,19 @@
     "showHeaderHorizontalRuleDescription": "Εμφάνιση οριζόντιας γραμμής κάτω από την κεφαλίδα.",
     "showFooterHorizontalRuleDescription": "Εμφάνιση οριζόντιας γραμμής πάνω από το υποσέλιδο.",
     "excludeHorizontalRuleFirstPageDescription": "Απόκρυψη στην πρώτη σελίδα.",
+    "excludeHorizontalRuleChapterOpeningDescription": "Απόκρυψη στις σελίδες ανοίγματος κεφαλαίου.",
     "excludeHorizontalRuleEvenPageDescription": "Απόκρυψη σε ζυγές σελίδες.",
     "excludeHorizontalRuleOddPageDescription": "Απόκρυψη σε μονές σελίδες.",
     "includeHeader": "Συμπερίληψη Κεφαλίδας",
     "includeFooter": "Συμπερίληψη Υποσέλιδου",
+    "firstPage": "Πρώτη Σελίδα",
     "differentFirstPage": "Διαφορετική Πρώτη Σελίδα",
+    "oddPages": "Μονές Σελίδες",
+    "evenPages": "Ζυγές Σελίδες",
     "differentOddAndEven": "Διαφορετικές Μονές και Ζυγές",
+    "chapterOpening": "Άνοιγμα Κεφαλαίου",
+    "differentChapterOpening": "Different chapter opening",
+    "defaultVariant": "Προεπιλογή",
     "richHeaderFooter": "Χρήση Εμπλουτισμένου Κειμένου",
     "firstPageNumber": "Αριθμός Πρώτης Σελίδας",
     "firstPageNumberDescription": "Ο αριθμός της πρώτης σελίδας στο μουσικό κείμενο. Χρησιμοποιήστε $p στην κεφαλίδα ή το υποσέλιδο για εισαγωγή αριθμού σελίδας.",

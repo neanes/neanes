@@ -12,7 +12,6 @@
     "insertPelastikon": "Inserează pelastikon",
     "measureBar": "Bară de măsură",
     "outline": "Contur",
-    "sectionName": "Numele secțiunii",
     "spaceAfter": "Spațiu după",
     "tempoSign": "Semn de tempo",
     "useDefaultStyle": "Folosește stilul implicit",
@@ -123,7 +122,13 @@
     "centerOnPage": "Centrează pe pagină",
     "offsetYTop": "Offset Y sus",
     "offsetYBottom": "Offset Y jos",
-    "fillWidth": "Umple lățimea"
+    "fillWidth": "Umple lățimea",
+    "runningMarker": "Marcaj Curent",
+    "runningMarkerRole": "Rol",
+    "runningMarkerChapter": "Capitol",
+    "runningMarkerSection": "Secțiune",
+    "runningMarkerText": "Text de Suprascriere",
+    "runningMarkerTextPlaceholder": "Folosește textul vizibil"
   },
   "richTextBox": {
     "default": "Implicit",

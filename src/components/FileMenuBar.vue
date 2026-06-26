@@ -66,6 +66,10 @@
             <PhScroll />
             {{ $t(($) => $.menu.file.pageSetup, { ns: 'menu' }) }}
           </MenubarItem>
+          <MenubarItem @select="onClickDocumentProperties">
+            <PhFileText />
+            {{ $t(($) => $.menu.file.documentProperties, { ns: 'menu' }) }}
+          </MenubarItem>
           <MenubarSub>
             <MenubarSubTrigger>
               <PhExport />
@@ -649,6 +653,10 @@ function onClickPrint() {
 
 function onClickPageSetup() {
   EventBus.$emit(IpcMainChannels.FileMenuPageSetup);
+}
+
+function onClickDocumentProperties() {
+  EventBus.$emit(IpcMainChannels.FileMenuDocumentProperties);
 }
 
 function onClickClose() {

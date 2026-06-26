@@ -67,7 +67,6 @@ export abstract class ScoreElement {
   public lineBreak: boolean = false;
   public lineBreakType: LineBreakType | null = null;
   public pageBreak: boolean = false;
-  public sectionName: string | null = null;
 
   public x: number = 0;
   public y: number = 0;
@@ -836,6 +835,8 @@ export enum TextBoxAlignment {
   Right = 'right',
 }
 
+export type RunningMarkerRole = 'chapter' | 'section';
+
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
   public alignment: TextBoxAlignment = TextBoxAlignment.Left;
@@ -860,6 +861,8 @@ export class TextBoxElement extends ScoreElement {
   public marginTop: number = 0;
   public marginBottom: number = 0;
   public fillWidth: boolean = false;
+  public runningMarkerRole: RunningMarkerRole | null = null;
+  public runningMarkerText: string | null = null;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -915,6 +918,8 @@ export class TextBoxElement extends ScoreElement {
       underline: this.underline,
       useDefaultStyle: this.useDefaultStyle,
       multipanel: this.multipanel,
+      runningMarkerRole: this.runningMarkerRole,
+      runningMarkerText: this.runningMarkerText,
     } as Partial<TextBoxElement>;
   }
 
@@ -951,6 +956,8 @@ export class RichTextBoxElement extends ScoreElement {
   public marginBottom: number = 0;
   public offsetYTop: number = 0;
   public offsetYBottom: number = 0;
+  public runningMarkerRole: RunningMarkerRole | null = null;
+  public runningMarkerText: string | null = null;
 
   // Values computed by the layout service
   public defaultLyricsFontHeight: number = 0;
@@ -989,6 +996,8 @@ export class RichTextBoxElement extends ScoreElement {
       modeChangeIgnoreAttractions: this.modeChangeIgnoreAttractions,
       modeChangePermanentEnharmonicZo: this.modeChangePermanentEnharmonicZo,
       modeChangeBpm: this.modeChangeBpm,
+      runningMarkerRole: this.runningMarkerRole,
+      runningMarkerText: this.runningMarkerText,
     } as Partial<RichTextBoxElement>;
   }
 }

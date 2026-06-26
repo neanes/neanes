@@ -12,7 +12,6 @@
     "insertPelastikon": "Insert Pelastikon",
     "measureBar": "Measure Bar",
     "outline": "Outline",
-    "sectionName": "Section Name",
     "spaceAfter": "Space After",
     "tempoSign": "Tempo Sign",
     "useDefaultStyle": "Use Default Style",
@@ -123,7 +122,13 @@
     "centerOnPage": "Center on Page",
     "offsetYTop": "Top Y Offset",
     "offsetYBottom": "Bottom Y Offset",
-    "fillWidth": "Fill Width"
+    "fillWidth": "Fill Width",
+    "runningMarker": "Running Marker",
+    "runningMarkerRole": "Role",
+    "runningMarkerChapter": "Chapter",
+    "runningMarkerSection": "Section",
+    "runningMarkerText": "Override Text",
+    "runningMarkerTextPlaceholder": "Use visible text"
   },
   "richTextBox": {
     "default": "Default",

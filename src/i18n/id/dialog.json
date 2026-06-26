@@ -33,6 +33,12 @@
     "root": "Pilih Kunci Mode",
     "description": "Pilih kunci mode."
   },
+  "documentProperties": {
+    "root": "Properti Dokumen",
+    "description": "Atur metadata dokumen untuk kepala berjalan dan token lainnya.",
+    "title": "Judul",
+    "author": "Penulis"
+  },
   "neumePositioning": {
     "root": "Penempatan Neuma",
     "description": "Sesuaikan offset neuma pendukung dan pratinjau posisinya.",
@@ -106,12 +112,19 @@
     "showHeaderHorizontalRuleDescription": "Tampilkan garis horizontal di bawah header.",
     "showFooterHorizontalRuleDescription": "Tampilkan garis horizontal di atas footer.",
     "excludeHorizontalRuleFirstPageDescription": "Sembunyikan di halaman pertama.",
+    "excludeHorizontalRuleChapterOpeningDescription": "Sembunyikan di halaman pembuka bab.",
     "excludeHorizontalRuleEvenPageDescription": "Sembunyikan di halaman genap.",
     "excludeHorizontalRuleOddPageDescription": "Sembunyikan di halaman ganjil.",
     "includeHeader": "Sertakan Header",
     "includeFooter": "Sertakan Footer",
+    "firstPage": "Halaman Pertama",
     "differentFirstPage": "Halaman Pertama Berbeda",
+    "oddPages": "Halaman Ganjil",
+    "evenPages": "Halaman Genap",
     "differentOddAndEven": "Halaman Ganjil dan Genap Berbeda",
+    "chapterOpening": "Awal Bab",
+    "differentChapterOpening": "Different chapter opening",
+    "defaultVariant": "Bawaan",
     "richHeaderFooter": "Gunakan Teks Kaya",
     "firstPageNumber": "Nomor Halaman Pertama",
     "firstPageNumberDescription": "Nomor halaman pertama dalam partitur. Gunakan $p di header atau footer untuk menyisipkan nomor halaman.",

@@ -605,7 +605,10 @@
                         }}
                       </FieldDescription>
                     </FieldContent>
-                    <Select v-model="form.numerals">
+                    <Select
+                      :model-value="form.numerals"
+                      @update:model-value="updateNumerals"
+                    >
                       <SelectTrigger id="page-setup-dialog-page-number-format">
                         <SelectValue />
                       </SelectTrigger>
@@ -2596,6 +2599,27 @@ function updateDefaultFontFamily(
   );
 }
 
+function updateDefaultFontsForArabicContext() {
+  const isArabicTextContext =
+    form.value.melkiteRtl || form.value.numerals === 'easternArabic';
+  const sourceFamily = isArabicTextContext
+    ? 'Source Serif'
+    : 'Noto Naskh Arabic';
+  const targetFamily = isArabicTextContext
+    ? 'Noto Naskh Arabic'
+    : 'Source Serif';
+
+  for (const [familyKey, styleKey] of [
+    ['dropCapDefaultFontFamily', 'dropCapDefaultFontStyle'],
+    ['lyricsDefaultFontFamily', 'lyricsDefaultFontStyle'],
+    ['textBoxDefaultFontFamily', 'textBoxDefaultFontStyle'],
+  ] as const) {
+    if (form.value[familyKey] === sourceFamily) {
+      updateDefaultFontFamily(familyKey, styleKey, targetFamily);
+    }
+  }
+}
+
 function toggleNeumeColorOption(
   option: NeumeColorOptions,
   value: CheckboxValue,
@@ -2706,12 +2730,22 @@ function updateMinimumSyllableToHyphenClearance(value: number | null) {
 function onMelkiteRtlChanged(value: CheckboxValue) {
   form.value.melkiteRtl = value === true;
   onChangeMelkiteRtl();
+  updateDefaultFontsForArabicContext();
 }
 
 function onChangeMelkiteRtl() {
   form.value.neumeDefaultFontFamily = form.value.melkiteRtl
     ? 'NeanesRTL'
     : 'Neanes';
+}
+
+function updateNumerals(value: unknown) {
+  if (value !== 'westernArabic' && value !== 'easternArabic') {
+    return;
+  }
+
+  form.value.numerals = value;
+  updateDefaultFontsForArabicContext();
 }
 
 function isSyllableElement(elementType: ElementType) {

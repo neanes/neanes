@@ -169,41 +169,6 @@
         </AppTooltip>
       </ToolbarToggleGroup>
       <ToolbarSeparator />
-      <ToolbarToggleGroup
-        type="multiple"
-        variant="outline"
-        :model-value="listValues"
-        @update:model-value="onListValuesChanged"
-      >
-        <AppTooltip
-          :tooltip="
-            $t(($) => $.toolbar.richTextBox.bulletedList, { ns: 'toolbar' })
-          "
-        >
-          <ToolbarToggleItem
-            value="bulletedList"
-            class="chrome-button"
-            :disabled="!isCommandEnabled('bulletedList')"
-            @mousedown.prevent
-          >
-            <PhListBullets class="size-4" />
-          </ToolbarToggleItem>
-        </AppTooltip>
-        <AppTooltip
-          :tooltip="
-            $t(($) => $.toolbar.richTextBox.numberedList, { ns: 'toolbar' })
-          "
-        >
-          <ToolbarToggleItem
-            value="numberedList"
-            class="chrome-button"
-            :disabled="!isCommandEnabled('numberedList')"
-            @mousedown.prevent
-          >
-            <PhListNumbers class="size-4" />
-          </ToolbarToggleItem>
-        </AppTooltip>
-      </ToolbarToggleGroup>
       <AppTooltip
         :tooltip="$t(($) => $.toolbar.richTextBox.outdent, { ns: 'toolbar' })"
       >
@@ -334,6 +299,8 @@
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
+      <RichTextToolbarItem name="bulletedList" :owner="element" />
+      <RichTextToolbarItem name="numberedList" :owner="element" />
       <RichTextToolbarItem name="link" :owner="element" />
       <RichTextToolbarItem name="uploadImage" :owner="element" />
       <RichTextToolbarItem name="insertTable" :owner="element" />
@@ -347,8 +314,6 @@
 import {
   PhArrowClockwise,
   PhArrowCounterClockwise,
-  PhListBullets,
-  PhListNumbers,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhTextAlignLeft,
@@ -412,8 +377,6 @@ import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
 
 const EXTRA_COMMAND_NAMES = [
-  'bulletedList',
-  'numberedList',
   'outdent',
   'indent',
   'undo',
@@ -459,7 +422,6 @@ const {
   styleValues,
   alignmentValue,
   isCommandEnabled,
-  isCommandActive,
   isStyleToggleEnabled,
   runCommand,
   onFontFamilyChanged,
@@ -467,7 +429,6 @@ const {
   onFontSizeChanged,
   onStyleValuesChanged,
   onAlignmentChanged,
-  executeChangedToggleCommands,
 } = useRichTextStyleCommands(props, EXTRA_COMMAND_NAMES);
 
 const scopedEditor = useActiveEditorForOwner(() => props.element);
@@ -505,20 +466,6 @@ const neumeCharacters = computed(() => {
 const neumeGlyphStyle = computed(() => ({
   fontFamily: props.pageSetup.neumeDefaultFontFamily,
 }));
-
-const listValues = computed(() =>
-  ['bulletedList', 'numberedList'].filter((commandName) =>
-    isCommandActive(commandName),
-  ),
-);
-
-function onListValuesChanged(value: unknown) {
-  executeChangedToggleCommands(
-    ['bulletedList', 'numberedList'],
-    listValues.value,
-    value,
-  );
-}
 
 function onCharacterBlockChanged(value: unknown) {
   if (typeof value === 'string') {

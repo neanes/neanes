@@ -15,6 +15,7 @@ import {
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { Score } from '@/models/Score';
+import { getRichTextLanguage } from '@/utils/richTextLanguage';
 
 import { SaveService } from './SaveService';
 
@@ -185,6 +186,35 @@ describe('SaveService font styles', () => {
     expect(saved.fontSubfamily).toBe('Semibold');
     expect(saved.bold).toBeUndefined();
     expect(saved.italic).toBeUndefined();
+  });
+
+  it('loads legacy rich text rtl as persisted language metadata', () => {
+    const element = new RichTextBoxElement();
+    const legacy = new RichTextBoxElement_v1();
+
+    (legacy as RichTextBoxElement_v1 & { rtl?: boolean }).rtl = true;
+
+    SaveService.LoadRichTextBox_v1(element, legacy);
+
+    expect(getRichTextLanguage(element)).toBe('ar:rtl');
+    expect(element.languageCode).toBe('ar');
+    expect(element.textDirection).toBe('rtl');
+  });
+
+  it('saves rich text language fields instead of legacy rtl', () => {
+    const element = new RichTextBoxElement();
+    const saved = new RichTextBoxElement_v1();
+
+    element.languageCode = 'ar';
+    element.textDirection = 'rtl';
+
+    SaveService.SaveRichTextBox(saved, element);
+
+    expect(saved.languageCode).toBe('ar');
+    expect(saved.textDirection).toBe('rtl');
+    expect((saved as RichTextBoxElement_v1 & { rtl?: boolean }).rtl).toBe(
+      undefined,
+    );
   });
 
   it('saves document properties and omits default chapter-opening headers/footers flag', () => {

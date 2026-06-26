@@ -77,6 +77,51 @@
       />
     </Field>
 
+    <Field>
+      <FieldLabel :for="`${idPrefix}-language`">
+        {{ $t(($) => $.dialog.preferences.language, { ns: 'dialog' }) }}
+      </FieldLabel>
+      <Select
+        :model-value="languageSelectValue"
+        :disabled="!isCommandEnabled('textPartLanguage')"
+        @update:model-value="onLanguageChanged"
+        @update:open="
+          $event
+            ? beginSelectionGuard(element)
+            : endSelectionGuard(element, { refocus: true })
+        "
+      >
+        <SelectTrigger :id="`${idPrefix}-language`" class="w-full">
+          <SelectValue
+            :placeholder="
+              $t(($) => $.dialog.preferences.languageSystemDefault, {
+                ns: 'dialog',
+              })
+            "
+          />
+        </SelectTrigger>
+        <RichTextSelectContent>
+          <SelectGroup>
+            <SelectItem :value="RICH_TEXT_NO_LANGUAGE_VALUE">
+              {{
+                $t(($) => $.dialog.preferences.languageSystemDefault, {
+                  ns: 'dialog',
+                })
+              }}
+            </SelectItem>
+            <SelectItem
+              v-for="language in languageOptions"
+              :key="language.value"
+              :value="language.value"
+              :text-value="language.title"
+            >
+              {{ language.title }}
+            </SelectItem>
+          </SelectGroup>
+        </RichTextSelectContent>
+      </Select>
+    </Field>
+
     <Field orientation="horizontal">
       <FieldLabel :for="`${idPrefix}-font-size`">{{
         $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
@@ -806,6 +851,7 @@ import {
   endSelectionGuard,
 } from '@/composables/useRichTextSelectionGuard';
 import { useRichTextStyleCommands } from '@/composables/useRichTextStyleCommands';
+import { supportedLocales } from '@/i18n';
 import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
 import {
   getNoteLabelSelector,
@@ -816,6 +862,10 @@ import type { PageSetup } from '@/models/PageSetup';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
 import { fraction3FormatOptions } from '@/utils/numberFormatOptions';
+import {
+  RICH_TEXT_LANGUAGE_OPTIONS,
+  RICH_TEXT_NO_LANGUAGE_VALUE,
+} from '@/utils/richTextLanguage';
 
 const props = defineProps<{
   idPrefix: string;
@@ -855,6 +905,7 @@ const {
   'subscript',
   'superscript',
   'removeFormat',
+  'textPartLanguage',
   FONT_VARIANT_NUMERIC,
   FONT_VARIANT_LIGATURES,
   FONT_VARIANT_CAPS,
@@ -869,6 +920,30 @@ const scopedEditor = useActiveEditorForOwner(() => props.element);
 // engaged. Neume-attribute controls rely on the focus zone alone (no marker).
 const panelRoot = ref<HTMLElement | null>(null);
 attachFocusZone(() => props.element, panelRoot);
+
+const richTextLanguageFallbackNames: Record<string, string> = {
+  ar: 'العربية',
+};
+const supportedLocaleNameByCode = new Map<string, string>(
+  supportedLocales.map((locale) => [locale.code, locale.name]),
+);
+
+const languageSelectValue = computed(() => {
+  const value = commandValue('textPartLanguage');
+
+  return typeof value === 'string' ? value : RICH_TEXT_NO_LANGUAGE_VALUE;
+});
+
+const languageOptions = computed(() =>
+  RICH_TEXT_LANGUAGE_OPTIONS.map((language) => ({
+    ...language,
+    title:
+      supportedLocaleNameByCode.get(language.languageCode) ??
+      richTextLanguageFallbackNames[language.languageCode] ??
+      language.title,
+    value: `${language.languageCode}:${language.textDirection}`,
+  })),
+);
 
 const POSITION_COMMAND_NAMES = ['subscript', 'superscript'] as const;
 
@@ -1019,6 +1094,35 @@ function onCapsChanged(value: unknown) {
   } else {
     runCommand(FONT_VARIANT_CAPS);
   }
+}
+
+function onLanguageChanged(value: AcceptableValue) {
+  if (!isCommandEnabled('textPartLanguage')) {
+    return;
+  }
+
+  if (value === RICH_TEXT_NO_LANGUAGE_VALUE) {
+    runCommand('textPartLanguage', { languageCode: false });
+    return;
+  }
+
+  if (typeof value !== 'string') {
+    return;
+  }
+
+  const [languageCode, textDirection] = value.split(':');
+
+  if (
+    languageCode === '' ||
+    (textDirection !== 'ltr' && textDirection !== 'rtl')
+  ) {
+    return;
+  }
+
+  runCommand('textPartLanguage', {
+    languageCode,
+    textDirection,
+  });
 }
 
 // The four ligature switches compose into one `font-variant-ligatures` value the

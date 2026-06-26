@@ -227,6 +227,7 @@ import {
   isRightHandPage,
 } from '@/utils/PageNumbering';
 import type { TokenMetadata } from '@/utils/replaceTokens';
+import { setRichTextLanguage } from '@/utils/richTextLanguage';
 import {
   resolveRunningMarkerPageMetadata,
   resolveRunningMarkerText,
@@ -378,6 +379,7 @@ type RichTextBoxComponent = {
 type AnnotationComponent = {
   focus: () => void;
   getCurrentText: () => string;
+  getPendingUpdates: () => Partial<AnnotationElement>;
 };
 
 const preferredRichTextBoxFocusTarget = ref<{
@@ -5980,6 +5982,14 @@ function updateAnnotation(
 ) {
   const annotationContext = getAnnotationContext(element);
 
+  if (newValues.text != null && newValues.text.trim() === '') {
+    if (annotationContext != null) {
+      removeAnnotation(annotationContext.parent, element);
+    }
+
+    return;
+  }
+
   if (newValues.text == null && annotationContext?.component != null) {
     const currentText = annotationContext.component.getCurrentText();
 
@@ -6065,10 +6075,6 @@ function updateRichTextBox(
     ...newValues,
   };
 
-  if (newValues.rtl != null) {
-    element.keyHelper++;
-  }
-
   const heightProp: keyof RichTextBoxElement = 'height';
 
   const noHistory =
@@ -6138,13 +6144,22 @@ function flushPendingAnnotationEditor() {
     return;
   }
 
-  const currentText = getAnnotationComponentRef(annotation)?.getCurrentText();
+  const component = getAnnotationComponentRef(annotation);
 
-  if (
-    currentText != null &&
-    (currentText.trim() === '' || annotation.text !== currentText)
-  ) {
-    updateAnnotation(annotation, {});
+  if (component == null) {
+    return;
+  }
+
+  const updates = component.getPendingUpdates();
+  const currentText = updates.text ?? component.getCurrentText();
+
+  if (currentText.trim() === '') {
+    updateAnnotation(annotation, { text: currentText });
+    return;
+  }
+
+  if (Object.keys(updates).length > 0) {
+    updateAnnotation(annotation, updates);
   }
 }
 
@@ -6794,7 +6809,13 @@ function createDefaultRichHeaderFooter(
   variant: HeaderFooterVariant,
 ) {
   const panel = getDefaultHeaderFooterPanels(pageSetup, kind, variant);
-  return createRichHeaderFooter(panel.left, panel.center, panel.right);
+  const textbox = createRichHeaderFooter(panel.left, panel.center, panel.right);
+
+  if (pageSetup.melkiteRtl || pageSetup.numerals === 'easternArabic') {
+    setRichTextLanguage(textbox, 'ar', 'rtl');
+  }
+
+  return textbox;
 }
 
 function createDefaultHeaderFooterElement(
@@ -7812,7 +7833,13 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
 
 function onFileMenuInsertRichTextBox() {
   const element = new RichTextBoxElement();
-  element.rtl = score.value.pageSetup.melkiteRtl;
+
+  if (
+    score.value.pageSetup.melkiteRtl ||
+    score.value.pageSetup.numerals === 'easternArabic'
+  ) {
+    setRichTextLanguage(element, 'ar', 'rtl');
+  }
 
   addScoreElement(element, selectedElementIndex.value);
 

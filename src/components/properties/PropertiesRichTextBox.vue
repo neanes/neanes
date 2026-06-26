@@ -364,17 +364,6 @@
 
       <Field orientation="horizontal">
         <Switch
-          id="properties-rich-text-box-rtl"
-          :model-value="element.rtl"
-          @update:model-value="updateBooleanProperty('rtl', $event)"
-        />
-        <FieldLabel for="properties-rich-text-box-rtl">
-          {{ $t(($) => $.toolbar.textbox.rtl, { ns: 'toolbar' }) }}
-        </FieldLabel>
-      </Field>
-
-      <Field orientation="horizontal">
-        <Switch
           id="properties-rich-text-box-scrollable"
           :model-value="element.scrollable"
           @update:model-value="updateBooleanProperty('scrollable', $event)"

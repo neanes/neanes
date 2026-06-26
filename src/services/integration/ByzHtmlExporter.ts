@@ -25,6 +25,10 @@ import { resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { isRightHandPage } from '@/utils/PageNumbering';
+import {
+  getRichTextLanguage,
+  getRichTextLanguageAttributes,
+} from '@/utils/richTextLanguage';
 import { Unit } from '@/utils/Unit';
 
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
@@ -951,20 +955,15 @@ export class ByzHtmlExporter {
   exportRichTextBox(element: RichTextBoxElement, indentation: number) {
     let className = this.config.classRichTextBox;
 
-    let styleAttribute = '';
-    let style = '';
-
     if (element.inline) {
       className += ` ${this.config.classTextBoxInline}`;
     }
 
-    if (element.rtl) {
-      style += 'direction: rtl;';
-    }
+    const languageAttributes = getRichTextLanguageAttributes(
+      getRichTextLanguage(element),
+    );
 
-    styleAttribute = ` style="${style}"`;
-
-    return `<div class="${className}"${styleAttribute}>${
+    return `<div class="${className}"${languageAttributes}>${
       element.content
     }</div\n${this.getIndentationString(indentation)}>`;
   }

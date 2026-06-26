@@ -224,7 +224,8 @@ export class RichTextBoxElement extends ScoreElement {
   public contentCenter: string = '';
   public scrollable: boolean | undefined = undefined;
   public multipanel: boolean | undefined = undefined;
-  public rtl: boolean | undefined = undefined;
+  public languageCode: string | undefined = undefined;
+  public textDirection: 'ltr' | 'rtl' | undefined = undefined;
   public inline: boolean | undefined = undefined;
   public centerOnPage: boolean | undefined = undefined;
   public modeChange: boolean | undefined = undefined;
@@ -284,6 +285,8 @@ export class AnnotationElement extends ScoreElement {
   public x: number = 0;
   public y: number = 0;
   public text: string = '';
+  public languageCode: string | undefined = undefined;
+  public textDirection: 'ltr' | 'rtl' | undefined = undefined;
 }
 
 export class AlternateLineElement extends ScoreElement {

@@ -116,7 +116,6 @@
   },
   "textbox": {
     "multipanel": "Multipanou",
-    "rtl": "RTL",
     "scrollable": "Derulabil",
     "modeChange": "Schimbă glasul",
     "virtualNote": "Notă de paralaghie",
@@ -128,8 +127,6 @@
   "richTextBox": {
     "default": "Implicit",
     "underline": "Subliniat",
-    "bulletedList": "Listă cu marcatori",
-    "numberedList": "Listă numerotată",
     "outdent": "Micșorează indentarea",
     "indent": "Mărește indentarea",
     "position": "Poziție text",

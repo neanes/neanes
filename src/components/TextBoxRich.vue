@@ -13,17 +13,18 @@
       :style="multipanelContainerStyle"
     >
       <RichTextEditor
-        :key="`left-${editorLanguage}`"
+        :key="`left-${editorLanguage}-${contentLanguage}`"
         ref="editorLeft"
         class="rich-text-editor multipanel left"
         :owner="element"
         :model-value="contentLeft"
         :config="editorConfig"
         @blur="onBlur"
+        @ready="onEditorReadyMultipanelSide"
         @select-neume="emit('select-neume')"
       />
       <RichTextEditor
-        :key="`center-${editorLanguage}`"
+        :key="`center-${editorLanguage}-${contentLanguage}`"
         ref="editorCenter"
         class="rich-text-editor multipanel center"
         :owner="element"
@@ -34,13 +35,14 @@
         @select-neume="emit('select-neume')"
       />
       <RichTextEditor
-        :key="`right-${editorLanguage}`"
+        :key="`right-${editorLanguage}-${contentLanguage}`"
         ref="editorRight"
         class="rich-text-editor multipanel right"
         :owner="element"
         :model-value="contentRight"
         :config="editorConfig"
         @blur="onBlur"
+        @ready="onEditorReadyMultipanelSide"
         @select-neume="emit('select-neume')"
       />
     </div>
@@ -51,7 +53,7 @@
           :style="textBoxTopInnerContainerStyle"
         >
           <RichTextEditor
-            :key="`inline-top-${editorLanguage}`"
+            :key="`inline-top-${editorLanguage}-${contentLanguage}`"
             ref="editor"
             class="rich-text-editor inline-top"
             :style="textBoxStyleTop"
@@ -66,7 +68,7 @@
       </div>
       <div class="inline-bottom-container" :style="textBoxBottomContainerStyle">
         <RichTextEditor
-          :key="`inline-bottom-${editorLanguage}`"
+          :key="`inline-bottom-${editorLanguage}-${contentLanguage}`"
           ref="editorBottom"
           class="rich-text-editor inline-bottom"
           :style="textBoxStyleBottom"
@@ -81,7 +83,7 @@
     </div>
     <RichTextEditor
       v-else-if="element.scrollable"
-      :key="`scrollable-${editorLanguage}`"
+      :key="`scrollable-${editorLanguage}-${contentLanguage}`"
       ref="editor"
       class="rich-text-editor single scrollable"
       :owner="element"
@@ -94,7 +96,7 @@
     />
     <RichTextEditor
       v-else
-      :key="`single-${editorLanguage}`"
+      :key="`single-${editorLanguage}-${contentLanguage}`"
       ref="editor"
       class="rich-text-editor single"
       :owner="element"
@@ -124,6 +126,16 @@ import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import type { TokenMetadata } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
+import {
+  applyRichTextLanguageToEditor,
+  getRichTextLanguage,
+  getRichTextLanguageCode,
+  getRichTextLanguageDirection,
+  hasMeaningfulRichTextEditorContent,
+  inferRichTextEditorLanguage,
+  inferSharedRichTextEditorLanguage,
+  RICH_TEXT_LANGUAGE_OPTIONS,
+} from '@/utils/richTextLanguage';
 import { withZoom } from '@/utils/withZoom';
 
 const emit = defineEmits([
@@ -190,6 +202,46 @@ const { observe: observeInlineBottom } = useResizeObserver();
 
 const htmlElement = computed(() => container.value!);
 
+const activeContentValues = computed(() => {
+  if (props.element.multipanel) {
+    return [
+      props.element.contentLeft,
+      props.element.contentCenter,
+      props.element.contentRight,
+    ];
+  }
+
+  if (props.element.inline) {
+    return [props.element.content, props.element.contentBottom];
+  }
+
+  return [props.element.content];
+});
+
+const hasStoredContent = computed(() =>
+  activeContentValues.value.some((html) => html.trim() !== ''),
+);
+
+const defaultInitialLanguage = computed(() => {
+  const storedLanguage = getRichTextLanguage(props.element);
+
+  if (storedLanguage != null) {
+    return storedLanguage;
+  }
+
+  return !hasStoredContent.value &&
+    (props.pageSetup.melkiteRtl || props.pageSetup.numerals === 'easternArabic')
+    ? 'ar:rtl'
+    : null;
+});
+
+const contentLanguage = computed(() => {
+  const language =
+    getRichTextLanguage(props.element) ?? defaultInitialLanguage.value;
+
+  return language == null ? 'en' : getRichTextLanguageCode(language);
+});
+
 const editorConfig = computed((): EditorConfig => {
   const fontSizeOptions: FontSizeOption[] = [];
 
@@ -224,7 +276,8 @@ const editorConfig = computed((): EditorConfig => {
     },
     language: {
       ui: props.editorLanguage,
-      content: props.element.rtl ? 'ar' : 'en',
+      content: contentLanguage.value,
+      textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
     },
     licenseKey: 'GPL',
     insertNeume: {
@@ -422,11 +475,29 @@ function getEditorInstanceRight() {
   return editorRight.value?.instance;
 }
 
+function getActiveEditorInstances() {
+  if (props.element.multipanel) {
+    return [
+      getEditorInstanceLeft(),
+      getEditorInstanceCenter(),
+      getEditorInstanceRight(),
+    ];
+  }
+
+  if (props.element.inline) {
+    return [getEditorInstance(), getEditorInstanceBottom()];
+  }
+
+  return [getEditorInstance()];
+}
+
 function phoneHome(height: number) {
   emit('update:height', height);
 }
 
 function onEditorReady(editor: InlineEditor) {
+  applyInitialLanguage(editor);
+
   if (props.recalc) {
     const height = getHeight();
 
@@ -472,7 +543,13 @@ function onEditorReady(editor: InlineEditor) {
   );
 }
 
+function onEditorReadyMultipanelSide(editor: InlineEditor) {
+  applyInitialLanguage(editor);
+}
+
 function onEditorReadyInline(editor: InlineEditor) {
+  applyInitialLanguage(editor);
+
   heightTop.value = getHeightTop() ?? 0;
 
   const element = editor.sourceElement;
@@ -488,6 +565,8 @@ function onEditorReadyInline(editor: InlineEditor) {
 }
 
 function onEditorReadyInlineBottom(editor: InlineEditor) {
+  applyInitialLanguage(editor);
+
   if (focusOnReady.value) {
     editor.editing.view.focus();
     focusOnReady.value = false;
@@ -505,6 +584,36 @@ function onEditorReadyInlineBottom(editor: InlineEditor) {
   );
 
   setPadding(editor);
+}
+
+function applyInitialLanguage(editor: InlineEditor) {
+  const language = defaultInitialLanguage.value;
+
+  if (language == null) {
+    return;
+  }
+
+  const languageCode = getRichTextLanguageCode(language);
+  const textDirection = getRichTextLanguageDirection(language);
+
+  if (hasMeaningfulRichTextEditorContent(editor)) {
+    if (inferRichTextEditorLanguage(editor) == null) {
+      applyRichTextLanguageToEditor(editor, languageCode, textDirection);
+    }
+
+    return;
+  }
+
+  const command = editor.commands.get('textPartLanguage')!;
+
+  if (!command.isEnabled) {
+    return;
+  }
+
+  editor.execute('textPartLanguage', {
+    languageCode,
+    textDirection,
+  });
 }
 
 function onBlur() {
@@ -542,6 +651,33 @@ function getPendingUpdates() {
   updated =
     addPendingEditorData(updates, 'contentRight', getEditorInstanceRight()) ||
     updated;
+
+  const activeEditors = getActiveEditorInstances();
+
+  if (props.editMode && activeEditors.some(Boolean)) {
+    const hasMeaningfulContent = activeEditors.some(
+      (editor) => editor != null && hasMeaningfulRichTextEditorContent(editor),
+    );
+
+    if (hasMeaningfulContent) {
+      const language = inferSharedRichTextEditorLanguage(activeEditors);
+      const currentLanguage = getRichTextLanguage(props.element);
+
+      if (
+        (currentLanguage?.toLowerCase() ?? null) !==
+        (language?.toLowerCase() ?? null)
+      ) {
+        if (language == null) {
+          updates.languageCode = null;
+          updates.textDirection = null;
+        } else {
+          updates.languageCode = getRichTextLanguageCode(language);
+          updates.textDirection = getRichTextLanguageDirection(language);
+        }
+        updated = true;
+      }
+    }
+  }
 
   if (
     height != null &&

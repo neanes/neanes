@@ -116,7 +116,6 @@
   },
   "textbox": {
     "multipanel": "Πολλαπλές Στήλες",
-    "rtl": "RTL",
     "scrollable": "Με δυνατότητα κύλισης",
     "modeChange": "Αλλαγή Ήχου",
     "virtualNote": "Φθόγγος Παραλλαγής",
@@ -128,8 +127,6 @@
   "richTextBox": {
     "default": "Προεπιλογή",
     "underline": "Υπογράμμιση",
-    "bulletedList": "Λίστα με κουκκίδες",
-    "numberedList": "Αριθμημένη λίστα",
     "outdent": "Μείωση εσοχής",
     "indent": "Αύξηση εσοχής",
     "position": "Θέση",

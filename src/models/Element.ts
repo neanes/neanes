@@ -934,7 +934,8 @@ export class RichTextBoxElement extends ScoreElement {
   public contentCenter: string = '';
   public scrollable: boolean = false;
   public multipanel: boolean = false;
-  public rtl: boolean = false;
+  public languageCode: string | null = null;
+  public textDirection: 'ltr' | 'rtl' | null = null;
   public inline: boolean = false;
   public centerOnPage: boolean = false;
   public modeChange: boolean = false;
@@ -972,7 +973,8 @@ export class RichTextBoxElement extends ScoreElement {
       contentLeft: this.contentLeft,
       contentRight: this.contentRight,
       contentCenter: this.contentCenter,
-      rtl: this.rtl,
+      languageCode: this.languageCode,
+      textDirection: this.textDirection,
       multipanel: this.multipanel,
       inline: this.inline,
       centerOnPage: this.centerOnPage,
@@ -1136,6 +1138,8 @@ export class ModeKeyElement extends ScoreElement {
 export class AnnotationElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Annotation;
   public text: string = '';
+  public languageCode: string | null = null;
+  public textDirection: 'ltr' | 'rtl' | null = null;
 
   public clone() {
     const clone = new AnnotationElement();
@@ -1150,6 +1154,8 @@ export class AnnotationElement extends ScoreElement {
       text: this.text,
       x: this.x,
       y: this.y,
+      languageCode: this.languageCode,
+      textDirection: this.textDirection,
     } as Partial<AnnotationElement>;
   }
 }

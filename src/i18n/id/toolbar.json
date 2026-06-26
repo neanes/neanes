@@ -116,7 +116,6 @@
   },
   "textbox": {
     "multipanel": "Multipanel",
-    "rtl": "RTL",
     "scrollable": "Dapat Digulir",
     "modeChange": "Ubah Mode",
     "virtualNote": "Nada Parallage",
@@ -128,8 +127,6 @@
   "richTextBox": {
     "default": "Bawaan",
     "underline": "Garis bawah",
-    "bulletedList": "Daftar berpoin",
-    "numberedList": "Daftar bernomor",
     "outdent": "Kurangi inden",
     "indent": "Inden",
     "position": "Posisi teks",

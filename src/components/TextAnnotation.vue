@@ -8,7 +8,7 @@
     @dblclick="handleDoubleClick"
   >
     <RichTextEditor
-      :key="editorLanguage"
+      :key="`${editorLanguage}-${contentLanguage}`"
       ref="editor"
       class="rich-text-editor"
       :owner="element"
@@ -39,6 +39,15 @@ import type InlineEditor from '@/customEditor';
 import type { AnnotationElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import {
+  applyRichTextLanguageToEditor,
+  getRichTextLanguage,
+  getRichTextLanguageCode,
+  getRichTextLanguageDirection,
+  hasMeaningfulRichTextEditorContent,
+  inferRichTextEditorLanguage,
+  RICH_TEXT_LANGUAGE_OPTIONS,
+} from '@/utils/richTextLanguage';
 import { withZoom } from '@/utils/withZoom';
 
 const ANNOTATION_LOCK_ID = 'ANNOTATION_LOCK_ID';
@@ -76,6 +85,28 @@ const focusOnReady = ref(false);
 const zoom = ref(1);
 
 let clampingInterval: ReturnType<typeof setInterval> | null = null;
+
+const hasStoredContent = computed(() => props.element.text.trim() !== '');
+
+const defaultInitialLanguage = computed(() => {
+  const storedLanguage = getRichTextLanguage(props.element);
+
+  if (storedLanguage != null) {
+    return storedLanguage;
+  }
+
+  return !hasStoredContent.value &&
+    (props.pageSetup.melkiteRtl || props.pageSetup.numerals === 'easternArabic')
+    ? 'ar:rtl'
+    : null;
+});
+
+const contentLanguage = computed(() => {
+  const language =
+    getRichTextLanguage(props.element) ?? defaultInitialLanguage.value;
+
+  return language == null ? 'en' : getRichTextLanguageCode(language);
+});
 
 const style = computed(() => {
   return {
@@ -125,6 +156,8 @@ const editorConfig = computed((): EditorConfig => {
     },
     language: {
       ui: props.editorLanguage,
+      content: contentLanguage.value,
+      textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
     },
     licenseKey: 'GPL',
     insertNeume: {
@@ -169,6 +202,8 @@ function getEditorInstance() {
 }
 
 function onEditorReady(editor: InlineEditor) {
+  applyInitialLanguage(editor);
+
   if (focusOnReady.value || props.element.text.trim() === '') {
     focusOnReady.value = false;
     focusEditor(editor);
@@ -180,13 +215,91 @@ function onEditorReady(editor: InlineEditor) {
 
 function handleEditorBlur(editor: InlineEditor) {
   editor.enableReadOnlyMode(ANNOTATION_LOCK_ID);
-  const text = editor.getData();
+  const updates = getPendingUpdates();
+  const text = updates.text ?? props.element.text;
 
   if (text.trim() === '') {
     emit('delete');
-  } else if (props.element.text !== text) {
-    emit('update', { text });
+  } else if (Object.keys(updates).length > 0) {
+    emit('update', updates);
   }
+}
+
+function getPendingUpdates() {
+  const editor = getEditorInstance();
+  const updates: Partial<AnnotationElement> = {};
+
+  if (editor == null) {
+    return updates;
+  }
+
+  Object.assign(updates, getRichTextLanguageUpdates(editor));
+
+  const text = editor.getData();
+
+  if (props.element.text !== text) {
+    updates.text = text;
+  }
+
+  return updates;
+}
+
+function applyInitialLanguage(editor: InlineEditor) {
+  const language = defaultInitialLanguage.value;
+
+  if (language == null) {
+    return;
+  }
+
+  const languageCode = getRichTextLanguageCode(language);
+  const textDirection = getRichTextLanguageDirection(language);
+
+  if (hasMeaningfulRichTextEditorContent(editor)) {
+    if (inferRichTextEditorLanguage(editor) == null) {
+      applyRichTextLanguageToEditor(editor, languageCode, textDirection);
+    }
+
+    return;
+  }
+
+  const command = editor.commands.get('textPartLanguage')!;
+
+  if (!command.isEnabled) {
+    return;
+  }
+
+  editor.execute('textPartLanguage', {
+    languageCode,
+    textDirection,
+  });
+}
+
+function getRichTextLanguageUpdates(editor: InlineEditor) {
+  const updates: Partial<AnnotationElement> = {};
+
+  if (!hasMeaningfulRichTextEditorContent(editor)) {
+    return updates;
+  }
+
+  const language = inferRichTextEditorLanguage(editor);
+  const currentLanguage = getRichTextLanguage(props.element);
+
+  if (
+    (currentLanguage?.toLowerCase() ?? null) ===
+    (language?.toLowerCase() ?? null)
+  ) {
+    return updates;
+  }
+
+  if (language == null) {
+    updates.languageCode = null;
+    updates.textDirection = null;
+  } else {
+    updates.languageCode = getRichTextLanguageCode(language);
+    updates.textDirection = getRichTextLanguageDirection(language);
+  }
+
+  return updates;
 }
 
 async function handleDoubleClick() {
@@ -338,6 +451,7 @@ function getCurrentText() {
 defineExpose({
   focus,
   getCurrentText,
+  getPendingUpdates,
 });
 </script>
 

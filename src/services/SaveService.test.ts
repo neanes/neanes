@@ -1,13 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
-import { DropCapElement, NoteElement, TextBoxElement } from '@/models/Element';
+import {
+  DropCapElement,
+  NoteElement,
+  RichTextBoxElement,
+  TextBoxElement,
+} from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import {
   DropCapElement as DropCapElement_v1,
   NoteElement as NoteElement_v1,
+  RichTextBoxElement as RichTextBoxElement_v1,
   TextBoxElement as TextBoxElement_v1,
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
+import { getRichTextLanguage } from '@/utils/richTextLanguage';
 
 import { SaveService } from './SaveService';
 
@@ -178,5 +185,34 @@ describe('SaveService font styles', () => {
     expect(saved.fontSubfamily).toBe('Semibold');
     expect(saved.bold).toBeUndefined();
     expect(saved.italic).toBeUndefined();
+  });
+
+  it('loads legacy rich text rtl as persisted language metadata', () => {
+    const element = new RichTextBoxElement();
+    const legacy = new RichTextBoxElement_v1();
+
+    (legacy as RichTextBoxElement_v1 & { rtl?: boolean }).rtl = true;
+
+    SaveService.LoadRichTextBox_v1(element, legacy);
+
+    expect(getRichTextLanguage(element)).toBe('ar:rtl');
+    expect(element.languageCode).toBe('ar');
+    expect(element.textDirection).toBe('rtl');
+  });
+
+  it('saves rich text language fields instead of legacy rtl', () => {
+    const element = new RichTextBoxElement();
+    const saved = new RichTextBoxElement_v1();
+
+    element.languageCode = 'ar';
+    element.textDirection = 'rtl';
+
+    SaveService.SaveRichTextBox(saved, element);
+
+    expect(saved.languageCode).toBe('ar');
+    expect(saved.textDirection).toBe('rtl');
+    expect((saved as RichTextBoxElement_v1 & { rtl?: boolean }).rtl).toBe(
+      undefined,
+    );
   });
 });

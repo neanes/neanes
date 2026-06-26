@@ -74,6 +74,51 @@ function normalizeSavedFontSubfamily(fontSubfamily: string | null | undefined) {
     : normalizeFontStyle(trimmed);
 }
 
+type RichTextLanguageFields = {
+  languageCode?: string | null;
+  textDirection?: 'ltr' | 'rtl' | null;
+};
+
+function saveRichTextLanguage(
+  target: { languageCode?: string; textDirection?: 'ltr' | 'rtl' },
+  source: RichTextLanguageFields,
+) {
+  const languageCode = source.languageCode?.trim();
+
+  if (
+    languageCode == null ||
+    languageCode === '' ||
+    !isTextDirection(source.textDirection)
+  ) {
+    return;
+  }
+
+  target.languageCode = languageCode;
+  target.textDirection = source.textDirection;
+}
+
+function loadRichTextLanguage(
+  target: { languageCode: string | null; textDirection: 'ltr' | 'rtl' | null },
+  source: RichTextLanguageFields,
+) {
+  const languageCode = source.languageCode?.trim();
+
+  if (
+    languageCode == null ||
+    languageCode === '' ||
+    !isTextDirection(source.textDirection)
+  ) {
+    return;
+  }
+
+  target.languageCode = languageCode;
+  target.textDirection = source.textDirection;
+}
+
+function isTextDirection(value: unknown): value is 'ltr' | 'rtl' {
+  return value === 'ltr' || value === 'rtl';
+}
+
 function loadFontFaceFromWeightFields({
   savedFontFamily,
   fallbackFontFamily,
@@ -685,6 +730,7 @@ export class SaveService {
           annotation.x = a.x;
           annotation.y = a.y;
           annotation.text = a.text;
+          saveRichTextLanguage(annotation, a);
           return annotation;
         });
     }
@@ -778,7 +824,7 @@ export class SaveService {
     element.customWidth = e.customWidth ?? undefined;
     element.marginTop = e.marginTop ?? undefined;
     element.marginBottom = e.marginBottom ?? undefined;
-    element.rtl = e.rtl || undefined;
+    saveRichTextLanguage(element, e);
     element.scrollable = e.scrollable || undefined;
   }
 
@@ -1560,6 +1606,7 @@ export class SaveService {
           annotation.text = a.text;
           annotation.x = a.x;
           annotation.y = a.y;
+          loadRichTextLanguage(annotation, a);
 
           return annotation;
         });
@@ -1683,8 +1730,17 @@ export class SaveService {
     element.modeChange = e.modeChange === true;
     element.inline = e.inline === true;
     element.multipanel = e.multipanel === true;
-    element.rtl = e.rtl === true;
     element.scrollable = e.scrollable === true;
+
+    loadRichTextLanguage(element, e);
+
+    if (
+      element.languageCode == null &&
+      (e as RichTextBoxElement_v1 & { rtl?: boolean }).rtl === true
+    ) {
+      element.languageCode = 'ar';
+      element.textDirection = 'rtl';
+    }
   }
 
   public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {

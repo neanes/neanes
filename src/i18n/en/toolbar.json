@@ -116,7 +116,6 @@
   },
   "textbox": {
     "multipanel": "Multipanel",
-    "rtl": "RTL",
     "scrollable": "Scrollable",
     "modeChange": "Change Mode",
     "virtualNote": "Parallage Note",
@@ -128,8 +127,6 @@
   "richTextBox": {
     "default": "Default",
     "underline": "Underline",
-    "bulletedList": "Bulleted List",
-    "numberedList": "Numbered List",
     "outdent": "Outdent",
     "indent": "Indent",
     "position": "Position",

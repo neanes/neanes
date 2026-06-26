@@ -64,6 +64,15 @@
     "selection": "Pilihan",
     "lyrics": "Lirik",
     "showDeveloperPanels": "Tampilkan Panel Pengembang",
+    "zoom": {
+      "root": "Zoom",
+      "zoomIn": "Perbesar",
+      "zoomOut": "Perkecil",
+      "actualSize": "Ukuran Aktual",
+      "pageWidth": "Lebar Halaman",
+      "textWidth": "Lebar Teks",
+      "wholePage": "Seluruh Halaman"
+    },
     "resetLayout": "Atur Ulang Tata Letak",
     "generateTestFiles": "Hasilkan File Uji (Debug)"
   },

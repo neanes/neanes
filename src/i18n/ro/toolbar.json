@@ -45,9 +45,11 @@
     "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Inserează sau elimină întrerupere de linie centrată după elementul selectat",
     "insertOrRemovePageBreakAfterSelectedElement": "Inserează sau elimină întrerupere de pagină după elementul selectat",
     "deleteSelectedElement": "Șterge elementul selectat",
-    "fit": "Potrivire",
+    "pageWidth": "Lățime pagină",
+    "textWidth": "Lățime text",
+    "wholePage": "Pagină întreagă",
     "speed": "Viteză",
-    "invalidZoom": "Valoarea trebuie să fie între 50% și 500%."
+    "invalidZoom": "Valoarea trebuie să fie între {{minZoom}} și {{maxZoom}}."
   },
   "status": {
     "section": "Secțiune {{ sectionNumber }} din {{ sectionCount }}",

@@ -64,6 +64,15 @@
     "selection": "Selecție",
     "lyrics": "Versuri",
     "showDeveloperPanels": "Arată panourile pentru dezvoltatori",
+    "zoom": {
+      "root": "Zoom",
+      "zoomIn": "Mărește",
+      "zoomOut": "Micșorează",
+      "actualSize": "Dimensiune reală",
+      "pageWidth": "Lățime pagină",
+      "textWidth": "Lățime text",
+      "wholePage": "Pagină întreagă"
+    },
     "resetLayout": "Resetează aranjarea",
     "generateTestFiles": "Generează fișiere de test (debugare)"
   },

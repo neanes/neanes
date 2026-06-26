@@ -45,9 +45,11 @@
     "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Sisipkan atau hapus jeda baris terpusat setelah elemen yang dipilih",
     "insertOrRemovePageBreakAfterSelectedElement": "Sisipkan atau hapus jeda halaman setelah elemen yang dipilih",
     "deleteSelectedElement": "Hapus elemen yang dipilih",
-    "fit": "Paskan",
+    "pageWidth": "Lebar Halaman",
+    "textWidth": "Lebar Teks",
+    "wholePage": "Seluruh Halaman",
     "speed": "Kecepatan",
-    "invalidZoom": "Nilai harus antara 50% dan 500%."
+    "invalidZoom": "Nilai harus antara {{minZoom}} dan {{maxZoom}}."
   },
   "status": {
     "section": "Bagian {{ sectionNumber }} dari {{ sectionCount }}",

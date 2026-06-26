@@ -138,18 +138,24 @@
                   </DropdownMenuTrigger>
                 </InputGroupAddon>
               </InputGroup>
-              <DropdownMenuContent align="end" class="w-24 min-w-24">
-                <DropdownMenuItem @select="selectZoomToFit">
-                  {{ zoomToFitLabel }}
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" class="w-32 min-w-32">
+                <DropdownMenuCheckboxItem
+                  v-for="option in zoomFitOptions"
+                  :key="option.mode"
+                  :model-value="zoomFitMode === option.mode"
+                  @select="selectZoomFitMode(option.mode)"
+                >
+                  {{ option.label }}
+                </DropdownMenuCheckboxItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
+                <DropdownMenuCheckboxItem
                   v-for="option in zoomOptions"
                   :key="option"
-                  @select="updateZoom(option)"
+                  :model-value="zoomLevelIsSelected(option)"
+                  @select="selectZoomLevel(option)"
                 >
-                  {{ option }}%
-                </DropdownMenuItem>
+                  {{ formatZoomPercent(option) }}
+                </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -515,8 +521,8 @@ import AppTooltip from '@/components/AppTooltip.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -538,6 +544,11 @@ import {
 import { LineBreakType } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import { TempoSign } from '@/models/Neumes';
+import {
+  formatZoomPercent,
+  ZOOM_LEVELS,
+  type ZoomFitMode,
+} from '@/models/Workspace';
 import { AudioState } from '@/services/audio/AudioService';
 import type { PlaybackOptions } from '@/services/audio/PlaybackService';
 import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
@@ -603,9 +614,9 @@ const props = defineProps({
     type: Number,
     required: true,
   },
-  zoomToFit: {
-    type: Boolean,
-    required: true,
+  zoomFitMode: {
+    type: String as PropType<ZoomFitMode | null>,
+    default: null,
   },
   playbackTime: {
     type: Number,
@@ -654,21 +665,30 @@ const emit = defineEmits([
   'update:audioOptionsSpeed',
   'update:entryMode',
   'update:zoom',
-  'update:zoomToFit',
+  'update:zoomFitMode',
 ]);
 
 const { t } = useTranslation();
-const ZOOM_TO_FIT_VALUE = 'fit';
-const zoomOptions = ['50', '75', '90', '100', '125', '150', '200', '500'];
+const ZOOM_COMPARISON_EPSILON = 0.000001;
+const zoomOptions = ZOOM_LEVELS;
 const zoomText = ref('');
 
-const zoomToFitLabel = computed(() =>
-  t(($) => $.toolbar.main.fit, { ns: 'toolbar' }),
-);
+const zoomFitOptions = computed<{ mode: ZoomFitMode; label: string }[]>(() => [
+  {
+    mode: 'page-width',
+    label: t(($) => $.toolbar.main.pageWidth, { ns: 'toolbar' }),
+  },
+  {
+    mode: 'text-width',
+    label: t(($) => $.toolbar.main.textWidth, { ns: 'toolbar' }),
+  },
+  {
+    mode: 'whole-page',
+    label: t(($) => $.toolbar.main.wholePage, { ns: 'toolbar' }),
+  },
+]);
 
-const zoomDisplay = computed(() =>
-  props.zoomToFit ? zoomToFitLabel.value : `${(props.zoom * 100).toFixed(0)}%`,
-);
+const zoomDisplay = computed(() => formatZoomPercent(props.zoom));
 
 // Keep the editable zoom field in sync with the canonical zoom display
 // whenever the zoom changes (e.g. via the zoom menu or external controls).
@@ -747,12 +767,14 @@ const tempoTooltip = computed(
 );
 
 function updateZoom(value: string) {
-  if (isZoomToFitValue(value)) {
-    selectZoomToFit();
+  const zoomFitMode = getZoomFitModeFromValue(value);
+
+  if (zoomFitMode != null) {
+    selectZoomFitMode(zoomFitMode);
     return;
   }
 
-  let valueAsNumber = parseInt(value);
+  let valueAsNumber = parseFloat(value);
 
   if (Number.isNaN(valueAsNumber)) {
     valueAsNumber = 100;
@@ -763,18 +785,34 @@ function updateZoom(value: string) {
   resetZoomInput();
 }
 
-function selectZoomToFit() {
-  emit('update:zoomToFit', true);
+function selectZoomFitMode(mode: ZoomFitMode) {
+  emit('update:zoomFitMode', mode);
   resetZoomInput();
 }
 
-function isZoomToFitValue(value: string) {
-  const normalizedValue = value.trim().toLowerCase();
+function selectZoomLevel(zoom: number) {
+  emit('update:zoom', zoom);
+  resetZoomInput();
+}
 
+function zoomLevelIsSelected(zoom: number) {
   return (
-    normalizedValue === ZOOM_TO_FIT_VALUE ||
-    normalizedValue === zoomToFitLabel.value.trim().toLowerCase()
+    props.zoomFitMode == null &&
+    Math.abs(props.zoom - zoom) <= ZOOM_COMPARISON_EPSILON
   );
+}
+
+function getZoomFitModeFromValue(value: string): ZoomFitMode | null {
+  const normalizedValue = value.trim().toLowerCase();
+  const normalizedModeValue = normalizedValue.replace(/\s+/g, '-');
+
+  const option = zoomFitOptions.value.find(
+    (option) =>
+      option.mode === normalizedModeValue ||
+      option.label.trim().toLowerCase() === normalizedValue,
+  );
+
+  return option?.mode ?? null;
 }
 
 function isCurrentZoomDisplay(value: string) {

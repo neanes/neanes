@@ -45,9 +45,11 @@
     "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Insert or remove centered line break after selected element",
     "insertOrRemovePageBreakAfterSelectedElement": "Insert or remove page break after selected element",
     "deleteSelectedElement": "Delete selected element",
-    "fit": "Fit",
+    "pageWidth": "Page Width",
+    "textWidth": "Text Width",
+    "wholePage": "Whole Page",
     "speed": "Speed",
-    "invalidZoom": "The value must be between 50% and 500%."
+    "invalidZoom": "The value must be between {{minZoom}} and {{maxZoom}}."
   },
   "status": {
     "section": "Section {{ sectionNumber }} of {{ sectionCount }}",

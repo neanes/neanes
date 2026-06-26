@@ -44,6 +44,8 @@ export class PageSetup {
   public excludeHeaderHorizontalRuleFirstPage: boolean | undefined = undefined;
   public excludeHeaderHorizontalRuleEvenPage: boolean | undefined = undefined;
   public excludeHeaderHorizontalRuleOddPage: boolean | undefined = undefined;
+  public excludeHeaderHorizontalRuleChapterOpening: boolean | undefined =
+    undefined;
   public headerHorizontalRuleMarginTop: number | undefined = undefined;
   public headerHorizontalRuleMarginBottom: number | undefined = undefined;
   public headerHorizontalRuleThickness: number | undefined = undefined;
@@ -53,6 +55,8 @@ export class PageSetup {
   public excludeFooterHorizontalRuleFirstPage: boolean | undefined = undefined;
   public excludeFooterHorizontalRuleEvenPage: boolean | undefined = undefined;
   public excludeFooterHorizontalRuleOddPage: boolean | undefined = undefined;
+  public excludeFooterHorizontalRuleChapterOpening: boolean | undefined =
+    undefined;
   public footerHorizontalRuleMarginTop: number | undefined = undefined;
   public footerHorizontalRuleMarginBottom: number | undefined = undefined;
   public footerHorizontalRuleThickness: number | undefined = undefined;

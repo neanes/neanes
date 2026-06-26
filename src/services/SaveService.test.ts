@@ -248,6 +248,28 @@ describe('SaveService font styles', () => {
     expect(savedPageSetup.headerFooterDifferentChapterOpening).toBe(false);
   });
 
+  it('loads and saves chapter-opening horizontal-rule exclusions', () => {
+    const pageSetup = new PageSetup();
+    const legacyPageSetup = new PageSetup_v1();
+
+    legacyPageSetup.showHeaderHorizontalRule = true;
+    legacyPageSetup.excludeHeaderHorizontalRuleChapterOpening = true;
+    legacyPageSetup.showFooterHorizontalRule = true;
+    legacyPageSetup.excludeFooterHorizontalRuleChapterOpening = true;
+
+    SaveService.LoadPageSetup_v1(pageSetup, legacyPageSetup);
+
+    expect(pageSetup.excludeHeaderHorizontalRuleChapterOpening).toBe(true);
+    expect(pageSetup.excludeFooterHorizontalRuleChapterOpening).toBe(true);
+
+    const savedPageSetup = new PageSetup_v1();
+
+    SaveService.SavePageSetup(savedPageSetup, pageSetup);
+
+    expect(savedPageSetup.excludeHeaderHorizontalRuleChapterOpening).toBe(true);
+    expect(savedPageSetup.excludeFooterHorizontalRuleChapterOpening).toBe(true);
+  });
+
   it('loads and saves chapter-opening header and footer variants', () => {
     const score = new Score();
     const chapterHeader = new TextBoxElement();

@@ -377,6 +377,8 @@ export class SaveService {
 
     if (p.showHeaderHorizontalRule) {
       pageSetup.showHeaderHorizontalRule = p.showHeaderHorizontalRule;
+      pageSetup.excludeHeaderHorizontalRuleChapterOpening =
+        p.excludeHeaderHorizontalRuleChapterOpening;
       pageSetup.excludeHeaderHorizontalRuleEvenPage =
         p.excludeHeaderHorizontalRuleEvenPage;
       pageSetup.excludeHeaderHorizontalRuleFirstPage =
@@ -392,6 +394,8 @@ export class SaveService {
 
     if (p.showFooterHorizontalRule) {
       pageSetup.showFooterHorizontalRule = p.showFooterHorizontalRule;
+      pageSetup.excludeFooterHorizontalRuleChapterOpening =
+        p.excludeFooterHorizontalRuleChapterOpening;
       pageSetup.excludeFooterHorizontalRuleEvenPage =
         p.excludeFooterHorizontalRuleEvenPage;
       pageSetup.excludeFooterHorizontalRuleFirstPage =
@@ -1078,6 +1082,8 @@ export class SaveService {
 
     if (p.showHeaderHorizontalRule === true) {
       pageSetup.showHeaderHorizontalRule = p.showHeaderHorizontalRule;
+      pageSetup.excludeHeaderHorizontalRuleChapterOpening =
+        p.excludeHeaderHorizontalRuleChapterOpening === true;
       pageSetup.excludeHeaderHorizontalRuleEvenPage =
         p.excludeHeaderHorizontalRuleEvenPage === true;
       pageSetup.excludeHeaderHorizontalRuleFirstPage =
@@ -1099,6 +1105,8 @@ export class SaveService {
 
     if (p.showFooterHorizontalRule === true) {
       pageSetup.showFooterHorizontalRule = p.showFooterHorizontalRule;
+      pageSetup.excludeFooterHorizontalRuleChapterOpening =
+        p.excludeFooterHorizontalRuleChapterOpening === true;
       pageSetup.excludeFooterHorizontalRuleEvenPage =
         p.excludeFooterHorizontalRuleEvenPage === true;
       pageSetup.excludeFooterHorizontalRuleFirstPage =

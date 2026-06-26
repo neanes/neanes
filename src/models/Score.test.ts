@@ -42,4 +42,19 @@ describe('Score header/footer selection', () => {
     expect(score.getHeaderForPage(3, true)).toBe(score.headers.default);
     expect(score.getFooterForPage(3, true)).toBe(score.footers.default);
   });
+
+  it('can hide header and footer rules on chapter-opening pages', () => {
+    const score = new Score();
+
+    score.pageSetup.showHeaderHorizontalRule = true;
+    score.pageSetup.showFooterHorizontalRule = true;
+    score.pageSetup.headerFooterDifferentChapterOpening = true;
+    score.pageSetup.excludeHeaderHorizontalRuleChapterOpening = true;
+    score.pageSetup.excludeFooterHorizontalRuleChapterOpening = true;
+
+    expect(score.shouldShowHeaderRuleForPageIndex(3, true)).toBe(false);
+    expect(score.shouldShowFooterRuleOnPage(3, true)).toBe(false);
+    expect(score.shouldShowHeaderRuleForPageIndex(2, false)).toBe(true);
+    expect(score.shouldShowFooterRuleOnPage(2, false)).toBe(true);
+  });
 });

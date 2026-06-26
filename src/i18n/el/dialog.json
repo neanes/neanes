@@ -112,6 +112,7 @@
     "showHeaderHorizontalRuleDescription": "Εμφάνιση οριζόντιας γραμμής κάτω από την κεφαλίδα.",
     "showFooterHorizontalRuleDescription": "Εμφάνιση οριζόντιας γραμμής πάνω από το υποσέλιδο.",
     "excludeHorizontalRuleFirstPageDescription": "Απόκρυψη στην πρώτη σελίδα.",
+    "excludeHorizontalRuleChapterOpeningDescription": "Απόκρυψη στις σελίδες ανοίγματος κεφαλαίου.",
     "excludeHorizontalRuleEvenPageDescription": "Απόκρυψη σε ζυγές σελίδες.",
     "excludeHorizontalRuleOddPageDescription": "Απόκρυψη σε μονές σελίδες.",
     "includeHeader": "Συμπερίληψη Κεφαλίδας",

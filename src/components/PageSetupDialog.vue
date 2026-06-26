@@ -751,6 +751,34 @@
                           </FieldLabel>
                         </Field>
 
+                        <Field
+                          v-if="form.headerFooterDifferentChapterOpening"
+                          orientation="horizontal"
+                        >
+                          <Checkbox
+                            id="page-setup-dialog-header-excludeHeaderHorizontalRuleChapterOpening"
+                            :model-value="
+                              form.excludeHeaderHorizontalRuleChapterOpening
+                            "
+                            @update:model-value="
+                              form.excludeHeaderHorizontalRuleChapterOpening =
+                                $event === true
+                            "
+                          />
+                          <FieldLabel
+                            for="page-setup-dialog-header-excludeHeaderHorizontalRuleChapterOpening"
+                          >
+                            {{
+                              $t(
+                                ($) =>
+                                  $.dialog.pageSetup
+                                    .excludeHorizontalRuleChapterOpeningDescription,
+                                { ns: 'dialog' },
+                              )
+                            }}
+                          </FieldLabel>
+                        </Field>
+
                         <template v-if="form.headerDifferentOddEven">
                           <Field orientation="horizontal">
                             <Checkbox
@@ -927,6 +955,34 @@
                                 ($) =>
                                   $.dialog.pageSetup
                                     .excludeHorizontalRuleFirstPageDescription,
+                                { ns: 'dialog' },
+                              )
+                            }}
+                          </FieldLabel>
+                        </Field>
+
+                        <Field
+                          v-if="form.headerFooterDifferentChapterOpening"
+                          orientation="horizontal"
+                        >
+                          <Checkbox
+                            id="page-setup-dialog-footer-excludeFooterHorizontalRuleChapterOpening"
+                            :model-value="
+                              form.excludeFooterHorizontalRuleChapterOpening
+                            "
+                            @update:model-value="
+                              form.excludeFooterHorizontalRuleChapterOpening =
+                                $event === true
+                            "
+                          />
+                          <FieldLabel
+                            for="page-setup-dialog-footer-excludeFooterHorizontalRuleChapterOpening"
+                          >
+                            {{
+                              $t(
+                                ($) =>
+                                  $.dialog.pageSetup
+                                    .excludeHorizontalRuleChapterOpeningDescription,
                                 { ns: 'dialog' },
                               )
                             }}

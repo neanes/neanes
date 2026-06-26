@@ -112,6 +112,7 @@
     "showHeaderHorizontalRuleDescription": "Afișează o linie orizontală sub antet.",
     "showFooterHorizontalRuleDescription": "Afișează o linie orizontală deasupra subsolului.",
     "excludeHorizontalRuleFirstPageDescription": "Ascunde pe prima pagină.",
+    "excludeHorizontalRuleChapterOpeningDescription": "Ascunde pe paginile de deschidere a capitolului.",
     "excludeHorizontalRuleEvenPageDescription": "Ascunde pe paginile pare.",
     "excludeHorizontalRuleOddPageDescription": "Ascunde pe paginile impare.",
     "includeHeader": "Include antet",

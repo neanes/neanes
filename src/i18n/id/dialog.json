@@ -112,6 +112,7 @@
     "showHeaderHorizontalRuleDescription": "Tampilkan garis horizontal di bawah header.",
     "showFooterHorizontalRuleDescription": "Tampilkan garis horizontal di atas footer.",
     "excludeHorizontalRuleFirstPageDescription": "Sembunyikan di halaman pertama.",
+    "excludeHorizontalRuleChapterOpeningDescription": "Sembunyikan di halaman pembuka bab.",
     "excludeHorizontalRuleEvenPageDescription": "Sembunyikan di halaman genap.",
     "excludeHorizontalRuleOddPageDescription": "Sembunyikan di halaman ganjil.",
     "includeHeader": "Sertakan Header",

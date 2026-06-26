@@ -2372,14 +2372,21 @@ function getHeaderFooterBadgeStyle(
 
 function shouldShowHeaderRuleForPageIndex(pageIndex: number) {
   const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
-  return score.value.shouldShowHeaderRuleForPageIndex(pageNumber);
+  return score.value.shouldShowHeaderRuleForPageIndex(
+    pageNumber,
+    isChapterOpening,
+  );
 }
 
 function shouldShowFooterRuleForPageIndex(pageIndex: number) {
   const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
-  return score.value.shouldShowFooterOnPage(pageNumber);
+  return score.value.shouldShowFooterRuleOnPage(pageNumber, isChapterOpening);
 }
 
 function getTokenMetadata(pageIndex: number): TokenMetadata {

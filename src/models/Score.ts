@@ -84,7 +84,10 @@ export class Score {
     return footer;
   }
 
-  public shouldShowHeaderRuleForPageIndex(physicalPageNumber: number): boolean {
+  public shouldShowHeaderRuleForPageIndex(
+    physicalPageNumber: number,
+    isChapterOpening = false,
+  ): boolean {
     if (this.pageSetup.showHeaderHorizontalRule) {
       const isOddDisplayedPage = isDisplayedPageNumberOdd(
         this.pageSetup,
@@ -100,7 +103,10 @@ export class Score {
           !isOddDisplayedPage) ||
         (this.pageSetup.headerDifferentOddEven &&
           this.pageSetup.excludeHeaderHorizontalRuleOddPage &&
-          isOddDisplayedPage)
+          isOddDisplayedPage) ||
+        (this.pageSetup.headerFooterDifferentChapterOpening &&
+          this.pageSetup.excludeHeaderHorizontalRuleChapterOpening &&
+          isChapterOpening)
       ) {
         return false;
       }
@@ -110,7 +116,10 @@ export class Score {
     return false;
   }
 
-  public shouldShowFooterOnPage(physicalPageNumber: number): boolean {
+  public shouldShowFooterRuleOnPage(
+    physicalPageNumber: number,
+    isChapterOpening = false,
+  ): boolean {
     if (this.pageSetup.showFooterHorizontalRule) {
       const isOddDisplayedPage = isDisplayedPageNumberOdd(
         this.pageSetup,
@@ -126,7 +135,10 @@ export class Score {
           !isOddDisplayedPage) ||
         (this.pageSetup.headerDifferentOddEven &&
           this.pageSetup.excludeFooterHorizontalRuleOddPage &&
-          isOddDisplayedPage)
+          isOddDisplayedPage) ||
+        (this.pageSetup.headerFooterDifferentChapterOpening &&
+          this.pageSetup.excludeFooterHorizontalRuleChapterOpening &&
+          isChapterOpening)
       ) {
         return false;
       }

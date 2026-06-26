@@ -84,6 +84,7 @@ import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
 import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
 import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
+import { Badge } from '@/components/ui/badge';
 import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
 import {
   ContextMenu,
@@ -211,7 +212,11 @@ import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { isElectron } from '@/utils/isElectron';
 import { resolvePageMargins } from '@/utils/PageMargins';
-import { getDisplayedPageNumber, isRightHandPage } from '@/utils/PageNumbering';
+import {
+  getDisplayedPageNumber,
+  isDisplayedPageNumberOdd,
+  isRightHandPage,
+} from '@/utils/PageNumbering';
 import type { TokenMetadata } from '@/utils/replaceTokens';
 import {
   resolveRunningMarkerPageMetadata,
@@ -2276,6 +2281,93 @@ function getFooterForPageIndex(pageIndex: number) {
 
   // Currently, footers only support a single text box element.
   return footer.elements[0] as TextBoxElement | RichTextBoxElement;
+}
+
+function getHeaderFooterVariantForPageIndex(
+  pageIndex: number,
+): HeaderFooterVariant {
+  const physicalPageNumber =
+    filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
+  const isOddDisplayedPage = isDisplayedPageNumberOdd(
+    score.value.pageSetup,
+    physicalPageNumber,
+  );
+
+  if (
+    score.value.pageSetup.headerDifferentFirstPage &&
+    physicalPageNumber === 1
+  ) {
+    return 'firstPage';
+  }
+
+  if (
+    score.value.pageSetup.headerFooterDifferentChapterOpening &&
+    isChapterOpening
+  ) {
+    return 'chapterOpening';
+  }
+
+  if (score.value.pageSetup.headerDifferentOddEven) {
+    return isOddDisplayedPage ? 'odd' : 'even';
+  }
+
+  return 'default';
+}
+
+function getHeaderFooterVariantLabel(variant: HeaderFooterVariant) {
+  switch (variant) {
+    case 'firstPage':
+      return t(($) => $.dialog.pageSetup.firstPage, { ns: 'dialog' });
+    case 'chapterOpening':
+      return t(($) => $.dialog.pageSetup.chapterOpening, { ns: 'dialog' });
+    case 'odd':
+      return t(($) => $.dialog.pageSetup.oddPages, { ns: 'dialog' });
+    case 'even':
+      return t(($) => $.dialog.pageSetup.evenPages, { ns: 'dialog' });
+    default:
+      return t(($) => $.dialog.pageSetup.defaultVariant, { ns: 'dialog' });
+  }
+}
+
+function getHeaderFooterBadgeLabel(pageIndex: number, kind: HeaderFooterKind) {
+  const kindLabel =
+    kind === 'header'
+      ? t(($) => $.dialog.pageSetup.header, { ns: 'dialog' })
+      : t(($) => $.dialog.pageSetup.footer, { ns: 'dialog' });
+
+  return `${kindLabel}: ${getHeaderFooterVariantLabel(
+    getHeaderFooterVariantForPageIndex(pageIndex),
+  )}`;
+}
+
+function getHeaderFooterBadgeStyle(
+  pageIndex: number,
+  page: Page,
+  kind: HeaderFooterKind,
+): StyleValue {
+  const margins = getResolvedMarginsForPage(page);
+  const badgeGap = 4;
+  const style: CSSProperties = {
+    left: withZoom(margins.left),
+  };
+
+  if (kind === 'header') {
+    style.top = withZoom(
+      score.value.pageSetup.headerMargin +
+        getHeaderForPageIndex(pageIndex).height +
+        badgeGap,
+    );
+  } else {
+    style.bottom = withZoom(
+      score.value.pageSetup.footerMargin +
+        getFooterForPageIndex(pageIndex).height +
+        badgeGap,
+    );
+  }
+
+  return style;
 }
 
 function shouldShowHeaderRuleForPageIndex(pageIndex: number) {
@@ -8833,6 +8925,20 @@ function renderTabLabel(tab: Tab) {
                         </div>
                       </template>
                       <template v-if="score.pageSetup.showHeader">
+                        <Badge
+                          v-if="
+                            !printMode &&
+                            getHeaderForPageIndex(pageIndex) ==
+                              selectedHeaderFooterElement
+                          "
+                          variant="outline"
+                          :style="
+                            getHeaderFooterBadgeStyle(pageIndex, page, 'header')
+                          "
+                          class="pointer-events-none absolute z-20 h-auto bg-background/95 px-2 py-0.5 text-[11px]"
+                        >
+                          {{ getHeaderFooterBadgeLabel(pageIndex, 'header') }}
+                        </Badge>
                         <template
                           v-if="
                             isRichTextBoxElement(
@@ -9499,6 +9605,20 @@ function renderTabLabel(tab: Tab) {
                         >
                       </div>
                       <template v-if="score.pageSetup.showFooter">
+                        <Badge
+                          v-if="
+                            !printMode &&
+                            getFooterForPageIndex(pageIndex) ==
+                              selectedHeaderFooterElement
+                          "
+                          variant="outline"
+                          :style="
+                            getHeaderFooterBadgeStyle(pageIndex, page, 'footer')
+                          "
+                          class="pointer-events-none absolute z-20 h-auto bg-background/95 px-2 py-0.5 text-[11px]"
+                        >
+                          {{ getHeaderFooterBadgeLabel(pageIndex, 'footer') }}
+                        </Badge>
                         <div
                           v-if="shouldShowFooterRuleForPageIndex(pageIndex)"
                           class="header-footer-hr"

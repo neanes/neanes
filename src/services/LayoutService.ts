@@ -70,6 +70,7 @@ import {
 import { TATWEEL } from '@/utils/constants';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
+import { resolveRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
@@ -470,6 +471,7 @@ export class LayoutService {
     // Only a single text box is supported right now
     if (score.pageSetup.showHeader) {
       this.processHeader(score.headers.default, pageSetup, neumeHeight);
+      this.processHeader(score.headers.chapterOpening, pageSetup, neumeHeight);
       this.processHeader(score.headers.odd, pageSetup, neumeHeight);
       this.processHeader(score.headers.even, pageSetup, neumeHeight);
       this.processHeader(score.headers.firstPage, pageSetup, neumeHeight);
@@ -477,6 +479,7 @@ export class LayoutService {
 
     if (score.pageSetup.showFooter) {
       this.processFooter(score.footers.default, pageSetup, neumeHeight);
+      this.processFooter(score.footers.chapterOpening, pageSetup, neumeHeight);
       this.processFooter(score.footers.odd, pageSetup, neumeHeight);
       this.processFooter(score.footers.even, pageSetup, neumeHeight);
       this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
@@ -1481,6 +1484,33 @@ export class LayoutService {
     }
 
     // Phase 2: Place completed paragraphs onto pages
+    const extraHeaderFooterHeightCache = new Map<
+      number,
+      { extraHeaderHeightPx: number; extraFooterHeightPx: number }
+    >();
+    // Keep header/footer overflow reservation stable within a physical page.
+    // This mitigates intra-page drift when oversized headers/footers extend
+    // outside the margins, but it is not a predictive pagination fix and does
+    // not guarantee those out-of-margin layouts will behave correctly.
+    const getCachedExtraHeaderFooterHeight = () => {
+      const physicalPageNumber = page.physicalPageNumber;
+      const cachedHeights =
+        extraHeaderFooterHeightCache.get(physicalPageNumber);
+
+      if (cachedHeights != null) {
+        return cachedHeights;
+      }
+
+      const extraHeights = this.getExtraHeaderFooterHeight(
+        score,
+        pageSetup,
+        pages,
+      );
+      extraHeaderFooterHeightCache.set(physicalPageNumber, extraHeights);
+
+      return extraHeights;
+    };
+
     for (const [
       completedParagraphIndex,
       completedParagraph,
@@ -1541,7 +1571,7 @@ export class LayoutService {
 
         // Calculate the height of the headers/footers of the current page
         let { extraHeaderHeightPx, extraFooterHeightPx } =
-          this.getExtraHeaderFooterHeight(score, pageSetup, pages.length);
+          getCachedExtraHeaderFooterHeight();
 
         const innerPageHeight =
           pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
@@ -1573,7 +1603,7 @@ export class LayoutService {
 
           // Recalculate the height of the headers/footers of the new page
           ({ extraHeaderHeightPx, extraFooterHeightPx } =
-            this.getExtraHeaderFooterHeight(score, pageSetup, pages.length));
+            getCachedExtraHeaderFooterHeight());
         }
 
         if (!('element' in item)) {
@@ -2891,23 +2921,37 @@ export class LayoutService {
   private static getExtraHeaderFooterHeight(
     score: {
       pageSetup: PageSetup;
-      getHeaderForPage: (page: number) => Header;
-      getFooterForPage: (page: number) => Footer;
+      getHeaderForPage: (page: number, isChapterOpening?: boolean) => Header;
+      getFooterForPage: (page: number, isChapterOpening?: boolean) => Footer;
+      shouldShowHeaderRuleForPageIndex: (
+        page: number,
+        isChapterOpening?: boolean,
+      ) => boolean;
+      shouldShowFooterRuleOnPage: (
+        page: number,
+        isChapterOpening?: boolean,
+      ) => boolean;
     },
     pageSetup: PageSetup,
-    pageNumber: number,
+    pages: Page[],
   ): { extraHeaderHeightPx: number; extraFooterHeightPx: number } {
     let extraHeaderHeightPx = 0;
     let extraFooterHeightPx = 0;
+    const pageNumber = pages.length;
+    const runningMarkerPageMetadata = resolveRunningMarkerPageMetadata(pages);
+    const isChapterOpening =
+      runningMarkerPageMetadata[pageNumber - 1]?.isChapterOpening ?? false;
 
     if (score.pageSetup.showHeader) {
-      const header = score.getHeaderForPage(pageNumber);
+      const header = score.getHeaderForPage(pageNumber, isChapterOpening);
 
       // Currently, headers and footers may only contain a single
       // text box.
       let headerHeightPx = (header.elements[0] as TextBoxElement).height;
 
-      if (score.pageSetup.showHeaderHorizontalRule) {
+      if (
+        score.shouldShowHeaderRuleForPageIndex(pageNumber, isChapterOpening)
+      ) {
         headerHeightPx +=
           score.pageSetup.headerHorizontalRuleMarginBottom +
           score.pageSetup.headerHorizontalRuleMarginTop +
@@ -2921,13 +2965,13 @@ export class LayoutService {
     }
 
     if (score.pageSetup.showFooter) {
-      const footer = score.getFooterForPage(pageNumber);
+      const footer = score.getFooterForPage(pageNumber, isChapterOpening);
 
       // Currently, headers and footers may only contain a single
       // text box.
       let footerHeightPx = (footer.elements[0] as TextBoxElement).height;
 
-      if (score.pageSetup.showFooterHorizontalRule) {
+      if (score.shouldShowFooterRuleOnPage(pageNumber, isChapterOpening)) {
         footerHeightPx +=
           score.pageSetup.footerHorizontalRuleMarginBottom +
           score.pageSetup.footerHorizontalRuleMarginTop +

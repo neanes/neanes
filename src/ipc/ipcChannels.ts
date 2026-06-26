@@ -1,5 +1,6 @@
 import type { PageSize } from '@/models/PageSetup';
 import type { Score } from '@/models/save/v1/Score';
+import type { ZoomFitMode } from '@/models/Workspace';
 import type { WorkspacePaneId } from '@/models/WorkspacePane';
 
 export enum IpcMainChannels {
@@ -22,6 +23,7 @@ export enum IpcMainChannels {
   FileMenuExportAsImage = 'FileMenuExportAsImage',
 
   FileMenuPageSetup = 'FileMenuPageSetup',
+  FileMenuDocumentProperties = 'FileMenuDocumentProperties',
 
   FileMenuUndo = 'FileMenuUndo',
   FileMenuRedo = 'FileMenuRedo',
@@ -40,6 +42,7 @@ export enum IpcMainChannels {
 
   FileMenuViewPaneVisibility = 'FileMenuViewPaneVisibility',
   FileMenuViewResetPaneLayout = 'FileMenuViewResetPaneLayout',
+  FileMenuViewZoom = 'FileMenuViewZoom',
 
   FileMenuPreferences = 'FileMenuPreferences',
   OpenAboutDialog = 'OpenAboutDialog',
@@ -73,6 +76,7 @@ export enum IpcRendererChannels {
   SetCanRedo = 'SetCanRedo',
   SetDeveloperPaneEnabled = 'SetDeveloperPaneEnabled',
   SetWorkspacePaneVisibility = 'SetWorkspacePaneVisibility',
+  SetWorkspaceZoomState = 'SetWorkspaceZoomState',
 
   ShowMessageBox = 'ShowMessageBox',
   ShowItemInFolder = 'ShowItemInFolder',
@@ -167,6 +171,20 @@ export interface FileMenuInsertTextboxArgs {
 export interface FileMenuViewPaneVisibilityArgs {
   paneId: WorkspacePaneId;
   visible?: boolean;
+}
+
+export type FileMenuViewZoomArgs =
+  | {
+      type: 'zoom-in' | 'zoom-out' | 'actual-size';
+    }
+  | {
+      type: 'fit';
+      mode: ZoomFitMode;
+    };
+
+export interface WorkspaceZoomState {
+  zoom: number;
+  zoomFitMode: ZoomFitMode | null;
 }
 
 export interface SaveWorkspaceArgs {

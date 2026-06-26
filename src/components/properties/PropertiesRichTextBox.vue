@@ -290,6 +290,76 @@
         </Field>
       </FieldGroup>
 
+      <template v-if="source === 'score'">
+        <FieldSeparator />
+
+        <FieldSet>
+          <FieldLegend variant="label">{{
+            $t(($) => $.toolbar.textbox.runningMarker, { ns: 'toolbar' })
+          }}</FieldLegend>
+          <FieldGroup>
+            <Field>
+              <FieldLabel for="properties-rich-text-box-running-marker-role">{{
+                $t(($) => $.toolbar.textbox.runningMarkerRole, {
+                  ns: 'toolbar',
+                })
+              }}</FieldLabel>
+              <Select
+                :model-value="
+                  element.runningMarkerRole ?? RUNNING_MARKER_NONE_VALUE
+                "
+                @update:model-value="onRunningMarkerRoleChanged"
+              >
+                <SelectTrigger
+                  id="properties-rich-text-box-running-marker-role"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <RichTextSelectContent>
+                  <SelectGroup>
+                    <SelectItem :value="RUNNING_MARKER_NONE_VALUE">
+                      {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
+                    </SelectItem>
+                    <SelectItem value="chapter">
+                      {{
+                        $t(($) => $.toolbar.textbox.runningMarkerChapter, {
+                          ns: 'toolbar',
+                        })
+                      }}
+                    </SelectItem>
+                    <SelectItem value="section">
+                      {{
+                        $t(($) => $.toolbar.textbox.runningMarkerSection, {
+                          ns: 'toolbar',
+                        })
+                      }}
+                    </SelectItem>
+                  </SelectGroup>
+                </RichTextSelectContent>
+              </Select>
+            </Field>
+
+            <Field>
+              <FieldLabel for="properties-rich-text-box-running-marker-text">{{
+                $t(($) => $.toolbar.textbox.runningMarkerText, {
+                  ns: 'toolbar',
+                })
+              }}</FieldLabel>
+              <Input
+                id="properties-rich-text-box-running-marker-text"
+                :model-value="element.runningMarkerText ?? ''"
+                :placeholder="
+                  $t(($) => $.toolbar.textbox.runningMarkerTextPlaceholder, {
+                    ns: 'toolbar',
+                  })
+                "
+                @update:model-value="onRunningMarkerTextChanged"
+              />
+            </Field>
+          </FieldGroup>
+        </FieldSet>
+      </template>
+
       <FieldSeparator />
 
       <Field orientation="horizontal">
@@ -322,6 +392,7 @@ import {
   FieldSeparator,
   FieldSet,
 } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectGroup,
@@ -376,6 +447,10 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  source: {
+    type: String as PropType<'score' | 'header-footer'>,
+    required: true,
+  },
 });
 
 const emit = defineEmits<{
@@ -383,6 +458,7 @@ const emit = defineEmits<{
 }>();
 
 const SELECT_NONE_VALUE = '__none__';
+const RUNNING_MARKER_NONE_VALUE = '__none__';
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
@@ -439,6 +515,23 @@ function onModeChangeVirtualNoteChanged(value: AcceptableValue) {
       modeChangeVirtualNote: value,
     });
   }
+}
+
+function onRunningMarkerRoleChanged(value: AcceptableValue) {
+  updateElement({
+    runningMarkerRole:
+      value === RUNNING_MARKER_NONE_VALUE || value == null
+        ? null
+        : (value as RichTextBoxElement['runningMarkerRole']),
+  });
+}
+
+function onRunningMarkerTextChanged(value: string | number) {
+  const text = String(value);
+
+  updateElement({
+    runningMarkerText: text.trim() === '' ? null : text,
+  });
 }
 
 function isScale(value: unknown): value is Scale {

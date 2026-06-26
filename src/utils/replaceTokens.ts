@@ -6,7 +6,13 @@ export interface TokenMetadata {
   fileName: string;
   filePath: string;
   numerals: 'westernArabic' | 'easternArabic';
+  title: string;
+  author: string;
+  chapter: string;
+  section: string;
 }
+
+export type TokenScope = 'body' | 'header' | 'footer';
 
 const easternArabicNumerals = [
   '٠',
@@ -52,7 +58,7 @@ export function replaceTokens(
   // the replacement token $p. The extra space helps
   // keep the position of other text in the text box
   // in the correct place.
-  if (pageNumber.length < 2) {
+  if (pageNumber !== '' && pageNumber.length < 2) {
     if (alignment === TextBoxAlignment.Left) {
       pageNumber += ' ';
     } else if (alignment === TextBoxAlignment.Right) {
@@ -61,6 +67,10 @@ export function replaceTokens(
   }
 
   return text
+    .replace(/\$:author/g, metadata.author)
+    .replace(/\$:title/g, metadata.title)
+    .replace(/\$:chapter/g, metadata.chapter)
+    .replace(/\$:section/g, metadata.section)
     .replace(/\$p/g, pageNumber)
     .replace(/\$n/g, formatNumber(metadata.numberOfPages, metadata.numerals))
     .replace(/\$f/g, metadata.fileName)

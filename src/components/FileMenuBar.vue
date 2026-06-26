@@ -66,6 +66,10 @@
             <PhScroll />
             {{ $t(($) => $.menu.file.pageSetup, { ns: 'menu' }) }}
           </MenubarItem>
+          <MenubarItem @select="onClickDocumentProperties">
+            <PhFileText />
+            {{ $t(($) => $.menu.file.documentProperties, { ns: 'menu' }) }}
+          </MenubarItem>
           <MenubarSub>
             <MenubarSubTrigger>
               <PhExport />
@@ -230,6 +234,49 @@
           {{ $t(($) => $.menu.view.root, { ns: 'menu' }) }}
         </MenubarTrigger>
         <MenubarContent class="chrome-menubar-content">
+          <MenubarSub>
+            <MenubarSubTrigger>
+              <PhMagnifyingGlass />
+              {{ $t(($) => $.menu.view.zoom.root, { ns: 'menu' }) }}
+            </MenubarSubTrigger>
+            <MenubarSubContent class="chrome-menubar-content">
+              <MenubarItem @select="onZoomInClick">
+                <PhMagnifyingGlassPlus />
+                {{ $t(($) => $.menu.view.zoom.zoomIn, { ns: 'menu' }) }}
+              </MenubarItem>
+              <MenubarItem @select="onZoomOutClick">
+                <PhMagnifyingGlassMinus />
+                {{ $t(($) => $.menu.view.zoom.zoomOut, { ns: 'menu' }) }}
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarCheckboxItem
+                :model-value="actualSizeZoomIsSelected"
+                @select="onActualSizeZoomClick"
+              >
+                {{ $t(($) => $.menu.view.zoom.actualSize, { ns: 'menu' }) }}
+              </MenubarCheckboxItem>
+              <MenubarSeparator />
+              <MenubarCheckboxItem
+                :model-value="props.zoomFitMode === 'page-width'"
+                @select="onZoomFitModeClick('page-width')"
+              >
+                {{ $t(($) => $.menu.view.zoom.pageWidth, { ns: 'menu' }) }}
+              </MenubarCheckboxItem>
+              <MenubarCheckboxItem
+                :model-value="props.zoomFitMode === 'text-width'"
+                @select="onZoomFitModeClick('text-width')"
+              >
+                {{ $t(($) => $.menu.view.zoom.textWidth, { ns: 'menu' }) }}
+              </MenubarCheckboxItem>
+              <MenubarCheckboxItem
+                :model-value="props.zoomFitMode === 'whole-page'"
+                @select="onZoomFitModeClick('whole-page')"
+              >
+                {{ $t(($) => $.menu.view.zoom.wholePage, { ns: 'menu' }) }}
+              </MenubarCheckboxItem>
+            </MenubarSubContent>
+          </MenubarSub>
+          <MenubarSeparator />
           <MenubarCheckboxItem
             :model-value="props.paneVisibility['neume-selector']"
             @update:model-value="
@@ -374,6 +421,8 @@ import {
   PhLightbulb,
   PhLinkSimple,
   PhMagnifyingGlass,
+  PhMagnifyingGlassMinus,
+  PhMagnifyingGlassPlus,
   PhMusicNotesPlus,
   PhNotePencil,
   PhPaintBrush,
@@ -417,12 +466,14 @@ import type {
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
   FileMenuViewPaneVisibilityArgs,
+  FileMenuViewZoomArgs,
 } from '@/ipc/ipcChannels';
 import {
   CloseWorkspacesDisposition,
   IpcMainChannels,
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
+import type { ZoomFitMode } from '@/models/Workspace';
 import type {
   WorkspacePaneId,
   WorkspacePaneVisibility,
@@ -435,6 +486,8 @@ import {
 const props = defineProps<{
   paneVisibility: WorkspacePaneVisibility;
   showDeveloperPanels: boolean;
+  zoom: number;
+  zoomFitMode: ZoomFitMode | null;
 }>();
 
 const fileSelector = useTemplateRef<HTMLInputElement>('file');
@@ -453,6 +506,12 @@ const openRecentIsSupported = recentFilesService.isSupported();
 const recentFiles = ref<BrowserRecentFile[]>([]);
 const openRecentIsEnabled = computed(
   () => openRecentIsSupported && recentFiles.value.length > 0,
+);
+const ZOOM_COMPARISON_EPSILON = 0.000001;
+const actualSizeZoomIsSelected = computed(
+  () =>
+    props.zoomFitMode == null &&
+    Math.abs(props.zoom - 1) <= ZOOM_COMPARISON_EPSILON,
 );
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -651,6 +710,10 @@ function onClickPageSetup() {
   EventBus.$emit(IpcMainChannels.FileMenuPageSetup);
 }
 
+function onClickDocumentProperties() {
+  EventBus.$emit(IpcMainChannels.FileMenuDocumentProperties);
+}
+
 function onClickClose() {
   EventBus.$emit(IpcMainChannels.CloseWorkspaces, {
     disposition: CloseWorkspacesDisposition.SELF,
@@ -825,6 +888,26 @@ function onTogglePaneClick(paneId: WorkspacePaneId, visible?: boolean) {
 
 function onResetPaneLayoutClick() {
   EventBus.$emit(IpcMainChannels.FileMenuViewResetPaneLayout);
+}
+
+function emitViewZoom(args: FileMenuViewZoomArgs) {
+  EventBus.$emit(IpcMainChannels.FileMenuViewZoom, args);
+}
+
+function onZoomInClick() {
+  emitViewZoom({ type: 'zoom-in' });
+}
+
+function onZoomOutClick() {
+  emitViewZoom({ type: 'zoom-out' });
+}
+
+function onActualSizeZoomClick() {
+  emitViewZoom({ type: 'actual-size' });
+}
+
+function onZoomFitModeClick(mode: ZoomFitMode) {
+  emitViewZoom({ type: 'fit', mode });
 }
 
 function onClickPreferences() {

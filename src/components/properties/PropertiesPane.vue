@@ -36,6 +36,7 @@
       :element="textBoxElement"
       :fonts="fonts"
       :page-setup="pageSetup"
+      :source="textBoxSource"
       @update="emit('update:text-box', textBoxElement, $event)"
     />
 
@@ -45,6 +46,7 @@
       :element="richTextBoxElement"
       :fonts="fonts"
       :page-setup="pageSetup"
+      :source="richTextBoxSource"
       @update="emit('update:rich-text-box', richTextBoxElement, $event)"
     />
 
@@ -165,11 +167,17 @@ const emit = defineEmits([
 const textBoxElement = computed(() =>
   props.context.kind === 'text-box' ? props.context.element : null,
 );
+const textBoxSource = computed(() =>
+  props.context.kind === 'text-box' ? props.context.source : 'score',
+);
 const annotationElement = computed(() =>
   props.context.kind === 'annotation' ? props.context.element : null,
 );
 const richTextBoxElement = computed(() =>
   props.context.kind === 'rich-text-box' ? props.context.element : null,
+);
+const richTextBoxSource = computed(() =>
+  props.context.kind === 'rich-text-box' ? props.context.source : 'score',
 );
 const dropCapElement = computed(() =>
   props.context.kind === 'drop-cap' ? props.context.element : null,

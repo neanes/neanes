@@ -33,6 +33,12 @@
     "root": "Select Mode Key",
     "description": "Choose a mode key."
   },
+  "documentProperties": {
+    "root": "Document Properties",
+    "description": "Set document metadata for running heads and other tokens.",
+    "title": "Title",
+    "author": "Author"
+  },
   "neumePositioning": {
     "root": "Neume Positioning",
     "description": "Adjust supporting neume offsets and preview their positions.",
@@ -106,12 +112,19 @@
     "showHeaderHorizontalRuleDescription": "Display a horizontal line below the header.",
     "showFooterHorizontalRuleDescription": "Display a horizontal line above the footer.",
     "excludeHorizontalRuleFirstPageDescription": "Hide on the first page.",
+    "excludeHorizontalRuleChapterOpeningDescription": "Hide on chapter-opening pages.",
     "excludeHorizontalRuleEvenPageDescription": "Hide on even pages.",
     "excludeHorizontalRuleOddPageDescription": "Hide on odd pages.",
     "includeHeader": "Include Header",
     "includeFooter": "Include Footer",
+    "firstPage": "First Page",
     "differentFirstPage": "Different First Page",
+    "oddPages": "Odd Pages",
+    "evenPages": "Even Pages",
     "differentOddAndEven": "Different Odd and Even",
+    "chapterOpening": "Chapter Opening",
+    "differentChapterOpening": "Different chapter opening",
+    "defaultVariant": "Default",
     "richHeaderFooter": "Use Rich Text",
     "firstPageNumber": "First Page Number",
     "firstPageNumberDescription": "The number of the first page in the score. Use $p in the header or footer to insert the page number.",

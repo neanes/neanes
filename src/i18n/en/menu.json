@@ -8,7 +8,8 @@
     "importFromOcr": "OCR Result…",
     "save": "Save",
     "saveAs": "Save As…",
-    "pageSetup": "Page Setup",
+    "pageSetup": "Page Setup…",
+    "documentProperties": "Document Properties…",
     "exportAs": "Export",
     "exportAsPdf": "Export as PDF…",
     "exportAsHtml": "Export as HTML…",
@@ -63,6 +64,15 @@
     "selection": "Selection",
     "lyrics": "Lyrics",
     "showDeveloperPanels": "Show Developer Panels",
+    "zoom": {
+      "root": "Zoom",
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out",
+      "actualSize": "Actual Size",
+      "pageWidth": "Page Width",
+      "textWidth": "Text Width",
+      "wholePage": "Whole Page"
+    },
     "resetLayout": "Reset Layout",
     "generateTestFiles": "Generate Test Files (Debug)"
   },

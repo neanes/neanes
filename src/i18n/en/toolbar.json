@@ -12,7 +12,6 @@
     "insertPelastikon": "Insert Pelastikon",
     "measureBar": "Measure Bar",
     "outline": "Outline",
-    "sectionName": "Section Name",
     "spaceAfter": "Space After",
     "tempoSign": "Tempo Sign",
     "useDefaultStyle": "Use Default Style",
@@ -46,9 +45,11 @@
     "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Insert or remove centered line break after selected element",
     "insertOrRemovePageBreakAfterSelectedElement": "Insert or remove page break after selected element",
     "deleteSelectedElement": "Delete selected element",
-    "fit": "Fit",
+    "pageWidth": "Page Width",
+    "textWidth": "Text Width",
+    "wholePage": "Whole Page",
     "speed": "Speed",
-    "invalidZoom": "The value must be between 50% and 500%."
+    "invalidZoom": "The value must be between {{minZoom}} and {{maxZoom}}."
   },
   "status": {
     "section": "Section {{ sectionNumber }} of {{ sectionCount }}",
@@ -122,7 +123,13 @@
     "centerOnPage": "Center on Page",
     "offsetYTop": "Top Y Offset",
     "offsetYBottom": "Bottom Y Offset",
-    "fillWidth": "Fill Width"
+    "fillWidth": "Fill Width",
+    "runningMarker": "Running Marker",
+    "runningMarkerRole": "Role",
+    "runningMarkerChapter": "Chapter",
+    "runningMarkerSection": "Section",
+    "runningMarkerText": "Override Text",
+    "runningMarkerTextPlaceholder": "Use visible text"
   },
   "richTextBox": {
     "default": "Default",

@@ -12,7 +12,6 @@
     "insertPelastikon": "Εισαγωγή Πελαστικού",
     "measureBar": "Διαστολή",
     "outline": "Περίγραμμα",
-    "sectionName": "Όνομα Ενότητας",
     "spaceAfter": "Διάστημα Μετά",
     "tempoSign": "Σημείο Χρονικής Αγωγής",
     "useDefaultStyle": "Χρήση Προεπιλεγμένης Μορφοποίησης",
@@ -46,9 +45,11 @@
     "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Εισαγωγή ή Αφαίρεση Κεντραρισμένης Αλλαγής Γραμμής μετά το Επιλεγμένο Στοιχείο",
     "insertOrRemovePageBreakAfterSelectedElement": "Εισαγωγή ή Αφαίρεση Αλλαγής Σελίδας μετά το Επιλεγμένο Στοιχείο",
     "deleteSelectedElement": "Διαγραφή Επιλεγμένου Στοιχείου",
-    "fit": "Προσαρμογή",
+    "pageWidth": "Πλάτος Σελίδας",
+    "textWidth": "Πλάτος Κειμένου",
+    "wholePage": "Ολόκληρη Σελίδα",
     "speed": "Ταχύτητα",
-    "invalidZoom": "Η τιμή πρέπει να είναι μεταξύ 50% και 500%."
+    "invalidZoom": "Η τιμή πρέπει να είναι μεταξύ {{minZoom}} και {{maxZoom}}."
   },
   "status": {
     "section": "Ενότητα {{ sectionNumber }} από {{ sectionCount }}",
@@ -122,7 +123,13 @@
     "centerOnPage": "Κέντρο στη Σελίδα",
     "offsetYTop": "Άνω Μετατόπιση Y",
     "offsetYBottom": "Κάτω Μετατόπιση Y",
-    "fillWidth": "Πλήρες Πλάτος"
+    "fillWidth": "Πλήρες Πλάτος",
+    "runningMarker": "Δείκτης Κεφαλίδας",
+    "runningMarkerRole": "Ρόλος",
+    "runningMarkerChapter": "Κεφάλαιο",
+    "runningMarkerSection": "Ενότητα",
+    "runningMarkerText": "Κείμενο Παράκαμψης",
+    "runningMarkerTextPlaceholder": "Χρήση ορατού κειμένου"
   },
   "richTextBox": {
     "default": "Προεπιλογή",

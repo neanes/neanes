@@ -12,7 +12,6 @@
     "insertPelastikon": "Sisipkan Pelastikon",
     "measureBar": "Garis Birama",
     "outline": "Garis Luar",
-    "sectionName": "Nama Bagian",
     "spaceAfter": "Ruang Setelah",
     "tempoSign": "Tanda Tempo",
     "useDefaultStyle": "Gunakan Gaya Default",
@@ -46,9 +45,11 @@
     "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Sisipkan atau hapus jeda baris terpusat setelah elemen yang dipilih",
     "insertOrRemovePageBreakAfterSelectedElement": "Sisipkan atau hapus jeda halaman setelah elemen yang dipilih",
     "deleteSelectedElement": "Hapus elemen yang dipilih",
-    "fit": "Paskan",
+    "pageWidth": "Lebar Halaman",
+    "textWidth": "Lebar Teks",
+    "wholePage": "Seluruh Halaman",
     "speed": "Kecepatan",
-    "invalidZoom": "Nilai harus antara 50% dan 500%."
+    "invalidZoom": "Nilai harus antara {{minZoom}} dan {{maxZoom}}."
   },
   "status": {
     "section": "Bagian {{ sectionNumber }} dari {{ sectionCount }}",
@@ -122,7 +123,13 @@
     "centerOnPage": "Tengah di Halaman",
     "offsetYTop": "Offset Y Atas",
     "offsetYBottom": "Offset Y Bawah",
-    "fillWidth": "Isi Lebar"
+    "fillWidth": "Isi Lebar",
+    "runningMarker": "Penanda Berjalan",
+    "runningMarkerRole": "Peran",
+    "runningMarkerChapter": "Bab",
+    "runningMarkerSection": "Bagian",
+    "runningMarkerText": "Teks Pengganti",
+    "runningMarkerTextPlaceholder": "Gunakan teks yang terlihat"
   },
   "richTextBox": {
     "default": "Bawaan",

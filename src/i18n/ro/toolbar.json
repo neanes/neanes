@@ -12,7 +12,6 @@
     "insertPelastikon": "Inserează pelastikon",
     "measureBar": "Bară de măsură",
     "outline": "Contur",
-    "sectionName": "Numele secțiunii",
     "spaceAfter": "Spațiu după",
     "tempoSign": "Semn de tempo",
     "useDefaultStyle": "Folosește stilul implicit",
@@ -46,9 +45,11 @@
     "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Inserează sau elimină întrerupere de linie centrată după elementul selectat",
     "insertOrRemovePageBreakAfterSelectedElement": "Inserează sau elimină întrerupere de pagină după elementul selectat",
     "deleteSelectedElement": "Șterge elementul selectat",
-    "fit": "Potrivire",
+    "pageWidth": "Lățime pagină",
+    "textWidth": "Lățime text",
+    "wholePage": "Pagină întreagă",
     "speed": "Viteză",
-    "invalidZoom": "Valoarea trebuie să fie între 50% și 500%."
+    "invalidZoom": "Valoarea trebuie să fie între {{minZoom}} și {{maxZoom}}."
   },
   "status": {
     "section": "Secțiune {{ sectionNumber }} din {{ sectionCount }}",
@@ -122,7 +123,13 @@
     "centerOnPage": "Centrează pe pagină",
     "offsetYTop": "Offset Y sus",
     "offsetYBottom": "Offset Y jos",
-    "fillWidth": "Umple lățimea"
+    "fillWidth": "Umple lățimea",
+    "runningMarker": "Marcaj Curent",
+    "runningMarkerRole": "Rol",
+    "runningMarkerChapter": "Capitol",
+    "runningMarkerSection": "Secțiune",
+    "runningMarkerText": "Text de Suprascriere",
+    "runningMarkerTextPlaceholder": "Folosește textul vizibil"
   },
   "richTextBox": {
     "default": "Implicit",

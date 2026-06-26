@@ -8,7 +8,8 @@
     "importFromOcr": "Rezultat OCR…",
     "save": "Salvează",
     "saveAs": "Salvează ca…",
-    "pageSetup": "Configurare pagină",
+    "pageSetup": "Configurare pagină…",
+    "documentProperties": "Proprietăți document…",
     "exportAs": "Exportă",
     "exportAsPdf": "Exportă ca PDF…",
     "exportAsHtml": "Exportă ca HTML…",
@@ -63,6 +64,15 @@
     "selection": "Selecție",
     "lyrics": "Versuri",
     "showDeveloperPanels": "Arată panourile pentru dezvoltatori",
+    "zoom": {
+      "root": "Zoom",
+      "zoomIn": "Mărește",
+      "zoomOut": "Micșorează",
+      "actualSize": "Dimensiune reală",
+      "pageWidth": "Lățime pagină",
+      "textWidth": "Lățime text",
+      "wholePage": "Pagină întreagă"
+    },
     "resetLayout": "Resetează aranjarea",
     "generateTestFiles": "Generează fișiere de test (debugare)"
   },

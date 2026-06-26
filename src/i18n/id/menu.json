@@ -8,7 +8,8 @@
     "importFromOcr": "Hasil OCR…",
     "save": "Simpan",
     "saveAs": "Simpan Sebagai…",
-    "pageSetup": "Pengaturan Halaman",
+    "pageSetup": "Pengaturan Halaman…",
+    "documentProperties": "Properti Dokumen…",
     "exportAs": "Ekspor",
     "exportAsPdf": "Ekspor sebagai PDF…",
     "exportAsHtml": "Ekspor sebagai HTML…",
@@ -63,6 +64,15 @@
     "selection": "Pilihan",
     "lyrics": "Lirik",
     "showDeveloperPanels": "Tampilkan Panel Pengembang",
+    "zoom": {
+      "root": "Zoom",
+      "zoomIn": "Perbesar",
+      "zoomOut": "Perkecil",
+      "actualSize": "Ukuran Aktual",
+      "pageWidth": "Lebar Halaman",
+      "textWidth": "Lebar Teks",
+      "wholePage": "Seluruh Halaman"
+    },
     "resetLayout": "Atur Ulang Tata Letak",
     "generateTestFiles": "Hasilkan File Uji (Debug)"
   },

@@ -33,6 +33,12 @@
     "root": "Selectează mărturia inițială",
     "description": "Alege mărturia inițială."
   },
+  "documentProperties": {
+    "root": "Proprietăți document",
+    "description": "Setează metadatele documentului pentru antete curente și alte tokenuri.",
+    "title": "Titlu",
+    "author": "Autor"
+  },
   "neumePositioning": {
     "root": "Poziționarea neumei",
     "description": "Ajustează decalajele neumelor de sprijin și previzualizează pozițiile lor.",
@@ -106,12 +112,19 @@
     "showHeaderHorizontalRuleDescription": "Afișează o linie orizontală sub antet.",
     "showFooterHorizontalRuleDescription": "Afișează o linie orizontală deasupra subsolului.",
     "excludeHorizontalRuleFirstPageDescription": "Ascunde pe prima pagină.",
+    "excludeHorizontalRuleChapterOpeningDescription": "Ascunde pe paginile de deschidere a capitolului.",
     "excludeHorizontalRuleEvenPageDescription": "Ascunde pe paginile pare.",
     "excludeHorizontalRuleOddPageDescription": "Ascunde pe paginile impare.",
     "includeHeader": "Include antet",
     "includeFooter": "Include subsol",
+    "firstPage": "Prima pagină",
     "differentFirstPage": "Prima pagină diferită",
+    "oddPages": "Pagini impare",
+    "evenPages": "Pagini pare",
     "differentOddAndEven": "Pagini impare și pare diferite",
+    "chapterOpening": "Deschidere capitol",
+    "differentChapterOpening": "Different chapter opening",
+    "defaultVariant": "Implicit",
     "richHeaderFooter": "Folosește text formatat",
     "firstPageNumber": "Numărul primei pagini",
     "firstPageNumberDescription": "Numărul primei pagini din partitură. Folosiți $p în antet sau subsol pentru a insera numărul paginii.",

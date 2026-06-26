@@ -2,30 +2,162 @@
 
 ## Headers & Footers
 
-To insert a header or footer, use the file menu: `Insert > Headers & Footers > Header` or `Insert > Headers & Footers > Footer`.
+Headers and footers can contain page numbers, document properties, and running text such as the current chapter or section title. They are useful for simple page numbering as well as book-style layouts with different left- and right-hand pages.
 
-Headers and footers may also be turned on and off in the page setup dialog, which is accessed through the main menu: `File > Page Setup`.
+To add or edit a header or footer, use `Insert > Headers & Footers > Header` or `Insert > Headers & Footers > Footer`.
 
-![Header Settings Dialog](./images/guide-header-settings-dialog.png)
+Headers and footers can be turned on and off in the page setup dialog, which is accessed through `File > Page Setup`.
 
-In the page setup dialog, you can control whether the first page has a different header and footer than the rest of the document, as well as whether odd and even pages have different headers.
+In the page setup dialog, you can choose whether headers and footers are shown, whether the first page is different, whether odd and even pages are different, whether chapter-opening pages are different, and whether new header/footer content uses plain text boxes or rich text boxes.
+
+### Header and Footer Variants
+
+Neanes provides several variants for headers and footers. A variant is a separate version of the header or footer that is used only on certain pages.
+
+| Variant         | Used when                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------- |
+| Default         | No more specific variant applies                                                                  |
+| First page      | `Different first page` is enabled and the page is the first page of the score                     |
+| Odd             | `Different odd and even` is enabled and the displayed page number is odd                          |
+| Even            | `Different odd and even` is enabled and the displayed page number is even                         |
+| Chapter opening | `Different chapter opening` is enabled and Neanes detects the start of a new chapter on that page |
+
+Each variant has left, center, and right content areas. For example, a book-style header might place the page number on the outside edge and the current chapter or section title in the center.
+
+### Which Variant Wins
+
+For each page, Neanes picks exactly one header variant and one footer variant. The selection order is:
+
+1. First page
+2. Chapter opening
+3. Odd or even
+4. Default
+
+This means the first-page header/footer wins over the chapter-opening header/footer. A first page that also starts a chapter still uses the first-page variant when `Different first page` is enabled.
+
+Chapter-opening variants win over odd/even variants. If `Different chapter opening` is turned off, chapter-opening pages use the odd, even, or default variant just like any other page.
+
+### Placeholder Tokens
+
+You can type placeholder tokens directly into a header or footer. Neanes replaces them when displaying, printing, or exporting the score.
+
+| Token       | Inserts                                  |
+| ----------- | ---------------------------------------- |
+| `$p`        | Displayed page number                    |
+| `$n`        | Displayed total page count               |
+| `$f`        | File name without extension              |
+| `$F`        | Full file path                           |
+| `$:author`  | Author from `File > Document Properties` |
+| `$:title`   | Title from `File > Document Properties`  |
+| `$:chapter` | Current chapter running marker           |
+| `$:section` | Current section running marker           |
+
+If a token has no value yet, Neanes substitutes an empty string.
 
 ### Page Numbers
 
-To insert a page number in the header, type `$p`. When the document is printed, the token `$p` will be replaced with the correct page number in the header/footer of each page.
+To insert a page number in a header or footer, type `$p`.
 
 ![Header Settings Page Number Example](./images/guide-header-page-number-example-1.png)
 
-### Other Tokens
+`$p` uses the displayed page number, so it respects the `First page number` setting. For example, if `First page number` is `3`, the first page displays as page `3`. If Eastern Arabic numerals are enabled in page setup, page-number tokens use Eastern Arabic digits.
 
-Several other tokens are available. Below is a list of currently supported tokens.
+`$n` uses the displayed number of the last page. For example, if a 10-page score starts at page `3`, `$n` displays `12`.
 
-| Token | Description                   |
-| ----- | ----------------------------- |
-| `$p`  | Page Number                   |
-| `$n`  | Number of Pages               |
-| `$f`  | File Name (without extension) |
-| `$F`  | File Path                     |
+### Document Properties
+
+Use `File > Document Properties` to set the title and author used by `$:title` and `$:author`.
+
+These values are document-wide. They do not change from page to page.
+
+### Running Markers
+
+Running markers let headers and footers show text from the score body, such as the current chapter or section title.
+
+Neanes supports two running-marker roles:
+
+- `Chapter`
+- `Section`
+
+To create a running marker:
+
+1. Select a text box or rich text box in the score body.
+2. Open `View > Properties`.
+3. Set the running-marker role to `Chapter` or `Section`.
+4. Optionally enter `Running Marker Text`.
+
+If `Running Marker Text` is filled in, Neanes uses that value. If it is empty, Neanes uses the visible text from the text box itself.
+
+Running markers are read from body text boxes and rich text boxes only. Headers and footers can refer to running markers with `$:chapter` and `$:section`, but header/footer text does not define new running markers.
+
+Neanes reads running markers page by page:
+
+- The first marker of each role on a page becomes the value for that page.
+- If a page has no new marker, it keeps the value from the previous page.
+- When a new chapter marker starts a chapter-opening page, the current section marker is cleared unless that page also has a new section marker.
+
+For example, if page 4 contains a chapter marker named `Matins`, then `$:chapter` displays `Matins` on page 4 and following pages until another chapter marker appears.
+
+### Chapter-Opening Pages
+
+A page is a chapter-opening page when the first `chapter` running marker on that page is different from the chapter marker already in effect.
+
+This can be subtle:
+
+- The chapter marker must be in the score body on that page.
+- Repeating the same chapter marker later does not create another chapter opening.
+- Moving a chapter marker to a different page can change which page uses the chapter-opening header/footer.
+- If the first page is also a chapter opening, the first-page variant is used when `Different first page` is enabled.
+
+Chapter-opening variants are useful when you want to suppress running heads at the start of each chapter while keeping a centered footer page number.
+
+### Facing Pages and Odd/Even Pages
+
+Facing pages are designed for book-style layouts with inside and outside margins.
+
+Odd/even header and footer selection is based on the displayed page number, not simply the page's position in the file. If `First page number` is `2`, the first page is treated as an even page for header/footer selection.
+
+When facing pages are on:
+
+- In left-to-right documents, odd displayed pages are right-hand pages.
+- In right-to-left documents, even displayed pages are right-hand pages.
+
+When facing pages are off, every page is treated as a right-hand page for layout purposes.
+
+### Default Starting Layouts
+
+New scores start with generated header/footer content.
+
+Without facing pages:
+
+- Headers start empty.
+- Footers start with a centered page number: `$p`
+
+With facing pages:
+
+- Ordinary headers are generated in a book-style layout.
+- Ordinary footers start empty.
+- Chapter-opening headers start empty.
+- Chapter-opening footers start with a centered page number: `$p`
+
+If you enable facing pages on a score that is still using the untouched generated defaults, Neanes may automatically enable `Different odd and even` so that the generated templates continue to make sense as facing-page headers.
+
+### Common Patterns
+
+Here are a few common setups.
+
+- Page numbers on every page: enable footers and place `$p` in the default footer.
+- No running head on the title page: enable `Different first page` and leave the first-page header blank.
+- Book-style running heads: enable facing pages and `Different odd and even`, then use `$:chapter`, `$:section`, and `$p` in the odd and even headers.
+- Chapter openings without running heads: enable `Different chapter opening`, leave the chapter-opening header blank, and keep `$p` in the chapter-opening footer.
+
+### Things to Watch For
+
+- Changing `First page number` can switch which pages use odd and even variants.
+- Moving a running-marker text box can change where a chapter opening is detected.
+- Running markers come only from body text boxes and rich text boxes, not from header/footer content.
+- Header/footer variants are global for the whole score. Neanes does not provide separate header/footer sets for different document sections.
+- Tokens are simple placeholders. They do not support conditional logic.
 
 ## Custom Mode Keys
 

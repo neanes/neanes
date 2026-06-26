@@ -8,7 +8,8 @@
     "importFromOcr": "Αποτέλεσμα OCR…",
     "save": "Αποθήκευση",
     "saveAs": "Αποθήκευση Ως…",
-    "pageSetup": "Διαμόρφωση Σελίδας",
+    "pageSetup": "Διαμόρφωση Σελίδας…",
+    "documentProperties": "Ιδιότητες Εγγράφου…",
     "exportAs": "Εξαγωγή",
     "exportAsPdf": "Εξαγωγή ως PDF…",
     "exportAsHtml": "Εξαγωγή ως HTML…",
@@ -63,6 +64,15 @@
     "selection": "Επιλογή",
     "lyrics": "Στίχοι",
     "showDeveloperPanels": "Εμφάνιση Πινάκων Προγραμματιστή",
+    "zoom": {
+      "root": "Ζουμ",
+      "zoomIn": "Μεγέθυνση",
+      "zoomOut": "Σμίκρυνση",
+      "actualSize": "Πραγματικό Μέγεθος",
+      "pageWidth": "Πλάτος Σελίδας",
+      "textWidth": "Πλάτος Κειμένου",
+      "wholePage": "Ολόκληρη Σελίδα"
+    },
     "resetLayout": "Επαναφορά Διάταξης",
     "generateTestFiles": "Δημιουργία Αρχείων Δοκιμής (Εντοπισμός Σφαλμάτων)"
   },

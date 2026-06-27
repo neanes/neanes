@@ -159,27 +159,27 @@ Here are a few common setups.
 - Header/footer variants are global for the whole score. Neanes does not provide separate header/footer sets for different document sections.
 - Tokens are simple placeholders. They do not support conditional logic.
 
-## Custom Mode Keys
+## Custom Initial Martyriæ
 
-Any rich text box can function as a mode key in the score. To enable this:
+Any rich text box can function as an initial martyria in the score. To enable this:
 
 1. Click the rich text box.
 2. Open `View -> Properties` and check the `Change Mode` option.
 3. Choose the starting note and scale.
 
-If the mode key includes a **fthora**, specify the **parallage note**.  
+If the initial martyria includes a **fthora**, specify the **parallage note**.
 _For example, triphonic hymns in the plagal of the fourth mode typically have a NI fthora on GA—so GA is the starting note, and NI is the parallage note._
 
-Custom mode keys can be adapted for other languages by replacing the Greek term `ήχος` with a localized equivalent, such as `glas`, `mode`, `глас`, etc.
+Custom initial martyriæ can be adapted for other languages by replacing the Greek term `ήχος` with a localized equivalent, such as `glas`, `mode`, `глас`, etc.
 
 ### Toolbar Shortcuts
 
 The rich text toolbar provides several buttons to help insert mode-related symbols:
 
-![Custom Mode Keys Toolbar Buttons](./images/guide-custom-mode-keys-toolbar-buttons.png)
+![Custom Initial Martyriæ Toolbar Buttons](./images/guide-custom-mode-keys-toolbar-buttons.png)
 
-1. **Neume Signatures** – Inserts neumes used in mode key signatures.
-2. **Martyriae** – Inserts martyriae (mode indicators).
+1. **Neumes** – Inserts neumes used in initial martyriæ.
+2. **Martyriæ** – Inserts martyriæ (signatures).
 3. **Plagal Symbol** – Inserts the Greek "plagal" symbol using the default text box font, allowing it to match the surrounding Greek text.
 
 After inserting a symbol, click it to customize its **color**, **size**, **position**, and **spacing**.
@@ -197,7 +197,7 @@ By default, an inline text box is centered relative to its own width—which may
 
 ### Example
 
-A sample file demonstrating various mode key configurations is available here:  
+A sample file demonstrating various initial martyriæ is available here:
 [byzx](http://github.com/neanes/neanes/blob/master/examples/Custom%20Mode%20Key%20Demo.byzx) | [PDF](http://github.com/neanes/neanes/blob/master/examples/Custom%20Mode%20Key%20Demo.pdf)
 
 ## Hyperlinks

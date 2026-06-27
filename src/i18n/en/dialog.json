@@ -24,14 +24,14 @@
     "calculateTimeSignatures": "Include Time Signatures",
     "displayTimeSignatures": "Display Time Signatures",
     "displayMeasureSubdivisions": "Display Measure Subdivisions",
-    "includeModeKeys": "Include Mode Keys",
+    "includeInitialMartyriae": "Include Initial Martyriæ",
     "includeTextBoxes": "Include Text Boxes",
     "exporting": "Exporting…",
     "export": "Export"
   },
-  "modeKey": {
-    "root": "Select Mode Key",
-    "description": "Choose a mode key."
+  "initialMartyria": {
+    "root": "Select Initial Martyria",
+    "description": "Choose an initial martyria."
   },
   "documentProperties": {
     "root": "Document Properties",
@@ -99,7 +99,7 @@
     "lyricsH": "Lyrics: Minimum Distance Between Adjacent Lyrics",
     "lyricsHDescription": "The minimum distance between adjacent lyrics. Increase this number if the lyrics are too close together.",
     "martyriaVerticalOffset": "Martyria: Vertical Offset",
-    "martyriaVerticalOffsetDescription": "The vertical position of martyriae in relation to the rest of the neumes. Increase this number to lower the martyriae.",
+    "martyriaVerticalOffsetDescription": "The vertical position of martyriæ in relation to the rest of the neumes. Increase this number to lower the martyriæ.",
     "line": "Line Spacing",
     "lineSpacingDescription": "The minimum space between each line. The actual space between lines may be larger than this in order to avoid collisions between neumes and lyrics on adjacent lines.",
     "hyphens": "Lyrics: Hyphen Spacing",
@@ -165,8 +165,8 @@
     "lyricsDescription": "The default styling for all lyrics in the score.",
     "textBoxes": "Text Boxes",
     "textBoxesDescription": "The default styling for all text boxes in the score.",
-    "modeKeys": "Mode Keys",
-    "modeKeysDescription": "The default styling for all mode keys in the score.",
+    "initialMartyriae": "Initial Martyriæ",
+    "initialMartyriaeDescription": "The default styling for all initial martyriæ in the score.",
     "neumesDescription": "The default styling for all neumes in the score.",
     "heightAdjust": "Height Adjust",
     "neumeStyles": "Neume Styles",

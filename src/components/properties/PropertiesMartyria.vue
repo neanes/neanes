@@ -170,7 +170,7 @@
 
       <Field>
         <FieldLabel for="properties-martyria-root-sign-override">{{
-          $t(($) => $.toolbar.martyria.rootSignOverride, { ns: 'toolbar' })
+          $t(($) => $.toolbar.martyria.martyriaSignOverride, { ns: 'toolbar' })
         }}</FieldLabel>
         <Select
           :model-value="element.rootSignOverride ?? SELECT_NONE_VALUE"

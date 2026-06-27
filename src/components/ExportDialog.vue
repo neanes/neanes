@@ -195,7 +195,9 @@
                 />
                 <FieldLabel for="export-dialog-include-mode-keys">
                   {{
-                    $t(($) => $.dialog.export.includeModeKeys, { ns: 'dialog' })
+                    $t(($) => $.dialog.export.includeInitialMartyriae, {
+                      ns: 'dialog',
+                    })
                   }}
                 </FieldLabel>
               </Field>

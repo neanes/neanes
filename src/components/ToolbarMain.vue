@@ -300,7 +300,7 @@
           </AppTooltip>
           <AppTooltip
             :tooltip="
-              $t(($) => $.toolbar.main.insertModeKey, { ns: 'toolbar' })
+              $t(($) => $.toolbar.main.insertInitialMartyria, { ns: 'toolbar' })
             "
           >
             <ToolbarButton

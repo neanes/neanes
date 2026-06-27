@@ -1980,7 +1980,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t(($) => $.menu.insert.modeKey),
+          label: i18next.t(($) => $.menu.insert.initialMartyria),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertModeKey);
           },

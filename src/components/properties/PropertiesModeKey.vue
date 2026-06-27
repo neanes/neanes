@@ -1,7 +1,7 @@
 <template>
   <FieldSet class="min-h-0 flex-1 overflow-auto">
     <FieldLegend class="sr-only">{{
-      $t(($) => $.menu.insert.modeKey, { ns: 'menu' })
+      $t(($) => $.menu.insert.initialMartyria, { ns: 'menu' })
     }}</FieldLegend>
     <FieldGroup>
       <Field orientation="horizontal">
@@ -22,7 +22,7 @@
       <template v-if="!element.useDefaultStyle">
         <Field orientation="horizontal">
           <FieldLabel for="properties-mode-key-font-size">{{
-            $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
+            $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
           }}</FieldLabel>
           <InputFontSize
             id="properties-mode-key-font-size"
@@ -62,7 +62,9 @@
 
         <Field orientation="horizontal">
           <FieldLabel for="properties-mode-key-height-adjustment">{{
-            $t(($) => $.toolbar.modeKey.heightAdjustment, { ns: 'toolbar' })
+            $t(($) => $.toolbar.initialMartyria.heightAdjustment, {
+              ns: 'toolbar',
+            })
           }}</FieldLabel>
           <InputUnit
             id="properties-mode-key-height-adjustment"
@@ -194,7 +196,7 @@
           "
         />
         <FieldLabel for="properties-mode-key-show-ambitus">{{
-          $t(($) => $.toolbar.modeKey.showAmbitus, { ns: 'toolbar' })
+          $t(($) => $.toolbar.initialMartyria.showAmbitus, { ns: 'toolbar' })
         }}</FieldLabel>
       </Field>
 
@@ -212,7 +214,7 @@
           "
         />
         <FieldLabel for="properties-mode-key-permanent-enharmonic-zo">{{
-          $t(($) => $.toolbar.modeKey.permanentEnharmonicZo, {
+          $t(($) => $.toolbar.initialMartyria.permanentEnharmonicZo, {
             ns: 'toolbar',
           })
         }}</FieldLabel>
@@ -224,7 +226,11 @@
         @click="$emit('open-mode-key-dialog')"
       >
         <PhMusicNotes data-icon="inline-start" />
-        {{ $t(($) => $.toolbar.modeKey.changeKey, { ns: 'toolbar' }) }}
+        {{
+          $t(($) => $.toolbar.initialMartyria.changeInitialMartyria, {
+            ns: 'toolbar',
+          })
+        }}
       </Button>
     </FieldGroup>
   </FieldSet>

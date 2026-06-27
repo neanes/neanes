@@ -25,7 +25,7 @@ Neanes (pronounced neh-ah-ness) is a free and open source scorewriter for notati
 This software is intended to create simple scores that contain:
 
 - A title
-- A mode signature
+- An initial martyria
 - Neumes and lyrics
 
 It is not intended to be a fully-featured word processor.

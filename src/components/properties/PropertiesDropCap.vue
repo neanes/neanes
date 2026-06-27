@@ -53,7 +53,7 @@
 
         <Field orientation="horizontal">
           <FieldLabel for="properties-drop-cap-font-size">{{
-            $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
+            $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
           }}</FieldLabel>
           <InputFontSize
             id="properties-drop-cap-font-size"

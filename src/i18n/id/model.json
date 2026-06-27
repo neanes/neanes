@@ -100,7 +100,7 @@
       "connectingHeteron": "Heteron Penghubung",
       "endofonon": "Endofonon"
     },
-    "rootSign": {
+    "martyriaSign": {
       "ananes": "Ananes",
       "neanes": "Neanes",
       "softChromaticGa": "Ga Kromatik Lembut",
@@ -200,7 +200,7 @@
     "grave": "Mode Berat",
     "plagalFourth": "Plagal dari Mode Keempat"
   },
-  "modeKey": {
+  "initialMartyria": {
     "heirmologicAndSticheraric": "Heirmologic dan Sticheraric",
     "tetraphonicPapadicAndOldSticheraric": "Tetraphonic (Papadic dan Sticheraric Lama)",
     "tetraphonic": "Tetraphonic",

@@ -283,7 +283,7 @@
             "
           />
           <FieldLabel for="properties-rich-text-box-permanent-enharmonic-zo">{{
-            $t(($) => $.toolbar.modeKey.permanentEnharmonicZo, {
+            $t(($) => $.toolbar.initialMartyria.permanentEnharmonicZo, {
               ns: 'toolbar',
             })
           }}</FieldLabel>

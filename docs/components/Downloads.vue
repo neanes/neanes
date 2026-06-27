@@ -6,7 +6,7 @@
         href="https://github.com/neanes/neanes/releases/latest"
         target="_blank"
         rel="noopener noreferrer"
-        >Github</a
+        >GitHub</a
       >.
     </div>
     <template v-if="!error && rows.length > 0">

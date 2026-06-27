@@ -3621,7 +3621,7 @@ The structure of the BYZ/BYZX files changed slightly. Most files should still op
 
 **New**
 
-- First build and release using Github Workflow.
+- First build and release using GitHub Workflow.
 - Includes builds for Windows, macOS, and Linux
 
 **Improvements**

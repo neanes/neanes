@@ -2538,6 +2538,130 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+function getLyricHtmlElement(index: number) {
+  const htmlElement = getTemplateRef<InstanceType<typeof ContentEditable>[]>(
+    `lyrics-${index}`,
+  )[0]?.htmlElement;
+
+  return htmlElement instanceof HTMLElement ? htmlElement : null;
+}
+
+type LyricSelectionSnapshot = {
+  element: NoteElement;
+  startOffset: number;
+  endOffset: number;
+  wasFocused: boolean;
+};
+
+function captureSelectedLyricSelection(): LyricSelectionSnapshot | null {
+  const element = selectedLyrics.value;
+
+  if (element == null) {
+    return null;
+  }
+
+  const index = elements.value.indexOf(element);
+  const htmlElement = getLyricHtmlElement(index);
+  const selection = window.getSelection();
+
+  if (htmlElement == null || selection == null || selection.rangeCount === 0) {
+    return null;
+  }
+
+  const range = selection.getRangeAt(0);
+
+  if (
+    !htmlElement.contains(range.startContainer) ||
+    !htmlElement.contains(range.endContainer)
+  ) {
+    return null;
+  }
+
+  return {
+    element,
+    startOffset: getTextOffset(
+      htmlElement,
+      range.startContainer,
+      range.startOffset,
+    ),
+    endOffset: getTextOffset(htmlElement, range.endContainer, range.endOffset),
+    wasFocused: document.activeElement === htmlElement,
+  };
+}
+
+function getTextOffset(root: HTMLElement, container: Node, offset: number) {
+  const range = document.createRange();
+  range.selectNodeContents(root);
+  range.setEnd(container, offset);
+
+  const textOffset = range.toString().length;
+
+  return textOffset;
+}
+
+function restoreLyricSelection(lyricSelection: LyricSelectionSnapshot) {
+  if (selectedLyrics.value !== lyricSelection.element) {
+    return;
+  }
+
+  const index = elements.value.indexOf(lyricSelection.element);
+  const htmlElement = getLyricHtmlElement(index);
+  const selection = window.getSelection();
+
+  if (htmlElement == null || selection == null) {
+    return;
+  }
+
+  const textLength = htmlElement.textContent?.length ?? 0;
+  const clampedStartOffset = clamp(lyricSelection.startOffset, 0, textLength);
+  const clampedEndOffset = clamp(lyricSelection.endOffset, 0, textLength);
+  const range = document.createRange();
+
+  setTextRangeBoundary(htmlElement, range, clampedStartOffset, true);
+  setTextRangeBoundary(htmlElement, range, clampedEndOffset, false);
+
+  if (lyricSelection.wasFocused && document.hasFocus()) {
+    htmlElement.focus();
+  }
+
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+function setTextRangeBoundary(
+  root: HTMLElement,
+  range: Range,
+  offset: number,
+  start: boolean,
+) {
+  let remainingOffset = offset;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let textNode = walker.nextNode();
+
+  while (textNode != null) {
+    const textLength = textNode.textContent?.length ?? 0;
+
+    if (remainingOffset <= textLength) {
+      if (start) {
+        range.setStart(textNode, remainingOffset);
+      } else {
+        range.setEnd(textNode, remainingOffset);
+      }
+
+      return;
+    }
+
+    remainingOffset -= textLength;
+    textNode = walker.nextNode();
+  }
+
+  if (start) {
+    range.setStart(root, root.childNodes.length);
+  } else {
+    range.setEnd(root, root.childNodes.length);
+  }
+}
+
 function getFirstElementForPage(pageNumber: number) {
   const page = filteredPages.value[pageNumber - 1];
 
@@ -4976,6 +5100,8 @@ function save(markUnsavedChanges: boolean = true) {
     hasUnsavedChanges.value = true;
   }
 
+  const lyricSelection = captureSelectedLyricSelection();
+
   // Save the indexes of the visible pages
   const visiblePages = pages.value
     .map((_, i) => i)
@@ -5014,6 +5140,12 @@ function save(markUnsavedChanges: boolean = true) {
     });
 
   pages.value = processedPages;
+
+  if (lyricSelection != null) {
+    nextTick(() => {
+      restoreLyricSelection(lyricSelection);
+    });
+  }
 
   // Auto-persist to local/dev storage. This deliberately serializes WITHOUT
   // flushing the live rich-text editors: `save()` runs frequently -- often via the

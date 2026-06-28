@@ -204,7 +204,7 @@ To save your file to the disk, click `File -> Save` or `File -> Save As` in the 
 
 ## Export to PDF
 
-To export the score to PDF, click `File -> Export to PDF` in the main menu.
+To export the score to PDF, click `File -> Export -> Export as PDF` in the main menu.
 
 ## Print
 

@@ -40,7 +40,11 @@ export enum IpcMainChannels {
 
   FileMenuFind = 'FileMenuFind',
 
+  FileMenuWindowPreviousTab = 'FileMenuWindowPreviousTab',
+  FileMenuWindowNextTab = 'FileMenuWindowNextTab',
+
   FileMenuViewPaneVisibility = 'FileMenuViewPaneVisibility',
+  FileMenuViewStatusBarVisibility = 'FileMenuViewStatusBarVisibility',
   FileMenuViewResetPaneLayout = 'FileMenuViewResetPaneLayout',
   FileMenuViewZoom = 'FileMenuViewZoom',
 
@@ -59,7 +63,7 @@ export enum IpcMainChannels {
   FileMenuInsertHeader = 'FileMenuInsertHeader',
   FileMenuInsertFooter = 'FileMenuInsertFooter',
 
-  FileMenuToolsCopyElementLink = 'FileMenuToolsCopyElementLink',
+  FileMenuEditCopyElementLink = 'FileMenuEditCopyElementLink',
 
   FileMenuGenerateTestFile = 'GenerateTestFile',
 
@@ -75,7 +79,10 @@ export enum IpcRendererChannels {
   SetCanUndo = 'SetCanUndo',
   SetCanRedo = 'SetCanRedo',
   SetDeveloperPaneEnabled = 'SetDeveloperPaneEnabled',
+  SetCopyElementLinkEnabled = 'SetCopyElementLinkEnabled',
+  SetWorkspaceTabNavigationEnabled = 'SetWorkspaceTabNavigationEnabled',
   SetWorkspacePaneVisibility = 'SetWorkspacePaneVisibility',
+  SetStatusBarVisibility = 'SetStatusBarVisibility',
   SetWorkspaceZoomState = 'SetWorkspaceZoomState',
 
   ShowMessageBox = 'ShowMessageBox',
@@ -170,6 +177,10 @@ export interface FileMenuInsertTextboxArgs {
 
 export interface FileMenuViewPaneVisibilityArgs {
   paneId: WorkspacePaneId;
+  visible?: boolean;
+}
+
+export interface FileMenuViewStatusBarVisibilityArgs {
   visible?: boolean;
 }
 

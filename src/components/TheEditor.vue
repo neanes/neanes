@@ -115,6 +115,7 @@ import type {
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
   FileMenuViewPaneVisibilityArgs,
+  FileMenuViewStatusBarVisibilityArgs,
   FileMenuViewZoomArgs,
   ShowMessageBoxReplyArgs,
   WorkspaceZoomState,
@@ -390,6 +391,7 @@ const preferredRichTextBoxFocusTarget = ref<{
 const searchTextQuery = ref('');
 const searchTextPanelIsOpen = ref(false);
 const showFileMenuBar = ref(!isElectron());
+const statusBarIsVisible = ref(true);
 const paneLayoutResetCounter = ref(0);
 const paneVisibility = ref(createDefaultPaneVisibility());
 const editorPreferencesHydrated = ref(false);
@@ -736,6 +738,7 @@ const selectedElement = computed({
     selectedWorkspace.value.selectedAlternateLineElement = null;
   },
 });
+const canCopyElementLink = computed(() => selectedElement.value?.id != null);
 
 const selectedElementForNeumeToolbar = computed(() => {
   if (
@@ -1201,6 +1204,9 @@ const zoomFitMode = computed({
     selectedWorkspace.value.zoomFitMode = value;
   },
 });
+const canNavigateWorkspaceTabs = computed(
+  () => !dialogOpen.value && tabs.value.length > 1,
+);
 
 const statusScrollPageNumber = computed(() =>
   clamp(currentPageNumber.value, 1, statusPageCount.value),
@@ -1536,6 +1542,33 @@ watch(
 );
 
 watch(
+  canCopyElementLink,
+  (enabled) => {
+    EventBus.$emit(IpcRendererChannels.SetCopyElementLinkEnabled, enabled);
+  },
+  { immediate: true },
+);
+
+watch(
+  canNavigateWorkspaceTabs,
+  (enabled) => {
+    EventBus.$emit(
+      IpcRendererChannels.SetWorkspaceTabNavigationEnabled,
+      enabled,
+    );
+  },
+  { immediate: true },
+);
+
+watch(
+  statusBarIsVisible,
+  (visible) => {
+    EventBus.$emit(IpcRendererChannels.SetStatusBarVisibility, visible);
+  },
+  { immediate: true },
+);
+
+watch(
   () =>
     ({
       zoom: zoom.value,
@@ -1635,8 +1668,17 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$on(IpcMainChannels.FileMenuFind, onFileMenuFind);
   EventBus.$on(
+    IpcMainChannels.FileMenuWindowPreviousTab,
+    onFileMenuWindowPreviousTab,
+  );
+  EventBus.$on(IpcMainChannels.FileMenuWindowNextTab, onFileMenuWindowNextTab);
+  EventBus.$on(
     IpcMainChannels.FileMenuViewPaneVisibility,
     onFileMenuViewPaneVisibility,
+  );
+  EventBus.$on(
+    IpcMainChannels.FileMenuViewStatusBarVisibility,
+    onFileMenuViewStatusBarVisibility,
   );
   EventBus.$on(
     IpcMainChannels.FileMenuViewResetPaneLayout,
@@ -1671,8 +1713,8 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuInsertHeader, onFileMenuInsertHeader);
   EventBus.$on(IpcMainChannels.FileMenuInsertFooter, onFileMenuInsertFooter);
   EventBus.$on(
-    IpcMainChannels.FileMenuToolsCopyElementLink,
-    onFileMenuToolsCopyElementLink,
+    IpcMainChannels.FileMenuEditCopyElementLink,
+    onFileMenuEditCopyElementLink,
   );
   EventBus.$on(
     IpcMainChannels.FileMenuGenerateTestFile,
@@ -1731,8 +1773,17 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$off(IpcMainChannels.FileMenuFind, onFileMenuFind);
   EventBus.$off(
+    IpcMainChannels.FileMenuWindowPreviousTab,
+    onFileMenuWindowPreviousTab,
+  );
+  EventBus.$off(IpcMainChannels.FileMenuWindowNextTab, onFileMenuWindowNextTab);
+  EventBus.$off(
     IpcMainChannels.FileMenuViewPaneVisibility,
     onFileMenuViewPaneVisibility,
+  );
+  EventBus.$off(
+    IpcMainChannels.FileMenuViewStatusBarVisibility,
+    onFileMenuViewStatusBarVisibility,
   );
   EventBus.$off(
     IpcMainChannels.FileMenuViewResetPaneLayout,
@@ -1767,8 +1818,8 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuInsertHeader, onFileMenuInsertHeader);
   EventBus.$off(IpcMainChannels.FileMenuInsertFooter, onFileMenuInsertFooter);
   EventBus.$off(
-    IpcMainChannels.FileMenuToolsCopyElementLink,
-    onFileMenuToolsCopyElementLink,
+    IpcMainChannels.FileMenuEditCopyElementLink,
+    onFileMenuEditCopyElementLink,
   );
   EventBus.$off(
     IpcMainChannels.FileMenuGenerateTestFile,
@@ -3588,6 +3639,8 @@ const toolbarInteractionKeyCodes = new Set([
   'Space',
   'Tab',
 ]);
+
+type WorkspaceTabNavigationDirection = 'previous' | 'next';
 
 function isEditorShortcutIgnored(event: KeyboardEvent) {
   return (
@@ -7902,7 +7955,7 @@ function onFileMenuInsertFooter() {
   updatePageSetup(score.value.pageSetup);
 }
 
-async function onFileMenuToolsCopyElementLink() {
+async function onFileMenuEditCopyElementLink() {
   if (selectedElement.value?.id != null) {
     try {
       await navigator.clipboard.writeText(
@@ -8286,6 +8339,14 @@ function onFileMenuFind() {
   }
 }
 
+function onFileMenuWindowPreviousTab() {
+  selectWorkspaceTab('previous');
+}
+
+function onFileMenuWindowNextTab() {
+  selectWorkspaceTab('next');
+}
+
 function onFileMenuViewPaneVisibility({
   paneId,
   visible,
@@ -8293,6 +8354,14 @@ function onFileMenuViewPaneVisibility({
   if (!dialogOpen.value) {
     const isVisible = visible ?? !paneVisibility.value[paneId];
     onPaneVisibilityChange(paneId, isVisible);
+  }
+}
+
+function onFileMenuViewStatusBarVisibility({
+  visible,
+}: FileMenuViewStatusBarVisibilityArgs) {
+  if (!dialogOpen.value) {
+    statusBarIsVisible.value = visible ?? !statusBarIsVisible.value;
   }
 }
 
@@ -8561,6 +8630,32 @@ function onTabClosed(tab: Tab) {
   }
 }
 
+function selectWorkspaceTab(direction: WorkspaceTabNavigationDirection) {
+  if (dialogOpen.value || !canNavigateWorkspaceTabs.value) {
+    return;
+  }
+
+  const currentIndex = tabs.value.findIndex(
+    (tab) => tab.key === selectedWorkspace.value.id,
+  );
+
+  if (currentIndex < 0) {
+    return;
+  }
+
+  const offset = direction === 'previous' ? -1 : 1;
+  const nextIndex =
+    (currentIndex + offset + tabs.value.length) % tabs.value.length;
+  const nextTab = tabs.value[nextIndex];
+  const nextWorkspace = workspaces.value.find(
+    (workspace) => workspace.id === nextTab?.key,
+  ) as Workspace | undefined;
+
+  if (nextWorkspace != null) {
+    selectedWorkspace.value = nextWorkspace;
+  }
+}
+
 function selectContextMenuWorkspace(_event: PointerEvent, tab: Tab) {
   contextMenuWorkspaceId.value = tab.key;
 }
@@ -8779,8 +8874,11 @@ function renderTabLabel(tab: Tab) {
     <FileMenuBar
       v-if="showFileMenuBar"
       class="no-print"
+      :can-copy-element-link="canCopyElementLink"
+      :can-navigate-workspace-tabs="canNavigateWorkspaceTabs"
       :pane-visibility="paneVisibility"
       :show-developer-panels="showDeveloperPanels"
+      :status-bar-visible="statusBarIsVisible"
       :zoom="zoom"
       :zoom-fit-mode="zoomFitMode"
     />
@@ -10208,6 +10306,7 @@ function renderTabLabel(tab: Tab) {
       </template>
     </div>
     <div
+      v-if="statusBarIsVisible"
       class="status-bar flex w-full flex-none items-center gap-2 chrome-toolbar-surface p-1"
     >
       <ButtonGroup>

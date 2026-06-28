@@ -1436,6 +1436,10 @@ const throttled = {
   onScroll: throttle(250, onScroll),
 };
 const saveDebounced = debounce(250, save);
+const ZOOM_WHEEL_DELTA_THRESHOLD = 80;
+const ZOOM_WHEEL_DELTA_RESET_DELAY_MS = 200;
+let zoomWheelDelta = 0;
+let zoomWheelResetTimeout: number | null = null;
 
 if (isDevelopment.value) {
   for (const [key, val] of Object.entries(throttled)) {
@@ -1734,6 +1738,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown);
   window.removeEventListener('keyup', onKeyup);
   window.removeEventListener('resize', throttled.onEditorViewportResize);
+  clearZoomWheelDeltaReset();
 
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
@@ -3784,6 +3789,202 @@ function onEditorViewportResize() {
 
 function onScroll() {
   calculatePageNumber();
+}
+
+type ZoomWheelAnchor =
+  | {
+      kind: 'page';
+      pageElement: HTMLElement;
+      clientX: number;
+      clientY: number;
+      pageX: number;
+      pageY: number;
+    }
+  | {
+      kind: 'scroll';
+      scrollX: number;
+      scrollY: number;
+      viewportOffsetX: number;
+      viewportOffsetY: number;
+    };
+
+function resetZoomWheelDelta() {
+  zoomWheelDelta = 0;
+  clearZoomWheelDeltaReset();
+}
+
+function clearZoomWheelDeltaReset() {
+  if (zoomWheelResetTimeout == null) {
+    return;
+  }
+
+  window.clearTimeout(zoomWheelResetTimeout);
+  zoomWheelResetTimeout = null;
+}
+
+function scheduleZoomWheelDeltaReset() {
+  clearZoomWheelDeltaReset();
+
+  zoomWheelResetTimeout = window.setTimeout(() => {
+    zoomWheelDelta = 0;
+    zoomWheelResetTimeout = null;
+  }, ZOOM_WHEEL_DELTA_RESET_DELAY_MS);
+}
+
+function createZoomWheelAnchor(
+  event: WheelEvent,
+  pageBackgroundElement: HTMLElement,
+  zoomValue: number,
+): ZoomWheelAnchor {
+  const pageElement =
+    event.target instanceof Element ? event.target.closest('.page') : null;
+
+  if (
+    pageElement instanceof HTMLElement &&
+    pageBackgroundElement.contains(pageElement)
+  ) {
+    const pageRect = pageElement.getBoundingClientRect();
+
+    return {
+      kind: 'page',
+      pageElement,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      pageX: (event.clientX - pageRect.left) / zoomValue,
+      pageY: (event.clientY - pageRect.top) / zoomValue,
+    };
+  }
+
+  // Fallback for gutters/padding between pages. Fixed page margins and
+  // container padding do not scale, so this only approximately preserves the
+  // cursor position when the wheel event is not over a page.
+  const backgroundRect = pageBackgroundElement.getBoundingClientRect();
+  const computedStyle = getComputedStyle(pageBackgroundElement);
+  const viewportOffsetX =
+    event.clientX - backgroundRect.left - parseFloat(computedStyle.paddingLeft);
+  const viewportOffsetY =
+    event.clientY - backgroundRect.top - parseFloat(computedStyle.paddingTop);
+
+  return {
+    kind: 'scroll',
+    scrollX: pageBackgroundElement.scrollLeft + viewportOffsetX,
+    scrollY: pageBackgroundElement.scrollTop + viewportOffsetY,
+    viewportOffsetX,
+    viewportOffsetY,
+  };
+}
+
+function restoreZoomWheelAnchor(
+  anchor: ZoomWheelAnchor,
+  pageBackgroundElement: HTMLElement,
+  previousZoom: number,
+) {
+  nextTick(() => {
+    if (!pageBackgroundElement.isConnected) {
+      return;
+    }
+
+    if (anchor.kind === 'page') {
+      if (!pageBackgroundElement.contains(anchor.pageElement)) {
+        return;
+      }
+
+      const pageRect = anchor.pageElement.getBoundingClientRect();
+      pageBackgroundElement.scrollLeft +=
+        pageRect.left + anchor.pageX * zoom.value - anchor.clientX;
+      pageBackgroundElement.scrollTop +=
+        pageRect.top + anchor.pageY * zoom.value - anchor.clientY;
+    } else {
+      const zoomRatio = zoom.value / previousZoom;
+
+      if (!Number.isFinite(zoomRatio) || zoomRatio <= 0) {
+        return;
+      }
+
+      pageBackgroundElement.scrollLeft =
+        anchor.scrollX * zoomRatio - anchor.viewportOffsetX;
+      pageBackgroundElement.scrollTop =
+        anchor.scrollY * zoomRatio - anchor.viewportOffsetY;
+    }
+
+    calculatePageNumber();
+  });
+}
+
+function applyZoomWheelStep(
+  event: WheelEvent,
+  pageBackgroundElement: HTMLElement,
+  direction: 1 | -1,
+) {
+  const previousZoom = zoom.value;
+  const anchor = createZoomWheelAnchor(
+    event,
+    pageBackgroundElement,
+    previousZoom,
+  );
+
+  if (zoomToNearestStep(direction)) {
+    restoreZoomWheelAnchor(anchor, pageBackgroundElement, previousZoom);
+  }
+}
+
+function onPageBackgroundWheel(event: WheelEvent) {
+  const isZoomWheelShortcut =
+    event.ctrlKey || (platformService.isMac && event.metaKey);
+
+  if (event.defaultPrevented || !isZoomWheelShortcut) {
+    return;
+  }
+
+  const pageBackgroundElement =
+    event.currentTarget instanceof HTMLElement
+      ? event.currentTarget
+      : pageBackgroundRef.value;
+
+  if (pageBackgroundElement == null) {
+    return;
+  }
+
+  const { deltaY } = event;
+
+  if (deltaY === 0) {
+    return;
+  }
+
+  // This is a vertical Ctrl/Cmd+wheel over the document: suppress the browser's
+  // native zoom even if we decline to zoom below (e.g. while a dialog is open).
+  event.preventDefault();
+
+  if (dialogOpen.value) {
+    return;
+  }
+
+  // Discrete wheels (e.g. Firefox in line/page mode) deliver one notch per
+  // event, so zoom a single step immediately. The accumulator below is tuned
+  // for high-resolution pixel deltas (mice and trackpad pinch in Chromium);
+  // accumulating discrete notches would require several to cross the
+  // threshold, making one deliberate notch feel unresponsive.
+  if (event.deltaMode !== WheelEvent.DOM_DELTA_PIXEL) {
+    resetZoomWheelDelta();
+    applyZoomWheelStep(event, pageBackgroundElement, deltaY < 0 ? 1 : -1);
+    return;
+  }
+
+  if (zoomWheelDelta !== 0 && Math.sign(zoomWheelDelta) !== Math.sign(deltaY)) {
+    zoomWheelDelta = 0;
+  }
+
+  zoomWheelDelta += deltaY;
+
+  if (Math.abs(zoomWheelDelta) < ZOOM_WHEEL_DELTA_THRESHOLD) {
+    scheduleZoomWheelDeltaReset();
+    return;
+  }
+
+  const direction = zoomWheelDelta < 0 ? 1 : -1;
+
+  resetZoomWheelDelta();
+  applyZoomWheelStep(event, pageBackgroundElement, direction);
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -7218,7 +7419,10 @@ function zoomToNearestStep(direction: 1 | -1) {
 
   if (zoomStep != null) {
     updateZoom(zoomStep);
+    return true;
   }
+
+  return false;
 }
 
 function updateZoomFitMode(mode: ZoomFitMode) {
@@ -9240,6 +9444,7 @@ function renderTabLabel(tab: Tab) {
                   ref="pageBackgroundRef"
                   class="page-background chrome-paper-canvas"
                   @scroll="throttled.onScroll"
+                  @wheel="onPageBackgroundWheel"
                 >
                   <div
                     v-for="(page, pageIndex) in filteredPages"

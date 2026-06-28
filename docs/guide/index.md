@@ -2,7 +2,7 @@
 
 ## Creating a new score
 
-To create a new score, use the file menu: `File -> New`. This will give you a template containing a title and a mode key.
+To create a new score, use the file menu: `File -> New`. This will give you a template containing a title and an initial martyria.
 
 ## Workspace panes
 
@@ -16,18 +16,18 @@ To update the title, click on it and begin typing.
 
 While editing the title, a toolbar will appear at the bottom of the window with common text controls. For full formatting options, open `View -> Properties` and select the title.
 
-## Updating the mode key
+## Updating the initial martyria
 
-To update the mode key, double click the current mode key to open the mode key dialog. You can also right-click the mode key and choose `Change Key`, or open `View -> Properties`, select the mode key, and press `Change Key`.
+To update the initial martyria, double click the current initial martyria to open the initial martyria dialog. You can also right-click the initial martyria and choose `Change Initial Martyria`, or open `View -> Properties`, select the initial martyria, and press `Change Initial Martyria`.
 
-![Mode Key Dialog](./images/guide-mode-key-dialog.png)
+![Initial Martyria Dialog](./images/guide-mode-key-dialog.png)
 
-In the mode key dialog, select the mode on the left, and then pick the appropriate signature on the right. Most common signatures should be present in the dialog. Many signatures can be written in several different ways, and not all variations have been included. If a signature is missing, request it by [opening an issue](https://github.com/neanes/neanes/issues/new).
+In the initial martyria dialog, select the mode on the left, and then pick the appropriate initial martyria on the right. Most common initial martyriæ should be present in the dialog. Many initial martyriæ can be written in several different ways, and not all variations have been included. If an initial martyria is missing, request it by [opening an issue](https://github.com/neanes/neanes/issues/new).
 
-While the mode key is selected, a toolbar at the bottom of the screen provides quick controls such as alignment and tempo signs. The Properties pane contains the full mode key settings, including size, color, BPM, margins, `Ignore Attractions`, and `Permanent Enharmonic Zo`.
+While the initial martyria is selected, a toolbar at the bottom of the screen provides quick controls such as alignment and tempo signs. The Properties pane contains the full initial martyria settings, including size, color, BPM, margins, `Ignore Attractions`, and `Permanent Enharmonic Zo`.
 
 > [!NOTE]
-> For more complex configurations, see the [Custom Mode Keys](./advanced.md#custom-mode-keys) section in the advanced guide.
+> For more complex configurations, see the [Custom Initial Martyriæ](./advanced.md#custom-initial-martyriæ) section in the advanced guide.
 
 ## Entering Neumes
 
@@ -54,7 +54,7 @@ Most common neumes have keyboard shortcuts. See [Neume Keyboard](./keyboard.html
 
 ### Martyria
 
-To insert a martyria, use the martyria button in the main toolbar. The note and root sign of the martyria are automatically calculated based on the mode key and fthoras placed above neumes. If the melody leaves the range generally used by traditional Byzantine Chant, the martyria will not display properly.
+To insert a martyria, use the martyria button in the main toolbar. The note and martyria sign are automatically calculated based on the initial martyria and fthoras placed above neumes. If the melody leaves the range generally used by traditional Byzantine Chant, the martyria will not display properly.
 
 ![Main Toolbar Martyria](./images/guide-main-toolbar-martyria.png)
 
@@ -126,7 +126,7 @@ In Single Edit Mode, clicking a quantitative neume updates the currently selecte
 
 ## Removing Neumes and Other Elements
 
-To remove a neume, text box, mode key, or other element, select it and press the `Delete` button in the main toolbar.
+To remove a neume, text box, initial martyria, or other element, select it and press the `Delete` button in the main toolbar.
 
 ![Main Toolbar Delete](./images/guide-main-toolbar-delete.png)
 
@@ -286,7 +286,7 @@ If checked, hymns that use the diatonic scale will automatically have the note Z
 
 This setting may be temporarily overridden for a particular note by selecting the note and checking `Ignore Attractions` in the Properties pane. This is helpful when the software incorrectly guesses that you want the Zo flattened. By checking `Ignore Attractions`, the note will be natural unless you explicitly place an alteration on it.
 
-It may also be overridden for an entire hymn by clicking on the mode key and checking `Ignore Attractions` in the Properties pane. This is useful for hymns of the plagal first mode from Ke, which are sometimes sung as if from Pa, but without the proper Pa fthora placed above Ke.
+It may also be overridden for an entire hymn by clicking on the initial martyria and checking `Ignore Attractions` in the Properties pane. This is useful for hymns of the plagal first mode from Ke, which are sometimes sung as if from Pa, but without the proper Pa fthora placed above Ke.
 
 #### Classic Legetos
 
@@ -317,7 +317,7 @@ In this section, you may specify the size in moria of the sharp and flat alterat
 
 Tempo is measured in beats per minute (BPM) and can be set via the `BPM` property on the following elements.
 
-- Mode keys
+- Initial martyriæ
 - Tempo signs
 - Martyria with tempo signs above them
 
@@ -329,7 +329,7 @@ You may configure the default tempos for each tempo sign in the `Preferences` di
 
 #### Permanent Enharmonic Zo
 
-It is common to write hymns of the third mode and the grave mode without the proper fthores and alterations on Zo. In order to get the correct playback with a flattened Zo, click the mode key and check `Permanent Enharmonic Zo`. This will make all Zo notes enharmonic, even if not specified.
+It is common to write hymns of the third mode and the grave mode without the proper fthores and alterations on Zo. In order to get the correct playback with a flattened Zo, click the initial martyria and check `Permanent Enharmonic Zo`. This will make all Zo notes enharmonic, even if not specified.
 
 #### Chromatic Fthora Note
 

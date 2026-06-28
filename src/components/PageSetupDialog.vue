@@ -1486,9 +1486,12 @@
                     </FieldLegend>
                     <FieldDescription>
                       {{
-                        $t(($) => $.dialog.pageSetup.modeKeysDescription, {
-                          ns: 'dialog',
-                        })
+                        $t(
+                          ($) => $.dialog.pageSetup.initialMartyriaeDescription,
+                          {
+                            ns: 'dialog',
+                          },
+                        )
                       }}
                     </FieldDescription>
                     <FieldGroup class="gap-4">
@@ -2095,7 +2098,7 @@ const sections = [
   },
   {
     value: 'modeKeys',
-    labelSelector: ($) => $.dialog.pageSetup.modeKeys,
+    labelSelector: ($) => $.dialog.pageSetup.initialMartyriae,
     icon: PhPlaylist,
   },
   {

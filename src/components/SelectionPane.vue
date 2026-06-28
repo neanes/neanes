@@ -216,7 +216,7 @@ const ELEMENT_TYPE_LABEL_SELECTORS: Record<
   },
   [ElementType.ModeKey]: {
     ns: 'menu',
-    selector: ($) => $.menu.insert.modeKey,
+    selector: ($) => $.menu.insert.initialMartyria,
   },
   [ElementType.Note]: {
     ns: 'toolbar',

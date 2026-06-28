@@ -203,7 +203,7 @@
           </MenubarItem>
           <MenubarItem @select="onClickAddModeKey">
             <PhWaveSine />
-            {{ $t(($) => $.menu.insert.modeKey, { ns: 'menu' }) }}
+            {{ $t(($) => $.menu.insert.initialMartyria, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddImage">
             <PhImageSquare />

@@ -10012,7 +10012,7 @@ function renderTabLabel(tab: Tab) {
                     "
                   >
                     {{
-                      $t(($) => $.toolbar.modeKey.showAmbitus, {
+                      $t(($) => $.toolbar.initialMartyria.showAmbitus, {
                         ns: 'toolbar',
                       })
                     }}
@@ -10049,7 +10049,9 @@ function renderTabLabel(tab: Tab) {
                 >
                   <PhMusicNotes />
                   {{
-                    $t(($) => $.toolbar.modeKey.changeKey, { ns: 'toolbar' })
+                    $t(($) => $.toolbar.initialMartyria.changeInitialMartyria, {
+                      ns: 'toolbar',
+                    })
                   }}
                 </ContextMenuItem>
                 <ContextMenuItem

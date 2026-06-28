@@ -24,12 +24,12 @@
     "calculateTimeSignatures": "Include indicații de măsură",
     "displayTimeSignatures": "Afișează indicații de măsură",
     "displayMeasureSubdivisions": "Afișează subdiviziunile măsurilor",
-    "includeModeKeys": "Include mărturii inițiale",
+    "includeInitialMartyriae": "Include mărturii inițiale",
     "includeTextBoxes": "Include casetele de text",
     "exporting": "Se exportă…",
     "export": "Exportă"
   },
-  "modeKey": {
+  "initialMartyria": {
     "root": "Selectează mărturia inițială",
     "description": "Alege mărturia inițială."
   },
@@ -165,8 +165,8 @@
     "lyricsDescription": "Stilizarea implicită pentru toate versurile din partitură.",
     "textBoxes": "Casete de text",
     "textBoxesDescription": "Stilizarea implicită pentru toate casetele de text din partitură.",
-    "modeKeys": "Mărturii inițiale",
-    "modeKeysDescription": "Stilizarea implicită pentru toate mărturiile inițiale din partitură.",
+    "initialMartyriae": "Mărturii inițiale",
+    "initialMartyriaeDescription": "Stilizarea implicită pentru toate mărturiile inițiale din partitură.",
     "neumesDescription": "Stilizarea implicită pentru toate neumele din partitură.",
     "heightAdjust": "Ajustare înălțime",
     "neumeStyles": "Stiluri neume",

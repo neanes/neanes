@@ -36,7 +36,7 @@
     "single": "Simplu",
     "martyria": "Mărturie",
     "insertDropCapBefore": "Inserează majusculă decorativă înainte",
-    "insertModeKey": "Inserează mărturie inițială",
+    "insertInitialMartyria": "Inserează mărturie inițială",
     "insertTextBox": "Inserează casetă de text",
     "insertTextBoxRich": "Inserează casetă de text formatat",
     "insertImage": "Inserează imagine",
@@ -86,18 +86,18 @@
     "auto": "Auto",
     "note": "Notă",
     "scale": "Scară muzicală",
-    "rootSignOverride": "Suprascriere semn de bază",
+    "martyriaSignOverride": "Suprascriere semn de mărturie",
     "tempoLeft": "Adaugă tempo stânga",
     "tempo": "Adaugă tempo deasupra",
     "tempoRight": "Adaugă tempo dreapta"
   },
-  "modeKey": {
+  "initialMartyria": {
     "size": "Mărime",
     "heightAdjustment": "Ajustare înălțime",
     "rightAlignTempo": "Aliniază tempoul la dreapta",
     "showAmbitus": "Afișează ambitus",
     "permanentEnharmonicZo": "Zo enarmonic permanent",
-    "changeKey": "Schimbă mărturia inițială",
+    "changeInitialMartyria": "Schimbă mărturia inițială",
     "useOptionalDiatonicFthoras": "Afișează ftoralele diatonice"
   },
   "neume": {
@@ -163,7 +163,7 @@
     "kerningRight": "Spațiere dreapta",
     "neumeFontSize": "Mărime font",
     "martyriaNote": "Notă mărturie",
-    "martyriaRootSign": "Semn rădăcină mărturie"
+    "martyriaSign": "Semn de mărturie"
   },
   "workspace": {
     "dockPane": "Andochează panoul",

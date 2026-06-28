@@ -36,7 +36,7 @@
     "single": "Single",
     "martyria": "Martyria",
     "insertDropCapBefore": "Insert drop cap before",
-    "insertModeKey": "Insert mode key",
+    "insertInitialMartyria": "Insert initial martyria",
     "insertTextBox": "Insert text box",
     "insertTextBoxRich": "Insert rich text box",
     "insertImage": "Insert image",
@@ -86,18 +86,18 @@
     "auto": "Auto",
     "note": "Note",
     "scale": "Scale",
-    "rootSignOverride": "Root Sign Override",
+    "martyriaSignOverride": "Martyria Sign Override",
     "tempoLeft": "Add Left Tempo",
     "tempo": "Add Tempo Above",
     "tempoRight": "Add Right Tempo"
   },
-  "modeKey": {
+  "initialMartyria": {
     "size": "Size",
     "heightAdjustment": "Height Adjustment",
     "rightAlignTempo": "Right-align tempo",
     "showAmbitus": "Show Ambitus",
     "permanentEnharmonicZo": "Permanent Enharmonic Zo",
-    "changeKey": "Change Key",
+    "changeInitialMartyria": "Change Initial Martyria",
     "useOptionalDiatonicFthoras": "Show Diatonic Fthoras"
   },
   "neume": {
@@ -163,7 +163,7 @@
     "kerningRight": "Right Kerning",
     "neumeFontSize": "Font Size",
     "martyriaNote": "Martyria Note",
-    "martyriaRootSign": "Martyria Root Sign"
+    "martyriaSign": "Martyria Sign"
   },
   "workspace": {
     "dockPane": "Dock Pane",

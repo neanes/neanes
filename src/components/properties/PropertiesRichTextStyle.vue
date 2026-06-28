@@ -124,7 +124,7 @@
 
     <Field orientation="horizontal">
       <FieldLabel :for="`${idPrefix}-font-size`">{{
-        $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
+        $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
       }}</FieldLabel>
       <div class="flex shrink-0 items-center gap-1">
         <InputFontSize
@@ -562,7 +562,7 @@
                 @mousedown.prevent
               >
                 {{
-                  $t(($) => $.toolbar.richTextBox.martyriaRootSign, {
+                  $t(($) => $.toolbar.richTextBox.martyriaSign, {
                     ns: 'toolbar',
                   })
                 }}

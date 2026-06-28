@@ -2,7 +2,7 @@
   <Toolbar class="chrome-toolbar" loop>
     <template v-if="!element.useDefaultStyle">
       <Label for="toolbar-mode-key-font-size">{{
-        $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
+        $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
       }}</Label>
       <InputFontSize
         id="toolbar-mode-key-font-size"
@@ -60,7 +60,9 @@
       @select="$emit('update:tempo', $event)"
     />
     <AppTooltip
-      :tooltip="$t(($) => $.toolbar.modeKey.rightAlignTempo, { ns: 'toolbar' })"
+      :tooltip="
+        $t(($) => $.toolbar.initialMartyria.rightAlignTempo, { ns: 'toolbar' })
+      "
     >
       <ToolbarButton
         variant="secondary"

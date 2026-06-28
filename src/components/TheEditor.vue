@@ -2612,7 +2612,7 @@ function restoreLyricSelection(lyricSelection: LyricSelectionSnapshot) {
     return;
   }
 
-  const textLength = htmlElement.innerText.length;
+  const textLength = htmlElement.textContent?.length ?? 0;
   const clampedStartOffset = clamp(lyricSelection.startOffset, 0, textLength);
   const clampedEndOffset = clamp(lyricSelection.endOffset, 0, textLength);
   const range = document.createRange();

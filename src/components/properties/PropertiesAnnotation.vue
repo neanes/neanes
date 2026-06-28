@@ -43,9 +43,8 @@
         :element="element"
         :fonts="fonts"
         :page-setup="pageSetup"
-        :default-font-color="pageSetup.textBoxDefaultColor"
-        :default-font-size="pageSetup.lyricsDefaultFontSize"
-        :default-font-family="pageSetup.textBoxDefaultFontFamily"
+        :paragraph-styles="paragraphStyles"
+        :fallback-paragraph-style="annotationStyle"
       />
     </FieldGroup>
   </FieldSet>
@@ -53,6 +52,7 @@
 
 <script setup lang="ts">
 import type { PropType } from 'vue';
+import { computed } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 import {
@@ -65,11 +65,16 @@ import {
 } from '@/components/ui/field';
 import type { AnnotationElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
 
 import PropertiesRichTextStyle from './PropertiesRichTextStyle.vue';
 
-defineProps({
+const props = defineProps({
   element: {
     type: Object as PropType<AnnotationElement>,
     required: true,
@@ -82,7 +87,18 @@ defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
 });
 
 defineEmits(['update']);
+
+const annotationStyle = computed(() =>
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+  ),
+);
 </script>

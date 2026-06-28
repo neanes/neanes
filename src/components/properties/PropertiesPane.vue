@@ -27,6 +27,7 @@
       :element="annotationElement"
       :fonts="fonts"
       :page-setup="pageSetup"
+      :paragraph-styles="paragraphStyles"
       @update="emit('update:annotation', annotationElement, $event)"
     />
 
@@ -36,8 +37,10 @@
       :element="textBoxElement"
       :fonts="fonts"
       :page-setup="pageSetup"
+      :paragraph-styles="paragraphStyles"
       :source="textBoxSource"
       @update="emit('update:text-box', textBoxElement, $event)"
+      @open-paragraph-styles-dialog="emit('open-paragraph-styles-dialog')"
     />
 
     <PropertiesRichTextBox
@@ -46,8 +49,10 @@
       :element="richTextBoxElement"
       :fonts="fonts"
       :page-setup="pageSetup"
+      :paragraph-styles="paragraphStyles"
       :source="richTextBoxSource"
       @update="emit('update:rich-text-box', richTextBoxElement, $event)"
+      @open-paragraph-styles-dialog="emit('open-paragraph-styles-dialog')"
     />
 
     <PropertiesDropCap
@@ -117,6 +122,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import type { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 
 import type { InspectorContext } from './InspectorContext';
 import PropertiesAnnotation from './PropertiesAnnotation.vue';
@@ -147,10 +153,15 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
 });
 
 const emit = defineEmits([
   'open-mode-key-dialog',
+  'open-paragraph-styles-dialog',
   'open-syllable-positioning-dialog',
   'update:annotation',
   'update:drop-cap',

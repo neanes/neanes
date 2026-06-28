@@ -67,6 +67,7 @@ import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeComboSelector from '@/components/NeumeComboSelector.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
+import ParagraphStylesDialog from '@/components/ParagraphStylesDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
 import type { InspectorContext } from '@/components/properties/InspectorContext';
 import PropertiesPane from '@/components/properties/PropertiesPane.vue';
@@ -138,7 +139,6 @@ import {
   NoteElement,
   RichTextBoxElement,
   TempoElement,
-  TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
@@ -178,6 +178,11 @@ import {
 } from '@/models/Neumes';
 import type { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { ScaleNote } from '@/models/Scales';
 import type { DocumentProperties } from '@/models/Score';
 import { Score } from '@/models/Score';
@@ -271,6 +276,8 @@ const modeKeyCommandFactory: CommandFactory<ModeKeyElement> =
 
 const dropCapCommandFactory: CommandFactory<DropCapElement> =
   new CommandFactory<DropCapElement>();
+
+const scoreCommandFactory: CommandFactory<Score> = new CommandFactory<Score>();
 
 const scoreElementCommandFactory: CommandFactory<ScoreElement> =
   new CommandFactory<ScoreElement>();
@@ -413,6 +420,7 @@ const modeKeyDialogIsOpen = ref(false);
 const syllablePositioningDialogIsOpen = ref(false);
 const playbackSettingsDialogIsOpen = ref(false);
 const pageSetupDialogIsOpen = ref(false);
+const paragraphStylesDialogIsOpen = ref(false);
 const documentPropertiesDialogIsOpen = ref(false);
 const editorPreferencesDialogIsOpen = ref(false);
 const aboutDialogIsOpen = ref(false);
@@ -1346,6 +1354,7 @@ const dialogOpen = computed(() => {
   return (
     modeKeyDialogIsOpen.value ||
     pageSetupDialogIsOpen.value ||
+    paragraphStylesDialogIsOpen.value ||
     documentPropertiesDialogIsOpen.value ||
     playbackSettingsDialogIsOpen.value ||
     syllablePositioningDialogIsOpen.value ||
@@ -1608,6 +1617,10 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
   EventBus.$on(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
   EventBus.$on(
+    IpcMainChannels.FileMenuParagraphStyles,
+    onFileMenuParagraphStyles,
+  );
+  EventBus.$on(
     IpcMainChannels.FileMenuDocumentProperties,
     onFileMenuDocumentProperties,
   );
@@ -1704,6 +1717,10 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuSave, onFileMenuSave);
   EventBus.$off(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
   EventBus.$off(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
+  EventBus.$off(
+    IpcMainChannels.FileMenuParagraphStyles,
+    onFileMenuParagraphStyles,
+  );
   EventBus.$off(
     IpcMainChannels.FileMenuDocumentProperties,
     onFileMenuDocumentProperties,
@@ -2732,6 +2749,10 @@ function openPlaybackSettingsDialog() {
   playbackSettingsDialogIsOpen.value = true;
 
   stopAudio();
+}
+
+function openParagraphStylesDialog() {
+  paragraphStylesDialogIsOpen.value = true;
 }
 
 function updatePlaybackOptions(options: PlaybackOptions) {
@@ -5066,7 +5087,12 @@ async function load() {
       await ipcService.exportWorkspaceAsLatex(
         selectedWorkspace.value,
         JSON.stringify(
-          latexExporter.export(pages.value, score.value.pageSetup, options),
+          latexExporter.export(
+            pages.value,
+            score.value.pageSetup,
+            score.value.paragraphStyles,
+            options,
+          ),
           null,
           2,
         ),
@@ -6563,23 +6589,38 @@ function deletePreviousElement() {
   }
 }
 
-function getResizableTextDefaultSnapshot(pageSetup: PageSetup) {
-  return {
-    lyricsDefaultFontFamily: pageSetup.lyricsDefaultFontFamily,
-    lyricsDefaultFontSize: pageSetup.lyricsDefaultFontSize,
-    lyricsDefaultFontStyle: pageSetup.lyricsDefaultFontStyle,
-    textBoxDefaultFontFamily: pageSetup.textBoxDefaultFontFamily,
-    textBoxDefaultFontSize: pageSetup.textBoxDefaultFontSize,
-    textBoxDefaultFontStyle: pageSetup.textBoxDefaultFontStyle,
-    textBoxDefaultLineHeight: pageSetup.textBoxDefaultLineHeight,
-  };
+function getResolvedAnnotationStyle() {
+  return resolveParagraphStyle(
+    score.value.paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+  );
 }
 
-function resizableTextDefaultsChanged(previous: PageSetup, current: PageSetup) {
-  return !shallowEquals(
-    getResizableTextDefaultSnapshot(previous),
-    getResizableTextDefaultSnapshot(current),
+function getResolvedDefaultTextStyle() {
+  return resolveParagraphStyle(
+    score.value.paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
   );
+}
+
+function getResolvedVerseStyle() {
+  return resolveParagraphStyle(
+    score.value.paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Verse,
+  );
+}
+
+function getResizableTextDefaultSnapshot(currentScore: Score) {
+  return {
+    defaultText: resolveParagraphStyle(
+      currentScore.paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    ),
+    verse: resolveParagraphStyle(
+      currentScore.paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Verse,
+    ),
+  };
 }
 
 function updatePageSetup(pageSetup: PageSetup) {
@@ -6591,10 +6632,6 @@ function updatePageSetup(pageSetup: PageSetup) {
       currentPageSetup,
       pageSetup,
     ),
-  );
-  const needToRecalcRichTextBoxes = resizableTextDefaultsChanged(
-    currentPageSetup,
-    nextPageSetup,
   );
 
   const updateCommands: Command[] = [
@@ -6652,11 +6689,6 @@ function updatePageSetup(pageSetup: PageSetup) {
 
   commandService.value.executeAsBatch(updateCommands);
 
-  if (needToRecalcRichTextBoxes) {
-    recalculateRichTextBoxHeights();
-    recalculateTextBoxHeights();
-  }
-
   save();
 }
 
@@ -6667,6 +6699,55 @@ function updateDocumentProperties(documentProperties: DocumentProperties) {
       newValues: documentProperties,
     }),
   );
+
+  save();
+}
+
+function getAllParagraphStyleElements(score: Score) {
+  return [...score.staff.elements, ...score.headersAndFooters].filter(
+    (element): element is TextBoxElement => isTextBoxElement(element),
+  );
+}
+
+function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
+  const previousResizableTextDefaults = getResizableTextDefaultSnapshot(
+    score.value,
+  );
+  const clonedStyles = paragraphStyles.map((style) => style.clone());
+  const validStyleIds = new Set(clonedStyles.map((style) => style.id));
+  const commands: Command[] = [
+    scoreCommandFactory.create('update-properties', {
+      target: score.value,
+      newValues: { paragraphStyles: clonedStyles },
+    }),
+  ];
+
+  for (const element of getAllParagraphStyleElements(score.value)) {
+    if (validStyleIds.has(element.paragraphStyleId)) {
+      continue;
+    }
+
+    commands.push(
+      textBoxCommandFactory.create('update-properties', {
+        target: element,
+        newValues: {
+          paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+        },
+      }),
+    );
+  }
+
+  commandService.value.executeAsBatch(commands);
+
+  if (
+    !shallowEquals(
+      previousResizableTextDefaults,
+      getResizableTextDefaultSnapshot(score.value),
+    )
+  ) {
+    recalculateRichTextBoxHeights();
+    recalculateTextBoxHeights();
+  }
 
   save();
 }
@@ -6785,12 +6866,17 @@ function getDefaultHeaderFooterPanels(
   };
 }
 
-function createRichHeaderFooter(left: string, center: string, right: string) {
+function createRichHeaderFooterWithStyle(
+  left: string,
+  center: string,
+  right: string,
+  paragraphStyleId: string,
+) {
   const textbox = new RichTextBoxElement();
   textbox.multipanel = true;
-  textbox.contentLeft = `${left}`;
-  textbox.contentCenter = `<p style="text-align:center;">${center}</p>`;
-  textbox.contentRight = `<p style="text-align:right;">${right}</p>`;
+  textbox.contentLeft = `<p class="neanes-style-${paragraphStyleId}">${left}</p>`;
+  textbox.contentCenter = `<p class="neanes-style-${paragraphStyleId}" style="text-align:center;">${center}</p>`;
+  textbox.contentRight = `<p class="neanes-style-${paragraphStyleId}" style="text-align:right;">${right}</p>`;
   return textbox;
 }
 
@@ -6800,7 +6886,16 @@ function createDefaultRegularHeaderFooter(
   variant: HeaderFooterVariant,
 ) {
   const panel = getDefaultHeaderFooterPanels(pageSetup, kind, variant);
-  return createRegularHeaderFooter(panel.left, panel.center, panel.right);
+  const textbox = createRegularHeaderFooter(
+    panel.left,
+    panel.center,
+    panel.right,
+  );
+  textbox.paragraphStyleId =
+    kind === 'header'
+      ? BUILT_IN_PARAGRAPH_STYLE_IDS.Header
+      : BUILT_IN_PARAGRAPH_STYLE_IDS.Footer;
+  return textbox;
 }
 
 function createDefaultRichHeaderFooter(
@@ -6809,7 +6904,16 @@ function createDefaultRichHeaderFooter(
   variant: HeaderFooterVariant,
 ) {
   const panel = getDefaultHeaderFooterPanels(pageSetup, kind, variant);
-  const textbox = createRichHeaderFooter(panel.left, panel.center, panel.right);
+  const paragraphStyleId =
+    kind === 'header'
+      ? BUILT_IN_PARAGRAPH_STYLE_IDS.Header
+      : BUILT_IN_PARAGRAPH_STYLE_IDS.Footer;
+  const textbox = createRichHeaderFooterWithStyle(
+    panel.left,
+    panel.center,
+    panel.right,
+    paragraphStyleId,
+  );
 
   if (pageSetup.melkiteRtl || pageSetup.numerals === 'easternArabic') {
     setRichTextLanguage(textbox, 'ar', 'rtl');
@@ -7411,6 +7515,10 @@ function onFileMenuPageSetup() {
   pageSetupDialogIsOpen.value = true;
 }
 
+function onFileMenuParagraphStyles() {
+  openParagraphStylesDialog();
+}
+
 function onFileMenuDocumentProperties() {
   documentPropertiesDialogIsOpen.value = true;
 }
@@ -7725,7 +7833,12 @@ async function exportAsLatex(args: ExportAsLatexSettings) {
     const reply = await ipcService.exportWorkspaceAsLatex(
       selectedWorkspace.value,
       JSON.stringify(
-        latexExporter.export(pages.value, score.value.pageSetup, args.options),
+        latexExporter.export(
+          pages.value,
+          score.value.pageSetup,
+          score.value.paragraphStyles,
+          args.options,
+        ),
         null,
         2,
       ),
@@ -7802,21 +7915,9 @@ function onFileMenuInsertAlternateLine() {
 function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
   const element = new TextBoxElement();
   element.inline = args?.inline ?? false;
-
-  if (element.inline) {
-    element.color = score.value.pageSetup.lyricsDefaultColor;
-    element.fontFamily = score.value.pageSetup.lyricsDefaultFontFamily;
-    element.fontSize = score.value.pageSetup.lyricsDefaultFontSize;
-    element.strokeWidth = score.value.pageSetup.lyricsDefaultStrokeWidth;
-    element.fontStyle = score.value.pageSetup.lyricsDefaultFontStyle;
-  } else {
-    element.color = score.value.pageSetup.textBoxDefaultColor;
-    element.fontFamily = score.value.pageSetup.textBoxDefaultFontFamily;
-    element.fontSize = score.value.pageSetup.textBoxDefaultFontSize;
-    element.strokeWidth = score.value.pageSetup.textBoxDefaultStrokeWidth;
-    element.lineHeight = score.value.pageSetup.textBoxDefaultLineHeight;
-    element.fontStyle = score.value.pageSetup.textBoxDefaultFontStyle;
-  }
+  element.paragraphStyleId = element.inline
+    ? BUILT_IN_PARAGRAPH_STYLE_IDS.Verse
+    : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
 
   addScoreElement(element, selectedElementIndex.value);
 
@@ -7833,7 +7934,7 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
 
 function onFileMenuInsertRichTextBox() {
   const element = new RichTextBoxElement();
-
+  element.content = `<p class="neanes-style-${BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText}"></p>`;
   if (
     score.value.pageSetup.melkiteRtl ||
     score.value.pageSetup.numerals === 'easternArabic'
@@ -8043,9 +8144,7 @@ async function onFileMenuSaveAs() {
 
 function onFileMenuUndo() {
   const currentIndex = selectedElementIndex.value;
-  const pageSetupPrevious = getResizableTextDefaultSnapshot(
-    score.value.pageSetup,
-  );
+  const pageSetupPrevious = getResizableTextDefaultSnapshot(score.value);
 
   commandService.value.undo();
 
@@ -8068,7 +8167,7 @@ function onFileMenuUndo() {
   if (
     !shallowEquals(
       pageSetupPrevious,
-      getResizableTextDefaultSnapshot(score.value.pageSetup),
+      getResizableTextDefaultSnapshot(score.value),
     )
   ) {
     recalculateRichTextBoxHeights();
@@ -8080,9 +8179,7 @@ function onFileMenuUndo() {
 
 function onFileMenuRedo() {
   const currentIndex = selectedElementIndex.value;
-  const pageSetupPrevious = getResizableTextDefaultSnapshot(
-    score.value.pageSetup,
-  );
+  const pageSetupPrevious = getResizableTextDefaultSnapshot(score.value);
 
   commandService.value.redo();
 
@@ -8105,7 +8202,7 @@ function onFileMenuRedo() {
   if (
     !shallowEquals(
       pageSetupPrevious,
-      getResizableTextDefaultSnapshot(score.value.pageSetup),
+      getResizableTextDefaultSnapshot(score.value),
     )
   ) {
     recalculateRichTextBoxHeights();
@@ -8426,27 +8523,12 @@ function createDefaultScore() {
   initializeDefaultHeaderFooters(score);
 
   const title = new TextBoxElement();
+  title.paragraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.Title;
   title.content = 'Title';
-  title.alignment = TextBoxAlignment.Center;
-  title.color = score.pageSetup.textBoxDefaultColor;
-  title.fontFamily = score.pageSetup.textBoxDefaultFontFamily;
-  title.fontSize = score.pageSetup.textBoxDefaultFontSize;
-  title.strokeWidth = score.pageSetup.textBoxDefaultStrokeWidth;
-  title.lineHeight = score.pageSetup.textBoxDefaultLineHeight;
-  title.fontStyle = score.pageSetup.textBoxDefaultFontStyle;
   title.height = Math.round(
     TextMeasurementService.getFontHeight(title.computedFont) * 1.2,
   );
   score.staff.elements.unshift(title, createDefaultModeKey(score.pageSetup));
-
-  for (const element of score.headersAndFooters) {
-    if (element.elementType === ElementType.TextBox) {
-      (element as TextBoxElement).fontFamily =
-        score.pageSetup.lyricsDefaultFontFamily;
-      (element as TextBoxElement).strokeWidth =
-        score.pageSetup.lyricsDefaultStrokeWidth;
-    }
-  }
 
   return score;
 }
@@ -8659,10 +8741,6 @@ const contextMenuMartyria = computed(() => {
   return getContextMenuTargetForHomogeneousSelection(isMartyriaElement);
 });
 
-const contextMenuTextBox = computed(() => {
-  return getContextMenuTargetForHomogeneousSelection(isTextBoxElement);
-});
-
 const contextMenuModeKey = computed(() => {
   return getContextMenuTargetForHomogeneousSelection(isModeKeyElement);
 });
@@ -8705,12 +8783,9 @@ function getContextMenuTargetForHomogeneousSelection<T extends ScoreElement>(
     : null;
 }
 
-// The `useDefaultStyle` property exists on text boxes, mode keys, and drop caps.
+// The `useDefaultStyle` property exists on mode keys and drop caps.
 const contextMenuUseDefaultStyleTarget = computed(
-  () =>
-    contextMenuTextBox.value ??
-    contextMenuModeKey.value ??
-    contextMenuDropCap.value,
+  () => contextMenuModeKey.value ?? contextMenuDropCap.value,
 );
 
 const contextMenuHasElementProperties = computed(
@@ -8721,14 +8796,12 @@ const contextMenuHasElementProperties = computed(
 );
 
 function setContextMenuUseDefaultStyle(
-  element: TextBoxElement | ModeKeyElement | DropCapElement,
+  element: ModeKeyElement | DropCapElement,
   value: boolean,
 ) {
   const wasUsingDefaultStyle = element.useDefaultStyle;
 
-  if (isTextBoxElement(element)) {
-    updateTextBox(element, { useDefaultStyle: value });
-  } else if (isModeKeyElement(element)) {
+  if (isModeKeyElement(element)) {
     updateModeKey(element, { useDefaultStyle: value });
   } else {
     updateDropCap(element, { useDefaultStyle: value });
@@ -8856,6 +8929,7 @@ function renderTabLabel(tab: Tab) {
             :fonts="fonts"
             :inner-neume="toolbarInnerNeume"
             :page-setup="score.pageSetup"
+            :paragraph-styles="score.paragraphStyles"
             @update:annotation="updateAnnotation"
             @update:text-box="updateTextBox"
             @update:rich-text-box="updateRichTextBox"
@@ -8867,6 +8941,7 @@ function renderTabLabel(tab: Tab) {
             @update:martyria="updateMartyria"
             @update:tempo="updateTempo"
             @open-mode-key-dialog="openModeKeyDialog"
+            @open-paragraph-styles-dialog="openParagraphStylesDialog"
             @open-syllable-positioning-dialog="openSyllablePositioningDialog"
           />
         </template>
@@ -9156,6 +9231,7 @@ function renderTabLabel(tab: Tab) {
                             token-scope="header"
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
+                            :paragraph-styles="score.paragraphStyles"
                             :editor-language="ckeditorLanguage"
                             :selected="
                               getHeaderForPageIndex(pageIndex) ==
@@ -9342,6 +9418,7 @@ function renderTabLabel(tab: Tab) {
                                 :element="annotation"
                                 :page-setup="score.pageSetup"
                                 :fonts="fonts"
+                                :paragraph-styles="score.paragraphStyles"
                                 :editor-language="ckeditorLanguage"
                                 :selected="
                                   selectedWorkspace.selectedAnnotationElement ===
@@ -9655,6 +9732,7 @@ function renderTabLabel(tab: Tab) {
                               :element="element as RichTextBoxElement"
                               :page-setup="score.pageSetup"
                               :fonts="fonts"
+                              :paragraph-styles="score.paragraphStyles"
                               :editor-language="ckeditorLanguage"
                               :selected="isSelected(element)"
                               @select-single="selectedElement = element"
@@ -9846,6 +9924,7 @@ function renderTabLabel(tab: Tab) {
                             token-scope="footer"
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
+                            :paragraph-styles="score.paragraphStyles"
                             :editor-language="ckeditorLanguage"
                             :selected="
                               getFooterForPageIndex(pageIndex) ==
@@ -10160,6 +10239,7 @@ function renderTabLabel(tab: Tab) {
         <ToolbarTextBox
           :element="inspectorContext.element"
           :fonts="fonts"
+          :paragraph-styles="score.paragraphStyles"
           @update="updateTextBox(inspectorContext.element, $event)"
           @insert:gorthmikon="insertGorthmikon"
           @insert:pelastikon="insertPelastikon"
@@ -10170,20 +10250,11 @@ function renderTabLabel(tab: Tab) {
           :element="inspectorContext.element"
           :page-setup="score.pageSetup"
           :fonts="fonts"
-          :default-font-color="
+          :paragraph-styles="score.paragraphStyles"
+          :fallback-paragraph-style="
             inspectorContext.element.inline
-              ? score.pageSetup.lyricsDefaultColor
-              : score.pageSetup.textBoxDefaultColor
-          "
-          :default-font-size="
-            inspectorContext.element.inline
-              ? score.pageSetup.lyricsDefaultFontSize
-              : score.pageSetup.textBoxDefaultFontSize
-          "
-          :default-font-family="
-            inspectorContext.element.inline
-              ? score.pageSetup.lyricsDefaultFontFamily
-              : score.pageSetup.textBoxDefaultFontFamily
+              ? getResolvedVerseStyle()
+              : getResolvedDefaultTextStyle()
           "
         />
       </template>
@@ -10192,9 +10263,8 @@ function renderTabLabel(tab: Tab) {
           :element="inspectorContext.element"
           :page-setup="score.pageSetup"
           :fonts="fonts"
-          :default-font-color="score.pageSetup.textBoxDefaultColor"
-          :default-font-size="score.pageSetup.lyricsDefaultFontSize"
-          :default-font-family="score.pageSetup.textBoxDefaultFontFamily"
+          :paragraph-styles="score.paragraphStyles"
+          :fallback-paragraph-style="getResolvedAnnotationStyle()"
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'drop-cap'">
@@ -10296,7 +10366,15 @@ function renderTabLabel(tab: Tab) {
       v-model:open="pageSetupDialogIsOpen"
       :page-setup="score.pageSetup"
       :fonts="fonts"
+      @open-paragraph-styles="openParagraphStylesDialog"
       @update="updatePageSetup($event)"
+    />
+    <ParagraphStylesDialog
+      v-if="paragraphStylesDialogIsOpen"
+      v-model:open="paragraphStylesDialogIsOpen"
+      :paragraph-styles="score.paragraphStyles"
+      :fonts="fonts"
+      @update="updateParagraphStyles($event)"
     />
     <DocumentPropertiesDialog
       v-if="documentPropertiesDialogIsOpen"
@@ -10322,6 +10400,7 @@ function renderTabLabel(tab: Tab) {
         :element="element as RichTextBoxElement"
         :page-setup="score.pageSetup"
         :fonts="fonts"
+        :paragraph-styles="score.paragraphStyles"
         :editor-language="ckeditorLanguage"
         :recalc="true"
         @update:height="

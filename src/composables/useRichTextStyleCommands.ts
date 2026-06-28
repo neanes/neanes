@@ -3,11 +3,17 @@ import { computed } from 'vue';
 
 import type { FontComboboxOption } from '@/components/FontCombobox.vue';
 import {
-  execForOwner,
-  useActiveEditorForOwner,
+  execForActiveOrLastOwner,
+  useActiveOrLastEditorForOwner,
+  useEditorCommandObservableState,
   useEditorCommandStates,
 } from '@/composables/useRichTextEditorRegistry';
 import type { PageSetup } from '@/models/PageSetup';
+import type {
+  ParagraphStyle,
+  ResolvedParagraphStyle,
+} from '@/models/ParagraphStyle';
+import { resolveParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   DEFAULT_FONT_STYLE,
@@ -37,6 +43,7 @@ const defaultSizeFormat = new Intl.NumberFormat(undefined, {
 // Italic shortcut buttons (which now flip an axis of the font style). Underline
 // stays a standalone command.
 const STYLE_COMMAND_NAMES = [
+  'style',
   'fontFamily',
   'fontSize',
   'fontColor',
@@ -54,24 +61,96 @@ const STYLE_TOGGLE_COMMANDS: Record<string, string> = {
   underline: 'underline',
 };
 
+export const PARAGRAPH_STYLE_NONE_VALUE = '__none__';
+export const PARAGRAPH_STYLE_MIXED_VALUE = '__mixed__';
+
+export function resolveRichTextParagraphStyleState(
+  paragraphStyles: ParagraphStyle[],
+  activeParagraphStyleIds: string[],
+  fallbackParagraphStyle: ResolvedParagraphStyle,
+) {
+  const paragraphStyleValue =
+    activeParagraphStyleIds.length === 0
+      ? PARAGRAPH_STYLE_NONE_VALUE
+      : activeParagraphStyleIds.length === 1
+        ? activeParagraphStyleIds[0]
+        : PARAGRAPH_STYLE_MIXED_VALUE;
+
+  const activeParagraphStyle =
+    paragraphStyleValue === PARAGRAPH_STYLE_NONE_VALUE ||
+    paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE
+      ? null
+      : resolveParagraphStyle(paragraphStyles, paragraphStyleValue);
+
+  return {
+    paragraphStyleValue,
+    activeParagraphStyle,
+    resolvedActiveParagraphStyle:
+      activeParagraphStyle ?? fallbackParagraphStyle,
+  };
+}
+
+export function shouldSyncParagraphStyleAlignment(
+  currentAlignment: unknown,
+  nextAlignment: string,
+) {
+  return currentAlignment !== nextAlignment;
+}
+
 export function useRichTextStyleCommands(
   props: {
     element: object;
     pageSetup: PageSetup;
     fonts: string[];
-    defaultFontFamily: string;
-    defaultFontSize: number;
-    defaultFontColor: string;
+    paragraphStyles?: ParagraphStyle[];
+    fallbackParagraphStyle: ResolvedParagraphStyle;
   },
   extraCommandNames: string[] = [],
 ) {
   const { t } = useTranslation();
-  const scopedEditor = useActiveEditorForOwner(() => props.element);
+  const scopedEditor = useActiveOrLastEditorForOwner(() => props.element);
 
   const commandStates = useEditorCommandStates(scopedEditor, [
     ...STYLE_COMMAND_NAMES,
     ...extraCommandNames,
   ]);
+  const styleCommandState = useEditorCommandObservableState(
+    scopedEditor,
+    'style',
+    ['enabledStyles'],
+  );
+  const paragraphStyleOptions = computed(() => {
+    return props.paragraphStyles ?? [];
+  });
+  const neanesParagraphStyleIds = computed(
+    () => new Set(paragraphStyleOptions.value.map((style) => style.id)),
+  );
+
+  const activeParagraphStyleIds = computed(() =>
+    toStyleNameArray(commandValue('style')).filter((styleId) =>
+      neanesParagraphStyleIds.value.has(styleId),
+    ),
+  );
+  const enabledParagraphStyleIds = computed(
+    () => new Set(toStyleNameArray(styleCommandState.properties.enabledStyles)),
+  );
+
+  const paragraphStyleState = computed(() =>
+    resolveRichTextParagraphStyleState(
+      props.paragraphStyles ?? [],
+      activeParagraphStyleIds.value,
+      props.fallbackParagraphStyle,
+    ),
+  );
+  const paragraphStyleValue = computed(
+    () => paragraphStyleState.value.paragraphStyleValue,
+  );
+  const activeParagraphStyle = computed(
+    () => paragraphStyleState.value.activeParagraphStyle,
+  );
+  const resolvedActiveParagraphStyle = computed(
+    () => paragraphStyleState.value.resolvedActiveParagraphStyle,
+  );
 
   const fontFamilyValue = computed(() =>
     fromRichTextFontFamilyModelValue(commandValue('fontFamily')),
@@ -82,12 +161,13 @@ export function useRichTextStyleCommands(
   );
 
   const fontFamilyOptions = computed<FontComboboxOption[]>(() => {
-    const resolvedDefault = props.defaultFontFamily.trim();
+    const resolvedDefault = resolvedActiveParagraphStyle.value.fontFamily;
+    const normalizedDefault = resolvedDefault.trim();
 
     return [
       {
-        label: resolvedDefault
-          ? `${defaultLabel.value} (${resolvedDefault})`
+        label: normalizedDefault
+          ? `${defaultLabel.value} (${normalizedDefault})`
           : defaultLabel.value,
         value: RICH_TEXT_DEFAULT_FONT_FAMILY,
       },
@@ -101,7 +181,7 @@ export function useRichTextStyleCommands(
 
     return typeof value === 'string' && value !== ''
       ? value
-      : DEFAULT_FONT_STYLE;
+      : resolvedActiveParagraphStyle.value.fontStyle;
   });
 
   const fontStyleFamilyValue = computed(() => {
@@ -109,7 +189,7 @@ export function useRichTextStyleCommands(
       return fontFamilyValue.value;
     }
 
-    return normalizeFontFamily(props.defaultFontFamily);
+    return normalizeFontFamily(resolvedActiveParagraphStyle.value.fontFamily);
   });
 
   const fontStyleOptions = computed(() =>
@@ -130,12 +210,14 @@ export function useRichTextStyleCommands(
 
   const fontSizePlaceholder = computed(
     () =>
-      `${defaultLabel.value} (${defaultSizeFormat.format(Unit.toPt(props.defaultFontSize))})`,
+      `${defaultLabel.value} (${defaultSizeFormat.format(Unit.toPt(resolvedActiveParagraphStyle.value.fontSize))})`,
   );
 
   const fontColorValue = computed(() => {
     const value = commandValue('fontColor');
-    return typeof value === 'string' ? value : props.defaultFontColor;
+    return typeof value === 'string'
+      ? value
+      : resolvedActiveParagraphStyle.value.color;
   });
 
   const fontColorHasExplicitValue = computed(
@@ -172,11 +254,19 @@ export function useRichTextStyleCommands(
       return;
     }
 
-    execForOwner(props.element, commandName, ...args);
+    execForActiveOrLastOwner(props.element, commandName, ...args);
   }
 
   function isStyleToggleEnabled(style: string) {
     return isCommandEnabled(STYLE_TOGGLE_COMMANDS[style] ?? style);
+  }
+
+  function isParagraphStyleEnabled(styleId: string) {
+    return (
+      isCommandEnabled('style') &&
+      neanesParagraphStyleIds.value.has(styleId) &&
+      enabledParagraphStyleIds.value.has(styleId)
+    );
   }
 
   function onFontFamilyChanged(value: string) {
@@ -190,7 +280,9 @@ export function useRichTextStyleCommands(
       // Clearing the family returns to inherited text. Only basic axes remain
       // valid without an explicit family; non-basic styles fall back to the
       // nearest basic style the inherited family offers.
-      const inheritedFamily = normalizeFontFamily(props.defaultFontFamily);
+      const inheritedFamily = normalizeFontFamily(
+        resolvedActiveParagraphStyle.value.fontFamily,
+      );
       const inheritedStyle = remapFontStyleAxesForOptions(
         fontStyleValue.value,
         inheritedFamily === '' ? [] : fontCatalog.getStyles(inheritedFamily),
@@ -285,16 +377,53 @@ export function useRichTextStyleCommands(
     }
   }
 
+  function onParagraphStyleChanged(value: string) {
+    if (!isCommandEnabled('style')) {
+      return;
+    }
+
+    if (value === PARAGRAPH_STYLE_NONE_VALUE) {
+      for (const styleId of activeParagraphStyleIds.value) {
+        runCommand('style', { styleName: styleId, forceValue: false });
+      }
+
+      return;
+    }
+
+    if (!neanesParagraphStyleIds.value.has(value)) {
+      return;
+    }
+
+    for (const styleId of activeParagraphStyleIds.value) {
+      if (styleId !== value) {
+        runCommand('style', { styleName: styleId, forceValue: false });
+      }
+    }
+
+    runCommand('style', { styleName: value, forceValue: true });
+
+    const resolved = resolveParagraphStyle(props.paragraphStyles ?? [], value);
+
+    if (
+      shouldSyncParagraphStyleAlignment(
+        commandValue('alignment'),
+        resolved.alignment,
+      )
+    ) {
+      runCommand('alignment', { value: resolved.alignment });
+    }
+  }
+
   function onRemoveFormat() {
     if (!isCommandEnabled('removeFormat')) {
       return;
     }
 
     if (isCommandEnabled('fontStyle')) {
-      execForOwner(props.element, 'fontStyle');
+      execForActiveOrLastOwner(props.element, 'fontStyle');
     }
 
-    execForOwner(props.element, 'removeFormat');
+    execForActiveOrLastOwner(props.element, 'removeFormat');
   }
 
   function executeChangedToggleCommands(
@@ -316,8 +445,13 @@ export function useRichTextStyleCommands(
 
   return {
     commandStates,
+    styleCommandState,
     fontFamilyValue,
     fontFamilyOptions,
+    paragraphStyleValue,
+    activeParagraphStyle,
+    resolvedActiveParagraphStyle,
+    paragraphStyleOptions,
     fontStyleValue,
     fontStyleOptions,
     fontStyleDisabled,
@@ -330,8 +464,10 @@ export function useRichTextStyleCommands(
     isCommandEnabled,
     isCommandActive,
     isStyleToggleEnabled,
+    isParagraphStyleEnabled,
     commandValue,
     runCommand,
+    onParagraphStyleChanged,
     onFontFamilyChanged,
     onFontStyleChanged,
     onFontSizeChanged,
@@ -367,4 +503,24 @@ function isAlignmentValue(
   value: string,
 ): value is 'left' | 'center' | 'right' | 'justify' {
   return ['left', 'center', 'right', 'justify'].includes(value);
+}
+
+function toStyleNameArray(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => {
+      if (isNonEmptyString(item)) {
+        return [item];
+      }
+
+      const name = Reflect.get(item as object, 'name');
+
+      return isNonEmptyString(name) ? [name] : [];
+    });
+  }
+
+  return isNonEmptyString(value) ? [value] : [];
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value !== '';
 }

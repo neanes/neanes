@@ -39,6 +39,22 @@
     "title": "Τίτλος",
     "author": "Συγγραφέας"
   },
+  "paragraphStyles": {
+    "root": "Paragraph Styles",
+    "description": "Create reusable text-box paragraph styles and control inheritance between them.",
+    "create": "Create",
+    "clone": "Clone",
+    "delete": "Delete",
+    "name": "Name",
+    "parentStyle": "Parent Style",
+    "builtIn": "Built-in",
+    "custom": "Custom",
+    "builtInDescription": "Built-in styles can be edited, but they cannot be renamed or deleted.",
+    "gapAbove": "Gap Above",
+    "gapBelow": "Gap Below",
+    "openDialog": "Edit Styles",
+    "pageSetupBridge": "Text-box defaults now live in Paragraph Styles. Edit Default Text and related styles there."
+  },
   "neumePositioning": {
     "root": "Τοποθέτηση Σημείου",
     "description": "Ρυθμίστε τις μετατοπίσεις των βοηθητικών σημείων και προεπισκοπήστε τις θέσεις τους.",

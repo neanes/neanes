@@ -1381,97 +1381,26 @@
                         })
                       }}
                     </FieldDescription>
-                    <FieldGroup class="gap-4">
-                      <Field orientation="horizontal">
-                        <FieldLabel>
-                          {{
-                            $t(($) => $.dialog.pageSetup.color, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <ColorPicker v-model="form.textBoxDefaultColor" />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel>
-                          {{
-                            $t(($) => $.dialog.pageSetup.size, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <InputFontSize v-model="form.textBoxDefaultFontSize" />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel
-                          for="page-setup-dialog-text-box-line-height"
-                        >
-                          {{
-                            $t(($) => $.dialog.pageSetup.lineHeight, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <InputUnit
-                          id="page-setup-dialog-text-box-line-height"
-                          v-model="form.textBoxDefaultLineHeight"
-                          unit="unitless"
-                          :min="0"
-                          :step="0.1"
-                          :format-options="fraction2FormatOptions"
-                          :nullable="true"
-                          placeholder="normal"
-                        />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel for="page-setup-dialog-text-box-font">
-                          {{
-                            $t(($) => $.dialog.pageSetup.font, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <FontCombobox
-                          id="page-setup-dialog-text-box-font"
-                          :model-value="form.textBoxDefaultFontFamily"
-                          :options="textBoxFontFamilies"
-                          @update:model-value="
-                            updateDefaultFontFamily(
-                              'textBoxDefaultFontFamily',
-                              'textBoxDefaultFontStyle',
-                              $event,
-                            )
-                          "
-                        />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel for="page-setup-dialog-text-box-font-style">
-                          {{
-                            $t(($) => $.dialog.pageSetup.style, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <FontStyleSelect
-                          id="page-setup-dialog-text-box-font-style"
-                          v-model="form.textBoxDefaultFontStyle"
-                          class="w-72 max-w-full"
-                          :options="textBoxFontStyleOptions"
-                        />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel>
-                          {{
-                            $t(($) => $.dialog.pageSetup.outline, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <InputStrokeWidth
-                          v-model="form.textBoxDefaultStrokeWidth"
-                        />
-                      </Field>
-                    </FieldGroup>
+                    <div
+                      class="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground"
+                    >
+                      {{
+                        $t(($) => $.dialog.paragraphStyles.pageSetupBridge, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      @click="emit('open-paragraph-styles')"
+                    >
+                      {{
+                        $t(($) => $.dialog.paragraphStyles.openDialog, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </Button>
                   </FieldSet>
                 </template>
 
@@ -1911,15 +1840,12 @@ type CheckboxValue = boolean | 'indeterminate';
 type DialogSelector = SelectorParam<'dialog'>;
 type BooleanPageSetupKey = {
   [K in keyof PageSetup]: PageSetup[K] extends boolean ? K : never;
-}[keyof PageSetup];
+}[keyof PageSetup] &
+  keyof PageSetup;
 type DefaultFontFamilyKey =
   | 'dropCapDefaultFontFamily'
-  | 'lyricsDefaultFontFamily'
-  | 'textBoxDefaultFontFamily';
-type DefaultFontStyleKey =
-  | 'dropCapDefaultFontStyle'
-  | 'lyricsDefaultFontStyle'
-  | 'textBoxDefaultFontStyle';
+  | 'lyricsDefaultFontFamily';
+type DefaultFontStyleKey = 'dropCapDefaultFontStyle' | 'lyricsDefaultFontStyle';
 type NeumeColorKey =
   | 'accidentalDefaultColor'
   | 'breathDefaultColor'
@@ -2036,6 +1962,7 @@ function getPreviewGapStyle(
 }
 
 const emit = defineEmits<{
+  'open-paragraph-styles': [];
   update: [pageSetup: PageSetup];
 }>();
 
@@ -2173,18 +2100,11 @@ const lyricsFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
-const textBoxFontFamilies = computed(() => [
-  ...fontCatalog.bundledTextFamilies(),
-  ...props.fonts,
-]);
 const dropCapFontStyleOptions = computed(() =>
   getFontStyleOptions(form.value.dropCapDefaultFontFamily),
 );
 const lyricsFontStyleOptions = computed(() =>
   getFontStyleOptions(form.value.lyricsDefaultFontFamily),
-);
-const textBoxFontStyleOptions = computed(() =>
-  getFontStyleOptions(form.value.textBoxDefaultFontFamily),
 );
 const neumeFontFamilies = computed(() => {
   if (form.value.melkiteRtl) {
@@ -2612,7 +2532,6 @@ function updateDefaultFontsForArabicContext() {
   for (const [familyKey, styleKey] of [
     ['dropCapDefaultFontFamily', 'dropCapDefaultFontStyle'],
     ['lyricsDefaultFontFamily', 'lyricsDefaultFontStyle'],
-    ['textBoxDefaultFontFamily', 'textBoxDefaultFontStyle'],
   ] as const) {
     if (form.value[familyKey] === sourceFamily) {
       updateDefaultFontFamily(familyKey, styleKey, targetFamily);

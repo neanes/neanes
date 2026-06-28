@@ -6,7 +6,7 @@
 import type { View } from 'ckeditor5';
 import { onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue';
 
-import { useActiveEditorForOwner } from '@/composables/useRichTextEditorRegistry';
+import { useActiveOrLastEditorForOwner } from '@/composables/useRichTextEditorRegistry';
 
 const props = defineProps<{
   name: string;
@@ -14,7 +14,7 @@ const props = defineProps<{
 }>();
 
 const root = useTemplateRef<HTMLElement>('root');
-const scopedEditor = useActiveEditorForOwner(() => props.owner);
+const scopedEditor = useActiveOrLastEditorForOwner(() => props.owner);
 
 let ckeditorView: View | null = null;
 

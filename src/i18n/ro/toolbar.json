@@ -12,6 +12,10 @@
     "insertPelastikon": "Inserează pelastikon",
     "measureBar": "Bară de măsură",
     "outline": "Contur",
+    "paragraphStyle": "Paragraph Style",
+    "clearOverrides": "Clear Overrides",
+    "overrideStatus": "Overrides",
+    "inherited": "Inherited",
     "spaceAfter": "Spațiu după",
     "tempoSign": "Semn de tempo",
     "useDefaultStyle": "Folosește stilul implicit",
@@ -27,6 +31,7 @@
     "marginBottom": "Spațiu jos",
     "verticalOffset": "Offset vertical",
     "none": "Niciunul",
+    "mixed": "Mixt",
     "inline": "În linie",
     "neume": "Neumă"
   },

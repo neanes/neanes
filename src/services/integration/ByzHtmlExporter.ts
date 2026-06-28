@@ -18,6 +18,11 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import type { Score } from '@/models/Score';
 import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
@@ -126,7 +131,7 @@ export class ByzHtmlExporter {
   };
 
   exportScore(score: Score) {
-    const style = this.exportPageSetup(score.pageSetup);
+    const style = this.exportPageSetup(score.pageSetup, score.paragraphStyles);
 
     const body = this.exportElements(score.staff.elements, score.pageSetup, 4);
     const fontFaceCss = fontCatalog.getRegisteredFontFaceCss();
@@ -170,7 +175,7 @@ export class ByzHtmlExporter {
     return result;
   }
 
-  exportPageSetup(pageSetup: PageSetup) {
+  exportPageSetup(pageSetup: PageSetup, paragraphStyles: ParagraphStyle[]) {
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
     const firstPageMargins = resolvePageMargins(pageSetup, 1);
     const secondPageMargins = resolvePageMargins(pageSetup, 2);
@@ -195,9 +200,25 @@ export class ByzHtmlExporter {
       pageSetup.dropCapDefaultFontFamily,
       pageSetup.dropCapDefaultFontStyle,
     );
+    const defaultTextBoxStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    );
+    const annotationStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+    );
+    const verseStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Verse,
+    );
     const defaultTextBoxFont = resolveFontStyle(
-      pageSetup.textBoxDefaultFontFamily,
-      pageSetup.textBoxDefaultFontStyle,
+      defaultTextBoxStyle.fontFamily,
+      defaultTextBoxStyle.fontStyle,
+    );
+    const defaultVerseFont = resolveFontStyle(
+      verseStyle.fontFamily,
+      verseStyle.fontStyle,
     );
     const defaultLyricsFontFamily = getFontFamilyWithFallback(
       defaultLyricsFont.cssFontFamily,
@@ -210,11 +231,11 @@ export class ByzHtmlExporter {
       defaultTextBoxFont.cssFontFamily,
     ).replaceAll('"', "'");
     const defaultRichTextBoxFontFamily = getFontFamilyWithFallback(
-      pageSetup.textBoxDefaultFontFamily,
+      defaultTextBoxStyle.fontFamily,
       pageSetup.neumeDefaultFontFamily,
     ).replaceAll('"', "'");
     const defaultInlineRichTextBoxFontFamily = getFontFamilyWithFallback(
-      pageSetup.lyricsDefaultFontFamily,
+      verseStyle.fontFamily,
       pageSetup.neumeDefaultFontFamily,
     ).replaceAll('"', "'");
 
@@ -331,11 +352,11 @@ export class ByzHtmlExporter {
       .${this.config.classTextBox} {
         white-space: break-spaces;
         font-family: ${defaultTextBoxFontFamily};
-        font-size: ${Unit.toPt(pageSetup.textBoxDefaultFontSize)}pt;
+        font-size: ${Unit.toPt(defaultTextBoxStyle.fontSize)}pt;
         font-weight: ${defaultTextBoxFont.cssFontWeight};
         font-style: ${defaultTextBoxFont.cssFontStyle};
-        color: ${pageSetup.textBoxDefaultColor};
-        -webkit-text-stroke-width: ${pageSetup.textBoxDefaultStrokeWidth};
+        color: ${defaultTextBoxStyle.color};
+        -webkit-text-stroke-width: ${defaultTextBoxStyle.strokeWidth};
       }
 
       .${this.config.classTextBoxInline} {
@@ -344,28 +365,37 @@ export class ByzHtmlExporter {
       }
 
       .${this.config.classTextBox}.${this.config.classTextBoxInline} {
-        font-family: ${defaultLyricsFontFamily};
-        font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
-        font-weight: ${defaultLyricsFont.cssFontWeight};
-        font-style: ${defaultLyricsFont.cssFontStyle};
-        color: ${pageSetup.lyricsDefaultColor};
-        -webkit-text-stroke-width: ${pageSetup.lyricsDefaultStrokeWidth};
+        font-family: ${defaultInlineRichTextBoxFontFamily};
+        font-size: ${Unit.toPt(verseStyle.fontSize)}pt;
+        font-weight: ${defaultVerseFont.cssFontWeight};
+        font-style: ${defaultVerseFont.cssFontStyle};
+        color: ${verseStyle.color};
+        -webkit-text-stroke-width: ${verseStyle.strokeWidth};
       }
 
       .${this.config.classRichTextBox} {
         font-family: ${defaultRichTextBoxFontFamily};
-        font-size: ${Unit.toPt(pageSetup.textBoxDefaultFontSize)}pt;
+        font-size: ${Unit.toPt(defaultTextBoxStyle.fontSize)}pt;
         font-weight: 400;
         font-style: normal;
-        color: ${pageSetup.textBoxDefaultColor};
+        color: ${defaultTextBoxStyle.color};
       }
 
       .${this.config.classRichTextBox}.${this.config.classTextBoxInline} {
         font-family: ${defaultInlineRichTextBoxFontFamily};
-        font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+        font-size: ${Unit.toPt(verseStyle.fontSize)}pt;
         font-weight: 400;
         font-style: normal;
-        color: ${pageSetup.lyricsDefaultColor};
+        color: ${verseStyle.color};
+      }
+
+      .annotation-container {
+        font-family: ${getFontFamilyWithFallback(
+          annotationStyle.fontFamily,
+          pageSetup.neumeDefaultFontFamily,
+        ).replaceAll('"', "'")};
+        font-size: ${Unit.toPt(annotationStyle.fontSize)}pt;
+        color: ${annotationStyle.color};
       }
 
       .${this.config.classImageBox} {
@@ -925,7 +955,10 @@ export class ByzHtmlExporter {
 
     let style = '';
 
-    if (!element.inline || !element.useDefaultStyle) {
+    if (
+      !element.inline ||
+      this.textBoxHasExplicitParagraphStyleOverrides(element)
+    ) {
       style += `color: ${element.computedColor};`;
       style += `font-family: ${getFontFamilyWithFallback(
         element.computedFontFamily,
@@ -939,7 +972,7 @@ export class ByzHtmlExporter {
       //style += `height: ${element.height};`;
     }
 
-    style += `text-align: ${element.alignment};`;
+    style += `text-align: ${element.computedAlignment};`;
 
     styleAttribute = ` style="${style}"`;
 
@@ -950,6 +983,12 @@ export class ByzHtmlExporter {
     return `<div dir="auto" class="${className}"${styleAttribute}>${
       element.content
     }</div\n${this.getIndentationString(indentation)}>`;
+  }
+
+  private textBoxHasExplicitParagraphStyleOverrides(element: TextBoxElement) {
+    return Object.values(element.getParagraphStyleOverrides()).some(
+      (value) => value !== undefined,
+    );
   }
 
   exportRichTextBox(element: RichTextBoxElement, indentation: number) {

@@ -21,6 +21,13 @@ import { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup, pageSizes } from '@/models/PageSetup';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  createParagraphStylesFromDefaults,
+  createParagraphStylesFromPageSetup,
+  ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import type { ScoreElement as ScoreElement_v1 } from '@/models/save/v1/Element';
 import {
   AlternateLineElement as AlternateLineElement_v1,
@@ -45,6 +52,10 @@ import {
   Score as Score_v1,
   Staff as Staff_v1,
 } from '@/models/save/v1/Score';
+import {
+  type ParagraphStyle as ParagraphStyle_v1,
+  ParagraphStyle as ParagraphStyleSave_v1,
+} from '@/models/save/v1/Style';
 import { DocumentProperties, Score } from '@/models/Score';
 import { Staff } from '@/models/Staff';
 import { fontCatalog } from '@/services/FontCatalog';
@@ -58,6 +69,10 @@ interface IScore {
 
 interface LegacySectionNameCompatibility {
   sectionName?: string | null;
+}
+
+interface LegacyTextBoxCssFontCompatibility {
+  fontStyle?: string | null;
 }
 
 function readLegacyCssFontStyle(fontStyle: string | null | undefined) {
@@ -176,43 +191,6 @@ function loadFontFaceFromWeightFields({
   };
 }
 
-function loadFontFaceFromToggleFields({
-  savedFontFamily,
-  fallbackFontFamily,
-  fontSubfamily,
-  legacyBold,
-  legacyItalic,
-  fallbackStyle = DEFAULT_FONT_STYLE,
-}: {
-  savedFontFamily: string | null | undefined;
-  fallbackFontFamily: string;
-  fontSubfamily?: string | null;
-  legacyBold?: boolean | null;
-  legacyItalic?: boolean | null;
-  fallbackStyle?: string;
-}) {
-  const face = splitSavedFontFamily(savedFontFamily, fallbackFontFamily);
-  const savedStyle = normalizeSavedFontSubfamily(fontSubfamily);
-
-  if (savedStyle != null) {
-    return { fontFamily: face.fontFamily, fontStyle: savedStyle };
-  }
-
-  const baseStyle =
-    face.fontStyle !== DEFAULT_FONT_STYLE
-      ? face.fontStyle
-      : normalizeFontStyle(fallbackStyle);
-
-  return {
-    fontFamily: face.fontFamily,
-    fontStyle: applyAxes(
-      baseStyle,
-      { bold: legacyBold || undefined, italic: legacyItalic || undefined },
-      fontCatalog.getStyles(face.fontFamily),
-    ),
-  };
-}
-
 function splitSavedFontFamily(
   fontFamily: string | null | undefined,
   fallbackFontFamily: string,
@@ -260,6 +238,9 @@ export class SaveService {
       score.documentProperties = undefined;
     }
     this.SavePageSetup(score.pageSetup, s.pageSetup);
+    score.paragraphStyles = s.paragraphStyles.map((style) =>
+      this.SaveParagraphStyle(style),
+    );
     this.SaveLyricSetup(score.staff.lyrics, s.staff.lyrics);
 
     this.SaveHeader(score.headers.default, s.headers.default);
@@ -367,14 +348,6 @@ export class SaveService {
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
     pageSetup.lyricsMinimumSpacing = p.lyricsMinimumSpacing;
     pageSetup.lyricsMelismaCutoffWidth = p.lyricsMelismaCutoffWidth;
-
-    pageSetup.textBoxDefaultColor = p.textBoxDefaultColor;
-    pageSetup.textBoxDefaultFontFamily = p.textBoxDefaultFontFamily;
-    pageSetup.textBoxDefaultFontSize = p.textBoxDefaultFontSize;
-    pageSetup.textBoxDefaultFontSubfamily = p.textBoxDefaultFontStyle;
-    pageSetup.textBoxDefaultStrokeWidth = p.textBoxDefaultStrokeWidth;
-    pageSetup.textBoxDefaultLineHeight =
-      p.textBoxDefaultLineHeight ?? undefined;
 
     pageSetup.martyriaDefaultColor = p.martyriaDefaultColor;
     pageSetup.martyriaDefaultStrokeWidth = p.martyriaDefaultStrokeWidth;
@@ -516,6 +489,22 @@ export class SaveService {
 
     documentProperties.title = title === '' ? undefined : title;
     documentProperties.author = author === '' ? undefined : author;
+  }
+
+  public static SaveParagraphStyle(style: ParagraphStyle) {
+    const saved = new ParagraphStyleSave_v1();
+    saved.id = style.id;
+    saved.displayName = style.displayName;
+    saved.builtIn = style.builtIn || undefined;
+    saved.parentStyleId = style.parentStyleId ?? undefined;
+    saved.alignment = style.overrides.alignment;
+    saved.fontFamily = style.overrides.fontFamily;
+    saved.fontSize = style.overrides.fontSize;
+    saved.fontSubfamily = style.overrides.fontStyle;
+    saved.color = style.overrides.color;
+    saved.strokeWidth = style.overrides.strokeWidth;
+    saved.lineHeight = style.overrides.lineHeight;
+    return saved;
   }
 
   public static SaveHeader(header: Header_v1, h: Header) {
@@ -797,8 +786,9 @@ export class SaveService {
   }
 
   public static SaveTextBox(element: TextBoxElement_v1, e: TextBoxElement) {
-    element.alignment = e.alignment;
-    element.color = e.color;
+    element.paragraphStyleId = e.paragraphStyleId;
+    element.alignment = e.alignment ?? undefined;
+    element.color = e.color ?? undefined;
     element.content = e.content;
     if (e.multipanel) {
       element.contentLeft = e.contentLeft;
@@ -812,19 +802,20 @@ export class SaveService {
       element.contentBottom = e.contentBottom;
     }
 
-    element.fontFamily = e.fontFamily;
-    element.fontSize = e.fontSize;
-    element.strokeWidth = e.strokeWidth;
-    element.fontSubfamily = e.fontStyle;
+    element.fontFamily = e.fontFamily ?? undefined;
+    element.fontSize = e.fontSize ?? undefined;
+    element.strokeWidth = e.strokeWidth ?? undefined;
+    element.fontSubfamily = e.fontStyle ?? undefined;
     element.underline = e.underline || undefined;
     element.lineHeight = e.lineHeight ?? undefined;
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
     element.fillWidth = e.fillWidth || undefined;
     element.customHeight = e.customHeight ?? undefined;
-    element.marginTop = e.marginTop ?? undefined;
-    element.marginBottom = e.marginBottom ?? undefined;
-    element.useDefaultStyle = e.useDefaultStyle || undefined;
+    element.gapAbove = e.gapAbove ?? undefined;
+    element.gapBelow = e.gapBelow ?? undefined;
+    element.marginTop = e.gapAbove ?? undefined;
+    element.marginBottom = e.gapBelow ?? undefined;
     element.runningMarkerRole = e.runningMarkerRole ?? undefined;
     element.runningMarkerText = e.runningMarkerText?.trim() || undefined;
   }
@@ -862,10 +853,18 @@ export class SaveService {
         e.modeChangePermanentEnharmonicZo ?? undefined;
     }
 
+    element.color = e.color ?? undefined;
+    element.fontFamily = e.fontFamily ?? undefined;
+    element.fontSize = e.fontSize ?? undefined;
+    element.strokeWidth = e.strokeWidth ?? undefined;
+    element.fontSubfamily = e.fontStyle ?? undefined;
+    element.lineHeight = e.lineHeight;
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
-    element.marginTop = e.marginTop ?? undefined;
-    element.marginBottom = e.marginBottom ?? undefined;
+    element.gapAbove = e.gapAbove ?? undefined;
+    element.gapBelow = e.gapBelow ?? undefined;
+    element.marginTop = e.gapAbove ?? undefined;
+    element.marginBottom = e.gapBelow ?? undefined;
     saveRichTextLanguage(element, e);
     element.scrollable = e.scrollable || undefined;
     element.runningMarkerRole = e.runningMarkerRole ?? undefined;
@@ -921,6 +920,29 @@ export class SaveService {
       s.documentProperties ?? new DocumentProperties_v1(),
     );
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
+    const legacyTextBoxDefaultFont = loadFontFaceFromWeightFields({
+      savedFontFamily: s.pageSetup.textBoxDefaultFontFamily,
+      fallbackFontFamily: 'Source Serif',
+      fontSubfamily: s.pageSetup.textBoxDefaultFontSubfamily,
+      legacyFontWeight: s.pageSetup.textBoxDefaultFontWeight,
+      legacyCssFontStyle: s.pageSetup.textBoxDefaultFontStyle,
+    });
+    const savedParagraphStyles = s.paragraphStyles ?? [];
+    const defaultParagraphStyles = createParagraphStylesFromDefaults(
+      score.pageSetup,
+      {
+        textBoxDefaultColor: s.pageSetup.textBoxDefaultColor,
+        textBoxDefaultFontFamily: legacyTextBoxDefaultFont.fontFamily,
+        textBoxDefaultFontSize: s.pageSetup.textBoxDefaultFontSize,
+        textBoxDefaultFontStyle: legacyTextBoxDefaultFont.fontStyle,
+        textBoxDefaultStrokeWidth: s.pageSetup.textBoxDefaultStrokeWidth,
+        textBoxDefaultLineHeight: s.pageSetup.textBoxDefaultLineHeight,
+      },
+    );
+    score.paragraphStyles = this.LoadParagraphStyles_v1(
+      savedParagraphStyles,
+      defaultParagraphStyles,
+    );
     this.LoadLyricSetup_v1(
       score.staff.lyrics,
       s.staff.lyrics ?? new LyricSetup(),
@@ -937,30 +959,40 @@ export class SaveService {
         score.headers.default,
         s.headers.default,
         score.pageSetup,
+        score.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
       );
       this.LoadHeader_v1(
         s.version,
         score.headers.chapterOpening,
         savedChapterOpeningHeader,
         score.pageSetup,
+        score.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
       );
       this.LoadHeader_v1(
         s.version,
         score.headers.even,
         s.headers.even,
         score.pageSetup,
+        score.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
       );
       this.LoadHeader_v1(
         s.version,
         score.headers.odd,
         s.headers.odd,
         score.pageSetup,
+        score.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
       );
       this.LoadHeader_v1(
         s.version,
         score.headers.firstPage,
         s.headers.firstPage,
         score.pageSetup,
+        score.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
       );
     }
 
@@ -975,30 +1007,40 @@ export class SaveService {
         score.footers.default,
         s.footers.default,
         score.pageSetup,
+        score.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
       );
       this.LoadFooter_v1(
         s.version,
         score.footers.chapterOpening,
         savedChapterOpeningFooter,
         score.pageSetup,
+        score.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
       );
       this.LoadFooter_v1(
         s.version,
         score.footers.even,
         s.footers.even,
         score.pageSetup,
+        score.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
       );
       this.LoadFooter_v1(
         s.version,
         score.footers.odd,
         s.footers.odd,
         score.pageSetup,
+        score.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
       );
       this.LoadFooter_v1(
         s.version,
         score.footers.firstPage,
         s.footers.firstPage,
         score.pageSetup,
+        score.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
       );
     }
 
@@ -1038,7 +1080,10 @@ export class SaveService {
             s.version,
             element as TextBoxElement,
             e as TextBoxElement_v1,
-            score.pageSetup,
+            score.paragraphStyles,
+            (e as TextBoxElement_v1).inline === true
+              ? BUILT_IN_PARAGRAPH_STYLE_IDS.Verse
+              : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
           );
           break;
         case ElementType_v1.RichTextBox:
@@ -1194,25 +1239,6 @@ export class SaveService {
     pageSetup.dropCapDefaultLineSpan =
       p.dropCapDefaultLineSpan ?? pageSetup.dropCapDefaultLineSpan;
 
-    pageSetup.textBoxDefaultColor =
-      p.textBoxDefaultColor ?? pageSetup.textBoxDefaultColor;
-    const textBoxDefaultFont = loadFontFaceFromWeightFields({
-      savedFontFamily: p.textBoxDefaultFontFamily,
-      fallbackFontFamily: pageSetup.textBoxDefaultFontFamily,
-      fontSubfamily: p.textBoxDefaultFontSubfamily,
-      legacyFontWeight: p.textBoxDefaultFontWeight,
-      legacyCssFontStyle: p.textBoxDefaultFontStyle,
-      fallbackStyle: pageSetup.textBoxDefaultFontStyle,
-    });
-    pageSetup.textBoxDefaultFontFamily = textBoxDefaultFont.fontFamily;
-    pageSetup.textBoxDefaultFontSize =
-      p.textBoxDefaultFontSize ?? pageSetup.textBoxDefaultFontSize;
-    pageSetup.textBoxDefaultFontStyle = textBoxDefaultFont.fontStyle;
-    pageSetup.textBoxDefaultStrokeWidth =
-      p.textBoxDefaultStrokeWidth ?? pageSetup.textBoxDefaultStrokeWidth;
-    pageSetup.textBoxDefaultLineHeight =
-      p.textBoxDefaultLineHeight ?? pageSetup.textBoxDefaultLineHeight;
-
     pageSetup.lyricsDefaultColor =
       p.lyricsDefaultColor ?? pageSetup.lyricsDefaultColor;
     const lyricsDefaultFont = loadFontFaceFromWeightFields({
@@ -1350,6 +1376,57 @@ export class SaveService {
     }
   }
 
+  public static LoadParagraphStyle_v1(saved: ParagraphStyle_v1) {
+    const style = new ParagraphStyle();
+    style.id = saved.id;
+    style.displayName = saved.displayName;
+    style.builtIn = saved.builtIn === true;
+    style.parentStyleId = saved.parentStyleId ?? null;
+    style.overrides = {
+      alignment: saved.alignment,
+      fontFamily: saved.fontFamily,
+      fontSize: saved.fontSize,
+      fontStyle: saved.fontSubfamily,
+      color: saved.color,
+      strokeWidth: saved.strokeWidth,
+      lineHeight: saved.lineHeight,
+    };
+    return style;
+  }
+
+  private static LoadParagraphStyles_v1(
+    savedParagraphStyles: ParagraphStyle_v1[],
+    defaultParagraphStyles: ParagraphStyle[],
+  ) {
+    if (savedParagraphStyles.length === 0) {
+      return defaultParagraphStyles;
+    }
+
+    const loadedParagraphStyles = savedParagraphStyles.map((style) =>
+      this.LoadParagraphStyle_v1(style),
+    );
+    const builtInStyleIds = new Set(defaultParagraphStyles.map((style) => style.id));
+    const savedBuiltIns = new Map<string, ParagraphStyle>();
+    const customStyles: ParagraphStyle[] = [];
+
+    for (const style of loadedParagraphStyles) {
+      if (builtInStyleIds.has(style.id)) {
+        if (!savedBuiltIns.has(style.id)) {
+          savedBuiltIns.set(style.id, style);
+        }
+      } else {
+        customStyles.push(style);
+      }
+    }
+
+    return [
+      ...defaultParagraphStyles.map(
+        (defaultStyle) => savedBuiltIns.get(defaultStyle.id) ?? defaultStyle,
+      ),
+      ...customStyles,
+    ];
+  }
+
   public static LoadLyricSetup_v1(lyricSetup: LyricSetup, l: LyricSetup_v1) {
     lyricSetup.locked = l.locked === true;
     lyricSetup.text = l.text;
@@ -1360,6 +1437,8 @@ export class SaveService {
     header: Header,
     h: Header_v1,
     pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    defaultParagraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
   ) {
     // Currently, headers only support a single element
     const e = h.elements[0];
@@ -1371,7 +1450,8 @@ export class SaveService {
         scoreVersion,
         element,
         e as TextBoxElement_v1,
-        pageSetup,
+        paragraphStyles,
+        defaultParagraphStyleId,
       );
 
       header.elements[0] = element;
@@ -1389,6 +1469,8 @@ export class SaveService {
     footer: Footer,
     f: Footer_v1,
     pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    defaultParagraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
   ) {
     // Currently, footers only support a single element
     const e = f.elements[0];
@@ -1400,7 +1482,8 @@ export class SaveService {
         scoreVersion,
         element,
         e as TextBoxElement_v1,
-        pageSetup,
+        paragraphStyles,
+        defaultParagraphStyleId,
       );
 
       footer.elements[0] = element;
@@ -1445,7 +1528,7 @@ export class SaveService {
   ) {
     element.imageHeight = e.imageHeight;
     element.imageWidth = e.imageWidth;
-    element.alignment = e.alignment;
+    element.alignment = e.alignment ?? null;
     element.data = e.data;
     element.inline = e.inline === true;
     element.lockAspectRatio = e.lockAspectRatio === true;
@@ -1728,9 +1811,57 @@ export class SaveService {
     element: TextBoxElement,
     e: TextBoxElement_v1,
     pageSetup: PageSetup,
+    defaultParagraphStyleId?: string,
+  ): void;
+  public static LoadTextBox_v1(
+    scoreVersion: string,
+    element: TextBoxElement,
+    e: TextBoxElement_v1,
+    paragraphStyles: ParagraphStyle[],
+    defaultParagraphStyleId?: string,
+  ): void;
+  public static LoadTextBox_v1(
+    scoreVersion: string,
+    element: TextBoxElement,
+    e: TextBoxElement_v1,
+    pageSetupOrParagraphStyles: PageSetup | ParagraphStyle[],
+    paragraphStylesOrDefaultParagraphStyleId?: ParagraphStyle[] | string,
+    defaultParagraphStyleId: string = e.inline === true
+      ? BUILT_IN_PARAGRAPH_STYLE_IDS.Verse
+      : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
   ) {
-    element.alignment = e.alignment;
-    element.color = e.color;
+    const paragraphStyles = Array.isArray(pageSetupOrParagraphStyles)
+      ? pageSetupOrParagraphStyles
+      : Array.isArray(paragraphStylesOrDefaultParagraphStyleId)
+        ? paragraphStylesOrDefaultParagraphStyleId
+        : createParagraphStylesFromPageSetup(pageSetupOrParagraphStyles);
+    const legacyCssFontStyle = readLegacyCssFontStyle(
+      (e as TextBoxElement_v1 & LegacyTextBoxCssFontCompatibility).fontStyle,
+    );
+    const resolvedDefaultParagraphStyleId =
+      typeof paragraphStylesOrDefaultParagraphStyleId === 'string'
+        ? paragraphStylesOrDefaultParagraphStyleId
+        : defaultParagraphStyleId;
+    const isParagraphStyleSave = e.paragraphStyleId != null;
+    const hasParagraphStyleOverrides =
+      e.fontFamily != null ||
+      e.fontSubfamily != null ||
+      legacyCssFontStyle != null ||
+      e.bold != null ||
+      e.italic != null ||
+      e.fontSize != null ||
+      e.color != null ||
+      e.strokeWidth != null ||
+      e.lineHeight != null;
+    const usesInheritedParagraphStyle = isParagraphStyleSave
+      ? !hasParagraphStyleOverrides
+      : scoreVersion === '1.0'
+        ? e.inline === true && e.useDefaultStyle === true
+        : e.useDefaultStyle === true;
+
+    element.alignment = e.alignment ?? null;
+    element.paragraphStyleId =
+      e.paragraphStyleId ?? resolvedDefaultParagraphStyleId;
     element.content = e.content;
 
     if (e.multipanel) {
@@ -1744,36 +1875,102 @@ export class SaveService {
     }
 
     element.multipanel = e.multipanel === true;
-
-    const font = loadFontFaceFromToggleFields({
-      savedFontFamily: e.fontFamily,
-      fallbackFontFamily: element.fontFamily,
-      fontSubfamily: e.fontSubfamily,
-      legacyBold: e.bold,
-      legacyItalic: e.italic,
-    });
-    element.fontFamily = font.fontFamily;
-    element.fontSize = e.fontSize;
     element.inline = e.inline === true;
-    element.fontStyle = font.fontStyle;
     element.underline = e.underline === true;
     element.height = e.height;
-    element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
-    element.lineHeight = e.lineHeight ?? pageSetup.textBoxDefaultLineHeight;
     element.customWidth = e.customWidth ?? null;
     element.fillWidth = e.fillWidth === true;
     element.customHeight = e.customHeight ?? null;
-    element.marginTop = e.marginTop ?? 0;
-    element.marginBottom = e.marginBottom ?? 0;
+    element.gapAbove = e.gapAbove ?? e.marginTop ?? null;
+    element.gapBelow = e.gapBelow ?? e.marginBottom ?? null;
+    element.marginTop = element.gapAbove ?? 0;
+    element.marginBottom = element.gapBelow ?? 0;
     element.runningMarkerRole = e.runningMarkerRole ?? null;
     element.runningMarkerText = e.runningMarkerText?.trim() || null;
 
-    if (scoreVersion === '1.0') {
-      // In this version, use default was incorrectly set to true
-      // for non-inline text boxes even though the field was never used
-      element.useDefaultStyle = element.inline && e.useDefaultStyle === true;
-    } else {
-      element.useDefaultStyle = e.useDefaultStyle === true;
+    if (!usesInheritedParagraphStyle) {
+      const savedFontFamily = e.fontFamily?.trim();
+      const hasSavedFontFamily =
+        savedFontFamily != null && savedFontFamily !== '';
+      const savedFontStyle = normalizeSavedFontSubfamily(e.fontSubfamily);
+      const hasLegacyStyleFlags = e.bold != null || e.italic != null;
+      const fallbackParagraphStyle =
+        hasSavedFontFamily ||
+        hasLegacyStyleFlags ||
+        legacyCssFontStyle != null ||
+        !isParagraphStyleSave
+          ? resolveParagraphStyle(paragraphStyles, element.paragraphStyleId)
+          : null;
+      const parsedFace = hasSavedFontFamily
+        ? splitSavedFontFamily(
+            savedFontFamily,
+            fallbackParagraphStyle!.fontFamily,
+          )
+        : null;
+
+      if (parsedFace != null) {
+        element.fontFamily = parsedFace.fontFamily;
+      }
+
+      if (savedFontStyle != null) {
+        element.fontStyle = savedFontStyle;
+      } else if (legacyCssFontStyle != null) {
+        const baseStyle =
+          parsedFace != null && parsedFace.fontStyle !== DEFAULT_FONT_STYLE
+            ? parsedFace.fontStyle
+            : isParagraphStyleSave
+              ? fallbackParagraphStyle!.fontStyle
+              : DEFAULT_FONT_STYLE;
+
+        element.fontStyle = applyAxes(
+          baseStyle,
+          {
+            bold: e.bold || undefined,
+            italic: legacyCssFontStyle !== 'normal',
+          },
+          fontCatalog.getStyles(
+            parsedFace?.fontFamily ?? fallbackParagraphStyle!.fontFamily,
+          ),
+        );
+      } else if (hasLegacyStyleFlags) {
+        const baseStyle =
+          parsedFace != null && parsedFace.fontStyle !== DEFAULT_FONT_STYLE
+            ? parsedFace.fontStyle
+            : isParagraphStyleSave
+              ? fallbackParagraphStyle!.fontStyle
+              : DEFAULT_FONT_STYLE;
+
+        element.fontStyle = applyAxes(
+          baseStyle,
+          { bold: e.bold || undefined, italic: e.italic || undefined },
+          fontCatalog.getStyles(
+            parsedFace?.fontFamily ?? fallbackParagraphStyle!.fontFamily,
+          ),
+        );
+      } else if (
+        parsedFace != null &&
+        parsedFace.fontStyle !== DEFAULT_FONT_STYLE
+      ) {
+        element.fontStyle = parsedFace.fontStyle;
+      } else if (!isParagraphStyleSave) {
+        element.fontStyle = DEFAULT_FONT_STYLE;
+      }
+
+      if (e.fontSize != null) {
+        element.fontSize = e.fontSize;
+      }
+
+      if (e.color != null) {
+        element.color = e.color;
+      }
+
+      if (e.strokeWidth != null) {
+        element.strokeWidth = e.strokeWidth;
+      }
+
+      if (e.lineHeight != null) {
+        element.lineHeight = e.lineHeight;
+      }
     }
   }
 
@@ -1810,7 +2007,17 @@ export class SaveService {
         e.modeChangePermanentEnharmonicZo === true;
     }
 
+    element.color = e.color ?? null;
+    element.fontFamily = e.fontFamily ?? null;
+    element.fontSize = e.fontSize ?? null;
+    element.strokeWidth = e.strokeWidth ?? null;
+    element.fontStyle = e.fontSubfamily ?? null;
+    element.lineHeight = e.lineHeight ?? null;
     element.customWidth = e.customWidth ?? null;
+    element.gapAbove = e.gapAbove ?? e.marginTop ?? null;
+    element.gapBelow = e.gapBelow ?? e.marginBottom ?? null;
+    element.marginTop = element.gapAbove ?? 0;
+    element.marginBottom = element.gapBelow ?? 0;
 
     element.modeChange = e.modeChange === true;
     element.inline = e.inline === true;

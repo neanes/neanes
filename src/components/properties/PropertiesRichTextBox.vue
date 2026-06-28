@@ -9,21 +9,10 @@
         :element="element"
         :fonts="fonts"
         :page-setup="pageSetup"
-        :default-font-color="
-          element.inline
-            ? pageSetup.lyricsDefaultColor
-            : pageSetup.textBoxDefaultColor
-        "
-        :default-font-size="
-          element.inline
-            ? pageSetup.lyricsDefaultFontSize
-            : pageSetup.textBoxDefaultFontSize
-        "
-        :default-font-family="
-          element.inline
-            ? pageSetup.lyricsDefaultFontFamily
-            : pageSetup.textBoxDefaultFontFamily
-        "
+        :paragraph-styles="paragraphStyles"
+        show-edit-styles-button
+        :fallback-paragraph-style="resolvedParagraphStyle"
+        @open-paragraph-styles-dialog="emit('open-paragraph-styles-dialog')"
       />
 
       <FieldSeparator />
@@ -109,36 +98,46 @@
       </FieldGroup>
 
       <Field orientation="horizontal">
-        <FieldLabel for="properties-rich-text-box-margin-top">{{
-          $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
+        <FieldLabel for="properties-rich-text-box-gap-above">{{
+          $t(($) => $.dialog.paragraphStyles.gapAbove, { ns: 'dialog' })
         }}</FieldLabel>
         <InputUnit
-          id="properties-rich-text-box-margin-top"
+          id="properties-rich-text-box-gap-above"
           class="w-28"
           unit="pt"
           :min="0"
           :max="maxHeight"
           :step="0.5"
-          :model-value="element.marginTop"
+          :model-value="element.gapAbove"
           :format-options="fraction1FormatOptions"
-          @update:model-value="updateNumberProperty('marginTop', $event)"
+          @update:model-value="
+            updateElement({
+              gapAbove: $event,
+              marginTop: $event ?? 0,
+            } as Partial<RichTextBoxElement>)
+          "
         />
       </Field>
 
       <Field orientation="horizontal">
-        <FieldLabel for="properties-rich-text-box-margin-bottom">{{
-          $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
+        <FieldLabel for="properties-rich-text-box-gap-below">{{
+          $t(($) => $.dialog.paragraphStyles.gapBelow, { ns: 'dialog' })
         }}</FieldLabel>
         <InputUnit
-          id="properties-rich-text-box-margin-bottom"
+          id="properties-rich-text-box-gap-below"
           class="w-28"
           unit="pt"
           :min="0"
           :max="maxHeight"
           :step="0.5"
-          :model-value="element.marginBottom"
+          :model-value="element.gapBelow"
           :format-options="fraction1FormatOptions"
-          @update:model-value="updateNumberProperty('marginBottom', $event)"
+          @update:model-value="
+            updateElement({
+              gapBelow: $event,
+              marginBottom: $event ?? 0,
+            } as Partial<RichTextBoxElement>)
+          "
         />
       </Field>
 
@@ -407,6 +406,11 @@ import {
   getScaleLabelSelector,
 } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { Scale, ScaleNote } from '@/models/Scales';
 import { fraction1FormatOptions } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
@@ -423,7 +427,6 @@ type NumberRichTextBoxProperty = {
     ? K
     : never;
 }[keyof RichTextBoxElement];
-
 const notes = Object.values(ScaleNote).map((x) => ({
   key: x,
   displayName: getNoteLabelSelector(x),
@@ -447,6 +450,10 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
   source: {
     type: String as PropType<'score' | 'header-footer'>,
     required: true,
@@ -454,6 +461,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits<{
+  'open-paragraph-styles-dialog': [];
   update: [value: Partial<RichTextBoxElement>];
 }>();
 
@@ -462,6 +470,18 @@ const RUNNING_MARKER_NONE_VALUE = '__none__';
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
+const fallbackParagraphStyleId = computed(() =>
+  props.element.inline
+    ? BUILT_IN_PARAGRAPH_STYLE_IDS.Verse
+    : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+);
+const resolvedParagraphStyle = computed(() =>
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    fallbackParagraphStyleId.value,
+    props.element.getParagraphStyleOverrides(),
+  ),
+);
 
 function updateElement(value: Partial<RichTextBoxElement>) {
   emit('update', value);

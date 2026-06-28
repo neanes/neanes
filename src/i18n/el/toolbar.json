@@ -12,6 +12,10 @@
     "insertPelastikon": "Εισαγωγή Πελαστικού",
     "measureBar": "Διαστολή",
     "outline": "Περίγραμμα",
+    "paragraphStyle": "Paragraph Style",
+    "clearOverrides": "Clear Overrides",
+    "overrideStatus": "Overrides",
+    "inherited": "Inherited",
     "spaceAfter": "Διάστημα Μετά",
     "tempoSign": "Σημείο Χρονικής Αγωγής",
     "useDefaultStyle": "Χρήση Προεπιλεγμένης Μορφοποίησης",
@@ -27,6 +31,7 @@
     "marginBottom": "Διάστημα Κάτω",
     "verticalOffset": "Κάθετη Μετατόπιση",
     "none": "Κανένα",
+    "mixed": "Μικτό",
     "inline": "Εντός Γραμμής",
     "neume": "Ποσοτικό Σημείο"
   },

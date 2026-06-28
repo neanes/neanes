@@ -128,13 +128,14 @@ export class PageSetup {
   public dropCapDefaultLineHeight: number | undefined = undefined;
   public dropCapDefaultLineSpan = 1;
 
-  public textBoxDefaultFontFamily = 'Source Serif';
-  public textBoxDefaultFontSize = Unit.fromPt(20);
+  // Deprecated load-only compatibility for pre-paragraph-style text boxes.
+  public textBoxDefaultFontFamily: string | undefined = undefined;
+  public textBoxDefaultFontSize: number | undefined = undefined;
   public textBoxDefaultFontSubfamily: string | undefined = undefined;
   public textBoxDefaultFontStyle: string | undefined = undefined;
   public textBoxDefaultFontWeight: string | undefined = undefined;
-  public textBoxDefaultColor = '#000000';
-  public textBoxDefaultStrokeWidth = 0;
+  public textBoxDefaultColor: string | undefined = undefined;
+  public textBoxDefaultStrokeWidth: number | undefined = undefined;
   public textBoxDefaultLineHeight: number | undefined = undefined;
 
   public hyphenSpacing: number = Unit.fromMm(13.125);

@@ -1,3 +1,4 @@
+import '@ckeditor/ckeditor5-style/dist/index.css';
 import 'ckeditor5/ckeditor5.css';
 
 import {
@@ -31,6 +32,7 @@ import {
   RemoveFormatEditing,
   SelectAllEditing,
   ShiftEnter,
+  Style,
   SubscriptEditing,
   SuperscriptEditing,
   Table,
@@ -110,6 +112,7 @@ InlineEditor.builtinPlugins = [
   RemoveFormatEditing,
   SelectAllEditing,
   ShiftEnter,
+  Style,
   SubscriptEditing,
   SuperscriptEditing,
   Table,

@@ -53,6 +53,8 @@ import {
 } from '@/models/NeumeValues';
 import { Line, Page } from '@/models/Page';
 import type { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { resolveParagraphStyle } from '@/models/ParagraphStyle';
 import {
   getNoteFromValue,
   getNoteValue,
@@ -470,19 +472,69 @@ export class LayoutService {
     // Process Header and Footers
     // Only a single text box is supported right now
     if (score.pageSetup.showHeader) {
-      this.processHeader(score.headers.default, pageSetup, neumeHeight);
-      this.processHeader(score.headers.chapterOpening, pageSetup, neumeHeight);
-      this.processHeader(score.headers.odd, pageSetup, neumeHeight);
-      this.processHeader(score.headers.even, pageSetup, neumeHeight);
-      this.processHeader(score.headers.firstPage, pageSetup, neumeHeight);
+      this.processHeader(
+        score.headers.default,
+        pageSetup,
+        neumeHeight,
+        score.paragraphStyles,
+      );
+      this.processHeader(
+        score.headers.chapterOpening,
+        pageSetup,
+        neumeHeight,
+        score.paragraphStyles,
+      );
+      this.processHeader(
+        score.headers.odd,
+        pageSetup,
+        neumeHeight,
+        score.paragraphStyles,
+      );
+      this.processHeader(
+        score.headers.even,
+        pageSetup,
+        neumeHeight,
+        score.paragraphStyles,
+      );
+      this.processHeader(
+        score.headers.firstPage,
+        pageSetup,
+        neumeHeight,
+        score.paragraphStyles,
+      );
     }
 
     if (score.pageSetup.showFooter) {
-      this.processFooter(score.footers.default, pageSetup, neumeHeight);
-      this.processFooter(score.footers.chapterOpening, pageSetup, neumeHeight);
-      this.processFooter(score.footers.odd, pageSetup, neumeHeight);
-      this.processFooter(score.footers.even, pageSetup, neumeHeight);
-      this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
+      this.processFooter(
+        score.footers.default,
+        pageSetup,
+        neumeHeight,
+        score.paragraphStyles,
+      );
+      this.processFooter(
+        score.footers.chapterOpening,
+        pageSetup,
+        neumeHeight,
+        score.paragraphStyles,
+      );
+      this.processFooter(
+        score.footers.odd,
+        pageSetup,
+        neumeHeight,
+        score.paragraphStyles,
+      );
+      this.processFooter(
+        score.footers.even,
+        pageSetup,
+        neumeHeight,
+        score.paragraphStyles,
+      );
+      this.processFooter(
+        score.footers.firstPage,
+        pageSetup,
+        neumeHeight,
+        score.paragraphStyles,
+      );
     }
 
     // Knuth-Plass requires stretch >= 0 and shrink >= 0. Floor both so
@@ -540,6 +592,7 @@ export class LayoutService {
             textBoxElement,
             pageSetup,
             neumeHeight,
+            score.paragraphStyles,
           );
 
           if (isFillWidthTextBox) {
@@ -4722,6 +4775,7 @@ export class LayoutService {
     header: Header,
     pageSetup: PageSetup,
     neumeHeight: number,
+    paragraphStyles: ParagraphStyle[],
   ) {
     // Currently headers may only contain a single text box.
     // It may be a rich textbox, but we don't need to do any
@@ -4736,6 +4790,7 @@ export class LayoutService {
         element,
         pageSetup,
         neumeHeight,
+        paragraphStyles,
       );
     } else if (
       header.elements.length > 0 &&
@@ -4750,6 +4805,7 @@ export class LayoutService {
     footer: Footer,
     pageSetup: PageSetup,
     neumeHeight: number,
+    paragraphStyles: ParagraphStyle[],
   ) {
     // Currently footers may only contain a single text box.
     // It may be a rich textbox, but we don't need to do any
@@ -4764,6 +4820,7 @@ export class LayoutService {
         element,
         pageSetup,
         neumeHeight,
+        paragraphStyles,
       );
     } else if (
       footer.elements.length > 0 &&
@@ -4778,35 +4835,32 @@ export class LayoutService {
     textBoxElement: TextBoxElement,
     pageSetup: PageSetup,
     neumeHeight: number,
+    paragraphStyles: ParagraphStyle[],
   ) {
     let elementWidthPx = 0;
+    const resolvedParagraphStyle = resolveParagraphStyle(
+      paragraphStyles,
+      textBoxElement.paragraphStyleId,
+      textBoxElement.getParagraphStyleOverrides(),
+    );
 
     if (textBoxElement.inline) {
       const resolvedTextBoxFont = resolveFontStyle(
-        textBoxElement.useDefaultStyle
-          ? pageSetup.lyricsDefaultFontFamily
-          : textBoxElement.fontFamily,
-        textBoxElement.useDefaultStyle
-          ? pageSetup.lyricsDefaultFontStyle
-          : textBoxElement.fontStyle,
+        resolvedParagraphStyle.fontFamily,
+        resolvedParagraphStyle.fontStyle,
       );
 
       textBoxElement.computedFontFamily = resolvedTextBoxFont.cssFontFamily;
 
-      textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultFontSize
-        : textBoxElement.fontSize;
+      textBoxElement.computedFontSize = resolvedParagraphStyle.fontSize;
 
-      textBoxElement.computedColor = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultColor
-        : textBoxElement.color;
+      textBoxElement.computedColor = resolvedParagraphStyle.color;
 
-      textBoxElement.computedStrokeWidth = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultStrokeWidth
-        : textBoxElement.strokeWidth;
+      textBoxElement.computedStrokeWidth = resolvedParagraphStyle.strokeWidth;
 
       textBoxElement.computedFontWeight = resolvedTextBoxFont.cssFontWeight;
       textBoxElement.computedFontStyle = resolvedTextBoxFont.cssFontStyle;
+      textBoxElement.computedAlignment = resolvedParagraphStyle.alignment;
 
       if (textBoxElement.fillWidth) {
         // Width is computed in Phase 2 after line breaking. During Phase 1 we
@@ -4828,35 +4882,29 @@ export class LayoutService {
       elementWidthPx = pageSetup.innerPageWidth;
 
       const resolvedTextBoxFont = resolveFontStyle(
-        textBoxElement.useDefaultStyle
-          ? pageSetup.textBoxDefaultFontFamily
-          : textBoxElement.fontFamily,
-        textBoxElement.useDefaultStyle
-          ? pageSetup.textBoxDefaultFontStyle
-          : textBoxElement.fontStyle,
+        resolvedParagraphStyle.fontFamily,
+        resolvedParagraphStyle.fontStyle,
       );
 
       textBoxElement.computedFontFamily = resolvedTextBoxFont.cssFontFamily;
 
-      textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
-        ? pageSetup.textBoxDefaultFontSize
-        : textBoxElement.fontSize;
+      textBoxElement.computedFontSize = resolvedParagraphStyle.fontSize;
 
-      textBoxElement.computedColor = textBoxElement.useDefaultStyle
-        ? pageSetup.textBoxDefaultColor
-        : textBoxElement.color;
+      textBoxElement.computedColor = resolvedParagraphStyle.color;
 
-      textBoxElement.computedStrokeWidth = textBoxElement.useDefaultStyle
-        ? pageSetup.textBoxDefaultStrokeWidth
-        : textBoxElement.strokeWidth;
+      textBoxElement.computedStrokeWidth = resolvedParagraphStyle.strokeWidth;
 
       textBoxElement.computedFontWeight = resolvedTextBoxFont.cssFontWeight;
       textBoxElement.computedFontStyle = resolvedTextBoxFont.cssFontStyle;
 
-      textBoxElement.computedLineHeight = textBoxElement.useDefaultStyle
-        ? pageSetup.textBoxDefaultLineHeight
-        : textBoxElement.lineHeight;
+      textBoxElement.computedLineHeight = resolvedParagraphStyle.lineHeight;
+      textBoxElement.computedAlignment = resolvedParagraphStyle.alignment;
     }
+
+    textBoxElement.marginTop =
+      textBoxElement.gapAbove ?? textBoxElement.marginTop ?? 0;
+    textBoxElement.marginBottom =
+      textBoxElement.gapBelow ?? textBoxElement.marginBottom ?? 0;
 
     if (textBoxElement.inline) {
       textBoxElement.height = neumeHeight;
@@ -4924,6 +4972,7 @@ export class LayoutService {
       textbox.computedColorPrevious = textbox.computedColor;
       textbox.computedStrokeWidthPrevious = textbox.computedStrokeWidth;
       textbox.computedLineHeightPrevious = textbox.computedLineHeight;
+      textbox.computedAlignmentPrevious = textbox.computedAlignment;
     } else if (element.elementType === ElementType.ModeKey) {
       const modeKey = element as ModeKeyElement;
       modeKey.computedFontFamilyPrevious = modeKey.computedFontFamily;
@@ -5004,7 +5053,8 @@ export class LayoutService {
         textbox.computedFontStylePrevious !== textbox.computedFontStyle ||
         textbox.computedColorPrevious !== textbox.computedColor ||
         textbox.computedStrokeWidthPrevious !== textbox.computedStrokeWidth ||
-        textbox.computedLineHeightPrevious !== textbox.computedLineHeight;
+        textbox.computedLineHeightPrevious !== textbox.computedLineHeight ||
+        textbox.computedAlignmentPrevious !== textbox.computedAlignment;
     }
 
     if (!element.updated && element.elementType === ElementType.RichTextBox) {

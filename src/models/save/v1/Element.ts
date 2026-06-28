@@ -182,6 +182,7 @@ export class EmptyElement extends ScoreElement {
 
 export enum TextBoxAlignment {
   Center = 'center',
+  Justify = 'justify',
   Left = 'left',
   Right = 'right',
 }
@@ -190,16 +191,17 @@ export type RunningMarkerRole = 'chapter' | 'section';
 
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
-  public alignment: TextBoxAlignment = TextBoxAlignment.Left;
-  public color: string = '#000000';
+  public paragraphStyleId: string | undefined = undefined;
+  public alignment: TextBoxAlignment | undefined = undefined;
+  public color: string | undefined = undefined;
   public content: string = '';
   public contentBottom: string = '';
   public contentLeft: string = '';
   public contentCenter: string = '';
   public contentRight: string = '';
-  public fontSize: number = 16;
-  public fontFamily: string = 'Source Serif';
-  public strokeWidth: number = 0;
+  public fontSize: number | undefined = undefined;
+  public fontFamily: string | undefined = undefined;
+  public strokeWidth: number | undefined = undefined;
   public multipanel: boolean | undefined = undefined;
   public inline: boolean | undefined = undefined;
   public fontSubfamily: string | undefined = undefined;
@@ -211,6 +213,8 @@ export class TextBoxElement extends ScoreElement {
   public customWidth: number | undefined = undefined;
   public customHeight: number | undefined = undefined;
   public fillWidth: boolean | undefined = undefined;
+  public gapAbove: number | undefined = undefined;
+  public gapBelow: number | undefined = undefined;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
   public useDefaultStyle: boolean | undefined = undefined;
@@ -238,8 +242,16 @@ export class RichTextBoxElement extends ScoreElement {
   public modeChangeIgnoreAttractions: boolean | undefined = undefined;
   public modeChangePermanentEnharmonicZo: boolean | undefined = undefined;
   public modeChangeBpm: number = 120;
+  public color: string | undefined = undefined;
+  public fontSize: number | undefined = undefined;
+  public fontFamily: string | undefined = undefined;
+  public strokeWidth: number | undefined = undefined;
+  public fontSubfamily: string | undefined = undefined;
+  public lineHeight: number | null | undefined = undefined;
   public height: number = 20;
   public customWidth: number | undefined = undefined;
+  public gapAbove: number | undefined = undefined;
+  public gapBelow: number | undefined = undefined;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
   public offsetYTop: number | undefined = undefined;

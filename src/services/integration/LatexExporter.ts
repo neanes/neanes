@@ -12,6 +12,11 @@ import type { Neume } from '@/models/Neumes';
 import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import type { Page } from '@/models/Page';
 import type { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { resolveRunningMarkerText } from '@/utils/runningMarkers';
@@ -67,6 +72,8 @@ function convertAlignment(alignment: TextBoxAlignment) {
   switch (alignment) {
     case TextBoxAlignment.Center:
       return 'c';
+    case TextBoxAlignment.Justify:
+      return 'l';
     case TextBoxAlignment.Left:
       return 'l';
     case TextBoxAlignment.Right:
@@ -108,6 +115,7 @@ export class LatexExporter {
   public export(
     pages: Page[],
     pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
     options: LatexExporterOptions,
   ) {
     const neumeDescent = TextMeasurementService.getFontBoundingBoxDescent(
@@ -163,9 +171,21 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
       pageSetup.lyricsDefaultFontFamily,
       pageSetup.lyricsDefaultFontStyle,
     );
+    const defaultTextBoxStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    );
+    const verseStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Verse,
+    );
     const defaultTextBoxFont = resolveFontStyle(
-      pageSetup.textBoxDefaultFontFamily,
-      pageSetup.textBoxDefaultFontStyle,
+      defaultTextBoxStyle.fontFamily,
+      defaultTextBoxStyle.fontStyle,
+    );
+    const defaultVerseFont = resolveFontStyle(
+      verseStyle.fontFamily,
+      verseStyle.fontStyle,
     );
 
     const result: LatexScore = {
@@ -188,14 +208,14 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           dropCap: convertFontName(pageSetup.dropCapDefaultFontFamily),
           lyrics: convertFontName(pageSetup.lyricsDefaultFontFamily),
           neume: convertFontName(pageSetup.neumeDefaultFontFamily),
-          textBox: convertFontName(pageSetup.textBoxDefaultFontFamily),
+          textBox: convertFontName(defaultTextBoxStyle.fontFamily),
         },
         fontSizes: {
           dropCap: toPt(pageSetup.dropCapDefaultFontSize),
           lyrics: toPt(pageSetup.lyricsDefaultFontSize),
           modeKey: toPt(pageSetup.modeKeyDefaultFontSize),
           neume: toPt(pageSetup.neumeDefaultFontSize),
-          textBox: toPt(pageSetup.textBoxDefaultFontSize),
+          textBox: toPt(defaultTextBoxStyle.fontSize),
         },
         dropCapDefaultFontWeight:
           defaultDropCapFont.cssFontWeight != '400'
@@ -242,7 +262,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           neume: pageSetup.neumeDefaultColor.substring(1),
           noteIndicator: pageSetup.noteIndicatorDefaultColor.substring(1),
           tempo: pageSetup.tempoDefaultColor.substring(1),
-          textBox: pageSetup.textBoxDefaultColor.substring(1),
+          textBox: defaultTextBoxStyle.color.substring(1),
         },
       },
       sections: [],
@@ -599,17 +619,26 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           ) {
             const textBox = element as TextBoxElement;
             const defaultFontFamily = textBox.inline
-              ? pageSetup.lyricsDefaultFontFamily
-              : pageSetup.textBoxDefaultFontFamily;
+              ? verseStyle.fontFamily
+              : defaultTextBoxStyle.fontFamily;
             const defaultFontSize = textBox.inline
-              ? pageSetup.lyricsDefaultFontSize
-              : pageSetup.textBoxDefaultFontSize;
+              ? verseStyle.fontSize
+              : defaultTextBoxStyle.fontSize;
             const defaultFont = textBox.inline
-              ? defaultLyricsFont
+              ? defaultVerseFont
               : defaultTextBoxFont;
             const defaultColor = textBox.inline
-              ? pageSetup.lyricsDefaultColor
-              : pageSetup.textBoxDefaultColor;
+              ? verseStyle.color
+              : defaultTextBoxStyle.color;
+            const resolvedParagraphStyle = resolveParagraphStyle(
+              paragraphStyles,
+              textBox.paragraphStyleId,
+              textBox.getParagraphStyleOverrides(),
+            );
+            const resolvedTextBoxFont = resolveFontStyle(
+              resolvedParagraphStyle.fontFamily,
+              resolvedParagraphStyle.fontStyle,
+            );
 
             pushExportedElement({
               type: 'textbox',
@@ -617,7 +646,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               width: toPt(textBox.width),
               height: toPt(textBox.height),
               alignment: !textBox.multipanel
-                ? convertAlignment(textBox.alignment)
+                ? convertAlignment(resolvedParagraphStyle.alignment)
                 : undefined,
               inline: textBox.inline || undefined,
               content: textBox.content,
@@ -636,27 +665,24 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? toPt(textBox.marginBottom)
                   : undefined,
               fontFamily:
-                !textBox.useDefaultStyle &&
-                textBox.fontFamily != defaultFontFamily
-                  ? convertFontName(textBox.fontFamily)
+                resolvedParagraphStyle.fontFamily != defaultFontFamily
+                  ? convertFontName(resolvedParagraphStyle.fontFamily)
                   : undefined,
               fontSize:
-                !textBox.useDefaultStyle && textBox.fontSize != defaultFontSize
-                  ? toPt(textBox.fontSize)
+                resolvedParagraphStyle.fontSize != defaultFontSize
+                  ? toPt(resolvedParagraphStyle.fontSize)
                   : undefined,
               fontStyle:
-                !textBox.useDefaultStyle &&
-                textBox.computedFontStyle != defaultFont.cssFontStyle
-                  ? textBox.computedFontStyle
+                resolvedTextBoxFont.cssFontStyle != defaultFont.cssFontStyle
+                  ? resolvedTextBoxFont.cssFontStyle
                   : undefined,
               fontWeight:
-                !textBox.useDefaultStyle &&
-                textBox.computedFontWeight != defaultFont.cssFontWeight
-                  ? textBox.computedFontWeight
+                resolvedTextBoxFont.cssFontWeight != defaultFont.cssFontWeight
+                  ? resolvedTextBoxFont.cssFontWeight
                   : undefined,
               color:
-                !textBox.useDefaultStyle && textBox.color != defaultColor
-                  ? textBox.color.substring(1)
+                resolvedParagraphStyle.color != defaultColor
+                  ? resolvedParagraphStyle.color.substring(1)
                   : undefined,
             } as LatexTextBoxElement);
           }

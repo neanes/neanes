@@ -107,6 +107,7 @@
       @ready="onEditorReady"
       @select-neume="emit('select-neume')"
     />
+    <component :is="'style'">{{ paragraphStyleCss }}</component>
   </div>
 </template>
 
@@ -130,6 +131,11 @@ import type InlineEditor from '@/customEditor';
 import type { RichTextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import type { TokenMetadata, TokenScope } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
@@ -163,6 +169,10 @@ const props = defineProps({
   },
   fonts: {
     type: Array as PropType<string[]>,
+    required: true,
+  },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
   editMode: {
@@ -254,6 +264,42 @@ const contentLanguage = computed(() => {
   return language == null ? 'en' : getRichTextLanguageCode(language);
 });
 
+const fallbackParagraphStyleId = computed(() =>
+  props.element.inline
+    ? BUILT_IN_PARAGRAPH_STYLE_IDS.Verse
+    : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+);
+
+const resolvedParagraphStyle = computed(() =>
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    fallbackParagraphStyleId.value,
+    props.element.getParagraphStyleOverrides(),
+  ),
+);
+
+const paragraphStyleDefinitions = computed(() =>
+  props.paragraphStyles.map((style) => ({
+    name: style.id,
+    element: 'p',
+    classes: [`neanes-style-${style.id}`],
+  })),
+);
+
+const paragraphStyleCss = computed(() =>
+  props.paragraphStyles
+    .map((style) => {
+      const resolved = resolveParagraphStyle(props.paragraphStyles, style.id);
+      return `.ck-content p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
+        resolved.fontFamily,
+        props.pageSetup.neumeDefaultFontFamily + 'Legacy',
+      )};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${
+        resolved.lineHeight ?? 'normal'
+      };}`;
+    })
+    .join('\n'),
+);
+
 const editorConfig = computed((): EditorConfig => {
   const fontSizeOptions: FontSizeOption[] = [];
 
@@ -291,15 +337,14 @@ const editorConfig = computed((): EditorConfig => {
       content: contentLanguage.value,
       textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
     },
+    style: {
+      definitions: paragraphStyleDefinitions.value,
+    },
     licenseKey: 'GPL',
     insertNeume: {
       neumeDefaultFontFamily: props.pageSetup.neumeDefaultFontFamily,
-      defaultFontSize: props.element.inline
-        ? props.pageSetup.lyricsDefaultFontSize
-        : props.pageSetup.textBoxDefaultFontSize,
-      defaultFontFamily: props.element.inline
-        ? props.pageSetup.lyricsDefaultFontFamily
-        : props.pageSetup.textBoxDefaultFontFamily,
+      defaultFontSize: resolvedParagraphStyle.value.fontSize,
+      defaultFontFamily: resolvedParagraphStyle.value.fontFamily,
     },
   };
 });
@@ -382,7 +427,7 @@ function getFontSizeInPt(value: unknown) {
 function getMinimumFontSizeInEditor(editor: Editor) {
   const sizes: number[] = [];
 
-  sizes.push(Unit.toPt(props.pageSetup.textBoxDefaultFontSize));
+  sizes.push(Unit.toPt(resolvedParagraphStyle.value.fontSize));
 
   const selectedFontSize = getSelectedFontSize(editor);
 
@@ -408,23 +453,18 @@ function getMinimumFontSizeInEditor(editor: Editor) {
 }
 
 const containerStyle = computed(() => {
-  const defaultFontFamily = props.element.inline
-    ? props.pageSetup.lyricsDefaultFontFamily
-    : props.pageSetup.textBoxDefaultFontFamily;
   const style: StyleValue = {
     width: withZoom(props.element.width),
     height: withZoom(props.element.height),
     '--ck-content-font-family': getFontFamilyWithFallback(
-      defaultFontFamily,
+      resolvedParagraphStyle.value.fontFamily,
       props.pageSetup.neumeDefaultFontFamily + 'Legacy', // TODO what a terrible hack
     ),
     '--ck-content-font-size': props.element.inline
-      ? `${props.pageSetup.lyricsDefaultFontSize}px`
+      ? `${resolvedParagraphStyle.value.fontSize}px`
       : ckContentFontSize.value, // no zoom because we will apply zooming on the whole editor
-    '--ck-content-font-color': props.element.inline
-      ? props.pageSetup.lyricsDefaultColor
-      : props.pageSetup.textBoxDefaultColor,
-    '--ck-content-line-height': 'normal',
+    '--ck-content-font-color': resolvedParagraphStyle.value.color,
+    '--ck-content-line-height': `${resolvedParagraphStyle.value.lineHeight ?? 'normal'}`,
   };
 
   return style;
@@ -514,7 +554,7 @@ watch(
 );
 
 watch(
-  () => props.pageSetup.textBoxDefaultFontSize,
+  () => resolvedParagraphStyle.value.fontSize,
   () => {
     refreshCkContentFontSize();
   },
@@ -567,7 +607,7 @@ function phoneHome(height: number) {
   emit('update:height', height);
 }
 
-const ckContentFontSize = ref(`${props.pageSetup.textBoxDefaultFontSize}px`);
+const ckContentFontSize = ref(`${resolvedParagraphStyle.value.fontSize}px`);
 
 function getMinimumFontSizeInActiveEditors() {
   const activeEditors = getActiveEditorInstances().filter(
@@ -575,7 +615,7 @@ function getMinimumFontSizeInActiveEditors() {
   );
 
   if (activeEditors.length === 0) {
-    return `${props.pageSetup.textBoxDefaultFontSize}px`;
+    return `${resolvedParagraphStyle.value.fontSize}px`;
   }
 
   const minimumSizes = activeEditors.map((editor) =>

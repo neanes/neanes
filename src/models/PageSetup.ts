@@ -193,13 +193,6 @@ export class PageSetup {
   public dropCapDefaultLineHeight: number | null = null;
   public dropCapDefaultLineSpan = 1;
 
-  public textBoxDefaultFontFamily = 'Source Serif';
-  public textBoxDefaultFontSize = Unit.fromPt(20);
-  public textBoxDefaultFontStyle = DEFAULT_FONT_STYLE;
-  public textBoxDefaultColor = '#000000';
-  public textBoxDefaultStrokeWidth = 0;
-  public textBoxDefaultLineHeight: number | null = null;
-
   public hyphenSpacing: number = Unit.fromMm(13.125);
   public minimumSyllableToHyphenClearance: number = Unit.fromMm(3.5);
 

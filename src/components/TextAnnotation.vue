@@ -38,6 +38,11 @@ import RichTextEditor from '@/components/RichTextEditor.vue';
 import type InlineEditor from '@/customEditor';
 import type { AnnotationElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import {
   applyRichTextLanguageToEditor,
@@ -64,6 +69,10 @@ const props = defineProps({
   },
   fonts: {
     type: Array as PropType<string[]>,
+    required: true,
+  },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
   editorLanguage: {
@@ -108,17 +117,24 @@ const contentLanguage = computed(() => {
   return language == null ? 'en' : getRichTextLanguageCode(language);
 });
 
+const annotationStyle = computed(() =>
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+  ),
+);
+
 const style = computed(() => {
   return {
     left: withZoom(elementX.value),
     top: withZoom(elementY.value),
     '--ck-content-font-family': getFontFamilyWithFallback(
-      props.pageSetup.textBoxDefaultFontFamily,
+      annotationStyle.value.fontFamily,
       props.pageSetup.neumeDefaultFontFamily + 'Legacy', // TODO what a terrible hack
     ),
-    '--ck-content-font-size': `${props.pageSetup.lyricsDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
-    '--ck-content-font-color': props.pageSetup.textBoxDefaultColor,
-    '--ck-content-line-height': 'normal',
+    '--ck-content-font-size': `${annotationStyle.value.fontSize}px`, // no zoom because we will apply zooming on the whole editor
+    '--ck-content-font-color': annotationStyle.value.color,
+    '--ck-content-line-height': annotationStyle.value.lineHeight ?? 'normal',
   };
 });
 
@@ -162,8 +178,8 @@ const editorConfig = computed((): EditorConfig => {
     licenseKey: 'GPL',
     insertNeume: {
       neumeDefaultFontFamily: props.pageSetup.neumeDefaultFontFamily,
-      defaultFontSize: props.pageSetup.lyricsDefaultFontSize,
-      defaultFontFamily: props.pageSetup.textBoxDefaultFontFamily,
+      defaultFontSize: annotationStyle.value.fontSize,
+      defaultFontFamily: annotationStyle.value.fontFamily,
     },
   };
 });

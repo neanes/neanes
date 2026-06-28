@@ -1,6 +1,40 @@
 <template>
   <div ref="panelRoot" class="contents">
     <Field>
+      <div class="mb-2 flex items-center justify-between gap-2">
+        <FieldLabel :for="`${idPrefix}-paragraph-style`">{{
+          $t(($) => $.toolbar.common.paragraphStyle, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <Button
+          v-if="showEditStylesButton"
+          type="button"
+          variant="ghost"
+          size="sm"
+          @click="$emit('open-paragraph-styles-dialog')"
+        >
+          {{ $t(($) => $.dialog.paragraphStyles.openDialog, { ns: 'dialog' }) }}
+        </Button>
+      </div>
+      <ParagraphStyleSelect
+        :id="`${idPrefix}-paragraph-style`"
+        trigger-class="w-full"
+        :model-value="paragraphStyleSelectValue"
+        :paragraph-styles="paragraphStyleOptions"
+        :disabled="!isCommandEnabled('style')"
+        :disabled-style-ids="disabledParagraphStyleIds"
+        :show-none-option="showParagraphStyleNoneOption"
+        :show-mixed-option="paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE"
+        rich-text-portal
+        @update:model-value="onParagraphStyleSelectChanged"
+        @update:open="
+          $event
+            ? beginSelectionGuard(element)
+            : endSelectionGuard(element, { refocus: true })
+        "
+      />
+    </Field>
+
+    <Field>
       <div class="flex min-h-6 items-center justify-between gap-2">
         <FieldLabel :for="`${idPrefix}-font`">{{
           $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' })
@@ -134,7 +168,7 @@
           :disabled="!isCommandEnabled('fontSize')"
           nullable
           :placeholder="fontSizePlaceholder"
-          :default-value="defaultFontSize"
+          :default-value="resolvedActiveParagraphStyle.fontSize"
           @update:model-value="onFontSizeChanged"
           @focus-within="beginSelectionGuard(element)"
           @blur-within="endSelectionGuard(element, { refocus: false })"
@@ -821,6 +855,7 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -841,8 +876,8 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
-  execForOwner,
-  useActiveEditorForOwner,
+  execForActiveOrLastOwner,
+  useActiveOrLastEditorForOwner,
   useEditorCommandObservableState,
 } from '@/composables/useRichTextEditorRegistry';
 import {
@@ -850,7 +885,10 @@ import {
   beginSelectionGuard,
   endSelectionGuard,
 } from '@/composables/useRichTextSelectionGuard';
-import { useRichTextStyleCommands } from '@/composables/useRichTextStyleCommands';
+import {
+  PARAGRAPH_STYLE_MIXED_VALUE,
+  useRichTextStyleCommands,
+} from '@/composables/useRichTextStyleCommands';
 import { supportedLocales } from '@/i18n';
 import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
 import {
@@ -859,6 +897,10 @@ import {
 } from '@/models/NeumeI18nMappings';
 import { Note, RootSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
+import type {
+  ParagraphStyle,
+  ResolvedParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
 import { fraction3FormatOptions } from '@/utils/numberFormatOptions';
@@ -872,14 +914,21 @@ const props = defineProps<{
   element: AnnotationElement | RichTextBoxElement;
   fonts: string[];
   pageSetup: PageSetup;
-  defaultFontColor: string;
-  defaultFontSize: number;
-  defaultFontFamily: string;
+  paragraphStyles: ParagraphStyle[];
+  showEditStylesButton?: boolean;
+  fallbackParagraphStyle: ResolvedParagraphStyle;
+}>();
+
+defineEmits<{
+  'open-paragraph-styles-dialog': [];
 }>();
 
 const {
   fontFamilyValue,
   fontFamilyOptions,
+  paragraphStyleValue,
+  paragraphStyleOptions,
+  resolvedActiveParagraphStyle,
   fontStyleValue,
   fontStyleOptions,
   fontStyleDisabled,
@@ -892,8 +941,10 @@ const {
   isCommandEnabled,
   isCommandActive,
   isStyleToggleEnabled,
+  isParagraphStyleEnabled,
   commandValue,
   runCommand,
+  onParagraphStyleChanged,
   onFontFamilyChanged,
   onFontStyleChanged,
   onFontSizeChanged,
@@ -913,7 +964,7 @@ const {
 
 const { t } = useTranslation();
 
-const scopedEditor = useActiveEditorForOwner(() => props.element);
+const scopedEditor = useActiveOrLastEditorForOwner(() => props.element);
 
 // Keep the editor logically focused while focus is in this panel or the shared
 // dropdown portal, and show the selection marker while a styling control is
@@ -943,6 +994,14 @@ const languageOptions = computed(() =>
       language.title,
     value: `${language.languageCode}:${language.textDirection}`,
   })),
+);
+
+const showParagraphStyleNoneOption = computed(() => true);
+const paragraphStyleSelectValue = computed(() => paragraphStyleValue.value);
+const disabledParagraphStyleIds = computed(() =>
+  paragraphStyleOptions.value
+    .filter((style) => !isParagraphStyleEnabled(style.id))
+    .map((style) => style.id),
 );
 
 const POSITION_COMMAND_NAMES = ['subscript', 'superscript'] as const;
@@ -1025,6 +1084,12 @@ const capsOptions = computed(() => [
     label: t(($) => $.toolbar.richTextBox.caseAllSmallCaps, { ns: 'toolbar' }),
   },
 ]);
+
+function onParagraphStyleSelectChanged(value: AcceptableValue) {
+  if (typeof value === 'string') {
+    onParagraphStyleChanged(value);
+  }
+}
 
 function applyNumericVariant(variant: NumericVariant) {
   const value = composeNumericVariant(variant);
@@ -1296,7 +1361,11 @@ function updateNeumeAttributes(
     return;
   }
 
-  execForOwner(props.element, UPDATE_NEUME_ATTRIBUTES_COMMAND, attributes);
+  execForActiveOrLastOwner(
+    props.element,
+    UPDATE_NEUME_ATTRIBUTES_COMMAND,
+    attributes,
+  );
 }
 
 function neumeFieldId(fieldName: string) {

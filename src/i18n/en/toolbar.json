@@ -12,6 +12,10 @@
     "insertPelastikon": "Insert Pelastikon",
     "measureBar": "Measure Bar",
     "outline": "Outline",
+    "paragraphStyle": "Paragraph Style",
+    "clearOverrides": "Clear Overrides",
+    "overrideStatus": "Overrides",
+    "inherited": "Inherited",
     "spaceAfter": "Space After",
     "tempoSign": "Tempo Sign",
     "useDefaultStyle": "Use Default Style",
@@ -27,6 +31,7 @@
     "marginBottom": "Gap Below",
     "verticalOffset": "Vertical Offset",
     "none": "None",
+    "mixed": "Mixed",
     "inline": "Inline",
     "neume": "Neume"
   },

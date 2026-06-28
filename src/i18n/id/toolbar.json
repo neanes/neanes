@@ -12,6 +12,10 @@
     "insertPelastikon": "Sisipkan Pelastikon",
     "measureBar": "Garis Birama",
     "outline": "Garis Luar",
+    "paragraphStyle": "Paragraph Style",
+    "clearOverrides": "Clear Overrides",
+    "overrideStatus": "Overrides",
+    "inherited": "Inherited",
     "spaceAfter": "Ruang Setelah",
     "tempoSign": "Tanda Tempo",
     "useDefaultStyle": "Gunakan Gaya Default",
@@ -27,6 +31,7 @@
     "marginBottom": "Celah Bawah",
     "verticalOffset": "Offset Vertikal",
     "none": "Tidak Ada",
+    "mixed": "Campuran",
     "inline": "Sebaris",
     "neume": "Neuma"
   },

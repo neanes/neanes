@@ -166,6 +166,12 @@ export function useActiveEditorForOwner(
   return computed(() => getActiveEditorForOwner(toValue(owner)));
 }
 
+export function useActiveOrLastEditorForOwner(
+  owner: MaybeRefOrGetter<object | null | undefined>,
+) {
+  return computed(() => resolveActiveOrLastEditorForOwner(toValue(owner)));
+}
+
 /**
  * Resolve the editor for an owner, preferring the currently active editor but falling
  * back to the last one that was active for that owner. Used by the selection guard so
@@ -197,6 +203,21 @@ export function execForOwner(
   ...args: unknown[]
 ) {
   const editor = getActiveEditorForOwner(owner);
+
+  if (editor == null) {
+    return false;
+  }
+
+  editor.execute(commandName, ...args);
+  return true;
+}
+
+export function execForActiveOrLastOwner(
+  owner: object | null | undefined,
+  commandName: string,
+  ...args: unknown[]
+) {
+  const editor = resolveActiveOrLastEditorForOwner(owner);
 
   if (editor == null) {
     return false;
@@ -364,6 +385,8 @@ function watchEditorCommandStates(
       return;
     }
 
+    const syncCallbacks: Array<() => void> = [];
+
     for (const [commandName, state] of stateEntries) {
       const command = editor.commands.get(commandName);
 
@@ -373,6 +396,7 @@ function watchEditorCommandStates(
 
       const propertyNames = propertyNamesByCommand[commandName] ?? [];
       const syncAll = () => syncCommandState(command, state, propertyNames);
+      syncCallbacks.push(syncAll);
 
       syncAll();
       listenToObservablePropertyChange(command, 'value', syncAll, addCleanup);
@@ -392,6 +416,25 @@ function watchEditorCommandStates(
         );
       }
     }
+
+    const syncSelectionDrivenStates = () => {
+      for (const sync of syncCallbacks) {
+        sync();
+      }
+    };
+
+    listenToEditorEvent(
+      editor.model.document.selection,
+      'change:range',
+      syncSelectionDrivenStates,
+      addCleanup,
+    );
+    listenToEditorEvent(
+      editor.model.document.selection,
+      'change:attribute',
+      syncSelectionDrivenStates,
+      addCleanup,
+    );
   });
 }
 

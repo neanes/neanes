@@ -4,8 +4,15 @@ import {
   DropCapElement,
   NoteElement,
   RichTextBoxElement,
+  TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  createParagraphStylesFromDefaults,
+  ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { PageSetup } from '@/models/PageSetup';
 import {
   DropCapElement as DropCapElement_v1,
@@ -19,12 +26,47 @@ import { getRichTextLanguage } from '@/utils/richTextLanguage';
 
 import { SaveService } from './SaveService';
 
+function createLegacyScore(pageSetupOverrides: Partial<PageSetup_v1> = {}) {
+  return {
+    version: '1.1',
+    appVersion: 'test',
+    pageSetup: Object.assign(new PageSetup_v1(), pageSetupOverrides),
+    headers: {
+      default: { elements: [new TextBoxElement_v1()] },
+      chapterOpening: { elements: [new TextBoxElement_v1()] },
+      even: { elements: [new TextBoxElement_v1()] },
+      odd: { elements: [new TextBoxElement_v1()] },
+      firstPage: { elements: [new TextBoxElement_v1()] },
+    },
+    footers: {
+      default: { elements: [new TextBoxElement_v1()] },
+      chapterOpening: { elements: [new TextBoxElement_v1()] },
+      even: { elements: [new TextBoxElement_v1()] },
+      odd: { elements: [new TextBoxElement_v1()] },
+      firstPage: { elements: [new TextBoxElement_v1()] },
+    },
+    staff: { elements: [], lyrics: { text: '' } },
+  } as any;
+}
+
+function loadLegacyDefaultTextStyle(
+  pageSetupOverrides: Partial<PageSetup_v1> = {},
+) {
+  const score = SaveService.LoadScoreFromJson(createLegacyScore(pageSetupOverrides));
+
+  return resolveParagraphStyle(
+    score.paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+  );
+}
+
 describe('SaveService font styles', () => {
   it('loads legacy text box bold/italic booleans as a font style', () => {
     const pageSetup = new PageSetup();
     const element = new TextBoxElement();
     const legacy = new TextBoxElement_v1();
 
+    legacy.useDefaultStyle = false;
     legacy.bold = true;
     legacy.italic = true;
 
@@ -43,10 +85,13 @@ describe('SaveService font styles', () => {
     legacy.textBoxDefaultFontStyle = 'italic';
 
     SaveService.LoadPageSetup_v1(pageSetup, legacy);
+    const defaultTextStyle = loadLegacyDefaultTextStyle({
+      textBoxDefaultFontStyle: 'italic',
+    });
 
     expect(pageSetup.dropCapDefaultFontStyle).toBe('Bold Italic');
     expect(pageSetup.lyricsDefaultFontStyle).toBe('Semibold');
-    expect(pageSetup.textBoxDefaultFontStyle).toBe('Italic');
+    expect(defaultTextStyle.fontStyle).toBe('Italic');
   });
 
   it('loads legacy page setup face names as base families and styles', () => {
@@ -58,13 +103,16 @@ describe('SaveService font styles', () => {
     legacy.textBoxDefaultFontFamily = 'Minion Pro Semibold';
 
     SaveService.LoadPageSetup_v1(pageSetup, legacy);
+    const defaultTextStyle = loadLegacyDefaultTextStyle({
+      textBoxDefaultFontFamily: 'Minion Pro Semibold',
+    });
 
     expect(pageSetup.lyricsDefaultFontFamily).toBe('Minion Pro');
     expect(pageSetup.lyricsDefaultFontStyle).toBe('Semibold');
     expect(pageSetup.dropCapDefaultFontFamily).toBe('Minion Pro');
     expect(pageSetup.dropCapDefaultFontStyle).toBe('Semibold');
-    expect(pageSetup.textBoxDefaultFontFamily).toBe('Minion Pro');
-    expect(pageSetup.textBoxDefaultFontStyle).toBe('Semibold');
+    expect(defaultTextStyle.fontFamily).toBe('Minion Pro');
+    expect(defaultTextStyle.fontStyle).toBe('Semibold');
   });
 
   it('merges legacy page setup numeric weights into face-name styles', () => {
@@ -75,9 +123,13 @@ describe('SaveService font styles', () => {
     legacy.textBoxDefaultFontWeight = '600';
 
     SaveService.LoadPageSetup_v1(pageSetup, legacy);
+    const defaultTextStyle = loadLegacyDefaultTextStyle({
+      textBoxDefaultFontFamily: 'Source Serif Caption',
+      textBoxDefaultFontWeight: '600',
+    });
 
-    expect(pageSetup.textBoxDefaultFontFamily).toBe('Source Serif');
-    expect(pageSetup.textBoxDefaultFontStyle).toBe('Caption Semibold');
+    expect(defaultTextStyle.fontFamily).toBe('Source Serif');
+    expect(defaultTextStyle.fontStyle).toBe('Caption Semibold');
   });
 
   it('remaps legacy numeric weights to the catalog face spelling', () => {
@@ -88,8 +140,12 @@ describe('SaveService font styles', () => {
     legacy.textBoxDefaultFontWeight = '200';
 
     SaveService.LoadPageSetup_v1(pageSetup, legacy);
+    const defaultTextStyle = loadLegacyDefaultTextStyle({
+      textBoxDefaultFontFamily: 'Source Serif',
+      textBoxDefaultFontWeight: '200',
+    });
 
-    expect(pageSetup.textBoxDefaultFontStyle).toBe('ExtraLight');
+    expect(defaultTextStyle.fontStyle).toBe('ExtraLight');
   });
 
   it('loads legacy lyrics weight/style pairs as a font style', () => {
@@ -136,6 +192,7 @@ describe('SaveService font styles', () => {
     const element = new TextBoxElement();
     const legacy = new TextBoxElement_v1();
 
+    legacy.useDefaultStyle = false;
     legacy.fontFamily = 'Minion Pro Semibold';
 
     SaveService.LoadTextBox_v1('1.1', element, legacy, pageSetup);
@@ -160,16 +217,20 @@ describe('SaveService font styles', () => {
     dropCapSave.fontSubfamily = 'Semibold';
     noteSave.lyricsUseDefaultStyle = false;
     noteSave.lyricsFontSubfamily = 'Bold Italic';
+    textBoxSave.useDefaultStyle = false;
     textBoxSave.fontSubfamily = 'Caption Semibold';
 
     SaveService.LoadPageSetup_v1(pageSetup, pageSetupSave);
     SaveService.LoadDropCap_v1(dropCap, dropCapSave, pageSetup);
     SaveService.LoadNote_v1(note, noteSave);
     SaveService.LoadTextBox_v1('1.1', textBox, textBoxSave, pageSetup);
+    const defaultTextStyle = loadLegacyDefaultTextStyle({
+      textBoxDefaultFontSubfamily: 'Bold Italic',
+    });
 
     expect(pageSetup.lyricsDefaultFontStyle).toBe('Semibold');
     expect(pageSetup.dropCapDefaultFontStyle).toBe('Caption');
-    expect(pageSetup.textBoxDefaultFontStyle).toBe('Bold Italic');
+    expect(defaultTextStyle.fontStyle).toBe('Bold Italic');
     expect(dropCap.fontStyle).toBe('Semibold');
     expect(note.lyricsFontStyle).toBe('Bold Italic');
     expect(textBox.fontStyle).toBe('Caption Semibold');
@@ -201,6 +262,476 @@ describe('SaveService font styles', () => {
     expect(element.textDirection).toBe('rtl');
   });
 
+  it('assigns built-in style ids when loading legacy text boxes', () => {
+    const pageSetup = new PageSetup();
+    const body = new TextBoxElement();
+    const inline = new TextBoxElement();
+    const legacyBody = new TextBoxElement_v1();
+    const legacyInline = new TextBoxElement_v1();
+
+    legacyInline.inline = true;
+
+    SaveService.LoadTextBox_v1('1.1', body, legacyBody, pageSetup);
+    SaveService.LoadTextBox_v1('1.1', inline, legacyInline, pageSetup);
+
+    expect(body.paragraphStyleId).toBe('default-text');
+    expect(inline.paragraphStyleId).toBe('verse');
+  });
+
+  it('loads old scores without paragraphStyles by seeding defaults', () => {
+    const legacy = {
+      version: '1.1',
+      appVersion: 'test',
+      pageSetup: new PageSetup_v1(),
+      headers: {
+        default: { elements: [new TextBoxElement_v1()] },
+        chapterOpening: { elements: [new TextBoxElement_v1()] },
+        even: { elements: [new TextBoxElement_v1()] },
+        odd: { elements: [new TextBoxElement_v1()] },
+        firstPage: { elements: [new TextBoxElement_v1()] },
+      },
+      footers: {
+        default: { elements: [new TextBoxElement_v1()] },
+        chapterOpening: { elements: [new TextBoxElement_v1()] },
+        even: { elements: [new TextBoxElement_v1()] },
+        odd: { elements: [new TextBoxElement_v1()] },
+        firstPage: { elements: [new TextBoxElement_v1()] },
+      },
+      staff: { elements: [], lyrics: { text: '' } },
+    } as any;
+
+    const loaded = SaveService.LoadScoreFromJson(legacy);
+
+    expect(loaded.paragraphStyles.length).toBeGreaterThan(0);
+  });
+
+  it('fills missing built-in paragraph styles when only custom styles are saved', () => {
+    const saved = createLegacyScore();
+    const customStyle = new ParagraphStyle();
+
+    customStyle.id = 'custom-style';
+    customStyle.displayName = 'Custom Style';
+    customStyle.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    customStyle.overrides.fontSize = 99;
+
+    saved.paragraphStyles = [SaveService.SaveParagraphStyle(customStyle)];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const builtInIds = Object.values(BUILT_IN_PARAGRAPH_STYLE_IDS);
+
+    expect(loaded.paragraphStyles.slice(0, builtInIds.length).map((style) => style.id))
+      .toEqual(builtInIds);
+    expect(loaded.paragraphStyles.at(-1)?.id).toBe('custom-style');
+  });
+
+  it('fills missing built-in paragraph styles when only one built-in style is saved', () => {
+    const saved = createLegacyScore();
+    const titleStyle = new ParagraphStyle();
+
+    titleStyle.id = BUILT_IN_PARAGRAPH_STYLE_IDS.Title;
+    titleStyle.displayName = 'Custom Title';
+    titleStyle.builtIn = true;
+    titleStyle.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    titleStyle.overrides.fontSize = 77;
+
+    saved.paragraphStyles = [SaveService.SaveParagraphStyle(titleStyle)];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const builtInIds = Object.values(BUILT_IN_PARAGRAPH_STYLE_IDS);
+
+    expect(loaded.paragraphStyles.slice(0, builtInIds.length).map((style) => style.id))
+      .toEqual(builtInIds);
+    expect(
+      resolveParagraphStyle(
+        loaded.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
+      ).fontSize,
+    ).toBe(77);
+  });
+
+  it('fills a missing default-text style from legacy page setup text box defaults', () => {
+    const saved = createLegacyScore({
+      textBoxDefaultFontFamily: 'Minion Pro Semibold',
+      textBoxDefaultFontStyle: 'italic',
+      textBoxDefaultFontSize: 42,
+      textBoxDefaultColor: '#123456',
+      textBoxDefaultStrokeWidth: 3,
+      textBoxDefaultLineHeight: 1.7,
+    });
+    const chapterStyle = new ParagraphStyle();
+
+    chapterStyle.id = BUILT_IN_PARAGRAPH_STYLE_IDS.Chapter;
+    chapterStyle.displayName = 'Chapter';
+    chapterStyle.builtIn = true;
+    chapterStyle.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+
+    saved.paragraphStyles = [SaveService.SaveParagraphStyle(chapterStyle)];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const defaultTextStyle = resolveParagraphStyle(
+      loaded.paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    );
+
+    expect(defaultTextStyle.fontFamily).toBe('Minion Pro');
+    expect(defaultTextStyle.fontStyle).toBe('Semibold Italic');
+    expect(defaultTextStyle.fontSize).toBe(42);
+    expect(defaultTextStyle.color).toBe('#123456');
+    expect(defaultTextStyle.strokeWidth).toBe(3);
+    expect(defaultTextStyle.lineHeight).toBe(1.7);
+  });
+
+  it('keeps a saved built-in paragraph style instead of overwriting it with generated defaults', () => {
+    const saved = createLegacyScore({
+      textBoxDefaultFontFamily: 'Source Serif',
+      textBoxDefaultFontStyle: 'italic',
+      textBoxDefaultFontSize: 42,
+    });
+    const defaultTextStyle = new ParagraphStyle();
+
+    defaultTextStyle.id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    defaultTextStyle.displayName = 'Default Text';
+    defaultTextStyle.builtIn = true;
+    defaultTextStyle.overrides.fontFamily = 'Alegreya';
+    defaultTextStyle.overrides.fontSize = 64;
+    defaultTextStyle.overrides.fontStyle = 'Semibold';
+
+    saved.paragraphStyles = [SaveService.SaveParagraphStyle(defaultTextStyle)];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const resolvedDefaultText = resolveParagraphStyle(
+      loaded.paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    );
+
+    expect(resolvedDefaultText.fontFamily).toBe('Alegreya');
+    expect(resolvedDefaultText.fontSize).toBe(64);
+    expect(resolvedDefaultText.fontStyle).toBe('Semibold');
+  });
+
+  it('preserves legacy non-default text box styling as element overrides', () => {
+    const pageSetup = new PageSetup();
+    const element = new TextBoxElement();
+    const legacy = new TextBoxElement_v1();
+
+    legacy.useDefaultStyle = false;
+    legacy.fontFamily = 'Minion Pro';
+    legacy.fontSubfamily = 'Semibold';
+    legacy.fontSize = 18;
+    legacy.color = '#123456';
+    legacy.strokeWidth = 2;
+    legacy.lineHeight = 1.5;
+
+    SaveService.LoadTextBox_v1('1.1', element, legacy, pageSetup);
+
+    expect(element.fontFamily).toBe('Minion Pro');
+    expect(element.fontStyle).toBe('Semibold');
+    expect(element.fontSize).toBe(18);
+    expect(element.color).toBe('#123456');
+    expect(element.strokeWidth).toBe(2);
+    expect(element.lineHeight).toBe(1.5);
+  });
+
+  it('keeps a legacy regular font style as an explicit override', () => {
+    const pageSetup = new PageSetup();
+    const paragraphStyles = createParagraphStylesFromDefaults(pageSetup, {
+      textBoxDefaultFontStyle: 'Italic',
+    });
+    const element = new TextBoxElement();
+    const legacy = new TextBoxElement_v1();
+
+    legacy.useDefaultStyle = false;
+    legacy.fontSubfamily = 'Regular';
+
+    SaveService.LoadTextBox_v1('1.1', element, legacy, paragraphStyles);
+
+    expect(element.fontStyle).toBe('Regular');
+    expect(
+      resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        element.getParagraphStyleOverrides(),
+      ).fontStyle,
+    ).toBe('Regular');
+  });
+
+  it('defaults legacy non-default text boxes to an explicit regular override', () => {
+    const pageSetup = new PageSetup();
+    const paragraphStyles = createParagraphStylesFromDefaults(pageSetup, {
+      textBoxDefaultFontStyle: 'Italic',
+    });
+    const element = new TextBoxElement();
+    const legacy = new TextBoxElement_v1();
+
+    legacy.useDefaultStyle = false;
+
+    SaveService.LoadTextBox_v1('1.1', element, legacy, paragraphStyles);
+
+    expect(element.paragraphStyleId).toBe('default-text');
+    expect(element.fontStyle).toBe('Regular');
+    expect(
+      resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        element.getParagraphStyleOverrides(),
+      ).fontStyle,
+    ).toBe('Regular');
+  });
+
+  it('keeps legacy css normal font style as an explicit regular override', () => {
+    const pageSetup = new PageSetup();
+    const paragraphStyles = createParagraphStylesFromDefaults(pageSetup, {
+      textBoxDefaultFontStyle: 'Italic',
+    });
+    const element = new TextBoxElement();
+    const legacy = new TextBoxElement_v1() as TextBoxElement_v1 & {
+      fontStyle?: string;
+    };
+
+    legacy.useDefaultStyle = false;
+    legacy.fontStyle = 'normal';
+
+    SaveService.LoadTextBox_v1('1.1', element, legacy, paragraphStyles);
+
+    expect(element.fontStyle).toBe('Regular');
+    expect(
+      resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        element.getParagraphStyleOverrides(),
+      ).fontStyle,
+    ).toBe('Regular');
+  });
+
+  it('keeps legacy css italic font style as an explicit italic override', () => {
+    const pageSetup = new PageSetup();
+    const paragraphStyles = createParagraphStylesFromDefaults(pageSetup, {
+      textBoxDefaultFontStyle: 'Regular',
+    });
+    const element = new TextBoxElement();
+    const legacy = new TextBoxElement_v1() as TextBoxElement_v1 & {
+      fontStyle?: string;
+    };
+
+    legacy.useDefaultStyle = false;
+    legacy.fontStyle = 'italic';
+
+    SaveService.LoadTextBox_v1('1.1', element, legacy, paragraphStyles);
+
+    expect(element.fontStyle).toBe('Italic');
+    expect(
+      resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        element.getParagraphStyleOverrides(),
+      ).fontStyle,
+    ).toBe('Italic');
+  });
+
+  it('combines legacy css font style with bold text box flags', () => {
+    const pageSetup = new PageSetup();
+    const paragraphStyles = createParagraphStylesFromDefaults(pageSetup, {
+      textBoxDefaultFontStyle: 'Italic',
+    });
+    const normalBold = new TextBoxElement();
+    const italicBold = new TextBoxElement();
+    const legacyNormalBold = new TextBoxElement_v1() as TextBoxElement_v1 & {
+      fontStyle?: string;
+    };
+    const legacyItalicBold = new TextBoxElement_v1() as TextBoxElement_v1 & {
+      fontStyle?: string;
+    };
+
+    legacyNormalBold.useDefaultStyle = false;
+    legacyNormalBold.fontStyle = 'normal';
+    legacyNormalBold.bold = true;
+    legacyItalicBold.useDefaultStyle = false;
+    legacyItalicBold.fontStyle = 'italic';
+    legacyItalicBold.bold = true;
+
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      normalBold,
+      legacyNormalBold,
+      paragraphStyles,
+    );
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      italicBold,
+      legacyItalicBold,
+      paragraphStyles,
+    );
+
+    expect(normalBold.fontStyle).toBe('Bold');
+    expect(italicBold.fontStyle).toBe('Bold Italic');
+  });
+
+  it('preserves legacy non-default text box styling when false was omitted', () => {
+    const pageSetup = new PageSetup();
+    const element = new TextBoxElement();
+    const legacy = new TextBoxElement_v1();
+
+    legacy.fontFamily = 'Minion Pro';
+    legacy.fontSubfamily = 'Semibold';
+    legacy.fontSize = 18;
+    legacy.color = '#123456';
+    legacy.strokeWidth = 2;
+    legacy.lineHeight = 1.5;
+
+    SaveService.LoadTextBox_v1('1.1', element, legacy, pageSetup);
+
+    expect(element.fontFamily).toBe('Minion Pro');
+    expect(element.fontStyle).toBe('Semibold');
+    expect(element.fontSize).toBe(18);
+    expect(element.color).toBe('#123456');
+    expect(element.strokeWidth).toBe(2);
+    expect(element.lineHeight).toBe(1.5);
+  });
+
+  it('loads only saved legacy text box overrides', () => {
+    const pageSetup = new PageSetup();
+    const element = new TextBoxElement();
+    const legacy = new TextBoxElement_v1();
+
+    legacy.useDefaultStyle = false;
+    legacy.fontSize = 18;
+
+    SaveService.LoadTextBox_v1('1.1', element, legacy, pageSetup);
+
+    expect(element.fontFamily).toBeNull();
+    expect(element.fontStyle).toBe('Regular');
+    expect(element.fontSize).toBe(18);
+    expect(element.color).toBeNull();
+    expect(element.strokeWidth).toBeNull();
+    expect(element.lineHeight).toBeNull();
+  });
+
+  it('keeps legacy default-styled text boxes inherited', () => {
+    const pageSetup = new PageSetup();
+    const paragraphStyles = createParagraphStylesFromDefaults(pageSetup, {
+      textBoxDefaultFontFamily: 'Minion Pro',
+      textBoxDefaultFontSize: 42,
+      textBoxDefaultFontStyle: 'Semibold',
+      textBoxDefaultColor: '#654321',
+      textBoxDefaultStrokeWidth: 3,
+      textBoxDefaultLineHeight: 1.7,
+    });
+    const element = new TextBoxElement();
+    const legacy = new TextBoxElement_v1();
+
+    legacy.useDefaultStyle = true;
+    legacy.fontFamily = 'Source Serif';
+    legacy.fontSize = 16;
+    legacy.color = '#000000';
+    legacy.strokeWidth = 0;
+
+    SaveService.LoadTextBox_v1('1.1', element, legacy, paragraphStyles);
+
+    expect(element.fontFamily).toBeNull();
+    expect(element.fontSize).toBeNull();
+    expect(element.fontStyle).toBeNull();
+    expect(element.strokeWidth).toBeNull();
+    expect(element.color).toBeNull();
+    expect(element.lineHeight).toBeNull();
+  });
+
+  it('loads saved paragraph-style text box overrides without useDefaultStyle', () => {
+    const pageSetup = new PageSetup();
+    const element = new TextBoxElement();
+    const saved = new TextBoxElement_v1();
+
+    saved.paragraphStyleId = 'title';
+    saved.fontFamily = 'Minion Pro';
+    saved.fontSubfamily = 'Semibold';
+    saved.fontSize = 18;
+    saved.color = '#123456';
+    saved.strokeWidth = 2;
+    saved.lineHeight = 1.5;
+
+    SaveService.LoadTextBox_v1('1.2', element, saved, pageSetup);
+
+    expect(element.paragraphStyleId).toBe('title');
+    expect(element.fontFamily).toBe('Minion Pro');
+    expect(element.fontStyle).toBe('Semibold');
+    expect(element.fontSize).toBe(18);
+    expect(element.color).toBe('#123456');
+    expect(element.strokeWidth).toBe(2);
+    expect(element.lineHeight).toBe(1.5);
+  });
+
+  it('loads only saved paragraph-style text box overrides', () => {
+    const pageSetup = new PageSetup();
+    const element = new TextBoxElement();
+    const saved = new TextBoxElement_v1();
+
+    saved.paragraphStyleId = 'title';
+    saved.fontSize = 18;
+
+    SaveService.LoadTextBox_v1('1.2', element, saved, pageSetup);
+
+    expect(element.paragraphStyleId).toBe('title');
+    expect(element.fontFamily).toBeNull();
+    expect(element.fontStyle).toBeNull();
+    expect(element.fontSize).toBe(18);
+    expect(element.color).toBeNull();
+    expect(element.strokeWidth).toBeNull();
+    expect(element.lineHeight).toBeNull();
+  });
+
+  it('keeps saved paragraph-style text boxes inherited when no overrides exist', () => {
+    const pageSetup = new PageSetup();
+    const element = new TextBoxElement();
+    const saved = new TextBoxElement_v1();
+
+    saved.paragraphStyleId = 'title';
+
+    SaveService.LoadTextBox_v1('1.2', element, saved, pageSetup);
+
+    expect(element.paragraphStyleId).toBe('title');
+    expect(element.fontFamily).toBeNull();
+    expect(element.fontSize).toBeNull();
+    expect(element.fontStyle).toBeNull();
+    expect(element.strokeWidth).toBeNull();
+    expect(element.color).toBeNull();
+    expect(element.lineHeight).toBeNull();
+  });
+
+  it('saves and loads paragraph-style alignment', () => {
+    const style = new ParagraphStyle();
+    style.id = 'custom';
+    style.displayName = 'Custom';
+    style.overrides.alignment = TextBoxAlignment.Right;
+
+    const saved = SaveService.SaveParagraphStyle(style);
+    const loaded = SaveService.LoadParagraphStyle_v1(saved);
+
+    expect(saved.alignment).toBe(TextBoxAlignment.Right);
+    expect(loaded.overrides.alignment).toBe(TextBoxAlignment.Right);
+  });
+
+  it('defaults missing text-box alignment to the paragraph style', () => {
+    const pageSetup = new PageSetup();
+    const element = new TextBoxElement();
+    const saved = new TextBoxElement_v1();
+    const paragraphStyles = [new ParagraphStyle()];
+
+    paragraphStyles[0].id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    paragraphStyles[0].overrides.alignment = TextBoxAlignment.Center;
+    saved.paragraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    saved.alignment = undefined;
+
+    SaveService.LoadTextBox_v1('1.2', element, saved, pageSetup);
+
+    expect(element.alignment).toBeNull();
+    expect(
+      resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        element.getParagraphStyleOverrides(),
+      ).alignment,
+    ).toBe(TextBoxAlignment.Center);
+  });
+
   it('saves rich text language fields instead of legacy rtl', () => {
     const element = new RichTextBoxElement();
     const saved = new RichTextBoxElement_v1();
@@ -215,6 +746,15 @@ describe('SaveService font styles', () => {
     expect((saved as RichTextBoxElement_v1 & { rtl?: boolean }).rtl).toBe(
       undefined,
     );
+  });
+
+  it('does not save an object-level paragraph style for rich text boxes', () => {
+    const element = new RichTextBoxElement();
+    const saved = new RichTextBoxElement_v1();
+
+    SaveService.SaveRichTextBox(saved, element);
+
+    expect('paragraphStyleId' in saved).toBe(false);
   });
 
   it('saves document properties and omits default chapter-opening headers/footers flag', () => {

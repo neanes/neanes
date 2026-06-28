@@ -34,6 +34,10 @@ import {
   measureBarAboveToLeft,
   measureBarLeftToAbove,
 } from './NeumeReplacements';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyleOverrides,
+} from './ParagraphStyle';
 import { Scale, ScaleNote } from './Scales';
 
 export enum ElementType {
@@ -831,6 +835,7 @@ export class EmptyElement extends ScoreElement {
 
 export enum TextBoxAlignment {
   Center = 'center',
+  Justify = 'justify',
   Left = 'left',
   Right = 'right',
 }
@@ -839,22 +844,24 @@ export type RunningMarkerRole = 'chapter' | 'section';
 
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
-  public alignment: TextBoxAlignment = TextBoxAlignment.Left;
-  public color: string = '#000000';
+  public paragraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  public alignment: TextBoxAlignment | null = null;
+  public color: string | null = null;
   public content: string = '';
   public contentBottom: string = '';
   public contentLeft: string = '';
   public contentCenter: string = '';
   public contentRight: string = '';
-  public fontSize: number = 16;
-  public fontFamily: string = 'Source Serif';
-  public strokeWidth: number = 0;
+  public fontSize: number | null = null;
+  public fontFamily: string | null = null;
+  public strokeWidth: number | null = null;
   public multipanel: boolean = false;
   public inline: boolean = false;
-  public fontStyle: string = DEFAULT_FONT_STYLE;
+  public fontStyle: string | null = null;
   public underline: boolean = false;
   public lineHeight: number | null = null;
-  public useDefaultStyle: boolean = true;
+  public gapAbove: number | null = null;
+  public gapBelow: number | null = null;
   public height: number = 20;
   public customWidth: number | null = null;
   public customHeight: number | null = null;
@@ -872,6 +879,7 @@ export class TextBoxElement extends ScoreElement {
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
   public computedLineHeight: number | null = null;
+  public computedAlignment: TextBoxAlignment = TextBoxAlignment.Left;
   public minHeight: number = 10;
 
   // Re-render helpers
@@ -883,6 +891,7 @@ export class TextBoxElement extends ScoreElement {
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
   public computedLineHeightPrevious: number | null = null;
+  public computedAlignmentPrevious: TextBoxAlignment = TextBoxAlignment.Left;
 
   public get computedFont() {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
@@ -898,6 +907,7 @@ export class TextBoxElement extends ScoreElement {
 
   public getClipboardProperties() {
     return {
+      paragraphStyleId: this.paragraphStyleId,
       alignment: this.alignment,
       color: this.color,
       content: this.content,
@@ -916,7 +926,8 @@ export class TextBoxElement extends ScoreElement {
       inline: this.inline,
       fontStyle: this.fontStyle,
       underline: this.underline,
-      useDefaultStyle: this.useDefaultStyle,
+      gapAbove: this.gapAbove,
+      gapBelow: this.gapBelow,
       multipanel: this.multipanel,
       runningMarkerRole: this.runningMarkerRole,
       runningMarkerText: this.runningMarkerText,
@@ -927,6 +938,18 @@ export class TextBoxElement extends ScoreElement {
     const format = this.getClipboardProperties();
     delete format.content;
     return format;
+  }
+
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
+    return {
+      fontFamily: this.fontFamily ?? undefined,
+      fontSize: this.fontSize ?? undefined,
+      fontStyle: this.fontStyle ?? undefined,
+      color: this.color ?? undefined,
+      strokeWidth: this.strokeWidth ?? undefined,
+      lineHeight: this.lineHeight ?? undefined,
+      alignment: this.alignment ?? undefined,
+    };
   }
 }
 
@@ -950,6 +973,14 @@ export class RichTextBoxElement extends ScoreElement {
   public modeChangeIgnoreAttractions: boolean = false;
   public modeChangePermanentEnharmonicZo: boolean = false;
   public modeChangeBpm: number = 120;
+  public color: string | null = null;
+  public fontSize: number | null = null;
+  public fontFamily: string | null = null;
+  public strokeWidth: number | null = null;
+  public fontStyle: string | null = null;
+  public lineHeight: number | null = null;
+  public gapAbove: number | null = null;
+  public gapBelow: number | null = null;
 
   public height: number = 20;
   public customWidth: number | null = null;
@@ -998,9 +1029,28 @@ export class RichTextBoxElement extends ScoreElement {
       modeChangeIgnoreAttractions: this.modeChangeIgnoreAttractions,
       modeChangePermanentEnharmonicZo: this.modeChangePermanentEnharmonicZo,
       modeChangeBpm: this.modeChangeBpm,
+      color: this.color,
+      fontSize: this.fontSize,
+      fontFamily: this.fontFamily,
+      strokeWidth: this.strokeWidth,
+      fontStyle: this.fontStyle,
+      lineHeight: this.lineHeight,
+      gapAbove: this.gapAbove,
+      gapBelow: this.gapBelow,
       runningMarkerRole: this.runningMarkerRole,
       runningMarkerText: this.runningMarkerText,
     } as Partial<RichTextBoxElement>;
+  }
+
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
+    return {
+      fontFamily: this.fontFamily ?? undefined,
+      fontSize: this.fontSize ?? undefined,
+      fontStyle: this.fontStyle ?? undefined,
+      color: this.color ?? undefined,
+      strokeWidth: this.strokeWidth ?? undefined,
+      lineHeight: this.lineHeight ?? undefined,
+    };
   }
 }
 

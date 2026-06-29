@@ -933,10 +933,7 @@ export class SaveService {
       legacyFontWeight: s.pageSetup.lyricsDefaultFontWeight,
       legacyCssFontStyle: s.pageSetup.lyricsDefaultFontStyle,
     });
-    const savedTextStyles =
-      s.textStyles ??
-      (s as Score_v1 & { paragraphStyles?: TextStyle_v1[] }).paragraphStyles ??
-      [];
+    const savedTextStyles = s.textStyles ?? [];
     const defaultTextStyles = createTextStylesFromDefaults(score.pageSetup, {
       textBoxDefaultColor: s.pageSetup.textBoxDefaultColor,
       textBoxDefaultFontFamily: legacyTextBoxDefaultFont.fontFamily,

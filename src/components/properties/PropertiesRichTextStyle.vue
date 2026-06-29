@@ -828,9 +828,9 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import TextStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import TextStyleResetButton from '@/components/properties/TextStyleResetButton.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
+import TextStyleSelect from '@/components/TextStyleSelect.vue';
 import { Button } from '@/components/ui/button';
 import {
   Field,

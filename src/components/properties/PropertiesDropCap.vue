@@ -249,8 +249,8 @@ import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import TextStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import TextStyleResetButton from '@/components/properties/TextStyleResetButton.vue';
+import TextStyleSelect from '@/components/TextStyleSelect.vue';
 import { Button } from '@/components/ui/button';
 import {
   Field,

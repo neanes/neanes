@@ -361,10 +361,10 @@ import AppTooltip from '@/components/AppTooltip.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
-import TextStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import RichTextPopoverContent from '@/components/RichTextPopoverContent.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import RichTextToolbarItem from '@/components/RichTextToolbarItem.vue';
+import TextStyleSelect from '@/components/TextStyleSelect.vue';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger } from '@/components/ui/popover';
 import {

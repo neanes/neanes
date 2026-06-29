@@ -68,7 +68,7 @@ import { computed } from 'vue';
 import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
-import TextStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import TextStyleSelect from '@/components/TextStyleSelect.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Toolbar, ToolbarSeparator } from '@/components/ui/toolbar';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';

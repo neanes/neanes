@@ -116,7 +116,7 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import NeumeIcon from '@/components/NeumeIcon.vue';
-import TextStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import TextStyleSelect from '@/components/TextStyleSelect.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Toolbar,

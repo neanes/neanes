@@ -51,7 +51,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from './ui/select';
+} from './ui/select/index.js';
 
 const props = defineProps({
   id: {

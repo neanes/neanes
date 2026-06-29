@@ -195,8 +195,8 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import TextStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import TextStyleResetButton from '@/components/properties/TextStyleResetButton.vue';
+import TextStyleSelect from '@/components/TextStyleSelect.vue';
 import { Button } from '@/components/ui/button';
 import {
   Field,

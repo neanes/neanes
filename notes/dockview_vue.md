@@ -55,7 +55,7 @@ workspace dark. The wrapper exposes a
 deliberately tiny contract to the host:
 
 - **Props:** `paneVisibility: WorkspacePaneVisibility` (the _desired_ visibility map)
-  and `paneLayoutResetCounter: number` (a monotonically-incrementing reset trigger).
+  and `layoutResetCounter: number` (a monotonically-incrementing reset trigger).
 - **Emit:** `pane-visibility-change(paneId, isVisible)` -- fired whenever Dockview's
   own state changes (a drag, the header buttons, the context menu).
 
@@ -580,22 +580,25 @@ Blink honors a trailing `break-after` on them and emits a blank final page.
 
 ## 5. State ownership: what is persisted, and the menu sync
 
-### 5.1 The layout is not persisted -- it is reconstructed
+### 5.1 The layout is editor-global environment state
 
-There is **no serialization of the dock layout or pane visibility anywhere** -- no
-`api.toJSON()`/`fromJSON()`, no `localStorage` key, no field on the `Workspace`
-model. On every launch the layout is built programmatically from
-`workspacePaneDefinitions` (`initializeLayout` -> `ensureCenterEditorPanel` +
-`ensureEdgeGroup` per edge + `addToolPane` per pane), and `paneVisibility` is seeded
-from `createDefaultPaneVisibility()` -- so only the neume selector is open at start.
-Pane positions, sizes, float state, and the `lastDockedEdgeByPanelId` memory all
-reset. This is a deliberate simplicity: the layout is _editor-session_ state derived
-from one declarative source, not document state to be saved with the score.
+Dockview's full layout JSON is not serialized with `api.toJSON()`/`fromJSON()`, and
+pane state is still not part of the `Workspace` model or score file. Instead,
+`TheEditor.vue` persists a small editor-global `editorEnvironment` record in
+`localStorage`. That record stores the pieces of layout state the editor owns:
+pane visibility, home edge/floating state for panes that differ from defaults, pane
+accordion sections, status-bar visibility, and zoom defaults.
 
-Consistent with this, lyrics-pane visibility is simply `paneVisibility.lyrics` --
-editor-global like every other pane, not a per-workspace field. The serialized
-per-workspace record (`WorkspaceLocalStorage`, the blob written to `localStorage`)
-carries no pane state at all.
+On launch the dock is still built programmatically from `workspacePaneDefinitions`
+(`initializeLayout` -> `ensureCenterEditorPanel` + `ensureEdgeGroup` per edge +
+`addToolPane` per pane). After construction, the saved `editorEnvironment.paneLayout`
+is applied to move/show/hide/float panes. If there is no saved pane layout,
+`paneVisibility` is seeded from `createDefaultPaneVisibility()`.
+
+Consistent with this, lyrics-pane visibility is simply persisted as part of the
+editor environment -- editor-global like every other pane, not a per-workspace field.
+The serialized per-workspace record (`WorkspaceLocalStorage`, the blob written to
+`localStorage`) carries no pane state at all.
 
 ### 5.2 One layout shared across all workspaces
 
@@ -607,18 +610,18 @@ session, not of any document.
 
 ### 5.3 The menu sync (the one cross-process channel)
 
-The only persistence-like wiring is keeping the OS application menu's checkboxes in
+The cross-process state wiring keeps the OS application menu's checkboxes in
 agreement with the renderer. The native **View** menu (built in
 `electron/main/index.ts`) holds one checkbox per pane plus "Reset Layout," and a
 lyrics entry with a `CmdOrCtrl+L` accelerator. The browser build's `FileMenuBar.vue`
 mirrors this menu with `MenubarCheckboxItem`s.
 Three IPC channels carry the state:
 
-| Channel                       | Direction        | Payload                        | Purpose                                        |
-| ----------------------------- | ---------------- | ------------------------------ | ---------------------------------------------- |
-| `FileMenuViewPaneVisibility`  | main -> renderer | `{ paneId, visible? }`         | a menu click; `visible` omitted = toggle       |
-| `FileMenuViewResetPaneLayout` | main -> renderer | --                             | the Reset Layout item                          |
-| `SetWorkspacePaneVisibility`  | renderer -> main | full `WorkspacePaneVisibility` | push authoritative state to re-sync checkboxes |
+| Channel                      | Direction        | Payload                        | Purpose                                        |
+| ---------------------------- | ---------------- | ------------------------------ | ---------------------------------------------- |
+| `FileMenuViewPaneVisibility` | main -> renderer | `{ paneId, visible? }`         | a menu click; `visible` omitted = toggle       |
+| `FileMenuViewResetLayout`    | main -> renderer | --                             | the Reset Layout item                          |
+| `SetWorkspacePaneVisibility` | renderer -> main | full `WorkspacePaneVisibility` | push authoritative state to re-sync checkboxes |
 
 The defining pattern (section 2.8) is that **the menu never trusts its own optimistic
 toggle**: the checkbox handler reverts `menuItem.checked` to the last-known value and
@@ -626,9 +629,10 @@ defers to the renderer, which applies the change and echoes the real state back 
 `SetWorkspacePaneVisibility` -> `syncPaneMenuItems`. The main process keeps a runtime
 shadow `paneMenuVisibility` only so checkboxes survive a menu rebuild (e.g. on
 language change); it is never written to disk and is lost on quit. `Reset Layout`
-sends `FileMenuViewResetPaneLayout` -> `resetLayout()`, which bumps
-`paneLayoutResetCounter`; the dock's watcher restores every pane to its home edge and
-index and re-applies default visibility.
+sends `FileMenuViewResetLayout` -> `resetLayout()`, which clears persisted editor
+layout state, resets zoom defaults, and bumps `layoutResetCounter`; the dock's
+watcher restores every pane to its home edge and index and re-applies default
+visibility.
 
 ---
 
@@ -712,7 +716,7 @@ The subsystem spans these files, grouped by concern.
 
 - `src/components/TheEditor.vue` -- the three zones; the `inspectorContext` computed;
   the `updateXxx` handlers and the `Partial<Element>` -> command pipeline;
-  `paneVisibility` / `paneLayoutResetCounter` / `setPaneVisibility` / `resetLayout` /
+  `paneVisibility` / `layoutResetCounter` / `setPaneVisibility` / `resetLayout` /
   `onPaneVisibilityChange`; the pane IPC handlers and the `SetWorkspacePaneVisibility`
   menu-sync emit; `isEditorShortcutIgnored`.
 
@@ -737,7 +741,7 @@ The subsystem spans these files, grouped by concern.
 - `src/components/FileMenuBar.vue` -- the browser View menu (parallel
   `MenubarCheckboxItem`s + Reset Layout).
 - `src/ipc/ipcChannels.ts` -- `FileMenuViewPaneVisibility`,
-  `FileMenuViewResetPaneLayout`, `SetWorkspacePaneVisibility`, and
+  `FileMenuViewResetLayout`, `SetWorkspacePaneVisibility`, and
   `FileMenuViewPaneVisibilityArgs`.
 - `src/App.vue` -- the print rule hiding stray teleport anchors.
 - `src/i18n/*/menu.json`, `toolbar.json` -- the `menu.view.*` pane titles and the

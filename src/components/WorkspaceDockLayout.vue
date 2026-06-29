@@ -45,6 +45,7 @@ import {
 } from 'vue';
 
 import { TooltipProvider } from '@/components/ui/tooltip';
+import type { EditorPaneLayout } from '@/models/EditorEnvironment';
 import type {
   MenuSelector,
   WorkspacePaneId,
@@ -86,7 +87,8 @@ interface PaneContentParams {
 
 const props = defineProps<{
   developerPaneEnabled: boolean;
-  paneLayoutResetCounter: number;
+  layoutResetCounter: number;
+  paneLayout: EditorPaneLayout | null;
   paneVisibility: WorkspacePaneVisibility;
 }>();
 const emit = defineEmits<{
@@ -95,6 +97,7 @@ const emit = defineEmits<{
     paneId: WorkspacePaneId,
     isVisible: boolean,
   ): void;
+  (event: 'layout-change', layout: EditorPaneLayout): void;
 }>();
 
 type DockDropEvent =
@@ -523,6 +526,31 @@ function requireDockviewPanel(api: DockviewApi, panelId: string) {
   return panel;
 }
 
+function paneHasDockviewPanel(definition: PaneDefinition) {
+  return definition.paneId !== 'developer' || props.developerPaneEnabled;
+}
+
+// All non-developer panes are permanent Dockview panels after initialization.
+// The developer pane is the only pane whose panel may be absent at runtime.
+function activePaneDefinitions() {
+  return paneRegistry.panes.filter(paneHasDockviewPanel);
+}
+
+function getPaneLayoutEdge(
+  definition: PaneDefinition,
+  layout: EditorPaneLayout | null = props.paneLayout,
+) {
+  const edge = layout?.[definition.paneId]?.edge;
+
+  return edge != null && definition.allowedEdges.includes(edge)
+    ? edge
+    : definition.homeEdge;
+}
+
+function shouldRestorePaneAsFloating(state: EditorPaneLayout[WorkspacePaneId]) {
+  return state?.floating === true && state.visible;
+}
+
 function resolvePane(panelId: string): ResolvedPane | null {
   const api = dockviewApi.value;
   const definition = findPaneDefinition(panelId);
@@ -768,13 +796,12 @@ function addToolPane(
   centerPanel.api.setActive();
 }
 
-function syncDeveloperPanePresence(enabled: boolean, api: DockviewApi) {
-  const developerPane = paneRegistry.byId.get('workspace-developer');
-
-  if (developerPane == null) {
-    return;
-  }
-
+function syncDeveloperPanePresence(
+  enabled: boolean,
+  api: DockviewApi,
+  restoreSavedLayout = false,
+) {
+  const developerPane = requirePaneDefinition('workspace-developer');
   const existingPanel = api.getPanel(developerPane.id);
 
   if (!enabled) {
@@ -789,12 +816,18 @@ function syncDeveloperPanePresence(enabled: boolean, api: DockviewApi) {
     return;
   }
 
-  addToolPane(
-    developerPane,
-    api,
-    ensureCenterEditorPanel(api),
-    developerPane.homeEdge,
-  );
+  const targetEdge = restoreSavedLayout
+    ? getPaneLayoutEdge(developerPane)
+    : developerPane.homeEdge;
+
+  addToolPane(developerPane, api, ensureCenterEditorPanel(api), targetEdge);
+
+  if (
+    restoreSavedLayout &&
+    shouldRestorePaneAsFloating(props.paneLayout?.developer)
+  ) {
+    floatPane(requireDockviewPanel(api, developerPane.id), api);
+  }
 }
 
 function activateSiblingPane(group: DockviewGroupPanel, panelId: string) {
@@ -896,18 +929,13 @@ function showPane(panelId: string, emitChange = true) {
   emitPaneVisibilityChange(definition.paneId, true, emitChange);
 }
 
-function computePaneVisibility(): WorkspacePaneVisibility {
+function computePaneVisibility(api: DockviewApi): WorkspacePaneVisibility {
   const visibility = createAllHiddenPaneVisibility();
-  const api = dockviewApi.value;
 
-  if (api == null) {
-    return visibility;
-  }
+  activePaneDefinitions().forEach((definition) => {
+    const panel = requireDockviewPanel(api, definition.id);
 
-  paneRegistry.panes.forEach((definition) => {
-    const panel = api.getPanel(definition.id);
-
-    if (panel == null || !isPanelVisible(panel.id, panel.group)) {
+    if (!isPanelVisible(panel.id, panel.group)) {
       return;
     }
 
@@ -919,8 +947,8 @@ function computePaneVisibility(): WorkspacePaneVisibility {
 
 let lastEmittedPaneVisibility: WorkspacePaneVisibility | null = null;
 
-function emitPaneVisibilityState() {
-  const visibility = computePaneVisibility();
+function emitPaneVisibilityState(api: DockviewApi) {
+  const visibility = computePaneVisibility(api);
   const previousVisibility = lastEmittedPaneVisibility;
   lastEmittedPaneVisibility = visibility;
 
@@ -936,14 +964,53 @@ function emitPaneVisibilityState() {
   });
 }
 
-function scheduleVisibilityStateEmit() {
+function captureLayoutState(api: DockviewApi): EditorPaneLayout {
+  const layout: EditorPaneLayout = { ...props.paneLayout };
+
+  activePaneDefinitions().forEach((definition) => {
+    const panel = requireDockviewPanel(api, definition.id);
+    const visible = isPanelVisible(panel.id, panel.group);
+
+    layout[definition.paneId] = {
+      visible,
+      edge:
+        getGroupEdge(panel.group) ??
+        lastDockedEdgeByPanelId.get(panel.id) ??
+        definition.homeEdge,
+      floating: visible && panel.api.location.type === 'floating',
+    };
+  });
+
+  return layout;
+}
+
+let lastEmittedPaneLayoutJson: string | null = null;
+
+function emitLayoutState(api: DockviewApi) {
+  const layout = captureLayoutState(api);
+  const layoutJson = JSON.stringify(layout);
+
+  if (lastEmittedPaneLayoutJson === layoutJson) {
+    return;
+  }
+
+  lastEmittedPaneLayoutJson = layoutJson;
+  emit('layout-change', layout);
+}
+
+function markLayoutStateCurrent(api: DockviewApi) {
+  lastEmittedPaneLayoutJson = JSON.stringify(captureLayoutState(api));
+}
+
+function scheduleVisibilityStateEmit(api: DockviewApi) {
   if (paneStateAnimationFrame !== 0) {
     return;
   }
 
   paneStateAnimationFrame = requestAnimationFrame(() => {
     paneStateAnimationFrame = 0;
-    emitPaneVisibilityState();
+    emitPaneVisibilityState(api);
+    emitLayoutState(api);
   });
 }
 
@@ -969,49 +1036,46 @@ function disposeGroupStateListeners(groupId: string) {
   paneStateGroupDisposables.delete(groupId);
 }
 
-function watchGroupState(group: DockviewGroupPanel) {
+function watchGroupState(group: DockviewGroupPanel, api: DockviewApi) {
   if (paneStateGroupDisposables.has(group.id)) {
     return;
   }
 
   paneStateGroupDisposables.set(group.id, [
-    group.api.onDidActivePanelChange(() => scheduleVisibilityStateEmit()),
-    group.api.onDidCollapsedChange(() => scheduleVisibilityStateEmit()),
-    group.api.onDidLocationChange(() => scheduleVisibilityStateEmit()),
+    group.api.onDidActivePanelChange(() => scheduleVisibilityStateEmit(api)),
+    group.api.onDidCollapsedChange(() => scheduleVisibilityStateEmit(api)),
+    group.api.onDidLocationChange(() => scheduleVisibilityStateEmit(api)),
   ]);
 }
 
 function installStateListeners(api: DockviewApi) {
   disposeStateListeners();
 
-  api.groups.forEach((group) => watchGroupState(group));
+  api.groups.forEach((group) => watchGroupState(group, api));
   paneStateApiDisposables.push(
     api.onDidAddGroup((group) => {
-      watchGroupState(group);
-      scheduleVisibilityStateEmit();
+      watchGroupState(group, api);
+      scheduleVisibilityStateEmit(api);
     }),
     api.onDidRemoveGroup((group) => {
       disposeGroupStateListeners(group.id);
-      scheduleVisibilityStateEmit();
+      scheduleVisibilityStateEmit(api);
     }),
     api.onDidMovePanel((event) => {
       rememberPanelCurrentOrPreviousDockedEdge(event.panel, event.from);
-      scheduleVisibilityStateEmit();
+      scheduleVisibilityStateEmit(api);
     }),
-    api.onDidActivePanelChange(() => scheduleVisibilityStateEmit()),
+    api.onDidActivePanelChange(() => scheduleVisibilityStateEmit(api)),
   );
 }
 
-function applyPaneVisibility(visibility: WorkspacePaneVisibility) {
-  const api = dockviewApi.value;
+function applyPaneVisibility(
+  visibility: WorkspacePaneVisibility,
+  api: DockviewApi,
+) {
+  syncDeveloperPanePresence(props.developerPaneEnabled, api, true);
 
-  if (api == null) {
-    return;
-  }
-
-  syncDeveloperPanePresence(props.developerPaneEnabled, api);
-
-  const visibleAtStart = computePaneVisibility();
+  const visibleAtStart = computePaneVisibility(api);
   const panesToShow = paneRegistry.panes.filter(
     (pane) => visibility[pane.paneId] && !visibleAtStart[pane.paneId],
   );
@@ -1029,6 +1093,46 @@ function applyPaneVisibility(visibility: WorkspacePaneVisibility) {
   });
 }
 
+function applyLayoutState(layout: EditorPaneLayout, api: DockviewApi) {
+  syncDeveloperPanePresence(props.developerPaneEnabled, api);
+
+  activePaneDefinitions().forEach((definition) => {
+    const panel = requireDockviewPanel(api, definition.id);
+    const targetEdge = getPaneLayoutEdge(definition, layout);
+    const targetGroup = ensureEdgeGroup(targetEdge, api);
+
+    if (panel.group !== targetGroup) {
+      panel.api.moveTo({ group: targetGroup, skipSetActive: true });
+    }
+
+    rememberPaneDockedEdge(panel.id, targetEdge);
+  });
+
+  const visibility = createAllHiddenPaneVisibility();
+
+  activePaneDefinitions().forEach((definition) => {
+    const state = layout[definition.paneId];
+    visibility[definition.paneId] =
+      state?.visible ?? props.paneVisibility[definition.paneId];
+  });
+
+  applyPaneVisibility(visibility, api);
+
+  activePaneDefinitions().forEach((definition) => {
+    const panel = requireDockviewPanel(api, definition.id);
+    const state = layout[definition.paneId];
+
+    if (
+      shouldRestorePaneAsFloating(state) &&
+      panel.api.location.type !== 'floating'
+    ) {
+      floatPane(panel, api);
+    }
+  });
+
+  ensureCenterEditorPanel(api).api.setActive();
+}
+
 function resetLayout() {
   const api = dockviewApi.value;
 
@@ -1038,13 +1142,8 @@ function resetLayout() {
 
   syncDeveloperPanePresence(props.developerPaneEnabled, api);
 
-  paneRegistry.panes.forEach((paneDefinition) => {
-    const panel = api.getPanel(paneDefinition.id);
-
-    if (panel == null) {
-      return;
-    }
-
+  activePaneDefinitions().forEach((paneDefinition) => {
+    const panel = requireDockviewPanel(api, paneDefinition.id);
     const homeGroup = ensureEdgeGroup(paneDefinition.homeEdge, api);
     const homeIndex = paneRegistry.homeIndexById.get(paneDefinition.id);
 
@@ -1068,8 +1167,10 @@ function resetLayout() {
     rememberPaneDockedEdge(panel.id, paneDefinition.homeEdge);
   });
 
-  applyPaneVisibility(props.paneVisibility);
+  applyPaneVisibility(props.paneVisibility, api);
   ensureCenterEditorPanel(api).api.setActive();
+  emitPaneVisibilityState(api);
+  markLayoutStateCurrent(api);
 }
 
 function dockPaneToLastDockedEdge(panelId: string) {
@@ -1201,9 +1302,16 @@ function onDockviewReady(event: DockviewReadyEvent) {
   );
 
   initializeLayout(event.api);
-  applyPaneVisibility(props.paneVisibility);
+
+  if (props.paneLayout != null) {
+    applyLayoutState(props.paneLayout, event.api);
+  } else {
+    applyPaneVisibility(props.paneVisibility, event.api);
+  }
+
+  markLayoutStateCurrent(event.api);
   installStateListeners(event.api);
-  emitPaneVisibilityState();
+  emitPaneVisibilityState(event.api);
 }
 
 function onDockviewWillShowOverlay(
@@ -1749,12 +1857,20 @@ onBeforeUnmount(() => {
 
 watch(
   () => props.paneVisibility,
-  (paneVisibility) => applyPaneVisibility(paneVisibility),
+  (paneVisibility) => {
+    const api = dockviewApi.value;
+
+    if (api == null) {
+      return;
+    }
+
+    applyPaneVisibility(paneVisibility, api);
+  },
   { deep: true, flush: 'post' },
 );
 
 watch(
-  () => props.paneLayoutResetCounter,
+  () => props.layoutResetCounter,
   () => resetLayout(),
   { flush: 'post' },
 );

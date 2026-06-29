@@ -6689,12 +6689,106 @@ function getAllTextStyleElements(score: Score) {
   );
 }
 
+function getAllRichTextBoxes(score: Score) {
+  return [...score.staff.elements, ...score.headersAndFooters].filter(
+    (element): element is RichTextBoxElement => isRichTextBoxElement(element),
+  );
+}
+
+function getAllNoteElements(score: Score) {
+  return score.staff.elements.filter(
+    (element): element is NoteElement =>
+      element.elementType === ElementType.Note,
+  );
+}
+
+function getDeletedStyleFallbacks(
+  previousStylesById: Map<string, TextStyle>,
+  nextStyleIds: Set<string>,
+) {
+  const deletedStyleFallbacks = new Map<string, string>();
+
+  for (const [styleId, style] of previousStylesById.entries()) {
+    if (nextStyleIds.has(styleId)) {
+      continue;
+    }
+
+    deletedStyleFallbacks.set(
+      styleId,
+      style.parentStyleId != null && nextStyleIds.has(style.parentStyleId)
+        ? style.parentStyleId
+        : BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    );
+  }
+
+  return deletedStyleFallbacks;
+}
+
+function rewriteRichTextHtmlForDeletedStyles(
+  html: string,
+  deletedStyleFallbacks: Map<string, string>,
+) {
+  if (html === '' || deletedStyleFallbacks.size === 0) {
+    return html;
+  }
+
+  const template = document.createElement('template');
+  template.innerHTML = html;
+
+  const styledElements = template.content.querySelectorAll('[class]');
+
+  for (const element of styledElements) {
+    const classes = Array.from(element.classList);
+    const deletedClasses: string[] = [];
+
+    for (const className of classes) {
+      if (!className.startsWith('neanes-style-')) {
+        continue;
+      }
+
+      const styleId = className.slice('neanes-style-'.length);
+
+      if (!deletedStyleFallbacks.has(styleId)) {
+        continue;
+      }
+
+      deletedClasses.push(className);
+      const fallbackStyleId = deletedStyleFallbacks.get(styleId);
+
+      if (fallbackStyleId == null) {
+        continue;
+      }
+
+      const fallbackClassName = `neanes-style-${fallbackStyleId}`;
+
+      if (!element.classList.contains(fallbackClassName)) {
+        element.classList.add(fallbackClassName);
+      }
+    }
+
+    for (const className of deletedClasses) {
+      element.classList.remove(className);
+    }
+  }
+
+  return template.innerHTML;
+}
+
 function updateTextStyles(textStyles: TextStyle[]) {
+  flushPendingRichTextEditors(selectedWorkspace.value);
+
   const previousResizableTextDefaults = getResizableTextDefaultSnapshot(
     score.value,
   );
+  const previousStylesById = new Map(
+    score.value.textStyles.map((style) => [style.id, style]),
+  );
   const clonedStyles = textStyles.map((style) => style.clone());
-  const validStyleIds = new Set(clonedStyles.map((style) => style.id));
+  const nextStyleIds = new Set(clonedStyles.map((style) => style.id));
+  const deletedStyleFallbacks = getDeletedStyleFallbacks(
+    previousStylesById,
+    nextStyleIds,
+  );
   const commands: Command[] = [
     scoreCommandFactory.create('update-properties', {
       target: score.value,
@@ -6703,7 +6797,7 @@ function updateTextStyles(textStyles: TextStyle[]) {
   ];
 
   for (const element of getAllTextStyleElements(score.value)) {
-    if (validStyleIds.has(element.textStyleId)) {
+    if (nextStyleIds.has(element.textStyleId)) {
       continue;
     }
 
@@ -6711,10 +6805,76 @@ function updateTextStyles(textStyles: TextStyle[]) {
       textBoxCommandFactory.create('update-properties', {
         target: element,
         newValues: {
-          textStyleId: BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+          textStyleId:
+            deletedStyleFallbacks.get(element.textStyleId) ??
+            BUILT_IN_TEXT_STYLE_IDS.DefaultText,
         },
       }),
     );
+  }
+
+  for (const element of getAllRichTextBoxes(score.value)) {
+    const updatedValues: Partial<RichTextBoxElement> = {};
+
+    for (const contentKey of [
+      'content',
+      'contentBottom',
+      'contentLeft',
+      'contentCenter',
+      'contentRight',
+    ] as const) {
+      const rewrittenHtml = rewriteRichTextHtmlForDeletedStyles(
+        element[contentKey],
+        deletedStyleFallbacks,
+      );
+
+      if (rewrittenHtml !== element[contentKey]) {
+        updatedValues[contentKey] = rewrittenHtml;
+      }
+    }
+
+    if (Object.keys(updatedValues).length === 0) {
+      continue;
+    }
+
+    commands.push(
+      richTextBoxCommandFactory.create('update-properties', {
+        target: element,
+        newValues: updatedValues,
+      }),
+    );
+  }
+
+  for (const note of getAllNoteElements(score.value)) {
+    const updatedAnnotations: Array<{
+      annotation: AnnotationElement;
+      text: string;
+    }> = [];
+
+    for (const annotation of note.annotations) {
+      const rewrittenText = rewriteRichTextHtmlForDeletedStyles(
+        annotation.text,
+        deletedStyleFallbacks,
+      );
+
+      if (rewrittenText !== annotation.text) {
+        updatedAnnotations.push({
+          annotation,
+          text: rewrittenText,
+        });
+      }
+    }
+
+    for (const { annotation, text } of updatedAnnotations) {
+      commands.push(
+        annotationCommandFactory.create('update-properties', {
+          target: annotation,
+          newValues: {
+            text,
+          },
+        }),
+      );
+    }
   }
 
   commandService.value.executeAsBatch(commands);

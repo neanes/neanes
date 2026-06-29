@@ -313,8 +313,6 @@ export default class FontStyleEditing extends Plugin {
 
     const oldFontStyle = data.attributeOldValue as string | undefined;
     const newFontStyle = data.attributeNewValue as string | undefined;
-    let oldFamily: string | null | undefined;
-    let newFamily: string | null | undefined;
     const siblingChange = this._getSiblingFontFamilyChange(data);
     const currentFamily =
       data.item instanceof ModelSelection ||
@@ -324,9 +322,9 @@ export default class FontStyleEditing extends Plugin {
             | string
             | undefined);
 
-    oldFamily =
+    const oldFamily =
       (siblingChange?.attributeOldValue as string | undefined) ?? currentFamily;
-    newFamily =
+    const newFamily =
       (siblingChange?.attributeNewValue as string | undefined) ?? currentFamily;
 
     const writer = conversionApi.writer;

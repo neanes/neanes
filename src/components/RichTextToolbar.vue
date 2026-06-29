@@ -24,7 +24,7 @@
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
-      <template v-if="richTextBoxElement != null">
+      <template v-if="showTextStyleSelect">
         <TextStyleSelect
           trigger-class="w-48"
           :model-value="toolbarTextStyleValue"
@@ -432,10 +432,10 @@ const props = defineProps({
   },
 });
 
-const richTextBoxElement = computed(() =>
-  props.element.elementType === ElementType.RichTextBox
-    ? (props.element as RichTextBoxElement)
-    : null,
+const showTextStyleSelect = computed(
+  () =>
+    props.element.elementType === ElementType.RichTextBox ||
+    props.element.elementType === ElementType.Annotation,
 );
 
 const styleCommandProps = {
@@ -480,13 +480,7 @@ const {
   onTextStyleChanged,
 } = useRichTextStyleCommands(styleCommandProps, EXTRA_COMMAND_NAMES);
 
-const toolbarTextStyleValue = computed(() => {
-  if (richTextBoxElement.value == null) {
-    return '';
-  }
-
-  return textStyleValue.value;
-});
+const toolbarTextStyleValue = computed(() => textStyleValue.value);
 const disabledTextStyleIds = computed(() =>
   props.textStyles
     .filter((style) => !isTextStyleEnabled(style.id))
@@ -536,10 +530,6 @@ function onCharacterBlockChanged(value: unknown) {
 }
 
 function onToolbarTextStyleChanged(value: string) {
-  if (richTextBoxElement.value == null) {
-    return;
-  }
-
   onTextStyleChanged(value);
 }
 

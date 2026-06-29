@@ -7867,6 +7867,7 @@ function focusElement(element: Element | null) {
 function onFileMenuInsertAnnotation() {
   if (selectedElement.value?.elementType === ElementType.Note) {
     const el = new AnnotationElement();
+    el.text = `<p class="neanes-style-${BUILT_IN_TEXT_STYLE_IDS.Annotation}"></p>`;
     const fontHeight = TextMeasurementService.getFontHeight(
       getDefaultLyricsFont(),
     );

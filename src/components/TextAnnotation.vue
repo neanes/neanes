@@ -18,6 +18,7 @@
       @blur="handleEditorBlur"
       @select-neume="emit('select-neume')"
     />
+    <component :is="'style'">{{ textStyleCss }}</component>
   </div>
 </template>
 
@@ -121,6 +122,28 @@ const annotationStyle = computed(() =>
   resolveTextStyle(props.textStyles, BUILT_IN_TEXT_STYLE_IDS.Annotation),
 );
 
+const textStyleDefinitions = computed(() =>
+  props.textStyles.map((style) => ({
+    name: style.id,
+    element: 'p',
+    classes: [`neanes-style-${style.id}`],
+  })),
+);
+
+const textStyleCss = computed(() =>
+  props.textStyles
+    .map((style) => {
+      const resolved = resolveTextStyle(props.textStyles, style.id);
+      return `.ck-content p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
+        resolved.fontFamily,
+        props.pageSetup.neumeDefaultFontFamily + 'Legacy',
+      )};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${
+        resolved.lineHeight ?? 'normal'
+      };}`;
+    })
+    .join('\n'),
+);
+
 const style = computed(() => {
   return {
     left: withZoom(elementX.value),
@@ -171,6 +194,9 @@ const editorConfig = computed((): EditorConfig => {
       ui: props.editorLanguage,
       content: contentLanguage.value,
       textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
+    },
+    style: {
+      definitions: textStyleDefinitions.value,
     },
     licenseKey: 'GPL',
     insertNeume: {

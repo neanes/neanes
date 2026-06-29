@@ -6702,6 +6702,13 @@ function getAllNoteElements(score: Score) {
   );
 }
 
+function getAllDropCapElements(score: Score) {
+  return score.staff.elements.filter(
+    (element): element is DropCapElement =>
+      element.elementType === ElementType.DropCap,
+  );
+}
+
 function getDeletedStyleFallbacks(
   previousStylesById: Map<string, TextStyle>,
   nextStyleIds: Set<string>,
@@ -6846,6 +6853,19 @@ function updateTextStyles(textStyles: TextStyle[]) {
   }
 
   for (const note of getAllNoteElements(score.value)) {
+    if (!nextStyleIds.has(note.lyricsTextStyleId)) {
+      commands.push(
+        noteElementCommandFactory.create('update-properties', {
+          target: note,
+          newValues: {
+            lyricsTextStyleId:
+              deletedStyleFallbacks.get(note.lyricsTextStyleId) ??
+              BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+          },
+        }),
+      );
+    }
+
     const updatedAnnotations: Array<{
       annotation: AnnotationElement;
       text: string;
@@ -6875,6 +6895,23 @@ function updateTextStyles(textStyles: TextStyle[]) {
         }),
       );
     }
+  }
+
+  for (const dropCap of getAllDropCapElements(score.value)) {
+    if (nextStyleIds.has(dropCap.textStyleId)) {
+      continue;
+    }
+
+    commands.push(
+      dropCapCommandFactory.create('update-properties', {
+        target: dropCap,
+        newValues: {
+          textStyleId:
+            deletedStyleFallbacks.get(dropCap.textStyleId) ??
+            BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+        },
+      }),
+    );
   }
 
   commandService.value.executeAsBatch(commands);

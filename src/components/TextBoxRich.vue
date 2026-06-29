@@ -136,6 +136,7 @@ import {
   resolveTextStyle,
   type TextStyle,
 } from '@/models/TextStyle';
+import { resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import type { TokenMetadata, TokenScope } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
@@ -290,10 +291,11 @@ const textStyleCss = computed(() =>
   props.textStyles
     .map((style) => {
       const resolved = resolveTextStyle(props.textStyles, style.id);
+      const font = resolveFontStyle(resolved.fontFamily, resolved.fontStyle);
       return `.ck-content p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
-        resolved.fontFamily,
+        font.cssFontFamily,
         props.pageSetup.neumeDefaultFontFamily + 'Legacy',
-      )};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${
+      )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${
         resolved.lineHeight ?? 'normal'
       };}`;
     })

@@ -2,30 +2,36 @@
   <div ref="panelRoot" class="contents">
     <Field>
       <div class="mb-2 flex items-center justify-between gap-2">
-        <FieldLabel :for="`${idPrefix}-paragraph-style`">{{
-          $t(($) => $.toolbar.common.paragraphStyle, { ns: 'toolbar' })
+        <FieldLabel :for="`${idPrefix}-text-style`">{{
+          $t(($) => $.toolbar.common.textStyle, { ns: 'toolbar' })
         }}</FieldLabel>
-        <Button
-          v-if="showEditStylesButton"
-          type="button"
-          variant="ghost"
-          size="sm"
-          @click="$emit('open-paragraph-styles-dialog')"
-        >
-          {{ $t(($) => $.dialog.paragraphStyles.openDialog, { ns: 'dialog' }) }}
-        </Button>
+        <div class="flex items-center gap-1">
+          <Button
+            v-if="showEditStylesButton"
+            type="button"
+            variant="ghost"
+            size="sm"
+            @click="openTextStylesDialog"
+          >
+            {{ $t(($) => $.dialog.textStyles.openDialog, { ns: 'dialog' }) }}
+          </Button>
+          <TextStyleResetButton
+            :disabled="!hasTextStyleOverrides"
+            @reset="resetAllTextStyleOverrides"
+          />
+        </div>
       </div>
-      <ParagraphStyleSelect
-        :id="`${idPrefix}-paragraph-style`"
+      <TextStyleSelect
+        :id="`${idPrefix}-text-style`"
         trigger-class="w-full"
-        :model-value="paragraphStyleSelectValue"
-        :paragraph-styles="paragraphStyleOptions"
+        :model-value="textStyleSelectValue"
+        :text-styles="textStyleOptions"
         :disabled="!isCommandEnabled('style')"
-        :disabled-style-ids="disabledParagraphStyleIds"
-        :show-none-option="showParagraphStyleNoneOption"
-        :show-mixed-option="paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE"
+        :disabled-style-ids="disabledTextStyleIds"
+        :show-none-option="showTextStyleNoneOption"
+        :show-mixed-option="textStyleValue === TEXT_STYLE_MIXED_VALUE"
         rich-text-portal
-        @update:model-value="onParagraphStyleSelectChanged"
+        @update:model-value="onTextStyleSelectChanged"
         @update:open="
           $event
             ? beginSelectionGuard(element)
@@ -45,30 +51,13 @@
           wrapper still receives pointer events for disabled buttons so clicking
           an inactive clear action does not blur the active editor.
         -->
-        <AppTooltip
-          :tooltip="
-            $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' })
+        <TextStyleResetButton
+          :disabled="
+            !isCommandEnabled('fontFamily') ||
+            fontFamilyValue === RICH_TEXT_DEFAULT_FONT_FAMILY
           "
-        >
-          <span class="inline-flex" @mousedown.prevent>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              class="text-muted-foreground"
-              :aria-label="
-                $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' })
-              "
-              :disabled="
-                !isCommandEnabled('fontFamily') ||
-                fontFamilyValue === RICH_TEXT_DEFAULT_FONT_FAMILY
-              "
-              @click="onFontFamilyChanged(RICH_TEXT_DEFAULT_FONT_FAMILY)"
-            >
-              <PhEraser />
-            </Button>
-          </span>
-        </AppTooltip>
+          @reset="onFontFamilyChanged(RICH_TEXT_DEFAULT_FONT_FAMILY)"
+        />
       </div>
       <FontCombobox
         :id="`${idPrefix}-font`"
@@ -92,9 +81,17 @@
     </Field>
 
     <Field>
-      <FieldLabel :for="`${idPrefix}-font-style`">{{
-        $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
-      }}</FieldLabel>
+      <div class="flex min-h-6 items-center justify-between gap-2">
+        <FieldLabel :for="`${idPrefix}-font-style`">{{
+          $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
+        }}</FieldLabel>
+        <TextStyleResetButton
+          :disabled="
+            !isCommandEnabled('fontStyle') || !fontStyleHasExplicitValue
+          "
+          @reset="resetFontStyle"
+        />
+      </div>
       <FontStyleSelect
         :id="`${idPrefix}-font-style`"
         class="w-full max-w-full"
@@ -168,32 +165,15 @@
           :disabled="!isCommandEnabled('fontSize')"
           nullable
           :placeholder="fontSizePlaceholder"
-          :default-value="resolvedActiveParagraphStyle.fontSize"
+          :default-value="resolvedActiveTextStyle.fontSize"
           @update:model-value="onFontSizeChanged"
           @focus-within="beginSelectionGuard(element)"
           @blur-within="endSelectionGuard(element, { refocus: false })"
         />
-        <AppTooltip
-          :tooltip="
-            $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' })
-          "
-        >
-          <span class="inline-flex" @mousedown.prevent>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              class="text-muted-foreground"
-              :aria-label="
-                $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' })
-              "
-              :disabled="!isCommandEnabled('fontSize') || fontSizeValue == null"
-              @click="onFontSizeChanged(null)"
-            >
-              <PhEraser />
-            </Button>
-          </span>
-        </AppTooltip>
+        <TextStyleResetButton
+          :disabled="!isCommandEnabled('fontSize') || fontSizeValue == null"
+          @reset="onFontSizeChanged(null)"
+        />
       </div>
     </Field>
 
@@ -214,29 +194,12 @@
               : endSelectionGuard(element, { refocus: true })
           "
         />
-        <AppTooltip
-          :tooltip="
-            $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' })
+        <TextStyleResetButton
+          :disabled="
+            !isCommandEnabled('fontColor') || !fontColorHasExplicitValue
           "
-        >
-          <span class="inline-flex" @mousedown.prevent>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              class="text-muted-foreground"
-              :aria-label="
-                $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' })
-              "
-              :disabled="
-                !isCommandEnabled('fontColor') || !fontColorHasExplicitValue
-              "
-              @click="onFontColorChanged(null)"
-            >
-              <PhEraser />
-            </Button>
-          </span>
-        </AppTooltip>
+          @reset="onFontColorChanged(null)"
+        />
       </div>
     </Field>
 
@@ -285,57 +248,67 @@
       <FieldLabel>{{
         $t(($) => $.toolbar.common.alignment, { ns: 'toolbar' })
       }}</FieldLabel>
-      <ToggleGroup
-        type="single"
-        variant="outline"
-        :model-value="alignmentValue"
-        @update:model-value="onAlignmentChanged"
-      >
-        <AppTooltip
-          :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
+      <div class="flex items-center gap-1">
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          :model-value="alignmentValue"
+          @update:model-value="onAlignmentChanged"
         >
-          <ToggleGroupItem
-            value="left"
-            :disabled="!isCommandEnabled('alignment')"
-            @mousedown.prevent
+          <AppTooltip
+            :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
           >
-            <PhTextAlignLeft />
-          </ToggleGroupItem>
-        </AppTooltip>
-        <AppTooltip
-          :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
-        >
-          <ToggleGroupItem
-            value="center"
-            :disabled="!isCommandEnabled('alignment')"
-            @mousedown.prevent
+            <ToggleGroupItem
+              value="left"
+              :disabled="!isCommandEnabled('alignment')"
+              @mousedown.prevent
+            >
+              <PhTextAlignLeft />
+            </ToggleGroupItem>
+          </AppTooltip>
+          <AppTooltip
+            :tooltip="
+              $t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })
+            "
           >
-            <PhTextAlignCenter />
-          </ToggleGroupItem>
-        </AppTooltip>
-        <AppTooltip
-          :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
-        >
-          <ToggleGroupItem
-            value="right"
-            :disabled="!isCommandEnabled('alignment')"
-            @mousedown.prevent
+            <ToggleGroupItem
+              value="center"
+              :disabled="!isCommandEnabled('alignment')"
+              @mousedown.prevent
+            >
+              <PhTextAlignCenter />
+            </ToggleGroupItem>
+          </AppTooltip>
+          <AppTooltip
+            :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
           >
-            <PhTextAlignRight />
-          </ToggleGroupItem>
-        </AppTooltip>
-        <AppTooltip
-          :tooltip="$t(($) => $.toolbar.selection.justify, { ns: 'toolbar' })"
-        >
-          <ToggleGroupItem
-            value="justify"
-            :disabled="!isCommandEnabled('alignment')"
-            @mousedown.prevent
+            <ToggleGroupItem
+              value="right"
+              :disabled="!isCommandEnabled('alignment')"
+              @mousedown.prevent
+            >
+              <PhTextAlignRight />
+            </ToggleGroupItem>
+          </AppTooltip>
+          <AppTooltip
+            :tooltip="$t(($) => $.toolbar.selection.justify, { ns: 'toolbar' })"
           >
-            <PhTextAlignJustify />
-          </ToggleGroupItem>
-        </AppTooltip>
-      </ToggleGroup>
+            <ToggleGroupItem
+              value="justify"
+              :disabled="!isCommandEnabled('alignment')"
+              @mousedown.prevent
+            >
+              <PhTextAlignJustify />
+            </ToggleGroupItem>
+          </AppTooltip>
+        </ToggleGroup>
+        <TextStyleResetButton
+          :disabled="
+            !isCommandEnabled('alignment') || !alignmentHasExplicitValue
+          "
+          @reset="resetAlignment"
+        />
+      </div>
     </Field>
 
     <Field orientation="horizontal">
@@ -855,7 +828,8 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import TextStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import TextStyleResetButton from '@/components/properties/TextStyleResetButton.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -886,7 +860,8 @@ import {
   endSelectionGuard,
 } from '@/composables/useRichTextSelectionGuard';
 import {
-  PARAGRAPH_STYLE_MIXED_VALUE,
+  TEXT_STYLE_MIXED_VALUE,
+  TEXT_STYLE_NONE_VALUE,
   useRichTextStyleCommands,
 } from '@/composables/useRichTextStyleCommands';
 import { supportedLocales } from '@/i18n';
@@ -897,10 +872,11 @@ import {
 } from '@/models/NeumeI18nMappings';
 import { Note, RootSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
-import type {
-  ParagraphStyle,
-  ResolvedParagraphStyle,
-} from '@/models/ParagraphStyle';
+import {
+  BUILT_IN_TEXT_STYLE_IDS,
+  type ResolvedTextStyle,
+  type TextStyle,
+} from '@/models/TextStyle';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
 import { fraction3FormatOptions } from '@/utils/numberFormatOptions';
@@ -914,21 +890,21 @@ const props = defineProps<{
   element: AnnotationElement | RichTextBoxElement;
   fonts: string[];
   pageSetup: PageSetup;
-  paragraphStyles: ParagraphStyle[];
+  textStyles: TextStyle[];
   showEditStylesButton?: boolean;
-  fallbackParagraphStyle: ResolvedParagraphStyle;
+  fallbackTextStyle: ResolvedTextStyle;
 }>();
 
-defineEmits<{
-  'open-paragraph-styles-dialog': [];
+const emit = defineEmits<{
+  'open-text-styles-dialog': [styleId: string];
 }>();
 
 const {
   fontFamilyValue,
   fontFamilyOptions,
-  paragraphStyleValue,
-  paragraphStyleOptions,
-  resolvedActiveParagraphStyle,
+  textStyleValue,
+  textStyleOptions,
+  resolvedActiveTextStyle,
   fontStyleValue,
   fontStyleOptions,
   fontStyleDisabled,
@@ -941,10 +917,10 @@ const {
   isCommandEnabled,
   isCommandActive,
   isStyleToggleEnabled,
-  isParagraphStyleEnabled,
+  isTextStyleEnabled,
   commandValue,
   runCommand,
-  onParagraphStyleChanged,
+  onTextStyleChanged,
   onFontFamilyChanged,
   onFontStyleChanged,
   onFontSizeChanged,
@@ -996,12 +972,58 @@ const languageOptions = computed(() =>
   })),
 );
 
-const showParagraphStyleNoneOption = computed(() => true);
-const paragraphStyleSelectValue = computed(() => paragraphStyleValue.value);
-const disabledParagraphStyleIds = computed(() =>
-  paragraphStyleOptions.value
-    .filter((style) => !isParagraphStyleEnabled(style.id))
+const showTextStyleNoneOption = computed(() => true);
+const textStyleSelectValue = computed(() => textStyleValue.value);
+const disabledTextStyleIds = computed(() =>
+  textStyleOptions.value
+    .filter((style) => !isTextStyleEnabled(style.id))
     .map((style) => style.id),
+);
+const fontStyleHasExplicitValue = computed(() => {
+  const value = commandValue('fontStyle');
+
+  return typeof value === 'string' && value !== '';
+});
+const alignmentHasExplicitValue = computed(() => {
+  const value = commandValue('alignment');
+
+  return (
+    typeof value === 'string' &&
+    value !== resolvedActiveTextStyle.value.alignment
+  );
+});
+const textStyleOverrideLabels = computed(() => {
+  const labels: string[] = [];
+
+  if (fontFamilyValue.value !== RICH_TEXT_DEFAULT_FONT_FAMILY) {
+    labels.push(t(($) => $.dialog.pageSetup.font, { ns: 'dialog' }));
+  }
+  if (fontStyleHasExplicitValue.value) {
+    labels.push(t(($) => $.dialog.pageSetup.style, { ns: 'dialog' }));
+  }
+  if (fontSizeValue.value != null) {
+    labels.push(t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' }));
+  }
+  if (fontColorHasExplicitValue.value) {
+    labels.push(t(($) => $.dialog.pageSetup.color, { ns: 'dialog' }));
+  }
+  if (styleValues.value.length > 0) {
+    labels.push(t(($) => $.dialog.pageSetup.style, { ns: 'dialog' }));
+  }
+  if (alignmentHasExplicitValue.value) {
+    labels.push(t(($) => $.toolbar.common.alignment, { ns: 'toolbar' }));
+  }
+
+  return [...new Set(labels)];
+});
+const hasTextStyleOverrides = computed(
+  () => textStyleOverrideLabels.value.length > 0,
+);
+const currentDialogTextStyleId = computed(() =>
+  textStyleValue.value === TEXT_STYLE_NONE_VALUE ||
+  textStyleValue.value === TEXT_STYLE_MIXED_VALUE
+    ? BUILT_IN_TEXT_STYLE_IDS.DefaultText
+    : textStyleValue.value,
 );
 
 const POSITION_COMMAND_NAMES = ['subscript', 'superscript'] as const;
@@ -1085,10 +1107,31 @@ const capsOptions = computed(() => [
   },
 ]);
 
-function onParagraphStyleSelectChanged(value: AcceptableValue) {
+function onTextStyleSelectChanged(value: AcceptableValue) {
   if (typeof value === 'string') {
-    onParagraphStyleChanged(value);
+    onTextStyleChanged(value);
   }
+}
+
+function resetFontStyle() {
+  runCommand('fontStyle');
+}
+
+function resetAlignment() {
+  runCommand('alignment');
+}
+
+function resetAllTextStyleOverrides() {
+  onFontFamilyChanged(RICH_TEXT_DEFAULT_FONT_FAMILY);
+  resetFontStyle();
+  onFontSizeChanged(null);
+  onFontColorChanged(null);
+  onStyleValuesChanged([]);
+  resetAlignment();
+}
+
+function openTextStylesDialog() {
+  emit('open-text-styles-dialog', currentDialogTextStyleId.value);
 }
 
 function applyNumericVariant(variant: NumericVariant) {

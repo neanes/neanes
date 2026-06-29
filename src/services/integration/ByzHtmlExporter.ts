@@ -18,14 +18,16 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
-import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
 import type { Score } from '@/models/Score';
+import {
+  BUILT_IN_TEXT_STYLE_IDS,
+  type ResolvedTextStyle,
+  resolveTextStyle,
+  type TextStyle,
+} from '@/models/TextStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { resolvePageMargins } from '@/utils/PageMargins';
@@ -131,7 +133,7 @@ export class ByzHtmlExporter {
   };
 
   exportScore(score: Score) {
-    const style = this.exportPageSetup(score.pageSetup, score.paragraphStyles);
+    const style = this.exportPageSetup(score.pageSetup, score.textStyles);
 
     const body = this.exportElements(score.staff.elements, score.pageSetup, 4);
     const fontFaceCss = fontCatalog.getRegisteredFontFaceCss();
@@ -175,7 +177,7 @@ export class ByzHtmlExporter {
     return result;
   }
 
-  exportPageSetup(pageSetup: PageSetup, paragraphStyles: ParagraphStyle[]) {
+  exportPageSetup(pageSetup: PageSetup, textStyles: TextStyle[]) {
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
     const firstPageMargins = resolvePageMargins(pageSetup, 1);
     const secondPageMargins = resolvePageMargins(pageSetup, 2);
@@ -192,33 +194,33 @@ export class ByzHtmlExporter {
     );
 
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
-    const defaultLyricsFont = resolveFontStyle(
-      pageSetup.lyricsDefaultFontFamily,
-      pageSetup.lyricsDefaultFontStyle,
+    const defaultTextBoxStyle = resolveTextStyle(
+      textStyles,
+      BUILT_IN_TEXT_STYLE_IDS.DefaultText,
     );
-    const defaultDropCapFont = resolveFontStyle(
-      pageSetup.dropCapDefaultFontFamily,
-      pageSetup.dropCapDefaultFontStyle,
+    const annotationStyle = resolveTextStyle(
+      textStyles,
+      BUILT_IN_TEXT_STYLE_IDS.Annotation,
     );
-    const defaultTextBoxStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    const lyricsStyle = resolveTextStyle(
+      textStyles,
+      BUILT_IN_TEXT_STYLE_IDS.Lyrics,
     );
-    const annotationStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
-    );
-    const verseStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.Verse,
+    const defaultDropCapStyle = resolveTextStyle(
+      textStyles,
+      BUILT_IN_TEXT_STYLE_IDS.DropCap,
     );
     const defaultTextBoxFont = resolveFontStyle(
       defaultTextBoxStyle.fontFamily,
       defaultTextBoxStyle.fontStyle,
     );
-    const defaultVerseFont = resolveFontStyle(
-      verseStyle.fontFamily,
-      verseStyle.fontStyle,
+    const defaultDropCapFont = resolveFontStyle(
+      defaultDropCapStyle.fontFamily,
+      defaultDropCapStyle.fontStyle,
+    );
+    const defaultLyricsFont = resolveFontStyle(
+      lyricsStyle.fontFamily,
+      lyricsStyle.fontStyle,
     );
     const defaultLyricsFontFamily = getFontFamilyWithFallback(
       defaultLyricsFont.cssFontFamily,
@@ -235,7 +237,7 @@ export class ByzHtmlExporter {
       pageSetup.neumeDefaultFontFamily,
     ).replaceAll('"', "'");
     const defaultInlineRichTextBoxFontFamily = getFontFamilyWithFallback(
-      verseStyle.fontFamily,
+      lyricsStyle.fontFamily,
       pageSetup.neumeDefaultFontFamily,
     ).replaceAll('"', "'");
 
@@ -245,18 +247,21 @@ export class ByzHtmlExporter {
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
         --byz-lyric-font-family: ${defaultLyricsFontFamily};
-        --byz-lyric-font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+        --byz-lyric-font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
         --byz-lyric-offset-h: ${lyricOffsetH};
         --byz-lyric-offset-v: ${Unit.toPt(pageSetup.lyricsVerticalOffset)}pt;
 
         --byz-drop-cap-font-family: ${defaultDropCapFontFamily};
-        --byz-drop-cap-font-size: ${Unit.toPt(
-          pageSetup.dropCapDefaultFontSize,
-        )}pt;
+        --byz-drop-cap-font-size: ${Unit.toPt(defaultDropCapStyle.fontSize)}pt;
         --byz-drop-cap-offset-v: ${Unit.toPt(
-          this.getDropCapAdjustment(pageSetup),
+          this.getDropCapAdjustment(
+            pageSetup,
+            defaultDropCapStyle,
+            defaultDropCapFont,
+            lyricsStyle,
+          ),
         )}pt;
-        --byz-drop-cap-color: ${pageSetup.dropCapDefaultColor};
+        --byz-drop-cap-color: ${defaultDropCapStyle.color};
 
         --byz-color-accidental: ${pageSetup.accidentalDefaultColor};
         --byz-color-agogi: ${pageSetup.tempoDefaultColor};
@@ -325,7 +330,7 @@ export class ByzHtmlExporter {
       }
 
       ${this.config.tagLyric} {
-        color: ${pageSetup.lyricsDefaultColor};
+        color: ${lyricsStyle.color};
         font-weight: ${defaultLyricsFont.cssFontWeight};
         font-style: ${defaultLyricsFont.cssFontStyle};
       }
@@ -333,12 +338,12 @@ export class ByzHtmlExporter {
       ${this.config.tagDropCap} {
         font-weight: ${defaultDropCapFont.cssFontWeight};
         font-style: ${defaultDropCapFont.cssFontStyle};
-        -webkit-text-stroke-width: ${pageSetup.dropCapDefaultStrokeWidth};
+        -webkit-text-stroke-width: ${defaultDropCapStyle.strokeWidth};
       }
 
       ${this.getTag('gorthmikon')}, ${this.getTag('pelastikon')} {
-        --byz-neume-font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
-        line-height: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+        --byz-neume-font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
+        line-height: ${Unit.toPt(lyricsStyle.fontSize)}pt;
       }
 
       ${this.config.tagMartyria}.${this.config.classMartyriaAlignRight} {
@@ -366,11 +371,11 @@ export class ByzHtmlExporter {
 
       .${this.config.classTextBox}.${this.config.classTextBoxInline} {
         font-family: ${defaultInlineRichTextBoxFontFamily};
-        font-size: ${Unit.toPt(verseStyle.fontSize)}pt;
-        font-weight: ${defaultVerseFont.cssFontWeight};
-        font-style: ${defaultVerseFont.cssFontStyle};
-        color: ${verseStyle.color};
-        -webkit-text-stroke-width: ${verseStyle.strokeWidth};
+        font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
+        font-weight: ${defaultLyricsFont.cssFontWeight};
+        font-style: ${defaultLyricsFont.cssFontStyle};
+        color: ${lyricsStyle.color};
+        -webkit-text-stroke-width: ${lyricsStyle.strokeWidth};
       }
 
       .${this.config.classRichTextBox} {
@@ -383,10 +388,10 @@ export class ByzHtmlExporter {
 
       .${this.config.classRichTextBox}.${this.config.classTextBoxInline} {
         font-family: ${defaultInlineRichTextBoxFontFamily};
-        font-size: ${Unit.toPt(verseStyle.fontSize)}pt;
+        font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
         font-weight: 400;
         font-style: normal;
-        color: ${verseStyle.color};
+        color: ${lyricsStyle.color};
       }
 
       .annotation-container {
@@ -639,33 +644,49 @@ export class ByzHtmlExporter {
     return result;
   }
 
-  // Inline typography for a note whose lyrics override the page-setup default.
-  // Returns '' for notes that use the default style, so those keep inheriting the
-  // x-ly defaults. Mirrors the family+style resolution used for the defaults.
+  // Inline typography for lyric overrides. Missing fields continue to inherit
+  // from the x-ly defaults.
   private getCustomLyricStyleAttribute(
     element: NoteElement,
     pageSetup: PageSetup,
   ): string {
-    if (element.lyricsUseDefaultStyle) {
+    if (!this.hasExplicitTextStyleOverrides(element)) {
       return '';
     }
 
-    const font = resolveFontStyle(
-      element.lyricsFontFamily,
-      element.lyricsFontStyle,
-    );
-    const fontFamily = getFontFamilyWithFallback(
-      font.cssFontFamily,
-      pageSetup.neumeDefaultFontFamily,
-    ).replaceAll('"', "'");
+    let style = '';
 
-    let style = `color: ${element.lyricsColor};`;
-    style += `font-family: ${fontFamily};`;
-    style += `font-size: ${Unit.toPt(element.lyricsFontSize)}pt;`;
-    style += `font-weight: ${font.cssFontWeight};`;
-    style += `font-style: ${font.cssFontStyle};`;
+    if (element.lyricsColor != null) {
+      style += `color: ${element.lyricsColor};`;
+    }
 
-    if (element.lyricsTextDecoration !== 'none') {
+    if (element.lyricsFontFamily != null || element.lyricsFontStyle != null) {
+      const font = resolveFontStyle(
+        element.lyricsFontFamily ?? 'Source Serif',
+        element.lyricsFontStyle ?? DEFAULT_FONT_STYLE,
+      );
+      const fontFamily = getFontFamilyWithFallback(
+        font.cssFontFamily,
+        pageSetup.neumeDefaultFontFamily,
+      ).replaceAll('"', "'");
+
+      style += `font-family: ${fontFamily};`;
+      style += `font-weight: ${font.cssFontWeight};`;
+      style += `font-style: ${font.cssFontStyle};`;
+    }
+
+    if (element.lyricsFontSize != null) {
+      style += `font-size: ${Unit.toPt(element.lyricsFontSize)}pt;`;
+    }
+
+    if (element.lyricsStrokeWidth != null) {
+      style += `-webkit-text-stroke-width: ${element.lyricsStrokeWidth};`;
+    }
+
+    if (
+      element.lyricsTextDecoration != null &&
+      element.lyricsTextDecoration !== 'none'
+    ) {
       style += `text-decoration: ${element.lyricsTextDecoration};`;
     }
 
@@ -955,10 +976,7 @@ export class ByzHtmlExporter {
 
     let style = '';
 
-    if (
-      !element.inline ||
-      this.textBoxHasExplicitParagraphStyleOverrides(element)
-    ) {
+    if (!element.inline || this.textBoxHasExplicitTextStyleOverrides(element)) {
       style += `color: ${element.computedColor};`;
       style += `font-family: ${getFontFamilyWithFallback(
         element.computedFontFamily,
@@ -985,10 +1003,16 @@ export class ByzHtmlExporter {
     }</div\n${this.getIndentationString(indentation)}>`;
   }
 
-  private textBoxHasExplicitParagraphStyleOverrides(element: TextBoxElement) {
-    return Object.values(element.getParagraphStyleOverrides()).some(
+  private hasExplicitTextStyleOverrides(
+    element: TextBoxElement | NoteElement | DropCapElement,
+  ) {
+    return Object.values(element.getTextStyleOverrides()).some(
       (value) => value !== undefined,
     );
+  }
+
+  private textBoxHasExplicitTextStyleOverrides(element: TextBoxElement) {
+    return this.hasExplicitTextStyleOverrides(element);
   }
 
   exportRichTextBox(element: RichTextBoxElement, indentation: number) {
@@ -1284,19 +1308,19 @@ export class ByzHtmlExporter {
     return result;
   }
 
-  getDropCapAdjustment(pageSetup: PageSetup) {
+  getDropCapAdjustment(
+    pageSetup: PageSetup,
+    defaultDropCapStyle: ResolvedTextStyle,
+    defaultDropCapFont: ReturnType<typeof resolveFontStyle>,
+    lyricsStyle: ResolvedTextStyle,
+  ) {
     const neumeHeight = TextMeasurementService.getFontHeight(
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
-
-    const defaultDropCapFont = resolveFontStyle(
-      pageSetup.dropCapDefaultFontFamily,
-      pageSetup.dropCapDefaultFontStyle,
-    );
     const font = `${defaultDropCapFont.cssFontStyle} normal ${
       defaultDropCapFont.cssFontWeight
-    } ${pageSetup.dropCapDefaultFontSize}px/${
-      pageSetup.dropCapDefaultLineHeight ?? 'normal'
+    } ${defaultDropCapStyle.fontSize}px/${
+      defaultDropCapStyle.lineHeight ?? 'normal'
     } "${defaultDropCapFont.cssFontFamily}"`;
 
     const fontBoundingBoxDescent =
@@ -1305,7 +1329,7 @@ export class ByzHtmlExporter {
     // TODO this doesn't work correctly for every font
     return (
       neumeHeight +
-      pageSetup.lyricsDefaultFontSize +
+      lyricsStyle.fontSize +
       pageSetup.lyricsVerticalOffset -
       fontBoundingBoxDescent
     );

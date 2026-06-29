@@ -2,71 +2,65 @@ import { describe, expect, it } from 'vitest';
 
 import { PageSetup } from '@/models/PageSetup';
 import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
-  createParagraphStyleFallback,
-  createParagraphStylesFromPageSetup,
-} from '@/models/ParagraphStyle';
+  BUILT_IN_TEXT_STYLE_IDS,
+  createTextStyleFallback,
+  createTextStylesFromPageSetup,
+} from '@/models/TextStyle';
 
 import {
-  PARAGRAPH_STYLE_MIXED_VALUE,
-  PARAGRAPH_STYLE_NONE_VALUE,
-  resolveRichTextParagraphStyleState,
-  shouldSyncParagraphStyleAlignment,
+  resolveRichTextTextStyleState,
+  shouldSyncTextStyleAlignment,
+  TEXT_STYLE_MIXED_VALUE,
+  TEXT_STYLE_NONE_VALUE,
 } from './useRichTextStyleCommands';
 
-describe('resolveRichTextParagraphStyleState', () => {
-  const paragraphStyles = createParagraphStylesFromPageSetup(new PageSetup());
-  const fallbackParagraphStyle = createParagraphStyleFallback();
+describe('resolveRichTextTextStyleState', () => {
+  const textStyles = createTextStylesFromPageSetup(new PageSetup());
+  const fallbackTextStyle = createTextStyleFallback();
 
   it('uses None plus the fallback style when no Neanes paragraph style is active', () => {
-    const state = resolveRichTextParagraphStyleState(
-      paragraphStyles,
+    const state = resolveRichTextTextStyleState(
+      textStyles,
       [],
-      fallbackParagraphStyle,
+      fallbackTextStyle,
     );
 
-    expect(state.paragraphStyleValue).toBe(PARAGRAPH_STYLE_NONE_VALUE);
-    expect(state.activeParagraphStyle).toBeNull();
-    expect(state.resolvedActiveParagraphStyle).toEqual(fallbackParagraphStyle);
+    expect(state.textStyleValue).toBe(TEXT_STYLE_NONE_VALUE);
+    expect(state.activeTextStyle).toBeNull();
+    expect(state.resolvedActiveTextStyle).toEqual(fallbackTextStyle);
   });
 
   it('resolves the active Neanes paragraph style when exactly one is active', () => {
-    const state = resolveRichTextParagraphStyleState(
-      paragraphStyles,
-      [BUILT_IN_PARAGRAPH_STYLE_IDS.Verse],
-      fallbackParagraphStyle,
+    const state = resolveRichTextTextStyleState(
+      textStyles,
+      [BUILT_IN_TEXT_STYLE_IDS.Lyrics],
+      fallbackTextStyle,
     );
 
-    expect(state.paragraphStyleValue).toBe(BUILT_IN_PARAGRAPH_STYLE_IDS.Verse);
-    expect(state.activeParagraphStyle?.fontFamily).toBe(
-      paragraphStyles.find(
-        (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.Verse,
-      )?.overrides.fontFamily,
+    expect(state.textStyleValue).toBe(BUILT_IN_TEXT_STYLE_IDS.Lyrics);
+    expect(state.activeTextStyle?.fontFamily).toBe(
+      textStyles.find((style) => style.id === BUILT_IN_TEXT_STYLE_IDS.Lyrics)
+        ?.overrides.fontFamily,
     );
-    expect(state.resolvedActiveParagraphStyle).toEqual(
-      state.activeParagraphStyle,
-    );
+    expect(state.resolvedActiveTextStyle).toEqual(state.activeTextStyle);
   });
 
   it('uses Mixed plus the fallback style when multiple Neanes paragraph styles are active', () => {
-    const state = resolveRichTextParagraphStyleState(
-      paragraphStyles,
-      [
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Verse,
-      ],
-      fallbackParagraphStyle,
+    const state = resolveRichTextTextStyleState(
+      textStyles,
+      [BUILT_IN_TEXT_STYLE_IDS.Title, BUILT_IN_TEXT_STYLE_IDS.Lyrics],
+      fallbackTextStyle,
     );
 
-    expect(state.paragraphStyleValue).toBe(PARAGRAPH_STYLE_MIXED_VALUE);
-    expect(state.activeParagraphStyle).toBeNull();
-    expect(state.resolvedActiveParagraphStyle).toEqual(fallbackParagraphStyle);
+    expect(state.textStyleValue).toBe(TEXT_STYLE_MIXED_VALUE);
+    expect(state.activeTextStyle).toBeNull();
+    expect(state.resolvedActiveTextStyle).toEqual(fallbackTextStyle);
   });
 
   it('does not resync alignment when the style alignment already matches the selection', () => {
-    expect(shouldSyncParagraphStyleAlignment('center', 'center')).toBe(false);
-    expect(shouldSyncParagraphStyleAlignment('left', 'left')).toBe(false);
-    expect(shouldSyncParagraphStyleAlignment(undefined, 'center')).toBe(true);
-    expect(shouldSyncParagraphStyleAlignment('left', 'center')).toBe(true);
+    expect(shouldSyncTextStyleAlignment('center', 'center')).toBe(false);
+    expect(shouldSyncTextStyleAlignment('left', 'left')).toBe(false);
+    expect(shouldSyncTextStyleAlignment(undefined, 'center')).toBe(true);
+    expect(shouldSyncTextStyleAlignment('left', 'center')).toBe(true);
   });
 });

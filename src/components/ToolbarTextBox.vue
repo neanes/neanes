@@ -1,22 +1,22 @@
 <template>
   <Toolbar class="chrome-toolbar" loop>
-    <ParagraphStyleSelect
+    <TextStyleSelect
       trigger-class="w-48"
-      :model-value="element.paragraphStyleId"
-      :paragraph-styles="paragraphStyles"
+      :model-value="element.textStyleId"
+      :text-styles="textStyles"
       @update:model-value="
-        $emit('update', { paragraphStyleId: $event } as Partial<TextBoxElement>)
+        $emit('update', { textStyleId: $event } as Partial<TextBoxElement>)
       "
     />
     <ToolbarSeparator />
     <FontCombobox
-      :model-value="resolvedParagraphStyle.fontFamily"
+      :model-value="resolvedTextStyle.fontFamily"
       :options="textBoxFontFamilies"
       @update:model-value="onFontFamilyChanged"
     />
     <FontStyleSelect
       class="w-40"
-      :model-value="resolvedParagraphStyle.fontStyle"
+      :model-value="resolvedTextStyle.fontStyle"
       :options="fontStyleOptions"
       :disabled="fontStyleOptions.length <= 1"
       @update:model-value="
@@ -25,7 +25,7 @@
     />
     <InputFontSize
       id="toolbar-text-box-font-size"
-      :model-value="resolvedParagraphStyle.fontSize"
+      :model-value="resolvedTextStyle.fontSize"
       @update:model-value="
         $emit('update', { fontSize: $event } as Partial<TextBoxElement>)
       "
@@ -117,17 +117,23 @@
           </ToggleGroupItem>
         </AppTooltip>
       </ToggleGroup>
-      <ToolbarButton
-        variant="ghost"
-        class="chrome-button"
-        :disabled="element.alignment == null"
-        :aria-label="$t(($) => $.toolbar.common.clearOverrides, { ns: 'toolbar' })"
-        @mousedown.prevent="
-          $emit('update', { alignment: null } as Partial<TextBoxElement>)
-        "
+      <AppTooltip
+        :tooltip="$t(($) => $.toolbar.common.resetToDefault, { ns: 'toolbar' })"
       >
-        <PhEraser class="size-4" />
-      </ToolbarButton>
+        <ToolbarButton
+          variant="ghost"
+          class="chrome-button"
+          :disabled="element.alignment == null"
+          :aria-label="
+            $t(($) => $.toolbar.common.resetToDefault, { ns: 'toolbar' })
+          "
+          @mousedown.prevent="
+            $emit('update', { alignment: null } as Partial<TextBoxElement>)
+          "
+        >
+          <PhEraser class="size-4" />
+        </ToolbarButton>
+      </AppTooltip>
     </template>
     <ToolbarSeparator />
     <AppTooltip
@@ -157,12 +163,12 @@
 
 <script setup lang="ts">
 import {
+  PhEraser,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhTextAlignLeft,
   PhTextAlignRight,
   PhTextB,
-  PhEraser,
   PhTextItalic,
   PhTextUnderline,
 } from '@phosphor-icons/vue';
@@ -174,7 +180,7 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import NeumeIcon from '@/components/NeumeIcon.vue';
-import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import TextStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Toolbar,
@@ -184,8 +190,8 @@ import {
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
-import { resolveParagraphStyle } from '@/models/ParagraphStyle';
+import type { TextStyle } from '@/models/TextStyle';
+import { resolveTextStyle } from '@/models/TextStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
@@ -197,19 +203,19 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
-  paragraphStyles: {
-    type: Array as PropType<ParagraphStyle[]>,
+  textStyles: {
+    type: Array as PropType<TextStyle[]>,
     required: true,
   },
 });
 
 const emit = defineEmits(['insert:gorthmikon', 'insert:pelastikon', 'update']);
 
-const resolvedParagraphStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    props.element.paragraphStyleId,
-    props.element.getParagraphStyleOverrides(),
+const resolvedTextStyle = computed(() =>
+  resolveTextStyle(
+    props.textStyles,
+    props.element.textStyleId,
+    props.element.getTextStyleOverrides(),
   ),
 );
 
@@ -221,8 +227,8 @@ const {
   applyStyleAxisToggles,
   remapStyleForFamily,
 } = useFontStyleControls(
-  () => resolvedParagraphStyle.value.fontFamily,
-  () => resolvedParagraphStyle.value.fontStyle,
+  () => resolvedTextStyle.value.fontFamily,
+  () => resolvedTextStyle.value.fontStyle,
 );
 
 const styleValues = computed(() => [
@@ -231,7 +237,7 @@ const styleValues = computed(() => [
 ]);
 
 const currentAlignment = computed(
-  () => props.element.alignment ?? resolvedParagraphStyle.value.alignment,
+  () => props.element.alignment ?? resolvedTextStyle.value.alignment,
 );
 
 const textBoxFontFamilies = computed(() => [

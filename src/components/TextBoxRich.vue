@@ -107,7 +107,7 @@
       @ready="onEditorReady"
       @select-neume="emit('select-neume')"
     />
-    <component :is="'style'">{{ paragraphStyleCss }}</component>
+    <component :is="'style'">{{ textStyleCss }}</component>
   </div>
 </template>
 
@@ -132,10 +132,10 @@ import type { RichTextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
+  BUILT_IN_TEXT_STYLE_IDS,
+  resolveTextStyle,
+  type TextStyle,
+} from '@/models/TextStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import type { TokenMetadata, TokenScope } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
@@ -171,8 +171,8 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
-  paragraphStyles: {
-    type: Array as PropType<ParagraphStyle[]>,
+  textStyles: {
+    type: Array as PropType<TextStyle[]>,
     required: true,
   },
   editMode: {
@@ -264,32 +264,32 @@ const contentLanguage = computed(() => {
   return language == null ? 'en' : getRichTextLanguageCode(language);
 });
 
-const fallbackParagraphStyleId = computed(() =>
+const fallbackTextStyleId = computed(() =>
   props.element.inline
-    ? BUILT_IN_PARAGRAPH_STYLE_IDS.Verse
-    : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    ? BUILT_IN_TEXT_STYLE_IDS.Lyrics
+    : BUILT_IN_TEXT_STYLE_IDS.DefaultText,
 );
 
-const resolvedParagraphStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    fallbackParagraphStyleId.value,
-    props.element.getParagraphStyleOverrides(),
+const resolvedTextStyle = computed(() =>
+  resolveTextStyle(
+    props.textStyles,
+    fallbackTextStyleId.value,
+    props.element.getTextStyleOverrides(),
   ),
 );
 
-const paragraphStyleDefinitions = computed(() =>
-  props.paragraphStyles.map((style) => ({
+const textStyleDefinitions = computed(() =>
+  props.textStyles.map((style) => ({
     name: style.id,
     element: 'p',
     classes: [`neanes-style-${style.id}`],
   })),
 );
 
-const paragraphStyleCss = computed(() =>
-  props.paragraphStyles
+const textStyleCss = computed(() =>
+  props.textStyles
     .map((style) => {
-      const resolved = resolveParagraphStyle(props.paragraphStyles, style.id);
+      const resolved = resolveTextStyle(props.textStyles, style.id);
       return `.ck-content p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
         resolved.fontFamily,
         props.pageSetup.neumeDefaultFontFamily + 'Legacy',
@@ -338,13 +338,13 @@ const editorConfig = computed((): EditorConfig => {
       textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
     },
     style: {
-      definitions: paragraphStyleDefinitions.value,
+      definitions: textStyleDefinitions.value,
     },
     licenseKey: 'GPL',
     insertNeume: {
       neumeDefaultFontFamily: props.pageSetup.neumeDefaultFontFamily,
-      defaultFontSize: resolvedParagraphStyle.value.fontSize,
-      defaultFontFamily: resolvedParagraphStyle.value.fontFamily,
+      defaultFontSize: resolvedTextStyle.value.fontSize,
+      defaultFontFamily: resolvedTextStyle.value.fontFamily,
     },
   };
 });
@@ -427,7 +427,7 @@ function getFontSizeInPt(value: unknown) {
 function getMinimumFontSizeInEditor(editor: Editor) {
   const sizes: number[] = [];
 
-  sizes.push(Unit.toPt(resolvedParagraphStyle.value.fontSize));
+  sizes.push(Unit.toPt(resolvedTextStyle.value.fontSize));
 
   const selectedFontSize = getSelectedFontSize(editor);
 
@@ -457,14 +457,14 @@ const containerStyle = computed(() => {
     width: withZoom(props.element.width),
     height: withZoom(props.element.height),
     '--ck-content-font-family': getFontFamilyWithFallback(
-      resolvedParagraphStyle.value.fontFamily,
+      resolvedTextStyle.value.fontFamily,
       props.pageSetup.neumeDefaultFontFamily + 'Legacy', // TODO what a terrible hack
     ),
     '--ck-content-font-size': props.element.inline
-      ? `${resolvedParagraphStyle.value.fontSize}px`
+      ? `${resolvedTextStyle.value.fontSize}px`
       : ckContentFontSize.value, // no zoom because we will apply zooming on the whole editor
-    '--ck-content-font-color': resolvedParagraphStyle.value.color,
-    '--ck-content-line-height': `${resolvedParagraphStyle.value.lineHeight ?? 'normal'}`,
+    '--ck-content-font-color': resolvedTextStyle.value.color,
+    '--ck-content-line-height': `${resolvedTextStyle.value.lineHeight ?? 'normal'}`,
   };
 
   return style;
@@ -554,7 +554,7 @@ watch(
 );
 
 watch(
-  () => resolvedParagraphStyle.value.fontSize,
+  () => resolvedTextStyle.value.fontSize,
   () => {
     refreshCkContentFontSize();
   },
@@ -607,7 +607,7 @@ function phoneHome(height: number) {
   emit('update:height', height);
 }
 
-const ckContentFontSize = ref(`${resolvedParagraphStyle.value.fontSize}px`);
+const ckContentFontSize = ref(`${resolvedTextStyle.value.fontSize}px`);
 
 function getMinimumFontSizeInActiveEditors() {
   const activeEditors = getActiveEditorInstances().filter(
@@ -615,7 +615,7 @@ function getMinimumFontSizeInActiveEditors() {
   );
 
   if (activeEditors.length === 0) {
-    return `${resolvedParagraphStyle.value.fontSize}px`;
+    return `${resolvedTextStyle.value.fontSize}px`;
   }
 
   const minimumSizes = activeEditors.map((editor) =>

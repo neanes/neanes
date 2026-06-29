@@ -5,8 +5,8 @@ import {
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
-import { Unit } from '@/utils/Unit';
 import { setRichTextLanguage } from '@/utils/richTextLanguage';
+import { Unit } from '@/utils/Unit';
 
 import glyphnames from '../../assets/fonts/sbmufl/glyphnames.json';
 import type { SbmuflGlyphName } from './../NeumeMappingService';

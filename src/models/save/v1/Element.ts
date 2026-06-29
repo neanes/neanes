@@ -16,7 +16,6 @@ import {
   RootSign,
   TempoSign,
 } from '@/models/save/v1/Neumes';
-import { Unit } from '@/utils/Unit';
 
 import { Scale, ScaleNote } from './Scales';
 
@@ -92,6 +91,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontStyle: string | undefined = undefined;
   public lyricsFontWeight: string | undefined = undefined;
   public lyricsTextDecoration: string | undefined = undefined;
+  public textStyleId: string | undefined = undefined;
   public lyricsUseDefaultStyle: boolean | undefined = undefined;
   public acceptsLyrics: AcceptsLyricsOption | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
@@ -191,7 +191,7 @@ export type RunningMarkerRole = 'chapter' | 'section';
 
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
-  public paragraphStyleId: string | undefined = undefined;
+  public textStyleId: string | undefined = undefined;
   public alignment: TextBoxAlignment | undefined = undefined;
   public color: string | undefined = undefined;
   public content: string = '';
@@ -316,14 +316,15 @@ export class AlternateLineElement extends ScoreElement {
 export class DropCapElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.DropCap;
   public content: string = 'A';
-  public fontFamily: string = 'Source Serif';
-  public fontSize: number = Unit.fromPt(60);
+  public textStyleId: string | undefined = undefined;
+  public fontFamily: string | undefined = undefined;
+  public fontSize: number | undefined = undefined;
   public fontSubfamily: string | undefined = undefined;
   public fontStyle: string | undefined = undefined;
   public fontWeight: string | undefined = undefined;
   public lineHeight: number | undefined = undefined;
-  public strokeWidth: number = 0;
-  public color: string = '#000000';
+  public strokeWidth: number | undefined = undefined;
+  public color: string | undefined = undefined;
   public useDefaultStyle: boolean | undefined = undefined;
   public customWidth: number | undefined = undefined;
   public lineSpan: number = 1;

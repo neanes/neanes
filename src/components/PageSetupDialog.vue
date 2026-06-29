@@ -1089,30 +1089,32 @@
                         })
                       }}
                     </FieldDescription>
+                    <div
+                      class="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground"
+                    >
+                      {{
+                        $t(($) => $.dialog.textStyles.pageSetupBridgeDropCaps, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      @click="
+                        emit(
+                          'open-text-styles',
+                          BUILT_IN_TEXT_STYLE_IDS.DropCap,
+                        )
+                      "
+                    >
+                      {{
+                        $t(($) => $.dialog.textStyles.openDialog, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </Button>
                     <FieldGroup class="gap-4">
-                      <Field orientation="horizontal">
-                        <FieldLabel>
-                          {{
-                            $t(($) => $.dialog.pageSetup.color, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <ColorPicker v-model="form.dropCapDefaultColor" />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel>
-                          {{
-                            $t(($) => $.dialog.pageSetup.size, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <InputFontSize
-                          v-model="form.dropCapDefaultFontSize"
-                          :max="500"
-                        />
-                      </Field>
                       <Field orientation="horizontal">
                         <FieldLabel for="page-setup-dialog-drop-cap-line-span">
                           {{
@@ -1129,75 +1131,6 @@
                           :max="10"
                           :step="1"
                           :format-options="fraction0FormatOptions"
-                        />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel
-                          for="page-setup-dialog-drop-cap-line-height"
-                        >
-                          {{
-                            $t(($) => $.dialog.pageSetup.lineHeight, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <InputUnit
-                          id="page-setup-dialog-drop-cap-line-height"
-                          v-model="form.dropCapDefaultLineHeight"
-                          unit="unitless"
-                          :min="0"
-                          :step="0.1"
-                          :format-options="fraction2FormatOptions"
-                          :nullable="true"
-                          placeholder="normal"
-                        />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel for="page-setup-dialog-drop-cap-font">
-                          {{
-                            $t(($) => $.dialog.pageSetup.font, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <FontCombobox
-                          id="page-setup-dialog-drop-cap-font"
-                          :model-value="form.dropCapDefaultFontFamily"
-                          :options="dropCapFontFamilies"
-                          @update:model-value="
-                            updateDefaultFontFamily(
-                              'dropCapDefaultFontFamily',
-                              'dropCapDefaultFontStyle',
-                              $event,
-                            )
-                          "
-                        />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel for="page-setup-dialog-drop-cap-font-style">
-                          {{
-                            $t(($) => $.dialog.pageSetup.style, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <FontStyleSelect
-                          id="page-setup-dialog-drop-cap-font-style"
-                          v-model="form.dropCapDefaultFontStyle"
-                          class="w-72 max-w-full"
-                          :options="dropCapFontStyleOptions"
-                        />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel>
-                          {{
-                            $t(($) => $.dialog.pageSetup.outline, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <InputStrokeWidth
-                          v-model="form.dropCapDefaultStrokeWidth"
                         />
                       </Field>
                     </FieldGroup>
@@ -1220,76 +1153,28 @@
                         })
                       }}
                     </FieldDescription>
-                    <FieldGroup class="gap-4">
-                      <Field orientation="horizontal">
-                        <FieldLabel>
-                          {{
-                            $t(($) => $.dialog.pageSetup.color, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <ColorPicker v-model="form.lyricsDefaultColor" />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel>
-                          {{
-                            $t(($) => $.dialog.pageSetup.size, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <InputFontSize v-model="form.lyricsDefaultFontSize" />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel for="page-setup-dialog-lyrics-font">
-                          {{
-                            $t(($) => $.dialog.pageSetup.font, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <FontCombobox
-                          id="page-setup-dialog-lyrics-font"
-                          :model-value="form.lyricsDefaultFontFamily"
-                          :options="lyricsFontFamilies"
-                          @update:model-value="
-                            updateDefaultFontFamily(
-                              'lyricsDefaultFontFamily',
-                              'lyricsDefaultFontStyle',
-                              $event,
-                            )
-                          "
-                        />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel for="page-setup-dialog-lyrics-font-style">
-                          {{
-                            $t(($) => $.dialog.pageSetup.style, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <FontStyleSelect
-                          id="page-setup-dialog-lyrics-font-style"
-                          v-model="form.lyricsDefaultFontStyle"
-                          class="w-72 max-w-full"
-                          :options="lyricsFontStyleOptions"
-                        />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel>
-                          {{
-                            $t(($) => $.dialog.pageSetup.outline, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <InputStrokeWidth
-                          v-model="form.lyricsDefaultStrokeWidth"
-                        />
-                      </Field>
-                    </FieldGroup>
+                    <div
+                      class="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground"
+                    >
+                      {{
+                        $t(($) => $.dialog.textStyles.pageSetupBridgeLyrics, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      @click="
+                        emit('open-text-styles', BUILT_IN_TEXT_STYLE_IDS.Lyrics)
+                      "
+                    >
+                      {{
+                        $t(($) => $.dialog.textStyles.openDialog, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </Button>
                   </FieldSet>
 
                   <Field orientation="horizontal">
@@ -1385,18 +1270,26 @@
                       class="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground"
                     >
                       {{
-                        $t(($) => $.dialog.paragraphStyles.pageSetupBridge, {
-                          ns: 'dialog',
-                        })
+                        $t(
+                          ($) => $.dialog.textStyles.pageSetupBridgeTextBoxes,
+                          {
+                            ns: 'dialog',
+                          },
+                        )
                       }}
                     </div>
                     <Button
                       type="button"
                       variant="outline"
-                      @click="emit('open-paragraph-styles')"
+                      @click="
+                        emit(
+                          'open-text-styles',
+                          BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+                        )
+                      "
                     >
                       {{
-                        $t(($) => $.dialog.paragraphStyles.openDialog, {
+                        $t(($) => $.dialog.textStyles.openDialog, {
                           ns: 'dialog',
                         })
                       }}
@@ -1765,7 +1658,6 @@ import { computed, ref } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
-import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import { toDisplay } from '@/components/InputUnit.types';
@@ -1820,13 +1712,13 @@ import {
 import type { PageSize, PageSizeUnit } from '@/models/PageSetup';
 import { PageSetup, pageSizes } from '@/models/PageSetup';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
-import { fontCatalog } from '@/services/FontCatalog';
+import {
+  BUILT_IN_TEXT_STYLE_IDS,
+  resolveTextStyle,
+  type TextStyle,
+} from '@/models/TextStyle';
 import { fontService } from '@/services/FontService';
 import { SaveService } from '@/services/SaveService';
-import {
-  getFontStyleOptions,
-  remapFontStyleForFamily,
-} from '@/utils/fontStyle';
 import {
   fraction0FormatOptions,
   fraction1FormatOptions,
@@ -1842,10 +1734,6 @@ type BooleanPageSetupKey = {
   [K in keyof PageSetup]: PageSetup[K] extends boolean ? K : never;
 }[keyof PageSetup] &
   keyof PageSetup;
-type DefaultFontFamilyKey =
-  | 'dropCapDefaultFontFamily'
-  | 'lyricsDefaultFontFamily';
-type DefaultFontStyleKey = 'dropCapDefaultFontStyle' | 'lyricsDefaultFontStyle';
 type NeumeColorKey =
   | 'accidentalDefaultColor'
   | 'breathDefaultColor'
@@ -1962,13 +1850,17 @@ function getPreviewGapStyle(
 }
 
 const emit = defineEmits<{
-  'open-paragraph-styles': [];
+  'open-text-styles': [styleId: string];
   update: [pageSetup: PageSetup];
 }>();
 
 const props = defineProps({
   pageSetup: {
     type: Object as PropType<PageSetup>,
+    required: true,
+  },
+  textStyles: {
+    type: Array as PropType<TextStyle[]>,
     required: true,
   },
   fonts: {
@@ -2092,20 +1984,6 @@ const previewNeumes = computed(() => {
 });
 const selectedNeumeColorOptions = ref<NeumeColorOptions[]>([]);
 
-const dropCapFontFamilies = computed(() => [
-  ...fontCatalog.bundledTextFamilies(),
-  ...props.fonts,
-]);
-const lyricsFontFamilies = computed(() => [
-  ...fontCatalog.bundledTextFamilies(),
-  ...props.fonts,
-]);
-const dropCapFontStyleOptions = computed(() =>
-  getFontStyleOptions(form.value.dropCapDefaultFontFamily),
-);
-const lyricsFontStyleOptions = computed(() =>
-  getFontStyleOptions(form.value.lyricsDefaultFontFamily),
-);
 const neumeFontFamilies = computed(() => {
   if (form.value.melkiteRtl) {
     return [{ label: 'EZ Psaltica RTL', value: 'NeanesRTL' }];
@@ -2231,7 +2109,7 @@ const lyricsVerticalOffsetMax = computed(
   () =>
     toDisplay(
       form.value.innerPageHeight -
-        form.value.lyricsDefaultFontSize -
+        resolvedLyricsStyle.value.fontSize -
         form.value.neumeDefaultFontSize,
       form.value.pageSizeUnit,
     ) ?? 0,
@@ -2481,6 +2359,10 @@ const neumeColorRows = [
 Object.assign(form.value, props.pageSetup);
 normalizeDirection();
 
+const resolvedLyricsStyle = computed(() =>
+  resolveTextStyle(props.textStyles, BUILT_IN_TEXT_STYLE_IDS.Lyrics),
+);
+
 function toPositiveDisplay(value: number) {
   return Math.max(0, toDisplay(value, form.value.pageSizeUnit) ?? 0);
 }
@@ -2504,38 +2386,6 @@ function updateFacingPages(value: CheckboxValue) {
 function normalizeDirection() {
   if (!form.value.facingPages) {
     form.value.direction = 'ltr';
-  }
-}
-
-function updateDefaultFontFamily(
-  familyKey: DefaultFontFamilyKey,
-  fontStyleKey: DefaultFontStyleKey,
-  family: string,
-) {
-  form.value[familyKey] = family;
-  form.value[fontStyleKey] = remapFontStyleForFamily(
-    form.value[fontStyleKey],
-    family,
-  );
-}
-
-function updateDefaultFontsForArabicContext() {
-  const isArabicTextContext =
-    form.value.melkiteRtl || form.value.numerals === 'easternArabic';
-  const sourceFamily = isArabicTextContext
-    ? 'Source Serif'
-    : 'Noto Naskh Arabic';
-  const targetFamily = isArabicTextContext
-    ? 'Noto Naskh Arabic'
-    : 'Source Serif';
-
-  for (const [familyKey, styleKey] of [
-    ['dropCapDefaultFontFamily', 'dropCapDefaultFontStyle'],
-    ['lyricsDefaultFontFamily', 'lyricsDefaultFontStyle'],
-  ] as const) {
-    if (form.value[familyKey] === sourceFamily) {
-      updateDefaultFontFamily(familyKey, styleKey, targetFamily);
-    }
   }
 }
 
@@ -2613,7 +2463,7 @@ function updateLyricsVerticalOffset(value: number | null) {
   form.value.lyricsVerticalOffset = Math.min(
     storageValue(value),
     form.value.innerPageHeight -
-      form.value.lyricsDefaultFontSize -
+      resolvedLyricsStyle.value.fontSize -
       form.value.neumeDefaultFontSize,
   );
 }
@@ -2649,7 +2499,6 @@ function updateMinimumSyllableToHyphenClearance(value: number | null) {
 function onMelkiteRtlChanged(value: CheckboxValue) {
   form.value.melkiteRtl = value === true;
   onChangeMelkiteRtl();
-  updateDefaultFontsForArabicContext();
 }
 
 function onChangeMelkiteRtl() {
@@ -2664,7 +2513,6 @@ function updateNumerals(value: unknown) {
   }
 
   form.value.numerals = value;
-  updateDefaultFontsForArabicContext();
 }
 
 function isSyllableElement(elementType: ElementType) {

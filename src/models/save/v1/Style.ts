@@ -1,6 +1,6 @@
 import type { TextBoxAlignment } from './Element';
 
-export class ParagraphStyle {
+export class TextStyle {
   public id: string = '';
   public displayName: string = '';
   public builtIn: boolean | undefined = undefined;

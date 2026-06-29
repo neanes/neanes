@@ -12,11 +12,8 @@ import type { Neume } from '@/models/Neumes';
 import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import type { Page } from '@/models/Page';
 import type { PageSetup } from '@/models/PageSetup';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
-import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
+import type { TextStyle } from '@/models/TextStyle';
+import { BUILT_IN_TEXT_STYLE_IDS, resolveTextStyle } from '@/models/TextStyle';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { resolveRunningMarkerText } from '@/utils/runningMarkers';
@@ -115,15 +112,11 @@ export class LatexExporter {
   public export(
     pages: Page[],
     pageSetup: PageSetup,
-    paragraphStyles: ParagraphStyle[],
+    textStyles: TextStyle[],
     options: LatexExporterOptions,
   ) {
     const neumeDescent = TextMeasurementService.getFontBoundingBoxDescent(
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-    );
-
-    const lyricAscent = TextMeasurementService.getFontBoundingBoxAscent(
-      pageSetup.lyricsFont,
     );
 
     /* 
@@ -157,36 +150,42 @@ Lyrics Baseline -->  |----------------|  ---
 
 Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Ascent 
 */
-    const lyricsVerticalOffset =
-      pageSetup.lyricsVerticalOffset + neumeDescent + lyricAscent;
     // TODO: Extend the LaTeX export schema to carry exact font face styles
     // such as Semibold, Caption, and Display. Until then, preserve the v2
     // output contract by projecting document styles onto CSS font-style and
     // font-weight, even though that loses non-CSS face information.
-    const defaultDropCapFont = resolveFontStyle(
-      pageSetup.dropCapDefaultFontFamily,
-      pageSetup.dropCapDefaultFontStyle,
+    const defaultTextBoxStyle = resolveTextStyle(
+      textStyles,
+      BUILT_IN_TEXT_STYLE_IDS.DefaultText,
     );
-    const defaultLyricsFont = resolveFontStyle(
-      pageSetup.lyricsDefaultFontFamily,
-      pageSetup.lyricsDefaultFontStyle,
+    const defaultDropCapStyle = resolveTextStyle(
+      textStyles,
+      BUILT_IN_TEXT_STYLE_IDS.DropCap,
     );
-    const defaultTextBoxStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    );
-    const verseStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.Verse,
+    const lyricsStyle = resolveTextStyle(
+      textStyles,
+      BUILT_IN_TEXT_STYLE_IDS.Lyrics,
     );
     const defaultTextBoxFont = resolveFontStyle(
       defaultTextBoxStyle.fontFamily,
       defaultTextBoxStyle.fontStyle,
     );
-    const defaultVerseFont = resolveFontStyle(
-      verseStyle.fontFamily,
-      verseStyle.fontStyle,
+    const defaultDropCapFont = resolveFontStyle(
+      defaultDropCapStyle.fontFamily,
+      defaultDropCapStyle.fontStyle,
     );
+    const defaultLyricsFont = resolveFontStyle(
+      lyricsStyle.fontFamily,
+      lyricsStyle.fontStyle,
+    );
+
+    const lyricsFont = `${defaultLyricsFont.cssFontStyle} normal ${defaultLyricsFont.cssFontWeight} ${lyricsStyle.fontSize}px "${defaultLyricsFont.cssFontFamily}"`;
+
+    const lyricAscent =
+      TextMeasurementService.getFontBoundingBoxAscent(lyricsFont);
+
+    const lyricsVerticalOffset =
+      pageSetup.lyricsVerticalOffset + neumeDescent + lyricAscent;
 
     const result: LatexScore = {
       appVersion: APP_VERSION,
@@ -205,14 +204,14 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             ? toPt(pageSetup.martyriaVerticalOffset)
             : undefined,
         fontFamilies: {
-          dropCap: convertFontName(pageSetup.dropCapDefaultFontFamily),
-          lyrics: convertFontName(pageSetup.lyricsDefaultFontFamily),
+          dropCap: convertFontName(defaultDropCapStyle.fontFamily),
+          lyrics: convertFontName(lyricsStyle.fontFamily),
           neume: convertFontName(pageSetup.neumeDefaultFontFamily),
           textBox: convertFontName(defaultTextBoxStyle.fontFamily),
         },
         fontSizes: {
-          dropCap: toPt(pageSetup.dropCapDefaultFontSize),
-          lyrics: toPt(pageSetup.lyricsDefaultFontSize),
+          dropCap: toPt(defaultDropCapStyle.fontSize),
+          lyrics: toPt(lyricsStyle.fontSize),
           modeKey: toPt(pageSetup.modeKeyDefaultFontSize),
           neume: toPt(pageSetup.neumeDefaultFontSize),
           textBox: toPt(defaultTextBoxStyle.fontSize),
@@ -248,13 +247,13 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           accidental: pageSetup.accidentalDefaultColor.substring(1),
           breath: pageSetup.breathDefaultColor.substring(1),
           cross: pageSetup.crossDefaultColor.substring(1),
-          dropCap: pageSetup.dropCapDefaultColor.substring(1),
+          dropCap: defaultDropCapStyle.color.substring(1),
           fthora: pageSetup.fthoraDefaultColor.substring(1),
           gorgon: pageSetup.gorgonDefaultColor.substring(1),
           heteron: pageSetup.heteronDefaultColor.substring(1),
           ison: pageSetup.isonDefaultColor.substring(1),
           koronis: pageSetup.koronisDefaultColor.substring(1),
-          lyrics: pageSetup.lyricsDefaultColor.substring(1),
+          lyrics: lyricsStyle.color.substring(1),
           martyria: pageSetup.martyriaDefaultColor.substring(1),
           measureBar: pageSetup.measureBarDefaultColor.substring(1),
           measureNumber: pageSetup.measureNumberDefaultColor.substring(1),
@@ -435,9 +434,14 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             } as LatexNoteElement;
 
             if (note.lyrics != '' || note.melismaText != '') {
+              const resolvedLyricsStyle = resolveTextStyle(
+                textStyles,
+                note.textStyleId,
+                note.getTextStyleOverrides(),
+              );
               const lyricsFont = resolveFontStyle(
-                note.lyricsFontFamily,
-                note.lyricsFontStyle,
+                resolvedLyricsStyle.fontFamily,
+                resolvedLyricsStyle.fontStyle,
               );
 
               noteInfo.lyrics =
@@ -448,27 +452,22 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? toPt(note.lyricsHorizontalOffset)
                   : undefined;
               noteInfo.lyricsColor =
-                !note.lyricsUseDefaultStyle &&
-                note.lyricsColor != pageSetup.lyricsDefaultColor
-                  ? note.lyricsColor.substring(1)
+                resolvedLyricsStyle.color != lyricsStyle.color
+                  ? resolvedLyricsStyle.color.substring(1)
                   : undefined;
               noteInfo.lyricsFontFamily =
-                !note.lyricsUseDefaultStyle &&
-                note.lyricsFontFamily != pageSetup.lyricsDefaultFontFamily
-                  ? convertFontName(note.lyricsFontFamily)
+                resolvedLyricsStyle.fontFamily != lyricsStyle.fontFamily
+                  ? convertFontName(resolvedLyricsStyle.fontFamily)
                   : undefined;
               noteInfo.lyricsFontSize =
-                !note.lyricsUseDefaultStyle &&
-                note.lyricsFontSize != pageSetup.lyricsDefaultFontSize
-                  ? toPt(note.lyricsFontSize)
+                resolvedLyricsStyle.fontSize != lyricsStyle.fontSize
+                  ? toPt(resolvedLyricsStyle.fontSize)
                   : undefined;
               noteInfo.lyricsFontStyle =
-                !note.lyricsUseDefaultStyle &&
                 lyricsFont.cssFontStyle != defaultLyricsFont.cssFontStyle
                   ? lyricsFont.cssFontStyle
                   : undefined;
               noteInfo.lyricsFontWeight =
-                !note.lyricsUseDefaultStyle &&
                 lyricsFont.cssFontWeight != defaultLyricsFont.cssFontWeight
                   ? lyricsFont.cssFontWeight
                   : undefined;
@@ -505,6 +504,15 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             } as LatexTempoElement);
           } else if (element.elementType === ElementType.DropCap) {
             const dropCap = element as DropCapElement;
+            const resolvedDropCapStyle = resolveTextStyle(
+              textStyles,
+              dropCap.textStyleId,
+              dropCap.getTextStyleOverrides(),
+            );
+            const resolvedDropCapFont = resolveFontStyle(
+              resolvedDropCapStyle.fontFamily,
+              resolvedDropCapStyle.fontStyle,
+            );
 
             let verticalAdjustment = 0;
 
@@ -529,29 +537,27 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 verticalAdjustment != 0 ? toPt(verticalAdjustment) : undefined,
               content: dropCap.content,
               fontFamily:
-                !dropCap.useDefaultStyle &&
-                dropCap.fontFamily != pageSetup.dropCapDefaultFontFamily
-                  ? convertFontName(dropCap.fontFamily)
+                resolvedDropCapStyle.fontFamily !=
+                defaultDropCapStyle.fontFamily
+                  ? convertFontName(resolvedDropCapStyle.fontFamily)
                   : undefined,
               fontSize:
-                !dropCap.useDefaultStyle &&
-                dropCap.fontSize != pageSetup.dropCapDefaultFontSize
-                  ? toPt(dropCap.fontSize)
+                resolvedDropCapStyle.fontSize != defaultDropCapStyle.fontSize
+                  ? toPt(resolvedDropCapStyle.fontSize)
                   : undefined,
               fontStyle:
-                !dropCap.useDefaultStyle &&
-                dropCap.computedFontStyle != defaultDropCapFont.cssFontStyle
-                  ? dropCap.computedFontStyle
+                resolvedDropCapFont.cssFontStyle !=
+                defaultDropCapFont.cssFontStyle
+                  ? resolvedDropCapFont.cssFontStyle
                   : undefined,
               fontWeight:
-                !dropCap.useDefaultStyle &&
-                dropCap.computedFontWeight != defaultDropCapFont.cssFontWeight
-                  ? dropCap.computedFontWeight
+                resolvedDropCapFont.cssFontWeight !=
+                defaultDropCapFont.cssFontWeight
+                  ? resolvedDropCapFont.cssFontWeight
                   : undefined,
               color:
-                !dropCap.useDefaultStyle &&
-                dropCap.color != pageSetup.dropCapDefaultColor
-                  ? dropCap.color.substring(1)
+                resolvedDropCapStyle.color != defaultDropCapStyle.color
+                  ? resolvedDropCapStyle.color.substring(1)
                   : undefined,
             } as LatexDropCapElement);
           } else if (
@@ -619,25 +625,25 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           ) {
             const textBox = element as TextBoxElement;
             const defaultFontFamily = textBox.inline
-              ? verseStyle.fontFamily
+              ? lyricsStyle.fontFamily
               : defaultTextBoxStyle.fontFamily;
             const defaultFontSize = textBox.inline
-              ? verseStyle.fontSize
+              ? lyricsStyle.fontSize
               : defaultTextBoxStyle.fontSize;
             const defaultFont = textBox.inline
-              ? defaultVerseFont
+              ? defaultLyricsFont
               : defaultTextBoxFont;
             const defaultColor = textBox.inline
-              ? verseStyle.color
+              ? lyricsStyle.color
               : defaultTextBoxStyle.color;
-            const resolvedParagraphStyle = resolveParagraphStyle(
-              paragraphStyles,
-              textBox.paragraphStyleId,
-              textBox.getParagraphStyleOverrides(),
+            const resolvedTextStyle = resolveTextStyle(
+              textStyles,
+              textBox.textStyleId,
+              textBox.getTextStyleOverrides(),
             );
             const resolvedTextBoxFont = resolveFontStyle(
-              resolvedParagraphStyle.fontFamily,
-              resolvedParagraphStyle.fontStyle,
+              resolvedTextStyle.fontFamily,
+              resolvedTextStyle.fontStyle,
             );
 
             pushExportedElement({
@@ -646,7 +652,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               width: toPt(textBox.width),
               height: toPt(textBox.height),
               alignment: !textBox.multipanel
-                ? convertAlignment(resolvedParagraphStyle.alignment)
+                ? convertAlignment(resolvedTextStyle.alignment)
                 : undefined,
               inline: textBox.inline || undefined,
               content: textBox.content,
@@ -665,12 +671,12 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? toPt(textBox.marginBottom)
                   : undefined,
               fontFamily:
-                resolvedParagraphStyle.fontFamily != defaultFontFamily
-                  ? convertFontName(resolvedParagraphStyle.fontFamily)
+                resolvedTextStyle.fontFamily != defaultFontFamily
+                  ? convertFontName(resolvedTextStyle.fontFamily)
                   : undefined,
               fontSize:
-                resolvedParagraphStyle.fontSize != defaultFontSize
-                  ? toPt(resolvedParagraphStyle.fontSize)
+                resolvedTextStyle.fontSize != defaultFontSize
+                  ? toPt(resolvedTextStyle.fontSize)
                   : undefined,
               fontStyle:
                 resolvedTextBoxFont.cssFontStyle != defaultFont.cssFontStyle
@@ -681,8 +687,8 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? resolvedTextBoxFont.cssFontWeight
                   : undefined,
               color:
-                resolvedParagraphStyle.color != defaultColor
-                  ? resolvedParagraphStyle.color.substring(1)
+                resolvedTextStyle.color != defaultColor
+                  ? resolvedTextStyle.color.substring(1)
                   : undefined,
             } as LatexTextBoxElement);
           }

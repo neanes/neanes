@@ -3,8 +3,8 @@ import { EmptyElement } from '@/models/save/v1/Element';
 
 import { Footers } from './Footers';
 import { Headers } from './Headers';
-import { ParagraphStyle } from './Style';
 import { PageSetup } from './PageSetup';
+import type { TextStyle } from './Style';
 
 const ScoreVersion: string = '1.2';
 
@@ -20,7 +20,7 @@ export class Score {
   public appVersion: string = APP_VERSION;
   public documentProperties: DocumentProperties | undefined = undefined;
   public pageSetup: PageSetup = new PageSetup();
-  public paragraphStyles: ParagraphStyle[] = [];
+  public textStyles: TextStyle[] = [];
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();

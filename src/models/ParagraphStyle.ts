@@ -4,9 +4,9 @@ import { Unit } from '@/utils/Unit';
 import type { TextBoxAlignment } from './Element';
 import type { PageSetup } from './PageSetup';
 
-export type ParagraphStyleAlignment = TextBoxAlignment;
+export type TextStyleAlignment = TextBoxAlignment;
 
-export const BUILT_IN_PARAGRAPH_STYLE_IDS = {
+export const BUILT_IN_TEXT_STYLE_IDS = {
   DefaultText: 'default-text',
   Annotation: 'annotation',
   Title: 'title',
@@ -15,14 +15,15 @@ export const BUILT_IN_PARAGRAPH_STYLE_IDS = {
   Section: 'section',
   Header: 'header',
   Footer: 'footer',
-  Verse: 'verse',
+  Lyrics: 'lyrics',
+  DropCap: 'drop-cap',
 } as const;
 
-export type BuiltInParagraphStyleId =
-  (typeof BUILT_IN_PARAGRAPH_STYLE_IDS)[keyof typeof BUILT_IN_PARAGRAPH_STYLE_IDS];
+export type BuiltInTextStyleId =
+  (typeof BUILT_IN_TEXT_STYLE_IDS)[keyof typeof BUILT_IN_TEXT_STYLE_IDS];
 
-export interface ParagraphStyleOverrides {
-  alignment?: ParagraphStyleAlignment;
+export interface TextStyleOverrides {
+  alignment?: TextStyleAlignment;
   fontFamily?: string;
   fontSize?: number;
   fontStyle?: string;
@@ -31,8 +32,8 @@ export interface ParagraphStyleOverrides {
   lineHeight?: number | null;
 }
 
-export interface ResolvedParagraphStyle {
-  alignment: ParagraphStyleAlignment;
+export interface ResolvedTextStyle {
+  alignment: TextStyleAlignment;
   fontFamily: string;
   fontSize: number;
   fontStyle: string;
@@ -41,15 +42,15 @@ export interface ResolvedParagraphStyle {
   lineHeight: number | null;
 }
 
-export class ParagraphStyle {
+export class TextStyle {
   public id: string = crypto.randomUUID();
-  public displayName: string = 'Paragraph Style';
+  public displayName: string = 'Text Style';
   public builtIn: boolean = false;
   public parentStyleId: string | null = null;
-  public overrides: ParagraphStyleOverrides = {};
+  public overrides: TextStyleOverrides = {};
 
   public clone() {
-    const clone = new ParagraphStyle();
+    const clone = new TextStyle();
     clone.id = this.id;
     clone.displayName = this.displayName;
     clone.builtIn = this.builtIn;
@@ -59,7 +60,7 @@ export class ParagraphStyle {
   }
 }
 
-export function createParagraphStyleFallback(): ResolvedParagraphStyle {
+export function createTextStyleFallback(): ResolvedTextStyle {
   return {
     alignment: 'left' as TextBoxAlignment,
     fontFamily: 'Source Serif',
@@ -71,109 +72,136 @@ export function createParagraphStyleFallback(): ResolvedParagraphStyle {
   };
 }
 
-export function createParagraphStylesFromPageSetup(pageSetup: PageSetup) {
-  return createParagraphStylesFromDefaults(pageSetup, {});
+export function createTextStylesFromPageSetup(pageSetup: PageSetup) {
+  return createTextStylesFromDefaults(pageSetup, {});
 }
 
-export interface LegacyTextBoxDefaults {
+export interface LegacyStyleDefaults {
   textBoxDefaultFontFamily?: string | null;
   textBoxDefaultFontSize?: number | null;
   textBoxDefaultFontStyle?: string | null;
   textBoxDefaultColor?: string | null;
   textBoxDefaultStrokeWidth?: number | null;
   textBoxDefaultLineHeight?: number | null;
+  dropCapDefaultFontFamily?: string | null;
+  dropCapDefaultFontSize?: number | null;
+  dropCapDefaultFontStyle?: string | null;
+  dropCapDefaultColor?: string | null;
+  dropCapDefaultStrokeWidth?: number | null;
+  dropCapDefaultLineHeight?: number | null;
+  lyricsDefaultFontFamily?: string | null;
+  lyricsDefaultFontSize?: number | null;
+  lyricsDefaultFontStyle?: string | null;
+  lyricsDefaultColor?: string | null;
+  lyricsDefaultStrokeWidth?: number | null;
+  lyricsDefaultLineHeight?: number | null;
 }
 
-export function createParagraphStylesFromDefaults(
+export function createTextStylesFromDefaults(
   pageSetup: PageSetup,
-  legacyTextBoxDefaults: LegacyTextBoxDefaults,
+  legacyStyleDefaults: LegacyStyleDefaults,
 ) {
-  const defaultText = new ParagraphStyle();
-  defaultText.id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  const defaultText = new TextStyle();
+  defaultText.id = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
   defaultText.displayName = 'Default Text';
   defaultText.builtIn = true;
   defaultText.overrides = {
     alignment: 'left' as TextBoxAlignment,
-    fontFamily:
-      legacyTextBoxDefaults.textBoxDefaultFontFamily ?? 'Source Serif',
-    fontSize: legacyTextBoxDefaults.textBoxDefaultFontSize ?? Unit.fromPt(12),
+    fontFamily: legacyStyleDefaults.textBoxDefaultFontFamily ?? 'Source Serif',
+    fontSize: legacyStyleDefaults.textBoxDefaultFontSize ?? Unit.fromPt(12),
     fontStyle:
-      legacyTextBoxDefaults.textBoxDefaultFontStyle ?? DEFAULT_FONT_STYLE,
-    color: legacyTextBoxDefaults.textBoxDefaultColor ?? '#000000',
-    strokeWidth: legacyTextBoxDefaults.textBoxDefaultStrokeWidth ?? 0,
-    lineHeight: legacyTextBoxDefaults.textBoxDefaultLineHeight ?? null,
+      legacyStyleDefaults.textBoxDefaultFontStyle ?? DEFAULT_FONT_STYLE,
+    color: legacyStyleDefaults.textBoxDefaultColor ?? '#000000',
+    strokeWidth: legacyStyleDefaults.textBoxDefaultStrokeWidth ?? 0,
+    lineHeight: legacyStyleDefaults.textBoxDefaultLineHeight ?? null,
   };
 
   const annotation = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+    BUILT_IN_TEXT_STYLE_IDS.Annotation,
     'Annotation',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
     {
-      fontSize: pageSetup.lyricsDefaultFontSize,
+      fontSize: Unit.fromPt(12),
     },
   );
 
   const title = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
+    BUILT_IN_TEXT_STYLE_IDS.Title,
     'Title',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
     {
       alignment: 'center' as TextBoxAlignment,
       fontSize: Unit.fromPt(28),
     },
   );
   const subtitle = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Subtitle,
+    BUILT_IN_TEXT_STYLE_IDS.Subtitle,
     'Subtitle',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
     {
       alignment: 'center' as TextBoxAlignment,
       fontSize: Unit.fromPt(22),
     },
   );
   const chapter = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Chapter,
+    BUILT_IN_TEXT_STYLE_IDS.Chapter,
     'Chapter',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
     {
       alignment: 'center' as TextBoxAlignment,
       fontSize: Unit.fromPt(24),
     },
   );
   const section = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Section,
+    BUILT_IN_TEXT_STYLE_IDS.Section,
     'Section',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
     {
       fontSize: Unit.fromPt(20),
     },
   );
   const header = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
+    BUILT_IN_TEXT_STYLE_IDS.Header,
     'Header',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
     {
       alignment: 'center' as TextBoxAlignment,
     },
   );
   const footer = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
+    BUILT_IN_TEXT_STYLE_IDS.Footer,
     'Footer',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
     {
       alignment: 'center' as TextBoxAlignment,
     },
   );
-  const verse = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Verse,
-    'Verse',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+  const lyrics = createBuiltInStyle(
+    BUILT_IN_TEXT_STYLE_IDS.Lyrics,
+    'Lyrics',
+    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
     {
-      fontFamily: pageSetup.lyricsDefaultFontFamily,
-      fontSize: pageSetup.lyricsDefaultFontSize,
-      fontStyle: pageSetup.lyricsDefaultFontStyle,
-      color: pageSetup.lyricsDefaultColor,
-      strokeWidth: pageSetup.lyricsDefaultStrokeWidth,
+      fontFamily: legacyStyleDefaults.lyricsDefaultFontFamily ?? 'Source Serif',
+      fontSize: legacyStyleDefaults.lyricsDefaultFontSize ?? Unit.fromPt(12),
+      fontStyle:
+        legacyStyleDefaults.lyricsDefaultFontStyle ?? DEFAULT_FONT_STYLE,
+      color: legacyStyleDefaults.lyricsDefaultColor ?? '#000000',
+      strokeWidth: legacyStyleDefaults.lyricsDefaultStrokeWidth ?? 0,
+    },
+  );
+  const dropCap = createBuiltInStyle(
+    BUILT_IN_TEXT_STYLE_IDS.DropCap,
+    'Drop Cap',
+    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    {
+      fontFamily:
+        legacyStyleDefaults.dropCapDefaultFontFamily ?? 'Source Serif',
+      fontSize: legacyStyleDefaults.dropCapDefaultFontSize ?? Unit.fromPt(60),
+      fontStyle:
+        legacyStyleDefaults.dropCapDefaultFontStyle ?? DEFAULT_FONT_STYLE,
+      color: legacyStyleDefaults.dropCapDefaultColor ?? '#000000',
+      strokeWidth: legacyStyleDefaults.dropCapDefaultStrokeWidth ?? 0,
+      lineHeight: legacyStyleDefaults.dropCapDefaultLineHeight ?? null,
     },
   );
 
@@ -186,45 +214,46 @@ export function createParagraphStylesFromDefaults(
     section,
     header,
     footer,
-    verse,
+    lyrics,
+    dropCap,
   ];
 }
 
-export function getParagraphStyleById(
-  styles: ParagraphStyle[],
+export function getTextStyleById(
+  styles: TextStyle[],
   styleId: string | null | undefined,
 ) {
   return styles.find((style) => style.id === styleId) ?? null;
 }
 
-export function resolveParagraphStyle(
-  styles: ParagraphStyle[],
+export function resolveTextStyle(
+  styles: TextStyle[],
   styleId: string | null | undefined,
-  elementOverrides?: ParagraphStyleOverrides,
-): ResolvedParagraphStyle {
+  elementOverrides?: TextStyleOverrides,
+): ResolvedTextStyle {
   const visited = new Set<string>();
-  const resolved = createParagraphStyleFallback();
-  const chain: ParagraphStyle[] = [];
+  const resolved = createTextStyleFallback();
+  const chain: TextStyle[] = [];
 
-  let style = getParagraphStyleById(styles, styleId);
+  let style = getTextStyleById(styles, styleId);
 
   while (style != null && !visited.has(style.id)) {
     visited.add(style.id);
     chain.unshift(style);
-    style = getParagraphStyleById(styles, style.parentStyleId);
+    style = getTextStyleById(styles, style.parentStyleId);
   }
 
   for (const item of chain) {
-    applyParagraphStyleOverrides(resolved, item.overrides);
+    applyTextStyleOverrides(resolved, item.overrides);
   }
 
-  applyParagraphStyleOverrides(resolved, elementOverrides);
+  applyTextStyleOverrides(resolved, elementOverrides);
 
   return resolved;
 }
 
-export function wouldCreateParagraphStyleCycle(
-  styles: ParagraphStyle[],
+export function wouldCreateTextStyleCycle(
+  styles: TextStyle[],
   styleId: string,
   parentStyleId: string | null,
 ) {
@@ -245,31 +274,31 @@ export function wouldCreateParagraphStyleCycle(
     }
 
     visited.add(currentId);
-    currentId = getParagraphStyleById(styles, currentId)?.parentStyleId ?? null;
+    currentId = getTextStyleById(styles, currentId)?.parentStyleId ?? null;
   }
 
   return false;
 }
 
-export function getAvailableParagraphStyleParents(
-  styles: ParagraphStyle[],
+export function getAvailableTextStyleParents(
+  styles: TextStyle[],
   styleId: string,
 ) {
   return styles.filter((candidate) => {
     return (
       candidate.id !== styleId &&
-      !wouldCreateParagraphStyleCycle(styles, styleId, candidate.id)
+      !wouldCreateTextStyleCycle(styles, styleId, candidate.id)
     );
   });
 }
 
 function createBuiltInStyle(
-  id: BuiltInParagraphStyleId,
+  id: BuiltInTextStyleId,
   displayName: string,
   parentStyleId: string | null,
-  overrides: ParagraphStyleOverrides = {},
+  overrides: TextStyleOverrides = {},
 ) {
-  const style = new ParagraphStyle();
+  const style = new TextStyle();
   style.id = id;
   style.displayName = displayName;
   style.builtIn = true;
@@ -278,9 +307,9 @@ function createBuiltInStyle(
   return style;
 }
 
-function applyParagraphStyleOverrides(
-  target: ResolvedParagraphStyle,
-  overrides?: ParagraphStyleOverrides,
+function applyTextStyleOverrides(
+  target: ResolvedTextStyle,
+  overrides?: TextStyleOverrides,
 ) {
   if (overrides == null) {
     return;

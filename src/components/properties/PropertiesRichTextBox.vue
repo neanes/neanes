@@ -9,10 +9,10 @@
         :element="element"
         :fonts="fonts"
         :page-setup="pageSetup"
-        :paragraph-styles="paragraphStyles"
+        :text-styles="textStyles"
         show-edit-styles-button
-        :fallback-paragraph-style="resolvedParagraphStyle"
-        @open-paragraph-styles-dialog="emit('open-paragraph-styles-dialog')"
+        :fallback-text-style="resolvedTextStyle"
+        @open-text-styles-dialog="emit('open-text-styles-dialog', $event)"
       />
 
       <FieldSeparator />
@@ -99,7 +99,7 @@
 
       <Field orientation="horizontal">
         <FieldLabel for="properties-rich-text-box-gap-above">{{
-          $t(($) => $.dialog.paragraphStyles.gapAbove, { ns: 'dialog' })
+          $t(($) => $.dialog.textStyles.gapAbove, { ns: 'dialog' })
         }}</FieldLabel>
         <InputUnit
           id="properties-rich-text-box-gap-above"
@@ -121,7 +121,7 @@
 
       <Field orientation="horizontal">
         <FieldLabel for="properties-rich-text-box-gap-below">{{
-          $t(($) => $.dialog.paragraphStyles.gapBelow, { ns: 'dialog' })
+          $t(($) => $.dialog.textStyles.gapBelow, { ns: 'dialog' })
         }}</FieldLabel>
         <InputUnit
           id="properties-rich-text-box-gap-below"
@@ -406,12 +406,12 @@ import {
   getScaleLabelSelector,
 } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
-import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
 import { Scale, ScaleNote } from '@/models/Scales';
+import {
+  BUILT_IN_TEXT_STYLE_IDS,
+  resolveTextStyle,
+  type TextStyle,
+} from '@/models/TextStyle';
 import { fraction1FormatOptions } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
 
@@ -450,8 +450,8 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
-  paragraphStyles: {
-    type: Array as PropType<ParagraphStyle[]>,
+  textStyles: {
+    type: Array as PropType<TextStyle[]>,
     required: true,
   },
   source: {
@@ -461,7 +461,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits<{
-  'open-paragraph-styles-dialog': [];
+  'open-text-styles-dialog': [styleId: string];
   update: [value: Partial<RichTextBoxElement>];
 }>();
 
@@ -470,16 +470,16 @@ const RUNNING_MARKER_NONE_VALUE = '__none__';
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
-const fallbackParagraphStyleId = computed(() =>
+const fallbackTextStyleId = computed(() =>
   props.element.inline
-    ? BUILT_IN_PARAGRAPH_STYLE_IDS.Verse
-    : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    ? BUILT_IN_TEXT_STYLE_IDS.Lyrics
+    : BUILT_IN_TEXT_STYLE_IDS.DefaultText,
 );
-const resolvedParagraphStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    fallbackParagraphStyleId.value,
-    props.element.getParagraphStyleOverrides(),
+const resolvedTextStyle = computed(() =>
+  resolveTextStyle(
+    props.textStyles,
+    fallbackTextStyleId.value,
+    props.element.getTextStyleOverrides(),
   ),
 );
 

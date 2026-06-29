@@ -5,11 +5,9 @@ import { Footers } from './Footers';
 import type { Header } from './Header';
 import { Headers } from './Headers';
 import { PageSetup } from './PageSetup';
-import {
-  createParagraphStylesFromPageSetup,
-  ParagraphStyle,
-} from './ParagraphStyle';
 import { Staff } from './Staff';
+import type { TextStyle } from './TextStyle';
+import { createTextStylesFromPageSetup } from './TextStyle';
 
 export class DocumentProperties {
   public title: string = '';
@@ -19,7 +17,7 @@ export class DocumentProperties {
 export class Score {
   public documentProperties: DocumentProperties = new DocumentProperties();
   public pageSetup: PageSetup = new PageSetup();
-  public paragraphStyles: ParagraphStyle[] = createParagraphStylesFromPageSetup(
+  public textStyles: TextStyle[] = createTextStylesFromPageSetup(
     this.pageSetup,
   );
   public headers: Headers = new Headers();

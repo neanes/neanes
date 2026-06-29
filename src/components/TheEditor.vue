@@ -67,7 +67,7 @@ import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeComboSelector from '@/components/NeumeComboSelector.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
-import ParagraphStylesDialog from '@/components/ParagraphStylesDialog.vue';
+import TextStylesDialog from '@/components/ParagraphStylesDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
 import type { InspectorContext } from '@/components/properties/InspectorContext';
 import PropertiesPane from '@/components/properties/PropertiesPane.vue';
@@ -178,15 +178,12 @@ import {
 } from '@/models/Neumes';
 import type { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
-import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
 import { ScaleNote } from '@/models/Scales';
 import type { DocumentProperties } from '@/models/Score';
 import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
+import type { TextStyle } from '@/models/TextStyle';
+import { BUILT_IN_TEXT_STYLE_IDS, resolveTextStyle } from '@/models/TextStyle';
 import type { WorkspaceLocalStorage, ZoomFitMode } from '@/models/Workspace';
 import {
   formatZoomPercent,
@@ -420,7 +417,10 @@ const modeKeyDialogIsOpen = ref(false);
 const syllablePositioningDialogIsOpen = ref(false);
 const playbackSettingsDialogIsOpen = ref(false);
 const pageSetupDialogIsOpen = ref(false);
-const paragraphStylesDialogIsOpen = ref(false);
+const textStylesDialogIsOpen = ref(false);
+const textStylesDialogSelectedStyleId = ref<string>(
+  BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+);
 const documentPropertiesDialogIsOpen = ref(false);
 const editorPreferencesDialogIsOpen = ref(false);
 const aboutDialogIsOpen = ref(false);
@@ -1354,7 +1354,7 @@ const dialogOpen = computed(() => {
   return (
     modeKeyDialogIsOpen.value ||
     pageSetupDialogIsOpen.value ||
-    paragraphStylesDialogIsOpen.value ||
+    textStylesDialogIsOpen.value ||
     documentPropertiesDialogIsOpen.value ||
     playbackSettingsDialogIsOpen.value ||
     syllablePositioningDialogIsOpen.value ||
@@ -1616,10 +1616,7 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuSave, onFileMenuSave);
   EventBus.$on(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
   EventBus.$on(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
-  EventBus.$on(
-    IpcMainChannels.FileMenuParagraphStyles,
-    onFileMenuParagraphStyles,
-  );
+  EventBus.$on(IpcMainChannels.FileMenuTextStyles, onFileMenuTextStyles);
   EventBus.$on(
     IpcMainChannels.FileMenuDocumentProperties,
     onFileMenuDocumentProperties,
@@ -1717,10 +1714,7 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuSave, onFileMenuSave);
   EventBus.$off(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
   EventBus.$off(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
-  EventBus.$off(
-    IpcMainChannels.FileMenuParagraphStyles,
-    onFileMenuParagraphStyles,
-  );
+  EventBus.$off(IpcMainChannels.FileMenuTextStyles, onFileMenuTextStyles);
   EventBus.$off(
     IpcMainChannels.FileMenuDocumentProperties,
     onFileMenuDocumentProperties,
@@ -1916,13 +1910,14 @@ function getFooterHorizontalRuleStyle(page: Page, footerHeight: number) {
 }
 
 function getLyricStyle(element: NoteElement) {
+  const resolvedLyricsStyle = resolveTextStyle(
+    score.value.textStyles,
+    element.textStyleId,
+    element.getTextStyleOverrides(),
+  );
   const resolvedLyricsFont = resolveFontStyle(
-    element.lyricsUseDefaultStyle
-      ? score.value.pageSetup.lyricsDefaultFontFamily
-      : element.lyricsFontFamily,
-    element.lyricsUseDefaultStyle
-      ? score.value.pageSetup.lyricsDefaultFontStyle
-      : element.lyricsFontStyle,
+    resolvedLyricsStyle.fontFamily,
+    resolvedLyricsStyle.fontStyle,
   );
 
   return {
@@ -1939,24 +1934,16 @@ function getLyricStyle(element: NoteElement) {
       element.lyricsHorizontalOffset < 0
         ? withZoom(-element.lyricsHorizontalOffset)
         : undefined,
-    fontSize: element.lyricsUseDefaultStyle
-      ? withZoom(score.value.pageSetup.lyricsDefaultFontSize)
-      : withZoom(element.lyricsFontSize),
+    fontSize: withZoom(resolvedLyricsStyle.fontSize),
     fontFamily: getFontFamilyWithFallback(
       resolvedLyricsFont.cssFontFamily,
       score.value.pageSetup.neumeDefaultFontFamily,
     ),
     fontWeight: resolvedLyricsFont.cssFontWeight,
     fontStyle: resolvedLyricsFont.cssFontStyle,
-    textDecoration: element.lyricsUseDefaultStyle
-      ? undefined
-      : element.lyricsTextDecoration,
-    color: element.lyricsUseDefaultStyle
-      ? score.value.pageSetup.lyricsDefaultColor
-      : element.lyricsColor,
-    webkitTextStrokeWidth: element.lyricsUseDefaultStyle
-      ? withZoom(score.value.pageSetup.lyricsDefaultStrokeWidth)
-      : withZoom(element.lyricsStrokeWidth),
+    textDecoration: element.lyricsTextDecoration ?? undefined,
+    color: resolvedLyricsStyle.color,
+    webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
     lineHeight: withZoom(element.lyricsFontHeight),
     left: element.alignLeft
       ? withZoom(Math.min(0, element.lyricsHorizontalOffset))
@@ -1966,36 +1953,29 @@ function getLyricStyle(element: NoteElement) {
 }
 
 function getLeadingLyricHyphenStyle(element: NoteElement) {
+  const resolvedLyricsStyle = resolveTextStyle(
+    score.value.textStyles,
+    element.textStyleId,
+    element.getTextStyleOverrides(),
+  );
   const resolvedLyricsFont = resolveFontStyle(
-    element.lyricsUseDefaultStyle
-      ? score.value.pageSetup.lyricsDefaultFontFamily
-      : element.lyricsFontFamily,
-    element.lyricsUseDefaultStyle
-      ? score.value.pageSetup.lyricsDefaultFontStyle
-      : element.lyricsFontStyle,
+    resolvedLyricsStyle.fontFamily,
+    resolvedLyricsStyle.fontStyle,
   );
 
   return {
     top: withZoom(element.lyricsVerticalOffset),
     left: withZoom(element.leadingLyricHyphenOffset),
-    fontSize: element.lyricsUseDefaultStyle
-      ? withZoom(score.value.pageSetup.lyricsDefaultFontSize)
-      : withZoom(element.lyricsFontSize),
+    fontSize: withZoom(resolvedLyricsStyle.fontSize),
     fontFamily: getFontFamilyWithFallback(
       resolvedLyricsFont.cssFontFamily,
       score.value.pageSetup.neumeDefaultFontFamily,
     ),
     fontWeight: resolvedLyricsFont.cssFontWeight,
     fontStyle: resolvedLyricsFont.cssFontStyle,
-    textDecoration: element.lyricsUseDefaultStyle
-      ? undefined
-      : element.lyricsTextDecoration,
-    color: element.lyricsUseDefaultStyle
-      ? score.value.pageSetup.lyricsDefaultColor
-      : element.lyricsColor,
-    webkitTextStrokeWidth: element.lyricsUseDefaultStyle
-      ? withZoom(score.value.pageSetup.lyricsDefaultStrokeWidth)
-      : withZoom(element.lyricsStrokeWidth),
+    textDecoration: element.lyricsTextDecoration ?? undefined,
+    color: resolvedLyricsStyle.color,
+    webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
     lineHeight: withZoom(element.lyricsFontHeight),
   } as CSSProperties;
 }
@@ -2208,7 +2188,8 @@ function getElementStyle(element: ScoreElement) {
 }
 
 function getAdjustmentRatioStyle(line: Line, page: Page) {
-  const fontSize = score.value.pageSetup.lyricsDefaultFontSize * 0.8;
+  const resolvedLyricsStyle = getResolvedLyricsStyle();
+  const fontSize = resolvedLyricsStyle.fontSize * 0.8;
   const gap = fontSize * 0.5;
   const margins = getResolvedMarginsForPage(page);
 
@@ -2225,17 +2206,17 @@ function getAdjustmentRatioStyle(line: Line, page: Page) {
       line.elements[0].y + score.value.pageSetup.lineHeight / 3 - fontSize / 2,
     ),
     fontSize: withZoom(fontSize),
-    fontFamily: score.value.pageSetup.lyricsDefaultFontFamily,
+    fontFamily: resolvedLyricsStyle.fontFamily,
     color: score.value.pageSetup.gorgonDefaultColor,
   } as StyleValue;
 }
 
 function getMelismaStyle(element: NoteElement) {
+  const resolvedLyricsStyle = getResolvedLyricsStyle(element);
+
   return {
     width: withZoom(element.melismaWidth),
-    minHeight: element.lyricsUseDefaultStyle
-      ? withZoom(score.value.pageSetup.lyricsDefaultFontSize)
-      : withZoom(element.lyricsFontSize),
+    minHeight: withZoom(resolvedLyricsStyle.fontSize),
   } as StyleValue;
 }
 
@@ -2249,17 +2230,14 @@ function getMelismaUnderscoreStyleOuter(element: NoteElement) {
 
 function getMelismaUnderscoreStyleInner(element: NoteElement) {
   const thickness = score.value.pageSetup.lyricsMelismaThickness;
+  const resolvedLyricsStyle = getResolvedLyricsStyle(element);
 
   const spacing = !element.isFullMelisma
     ? score.value.pageSetup.lyricsMelismaSpacing
     : 0;
 
   return {
-    borderBottom: `${withZoom(thickness)} solid ${
-      element.lyricsUseDefaultStyle
-        ? score.value.pageSetup.lyricsDefaultColor
-        : element.lyricsColor
-    }`,
+    borderBottom: `${withZoom(thickness)} solid ${resolvedLyricsStyle.color}`,
     left: withZoom(spacing),
     width: `calc(100% - ${withZoom(spacing)})`,
   };
@@ -2751,8 +2729,11 @@ function openPlaybackSettingsDialog() {
   stopAudio();
 }
 
-function openParagraphStylesDialog() {
-  paragraphStylesDialogIsOpen.value = true;
+function openTextStylesDialog(
+  styleId: string = BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+) {
+  textStylesDialogSelectedStyleId.value = styleId;
+  textStylesDialogIsOpen.value = true;
 }
 
 function updatePlaybackOptions(options: PlaybackOptions) {
@@ -2979,11 +2960,6 @@ function addQuantitativeNeume(
   }
 
   const element = new NoteElement();
-  element.lyricsColor = score.value.pageSetup.lyricsDefaultColor;
-  element.lyricsFontFamily = score.value.pageSetup.lyricsDefaultFontFamily;
-  element.lyricsFontSize = score.value.pageSetup.lyricsDefaultFontSize;
-  element.lyricsFontStyle = score.value.pageSetup.lyricsDefaultFontStyle;
-  element.lyricsStrokeWidth = score.value.pageSetup.lyricsDefaultStrokeWidth;
 
   element.quantitativeNeume = quantitativeNeume;
   // Special case for neumes with secondary gorgon
@@ -3208,13 +3184,6 @@ function addDropCap(after: boolean) {
   }
 
   const element = new DropCapElement();
-
-  element.color = score.value.pageSetup.dropCapDefaultColor;
-  element.fontFamily = score.value.pageSetup.dropCapDefaultFontFamily;
-  element.fontSize = score.value.pageSetup.dropCapDefaultFontSize;
-  element.strokeWidth = score.value.pageSetup.dropCapDefaultStrokeWidth;
-  element.fontStyle = score.value.pageSetup.dropCapDefaultFontStyle;
-  element.lineHeight = score.value.pageSetup.dropCapDefaultLineHeight;
   element.lineSpan = score.value.pageSetup.dropCapDefaultLineSpan;
 
   if (after && !isLastElement(selectedElement.value)) {
@@ -5090,7 +5059,7 @@ async function load() {
           latexExporter.export(
             pages.value,
             score.value.pageSetup,
-            score.value.paragraphStyles,
+            score.value.textStyles,
             options,
           ),
           null,
@@ -6590,35 +6559,46 @@ function deletePreviousElement() {
 }
 
 function getResolvedAnnotationStyle() {
-  return resolveParagraphStyle(
-    score.value.paragraphStyles,
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+  return resolveTextStyle(
+    score.value.textStyles,
+    BUILT_IN_TEXT_STYLE_IDS.Annotation,
   );
 }
 
 function getResolvedDefaultTextStyle() {
-  return resolveParagraphStyle(
-    score.value.paragraphStyles,
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+  return resolveTextStyle(
+    score.value.textStyles,
+    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
   );
 }
 
-function getResolvedVerseStyle() {
-  return resolveParagraphStyle(
-    score.value.paragraphStyles,
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Verse,
+function getResolvedLyricsStyle(element?: NoteElement) {
+  return resolveTextStyle(
+    score.value.textStyles,
+    element?.textStyleId ?? BUILT_IN_TEXT_STYLE_IDS.Lyrics,
+    element?.getTextStyleOverrides(),
   );
+}
+
+function getDefaultLyricsFont() {
+  const resolvedLyricsStyle = getResolvedLyricsStyle();
+  const resolvedLyricsFont = resolveFontStyle(
+    resolvedLyricsStyle.fontFamily,
+    resolvedLyricsStyle.fontStyle,
+  );
+
+  return `${resolvedLyricsFont.cssFontStyle} normal ${resolvedLyricsFont.cssFontWeight} ${resolvedLyricsStyle.fontSize}px "${resolvedLyricsFont.cssFontFamily}"`;
 }
 
 function getResizableTextDefaultSnapshot(currentScore: Score) {
   return {
-    defaultText: resolveParagraphStyle(
-      currentScore.paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    defaultText: resolveTextStyle(
+      currentScore.textStyles,
+      BUILT_IN_TEXT_STYLE_IDS.DefaultText,
     ),
-    verse: resolveParagraphStyle(
-      currentScore.paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.Verse,
+    lyrics: resolveTextStyle(
+      currentScore.textStyles,
+      BUILT_IN_TEXT_STYLE_IDS.Lyrics,
     ),
   };
 }
@@ -6703,27 +6683,27 @@ function updateDocumentProperties(documentProperties: DocumentProperties) {
   save();
 }
 
-function getAllParagraphStyleElements(score: Score) {
+function getAllTextStyleElements(score: Score) {
   return [...score.staff.elements, ...score.headersAndFooters].filter(
     (element): element is TextBoxElement => isTextBoxElement(element),
   );
 }
 
-function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
+function updateTextStyles(textStyles: TextStyle[]) {
   const previousResizableTextDefaults = getResizableTextDefaultSnapshot(
     score.value,
   );
-  const clonedStyles = paragraphStyles.map((style) => style.clone());
+  const clonedStyles = textStyles.map((style) => style.clone());
   const validStyleIds = new Set(clonedStyles.map((style) => style.id));
   const commands: Command[] = [
     scoreCommandFactory.create('update-properties', {
       target: score.value,
-      newValues: { paragraphStyles: clonedStyles },
+      newValues: { textStyles: clonedStyles },
     }),
   ];
 
-  for (const element of getAllParagraphStyleElements(score.value)) {
-    if (validStyleIds.has(element.paragraphStyleId)) {
+  for (const element of getAllTextStyleElements(score.value)) {
+    if (validStyleIds.has(element.textStyleId)) {
       continue;
     }
 
@@ -6731,7 +6711,7 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
       textBoxCommandFactory.create('update-properties', {
         target: element,
         newValues: {
-          paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+          textStyleId: BUILT_IN_TEXT_STYLE_IDS.DefaultText,
         },
       }),
     );
@@ -6870,13 +6850,13 @@ function createRichHeaderFooterWithStyle(
   left: string,
   center: string,
   right: string,
-  paragraphStyleId: string,
+  textStyleId: string,
 ) {
   const textbox = new RichTextBoxElement();
   textbox.multipanel = true;
-  textbox.contentLeft = `<p class="neanes-style-${paragraphStyleId}">${left}</p>`;
-  textbox.contentCenter = `<p class="neanes-style-${paragraphStyleId}" style="text-align:center;">${center}</p>`;
-  textbox.contentRight = `<p class="neanes-style-${paragraphStyleId}" style="text-align:right;">${right}</p>`;
+  textbox.contentLeft = `<p class="neanes-style-${textStyleId}">${left}</p>`;
+  textbox.contentCenter = `<p class="neanes-style-${textStyleId}" style="text-align:center;">${center}</p>`;
+  textbox.contentRight = `<p class="neanes-style-${textStyleId}" style="text-align:right;">${right}</p>`;
   return textbox;
 }
 
@@ -6891,10 +6871,10 @@ function createDefaultRegularHeaderFooter(
     panel.center,
     panel.right,
   );
-  textbox.paragraphStyleId =
+  textbox.textStyleId =
     kind === 'header'
-      ? BUILT_IN_PARAGRAPH_STYLE_IDS.Header
-      : BUILT_IN_PARAGRAPH_STYLE_IDS.Footer;
+      ? BUILT_IN_TEXT_STYLE_IDS.Header
+      : BUILT_IN_TEXT_STYLE_IDS.Footer;
   return textbox;
 }
 
@@ -6904,15 +6884,15 @@ function createDefaultRichHeaderFooter(
   variant: HeaderFooterVariant,
 ) {
   const panel = getDefaultHeaderFooterPanels(pageSetup, kind, variant);
-  const paragraphStyleId =
+  const textStyleId =
     kind === 'header'
-      ? BUILT_IN_PARAGRAPH_STYLE_IDS.Header
-      : BUILT_IN_PARAGRAPH_STYLE_IDS.Footer;
+      ? BUILT_IN_TEXT_STYLE_IDS.Header
+      : BUILT_IN_TEXT_STYLE_IDS.Footer;
   const textbox = createRichHeaderFooterWithStyle(
     panel.left,
     panel.center,
     panel.right,
-    paragraphStyleId,
+    textStyleId,
   );
 
   if (pageSetup.melkiteRtl || pageSetup.numerals === 'easternArabic') {
@@ -7515,8 +7495,8 @@ function onFileMenuPageSetup() {
   pageSetupDialogIsOpen.value = true;
 }
 
-function onFileMenuParagraphStyles() {
-  openParagraphStylesDialog();
+function onFileMenuTextStyles() {
+  openTextStylesDialog();
 }
 
 function onFileMenuDocumentProperties() {
@@ -7836,7 +7816,7 @@ async function exportAsLatex(args: ExportAsLatexSettings) {
         latexExporter.export(
           pages.value,
           score.value.pageSetup,
-          score.value.paragraphStyles,
+          score.value.textStyles,
           args.options,
         ),
         null,
@@ -7888,7 +7868,7 @@ function onFileMenuInsertAnnotation() {
   if (selectedElement.value?.elementType === ElementType.Note) {
     const el = new AnnotationElement();
     const fontHeight = TextMeasurementService.getFontHeight(
-      score.value.pageSetup.lyricsFont,
+      getDefaultLyricsFont(),
     );
     el.x = 0;
     el.y = -fontHeight;
@@ -7902,7 +7882,7 @@ function onFileMenuInsertAlternateLine() {
   if (selectedElement.value?.elementType === ElementType.Note) {
     const el = new AlternateLineElement();
     const fontHeight = TextMeasurementService.getFontHeight(
-      score.value.pageSetup.lyricsFont,
+      getDefaultLyricsFont(),
     );
     el.x = 0;
     el.y = -fontHeight;
@@ -7915,9 +7895,9 @@ function onFileMenuInsertAlternateLine() {
 function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
   const element = new TextBoxElement();
   element.inline = args?.inline ?? false;
-  element.paragraphStyleId = element.inline
-    ? BUILT_IN_PARAGRAPH_STYLE_IDS.Verse
-    : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  element.textStyleId = element.inline
+    ? BUILT_IN_TEXT_STYLE_IDS.Lyrics
+    : BUILT_IN_TEXT_STYLE_IDS.DefaultText;
 
   addScoreElement(element, selectedElementIndex.value);
 
@@ -7934,7 +7914,7 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
 
 function onFileMenuInsertRichTextBox() {
   const element = new RichTextBoxElement();
-  element.content = `<p class="neanes-style-${BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText}"></p>`;
+  element.content = `<p class="neanes-style-${BUILT_IN_TEXT_STYLE_IDS.DefaultText}"></p>`;
   if (
     score.value.pageSetup.melkiteRtl ||
     score.value.pageSetup.numerals === 'easternArabic'
@@ -8523,7 +8503,7 @@ function createDefaultScore() {
   initializeDefaultHeaderFooters(score);
 
   const title = new TextBoxElement();
-  title.paragraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.Title;
+  title.textStyleId = BUILT_IN_TEXT_STYLE_IDS.Title;
   title.content = 'Title';
   title.height = Math.round(
     TextMeasurementService.getFontHeight(title.computedFont) * 1.2,
@@ -8745,10 +8725,6 @@ const contextMenuModeKey = computed(() => {
   return getContextMenuTargetForHomogeneousSelection(isModeKeyElement);
 });
 
-const contextMenuDropCap = computed(() => {
-  return getContextMenuTargetForHomogeneousSelection(isDropCapElement);
-});
-
 const contextMenuImageBox = computed(() => {
   return getContextMenuTargetForHomogeneousSelection(isImageBoxElement);
 });
@@ -8783,9 +8759,8 @@ function getContextMenuTargetForHomogeneousSelection<T extends ScoreElement>(
     : null;
 }
 
-// The `useDefaultStyle` property exists on mode keys and drop caps.
 const contextMenuUseDefaultStyleTarget = computed(
-  () => contextMenuModeKey.value ?? contextMenuDropCap.value,
+  () => contextMenuModeKey.value,
 );
 
 const contextMenuHasElementProperties = computed(
@@ -8796,16 +8771,12 @@ const contextMenuHasElementProperties = computed(
 );
 
 function setContextMenuUseDefaultStyle(
-  element: ModeKeyElement | DropCapElement,
+  element: ModeKeyElement,
   value: boolean,
 ) {
   const wasUsingDefaultStyle = element.useDefaultStyle;
 
-  if (isModeKeyElement(element)) {
-    updateModeKey(element, { useDefaultStyle: value });
-  } else {
-    updateDropCap(element, { useDefaultStyle: value });
-  }
+  updateModeKey(element, { useDefaultStyle: value });
 
   if (wasUsingDefaultStyle && !value) {
     setPaneVisibility('properties', true);
@@ -8929,7 +8900,7 @@ function renderTabLabel(tab: Tab) {
             :fonts="fonts"
             :inner-neume="toolbarInnerNeume"
             :page-setup="score.pageSetup"
-            :paragraph-styles="score.paragraphStyles"
+            :text-styles="score.textStyles"
             @update:annotation="updateAnnotation"
             @update:text-box="updateTextBox"
             @update:rich-text-box="updateRichTextBox"
@@ -8941,7 +8912,7 @@ function renderTabLabel(tab: Tab) {
             @update:martyria="updateMartyria"
             @update:tempo="updateTempo"
             @open-mode-key-dialog="openModeKeyDialog"
-            @open-paragraph-styles-dialog="openParagraphStylesDialog"
+            @open-text-styles-dialog="openTextStylesDialog"
             @open-syllable-positioning-dialog="openSyllablePositioningDialog"
           />
         </template>
@@ -9231,7 +9202,7 @@ function renderTabLabel(tab: Tab) {
                             token-scope="header"
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
-                            :paragraph-styles="score.paragraphStyles"
+                            :text-styles="score.textStyles"
                             :editor-language="ckeditorLanguage"
                             :selected="
                               getHeaderForPageIndex(pageIndex) ==
@@ -9418,7 +9389,7 @@ function renderTabLabel(tab: Tab) {
                                 :element="annotation"
                                 :page-setup="score.pageSetup"
                                 :fonts="fonts"
-                                :paragraph-styles="score.paragraphStyles"
+                                :text-styles="score.textStyles"
                                 :editor-language="ckeditorLanguage"
                                 :selected="
                                   selectedWorkspace.selectedAnnotationElement ===
@@ -9732,7 +9703,7 @@ function renderTabLabel(tab: Tab) {
                               :element="element as RichTextBoxElement"
                               :page-setup="score.pageSetup"
                               :fonts="fonts"
-                              :paragraph-styles="score.paragraphStyles"
+                              :text-styles="score.textStyles"
                               :editor-language="ckeditorLanguage"
                               :selected="isSelected(element)"
                               @select-single="selectedElement = element"
@@ -9924,7 +9895,7 @@ function renderTabLabel(tab: Tab) {
                             token-scope="footer"
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
-                            :paragraph-styles="score.paragraphStyles"
+                            :text-styles="score.textStyles"
                             :editor-language="ckeditorLanguage"
                             :selected="
                               getFooterForPageIndex(pageIndex) ==
@@ -10231,6 +10202,7 @@ function renderTabLabel(tab: Tab) {
         <ToolbarLyrics
           :element="inspectorContext.element"
           :fonts="fonts"
+          :text-styles="score.textStyles"
           @update="updateNoteAndSave(inspectorContext.element, $event)"
           @insert:special-character="insertSpecialCharacter"
         />
@@ -10239,7 +10211,7 @@ function renderTabLabel(tab: Tab) {
         <ToolbarTextBox
           :element="inspectorContext.element"
           :fonts="fonts"
-          :paragraph-styles="score.paragraphStyles"
+          :text-styles="score.textStyles"
           @update="updateTextBox(inspectorContext.element, $event)"
           @insert:gorthmikon="insertGorthmikon"
           @insert:pelastikon="insertPelastikon"
@@ -10250,10 +10222,10 @@ function renderTabLabel(tab: Tab) {
           :element="inspectorContext.element"
           :page-setup="score.pageSetup"
           :fonts="fonts"
-          :paragraph-styles="score.paragraphStyles"
-          :fallback-paragraph-style="
+          :text-styles="score.textStyles"
+          :fallback-text-style="
             inspectorContext.element.inline
-              ? getResolvedVerseStyle()
+              ? getResolvedLyricsStyle()
               : getResolvedDefaultTextStyle()
           "
         />
@@ -10263,14 +10235,15 @@ function renderTabLabel(tab: Tab) {
           :element="inspectorContext.element"
           :page-setup="score.pageSetup"
           :fonts="fonts"
-          :paragraph-styles="score.paragraphStyles"
-          :fallback-paragraph-style="getResolvedAnnotationStyle()"
+          :text-styles="score.textStyles"
+          :fallback-text-style="getResolvedAnnotationStyle()"
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'drop-cap'">
         <ToolbarDropCap
           :element="inspectorContext.element"
           :fonts="fonts"
+          :text-styles="score.textStyles"
           @update="updateDropCap(inspectorContext.element, $event)"
         />
       </template>
@@ -10365,16 +10338,18 @@ function renderTabLabel(tab: Tab) {
       v-if="pageSetupDialogIsOpen"
       v-model:open="pageSetupDialogIsOpen"
       :page-setup="score.pageSetup"
+      :text-styles="score.textStyles"
       :fonts="fonts"
-      @open-paragraph-styles="openParagraphStylesDialog"
+      @open-text-styles="openTextStylesDialog($event)"
       @update="updatePageSetup($event)"
     />
-    <ParagraphStylesDialog
-      v-if="paragraphStylesDialogIsOpen"
-      v-model:open="paragraphStylesDialogIsOpen"
-      :paragraph-styles="score.paragraphStyles"
+    <TextStylesDialog
+      v-if="textStylesDialogIsOpen"
+      v-model:open="textStylesDialogIsOpen"
+      :text-styles="score.textStyles"
+      :initial-selected-style-id="textStylesDialogSelectedStyleId"
       :fonts="fonts"
-      @update="updateParagraphStyles($event)"
+      @update="updateTextStyles($event)"
     />
     <DocumentPropertiesDialog
       v-if="documentPropertiesDialogIsOpen"
@@ -10400,7 +10375,7 @@ function renderTabLabel(tab: Tab) {
         :element="element as RichTextBoxElement"
         :page-setup="score.pageSetup"
         :fonts="fonts"
-        :paragraph-styles="score.paragraphStyles"
+        :text-styles="score.textStyles"
         :editor-language="ckeditorLanguage"
         :recalc="true"
         @update:height="

@@ -39,9 +39,9 @@
     "title": "Τίτλος",
     "author": "Συγγραφέας"
   },
-  "paragraphStyles": {
-    "root": "Paragraph Styles",
-    "description": "Create reusable text-box paragraph styles and control inheritance between them.",
+  "textStyles": {
+    "root": "Text Styles",
+    "description": "Create reusable text-box text styles and control inheritance between them.",
     "create": "Create",
     "clone": "Clone",
     "delete": "Delete",
@@ -53,7 +53,9 @@
     "gapAbove": "Gap Above",
     "gapBelow": "Gap Below",
     "openDialog": "Edit Styles",
-    "pageSetupBridge": "Text-box defaults now live in Paragraph Styles. Edit Default Text and related styles there."
+    "pageSetupBridgeTextBoxes": "Text-box defaults now live in Text Styles. Edit Default Text and related styles there.",
+    "pageSetupBridgeLyrics": "Lyrics styling now lives in Text Styles. Edit the Lyrics style there.",
+    "pageSetupBridgeDropCaps": "Drop-cap styling now lives in Text Styles. Edit the Drop Cap style there."
   },
   "neumePositioning": {
     "root": "Τοποθέτηση Σημείου",

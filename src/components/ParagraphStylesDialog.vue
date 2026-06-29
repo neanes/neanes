@@ -5,11 +5,11 @@
     >
       <DialogHeader>
         <DialogTitle>
-          {{ $t(($) => $.dialog.paragraphStyles.root, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.textStyles.root, { ns: 'dialog' }) }}
         </DialogTitle>
         <DialogDescription>
           {{
-            $t(($) => $.dialog.paragraphStyles.description, {
+            $t(($) => $.dialog.textStyles.description, {
               ns: 'dialog',
             })
           }}
@@ -19,7 +19,7 @@
         <div class="flex min-h-0 flex-col overflow-hidden rounded-md border">
           <div class="flex items-center gap-2 border-b p-2">
             <Button type="button" size="sm" @click="createStyle">
-              {{ $t(($) => $.dialog.paragraphStyles.create, { ns: 'dialog' }) }}
+              {{ $t(($) => $.dialog.textStyles.create, { ns: 'dialog' }) }}
             </Button>
             <Button
               type="button"
@@ -28,7 +28,7 @@
               :disabled="selectedStyle == null"
               @click="cloneSelectedStyle"
             >
-              {{ $t(($) => $.dialog.paragraphStyles.clone, { ns: 'dialog' }) }}
+              {{ $t(($) => $.dialog.textStyles.clone, { ns: 'dialog' }) }}
             </Button>
             <Button
               type="button"
@@ -37,7 +37,7 @@
               :disabled="selectedStyle == null || selectedStyle.builtIn"
               @click="deleteSelectedStyle"
             >
-              {{ $t(($) => $.dialog.paragraphStyles.delete, { ns: 'dialog' }) }}
+              {{ $t(($) => $.dialog.textStyles.delete, { ns: 'dialog' }) }}
             </Button>
           </div>
           <ScrollArea class="min-h-0 flex-1">
@@ -58,10 +58,10 @@
                 <div class="text-xs text-muted-foreground">
                   {{
                     style.builtIn
-                      ? $t(($) => $.dialog.paragraphStyles.builtIn, {
+                      ? $t(($) => $.dialog.textStyles.builtIn, {
                           ns: 'dialog',
                         })
-                      : $t(($) => $.dialog.paragraphStyles.custom, {
+                      : $t(($) => $.dialog.textStyles.custom, {
                           ns: 'dialog',
                         })
                   }}
@@ -78,13 +78,11 @@
           <ScrollArea class="min-h-0 flex-1 rounded-md border">
             <FieldGroup class="p-4">
               <Field>
-                <FieldLabel for="paragraph-style-name">
-                  {{
-                    $t(($) => $.dialog.paragraphStyles.name, { ns: 'dialog' })
-                  }}
+                <FieldLabel for="text-style-name">
+                  {{ $t(($) => $.dialog.textStyles.name, { ns: 'dialog' }) }}
                 </FieldLabel>
                 <Input
-                  id="paragraph-style-name"
+                  id="text-style-name"
                   :model-value="selectedStyle.displayName"
                   :disabled="selectedStyle.builtIn"
                   @update:model-value="updateSelectedStyleName"
@@ -92,19 +90,19 @@
               </Field>
 
               <Field v-if="selectedStyle.id !== defaultTextStyleId">
-                <FieldLabel for="paragraph-style-parent">
+                <FieldLabel for="text-style-parent">
                   {{
-                    $t(($) => $.dialog.paragraphStyles.parentStyle, {
+                    $t(($) => $.dialog.textStyles.parentStyle, {
                       ns: 'dialog',
                     })
                   }}
                 </FieldLabel>
-                <ParagraphStyleSelect
-                  id="paragraph-style-parent"
+                <TextStyleSelect
+                  id="text-style-parent"
                   :model-value="
                     selectedStyle.parentStyleId ?? defaultTextStyleId
                   "
-                  :paragraph-styles="availableParents"
+                  :text-styles="availableParents"
                   @update:model-value="updateSelectedStyleParent"
                 />
               </Field>
@@ -114,7 +112,7 @@
                 class="rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground"
               >
                 {{
-                  $t(($) => $.dialog.paragraphStyles.builtInDescription, {
+                  $t(($) => $.dialog.textStyles.builtInDescription, {
                     ns: 'dialog',
                   })
                 }}
@@ -184,7 +182,7 @@
 
               <Field>
                 <div class="mb-2 flex items-center justify-between gap-3">
-                  <FieldLabel for="paragraph-style-font">
+                  <FieldLabel for="text-style-font">
                     {{ $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' }) }}
                   </FieldLabel>
                   <Switch
@@ -193,7 +191,7 @@
                   />
                 </div>
                 <FontCombobox
-                  id="paragraph-style-font"
+                  id="text-style-font"
                   class="w-full max-w-full"
                   :model-value="resolvedStyle.fontFamily"
                   :options="fontOptions"
@@ -206,7 +204,7 @@
 
               <Field>
                 <div class="mb-2 flex items-center justify-between gap-3">
-                  <FieldLabel for="paragraph-style-font-style">
+                  <FieldLabel for="text-style-font-style">
                     {{ $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' }) }}
                   </FieldLabel>
                   <Switch
@@ -215,7 +213,7 @@
                   />
                 </div>
                 <FontStyleSelect
-                  id="paragraph-style-font-style"
+                  id="text-style-font-style"
                   class="w-full max-w-full"
                   :model-value="resolvedStyle.fontStyle"
                   :options="fontStyleOptions"
@@ -227,12 +225,12 @@
               </Field>
 
               <Field orientation="horizontal">
-                <FieldLabel for="paragraph-style-font-size">
+                <FieldLabel for="text-style-font-size">
                   {{ $t(($) => $.dialog.pageSetup.size, { ns: 'dialog' }) }}
                 </FieldLabel>
                 <div class="flex items-center gap-3">
                   <InputFontSize
-                    id="paragraph-style-font-size"
+                    id="text-style-font-size"
                     :model-value="resolvedStyle.fontSize"
                     :disabled="!hasOverride('fontSize')"
                     @update:model-value="
@@ -266,12 +264,12 @@
               </Field>
 
               <Field orientation="horizontal">
-                <FieldLabel for="paragraph-style-stroke-width">
+                <FieldLabel for="text-style-stroke-width">
                   {{ $t(($) => $.dialog.pageSetup.outline, { ns: 'dialog' }) }}
                 </FieldLabel>
                 <div class="flex items-center gap-3">
                   <InputStrokeWidth
-                    id="paragraph-style-stroke-width"
+                    id="text-style-stroke-width"
                     :model-value="resolvedStyle.strokeWidth"
                     :disabled="!hasOverride('strokeWidth')"
                     @update:model-value="
@@ -286,14 +284,14 @@
               </Field>
 
               <Field orientation="horizontal">
-                <FieldLabel for="paragraph-style-line-height">
+                <FieldLabel for="text-style-line-height">
                   {{
                     $t(($) => $.dialog.pageSetup.lineHeight, { ns: 'dialog' })
                   }}
                 </FieldLabel>
                 <div class="flex items-center gap-3">
                   <InputUnit
-                    id="paragraph-style-line-height"
+                    id="text-style-line-height"
                     unit="unitless"
                     :nullable="true"
                     :min="0"
@@ -347,7 +345,7 @@ import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import TextStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -369,48 +367,57 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
-  getAvailableParagraphStyleParents,
-  ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
+  BUILT_IN_TEXT_STYLE_IDS,
+  getAvailableTextStyleParents,
+  resolveTextStyle,
+  TextStyle,
+} from '@/models/TextStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
 
 const props = defineProps({
-  paragraphStyles: {
-    type: Array as PropType<ParagraphStyle[]>,
+  textStyles: {
+    type: Array as PropType<TextStyle[]>,
     required: true,
   },
   fonts: {
     type: Array as PropType<string[]>,
     required: true,
   },
+  initialSelectedStyleId: {
+    type: String,
+    default: BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+  },
 });
 
 const emit = defineEmits<{
-  update: [styles: ParagraphStyle[]];
+  update: [styles: TextStyle[]];
 }>();
 
 const open = defineModel<boolean>('open', { required: true });
 
-const styles = ref<ParagraphStyle[]>([]);
-const selectedStyleId = ref<string>(BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText);
+const styles = ref<TextStyle[]>([]);
+const selectedStyleId = ref<string>(BUILT_IN_TEXT_STYLE_IDS.DefaultText);
 
-const defaultTextStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+const defaultTextStyleId = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
 
 watch(
-  [() => open.value, () => props.paragraphStyles],
+  [
+    () => open.value,
+    () => props.textStyles,
+    () => props.initialSelectedStyleId,
+  ],
   () => {
     if (!open.value) {
       return;
     }
 
-    styles.value = props.paragraphStyles.map((style) => style.clone());
+    styles.value = props.textStyles.map((style) => style.clone());
+    selectedStyleId.value = props.initialSelectedStyleId;
     selectedStyleId.value =
       styles.value.find((style) => style.id === selectedStyleId.value)?.id ??
       styles.value[0]?.id ??
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+      BUILT_IN_TEXT_STYLE_IDS.DefaultText;
   },
   { immediate: true },
 );
@@ -422,8 +429,8 @@ const selectedStyle = computed(
 
 const resolvedStyle = computed(() =>
   selectedStyle.value == null
-    ? resolveParagraphStyle(styles.value, defaultTextStyleId)
-    : resolveParagraphStyle(styles.value, selectedStyle.value.id),
+    ? resolveTextStyle(styles.value, defaultTextStyleId)
+    : resolveTextStyle(styles.value, selectedStyle.value.id),
 );
 
 const availableParents = computed(() => {
@@ -431,10 +438,7 @@ const availableParents = computed(() => {
     return [];
   }
 
-  return getAvailableParagraphStyleParents(
-    styles.value,
-    selectedStyle.value.id,
-  );
+  return getAvailableTextStyleParents(styles.value, selectedStyle.value.id);
 });
 
 const fontOptions = computed(() => [
@@ -446,14 +450,11 @@ const fontStyleOptions = computed(() =>
   fontCatalog.getStyles(resolvedStyle.value.fontFamily),
 );
 
-function hasOverride(key: keyof ParagraphStyle['overrides']) {
+function hasOverride(key: keyof TextStyle['overrides']) {
   return selectedStyle.value?.overrides[key] !== undefined;
 }
 
-function toggleOverride(
-  key: keyof ParagraphStyle['overrides'],
-  value: boolean,
-) {
+function toggleOverride(key: keyof TextStyle['overrides'], value: boolean) {
   if (selectedStyle.value == null) {
     return;
   }
@@ -473,7 +474,7 @@ function updateSelectedStyleName(value: string | number) {
     return;
   }
 
-  selectedStyle.value.displayName = String(value).trim() || 'Paragraph Style';
+  selectedStyle.value.displayName = String(value).trim() || 'Text Style';
 }
 
 function updateSelectedStyleParent(styleId: string) {
@@ -485,7 +486,7 @@ function updateSelectedStyleParent(styleId: string) {
 }
 
 function updateSelectedStyleOverride(
-  key: keyof ParagraphStyle['overrides'],
+  key: keyof TextStyle['overrides'],
   value: string | number | null,
 ) {
   if (selectedStyle.value == null) {
@@ -509,9 +510,9 @@ function updateAlignmentOverride(value: unknown) {
 }
 
 function createStyle() {
-  const style = new ParagraphStyle();
-  style.displayName = getNextStyleName('Paragraph Style');
-  style.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  const style = new TextStyle();
+  style.displayName = getNextStyleName('Text Style');
+  style.parentStyleId = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
   styles.value.push(style);
   selectedStyleId.value = style.id;
 }
@@ -549,7 +550,7 @@ function deleteSelectedStyle() {
       updated.parentStyleId = parentStyleId;
       return updated;
     });
-  selectedStyleId.value = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  selectedStyleId.value = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
 }
 
 function getNextStyleName(baseName: string) {

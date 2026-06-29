@@ -66,9 +66,9 @@
             <PhScroll />
             {{ $t(($) => $.menu.file.pageSetup, { ns: 'menu' }) }}
           </MenubarItem>
-          <MenubarItem @select="onClickParagraphStyles">
+          <MenubarItem @select="onClickTextStyles">
             <PhTextAa />
-            {{ $t(($) => $.menu.file.paragraphStyles, { ns: 'menu' }) }}
+            {{ $t(($) => $.menu.file.textStyles, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickDocumentProperties">
             <PhFileText />
@@ -714,8 +714,8 @@ function onClickPageSetup() {
   EventBus.$emit(IpcMainChannels.FileMenuPageSetup);
 }
 
-function onClickParagraphStyles() {
-  EventBus.$emit(IpcMainChannels.FileMenuParagraphStyles);
+function onClickTextStyles() {
+  EventBus.$emit(IpcMainChannels.FileMenuTextStyles);
 }
 
 function onClickDocumentProperties() {

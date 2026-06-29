@@ -1,5 +1,3 @@
-import { DEFAULT_FONT_STYLE } from '../utils/fontConstants';
-import { resolveFontStyle } from '../utils/fontStyle';
 import { Unit } from '../utils/Unit';
 
 export type PageSize =
@@ -122,11 +120,6 @@ export class PageSetup {
 
   public melkiteRtl = false;
 
-  public lyricsDefaultFontFamily = 'Source Serif';
-  public lyricsDefaultFontSize = Unit.fromPt(12);
-  public lyricsDefaultFontStyle = DEFAULT_FONT_STYLE;
-  public lyricsDefaultColor = '#000000';
-  public lyricsDefaultStrokeWidth = 0;
   public lyricsVerticalOffset = -Unit.fromInch(0.05);
   public lyricsMinimumSpacing = Unit.fromInch(0.05);
   public lyricsMelismaCutoffWidth = Unit.fromPt(5);
@@ -134,15 +127,6 @@ export class PageSetup {
   // These properties are currently not exposed in the UI or saved as part of the byzx format.
   public lyricsMelismaSpacing = Unit.fromInch(0.025);
   public lyricsMelismaThickness = 1;
-
-  public get lyricsFont() {
-    const resolved = resolveFontStyle(
-      this.lyricsDefaultFontFamily,
-      this.lyricsDefaultFontStyle,
-    );
-
-    return `${resolved.cssFontStyle} normal ${resolved.cssFontWeight} ${this.lyricsDefaultFontSize}px "${resolved.cssFontFamily}"`;
-  }
 
   public neumeDefaultFontFamily = 'Neanes';
   public neumeDefaultFontSize = Unit.fromPt(20);
@@ -185,12 +169,6 @@ export class PageSetup {
   public tempoDefaultColor = '#ED0000';
   public tempoDefaultStrokeWidth = 0;
 
-  public dropCapDefaultFontFamily = 'Source Serif';
-  public dropCapDefaultFontSize = Unit.fromPt(60);
-  public dropCapDefaultFontStyle = DEFAULT_FONT_STYLE;
-  public dropCapDefaultColor = '#000000';
-  public dropCapDefaultStrokeWidth = 0;
-  public dropCapDefaultLineHeight: number | null = null;
   public dropCapDefaultLineSpan = 1;
 
   public hyphenSpacing: number = Unit.fromMm(13.125);

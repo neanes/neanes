@@ -43,8 +43,10 @@
         :element="element"
         :fonts="fonts"
         :page-setup="pageSetup"
-        :paragraph-styles="paragraphStyles"
-        :fallback-paragraph-style="annotationStyle"
+        :text-styles="textStyles"
+        show-edit-styles-button
+        :fallback-text-style="annotationStyle"
+        @open-text-styles-dialog="emit('open-text-styles-dialog', $event)"
       />
     </FieldGroup>
   </FieldSet>
@@ -66,10 +68,10 @@ import {
 import type { AnnotationElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
+  BUILT_IN_TEXT_STYLE_IDS,
+  resolveTextStyle,
+  type TextStyle,
+} from '@/models/TextStyle';
 import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
 
 import PropertiesRichTextStyle from './PropertiesRichTextStyle.vue';
@@ -87,18 +89,15 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
-  paragraphStyles: {
-    type: Array as PropType<ParagraphStyle[]>,
+  textStyles: {
+    type: Array as PropType<TextStyle[]>,
     required: true,
   },
 });
 
-defineEmits(['update']);
+const emit = defineEmits(['open-text-styles-dialog', 'update']);
 
 const annotationStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
-  ),
+  resolveTextStyle(props.textStyles, BUILT_IN_TEXT_STYLE_IDS.Annotation),
 );
 </script>

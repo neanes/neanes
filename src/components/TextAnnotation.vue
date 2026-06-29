@@ -39,10 +39,10 @@ import type InlineEditor from '@/customEditor';
 import type { AnnotationElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
+  BUILT_IN_TEXT_STYLE_IDS,
+  resolveTextStyle,
+  type TextStyle,
+} from '@/models/TextStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import {
   applyRichTextLanguageToEditor,
@@ -71,8 +71,8 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
-  paragraphStyles: {
-    type: Array as PropType<ParagraphStyle[]>,
+  textStyles: {
+    type: Array as PropType<TextStyle[]>,
     required: true,
   },
   editorLanguage: {
@@ -118,10 +118,7 @@ const contentLanguage = computed(() => {
 });
 
 const annotationStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
-  ),
+  resolveTextStyle(props.textStyles, BUILT_IN_TEXT_STYLE_IDS.Annotation),
 );
 
 const style = computed(() => {

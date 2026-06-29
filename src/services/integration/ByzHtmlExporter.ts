@@ -394,6 +394,8 @@ export class ByzHtmlExporter {
         color: ${lyricsStyle.color};
       }
 
+      ${this.getRichTextStyleCss(textStyles, pageSetup)}
+
       .annotation-container {
         font-family: ${getFontFamilyWithFallback(
           annotationStyle.fontFamily,
@@ -470,6 +472,22 @@ export class ByzHtmlExporter {
 `;
 
     return style;
+  }
+
+  private getRichTextStyleCss(textStyles: TextStyle[], pageSetup: PageSetup) {
+    return textStyles
+      .map((style) => {
+        const resolved = resolveTextStyle(textStyles, style.id);
+        const font = resolveFontStyle(resolved.fontFamily, resolved.fontStyle);
+
+        return `.${this.config.classRichTextBox} p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
+          font.cssFontFamily,
+          pageSetup.neumeDefaultFontFamily + 'Legacy',
+        )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${
+          resolved.lineHeight ?? 'normal'
+        };}`;
+      })
+      .join('\n');
   }
 
   private getPageProgressionCss(

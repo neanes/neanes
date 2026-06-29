@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   RichTextBoxElement,
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
+import { PageSetup } from '@/models/PageSetup';
+import { TextStyle } from '@/models/TextStyle';
 import { setRichTextLanguage } from '@/utils/richTextLanguage';
 import { Unit } from '@/utils/Unit';
 
@@ -51,6 +53,37 @@ describe('ByzHtmlExporter', () => {
 
     expect(exporter.exportRichTextBox(element, 0)).toBe(
       '<div class="byz---rich-text-box" lang="ar" dir="rtl"><p><span lang="ar" dir="rtl">Hello</span></p></div\n>',
+    );
+  });
+
+  it('exports rich text paragraph styles in the ByzHTML stylesheet', () => {
+    const exporter = new ByzHtmlExporter();
+    const pageSetup = new PageSetup();
+    const style = new TextStyle();
+
+    vi.spyOn(
+      exporter as ByzHtmlExporter,
+      'getDropCapAdjustment',
+    ).mockReturnValue(0);
+
+    style.id = 'custom-style';
+    style.overrides = {
+      fontFamily: 'Alegreya',
+      fontSize: 16,
+      fontStyle: 'Bold Italic',
+      color: '#abcdef',
+      strokeWidth: 1.5,
+      lineHeight: 1.4,
+    };
+
+    const css = exporter.exportPageSetup(pageSetup, [style]);
+
+    expect(css).toContain(
+      '.byz---rich-text-box p.neanes-style-custom-style{font-family:',
+    );
+    expect(css).toContain('font-weight:700;font-style:italic;font-size:16px;');
+    expect(css).toContain(
+      'color:#abcdef;-webkit-text-stroke-width:1.5px;line-height:1.4;',
     );
   });
 

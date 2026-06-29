@@ -1912,7 +1912,7 @@ function getFooterHorizontalRuleStyle(page: Page, footerHeight: number) {
 function getLyricStyle(element: NoteElement) {
   const resolvedLyricsStyle = resolveTextStyle(
     score.value.textStyles,
-    element.textStyleId,
+    element.lyricsTextStyleId,
     element.getTextStyleOverrides(),
   );
   const resolvedLyricsFont = resolveFontStyle(
@@ -1955,7 +1955,7 @@ function getLyricStyle(element: NoteElement) {
 function getLeadingLyricHyphenStyle(element: NoteElement) {
   const resolvedLyricsStyle = resolveTextStyle(
     score.value.textStyles,
-    element.textStyleId,
+    element.lyricsTextStyleId,
     element.getTextStyleOverrides(),
   );
   const resolvedLyricsFont = resolveFontStyle(
@@ -6575,7 +6575,7 @@ function getResolvedDefaultTextStyle() {
 function getResolvedLyricsStyle(element?: NoteElement) {
   return resolveTextStyle(
     score.value.textStyles,
-    element?.textStyleId ?? BUILT_IN_TEXT_STYLE_IDS.Lyrics,
+    element?.lyricsTextStyleId ?? BUILT_IN_TEXT_STYLE_IDS.Lyrics,
     element?.getTextStyleOverrides(),
   );
 }

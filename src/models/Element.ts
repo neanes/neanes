@@ -113,7 +113,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontFamily: string | null = null;
   public lyricsFontSize: number | null = null;
   public lyricsStrokeWidth: number | null = null;
-  public textStyleId: string = BUILT_IN_TEXT_STYLE_IDS.Lyrics;
+  public lyricsTextStyleId: string = BUILT_IN_TEXT_STYLE_IDS.Lyrics;
   public lyricsUseDefaultStyle: boolean = true;
   public lyricsFontStyle: string | null = null;
   public lyricsTextDecoration: string | null = null;
@@ -216,7 +216,7 @@ export class NoteElement extends ScoreElement {
             isHyphen: this.isHyphen,
             isMelismaStart: this.isMelismaStart,
             isMelisma: this.isMelisma,
-            textStyleId: this.textStyleId,
+            lyricsTextStyleId: this.lyricsTextStyleId,
             lyricsColor: this.lyricsColor,
             lyricsFontFamily: this.lyricsFontFamily,
             lyricsFontSize: this.lyricsFontSize,
@@ -297,7 +297,7 @@ export class NoteElement extends ScoreElement {
       lyricsFontFamily: this.lyricsFontFamily,
       lyricsFontSize: this.lyricsFontSize,
       lyricsStrokeWidth: this.lyricsStrokeWidth,
-      textStyleId: this.textStyleId,
+      textStyleId: this.lyricsTextStyleId,
       lyricsFontStyle: this.lyricsFontStyle,
       lyricsTextDecoration: this.lyricsTextDecoration,
     };

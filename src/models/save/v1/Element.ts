@@ -91,7 +91,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontStyle: string | undefined = undefined;
   public lyricsFontWeight: string | undefined = undefined;
   public lyricsTextDecoration: string | undefined = undefined;
-  public textStyleId: string | undefined = undefined;
+  public lyricsTextStyleId: string | undefined = undefined;
   public lyricsUseDefaultStyle: boolean | undefined = undefined;
   public acceptsLyrics: AcceptsLyricsOption | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;

@@ -26,10 +26,12 @@
         </div>
         <TextStyleSelect
           id="properties-lyrics-text-style"
-          :model-value="element.textStyleId"
+          :model-value="element.lyricsTextStyleId"
           :text-styles="textStyles"
           @update:model-value="
-            $emit('update', { textStyleId: $event } as Partial<NoteElement>)
+            $emit('update', {
+              lyricsTextStyleId: $event,
+            } as Partial<NoteElement>)
           "
         />
       </Field>
@@ -231,7 +233,7 @@ const emit = defineEmits(['open-text-styles-dialog', 'update']);
 const resolvedTextStyle = computed(() =>
   resolveTextStyle(
     props.textStyles,
-    props.element.textStyleId,
+    props.element.lyricsTextStyleId,
     props.element.getTextStyleOverrides(),
   ),
 );
@@ -310,6 +312,6 @@ function clearTextStyleOverrides() {
 }
 
 function openTextStylesDialog() {
-  emit('open-text-styles-dialog', props.element.textStyleId);
+  emit('open-text-styles-dialog', props.element.lyricsTextStyleId);
 }
 </script>

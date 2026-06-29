@@ -592,7 +592,7 @@ export class SaveService {
   }
 
   public static SaveNote(element: NoteElement_v1, e: NoteElement) {
-    element.textStyleId = e.textStyleId;
+    element.lyricsTextStyleId = e.lyricsTextStyleId;
     element.quantitativeNeume = e.quantitativeNeume;
     element.spaceAfter = e.spaceAfter || undefined;
 
@@ -1624,7 +1624,8 @@ export class SaveService {
     e: NoteElement_v1,
     textStyles?: TextStyle[],
   ) {
-    element.textStyleId = e.textStyleId ?? BUILT_IN_TEXT_STYLE_IDS.Lyrics;
+    element.lyricsTextStyleId =
+      e.lyricsTextStyleId ?? BUILT_IN_TEXT_STYLE_IDS.Lyrics;
     element.quantitativeNeume = Object.values(QuantitativeNeume).includes(
       e.quantitativeNeume,
     )
@@ -1782,16 +1783,16 @@ export class SaveService {
       e.lyricsStrokeWidth != null ||
       e.lyricsTextDecoration != null;
     const usesLegacyDefaultLyrics =
-      e.textStyleId == null &&
+      e.lyricsTextStyleId == null &&
       (e.lyricsUseDefaultStyle === true || !hasExplicitLyricsOverrides);
     element.lyricsUseDefaultStyle = !hasExplicitLyricsOverrides;
 
     if (!usesLegacyDefaultLyrics) {
       const fallbackStyle = resolveTextStyle(
         textStyles ?? [],
-        element.textStyleId,
+        element.lyricsTextStyleId,
       );
-      const shouldSynthesizeLegacyOverrides = e.textStyleId == null;
+      const shouldSynthesizeLegacyOverrides = e.lyricsTextStyleId == null;
       const lyricsFont = loadFontFaceFromWeightFields({
         savedFontFamily: e.lyricsFontFamily,
         fallbackFontFamily: fallbackStyle.fontFamily,

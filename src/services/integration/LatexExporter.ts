@@ -436,7 +436,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             if (note.lyrics != '' || note.melismaText != '') {
               const resolvedLyricsStyle = resolveTextStyle(
                 textStyles,
-                note.textStyleId,
+                note.lyricsTextStyleId,
                 note.getTextStyleOverrides(),
               );
               const lyricsFont = resolveFontStyle(

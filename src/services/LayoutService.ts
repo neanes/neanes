@@ -4949,7 +4949,7 @@ export class LayoutService {
   ) {
     return resolveTextStyle(
       textStyles,
-      noteElement.textStyleId,
+      noteElement.lyricsTextStyleId,
       noteElement.getTextStyleOverrides(),
     );
   }

@@ -118,6 +118,15 @@ export function hasMeaningfulRichTextEditorContent(
   return hasMeaningfulText;
 }
 
+export function hasMeaningfulRichTextHtmlContent(html: string): boolean {
+  return (
+    html
+      .replace(HTML_NBSP_ENTITY_REGEX, ' ')
+      .replace(HTML_TAG_REGEX, '')
+      .replace(/[\s\u00a0]/g, '').length > 0
+  );
+}
+
 export function inferSharedRichTextEditorLanguage(
   editors: Array<Pick<Editor, 'model'> | undefined>,
 ): string | null {
@@ -233,3 +242,6 @@ function normalizeTextDirection(
 function isMeaningfulText(text: string) {
   return text.replace(/\s/g, '').length > 0;
 }
+
+const HTML_TAG_REGEX = /<[^>]*>/g;
+const HTML_NBSP_ENTITY_REGEX = /&(nbsp|#160|#xA0);/gi;

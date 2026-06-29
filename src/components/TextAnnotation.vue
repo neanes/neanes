@@ -51,6 +51,7 @@ import {
   getRichTextLanguageCode,
   getRichTextLanguageDirection,
   hasMeaningfulRichTextEditorContent,
+  hasMeaningfulRichTextHtmlContent,
   inferRichTextEditorLanguage,
   RICH_TEXT_LANGUAGE_OPTIONS,
 } from '@/utils/richTextLanguage';
@@ -96,7 +97,9 @@ const zoom = ref(1);
 
 let clampingInterval: ReturnType<typeof setInterval> | null = null;
 
-const hasStoredContent = computed(() => props.element.text.trim() !== '');
+const hasStoredContent = computed(() =>
+  hasMeaningfulRichTextHtmlContent(props.element.text),
+);
 
 const defaultInitialLanguage = computed(() => {
   const storedLanguage = getRichTextLanguage(props.element);
@@ -243,7 +246,7 @@ function getEditorInstance() {
 function onEditorReady(editor: InlineEditor) {
   applyInitialLanguage(editor);
 
-  if (focusOnReady.value || props.element.text.trim() === '') {
+  if (focusOnReady.value || !hasStoredContent.value) {
     focusOnReady.value = false;
     focusEditor(editor);
   } else {
@@ -257,7 +260,7 @@ function handleEditorBlur(editor: InlineEditor) {
   const updates = getPendingUpdates();
   const text = updates.text ?? props.element.text;
 
-  if (text.trim() === '') {
+  if (!hasMeaningfulRichTextHtmlContent(text)) {
     emit('delete');
   } else if (Object.keys(updates).length > 0) {
     emit('update', updates);

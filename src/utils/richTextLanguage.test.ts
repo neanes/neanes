@@ -7,6 +7,7 @@ import {
   getRichTextLanguage,
   getRichTextLanguageAttributes,
   hasMeaningfulRichTextEditorContent,
+  hasMeaningfulRichTextHtmlContent,
   inferRichTextEditorLanguage,
   inferSharedRichTextEditorLanguage,
   setRichTextLanguage,
@@ -41,6 +42,13 @@ describe('richTextLanguage', () => {
 
     expect(hasMeaningfulRichTextEditorContent(editor)).toBe(true);
     expect(inferRichTextEditorLanguage(editor)).toBe('el:ltr');
+  });
+
+  it('detects meaningful HTML content instead of literal non-empty strings', () => {
+    expect(hasMeaningfulRichTextHtmlContent('')).toBe(false);
+    expect(hasMeaningfulRichTextHtmlContent('<p></p>')).toBe(false);
+    expect(hasMeaningfulRichTextHtmlContent('<p>&nbsp;</p>')).toBe(false);
+    expect(hasMeaningfulRichTextHtmlContent('<p>  Kyrie  </p>')).toBe(true);
   });
 
   it('returns null for missing or mixed meaningful text language', () => {

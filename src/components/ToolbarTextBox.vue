@@ -131,7 +131,7 @@
             $emit('update', { alignment: null } as Partial<TextBoxElement>)
           "
         >
-          <PhEraser class="size-4" />
+          <PhArrowCounterClockwise class="size-4" />
         </ToolbarButton>
       </AppTooltip>
     </template>
@@ -163,7 +163,7 @@
 
 <script setup lang="ts">
 import {
-  PhEraser,
+  PhArrowCounterClockwise,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhTextAlignLeft,

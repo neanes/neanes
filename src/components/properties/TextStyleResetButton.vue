@@ -14,14 +14,14 @@
         :disabled="disabled"
         @click="$emit('reset')"
       >
-        <PhEraser />
+        <PhArrowCounterClockwise />
       </Button>
     </span>
   </AppTooltip>
 </template>
 
 <script setup lang="ts">
-import { PhEraser } from '@phosphor-icons/vue';
+import { PhArrowCounterClockwise } from '@phosphor-icons/vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
 import { Button } from '@/components/ui/button';

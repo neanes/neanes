@@ -515,7 +515,7 @@
       @mousedown.prevent
       @click="onRemoveFormat"
     >
-      <PhEraser data-icon="inline-start" />
+      <PhArrowCounterClockwise data-icon="inline-start" />
       {{ $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' }) }}
     </Button>
 
@@ -790,7 +790,7 @@
 
 <script setup lang="ts">
 import {
-  PhEraser,
+  PhArrowCounterClockwise,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhTextAlignLeft,

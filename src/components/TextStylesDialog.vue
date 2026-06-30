@@ -75,10 +75,24 @@
                 </Button>
               </span>
             </AppTooltip>
+            <AppTooltip tooltip="Reset to Factory">
+              <span class="inline-flex ml-auto" @mousedown.prevent>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  :disabled="!showOverrideToggles"
+                  aria-label="Reset to Factory"
+                  @click="resetSelectedStyleOverrides"
+                >
+                  <PhArrowCounterClockwise />
+                </Button>
+              </span>
+            </AppTooltip>
             <AppTooltip
               :tooltip="$t(($) => $.dialog.textStyles.delete, { ns: 'dialog' })"
             >
-              <span class="inline-flex ml-auto" @mousedown.prevent>
+              <span class="inline-flex" @mousedown.prevent>
                 <Button
                   type="button"
                   variant="ghost"
@@ -392,6 +406,7 @@
 
 <script setup lang="ts">
 import {
+  PhArrowCounterClockwise,
   PhCheck,
   PhCopy,
   PhPlus,
@@ -578,6 +593,14 @@ function updateSelectedStyleOverride(
   (selectedStyle.value.overrides as Record<string, string | number | null>)[
     key
   ] = value;
+}
+
+function resetSelectedStyleOverrides() {
+  if (selectedStyle.value == null || !showOverrideToggles.value) {
+    return;
+  }
+
+  selectedStyle.value.overrides = {};
 }
 
 function updateAlignmentOverride(value: unknown) {

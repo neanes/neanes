@@ -2,7 +2,6 @@ import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { Unit } from '@/utils/Unit';
 
 import type { TextBoxAlignment } from './Element';
-import type { PageSetup } from './PageSetup';
 
 export type TextStyleAlignment = TextBoxAlignment;
 
@@ -72,10 +71,6 @@ export function createTextStyleFallback(): ResolvedTextStyle {
   };
 }
 
-export function createTextStylesFromPageSetup(pageSetup: PageSetup) {
-  return createTextStylesFromDefaults(pageSetup, {});
-}
-
 export interface LegacyStyleDefaults {
   textBoxDefaultFontFamily?: string | null;
   textBoxDefaultFontSize?: number | null;
@@ -98,8 +93,7 @@ export interface LegacyStyleDefaults {
 }
 
 export function createTextStylesFromDefaults(
-  pageSetup: PageSetup,
-  legacyStyleDefaults: LegacyStyleDefaults,
+  legacyStyleDefaults: LegacyStyleDefaults = {},
 ) {
   const defaultText = new TextStyle();
   defaultText.id = BUILT_IN_TEXT_STYLE_IDS.DefaultText;

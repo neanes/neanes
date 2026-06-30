@@ -5,7 +5,6 @@ import {
   TextBoxAlignment,
   TextBoxElement,
 } from './Element';
-import { PageSetup } from './PageSetup';
 import {
   BUILT_IN_TEXT_STYLE_IDS,
   createTextStylesFromDefaults,
@@ -16,9 +15,7 @@ import {
 
 describe('TextStyle', () => {
   it('seeds built-in styles from page setup defaults', () => {
-    const pageSetup = new PageSetup();
-
-    const styles = createTextStylesFromDefaults(pageSetup, {
+    const styles = createTextStylesFromDefaults({
       textBoxDefaultFontFamily: 'Minion Pro',
       lyricsDefaultFontFamily: 'GFS Didot',
     });

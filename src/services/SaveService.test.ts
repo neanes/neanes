@@ -489,8 +489,7 @@ describe('SaveService font styles', () => {
   });
 
   it('keeps a legacy regular font style as an explicit override', () => {
-    const pageSetup = new PageSetup();
-    const textStyles = createTextStylesFromDefaults(pageSetup, {
+    const textStyles = createTextStylesFromDefaults({
       textBoxDefaultFontStyle: 'Italic',
     });
     const element = new TextBoxElement();
@@ -512,8 +511,7 @@ describe('SaveService font styles', () => {
   });
 
   it('defaults legacy non-default text boxes to an explicit regular override', () => {
-    const pageSetup = new PageSetup();
-    const textStyles = createTextStylesFromDefaults(pageSetup, {
+    const textStyles = createTextStylesFromDefaults({
       textBoxDefaultFontStyle: 'Italic',
     });
     const element = new TextBoxElement();
@@ -535,8 +533,7 @@ describe('SaveService font styles', () => {
   });
 
   it('keeps legacy css normal font style as an explicit regular override', () => {
-    const pageSetup = new PageSetup();
-    const textStyles = createTextStylesFromDefaults(pageSetup, {
+    const textStyles = createTextStylesFromDefaults({
       textBoxDefaultFontStyle: 'Italic',
     });
     const element = new TextBoxElement();
@@ -560,8 +557,7 @@ describe('SaveService font styles', () => {
   });
 
   it('keeps legacy css italic font style as an explicit italic override', () => {
-    const pageSetup = new PageSetup();
-    const textStyles = createTextStylesFromDefaults(pageSetup, {
+    const textStyles = createTextStylesFromDefaults({
       textBoxDefaultFontStyle: 'Regular',
     });
     const element = new TextBoxElement();
@@ -585,8 +581,7 @@ describe('SaveService font styles', () => {
   });
 
   it('combines legacy css font style with bold text box flags', () => {
-    const pageSetup = new PageSetup();
-    const textStyles = createTextStylesFromDefaults(pageSetup, {
+    const textStyles = createTextStylesFromDefaults({
       textBoxDefaultFontStyle: 'Italic',
     });
     const normalBold = new TextBoxElement();
@@ -653,8 +648,7 @@ describe('SaveService font styles', () => {
   });
 
   it('keeps legacy default-styled text boxes inherited', () => {
-    const pageSetup = new PageSetup();
-    const textStyles = createTextStylesFromDefaults(pageSetup, {
+    const textStyles = createTextStylesFromDefaults({
       textBoxDefaultFontFamily: 'Minion Pro',
       textBoxDefaultFontSize: 42,
       textBoxDefaultFontStyle: 'Semibold',
@@ -985,7 +979,7 @@ describe('SaveService font styles', () => {
   });
 
   it('uses built-in Lyrics style as the fallback for legacy note overrides', () => {
-    const textStyles = createTextStylesFromDefaults(new PageSetup(), {
+    const textStyles = createTextStylesFromDefaults({
       lyricsDefaultFontFamily: 'Minion Pro',
       lyricsDefaultFontStyle: 'Semibold',
       lyricsDefaultFontSize: 15,
@@ -1009,7 +1003,7 @@ describe('SaveService font styles', () => {
 
   it('uses built-in Drop Cap style as the fallback for legacy drop-cap overrides', () => {
     const pageSetup = new PageSetup();
-    const textStyles = createTextStylesFromDefaults(pageSetup, {
+    const textStyles = createTextStylesFromDefaults({
       dropCapDefaultFontFamily: 'Minion Pro',
       dropCapDefaultFontStyle: 'Semibold',
       dropCapDefaultFontSize: 80,

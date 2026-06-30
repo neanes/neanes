@@ -7,7 +7,7 @@ import { Headers } from './Headers';
 import { PageSetup } from './PageSetup';
 import { Staff } from './Staff';
 import type { TextStyle } from './TextStyle';
-import { createTextStylesFromPageSetup } from './TextStyle';
+import { createTextStylesFromDefaults } from './TextStyle';
 
 export class DocumentProperties {
   public title: string = '';
@@ -17,9 +17,7 @@ export class DocumentProperties {
 export class Score {
   public documentProperties: DocumentProperties = new DocumentProperties();
   public pageSetup: PageSetup = new PageSetup();
-  public textStyles: TextStyle[] = createTextStylesFromPageSetup(
-    this.pageSetup,
-  );
+  public textStyles: TextStyle[] = createTextStylesFromDefaults();
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();

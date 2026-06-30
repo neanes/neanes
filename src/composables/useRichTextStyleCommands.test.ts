@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_TEXT_STYLE_IDS,
   createTextStyleFallback,
-  createTextStylesFromPageSetup,
+  createTextStylesFromDefaults,
 } from '@/models/TextStyle';
 
 import {
@@ -15,7 +14,7 @@ import {
 } from './useRichTextStyleCommands';
 
 describe('resolveRichTextTextStyleState', () => {
-  const textStyles = createTextStylesFromPageSetup(new PageSetup());
+  const textStyles = createTextStylesFromDefaults();
   const fallbackTextStyle = createTextStyleFallback();
 
   it('uses None plus the fallback style when no Neanes paragraph style is active', () => {

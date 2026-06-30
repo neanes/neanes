@@ -54,7 +54,6 @@ import { Staff } from '@/models/Staff';
 import {
   BUILT_IN_TEXT_STYLE_IDS,
   createTextStylesFromDefaults,
-  createTextStylesFromPageSetup,
   resolveTextStyle,
   TextStyle,
 } from '@/models/TextStyle';
@@ -930,7 +929,7 @@ export class SaveService {
       legacyCssFontStyle: s.pageSetup.lyricsDefaultFontStyle,
     });
     const savedTextStyles = s.textStyles ?? [];
-    const defaultTextStyles = createTextStylesFromDefaults(score.pageSetup, {
+    const defaultTextStyles = createTextStylesFromDefaults({
       textBoxDefaultColor: s.pageSetup.textBoxDefaultColor,
       textBoxDefaultFontFamily: legacyTextBoxDefaultFont.fontFamily,
       textBoxDefaultFontSize: s.pageSetup.textBoxDefaultFontSize,
@@ -1507,7 +1506,7 @@ export class SaveService {
     }
 
     const fallbackStyle = resolveTextStyle(
-      textStyles ?? createTextStylesFromPageSetup(pageSetup),
+      textStyles ?? createTextStylesFromDefaults(),
       element.textStyleId,
     );
 
@@ -1895,7 +1894,7 @@ export class SaveService {
       ? pageSetupOrTextStyles
       : Array.isArray(textStylesOrDefaultTextStyleId)
         ? textStylesOrDefaultTextStyleId
-        : createTextStylesFromPageSetup(pageSetupOrTextStyles);
+        : createTextStylesFromDefaults();
     const legacyCssFontStyle = readLegacyCssFontStyle(
       (e as TextBoxElement_v1 & LegacyTextBoxCssFontCompatibility).fontStyle,
     );

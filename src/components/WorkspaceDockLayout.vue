@@ -1888,12 +1888,15 @@ watch(
     intercepted in decideDrop so tools redock into permanent edge
     groups instead of Dockview's default grid splits. -->
     <!-- Pointer DnD is kept for consistent panel dragging. Whole-group drags
-    from Dockview's blank header handle are blocked in this wrapper. -->
+    from Dockview's blank header handle are blocked in this wrapper. Floating
+    panes keep the void-space move handle instead of Dockview 7's dedicated
+    blank floating titlebar. -->
     <!-- The theme is explicit because Dockview's fallback is a dark Abyss theme. -->
     <DockviewVue
       class="workspace-dock-layout"
       :components="dockComponents"
       :default-tab-component="PaneTab"
+      floating-group-drag-handle="tabbar"
       :get-tab-context-menu-items="onTabContextMenu"
       :right-header-actions-component="PaneHeaderActions"
       dnd-strategy="pointer"

@@ -867,8 +867,6 @@ export class TextBoxElement extends ScoreElement {
   public fontStyle: string | null = null;
   public underline: boolean = false;
   public lineHeight: number | null = null;
-  public gapAbove: number | null = null;
-  public gapBelow: number | null = null;
   public height: number = 20;
   public customWidth: number | null = null;
   public customHeight: number | null = null;
@@ -933,8 +931,6 @@ export class TextBoxElement extends ScoreElement {
       inline: this.inline,
       fontStyle: this.fontStyle,
       underline: this.underline,
-      gapAbove: this.gapAbove,
-      gapBelow: this.gapBelow,
       multipanel: this.multipanel,
       runningMarkerRole: this.runningMarkerRole,
       runningMarkerText: this.runningMarkerText,
@@ -986,8 +982,6 @@ export class RichTextBoxElement extends ScoreElement {
   public strokeWidth: number | null = null;
   public fontStyle: string | null = null;
   public lineHeight: number | null = null;
-  public gapAbove: number | null = null;
-  public gapBelow: number | null = null;
 
   public height: number = 20;
   public customWidth: number | null = null;
@@ -1042,8 +1036,6 @@ export class RichTextBoxElement extends ScoreElement {
       strokeWidth: this.strokeWidth,
       fontStyle: this.fontStyle,
       lineHeight: this.lineHeight,
-      gapAbove: this.gapAbove,
-      gapBelow: this.gapBelow,
       runningMarkerRole: this.runningMarkerRole,
       runningMarkerText: this.runningMarkerText,
     } as Partial<RichTextBoxElement>;

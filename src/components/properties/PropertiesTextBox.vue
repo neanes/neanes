@@ -211,13 +211,10 @@
           :min="-maxHeight"
           :max="maxHeight"
           :step="0.5"
-          :model-value="element.gapAbove ?? 0"
+          :model-value="element.marginTop"
           :format-options="fraction1FormatOptions"
           @update:model-value="
-            $emit('update', {
-              gapAbove: $event,
-              marginTop: $event ?? 0,
-            } as Partial<TextBoxElement>)
+            $emit('update', { marginTop: $event } as Partial<TextBoxElement>)
           "
         />
       </Field>
@@ -233,13 +230,13 @@
           :min="0"
           :max="maxHeight"
           :step="0.5"
-          :model-value="element.gapBelow ?? 0"
+          :model-value="element.marginBottom"
           :format-options="fraction1FormatOptions"
           @update:model-value="
-            $emit('update', {
-              gapBelow: $event,
-              marginBottom: $event ?? 0,
-            } as Partial<TextBoxElement>)
+            $emit(
+              'update',
+              { marginBottom: $event } as Partial<TextBoxElement>,
+            )
           "
         />
       </Field>

@@ -4922,11 +4922,6 @@ export class LayoutService {
       textBoxElement.computedAlignment = resolvedTextStyle.alignment;
     }
 
-    textBoxElement.marginTop =
-      textBoxElement.gapAbove ?? textBoxElement.marginTop ?? 0;
-    textBoxElement.marginBottom =
-      textBoxElement.gapBelow ?? textBoxElement.marginBottom ?? 0;
-
     if (textBoxElement.inline) {
       textBoxElement.height = neumeHeight;
       textBoxElement.minHeight = Unit.fromPt(0.5);

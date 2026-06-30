@@ -213,8 +213,6 @@ export class TextBoxElement extends ScoreElement {
   public customWidth: number | undefined = undefined;
   public customHeight: number | undefined = undefined;
   public fillWidth: boolean | undefined = undefined;
-  public gapAbove: number | undefined = undefined;
-  public gapBelow: number | undefined = undefined;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
   public useDefaultStyle: boolean | undefined = undefined;
@@ -250,8 +248,6 @@ export class RichTextBoxElement extends ScoreElement {
   public lineHeight: number | null | undefined = undefined;
   public height: number = 20;
   public customWidth: number | undefined = undefined;
-  public gapAbove: number | undefined = undefined;
-  public gapBelow: number | undefined = undefined;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
   public offsetYTop: number | undefined = undefined;

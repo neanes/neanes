@@ -804,10 +804,8 @@ export class SaveService {
     element.customWidth = e.customWidth ?? undefined;
     element.fillWidth = e.fillWidth || undefined;
     element.customHeight = e.customHeight ?? undefined;
-    element.gapAbove = e.gapAbove ?? undefined;
-    element.gapBelow = e.gapBelow ?? undefined;
-    element.marginTop = e.gapAbove ?? undefined;
-    element.marginBottom = e.gapBelow ?? undefined;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     element.runningMarkerRole = e.runningMarkerRole ?? undefined;
     element.runningMarkerText = e.runningMarkerText?.trim() || undefined;
   }
@@ -853,10 +851,8 @@ export class SaveService {
     element.lineHeight = e.lineHeight;
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
-    element.gapAbove = e.gapAbove ?? undefined;
-    element.gapBelow = e.gapBelow ?? undefined;
-    element.marginTop = e.gapAbove ?? undefined;
-    element.marginBottom = e.gapBelow ?? undefined;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     saveRichTextLanguage(element, e);
     element.scrollable = e.scrollable || undefined;
     element.runningMarkerRole = e.runningMarkerRole ?? undefined;
@@ -1945,10 +1941,8 @@ export class SaveService {
     element.customWidth = e.customWidth ?? null;
     element.fillWidth = e.fillWidth === true;
     element.customHeight = e.customHeight ?? null;
-    element.gapAbove = e.gapAbove ?? e.marginTop ?? null;
-    element.gapBelow = e.gapBelow ?? e.marginBottom ?? null;
-    element.marginTop = element.gapAbove ?? 0;
-    element.marginBottom = element.gapBelow ?? 0;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
     element.runningMarkerRole = e.runningMarkerRole ?? null;
     element.runningMarkerText = e.runningMarkerText?.trim() || null;
 
@@ -2075,10 +2069,8 @@ export class SaveService {
     element.fontStyle = e.fontSubfamily ?? null;
     element.lineHeight = e.lineHeight ?? null;
     element.customWidth = e.customWidth ?? null;
-    element.gapAbove = e.gapAbove ?? e.marginTop ?? null;
-    element.gapBelow = e.gapBelow ?? e.marginBottom ?? null;
-    element.marginTop = element.gapAbove ?? 0;
-    element.marginBottom = element.gapBelow ?? 0;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
 
     element.modeChange = e.modeChange === true;
     element.inline = e.inline === true;

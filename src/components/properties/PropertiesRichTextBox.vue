@@ -108,13 +108,10 @@
           :min="-maxHeight"
           :max="maxHeight"
           :step="0.5"
-          :model-value="element.gapAbove"
+          :model-value="element.marginTop"
           :format-options="fraction1FormatOptions"
           @update:model-value="
-            updateElement({
-              gapAbove: $event,
-              marginTop: $event ?? 0,
-            } as Partial<RichTextBoxElement>)
+            updateElement({ marginTop: $event } as Partial<RichTextBoxElement>)
           "
         />
       </Field>
@@ -130,12 +127,11 @@
           :min="0"
           :max="maxHeight"
           :step="0.5"
-          :model-value="element.gapBelow"
+          :model-value="element.marginBottom"
           :format-options="fraction1FormatOptions"
           @update:model-value="
             updateElement({
-              gapBelow: $event,
-              marginBottom: $event ?? 0,
+              marginBottom: $event,
             } as Partial<RichTextBoxElement>)
           "
         />

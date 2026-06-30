@@ -529,17 +529,6 @@
           }}
         </FieldLabel>
       </Field>
-
-      <Button
-        type="button"
-        variant="secondary"
-        :disabled="!isCommandEnabled('removeFormat')"
-        @mousedown.prevent
-        @click="onRemoveFormat"
-      >
-        <PhArrowCounterClockwise data-icon="inline-start" />
-        {{ $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' }) }}
-      </Button>
     </PaneSection>
 
     <PaneSection
@@ -930,7 +919,6 @@ const {
   onFontColorChanged,
   onStyleValuesChanged,
   onAlignmentChanged,
-  onRemoveFormat,
 } = useRichParagraphStyleCommands(props, [
   'subscript',
   'superscript',

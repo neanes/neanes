@@ -114,7 +114,6 @@ export class NoteElement extends ScoreElement {
   public lyricsFontSize: number | null = null;
   public lyricsStrokeWidth: number | null = null;
   public lyricsTextStyleId: string = BUILT_IN_TEXT_STYLE_IDS.Lyrics;
-  public lyricsUseDefaultStyle: boolean = true;
   public lyricsFontStyle: string | null = null;
   public lyricsTextDecoration: string | null = null;
   public acceptsLyrics: AcceptsLyricsOption = AcceptsLyricsOption.Default;
@@ -1257,7 +1256,6 @@ export class DropCapElement extends ScoreElement {
   public lineHeight: number | null = null;
   public strokeWidth: number | null = null;
   public color: string | null = null;
-  public useDefaultStyle: boolean = true;
   public customWidth: number | null = null;
   public lineSpan: number = 1;
 

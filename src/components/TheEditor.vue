@@ -8438,6 +8438,7 @@ async function onFileMenuCopyAsHtml() {
   const html = byzHtmlExporter.exportElements(
     copiedElements,
     score.value.pageSetup,
+    score.value.textStyles,
     0,
     true,
   );

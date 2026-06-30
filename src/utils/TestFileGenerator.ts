@@ -812,7 +812,6 @@ export abstract class TestFileGenerator {
 
     for (const font of fonts) {
       const dropCap = new DropCapElement();
-      dropCap.useDefaultStyle = false;
       dropCap.fontFamily = font;
       dropCap.fontSize = 80;
       elements.push(dropCap);

@@ -1505,7 +1505,6 @@ export class SaveService {
       (e.useDefaultStyle === true || !hasExplicitDropCapOverrides);
 
     element.textStyleId = e.textStyleId ?? BUILT_IN_TEXT_STYLE_IDS.DropCap;
-    element.useDefaultStyle = !hasExplicitDropCapOverrides;
 
     if (usesLegacyDefaultStyle) {
       return;
@@ -1785,7 +1784,6 @@ export class SaveService {
     const usesLegacyDefaultLyrics =
       e.lyricsTextStyleId == null &&
       (e.lyricsUseDefaultStyle === true || !hasExplicitLyricsOverrides);
-    element.lyricsUseDefaultStyle = !hasExplicitLyricsOverrides;
 
     if (!usesLegacyDefaultLyrics) {
       const fallbackStyle = resolveTextStyle(

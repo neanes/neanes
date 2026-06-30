@@ -516,7 +516,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
 
             let verticalAdjustment = 0;
 
-            if (dropCap.lineHeight != null) {
+            if (resolvedDropCapStyle.lineHeight != null) {
               const fontHeight = TextMeasurementService.getFontHeight(
                 dropCap.computedFont,
               );
@@ -524,7 +524,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               const originalLineHeight = fontHeight / dropCap.computedFontSize;
 
               verticalAdjustment =
-                ((dropCap.lineHeight - originalLineHeight) *
+                ((resolvedDropCapStyle.lineHeight - originalLineHeight) *
                   dropCap.computedFontSize) /
                 2;
             }

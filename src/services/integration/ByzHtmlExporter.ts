@@ -135,7 +135,12 @@ export class ByzHtmlExporter {
   exportScore(score: Score) {
     const style = this.exportPageSetup(score.pageSetup, score.textStyles);
 
-    const body = this.exportElements(score.staff.elements, score.pageSetup, 4);
+    const body = this.exportElements(
+      score.staff.elements,
+      score.pageSetup,
+      score.textStyles,
+      4,
+    );
     const fontFaceCss = fontCatalog.getRegisteredFontFaceCss();
 
     let injectRtl = '';
@@ -529,6 +534,7 @@ export class ByzHtmlExporter {
   exportElements(
     elements: ScoreElement[],
     pageSetup: PageSetup,
+    textStyles: TextStyle[],
     indentation: number,
     startInsidePage: boolean = false,
   ) {
@@ -582,6 +588,7 @@ export class ByzHtmlExporter {
 
           result += this.exportDropCap(
             element as DropCapElement,
+            textStyles,
             indentation + 2,
           );
 
@@ -954,21 +961,38 @@ export class ByzHtmlExporter {
     )}>`;
   }
 
-  exportDropCap(element: DropCapElement, indentation: number) {
+  exportDropCap(
+    element: DropCapElement,
+    textStyles: TextStyle[],
+    indentation: number,
+  ) {
     let styleAttribute = '';
 
-    if (!element.useDefaultStyle) {
+    if (
+      this.hasExplicitTextStyleOverrides(element) ||
+      element.textStyleId !== BUILT_IN_TEXT_STYLE_IDS.DropCap
+    ) {
+      const resolvedDropCapStyle = resolveTextStyle(
+        textStyles,
+        element.textStyleId,
+        element.getTextStyleOverrides(),
+      );
+      const resolvedDropCapFont = resolveFontStyle(
+        resolvedDropCapStyle.fontFamily,
+        resolvedDropCapStyle.fontStyle,
+      );
+
       let style = '';
 
-      style += `color: ${element.computedColor};`;
+      style += `color: ${resolvedDropCapStyle.color};`;
       style += `font-family: ${getFontFamilyWithFallback(
-        element.computedFontFamily,
+        resolvedDropCapStyle.fontFamily,
       ).replaceAll('"', "'")};`;
-      style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
-      style += `font-weight: ${element.computedFontWeight};`;
-      style += `font-style: ${element.computedFontStyle};`;
-      style += `line-height: ${element.computedLineHeight};`;
-      style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
+      style += `font-size: ${Unit.toPt(resolvedDropCapStyle.fontSize)}pt;`;
+      style += `font-weight: ${resolvedDropCapFont.cssFontWeight};`;
+      style += `font-style: ${resolvedDropCapFont.cssFontStyle};`;
+      style += `line-height: ${resolvedDropCapStyle.lineHeight ?? 'normal'};`;
+      style += `-webkit-text-stroke-width: ${resolvedDropCapStyle.strokeWidth};`;
 
       styleAttribute = ` style="${style}"`;
     }
@@ -994,7 +1018,11 @@ export class ByzHtmlExporter {
 
     let style = '';
 
-    if (!element.inline || this.textBoxHasExplicitTextStyleOverrides(element)) {
+    if (
+      !element.inline ||
+      this.textBoxHasExplicitTextStyleOverrides(element) ||
+      element.textStyleId !== BUILT_IN_TEXT_STYLE_IDS.Lyrics
+    ) {
       style += `color: ${element.computedColor};`;
       style += `font-family: ${getFontFamilyWithFallback(
         element.computedFontFamily,

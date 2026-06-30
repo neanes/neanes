@@ -1,9 +1,16 @@
 <template>
-  <FieldSet class="min-h-0 flex-1 overflow-auto">
-    <FieldLegend class="sr-only">{{
+  <PaneAccordion
+    :open-sections="openSections"
+    @update:open-sections="$emit('update:open-sections', $event)"
+  >
+    <template #legend>{{
       $t(($) => $.menu.insert.annotation, { ns: 'menu' })
-    }}</FieldLegend>
-    <FieldGroup>
+    }}</template>
+
+    <PaneSection
+      value="positioning"
+      :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
+    >
       <Field orientation="horizontal">
         <FieldLabel for="properties-annotation-left">{{
           $t(($) => $.dialog.common.left, { ns: 'dialog' })
@@ -35,23 +42,21 @@
           "
         />
       </Field>
+    </PaneSection>
 
-      <FieldSeparator />
-
-      <PropertiesRichTextStyle
-        id-prefix="properties-annotation"
-        :element="element"
-        :fonts="fonts"
-        :page-setup="pageSetup"
-        :paragraph-styles="paragraphStyles"
-        show-edit-styles-button
-        :fallback-paragraph-style="annotationStyle"
-        @open-paragraph-styles-dialog="
-          emit('open-paragraph-styles-dialog', $event)
-        "
-      />
-    </FieldGroup>
-  </FieldSet>
+    <PropertiesRichTextStyle
+      id-prefix="properties-annotation"
+      :element="element"
+      :fonts="fonts"
+      :page-setup="pageSetup"
+      :paragraph-styles="paragraphStyles"
+      show-edit-styles-button
+      :fallback-paragraph-style="annotationStyle"
+      @open-paragraph-styles-dialog="
+        emit('open-paragraph-styles-dialog', $event)
+      "
+    />
+  </PaneAccordion>
 </template>
 
 <script setup lang="ts">
@@ -59,14 +64,9 @@ import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSeparator,
-  FieldSet,
-} from '@/components/ui/field';
+import PaneAccordion from '@/components/pane/PaneAccordion.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
+import { Field, FieldLabel } from '@/components/ui/field';
 import type { AnnotationElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
@@ -87,6 +87,10 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
@@ -97,7 +101,11 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['open-paragraph-styles-dialog', 'update']);
+const emit = defineEmits([
+  'open-paragraph-styles-dialog',
+  'update',
+  'update:open-sections',
+]);
 
 const annotationStyle = computed(() =>
   resolveParagraphStyle(

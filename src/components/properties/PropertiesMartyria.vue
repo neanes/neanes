@@ -1,9 +1,16 @@
 <template>
-  <FieldSet class="min-h-0 flex-1 overflow-auto">
-    <FieldLegend class="sr-only">{{
+  <PaneAccordion
+    :open-sections="openSections"
+    @update:open-sections="$emit('update:open-sections', $event)"
+  >
+    <template #legend>{{
       $t(($) => $.toolbar.main.martyria, { ns: 'toolbar' })
-    }}</FieldLegend>
-    <FieldGroup>
+    }}</template>
+
+    <PaneSection
+      value="martyria"
+      :title="$t(($) => $.toolbar.main.martyria, { ns: 'toolbar' })"
+    >
       <Field orientation="horizontal">
         <Switch
           id="properties-martyria-auto"
@@ -78,66 +85,6 @@
           </Select>
         </Field>
       </template>
-
-      <Field orientation="horizontal">
-        <FieldLabel for="properties-martyria-bpm">{{
-          $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <InputBpm
-          id="properties-martyria-bpm"
-          :disabled="
-            element.tempo == null &&
-            element.tempoLeft == null &&
-            element.tempoRight == null
-          "
-          :model-value="element.bpm"
-          @update:model-value="
-            $emit('update', {
-              bpm: $event,
-            } as Partial<MartyriaElement>)
-          "
-        />
-      </Field>
-
-      <Field orientation="horizontal">
-        <FieldLabel for="properties-martyria-vertical-offset">{{
-          $t(($) => $.toolbar.common.verticalOffset, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <InputUnit
-          id="properties-martyria-vertical-offset"
-          unit="pt"
-          :min="-spaceAfterMax"
-          :max="spaceAfterMax"
-          :step="0.5"
-          :format-options="fraction2FormatOptions"
-          :model-value="element.verticalOffset"
-          @update:model-value="
-            $emit('update', {
-              verticalOffset: $event,
-            } as Partial<MartyriaElement>)
-          "
-        />
-      </Field>
-
-      <Field orientation="horizontal">
-        <FieldLabel for="properties-martyria-space-after">{{
-          $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <InputUnit
-          id="properties-martyria-space-after"
-          unit="pt"
-          :min="-spaceAfterMax"
-          :max="spaceAfterMax"
-          :step="0.5"
-          :format-options="fraction2FormatOptions"
-          :model-value="element.spaceAfter"
-          @update:model-value="
-            $emit('update', {
-              spaceAfter: $event,
-            } as Partial<MartyriaElement>)
-          "
-        />
-      </Field>
 
       <Field v-if="showChromaticFthoraNote">
         <FieldLabel for="properties-martyria-fthora-note">{{
@@ -223,8 +170,78 @@
           </SelectContent>
         </Select>
       </Field>
-    </FieldGroup>
-  </FieldSet>
+    </PaneSection>
+
+    <PaneSection
+      value="tempo"
+      :title="$t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' })"
+    >
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-martyria-bpm">{{
+          $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <InputBpm
+          id="properties-martyria-bpm"
+          :disabled="
+            element.tempo == null &&
+            element.tempoLeft == null &&
+            element.tempoRight == null
+          "
+          :model-value="element.bpm"
+          @update:model-value="
+            $emit('update', {
+              bpm: $event,
+            } as Partial<MartyriaElement>)
+          "
+        />
+      </Field>
+    </PaneSection>
+
+    <PaneSection
+      value="positioning"
+      :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
+    >
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-martyria-vertical-offset">{{
+          $t(($) => $.toolbar.common.verticalOffset, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <InputUnit
+          id="properties-martyria-vertical-offset"
+          unit="pt"
+          :min="-spaceAfterMax"
+          :max="spaceAfterMax"
+          :step="0.5"
+          :format-options="fraction2FormatOptions"
+          :model-value="element.verticalOffset"
+          @update:model-value="
+            $emit('update', {
+              verticalOffset: $event,
+            } as Partial<MartyriaElement>)
+          "
+        />
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-martyria-space-after">{{
+          $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <InputUnit
+          id="properties-martyria-space-after"
+          unit="pt"
+          :min="-spaceAfterMax"
+          :max="spaceAfterMax"
+          :step="0.5"
+          :format-options="fraction2FormatOptions"
+          :model-value="element.spaceAfter"
+          @update:model-value="
+            $emit('update', {
+              spaceAfter: $event,
+            } as Partial<MartyriaElement>)
+          "
+        />
+      </Field>
+    </PaneSection>
+  </PaneAccordion>
 </template>
 
 <script setup lang="ts">
@@ -234,13 +251,9 @@ import { computed } from 'vue';
 
 import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from '@/components/ui/field';
+import PaneAccordion from '@/components/pane/PaneAccordion.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
+import { Field, FieldLabel } from '@/components/ui/field';
 import {
   Select,
   SelectContent,
@@ -318,13 +331,17 @@ const props = defineProps({
     type: Object as PropType<MartyriaElement>,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
   },
 });
 
-const emit = defineEmits(['update']);
+const emit = defineEmits(['update', 'update:open-sections']);
 const SELECT_NONE_VALUE = '__none__';
 
 const spaceAfterMax = computed(() =>

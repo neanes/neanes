@@ -411,8 +411,9 @@ Each `Properties*.vue` follows one shape: it takes `:element` (concrete type) pl
 the shared context it needs (`pageSetup` for min/max bounds, `fonts` for the three
 font-bearing panes, `innerNeume` only for `PropertiesNeume`), reads values directly
 off `element` (the element is treated as read-only input -- there is no local `v-model`
-copy), and emits a single generic `update` carrying a **`Partial<Element>`**. The
-router re-emits that enriched with the element: `@update="emit('update:neume', neumeElement, $event)"`.
+copy), groups its controls inside `PaneAccordion` / `PaneSection`, and
+emits a single generic `update` carrying a **`Partial<Element>`**. The router re-emits
+that enriched with the element: `@update="emit('update:neume', neumeElement, $event)"`.
 The host handler applies it uniformly, routing every edit through the app's undo/redo
 command bus (`commandService`) and then persisting the workspace (`save()`):
 
@@ -441,6 +442,19 @@ conditionally `refreshStaffLyrics()` (re-flows lyric text across the notes);
 `updateTextBox`/`updateRichTextBox` pass a
 `noHistory` flag when the _only_ changed key is the layout-derived `height`, keeping
 pure resizes out of the undo stack.
+
+Pane section state is editor-global environment state, not element state.
+`TheEditor.vue` owns the `openSections` arrays and passes them into
+`DeveloperPane.vue` and `PropertiesPane.vue`; `PropertiesPane.vue` forwards that
+state to the currently mounted `Properties*` child. Each top-level `PaneAccordion`
+is a controlled component that takes `openSections` and emits
+`update:open-sections`, while each `PaneSection` registers its stable section id
+through `paneSectionRegistrationKey`. When the visible section set changes, the
+accordion filters user changes to the currently registered sections but preserves
+open ids for hidden sections, so collapsing `style` on a text box does not discard
+the state of `martyria`, `tempo`, or the developer-only `glue` section when those
+sections are not currently mounted. Reset layout restores
+`DEFAULT_PANE_ACCORDION_STATE`.
 
 ### 3.3 Structural actions and `LyricsPane`
 
@@ -517,6 +531,9 @@ the same object as the selected text box, it's `'score'`, else `'header-footer'`
 - **Panes are stateless over the element.** They read `element` and emit partials;
   they keep no editable copy. The `:key` remount guarantees no stale derived state
   leaks across selections.
+- **Pane sections are stable environment state.** Section ids are semantic
+  (`style`, `positioning`, `tempo`, `display`, etc.), not tied to element ids;
+  adding or renaming one must account for `DEFAULT_PANE_ACCORDION_STATE`.
 - **One update path per element type.** Toolbar and pane both emit `Partial<Element>`
   to the same `updateXxx` -> `UpdatePropertiesCommand`. Adding a control on either
   surface must reuse that handler, never write the element directly.
@@ -594,7 +611,8 @@ pane state is not part of the `Workspace` model or score file. Instead,
 `TheEditor.vue` persists a small editor-global `editorEnvironment` record in
 `localStorage`. That record stores the pieces of layout state the editor owns:
 pane visibility, home edge/floating state for panes that differ from defaults, pane
-accordion sections, status-bar visibility, and zoom defaults.
+accordion sections for the developer and properties panes, status-bar visibility,
+and zoom defaults.
 
 On launch the dock is built programmatically from `workspacePaneDefinitions`
 (`initializeLayout` -> `ensureCenterEditorPanel` + `ensureEdgeGroup` per edge +
@@ -726,11 +744,17 @@ The subsystem spans these files, grouped by concern.
   `paneVisibility` / `layoutResetCounter` / `setPaneVisibility` / `resetLayout` /
   `onPaneVisibilityChange`; the pane IPC handlers and the `SetWorkspacePaneVisibility`
   menu-sync emit; `isEditorShortcutIgnored`.
+- `src/models/EditorEnvironment.ts` -- the editor-global persisted environment
+  shape and default pane accordion section state.
 
 **The inspector:**
 
 - `src/components/properties/InspectorContext.ts` -- the selection discriminated union.
 - `src/components/properties/PropertiesPane.vue` -- the context -> pane router.
+- `src/components/pane/PaneAccordion.vue`,
+  `src/components/pane/PaneSection.vue`,
+  `src/components/pane/PaneSectionRegistration.ts` -- the shared pane accordion
+  and section-state registration contract.
 - `src/components/properties/Properties{Annotation,TextBox,RichTextBox,DropCap,ImageBox,Lyrics,ModeKey,Neume,Martyria,Tempo}.vue`
   -- the per-element structured editors.
 - `src/components/LyricsPane.vue` -- bulk staff-lyrics text editor (selection-independent).

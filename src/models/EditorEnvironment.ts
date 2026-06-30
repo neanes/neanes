@@ -6,6 +6,19 @@ export const DEFAULT_PANE_ACCORDION_STATE: Partial<
   Record<WorkspacePaneId, string[]>
 > = {
   developer: ['display', 'line', 'inspector'],
+  properties: [
+    'style',
+    'size',
+    'positioning',
+    'neume',
+    'tempo',
+    'martyria',
+    'initial-martyria',
+    'mode-change',
+    'running-marker',
+    'scrollable',
+    'neume-attributes',
+  ],
 };
 
 export type EditorPaneLayout = {
@@ -107,7 +120,7 @@ function persistPaneAccordionState(
 
     if (
       openSections != null &&
-      !arraysAreEqual(
+      !arraysHaveSameValues(
         openSections,
         DEFAULT_PANE_ACCORDION_STATE[definition.id] ?? [],
       )
@@ -121,6 +134,12 @@ function persistPaneAccordionState(
     : { paneAccordionState: persistedState };
 }
 
-function arraysAreEqual(a: readonly string[], b: readonly string[]) {
-  return a.length === b.length && a.every((value, index) => value === b[index]);
+function arraysHaveSameValues(a: readonly string[], b: readonly string[]) {
+  const values = new Set(a);
+  const otherValues = new Set(b);
+
+  return (
+    values.size === otherValues.size &&
+    [...values].every((value) => otherValues.has(value))
+  );
 }

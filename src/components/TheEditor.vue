@@ -425,6 +425,10 @@ const developerPaneOpenSections = computed({
   get: () => accordionStateFor('developer'),
   set: (value: string[]) => setAccordionState('developer', value),
 });
+const propertiesPaneOpenSections = computed({
+  get: () => accordionStateFor('properties'),
+  set: (value: string[]) => setAccordionState('properties', value),
+});
 const workspaces = ref<Workspace[]>([]);
 const selectedWorkspaceValue = ref(new Workspace());
 const pendingLyricsAssignmentTimers = new Map<string, number>();
@@ -9530,6 +9534,7 @@ function renderTabLabel(tab: Tab) {
             :context="inspectorContext"
             :fonts="fonts"
             :inner-neume="toolbarInnerNeume"
+            :open-sections="propertiesPaneOpenSections"
             :page-setup="score.pageSetup"
             :paragraph-styles="score.paragraphStyles"
             @update:annotation="updateAnnotation"
@@ -9541,6 +9546,7 @@ function renderTabLabel(tab: Tab) {
             @update:mode-key="updateModeKey"
             @update:neume="updateNoteAndSave"
             @update:martyria="updateMartyria"
+            @update:open-sections="propertiesPaneOpenSections = $event"
             @update:tempo="updateTempo"
             @open-mode-key-dialog="openModeKeyDialog"
             @open-paragraph-styles-dialog="openParagraphStylesDialog"

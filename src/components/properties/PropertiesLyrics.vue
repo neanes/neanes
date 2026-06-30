@@ -1,9 +1,16 @@
 <template>
-  <FieldSet class="min-h-0 flex-1 overflow-auto">
-    <FieldLegend class="sr-only">{{
+  <PaneAccordion
+    :open-sections="openSections"
+    @update:open-sections="$emit('update:open-sections', $event)"
+  >
+    <template #legend>{{
       $t(($) => $.menu.view.lyrics, { ns: 'menu' })
-    }}</FieldLegend>
-    <FieldGroup>
+    }}</template>
+
+    <PaneSection
+      value="style"
+      :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
+    >
       <Field>
         <div class="mb-2 flex items-center justify-between gap-2">
           <FieldLabel for="properties-lyrics-text-style">{{
@@ -185,8 +192,8 @@
           />
         </div>
       </Field>
-    </FieldGroup>
-  </FieldSet>
+    </PaneSection>
+  </PaneAccordion>
 </template>
 
 <script setup lang="ts">
@@ -199,16 +206,12 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
+import PaneAccordion from '@/components/pane/PaneAccordion.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import ParagraphStyleResetButton from '@/components/properties/ParagraphStyleResetButton.vue';
 import { Button } from '@/components/ui/button';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from '@/components/ui/field';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { NoteElement } from '@/models/Element';
@@ -227,13 +230,21 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
   paragraphStyles: {
     type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
 });
 
-const emit = defineEmits(['open-paragraph-styles-dialog', 'update']);
+const emit = defineEmits([
+  'open-paragraph-styles-dialog',
+  'update',
+  'update:open-sections',
+]);
 
 const resolvedParagraphStyle = computed(() =>
   resolveParagraphStyle(
@@ -293,12 +304,13 @@ const paragraphStyleOverrideLabels = computed(() => {
 const hasParagraphStyleOverrides = computed(
   () => paragraphStyleOverrideLabels.value.length > 0,
 );
+
 function onStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {
+    lyricsTextDecoration: values.includes('underline') ? 'underline' : null,
     lyricsFontStyle: applyStyleAxisToggles(values),
-    lyricsTextDecoration: values.includes('underline') ? 'underline' : 'none',
   } as Partial<NoteElement>);
 }
 

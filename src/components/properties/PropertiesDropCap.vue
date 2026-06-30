@@ -1,9 +1,16 @@
 <template>
-  <FieldSet class="min-h-0 flex-1 overflow-auto">
-    <FieldLegend class="sr-only">{{
+  <PaneAccordion
+    :open-sections="openSections"
+    @update:open-sections="$emit('update:open-sections', $event)"
+  >
+    <template #legend>{{
       $t(($) => $.menu.insert.dropCap, { ns: 'menu' })
-    }}</FieldLegend>
-    <FieldGroup>
+    }}</template>
+
+    <PaneSection
+      value="style"
+      :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
+    >
       <Field>
         <div class="mb-2 flex items-center justify-between gap-2">
           <FieldLabel for="properties-drop-cap-text-style">{{
@@ -108,6 +115,24 @@
       </Field>
 
       <Field orientation="horizontal">
+        <FieldLabel for="properties-drop-cap-line-span">{{
+          $t(($) => $.toolbar.dropCap.lineSpan, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <InputUnit
+          id="properties-drop-cap-line-span"
+          unit="unitless"
+          :min="1"
+          :max="10"
+          :step="1"
+          :model-value="element.lineSpan"
+          :format-options="fraction0FormatOptions"
+          @update:model-value="
+            $emit('update', { lineSpan: $event } as Partial<DropCapElement>)
+          "
+        />
+      </Field>
+
+      <Field orientation="horizontal">
         <FieldLabel for="properties-drop-cap-line-height">{{
           $t(($) => $.dialog.pageSetup.lineHeight, { ns: 'dialog' })
         }}</FieldLabel>
@@ -201,24 +226,12 @@
           />
         </div>
       </Field>
+    </PaneSection>
 
-      <Field orientation="horizontal">
-        <FieldLabel for="properties-drop-cap-line-span">{{
-          $t(($) => $.toolbar.dropCap.lineSpan, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <InputUnit
-          id="properties-drop-cap-line-span"
-          unit="unitless"
-          :min="1"
-          :max="10"
-          :step="1"
-          :model-value="element.lineSpan"
-          :format-options="fraction0FormatOptions"
-          @update:model-value="
-            $emit('update', { lineSpan: $event } as Partial<DropCapElement>)
-          "
-        />
-      </Field>
+    <PaneSection
+      value="positioning"
+      :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
+    >
       <Field orientation="horizontal">
         <FieldLabel for="properties-drop-cap-width">{{
           $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
@@ -226,20 +239,18 @@
         <InputUnit
           id="properties-drop-cap-width"
           unit="pt"
-          :nullable="true"
-          :min="4"
+          :min="1"
           :max="maxWidth"
           :step="0.5"
           :model-value="element.customWidth"
-          :format-options="fraction1FormatOptions"
-          placeholder="auto"
+          :format-options="fraction2FormatOptions"
           @update:model-value="
             $emit('update', { customWidth: $event } as Partial<DropCapElement>)
           "
         />
       </Field>
-    </FieldGroup>
-  </FieldSet>
+    </PaneSection>
+  </PaneAccordion>
 </template>
 
 <script setup lang="ts">
@@ -253,16 +264,12 @@ import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import PaneAccordion from '@/components/pane/PaneAccordion.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import ParagraphStyleResetButton from '@/components/properties/ParagraphStyleResetButton.vue';
 import { Button } from '@/components/ui/button';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from '@/components/ui/field';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { DropCapElement } from '@/models/Element';
@@ -274,7 +281,6 @@ import {
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   fraction0FormatOptions,
-  fraction1FormatOptions,
   fraction2FormatOptions,
 } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
@@ -288,6 +294,10 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
@@ -298,7 +308,11 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['open-paragraph-styles-dialog', 'update']);
+const emit = defineEmits([
+  'open-paragraph-styles-dialog',
+  'update',
+  'update:open-sections',
+]);
 
 const resolvedParagraphStyle = computed(() =>
   resolveParagraphStyle(
@@ -354,6 +368,7 @@ const paragraphStyleOverrideLabels = computed(() => {
 const hasParagraphStyleOverrides = computed(
   () => paragraphStyleOverrideLabels.value.length > 0,
 );
+
 function onStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 

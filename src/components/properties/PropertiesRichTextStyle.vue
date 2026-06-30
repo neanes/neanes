@@ -1,794 +1,799 @@
 <template>
   <div ref="panelRoot" class="contents">
-    <Field>
-      <div class="mb-2 flex items-center justify-between gap-2">
-        <FieldLabel :for="`${idPrefix}-text-style`">{{
-          $t(($) => $.toolbar.common.paragraphStyle, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <div class="flex items-center gap-1">
-          <Button
-            v-if="showEditStylesButton"
-            type="button"
-            variant="ghost"
-            size="sm"
-            @click="openParagraphStylesDialog"
-          >
-            {{
-              $t(($) => $.dialog.paragraphStyles.openDialog, { ns: 'dialog' })
-            }}
-          </Button>
-          <ParagraphStyleResetButton
-            :disabled="!hasParagraphStyleOverrides"
-            @reset="resetAllParagraphStyleOverrides"
-          />
-        </div>
-      </div>
-      <ParagraphStyleSelect
-        :id="`${idPrefix}-text-style`"
-        trigger-class="w-full"
-        :model-value="paragraphStyleSelectValue"
-        :paragraph-styles="paragraphStyleOptions"
-        :disabled="!isCommandEnabled('style')"
-        :disabled-style-ids="disabledParagraphStyleIds"
-        :show-none-option="showParagraphStyleNoneOption"
-        :show-mixed-option="paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE"
-        rich-text-portal
-        @update:model-value="onParagraphStyleSelectChanged"
-        @update:open="
-          $event
-            ? beginSelectionGuard(element)
-            : endSelectionGuard(element, { refocus: true })
-        "
-      />
-    </Field>
-
-    <Field>
-      <div class="flex min-h-6 items-center justify-between gap-2">
-        <FieldLabel :for="`${idPrefix}-font`">{{
-          $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' })
-        }}</FieldLabel>
-        <!--
-          Keep the action mounted so controls do not shift when formatting is
-          removed; disable it when there is no explicit value to clear. The
-          wrapper still receives pointer events for disabled buttons so clicking
-          an inactive clear action does not blur the active editor.
-        -->
-        <ParagraphStyleResetButton
-          :disabled="
-            !isCommandEnabled('fontFamily') ||
-            fontFamilyValue === RICH_TEXT_DEFAULT_FONT_FAMILY
-          "
-          @reset="onFontFamilyChanged(RICH_TEXT_DEFAULT_FONT_FAMILY)"
-        />
-      </div>
-      <FontCombobox
-        :id="`${idPrefix}-font`"
-        class="w-full max-w-full"
-        :model-value="fontFamilyValue"
-        :options="fontFamilyOptions"
-        :selected-label-class="
-          fontFamilyValue === RICH_TEXT_DEFAULT_FONT_FAMILY
-            ? 'text-muted-foreground'
-            : undefined
-        "
-        :disabled="!isCommandEnabled('fontFamily')"
-        rich-text-portal
-        @update:model-value="onFontFamilyChanged"
-        @update:open="
-          $event
-            ? beginSelectionGuard(element)
-            : endSelectionGuard(element, { refocus: true })
-        "
-      />
-    </Field>
-
-    <Field>
-      <div class="flex min-h-6 items-center justify-between gap-2">
-        <FieldLabel :for="`${idPrefix}-font-style`">{{
-          $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
-        }}</FieldLabel>
-        <ParagraphStyleResetButton
-          :disabled="
-            !isCommandEnabled('fontStyle') || !fontStyleHasExplicitValue
-          "
-          @reset="resetFontStyle"
-        />
-      </div>
-      <FontStyleSelect
-        :id="`${idPrefix}-font-style`"
-        class="w-full max-w-full"
-        :model-value="fontStyleValue"
-        :options="fontStyleOptions"
-        :disabled="fontStyleDisabled"
-        rich-text-portal
-        @update:model-value="onFontStyleChanged"
-        @update:open="
-          $event
-            ? beginSelectionGuard(element)
-            : endSelectionGuard(element, { refocus: true })
-        "
-      />
-    </Field>
-
-    <Field>
-      <FieldLabel :for="`${idPrefix}-language`">
-        {{ $t(($) => $.dialog.preferences.language, { ns: 'dialog' }) }}
-      </FieldLabel>
-      <Select
-        :model-value="languageSelectValue"
-        :disabled="!isCommandEnabled('textPartLanguage')"
-        @update:model-value="onLanguageChanged"
-        @update:open="
-          $event
-            ? beginSelectionGuard(element)
-            : endSelectionGuard(element, { refocus: true })
-        "
-      >
-        <SelectTrigger :id="`${idPrefix}-language`" class="w-full">
-          <SelectValue
-            :placeholder="
-              $t(($) => $.dialog.preferences.languageSystemDefault, {
-                ns: 'dialog',
-              })
-            "
-          />
-        </SelectTrigger>
-        <RichTextSelectContent>
-          <SelectGroup>
-            <SelectItem :value="RICH_TEXT_NO_LANGUAGE_VALUE">
-              {{
-                $t(($) => $.dialog.preferences.languageSystemDefault, {
-                  ns: 'dialog',
-                })
-              }}
-            </SelectItem>
-            <SelectItem
-              v-for="language in languageOptions"
-              :key="language.value"
-              :value="language.value"
-              :text-value="language.title"
+    <PaneSection
+      value="style"
+      :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
+    >
+      <Field>
+        <div class="mb-2 flex items-center justify-between gap-2">
+          <FieldLabel :for="`${idPrefix}-text-style`">{{
+            $t(($) => $.toolbar.common.paragraphStyle, { ns: 'toolbar' })
+          }}</FieldLabel>
+          <div class="flex items-center gap-1">
+            <Button
+              v-if="showEditStylesButton"
+              type="button"
+              variant="ghost"
+              size="sm"
+              @click="openParagraphStylesDialog"
             >
-              {{ language.title }}
-            </SelectItem>
-          </SelectGroup>
-        </RichTextSelectContent>
-      </Select>
-    </Field>
-
-    <Field orientation="horizontal">
-      <FieldLabel :for="`${idPrefix}-font-size`">{{
-        $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
-      }}</FieldLabel>
-      <div class="flex shrink-0 items-center gap-1">
-        <InputFontSize
-          :id="`${idPrefix}-font-size`"
-          class="w-36"
-          :model-value="fontSizeValue"
-          :disabled="!isCommandEnabled('fontSize')"
-          nullable
-          :placeholder="fontSizePlaceholder"
-          :default-value="resolvedActiveParagraphStyle.fontSize"
-          @update:model-value="onFontSizeChanged"
-          @focus-within="beginSelectionGuard(element)"
-          @blur-within="endSelectionGuard(element, { refocus: false })"
-        />
-        <ParagraphStyleResetButton
-          :disabled="!isCommandEnabled('fontSize') || fontSizeValue == null"
-          @reset="onFontSizeChanged(null)"
-        />
-      </div>
-    </Field>
-
-    <Field orientation="horizontal">
-      <FieldLabel :for="`${idPrefix}-font-color`">{{
-        $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
-      }}</FieldLabel>
-      <div class="flex shrink-0 items-center gap-1">
-        <ColorPicker
-          :id="`${idPrefix}-font-color`"
-          :model-value="fontColorValue"
-          :disabled="!isCommandEnabled('fontColor')"
+              {{
+                $t(($) => $.dialog.paragraphStyles.openDialog, { ns: 'dialog' })
+              }}
+            </Button>
+            <ParagraphStyleResetButton
+              :disabled="!hasParagraphStyleOverrides"
+              @reset="resetAllParagraphStyleOverrides"
+            />
+          </div>
+        </div>
+        <ParagraphStyleSelect
+          :id="`${idPrefix}-text-style`"
+          trigger-class="w-full"
+          :model-value="paragraphStyleSelectValue"
+          :paragraph-styles="paragraphStyleOptions"
+          :disabled="!isCommandEnabled('style')"
+          :disabled-style-ids="disabledParagraphStyleIds"
+          :show-none-option="showParagraphStyleNoneOption"
+          :show-mixed-option="
+            paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE
+          "
           rich-text-portal
-          @update:model-value="onFontColorChanged"
+          @update:model-value="onParagraphStyleSelectChanged"
           @update:open="
             $event
               ? beginSelectionGuard(element)
               : endSelectionGuard(element, { refocus: true })
           "
         />
-        <ParagraphStyleResetButton
-          :disabled="
-            !isCommandEnabled('fontColor') || !fontColorHasExplicitValue
-          "
-          @reset="onFontColorChanged(null)"
-        />
-      </div>
-    </Field>
+      </Field>
 
-    <Field orientation="horizontal">
-      <FieldLabel>{{
-        $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
-      }}</FieldLabel>
-      <div class="flex flex-wrap gap-1">
-        <ToggleGroup
-          type="multiple"
-          variant="outline"
-          :model-value="styleValues"
-          @update:model-value="onStyleValuesChanged"
-        >
-          <ToggleGroupItem
-            value="bold"
-            :aria-label="$t(($) => $.dialog.pageSetup.bold, { ns: 'dialog' })"
-            :disabled="!isStyleToggleEnabled('bold')"
-            @mousedown.prevent
-          >
-            <PhTextB />
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="italic"
-            :aria-label="$t(($) => $.dialog.pageSetup.italic, { ns: 'dialog' })"
-            :disabled="!isStyleToggleEnabled('italic')"
-            @mousedown.prevent
-          >
-            <PhTextItalic />
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="underline"
-            :aria-label="
-              $t(($) => $.toolbar.richTextBox.underline, { ns: 'toolbar' })
+      <Field>
+        <div class="flex min-h-6 items-center justify-between gap-2">
+          <FieldLabel :for="`${idPrefix}-font`">{{
+            $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' })
+          }}</FieldLabel>
+          <!--
+          Keep the action mounted so controls do not shift when formatting is
+          removed; disable it when there is no explicit value to clear. The
+          wrapper still receives pointer events for disabled buttons so clicking
+          an inactive clear action does not blur the active editor.
+        -->
+          <ParagraphStyleResetButton
+            :disabled="
+              !isCommandEnabled('fontFamily') ||
+              fontFamilyValue === RICH_TEXT_DEFAULT_FONT_FAMILY
             "
-            :disabled="!isStyleToggleEnabled('underline')"
-            @mousedown.prevent
-          >
-            <PhTextUnderline />
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </div>
-    </Field>
+            @reset="onFontFamilyChanged(RICH_TEXT_DEFAULT_FONT_FAMILY)"
+          />
+        </div>
+        <FontCombobox
+          :id="`${idPrefix}-font`"
+          class="w-full max-w-full"
+          :model-value="fontFamilyValue"
+          :options="fontFamilyOptions"
+          :selected-label-class="
+            fontFamilyValue === RICH_TEXT_DEFAULT_FONT_FAMILY
+              ? 'text-muted-foreground'
+              : undefined
+          "
+          :disabled="!isCommandEnabled('fontFamily')"
+          rich-text-portal
+          @update:model-value="onFontFamilyChanged"
+          @update:open="
+            $event
+              ? beginSelectionGuard(element)
+              : endSelectionGuard(element, { refocus: true })
+          "
+        />
+      </Field>
 
-    <Field orientation="horizontal">
-      <FieldLabel>{{
-        $t(($) => $.toolbar.common.alignment, { ns: 'toolbar' })
-      }}</FieldLabel>
-      <div class="flex items-center gap-1">
+      <Field>
+        <div class="flex min-h-6 items-center justify-between gap-2">
+          <FieldLabel :for="`${idPrefix}-font-style`">{{
+            $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
+          }}</FieldLabel>
+          <ParagraphStyleResetButton
+            :disabled="
+              !isCommandEnabled('fontStyle') || !fontStyleHasExplicitValue
+            "
+            @reset="resetFontStyle"
+          />
+        </div>
+        <FontStyleSelect
+          :id="`${idPrefix}-font-style`"
+          class="w-full max-w-full"
+          :model-value="fontStyleValue"
+          :options="fontStyleOptions"
+          :disabled="fontStyleDisabled"
+          rich-text-portal
+          @update:model-value="onFontStyleChanged"
+          @update:open="
+            $event
+              ? beginSelectionGuard(element)
+              : endSelectionGuard(element, { refocus: true })
+          "
+        />
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
+        }}</FieldLabel>
+        <div class="flex flex-wrap gap-1">
+          <ToggleGroup
+            type="multiple"
+            variant="outline"
+            :model-value="styleValues"
+            @update:model-value="onStyleValuesChanged"
+          >
+            <ToggleGroupItem
+              value="bold"
+              :aria-label="$t(($) => $.dialog.pageSetup.bold, { ns: 'dialog' })"
+              :disabled="!isStyleToggleEnabled('bold')"
+              @mousedown.prevent
+            >
+              <PhTextB />
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="italic"
+              :aria-label="
+                $t(($) => $.dialog.pageSetup.italic, { ns: 'dialog' })
+              "
+              :disabled="!isStyleToggleEnabled('italic')"
+              @mousedown.prevent
+            >
+              <PhTextItalic />
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="underline"
+              :aria-label="
+                $t(($) => $.toolbar.richTextBox.underline, { ns: 'toolbar' })
+              "
+              :disabled="!isStyleToggleEnabled('underline')"
+              @mousedown.prevent
+            >
+              <PhTextUnderline />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel :for="`${idPrefix}-font-size`">{{
+          $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <div class="flex shrink-0 items-center gap-1">
+          <InputFontSize
+            :id="`${idPrefix}-font-size`"
+            class="w-36"
+            :model-value="fontSizeValue"
+            :disabled="!isCommandEnabled('fontSize')"
+            nullable
+            :placeholder="fontSizePlaceholder"
+            :default-value="resolvedActiveParagraphStyle.fontSize"
+            @update:model-value="onFontSizeChanged"
+            @focus-within="beginSelectionGuard(element)"
+            @blur-within="endSelectionGuard(element, { refocus: false })"
+          />
+          <ParagraphStyleResetButton
+            :disabled="!isCommandEnabled('fontSize') || fontSizeValue == null"
+            @reset="onFontSizeChanged(null)"
+          />
+        </div>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel :for="`${idPrefix}-font-color`">{{
+          $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
+        }}</FieldLabel>
+        <div class="flex shrink-0 items-center gap-1">
+          <ColorPicker
+            :id="`${idPrefix}-font-color`"
+            :model-value="fontColorValue"
+            :disabled="!isCommandEnabled('fontColor')"
+            rich-text-portal
+            @update:model-value="onFontColorChanged"
+            @update:open="
+              $event
+                ? beginSelectionGuard(element)
+                : endSelectionGuard(element, { refocus: true })
+            "
+          />
+          <ParagraphStyleResetButton
+            :disabled="
+              !isCommandEnabled('fontColor') || !fontColorHasExplicitValue
+            "
+            @reset="onFontColorChanged(null)"
+          />
+        </div>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.toolbar.common.alignment, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            :model-value="alignmentValue"
+            @update:model-value="onAlignmentChanged"
+          >
+            <AppTooltip
+              :tooltip="
+                $t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })
+              "
+            >
+              <ToggleGroupItem
+                value="left"
+                :disabled="!isCommandEnabled('alignment')"
+                @mousedown.prevent
+              >
+                <PhTextAlignLeft />
+              </ToggleGroupItem>
+            </AppTooltip>
+            <AppTooltip
+              :tooltip="
+                $t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })
+              "
+            >
+              <ToggleGroupItem
+                value="center"
+                :disabled="!isCommandEnabled('alignment')"
+                @mousedown.prevent
+              >
+                <PhTextAlignCenter />
+              </ToggleGroupItem>
+            </AppTooltip>
+            <AppTooltip
+              :tooltip="
+                $t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })
+              "
+            >
+              <ToggleGroupItem
+                value="right"
+                :disabled="!isCommandEnabled('alignment')"
+                @mousedown.prevent
+              >
+                <PhTextAlignRight />
+              </ToggleGroupItem>
+            </AppTooltip>
+            <AppTooltip
+              :tooltip="
+                $t(($) => $.toolbar.common.alignJustify, { ns: 'toolbar' })
+              "
+            >
+              <ToggleGroupItem
+                value="justify"
+                :disabled="!isCommandEnabled('alignment')"
+                @mousedown.prevent
+              >
+                <PhTextAlignJustify />
+              </ToggleGroupItem>
+            </AppTooltip>
+          </ToggleGroup>
+          <ParagraphStyleResetButton
+            :disabled="
+              !isCommandEnabled('alignment') || !alignmentHasExplicitValue
+            "
+            @reset="resetAlignment"
+          />
+        </div>
+      </Field>
+
+      <Field>
+        <FieldLabel :for="`${idPrefix}-language`">
+          {{ $t(($) => $.dialog.preferences.language, { ns: 'dialog' }) }}
+        </FieldLabel>
+        <Select
+          :model-value="languageSelectValue"
+          :disabled="!isCommandEnabled('textPartLanguage')"
+          @update:model-value="onLanguageChanged"
+          @update:open="
+            $event
+              ? beginSelectionGuard(element)
+              : endSelectionGuard(element, { refocus: true })
+          "
+        >
+          <SelectTrigger :id="`${idPrefix}-language`" class="w-full">
+            <SelectValue
+              :placeholder="
+                $t(($) => $.dialog.preferences.languageSystemDefault, {
+                  ns: 'dialog',
+                })
+              "
+            />
+          </SelectTrigger>
+          <RichTextSelectContent>
+            <SelectGroup>
+              <SelectItem :value="RICH_TEXT_NO_LANGUAGE_VALUE">
+                {{
+                  $t(($) => $.dialog.preferences.languageSystemDefault, {
+                    ns: 'dialog',
+                  })
+                }}
+              </SelectItem>
+              <SelectItem
+                v-for="language in languageOptions"
+                :key="language.value"
+                :value="language.value"
+                :text-value="language.title"
+              >
+                {{ language.title }}
+              </SelectItem>
+            </SelectGroup>
+          </RichTextSelectContent>
+        </Select>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.toolbar.richTextBox.position, { ns: 'toolbar' })
+        }}</FieldLabel>
         <ToggleGroup
           type="single"
           variant="outline"
-          :model-value="alignmentValue"
-          @update:model-value="onAlignmentChanged"
+          :model-value="positionValue"
+          @update:model-value="onPositionValueChanged"
+        >
+          <ToggleGroupItem
+            value="subscript"
+            :aria-label="
+              $t(($) => $.toolbar.richTextBox.subscript, { ns: 'toolbar' })
+            "
+            :disabled="!isCommandEnabled('subscript')"
+            @mousedown.prevent
+          >
+            <PhTextSubscript />
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="superscript"
+            :aria-label="
+              $t(($) => $.toolbar.richTextBox.superscript, { ns: 'toolbar' })
+            "
+            :disabled="!isCommandEnabled('superscript')"
+            @mousedown.prevent
+          >
+            <PhTextSuperscript />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.toolbar.richTextBox.case, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          :model-value="capsValue"
+          @update:model-value="onCapsChanged"
         >
           <AppTooltip
-            :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
+            v-for="option in capsOptions"
+            :key="option.value"
+            :tooltip="option.label"
           >
             <ToggleGroupItem
-              value="left"
-              :disabled="!isCommandEnabled('alignment')"
+              :value="option.value"
+              :aria-label="option.label"
+              :disabled="!isCommandEnabled(FONT_VARIANT_CAPS)"
+              :style="caseOptionStyle(option.value)"
               @mousedown.prevent
             >
-              <PhTextAlignLeft />
-            </ToggleGroupItem>
-          </AppTooltip>
-          <AppTooltip
-            :tooltip="
-              $t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })
-            "
-          >
-            <ToggleGroupItem
-              value="center"
-              :disabled="!isCommandEnabled('alignment')"
-              @mousedown.prevent
-            >
-              <PhTextAlignCenter />
-            </ToggleGroupItem>
-          </AppTooltip>
-          <AppTooltip
-            :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
-          >
-            <ToggleGroupItem
-              value="right"
-              :disabled="!isCommandEnabled('alignment')"
-              @mousedown.prevent
-            >
-              <PhTextAlignRight />
-            </ToggleGroupItem>
-          </AppTooltip>
-          <AppTooltip
-            :tooltip="
-              $t(($) => $.toolbar.common.alignJustify, { ns: 'toolbar' })
-            "
-          >
-            <ToggleGroupItem
-              value="justify"
-              :disabled="!isCommandEnabled('alignment')"
-              @mousedown.prevent
-            >
-              <PhTextAlignJustify />
+              Aa
             </ToggleGroupItem>
           </AppTooltip>
         </ToggleGroup>
-        <ParagraphStyleResetButton
-          :disabled="
-            !isCommandEnabled('alignment') || !alignmentHasExplicitValue
-          "
-          @reset="resetAlignment"
-        />
-      </div>
-    </Field>
+      </Field>
 
-    <Field orientation="horizontal">
-      <FieldLabel>{{
-        $t(($) => $.toolbar.richTextBox.position, { ns: 'toolbar' })
-      }}</FieldLabel>
-      <ToggleGroup
-        type="single"
-        variant="outline"
-        :model-value="positionValue"
-        @update:model-value="onPositionValueChanged"
-      >
-        <ToggleGroupItem
-          value="subscript"
-          :aria-label="
-            $t(($) => $.toolbar.richTextBox.subscript, { ns: 'toolbar' })
-          "
-          :disabled="!isCommandEnabled('subscript')"
-          @mousedown.prevent
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.toolbar.richTextBox.numbers, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          :model-value="numericValue"
+          @update:model-value="onNumericChanged"
         >
-          <PhTextSubscript />
-        </ToggleGroupItem>
-        <ToggleGroupItem
-          value="superscript"
-          :aria-label="
-            $t(($) => $.toolbar.richTextBox.superscript, { ns: 'toolbar' })
-          "
-          :disabled="!isCommandEnabled('superscript')"
-          @mousedown.prevent
-        >
-          <PhTextSuperscript />
-        </ToggleGroupItem>
-      </ToggleGroup>
-    </Field>
-
-    <Field orientation="horizontal">
-      <FieldLabel>{{
-        $t(($) => $.toolbar.richTextBox.numbers, { ns: 'toolbar' })
-      }}</FieldLabel>
-      <ToggleGroup
-        type="single"
-        variant="outline"
-        :model-value="numericValue"
-        @update:model-value="onNumericChanged"
-      >
-        <AppTooltip
-          v-for="option in numericOptions"
-          :key="option.value"
-          :tooltip="option.label"
-        >
-          <ToggleGroupItem
-            :value="option.value"
-            :aria-label="option.label"
-            :disabled="!isCommandEnabled(FONT_VARIANT_NUMERIC)"
-            :style="numericOptionStyle(option.value)"
-            @mousedown.prevent
+          <AppTooltip
+            v-for="option in numericOptions"
+            :key="option.value"
+            :tooltip="option.label"
           >
-            19
-          </ToggleGroupItem>
-        </AppTooltip>
-      </ToggleGroup>
-    </Field>
-
-    <Field orientation="horizontal">
-      <Switch
-        :id="`${idPrefix}-fractions`"
-        :model-value="numericVariant.fractions !== null"
-        :disabled="!isCommandEnabled(FONT_VARIANT_NUMERIC)"
-        @mousedown.prevent
-        @update:model-value="onFractionsChanged($event)"
-      />
-      <FieldLabel :for="`${idPrefix}-fractions`" @mousedown.prevent>
-        {{ $t(($) => $.toolbar.richTextBox.fractions, { ns: 'toolbar' }) }}
-      </FieldLabel>
-    </Field>
-
-    <Field orientation="horizontal">
-      <Switch
-        :id="`${idPrefix}-slashed-zero`"
-        :model-value="numericVariant.slashedZero"
-        :disabled="!isCommandEnabled(FONT_VARIANT_NUMERIC)"
-        @mousedown.prevent
-        @update:model-value="onNumericFlagChanged('slashedZero', $event)"
-      />
-      <FieldLabel :for="`${idPrefix}-slashed-zero`" @mousedown.prevent>
-        {{ $t(($) => $.toolbar.richTextBox.slashedZero, { ns: 'toolbar' }) }}
-      </FieldLabel>
-    </Field>
-
-    <Field orientation="horizontal">
-      <Switch
-        :id="`${idPrefix}-ordinals`"
-        :model-value="numericVariant.ordinal"
-        :disabled="!isCommandEnabled(FONT_VARIANT_NUMERIC)"
-        @mousedown.prevent
-        @update:model-value="onNumericFlagChanged('ordinal', $event)"
-      />
-      <FieldLabel :for="`${idPrefix}-ordinals`" @mousedown.prevent>
-        {{ $t(($) => $.toolbar.richTextBox.ordinals, { ns: 'toolbar' }) }}
-      </FieldLabel>
-    </Field>
-
-    <Field orientation="horizontal">
-      <FieldLabel>{{
-        $t(($) => $.toolbar.richTextBox.case, { ns: 'toolbar' })
-      }}</FieldLabel>
-      <ToggleGroup
-        type="single"
-        variant="outline"
-        :model-value="capsValue"
-        @update:model-value="onCapsChanged"
-      >
-        <AppTooltip
-          v-for="option in capsOptions"
-          :key="option.value"
-          :tooltip="option.label"
-        >
-          <ToggleGroupItem
-            :value="option.value"
-            :aria-label="option.label"
-            :disabled="!isCommandEnabled(FONT_VARIANT_CAPS)"
-            :style="caseOptionStyle(option.value)"
-            @mousedown.prevent
-          >
-            Aa
-          </ToggleGroupItem>
-        </AppTooltip>
-      </ToggleGroup>
-    </Field>
-
-    <Field orientation="horizontal">
-      <Switch
-        :id="`${idPrefix}-common-ligatures`"
-        :model-value="ligatureVariant.common"
-        :disabled="!isCommandEnabled(FONT_VARIANT_LIGATURES)"
-        @mousedown.prevent
-        @update:model-value="onLigatureFlagChanged('common', $event)"
-      />
-      <FieldLabel :for="`${idPrefix}-common-ligatures`" @mousedown.prevent>
-        {{
-          $t(($) => $.toolbar.richTextBox.commonLigatures, { ns: 'toolbar' })
-        }}
-      </FieldLabel>
-    </Field>
-
-    <Field orientation="horizontal">
-      <Switch
-        :id="`${idPrefix}-discretionary-ligatures`"
-        :model-value="ligatureVariant.discretionary"
-        :disabled="!isCommandEnabled(FONT_VARIANT_LIGATURES)"
-        @mousedown.prevent
-        @update:model-value="onLigatureFlagChanged('discretionary', $event)"
-      />
-      <FieldLabel
-        :for="`${idPrefix}-discretionary-ligatures`"
-        @mousedown.prevent
-      >
-        {{
-          $t(($) => $.toolbar.richTextBox.discretionaryLigatures, {
-            ns: 'toolbar',
-          })
-        }}
-      </FieldLabel>
-    </Field>
-
-    <Field orientation="horizontal">
-      <Switch
-        :id="`${idPrefix}-historical-ligatures`"
-        :model-value="ligatureVariant.historical"
-        :disabled="!isCommandEnabled(FONT_VARIANT_LIGATURES)"
-        @mousedown.prevent
-        @update:model-value="onLigatureFlagChanged('historical', $event)"
-      />
-      <FieldLabel :for="`${idPrefix}-historical-ligatures`" @mousedown.prevent>
-        {{
-          $t(($) => $.toolbar.richTextBox.historicalLigatures, {
-            ns: 'toolbar',
-          })
-        }}
-      </FieldLabel>
-    </Field>
-
-    <Field orientation="horizontal">
-      <Switch
-        :id="`${idPrefix}-contextual-alternates`"
-        :model-value="ligatureVariant.contextual"
-        :disabled="!isCommandEnabled(FONT_VARIANT_LIGATURES)"
-        @mousedown.prevent
-        @update:model-value="onLigatureFlagChanged('contextual', $event)"
-      />
-      <FieldLabel :for="`${idPrefix}-contextual-alternates`" @mousedown.prevent>
-        {{
-          $t(($) => $.toolbar.richTextBox.contextualAlternates, {
-            ns: 'toolbar',
-          })
-        }}
-      </FieldLabel>
-    </Field>
-
-    <Button
-      type="button"
-      variant="secondary"
-      :disabled="!isCommandEnabled('removeFormat')"
-      @mousedown.prevent
-      @click="onRemoveFormat"
-    >
-      <PhArrowCounterClockwise data-icon="inline-start" />
-      {{ $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' }) }}
-    </Button>
-
-    <template v-if="isNeumeSelected">
-      <FieldSeparator />
-
-      <FieldSet>
-        <FieldLegend variant="label">{{
-          $t(($) => $.toolbar.richTextBox.neumeAttributes, { ns: 'toolbar' })
-        }}</FieldLegend>
-        <FieldGroup>
-          <template v-if="neumeType === 'martyria'">
-            <Field>
-              <FieldLabel
-                :for="neumeFieldId('martyria-note')"
-                @mousedown.prevent
-              >
-                {{
-                  $t(($) => $.toolbar.richTextBox.martyriaNote, {
-                    ns: 'toolbar',
-                  })
-                }}
-              </FieldLabel>
-              <Select
-                :model-value="neumeMartyriaNote"
-                @update:model-value="onNeumeMartyriaNoteChanged"
-              >
-                <SelectTrigger
-                  :id="neumeFieldId('martyria-note')"
-                  class="w-full"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <RichTextSelectContent>
-                  <SelectGroup>
-                    <SelectItem
-                      v-for="note in martyriaNotes"
-                      :key="note.key"
-                      :value="note.key"
-                    >
-                      {{ $t(note.displayName, { ns: 'model' }) }}
-                    </SelectItem>
-                  </SelectGroup>
-                </RichTextSelectContent>
-              </Select>
-            </Field>
-
-            <Field>
-              <FieldLabel
-                :for="neumeFieldId('martyria-root-sign')"
-                @mousedown.prevent
-              >
-                {{
-                  $t(($) => $.toolbar.richTextBox.martyriaSign, {
-                    ns: 'toolbar',
-                  })
-                }}
-              </FieldLabel>
-              <Select
-                :model-value="neumeMartyriaRootSign"
-                @update:model-value="onNeumeMartyriaRootSignChanged"
-              >
-                <SelectTrigger
-                  :id="neumeFieldId('martyria-root-sign')"
-                  class="w-full"
-                >
-                  <SelectValue>
-                    <span
-                      v-if="selectedMartyriaRootSign"
-                      class="root-sign-option"
-                    >
-                      <span class="root-sign-glyph" :style="neumeGlyphStyle">{{
-                        selectedMartyriaRootSign.glyph
-                      }}</span>
-                      <span class="root-sign-name">{{
-                        $t(selectedMartyriaRootSign.name, { ns: 'model' })
-                      }}</span>
-                    </span>
-                  </SelectValue>
-                </SelectTrigger>
-                <RichTextSelectContent>
-                  <SelectGroup>
-                    <SelectItem
-                      v-for="rootSign in martyriaRootSigns"
-                      :key="rootSign.key"
-                      :value="rootSign.key"
-                      :text-value="$t(rootSign.name, { ns: 'model' })"
-                    >
-                      <span class="root-sign-option">
-                        <span
-                          class="root-sign-glyph"
-                          :style="neumeGlyphStyle"
-                          >{{ rootSign.glyph }}</span
-                        >
-                        <span class="root-sign-name">{{
-                          $t(rootSign.name, { ns: 'model' })
-                        }}</span>
-                      </span>
-                    </SelectItem>
-                  </SelectGroup>
-                </RichTextSelectContent>
-              </Select>
-            </Field>
-          </template>
-
-          <Field orientation="horizontal">
-            <Switch
-              :id="neumeFieldId('align-right')"
-              :model-value="neumeAlignRight"
+            <ToggleGroupItem
+              :value="option.value"
+              :aria-label="option.label"
+              :disabled="!isCommandEnabled(FONT_VARIANT_NUMERIC)"
+              :style="numericOptionStyle(option.value)"
               @mousedown.prevent
-              @update:model-value="onNeumeAlignRightChanged"
-            />
-            <FieldLabel :for="neumeFieldId('align-right')" @mousedown.prevent>
-              {{ $t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' }) }}
-            </FieldLabel>
-          </Field>
+            >
+              19
+            </ToggleGroupItem>
+          </AppTooltip>
+        </ToggleGroup>
+      </Field>
 
-          <Field orientation="horizontal">
-            <FieldLabel :for="neumeFieldId('top')">{{
-              $t(($) => $.dialog.common.top, { ns: 'dialog' })
-            }}</FieldLabel>
-            <InputUnit
-              :id="neumeFieldId('top')"
-              class="w-28"
-              unit="unitless"
-              :model-value="neumeTop"
-              :step="0.05"
-              :format-options="fraction3FormatOptions"
-              @update:model-value="updateNeumeNumberAttribute('top', $event)"
-            />
-          </Field>
+      <Field orientation="horizontal">
+        <Switch
+          :id="`${idPrefix}-fractions`"
+          :model-value="numericVariant.fractions !== null"
+          :disabled="!isCommandEnabled(FONT_VARIANT_NUMERIC)"
+          @mousedown.prevent
+          @update:model-value="onFractionsChanged($event)"
+        />
+        <FieldLabel :for="`${idPrefix}-fractions`" @mousedown.prevent>
+          {{ $t(($) => $.toolbar.richTextBox.fractions, { ns: 'toolbar' }) }}
+        </FieldLabel>
+      </Field>
 
-          <Field v-if="neumeAlignRight" orientation="horizontal">
-            <FieldLabel :for="neumeFieldId('right')">{{
-              $t(($) => $.dialog.common.right, { ns: 'dialog' })
-            }}</FieldLabel>
-            <InputUnit
-              :id="neumeFieldId('right')"
-              class="w-28"
-              unit="unitless"
-              :model-value="neumeRight"
-              :step="0.05"
-              :format-options="fraction3FormatOptions"
-              @update:model-value="updateNeumeNumberAttribute('right', $event)"
-            />
-          </Field>
+      <Field orientation="horizontal">
+        <Switch
+          :id="`${idPrefix}-slashed-zero`"
+          :model-value="numericVariant.slashedZero"
+          :disabled="!isCommandEnabled(FONT_VARIANT_NUMERIC)"
+          @mousedown.prevent
+          @update:model-value="onNumericFlagChanged('slashedZero', $event)"
+        />
+        <FieldLabel :for="`${idPrefix}-slashed-zero`" @mousedown.prevent>
+          {{ $t(($) => $.toolbar.richTextBox.slashedZero, { ns: 'toolbar' }) }}
+        </FieldLabel>
+      </Field>
 
-          <Field v-else orientation="horizontal">
-            <FieldLabel :for="neumeFieldId('left')">{{
-              $t(($) => $.dialog.common.left, { ns: 'dialog' })
-            }}</FieldLabel>
-            <InputUnit
-              :id="neumeFieldId('left')"
-              class="w-28"
-              unit="unitless"
-              :model-value="neumeLeft"
-              :step="0.05"
-              :format-options="fraction3FormatOptions"
-              @update:model-value="updateNeumeNumberAttribute('left', $event)"
-            />
-          </Field>
+      <Field orientation="horizontal">
+        <Switch
+          :id="`${idPrefix}-ordinals`"
+          :model-value="numericVariant.ordinal"
+          :disabled="!isCommandEnabled(FONT_VARIANT_NUMERIC)"
+          @mousedown.prevent
+          @update:model-value="onNumericFlagChanged('ordinal', $event)"
+        />
+        <FieldLabel :for="`${idPrefix}-ordinals`" @mousedown.prevent>
+          {{ $t(($) => $.toolbar.richTextBox.ordinals, { ns: 'toolbar' }) }}
+        </FieldLabel>
+      </Field>
 
-          <Field orientation="horizontal">
-            <FieldLabel :for="neumeFieldId('kerning-left')">{{
-              $t(($) => $.toolbar.richTextBox.kerningLeft, { ns: 'toolbar' })
-            }}</FieldLabel>
-            <InputUnit
-              :id="neumeFieldId('kerning-left')"
-              class="w-28"
-              unit="unitless"
-              :model-value="neumeKerningLeft"
-              :step="0.05"
-              :format-options="fraction3FormatOptions"
-              @update:model-value="
-                updateNeumeNumberAttribute('kerningLeft', $event)
-              "
-            />
-          </Field>
+      <Field orientation="horizontal">
+        <Switch
+          :id="`${idPrefix}-common-ligatures`"
+          :model-value="ligatureVariant.common"
+          :disabled="!isCommandEnabled(FONT_VARIANT_LIGATURES)"
+          @mousedown.prevent
+          @update:model-value="onLigatureFlagChanged('common', $event)"
+        />
+        <FieldLabel :for="`${idPrefix}-common-ligatures`" @mousedown.prevent>
+          {{
+            $t(($) => $.toolbar.richTextBox.commonLigatures, { ns: 'toolbar' })
+          }}
+        </FieldLabel>
+      </Field>
 
-          <Field orientation="horizontal">
-            <FieldLabel :for="neumeFieldId('kerning-right')">{{
-              $t(($) => $.toolbar.richTextBox.kerningRight, { ns: 'toolbar' })
-            }}</FieldLabel>
-            <InputUnit
-              :id="neumeFieldId('kerning-right')"
-              class="w-28"
-              unit="unitless"
-              :model-value="neumeKerningRight"
-              :step="0.05"
-              :format-options="fraction3FormatOptions"
-              @update:model-value="
-                updateNeumeNumberAttribute('kerningRight', $event)
-              "
-            />
-          </Field>
+      <Field orientation="horizontal">
+        <Switch
+          :id="`${idPrefix}-discretionary-ligatures`"
+          :model-value="ligatureVariant.discretionary"
+          :disabled="!isCommandEnabled(FONT_VARIANT_LIGATURES)"
+          @mousedown.prevent
+          @update:model-value="onLigatureFlagChanged('discretionary', $event)"
+        />
+        <FieldLabel
+          :for="`${idPrefix}-discretionary-ligatures`"
+          @mousedown.prevent
+        >
+          {{
+            $t(($) => $.toolbar.richTextBox.discretionaryLigatures, {
+              ns: 'toolbar',
+            })
+          }}
+        </FieldLabel>
+      </Field>
 
-          <Field orientation="horizontal">
-            <FieldLabel :for="neumeFieldId('width')">{{
-              $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
-            }}</FieldLabel>
-            <InputUnit
-              :id="neumeFieldId('width')"
-              class="w-28"
-              unit="unitless"
-              :nullable="true"
-              :min="0"
-              :model-value="neumeWidth"
-              :step="0.05"
-              :format-options="fraction3FormatOptions"
-              placeholder="auto"
-              @update:model-value="updateNeumeAttributes({ width: $event })"
-            />
-          </Field>
+      <Field orientation="horizontal">
+        <Switch
+          :id="`${idPrefix}-historical-ligatures`"
+          :model-value="ligatureVariant.historical"
+          :disabled="!isCommandEnabled(FONT_VARIANT_LIGATURES)"
+          @mousedown.prevent
+          @update:model-value="onLigatureFlagChanged('historical', $event)"
+        />
+        <FieldLabel
+          :for="`${idPrefix}-historical-ligatures`"
+          @mousedown.prevent
+        >
+          {{
+            $t(($) => $.toolbar.richTextBox.historicalLigatures, {
+              ns: 'toolbar',
+            })
+          }}
+        </FieldLabel>
+      </Field>
 
-          <Field orientation="horizontal">
-            <FieldLabel :for="neumeFieldId('font-size')">{{
-              $t(($) => $.toolbar.richTextBox.neumeFontSize, {
+      <Field orientation="horizontal">
+        <Switch
+          :id="`${idPrefix}-contextual-alternates`"
+          :model-value="ligatureVariant.contextual"
+          :disabled="!isCommandEnabled(FONT_VARIANT_LIGATURES)"
+          @mousedown.prevent
+          @update:model-value="onLigatureFlagChanged('contextual', $event)"
+        />
+        <FieldLabel
+          :for="`${idPrefix}-contextual-alternates`"
+          @mousedown.prevent
+        >
+          {{
+            $t(($) => $.toolbar.richTextBox.contextualAlternates, {
+              ns: 'toolbar',
+            })
+          }}
+        </FieldLabel>
+      </Field>
+
+      <Button
+        type="button"
+        variant="secondary"
+        :disabled="!isCommandEnabled('removeFormat')"
+        @mousedown.prevent
+        @click="onRemoveFormat"
+      >
+        <PhArrowCounterClockwise data-icon="inline-start" />
+        {{ $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' }) }}
+      </Button>
+    </PaneSection>
+
+    <PaneSection
+      v-if="isNeumeSelected"
+      value="neume-attributes"
+      :title="
+        $t(($) => $.toolbar.richTextBox.neumeAttributes, { ns: 'toolbar' })
+      "
+    >
+      <template v-if="neumeType === 'martyria'">
+        <Field>
+          <FieldLabel :for="neumeFieldId('martyria-note')" @mousedown.prevent>
+            {{
+              $t(($) => $.toolbar.richTextBox.martyriaNote, {
                 ns: 'toolbar',
               })
-            }}</FieldLabel>
-            <InputUnit
-              :id="neumeFieldId('font-size')"
-              class="w-28"
-              unit="unitless"
-              :min="0"
-              :model-value="neumeFontSize"
-              :step="0.05"
-              :format-options="fraction3FormatOptions"
-              @update:model-value="
-                updateNeumeNumberAttribute('neumeFontSize', $event, 1)
-              "
-            />
-          </Field>
+            }}
+          </FieldLabel>
+          <Select
+            :model-value="neumeMartyriaNote"
+            @update:model-value="onNeumeMartyriaNoteChanged"
+          >
+            <SelectTrigger :id="neumeFieldId('martyria-note')" class="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <RichTextSelectContent>
+              <SelectGroup>
+                <SelectItem
+                  v-for="note in martyriaNotes"
+                  :key="note.key"
+                  :value="note.key"
+                >
+                  {{ $t(note.displayName, { ns: 'model' }) }}
+                </SelectItem>
+              </SelectGroup>
+            </RichTextSelectContent>
+          </Select>
+        </Field>
 
-          <Field v-if="neumeType === 'plagal'" orientation="horizontal">
-            <FieldLabel :for="neumeFieldId('line-height')">{{
-              $t(($) => $.dialog.pageSetup.lineHeight, {
-                ns: 'dialog',
+        <Field>
+          <FieldLabel
+            :for="neumeFieldId('martyria-root-sign')"
+            @mousedown.prevent
+          >
+            {{
+              $t(($) => $.toolbar.richTextBox.martyriaSign, {
+                ns: 'toolbar',
               })
-            }}</FieldLabel>
-            <InputUnit
-              :id="neumeFieldId('line-height')"
-              class="w-28"
-              unit="unitless"
-              :min="0"
-              :model-value="neumeLineHeight"
-              :step="0.05"
-              :format-options="fraction3FormatOptions"
-              @update:model-value="
-                updateNeumeNumberAttribute('neumeLineHeight', $event, 1)
-              "
-            />
-          </Field>
+            }}
+          </FieldLabel>
+          <Select
+            :model-value="neumeMartyriaRootSign"
+            @update:model-value="onNeumeMartyriaRootSignChanged"
+          >
+            <SelectTrigger
+              :id="neumeFieldId('martyria-root-sign')"
+              class="w-full"
+            >
+              <SelectValue>
+                <span v-if="selectedMartyriaRootSign" class="root-sign-option">
+                  <span class="root-sign-glyph" :style="neumeGlyphStyle">{{
+                    selectedMartyriaRootSign.glyph
+                  }}</span>
+                  <span class="root-sign-name">{{
+                    $t(selectedMartyriaRootSign.name, { ns: 'model' })
+                  }}</span>
+                </span>
+              </SelectValue>
+            </SelectTrigger>
+            <RichTextSelectContent>
+              <SelectGroup>
+                <SelectItem
+                  v-for="rootSign in martyriaRootSigns"
+                  :key="rootSign.key"
+                  :value="rootSign.key"
+                  :text-value="$t(rootSign.name, { ns: 'model' })"
+                >
+                  <span class="root-sign-option">
+                    <span class="root-sign-glyph" :style="neumeGlyphStyle">{{
+                      rootSign.glyph
+                    }}</span>
+                    <span class="root-sign-name">{{
+                      $t(rootSign.name, { ns: 'model' })
+                    }}</span>
+                  </span>
+                </SelectItem>
+              </SelectGroup>
+            </RichTextSelectContent>
+          </Select>
+        </Field>
+      </template>
 
-          <Field orientation="horizontal">
-            <FieldLabel @mousedown.prevent>{{
-              $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
-            }}</FieldLabel>
-            <ColorPicker
-              :model-value="neumeColor"
-              :default-colors="neumeDefaultColors"
-              history-key="richTextNeumeColorPicker_presetColors"
-              rich-text-portal
-              @update:model-value="updateNeumeAttributes({ color: $event })"
-            />
-          </Field>
-        </FieldGroup>
-      </FieldSet>
-    </template>
+      <Field orientation="horizontal">
+        <Switch
+          :id="neumeFieldId('align-right')"
+          :model-value="neumeAlignRight"
+          @mousedown.prevent
+          @update:model-value="onNeumeAlignRightChanged"
+        />
+        <FieldLabel :for="neumeFieldId('align-right')" @mousedown.prevent>
+          {{ $t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' }) }}
+        </FieldLabel>
+      </Field>
+
+      <Field v-if="neumeAlignRight" orientation="horizontal">
+        <FieldLabel :for="neumeFieldId('right')">{{
+          $t(($) => $.dialog.common.right, { ns: 'dialog' })
+        }}</FieldLabel>
+        <InputUnit
+          :id="neumeFieldId('right')"
+          class="w-28"
+          unit="unitless"
+          :model-value="neumeRight"
+          :step="0.05"
+          :format-options="fraction3FormatOptions"
+          @update:model-value="updateNeumeNumberAttribute('right', $event)"
+        />
+      </Field>
+
+      <Field v-else orientation="horizontal">
+        <FieldLabel :for="neumeFieldId('left')">{{
+          $t(($) => $.dialog.common.left, { ns: 'dialog' })
+        }}</FieldLabel>
+        <InputUnit
+          :id="neumeFieldId('left')"
+          class="w-28"
+          unit="unitless"
+          :model-value="neumeLeft"
+          :step="0.05"
+          :format-options="fraction3FormatOptions"
+          @update:model-value="updateNeumeNumberAttribute('left', $event)"
+        />
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel :for="neumeFieldId('top')">{{
+          $t(($) => $.dialog.common.top, { ns: 'dialog' })
+        }}</FieldLabel>
+        <InputUnit
+          :id="neumeFieldId('top')"
+          class="w-28"
+          unit="unitless"
+          :model-value="neumeTop"
+          :step="0.05"
+          :format-options="fraction3FormatOptions"
+          @update:model-value="updateNeumeNumberAttribute('top', $event)"
+        />
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel :for="neumeFieldId('width')">{{
+          $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <InputUnit
+          :id="neumeFieldId('width')"
+          class="w-28"
+          unit="unitless"
+          :nullable="true"
+          :min="0"
+          :model-value="neumeWidth"
+          :step="0.05"
+          :format-options="fraction3FormatOptions"
+          placeholder="auto"
+          @update:model-value="updateNeumeAttributes({ width: $event })"
+        />
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel :for="neumeFieldId('font-size')">{{
+          $t(($) => $.toolbar.richTextBox.neumeFontSize, {
+            ns: 'toolbar',
+          })
+        }}</FieldLabel>
+        <InputUnit
+          :id="neumeFieldId('font-size')"
+          class="w-28"
+          unit="unitless"
+          :min="0"
+          :model-value="neumeFontSize"
+          :step="0.05"
+          :format-options="fraction3FormatOptions"
+          @update:model-value="
+            updateNeumeNumberAttribute('neumeFontSize', $event, 1)
+          "
+        />
+      </Field>
+
+      <Field v-if="neumeType === 'plagal'" orientation="horizontal">
+        <FieldLabel :for="neumeFieldId('line-height')">{{
+          $t(($) => $.dialog.pageSetup.lineHeight, {
+            ns: 'dialog',
+          })
+        }}</FieldLabel>
+        <InputUnit
+          :id="neumeFieldId('line-height')"
+          class="w-28"
+          unit="unitless"
+          :min="0"
+          :model-value="neumeLineHeight"
+          :step="0.05"
+          :format-options="fraction3FormatOptions"
+          @update:model-value="
+            updateNeumeNumberAttribute('neumeLineHeight', $event, 1)
+          "
+        />
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel :for="neumeFieldId('kerning-left')">{{
+          $t(($) => $.toolbar.richTextBox.kerningLeft, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <InputUnit
+          :id="neumeFieldId('kerning-left')"
+          class="w-28"
+          unit="unitless"
+          :model-value="neumeKerningLeft"
+          :step="0.05"
+          :format-options="fraction3FormatOptions"
+          @update:model-value="
+            updateNeumeNumberAttribute('kerningLeft', $event)
+          "
+        />
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel :for="neumeFieldId('kerning-right')">{{
+          $t(($) => $.toolbar.richTextBox.kerningRight, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <InputUnit
+          :id="neumeFieldId('kerning-right')"
+          class="w-28"
+          unit="unitless"
+          :model-value="neumeKerningRight"
+          :step="0.05"
+          :format-options="fraction3FormatOptions"
+          @update:model-value="
+            updateNeumeNumberAttribute('kerningRight', $event)
+          "
+        />
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel @mousedown.prevent>{{
+          $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
+        }}</FieldLabel>
+        <ColorPicker
+          :model-value="neumeColor"
+          :default-colors="neumeDefaultColors"
+          history-key="richTextNeumeColorPicker_presetColors"
+          rich-text-portal
+          @update:model-value="updateNeumeAttributes({ color: $event })"
+        />
+      </Field>
+    </PaneSection>
   </div>
 </template>
 
@@ -832,18 +837,12 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import ParagraphStyleResetButton from '@/components/properties/ParagraphStyleResetButton.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import { Button } from '@/components/ui/button';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSeparator,
-  FieldSet,
-} from '@/components/ui/field';
+import { Field, FieldLabel } from '@/components/ui/field';
 import {
   Select,
   SelectGroup,
@@ -924,7 +923,7 @@ const {
   isParagraphStyleEnabled,
   commandValue,
   runCommand,
-  onParagraphStyleChanged: onParagraphStyleChanged,
+  onParagraphStyleChanged,
   onFontFamilyChanged,
   onFontStyleChanged,
   onFontSizeChanged,

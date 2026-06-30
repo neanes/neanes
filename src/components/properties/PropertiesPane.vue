@@ -17,7 +17,9 @@
       v-else-if="tempoElement != null"
       :key="`tempo-${tempoElement.id}`"
       :element="tempoElement"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:tempo', tempoElement, $event)"
     />
 
@@ -26,8 +28,10 @@
       :key="`annotation-${annotationElement.id}`"
       :element="annotationElement"
       :fonts="fonts"
+      :open-sections="openSections"
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:annotation', annotationElement, $event)"
       @open-paragraph-styles-dialog="
         emit('open-paragraph-styles-dialog', $event)
@@ -39,9 +43,11 @@
       :key="`text-box-${textBoxElement.id}`"
       :element="textBoxElement"
       :fonts="fonts"
+      :open-sections="openSections"
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
       :source="textBoxSource"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:text-box', textBoxElement, $event)"
       @open-paragraph-styles-dialog="
         emit('open-paragraph-styles-dialog', $event)
@@ -53,9 +59,11 @@
       :key="`rich-text-box-${richTextBoxElement.id}`"
       :element="richTextBoxElement"
       :fonts="fonts"
+      :open-sections="openSections"
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
       :source="richTextBoxSource"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:rich-text-box', richTextBoxElement, $event)"
       @open-paragraph-styles-dialog="
         emit('open-paragraph-styles-dialog', $event)
@@ -67,8 +75,10 @@
       :key="`drop-cap-${dropCapElement.id}`"
       :element="dropCapElement"
       :fonts="fonts"
+      :open-sections="openSections"
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:drop-cap', dropCapElement, $event)"
       @open-paragraph-styles-dialog="
         emit('open-paragraph-styles-dialog', $event)
@@ -79,7 +89,9 @@
       v-else-if="imageBoxElement != null"
       :key="`image-box-${imageBoxElement.id}`"
       :element="imageBoxElement"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:image-box', imageBoxElement, $event)"
     />
 
@@ -89,6 +101,8 @@
       :element="lyricsElement"
       :fonts="fonts"
       :paragraph-styles="paragraphStyles"
+      :open-sections="openSections"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:lyrics', lyricsElement, $event)"
       @open-paragraph-styles-dialog="
         emit('open-paragraph-styles-dialog', $event)
@@ -99,7 +113,9 @@
       v-else-if="modeKeyElement != null"
       :key="`mode-key-${modeKeyElement.id}`"
       :element="modeKeyElement"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:mode-key', modeKeyElement, $event)"
     />
 
@@ -108,7 +124,9 @@
       :key="`neume-${neumeElement.id}`"
       :element="neumeElement"
       :inner-neume="innerNeume"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:neume', neumeElement, $event)"
     />
 
@@ -116,7 +134,9 @@
       v-else-if="martyriaElement != null"
       :key="`martyria-${martyriaElement.id}`"
       :element="martyriaElement"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:martyria', martyriaElement, $event)"
     />
   </div>
@@ -168,10 +188,15 @@ const props = defineProps({
     type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
 });
 
 const emit = defineEmits([
   'open-paragraph-styles-dialog',
+  'update:open-sections',
   'update:annotation',
   'update:drop-cap',
   'update:image-box',

@@ -52,10 +52,7 @@
     "builtInDescription": "Built-in styles can be edited, but they cannot be renamed or deleted.",
     "gapAbove": "Gap Above",
     "gapBelow": "Gap Below",
-    "openDialog": "Edit Styles",
-    "pageSetupBridgeTextBoxes": "Text-box defaults now live in Text Styles. Edit Default Text and related styles there.",
-    "pageSetupBridgeLyrics": "Lyrics styling now lives in Text Styles. Edit the Lyrics style there.",
-    "pageSetupBridgeDropCaps": "Drop-cap styling now lives in Text Styles. Edit the Drop Cap style there."
+    "openDialog": "Edit Styles"
   },
   "neumePositioning": {
     "root": "Penempatan Neuma",
@@ -169,7 +166,6 @@
     "alternateLineStyling": "Gaya Baris Alternatif",
     "alternateLineDescription": "Gaya default untuk semua baris alternatif dalam partitur.",
     "dropCaps": "Huruf Awal Besar",
-    "dropCapsDescription": "Gaya default untuk semua huruf awal besar dalam partitur.",
     "color": "Warna",
     "size": "Ukuran",
     "lineHeight": "Tinggi Baris",
@@ -180,9 +176,7 @@
     "italic": "Miring",
     "outline": "Garis Luar",
     "lyrics": "Lirik",
-    "lyricsDescription": "Gaya default untuk semua lirik dalam partitur.",
     "textBoxes": "Kotak Teks",
-    "textBoxesDescription": "Gaya default untuk semua kotak teks dalam partitur.",
     "initialMartyriae": "Martyria Awal",
     "initialMartyriaeDescription": "Gaya default untuk semua martyria awal dalam partitur.",
     "neumesDescription": "Gaya default untuk semua neuma dalam partitur.",

@@ -1074,109 +1074,27 @@
                 </template>
 
                 <template v-else-if="section.value === 'dropCaps'">
-                  <FieldSet>
-                    <FieldLegend variant="label">
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-dialog-drop-cap-line-span">
                       {{
-                        $t(($) => $.dialog.pageSetup.defaultStyling, {
+                        $t(($) => $.dialog.pageSetup.lineSpan, {
                           ns: 'dialog',
                         })
                       }}
-                    </FieldLegend>
-                    <FieldDescription>
-                      {{
-                        $t(($) => $.dialog.pageSetup.dropCapsDescription, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </FieldDescription>
-                    <div
-                      class="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground"
-                    >
-                      {{
-                        $t(($) => $.dialog.textStyles.pageSetupBridgeDropCaps, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      @click="
-                        emit(
-                          'open-text-styles',
-                          BUILT_IN_TEXT_STYLE_IDS.DropCap,
-                        )
-                      "
-                    >
-                      {{
-                        $t(($) => $.dialog.textStyles.openDialog, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </Button>
-                    <FieldGroup class="gap-4">
-                      <Field orientation="horizontal">
-                        <FieldLabel for="page-setup-dialog-drop-cap-line-span">
-                          {{
-                            $t(($) => $.dialog.pageSetup.lineSpan, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <InputUnit
-                          id="page-setup-dialog-drop-cap-line-span"
-                          v-model="form.dropCapDefaultLineSpan"
-                          unit="unitless"
-                          :min="1"
-                          :max="10"
-                          :step="1"
-                          :format-options="fraction0FormatOptions"
-                        />
-                      </Field>
-                    </FieldGroup>
-                  </FieldSet>
+                    </FieldLabel>
+                    <InputUnit
+                      id="page-setup-dialog-drop-cap-line-span"
+                      v-model="form.dropCapDefaultLineSpan"
+                      unit="unitless"
+                      :min="1"
+                      :max="10"
+                      :step="1"
+                      :format-options="fraction0FormatOptions"
+                    />
+                  </Field>
                 </template>
 
                 <template v-else-if="section.value === 'lyrics'">
-                  <FieldSet>
-                    <FieldLegend variant="label">
-                      {{
-                        $t(($) => $.dialog.pageSetup.defaultStyling, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </FieldLegend>
-                    <FieldDescription>
-                      {{
-                        $t(($) => $.dialog.pageSetup.lyricsDescription, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </FieldDescription>
-                    <div
-                      class="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground"
-                    >
-                      {{
-                        $t(($) => $.dialog.textStyles.pageSetupBridgeLyrics, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      @click="
-                        emit('open-text-styles', BUILT_IN_TEXT_STYLE_IDS.Lyrics)
-                      "
-                    >
-                      {{
-                        $t(($) => $.dialog.textStyles.openDialog, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </Button>
-                  </FieldSet>
-
                   <Field orientation="horizontal">
                     <FieldContent>
                       <FieldLabel for="page-setup-dialog-lyrics-melisma-cutoff">
@@ -1248,53 +1166,6 @@
                       </FieldDescription>
                     </FieldContent>
                   </Field>
-                </template>
-
-                <template v-else-if="section.value === 'textBoxes'">
-                  <FieldSet>
-                    <FieldLegend variant="label">
-                      {{
-                        $t(($) => $.dialog.pageSetup.defaultStyling, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </FieldLegend>
-                    <FieldDescription>
-                      {{
-                        $t(($) => $.dialog.pageSetup.textBoxesDescription, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </FieldDescription>
-                    <div
-                      class="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground"
-                    >
-                      {{
-                        $t(
-                          ($) => $.dialog.textStyles.pageSetupBridgeTextBoxes,
-                          {
-                            ns: 'dialog',
-                          },
-                        )
-                      }}
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      @click="
-                        emit(
-                          'open-text-styles',
-                          BUILT_IN_TEXT_STYLE_IDS.DefaultText,
-                        )
-                      "
-                    >
-                      {{
-                        $t(($) => $.dialog.textStyles.openDialog, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </Button>
-                  </FieldSet>
                 </template>
 
                 <template v-else-if="section.value === 'modeKeys'">
@@ -1909,11 +1780,6 @@ const sections = [
     value: 'lyrics',
     labelSelector: ($) => $.dialog.pageSetup.lyrics,
     icon: PhTextT,
-  },
-  {
-    value: 'textBoxes',
-    labelSelector: ($) => $.dialog.pageSetup.textBoxes,
-    icon: PhTextbox,
   },
   {
     value: 'modeKeys',

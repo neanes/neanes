@@ -330,7 +330,7 @@
             {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
           </Button>
         </DialogClose>
-        <Button type="button" @click="submit">
+        <Button type="button" :disabled="!canSubmit" @click="submit">
           {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
         </Button>
       </DialogFooter>
@@ -463,6 +463,10 @@ const fontStyleOptions = computed(() =>
   fontCatalog.getStyles(resolvedStyle.value.fontFamily),
 );
 
+const canSubmit = computed(() =>
+  styles.value.every((style) => style.displayName.trim().length > 0),
+);
+
 function hasOverride(key: keyof TextStyle['overrides']) {
   return selectedStyle.value?.overrides[key] !== undefined;
 }
@@ -487,7 +491,7 @@ function updateSelectedStyleName(value: string | number) {
     return;
   }
 
-  selectedStyle.value.displayName = String(value).trim() || 'Text Style';
+  selectedStyle.value.displayName = String(value).trim();
 }
 
 function updateSelectedStyleParent(styleId: string) {
@@ -583,6 +587,10 @@ function getNextStyleName(baseName: string) {
 }
 
 function submit() {
+  if (!canSubmit.value) {
+    return;
+  }
+
   emit(
     'update',
     styles.value.map((style) => style.clone()),

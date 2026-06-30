@@ -1,7 +1,7 @@
 <template>
   <Dialog v-model:open="open">
     <DialogContent
-      class="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-none sm:max-w-5xl"
+      class="h-[42rem] max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-5xl"
     >
       <DialogHeader>
         <DialogTitle>
@@ -15,9 +15,14 @@
           }}
         </DialogDescription>
       </DialogHeader>
-      <div class="grid min-h-0 flex-1 gap-4 md:grid-cols-[16rem_minmax(0,1fr)]">
-        <div class="flex min-h-0 flex-col overflow-hidden border">
-          <div class="flex items-center gap-2 border-b p-2">
+
+      <div
+        class="grid min-h-0 gap-4 overflow-hidden md:grid-cols-[13rem_minmax(0,1fr)]"
+      >
+        <div
+          class="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden"
+        >
+          <div class="flex flex-wrap items-center gap-2">
             <Button type="button" size="sm" @click="createStyle">
               {{ $t(($) => $.dialog.textStyles.create, { ns: 'dialog' }) }}
             </Button>
@@ -40,17 +45,20 @@
               {{ $t(($) => $.dialog.textStyles.delete, { ns: 'dialog' }) }}
             </Button>
           </div>
-          <ScrollArea class="min-h-0 flex-1">
-            <div class="grid gap-1 p-2">
+
+          <ScrollArea class="min-h-0">
+            <div
+              class="grid gap-1 rounded-lg bg-muted p-1 text-muted-foreground"
+            >
               <button
                 v-for="style in styles"
                 :key="style.id"
                 type="button"
-                class="rounded-sm px-3 py-2 text-left text-sm transition-colors"
+                class="inline-flex min-h-9 w-full items-center rounded-md px-3 py-2 text-left text-sm font-medium transition-all"
                 :class="
                   style.id === selectedStyleId
                     ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                    : 'hover:bg-background/60 hover:text-foreground'
                 "
                 @click="selectedStyleId = style.id"
               >
@@ -64,63 +72,139 @@
           v-if="selectedStyle != null"
           class="flex min-h-0 flex-col overflow-hidden"
         >
-          <ScrollArea class="min-h-0 flex-1 border">
+          <ScrollArea class="h-full min-h-0 border">
             <FieldGroup class="p-4">
-              <Field>
-                <FieldLabel for="text-style-name">
-                  {{ $t(($) => $.dialog.textStyles.name, { ns: 'dialog' }) }}
-                </FieldLabel>
+              <Field orientation="horizontal">
+                <div class="min-w-0 flex-1">
+                  <FieldLabel for="text-style-name">
+                    {{ $t(($) => $.dialog.textStyles.name, { ns: 'dialog' }) }}
+                  </FieldLabel>
+                </div>
                 <Input
                   id="text-style-name"
+                  class="ml-auto w-64 shrink-0"
                   :model-value="selectedStyle.displayName"
                   :disabled="selectedStyle.builtIn"
                   @update:model-value="updateSelectedStyleName"
                 />
               </Field>
 
-              <Field v-if="selectedStyle.id !== defaultTextStyleId">
-                <FieldLabel for="text-style-parent">
-                  {{
-                    $t(($) => $.dialog.textStyles.parentStyle, {
-                      ns: 'dialog',
-                    })
-                  }}
-                </FieldLabel>
+              <Field
+                v-if="selectedStyle.id !== defaultTextStyleId"
+                orientation="horizontal"
+              >
+                <div class="min-w-0 flex-1">
+                  <FieldLabel for="text-style-parent">
+                    {{
+                      $t(($) => $.dialog.textStyles.parentStyle, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </FieldLabel>
+                </div>
                 <TextStyleSelect
                   id="text-style-parent"
+                  class="ml-auto w-40 shrink-0"
                   :model-value="
                     selectedStyle.parentStyleId ?? defaultTextStyleId
                   "
                   :text-styles="availableParents"
+                  trigger-class="w-40"
                   @update:model-value="updateSelectedStyleParent"
                 />
               </Field>
 
-              <div
-                v-if="selectedStyle.builtIn"
-                class="border bg-muted/30 px-3 py-2 text-xs text-muted-foreground"
-              >
-                {{
-                  $t(($) => $.dialog.textStyles.builtInDescription, {
-                    ns: 'dialog',
-                  })
-                }}
-              </div>
-
               <FieldSeparator />
 
-              <Field>
-                <div class="mb-2 flex items-center gap-3">
+              <Field orientation="horizontal">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
+                  <Switch
+                    v-if="showOverrideToggles"
+                    :model-value="hasOverride('fontFamily')"
+                    @update:model-value="toggleOverride('fontFamily', $event)"
+                  />
+                  <FieldLabel for="text-style-font" class="shrink-0">
+                    {{ $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' }) }}
+                  </FieldLabel>
+                </div>
+                <FontCombobox
+                  id="text-style-font"
+                  class="ml-auto w-64 min-w-0 shrink-0"
+                  :model-value="resolvedStyle.fontFamily"
+                  :options="fontOptions"
+                  :disabled="
+                    showOverrideToggles ? !hasOverride('fontFamily') : false
+                  "
+                  @update:model-value="
+                    updateSelectedStyleOverride('fontFamily', $event)
+                  "
+                />
+              </Field>
+
+              <Field orientation="horizontal">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
+                  <Switch
+                    v-if="showOverrideToggles"
+                    :model-value="hasOverride('fontStyle')"
+                    @update:model-value="toggleOverride('fontStyle', $event)"
+                  />
+                  <FieldLabel for="text-style-font-style" class="shrink-0">
+                    {{ $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' }) }}
+                  </FieldLabel>
+                </div>
+                <FontStyleSelect
+                  id="text-style-font-style"
+                  class="ml-auto w-64 min-w-0 shrink-0"
+                  :model-value="resolvedStyle.fontStyle"
+                  :options="fontStyleOptions"
+                  :disabled="
+                    showOverrideToggles ? !hasOverride('fontStyle') : false
+                  "
+                  @update:model-value="
+                    updateSelectedStyleOverride('fontStyle', $event)
+                  "
+                />
+              </Field>
+
+              <Field orientation="horizontal">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
+                  <Switch
+                    v-if="showOverrideToggles"
+                    :model-value="hasOverride('fontSize')"
+                    @update:model-value="toggleOverride('fontSize', $event)"
+                  />
+                  <FieldLabel for="text-style-font-size" class="shrink-0">
+                    {{ $t(($) => $.dialog.pageSetup.size, { ns: 'dialog' }) }}
+                  </FieldLabel>
+                </div>
+                <div class="ml-auto w-40 shrink-0">
+                  <InputFontSize
+                    id="text-style-font-size"
+                    class="w-full"
+                    :model-value="resolvedStyle.fontSize"
+                    :disabled="
+                      showOverrideToggles ? !hasOverride('fontSize') : false
+                    "
+                    @update:model-value="
+                      updateSelectedStyleOverride('fontSize', $event)
+                    "
+                  />
+                </div>
+              </Field>
+
+              <Field orientation="horizontal">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
                   <Switch
                     v-if="showOverrideToggles"
                     :model-value="hasOverride('alignment')"
                     @update:model-value="toggleOverride('alignment', $event)"
                   />
-                  <FieldLabel>{{
+                  <FieldLabel class="min-w-0">{{
                     $t(($) => $.toolbar.common.alignment, { ns: 'toolbar' })
                   }}</FieldLabel>
                 </div>
                 <ToggleGroup
+                  class="ml-auto shrink-0"
                   type="single"
                   variant="outline"
                   :model-value="resolvedStyle.alignment"
@@ -176,85 +260,14 @@
                 <div class="flex min-w-0 flex-1 items-center gap-3">
                   <Switch
                     v-if="showOverrideToggles"
-                    :model-value="hasOverride('fontFamily')"
-                    @update:model-value="toggleOverride('fontFamily', $event)"
-                  />
-                  <FieldLabel for="text-style-font" class="shrink-0">
-                    {{ $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' }) }}
-                  </FieldLabel>
-                  <FontCombobox
-                    id="text-style-font"
-                    class="min-w-0 flex-1"
-                    :model-value="resolvedStyle.fontFamily"
-                    :options="fontOptions"
-                    :disabled="
-                      showOverrideToggles ? !hasOverride('fontFamily') : false
-                    "
-                    @update:model-value="
-                      updateSelectedStyleOverride('fontFamily', $event)
-                    "
-                  />
-                </div>
-              </Field>
-
-              <Field orientation="horizontal">
-                <div class="flex min-w-0 flex-1 items-center gap-3">
-                  <Switch
-                    v-if="showOverrideToggles"
-                    :model-value="hasOverride('fontStyle')"
-                    @update:model-value="toggleOverride('fontStyle', $event)"
-                  />
-                  <FieldLabel for="text-style-font-style" class="shrink-0">
-                    {{ $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' }) }}
-                  </FieldLabel>
-                  <FontStyleSelect
-                    id="text-style-font-style"
-                    class="min-w-0 flex-1"
-                    :model-value="resolvedStyle.fontStyle"
-                    :options="fontStyleOptions"
-                    :disabled="
-                      showOverrideToggles ? !hasOverride('fontStyle') : false
-                    "
-                    @update:model-value="
-                      updateSelectedStyleOverride('fontStyle', $event)
-                    "
-                  />
-                </div>
-              </Field>
-
-              <Field orientation="horizontal">
-                <div class="flex items-center gap-3">
-                  <Switch
-                    v-if="showOverrideToggles"
-                    :model-value="hasOverride('fontSize')"
-                    @update:model-value="toggleOverride('fontSize', $event)"
-                  />
-                  <FieldLabel for="text-style-font-size" class="shrink-0">
-                    {{ $t(($) => $.dialog.pageSetup.size, { ns: 'dialog' }) }}
-                  </FieldLabel>
-                  <InputFontSize
-                    id="text-style-font-size"
-                    :model-value="resolvedStyle.fontSize"
-                    :disabled="
-                      showOverrideToggles ? !hasOverride('fontSize') : false
-                    "
-                    @update:model-value="
-                      updateSelectedStyleOverride('fontSize', $event)
-                    "
-                  />
-                </div>
-              </Field>
-
-              <Field orientation="horizontal">
-                <div class="flex items-center gap-3">
-                  <Switch
-                    v-if="showOverrideToggles"
                     :model-value="hasOverride('color')"
                     @update:model-value="toggleOverride('color', $event)"
                   />
                   <FieldLabel class="shrink-0">
                     {{ $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' }) }}
                   </FieldLabel>
+                </div>
+                <div class="ml-auto shrink-0">
                   <ColorPicker
                     :model-value="resolvedStyle.color"
                     :disabled="
@@ -268,17 +281,22 @@
               </Field>
 
               <Field orientation="horizontal">
-                <div class="flex items-center gap-3">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
                   <Switch
                     v-if="showOverrideToggles"
                     :model-value="hasOverride('strokeWidth')"
                     @update:model-value="toggleOverride('strokeWidth', $event)"
                   />
                   <FieldLabel for="text-style-stroke-width" class="shrink-0">
-                    {{ $t(($) => $.dialog.pageSetup.outline, { ns: 'dialog' }) }}
+                    {{
+                      $t(($) => $.dialog.pageSetup.outline, { ns: 'dialog' })
+                    }}
                   </FieldLabel>
+                </div>
+                <div class="ml-auto w-40 shrink-0">
                   <InputStrokeWidth
                     id="text-style-stroke-width"
+                    class="w-full"
                     :model-value="resolvedStyle.strokeWidth"
                     :disabled="
                       showOverrideToggles ? !hasOverride('strokeWidth') : false
@@ -291,7 +309,7 @@
               </Field>
 
               <Field orientation="horizontal">
-                <div class="flex items-center gap-3">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
                   <Switch
                     v-if="showOverrideToggles"
                     :model-value="hasOverride('lineHeight')"
@@ -302,8 +320,11 @@
                       $t(($) => $.dialog.pageSetup.lineHeight, { ns: 'dialog' })
                     }}
                   </FieldLabel>
+                </div>
+                <div class="ml-auto w-40 shrink-0">
                   <InputUnit
                     id="text-style-line-height"
+                    class="w-full"
                     unit="unitless"
                     :nullable="true"
                     :min="0"

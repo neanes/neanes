@@ -1523,7 +1523,6 @@ import {
   PhPalette,
   PhPlaylist,
   PhSplitHorizontal,
-  PhTextbox,
   PhTextT,
 } from '@phosphor-icons/vue';
 import type { SelectorParam } from 'i18next';

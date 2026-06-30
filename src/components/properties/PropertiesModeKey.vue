@@ -219,26 +219,12 @@
           })
         }}</FieldLabel>
       </Field>
-
-      <Button
-        type="button"
-        variant="secondary"
-        @click="$emit('open-mode-key-dialog')"
-      >
-        <PhMusicNotes data-icon="inline-start" />
-        {{
-          $t(($) => $.toolbar.initialMartyria.changeInitialMartyria, {
-            ns: 'toolbar',
-          })
-        }}
-      </Button>
     </FieldGroup>
   </FieldSet>
 </template>
 
 <script setup lang="ts">
 import {
-  PhMusicNotes,
   PhTextAlignCenter,
   PhTextAlignLeft,
   PhTextAlignRight,
@@ -252,7 +238,6 @@ import InputBpm from '@/components/InputBpm.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { Button } from '@/components/ui/button';
 import {
   Field,
   FieldGroup,
@@ -282,7 +267,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['open-mode-key-dialog', 'update']);
+const emit = defineEmits(['update']);
 
 const heightAdjustmentMin = computed(
   () => -Math.round(Unit.fromPt(props.element.height)),

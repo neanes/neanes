@@ -77,12 +77,29 @@
         <PhAlignRight class="size-4" weight="duotone" />
       </ToolbarButton>
     </AppTooltip>
+    <ToolbarSeparator />
+    <AppTooltip
+      :tooltip="
+        $t(($) => $.toolbar.initialMartyria.changeInitialMartyria, {
+          ns: 'toolbar',
+        })
+      "
+    >
+      <ToolbarButton
+        variant="secondary"
+        class="chrome-button"
+        @click="$emit('open-mode-key-dialog')"
+      >
+        <PhMusicNotes class="size-4" />
+      </ToolbarButton>
+    </AppTooltip>
   </Toolbar>
 </template>
 
 <script setup lang="ts">
 import {
   PhAlignRight,
+  PhMusicNotes,
   PhTextAlignCenter,
   PhTextAlignLeft,
   PhTextAlignRight,
@@ -147,7 +164,7 @@ defineProps({
   },
 });
 
-const emit = defineEmits(['update', 'update:tempo']);
+const emit = defineEmits(['open-mode-key-dialog', 'update', 'update:tempo']);
 
 function onAlignmentChanged(value: unknown) {
   if (isTextBoxAlignment(value)) {

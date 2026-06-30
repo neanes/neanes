@@ -314,14 +314,6 @@
             {{ $t(($) => $.menu.view.properties, { ns: 'menu' }) }}
           </MenubarCheckboxItem>
           <MenubarCheckboxItem
-            :model-value="props.paneVisibility.selection"
-            @update:model-value="
-              onTogglePaneClick('selection', $event === true)
-            "
-          >
-            {{ $t(($) => $.menu.view.selection, { ns: 'menu' }) }}
-          </MenubarCheckboxItem>
-          <MenubarCheckboxItem
             :model-value="props.paneVisibility.lyrics"
             @update:model-value="onTogglePaneClick('lyrics', $event === true)"
           >

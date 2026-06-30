@@ -20,15 +20,6 @@
         />
       </Field>
 
-      <Button
-        type="button"
-        variant="secondary"
-        @click="$emit('open-syllable-positioning-dialog')"
-      >
-        <PhCrosshair data-icon="inline-start" />
-        {{ $t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' }) }}
-      </Button>
-
       <Field orientation="horizontal">
         <Switch
           id="properties-neume-ignore-attractions"
@@ -119,13 +110,11 @@
 </template>
 
 <script setup lang="ts">
-import { PhCrosshair } from '@phosphor-icons/vue';
 import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
-import { Button } from '@/components/ui/button';
 import {
   Field,
   FieldGroup,
@@ -191,7 +180,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['open-syllable-positioning-dialog', 'update']);
+const emit = defineEmits(['update']);
 
 const notes = computed((): ChromaticFthoraNoteOption[] => {
   if (

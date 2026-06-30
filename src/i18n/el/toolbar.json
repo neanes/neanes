@@ -3,6 +3,7 @@
     "alignLeft": "Στοίχιση Αριστερά",
     "alignCenter": "Στοίχιση στο Κέντρο",
     "alignRight": "Στοίχιση Δεξιά",
+    "alignJustify": "Πλήρης Στοίχιση",
     "alignment": "Στοίχιση",
     "bpm": "BPM",
     "chooseColor": "Επιλογή χρώματος",
@@ -63,15 +64,6 @@
   "properties": {
     "noProperties": "Δεν υπάρχουν ιδιότητες",
     "nothingToEdit": "Δεν υπάρχει τίποτα για επεξεργασία"
-  },
-  "selection": {
-    "elements": "Στοιχεία",
-    "lineBreak": "Αλλαγή Γραμμής",
-    "center": "Κέντρο",
-    "justify": "Πλήρης Στοίχιση",
-    "pageBreak": "Αλλαγή Σελίδας",
-    "noSelection": "Καμία επιλογή",
-    "nothingSelected": "Δεν έχει επιλεγεί τίποτα"
   },
   "imageBox": {
     "maintainAspectRatio": "Διατήρηση Αναλογίας",

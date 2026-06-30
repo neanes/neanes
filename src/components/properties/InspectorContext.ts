@@ -6,7 +6,6 @@ import type {
   ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
-  ScoreElement,
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
@@ -30,5 +29,4 @@ export type InspectorContext =
   | { kind: 'mode-key'; element: ModeKeyElement }
   | { kind: 'neume'; element: NoteElement }
   | { kind: 'martyria'; element: MartyriaElement }
-  | { kind: 'tempo'; element: TempoElement }
-  | { kind: 'range'; elements: ScoreElement[] };
+  | { kind: 'tempo'; element: TempoElement };

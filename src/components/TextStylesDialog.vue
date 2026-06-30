@@ -87,10 +87,7 @@
                 />
               </Field>
 
-              <Field
-                v-if="selectedStyle?.id !== defaultTextStyleId"
-                orientation="horizontal"
-              >
+              <Field orientation="horizontal">
                 <div class="min-w-0 flex-1">
                   <FieldLabel for="text-style-parent">
                     {{
@@ -103,10 +100,13 @@
                 <TextStyleSelect
                   id="text-style-parent"
                   class="ml-auto w-32 shrink-0"
+                  :disabled="selectedStyle?.id === defaultTextStyleId"
                   :model-value="
-                    selectedStyle?.parentStyleId ?? defaultTextStyleId
+                    selectedStyle?.parentStyleId ?? TEXT_STYLE_NONE_VALUE
                   "
                   :text-styles="availableParents"
+                  :show-none-option="true"
+                  :none-label="parentNoneLabel"
                   trigger-class="w-32"
                   @update:model-value="updateSelectedStyleParent"
                 />
@@ -366,6 +366,7 @@ import {
   PhTextAlignLeft,
   PhTextAlignRight,
 } from '@phosphor-icons/vue';
+import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
 import { computed, ref, watch } from 'vue';
 
@@ -398,6 +399,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { TEXT_STYLE_NONE_VALUE } from '@/composables/useRichTextStyleCommands';
 import {
   BUILT_IN_TEXT_STYLE_IDS,
   getAvailableTextStyleParents,
@@ -427,6 +429,7 @@ const emit = defineEmits<{
 }>();
 
 const open = defineModel<boolean>('open', { required: true });
+const { t } = useTranslation();
 
 const styles = ref<TextStyle[]>([]);
 const selectedStyleId = ref<string>(BUILT_IN_TEXT_STYLE_IDS.DefaultText);
@@ -476,6 +479,10 @@ const availableParents = computed(() => {
   return getAvailableTextStyleParents(styles.value, selectedStyle.value.id);
 });
 
+const parentNoneLabel = computed(
+  () => `(${t(($) => $.toolbar.common.none, { ns: 'toolbar' })})`,
+);
+
 const fontOptions = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
@@ -521,7 +528,8 @@ function updateSelectedStyleParent(styleId: string) {
     return;
   }
 
-  selectedStyle.value.parentStyleId = styleId;
+  selectedStyle.value.parentStyleId =
+    styleId === TEXT_STYLE_NONE_VALUE ? null : styleId;
 }
 
 function updateSelectedStyleOverride(

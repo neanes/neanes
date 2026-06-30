@@ -390,6 +390,21 @@ describe('SaveService font styles', () => {
     ).toBe(77);
   });
 
+  it('round-trips a custom parentless text style without saving parentStyleId', () => {
+    const style = new TextStyle();
+
+    style.id = 'custom-root';
+    style.displayName = 'Custom Root';
+    style.parentStyleId = null;
+    style.overrides.fontSize = 18;
+
+    const saved = SaveService.SaveTextStyle(style);
+    const loaded = SaveService.LoadTextStyle_v1(saved);
+
+    expect(saved.parentStyleId).toBeUndefined();
+    expect(loaded.parentStyleId).toBeNull();
+  });
+
   it('fills a missing default-text style from legacy page setup text box defaults', () => {
     const saved = createLegacyScore({
       textBoxDefaultFontFamily: 'Minion Pro Semibold',

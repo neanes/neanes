@@ -144,7 +144,6 @@ const paneMenuItemIds: Record<WorkspacePaneId, string> = {
   'neume-selector': 'view-pane-neume-selector',
   lyrics: 'view-pane-lyrics',
   properties: 'view-pane-properties',
-  selection: 'view-pane-selection',
 };
 const zoomMenuItemIds = {
   actualSize: 'view-zoom-actual-size',
@@ -2241,10 +2240,6 @@ function createMenu() {
         createPaneMenuItem(
           'properties',
           i18next.t(($) => $.menu.view.properties),
-        ),
-        createPaneMenuItem(
-          'selection',
-          i18next.t(($) => $.menu.view.selection),
         ),
         createPaneMenuItem(
           'lyrics',

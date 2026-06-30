@@ -3,6 +3,7 @@
     "alignLeft": "Aliniere stânga",
     "alignCenter": "Aliniere centru",
     "alignRight": "Aliniere dreapta",
+    "alignJustify": "Justificat",
     "alignment": "Aliniere",
     "bpm": "BPM",
     "chooseColor": "Alege culoarea",
@@ -63,15 +64,6 @@
   "properties": {
     "noProperties": "Nicio proprietate",
     "nothingToEdit": "Nimic de editat"
-  },
-  "selection": {
-    "elements": "Elemente",
-    "lineBreak": "Întrerupere de linie",
-    "center": "Centru",
-    "justify": "Justificat",
-    "pageBreak": "Întrerupere de pagină",
-    "noSelection": "Nicio selecție",
-    "nothingSelected": "Nimic selectat"
   },
   "imageBox": {
     "maintainAspectRatio": "Menține raportul de aspect",

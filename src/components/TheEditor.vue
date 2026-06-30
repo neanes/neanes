@@ -72,7 +72,6 @@ import type { InspectorContext } from '@/components/properties/InspectorContext'
 import PropertiesPane from '@/components/properties/PropertiesPane.vue';
 import RichTextToolbar from '@/components/RichTextToolbar.vue';
 import SearchText from '@/components/SearchText.vue';
-import SelectionPane from '@/components/SelectionPane.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import Annotation from '@/components/TextAnnotation.vue';
 import TextBox from '@/components/TextBox.vue';
@@ -581,16 +580,6 @@ const inspectorContext = computed<InspectorContext>(() => {
     isTempoElement(currentSelectedElement)
   ) {
     return { kind: 'tempo', element: currentSelectedElement };
-  }
-
-  if (selectionRange.value != null) {
-    const start = Math.min(
-      selectionRange.value.start,
-      selectionRange.value.end,
-    );
-    const end = Math.max(selectionRange.value.start, selectionRange.value.end);
-
-    return { kind: 'range', elements: elements.value.slice(start, end + 1) };
   }
 
   return { kind: 'none' };
@@ -3182,56 +3171,6 @@ function isLastElement(element: ScoreElement) {
   return elements.value.indexOf(element) === elements.value.length - 1;
 }
 
-function getInspectorSelectionElement() {
-  const context = inspectorContext.value;
-
-  switch (context.kind) {
-    case 'none':
-    case 'range':
-    case 'lyrics':
-      return null;
-    case 'text-box':
-    case 'rich-text-box':
-      return context.source === 'score' ? context.element : null;
-    case 'annotation':
-      return selectedElement.value;
-    case 'neume':
-      return selectedElementForNeumeToolbar.value;
-    default:
-      return context.element;
-  }
-}
-
-function getInspectorSelectionElementCollection(element: ScoreElement) {
-  const alternateLine = selectedWorkspace.value.selectedAlternateLineElement;
-
-  if (alternateLine?.elements.includes(element)) {
-    return alternateLine.elements;
-  }
-
-  return elements.value;
-}
-
-function canApplyInspectorBreakToElement(
-  element: ScoreElement,
-  collection: ScoreElement[],
-) {
-  return collection === elements.value && !isLastElement(element);
-}
-
-const canApplyInspectorBreak = computed(() => {
-  const element = getInspectorSelectionElement();
-
-  if (element == null) {
-    return false;
-  }
-
-  return canApplyInspectorBreakToElement(
-    element,
-    getInspectorSelectionElementCollection(element),
-  );
-});
-
 function insertPelastikon() {
   document.execCommand('insertText', false, PELASTIKON);
 }
@@ -3551,32 +3490,6 @@ function togglePageBreak() {
   }
 }
 
-function toggleInspectorPageBreak() {
-  const element = getInspectorSelectionElement();
-
-  if (element == null) {
-    return;
-  }
-
-  const collection = getInspectorSelectionElementCollection(element);
-
-  if (!canApplyInspectorBreakToElement(element, collection)) {
-    return;
-  }
-
-  commandService.value.execute(
-    scoreElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: {
-        pageBreak: !element.pageBreak,
-        lineBreak: false,
-      },
-    }),
-  );
-
-  save();
-}
-
 function toggleLineBreak(lineBreakType: LineBreakType | null) {
   if (selectedElement.value && !isLastElement(selectedElement.value)) {
     let lineBreak = !selectedElement.value.lineBreak;
@@ -3602,43 +3515,6 @@ function toggleLineBreak(lineBreakType: LineBreakType | null) {
 
     save();
   }
-}
-
-function toggleInspectorLineBreak(lineBreakType: LineBreakType | null) {
-  const element = getInspectorSelectionElement();
-
-  if (element == null) {
-    return;
-  }
-
-  const collection = getInspectorSelectionElementCollection(element);
-
-  if (!canApplyInspectorBreakToElement(element, collection)) {
-    return;
-  }
-
-  let lineBreak = !element.lineBreak;
-
-  if (lineBreakType != element.lineBreakType) {
-    lineBreak = true;
-  }
-
-  if (!lineBreak) {
-    lineBreakType = null;
-  }
-
-  commandService.value.execute(
-    scoreElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: {
-        lineBreak,
-        pageBreak: false,
-        lineBreakType,
-      },
-    }),
-  );
-
-  save();
 }
 
 function switchToMartyria(element: ScoreElement) {
@@ -7009,37 +6885,6 @@ function deleteSelectedElement() {
   }
 }
 
-function deleteInspectorSelectionElement() {
-  if (inspectorContext.value.kind === 'range') {
-    deleteSelectedElement();
-    return;
-  }
-
-  const element = getInspectorSelectionElement();
-
-  if (element == null) {
-    return;
-  }
-
-  const alternateLine = selectedWorkspace.value.selectedAlternateLineElement;
-
-  if (alternateLine?.elements.includes(element)) {
-    if (
-      alternateLine.elements.length === 1 &&
-      selectedElement.value?.elementType === ElementType.Note
-    ) {
-      removeAlternateLine(selectedElement.value as NoteElement, alternateLine);
-    } else {
-      removeScoreElement(element, alternateLine.elements);
-      save();
-    }
-
-    return;
-  }
-
-  deleteSelectedElement();
-}
-
 function deletePreviousElement() {
   if (selectedWorkspace.value.selectedAlternateLineElement) {
     const alternateLineElements =
@@ -8477,32 +8322,6 @@ async function onFileMenuEditCopyElementLink() {
   }
 }
 
-async function copyInspectorSelectionElementLink() {
-  const element = getInspectorSelectionElement();
-
-  if (element?.id == null) {
-    return;
-  }
-
-  try {
-    await navigator.clipboard.writeText('#element-' + element.id.toString());
-    toast.success(
-      t(($) => $.toast.editor.copyElementLinkSuccess, { ns: 'toast' }),
-    );
-  } catch (error) {
-    console.error(error);
-    showErrorToast(
-      t(($) => $.toast.editor.copyFailed, { ns: 'toast' }),
-      error,
-      {
-        fallback: t(($) => $.toast.editor.clipboardWriteFailed, {
-          ns: 'toast',
-        }),
-      },
-    );
-  }
-}
-
 async function onFileMenuSave() {
   const workspace = selectedWorkspace.value;
 
@@ -9395,12 +9214,14 @@ function renderTabLabel(tab: Tab) {
       :neume-keyboard="neumeKeyboard"
       :can-undo="canUndo"
       :can-redo="canRedo"
+      :can-copy-element-link="canCopyElementLink"
       @new-score="onFileMenuNewScore"
       @open-score="onClickOpenScore"
       @save-score="onFileMenuSave"
       @print-score="onClickPrintScore"
       @cut="onFileMenuCut"
       @copy="onFileMenuCopy"
+      @copy-element-link="onFileMenuEditCopyElementLink"
       @paste="onFileMenuPaste"
       @undo="onFileMenuUndo"
       @redo="onFileMenuRedo"
@@ -9468,19 +9289,6 @@ function renderTabLabel(tab: Tab) {
             @update:neume="updateNoteAndSave"
             @update:martyria="updateMartyria"
             @update:tempo="updateTempo"
-            @open-mode-key-dialog="openModeKeyDialog"
-            @open-syllable-positioning-dialog="openSyllablePositioningDialog"
-          />
-        </template>
-
-        <template #selection>
-          <SelectionPane
-            :context="inspectorContext"
-            :can-apply-break="canApplyInspectorBreak"
-            @copy-element-link="copyInspectorSelectionElementLink"
-            @toggle-page-break="toggleInspectorPageBreak"
-            @toggle-line-break="toggleInspectorLineBreak"
-            @delete-selected-element="deleteInspectorSelectionElement"
           />
         </template>
 
@@ -10722,6 +10530,7 @@ function renderTabLabel(tab: Tab) {
           "
           @update:ison="setIson(inspectorContext.element, $event)"
           @update:tie="setTie(inspectorContext.element, $event)"
+          @open-syllable-positioning-dialog="openSyllablePositioningDialog"
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'martyria'">
@@ -10751,6 +10560,7 @@ function renderTabLabel(tab: Tab) {
           :element="inspectorContext.element"
           @update="updateModeKey(inspectorContext.element, $event)"
           @update:tempo="setModeKeyTempo(inspectorContext.element, $event)"
+          @open-mode-key-dialog="openModeKeyDialog"
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'lyrics'">

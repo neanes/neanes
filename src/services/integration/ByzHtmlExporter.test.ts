@@ -103,7 +103,8 @@ describe('ByzHtmlExporter', () => {
     element.computedLineHeight = 1.4;
 
     expect(exporter.exportTextBox(element, 0)).toBe(
-      '<div dir="auto" class="byz--text-box byz--text-box-inline" style="text-align: center;">Inline text</div\n>',
+      `<div dir="auto" class="byz--text-box byz--text-box-inline" style="color: #123456;font-family: 'Alegreya', 'Source Serif';font-size: 18pt;font-weight: 700;font-style: italic;line-height: 1.4;-webkit-text-stroke-width: 2;text-align: center;">Inline text</div
+>`,
     );
   });
 

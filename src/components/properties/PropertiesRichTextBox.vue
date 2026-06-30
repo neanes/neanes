@@ -105,7 +105,7 @@
           id="properties-rich-text-box-gap-above"
           class="w-28"
           unit="pt"
-          :min="0"
+          :min="-maxHeight"
           :max="maxHeight"
           :step="0.5"
           :model-value="element.gapAbove"

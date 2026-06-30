@@ -19,35 +19,11 @@
       <Tabs
         v-model="selectedStyleId"
         orientation="vertical"
-        class="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden sm:grid-cols-[13rem_minmax(0,1fr)] sm:grid-rows-[minmax(0,1fr)]"
+        class="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-4 overflow-hidden sm:grid-cols-[13rem_minmax(0,1fr)] sm:grid-rows-[minmax(0,1fr)]"
       >
         <div
-          class="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden"
+          class="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-4 overflow-hidden"
         >
-          <div class="flex flex-wrap items-center gap-2">
-            <Button type="button" size="sm" @click="createStyle">
-              {{ $t(($) => $.dialog.textStyles.create, { ns: 'dialog' }) }}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              :disabled="selectedStyle == null"
-              @click="cloneSelectedStyle"
-            >
-              {{ $t(($) => $.dialog.textStyles.clone, { ns: 'dialog' }) }}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              :disabled="selectedStyle == null || selectedStyle.builtIn"
-              @click="deleteSelectedStyle"
-            >
-              {{ $t(($) => $.dialog.textStyles.delete, { ns: 'dialog' }) }}
-            </Button>
-          </div>
-
           <ScrollArea class="min-h-0">
             <TabsList
               class="h-auto w-full flex-col items-stretch justify-start p-1"
@@ -62,6 +38,62 @@
               </TabsTrigger>
             </TabsList>
           </ScrollArea>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <AppTooltip
+              :tooltip="$t(($) => $.dialog.textStyles.create, { ns: 'dialog' })"
+            >
+              <span class="inline-flex" @mousedown.prevent>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  :aria-label="
+                    $t(($) => $.dialog.textStyles.create, { ns: 'dialog' })
+                  "
+                  @click="createStyle"
+                >
+                  <PhPlus />
+                </Button>
+              </span>
+            </AppTooltip>
+            <AppTooltip
+              :tooltip="$t(($) => $.dialog.textStyles.clone, { ns: 'dialog' })"
+            >
+              <span class="inline-flex" @mousedown.prevent>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  :disabled="selectedStyle == null"
+                  :aria-label="
+                    $t(($) => $.dialog.textStyles.clone, { ns: 'dialog' })
+                  "
+                  @click="cloneSelectedStyle"
+                >
+                  <PhCopy />
+                </Button>
+              </span>
+            </AppTooltip>
+            <AppTooltip
+              :tooltip="$t(($) => $.dialog.textStyles.delete, { ns: 'dialog' })"
+            >
+              <span class="inline-flex ml-auto" @mousedown.prevent>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  :disabled="selectedStyle == null || selectedStyle.builtIn"
+                  :aria-label="
+                    $t(($) => $.dialog.textStyles.delete, { ns: 'dialog' })
+                  "
+                  @click="deleteSelectedStyle"
+                >
+                  <PhTrash />
+                </Button>
+              </span>
+            </AppTooltip>
+          </div>
         </div>
 
         <TabsContent
@@ -361,10 +393,13 @@
 <script setup lang="ts">
 import {
   PhCheck,
+  PhCopy,
+  PhPlus,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhTextAlignLeft,
   PhTextAlignRight,
+  PhTrash,
 } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';

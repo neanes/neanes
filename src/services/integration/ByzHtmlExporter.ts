@@ -18,13 +18,13 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
-import type { Score } from '@/models/Score';
 import {
-  BUILT_IN_TEXT_STYLE_IDS,
-  type ResolvedTextStyle,
-  resolveTextStyle,
-  type TextStyle,
-} from '@/models/TextStyle';
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  type ResolvedParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
+import type { Score } from '@/models/Score';
 import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
 import { resolveFontStyle } from '@/utils/fontStyle';
@@ -132,12 +132,12 @@ export class ByzHtmlExporter {
   };
 
   exportScore(score: Score) {
-    const style = this.exportPageSetup(score.pageSetup, score.textStyles);
+    const style = this.exportPageSetup(score.pageSetup, score.paragraphStyles);
 
     const body = this.exportElements(
       score.staff.elements,
       score.pageSetup,
-      score.textStyles,
+      score.paragraphStyles,
       4,
     );
     const fontFaceCss = fontCatalog.getRegisteredFontFaceCss();
@@ -181,7 +181,7 @@ export class ByzHtmlExporter {
     return result;
   }
 
-  exportPageSetup(pageSetup: PageSetup, textStyles: TextStyle[]) {
+  exportPageSetup(pageSetup: PageSetup, paragraphStyles: ParagraphStyle[]) {
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
     const firstPageMargins = resolvePageMargins(pageSetup, 1);
     const secondPageMargins = resolvePageMargins(pageSetup, 2);
@@ -198,21 +198,21 @@ export class ByzHtmlExporter {
     );
 
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
-    const defaultTextBoxStyle = resolveTextStyle(
-      textStyles,
-      BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    const defaultTextBoxStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     );
-    const annotationStyle = resolveTextStyle(
-      textStyles,
-      BUILT_IN_TEXT_STYLE_IDS.Annotation,
+    const annotationStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
     );
-    const lyricsStyle = resolveTextStyle(
-      textStyles,
-      BUILT_IN_TEXT_STYLE_IDS.Lyrics,
+    const lyricsStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
     );
-    const defaultDropCapStyle = resolveTextStyle(
-      textStyles,
-      BUILT_IN_TEXT_STYLE_IDS.DropCap,
+    const defaultDropCapStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
     );
     const defaultTextBoxFont = resolveFontStyle(
       defaultTextBoxStyle.fontFamily,
@@ -398,7 +398,7 @@ export class ByzHtmlExporter {
         color: ${lyricsStyle.color};
       }
 
-      ${this.getRichTextStyleCss(textStyles, pageSetup)}
+      ${this.getRichTextStyleCss(paragraphStyles, pageSetup)}
 
       .annotation-container {
         font-family: ${getFontFamilyWithFallback(
@@ -478,10 +478,13 @@ export class ByzHtmlExporter {
     return style;
   }
 
-  private getRichTextStyleCss(textStyles: TextStyle[], pageSetup: PageSetup) {
-    return textStyles
+  private getRichTextStyleCss(
+    paragraphStyles: ParagraphStyle[],
+    pageSetup: PageSetup,
+  ) {
+    return paragraphStyles
       .map((style) => {
-        const resolved = resolveTextStyle(textStyles, style.id);
+        const resolved = resolveParagraphStyle(paragraphStyles, style.id);
         const font = resolveFontStyle(resolved.fontFamily, resolved.fontStyle);
 
         return `.${this.config.classRichTextBox} p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
@@ -533,7 +536,7 @@ export class ByzHtmlExporter {
   exportElements(
     elements: ScoreElement[],
     pageSetup: PageSetup,
-    textStyles: TextStyle[],
+    paragraphStyles: ParagraphStyle[],
     indentation: number,
     startInsidePage: boolean = false,
   ) {
@@ -555,7 +558,7 @@ export class ByzHtmlExporter {
           result += this.exportNote(
             element as NoteElement,
             pageSetup,
-            textStyles,
+            paragraphStyles,
             indentation + 2,
           );
           needLineBreak = true;
@@ -588,7 +591,7 @@ export class ByzHtmlExporter {
 
           result += this.exportDropCap(
             element as DropCapElement,
-            textStyles,
+            paragraphStyles,
             indentation + 2,
           );
 
@@ -673,17 +676,17 @@ export class ByzHtmlExporter {
   // from the x-ly defaults.
   private getCustomLyricStyleAttribute(
     element: NoteElement,
-    textStyles: TextStyle[],
+    paragraphStyles: ParagraphStyle[],
     pageSetup: PageSetup,
   ): string {
-    const lyricsStyle = resolveTextStyle(
-      textStyles,
-      BUILT_IN_TEXT_STYLE_IDS.Lyrics,
+    const lyricsStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
     );
-    const resolvedLyricsStyle = resolveTextStyle(
-      textStyles,
-      element.lyricsTextStyleId,
-      element.getTextStyleOverrides(),
+    const resolvedLyricsStyle = resolveParagraphStyle(
+      paragraphStyles,
+      element.lyricsParagraphStyleId,
+      element.getParagraphStyleOverrides(),
     );
     const hasTextDecorationOverride =
       element.lyricsTextDecoration != null &&
@@ -747,7 +750,7 @@ export class ByzHtmlExporter {
   exportNote(
     element: NoteElement,
     pageSetup: PageSetup,
-    textStyles: TextStyle[],
+    paragraphStyles: ParagraphStyle[],
     indentation: number,
   ) {
     let inner = '';
@@ -884,7 +887,7 @@ export class ByzHtmlExporter {
 
     const lyricStyleAttribute = this.getCustomLyricStyleAttribute(
       element,
-      textStyles,
+      paragraphStyles,
       pageSetup,
     );
 
@@ -995,19 +998,19 @@ export class ByzHtmlExporter {
 
   exportDropCap(
     element: DropCapElement,
-    textStyles: TextStyle[],
+    paragraphStyles: ParagraphStyle[],
     indentation: number,
   ) {
     let styleAttribute = '';
 
     if (
-      this.hasExplicitTextStyleOverrides(element) ||
-      element.textStyleId !== BUILT_IN_TEXT_STYLE_IDS.DropCap
+      this.hasExplicitParagraphStyleOverrides(element) ||
+      element.paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap
     ) {
-      const resolvedDropCapStyle = resolveTextStyle(
-        textStyles,
-        element.textStyleId,
-        element.getTextStyleOverrides(),
+      const resolvedDropCapStyle = resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        element.getParagraphStyleOverrides(),
       );
       const resolvedDropCapFont = resolveFontStyle(
         resolvedDropCapStyle.fontFamily,
@@ -1052,8 +1055,8 @@ export class ByzHtmlExporter {
 
     if (
       !element.inline ||
-      this.textBoxHasExplicitTextStyleOverrides(element) ||
-      element.textStyleId !== BUILT_IN_TEXT_STYLE_IDS.Lyrics
+      this.textBoxHasExplicitParagraphStyleOverrides(element) ||
+      element.paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
     ) {
       style += `color: ${element.computedColor};`;
       style += `font-family: ${getFontFamilyWithFallback(
@@ -1081,16 +1084,16 @@ export class ByzHtmlExporter {
     }</div\n${this.getIndentationString(indentation)}>`;
   }
 
-  private hasExplicitTextStyleOverrides(
+  private hasExplicitParagraphStyleOverrides(
     element: TextBoxElement | NoteElement | DropCapElement,
   ) {
-    return Object.values(element.getTextStyleOverrides()).some(
+    return Object.values(element.getParagraphStyleOverrides()).some(
       (value) => value !== undefined,
     );
   }
 
-  private textBoxHasExplicitTextStyleOverrides(element: TextBoxElement) {
-    return this.hasExplicitTextStyleOverrides(element);
+  private textBoxHasExplicitParagraphStyleOverrides(element: TextBoxElement) {
+    return this.hasExplicitParagraphStyleOverrides(element);
   }
 
   exportRichTextBox(element: RichTextBoxElement, indentation: number) {
@@ -1388,9 +1391,9 @@ export class ByzHtmlExporter {
 
   getDropCapAdjustment(
     pageSetup: PageSetup,
-    defaultDropCapStyle: ResolvedTextStyle,
+    defaultDropCapStyle: ResolvedParagraphStyle,
     defaultDropCapFont: ReturnType<typeof resolveFontStyle>,
-    lyricsStyle: ResolvedTextStyle,
+    lyricsStyle: ResolvedParagraphStyle,
   ) {
     const neumeHeight = TextMeasurementService.getFontHeight(
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,

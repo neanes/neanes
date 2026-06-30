@@ -3,9 +3,9 @@ import { Unit } from '@/utils/Unit';
 
 import type { TextBoxAlignment } from './Element';
 
-export type TextStyleAlignment = TextBoxAlignment;
+export type ParagraphStyleAlignment = TextBoxAlignment;
 
-export const BUILT_IN_TEXT_STYLE_IDS = {
+export const BUILT_IN_PARAGRAPH_STYLE_IDS = {
   DefaultText: 'default-text',
   Annotation: 'annotation',
   Title: 'title',
@@ -18,11 +18,11 @@ export const BUILT_IN_TEXT_STYLE_IDS = {
   DropCap: 'drop-cap',
 } as const;
 
-export type BuiltInTextStyleId =
-  (typeof BUILT_IN_TEXT_STYLE_IDS)[keyof typeof BUILT_IN_TEXT_STYLE_IDS];
+export type BuiltInParagraphStyleId =
+  (typeof BUILT_IN_PARAGRAPH_STYLE_IDS)[keyof typeof BUILT_IN_PARAGRAPH_STYLE_IDS];
 
-export interface TextStyleOverrides {
-  alignment?: TextStyleAlignment;
+export interface ParagraphStyleOverrides {
+  alignment?: ParagraphStyleAlignment;
   fontFamily?: string;
   fontSize?: number;
   fontStyle?: string;
@@ -31,8 +31,8 @@ export interface TextStyleOverrides {
   lineHeight?: number | null;
 }
 
-export interface ResolvedTextStyle {
-  alignment: TextStyleAlignment;
+export interface ResolvedParagraphStyle {
+  alignment: ParagraphStyleAlignment;
   fontFamily: string;
   fontSize: number;
   fontStyle: string;
@@ -41,15 +41,15 @@ export interface ResolvedTextStyle {
   lineHeight: number | null;
 }
 
-export class TextStyle {
+export class ParagraphStyle {
   public id: string = crypto.randomUUID();
-  public displayName: string = 'Text Style';
+  public displayName: string = 'Paragraph Style';
   public builtIn: boolean = false;
   public parentStyleId: string | null = null;
-  public overrides: TextStyleOverrides = {};
+  public overrides: ParagraphStyleOverrides = {};
 
   public clone() {
-    const clone = new TextStyle();
+    const clone = new ParagraphStyle();
     clone.id = this.id;
     clone.displayName = this.displayName;
     clone.builtIn = this.builtIn;
@@ -59,7 +59,7 @@ export class TextStyle {
   }
 }
 
-export function createTextStyleFallback(): ResolvedTextStyle {
+export function createParagraphStyleFallback(): ResolvedParagraphStyle {
   return {
     alignment: 'left' as TextBoxAlignment,
     fontFamily: 'Source Serif',
@@ -92,11 +92,11 @@ export interface LegacyStyleDefaults {
   lyricsDefaultLineHeight?: number | null;
 }
 
-export function createTextStylesFromDefaults(
+export function createParagraphStylesFromDefaults(
   legacyStyleDefaults: LegacyStyleDefaults = {},
 ) {
-  const defaultText = new TextStyle();
-  defaultText.id = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
+  const defaultText = new ParagraphStyle();
+  defaultText.id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
   defaultText.displayName = 'Default Text';
   defaultText.builtIn = true;
   defaultText.overrides = {
@@ -111,69 +111,69 @@ export function createTextStylesFromDefaults(
   };
 
   const annotation = createBuiltInStyle(
-    BUILT_IN_TEXT_STYLE_IDS.Annotation,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
     'Annotation',
-    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
       fontSize: Unit.fromPt(12),
     },
   );
 
   const title = createBuiltInStyle(
-    BUILT_IN_TEXT_STYLE_IDS.Title,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
     'Title',
-    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
       alignment: 'center' as TextBoxAlignment,
       fontSize: Unit.fromPt(28),
     },
   );
   const subtitle = createBuiltInStyle(
-    BUILT_IN_TEXT_STYLE_IDS.Subtitle,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Subtitle,
     'Subtitle',
-    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
       alignment: 'center' as TextBoxAlignment,
       fontSize: Unit.fromPt(22),
     },
   );
   const chapter = createBuiltInStyle(
-    BUILT_IN_TEXT_STYLE_IDS.Chapter,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Chapter,
     'Chapter',
-    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
       alignment: 'center' as TextBoxAlignment,
       fontSize: Unit.fromPt(24),
     },
   );
   const section = createBuiltInStyle(
-    BUILT_IN_TEXT_STYLE_IDS.Section,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Section,
     'Section',
-    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
       fontSize: Unit.fromPt(20),
     },
   );
   const header = createBuiltInStyle(
-    BUILT_IN_TEXT_STYLE_IDS.Header,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
     'Header',
-    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
       alignment: 'center' as TextBoxAlignment,
     },
   );
   const footer = createBuiltInStyle(
-    BUILT_IN_TEXT_STYLE_IDS.Footer,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
     'Footer',
-    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
       alignment: 'center' as TextBoxAlignment,
     },
   );
   const lyrics = createBuiltInStyle(
-    BUILT_IN_TEXT_STYLE_IDS.Lyrics,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
     'Lyrics',
-    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
       fontFamily: legacyStyleDefaults.lyricsDefaultFontFamily ?? 'Source Serif',
       fontSize: legacyStyleDefaults.lyricsDefaultFontSize ?? Unit.fromPt(12),
@@ -184,9 +184,9 @@ export function createTextStylesFromDefaults(
     },
   );
   const dropCap = createBuiltInStyle(
-    BUILT_IN_TEXT_STYLE_IDS.DropCap,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
     'Drop Cap',
-    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
       fontFamily:
         legacyStyleDefaults.dropCapDefaultFontFamily ?? 'Source Serif',
@@ -213,41 +213,41 @@ export function createTextStylesFromDefaults(
   ];
 }
 
-export function getTextStyleById(
-  styles: TextStyle[],
+export function getParagraphStyleById(
+  styles: ParagraphStyle[],
   styleId: string | null | undefined,
 ) {
   return styles.find((style) => style.id === styleId) ?? null;
 }
 
-export function resolveTextStyle(
-  styles: TextStyle[],
+export function resolveParagraphStyle(
+  styles: ParagraphStyle[],
   styleId: string | null | undefined,
-  elementOverrides?: TextStyleOverrides,
-): ResolvedTextStyle {
+  elementOverrides?: ParagraphStyleOverrides,
+): ResolvedParagraphStyle {
   const visited = new Set<string>();
-  const resolved = createTextStyleFallback();
-  const chain: TextStyle[] = [];
+  const resolved = createParagraphStyleFallback();
+  const chain: ParagraphStyle[] = [];
 
-  let style = getTextStyleById(styles, styleId);
+  let style = getParagraphStyleById(styles, styleId);
 
   while (style != null && !visited.has(style.id)) {
     visited.add(style.id);
     chain.unshift(style);
-    style = getTextStyleById(styles, style.parentStyleId);
+    style = getParagraphStyleById(styles, style.parentStyleId);
   }
 
   for (const item of chain) {
-    applyTextStyleOverrides(resolved, item.overrides);
+    applyParagraphStyleOverrides(resolved, item.overrides);
   }
 
-  applyTextStyleOverrides(resolved, elementOverrides);
+  applyParagraphStyleOverrides(resolved, elementOverrides);
 
   return resolved;
 }
 
-export function wouldCreateTextStyleCycle(
-  styles: TextStyle[],
+export function wouldCreateParagraphStyleCycle(
+  styles: ParagraphStyle[],
   styleId: string,
   parentStyleId: string | null,
 ) {
@@ -268,31 +268,31 @@ export function wouldCreateTextStyleCycle(
     }
 
     visited.add(currentId);
-    currentId = getTextStyleById(styles, currentId)?.parentStyleId ?? null;
+    currentId = getParagraphStyleById(styles, currentId)?.parentStyleId ?? null;
   }
 
   return false;
 }
 
-export function getAvailableTextStyleParents(
-  styles: TextStyle[],
+export function getAvailableParagraphStyleParents(
+  styles: ParagraphStyle[],
   styleId: string,
 ) {
   return styles.filter((candidate) => {
     return (
       candidate.id !== styleId &&
-      !wouldCreateTextStyleCycle(styles, styleId, candidate.id)
+      !wouldCreateParagraphStyleCycle(styles, styleId, candidate.id)
     );
   });
 }
 
 function createBuiltInStyle(
-  id: BuiltInTextStyleId,
+  id: BuiltInParagraphStyleId,
   displayName: string,
   parentStyleId: string | null,
-  overrides: TextStyleOverrides = {},
+  overrides: ParagraphStyleOverrides = {},
 ) {
-  const style = new TextStyle();
+  const style = new ParagraphStyle();
   style.id = id;
   style.displayName = displayName;
   style.builtIn = true;
@@ -301,9 +301,9 @@ function createBuiltInStyle(
   return style;
 }
 
-function applyTextStyleOverrides(
-  target: ResolvedTextStyle,
-  overrides?: TextStyleOverrides,
+function applyParagraphStyleOverrides(
+  target: ResolvedParagraphStyle,
+  overrides?: ParagraphStyleOverrides,
 ) {
   if (overrides == null) {
     return;

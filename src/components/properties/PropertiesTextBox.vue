@@ -7,29 +7,33 @@
       <Field>
         <div class="mb-2 flex items-center justify-between gap-2">
           <FieldLabel for="properties-text-box-text-style">{{
-            $t(($) => $.toolbar.common.textStyle, { ns: 'toolbar' })
+            $t(($) => $.toolbar.common.paragraphStyle, { ns: 'toolbar' })
           }}</FieldLabel>
           <div class="flex items-center gap-1">
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              @click="openTextStylesDialog"
+              @click="openParagraphStylesDialog"
             >
-              {{ $t(($) => $.dialog.textStyles.openDialog, { ns: 'dialog' }) }}
+              {{
+                $t(($) => $.dialog.paragraphStyles.openDialog, { ns: 'dialog' })
+              }}
             </Button>
-            <TextStyleResetButton
-              :disabled="!hasTextStyleOverrides"
-              @reset="clearTextStyleOverrides"
+            <ParagraphStyleResetButton
+              :disabled="!hasParagraphStyleOverrides"
+              @reset="clearParagraphStyleOverrides"
             />
           </div>
         </div>
-        <TextStyleSelect
+        <ParagraphStyleSelect
           id="properties-text-box-text-style"
-          :model-value="element.textStyleId"
-          :text-styles="textStyles"
+          :model-value="element.paragraphStyleId"
+          :paragraph-styles="paragraphStyles"
           @update:model-value="
-            $emit('update', { textStyleId: $event } as Partial<TextBoxElement>)
+            $emit('update', {
+              paragraphStyleId: $event,
+            } as Partial<TextBoxElement>)
           "
         />
       </Field>
@@ -39,7 +43,7 @@
           <FieldLabel for="properties-text-box-font">{{
             $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' })
           }}</FieldLabel>
-          <TextStyleResetButton
+          <ParagraphStyleResetButton
             :disabled="element.fontFamily == null"
             @reset="
               $emit('update', { fontFamily: null } as Partial<TextBoxElement>)
@@ -49,7 +53,7 @@
         <FontCombobox
           id="properties-text-box-font"
           class="w-full max-w-full"
-          :model-value="resolvedTextStyle.fontFamily"
+          :model-value="resolvedParagraphStyle.fontFamily"
           :options="textBoxFontFamilies"
           @update:model-value="onFontFamilyChanged"
         />
@@ -60,7 +64,7 @@
           <FieldLabel for="properties-text-box-font-style">{{
             $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
           }}</FieldLabel>
-          <TextStyleResetButton
+          <ParagraphStyleResetButton
             :disabled="element.fontStyle == null"
             @reset="
               $emit('update', { fontStyle: null } as Partial<TextBoxElement>)
@@ -70,7 +74,7 @@
         <FontStyleSelect
           id="properties-text-box-font-style"
           class="w-full max-w-full"
-          :model-value="resolvedTextStyle.fontStyle"
+          :model-value="resolvedParagraphStyle.fontStyle"
           :options="fontStyleOptions"
           :disabled="fontStyleOptions.length <= 1"
           @update:model-value="
@@ -88,12 +92,12 @@
         <div class="flex items-center gap-1">
           <InputFontSize
             id="properties-text-box-font-size"
-            :model-value="resolvedTextStyle.fontSize"
+            :model-value="resolvedParagraphStyle.fontSize"
             @update:model-value="
               $emit('update', { fontSize: $event } as Partial<TextBoxElement>)
             "
           />
-          <TextStyleResetButton
+          <ParagraphStyleResetButton
             :disabled="element.fontSize == null"
             @reset="
               $emit('update', { fontSize: null } as Partial<TextBoxElement>)
@@ -113,14 +117,14 @@
             :nullable="true"
             :min="0"
             :step="0.1"
-            :model-value="resolvedTextStyle.lineHeight"
+            :model-value="resolvedParagraphStyle.lineHeight"
             :format-options="fraction2FormatOptions"
             placeholder="normal"
             @update:model-value="
               $emit('update', { lineHeight: $event } as Partial<TextBoxElement>)
             "
           />
-          <TextStyleResetButton
+          <ParagraphStyleResetButton
             :disabled="element.lineHeight == null"
             @reset="
               $emit('update', { lineHeight: null } as Partial<TextBoxElement>)
@@ -135,12 +139,12 @@
         }}</FieldLabel>
         <div class="flex items-center gap-1">
           <ColorPicker
-            :model-value="resolvedTextStyle.color"
+            :model-value="resolvedParagraphStyle.color"
             @update:model-value="
               $emit('update', { color: $event } as Partial<TextBoxElement>)
             "
           />
-          <TextStyleResetButton
+          <ParagraphStyleResetButton
             :disabled="element.color == null"
             @reset="$emit('update', { color: null } as Partial<TextBoxElement>)"
           />
@@ -184,14 +188,14 @@
         <div class="flex items-center gap-1">
           <InputStrokeWidth
             id="properties-text-box-outline"
-            :model-value="resolvedTextStyle.strokeWidth"
+            :model-value="resolvedParagraphStyle.strokeWidth"
             @update:model-value="
               $emit('update', {
                 strokeWidth: $event,
               } as Partial<TextBoxElement>)
             "
           />
-          <TextStyleResetButton
+          <ParagraphStyleResetButton
             :disabled="element.strokeWidth == null"
             @reset="
               $emit('update', { strokeWidth: null } as Partial<TextBoxElement>)
@@ -202,7 +206,7 @@
 
       <Field orientation="horizontal">
         <FieldLabel for="properties-text-box-gap-above">{{
-          $t(($) => $.dialog.textStyles.gapAbove, { ns: 'dialog' })
+          $t(($) => $.dialog.paragraphStyles.gapAbove, { ns: 'dialog' })
         }}</FieldLabel>
         <InputUnit
           id="properties-text-box-gap-above"
@@ -221,7 +225,7 @@
 
       <Field orientation="horizontal">
         <FieldLabel for="properties-text-box-gap-below">{{
-          $t(($) => $.dialog.textStyles.gapBelow, { ns: 'dialog' })
+          $t(($) => $.dialog.paragraphStyles.gapBelow, { ns: 'dialog' })
         }}</FieldLabel>
         <InputUnit
           id="properties-text-box-gap-below"
@@ -286,7 +290,7 @@
               </ToggleGroupItem>
             </AppTooltip>
           </ToggleGroup>
-          <TextStyleResetButton
+          <ParagraphStyleResetButton
             :disabled="element.alignment == null"
             @reset="
               $emit('update', { alignment: null } as Partial<TextBoxElement>)
@@ -465,8 +469,8 @@ import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import TextStyleResetButton from '@/components/properties/TextStyleResetButton.vue';
-import TextStyleSelect from '@/components/TextStyleSelect.vue';
+import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import ParagraphStyleResetButton from '@/components/properties/ParagraphStyleResetButton.vue';
 import { Button } from '@/components/ui/button';
 import {
   Field,
@@ -492,10 +496,10 @@ import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
-  BUILT_IN_TEXT_STYLE_IDS,
-  resolveTextStyle,
-  type TextStyle,
-} from '@/models/TextStyle';
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   fraction1FormatOptions,
@@ -516,8 +520,8 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
-  textStyles: {
-    type: Array as PropType<TextStyle[]>,
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
   source: {
@@ -526,13 +530,13 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['open-text-styles-dialog', 'update']);
+const emit = defineEmits(['open-paragraph-styles-dialog', 'update']);
 
-const resolvedTextStyle = computed(() =>
-  resolveTextStyle(
-    props.textStyles,
-    props.element.textStyleId,
-    props.element.getTextStyleOverrides(),
+const resolvedParagraphStyle = computed(() =>
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    props.element.paragraphStyleId,
+    props.element.getParagraphStyleOverrides(),
   ),
 );
 
@@ -543,8 +547,8 @@ const {
   applyStyleAxisToggles,
   remapStyleForFamily,
 } = useFontStyleControls(
-  () => resolvedTextStyle.value.fontFamily,
-  () => resolvedTextStyle.value.fontStyle,
+  () => resolvedParagraphStyle.value.fontFamily,
+  () => resolvedParagraphStyle.value.fontStyle,
 );
 
 const styleValues = computed(() => [
@@ -553,7 +557,7 @@ const styleValues = computed(() => [
 ]);
 
 const currentAlignment = computed(
-  () => props.element.alignment ?? resolvedTextStyle.value.alignment,
+  () => props.element.alignment ?? resolvedParagraphStyle.value.alignment,
 );
 
 const textBoxFontFamilies = computed(() => [
@@ -564,7 +568,7 @@ const textBoxFontFamilies = computed(() => [
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 const RUNNING_MARKER_NONE_VALUE = '__none__';
-const textStyleOverrideLabels = computed(() => {
+const paragraphStyleOverrideLabels = computed(() => {
   const labels: string[] = [];
 
   if (props.element.fontFamily != null) {
@@ -591,8 +595,8 @@ const textStyleOverrideLabels = computed(() => {
 
   return labels;
 });
-const hasTextStyleOverrides = computed(
-  () => textStyleOverrideLabels.value.length > 0,
+const hasParagraphStyleOverrides = computed(
+  () => paragraphStyleOverrideLabels.value.length > 0,
 );
 
 function onStyleValuesChanged(value: unknown) {
@@ -612,7 +616,7 @@ function onFontFamilyChanged(fontFamily: string) {
   } as Partial<TextBoxElement>);
 }
 
-function clearTextStyleOverrides() {
+function clearParagraphStyleOverrides() {
   emit('update', {
     alignment: null,
     color: null,
@@ -624,10 +628,10 @@ function clearTextStyleOverrides() {
   } as Partial<TextBoxElement>);
 }
 
-function openTextStylesDialog() {
+function openParagraphStylesDialog() {
   emit(
-    'open-text-styles-dialog',
-    props.element.textStyleId ?? BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    'open-paragraph-styles-dialog',
+    props.element.paragraphStyleId ?? BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
   );
 }
 

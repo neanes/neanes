@@ -12,8 +12,11 @@ import type { Neume } from '@/models/Neumes';
 import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import type { Page } from '@/models/Page';
 import type { PageSetup } from '@/models/PageSetup';
-import type { TextStyle } from '@/models/TextStyle';
-import { BUILT_IN_TEXT_STYLE_IDS, resolveTextStyle } from '@/models/TextStyle';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { resolveRunningMarkerText } from '@/utils/runningMarkers';
@@ -112,7 +115,7 @@ export class LatexExporter {
   public export(
     pages: Page[],
     pageSetup: PageSetup,
-    textStyles: TextStyle[],
+    paragraphStyles: ParagraphStyle[],
     options: LatexExporterOptions,
   ) {
     const neumeDescent = TextMeasurementService.getFontBoundingBoxDescent(
@@ -154,17 +157,17 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
     // such as Semibold, Caption, and Display. Until then, preserve the v2
     // output contract by projecting document styles onto CSS font-style and
     // font-weight, even though that loses non-CSS face information.
-    const defaultTextBoxStyle = resolveTextStyle(
-      textStyles,
-      BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    const defaultTextBoxStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     );
-    const defaultDropCapStyle = resolveTextStyle(
-      textStyles,
-      BUILT_IN_TEXT_STYLE_IDS.DropCap,
+    const defaultDropCapStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
     );
-    const lyricsStyle = resolveTextStyle(
-      textStyles,
-      BUILT_IN_TEXT_STYLE_IDS.Lyrics,
+    const lyricsStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
     );
     const defaultTextBoxFont = resolveFontStyle(
       defaultTextBoxStyle.fontFamily,
@@ -434,10 +437,10 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             } as LatexNoteElement;
 
             if (note.lyrics != '' || note.melismaText != '') {
-              const resolvedLyricsStyle = resolveTextStyle(
-                textStyles,
-                note.lyricsTextStyleId,
-                note.getTextStyleOverrides(),
+              const resolvedLyricsStyle = resolveParagraphStyle(
+                paragraphStyles,
+                note.lyricsParagraphStyleId,
+                note.getParagraphStyleOverrides(),
               );
               const lyricsFont = resolveFontStyle(
                 resolvedLyricsStyle.fontFamily,
@@ -504,10 +507,10 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             } as LatexTempoElement);
           } else if (element.elementType === ElementType.DropCap) {
             const dropCap = element as DropCapElement;
-            const resolvedDropCapStyle = resolveTextStyle(
-              textStyles,
-              dropCap.textStyleId,
-              dropCap.getTextStyleOverrides(),
+            const resolvedDropCapStyle = resolveParagraphStyle(
+              paragraphStyles,
+              dropCap.paragraphStyleId,
+              dropCap.getParagraphStyleOverrides(),
             );
             const resolvedDropCapFont = resolveFontStyle(
               resolvedDropCapStyle.fontFamily,
@@ -636,14 +639,14 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             const defaultColor = textBox.inline
               ? lyricsStyle.color
               : defaultTextBoxStyle.color;
-            const resolvedTextStyle = resolveTextStyle(
-              textStyles,
-              textBox.textStyleId,
-              textBox.getTextStyleOverrides(),
+            const resolvedParagraphStyle = resolveParagraphStyle(
+              paragraphStyles,
+              textBox.paragraphStyleId,
+              textBox.getParagraphStyleOverrides(),
             );
             const resolvedTextBoxFont = resolveFontStyle(
-              resolvedTextStyle.fontFamily,
-              resolvedTextStyle.fontStyle,
+              resolvedParagraphStyle.fontFamily,
+              resolvedParagraphStyle.fontStyle,
             );
 
             pushExportedElement({
@@ -652,7 +655,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               width: toPt(textBox.width),
               height: toPt(textBox.height),
               alignment: !textBox.multipanel
-                ? convertAlignment(resolvedTextStyle.alignment)
+                ? convertAlignment(resolvedParagraphStyle.alignment)
                 : undefined,
               inline: textBox.inline || undefined,
               content: textBox.content,
@@ -671,12 +674,12 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? toPt(textBox.marginBottom)
                   : undefined,
               fontFamily:
-                resolvedTextStyle.fontFamily != defaultFontFamily
-                  ? convertFontName(resolvedTextStyle.fontFamily)
+                resolvedParagraphStyle.fontFamily != defaultFontFamily
+                  ? convertFontName(resolvedParagraphStyle.fontFamily)
                   : undefined,
               fontSize:
-                resolvedTextStyle.fontSize != defaultFontSize
-                  ? toPt(resolvedTextStyle.fontSize)
+                resolvedParagraphStyle.fontSize != defaultFontSize
+                  ? toPt(resolvedParagraphStyle.fontSize)
                   : undefined,
               fontStyle:
                 resolvedTextBoxFont.cssFontStyle != defaultFont.cssFontStyle
@@ -687,8 +690,8 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? resolvedTextBoxFont.cssFontWeight
                   : undefined,
               color:
-                resolvedTextStyle.color != defaultColor
-                  ? resolvedTextStyle.color.substring(1)
+                resolvedParagraphStyle.color != defaultColor
+                  ? resolvedParagraphStyle.color.substring(1)
                   : undefined,
             } as LatexTextBoxElement);
           }

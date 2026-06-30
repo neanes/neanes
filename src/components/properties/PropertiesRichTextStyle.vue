@@ -3,7 +3,7 @@
     <Field>
       <div class="mb-2 flex items-center justify-between gap-2">
         <FieldLabel :for="`${idPrefix}-text-style`">{{
-          $t(($) => $.toolbar.common.textStyle, { ns: 'toolbar' })
+          $t(($) => $.toolbar.common.paragraphStyle, { ns: 'toolbar' })
         }}</FieldLabel>
         <div class="flex items-center gap-1">
           <Button
@@ -11,27 +11,29 @@
             type="button"
             variant="ghost"
             size="sm"
-            @click="openTextStylesDialog"
+            @click="openParagraphStylesDialog"
           >
-            {{ $t(($) => $.dialog.textStyles.openDialog, { ns: 'dialog' }) }}
+            {{
+              $t(($) => $.dialog.paragraphStyles.openDialog, { ns: 'dialog' })
+            }}
           </Button>
-          <TextStyleResetButton
-            :disabled="!hasTextStyleOverrides"
-            @reset="resetAllTextStyleOverrides"
+          <ParagraphStyleResetButton
+            :disabled="!hasParagraphStyleOverrides"
+            @reset="resetAllParagraphStyleOverrides"
           />
         </div>
       </div>
-      <TextStyleSelect
+      <ParagraphStyleSelect
         :id="`${idPrefix}-text-style`"
         trigger-class="w-full"
-        :model-value="textStyleSelectValue"
-        :text-styles="textStyleOptions"
+        :model-value="paragraphStyleSelectValue"
+        :paragraph-styles="paragraphStyleOptions"
         :disabled="!isCommandEnabled('style')"
-        :disabled-style-ids="disabledTextStyleIds"
-        :show-none-option="showTextStyleNoneOption"
-        :show-mixed-option="textStyleValue === TEXT_STYLE_MIXED_VALUE"
+        :disabled-style-ids="disabledParagraphStyleIds"
+        :show-none-option="showParagraphStyleNoneOption"
+        :show-mixed-option="paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE"
         rich-text-portal
-        @update:model-value="onTextStyleSelectChanged"
+        @update:model-value="onParagraphStyleSelectChanged"
         @update:open="
           $event
             ? beginSelectionGuard(element)
@@ -51,7 +53,7 @@
           wrapper still receives pointer events for disabled buttons so clicking
           an inactive clear action does not blur the active editor.
         -->
-        <TextStyleResetButton
+        <ParagraphStyleResetButton
           :disabled="
             !isCommandEnabled('fontFamily') ||
             fontFamilyValue === RICH_TEXT_DEFAULT_FONT_FAMILY
@@ -85,7 +87,7 @@
         <FieldLabel :for="`${idPrefix}-font-style`">{{
           $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
         }}</FieldLabel>
-        <TextStyleResetButton
+        <ParagraphStyleResetButton
           :disabled="
             !isCommandEnabled('fontStyle') || !fontStyleHasExplicitValue
           "
@@ -165,12 +167,12 @@
           :disabled="!isCommandEnabled('fontSize')"
           nullable
           :placeholder="fontSizePlaceholder"
-          :default-value="resolvedActiveTextStyle.fontSize"
+          :default-value="resolvedActiveParagraphStyle.fontSize"
           @update:model-value="onFontSizeChanged"
           @focus-within="beginSelectionGuard(element)"
           @blur-within="endSelectionGuard(element, { refocus: false })"
         />
-        <TextStyleResetButton
+        <ParagraphStyleResetButton
           :disabled="!isCommandEnabled('fontSize') || fontSizeValue == null"
           @reset="onFontSizeChanged(null)"
         />
@@ -194,7 +196,7 @@
               : endSelectionGuard(element, { refocus: true })
           "
         />
-        <TextStyleResetButton
+        <ParagraphStyleResetButton
           :disabled="
             !isCommandEnabled('fontColor') || !fontColorHasExplicitValue
           "
@@ -302,7 +304,7 @@
             </ToggleGroupItem>
           </AppTooltip>
         </ToggleGroup>
-        <TextStyleResetButton
+        <ParagraphStyleResetButton
           :disabled="
             !isCommandEnabled('alignment') || !alignmentHasExplicitValue
           "
@@ -828,9 +830,9 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import TextStyleResetButton from '@/components/properties/TextStyleResetButton.vue';
+import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import ParagraphStyleResetButton from '@/components/properties/ParagraphStyleResetButton.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
-import TextStyleSelect from '@/components/TextStyleSelect.vue';
 import { Button } from '@/components/ui/button';
 import {
   Field,
@@ -860,9 +862,9 @@ import {
   endSelectionGuard,
 } from '@/composables/useRichTextSelectionGuard';
 import {
-  TEXT_STYLE_MIXED_VALUE,
-  TEXT_STYLE_NONE_VALUE,
-  useRichTextStyleCommands,
+  PARAGRAPH_STYLE_MIXED_VALUE,
+  PARAGRAPH_STYLE_NONE_VALUE,
+  useRichParagraphStyleCommands,
 } from '@/composables/useRichTextStyleCommands';
 import { supportedLocales } from '@/i18n';
 import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
@@ -873,10 +875,10 @@ import {
 import { Note, RootSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import {
-  BUILT_IN_TEXT_STYLE_IDS,
-  type ResolvedTextStyle,
-  type TextStyle,
-} from '@/models/TextStyle';
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  type ResolvedParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
 import { fraction3FormatOptions } from '@/utils/numberFormatOptions';
@@ -890,21 +892,21 @@ const props = defineProps<{
   element: AnnotationElement | RichTextBoxElement;
   fonts: string[];
   pageSetup: PageSetup;
-  textStyles: TextStyle[];
+  paragraphStyles: ParagraphStyle[];
   showEditStylesButton?: boolean;
-  fallbackTextStyle: ResolvedTextStyle;
+  fallbackParagraphStyle: ResolvedParagraphStyle;
 }>();
 
 const emit = defineEmits<{
-  'open-text-styles-dialog': [styleId: string];
+  'open-paragraph-styles-dialog': [styleId: string];
 }>();
 
 const {
   fontFamilyValue,
   fontFamilyOptions,
-  textStyleValue,
-  textStyleOptions,
-  resolvedActiveTextStyle,
+  paragraphStyleValue,
+  paragraphStyleOptions,
+  resolvedActiveParagraphStyle,
   fontStyleValue,
   fontStyleOptions,
   fontStyleDisabled,
@@ -917,10 +919,10 @@ const {
   isCommandEnabled,
   isCommandActive,
   isStyleToggleEnabled,
-  isTextStyleEnabled,
+  isParagraphStyleEnabled,
   commandValue,
   runCommand,
-  onTextStyleChanged,
+  onParagraphStyleChanged: onParagraphStyleChanged,
   onFontFamilyChanged,
   onFontStyleChanged,
   onFontSizeChanged,
@@ -928,7 +930,7 @@ const {
   onStyleValuesChanged,
   onAlignmentChanged,
   onRemoveFormat,
-} = useRichTextStyleCommands(props, [
+} = useRichParagraphStyleCommands(props, [
   'subscript',
   'superscript',
   'removeFormat',
@@ -972,11 +974,11 @@ const languageOptions = computed(() =>
   })),
 );
 
-const showTextStyleNoneOption = computed(() => true);
-const textStyleSelectValue = computed(() => textStyleValue.value);
-const disabledTextStyleIds = computed(() =>
-  textStyleOptions.value
-    .filter((style) => !isTextStyleEnabled(style.id))
+const showParagraphStyleNoneOption = computed(() => true);
+const paragraphStyleSelectValue = computed(() => paragraphStyleValue.value);
+const disabledParagraphStyleIds = computed(() =>
+  paragraphStyleOptions.value
+    .filter((style) => !isParagraphStyleEnabled(style.id))
     .map((style) => style.id),
 );
 const fontStyleHasExplicitValue = computed(() => {
@@ -989,10 +991,10 @@ const alignmentHasExplicitValue = computed(() => {
 
   return (
     typeof value === 'string' &&
-    value !== resolvedActiveTextStyle.value.alignment
+    value !== resolvedActiveParagraphStyle.value.alignment
   );
 });
-const textStyleOverrideLabels = computed(() => {
+const paragraphStyleOverrideLabels = computed(() => {
   const labels: string[] = [];
 
   if (fontFamilyValue.value !== RICH_TEXT_DEFAULT_FONT_FAMILY) {
@@ -1016,14 +1018,14 @@ const textStyleOverrideLabels = computed(() => {
 
   return [...new Set(labels)];
 });
-const hasTextStyleOverrides = computed(
-  () => textStyleOverrideLabels.value.length > 0,
+const hasParagraphStyleOverrides = computed(
+  () => paragraphStyleOverrideLabels.value.length > 0,
 );
-const currentDialogTextStyleId = computed(() =>
-  textStyleValue.value === TEXT_STYLE_NONE_VALUE ||
-  textStyleValue.value === TEXT_STYLE_MIXED_VALUE
-    ? BUILT_IN_TEXT_STYLE_IDS.DefaultText
-    : textStyleValue.value,
+const currentDialogParagraphStyleId = computed(() =>
+  paragraphStyleValue.value === PARAGRAPH_STYLE_NONE_VALUE ||
+  paragraphStyleValue.value === PARAGRAPH_STYLE_MIXED_VALUE
+    ? BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText
+    : paragraphStyleValue.value,
 );
 
 const POSITION_COMMAND_NAMES = ['subscript', 'superscript'] as const;
@@ -1107,9 +1109,9 @@ const capsOptions = computed(() => [
   },
 ]);
 
-function onTextStyleSelectChanged(value: AcceptableValue) {
+function onParagraphStyleSelectChanged(value: AcceptableValue) {
   if (typeof value === 'string') {
-    onTextStyleChanged(value);
+    onParagraphStyleChanged(value);
   }
 }
 
@@ -1121,7 +1123,7 @@ function resetAlignment() {
   runCommand('alignment');
 }
 
-function resetAllTextStyleOverrides() {
+function resetAllParagraphStyleOverrides() {
   onFontFamilyChanged(RICH_TEXT_DEFAULT_FONT_FAMILY);
   resetFontStyle();
   onFontSizeChanged(null);
@@ -1130,8 +1132,8 @@ function resetAllTextStyleOverrides() {
   resetAlignment();
 }
 
-function openTextStylesDialog() {
-  emit('open-text-styles-dialog', currentDialogTextStyleId.value);
+function openParagraphStylesDialog() {
+  emit('open-paragraph-styles-dialog', currentDialogParagraphStyleId.value);
 }
 
 function applyNumericVariant(variant: NumericVariant) {

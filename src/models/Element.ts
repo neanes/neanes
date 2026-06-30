@@ -34,8 +34,11 @@ import {
   measureBarAboveToLeft,
   measureBarLeftToAbove,
 } from './NeumeReplacements';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyleOverrides,
+} from './ParagraphStyle';
 import { Scale, ScaleNote } from './Scales';
-import { BUILT_IN_TEXT_STYLE_IDS, type TextStyleOverrides } from './TextStyle';
 
 export enum ElementType {
   Note = 'Note',
@@ -113,7 +116,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontFamily: string | null = null;
   public lyricsFontSize: number | null = null;
   public lyricsStrokeWidth: number | null = null;
-  public lyricsTextStyleId: string = BUILT_IN_TEXT_STYLE_IDS.Lyrics;
+  public lyricsParagraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics;
   public lyricsFontStyle: string | null = null;
   public lyricsTextDecoration: string | null = null;
   public acceptsLyrics: AcceptsLyricsOption = AcceptsLyricsOption.Default;
@@ -215,7 +218,7 @@ export class NoteElement extends ScoreElement {
             isHyphen: this.isHyphen,
             isMelismaStart: this.isMelismaStart,
             isMelisma: this.isMelisma,
-            lyricsTextStyleId: this.lyricsTextStyleId,
+            lyricsParagraphStyleId: this.lyricsParagraphStyleId,
             lyricsColor: this.lyricsColor,
             lyricsFontFamily: this.lyricsFontFamily,
             lyricsFontSize: this.lyricsFontSize,
@@ -296,13 +299,13 @@ export class NoteElement extends ScoreElement {
       lyricsFontFamily: this.lyricsFontFamily,
       lyricsFontSize: this.lyricsFontSize,
       lyricsStrokeWidth: this.lyricsStrokeWidth,
-      textStyleId: this.lyricsTextStyleId,
+      lyricsParagraphStyleId: this.lyricsParagraphStyleId,
       lyricsFontStyle: this.lyricsFontStyle,
       lyricsTextDecoration: this.lyricsTextDecoration,
     };
   }
 
-  public getTextStyleOverrides(): TextStyleOverrides {
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
     return {
       fontFamily: this.lyricsFontFamily ?? undefined,
       fontSize: this.lyricsFontSize ?? undefined,
@@ -851,7 +854,7 @@ export type RunningMarkerRole = 'chapter' | 'section';
 
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
-  public textStyleId: string = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
+  public paragraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
   public alignment: TextBoxAlignment | null = null;
   public color: string | null = null;
   public content: string = '';
@@ -912,7 +915,7 @@ export class TextBoxElement extends ScoreElement {
 
   public getClipboardProperties() {
     return {
-      textStyleId: this.textStyleId,
+      paragraphStyleId: this.paragraphStyleId,
       alignment: this.alignment,
       color: this.color,
       content: this.content,
@@ -943,7 +946,7 @@ export class TextBoxElement extends ScoreElement {
     return format;
   }
 
-  public getTextStyleOverrides(): TextStyleOverrides {
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
     return {
       fontFamily: this.fontFamily ?? undefined,
       fontSize: this.fontSize ?? undefined,
@@ -1041,7 +1044,7 @@ export class RichTextBoxElement extends ScoreElement {
     } as Partial<RichTextBoxElement>;
   }
 
-  public getTextStyleOverrides(): TextStyleOverrides {
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
     return {
       fontFamily: this.fontFamily ?? undefined,
       fontSize: this.fontSize ?? undefined,
@@ -1241,7 +1244,7 @@ export class AlternateLineElement extends ScoreElement {
 export class DropCapElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.DropCap;
   public content: string = 'A';
-  public textStyleId: string = BUILT_IN_TEXT_STYLE_IDS.DropCap;
+  public paragraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap;
   public fontFamily: string | null = null;
   public fontSize: number | null = null;
   public fontStyle: string | null = null;
@@ -1285,7 +1288,7 @@ export class DropCapElement extends ScoreElement {
 
   public getClipboardProperties() {
     return {
-      textStyleId: this.textStyleId,
+      paragraphStyleId: this.paragraphStyleId,
       color: this.color,
       content: this.content,
       fontSize: this.fontSize,
@@ -1298,7 +1301,7 @@ export class DropCapElement extends ScoreElement {
     } as Partial<DropCapElement>;
   }
 
-  public getTextStyleOverrides(): TextStyleOverrides {
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
     return {
       fontFamily: this.fontFamily ?? undefined,
       fontSize: this.fontSize ?? undefined,

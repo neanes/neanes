@@ -17,7 +17,7 @@
           {{ mixedLabel }}
         </SelectItem>
         <SelectItem
-          v-for="style in textStyles"
+          v-for="style in paragraphStyles"
           :key="style.id"
           :value="style.id"
           :disabled="isStyleDisabled(style.id)"
@@ -37,11 +37,11 @@ import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import {
-  TEXT_STYLE_MIXED_VALUE,
-  TEXT_STYLE_NONE_VALUE,
+  PARAGRAPH_STYLE_MIXED_VALUE,
+  PARAGRAPH_STYLE_NONE_VALUE,
 } from '@/composables/useRichTextStyleCommands';
 import { cn } from '@/lib/utils';
-import type { TextStyle } from '@/models/TextStyle';
+import type { ParagraphStyle } from '@/models/ParagraphStyle.js';
 
 import RichTextSelectContent from './RichTextSelectContent.vue';
 import {
@@ -62,8 +62,8 @@ const props = defineProps({
     type: String,
     required: true,
   },
-  textStyles: {
-    type: Array as PropType<TextStyle[]>,
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
   disabled: {
@@ -84,11 +84,11 @@ const props = defineProps({
   },
   noneValue: {
     type: String,
-    default: TEXT_STYLE_NONE_VALUE,
+    default: PARAGRAPH_STYLE_NONE_VALUE,
   },
   mixedValue: {
     type: String,
-    default: TEXT_STYLE_MIXED_VALUE,
+    default: PARAGRAPH_STYLE_MIXED_VALUE,
   },
   noneLabel: {
     type: String,
@@ -114,7 +114,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useTranslation();
-const textStyles = computed(() => props.textStyles);
+const paragraphStyles = computed(() => props.paragraphStyles);
 const disabledStyleIds = computed(() => new Set(props.disabledStyleIds));
 const contentComponent = computed(() =>
   props.richTextPortal ? RichTextSelectContent : SelectContent,

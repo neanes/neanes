@@ -27,9 +27,11 @@
       :element="annotationElement"
       :fonts="fonts"
       :page-setup="pageSetup"
-      :text-styles="textStyles"
+      :paragraph-styles="paragraphStyles"
       @update="emit('update:annotation', annotationElement, $event)"
-      @open-text-styles-dialog="emit('open-text-styles-dialog', $event)"
+      @open-paragraph-styles-dialog="
+        emit('open-paragraph-styles-dialog', $event)
+      "
     />
 
     <PropertiesTextBox
@@ -38,10 +40,12 @@
       :element="textBoxElement"
       :fonts="fonts"
       :page-setup="pageSetup"
-      :text-styles="textStyles"
+      :paragraph-styles="paragraphStyles"
       :source="textBoxSource"
       @update="emit('update:text-box', textBoxElement, $event)"
-      @open-text-styles-dialog="emit('open-text-styles-dialog', $event)"
+      @open-paragraph-styles-dialog="
+        emit('open-paragraph-styles-dialog', $event)
+      "
     />
 
     <PropertiesRichTextBox
@@ -50,10 +54,12 @@
       :element="richTextBoxElement"
       :fonts="fonts"
       :page-setup="pageSetup"
-      :text-styles="textStyles"
+      :paragraph-styles="paragraphStyles"
       :source="richTextBoxSource"
       @update="emit('update:rich-text-box', richTextBoxElement, $event)"
-      @open-text-styles-dialog="emit('open-text-styles-dialog', $event)"
+      @open-paragraph-styles-dialog="
+        emit('open-paragraph-styles-dialog', $event)
+      "
     />
 
     <PropertiesDropCap
@@ -62,9 +68,11 @@
       :element="dropCapElement"
       :fonts="fonts"
       :page-setup="pageSetup"
-      :text-styles="textStyles"
+      :paragraph-styles="paragraphStyles"
       @update="emit('update:drop-cap', dropCapElement, $event)"
-      @open-text-styles-dialog="emit('open-text-styles-dialog', $event)"
+      @open-paragraph-styles-dialog="
+        emit('open-paragraph-styles-dialog', $event)
+      "
     />
 
     <PropertiesImageBox
@@ -80,9 +88,11 @@
       :key="`lyrics-${lyricsElement.id}`"
       :element="lyricsElement"
       :fonts="fonts"
-      :text-styles="textStyles"
+      :paragraph-styles="paragraphStyles"
       @update="emit('update:lyrics', lyricsElement, $event)"
-      @open-text-styles-dialog="emit('open-text-styles-dialog', $event)"
+      @open-paragraph-styles-dialog="
+        emit('open-paragraph-styles-dialog', $event)
+      "
     />
 
     <PropertiesModeKey
@@ -127,7 +137,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import type { PageSetup } from '@/models/PageSetup';
-import type { TextStyle } from '@/models/TextStyle';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 
 import type { InspectorContext } from './InspectorContext';
 import PropertiesAnnotation from './PropertiesAnnotation.vue';
@@ -158,15 +168,15 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
-  textStyles: {
-    type: Array as PropType<TextStyle[]>,
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
 });
 
 const emit = defineEmits([
   'open-mode-key-dialog',
-  'open-text-styles-dialog',
+  'open-paragraph-styles-dialog',
   'open-syllable-positioning-dialog',
   'update:annotation',
   'update:drop-cap',

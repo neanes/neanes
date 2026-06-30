@@ -5,11 +5,11 @@
     >
       <DialogHeader>
         <DialogTitle>
-          {{ $t(($) => $.dialog.textStyles.root, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.paragraphStyles.root, { ns: 'dialog' }) }}
         </DialogTitle>
         <DialogDescription>
           {{
-            $t(($) => $.dialog.textStyles.description, {
+            $t(($) => $.dialog.paragraphStyles.description, {
               ns: 'dialog',
             })
           }}
@@ -41,7 +41,9 @@
 
           <div class="flex flex-wrap items-center gap-2">
             <AppTooltip
-              :tooltip="$t(($) => $.dialog.textStyles.create, { ns: 'dialog' })"
+              :tooltip="
+                $t(($) => $.dialog.paragraphStyles.create, { ns: 'dialog' })
+              "
             >
               <span class="inline-flex" @mousedown.prevent>
                 <Button
@@ -49,7 +51,7 @@
                   variant="ghost"
                   size="icon-sm"
                   :aria-label="
-                    $t(($) => $.dialog.textStyles.create, { ns: 'dialog' })
+                    $t(($) => $.dialog.paragraphStyles.create, { ns: 'dialog' })
                   "
                   @click="createStyle"
                 >
@@ -58,7 +60,9 @@
               </span>
             </AppTooltip>
             <AppTooltip
-              :tooltip="$t(($) => $.dialog.textStyles.clone, { ns: 'dialog' })"
+              :tooltip="
+                $t(($) => $.dialog.paragraphStyles.clone, { ns: 'dialog' })
+              "
             >
               <span class="inline-flex" @mousedown.prevent>
                 <Button
@@ -67,7 +71,7 @@
                   size="icon-sm"
                   :disabled="selectedStyle == null"
                   :aria-label="
-                    $t(($) => $.dialog.textStyles.clone, { ns: 'dialog' })
+                    $t(($) => $.dialog.paragraphStyles.clone, { ns: 'dialog' })
                   "
                   @click="cloneSelectedStyle"
                 >
@@ -90,7 +94,9 @@
               </span>
             </AppTooltip>
             <AppTooltip
-              :tooltip="$t(($) => $.dialog.textStyles.delete, { ns: 'dialog' })"
+              :tooltip="
+                $t(($) => $.dialog.paragraphStyles.delete, { ns: 'dialog' })
+              "
             >
               <span class="inline-flex" @mousedown.prevent>
                 <Button
@@ -99,7 +105,7 @@
                   size="icon-sm"
                   :disabled="selectedStyle == null || selectedStyle.builtIn"
                   :aria-label="
-                    $t(($) => $.dialog.textStyles.delete, { ns: 'dialog' })
+                    $t(($) => $.dialog.paragraphStyles.delete, { ns: 'dialog' })
                   "
                   @click="deleteSelectedStyle"
                 >
@@ -121,7 +127,9 @@
               <Field orientation="horizontal">
                 <div class="min-w-0 flex-1">
                   <FieldLabel for="text-style-name">
-                    {{ $t(($) => $.dialog.textStyles.name, { ns: 'dialog' }) }}
+                    {{
+                      $t(($) => $.dialog.paragraphStyles.name, { ns: 'dialog' })
+                    }}
                   </FieldLabel>
                 </div>
                 <Input
@@ -137,20 +145,20 @@
                 <div class="min-w-0 flex-1">
                   <FieldLabel for="text-style-parent">
                     {{
-                      $t(($) => $.dialog.textStyles.parentStyle, {
+                      $t(($) => $.dialog.paragraphStyles.parentStyle, {
                         ns: 'dialog',
                       })
                     }}
                   </FieldLabel>
                 </div>
-                <TextStyleSelect
+                <ParagraphStyleSelect
                   id="text-style-parent"
                   class="ml-auto w-32 shrink-0"
-                  :disabled="selectedStyle?.id === defaultTextStyleId"
+                  :disabled="selectedStyle?.id === defaultParagraphStyleId"
                   :model-value="
-                    selectedStyle?.parentStyleId ?? TEXT_STYLE_NONE_VALUE
+                    selectedStyle?.parentStyleId ?? PARAGRAPH_STYLE_NONE_VALUE
                   "
-                  :text-styles="availableParents"
+                  :paragraph-styles="availableParents"
                   :show-none-option="true"
                   :none-label="parentNoneLabel"
                   trigger-class="w-32"
@@ -427,7 +435,7 @@ import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import TextStyleSelect from '@/components/TextStyleSelect.vue';
+import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -449,19 +457,19 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { TEXT_STYLE_NONE_VALUE } from '@/composables/useRichTextStyleCommands';
+import { PARAGRAPH_STYLE_NONE_VALUE } from '@/composables/useRichTextStyleCommands';
 import {
-  BUILT_IN_TEXT_STYLE_IDS,
-  getAvailableTextStyleParents,
-  resolveTextStyle,
-  TextStyle,
-} from '@/models/TextStyle';
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  getAvailableParagraphStyleParents,
+  ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
 
 const props = defineProps({
-  textStyles: {
-    type: Array as PropType<TextStyle[]>,
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
   fonts: {
@@ -470,26 +478,26 @@ const props = defineProps({
   },
   initialSelectedStyleId: {
     type: String,
-    default: BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    default: BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
   },
 });
 
 const emit = defineEmits<{
-  update: [styles: TextStyle[]];
+  update: [styles: ParagraphStyle[]];
 }>();
 
 const open = defineModel<boolean>('open', { required: true });
 const { t } = useTranslation();
 
-const styles = ref<TextStyle[]>([]);
-const selectedStyleId = ref<string>(BUILT_IN_TEXT_STYLE_IDS.DefaultText);
+const styles = ref<ParagraphStyle[]>([]);
+const selectedStyleId = ref<string>(BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText);
 
-const defaultTextStyleId = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
+const defaultParagraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
 
 watch(
   [
     () => open.value,
-    () => props.textStyles,
+    () => props.paragraphStyles,
     () => props.initialSelectedStyleId,
   ],
   () => {
@@ -497,12 +505,12 @@ watch(
       return;
     }
 
-    styles.value = props.textStyles.map((style) => style.clone());
+    styles.value = props.paragraphStyles.map((style) => style.clone());
     selectedStyleId.value = props.initialSelectedStyleId;
     selectedStyleId.value =
       styles.value.find((style) => style.id === selectedStyleId.value)?.id ??
       styles.value[0]?.id ??
-      BUILT_IN_TEXT_STYLE_IDS.DefaultText;
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
   },
   { immediate: true },
 );
@@ -517,8 +525,8 @@ const showOverrideToggles = computed(
 
 const resolvedStyle = computed(() =>
   selectedStyle.value == null
-    ? resolveTextStyle(styles.value, defaultTextStyleId)
-    : resolveTextStyle(styles.value, selectedStyle.value.id),
+    ? resolveParagraphStyle(styles.value, defaultParagraphStyleId)
+    : resolveParagraphStyle(styles.value, selectedStyle.value.id),
 );
 
 const availableParents = computed(() => {
@@ -526,7 +534,10 @@ const availableParents = computed(() => {
     return [];
   }
 
-  return getAvailableTextStyleParents(styles.value, selectedStyle.value.id);
+  return getAvailableParagraphStyleParents(
+    styles.value,
+    selectedStyle.value.id,
+  );
 });
 
 const parentNoneLabel = computed(
@@ -546,11 +557,14 @@ const canSubmit = computed(() =>
   styles.value.every((style) => style.displayName.trim().length > 0),
 );
 
-function hasOverride(key: keyof TextStyle['overrides']) {
+function hasOverride(key: keyof ParagraphStyle['overrides']) {
   return selectedStyle.value?.overrides[key] !== undefined;
 }
 
-function toggleOverride(key: keyof TextStyle['overrides'], value: boolean) {
+function toggleOverride(
+  key: keyof ParagraphStyle['overrides'],
+  value: boolean,
+) {
   if (selectedStyle.value == null) {
     return;
   }
@@ -579,11 +593,11 @@ function updateSelectedStyleParent(styleId: string) {
   }
 
   selectedStyle.value.parentStyleId =
-    styleId === TEXT_STYLE_NONE_VALUE ? null : styleId;
+    styleId === PARAGRAPH_STYLE_NONE_VALUE ? null : styleId;
 }
 
 function updateSelectedStyleOverride(
-  key: keyof TextStyle['overrides'],
+  key: keyof ParagraphStyle['overrides'],
   value: string | number | null,
 ) {
   if (selectedStyle.value == null) {
@@ -615,9 +629,9 @@ function updateAlignmentOverride(value: unknown) {
 }
 
 function createStyle() {
-  const style = new TextStyle();
-  style.displayName = getNextStyleName('Text Style');
-  style.parentStyleId = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
+  const style = new ParagraphStyle();
+  style.displayName = getNextStyleName('New Paragraph Style');
+  style.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
   styles.value.push(style);
   selectedStyleId.value = style.id;
 }
@@ -655,7 +669,7 @@ function deleteSelectedStyle() {
       updated.parentStyleId = parentStyleId;
       return updated;
     });
-  selectedStyleId.value = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
+  selectedStyleId.value = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
 }
 
 function getNextStyleName(baseName: string) {

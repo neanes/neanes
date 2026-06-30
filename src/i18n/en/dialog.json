@@ -39,9 +39,9 @@
     "title": "Title",
     "author": "Author"
   },
-  "textStyles": {
-    "root": "Text Styles",
-    "description": "Configure reusable text styles.",
+  "paragraphStyles": {
+    "root": "Paragraph Styles",
+    "description": "Configure reusable paragraph styles.",
     "create": "New",
     "clone": "New from Selection",
     "delete": "Delete",

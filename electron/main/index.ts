@@ -2178,9 +2178,9 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t(($) => $.menu.file.textStyles),
+          label: i18next.t(($) => $.menu.file.paragraphStyles),
           click() {
-            win?.webContents.send(IpcMainChannels.FileMenuTextStyles);
+            win?.webContents.send(IpcMainChannels.FileMenuParagraphStyles);
           },
         },
       ],

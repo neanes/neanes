@@ -9,8 +9,11 @@ import {
   useEditorCommandStates,
 } from '@/composables/useRichTextEditorRegistry';
 import type { PageSetup } from '@/models/PageSetup';
-import type { ResolvedTextStyle, TextStyle } from '@/models/TextStyle';
-import { resolveTextStyle } from '@/models/TextStyle';
+import type {
+  ParagraphStyle,
+  ResolvedParagraphStyle,
+} from '@/models/ParagraphStyle';
+import { resolveParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   DEFAULT_FONT_STYLE,
@@ -58,48 +61,49 @@ const STYLE_TOGGLE_COMMANDS: Record<string, string> = {
   underline: 'underline',
 };
 
-export const TEXT_STYLE_NONE_VALUE = '__none__';
-export const TEXT_STYLE_MIXED_VALUE = '__mixed__';
+export const PARAGRAPH_STYLE_NONE_VALUE = '__none__';
+export const PARAGRAPH_STYLE_MIXED_VALUE = '__mixed__';
 
-export function resolveRichTextTextStyleState(
-  textStyles: TextStyle[],
-  activeTextStyleIds: string[],
-  fallbackTextStyle: ResolvedTextStyle,
+export function resolveRichTextParagraphStyleState(
+  paragraphStyles: ParagraphStyle[],
+  activeParagraphStyleIds: string[],
+  fallbackParagraphStyle: ResolvedParagraphStyle,
 ) {
-  const textStyleValue =
-    activeTextStyleIds.length === 0
-      ? TEXT_STYLE_NONE_VALUE
-      : activeTextStyleIds.length === 1
-        ? activeTextStyleIds[0]
-        : TEXT_STYLE_MIXED_VALUE;
+  const paragraphStyleValue =
+    activeParagraphStyleIds.length === 0
+      ? PARAGRAPH_STYLE_NONE_VALUE
+      : activeParagraphStyleIds.length === 1
+        ? activeParagraphStyleIds[0]
+        : PARAGRAPH_STYLE_MIXED_VALUE;
 
-  const activeTextStyle =
-    textStyleValue === TEXT_STYLE_NONE_VALUE ||
-    textStyleValue === TEXT_STYLE_MIXED_VALUE
+  const activeParagraphStyle =
+    paragraphStyleValue === PARAGRAPH_STYLE_NONE_VALUE ||
+    paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE
       ? null
-      : resolveTextStyle(textStyles, textStyleValue);
+      : resolveParagraphStyle(paragraphStyles, paragraphStyleValue);
 
   return {
-    textStyleValue,
-    activeTextStyle,
-    resolvedActiveTextStyle: activeTextStyle ?? fallbackTextStyle,
+    paragraphStyleValue,
+    activeParagraphStyle,
+    resolvedActiveParagraphStyle:
+      activeParagraphStyle ?? fallbackParagraphStyle,
   };
 }
 
-export function shouldSyncTextStyleAlignment(
+export function shouldSyncParagraphStyleAlignment(
   currentAlignment: unknown,
   nextAlignment: string,
 ) {
   return currentAlignment !== nextAlignment;
 }
 
-export function useRichTextStyleCommands(
+export function useRichParagraphStyleCommands(
   props: {
     element: object;
     pageSetup: PageSetup;
     fonts: string[];
-    textStyles?: TextStyle[];
-    fallbackTextStyle: ResolvedTextStyle;
+    paragraphStyles?: ParagraphStyle[];
+    fallbackParagraphStyle: ResolvedParagraphStyle;
   },
   extraCommandNames: string[] = [],
 ) {
@@ -115,33 +119,37 @@ export function useRichTextStyleCommands(
     'style',
     ['enabledStyles'],
   );
-  const textStyleOptions = computed(() => {
-    return props.textStyles ?? [];
+  const paragraphStyleOptions = computed(() => {
+    return props.paragraphStyles ?? [];
   });
-  const neanesTextStyleIds = computed(
-    () => new Set(textStyleOptions.value.map((style) => style.id)),
+  const neanesParagraphStyleIds = computed(
+    () => new Set(paragraphStyleOptions.value.map((style) => style.id)),
   );
 
-  const activeTextStyleIds = computed(() =>
+  const activeParagraphStyleIds = computed(() =>
     toStyleNameArray(commandValue('style')).filter((styleId) =>
-      neanesTextStyleIds.value.has(styleId),
+      neanesParagraphStyleIds.value.has(styleId),
     ),
   );
-  const enabledTextStyleIds = computed(
+  const enabledParagraphStyleIds = computed(
     () => new Set(toStyleNameArray(styleCommandState.properties.enabledStyles)),
   );
 
-  const textStyleState = computed(() =>
-    resolveRichTextTextStyleState(
-      props.textStyles ?? [],
-      activeTextStyleIds.value,
-      props.fallbackTextStyle,
+  const paragraphStyleState = computed(() =>
+    resolveRichTextParagraphStyleState(
+      props.paragraphStyles ?? [],
+      activeParagraphStyleIds.value,
+      props.fallbackParagraphStyle,
     ),
   );
-  const textStyleValue = computed(() => textStyleState.value.textStyleValue);
-  const activeTextStyle = computed(() => textStyleState.value.activeTextStyle);
-  const resolvedActiveTextStyle = computed(
-    () => textStyleState.value.resolvedActiveTextStyle,
+  const paragraphStyleValue = computed(
+    () => paragraphStyleState.value.paragraphStyleValue,
+  );
+  const activeParagraphStyle = computed(
+    () => paragraphStyleState.value.activeParagraphStyle,
+  );
+  const resolvedActiveParagraphStyle = computed(
+    () => paragraphStyleState.value.resolvedActiveParagraphStyle,
   );
 
   const fontFamilyValue = computed(() =>
@@ -153,7 +161,7 @@ export function useRichTextStyleCommands(
   );
 
   const fontFamilyOptions = computed<FontComboboxOption[]>(() => {
-    const resolvedDefault = resolvedActiveTextStyle.value.fontFamily;
+    const resolvedDefault = resolvedActiveParagraphStyle.value.fontFamily;
     const normalizedDefault = resolvedDefault.trim();
 
     return [
@@ -173,7 +181,7 @@ export function useRichTextStyleCommands(
 
     return typeof value === 'string' && value !== ''
       ? value
-      : resolvedActiveTextStyle.value.fontStyle;
+      : resolvedActiveParagraphStyle.value.fontStyle;
   });
 
   const fontStyleFamilyValue = computed(() => {
@@ -181,7 +189,7 @@ export function useRichTextStyleCommands(
       return fontFamilyValue.value;
     }
 
-    return normalizeFontFamily(resolvedActiveTextStyle.value.fontFamily);
+    return normalizeFontFamily(resolvedActiveParagraphStyle.value.fontFamily);
   });
 
   const fontStyleOptions = computed(() =>
@@ -202,14 +210,14 @@ export function useRichTextStyleCommands(
 
   const fontSizePlaceholder = computed(
     () =>
-      `${defaultLabel.value} (${defaultSizeFormat.format(Unit.toPt(resolvedActiveTextStyle.value.fontSize))})`,
+      `${defaultLabel.value} (${defaultSizeFormat.format(Unit.toPt(resolvedActiveParagraphStyle.value.fontSize))})`,
   );
 
   const fontColorValue = computed(() => {
     const value = commandValue('fontColor');
     return typeof value === 'string'
       ? value
-      : resolvedActiveTextStyle.value.color;
+      : resolvedActiveParagraphStyle.value.color;
   });
 
   const fontColorHasExplicitValue = computed(
@@ -253,11 +261,11 @@ export function useRichTextStyleCommands(
     return isCommandEnabled(STYLE_TOGGLE_COMMANDS[style] ?? style);
   }
 
-  function isTextStyleEnabled(styleId: string) {
+  function isParagraphStyleEnabled(styleId: string) {
     return (
       isCommandEnabled('style') &&
-      neanesTextStyleIds.value.has(styleId) &&
-      enabledTextStyleIds.value.has(styleId)
+      neanesParagraphStyleIds.value.has(styleId) &&
+      enabledParagraphStyleIds.value.has(styleId)
     );
   }
 
@@ -273,7 +281,7 @@ export function useRichTextStyleCommands(
       // valid without an explicit family; non-basic styles fall back to the
       // nearest basic style the inherited family offers.
       const inheritedFamily = normalizeFontFamily(
-        resolvedActiveTextStyle.value.fontFamily,
+        resolvedActiveParagraphStyle.value.fontFamily,
       );
       const inheritedStyle = remapFontStyleAxesForOptions(
         fontStyleValue.value,
@@ -369,24 +377,24 @@ export function useRichTextStyleCommands(
     }
   }
 
-  function onTextStyleChanged(value: string) {
+  function onParagraphStyleChanged(value: string) {
     if (!isCommandEnabled('style')) {
       return;
     }
 
-    if (value === TEXT_STYLE_NONE_VALUE) {
-      for (const styleId of activeTextStyleIds.value) {
+    if (value === PARAGRAPH_STYLE_NONE_VALUE) {
+      for (const styleId of activeParagraphStyleIds.value) {
         runCommand('style', { styleName: styleId, forceValue: false });
       }
 
       return;
     }
 
-    if (!neanesTextStyleIds.value.has(value)) {
+    if (!neanesParagraphStyleIds.value.has(value)) {
       return;
     }
 
-    for (const styleId of activeTextStyleIds.value) {
+    for (const styleId of activeParagraphStyleIds.value) {
       if (styleId !== value) {
         runCommand('style', { styleName: styleId, forceValue: false });
       }
@@ -394,10 +402,10 @@ export function useRichTextStyleCommands(
 
     runCommand('style', { styleName: value, forceValue: true });
 
-    const resolved = resolveTextStyle(props.textStyles ?? [], value);
+    const resolved = resolveParagraphStyle(props.paragraphStyles ?? [], value);
 
     if (
-      shouldSyncTextStyleAlignment(
+      shouldSyncParagraphStyleAlignment(
         commandValue('alignment'),
         resolved.alignment,
       )
@@ -440,10 +448,10 @@ export function useRichTextStyleCommands(
     styleCommandState,
     fontFamilyValue,
     fontFamilyOptions,
-    textStyleValue,
-    activeTextStyle,
-    resolvedActiveTextStyle,
-    textStyleOptions,
+    paragraphStyleValue,
+    activeParagraphStyle,
+    resolvedActiveParagraphStyle,
+    paragraphStyleOptions: paragraphStyleOptions,
     fontStyleValue,
     fontStyleOptions,
     fontStyleDisabled,
@@ -456,10 +464,10 @@ export function useRichTextStyleCommands(
     isCommandEnabled,
     isCommandActive,
     isStyleToggleEnabled,
-    isTextStyleEnabled,
+    isParagraphStyleEnabled,
     commandValue,
     runCommand,
-    onTextStyleChanged,
+    onParagraphStyleChanged,
     onFontFamilyChanged,
     onFontStyleChanged,
     onFontSizeChanged,

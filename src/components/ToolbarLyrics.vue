@@ -1,22 +1,24 @@
 <template>
   <Toolbar class="chrome-toolbar" loop>
-    <TextStyleSelect
+    <ParagraphStyleSelect
       trigger-class="w-48"
-      :model-value="element.lyricsTextStyleId"
-      :text-styles="textStyles"
+      :model-value="element.lyricsParagraphStyleId"
+      :paragraph-styles="paragraphStyles"
       @update:model-value="
-        $emit('update', { lyricsTextStyleId: $event } as Partial<NoteElement>)
+        $emit('update', {
+          lyricsParagraphStyleId: $event,
+        } as Partial<NoteElement>)
       "
     />
     <ToolbarSeparator />
     <FontCombobox
-      :model-value="resolvedTextStyle.fontFamily"
+      :model-value="resolvedParagraphStyle.fontFamily"
       :options="lyricsFontFamilies"
       @update:model-value="onFontFamilyChanged"
     />
     <FontStyleSelect
       class="w-40"
-      :model-value="resolvedTextStyle.fontStyle"
+      :model-value="resolvedParagraphStyle.fontStyle"
       :options="fontStyleOptions"
       :disabled="fontStyleOptions.length <= 1"
       @update:model-value="
@@ -27,7 +29,7 @@
     />
     <InputFontSize
       id="toolbar-lyrics-font-size"
-      :model-value="resolvedTextStyle.fontSize"
+      :model-value="resolvedParagraphStyle.fontSize"
       @update:model-value="
         $emit('update', {
           lyricsFontSize: $event,
@@ -116,7 +118,7 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import NeumeIcon from '@/components/NeumeIcon.vue';
-import TextStyleSelect from '@/components/TextStyleSelect.vue';
+import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Toolbar,
@@ -125,7 +127,10 @@ import {
 } from '@/components/ui/toolbar';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { NoteElement } from '@/models/Element';
-import { resolveTextStyle, type TextStyle } from '@/models/TextStyle';
+import {
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   E_MACRON,
@@ -156,19 +161,19 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
-  textStyles: {
-    type: Array as PropType<TextStyle[]>,
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
 });
 
 const emit = defineEmits(['insert:specialCharacter', 'update']);
 
-const resolvedTextStyle = computed(() =>
-  resolveTextStyle(
-    props.textStyles,
-    props.element.lyricsTextStyleId,
-    props.element.getTextStyleOverrides(),
+const resolvedParagraphStyle = computed(() =>
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    props.element.lyricsParagraphStyleId,
+    props.element.getParagraphStyleOverrides(),
   ),
 );
 
@@ -180,8 +185,8 @@ const {
   applyStyleAxisToggles,
   remapStyleForFamily,
 } = useFontStyleControls(
-  () => resolvedTextStyle.value.fontFamily,
-  () => resolvedTextStyle.value.fontStyle,
+  () => resolvedParagraphStyle.value.fontFamily,
+  () => resolvedParagraphStyle.value.fontStyle,
 );
 
 const underline = computed(

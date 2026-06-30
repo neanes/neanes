@@ -39,9 +39,9 @@
     "title": "Titlu",
     "author": "Autor"
   },
-  "textStyles": {
-    "root": "Text Styles",
-    "description": "Create reusable text-box text styles and control inheritance between them.",
+  "paragraphStyles": {
+    "root": "Paragraph Styles",
+    "description": "Create reusable paragraph styles and control inheritance between them.",
     "create": "New",
     "clone": "New from Selection",
     "delete": "Delete",

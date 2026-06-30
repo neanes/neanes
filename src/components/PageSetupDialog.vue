@@ -1584,12 +1584,12 @@ import {
 } from '@/models/Neumes';
 import type { PageSize, PageSizeUnit } from '@/models/PageSetup';
 import { PageSetup, pageSizes } from '@/models/PageSetup';
-import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import {
-  BUILT_IN_TEXT_STYLE_IDS,
-  resolveTextStyle,
-  type TextStyle,
-} from '@/models/TextStyle';
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
+import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { fontService } from '@/services/FontService';
 import { SaveService } from '@/services/SaveService';
 import {
@@ -1723,7 +1723,7 @@ function getPreviewGapStyle(
 }
 
 const emit = defineEmits<{
-  'open-text-styles': [styleId: string];
+  'open-paragraph-styles': [styleId: string];
   update: [pageSetup: PageSetup];
 }>();
 
@@ -1732,8 +1732,8 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
-  textStyles: {
-    type: Array as PropType<TextStyle[]>,
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
   fonts: {
@@ -2228,7 +2228,10 @@ Object.assign(form.value, props.pageSetup);
 normalizeDirection();
 
 const resolvedLyricsStyle = computed(() =>
-  resolveTextStyle(props.textStyles, BUILT_IN_TEXT_STYLE_IDS.Lyrics),
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+  ),
 );
 
 function toPositiveDisplay(value: number) {

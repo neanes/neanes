@@ -6,7 +6,7 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
-import { TextStyle } from '@/models/TextStyle';
+import { ParagraphStyle } from '@/models/ParagraphStyle';
 import { setRichTextLanguage } from '@/utils/richTextLanguage';
 import { Unit } from '@/utils/Unit';
 
@@ -59,7 +59,7 @@ describe('ByzHtmlExporter', () => {
   it('exports rich text paragraph styles in the ByzHTML stylesheet', () => {
     const exporter = new ByzHtmlExporter();
     const pageSetup = new PageSetup();
-    const style = new TextStyle();
+    const style = new ParagraphStyle();
 
     vi.spyOn(
       exporter as ByzHtmlExporter,

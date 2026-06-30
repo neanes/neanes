@@ -24,17 +24,19 @@
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
-      <template v-if="showTextStyleSelect">
-        <TextStyleSelect
+      <template v-if="showParagraphStyleSelect">
+        <ParagraphStyleSelect
           trigger-class="w-48"
-          :model-value="toolbarTextStyleValue"
-          :text-styles="textStyles"
+          :model-value="toolbarParagraphStyleValue"
+          :paragraph-styles="paragraphStyles"
           :disabled="!isCommandEnabled('style')"
-          :disabled-style-ids="disabledTextStyleIds"
+          :disabled-style-ids="disabledParagraphStyleIds"
           show-none-option
-          :show-mixed-option="textStyleValue === TEXT_STYLE_MIXED_VALUE"
+          :show-mixed-option="
+            paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE
+          "
           rich-text-portal
-          @update:model-value="onToolbarTextStyleChanged"
+          @update:model-value="onToolbarParagraphStyleChanged"
           @update:open="
             $event
               ? beginSelectionGuard(element)
@@ -80,7 +82,7 @@
         :disabled="!isCommandEnabled('fontSize')"
         nullable
         :placeholder="fontSizePlaceholder"
-        :default-value="resolvedActiveTextStyle.fontSize"
+        :default-value="resolvedActiveParagraphStyle.fontSize"
         @update:model-value="onFontSizeChanged"
         @focus-within="beginSelectionGuard(element)"
         @blur-within="endSelectionGuard(element, { refocus: false })"
@@ -362,10 +364,10 @@ import AppTooltip from '@/components/AppTooltip.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
+import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import RichTextPopoverContent from '@/components/RichTextPopoverContent.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import RichTextToolbarItem from '@/components/RichTextToolbarItem.vue';
-import TextStyleSelect from '@/components/TextStyleSelect.vue';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -389,15 +391,18 @@ import {
   endSelectionGuard,
 } from '@/composables/useRichTextSelectionGuard';
 import {
-  TEXT_STYLE_MIXED_VALUE,
-  useRichTextStyleCommands,
+  PARAGRAPH_STYLE_MIXED_VALUE,
+  useRichParagraphStyleCommands,
 } from '@/composables/useRichTextStyleCommands';
 import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
 import { ElementType } from '@/models/Element';
 import type { Neume } from '@/models/Neumes';
 import { Note, RootSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
-import type { ResolvedTextStyle, TextStyle } from '@/models/TextStyle';
+import type {
+  ParagraphStyle,
+  ResolvedParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
@@ -423,17 +428,17 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
-  textStyles: {
-    type: Array as PropType<TextStyle[]>,
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     default: () => [],
   },
-  fallbackTextStyle: {
-    type: Object as PropType<ResolvedTextStyle>,
+  fallbackParagraphStyle: {
+    type: Object as PropType<ResolvedParagraphStyle>,
     required: true,
   },
 });
 
-const showTextStyleSelect = computed(
+const showParagraphStyleSelect = computed(
   () =>
     props.element.elementType === ElementType.RichTextBox ||
     props.element.elementType === ElementType.Annotation,
@@ -443,14 +448,14 @@ const styleCommandProps = {
   get element() {
     return props.element;
   },
-  get fallbackTextStyle() {
-    return props.fallbackTextStyle;
+  get fallbackParagraphStyle() {
+    return props.fallbackParagraphStyle;
   },
   get fonts() {
     return props.fonts;
   },
-  get textStyles() {
-    return props.textStyles;
+  get paragraphStyles() {
+    return props.paragraphStyles;
   },
   get pageSetup() {
     return props.pageSetup;
@@ -458,8 +463,8 @@ const styleCommandProps = {
 };
 
 const {
-  textStyleValue,
-  resolvedActiveTextStyle,
+  paragraphStyleValue,
+  resolvedActiveParagraphStyle,
   fontFamilyValue,
   fontFamilyOptions,
   fontStyleValue,
@@ -471,20 +476,20 @@ const {
   alignmentValue,
   isCommandEnabled,
   isStyleToggleEnabled,
-  isTextStyleEnabled,
+  isParagraphStyleEnabled,
   runCommand,
   onFontFamilyChanged,
   onFontStyleChanged,
   onFontSizeChanged,
   onStyleValuesChanged,
   onAlignmentChanged,
-  onTextStyleChanged,
-} = useRichTextStyleCommands(styleCommandProps, EXTRA_COMMAND_NAMES);
+  onParagraphStyleChanged,
+} = useRichParagraphStyleCommands(styleCommandProps, EXTRA_COMMAND_NAMES);
 
-const toolbarTextStyleValue = computed(() => textStyleValue.value);
-const disabledTextStyleIds = computed(() =>
-  props.textStyles
-    .filter((style) => !isTextStyleEnabled(style.id))
+const toolbarParagraphStyleValue = computed(() => paragraphStyleValue.value);
+const disabledParagraphStyleIds = computed(() =>
+  props.paragraphStyles
+    .filter((style) => !isParagraphStyleEnabled(style.id))
     .map((style) => style.id),
 );
 
@@ -530,8 +535,8 @@ function onCharacterBlockChanged(value: unknown) {
   }
 }
 
-function onToolbarTextStyleChanged(value: string) {
-  onTextStyleChanged(value);
+function onToolbarParagraphStyleChanged(value: string) {
+  onParagraphStyleChanged(value);
 }
 
 function insertSingleNeume(neume: Neume) {
@@ -560,7 +565,7 @@ function insertMartyria() {
 function insertPlagal() {
   const neumeFont = getInsertNeumeConfigValue(
     'insertNeume.defaultFontFamily',
-    props.fallbackTextStyle.fontFamily,
+    props.fallbackParagraphStyle.fontFamily,
   );
 
   const piHeight = TextMeasurementService.getTextHeight(

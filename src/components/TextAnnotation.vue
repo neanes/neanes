@@ -18,7 +18,7 @@
       @blur="handleEditorBlur"
       @select-neume="emit('select-neume')"
     />
-    <component :is="'style'">{{ textStyleCss }}</component>
+    <component :is="'style'">{{ paragraphStyleCss }}</component>
   </div>
 </template>
 
@@ -40,10 +40,10 @@ import type InlineEditor from '@/customEditor';
 import type { AnnotationElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
-  BUILT_IN_TEXT_STYLE_IDS,
-  resolveTextStyle,
-  type TextStyle,
-} from '@/models/TextStyle';
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import {
@@ -74,8 +74,8 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
-  textStyles: {
-    type: Array as PropType<TextStyle[]>,
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
   editorLanguage: {
@@ -123,21 +123,24 @@ const contentLanguage = computed(() => {
 });
 
 const annotationStyle = computed(() =>
-  resolveTextStyle(props.textStyles, BUILT_IN_TEXT_STYLE_IDS.Annotation),
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+  ),
 );
 
-const textStyleDefinitions = computed(() =>
-  props.textStyles.map((style) => ({
+const paragraphStyleDefinitions = computed(() =>
+  props.paragraphStyles.map((style) => ({
     name: style.id,
     element: 'p',
     classes: [`neanes-style-${style.id}`],
   })),
 );
 
-const textStyleCss = computed(() =>
-  props.textStyles
+const paragraphStyleCss = computed(() =>
+  props.paragraphStyles
     .map((style) => {
-      const resolved = resolveTextStyle(props.textStyles, style.id);
+      const resolved = resolveParagraphStyle(props.paragraphStyles, style.id);
       const font = resolveFontStyle(resolved.fontFamily, resolved.fontStyle);
       return `.ck-content p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
         font.cssFontFamily,
@@ -201,7 +204,7 @@ const editorConfig = computed((): EditorConfig => {
       textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
     },
     style: {
-      definitions: textStyleDefinitions.value,
+      definitions: paragraphStyleDefinitions.value,
     },
     licenseKey: 'GPL',
     insertNeume: {

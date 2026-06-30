@@ -1,22 +1,22 @@
 <template>
   <Toolbar class="chrome-toolbar" loop>
-    <TextStyleSelect
+    <ParagraphStyleSelect
       trigger-class="w-48"
-      :model-value="element.textStyleId"
-      :text-styles="textStyles"
+      :model-value="element.paragraphStyleId"
+      :paragraph-styles="paragraphStyles"
       @update:model-value="
-        $emit('update', { textStyleId: $event } as Partial<DropCapElement>)
+        $emit('update', { paragraphStyleId: $event } as Partial<DropCapElement>)
       "
     />
     <ToolbarSeparator />
     <FontCombobox
-      :model-value="resolvedTextStyle.fontFamily"
+      :model-value="resolvedParagraphStyle.fontFamily"
       :options="dropCapFontFamilies"
       @update:model-value="onFontFamilyChanged"
     />
     <FontStyleSelect
       class="w-40"
-      :model-value="resolvedTextStyle.fontStyle"
+      :model-value="resolvedParagraphStyle.fontStyle"
       :options="fontStyleOptions"
       :disabled="fontStyleOptions.length <= 1"
       @update:model-value="
@@ -26,7 +26,7 @@
     <InputFontSize
       id="toolbar-drop-cap-font-size"
       :max="500"
-      :model-value="resolvedTextStyle.fontSize"
+      :model-value="resolvedParagraphStyle.fontSize"
       @update:model-value="
         $emit('update', { fontSize: $event } as Partial<DropCapElement>)
       "
@@ -68,12 +68,15 @@ import { computed } from 'vue';
 import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
-import TextStyleSelect from '@/components/TextStyleSelect.vue';
+import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Toolbar, ToolbarSeparator } from '@/components/ui/toolbar';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { DropCapElement } from '@/models/Element';
-import { resolveTextStyle, type TextStyle } from '@/models/TextStyle';
+import {
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
@@ -85,19 +88,19 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
-  textStyles: {
-    type: Array as PropType<TextStyle[]>,
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
 });
 
 const emit = defineEmits(['update']);
 
-const resolvedTextStyle = computed(() =>
-  resolveTextStyle(
-    props.textStyles,
-    props.element.textStyleId,
-    props.element.getTextStyleOverrides(),
+const resolvedParagraphStyle = computed(() =>
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    props.element.paragraphStyleId,
+    props.element.getParagraphStyleOverrides(),
   ),
 );
 
@@ -109,8 +112,8 @@ const {
   applyStyleAxisToggles,
   remapStyleForFamily,
 } = useFontStyleControls(
-  () => resolvedTextStyle.value.fontFamily,
-  () => resolvedTextStyle.value.fontStyle,
+  () => resolvedParagraphStyle.value.fontFamily,
+  () => resolvedParagraphStyle.value.fontStyle,
 );
 
 const styleValues = computed(() => [...activeStyleAxisValues.value]);

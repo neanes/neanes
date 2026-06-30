@@ -7,30 +7,32 @@
       <Field>
         <div class="mb-2 flex items-center justify-between gap-2">
           <FieldLabel for="properties-lyrics-text-style">{{
-            $t(($) => $.toolbar.common.textStyle, { ns: 'toolbar' })
+            $t(($) => $.toolbar.common.paragraphStyle, { ns: 'toolbar' })
           }}</FieldLabel>
           <div class="flex items-center gap-1">
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              @click="openTextStylesDialog"
+              @click="openParagraphStylesDialog"
             >
-              {{ $t(($) => $.dialog.textStyles.openDialog, { ns: 'dialog' }) }}
+              {{
+                $t(($) => $.dialog.paragraphStyles.openDialog, { ns: 'dialog' })
+              }}
             </Button>
-            <TextStyleResetButton
-              :disabled="!hasTextStyleOverrides"
-              @reset="clearTextStyleOverrides"
+            <ParagraphStyleResetButton
+              :disabled="!hasParagraphStyleOverrides"
+              @reset="clearParagraphStyleOverrides"
             />
           </div>
         </div>
-        <TextStyleSelect
+        <ParagraphStyleSelect
           id="properties-lyrics-text-style"
-          :model-value="element.lyricsTextStyleId"
-          :text-styles="textStyles"
+          :model-value="element.lyricsParagraphStyleId"
+          :paragraph-styles="paragraphStyles"
           @update:model-value="
             $emit('update', {
-              lyricsTextStyleId: $event,
+              lyricsParagraphStyleId: $event,
             } as Partial<NoteElement>)
           "
         />
@@ -41,7 +43,7 @@
           <FieldLabel for="properties-lyrics-font">{{
             $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' })
           }}</FieldLabel>
-          <TextStyleResetButton
+          <ParagraphStyleResetButton
             :disabled="element.lyricsFontFamily == null"
             @reset="
               $emit('update', {
@@ -53,7 +55,7 @@
         <FontCombobox
           id="properties-lyrics-font"
           class="w-full max-w-full"
-          :model-value="resolvedTextStyle.fontFamily"
+          :model-value="resolvedParagraphStyle.fontFamily"
           :options="lyricsFontFamilies"
           @update:model-value="onFontFamilyChanged"
         />
@@ -64,7 +66,7 @@
           <FieldLabel for="properties-lyrics-font-style">{{
             $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
           }}</FieldLabel>
-          <TextStyleResetButton
+          <ParagraphStyleResetButton
             :disabled="element.lyricsFontStyle == null"
             @reset="
               $emit('update', { lyricsFontStyle: null } as Partial<NoteElement>)
@@ -74,7 +76,7 @@
         <FontStyleSelect
           id="properties-lyrics-font-style"
           class="w-full max-w-full"
-          :model-value="resolvedTextStyle.fontStyle"
+          :model-value="resolvedParagraphStyle.fontStyle"
           :options="fontStyleOptions"
           :disabled="fontStyleOptions.length <= 1"
           @update:model-value="
@@ -92,14 +94,14 @@
         <div class="flex items-center gap-1">
           <InputFontSize
             id="properties-lyrics-font-size"
-            :model-value="resolvedTextStyle.fontSize"
+            :model-value="resolvedParagraphStyle.fontSize"
             @update:model-value="
               $emit('update', {
                 lyricsFontSize: $event,
               } as Partial<NoteElement>)
             "
           />
-          <TextStyleResetButton
+          <ParagraphStyleResetButton
             :disabled="element.lyricsFontSize == null"
             @reset="
               $emit('update', { lyricsFontSize: null } as Partial<NoteElement>)
@@ -114,14 +116,14 @@
         }}</FieldLabel>
         <div class="flex items-center gap-1">
           <ColorPicker
-            :model-value="resolvedTextStyle.color"
+            :model-value="resolvedParagraphStyle.color"
             @update:model-value="
               $emit('update', {
                 lyricsColor: $event,
               } as Partial<NoteElement>)
             "
           />
-          <TextStyleResetButton
+          <ParagraphStyleResetButton
             :disabled="element.lyricsColor == null"
             @reset="
               $emit('update', { lyricsColor: null } as Partial<NoteElement>)
@@ -166,14 +168,14 @@
         }}</FieldLabel>
         <div class="flex items-center gap-1">
           <InputStrokeWidth
-            :model-value="resolvedTextStyle.strokeWidth"
+            :model-value="resolvedParagraphStyle.strokeWidth"
             @update:model-value="
               $emit('update', {
                 lyricsStrokeWidth: $event,
               } as Partial<NoteElement>)
             "
           />
-          <TextStyleResetButton
+          <ParagraphStyleResetButton
             :disabled="element.lyricsStrokeWidth == null"
             @reset="
               $emit('update', {
@@ -197,8 +199,8 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import TextStyleResetButton from '@/components/properties/TextStyleResetButton.vue';
-import TextStyleSelect from '@/components/TextStyleSelect.vue';
+import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import ParagraphStyleResetButton from '@/components/properties/ParagraphStyleResetButton.vue';
 import { Button } from '@/components/ui/button';
 import {
   Field,
@@ -210,7 +212,10 @@ import {
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { NoteElement } from '@/models/Element';
-import { resolveTextStyle, type TextStyle } from '@/models/TextStyle';
+import {
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
@@ -222,19 +227,19 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
-  textStyles: {
-    type: Array as PropType<TextStyle[]>,
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
 });
 
-const emit = defineEmits(['open-text-styles-dialog', 'update']);
+const emit = defineEmits(['open-paragraph-styles-dialog', 'update']);
 
-const resolvedTextStyle = computed(() =>
-  resolveTextStyle(
-    props.textStyles,
-    props.element.lyricsTextStyleId,
-    props.element.getTextStyleOverrides(),
+const resolvedParagraphStyle = computed(() =>
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    props.element.lyricsParagraphStyleId,
+    props.element.getParagraphStyleOverrides(),
   ),
 );
 
@@ -245,8 +250,8 @@ const {
   applyStyleAxisToggles,
   remapStyleForFamily,
 } = useFontStyleControls(
-  () => resolvedTextStyle.value.fontFamily,
-  () => resolvedTextStyle.value.fontStyle,
+  () => resolvedParagraphStyle.value.fontFamily,
+  () => resolvedParagraphStyle.value.fontStyle,
 );
 
 const underline = computed(
@@ -261,7 +266,7 @@ const lyricsFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
-const textStyleOverrideLabels = computed(() => {
+const paragraphStyleOverrideLabels = computed(() => {
   const labels: string[] = [];
 
   if (props.element.lyricsFontFamily != null) {
@@ -285,8 +290,8 @@ const textStyleOverrideLabels = computed(() => {
 
   return labels;
 });
-const hasTextStyleOverrides = computed(
-  () => textStyleOverrideLabels.value.length > 0,
+const hasParagraphStyleOverrides = computed(
+  () => paragraphStyleOverrideLabels.value.length > 0,
 );
 function onStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
@@ -304,7 +309,7 @@ function onFontFamilyChanged(lyricsFontFamily: string) {
   } as Partial<NoteElement>);
 }
 
-function clearTextStyleOverrides() {
+function clearParagraphStyleOverrides() {
   emit('update', {
     lyricsColor: null,
     lyricsFontFamily: null,
@@ -315,7 +320,7 @@ function clearTextStyleOverrides() {
   } as Partial<NoteElement>);
 }
 
-function openTextStylesDialog() {
-  emit('open-text-styles-dialog', props.element.lyricsTextStyleId);
+function openParagraphStylesDialog() {
+  emit('open-paragraph-styles-dialog', props.element.lyricsParagraphStyleId);
 }
 </script>

@@ -9,6 +9,12 @@ import {
 } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  createParagraphStylesFromDefaults,
+  ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
+import {
   DropCapElement as DropCapElement_v1,
   NoteElement as NoteElement_v1,
   RichTextBoxElement as RichTextBoxElement_v1,
@@ -16,12 +22,6 @@ import {
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { Score } from '@/models/Score';
-import {
-  BUILT_IN_TEXT_STYLE_IDS,
-  createTextStylesFromDefaults,
-  resolveTextStyle,
-  TextStyle,
-} from '@/models/TextStyle';
 import { getRichTextLanguage } from '@/utils/richTextLanguage';
 
 import { SaveService } from './SaveService';
@@ -49,16 +49,16 @@ function createLegacyScore(pageSetupOverrides: Partial<PageSetup_v1> = {}) {
   } as any;
 }
 
-function loadLegacyDefaultTextStyle(
+function loadLegacyDefaultParagraphStyle(
   pageSetupOverrides: Partial<PageSetup_v1> = {},
 ) {
   const score = SaveService.LoadScoreFromJson(
     createLegacyScore(pageSetupOverrides),
   );
 
-  return resolveTextStyle(
-    score.textStyles,
-    BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+  return resolveParagraphStyle(
+    score.paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
   );
 }
 
@@ -70,12 +70,11 @@ function loadLegacyBuiltInStyle(
     createLegacyScore(pageSetupOverrides),
   );
 
-  return resolveTextStyle(score.textStyles, styleId);
+  return resolveParagraphStyle(score.paragraphStyles, styleId);
 }
 
 describe('SaveService font styles', () => {
   it('loads legacy text box bold/italic booleans as a font style', () => {
-    const pageSetup = new PageSetup();
     const element = new TextBoxElement();
     const legacy = new TextBoxElement_v1();
 
@@ -83,7 +82,12 @@ describe('SaveService font styles', () => {
     legacy.bold = true;
     legacy.italic = true;
 
-    SaveService.LoadTextBox_v1('1.1', element, legacy, pageSetup);
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      element,
+      legacy,
+      createParagraphStylesFromDefaults(),
+    );
 
     expect(element.fontStyle).toBe('Bold Italic');
   });
@@ -98,23 +102,26 @@ describe('SaveService font styles', () => {
     legacy.textBoxDefaultFontStyle = 'italic';
 
     SaveService.LoadPageSetup_v1(pageSetup, legacy);
-    const lyricsStyle = loadLegacyBuiltInStyle(BUILT_IN_TEXT_STYLE_IDS.Lyrics, {
-      lyricsDefaultFontWeight: '600',
-    });
+    const lyricsStyle = loadLegacyBuiltInStyle(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+      {
+        lyricsDefaultFontWeight: '600',
+      },
+    );
     const dropCapStyle = loadLegacyBuiltInStyle(
-      BUILT_IN_TEXT_STYLE_IDS.DropCap,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
       {
         dropCapDefaultFontWeight: '700',
         dropCapDefaultFontStyle: 'italic',
       },
     );
-    const defaultTextStyle = loadLegacyDefaultTextStyle({
+    const defaultParagraphStyle = loadLegacyDefaultParagraphStyle({
       textBoxDefaultFontStyle: 'italic',
     });
 
     expect(dropCapStyle.fontStyle).toBe('Bold Italic');
     expect(lyricsStyle.fontStyle).toBe('Semibold');
-    expect(defaultTextStyle.fontStyle).toBe('Italic');
+    expect(defaultParagraphStyle.fontStyle).toBe('Italic');
   });
 
   it('loads legacy page setup face names as base families and styles', () => {
@@ -126,16 +133,19 @@ describe('SaveService font styles', () => {
     legacy.textBoxDefaultFontFamily = 'Minion Pro Semibold';
 
     SaveService.LoadPageSetup_v1(pageSetup, legacy);
-    const lyricsStyle = loadLegacyBuiltInStyle(BUILT_IN_TEXT_STYLE_IDS.Lyrics, {
-      lyricsDefaultFontFamily: 'Minion Pro Semibold',
-    });
+    const lyricsStyle = loadLegacyBuiltInStyle(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+      {
+        lyricsDefaultFontFamily: 'Minion Pro Semibold',
+      },
+    );
     const dropCapStyle = loadLegacyBuiltInStyle(
-      BUILT_IN_TEXT_STYLE_IDS.DropCap,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
       {
         dropCapDefaultFontFamily: 'Minion Pro Semibold',
       },
     );
-    const defaultTextStyle = loadLegacyDefaultTextStyle({
+    const defaultParagraphStyle = loadLegacyDefaultParagraphStyle({
       textBoxDefaultFontFamily: 'Minion Pro Semibold',
     });
 
@@ -143,8 +153,8 @@ describe('SaveService font styles', () => {
     expect(lyricsStyle.fontStyle).toBe('Semibold');
     expect(dropCapStyle.fontFamily).toBe('Minion Pro');
     expect(dropCapStyle.fontStyle).toBe('Semibold');
-    expect(defaultTextStyle.fontFamily).toBe('Minion Pro');
-    expect(defaultTextStyle.fontStyle).toBe('Semibold');
+    expect(defaultParagraphStyle.fontFamily).toBe('Minion Pro');
+    expect(defaultParagraphStyle.fontStyle).toBe('Semibold');
   });
 
   it('merges legacy page setup numeric weights into face-name styles', () => {
@@ -155,13 +165,13 @@ describe('SaveService font styles', () => {
     legacy.textBoxDefaultFontWeight = '600';
 
     SaveService.LoadPageSetup_v1(pageSetup, legacy);
-    const defaultTextStyle = loadLegacyDefaultTextStyle({
+    const defaultParagraphStyle = loadLegacyDefaultParagraphStyle({
       textBoxDefaultFontFamily: 'Source Serif Caption',
       textBoxDefaultFontWeight: '600',
     });
 
-    expect(defaultTextStyle.fontFamily).toBe('Source Serif');
-    expect(defaultTextStyle.fontStyle).toBe('Caption Semibold');
+    expect(defaultParagraphStyle.fontFamily).toBe('Source Serif');
+    expect(defaultParagraphStyle.fontStyle).toBe('Caption Semibold');
   });
 
   it('remaps legacy numeric weights to the catalog face spelling', () => {
@@ -172,12 +182,12 @@ describe('SaveService font styles', () => {
     legacy.textBoxDefaultFontWeight = '200';
 
     SaveService.LoadPageSetup_v1(pageSetup, legacy);
-    const defaultTextStyle = loadLegacyDefaultTextStyle({
+    const defaultParagraphStyle = loadLegacyDefaultParagraphStyle({
       textBoxDefaultFontFamily: 'Source Serif',
       textBoxDefaultFontWeight: '200',
     });
 
-    expect(defaultTextStyle.fontStyle).toBe('ExtraLight');
+    expect(defaultParagraphStyle.fontStyle).toBe('ExtraLight');
   });
 
   it('loads legacy lyrics weight/style pairs as a font style', () => {
@@ -220,14 +230,18 @@ describe('SaveService font styles', () => {
   });
 
   it('loads legacy text box face names as base families and styles', () => {
-    const pageSetup = new PageSetup();
     const element = new TextBoxElement();
     const legacy = new TextBoxElement_v1();
 
     legacy.useDefaultStyle = false;
     legacy.fontFamily = 'Minion Pro Semibold';
 
-    SaveService.LoadTextBox_v1('1.1', element, legacy, pageSetup);
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      element,
+      legacy,
+      createParagraphStylesFromDefaults(),
+    );
 
     expect(element.fontFamily).toBe('Minion Pro');
     expect(element.fontStyle).toBe('Semibold');
@@ -253,25 +267,33 @@ describe('SaveService font styles', () => {
     textBoxSave.fontSubfamily = 'Caption Semibold';
 
     SaveService.LoadPageSetup_v1(pageSetup, pageSetupSave);
-    const lyricsStyle = loadLegacyBuiltInStyle(BUILT_IN_TEXT_STYLE_IDS.Lyrics, {
-      lyricsDefaultFontSubfamily: 'Semibold',
-    });
+    const lyricsStyle = loadLegacyBuiltInStyle(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+      {
+        lyricsDefaultFontSubfamily: 'Semibold',
+      },
+    );
     const dropCapStyle = loadLegacyBuiltInStyle(
-      BUILT_IN_TEXT_STYLE_IDS.DropCap,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
       {
         dropCapDefaultFontSubfamily: 'Caption',
       },
     );
     SaveService.LoadDropCap_v1(dropCap, dropCapSave, pageSetup);
     SaveService.LoadNote_v1(note, noteSave);
-    SaveService.LoadTextBox_v1('1.1', textBox, textBoxSave, pageSetup);
-    const defaultTextStyle = loadLegacyDefaultTextStyle({
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      textBox,
+      textBoxSave,
+      createParagraphStylesFromDefaults(),
+    );
+    const defaultParagraphStyle = loadLegacyDefaultParagraphStyle({
       textBoxDefaultFontSubfamily: 'Bold Italic',
     });
 
     expect(lyricsStyle.fontStyle).toBe('Semibold');
     expect(dropCapStyle.fontStyle).toBe('Caption');
-    expect(defaultTextStyle.fontStyle).toBe('Bold Italic');
+    expect(defaultParagraphStyle.fontStyle).toBe('Bold Italic');
     expect(dropCap.fontStyle).toBe('Semibold');
     expect(note.lyricsFontStyle).toBe('Bold Italic');
     expect(textBox.fontStyle).toBe('Caption Semibold');
@@ -304,7 +326,6 @@ describe('SaveService font styles', () => {
   });
 
   it('assigns built-in style ids when loading legacy text boxes', () => {
-    const pageSetup = new PageSetup();
     const body = new TextBoxElement();
     const inline = new TextBoxElement();
     const legacyBody = new TextBoxElement_v1();
@@ -312,14 +333,24 @@ describe('SaveService font styles', () => {
 
     legacyInline.inline = true;
 
-    SaveService.LoadTextBox_v1('1.1', body, legacyBody, pageSetup);
-    SaveService.LoadTextBox_v1('1.1', inline, legacyInline, pageSetup);
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      body,
+      legacyBody,
+      createParagraphStylesFromDefaults(),
+    );
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      inline,
+      legacyInline,
+      createParagraphStylesFromDefaults(),
+    );
 
-    expect(body.textStyleId).toBe('default-text');
-    expect(inline.textStyleId).toBe('lyrics');
+    expect(body.paragraphStyleId).toBe('default-text');
+    expect(inline.paragraphStyleId).toBe('lyrics');
   });
 
-  it('loads old scores without textStyles by seeding defaults', () => {
+  it('loads old scores without paragraphStyles by seeding defaults', () => {
     const legacy = {
       version: '1.1',
       appVersion: 'test',
@@ -343,63 +374,69 @@ describe('SaveService font styles', () => {
 
     const loaded = SaveService.LoadScoreFromJson(legacy);
 
-    expect(loaded.textStyles.length).toBeGreaterThan(0);
+    expect(loaded.paragraphStyles.length).toBeGreaterThan(0);
   });
 
   it('fills missing built-in paragraph styles when only custom styles are saved', () => {
     const saved = createLegacyScore();
-    const customStyle = new TextStyle();
+    const customStyle = new ParagraphStyle();
 
     customStyle.id = 'custom-style';
     customStyle.displayName = 'Custom Style';
-    customStyle.parentStyleId = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
+    customStyle.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
     customStyle.overrides.fontSize = 99;
 
-    saved.textStyles = [SaveService.SaveTextStyle(customStyle)];
+    saved.paragraphStyles = [SaveService.SaveParagraphStyle(customStyle)];
 
     const loaded = SaveService.LoadScore_v1(saved);
-    const builtInIds = Object.values(BUILT_IN_TEXT_STYLE_IDS);
+    const builtInIds = Object.values(BUILT_IN_PARAGRAPH_STYLE_IDS);
 
     expect(
-      loaded.textStyles.slice(0, builtInIds.length).map((style) => style.id),
+      loaded.paragraphStyles
+        .slice(0, builtInIds.length)
+        .map((style) => style.id),
     ).toEqual(builtInIds);
-    expect(loaded.textStyles.at(-1)?.id).toBe('custom-style');
+    expect(loaded.paragraphStyles.at(-1)?.id).toBe('custom-style');
   });
 
   it('fills missing built-in paragraph styles when only one built-in style is saved', () => {
     const saved = createLegacyScore();
-    const titleStyle = new TextStyle();
+    const titleStyle = new ParagraphStyle();
 
-    titleStyle.id = BUILT_IN_TEXT_STYLE_IDS.Title;
+    titleStyle.id = BUILT_IN_PARAGRAPH_STYLE_IDS.Title;
     titleStyle.displayName = 'Custom Title';
     titleStyle.builtIn = true;
-    titleStyle.parentStyleId = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
+    titleStyle.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
     titleStyle.overrides.fontSize = 77;
 
-    saved.textStyles = [SaveService.SaveTextStyle(titleStyle)];
+    saved.paragraphStyles = [SaveService.SaveParagraphStyle(titleStyle)];
 
     const loaded = SaveService.LoadScore_v1(saved);
-    const builtInIds = Object.values(BUILT_IN_TEXT_STYLE_IDS);
+    const builtInIds = Object.values(BUILT_IN_PARAGRAPH_STYLE_IDS);
 
     expect(
-      loaded.textStyles.slice(0, builtInIds.length).map((style) => style.id),
+      loaded.paragraphStyles
+        .slice(0, builtInIds.length)
+        .map((style) => style.id),
     ).toEqual(builtInIds);
     expect(
-      resolveTextStyle(loaded.textStyles, BUILT_IN_TEXT_STYLE_IDS.Title)
-        .fontSize,
+      resolveParagraphStyle(
+        loaded.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
+      ).fontSize,
     ).toBe(77);
   });
 
-  it('round-trips a custom parentless text style without saving parentStyleId', () => {
-    const style = new TextStyle();
+  it('round-trips a custom parentless paragraph style without saving parentStyleId', () => {
+    const style = new ParagraphStyle();
 
     style.id = 'custom-root';
     style.displayName = 'Custom Root';
     style.parentStyleId = null;
     style.overrides.fontSize = 18;
 
-    const saved = SaveService.SaveTextStyle(style);
-    const loaded = SaveService.LoadTextStyle_v1(saved);
+    const saved = SaveService.SaveParagraphStyle(style);
+    const loaded = SaveService.LoadParagraphStyle_v1(saved);
 
     expect(saved.parentStyleId).toBeUndefined();
     expect(loaded.parentStyleId).toBeNull();
@@ -414,27 +451,27 @@ describe('SaveService font styles', () => {
       textBoxDefaultStrokeWidth: 3,
       textBoxDefaultLineHeight: 1.7,
     });
-    const chapterStyle = new TextStyle();
+    const chapterStyle = new ParagraphStyle();
 
-    chapterStyle.id = BUILT_IN_TEXT_STYLE_IDS.Chapter;
+    chapterStyle.id = BUILT_IN_PARAGRAPH_STYLE_IDS.Chapter;
     chapterStyle.displayName = 'Chapter';
     chapterStyle.builtIn = true;
-    chapterStyle.parentStyleId = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
+    chapterStyle.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
 
-    saved.textStyles = [SaveService.SaveTextStyle(chapterStyle)];
+    saved.paragraphStyles = [SaveService.SaveParagraphStyle(chapterStyle)];
 
     const loaded = SaveService.LoadScore_v1(saved);
-    const defaultTextStyle = resolveTextStyle(
-      loaded.textStyles,
-      BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    const defaultParagraphStyle = resolveParagraphStyle(
+      loaded.paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     );
 
-    expect(defaultTextStyle.fontFamily).toBe('Minion Pro');
-    expect(defaultTextStyle.fontStyle).toBe('Semibold Italic');
-    expect(defaultTextStyle.fontSize).toBe(42);
-    expect(defaultTextStyle.color).toBe('#123456');
-    expect(defaultTextStyle.strokeWidth).toBe(3);
-    expect(defaultTextStyle.lineHeight).toBe(1.7);
+    expect(defaultParagraphStyle.fontFamily).toBe('Minion Pro');
+    expect(defaultParagraphStyle.fontStyle).toBe('Semibold Italic');
+    expect(defaultParagraphStyle.fontSize).toBe(42);
+    expect(defaultParagraphStyle.color).toBe('#123456');
+    expect(defaultParagraphStyle.strokeWidth).toBe(3);
+    expect(defaultParagraphStyle.lineHeight).toBe(1.7);
   });
 
   it('keeps a saved built-in paragraph style instead of overwriting it with generated defaults', () => {
@@ -443,21 +480,23 @@ describe('SaveService font styles', () => {
       textBoxDefaultFontStyle: 'italic',
       textBoxDefaultFontSize: 42,
     });
-    const defaultTextStyle = new TextStyle();
+    const defaultParagraphStyle = new ParagraphStyle();
 
-    defaultTextStyle.id = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
-    defaultTextStyle.displayName = 'Default Text';
-    defaultTextStyle.builtIn = true;
-    defaultTextStyle.overrides.fontFamily = 'Alegreya';
-    defaultTextStyle.overrides.fontSize = 64;
-    defaultTextStyle.overrides.fontStyle = 'Semibold';
+    defaultParagraphStyle.id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    defaultParagraphStyle.displayName = 'Default Text';
+    defaultParagraphStyle.builtIn = true;
+    defaultParagraphStyle.overrides.fontFamily = 'Alegreya';
+    defaultParagraphStyle.overrides.fontSize = 64;
+    defaultParagraphStyle.overrides.fontStyle = 'Semibold';
 
-    saved.textStyles = [SaveService.SaveTextStyle(defaultTextStyle)];
+    saved.paragraphStyles = [
+      SaveService.SaveParagraphStyle(defaultParagraphStyle),
+    ];
 
     const loaded = SaveService.LoadScore_v1(saved);
-    const resolvedDefaultText = resolveTextStyle(
-      loaded.textStyles,
-      BUILT_IN_TEXT_STYLE_IDS.DefaultText,
+    const resolvedDefaultText = resolveParagraphStyle(
+      loaded.paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     );
 
     expect(resolvedDefaultText.fontFamily).toBe('Alegreya');
@@ -466,7 +505,6 @@ describe('SaveService font styles', () => {
   });
 
   it('preserves legacy non-default text box styling as element overrides', () => {
-    const pageSetup = new PageSetup();
     const element = new TextBoxElement();
     const legacy = new TextBoxElement_v1();
 
@@ -478,7 +516,12 @@ describe('SaveService font styles', () => {
     legacy.strokeWidth = 2;
     legacy.lineHeight = 1.5;
 
-    SaveService.LoadTextBox_v1('1.1', element, legacy, pageSetup);
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      element,
+      legacy,
+      createParagraphStylesFromDefaults(),
+    );
 
     expect(element.fontFamily).toBe('Minion Pro');
     expect(element.fontStyle).toBe('Semibold');
@@ -489,7 +532,7 @@ describe('SaveService font styles', () => {
   });
 
   it('keeps a legacy regular font style as an explicit override', () => {
-    const textStyles = createTextStylesFromDefaults({
+    const paragraphStyles = createParagraphStylesFromDefaults({
       textBoxDefaultFontStyle: 'Italic',
     });
     const element = new TextBoxElement();
@@ -498,20 +541,20 @@ describe('SaveService font styles', () => {
     legacy.useDefaultStyle = false;
     legacy.fontSubfamily = 'Regular';
 
-    SaveService.LoadTextBox_v1('1.1', element, legacy, textStyles);
+    SaveService.LoadTextBox_v1('1.1', element, legacy, paragraphStyles);
 
     expect(element.fontStyle).toBe('Regular');
     expect(
-      resolveTextStyle(
-        textStyles,
-        element.textStyleId,
-        element.getTextStyleOverrides(),
+      resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        element.getParagraphStyleOverrides(),
       ).fontStyle,
     ).toBe('Regular');
   });
 
   it('defaults legacy non-default text boxes to an explicit regular override', () => {
-    const textStyles = createTextStylesFromDefaults({
+    const paragraphStyles = createParagraphStylesFromDefaults({
       textBoxDefaultFontStyle: 'Italic',
     });
     const element = new TextBoxElement();
@@ -519,21 +562,21 @@ describe('SaveService font styles', () => {
 
     legacy.useDefaultStyle = false;
 
-    SaveService.LoadTextBox_v1('1.1', element, legacy, textStyles);
+    SaveService.LoadTextBox_v1('1.1', element, legacy, paragraphStyles);
 
-    expect(element.textStyleId).toBe('default-text');
+    expect(element.paragraphStyleId).toBe('default-text');
     expect(element.fontStyle).toBe('Regular');
     expect(
-      resolveTextStyle(
-        textStyles,
-        element.textStyleId,
-        element.getTextStyleOverrides(),
+      resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        element.getParagraphStyleOverrides(),
       ).fontStyle,
     ).toBe('Regular');
   });
 
   it('keeps legacy css normal font style as an explicit regular override', () => {
-    const textStyles = createTextStylesFromDefaults({
+    const paragraphStyles = createParagraphStylesFromDefaults({
       textBoxDefaultFontStyle: 'Italic',
     });
     const element = new TextBoxElement();
@@ -544,20 +587,20 @@ describe('SaveService font styles', () => {
     legacy.useDefaultStyle = false;
     legacy.fontStyle = 'normal';
 
-    SaveService.LoadTextBox_v1('1.1', element, legacy, textStyles);
+    SaveService.LoadTextBox_v1('1.1', element, legacy, paragraphStyles);
 
     expect(element.fontStyle).toBe('Regular');
     expect(
-      resolveTextStyle(
-        textStyles,
-        element.textStyleId,
-        element.getTextStyleOverrides(),
+      resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        element.getParagraphStyleOverrides(),
       ).fontStyle,
     ).toBe('Regular');
   });
 
   it('keeps legacy css italic font style as an explicit italic override', () => {
-    const textStyles = createTextStylesFromDefaults({
+    const paragraphStyles = createParagraphStylesFromDefaults({
       textBoxDefaultFontStyle: 'Regular',
     });
     const element = new TextBoxElement();
@@ -568,20 +611,20 @@ describe('SaveService font styles', () => {
     legacy.useDefaultStyle = false;
     legacy.fontStyle = 'italic';
 
-    SaveService.LoadTextBox_v1('1.1', element, legacy, textStyles);
+    SaveService.LoadTextBox_v1('1.1', element, legacy, paragraphStyles);
 
     expect(element.fontStyle).toBe('Italic');
     expect(
-      resolveTextStyle(
-        textStyles,
-        element.textStyleId,
-        element.getTextStyleOverrides(),
+      resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        element.getParagraphStyleOverrides(),
       ).fontStyle,
     ).toBe('Italic');
   });
 
   it('combines legacy css font style with bold text box flags', () => {
-    const textStyles = createTextStylesFromDefaults({
+    const paragraphStyles = createParagraphStylesFromDefaults({
       textBoxDefaultFontStyle: 'Italic',
     });
     const normalBold = new TextBoxElement();
@@ -600,15 +643,24 @@ describe('SaveService font styles', () => {
     legacyItalicBold.fontStyle = 'italic';
     legacyItalicBold.bold = true;
 
-    SaveService.LoadTextBox_v1('1.1', normalBold, legacyNormalBold, textStyles);
-    SaveService.LoadTextBox_v1('1.1', italicBold, legacyItalicBold, textStyles);
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      normalBold,
+      legacyNormalBold,
+      paragraphStyles,
+    );
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      italicBold,
+      legacyItalicBold,
+      paragraphStyles,
+    );
 
     expect(normalBold.fontStyle).toBe('Bold');
     expect(italicBold.fontStyle).toBe('Bold Italic');
   });
 
   it('preserves legacy non-default text box styling when false was omitted', () => {
-    const pageSetup = new PageSetup();
     const element = new TextBoxElement();
     const legacy = new TextBoxElement_v1();
 
@@ -619,7 +671,12 @@ describe('SaveService font styles', () => {
     legacy.strokeWidth = 2;
     legacy.lineHeight = 1.5;
 
-    SaveService.LoadTextBox_v1('1.1', element, legacy, pageSetup);
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      element,
+      legacy,
+      createParagraphStylesFromDefaults(),
+    );
 
     expect(element.fontFamily).toBe('Minion Pro');
     expect(element.fontStyle).toBe('Semibold');
@@ -630,14 +687,18 @@ describe('SaveService font styles', () => {
   });
 
   it('loads only saved legacy text box overrides', () => {
-    const pageSetup = new PageSetup();
     const element = new TextBoxElement();
     const legacy = new TextBoxElement_v1();
 
     legacy.useDefaultStyle = false;
     legacy.fontSize = 18;
 
-    SaveService.LoadTextBox_v1('1.1', element, legacy, pageSetup);
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      element,
+      legacy,
+      createParagraphStylesFromDefaults(),
+    );
 
     expect(element.fontFamily).toBeNull();
     expect(element.fontStyle).toBe('Regular');
@@ -648,7 +709,7 @@ describe('SaveService font styles', () => {
   });
 
   it('keeps legacy default-styled text boxes inherited', () => {
-    const textStyles = createTextStylesFromDefaults({
+    const paragraphStyles = createParagraphStylesFromDefaults({
       textBoxDefaultFontFamily: 'Minion Pro',
       textBoxDefaultFontSize: 42,
       textBoxDefaultFontStyle: 'Semibold',
@@ -665,7 +726,7 @@ describe('SaveService font styles', () => {
     legacy.color = '#000000';
     legacy.strokeWidth = 0;
 
-    SaveService.LoadTextBox_v1('1.1', element, legacy, textStyles);
+    SaveService.LoadTextBox_v1('1.1', element, legacy, paragraphStyles);
 
     expect(element.fontFamily).toBeNull();
     expect(element.fontSize).toBeNull();
@@ -676,11 +737,10 @@ describe('SaveService font styles', () => {
   });
 
   it('loads saved paragraph-style text box overrides without useDefaultStyle', () => {
-    const pageSetup = new PageSetup();
     const element = new TextBoxElement();
     const saved = new TextBoxElement_v1();
 
-    saved.textStyleId = 'title';
+    saved.paragraphStyleId = 'title';
     saved.fontFamily = 'Minion Pro';
     saved.fontSubfamily = 'Semibold';
     saved.fontSize = 18;
@@ -688,9 +748,14 @@ describe('SaveService font styles', () => {
     saved.strokeWidth = 2;
     saved.lineHeight = 1.5;
 
-    SaveService.LoadTextBox_v1('1.2', element, saved, pageSetup);
+    SaveService.LoadTextBox_v1(
+      '1.2',
+      element,
+      saved,
+      createParagraphStylesFromDefaults(),
+    );
 
-    expect(element.textStyleId).toBe('title');
+    expect(element.paragraphStyleId).toBe('title');
     expect(element.fontFamily).toBe('Minion Pro');
     expect(element.fontStyle).toBe('Semibold');
     expect(element.fontSize).toBe(18);
@@ -700,16 +765,20 @@ describe('SaveService font styles', () => {
   });
 
   it('loads only saved paragraph-style text box overrides', () => {
-    const pageSetup = new PageSetup();
     const element = new TextBoxElement();
     const saved = new TextBoxElement_v1();
 
-    saved.textStyleId = 'title';
+    saved.paragraphStyleId = 'title';
     saved.fontSize = 18;
 
-    SaveService.LoadTextBox_v1('1.2', element, saved, pageSetup);
+    SaveService.LoadTextBox_v1(
+      '1.2',
+      element,
+      saved,
+      createParagraphStylesFromDefaults(),
+    );
 
-    expect(element.textStyleId).toBe('title');
+    expect(element.paragraphStyleId).toBe('title');
     expect(element.fontFamily).toBeNull();
     expect(element.fontStyle).toBeNull();
     expect(element.fontSize).toBe(18);
@@ -719,15 +788,19 @@ describe('SaveService font styles', () => {
   });
 
   it('keeps saved paragraph-style text boxes inherited when no overrides exist', () => {
-    const pageSetup = new PageSetup();
     const element = new TextBoxElement();
     const saved = new TextBoxElement_v1();
 
-    saved.textStyleId = 'title';
+    saved.paragraphStyleId = 'title';
 
-    SaveService.LoadTextBox_v1('1.2', element, saved, pageSetup);
+    SaveService.LoadTextBox_v1(
+      '1.2',
+      element,
+      saved,
+      createParagraphStylesFromDefaults(),
+    );
 
-    expect(element.textStyleId).toBe('title');
+    expect(element.paragraphStyleId).toBe('title');
     expect(element.fontFamily).toBeNull();
     expect(element.fontSize).toBeNull();
     expect(element.fontStyle).toBeNull();
@@ -737,37 +810,36 @@ describe('SaveService font styles', () => {
   });
 
   it('saves and loads paragraph-style alignment', () => {
-    const style = new TextStyle();
+    const style = new ParagraphStyle();
     style.id = 'custom';
     style.displayName = 'Custom';
     style.overrides.alignment = TextBoxAlignment.Right;
 
-    const saved = SaveService.SaveTextStyle(style);
-    const loaded = SaveService.LoadTextStyle_v1(saved);
+    const saved = SaveService.SaveParagraphStyle(style);
+    const loaded = SaveService.LoadParagraphStyle_v1(saved);
 
     expect(saved.alignment).toBe(TextBoxAlignment.Right);
     expect(loaded.overrides.alignment).toBe(TextBoxAlignment.Right);
   });
 
   it('defaults missing text-box alignment to the paragraph style', () => {
-    const pageSetup = new PageSetup();
     const element = new TextBoxElement();
     const saved = new TextBoxElement_v1();
-    const textStyles = [new TextStyle()];
+    const paragraphStyles = [new ParagraphStyle()];
 
-    textStyles[0].id = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
-    textStyles[0].overrides.alignment = TextBoxAlignment.Center;
-    saved.textStyleId = BUILT_IN_TEXT_STYLE_IDS.DefaultText;
+    paragraphStyles[0].id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    paragraphStyles[0].overrides.alignment = TextBoxAlignment.Center;
+    saved.paragraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
     saved.alignment = undefined;
 
-    SaveService.LoadTextBox_v1('1.2', element, saved, pageSetup);
+    SaveService.LoadTextBox_v1('1.2', element, saved, paragraphStyles);
 
     expect(element.alignment).toBeNull();
     expect(
-      resolveTextStyle(
-        textStyles,
-        element.textStyleId,
-        element.getTextStyleOverrides(),
+      resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        element.getParagraphStyleOverrides(),
       ).alignment,
     ).toBe(TextBoxAlignment.Center);
   });
@@ -794,7 +866,7 @@ describe('SaveService font styles', () => {
 
     SaveService.SaveRichTextBox(saved, element);
 
-    expect('textStyleId' in saved).toBe(false);
+    expect('paragraphStyleId' in saved).toBe(false);
   });
 
   it('saves document properties and omits default chapter-opening headers/footers flag', () => {
@@ -834,7 +906,12 @@ describe('SaveService font styles', () => {
     richTextBoxSave.runningMarkerText = ' Section A ';
 
     SaveService.LoadPageSetup_v1(pageSetup, legacyPageSetup);
-    SaveService.LoadTextBox_v1('1.1', textBox, textBoxSave, pageSetup);
+    SaveService.LoadTextBox_v1(
+      '1.1',
+      textBox,
+      textBoxSave,
+      createParagraphStylesFromDefaults(),
+    );
     SaveService.LoadRichTextBox_v1(richTextBox, richTextBoxSave);
 
     expect(pageSetup.headerFooterDifferentChapterOpening).toBe(false);
@@ -944,12 +1021,15 @@ describe('SaveService font styles', () => {
   });
 
   it('loads legacy lyrics defaults into the built-in Lyrics style', () => {
-    const lyricsStyle = loadLegacyBuiltInStyle(BUILT_IN_TEXT_STYLE_IDS.Lyrics, {
-      lyricsDefaultFontFamily: 'Minion Pro Semibold',
-      lyricsDefaultFontSize: 33,
-      lyricsDefaultColor: '#123456',
-      lyricsDefaultStrokeWidth: 2,
-    });
+    const lyricsStyle = loadLegacyBuiltInStyle(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+      {
+        lyricsDefaultFontFamily: 'Minion Pro Semibold',
+        lyricsDefaultFontSize: 33,
+        lyricsDefaultColor: '#123456',
+        lyricsDefaultStrokeWidth: 2,
+      },
+    );
 
     expect(lyricsStyle.fontFamily).toBe('Minion Pro');
     expect(lyricsStyle.fontStyle).toBe('Semibold');
@@ -960,7 +1040,7 @@ describe('SaveService font styles', () => {
 
   it('loads legacy drop-cap defaults into the built-in Drop Cap style', () => {
     const dropCapStyle = loadLegacyBuiltInStyle(
-      BUILT_IN_TEXT_STYLE_IDS.DropCap,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
       {
         dropCapDefaultFontFamily: 'Minion Pro Semibold',
         dropCapDefaultFontSize: 72,
@@ -979,7 +1059,7 @@ describe('SaveService font styles', () => {
   });
 
   it('uses built-in Lyrics style as the fallback for legacy note overrides', () => {
-    const textStyles = createTextStylesFromDefaults({
+    const paragraphStyles = createParagraphStylesFromDefaults({
       lyricsDefaultFontFamily: 'Minion Pro',
       lyricsDefaultFontStyle: 'Semibold',
       lyricsDefaultFontSize: 15,
@@ -992,7 +1072,7 @@ describe('SaveService font styles', () => {
     legacy.lyricsUseDefaultStyle = false;
     legacy.lyricsFontSubfamily = 'Italic';
 
-    SaveService.LoadNote_v1(element, legacy, textStyles);
+    SaveService.LoadNote_v1(element, legacy, paragraphStyles);
 
     expect(element.lyricsFontFamily).toBe('Minion Pro');
     expect(element.lyricsFontStyle).toBe('Italic');
@@ -1003,7 +1083,7 @@ describe('SaveService font styles', () => {
 
   it('uses built-in Drop Cap style as the fallback for legacy drop-cap overrides', () => {
     const pageSetup = new PageSetup();
-    const textStyles = createTextStylesFromDefaults({
+    const paragraphStyles = createParagraphStylesFromDefaults({
       dropCapDefaultFontFamily: 'Minion Pro',
       dropCapDefaultFontStyle: 'Semibold',
       dropCapDefaultFontSize: 80,
@@ -1021,7 +1101,7 @@ describe('SaveService font styles', () => {
     legacy.fontSubfamily = 'Italic';
     legacy.lineHeight = undefined;
 
-    SaveService.LoadDropCap_v1(element, legacy, pageSetup, textStyles);
+    SaveService.LoadDropCap_v1(element, legacy, pageSetup, paragraphStyles);
 
     expect(element.fontFamily).toBe('Minion Pro');
     expect(element.fontStyle).toBe('Italic');

@@ -12,185 +12,164 @@
         Reload Layout Diagnostics
       </Button>
     </div>
-    <ScrollArea class="developer-pane-scroll min-h-0 flex-1">
-      <div class="developer-pane-scroll-content pr-4">
-        <Accordion
-          type="multiple"
-          class="developer-pane-accordion"
-          :model-value="openSections"
-          @update:model-value="emitOpenSections($event)"
+    <PaneAccordion
+      :open-sections="props.openSections"
+      @update:open-sections="emit('update:open-sections', $event)"
+    >
+      <template #legend>Developer diagnostics</template>
+
+      <PaneSection title="Display Switches" value="display">
+        <Field
+          v-for="toggle in utilityDisplayToggles"
+          :key="toggle.key"
+          orientation="horizontal"
         >
-          <AccordionItem value="display">
-            <AccordionTrigger>Display Switches</AccordionTrigger>
-            <AccordionContent>
-              <FieldGroup class="pt-2">
-                <Field
-                  v-for="toggle in utilityDisplayToggles"
-                  :key="toggle.key"
-                  orientation="horizontal"
-                >
-                  <Switch
-                    :id="`developer-pane-${toggle.key}`"
-                    :model-value="props.toggles[toggle.key]"
-                    @update:model-value="
-                      emit('update:toggle', toggle.key, $event === true)
-                    "
-                  />
-                  <FieldLabel :for="`developer-pane-${toggle.key}`">
-                    {{ toggle.label }}
-                  </FieldLabel>
-                </Field>
-                <Separator class="my-3" />
-                <Field
-                  v-for="toggle in displayToggles"
-                  :key="toggle.key"
-                  orientation="horizontal"
-                >
-                  <Switch
-                    :id="`developer-pane-${toggle.key}`"
-                    :disabled="!props.toggles.overlaysEnabled"
-                    :model-value="props.toggles[toggle.key]"
-                    @update:model-value="
-                      emit('update:toggle', toggle.key, $event === true)
-                    "
-                  />
-                  <FieldLabel :for="`developer-pane-${toggle.key}`">
-                    {{ toggle.label }}
-                  </FieldLabel>
-                </Field>
-              </FieldGroup>
-            </AccordionContent>
-          </AccordionItem>
+          <Switch
+            :id="`developer-pane-${toggle.key}`"
+            :model-value="props.toggles[toggle.key]"
+            @update:model-value="
+              emit('update:toggle', toggle.key, $event === true)
+            "
+          />
+          <FieldLabel :for="`developer-pane-${toggle.key}`">
+            {{ toggle.label }}
+          </FieldLabel>
+        </Field>
+        <Separator class="my-3" />
+        <Field
+          v-for="toggle in displayToggles"
+          :key="toggle.key"
+          orientation="horizontal"
+        >
+          <Switch
+            :id="`developer-pane-${toggle.key}`"
+            :disabled="!props.toggles.overlaysEnabled"
+            :model-value="props.toggles[toggle.key]"
+            @update:model-value="
+              emit('update:toggle', toggle.key, $event === true)
+            "
+          />
+          <FieldLabel :for="`developer-pane-${toggle.key}`">
+            {{ toggle.label }}
+          </FieldLabel>
+        </Field>
+      </PaneSection>
 
-          <AccordionItem value="line">
-            <AccordionTrigger>Line Diagnostics</AccordionTrigger>
-            <AccordionContent>
-              <div class="developer-pane-section pt-2">
-                <template v-if="lineDiagnostics != null">
-                  <dl class="developer-pane-grid">
-                    <template
-                      v-for="item in lineDiagnosticRows"
-                      :key="item.label"
-                    >
-                      <dt>{{ item.label }}</dt>
-                      <dd>{{ item.value }}</dd>
-                    </template>
-                  </dl>
-                </template>
-                <p v-else class="developer-pane-empty">
-                  Layout diagnostics are unavailable for the current selection.
-                </p>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+      <PaneSection
+        body-class="developer-pane-section"
+        title="Line Diagnostics"
+        value="line"
+      >
+        <template v-if="lineDiagnostics != null">
+          <dl class="developer-pane-grid">
+            <template v-for="item in lineDiagnosticRows" :key="item.label">
+              <dt>{{ item.label }}</dt>
+              <dd>{{ item.value }}</dd>
+            </template>
+          </dl>
+        </template>
+        <p v-else class="developer-pane-empty">
+          Layout diagnostics are unavailable for the current selection.
+        </p>
+      </PaneSection>
 
-          <AccordionItem v-if="props.toggles.showGlueWidths" value="glue">
-            <AccordionTrigger>Glue Overlays</AccordionTrigger>
-            <AccordionContent>
-              <div class="developer-pane-section pt-2">
-                <ul class="developer-pane-list">
-                  <li>Top bar = actual justified width.</li>
-                  <li>Bottom bar = preferred width.</li>
-                  <li>Blue = glue that stretched.</li>
-                  <li>Red = glue that shrunk.</li>
-                  <li>Hatched boxes = glue w/ negative width.</li>
-                  <li>Delta = actual minus preferred.</li>
-                </ul>
-                <ul
-                  v-if="lineDiagnostics != null && glueOverlayRows.length > 0"
-                  class="developer-pane-list pt-2"
+      <PaneSection
+        v-if="props.toggles.showGlueWidths"
+        body-class="developer-pane-section"
+        title="Glue Overlays"
+        value="glue"
+      >
+        <ul class="developer-pane-list">
+          <li>Top bar = actual justified width.</li>
+          <li>Bottom bar = preferred width.</li>
+          <li>Blue = glue that stretched.</li>
+          <li>Red = glue that shrunk.</li>
+          <li>Hatched boxes = glue w/ negative width.</li>
+          <li>Delta = actual minus preferred.</li>
+        </ul>
+        <ul
+          v-if="lineDiagnostics != null && glueOverlayRows.length > 0"
+          class="developer-pane-list pt-2"
+        >
+          <li
+            v-for="(row, index) in glueOverlayRows"
+            :key="`glue-overlay-${index}`"
+          >
+            <code>{{ row }}</code>
+          </li>
+        </ul>
+        <p
+          v-else-if="lineDiagnostics != null"
+          class="developer-pane-empty pt-2"
+        >
+          No anchored glue overlays were found for the selected line.
+        </p>
+        <p v-else class="developer-pane-empty pt-2">
+          Select a line-owned element to inspect its glue overlays.
+        </p>
+      </PaneSection>
+
+      <PaneSection
+        body-class="developer-pane-section"
+        title="Element Inspector"
+        value="inspector"
+      >
+        <template v-if="selectedElement != null">
+          <dl class="developer-pane-grid">
+            <template
+              v-for="item in inspectorRows"
+              :key="`${item.label}-${item.value}`"
+            >
+              <dt>{{ item.label }}</dt>
+              <dd
+                :class="{
+                  'developer-pane-grid-multiline': item.value.includes('\n'),
+                }"
+              >
+                {{ item.value }}
+              </dd>
+            </template>
+          </dl>
+
+          <div v-if="generatedItemGroups.length > 0" class="pt-3">
+            <p class="developer-pane-subtitle">Generated Items</p>
+            <div
+              v-for="(group, index) in generatedItemGroups"
+              :key="`${group.ownerElementId}-${index}`"
+              class="developer-pane-group"
+            >
+              <p class="developer-pane-group-title">
+                {{ getGroupLabel(group) }}
+              </p>
+              <ul class="developer-pane-list">
+                <li
+                  v-for="(item, itemIndex) in group.items"
+                  :key="`${group.ownerElementId}-${index}-${itemIndex}`"
                 >
-                  <li
-                    v-for="(row, index) in glueOverlayRows"
-                    :key="`glue-overlay-${index}`"
-                  >
-                    <code>{{ row }}</code>
-                  </li>
-                </ul>
-                <p
-                  v-else-if="lineDiagnostics != null"
-                  class="developer-pane-empty pt-2"
-                >
-                  No anchored glue overlays were found for the selected line.
-                </p>
-                <p v-else class="developer-pane-empty pt-2">
-                  Select a line-owned element to inspect its glue overlays.
-                </p>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="inspector">
-            <AccordionTrigger>Element Inspector</AccordionTrigger>
-            <AccordionContent>
-              <div class="developer-pane-section pt-2">
-                <template v-if="selectedElement != null">
-                  <dl class="developer-pane-grid">
-                    <template
-                      v-for="item in inspectorRows"
-                      :key="`${item.label}-${item.value}`"
-                    >
-                      <dt>{{ item.label }}</dt>
-                      <dd
-                        :class="{
-                          'developer-pane-grid-multiline':
-                            item.value.includes('\n'),
-                        }"
-                      >
-                        {{ item.value }}
-                      </dd>
-                    </template>
-                  </dl>
-
-                  <div v-if="generatedItemGroups.length > 0" class="pt-3">
-                    <p class="developer-pane-subtitle">Generated Items</p>
-                    <div
-                      v-for="(group, index) in generatedItemGroups"
-                      :key="`${group.ownerElementId}-${index}`"
-                      class="developer-pane-group"
-                    >
-                      <p class="developer-pane-group-title">
-                        {{ getGroupLabel(group) }}
-                      </p>
-                      <ul class="developer-pane-list">
-                        <li
-                          v-for="(item, itemIndex) in group.items"
-                          :key="`${group.ownerElementId}-${index}-${itemIndex}`"
-                        >
-                          <code>{{ formatDiagnosticItem(item) }}</code>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                  <p v-else class="developer-pane-empty pt-3">
-                    Generated layout items are unavailable for the current
-                    selection.
-                  </p>
-                </template>
-                <p v-else class="developer-pane-empty">
-                  Select an element to inspect it.
-                </p>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
-    </ScrollArea>
+                  <code>{{ formatDiagnosticItem(item) }}</code>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <p v-else class="developer-pane-empty pt-3">
+            Generated layout items are unavailable for the current selection.
+          </p>
+        </template>
+        <p v-else class="developer-pane-empty">
+          Select an element to inspect it.
+        </p>
+      </PaneSection>
+    </PaneAccordion>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import PaneAccordion from '@/components/pane/PaneAccordion.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
 import { Button } from '@/components/ui/button';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import type { ScoreElement } from '@/models/Element';
@@ -310,13 +289,6 @@ const glueOverlayRows = computed(() => {
   return diagnostics.glueOverlays.map(formatGlueOverlay);
 });
 
-function emitOpenSections(value: string | string[] | undefined) {
-  emit(
-    'update:open-sections',
-    value == null ? [] : Array.isArray(value) ? value : [value],
-  );
-}
-
 function formatDiagnosticItem(item: LayoutDiagnosticItem) {
   if (item.type === 'box') {
     const label = item.label;
@@ -391,17 +363,6 @@ function getGlueOwnerLabel(glue: GlueOverlayDiagnostics) {
 </script>
 
 <style scoped>
-.developer-pane-accordion {
-  display: flex;
-  min-height: 0;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.developer-pane-scroll-content {
-  min-width: 0;
-}
-
 .developer-pane-section {
   font-size: 0.75rem;
 }

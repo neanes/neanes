@@ -1,9 +1,16 @@
 <template>
-  <FieldSet class="min-h-0 flex-1 overflow-auto">
-    <FieldLegend class="sr-only">{{
+  <PaneAccordion
+    :open-sections="openSections"
+    @update:open-sections="$emit('update:open-sections', $event)"
+  >
+    <template #legend>{{
       $t(($) => $.menu.insert.image, { ns: 'menu' })
-    }}</FieldLegend>
-    <FieldGroup>
+    }}</template>
+
+    <PaneSection
+      value="size"
+      :title="$t(($) => $.dialog.pageSetup.size, { ns: 'dialog' })"
+    >
       <Field orientation="horizontal">
         <Switch
           id="properties-image-box-inline"
@@ -67,8 +74,14 @@
           @update:model-value="onChangeHeight($event)"
         />
       </Field>
+    </PaneSection>
 
-      <Field v-if="!element.inline" orientation="horizontal">
+    <PaneSection
+      v-if="!element.inline"
+      value="positioning"
+      :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
+    >
+      <Field orientation="horizontal">
         <FieldLabel>{{
           $t(($) => $.toolbar.common.alignment, { ns: 'toolbar' })
         }}</FieldLabel>
@@ -103,8 +116,8 @@
           </AppTooltip>
         </ToggleGroup>
       </Field>
-    </FieldGroup>
-  </FieldSet>
+    </PaneSection>
+  </PaneAccordion>
 </template>
 
 <script setup lang="ts">
@@ -117,13 +130,9 @@ import type { PropType } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from '@/components/ui/field';
+import PaneAccordion from '@/components/pane/PaneAccordion.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { ImageBoxElement } from '@/models/Element';
@@ -136,13 +145,17 @@ const props = defineProps({
     type: Object as PropType<ImageBoxElement>,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
   },
 });
 
-const emit = defineEmits(['update']);
+const emit = defineEmits(['update', 'update:open-sections']);
 
 function onAlignmentChanged(value: unknown) {
   if (isTextBoxAlignment(value)) {

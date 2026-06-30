@@ -214,7 +214,12 @@
             {{ $t(($) => $.menu.insert.inlineTextBox, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddModeKey">
-            <PhWaveSine />
+            <span
+              class="inline-grid size-4 shrink-0 place-items-center font-['Source_Serif'] text-sm leading-none"
+              aria-hidden="true"
+            >
+              Ηχ
+            </span>
             {{ $t(($) => $.menu.insert.initialMartyria, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddImage">
@@ -460,7 +465,6 @@ import {
   PhTextAa,
   PhTextbox,
   PhTrayArrowDown,
-  PhWaveSine,
   PhX,
   PhXCircle,
 } from '@phosphor-icons/vue';

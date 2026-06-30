@@ -42,8 +42,8 @@
   "textStyles": {
     "root": "Text Styles",
     "description": "Configure reusable text styles.",
-    "create": "Create",
-    "clone": "Clone",
+    "create": "New",
+    "clone": "New from Selection",
     "delete": "Delete",
     "name": "Name",
     "parentStyle": "Parent Style",

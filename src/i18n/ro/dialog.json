@@ -42,8 +42,8 @@
   "textStyles": {
     "root": "Text Styles",
     "description": "Create reusable text-box text styles and control inheritance between them.",
-    "create": "Create",
-    "clone": "Copy",
+    "create": "New",
+    "clone": "New from Selection",
     "delete": "Delete",
     "name": "Name",
     "parentStyle": "Parent Style",

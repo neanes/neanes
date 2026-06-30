@@ -53,6 +53,9 @@
     "header": "Header",
     "footer": "Footer"
   },
+  "format": {
+    "root": "Format"
+  },
   "view": {
     "root": "View",
     "developer": "Developer",

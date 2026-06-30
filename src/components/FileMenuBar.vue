@@ -344,7 +344,7 @@
             {{ $t(($) => $.menu.view.statusBar, { ns: 'menu' }) }}
           </MenubarCheckboxItem>
           <MenubarSeparator />
-          <MenubarItem @select="onResetPaneLayoutClick">
+          <MenubarItem @select="onResetLayoutClick">
             <PhArrowCounterClockwise />
             {{ $t(($) => $.menu.view.resetLayout, { ns: 'menu' }) }}
           </MenubarItem>
@@ -940,8 +940,8 @@ function onToggleStatusBarClick(visible?: boolean) {
   } as FileMenuViewStatusBarVisibilityArgs);
 }
 
-function onResetPaneLayoutClick() {
-  EventBus.$emit(IpcMainChannels.FileMenuViewResetPaneLayout);
+function onResetLayoutClick() {
+  EventBus.$emit(IpcMainChannels.FileMenuViewResetLayout);
 }
 
 function emitViewZoom(args: FileMenuViewZoomArgs) {

@@ -2261,7 +2261,7 @@ function createMenu() {
         {
           label: i18next.t(($) => $.menu.view.resetLayout),
           click() {
-            win?.webContents.send(IpcMainChannels.FileMenuViewResetPaneLayout);
+            win?.webContents.send(IpcMainChannels.FileMenuViewResetLayout);
           },
         },
         ...(isDevelopment

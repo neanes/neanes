@@ -125,6 +125,11 @@ import {
   IpcMainChannels,
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
+import type { EditorPaneLayout } from '@/models/EditorEnvironment';
+import {
+  DEFAULT_PANE_ACCORDION_STATE,
+  EditorEnvironment,
+} from '@/models/EditorEnvironment';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import type { EmptyElement, ScoreElement } from '@/models/Element';
 import {
@@ -391,9 +396,18 @@ const preferredRichTextBoxFocusTarget = ref<{
 const searchTextQuery = ref('');
 const searchTextPanelIsOpen = ref(false);
 const showFileMenuBar = ref(!isElectron());
-const statusBarIsVisible = ref(true);
-const paneLayoutResetCounter = ref(0);
-const paneVisibility = ref(createDefaultPaneVisibility());
+
+// Hydrate remembered state synchronously (not in onMounted) so saved layout,
+// zoom defaults, and developer-pane preference are available before the dock
+// layout and UI-state refs are first read or rendered.
+const editorEnvironment = ref(loadEditorEnvironment());
+const editorPreferences = ref(loadEditorPreferences());
+
+const statusBarIsVisible = ref(editorEnvironment.value.statusBarIsVisible);
+const layoutResetCounter = ref(0);
+const paneVisibility = ref(
+  createInitialPaneVisibility(editorEnvironment.value, editorPreferences.value),
+);
 const editorPreferencesHydrated = ref(false);
 const isDevelopment = ref(import.meta.env.DEV);
 const isBrowser = ref(!isElectron());
@@ -401,7 +415,10 @@ const isLoading = ref(true);
 const printMode = ref(false);
 const canUndo = ref(false);
 const canRedo = ref(false);
-const developerPaneOpenSections = ref(['display', 'line', 'inspector']);
+const developerPaneOpenSections = computed({
+  get: () => accordionStateFor('developer'),
+  set: (value: string[]) => setAccordionState('developer', value),
+});
 const workspaces = ref<Workspace[]>([]);
 const selectedWorkspaceValue = ref(new Workspace());
 const pendingLyricsAssignmentTimers = new Map<string, number>();
@@ -468,7 +485,6 @@ const audioOptions = reactive<PlaybackOptions>({
     [Accidental.Sharp_8_Left]: 8,
   },
 });
-const editorPreferences = ref(new EditorPreferences());
 const byzHtmlExporter = new ByzHtmlExporter();
 const exportInProgress = ref(false);
 
@@ -1572,6 +1588,11 @@ watch(
   { immediate: true },
 );
 
+watch(statusBarIsVisible, (visible) => {
+  editorEnvironment.value.statusBarIsVisible = visible;
+  saveEditorEnvironment();
+});
+
 watch(
   () =>
     ({
@@ -1610,14 +1631,6 @@ onMounted(() => {
     // Deserialize as -Infinity
     audioOptions.volumeIson = audioOptions.volumeIson ?? -Infinity;
     audioOptions.volumeMelody = audioOptions.volumeMelody ?? -Infinity;
-  }
-
-  const savedEditorPreferences = localStorage.getItem('editorPreferences');
-
-  if (savedEditorPreferences != null) {
-    editorPreferences.value = EditorPreferences.createFrom(
-      JSON.parse(savedEditorPreferences),
-    );
   }
 
   syncDeveloperPanelsFromPreferencesOnStartup();
@@ -1685,8 +1698,8 @@ onMounted(() => {
     onFileMenuViewStatusBarVisibility,
   );
   EventBus.$on(
-    IpcMainChannels.FileMenuViewResetPaneLayout,
-    onFileMenuViewResetPaneLayout,
+    IpcMainChannels.FileMenuViewResetLayout,
+    onFileMenuViewResetLayout,
   );
   EventBus.$on(IpcMainChannels.FileMenuViewZoom, onFileMenuViewZoom);
   EventBus.$on(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
@@ -1739,6 +1752,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keyup', onKeyup);
   window.removeEventListener('resize', throttled.onEditorViewportResize);
   clearZoomWheelDeltaReset();
+  saveEditorEnvironment();
 
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
@@ -1791,8 +1805,8 @@ onBeforeUnmount(() => {
     onFileMenuViewStatusBarVisibility,
   );
   EventBus.$off(
-    IpcMainChannels.FileMenuViewResetPaneLayout,
-    onFileMenuViewResetPaneLayout,
+    IpcMainChannels.FileMenuViewResetLayout,
+    onFileMenuViewResetLayout,
   );
   EventBus.$off(IpcMainChannels.FileMenuViewZoom, onFileMenuViewZoom);
   EventBus.$off(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
@@ -2944,7 +2958,10 @@ function syncDeveloperPanelsMenuState() {
 }
 
 function syncDeveloperPanelsFromPreferencesOnStartup() {
-  setPaneVisibility('developer', editorPreferences.value.showDeveloperPanels);
+  if (editorEnvironment.value.paneLayout?.developer == null) {
+    setPaneVisibility('developer', editorPreferences.value.showDeveloperPanels);
+  }
+
   syncDeveloperPanelsMenuState();
 }
 
@@ -3009,10 +3026,25 @@ function showPropertiesPaneForRichTextNeume() {
 
 function resetLayout() {
   const defaultVisibility = createDefaultPaneVisibility();
+  const defaultEnvironment = new EditorEnvironment();
 
+  pendingZoomFitDefaultUpdate = null;
+  editorEnvironment.value.defaultZoom = defaultEnvironment.defaultZoom;
+  editorEnvironment.value.defaultZoomFitMode =
+    defaultEnvironment.defaultZoomFitMode;
+  editorEnvironment.value.statusBarIsVisible =
+    defaultEnvironment.statusBarIsVisible;
+  editorEnvironment.value.paneLayout = defaultEnvironment.paneLayout;
+  editorEnvironment.value.paneAccordionState = {
+    ...defaultEnvironment.paneAccordionState,
+  };
+  zoom.value = defaultEnvironment.defaultZoom;
+  zoomFitMode.value = defaultEnvironment.defaultZoomFitMode;
+  statusBarIsVisible.value = defaultEnvironment.statusBarIsVisible;
   Object.assign(paneVisibility.value, defaultVisibility);
   paneVisibility.value.developer = editorPreferences.value.showDeveloperPanels;
-  paneLayoutResetCounter.value += 1;
+  layoutResetCounter.value += 1;
+  saveEditorEnvironment();
 }
 
 function onPaneVisibilityChange(paneId: WorkspacePaneId, isVisible: boolean) {
@@ -3028,6 +3060,11 @@ function onPaneVisibilityChange(paneId: WorkspacePaneId, isVisible: boolean) {
 
   setPaneVisibility(paneId, isVisible);
   refocusSelectedRichTextEditorAfterShowingPane(paneId, isVisible);
+}
+
+function onPaneLayoutChange(layout: EditorPaneLayout) {
+  editorEnvironment.value.paneLayout = layout;
+  saveEditorEnvironmentDebounced();
 }
 
 function updateEditorPreferences(form: EditorPreferences) {
@@ -3061,6 +3098,84 @@ function saveEditorPreferences() {
     'editorPreferences',
     JSON.stringify(editorPreferences.value),
   );
+}
+
+function loadEditorPreferences() {
+  try {
+    const savedEditorPreferences = localStorage.getItem('editorPreferences');
+
+    if (savedEditorPreferences != null) {
+      return EditorPreferences.createFrom(JSON.parse(savedEditorPreferences));
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  return new EditorPreferences();
+}
+
+function loadEditorEnvironment() {
+  try {
+    const savedEditorEnvironment = localStorage.getItem('editorEnvironment');
+
+    if (savedEditorEnvironment != null) {
+      return EditorEnvironment.createFrom(JSON.parse(savedEditorEnvironment));
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  return new EditorEnvironment();
+}
+
+function createInitialPaneVisibility(
+  environment: EditorEnvironment,
+  preferences: EditorPreferences,
+) {
+  const visibility = createDefaultPaneVisibility();
+  const savedLayout = environment.paneLayout;
+
+  if (savedLayout != null) {
+    (Object.keys(visibility) as WorkspacePaneId[]).forEach((paneId) => {
+      const paneState = savedLayout[paneId];
+
+      if (paneState != null) {
+        visibility[paneId] = paneState.visible;
+      }
+    });
+  }
+
+  if (!preferences.showDeveloperPanels) {
+    visibility.developer = false;
+  } else if (savedLayout?.developer == null) {
+    visibility.developer = true;
+  }
+
+  return visibility;
+}
+
+function saveEditorEnvironment() {
+  localStorage.setItem(
+    'editorEnvironment',
+    JSON.stringify(editorEnvironment.value),
+  );
+}
+
+// Pane-layout and fit-mode zoom changes can fire rapidly (drag, resize); coalesce
+// their writes.
+const saveEditorEnvironmentDebounced = debounce(500, saveEditorEnvironment);
+
+function accordionStateFor(paneId: WorkspacePaneId): string[] {
+  return (
+    editorEnvironment.value.paneAccordionState[paneId] ??
+    DEFAULT_PANE_ACCORDION_STATE[paneId] ??
+    []
+  );
+}
+
+function setAccordionState(paneId: WorkspacePaneId, value: string[]) {
+  editorEnvironment.value.paneAccordionState[paneId] = value;
+  saveEditorEnvironment();
 }
 
 function isLastElement(element: ScoreElement) {
@@ -5674,6 +5789,7 @@ async function onCloseApplication() {
     }
   }
 
+  saveEditorEnvironment();
   await ipcService.exitApplication();
 }
 
@@ -7390,6 +7506,36 @@ function updateEntryMode(mode: EntryMode) {
   entryMode.value = mode;
 }
 
+// Remember the current zoom settings so newly opened documents inherit the last
+// user-selected zoom command rather than whichever tab or page setup recalculated
+// zoom-fit most recently.
+function rememberZoomDefault() {
+  if (
+    editorEnvironment.value.defaultZoom === zoom.value &&
+    editorEnvironment.value.defaultZoomFitMode === zoomFitMode.value
+  ) {
+    return;
+  }
+
+  editorEnvironment.value.defaultZoom = zoom.value;
+  editorEnvironment.value.defaultZoomFitMode = zoomFitMode.value;
+  saveEditorEnvironmentDebounced();
+}
+
+function rememberZoomFitModeDefault(mode: ZoomFitMode) {
+  if (editorEnvironment.value.defaultZoomFitMode === mode) {
+    return;
+  }
+
+  editorEnvironment.value.defaultZoomFitMode = mode;
+  saveEditorEnvironmentDebounced();
+}
+
+let pendingZoomFitDefaultUpdate: {
+  mode: ZoomFitMode;
+  workspaceId: string;
+} | null = null;
+
 function updateZoom(newZoom: number) {
   if (newZoom < MIN_ZOOM || newZoom > MAX_ZOOM) {
     toast.error(
@@ -7403,8 +7549,10 @@ function updateZoom(newZoom: number) {
       },
     );
   } else {
+    pendingZoomFitDefaultUpdate = null;
     zoom.value = newZoom;
     zoomFitMode.value = null;
+    rememberZoomDefault();
   }
 }
 
@@ -7426,6 +7574,12 @@ function zoomToNearestStep(direction: 1 | -1) {
 }
 
 function updateZoomFitMode(mode: ZoomFitMode) {
+  pendingZoomFitDefaultUpdate = {
+    mode,
+    workspaceId: selectedWorkspace.value.id,
+  };
+  rememberZoomFitModeDefault(mode);
+
   if (zoomFitMode.value === mode) {
     performZoomToFit();
     return;
@@ -7474,6 +7628,14 @@ function performZoomToFit() {
   const newZoom = clamp(fitZoom, MIN_ZOOM, MAX_ZOOM);
   zoom.value = newZoom;
   alignZoomFitScroll(mode, newZoom);
+
+  if (
+    pendingZoomFitDefaultUpdate?.workspaceId === selectedWorkspace.value.id &&
+    pendingZoomFitDefaultUpdate.mode === mode
+  ) {
+    pendingZoomFitDefaultUpdate = null;
+    rememberZoomDefault();
+  }
 }
 
 function getCurrentPhysicalPageNumber() {
@@ -8701,7 +8863,7 @@ function onFileMenuViewStatusBarVisibility({
   }
 }
 
-function onFileMenuViewResetPaneLayout() {
+function onFileMenuViewResetLayout() {
   if (!dialogOpen.value) {
     resetLayout();
   }
@@ -8906,6 +9068,10 @@ function openScore(args: FileMenuOpenScoreArgs) {
 }
 
 function addWorkspace(workspace: Workspace) {
+  // Newly opened documents inherit the last-used zoom settings.
+  workspace.zoom = editorEnvironment.value.defaultZoom;
+  workspace.zoomFitMode = editorEnvironment.value.defaultZoomFitMode;
+
   workspaces.value.push(workspace);
 
   const tab = {
@@ -9264,8 +9430,10 @@ function renderTabLabel(tab: Tab) {
       <WorkspaceDockLayout
         :developer-pane-enabled="showDeveloperPanels"
         :pane-visibility="paneVisibility"
-        :pane-layout-reset-counter="paneLayoutResetCounter"
+        :pane-layout="editorEnvironment.paneLayout"
+        :layout-reset-counter="layoutResetCounter"
         @pane-visibility-change="onPaneVisibilityChange"
+        @layout-change="onPaneLayoutChange"
       >
         <template #neume-selector>
           <NeumeSelector

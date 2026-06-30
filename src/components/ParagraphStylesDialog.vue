@@ -153,7 +153,7 @@
                 </div>
                 <ParagraphStyleSelect
                   id="text-style-parent"
-                  class="ml-auto w-32 shrink-0"
+                  class="ml-auto w-64 shrink-0"
                   :disabled="selectedStyle?.id === defaultParagraphStyleId"
                   :model-value="
                     selectedStyle?.parentStyleId ?? PARAGRAPH_STYLE_NONE_VALUE
@@ -161,7 +161,7 @@
                   :paragraph-styles="availableParents"
                   :show-none-option="true"
                   :none-label="parentNoneLabel"
-                  trigger-class="w-32"
+                  trigger-class="w-64"
                   @update:model-value="updateSelectedStyleParent"
                 />
               </Field>
@@ -206,7 +206,7 @@
                 </div>
                 <FontStyleSelect
                   id="text-style-font-style"
-                  class="ml-auto w-72 min-w-0 shrink-0"
+                  class="ml-auto w-64 min-w-0 shrink-0"
                   :model-value="resolvedStyle.fontStyle"
                   :options="fontStyleOptions"
                   :disabled="

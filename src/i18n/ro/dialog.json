@@ -46,7 +46,7 @@
     "clone": "New from Selection",
     "delete": "Delete",
     "name": "Name",
-    "parentStyle": "Parent Style",
+    "parentStyle": "Parent",
     "builtIn": "Built-in",
     "custom": "Custom",
     "builtInDescription": "Built-in styles can be edited, but they cannot be renamed or deleted.",

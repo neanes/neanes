@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
+import { Unit } from '@/utils/Unit';
+
 import {
   RichTextBoxElement,
   TextBoxAlignment,
@@ -7,6 +10,7 @@ import {
 } from './Element';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
+  createBuiltInParagraphStyleFromFactory,
   createParagraphStylesFromDefaults,
   ParagraphStyle,
   resolveParagraphStyle,
@@ -91,5 +95,61 @@ describe('ParagraphStyle', () => {
       BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     );
     expect('paragraphStyleId' in new RichTextBoxElement()).toBe(false);
+  });
+
+  it('returns fresh factory definitions for built-in paragraph styles', () => {
+    const title = createBuiltInParagraphStyleFromFactory(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
+    );
+    title.displayName = 'Title Override';
+    title.parentStyleId = null;
+    title.overrides.fontFamily = 'Minion Pro';
+
+    const resetTitle = createBuiltInParagraphStyleFromFactory(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
+    );
+
+    expect(resetTitle).not.toBe(title);
+    expect(resetTitle.displayName).toBe('Title');
+    expect(resetTitle.builtIn).toBe(true);
+    expect(resetTitle.parentStyleId).toBe(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    );
+    expect(resetTitle.overrides).toEqual({
+      alignment: TextBoxAlignment.Center,
+      fontSize: Unit.fromPt(28),
+    });
+    expect(resetTitle.overrides.fontFamily).toBeUndefined();
+
+    const defaultText = createBuiltInParagraphStyleFromFactory(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    );
+
+    expect(defaultText.displayName).toBe('Default Text');
+    expect(defaultText.builtIn).toBe(true);
+    expect(defaultText.parentStyleId).toBeNull();
+    expect(defaultText.overrides).toEqual({
+      alignment: TextBoxAlignment.Left,
+      fontFamily: 'Source Serif',
+      fontSize: Unit.fromPt(12),
+      fontStyle: DEFAULT_FONT_STYLE,
+      color: '#000000',
+      strokeWidth: 0,
+      lineHeight: null,
+    });
+
+    const customizedDefaultText = createBuiltInParagraphStyleFromFactory(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    );
+    customizedDefaultText.overrides.fontFamily = 'Minion Pro';
+
+    const resolvedTitle = resolveParagraphStyle(
+      [customizedDefaultText, resetTitle],
+      resetTitle.id,
+    );
+
+    expect(resolvedTitle.fontFamily).toBe('Minion Pro');
+    expect(resolvedTitle.fontSize).toBe(Unit.fromPt(28));
+    expect(resolvedTitle.alignment).toBe(TextBoxAlignment.Center);
   });
 });

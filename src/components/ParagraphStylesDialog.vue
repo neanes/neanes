@@ -85,7 +85,7 @@
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  :disabled="!showOverrideToggles"
+                  :disabled="selectedStyle?.builtIn !== true"
                   aria-label="Reset to Factory"
                   @click="resetSelectedStyleOverrides"
                 >
@@ -296,7 +296,7 @@
                   </AppTooltip>
                   <AppTooltip
                     :tooltip="
-                      $t(($) => $.toolbar.selection.justify, {
+                      $t(($) => $.toolbar.common.alignJustify, {
                         ns: 'toolbar',
                       })
                     "
@@ -460,6 +460,8 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { PARAGRAPH_STYLE_NONE_VALUE } from '@/composables/useRichTextStyleCommands';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type BuiltInParagraphStyleId,
+  createBuiltInParagraphStyleFromFactory,
   getAvailableParagraphStyleParents,
   ParagraphStyle,
   resolveParagraphStyle,
@@ -610,11 +612,21 @@ function updateSelectedStyleOverride(
 }
 
 function resetSelectedStyleOverrides() {
-  if (selectedStyle.value == null || !showOverrideToggles.value) {
+  if (selectedStyle.value == null || selectedStyle.value.builtIn !== true) {
     return;
   }
 
-  selectedStyle.value.overrides = {};
+  const index = styles.value.findIndex(
+    (style) => style.id === selectedStyle.value?.id,
+  );
+
+  if (index === -1) {
+    return;
+  }
+
+  styles.value[index] = createBuiltInParagraphStyleFromFactory(
+    selectedStyle.value.id as BuiltInParagraphStyleId,
+  );
 }
 
 function updateAlignmentOverride(value: unknown) {

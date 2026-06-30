@@ -282,7 +282,7 @@
             </AppTooltip>
             <AppTooltip
               :tooltip="
-                $t(($) => $.toolbar.selection.justify, { ns: 'toolbar' })
+                $t(($) => $.toolbar.common.alignJustify, { ns: 'toolbar' })
               "
             >
               <ToggleGroupItem :value="TextBoxAlignment.Justify">

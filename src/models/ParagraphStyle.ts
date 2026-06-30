@@ -95,99 +95,48 @@ export interface LegacyStyleDefaults {
 export function createParagraphStylesFromDefaults(
   legacyStyleDefaults: LegacyStyleDefaults = {},
 ) {
-  const defaultText = new ParagraphStyle();
-  defaultText.id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
-  defaultText.displayName = 'Default Text';
-  defaultText.builtIn = true;
-  defaultText.overrides = {
-    alignment: 'left' as TextBoxAlignment,
-    fontFamily: legacyStyleDefaults.textBoxDefaultFontFamily ?? 'Source Serif',
-    fontSize: legacyStyleDefaults.textBoxDefaultFontSize ?? Unit.fromPt(12),
-    fontStyle:
-      legacyStyleDefaults.textBoxDefaultFontStyle ?? DEFAULT_FONT_STYLE,
-    color: legacyStyleDefaults.textBoxDefaultColor ?? '#000000',
-    strokeWidth: legacyStyleDefaults.textBoxDefaultStrokeWidth ?? 0,
-    lineHeight: legacyStyleDefaults.textBoxDefaultLineHeight ?? null,
-  };
+  const styles = createParagraphStylesFromFactory();
 
-  const annotation = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
-    'Annotation',
+  const defaultText = getParagraphStyleById(
+    styles,
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    {
-      fontSize: Unit.fromPt(12),
-    },
   );
-
-  const title = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
-    'Title',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    {
-      alignment: 'center' as TextBoxAlignment,
-      fontSize: Unit.fromPt(28),
-    },
-  );
-  const subtitle = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Subtitle,
-    'Subtitle',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    {
-      alignment: 'center' as TextBoxAlignment,
-      fontSize: Unit.fromPt(22),
-    },
-  );
-  const chapter = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Chapter,
-    'Chapter',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    {
-      alignment: 'center' as TextBoxAlignment,
-      fontSize: Unit.fromPt(24),
-    },
-  );
-  const section = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Section,
-    'Section',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    {
-      fontSize: Unit.fromPt(20),
-    },
-  );
-  const header = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
-    'Header',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    {
-      alignment: 'center' as TextBoxAlignment,
-    },
-  );
-  const footer = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
-    'Footer',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    {
-      alignment: 'center' as TextBoxAlignment,
-    },
-  );
-  const lyrics = createBuiltInStyle(
+  const lyrics = getParagraphStyleById(
+    styles,
     BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-    'Lyrics',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    {
+  );
+  const dropCap = getParagraphStyleById(
+    styles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
+  );
+
+  if (defaultText != null) {
+    defaultText.overrides = {
+      alignment: 'left' as TextBoxAlignment,
+      fontFamily:
+        legacyStyleDefaults.textBoxDefaultFontFamily ?? 'Source Serif',
+      fontSize: legacyStyleDefaults.textBoxDefaultFontSize ?? Unit.fromPt(12),
+      fontStyle:
+        legacyStyleDefaults.textBoxDefaultFontStyle ?? DEFAULT_FONT_STYLE,
+      color: legacyStyleDefaults.textBoxDefaultColor ?? '#000000',
+      strokeWidth: legacyStyleDefaults.textBoxDefaultStrokeWidth ?? 0,
+      lineHeight: legacyStyleDefaults.textBoxDefaultLineHeight ?? null,
+    };
+  }
+
+  if (lyrics != null) {
+    lyrics.overrides = {
       fontFamily: legacyStyleDefaults.lyricsDefaultFontFamily ?? 'Source Serif',
       fontSize: legacyStyleDefaults.lyricsDefaultFontSize ?? Unit.fromPt(12),
       fontStyle:
         legacyStyleDefaults.lyricsDefaultFontStyle ?? DEFAULT_FONT_STYLE,
       color: legacyStyleDefaults.lyricsDefaultColor ?? '#000000',
       strokeWidth: legacyStyleDefaults.lyricsDefaultStrokeWidth ?? 0,
-    },
-  );
-  const dropCap = createBuiltInStyle(
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
-    'Drop Cap',
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    {
+    };
+  }
+
+  if (dropCap != null) {
+    dropCap.overrides = {
       fontFamily:
         legacyStyleDefaults.dropCapDefaultFontFamily ?? 'Source Serif',
       fontSize: legacyStyleDefaults.dropCapDefaultFontSize ?? Unit.fromPt(60),
@@ -196,21 +145,22 @@ export function createParagraphStylesFromDefaults(
       color: legacyStyleDefaults.dropCapDefaultColor ?? '#000000',
       strokeWidth: legacyStyleDefaults.dropCapDefaultStrokeWidth ?? 0,
       lineHeight: legacyStyleDefaults.dropCapDefaultLineHeight ?? null,
-    },
-  );
+    };
+  }
 
-  return [
-    defaultText,
-    annotation,
-    title,
-    subtitle,
-    chapter,
-    section,
-    header,
-    footer,
-    lyrics,
-    dropCap,
-  ];
+  return styles;
+}
+
+export function createBuiltInParagraphStyleFromFactory(
+  id: BuiltInParagraphStyleId,
+) {
+  const style = getParagraphStyleById(createParagraphStylesFromFactory(), id);
+
+  if (style == null) {
+    throw new Error(`Unknown built-in paragraph style id: ${id}`);
+  }
+
+  return style.clone();
 }
 
 export function getParagraphStyleById(
@@ -299,6 +249,122 @@ function createBuiltInStyle(
   style.parentStyleId = parentStyleId;
   style.overrides = overrides;
   return style;
+}
+
+function createParagraphStylesFromFactory() {
+  const defaultText = new ParagraphStyle();
+  defaultText.id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  defaultText.displayName = 'Default Text';
+  defaultText.builtIn = true;
+  defaultText.parentStyleId = null;
+  defaultText.overrides = {
+    alignment: 'left' as TextBoxAlignment,
+    fontFamily: 'Source Serif',
+    fontSize: Unit.fromPt(12),
+    fontStyle: DEFAULT_FONT_STYLE,
+    color: '#000000',
+    strokeWidth: 0,
+    lineHeight: null,
+  };
+
+  const annotation = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+    'Annotation',
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    {
+      fontSize: Unit.fromPt(12),
+    },
+  );
+
+  const title = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
+    'Title',
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    {
+      alignment: 'center' as TextBoxAlignment,
+      fontSize: Unit.fromPt(28),
+    },
+  );
+  const subtitle = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Subtitle,
+    'Subtitle',
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    {
+      alignment: 'center' as TextBoxAlignment,
+      fontSize: Unit.fromPt(22),
+    },
+  );
+  const chapter = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Chapter,
+    'Chapter',
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    {
+      alignment: 'center' as TextBoxAlignment,
+      fontSize: Unit.fromPt(24),
+    },
+  );
+  const section = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Section,
+    'Section',
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    {
+      fontSize: Unit.fromPt(20),
+    },
+  );
+  const header = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
+    'Header',
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    {
+      alignment: 'center' as TextBoxAlignment,
+    },
+  );
+  const footer = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
+    'Footer',
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    {
+      alignment: 'center' as TextBoxAlignment,
+    },
+  );
+  const lyrics = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+    'Lyrics',
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    {
+      fontFamily: 'Source Serif',
+      fontSize: Unit.fromPt(12),
+      fontStyle: DEFAULT_FONT_STYLE,
+      color: '#000000',
+      strokeWidth: 0,
+    },
+  );
+  const dropCap = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
+    'Drop Cap',
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    {
+      fontFamily: 'Source Serif',
+      fontSize: Unit.fromPt(60),
+      fontStyle: DEFAULT_FONT_STYLE,
+      color: '#000000',
+      strokeWidth: 0,
+      lineHeight: null,
+    },
+  );
+
+  return [
+    defaultText,
+    annotation,
+    title,
+    subtitle,
+    chapter,
+    section,
+    header,
+    footer,
+    lyrics,
+    dropCap,
+  ];
 }
 
 function applyParagraphStyleOverrides(

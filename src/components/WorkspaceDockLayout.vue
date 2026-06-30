@@ -2097,12 +2097,21 @@ watch(
    * in them), the sashes inside the kept split containers, and the three px-positioned
    * overlay hosts cover every other case in 6.6.1 (each non-center
    * grid/branch/group/part nests inside one of these).
+   *
+   * The two .dv-live-region* nodes are `position: absolute` with no `top`, so they
+   * resolve to their static position at the bottom of the dock content -- which in
+   * print lands at the top of the page AFTER the last one (y >= page height), and an
+   * absolutely-positioned box there makes Blink emit a blank trailing page. Hiding them
+   * in print is safe: no assistive technology is attached to the print snapshot, so the
+   * "never display:none" rule the regions carry for interactive use does not apply here.
    */
   :deep(.dv-view:not(:has(.workspace-center-editor))),
   :deep(.dv-sash-container),
   :deep(.dv-render-overlay),
   :deep(.dv-overlay-render-container),
-  :deep(.dv-floating-overlay-host) {
+  :deep(.dv-floating-overlay-host),
+  :deep(.dv-live-region),
+  :deep(.dv-live-region-assertive) {
     display: none !important;
   }
 }

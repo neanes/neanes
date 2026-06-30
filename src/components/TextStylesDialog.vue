@@ -1,7 +1,7 @@
 <template>
   <Dialog v-model:open="open">
     <DialogContent
-      class="h-[42rem] max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-5xl"
+      class="h-[42rem] max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-3xl"
     >
       <DialogHeader>
         <DialogTitle>
@@ -16,8 +16,10 @@
         </DialogDescription>
       </DialogHeader>
 
-      <div
-        class="grid min-h-0 gap-4 overflow-hidden md:grid-cols-[13rem_minmax(0,1fr)]"
+      <Tabs
+        v-model="selectedStyleId"
+        orientation="vertical"
+        class="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden sm:grid-cols-[13rem_minmax(0,1fr)] sm:grid-rows-[minmax(0,1fr)]"
       >
         <div
           class="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden"
@@ -47,30 +49,26 @@
           </div>
 
           <ScrollArea class="min-h-0">
-            <div
-              class="grid gap-1 rounded-lg bg-muted p-1 text-muted-foreground"
+            <TabsList
+              class="h-auto w-full flex-col items-stretch justify-start p-1"
             >
-              <button
+              <TabsTrigger
                 v-for="style in styles"
                 :key="style.id"
-                type="button"
-                class="inline-flex min-h-9 w-full items-center rounded-md px-3 py-2 text-left text-sm font-medium transition-all"
-                :class="
-                  style.id === selectedStyleId
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'hover:bg-background/60 hover:text-foreground'
-                "
-                @click="selectedStyleId = style.id"
+                :value="style.id"
+                class="min-h-9 w-full flex-none justify-start whitespace-normal text-left"
               >
-                <div class="font-medium">{{ style.displayName }}</div>
-              </button>
-            </div>
+                {{ style.displayName }}
+              </TabsTrigger>
+            </TabsList>
           </ScrollArea>
         </div>
 
-        <div
-          v-if="selectedStyle != null"
-          class="flex min-h-0 flex-col overflow-hidden"
+        <TabsContent
+          v-for="style in styles"
+          :key="style.id"
+          :value="style.id"
+          class="col-start-1 row-start-2 min-h-0 min-w-0 overflow-hidden sm:col-start-2 sm:row-start-1"
         >
           <ScrollArea class="h-full min-h-0 border">
             <FieldGroup class="p-4">
@@ -83,14 +81,14 @@
                 <Input
                   id="text-style-name"
                   class="ml-auto w-64 shrink-0"
-                  :model-value="selectedStyle.displayName"
-                  :disabled="selectedStyle.builtIn"
+                  :model-value="selectedStyle?.displayName ?? ''"
+                  :disabled="selectedStyle?.builtIn ?? false"
                   @update:model-value="updateSelectedStyleName"
                 />
               </Field>
 
               <Field
-                v-if="selectedStyle.id !== defaultTextStyleId"
+                v-if="selectedStyle?.id !== defaultTextStyleId"
                 orientation="horizontal"
               >
                 <div class="min-w-0 flex-1">
@@ -104,12 +102,12 @@
                 </div>
                 <TextStyleSelect
                   id="text-style-parent"
-                  class="ml-auto w-40 shrink-0"
+                  class="ml-auto w-32 shrink-0"
                   :model-value="
-                    selectedStyle.parentStyleId ?? defaultTextStyleId
+                    selectedStyle?.parentStyleId ?? defaultTextStyleId
                   "
                   :text-styles="availableParents"
-                  trigger-class="w-40"
+                  trigger-class="w-32"
                   @update:model-value="updateSelectedStyleParent"
                 />
               </Field>
@@ -154,7 +152,7 @@
                 </div>
                 <FontStyleSelect
                   id="text-style-font-style"
-                  class="ml-auto w-64 min-w-0 shrink-0"
+                  class="ml-auto w-72 min-w-0 shrink-0"
                   :model-value="resolvedStyle.fontStyle"
                   :options="fontStyleOptions"
                   :disabled="
@@ -343,8 +341,8 @@
               </Field>
             </FieldGroup>
           </ScrollArea>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
       <DialogFooter>
         <DialogClose as-child>
           <Button variant="outline" type="button">
@@ -352,6 +350,7 @@
           </Button>
         </DialogClose>
         <Button type="button" :disabled="!canSubmit" @click="submit">
+          <PhCheck />
           {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
         </Button>
       </DialogFooter>
@@ -361,6 +360,7 @@
 
 <script setup lang="ts">
 import {
+  PhCheck,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhTextAlignLeft,
@@ -396,6 +396,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   BUILT_IN_TEXT_STYLE_IDS,

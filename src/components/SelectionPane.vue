@@ -97,7 +97,7 @@
           @click="emit('copy-element-link')"
         >
           <PhLinkSimple data-icon="inline-start" />
-          {{ $t(($) => $.menu.tools.copyElementLink, { ns: 'menu' }) }}
+          {{ $t(($) => $.menu.edit.copyElementLink, { ns: 'menu' }) }}
         </Button>
 
         <Button
@@ -216,7 +216,7 @@ const ELEMENT_TYPE_LABEL_SELECTORS: Record<
   },
   [ElementType.ModeKey]: {
     ns: 'menu',
-    selector: ($) => $.menu.insert.modeKey,
+    selector: ($) => $.menu.insert.initialMartyria,
   },
   [ElementType.Note]: {
     ns: 'toolbar',

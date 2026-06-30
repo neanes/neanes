@@ -34,6 +34,7 @@
     "copyFormat": "Salin Format",
     "pasteFormat": "Tempel Format",
     "find": "Cari",
+    "copyElementLink": "Salin Tautan Elemen",
     "preferences": "Preferensi"
   },
   "insert": {
@@ -46,15 +47,11 @@
     "textBox": "Kotak Teks",
     "richTextBox": "Kotak Teks Kaya",
     "inlineTextBox": "Kotak Teks Sebaris",
-    "modeKey": "Kunci Mode",
+    "initialMartyria": "Martyria Awal",
     "image": "Gambar",
     "headersAndFooters": "Header dan Footer",
     "header": "Header",
     "footer": "Footer"
-  },
-  "tools": {
-    "root": "Alat",
-    "copyElementLink": "Salin Tautan Elemen"
   },
   "view": {
     "root": "Tampilan",
@@ -64,6 +61,7 @@
     "properties": "Properti",
     "selection": "Pilihan",
     "lyrics": "Lirik",
+    "statusBar": "Bilah Status",
     "showDeveloperPanels": "Tampilkan Panel Pengembang",
     "zoom": {
       "root": "Zoom",
@@ -76,6 +74,11 @@
     },
     "resetLayout": "Atur Ulang Tata Letak",
     "generateTestFiles": "Hasilkan File Uji (Debug)"
+  },
+  "window": {
+    "root": "Jendela",
+    "previousTab": "Tab Sebelumnya",
+    "nextTab": "Tab Berikutnya"
   },
   "help": {
     "root": "Bantuan",

@@ -5,10 +5,12 @@
     >
       <DialogHeader>
         <DialogTitle>
-          {{ $t(($) => $.dialog.modeKey.root, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.initialMartyria.root, { ns: 'dialog' }) }}
         </DialogTitle>
         <DialogDescription>
-          {{ $t(($) => $.dialog.modeKey.description, { ns: 'dialog' }) }}
+          {{
+            $t(($) => $.dialog.initialMartyria.description, { ns: 'dialog' })
+          }}
         </DialogDescription>
       </DialogHeader>
       <Tabs
@@ -88,7 +90,7 @@
         />
         <FieldLabel for="mode-key-dialog-use-optional-diatonic-fthoras">
           {{
-            $t(($) => $.toolbar.modeKey.useOptionalDiatonicFthoras, {
+            $t(($) => $.toolbar.initialMartyria.useOptionalDiatonicFthoras, {
               ns: 'toolbar',
             })
           }}

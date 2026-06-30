@@ -34,6 +34,7 @@
     "copyFormat": "Copy Format",
     "pasteFormat": "Paste Format",
     "find": "Find",
+    "copyElementLink": "Copy Element Link",
     "preferences": "Preferences"
   },
   "insert": {
@@ -46,15 +47,11 @@
     "textBox": "Text Box",
     "richTextBox": "Rich Text Box",
     "inlineTextBox": "Inline Text Box",
-    "modeKey": "Mode Key",
+    "initialMartyria": "Initial Martyria",
     "image": "Image",
     "headersAndFooters": "Headers and Footers",
     "header": "Header",
     "footer": "Footer"
-  },
-  "tools": {
-    "root": "Tools",
-    "copyElementLink": "Copy Element Link"
   },
   "view": {
     "root": "View",
@@ -64,6 +61,7 @@
     "properties": "Properties",
     "selection": "Selection",
     "lyrics": "Lyrics",
+    "statusBar": "Status Bar",
     "showDeveloperPanels": "Show Developer Panels",
     "zoom": {
       "root": "Zoom",
@@ -76,6 +74,11 @@
     },
     "resetLayout": "Reset Layout",
     "generateTestFiles": "Generate Test Files (Debug)"
+  },
+  "window": {
+    "root": "Window",
+    "previousTab": "Previous Tab",
+    "nextTab": "Next Tab"
   },
   "help": {
     "root": "Help",

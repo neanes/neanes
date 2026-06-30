@@ -44,7 +44,7 @@
     "single": "Tunggal",
     "martyria": "Martyria",
     "insertDropCapBefore": "Sisipkan huruf awal besar sebelum",
-    "insertModeKey": "Sisipkan Kunci Mode",
+    "insertInitialMartyria": "Sisipkan Martyria Awal",
     "insertTextBox": "Sisipkan Kotak Teks",
     "insertTextBoxRich": "Sisipkan Kotak Teks Kaya",
     "insertImage": "Sisipkan gambar",
@@ -94,18 +94,18 @@
     "auto": "Otomatis",
     "note": "Nada",
     "scale": "Skala",
-    "rootSignOverride": "Penimpa Tanda Dasar",
+    "martyriaSignOverride": "Penimpa Tanda Martyria",
     "tempoLeft": "Tambah Tempo Kiri",
     "tempo": "Tambah Tempo di Atas",
     "tempoRight": "Tambah Tempo Kanan"
   },
-  "modeKey": {
+  "initialMartyria": {
     "size": "Ukuran",
     "heightAdjustment": "Penyesuaian Tinggi",
     "rightAlignTempo": "Rata kanan tempo",
     "showAmbitus": "Tampilkan Ambitus",
     "permanentEnharmonicZo": "Zo Enharmonik Permanen",
-    "changeKey": "Ubah Kunci",
+    "changeInitialMartyria": "Ubah Martyria Awal",
     "useOptionalDiatonicFthoras": "Tampilkan Fthora Diatonik"
   },
   "neume": {
@@ -171,7 +171,7 @@
     "kerningRight": "Kerning Kanan",
     "neumeFontSize": "Ukuran Font",
     "martyriaNote": "Nada Martyria",
-    "martyriaRootSign": "Tanda Akar Martyria"
+    "martyriaSign": "Tanda Martyria"
   },
   "workspace": {
     "dockPane": "Tambatkan Panel",

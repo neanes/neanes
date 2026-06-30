@@ -100,7 +100,7 @@
       "connectingHeteron": "Eteron de legătură",
       "endofonon": "Endofonon"
     },
-    "rootSign": {
+    "martyriaSign": {
       "ananes": "Ananes",
       "neanes": "Neanes",
       "softChromaticGa": "Cromatic moale Ga",
@@ -200,7 +200,7 @@
     "grave": "Glasul al șaptelea",
     "plagalFourth": "Glasul al optulea"
   },
-  "modeKey": {
+  "initialMartyria": {
     "heirmologicAndSticheraric": "Irmologic și stihiraric",
     "tetraphonicPapadicAndOldSticheraric": "Tetrafonic (papadic și stihiraric vechi)",
     "tetraphonic": "Tetrafonic",

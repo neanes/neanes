@@ -487,7 +487,7 @@ front-ends over one command. The division of labor across element kinds is:
   contextual toolbar (`ToolbarNeume`, `ToolbarMartyria`, `ToolbarModeKey`,
   `ToolbarTextBox`, `ToolbarDropCap`, `ToolbarLyrics`).
 - **Cross-cutting controls** -- the section-name field lives in `SelectionPane`
-  (`update:score-element-section-name`) and the "edit mode key" dialog trigger lives
+  (`update:score-element-section-name`) and the "edit initial martyria" dialog trigger lives
   in `PropertiesModeKey` (`open-mode-key-dialog`), rather than on any element's
   toolbar.
 

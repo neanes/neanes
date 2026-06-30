@@ -357,7 +357,7 @@ export class LayoutService {
       this.saveElementState(element);
     });
 
-    this.calculateMartyrias(elements, pageSetup);
+    this.calculateMartyriae(elements, pageSetup);
 
     // Always make sure this is an empty element at the end of the score.
     // If this case is true, we have a bug, but this will prevent
@@ -7369,7 +7369,7 @@ export class LayoutService {
     );
   }
 
-  public static calculateMartyrias(
+  public static calculateMartyriae(
     elements: ScoreElement[],
     pageSetup: PageSetup,
   ) {

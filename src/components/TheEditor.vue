@@ -116,6 +116,7 @@ import type {
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
   FileMenuViewPaneVisibilityArgs,
+  FileMenuViewStatusBarVisibilityArgs,
   FileMenuViewZoomArgs,
   ShowMessageBoxReplyArgs,
   WorkspaceZoomState,
@@ -394,6 +395,7 @@ const preferredRichTextBoxFocusTarget = ref<{
 const searchTextQuery = ref('');
 const searchTextPanelIsOpen = ref(false);
 const showFileMenuBar = ref(!isElectron());
+const statusBarIsVisible = ref(true);
 const paneLayoutResetCounter = ref(0);
 const paneVisibility = ref(createDefaultPaneVisibility());
 const editorPreferencesHydrated = ref(false);
@@ -744,6 +746,7 @@ const selectedElement = computed({
     selectedWorkspace.value.selectedAlternateLineElement = null;
   },
 });
+const canCopyElementLink = computed(() => selectedElement.value?.id != null);
 
 const selectedElementForNeumeToolbar = computed(() => {
   if (
@@ -1209,6 +1212,9 @@ const zoomFitMode = computed({
     selectedWorkspace.value.zoomFitMode = value;
   },
 });
+const canNavigateWorkspaceTabs = computed(
+  () => !dialogOpen.value && tabs.value.length > 1,
+);
 
 const statusScrollPageNumber = computed(() =>
   clamp(currentPageNumber.value, 1, statusPageCount.value),
@@ -1439,6 +1445,10 @@ const throttled = {
   onScroll: throttle(250, onScroll),
 };
 const saveDebounced = debounce(250, save);
+const ZOOM_WHEEL_DELTA_THRESHOLD = 80;
+const ZOOM_WHEEL_DELTA_RESET_DELAY_MS = 200;
+let zoomWheelDelta = 0;
+let zoomWheelResetTimeout: number | null = null;
 
 if (isDevelopment.value) {
   for (const [key, val] of Object.entries(throttled)) {
@@ -1545,6 +1555,33 @@ watch(
 );
 
 watch(
+  canCopyElementLink,
+  (enabled) => {
+    EventBus.$emit(IpcRendererChannels.SetCopyElementLinkEnabled, enabled);
+  },
+  { immediate: true },
+);
+
+watch(
+  canNavigateWorkspaceTabs,
+  (enabled) => {
+    EventBus.$emit(
+      IpcRendererChannels.SetWorkspaceTabNavigationEnabled,
+      enabled,
+    );
+  },
+  { immediate: true },
+);
+
+watch(
+  statusBarIsVisible,
+  (visible) => {
+    EventBus.$emit(IpcRendererChannels.SetStatusBarVisibility, visible);
+  },
+  { immediate: true },
+);
+
+watch(
   () =>
     ({
       zoom: zoom.value,
@@ -1645,8 +1682,17 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$on(IpcMainChannels.FileMenuFind, onFileMenuFind);
   EventBus.$on(
+    IpcMainChannels.FileMenuWindowPreviousTab,
+    onFileMenuWindowPreviousTab,
+  );
+  EventBus.$on(IpcMainChannels.FileMenuWindowNextTab, onFileMenuWindowNextTab);
+  EventBus.$on(
     IpcMainChannels.FileMenuViewPaneVisibility,
     onFileMenuViewPaneVisibility,
+  );
+  EventBus.$on(
+    IpcMainChannels.FileMenuViewStatusBarVisibility,
+    onFileMenuViewStatusBarVisibility,
   );
   EventBus.$on(
     IpcMainChannels.FileMenuViewResetPaneLayout,
@@ -1681,8 +1727,8 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuInsertHeader, onFileMenuInsertHeader);
   EventBus.$on(IpcMainChannels.FileMenuInsertFooter, onFileMenuInsertFooter);
   EventBus.$on(
-    IpcMainChannels.FileMenuToolsCopyElementLink,
-    onFileMenuToolsCopyElementLink,
+    IpcMainChannels.FileMenuEditCopyElementLink,
+    onFileMenuEditCopyElementLink,
   );
   EventBus.$on(
     IpcMainChannels.FileMenuGenerateTestFile,
@@ -1702,6 +1748,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown);
   window.removeEventListener('keyup', onKeyup);
   window.removeEventListener('resize', throttled.onEditorViewportResize);
+  clearZoomWheelDeltaReset();
 
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
@@ -1742,8 +1789,17 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$off(IpcMainChannels.FileMenuFind, onFileMenuFind);
   EventBus.$off(
+    IpcMainChannels.FileMenuWindowPreviousTab,
+    onFileMenuWindowPreviousTab,
+  );
+  EventBus.$off(IpcMainChannels.FileMenuWindowNextTab, onFileMenuWindowNextTab);
+  EventBus.$off(
     IpcMainChannels.FileMenuViewPaneVisibility,
     onFileMenuViewPaneVisibility,
+  );
+  EventBus.$off(
+    IpcMainChannels.FileMenuViewStatusBarVisibility,
+    onFileMenuViewStatusBarVisibility,
   );
   EventBus.$off(
     IpcMainChannels.FileMenuViewResetPaneLayout,
@@ -1778,8 +1834,8 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuInsertHeader, onFileMenuInsertHeader);
   EventBus.$off(IpcMainChannels.FileMenuInsertFooter, onFileMenuInsertFooter);
   EventBus.$off(
-    IpcMainChannels.FileMenuToolsCopyElementLink,
-    onFileMenuToolsCopyElementLink,
+    IpcMainChannels.FileMenuEditCopyElementLink,
+    onFileMenuEditCopyElementLink,
   );
   EventBus.$off(
     IpcMainChannels.FileMenuGenerateTestFile,
@@ -2480,6 +2536,130 @@ function getElementIndex(element: ScoreElement) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+function getLyricHtmlElement(index: number) {
+  const htmlElement = getTemplateRef<InstanceType<typeof ContentEditable>[]>(
+    `lyrics-${index}`,
+  )[0]?.htmlElement;
+
+  return htmlElement instanceof HTMLElement ? htmlElement : null;
+}
+
+type LyricSelectionSnapshot = {
+  element: NoteElement;
+  startOffset: number;
+  endOffset: number;
+  wasFocused: boolean;
+};
+
+function captureSelectedLyricSelection(): LyricSelectionSnapshot | null {
+  const element = selectedLyrics.value;
+
+  if (element == null) {
+    return null;
+  }
+
+  const index = elements.value.indexOf(element);
+  const htmlElement = getLyricHtmlElement(index);
+  const selection = window.getSelection();
+
+  if (htmlElement == null || selection == null || selection.rangeCount === 0) {
+    return null;
+  }
+
+  const range = selection.getRangeAt(0);
+
+  if (
+    !htmlElement.contains(range.startContainer) ||
+    !htmlElement.contains(range.endContainer)
+  ) {
+    return null;
+  }
+
+  return {
+    element,
+    startOffset: getTextOffset(
+      htmlElement,
+      range.startContainer,
+      range.startOffset,
+    ),
+    endOffset: getTextOffset(htmlElement, range.endContainer, range.endOffset),
+    wasFocused: document.activeElement === htmlElement,
+  };
+}
+
+function getTextOffset(root: HTMLElement, container: Node, offset: number) {
+  const range = document.createRange();
+  range.selectNodeContents(root);
+  range.setEnd(container, offset);
+
+  const textOffset = range.toString().length;
+
+  return textOffset;
+}
+
+function restoreLyricSelection(lyricSelection: LyricSelectionSnapshot) {
+  if (selectedLyrics.value !== lyricSelection.element) {
+    return;
+  }
+
+  const index = elements.value.indexOf(lyricSelection.element);
+  const htmlElement = getLyricHtmlElement(index);
+  const selection = window.getSelection();
+
+  if (htmlElement == null || selection == null) {
+    return;
+  }
+
+  const textLength = htmlElement.textContent?.length ?? 0;
+  const clampedStartOffset = clamp(lyricSelection.startOffset, 0, textLength);
+  const clampedEndOffset = clamp(lyricSelection.endOffset, 0, textLength);
+  const range = document.createRange();
+
+  setTextRangeBoundary(htmlElement, range, clampedStartOffset, true);
+  setTextRangeBoundary(htmlElement, range, clampedEndOffset, false);
+
+  if (lyricSelection.wasFocused && document.hasFocus()) {
+    htmlElement.focus();
+  }
+
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+function setTextRangeBoundary(
+  root: HTMLElement,
+  range: Range,
+  offset: number,
+  start: boolean,
+) {
+  let remainingOffset = offset;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let textNode = walker.nextNode();
+
+  while (textNode != null) {
+    const textLength = textNode.textContent?.length ?? 0;
+
+    if (remainingOffset <= textLength) {
+      if (start) {
+        range.setStart(textNode, remainingOffset);
+      } else {
+        range.setEnd(textNode, remainingOffset);
+      }
+
+      return;
+    }
+
+    remainingOffset -= textLength;
+    textNode = walker.nextNode();
+  }
+
+  if (start) {
+    range.setStart(root, root.childNodes.length);
+  } else {
+    range.setEnd(root, root.childNodes.length);
+  }
 }
 
 function getFirstElementForPage(pageNumber: number) {
@@ -3579,6 +3759,8 @@ const toolbarInteractionKeyCodes = new Set([
   'Tab',
 ]);
 
+type WorkspaceTabNavigationDirection = 'previous' | 'next';
+
 function isEditorShortcutIgnored(event: KeyboardEvent) {
   return (
     event.target instanceof Element &&
@@ -3597,6 +3779,202 @@ function onEditorViewportResize() {
 
 function onScroll() {
   calculatePageNumber();
+}
+
+type ZoomWheelAnchor =
+  | {
+      kind: 'page';
+      pageElement: HTMLElement;
+      clientX: number;
+      clientY: number;
+      pageX: number;
+      pageY: number;
+    }
+  | {
+      kind: 'scroll';
+      scrollX: number;
+      scrollY: number;
+      viewportOffsetX: number;
+      viewportOffsetY: number;
+    };
+
+function resetZoomWheelDelta() {
+  zoomWheelDelta = 0;
+  clearZoomWheelDeltaReset();
+}
+
+function clearZoomWheelDeltaReset() {
+  if (zoomWheelResetTimeout == null) {
+    return;
+  }
+
+  window.clearTimeout(zoomWheelResetTimeout);
+  zoomWheelResetTimeout = null;
+}
+
+function scheduleZoomWheelDeltaReset() {
+  clearZoomWheelDeltaReset();
+
+  zoomWheelResetTimeout = window.setTimeout(() => {
+    zoomWheelDelta = 0;
+    zoomWheelResetTimeout = null;
+  }, ZOOM_WHEEL_DELTA_RESET_DELAY_MS);
+}
+
+function createZoomWheelAnchor(
+  event: WheelEvent,
+  pageBackgroundElement: HTMLElement,
+  zoomValue: number,
+): ZoomWheelAnchor {
+  const pageElement =
+    event.target instanceof Element ? event.target.closest('.page') : null;
+
+  if (
+    pageElement instanceof HTMLElement &&
+    pageBackgroundElement.contains(pageElement)
+  ) {
+    const pageRect = pageElement.getBoundingClientRect();
+
+    return {
+      kind: 'page',
+      pageElement,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      pageX: (event.clientX - pageRect.left) / zoomValue,
+      pageY: (event.clientY - pageRect.top) / zoomValue,
+    };
+  }
+
+  // Fallback for gutters/padding between pages. Fixed page margins and
+  // container padding do not scale, so this only approximately preserves the
+  // cursor position when the wheel event is not over a page.
+  const backgroundRect = pageBackgroundElement.getBoundingClientRect();
+  const computedStyle = getComputedStyle(pageBackgroundElement);
+  const viewportOffsetX =
+    event.clientX - backgroundRect.left - parseFloat(computedStyle.paddingLeft);
+  const viewportOffsetY =
+    event.clientY - backgroundRect.top - parseFloat(computedStyle.paddingTop);
+
+  return {
+    kind: 'scroll',
+    scrollX: pageBackgroundElement.scrollLeft + viewportOffsetX,
+    scrollY: pageBackgroundElement.scrollTop + viewportOffsetY,
+    viewportOffsetX,
+    viewportOffsetY,
+  };
+}
+
+function restoreZoomWheelAnchor(
+  anchor: ZoomWheelAnchor,
+  pageBackgroundElement: HTMLElement,
+  previousZoom: number,
+) {
+  nextTick(() => {
+    if (!pageBackgroundElement.isConnected) {
+      return;
+    }
+
+    if (anchor.kind === 'page') {
+      if (!pageBackgroundElement.contains(anchor.pageElement)) {
+        return;
+      }
+
+      const pageRect = anchor.pageElement.getBoundingClientRect();
+      pageBackgroundElement.scrollLeft +=
+        pageRect.left + anchor.pageX * zoom.value - anchor.clientX;
+      pageBackgroundElement.scrollTop +=
+        pageRect.top + anchor.pageY * zoom.value - anchor.clientY;
+    } else {
+      const zoomRatio = zoom.value / previousZoom;
+
+      if (!Number.isFinite(zoomRatio) || zoomRatio <= 0) {
+        return;
+      }
+
+      pageBackgroundElement.scrollLeft =
+        anchor.scrollX * zoomRatio - anchor.viewportOffsetX;
+      pageBackgroundElement.scrollTop =
+        anchor.scrollY * zoomRatio - anchor.viewportOffsetY;
+    }
+
+    calculatePageNumber();
+  });
+}
+
+function applyZoomWheelStep(
+  event: WheelEvent,
+  pageBackgroundElement: HTMLElement,
+  direction: 1 | -1,
+) {
+  const previousZoom = zoom.value;
+  const anchor = createZoomWheelAnchor(
+    event,
+    pageBackgroundElement,
+    previousZoom,
+  );
+
+  if (zoomToNearestStep(direction)) {
+    restoreZoomWheelAnchor(anchor, pageBackgroundElement, previousZoom);
+  }
+}
+
+function onPageBackgroundWheel(event: WheelEvent) {
+  const isZoomWheelShortcut =
+    event.ctrlKey || (platformService.isMac && event.metaKey);
+
+  if (event.defaultPrevented || !isZoomWheelShortcut) {
+    return;
+  }
+
+  const pageBackgroundElement =
+    event.currentTarget instanceof HTMLElement
+      ? event.currentTarget
+      : pageBackgroundRef.value;
+
+  if (pageBackgroundElement == null) {
+    return;
+  }
+
+  const { deltaY } = event;
+
+  if (deltaY === 0) {
+    return;
+  }
+
+  // This is a vertical Ctrl/Cmd+wheel over the document: suppress the browser's
+  // native zoom even if we decline to zoom below (e.g. while a dialog is open).
+  event.preventDefault();
+
+  if (dialogOpen.value) {
+    return;
+  }
+
+  // Discrete wheels (e.g. Firefox in line/page mode) deliver one notch per
+  // event, so zoom a single step immediately. The accumulator below is tuned
+  // for high-resolution pixel deltas (mice and trackpad pinch in Chromium);
+  // accumulating discrete notches would require several to cross the
+  // threshold, making one deliberate notch feel unresponsive.
+  if (event.deltaMode !== WheelEvent.DOM_DELTA_PIXEL) {
+    resetZoomWheelDelta();
+    applyZoomWheelStep(event, pageBackgroundElement, deltaY < 0 ? 1 : -1);
+    return;
+  }
+
+  if (zoomWheelDelta !== 0 && Math.sign(zoomWheelDelta) !== Math.sign(deltaY)) {
+    zoomWheelDelta = 0;
+  }
+
+  zoomWheelDelta += deltaY;
+
+  if (Math.abs(zoomWheelDelta) < ZOOM_WHEEL_DELTA_THRESHOLD) {
+    scheduleZoomWheelDeltaReset();
+    return;
+  }
+
+  const direction = zoomWheelDelta < 0 ? 1 : -1;
+
+  resetZoomWheelDelta();
+  applyZoomWheelStep(event, pageBackgroundElement, direction);
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -4913,6 +5291,8 @@ function save(markUnsavedChanges: boolean = true) {
     hasUnsavedChanges.value = true;
   }
 
+  const lyricSelection = captureSelectedLyricSelection();
+
   // Save the indexes of the visible pages
   const visiblePages = pages.value
     .map((_, i) => i)
@@ -4951,6 +5331,12 @@ function save(markUnsavedChanges: boolean = true) {
     });
 
   pages.value = processedPages;
+
+  if (lyricSelection != null) {
+    nextTick(() => {
+      restoreLyricSelection(lyricSelection);
+    });
+  }
 
   // Auto-persist to local/dev storage. This deliberately serializes WITHOUT
   // flushing the live rich-text editors: `save()` runs frequently -- often via the
@@ -7314,7 +7700,10 @@ function zoomToNearestStep(direction: 1 | -1) {
 
   if (zoomStep != null) {
     updateZoom(zoomStep);
+    return true;
   }
+
+  return false;
 }
 
 function updateZoomFitMode(mode: ZoomFitMode) {
@@ -8181,7 +8570,7 @@ function onFileMenuInsertFooter() {
   updatePageSetup(score.value.pageSetup);
 }
 
-async function onFileMenuToolsCopyElementLink() {
+async function onFileMenuEditCopyElementLink() {
   if (selectedElement.value?.id != null) {
     try {
       await navigator.clipboard.writeText(
@@ -8562,6 +8951,14 @@ function onFileMenuFind() {
   }
 }
 
+function onFileMenuWindowPreviousTab() {
+  selectWorkspaceTab('previous');
+}
+
+function onFileMenuWindowNextTab() {
+  selectWorkspaceTab('next');
+}
+
 function onFileMenuViewPaneVisibility({
   paneId,
   visible,
@@ -8569,6 +8966,14 @@ function onFileMenuViewPaneVisibility({
   if (!dialogOpen.value) {
     const isVisible = visible ?? !paneVisibility.value[paneId];
     onPaneVisibilityChange(paneId, isVisible);
+  }
+}
+
+function onFileMenuViewStatusBarVisibility({
+  visible,
+}: FileMenuViewStatusBarVisibilityArgs) {
+  if (!dialogOpen.value) {
+    statusBarIsVisible.value = visible ?? !statusBarIsVisible.value;
   }
 }
 
@@ -8822,6 +9227,32 @@ function onTabClosed(tab: Tab) {
   }
 }
 
+function selectWorkspaceTab(direction: WorkspaceTabNavigationDirection) {
+  if (dialogOpen.value || !canNavigateWorkspaceTabs.value) {
+    return;
+  }
+
+  const currentIndex = tabs.value.findIndex(
+    (tab) => tab.key === selectedWorkspace.value.id,
+  );
+
+  if (currentIndex < 0) {
+    return;
+  }
+
+  const offset = direction === 'previous' ? -1 : 1;
+  const nextIndex =
+    (currentIndex + offset + tabs.value.length) % tabs.value.length;
+  const nextTab = tabs.value[nextIndex];
+  const nextWorkspace = workspaces.value.find(
+    (workspace) => workspace.id === nextTab?.key,
+  ) as Workspace | undefined;
+
+  if (nextWorkspace != null) {
+    selectedWorkspace.value = nextWorkspace;
+  }
+}
+
 function selectContextMenuWorkspace(_event: PointerEvent, tab: Tab) {
   contextMenuWorkspaceId.value = tab.key;
 }
@@ -9022,8 +9453,11 @@ function renderTabLabel(tab: Tab) {
     <FileMenuBar
       v-if="showFileMenuBar"
       class="no-print"
+      :can-copy-element-link="canCopyElementLink"
+      :can-navigate-workspace-tabs="canNavigateWorkspaceTabs"
       :pane-visibility="paneVisibility"
       :show-developer-panels="showDeveloperPanels"
+      :status-bar-visible="statusBarIsVisible"
       :zoom="zoom"
       :zoom-fit-mode="zoomFitMode"
     />
@@ -9255,6 +9689,7 @@ function renderTabLabel(tab: Tab) {
                   ref="pageBackgroundRef"
                   class="page-background chrome-paper-canvas"
                   @scroll="throttled.onScroll"
+                  @wheel="onPageBackgroundWheel"
                 >
                   <div
                     v-for="(page, pageIndex) in filteredPages"
@@ -10261,7 +10696,7 @@ function renderTabLabel(tab: Tab) {
                     "
                   >
                     {{
-                      $t(($) => $.toolbar.modeKey.showAmbitus, {
+                      $t(($) => $.toolbar.initialMartyria.showAmbitus, {
                         ns: 'toolbar',
                       })
                     }}
@@ -10298,7 +10733,9 @@ function renderTabLabel(tab: Tab) {
                 >
                   <PhMusicNotes />
                   {{
-                    $t(($) => $.toolbar.modeKey.changeKey, { ns: 'toolbar' })
+                    $t(($) => $.toolbar.initialMartyria.changeInitialMartyria, {
+                      ns: 'toolbar',
+                    })
                   }}
                 </ContextMenuItem>
                 <ContextMenuItem
@@ -10448,6 +10885,7 @@ function renderTabLabel(tab: Tab) {
       </template>
     </div>
     <div
+      v-if="statusBarIsVisible"
       class="status-bar flex w-full flex-none items-center gap-2 chrome-toolbar-surface p-1"
     >
       <ButtonGroup>

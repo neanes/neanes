@@ -1,6 +1,6 @@
 'use strict';
 
-import type { MenuItemConstructorOptions } from 'electron';
+import type { Input, MenuItemConstructorOptions } from 'electron';
 import {
   app,
   BrowserWindow,
@@ -40,6 +40,7 @@ import type {
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
   FileMenuViewPaneVisibilityArgs,
+  FileMenuViewStatusBarVisibilityArgs,
   FileMenuViewZoomArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
@@ -128,7 +129,10 @@ let readyToExit = false;
 let creatingWindow = false;
 let quitting = false;
 let developerPaneEnabled = false;
+let copyElementLinkMenuEnabled = false;
 let paneMenuVisibility = createDefaultPaneVisibility();
+let statusBarMenuVisible = true;
+let workspaceTabNavigationMenuEnabled = false;
 let zoomMenuState: WorkspaceZoomState = {
   zoom: 1,
   zoomFitMode: null,
@@ -150,6 +154,12 @@ const zoomFitMenuItemIds: Record<ZoomFitMode, string> = {
   'text-width': 'view-zoom-text-width',
   'whole-page': 'view-zoom-whole-page',
 };
+const copyElementLinkMenuItemId = 'edit-copy-element-link';
+const statusBarMenuItemId = 'view-status-bar';
+const workspaceTabNavigationMenuItemIds = [
+  'window-previous-tab',
+  'window-next-tab',
+];
 let updateAvailable = false;
 let updateDownloaded = false;
 let updateDownloadInProgress = false;
@@ -1486,6 +1496,56 @@ function syncPaneMenuItems(visibility: WorkspacePaneVisibility) {
   );
 }
 
+function syncStatusBarMenuItem(isVisible: boolean) {
+  statusBarMenuVisible = isVisible;
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  const item = menu.getMenuItemById(statusBarMenuItemId);
+
+  if (item != null) {
+    item.checked = isVisible;
+  }
+}
+
+function syncCopyElementLinkMenuItemEnabled(isEnabled: boolean) {
+  copyElementLinkMenuEnabled = isEnabled;
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  const item = menu.getMenuItemById(copyElementLinkMenuItemId);
+
+  if (item != null) {
+    item.enabled = isEnabled;
+  }
+}
+
+function syncWorkspaceTabNavigationMenuItemsEnabled(isEnabled: boolean) {
+  workspaceTabNavigationMenuEnabled = isEnabled;
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  for (const id of workspaceTabNavigationMenuItemIds) {
+    const item = menu.getMenuItemById(id);
+
+    if (item != null) {
+      item.enabled = isEnabled;
+    }
+  }
+}
+
 const ZOOM_COMPARISON_EPSILON = 0.000001;
 
 function zoomMenuStateIsActualSize() {
@@ -1497,6 +1557,58 @@ function zoomMenuStateIsActualSize() {
 
 function sendViewZoomCommand(args: FileMenuViewZoomArgs) {
   win?.webContents.send(IpcMainChannels.FileMenuViewZoom, args);
+}
+
+type WorkspaceTabNavigationDirection = 'previous' | 'next';
+
+function sendWindowTabNavigationCommand(
+  direction: WorkspaceTabNavigationDirection,
+) {
+  win?.webContents.send(
+    direction === 'previous'
+      ? IpcMainChannels.FileMenuWindowPreviousTab
+      : IpcMainChannels.FileMenuWindowNextTab,
+  );
+}
+
+function getWindowTabNavigationInput(
+  input: Input,
+): WorkspaceTabNavigationDirection | null {
+  if (input.type !== 'keyDown') {
+    return null;
+  }
+
+  const isCtrlOnly = input.control && !input.alt && !input.meta;
+
+  if (isCtrlOnly && input.shift && input.code === 'Tab') {
+    return 'previous';
+  }
+
+  if (isCtrlOnly && !input.shift && input.code === 'Tab') {
+    return 'next';
+  }
+
+  if (isMac && input.meta && input.shift && !input.control && !input.alt) {
+    if (input.code === 'BracketLeft') {
+      return 'previous';
+    }
+
+    if (input.code === 'BracketRight') {
+      return 'next';
+    }
+  }
+
+  if (!isMac && isCtrlOnly) {
+    if (!input.shift && input.code === 'PageUp') {
+      return 'previous';
+    }
+
+    if (!input.shift && input.code === 'PageDown') {
+      return 'next';
+    }
+  }
+
+  return null;
 }
 
 function syncZoomMenuItems(state: WorkspaceZoomState) {
@@ -1563,6 +1675,44 @@ function createPaneMenuItem(
         paneId,
         visible: requestedVisibility,
       } as FileMenuViewPaneVisibilityArgs);
+    },
+  };
+}
+
+function createStatusBarMenuItem(label: string): MenuItemConstructorOptions {
+  return {
+    checked: statusBarMenuVisible,
+    id: statusBarMenuItemId,
+    label,
+    type: 'checkbox',
+    click(menuItem) {
+      const requestedVisibility = menuItem.checked;
+
+      menuItem.checked = statusBarMenuVisible;
+      win?.webContents.send(IpcMainChannels.FileMenuViewStatusBarVisibility, {
+        visible: requestedVisibility,
+      } as FileMenuViewStatusBarVisibilityArgs);
+    },
+  };
+}
+
+function createWindowTabNavigationMenuItem(
+  direction: WorkspaceTabNavigationDirection,
+  label: string,
+  accelerator: string,
+  id = `window-${direction}-tab`,
+): MenuItemConstructorOptions {
+  return {
+    accelerator,
+    enabled: workspaceTabNavigationMenuEnabled,
+    id,
+    label,
+    click(menuItem, browserWindow, event) {
+      // The accelerator is handled by before-input-event so aliases share one
+      // path. Mouse menu selection still dispatches.
+      if (!event.triggeredByAccelerator) {
+        sendWindowTabNavigationCommand(direction);
+      }
     },
   };
 }
@@ -1727,15 +1877,15 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t(($) => $.menu.file.exportAsPdf),
-          accelerator: 'CmdOrCtrl+E',
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuExportAsPdf);
-          },
-        },
-        {
           label: i18next.t(($) => $.menu.file.exportAs),
           submenu: [
+            {
+              label: i18next.t(($) => $.menu.file.exportAsPdf),
+              accelerator: 'CmdOrCtrl+E',
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsPdf);
+              },
+            },
             {
               label: i18next.t(($) => $.menu.file.exportAsHtml),
               accelerator: 'CmdOrCtrl+Shift+E',
@@ -1926,6 +2076,15 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          id: copyElementLinkMenuItemId,
+          enabled: copyElementLinkMenuEnabled,
+          label: i18next.t(($) => $.menu.edit.copyElementLink),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuEditCopyElementLink);
+          },
+        },
+        { type: 'separator' },
+        {
           label: i18next.t(($) => $.menu.edit.preferences),
           accelerator: 'CmdOrCtrl+,',
           click() {
@@ -1986,7 +2145,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t(($) => $.menu.insert.modeKey),
+          label: i18next.t(($) => $.menu.insert.initialMartyria),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertModeKey);
           },
@@ -2103,6 +2262,8 @@ function createMenu() {
           i18next.t(($) => $.menu.view.developer),
         ),
         { type: 'separator' },
+        createStatusBarMenuItem(i18next.t(($) => $.menu.view.statusBar)),
+        { type: 'separator' },
         {
           label: i18next.t(($) => $.menu.view.resetLayout),
           click() {
@@ -2122,14 +2283,19 @@ function createMenu() {
       ],
     },
     {
-      label: i18next.t(($) => $.menu.tools.root),
+      label: i18next.t(($) => $.menu.window.root),
+      role: 'windowMenu',
       submenu: [
-        {
-          label: i18next.t(($) => $.menu.tools.copyElementLink),
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuToolsCopyElementLink);
-          },
-        },
+        createWindowTabNavigationMenuItem(
+          'previous',
+          i18next.t(($) => $.menu.window.previousTab),
+          isMac ? 'Command+Shift+[' : 'Ctrl+PageUp',
+        ),
+        createWindowTabNavigationMenuItem(
+          'next',
+          i18next.t(($) => $.menu.window.nextTab),
+          isMac ? 'Command+Shift+]' : 'Ctrl+PageDown',
+        ),
       ],
     },
     ...(isDevelopment
@@ -2259,6 +2425,14 @@ async function createWindow() {
     shell.openExternal(details.url);
     return { action: 'deny' };
   });
+  win.webContents.on('before-input-event', (event, input) => {
+    const direction = getWindowTabNavigationInput(input);
+
+    if (direction != null && workspaceTabNavigationMenuEnabled) {
+      event.preventDefault();
+      sendWindowTabNavigationCommand(direction);
+    }
+  });
 
   if (!silent) {
     win.once('ready-to-show', () => {
@@ -2332,9 +2506,30 @@ ipcMain.on(
 );
 
 ipcMain.on(
+  IpcRendererChannels.SetCopyElementLinkEnabled,
+  (event, isEnabled: boolean) => {
+    syncCopyElementLinkMenuItemEnabled(isEnabled);
+  },
+);
+
+ipcMain.on(
+  IpcRendererChannels.SetWorkspaceTabNavigationEnabled,
+  (event, isEnabled: boolean) => {
+    syncWorkspaceTabNavigationMenuItemsEnabled(isEnabled);
+  },
+);
+
+ipcMain.on(
   IpcRendererChannels.SetWorkspacePaneVisibility,
   (event, visibility: WorkspacePaneVisibility) => {
     syncPaneMenuItems(visibility);
+  },
+);
+
+ipcMain.on(
+  IpcRendererChannels.SetStatusBarVisibility,
+  (event, isVisible: boolean) => {
+    syncStatusBarMenuItem(isVisible);
   },
 );
 

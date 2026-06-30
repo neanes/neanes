@@ -34,6 +34,7 @@
     "copyFormat": "Copiază formatul",
     "pasteFormat": "Lipește formatul",
     "find": "Căutare",
+    "copyElementLink": "Copiază linkul elementului",
     "preferences": "Preferințe"
   },
   "insert": {
@@ -46,15 +47,11 @@
     "textBox": "Casetă de text",
     "richTextBox": "Casetă de text formatat",
     "inlineTextBox": "Casetă de text în linie",
-    "modeKey": "Mărturie inițială",
+    "initialMartyria": "Mărturie inițială",
     "image": "Imagine",
     "headersAndFooters": "Antete și subsoluri",
     "header": "Antet",
     "footer": "Subsol"
-  },
-  "tools": {
-    "root": "Unelte",
-    "copyElementLink": "Copiază linkul elementului"
   },
   "view": {
     "root": "Vizualizare",
@@ -64,6 +61,7 @@
     "properties": "Proprietăți",
     "selection": "Selecție",
     "lyrics": "Versuri",
+    "statusBar": "Bară de stare",
     "showDeveloperPanels": "Arată panourile pentru dezvoltatori",
     "zoom": {
       "root": "Zoom",
@@ -76,6 +74,11 @@
     },
     "resetLayout": "Resetează aranjarea",
     "generateTestFiles": "Generează fișiere de test (debugare)"
+  },
+  "window": {
+    "root": "Fereastră",
+    "previousTab": "Fila precedentă",
+    "nextTab": "Fila următoare"
   },
   "help": {
     "root": "Ajutor",

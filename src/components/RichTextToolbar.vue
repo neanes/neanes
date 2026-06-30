@@ -321,6 +321,7 @@
       <RichTextToolbarItem name="bulletedList" :owner="element" />
       <RichTextToolbarItem name="numberedList" :owner="element" />
       <RichTextToolbarItem name="link" :owner="element" />
+      <RichTextToolbarItem name="horizontalLine" :owner="element" />
       <RichTextToolbarItem name="uploadImage" :owner="element" />
       <RichTextToolbarItem name="insertTable" :owner="element" />
       <ToolbarSeparator />

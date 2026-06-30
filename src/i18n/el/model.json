@@ -100,7 +100,7 @@
       "connectingHeteron": "Έτερον Σύνδεσης",
       "endofonon": "Ενδόφωνον"
     },
-    "rootSign": {
+    "martyriaSign": {
       "ananes": "Ανανές",
       "neanes": "Νεανές",
       "softChromaticGa": "Μαλακό Χρωματικό Γα",
@@ -200,7 +200,7 @@
     "grave": "Ήχος Βαρύς",
     "plagalFourth": "Ήχος Πλάγιος του Τετάρτου"
   },
-  "modeKey": {
+  "initialMartyria": {
     "heirmologicAndSticheraric": "Ειρμολογικός και Στιχηραρικός",
     "tetraphonicPapadicAndOldSticheraric": "Τετράφωνος (Παπαδικός και Παλαιός Στιχηραρικός)",
     "tetraphonic": "Τετράφωνος",

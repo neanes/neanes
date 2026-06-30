@@ -83,7 +83,7 @@
 
       <Field orientation="horizontal">
         <FieldLabel for="properties-text-box-font-size">{{
-          $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
+          $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
         }}</FieldLabel>
         <div class="flex items-center gap-1">
           <InputFontSize

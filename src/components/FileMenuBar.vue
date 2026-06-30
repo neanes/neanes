@@ -80,6 +80,10 @@
               {{ $t(($) => $.menu.file.exportAs, { ns: 'menu' }) }}
             </MenubarSubTrigger>
             <MenubarSubContent class="chrome-menubar-content">
+              <MenubarItem @select="onClickExportAsPdf">
+                <PhFilePdf />
+                {{ $t(($) => $.menu.file.exportAsPdf, { ns: 'menu' }) }}
+              </MenubarItem>
               <MenubarItem @select="onClickExportAsHtml">
                 <PhFileHtml />
                 {{ $t(($) => $.menu.file.exportAsHtml, { ns: 'menu' }) }}
@@ -166,6 +170,14 @@
             {{ $t(($) => $.menu.edit.find, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
+          <MenubarItem
+            :disabled="!props.canCopyElementLink"
+            @select="onClickCopyElementLink"
+          >
+            <PhLinkSimple />
+            {{ $t(($) => $.menu.edit.copyElementLink, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSeparator />
           <MenubarItem @select="onClickPreferences">
             <PhGearFine />
             {{ $t(($) => $.menu.edit.preferences, { ns: 'menu' }) }}
@@ -207,7 +219,7 @@
           </MenubarItem>
           <MenubarItem @select="onClickAddModeKey">
             <PhWaveSine />
-            {{ $t(($) => $.menu.insert.modeKey, { ns: 'menu' }) }}
+            {{ $t(($) => $.menu.insert.initialMartyria, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddImage">
             <PhImageSquare />
@@ -329,6 +341,13 @@
             {{ $t(($) => $.menu.view.developer, { ns: 'menu' }) }}
           </MenubarCheckboxItem>
           <MenubarSeparator />
+          <MenubarCheckboxItem
+            :model-value="props.statusBarVisible"
+            @update:model-value="onToggleStatusBarClick($event === true)"
+          >
+            {{ $t(($) => $.menu.view.statusBar, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarSeparator />
           <MenubarItem @select="onResetPaneLayoutClick">
             <PhArrowCounterClockwise />
             {{ $t(($) => $.menu.view.resetLayout, { ns: 'menu' }) }}
@@ -338,12 +357,22 @@
 
       <MenubarMenu>
         <MenubarTrigger>
-          {{ $t(($) => $.menu.tools.root, { ns: 'menu' }) }}
+          {{ $t(($) => $.menu.window.root, { ns: 'menu' }) }}
         </MenubarTrigger>
         <MenubarContent class="chrome-menubar-content">
-          <MenubarItem @select="onClickCopyElementLink">
-            <PhLinkSimple />
-            {{ $t(($) => $.menu.tools.copyElementLink, { ns: 'menu' }) }}
+          <MenubarItem
+            :disabled="!props.canNavigateWorkspaceTabs"
+            @select="onClickPreviousTab"
+          >
+            <PhArrowLineLeft />
+            {{ $t(($) => $.menu.window.previousTab, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem
+            :disabled="!props.canNavigateWorkspaceTabs"
+            @select="onClickNextTab"
+          >
+            <PhArrowLineRight />
+            {{ $t(($) => $.menu.window.nextTab, { ns: 'menu' }) }}
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
@@ -403,6 +432,8 @@
 import {
   PhArrowClockwise,
   PhArrowCounterClockwise,
+  PhArrowLineLeft,
+  PhArrowLineRight,
   PhArticleNyTimes,
   PhBookOpen,
   PhBookOpenText,
@@ -414,6 +445,7 @@ import {
   PhFileCode,
   PhFileHtml,
   PhFileImage,
+  PhFilePdf,
   PhFilePlus,
   PhFileText,
   PhFloppyDisk,
@@ -470,6 +502,7 @@ import type {
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
   FileMenuViewPaneVisibilityArgs,
+  FileMenuViewStatusBarVisibilityArgs,
   FileMenuViewZoomArgs,
 } from '@/ipc/ipcChannels';
 import {
@@ -488,8 +521,11 @@ import {
 } from '@/services/BrowserRecentFilesService';
 
 const props = defineProps<{
+  canCopyElementLink: boolean;
+  canNavigateWorkspaceTabs: boolean;
   paneVisibility: WorkspacePaneVisibility;
   showDeveloperPanels: boolean;
+  statusBarVisible: boolean;
   zoom: number;
   zoomFitMode: ZoomFitMode | null;
 }>();
@@ -690,6 +726,10 @@ function onClickSaveAs() {
   EventBus.$emit(IpcMainChannels.FileMenuSaveAs);
 }
 
+function onClickExportAsPdf() {
+  EventBus.$emit(IpcMainChannels.FileMenuExportAsPdf);
+}
+
 function onClickExportAsHtml() {
   EventBus.$emit(IpcMainChannels.FileMenuExportAsHtml);
 }
@@ -887,11 +927,25 @@ function onClickFind() {
   EventBus.$emit(IpcMainChannels.FileMenuFind);
 }
 
+function onClickPreviousTab() {
+  EventBus.$emit(IpcMainChannels.FileMenuWindowPreviousTab);
+}
+
+function onClickNextTab() {
+  EventBus.$emit(IpcMainChannels.FileMenuWindowNextTab);
+}
+
 function onTogglePaneClick(paneId: WorkspacePaneId, visible?: boolean) {
   EventBus.$emit(IpcMainChannels.FileMenuViewPaneVisibility, {
     paneId,
     visible,
   } as FileMenuViewPaneVisibilityArgs);
+}
+
+function onToggleStatusBarClick(visible?: boolean) {
+  EventBus.$emit(IpcMainChannels.FileMenuViewStatusBarVisibility, {
+    visible,
+  } as FileMenuViewStatusBarVisibilityArgs);
 }
 
 function onResetPaneLayoutClick() {
@@ -979,7 +1033,7 @@ function onClickAddFooter() {
 }
 
 function onClickCopyElementLink() {
-  EventBus.$emit(IpcMainChannels.FileMenuToolsCopyElementLink);
+  EventBus.$emit(IpcMainChannels.FileMenuEditCopyElementLink);
 }
 
 function onClickAbout() {

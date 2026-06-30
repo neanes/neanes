@@ -6,7 +6,7 @@ To create a new score, use the file menu: `File -> New`. This will give you a te
 
 ## Workspace panes
 
-The editor uses dockable panes for tools. Use `View -> Neume Selector`, `View -> Common Combinations`, `View -> Properties`, and `View -> Lyrics` to show or hide panes. The Neume Selector and Properties panes are visible by default. The Properties pane shows type-specific settings for the current element. Use `View -> Reset Layout` to restore the default editor layout state, including pane arrangement, pane sections, status bar visibility, and zoom defaults.
+The editor uses dockable panes for tools. Use `View -> Neume Selector`, `View -> Common Combinations`, `View -> Properties`, and `View -> Lyrics` to show or hide panes. The Neume Selector and Properties panes are visible by default. The Properties pane shows type-specific settings for the current element, grouped into collapsible sections. Use `View -> Reset Layout` to restore the default editor layout state, including pane arrangement, pane sections, status bar visibility, and zoom defaults.
 
 ## Updating the title
 

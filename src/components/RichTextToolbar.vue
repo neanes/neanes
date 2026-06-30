@@ -112,6 +112,21 @@
           </ToolbarToggleItem>
         </AppTooltip>
       </ToolbarToggleGroup>
+      <AppTooltip
+        :tooltip="
+          $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' })
+        "
+      >
+        <ToolbarButton
+          variant="secondary"
+          class="chrome-button"
+          :disabled="!isCommandEnabled('removeFormat')"
+          @mousedown.prevent
+          @click="onRemoveFormat"
+        >
+          <PhEraser class="size-4" />
+        </ToolbarButton>
+      </AppTooltip>
       <ToolbarSeparator />
       <ToolbarToggleGroup
         type="single"
@@ -315,6 +330,7 @@
 import {
   PhArrowClockwise,
   PhArrowCounterClockwise,
+  PhEraser,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhTextAlignLeft,
@@ -382,6 +398,7 @@ const EXTRA_COMMAND_NAMES = [
   'indent',
   'undo',
   'redo',
+  'removeFormat',
   INSERT_NEUME_COMMAND,
 ];
 
@@ -430,6 +447,7 @@ const {
   onFontSizeChanged,
   onStyleValuesChanged,
   onAlignmentChanged,
+  onRemoveFormat,
 } = useRichTextStyleCommands(props, EXTRA_COMMAND_NAMES);
 
 const scopedEditor = useActiveEditorForOwner(() => props.element);

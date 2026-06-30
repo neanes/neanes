@@ -1,9 +1,16 @@
 <template>
-  <FieldSet class="min-h-0 flex-1 overflow-auto">
-    <FieldLegend class="sr-only">{{
+  <PaneAccordion
+    :open-sections="openSections"
+    @update:open-sections="$emit('update:open-sections', $event)"
+  >
+    <template #legend>{{
       $t(($) => $.menu.view.lyrics, { ns: 'menu' })
-    }}</FieldLegend>
-    <FieldGroup>
+    }}</template>
+
+    <PaneSection
+      value="style"
+      :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
+    >
       <Field orientation="horizontal">
         <Switch
           id="properties-lyrics-use-default-style"
@@ -52,35 +59,6 @@
         </Field>
 
         <Field orientation="horizontal">
-          <FieldLabel for="properties-lyrics-font-size">{{
-            $t(($) => $.dialog.pageSetup.size, { ns: 'dialog' })
-          }}</FieldLabel>
-          <InputFontSize
-            id="properties-lyrics-font-size"
-            :model-value="element.lyricsFontSize"
-            @update:model-value="
-              $emit('update', {
-                lyricsFontSize: $event,
-              } as Partial<NoteElement>)
-            "
-          />
-        </Field>
-
-        <Field orientation="horizontal">
-          <FieldLabel>{{
-            $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
-          }}</FieldLabel>
-          <ColorPicker
-            :model-value="element.lyricsColor"
-            @update:model-value="
-              $emit('update', {
-                lyricsColor: $event,
-              } as Partial<NoteElement>)
-            "
-          />
-        </Field>
-
-        <Field orientation="horizontal">
           <FieldLabel>{{
             $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
           }}</FieldLabel>
@@ -111,6 +89,35 @@
         </Field>
 
         <Field orientation="horizontal">
+          <FieldLabel for="properties-lyrics-font-size">{{
+            $t(($) => $.dialog.pageSetup.size, { ns: 'dialog' })
+          }}</FieldLabel>
+          <InputFontSize
+            id="properties-lyrics-font-size"
+            :model-value="element.lyricsFontSize"
+            @update:model-value="
+              $emit('update', {
+                lyricsFontSize: $event,
+              } as Partial<NoteElement>)
+            "
+          />
+        </Field>
+
+        <Field orientation="horizontal">
+          <FieldLabel>{{
+            $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
+          }}</FieldLabel>
+          <ColorPicker
+            :model-value="element.lyricsColor"
+            @update:model-value="
+              $emit('update', {
+                lyricsColor: $event,
+              } as Partial<NoteElement>)
+            "
+          />
+        </Field>
+
+        <Field orientation="horizontal">
           <FieldLabel>{{
             $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
           }}</FieldLabel>
@@ -124,8 +131,8 @@
           />
         </Field>
       </template>
-    </FieldGroup>
-  </FieldSet>
+    </PaneSection>
+  </PaneAccordion>
 </template>
 
 <script setup lang="ts">
@@ -138,13 +145,9 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from '@/components/ui/field';
+import PaneAccordion from '@/components/pane/PaneAccordion.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
@@ -160,9 +163,13 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
 });
 
-const emit = defineEmits(['update']);
+const emit = defineEmits(['update', 'update:open-sections']);
 
 const {
   fontStyleOptions,

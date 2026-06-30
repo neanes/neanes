@@ -46,7 +46,7 @@ export enum IpcMainChannels {
 
   FileMenuViewPaneVisibility = 'FileMenuViewPaneVisibility',
   FileMenuViewStatusBarVisibility = 'FileMenuViewStatusBarVisibility',
-  FileMenuViewResetPaneLayout = 'FileMenuViewResetPaneLayout',
+  FileMenuViewResetLayout = 'FileMenuViewResetLayout',
   FileMenuViewZoom = 'FileMenuViewZoom',
 
   FileMenuPreferences = 'FileMenuPreferences',

@@ -144,7 +144,6 @@ const paneMenuItemIds: Record<WorkspacePaneId, string> = {
   'neume-selector': 'view-pane-neume-selector',
   lyrics: 'view-pane-lyrics',
   properties: 'view-pane-properties',
-  selection: 'view-pane-selection',
 };
 const zoomMenuItemIds = {
   actualSize: 'view-zoom-actual-size',
@@ -2254,10 +2253,6 @@ function createMenu() {
           i18next.t(($) => $.menu.view.properties),
         ),
         createPaneMenuItem(
-          'selection',
-          i18next.t(($) => $.menu.view.selection),
-        ),
-        createPaneMenuItem(
           'lyrics',
           i18next.t(($) => $.menu.view.lyrics),
           'CmdOrCtrl+L',
@@ -2272,7 +2267,7 @@ function createMenu() {
         {
           label: i18next.t(($) => $.menu.view.resetLayout),
           click() {
-            win?.webContents.send(IpcMainChannels.FileMenuViewResetPaneLayout);
+            win?.webContents.send(IpcMainChannels.FileMenuViewResetLayout);
           },
         },
         ...(isDevelopment

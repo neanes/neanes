@@ -1,6 +1,6 @@
 <template>
   <div class="flex size-full min-h-0 flex-col overflow-hidden p-3">
-    <template v-if="context.kind === 'none' || context.kind === 'range'">
+    <template v-if="context.kind === 'none'">
       <Empty class="min-h-40 border bg-muted/20">
         <EmptyHeader>
           <EmptyTitle>{{
@@ -101,7 +101,6 @@
       :element="modeKeyElement"
       :page-setup="pageSetup"
       @update="emit('update:mode-key', modeKeyElement, $event)"
-      @open-mode-key-dialog="emit('open-mode-key-dialog')"
     />
 
     <PropertiesNeume
@@ -111,9 +110,6 @@
       :inner-neume="innerNeume"
       :page-setup="pageSetup"
       @update="emit('update:neume', neumeElement, $event)"
-      @open-syllable-positioning-dialog="
-        emit('open-syllable-positioning-dialog')
-      "
     />
 
     <PropertiesMartyria
@@ -175,9 +171,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
-  'open-mode-key-dialog',
   'open-paragraph-styles-dialog',
-  'open-syllable-positioning-dialog',
   'update:annotation',
   'update:drop-cap',
   'update:image-box',

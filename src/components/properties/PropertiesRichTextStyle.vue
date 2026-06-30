@@ -293,7 +293,9 @@
             </ToggleGroupItem>
           </AppTooltip>
           <AppTooltip
-            :tooltip="$t(($) => $.toolbar.selection.justify, { ns: 'toolbar' })"
+            :tooltip="
+              $t(($) => $.toolbar.common.alignJustify, { ns: 'toolbar' })
+            "
           >
             <ToggleGroupItem
               value="justify"

@@ -537,11 +537,24 @@
           </ToolbarToggleItem>
         </ToolbarToggleGroup>
       </template>
+      <ToolbarSeparator />
+      <AppTooltip
+        :tooltip="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
+      >
+        <ToolbarButton
+          variant="secondary"
+          class="chrome-button"
+          @click="$emit('open-syllable-positioning-dialog')"
+        >
+          <PhCrosshair class="size-4" />
+        </ToolbarButton>
+      </AppTooltip>
     </Toolbar>
   </div>
 </template>
 
 <script setup lang="ts">
+import { PhCrosshair } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
 import { computed, useId } from 'vue';
@@ -899,6 +912,7 @@ const emit = defineEmits([
   'update:tertiaryFthora',
   'update:tie',
   'update:time',
+  'open-syllable-positioning-dialog',
 ]);
 
 const neumeSelectLabelId = useId();

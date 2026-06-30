@@ -326,14 +326,6 @@
             {{ $t(($) => $.menu.view.properties, { ns: 'menu' }) }}
           </MenubarCheckboxItem>
           <MenubarCheckboxItem
-            :model-value="props.paneVisibility.selection"
-            @update:model-value="
-              onTogglePaneClick('selection', $event === true)
-            "
-          >
-            {{ $t(($) => $.menu.view.selection, { ns: 'menu' }) }}
-          </MenubarCheckboxItem>
-          <MenubarCheckboxItem
             :model-value="props.paneVisibility.lyrics"
             @update:model-value="onTogglePaneClick('lyrics', $event === true)"
           >
@@ -356,7 +348,7 @@
             {{ $t(($) => $.menu.view.statusBar, { ns: 'menu' }) }}
           </MenubarCheckboxItem>
           <MenubarSeparator />
-          <MenubarItem @select="onResetPaneLayoutClick">
+          <MenubarItem @select="onResetLayoutClick">
             <PhArrowCounterClockwise />
             {{ $t(($) => $.menu.view.resetLayout, { ns: 'menu' }) }}
           </MenubarItem>
@@ -956,8 +948,8 @@ function onToggleStatusBarClick(visible?: boolean) {
   } as FileMenuViewStatusBarVisibilityArgs);
 }
 
-function onResetPaneLayoutClick() {
-  EventBus.$emit(IpcMainChannels.FileMenuViewResetPaneLayout);
+function onResetLayoutClick() {
+  EventBus.$emit(IpcMainChannels.FileMenuViewResetLayout);
 }
 
 function emitViewZoom(args: FileMenuViewZoomArgs) {

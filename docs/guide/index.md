@@ -6,7 +6,7 @@ To create a new score, use the file menu: `File -> New`. This will give you a te
 
 ## Workspace panes
 
-The editor uses dockable panes for tools. Use `View -> Neume Selector`, `View -> Common Combinations`, `View -> Properties`, `View -> Selection`, and `View -> Lyrics` to show or hide panes. The Neume Selector is visible by default, the Properties pane shows type-specific settings for the current element, and the Selection pane shows common selection settings. Use `View -> Reset Layout` to restore the default pane arrangement.
+The editor uses dockable panes for tools. Use `View -> Neume Selector`, `View -> Common Combinations`, `View -> Properties`, and `View -> Lyrics` to show or hide panes. The Neume Selector and Properties panes are visible by default. The Properties pane shows type-specific settings for the current element. Use `View -> Reset Layout` to restore the default editor layout state, including pane arrangement, pane sections, status bar visibility, and zoom defaults.
 
 ## Updating the title
 
@@ -170,7 +170,7 @@ For example, to add a melisma to the word `των`, type <kbd>τω-</kbd> <kbd>-
 
 ## Page Breaks and Line Breaks
 
-To insert a page break or a line break, click the neume that you want the break to occur after, and press the `Page Break` or `Line Break` button in the main toolbar. To remove the page or line break, highlight the element with the break, and press the page or line break button again. These controls are also available in the Selection pane for the selected element.
+To insert a page break or a line break, click the neume that you want the break to occur after, and press the `Page Break` or `Line Break` button in the main toolbar. To remove the page or line break, highlight the element with the break, and press the page or line break button again.
 
 ### Line Break
 

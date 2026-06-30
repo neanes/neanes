@@ -73,7 +73,6 @@ import type { InspectorContext } from '@/components/properties/InspectorContext'
 import PropertiesPane from '@/components/properties/PropertiesPane.vue';
 import RichTextToolbar from '@/components/RichTextToolbar.vue';
 import SearchText from '@/components/SearchText.vue';
-import SelectionPane from '@/components/SelectionPane.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import Annotation from '@/components/TextAnnotation.vue';
 import TextBox from '@/components/TextBox.vue';
@@ -126,6 +125,11 @@ import {
   IpcMainChannels,
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
+import type { EditorPaneLayout } from '@/models/EditorEnvironment';
+import {
+  DEFAULT_PANE_ACCORDION_STATE,
+  EditorEnvironment,
+} from '@/models/EditorEnvironment';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import type { EmptyElement, ScoreElement } from '@/models/Element';
 import {
@@ -398,9 +402,18 @@ const preferredRichTextBoxFocusTarget = ref<{
 const searchTextQuery = ref('');
 const searchTextPanelIsOpen = ref(false);
 const showFileMenuBar = ref(!isElectron());
-const statusBarIsVisible = ref(true);
-const paneLayoutResetCounter = ref(0);
-const paneVisibility = ref(createDefaultPaneVisibility());
+
+// Hydrate remembered state synchronously (not in onMounted) so saved layout,
+// zoom defaults, and developer-pane preference are available before the dock
+// layout and UI-state refs are first read or rendered.
+const editorEnvironment = ref(loadEditorEnvironment());
+const editorPreferences = ref(loadEditorPreferences());
+
+const statusBarIsVisible = ref(editorEnvironment.value.statusBarIsVisible);
+const layoutResetCounter = ref(0);
+const paneVisibility = ref(
+  createInitialPaneVisibility(editorEnvironment.value, editorPreferences.value),
+);
 const editorPreferencesHydrated = ref(false);
 const isDevelopment = ref(import.meta.env.DEV);
 const isBrowser = ref(!isElectron());
@@ -408,7 +421,10 @@ const isLoading = ref(true);
 const printMode = ref(false);
 const canUndo = ref(false);
 const canRedo = ref(false);
-const developerPaneOpenSections = ref(['display', 'line', 'inspector']);
+const developerPaneOpenSections = computed({
+  get: () => accordionStateFor('developer'),
+  set: (value: string[]) => setAccordionState('developer', value),
+});
 const workspaces = ref<Workspace[]>([]);
 const selectedWorkspaceValue = ref(new Workspace());
 const pendingLyricsAssignmentTimers = new Map<string, number>();
@@ -479,7 +495,6 @@ const audioOptions = reactive<PlaybackOptions>({
     [Accidental.Sharp_8_Left]: 8,
   },
 });
-const editorPreferences = ref(new EditorPreferences());
 const byzHtmlExporter = new ByzHtmlExporter();
 const exportInProgress = ref(false);
 
@@ -576,16 +591,6 @@ const inspectorContext = computed<InspectorContext>(() => {
     isTempoElement(currentSelectedElement)
   ) {
     return { kind: 'tempo', element: currentSelectedElement };
-  }
-
-  if (selectionRange.value != null) {
-    const start = Math.min(
-      selectionRange.value.start,
-      selectionRange.value.end,
-    );
-    const end = Math.max(selectionRange.value.start, selectionRange.value.end);
-
-    return { kind: 'range', elements: elements.value.slice(start, end + 1) };
   }
 
   return { kind: 'none' };
@@ -1584,6 +1589,11 @@ watch(
   { immediate: true },
 );
 
+watch(statusBarIsVisible, (visible) => {
+  editorEnvironment.value.statusBarIsVisible = visible;
+  saveEditorEnvironment();
+});
+
 watch(
   () =>
     ({
@@ -1622,14 +1632,6 @@ onMounted(() => {
     // Deserialize as -Infinity
     audioOptions.volumeIson = audioOptions.volumeIson ?? -Infinity;
     audioOptions.volumeMelody = audioOptions.volumeMelody ?? -Infinity;
-  }
-
-  const savedEditorPreferences = localStorage.getItem('editorPreferences');
-
-  if (savedEditorPreferences != null) {
-    editorPreferences.value = EditorPreferences.createFrom(
-      JSON.parse(savedEditorPreferences),
-    );
   }
 
   syncDeveloperPanelsFromPreferencesOnStartup();
@@ -1701,8 +1703,8 @@ onMounted(() => {
     onFileMenuViewStatusBarVisibility,
   );
   EventBus.$on(
-    IpcMainChannels.FileMenuViewResetPaneLayout,
-    onFileMenuViewResetPaneLayout,
+    IpcMainChannels.FileMenuViewResetLayout,
+    onFileMenuViewResetLayout,
   );
   EventBus.$on(IpcMainChannels.FileMenuViewZoom, onFileMenuViewZoom);
   EventBus.$on(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
@@ -1755,6 +1757,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keyup', onKeyup);
   window.removeEventListener('resize', throttled.onEditorViewportResize);
   clearZoomWheelDeltaReset();
+  saveEditorEnvironment();
 
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
@@ -1811,8 +1814,8 @@ onBeforeUnmount(() => {
     onFileMenuViewStatusBarVisibility,
   );
   EventBus.$off(
-    IpcMainChannels.FileMenuViewResetPaneLayout,
-    onFileMenuViewResetPaneLayout,
+    IpcMainChannels.FileMenuViewResetLayout,
+    onFileMenuViewResetLayout,
   );
   EventBus.$off(IpcMainChannels.FileMenuViewZoom, onFileMenuViewZoom);
   EventBus.$off(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
@@ -2955,7 +2958,10 @@ function syncDeveloperPanelsMenuState() {
 }
 
 function syncDeveloperPanelsFromPreferencesOnStartup() {
-  setPaneVisibility('developer', editorPreferences.value.showDeveloperPanels);
+  if (editorEnvironment.value.paneLayout?.developer == null) {
+    setPaneVisibility('developer', editorPreferences.value.showDeveloperPanels);
+  }
+
   syncDeveloperPanelsMenuState();
 }
 
@@ -3020,10 +3026,25 @@ function showPropertiesPaneForRichTextNeume() {
 
 function resetLayout() {
   const defaultVisibility = createDefaultPaneVisibility();
+  const defaultEnvironment = new EditorEnvironment();
 
+  pendingZoomFitDefaultUpdate = null;
+  editorEnvironment.value.defaultZoom = defaultEnvironment.defaultZoom;
+  editorEnvironment.value.defaultZoomFitMode =
+    defaultEnvironment.defaultZoomFitMode;
+  editorEnvironment.value.statusBarIsVisible =
+    defaultEnvironment.statusBarIsVisible;
+  editorEnvironment.value.paneLayout = defaultEnvironment.paneLayout;
+  editorEnvironment.value.paneAccordionState = {
+    ...defaultEnvironment.paneAccordionState,
+  };
+  zoom.value = defaultEnvironment.defaultZoom;
+  zoomFitMode.value = defaultEnvironment.defaultZoomFitMode;
+  statusBarIsVisible.value = defaultEnvironment.statusBarIsVisible;
   Object.assign(paneVisibility.value, defaultVisibility);
   paneVisibility.value.developer = editorPreferences.value.showDeveloperPanels;
-  paneLayoutResetCounter.value += 1;
+  layoutResetCounter.value += 1;
+  saveEditorEnvironment();
 }
 
 function onPaneVisibilityChange(paneId: WorkspacePaneId, isVisible: boolean) {
@@ -3039,6 +3060,11 @@ function onPaneVisibilityChange(paneId: WorkspacePaneId, isVisible: boolean) {
 
   setPaneVisibility(paneId, isVisible);
   refocusSelectedRichTextEditorAfterShowingPane(paneId, isVisible);
+}
+
+function onPaneLayoutChange(layout: EditorPaneLayout) {
+  editorEnvironment.value.paneLayout = layout;
+  saveEditorEnvironmentDebounced();
 }
 
 function updateEditorPreferences(form: EditorPreferences) {
@@ -3074,59 +3100,87 @@ function saveEditorPreferences() {
   );
 }
 
+function loadEditorPreferences() {
+  try {
+    const savedEditorPreferences = localStorage.getItem('editorPreferences');
+
+    if (savedEditorPreferences != null) {
+      return EditorPreferences.createFrom(JSON.parse(savedEditorPreferences));
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  return new EditorPreferences();
+}
+
+function loadEditorEnvironment() {
+  try {
+    const savedEditorEnvironment = localStorage.getItem('editorEnvironment');
+
+    if (savedEditorEnvironment != null) {
+      return EditorEnvironment.createFrom(JSON.parse(savedEditorEnvironment));
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  return new EditorEnvironment();
+}
+
+function createInitialPaneVisibility(
+  environment: EditorEnvironment,
+  preferences: EditorPreferences,
+) {
+  const visibility = createDefaultPaneVisibility();
+  const savedLayout = environment.paneLayout;
+
+  if (savedLayout != null) {
+    (Object.keys(visibility) as WorkspacePaneId[]).forEach((paneId) => {
+      const paneState = savedLayout[paneId];
+
+      if (paneState != null) {
+        visibility[paneId] = paneState.visible;
+      }
+    });
+  }
+
+  if (!preferences.showDeveloperPanels) {
+    visibility.developer = false;
+  } else if (savedLayout?.developer == null) {
+    visibility.developer = true;
+  }
+
+  return visibility;
+}
+
+function saveEditorEnvironment() {
+  localStorage.setItem(
+    'editorEnvironment',
+    JSON.stringify(editorEnvironment.value),
+  );
+}
+
+// Pane-layout and fit-mode zoom changes can fire rapidly (drag, resize); coalesce
+// their writes.
+const saveEditorEnvironmentDebounced = debounce(500, saveEditorEnvironment);
+
+function accordionStateFor(paneId: WorkspacePaneId): string[] {
+  return (
+    editorEnvironment.value.paneAccordionState[paneId] ??
+    DEFAULT_PANE_ACCORDION_STATE[paneId] ??
+    []
+  );
+}
+
+function setAccordionState(paneId: WorkspacePaneId, value: string[]) {
+  editorEnvironment.value.paneAccordionState[paneId] = value;
+  saveEditorEnvironment();
+}
+
 function isLastElement(element: ScoreElement) {
   return elements.value.indexOf(element) === elements.value.length - 1;
 }
-
-function getInspectorSelectionElement() {
-  const context = inspectorContext.value;
-
-  switch (context.kind) {
-    case 'none':
-    case 'range':
-    case 'lyrics':
-      return null;
-    case 'text-box':
-    case 'rich-text-box':
-      return context.source === 'score' ? context.element : null;
-    case 'annotation':
-      return selectedElement.value;
-    case 'neume':
-      return selectedElementForNeumeToolbar.value;
-    default:
-      return context.element;
-  }
-}
-
-function getInspectorSelectionElementCollection(element: ScoreElement) {
-  const alternateLine = selectedWorkspace.value.selectedAlternateLineElement;
-
-  if (alternateLine?.elements.includes(element)) {
-    return alternateLine.elements;
-  }
-
-  return elements.value;
-}
-
-function canApplyInspectorBreakToElement(
-  element: ScoreElement,
-  collection: ScoreElement[],
-) {
-  return collection === elements.value && !isLastElement(element);
-}
-
-const canApplyInspectorBreak = computed(() => {
-  const element = getInspectorSelectionElement();
-
-  if (element == null) {
-    return false;
-  }
-
-  return canApplyInspectorBreakToElement(
-    element,
-    getInspectorSelectionElementCollection(element),
-  );
-});
 
 function insertPelastikon() {
   document.execCommand('insertText', false, PELASTIKON);
@@ -3435,32 +3489,6 @@ function togglePageBreak() {
   }
 }
 
-function toggleInspectorPageBreak() {
-  const element = getInspectorSelectionElement();
-
-  if (element == null) {
-    return;
-  }
-
-  const collection = getInspectorSelectionElementCollection(element);
-
-  if (!canApplyInspectorBreakToElement(element, collection)) {
-    return;
-  }
-
-  commandService.value.execute(
-    scoreElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: {
-        pageBreak: !element.pageBreak,
-        lineBreak: false,
-      },
-    }),
-  );
-
-  save();
-}
-
 function toggleLineBreak(lineBreakType: LineBreakType | null) {
   if (selectedElement.value && !isLastElement(selectedElement.value)) {
     let lineBreak = !selectedElement.value.lineBreak;
@@ -3486,43 +3514,6 @@ function toggleLineBreak(lineBreakType: LineBreakType | null) {
 
     save();
   }
-}
-
-function toggleInspectorLineBreak(lineBreakType: LineBreakType | null) {
-  const element = getInspectorSelectionElement();
-
-  if (element == null) {
-    return;
-  }
-
-  const collection = getInspectorSelectionElementCollection(element);
-
-  if (!canApplyInspectorBreakToElement(element, collection)) {
-    return;
-  }
-
-  let lineBreak = !element.lineBreak;
-
-  if (lineBreakType != element.lineBreakType) {
-    lineBreak = true;
-  }
-
-  if (!lineBreak) {
-    lineBreakType = null;
-  }
-
-  commandService.value.execute(
-    scoreElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: {
-        lineBreak,
-        pageBreak: false,
-        lineBreakType,
-      },
-    }),
-  );
-
-  save();
 }
 
 function switchToMartyria(element: ScoreElement) {
@@ -5678,6 +5669,7 @@ async function onCloseApplication() {
     }
   }
 
+  saveEditorEnvironment();
   await ipcService.exitApplication();
 }
 
@@ -6897,37 +6889,6 @@ function deleteSelectedElement() {
   }
 }
 
-function deleteInspectorSelectionElement() {
-  if (inspectorContext.value.kind === 'range') {
-    deleteSelectedElement();
-    return;
-  }
-
-  const element = getInspectorSelectionElement();
-
-  if (element == null) {
-    return;
-  }
-
-  const alternateLine = selectedWorkspace.value.selectedAlternateLineElement;
-
-  if (alternateLine?.elements.includes(element)) {
-    if (
-      alternateLine.elements.length === 1 &&
-      selectedElement.value?.elementType === ElementType.Note
-    ) {
-      removeAlternateLine(selectedElement.value as NoteElement, alternateLine);
-    } else {
-      removeScoreElement(element, alternateLine.elements);
-      save();
-    }
-
-    return;
-  }
-
-  deleteSelectedElement();
-}
-
 function deletePreviousElement() {
   if (selectedWorkspace.value.selectedAlternateLineElement) {
     const alternateLineElements =
@@ -7680,6 +7641,36 @@ function updateEntryMode(mode: EntryMode) {
   entryMode.value = mode;
 }
 
+// Remember the current zoom settings so newly opened documents inherit the last
+// user-selected zoom command rather than whichever tab or page setup recalculated
+// zoom-fit most recently.
+function rememberZoomDefault() {
+  if (
+    editorEnvironment.value.defaultZoom === zoom.value &&
+    editorEnvironment.value.defaultZoomFitMode === zoomFitMode.value
+  ) {
+    return;
+  }
+
+  editorEnvironment.value.defaultZoom = zoom.value;
+  editorEnvironment.value.defaultZoomFitMode = zoomFitMode.value;
+  saveEditorEnvironmentDebounced();
+}
+
+function rememberZoomFitModeDefault(mode: ZoomFitMode) {
+  if (editorEnvironment.value.defaultZoomFitMode === mode) {
+    return;
+  }
+
+  editorEnvironment.value.defaultZoomFitMode = mode;
+  saveEditorEnvironmentDebounced();
+}
+
+let pendingZoomFitDefaultUpdate: {
+  mode: ZoomFitMode;
+  workspaceId: string;
+} | null = null;
+
 function updateZoom(newZoom: number) {
   if (newZoom < MIN_ZOOM || newZoom > MAX_ZOOM) {
     toast.error(
@@ -7693,8 +7684,10 @@ function updateZoom(newZoom: number) {
       },
     );
   } else {
+    pendingZoomFitDefaultUpdate = null;
     zoom.value = newZoom;
     zoomFitMode.value = null;
+    rememberZoomDefault();
   }
 }
 
@@ -7716,6 +7709,12 @@ function zoomToNearestStep(direction: 1 | -1) {
 }
 
 function updateZoomFitMode(mode: ZoomFitMode) {
+  pendingZoomFitDefaultUpdate = {
+    mode,
+    workspaceId: selectedWorkspace.value.id,
+  };
+  rememberZoomFitModeDefault(mode);
+
   if (zoomFitMode.value === mode) {
     performZoomToFit();
     return;
@@ -7764,6 +7763,14 @@ function performZoomToFit() {
   const newZoom = clamp(fitZoom, MIN_ZOOM, MAX_ZOOM);
   zoom.value = newZoom;
   alignZoomFitScroll(mode, newZoom);
+
+  if (
+    pendingZoomFitDefaultUpdate?.workspaceId === selectedWorkspace.value.id &&
+    pendingZoomFitDefaultUpdate.mode === mode
+  ) {
+    pendingZoomFitDefaultUpdate = null;
+    rememberZoomDefault();
+  }
 }
 
 function getCurrentPhysicalPageNumber() {
@@ -8603,32 +8610,6 @@ async function onFileMenuEditCopyElementLink() {
   }
 }
 
-async function copyInspectorSelectionElementLink() {
-  const element = getInspectorSelectionElement();
-
-  if (element?.id == null) {
-    return;
-  }
-
-  try {
-    await navigator.clipboard.writeText('#element-' + element.id.toString());
-    toast.success(
-      t(($) => $.toast.editor.copyElementLinkSuccess, { ns: 'toast' }),
-    );
-  } catch (error) {
-    console.error(error);
-    showErrorToast(
-      t(($) => $.toast.editor.copyFailed, { ns: 'toast' }),
-      error,
-      {
-        fallback: t(($) => $.toast.editor.clipboardWriteFailed, {
-          ns: 'toast',
-        }),
-      },
-    );
-  }
-}
-
 async function onFileMenuSave() {
   const workspace = selectedWorkspace.value;
 
@@ -8986,7 +8967,7 @@ function onFileMenuViewStatusBarVisibility({
   }
 }
 
-function onFileMenuViewResetPaneLayout() {
+function onFileMenuViewResetLayout() {
   if (!dialogOpen.value) {
     resetLayout();
   }
@@ -9176,6 +9157,10 @@ function openScore(args: FileMenuOpenScoreArgs) {
 }
 
 function addWorkspace(workspace: Workspace) {
+  // Newly opened documents inherit the last-used zoom settings.
+  workspace.zoom = editorEnvironment.value.defaultZoom;
+  workspace.zoomFitMode = editorEnvironment.value.defaultZoomFitMode;
+
   workspaces.value.push(workspace);
 
   const tab = {
@@ -9481,12 +9466,14 @@ function renderTabLabel(tab: Tab) {
       :neume-keyboard="neumeKeyboard"
       :can-undo="canUndo"
       :can-redo="canRedo"
+      :can-copy-element-link="canCopyElementLink"
       @new-score="onFileMenuNewScore"
       @open-score="onClickOpenScore"
       @save-score="onFileMenuSave"
       @print-score="onClickPrintScore"
       @cut="onFileMenuCut"
       @copy="onFileMenuCopy"
+      @copy-element-link="onFileMenuEditCopyElementLink"
       @paste="onFileMenuPaste"
       @undo="onFileMenuUndo"
       @redo="onFileMenuRedo"
@@ -9516,8 +9503,10 @@ function renderTabLabel(tab: Tab) {
       <WorkspaceDockLayout
         :developer-pane-enabled="showDeveloperPanels"
         :pane-visibility="paneVisibility"
-        :pane-layout-reset-counter="paneLayoutResetCounter"
+        :pane-layout="editorEnvironment.paneLayout"
+        :layout-reset-counter="layoutResetCounter"
         @pane-visibility-change="onPaneVisibilityChange"
+        @layout-change="onPaneLayoutChange"
       >
         <template #neume-selector>
           <NeumeSelector
@@ -9556,17 +9545,6 @@ function renderTabLabel(tab: Tab) {
             @open-mode-key-dialog="openModeKeyDialog"
             @open-paragraph-styles-dialog="openParagraphStylesDialog"
             @open-syllable-positioning-dialog="openSyllablePositioningDialog"
-          />
-        </template>
-
-        <template #selection>
-          <SelectionPane
-            :context="inspectorContext"
-            :can-apply-break="canApplyInspectorBreak"
-            @copy-element-link="copyInspectorSelectionElementLink"
-            @toggle-page-break="toggleInspectorPageBreak"
-            @toggle-line-break="toggleInspectorLineBreak"
-            @delete-selected-element="deleteInspectorSelectionElement"
           />
         </template>
 
@@ -10812,6 +10790,7 @@ function renderTabLabel(tab: Tab) {
           "
           @update:ison="setIson(inspectorContext.element, $event)"
           @update:tie="setTie(inspectorContext.element, $event)"
+          @open-syllable-positioning-dialog="openSyllablePositioningDialog"
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'martyria'">
@@ -10841,6 +10820,7 @@ function renderTabLabel(tab: Tab) {
           :element="inspectorContext.element"
           @update="updateModeKey(inspectorContext.element, $event)"
           @update:tempo="setModeKeyTempo(inspectorContext.element, $event)"
+          @open-mode-key-dialog="openModeKeyDialog"
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'lyrics'">

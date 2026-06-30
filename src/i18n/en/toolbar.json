@@ -3,6 +3,7 @@
     "alignLeft": "Align Left",
     "alignCenter": "Align Center",
     "alignRight": "Align Right",
+    "alignJustify": "Justify",
     "alignment": "Alignment",
     "bpm": "BPM",
     "chooseColor": "Choose color",
@@ -71,15 +72,6 @@
   "properties": {
     "noProperties": "No properties",
     "nothingToEdit": "Nothing to edit"
-  },
-  "selection": {
-    "elements": "Elements",
-    "lineBreak": "Line Break",
-    "center": "Center",
-    "justify": "Justify",
-    "pageBreak": "Page Break",
-    "noSelection": "No selection",
-    "nothingSelected": "Nothing selected"
   },
   "imageBox": {
     "maintainAspectRatio": "Maintain Aspect Ratio",

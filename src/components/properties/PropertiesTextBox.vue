@@ -233,10 +233,7 @@
           :model-value="element.marginBottom"
           :format-options="fraction1FormatOptions"
           @update:model-value="
-            $emit(
-              'update',
-              { marginBottom: $event } as Partial<TextBoxElement>,
-            )
+            $emit('update', { marginBottom: $event } as Partial<TextBoxElement>)
           "
         />
       </Field>

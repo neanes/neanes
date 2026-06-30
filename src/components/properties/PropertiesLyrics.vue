@@ -279,6 +279,9 @@ const textStyleOverrideLabels = computed(() => {
   if (props.element.lyricsStrokeWidth != null) {
     labels.push('Outline');
   }
+  if (props.element.lyricsTextDecoration === 'underline') {
+    labels.push('Underline');
+  }
 
   return labels;
 });
@@ -308,6 +311,7 @@ function clearTextStyleOverrides() {
     lyricsFontSize: null,
     lyricsFontStyle: null,
     lyricsStrokeWidth: null,
+    lyricsTextDecoration: null,
   } as Partial<NoteElement>);
 }
 

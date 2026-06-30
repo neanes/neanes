@@ -512,8 +512,8 @@ is part of the build because underline is decoration, not a font face.
 
 Rich text serializes every explicit `fontStyle` as CSS so both axes are pinned:
 
-| Explicit style | Rich-text output |
-| -------------- | ---------------- |
+| Explicit style | Rich-text output                                   |
+| -------------- | -------------------------------------------------- |
 | `Regular`      | CSS span with `font-weight:400;font-style:normal;` |
 | `Bold`         | CSS span with `font-weight:700;font-style:normal;` |
 | `Italic`       | CSS span with `font-weight:400;font-style:italic;` |
@@ -525,7 +525,9 @@ adds a nested style span for the explicit face. A bold run in `GFS Didot` thus
 serializes as:
 
 ```html
-<span style="font-family:GFS Didot,Neanes;"><span style="font-weight:700;font-style:normal;">...</span></span>
+<span style="font-family:GFS Didot,Neanes;"
+  ><span style="font-weight:700;font-style:normal;">...</span></span
+>
 ```
 
 This is now faithful because explicit rich-text styles pin both axes via CSS

@@ -27,7 +27,6 @@ import {
 } from '@/models/TextStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
-import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { resolvePageMargins } from '@/utils/PageMargins';
@@ -556,6 +555,7 @@ export class ByzHtmlExporter {
           result += this.exportNote(
             element as NoteElement,
             pageSetup,
+            textStyles,
             indentation + 2,
           );
           needLineBreak = true;
@@ -673,22 +673,47 @@ export class ByzHtmlExporter {
   // from the x-ly defaults.
   private getCustomLyricStyleAttribute(
     element: NoteElement,
+    textStyles: TextStyle[],
     pageSetup: PageSetup,
   ): string {
-    if (!this.hasExplicitTextStyleOverrides(element)) {
+    const lyricsStyle = resolveTextStyle(
+      textStyles,
+      BUILT_IN_TEXT_STYLE_IDS.Lyrics,
+    );
+    const resolvedLyricsStyle = resolveTextStyle(
+      textStyles,
+      element.lyricsTextStyleId,
+      element.getTextStyleOverrides(),
+    );
+    const hasTextDecorationOverride =
+      element.lyricsTextDecoration != null &&
+      element.lyricsTextDecoration !== 'none';
+
+    if (
+      resolvedLyricsStyle.color === lyricsStyle.color &&
+      resolvedLyricsStyle.fontFamily === lyricsStyle.fontFamily &&
+      resolvedLyricsStyle.fontStyle === lyricsStyle.fontStyle &&
+      resolvedLyricsStyle.fontSize === lyricsStyle.fontSize &&
+      resolvedLyricsStyle.strokeWidth === lyricsStyle.strokeWidth &&
+      resolvedLyricsStyle.lineHeight === lyricsStyle.lineHeight &&
+      !hasTextDecorationOverride
+    ) {
       return '';
     }
 
     let style = '';
 
-    if (element.lyricsColor != null) {
-      style += `color: ${element.lyricsColor};`;
+    if (resolvedLyricsStyle.color !== lyricsStyle.color) {
+      style += `color: ${resolvedLyricsStyle.color};`;
     }
 
-    if (element.lyricsFontFamily != null || element.lyricsFontStyle != null) {
+    if (
+      resolvedLyricsStyle.fontFamily !== lyricsStyle.fontFamily ||
+      resolvedLyricsStyle.fontStyle !== lyricsStyle.fontStyle
+    ) {
       const font = resolveFontStyle(
-        element.lyricsFontFamily ?? 'Source Serif',
-        element.lyricsFontStyle ?? DEFAULT_FONT_STYLE,
+        resolvedLyricsStyle.fontFamily,
+        resolvedLyricsStyle.fontStyle,
       );
       const fontFamily = getFontFamilyWithFallback(
         font.cssFontFamily,
@@ -700,25 +725,31 @@ export class ByzHtmlExporter {
       style += `font-style: ${font.cssFontStyle};`;
     }
 
-    if (element.lyricsFontSize != null) {
-      style += `font-size: ${Unit.toPt(element.lyricsFontSize)}pt;`;
+    if (resolvedLyricsStyle.fontSize !== lyricsStyle.fontSize) {
+      style += `font-size: ${Unit.toPt(resolvedLyricsStyle.fontSize)}pt;`;
     }
 
-    if (element.lyricsStrokeWidth != null) {
-      style += `-webkit-text-stroke-width: ${element.lyricsStrokeWidth};`;
+    if (resolvedLyricsStyle.strokeWidth !== lyricsStyle.strokeWidth) {
+      style += `-webkit-text-stroke-width: ${resolvedLyricsStyle.strokeWidth};`;
     }
 
-    if (
-      element.lyricsTextDecoration != null &&
-      element.lyricsTextDecoration !== 'none'
-    ) {
+    if (resolvedLyricsStyle.lineHeight !== lyricsStyle.lineHeight) {
+      style += `line-height: ${resolvedLyricsStyle.lineHeight ?? 'normal'};`;
+    }
+
+    if (hasTextDecorationOverride) {
       style += `text-decoration: ${element.lyricsTextDecoration};`;
     }
 
     return ` style="${style}"`;
   }
 
-  exportNote(element: NoteElement, pageSetup: PageSetup, indentation: number) {
+  exportNote(
+    element: NoteElement,
+    pageSetup: PageSetup,
+    textStyles: TextStyle[],
+    indentation: number,
+  ) {
     let inner = '';
 
     if (element.measureBarLeft) {
@@ -853,6 +884,7 @@ export class ByzHtmlExporter {
 
     const lyricStyleAttribute = this.getCustomLyricStyleAttribute(
       element,
+      textStyles,
       pageSetup,
     );
 

@@ -1002,7 +1002,7 @@ const textStyleOverrideLabels = computed(() => {
     labels.push(t(($) => $.dialog.pageSetup.style, { ns: 'dialog' }));
   }
   if (fontSizeValue.value != null) {
-    labels.push(t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' }));
+    labels.push(t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' }));
   }
   if (fontColorHasExplicitValue.value) {
     labels.push(t(($) => $.dialog.pageSetup.color, { ns: 'dialog' }));

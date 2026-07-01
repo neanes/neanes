@@ -121,8 +121,8 @@
           <ToggleGroup
             type="multiple"
             variant="outline"
-            :model-value="styleValues"
-            @update:model-value="onStyleValuesChanged"
+            :model-value="fontStyleValues"
+            @update:model-value="onFontStyleValuesChanged"
           >
             <ToggleGroupItem
               value="bold"
@@ -142,6 +142,21 @@
             >
               <PhTextItalic />
             </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.toolbar.richTextBox.textDecorations, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <div class="flex flex-wrap items-center gap-1">
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            :model-value="textDecorationValues[0]"
+            @update:model-value="onTextDecorationValuesChanged"
+          >
             <ToggleGroupItem
               value="underline"
               :aria-label="
@@ -153,6 +168,12 @@
               <PhTextUnderline />
             </ToggleGroupItem>
           </ToggleGroup>
+          <ParagraphStyleClearButton
+            :disabled="
+              !isCommandEnabled('underline') || !textDecorationHasExplicitValue
+            "
+            @clear="clearTextDecorationOverride"
+          />
         </div>
       </Field>
 
@@ -897,11 +918,14 @@ const {
   fontStyleValue,
   fontStyleOptions,
   fontStyleDisabled,
+  fontStyleValues,
+  textDecorationValues,
+  textDecorationHasExplicitValue,
+  clearTextDecorationOverride,
   fontSizeValue,
   fontSizePlaceholder,
   fontColorValue,
   fontColorHasExplicitValue,
-  styleValues,
   alignmentValue,
   isCommandEnabled,
   isCommandActive,
@@ -914,7 +938,8 @@ const {
   onFontStyleChanged,
   onFontSizeChanged,
   onFontColorChanged,
-  onStyleValuesChanged,
+  onFontStyleValuesChanged,
+  onTextDecorationValuesChanged,
   onAlignmentChanged,
 } = useRichParagraphStyleCommands(props, [
   'subscript',

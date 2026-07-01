@@ -91,8 +91,8 @@
       <ToolbarToggleGroup
         type="multiple"
         variant="outline"
-        :model-value="styleValues"
-        @update:model-value="onStyleValuesChanged"
+        :model-value="fontStyleValues"
+        @update:model-value="onFontStyleValuesChanged"
       >
         <AppTooltip
           :tooltip="$t(($) => $.dialog.pageSetup.bold, { ns: 'dialog' })"
@@ -118,6 +118,13 @@
             <PhTextItalic class="size-4" />
           </ToolbarToggleItem>
         </AppTooltip>
+      </ToolbarToggleGroup>
+      <ToolbarToggleGroup
+        type="single"
+        variant="outline"
+        :model-value="textDecorationValues[0]"
+        @update:model-value="onTextDecorationValuesChanged"
+      >
         <AppTooltip
           :tooltip="
             $t(($) => $.toolbar.richTextBox.underline, { ns: 'toolbar' })
@@ -490,9 +497,10 @@ const {
   fontStyleValue,
   fontStyleOptions,
   fontStyleDisabled,
+  fontStyleValues,
+  textDecorationValues,
   fontSizeValue,
   fontSizePlaceholder,
-  styleValues,
   alignmentValue,
   isCommandEnabled,
   isStyleToggleEnabled,
@@ -501,7 +509,8 @@ const {
   onFontFamilyChanged,
   onFontStyleChanged,
   onFontSizeChanged,
-  onStyleValuesChanged,
+  onFontStyleValuesChanged,
+  onTextDecorationValuesChanged,
   onAlignmentChanged,
   onParagraphStyleChanged,
   onClearFormatting,

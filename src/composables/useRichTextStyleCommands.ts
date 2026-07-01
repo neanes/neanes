@@ -54,10 +54,14 @@ const STYLE_COMMAND_NAMES = [
   'alignment',
 ];
 
-// Maps a Bold/Italic/Underline toggle value to the command that backs it.
-const STYLE_TOGGLE_COMMANDS: Record<string, string> = {
+// Bold/Italic and underline share the same toggle-group UI shape, but they are
+// handled by different commands so changing one lane cannot mutate the other.
+const FONT_STYLE_TOGGLE_COMMANDS: Record<string, string> = {
   bold: 'fontStyleToggleBold',
   italic: 'fontStyleToggleItalic',
+};
+
+const TEXT_DECORATION_TOGGLE_COMMANDS: Record<string, string> = {
   underline: 'underline',
 };
 
@@ -224,9 +228,20 @@ export function useRichParagraphStyleCommands(
     () => typeof commandValue('fontColor') === 'string',
   );
 
-  const styleValues = computed(() =>
-    Object.keys(STYLE_TOGGLE_COMMANDS).filter((style) =>
-      isCommandActive(STYLE_TOGGLE_COMMANDS[style]),
+  const underlineActive = computed(() => commandValue('underline') === true);
+  const resolvedUnderline = computed(
+    () => resolvedActiveParagraphStyle.value.textDecoration === 'underline',
+  );
+
+  const fontStyleValues = computed(() =>
+    Object.keys(FONT_STYLE_TOGGLE_COMMANDS).filter((style) =>
+      isCommandActive(FONT_STYLE_TOGGLE_COMMANDS[style]),
+    ),
+  );
+
+  const textDecorationValues = computed(() =>
+    Object.keys(TEXT_DECORATION_TOGGLE_COMMANDS).filter((style) =>
+      isCommandActive(TEXT_DECORATION_TOGGLE_COMMANDS[style]),
     ),
   );
 
@@ -258,7 +273,11 @@ export function useRichParagraphStyleCommands(
   }
 
   function isStyleToggleEnabled(style: string) {
-    return isCommandEnabled(STYLE_TOGGLE_COMMANDS[style] ?? style);
+    return isCommandEnabled(
+      FONT_STYLE_TOGGLE_COMMANDS[style] ??
+        TEXT_DECORATION_TOGGLE_COMMANDS[style] ??
+        style,
+    );
   }
 
   function isParagraphStyleEnabled(styleId: string) {
@@ -360,13 +379,34 @@ export function useRichParagraphStyleCommands(
     runCommand('fontColor', { value });
   }
 
-  function onStyleValuesChanged(value: unknown) {
-    const next = Array.isArray(value) ? value : [];
-    const previous = styleValues.value;
+  function setUnderlineActive(value: boolean) {
+    if (underlineActive.value !== value) {
+      runCommand('underline');
+    }
+  }
 
-    for (const style of Object.keys(STYLE_TOGGLE_COMMANDS)) {
+  function onStyleValuesChanged(value: unknown) {
+    onFontStyleValuesChanged(value);
+  }
+
+  function onFontStyleValuesChanged(value: unknown) {
+    const next = toToggleGroupValues(value);
+    const previous = fontStyleValues.value;
+
+    for (const style of Object.keys(FONT_STYLE_TOGGLE_COMMANDS)) {
       if (next.includes(style) !== previous.includes(style)) {
-        runCommand(STYLE_TOGGLE_COMMANDS[style]);
+        runCommand(FONT_STYLE_TOGGLE_COMMANDS[style]);
+      }
+    }
+  }
+
+  function onTextDecorationValuesChanged(value: unknown) {
+    const next = toToggleGroupValues(value);
+    const previous = textDecorationValues.value;
+
+    for (const style of Object.keys(TEXT_DECORATION_TOGGLE_COMMANDS)) {
+      if (next.includes(style) !== previous.includes(style)) {
+        runCommand(TEXT_DECORATION_TOGGLE_COMMANDS[style]);
       }
     }
   }
@@ -404,6 +444,10 @@ export function useRichParagraphStyleCommands(
 
     const resolved = resolveParagraphStyle(props.paragraphStyles ?? [], value);
 
+    if (resolved.textDecoration === 'underline') {
+      setUnderlineActive(true);
+    }
+
     if (
       shouldSyncParagraphStyleAlignment(
         commandValue('alignment'),
@@ -424,6 +468,10 @@ export function useRichParagraphStyleCommands(
     }
 
     execForActiveOrLastOwner(props.element, 'removeFormat');
+  }
+
+  function clearTextDecorationOverride() {
+    setUnderlineActive(resolvedUnderline.value);
   }
 
   function executeChangedToggleCommands(
@@ -459,7 +507,14 @@ export function useRichParagraphStyleCommands(
     fontSizePlaceholder,
     fontColorValue,
     fontColorHasExplicitValue,
-    styleValues,
+    underlineActive,
+    resolvedUnderline,
+    textDecorationHasExplicitValue: computed(
+      () => underlineActive.value !== resolvedUnderline.value,
+    ),
+    fontStyleValues,
+    textDecorationValues,
+    styleValues: fontStyleValues,
     alignmentValue,
     isCommandEnabled,
     isCommandActive,
@@ -473,7 +528,10 @@ export function useRichParagraphStyleCommands(
     onFontSizeChanged,
     onFontColorChanged,
     onStyleValuesChanged,
+    onFontStyleValuesChanged,
+    onTextDecorationValuesChanged,
     onAlignmentChanged,
+    clearTextDecorationOverride,
     onClearFormatting,
     executeChangedToggleCommands,
   };
@@ -516,6 +574,14 @@ function toStyleNameArray(value: unknown) {
 
       return isNonEmptyString(name) ? [name] : [];
     });
+  }
+
+  return isNonEmptyString(value) ? [value] : [];
+}
+
+function toToggleGroupValues(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.filter(isNonEmptyString);
   }
 
   return isNonEmptyString(value) ? [value] : [];

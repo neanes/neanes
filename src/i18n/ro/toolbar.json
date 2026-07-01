@@ -128,6 +128,7 @@
   },
   "richTextBox": {
     "default": "Implicit",
+    "textDecorations": "Decorațiuni text",
     "underline": "Subliniat",
     "outdent": "Micșorează indentarea",
     "indent": "Mărește indentarea",

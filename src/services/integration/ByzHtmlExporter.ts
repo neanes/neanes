@@ -35,6 +35,7 @@ import {
   getRichTextLanguage,
   getRichTextLanguageAttributes,
 } from '@/utils/richTextLanguage';
+import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import { Unit } from '@/utils/Unit';
 
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
@@ -485,19 +486,11 @@ export class ByzHtmlExporter {
     paragraphStyles: ParagraphStyle[],
     pageSetup: PageSetup,
   ) {
-    return paragraphStyles
-      .map((style) => {
-        const resolved = resolveParagraphStyle(paragraphStyles, style.id);
-        const font = resolveFontStyle(resolved.fontFamily, resolved.fontStyle);
-
-        return `.${this.config.classRichTextBox} p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
-          font.cssFontFamily,
-          pageSetup.neumeDefaultFontFamily + 'Legacy',
-        )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;text-decoration:${
-          resolved.textDecoration ?? 'none'
-        };line-height:${resolved.lineHeight ?? 'normal'};}`;
-      })
-      .join('\n');
+    return buildRichTextParagraphStyleCss(
+      paragraphStyles,
+      pageSetup,
+      `.${this.config.classRichTextBox}`,
+    );
   }
 
   private getPageProgressionCss(

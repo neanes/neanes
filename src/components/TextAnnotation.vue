@@ -44,7 +44,6 @@ import {
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import { resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import {
   applyRichTextLanguageToEditor,
@@ -56,6 +55,7 @@ import {
   inferRichTextEditorLanguage,
   RICH_TEXT_LANGUAGE_OPTIONS,
 } from '@/utils/richTextLanguage';
+import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import { withZoom } from '@/utils/withZoom';
 
 const ANNOTATION_LOCK_ID = 'ANNOTATION_LOCK_ID';
@@ -138,18 +138,11 @@ const paragraphStyleDefinitions = computed(() =>
 );
 
 const paragraphStyleCss = computed(() =>
-  props.paragraphStyles
-    .map((style) => {
-      const resolved = resolveParagraphStyle(props.paragraphStyles, style.id);
-      const font = resolveFontStyle(resolved.fontFamily, resolved.fontStyle);
-      return `.ck-content p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
-        font.cssFontFamily,
-        props.pageSetup.neumeDefaultFontFamily + 'Legacy',
-      )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;text-decoration:${
-        resolved.textDecoration ?? 'none'
-      };line-height:${resolved.lineHeight ?? 'normal'};}`;
-    })
-    .join('\n'),
+  buildRichTextParagraphStyleCss(
+    props.paragraphStyles,
+    props.pageSetup,
+    '.ck-content',
+  ),
 );
 
 const style = computed(() => {

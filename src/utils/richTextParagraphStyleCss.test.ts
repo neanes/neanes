@@ -1,0 +1,33 @@
+import { describe, expect, it } from 'vitest';
+
+import { PageSetup } from '@/models/PageSetup';
+import { ParagraphStyle } from '@/models/ParagraphStyle';
+
+import { buildRichTextParagraphStyleCss } from './richTextParagraphStyleCss';
+
+describe('buildRichTextParagraphStyleCss', () => {
+  it('does not emit text-decoration for rich-text paragraph styles', () => {
+    const pageSetup = new PageSetup();
+    const style = new ParagraphStyle();
+
+    style.id = 'custom-style';
+    style.overrides = {
+      fontFamily: 'Alegreya',
+      fontSize: 16,
+      fontStyle: 'Bold Italic',
+      color: '#abcdef',
+      strokeWidth: 1.5,
+      lineHeight: 1.4,
+      textDecoration: 'underline',
+    };
+
+    const css = buildRichTextParagraphStyleCss([style], pageSetup, '.ck-content');
+
+    expect(css).toContain('.ck-content p.neanes-style-custom-style{font-family:');
+    expect(css).toContain('font-weight:700;font-style:italic;font-size:16px;');
+    expect(css).toContain(
+      'color:#abcdef;-webkit-text-stroke-width:1.5px;line-height:1.4;',
+    );
+    expect(css).not.toContain('text-decoration:underline;');
+  });
+});

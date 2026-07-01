@@ -23,13 +23,14 @@
               size="sm"
               @click="openParagraphStylesDialog"
             >
+              <PhTextAa />
               {{
                 $t(($) => $.dialog.paragraphStyles.openDialog, { ns: 'dialog' })
               }}
             </Button>
-            <ParagraphStyleResetButton
+            <ParagraphStyleClearButton
               :disabled="!hasParagraphStyleOverrides"
-              @reset="clearParagraphStyleOverrides"
+              @clear="clearParagraphStyleFormatting"
             />
           </div>
         </div>
@@ -50,9 +51,9 @@
           <FieldLabel for="properties-lyrics-font">{{
             $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' })
           }}</FieldLabel>
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="element.lyricsFontFamily == null"
-            @reset="
+            @clear="
               $emit('update', {
                 lyricsFontFamily: null,
               } as Partial<NoteElement>)
@@ -73,9 +74,9 @@
           <FieldLabel for="properties-lyrics-font-style">{{
             $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
           }}</FieldLabel>
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="element.lyricsFontStyle == null"
-            @reset="
+            @clear="
               $emit('update', { lyricsFontStyle: null } as Partial<NoteElement>)
             "
           />
@@ -108,9 +109,9 @@
               } as Partial<NoteElement>)
             "
           />
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="element.lyricsFontSize == null"
-            @reset="
+            @clear="
               $emit('update', { lyricsFontSize: null } as Partial<NoteElement>)
             "
           />
@@ -130,9 +131,9 @@
               } as Partial<NoteElement>)
             "
           />
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="element.lyricsColor == null"
-            @reset="
+            @clear="
               $emit('update', { lyricsColor: null } as Partial<NoteElement>)
             "
           />
@@ -179,9 +180,9 @@
               <PhTextUnderline />
             </ToggleGroupItem>
           </ToggleGroup>
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="element.lyricsTextDecoration == null"
-            @reset="
+            @clear="
               $emit('update', {
                 lyricsTextDecoration: null,
               } as Partial<NoteElement>)
@@ -203,9 +204,9 @@
               } as Partial<NoteElement>)
             "
           />
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="element.lyricsStrokeWidth == null"
-            @reset="
+            @clear="
               $emit('update', {
                 lyricsStrokeWidth: null,
               } as Partial<NoteElement>)
@@ -218,7 +219,12 @@
 </template>
 
 <script setup lang="ts">
-import { PhTextB, PhTextItalic, PhTextUnderline } from '@phosphor-icons/vue';
+import {
+  PhTextAa,
+  PhTextB,
+  PhTextItalic,
+  PhTextUnderline,
+} from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
@@ -230,7 +236,7 @@ import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
-import ParagraphStyleResetButton from '@/components/properties/ParagraphStyleResetButton.vue';
+import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -299,32 +305,14 @@ const lyricsFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
-const paragraphStyleOverrideLabels = computed(() => {
-  const labels: string[] = [];
-
-  if (props.element.lyricsFontFamily != null) {
-    labels.push('Font');
-  }
-  if (props.element.lyricsFontStyle != null) {
-    labels.push('Style');
-  }
-  if (props.element.lyricsFontSize != null) {
-    labels.push('Size');
-  }
-  if (props.element.lyricsColor != null) {
-    labels.push('Color');
-  }
-  if (props.element.lyricsStrokeWidth != null) {
-    labels.push('Outline');
-  }
-  if (props.element.lyricsTextDecoration != null) {
-    labels.push('Underline');
-  }
-
-  return labels;
-});
 const hasParagraphStyleOverrides = computed(
-  () => paragraphStyleOverrideLabels.value.length > 0,
+  () =>
+    props.element.lyricsColor != null ||
+    props.element.lyricsFontFamily != null ||
+    props.element.lyricsFontSize != null ||
+    props.element.lyricsFontStyle != null ||
+    props.element.lyricsStrokeWidth != null ||
+    props.element.lyricsTextDecoration != null,
 );
 
 function onFontStyleValuesChanged(value: unknown) {
@@ -350,7 +338,7 @@ function onFontFamilyChanged(lyricsFontFamily: string) {
   } as Partial<NoteElement>);
 }
 
-function clearParagraphStyleOverrides() {
+function clearParagraphStyleFormatting() {
   emit('update', {
     lyricsColor: null,
     lyricsFontFamily: null,

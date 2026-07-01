@@ -133,21 +133,6 @@
           </ToolbarToggleItem>
         </AppTooltip>
       </ToolbarToggleGroup>
-      <AppTooltip
-        :tooltip="
-          $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' })
-        "
-      >
-        <ToolbarButton
-          variant="secondary"
-          class="chrome-button"
-          :disabled="!isCommandEnabled('removeFormat')"
-          @mousedown.prevent
-          @click="onRemoveFormat"
-        >
-          <PhEraser class="size-4" />
-        </ToolbarButton>
-      </AppTooltip>
       <ToolbarSeparator />
       <ToolbarToggleGroup
         type="single"
@@ -229,6 +214,24 @@
           @click="runCommand('indent')"
         >
           <PhTextIndent class="size-4" />
+        </ToolbarButton>
+      </AppTooltip>
+      <ToolbarSeparator />
+      <AppTooltip
+        :tooltip="
+          $t(($) => $.toolbar.common.clearFormatting, {
+            ns: 'toolbar',
+          })
+        "
+      >
+        <ToolbarButton
+          variant="secondary"
+          class="chrome-button"
+          :disabled="!isCommandEnabled('removeFormat')"
+          @mousedown.prevent
+          @click="onClearFormatting"
+        >
+          <PhTextTSlash class="size-4" />
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
@@ -351,7 +354,6 @@
 import {
   PhArrowClockwise,
   PhArrowCounterClockwise,
-  PhEraser,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhTextAlignLeft,
@@ -360,6 +362,7 @@ import {
   PhTextIndent,
   PhTextItalic,
   PhTextOutdent,
+  PhTextTSlash,
   PhTextUnderline,
 } from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
@@ -501,7 +504,7 @@ const {
   onStyleValuesChanged,
   onAlignmentChanged,
   onParagraphStyleChanged,
-  onRemoveFormat,
+  onClearFormatting,
 } = useRichParagraphStyleCommands(styleCommandProps, EXTRA_COMMAND_NAMES);
 
 const toolbarParagraphStyleValue = computed(() => paragraphStyleValue.value);

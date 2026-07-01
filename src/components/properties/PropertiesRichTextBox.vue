@@ -106,7 +106,7 @@
 
       <Field orientation="horizontal">
         <FieldLabel for="properties-rich-text-box-gap-above">{{
-          $t(($) => $.dialog.paragraphStyles.gapAbove, { ns: 'dialog' })
+          $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
         }}</FieldLabel>
         <InputUnit
           id="properties-rich-text-box-gap-above"
@@ -125,7 +125,7 @@
 
       <Field orientation="horizontal">
         <FieldLabel for="properties-rich-text-box-gap-below">{{
-          $t(($) => $.dialog.paragraphStyles.gapBelow, { ns: 'dialog' })
+          $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
         }}</FieldLabel>
         <InputUnit
           id="properties-rich-text-box-gap-below"

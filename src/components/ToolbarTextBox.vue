@@ -124,23 +124,6 @@
           </ToggleGroupItem>
         </AppTooltip>
       </ToggleGroup>
-      <AppTooltip
-        :tooltip="$t(($) => $.toolbar.common.resetToDefault, { ns: 'toolbar' })"
-      >
-        <ToolbarButton
-          variant="ghost"
-          class="chrome-button"
-          :disabled="element.alignment == null"
-          :aria-label="
-            $t(($) => $.toolbar.common.resetToDefault, { ns: 'toolbar' })
-          "
-          @mousedown.prevent="
-            $emit('update', { alignment: null } as Partial<TextBoxElement>)
-          "
-        >
-          <PhArrowCounterClockwise class="size-4" />
-        </ToolbarButton>
-      </AppTooltip>
     </template>
     <ToolbarSeparator />
     <AppTooltip
@@ -170,7 +153,6 @@
 
 <script setup lang="ts">
 import {
-  PhArrowCounterClockwise,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhTextAlignLeft,

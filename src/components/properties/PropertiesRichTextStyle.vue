@@ -17,14 +17,11 @@
               size="sm"
               @click="openParagraphStylesDialog"
             >
+              <PhTextAa />
               {{
                 $t(($) => $.dialog.paragraphStyles.openDialog, { ns: 'dialog' })
               }}
             </Button>
-            <ParagraphStyleResetButton
-              :disabled="!hasParagraphStyleOverrides"
-              @reset="resetAllParagraphStyleOverrides"
-            />
           </div>
         </div>
         <ParagraphStyleSelect
@@ -59,12 +56,12 @@
           wrapper still receives pointer events for disabled buttons so clicking
           an inactive clear action does not blur the active editor.
         -->
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="
               !isCommandEnabled('fontFamily') ||
               fontFamilyValue === RICH_TEXT_DEFAULT_FONT_FAMILY
             "
-            @reset="onFontFamilyChanged(RICH_TEXT_DEFAULT_FONT_FAMILY)"
+            @clear="onFontFamilyChanged(RICH_TEXT_DEFAULT_FONT_FAMILY)"
           />
         </div>
         <FontCombobox
@@ -93,11 +90,11 @@
           <FieldLabel :for="`${idPrefix}-font-style`">{{
             $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
           }}</FieldLabel>
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="
               !isCommandEnabled('fontStyle') || !fontStyleHasExplicitValue
             "
-            @reset="resetFontStyle"
+            @clear="clearFontStyleOverride"
           />
         </div>
         <FontStyleSelect
@@ -176,9 +173,9 @@
             @focus-within="beginSelectionGuard(element)"
             @blur-within="endSelectionGuard(element, { refocus: false })"
           />
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="!isCommandEnabled('fontSize') || fontSizeValue == null"
-            @reset="onFontSizeChanged(null)"
+            @clear="onFontSizeChanged(null)"
           />
         </div>
       </Field>
@@ -200,11 +197,11 @@
                 : endSelectionGuard(element, { refocus: true })
             "
           />
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="
               !isCommandEnabled('fontColor') || !fontColorHasExplicitValue
             "
-            @reset="onFontColorChanged(null)"
+            @clear="onFontColorChanged(null)"
           />
         </div>
       </Field>
@@ -273,11 +270,11 @@
               </ToggleGroupItem>
             </AppTooltip>
           </ToggleGroup>
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="
               !isCommandEnabled('alignment') || !alignmentHasExplicitValue
             "
-            @reset="resetAlignment"
+            @clear="clearAlignmentOverride"
           />
         </div>
       </Field>
@@ -788,6 +785,7 @@
 
 <script setup lang="ts">
 import {
+  PhTextAa,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhTextAlignLeft,
@@ -827,7 +825,7 @@ import InputFontSize from '@/components/InputFontSize.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
-import ParagraphStyleResetButton from '@/components/properties/ParagraphStyleResetButton.vue';
+import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
@@ -921,7 +919,6 @@ const {
 } = useRichParagraphStyleCommands(props, [
   'subscript',
   'superscript',
-  'removeFormat',
   'textPartLanguage',
   FONT_VARIANT_NUMERIC,
   FONT_VARIANT_LIGATURES,
@@ -982,33 +979,6 @@ const alignmentHasExplicitValue = computed(() => {
     value !== resolvedActiveParagraphStyle.value.alignment
   );
 });
-const paragraphStyleOverrideLabels = computed(() => {
-  const labels: string[] = [];
-
-  if (fontFamilyValue.value !== RICH_TEXT_DEFAULT_FONT_FAMILY) {
-    labels.push(t(($) => $.dialog.pageSetup.font, { ns: 'dialog' }));
-  }
-  if (fontStyleHasExplicitValue.value) {
-    labels.push(t(($) => $.dialog.pageSetup.style, { ns: 'dialog' }));
-  }
-  if (fontSizeValue.value != null) {
-    labels.push(t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' }));
-  }
-  if (fontColorHasExplicitValue.value) {
-    labels.push(t(($) => $.dialog.pageSetup.color, { ns: 'dialog' }));
-  }
-  if (styleValues.value.length > 0) {
-    labels.push(t(($) => $.dialog.pageSetup.style, { ns: 'dialog' }));
-  }
-  if (alignmentHasExplicitValue.value) {
-    labels.push(t(($) => $.toolbar.common.alignment, { ns: 'toolbar' }));
-  }
-
-  return [...new Set(labels)];
-});
-const hasParagraphStyleOverrides = computed(
-  () => paragraphStyleOverrideLabels.value.length > 0,
-);
 const currentDialogParagraphStyleId = computed(() =>
   paragraphStyleValue.value === PARAGRAPH_STYLE_NONE_VALUE ||
   paragraphStyleValue.value === PARAGRAPH_STYLE_MIXED_VALUE
@@ -1103,21 +1073,12 @@ function onParagraphStyleSelectChanged(value: AcceptableValue) {
   }
 }
 
-function resetFontStyle() {
+function clearFontStyleOverride() {
   runCommand('fontStyle');
 }
 
-function resetAlignment() {
+function clearAlignmentOverride() {
   runCommand('alignment');
-}
-
-function resetAllParagraphStyleOverrides() {
-  onFontFamilyChanged(RICH_TEXT_DEFAULT_FONT_FAMILY);
-  resetFontStyle();
-  onFontSizeChanged(null);
-  onFontColorChanged(null);
-  onStyleValuesChanged([]);
-  resetAlignment();
 }
 
 function openParagraphStylesDialog() {

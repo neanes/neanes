@@ -414,7 +414,7 @@ export function useRichParagraphStyleCommands(
     }
   }
 
-  function onRemoveFormat() {
+  function onClearFormatting() {
     if (!isCommandEnabled('removeFormat')) {
       return;
     }
@@ -474,7 +474,7 @@ export function useRichParagraphStyleCommands(
     onFontColorChanged,
     onStyleValuesChanged,
     onAlignmentChanged,
-    onRemoveFormat,
+    onClearFormatting,
     executeChangedToggleCommands,
   };
 }

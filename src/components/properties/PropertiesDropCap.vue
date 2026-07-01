@@ -23,13 +23,14 @@
               size="sm"
               @click="openParagraphStylesDialog"
             >
+              <PhTextAa />
               {{
                 $t(($) => $.dialog.paragraphStyles.openDialog, { ns: 'dialog' })
               }}
             </Button>
-            <ParagraphStyleResetButton
+            <ParagraphStyleClearButton
               :disabled="!hasParagraphStyleOverrides"
-              @reset="clearParagraphStyleOverrides"
+              @clear="clearParagraphStyleFormatting"
             />
           </div>
         </div>
@@ -50,9 +51,9 @@
           <FieldLabel for="properties-drop-cap-font">{{
             $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' })
           }}</FieldLabel>
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="element.fontFamily == null"
-            @reset="
+            @clear="
               $emit('update', { fontFamily: null } as Partial<DropCapElement>)
             "
           />
@@ -71,9 +72,9 @@
           <FieldLabel for="properties-drop-cap-font-style">{{
             $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
           }}</FieldLabel>
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="element.fontStyle == null"
-            @reset="
+            @clear="
               $emit('update', { fontStyle: null } as Partial<DropCapElement>)
             "
           />
@@ -105,9 +106,9 @@
               $emit('update', { fontSize: $event } as Partial<DropCapElement>)
             "
           />
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="element.fontSize == null"
-            @reset="
+            @clear="
               $emit('update', { fontSize: null } as Partial<DropCapElement>)
             "
           />
@@ -150,9 +151,9 @@
               $emit('update', { lineHeight: $event } as Partial<DropCapElement>)
             "
           />
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="element.lineHeight == null"
-            @reset="
+            @clear="
               $emit('update', { lineHeight: null } as Partial<DropCapElement>)
             "
           />
@@ -170,9 +171,9 @@
               $emit('update', { color: $event } as Partial<DropCapElement>)
             "
           />
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="element.color == null"
-            @reset="$emit('update', { color: null } as Partial<DropCapElement>)"
+            @clear="$emit('update', { color: null } as Partial<DropCapElement>)"
           />
         </div>
       </Field>
@@ -218,9 +219,9 @@
               } as Partial<DropCapElement>)
             "
           />
-          <ParagraphStyleResetButton
+          <ParagraphStyleClearButton
             :disabled="element.strokeWidth == null"
-            @reset="
+            @clear="
               $emit('update', { strokeWidth: null } as Partial<DropCapElement>)
             "
           />
@@ -254,7 +255,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhTextB, PhTextItalic } from '@phosphor-icons/vue';
+import { PhTextAa, PhTextB, PhTextItalic } from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
@@ -267,7 +268,7 @@ import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
-import ParagraphStyleResetButton from '@/components/properties/ParagraphStyleResetButton.vue';
+import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -341,32 +342,14 @@ const dropCapFontFamilies = computed(() => [
 ]);
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
-const paragraphStyleOverrideLabels = computed(() => {
-  const labels: string[] = [];
-
-  if (props.element.fontFamily != null) {
-    labels.push('Font');
-  }
-  if (props.element.fontStyle != null) {
-    labels.push('Style');
-  }
-  if (props.element.fontSize != null) {
-    labels.push('Size');
-  }
-  if (props.element.lineHeight != null) {
-    labels.push('Line Height');
-  }
-  if (props.element.color != null) {
-    labels.push('Color');
-  }
-  if (props.element.strokeWidth != null) {
-    labels.push('Outline');
-  }
-
-  return labels;
-});
 const hasParagraphStyleOverrides = computed(
-  () => paragraphStyleOverrideLabels.value.length > 0,
+  () =>
+    props.element.color != null ||
+    props.element.fontFamily != null ||
+    props.element.fontSize != null ||
+    props.element.fontStyle != null ||
+    props.element.lineHeight != null ||
+    props.element.strokeWidth != null,
 );
 
 function onStyleValuesChanged(value: unknown) {
@@ -384,7 +367,7 @@ function onFontFamilyChanged(fontFamily: string) {
   } as Partial<DropCapElement>);
 }
 
-function clearParagraphStyleOverrides() {
+function clearParagraphStyleFormatting() {
   emit('update', {
     color: null,
     fontFamily: null,

@@ -42,7 +42,7 @@
           <div class="flex flex-wrap items-center gap-2">
             <AppTooltip
               :tooltip="
-                $t(($) => $.dialog.paragraphStyles.create, { ns: 'dialog' })
+                $t(($) => $.dialog.paragraphStyles.new, { ns: 'dialog' })
               "
             >
               <span class="inline-flex" @mousedown.prevent>
@@ -51,7 +51,7 @@
                   variant="ghost"
                   size="icon-sm"
                   :aria-label="
-                    $t(($) => $.dialog.paragraphStyles.create, { ns: 'dialog' })
+                    $t(($) => $.dialog.paragraphStyles.new, { ns: 'dialog' })
                   "
                   @click="createStyle"
                 >
@@ -61,7 +61,7 @@
             </AppTooltip>
             <AppTooltip
               :tooltip="
-                $t(($) => $.dialog.paragraphStyles.clone, { ns: 'dialog' })
+                $t(($) => $.dialog.paragraphStyles.duplicate, { ns: 'dialog' })
               "
             >
               <span class="inline-flex" @mousedown.prevent>
@@ -71,25 +71,30 @@
                   size="icon-sm"
                   :disabled="selectedStyle == null"
                   :aria-label="
-                    $t(($) => $.dialog.paragraphStyles.clone, { ns: 'dialog' })
+                    $t(($) => $.dialog.paragraphStyles.duplicate, {
+                      ns: 'dialog',
+                    })
                   "
-                  @click="cloneSelectedStyle"
+                  @click="duplicateSelectedStyle"
                 >
                   <PhCopy />
                 </Button>
               </span>
             </AppTooltip>
-            <AppTooltip tooltip="Reset to Factory">
+            <AppTooltip :tooltip="selectedStyleAction.label">
               <span class="inline-flex ml-auto" @mousedown.prevent>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  :disabled="selectedStyle?.builtIn !== true"
-                  aria-label="Reset to Factory"
-                  @click="resetSelectedStyleOverrides"
+                  :disabled="selectedStyleAction.disabled"
+                  :aria-label="selectedStyleAction.label"
+                  @click="runSelectedStyleAction"
                 >
-                  <PhArrowCounterClockwise />
+                  <PhArrowCounterClockwise
+                    v-if="selectedStyleAction.kind === 'resetStyleToDefault'"
+                  />
+                  <PhTextTSlash v-else />
                 </Button>
               </span>
             </AppTooltip>
@@ -450,6 +455,7 @@ import {
   PhTextAlignJustify,
   PhTextAlignLeft,
   PhTextAlignRight,
+  PhTextTSlash,
   PhTrash,
 } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
@@ -493,6 +499,7 @@ import {
   createDefaultBuiltInParagraphStyle,
   getAvailableParagraphStyleParents,
   ParagraphStyle,
+  type ParagraphStyleOverrides,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
@@ -596,6 +603,52 @@ const canSubmit = computed(() =>
   styles.value.every((style) => style.displayName.trim().length > 0),
 );
 
+const selectedStyleHasOverrides = computed(
+  () => Object.keys(selectedStyle.value?.overrides ?? {}).length > 0,
+);
+
+const selectedBuiltInStyleMatchesDefault = computed(() => {
+  const style = selectedStyle.value;
+
+  if (style == null || style.builtIn !== true) {
+    return false;
+  }
+
+  return paragraphStylesEqual(
+    style,
+    createDefaultBuiltInParagraphStyle(style.id as BuiltInParagraphStyleId),
+  );
+});
+
+const selectedStyleAction = computed(() => {
+  const style = selectedStyle.value;
+
+  if (style?.builtIn === true) {
+    const label = t(($) => $.dialog.paragraphStyles.resetStyleToDefault, {
+      ns: 'dialog',
+    });
+
+    return {
+      kind: 'resetStyleToDefault',
+      label,
+      disabled: selectedBuiltInStyleMatchesDefault.value,
+    };
+  }
+
+  const label = t(($) => $.dialog.paragraphStyles.clearFormatting, {
+    ns: 'dialog',
+  });
+
+  return {
+    kind: 'clearFormatting',
+    label,
+    disabled:
+      style == null ||
+      style.parentStyleId == null ||
+      !selectedStyleHasOverrides.value,
+  };
+});
+
 function hasOverride(key: keyof ParagraphStyle['overrides']) {
   return selectedStyle.value?.overrides[key] !== undefined;
 }
@@ -655,10 +708,15 @@ function updateTextDecorationOverride(value: boolean | 'indeterminate') {
   );
 }
 
-function resetSelectedStyleOverrides() {
+function runSelectedStyleAction() {
   const style = selectedStyle.value;
 
-  if (style == null || style.builtIn !== true) {
+  if (style == null || selectedStyleAction.value.disabled) {
+    return;
+  }
+
+  if (style.builtIn !== true) {
+    style.overrides = {};
     return;
   }
 
@@ -694,7 +752,7 @@ function createStyle() {
   selectedStyleId.value = style.id;
 }
 
-function cloneSelectedStyle() {
+function duplicateSelectedStyle() {
   const style = selectedStyle.value;
 
   if (style == null) {
@@ -746,6 +804,34 @@ function getNextStyleName(baseName: string) {
   }
 
   return `${baseName} ${suffix}`;
+}
+
+function paragraphStylesEqual(a: ParagraphStyle, b: ParagraphStyle) {
+  return (
+    a.id === b.id &&
+    a.displayName === b.displayName &&
+    a.builtIn === b.builtIn &&
+    a.parentStyleId === b.parentStyleId &&
+    paragraphStyleOverridesEqual(a.overrides, b.overrides)
+  );
+}
+
+function paragraphStyleOverridesEqual(
+  a: ParagraphStyleOverrides,
+  b: ParagraphStyleOverrides,
+) {
+  const keys = new Set([
+    ...(Object.keys(a) as Array<keyof ParagraphStyleOverrides>),
+    ...(Object.keys(b) as Array<keyof ParagraphStyleOverrides>),
+  ]);
+
+  for (const key of keys) {
+    if (a[key] !== b[key]) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function submit() {

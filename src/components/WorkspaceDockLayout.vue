@@ -11,22 +11,20 @@ import {
 import { useColorMode } from '@vueuse/core';
 import type {
   ContextMenuItem,
+  DockviewApi,
   DockviewGroupPanel,
+  DockviewReadyEvent,
+  DockviewWillDropEvent,
+  DockviewWillShowOverlayLocationEvent,
   EdgeGroupPosition,
   FloatingGroupOptions,
   GetTabContextMenuItemsParams,
   IDockviewHeaderActionsProps,
   IDockviewPanel,
-  PanelTransfer,
-  Position,
-} from 'dockview-core';
-import type {
-  DockviewApi,
-  DockviewReadyEvent,
-  DockviewWillDropEvent,
-  DockviewWillShowOverlayLocationEvent,
   IDockviewPanelHeaderProps,
   IDockviewPanelProps,
+  PanelTransfer,
+  Position,
   VueComponent,
 } from 'dockview-vue';
 import { DockviewVue, themeDark, themeLight } from 'dockview-vue';
@@ -2070,10 +2068,10 @@ watch(
    * flex/min-width/min-height/margin/padding (no flex container or padding survives
    * this chain). The geometry reset is version-independent Chromium behavior.
    *
-   * The exact selector set, however, is audited against dockview-core 6.6.1 +
-   * themeLight: a Dockview upgrade (a new px-positioned container, a theme that pads)
-   * can re-open this, so revisit with Dockview's source open. The `:has()` filters keep
-   * the editor branch while leaving the rest hideable.
+   * The exact selector set, however, is tied to Dockview's DOM and themeLight: a
+   * Dockview upgrade (a new px-positioned container, a theme that pads) can re-open
+   * this, so revisit with Dockview's source open. The `:has()` filters keep the editor
+   * branch while leaving the rest hideable.
    */
   .workspace-dock-layout-container,
   .workspace-dock-layout,

@@ -90,7 +90,12 @@
         class="chrome-button"
         @click="$emit('open-mode-key-dialog')"
       >
-        <PhMusicNotes class="size-4" />
+        <span
+          class="inline-grid size-4 place-items-center font-['Source_Serif'] text-sm leading-none text-destructive"
+          aria-hidden="true"
+        >
+          Ηχ
+        </span>
       </ToolbarButton>
     </AppTooltip>
   </Toolbar>
@@ -99,7 +104,6 @@
 <script setup lang="ts">
 import {
   PhAlignRight,
-  PhMusicNotes,
   PhTextAlignCenter,
   PhTextAlignLeft,
   PhTextAlignRight,

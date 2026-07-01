@@ -32,7 +32,14 @@
                 :value="section.value"
                 class="min-h-9 w-full flex-none justify-start whitespace-normal text-left"
               >
-                <component :is="section.icon" />
+                <span
+                  v-if="section.value === 'modeKeys'"
+                  class="inline-grid size-4 shrink-0 place-items-center font-['Source_Serif'] text-sm leading-none"
+                  aria-hidden="true"
+                >
+                  Ηχ
+                </span>
+                <component :is="section.icon" v-else />
                 {{ $t(section.labelSelector, { ns: 'dialog' }) }}
               </TabsTrigger>
             </TabsList>
@@ -1521,7 +1528,6 @@ import {
   PhMusicNotes,
   PhPaintBucket,
   PhPalette,
-  PhPlaylist,
   PhSplitHorizontal,
   PhTextT,
 } from '@phosphor-icons/vue';
@@ -1783,7 +1789,7 @@ const sections = [
   {
     value: 'modeKeys',
     labelSelector: ($) => $.dialog.pageSetup.initialMartyriae,
-    icon: PhPlaylist,
+    icon: PhMusicNotes,
   },
   {
     value: 'neumes',

@@ -20,8 +20,8 @@ import {
   RichTextBoxElement as RichTextBoxElement_v1,
   TextBoxElement as TextBoxElement_v1,
 } from '@/models/save/v1/Element';
-import { ParagraphStyle as ParagraphStyle_v1 } from '@/models/save/v1/Style';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
+import { ParagraphStyle as ParagraphStyle_v1 } from '@/models/save/v1/Style';
 import { Score } from '@/models/Score';
 import { getRichTextLanguage } from '@/utils/richTextLanguage';
 
@@ -834,9 +834,9 @@ describe('SaveService font styles', () => {
 
     expect(saved.textDecoration).toBe('underline');
     expect(loaded.overrides.textDecoration).toBe('underline');
-    expect(
-      resolveParagraphStyle([loaded], loaded.id).textDecoration,
-    ).toBe('underline');
+    expect(resolveParagraphStyle([loaded], loaded.id).textDecoration).toBe(
+      'underline',
+    );
   });
 
   it('loads old paragraph styles without text decoration as null', () => {
@@ -846,7 +846,9 @@ describe('SaveService font styles', () => {
 
     const loaded = SaveService.LoadParagraphStyle_v1(saved);
 
-    expect(resolveParagraphStyle([loaded], loaded.id).textDecoration).toBeNull();
+    expect(
+      resolveParagraphStyle([loaded], loaded.id).textDecoration,
+    ).toBeNull();
   });
 
   it('defaults missing text-box alignment to the paragraph style', () => {

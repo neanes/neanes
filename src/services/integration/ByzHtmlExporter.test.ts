@@ -112,7 +112,12 @@ describe('ByzHtmlExporter', () => {
     customStyle.id = 'custom-style';
     customStyle.overrides.textDecoration = 'underline';
 
-    const html = exporter.exportTextBox(element, new PageSetup(), [customStyle], 0);
+    const html = exporter.exportTextBox(
+      element,
+      new PageSetup(),
+      [customStyle],
+      0,
+    );
     const css = exporter.exportPageSetup(new PageSetup(), [customStyle]);
 
     expect(css).toContain('text-decoration:underline;');
@@ -144,9 +149,9 @@ describe('ByzHtmlExporter', () => {
     element.computedStrokeWidth = 0;
     element.computedLineHeight = null;
 
-    expect(exporter.exportTextBox(element, new PageSetup(), [style], 0)).toContain(
-      'text-decoration: none;',
-    );
+    expect(
+      exporter.exportTextBox(element, new PageSetup(), [style], 0),
+    ).toContain('text-decoration: none;');
   });
 
   it('keeps inherited inline text boxes on the shared inline CSS defaults', () => {

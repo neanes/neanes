@@ -147,9 +147,7 @@ const paragraphStyleCss = computed(() =>
         props.pageSetup.neumeDefaultFontFamily + 'Legacy',
       )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;text-decoration:${
         resolved.textDecoration ?? 'none'
-      };line-height:${
-        resolved.lineHeight ?? 'normal'
-      };}`;
+      };line-height:${resolved.lineHeight ?? 'normal'};}`;
     })
     .join('\n'),
 );

@@ -200,7 +200,9 @@
           </ToggleGroup>
           <ParagraphStyleResetButton
             :disabled="element.underline == null"
-            @reset="$emit('update', { underline: null } as Partial<TextBoxElement>)"
+            @reset="
+              $emit('update', { underline: null } as Partial<TextBoxElement>)
+            "
           />
         </div>
       </Field>

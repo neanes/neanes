@@ -11,8 +11,8 @@ import {
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   createBuiltInParagraphStyleFromFactory,
-  createParagraphStylesFromDefaults,
   createParagraphStyleFallback,
+  createParagraphStylesFromDefaults,
   ParagraphStyle,
   resolveParagraphStyle,
   wouldCreateParagraphStyleCycle,

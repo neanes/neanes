@@ -1916,11 +1916,7 @@ export class SaveService {
     element.multipanel = e.multipanel === true;
     element.inline = e.inline === true;
     element.underline =
-      e.underline === true
-        ? true
-        : e.underline === false
-          ? false
-          : null;
+      e.underline === true ? true : e.underline === false ? false : null;
     element.height = e.height;
     element.customWidth = e.customWidth ?? null;
     element.fillWidth = e.fillWidth === true;

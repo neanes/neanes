@@ -2019,7 +2019,7 @@ function getLyricStyle(element: NoteElement) {
         ? element.lyricsTextDecoration
         : element.lyricsTextDecoration === 'none'
           ? 'none'
-          : resolvedLyricsStyle.textDecoration ?? undefined,
+          : (resolvedLyricsStyle.textDecoration ?? undefined),
     color: resolvedLyricsStyle.color,
     webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
     lineHeight: withZoom(element.lyricsFontHeight),
@@ -2057,7 +2057,7 @@ function getLeadingLyricHyphenStyle(element: NoteElement) {
         ? element.lyricsTextDecoration
         : element.lyricsTextDecoration === 'none'
           ? 'none'
-          : resolvedLyricsStyle.textDecoration ?? undefined,
+          : (resolvedLyricsStyle.textDecoration ?? undefined),
     color: resolvedLyricsStyle.color,
     webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
     lineHeight: withZoom(element.lyricsFontHeight),

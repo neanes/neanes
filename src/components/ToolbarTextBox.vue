@@ -52,9 +52,9 @@
         :class="{ selected: isFontStyleAxisActive('italic') }"
         :disabled="!isFontStyleAxisToggleEnabled('italic')"
         aria-label="Toggle italic"
-        >
-          <PhTextItalic class="size-4" />
-        </ToggleGroupItem>
+      >
+        <PhTextItalic class="size-4" />
+      </ToggleGroupItem>
     </ToggleGroup>
     <ToggleGroup
       type="multiple"

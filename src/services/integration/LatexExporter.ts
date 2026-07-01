@@ -243,8 +243,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           defaultTextBoxFont.cssFontStyle != 'normal'
             ? defaultTextBoxFont.cssFontStyle
             : undefined,
-        lyricsDefaultTextDecoration:
-          lyricsStyle.textDecoration ?? undefined,
+        lyricsDefaultTextDecoration: lyricsStyle.textDecoration ?? undefined,
         textBoxDefaultTextDecoration:
           defaultTextBoxStyle.textDecoration ?? undefined,
         lyricsVerticalOffset: toPt(lyricsVerticalOffset),
@@ -486,7 +485,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   : undefined;
               noteInfo.lyricsTextDecoration =
                 resolvedLyricsTextDecoration !== lyricsStyle.textDecoration
-                  ? resolvedLyricsTextDecoration ?? 'none'
+                  ? (resolvedLyricsTextDecoration ?? 'none')
                   : undefined;
             }
 
@@ -712,15 +711,15 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? 'underline'
                   : textBox.underline === false
                     ? 'none'
-                  : resolvedParagraphStyle.textDecoration) !==
+                    : resolvedParagraphStyle.textDecoration) !==
                 (textBox.inline
                   ? lyricsStyle.textDecoration
                   : defaultTextBoxStyle.textDecoration)
-                  ? (textBox.underline === true
+                  ? ((textBox.underline === true
                       ? 'underline'
                       : textBox.underline === false
                         ? 'none'
-                      : resolvedParagraphStyle.textDecoration) ?? 'none'
+                        : resolvedParagraphStyle.textDecoration) ?? 'none')
                   : undefined,
             } as LatexTextBoxElement);
           }

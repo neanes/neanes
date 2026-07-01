@@ -10984,7 +10984,6 @@ function renderTabLabel(tab: Tab) {
       :page-setup="score.pageSetup"
       :paragraph-styles="score.paragraphStyles"
       :fonts="fonts"
-      @open-paragraph-styles="openParagraphStylesDialog($event)"
       @update="updatePageSetup($event)"
     />
     <ParagraphStylesDialog

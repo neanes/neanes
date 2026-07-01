@@ -1737,7 +1737,6 @@ function getPreviewGapStyle(
 }
 
 const emit = defineEmits<{
-  'open-paragraph-styles': [styleId: string];
   update: [pageSetup: PageSetup];
 }>();
 

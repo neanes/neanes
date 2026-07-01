@@ -320,7 +320,12 @@
               class="chrome-button toolbar-icon"
               @click="$emit('add-mode-key')"
             >
-              <NeumeIcon name="mode-key" />
+              <span
+                class="inline-grid size-6 place-items-center font-['Source_Serif'] text-[17px] leading-none text-destructive"
+                aria-hidden="true"
+              >
+                Ηχ
+              </span>
             </ToolbarButton>
           </AppTooltip>
           <AppTooltip

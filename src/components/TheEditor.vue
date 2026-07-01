@@ -9,7 +9,6 @@ import {
   PhCopy,
   PhCrosshair,
   PhFile,
-  PhMusicNotes,
   PhParagraph,
   PhScissors,
   PhSelectionAll,
@@ -10464,7 +10463,12 @@ function renderTabLabel(tab: Tab) {
                   v-if="contextMenuModeKey != null"
                   @select="openContextMenuChangeKey(contextMenuModeKey)"
                 >
-                  <PhMusicNotes />
+                  <span
+                    class="inline-grid size-4 shrink-0 place-items-center font-['Source_Serif'] text-sm leading-none"
+                    aria-hidden="true"
+                  >
+                    Ηχ
+                  </span>
                   {{
                     $t(($) => $.toolbar.initialMartyria.changeInitialMartyria, {
                       ns: 'toolbar',

@@ -21,9 +21,15 @@ describe('buildRichTextParagraphStyleCss', () => {
       textDecoration: 'underline',
     };
 
-    const css = buildRichTextParagraphStyleCss([style], pageSetup, '.ck-content');
+    const css = buildRichTextParagraphStyleCss(
+      [style],
+      pageSetup,
+      '.ck-content',
+    );
 
-    expect(css).toContain('.ck-content p.neanes-style-custom-style{font-family:');
+    expect(css).toContain(
+      '.ck-content p.neanes-style-custom-style{font-family:',
+    );
     expect(css).toContain('font-weight:700;font-style:italic;font-size:16px;');
     expect(css).toContain(
       'color:#abcdef;-webkit-text-stroke-width:1.5px;line-height:1.4;',

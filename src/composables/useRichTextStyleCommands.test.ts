@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
-  ParagraphStyle,
   createDefaultParagraphStyles,
   createParagraphStyleFallback,
+  ParagraphStyle,
 } from '@/models/ParagraphStyle';
 
 const registryMocks = vi.hoisted(() => ({
@@ -176,7 +176,11 @@ describe('useRichParagraphStyleCommands', () => {
     underlinedStyle.id = 'underlined-style';
     underlinedStyle.overrides.textDecoration = 'underline';
 
-    const { commands } = setupCommands([underlinedStyle], ['underlined-style'], true);
+    const { commands } = setupCommands(
+      [underlinedStyle],
+      ['underlined-style'],
+      true,
+    );
 
     expect(commands.textDecorationHasExplicitValue.value).toBe(false);
 
@@ -190,7 +194,11 @@ describe('useRichParagraphStyleCommands', () => {
     underlinedStyle.id = 'underlined-style';
     underlinedStyle.overrides.textDecoration = 'underline';
 
-    const { commands } = setupCommands([underlinedStyle], ['underlined-style'], false);
+    const { commands } = setupCommands(
+      [underlinedStyle],
+      ['underlined-style'],
+      false,
+    );
 
     expect(commands.textDecorationHasExplicitValue.value).toBe(true);
 

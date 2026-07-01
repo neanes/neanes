@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { Unit } from '@/utils/Unit';
 
 import {
@@ -10,20 +9,17 @@ import {
 } from './Element';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
-  createBuiltInParagraphStyleFromFactory,
+  createDefaultBuiltInParagraphStyle,
+  createDefaultParagraphStyles,
   createParagraphStyleFallback,
-  createParagraphStylesFromDefaults,
   ParagraphStyle,
   resolveParagraphStyle,
   wouldCreateParagraphStyleCycle,
 } from './ParagraphStyle';
 
 describe('ParagraphStyle', () => {
-  it('seeds built-in styles from page setup defaults', () => {
-    const styles = createParagraphStylesFromDefaults({
-      textBoxDefaultFontFamily: 'Minion Pro',
-      lyricsDefaultFontFamily: 'GFS Didot',
-    });
+  it('creates built-in styles from the default paragraph-style graph', () => {
+    const styles = createDefaultParagraphStyles();
 
     expect(styles.map((style) => style.id)).toEqual([
       BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
@@ -37,12 +33,17 @@ describe('ParagraphStyle', () => {
       BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
       BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
     ]);
-    expect(styles[0].overrides.fontFamily).toBe('Minion Pro');
-    expect(styles[0].overrides.alignment).toBe(TextBoxAlignment.Left);
+    expect(styles[0].overrides).toEqual({});
+    expect(resolveParagraphStyle(styles, styles[0].id).fontFamily).toBe(
+      'Source Serif',
+    );
+    expect(resolveParagraphStyle(styles, styles[0].id).alignment).toBe(
+      TextBoxAlignment.Left,
+    );
     expect(styles[2].overrides.alignment).toBe(TextBoxAlignment.Center);
     expect(styles[5].overrides.alignment).toBeUndefined();
-    expect(styles[8].overrides.fontFamily).toBe('GFS Didot');
-    expect(styles[9].overrides.fontFamily).toBe('Source Serif');
+    expect(styles[8].overrides).toEqual({});
+    expect(styles[9].overrides).toEqual({ fontSize: Unit.fromPt(60) });
   });
 
   it('resolves inheritance through parent styles and element overrides', () => {
@@ -101,15 +102,15 @@ describe('ParagraphStyle', () => {
     expect('paragraphStyleId' in new RichTextBoxElement()).toBe(false);
   });
 
-  it('returns fresh factory definitions for built-in paragraph styles', () => {
-    const title = createBuiltInParagraphStyleFromFactory(
+  it('returns fresh default definitions for built-in paragraph styles', () => {
+    const title = createDefaultBuiltInParagraphStyle(
       BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
     );
     title.displayName = 'Title Override';
     title.parentStyleId = null;
     title.overrides.fontFamily = 'Minion Pro';
 
-    const resetTitle = createBuiltInParagraphStyleFromFactory(
+    const resetTitle = createDefaultBuiltInParagraphStyle(
       BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
     );
 
@@ -125,25 +126,17 @@ describe('ParagraphStyle', () => {
     });
     expect(resetTitle.overrides.fontFamily).toBeUndefined();
 
-    const defaultText = createBuiltInParagraphStyleFromFactory(
+    const defaultText = createDefaultBuiltInParagraphStyle(
       BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     );
 
     expect(defaultText.displayName).toBe('Default Text');
     expect(defaultText.builtIn).toBe(true);
     expect(defaultText.parentStyleId).toBeNull();
-    expect(defaultText.overrides).toEqual({
-      alignment: TextBoxAlignment.Left,
-      fontFamily: 'Source Serif',
-      fontSize: Unit.fromPt(12),
-      fontStyle: DEFAULT_FONT_STYLE,
-      color: '#000000',
-      strokeWidth: 0,
-      lineHeight: null,
-    });
+    expect(defaultText.overrides).toEqual({});
     expect(defaultText.overrides.textDecoration).toBeUndefined();
 
-    const customizedDefaultText = createBuiltInParagraphStyleFromFactory(
+    const customizedDefaultText = createDefaultBuiltInParagraphStyle(
       BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     );
     customizedDefaultText.overrides.fontFamily = 'Minion Pro';

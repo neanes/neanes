@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
+  createDefaultParagraphStyles,
   createParagraphStyleFallback,
-  createParagraphStylesFromDefaults,
 } from '@/models/ParagraphStyle';
 
 import {
@@ -14,7 +14,7 @@ import {
 } from './useRichTextStyleCommands';
 
 describe('resolveRichTextParagraphStyleState', () => {
-  const paragraphStyles = createParagraphStylesFromDefaults();
+  const paragraphStyles = createDefaultParagraphStyles();
   const fallbackParagraphStyle = createParagraphStyleFallback();
 
   it('uses None plus the fallback style when no Neanes paragraph style is active', () => {
@@ -38,9 +38,7 @@ describe('resolveRichTextParagraphStyleState', () => {
 
     expect(state.paragraphStyleValue).toBe(BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics);
     expect(state.activeParagraphStyle?.fontFamily).toBe(
-      paragraphStyles.find(
-        (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-      )?.overrides.fontFamily,
+      fallbackParagraphStyle.fontFamily,
     );
     expect(state.resolvedActiveParagraphStyle).toEqual(
       state.activeParagraphStyle,

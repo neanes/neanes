@@ -490,7 +490,7 @@ import { PARAGRAPH_STYLE_NONE_VALUE } from '@/composables/useRichTextStyleComman
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   type BuiltInParagraphStyleId,
-  createBuiltInParagraphStyleFromFactory,
+  createDefaultBuiltInParagraphStyle,
   getAvailableParagraphStyleParents,
   ParagraphStyle,
   resolveParagraphStyle,
@@ -668,7 +668,7 @@ function resetSelectedStyleOverrides() {
     return;
   }
 
-  styles.value[index] = createBuiltInParagraphStyleFromFactory(
+  styles.value[index] = createDefaultBuiltInParagraphStyle(
     selectedStyle.value.id as BuiltInParagraphStyleId,
   );
 }

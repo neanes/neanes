@@ -74,89 +74,10 @@ export function createParagraphStyleFallback(): ResolvedParagraphStyle {
   };
 }
 
-export interface LegacyStyleDefaults {
-  textBoxDefaultFontFamily?: string | null;
-  textBoxDefaultFontSize?: number | null;
-  textBoxDefaultFontStyle?: string | null;
-  textBoxDefaultColor?: string | null;
-  textBoxDefaultStrokeWidth?: number | null;
-  textBoxDefaultLineHeight?: number | null;
-  dropCapDefaultFontFamily?: string | null;
-  dropCapDefaultFontSize?: number | null;
-  dropCapDefaultFontStyle?: string | null;
-  dropCapDefaultColor?: string | null;
-  dropCapDefaultStrokeWidth?: number | null;
-  dropCapDefaultLineHeight?: number | null;
-  lyricsDefaultFontFamily?: string | null;
-  lyricsDefaultFontSize?: number | null;
-  lyricsDefaultFontStyle?: string | null;
-  lyricsDefaultColor?: string | null;
-  lyricsDefaultStrokeWidth?: number | null;
-}
-
-export function createParagraphStylesFromDefaults(
-  legacyStyleDefaults: LegacyStyleDefaults = {},
-) {
-  const styles = createParagraphStylesFromFactory();
-
-  const defaultText = getParagraphStyleById(
-    styles,
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-  );
-  const lyrics = getParagraphStyleById(
-    styles,
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-  );
-  const dropCap = getParagraphStyleById(
-    styles,
-    BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
-  );
-
-  if (defaultText != null) {
-    defaultText.overrides = {
-      alignment: 'left' as TextBoxAlignment,
-      fontFamily:
-        legacyStyleDefaults.textBoxDefaultFontFamily ?? 'Source Serif',
-      fontSize: legacyStyleDefaults.textBoxDefaultFontSize ?? Unit.fromPt(12),
-      fontStyle:
-        legacyStyleDefaults.textBoxDefaultFontStyle ?? DEFAULT_FONT_STYLE,
-      color: legacyStyleDefaults.textBoxDefaultColor ?? '#000000',
-      strokeWidth: legacyStyleDefaults.textBoxDefaultStrokeWidth ?? 0,
-      lineHeight: legacyStyleDefaults.textBoxDefaultLineHeight ?? null,
-    };
-  }
-
-  if (lyrics != null) {
-    lyrics.overrides = {
-      fontFamily: legacyStyleDefaults.lyricsDefaultFontFamily ?? 'Source Serif',
-      fontSize: legacyStyleDefaults.lyricsDefaultFontSize ?? Unit.fromPt(12),
-      fontStyle:
-        legacyStyleDefaults.lyricsDefaultFontStyle ?? DEFAULT_FONT_STYLE,
-      color: legacyStyleDefaults.lyricsDefaultColor ?? '#000000',
-      strokeWidth: legacyStyleDefaults.lyricsDefaultStrokeWidth ?? 0,
-    };
-  }
-
-  if (dropCap != null) {
-    dropCap.overrides = {
-      fontFamily:
-        legacyStyleDefaults.dropCapDefaultFontFamily ?? 'Source Serif',
-      fontSize: legacyStyleDefaults.dropCapDefaultFontSize ?? Unit.fromPt(60),
-      fontStyle:
-        legacyStyleDefaults.dropCapDefaultFontStyle ?? DEFAULT_FONT_STYLE,
-      color: legacyStyleDefaults.dropCapDefaultColor ?? '#000000',
-      strokeWidth: legacyStyleDefaults.dropCapDefaultStrokeWidth ?? 0,
-      lineHeight: legacyStyleDefaults.dropCapDefaultLineHeight ?? null,
-    };
-  }
-
-  return styles;
-}
-
-export function createBuiltInParagraphStyleFromFactory(
+export function createDefaultBuiltInParagraphStyle(
   id: BuiltInParagraphStyleId,
 ) {
-  const style = getParagraphStyleById(createParagraphStylesFromFactory(), id);
+  const style = getParagraphStyleById(createDefaultParagraphStyles(), id);
 
   if (style == null) {
     throw new Error(`Unknown built-in paragraph style id: ${id}`);
@@ -253,29 +174,17 @@ function createBuiltInStyle(
   return style;
 }
 
-function createParagraphStylesFromFactory() {
+export function createDefaultParagraphStyles() {
   const defaultText = new ParagraphStyle();
   defaultText.id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
   defaultText.displayName = 'Default Text';
   defaultText.builtIn = true;
   defaultText.parentStyleId = null;
-  defaultText.overrides = {
-    alignment: 'left' as TextBoxAlignment,
-    fontFamily: 'Source Serif',
-    fontSize: Unit.fromPt(12),
-    fontStyle: DEFAULT_FONT_STYLE,
-    color: '#000000',
-    strokeWidth: 0,
-    lineHeight: null,
-  };
 
   const annotation = createBuiltInStyle(
     BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
     'Annotation',
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    {
-      fontSize: Unit.fromPt(12),
-    },
   );
 
   const title = createBuiltInStyle(
@@ -333,25 +242,13 @@ function createParagraphStylesFromFactory() {
     BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
     'Lyrics',
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    {
-      fontFamily: 'Source Serif',
-      fontSize: Unit.fromPt(12),
-      fontStyle: DEFAULT_FONT_STYLE,
-      color: '#000000',
-      strokeWidth: 0,
-    },
   );
   const dropCap = createBuiltInStyle(
     BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
     'Drop Cap',
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
-      fontFamily: 'Source Serif',
       fontSize: Unit.fromPt(60),
-      fontStyle: DEFAULT_FONT_STYLE,
-      color: '#000000',
-      strokeWidth: 0,
-      lineHeight: null,
     },
   );
 

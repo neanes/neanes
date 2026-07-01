@@ -62,6 +62,10 @@
             {{ $t(($) => $.menu.file.saveAs, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
+          <MenubarItem @select="onClickPageSetup">
+            <PhScroll />
+            {{ $t(($) => $.menu.file.pageSetup, { ns: 'menu' }) }}
+          </MenubarItem>
           <MenubarItem @select="onClickDocumentProperties">
             <PhFileText />
             {{ $t(($) => $.menu.file.documentProperties, { ns: 'menu' }) }}
@@ -247,10 +251,6 @@
           {{ $t(($) => $.menu.format.root, { ns: 'menu' }) }}
         </MenubarTrigger>
         <MenubarContent class="chrome-menubar-content">
-          <MenubarItem @select="onClickPageSetup">
-            <PhScroll />
-            {{ $t(($) => $.menu.file.pageSetup, { ns: 'menu' }) }}
-          </MenubarItem>
           <MenubarItem @select="onClickParagraphStyles">
             <PhTextAa />
             {{ $t(($) => $.menu.file.paragraphStyles, { ns: 'menu' }) }}

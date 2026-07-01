@@ -1857,6 +1857,13 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: i18next.t(($) => $.menu.file.pageSetup),
+          accelerator: 'CmdOrCtrl+Shift+P',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuPageSetup);
+          },
+        },
+        {
           label: i18next.t(($) => $.menu.file.documentProperties),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuDocumentProperties);
@@ -2169,13 +2176,6 @@ function createMenu() {
     {
       label: i18next.t(($) => $.menu.format.root),
       submenu: [
-        {
-          label: i18next.t(($) => $.menu.file.pageSetup),
-          accelerator: 'CmdOrCtrl+Shift+P',
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuPageSetup);
-          },
-        },
         {
           label: i18next.t(($) => $.menu.file.paragraphStyles),
           click() {

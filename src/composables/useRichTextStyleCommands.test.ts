@@ -122,8 +122,14 @@ describe('useRichParagraphStyleCommands', () => {
       fontSize: createCommandState(commandOverrides.fontSize ?? '', true),
       fontColor: createCommandState(commandOverrides.fontColor ?? '', true),
       fontStyle: createCommandState(commandOverrides.fontStyle ?? '', true),
-      fontStyleToggleBold: createCommandState(commandOverrides.bold ?? false, true),
-      fontStyleToggleItalic: createCommandState(commandOverrides.italic ?? false, true),
+      fontStyleToggleBold: createCommandState(
+        commandOverrides.bold ?? false,
+        true,
+      ),
+      fontStyleToggleItalic: createCommandState(
+        commandOverrides.italic ?? false,
+        true,
+      ),
       underline: createCommandState(underlineActive, true),
       alignment: createCommandState(commandOverrides.alignment ?? 'left', true),
     } as const;

@@ -20,6 +20,7 @@ import {
   RichTextBoxElement as RichTextBoxElement_v1,
   TextBoxElement as TextBoxElement_v1,
 } from '@/models/save/v1/Element';
+import { ParagraphStyle as ParagraphStyle_v1 } from '@/models/save/v1/Style';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { Score } from '@/models/Score';
 import { getRichTextLanguage } from '@/utils/richTextLanguage';
@@ -820,6 +821,32 @@ describe('SaveService font styles', () => {
 
     expect(saved.alignment).toBe(TextBoxAlignment.Right);
     expect(loaded.overrides.alignment).toBe(TextBoxAlignment.Right);
+  });
+
+  it('saves and loads paragraph-style text decoration', () => {
+    const style = new ParagraphStyle();
+    style.id = 'custom';
+    style.displayName = 'Custom';
+    style.overrides.textDecoration = 'underline';
+
+    const saved = SaveService.SaveParagraphStyle(style);
+    const loaded = SaveService.LoadParagraphStyle_v1(saved);
+
+    expect(saved.textDecoration).toBe('underline');
+    expect(loaded.overrides.textDecoration).toBe('underline');
+    expect(
+      resolveParagraphStyle([loaded], loaded.id).textDecoration,
+    ).toBe('underline');
+  });
+
+  it('loads old paragraph styles without text decoration as null', () => {
+    const saved = new ParagraphStyle_v1();
+    saved.id = 'legacy';
+    saved.displayName = 'Legacy';
+
+    const loaded = SaveService.LoadParagraphStyle_v1(saved);
+
+    expect(resolveParagraphStyle([loaded], loaded.id).textDecoration).toBeNull();
   });
 
   it('defaults missing text-box alignment to the paragraph style', () => {

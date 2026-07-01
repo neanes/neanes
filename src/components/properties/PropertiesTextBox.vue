@@ -165,8 +165,8 @@
         <ToggleGroup
           type="multiple"
           variant="outline"
-          :model-value="styleValues"
-          @update:model-value="onStyleValuesChanged"
+          :model-value="fontStyleValues"
+          @update:model-value="onFontStyleValuesChanged"
         >
           <ToggleGroupItem
             value="bold"
@@ -182,10 +182,27 @@
           >
             <PhTextItalic />
           </ToggleGroupItem>
-          <ToggleGroupItem value="underline" aria-label="Toggle underline">
-            <PhTextUnderline />
-          </ToggleGroupItem>
         </ToggleGroup>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>Text Decorations</FieldLabel>
+        <div class="flex items-center gap-1">
+          <ToggleGroup
+            type="multiple"
+            variant="outline"
+            :model-value="underlineValues"
+            @update:model-value="onTextDecorationValuesChanged"
+          >
+            <ToggleGroupItem value="underline" aria-label="Toggle underline">
+              <PhTextUnderline />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <ParagraphStyleResetButton
+            :disabled="element.underline == null"
+            @reset="$emit('update', { underline: null } as Partial<TextBoxElement>)"
+          />
+        </div>
       </Field>
 
       <Field orientation="horizontal">
@@ -559,10 +576,15 @@ const {
   () => resolvedParagraphStyle.value.fontStyle,
 );
 
-const styleValues = computed(() => [
-  ...activeStyleAxisValues.value,
-  ...(props.element.underline ? ['underline'] : []),
-]);
+const underline = computed(
+  () =>
+    props.element.underline === true ||
+    (props.element.underline == null &&
+      resolvedParagraphStyle.value.textDecoration === 'underline'),
+);
+
+const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
+const underlineValues = computed(() => (underline.value ? ['underline'] : []));
 
 const currentAlignment = computed(
   () => props.element.alignment ?? resolvedParagraphStyle.value.alignment,
@@ -597,6 +619,9 @@ const paragraphStyleOverrideLabels = computed(() => {
   if (props.element.strokeWidth != null) {
     labels.push('Outline');
   }
+  if (props.element.underline != null) {
+    labels.push('Underline');
+  }
   if (props.element.alignment != null) {
     labels.push('Alignment');
   }
@@ -607,14 +632,19 @@ const hasParagraphStyleOverrides = computed(
   () => paragraphStyleOverrideLabels.value.length > 0,
 );
 
-function onStyleValuesChanged(value: unknown) {
+function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
-  const update: Partial<TextBoxElement> = {
-    underline: values.includes('underline'),
+  emit('update', {
     fontStyle: applyStyleAxisToggles(values),
-  };
+  } as Partial<TextBoxElement>);
+}
 
-  emit('update', update);
+function onTextDecorationValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
+    underline: values.includes('underline') ? true : false,
+  } as Partial<TextBoxElement>);
 }
 
 function onFontFamilyChanged(fontFamily: string) {
@@ -632,6 +662,7 @@ function clearParagraphStyleOverrides() {
     fontSize: null,
     fontStyle: null,
     lineHeight: null,
+    underline: null,
     strokeWidth: null,
   } as Partial<TextBoxElement>);
 }

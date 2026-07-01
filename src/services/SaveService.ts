@@ -490,6 +490,7 @@ export class SaveService {
     saved.color = style.overrides.color;
     saved.strokeWidth = style.overrides.strokeWidth;
     saved.lineHeight = style.overrides.lineHeight;
+    saved.textDecoration = style.overrides.textDecoration;
     return saved;
   }
 
@@ -799,7 +800,7 @@ export class SaveService {
     element.fontSize = e.fontSize ?? undefined;
     element.strokeWidth = e.strokeWidth ?? undefined;
     element.fontSubfamily = e.fontStyle ?? undefined;
-    element.underline = e.underline || undefined;
+    element.underline = e.underline ?? undefined;
     element.lineHeight = e.lineHeight ?? undefined;
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
@@ -1362,6 +1363,7 @@ export class SaveService {
       color: saved.color,
       strokeWidth: saved.strokeWidth,
       lineHeight: saved.lineHeight,
+      textDecoration: saved.textDecoration,
     };
     return style;
   }
@@ -1913,7 +1915,12 @@ export class SaveService {
 
     element.multipanel = e.multipanel === true;
     element.inline = e.inline === true;
-    element.underline = e.underline === true;
+    element.underline =
+      e.underline === true
+        ? true
+        : e.underline === false
+          ? false
+          : null;
     element.height = e.height;
     element.customWidth = e.customWidth ?? null;
     element.fillWidth = e.fillWidth === true;

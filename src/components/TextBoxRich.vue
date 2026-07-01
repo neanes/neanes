@@ -295,7 +295,9 @@ const paragraphStyleCss = computed(() =>
       return `.ck-content p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
         font.cssFontFamily,
         props.pageSetup.neumeDefaultFontFamily + 'Legacy',
-      )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${
+      )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;text-decoration:${
+        resolved.textDecoration ?? 'none'
+      };line-height:${
         resolved.lineHeight ?? 'normal'
       };}`;
     })

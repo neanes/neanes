@@ -337,6 +337,7 @@ export class ByzHtmlExporter {
         color: ${lyricsStyle.color};
         font-weight: ${defaultLyricsFont.cssFontWeight};
         font-style: ${defaultLyricsFont.cssFontStyle};
+        text-decoration: ${lyricsStyle.textDecoration ?? 'none'};
       }
 
       ${this.config.tagDropCap} {
@@ -366,6 +367,7 @@ export class ByzHtmlExporter {
         font-style: ${defaultTextBoxFont.cssFontStyle};
         color: ${defaultTextBoxStyle.color};
         -webkit-text-stroke-width: ${defaultTextBoxStyle.strokeWidth};
+        text-decoration: ${defaultTextBoxStyle.textDecoration ?? 'none'};
       }
 
       .${this.config.classTextBoxInline} {
@@ -380,6 +382,7 @@ export class ByzHtmlExporter {
         font-style: ${defaultLyricsFont.cssFontStyle};
         color: ${lyricsStyle.color};
         -webkit-text-stroke-width: ${lyricsStyle.strokeWidth};
+        text-decoration: ${lyricsStyle.textDecoration ?? 'none'};
       }
 
       .${this.config.classRichTextBox} {
@@ -490,7 +493,9 @@ export class ByzHtmlExporter {
         return `.${this.config.classRichTextBox} p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
           font.cssFontFamily,
           pageSetup.neumeDefaultFontFamily + 'Legacy',
-        )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${
+        )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;text-decoration:${
+          resolved.textDecoration ?? 'none'
+        };line-height:${
           resolved.lineHeight ?? 'normal'
         };}`;
       })
@@ -614,7 +619,12 @@ export class ByzHtmlExporter {
             needLineBreak = false;
           }
 
-          result += this.exportTextBox(element as TextBoxElement, indentation);
+          result += this.exportTextBox(
+            element as TextBoxElement,
+            pageSetup,
+            paragraphStyles,
+            indentation,
+          );
           break;
         case ElementType.RichTextBox:
           if (insidePage) {
@@ -688,9 +698,14 @@ export class ByzHtmlExporter {
       element.lyricsParagraphStyleId,
       element.getParagraphStyleOverrides(),
     );
+    const resolvedLyricsTextDecoration =
+      element.lyricsTextDecoration === 'underline'
+        ? 'underline'
+        : element.lyricsTextDecoration === 'none'
+          ? 'none'
+          : resolvedLyricsStyle.textDecoration;
     const hasTextDecorationOverride =
-      element.lyricsTextDecoration != null &&
-      element.lyricsTextDecoration !== 'none';
+      resolvedLyricsTextDecoration !== lyricsStyle.textDecoration;
 
     if (
       resolvedLyricsStyle.color === lyricsStyle.color &&
@@ -741,7 +756,7 @@ export class ByzHtmlExporter {
     }
 
     if (hasTextDecorationOverride) {
-      style += `text-decoration: ${element.lyricsTextDecoration};`;
+      style += `text-decoration: ${resolvedLyricsTextDecoration ?? 'none'};`;
     }
 
     return ` style="${style}"`;
@@ -1046,12 +1061,40 @@ export class ByzHtmlExporter {
     );
   }
 
-  exportTextBox(element: TextBoxElement, indentation: number) {
+  exportTextBox(
+    element: TextBoxElement,
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    indentation: number,
+  ) {
     let styleAttribute = '';
 
     let className = this.config.classTextBox;
 
+    const defaultTextBoxStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    );
+    const lyricsStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+    );
+    const resolvedParagraphStyle = resolveParagraphStyle(
+      paragraphStyles,
+      element.paragraphStyleId,
+      element.getParagraphStyleOverrides(),
+    );
+
     let style = '';
+    const defaultTextDecoration = element.inline
+      ? lyricsStyle.textDecoration
+      : defaultTextBoxStyle.textDecoration;
+    const resolvedTextDecoration =
+      element.underline === true
+        ? 'underline'
+        : element.underline === false
+          ? 'none'
+        : resolvedParagraphStyle.textDecoration;
 
     if (
       !element.inline ||
@@ -1069,6 +1112,10 @@ export class ByzHtmlExporter {
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
       //style += `width: ${element.width};`;
       //style += `height: ${element.height};`;
+    }
+
+    if (resolvedTextDecoration !== defaultTextDecoration) {
+      style += `text-decoration: ${resolvedTextDecoration ?? 'none'};`;
     }
 
     style += `text-align: ${element.computedAlignment};`;

@@ -243,6 +243,10 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           defaultTextBoxFont.cssFontStyle != 'normal'
             ? defaultTextBoxFont.cssFontStyle
             : undefined,
+        lyricsDefaultTextDecoration:
+          lyricsStyle.textDecoration ?? undefined,
+        textBoxDefaultTextDecoration:
+          defaultTextBoxStyle.textDecoration ?? undefined,
         lyricsVerticalOffset: toPt(lyricsVerticalOffset),
         lyricsMelismaSpacing: toPt(pageSetup.lyricsMelismaSpacing),
         lyricsMelismaThickness: toPt(pageSetup.lyricsMelismaThickness),
@@ -442,6 +446,12 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 note.lyricsParagraphStyleId,
                 note.getParagraphStyleOverrides(),
               );
+              const resolvedLyricsTextDecoration =
+                note.lyricsTextDecoration === 'underline'
+                  ? 'underline'
+                  : note.lyricsTextDecoration === 'none'
+                    ? 'none'
+                    : resolvedLyricsStyle.textDecoration;
               const lyricsFont = resolveFontStyle(
                 resolvedLyricsStyle.fontFamily,
                 resolvedLyricsStyle.fontStyle,
@@ -473,6 +483,10 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               noteInfo.lyricsFontWeight =
                 lyricsFont.cssFontWeight != defaultLyricsFont.cssFontWeight
                   ? lyricsFont.cssFontWeight
+                  : undefined;
+              noteInfo.lyricsTextDecoration =
+                resolvedLyricsTextDecoration !== lyricsStyle.textDecoration
+                  ? resolvedLyricsTextDecoration ?? 'none'
                   : undefined;
             }
 
@@ -693,6 +707,21 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 resolvedParagraphStyle.color != defaultColor
                   ? resolvedParagraphStyle.color.substring(1)
                   : undefined,
+              textDecoration:
+                (textBox.underline === true
+                  ? 'underline'
+                  : textBox.underline === false
+                    ? 'none'
+                  : resolvedParagraphStyle.textDecoration) !==
+                (textBox.inline
+                  ? lyricsStyle.textDecoration
+                  : defaultTextBoxStyle.textDecoration)
+                  ? (textBox.underline === true
+                      ? 'underline'
+                      : textBox.underline === false
+                        ? 'none'
+                      : resolvedParagraphStyle.textDecoration) ?? 'none'
+                  : undefined,
             } as LatexTextBoxElement);
           }
         }
@@ -751,6 +780,8 @@ interface LatexPageSetup {
   dropCapDefaultFontStyle: string | undefined;
   lyricsDefaultFontStyle: string | undefined;
   textBoxDefaultFontStyle: string | undefined;
+  lyricsDefaultTextDecoration: 'underline' | undefined;
+  textBoxDefaultTextDecoration: 'underline' | undefined;
   lyricsVerticalOffset: number;
   lyricsMelismaSpacing: number;
   lyricsMelismaThickness: number;
@@ -854,6 +885,7 @@ interface LatexNoteElement extends LatexBaseElement {
   lyricsFontSize?: number;
   lyricsFontStyle?: string;
   lyricsFontWeight?: string;
+  lyricsTextDecoration?: 'underline' | 'none';
 }
 
 interface LatexMartyriaElement extends LatexBaseElement {
@@ -883,6 +915,7 @@ interface LatexDropCapElement extends LatexBaseElement {
   fontStyle?: string;
   fontWeight?: string;
   color?: string;
+  textDecoration?: 'underline' | 'none';
 }
 
 interface LatexTextBoxElement extends LatexBaseElement {

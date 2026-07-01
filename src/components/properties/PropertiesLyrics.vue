@@ -146,8 +146,8 @@
         <ToggleGroup
           type="multiple"
           variant="outline"
-          :model-value="styleValues"
-          @update:model-value="onStyleValuesChanged"
+          :model-value="fontStyleValues"
+          @update:model-value="onFontStyleValuesChanged"
         >
           <ToggleGroupItem
             value="bold"
@@ -163,10 +163,31 @@
           >
             <PhTextItalic />
           </ToggleGroupItem>
-          <ToggleGroupItem value="underline" aria-label="Toggle underline">
-            <PhTextUnderline />
-          </ToggleGroupItem>
         </ToggleGroup>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>Text Decorations</FieldLabel>
+        <div class="flex items-center gap-1">
+          <ToggleGroup
+            type="multiple"
+            variant="outline"
+            :model-value="underlineValues"
+            @update:model-value="onTextDecorationValuesChanged"
+          >
+            <ToggleGroupItem value="underline" aria-label="Toggle underline">
+              <PhTextUnderline />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <ParagraphStyleResetButton
+            :disabled="element.lyricsTextDecoration == null"
+            @reset="
+              $emit('update', {
+                lyricsTextDecoration: null,
+              } as Partial<NoteElement>)
+            "
+          />
+        </div>
       </Field>
 
       <Field orientation="horizontal">
@@ -266,12 +287,13 @@ const {
 );
 
 const underline = computed(
-  () => props.element.lyricsTextDecoration === 'underline',
+  () =>
+    props.element.lyricsTextDecoration === 'underline' ||
+    (props.element.lyricsTextDecoration == null &&
+      resolvedParagraphStyle.value.textDecoration === 'underline'),
 );
-const styleValues = computed(() => [
-  ...activeStyleAxisValues.value,
-  ...(underline.value ? ['underline'] : []),
-]);
+const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
+const underlineValues = computed(() => (underline.value ? ['underline'] : []));
 
 const lyricsFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
@@ -295,7 +317,7 @@ const paragraphStyleOverrideLabels = computed(() => {
   if (props.element.lyricsStrokeWidth != null) {
     labels.push('Outline');
   }
-  if (props.element.lyricsTextDecoration === 'underline') {
+  if (props.element.lyricsTextDecoration != null) {
     labels.push('Underline');
   }
 
@@ -305,12 +327,19 @@ const hasParagraphStyleOverrides = computed(
   () => paragraphStyleOverrideLabels.value.length > 0,
 );
 
-function onStyleValuesChanged(value: unknown) {
+function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {
-    lyricsTextDecoration: values.includes('underline') ? 'underline' : null,
     lyricsFontStyle: applyStyleAxisToggles(values),
+  } as Partial<NoteElement>);
+}
+
+function onTextDecorationValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
+    lyricsTextDecoration: values.includes('underline') ? 'underline' : 'none',
   } as Partial<NoteElement>);
 }
 

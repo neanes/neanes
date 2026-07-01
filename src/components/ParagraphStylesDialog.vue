@@ -312,6 +312,34 @@
                 <div class="flex min-w-0 flex-1 items-center gap-3">
                   <Switch
                     v-if="showOverrideToggles"
+                    :model-value="hasOverride('textDecoration')"
+                    @update:model-value="
+                      toggleOverride('textDecoration', $event)
+                    "
+                  />
+                  <FieldLabel class="shrink-0">Text Decorations</FieldLabel>
+                </div>
+                <div class="ml-auto flex shrink-0 items-center gap-2">
+                  <Checkbox
+                    id="text-style-underline"
+                    :model-value="textDecorationCheckboxValue"
+                    :disabled="
+                      showOverrideToggles
+                        ? !hasOverride('textDecoration')
+                        : false
+                    "
+                    @update:model-value="updateTextDecorationOverride"
+                  />
+                  <FieldLabel for="text-style-underline" class="shrink-0">
+                    Underline
+                  </FieldLabel>
+                </div>
+              </Field>
+
+              <Field orientation="horizontal">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
+                  <Switch
+                    v-if="showOverrideToggles"
                     :model-value="hasOverride('color')"
                     @update:model-value="toggleOverride('color', $event)"
                   />
@@ -437,6 +465,7 @@ import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogClose,
@@ -555,6 +584,14 @@ const fontStyleOptions = computed(() =>
   fontCatalog.getStyles(resolvedStyle.value.fontFamily),
 );
 
+const textDecorationCheckboxValue = computed(() => {
+  if (selectedStyle.value?.overrides.textDecoration !== undefined) {
+    return selectedStyle.value.overrides.textDecoration === 'underline';
+  }
+
+  return resolvedStyle.value.textDecoration === 'underline';
+});
+
 const canSubmit = computed(() =>
   styles.value.every((style) => style.displayName.trim().length > 0),
 );
@@ -609,6 +646,13 @@ function updateSelectedStyleOverride(
   (selectedStyle.value.overrides as Record<string, string | number | null>)[
     key
   ] = value;
+}
+
+function updateTextDecorationOverride(value: boolean | 'indeterminate') {
+  updateSelectedStyleOverride(
+    'textDecoration',
+    value === true ? 'underline' : null,
+  );
 }
 
 function resetSelectedStyleOverrides() {

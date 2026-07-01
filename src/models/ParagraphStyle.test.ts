@@ -12,6 +12,7 @@ import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   createBuiltInParagraphStyleFromFactory,
   createParagraphStylesFromDefaults,
+  createParagraphStyleFallback,
   ParagraphStyle,
   resolveParagraphStyle,
   wouldCreateParagraphStyleCycle,
@@ -51,6 +52,7 @@ describe('ParagraphStyle', () => {
       alignment: TextBoxAlignment.Center,
       fontFamily: 'Source Serif',
       color: '#111111',
+      textDecoration: 'underline',
     };
 
     const child = new ParagraphStyle();
@@ -60,6 +62,7 @@ describe('ParagraphStyle', () => {
       alignment: TextBoxAlignment.Right,
       color: '#222222',
       lineHeight: 1.2,
+      textDecoration: null,
     };
 
     const resolved = resolveParagraphStyle([parent, child], child.id, {
@@ -71,6 +74,7 @@ describe('ParagraphStyle', () => {
     expect(resolved.fontFamily).toBe('Source Serif');
     expect(resolved.color).toBe('#333333');
     expect(resolved.lineHeight).toBe(1.2);
+    expect(resolved.textDecoration).toBeNull();
   });
 
   it('detects inheritance cycles', () => {
@@ -137,6 +141,7 @@ describe('ParagraphStyle', () => {
       strokeWidth: 0,
       lineHeight: null,
     });
+    expect(defaultText.overrides.textDecoration).toBeUndefined();
 
     const customizedDefaultText = createBuiltInParagraphStyleFromFactory(
       BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
@@ -151,5 +156,6 @@ describe('ParagraphStyle', () => {
     expect(resolvedTitle.fontFamily).toBe('Minion Pro');
     expect(resolvedTitle.fontSize).toBe(Unit.fromPt(28));
     expect(resolvedTitle.alignment).toBe(TextBoxAlignment.Center);
+    expect(createParagraphStyleFallback().textDecoration).toBeNull();
   });
 });

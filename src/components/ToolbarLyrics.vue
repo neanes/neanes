@@ -40,8 +40,8 @@
     <ToggleGroup
       type="multiple"
       variant="outline"
-      :model-value="styleValues"
-      @update:model-value="onStyleValuesChanged"
+      :model-value="fontStyleValues"
+      @update:model-value="onFontStyleValuesChanged"
     >
       <ToggleGroupItem
         value="bold"
@@ -61,6 +61,13 @@
       >
         <PhTextItalic class="size-4" />
       </ToggleGroupItem>
+    </ToggleGroup>
+    <ToggleGroup
+      type="multiple"
+      variant="outline"
+      :model-value="underlineValues"
+      @update:model-value="onTextDecorationValuesChanged"
+    >
       <ToggleGroupItem
         value="underline"
         class="chrome-button"
@@ -190,23 +197,31 @@ const {
 );
 
 const underline = computed(
-  () => props.element.lyricsTextDecoration === 'underline',
+  () =>
+    props.element.lyricsTextDecoration === 'underline' ||
+    (props.element.lyricsTextDecoration == null &&
+      resolvedParagraphStyle.value.textDecoration === 'underline'),
 );
-const styleValues = computed(() => [
-  ...activeStyleAxisValues.value,
-  ...(underline.value ? ['underline'] : []),
-]);
+const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
+const underlineValues = computed(() => (underline.value ? ['underline'] : []));
 
 const lyricsFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 
-function onStyleValuesChanged(value: unknown) {
+function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {
     lyricsFontStyle: applyStyleAxisToggles(values),
+  } as Partial<NoteElement>);
+}
+
+function onTextDecorationValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
     lyricsTextDecoration: values.includes('underline') ? 'underline' : 'none',
   } as Partial<NoteElement>);
 }

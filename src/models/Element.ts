@@ -868,7 +868,7 @@ export class TextBoxElement extends ScoreElement {
   public multipanel: boolean = false;
   public inline: boolean = false;
   public fontStyle: string | null = null;
-  public underline: boolean = false;
+  public underline: boolean | null = null;
   public lineHeight: number | null = null;
   public height: number = 20;
   public customWidth: number | null = null;
@@ -887,6 +887,7 @@ export class TextBoxElement extends ScoreElement {
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
   public computedLineHeight: number | null = null;
+  public computedUnderline: boolean = false;
   public computedAlignment: TextBoxAlignment = TextBoxAlignment.Left;
   public minHeight: number = 10;
 
@@ -899,6 +900,7 @@ export class TextBoxElement extends ScoreElement {
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
   public computedLineHeightPrevious: number | null = null;
+  public computedUnderlinePrevious: boolean = false;
   public computedAlignmentPrevious: TextBoxAlignment = TextBoxAlignment.Left;
 
   public get computedFont() {

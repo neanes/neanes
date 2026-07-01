@@ -4874,6 +4874,8 @@ export class LayoutService {
       textBoxElement.computedColor = resolvedParagraphStyle.color;
 
       textBoxElement.computedStrokeWidth = resolvedParagraphStyle.strokeWidth;
+      textBoxElement.computedUnderline =
+        resolvedParagraphStyle.textDecoration === 'underline';
 
       textBoxElement.computedFontWeight = resolvedTextBoxFont.cssFontWeight;
       textBoxElement.computedFontStyle = resolvedTextBoxFont.cssFontStyle;
@@ -4911,6 +4913,8 @@ export class LayoutService {
       textBoxElement.computedColor = resolvedParagraphStyle.color;
 
       textBoxElement.computedStrokeWidth = resolvedParagraphStyle.strokeWidth;
+      textBoxElement.computedUnderline =
+        resolvedParagraphStyle.textDecoration === 'underline';
 
       textBoxElement.computedFontWeight = resolvedTextBoxFont.cssFontWeight;
       textBoxElement.computedFontStyle = resolvedTextBoxFont.cssFontStyle;
@@ -5009,6 +5013,7 @@ export class LayoutService {
       textbox.computedColorPrevious = textbox.computedColor;
       textbox.computedStrokeWidthPrevious = textbox.computedStrokeWidth;
       textbox.computedLineHeightPrevious = textbox.computedLineHeight;
+      textbox.computedUnderlinePrevious = textbox.computedUnderline;
       textbox.computedAlignmentPrevious = textbox.computedAlignment;
     } else if (element.elementType === ElementType.ModeKey) {
       const modeKey = element as ModeKeyElement;
@@ -5091,6 +5096,7 @@ export class LayoutService {
         textbox.computedColorPrevious !== textbox.computedColor ||
         textbox.computedStrokeWidthPrevious !== textbox.computedStrokeWidth ||
         textbox.computedLineHeightPrevious !== textbox.computedLineHeight ||
+        textbox.computedUnderlinePrevious !== textbox.computedUnderline ||
         textbox.computedAlignmentPrevious !== textbox.computedAlignment;
     }
 

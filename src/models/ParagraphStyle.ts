@@ -29,6 +29,7 @@ export interface ParagraphStyleOverrides {
   color?: string;
   strokeWidth?: number;
   lineHeight?: number | null;
+  textDecoration?: 'underline' | null;
 }
 
 export interface ResolvedParagraphStyle {
@@ -39,6 +40,7 @@ export interface ResolvedParagraphStyle {
   color: string;
   strokeWidth: number;
   lineHeight: number | null;
+  textDecoration: 'underline' | null;
 }
 
 export class ParagraphStyle {
@@ -68,6 +70,7 @@ export function createParagraphStyleFallback(): ResolvedParagraphStyle {
     color: '#000000',
     strokeWidth: 0,
     lineHeight: null,
+    textDecoration: null,
   };
 }
 
@@ -401,5 +404,9 @@ function applyParagraphStyleOverrides(
 
   if (overrides.lineHeight !== undefined) {
     target.lineHeight = overrides.lineHeight;
+  }
+
+  if (overrides.textDecoration !== undefined) {
+    target.textDecoration = overrides.textDecoration;
   }
 }

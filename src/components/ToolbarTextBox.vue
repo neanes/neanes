@@ -34,8 +34,8 @@
     <ToggleGroup
       type="multiple"
       variant="outline"
-      :model-value="styleValues"
-      @update:model-value="onStyleValuesChanged"
+      :model-value="fontStyleValues"
+      @update:model-value="onFontStyleValuesChanged"
     >
       <ToggleGroupItem
         value="bold"
@@ -52,13 +52,20 @@
         :class="{ selected: isFontStyleAxisActive('italic') }"
         :disabled="!isFontStyleAxisToggleEnabled('italic')"
         aria-label="Toggle italic"
-      >
-        <PhTextItalic class="size-4" />
-      </ToggleGroupItem>
+        >
+          <PhTextItalic class="size-4" />
+        </ToggleGroupItem>
+    </ToggleGroup>
+    <ToggleGroup
+      type="multiple"
+      variant="outline"
+      :model-value="underlineValues"
+      @update:model-value="onTextDecorationValuesChanged"
+    >
       <ToggleGroupItem
         value="underline"
         class="chrome-button"
-        :class="{ selected: element.underline }"
+        :class="{ selected: underline }"
         aria-label="Toggle underline"
       >
         <PhTextUnderline class="size-4" />
@@ -231,10 +238,15 @@ const {
   () => resolvedParagraphStyle.value.fontStyle,
 );
 
-const styleValues = computed(() => [
-  ...activeStyleAxisValues.value,
-  ...(props.element.underline ? ['underline'] : []),
-]);
+const underline = computed(
+  () =>
+    props.element.underline === true ||
+    (props.element.underline == null &&
+      resolvedParagraphStyle.value.textDecoration === 'underline'),
+);
+
+const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
+const underlineValues = computed(() => (underline.value ? ['underline'] : []));
 
 const currentAlignment = computed(
   () => props.element.alignment ?? resolvedParagraphStyle.value.alignment,
@@ -245,14 +257,20 @@ const textBoxFontFamilies = computed(() => [
   ...props.fonts,
 ]);
 
-function onStyleValuesChanged(value: unknown) {
+function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
-  const update: Partial<TextBoxElement> = {
-    underline: values.includes('underline'),
-    fontStyle: applyStyleAxisToggles(values),
-  };
 
-  emit('update', update);
+  emit('update', {
+    fontStyle: applyStyleAxisToggles(values),
+  } as Partial<TextBoxElement>);
+}
+
+function onTextDecorationValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
+    underline: values.includes('underline') ? true : false,
+  } as Partial<TextBoxElement>);
 }
 
 function onFontFamilyChanged(fontFamily: string) {

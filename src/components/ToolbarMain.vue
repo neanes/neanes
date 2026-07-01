@@ -254,7 +254,7 @@
               class="chrome-button toolbar-icon"
               @click="$emit('add-alternate-line')"
             >
-              <PhMusicNotesPlus weight="duotone" />
+              <PhPencilLine weight="duotone" />
             </ToolbarButton>
           </AppTooltip>
           <AppTooltip
@@ -516,10 +516,10 @@ import {
   PhImageSquare,
   PhLinkSimple,
   PhMagnifyingGlass,
-  PhMusicNotesPlus,
   PhNotePencil,
   PhParagraph,
   PhPause,
+  PhPencilLine,
   PhPlay,
   PhPrinter,
   PhScissors,

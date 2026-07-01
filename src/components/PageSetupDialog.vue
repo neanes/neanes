@@ -39,6 +39,13 @@
                 >
                   Ηχ
                 </span>
+                <span
+                  v-else-if="section.value === 'neumes'"
+                  class="inline-grid size-4 shrink-0 place-items-center font-['Neanes'] text-[0.75rem] leading-none"
+                  aria-hidden="true"
+                >
+                  {{ isonIcon }}
+                </span>
                 <component :is="section.icon" v-else />
                 {{ $t(section.labelSelector, { ns: 'dialog' }) }}
               </TabsTrigger>
@@ -1597,6 +1604,7 @@ import {
 } from '@/models/ParagraphStyle';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { fontService } from '@/services/FontService';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { SaveService } from '@/services/SaveService';
 import {
   fraction0FormatOptions,
@@ -1749,6 +1757,8 @@ const props = defineProps({
 });
 
 const open = defineModel<boolean>('open', { required: true });
+
+const isonIcon = NeumeMappingService.getMapping(QuantitativeNeume.Ison).text;
 
 const sections = [
   {

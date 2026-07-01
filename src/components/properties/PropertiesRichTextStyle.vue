@@ -22,6 +22,10 @@
                 $t(($) => $.dialog.paragraphStyles.openDialog, { ns: 'dialog' })
               }}
             </Button>
+            <ParagraphStyleClearButton
+              :disabled="!hasParagraphStyleOverrides"
+              @clear="resetAllParagraphStyleOverrides"
+            />
           </div>
         </div>
         <ParagraphStyleSelect
@@ -926,6 +930,9 @@ const {
   fontSizePlaceholder,
   fontColorValue,
   fontColorHasExplicitValue,
+  fontStyleHasExplicitValue,
+  alignmentHasExplicitValue,
+  hasParagraphStyleOverrides,
   alignmentValue,
   isCommandEnabled,
   isCommandActive,
@@ -938,9 +945,12 @@ const {
   onFontStyleChanged,
   onFontSizeChanged,
   onFontColorChanged,
+  clearFontStyleOverride,
+  clearAlignmentOverride,
   onFontStyleValuesChanged,
   onTextDecorationValuesChanged,
   onAlignmentChanged,
+  resetAllParagraphStyleOverrides,
 } = useRichParagraphStyleCommands(props, [
   'subscript',
   'superscript',
@@ -991,19 +1001,6 @@ const disabledParagraphStyleIds = computed(() =>
     .filter((style) => !isParagraphStyleEnabled(style.id))
     .map((style) => style.id),
 );
-const fontStyleHasExplicitValue = computed(() => {
-  const value = commandValue('fontStyle');
-
-  return typeof value === 'string' && value !== '';
-});
-const alignmentHasExplicitValue = computed(() => {
-  const value = commandValue('alignment');
-
-  return (
-    typeof value === 'string' &&
-    value !== resolvedActiveParagraphStyle.value.alignment
-  );
-});
 const currentDialogParagraphStyleId = computed(() =>
   paragraphStyleValue.value === PARAGRAPH_STYLE_NONE_VALUE ||
   paragraphStyleValue.value === PARAGRAPH_STYLE_MIXED_VALUE
@@ -1096,14 +1093,6 @@ function onParagraphStyleSelectChanged(value: AcceptableValue) {
   if (typeof value === 'string') {
     onParagraphStyleChanged(value);
   }
-}
-
-function clearFontStyleOverride() {
-  runCommand('fontStyle');
-}
-
-function clearAlignmentOverride() {
-  runCommand('alignment');
 }
 
 function openParagraphStylesDialog() {

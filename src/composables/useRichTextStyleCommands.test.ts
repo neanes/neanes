@@ -103,20 +103,29 @@ describe('useRichParagraphStyleCommands', () => {
     paragraphStyles: ParagraphStyle[] = createDefaultParagraphStyles(),
     activeStyleIds: string[] = [],
     underlineActive = false,
+    commandOverrides: {
+      fontFamily?: string;
+      fontStyle?: string;
+      fontSize?: string;
+      fontColor?: string;
+      bold?: boolean;
+      italic?: boolean;
+      alignment?: string;
+    } = {},
   ) {
     const element = {};
     const pageSetup = new PageSetup();
     const fallbackParagraphStyle = createParagraphStyleFallback();
     const commandStates = {
       style: createCommandState(activeStyleIds, true),
-      fontFamily: createCommandState('', true),
-      fontSize: createCommandState('', true),
-      fontColor: createCommandState('', true),
-      fontStyle: createCommandState('', true),
-      fontStyleToggleBold: createCommandState(false, true),
-      fontStyleToggleItalic: createCommandState(false, true),
+      fontFamily: createCommandState(commandOverrides.fontFamily ?? '', true),
+      fontSize: createCommandState(commandOverrides.fontSize ?? '', true),
+      fontColor: createCommandState(commandOverrides.fontColor ?? '', true),
+      fontStyle: createCommandState(commandOverrides.fontStyle ?? '', true),
+      fontStyleToggleBold: createCommandState(commandOverrides.bold ?? false, true),
+      fontStyleToggleItalic: createCommandState(commandOverrides.italic ?? false, true),
       underline: createCommandState(underlineActive, true),
-      alignment: createCommandState('left', true),
+      alignment: createCommandState(commandOverrides.alignment ?? 'left', true),
     } as const;
 
     registryMocks.execForActiveOrLastOwner.mockReset();
@@ -283,6 +292,68 @@ describe('useRichParagraphStyleCommands', () => {
     expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledWith(
       {},
       'underline',
+    );
+  });
+
+  it('resets rich-text overrides without changing the active paragraph style', () => {
+    const underlinedStyle = new ParagraphStyle();
+    underlinedStyle.id = 'underlined-style';
+    underlinedStyle.overrides.textDecoration = 'underline';
+
+    const { commands } = setupCommands(
+      [underlinedStyle],
+      ['underlined-style'],
+      false,
+      {
+        fontFamily: 'Source Serif 4',
+        fontStyle: 'Bold',
+        fontSize: '18pt',
+        fontColor: '#123456',
+        bold: true,
+        italic: true,
+        alignment: 'center',
+      },
+    );
+
+    expect(commands.hasParagraphStyleOverrides.value).toBe(true);
+
+    commands.resetAllParagraphStyleOverrides();
+
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+      1,
+      {},
+      'fontFamily',
+    );
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+      2,
+      {},
+      'fontStyle',
+    );
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+      3,
+      {},
+      'fontSize',
+    );
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+      4,
+      {},
+      'fontColor',
+    );
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+      5,
+      {},
+      'underline',
+    );
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+      6,
+      {},
+      'alignment',
+    );
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(6);
+    expect(registryMocks.execForActiveOrLastOwner).not.toHaveBeenCalledWith(
+      {},
+      'style',
+      expect.anything(),
     );
   });
 });

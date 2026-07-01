@@ -228,6 +228,21 @@ export function useRichParagraphStyleCommands(
     () => typeof commandValue('fontColor') === 'string',
   );
 
+  const fontStyleHasExplicitValue = computed(
+    () =>
+      typeof commandValue('fontStyle') === 'string' &&
+      commandValue('fontStyle') !== '',
+  );
+
+  const alignmentHasExplicitValue = computed(() => {
+    const value = commandValue('alignment');
+
+    return (
+      typeof value === 'string' &&
+      value !== resolvedActiveParagraphStyle.value.alignment
+    );
+  });
+
   const underlineActive = computed(() => commandValue('underline') === true);
   const resolvedUnderline = computed(
     () => resolvedActiveParagraphStyle.value.textDecoration === 'underline',
@@ -251,6 +266,21 @@ export function useRichParagraphStyleCommands(
       ? value
       : 'left';
   });
+
+  const textDecorationHasExplicitValue = computed(
+    () => underlineActive.value !== resolvedUnderline.value,
+  );
+
+  const hasParagraphStyleOverrides = computed(
+    () =>
+      fontFamilyValue.value !== RICH_TEXT_DEFAULT_FONT_FAMILY ||
+      fontStyleHasExplicitValue.value ||
+      fontSizeValue.value != null ||
+      fontColorHasExplicitValue.value ||
+      fontStyleValues.value.length > 0 ||
+      textDecorationHasExplicitValue.value ||
+      alignmentHasExplicitValue.value,
+  );
 
   function isCommandEnabled(commandName: string) {
     return scopedEditor.value != null && commandStates[commandName]?.isEnabled;
@@ -379,6 +409,14 @@ export function useRichParagraphStyleCommands(
     runCommand('fontColor', { value });
   }
 
+  function clearFontStyleOverride() {
+    runCommand('fontStyle');
+  }
+
+  function clearAlignmentOverride() {
+    runCommand('alignment');
+  }
+
   function setUnderlineActive(value: boolean) {
     if (underlineActive.value !== value) {
       runCommand('underline');
@@ -474,6 +512,15 @@ export function useRichParagraphStyleCommands(
     setUnderlineActive(resolvedUnderline.value);
   }
 
+  function resetAllParagraphStyleOverrides() {
+    runCommand('fontFamily');
+    clearFontStyleOverride();
+    onFontSizeChanged(null);
+    onFontColorChanged(null);
+    clearTextDecorationOverride();
+    clearAlignmentOverride();
+  }
+
   function executeChangedToggleCommands(
     commandNames: string[],
     previousValues: string[],
@@ -507,11 +554,12 @@ export function useRichParagraphStyleCommands(
     fontSizePlaceholder,
     fontColorValue,
     fontColorHasExplicitValue,
+    fontStyleHasExplicitValue,
+    alignmentHasExplicitValue,
     underlineActive,
     resolvedUnderline,
-    textDecorationHasExplicitValue: computed(
-      () => underlineActive.value !== resolvedUnderline.value,
-    ),
+    hasParagraphStyleOverrides,
+    textDecorationHasExplicitValue,
     fontStyleValues,
     textDecorationValues,
     styleValues: fontStyleValues,
@@ -527,11 +575,14 @@ export function useRichParagraphStyleCommands(
     onFontStyleChanged,
     onFontSizeChanged,
     onFontColorChanged,
+    clearFontStyleOverride,
+    clearAlignmentOverride,
     onStyleValuesChanged,
     onFontStyleValuesChanged,
     onTextDecorationValuesChanged,
     onAlignmentChanged,
     clearTextDecorationOverride,
+    resetAllParagraphStyleOverrides,
     onClearFormatting,
     executeChangedToggleCommands,
   };

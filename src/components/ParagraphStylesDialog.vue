@@ -656,12 +656,14 @@ function updateTextDecorationOverride(value: boolean | 'indeterminate') {
 }
 
 function resetSelectedStyleOverrides() {
-  if (selectedStyle.value == null || selectedStyle.value.builtIn !== true) {
+  const style = selectedStyle.value;
+
+  if (style == null || style.builtIn !== true) {
     return;
   }
 
   const index = styles.value.findIndex(
-    (style) => style.id === selectedStyle.value?.id,
+    (candidate) => candidate.id === style.id,
   );
 
   if (index === -1) {
@@ -669,7 +671,7 @@ function resetSelectedStyleOverrides() {
   }
 
   styles.value[index] = createDefaultBuiltInParagraphStyle(
-    selectedStyle.value.id as BuiltInParagraphStyleId,
+    style.id as BuiltInParagraphStyleId,
   );
 }
 
@@ -693,27 +695,29 @@ function createStyle() {
 }
 
 function cloneSelectedStyle() {
-  if (selectedStyle.value == null) {
+  const style = selectedStyle.value;
+
+  if (style == null) {
     return;
   }
 
-  const clone = selectedStyle.value.clone();
+  const clone = style.clone();
   clone.id = crypto.randomUUID();
   clone.builtIn = false;
-  clone.displayName = getNextStyleName(
-    `${selectedStyle.value.displayName} Copy`,
-  );
+  clone.displayName = getNextStyleName(`${style.displayName} Copy`);
   styles.value.push(clone);
   selectedStyleId.value = clone.id;
 }
 
 function deleteSelectedStyle() {
-  if (selectedStyle.value == null || selectedStyle.value.builtIn) {
+  const style = selectedStyle.value;
+
+  if (style == null || style.builtIn) {
     return;
   }
 
-  const styleId = selectedStyle.value.id;
-  const parentStyleId = selectedStyle.value.parentStyleId;
+  const styleId = style.id;
+  const parentStyleId = style.parentStyleId;
   styles.value = styles.value
     .filter((style) => style.id !== styleId)
     .map((style) => {

@@ -77,12 +77,10 @@ export function createParagraphStyleFallback(): ResolvedParagraphStyle {
 export function createDefaultBuiltInParagraphStyle(
   id: BuiltInParagraphStyleId,
 ) {
-  const style = getParagraphStyleById(createDefaultParagraphStyles(), id);
-
-  if (style == null) {
-    throw new Error(`Unknown built-in paragraph style id: ${id}`);
-  }
-
+  const style = getRequiredParagraphStyleById(
+    createDefaultParagraphStyles(),
+    id,
+  );
   return style.clone();
 }
 
@@ -91,6 +89,19 @@ export function getParagraphStyleById(
   styleId: string | null | undefined,
 ) {
   return styles.find((style) => style.id === styleId) ?? null;
+}
+
+export function getRequiredParagraphStyleById(
+  styles: ParagraphStyle[],
+  styleId: string,
+) {
+  const style = getParagraphStyleById(styles, styleId);
+
+  if (style == null) {
+    throw new Error(`Unknown paragraph style id: ${styleId}`);
+  }
+
+  return style;
 }
 
 export function resolveParagraphStyle(

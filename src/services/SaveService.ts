@@ -24,7 +24,7 @@ import { PageSetup, pageSizes } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   createDefaultParagraphStyles,
-  getParagraphStyleById,
+  getRequiredParagraphStyleById,
   ParagraphStyle,
   type ParagraphStyleOverrides,
   type ResolvedParagraphStyle,
@@ -217,135 +217,132 @@ function createParagraphStylesFromLegacyPageSetupDefaults(
   legacyDefaults: LegacyPageSetupStyleDefaults,
 ) {
   const styles = createDefaultParagraphStyles();
-  const defaultText = getParagraphStyleById(
+  const defaultText = getRequiredParagraphStyleById(
     styles,
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
   );
-  const lyrics = getParagraphStyleById(
+  const lyrics = getRequiredParagraphStyleById(
     styles,
     BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
   );
-  const dropCap = getParagraphStyleById(
+  const dropCap = getRequiredParagraphStyleById(
     styles,
     BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
   );
 
-  if (defaultText != null) {
-    const inherited = resolveParagraphStyle(styles, defaultText.parentStyleId);
+  const defaultTextInherited = resolveParagraphStyle(
+    styles,
+    defaultText.parentStyleId,
+  );
 
-    applyGeneratedParagraphStyleOverride(
-      defaultText,
-      inherited,
-      'fontFamily',
-      legacyDefaults.textBoxDefaultFontFamily ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      defaultText,
-      inherited,
-      'fontSize',
-      legacyDefaults.textBoxDefaultFontSize ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      defaultText,
-      inherited,
-      'fontStyle',
-      legacyDefaults.textBoxDefaultFontStyle ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      defaultText,
-      inherited,
-      'color',
-      legacyDefaults.textBoxDefaultColor ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      defaultText,
-      inherited,
-      'strokeWidth',
-      legacyDefaults.textBoxDefaultStrokeWidth ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      defaultText,
-      inherited,
-      'lineHeight',
-      legacyDefaults.textBoxDefaultLineHeight ?? undefined,
-    );
-  }
+  applyGeneratedParagraphStyleOverride(
+    defaultText,
+    defaultTextInherited,
+    'fontFamily',
+    legacyDefaults.textBoxDefaultFontFamily ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    defaultText,
+    defaultTextInherited,
+    'fontSize',
+    legacyDefaults.textBoxDefaultFontSize ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    defaultText,
+    defaultTextInherited,
+    'fontStyle',
+    legacyDefaults.textBoxDefaultFontStyle ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    defaultText,
+    defaultTextInherited,
+    'color',
+    legacyDefaults.textBoxDefaultColor ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    defaultText,
+    defaultTextInherited,
+    'strokeWidth',
+    legacyDefaults.textBoxDefaultStrokeWidth ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    defaultText,
+    defaultTextInherited,
+    'lineHeight',
+    legacyDefaults.textBoxDefaultLineHeight ?? undefined,
+  );
 
-  if (lyrics != null) {
-    const inherited = resolveParagraphStyle(styles, lyrics.parentStyleId);
+  const lyricsInherited = resolveParagraphStyle(styles, lyrics.parentStyleId);
 
-    applyGeneratedParagraphStyleOverride(
-      lyrics,
-      inherited,
-      'fontFamily',
-      legacyDefaults.lyricsDefaultFontFamily ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      lyrics,
-      inherited,
-      'fontSize',
-      legacyDefaults.lyricsDefaultFontSize ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      lyrics,
-      inherited,
-      'fontStyle',
-      legacyDefaults.lyricsDefaultFontStyle ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      lyrics,
-      inherited,
-      'color',
-      legacyDefaults.lyricsDefaultColor ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      lyrics,
-      inherited,
-      'strokeWidth',
-      legacyDefaults.lyricsDefaultStrokeWidth ?? undefined,
-    );
-  }
+  applyGeneratedParagraphStyleOverride(
+    lyrics,
+    lyricsInherited,
+    'fontFamily',
+    legacyDefaults.lyricsDefaultFontFamily ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    lyrics,
+    lyricsInherited,
+    'fontSize',
+    legacyDefaults.lyricsDefaultFontSize ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    lyrics,
+    lyricsInherited,
+    'fontStyle',
+    legacyDefaults.lyricsDefaultFontStyle ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    lyrics,
+    lyricsInherited,
+    'color',
+    legacyDefaults.lyricsDefaultColor ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    lyrics,
+    lyricsInherited,
+    'strokeWidth',
+    legacyDefaults.lyricsDefaultStrokeWidth ?? undefined,
+  );
 
-  if (dropCap != null) {
-    const inherited = resolveParagraphStyle(styles, dropCap.parentStyleId);
+  const dropCapInherited = resolveParagraphStyle(styles, dropCap.parentStyleId);
 
-    applyGeneratedParagraphStyleOverride(
-      dropCap,
-      inherited,
-      'fontFamily',
-      legacyDefaults.dropCapDefaultFontFamily ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      dropCap,
-      inherited,
-      'fontSize',
-      legacyDefaults.dropCapDefaultFontSize ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      dropCap,
-      inherited,
-      'fontStyle',
-      legacyDefaults.dropCapDefaultFontStyle ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      dropCap,
-      inherited,
-      'color',
-      legacyDefaults.dropCapDefaultColor ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      dropCap,
-      inherited,
-      'strokeWidth',
-      legacyDefaults.dropCapDefaultStrokeWidth ?? undefined,
-    );
-    applyGeneratedParagraphStyleOverride(
-      dropCap,
-      inherited,
-      'lineHeight',
-      legacyDefaults.dropCapDefaultLineHeight ?? undefined,
-    );
-  }
+  applyGeneratedParagraphStyleOverride(
+    dropCap,
+    dropCapInherited,
+    'fontFamily',
+    legacyDefaults.dropCapDefaultFontFamily ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    dropCap,
+    dropCapInherited,
+    'fontSize',
+    legacyDefaults.dropCapDefaultFontSize ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    dropCap,
+    dropCapInherited,
+    'fontStyle',
+    legacyDefaults.dropCapDefaultFontStyle ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    dropCap,
+    dropCapInherited,
+    'color',
+    legacyDefaults.dropCapDefaultColor ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    dropCap,
+    dropCapInherited,
+    'strokeWidth',
+    legacyDefaults.dropCapDefaultStrokeWidth ?? undefined,
+  );
+  applyGeneratedParagraphStyleOverride(
+    dropCap,
+    dropCapInherited,
+    'lineHeight',
+    legacyDefaults.dropCapDefaultLineHeight ?? undefined,
+  );
 
   return styles;
 }

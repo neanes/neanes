@@ -7131,11 +7131,7 @@ function rewriteRichTextHtmlForDeletedStyles(
       }
 
       deletedClasses.push(className);
-      const fallbackStyleId = deletedStyleFallbacks.get(styleId);
-
-      if (fallbackStyleId == null) {
-        continue;
-      }
+      const fallbackStyleId = deletedStyleFallbacks.get(styleId)!;
 
       const fallbackClassName = `neanes-style-${fallbackStyleId}`;
 

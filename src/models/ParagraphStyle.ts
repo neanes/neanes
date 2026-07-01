@@ -92,7 +92,6 @@ export interface LegacyStyleDefaults {
   lyricsDefaultFontStyle?: string | null;
   lyricsDefaultColor?: string | null;
   lyricsDefaultStrokeWidth?: number | null;
-  lyricsDefaultLineHeight?: number | null;
 }
 
 export function createParagraphStylesFromDefaults(

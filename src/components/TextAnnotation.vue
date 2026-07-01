@@ -8,7 +8,7 @@
     @dblclick="handleDoubleClick"
   >
     <RichTextEditor
-      :key="`${editorLanguage}-${contentLanguage}`"
+      :key="`${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
       ref="editor"
       class="rich-text-editor"
       :owner="element"
@@ -135,6 +135,10 @@ const paragraphStyleDefinitions = computed(() =>
     element: 'p',
     classes: [`neanes-style-${style.id}`],
   })),
+);
+
+const paragraphStyleDefinitionKey = computed(() =>
+  props.paragraphStyles.map((style) => style.id).join('|'),
 );
 
 const paragraphStyleCss = computed(() =>

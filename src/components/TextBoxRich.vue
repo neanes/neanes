@@ -13,7 +13,7 @@
       :style="multipanelContainerStyle"
     >
       <RichTextEditor
-        :key="`left-${editorLanguage}-${contentLanguage}`"
+        :key="`left-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
         ref="editorLeft"
         class="rich-text-editor multipanel left"
         :owner="element"
@@ -24,7 +24,7 @@
         @select-neume="emit('select-neume')"
       />
       <RichTextEditor
-        :key="`center-${editorLanguage}-${contentLanguage}`"
+        :key="`center-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
         ref="editorCenter"
         class="rich-text-editor multipanel center"
         :owner="element"
@@ -35,7 +35,7 @@
         @select-neume="emit('select-neume')"
       />
       <RichTextEditor
-        :key="`right-${editorLanguage}-${contentLanguage}`"
+        :key="`right-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
         ref="editorRight"
         class="rich-text-editor multipanel right"
         :owner="element"
@@ -53,7 +53,7 @@
           :style="textBoxTopInnerContainerStyle"
         >
           <RichTextEditor
-            :key="`inline-top-${editorLanguage}-${contentLanguage}`"
+            :key="`inline-top-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
             ref="editor"
             class="rich-text-editor inline-top"
             :style="textBoxStyleTop"
@@ -68,7 +68,7 @@
       </div>
       <div class="inline-bottom-container" :style="textBoxBottomContainerStyle">
         <RichTextEditor
-          :key="`inline-bottom-${editorLanguage}-${contentLanguage}`"
+          :key="`inline-bottom-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
           ref="editorBottom"
           class="rich-text-editor inline-bottom"
           :style="textBoxStyleBottom"
@@ -83,7 +83,7 @@
     </div>
     <RichTextEditor
       v-else-if="element.scrollable"
-      :key="`scrollable-${editorLanguage}-${contentLanguage}`"
+      :key="`scrollable-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
       ref="editor"
       class="rich-text-editor single scrollable"
       :owner="element"
@@ -96,7 +96,7 @@
     />
     <RichTextEditor
       v-else
-      :key="`single-${editorLanguage}-${contentLanguage}`"
+      :key="`single-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
       ref="editor"
       class="rich-text-editor single"
       :owner="element"
@@ -285,6 +285,10 @@ const paragraphStyleDefinitions = computed(() =>
     element: 'p',
     classes: [`neanes-style-${style.id}`],
   })),
+);
+
+const paragraphStyleDefinitionKey = computed(() =>
+  props.paragraphStyles.map((style) => style.id).join('|'),
 );
 
 const paragraphStyleCss = computed(() =>

@@ -187,7 +187,7 @@
         </MenubarTrigger>
         <MenubarContent class="chrome-menubar-content">
           <MenubarItem @select="onClickAddAlternateLine">
-            <PhMusicNotesPlus />
+            <PhPencilLine />
             {{ $t(($) => $.menu.insert.alternateLine, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddAnnotation">
@@ -452,10 +452,10 @@ import {
   PhMagnifyingGlass,
   PhMagnifyingGlassMinus,
   PhMagnifyingGlassPlus,
-  PhMusicNotesPlus,
   PhNotePencil,
   PhPaintBrush,
   PhPaintBucket,
+  PhPencilLine,
   PhPrinter,
   PhRowsPlusBottom,
   PhRowsPlusTop,

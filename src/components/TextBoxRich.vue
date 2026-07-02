@@ -272,11 +272,7 @@ const fallbackParagraphStyleId = computed(() =>
 );
 
 const resolvedParagraphStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    fallbackParagraphStyleId.value,
-    props.element.getParagraphStyleOverrides(),
-  ),
+  resolveParagraphStyle(props.paragraphStyles, fallbackParagraphStyleId.value),
 );
 
 const paragraphStyleDefinitions = computed(() =>

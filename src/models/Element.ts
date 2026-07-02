@@ -981,12 +981,6 @@ export class RichTextBoxElement extends ScoreElement {
   public modeChangeIgnoreAttractions: boolean = false;
   public modeChangePermanentEnharmonicZo: boolean = false;
   public modeChangeBpm: number = 120;
-  public color: string | null = null;
-  public fontSize: number | null = null;
-  public fontFamily: string | null = null;
-  public strokeWidth: number | null = null;
-  public fontStyle: string | null = null;
-  public lineHeight: number | null = null;
 
   public height: number = 20;
   public customWidth: number | null = null;
@@ -1035,26 +1029,9 @@ export class RichTextBoxElement extends ScoreElement {
       modeChangeIgnoreAttractions: this.modeChangeIgnoreAttractions,
       modeChangePermanentEnharmonicZo: this.modeChangePermanentEnharmonicZo,
       modeChangeBpm: this.modeChangeBpm,
-      color: this.color,
-      fontSize: this.fontSize,
-      fontFamily: this.fontFamily,
-      strokeWidth: this.strokeWidth,
-      fontStyle: this.fontStyle,
-      lineHeight: this.lineHeight,
       runningMarkerRole: this.runningMarkerRole,
       runningMarkerText: this.runningMarkerText,
     } as Partial<RichTextBoxElement>;
-  }
-
-  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
-    return {
-      fontFamily: this.fontFamily ?? undefined,
-      fontSize: this.fontSize ?? undefined,
-      fontStyle: this.fontStyle ?? undefined,
-      color: this.color ?? undefined,
-      strokeWidth: this.strokeWidth ?? undefined,
-      lineHeight: this.lineHeight ?? undefined,
-    };
   }
 }
 

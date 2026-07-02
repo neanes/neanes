@@ -474,11 +474,7 @@ const fallbackParagraphStyleId = computed(() =>
     : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
 );
 const resolvedParagraphStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    fallbackParagraphStyleId.value,
-    props.element.getParagraphStyleOverrides(),
-  ),
+  resolveParagraphStyle(props.paragraphStyles, fallbackParagraphStyleId.value),
 );
 
 function updateElement(value: Partial<RichTextBoxElement>) {

@@ -1552,12 +1552,6 @@ export class SaveService {
         e.modeChangePermanentEnharmonicZo ?? undefined;
     }
 
-    element.color = e.color ?? undefined;
-    element.fontFamily = e.fontFamily ?? undefined;
-    element.fontSize = e.fontSize ?? undefined;
-    element.strokeWidth = e.strokeWidth ?? undefined;
-    element.fontSubfamily = e.fontStyle ?? undefined;
-    element.lineHeight = e.lineHeight;
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
     element.marginTop = e.marginTop ?? undefined;
@@ -2510,12 +2504,6 @@ export class SaveService {
         e.modeChangePermanentEnharmonicZo === true;
     }
 
-    element.color = e.color ?? null;
-    element.fontFamily = e.fontFamily ?? null;
-    element.fontSize = e.fontSize ?? null;
-    element.strokeWidth = e.strokeWidth ?? null;
-    element.fontStyle = e.fontSubfamily ?? null;
-    element.lineHeight = e.lineHeight ?? null;
     element.customWidth = e.customWidth ?? null;
     element.marginTop = e.marginTop ?? 0;
     element.marginBottom = e.marginBottom ?? 0;

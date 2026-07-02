@@ -2929,7 +2929,6 @@ export class LayoutService {
       noteElement.lyricsFontHeight = this.getNoteLyricsFontHeightFromCache(
         fontHeightCache,
         noteElement,
-        pageSetup,
         paragraphStyles,
       );
       this.getNoteWidth(noteElement, pageSetup, noteWidthArgs);
@@ -8371,7 +8370,6 @@ export class LayoutService {
   private static getNoteLyricsFontHeightFromCache(
     cache: Map<string, number>,
     element: NoteElement,
-    pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
   ) {
     const resolvedLyricsStyle = this.getResolvedLyricsStyle(

@@ -7330,7 +7330,7 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
         newValues: {
           paragraphStyleId:
             deletedStyleFallbacks.get(dropCap.paragraphStyleId) ??
-            BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+            BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
         },
       }),
     );

@@ -1363,6 +1363,7 @@ const dialogOpen = computed(() => {
     documentPropertiesDialogIsOpen.value ||
     playbackSettingsDialogIsOpen.value ||
     syllablePositioningDialogIsOpen.value ||
+    exportDialogIsOpen.value ||
     editorPreferencesDialogIsOpen.value ||
     aboutDialogIsOpen.value
   );

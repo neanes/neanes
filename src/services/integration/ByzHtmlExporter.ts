@@ -203,10 +203,6 @@ export class ByzHtmlExporter {
       paragraphStyles,
       BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     );
-    const annotationStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
-    );
     const lyricsStyle = resolveParagraphStyle(
       paragraphStyles,
       BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
@@ -403,15 +399,6 @@ export class ByzHtmlExporter {
       }
 
       ${this.getRichTextStyleCss(paragraphStyles, pageSetup)}
-
-      .annotation-container {
-        font-family: ${getFontFamilyWithFallback(
-          annotationStyle.fontFamily,
-          pageSetup.neumeDefaultFontFamily,
-        ).replaceAll('"', "'")};
-        font-size: ${Unit.toPt(annotationStyle.fontSize)}pt;
-        color: ${annotationStyle.color};
-      }
 
       .${this.config.classImageBox} {
         display: flex;

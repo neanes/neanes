@@ -1,4 +1,5 @@
 import type {
+  AlternateLineElement,
   DropCapElement,
   NoteElement,
   ScoreElement,
@@ -34,6 +35,22 @@ export function sanitizeClipboardElementParagraphStyleIds(
 ) {
   const paragraphStyleIds = createParagraphStyleIdSet(paragraphStyles);
 
+  sanitizeElementParagraphStyleIds(element, paragraphStyleIds);
+}
+
+function sanitizeAlternateLineParagraphStyleIds(
+  alternateLine: AlternateLineElement,
+  paragraphStyleIds: Set<string>,
+) {
+  for (const childElement of alternateLine.elements) {
+    sanitizeElementParagraphStyleIds(childElement, paragraphStyleIds);
+  }
+}
+
+function sanitizeElementParagraphStyleIds(
+  element: ScoreElement,
+  paragraphStyleIds: Set<string>,
+) {
   switch (element.elementType) {
     case ElementType.Note: {
       const note = element as NoteElement;
@@ -42,6 +59,13 @@ export function sanitizeClipboardElementParagraphStyleIds(
         paragraphStyleIds,
         BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
       );
+
+      for (const alternateLine of note.alternateLines) {
+        sanitizeAlternateLineParagraphStyleIds(
+          alternateLine,
+          paragraphStyleIds,
+        );
+      }
       break;
     }
     case ElementType.TextBox: {
@@ -59,6 +83,13 @@ export function sanitizeClipboardElementParagraphStyleIds(
         dropCap.paragraphStyleId,
         paragraphStyleIds,
         BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
+      );
+      break;
+    }
+    case ElementType.AlternateLine: {
+      sanitizeAlternateLineParagraphStyleIds(
+        element as AlternateLineElement,
+        paragraphStyleIds,
       );
       break;
     }

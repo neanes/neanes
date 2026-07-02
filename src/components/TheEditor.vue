@@ -6994,32 +6994,40 @@ function getDefaultLyricsFont() {
   return `${resolvedLyricsFont.cssFontStyle} normal ${resolvedLyricsFont.cssFontWeight} ${resolvedLyricsStyle.fontSize}px "${resolvedLyricsFont.cssFontFamily}"`;
 }
 
-function getResizableTextDefaultSnapshot(currentScore: Score) {
-  return {
-    defaultText: resolveParagraphStyle(
-      currentScore.paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    ),
-    lyrics: resolveParagraphStyle(
-      currentScore.paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-    ),
-  };
+type ResizableTextStyleSnapshot = Map<string, ResolvedParagraphStyle>;
+
+function getResizableTextStyleSnapshot(
+  currentScore: Score,
+): ResizableTextStyleSnapshot {
+  const snapshot: ResizableTextStyleSnapshot = new Map();
+
+  for (const style of currentScore.paragraphStyles) {
+    snapshot.set(
+      style.id,
+      resolveParagraphStyle(currentScore.paragraphStyles, style.id),
+    );
+  }
+
+  return snapshot;
 }
 
-type ResizableTextDefaultSnapshot = {
-  defaultText: ResolvedParagraphStyle;
-  lyrics: ResolvedParagraphStyle;
-};
-
-function resizableTextDefaultsChanged(
-  previous: ResizableTextDefaultSnapshot,
-  current: ResizableTextDefaultSnapshot,
+function resizableTextStylesChanged(
+  previous: ResizableTextStyleSnapshot,
+  current: ResizableTextStyleSnapshot,
 ) {
-  return (
-    !shallowEquals(previous.defaultText, current.defaultText) ||
-    !shallowEquals(previous.lyrics, current.lyrics)
-  );
+  if (previous.size !== current.size) {
+    return true;
+  }
+
+  for (const [styleId, previousStyle] of previous) {
+    const currentStyle = current.get(styleId);
+
+    if (currentStyle == null || !shallowEquals(previousStyle, currentStyle)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function updatePageSetup(pageSetup: PageSetup) {
@@ -7242,7 +7250,7 @@ function rewriteRichTextHtmlForDeletedStyles(
 function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
   flushPendingRichTextEditors(selectedWorkspace.value);
 
-  const previousResizableTextDefaults = getResizableTextDefaultSnapshot(
+  const previousResizableTextStyles = getResizableTextStyleSnapshot(
     score.value,
   );
   const previousStylesById = new Map(
@@ -7389,9 +7397,9 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
   commandService.value.executeAsBatch(commands);
 
   if (
-    resizableTextDefaultsChanged(
-      previousResizableTextDefaults,
-      getResizableTextDefaultSnapshot(score.value),
+    resizableTextStylesChanged(
+      previousResizableTextStyles,
+      getResizableTextStyleSnapshot(score.value),
     )
   ) {
     recalculateRichTextBoxHeights();
@@ -8817,7 +8825,7 @@ async function onFileMenuSaveAs() {
 
 function onFileMenuUndo() {
   const currentIndex = selectedElementIndex.value;
-  const previousResizableTextDefaults = getResizableTextDefaultSnapshot(
+  const previousResizableTextStyles = getResizableTextStyleSnapshot(
     score.value,
   );
 
@@ -8840,9 +8848,9 @@ function onFileMenuUndo() {
   }
 
   if (
-    resizableTextDefaultsChanged(
-      previousResizableTextDefaults,
-      getResizableTextDefaultSnapshot(score.value),
+    resizableTextStylesChanged(
+      previousResizableTextStyles,
+      getResizableTextStyleSnapshot(score.value),
     )
   ) {
     recalculateRichTextBoxHeights();
@@ -8854,7 +8862,7 @@ function onFileMenuUndo() {
 
 function onFileMenuRedo() {
   const currentIndex = selectedElementIndex.value;
-  const previousResizableTextDefaults = getResizableTextDefaultSnapshot(
+  const previousResizableTextStyles = getResizableTextStyleSnapshot(
     score.value,
   );
 
@@ -8877,9 +8885,9 @@ function onFileMenuRedo() {
   }
 
   if (
-    resizableTextDefaultsChanged(
-      previousResizableTextDefaults,
-      getResizableTextDefaultSnapshot(score.value),
+    resizableTextStylesChanged(
+      previousResizableTextStyles,
+      getResizableTextStyleSnapshot(score.value),
     )
   ) {
     recalculateRichTextBoxHeights();

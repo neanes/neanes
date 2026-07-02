@@ -624,9 +624,20 @@ const textDecorationCheckboxValue = computed(() => {
   return resolvedStyle.value.textDecoration === 'underline';
 });
 
-const canSubmit = computed(() =>
-  styles.value.every((style) => style.displayName.trim().length > 0),
-);
+const canSubmit = computed(() => {
+  const names = new Set<string>();
+
+  return styles.value.every((style) => {
+    const name = getParagraphStyleDisplayName(style).trim();
+
+    if (name.length === 0 || names.has(name)) {
+      return false;
+    }
+
+    names.add(name);
+    return true;
+  });
+});
 
 const selectedStyleHasOverrides = computed(
   () => Object.keys(selectedStyle.value?.overrides ?? {}).length > 0,

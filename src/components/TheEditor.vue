@@ -7114,10 +7114,26 @@ function getAllRichTextBoxes(score: Score) {
 }
 
 function getAllNoteElements(score: Score) {
-  return score.staff.elements.filter(
-    (element): element is NoteElement =>
-      element.elementType === ElementType.Note,
-  );
+  const notes: NoteElement[] = [];
+
+  function collectNotes(elements: ScoreElement[]) {
+    for (const element of elements) {
+      if (element.elementType !== ElementType.Note) {
+        continue;
+      }
+
+      const note = element as NoteElement;
+      notes.push(note);
+
+      for (const alternateLine of note.alternateLines) {
+        collectNotes(alternateLine.elements);
+      }
+    }
+  }
+
+  collectNotes(score.staff.elements);
+
+  return notes;
 }
 
 function getAllDropCapElements(score: Score) {

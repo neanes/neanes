@@ -7109,12 +7109,26 @@ function getDeletedStyleFallbacks(
       continue;
     }
 
-    deletedStyleFallbacks.set(
-      styleId,
-      style.parentStyleId != null && nextStyleIds.has(style.parentStyleId)
-        ? style.parentStyleId
-        : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    );
+    const visited = new Set<string>();
+    let parentStyleId = style.parentStyleId;
+
+    while (parentStyleId != null && !visited.has(parentStyleId)) {
+      if (nextStyleIds.has(parentStyleId)) {
+        deletedStyleFallbacks.set(styleId, parentStyleId);
+        break;
+      }
+
+      visited.add(parentStyleId);
+      parentStyleId =
+        previousStylesById.get(parentStyleId)?.parentStyleId ?? null;
+    }
+
+    if (!deletedStyleFallbacks.has(styleId)) {
+      deletedStyleFallbacks.set(
+        styleId,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+      );
+    }
   }
 
   return deletedStyleFallbacks;

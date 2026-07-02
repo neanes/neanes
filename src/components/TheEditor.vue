@@ -3997,7 +3997,7 @@ function onKeydown(event: KeyboardEvent) {
 
   const editorShortcutIgnored = isEditorShortcutIgnored(event);
 
-  if (platformService.isMac && isTextInputFocused() && !dialogOpen.value) {
+  if (platformService.isMac && isTextInputFocused()) {
     onKeydownMac(event);
   }
 
@@ -4007,11 +4007,7 @@ function onKeydown(event: KeyboardEvent) {
 
   // Handle undo / redo
   // See https://github.com/electron/electron/issues/3682.
-  if (
-    (event.ctrlKey || event.metaKey) &&
-    !isTextInputFocused() &&
-    !dialogOpen.value
-  ) {
+  if ((event.ctrlKey || event.metaKey) && !isTextInputFocused()) {
     if (event.code === 'KeyZ') {
       if (platformService.isMac && event.shiftKey) {
         throttled.onFileMenuRedo();
@@ -4088,7 +4084,7 @@ function onKeydown(event: KeyboardEvent) {
     return onKeydownTextBox(event);
   }
 
-  if (!isTextInputFocused() && !dialogOpen.value) {
+  if (!isTextInputFocused()) {
     return onKeydownNeume(event);
   }
 }

@@ -34,7 +34,7 @@
                 :value="style.id"
                 class="min-h-9 w-full flex-none justify-start whitespace-normal text-left"
               >
-                {{ style.displayName }}
+                {{ getParagraphStyleDisplayName(style) }}
               </TabsTrigger>
             </TabsList>
           </ScrollArea>
@@ -140,7 +140,11 @@
                 <Input
                   id="text-style-name"
                   class="ml-auto w-64 shrink-0"
-                  :model-value="selectedStyle?.displayName ?? ''"
+                  :model-value="
+                    selectedStyle == null
+                      ? ''
+                      : getParagraphStyleDisplayName(selectedStyle)
+                  "
                   :disabled="selectedStyle?.builtIn ?? false"
                   @update:model-value="updateSelectedStyleName"
                 />
@@ -506,6 +510,7 @@ import {
   type BuiltInParagraphStyleId,
   createDefaultBuiltInParagraphStyle,
   getAvailableParagraphStyleParents,
+  getBuiltInParagraphStyleNameSelector,
   ParagraphStyle,
   type ParagraphStyleOverrides,
   resolveParagraphStyle,
@@ -661,6 +666,12 @@ function hasOverride(key: keyof ParagraphStyle['overrides']) {
   return selectedStyle.value?.overrides[key] !== undefined;
 }
 
+function getParagraphStyleDisplayName(style: ParagraphStyle) {
+  const selector = getBuiltInParagraphStyleNameSelector(style.id);
+
+  return selector == null ? style.displayName : t(selector, { ns: 'dialog' });
+}
+
 function toggleOverride(
   key: keyof ParagraphStyle['overrides'],
   value: boolean,
@@ -754,7 +765,9 @@ function updateAlignmentOverride(value: unknown) {
 
 function createStyle() {
   const style = new ParagraphStyle();
-  style.displayName = getNextStyleName('New Paragraph Style');
+  style.displayName = getNextStyleName(
+    t(($) => $.dialog.paragraphStyles.newStyleName, { ns: 'dialog' }),
+  );
   style.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
   styles.value.push(style);
   selectedStyleId.value = style.id;
@@ -770,7 +783,12 @@ function duplicateSelectedStyle() {
   const clone = style.clone();
   clone.id = crypto.randomUUID();
   clone.builtIn = false;
-  clone.displayName = getNextStyleName(`${style.displayName} Copy`);
+  clone.displayName = getNextStyleName(
+    t(($) => $.dialog.paragraphStyles.copyStyleName, {
+      ns: 'dialog',
+      name: getParagraphStyleDisplayName(style),
+    }),
+  );
   styles.value.push(clone);
   selectedStyleId.value = clone.id;
 }
@@ -799,7 +817,9 @@ function deleteSelectedStyle() {
 }
 
 function getNextStyleName(baseName: string) {
-  const existingNames = new Set(styles.value.map((style) => style.displayName));
+  const existingNames = new Set(
+    styles.value.map((style) => getParagraphStyleDisplayName(style)),
+  );
 
   if (!existingNames.has(baseName)) {
     return baseName;

@@ -49,7 +49,21 @@
     "resetStyleToDefault": "Επαναφορά Στυλ στην Προεπιλογή",
     "name": "Όνομα",
     "parentStyle": "Γονικό Στυλ",
-    "openDialog": "Επεξεργασία Στυλ"
+    "openDialog": "Επεξεργασία Στυλ",
+    "newStyleName": "Νέο Στυλ Παραγράφου",
+    "copyStyleName": "Αντίγραφο {{name}}",
+    "builtIn": {
+      "defaultText": "Προεπιλεγμένο Κείμενο",
+      "annotation": "Επισήμανση",
+      "title": "Τίτλος",
+      "subtitle": "Υπότιτλος",
+      "chapter": "Κεφάλαιο",
+      "section": "Ενότητα",
+      "header": "Κεφαλίδα",
+      "footer": "Υποσέλιδο",
+      "lyrics": "Στίχοι",
+      "dropCap": "Αρχίγραμμα"
+    }
   },
   "neumePositioning": {
     "root": "Τοποθέτηση Σημείου",

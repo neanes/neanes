@@ -49,7 +49,21 @@
     "resetStyleToDefault": "Reset Style to Default",
     "name": "Name",
     "parentStyle": "Parent",
-    "openDialog": "Edit Styles"
+    "openDialog": "Edit Styles",
+    "newStyleName": "New Paragraph Style",
+    "copyStyleName": "{{name}} Copy",
+    "builtIn": {
+      "defaultText": "Default Text",
+      "annotation": "Annotation",
+      "title": "Title",
+      "subtitle": "Subtitle",
+      "chapter": "Chapter",
+      "section": "Section",
+      "header": "Header",
+      "footer": "Footer",
+      "lyrics": "Lyrics",
+      "dropCap": "Drop Cap"
+    }
   },
   "neumePositioning": {
     "root": "Neume Positioning",

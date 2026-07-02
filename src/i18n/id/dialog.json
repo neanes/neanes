@@ -49,7 +49,21 @@
     "resetStyleToDefault": "Atur Ulang Gaya ke Default",
     "name": "Nama",
     "parentStyle": "Gaya Induk",
-    "openDialog": "Sunting Gaya"
+    "openDialog": "Sunting Gaya",
+    "newStyleName": "Gaya Paragraf Baru",
+    "copyStyleName": "Salinan {{name}}",
+    "builtIn": {
+      "defaultText": "Teks Default",
+      "annotation": "Anotasi",
+      "title": "Judul",
+      "subtitle": "Subjudul",
+      "chapter": "Bab",
+      "section": "Bagian",
+      "header": "Header",
+      "footer": "Footer",
+      "lyrics": "Lirik",
+      "dropCap": "Huruf Awal Besar"
+    }
   },
   "neumePositioning": {
     "root": "Penempatan Neuma",

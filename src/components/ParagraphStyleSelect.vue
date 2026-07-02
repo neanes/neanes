@@ -21,9 +21,9 @@
           :key="style.id"
           :value="style.id"
           :disabled="isStyleDisabled(style.id)"
-          :text-value="style.displayName"
+          :text-value="getParagraphStyleDisplayName(style)"
         >
-          {{ style.displayName }}
+          {{ getParagraphStyleDisplayName(style) }}
         </SelectItem>
       </SelectGroup>
     </component>
@@ -41,7 +41,10 @@ import {
   PARAGRAPH_STYLE_NONE_VALUE,
 } from '@/composables/useRichTextStyleCommands';
 import { cn } from '@/lib/utils';
-import type { ParagraphStyle } from '@/models/ParagraphStyle.js';
+import {
+  getBuiltInParagraphStyleNameSelector,
+  type ParagraphStyle,
+} from '@/models/ParagraphStyle.js';
 
 import RichTextSelectContent from './RichTextSelectContent.vue';
 import {
@@ -128,6 +131,12 @@ const mixedLabel = computed(
 
 function isStyleDisabled(styleId: string) {
   return disabledStyleIds.value.has(styleId);
+}
+
+function getParagraphStyleDisplayName(style: ParagraphStyle) {
+  const selector = getBuiltInParagraphStyleNameSelector(style.id);
+
+  return selector == null ? style.displayName : t(selector, { ns: 'dialog' });
 }
 
 function onUpdate(value: AcceptableValue) {

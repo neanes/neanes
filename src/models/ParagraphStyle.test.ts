@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { resources } from '@/i18n';
 import { Unit } from '@/utils/Unit';
 
 import {
@@ -12,6 +13,7 @@ import {
   createDefaultBuiltInParagraphStyle,
   createDefaultParagraphStyles,
   createParagraphStyleFallback,
+  getBuiltInParagraphStyleNameSelector,
   ParagraphStyle,
   resolveParagraphStyle,
   wouldCreateParagraphStyleCycle,
@@ -150,5 +152,18 @@ describe('ParagraphStyle', () => {
     expect(resolvedTitle.fontSize).toBe(Unit.fromPt(28));
     expect(resolvedTitle.alignment).toBe(TextBoxAlignment.Center);
     expect(createParagraphStyleFallback().textDecoration).toBeNull();
+  });
+
+  it('maps built-in paragraph style ids to display-name selectors', () => {
+    const defaultTextSelector = getBuiltInParagraphStyleNameSelector(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    );
+    const lyricsSelector = getBuiltInParagraphStyleNameSelector(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+    );
+
+    expect(defaultTextSelector?.(resources.en)).toBe('Default Text');
+    expect(lyricsSelector?.(resources.ro)).toBe('Versuri');
+    expect(getBuiltInParagraphStyleNameSelector('custom-style')).toBeNull();
   });
 });

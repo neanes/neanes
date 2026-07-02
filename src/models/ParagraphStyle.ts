@@ -1,3 +1,5 @@
+import type { SelectorParam } from 'i18next';
+
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { Unit } from '@/utils/Unit';
 
@@ -20,6 +22,38 @@ export const BUILT_IN_PARAGRAPH_STYLE_IDS = {
 
 export type BuiltInParagraphStyleId =
   (typeof BUILT_IN_PARAGRAPH_STYLE_IDS)[keyof typeof BUILT_IN_PARAGRAPH_STYLE_IDS];
+
+export type ParagraphStyleNameSelector = SelectorParam<'dialog'>;
+
+const BUILT_IN_PARAGRAPH_STYLE_NAME_SELECTORS: Record<
+  BuiltInParagraphStyleId,
+  ParagraphStyleNameSelector
+> = {
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText]: ($) =>
+    $.dialog.paragraphStyles.builtIn.defaultText,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation]: ($) =>
+    $.dialog.paragraphStyles.builtIn.annotation,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.Title]: ($) =>
+    $.dialog.paragraphStyles.builtIn.title,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.Subtitle]: ($) =>
+    $.dialog.paragraphStyles.builtIn.subtitle,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.Chapter]: ($) =>
+    $.dialog.paragraphStyles.builtIn.chapter,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.Section]: ($) =>
+    $.dialog.paragraphStyles.builtIn.section,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.Header]: ($) =>
+    $.dialog.paragraphStyles.builtIn.header,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.Footer]: ($) =>
+    $.dialog.paragraphStyles.builtIn.footer,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics]: ($) =>
+    $.dialog.paragraphStyles.builtIn.lyrics,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap]: ($) =>
+    $.dialog.paragraphStyles.builtIn.dropCap,
+};
+
+const builtInParagraphStyleIds = new Set<string>(
+  Object.values(BUILT_IN_PARAGRAPH_STYLE_IDS),
+);
 
 export interface ParagraphStyleOverrides {
   alignment?: ParagraphStyleAlignment;
@@ -82,6 +116,22 @@ export function createDefaultBuiltInParagraphStyle(
     id,
   );
   return style.clone();
+}
+
+export function isBuiltInParagraphStyleId(
+  styleId: string,
+): styleId is BuiltInParagraphStyleId {
+  return builtInParagraphStyleIds.has(styleId);
+}
+
+export function getBuiltInParagraphStyleNameSelector(
+  styleId: string | null | undefined,
+) {
+  if (styleId == null || !isBuiltInParagraphStyleId(styleId)) {
+    return null;
+  }
+
+  return BUILT_IN_PARAGRAPH_STYLE_NAME_SELECTORS[styleId];
 }
 
 export function getParagraphStyleById(

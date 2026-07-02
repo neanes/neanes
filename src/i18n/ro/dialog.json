@@ -49,7 +49,21 @@
     "resetStyleToDefault": "Resetează stilul la implicit",
     "name": "Nume",
     "parentStyle": "Stil părinte",
-    "openDialog": "Editează stilurile"
+    "openDialog": "Editează stilurile",
+    "newStyleName": "Stil de paragraf nou",
+    "copyStyleName": "Copie {{name}}",
+    "builtIn": {
+      "defaultText": "Text implicit",
+      "annotation": "Adnotare",
+      "title": "Titlu",
+      "subtitle": "Subtitlu",
+      "chapter": "Capitol",
+      "section": "Secțiune",
+      "header": "Antet",
+      "footer": "Subsol",
+      "lyrics": "Versuri",
+      "dropCap": "Majusculă decorativă"
+    }
   },
   "neumePositioning": {
     "root": "Poziționarea neumei",

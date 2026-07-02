@@ -6,7 +6,7 @@ import { Headers } from './Headers';
 import { PageSetup } from './PageSetup';
 import type { ParagraphStyle } from './Style';
 
-const ScoreVersion: string = '1.2';
+const ScoreVersion: string = '1.1';
 
 export { ScoreVersion };
 

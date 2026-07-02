@@ -168,7 +168,9 @@
       </Field>
 
       <Field orientation="horizontal">
-        <FieldLabel>Text Decorations</FieldLabel>
+        <FieldLabel>{{
+          $t(($) => $.toolbar.richTextBox.textDecorations, { ns: 'toolbar' })
+        }}</FieldLabel>
         <div class="flex items-center gap-1">
           <ToggleGroup
             type="multiple"

@@ -322,7 +322,11 @@
                       toggleOverride('textDecoration', $event)
                     "
                   />
-                  <FieldLabel class="shrink-0">Text Decorations</FieldLabel>
+                  <FieldLabel class="shrink-0">{{
+                    $t(($) => $.toolbar.richTextBox.textDecorations, {
+                      ns: 'toolbar',
+                    })
+                  }}</FieldLabel>
                 </div>
                 <div class="ml-auto flex shrink-0 items-center gap-2">
                   <Checkbox
@@ -336,7 +340,11 @@
                     @update:model-value="updateTextDecorationOverride"
                   />
                   <FieldLabel for="text-style-underline" class="shrink-0">
-                    Underline
+                    {{
+                      $t(($) => $.toolbar.richTextBox.underline, {
+                        ns: 'toolbar',
+                      })
+                    }}
                   </FieldLabel>
                 </div>
               </Field>

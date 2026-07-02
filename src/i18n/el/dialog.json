@@ -40,16 +40,16 @@
     "author": "Συγγραφέας"
   },
   "paragraphStyles": {
-    "root": "Paragraph Styles",
-    "description": "Create reusable paragraph styles and control inheritance between them.",
-    "new": "New Style",
-    "duplicate": "Duplicate Style",
-    "delete": "Delete Style",
+    "root": "Στυλ Παραγράφου",
+    "description": "Ρυθμίστε επαναχρησιμοποιήσιμα στυλ παραγράφου.",
+    "new": "Νέο Στυλ",
+    "duplicate": "Δημιουργία Αντιγράφου Στυλ",
+    "delete": "Διαγραφή Στυλ",
     "clearFormatting": "Αφαίρεση μορφοποίησης",
-    "resetStyleToDefault": "Reset Style to Default",
-    "name": "Name",
-    "parentStyle": "Parent",
-    "openDialog": "Edit Styles"
+    "resetStyleToDefault": "Επαναφορά Στυλ στην Προεπιλογή",
+    "name": "Όνομα",
+    "parentStyle": "Γονικό Στυλ",
+    "openDialog": "Επεξεργασία Στυλ"
   },
   "neumePositioning": {
     "root": "Τοποθέτηση Σημείου",

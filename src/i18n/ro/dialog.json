@@ -40,16 +40,16 @@
     "author": "Autor"
   },
   "paragraphStyles": {
-    "root": "Paragraph Styles",
-    "description": "Create reusable paragraph styles and control inheritance between them.",
-    "new": "New Style",
-    "duplicate": "Duplicate Style",
-    "delete": "Delete Style",
+    "root": "Stiluri paragraf",
+    "description": "Configurați stiluri de paragraf reutilizabile.",
+    "new": "Stil nou",
+    "duplicate": "Duplică stilul",
+    "delete": "Șterge stilul",
     "clearFormatting": "Elimină formatarea",
-    "resetStyleToDefault": "Reset Style to Default",
-    "name": "Name",
-    "parentStyle": "Parent",
-    "openDialog": "Edit Styles"
+    "resetStyleToDefault": "Resetează stilul la implicit",
+    "name": "Nume",
+    "parentStyle": "Stil părinte",
+    "openDialog": "Editează stilurile"
   },
   "neumePositioning": {
     "root": "Poziționarea neumei",

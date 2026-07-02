@@ -40,16 +40,16 @@
     "author": "Penulis"
   },
   "paragraphStyles": {
-    "root": "Paragraph Styles",
-    "description": "Create reusable paragraph styles and control inheritance between them.",
-    "new": "New Style",
-    "duplicate": "Duplicate Style",
-    "delete": "Delete Style",
+    "root": "Gaya Paragraf",
+    "description": "Atur gaya paragraf yang dapat digunakan kembali.",
+    "new": "Gaya Baru",
+    "duplicate": "Gandakan Gaya",
+    "delete": "Hapus Gaya",
     "clearFormatting": "Hapus Format",
-    "resetStyleToDefault": "Reset Style to Default",
-    "name": "Name",
-    "parentStyle": "Parent",
-    "openDialog": "Edit Styles"
+    "resetStyleToDefault": "Atur Ulang Gaya ke Default",
+    "name": "Nama",
+    "parentStyle": "Gaya Induk",
+    "openDialog": "Sunting Gaya"
   },
   "neumePositioning": {
     "root": "Penempatan Neuma",

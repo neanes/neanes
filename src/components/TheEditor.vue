@@ -226,6 +226,11 @@ import {
 } from '@/services/LayoutService';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
+import {
+  sanitizeClipboardElementParagraphStyleIds,
+  sanitizeClipboardNoteFormatParagraphStyleId,
+  sanitizeClipboardTextBoxFormatParagraphStyleId,
+} from '@/utils/clipboardParagraphStyles';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { getCursorPosition } from '@/utils/getCursorPosition';
@@ -4867,6 +4872,23 @@ function onCopyScoreElements() {
   }
 }
 
+function cloneScoreElementForPaste(
+  element: ScoreElement,
+  includeLyrics: boolean,
+) {
+  const clone = element.clone({ includeLyrics });
+
+  sanitizeClipboardElementParagraphStyleIds(clone, score.value.paragraphStyles);
+
+  return clone;
+}
+
+function cloneClipboardForPaste(includeLyrics: boolean) {
+  return clipboard.value.map((element) =>
+    cloneScoreElementForPaste(element, includeLyrics),
+  );
+}
+
 function onPasteScoreElements(includeLyrics: boolean) {
   if (clipboard.value.length > 0 && selectedElement.value != null) {
     switch (entryMode.value) {
@@ -4892,7 +4914,7 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
     ? selectedElementIndex.value
     : selectedElementIndex.value + 1;
 
-  const newElements = clipboard.value.map((x) => x.clone({ includeLyrics }));
+  const newElements = cloneClipboardForPaste(includeLyrics);
 
   addScoreElements(newElements, insertAtIndex);
 
@@ -4906,16 +4928,17 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
   }
 
   const commands: Command[] = [];
+  const pastedElements = cloneClipboardForPaste(includeLyrics);
 
   let currentIndex = selectedElementIndex.value;
 
-  for (const clipboardElement of clipboard.value) {
+  for (const clipboardElement of pastedElements) {
     const currentElement = elements.value[currentIndex];
 
     if (currentIndex >= elements.value.length - 1) {
       commands.push(
         scoreElementCommandFactory.create('add-to-collection', {
-          elements: [clipboardElement.clone({ includeLyrics })],
+          elements: [clipboardElement],
           collection: elements.value,
           insertAtIndex: currentIndex,
         }),
@@ -5033,7 +5056,7 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
       } else {
         commands.push(
           scoreElementCommandFactory.create('replace-element-in-collection', {
-            element: clipboardElement.clone(),
+            element: clipboardElement,
             collection: elements.value,
             replaceAtIndex: currentIndex,
           }),
@@ -8961,20 +8984,31 @@ function applyCopiedFormat(element: ScoreElement, commands: Command[]) {
     element.elementType === ElementType.TextBox &&
     textBoxFormat.value != null
   ) {
+    const sanitizedFormat = sanitizeClipboardTextBoxFormatParagraphStyleId(
+      textBoxFormat.value,
+      score.value.paragraphStyles,
+      element as TextBoxElement,
+    );
+
     commands.push(
       textBoxCommandFactory.create('update-properties', {
         target: element as TextBoxElement,
-        newValues: textBoxFormat.value,
+        newValues: sanitizedFormat,
       }),
     );
   } else if (
     element.elementType === ElementType.Note &&
     noteFormat.value != null
   ) {
+    const sanitizedFormat = sanitizeClipboardNoteFormatParagraphStyleId(
+      noteFormat.value,
+      score.value.paragraphStyles,
+    );
+
     commands.push(
       noteElementCommandFactory.create('update-properties', {
         target: element as NoteElement,
-        newValues: noteFormat.value,
+        newValues: sanitizedFormat,
       }),
     );
   }

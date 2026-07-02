@@ -675,12 +675,14 @@ symmetry.
 
 ### 6.2 On-screen and print layout
 
-`PageSetup.lyricsFont` and `NoteElement.lyricsFont` resolve styles before
-constructing CSS font strings. For text boxes and drop caps, `LayoutService`
-resolves the stored family+style pair and writes computed CSS family, weight, and
-slant fields before measurement and rendering. This matters because a Semibold
-or Caption face can change width and line breaks; treating style as toolbar-only
-state would make the printed score disagree with the editor.
+Default and per-note lyrics resolve through paragraph styles plus
+`NoteElement.getParagraphStyleOverrides()` before constructing CSS font strings
+at the layout, editor-rendering, and export call sites. For text boxes and drop
+caps, `LayoutService` resolves the stored family+style pair and writes computed
+CSS family, weight, and slant fields before measurement and rendering. This
+matters because a Semibold or Caption face can change width and line breaks;
+treating style as toolbar-only state would make the printed score disagree with
+the editor.
 
 ### 6.3 Exporters
 

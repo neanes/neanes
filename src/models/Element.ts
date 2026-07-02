@@ -17,8 +17,6 @@ import {
   TempoSign,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
-import { resolveFontStyle } from '@/utils/fontStyle';
 import { Unit } from '@/utils/Unit';
 
 import type { ModeKeyTemplate } from './ModeKeys';
@@ -189,15 +187,6 @@ export class NoteElement extends ScoreElement {
   public fthoraCarry: Fthora | null = null;
   public secondaryFthoraCarry: Fthora | null = null;
   public tertiaryFthoraCarry: Fthora | null = null;
-
-  public get lyricsFont() {
-    const resolved = resolveFontStyle(
-      this.lyricsFontFamily ?? 'Source Serif',
-      this.lyricsFontStyle ?? DEFAULT_FONT_STYLE,
-    );
-
-    return `${resolved.cssFontStyle} normal ${resolved.cssFontWeight} ${this.lyricsFontSize ?? Unit.fromPt(12)}px "${resolved.cssFontFamily}"`;
-  }
 
   public clone(args?: ElementCloneArgs) {
     const clone = new NoteElement();

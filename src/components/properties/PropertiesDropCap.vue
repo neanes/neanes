@@ -154,10 +154,9 @@
           <ParagraphStyleClearButton
             :disabled="element.lineHeight === undefined"
             @clear="
-              $emit(
-                'update',
-                { lineHeight: undefined } as Partial<DropCapElement>,
-              )
+              $emit('update', {
+                lineHeight: undefined,
+              } as Partial<DropCapElement>)
             "
           />
         </div>

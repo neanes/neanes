@@ -123,7 +123,7 @@ describe('Element clipboard and paragraph-style overrides', () => {
         textBox.paragraphStyleId,
         textBox.getParagraphStyleOverrides(),
       ).lineHeight,
-      ).toBe(2.25);
+    ).toBe(2.25);
   });
 
   it('preserves inherited, explicit normal, and numeric drop-cap line height overrides', () => {

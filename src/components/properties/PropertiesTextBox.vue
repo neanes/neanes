@@ -135,10 +135,9 @@
           <ParagraphStyleClearButton
             :disabled="element.lineHeight === undefined"
             @clear="
-              $emit(
-                'update',
-                { lineHeight: undefined } as Partial<TextBoxElement>,
-              )
+              $emit('update', {
+                lineHeight: undefined,
+              } as Partial<TextBoxElement>)
             "
           />
         </div>

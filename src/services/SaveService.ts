@@ -1242,7 +1242,11 @@ export class SaveService {
     if (e.elementType === ElementType.TextBox) {
       const element = new TextBoxElement_v1();
 
-      this.SaveTextBox(element, e as TextBoxElement);
+      this.SaveTextBox(
+        element,
+        e as TextBoxElement,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
+      );
 
       header.elements[0] = element;
     } else if (e.elementType === ElementType.RichTextBox) {
@@ -1261,7 +1265,11 @@ export class SaveService {
     if (e.elementType === ElementType.TextBox) {
       const element = new TextBoxElement_v1();
 
-      this.SaveTextBox(element, e as TextBoxElement);
+      this.SaveTextBox(
+        element,
+        e as TextBoxElement,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
+      );
 
       footer.elements[0] = element;
     } else if (e.elementType === ElementType.RichTextBox) {
@@ -1530,19 +1538,16 @@ export class SaveService {
     }
   }
 
-  public static SaveTextBox(element: TextBoxElement_v1, e: TextBoxElement) {
-    const defaultParagraphStyleId =
-      e.inline === true
-        ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
-        : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  public static SaveTextBox(
+    element: TextBoxElement_v1,
+    e: TextBoxElement,
+    defaultParagraphStyleId = e.inline === true
+      ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
+      : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+  ) {
     const paragraphStyleId = e.paragraphStyleId ?? defaultParagraphStyleId;
-    const shouldSaveParagraphStyleId =
-      e.inline === true
-        ? paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics &&
-          paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText
-        : paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
 
-    if (shouldSaveParagraphStyleId) {
+    if (paragraphStyleId !== defaultParagraphStyleId) {
       element.paragraphStyleId = paragraphStyleId;
     }
     element.alignment = e.alignment ?? undefined;

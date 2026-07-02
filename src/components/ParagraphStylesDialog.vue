@@ -81,43 +81,58 @@
                 </Button>
               </span>
             </AppTooltip>
-            <AppTooltip :tooltip="selectedStyleAction.label">
-              <span class="inline-flex ml-auto" @mousedown.prevent>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  :disabled="selectedStyleAction.disabled"
-                  :aria-label="selectedStyleAction.label"
-                  @click="runSelectedStyleAction"
-                >
-                  <PhArrowCounterClockwise
-                    v-if="selectedStyleAction.kind === 'resetStyleToDefault'"
-                  />
-                  <PhTextTSlash v-else />
-                </Button>
-              </span>
-            </AppTooltip>
-            <AppTooltip
-              :tooltip="
-                $t(($) => $.dialog.paragraphStyles.delete, { ns: 'dialog' })
-              "
-            >
-              <span class="inline-flex" @mousedown.prevent>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  :disabled="selectedStyle == null || selectedStyle.builtIn"
-                  :aria-label="
-                    $t(($) => $.dialog.paragraphStyles.delete, { ns: 'dialog' })
-                  "
-                  @click="deleteSelectedStyle"
-                >
-                  <PhTrash />
-                </Button>
-              </span>
-            </AppTooltip>
+            <div class="ml-auto flex items-center gap-2">
+              <AppTooltip :tooltip="resetStyleToDefaultLabel">
+                <span class="inline-flex" @mousedown.prevent>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    :disabled="!selectedStyleCanResetToDefault"
+                    :aria-label="resetStyleToDefaultLabel"
+                    @click="resetSelectedStyleToDefault"
+                  >
+                    <PhArrowCounterClockwise />
+                  </Button>
+                </span>
+              </AppTooltip>
+              <AppTooltip :tooltip="clearFormattingLabel">
+                <span class="inline-flex" @mousedown.prevent>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    :disabled="!selectedStyleCanClearFormatting"
+                    :aria-label="clearFormattingLabel"
+                    @click="clearSelectedStyleFormatting"
+                  >
+                    <PhTextTSlash />
+                  </Button>
+                </span>
+              </AppTooltip>
+              <AppTooltip
+                :tooltip="
+                  $t(($) => $.dialog.paragraphStyles.delete, { ns: 'dialog' })
+                "
+              >
+                <span class="inline-flex" @mousedown.prevent>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    :disabled="selectedStyle == null || selectedStyle.builtIn"
+                    :aria-label="
+                      $t(($) => $.dialog.paragraphStyles.delete, {
+                        ns: 'dialog',
+                      })
+                    "
+                    @click="deleteSelectedStyle"
+                  >
+                    <PhTrash />
+                  </Button>
+                </span>
+              </AppTooltip>
+            </div>
           </div>
         </div>
 
@@ -570,9 +585,6 @@ const selectedStyle = computed(
   () =>
     styles.value.find((style) => style.id === selectedStyleId.value) ?? null,
 );
-const showOverrideToggles = computed(
-  () => selectedStyle.value?.parentStyleId != null,
-);
 
 const resolvedStyle = computed(() =>
   selectedStyle.value == null
@@ -619,6 +631,14 @@ const canSubmit = computed(() =>
 const selectedStyleHasOverrides = computed(
   () => Object.keys(selectedStyle.value?.overrides ?? {}).length > 0,
 );
+const selectedStyleCanClearFormatting = computed(
+  () => selectedStyle.value != null && selectedStyleHasOverrides.value,
+);
+const showOverrideToggles = computed(
+  () =>
+    selectedStyle.value?.parentStyleId != null ||
+    selectedStyleCanClearFormatting.value,
+);
 
 const selectedBuiltInStyleMatchesDefault = computed(() => {
   const style = selectedStyle.value;
@@ -633,34 +653,21 @@ const selectedBuiltInStyleMatchesDefault = computed(() => {
   );
 });
 
-const selectedStyleAction = computed(() => {
-  const style = selectedStyle.value;
-
-  if (style?.builtIn === true) {
-    const label = t(($) => $.dialog.paragraphStyles.resetStyleToDefault, {
-      ns: 'dialog',
-    });
-
-    return {
-      kind: 'resetStyleToDefault',
-      label,
-      disabled: selectedBuiltInStyleMatchesDefault.value,
-    };
-  }
-
-  const label = t(($) => $.dialog.paragraphStyles.clearFormatting, {
+const selectedStyleCanResetToDefault = computed(
+  () =>
+    selectedStyle.value?.builtIn === true &&
+    !selectedBuiltInStyleMatchesDefault.value,
+);
+const clearFormattingLabel = computed(() =>
+  t(($) => $.dialog.paragraphStyles.clearFormatting, {
     ns: 'dialog',
-  });
-
-  return {
-    kind: 'clearFormatting',
-    label,
-    disabled:
-      style == null ||
-      style.parentStyleId == null ||
-      !selectedStyleHasOverrides.value,
-  };
-});
+  }),
+);
+const resetStyleToDefaultLabel = computed(() =>
+  t(($) => $.dialog.paragraphStyles.resetStyleToDefault, {
+    ns: 'dialog',
+  }),
+);
 
 function hasOverride(key: keyof ParagraphStyle['overrides']) {
   return selectedStyle.value?.overrides[key] !== undefined;
@@ -727,15 +734,20 @@ function updateTextDecorationOverride(value: boolean | 'indeterminate') {
   );
 }
 
-function runSelectedStyleAction() {
+function clearSelectedStyleFormatting() {
   const style = selectedStyle.value;
 
-  if (style == null || selectedStyleAction.value.disabled) {
+  if (style == null || !selectedStyleCanClearFormatting.value) {
     return;
   }
 
-  if (style.builtIn !== true) {
-    style.overrides = {};
+  style.overrides = {};
+}
+
+function resetSelectedStyleToDefault() {
+  const style = selectedStyle.value;
+
+  if (style == null || !selectedStyleCanResetToDefault.value) {
     return;
   }
 

@@ -887,7 +887,6 @@ import {
 import { Note, RootSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
   type ParagraphStyle,
   type ResolvedParagraphStyle,
 } from '@/models/ParagraphStyle';
@@ -906,6 +905,7 @@ const props = defineProps<{
   pageSetup: PageSetup;
   paragraphStyles: ParagraphStyle[];
   showEditStylesButton?: boolean;
+  fallbackParagraphStyleId: string;
   fallbackParagraphStyle: ResolvedParagraphStyle;
 }>();
 
@@ -1004,7 +1004,7 @@ const disabledParagraphStyleIds = computed(() =>
 const currentDialogParagraphStyleId = computed(() =>
   paragraphStyleValue.value === PARAGRAPH_STYLE_NONE_VALUE ||
   paragraphStyleValue.value === PARAGRAPH_STYLE_MIXED_VALUE
-    ? BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText
+    ? props.fallbackParagraphStyleId
     : paragraphStyleValue.value,
 );
 

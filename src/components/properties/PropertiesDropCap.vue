@@ -242,11 +242,13 @@
         <InputUnit
           id="properties-drop-cap-width"
           unit="pt"
+          :nullable="true"
           :min="1"
           :max="maxWidth"
           :step="0.5"
           :model-value="element.customWidth"
           :format-options="fraction2FormatOptions"
+          placeholder="auto"
           @update:model-value="
             $emit('update', { customWidth: $event } as Partial<DropCapElement>)
           "

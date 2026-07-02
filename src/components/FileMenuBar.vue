@@ -253,7 +253,7 @@
         <MenubarContent class="chrome-menubar-content">
           <MenubarItem @select="onClickParagraphStyles">
             <PhTextAa />
-            {{ $t(($) => $.menu.file.paragraphStyles, { ns: 'menu' }) }}
+            {{ $t(($) => $.menu.format.paragraphStyles, { ns: 'menu' }) }}
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>

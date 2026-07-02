@@ -9,7 +9,6 @@
     "save": "Αποθήκευση",
     "saveAs": "Αποθήκευση Ως…",
     "pageSetup": "Διαμόρφωση Σελίδας…",
-    "paragraphStyles": "Στυλ Παραγράφου…",
     "documentProperties": "Ιδιότητες Εγγράφου…",
     "exportAs": "Εξαγωγή",
     "exportAsPdf": "Εξαγωγή ως PDF…",
@@ -54,7 +53,8 @@
     "footer": "Υποσέλιδο"
   },
   "format": {
-    "root": "Μορφή"
+    "root": "Μορφή",
+    "paragraphStyles": "Στυλ Παραγράφου…"
   },
   "view": {
     "root": "Προβολή",

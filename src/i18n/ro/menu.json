@@ -9,7 +9,6 @@
     "save": "Salvează",
     "saveAs": "Salvează ca…",
     "pageSetup": "Configurare pagină…",
-    "paragraphStyles": "Stiluri paragraf…",
     "documentProperties": "Proprietăți document…",
     "exportAs": "Exportă",
     "exportAsPdf": "Exportă ca PDF…",
@@ -54,7 +53,8 @@
     "footer": "Subsol"
   },
   "format": {
-    "root": "Format"
+    "root": "Format",
+    "paragraphStyles": "Stiluri paragraf…"
   },
   "view": {
     "root": "Vizualizare",

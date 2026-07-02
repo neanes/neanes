@@ -2177,7 +2177,7 @@ function createMenu() {
       label: i18next.t(($) => $.menu.format.root),
       submenu: [
         {
-          label: i18next.t(($) => $.menu.file.paragraphStyles),
+          label: i18next.t(($) => $.menu.format.paragraphStyles),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuParagraphStyles);
           },

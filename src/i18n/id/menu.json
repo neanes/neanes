@@ -9,7 +9,6 @@
     "save": "Simpan",
     "saveAs": "Simpan Sebagai…",
     "pageSetup": "Pengaturan Halaman…",
-    "paragraphStyles": "Gaya Paragraf…",
     "documentProperties": "Properti Dokumen…",
     "exportAs": "Ekspor",
     "exportAsPdf": "Ekspor sebagai PDF…",
@@ -54,7 +53,8 @@
     "footer": "Footer"
   },
   "format": {
-    "root": "Format"
+    "root": "Format",
+    "paragraphStyles": "Gaya Paragraf…"
   },
   "view": {
     "root": "Tampilan",

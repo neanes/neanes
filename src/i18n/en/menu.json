@@ -9,7 +9,6 @@
     "save": "Save",
     "saveAs": "Save As…",
     "pageSetup": "Page Setup…",
-    "paragraphStyles": "Paragraph Styles…",
     "documentProperties": "Document Properties…",
     "exportAs": "Export",
     "exportAsPdf": "Export as PDF…",
@@ -54,7 +53,8 @@
     "footer": "Footer"
   },
   "format": {
-    "root": "Format"
+    "root": "Format",
+    "paragraphStyles": "Paragraph Styles…"
   },
   "view": {
     "root": "View",

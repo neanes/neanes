@@ -301,7 +301,7 @@ describe('useRichParagraphStyleCommands', () => {
     );
   });
 
-  it('resets rich-text overrides without changing the active paragraph style', () => {
+  it('clears rich-text paragraph style formatting without changing the active paragraph style', () => {
     const underlinedStyle = new ParagraphStyle();
     underlinedStyle.id = 'underlined-style';
     underlinedStyle.overrides.textDecoration = 'underline';
@@ -323,7 +323,7 @@ describe('useRichParagraphStyleCommands', () => {
 
     expect(commands.hasParagraphStyleOverrides.value).toBe(true);
 
-    commands.resetAllParagraphStyleOverrides();
+    commands.clearParagraphStyleFormatting();
 
     expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
       1,

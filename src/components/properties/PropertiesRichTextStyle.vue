@@ -24,7 +24,7 @@
             </Button>
             <ParagraphStyleClearButton
               :disabled="!hasParagraphStyleOverrides"
-              @clear="resetAllParagraphStyleOverrides"
+              @clear="clearParagraphStyleFormatting"
             />
           </div>
         </div>
@@ -950,7 +950,7 @@ const {
   onFontStyleValuesChanged,
   onTextDecorationValuesChanged,
   onAlignmentChanged,
-  resetAllParagraphStyleOverrides,
+  clearParagraphStyleFormatting,
 } = useRichParagraphStyleCommands(props, [
   'subscript',
   'superscript',

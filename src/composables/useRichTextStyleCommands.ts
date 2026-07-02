@@ -512,7 +512,7 @@ export function useRichParagraphStyleCommands(
     setUnderlineActive(resolvedUnderline.value);
   }
 
-  function resetAllParagraphStyleOverrides() {
+  function clearParagraphStyleFormatting() {
     runCommand('fontFamily');
     clearFontStyleOverride();
     onFontSizeChanged(null);
@@ -582,7 +582,7 @@ export function useRichParagraphStyleCommands(
     onTextDecorationValuesChanged,
     onAlignmentChanged,
     clearTextDecorationOverride,
-    resetAllParagraphStyleOverrides,
+    clearParagraphStyleFormatting,
     onClearFormatting,
     executeChangedToggleCommands,
   };

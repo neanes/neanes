@@ -6583,7 +6583,7 @@ function flushPendingAnnotationEditor() {
   const updates = component.getPendingUpdates();
   const currentText = updates.text ?? component.getCurrentText();
 
-  if (currentText.trim() === '') {
+  if (!hasMeaningfulRichTextHtmlContent(currentText)) {
     updateAnnotation(annotation, { text: currentText });
     return;
   }

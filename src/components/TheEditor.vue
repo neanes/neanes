@@ -188,6 +188,7 @@ import type {
 } from '@/models/ParagraphStyle';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
+  getTextBoxParagraphStyleFallbackId,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
 import { ScaleNote } from '@/models/Scales';
@@ -7147,7 +7148,7 @@ function getDeletedStyleFallbacks(
   previousStylesById: Map<string, ParagraphStyle>,
   nextStyleIds: Set<string>,
 ) {
-  const deletedStyleFallbacks = new Map<string, string>();
+  const deletedStyleFallbacks = new Map<string, string | null>();
 
   for (const [styleId, style] of previousStylesById.entries()) {
     if (nextStyleIds.has(styleId)) {
@@ -7169,19 +7170,29 @@ function getDeletedStyleFallbacks(
     }
 
     if (!deletedStyleFallbacks.has(styleId)) {
-      deletedStyleFallbacks.set(
-        styleId,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-      );
+      deletedStyleFallbacks.set(styleId, null);
     }
   }
 
   return deletedStyleFallbacks;
 }
 
+function getDeletedStyleFallbackId(
+  styleId: string,
+  deletedStyleFallbacks: Map<string, string | null>,
+  defaultFallbackStyleId: string,
+) {
+  if (!deletedStyleFallbacks.has(styleId)) {
+    return null;
+  }
+
+  return deletedStyleFallbacks.get(styleId) ?? defaultFallbackStyleId;
+}
+
 function rewriteRichTextHtmlForDeletedStyles(
   html: string,
-  deletedStyleFallbacks: Map<string, string>,
+  deletedStyleFallbacks: Map<string, string | null>,
+  defaultFallbackStyleId: string,
 ) {
   if (html === '' || deletedStyleFallbacks.size === 0) {
     return html;
@@ -7202,14 +7213,17 @@ function rewriteRichTextHtmlForDeletedStyles(
       }
 
       const styleId = className.slice('neanes-style-'.length);
+      const fallbackStyleId = getDeletedStyleFallbackId(
+        styleId,
+        deletedStyleFallbacks,
+        defaultFallbackStyleId,
+      );
 
-      if (!deletedStyleFallbacks.has(styleId)) {
+      if (fallbackStyleId == null) {
         continue;
       }
 
       deletedClasses.push(className);
-      const fallbackStyleId = deletedStyleFallbacks.get(styleId)!;
-
       const fallbackClassName = `neanes-style-${fallbackStyleId}`;
 
       if (!element.classList.contains(fallbackClassName)) {
@@ -7257,8 +7271,11 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
         target: element,
         newValues: {
           paragraphStyleId:
-            deletedStyleFallbacks.get(element.paragraphStyleId) ??
-            BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+            getDeletedStyleFallbackId(
+              element.paragraphStyleId,
+              deletedStyleFallbacks,
+              getTextBoxParagraphStyleFallbackId(element.inline),
+            ) ?? getTextBoxParagraphStyleFallbackId(element.inline),
         },
       }),
     );
@@ -7266,6 +7283,9 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
 
   for (const element of getAllRichTextBoxes(score.value)) {
     const updatedValues: Partial<RichTextBoxElement> = {};
+    const defaultFallbackStyleId = getTextBoxParagraphStyleFallbackId(
+      element.inline,
+    );
 
     for (const contentKey of [
       'content',
@@ -7277,6 +7297,7 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
       const rewrittenHtml = rewriteRichTextHtmlForDeletedStyles(
         element[contentKey],
         deletedStyleFallbacks,
+        defaultFallbackStyleId,
       );
 
       if (rewrittenHtml !== element[contentKey]) {
@@ -7303,8 +7324,11 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
           target: note,
           newValues: {
             lyricsParagraphStyleId:
-              deletedStyleFallbacks.get(note.lyricsParagraphStyleId) ??
-              BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+              getDeletedStyleFallbackId(
+                note.lyricsParagraphStyleId,
+                deletedStyleFallbacks,
+                BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+              ) ?? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
           },
         }),
       );
@@ -7319,6 +7343,7 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
       const rewrittenText = rewriteRichTextHtmlForDeletedStyles(
         annotation.text,
         deletedStyleFallbacks,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
       );
 
       if (rewrittenText !== annotation.text) {
@@ -7351,8 +7376,11 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
         target: dropCap,
         newValues: {
           paragraphStyleId:
-            deletedStyleFallbacks.get(dropCap.paragraphStyleId) ??
-            BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
+            getDeletedStyleFallbackId(
+              dropCap.paragraphStyleId,
+              deletedStyleFallbacks,
+              BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
+            ) ?? BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
         },
       }),
     );

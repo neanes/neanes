@@ -8,6 +8,7 @@ import type {
 import { ElementType } from '@/models/Element';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
+  getTextBoxParagraphStyleFallbackId,
   type ParagraphStyle,
 } from '@/models/ParagraphStyle';
 
@@ -21,12 +22,6 @@ function resolveClipboardParagraphStyleId(
   fallbackStyleId: string,
 ) {
   return paragraphStyleIds.has(styleId) ? styleId : fallbackStyleId;
-}
-
-function getTextBoxParagraphStyleFallback(inline: boolean) {
-  return inline
-    ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
-    : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
 }
 
 export function sanitizeClipboardElementParagraphStyleIds(
@@ -73,7 +68,7 @@ function sanitizeElementParagraphStyleIds(
       textBox.paragraphStyleId = resolveClipboardParagraphStyleId(
         textBox.paragraphStyleId,
         paragraphStyleIds,
-        getTextBoxParagraphStyleFallback(textBox.inline),
+        getTextBoxParagraphStyleFallbackId(textBox.inline),
       );
       break;
     }
@@ -112,7 +107,7 @@ export function sanitizeClipboardTextBoxFormatParagraphStyleId(
     paragraphStyleId: resolveClipboardParagraphStyleId(
       format.paragraphStyleId,
       paragraphStyleIds,
-      getTextBoxParagraphStyleFallback(
+      getTextBoxParagraphStyleFallbackId(
         format.inline ?? target?.inline ?? false,
       ),
     ),

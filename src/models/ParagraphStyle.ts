@@ -124,6 +124,12 @@ export function isBuiltInParagraphStyleId(
   return builtInParagraphStyleIds.has(styleId);
 }
 
+export function getTextBoxParagraphStyleFallbackId(inline: boolean) {
+  return inline
+    ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
+    : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+}
+
 export function getBuiltInParagraphStyleNameSelector(
   styleId: string | null | undefined,
 ) {

@@ -16,7 +16,7 @@
           @click="handleButtonClick"
         >
           <NeumeIcon v-if="mainIcon" :name="mainIcon" :size="imgSize" />
-          <span v-if="mainText" :style="pargraphStyle">{{ mainText }}</span>
+          <span v-if="mainText" :style="textStyle">{{ mainText }}</span>
         </ToolbarButton>
         <div v-if="showMenu" class="menu chrome-menu" :class="direction">
           <div
@@ -27,9 +27,7 @@
             @mouseenter="handleMouseEnter(option.neume)"
           >
             <NeumeIcon v-if="option.icon" :name="option.icon" :size="imgSize" />
-            <span v-if="option.text" :style="pargraphStyle">{{
-              option.text
-            }}</span>
+            <span v-if="option.text" :style="textStyle">{{ option.text }}</span>
           </div>
         </div>
       </div>
@@ -106,7 +104,7 @@ const mainText = computed(() => {
   return mainOption.value.text;
 });
 
-const pargraphStyle = computed(() => {
+const textStyle = computed(() => {
   return {
     fontFamily: props.fontFamily,
   } as StyleValue;

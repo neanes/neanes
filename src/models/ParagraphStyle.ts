@@ -171,6 +171,13 @@ export function resolveParagraphStyle(
 
   let style = getParagraphStyleById(styles, styleId);
 
+  if (style == null && styleId != null) {
+    style = getParagraphStyleById(
+      styles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    );
+  }
+
   while (style != null && !visited.has(style.id)) {
     visited.add(style.id);
     chain.unshift(style);

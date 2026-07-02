@@ -1027,7 +1027,7 @@ export class ByzHtmlExporter {
 
       style += `color: ${resolvedDropCapStyle.color};`;
       style += `font-family: ${getFontFamilyWithFallback(
-        resolvedDropCapStyle.fontFamily,
+        resolvedDropCapFont.cssFontFamily,
       ).replaceAll('"', "'")};`;
       style += `font-size: ${Unit.toPt(resolvedDropCapStyle.fontSize)}pt;`;
       style += `font-weight: ${resolvedDropCapFont.cssFontWeight};`;

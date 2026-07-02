@@ -240,12 +240,6 @@ export class RichTextBoxElement extends ScoreElement {
   public modeChangeIgnoreAttractions: boolean | undefined = undefined;
   public modeChangePermanentEnharmonicZo: boolean | undefined = undefined;
   public modeChangeBpm: number = 120;
-  public color: string | undefined = undefined;
-  public fontSize: number | undefined = undefined;
-  public fontFamily: string | undefined = undefined;
-  public strokeWidth: number | undefined = undefined;
-  public fontSubfamily: string | undefined = undefined;
-  public lineHeight: number | null | undefined = undefined;
   public height: number = 20;
   public customWidth: number | undefined = undefined;
   public marginTop: number | undefined = undefined;

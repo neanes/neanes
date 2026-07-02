@@ -211,9 +211,7 @@
                   :disabled="
                     showOverrideToggles ? !hasOverride('fontFamily') : false
                   "
-                  @update:model-value="
-                    updateSelectedStyleOverride('fontFamily', $event)
-                  "
+                  @update:model-value="onFontFamilyChanged"
                 />
               </Field>
 
@@ -519,6 +517,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import { PARAGRAPH_STYLE_NONE_VALUE } from '@/composables/useRichTextStyleCommands';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -612,8 +611,9 @@ const fontOptions = computed(() => [
   ...props.fonts,
 ]);
 
-const fontStyleOptions = computed(() =>
-  fontCatalog.getStyles(resolvedStyle.value.fontFamily),
+const { fontStyleOptions, remapStyleForFamily } = useFontStyleControls(
+  () => resolvedStyle.value.fontFamily,
+  () => resolvedStyle.value.fontStyle,
 );
 
 const textDecorationCheckboxValue = computed(() => {
@@ -733,6 +733,13 @@ function updateSelectedStyleOverride(
   (selectedStyle.value.overrides as Record<string, string | number | null>)[
     key
   ] = value;
+}
+
+function onFontFamilyChanged(fontFamily: string) {
+  const fontStyle = remapStyleForFamily(fontFamily);
+
+  updateSelectedStyleOverride('fontFamily', fontFamily);
+  updateSelectedStyleOverride('fontStyle', fontStyle);
 }
 
 function updateTextDecorationOverride(value: boolean | 'indeterminate') {

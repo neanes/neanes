@@ -98,7 +98,9 @@ function loadLegacyElement(
   legacyElement: DropCapElement_v1 | NoteElement_v1 | TextBoxElement_v1,
   paragraphStyles?: ParagraphStyle[],
 ) {
-  const saved = createLegacyScore();
+  const saved = createLegacyScore({
+    textBoxDefaultFontFamily: 'Source Serif',
+  });
 
   saved.staff.elements = [legacyElement];
 
@@ -350,6 +352,26 @@ describe('SaveService font styles', () => {
     expect(saved.italic).toBeUndefined();
   });
 
+  it('omits the default lyrics paragraph style id when saving notes', () => {
+    const element = new NoteElement();
+    const saved = new NoteElement_v1();
+
+    SaveService.SaveNote(saved, element);
+
+    expect(saved.lyricsParagraphStyleId).toBeUndefined();
+  });
+
+  it('saves non-default note lyrics paragraph style ids explicitly', () => {
+    const element = new NoteElement();
+    const saved = new NoteElement_v1();
+
+    element.lyricsParagraphStyleId = 'custom-lyrics';
+
+    SaveService.SaveNote(saved, element);
+
+    expect(saved.lyricsParagraphStyleId).toBe('custom-lyrics');
+  });
+
   it('saves explicit text-box normal line height as null', () => {
     const element = new TextBoxElement();
     const saved = new TextBoxElement_v1();
@@ -416,6 +438,42 @@ describe('SaveService font styles', () => {
     expect(element.textDirection).toBe('rtl');
   });
 
+  it('loads sparse current notes without legacy page setup defaults as Lyrics', () => {
+    const legacy = createLegacyScore();
+    const note = new NoteElement_v1();
+
+    note.lyricsFontFamily = 'Minion Pro';
+    note.lyricsFontSubfamily = 'Regular';
+
+    legacy.staff.elements = [note];
+
+    const loaded = SaveService.LoadScore_v1(legacy);
+    const element = loaded.staff.elements[0] as NoteElement;
+
+    expect(element.lyricsParagraphStyleId).toBe('lyrics');
+    expect(element.lyricsFontFamily).toBe('Minion Pro');
+    expect(element.lyricsFontStyle).toBe('Regular');
+  });
+
+  it('migrates legacy note lyric overrides when page setup defaults are present', () => {
+    const legacy = createLegacyScore({
+      lyricsDefaultFontFamily: 'Minion Pro',
+    });
+    const note = new NoteElement_v1();
+
+    note.lyricsFontFamily = 'Minion Pro';
+    note.lyricsFontSubfamily = 'Regular';
+
+    legacy.staff.elements = [note];
+
+    const loaded = SaveService.LoadScore_v1(legacy);
+    const element = loaded.staff.elements[0] as NoteElement;
+
+    expect(element.lyricsParagraphStyleId).toBe('lyrics');
+    expect(element.lyricsFontFamily).toBeNull();
+    expect(element.lyricsFontStyle).toBeNull();
+  });
+
   it('assigns built-in style ids when loading legacy text boxes', () => {
     const legacyBody = new TextBoxElement_v1();
     const legacyInline = new TextBoxElement_v1();
@@ -427,6 +485,44 @@ describe('SaveService font styles', () => {
 
     expect(body.paragraphStyleId).toBe('default-text');
     expect(inline.paragraphStyleId).toBe('lyrics');
+  });
+
+  it('omits default paragraph style ids when saving text boxes and drop caps', () => {
+    const body = new TextBoxElement();
+    const inline = new TextBoxElement();
+    const dropCap = new DropCapElement();
+    const savedBody = new TextBoxElement_v1();
+    const savedInline = new TextBoxElement_v1();
+    const savedDropCap = new DropCapElement_v1();
+
+    inline.inline = true;
+    inline.paragraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics;
+
+    SaveService.SaveTextBox(savedBody, body);
+    SaveService.SaveTextBox(savedInline, inline);
+    SaveService.SaveDropCap(savedDropCap, dropCap);
+
+    expect(savedBody.paragraphStyleId).toBeUndefined();
+    expect(savedInline.paragraphStyleId).toBeUndefined();
+    expect(savedDropCap.paragraphStyleId).toBeUndefined();
+  });
+
+  it('saves non-default text box and drop-cap paragraph style ids explicitly', () => {
+    const body = new TextBoxElement();
+    const dropCap = new DropCapElement();
+    const savedBody = new TextBoxElement_v1();
+    const savedDropCap = new DropCapElement_v1();
+
+    body.paragraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.Header;
+    dropCap.paragraphStyleId = 'custom-drop-cap';
+
+    SaveService.SaveTextBox(savedBody, body);
+    SaveService.SaveDropCap(savedDropCap, dropCap);
+
+    expect(savedBody.paragraphStyleId).toBe(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
+    );
+    expect(savedDropCap.paragraphStyleId).toBe('custom-drop-cap');
   });
 
   it('loads old scores without paragraphStyles by seeding defaults', () => {

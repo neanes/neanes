@@ -80,19 +80,25 @@ interface LegacyTextBoxCssFontCompatibility {
 interface LegacyPageSetupStyleDefaults {
   textBoxDefaultFontFamily?: string | null;
   textBoxDefaultFontSize?: number | null;
+  textBoxDefaultFontSubfamily?: string | null;
   textBoxDefaultFontStyle?: string | null;
+  textBoxDefaultFontWeight?: string | null;
   textBoxDefaultColor?: string | null;
   textBoxDefaultStrokeWidth?: number | null;
   textBoxDefaultLineHeight?: number | null;
   dropCapDefaultFontFamily?: string | null;
   dropCapDefaultFontSize?: number | null;
+  dropCapDefaultFontSubfamily?: string | null;
   dropCapDefaultFontStyle?: string | null;
+  dropCapDefaultFontWeight?: string | null;
   dropCapDefaultColor?: string | null;
   dropCapDefaultStrokeWidth?: number | null;
   dropCapDefaultLineHeight?: number | null;
   lyricsDefaultFontFamily?: string | null;
   lyricsDefaultFontSize?: number | null;
+  lyricsDefaultFontSubfamily?: string | null;
   lyricsDefaultFontStyle?: string | null;
+  lyricsDefaultFontWeight?: string | null;
   lyricsDefaultColor?: string | null;
   lyricsDefaultStrokeWidth?: number | null;
 }
@@ -168,6 +174,34 @@ function normalizeLegacySectionName(value: string | null | undefined) {
   const trimmed = value?.trim();
 
   return trimmed == null || trimmed === '' ? null : trimmed;
+}
+
+function hasLegacyPageSetupStyleDefaults(pageSetup: PageSetup_v1) {
+  return [
+    pageSetup.textBoxDefaultFontFamily,
+    pageSetup.textBoxDefaultFontSize,
+    pageSetup.textBoxDefaultFontSubfamily,
+    pageSetup.textBoxDefaultFontStyle,
+    pageSetup.textBoxDefaultFontWeight,
+    pageSetup.textBoxDefaultColor,
+    pageSetup.textBoxDefaultStrokeWidth,
+    pageSetup.textBoxDefaultLineHeight,
+    pageSetup.lyricsDefaultFontFamily,
+    pageSetup.lyricsDefaultFontSize,
+    pageSetup.lyricsDefaultFontSubfamily,
+    pageSetup.lyricsDefaultFontStyle,
+    pageSetup.lyricsDefaultFontWeight,
+    pageSetup.lyricsDefaultColor,
+    pageSetup.lyricsDefaultStrokeWidth,
+    pageSetup.dropCapDefaultFontFamily,
+    pageSetup.dropCapDefaultFontSize,
+    pageSetup.dropCapDefaultFontSubfamily,
+    pageSetup.dropCapDefaultFontStyle,
+    pageSetup.dropCapDefaultFontWeight,
+    pageSetup.dropCapDefaultColor,
+    pageSetup.dropCapDefaultStrokeWidth,
+    pageSetup.dropCapDefaultLineHeight,
+  ].some((value) => value != null);
 }
 
 function loadFontFaceFromWeightFields({
@@ -1240,7 +1274,12 @@ export class SaveService {
   }
 
   public static SaveDropCap(element: DropCapElement_v1, e: DropCapElement) {
-    element.paragraphStyleId = e.paragraphStyleId;
+    const paragraphStyleId =
+      e.paragraphStyleId ?? BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap;
+
+    if (paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap) {
+      element.paragraphStyleId = paragraphStyleId;
+    }
     element.content = e.content;
     element.customWidth = e.customWidth ?? undefined;
     element.lineSpan = e.lineSpan;
@@ -1301,7 +1340,12 @@ export class SaveService {
   }
 
   public static SaveNote(element: NoteElement_v1, e: NoteElement) {
-    element.lyricsParagraphStyleId = e.lyricsParagraphStyleId;
+    const lyricsParagraphStyleId =
+      e.lyricsParagraphStyleId ?? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics;
+
+    if (lyricsParagraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics) {
+      element.lyricsParagraphStyleId = lyricsParagraphStyleId;
+    }
     element.quantitativeNeume = e.quantitativeNeume;
     element.spaceAfter = e.spaceAfter || undefined;
 
@@ -1487,7 +1531,20 @@ export class SaveService {
   }
 
   public static SaveTextBox(element: TextBoxElement_v1, e: TextBoxElement) {
-    element.paragraphStyleId = e.paragraphStyleId;
+    const defaultParagraphStyleId =
+      e.inline === true
+        ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
+        : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    const paragraphStyleId = e.paragraphStyleId ?? defaultParagraphStyleId;
+    const shouldSaveParagraphStyleId =
+      e.inline === true
+        ? paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics &&
+          paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText
+        : paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+
+    if (shouldSaveParagraphStyleId) {
+      element.paragraphStyleId = paragraphStyleId;
+    }
     element.alignment = e.alignment ?? undefined;
     element.color = e.color ?? undefined;
     element.content = e.content;
@@ -1637,27 +1694,35 @@ export class SaveService {
       createParagraphStylesFromLegacyPageSetupDefaults({
         textBoxDefaultColor: s.pageSetup.textBoxDefaultColor,
         textBoxDefaultFontFamily: legacyTextBoxDefaultFont.fontFamily,
+        textBoxDefaultFontSubfamily: s.pageSetup.textBoxDefaultFontSubfamily,
         textBoxDefaultFontSize: s.pageSetup.textBoxDefaultFontSize,
         textBoxDefaultFontStyle: legacyTextBoxDefaultFont.fontStyle,
+        textBoxDefaultFontWeight: s.pageSetup.textBoxDefaultFontWeight,
         textBoxDefaultStrokeWidth: s.pageSetup.textBoxDefaultStrokeWidth,
         textBoxDefaultLineHeight: s.pageSetup.textBoxDefaultLineHeight,
         dropCapDefaultColor: s.pageSetup.dropCapDefaultColor,
         dropCapDefaultFontFamily: legacyDropCapDefaultFont.fontFamily,
+        dropCapDefaultFontSubfamily: s.pageSetup.dropCapDefaultFontSubfamily,
         dropCapDefaultFontSize: s.pageSetup.dropCapDefaultFontSize,
         dropCapDefaultFontStyle: legacyDropCapDefaultFont.fontStyle,
+        dropCapDefaultFontWeight: s.pageSetup.dropCapDefaultFontWeight,
         dropCapDefaultStrokeWidth: s.pageSetup.dropCapDefaultStrokeWidth,
         dropCapDefaultLineHeight: s.pageSetup.dropCapDefaultLineHeight,
         lyricsDefaultColor: s.pageSetup.lyricsDefaultColor,
         lyricsDefaultFontFamily: legacyLyricsDefaultFont.fontFamily,
+        lyricsDefaultFontSubfamily: s.pageSetup.lyricsDefaultFontSubfamily,
         lyricsDefaultFontSize: s.pageSetup.lyricsDefaultFontSize,
         lyricsDefaultFontStyle: legacyLyricsDefaultFont.fontStyle,
+        lyricsDefaultFontWeight: s.pageSetup.lyricsDefaultFontWeight,
         lyricsDefaultStrokeWidth: s.pageSetup.lyricsDefaultStrokeWidth,
       });
     score.paragraphStyles = this.LoadParagraphStyles_v1(
       savedParagraphStyles,
       defaultParagraphStyles,
     );
-    migrateLegacyParagraphStyleOverrides(s, score.paragraphStyles);
+    if (hasLegacyPageSetupStyleDefaults(s.pageSetup)) {
+      migrateLegacyParagraphStyleOverrides(s, score.paragraphStyles);
+    }
     this.LoadLyricSetup_v1(
       score.staff.lyrics,
       s.staff.lyrics ?? new LyricSetup(),

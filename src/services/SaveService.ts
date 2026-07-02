@@ -255,6 +255,10 @@ function createParagraphStylesFromLegacyPageSetupDefaults(
     styles,
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
   );
+  const annotation = getRequiredParagraphStyleById(
+    styles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+  );
   const lyrics = getRequiredParagraphStyleById(
     styles,
     BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
@@ -305,6 +309,10 @@ function createParagraphStylesFromLegacyPageSetupDefaults(
     'lineHeight',
     legacyDefaults.textBoxDefaultLineHeight ?? undefined,
   );
+
+  if (legacyDefaults.lyricsDefaultFontSize != null) {
+    annotation.overrides.fontSize = legacyDefaults.lyricsDefaultFontSize;
+  }
 
   const lyricsInherited = resolveParagraphStyle(styles, lyrics.parentStyleId);
 

@@ -522,10 +522,10 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { PARAGRAPH_STYLE_NONE_VALUE } from '@/composables/useRichTextStyleCommands';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
-  type BuiltInParagraphStyleId,
   createDefaultBuiltInParagraphStyle,
   getAvailableParagraphStyleParents,
   getBuiltInParagraphStyleNameSelector,
+  isBuiltInParagraphStyleId,
   ParagraphStyle,
   type ParagraphStyleOverrides,
   resolveParagraphStyle,
@@ -643,21 +643,29 @@ const showOverrideToggles = computed(
 const selectedBuiltInStyleMatchesDefault = computed(() => {
   const style = selectedStyle.value;
 
-  if (style == null || style.builtIn !== true) {
+  if (
+    style == null ||
+    style.builtIn !== true ||
+    !isBuiltInParagraphStyleId(style.id)
+  ) {
     return false;
   }
 
   return paragraphStylesEqual(
     style,
-    createDefaultBuiltInParagraphStyle(style.id as BuiltInParagraphStyleId),
+    createDefaultBuiltInParagraphStyle(style.id),
   );
 });
 
-const selectedStyleCanResetToDefault = computed(
-  () =>
-    selectedStyle.value?.builtIn === true &&
-    !selectedBuiltInStyleMatchesDefault.value,
-);
+const selectedStyleCanResetToDefault = computed(() => {
+  const style = selectedStyle.value;
+
+  return (
+    style?.builtIn === true &&
+    isBuiltInParagraphStyleId(style.id) &&
+    !selectedBuiltInStyleMatchesDefault.value
+  );
+});
 const clearFormattingLabel = computed(() =>
   t(($) => $.dialog.paragraphStyles.clearFormatting, {
     ns: 'dialog',
@@ -747,7 +755,11 @@ function clearSelectedStyleFormatting() {
 function resetSelectedStyleToDefault() {
   const style = selectedStyle.value;
 
-  if (style == null || !selectedStyleCanResetToDefault.value) {
+  if (
+    style == null ||
+    !selectedStyleCanResetToDefault.value ||
+    !isBuiltInParagraphStyleId(style.id)
+  ) {
     return;
   }
 
@@ -759,9 +771,7 @@ function resetSelectedStyleToDefault() {
     return;
   }
 
-  styles.value[index] = createDefaultBuiltInParagraphStyle(
-    style.id as BuiltInParagraphStyleId,
-  );
+  styles.value[index] = createDefaultBuiltInParagraphStyle(style.id);
 }
 
 function updateAlignmentOverride(value: unknown) {

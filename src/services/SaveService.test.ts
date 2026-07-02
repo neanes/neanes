@@ -350,6 +350,59 @@ describe('SaveService font styles', () => {
     expect(saved.italic).toBeUndefined();
   });
 
+  it('saves explicit text-box normal line height as null', () => {
+    const element = new TextBoxElement();
+    const saved = new TextBoxElement_v1();
+
+    element.lineHeight = null;
+
+    SaveService.SaveTextBox(saved, element);
+
+    expect(saved.lineHeight).toBeNull();
+  });
+
+  it('loads explicit and omitted text-box line height values as-is', () => {
+    const omitted = new TextBoxElement_v1();
+    const explicit = new TextBoxElement_v1();
+    const omittedElement = new TextBoxElement();
+    const explicitElement = new TextBoxElement();
+
+    explicit.lineHeight = null;
+
+    SaveService.LoadTextBox_v1(omittedElement, omitted);
+    SaveService.LoadTextBox_v1(explicitElement, explicit);
+
+    expect(omittedElement.lineHeight).toBeUndefined();
+    expect(explicitElement.lineHeight).toBeNull();
+  });
+
+  it('round-trips explicit normal text-box line height through inherited numeric paragraph styles', () => {
+    const paragraphStyles = createParagraphStylesWithBuiltInOverrides({
+      [BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText]: {
+        lineHeight: 1.7,
+      },
+    });
+    const element = new TextBoxElement();
+    const saved = new TextBoxElement_v1();
+
+    element.lineHeight = null;
+
+    SaveService.SaveTextBox(saved, element);
+
+    const loaded = new TextBoxElement();
+    SaveService.LoadTextBox_v1(loaded, saved);
+
+    expect(saved.lineHeight).toBeNull();
+    expect(loaded.lineHeight).toBeNull();
+    expect(
+      resolveParagraphStyle(
+        paragraphStyles,
+        loaded.paragraphStyleId,
+        loaded.getParagraphStyleOverrides(),
+      ).lineHeight,
+    ).toBeNull();
+  });
+
   it('loads legacy rich text rtl as persisted language metadata', () => {
     const element = new RichTextBoxElement();
     const legacy = new RichTextBoxElement_v1();
@@ -697,7 +750,7 @@ describe('SaveService font styles', () => {
     expect(element.fontSize).toBe(18);
     expect(element.color).toBeNull();
     expect(element.strokeWidth).toBeNull();
-    expect(element.lineHeight).toBeNull();
+    expect(element.lineHeight).toBeUndefined();
   });
 
   it('keeps legacy default-styled text boxes inherited', () => {
@@ -726,7 +779,7 @@ describe('SaveService font styles', () => {
     expect(element.fontStyle).toBeNull();
     expect(element.strokeWidth).toBeNull();
     expect(element.color).toBeNull();
-    expect(element.lineHeight).toBeNull();
+    expect(element.lineHeight).toBeUndefined();
   });
 
   it('loads saved paragraph-style text box overrides without useDefaultStyle', () => {
@@ -767,7 +820,7 @@ describe('SaveService font styles', () => {
     expect(element.fontSize).toBe(18);
     expect(element.color).toBeNull();
     expect(element.strokeWidth).toBeNull();
-    expect(element.lineHeight).toBeNull();
+    expect(element.lineHeight).toBeUndefined();
   });
 
   it('keeps saved paragraph-style text boxes inherited when no overrides exist', () => {
@@ -784,7 +837,7 @@ describe('SaveService font styles', () => {
     expect(element.fontStyle).toBeNull();
     expect(element.strokeWidth).toBeNull();
     expect(element.color).toBeNull();
-    expect(element.lineHeight).toBeNull();
+    expect(element.lineHeight).toBeUndefined();
   });
 
   it('saves and loads paragraph-style alignment', () => {
@@ -1059,6 +1112,22 @@ describe('SaveService font styles', () => {
     expect(dropCapStyle.lineHeight).toBe(1.5);
   });
 
+  it('loads omitted and explicit drop-cap line height values as-is', () => {
+    const pageSetup = new PageSetup();
+    const omitted = new DropCapElement_v1();
+    const explicit = new DropCapElement_v1();
+    const omittedElement = new DropCapElement();
+    const explicitElement = new DropCapElement();
+
+    explicit.lineHeight = null;
+
+    SaveService.LoadDropCap_v1(omittedElement, omitted, pageSetup);
+    SaveService.LoadDropCap_v1(explicitElement, explicit, pageSetup);
+
+    expect(omittedElement.lineHeight).toBeUndefined();
+    expect(explicitElement.lineHeight).toBeNull();
+  });
+
   it('uses built-in Lyrics style as the fallback for legacy note overrides', () => {
     const paragraphStyles = createParagraphStylesWithBuiltInOverrides({
       [BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics]: {
@@ -1127,13 +1196,73 @@ describe('SaveService font styles', () => {
     expect(element.fontSize).toBeNull();
     expect(element.color).toBeNull();
     expect(element.strokeWidth).toBeNull();
-    expect(element.lineHeight).toBeNull();
+    expect(element.lineHeight).toBeUndefined();
     expect(resolvedDropCapStyle.fontFamily).toBe('Minion Pro');
     expect(resolvedDropCapStyle.fontStyle).toBe('Italic');
     expect(resolvedDropCapStyle.fontSize).toBe(80);
     expect(resolvedDropCapStyle.color).toBe('#fedcba');
     expect(resolvedDropCapStyle.strokeWidth).toBe(5);
     expect(resolvedDropCapStyle.lineHeight).toBe(1.25);
+  });
+
+  it('keeps legacy explicit normal drop-cap line height as an override', () => {
+    const paragraphStyles = createParagraphStylesWithBuiltInOverrides({
+      [BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap]: {
+        lineHeight: 1.7,
+      },
+    });
+    const legacy = new DropCapElement_v1();
+
+    legacy.lineHeight = null;
+
+    const element = loadLegacyDropCap(legacy, paragraphStyles);
+
+    expect(element.lineHeight).toBeNull();
+    expect(
+      resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        element.getParagraphStyleOverrides(),
+      ).lineHeight,
+    ).toBeNull();
+  });
+
+  it('saves explicit normal drop-cap line height as null', () => {
+    const element = new DropCapElement();
+    const saved = new DropCapElement_v1();
+
+    element.lineHeight = null;
+
+    SaveService.SaveDropCap(saved, element);
+
+    expect(saved.lineHeight).toBeNull();
+  });
+
+  it('round-trips explicit normal drop-cap line height through inherited numeric paragraph styles', () => {
+    const paragraphStyles = createParagraphStylesWithBuiltInOverrides({
+      [BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap]: {
+        lineHeight: 1.7,
+      },
+    });
+    const element = new DropCapElement();
+    const saved = new DropCapElement_v1();
+
+    element.lineHeight = null;
+
+    SaveService.SaveDropCap(saved, element);
+
+    const loaded = new DropCapElement();
+    SaveService.LoadDropCap_v1(loaded, saved, new PageSetup());
+
+    expect(saved.lineHeight).toBeNull();
+    expect(loaded.lineHeight).toBeNull();
+    expect(
+      resolveParagraphStyle(
+        paragraphStyles,
+        loaded.paragraphStyleId,
+        loaded.getParagraphStyleOverrides(),
+      ).lineHeight,
+    ).toBeNull();
   });
 
   it('round-trips drop-cap line span through page setup', () => {

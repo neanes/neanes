@@ -447,7 +447,7 @@ function migrateLegacyDropCapParagraphStyleOverrides(
     element.fontWeight != null ||
     element.fontStyle != null ||
     element.fontSize != null ||
-    element.lineHeight != null ||
+    element.lineHeight !== undefined ||
     element.strokeWidth != null ||
     element.color != null;
   const usesLegacyDefaultStyle =
@@ -1255,7 +1255,7 @@ export class SaveService {
       element.fontSize = e.fontSize;
     }
     element.fontSubfamily = e.fontStyle ?? undefined;
-    element.lineHeight = e.lineHeight ?? undefined;
+    element.lineHeight = e.lineHeight;
     if (e.strokeWidth != null) {
       element.strokeWidth = e.strokeWidth;
     }
@@ -1508,7 +1508,7 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth ?? undefined;
     element.fontSubfamily = e.fontStyle ?? undefined;
     element.underline = e.underline ?? undefined;
-    element.lineHeight = e.lineHeight ?? undefined;
+    element.lineHeight = e.lineHeight;
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
     element.fillWidth = e.fillWidth || undefined;
@@ -2151,7 +2151,7 @@ export class SaveService {
     element.fontFamily = e.fontFamily ?? null;
     element.color = e.color ?? null;
     element.fontSize = e.fontSize ?? null;
-    element.lineHeight = e.lineHeight ?? null;
+    element.lineHeight = e.lineHeight;
     element.fontStyle = normalizeSavedFontSubfamily(e.fontSubfamily) ?? null;
     element.strokeWidth = e.strokeWidth ?? null;
   }
@@ -2468,7 +2468,7 @@ export class SaveService {
     element.fontSize = e.fontSize ?? null;
     element.color = e.color ?? null;
     element.strokeWidth = e.strokeWidth ?? null;
-    element.lineHeight = e.lineHeight ?? null;
+    element.lineHeight = e.lineHeight;
   }
 
   public static LoadRichTextBox_v1(

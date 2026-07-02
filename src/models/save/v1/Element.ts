@@ -208,7 +208,7 @@ export class TextBoxElement extends ScoreElement {
   public bold: boolean | undefined = undefined;
   public italic: boolean | undefined = undefined;
   public underline: boolean | undefined = undefined;
-  public lineHeight: number | undefined = undefined;
+  public lineHeight: number | null | undefined = undefined;
   public height: number = 20;
   public customWidth: number | undefined = undefined;
   public customHeight: number | undefined = undefined;
@@ -318,7 +318,7 @@ export class DropCapElement extends ScoreElement {
   public fontSubfamily: string | undefined = undefined;
   public fontStyle: string | undefined = undefined;
   public fontWeight: string | undefined = undefined;
-  public lineHeight: number | undefined = undefined;
+  public lineHeight: number | null | undefined = undefined;
   public strokeWidth: number | undefined = undefined;
   public color: string | undefined = undefined;
   public useDefaultStyle: boolean | undefined = undefined;

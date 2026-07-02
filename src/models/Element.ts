@@ -223,6 +223,7 @@ export class NoteElement extends ScoreElement {
             lyricsFontFamily: this.lyricsFontFamily,
             lyricsFontSize: this.lyricsFontSize,
             lyricsFontStyle: this.lyricsFontStyle,
+            lyricsTextDecoration: this.lyricsTextDecoration,
             lyricsStrokeWidth: this.lyricsStrokeWidth,
           }
         : null),
@@ -312,6 +313,12 @@ export class NoteElement extends ScoreElement {
       fontStyle: this.lyricsFontStyle ?? undefined,
       color: this.lyricsColor ?? undefined,
       strokeWidth: this.lyricsStrokeWidth ?? undefined,
+      textDecoration:
+        this.lyricsTextDecoration != null
+          ? this.lyricsTextDecoration === 'underline'
+            ? 'underline'
+            : null
+          : undefined,
     };
   }
 
@@ -869,7 +876,7 @@ export class TextBoxElement extends ScoreElement {
   public inline: boolean = false;
   public fontStyle: string | null = null;
   public underline: boolean | null = null;
-  public lineHeight: number | null = null;
+  public lineHeight: number | null | undefined = undefined;
   public height: number = 20;
   public customWidth: number | null = null;
   public customHeight: number | null = null;
@@ -936,6 +943,7 @@ export class TextBoxElement extends ScoreElement {
       inline: this.inline,
       fontStyle: this.fontStyle,
       underline: this.underline,
+      lineHeight: this.lineHeight,
       multipanel: this.multipanel,
       runningMarkerRole: this.runningMarkerRole,
       runningMarkerText: this.runningMarkerText,
@@ -955,8 +963,14 @@ export class TextBoxElement extends ScoreElement {
       fontStyle: this.fontStyle ?? undefined,
       color: this.color ?? undefined,
       strokeWidth: this.strokeWidth ?? undefined,
-      lineHeight: this.lineHeight ?? undefined,
+      lineHeight: this.lineHeight,
       alignment: this.alignment ?? undefined,
+      textDecoration:
+        this.underline != null
+          ? this.underline === true
+            ? 'underline'
+            : null
+          : undefined,
     };
   }
 }
@@ -1227,7 +1241,7 @@ export class DropCapElement extends ScoreElement {
   public fontFamily: string | null = null;
   public fontSize: number | null = null;
   public fontStyle: string | null = null;
-  public lineHeight: number | null = null;
+  public lineHeight: number | null | undefined = undefined;
   public strokeWidth: number | null = null;
   public color: string | null = null;
   public customWidth: number | null = null;
@@ -1287,7 +1301,7 @@ export class DropCapElement extends ScoreElement {
       fontStyle: this.fontStyle ?? undefined,
       color: this.color ?? undefined,
       strokeWidth: this.strokeWidth ?? undefined,
-      lineHeight: this.lineHeight ?? undefined,
+      lineHeight: this.lineHeight,
     };
   }
 }

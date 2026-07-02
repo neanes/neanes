@@ -152,9 +152,12 @@
             "
           />
           <ParagraphStyleClearButton
-            :disabled="element.lineHeight == null"
+            :disabled="element.lineHeight === undefined"
             @clear="
-              $emit('update', { lineHeight: null } as Partial<DropCapElement>)
+              $emit(
+                'update',
+                { lineHeight: undefined } as Partial<DropCapElement>,
+              )
             "
           />
         </div>
@@ -348,7 +351,7 @@ const hasParagraphStyleOverrides = computed(
     props.element.fontFamily != null ||
     props.element.fontSize != null ||
     props.element.fontStyle != null ||
-    props.element.lineHeight != null ||
+    props.element.lineHeight !== undefined ||
     props.element.strokeWidth != null,
 );
 
@@ -373,7 +376,7 @@ function clearParagraphStyleFormatting() {
     fontFamily: null,
     fontSize: null,
     fontStyle: null,
-    lineHeight: null,
+    lineHeight: undefined,
     strokeWidth: null,
   } as Partial<DropCapElement>);
 }

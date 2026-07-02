@@ -1363,6 +1363,7 @@ const dialogOpen = computed(() => {
     documentPropertiesDialogIsOpen.value ||
     playbackSettingsDialogIsOpen.value ||
     syllablePositioningDialogIsOpen.value ||
+    exportDialogIsOpen.value ||
     editorPreferencesDialogIsOpen.value ||
     aboutDialogIsOpen.value
   );
@@ -3986,9 +3987,17 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
 
+  if (dialogOpen.value) {
+    if (handleDialogEditShortcut(event)) {
+      event.preventDefault();
+    }
+
+    return;
+  }
+
   const editorShortcutIgnored = isEditorShortcutIgnored(event);
 
-  if (platformService.isMac && isTextInputFocused() && !dialogOpen.value) {
+  if (platformService.isMac && isTextInputFocused()) {
     onKeydownMac(event);
   }
 
@@ -3998,11 +4007,7 @@ function onKeydown(event: KeyboardEvent) {
 
   // Handle undo / redo
   // See https://github.com/electron/electron/issues/3682.
-  if (
-    (event.ctrlKey || event.metaKey) &&
-    !isTextInputFocused() &&
-    !dialogOpen.value
-  ) {
+  if ((event.ctrlKey || event.metaKey) && !isTextInputFocused()) {
     if (event.code === 'KeyZ') {
       if (platformService.isMac && event.shiftKey) {
         throttled.onFileMenuRedo();
@@ -4012,9 +4017,11 @@ function onKeydown(event: KeyboardEvent) {
       event.preventDefault();
       return;
     } else if (event.code === 'KeyY') {
-      throttled.onFileMenuRedo();
-      event.preventDefault();
-      return;
+      if (!platformService.isMac) {
+        throttled.onFileMenuRedo();
+        event.preventDefault();
+        return;
+      }
     } else if (event.code === 'KeyX') {
       throttled.onCutScoreElements();
       event.preventDefault();
@@ -4077,7 +4084,7 @@ function onKeydown(event: KeyboardEvent) {
     return onKeydownTextBox(event);
   }
 
-  if (!isTextInputFocused() && !dialogOpen.value) {
+  if (!isTextInputFocused()) {
     return onKeydownNeume(event);
   }
 }
@@ -4704,42 +4711,83 @@ function onKeydownTextBox(event: KeyboardEvent) {
 }
 
 function onKeydownMac(event: KeyboardEvent) {
-  let handled = false;
+  if (handleEditShortcut(event)) {
+    event.preventDefault();
+  }
+}
 
-  if (!event.metaKey) {
-    return;
+function handleEditShortcut(event: KeyboardEvent, canPaste: boolean = true) {
+  if (!isPlatformShortcutPressed(event)) {
+    return false;
   }
 
   switch (event.code) {
     case 'KeyA':
       document.execCommand('selectAll');
-      handled = true;
-      break;
+      return true;
     case 'KeyC':
       document.execCommand('copy');
-      handled = true;
-      break;
+      return true;
     case 'KeyV':
+      if (!canPaste) {
+        return false;
+      }
+
       void pasteTextFromClipboard();
-      handled = true;
-      break;
+      return true;
     case 'KeyX':
       document.execCommand('cut');
-      handled = true;
-      break;
-    case 'KeyZ':
-      if (event.shiftKey) {
+      return true;
+    case 'KeyY':
+      if (!platformService.isMac) {
         document.execCommand('redo');
-      } else {
-        document.execCommand('undo');
+        return true;
       }
-      handled = true;
-      break;
-  }
 
-  if (handled) {
-    event.preventDefault();
+      return false;
+    case 'KeyZ':
+      if (platformService.isMac && event.shiftKey) {
+        document.execCommand('redo');
+        return true;
+      }
+
+      if (!event.shiftKey) {
+        document.execCommand('undo');
+        return true;
+      }
+
+      return false;
+    default:
+      return false;
   }
+}
+
+function handleDialogEditShortcut(event: KeyboardEvent) {
+  return handleEditShortcut(
+    event,
+    isElectron() || isContentEditableTarget(event.target),
+  );
+}
+
+function isPlatformShortcutPressed(event: KeyboardEvent) {
+  return platformService.isMac ? event.metaKey : event.ctrlKey && !event.altKey;
+}
+
+function isContentEditableTarget(target: EventTarget | null) {
+  const element =
+    target instanceof Element
+      ? target
+      : target instanceof Node
+        ? target.parentElement
+        : null;
+
+  return (
+    element != null &&
+    ((element instanceof HTMLElement && element.isContentEditable) ||
+      element.closest(
+        '[contenteditable="true"], [contenteditable="plaintext-only"]',
+      ) != null)
+  );
 }
 
 function onKeyup(event: KeyboardEvent) {

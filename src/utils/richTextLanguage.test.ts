@@ -47,6 +47,9 @@ describe('richTextLanguage', () => {
   it('detects meaningful HTML content instead of literal non-empty strings', () => {
     expect(hasMeaningfulRichTextHtmlContent('')).toBe(false);
     expect(hasMeaningfulRichTextHtmlContent('<p></p>')).toBe(false);
+    expect(
+      hasMeaningfulRichTextHtmlContent('<p class="neanes-style-x"></p>'),
+    ).toBe(false);
     expect(hasMeaningfulRichTextHtmlContent('<p>&nbsp;</p>')).toBe(false);
     expect(hasMeaningfulRichTextHtmlContent('<p>  Kyrie  </p>')).toBe(true);
   });

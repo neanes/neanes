@@ -244,7 +244,10 @@ import {
   isRightHandPage,
 } from '@/utils/PageNumbering';
 import type { TokenMetadata } from '@/utils/replaceTokens';
-import { setRichTextLanguage } from '@/utils/richTextLanguage';
+import {
+  hasMeaningfulRichTextHtmlContent,
+  setRichTextLanguage,
+} from '@/utils/richTextLanguage';
 import {
   resolveRunningMarkerPageMetadata,
   resolveRunningMarkerText,
@@ -6405,7 +6408,10 @@ function updateAnnotation(
 ) {
   const annotationContext = getAnnotationContext(element);
 
-  if (newValues.text != null && newValues.text.trim() === '') {
+  if (
+    newValues.text != null &&
+    !hasMeaningfulRichTextHtmlContent(newValues.text)
+  ) {
     if (annotationContext != null) {
       removeAnnotation(annotationContext.parent, element);
     }
@@ -6416,7 +6422,7 @@ function updateAnnotation(
   if (newValues.text == null && annotationContext?.component != null) {
     const currentText = annotationContext.component.getCurrentText();
 
-    if (currentText.trim() === '') {
+    if (!hasMeaningfulRichTextHtmlContent(currentText)) {
       removeAnnotation(annotationContext.parent, element);
       return;
     }

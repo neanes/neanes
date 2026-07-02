@@ -182,7 +182,10 @@ import {
 } from '@/models/Neumes';
 import type { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import type {
+  ParagraphStyle,
+  ResolvedParagraphStyle,
+} from '@/models/ParagraphStyle';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   resolveParagraphStyle,
@@ -6974,6 +6977,21 @@ function getResizableTextDefaultSnapshot(currentScore: Score) {
   };
 }
 
+type ResizableTextDefaultSnapshot = {
+  defaultText: ResolvedParagraphStyle;
+  lyrics: ResolvedParagraphStyle;
+};
+
+function resizableTextDefaultsChanged(
+  previous: ResizableTextDefaultSnapshot,
+  current: ResizableTextDefaultSnapshot,
+) {
+  return (
+    !shallowEquals(previous.defaultText, current.defaultText) ||
+    !shallowEquals(previous.lyrics, current.lyrics)
+  );
+}
+
 function updatePageSetup(pageSetup: PageSetup) {
   const currentPageSetup = score.value.pageSetup;
   const nextPageSetup = normalizePageSetupForGeneratedHeaderFooterDefaults(
@@ -7284,7 +7302,7 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
   commandService.value.executeAsBatch(commands);
 
   if (
-    !shallowEquals(
+    resizableTextDefaultsChanged(
       previousResizableTextDefaults,
       getResizableTextDefaultSnapshot(score.value),
     )
@@ -8712,7 +8730,9 @@ async function onFileMenuSaveAs() {
 
 function onFileMenuUndo() {
   const currentIndex = selectedElementIndex.value;
-  const pageSetupPrevious = getResizableTextDefaultSnapshot(score.value);
+  const previousResizableTextDefaults = getResizableTextDefaultSnapshot(
+    score.value,
+  );
 
   commandService.value.undo();
 
@@ -8733,8 +8753,8 @@ function onFileMenuUndo() {
   }
 
   if (
-    !shallowEquals(
-      pageSetupPrevious,
+    resizableTextDefaultsChanged(
+      previousResizableTextDefaults,
       getResizableTextDefaultSnapshot(score.value),
     )
   ) {
@@ -8747,7 +8767,9 @@ function onFileMenuUndo() {
 
 function onFileMenuRedo() {
   const currentIndex = selectedElementIndex.value;
-  const pageSetupPrevious = getResizableTextDefaultSnapshot(score.value);
+  const previousResizableTextDefaults = getResizableTextDefaultSnapshot(
+    score.value,
+  );
 
   commandService.value.redo();
 
@@ -8768,8 +8790,8 @@ function onFileMenuRedo() {
   }
 
   if (
-    !shallowEquals(
-      pageSetupPrevious,
+    resizableTextDefaultsChanged(
+      previousResizableTextDefaults,
       getResizableTextDefaultSnapshot(score.value),
     )
   ) {

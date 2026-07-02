@@ -710,7 +710,7 @@ function updateSelectedStyleName(value: string | number) {
     return;
   }
 
-  selectedStyle.value.displayName = String(value).trim();
+  selectedStyle.value.displayName = String(value);
 }
 
 function updateSelectedStyleParent(styleId: string) {
@@ -891,15 +891,22 @@ function paragraphStyleOverridesEqual(
   return true;
 }
 
+function prepareParagraphStyleForSubmit(style: ParagraphStyle) {
+  const updated = style.clone();
+
+  if (!updated.builtIn) {
+    updated.displayName = updated.displayName.trim();
+  }
+
+  return updated;
+}
+
 function submit() {
   if (!canSubmit.value) {
     return;
   }
 
-  emit(
-    'update',
-    styles.value.map((style) => style.clone()),
-  );
+  emit('update', styles.value.map(prepareParagraphStyleForSubmit));
   open.value = false;
 }
 </script>

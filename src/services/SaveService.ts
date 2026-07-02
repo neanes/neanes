@@ -2109,16 +2109,41 @@ export class SaveService {
     style.displayName = saved.displayName;
     style.builtIn = saved.builtIn === true;
     style.parentStyleId = saved.parentStyleId ?? null;
-    style.overrides = {
-      alignment: saved.alignment,
-      fontFamily: saved.fontFamily,
-      fontSize: saved.fontSize,
-      fontStyle: saved.fontSubfamily,
-      color: saved.color,
-      strokeWidth: saved.strokeWidth,
-      lineHeight: saved.lineHeight,
-      textDecoration: saved.textDecoration,
-    };
+    const overrides: ParagraphStyleOverrides = {};
+
+    if (saved.alignment !== undefined) {
+      overrides.alignment = saved.alignment;
+    }
+
+    if (saved.fontFamily !== undefined) {
+      overrides.fontFamily = saved.fontFamily;
+    }
+
+    if (saved.fontSize !== undefined) {
+      overrides.fontSize = saved.fontSize;
+    }
+
+    if (saved.fontSubfamily !== undefined) {
+      overrides.fontStyle = saved.fontSubfamily;
+    }
+
+    if (saved.color !== undefined) {
+      overrides.color = saved.color;
+    }
+
+    if (saved.strokeWidth !== undefined) {
+      overrides.strokeWidth = saved.strokeWidth;
+    }
+
+    if (saved.lineHeight !== undefined) {
+      overrides.lineHeight = saved.lineHeight;
+    }
+
+    if (saved.textDecoration !== undefined) {
+      overrides.textDecoration = saved.textDecoration;
+    }
+
+    style.overrides = overrides;
     return style;
   }
 

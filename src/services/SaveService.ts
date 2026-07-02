@@ -1549,7 +1549,7 @@ export class SaveService {
   public static SaveTextBox(
     element: TextBoxElement_v1,
     e: TextBoxElement,
-    defaultParagraphStyleId = e.inline === true
+    defaultParagraphStyleId: string = e.inline === true
       ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
       : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
   ) {

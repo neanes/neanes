@@ -354,6 +354,7 @@ describe('useRichParagraphStyleCommands', () => {
       6,
       {},
       'alignment',
+      { value: 'left' },
     );
     expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(6);
     expect(registryMocks.execForActiveOrLastOwner).not.toHaveBeenCalledWith(

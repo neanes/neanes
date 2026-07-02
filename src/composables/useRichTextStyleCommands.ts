@@ -414,7 +414,9 @@ export function useRichParagraphStyleCommands(
   }
 
   function clearAlignmentOverride() {
-    runCommand('alignment');
+    runCommand('alignment', {
+      value: resolvedActiveParagraphStyle.value.alignment,
+    });
   }
 
   function setUnderlineActive(value: boolean) {

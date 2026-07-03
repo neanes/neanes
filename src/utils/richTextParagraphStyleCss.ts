@@ -17,7 +17,7 @@ export function buildRichTextParagraphStyleCss(
       return `${selectorPrefix} p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
         font.cssFontFamily,
         pageSetup.neumeDefaultFontFamily + 'Legacy',
-      )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${resolved.lineHeight ?? 'normal'};}`;
+      )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${resolved.lineHeight ?? 'normal'};text-align:${resolved.alignment};}`;
     })
     .join('\n');
 }

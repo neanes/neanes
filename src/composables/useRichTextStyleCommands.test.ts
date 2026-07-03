@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { TextBoxAlignment } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -7,6 +8,7 @@ import {
   createParagraphStyleFallback,
   ParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { ALIGNMENT_OVERRIDE_MIXED_VALUE } from '@/utils/alignmentOverride';
 
 const registryMocks = vi.hoisted(() => ({
   execForActiveOrLastOwner: vi.fn(),
@@ -33,7 +35,6 @@ import {
   PARAGRAPH_STYLE_MIXED_VALUE,
   PARAGRAPH_STYLE_NONE_VALUE,
   resolveRichTextParagraphStyleState,
-  shouldSyncParagraphStyleAlignment,
   useRichParagraphStyleCommands,
 } from './useRichTextStyleCommands';
 
@@ -80,13 +81,6 @@ describe('resolveRichTextParagraphStyleState', () => {
     expect(state.activeParagraphStyle).toBeNull();
     expect(state.resolvedActiveParagraphStyle).toEqual(fallbackParagraphStyle);
   });
-
-  it('does not resync alignment when the style alignment already matches the selection', () => {
-    expect(shouldSyncParagraphStyleAlignment('center', 'center')).toBe(false);
-    expect(shouldSyncParagraphStyleAlignment('left', 'left')).toBe(false);
-    expect(shouldSyncParagraphStyleAlignment(undefined, 'center')).toBe(true);
-    expect(shouldSyncParagraphStyleAlignment('left', 'center')).toBe(true);
-  });
 });
 
 describe('useRichParagraphStyleCommands', () => {
@@ -131,8 +125,8 @@ describe('useRichParagraphStyleCommands', () => {
         true,
       ),
       underline: createCommandState(underlineActive, true),
-      alignment: createCommandState(commandOverrides.alignment ?? 'left', true),
-    } as const;
+      alignment: createCommandState(commandOverrides.alignment, true),
+    };
 
     registryMocks.execForActiveOrLastOwner.mockReset();
     registryMocks.useActiveOrLastEditorForOwner.mockReturnValue({ value: {} });
@@ -186,6 +180,62 @@ describe('useRichParagraphStyleCommands', () => {
     expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(2);
   });
 
+  it('falls back to the resolved paragraph-style alignment when no explicit override exists', () => {
+    const centeredStyle = new ParagraphStyle();
+    centeredStyle.id = 'centered-style';
+    centeredStyle.overrides.alignment = 'center' as TextBoxAlignment;
+
+    const { commands } = setupCommands([centeredStyle], ['centered-style']);
+
+    expect(commands.alignmentValue.value).toBe('center');
+    expect(commands.alignmentHasExplicitValue.value).toBe(false);
+  });
+
+  it('treats an explicit alignment override as explicit even when it matches the style', () => {
+    const centeredStyle = new ParagraphStyle();
+    centeredStyle.id = 'centered-style';
+    centeredStyle.overrides.alignment = 'center' as TextBoxAlignment;
+
+    const { commands } = setupCommands(
+      [centeredStyle],
+      ['centered-style'],
+      false,
+      {
+        alignment: 'center' as TextBoxAlignment,
+      },
+    );
+
+    expect(commands.alignmentValue.value).toBe('center');
+    expect(commands.alignmentHasExplicitValue.value).toBe(true);
+  });
+
+  it('shows a mixed alignment value when mixed paragraph styles do not resolve to one alignment', () => {
+    const leftStyle = new ParagraphStyle();
+    leftStyle.id = 'left-style';
+    leftStyle.overrides.alignment = 'left' as TextBoxAlignment;
+
+    const rightStyle = new ParagraphStyle();
+    rightStyle.id = 'right-style';
+    rightStyle.overrides.alignment = 'right' as TextBoxAlignment;
+
+    const { commands } = setupCommands(
+      [leftStyle, rightStyle],
+      ['left-style', 'right-style'],
+    );
+
+    expect(commands.alignmentValue.value).toBe(PARAGRAPH_STYLE_MIXED_VALUE);
+    expect(commands.alignmentHasExplicitValue.value).toBe(false);
+  });
+
+  it('shows a mixed alignment value when selection has explicit overrides but no uniform value', () => {
+    const { commands } = setupCommands([], [], false, {
+      alignment: ALIGNMENT_OVERRIDE_MIXED_VALUE,
+    });
+
+    expect(commands.alignmentValue.value).toBe(ALIGNMENT_OVERRIDE_MIXED_VALUE);
+    expect(commands.alignmentHasExplicitValue.value).toBe(true);
+  });
+
   it('keeps clear disabled when the active underlined paragraph style is already reflected inline', () => {
     const underlinedStyle = new ParagraphStyle();
     underlinedStyle.id = 'underlined-style';
@@ -202,6 +252,20 @@ describe('useRichParagraphStyleCommands', () => {
     commands.clearTextDecorationOverride();
 
     expect(registryMocks.execForActiveOrLastOwner).not.toHaveBeenCalled();
+  });
+
+  it('clears an explicit alignment override without forcing a paragraph-style value', () => {
+    const { commands } = setupCommands([], [], false, {
+      alignment: 'left' as TextBoxAlignment,
+    });
+
+    commands.clearAlignmentOverride();
+
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(1);
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledWith(
+      {},
+      'alignment',
+    );
   });
 
   it('restores underline when the active underlined paragraph style has been cleared inline', () => {
@@ -284,6 +348,30 @@ describe('useRichParagraphStyleCommands', () => {
     expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(1);
   });
 
+  it('does not resync alignment when applying a paragraph style', () => {
+    const rightAlignedStyle = new ParagraphStyle();
+    rightAlignedStyle.id = 'right-aligned-style';
+    rightAlignedStyle.overrides.alignment = 'right' as TextBoxAlignment;
+
+    const { commands } = setupCommands([rightAlignedStyle], [], false, {
+      alignment: 'left' as TextBoxAlignment,
+    });
+
+    commands.onParagraphStyleChanged('right-aligned-style');
+
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(1);
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledWith(
+      {},
+      'style',
+      { styleName: 'right-aligned-style', forceValue: true },
+    );
+    expect(registryMocks.execForActiveOrLastOwner).not.toHaveBeenCalledWith(
+      {},
+      'alignment',
+      expect.anything(),
+    );
+  });
+
   it('removes underline when the active non-underlined paragraph style has inline underline', () => {
     const plainStyle = new ParagraphStyle();
     plainStyle.id = 'plain-style';
@@ -317,7 +405,7 @@ describe('useRichParagraphStyleCommands', () => {
         fontColor: '#123456',
         bold: true,
         italic: true,
-        alignment: 'center',
+        alignment: 'center' as TextBoxAlignment,
       },
     );
 
@@ -354,7 +442,6 @@ describe('useRichParagraphStyleCommands', () => {
       6,
       {},
       'alignment',
-      { value: 'left' },
     );
     expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(6);
     expect(registryMocks.execForActiveOrLastOwner).not.toHaveBeenCalledWith(

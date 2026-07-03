@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import type { TextBoxAlignment } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { ParagraphStyle } from '@/models/ParagraphStyle';
 
 import { buildRichTextParagraphStyleCss } from './richTextParagraphStyleCss';
 
 describe('buildRichTextParagraphStyleCss', () => {
-  it('does not emit text-decoration for rich-text paragraph styles', () => {
+  it('projects resolved alignment for rich-text paragraph styles', () => {
     const pageSetup = new PageSetup();
     const style = new ParagraphStyle();
 
@@ -18,6 +19,7 @@ describe('buildRichTextParagraphStyleCss', () => {
       color: '#abcdef',
       strokeWidth: 1.5,
       lineHeight: 1.4,
+      alignment: 'right' as TextBoxAlignment,
       textDecoration: 'underline',
     };
 
@@ -34,6 +36,7 @@ describe('buildRichTextParagraphStyleCss', () => {
     expect(css).toContain(
       'color:#abcdef;-webkit-text-stroke-width:1.5px;line-height:1.4;',
     );
+    expect(css).toContain('text-align:right;');
     expect(css).not.toContain('text-decoration:underline;');
   });
 });

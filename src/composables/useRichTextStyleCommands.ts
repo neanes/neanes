@@ -15,6 +15,7 @@ import type {
 } from '@/models/ParagraphStyle';
 import { resolveParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
+import { ALIGNMENT_OVERRIDE_MIXED_VALUE } from '@/utils/alignmentOverride';
 import {
   DEFAULT_FONT_STYLE,
   RICH_TEXT_DEFAULT_FONT_FAMILY,
@@ -92,13 +93,6 @@ export function resolveRichTextParagraphStyleState(
     resolvedActiveParagraphStyle:
       activeParagraphStyle ?? fallbackParagraphStyle,
   };
-}
-
-export function shouldSyncParagraphStyleAlignment(
-  currentAlignment: unknown,
-  nextAlignment: string,
-) {
-  return currentAlignment !== nextAlignment;
 }
 
 export function useRichParagraphStyleCommands(
@@ -235,12 +229,7 @@ export function useRichParagraphStyleCommands(
   );
 
   const alignmentHasExplicitValue = computed(() => {
-    const value = commandValue('alignment');
-
-    return (
-      typeof value === 'string' &&
-      value !== resolvedActiveParagraphStyle.value.alignment
-    );
+    return commandValue('alignment') !== undefined;
   });
 
   const underlineActive = computed(() => commandValue('underline') === true);
@@ -262,10 +251,30 @@ export function useRichParagraphStyleCommands(
 
   const alignmentValue = computed(() => {
     const value = commandValue('alignment');
-    return typeof value === 'string' && isAlignmentValue(value)
-      ? value
-      : 'left';
+    if (
+      typeof value === 'string' &&
+      (isAlignmentValue(value) || value === ALIGNMENT_OVERRIDE_MIXED_VALUE)
+    ) {
+      return value;
+    }
+
+    return paragraphStyleValue.value === PARAGRAPH_STYLE_MIXED_VALUE
+      ? resolveMixedParagraphStyleAlignmentValue()
+      : resolvedActiveParagraphStyle.value.alignment;
   });
+
+  function resolveMixedParagraphStyleAlignmentValue() {
+    const alignments = new Set(
+      activeParagraphStyleIds.value.map(
+        (styleId) =>
+          resolveParagraphStyle(props.paragraphStyles ?? [], styleId).alignment,
+      ),
+    );
+
+    return alignments.size === 1
+      ? [...alignments][0]
+      : ALIGNMENT_OVERRIDE_MIXED_VALUE;
+  }
 
   const textDecorationHasExplicitValue = computed(
     () => underlineActive.value !== resolvedUnderline.value,
@@ -414,9 +423,7 @@ export function useRichParagraphStyleCommands(
   }
 
   function clearAlignmentOverride() {
-    runCommand('alignment', {
-      value: resolvedActiveParagraphStyle.value.alignment,
-    });
+    runCommand('alignment');
   }
 
   function setUnderlineActive(value: boolean) {
@@ -482,19 +489,11 @@ export function useRichParagraphStyleCommands(
 
     runCommand('style', { styleName: value, forceValue: true });
 
-    const resolved = resolveParagraphStyle(props.paragraphStyles ?? [], value);
-
-    if (resolved.textDecoration === 'underline') {
-      setUnderlineActive(true);
-    }
-
     if (
-      shouldSyncParagraphStyleAlignment(
-        commandValue('alignment'),
-        resolved.alignment,
-      )
+      resolveParagraphStyle(props.paragraphStyles ?? [], value)
+        .textDecoration === 'underline'
     ) {
-      runCommand('alignment', { value: resolved.alignment });
+      setUnderlineActive(true);
     }
   }
 

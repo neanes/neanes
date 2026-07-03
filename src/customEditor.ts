@@ -1,4 +1,3 @@
-import '@ckeditor/ckeditor5-style/dist/index.css';
 import 'ckeditor5/ckeditor5.css';
 
 import {

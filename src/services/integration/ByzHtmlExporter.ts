@@ -143,10 +143,10 @@ export class ByzHtmlExporter {
   <head>
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/danielgarthur/byzhtml@${byzhtmlVersion}/dist/Neanes.css"
+      href="https://cdn.jsdelivr.net/gh/neanes/byzhtml@${byzhtmlVersion}/dist/Neanes.css"
     />
     
-    <script src="https://cdn.jsdelivr.net/gh/danielgarthur/byzhtml@${byzhtmlVersion}/dist/byzhtml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/neanes/byzhtml@${byzhtmlVersion}/dist/byzhtml.min.js"></script>
 
     ${injectRtl}
 

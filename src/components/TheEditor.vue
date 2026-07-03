@@ -9731,9 +9731,7 @@ function renderTabLabel(tab: Tab) {
             @update:martyria="updateMartyria"
             @update:open-sections="propertiesPaneOpenSections = $event"
             @update:tempo="updateTempo"
-            @open-mode-key-dialog="openModeKeyDialog"
             @open-paragraph-styles-dialog="openParagraphStylesDialog"
-            @open-syllable-positioning-dialog="openSyllablePositioningDialog"
           />
         </template>
 

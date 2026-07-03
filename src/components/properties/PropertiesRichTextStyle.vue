@@ -161,16 +161,16 @@
             :model-value="textDecorationValues[0]"
             @update:model-value="onTextDecorationValuesChanged"
           >
-          <ToggleGroupItem
-            value="underline"
-            :aria-label="
-              $t(($) => $.toolbar.richTextBox.underline, { ns: 'toolbar' })
-            "
-            :disabled="!isStyleToggleEnabled('underline')"
-            @mousedown.prevent
-          >
-            <PhTextUnderline />
-          </ToggleGroupItem>
+            <ToggleGroupItem
+              value="underline"
+              :aria-label="
+                $t(($) => $.toolbar.richTextBox.underline, { ns: 'toolbar' })
+              "
+              :disabled="!isStyleToggleEnabled('underline')"
+              @mousedown.prevent
+            >
+              <PhTextUnderline />
+            </ToggleGroupItem>
           </ToggleGroup>
         </div>
       </Field>

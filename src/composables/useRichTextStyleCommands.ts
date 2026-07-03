@@ -474,7 +474,6 @@ export function useRichParagraphStyleCommands(
     }
 
     runCommand('style', { styleName: value, forceValue: true });
-
   }
 
   function onClearFormatting() {

@@ -13,11 +13,15 @@ export function buildRichTextParagraphStyleCss(
     .map((style) => {
       const resolved = resolveParagraphStyle(paragraphStyles, style.id);
       const font = resolveFontStyle(resolved.fontFamily, resolved.fontStyle);
+      const textDecoration =
+        resolved.textDecoration === 'underline'
+          ? 'text-decoration:underline;'
+          : '';
 
       return `${selectorPrefix} p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
         font.cssFontFamily,
         pageSetup.neumeDefaultFontFamily + 'Legacy',
-      )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${resolved.lineHeight ?? 'normal'};text-align:${resolved.alignment};}`;
+      )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${resolved.lineHeight ?? 'normal'};text-align:${resolved.alignment};${textDecoration}}`;
     })
     .join('\n');
 }

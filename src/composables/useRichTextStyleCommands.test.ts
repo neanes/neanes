@@ -157,7 +157,7 @@ describe('useRichParagraphStyleCommands', () => {
     };
   }
 
-  it('materializes inline underline when applying an underlined paragraph style', () => {
+  it('only applies the style command when selecting an underlined paragraph style', () => {
     const underlinedStyle = new ParagraphStyle();
     underlinedStyle.id = 'underlined-style';
     underlinedStyle.overrides.textDecoration = 'underline';
@@ -172,12 +172,7 @@ describe('useRichParagraphStyleCommands', () => {
       'style',
       { styleName: 'underlined-style', forceValue: true },
     );
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
-      2,
-      {},
-      'underline',
-    );
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(2);
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(1);
   });
 
   it('falls back to the resolved paragraph-style alignment when no explicit override exists', () => {
@@ -236,24 +231,6 @@ describe('useRichParagraphStyleCommands', () => {
     expect(commands.alignmentHasExplicitValue.value).toBe(true);
   });
 
-  it('keeps clear disabled when the active underlined paragraph style is already reflected inline', () => {
-    const underlinedStyle = new ParagraphStyle();
-    underlinedStyle.id = 'underlined-style';
-    underlinedStyle.overrides.textDecoration = 'underline';
-
-    const { commands } = setupCommands(
-      [underlinedStyle],
-      ['underlined-style'],
-      true,
-    );
-
-    expect(commands.textDecorationHasExplicitValue.value).toBe(false);
-
-    commands.clearTextDecorationOverride();
-
-    expect(registryMocks.execForActiveOrLastOwner).not.toHaveBeenCalled();
-  });
-
   it('clears an explicit alignment override without forcing a paragraph-style value', () => {
     const { commands } = setupCommands([], [], false, {
       alignment: 'left' as TextBoxAlignment,
@@ -265,28 +242,6 @@ describe('useRichParagraphStyleCommands', () => {
     expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledWith(
       {},
       'alignment',
-    );
-  });
-
-  it('restores underline when the active underlined paragraph style has been cleared inline', () => {
-    const underlinedStyle = new ParagraphStyle();
-    underlinedStyle.id = 'underlined-style';
-    underlinedStyle.overrides.textDecoration = 'underline';
-
-    const { commands } = setupCommands(
-      [underlinedStyle],
-      ['underlined-style'],
-      false,
-    );
-
-    expect(commands.textDecorationHasExplicitValue.value).toBe(true);
-
-    commands.clearTextDecorationOverride();
-
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(1);
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledWith(
-      {},
-      'underline',
     );
   });
 
@@ -372,23 +327,6 @@ describe('useRichParagraphStyleCommands', () => {
     );
   });
 
-  it('removes underline when the active non-underlined paragraph style has inline underline', () => {
-    const plainStyle = new ParagraphStyle();
-    plainStyle.id = 'plain-style';
-
-    const { commands } = setupCommands([plainStyle], ['plain-style'], true);
-
-    expect(commands.textDecorationHasExplicitValue.value).toBe(true);
-
-    commands.clearTextDecorationOverride();
-
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(1);
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledWith(
-      {},
-      'underline',
-    );
-  });
-
   it('clears rich-text paragraph style formatting without changing the active paragraph style', () => {
     const underlinedStyle = new ParagraphStyle();
     underlinedStyle.id = 'underlined-style';
@@ -436,14 +374,9 @@ describe('useRichParagraphStyleCommands', () => {
     expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
       5,
       {},
-      'underline',
-    );
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
-      6,
-      {},
       'alignment',
     );
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(6);
+    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(5);
     expect(registryMocks.execForActiveOrLastOwner).not.toHaveBeenCalledWith(
       {},
       'style',

@@ -161,23 +161,17 @@
             :model-value="textDecorationValues[0]"
             @update:model-value="onTextDecorationValuesChanged"
           >
-            <ToggleGroupItem
-              value="underline"
-              :aria-label="
-                $t(($) => $.toolbar.richTextBox.underline, { ns: 'toolbar' })
-              "
-              :disabled="!isStyleToggleEnabled('underline')"
-              @mousedown.prevent
-            >
-              <PhTextUnderline />
-            </ToggleGroupItem>
-          </ToggleGroup>
-          <ParagraphStyleClearButton
-            :disabled="
-              !isCommandEnabled('underline') || !textDecorationHasExplicitValue
+          <ToggleGroupItem
+            value="underline"
+            :aria-label="
+              $t(($) => $.toolbar.richTextBox.underline, { ns: 'toolbar' })
             "
-            @clear="clearTextDecorationOverride"
-          />
+            :disabled="!isStyleToggleEnabled('underline')"
+            @mousedown.prevent
+          >
+            <PhTextUnderline />
+          </ToggleGroupItem>
+          </ToggleGroup>
         </div>
       </Field>
 
@@ -924,8 +918,6 @@ const {
   fontStyleDisabled,
   fontStyleValues,
   textDecorationValues,
-  textDecorationHasExplicitValue,
-  clearTextDecorationOverride,
   fontSizeValue,
   fontSizePlaceholder,
   fontColorValue,

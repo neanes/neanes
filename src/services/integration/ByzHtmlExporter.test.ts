@@ -56,7 +56,7 @@ describe('ByzHtmlExporter', () => {
     );
   });
 
-  it('exports rich text paragraph styles without text decoration in the stylesheet', () => {
+  it('exports rich text paragraph styles with underline in the stylesheet', () => {
     const exporter = new ByzHtmlExporter();
     const pageSetup = new PageSetup();
     const style = new ParagraphStyle();
@@ -86,10 +86,10 @@ describe('ByzHtmlExporter', () => {
     expect(css).toContain(
       'color:#abcdef;-webkit-text-stroke-width:1.5px;line-height:1.4;',
     );
-    expect(css).not.toContain('text-decoration:underline;');
+    expect(css).toContain('text-decoration:underline;');
   });
 
-  it('exports paragraph-style text boxes with underline as inline text only', () => {
+  it('exports paragraph-style text boxes with underline through shared CSS and inline text', () => {
     const exporter = new ByzHtmlExporter();
     const element = new TextBoxElement();
 
@@ -121,7 +121,7 @@ describe('ByzHtmlExporter', () => {
     );
     const css = exporter.exportPageSetup(new PageSetup(), [customStyle]);
 
-    expect(css).not.toContain('text-decoration:underline;');
+    expect(css).toContain('text-decoration:underline;');
     expect(html).toContain('text-decoration: underline;');
   });
 

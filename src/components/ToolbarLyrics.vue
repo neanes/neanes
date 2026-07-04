@@ -197,10 +197,7 @@ const {
 );
 
 const underline = computed(
-  () =>
-    props.element.lyricsTextDecoration === 'underline' ||
-    (props.element.lyricsTextDecoration == null &&
-      resolvedParagraphStyle.value.textDecoration === 'underline'),
+  () => resolvedParagraphStyle.value.textDecoration === 'underline',
 );
 const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
 const underlineValues = computed(() => (underline.value ? ['underline'] : []));

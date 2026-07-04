@@ -1,8 +1,9 @@
 import { Plugin } from 'ckeditor5';
 
+import { ALIGNMENT_VALUES } from '@/utils/alignmentOverride';
+
 import {
   ALIGNMENT_OVERRIDE,
-  ALIGNMENT_VALUES,
   AlignmentOverrideCommand,
 } from './alignmentoverridecommand';
 

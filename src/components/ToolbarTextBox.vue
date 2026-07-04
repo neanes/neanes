@@ -221,18 +221,13 @@ const {
 );
 
 const underline = computed(
-  () =>
-    props.element.underline === true ||
-    (props.element.underline == null &&
-      resolvedParagraphStyle.value.textDecoration === 'underline'),
+  () => resolvedParagraphStyle.value.textDecoration === 'underline',
 );
 
 const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
 const underlineValues = computed(() => (underline.value ? ['underline'] : []));
 
-const currentAlignment = computed(
-  () => props.element.alignment ?? resolvedParagraphStyle.value.alignment,
-);
+const currentAlignment = computed(() => resolvedParagraphStyle.value.alignment);
 
 const textBoxFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),

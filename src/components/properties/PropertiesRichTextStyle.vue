@@ -6,12 +6,11 @@
     >
       <Field>
         <div class="mb-2 flex items-center justify-between gap-2">
-          <FieldLabel :for="`${idPrefix}-text-style`">{{
+          <FieldLabel :for="`${idPrefix}-paragraph-style`">{{
             $t(($) => $.toolbar.common.paragraphStyle, { ns: 'toolbar' })
           }}</FieldLabel>
           <div class="flex items-center gap-1">
             <Button
-              v-if="showEditStylesButton"
               type="button"
               variant="ghost"
               size="sm"
@@ -29,7 +28,7 @@
           </div>
         </div>
         <ParagraphStyleSelect
-          :id="`${idPrefix}-text-style`"
+          :id="`${idPrefix}-paragraph-style`"
           trigger-class="w-full"
           :model-value="paragraphStyleValue"
           :paragraph-styles="paragraphStyleOptions"
@@ -896,7 +895,6 @@ const props = defineProps<{
   fonts: string[];
   pageSetup: PageSetup;
   paragraphStyles: ParagraphStyle[];
-  showEditStylesButton?: boolean;
   fallbackParagraphStyleId: string;
   fallbackParagraphStyle: ResolvedParagraphStyle;
 }>();

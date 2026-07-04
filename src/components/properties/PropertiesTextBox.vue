@@ -12,7 +12,7 @@
       :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
     >
       <ParagraphStyleField
-        id="properties-text-box-text-style"
+        id="properties-text-box-paragraph-style"
         :model-value="element.paragraphStyleId"
         :paragraph-styles="paragraphStyles"
         :has-overrides="hasParagraphStyleOverrides"

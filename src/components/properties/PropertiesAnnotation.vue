@@ -50,7 +50,6 @@
       :fonts="fonts"
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
-      show-edit-styles-button
       :fallback-paragraph-style-id="BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation"
       :fallback-paragraph-style="annotationStyle"
       @open-paragraph-styles-dialog="

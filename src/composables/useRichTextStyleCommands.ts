@@ -16,7 +16,11 @@ import type {
 } from '@/models/ParagraphStyle';
 import { resolveParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
-import { ALIGNMENT_OVERRIDE_MIXED_VALUE } from '@/utils/alignmentOverride';
+import {
+  ALIGNMENT_OVERRIDE_MIXED_VALUE,
+  ALIGNMENT_VALUES,
+  type AlignmentOverrideValue,
+} from '@/utils/alignmentOverride';
 import {
   DEFAULT_FONT_STYLE,
   RICH_TEXT_DEFAULT_FONT_FAMILY,
@@ -568,10 +572,8 @@ function fromRichTextFontSizeModelValue(value: unknown) {
   return match[2] === 'pt' ? Unit.fromPt(size) : size;
 }
 
-function isAlignmentValue(
-  value: string,
-): value is 'left' | 'center' | 'right' | 'justify' {
-  return ['left', 'center', 'right', 'justify'].includes(value);
+function isAlignmentValue(value: string): value is AlignmentOverrideValue {
+  return (ALIGNMENT_VALUES as readonly string[]).includes(value);
 }
 
 function toToggleGroupValues(value: unknown) {

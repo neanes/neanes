@@ -74,10 +74,11 @@ it and tracks which editor is currently active:
   editor's `destroy` unregisters everything.
 - `activeEditor` / `activeEditorOwner` (`shallowRef`s) -- the single globally
   focused editor and its owner.
-- `getActiveEditorForOwner(owner)` / `useActiveEditorForOwner(owner)` -- the active
-  editor _iff_ it belongs to `owner`. The toolbar and panel use this as their
-  `scopedEditor`; command enablement (`isCommandEnabled`) requires it to be
-  non-null, and `execForOwner` runs a command only when it is.
+- `getActiveEditorForOwner(owner)` (internal) -- the active editor _iff_ it
+  belongs to `owner`. The toolbar and panel use
+  `useActiveOrLastEditorForOwner(owner)` as their `scopedEditor`; command
+  enablement (`isCommandEnabled`) requires it to be non-null, and
+  `execForActiveOrLastOwner` runs a command only when it is.
 - `resolveActiveOrLastEditorForOwner(owner)` --
   `getActiveEditorForOwner(owner) ?? <last-active editor for owner>`. The fallback
   is what makes the focus zone _sticky_ (section 2.4): a transient blur that nulls
@@ -347,7 +348,7 @@ A, whose toolbar root and the shared portal are already registered (sticky).
    active and the toolbar stays enabled. The real highlight is gone (the editing
    view is unfocused), so the marker stands in for it.
 4. **Pick a font.** `@update:model-value` -> `onFontFamilyChanged` ->
-   `execForOwner` runs `fontFamily` on the still-intact model selection; `open`
+   `execForActiveOrLastOwner` runs `fontFamily` on the still-intact model selection; `open`
    becomes false.
 5. **Close.** `@update:open(false)` -> `endSelectionGuard(A, { refocus: true })`. Reka parks
    focus on the trigger/option (inside the registered container/portal), so

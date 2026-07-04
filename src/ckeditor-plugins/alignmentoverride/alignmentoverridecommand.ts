@@ -1,13 +1,13 @@
 import type { Batch, ModelWriter } from 'ckeditor5';
 import { Command } from 'ckeditor5';
 
-import { ALIGNMENT_OVERRIDE_MIXED_VALUE } from '@/utils/alignmentOverride';
+import {
+  ALIGNMENT_OVERRIDE_MIXED_VALUE,
+  ALIGNMENT_VALUES,
+  type AlignmentOverrideValue,
+} from '@/utils/alignmentOverride';
 
 export const ALIGNMENT_OVERRIDE = 'alignmentOverride';
-
-export const ALIGNMENT_VALUES = ['left', 'center', 'right', 'justify'] as const;
-
-export type AlignmentOverrideValue = (typeof ALIGNMENT_VALUES)[number];
 
 function isAlignmentOverrideValue(
   value: unknown,

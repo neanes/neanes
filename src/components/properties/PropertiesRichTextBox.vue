@@ -13,7 +13,6 @@
       :fonts="fonts"
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
-      show-edit-styles-button
       :fallback-paragraph-style-id="fallbackParagraphStyleId"
       :fallback-paragraph-style="resolvedParagraphStyle"
       @open-paragraph-styles-dialog="

@@ -12,7 +12,7 @@
       :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
     >
       <ParagraphStyleField
-        id="properties-lyrics-text-style"
+        id="properties-lyrics-paragraph-style"
         :model-value="element.lyricsParagraphStyleId"
         :paragraph-styles="paragraphStyles"
         :has-overrides="hasParagraphStyleOverrides"
@@ -269,10 +269,7 @@ const {
 );
 
 const underline = computed(
-  () =>
-    props.element.lyricsTextDecoration === 'underline' ||
-    (props.element.lyricsTextDecoration == null &&
-      resolvedParagraphStyle.value.textDecoration === 'underline'),
+  () => resolvedParagraphStyle.value.textDecoration === 'underline',
 );
 const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
 const underlineValues = computed(() => (underline.value ? ['underline'] : []));

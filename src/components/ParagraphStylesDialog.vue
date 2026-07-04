@@ -519,6 +519,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import { PARAGRAPH_STYLE_NONE_VALUE } from '@/composables/useRichTextStyleCommands';
+import { TextBoxAlignment } from '@/models/Element';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   createDefaultBuiltInParagraphStyle,
@@ -790,13 +791,12 @@ function resetSelectedStyleToDefault() {
 }
 
 function updateAlignmentOverride(value: unknown) {
-  if (
-    value === 'left' ||
-    value === 'center' ||
-    value === 'right' ||
-    value === 'justify'
-  ) {
-    updateSelectedStyleOverride('alignment', value);
+  const alignment = Object.values(TextBoxAlignment).find(
+    (candidate) => candidate === value,
+  );
+
+  if (alignment != null) {
+    updateSelectedStyleOverride('alignment', alignment);
   }
 }
 

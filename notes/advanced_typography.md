@@ -104,16 +104,14 @@ output when CSS cannot otherwise select the face.
 
 The shared model covers all text whose typography is saved in the score:
 
-| Surface                     | Runtime field(s)                                                       |
-| --------------------------- | ---------------------------------------------------------------------- |
-| rich text boxes/headers     | HTML in `RichTextBoxElement.content*`; CKEditor model uses `fontStyle` |
-| text annotations            | HTML in `AnnotationElement.text`; CKEditor model uses `fontStyle`      |
-| plain text boxes            | `TextBoxElement.fontFamily` + `fontStyle`                              |
-| lyrics custom overrides     | `NoteElement.lyricsFontFamily` + `lyricsFontStyle`                     |
-| drop caps                   | `DropCapElement.fontFamily` + `fontStyle`                              |
-| page setup lyrics default   | `PageSetup.lyricsDefaultFontFamily` + `lyricsDefaultFontStyle`         |
-| page setup drop-cap default | `PageSetup.dropCapDefaultFontFamily` + `dropCapDefaultFontStyle`       |
-| page setup text-box default | `PageSetup.textBoxDefaultFontFamily` + `textBoxDefaultFontStyle`       |
+| Surface                 | Runtime field(s)                                                                                               |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| rich text boxes/headers | HTML in `RichTextBoxElement.content*`; CKEditor model uses `fontStyle`                                         |
+| text annotations        | HTML in `AnnotationElement.text`; CKEditor model uses `fontStyle`                                              |
+| plain text boxes        | `TextBoxElement.fontFamily` + `fontStyle`                                                                      |
+| lyrics custom overrides | `NoteElement.lyricsFontFamily` + `lyricsFontStyle`                                                             |
+| drop caps               | `DropCapElement.fontFamily` + `fontStyle`                                                                      |
+| paragraph styles        | `ParagraphStyle.overrides.fontFamily` + `fontStyle` (the built-in styles carry the former page-setup defaults) |
 
 Music fonts remain ordinary font families with only the `Regular` style. They
 participate in the catalog so the controls can disable style and Bold/Italic
@@ -132,9 +130,9 @@ Style is not a toolbar convenience. It affects:
 
 That is why non-rich fields store `fontStyle` directly and why rich text
 normalizes its HTML into the same concept on editor load. CKEditor may import
-legacy semantic wrappers; normalized output uses stock semantic tags for basic
-faces and CSS spans for explicit non-basic faces, so the browser renders the same
-score typography model the rest of the app uses.
+legacy semantic wrappers; normalized output serializes every explicit face as
+CSS spans (section 5.2), so the browser renders the same score typography model
+the rest of the app uses.
 
 ### 1.4 Regular, defaults, and inherited rich text
 
@@ -144,11 +142,12 @@ because the document model needs a stable way to say "plain for this family."
 
 The two storage formats use that baseline differently:
 
-- **Non-rich score fields** store their face style explicitly (including
-  `Regular`) because they are structured JSON fields whose value participates in
-  clone, page setup, and UI state. Inheriting the page-setup default is a
-  separate, explicit switch -- a `useDefaultStyle` / `lyricsUseDefaultStyle`
-  boolean on the element (section 4.1) -- not the absence of a value.
+- **Non-rich score fields** store an explicit face style (including
+  `Regular`) when the element overrides its paragraph style, and store null to
+  inherit the face of the style referenced by the element's `paragraphStyleId`
+  (or `lyricsParagraphStyleId`). The legacy `useDefaultStyle` /
+  `lyricsUseDefaultStyle` booleans are load-only compatibility (section 4.2),
+  not runtime state.
 - **CKEditor rich text** omits the `fontStyle` attribute when the run has no
   explicit face-style override. In that case the run inherits the active
   paragraph/text style's family and axes. A run with an explicit `fontFamily`
@@ -353,9 +352,8 @@ The runtime model stores:
 - `TextBoxElement.fontStyle`
 - `NoteElement.lyricsFontStyle`
 - `DropCapElement.fontStyle`
-- `PageSetup.lyricsDefaultFontStyle`
-- `PageSetup.dropCapDefaultFontStyle`
-- `PageSetup.textBoxDefaultFontStyle`
+- `ParagraphStyle.overrides.fontStyle` (the built-in styles carry the former
+  page-setup defaults)
 
 The score JSON save model writes those face styles to `fontSubfamily` field
 names:
@@ -363,9 +361,8 @@ names:
 - `TextBoxElement_v1.fontSubfamily`
 - `NoteElement_v1.lyricsFontSubfamily`
 - `DropCapElement_v1.fontSubfamily`
-- `PageSetup_v1.lyricsDefaultFontSubfamily`
-- `PageSetup_v1.dropCapDefaultFontSubfamily`
-- `PageSetup_v1.textBoxDefaultFontSubfamily`
+- `ParagraphStyle_v1.fontSubfamily` (in `score.paragraphStyles`; the
+  `PageSetup_v1.*DefaultFontSubfamily` fields are legacy load-only)
 
 The deserializer still recognizes the legacy fields and meanings that predate
 `fontSubfamily`:
@@ -383,12 +380,13 @@ used `fontStyle` for CSS slant values such as `normal`, `italic`, or `oblique`.
 Score JSON therefore avoids overloading that legacy key. App score JSON does not
 write a separate CSS slant field; CSS slant is derived from the face at runtime.
 
-Each non-rich surface also has an inherit switch: a `useDefaultStyle` (text boxes,
-drop caps) or `lyricsUseDefaultStyle` (custom lyrics) boolean. When set, the
-element inherits the matching page-setup default family and style; when cleared,
-it uses its own stored `fontFamily` + `fontStyle`. So "inherit the default" for
-non-rich text is this boolean, not an absent value -- which is why the structured
-fields can always store a concrete face, including `Regular`.
+Each non-rich surface inherits by omission: a null/absent `fontFamily` +
+`fontSubfamily` falls through to the element's paragraph style
+(`paragraphStyleId`, or `lyricsParagraphStyleId` for lyrics). The legacy
+`useDefaultStyle` (text boxes, drop caps) and `lyricsUseDefaultStyle` (custom
+lyrics) booleans are recognized on load and folded into this model (section
+4.2); mode keys still use `useDefaultStyle` because they are not
+paragraph-styled.
 
 **Compatibility is backward-only.** Deserializing legacy files is fully supported
 (the classifier and folding in section 4.2). The reverse is not: a file written
@@ -503,10 +501,10 @@ Rich text uses two text attributes:
   Enter.
 
 `BoldEditing` and `ItalicEditing` are not part of the editor build. Bold and
-Italic are represented as `fontStyle` axes, but they downcast to the same stock
-`<strong>` and `<i>` markup those plugins would emit (section 5.2), so the model
-is unified on `fontStyle` while the output stays conventional. `UnderlineEditing`
-is part of the build because underline is decoration, not a font face.
+Italic are represented as `fontStyle` axes and downcast to CSS spans like every
+other explicit face (section 5.2), so the model and the output are both unified
+on `fontStyle`. `UnderlineEditing` is part of the build because underline is
+decoration, not a font face.
 
 ### 5.2 Rich-text output
 
@@ -781,9 +779,9 @@ This subsystem preserves these invariants:
   compatibility.
 - `Regular` is the virtual baseline style and is always legal even when a font
   source does not report a Regular face.
-- The Bold axis is the document shortcut for the 700-weight face. In rich text it
-  serializes as stock `<strong>`; in non-rich CSS resolution it is
-  `font-weight:700`. Semibold, Light, Caption, Display, Extra Bold, and Black are
+- The Bold axis is the document shortcut for the 700-weight face. It resolves
+  to `font-weight:700` in both rich-text CSS spans and non-rich CSS
+  resolution. Semibold, Light, Caption, Display, Extra Bold, and Black are
   styles; numeric `800` and `900` fold to those named styles rather than to the
   Bold axis.
 - Style lists come from `fontCatalog.getStyles`; controls do not invent
@@ -872,8 +870,10 @@ This subsystem preserves these invariants:
 
 - `src/models/Element.ts` -- runtime `fontStyle` fields for lyrics, text boxes,
   and drop caps, plus saved annotation rich-text HTML.
-- `src/models/PageSetup.ts` -- default typography styles and resolved lyrics
-  font getter.
+- `src/models/ParagraphStyle.ts` -- paragraph styles whose overrides carry the
+  default text typography, plus the resolution helpers.
+- `src/models/PageSetup.ts` -- neume, mode-key, and alternate-line font
+  defaults (text defaults live in the paragraph styles).
 - `src/models/save/v1/Element.ts`, `src/models/save/v1/PageSetup.ts` -- saved
   `fontSubfamily` fields plus legacy optional fields.
 - `src/services/SaveService.ts` -- writes `fontSubfamily` fields, splits legacy

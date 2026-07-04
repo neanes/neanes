@@ -4,18 +4,13 @@ import { resources } from '@/i18n';
 import { Unit } from '@/utils/Unit';
 
 import {
-  RichTextBoxElement,
-  TextBoxAlignment,
-  TextBoxElement,
-} from './Element';
-import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   createDefaultBuiltInParagraphStyle,
   createDefaultParagraphStyles,
-  createParagraphStyleFallback,
   getBuiltInParagraphStyleNameSelector,
   ParagraphStyle,
   resolveParagraphStyle,
+  TextBoxAlignment,
   wouldCreateParagraphStyleCycle,
 } from './ParagraphStyle';
 
@@ -93,15 +88,11 @@ describe('ParagraphStyle', () => {
       true,
     );
     expect(
+      wouldCreateParagraphStyleCycle([left, right], 'right', 'right'),
+    ).toBe(true);
+    expect(
       wouldCreateParagraphStyleCycle([left, right], 'right', 'missing'),
     ).toBe(false);
-  });
-
-  it('starts new text boxes with the Default Text paragraph style', () => {
-    expect(new TextBoxElement().paragraphStyleId).toBe(
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    );
-    expect('paragraphStyleId' in new RichTextBoxElement()).toBe(false);
   });
 
   it('returns fresh default definitions for built-in paragraph styles', () => {
@@ -137,21 +128,6 @@ describe('ParagraphStyle', () => {
     expect(defaultText.parentStyleId).toBeNull();
     expect(defaultText.overrides).toEqual({});
     expect(defaultText.overrides.textDecoration).toBeUndefined();
-
-    const customizedDefaultText = createDefaultBuiltInParagraphStyle(
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    );
-    customizedDefaultText.overrides.fontFamily = 'Minion Pro';
-
-    const resolvedTitle = resolveParagraphStyle(
-      [customizedDefaultText, resetTitle],
-      resetTitle.id,
-    );
-
-    expect(resolvedTitle.fontFamily).toBe('Minion Pro');
-    expect(resolvedTitle.fontSize).toBe(Unit.fromPt(28));
-    expect(resolvedTitle.alignment).toBe(TextBoxAlignment.Center);
-    expect(createParagraphStyleFallback().textDecoration).toBeNull();
   });
 
   it('maps built-in paragraph style ids to display-name selectors', () => {

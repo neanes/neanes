@@ -3,7 +3,12 @@ import type { SelectorParam } from 'i18next';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { Unit } from '@/utils/Unit';
 
-import type { TextBoxAlignment } from './Element';
+export enum TextBoxAlignment {
+  Center = 'center',
+  Justify = 'justify',
+  Left = 'left',
+  Right = 'right',
+}
 
 export const BUILT_IN_PARAGRAPH_STYLE_IDS = {
   DefaultText: 'default-text',
@@ -73,15 +78,17 @@ export function hasParagraphStyleOverrides(overrides: ParagraphStyleOverrides) {
 export class ParagraphStyle {
   public id: string = crypto.randomUUID();
   public displayName: string = 'Paragraph Style';
-  public builtIn: boolean = false;
   public parentStyleId: string | null = null;
   public overrides: ParagraphStyleOverrides = {};
+
+  public get builtIn() {
+    return isBuiltInParagraphStyleId(this.id);
+  }
 
   public clone() {
     const clone = new ParagraphStyle();
     clone.id = this.id;
     clone.displayName = this.displayName;
-    clone.builtIn = this.builtIn;
     clone.parentStyleId = this.parentStyleId;
     clone.overrides = { ...this.overrides };
     return clone;
@@ -90,7 +97,7 @@ export class ParagraphStyle {
 
 export function createParagraphStyleFallback(): ResolvedParagraphStyle {
   return {
-    alignment: 'left' as TextBoxAlignment,
+    alignment: TextBoxAlignment.Left,
     fontFamily: 'Source Serif',
     fontSize: Unit.fromPt(12),
     fontStyle: DEFAULT_FONT_STYLE,
@@ -104,11 +111,7 @@ export function createParagraphStyleFallback(): ResolvedParagraphStyle {
 export function createDefaultBuiltInParagraphStyle(
   id: BuiltInParagraphStyleId,
 ) {
-  const style = getRequiredParagraphStyleById(
-    createDefaultParagraphStyles(),
-    id,
-  );
-  return style.clone();
+  return getRequiredParagraphStyleById(createDefaultParagraphStyles(), id);
 }
 
 export function isBuiltInParagraphStyleId(
@@ -191,14 +194,6 @@ export function wouldCreateParagraphStyleCycle(
   styleId: string,
   parentStyleId: string | null,
 ) {
-  if (parentStyleId == null) {
-    return false;
-  }
-
-  if (parentStyleId === styleId) {
-    return true;
-  }
-
   const visited = new Set<string>();
   let currentId: string | null = parentStyleId;
 
@@ -233,7 +228,6 @@ function createBuiltInStyle(
   const style = new ParagraphStyle();
   style.id = id;
   style.displayName = displayName;
-  style.builtIn = true;
   style.parentStyleId = parentStyleId;
   style.overrides = overrides;
   return style;
@@ -257,7 +251,7 @@ export function createDefaultParagraphStyles() {
     'Title',
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
-      alignment: 'center' as TextBoxAlignment,
+      alignment: TextBoxAlignment.Center,
       fontSize: Unit.fromPt(28),
     },
   );
@@ -266,7 +260,7 @@ export function createDefaultParagraphStyles() {
     'Subtitle',
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
-      alignment: 'center' as TextBoxAlignment,
+      alignment: TextBoxAlignment.Center,
       fontSize: Unit.fromPt(22),
     },
   );
@@ -275,7 +269,7 @@ export function createDefaultParagraphStyles() {
     'Chapter',
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
-      alignment: 'center' as TextBoxAlignment,
+      alignment: TextBoxAlignment.Center,
       fontSize: Unit.fromPt(24),
     },
   );
@@ -292,7 +286,7 @@ export function createDefaultParagraphStyles() {
     'Header',
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
-      alignment: 'center' as TextBoxAlignment,
+      alignment: TextBoxAlignment.Center,
     },
   );
   const footer = createBuiltInStyle(
@@ -300,7 +294,7 @@ export function createDefaultParagraphStyles() {
     'Footer',
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
-      alignment: 'center' as TextBoxAlignment,
+      alignment: TextBoxAlignment.Center,
     },
   );
   const lyrics = createBuiltInStyle(

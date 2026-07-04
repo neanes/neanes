@@ -26,7 +26,6 @@ import {
   createDefaultParagraphStyles,
   getRequiredParagraphStyleById,
   getTextBoxParagraphStyleFallbackId,
-  isBuiltInParagraphStyleId,
   ParagraphStyle,
   type ParagraphStyleOverrides,
   type ResolvedParagraphStyle,
@@ -2030,8 +2029,6 @@ export class SaveService {
     const style = new ParagraphStyle();
     style.id = saved.id;
     style.displayName = saved.displayName;
-    style.builtIn =
-      saved.builtIn === true && isBuiltInParagraphStyleId(saved.id);
     style.parentStyleId = saved.parentStyleId ?? null;
     const overrides: ParagraphStyleOverrides = {};
 

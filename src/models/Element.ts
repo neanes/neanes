@@ -35,6 +35,7 @@ import {
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   type ParagraphStyleOverrides,
+  TextBoxAlignment,
 } from './ParagraphStyle';
 import { Scale, ScaleNote } from './Scales';
 
@@ -839,12 +840,7 @@ export class EmptyElement extends ScoreElement {
   }
 }
 
-export enum TextBoxAlignment {
-  Center = 'center',
-  Justify = 'justify',
-  Left = 'left',
-  Right = 'right',
-}
+export { TextBoxAlignment };
 
 export type RunningMarkerRole = 'chapter' | 'section';
 

@@ -89,12 +89,14 @@ export class NoteElement extends ScoreElement {
   public lyricsStrokeWidth: number | undefined = undefined;
   public lyricsFontSubfamily: string | undefined = undefined;
   public lyricsTextDecoration: string | undefined = undefined;
+  public lyricsParagraphStyleId: string | undefined = undefined;
+
   // Deprecated load-only compatibility for legacy lyrics font-style fields.
   public lyricsFontStyle: string | undefined = undefined;
   public lyricsFontWeight: string | undefined = undefined;
-  public lyricsParagraphStyleId: string | undefined = undefined;
   // Deprecated load-only compatibility for pre-paragraph-style lyrics.
   public lyricsUseDefaultStyle: boolean | undefined = undefined;
+
   public acceptsLyrics: AcceptsLyricsOption | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;
@@ -208,10 +210,12 @@ export class TextBoxElement extends ScoreElement {
   public inline: boolean | undefined = undefined;
   public fontSubfamily: string | undefined = undefined;
   public underline: boolean | undefined = undefined;
+  public lineHeight: number | null | undefined = undefined;
+
   // Deprecated load-only compatibility for legacy text-box font-style fields.
   public bold: boolean | undefined = undefined;
   public italic: boolean | undefined = undefined;
-  public lineHeight: number | null | undefined = undefined;
+
   public height: number = 20;
   public customWidth: number | undefined = undefined;
   public customHeight: number | undefined = undefined;
@@ -314,16 +318,17 @@ export class DropCapElement extends ScoreElement {
   public fontFamily: string | undefined = undefined;
   public fontSize: number | undefined = undefined;
   public fontSubfamily: string | undefined = undefined;
-  // Deprecated load-only compatibility for legacy drop-cap font-style fields.
-  public fontStyle: string | undefined = undefined;
-  public fontWeight: string | undefined = undefined;
   public lineHeight: number | null | undefined = undefined;
   public strokeWidth: number | undefined = undefined;
   public color: string | undefined = undefined;
-  // Deprecated load-only compatibility for pre-paragraph-style drop caps.
-  public useDefaultStyle: boolean | undefined = undefined;
   public customWidth: number | undefined = undefined;
   public lineSpan: number = 1;
+
+  // Deprecated load-only compatibility for legacy drop-cap font-style fields.
+  public fontStyle: string | undefined = undefined;
+  public fontWeight: string | undefined = undefined;
+  // Deprecated load-only compatibility for pre-paragraph-style drop caps.
+  public useDefaultStyle: boolean | undefined = undefined;
 }
 
 export class ImageBoxElement extends ScoreElement {

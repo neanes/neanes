@@ -648,11 +648,7 @@ const showOverrideToggles = computed(
 const selectedBuiltInStyleMatchesDefault = computed(() => {
   const style = selectedStyle.value;
 
-  if (
-    style == null ||
-    style.builtIn !== true ||
-    !isBuiltInParagraphStyleId(style.id)
-  ) {
+  if (style == null || !isBuiltInParagraphStyleId(style.id)) {
     return false;
   }
 
@@ -665,11 +661,7 @@ const selectedBuiltInStyleMatchesDefault = computed(() => {
 const selectedStyleCanResetToDefault = computed(() => {
   const style = selectedStyle.value;
 
-  return (
-    style?.builtIn === true &&
-    isBuiltInParagraphStyleId(style.id) &&
-    !selectedBuiltInStyleMatchesDefault.value
-  );
+  return style?.builtIn === true && !selectedBuiltInStyleMatchesDefault.value;
 });
 const clearFormattingLabel = computed(() =>
   t(($) => $.dialog.paragraphStyles.clearFormatting, {
@@ -819,7 +811,6 @@ function duplicateSelectedStyle() {
 
   const clone = style.clone();
   clone.id = crypto.randomUUID();
-  clone.builtIn = false;
   clone.displayName = getNextStyleName(
     t(($) => $.dialog.paragraphStyles.copyStyleName, {
       ns: 'dialog',
@@ -875,7 +866,6 @@ function paragraphStylesEqual(a: ParagraphStyle, b: ParagraphStyle) {
   return (
     a.id === b.id &&
     a.displayName === b.displayName &&
-    a.builtIn === b.builtIn &&
     a.parentStyleId === b.parentStyleId &&
     paragraphStyleOverridesEqual(a.overrides, b.overrides)
   );

@@ -519,7 +519,6 @@ describe('SaveService font styles', () => {
 
     titleStyle.id = BUILT_IN_PARAGRAPH_STYLE_IDS.Title;
     titleStyle.displayName = 'Custom Title';
-    titleStyle.builtIn = true;
     titleStyle.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
     titleStyle.overrides.fontSize = 77;
 
@@ -569,7 +568,6 @@ describe('SaveService font styles', () => {
 
     chapterStyle.id = BUILT_IN_PARAGRAPH_STYLE_IDS.Chapter;
     chapterStyle.displayName = 'Chapter';
-    chapterStyle.builtIn = true;
     chapterStyle.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
 
     saved.paragraphStyles = [SaveService.SaveParagraphStyle(chapterStyle)];
@@ -598,7 +596,6 @@ describe('SaveService font styles', () => {
 
     defaultParagraphStyle.id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
     defaultParagraphStyle.displayName = 'Default Text';
-    defaultParagraphStyle.builtIn = true;
     defaultParagraphStyle.overrides.fontFamily = 'Alegreya';
     defaultParagraphStyle.overrides.fontSize = 64;
     defaultParagraphStyle.overrides.fontStyle = 'Semibold';

@@ -1,5 +1,5 @@
 import { useTranslation } from 'i18next-vue';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 
 import type { FontComboboxOption } from '@/components/FontCombobox.vue';
 import {
@@ -150,6 +150,36 @@ export function useRichParagraphStyleCommands(
     () => paragraphStyleState.value.resolvedActiveParagraphStyle,
   );
 
+  watch(
+    [
+      scopedEditor,
+      () => resolvedActiveParagraphStyle.value.fontFamily,
+      () => resolvedActiveParagraphStyle.value.fontStyle,
+    ],
+    ([editor, fontFamily, fontStyle]) => {
+      const fallback = { fontFamily, fontStyle };
+
+      for (const commandName of [
+        'fontStyleToggleBold',
+        'fontStyleToggleItalic',
+      ]) {
+        const command = editor?.commands.get(commandName) as
+          | {
+              setResolvedParagraphStyleFallback?: (fallback: {
+                fontFamily: string;
+                fontStyle: string;
+              }) => void;
+              refresh?: () => void;
+            }
+          | undefined;
+
+        command?.setResolvedParagraphStyleFallback?.(fallback);
+        command?.refresh?.();
+      }
+    },
+    { immediate: true },
+  );
+
   const fontFamilyValue = computed(() =>
     fromRichTextFontFamilyModelValue(commandValue('fontFamily')),
   );
@@ -279,7 +309,6 @@ export function useRichParagraphStyleCommands(
       fontStyleHasExplicitValue.value ||
       fontSizeValue.value != null ||
       fontColorHasExplicitValue.value ||
-      fontStyleValues.value.length > 0 ||
       alignmentHasExplicitValue.value,
   );
 

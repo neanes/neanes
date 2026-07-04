@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { nextTick, reactive, ref } from 'vue';
 
 import type { TextBoxAlignment } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
@@ -173,6 +174,130 @@ describe('useRichParagraphStyleCommands', () => {
       { styleName: 'underlined-style', forceValue: true },
     );
     expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(1);
+  });
+
+  it('pushes the resolved paragraph-style fallback into the bold and italic toggle commands', async () => {
+    const boldToggle = {
+      refresh: vi.fn(),
+      setResolvedParagraphStyleFallback: vi.fn(),
+    };
+    const italicToggle = {
+      refresh: vi.fn(),
+      setResolvedParagraphStyleFallback: vi.fn(),
+    };
+
+    const editor = {
+      commands: {
+        get: (name: string) => {
+          if (name === 'fontStyleToggleBold') {
+            return boldToggle;
+          }
+
+          if (name === 'fontStyleToggleItalic') {
+            return italicToggle;
+          }
+
+          return null;
+        },
+      },
+    };
+
+    const initialStyle = new ParagraphStyle();
+    initialStyle.id = 'initial-style';
+    initialStyle.overrides.fontFamily = 'Initial Family';
+    initialStyle.overrides.fontStyle = 'Bold';
+
+    const nextStyle = new ParagraphStyle();
+    nextStyle.id = 'next-style';
+    nextStyle.overrides.fontFamily = 'Next Family';
+    nextStyle.overrides.fontStyle = 'Italic';
+
+    const commandStates = reactive({
+      style: reactive(createCommandState([initialStyle.id], true)),
+      fontFamily: reactive(createCommandState('', true)),
+      fontSize: reactive(createCommandState('', true)),
+      fontColor: reactive(createCommandState('', true)),
+      fontStyle: reactive(createCommandState('', true)),
+      fontStyleToggleBold: reactive(createCommandState(false, true)),
+      fontStyleToggleItalic: reactive(createCommandState(false, true)),
+      underline: reactive(createCommandState(false, true)),
+      alignment: reactive(createCommandState(undefined, true)),
+    });
+
+    registryMocks.execForActiveOrLastOwner.mockReset();
+    registryMocks.useActiveOrLastEditorForOwner.mockReturnValue(ref(editor));
+    registryMocks.useEditorCommandStates.mockReturnValue(
+      commandStates as unknown as Record<string, unknown>,
+    );
+    registryMocks.useEditorCommandObservableState.mockReturnValue({
+      value: undefined,
+      isEnabled: true,
+      exists: true,
+      properties: {
+        enabledStyles: [initialStyle.id, nextStyle.id],
+      },
+    });
+
+    useRichParagraphStyleCommands(
+      {
+        element: {},
+        pageSetup: new PageSetup(),
+        fonts: [],
+        paragraphStyles: [initialStyle, nextStyle],
+        fallbackParagraphStyle: createParagraphStyleFallback(),
+      },
+      [],
+    );
+
+    expect(boldToggle.setResolvedParagraphStyleFallback).toHaveBeenCalledWith({
+      fontFamily: 'Initial Family',
+      fontStyle: 'Bold',
+    });
+    expect(italicToggle.setResolvedParagraphStyleFallback).toHaveBeenCalledWith({
+      fontFamily: 'Initial Family',
+      fontStyle: 'Bold',
+    });
+    expect(boldToggle.refresh).toHaveBeenCalledTimes(1);
+    expect(italicToggle.refresh).toHaveBeenCalledTimes(1);
+
+    commandStates.style.value = [nextStyle.id];
+    await nextTick();
+
+    expect(boldToggle.setResolvedParagraphStyleFallback).toHaveBeenLastCalledWith(
+      {
+        fontFamily: 'Next Family',
+        fontStyle: 'Italic',
+      },
+    );
+    expect(
+      italicToggle.setResolvedParagraphStyleFallback,
+    ).toHaveBeenLastCalledWith({
+      fontFamily: 'Next Family',
+      fontStyle: 'Italic',
+    });
+    expect(boldToggle.refresh).toHaveBeenCalledTimes(2);
+    expect(italicToggle.refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not treat inherited bold and italic as explicit paragraph-style overrides', () => {
+    const boldStyle = new ParagraphStyle();
+    boldStyle.id = 'bold-style';
+    boldStyle.overrides.fontStyle = 'Bold';
+
+    const { commands, commandStates } = setupCommands(
+      [boldStyle],
+      ['bold-style'],
+      false,
+      {
+      bold: true,
+      italic: false,
+      },
+    );
+
+    commandStates.fontColor.value = undefined;
+
+    expect(commands.fontStyleHasExplicitValue.value).toBe(false);
+    expect(commands.hasParagraphStyleOverrides.value).toBe(false);
   });
 
   it('falls back to the resolved paragraph-style alignment when no explicit override exists', () => {

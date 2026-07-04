@@ -1,5 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 
+vi.mock('@/services/FontCatalog', () => ({
+  fontCatalog: {
+    getStyles: vi.fn(() => [
+      'Regular',
+      'Bold',
+      'Italic',
+      'Bold Italic',
+      'Caption',
+      'Caption Bold',
+    ]),
+  },
+}));
+
 vi.mock('ckeditor5', () => ({
   Command: class Command {
     public editor: unknown;
@@ -76,6 +89,52 @@ describe('FontStyleToggleCommand', () => {
     expect(command.value).toBe(false);
   });
 
+  it('uses the resolved paragraph-style bold fallback when no explicit fontStyle is set', () => {
+    const editor = createEditor({});
+    const command = new FontStyleToggleCommand(editor as never, 'bold');
+
+    command.setResolvedParagraphStyleFallback({
+      fontFamily: 'Source Serif',
+      fontStyle: 'Bold',
+    });
+    command.refresh();
+
+    expect(command.value).toBe(true);
+
+    command.execute();
+
+    expect(editor.execute).toHaveBeenCalledWith('fontStyle', {
+      value: 'Regular',
+    });
+    expect(editor.execute).not.toHaveBeenCalledWith(
+      'fontFamily',
+      expect.anything(),
+    );
+  });
+
+  it('uses the resolved paragraph-style italic fallback when no explicit fontStyle is set', () => {
+    const editor = createEditor({});
+    const command = new FontStyleToggleCommand(editor as never, 'italic');
+
+    command.setResolvedParagraphStyleFallback({
+      fontFamily: 'Source Serif',
+      fontStyle: 'Italic',
+    });
+    command.refresh();
+
+    expect(command.value).toBe(true);
+
+    command.execute();
+
+    expect(editor.execute).toHaveBeenCalledWith('fontStyle', {
+      value: 'Regular',
+    });
+    expect(editor.execute).not.toHaveBeenCalledWith(
+      'fontFamily',
+      expect.anything(),
+    );
+  });
+
   it('toggles a basic axis without materializing the default family', () => {
     const editor = createEditor({});
     const command = new FontStyleToggleCommand(editor as never, 'bold');
@@ -90,6 +149,25 @@ describe('FontStyleToggleCommand', () => {
       'fontFamily',
       expect.anything(),
     );
+  });
+
+  it('materializes the resolved fallback family for a non-basic toggle target', () => {
+    const editor = createEditor({ defaultFontFamily: 'Source Serif' });
+    const command = new FontStyleToggleCommand(editor as never, 'bold');
+
+    command.setResolvedParagraphStyleFallback({
+      fontFamily: 'GFS Didot',
+      fontStyle: 'Caption',
+    });
+    command.refresh();
+    command.execute();
+
+    expect(editor.execute).toHaveBeenNthCalledWith(1, 'fontFamily', {
+      value: 'GFS Didot,Neanes',
+    });
+    expect(editor.execute).toHaveBeenNthCalledWith(2, 'fontStyle', {
+      value: 'Caption Bold',
+    });
   });
 
   it('materializes the default family for a non-basic toggle target', () => {
@@ -111,6 +189,19 @@ describe('FontStyleToggleCommand', () => {
     const editor = createEditor({ fontFamily: 'GFS Didot,Neanes' });
     const command = new FontStyleToggleCommand(editor as never, 'italic');
 
+    command.refresh();
+
+    expect(command.value).toBe(false);
+  });
+
+  it('lets an explicit inline fontStyle win over the paragraph-style fallback', () => {
+    const editor = createEditor({ fontStyle: 'Regular' });
+    const command = new FontStyleToggleCommand(editor as never, 'bold');
+
+    command.setResolvedParagraphStyleFallback({
+      fontFamily: 'Source Serif',
+      fontStyle: 'Bold',
+    });
     command.refresh();
 
     expect(command.value).toBe(false);

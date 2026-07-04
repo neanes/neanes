@@ -78,16 +78,6 @@ export default class AlignmentOverrideEditing extends Plugin {
     for (const value of ALIGNMENT_VALUES) {
       editor.conversion.for('upcast').attributeToAttribute({
         view: {
-          classes: `text-align-${value}`,
-        },
-        model: {
-          key: ALIGNMENT_OVERRIDE,
-          value,
-        },
-      });
-
-      editor.conversion.for('upcast').attributeToAttribute({
-        view: {
           styles: {
             'text-align': value,
           },

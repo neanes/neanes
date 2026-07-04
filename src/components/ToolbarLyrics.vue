@@ -1,5 +1,5 @@
 <template>
-  <Toolbar class="lyrics-toolbar h-auto w-full gap-0 border-0 p-1" loop>
+  <Toolbar class="chrome-toolbar" loop>
     <template v-if="!element.lyricsUseDefaultStyle">
       <FontCombobox
         :model-value="element.lyricsFontFamily"
@@ -35,29 +35,29 @@
       >
         <ToggleGroupItem
           value="bold"
-          class="icon-btn"
+          class="chrome-button"
           :class="{ selected: isFontStyleAxisActive('bold') }"
           :disabled="!isFontStyleAxisToggleEnabled('bold')"
           aria-label="Toggle bold"
         >
-          <PhTextB class="h-4 w-4" />
+          <PhTextB class="size-4" />
         </ToggleGroupItem>
         <ToggleGroupItem
           value="italic"
-          class="icon-btn"
+          class="chrome-button"
           :class="{ selected: isFontStyleAxisActive('italic') }"
           :disabled="!isFontStyleAxisToggleEnabled('italic')"
           aria-label="Toggle italic"
         >
-          <PhTextItalic class="h-4 w-4" />
+          <PhTextItalic class="size-4" />
         </ToggleGroupItem>
         <ToggleGroupItem
           value="underline"
-          class="icon-btn"
+          class="chrome-button"
           :class="{ selected: underline }"
           aria-label="Toggle underline"
         >
-          <PhTextUnderline class="h-4 w-4" />
+          <PhTextUnderline class="size-4" />
         </ToggleGroupItem>
       </ToggleGroup>
       <ToolbarSeparator />
@@ -67,11 +67,10 @@
     >
       <ToolbarButton
         variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
+        class="chrome-button"
         @mousedown.prevent="$emit('insert:specialCharacter', PELASTIKON)"
       >
-        <img src="@/assets/icons/letterPelastikon.svg" />
+        <NeumeIcon name="letterPelastikon" />
       </ToolbarButton>
     </AppTooltip>
     <AppTooltip
@@ -79,11 +78,10 @@
     >
       <ToolbarButton
         variant="secondary"
-        size="icon-sm"
-        class="icon-btn"
+        class="chrome-button"
         @mousedown.prevent="$emit('insert:specialCharacter', GORTHMIKON)"
       >
-        <img src="@/assets/icons/letterGorthmikon.svg" />
+        <NeumeIcon name="letterGorthmikon" />
       </ToolbarButton>
     </AppTooltip>
     <ToolbarSeparator />
@@ -91,8 +89,7 @@
       v-for="character in specialCharacters"
       :key="character"
       variant="secondary"
-      size="icon-sm"
-      class="icon-btn character-button"
+      class="chrome-button character-button"
       :class="getCharacterLanguage(character)"
       :aria-label="character"
       @mousedown.prevent="$emit('insert:specialCharacter', character)"
@@ -111,6 +108,7 @@ import AppTooltip from '@/components/AppTooltip.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
+import NeumeIcon from '@/components/NeumeIcon.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Toolbar,
@@ -202,60 +200,6 @@ function getCharacterLanguage(character: string) {
 </script>
 
 <style scoped>
-.lyrics-toolbar {
-  flex-wrap: wrap;
-  background-color: var(--color-legacy-chrome-menu-surface);
-
-  --btn-size: 32px;
-}
-
-.icon-btn {
-  box-sizing: border-box;
-  height: var(--btn-size);
-  width: var(--btn-size);
-  appearance: auto;
-  background: revert;
-  border: revert;
-  border-radius: revert;
-  box-shadow: revert;
-  font-weight: revert;
-
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-  outline: revert;
-  padding: 0;
-  transition: revert;
-  user-select: none;
-}
-
-.icon-btn:hover {
-  background: revert;
-}
-
-.icon-btn.selected,
-.icon-btn[data-state='on'],
-.icon-btn[aria-pressed='true'] {
-  background: var(--color-legacy-chrome-selected);
-}
-
-.icon-btn > img {
-  height: var(--btn-size);
-  max-width: none;
-  width: var(--btn-size);
-}
-
-.icon-btn[aria-disabled='true'],
-.icon-btn[data-disabled],
-.icon-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
 .character-button {
   font-size: 1.25rem;
 }

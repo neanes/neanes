@@ -8,7 +8,8 @@
     "importFromOcr": "Rezultat OCR…",
     "save": "Salvează",
     "saveAs": "Salvează ca…",
-    "pageSetup": "Configurare pagină",
+    "pageSetup": "Configurare pagină…",
+    "documentProperties": "Proprietăți document…",
     "exportAs": "Exportă",
     "exportAsPdf": "Exportă ca PDF…",
     "exportAsHtml": "Exportă ca HTML…",
@@ -32,6 +33,7 @@
     "copyFormat": "Copiază formatul",
     "pasteFormat": "Lipește formatul",
     "find": "Căutare",
+    "copyElementLink": "Copiază linkul elementului",
     "preferences": "Preferințe"
   },
   "insert": {
@@ -44,15 +46,11 @@
     "textBox": "Casetă de text",
     "richTextBox": "Casetă de text formatat",
     "inlineTextBox": "Casetă de text în linie",
-    "modeKey": "Mărturie inițială",
+    "initialMartyria": "Mărturie inițială",
     "image": "Imagine",
     "headersAndFooters": "Antete și subsoluri",
     "header": "Antet",
     "footer": "Subsol"
-  },
-  "tools": {
-    "root": "Unelte",
-    "copyElementLink": "Copiază linkul elementului"
   },
   "view": {
     "root": "Vizualizare",
@@ -60,11 +58,25 @@
     "neumeSelector": "Selector de neume",
     "commonCombos": "Combinații frecvente",
     "properties": "Proprietăți",
-    "selection": "Selecție",
     "lyrics": "Versuri",
+    "statusBar": "Bară de stare",
     "showDeveloperPanels": "Arată panourile pentru dezvoltatori",
+    "zoom": {
+      "root": "Zoom",
+      "zoomIn": "Mărește",
+      "zoomOut": "Micșorează",
+      "actualSize": "Dimensiune reală",
+      "pageWidth": "Lățime pagină",
+      "textWidth": "Lățime text",
+      "wholePage": "Pagină întreagă"
+    },
     "resetLayout": "Resetează aranjarea",
     "generateTestFiles": "Generează fișiere de test (debugare)"
+  },
+  "window": {
+    "root": "Fereastră",
+    "previousTab": "Fila precedentă",
+    "nextTab": "Fila următoare"
   },
   "help": {
     "root": "Ajutor",

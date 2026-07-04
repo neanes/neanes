@@ -3,7 +3,7 @@
     <div
       v-for="(combo, index) in combos"
       :key="index"
-      class="row"
+      class="row chrome-list-item"
       @click="$emit('select-neume-combo', combo)"
     >
       <SyllableNeumeBox
@@ -52,9 +52,5 @@ const combos: NeumeCombination[] = [
 .neume {
   margin: 0 0.125rem;
   --zoom: 1;
-}
-
-.row:hover {
-  background-color: var(--color-legacy-chrome-hover);
 }
 </style>

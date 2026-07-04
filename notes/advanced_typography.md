@@ -770,9 +770,11 @@ The same user-facing semantics apply everywhere:
   current default family if the user is still choosing that style.
 - family changes remap the style after the `fontFamily` command, in a separate
   transaction for correct downcast behavior.
-- remove-format clears both `fontFamily` and `fontStyle`; the toolbar clears
-  `fontStyle` before running CKEditor's `removeFormat` command, and the plugin
-  downcast also handles same-batch co-clears as a safety net.
+- the remove-format button in `RichTextToolbar.vue` clears both `fontFamily` and
+  `fontStyle`; the toolbar clears `fontStyle` before running CKEditor's
+  `removeFormat` command, and the plugin downcast also handles same-batch co-clears
+  as a safety net. The properties panel keeps per-field clear actions, but does not
+  run the global remove-format command.
 
 The style control appears beside the family control in both
 `RichTextToolbar.vue` and `PropertiesRichTextStyle.vue`.

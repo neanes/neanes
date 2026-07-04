@@ -1,14 +1,13 @@
 <template>
-  <div class="main-toolbar p-1">
+  <div class="main-toolbar chrome-toolbar">
     <div class="toolbar-left">
-      <Toolbar class="row h-auto w-full gap-0 border-0 p-0" loop>
+      <Toolbar class="row chrome-toolbar-row" loop>
         <div class="toolbar-leading-group">
           <div class="toolbar-leading-section">
             <AppTooltip :tooltip="$t(($) => $.menu.file.new, { ns: 'menu' })">
               <ToolbarButton
                 variant="secondary"
-                size="icon-sm"
-                class="icon-btn"
+                class="chrome-button toolbar-icon"
                 @click="$emit('new-score')"
               >
                 <PhFilePlus weight="duotone" />
@@ -17,8 +16,7 @@
             <AppTooltip :tooltip="$t(($) => $.menu.file.open, { ns: 'menu' })">
               <ToolbarButton
                 variant="secondary"
-                size="icon-sm"
-                class="icon-btn"
+                class="chrome-button toolbar-icon"
                 @click="$emit('open-score')"
               >
                 <PhFolderOpen weight="duotone" />
@@ -27,8 +25,7 @@
             <AppTooltip :tooltip="$t(($) => $.menu.file.save, { ns: 'menu' })">
               <ToolbarButton
                 variant="secondary"
-                size="icon-sm"
-                class="icon-btn"
+                class="chrome-button toolbar-icon"
                 @click="$emit('save-score')"
               >
                 <PhFloppyDisk weight="duotone" />
@@ -37,8 +34,7 @@
             <AppTooltip :tooltip="$t(($) => $.menu.file.print, { ns: 'menu' })">
               <ToolbarButton
                 variant="secondary"
-                size="icon-sm"
-                class="icon-btn"
+                class="chrome-button toolbar-icon"
                 @click="$emit('print-score')"
               >
                 <PhPrinter weight="duotone" />
@@ -50,8 +46,7 @@
             <AppTooltip :tooltip="$t(($) => $.menu.edit.cut, { ns: 'menu' })">
               <ToolbarButton
                 variant="secondary"
-                size="icon-sm"
-                class="icon-btn"
+                class="chrome-button toolbar-icon"
                 @click="$emit('cut')"
               >
                 <PhScissors weight="duotone" />
@@ -60,18 +55,28 @@
             <AppTooltip :tooltip="$t(($) => $.menu.edit.copy, { ns: 'menu' })">
               <ToolbarButton
                 variant="secondary"
-                size="icon-sm"
-                class="icon-btn"
+                class="chrome-button toolbar-icon"
                 @click="$emit('copy')"
               >
                 <PhCopy weight="duotone" />
               </ToolbarButton>
             </AppTooltip>
+            <AppTooltip
+              :tooltip="$t(($) => $.menu.edit.copyElementLink, { ns: 'menu' })"
+            >
+              <ToolbarButton
+                variant="secondary"
+                class="chrome-button toolbar-icon"
+                :disabled="!canCopyElementLink"
+                @click="$emit('copy-element-link')"
+              >
+                <PhLinkSimple weight="duotone" />
+              </ToolbarButton>
+            </AppTooltip>
             <AppTooltip :tooltip="$t(($) => $.menu.edit.paste, { ns: 'menu' })">
               <ToolbarButton
                 variant="secondary"
-                size="icon-sm"
-                class="icon-btn"
+                class="chrome-button toolbar-icon"
                 @click="$emit('paste')"
               >
                 <PhClipboardText weight="duotone" />
@@ -84,8 +89,7 @@
           <AppTooltip :tooltip="$t(($) => $.menu.edit.undo, { ns: 'menu' })">
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               :disabled="!canUndo"
               @click="$emit('undo')"
             >
@@ -95,8 +99,7 @@
           <AppTooltip :tooltip="$t(($) => $.menu.edit.redo, { ns: 'menu' })">
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               :disabled="!canRedo"
               @click="$emit('redo')"
             >
@@ -115,8 +118,7 @@
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('delete-selected-element')"
             >
               <PhTrash class="delete-icon" weight="duotone" />
@@ -148,18 +150,24 @@
                   </DropdownMenuTrigger>
                 </InputGroupAddon>
               </InputGroup>
-              <DropdownMenuContent align="end" class="w-24 min-w-24">
-                <DropdownMenuItem @select="selectZoomToFit">
-                  {{ zoomToFitLabel }}
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" class="w-32 min-w-32">
+                <DropdownMenuCheckboxItem
+                  v-for="option in zoomFitOptions"
+                  :key="option.mode"
+                  :model-value="zoomFitMode === option.mode"
+                  @select="selectZoomFitMode(option.mode)"
+                >
+                  {{ option.label }}
+                </DropdownMenuCheckboxItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
+                <DropdownMenuCheckboxItem
                   v-for="option in zoomOptions"
                   :key="option"
-                  @select="updateZoom(option)"
+                  :model-value="zoomLevelIsSelected(option)"
+                  @select="selectZoomLevel(option)"
                 >
-                  {{ option }}%
-                </DropdownMenuItem>
+                  {{ formatZoomPercent(option) }}
+                </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -171,8 +179,7 @@
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('open-page-setup')"
             >
               <PhScroll weight="duotone" />
@@ -181,8 +188,7 @@
           <AppTooltip :tooltip="$t(($) => $.menu.edit.find, { ns: 'menu' })">
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('find')"
             >
               <PhMagnifyingGlass weight="duotone" />
@@ -190,7 +196,7 @@
           </AppTooltip>
         </div>
       </Toolbar>
-      <Toolbar class="row h-auto w-full gap-0 border-0 p-0" loop>
+      <Toolbar class="row chrome-toolbar-row" loop>
         <div class="toolbar-leading-group">
           <div class="toolbar-leading-section">
             <ToolbarToggleGroup
@@ -198,16 +204,22 @@
               :model-value="entryMode"
               @update:model-value="onEntryModeChanged"
             >
-              <ToolbarToggleItem class="entry-mode-btn" :value="EntryMode.Auto">
+              <ToolbarToggleItem
+                class="chrome-button is-text"
+                :value="EntryMode.Auto"
+              >
                 {{ $t(($) => $.toolbar.main.auto, { ns: 'toolbar' }) }}
               </ToolbarToggleItem>
               <ToolbarToggleItem
-                class="entry-mode-btn"
+                class="chrome-button is-text"
                 :value="EntryMode.Insert"
               >
                 {{ $t(($) => $.toolbar.main.insert, { ns: 'toolbar' }) }}
               </ToolbarToggleItem>
-              <ToolbarToggleItem class="entry-mode-btn" :value="EntryMode.Edit">
+              <ToolbarToggleItem
+                class="chrome-button is-text"
+                :value="EntryMode.Edit"
+              >
                 {{ $t(($) => $.toolbar.main.single, { ns: 'toolbar' }) }}
               </ToolbarToggleItem>
             </ToolbarToggleGroup>
@@ -217,11 +229,10 @@
             <AppTooltip :tooltip="martyriaTooltip">
               <ToolbarButton
                 variant="secondary"
-                size="icon-sm"
-                class="neume-button"
+                class="chrome-button"
                 @click="$emit('add-auto-martyria')"
               >
-                <img src="@/assets/icons/martyria.svg" />
+                <NeumeIcon name="martyria" />
               </ToolbarButton>
             </AppTooltip>
             <ButtonWithMenu
@@ -240,11 +251,10 @@
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('add-alternate-line')"
             >
-              <PhMusicNotesPlus weight="duotone" />
+              <PhPencilLine weight="duotone" />
             </ToolbarButton>
           </AppTooltip>
           <AppTooltip
@@ -252,8 +262,7 @@
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('add-annotation')"
             >
               <PhNotePencil weight="duotone" />
@@ -269,8 +278,7 @@
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('add-drop-cap')"
             >
               <PhArticleNyTimes weight="duotone" />
@@ -283,8 +291,7 @@
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('add-text-box')"
             >
               <PhTextbox weight="duotone" />
@@ -297,8 +304,7 @@
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('add-text-box-rich')"
             >
               <PhTextbox class="rich-text-box-icon" weight="duotone" />
@@ -306,16 +312,20 @@
           </AppTooltip>
           <AppTooltip
             :tooltip="
-              $t(($) => $.toolbar.main.insertModeKey, { ns: 'toolbar' })
+              $t(($) => $.toolbar.main.insertInitialMartyria, { ns: 'toolbar' })
             "
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('add-mode-key')"
             >
-              <img src="@/assets/icons/mode-key.svg" />
+              <span
+                class="inline-grid size-6 place-items-center font-['Source_Serif'] text-[17px] leading-none text-destructive"
+                aria-hidden="true"
+              >
+                Ηχ
+              </span>
             </ToolbarButton>
           </AppTooltip>
           <AppTooltip
@@ -323,8 +333,7 @@
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('add-image')"
             >
               <PhImageSquare weight="duotone" />
@@ -346,8 +355,7 @@
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('toggle-line-break', LineBreakType.Left)"
             >
               <PhParagraph weight="duotone" />
@@ -367,8 +375,7 @@
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('toggle-line-break', LineBreakType.Justify)"
             >
               <svg viewBox="0 0 24 24">
@@ -395,8 +402,7 @@
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('toggle-line-break', LineBreakType.Center)"
             >
               <svg viewBox="0 0 24 24">
@@ -422,8 +428,7 @@
           >
             <ToolbarButton
               variant="secondary"
-              size="icon-sm"
-              class="icon-btn"
+              class="chrome-button toolbar-icon"
               @click="$emit('toggle-page-break')"
             >
               <PhFile />
@@ -432,13 +437,15 @@
         </div>
       </Toolbar>
     </div>
-    <Toolbar class="toolbar-playback-section h-auto gap-0 border-0 p-0" loop>
+    <Toolbar
+      class="toolbar-playback-section chrome-toolbar-row chrome-toolbar-row-fit"
+      loop
+    >
       <div class="toolbar-playback-controls">
         <div class="audio-container">
           <ToolbarButton
             variant="secondary"
-            size="icon-sm"
-            class="icon-btn"
+            class="chrome-button toolbar-icon"
             :aria-label="
               audioState === AudioState.Playing ? 'Pause audio' : 'Play audio'
             "
@@ -449,8 +456,7 @@
           </ToolbarButton>
           <ToolbarButton
             variant="secondary"
-            size="icon-sm"
-            class="icon-btn"
+            class="chrome-button toolbar-icon"
             aria-label="Playback settings"
             @click="$emit('open-playback-settings')"
           >
@@ -508,11 +514,12 @@ import {
   PhFolderOpen,
   PhGearFine,
   PhImageSquare,
+  PhLinkSimple,
   PhMagnifyingGlass,
-  PhMusicNotesPlus,
   PhNotePencil,
   PhParagraph,
   PhPause,
+  PhPencilLine,
   PhPlay,
   PhPrinter,
   PhScissors,
@@ -532,8 +539,8 @@ import AppTooltip from '@/components/AppTooltip.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -555,6 +562,11 @@ import {
 import { LineBreakType } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import { TempoSign } from '@/models/Neumes';
+import {
+  formatZoomPercent,
+  ZOOM_LEVELS,
+  type ZoomFitMode,
+} from '@/models/Workspace';
 import { AudioState } from '@/services/audio/AudioService';
 import type { PlaybackOptions } from '@/services/audio/PlaybackService';
 import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
@@ -562,39 +574,40 @@ import { fraction0FormatOptions } from '@/utils/numberFormatOptions';
 
 import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
 import ButtonWithMenu from './ButtonWithMenu.vue';
+import NeumeIcon from './NeumeIcon.vue';
 
 const tempoOptions: ButtonWithMenuOption[] = [
   {
     neume: TempoSign.VerySlow,
-    icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
+    icon: 'agogi-poli-argi',
   },
   {
     neume: TempoSign.Slower,
-    icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
+    icon: 'agogi-argoteri',
   },
   {
     neume: TempoSign.Slow,
-    icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
+    icon: 'agogi-argi',
   },
   {
     neume: TempoSign.Moderate,
-    icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
+    icon: 'agogi-metria',
   },
   {
     neume: TempoSign.Medium,
-    icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
+    icon: 'agogi-mesi',
   },
   {
     neume: TempoSign.Quick,
-    icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
+    icon: 'agogi-gorgi',
   },
   {
     neume: TempoSign.Quicker,
-    icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
+    icon: 'agogi-gorgoteri',
   },
   {
     neume: TempoSign.VeryQuick,
-    icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url).href,
+    icon: 'agogi-poli-gorgi',
   },
 ];
 
@@ -619,9 +632,9 @@ const props = defineProps({
     type: Number,
     required: true,
   },
-  zoomToFit: {
-    type: Boolean,
-    required: true,
+  zoomFitMode: {
+    type: String as PropType<ZoomFitMode | null>,
+    default: null,
   },
   playbackTime: {
     type: Number,
@@ -639,6 +652,10 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  canCopyElementLink: {
+    type: Boolean,
+    required: true,
+  },
 });
 
 const emit = defineEmits([
@@ -652,6 +669,7 @@ const emit = defineEmits([
   'add-text-box',
   'add-text-box-rich',
   'copy',
+  'copy-element-link',
   'cut',
   'delete-selected-element',
   'find',
@@ -670,21 +688,30 @@ const emit = defineEmits([
   'update:audioOptionsSpeed',
   'update:entryMode',
   'update:zoom',
-  'update:zoomToFit',
+  'update:zoomFitMode',
 ]);
 
 const { t } = useTranslation();
-const ZOOM_TO_FIT_VALUE = 'fit';
-const zoomOptions = ['50', '75', '90', '100', '125', '150', '200', '500'];
+const ZOOM_COMPARISON_EPSILON = 0.000001;
+const zoomOptions = ZOOM_LEVELS;
 const zoomText = ref('');
 
-const zoomToFitLabel = computed(() =>
-  t(($) => $.toolbar.main.fit, { ns: 'toolbar' }),
-);
+const zoomFitOptions = computed<{ mode: ZoomFitMode; label: string }[]>(() => [
+  {
+    mode: 'page-width',
+    label: t(($) => $.toolbar.main.pageWidth, { ns: 'toolbar' }),
+  },
+  {
+    mode: 'text-width',
+    label: t(($) => $.toolbar.main.textWidth, { ns: 'toolbar' }),
+  },
+  {
+    mode: 'whole-page',
+    label: t(($) => $.toolbar.main.wholePage, { ns: 'toolbar' }),
+  },
+]);
 
-const zoomDisplay = computed(() =>
-  props.zoomToFit ? zoomToFitLabel.value : `${(props.zoom * 100).toFixed(0)}%`,
-);
+const zoomDisplay = computed(() => formatZoomPercent(props.zoom));
 
 // Keep the editable zoom field in sync with the canonical zoom display
 // whenever the zoom changes (e.g. via the zoom menu or external controls).
@@ -763,12 +790,14 @@ const tempoTooltip = computed(
 );
 
 function updateZoom(value: string) {
-  if (isZoomToFitValue(value)) {
-    selectZoomToFit();
+  const zoomFitMode = getZoomFitModeFromValue(value);
+
+  if (zoomFitMode != null) {
+    selectZoomFitMode(zoomFitMode);
     return;
   }
 
-  let valueAsNumber = parseInt(value);
+  let valueAsNumber = parseFloat(value);
 
   if (Number.isNaN(valueAsNumber)) {
     valueAsNumber = 100;
@@ -779,18 +808,34 @@ function updateZoom(value: string) {
   resetZoomInput();
 }
 
-function selectZoomToFit() {
-  emit('update:zoomToFit', true);
+function selectZoomFitMode(mode: ZoomFitMode) {
+  emit('update:zoomFitMode', mode);
   resetZoomInput();
 }
 
-function isZoomToFitValue(value: string) {
-  const normalizedValue = value.trim().toLowerCase();
+function selectZoomLevel(zoom: number) {
+  emit('update:zoom', zoom);
+  resetZoomInput();
+}
 
+function zoomLevelIsSelected(zoom: number) {
   return (
-    normalizedValue === ZOOM_TO_FIT_VALUE ||
-    normalizedValue === zoomToFitLabel.value.trim().toLowerCase()
+    props.zoomFitMode == null &&
+    Math.abs(props.zoom - zoom) <= ZOOM_COMPARISON_EPSILON
   );
+}
+
+function getZoomFitModeFromValue(value: string): ZoomFitMode | null {
+  const normalizedValue = value.trim().toLowerCase();
+  const normalizedModeValue = normalizedValue.replace(/\s+/g, '-');
+
+  const option = zoomFitOptions.value.find(
+    (option) =>
+      option.mode === normalizedModeValue ||
+      option.label.trim().toLowerCase() === normalizedValue,
+  );
+
+  return option?.mode ?? null;
 }
 
 function isCurrentZoomDisplay(value: string) {
@@ -814,10 +859,7 @@ function resetZoomInput() {
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  font-size: 16px;
-  background-color: var(--color-legacy-chrome-menu-surface);
 
-  --btn-size: 32px;
   --toolbar-left-min-width: 42rem;
 }
 
@@ -825,6 +867,7 @@ function resetZoomInput() {
   display: grid;
   flex: 0 1 var(--toolbar-left-min-width);
   grid-template-columns: max-content max-content max-content minmax(0, 1fr);
+  row-gap: 3px;
   max-width: 100%;
   min-width: min(100%, var(--toolbar-left-min-width));
 }
@@ -904,81 +947,19 @@ function resetZoomInput() {
   flex-wrap: wrap;
 }
 
-.main-toolbar :deep(button:not(.entry-mode-btn)) {
+.main-toolbar :deep(.chrome-button:not(.is-text)) {
   font-size: inherit;
-  font-weight: normal;
 }
 
-.entry-mode-btn {
-  all: revert;
-}
-
-.entry-mode-btn[data-state='on'] {
-  background-color: var(--color-legacy-chrome-selected);
-}
-
-.icon-btn,
-.neume-button,
-:deep(.menu-container > .neume-button) {
-  box-sizing: border-box;
-  height: var(--btn-size);
-  width: var(--btn-size);
-  appearance: auto;
-  background: revert;
-  border: revert;
-  border-radius: revert;
-  box-shadow: revert;
-  font-weight: revert;
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-  outline: revert;
-  padding: 0;
-  transition: revert;
-  user-select: none;
-}
-
-.icon-btn {
-  --btn-icon-size: 24px;
-}
-
-.icon-btn:hover,
-.neume-button:hover,
-:deep(.menu-container > .neume-button:hover) {
-  background: revert;
-}
-
-.neume-button > img,
-.neume-button > svg,
-:deep(.menu-container > .neume-button > img),
-:deep(.menu-container > .neume-button > svg) {
-  height: var(--btn-size);
+.toolbar-icon > :is(img, svg, .neume-icon) {
+  height: 24px;
   max-width: none;
-  width: var(--btn-size);
-}
-
-.icon-btn > img,
-.icon-btn > svg {
-  height: var(--btn-icon-size, var(--btn-size));
-  max-width: none;
-  width: var(--btn-icon-size, var(--btn-size));
+  width: 24px;
 }
 
 .delete-icon,
 .rich-text-box-icon {
-  color: red;
-}
-
-.icon-btn[aria-disabled='true'],
-.icon-btn:disabled,
-.neume-button[aria-disabled='true'],
-:deep(.menu-container > .neume-button:disabled) {
-  cursor: not-allowed;
-  opacity: 0.5;
+  color: var(--destructive);
 }
 
 .audio-container {

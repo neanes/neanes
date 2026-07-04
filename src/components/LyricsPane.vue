@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="flex size-full min-h-0 flex-col overflow-hidden bg-background p-3"
-  >
+  <div class="flex size-full min-h-0 flex-col overflow-hidden p-3">
     <FieldSet class="min-h-0 flex-1 overflow-hidden">
       <FieldLegend class="sr-only">{{
         $t(($) => $.menu.view.lyrics, { ns: 'menu' })

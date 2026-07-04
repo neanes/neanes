@@ -16,11 +16,11 @@
               :tooltip="tooltip(neume)"
             />
 
-            <div v-if="showVareiaDottedMenu" class="menu">
+            <div v-if="showVareiaDottedMenu" class="menu chrome-menu">
               <div
                 v-for="menuItem in vareiaDottedMenuItems"
                 :key="menuItem"
-                class="menu-item"
+                class="menu-item chrome-menu-item"
                 @mouseenter="selectedVareiaDotted = menuItem"
               >
                 <Neume
@@ -85,11 +85,11 @@
               :tooltip="tooltip(neume)"
             />
 
-            <div v-if="showHyporoeKentemataMenu" class="menu">
+            <div v-if="showHyporoeKentemataMenu" class="menu chrome-menu">
               <div
                 v-for="menuItem in secondaryGorgonMenuItems"
                 :key="menuItem.gorgon as string"
-                class="menu-item"
+                class="menu-item chrome-menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -125,11 +125,11 @@
               :tooltip="tooltip(neume)"
             />
 
-            <div v-if="showIsonKentemataMenu" class="menu down">
+            <div v-if="showIsonKentemataMenu" class="menu down chrome-menu">
               <div
                 v-for="menuItem in secondaryGorgonMenuItemsDown"
                 :key="menuItem.gorgon as string"
-                class="menu-item"
+                class="menu-item chrome-menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -167,11 +167,11 @@
               :tooltip="tooltip(neume)"
             />
 
-            <div v-if="showApostrophosKentemataMenu" class="menu">
+            <div v-if="showApostrophosKentemataMenu" class="menu chrome-menu">
               <div
                 v-for="menuItem in secondaryGorgonMenuItems"
                 :key="menuItem.gorgon as string"
-                class="menu-item"
+                class="menu-item chrome-menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -209,11 +209,11 @@
               :tooltip="tooltip(neume)"
             />
 
-            <div v-if="showElaphronKentemataMenu" class="menu">
+            <div v-if="showElaphronKentemataMenu" class="menu chrome-menu">
               <div
                 v-for="menuItem in secondaryGorgonMenuItems"
                 :key="menuItem.gorgon as string"
-                class="menu-item"
+                class="menu-item chrome-menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -254,11 +254,14 @@
               :tooltip="tooltip(neume)"
             />
 
-            <div v-if="showElaphronApostrophosKentemataMenu" class="menu">
+            <div
+              v-if="showElaphronApostrophosKentemataMenu"
+              class="menu chrome-menu"
+            >
               <div
                 v-for="menuItem in secondaryGorgonMenuItems"
                 :key="menuItem.gorgon as string"
-                class="menu-item"
+                class="menu-item chrome-menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -296,11 +299,11 @@
               :tooltip="tooltip(neume)"
             />
 
-            <div v-if="showHamiliKentemataMenu" class="menu">
+            <div v-if="showHamiliKentemataMenu" class="menu chrome-menu">
               <div
                 v-for="menuItem in secondaryGorgonMenuItems"
                 :key="menuItem.gorgon as string"
-                class="menu-item"
+                class="menu-item chrome-menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -338,11 +341,14 @@
               :tooltip="tooltip(neume)"
             />
 
-            <div v-if="showRunningElaphronKentemataMenu" class="menu">
+            <div
+              v-if="showRunningElaphronKentemataMenu"
+              class="menu chrome-menu"
+            >
               <div
                 v-for="menuItem in secondaryGorgonMenuItems"
                 :key="menuItem.gorgon as string"
-                class="menu-item"
+                class="menu-item chrome-menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -709,6 +715,7 @@ function tooltip(neume: QuantitativeNeume): AppTooltipValue {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  color: var(--chrome-menu-foreground);
 
   --neume-height: 2.5rem;
 }
@@ -732,7 +739,11 @@ function tooltip(neume: QuantitativeNeume): AppTooltipValue {
 }
 
 .neume-selector-panel :deep(.neume:hover) {
-  background-color: var(--color-legacy-chrome-hover);
+  background-color: var(--chrome-hover);
+}
+
+.menu :deep(.neume:hover) {
+  background-color: transparent;
 }
 
 .menu-container {
@@ -745,9 +756,6 @@ function tooltip(neume: QuantitativeNeume): AppTooltipValue {
 .menu {
   position: absolute;
   z-index: 40;
-  background-color: var(--color-legacy-chrome-surface);
-  border: 1px solid var(--color-legacy-chrome-border);
-  box-sizing: border-box;
   bottom: 0;
   width: 100%;
 }
@@ -761,14 +769,5 @@ function tooltip(neume: QuantitativeNeume): AppTooltipValue {
   height: var(--neume-height);
   width: 100%;
   padding: 3px 0;
-  box-sizing: border-box;
-  text-align: center;
-  user-select: none;
-  overflow: hidden;
-  position: relative;
-}
-
-.menu-item:hover {
-  background-color: var(--color-legacy-chrome-hover);
 }
 </style>

@@ -89,10 +89,10 @@ sub-editors share one owner.
 ### 1.4 The custom UI and where content gets persisted
 
 - **`RichTextToolbar.vue`** -- the floating toolbar (undo/redo, font, size, bold/
-  italic/underline, alignment, lists, indent, neume insertion, and the native
-  link/image/table/find buttons).
+  italic/underline, alignment, remove-format, lists, indent, neume insertion, and
+  the native link/image/table/find buttons).
 - **`PropertiesRichTextStyle.vue`** -- the properties-panel section (font, size,
-  color, style, alignment, script, remove-format, and neume-attribute controls).
+  color, style, alignment, script, and neume-attribute controls).
 - **`TextBoxRich.vue`** -- lays out an element's sub-editors and, on
   `RichTextEditor`'s `blur`, calls `getPendingUpdates()` (which diffs each
   sub-editor's `getData()` against the model) and emits `update`. **Blur is the

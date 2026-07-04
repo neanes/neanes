@@ -4,24 +4,13 @@
 @import 'tw-animate-css';
 @import 'shadcn-vue/tailwind.css';
 @import 'vue-sonner/style.css';
+@import './chrome.css';
 @source '../../node_modules/@vuelor/picker';
 
 @theme {
   /* Keep shadcn-vue's compact text utilities legible in desktop dialogs. */
   --text-xs: 0.875rem;
   --text-xs--line-height: calc(1.25 / 0.875);
-
-  /* Legacy chrome colors */
-  --color-legacy-chrome-menubar: #aaa;
-  --color-legacy-chrome-menu-surface: lightgray;
-  --color-legacy-chrome-tab-list: silver;
-  --color-legacy-chrome-tab-strip: #b5b5b5;
-  --color-legacy-chrome-tab-action: darkgray;
-  --color-legacy-chrome-surface: white;
-  --color-legacy-chrome-border: black;
-  --color-legacy-chrome-divider: #666;
-  --color-legacy-chrome-hover: aliceblue;
-  --color-legacy-chrome-selected: lightsteelblue;
 
   /* Define the Vuelor Design System tokens */
   --color-vuelor-primary: #0d99ff;
@@ -111,6 +100,8 @@
   --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
   --sidebar-border: oklch(0.925 0.005 214.3);
   --sidebar-ring: oklch(0.723 0.014 214.4);
+
+  color-scheme: light;
 }
 
 .dark {
@@ -145,6 +136,8 @@
   --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.56 0.021 213.5);
+
+  color-scheme: dark;
 }
 
 @layer base {

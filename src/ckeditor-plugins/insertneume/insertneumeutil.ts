@@ -43,7 +43,7 @@ export type InsertNeumeDefaultAttributesMartyriaType = Record<
 
 export const INSERT_NEUME_CHARACTER_BLOCKS = [
   {
-    name: 'Mode Keys - Common',
+    name: 'Initial Martyriæ - Common',
     neumes: [
       ModeSign.AlphaWithDeltaHat,
       ModeSign.AlphaWithHypsili,

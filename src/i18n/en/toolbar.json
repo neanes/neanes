@@ -3,6 +3,7 @@
     "alignLeft": "Align Left",
     "alignCenter": "Align Center",
     "alignRight": "Align Right",
+    "alignJustify": "Justify",
     "alignment": "Alignment",
     "bpm": "BPM",
     "chooseColor": "Choose color",
@@ -12,7 +13,6 @@
     "insertPelastikon": "Insert Pelastikon",
     "measureBar": "Measure Bar",
     "outline": "Outline",
-    "sectionName": "Section Name",
     "spaceAfter": "Space After",
     "tempoSign": "Tempo Sign",
     "useDefaultStyle": "Use Default Style",
@@ -37,7 +37,7 @@
     "single": "Single",
     "martyria": "Martyria",
     "insertDropCapBefore": "Insert drop cap before",
-    "insertModeKey": "Insert mode key",
+    "insertInitialMartyria": "Insert initial martyria",
     "insertTextBox": "Insert text box",
     "insertTextBoxRich": "Insert rich text box",
     "insertImage": "Insert image",
@@ -46,9 +46,11 @@
     "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Insert or remove centered line break after selected element",
     "insertOrRemovePageBreakAfterSelectedElement": "Insert or remove page break after selected element",
     "deleteSelectedElement": "Delete selected element",
-    "fit": "Fit",
+    "pageWidth": "Page Width",
+    "textWidth": "Text Width",
+    "wholePage": "Whole Page",
     "speed": "Speed",
-    "invalidZoom": "The value must be between 50% and 500%."
+    "invalidZoom": "The value must be between {{minZoom}} and {{maxZoom}}."
   },
   "status": {
     "section": "Section {{ sectionNumber }} of {{ sectionCount }}",
@@ -63,15 +65,6 @@
     "noProperties": "No properties",
     "nothingToEdit": "Nothing to edit"
   },
-  "selection": {
-    "elements": "Elements",
-    "lineBreak": "Line Break",
-    "center": "Center",
-    "justify": "Justify",
-    "pageBreak": "Page Break",
-    "noSelection": "No selection",
-    "nothingSelected": "Nothing selected"
-  },
   "imageBox": {
     "maintainAspectRatio": "Maintain Aspect Ratio",
     "width": "Width",
@@ -85,18 +78,18 @@
     "auto": "Auto",
     "note": "Note",
     "scale": "Scale",
-    "rootSignOverride": "Root Sign Override",
+    "martyriaSignOverride": "Martyria Sign Override",
     "tempoLeft": "Add Left Tempo",
     "tempo": "Add Tempo Above",
     "tempoRight": "Add Right Tempo"
   },
-  "modeKey": {
+  "initialMartyria": {
     "size": "Size",
     "heightAdjustment": "Height Adjustment",
     "rightAlignTempo": "Right-align tempo",
     "showAmbitus": "Show Ambitus",
     "permanentEnharmonicZo": "Permanent Enharmonic Zo",
-    "changeKey": "Change Key",
+    "changeInitialMartyria": "Change Initial Martyria",
     "useOptionalDiatonicFthoras": "Show Diatonic Fthoras"
   },
   "neume": {
@@ -116,20 +109,23 @@
   },
   "textbox": {
     "multipanel": "Multipanel",
-    "rtl": "RTL",
     "scrollable": "Scrollable",
     "modeChange": "Change Mode",
     "virtualNote": "Parallage Note",
     "centerOnPage": "Center on Page",
     "offsetYTop": "Top Y Offset",
     "offsetYBottom": "Bottom Y Offset",
-    "fillWidth": "Fill Width"
+    "fillWidth": "Fill Width",
+    "runningMarker": "Running Marker",
+    "runningMarkerRole": "Role",
+    "runningMarkerChapter": "Chapter",
+    "runningMarkerSection": "Section",
+    "runningMarkerText": "Override Text",
+    "runningMarkerTextPlaceholder": "Use visible text"
   },
   "richTextBox": {
     "default": "Default",
     "underline": "Underline",
-    "bulletedList": "Bulleted List",
-    "numberedList": "Numbered List",
     "outdent": "Outdent",
     "indent": "Indent",
     "position": "Position",
@@ -159,7 +155,7 @@
     "kerningRight": "Right Kerning",
     "neumeFontSize": "Font Size",
     "martyriaNote": "Martyria Note",
-    "martyriaRootSign": "Martyria Root Sign"
+    "martyriaSign": "Martyria Sign"
   },
   "workspace": {
     "dockPane": "Dock Pane",

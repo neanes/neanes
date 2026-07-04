@@ -6,12 +6,12 @@
       </AlertDescription>
     </Alert>
 
-    <Menubar class="rounded-none bg-legacy-chrome-menubar">
+    <Menubar class="chrome-menubar">
       <MenubarMenu>
         <MenubarTrigger>
           {{ $t(($) => $.menu.file.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="bg-legacy-chrome-menu-surface">
+        <MenubarContent class="chrome-menubar-content">
           <MenubarItem @select="onClickNew">
             <PhFilePlus />
             {{ $t(($) => $.menu.file.new, { ns: 'menu' }) }}
@@ -30,7 +30,7 @@
             </MenubarSubTrigger>
             <MenubarSubContent
               v-if="openRecentIsEnabled"
-              class="bg-legacy-chrome-menu-surface"
+              class="chrome-menubar-content"
             >
               <MenubarItem
                 v-for="(recentFile, index) in recentFiles"
@@ -46,7 +46,7 @@
               <PhTrayArrowDown />
               {{ $t(($) => $.menu.file.import, { ns: 'menu' }) }}
             </MenubarSubTrigger>
-            <MenubarSubContent class="bg-legacy-chrome-menu-surface">
+            <MenubarSubContent class="chrome-menubar-content">
               <MenubarItem @select="onClickImportOcr">
                 <PhFileText />
                 {{ $t(($) => $.menu.file.importFromOcr, { ns: 'menu' }) }}
@@ -66,12 +66,20 @@
             <PhScroll />
             {{ $t(($) => $.menu.file.pageSetup, { ns: 'menu' }) }}
           </MenubarItem>
+          <MenubarItem @select="onClickDocumentProperties">
+            <PhFileText />
+            {{ $t(($) => $.menu.file.documentProperties, { ns: 'menu' }) }}
+          </MenubarItem>
           <MenubarSub>
             <MenubarSubTrigger>
               <PhExport />
               {{ $t(($) => $.menu.file.exportAs, { ns: 'menu' }) }}
             </MenubarSubTrigger>
-            <MenubarSubContent class="bg-legacy-chrome-menu-surface">
+            <MenubarSubContent class="chrome-menubar-content">
+              <MenubarItem @select="onClickExportAsPdf">
+                <PhFilePdf />
+                {{ $t(($) => $.menu.file.exportAsPdf, { ns: 'menu' }) }}
+              </MenubarItem>
               <MenubarItem @select="onClickExportAsHtml">
                 <PhFileHtml />
                 {{ $t(($) => $.menu.file.exportAsHtml, { ns: 'menu' }) }}
@@ -110,7 +118,7 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.edit.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="bg-legacy-chrome-menu-surface">
+        <MenubarContent class="chrome-menubar-content">
           <MenubarItem @select="onClickUndo">
             <PhArrowCounterClockwise />
             {{ $t(($) => $.menu.edit.undo, { ns: 'menu' }) }}
@@ -158,6 +166,14 @@
             {{ $t(($) => $.menu.edit.find, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
+          <MenubarItem
+            :disabled="!props.canCopyElementLink"
+            @select="onClickCopyElementLink"
+          >
+            <PhLinkSimple />
+            {{ $t(($) => $.menu.edit.copyElementLink, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSeparator />
           <MenubarItem @select="onClickPreferences">
             <PhGearFine />
             {{ $t(($) => $.menu.edit.preferences, { ns: 'menu' }) }}
@@ -169,9 +185,9 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.insert.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="bg-legacy-chrome-menu-surface">
+        <MenubarContent class="chrome-menubar-content">
           <MenubarItem @select="onClickAddAlternateLine">
-            <PhMusicNotesPlus />
+            <PhPencilLine />
             {{ $t(($) => $.menu.insert.alternateLine, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddAnnotation">
@@ -198,8 +214,13 @@
             {{ $t(($) => $.menu.insert.inlineTextBox, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddModeKey">
-            <PhWaveSine />
-            {{ $t(($) => $.menu.insert.modeKey, { ns: 'menu' }) }}
+            <span
+              class="inline-grid size-4 shrink-0 place-items-center font-['Source_Serif'] text-sm leading-none"
+              aria-hidden="true"
+            >
+              Ηχ
+            </span>
+            {{ $t(($) => $.menu.insert.initialMartyria, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarItem @select="onClickAddImage">
             <PhImageSquare />
@@ -211,7 +232,7 @@
               <PhBookOpenText />
               {{ $t(($) => $.menu.insert.headersAndFooters, { ns: 'menu' }) }}
             </MenubarSubTrigger>
-            <MenubarSubContent class="bg-legacy-chrome-menu-surface">
+            <MenubarSubContent class="chrome-menubar-content">
               <MenubarItem @select="onClickAddHeader">
                 <PhRowsPlusTop />
                 {{ $t(($) => $.menu.insert.header, { ns: 'menu' }) }}
@@ -229,7 +250,50 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.view.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="bg-legacy-chrome-menu-surface">
+        <MenubarContent class="chrome-menubar-content">
+          <MenubarSub>
+            <MenubarSubTrigger>
+              <PhMagnifyingGlass />
+              {{ $t(($) => $.menu.view.zoom.root, { ns: 'menu' }) }}
+            </MenubarSubTrigger>
+            <MenubarSubContent class="chrome-menubar-content">
+              <MenubarItem @select="onZoomInClick">
+                <PhMagnifyingGlassPlus />
+                {{ $t(($) => $.menu.view.zoom.zoomIn, { ns: 'menu' }) }}
+              </MenubarItem>
+              <MenubarItem @select="onZoomOutClick">
+                <PhMagnifyingGlassMinus />
+                {{ $t(($) => $.menu.view.zoom.zoomOut, { ns: 'menu' }) }}
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarCheckboxItem
+                :model-value="actualSizeZoomIsSelected"
+                @select="onActualSizeZoomClick"
+              >
+                {{ $t(($) => $.menu.view.zoom.actualSize, { ns: 'menu' }) }}
+              </MenubarCheckboxItem>
+              <MenubarSeparator />
+              <MenubarCheckboxItem
+                :model-value="props.zoomFitMode === 'page-width'"
+                @select="onZoomFitModeClick('page-width')"
+              >
+                {{ $t(($) => $.menu.view.zoom.pageWidth, { ns: 'menu' }) }}
+              </MenubarCheckboxItem>
+              <MenubarCheckboxItem
+                :model-value="props.zoomFitMode === 'text-width'"
+                @select="onZoomFitModeClick('text-width')"
+              >
+                {{ $t(($) => $.menu.view.zoom.textWidth, { ns: 'menu' }) }}
+              </MenubarCheckboxItem>
+              <MenubarCheckboxItem
+                :model-value="props.zoomFitMode === 'whole-page'"
+                @select="onZoomFitModeClick('whole-page')"
+              >
+                {{ $t(($) => $.menu.view.zoom.wholePage, { ns: 'menu' }) }}
+              </MenubarCheckboxItem>
+            </MenubarSubContent>
+          </MenubarSub>
+          <MenubarSeparator />
           <MenubarCheckboxItem
             :model-value="props.paneVisibility['neume-selector']"
             @update:model-value="
@@ -255,14 +319,6 @@
             {{ $t(($) => $.menu.view.properties, { ns: 'menu' }) }}
           </MenubarCheckboxItem>
           <MenubarCheckboxItem
-            :model-value="props.paneVisibility.selection"
-            @update:model-value="
-              onTogglePaneClick('selection', $event === true)
-            "
-          >
-            {{ $t(($) => $.menu.view.selection, { ns: 'menu' }) }}
-          </MenubarCheckboxItem>
-          <MenubarCheckboxItem
             :model-value="props.paneVisibility.lyrics"
             @update:model-value="onTogglePaneClick('lyrics', $event === true)"
           >
@@ -278,7 +334,14 @@
             {{ $t(($) => $.menu.view.developer, { ns: 'menu' }) }}
           </MenubarCheckboxItem>
           <MenubarSeparator />
-          <MenubarItem @select="onResetPaneLayoutClick">
+          <MenubarCheckboxItem
+            :model-value="props.statusBarVisible"
+            @update:model-value="onToggleStatusBarClick($event === true)"
+          >
+            {{ $t(($) => $.menu.view.statusBar, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarSeparator />
+          <MenubarItem @select="onResetLayoutClick">
             <PhArrowCounterClockwise />
             {{ $t(($) => $.menu.view.resetLayout, { ns: 'menu' }) }}
           </MenubarItem>
@@ -287,12 +350,22 @@
 
       <MenubarMenu>
         <MenubarTrigger>
-          {{ $t(($) => $.menu.tools.root, { ns: 'menu' }) }}
+          {{ $t(($) => $.menu.window.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="bg-legacy-chrome-menu-surface">
-          <MenubarItem @select="onClickCopyElementLink">
-            <PhLinkSimple />
-            {{ $t(($) => $.menu.tools.copyElementLink, { ns: 'menu' }) }}
+        <MenubarContent class="chrome-menubar-content">
+          <MenubarItem
+            :disabled="!props.canNavigateWorkspaceTabs"
+            @select="onClickPreviousTab"
+          >
+            <PhArrowLineLeft />
+            {{ $t(($) => $.menu.window.previousTab, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem
+            :disabled="!props.canNavigateWorkspaceTabs"
+            @select="onClickNextTab"
+          >
+            <PhArrowLineRight />
+            {{ $t(($) => $.menu.window.nextTab, { ns: 'menu' }) }}
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
@@ -301,7 +374,7 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.help.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="bg-legacy-chrome-menu-surface">
+        <MenubarContent class="chrome-menubar-content">
           <MenubarItem @select="onClickGuide">
             <PhBookOpen />
             {{ $t(($) => $.menu.help.guide, { ns: 'menu' }) }}
@@ -352,6 +425,8 @@
 import {
   PhArrowClockwise,
   PhArrowCounterClockwise,
+  PhArrowLineLeft,
+  PhArrowLineRight,
   PhArticleNyTimes,
   PhBookOpen,
   PhBookOpenText,
@@ -363,6 +438,7 @@ import {
   PhFileCode,
   PhFileHtml,
   PhFileImage,
+  PhFilePdf,
   PhFilePlus,
   PhFileText,
   PhFloppyDisk,
@@ -374,10 +450,12 @@ import {
   PhLightbulb,
   PhLinkSimple,
   PhMagnifyingGlass,
-  PhMusicNotesPlus,
+  PhMagnifyingGlassMinus,
+  PhMagnifyingGlassPlus,
   PhNotePencil,
   PhPaintBrush,
   PhPaintBucket,
+  PhPencilLine,
   PhPrinter,
   PhRowsPlusBottom,
   PhRowsPlusTop,
@@ -387,7 +465,6 @@ import {
   PhTextAa,
   PhTextbox,
   PhTrayArrowDown,
-  PhWaveSine,
   PhX,
   PhXCircle,
 } from '@phosphor-icons/vue';
@@ -417,12 +494,15 @@ import type {
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
   FileMenuViewPaneVisibilityArgs,
+  FileMenuViewStatusBarVisibilityArgs,
+  FileMenuViewZoomArgs,
 } from '@/ipc/ipcChannels';
 import {
   CloseWorkspacesDisposition,
   IpcMainChannels,
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
+import type { ZoomFitMode } from '@/models/Workspace';
 import type {
   WorkspacePaneId,
   WorkspacePaneVisibility,
@@ -433,8 +513,13 @@ import {
 } from '@/services/BrowserRecentFilesService';
 
 const props = defineProps<{
+  canCopyElementLink: boolean;
+  canNavigateWorkspaceTabs: boolean;
   paneVisibility: WorkspacePaneVisibility;
   showDeveloperPanels: boolean;
+  statusBarVisible: boolean;
+  zoom: number;
+  zoomFitMode: ZoomFitMode | null;
 }>();
 
 const fileSelector = useTemplateRef<HTMLInputElement>('file');
@@ -453,6 +538,12 @@ const openRecentIsSupported = recentFilesService.isSupported();
 const recentFiles = ref<BrowserRecentFile[]>([]);
 const openRecentIsEnabled = computed(
   () => openRecentIsSupported && recentFiles.value.length > 0,
+);
+const ZOOM_COMPARISON_EPSILON = 0.000001;
+const actualSizeZoomIsSelected = computed(
+  () =>
+    props.zoomFitMode == null &&
+    Math.abs(props.zoom - 1) <= ZOOM_COMPARISON_EPSILON,
 );
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -627,6 +718,10 @@ function onClickSaveAs() {
   EventBus.$emit(IpcMainChannels.FileMenuSaveAs);
 }
 
+function onClickExportAsPdf() {
+  EventBus.$emit(IpcMainChannels.FileMenuExportAsPdf);
+}
+
 function onClickExportAsHtml() {
   EventBus.$emit(IpcMainChannels.FileMenuExportAsHtml);
 }
@@ -649,6 +744,10 @@ function onClickPrint() {
 
 function onClickPageSetup() {
   EventBus.$emit(IpcMainChannels.FileMenuPageSetup);
+}
+
+function onClickDocumentProperties() {
+  EventBus.$emit(IpcMainChannels.FileMenuDocumentProperties);
 }
 
 function onClickClose() {
@@ -816,6 +915,14 @@ function onClickFind() {
   EventBus.$emit(IpcMainChannels.FileMenuFind);
 }
 
+function onClickPreviousTab() {
+  EventBus.$emit(IpcMainChannels.FileMenuWindowPreviousTab);
+}
+
+function onClickNextTab() {
+  EventBus.$emit(IpcMainChannels.FileMenuWindowNextTab);
+}
+
 function onTogglePaneClick(paneId: WorkspacePaneId, visible?: boolean) {
   EventBus.$emit(IpcMainChannels.FileMenuViewPaneVisibility, {
     paneId,
@@ -823,8 +930,34 @@ function onTogglePaneClick(paneId: WorkspacePaneId, visible?: boolean) {
   } as FileMenuViewPaneVisibilityArgs);
 }
 
-function onResetPaneLayoutClick() {
-  EventBus.$emit(IpcMainChannels.FileMenuViewResetPaneLayout);
+function onToggleStatusBarClick(visible?: boolean) {
+  EventBus.$emit(IpcMainChannels.FileMenuViewStatusBarVisibility, {
+    visible,
+  } as FileMenuViewStatusBarVisibilityArgs);
+}
+
+function onResetLayoutClick() {
+  EventBus.$emit(IpcMainChannels.FileMenuViewResetLayout);
+}
+
+function emitViewZoom(args: FileMenuViewZoomArgs) {
+  EventBus.$emit(IpcMainChannels.FileMenuViewZoom, args);
+}
+
+function onZoomInClick() {
+  emitViewZoom({ type: 'zoom-in' });
+}
+
+function onZoomOutClick() {
+  emitViewZoom({ type: 'zoom-out' });
+}
+
+function onActualSizeZoomClick() {
+  emitViewZoom({ type: 'actual-size' });
+}
+
+function onZoomFitModeClick(mode: ZoomFitMode) {
+  emitViewZoom({ type: 'fit', mode });
 }
 
 function onClickPreferences() {
@@ -888,7 +1021,7 @@ function onClickAddFooter() {
 }
 
 function onClickCopyElementLink() {
-  EventBus.$emit(IpcMainChannels.FileMenuToolsCopyElementLink);
+  EventBus.$emit(IpcMainChannels.FileMenuEditCopyElementLink);
 }
 
 function onClickAbout() {

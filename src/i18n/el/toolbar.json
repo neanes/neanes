@@ -3,6 +3,7 @@
     "alignLeft": "Στοίχιση Αριστερά",
     "alignCenter": "Στοίχιση στο Κέντρο",
     "alignRight": "Στοίχιση Δεξιά",
+    "alignJustify": "Πλήρης Στοίχιση",
     "alignment": "Στοίχιση",
     "bpm": "BPM",
     "chooseColor": "Επιλογή χρώματος",
@@ -12,7 +13,6 @@
     "insertPelastikon": "Εισαγωγή Πελαστικού",
     "measureBar": "Διαστολή",
     "outline": "Περίγραμμα",
-    "sectionName": "Όνομα Ενότητας",
     "spaceAfter": "Διάστημα Μετά",
     "tempoSign": "Σημείο Χρονικής Αγωγής",
     "useDefaultStyle": "Χρήση Προεπιλεγμένης Μορφοποίησης",
@@ -37,7 +37,7 @@
     "single": "Μονό",
     "martyria": "Μαρτυρία",
     "insertDropCapBefore": "Εισαγωγή Αρχιγράμματος Πριν",
-    "insertModeKey": "Εισαγωγή Αρκτικής Μαρτυρίας",
+    "insertInitialMartyria": "Εισαγωγή Αρκτικής Μαρτυρίας",
     "insertTextBox": "Εισαγωγή Πλαισίου Κειμένου",
     "insertTextBoxRich": "Εισαγωγή Πλαισίου Εμπλουτισμένου Κειμένου",
     "insertImage": "Εισαγωγή Εικόνας",
@@ -46,9 +46,11 @@
     "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Εισαγωγή ή Αφαίρεση Κεντραρισμένης Αλλαγής Γραμμής μετά το Επιλεγμένο Στοιχείο",
     "insertOrRemovePageBreakAfterSelectedElement": "Εισαγωγή ή Αφαίρεση Αλλαγής Σελίδας μετά το Επιλεγμένο Στοιχείο",
     "deleteSelectedElement": "Διαγραφή Επιλεγμένου Στοιχείου",
-    "fit": "Προσαρμογή",
+    "pageWidth": "Πλάτος Σελίδας",
+    "textWidth": "Πλάτος Κειμένου",
+    "wholePage": "Ολόκληρη Σελίδα",
     "speed": "Ταχύτητα",
-    "invalidZoom": "Η τιμή πρέπει να είναι μεταξύ 50% και 500%."
+    "invalidZoom": "Η τιμή πρέπει να είναι μεταξύ {{minZoom}} και {{maxZoom}}."
   },
   "status": {
     "section": "Ενότητα {{ sectionNumber }} από {{ sectionCount }}",
@@ -63,15 +65,6 @@
     "noProperties": "Δεν υπάρχουν ιδιότητες",
     "nothingToEdit": "Δεν υπάρχει τίποτα για επεξεργασία"
   },
-  "selection": {
-    "elements": "Στοιχεία",
-    "lineBreak": "Αλλαγή Γραμμής",
-    "center": "Κέντρο",
-    "justify": "Πλήρης Στοίχιση",
-    "pageBreak": "Αλλαγή Σελίδας",
-    "noSelection": "Καμία επιλογή",
-    "nothingSelected": "Δεν έχει επιλεγεί τίποτα"
-  },
   "imageBox": {
     "maintainAspectRatio": "Διατήρηση Αναλογίας",
     "width": "Πλάτος",
@@ -85,18 +78,18 @@
     "auto": "Αυτόματο",
     "note": "Φθόγγος",
     "scale": "Κλίμακα",
-    "rootSignOverride": "Μαρτυρικό Σημείο",
+    "martyriaSignOverride": "Μαρτυρικό Σημείο",
     "tempoLeft": "Προσθήκη Χρονικής Αγωγής Αριστερά",
     "tempo": "Προσθήκη Χρονικής Αγωγής Πάνω",
     "tempoRight": "Προσθήκη Χρονικής Αγωγής Δεξιά"
   },
-  "modeKey": {
+  "initialMartyria": {
     "size": "Μέγεθος",
     "heightAdjustment": "Ρύθμιση Ύψους",
     "rightAlignTempo": "Στοίχιση Χρονικής Αγωγής Δεξιά",
     "showAmbitus": "Εμφάνιση Έκτασης",
     "permanentEnharmonicZo": "Μόνιμο Εναρμόνιο Ζω",
-    "changeKey": "Αλλαγή Αρκτικής Μαρτυρίας",
+    "changeInitialMartyria": "Αλλαγή Αρκτικής Μαρτυρίας",
     "useOptionalDiatonicFthoras": "Εμφάνιση Διατονικών Φθορών"
   },
   "neume": {
@@ -116,20 +109,23 @@
   },
   "textbox": {
     "multipanel": "Πολλαπλές Στήλες",
-    "rtl": "RTL",
     "scrollable": "Με δυνατότητα κύλισης",
     "modeChange": "Αλλαγή Ήχου",
     "virtualNote": "Φθόγγος Παραλλαγής",
     "centerOnPage": "Κέντρο στη Σελίδα",
     "offsetYTop": "Άνω Μετατόπιση Y",
     "offsetYBottom": "Κάτω Μετατόπιση Y",
-    "fillWidth": "Πλήρες Πλάτος"
+    "fillWidth": "Πλήρες Πλάτος",
+    "runningMarker": "Δείκτης Κεφαλίδας",
+    "runningMarkerRole": "Ρόλος",
+    "runningMarkerChapter": "Κεφάλαιο",
+    "runningMarkerSection": "Ενότητα",
+    "runningMarkerText": "Κείμενο Παράκαμψης",
+    "runningMarkerTextPlaceholder": "Χρήση ορατού κειμένου"
   },
   "richTextBox": {
     "default": "Προεπιλογή",
     "underline": "Υπογράμμιση",
-    "bulletedList": "Λίστα με κουκκίδες",
-    "numberedList": "Αριθμημένη λίστα",
     "outdent": "Μείωση εσοχής",
     "indent": "Αύξηση εσοχής",
     "position": "Θέση",
@@ -159,7 +155,7 @@
     "kerningRight": "Δεξιά διαστοιχείωση",
     "neumeFontSize": "Μέγεθος νεύματος",
     "martyriaNote": "Φθόγγος μαρτυρίας",
-    "martyriaRootSign": "Ριζικό σημάδι μαρτυρίας"
+    "martyriaSign": "Μαρτυρικό σημείο"
   },
   "workspace": {
     "dockPane": "Προσάρτηση Πλαισίου",

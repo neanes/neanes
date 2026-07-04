@@ -9,7 +9,6 @@ import {
   PhCopy,
   PhCrosshair,
   PhFile,
-  PhMusicNotes,
   PhParagraph,
   PhScissors,
   PhSelectionAll,
@@ -45,6 +44,7 @@ import AboutDialog from '@/components/AboutDialog.vue';
 import AlternateLine from '@/components/AlternateLine.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
+import DocumentPropertiesDialog from '@/components/DocumentPropertiesDialog.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import type {
@@ -71,7 +71,6 @@ import type { InspectorContext } from '@/components/properties/InspectorContext'
 import PropertiesPane from '@/components/properties/PropertiesPane.vue';
 import RichTextToolbar from '@/components/RichTextToolbar.vue';
 import SearchText from '@/components/SearchText.vue';
-import SelectionPane from '@/components/SelectionPane.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import Annotation from '@/components/TextAnnotation.vue';
 import TextBox from '@/components/TextBox.vue';
@@ -83,6 +82,7 @@ import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
 import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
 import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
+import { Badge } from '@/components/ui/badge';
 import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
 import {
   ContextMenu,
@@ -95,6 +95,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import WorkspaceDockLayout from '@/components/WorkspaceDockLayout.vue';
 import { useEditorServices } from '@/composables/useEditorServices';
+import { useResizeObserver } from '@/composables/useResizeObserver';
 import {
   clearActiveEditor,
   focusLastActiveEditorForOwner,
@@ -112,13 +113,21 @@ import type {
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
   FileMenuViewPaneVisibilityArgs,
+  FileMenuViewStatusBarVisibilityArgs,
+  FileMenuViewZoomArgs,
   ShowMessageBoxReplyArgs,
+  WorkspaceZoomState,
 } from '@/ipc/ipcChannels';
 import {
   CloseWorkspacesDisposition,
   IpcMainChannels,
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
+import type { EditorPaneLayout } from '@/models/EditorEnvironment';
+import {
+  DEFAULT_PANE_ACCORDION_STATE,
+  EditorEnvironment,
+} from '@/models/EditorEnvironment';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import type { EmptyElement, ScoreElement } from '@/models/Element';
 import {
@@ -138,7 +147,7 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import type {
-  AnonymousBoxOverlayDiagnostics,
+  BoxOverlayDiagnostics,
   ElementOverlayBox,
   ElementOverlayDiagnostics,
 } from '@/models/LayoutDiagnostics';
@@ -147,6 +156,7 @@ import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
 import {
   areVocalExpressionsEquivalent,
+  getSecondaryGorgonNeume,
   getSecondaryNeume,
   measureBarAboveToLeft,
   onlyTakesBottomKlasma,
@@ -158,7 +168,6 @@ import type {
   MeasureBar,
   MeasureNumber,
   Note,
-  QuantitativeNeume,
   TempoSign,
   Tie,
 } from '@/models/Neumes';
@@ -166,16 +175,25 @@ import {
   Accidental,
   Fthora,
   GorgonNeume,
+  NeumeSelection,
+  QuantitativeNeume,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import type { Line, Page } from '@/models/Page';
-import type { PageSetup } from '@/models/PageSetup';
+import { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
+import type { DocumentProperties } from '@/models/Score';
 import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
-import type { WorkspaceLocalStorage } from '@/models/Workspace';
-import { Workspace } from '@/models/Workspace';
+import type { WorkspaceLocalStorage, ZoomFitMode } from '@/models/Workspace';
+import {
+  formatZoomPercent,
+  MAX_ZOOM,
+  MIN_ZOOM,
+  Workspace,
+  ZOOM_LEVELS,
+} from '@/models/Workspace';
 import {
   createDefaultPaneVisibility,
   type WorkspacePaneId,
@@ -207,7 +225,17 @@ import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { isElectron } from '@/utils/isElectron';
 import { resolvePageMargins } from '@/utils/PageMargins';
+import {
+  getDisplayedPageNumber,
+  isDisplayedPageNumberOdd,
+  isRightHandPage,
+} from '@/utils/PageNumbering';
 import type { TokenMetadata } from '@/utils/replaceTokens';
+import { setRichTextLanguage } from '@/utils/richTextLanguage';
+import {
+  resolveRunningMarkerPageMetadata,
+  resolveRunningMarkerText,
+} from '@/utils/runningMarkers';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
@@ -253,6 +281,9 @@ const scoreElementCommandFactory: CommandFactory<ScoreElement> =
 
 const pageSetupCommandFactory: CommandFactory<PageSetup> =
   new CommandFactory<PageSetup>();
+
+const documentPropertiesCommandFactory: CommandFactory<DocumentProperties> =
+  new CommandFactory<DocumentProperties>();
 
 function createFontLoadDescriptor(
   fontFamily: string,
@@ -317,6 +348,7 @@ const {
   textSearchService,
 } = useEditorServices();
 const { t } = useTranslation();
+const { observe: observePageBackgroundResize } = useResizeObserver();
 
 const dynamicTemplateRefs = new Map<string, unknown[]>();
 const dynamicTemplateRefSetters = new Map<string, (value: unknown) => void>();
@@ -351,6 +383,7 @@ type RichTextBoxComponent = {
 type AnnotationComponent = {
   focus: () => void;
   getCurrentText: () => string;
+  getPendingUpdates: () => Partial<AnnotationElement>;
 };
 
 const preferredRichTextBoxFocusTarget = ref<{
@@ -361,8 +394,18 @@ const preferredRichTextBoxFocusTarget = ref<{
 const searchTextQuery = ref('');
 const searchTextPanelIsOpen = ref(false);
 const showFileMenuBar = ref(!isElectron());
-const paneLayoutResetCounter = ref(0);
-const paneVisibility = ref(createDefaultPaneVisibility());
+
+// Hydrate remembered state synchronously (not in onMounted) so saved layout,
+// zoom defaults, and developer-pane preference are available before the dock
+// layout and UI-state refs are first read or rendered.
+const editorEnvironment = ref(loadEditorEnvironment());
+const editorPreferences = ref(loadEditorPreferences());
+
+const statusBarIsVisible = ref(editorEnvironment.value.statusBarIsVisible);
+const layoutResetCounter = ref(0);
+const paneVisibility = ref(
+  createInitialPaneVisibility(editorEnvironment.value, editorPreferences.value),
+);
 const editorPreferencesHydrated = ref(false);
 const isDevelopment = ref(import.meta.env.DEV);
 const isBrowser = ref(!isElectron());
@@ -370,7 +413,14 @@ const isLoading = ref(true);
 const printMode = ref(false);
 const canUndo = ref(false);
 const canRedo = ref(false);
-const developerPaneOpenSections = ref(['display', 'line', 'inspector']);
+const developerPaneOpenSections = computed({
+  get: () => accordionStateFor('developer'),
+  set: (value: string[]) => setAccordionState('developer', value),
+});
+const propertiesPaneOpenSections = computed({
+  get: () => accordionStateFor('properties'),
+  set: (value: string[]) => setAccordionState('properties', value),
+});
 const workspaces = ref<Workspace[]>([]);
 const selectedWorkspaceValue = ref(new Workspace());
 const pendingLyricsAssignmentTimers = new Map<string, number>();
@@ -384,6 +434,7 @@ const modeKeyDialogIsOpen = ref(false);
 const syllablePositioningDialogIsOpen = ref(false);
 const playbackSettingsDialogIsOpen = ref(false);
 const pageSetupDialogIsOpen = ref(false);
+const documentPropertiesDialogIsOpen = ref(false);
 const editorPreferencesDialogIsOpen = ref(false);
 const aboutDialogIsOpen = ref(false);
 const exportDialogIsOpen = ref(false);
@@ -397,7 +448,7 @@ const richTextBoxCalculationCount = ref(0);
 const textBoxCalculation = ref(false);
 const textBoxCalculationCount = ref(0);
 const fonts = ref<string[]>([]);
-const toolbarInnerNeume = ref('Primary');
+const toolbarInnerNeume = ref<NeumeSelection>(NeumeSelection.Primary);
 const keyboardModifier = ref<string | null>(null);
 const audioElement = ref<ScoreElement | null>(null);
 const playbackEvents = ref<PlaybackSequenceEvent[]>([]);
@@ -436,7 +487,6 @@ const audioOptions = reactive<PlaybackOptions>({
     [Accidental.Sharp_8_Left]: 8,
   },
 });
-const editorPreferences = ref(new EditorPreferences());
 const byzHtmlExporter = new ByzHtmlExporter();
 const exportInProgress = ref(false);
 
@@ -533,16 +583,6 @@ const inspectorContext = computed<InspectorContext>(() => {
     isTempoElement(currentSelectedElement)
   ) {
     return { kind: 'tempo', element: currentSelectedElement };
-  }
-
-  if (selectionRange.value != null) {
-    const start = Math.min(
-      selectionRange.value.start,
-      selectionRange.value.end,
-    );
-    const end = Math.max(selectionRange.value.start, selectionRange.value.end);
-
-    return { kind: 'range', elements: elements.value.slice(start, end + 1) };
   }
 
   return { kind: 'none' };
@@ -674,7 +714,7 @@ const selectedElement = computed({
       selectedLyrics.value = null;
       selectionRange.value = null;
       selectedHeaderFooterElement.value = null;
-      toolbarInnerNeume.value = 'Primary';
+      toolbarInnerNeume.value = NeumeSelection.Primary;
 
       if (audioService.state === AudioState.Playing) {
         const event = playbackEvents.value.find(
@@ -706,6 +746,7 @@ const selectedElement = computed({
     selectedWorkspace.value.selectedAlternateLineElement = null;
   },
 });
+const canCopyElementLink = computed(() => selectedElement.value?.id != null);
 
 const selectedElementForNeumeToolbar = computed(() => {
   if (
@@ -747,6 +788,8 @@ const showDeveloperPanels = computed(
   () => editorPreferences.value.showDeveloperPanels,
 );
 
+const overlaysEnabled = computed(() => editorPreferences.value.overlaysEnabled);
+
 const printOverlays = computed(() => editorPreferences.value.printOverlays);
 
 const showGuides = computed(() => editorPreferences.value.showGuides);
@@ -757,6 +800,10 @@ const showAdjustmentRatios = computed(
 
 const showAnonymousBoxes = computed(
   () => editorPreferences.value.showAnonymousBoxes,
+);
+
+const showElementBoxes = computed(
+  () => editorPreferences.value.showElementBoxes,
 );
 
 const showInkBoundingBoxes = computed(
@@ -891,6 +938,7 @@ function reloadDeveloperPaneDiagnostics() {
 }
 
 function getDeveloperGlueOverlays(
+  page: Page,
   line: Line,
   lineIndex: number,
   pageIndex: number,
@@ -899,6 +947,7 @@ function getDeveloperGlueOverlays(
 
   if (
     !showDeveloperPanels.value ||
+    !overlaysEnabled.value ||
     !showGlueWidths.value ||
     diagnostics == null ||
     line.elements.length === 0
@@ -914,10 +963,12 @@ function getDeveloperGlueOverlays(
     score.value.pageSetup.lineHeight * 0.45 -
     stackHeight / 2;
   const preferredTop = stackTop + barHeight + barGap;
+  const resolvedMargins = getResolvedMarginsForPage(page);
 
   return diagnostics.glueOverlays.map((overlay, overlayIndex) => {
     const delta = overlay.actualWidth - overlay.preferredWidth;
     const actualFrame = getDeveloperGlueOverlayFrame(
+      resolvedMargins,
       line,
       overlay.left,
       stackTop,
@@ -925,6 +976,7 @@ function getDeveloperGlueOverlays(
       barHeight,
     );
     const preferredFrame = getDeveloperGlueOverlayFrame(
+      resolvedMargins,
       line,
       overlay.left,
       preferredTop,
@@ -967,12 +1019,13 @@ function getDeveloperGlueOverlays(
   });
 }
 
-function getDeveloperAnonymousBoxOverlays(line: Line, lineIndex: number) {
+function getDeveloperBoxOverlays(page: Page, line: Line, lineIndex: number) {
   const diagnostics = line.diagnostics;
 
   if (
     !showDeveloperPanels.value ||
-    !showAnonymousBoxes.value ||
+    !overlaysEnabled.value ||
+    (!showAnonymousBoxes.value && !showElementBoxes.value) ||
     diagnostics == null ||
     line.elements.length === 0
   ) {
@@ -981,13 +1034,25 @@ function getDeveloperAnonymousBoxOverlays(line: Line, lineIndex: number) {
 
   const height = Math.max(4, score.value.pageSetup.lineHeight * 0.08);
   const top = line.elements[0].y + score.value.pageSetup.lineHeight * 0.2;
+  const resolvedMargins = getResolvedMarginsForPage(page);
 
-  return diagnostics.anonymousBoxOverlays.map((overlay, overlayIndex) => ({
-    key: `${lineIndex}-${overlay.ownerElementId ?? 'anon'}-${overlay.label ?? 'box'}-${overlayIndex}`,
-    kind: getDeveloperAnonymousBoxKind(overlay),
+  const overlays: BoxOverlayDiagnostics[] = [];
+
+  if (showAnonymousBoxes.value) {
+    overlays.push(...diagnostics.anonymousBoxOverlays);
+  }
+
+  if (showElementBoxes.value) {
+    overlays.push(...diagnostics.nonAnonymousBoxOverlays);
+  }
+
+  return overlays.map((overlay, overlayIndex) => ({
+    key: `${lineIndex}-${overlay.anonymous ? 'anon' : 'owned'}-${overlay.ownerElementId ?? 'none'}-${overlay.label ?? 'box'}-${overlayIndex}`,
+    kind: getDeveloperBoxOverlayKind(overlay),
     label: overlay.label,
     style: getDeveloperOverlayStyle(
       getDeveloperGlueOverlayFrame(
+        resolvedMargins,
         line,
         overlay.left,
         top,
@@ -1139,14 +1204,17 @@ const zoom = computed({
   },
 });
 
-const zoomToFit = computed({
+const zoomFitMode = computed({
   get: () => {
-    return selectedWorkspace.value.zoomToFit;
+    return selectedWorkspace.value.zoomFitMode;
   },
-  set: (value: boolean) => {
-    selectedWorkspace.value.zoomToFit = value;
+  set: (value: ZoomFitMode | null) => {
+    selectedWorkspace.value.zoomFitMode = value;
   },
 });
+const canNavigateWorkspaceTabs = computed(
+  () => !dialogOpen.value && tabs.value.length > 1,
+);
 
 const statusScrollPageNumber = computed(() =>
   clamp(currentPageNumber.value, 1, statusPageCount.value),
@@ -1266,14 +1334,14 @@ const pageStyle = computed(() => {
 
 const guideStyleTop = computed(() => {
   return {
-    top: withZoom(score.value.pageSetup.topMargin - 1),
+    top: withZoom(score.value.pageSetup.topMargin),
     width: withZoom(score.value.pageSetup.pageWidth),
   } as StyleValue;
 });
 
 const guideStyleBottom = computed(() => {
   return {
-    bottom: withZoom(score.value.pageSetup.bottomMargin - 1),
+    bottom: withZoom(score.value.pageSetup.bottomMargin),
     width: withZoom(score.value.pageSetup.pageWidth),
   } as StyleValue;
 });
@@ -1292,8 +1360,10 @@ const dialogOpen = computed(() => {
   return (
     modeKeyDialogIsOpen.value ||
     pageSetupDialogIsOpen.value ||
+    documentPropertiesDialogIsOpen.value ||
     playbackSettingsDialogIsOpen.value ||
     syllablePositioningDialogIsOpen.value ||
+    exportDialogIsOpen.value ||
     editorPreferencesDialogIsOpen.value ||
     aboutDialogIsOpen.value
   );
@@ -1302,6 +1372,10 @@ const dialogOpen = computed(() => {
 const filteredPages = computed(() => {
   return printMode.value ? pages.value.filter((x) => !x.isEmpty) : pages.value;
 });
+
+const runningMarkerPageMetadata = computed(() =>
+  resolveRunningMarkerPageMetadata(filteredPages.value),
+);
 
 provide(
   editorPreferencesKey,
@@ -1351,6 +1425,7 @@ const throttled = {
   updateNoteAndSave: throttle(keydownThrottleIntervalMs, updateNoteAndSave),
   setKlasma: throttle(keydownThrottleIntervalMs, setKlasma),
   setGorgon: throttle(keydownThrottleIntervalMs, setGorgon),
+  setSecondaryGorgon: throttle(keydownThrottleIntervalMs, setSecondaryGorgon),
   setFthoraNote: throttle(keydownThrottleIntervalMs, setFthoraNote),
   setFthoraMartyria: throttle(keydownThrottleIntervalMs, setFthoraMartyria),
   setMartyriaTempo: throttle(keydownThrottleIntervalMs, setMartyriaTempo),
@@ -1366,10 +1441,14 @@ const throttled = {
   setTie: throttle(keydownThrottleIntervalMs, setTie),
   setVocalExpression: throttle(keydownThrottleIntervalMs, setVocalExpression),
   updateMartyria: throttle(keydownThrottleIntervalMs, updateMartyria),
-  onWindowResize: throttle(250, onWindowResize),
+  onEditorViewportResize: throttle(250, onEditorViewportResize),
   onScroll: throttle(250, onScroll),
 };
 const saveDebounced = debounce(250, save);
+const ZOOM_WHEEL_DELTA_THRESHOLD = 80;
+const ZOOM_WHEEL_DELTA_RESET_DELAY_MS = 200;
+let zoomWheelDelta = 0;
+let zoomWheelResetTimeout: number | null = null;
 
 if (isDevelopment.value) {
   for (const [key, val] of Object.entries(throttled)) {
@@ -1382,6 +1461,36 @@ if (isDevelopment.value) {
 watch(zoom, () => {
   document.documentElement.style.setProperty('--zoom', zoom.value.toString());
 });
+
+watch(
+  () => [
+    zoomFitMode.value,
+    score.value.pageSetup.pageWidth,
+    score.value.pageSetup.pageHeight,
+    score.value.pageSetup.innerPageWidth,
+    score.value.pageSetup.leftMargin,
+    score.value.pageSetup.rightMargin,
+    score.value.pageSetup.facingPages,
+    score.value.pageSetup.direction,
+    score.value.pageSetup.firstPageNumber,
+  ],
+  () => {
+    if (zoomFitMode.value != null) {
+      nextTick(performZoomToFit);
+    }
+  },
+  { flush: 'post' },
+);
+
+watch(
+  () => getCurrentPhysicalPageNumber(),
+  () => {
+    if (zoomFitMode.value === 'text-width') {
+      alignZoomFitScroll(zoomFitMode.value, zoom.value);
+    }
+  },
+  { flush: 'post' },
+);
 
 watch(currentFilePath, () => {
   window.document.title = windowTitle.value;
@@ -1445,6 +1554,50 @@ watch(
   { deep: true, immediate: true },
 );
 
+watch(
+  canCopyElementLink,
+  (enabled) => {
+    EventBus.$emit(IpcRendererChannels.SetCopyElementLinkEnabled, enabled);
+  },
+  { immediate: true },
+);
+
+watch(
+  canNavigateWorkspaceTabs,
+  (enabled) => {
+    EventBus.$emit(
+      IpcRendererChannels.SetWorkspaceTabNavigationEnabled,
+      enabled,
+    );
+  },
+  { immediate: true },
+);
+
+watch(
+  statusBarIsVisible,
+  (visible) => {
+    EventBus.$emit(IpcRendererChannels.SetStatusBarVisibility, visible);
+  },
+  { immediate: true },
+);
+
+watch(statusBarIsVisible, (visible) => {
+  editorEnvironment.value.statusBarIsVisible = visible;
+  saveEditorEnvironment();
+});
+
+watch(
+  () =>
+    ({
+      zoom: zoom.value,
+      zoomFitMode: zoomFitMode.value,
+    }) as WorkspaceZoomState,
+  (state) => {
+    EventBus.$emit(IpcRendererChannels.SetWorkspaceZoomState, state);
+  },
+  { immediate: true },
+);
+
 watch(isLyricsManagerOpen, (isOpen, wasOpen) => {
   if (isOpen && !wasOpen) {
     refreshStaffLyrics();
@@ -1473,20 +1626,18 @@ onMounted(() => {
     audioOptions.volumeMelody = audioOptions.volumeMelody ?? -Infinity;
   }
 
-  const savedEditorPreferences = localStorage.getItem('editorPreferences');
-
-  if (savedEditorPreferences != null) {
-    editorPreferences.value = EditorPreferences.createFrom(
-      JSON.parse(savedEditorPreferences),
-    );
-  }
-
   syncDeveloperPanelsFromPreferencesOnStartup();
   editorPreferencesHydrated.value = true;
 
   window.addEventListener('keydown', onKeydown);
   window.addEventListener('keyup', onKeyup);
-  window.addEventListener('resize', throttled.onWindowResize);
+  window.addEventListener('resize', throttled.onEditorViewportResize);
+
+  if (pageBackgroundRef.value != null) {
+    observePageBackgroundResize(pageBackgroundRef.value, () => {
+      throttled.onEditorViewportResize();
+    });
+  }
 
   EventBus.$on(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$on(IpcMainChannels.CloseApplication, onCloseApplication);
@@ -1499,6 +1650,10 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuSave, onFileMenuSave);
   EventBus.$on(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
   EventBus.$on(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
+  EventBus.$on(
+    IpcMainChannels.FileMenuDocumentProperties,
+    onFileMenuDocumentProperties,
+  );
   EventBus.$on(IpcMainChannels.FileMenuImportOcr, onFileMenuImportOcr);
   EventBus.$on(IpcMainChannels.FileMenuExportAsPdf, onFileMenuExportAsPdf);
   EventBus.$on(IpcMainChannels.FileMenuExportAsHtml, onFileMenuExportAsHtml);
@@ -1523,13 +1678,23 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$on(IpcMainChannels.FileMenuFind, onFileMenuFind);
   EventBus.$on(
+    IpcMainChannels.FileMenuWindowPreviousTab,
+    onFileMenuWindowPreviousTab,
+  );
+  EventBus.$on(IpcMainChannels.FileMenuWindowNextTab, onFileMenuWindowNextTab);
+  EventBus.$on(
     IpcMainChannels.FileMenuViewPaneVisibility,
     onFileMenuViewPaneVisibility,
   );
   EventBus.$on(
-    IpcMainChannels.FileMenuViewResetPaneLayout,
-    onFileMenuViewResetPaneLayout,
+    IpcMainChannels.FileMenuViewStatusBarVisibility,
+    onFileMenuViewStatusBarVisibility,
   );
+  EventBus.$on(
+    IpcMainChannels.FileMenuViewResetLayout,
+    onFileMenuViewResetLayout,
+  );
+  EventBus.$on(IpcMainChannels.FileMenuViewZoom, onFileMenuViewZoom);
   EventBus.$on(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
   EventBus.$on(IpcMainChannels.OpenAboutDialog, onOpenAboutDialog);
   EventBus.$on(
@@ -1558,8 +1723,8 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuInsertHeader, onFileMenuInsertHeader);
   EventBus.$on(IpcMainChannels.FileMenuInsertFooter, onFileMenuInsertFooter);
   EventBus.$on(
-    IpcMainChannels.FileMenuToolsCopyElementLink,
-    onFileMenuToolsCopyElementLink,
+    IpcMainChannels.FileMenuEditCopyElementLink,
+    onFileMenuEditCopyElementLink,
   );
   EventBus.$on(
     IpcMainChannels.FileMenuGenerateTestFile,
@@ -1578,7 +1743,9 @@ onBeforeUnmount(() => {
 
   window.removeEventListener('keydown', onKeydown);
   window.removeEventListener('keyup', onKeyup);
-  window.removeEventListener('resize', throttled.onWindowResize);
+  window.removeEventListener('resize', throttled.onEditorViewportResize);
+  clearZoomWheelDeltaReset();
+  saveEditorEnvironment();
 
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
@@ -1591,6 +1758,10 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuSave, onFileMenuSave);
   EventBus.$off(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
   EventBus.$off(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
+  EventBus.$off(
+    IpcMainChannels.FileMenuDocumentProperties,
+    onFileMenuDocumentProperties,
+  );
   EventBus.$off(IpcMainChannels.FileMenuExportAsPdf, onFileMenuExportAsPdf);
   EventBus.$off(IpcMainChannels.FileMenuExportAsHtml, onFileMenuExportAsHtml);
   EventBus.$off(
@@ -1614,13 +1785,23 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$off(IpcMainChannels.FileMenuFind, onFileMenuFind);
   EventBus.$off(
+    IpcMainChannels.FileMenuWindowPreviousTab,
+    onFileMenuWindowPreviousTab,
+  );
+  EventBus.$off(IpcMainChannels.FileMenuWindowNextTab, onFileMenuWindowNextTab);
+  EventBus.$off(
     IpcMainChannels.FileMenuViewPaneVisibility,
     onFileMenuViewPaneVisibility,
   );
   EventBus.$off(
-    IpcMainChannels.FileMenuViewResetPaneLayout,
-    onFileMenuViewResetPaneLayout,
+    IpcMainChannels.FileMenuViewStatusBarVisibility,
+    onFileMenuViewStatusBarVisibility,
   );
+  EventBus.$off(
+    IpcMainChannels.FileMenuViewResetLayout,
+    onFileMenuViewResetLayout,
+  );
+  EventBus.$off(IpcMainChannels.FileMenuViewZoom, onFileMenuViewZoom);
   EventBus.$off(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
   EventBus.$off(IpcMainChannels.OpenAboutDialog, onOpenAboutDialog);
   EventBus.$off(
@@ -1649,8 +1830,8 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuInsertHeader, onFileMenuInsertHeader);
   EventBus.$off(IpcMainChannels.FileMenuInsertFooter, onFileMenuInsertFooter);
   EventBus.$off(
-    IpcMainChannels.FileMenuToolsCopyElementLink,
-    onFileMenuToolsCopyElementLink,
+    IpcMainChannels.FileMenuEditCopyElementLink,
+    onFileMenuEditCopyElementLink,
   );
   EventBus.$off(
     IpcMainChannels.FileMenuGenerateTestFile,
@@ -1730,7 +1911,7 @@ function getGuideStyleLeft(page: Page) {
   const margins = getResolvedMarginsForPage(page);
 
   return {
-    left: withZoom(margins.left - 1),
+    left: withZoom(margins.left),
     height: withZoom(score.value.pageSetup.pageHeight),
   } as StyleValue;
 }
@@ -1739,7 +1920,7 @@ function getGuideStyleRight(page: Page) {
   const margins = getResolvedMarginsForPage(page);
 
   return {
-    right: withZoom(margins.right - 1),
+    right: withZoom(margins.right),
     height: withZoom(score.value.pageSetup.pageHeight),
   } as StyleValue;
 }
@@ -1922,7 +2103,7 @@ function formatDeveloperNumber(value: number) {
   return Number.isFinite(value) ? value.toFixed(2) : String(value);
 }
 
-function getDeveloperAnonymousBoxKind(overlay: AnonymousBoxOverlayDiagnostics) {
+function getDeveloperBoxOverlayKind(overlay: BoxOverlayDiagnostics) {
   switch (overlay.label) {
     case 'line-start-reservation':
       return 'line-start-reservation';
@@ -1931,12 +2112,12 @@ function getDeveloperAnonymousBoxKind(overlay: AnonymousBoxOverlayDiagnostics) {
     case 'lyric-collision':
       return 'lyric-collision';
     default:
-      return 'anonymous';
+      return overlay.anonymous ? 'anonymous' : 'owned';
   }
 }
 
 function getDeveloperOverlayBoxes(element: ScoreElement) {
-  if (!showDeveloperPanels.value) {
+  if (!showDeveloperPanels.value || !overlaysEnabled.value) {
     return [];
   }
 
@@ -2002,6 +2183,7 @@ function getDeveloperOverlayStyle(box: {
 }
 
 function getDeveloperGlueOverlayFrame(
+  resolvedMargins: ReturnType<typeof resolvePageMargins>,
   line: Line,
   logicalLeft: number,
   top: number,
@@ -2013,13 +2195,8 @@ function getDeveloperGlueOverlayFrame(
   const normalizedLogicalRight = Math.max(logicalLeft, logicalRight);
   const normalizedWidth = normalizedLogicalRight - normalizedLogicalLeft;
   const physicalLeft = rtl.value
-    ? score.value.pageSetup.pageWidth -
-      score.value.pageSetup.rightMargin -
-      line.indentation -
-      normalizedLogicalRight
-    : score.value.pageSetup.leftMargin +
-      line.indentation +
-      normalizedLogicalLeft;
+    ? resolvedMargins.contentRight - line.indentation - normalizedLogicalRight
+    : resolvedMargins.contentLeft + line.indentation + normalizedLogicalLeft;
 
   return {
     height,
@@ -2211,8 +2388,10 @@ function showExportReplyToast(
 
 function getHeaderForPageIndex(pageIndex: number) {
   const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
-  const header = score.value.getHeaderForPage(pageNumber);
+  const header = score.value.getHeaderForPage(pageNumber, isChapterOpening);
 
   // Currently, headers only support a single text box element.
   return header.elements[0] as TextBoxElement | RichTextBoxElement;
@@ -2220,34 +2399,146 @@ function getHeaderForPageIndex(pageIndex: number) {
 
 function getFooterForPageIndex(pageIndex: number) {
   const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
-  const footer = score.value.getFooterForPage(pageNumber);
+  const footer = score.value.getFooterForPage(pageNumber, isChapterOpening);
 
   // Currently, footers only support a single text box element.
   return footer.elements[0] as TextBoxElement | RichTextBoxElement;
 }
 
-function shouldShowHeaderForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+function getHeaderFooterVariantForPageIndex(
+  pageIndex: number,
+): HeaderFooterVariant {
+  const physicalPageNumber =
+    filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
+  const isOddDisplayedPage = isDisplayedPageNumberOdd(
+    score.value.pageSetup,
+    physicalPageNumber,
+  );
 
-  return score.value.shouldShowHeaderOnPage(pageNumber);
+  if (
+    score.value.pageSetup.headerDifferentFirstPage &&
+    physicalPageNumber === 1
+  ) {
+    return 'firstPage';
+  }
+
+  if (
+    score.value.pageSetup.headerFooterDifferentChapterOpening &&
+    isChapterOpening
+  ) {
+    return 'chapterOpening';
+  }
+
+  if (score.value.pageSetup.headerDifferentOddEven) {
+    return isOddDisplayedPage ? 'odd' : 'even';
+  }
+
+  return 'default';
 }
 
-function shouldShowFooterForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+function getHeaderFooterVariantLabel(variant: HeaderFooterVariant) {
+  switch (variant) {
+    case 'firstPage':
+      return t(($) => $.dialog.pageSetup.firstPage, { ns: 'dialog' });
+    case 'chapterOpening':
+      return t(($) => $.dialog.pageSetup.chapterOpening, { ns: 'dialog' });
+    case 'odd':
+      return t(($) => $.dialog.pageSetup.oddPages, { ns: 'dialog' });
+    case 'even':
+      return t(($) => $.dialog.pageSetup.evenPages, { ns: 'dialog' });
+    default:
+      return t(($) => $.dialog.pageSetup.defaultVariant, { ns: 'dialog' });
+  }
+}
 
-  return score.value.shouldShowFooterOnPage(pageNumber);
+function getHeaderFooterBadgeLabel(pageIndex: number, kind: HeaderFooterKind) {
+  const kindLabel =
+    kind === 'header'
+      ? t(($) => $.dialog.pageSetup.header, { ns: 'dialog' })
+      : t(($) => $.dialog.pageSetup.footer, { ns: 'dialog' });
+
+  return `${kindLabel}: ${getHeaderFooterVariantLabel(
+    getHeaderFooterVariantForPageIndex(pageIndex),
+  )}`;
+}
+
+function getHeaderFooterBadgeStyle(
+  pageIndex: number,
+  page: Page,
+  kind: HeaderFooterKind,
+): StyleValue {
+  const margins = getResolvedMarginsForPage(page);
+  const badgeGap = 4;
+  const style: CSSProperties = {
+    left: withZoom(margins.left),
+  };
+
+  if (kind === 'header') {
+    style.top = withZoom(
+      score.value.pageSetup.headerMargin +
+        getHeaderForPageIndex(pageIndex).height +
+        badgeGap,
+    );
+  } else {
+    style.bottom = withZoom(
+      score.value.pageSetup.footerMargin +
+        getFooterForPageIndex(pageIndex).height +
+        badgeGap,
+    );
+  }
+
+  return style;
+}
+
+function shouldShowHeaderRuleForPageIndex(pageIndex: number) {
+  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
+
+  return score.value.shouldShowHeaderRuleForPageIndex(
+    pageNumber,
+    isChapterOpening,
+  );
+}
+
+function shouldShowFooterRuleForPageIndex(pageIndex: number) {
+  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const isChapterOpening =
+    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
+
+  return score.value.shouldShowFooterRuleOnPage(pageNumber, isChapterOpening);
 }
 
 function getTokenMetadata(pageIndex: number): TokenMetadata {
+  const physicalPageNumber = filteredPages.value[pageIndex].physicalPageNumber;
+  const lastPhysicalPageNumber =
+    filteredPages.value[filteredPages.value.length - 1].physicalPageNumber;
+  const runningMarkers = runningMarkerPageMetadata.value[pageIndex];
+
   return {
-    pageNumber: pageIndex + score.value.pageSetup.firstPageNumber,
-    numberOfPages: pageCount.value + score.value.pageSetup.firstPageNumber - 1,
+    pageNumber: getDisplayedPageNumber(
+      score.value.pageSetup,
+      physicalPageNumber,
+    ),
+    numberOfPages: getDisplayedPageNumber(
+      score.value.pageSetup,
+      lastPhysicalPageNumber,
+    ),
+    numerals: score.value.pageSetup.numerals,
     fileName:
       selectedWorkspace.value.filePath != null
         ? getFileNameFromPath(selectedWorkspace.value.filePath)
         : selectedWorkspace.value.tempFileName,
     filePath: currentFilePath.value || '',
+    title: score.value.documentProperties.title,
+    author: score.value.documentProperties.author,
+    chapter: runningMarkers?.chapter ?? '',
+    section: runningMarkers?.section ?? '',
   };
 }
 
@@ -2257,6 +2548,130 @@ function getElementIndex(element: ScoreElement) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+function getLyricHtmlElement(index: number) {
+  const htmlElement = getTemplateRef<InstanceType<typeof ContentEditable>[]>(
+    `lyrics-${index}`,
+  )[0]?.htmlElement;
+
+  return htmlElement instanceof HTMLElement ? htmlElement : null;
+}
+
+type LyricSelectionSnapshot = {
+  element: NoteElement;
+  startOffset: number;
+  endOffset: number;
+  wasFocused: boolean;
+};
+
+function captureSelectedLyricSelection(): LyricSelectionSnapshot | null {
+  const element = selectedLyrics.value;
+
+  if (element == null) {
+    return null;
+  }
+
+  const index = elements.value.indexOf(element);
+  const htmlElement = getLyricHtmlElement(index);
+  const selection = window.getSelection();
+
+  if (htmlElement == null || selection == null || selection.rangeCount === 0) {
+    return null;
+  }
+
+  const range = selection.getRangeAt(0);
+
+  if (
+    !htmlElement.contains(range.startContainer) ||
+    !htmlElement.contains(range.endContainer)
+  ) {
+    return null;
+  }
+
+  return {
+    element,
+    startOffset: getTextOffset(
+      htmlElement,
+      range.startContainer,
+      range.startOffset,
+    ),
+    endOffset: getTextOffset(htmlElement, range.endContainer, range.endOffset),
+    wasFocused: document.activeElement === htmlElement,
+  };
+}
+
+function getTextOffset(root: HTMLElement, container: Node, offset: number) {
+  const range = document.createRange();
+  range.selectNodeContents(root);
+  range.setEnd(container, offset);
+
+  const textOffset = range.toString().length;
+
+  return textOffset;
+}
+
+function restoreLyricSelection(lyricSelection: LyricSelectionSnapshot) {
+  if (selectedLyrics.value !== lyricSelection.element) {
+    return;
+  }
+
+  const index = elements.value.indexOf(lyricSelection.element);
+  const htmlElement = getLyricHtmlElement(index);
+  const selection = window.getSelection();
+
+  if (htmlElement == null || selection == null) {
+    return;
+  }
+
+  const textLength = htmlElement.textContent?.length ?? 0;
+  const clampedStartOffset = clamp(lyricSelection.startOffset, 0, textLength);
+  const clampedEndOffset = clamp(lyricSelection.endOffset, 0, textLength);
+  const range = document.createRange();
+
+  setTextRangeBoundary(htmlElement, range, clampedStartOffset, true);
+  setTextRangeBoundary(htmlElement, range, clampedEndOffset, false);
+
+  if (lyricSelection.wasFocused && document.hasFocus()) {
+    htmlElement.focus();
+  }
+
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+function setTextRangeBoundary(
+  root: HTMLElement,
+  range: Range,
+  offset: number,
+  start: boolean,
+) {
+  let remainingOffset = offset;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let textNode = walker.nextNode();
+
+  while (textNode != null) {
+    const textLength = textNode.textContent?.length ?? 0;
+
+    if (remainingOffset <= textLength) {
+      if (start) {
+        range.setStart(textNode, remainingOffset);
+      } else {
+        range.setEnd(textNode, remainingOffset);
+      }
+
+      return;
+    }
+
+    remainingOffset -= textLength;
+    textNode = walker.nextNode();
+  }
+
+  if (start) {
+    range.setStart(root, root.childNodes.length);
+  } else {
+    range.setEnd(root, root.childNodes.length);
+  }
 }
 
 function getFirstElementForPage(pageNumber: number) {
@@ -2346,7 +2761,7 @@ function getSectionNumberForElementIndex(elementIndex: number) {
     return 1;
   }
 
-  const sectionMarkers = scoreElements.filter(hasSectionName);
+  const sectionMarkers = scoreElements.filter(isSectionMarker);
   if (sectionMarkers.length === 0) {
     return 1;
   }
@@ -2376,7 +2791,7 @@ function getSectionCount() {
     return 1;
   }
 
-  const sectionMarkers = scoreElements.filter(hasSectionName);
+  const sectionMarkers = scoreElements.filter(isSectionMarker);
   if (sectionMarkers.length === 0) {
     return 1;
   }
@@ -2387,8 +2802,21 @@ function getSectionCount() {
   );
 }
 
-function hasSectionName(element: ScoreElement) {
-  return (element.sectionName ?? '').trim().length > 0;
+function isSectionMarker(element: ScoreElement) {
+  if (
+    element.elementType !== ElementType.TextBox &&
+    element.elementType !== ElementType.RichTextBox
+  ) {
+    return false;
+  }
+
+  const runningMarkerElement = element as TextBoxElement | RichTextBoxElement;
+
+  if (runningMarkerElement.runningMarkerRole !== 'section') {
+    return false;
+  }
+
+  return resolveRunningMarkerText(runningMarkerElement) != null;
 }
 
 function setSelectionRange(element: ScoreElement) {
@@ -2523,16 +2951,21 @@ function syncDeveloperPanelsMenuState() {
 }
 
 function syncDeveloperPanelsFromPreferencesOnStartup() {
-  setPaneVisibility('developer', editorPreferences.value.showDeveloperPanels);
+  if (editorEnvironment.value.paneLayout?.developer == null) {
+    setPaneVisibility('developer', editorPreferences.value.showDeveloperPanels);
+  }
+
   syncDeveloperPanelsMenuState();
 }
 
 function updateDeveloperToggle(
   key:
+    | 'overlaysEnabled'
     | 'printOverlays'
     | 'showAdjustmentRatios'
     | 'showAnonymousBoxes'
     | 'showCollisionRegions'
+    | 'showElementBoxes'
     | 'showGuides'
     | 'showGlueWidths'
     | 'showInkBoundingBoxes'
@@ -2586,10 +3019,25 @@ function showPropertiesPaneForRichTextNeume() {
 
 function resetLayout() {
   const defaultVisibility = createDefaultPaneVisibility();
+  const defaultEnvironment = new EditorEnvironment();
 
+  pendingZoomFitDefaultUpdate = null;
+  editorEnvironment.value.defaultZoom = defaultEnvironment.defaultZoom;
+  editorEnvironment.value.defaultZoomFitMode =
+    defaultEnvironment.defaultZoomFitMode;
+  editorEnvironment.value.statusBarIsVisible =
+    defaultEnvironment.statusBarIsVisible;
+  editorEnvironment.value.paneLayout = defaultEnvironment.paneLayout;
+  editorEnvironment.value.paneAccordionState = {
+    ...defaultEnvironment.paneAccordionState,
+  };
+  zoom.value = defaultEnvironment.defaultZoom;
+  zoomFitMode.value = defaultEnvironment.defaultZoomFitMode;
+  statusBarIsVisible.value = defaultEnvironment.statusBarIsVisible;
   Object.assign(paneVisibility.value, defaultVisibility);
   paneVisibility.value.developer = editorPreferences.value.showDeveloperPanels;
-  paneLayoutResetCounter.value += 1;
+  layoutResetCounter.value += 1;
+  saveEditorEnvironment();
 }
 
 function onPaneVisibilityChange(paneId: WorkspacePaneId, isVisible: boolean) {
@@ -2605,6 +3053,11 @@ function onPaneVisibilityChange(paneId: WorkspacePaneId, isVisible: boolean) {
 
   setPaneVisibility(paneId, isVisible);
   refocusSelectedRichTextEditorAfterShowingPane(paneId, isVisible);
+}
+
+function onPaneLayoutChange(layout: EditorPaneLayout) {
+  editorEnvironment.value.paneLayout = layout;
+  saveEditorEnvironmentDebounced();
 }
 
 function updateEditorPreferences(form: EditorPreferences) {
@@ -2640,59 +3093,87 @@ function saveEditorPreferences() {
   );
 }
 
+function loadEditorPreferences() {
+  try {
+    const savedEditorPreferences = localStorage.getItem('editorPreferences');
+
+    if (savedEditorPreferences != null) {
+      return EditorPreferences.createFrom(JSON.parse(savedEditorPreferences));
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  return new EditorPreferences();
+}
+
+function loadEditorEnvironment() {
+  try {
+    const savedEditorEnvironment = localStorage.getItem('editorEnvironment');
+
+    if (savedEditorEnvironment != null) {
+      return EditorEnvironment.createFrom(JSON.parse(savedEditorEnvironment));
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  return new EditorEnvironment();
+}
+
+function createInitialPaneVisibility(
+  environment: EditorEnvironment,
+  preferences: EditorPreferences,
+) {
+  const visibility = createDefaultPaneVisibility();
+  const savedLayout = environment.paneLayout;
+
+  if (savedLayout != null) {
+    (Object.keys(visibility) as WorkspacePaneId[]).forEach((paneId) => {
+      const paneState = savedLayout[paneId];
+
+      if (paneState != null) {
+        visibility[paneId] = paneState.visible;
+      }
+    });
+  }
+
+  if (!preferences.showDeveloperPanels) {
+    visibility.developer = false;
+  } else if (savedLayout?.developer == null) {
+    visibility.developer = true;
+  }
+
+  return visibility;
+}
+
+function saveEditorEnvironment() {
+  localStorage.setItem(
+    'editorEnvironment',
+    JSON.stringify(editorEnvironment.value),
+  );
+}
+
+// Pane-layout and fit-mode zoom changes can fire rapidly (drag, resize); coalesce
+// their writes.
+const saveEditorEnvironmentDebounced = debounce(500, saveEditorEnvironment);
+
+function accordionStateFor(paneId: WorkspacePaneId): string[] {
+  return (
+    editorEnvironment.value.paneAccordionState[paneId] ??
+    DEFAULT_PANE_ACCORDION_STATE[paneId] ??
+    []
+  );
+}
+
+function setAccordionState(paneId: WorkspacePaneId, value: string[]) {
+  editorEnvironment.value.paneAccordionState[paneId] = value;
+  saveEditorEnvironment();
+}
+
 function isLastElement(element: ScoreElement) {
   return elements.value.indexOf(element) === elements.value.length - 1;
 }
-
-function getInspectorSelectionElement() {
-  const context = inspectorContext.value;
-
-  switch (context.kind) {
-    case 'none':
-    case 'range':
-    case 'lyrics':
-      return null;
-    case 'text-box':
-    case 'rich-text-box':
-      return context.source === 'score' ? context.element : null;
-    case 'annotation':
-      return selectedElement.value;
-    case 'neume':
-      return selectedElementForNeumeToolbar.value;
-    default:
-      return context.element;
-  }
-}
-
-function getInspectorSelectionElementCollection(element: ScoreElement) {
-  const alternateLine = selectedWorkspace.value.selectedAlternateLineElement;
-
-  if (alternateLine?.elements.includes(element)) {
-    return alternateLine.elements;
-  }
-
-  return elements.value;
-}
-
-function canApplyInspectorBreakToElement(
-  element: ScoreElement,
-  collection: ScoreElement[],
-) {
-  return collection === elements.value && !isLastElement(element);
-}
-
-const canApplyInspectorBreak = computed(() => {
-  const element = getInspectorSelectionElement();
-
-  if (element == null) {
-    return false;
-  }
-
-  return canApplyInspectorBreakToElement(
-    element,
-    getInspectorSelectionElementCollection(element),
-  );
-});
 
 function insertPelastikon() {
   document.execCommand('insertText', false, PELASTIKON);
@@ -3013,32 +3494,6 @@ function togglePageBreak() {
   }
 }
 
-function toggleInspectorPageBreak() {
-  const element = getInspectorSelectionElement();
-
-  if (element == null) {
-    return;
-  }
-
-  const collection = getInspectorSelectionElementCollection(element);
-
-  if (!canApplyInspectorBreakToElement(element, collection)) {
-    return;
-  }
-
-  commandService.value.execute(
-    scoreElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: {
-        pageBreak: !element.pageBreak,
-        lineBreak: false,
-      },
-    }),
-  );
-
-  save();
-}
-
 function toggleLineBreak(lineBreakType: LineBreakType | null) {
   if (selectedElement.value && !isLastElement(selectedElement.value)) {
     let lineBreak = !selectedElement.value.lineBreak;
@@ -3064,63 +3519,6 @@ function toggleLineBreak(lineBreakType: LineBreakType | null) {
 
     save();
   }
-}
-
-function toggleInspectorLineBreak(lineBreakType: LineBreakType | null) {
-  const element = getInspectorSelectionElement();
-
-  if (element == null) {
-    return;
-  }
-
-  const collection = getInspectorSelectionElementCollection(element);
-
-  if (!canApplyInspectorBreakToElement(element, collection)) {
-    return;
-  }
-
-  let lineBreak = !element.lineBreak;
-
-  if (lineBreakType != element.lineBreakType) {
-    lineBreak = true;
-  }
-
-  if (!lineBreak) {
-    lineBreakType = null;
-  }
-
-  commandService.value.execute(
-    scoreElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: {
-        lineBreak,
-        pageBreak: false,
-        lineBreakType,
-      },
-    }),
-  );
-
-  save();
-}
-
-function updateScoreElementSectionName(
-  element: ScoreElement,
-  sectionName: string | null,
-) {
-  if (sectionName != null && sectionName.trim() == '') {
-    sectionName = null;
-  }
-
-  commandService.value.execute(
-    scoreElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: {
-        sectionName,
-      },
-    }),
-  );
-
-  save();
 }
 
 function switchToMartyria(element: ScoreElement) {
@@ -3270,7 +3668,7 @@ function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
     }
 
     if (
-      shouldShowHeaderForPageIndex(pageIndex) &&
+      score.value.pageSetup.showHeader &&
       getHeaderForPageIndex(pageIndex) === element
     ) {
       components.push(
@@ -3279,7 +3677,7 @@ function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
     }
 
     if (
-      shouldShowFooterForPageIndex(pageIndex) &&
+      score.value.pageSetup.showFooter &&
       getFooterForPageIndex(pageIndex) === element
     ) {
       components.push(
@@ -3366,6 +3764,8 @@ const toolbarInteractionKeyCodes = new Set([
   'Tab',
 ]);
 
+type WorkspaceTabNavigationDirection = 'previous' | 'next';
+
 function isEditorShortcutIgnored(event: KeyboardEvent) {
   return (
     event.target instanceof Element &&
@@ -3376,8 +3776,8 @@ function isEditorShortcutIgnored(event: KeyboardEvent) {
   );
 }
 
-function onWindowResize() {
-  if (zoomToFit.value) {
+function onEditorViewportResize() {
+  if (zoomFitMode.value != null) {
     performZoomToFit();
   }
 }
@@ -3386,14 +3786,218 @@ function onScroll() {
   calculatePageNumber();
 }
 
+type ZoomWheelAnchor =
+  | {
+      kind: 'page';
+      pageElement: HTMLElement;
+      clientX: number;
+      clientY: number;
+      pageX: number;
+      pageY: number;
+    }
+  | {
+      kind: 'scroll';
+      scrollX: number;
+      scrollY: number;
+      viewportOffsetX: number;
+      viewportOffsetY: number;
+    };
+
+function resetZoomWheelDelta() {
+  zoomWheelDelta = 0;
+  clearZoomWheelDeltaReset();
+}
+
+function clearZoomWheelDeltaReset() {
+  if (zoomWheelResetTimeout == null) {
+    return;
+  }
+
+  window.clearTimeout(zoomWheelResetTimeout);
+  zoomWheelResetTimeout = null;
+}
+
+function scheduleZoomWheelDeltaReset() {
+  clearZoomWheelDeltaReset();
+
+  zoomWheelResetTimeout = window.setTimeout(() => {
+    zoomWheelDelta = 0;
+    zoomWheelResetTimeout = null;
+  }, ZOOM_WHEEL_DELTA_RESET_DELAY_MS);
+}
+
+function createZoomWheelAnchor(
+  event: WheelEvent,
+  pageBackgroundElement: HTMLElement,
+  zoomValue: number,
+): ZoomWheelAnchor {
+  const pageElement =
+    event.target instanceof Element ? event.target.closest('.page') : null;
+
+  if (
+    pageElement instanceof HTMLElement &&
+    pageBackgroundElement.contains(pageElement)
+  ) {
+    const pageRect = pageElement.getBoundingClientRect();
+
+    return {
+      kind: 'page',
+      pageElement,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      pageX: (event.clientX - pageRect.left) / zoomValue,
+      pageY: (event.clientY - pageRect.top) / zoomValue,
+    };
+  }
+
+  // Fallback for gutters/padding between pages. Fixed page margins and
+  // container padding do not scale, so this only approximately preserves the
+  // cursor position when the wheel event is not over a page.
+  const backgroundRect = pageBackgroundElement.getBoundingClientRect();
+  const computedStyle = getComputedStyle(pageBackgroundElement);
+  const viewportOffsetX =
+    event.clientX - backgroundRect.left - parseFloat(computedStyle.paddingLeft);
+  const viewportOffsetY =
+    event.clientY - backgroundRect.top - parseFloat(computedStyle.paddingTop);
+
+  return {
+    kind: 'scroll',
+    scrollX: pageBackgroundElement.scrollLeft + viewportOffsetX,
+    scrollY: pageBackgroundElement.scrollTop + viewportOffsetY,
+    viewportOffsetX,
+    viewportOffsetY,
+  };
+}
+
+function restoreZoomWheelAnchor(
+  anchor: ZoomWheelAnchor,
+  pageBackgroundElement: HTMLElement,
+  previousZoom: number,
+) {
+  nextTick(() => {
+    if (!pageBackgroundElement.isConnected) {
+      return;
+    }
+
+    if (anchor.kind === 'page') {
+      if (!pageBackgroundElement.contains(anchor.pageElement)) {
+        return;
+      }
+
+      const pageRect = anchor.pageElement.getBoundingClientRect();
+      pageBackgroundElement.scrollLeft +=
+        pageRect.left + anchor.pageX * zoom.value - anchor.clientX;
+      pageBackgroundElement.scrollTop +=
+        pageRect.top + anchor.pageY * zoom.value - anchor.clientY;
+    } else {
+      const zoomRatio = zoom.value / previousZoom;
+
+      if (!Number.isFinite(zoomRatio) || zoomRatio <= 0) {
+        return;
+      }
+
+      pageBackgroundElement.scrollLeft =
+        anchor.scrollX * zoomRatio - anchor.viewportOffsetX;
+      pageBackgroundElement.scrollTop =
+        anchor.scrollY * zoomRatio - anchor.viewportOffsetY;
+    }
+
+    calculatePageNumber();
+  });
+}
+
+function applyZoomWheelStep(
+  event: WheelEvent,
+  pageBackgroundElement: HTMLElement,
+  direction: 1 | -1,
+) {
+  const previousZoom = zoom.value;
+  const anchor = createZoomWheelAnchor(
+    event,
+    pageBackgroundElement,
+    previousZoom,
+  );
+
+  if (zoomToNearestStep(direction)) {
+    restoreZoomWheelAnchor(anchor, pageBackgroundElement, previousZoom);
+  }
+}
+
+function onPageBackgroundWheel(event: WheelEvent) {
+  const isZoomWheelShortcut =
+    event.ctrlKey || (platformService.isMac && event.metaKey);
+
+  if (event.defaultPrevented || !isZoomWheelShortcut) {
+    return;
+  }
+
+  const pageBackgroundElement =
+    event.currentTarget instanceof HTMLElement
+      ? event.currentTarget
+      : pageBackgroundRef.value;
+
+  if (pageBackgroundElement == null) {
+    return;
+  }
+
+  const { deltaY } = event;
+
+  if (deltaY === 0) {
+    return;
+  }
+
+  // This is a vertical Ctrl/Cmd+wheel over the document: suppress the browser's
+  // native zoom even if we decline to zoom below (e.g. while a dialog is open).
+  event.preventDefault();
+
+  if (dialogOpen.value) {
+    return;
+  }
+
+  // Discrete wheels (e.g. Firefox in line/page mode) deliver one notch per
+  // event, so zoom a single step immediately. The accumulator below is tuned
+  // for high-resolution pixel deltas (mice and trackpad pinch in Chromium);
+  // accumulating discrete notches would require several to cross the
+  // threshold, making one deliberate notch feel unresponsive.
+  if (event.deltaMode !== WheelEvent.DOM_DELTA_PIXEL) {
+    resetZoomWheelDelta();
+    applyZoomWheelStep(event, pageBackgroundElement, deltaY < 0 ? 1 : -1);
+    return;
+  }
+
+  if (zoomWheelDelta !== 0 && Math.sign(zoomWheelDelta) !== Math.sign(deltaY)) {
+    zoomWheelDelta = 0;
+  }
+
+  zoomWheelDelta += deltaY;
+
+  if (Math.abs(zoomWheelDelta) < ZOOM_WHEEL_DELTA_THRESHOLD) {
+    scheduleZoomWheelDeltaReset();
+    return;
+  }
+
+  const direction = zoomWheelDelta < 0 ? 1 : -1;
+
+  resetZoomWheelDelta();
+  applyZoomWheelStep(event, pageBackgroundElement, direction);
+}
+
 function onKeydown(event: KeyboardEvent) {
   if (event.defaultPrevented) {
     return;
   }
 
+  if (dialogOpen.value) {
+    if (handleDialogEditShortcut(event)) {
+      event.preventDefault();
+    }
+
+    return;
+  }
+
   const editorShortcutIgnored = isEditorShortcutIgnored(event);
 
-  if (platformService.isMac && isTextInputFocused() && !dialogOpen.value) {
+  if (platformService.isMac && isTextInputFocused()) {
     onKeydownMac(event);
   }
 
@@ -3403,11 +4007,7 @@ function onKeydown(event: KeyboardEvent) {
 
   // Handle undo / redo
   // See https://github.com/electron/electron/issues/3682.
-  if (
-    (event.ctrlKey || event.metaKey) &&
-    !isTextInputFocused() &&
-    !dialogOpen.value
-  ) {
+  if ((event.ctrlKey || event.metaKey) && !isTextInputFocused()) {
     if (event.code === 'KeyZ') {
       if (platformService.isMac && event.shiftKey) {
         throttled.onFileMenuRedo();
@@ -3417,9 +4017,11 @@ function onKeydown(event: KeyboardEvent) {
       event.preventDefault();
       return;
     } else if (event.code === 'KeyY') {
-      throttled.onFileMenuRedo();
-      event.preventDefault();
-      return;
+      if (!platformService.isMac) {
+        throttled.onFileMenuRedo();
+        event.preventDefault();
+        return;
+      }
     } else if (event.code === 'KeyX') {
       throttled.onCutScoreElements();
       event.preventDefault();
@@ -3482,7 +4084,7 @@ function onKeydown(event: KeyboardEvent) {
     return onKeydownTextBox(event);
   }
 
-  if (!isTextInputFocused() && !dialogOpen.value) {
+  if (!isTextInputFocused()) {
     return onKeydownNeume(event);
   }
 }
@@ -3637,7 +4239,19 @@ function onKeydownNeume(event: KeyboardEvent) {
 
       if (gorgonMapping != null) {
         handled = true;
-        throttled.setGorgon(noteElement, gorgonMapping.neumes as GorgonNeume[]);
+        const gorgonNeumes = gorgonMapping.neumes as GorgonNeume[];
+        const secondaryGorgonNeume = getSecondaryGorgonNeume(gorgonNeumes);
+
+        if (
+          toolbarInnerNeume.value === 'Secondary' &&
+          noteElement.quantitativeNeume !== QuantitativeNeume.Hyporoe &&
+          getSecondaryNeume(noteElement.quantitativeNeume) != null &&
+          secondaryGorgonNeume != null
+        ) {
+          throttled.setSecondaryGorgon(noteElement, secondaryGorgonNeume);
+        } else {
+          throttled.setGorgon(noteElement, gorgonNeumes);
+        }
       }
 
       const vocalExpressionMapping = neumeKeyboard.findVocalExpressionMapping(
@@ -4097,42 +4711,83 @@ function onKeydownTextBox(event: KeyboardEvent) {
 }
 
 function onKeydownMac(event: KeyboardEvent) {
-  let handled = false;
+  if (handleEditShortcut(event)) {
+    event.preventDefault();
+  }
+}
 
-  if (!event.metaKey) {
-    return;
+function handleEditShortcut(event: KeyboardEvent, canPaste: boolean = true) {
+  if (!isPlatformShortcutPressed(event)) {
+    return false;
   }
 
   switch (event.code) {
     case 'KeyA':
       document.execCommand('selectAll');
-      handled = true;
-      break;
+      return true;
     case 'KeyC':
       document.execCommand('copy');
-      handled = true;
-      break;
+      return true;
     case 'KeyV':
+      if (!canPaste) {
+        return false;
+      }
+
       void pasteTextFromClipboard();
-      handled = true;
-      break;
+      return true;
     case 'KeyX':
       document.execCommand('cut');
-      handled = true;
-      break;
-    case 'KeyZ':
-      if (event.shiftKey) {
+      return true;
+    case 'KeyY':
+      if (!platformService.isMac) {
         document.execCommand('redo');
-      } else {
-        document.execCommand('undo');
+        return true;
       }
-      handled = true;
-      break;
-  }
 
-  if (handled) {
-    event.preventDefault();
+      return false;
+    case 'KeyZ':
+      if (platformService.isMac && event.shiftKey) {
+        document.execCommand('redo');
+        return true;
+      }
+
+      if (!event.shiftKey) {
+        document.execCommand('undo');
+        return true;
+      }
+
+      return false;
+    default:
+      return false;
   }
+}
+
+function handleDialogEditShortcut(event: KeyboardEvent) {
+  return handleEditShortcut(
+    event,
+    isElectron() || isContentEditableTarget(event.target),
+  );
+}
+
+function isPlatformShortcutPressed(event: KeyboardEvent) {
+  return platformService.isMac ? event.metaKey : event.ctrlKey && !event.altKey;
+}
+
+function isContentEditableTarget(target: EventTarget | null) {
+  const element =
+    target instanceof Element
+      ? target
+      : target instanceof Node
+        ? target.parentElement
+        : null;
+
+  return (
+    element != null &&
+    ((element instanceof HTMLElement && element.isContentEditable) ||
+      element.closest(
+        '[contenteditable="true"], [contenteditable="plaintext-only"]',
+      ) != null)
+  );
 }
 
 function onKeyup(event: KeyboardEvent) {
@@ -4688,6 +5343,8 @@ function save(markUnsavedChanges: boolean = true) {
     hasUnsavedChanges.value = true;
   }
 
+  const lyricSelection = captureSelectedLyricSelection();
+
   // Save the indexes of the visible pages
   const visiblePages = pages.value
     .map((_, i) => i)
@@ -4726,6 +5383,12 @@ function save(markUnsavedChanges: boolean = true) {
     });
 
   pages.value = processedPages;
+
+  if (lyricSelection != null) {
+    nextTick(() => {
+      restoreLyricSelection(lyricSelection);
+    });
+  }
 
   // Auto-persist to local/dev storage. This deliberately serializes WITHOUT
   // flushing the live rich-text editors: `save()` runs frequently -- often via the
@@ -5053,6 +5716,7 @@ async function onCloseApplication() {
     }
   }
 
+  saveEditorEnvironment();
   await ipcService.exitApplication();
 }
 
@@ -5747,6 +6411,14 @@ function updateAnnotation(
 ) {
   const annotationContext = getAnnotationContext(element);
 
+  if (newValues.text != null && newValues.text.trim() === '') {
+    if (annotationContext != null) {
+      removeAnnotation(annotationContext.parent, element);
+    }
+
+    return;
+  }
+
   if (newValues.text == null && annotationContext?.component != null) {
     const currentText = annotationContext.component.getCurrentText();
 
@@ -5832,10 +6504,6 @@ function updateRichTextBox(
     ...newValues,
   };
 
-  if (newValues.rtl != null) {
-    element.keyHelper++;
-  }
-
   const heightProp: keyof RichTextBoxElement = 'height';
 
   const noHistory =
@@ -5905,13 +6573,22 @@ function flushPendingAnnotationEditor() {
     return;
   }
 
-  const currentText = getAnnotationComponentRef(annotation)?.getCurrentText();
+  const component = getAnnotationComponentRef(annotation);
 
-  if (
-    currentText != null &&
-    (currentText.trim() === '' || annotation.text !== currentText)
-  ) {
-    updateAnnotation(annotation, {});
+  if (component == null) {
+    return;
+  }
+
+  const updates = component.getPendingUpdates();
+  const currentText = updates.text ?? component.getCurrentText();
+
+  if (currentText.trim() === '') {
+    updateAnnotation(annotation, { text: currentText });
+    return;
+  }
+
+  if (Object.keys(updates).length > 0) {
+    updateAnnotation(annotation, updates);
   }
 }
 
@@ -6259,37 +6936,6 @@ function deleteSelectedElement() {
   }
 }
 
-function deleteInspectorSelectionElement() {
-  if (inspectorContext.value.kind === 'range') {
-    deleteSelectedElement();
-    return;
-  }
-
-  const element = getInspectorSelectionElement();
-
-  if (element == null) {
-    return;
-  }
-
-  const alternateLine = selectedWorkspace.value.selectedAlternateLineElement;
-
-  if (alternateLine?.elements.includes(element)) {
-    if (
-      alternateLine.elements.length === 1 &&
-      selectedElement.value?.elementType === ElementType.Note
-    ) {
-      removeAlternateLine(selectedElement.value as NoteElement, alternateLine);
-    } else {
-      removeScoreElement(element, alternateLine.elements);
-      save();
-    }
-
-    return;
-  }
-
-  deleteSelectedElement();
-}
-
 function deletePreviousElement() {
   if (selectedWorkspace.value.selectedAlternateLineElement) {
     const alternateLineElements =
@@ -6335,107 +6981,71 @@ function resizableTextDefaultsChanged(previous: PageSetup, current: PageSetup) {
 }
 
 function updatePageSetup(pageSetup: PageSetup) {
-  const needToRecalcRichTextBoxes = resizableTextDefaultsChanged(
-    score.value.pageSetup,
+  const currentPageSetup = score.value.pageSetup;
+  const nextPageSetup = normalizePageSetupForGeneratedHeaderFooterDefaults(
     pageSetup,
+    shouldAutoEnableDifferentOddEvenForFacingPages(
+      score.value,
+      currentPageSetup,
+      pageSetup,
+    ),
+  );
+  const needToRecalcRichTextBoxes = resizableTextDefaultsChanged(
+    currentPageSetup,
+    nextPageSetup,
   );
 
   const updateCommands: Command[] = [
     pageSetupCommandFactory.create('update-properties', {
-      target: score.value.pageSetup,
-      newValues: pageSetup,
+      target: currentPageSetup,
+      newValues: nextPageSetup,
     }),
   ];
 
-  if (pageSetup.richHeaderFooter && !score.value.pageSetup.richHeaderFooter) {
-    updateCommands.push(
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.default.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.even.elements,
-        element: createRichHeaderFooter('$p', 'Title', ''),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.firstPage.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.odd.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.default.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.even.elements,
-        element: createRichHeaderFooter('$p', 'Footer', ''),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.firstPage.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.odd.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
+  if (nextPageSetup.richHeaderFooter !== currentPageSetup.richHeaderFooter) {
+    pushHeaderFooterReplacementCommands(
+      updateCommands,
+      score.value,
+      createGeneratedHeaderFooterTemplates(
+        nextPageSetup,
+        nextPageSetup.richHeaderFooter,
+      ),
     );
   } else if (
-    !pageSetup.richHeaderFooter &&
-    score.value.pageSetup.richHeaderFooter
+    generatedHeaderFooterDefaultsChanged(currentPageSetup, nextPageSetup)
   ) {
-    updateCommands.push(
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.default.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.even.elements,
-        element: createRegularHeaderFooter('$p', 'Title', ''),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.firstPage.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.headers.odd.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.default.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.even.elements,
-        element: createRegularHeaderFooter('$p', 'Footer', ''),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.firstPage.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: score.value.footers.odd.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
+    const oldGeneratedTemplates = createGeneratedHeaderFooterTemplates(
+      currentPageSetup,
+      currentPageSetup.richHeaderFooter,
     );
+    const newGeneratedTemplates = createGeneratedHeaderFooterTemplates(
+      nextPageSetup,
+      nextPageSetup.richHeaderFooter,
+    );
+
+    for (const slot of headerFooterSlots) {
+      const currentElement = getHeaderFooterSlotElement(score.value, slot);
+      const oldGeneratedElement = getHeaderFooterTemplateSlotElement(
+        oldGeneratedTemplates,
+        slot,
+      );
+
+      if (
+        currentElement != null &&
+        areGeneratedHeaderFooterElementsEqual(
+          currentElement,
+          oldGeneratedElement,
+        )
+      ) {
+        updateCommands.push(
+          createHeaderFooterReplacementCommand(
+            score.value,
+            slot,
+            getHeaderFooterTemplateSlotElement(newGeneratedTemplates, slot),
+          ),
+        );
+      }
+    }
   }
 
   commandService.value.executeAsBatch(updateCommands);
@@ -6444,6 +7054,17 @@ function updatePageSetup(pageSetup: PageSetup) {
     recalculateRichTextBoxHeights();
     recalculateTextBoxHeights();
   }
+
+  save();
+}
+
+function updateDocumentProperties(documentProperties: DocumentProperties) {
+  commandService.value.execute(
+    documentPropertiesCommandFactory.create('update-properties', {
+      target: score.value.documentProperties,
+      newValues: documentProperties,
+    }),
+  );
 
   save();
 }
@@ -6474,6 +7095,94 @@ function createRegularHeaderFooter(
   return textbox;
 }
 
+type HeaderFooterKind = 'header' | 'footer';
+type HeaderFooterVariant =
+  | 'default'
+  | 'firstPage'
+  | 'odd'
+  | 'even'
+  | 'chapterOpening';
+type HeaderFooterSlot = {
+  kind: HeaderFooterKind;
+  variant: HeaderFooterVariant;
+};
+type HeaderFooterTemplateElement = TextBoxElement | RichTextBoxElement;
+type HeaderFooterTemplateGroup<T> = Record<HeaderFooterVariant, T>;
+type HeaderFooterTemplates<T> = Record<
+  HeaderFooterKind,
+  HeaderFooterTemplateGroup<T>
+>;
+
+const headerFooterVariants: HeaderFooterVariant[] = [
+  'default',
+  'firstPage',
+  'odd',
+  'even',
+  'chapterOpening',
+];
+
+const headerFooterSlots: HeaderFooterSlot[] = [
+  { kind: 'header', variant: 'default' },
+  { kind: 'header', variant: 'firstPage' },
+  { kind: 'header', variant: 'odd' },
+  { kind: 'header', variant: 'even' },
+  { kind: 'header', variant: 'chapterOpening' },
+  { kind: 'footer', variant: 'default' },
+  { kind: 'footer', variant: 'firstPage' },
+  { kind: 'footer', variant: 'odd' },
+  { kind: 'footer', variant: 'even' },
+  { kind: 'footer', variant: 'chapterOpening' },
+];
+
+const nonChapterOddEvenAffectedSlots: HeaderFooterSlot[] = [
+  { kind: 'header', variant: 'default' },
+  { kind: 'header', variant: 'odd' },
+  { kind: 'header', variant: 'even' },
+  { kind: 'footer', variant: 'default' },
+  { kind: 'footer', variant: 'odd' },
+  { kind: 'footer', variant: 'even' },
+];
+
+function getDefaultHeaderFooterPanels(
+  pageSetup: PageSetup,
+  kind: HeaderFooterKind,
+  variant: HeaderFooterVariant,
+) {
+  if (!pageSetup.facingPages) {
+    return kind === 'header'
+      ? { left: '', center: '', right: '' }
+      : { left: '', center: '$p', right: '' };
+  }
+
+  if (variant === 'chapterOpening') {
+    return kind === 'header'
+      ? { left: '', center: '', right: '' }
+      : { left: '', center: '$p', right: '' };
+  }
+
+  if (kind === 'footer') {
+    return { left: '', center: '', right: '' };
+  }
+
+  let isRightHandTemplatePage: boolean;
+
+  if (variant === 'default' || variant === 'firstPage') {
+    isRightHandTemplatePage = isRightHandPage(pageSetup, 1);
+  } else if (!pageSetup.facingPages) {
+    isRightHandTemplatePage = variant === 'odd';
+  } else if (pageSetup.direction === 'rtl') {
+    isRightHandTemplatePage = variant === 'even';
+  } else {
+    isRightHandTemplatePage = variant === 'odd';
+  }
+
+  return {
+    left: isRightHandTemplatePage ? '' : '$p',
+    center: isRightHandTemplatePage ? '$:section' : '$:chapter',
+    right: isRightHandTemplatePage ? '$p' : '',
+  };
+}
+
 function createRichHeaderFooter(left: string, center: string, right: string) {
   const textbox = new RichTextBoxElement();
   textbox.multipanel = true;
@@ -6483,33 +7192,305 @@ function createRichHeaderFooter(left: string, center: string, right: string) {
   return textbox;
 }
 
+function createDefaultRegularHeaderFooter(
+  pageSetup: PageSetup,
+  kind: HeaderFooterKind,
+  variant: HeaderFooterVariant,
+) {
+  const panel = getDefaultHeaderFooterPanels(pageSetup, kind, variant);
+  return createRegularHeaderFooter(panel.left, panel.center, panel.right);
+}
+
+function createDefaultRichHeaderFooter(
+  pageSetup: PageSetup,
+  kind: HeaderFooterKind,
+  variant: HeaderFooterVariant,
+) {
+  const panel = getDefaultHeaderFooterPanels(pageSetup, kind, variant);
+  const textbox = createRichHeaderFooter(panel.left, panel.center, panel.right);
+
+  if (pageSetup.melkiteRtl || pageSetup.numerals === 'easternArabic') {
+    setRichTextLanguage(textbox, 'ar', 'rtl');
+  }
+
+  return textbox;
+}
+
+function createDefaultHeaderFooterElement(
+  pageSetup: PageSetup,
+  richHeaderFooter: boolean,
+  kind: HeaderFooterKind,
+  variant: HeaderFooterVariant,
+) {
+  return richHeaderFooter
+    ? createDefaultRichHeaderFooter(pageSetup, kind, variant)
+    : createDefaultRegularHeaderFooter(pageSetup, kind, variant);
+}
+
+function createGeneratedHeaderFooterTemplates(
+  pageSetup: PageSetup,
+  richHeaderFooter: boolean,
+): HeaderFooterTemplates<HeaderFooterTemplateElement> {
+  return {
+    header: Object.fromEntries(
+      headerFooterVariants.map((variant) => [
+        variant,
+        createDefaultHeaderFooterElement(
+          pageSetup,
+          richHeaderFooter,
+          'header',
+          variant,
+        ),
+      ]),
+    ) as HeaderFooterTemplateGroup<HeaderFooterTemplateElement>,
+    footer: Object.fromEntries(
+      headerFooterVariants.map((variant) => [
+        variant,
+        createDefaultHeaderFooterElement(
+          pageSetup,
+          richHeaderFooter,
+          'footer',
+          variant,
+        ),
+      ]),
+    ) as HeaderFooterTemplateGroup<HeaderFooterTemplateElement>,
+  };
+}
+
+function getHeaderFooterSlotCollection(score: Score, slot: HeaderFooterSlot) {
+  return slot.kind === 'header'
+    ? score.headers[slot.variant].elements
+    : score.footers[slot.variant].elements;
+}
+
+function getHeaderFooterSlotElement(score: Score, slot: HeaderFooterSlot) {
+  return getHeaderFooterSlotCollection(score, slot)[0] as
+    | HeaderFooterTemplateElement
+    | undefined;
+}
+
+function getHeaderFooterTemplateSlotElement(
+  templates: HeaderFooterTemplates<HeaderFooterTemplateElement>,
+  slot: HeaderFooterSlot,
+) {
+  return templates[slot.kind][slot.variant];
+}
+
+function createHeaderFooterReplacementCommand(
+  score: Score,
+  slot: HeaderFooterSlot,
+  element: HeaderFooterTemplateElement,
+) {
+  return scoreElementCommandFactory.create('replace-element-in-collection', {
+    collection: getHeaderFooterSlotCollection(score, slot),
+    element,
+    replaceAtIndex: 0,
+  });
+}
+
+function pushHeaderFooterReplacementCommands(
+  updateCommands: Command[],
+  score: Score,
+  templates: HeaderFooterTemplates<HeaderFooterTemplateElement>,
+) {
+  for (const slot of headerFooterSlots) {
+    updateCommands.push(
+      createHeaderFooterReplacementCommand(
+        score,
+        slot,
+        getHeaderFooterTemplateSlotElement(templates, slot),
+      ),
+    );
+  }
+}
+
+function areGeneratedHeaderFooterElementsEqual(
+  left: HeaderFooterTemplateElement,
+  right: HeaderFooterTemplateElement,
+) {
+  if (left.elementType !== right.elementType) {
+    return false;
+  }
+
+  return (
+    left.multipanel === right.multipanel &&
+    left.contentLeft === right.contentLeft &&
+    left.contentCenter === right.contentCenter &&
+    left.contentRight === right.contentRight
+  );
+}
+
+function generatedHeaderFooterDefaultsChanged(
+  previous: PageSetup,
+  current: PageSetup,
+) {
+  return !shallowEquals(
+    {
+      facingPages: previous.facingPages,
+      direction: previous.direction,
+      headerDifferentOddEven: previous.headerDifferentOddEven,
+      headerFooterDifferentChapterOpening:
+        previous.headerFooterDifferentChapterOpening,
+      richHeaderFooter: previous.richHeaderFooter,
+    },
+    {
+      facingPages: current.facingPages,
+      direction: current.direction,
+      headerDifferentOddEven: current.headerDifferentOddEven,
+      headerFooterDifferentChapterOpening:
+        current.headerFooterDifferentChapterOpening,
+      richHeaderFooter: current.richHeaderFooter,
+    },
+  );
+}
+
+function shouldAutoEnableDifferentOddEvenForFacingPages(
+  score: Score,
+  previous: PageSetup,
+  current: PageSetup,
+) {
+  if (
+    previous.facingPages ||
+    !current.facingPages ||
+    current.headerDifferentOddEven
+  ) {
+    return false;
+  }
+
+  const oldGeneratedTemplates = createGeneratedHeaderFooterTemplates(
+    previous,
+    previous.richHeaderFooter,
+  );
+
+  return nonChapterOddEvenAffectedSlots.every((slot) => {
+    const currentElement = getHeaderFooterSlotElement(score, slot);
+
+    return (
+      currentElement != null &&
+      areGeneratedHeaderFooterElementsEqual(
+        currentElement,
+        getHeaderFooterTemplateSlotElement(oldGeneratedTemplates, slot),
+      )
+    );
+  });
+}
+
+function normalizePageSetupForGeneratedHeaderFooterDefaults(
+  pageSetup: PageSetup,
+  autoEnableDifferentOddEven: boolean,
+) {
+  return autoEnableDifferentOddEven
+    ? Object.assign(new PageSetup(), pageSetup, {
+        headerDifferentOddEven: true,
+      })
+    : pageSetup;
+}
+
+function initializeDefaultHeaderFooters(score: Score) {
+  const templates = createGeneratedHeaderFooterTemplates(
+    score.pageSetup,
+    score.pageSetup.richHeaderFooter,
+  );
+
+  for (const slot of headerFooterSlots) {
+    getHeaderFooterSlotCollection(score, slot)[0] =
+      getHeaderFooterTemplateSlotElement(templates, slot);
+  }
+}
+
 function updateEntryMode(mode: EntryMode) {
   entryMode.value = mode;
 }
 
+// Remember the current zoom settings so newly opened documents inherit the last
+// user-selected zoom command rather than whichever tab or page setup recalculated
+// zoom-fit most recently.
+function rememberZoomDefault() {
+  if (
+    editorEnvironment.value.defaultZoom === zoom.value &&
+    editorEnvironment.value.defaultZoomFitMode === zoomFitMode.value
+  ) {
+    return;
+  }
+
+  editorEnvironment.value.defaultZoom = zoom.value;
+  editorEnvironment.value.defaultZoomFitMode = zoomFitMode.value;
+  saveEditorEnvironmentDebounced();
+}
+
+function rememberZoomFitModeDefault(mode: ZoomFitMode) {
+  if (editorEnvironment.value.defaultZoomFitMode === mode) {
+    return;
+  }
+
+  editorEnvironment.value.defaultZoomFitMode = mode;
+  saveEditorEnvironmentDebounced();
+}
+
+let pendingZoomFitDefaultUpdate: {
+  mode: ZoomFitMode;
+  workspaceId: string;
+} | null = null;
+
 function updateZoom(newZoom: number) {
-  if (newZoom < 0.5 || newZoom > 5) {
+  if (newZoom < MIN_ZOOM || newZoom > MAX_ZOOM) {
     toast.error(
       t(($) => $.toast.editor.rangeOverflow, { ns: 'toast' }),
       {
-        description: t(($) => $.toolbar.main.invalidZoom, { ns: 'toolbar' }),
+        description: t(($) => $.toolbar.main.invalidZoom, {
+          ns: 'toolbar',
+          minZoom: formatZoomPercent(MIN_ZOOM),
+          maxZoom: formatZoomPercent(MAX_ZOOM),
+        }),
       },
     );
   } else {
+    pendingZoomFitDefaultUpdate = null;
     zoom.value = newZoom;
-    zoomToFit.value = false;
+    zoomFitMode.value = null;
+    rememberZoomDefault();
   }
 }
 
-function updateZoomToFit(value: boolean) {
-  zoomToFit.value = value;
+function zoomToNearestStep(direction: 1 | -1) {
+  const zoomStepEpsilon = 0.000001;
+  const zoomStep =
+    direction > 0
+      ? ZOOM_LEVELS.find((option) => option > zoom.value + zoomStepEpsilon)
+      : [...ZOOM_LEVELS]
+          .reverse()
+          .find((option) => option < zoom.value - zoomStepEpsilon);
 
-  if (value) {
-    performZoomToFit();
+  if (zoomStep != null) {
+    updateZoom(zoomStep);
+    return true;
   }
+
+  return false;
+}
+
+function updateZoomFitMode(mode: ZoomFitMode) {
+  pendingZoomFitDefaultUpdate = {
+    mode,
+    workspaceId: selectedWorkspace.value.id,
+  };
+  rememberZoomFitModeDefault(mode);
+
+  if (zoomFitMode.value === mode) {
+    performZoomToFit();
+    return;
+  }
+
+  zoomFitMode.value = mode;
 }
 
 function performZoomToFit() {
+  const mode = zoomFitMode.value;
+
+  if (mode == null) {
+    return;
+  }
+
   const pageBackgroundElement = pageBackgroundRef.value;
 
   if (pageBackgroundElement == null) {
@@ -6522,8 +7503,64 @@ function performZoomToFit() {
     pageBackgroundElement.clientWidth -
     parseFloat(computedStyle.paddingLeft) -
     parseFloat(computedStyle.paddingRight);
+  const availableHeight =
+    pageBackgroundElement.clientHeight -
+    parseFloat(computedStyle.paddingTop) -
+    parseFloat(computedStyle.paddingBottom);
 
-  zoom.value = availableWidth / score.value.pageSetup.pageWidth;
+  const pageSetup = score.value.pageSetup;
+  const zoomForPageWidth = availableWidth / pageSetup.pageWidth;
+  const fitZoom =
+    mode === 'text-width'
+      ? availableWidth / pageSetup.innerPageWidth
+      : mode === 'whole-page'
+        ? Math.min(zoomForPageWidth, availableHeight / pageSetup.pageHeight)
+        : zoomForPageWidth;
+
+  if (!Number.isFinite(fitZoom) || fitZoom <= 0) {
+    return;
+  }
+
+  const newZoom = clamp(fitZoom, MIN_ZOOM, MAX_ZOOM);
+  zoom.value = newZoom;
+  alignZoomFitScroll(mode, newZoom);
+
+  if (
+    pendingZoomFitDefaultUpdate?.workspaceId === selectedWorkspace.value.id &&
+    pendingZoomFitDefaultUpdate.mode === mode
+  ) {
+    pendingZoomFitDefaultUpdate = null;
+    rememberZoomDefault();
+  }
+}
+
+function getCurrentPhysicalPageNumber() {
+  if (filteredPages.value.length === 0) {
+    return 1;
+  }
+
+  const pageIndex =
+    clamp(currentPageNumber.value, 1, filteredPages.value.length) - 1;
+
+  return filteredPages.value[pageIndex].physicalPageNumber;
+}
+
+function alignZoomFitScroll(mode: ZoomFitMode, zoomValue: number) {
+  nextTick(() => {
+    const pageBackgroundElement = pageBackgroundRef.value;
+
+    if (pageBackgroundElement == null) {
+      return;
+    }
+
+    pageBackgroundElement.scrollLeft =
+      mode === 'text-width'
+        ? resolvePageMargins(
+            score.value.pageSetup,
+            getCurrentPhysicalPageNumber(),
+          ).contentLeft * zoomValue
+        : 0;
+  });
 }
 
 async function playAudio() {
@@ -6819,6 +7856,10 @@ function onFileMenuImportOcr(args: FileMenuImportOcrArgs) {
 
 function onFileMenuPageSetup() {
   pageSetupDialogIsOpen.value = true;
+}
+
+function onFileMenuDocumentProperties() {
+  documentPropertiesDialogIsOpen.value = true;
 }
 
 async function onFileMenuPrint() {
@@ -7239,7 +8280,13 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
 
 function onFileMenuInsertRichTextBox() {
   const element = new RichTextBoxElement();
-  element.rtl = score.value.pageSetup.melkiteRtl;
+
+  if (
+    score.value.pageSetup.melkiteRtl ||
+    score.value.pageSetup.numerals === 'easternArabic'
+  ) {
+    setRichTextLanguage(element, 'ar', 'rtl');
+  }
 
   addScoreElement(element, selectedElementIndex.value);
 
@@ -7302,7 +8349,7 @@ function onFileMenuInsertFooter() {
   updatePageSetup(score.value.pageSetup);
 }
 
-async function onFileMenuToolsCopyElementLink() {
+async function onFileMenuEditCopyElementLink() {
   if (selectedElement.value?.id != null) {
     try {
       await navigator.clipboard.writeText(
@@ -7323,32 +8370,6 @@ async function onFileMenuToolsCopyElementLink() {
         },
       );
     }
-  }
-}
-
-async function copyInspectorSelectionElementLink() {
-  const element = getInspectorSelectionElement();
-
-  if (element?.id == null) {
-    return;
-  }
-
-  try {
-    await navigator.clipboard.writeText('#element-' + element.id.toString());
-    toast.success(
-      t(($) => $.toast.editor.copyElementLinkSuccess, { ns: 'toast' }),
-    );
-  } catch (error) {
-    console.error(error);
-    showErrorToast(
-      t(($) => $.toast.editor.copyFailed, { ns: 'toast' }),
-      error,
-      {
-        fallback: t(($) => $.toast.editor.clipboardWriteFailed, {
-          ns: 'toast',
-        }),
-      },
-    );
   }
 }
 
@@ -7686,6 +8707,14 @@ function onFileMenuFind() {
   }
 }
 
+function onFileMenuWindowPreviousTab() {
+  selectWorkspaceTab('previous');
+}
+
+function onFileMenuWindowNextTab() {
+  selectWorkspaceTab('next');
+}
+
 function onFileMenuViewPaneVisibility({
   paneId,
   visible,
@@ -7696,9 +8725,38 @@ function onFileMenuViewPaneVisibility({
   }
 }
 
-function onFileMenuViewResetPaneLayout() {
+function onFileMenuViewStatusBarVisibility({
+  visible,
+}: FileMenuViewStatusBarVisibilityArgs) {
+  if (!dialogOpen.value) {
+    statusBarIsVisible.value = visible ?? !statusBarIsVisible.value;
+  }
+}
+
+function onFileMenuViewResetLayout() {
   if (!dialogOpen.value) {
     resetLayout();
+  }
+}
+
+function onFileMenuViewZoom(args: FileMenuViewZoomArgs) {
+  if (dialogOpen.value) {
+    return;
+  }
+
+  switch (args.type) {
+    case 'zoom-in':
+      zoomToNearestStep(1);
+      break;
+    case 'zoom-out':
+      zoomToNearestStep(-1);
+      break;
+    case 'actual-size':
+      updateZoom(1);
+      break;
+    case 'fit':
+      updateZoomFitMode(args.mode);
+      break;
   }
 }
 
@@ -7793,10 +8851,16 @@ function createDefaultScore() {
         score.pageSetup,
         JSON.parse(pageSetupDefault),
       );
+      score.pageSetup = normalizePageSetupForGeneratedHeaderFooterDefaults(
+        score.pageSetup,
+        score.pageSetup.facingPages && !score.pageSetup.headerDifferentOddEven,
+      );
     }
   } catch (error) {
     console.error(error);
   }
+
+  initializeDefaultHeaderFooters(score);
 
   const title = new TextBoxElement();
   title.content = 'Title';
@@ -7874,6 +8938,10 @@ function openScore(args: FileMenuOpenScoreArgs) {
 }
 
 function addWorkspace(workspace: Workspace) {
+  // Newly opened documents inherit the last-used zoom settings.
+  workspace.zoom = editorEnvironment.value.defaultZoom;
+  workspace.zoomFitMode = editorEnvironment.value.defaultZoomFitMode;
+
   workspaces.value.push(workspace);
 
   const tab = {
@@ -7931,6 +8999,32 @@ function onTabClosed(tab: Tab) {
     // If we got here, the workspace was already removed by closeWorkspace.
     // We allow the tab component to close the tab by returning true.
     return true;
+  }
+}
+
+function selectWorkspaceTab(direction: WorkspaceTabNavigationDirection) {
+  if (dialogOpen.value || !canNavigateWorkspaceTabs.value) {
+    return;
+  }
+
+  const currentIndex = tabs.value.findIndex(
+    (tab) => tab.key === selectedWorkspace.value.id,
+  );
+
+  if (currentIndex < 0) {
+    return;
+  }
+
+  const offset = direction === 'previous' ? -1 : 1;
+  const nextIndex =
+    (currentIndex + offset + tabs.value.length) % tabs.value.length;
+  const nextTab = tabs.value[nextIndex];
+  const nextWorkspace = workspaces.value.find(
+    (workspace) => workspace.id === nextTab?.key,
+  ) as Workspace | undefined;
+
+  if (nextWorkspace != null) {
+    selectedWorkspace.value = nextWorkspace;
   }
 }
 
@@ -8152,13 +9246,18 @@ function renderTabLabel(tab: Tab) {
     <FileMenuBar
       v-if="showFileMenuBar"
       class="no-print"
+      :can-copy-element-link="canCopyElementLink"
+      :can-navigate-workspace-tabs="canNavigateWorkspaceTabs"
       :pane-visibility="paneVisibility"
       :show-developer-panels="showDeveloperPanels"
+      :status-bar-visible="statusBarIsVisible"
+      :zoom="zoom"
+      :zoom-fit-mode="zoomFitMode"
     />
     <ToolbarMain
       :entry-mode="entryMode"
       :zoom="zoom"
-      :zoom-to-fit="zoomToFit"
+      :zoom-fit-mode="zoomFitMode"
       :audio-state="audioService.state"
       :audio-options="audioOptions"
       :playback-time="selectedWorkspace.playbackTime"
@@ -8166,17 +9265,19 @@ function renderTabLabel(tab: Tab) {
       :neume-keyboard="neumeKeyboard"
       :can-undo="canUndo"
       :can-redo="canRedo"
+      :can-copy-element-link="canCopyElementLink"
       @new-score="onFileMenuNewScore"
       @open-score="onClickOpenScore"
       @save-score="onFileMenuSave"
       @print-score="onClickPrintScore"
       @cut="onFileMenuCut"
       @copy="onFileMenuCopy"
+      @copy-element-link="onFileMenuEditCopyElementLink"
       @paste="onFileMenuPaste"
       @undo="onFileMenuUndo"
       @redo="onFileMenuRedo"
       @update:zoom="updateZoom"
-      @update:zoom-to-fit="updateZoomToFit"
+      @update:zoom-fit-mode="updateZoomFitMode"
       @update:audio-options-speed="updateAudioOptionsSpeed"
       @add-auto-martyria="addAutoMartyria"
       @update:entry-mode="updateEntryMode"
@@ -8201,8 +9302,10 @@ function renderTabLabel(tab: Tab) {
       <WorkspaceDockLayout
         :developer-pane-enabled="showDeveloperPanels"
         :pane-visibility="paneVisibility"
-        :pane-layout-reset-counter="paneLayoutResetCounter"
+        :pane-layout="editorEnvironment.paneLayout"
+        :layout-reset-counter="layoutResetCounter"
         @pane-visibility-change="onPaneVisibilityChange"
+        @layout-change="onPaneLayoutChange"
       >
         <template #neume-selector>
           <NeumeSelector
@@ -8226,6 +9329,7 @@ function renderTabLabel(tab: Tab) {
             :context="inspectorContext"
             :fonts="fonts"
             :inner-neume="toolbarInnerNeume"
+            :open-sections="propertiesPaneOpenSections"
             :page-setup="score.pageSetup"
             @update:annotation="updateAnnotation"
             @update:text-box="updateTextBox"
@@ -8236,24 +9340,8 @@ function renderTabLabel(tab: Tab) {
             @update:mode-key="updateModeKey"
             @update:neume="updateNoteAndSave"
             @update:martyria="updateMartyria"
+            @update:open-sections="propertiesPaneOpenSections = $event"
             @update:tempo="updateTempo"
-            @open-mode-key-dialog="openModeKeyDialog"
-            @open-syllable-positioning-dialog="openSyllablePositioningDialog"
-          />
-        </template>
-
-        <template #selection>
-          <SelectionPane
-            :context="inspectorContext"
-            :can-apply-break="canApplyInspectorBreak"
-            @copy-element-link="copyInspectorSelectionElementLink"
-            @toggle-page-break="toggleInspectorPageBreak"
-            @toggle-line-break="toggleInspectorLineBreak"
-            @delete-selected-element="deleteInspectorSelectionElement"
-            @update:score-element-section-name="
-              (element, sectionName) =>
-                updateScoreElementSectionName(element, sectionName)
-            "
           />
         </template>
 
@@ -8282,6 +9370,7 @@ function renderTabLabel(tab: Tab) {
               developerPaneHasMissingDiagnostics
             "
             :toggles="{
+              overlaysEnabled,
               printOverlays,
               showAdjustmentRatios,
               showAnonymousBoxes,
@@ -8290,6 +9379,7 @@ function renderTabLabel(tab: Tab) {
               showGlueWidths,
               showInkBoundingBoxes,
               showLyricBoundingBoxes,
+              showElementBoxes,
               showNeumeBoundingBoxes,
             }"
             @reload-diagnostics="reloadDeveloperPaneDiagnostics"
@@ -8299,7 +9389,7 @@ function renderTabLabel(tab: Tab) {
         </template>
 
         <template #center>
-          <div class="page-container">
+          <div class="page-container chrome-paper-canvas">
             <ContextMenu>
               <ContextMenuTrigger
                 as="div"
@@ -8328,7 +9418,7 @@ function renderTabLabel(tab: Tab) {
                   </template>
                 </Vue3TabsChrome>
               </ContextMenuTrigger>
-              <ContextMenuContent class="bg-legacy-chrome-menu-surface">
+              <ContextMenuContent class="chrome-menu">
                 <ContextMenuItem
                   @select="
                     closeContextMenuWorkspaces(CloseWorkspacesDisposition.SELF)
@@ -8381,8 +9471,9 @@ function renderTabLabel(tab: Tab) {
               >
                 <div
                   ref="pageBackgroundRef"
-                  class="page-background"
+                  class="page-background chrome-paper-canvas"
                   @scroll="throttled.onScroll"
+                  @wheel="onPageBackgroundWheel"
                 >
                   <div
                     v-for="(page, pageIndex) in filteredPages"
@@ -8401,6 +9492,7 @@ function renderTabLabel(tab: Tab) {
                       <template
                         v-if="
                           showDeveloperPanels &&
+                          overlaysEnabled &&
                           showGuides &&
                           (!printMode || shouldRenderDeveloperOverlaysInPrint)
                         "
@@ -8419,6 +9511,7 @@ function renderTabLabel(tab: Tab) {
                       <template
                         v-if="
                           showDeveloperPanels &&
+                          overlaysEnabled &&
                           showGlueWidths &&
                           (!printMode || shouldRenderDeveloperOverlaysInPrint)
                         "
@@ -8429,6 +9522,7 @@ function renderTabLabel(tab: Tab) {
                         >
                           <div
                             v-for="overlay in getDeveloperGlueOverlays(
+                              page,
                               line,
                               lineIndex,
                               pageIndex,
@@ -8461,7 +9555,8 @@ function renderTabLabel(tab: Tab) {
                       <template
                         v-if="
                           showDeveloperPanels &&
-                          showAnonymousBoxes &&
+                          overlaysEnabled &&
+                          (showAnonymousBoxes || showElementBoxes) &&
                           (!printMode || shouldRenderDeveloperOverlaysInPrint)
                         "
                       >
@@ -8470,12 +9565,13 @@ function renderTabLabel(tab: Tab) {
                           :key="`developer-anonymous-line-${pageIndex}-${lineIndex}`"
                         >
                           <div
-                            v-for="overlay in getDeveloperAnonymousBoxOverlays(
+                            v-for="overlay in getDeveloperBoxOverlays(
+                              page,
                               line,
                               lineIndex,
                             )"
                             :key="`developer-anonymous-${pageIndex}-${overlay.key}`"
-                            class="developer-anonymous-box-overlay"
+                            class="developer-box-overlay"
                             :class="overlay.kind"
                             :style="overlay.style"
                             :title="overlay.label"
@@ -8483,6 +9579,20 @@ function renderTabLabel(tab: Tab) {
                         </div>
                       </template>
                       <template v-if="score.pageSetup.showHeader">
+                        <Badge
+                          v-if="
+                            !printMode &&
+                            getHeaderForPageIndex(pageIndex) ==
+                              selectedHeaderFooterElement
+                          "
+                          variant="outline"
+                          :style="
+                            getHeaderFooterBadgeStyle(pageIndex, page, 'header')
+                          "
+                          class="pointer-events-none absolute z-20 h-auto bg-background/95 px-2 py-0.5 text-[11px]"
+                        >
+                          {{ getHeaderFooterBadgeLabel(pageIndex, 'header') }}
+                        </Badge>
                         <template
                           v-if="
                             isRichTextBoxElement(
@@ -8507,6 +9617,7 @@ function renderTabLabel(tab: Tab) {
                                 selectedHeaderFooterElement
                             "
                             :metadata="getTokenMetadata(pageIndex)"
+                            token-scope="header"
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
                             :editor-language="ckeditorLanguage"
@@ -8558,6 +9669,7 @@ function renderTabLabel(tab: Tab) {
                                 selectedHeaderFooterElement
                             "
                             :metadata="getTokenMetadata(pageIndex)"
+                            token-scope="header"
                             :page-setup="score.pageSetup"
                             :selected="
                               getHeaderForPageIndex(pageIndex) ==
@@ -8586,7 +9698,7 @@ function renderTabLabel(tab: Tab) {
                           />
                         </template>
                         <div
-                          v-if="shouldShowHeaderForPageIndex(pageIndex)"
+                          v-if="shouldShowHeaderRuleForPageIndex(pageIndex)"
                           class="header-footer-hr"
                           :style="
                             getHeaderHorizontalRuleStyle(
@@ -8619,14 +9731,6 @@ function renderTabLabel(tab: Tab) {
                               "
                               class="neume-box"
                             >
-                              <span
-                                v-if="
-                                  element.sectionName != '' &&
-                                  element.sectionName != null
-                                "
-                                class="section-name"
-                                >§</span
-                              >
                               <span v-if="element.pageBreak" class="page-break"
                                 ><PhFile
                               /></span>
@@ -8891,14 +9995,6 @@ function renderTabLabel(tab: Tab) {
                           </template>
                           <template v-else-if="isMartyriaElement(element)">
                             <div class="neume-box">
-                              <span
-                                v-if="
-                                  element.sectionName != '' &&
-                                  element.sectionName != null
-                                "
-                                class="section-name"
-                                >§</span
-                              >
                               <span v-if="element.pageBreak" class="page-break">
                                 <PhFile
                               /></span>
@@ -8934,14 +10030,6 @@ function renderTabLabel(tab: Tab) {
                               "
                               class="neume-box"
                             >
-                              <span
-                                v-if="
-                                  element.sectionName != '' &&
-                                  element.sectionName != null
-                                "
-                                class="section-name"
-                                >§</span
-                              >
                               <span v-if="element.pageBreak" class="page-break">
                                 <PhFile
                               /></span>
@@ -8968,14 +10056,6 @@ function renderTabLabel(tab: Tab) {
                               "
                               class="neume-box"
                             >
-                              <span
-                                v-if="
-                                  element.sectionName != '' &&
-                                  element.sectionName != null
-                                "
-                                class="section-name"
-                                >§</span
-                              >
                               <span v-if="element.pageBreak" class="page-break">
                                 <PhFile
                               /></span>
@@ -8994,14 +10074,6 @@ function renderTabLabel(tab: Tab) {
                             </div>
                           </template>
                           <template v-else-if="isTextBoxElement(element)">
-                            <span
-                              v-if="
-                                element.sectionName != '' &&
-                                element.sectionName != null
-                              "
-                              class="section-name-2"
-                              >§</span
-                            >
                             <span v-if="element.pageBreak" class="page-break-2"
                               ><PhFile
                             /></span>
@@ -9032,14 +10104,6 @@ function renderTabLabel(tab: Tab) {
                             />
                           </template>
                           <template v-else-if="isRichTextBoxElement(element)">
-                            <span
-                              v-if="
-                                element.sectionName != '' &&
-                                element.sectionName != null
-                              "
-                              class="section-name-2"
-                              >§</span
-                            >
                             <span v-if="element.pageBreak" class="page-break-2"
                               ><PhFile
                             /></span>
@@ -9077,14 +10141,6 @@ function renderTabLabel(tab: Tab) {
                             />
                           </template>
                           <template v-else-if="isModeKeyElement(element)">
-                            <span
-                              v-if="
-                                element.sectionName != '' &&
-                                element.sectionName != null
-                              "
-                              class="section-name-2"
-                              >§</span
-                            >
                             <span v-if="element.pageBreak" class="page-break-2"
                               ><PhFile
                             /></span>
@@ -9109,14 +10165,6 @@ function renderTabLabel(tab: Tab) {
                             />
                           </template>
                           <template v-else-if="isDropCapElement(element)">
-                            <span
-                              v-if="
-                                element.sectionName != '' &&
-                                element.sectionName != null
-                              "
-                              class="section-name"
-                              >§</span
-                            >
                             <span v-if="element.pageBreak" class="page-break"
                               ><PhFile
                             /></span>
@@ -9198,6 +10246,7 @@ function renderTabLabel(tab: Tab) {
                         <span
                           v-if="
                             showDeveloperPanels &&
+                            overlaysEnabled &&
                             showAdjustmentRatios &&
                             (!printMode ||
                               shouldRenderDeveloperOverlaysInPrint) &&
@@ -9210,8 +10259,22 @@ function renderTabLabel(tab: Tab) {
                         >
                       </div>
                       <template v-if="score.pageSetup.showFooter">
+                        <Badge
+                          v-if="
+                            !printMode &&
+                            getFooterForPageIndex(pageIndex) ==
+                              selectedHeaderFooterElement
+                          "
+                          variant="outline"
+                          :style="
+                            getHeaderFooterBadgeStyle(pageIndex, page, 'footer')
+                          "
+                          class="pointer-events-none absolute z-20 h-auto bg-background/95 px-2 py-0.5 text-[11px]"
+                        >
+                          {{ getHeaderFooterBadgeLabel(pageIndex, 'footer') }}
+                        </Badge>
                         <div
-                          v-if="shouldShowFooterForPageIndex(pageIndex)"
+                          v-if="shouldShowFooterRuleForPageIndex(pageIndex)"
                           class="header-footer-hr"
                           :style="
                             getFooterHorizontalRuleStyle(
@@ -9244,6 +10307,7 @@ function renderTabLabel(tab: Tab) {
                                 selectedHeaderFooterElement
                             "
                             :metadata="getTokenMetadata(pageIndex)"
+                            token-scope="footer"
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
                             :editor-language="ckeditorLanguage"
@@ -9295,6 +10359,7 @@ function renderTabLabel(tab: Tab) {
                                 selectedHeaderFooterElement
                             "
                             :metadata="getTokenMetadata(pageIndex)"
+                            token-scope="footer"
                             :page-setup="score.pageSetup"
                             :selected="
                               getFooterForPageIndex(pageIndex) ==
@@ -9327,7 +10392,7 @@ function renderTabLabel(tab: Tab) {
                 </div>
               </ContextMenuTrigger>
               <ContextMenuContent
-                class="bg-legacy-chrome-menu-surface"
+                class="chrome-menu"
                 @pointerdown.capture="onScoreMenuContentPointerDown"
                 @pointerup.capture="onScoreMenuContentPointerUp"
               >
@@ -9411,7 +10476,7 @@ function renderTabLabel(tab: Tab) {
                     "
                   >
                     {{
-                      $t(($) => $.toolbar.modeKey.showAmbitus, {
+                      $t(($) => $.toolbar.initialMartyria.showAmbitus, {
                         ns: 'toolbar',
                       })
                     }}
@@ -9446,9 +10511,16 @@ function renderTabLabel(tab: Tab) {
                   v-if="contextMenuModeKey != null"
                   @select="openContextMenuChangeKey(contextMenuModeKey)"
                 >
-                  <PhMusicNotes />
+                  <span
+                    class="inline-grid size-4 shrink-0 place-items-center font-['Source_Serif'] text-sm leading-none"
+                    aria-hidden="true"
+                  >
+                    Ηχ
+                  </span>
                   {{
-                    $t(($) => $.toolbar.modeKey.changeKey, { ns: 'toolbar' })
+                    $t(($) => $.toolbar.initialMartyria.changeInitialMartyria, {
+                      ns: 'toolbar',
+                    })
                   }}
                 </ContextMenuItem>
                 <ContextMenuItem
@@ -9474,7 +10546,7 @@ function renderTabLabel(tab: Tab) {
         inspectorContext.kind === 'annotation' ||
         inspectorContext.kind === 'drop-cap'
       "
-      class="contextual-toolbar-panel"
+      class="contextual-toolbar-panel flex-none w-full min-w-0"
     >
       <template v-if="inspectorContext.kind === 'neume'">
         <ToolbarNeume
@@ -9516,6 +10588,7 @@ function renderTabLabel(tab: Tab) {
           "
           @update:ison="setIson(inspectorContext.element, $event)"
           @update:tie="setTie(inspectorContext.element, $event)"
+          @open-syllable-positioning-dialog="openSyllablePositioningDialog"
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'martyria'">
@@ -9545,6 +10618,7 @@ function renderTabLabel(tab: Tab) {
           :element="inspectorContext.element"
           @update="updateModeKey(inspectorContext.element, $event)"
           @update:tempo="setModeKeyTempo(inspectorContext.element, $event)"
+          @open-mode-key-dialog="openModeKeyDialog"
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'lyrics'">
@@ -9605,10 +10679,11 @@ function renderTabLabel(tab: Tab) {
       </template>
     </div>
     <div
-      class="status-bar flex w-full flex-none items-center gap-2 bg-legacy-chrome-menu-surface p-1"
+      v-if="statusBarIsVisible"
+      class="status-bar flex w-full flex-none items-center gap-2 chrome-toolbar-surface p-1"
     >
       <ButtonGroup>
-        <ButtonGroupText>
+        <ButtonGroupText data-slot="button-group-text">
           {{
             $t(($) => $.toolbar.status.pageNumber, {
               ns: 'toolbar',
@@ -9617,7 +10692,7 @@ function renderTabLabel(tab: Tab) {
             })
           }}
         </ButtonGroupText>
-        <ButtonGroupText>
+        <ButtonGroupText data-slot="button-group-text">
           {{
             $t(($) => $.toolbar.status.section, {
               ns: 'toolbar',
@@ -9628,7 +10703,7 @@ function renderTabLabel(tab: Tab) {
         </ButtonGroupText>
       </ButtonGroup>
       <ButtonGroup>
-        <ButtonGroupText>
+        <ButtonGroupText data-slot="button-group-text">
           {{
             $t(($) => $.toolbar.status.line, {
               ns: 'toolbar',
@@ -9637,7 +10712,7 @@ function renderTabLabel(tab: Tab) {
             })
           }}
         </ButtonGroupText>
-        <ButtonGroupText>
+        <ButtonGroupText data-slot="button-group-text">
           {{
             $t(($) => $.toolbar.status.column, {
               ns: 'toolbar',
@@ -9646,7 +10721,10 @@ function renderTabLabel(tab: Tab) {
             })
           }}
         </ButtonGroupText>
-        <ButtonGroupText v-if="statusNeumeNoteDisplay">
+        <ButtonGroupText
+          v-if="statusNeumeNoteDisplay"
+          data-slot="button-group-text"
+        >
           {{ statusNeumeNoteDisplay }}
         </ButtonGroupText>
       </ButtonGroup>
@@ -9693,6 +10771,12 @@ function renderTabLabel(tab: Tab) {
       :page-setup="score.pageSetup"
       :fonts="fonts"
       @update="updatePageSetup($event)"
+    />
+    <DocumentPropertiesDialog
+      v-if="documentPropertiesDialogIsOpen"
+      v-model:open="documentPropertiesDialogIsOpen"
+      :document-properties="score.documentProperties"
+      @update="updateDocumentProperties($event)"
     />
     <ExportDialog
       v-if="exportDialogIsOpen"
@@ -9790,10 +10874,6 @@ function renderTabLabel(tab: Tab) {
 .header-footer-hr {
   position: absolute;
   border-top-style: solid;
-}
-
-.red {
-  color: #ed0000;
 }
 
 .neume-box .selected {
@@ -9909,24 +10989,29 @@ function renderTabLabel(tab: Tab) {
     );
 }
 
-.developer-anonymous-box-overlay {
+.developer-box-overlay {
   position: absolute;
   pointer-events: none;
   border: 1px solid rgb(190 24 93 / 75%);
   background: rgb(244 114 182 / 16%);
 }
 
-.developer-anonymous-box-overlay.line-start-reservation {
+.developer-box-overlay.owned {
+  border-color: rgb(37 99 235 / 75%);
+  background: rgb(96 165 250 / 16%);
+}
+
+.developer-box-overlay.line-start-reservation {
   border-color: rgb(147 51 234 / 75%);
   background: rgb(192 132 252 / 16%);
 }
 
-.developer-anonymous-box-overlay.martyria-shift {
+.developer-box-overlay.martyria-shift {
   border-color: rgb(217 119 6 / 80%);
   background: rgb(251 191 36 / 16%);
 }
 
-.developer-anonymous-box-overlay.lyric-collision {
+.developer-box-overlay.lyric-collision {
   border-color: rgb(22 163 74 / 80%);
   background: rgb(74 222 128 / 16%);
 }
@@ -9966,26 +11051,53 @@ function renderTabLabel(tab: Tab) {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background-color: #ddd;
 }
 
+/*
+ * vue3-tabs-chrome -> chrome tokens. The library ships compile-time hex with
+ * no theming surface, so we override its compiled rules here. The tab component
+ * is nested under TheEditor's scoped root, so these deep selectors match the
+ * library DOM while staying local to the editor.
+ */
 :deep(.vue3-tabs-chrome) {
   padding: 0;
 }
 
-:deep(.vue3-tabs-chrome .tabs-background) {
-  display: none;
-}
-
 :deep(.vue3-tabs-chrome .tabs-main) {
   border-radius: 0;
-  background-color: var(--color-legacy-chrome-tab-list);
   margin: 0;
   padding: 0.5rem 0.5rem 0.5rem 1rem;
 }
 
+:deep(.vue3-tabs-chrome .tabs-background) {
+  padding: 0;
+}
+
+:deep(.vue3-tabs-chrome .tabs-background-divider) {
+  display: none;
+}
+
+:deep(.vue3-tabs-chrome .tabs-background-content) {
+  border-radius: 0;
+  background-color: var(--chrome-tab-rest);
+}
+
+:deep(.vue3-tabs-chrome .tabs-background-before),
+:deep(.vue3-tabs-chrome .tabs-background-after) {
+  fill: var(--chrome-tab-rest);
+}
+
+:deep(.vue3-tabs-chrome .tabs-item:hover .tabs-background-content) {
+  background-color: var(--chrome-tab-hover);
+}
+
+:deep(.vue3-tabs-chrome .tabs-item:hover .tabs-background-before),
+:deep(.vue3-tabs-chrome .tabs-item:hover .tabs-background-after) {
+  fill: var(--chrome-tab-hover);
+}
+
 :deep(.vue3-tabs-chrome .tabs-item) {
-  border-right: 1px solid var(--color-legacy-chrome-border);
+  border-right: 1px solid var(--chrome-tab-divider);
 }
 
 :deep(.vue3-tabs-chrome .tabs-item:last-of-type) {
@@ -9993,7 +11105,17 @@ function renderTabLabel(tab: Tab) {
 }
 
 :deep(.vue3-tabs-chrome .tabs-item.active .tabs-main) {
-  background-color: var(--color-legacy-chrome-menu-surface);
+  background-color: transparent;
+}
+
+:deep(.vue3-tabs-chrome .tabs-item.active .tabs-background-content) {
+  border-top: 1px solid var(--chrome-tab-active-border);
+  background-color: var(--chrome-tab-active);
+}
+
+:deep(.vue3-tabs-chrome .tabs-item.active .tabs-background-before),
+:deep(.vue3-tabs-chrome .tabs-item.active .tabs-background-after) {
+  fill: var(--chrome-tab-active);
 }
 
 :deep(.vue3-tabs-chrome .tabs-item.active .tabs-close) {
@@ -10002,6 +11124,15 @@ function renderTabLabel(tab: Tab) {
 
 :deep(.vue3-tabs-chrome .tabs-close) {
   right: 0.5rem;
+}
+
+:deep(.vue3-tabs-chrome .tabs-close-icon) {
+  stroke: var(--muted-foreground);
+}
+
+:deep(.vue3-tabs-chrome .tabs-close-icon:hover) {
+  stroke: var(--foreground);
+  background-color: var(--chrome-tab-close-hover);
 }
 
 :deep(.vue3-tabs-chrome .tabs-after) {
@@ -10015,7 +11146,7 @@ function renderTabLabel(tab: Tab) {
 }
 
 .workspace-tab-container {
-  background-color: var(--color-legacy-chrome-tab-strip);
+  background-color: var(--chrome-tab-strip);
 }
 
 .workspace-tab-new-button {
@@ -10030,20 +11161,13 @@ function renderTabLabel(tab: Tab) {
   color: inherit;
   font-size: 1.25rem;
   font-weight: bold;
-  background-color: var(--color-legacy-chrome-tab-action);
+  background-color: var(--chrome-tab-new);
   border: none;
   cursor: default;
 }
 
 .workspace-tab-new-button:hover {
-  background-color: var(--color-legacy-chrome-hover);
-}
-
-.contextual-toolbar-panel {
-  flex: 0 0 auto;
-  width: 100%;
-  min-width: 0;
-  background-color: var(--color-legacy-chrome-menu-surface);
+  background-color: var(--chrome-tab-action-hover);
 }
 
 .page-background {
@@ -10051,7 +11175,6 @@ function renderTabLabel(tab: Tab) {
   flex-direction: column;
   min-width: 0;
   padding: 2rem 1rem;
-  background-color: #ddd;
 
   overflow: auto;
   flex: 1;
@@ -10063,7 +11186,8 @@ function renderTabLabel(tab: Tab) {
   margin-left: auto;
   margin-right: auto;
 
-  background-color: white;
+  background-color: var(--chrome-paper);
+  color: var(--chrome-paper-foreground);
   overflow: clip;
 
   position: relative;
@@ -10195,22 +11319,6 @@ function renderTabLabel(tab: Tab) {
   width: calc(16px * var(--zoom, 1));
 }
 
-.section-name {
-  position: absolute;
-  top: calc(-20px * var(--zoom, 1));
-  height: 100%;
-  font-weight: bold;
-}
-
-.section-name-2 {
-  position: absolute;
-  font-weight: bold;
-  left: calc(-22px * var(--zoom, 1));
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
 .print-only {
   display: none;
 }
@@ -10330,11 +11438,6 @@ function renderTabLabel(tab: Tab) {
   .workspace-tab-container,
   .workspace-tab-new-button,
   .contextual-toolbar-panel,
-  .status-bar,
-  .main-toolbar,
-  .search-text-container,
-  .section-name,
-  .section-name-2,
   .page-break,
   .line-break,
   .page-break-2,

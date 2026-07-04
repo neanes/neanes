@@ -46,7 +46,6 @@ export abstract class ScoreElement {
   public lineBreak: boolean | undefined = undefined;
   public pageBreak: boolean | undefined = undefined;
   public lineBreakType: LineBreakType | undefined = undefined;
-  public sectionName: string | undefined = undefined;
 }
 
 export enum AcceptsLyricsOption {
@@ -187,6 +186,8 @@ export enum TextBoxAlignment {
   Right = 'right',
 }
 
+export type RunningMarkerRole = 'chapter' | 'section';
+
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
   public alignment: TextBoxAlignment = TextBoxAlignment.Left;
@@ -213,6 +214,8 @@ export class TextBoxElement extends ScoreElement {
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
   public useDefaultStyle: boolean | undefined = undefined;
+  public runningMarkerRole: RunningMarkerRole | undefined = undefined;
+  public runningMarkerText: string | undefined = undefined;
 }
 
 export class RichTextBoxElement extends ScoreElement {
@@ -224,7 +227,8 @@ export class RichTextBoxElement extends ScoreElement {
   public contentCenter: string = '';
   public scrollable: boolean | undefined = undefined;
   public multipanel: boolean | undefined = undefined;
-  public rtl: boolean | undefined = undefined;
+  public languageCode: string | undefined = undefined;
+  public textDirection: 'ltr' | 'rtl' | undefined = undefined;
   public inline: boolean | undefined = undefined;
   public centerOnPage: boolean | undefined = undefined;
   public modeChange: boolean | undefined = undefined;
@@ -240,6 +244,8 @@ export class RichTextBoxElement extends ScoreElement {
   public marginBottom: number | undefined = undefined;
   public offsetYTop: number | undefined = undefined;
   public offsetYBottom: number | undefined = undefined;
+  public runningMarkerRole: RunningMarkerRole | undefined = undefined;
+  public runningMarkerText: string | undefined = undefined;
 }
 
 export class ModeKeyElement extends ScoreElement {
@@ -284,6 +290,8 @@ export class AnnotationElement extends ScoreElement {
   public x: number = 0;
   public y: number = 0;
   public text: string = '';
+  public languageCode: string | undefined = undefined;
+  public textDirection: 'ltr' | 'rtl' | undefined = undefined;
 }
 
 export class AlternateLineElement extends ScoreElement {

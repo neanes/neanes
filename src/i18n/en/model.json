@@ -100,7 +100,7 @@
       "connectingHeteron": "Connecting Heteron",
       "endofonon": "Endofonon"
     },
-    "rootSign": {
+    "martyriaSign": {
       "ananes": "Ananes",
       "neanes": "Neanes",
       "softChromaticGa": "Soft Chromatic Ga",
@@ -200,7 +200,7 @@
     "grave": "Grave Mode",
     "plagalFourth": "Plagal of Fourth Mode"
   },
-  "modeKey": {
+  "initialMartyria": {
     "heirmologicAndSticheraric": "Heirmologic and Sticheraric",
     "tetraphonicPapadicAndOldSticheraric": "Tetraphonic (Papadic and Old Sticheraric)",
     "tetraphonic": "Tetraphonic",

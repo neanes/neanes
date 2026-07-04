@@ -1,31 +1,26 @@
 <template>
-  <div ref="toolbarRoot" class="rich-text-toolbar w-full p-1">
-    <Toolbar
-      class="rich-text-toolbar-row h-auto w-full gap-0 border-0 p-0"
-      loop
-    >
+  <div ref="toolbarRoot" class="chrome-toolbar">
+    <Toolbar class="chrome-toolbar-row" loop>
       <AppTooltip :tooltip="$t(($) => $.menu.edit.undo, { ns: 'menu' })">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="legacy-toolbar-button"
+          class="chrome-button"
           :disabled="!isCommandEnabled('undo')"
           @mousedown.prevent
           @click="runCommand('undo')"
         >
-          <PhArrowCounterClockwise class="h-4 w-4" />
+          <PhArrowCounterClockwise class="size-4" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="$t(($) => $.menu.edit.redo, { ns: 'menu' })">
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="legacy-toolbar-button"
+          class="chrome-button"
           :disabled="!isCommandEnabled('redo')"
           @mousedown.prevent
           @click="runCommand('redo')"
         >
-          <PhArrowClockwise class="h-4 w-4" />
+          <PhArrowClockwise class="size-4" />
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
@@ -83,11 +78,11 @@
         >
           <ToolbarToggleItem
             value="bold"
-            class="legacy-toolbar-button"
+            class="chrome-button"
             :disabled="!isStyleToggleEnabled('bold')"
             @mousedown.prevent
           >
-            <PhTextB class="h-4 w-4" />
+            <PhTextB class="size-4" />
           </ToolbarToggleItem>
         </AppTooltip>
         <AppTooltip
@@ -95,11 +90,11 @@
         >
           <ToolbarToggleItem
             value="italic"
-            class="legacy-toolbar-button"
+            class="chrome-button"
             :disabled="!isStyleToggleEnabled('italic')"
             @mousedown.prevent
           >
-            <PhTextItalic class="h-4 w-4" />
+            <PhTextItalic class="size-4" />
           </ToolbarToggleItem>
         </AppTooltip>
         <AppTooltip
@@ -109,14 +104,29 @@
         >
           <ToolbarToggleItem
             value="underline"
-            class="legacy-toolbar-button"
+            class="chrome-button"
             :disabled="!isStyleToggleEnabled('underline')"
             @mousedown.prevent
           >
-            <PhTextUnderline class="h-4 w-4" />
+            <PhTextUnderline class="size-4" />
           </ToolbarToggleItem>
         </AppTooltip>
       </ToolbarToggleGroup>
+      <AppTooltip
+        :tooltip="
+          $t(($) => $.toolbar.richTextBox.removeFormat, { ns: 'toolbar' })
+        "
+      >
+        <ToolbarButton
+          variant="secondary"
+          class="chrome-button"
+          :disabled="!isCommandEnabled('removeFormat')"
+          @mousedown.prevent
+          @click="onRemoveFormat"
+        >
+          <PhEraser class="size-4" />
+        </ToolbarButton>
+      </AppTooltip>
       <ToolbarSeparator />
       <ToolbarToggleGroup
         type="single"
@@ -129,11 +139,11 @@
         >
           <ToolbarToggleItem
             value="left"
-            class="legacy-toolbar-button"
+            class="chrome-button"
             :disabled="!isCommandEnabled('alignment')"
             @mousedown.prevent
           >
-            <PhTextAlignLeft class="h-4 w-4" />
+            <PhTextAlignLeft class="size-4" />
           </ToolbarToggleItem>
         </AppTooltip>
         <AppTooltip
@@ -141,11 +151,11 @@
         >
           <ToolbarToggleItem
             value="center"
-            class="legacy-toolbar-button"
+            class="chrome-button"
             :disabled="!isCommandEnabled('alignment')"
             @mousedown.prevent
           >
-            <PhTextAlignCenter class="h-4 w-4" />
+            <PhTextAlignCenter class="size-4" />
           </ToolbarToggleItem>
         </AppTooltip>
         <AppTooltip
@@ -153,74 +163,38 @@
         >
           <ToolbarToggleItem
             value="right"
-            class="legacy-toolbar-button"
+            class="chrome-button"
             :disabled="!isCommandEnabled('alignment')"
             @mousedown.prevent
           >
-            <PhTextAlignRight class="h-4 w-4" />
+            <PhTextAlignRight class="size-4" />
           </ToolbarToggleItem>
         </AppTooltip>
         <AppTooltip
-          :tooltip="$t(($) => $.toolbar.selection.justify, { ns: 'toolbar' })"
+          :tooltip="$t(($) => $.toolbar.common.alignJustify, { ns: 'toolbar' })"
         >
           <ToolbarToggleItem
             value="justify"
-            class="legacy-toolbar-button"
+            class="chrome-button"
             :disabled="!isCommandEnabled('alignment')"
             @mousedown.prevent
           >
-            <PhTextAlignJustify class="h-4 w-4" />
+            <PhTextAlignJustify class="size-4" />
           </ToolbarToggleItem>
         </AppTooltip>
       </ToolbarToggleGroup>
       <ToolbarSeparator />
-      <ToolbarToggleGroup
-        type="multiple"
-        variant="outline"
-        :model-value="listValues"
-        @update:model-value="onListValuesChanged"
-      >
-        <AppTooltip
-          :tooltip="
-            $t(($) => $.toolbar.richTextBox.bulletedList, { ns: 'toolbar' })
-          "
-        >
-          <ToolbarToggleItem
-            value="bulletedList"
-            class="legacy-toolbar-button"
-            :disabled="!isCommandEnabled('bulletedList')"
-            @mousedown.prevent
-          >
-            <PhListBullets class="h-4 w-4" />
-          </ToolbarToggleItem>
-        </AppTooltip>
-        <AppTooltip
-          :tooltip="
-            $t(($) => $.toolbar.richTextBox.numberedList, { ns: 'toolbar' })
-          "
-        >
-          <ToolbarToggleItem
-            value="numberedList"
-            class="legacy-toolbar-button"
-            :disabled="!isCommandEnabled('numberedList')"
-            @mousedown.prevent
-          >
-            <PhListNumbers class="h-4 w-4" />
-          </ToolbarToggleItem>
-        </AppTooltip>
-      </ToolbarToggleGroup>
       <AppTooltip
         :tooltip="$t(($) => $.toolbar.richTextBox.outdent, { ns: 'toolbar' })"
       >
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="legacy-toolbar-button"
+          class="chrome-button"
           :disabled="!isCommandEnabled('outdent')"
           @mousedown.prevent
           @click="runCommand('outdent')"
         >
-          <PhTextOutdent class="h-4 w-4" />
+          <PhTextOutdent class="size-4" />
         </ToolbarButton>
       </AppTooltip>
       <AppTooltip
@@ -228,13 +202,12 @@
       >
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="legacy-toolbar-button"
+          class="chrome-button"
           :disabled="!isCommandEnabled('indent')"
           @mousedown.prevent
           @click="runCommand('indent')"
         >
-          <PhTextIndent class="h-4 w-4" />
+          <PhTextIndent class="size-4" />
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
@@ -245,8 +218,7 @@
         <PopoverTrigger as-child>
           <ToolbarButton
             variant="secondary"
-            size="icon-sm"
-            class="legacy-toolbar-button"
+            class="chrome-button"
             :disabled="!isCommandEnabled(INSERT_NEUME_COMMAND)"
             :aria-label="
               $t(($) => $.toolbar.richTextBox.insertNeume, { ns: 'toolbar' })
@@ -316,8 +288,7 @@
       >
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="legacy-toolbar-button"
+          class="chrome-button"
           :disabled="!isCommandEnabled(INSERT_NEUME_COMMAND)"
           @mousedown.prevent
           @click="insertMartyria"
@@ -334,8 +305,7 @@
       >
         <ToolbarButton
           variant="secondary"
-          size="icon-sm"
-          class="legacy-toolbar-button"
+          class="chrome-button"
           :disabled="!isCommandEnabled(INSERT_NEUME_COMMAND)"
           @mousedown.prevent
           @click="insertPlagal"
@@ -344,7 +314,10 @@
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
+      <RichTextToolbarItem name="bulletedList" :owner="element" />
+      <RichTextToolbarItem name="numberedList" :owner="element" />
       <RichTextToolbarItem name="link" :owner="element" />
+      <RichTextToolbarItem name="horizontalLine" :owner="element" />
       <RichTextToolbarItem name="uploadImage" :owner="element" />
       <RichTextToolbarItem name="insertTable" :owner="element" />
       <ToolbarSeparator />
@@ -357,8 +330,7 @@
 import {
   PhArrowClockwise,
   PhArrowCounterClockwise,
-  PhListBullets,
-  PhListNumbers,
+  PhEraser,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhTextAlignLeft,
@@ -422,12 +394,11 @@ import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
 
 const EXTRA_COMMAND_NAMES = [
-  'bulletedList',
-  'numberedList',
   'outdent',
   'indent',
   'undo',
   'redo',
+  'removeFormat',
   INSERT_NEUME_COMMAND,
 ];
 
@@ -469,7 +440,6 @@ const {
   styleValues,
   alignmentValue,
   isCommandEnabled,
-  isCommandActive,
   isStyleToggleEnabled,
   runCommand,
   onFontFamilyChanged,
@@ -477,7 +447,7 @@ const {
   onFontSizeChanged,
   onStyleValuesChanged,
   onAlignmentChanged,
-  executeChangedToggleCommands,
+  onRemoveFormat,
 } = useRichTextStyleCommands(props, EXTRA_COMMAND_NAMES);
 
 const scopedEditor = useActiveEditorForOwner(() => props.element);
@@ -515,20 +485,6 @@ const neumeCharacters = computed(() => {
 const neumeGlyphStyle = computed(() => ({
   fontFamily: props.pageSetup.neumeDefaultFontFamily,
 }));
-
-const listValues = computed(() =>
-  ['bulletedList', 'numberedList'].filter((commandName) =>
-    isCommandActive(commandName),
-  ),
-);
-
-function onListValuesChanged(value: unknown) {
-  executeChangedToggleCommands(
-    ['bulletedList', 'numberedList'],
-    listValues.value,
-    value,
-  );
-}
 
 function onCharacterBlockChanged(value: unknown) {
   if (typeof value === 'string') {
@@ -619,59 +575,6 @@ function getInsertNeumeConfigValue<T>(path: string, fallback: T) {
 </script>
 
 <style scoped>
-.rich-text-toolbar {
-  background-color: var(--color-legacy-chrome-menu-surface);
-
-  --rich-text-toolbar-button-size: 32px;
-  --rich-text-neume-tile-size: 40px;
-  --rich-text-neume-grid-gap: 4px;
-}
-
-.rich-text-toolbar-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.legacy-toolbar-button {
-  box-sizing: border-box;
-  height: var(--rich-text-toolbar-button-size);
-  width: var(--rich-text-toolbar-button-size);
-  appearance: auto;
-  background: revert;
-  border: revert;
-  border-radius: revert;
-  box-shadow: revert;
-  font-weight: revert;
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-  outline: revert;
-  padding: 0;
-  transition: revert;
-  user-select: none;
-}
-
-.legacy-toolbar-button:hover {
-  background: revert;
-}
-
-.legacy-toolbar-button[data-state='on'],
-.legacy-toolbar-button[aria-pressed='true'] {
-  background: var(--color-legacy-chrome-selected);
-}
-
-.legacy-toolbar-button[aria-disabled='true'],
-.legacy-toolbar-button[data-disabled],
-.legacy-toolbar-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
 .neume-toolbar-glyph,
 .martyria-toolbar-glyph {
   font-size: 16pt;

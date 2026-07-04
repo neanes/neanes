@@ -1,8 +1,6 @@
 <template>
-  <div
-    class="flex size-full min-h-0 flex-col overflow-hidden bg-background p-3"
-  >
-    <template v-if="context.kind === 'none' || context.kind === 'range'">
+  <div class="flex size-full min-h-0 flex-col overflow-hidden p-3">
+    <template v-if="context.kind === 'none'">
       <Empty class="min-h-40 border bg-muted/20">
         <EmptyHeader>
           <EmptyTitle>{{
@@ -19,7 +17,9 @@
       v-else-if="tempoElement != null"
       :key="`tempo-${tempoElement.id}`"
       :element="tempoElement"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:tempo', tempoElement, $event)"
     />
 
@@ -28,7 +28,9 @@
       :key="`annotation-${annotationElement.id}`"
       :element="annotationElement"
       :fonts="fonts"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:annotation', annotationElement, $event)"
     />
 
@@ -37,7 +39,10 @@
       :key="`text-box-${textBoxElement.id}`"
       :element="textBoxElement"
       :fonts="fonts"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      :source="textBoxSource"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:text-box', textBoxElement, $event)"
     />
 
@@ -46,7 +51,10 @@
       :key="`rich-text-box-${richTextBoxElement.id}`"
       :element="richTextBoxElement"
       :fonts="fonts"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      :source="richTextBoxSource"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:rich-text-box', richTextBoxElement, $event)"
     />
 
@@ -55,7 +63,9 @@
       :key="`drop-cap-${dropCapElement.id}`"
       :element="dropCapElement"
       :fonts="fonts"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:drop-cap', dropCapElement, $event)"
     />
 
@@ -63,7 +73,9 @@
       v-else-if="imageBoxElement != null"
       :key="`image-box-${imageBoxElement.id}`"
       :element="imageBoxElement"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:image-box', imageBoxElement, $event)"
     />
 
@@ -72,6 +84,8 @@
       :key="`lyrics-${lyricsElement.id}`"
       :element="lyricsElement"
       :fonts="fonts"
+      :open-sections="openSections"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:lyrics', lyricsElement, $event)"
     />
 
@@ -79,9 +93,10 @@
       v-else-if="modeKeyElement != null"
       :key="`mode-key-${modeKeyElement.id}`"
       :element="modeKeyElement"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:mode-key', modeKeyElement, $event)"
-      @open-mode-key-dialog="emit('open-mode-key-dialog')"
     />
 
     <PropertiesNeume
@@ -89,18 +104,19 @@
       :key="`neume-${neumeElement.id}`"
       :element="neumeElement"
       :inner-neume="innerNeume"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:neume', neumeElement, $event)"
-      @open-syllable-positioning-dialog="
-        emit('open-syllable-positioning-dialog')
-      "
     />
 
     <PropertiesMartyria
       v-else-if="martyriaElement != null"
       :key="`martyria-${martyriaElement.id}`"
       :element="martyriaElement"
+      :open-sections="openSections"
       :page-setup="pageSetup"
+      @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:martyria', martyriaElement, $event)"
     />
   </div>
@@ -147,11 +163,14 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
 });
 
 const emit = defineEmits([
-  'open-mode-key-dialog',
-  'open-syllable-positioning-dialog',
+  'update:open-sections',
   'update:annotation',
   'update:drop-cap',
   'update:image-box',
@@ -167,11 +186,17 @@ const emit = defineEmits([
 const textBoxElement = computed(() =>
   props.context.kind === 'text-box' ? props.context.element : null,
 );
+const textBoxSource = computed(() =>
+  props.context.kind === 'text-box' ? props.context.source : 'score',
+);
 const annotationElement = computed(() =>
   props.context.kind === 'annotation' ? props.context.element : null,
 );
 const richTextBoxElement = computed(() =>
   props.context.kind === 'rich-text-box' ? props.context.element : null,
+);
+const richTextBoxSource = computed(() =>
+  props.context.kind === 'rich-text-box' ? props.context.source : 'score',
 );
 const dropCapElement = computed(() =>
   props.context.kind === 'drop-cap' ? props.context.element : null,

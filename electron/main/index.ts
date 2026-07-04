@@ -1,6 +1,6 @@
 'use strict';
 
-import type { MenuItemConstructorOptions } from 'electron';
+import type { Input, MenuItemConstructorOptions } from 'electron';
 import {
   app,
   BrowserWindow,
@@ -40,6 +40,8 @@ import type {
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
   FileMenuViewPaneVisibilityArgs,
+  FileMenuViewStatusBarVisibilityArgs,
+  FileMenuViewZoomArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
@@ -47,6 +49,7 @@ import type {
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxArgs,
+  WorkspaceZoomState,
 } from '../../src/ipc/ipcChannels';
 import {
   CloseWorkspacesDisposition,
@@ -54,6 +57,7 @@ import {
   IpcRendererChannels,
 } from '../../src/ipc/ipcChannels';
 import type { Score } from '../../src/models/save/v1/Score';
+import type { ZoomFitMode } from '../../src/models/Workspace';
 import {
   createDefaultPaneVisibility,
   type WorkspacePaneId,
@@ -125,7 +129,14 @@ let readyToExit = false;
 let creatingWindow = false;
 let quitting = false;
 let developerPaneEnabled = false;
+let copyElementLinkMenuEnabled = false;
 let paneMenuVisibility = createDefaultPaneVisibility();
+let statusBarMenuVisible = true;
+let workspaceTabNavigationMenuEnabled = false;
+let zoomMenuState: WorkspaceZoomState = {
+  zoom: 1,
+  zoomFitMode: null,
+};
 
 const paneMenuItemIds: Record<WorkspacePaneId, string> = {
   'common-combos': 'view-pane-common-combos',
@@ -133,8 +144,21 @@ const paneMenuItemIds: Record<WorkspacePaneId, string> = {
   'neume-selector': 'view-pane-neume-selector',
   lyrics: 'view-pane-lyrics',
   properties: 'view-pane-properties',
-  selection: 'view-pane-selection',
 };
+const zoomMenuItemIds = {
+  actualSize: 'view-zoom-actual-size',
+} as const;
+const zoomFitMenuItemIds: Record<ZoomFitMode, string> = {
+  'page-width': 'view-zoom-page-width',
+  'text-width': 'view-zoom-text-width',
+  'whole-page': 'view-zoom-whole-page',
+};
+const copyElementLinkMenuItemId = 'edit-copy-element-link';
+const statusBarMenuItemId = 'view-status-bar';
+const workspaceTabNavigationMenuItemIds = [
+  'window-previous-tab',
+  'window-next-tab',
+];
 let updateAvailable = false;
 let updateDownloaded = false;
 let updateDownloadInProgress = false;
@@ -1471,6 +1495,165 @@ function syncPaneMenuItems(visibility: WorkspacePaneVisibility) {
   );
 }
 
+function syncStatusBarMenuItem(isVisible: boolean) {
+  statusBarMenuVisible = isVisible;
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  const item = menu.getMenuItemById(statusBarMenuItemId);
+
+  if (item != null) {
+    item.checked = isVisible;
+  }
+}
+
+function syncCopyElementLinkMenuItemEnabled(isEnabled: boolean) {
+  copyElementLinkMenuEnabled = isEnabled;
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  const item = menu.getMenuItemById(copyElementLinkMenuItemId);
+
+  if (item != null) {
+    item.enabled = isEnabled;
+  }
+}
+
+function syncWorkspaceTabNavigationMenuItemsEnabled(isEnabled: boolean) {
+  workspaceTabNavigationMenuEnabled = isEnabled;
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  for (const id of workspaceTabNavigationMenuItemIds) {
+    const item = menu.getMenuItemById(id);
+
+    if (item != null) {
+      item.enabled = isEnabled;
+    }
+  }
+}
+
+const ZOOM_COMPARISON_EPSILON = 0.000001;
+
+function zoomMenuStateIsActualSize() {
+  return (
+    zoomMenuState.zoomFitMode == null &&
+    Math.abs(zoomMenuState.zoom - 1) <= ZOOM_COMPARISON_EPSILON
+  );
+}
+
+function sendViewZoomCommand(args: FileMenuViewZoomArgs) {
+  win?.webContents.send(IpcMainChannels.FileMenuViewZoom, args);
+}
+
+type WorkspaceTabNavigationDirection = 'previous' | 'next';
+
+function sendWindowTabNavigationCommand(
+  direction: WorkspaceTabNavigationDirection,
+) {
+  win?.webContents.send(
+    direction === 'previous'
+      ? IpcMainChannels.FileMenuWindowPreviousTab
+      : IpcMainChannels.FileMenuWindowNextTab,
+  );
+}
+
+function getWindowTabNavigationInput(
+  input: Input,
+): WorkspaceTabNavigationDirection | null {
+  if (input.type !== 'keyDown') {
+    return null;
+  }
+
+  const isCtrlOnly = input.control && !input.alt && !input.meta;
+
+  if (isCtrlOnly && input.shift && input.code === 'Tab') {
+    return 'previous';
+  }
+
+  if (isCtrlOnly && !input.shift && input.code === 'Tab') {
+    return 'next';
+  }
+
+  if (isMac && input.meta && input.shift && !input.control && !input.alt) {
+    if (input.code === 'BracketLeft') {
+      return 'previous';
+    }
+
+    if (input.code === 'BracketRight') {
+      return 'next';
+    }
+  }
+
+  if (!isMac && isCtrlOnly) {
+    if (!input.shift && input.code === 'PageUp') {
+      return 'previous';
+    }
+
+    if (!input.shift && input.code === 'PageDown') {
+      return 'next';
+    }
+  }
+
+  return null;
+}
+
+function syncZoomMenuItems(state: WorkspaceZoomState) {
+  zoomMenuState = {
+    ...state,
+  };
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  const actualSizeItem = menu.getMenuItemById(zoomMenuItemIds.actualSize);
+
+  if (actualSizeItem != null) {
+    actualSizeItem.checked = zoomMenuStateIsActualSize();
+  }
+
+  (Object.entries(zoomFitMenuItemIds) as Array<[ZoomFitMode, string]>).forEach(
+    ([mode, id]) => {
+      const item = menu.getMenuItemById(id);
+
+      if (item != null) {
+        item.checked = zoomMenuState.zoomFitMode === mode;
+      }
+    },
+  );
+}
+
+function createZoomFitMenuItem(
+  mode: ZoomFitMode,
+  label: string,
+): MenuItemConstructorOptions {
+  return {
+    checked: zoomMenuState.zoomFitMode === mode,
+    id: zoomFitMenuItemIds[mode],
+    label,
+    type: 'checkbox',
+    click(menuItem) {
+      menuItem.checked = zoomMenuState.zoomFitMode === mode;
+      sendViewZoomCommand({ type: 'fit', mode });
+    },
+  };
+}
+
 function createPaneMenuItem(
   paneId: WorkspacePaneId,
   label: string,
@@ -1491,6 +1674,44 @@ function createPaneMenuItem(
         paneId,
         visible: requestedVisibility,
       } as FileMenuViewPaneVisibilityArgs);
+    },
+  };
+}
+
+function createStatusBarMenuItem(label: string): MenuItemConstructorOptions {
+  return {
+    checked: statusBarMenuVisible,
+    id: statusBarMenuItemId,
+    label,
+    type: 'checkbox',
+    click(menuItem) {
+      const requestedVisibility = menuItem.checked;
+
+      menuItem.checked = statusBarMenuVisible;
+      win?.webContents.send(IpcMainChannels.FileMenuViewStatusBarVisibility, {
+        visible: requestedVisibility,
+      } as FileMenuViewStatusBarVisibilityArgs);
+    },
+  };
+}
+
+function createWindowTabNavigationMenuItem(
+  direction: WorkspaceTabNavigationDirection,
+  label: string,
+  accelerator: string,
+  id = `window-${direction}-tab`,
+): MenuItemConstructorOptions {
+  return {
+    accelerator,
+    enabled: workspaceTabNavigationMenuEnabled,
+    id,
+    label,
+    click(menuItem, browserWindow, event) {
+      // The accelerator is handled by before-input-event so aliases share one
+      // path. Mouse menu selection still dispatches.
+      if (!event.triggeredByAccelerator) {
+        sendWindowTabNavigationCommand(direction);
+      }
     },
   };
 }
@@ -1643,15 +1864,21 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t(($) => $.menu.file.exportAsPdf),
-          accelerator: 'CmdOrCtrl+E',
+          label: i18next.t(($) => $.menu.file.documentProperties),
           click() {
-            win?.webContents.send(IpcMainChannels.FileMenuExportAsPdf);
+            win?.webContents.send(IpcMainChannels.FileMenuDocumentProperties);
           },
         },
         {
           label: i18next.t(($) => $.menu.file.exportAs),
           submenu: [
+            {
+              label: i18next.t(($) => $.menu.file.exportAsPdf),
+              accelerator: 'CmdOrCtrl+E',
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsPdf);
+              },
+            },
             {
               label: i18next.t(($) => $.menu.file.exportAsHtml),
               accelerator: 'CmdOrCtrl+Shift+E',
@@ -1842,6 +2069,15 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          id: copyElementLinkMenuItemId,
+          enabled: copyElementLinkMenuEnabled,
+          label: i18next.t(($) => $.menu.edit.copyElementLink),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuEditCopyElementLink);
+          },
+        },
+        { type: 'separator' },
+        {
           label: i18next.t(($) => $.menu.edit.preferences),
           accelerator: 'CmdOrCtrl+,',
           click() {
@@ -1902,7 +2138,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t(($) => $.menu.insert.modeKey),
+          label: i18next.t(($) => $.menu.insert.initialMartyria),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertModeKey);
           },
@@ -1940,6 +2176,59 @@ function createMenu() {
     {
       label: i18next.t(($) => $.menu.view.root),
       submenu: [
+        {
+          label: i18next.t(($) => $.menu.view.zoom.root),
+          submenu: [
+            {
+              label: i18next.t(($) => $.menu.view.zoom.zoomIn),
+              accelerator: 'CmdOrCtrl+Plus',
+              click() {
+                sendViewZoomCommand({ type: 'zoom-in' });
+              },
+            },
+            {
+              label: i18next.t(($) => $.menu.view.zoom.zoomIn),
+              accelerator: 'CmdOrCtrl+=',
+              visible: false,
+              click() {
+                sendViewZoomCommand({ type: 'zoom-in' });
+              },
+            },
+            {
+              label: i18next.t(($) => $.menu.view.zoom.zoomOut),
+              accelerator: 'CmdOrCtrl+-',
+              click() {
+                sendViewZoomCommand({ type: 'zoom-out' });
+              },
+            },
+            { type: 'separator' },
+            {
+              checked: zoomMenuStateIsActualSize(),
+              id: zoomMenuItemIds.actualSize,
+              label: i18next.t(($) => $.menu.view.zoom.actualSize),
+              accelerator: 'CmdOrCtrl+0',
+              type: 'checkbox',
+              click(menuItem) {
+                menuItem.checked = zoomMenuStateIsActualSize();
+                sendViewZoomCommand({ type: 'actual-size' });
+              },
+            },
+            { type: 'separator' },
+            createZoomFitMenuItem(
+              'page-width',
+              i18next.t(($) => $.menu.view.zoom.pageWidth),
+            ),
+            createZoomFitMenuItem(
+              'text-width',
+              i18next.t(($) => $.menu.view.zoom.textWidth),
+            ),
+            createZoomFitMenuItem(
+              'whole-page',
+              i18next.t(($) => $.menu.view.zoom.wholePage),
+            ),
+          ],
+        },
+        { type: 'separator' },
         createPaneMenuItem(
           'neume-selector',
           i18next.t(($) => $.menu.view.neumeSelector),
@@ -1953,10 +2242,6 @@ function createMenu() {
           i18next.t(($) => $.menu.view.properties),
         ),
         createPaneMenuItem(
-          'selection',
-          i18next.t(($) => $.menu.view.selection),
-        ),
-        createPaneMenuItem(
           'lyrics',
           i18next.t(($) => $.menu.view.lyrics),
           'CmdOrCtrl+L',
@@ -1966,10 +2251,12 @@ function createMenu() {
           i18next.t(($) => $.menu.view.developer),
         ),
         { type: 'separator' },
+        createStatusBarMenuItem(i18next.t(($) => $.menu.view.statusBar)),
+        { type: 'separator' },
         {
           label: i18next.t(($) => $.menu.view.resetLayout),
           click() {
-            win?.webContents.send(IpcMainChannels.FileMenuViewResetPaneLayout);
+            win?.webContents.send(IpcMainChannels.FileMenuViewResetLayout);
           },
         },
         ...(isDevelopment
@@ -1979,24 +2266,25 @@ function createMenu() {
               { role: 'forceReload' },
               { role: 'toggleDevTools' },
               { type: 'separator' },
-              { role: 'resetZoom' },
-              { role: 'zoomIn' },
-              { role: 'zoomOut' },
-              { type: 'separator' },
               { role: 'togglefullscreen' },
             ] as MenuItemConstructorOptions[])
           : []),
       ],
     },
     {
-      label: i18next.t(($) => $.menu.tools.root),
+      label: i18next.t(($) => $.menu.window.root),
+      role: 'windowMenu',
       submenu: [
-        {
-          label: i18next.t(($) => $.menu.tools.copyElementLink),
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuToolsCopyElementLink);
-          },
-        },
+        createWindowTabNavigationMenuItem(
+          'previous',
+          i18next.t(($) => $.menu.window.previousTab),
+          isMac ? 'Command+Shift+[' : 'Ctrl+PageUp',
+        ),
+        createWindowTabNavigationMenuItem(
+          'next',
+          i18next.t(($) => $.menu.window.nextTab),
+          isMac ? 'Command+Shift+]' : 'Ctrl+PageDown',
+        ),
       ],
     },
     ...(isDevelopment
@@ -2126,6 +2414,14 @@ async function createWindow() {
     shell.openExternal(details.url);
     return { action: 'deny' };
   });
+  win.webContents.on('before-input-event', (event, input) => {
+    const direction = getWindowTabNavigationInput(input);
+
+    if (direction != null && workspaceTabNavigationMenuEnabled) {
+      event.preventDefault();
+      sendWindowTabNavigationCommand(direction);
+    }
+  });
 
   if (!silent) {
     win.once('ready-to-show', () => {
@@ -2199,9 +2495,37 @@ ipcMain.on(
 );
 
 ipcMain.on(
+  IpcRendererChannels.SetCopyElementLinkEnabled,
+  (event, isEnabled: boolean) => {
+    syncCopyElementLinkMenuItemEnabled(isEnabled);
+  },
+);
+
+ipcMain.on(
+  IpcRendererChannels.SetWorkspaceTabNavigationEnabled,
+  (event, isEnabled: boolean) => {
+    syncWorkspaceTabNavigationMenuItemsEnabled(isEnabled);
+  },
+);
+
+ipcMain.on(
   IpcRendererChannels.SetWorkspacePaneVisibility,
   (event, visibility: WorkspacePaneVisibility) => {
     syncPaneMenuItems(visibility);
+  },
+);
+
+ipcMain.on(
+  IpcRendererChannels.SetStatusBarVisibility,
+  (event, isVisible: boolean) => {
+    syncStatusBarMenuItem(isVisible);
+  },
+);
+
+ipcMain.on(
+  IpcRendererChannels.SetWorkspaceZoomState,
+  (event, state: WorkspaceZoomState) => {
+    syncZoomMenuItems(state);
   },
 );
 

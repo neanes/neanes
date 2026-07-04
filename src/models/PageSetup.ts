@@ -85,20 +85,24 @@ export class PageSetup {
   public leftMargin = Unit.fromInch(1);
   public rightMargin = Unit.fromInch(1);
   public facingPages = false;
+  public direction: 'ltr' | 'rtl' = 'ltr';
 
   public headerMargin = Unit.fromInch(0.5);
   public footerMargin = Unit.fromInch(0.5);
   public headerDifferentFirstPage = false;
   public headerDifferentOddEven = false;
+  public headerFooterDifferentChapterOpening = true;
   public showHeader = false;
   public showFooter = false;
   public richHeaderFooter = false;
   public firstPageNumber = 1;
+  public numerals: 'westernArabic' | 'easternArabic' = 'westernArabic';
 
   public showHeaderHorizontalRule = false;
   public excludeHeaderHorizontalRuleFirstPage = false;
   public excludeHeaderHorizontalRuleEvenPage = false;
   public excludeHeaderHorizontalRuleOddPage = false;
+  public excludeHeaderHorizontalRuleChapterOpening = false;
   public headerHorizontalRuleMarginTop = 0;
   public headerHorizontalRuleMarginBottom = 0;
   public headerHorizontalRuleThickness = Unit.fromPt(1);
@@ -108,6 +112,7 @@ export class PageSetup {
   public excludeFooterHorizontalRuleFirstPage = false;
   public excludeFooterHorizontalRuleEvenPage = false;
   public excludeFooterHorizontalRuleOddPage = false;
+  public excludeFooterHorizontalRuleChapterOpening = false;
   public footerHorizontalRuleMarginTop = 0;
   public footerHorizontalRuleMarginBottom = 0;
   public footerHorizontalRuleThickness = Unit.fromPt(1);

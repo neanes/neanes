@@ -3,6 +3,7 @@
     "alignLeft": "Rata Kiri",
     "alignCenter": "Rata Tengah",
     "alignRight": "Rata Kanan",
+    "alignJustify": "Rata Penuh",
     "alignment": "Perataan",
     "bpm": "BPM",
     "chooseColor": "Pilih warna",
@@ -12,7 +13,6 @@
     "insertPelastikon": "Sisipkan Pelastikon",
     "measureBar": "Garis Birama",
     "outline": "Garis Luar",
-    "sectionName": "Nama Bagian",
     "spaceAfter": "Ruang Setelah",
     "tempoSign": "Tanda Tempo",
     "useDefaultStyle": "Gunakan Gaya Default",
@@ -37,7 +37,7 @@
     "single": "Tunggal",
     "martyria": "Martyria",
     "insertDropCapBefore": "Sisipkan huruf awal besar sebelum",
-    "insertModeKey": "Sisipkan Kunci Mode",
+    "insertInitialMartyria": "Sisipkan Martyria Awal",
     "insertTextBox": "Sisipkan Kotak Teks",
     "insertTextBoxRich": "Sisipkan Kotak Teks Kaya",
     "insertImage": "Sisipkan gambar",
@@ -46,9 +46,11 @@
     "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Sisipkan atau hapus jeda baris terpusat setelah elemen yang dipilih",
     "insertOrRemovePageBreakAfterSelectedElement": "Sisipkan atau hapus jeda halaman setelah elemen yang dipilih",
     "deleteSelectedElement": "Hapus elemen yang dipilih",
-    "fit": "Paskan",
+    "pageWidth": "Lebar Halaman",
+    "textWidth": "Lebar Teks",
+    "wholePage": "Seluruh Halaman",
     "speed": "Kecepatan",
-    "invalidZoom": "Nilai harus antara 50% dan 500%."
+    "invalidZoom": "Nilai harus antara {{minZoom}} dan {{maxZoom}}."
   },
   "status": {
     "section": "Bagian {{ sectionNumber }} dari {{ sectionCount }}",
@@ -63,15 +65,6 @@
     "noProperties": "Tidak ada properti",
     "nothingToEdit": "Tidak ada yang dapat diedit"
   },
-  "selection": {
-    "elements": "Elemen",
-    "lineBreak": "Jeda Baris",
-    "center": "Tengah",
-    "justify": "Rata Penuh",
-    "pageBreak": "Jeda Halaman",
-    "noSelection": "Tidak ada pilihan",
-    "nothingSelected": "Tidak ada yang dipilih"
-  },
   "imageBox": {
     "maintainAspectRatio": "Pertahankan Rasio Aspek",
     "width": "Lebar",
@@ -85,18 +78,18 @@
     "auto": "Otomatis",
     "note": "Nada",
     "scale": "Skala",
-    "rootSignOverride": "Penimpa Tanda Dasar",
+    "martyriaSignOverride": "Penimpa Tanda Martyria",
     "tempoLeft": "Tambah Tempo Kiri",
     "tempo": "Tambah Tempo di Atas",
     "tempoRight": "Tambah Tempo Kanan"
   },
-  "modeKey": {
+  "initialMartyria": {
     "size": "Ukuran",
     "heightAdjustment": "Penyesuaian Tinggi",
     "rightAlignTempo": "Rata kanan tempo",
     "showAmbitus": "Tampilkan Ambitus",
     "permanentEnharmonicZo": "Zo Enharmonik Permanen",
-    "changeKey": "Ubah Kunci",
+    "changeInitialMartyria": "Ubah Martyria Awal",
     "useOptionalDiatonicFthoras": "Tampilkan Fthora Diatonik"
   },
   "neume": {
@@ -116,20 +109,23 @@
   },
   "textbox": {
     "multipanel": "Multipanel",
-    "rtl": "RTL",
     "scrollable": "Dapat Digulir",
     "modeChange": "Ubah Mode",
     "virtualNote": "Nada Parallage",
     "centerOnPage": "Tengah di Halaman",
     "offsetYTop": "Offset Y Atas",
     "offsetYBottom": "Offset Y Bawah",
-    "fillWidth": "Isi Lebar"
+    "fillWidth": "Isi Lebar",
+    "runningMarker": "Penanda Berjalan",
+    "runningMarkerRole": "Peran",
+    "runningMarkerChapter": "Bab",
+    "runningMarkerSection": "Bagian",
+    "runningMarkerText": "Teks Pengganti",
+    "runningMarkerTextPlaceholder": "Gunakan teks yang terlihat"
   },
   "richTextBox": {
     "default": "Bawaan",
     "underline": "Garis bawah",
-    "bulletedList": "Daftar berpoin",
-    "numberedList": "Daftar bernomor",
     "outdent": "Kurangi inden",
     "indent": "Inden",
     "position": "Posisi teks",
@@ -159,7 +155,7 @@
     "kerningRight": "Kerning Kanan",
     "neumeFontSize": "Ukuran Font",
     "martyriaNote": "Nada Martyria",
-    "martyriaRootSign": "Tanda Akar Martyria"
+    "martyriaSign": "Tanda Martyria"
   },
   "workspace": {
     "dockPane": "Tambatkan Panel",

@@ -1,9 +1,16 @@
 <template>
-  <FieldSet class="min-h-0 flex-1 overflow-auto">
-    <FieldLegend class="sr-only">{{
+  <PaneAccordion
+    :open-sections="openSections"
+    @update:open-sections="$emit('update:open-sections', $event)"
+  >
+    <template #legend>{{
       $t(($) => $.menu.insert.dropCap, { ns: 'menu' })
-    }}</FieldLegend>
-    <FieldGroup>
+    }}</template>
+
+    <PaneSection
+      value="style"
+      :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
+    >
       <Field orientation="horizontal">
         <Switch
           id="properties-drop-cap-use-default-style"
@@ -52,8 +59,35 @@
         </Field>
 
         <Field orientation="horizontal">
+          <FieldLabel>{{
+            $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
+          }}</FieldLabel>
+          <ToggleGroup
+            type="multiple"
+            variant="outline"
+            :model-value="styleValues"
+            @update:model-value="onStyleValuesChanged"
+          >
+            <ToggleGroupItem
+              value="bold"
+              aria-label="Toggle bold"
+              :disabled="!isFontStyleAxisToggleEnabled('bold')"
+            >
+              <PhTextB />
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="italic"
+              aria-label="Toggle italic"
+              :disabled="!isFontStyleAxisToggleEnabled('italic')"
+            >
+              <PhTextItalic />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </Field>
+
+        <Field orientation="horizontal">
           <FieldLabel for="properties-drop-cap-font-size">{{
-            $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
+            $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
           }}</FieldLabel>
           <InputFontSize
             id="properties-drop-cap-font-size"
@@ -61,6 +95,24 @@
             :model-value="element.fontSize"
             @update:model-value="
               $emit('update', { fontSize: $event } as Partial<DropCapElement>)
+            "
+          />
+        </Field>
+
+        <Field orientation="horizontal">
+          <FieldLabel for="properties-drop-cap-line-span">{{
+            $t(($) => $.toolbar.dropCap.lineSpan, { ns: 'toolbar' })
+          }}</FieldLabel>
+          <InputUnit
+            id="properties-drop-cap-line-span"
+            unit="unitless"
+            :min="1"
+            :max="10"
+            :step="1"
+            :model-value="element.lineSpan"
+            :format-options="fraction0FormatOptions"
+            @update:model-value="
+              $emit('update', { lineSpan: $event } as Partial<DropCapElement>)
             "
           />
         </Field>
@@ -97,33 +149,6 @@
         </Field>
 
         <Field orientation="horizontal">
-          <FieldLabel>{{
-            $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
-          }}</FieldLabel>
-          <ToggleGroup
-            type="multiple"
-            variant="outline"
-            :model-value="styleValues"
-            @update:model-value="onStyleValuesChanged"
-          >
-            <ToggleGroupItem
-              value="bold"
-              aria-label="Toggle bold"
-              :disabled="!isFontStyleAxisToggleEnabled('bold')"
-            >
-              <PhTextB />
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="italic"
-              aria-label="Toggle italic"
-              :disabled="!isFontStyleAxisToggleEnabled('italic')"
-            >
-              <PhTextItalic />
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </Field>
-
-        <Field orientation="horizontal">
           <FieldLabel for="properties-drop-cap-outline">{{
             $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
           }}</FieldLabel>
@@ -137,26 +162,13 @@
             "
           />
         </Field>
-
-        <Field orientation="horizontal">
-          <FieldLabel for="properties-drop-cap-line-span">{{
-            $t(($) => $.toolbar.dropCap.lineSpan, { ns: 'toolbar' })
-          }}</FieldLabel>
-          <InputUnit
-            id="properties-drop-cap-line-span"
-            unit="unitless"
-            :min="1"
-            :max="10"
-            :step="1"
-            :model-value="element.lineSpan"
-            :format-options="fraction0FormatOptions"
-            @update:model-value="
-              $emit('update', { lineSpan: $event } as Partial<DropCapElement>)
-            "
-          />
-        </Field>
       </template>
+    </PaneSection>
 
+    <PaneSection
+      value="positioning"
+      :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
+    >
       <Field orientation="horizontal">
         <FieldLabel for="properties-drop-cap-width">{{
           $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
@@ -176,8 +188,8 @@
           "
         />
       </Field>
-    </FieldGroup>
-  </FieldSet>
+    </PaneSection>
+  </PaneAccordion>
 </template>
 
 <script setup lang="ts">
@@ -191,13 +203,9 @@ import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from '@/components/ui/field';
+import PaneAccordion from '@/components/pane/PaneAccordion.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
@@ -220,13 +228,17 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
   },
 });
 
-const emit = defineEmits(['update']);
+const emit = defineEmits(['update', 'update:open-sections']);
 
 const {
   fontStyleOptions,

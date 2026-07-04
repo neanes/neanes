@@ -89,9 +89,58 @@
                     ns: 'dialog',
                   })
                 }}
-                <img src="@/assets/icons/crowdin-badge.svg" alt="Crowdin" />
               </a>
             </FieldDescription>
+          </Field>
+
+          <Field>
+            <FieldLabel id="editor-preferences-color-mode-label">
+              {{
+                $t(($) => $.dialog.preferences.colorMode, {
+                  ns: 'dialog',
+                })
+              }}
+            </FieldLabel>
+            <ToggleGroup
+              id="editor-preferences-color-mode"
+              type="single"
+              variant="outline"
+              class="grid w-full grid-cols-3"
+              :model-value="colorModeDraft"
+              aria-labelledby="editor-preferences-color-mode-label"
+              @update:model-value="onColorModeChanged"
+            >
+              <ToggleGroupItem value="light" class="min-w-0 justify-center">
+                <PhSun data-icon="inline-start" />
+                <span class="min-w-0 truncate">
+                  {{
+                    $t(($) => $.dialog.preferences.colorModeLight, {
+                      ns: 'dialog',
+                    })
+                  }}
+                </span>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="dark" class="min-w-0 justify-center">
+                <PhMoon data-icon="inline-start" />
+                <span class="min-w-0 truncate">
+                  {{
+                    $t(($) => $.dialog.preferences.colorModeDark, {
+                      ns: 'dialog',
+                    })
+                  }}
+                </span>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="auto" class="min-w-0 justify-center">
+                <PhDesktop data-icon="inline-start" />
+                <span class="min-w-0 truncate">
+                  {{
+                    $t(($) => $.dialog.preferences.colorModeSystem, {
+                      ns: 'dialog',
+                    })
+                  }}
+                </span>
+              </ToggleGroupItem>
+            </ToggleGroup>
           </Field>
 
           <Field>
@@ -219,10 +268,18 @@
 </template>
 
 <script setup lang="ts">
-import { PhArrowCounterClockwise, PhCheck } from '@phosphor-icons/vue';
+import {
+  PhArrowCounterClockwise,
+  PhCheck,
+  PhDesktop,
+  PhMoon,
+  PhSun,
+} from '@phosphor-icons/vue';
+import type { BasicColorSchema } from '@vueuse/core';
+import { useColorMode } from '@vueuse/core';
 import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
 import { Button } from '@/components/ui/button';
@@ -252,6 +309,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { supportedLocales } from '@/i18n';
 import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
 import { getTempoSignLabelSelector } from '@/models/NeumeI18nMappings';
@@ -278,6 +336,8 @@ const open = defineModel<boolean>('open', { required: true });
 const form = ref(cloneEditorPreferences(props.options));
 const LANGUAGE_SYSTEM_DEFAULT_VALUE = '__system_default__';
 const { t } = useTranslation();
+const colorMode = useColorMode();
+const colorModeDraft = ref<BasicColorSchema>(colorMode.store.value);
 const languageSelectValue = computed({
   get() {
     return form.value.language || LANGUAGE_SYSTEM_DEFAULT_VALUE;
@@ -316,17 +376,32 @@ function onTempoChanged(neume: TempoSign, bpm: number) {
   form.value.tempoDefaults[neume] = bpm;
 }
 
+function onColorModeChanged(value: unknown) {
+  if (value === 'light' || value === 'dark' || value === 'auto') {
+    colorModeDraft.value = value;
+  }
+}
+
 function resetToSystemDefaults() {
   form.value = new EditorPreferences();
+  colorModeDraft.value = 'auto';
 }
 
 function getTempoInputId(tempo: TempoSign) {
   return `editor-preferences-tempo-${tempo}`;
 }
 
-function submit() {
+async function submit() {
+  colorMode.store.value = colorModeDraft.value;
+  await nextTick();
   emit('update', form.value);
 }
+
+watch(open, (isOpen) => {
+  if (isOpen) {
+    colorModeDraft.value = colorMode.store.value;
+  }
+});
 
 function cloneEditorPreferences(options: EditorPreferences) {
   return EditorPreferences.createFrom(JSON.parse(JSON.stringify(options)));

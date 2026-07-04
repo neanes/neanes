@@ -1,33 +1,38 @@
 <template>
-  <FieldSet class="min-h-0 flex-1 overflow-auto">
-    <FieldLegend class="sr-only">{{
+  <PaneAccordion
+    :open-sections="openSections"
+    @update:open-sections="$emit('update:open-sections', $event)"
+  >
+    <template #legend>{{
       $t(($) => $.menu.insert.richTextBox, { ns: 'menu' })
-    }}</FieldLegend>
-    <FieldGroup>
-      <PropertiesRichTextStyle
-        id-prefix="properties-rich-text-box"
-        :element="element"
-        :fonts="fonts"
-        :page-setup="pageSetup"
-        :default-font-color="
-          element.inline
-            ? pageSetup.lyricsDefaultColor
-            : pageSetup.textBoxDefaultColor
-        "
-        :default-font-size="
-          element.inline
-            ? pageSetup.lyricsDefaultFontSize
-            : pageSetup.textBoxDefaultFontSize
-        "
-        :default-font-family="
-          element.inline
-            ? pageSetup.lyricsDefaultFontFamily
-            : pageSetup.textBoxDefaultFontFamily
-        "
-      />
+    }}</template>
 
-      <FieldSeparator />
+    <PropertiesRichTextStyle
+      id-prefix="properties-rich-text-box"
+      :element="element"
+      :fonts="fonts"
+      :page-setup="pageSetup"
+      :default-font-color="
+        element.inline
+          ? pageSetup.lyricsDefaultColor
+          : pageSetup.textBoxDefaultColor
+      "
+      :default-font-size="
+        element.inline
+          ? pageSetup.lyricsDefaultFontSize
+          : pageSetup.textBoxDefaultFontSize
+      "
+      :default-font-family="
+        element.inline
+          ? pageSetup.lyricsDefaultFontFamily
+          : pageSetup.textBoxDefaultFontFamily
+      "
+    />
 
+    <PaneSection
+      value="positioning"
+      :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
+    >
       <Field orientation="horizontal">
         <Switch
           id="properties-rich-text-box-inline"
@@ -39,7 +44,7 @@
         </FieldLabel>
       </Field>
 
-      <FieldGroup v-if="element.inline">
+      <template v-if="element.inline">
         <Field orientation="horizontal">
           <FieldLabel for="properties-rich-text-box-width">{{
             $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
@@ -106,7 +111,7 @@
             $t(($) => $.toolbar.textbox.centerOnPage, { ns: 'toolbar' })
           }}</FieldLabel>
         </Field>
-      </FieldGroup>
+      </template>
 
       <Field orientation="horizontal">
         <FieldLabel for="properties-rich-text-box-margin-top">{{
@@ -141,9 +146,12 @@
           @update:model-value="updateNumberProperty('marginBottom', $event)"
         />
       </Field>
+    </PaneSection>
 
-      <FieldSeparator />
-
+    <PaneSection
+      value="mode-change"
+      :title="$t(($) => $.toolbar.textbox.modeChange, { ns: 'toolbar' })"
+    >
       <Field orientation="horizontal">
         <Switch
           id="properties-rich-text-box-mode-change"
@@ -155,14 +163,11 @@
         }}</FieldLabel>
       </Field>
 
-      <FieldGroup v-if="element.modeChange">
+      <template v-if="element.modeChange">
         <Field>
-          <FieldLabel
-            for="properties-rich-text-box-mode-change-physical-note"
-            >{{
-              $t(($) => $.toolbar.martyria.note, { ns: 'toolbar' })
-            }}</FieldLabel
-          >
+          <FieldLabel for="properties-rich-text-box-mode-change-physical-note">
+            {{ $t(($) => $.toolbar.martyria.note, { ns: 'toolbar' }) }}
+          </FieldLabel>
           <Select
             :model-value="element.modeChangePhysicalNote"
             @update:model-value="onModeChangePhysicalNoteChanged"
@@ -283,26 +288,79 @@
             "
           />
           <FieldLabel for="properties-rich-text-box-permanent-enharmonic-zo">{{
-            $t(($) => $.toolbar.modeKey.permanentEnharmonicZo, {
+            $t(($) => $.toolbar.initialMartyria.permanentEnharmonicZo, {
               ns: 'toolbar',
             })
           }}</FieldLabel>
         </Field>
-      </FieldGroup>
+      </template>
+    </PaneSection>
 
-      <FieldSeparator />
-
-      <Field orientation="horizontal">
-        <Switch
-          id="properties-rich-text-box-rtl"
-          :model-value="element.rtl"
-          @update:model-value="updateBooleanProperty('rtl', $event)"
-        />
-        <FieldLabel for="properties-rich-text-box-rtl">
-          {{ $t(($) => $.toolbar.textbox.rtl, { ns: 'toolbar' }) }}
-        </FieldLabel>
+    <PaneSection
+      v-if="source === 'score'"
+      value="running-marker"
+      :title="$t(($) => $.toolbar.textbox.runningMarker, { ns: 'toolbar' })"
+    >
+      <Field>
+        <FieldLabel for="properties-rich-text-box-running-marker-role">{{
+          $t(($) => $.toolbar.textbox.runningMarkerRole, {
+            ns: 'toolbar',
+          })
+        }}</FieldLabel>
+        <Select
+          :model-value="element.runningMarkerRole ?? RUNNING_MARKER_NONE_VALUE"
+          @update:model-value="onRunningMarkerRoleChanged"
+        >
+          <SelectTrigger id="properties-rich-text-box-running-marker-role">
+            <SelectValue />
+          </SelectTrigger>
+          <RichTextSelectContent>
+            <SelectGroup>
+              <SelectItem :value="RUNNING_MARKER_NONE_VALUE">
+                {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
+              </SelectItem>
+              <SelectItem value="chapter">
+                {{
+                  $t(($) => $.toolbar.textbox.runningMarkerChapter, {
+                    ns: 'toolbar',
+                  })
+                }}
+              </SelectItem>
+              <SelectItem value="section">
+                {{
+                  $t(($) => $.toolbar.textbox.runningMarkerSection, {
+                    ns: 'toolbar',
+                  })
+                }}
+              </SelectItem>
+            </SelectGroup>
+          </RichTextSelectContent>
+        </Select>
       </Field>
 
+      <Field>
+        <FieldLabel for="properties-rich-text-box-running-marker-text">{{
+          $t(($) => $.toolbar.textbox.runningMarkerText, {
+            ns: 'toolbar',
+          })
+        }}</FieldLabel>
+        <Input
+          id="properties-rich-text-box-running-marker-text"
+          :model-value="element.runningMarkerText ?? ''"
+          :placeholder="
+            $t(($) => $.toolbar.textbox.runningMarkerTextPlaceholder, {
+              ns: 'toolbar',
+            })
+          "
+          @update:model-value="onRunningMarkerTextChanged"
+        />
+      </Field>
+    </PaneSection>
+
+    <PaneSection
+      value="scrollable"
+      :title="$t(($) => $.toolbar.textbox.scrollable, { ns: 'toolbar' })"
+    >
       <Field orientation="horizontal">
         <Switch
           id="properties-rich-text-box-scrollable"
@@ -313,8 +371,8 @@
           $t(($) => $.toolbar.textbox.scrollable, { ns: 'toolbar' })
         }}</FieldLabel>
       </Field>
-    </FieldGroup>
-  </FieldSet>
+    </PaneSection>
+  </PaneAccordion>
 </template>
 
 <script setup lang="ts">
@@ -324,15 +382,11 @@ import { computed } from 'vue';
 
 import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import PaneAccordion from '@/components/pane/PaneAccordion.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSeparator,
-  FieldSet,
-} from '@/components/ui/field';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectGroup,
@@ -383,17 +437,27 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
   pageSetup: {
     type: Object as PropType<PageSetup>,
+    required: true,
+  },
+  source: {
+    type: String as PropType<'score' | 'header-footer'>,
     required: true,
   },
 });
 
 const emit = defineEmits<{
+  'update:open-sections': [value: string[]];
   update: [value: Partial<RichTextBoxElement>];
 }>();
 
 const SELECT_NONE_VALUE = '__none__';
+const RUNNING_MARKER_NONE_VALUE = '__none__';
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
@@ -450,6 +514,23 @@ function onModeChangeVirtualNoteChanged(value: AcceptableValue) {
       modeChangeVirtualNote: value,
     });
   }
+}
+
+function onRunningMarkerRoleChanged(value: AcceptableValue) {
+  updateElement({
+    runningMarkerRole:
+      value === RUNNING_MARKER_NONE_VALUE
+        ? null
+        : (value as RichTextBoxElement['runningMarkerRole']),
+  });
+}
+
+function onRunningMarkerTextChanged(value: string | number) {
+  const text = String(value);
+
+  updateElement({
+    runningMarkerText: text.trim() === '' ? null : text,
+  });
 }
 
 function isScale(value: unknown): value is Scale {

@@ -5,10 +5,12 @@
     >
       <DialogHeader>
         <DialogTitle>
-          {{ $t(($) => $.dialog.modeKey.root, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.initialMartyria.root, { ns: 'dialog' }) }}
         </DialogTitle>
         <DialogDescription>
-          {{ $t(($) => $.dialog.modeKey.description, { ns: 'dialog' }) }}
+          {{
+            $t(($) => $.dialog.initialMartyria.description, { ns: 'dialog' })
+          }}
         </DialogDescription>
       </DialogHeader>
       <Tabs
@@ -64,7 +66,7 @@
                 "
               >
                 <ItemContent class="items-start">
-                  <div class="w-full px-2 py-1">
+                  <div class="mode-key-preview w-full px-2 py-1">
                     <ModeKey
                       class="!w-auto !border-0 [--zoom:1]"
                       :element="template"
@@ -88,7 +90,7 @@
         />
         <FieldLabel for="mode-key-dialog-use-optional-diatonic-fthoras">
           {{
-            $t(($) => $.toolbar.modeKey.useOptionalDiatonicFthoras, {
+            $t(($) => $.toolbar.initialMartyria.useOptionalDiatonicFthoras, {
               ns: 'toolbar',
             })
           }}
@@ -286,3 +288,14 @@ function updateModeKey() {
   open.value = false;
 }
 </script>
+
+<style scoped>
+.mode-key-preview {
+  color: var(--muted-foreground);
+}
+
+.mode-key-preview :deep(.mode-key-container),
+.mode-key-preview :deep(.mode-key-container *) {
+  color: inherit !important;
+}
+</style>

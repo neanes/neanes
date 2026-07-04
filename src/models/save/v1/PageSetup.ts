@@ -27,20 +27,25 @@ export class PageSetup {
   public leftMargin = Unit.fromInch(1);
   public rightMargin = Unit.fromInch(1);
   public facingPages: boolean | undefined = undefined;
+  public direction: 'ltr' | 'rtl' | undefined = undefined;
 
   public headerMargin = Unit.fromInch(0.5);
   public footerMargin = Unit.fromInch(0.5);
   public headerDifferentFirstPage: boolean | undefined = undefined;
   public headerDifferentOddEven: boolean | undefined = undefined;
+  public headerFooterDifferentChapterOpening: boolean | undefined = undefined;
   public showHeader: boolean | undefined = undefined;
   public showFooter: boolean | undefined = undefined;
   public richHeaderFooter: boolean | undefined = undefined;
   public firstPageNumber = 1;
+  public numerals: 'westernArabic' | 'easternArabic' | undefined = undefined;
 
   public showHeaderHorizontalRule: boolean | undefined = undefined;
   public excludeHeaderHorizontalRuleFirstPage: boolean | undefined = undefined;
   public excludeHeaderHorizontalRuleEvenPage: boolean | undefined = undefined;
   public excludeHeaderHorizontalRuleOddPage: boolean | undefined = undefined;
+  public excludeHeaderHorizontalRuleChapterOpening: boolean | undefined =
+    undefined;
   public headerHorizontalRuleMarginTop: number | undefined = undefined;
   public headerHorizontalRuleMarginBottom: number | undefined = undefined;
   public headerHorizontalRuleThickness: number | undefined = undefined;
@@ -50,6 +55,8 @@ export class PageSetup {
   public excludeFooterHorizontalRuleFirstPage: boolean | undefined = undefined;
   public excludeFooterHorizontalRuleEvenPage: boolean | undefined = undefined;
   public excludeFooterHorizontalRuleOddPage: boolean | undefined = undefined;
+  public excludeFooterHorizontalRuleChapterOpening: boolean | undefined =
+    undefined;
   public footerHorizontalRuleMarginTop: number | undefined = undefined;
   public footerHorizontalRuleMarginBottom: number | undefined = undefined;
   public footerHorizontalRuleThickness: number | undefined = undefined;

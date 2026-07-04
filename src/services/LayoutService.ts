@@ -25,7 +25,7 @@ import { ElementType, EmptyElement, LineBreakType } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
 import type {
-  AnonymousBoxOverlayDiagnostics,
+  BoxOverlayDiagnostics,
   ElementOverlayDiagnostics,
   GlueOverlayDiagnostics,
   LayoutDiagnosticItem,
@@ -70,6 +70,7 @@ import {
 import { TATWEEL } from '@/utils/constants';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
+import { resolveRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
@@ -353,7 +354,7 @@ export class LayoutService {
       this.saveElementState(element);
     });
 
-    this.calculateMartyrias(elements, pageSetup);
+    this.calculateMartyriae(elements, pageSetup);
 
     // Always make sure this is an empty element at the end of the score.
     // If this case is true, we have a bug, but this will prevent
@@ -470,6 +471,7 @@ export class LayoutService {
     // Only a single text box is supported right now
     if (score.pageSetup.showHeader) {
       this.processHeader(score.headers.default, pageSetup, neumeHeight);
+      this.processHeader(score.headers.chapterOpening, pageSetup, neumeHeight);
       this.processHeader(score.headers.odd, pageSetup, neumeHeight);
       this.processHeader(score.headers.even, pageSetup, neumeHeight);
       this.processHeader(score.headers.firstPage, pageSetup, neumeHeight);
@@ -477,6 +479,7 @@ export class LayoutService {
 
     if (score.pageSetup.showFooter) {
       this.processFooter(score.footers.default, pageSetup, neumeHeight);
+      this.processFooter(score.footers.chapterOpening, pageSetup, neumeHeight);
       this.processFooter(score.footers.odd, pageSetup, neumeHeight);
       this.processFooter(score.footers.even, pageSetup, neumeHeight);
       this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
@@ -1481,6 +1484,33 @@ export class LayoutService {
     }
 
     // Phase 2: Place completed paragraphs onto pages
+    const extraHeaderFooterHeightCache = new Map<
+      number,
+      { extraHeaderHeightPx: number; extraFooterHeightPx: number }
+    >();
+    // Keep header/footer overflow reservation stable within a physical page.
+    // This mitigates intra-page drift when oversized headers/footers extend
+    // outside the margins, but it is not a predictive pagination fix and does
+    // not guarantee those out-of-margin layouts will behave correctly.
+    const getCachedExtraHeaderFooterHeight = () => {
+      const physicalPageNumber = page.physicalPageNumber;
+      const cachedHeights =
+        extraHeaderFooterHeightCache.get(physicalPageNumber);
+
+      if (cachedHeights != null) {
+        return cachedHeights;
+      }
+
+      const extraHeights = this.getExtraHeaderFooterHeight(
+        score,
+        pageSetup,
+        pages,
+      );
+      extraHeaderFooterHeightCache.set(physicalPageNumber, extraHeights);
+
+      return extraHeights;
+    };
+
     for (const [
       completedParagraphIndex,
       completedParagraph,
@@ -1541,7 +1571,7 @@ export class LayoutService {
 
         // Calculate the height of the headers/footers of the current page
         let { extraHeaderHeightPx, extraFooterHeightPx } =
-          this.getExtraHeaderFooterHeight(score, pageSetup, pages.length);
+          getCachedExtraHeaderFooterHeight();
 
         const innerPageHeight =
           pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
@@ -1573,7 +1603,7 @@ export class LayoutService {
 
           // Recalculate the height of the headers/footers of the new page
           ({ extraHeaderHeightPx, extraFooterHeightPx } =
-            this.getExtraHeaderFooterHeight(score, pageSetup, pages.length));
+            getCachedExtraHeaderFooterHeight());
         }
 
         if (!('element' in item)) {
@@ -2519,13 +2549,14 @@ export class LayoutService {
       lines.push({
         actualContentWidth: naturalContentWidth + stretchUsed - shrinkUsed,
         adjustmentRatio,
-        anonymousBoxOverlays: this.getAnonymousBoxOverlayDiagnosticsForLine(
+        anonymousBoxOverlays: this.getBoxOverlayDiagnosticsForLine(
           items,
           diagnosticItems,
           positions,
           contentStart,
           breakpoint,
           lineIndex,
+          true,
         ),
         glueOverlays: this.getGlueOverlayDiagnosticsForLine(
           items,
@@ -2539,6 +2570,15 @@ export class LayoutService {
           diagnosticItems.slice(contentStart, breakpoint + 1),
         ),
         naturalContentWidth,
+        nonAnonymousBoxOverlays: this.getBoxOverlayDiagnosticsForLine(
+          items,
+          diagnosticItems,
+          positions,
+          contentStart,
+          breakpoint,
+          lineIndex,
+          false,
+        ),
         paragraphIndex,
         paragraphLineIndex: lineIndex,
         recomputedBadness: Number.isFinite(adjustmentRatio)
@@ -2553,13 +2593,14 @@ export class LayoutService {
     return lines;
   }
 
-  private static getAnonymousBoxOverlayDiagnosticsForLine(
+  private static getBoxOverlayDiagnosticsForLine(
     items: InputItem[],
     diagnosticItems: LayoutDiagnosticItem[],
     positions: PositionedItem[],
     contentStart: number,
     breakpoint: number,
     lineIndex: number,
+    anonymous: boolean,
   ) {
     const positionsByItem = new Map<number, PositionedItem>();
 
@@ -2569,7 +2610,7 @@ export class LayoutService {
       }
     }
 
-    const overlays: AnonymousBoxOverlayDiagnostics[] = [];
+    const overlays: BoxOverlayDiagnostics[] = [];
 
     for (let itemIndex = contentStart; itemIndex <= breakpoint; itemIndex++) {
       const item = items[itemIndex];
@@ -2579,13 +2620,14 @@ export class LayoutService {
       if (
         item.type !== 'box' ||
         diagnosticItem?.type !== 'box' ||
-        !diagnosticItem.anonymous ||
+        diagnosticItem.anonymous !== anonymous ||
         position == null
       ) {
         continue;
       }
 
       overlays.push({
+        anonymous: diagnosticItem.anonymous,
         label: diagnosticItem.label,
         left: position.xOffset,
         ownerElementId: diagnosticItem.ownerElementId,
@@ -2624,14 +2666,7 @@ export class LayoutService {
       if (
         item.type !== 'glue' ||
         diagnosticItem?.type !== 'glue' ||
-        position == null ||
-        !this.hasAnchoredBoxesAroundItem(
-          items,
-          positionsByItem,
-          contentStart,
-          breakpoint,
-          itemIndex,
-        )
+        position == null
       ) {
         continue;
       }
@@ -2652,38 +2687,6 @@ export class LayoutService {
 
     return overlays;
   }
-
-  private static hasAnchoredBoxesAroundItem(
-    items: InputItem[],
-    positionsByItem: Map<number, PositionedItem>,
-    contentStart: number,
-    breakpoint: number,
-    itemIndex: number,
-  ) {
-    let hasPreviousBox = false;
-    let hasNextBox = false;
-
-    for (let i = itemIndex - 1; i >= contentStart; i--) {
-      if (items[i].type !== 'box') {
-        continue;
-      }
-
-      hasPreviousBox = positionsByItem.has(i);
-      break;
-    }
-
-    for (let i = itemIndex + 1; i <= breakpoint; i++) {
-      if (items[i].type !== 'box') {
-        continue;
-      }
-
-      hasNextBox = positionsByItem.has(i);
-      break;
-    }
-
-    return hasPreviousBox && hasNextBox;
-  }
-
   private static groupDiagnosticItems(items: LayoutDiagnosticItem[]) {
     const groups: LineLayoutDiagnostics['itemGroups'] = [];
 
@@ -2918,23 +2921,37 @@ export class LayoutService {
   private static getExtraHeaderFooterHeight(
     score: {
       pageSetup: PageSetup;
-      getHeaderForPage: (page: number) => Header;
-      getFooterForPage: (page: number) => Footer;
+      getHeaderForPage: (page: number, isChapterOpening?: boolean) => Header;
+      getFooterForPage: (page: number, isChapterOpening?: boolean) => Footer;
+      shouldShowHeaderRuleForPageIndex: (
+        page: number,
+        isChapterOpening?: boolean,
+      ) => boolean;
+      shouldShowFooterRuleOnPage: (
+        page: number,
+        isChapterOpening?: boolean,
+      ) => boolean;
     },
     pageSetup: PageSetup,
-    pageNumber: number,
+    pages: Page[],
   ): { extraHeaderHeightPx: number; extraFooterHeightPx: number } {
     let extraHeaderHeightPx = 0;
     let extraFooterHeightPx = 0;
+    const pageNumber = pages.length;
+    const runningMarkerPageMetadata = resolveRunningMarkerPageMetadata(pages);
+    const isChapterOpening =
+      runningMarkerPageMetadata[pageNumber - 1]?.isChapterOpening ?? false;
 
     if (score.pageSetup.showHeader) {
-      const header = score.getHeaderForPage(pageNumber);
+      const header = score.getHeaderForPage(pageNumber, isChapterOpening);
 
       // Currently, headers and footers may only contain a single
       // text box.
       let headerHeightPx = (header.elements[0] as TextBoxElement).height;
 
-      if (score.pageSetup.showHeaderHorizontalRule) {
+      if (
+        score.shouldShowHeaderRuleForPageIndex(pageNumber, isChapterOpening)
+      ) {
         headerHeightPx +=
           score.pageSetup.headerHorizontalRuleMarginBottom +
           score.pageSetup.headerHorizontalRuleMarginTop +
@@ -2948,13 +2965,13 @@ export class LayoutService {
     }
 
     if (score.pageSetup.showFooter) {
-      const footer = score.getFooterForPage(pageNumber);
+      const footer = score.getFooterForPage(pageNumber, isChapterOpening);
 
       // Currently, headers and footers may only contain a single
       // text box.
       let footerHeightPx = (footer.elements[0] as TextBoxElement).height;
 
-      if (score.pageSetup.showFooterHorizontalRule) {
+      if (score.shouldShowFooterRuleOnPage(pageNumber, isChapterOpening)) {
         footerHeightPx +=
           score.pageSetup.footerHorizontalRuleMarginBottom +
           score.pageSetup.footerHorizontalRuleMarginTop +
@@ -3372,7 +3389,6 @@ export class LayoutService {
       leftBoxes,
       rightBoxes,
       clearance,
-      true,
     );
   }
 
@@ -3381,20 +3397,11 @@ export class LayoutService {
     leftBoxes: NoteGlyphBox[],
     rightBoxes: NoteGlyphBox[],
     clearance: number,
-    skipPrimaryBasePairs: boolean = false,
   ) {
     let spacing = 0;
 
     for (const leftBox of leftBoxes) {
       for (const rightBox of rightBoxes) {
-        if (
-          skipPrimaryBasePairs &&
-          leftBox.collisionKind === 'base' &&
-          rightBox.collisionKind === 'base'
-        ) {
-          continue;
-        }
-
         if (!this.noteGlyphBoxesVerticallyOverlap(leftBox, rightBox)) {
           continue;
         }
@@ -5381,17 +5388,27 @@ export class LayoutService {
           firstElementOnNextLine = pages[pageIndex + 1].lines[0].elements[0];
         }
 
-        const noteElements = line.elements.filter(
-          (x) => x.elementType === ElementType.Note,
-        ) as NoteElement[];
-
         const indexOfFirstNote = line.elements.findIndex(
           (x) => x.elementType === ElementType.Note,
         );
         let lineEndingMayShowLeadingLyricHyphen = false;
 
-        for (const element of noteElements) {
-          const index = line.elements.indexOf(element);
+        for (let index = 0; index < line.elements.length; index++) {
+          const currentElement = line.elements[index];
+
+          if (this.isBreakElement(currentElement)) {
+            melismaSyllables = null;
+            phase2GreekMelismaIsActive = false;
+            previousLineEndingMayShowLeadingLyricHyphen = false;
+            lineEndingMayShowLeadingLyricHyphen = false;
+            continue;
+          }
+
+          if (currentElement.elementType !== ElementType.Note) {
+            continue;
+          }
+
+          const element = currentElement as NoteElement;
 
           // We do not simply check for index === 0 because we also want
           // to include the case where the first letter of the melisma
@@ -5897,62 +5914,73 @@ export class LayoutService {
           const nextElement =
             i + 1 < line.elements.length ? line.elements[i + 1] : null;
           const measureBarLeft = this.getVisibleMeasureBarLeft(owner);
-          if (measureBarLeft && previousAnchor) {
-            const previousBounds = this.getMeasureBarAnchorBounds(
-              previousAnchor,
-              pageSetup,
-              measureBarWidthMap,
-              measureBarLeft,
-              'right',
-            );
-            const ownerBounds = this.getMeasureBarAnchorBounds(
-              owner,
-              pageSetup,
-              measureBarWidthMap,
-              measureBarLeft,
-              'left',
-            );
+          if (measureBarLeft) {
             const barWidth = measureBarWidthMap.get(measureBarLeft) ?? 0;
             if (barWidth > 0) {
-              const followsMartyria =
-                previousAnchor.elementType === ElementType.Martyria;
-              const previousClampExtents = followsMartyria
-                ? (this.getMeasureBarCollisionExtentsForAnchor(
-                    previousAnchor,
-                    measureBarLeft,
-                    pageSetup,
-                    measureBarWidthMap,
-                  ) ?? { left: 0, right: barWidth })
-                : { left: 0, right: barWidth };
-              const previousCenterBounds = this.getMeasureBarAnchorBounds(
-                previousAnchor,
-                pageSetup,
-                measureBarWidthMap,
-              );
-              const ownerCenterBounds = this.getMeasureBarAnchorBounds(
-                owner,
-                pageSetup,
-                measureBarWidthMap,
-              );
-              const centeredLeft = followsMartyria
-                ? (previousCenterBounds.right +
-                    ownerCenterBounds.left -
-                    barWidth) /
-                  2
-                : (previousBounds.right + ownerBounds.left - barWidth) / 2;
-              const barSpacing = followsMartyria
-                ? this.getMeasureBarCollisionSpacing(pageSetup)
-                : this.getInlineSpacing(pageSetup);
-              const rightLimit = ownerBounds.left - barWidth - barSpacing;
-              const targetLeft = Math.min(
-                Math.max(
-                  centeredLeft,
-                  previousBounds.right + barSpacing - previousClampExtents.left,
-                ),
-                rightLimit,
-              );
-              owner.computedMeasureBarLeftOffsetX =
-                direction * (targetLeft - owner.x);
+              if (!pageSetup.melkiteRtl && !previousAnchor) {
+                const resolvedMargins = resolvePageMargins(
+                  pageSetup,
+                  page.physicalPageNumber,
+                );
+                owner.computedMeasureBarLeftOffsetX =
+                  resolvedMargins.left - owner.x;
+              } else if (previousAnchor) {
+                const previousBounds = this.getMeasureBarAnchorBounds(
+                  previousAnchor,
+                  pageSetup,
+                  measureBarWidthMap,
+                  measureBarLeft,
+                  'right',
+                );
+                const ownerBounds = this.getMeasureBarAnchorBounds(
+                  owner,
+                  pageSetup,
+                  measureBarWidthMap,
+                  measureBarLeft,
+                  'left',
+                );
+                const followsMartyria =
+                  previousAnchor.elementType === ElementType.Martyria;
+                const previousClampExtents = followsMartyria
+                  ? (this.getMeasureBarCollisionExtentsForAnchor(
+                      previousAnchor,
+                      measureBarLeft,
+                      pageSetup,
+                      measureBarWidthMap,
+                    ) ?? { left: 0, right: barWidth })
+                  : { left: 0, right: barWidth };
+                const previousCenterBounds = this.getMeasureBarAnchorBounds(
+                  previousAnchor,
+                  pageSetup,
+                  measureBarWidthMap,
+                );
+                const ownerCenterBounds = this.getMeasureBarAnchorBounds(
+                  owner,
+                  pageSetup,
+                  measureBarWidthMap,
+                );
+                const centeredLeft = followsMartyria
+                  ? (previousCenterBounds.right +
+                      ownerCenterBounds.left -
+                      barWidth) /
+                    2
+                  : (previousBounds.right + ownerBounds.left - barWidth) / 2;
+                const barSpacing = followsMartyria
+                  ? this.getMeasureBarCollisionSpacing(pageSetup)
+                  : this.getInlineSpacing(pageSetup);
+                const rightLimit = ownerBounds.left - barWidth - barSpacing;
+                const targetLeft = Math.min(
+                  Math.max(
+                    centeredLeft,
+                    previousBounds.right +
+                      barSpacing -
+                      previousClampExtents.left,
+                  ),
+                  rightLimit,
+                );
+                owner.computedMeasureBarLeftOffsetX =
+                  direction * (targetLeft - owner.x);
+              }
             }
           }
 
@@ -7259,7 +7287,7 @@ export class LayoutService {
     );
   }
 
-  public static calculateMartyrias(
+  public static calculateMartyriae(
     elements: ScoreElement[],
     pageSetup: PageSetup,
   ) {

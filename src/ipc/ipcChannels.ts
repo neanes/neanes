@@ -1,5 +1,6 @@
 import type { PageSize } from '@/models/PageSetup';
 import type { Score } from '@/models/save/v1/Score';
+import type { ZoomFitMode } from '@/models/Workspace';
 import type { WorkspacePaneId } from '@/models/WorkspacePane';
 
 export enum IpcMainChannels {
@@ -22,6 +23,7 @@ export enum IpcMainChannels {
   FileMenuExportAsImage = 'FileMenuExportAsImage',
 
   FileMenuPageSetup = 'FileMenuPageSetup',
+  FileMenuDocumentProperties = 'FileMenuDocumentProperties',
 
   FileMenuUndo = 'FileMenuUndo',
   FileMenuRedo = 'FileMenuRedo',
@@ -38,8 +40,13 @@ export enum IpcMainChannels {
 
   FileMenuFind = 'FileMenuFind',
 
+  FileMenuWindowPreviousTab = 'FileMenuWindowPreviousTab',
+  FileMenuWindowNextTab = 'FileMenuWindowNextTab',
+
   FileMenuViewPaneVisibility = 'FileMenuViewPaneVisibility',
-  FileMenuViewResetPaneLayout = 'FileMenuViewResetPaneLayout',
+  FileMenuViewStatusBarVisibility = 'FileMenuViewStatusBarVisibility',
+  FileMenuViewResetLayout = 'FileMenuViewResetLayout',
+  FileMenuViewZoom = 'FileMenuViewZoom',
 
   FileMenuPreferences = 'FileMenuPreferences',
   OpenAboutDialog = 'OpenAboutDialog',
@@ -56,7 +63,7 @@ export enum IpcMainChannels {
   FileMenuInsertHeader = 'FileMenuInsertHeader',
   FileMenuInsertFooter = 'FileMenuInsertFooter',
 
-  FileMenuToolsCopyElementLink = 'FileMenuToolsCopyElementLink',
+  FileMenuEditCopyElementLink = 'FileMenuEditCopyElementLink',
 
   FileMenuGenerateTestFile = 'GenerateTestFile',
 
@@ -72,7 +79,11 @@ export enum IpcRendererChannels {
   SetCanUndo = 'SetCanUndo',
   SetCanRedo = 'SetCanRedo',
   SetDeveloperPaneEnabled = 'SetDeveloperPaneEnabled',
+  SetCopyElementLinkEnabled = 'SetCopyElementLinkEnabled',
+  SetWorkspaceTabNavigationEnabled = 'SetWorkspaceTabNavigationEnabled',
   SetWorkspacePaneVisibility = 'SetWorkspacePaneVisibility',
+  SetStatusBarVisibility = 'SetStatusBarVisibility',
+  SetWorkspaceZoomState = 'SetWorkspaceZoomState',
 
   ShowMessageBox = 'ShowMessageBox',
   ShowItemInFolder = 'ShowItemInFolder',
@@ -167,6 +178,24 @@ export interface FileMenuInsertTextboxArgs {
 export interface FileMenuViewPaneVisibilityArgs {
   paneId: WorkspacePaneId;
   visible?: boolean;
+}
+
+export interface FileMenuViewStatusBarVisibilityArgs {
+  visible?: boolean;
+}
+
+export type FileMenuViewZoomArgs =
+  | {
+      type: 'zoom-in' | 'zoom-out' | 'actual-size';
+    }
+  | {
+      type: 'fit';
+      mode: ZoomFitMode;
+    };
+
+export interface WorkspaceZoomState {
+  zoom: number;
+  zoomFitMode: ZoomFitMode | null;
 }
 
 export interface SaveWorkspaceArgs {

@@ -13,6 +13,7 @@ import {
   FontFamilyEditing,
   FontSizeEditing,
   GeneralHtmlSupport,
+  HorizontalLine,
   Image,
   ImageCaption,
   ImageResize,
@@ -24,6 +25,7 @@ import {
   IndentEditing,
   Link,
   ListEditing,
+  ListProperties,
   Paragraph,
   PasteFromOffice,
   Plugin,
@@ -38,6 +40,7 @@ import {
   TableColumnResize,
   TableProperties,
   TableToolbar,
+  TextPartLanguage,
   TextTransformation,
   Typing,
   UnderlineEditing,
@@ -52,6 +55,7 @@ import FontStyle from './ckeditor-plugins/fontstyle/fontstyle';
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
 import OpenType from './ckeditor-plugins/opentype/opentype';
 import NeanesFakeSelectionEditing from './ckeditor-plugins/richtextselection/richtextselection';
+import { RICH_TEXT_LANGUAGE_OPTIONS } from './utils/richTextLanguage';
 
 export default class InlineEditor extends DecoupledEditor {}
 
@@ -86,6 +90,7 @@ InlineEditor.builtinPlugins = [
   FontFamilyEditing,
   FontSizeEditing,
   GeneralHtmlSupport,
+  HorizontalLine,
   Image,
   ImageCaption,
   ImageResize,
@@ -100,6 +105,7 @@ InlineEditor.builtinPlugins = [
   InsertNeume,
   Link,
   ListEditing,
+  ListProperties,
   NeanesFakeSelectionEditing,
   Paragraph,
   PasteFromOffice,
@@ -114,6 +120,7 @@ InlineEditor.builtinPlugins = [
   TableColumnResize,
   TableProperties,
   TableToolbar,
+  TextPartLanguage,
   TextTransformation,
   Typing,
   UnderlineEditing,
@@ -130,6 +137,7 @@ InlineEditor.defaultConfig = {
   language: {
     ui: 'en',
     content: 'en',
+    textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
   },
   translations: [elTranslations, idTranslations, roTranslations],
   fontFamily: {
@@ -137,6 +145,26 @@ InlineEditor.defaultConfig = {
   },
   fontSize: {
     supportAllValues: true,
+  },
+  list: {
+    properties: {
+      styles: {
+        listStyleTypes: {
+          bulleted: ['disc', 'circle', 'square'],
+          numbered: [
+            'decimal',
+            'decimal-leading-zero',
+            'lower-roman',
+            'upper-roman',
+            'lower-latin',
+            'upper-latin',
+            'arabic-indic',
+          ],
+        },
+      },
+      startIndex: true,
+      reversed: true,
+    },
   },
   image: {
     toolbar: [
@@ -168,7 +196,13 @@ InlineEditor.defaultConfig = {
     // the values it models and drops the rest. Keep GeneralHtmlSupport from also
     // capturing them, which would otherwise leave a competing inner declaration
     // that overrides the plugin's own span.
+    // TextPartLanguage similarly owns language metadata. If GHS also preserves
+    // `dir`, removing the language leaves a stale `<span dir="...">`.
     disallow: [
+      {
+        name: 'span',
+        attributes: ['lang', 'dir'],
+      },
       {
         name: 'span',
         styles: [

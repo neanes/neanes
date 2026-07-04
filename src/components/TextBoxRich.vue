@@ -13,17 +13,18 @@
       :style="multipanelContainerStyle"
     >
       <RichTextEditor
-        :key="`left-${editorLanguage}`"
+        :key="`left-${editorLanguage}-${contentLanguage}`"
         ref="editorLeft"
         class="rich-text-editor multipanel left"
         :owner="element"
         :model-value="contentLeft"
         :config="editorConfig"
         @blur="onBlur"
+        @ready="onEditorReadyMultipanelSide"
         @select-neume="emit('select-neume')"
       />
       <RichTextEditor
-        :key="`center-${editorLanguage}`"
+        :key="`center-${editorLanguage}-${contentLanguage}`"
         ref="editorCenter"
         class="rich-text-editor multipanel center"
         :owner="element"
@@ -34,13 +35,14 @@
         @select-neume="emit('select-neume')"
       />
       <RichTextEditor
-        :key="`right-${editorLanguage}`"
+        :key="`right-${editorLanguage}-${contentLanguage}`"
         ref="editorRight"
         class="rich-text-editor multipanel right"
         :owner="element"
         :model-value="contentRight"
         :config="editorConfig"
         @blur="onBlur"
+        @ready="onEditorReadyMultipanelSide"
         @select-neume="emit('select-neume')"
       />
     </div>
@@ -51,7 +53,7 @@
           :style="textBoxTopInnerContainerStyle"
         >
           <RichTextEditor
-            :key="`inline-top-${editorLanguage}`"
+            :key="`inline-top-${editorLanguage}-${contentLanguage}`"
             ref="editor"
             class="rich-text-editor inline-top"
             :style="textBoxStyleTop"
@@ -66,7 +68,7 @@
       </div>
       <div class="inline-bottom-container" :style="textBoxBottomContainerStyle">
         <RichTextEditor
-          :key="`inline-bottom-${editorLanguage}`"
+          :key="`inline-bottom-${editorLanguage}-${contentLanguage}`"
           ref="editorBottom"
           class="rich-text-editor inline-bottom"
           :style="textBoxStyleBottom"
@@ -81,7 +83,7 @@
     </div>
     <RichTextEditor
       v-else-if="element.scrollable"
-      :key="`scrollable-${editorLanguage}`"
+      :key="`scrollable-${editorLanguage}-${contentLanguage}`"
       ref="editor"
       class="rich-text-editor single scrollable"
       :owner="element"
@@ -94,7 +96,7 @@
     />
     <RichTextEditor
       v-else
-      :key="`single-${editorLanguage}`"
+      :key="`single-${editorLanguage}-${contentLanguage}`"
       ref="editor"
       class="rich-text-editor single"
       :owner="element"
@@ -112,7 +114,14 @@
 import type { Editor, EditorConfig, FontSizeOption } from 'ckeditor5';
 import { debounce, throttle } from 'throttle-debounce';
 import type { PropType, StyleValue } from 'vue';
-import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  ref,
+  useTemplateRef,
+  watch,
+} from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import RichTextEditor from '@/components/RichTextEditor.vue';
@@ -122,8 +131,19 @@ import type { RichTextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
-import type { TokenMetadata } from '@/utils/replaceTokens';
+import type { TokenMetadata, TokenScope } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
+import {
+  applyRichTextLanguageToEditor,
+  getRichTextLanguage,
+  getRichTextLanguageCode,
+  getRichTextLanguageDirection,
+  hasMeaningfulRichTextEditorContent,
+  inferRichTextEditorLanguage,
+  inferSharedRichTextEditorLanguage,
+  RICH_TEXT_LANGUAGE_OPTIONS,
+} from '@/utils/richTextLanguage';
+import { Unit } from '@/utils/Unit';
 import { withZoom } from '@/utils/withZoom';
 
 const emit = defineEmits([
@@ -157,6 +177,10 @@ const props = defineProps({
     type: Object as PropType<TokenMetadata>,
     default: undefined,
   },
+  tokenScope: {
+    type: String as PropType<TokenScope>,
+    default: 'body',
+  },
   recalc: {
     type: Boolean,
     default: false,
@@ -189,6 +213,46 @@ const { observe: observeInlineTop } = useResizeObserver();
 const { observe: observeInlineBottom } = useResizeObserver();
 
 const htmlElement = computed(() => container.value!);
+
+const activeContentValues = computed(() => {
+  if (props.element.multipanel) {
+    return [
+      props.element.contentLeft,
+      props.element.contentCenter,
+      props.element.contentRight,
+    ];
+  }
+
+  if (props.element.inline) {
+    return [props.element.content, props.element.contentBottom];
+  }
+
+  return [props.element.content];
+});
+
+const hasStoredContent = computed(() =>
+  activeContentValues.value.some((html) => html.trim() !== ''),
+);
+
+const defaultInitialLanguage = computed(() => {
+  const storedLanguage = getRichTextLanguage(props.element);
+
+  if (storedLanguage != null) {
+    return storedLanguage;
+  }
+
+  return !hasStoredContent.value &&
+    (props.pageSetup.melkiteRtl || props.pageSetup.numerals === 'easternArabic')
+    ? 'ar:rtl'
+    : null;
+});
+
+const contentLanguage = computed(() => {
+  const language =
+    getRichTextLanguage(props.element) ?? defaultInitialLanguage.value;
+
+  return language == null ? 'en' : getRichTextLanguageCode(language);
+});
 
 const editorConfig = computed((): EditorConfig => {
   const fontSizeOptions: FontSizeOption[] = [];
@@ -225,7 +289,8 @@ const editorConfig = computed((): EditorConfig => {
     },
     language: {
       ui: props.editorLanguage,
-      content: props.element.rtl ? 'ar' : 'en',
+      content: contentLanguage.value,
+      textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
     },
     licenseKey: 'GPL',
     insertNeume: {
@@ -290,6 +355,59 @@ const contentRight = computed(() => {
       );
 });
 
+function getSelectedFontSize(editor: Editor): string | undefined {
+  const fontSize = editor.model.document.selection.getAttribute('fontSize');
+  return typeof fontSize === 'string' ? fontSize : undefined;
+}
+
+function getFontSizeInPt(value: unknown) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const match = value.trim().match(/^([\d.]+)(pt|px)$/);
+
+  if (match == null) {
+    return null;
+  }
+
+  const size = Number(match[1]);
+
+  if (!Number.isFinite(size)) {
+    return null;
+  }
+
+  return match[2] === 'pt' ? size : Unit.toPt(size);
+}
+
+function getMinimumFontSizeInEditor(editor: Editor) {
+  const sizes: number[] = [];
+
+  sizes.push(Unit.toPt(props.pageSetup.textBoxDefaultFontSize));
+
+  const selectedFontSize = getSelectedFontSize(editor);
+
+  const selectedFontSizeInPt = getFontSizeInPt(selectedFontSize);
+
+  if (selectedFontSizeInPt != null) {
+    sizes.push(selectedFontSizeInPt);
+  }
+
+  for (const root of editor.model.document.roots) {
+    for (const item of editor.model.createRangeIn(root).getItems()) {
+      const fontSize = item.getAttribute('fontSize');
+
+      const fontSizeInPt = getFontSizeInPt(fontSize);
+
+      if (fontSizeInPt != null) {
+        sizes.push(fontSizeInPt);
+      }
+    }
+  }
+
+  return `${Math.min(...sizes)}pt`;
+}
+
 const containerStyle = computed(() => {
   const defaultFontFamily = props.element.inline
     ? props.pageSetup.lyricsDefaultFontFamily
@@ -303,7 +421,7 @@ const containerStyle = computed(() => {
     ),
     '--ck-content-font-size': props.element.inline
       ? `${props.pageSetup.lyricsDefaultFontSize}px`
-      : `${props.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
+      : ckContentFontSize.value, // no zoom because we will apply zooming on the whole editor
     '--ck-content-font-color': props.element.inline
       ? props.pageSetup.lyricsDefaultColor
       : props.pageSetup.textBoxDefaultColor,
@@ -396,6 +514,13 @@ watch(
   },
 );
 
+watch(
+  () => props.pageSetup.textBoxDefaultFontSize,
+  () => {
+    refreshCkContentFontSize();
+  },
+);
+
 onBeforeUnmount(() => {
   unmounting.value = true;
   update();
@@ -423,18 +548,83 @@ function getEditorInstanceRight() {
   return editorRight.value?.instance;
 }
 
+function getActiveEditorInstances() {
+  if (props.element.multipanel) {
+    return [
+      getEditorInstanceLeft(),
+      getEditorInstanceCenter(),
+      getEditorInstanceRight(),
+    ];
+  }
+
+  if (props.element.inline) {
+    return [getEditorInstance(), getEditorInstanceBottom()];
+  }
+
+  return [getEditorInstance()];
+}
+
 function phoneHome(height: number) {
   emit('update:height', height);
 }
 
-function onEditorReady(editor: InlineEditor) {
-  if (props.recalc) {
-    const height = getHeight();
+const ckContentFontSize = ref(`${props.pageSetup.textBoxDefaultFontSize}px`);
 
-    if (height != null && Math.abs(props.element.height - height) > 0.001) {
-      debouncedPhoneHome(height);
-    }
+function getMinimumFontSizeInActiveEditors() {
+  const activeEditors = getActiveEditorInstances().filter(
+    (editor): editor is InlineEditor => editor != null,
+  );
+
+  if (activeEditors.length === 0) {
+    return `${props.pageSetup.textBoxDefaultFontSize}px`;
   }
+
+  const minimumSizes = activeEditors.map((editor) =>
+    parseFloat(getMinimumFontSizeInEditor(editor)),
+  );
+
+  return `${Math.min(...minimumSizes)}pt`;
+}
+
+function refreshCkContentFontSize() {
+  ckContentFontSize.value = getMinimumFontSizeInActiveEditors();
+}
+
+async function initializeCkContentFontSize() {
+  refreshCkContentFontSize();
+  await nextTick();
+}
+
+function emitRecalculatedHeightIfNeeded() {
+  if (!props.recalc) {
+    return;
+  }
+
+  const height = getHeight();
+
+  if (height != null && Math.abs(props.element.height - height) > 0.001) {
+    debouncedPhoneHome(height);
+  }
+}
+
+function observeCkContentFontSize(editor: InlineEditor) {
+  editor.model.document.on('change:data', () => refreshCkContentFontSize());
+
+  editor.model.document.selection.on(
+    'change:attribute',
+    (_evt, attributeName) => {
+      if (attributeName === 'fontSize') {
+        refreshCkContentFontSize();
+      }
+    },
+  );
+}
+
+async function onEditorReady(editor: InlineEditor) {
+  applyInitialLanguage(editor);
+  await initializeCkContentFontSize();
+
+  emitRecalculatedHeightIfNeeded();
 
   if (focusOnReady.value) {
     editor.editing.view.focus();
@@ -442,6 +632,8 @@ function onEditorReady(editor: InlineEditor) {
   }
 
   const element = editor.sourceElement;
+
+  observeCkContentFontSize(editor);
 
   observeResize(
     element!,
@@ -473,7 +665,16 @@ function onEditorReady(editor: InlineEditor) {
   );
 }
 
+async function onEditorReadyMultipanelSide(editor: InlineEditor) {
+  applyInitialLanguage(editor);
+  await initializeCkContentFontSize();
+  emitRecalculatedHeightIfNeeded();
+  observeCkContentFontSize(editor);
+}
+
 function onEditorReadyInline(editor: InlineEditor) {
+  applyInitialLanguage(editor);
+
   heightTop.value = getHeightTop() ?? 0;
 
   const element = editor.sourceElement;
@@ -489,6 +690,8 @@ function onEditorReadyInline(editor: InlineEditor) {
 }
 
 function onEditorReadyInlineBottom(editor: InlineEditor) {
+  applyInitialLanguage(editor);
+
   if (focusOnReady.value) {
     editor.editing.view.focus();
     focusOnReady.value = false;
@@ -506,6 +709,36 @@ function onEditorReadyInlineBottom(editor: InlineEditor) {
   );
 
   setPadding(editor);
+}
+
+function applyInitialLanguage(editor: InlineEditor) {
+  const language = defaultInitialLanguage.value;
+
+  if (language == null) {
+    return;
+  }
+
+  const languageCode = getRichTextLanguageCode(language);
+  const textDirection = getRichTextLanguageDirection(language);
+
+  if (hasMeaningfulRichTextEditorContent(editor)) {
+    if (inferRichTextEditorLanguage(editor) == null) {
+      applyRichTextLanguageToEditor(editor, languageCode, textDirection);
+    }
+
+    return;
+  }
+
+  const command = editor.commands.get('textPartLanguage')!;
+
+  if (!command.isEnabled) {
+    return;
+  }
+
+  editor.execute('textPartLanguage', {
+    languageCode,
+    textDirection,
+  });
 }
 
 function onBlur() {
@@ -543,6 +776,33 @@ function getPendingUpdates() {
   updated =
     addPendingEditorData(updates, 'contentRight', getEditorInstanceRight()) ||
     updated;
+
+  const activeEditors = getActiveEditorInstances();
+
+  if (props.editMode && activeEditors.some(Boolean)) {
+    const hasMeaningfulContent = activeEditors.some(
+      (editor) => editor != null && hasMeaningfulRichTextEditorContent(editor),
+    );
+
+    if (hasMeaningfulContent) {
+      const language = inferSharedRichTextEditorLanguage(activeEditors);
+      const currentLanguage = getRichTextLanguage(props.element);
+
+      if (
+        (currentLanguage?.toLowerCase() ?? null) !==
+        (language?.toLowerCase() ?? null)
+      ) {
+        if (language == null) {
+          updates.languageCode = null;
+          updates.textDirection = null;
+        } else {
+          updates.languageCode = getRichTextLanguageCode(language);
+          updates.textDirection = getRichTextLanguageDirection(language);
+        }
+        updated = true;
+      }
+    }
+  }
 
   if (
     height != null &&

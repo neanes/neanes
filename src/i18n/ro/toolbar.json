@@ -3,6 +3,7 @@
     "alignLeft": "Aliniere stânga",
     "alignCenter": "Aliniere centru",
     "alignRight": "Aliniere dreapta",
+    "alignJustify": "Justificat",
     "alignment": "Aliniere",
     "bpm": "BPM",
     "chooseColor": "Alege culoarea",
@@ -12,7 +13,6 @@
     "insertPelastikon": "Inserează pelastikon",
     "measureBar": "Bară de măsură",
     "outline": "Contur",
-    "sectionName": "Numele secțiunii",
     "spaceAfter": "Spațiu după",
     "tempoSign": "Semn de tempo",
     "useDefaultStyle": "Folosește stilul implicit",
@@ -37,7 +37,7 @@
     "single": "Simplu",
     "martyria": "Mărturie",
     "insertDropCapBefore": "Inserează majusculă decorativă înainte",
-    "insertModeKey": "Inserează mărturie inițială",
+    "insertInitialMartyria": "Inserează mărturie inițială",
     "insertTextBox": "Inserează casetă de text",
     "insertTextBoxRich": "Inserează casetă de text formatat",
     "insertImage": "Inserează imagine",
@@ -46,9 +46,11 @@
     "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Inserează sau elimină întrerupere de linie centrată după elementul selectat",
     "insertOrRemovePageBreakAfterSelectedElement": "Inserează sau elimină întrerupere de pagină după elementul selectat",
     "deleteSelectedElement": "Șterge elementul selectat",
-    "fit": "Potrivire",
+    "pageWidth": "Lățime pagină",
+    "textWidth": "Lățime text",
+    "wholePage": "Pagină întreagă",
     "speed": "Viteză",
-    "invalidZoom": "Valoarea trebuie să fie între 50% și 500%."
+    "invalidZoom": "Valoarea trebuie să fie între {{minZoom}} și {{maxZoom}}."
   },
   "status": {
     "section": "Secțiune {{ sectionNumber }} din {{ sectionCount }}",
@@ -63,15 +65,6 @@
     "noProperties": "Nicio proprietate",
     "nothingToEdit": "Nimic de editat"
   },
-  "selection": {
-    "elements": "Elemente",
-    "lineBreak": "Întrerupere de linie",
-    "center": "Centru",
-    "justify": "Justificat",
-    "pageBreak": "Întrerupere de pagină",
-    "noSelection": "Nicio selecție",
-    "nothingSelected": "Nimic selectat"
-  },
   "imageBox": {
     "maintainAspectRatio": "Menține raportul de aspect",
     "width": "Lățime",
@@ -85,18 +78,18 @@
     "auto": "Auto",
     "note": "Notă",
     "scale": "Scară muzicală",
-    "rootSignOverride": "Suprascriere semn de bază",
+    "martyriaSignOverride": "Suprascriere semn de mărturie",
     "tempoLeft": "Adaugă tempo stânga",
     "tempo": "Adaugă tempo deasupra",
     "tempoRight": "Adaugă tempo dreapta"
   },
-  "modeKey": {
+  "initialMartyria": {
     "size": "Mărime",
     "heightAdjustment": "Ajustare înălțime",
     "rightAlignTempo": "Aliniază tempoul la dreapta",
     "showAmbitus": "Afișează ambitus",
     "permanentEnharmonicZo": "Zo enarmonic permanent",
-    "changeKey": "Schimbă mărturia inițială",
+    "changeInitialMartyria": "Schimbă mărturia inițială",
     "useOptionalDiatonicFthoras": "Afișează ftoralele diatonice"
   },
   "neume": {
@@ -116,20 +109,23 @@
   },
   "textbox": {
     "multipanel": "Multipanou",
-    "rtl": "RTL",
     "scrollable": "Derulabil",
     "modeChange": "Schimbă glasul",
     "virtualNote": "Notă de paralaghie",
     "centerOnPage": "Centrează pe pagină",
     "offsetYTop": "Offset Y sus",
     "offsetYBottom": "Offset Y jos",
-    "fillWidth": "Umple lățimea"
+    "fillWidth": "Umple lățimea",
+    "runningMarker": "Marcaj Curent",
+    "runningMarkerRole": "Rol",
+    "runningMarkerChapter": "Capitol",
+    "runningMarkerSection": "Secțiune",
+    "runningMarkerText": "Text de Suprascriere",
+    "runningMarkerTextPlaceholder": "Folosește textul vizibil"
   },
   "richTextBox": {
     "default": "Implicit",
     "underline": "Subliniat",
-    "bulletedList": "Listă cu marcatori",
-    "numberedList": "Listă numerotată",
     "outdent": "Micșorează indentarea",
     "indent": "Mărește indentarea",
     "position": "Poziție text",
@@ -159,7 +155,7 @@
     "kerningRight": "Spațiere dreapta",
     "neumeFontSize": "Mărime font",
     "martyriaNote": "Notă mărturie",
-    "martyriaRootSign": "Semn rădăcină mărturie"
+    "martyriaSign": "Semn de mărturie"
   },
   "workspace": {
     "dockPane": "Andochează panoul",

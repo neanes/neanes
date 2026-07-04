@@ -1,9 +1,16 @@
 <template>
-  <FieldSet class="min-h-0 flex-1 overflow-auto">
-    <FieldLegend class="sr-only">{{
-      $t(($) => $.menu.insert.modeKey, { ns: 'menu' })
-    }}</FieldLegend>
-    <FieldGroup>
+  <PaneAccordion
+    :open-sections="openSections"
+    @update:open-sections="$emit('update:open-sections', $event)"
+  >
+    <template #legend>{{
+      $t(($) => $.menu.insert.initialMartyria, { ns: 'menu' })
+    }}</template>
+
+    <PaneSection
+      value="style"
+      :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
+    >
       <Field orientation="horizontal">
         <Switch
           id="properties-mode-key-use-default-style"
@@ -22,7 +29,7 @@
       <template v-if="!element.useDefaultStyle">
         <Field orientation="horizontal">
           <FieldLabel for="properties-mode-key-font-size">{{
-            $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
+            $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
           }}</FieldLabel>
           <InputFontSize
             id="properties-mode-key-font-size"
@@ -62,7 +69,9 @@
 
         <Field orientation="horizontal">
           <FieldLabel for="properties-mode-key-height-adjustment">{{
-            $t(($) => $.toolbar.modeKey.heightAdjustment, { ns: 'toolbar' })
+            $t(($) => $.toolbar.initialMartyria.heightAdjustment, {
+              ns: 'toolbar',
+            })
           }}</FieldLabel>
           <InputUnit
             id="properties-mode-key-height-adjustment"
@@ -80,7 +89,12 @@
           />
         </Field>
       </template>
+    </PaneSection>
 
+    <PaneSection
+      value="positioning"
+      :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
+    >
       <Field orientation="horizontal">
         <FieldLabel>{{
           $t(($) => $.toolbar.common.alignment, { ns: 'toolbar' })
@@ -167,6 +181,26 @@
           "
         />
       </Field>
+    </PaneSection>
+
+    <PaneSection
+      value="initial-martyria"
+      :title="$t(($) => $.menu.insert.initialMartyria, { ns: 'menu' })"
+    >
+      <Field orientation="horizontal">
+        <Switch
+          id="properties-mode-key-show-ambitus"
+          :model-value="element.showAmbitus"
+          @update:model-value="
+            $emit('update', {
+              showAmbitus: $event === true,
+            } as Partial<ModeKeyElement>)
+          "
+        />
+        <FieldLabel for="properties-mode-key-show-ambitus">{{
+          $t(($) => $.toolbar.initialMartyria.showAmbitus, { ns: 'toolbar' })
+        }}</FieldLabel>
+      </Field>
 
       <Field orientation="horizontal">
         <Switch
@@ -180,21 +214,6 @@
         />
         <FieldLabel for="properties-mode-key-ignore-attractions">{{
           $t(($) => $.toolbar.common.ignoreAttractions, { ns: 'toolbar' })
-        }}</FieldLabel>
-      </Field>
-
-      <Field orientation="horizontal">
-        <Switch
-          id="properties-mode-key-show-ambitus"
-          :model-value="element.showAmbitus"
-          @update:model-value="
-            $emit('update', {
-              showAmbitus: $event === true,
-            } as Partial<ModeKeyElement>)
-          "
-        />
-        <FieldLabel for="properties-mode-key-show-ambitus">{{
-          $t(($) => $.toolbar.modeKey.showAmbitus, { ns: 'toolbar' })
         }}</FieldLabel>
       </Field>
 
@@ -212,27 +231,17 @@
           "
         />
         <FieldLabel for="properties-mode-key-permanent-enharmonic-zo">{{
-          $t(($) => $.toolbar.modeKey.permanentEnharmonicZo, {
+          $t(($) => $.toolbar.initialMartyria.permanentEnharmonicZo, {
             ns: 'toolbar',
           })
         }}</FieldLabel>
       </Field>
-
-      <Button
-        type="button"
-        variant="secondary"
-        @click="$emit('open-mode-key-dialog')"
-      >
-        <PhMusicNotes data-icon="inline-start" />
-        {{ $t(($) => $.toolbar.modeKey.changeKey, { ns: 'toolbar' }) }}
-      </Button>
-    </FieldGroup>
-  </FieldSet>
+    </PaneSection>
+  </PaneAccordion>
 </template>
 
 <script setup lang="ts">
 import {
-  PhMusicNotes,
   PhTextAlignCenter,
   PhTextAlignLeft,
   PhTextAlignRight,
@@ -246,14 +255,9 @@ import InputBpm from '@/components/InputBpm.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { Button } from '@/components/ui/button';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from '@/components/ui/field';
+import PaneAccordion from '@/components/pane/PaneAccordion.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { ModeKeyElement } from '@/models/Element';
@@ -270,13 +274,17 @@ const props = defineProps({
     type: Object as PropType<ModeKeyElement>,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
   },
 });
 
-const emit = defineEmits(['open-mode-key-dialog', 'update']);
+const emit = defineEmits(['update', 'update:open-sections']);
 
 const heightAdjustmentMin = computed(
   () => -Math.round(Unit.fromPt(props.element.height)),

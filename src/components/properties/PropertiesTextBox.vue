@@ -1,9 +1,16 @@
 <template>
-  <FieldSet class="min-h-0 flex-1 overflow-auto">
-    <FieldLegend class="sr-only">{{
+  <PaneAccordion
+    :open-sections="openSections"
+    @update:open-sections="$emit('update:open-sections', $event)"
+  >
+    <template #legend>{{
       $t(($) => $.menu.insert.textBox, { ns: 'menu' })
-    }}</FieldLegend>
-    <FieldGroup>
+    }}</template>
+
+    <PaneSection
+      value="style"
+      :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
+    >
       <Field orientation="horizontal">
         <Switch
           id="properties-text-box-use-default-style"
@@ -52,8 +59,38 @@
         </Field>
 
         <Field orientation="horizontal">
+          <FieldLabel>{{
+            $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
+          }}</FieldLabel>
+          <ToggleGroup
+            type="multiple"
+            variant="outline"
+            :model-value="styleValues"
+            @update:model-value="onStyleValuesChanged"
+          >
+            <ToggleGroupItem
+              value="bold"
+              aria-label="Toggle bold"
+              :disabled="!isFontStyleAxisToggleEnabled('bold')"
+            >
+              <PhTextB />
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="italic"
+              aria-label="Toggle italic"
+              :disabled="!isFontStyleAxisToggleEnabled('italic')"
+            >
+              <PhTextItalic />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="underline" aria-label="Toggle underline">
+              <PhTextUnderline />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </Field>
+
+        <Field orientation="horizontal">
           <FieldLabel for="properties-text-box-font-size">{{
-            $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
+            $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
           }}</FieldLabel>
           <InputFontSize
             id="properties-text-box-font-size"
@@ -93,36 +130,6 @@
               $emit('update', { color: $event } as Partial<TextBoxElement>)
             "
           />
-        </Field>
-
-        <Field orientation="horizontal">
-          <FieldLabel>{{
-            $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
-          }}</FieldLabel>
-          <ToggleGroup
-            type="multiple"
-            variant="outline"
-            :model-value="styleValues"
-            @update:model-value="onStyleValuesChanged"
-          >
-            <ToggleGroupItem
-              value="bold"
-              aria-label="Toggle bold"
-              :disabled="!isFontStyleAxisToggleEnabled('bold')"
-            >
-              <PhTextB />
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="italic"
-              aria-label="Toggle italic"
-              :disabled="!isFontStyleAxisToggleEnabled('italic')"
-            >
-              <PhTextItalic />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="underline" aria-label="Toggle underline">
-              <PhTextUnderline />
-            </ToggleGroupItem>
-          </ToggleGroup>
         </Field>
 
         <Field orientation="horizontal">
@@ -192,23 +199,28 @@
           </AppTooltip>
         </ToggleGroup>
       </Field>
+    </PaneSection>
+
+    <PaneSection
+      value="positioning"
+      :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
+    >
+      <Field v-if="!element.inline" orientation="horizontal">
+        <Switch
+          id="properties-text-box-multipanel"
+          :model-value="element.multipanel"
+          @update:model-value="
+            $emit('update', {
+              multipanel: $event === true,
+            } as Partial<TextBoxElement>)
+          "
+        />
+        <FieldLabel for="properties-text-box-multipanel">{{
+          $t(($) => $.toolbar.textbox.multipanel, { ns: 'toolbar' })
+        }}</FieldLabel>
+      </Field>
 
       <template v-if="!element.inline">
-        <Field orientation="horizontal">
-          <Switch
-            id="properties-text-box-multipanel"
-            :model-value="element.multipanel"
-            @update:model-value="
-              $emit('update', {
-                multipanel: $event === true,
-              } as Partial<TextBoxElement>)
-            "
-          />
-          <FieldLabel for="properties-text-box-multipanel">{{
-            $t(($) => $.toolbar.textbox.multipanel, { ns: 'toolbar' })
-          }}</FieldLabel>
-        </Field>
-
         <Field v-if="!element.multipanel" orientation="horizontal">
           <FieldLabel for="properties-text-box-height">{{
             $t(($) => $.toolbar.common.height, { ns: 'toolbar' })
@@ -308,8 +320,69 @@
           "
         />
       </Field>
-    </FieldGroup>
-  </FieldSet>
+    </PaneSection>
+
+    <PaneSection
+      v-if="source === 'score'"
+      value="running-marker"
+      :title="$t(($) => $.toolbar.textbox.runningMarker, { ns: 'toolbar' })"
+    >
+      <Field>
+        <FieldLabel for="properties-text-box-running-marker-role">{{
+          $t(($) => $.toolbar.textbox.runningMarkerRole, {
+            ns: 'toolbar',
+          })
+        }}</FieldLabel>
+        <Select
+          :model-value="element.runningMarkerRole ?? RUNNING_MARKER_NONE_VALUE"
+          @update:model-value="onRunningMarkerRoleChanged"
+        >
+          <SelectTrigger id="properties-text-box-running-marker-role">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem :value="RUNNING_MARKER_NONE_VALUE">
+                {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
+              </SelectItem>
+              <SelectItem value="chapter">
+                {{
+                  $t(($) => $.toolbar.textbox.runningMarkerChapter, {
+                    ns: 'toolbar',
+                  })
+                }}
+              </SelectItem>
+              <SelectItem value="section">
+                {{
+                  $t(($) => $.toolbar.textbox.runningMarkerSection, {
+                    ns: 'toolbar',
+                  })
+                }}
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </Field>
+
+      <Field>
+        <FieldLabel for="properties-text-box-running-marker-text">{{
+          $t(($) => $.toolbar.textbox.runningMarkerText, {
+            ns: 'toolbar',
+          })
+        }}</FieldLabel>
+        <Input
+          id="properties-text-box-running-marker-text"
+          :model-value="element.runningMarkerText ?? ''"
+          :placeholder="
+            $t(($) => $.toolbar.textbox.runningMarkerTextPlaceholder, {
+              ns: 'toolbar',
+            })
+          "
+          @update:model-value="onRunningMarkerTextChanged"
+        />
+      </Field>
+    </PaneSection>
+  </PaneAccordion>
 </template>
 
 <script setup lang="ts">
@@ -321,6 +394,7 @@ import {
   PhTextItalic,
   PhTextUnderline,
 } from '@phosphor-icons/vue';
+import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
@@ -331,13 +405,18 @@ import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import PaneAccordion from '@/components/pane/PaneAccordion.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from '@/components/ui/field';
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
@@ -360,13 +439,21 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  source: {
+    type: String as PropType<'score' | 'header-footer'>,
+    required: true,
+  },
 });
 
-const emit = defineEmits(['update']);
+const emit = defineEmits(['update', 'update:open-sections']);
 
 const {
   fontStyleOptions,
@@ -391,6 +478,7 @@ const textBoxFontFamilies = computed(() => [
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
+const RUNNING_MARKER_NONE_VALUE = '__none__';
 
 function onStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
@@ -418,6 +506,23 @@ function onAlignmentChanged(value: unknown) {
       alignment: value,
     } as Partial<TextBoxElement>);
   }
+}
+
+function onRunningMarkerRoleChanged(value: AcceptableValue) {
+  emit('update', {
+    runningMarkerRole:
+      value === RUNNING_MARKER_NONE_VALUE
+        ? null
+        : (value as TextBoxElement['runningMarkerRole']),
+  } as Partial<TextBoxElement>);
+}
+
+function onRunningMarkerTextChanged(value: string | number) {
+  const text = String(value);
+
+  emit('update', {
+    runningMarkerText: text.trim() === '' ? null : text,
+  } as Partial<TextBoxElement>);
 }
 
 function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {

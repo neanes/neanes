@@ -32,7 +32,21 @@
                 :value="section.value"
                 class="min-h-9 w-full flex-none justify-start whitespace-normal text-left"
               >
-                <component :is="section.icon" />
+                <span
+                  v-if="section.value === 'modeKeys'"
+                  class="inline-grid size-4 shrink-0 place-items-center font-['Source_Serif'] text-sm leading-none"
+                  aria-hidden="true"
+                >
+                  Ηχ
+                </span>
+                <span
+                  v-else-if="section.value === 'neumes'"
+                  class="inline-grid size-4 shrink-0 place-items-center font-['Neanes'] text-[0.75rem] leading-none"
+                  aria-hidden="true"
+                >
+                  {{ isonIcon }}
+                </span>
+                <component :is="section.icon" v-else />
                 {{ $t(section.labelSelector, { ns: 'dialog' }) }}
               </TabsTrigger>
             </TabsList>
@@ -197,7 +211,7 @@
                     <Checkbox
                       id="page-setup-dialog-facing-pages"
                       :model-value="form.facingPages"
-                      @update:model-value="form.facingPages = $event === true"
+                      @update:model-value="updateFacingPages"
                     />
                     <FieldContent>
                       <FieldLabel for="page-setup-dialog-facing-pages">
@@ -208,6 +222,45 @@
                         }}
                       </FieldLabel>
                     </FieldContent>
+                  </Field>
+                  <Field v-if="form.facingPages" orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-page-layout-direction">
+                        {{
+                          $t(($) => $.dialog.pageSetup.direction, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(($) => $.dialog.pageSetup.directionDescription, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <Select v-model="form.direction">
+                      <SelectTrigger
+                        id="page-setup-dialog-page-layout-direction"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem
+                            v-for="[
+                              direction,
+                              labelSelector,
+                            ] in directionOptions"
+                            :key="direction"
+                            :value="direction"
+                          >
+                            {{ $t(labelSelector, { ns: 'dialog' }) }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
                   </Field>
                   <Field
                     v-for="row in marginRows"
@@ -549,6 +602,44 @@
                     />
                   </Field>
 
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-page-number-format">
+                        {{
+                          $t(($) => $.dialog.pageSetup.numerals, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(($) => $.dialog.pageSetup.numeralsDescription, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <Select
+                      :model-value="form.numerals"
+                      @update:model-value="updateNumerals"
+                    >
+                      <SelectTrigger id="page-setup-dialog-page-number-format">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem
+                            v-for="[numerals, labelSelector] in numeralsOptions"
+                            :key="numerals"
+                            :value="numerals"
+                          >
+                            {{ $t(labelSelector, { ns: 'dialog' }) }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+
                   <FieldSet>
                     <FieldLegend variant="label">
                       {{
@@ -671,6 +762,34 @@
                                 ($) =>
                                   $.dialog.pageSetup
                                     .excludeHorizontalRuleFirstPageDescription,
+                                { ns: 'dialog' },
+                              )
+                            }}
+                          </FieldLabel>
+                        </Field>
+
+                        <Field
+                          v-if="form.headerFooterDifferentChapterOpening"
+                          orientation="horizontal"
+                        >
+                          <Checkbox
+                            id="page-setup-dialog-header-excludeHeaderHorizontalRuleChapterOpening"
+                            :model-value="
+                              form.excludeHeaderHorizontalRuleChapterOpening
+                            "
+                            @update:model-value="
+                              form.excludeHeaderHorizontalRuleChapterOpening =
+                                $event === true
+                            "
+                          />
+                          <FieldLabel
+                            for="page-setup-dialog-header-excludeHeaderHorizontalRuleChapterOpening"
+                          >
+                            {{
+                              $t(
+                                ($) =>
+                                  $.dialog.pageSetup
+                                    .excludeHorizontalRuleChapterOpeningDescription,
                                 { ns: 'dialog' },
                               )
                             }}
@@ -853,6 +972,34 @@
                                 ($) =>
                                   $.dialog.pageSetup
                                     .excludeHorizontalRuleFirstPageDescription,
+                                { ns: 'dialog' },
+                              )
+                            }}
+                          </FieldLabel>
+                        </Field>
+
+                        <Field
+                          v-if="form.headerFooterDifferentChapterOpening"
+                          orientation="horizontal"
+                        >
+                          <Checkbox
+                            id="page-setup-dialog-footer-excludeFooterHorizontalRuleChapterOpening"
+                            :model-value="
+                              form.excludeFooterHorizontalRuleChapterOpening
+                            "
+                            @update:model-value="
+                              form.excludeFooterHorizontalRuleChapterOpening =
+                                $event === true
+                            "
+                          />
+                          <FieldLabel
+                            for="page-setup-dialog-footer-excludeFooterHorizontalRuleChapterOpening"
+                          >
+                            {{
+                              $t(
+                                ($) =>
+                                  $.dialog.pageSetup
+                                    .excludeHorizontalRuleChapterOpeningDescription,
                                 { ns: 'dialog' },
                               )
                             }}
@@ -1353,9 +1500,12 @@
                     </FieldLegend>
                     <FieldDescription>
                       {{
-                        $t(($) => $.dialog.pageSetup.modeKeysDescription, {
-                          ns: 'dialog',
-                        })
+                        $t(
+                          ($) => $.dialog.pageSetup.initialMartyriaeDescription,
+                          {
+                            ns: 'dialog',
+                          },
+                        )
                       }}
                     </FieldDescription>
                     <FieldGroup class="gap-4">
@@ -1692,7 +1842,6 @@ import {
   PhMusicNotes,
   PhPaintBucket,
   PhPalette,
-  PhPlaylist,
   PhSplitHorizontal,
   PhTextbox,
   PhTextT,
@@ -1760,6 +1909,7 @@ import { PageSetup, pageSizes } from '@/models/PageSetup';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { fontCatalog } from '@/services/FontCatalog';
 import { fontService } from '@/services/FontService';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { SaveService } from '@/services/SaveService';
 import {
   getFontStyleOptions,
@@ -1815,6 +1965,8 @@ type NeumeStrokeKey =
   | 'measureNumberDefaultStrokeWidth'
   | 'noteIndicatorDefaultStrokeWidth'
   | 'tempoDefaultStrokeWidth';
+type PageDirection = PageSetup['direction'];
+type PageNumerals = PageSetup['numerals'];
 
 enum NeumeColorOptions {
   Accidentals = 'Accidentals',
@@ -1917,6 +2069,8 @@ const props = defineProps({
 
 const open = defineModel<boolean>('open', { required: true });
 
+const isonIcon = NeumeMappingService.getMapping(QuantitativeNeume.Ison).text;
+
 const sections = [
   {
     value: 'pageSize',
@@ -1960,8 +2114,8 @@ const sections = [
   },
   {
     value: 'modeKeys',
-    labelSelector: ($) => $.dialog.pageSetup.modeKeys,
-    icon: PhPlaylist,
+    labelSelector: ($) => $.dialog.pageSetup.initialMartyriae,
+    icon: PhMusicNotes,
   },
   {
     value: 'neumes',
@@ -1989,6 +2143,16 @@ const pageSizeUnitOptions = [
   value: PageSizeUnit;
   labelSelector: DialogSelector;
 }>;
+
+const directionOptions = new Map<PageDirection, DialogSelector>([
+  ['ltr', ($) => $.dialog.pageSetup.leftToRight],
+  ['rtl', ($) => $.dialog.pageSetup.rightToLeft],
+]);
+
+const numeralsOptions = new Map<PageNumerals, DialogSelector>([
+  ['westernArabic', ($) => $.dialog.pageSetup.westernArabic],
+  ['easternArabic', ($) => $.dialog.pageSetup.easternArabic],
+]);
 
 const form = ref(new PageSetup());
 const neumeBulkColor = ref('#000000');
@@ -2275,6 +2439,11 @@ const headerFooterCheckboxRows = [
     labelSelector: ($) => $.dialog.pageSetup.richHeaderFooter,
     modelKey: 'richHeaderFooter',
   },
+  {
+    id: 'page-setup-dialog-different-chapter-opening',
+    labelSelector: ($) => $.dialog.pageSetup.differentChapterOpening,
+    modelKey: 'headerFooterDifferentChapterOpening',
+  },
 ] as const satisfies ReadonlyArray<{
   id: string;
   labelSelector: DialogSelector;
@@ -2410,6 +2579,7 @@ const neumeColorRows = [
 }>;
 
 Object.assign(form.value, props.pageSetup);
+normalizeDirection();
 
 function toPositiveDisplay(value: number) {
   return Math.max(0, toDisplay(value, form.value.pageSizeUnit) ?? 0);
@@ -2423,6 +2593,20 @@ function setBoolean(key: BooleanPageSetupKey, value: CheckboxValue) {
   form.value[key] = value === true;
 }
 
+function updateFacingPages(value: CheckboxValue) {
+  form.value.facingPages = value === true;
+  if (form.value.facingPages) {
+    form.value.headerDifferentOddEven = true;
+  }
+  normalizeDirection();
+}
+
+function normalizeDirection() {
+  if (!form.value.facingPages) {
+    form.value.direction = 'ltr';
+  }
+}
+
 function updateDefaultFontFamily(
   familyKey: DefaultFontFamilyKey,
   fontStyleKey: DefaultFontStyleKey,
@@ -2433,6 +2617,27 @@ function updateDefaultFontFamily(
     form.value[fontStyleKey],
     family,
   );
+}
+
+function updateDefaultFontsForArabicContext() {
+  const isArabicTextContext =
+    form.value.melkiteRtl || form.value.numerals === 'easternArabic';
+  const sourceFamily = isArabicTextContext
+    ? 'Source Serif'
+    : 'Noto Naskh Arabic';
+  const targetFamily = isArabicTextContext
+    ? 'Noto Naskh Arabic'
+    : 'Source Serif';
+
+  for (const [familyKey, styleKey] of [
+    ['dropCapDefaultFontFamily', 'dropCapDefaultFontStyle'],
+    ['lyricsDefaultFontFamily', 'lyricsDefaultFontStyle'],
+    ['textBoxDefaultFontFamily', 'textBoxDefaultFontStyle'],
+  ] as const) {
+    if (form.value[familyKey] === sourceFamily) {
+      updateDefaultFontFamily(familyKey, styleKey, targetFamily);
+    }
+  }
 }
 
 function toggleNeumeColorOption(
@@ -2545,12 +2750,22 @@ function updateMinimumSyllableToHyphenClearance(value: number | null) {
 function onMelkiteRtlChanged(value: CheckboxValue) {
   form.value.melkiteRtl = value === true;
   onChangeMelkiteRtl();
+  updateDefaultFontsForArabicContext();
 }
 
 function onChangeMelkiteRtl() {
   form.value.neumeDefaultFontFamily = form.value.melkiteRtl
     ? 'NeanesRTL'
     : 'Neanes';
+}
+
+function updateNumerals(value: unknown) {
+  if (value !== 'westernArabic' && value !== 'easternArabic') {
+    return;
+  }
+
+  form.value.numerals = value;
+  updateDefaultFontsForArabicContext();
 }
 
 function isSyllableElement(elementType: ElementType) {
@@ -2590,11 +2805,13 @@ function updatePageSize() {
 }
 
 function updatePageSetup() {
+  normalizeDirection();
   emit('update', form.value);
   open.value = false;
 }
 
 function saveAsDefault() {
+  normalizeDirection();
   const defaults = new PageSetup_v1();
   SaveService.SavePageSetup(defaults, form.value);
 

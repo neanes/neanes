@@ -1,47 +1,39 @@
 <template>
-  <FieldSet class="min-h-0 flex-1 overflow-auto">
-    <FieldLegend class="sr-only">{{
+  <PaneAccordion
+    :open-sections="openSections"
+    @update:open-sections="$emit('update:open-sections', $event)"
+  >
+    <template #legend>{{
       $t(($) => $.toolbar.common.neume, { ns: 'toolbar' })
-    }}</FieldLegend>
-    <FieldGroup>
-      <Field orientation="horizontal">
-        <FieldLabel for="properties-neume-space-after">{{
-          $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <InputUnit
-          id="properties-neume-space-after"
-          unit="pt"
-          :min="-spaceAfterMax"
-          :max="spaceAfterMax"
-          :step="0.5"
-          :format-options="fraction2FormatOptions"
-          :model-value="element.spaceAfter"
-          @update:model-value="$emit('update', { spaceAfter: $event })"
-        />
-      </Field>
+    }}</template>
 
-      <Button
-        type="button"
-        variant="secondary"
-        @click="$emit('open-syllable-positioning-dialog')"
-      >
-        <PhCrosshair data-icon="inline-start" />
-        {{ $t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' }) }}
-      </Button>
-
-      <Field orientation="horizontal">
-        <Switch
-          id="properties-neume-ignore-attractions"
-          :model-value="element.ignoreAttractions"
-          @update:model-value="
-            $emit('update', {
-              ignoreAttractions: $event === true,
-            } as Partial<NoteElement>)
-          "
-        />
-        <FieldLabel for="properties-neume-ignore-attractions">{{
-          $t(($) => $.toolbar.common.ignoreAttractions, { ns: 'toolbar' })
+    <PaneSection
+      value="neume"
+      :title="$t(($) => $.toolbar.common.neume, { ns: 'toolbar' })"
+    >
+      <Field v-if="showChromaticFthoraNote">
+        <FieldLabel for="properties-neume-fthora-note">{{
+          $t(($) => $.toolbar.common.fthoraNote, { ns: 'toolbar' })
         }}</FieldLabel>
+        <Select
+          :model-value="chromaticFthoraNote"
+          @update:model-value="updateChromaticFthoraNote"
+        >
+          <SelectTrigger id="properties-neume-fthora-note" class="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem
+                v-for="note in notes"
+                :key="note.value"
+                :value="note.value"
+              >
+                {{ $t(note.label, { ns: 'model' }) }}
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </Field>
 
       <Field>
@@ -90,49 +82,54 @@
         </Select>
       </Field>
 
-      <Field v-if="showChromaticFthoraNote">
-        <FieldLabel for="properties-neume-fthora-note">{{
-          $t(($) => $.toolbar.common.fthoraNote, { ns: 'toolbar' })
+      <Field orientation="horizontal">
+        <Switch
+          id="properties-neume-ignore-attractions"
+          :model-value="element.ignoreAttractions"
+          @update:model-value="
+            $emit('update', {
+              ignoreAttractions: $event === true,
+            } as Partial<NoteElement>)
+          "
+        />
+        <FieldLabel for="properties-neume-ignore-attractions">{{
+          $t(($) => $.toolbar.common.ignoreAttractions, { ns: 'toolbar' })
         }}</FieldLabel>
-        <Select
-          :model-value="chromaticFthoraNote"
-          @update:model-value="updateChromaticFthoraNote"
-        >
-          <SelectTrigger id="properties-neume-fthora-note" class="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem
-                v-for="note in notes"
-                :key="note.value"
-                :value="note.value"
-              >
-                {{ $t(note.label, { ns: 'model' }) }}
-              </SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
       </Field>
-    </FieldGroup>
-  </FieldSet>
+    </PaneSection>
+
+    <PaneSection
+      value="positioning"
+      :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
+    >
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-neume-space-after">{{
+          $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <InputUnit
+          id="properties-neume-space-after"
+          unit="pt"
+          :min="-spaceAfterMax"
+          :max="spaceAfterMax"
+          :step="0.5"
+          :format-options="fraction2FormatOptions"
+          :model-value="element.spaceAfter"
+          @update:model-value="$emit('update', { spaceAfter: $event })"
+        />
+      </Field>
+    </PaneSection>
+  </PaneAccordion>
 </template>
 
 <script setup lang="ts">
-import { PhCrosshair } from '@phosphor-icons/vue';
 import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
-import { Button } from '@/components/ui/button';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from '@/components/ui/field';
+import PaneAccordion from '@/components/pane/PaneAccordion.vue';
+import PaneSection from '@/components/pane/PaneSection.vue';
+import { Field, FieldLabel } from '@/components/ui/field';
 import {
   Select,
   SelectContent,
@@ -185,13 +182,17 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  openSections: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
   },
 });
 
-const emit = defineEmits(['open-syllable-positioning-dialog', 'update']);
+const emit = defineEmits(['update', 'update:open-sections']);
 
 const notes = computed((): ChromaticFthoraNoteOption[] => {
   if (

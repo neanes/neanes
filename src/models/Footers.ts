@@ -5,4 +5,5 @@ export class Footers {
   public odd: Footer = new Footer();
   public even: Footer = new Footer();
   public firstPage: Footer = new Footer();
+  public chapterOpening: Footer = new Footer();
 }

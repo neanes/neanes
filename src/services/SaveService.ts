@@ -2610,8 +2610,6 @@ export class SaveService {
     }
 
     element.customWidth = e.customWidth ?? null;
-    element.marginTop = e.marginTop ?? 0;
-    element.marginBottom = e.marginBottom ?? 0;
 
     element.modeChange = e.modeChange === true;
     element.inline = e.inline === true;

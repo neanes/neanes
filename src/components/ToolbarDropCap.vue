@@ -35,8 +35,8 @@
     <ToggleGroup
       type="multiple"
       variant="outline"
-      :model-value="styleValues"
-      @update:model-value="onStyleValuesChanged"
+      :model-value="fontStyleValues"
+      @update:model-value="onFontStyleValuesChanged"
     >
       <ToggleGroupItem
         value="bold"
@@ -116,14 +116,14 @@ const {
   () => resolvedParagraphStyle.value.fontStyle,
 );
 
-const styleValues = computed(() => [...activeStyleAxisValues.value]);
+const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
 
 const dropCapFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 
-function onStyleValuesChanged(value: unknown) {
+function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {

@@ -132,7 +132,7 @@ import type { RichTextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  getTextBoxParagraphStyleFallbackId,
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
@@ -267,9 +267,7 @@ const contentLanguage = computed(() => {
 });
 
 const fallbackParagraphStyleId = computed(() =>
-  props.element.inline
-    ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
-    : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+  getTextBoxParagraphStyleFallbackId(props.element.inline),
 );
 
 const resolvedParagraphStyle = computed(() =>

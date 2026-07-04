@@ -31,16 +31,16 @@
         <ParagraphStyleSelect
           :id="`${idPrefix}-text-style`"
           trigger-class="w-full"
-          :model-value="paragraphStyleSelectValue"
+          :model-value="paragraphStyleValue"
           :paragraph-styles="paragraphStyleOptions"
           :disabled="!isCommandEnabled('style')"
           :disabled-style-ids="disabledParagraphStyleIds"
-          :show-none-option="showParagraphStyleNoneOption"
+          show-none-option
           :show-mixed-option="
             paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE
           "
           rich-text-portal
-          @update:model-value="onParagraphStyleSelectChanged"
+          @update:model-value="onParagraphStyleChanged"
           @update:open="
             $event
               ? beginSelectionGuard(element)
@@ -56,9 +56,7 @@
           }}</FieldLabel>
           <!--
           Keep the action mounted so controls do not shift when formatting is
-          removed; disable it when there is no explicit value to clear. The
-          wrapper still receives pointer events for disabled buttons so clicking
-          an inactive clear action does not blur the active editor.
+          removed; disable it when there is no explicit value to clear.
         -->
           <ParagraphStyleClearButton
             :disabled="
@@ -986,8 +984,6 @@ const languageOptions = computed(() =>
   })),
 );
 
-const showParagraphStyleNoneOption = computed(() => true);
-const paragraphStyleSelectValue = computed(() => paragraphStyleValue.value);
 const disabledParagraphStyleIds = computed(() =>
   paragraphStyleOptions.value
     .filter((style) => !isParagraphStyleEnabled(style.id))
@@ -1080,12 +1076,6 @@ const capsOptions = computed(() => [
     label: t(($) => $.toolbar.richTextBox.caseAllSmallCaps, { ns: 'toolbar' }),
   },
 ]);
-
-function onParagraphStyleSelectChanged(value: AcceptableValue) {
-  if (typeof value === 'string') {
-    onParagraphStyleChanged(value);
-  }
-}
 
 function openParagraphStylesDialog() {
   emit('open-paragraph-styles-dialog', currentDialogParagraphStyleId.value);

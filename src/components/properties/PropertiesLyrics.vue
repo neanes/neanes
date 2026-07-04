@@ -245,6 +245,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { NoteElement } from '@/models/Element';
 import {
+  hasParagraphStyleOverrides as overridesHaveValues,
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
@@ -307,14 +308,8 @@ const lyricsFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
-const hasParagraphStyleOverrides = computed(
-  () =>
-    props.element.lyricsColor != null ||
-    props.element.lyricsFontFamily != null ||
-    props.element.lyricsFontSize != null ||
-    props.element.lyricsFontStyle != null ||
-    props.element.lyricsStrokeWidth != null ||
-    props.element.lyricsTextDecoration != null,
+const hasParagraphStyleOverrides = computed(() =>
+  overridesHaveValues(props.element.getParagraphStyleOverrides()),
 );
 
 function onFontStyleValuesChanged(value: unknown) {

@@ -74,7 +74,7 @@ import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   type ParagraphStyle,
   resolveParagraphStyle,
-} from '@/models/ParagraphStyle.js';
+} from '@/models/ParagraphStyle';
 import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
 
 import PropertiesRichTextStyle from './PropertiesRichTextStyle.vue';

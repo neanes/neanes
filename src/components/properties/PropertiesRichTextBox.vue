@@ -400,7 +400,7 @@ import {
 } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
 import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  getTextBoxParagraphStyleFallbackId,
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
@@ -470,9 +470,7 @@ const RUNNING_MARKER_NONE_VALUE = '__none__';
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 const fallbackParagraphStyleId = computed(() =>
-  props.element.inline
-    ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
-    : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+  getTextBoxParagraphStyleFallbackId(props.element.inline),
 );
 const resolvedParagraphStyle = computed(() =>
   resolveParagraphStyle(props.paragraphStyles, fallbackParagraphStyleId.value),

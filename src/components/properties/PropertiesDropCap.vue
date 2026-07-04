@@ -187,8 +187,8 @@
         <ToggleGroup
           type="multiple"
           variant="outline"
-          :model-value="styleValues"
-          @update:model-value="onStyleValuesChanged"
+          :model-value="fontStyleValues"
+          @update:model-value="onFontStyleValuesChanged"
         >
           <ToggleGroupItem
             value="bold"
@@ -280,6 +280,7 @@ import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import type { DropCapElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
+  hasParagraphStyleOverrides as overridesHaveValues,
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
@@ -338,7 +339,7 @@ const {
   () => resolvedParagraphStyle.value.fontStyle,
 );
 
-const styleValues = computed(() => [...activeStyleAxisValues.value]);
+const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
 
 const dropCapFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
@@ -346,17 +347,11 @@ const dropCapFontFamilies = computed(() => [
 ]);
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
-const hasParagraphStyleOverrides = computed(
-  () =>
-    props.element.color != null ||
-    props.element.fontFamily != null ||
-    props.element.fontSize != null ||
-    props.element.fontStyle != null ||
-    props.element.lineHeight !== undefined ||
-    props.element.strokeWidth != null,
+const hasParagraphStyleOverrides = computed(() =>
+  overridesHaveValues(props.element.getParagraphStyleOverrides()),
 );
 
-function onStyleValuesChanged(value: unknown) {
+function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {

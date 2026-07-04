@@ -521,7 +521,7 @@ import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  hasParagraphStyleOverrides as overridesHaveValues,
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
@@ -606,16 +606,8 @@ const textBoxFontFamilies = computed(() => [
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 const RUNNING_MARKER_NONE_VALUE = '__none__';
-const hasParagraphStyleOverrides = computed(
-  () =>
-    props.element.alignment != null ||
-    props.element.color != null ||
-    props.element.fontFamily != null ||
-    props.element.fontSize != null ||
-    props.element.fontStyle != null ||
-    props.element.lineHeight !== undefined ||
-    props.element.strokeWidth != null ||
-    props.element.underline != null,
+const hasParagraphStyleOverrides = computed(() =>
+  overridesHaveValues(props.element.getParagraphStyleOverrides()),
 );
 
 function onFontStyleValuesChanged(value: unknown) {
@@ -629,7 +621,7 @@ function onTextDecorationValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {
-    underline: values.includes('underline') ? true : false,
+    underline: values.includes('underline'),
   } as Partial<TextBoxElement>);
 }
 
@@ -654,10 +646,7 @@ function clearParagraphStyleFormatting() {
 }
 
 function openParagraphStylesDialog() {
-  emit(
-    'open-paragraph-styles-dialog',
-    props.element.paragraphStyleId ?? BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-  );
+  emit('open-paragraph-styles-dialog', props.element.paragraphStyleId);
 }
 
 function onAlignmentChanged(value: unknown) {

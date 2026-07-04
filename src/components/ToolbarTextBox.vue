@@ -251,7 +251,7 @@ function onTextDecorationValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {
-    underline: values.includes('underline') ? true : false,
+    underline: values.includes('underline'),
   } as Partial<TextBoxElement>);
 }
 

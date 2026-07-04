@@ -24,27 +24,23 @@
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
-      <template v-if="showParagraphStyleSelect">
-        <ParagraphStyleSelect
-          trigger-class="w-48"
-          :model-value="toolbarParagraphStyleValue"
-          :paragraph-styles="paragraphStyles"
-          :disabled="!isCommandEnabled('style')"
-          :disabled-style-ids="disabledParagraphStyleIds"
-          show-none-option
-          :show-mixed-option="
-            paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE
-          "
-          rich-text-portal
-          @update:model-value="onToolbarParagraphStyleChanged"
-          @update:open="
-            $event
-              ? beginSelectionGuard(element)
-              : endSelectionGuard(element, { refocus: true })
-          "
-        />
-        <ToolbarSeparator />
-      </template>
+      <ParagraphStyleSelect
+        trigger-class="w-48"
+        :model-value="paragraphStyleValue"
+        :paragraph-styles="paragraphStyles"
+        :disabled="!isCommandEnabled('style')"
+        :disabled-style-ids="disabledParagraphStyleIds"
+        show-none-option
+        :show-mixed-option="paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE"
+        rich-text-portal
+        @update:model-value="onParagraphStyleChanged"
+        @update:open="
+          $event
+            ? beginSelectionGuard(element)
+            : endSelectionGuard(element, { refocus: true })
+        "
+      />
+      <ToolbarSeparator />
       <FontCombobox
         :model-value="fontFamilyValue"
         :options="fontFamilyOptions"
@@ -421,7 +417,6 @@ import {
   useRichTextStyleCommands,
 } from '@/composables/useRichTextStyleCommands';
 import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
-import { ElementType } from '@/models/Element';
 import type { Neume } from '@/models/Neumes';
 import { Note, RootSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
@@ -457,37 +452,13 @@ const props = defineProps({
   },
   paragraphStyles: {
     type: Array as PropType<ParagraphStyle[]>,
-    default: () => [],
+    required: true,
   },
   fallbackParagraphStyle: {
     type: Object as PropType<ResolvedParagraphStyle>,
     required: true,
   },
 });
-
-const showParagraphStyleSelect = computed(
-  () =>
-    props.element.elementType === ElementType.RichTextBox ||
-    props.element.elementType === ElementType.Annotation,
-);
-
-const styleCommandProps = {
-  get element() {
-    return props.element;
-  },
-  get fallbackParagraphStyle() {
-    return props.fallbackParagraphStyle;
-  },
-  get fonts() {
-    return props.fonts;
-  },
-  get paragraphStyles() {
-    return props.paragraphStyles;
-  },
-  get pageSetup() {
-    return props.pageSetup;
-  },
-};
 
 const {
   paragraphStyleValue,
@@ -514,9 +485,8 @@ const {
   onAlignmentChanged,
   onParagraphStyleChanged,
   onClearFormatting,
-} = useRichTextStyleCommands(styleCommandProps, EXTRA_COMMAND_NAMES);
+} = useRichTextStyleCommands(props, EXTRA_COMMAND_NAMES);
 
-const toolbarParagraphStyleValue = computed(() => paragraphStyleValue.value);
 const disabledParagraphStyleIds = computed(() =>
   props.paragraphStyles
     .filter((style) => !isParagraphStyleEnabled(style.id))
@@ -563,10 +533,6 @@ function onCharacterBlockChanged(value: unknown) {
   if (typeof value === 'string') {
     selectedCharacterBlockName.value = value;
   }
-}
-
-function onToolbarParagraphStyleChanged(value: string) {
-  onParagraphStyleChanged(value);
 }
 
 function insertSingleNeume(neume: Neume) {

@@ -1,12 +1,17 @@
 <template>
-  <AppTooltip :tooltip="effectiveLabel">
+  <AppTooltip :tooltip="label">
+    <!--
+      The wrapper span still receives pointer events while the button is
+      disabled, so clicking an inactive clear action does not blur the active
+      editor.
+    -->
     <span class="inline-flex" @mousedown.prevent>
       <Button
         type="button"
         variant="ghost"
         size="icon-xs"
         class="text-muted-foreground"
-        :aria-label="effectiveLabel"
+        :aria-label="label"
         :disabled="disabled"
         @click="$emit('clear')"
       >
@@ -24,25 +29,19 @@ import { computed } from 'vue';
 import AppTooltip from '@/components/AppTooltip.vue';
 import { Button } from '@/components/ui/button';
 
-const props = defineProps({
+defineProps({
   disabled: {
     type: Boolean,
     default: false,
-  },
-  label: {
-    type: String,
-    default: undefined,
   },
 });
 
 defineEmits(['clear']);
 
 const { t } = useTranslation();
-const effectiveLabel = computed(
-  () =>
-    props.label ??
-    t(($) => $.toolbar.common.clearFormatting, {
-      ns: 'toolbar',
-    }),
+const label = computed(() =>
+  t(($) => $.toolbar.common.clearFormatting, {
+    ns: 'toolbar',
+  }),
 );
 </script>

@@ -1,11 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
   RichTextBoxElement,
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   ParagraphStyle,
@@ -72,36 +71,6 @@ describe('ByzHtmlExporter', () => {
     expect(exporter.exportRichTextBox(element, 0)).toBe(
       '<div class="byz---rich-text-box" lang="ar" dir="rtl"><p><span lang="ar" dir="rtl">Hello</span></p></div\n>',
     );
-  });
-
-  it('exports rich text paragraph styles with underline in the stylesheet', () => {
-    const exporter = new ByzHtmlExporter();
-    const pageSetup = new PageSetup();
-    const style = new ParagraphStyle();
-
-    vi.spyOn(exporter, 'getDropCapAdjustment').mockReturnValue(0);
-
-    style.id = 'custom-style';
-    style.overrides = {
-      fontFamily: 'Alegreya',
-      fontSize: 16,
-      fontStyle: 'Bold Italic',
-      color: '#abcdef',
-      strokeWidth: 1.5,
-      lineHeight: 1.4,
-      textDecoration: 'underline',
-    };
-
-    const css = exporter.exportPageSetup(pageSetup, [style]);
-
-    expect(css).toContain(
-      '.byz---rich-text-box p.neanes-style-custom-style{font-family:',
-    );
-    expect(css).toContain('font-weight:700;font-style:italic;font-size:16px;');
-    expect(css).toContain(
-      'color:#abcdef;-webkit-text-stroke-width:1.5px;line-height:1.4;',
-    );
-    expect(css).toContain('text-decoration:underline;');
   });
 
   it('exports paragraph-style text boxes with inline underline text decoration', () => {

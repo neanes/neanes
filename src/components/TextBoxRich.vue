@@ -149,6 +149,7 @@ import {
   inferSharedRichTextEditorLanguage,
   RICH_TEXT_LANGUAGE_OPTIONS,
 } from '@/utils/richTextLanguage';
+import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleClasses';
 import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import { Unit } from '@/utils/Unit';
 import { withZoom } from '@/utils/withZoom';
@@ -279,7 +280,7 @@ const paragraphStyleDefinitions = computed(() =>
   props.paragraphStyles.map((style) => ({
     name: style.id,
     element: 'p',
-    classes: [`neanes-style-${style.id}`],
+    classes: [richTextParagraphStyleClassName(style.id)],
   })),
 );
 

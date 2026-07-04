@@ -3,6 +3,7 @@ import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { resolveParagraphStyle } from '@/models/ParagraphStyle';
 import { resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleClasses';
 
 export function buildRichTextParagraphStyleCss(
   paragraphStyles: ParagraphStyle[],
@@ -18,7 +19,7 @@ export function buildRichTextParagraphStyleCss(
           ? 'text-decoration:underline;'
           : '';
 
-      return `${selectorPrefix} p.neanes-style-${style.id}{font-family:${getFontFamilyWithFallback(
+      return `${selectorPrefix} p.${richTextParagraphStyleClassName(style.id)}{font-family:${getFontFamilyWithFallback(
         font.cssFontFamily,
         pageSetup.neumeDefaultFontFamily + 'Legacy',
       )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${resolved.lineHeight ?? 'normal'};text-align:${resolved.alignment};${textDecoration}}`;

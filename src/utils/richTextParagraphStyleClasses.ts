@@ -1,3 +1,9 @@
+const RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX = 'neanes-style-';
+
+export function richTextParagraphStyleClassName(styleId: string) {
+  return `${RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX}${styleId}`;
+}
+
 export type RichTextParagraphStyleClassFallbackResolver = (
   styleId: string,
 ) => string | null;
@@ -21,11 +27,13 @@ export function rewriteRichTextParagraphStyleClasses(
     const deletedClasses: string[] = [];
 
     for (const className of classes) {
-      if (!className.startsWith('neanes-style-')) {
+      if (!className.startsWith(RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX)) {
         continue;
       }
 
-      const styleId = className.slice('neanes-style-'.length);
+      const styleId = className.slice(
+        RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX.length,
+      );
       const fallbackStyleId = resolveFallbackStyleId(styleId);
 
       if (fallbackStyleId == null) {
@@ -33,13 +41,12 @@ export function rewriteRichTextParagraphStyleClasses(
       }
 
       deletedClasses.push(className);
-      const fallbackClassName = `neanes-style-${fallbackStyleId}`;
+      const fallbackClassName =
+        richTextParagraphStyleClassName(fallbackStyleId);
 
       if (!element.classList.contains(fallbackClassName)) {
         element.classList.add(fallbackClassName);
       }
-
-      didRewrite = true;
     }
 
     if (deletedClasses.length > 0) {

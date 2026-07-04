@@ -249,7 +249,10 @@ import {
   hasMeaningfulRichTextHtmlContent,
   setRichTextLanguage,
 } from '@/utils/richTextLanguage';
-import { rewriteRichTextParagraphStyleClasses } from '@/utils/richTextParagraphStyleClasses';
+import {
+  rewriteRichTextParagraphStyleClasses,
+  richTextParagraphStyleClassName,
+} from '@/utils/richTextParagraphStyleClasses';
 import {
   resolveRunningMarkerPageMetadata,
   resolveRunningMarkerText,
@@ -7532,9 +7535,10 @@ function createRichHeaderFooterWithStyle(
 ) {
   const textbox = new RichTextBoxElement();
   textbox.multipanel = true;
-  textbox.contentLeft = `<p class="neanes-style-${paragraphStyleId}">${left}</p>`;
-  textbox.contentCenter = `<p class="neanes-style-${paragraphStyleId}" style="text-align:center;">${center}</p>`;
-  textbox.contentRight = `<p class="neanes-style-${paragraphStyleId}" style="text-align:right;">${right}</p>`;
+  const className = richTextParagraphStyleClassName(paragraphStyleId);
+  textbox.contentLeft = `<p class="${className}">${left}</p>`;
+  textbox.contentCenter = `<p class="${className}" style="text-align:center;">${center}</p>`;
+  textbox.contentRight = `<p class="${className}" style="text-align:right;">${right}</p>`;
   return textbox;
 }
 
@@ -8594,7 +8598,7 @@ function focusElement(element: Element | null) {
 function onFileMenuInsertAnnotation() {
   if (selectedElement.value?.elementType === ElementType.Note) {
     const el = new AnnotationElement();
-    el.text = `<p class="neanes-style-${BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation}"></p>`;
+    el.text = `<p class="${richTextParagraphStyleClassName(BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation)}"></p>`;
     const fontHeight = TextMeasurementService.getFontHeight(
       getDefaultLyricsFont(),
     );
@@ -8642,7 +8646,7 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
 
 function onFileMenuInsertRichTextBox() {
   const element = new RichTextBoxElement();
-  element.content = `<p class="neanes-style-${BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText}"></p>`;
+  element.content = `<p class="${richTextParagraphStyleClassName(BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText)}"></p>`;
   if (
     score.value.pageSetup.melkiteRtl ||
     score.value.pageSetup.numerals === 'easternArabic'

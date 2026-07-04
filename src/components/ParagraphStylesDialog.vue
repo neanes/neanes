@@ -419,8 +419,8 @@ import {
   isBuiltInParagraphStyleId,
   isTextBoxAlignment,
   ParagraphStyle,
-  pruneParentlessParagraphStyleRootFallbackOverrides,
   type ParagraphStyleOverrides,
+  pruneParentlessParagraphStyleRootFallbackOverrides,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';

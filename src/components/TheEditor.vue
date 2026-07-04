@@ -2269,7 +2269,7 @@ function getElementStyle(element: ScoreElement) {
 }
 
 function getAdjustmentRatioStyle(line: Line, page: Page) {
-  const resolvedLyricsStyle = getResolvedLyricsStyle();
+  const resolvedLyricsStyle = resolvedDefaultLyricsStyle.value;
   const fontSize = resolvedLyricsStyle.fontSize * 0.8;
   const gap = fontSize * 0.5;
   const margins = getResolvedMarginsForPage(page);
@@ -6995,30 +6995,37 @@ function deletePreviousElement() {
   }
 }
 
-function getResolvedAnnotationStyle() {
-  return resolveParagraphStyle(
+const resolvedAnnotationStyle = computed(() =>
+  resolveParagraphStyle(
     score.value.paragraphStyles,
     BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
-  );
-}
+  ),
+);
 
-function getResolvedDefaultParagraphStyle() {
-  return resolveParagraphStyle(
+const resolvedDefaultParagraphStyle = computed(() =>
+  resolveParagraphStyle(
     score.value.paragraphStyles,
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-  );
-}
+  ),
+);
 
-function getResolvedLyricsStyle(element?: NoteElement) {
+const resolvedDefaultLyricsStyle = computed(() =>
+  resolveParagraphStyle(
+    score.value.paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+  ),
+);
+
+function getResolvedLyricsStyle(element: NoteElement) {
   return resolveParagraphStyle(
     score.value.paragraphStyles,
-    element?.lyricsParagraphStyleId ?? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-    element?.getParagraphStyleOverrides(),
+    element.lyricsParagraphStyleId,
+    element.getParagraphStyleOverrides(),
   );
 }
 
 function getDefaultLyricsFont() {
-  return resolveFontCss(getResolvedLyricsStyle());
+  return resolveFontCss(resolvedDefaultLyricsStyle.value);
 }
 
 type ResizableParagraphStyleSnapshot = Map<string, ResolvedParagraphStyle>;
@@ -7055,6 +7062,26 @@ function resizableParagraphStylesChanged(
   }
 
   return false;
+}
+
+// Brackets an operation that may change paragraph styles and recalculates the
+// text box heights that depend on the resolved styles when they changed.
+function runWithResizableParagraphStyleRecalc(operation: () => void) {
+  const previousResizableParagraphStyles = getResizableParagraphStyleSnapshot(
+    score.value,
+  );
+
+  operation();
+
+  if (
+    resizableParagraphStylesChanged(
+      previousResizableParagraphStyles,
+      getResizableParagraphStyleSnapshot(score.value),
+    )
+  ) {
+    recalculateRichTextBoxHeights();
+    recalculateTextBoxHeights();
+  }
 }
 
 function updatePageSetup(pageSetup: PageSetup) {
@@ -7139,13 +7166,13 @@ function updateDocumentProperties(documentProperties: DocumentProperties) {
 
 function getAllTextBoxElements(score: Score) {
   return [...score.staff.elements, ...score.headersAndFooters].filter(
-    (element): element is TextBoxElement => isTextBoxElement(element),
+    isTextBoxElement,
   );
 }
 
 function getAllRichTextBoxes(score: Score) {
   return [...score.staff.elements, ...score.headersAndFooters].filter(
-    (element): element is RichTextBoxElement => isRichTextBoxElement(element),
+    isRichTextBoxElement,
   );
 }
 
@@ -7173,10 +7200,7 @@ function getAllNoteElements(score: Score) {
 }
 
 function getAllDropCapElements(score: Score) {
-  return score.staff.elements.filter(
-    (element): element is DropCapElement =>
-      element.elementType === ElementType.DropCap,
-  );
+  return score.staff.elements.filter(isDropCapElement);
 }
 
 function getDeletedStyleFallbacks(
@@ -7227,9 +7251,6 @@ function getDeletedStyleFallbackId(
 function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
   flushPendingRichTextEditors(selectedWorkspace.value);
 
-  const previousResizableParagraphStyles = getResizableParagraphStyleSnapshot(
-    score.value,
-  );
   const previousStylesById = new Map(
     score.value.paragraphStyles.map((style) => [style.id, style]),
   );
@@ -7352,17 +7373,9 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
     );
   }
 
-  commandService.value.executeAsBatch(commands);
-
-  if (
-    resizableParagraphStylesChanged(
-      previousResizableParagraphStyles,
-      getResizableParagraphStyleSnapshot(score.value),
-    )
-  ) {
-    recalculateRichTextBoxHeights();
-    recalculateTextBoxHeights();
-  }
+  runWithResizableParagraphStyleRecalc(() =>
+    commandService.value.executeAsBatch(commands),
+  );
 
   save();
 }
@@ -8581,9 +8594,7 @@ function onFileMenuInsertAlternateLine() {
 function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
   const element = new TextBoxElement();
   element.inline = args?.inline ?? false;
-  element.paragraphStyleId = element.inline
-    ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
-    : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  element.paragraphStyleId = getTextBoxParagraphStyleFallbackId(element.inline);
 
   addScoreElement(element, selectedElementIndex.value);
 
@@ -8783,75 +8794,53 @@ async function onFileMenuSaveAs() {
 }
 
 function onFileMenuUndo() {
-  const currentIndex = selectedElementIndex.value;
-  const previousResizableParagraphStyles = getResizableParagraphStyleSnapshot(
-    score.value,
-  );
+  runWithResizableParagraphStyleRecalc(() => {
+    const currentIndex = selectedElementIndex.value;
 
-  commandService.value.undo();
+    commandService.value.undo();
 
-  // TODO this may be overkill, but the alternative is putting in place
-  // an event system to only refresh on certain undo actions
-  refreshStaffLyrics();
+    // TODO this may be overkill, but the alternative is putting in place
+    // an event system to only refresh on certain undo actions
+    refreshStaffLyrics();
 
-  if (currentIndex > -1) {
-    // If the selected element was removed during the undo process, choose a new one
-    const clampedIndex = Math.min(currentIndex, elements.value.length - 1);
+    if (currentIndex > -1) {
+      // If the selected element was removed during the undo process, choose a new one
+      const clampedIndex = Math.min(currentIndex, elements.value.length - 1);
 
-    if (selectedElement.value !== elements.value[clampedIndex]) {
-      selectedElement.value = elements.value[clampedIndex];
+      if (selectedElement.value !== elements.value[clampedIndex]) {
+        selectedElement.value = elements.value[clampedIndex];
+      }
+
+      // Undo can affect the note display in the neume toolbar, so force a refresh here.
+      selectedElement.value.keyHelper++;
     }
-
-    // Undo can affect the note display in the neume toolbar, so force a refresh here.
-    selectedElement.value.keyHelper++;
-  }
-
-  if (
-    resizableParagraphStylesChanged(
-      previousResizableParagraphStyles,
-      getResizableParagraphStyleSnapshot(score.value),
-    )
-  ) {
-    recalculateRichTextBoxHeights();
-    recalculateTextBoxHeights();
-  }
+  });
 
   save();
 }
 
 function onFileMenuRedo() {
-  const currentIndex = selectedElementIndex.value;
-  const previousResizableParagraphStyles = getResizableParagraphStyleSnapshot(
-    score.value,
-  );
+  runWithResizableParagraphStyleRecalc(() => {
+    const currentIndex = selectedElementIndex.value;
 
-  commandService.value.redo();
+    commandService.value.redo();
 
-  // TODO this may be overkill, but the alternative is putting in place
-  // an event system to only refresh on certain undo actions
-  refreshStaffLyrics();
+    // TODO this may be overkill, but the alternative is putting in place
+    // an event system to only refresh on certain undo actions
+    refreshStaffLyrics();
 
-  if (currentIndex > -1) {
-    // If the selected element was removed during the redo process, choose a new one
-    const clampedIndex = Math.min(currentIndex, elements.value.length - 1);
+    if (currentIndex > -1) {
+      // If the selected element was removed during the redo process, choose a new one
+      const clampedIndex = Math.min(currentIndex, elements.value.length - 1);
 
-    if (selectedElement.value !== elements.value[clampedIndex]) {
-      selectedElement.value = elements.value[clampedIndex];
+      if (selectedElement.value !== elements.value[clampedIndex]) {
+        selectedElement.value = elements.value[clampedIndex];
+      }
+
+      // Redo can affect the note display in the neume toolbar, so force a refresh here.
+      selectedElement.value.keyHelper++;
     }
-
-    // Redo can affect the note display in the neume toolbar, so force a refresh here.
-    selectedElement.value.keyHelper++;
-  }
-
-  if (
-    resizableParagraphStylesChanged(
-      previousResizableParagraphStyles,
-      getResizableParagraphStyleSnapshot(score.value),
-    )
-  ) {
-    recalculateRichTextBoxHeights();
-    recalculateTextBoxHeights();
-  }
+  });
 
   save();
 }
@@ -10947,8 +10936,8 @@ function renderTabLabel(tab: Tab) {
           :paragraph-styles="score.paragraphStyles"
           :fallback-paragraph-style="
             inspectorContext.element.inline
-              ? getResolvedLyricsStyle()
-              : getResolvedDefaultParagraphStyle()
+              ? resolvedDefaultLyricsStyle
+              : resolvedDefaultParagraphStyle
           "
         />
       </template>
@@ -10958,7 +10947,7 @@ function renderTabLabel(tab: Tab) {
           :page-setup="score.pageSetup"
           :fonts="fonts"
           :paragraph-styles="score.paragraphStyles"
-          :fallback-paragraph-style="getResolvedAnnotationStyle()"
+          :fallback-paragraph-style="resolvedAnnotationStyle"
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'drop-cap'">

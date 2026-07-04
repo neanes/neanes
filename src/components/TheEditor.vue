@@ -7098,14 +7098,7 @@ function runWithResizableParagraphStyleRecalc(operation: () => void) {
 
 function updatePageSetup(pageSetup: PageSetup) {
   const currentPageSetup = score.value.pageSetup;
-  const nextPageSetup = normalizePageSetupForGeneratedHeaderFooterDefaults(
-    pageSetup,
-    shouldAutoEnableDifferentOddEvenForFacingPages(
-      score.value,
-      currentPageSetup,
-      pageSetup,
-    ),
-  );
+  const nextPageSetup = pageSetup;
 
   const updateCommands: Command[] = [
     pageSetupCommandFactory.create('update-properties', {
@@ -7457,15 +7450,6 @@ const headerFooterSlots: HeaderFooterSlot[] = [
   { kind: 'footer', variant: 'chapterOpening' },
 ];
 
-const nonChapterOddEvenAffectedSlots: HeaderFooterSlot[] = [
-  { kind: 'header', variant: 'default' },
-  { kind: 'header', variant: 'odd' },
-  { kind: 'header', variant: 'even' },
-  { kind: 'footer', variant: 'default' },
-  { kind: 'footer', variant: 'odd' },
-  { kind: 'footer', variant: 'even' },
-];
-
 function getDefaultHeaderFooterPanels(
   pageSetup: PageSetup,
   kind: HeaderFooterKind,
@@ -7689,48 +7673,6 @@ function generatedHeaderFooterDefaultsChanged(
       richHeaderFooter: current.richHeaderFooter,
     },
   );
-}
-
-function shouldAutoEnableDifferentOddEvenForFacingPages(
-  score: Score,
-  previous: PageSetup,
-  current: PageSetup,
-) {
-  if (
-    previous.facingPages ||
-    !current.facingPages ||
-    current.headerDifferentOddEven
-  ) {
-    return false;
-  }
-
-  const oldGeneratedTemplates = createGeneratedHeaderFooterTemplates(
-    previous,
-    previous.richHeaderFooter,
-  );
-
-  return nonChapterOddEvenAffectedSlots.every((slot) => {
-    const currentElement = getHeaderFooterSlotElement(score, slot);
-
-    return (
-      currentElement != null &&
-      areGeneratedHeaderFooterElementsEqual(
-        currentElement,
-        getHeaderFooterTemplateSlotElement(oldGeneratedTemplates, slot),
-      )
-    );
-  });
-}
-
-function normalizePageSetupForGeneratedHeaderFooterDefaults(
-  pageSetup: PageSetup,
-  autoEnableDifferentOddEven: boolean,
-) {
-  return autoEnableDifferentOddEven
-    ? Object.assign(new PageSetup(), pageSetup, {
-        headerDifferentOddEven: true,
-      })
-    : pageSetup;
 }
 
 function initializeDefaultHeaderFooters(score: Score) {
@@ -9183,10 +9125,6 @@ function createDefaultScore() {
       SaveService.LoadPageSetup_v1(
         score.pageSetup,
         JSON.parse(pageSetupDefault),
-      );
-      score.pageSetup = normalizePageSetupForGeneratedHeaderFooterDefaults(
-        score.pageSetup,
-        score.pageSetup.facingPages && !score.pageSetup.headerDifferentOddEven,
       );
     }
   } catch (error) {

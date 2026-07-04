@@ -2263,9 +2263,6 @@ function setBoolean(key: BooleanPageSetupKey, value: CheckboxValue) {
 
 function updateFacingPages(value: CheckboxValue) {
   form.value.facingPages = value === true;
-  if (form.value.facingPages) {
-    form.value.headerDifferentOddEven = true;
-  }
   normalizeDirection();
 }
 

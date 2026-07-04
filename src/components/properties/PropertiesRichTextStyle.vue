@@ -854,8 +854,8 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
-  execForActiveOrLastOwner,
-  useActiveOrLastEditorForOwner,
+  execForOwner,
+  useActiveEditorForOwner,
   useEditorCommandObservableState,
 } from '@/composables/useRichTextEditorRegistry';
 import {
@@ -948,7 +948,7 @@ const {
 
 const { t } = useTranslation();
 
-const scopedEditor = useActiveOrLastEditorForOwner(() => props.element);
+const scopedEditor = useActiveEditorForOwner(() => props.element);
 
 // Keep the editor logically focused while focus is in this panel or the shared
 // dropdown portal, and show the selection marker while a styling control is
@@ -1342,11 +1342,7 @@ function updateNeumeAttributes(
     return;
   }
 
-  execForActiveOrLastOwner(
-    props.element,
-    UPDATE_NEUME_ATTRIBUTES_COMMAND,
-    attributes,
-  );
+  execForOwner(props.element, UPDATE_NEUME_ATTRIBUTES_COMMAND, attributes);
 }
 
 function neumeFieldId(fieldName: string) {

@@ -74,11 +74,10 @@ it and tracks which editor is currently active:
   editor's `destroy` unregisters everything.
 - `activeEditor` / `activeEditorOwner` (`shallowRef`s) -- the single globally
   focused editor and its owner.
-- `getActiveEditorForOwner(owner)` (internal) -- the active editor _iff_ it
-  belongs to `owner`. The toolbar and panel use
-  `useActiveOrLastEditorForOwner(owner)` as their `scopedEditor`; command
-  enablement (`isCommandEnabled`) requires it to be non-null, and
-  `execForActiveOrLastOwner` runs a command only when it is.
+- `getActiveEditorForOwner(owner)` / `useActiveEditorForOwner(owner)` -- the active
+  editor _iff_ it belongs to `owner`. The toolbar and panel use this as their
+  `scopedEditor`; command enablement (`isCommandEnabled`) requires it to be
+  non-null, and `execForOwner` runs a command only when it is.
 - `resolveActiveOrLastEditorForOwner(owner)` --
   `getActiveEditorForOwner(owner) ?? <last-active editor for owner>`. The fallback
   is what makes the focus zone _sticky_ (section 2.4): a transient blur that nulls
@@ -292,16 +291,28 @@ deliberate next target.)
 ### 2.7 Where each control plugs in
 
 - **`RichTextToolbar.vue`** has a single root `<div ref="toolbarRoot">` and calls
-  `attachFocusZone(() => props.element, toolbarRoot)`. The font combobox wires
+  `attachFocusZone(() => props.element, toolbarRoot)`. The font combobox and the
+  paragraph-style and font-style selects wire
   `@update:open` -> `beginSelectionGuard` / `endSelectionGuard({ refocus: true })`; the size field wires
   `@focuscapture` -> `beginSelectionGuard` and `@blurcapture` -> `endSelectionGuard({ refocus: false })`.
 - **`PropertiesRichTextStyle.vue`** is a fragment, so it is wrapped in
   `<div ref="panelRoot" class="contents">`. Tailwind's `contents`
   (`display: contents`) removes the wrapper's own box -- preserving the panel's
   layout -- while keeping it a real DOM ancestor, which is all `focusTracker`
-  containment and capture-phase listeners need. Font combobox and color picker
+  containment and capture-phase listeners need. Font combobox, paragraph-style and
+  font-style selects, and color picker
   wire `@update:open` -> `beginSelectionGuard` / `endSelectionGuard({ refocus: true })`; the size field wires
   focus/blur capture.
+- **Select-shaped controls** (`ParagraphStyleSelect`, `FontStyleSelect`) ride the
+  same zone, with two `richTextPortal`-gated preventions of their own: the trigger
+  `preventDefault`s its mousedown (the editable keeps focus while opening), and
+  `close-auto-focus` is prevented on the content. The latter is load-bearing:
+  unlike the combobox, whose close-time trigger refocus is gated on
+  `activeElement` being `<body>`, Reka's `Select` refocuses its trigger on
+  content unmount **unconditionally** -- and the unmount trails the close
+  animation, so it lands _after_ the guard's refocus and would yank focus off
+  the editable again. Preventing it leaves the guard (section 2.6) as the only
+  authority over where focus goes on close.
 - **Neume-attribute controls** in the panel (the neume `InputUnit`s, `Select`s,
   and the neume color picker) are intentionally **not** wired to `beginSelectionGuard`/`endSelectionGuard`.
   They live inside `panelRoot` or open into the portal, so Layer A keeps the
@@ -317,7 +328,8 @@ deliberate next target.)
 
 ### 2.8 Sharing the controls with non-rich-text usages
 
-`FontCombobox`, `ColorPicker`, and `InputUnit`/`InputFontSize` are also used by
+`FontCombobox`, `ColorPicker`, `ParagraphStyleSelect`, `FontStyleSelect`, and
+`InputUnit`/`InputFontSize` are also used by
 non-rich-text dialogs and panels, so their focus-related behavior is scoped so
 those other usages are unaffected:
 
@@ -326,7 +338,9 @@ those other usages are unaffected:
 - `ColorPicker`'s focus interception (preventing trigger refocus on close, staying
   a _non-modal_ popover so the user can click back into the editor) is gated on its
   `richTextPortal` prop. When that prop is unset, Reka's default focus-return
-  behavior applies, which keyboard accessibility relies on.
+  behavior applies, which keyboard accessibility relies on. The selects' trigger
+  mousedown and `close-auto-focus` preventions (section 2.7) are gated on the same
+  prop, for the same reason.
 - `FontCombobox`'s `@mousedown.prevent` on its trigger is the conventional combobox
   pattern (the trigger is `tabindex="-1"` and opens on click).
 
@@ -348,7 +362,7 @@ A, whose toolbar root and the shared portal are already registered (sticky).
    active and the toolbar stays enabled. The real highlight is gone (the editing
    view is unfocused), so the marker stands in for it.
 4. **Pick a font.** `@update:model-value` -> `onFontFamilyChanged` ->
-   `execForActiveOrLastOwner` runs `fontFamily` on the still-intact model selection; `open`
+   `execForOwner` runs `fontFamily` on the still-intact model selection; `open`
    becomes false.
 5. **Close.** `@update:open(false)` -> `endSelectionGuard(A, { refocus: true })`. Reka parks
    focus on the trigger/option (inside the registered container/portal), so

@@ -13,14 +13,14 @@ import {
 import { ALIGNMENT_OVERRIDE_MIXED_VALUE } from '@/utils/alignmentOverride';
 
 const registryMocks = vi.hoisted(() => ({
-  execForActiveOrLastOwner: vi.fn(),
-  useActiveOrLastEditorForOwner: vi.fn(),
+  execForOwner: vi.fn(),
+  useActiveEditorForOwner: vi.fn(),
   useEditorCommandStates: vi.fn(),
 }));
 
 vi.mock('@/composables/useRichTextEditorRegistry', () => ({
-  execForActiveOrLastOwner: registryMocks.execForActiveOrLastOwner,
-  useActiveOrLastEditorForOwner: registryMocks.useActiveOrLastEditorForOwner,
+  execForOwner: registryMocks.execForOwner,
+  useActiveEditorForOwner: registryMocks.useActiveEditorForOwner,
   useEditorCommandStates: registryMocks.useEditorCommandStates,
 }));
 
@@ -145,8 +145,8 @@ describe('useRichTextStyleCommands', () => {
       commandOverrides,
     );
 
-    registryMocks.execForActiveOrLastOwner.mockReset();
-    registryMocks.useActiveOrLastEditorForOwner.mockReturnValue({ value: {} });
+    registryMocks.execForOwner.mockReset();
+    registryMocks.useActiveEditorForOwner.mockReturnValue({ value: {} });
     registryMocks.useEditorCommandStates.mockReturnValue(
       commandStates as unknown as Record<string, unknown>,
     );
@@ -175,13 +175,11 @@ describe('useRichTextStyleCommands', () => {
 
     commands.onParagraphStyleChanged('underlined-style');
 
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
-      1,
-      {},
-      'style',
-      { styleName: 'underlined-style', forceValue: true },
-    );
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(1);
+    expect(registryMocks.execForOwner).toHaveBeenNthCalledWith(1, {}, 'style', {
+      styleName: 'underlined-style',
+      forceValue: true,
+    });
+    expect(registryMocks.execForOwner).toHaveBeenCalledTimes(1);
   });
 
   it('pushes the resolved paragraph-style fallback into the bold and italic toggle commands', async () => {
@@ -222,8 +220,8 @@ describe('useRichTextStyleCommands', () => {
 
     const commandStates = reactive(createCommandStates([initialStyle.id]));
 
-    registryMocks.execForActiveOrLastOwner.mockReset();
-    registryMocks.useActiveOrLastEditorForOwner.mockReturnValue(ref(editor));
+    registryMocks.execForOwner.mockReset();
+    registryMocks.useActiveEditorForOwner.mockReturnValue(ref(editor));
     registryMocks.useEditorCommandStates.mockReturnValue(
       commandStates as unknown as Record<string, unknown>,
     );
@@ -355,11 +353,8 @@ describe('useRichTextStyleCommands', () => {
 
     commands.clearAlignmentOverride();
 
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(1);
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledWith(
-      {},
-      'alignment',
-    );
+    expect(registryMocks.execForOwner).toHaveBeenCalledTimes(1);
+    expect(registryMocks.execForOwner).toHaveBeenCalledWith({}, 'alignment');
   });
 
   it('keeps bold and italic updates away from underline', () => {
@@ -367,17 +362,17 @@ describe('useRichTextStyleCommands', () => {
 
     commands.onFontStyleValuesChanged(['bold', 'italic']);
 
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+    expect(registryMocks.execForOwner).toHaveBeenNthCalledWith(
       1,
       {},
       'fontStyleToggleBold',
     );
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+    expect(registryMocks.execForOwner).toHaveBeenNthCalledWith(
       2,
       {},
       'fontStyleToggleItalic',
     );
-    expect(registryMocks.execForActiveOrLastOwner).not.toHaveBeenCalledWith(
+    expect(registryMocks.execForOwner).not.toHaveBeenCalledWith(
       {},
       'underline',
     );
@@ -388,16 +383,13 @@ describe('useRichTextStyleCommands', () => {
 
     commands.onTextDecorationValuesChanged('underline');
 
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(1);
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledWith(
-      {},
-      'underline',
-    );
-    expect(registryMocks.execForActiveOrLastOwner).not.toHaveBeenCalledWith(
+    expect(registryMocks.execForOwner).toHaveBeenCalledTimes(1);
+    expect(registryMocks.execForOwner).toHaveBeenCalledWith({}, 'underline');
+    expect(registryMocks.execForOwner).not.toHaveBeenCalledWith(
       {},
       'fontStyleToggleBold',
     );
-    expect(registryMocks.execForActiveOrLastOwner).not.toHaveBeenCalledWith(
+    expect(registryMocks.execForOwner).not.toHaveBeenCalledWith(
       {},
       'fontStyleToggleItalic',
     );
@@ -411,13 +403,11 @@ describe('useRichTextStyleCommands', () => {
 
     commands.onParagraphStyleChanged('plain-style');
 
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
-      1,
-      {},
-      'style',
-      { styleName: 'plain-style', forceValue: true },
-    );
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(1);
+    expect(registryMocks.execForOwner).toHaveBeenNthCalledWith(1, {}, 'style', {
+      styleName: 'plain-style',
+      forceValue: true,
+    });
+    expect(registryMocks.execForOwner).toHaveBeenCalledTimes(1);
   });
 
   it('does not resync alignment when applying a paragraph style', () => {
@@ -431,13 +421,12 @@ describe('useRichTextStyleCommands', () => {
 
     commands.onParagraphStyleChanged('right-aligned-style');
 
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(1);
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledWith(
-      {},
-      'style',
-      { styleName: 'right-aligned-style', forceValue: true },
-    );
-    expect(registryMocks.execForActiveOrLastOwner).not.toHaveBeenCalledWith(
+    expect(registryMocks.execForOwner).toHaveBeenCalledTimes(1);
+    expect(registryMocks.execForOwner).toHaveBeenCalledWith({}, 'style', {
+      styleName: 'right-aligned-style',
+      forceValue: true,
+    });
+    expect(registryMocks.execForOwner).not.toHaveBeenCalledWith(
       {},
       'alignment',
       expect.anything(),
@@ -468,33 +457,33 @@ describe('useRichTextStyleCommands', () => {
 
     commands.clearParagraphStyleFormatting();
 
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+    expect(registryMocks.execForOwner).toHaveBeenNthCalledWith(
       1,
       {},
       'fontFamily',
     );
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+    expect(registryMocks.execForOwner).toHaveBeenNthCalledWith(
       2,
       {},
       'fontStyle',
     );
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+    expect(registryMocks.execForOwner).toHaveBeenNthCalledWith(
       3,
       {},
       'fontSize',
     );
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+    expect(registryMocks.execForOwner).toHaveBeenNthCalledWith(
       4,
       {},
       'fontColor',
     );
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenNthCalledWith(
+    expect(registryMocks.execForOwner).toHaveBeenNthCalledWith(
       5,
       {},
       'alignment',
     );
-    expect(registryMocks.execForActiveOrLastOwner).toHaveBeenCalledTimes(5);
-    expect(registryMocks.execForActiveOrLastOwner).not.toHaveBeenCalledWith(
+    expect(registryMocks.execForOwner).toHaveBeenCalledTimes(5);
+    expect(registryMocks.execForOwner).not.toHaveBeenCalledWith(
       {},
       'style',
       expect.anything(),

@@ -406,7 +406,7 @@ import {
   ToolbarToggleGroup,
   ToolbarToggleItem,
 } from '@/components/ui/toolbar';
-import { useActiveOrLastEditorForOwner } from '@/composables/useRichTextEditorRegistry';
+import { useActiveEditorForOwner } from '@/composables/useRichTextEditorRegistry';
 import {
   attachFocusZone,
   beginSelectionGuard,
@@ -487,7 +487,7 @@ const {
   onClearFormatting,
 } = useRichTextStyleCommands(props, EXTRA_COMMAND_NAMES);
 
-const scopedEditor = useActiveOrLastEditorForOwner(() => props.element);
+const scopedEditor = useActiveEditorForOwner(() => props.element);
 
 // Keep the editor logically focused while focus is in the toolbar or the
 // shared dropdown portal, and show the selection marker while a styling control

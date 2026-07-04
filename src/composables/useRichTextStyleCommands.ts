@@ -4,8 +4,8 @@ import { computed, watch } from 'vue';
 import type { FontStyleToggleCommand } from '@/ckeditor-plugins/fontstyle/fontstylecommand';
 import type { FontComboboxOption } from '@/components/FontCombobox.vue';
 import {
-  execForActiveOrLastOwner,
-  useActiveOrLastEditorForOwner,
+  execForOwner,
+  useActiveEditorForOwner,
   useEditorCommandStates,
 } from '@/composables/useRichTextEditorRegistry';
 import type { PageSetup } from '@/models/PageSetup';
@@ -106,7 +106,7 @@ export function useRichTextStyleCommands(
   extraCommandNames: string[] = [],
 ) {
   const { t } = useTranslation();
-  const scopedEditor = useActiveOrLastEditorForOwner(() => props.element);
+  const scopedEditor = useActiveEditorForOwner(() => props.element);
 
   const commandStates = useEditorCommandStates(
     scopedEditor,
@@ -314,7 +314,7 @@ export function useRichTextStyleCommands(
       return;
     }
 
-    execForActiveOrLastOwner(props.element, commandName, ...args);
+    execForOwner(props.element, commandName, ...args);
   }
 
   function isStyleToggleEnabled(style: string) {
@@ -500,10 +500,10 @@ export function useRichTextStyleCommands(
     }
 
     if (isCommandEnabled('fontStyle')) {
-      execForActiveOrLastOwner(props.element, 'fontStyle');
+      execForOwner(props.element, 'fontStyle');
     }
 
-    execForActiveOrLastOwner(props.element, 'removeFormat');
+    execForOwner(props.element, 'removeFormat');
   }
 
   function clearParagraphStyleFormatting() {
@@ -536,7 +536,6 @@ export function useRichTextStyleCommands(
     isCommandEnabled,
     isCommandActive,
     isStyleToggleEnabled,
-    isParagraphStyleEnabled,
     commandValue,
     runCommand,
     onParagraphStyleChanged,

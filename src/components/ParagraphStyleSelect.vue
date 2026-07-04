@@ -5,10 +5,17 @@
     @update:model-value="onUpdate"
     @update:open="emit('update:open', $event)"
   >
-    <SelectTrigger :id="id" :class="cn('bg-background', triggerClass)">
+    <SelectTrigger
+      :id="id"
+      :class="cn('bg-background', triggerClass)"
+      @mousedown="onTriggerMousedown"
+    >
       <SelectValue />
     </SelectTrigger>
-    <component :is="contentComponent">
+    <component
+      :is="contentComponent"
+      @close-auto-focus="onContentCloseAutoFocus"
+    >
       <SelectGroup>
         <SelectItem v-if="showNoneOption" :value="PARAGRAPH_STYLE_NONE_VALUE">
           {{ noneLabel }}
@@ -131,6 +138,21 @@ function styleDisplayName(style: ParagraphStyle) {
 function onUpdate(value: AcceptableValue) {
   if (typeof value === 'string') {
     emit('update:modelValue', value);
+  }
+}
+
+// In rich-text mode the selection guard owns focus: keep the editable focused
+// when opening, and let the guard (not Reka Select) decide where focus goes on
+// close. Elsewhere keep Reka's default behavior for ordinary form controls.
+function onTriggerMousedown(event: MouseEvent) {
+  if (props.richTextPortal) {
+    event.preventDefault();
+  }
+}
+
+function onContentCloseAutoFocus(event: Event) {
+  if (props.richTextPortal) {
+    event.preventDefault();
   }
 }
 </script>

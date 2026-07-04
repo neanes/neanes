@@ -1,19 +1,12 @@
-import type { Batch, ModelWriter } from 'ckeditor5';
 import { Command } from 'ckeditor5';
 
 import {
   ALIGNMENT_OVERRIDE_MIXED_VALUE,
-  ALIGNMENT_VALUES,
   type AlignmentOverrideValue,
+  isAlignmentOverrideValue,
 } from '@/utils/alignmentOverride';
 
 export const ALIGNMENT_OVERRIDE = 'alignmentOverride';
-
-function isAlignmentOverrideValue(
-  value: unknown,
-): value is AlignmentOverrideValue {
-  return typeof value === 'string' && ALIGNMENT_VALUES.includes(value as never);
-}
 
 export class AlignmentOverrideCommand extends Command {
   declare public value:
@@ -59,15 +52,14 @@ export class AlignmentOverrideCommand extends Command {
   }
 
   public override execute(
-    options: { value?: AlignmentOverrideValue; batch?: Batch } = {},
+    options: { value?: AlignmentOverrideValue } = {},
   ): void {
     const model = this.editor.model;
     const selection = model.document.selection;
     const schema = model.schema;
     const value = options.value;
-    const batch = options.batch;
 
-    const updateAttribute = (writer: ModelWriter) => {
+    model.change((writer) => {
       for (const block of selection.getSelectedBlocks()) {
         if (!schema.checkAttribute(block, ALIGNMENT_OVERRIDE)) {
           continue;
@@ -79,12 +71,6 @@ export class AlignmentOverrideCommand extends Command {
           writer.removeAttribute(ALIGNMENT_OVERRIDE, block);
         }
       }
-    };
-
-    if (batch) {
-      model.enqueueChange(batch, updateAttribute);
-    } else {
-      model.change(updateAttribute);
-    }
+    });
   }
 }

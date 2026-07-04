@@ -21,7 +21,6 @@ export default class AlignmentOverrideEditing extends Plugin {
     });
     schema.setAttributeProperties(ALIGNMENT_OVERRIDE, {
       isFormatting: true,
-      copyOnEnter: true,
       blockAlignment: {
         left: {
           value: 'left',

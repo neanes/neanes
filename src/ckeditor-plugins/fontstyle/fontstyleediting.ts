@@ -43,6 +43,18 @@ const LEGACY_BOLD = 'neanesLegacyBold';
 const LEGACY_ITALIC = 'neanesLegacyItalic';
 const LEGACY_NORMAL = 'neanesLegacyNormal';
 const LEGACY_WEIGHT = 'neanesLegacyWeight';
+const LEGACY_MARKER_KEYS = [
+  LEGACY_BOLD,
+  LEGACY_ITALIC,
+  LEGACY_NORMAL,
+  LEGACY_WEIGHT,
+];
+
+function removeLegacyMarkers(writer: ModelWriter, range: ModelRange) {
+  for (const key of LEGACY_MARKER_KEYS) {
+    writer.removeAttribute(key, range);
+  }
+}
 
 interface ItemSnapshot {
   isText: boolean;
@@ -105,13 +117,7 @@ export default class FontStyleEditing extends Plugin {
     const schema = editor.model.schema;
 
     schema.extend('$text', {
-      allowAttributes: [
-        FONT_STYLE,
-        LEGACY_BOLD,
-        LEGACY_ITALIC,
-        LEGACY_NORMAL,
-        LEGACY_WEIGHT,
-      ],
+      allowAttributes: [FONT_STYLE, ...LEGACY_MARKER_KEYS],
     });
     schema.setAttributeProperties(FONT_STYLE, {
       isFormatting: true,
@@ -543,10 +549,7 @@ export default class FontStyleEditing extends Plugin {
     // Non-text items (neumes) only need stray markers cleaned off.
     if (!isText) {
       if (hasMarkers) {
-        writer.removeAttribute(LEGACY_BOLD, range);
-        writer.removeAttribute(LEGACY_ITALIC, range);
-        writer.removeAttribute(LEGACY_NORMAL, range);
-        writer.removeAttribute(LEGACY_WEIGHT, range);
+        removeLegacyMarkers(writer, range);
         return true;
       }
 
@@ -618,10 +621,7 @@ export default class FontStyleEditing extends Plugin {
     }
 
     if (hasMarkers) {
-      writer.removeAttribute(LEGACY_BOLD, range);
-      writer.removeAttribute(LEGACY_ITALIC, range);
-      writer.removeAttribute(LEGACY_NORMAL, range);
-      writer.removeAttribute(LEGACY_WEIGHT, range);
+      removeLegacyMarkers(writer, range);
     }
 
     if (familyChanged) {

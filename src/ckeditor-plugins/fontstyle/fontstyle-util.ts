@@ -24,15 +24,10 @@ export function getEditorDefaultFontFamily(editor: Editor): string | null {
   return family != null && family.trim() !== '' ? family : null;
 }
 
-export function getEditorDefaultFontFamilyModelValue(
+export function toEditorFontFamilyModelValue(
   editor: Editor,
+  family: string,
 ): string | null {
-  const family = getEditorDefaultFontFamily(editor);
-
-  if (family == null) {
-    return null;
-  }
-
   const neumeFallback = editor.config.get(
     'insertNeume.neumeDefaultFontFamily',
   ) as string | undefined;
@@ -40,6 +35,14 @@ export function getEditorDefaultFontFamilyModelValue(
   return neumeFallback != null && neumeFallback.trim() !== ''
     ? (toRichTextFontFamilyModelValue(family, neumeFallback) ?? null)
     : normalizeFontFamily(family);
+}
+
+export function getEditorDefaultFontFamilyModelValue(
+  editor: Editor,
+): string | null {
+  const family = getEditorDefaultFontFamily(editor);
+
+  return family == null ? null : toEditorFontFamilyModelValue(editor, family);
 }
 
 function explicitFontStyleCss(

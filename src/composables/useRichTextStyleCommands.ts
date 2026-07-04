@@ -18,8 +18,7 @@ import { resolveParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   ALIGNMENT_OVERRIDE_MIXED_VALUE,
-  ALIGNMENT_VALUES,
-  type AlignmentOverrideValue,
+  isAlignmentOverrideValue,
 } from '@/utils/alignmentOverride';
 import {
   DEFAULT_FONT_STYLE,
@@ -270,8 +269,8 @@ export function useRichTextStyleCommands(
   const alignmentValue = computed(() => {
     const value = commandValue('alignment');
     if (
-      typeof value === 'string' &&
-      (isAlignmentValue(value) || value === ALIGNMENT_OVERRIDE_MIXED_VALUE)
+      isAlignmentOverrideValue(value) ||
+      value === ALIGNMENT_OVERRIDE_MIXED_VALUE
     ) {
       return value;
     }
@@ -461,7 +460,7 @@ export function useRichTextStyleCommands(
   }
 
   function onAlignmentChanged(value: unknown) {
-    if (typeof value === 'string' && isAlignmentValue(value)) {
+    if (isAlignmentOverrideValue(value)) {
       runCommand('alignment', { value });
     }
   }
@@ -570,10 +569,6 @@ function fromRichTextFontSizeModelValue(value: unknown) {
   }
 
   return match[2] === 'pt' ? Unit.fromPt(size) : size;
-}
-
-function isAlignmentValue(value: string): value is AlignmentOverrideValue {
-  return (ALIGNMENT_VALUES as readonly string[]).includes(value);
 }
 
 function toToggleGroupValues(value: unknown) {

@@ -9,16 +9,15 @@ import { Command, ModelDocumentSelection } from 'ckeditor5';
 
 import { fontCatalog } from '@/services/FontCatalog';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
-import {
-  firstFontFamilyToken,
-  toRichTextFontFamilyModelValue,
-} from '@/utils/fontFamily';
+import { firstFontFamilyToken } from '@/utils/fontFamily';
 import type { StyleAxis } from '@/utils/fontStyleAxes';
 import {
   fontStyleNeedsExplicitFamily,
   parseStyleAxes,
   resolveAxisToggle,
 } from '@/utils/fontStyleAxes';
+
+import { toEditorFontFamilyModelValue } from './fontstyle-util';
 
 export const FONT_STYLE = 'fontStyle';
 export const FONT_STYLE_TOGGLE_BOLD = 'fontStyleToggleBold';
@@ -217,13 +216,7 @@ export class FontStyleToggleCommand extends Command {
       );
 
       if (family != null) {
-        const neumeFallback = this.editor.config.get(
-          'insertNeume.neumeDefaultFontFamily',
-        ) as string | undefined;
-        const modelValue = toRichTextFontFamilyModelValue(
-          family,
-          neumeFallback ?? '',
-        );
+        const modelValue = toEditorFontFamilyModelValue(this.editor, family);
 
         if (modelValue != null) {
           this.editor.execute(FONT_FAMILY, { value: modelValue });

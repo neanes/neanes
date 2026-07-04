@@ -86,22 +86,9 @@ describe('AlignmentOverrideCommand', () => {
   });
 
   it('disables the command when the first selected block cannot carry alignment', () => {
-    const editor = {
-      model: {
-        document: {
-          selection: {
-            getSelectedBlocks: () => [
-              { allowed: false, getAttribute: () => undefined },
-            ],
-          },
-        },
-        schema: {
-          checkAttribute: (block: BlockMock, attributeName: string) =>
-            attributeName === ALIGNMENT_OVERRIDE && block.allowed !== false,
-        },
-        change: vi.fn(),
-      },
-    };
+    const { editor } = createEditor([
+      { allowed: false, getAttribute: () => undefined },
+    ]);
     const command = new AlignmentOverrideCommand(editor as never);
 
     command.refresh();

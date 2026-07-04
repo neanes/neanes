@@ -520,9 +520,7 @@ const selectedStyleHasOverrides = computed(() =>
   hasParagraphStyleOverrides(selectedStyle.value?.overrides ?? {}),
 );
 const showOverrideToggles = computed(
-  () =>
-    selectedStyle.value?.parentStyleId != null ||
-    selectedStyleHasOverrides.value,
+  () => selectedStyle.value?.parentStyleId != null,
 );
 
 const selectedBuiltInStyleMatchesDefault = computed(() => {

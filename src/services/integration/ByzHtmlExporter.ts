@@ -20,6 +20,7 @@ import {
 import type { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
+  hasParagraphStyleOverrides,
   type ParagraphStyle,
   type ResolvedParagraphStyle,
   resolveParagraphStyle,
@@ -27,7 +28,7 @@ import {
 import type { Score } from '@/models/Score';
 import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
-import { resolveFontStyle } from '@/utils/fontStyle';
+import { type ResolvedFontStyle, resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { isRightHandPage } from '@/utils/PageNumbering';
@@ -599,7 +600,6 @@ export class ByzHtmlExporter {
 
           result += this.exportTextBox(
             element as TextBoxElement,
-            pageSetup,
             paragraphStyles,
             indentation,
           );
@@ -997,7 +997,7 @@ export class ByzHtmlExporter {
     let styleAttribute = '';
 
     if (
-      this.hasExplicitParagraphStyleOverrides(element) ||
+      hasParagraphStyleOverrides(element.getParagraphStyleOverrides()) ||
       element.paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap
     ) {
       const resolvedDropCapStyle = resolveParagraphStyle(
@@ -1041,7 +1041,6 @@ export class ByzHtmlExporter {
 
   exportTextBox(
     element: TextBoxElement,
-    pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
     indentation: number,
   ) {
@@ -1076,7 +1075,7 @@ export class ByzHtmlExporter {
 
     if (
       !element.inline ||
-      this.textBoxHasExplicitParagraphStyleOverrides(element) ||
+      hasParagraphStyleOverrides(element.getParagraphStyleOverrides()) ||
       element.paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
     ) {
       style += `color: ${element.computedColor};`;
@@ -1107,18 +1106,6 @@ export class ByzHtmlExporter {
     return `<div dir="auto" class="${className}"${styleAttribute}>${
       element.content
     }</div\n${this.getIndentationString(indentation)}>`;
-  }
-
-  private hasExplicitParagraphStyleOverrides(
-    element: TextBoxElement | NoteElement | DropCapElement,
-  ) {
-    return Object.values(element.getParagraphStyleOverrides()).some(
-      (value) => value !== undefined,
-    );
-  }
-
-  private textBoxHasExplicitParagraphStyleOverrides(element: TextBoxElement) {
-    return this.hasExplicitParagraphStyleOverrides(element);
   }
 
   exportRichTextBox(element: RichTextBoxElement, indentation: number) {
@@ -1417,7 +1404,7 @@ export class ByzHtmlExporter {
   getDropCapAdjustment(
     pageSetup: PageSetup,
     defaultDropCapStyle: ResolvedParagraphStyle,
-    defaultDropCapFont: ReturnType<typeof resolveFontStyle>,
+    defaultDropCapFont: ResolvedFontStyle,
     lyricsStyle: ResolvedParagraphStyle,
   ) {
     const neumeHeight = TextMeasurementService.getFontHeight(

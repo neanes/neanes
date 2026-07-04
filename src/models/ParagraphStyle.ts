@@ -66,6 +66,10 @@ export interface ParagraphStyleOverrides {
 
 export type ResolvedParagraphStyle = Required<ParagraphStyleOverrides>;
 
+export function hasParagraphStyleOverrides(overrides: ParagraphStyleOverrides) {
+  return Object.values(overrides).some((value) => value !== undefined);
+}
+
 export class ParagraphStyle {
   public id: string = crypto.randomUUID();
   public displayName: string = 'Paragraph Style';

@@ -17,7 +17,7 @@ import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import { resolveFontStyle } from '@/utils/fontStyle';
+import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { resolveRunningMarkerText } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
@@ -182,7 +182,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
       lyricsStyle.fontStyle,
     );
 
-    const lyricsFont = `${defaultLyricsFont.cssFontStyle} normal ${defaultLyricsFont.cssFontWeight} ${lyricsStyle.fontSize}px "${defaultLyricsFont.cssFontFamily}"`;
+    const lyricsFont = resolveFontCss(lyricsStyle);
 
     const lyricAscent =
       TextMeasurementService.getFontBoundingBoxAscent(lyricsFont);
@@ -661,6 +661,15 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               resolvedParagraphStyle.fontFamily,
               resolvedParagraphStyle.fontStyle,
             );
+            const resolvedTextDecoration =
+              textBox.underline === true
+                ? 'underline'
+                : textBox.underline === false
+                  ? 'none'
+                  : resolvedParagraphStyle.textDecoration;
+            const defaultTextDecoration = textBox.inline
+              ? lyricsStyle.textDecoration
+              : defaultTextBoxStyle.textDecoration;
 
             pushExportedElement({
               type: 'textbox',
@@ -707,19 +716,8 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? resolvedParagraphStyle.color.substring(1)
                   : undefined,
               textDecoration:
-                (textBox.underline === true
-                  ? 'underline'
-                  : textBox.underline === false
-                    ? 'none'
-                    : resolvedParagraphStyle.textDecoration) !==
-                (textBox.inline
-                  ? lyricsStyle.textDecoration
-                  : defaultTextBoxStyle.textDecoration)
-                  ? ((textBox.underline === true
-                      ? 'underline'
-                      : textBox.underline === false
-                        ? 'none'
-                        : resolvedParagraphStyle.textDecoration) ?? 'none')
+                resolvedTextDecoration !== defaultTextDecoration
+                  ? (resolvedTextDecoration ?? 'none')
                   : undefined,
             } as LatexTextBoxElement);
           }
@@ -914,7 +912,6 @@ interface LatexDropCapElement extends LatexBaseElement {
   fontStyle?: string;
   fontWeight?: string;
   color?: string;
-  textDecoration?: 'underline' | 'none';
 }
 
 interface LatexTextBoxElement extends LatexBaseElement {
@@ -934,6 +931,7 @@ interface LatexTextBoxElement extends LatexBaseElement {
   fontStyle?: string;
   fontWeight?: string;
   color?: string;
+  textDecoration?: 'underline' | 'none';
 }
 
 interface LatexModeKeyElement extends LatexBaseElement {

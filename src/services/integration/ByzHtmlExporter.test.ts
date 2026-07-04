@@ -61,10 +61,7 @@ describe('ByzHtmlExporter', () => {
     const pageSetup = new PageSetup();
     const style = new ParagraphStyle();
 
-    vi.spyOn(
-      exporter as ByzHtmlExporter,
-      'getDropCapAdjustment',
-    ).mockReturnValue(0);
+    vi.spyOn(exporter, 'getDropCapAdjustment').mockReturnValue(0);
 
     style.id = 'custom-style';
     style.overrides = {
@@ -93,10 +90,7 @@ describe('ByzHtmlExporter', () => {
     const exporter = new ByzHtmlExporter();
     const element = new TextBoxElement();
 
-    vi.spyOn(
-      exporter as ByzHtmlExporter,
-      'getDropCapAdjustment',
-    ).mockReturnValue(0);
+    vi.spyOn(exporter, 'getDropCapAdjustment').mockReturnValue(0);
 
     element.content = 'Styled text';
     element.paragraphStyleId = 'custom-style';
@@ -113,12 +107,7 @@ describe('ByzHtmlExporter', () => {
     customStyle.id = 'custom-style';
     customStyle.overrides.textDecoration = 'underline';
 
-    const html = exporter.exportTextBox(
-      element,
-      new PageSetup(),
-      [customStyle],
-      0,
-    );
+    const html = exporter.exportTextBox(element, [customStyle], 0);
     const css = exporter.exportPageSetup(new PageSetup(), [customStyle]);
 
     expect(css).toContain('text-decoration:underline;');
@@ -129,11 +118,6 @@ describe('ByzHtmlExporter', () => {
     const exporter = new ByzHtmlExporter();
     const element = new TextBoxElement();
     const style = new ParagraphStyle();
-
-    vi.spyOn(
-      exporter as ByzHtmlExporter,
-      'getDropCapAdjustment',
-    ).mockReturnValue(0);
 
     style.id = 'custom-style';
     style.overrides.textDecoration = 'underline';
@@ -150,9 +134,9 @@ describe('ByzHtmlExporter', () => {
     element.computedStrokeWidth = 0;
     element.computedLineHeight = null;
 
-    expect(
-      exporter.exportTextBox(element, new PageSetup(), [style], 0),
-    ).toContain('text-decoration: none;');
+    expect(exporter.exportTextBox(element, [style], 0)).toContain(
+      'text-decoration: none;',
+    );
   });
 
   it('keeps inherited inline text boxes on the shared inline CSS defaults', () => {
@@ -170,7 +154,7 @@ describe('ByzHtmlExporter', () => {
     element.computedStrokeWidth = 2;
     element.computedLineHeight = 1.4;
 
-    expect(exporter.exportTextBox(element, new PageSetup(), [], 0)).toBe(
+    expect(exporter.exportTextBox(element, [], 0)).toBe(
       `<div dir="auto" class="byz--text-box byz--text-box-inline" style="color: #123456;font-family: 'Alegreya', 'Source Serif';font-size: 18pt;font-weight: 700;font-style: italic;line-height: 1.4;-webkit-text-stroke-width: 2;text-align: center;">Inline text</div
 >`,
     );
@@ -196,7 +180,7 @@ describe('ByzHtmlExporter', () => {
     element.computedStrokeWidth = 2;
     element.computedLineHeight = 1.4;
 
-    expect(exporter.exportTextBox(element, new PageSetup(), [], 0)).toBe(
+    expect(exporter.exportTextBox(element, [], 0)).toBe(
       `<div dir="auto" class="byz--text-box byz--text-box-inline" style="color: #123456;font-family: 'Alegreya', 'Source Serif';font-size: 18pt;font-weight: 700;font-style: italic;line-height: 1.4;-webkit-text-stroke-width: 2;text-align: right;">Inline override</div\n>`,
     );
   });

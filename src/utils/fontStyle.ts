@@ -101,6 +101,16 @@ export function resolveFontStyle(
   };
 }
 
+export function resolveFontCss(style: {
+  fontFamily: string;
+  fontStyle: string;
+  fontSize: number;
+}) {
+  const font = resolveFontStyle(style.fontFamily, style.fontStyle);
+
+  return `${font.cssFontStyle} normal ${font.cssFontWeight} ${style.fontSize}px "${font.cssFontFamily}"`;
+}
+
 export function getFontStyleOptions(fontFamily: string) {
   return fontFamily.trim() === ''
     ? [DEFAULT_FONT_STYLE]

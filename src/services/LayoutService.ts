@@ -73,7 +73,7 @@ import {
   type SbmuflGlyphName,
 } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
-import { resolveFontStyle } from '@/utils/fontStyle';
+import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { resolveRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
@@ -411,15 +411,9 @@ export class LayoutService {
     const neumeAscent = TextMeasurementService.getFontBoundingBoxAscent(
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
-    const defaultLyricsStyle = resolveParagraphStyle(
+    const defaultLyricsFontCss = this.getDefaultLyricsFont(
       score.paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
     );
-    const defaultLyricsFont = resolveFontStyle(
-      defaultLyricsStyle.fontFamily,
-      defaultLyricsStyle.fontStyle,
-    );
-    const defaultLyricsFontCss = `${defaultLyricsFont.cssFontStyle} normal ${defaultLyricsFont.cssFontWeight} ${defaultLyricsStyle.fontSize}px "${defaultLyricsFont.cssFontFamily}"`;
 
     const oligonMidpoint = fontService.getMetrics(
       pageSetup.neumeDefaultFontFamily,
@@ -474,12 +468,7 @@ export class LayoutService {
       paragraphStyles: score.paragraphStyles,
     };
 
-    this.precomputeNoteGeometry(
-      elements,
-      pageSetup,
-      noteWidthArgs,
-      score.paragraphStyles,
-    );
+    this.precomputeNoteGeometry(elements, pageSetup, noteWidthArgs);
 
     // Process Header and Footers
     // Only a single text box is supported right now
@@ -676,7 +665,6 @@ export class LayoutService {
             elementWidthPx = isFillWidthRichTextBox
               ? this.getFillWidthPlaceholderWidth(
                   richTextBoxElement,
-                  pageSetup,
                   score.paragraphStyles,
                 )
               : richTextBoxElement.customWidth!;
@@ -2229,7 +2217,6 @@ export class LayoutService {
 
   private static getFillWidthPlaceholderWidth(
     element: ScoreElement,
-    pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
   ) {
     if (
@@ -2902,7 +2889,6 @@ export class LayoutService {
     elements: ScoreElement[],
     pageSetup: PageSetup,
     noteWidthArgs: GetNoteWidthArgs,
-    paragraphStyles: ParagraphStyle[],
   ) {
     for (const element of elements) {
       if (element.elementType !== ElementType.Note) {
@@ -2929,7 +2915,7 @@ export class LayoutService {
       noteElement.lyricsFontHeight = this.getNoteLyricsFontHeightFromCache(
         fontHeightCache,
         noteElement,
-        paragraphStyles,
+        noteWidthArgs.paragraphStyles,
       );
       this.getNoteWidth(noteElement, pageSetup, noteWidthArgs);
     }
@@ -4859,34 +4845,32 @@ export class LayoutService {
       textBoxElement.paragraphStyleId,
       textBoxElement.getParagraphStyleOverrides(),
     );
+    const resolvedTextBoxFont = resolveFontStyle(
+      resolvedParagraphStyle.fontFamily,
+      resolvedParagraphStyle.fontStyle,
+    );
+
+    textBoxElement.computedFontFamily = resolvedTextBoxFont.cssFontFamily;
+
+    textBoxElement.computedFontSize = resolvedParagraphStyle.fontSize;
+
+    textBoxElement.computedColor = resolvedParagraphStyle.color;
+
+    textBoxElement.computedStrokeWidth = resolvedParagraphStyle.strokeWidth;
+    textBoxElement.computedUnderline =
+      resolvedParagraphStyle.textDecoration === 'underline';
+
+    textBoxElement.computedFontWeight = resolvedTextBoxFont.cssFontWeight;
+    textBoxElement.computedFontStyle = resolvedTextBoxFont.cssFontStyle;
+    textBoxElement.computedAlignment = resolvedParagraphStyle.alignment;
 
     if (textBoxElement.inline) {
-      const resolvedTextBoxFont = resolveFontStyle(
-        resolvedParagraphStyle.fontFamily,
-        resolvedParagraphStyle.fontStyle,
-      );
-
-      textBoxElement.computedFontFamily = resolvedTextBoxFont.cssFontFamily;
-
-      textBoxElement.computedFontSize = resolvedParagraphStyle.fontSize;
-
-      textBoxElement.computedColor = resolvedParagraphStyle.color;
-
-      textBoxElement.computedStrokeWidth = resolvedParagraphStyle.strokeWidth;
-      textBoxElement.computedUnderline =
-        resolvedParagraphStyle.textDecoration === 'underline';
-
-      textBoxElement.computedFontWeight = resolvedTextBoxFont.cssFontWeight;
-      textBoxElement.computedFontStyle = resolvedTextBoxFont.cssFontStyle;
-      textBoxElement.computedAlignment = resolvedParagraphStyle.alignment;
-
       if (textBoxElement.fillWidth) {
         // Width is computed in Phase 2 after line breaking. During Phase 1 we
         // use the textbox's intrinsic no-wrap width so the line breaker can
         // move it to the next line when the remaining space is too small.
         elementWidthPx = this.getFillWidthPlaceholderWidth(
           textBoxElement,
-          pageSetup,
           paragraphStyles,
         );
       } else if (textBoxElement.customWidth != null) {
@@ -4900,26 +4884,7 @@ export class LayoutService {
     } else {
       elementWidthPx = pageSetup.innerPageWidth;
 
-      const resolvedTextBoxFont = resolveFontStyle(
-        resolvedParagraphStyle.fontFamily,
-        resolvedParagraphStyle.fontStyle,
-      );
-
-      textBoxElement.computedFontFamily = resolvedTextBoxFont.cssFontFamily;
-
-      textBoxElement.computedFontSize = resolvedParagraphStyle.fontSize;
-
-      textBoxElement.computedColor = resolvedParagraphStyle.color;
-
-      textBoxElement.computedStrokeWidth = resolvedParagraphStyle.strokeWidth;
-      textBoxElement.computedUnderline =
-        resolvedParagraphStyle.textDecoration === 'underline';
-
-      textBoxElement.computedFontWeight = resolvedTextBoxFont.cssFontWeight;
-      textBoxElement.computedFontStyle = resolvedTextBoxFont.cssFontStyle;
-
       textBoxElement.computedLineHeight = resolvedParagraphStyle.lineHeight;
-      textBoxElement.computedAlignment = resolvedParagraphStyle.alignment;
     }
 
     if (textBoxElement.inline) {
@@ -4949,17 +4914,13 @@ export class LayoutService {
     );
   }
 
-  private static getDefaultLyricsFont(
-    paragraphStyles: ParagraphStyle[],
-    styleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-  ) {
-    const resolvedLyricsStyle = resolveParagraphStyle(paragraphStyles, styleId);
-    const resolvedLyricsFont = resolveFontStyle(
-      resolvedLyricsStyle.fontFamily,
-      resolvedLyricsStyle.fontStyle,
+  private static getDefaultLyricsFont(paragraphStyles: ParagraphStyle[]) {
+    return resolveFontCss(
+      resolveParagraphStyle(
+        paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+      ),
     );
-
-    return `${resolvedLyricsFont.cssFontStyle} normal ${resolvedLyricsFont.cssFontWeight} ${resolvedLyricsStyle.fontSize}px "${resolvedLyricsFont.cssFontFamily}"`;
   }
 
   private static saveElementState(element: ScoreElement) {
@@ -5148,7 +5109,7 @@ export class LayoutService {
       measureBarWidthMap,
       runningElaphronWidth,
       elaphronWidth,
-      paragraphStyles: paragraphStyles,
+      paragraphStyles,
     } = args;
 
     noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
@@ -5887,7 +5848,6 @@ export class LayoutService {
                 -this.getLyricsFontBoundingBoxDescentFromCache(
                   fontBoundingBoxDescentCache,
                   element,
-                  pageSetup,
                   paragraphStyles,
                 );
             } else if (pageSetup.melkiteRtl) {
@@ -8299,15 +8259,9 @@ export class LayoutService {
     trimLeadingPunctuation: boolean = false,
     trimTrailingPunctuation: boolean = false,
   ) {
-    const resolvedLyricsStyle = this.getResolvedLyricsStyle(
-      element,
-      paragraphStyles,
+    const font = resolveFontCss(
+      this.getResolvedLyricsStyle(element, paragraphStyles),
     );
-    const resolvedLyricsFont = resolveFontStyle(
-      resolvedLyricsStyle.fontFamily,
-      resolvedLyricsStyle.fontStyle,
-    );
-    const font = `${resolvedLyricsFont.cssFontStyle} normal ${resolvedLyricsFont.cssFontWeight} ${resolvedLyricsStyle.fontSize}px "${resolvedLyricsFont.cssFontFamily}"`;
 
     let text = textOverride ?? element.lyrics;
 
@@ -8341,18 +8295,11 @@ export class LayoutService {
   private static getLyricsFontBoundingBoxDescentFromCache(
     cache: Map<string, number>,
     element: NoteElement,
-    pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
   ) {
-    const resolvedLyricsStyle = this.getResolvedLyricsStyle(
-      element,
-      paragraphStyles,
+    const font = resolveFontCss(
+      this.getResolvedLyricsStyle(element, paragraphStyles),
     );
-    const resolvedLyricsFont = resolveFontStyle(
-      resolvedLyricsStyle.fontFamily,
-      resolvedLyricsStyle.fontStyle,
-    );
-    const font = `${resolvedLyricsFont.cssFontStyle} normal ${resolvedLyricsFont.cssFontWeight} ${resolvedLyricsStyle.fontSize}px "${resolvedLyricsFont.cssFontFamily}"`;
 
     const key = font;
 
@@ -8372,15 +8319,9 @@ export class LayoutService {
     element: NoteElement,
     paragraphStyles: ParagraphStyle[],
   ) {
-    const resolvedLyricsStyle = this.getResolvedLyricsStyle(
-      element,
-      paragraphStyles,
+    const font = resolveFontCss(
+      this.getResolvedLyricsStyle(element, paragraphStyles),
     );
-    const resolvedLyricsFont = resolveFontStyle(
-      resolvedLyricsStyle.fontFamily,
-      resolvedLyricsStyle.fontStyle,
-    );
-    const font = `${resolvedLyricsFont.cssFontStyle} normal ${resolvedLyricsFont.cssFontWeight} ${resolvedLyricsStyle.fontSize}px "${resolvedLyricsFont.cssFontFamily}"`;
 
     return this.getLyricsFontHeightFromCache(cache, font);
   }

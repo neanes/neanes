@@ -233,7 +233,7 @@ import {
   sanitizeClipboardTextBoxFormatParagraphStyleId,
 } from '@/utils/clipboardParagraphStyles';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
-import { resolveFontStyle } from '@/utils/fontStyle';
+import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
@@ -7034,13 +7034,7 @@ function getResolvedLyricsStyle(element?: NoteElement) {
 }
 
 function getDefaultLyricsFont() {
-  const resolvedLyricsStyle = getResolvedLyricsStyle();
-  const resolvedLyricsFont = resolveFontStyle(
-    resolvedLyricsStyle.fontFamily,
-    resolvedLyricsStyle.fontStyle,
-  );
-
-  return `${resolvedLyricsFont.cssFontStyle} normal ${resolvedLyricsFont.cssFontWeight} ${resolvedLyricsStyle.fontSize}px "${resolvedLyricsFont.cssFontFamily}"`;
+  return resolveFontCss(getResolvedLyricsStyle());
 }
 
 type ResizableTextStyleSnapshot = Map<string, ResolvedParagraphStyle>;

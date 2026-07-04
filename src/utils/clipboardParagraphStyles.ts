@@ -7,7 +7,7 @@ import type {
   ScoreElement,
   TextBoxElement,
 } from '@/models/Element';
-import { ElementType } from '@/models/Element';
+import { ElementType, RICH_TEXT_BOX_CONTENT_KEYS } from '@/models/Element';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   getTextBoxParagraphStyleFallbackId,
@@ -96,31 +96,13 @@ function sanitizeElementParagraphStyleIds(
         richTextBox.inline,
       );
 
-      richTextBox.content = rewriteClipboardRichTextHtml(
-        richTextBox.content,
-        paragraphStyleIds,
-        fallbackStyleId,
-      );
-      richTextBox.contentBottom = rewriteClipboardRichTextHtml(
-        richTextBox.contentBottom,
-        paragraphStyleIds,
-        fallbackStyleId,
-      );
-      richTextBox.contentLeft = rewriteClipboardRichTextHtml(
-        richTextBox.contentLeft,
-        paragraphStyleIds,
-        fallbackStyleId,
-      );
-      richTextBox.contentCenter = rewriteClipboardRichTextHtml(
-        richTextBox.contentCenter,
-        paragraphStyleIds,
-        fallbackStyleId,
-      );
-      richTextBox.contentRight = rewriteClipboardRichTextHtml(
-        richTextBox.contentRight,
-        paragraphStyleIds,
-        fallbackStyleId,
-      );
+      for (const contentKey of RICH_TEXT_BOX_CONTENT_KEYS) {
+        richTextBox[contentKey] = rewriteClipboardRichTextHtml(
+          richTextBox[contentKey],
+          paragraphStyleIds,
+          fallbackStyleId,
+        );
+      }
       break;
     }
     case ElementType.TextBox: {

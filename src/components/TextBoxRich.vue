@@ -128,7 +128,10 @@ import type { ComponentExposed } from 'vue-component-type-helpers';
 import RichTextEditor from '@/components/RichTextEditor.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
 import type InlineEditor from '@/customEditor';
-import type { RichTextBoxElement } from '@/models/Element';
+import type {
+  RichTextBoxContentKey,
+  RichTextBoxElement,
+} from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
@@ -136,7 +139,7 @@ import {
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { getFontFamilyWithNeumeFallback } from '@/utils/getFontFamilyWithFallback';
 import type { TokenMetadata, TokenScope } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
 import {
@@ -450,9 +453,9 @@ const containerStyle = computed(() => {
   const style: StyleValue = {
     width: withZoom(props.element.width),
     height: withZoom(props.element.height),
-    '--ck-content-font-family': getFontFamilyWithFallback(
+    '--ck-content-font-family': getFontFamilyWithNeumeFallback(
       resolvedParagraphStyle.value.fontFamily,
-      props.pageSetup.neumeDefaultFontFamily + 'Legacy', // TODO what a terrible hack
+      props.pageSetup.neumeDefaultFontFamily,
     ),
     '--ck-content-font-size': props.element.inline
       ? `${resolvedParagraphStyle.value.fontSize}px`
@@ -860,12 +863,7 @@ function getPendingUpdates() {
 
 function addPendingEditorData(
   updates: Partial<RichTextBoxElement>,
-  propertyName:
-    | 'content'
-    | 'contentBottom'
-    | 'contentLeft'
-    | 'contentCenter'
-    | 'contentRight',
+  propertyName: RichTextBoxContentKey,
   editor: Editor | undefined,
 ) {
   if (!props.editMode || editor == null) {

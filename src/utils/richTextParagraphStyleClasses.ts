@@ -4,13 +4,9 @@ export function richTextParagraphStyleClassName(styleId: string) {
   return `${RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX}${styleId}`;
 }
 
-export type RichTextParagraphStyleClassFallbackResolver = (
-  styleId: string,
-) => string | null;
-
 export function rewriteRichTextParagraphStyleClasses(
   html: string,
-  resolveFallbackStyleId: RichTextParagraphStyleClassFallbackResolver,
+  resolveFallbackStyleId: (styleId: string) => string | null,
 ) {
   if (html === '') {
     return html;
@@ -23,10 +19,7 @@ export function rewriteRichTextParagraphStyleClasses(
   let didRewrite = false;
 
   for (const element of styledElements) {
-    const classes = Array.from(element.classList);
-    const deletedClasses: string[] = [];
-
-    for (const className of classes) {
+    for (const className of Array.from(element.classList)) {
       if (!className.startsWith(RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX)) {
         continue;
       }
@@ -40,21 +33,9 @@ export function rewriteRichTextParagraphStyleClasses(
         continue;
       }
 
-      deletedClasses.push(className);
-      const fallbackClassName =
-        richTextParagraphStyleClassName(fallbackStyleId);
-
-      if (!element.classList.contains(fallbackClassName)) {
-        element.classList.add(fallbackClassName);
-      }
-    }
-
-    if (deletedClasses.length > 0) {
+      element.classList.remove(className);
+      element.classList.add(richTextParagraphStyleClassName(fallbackStyleId));
       didRewrite = true;
-
-      for (const className of deletedClasses) {
-        element.classList.remove(className);
-      }
     }
   }
 

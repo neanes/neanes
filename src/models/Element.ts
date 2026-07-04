@@ -960,6 +960,16 @@ export class TextBoxElement extends ScoreElement {
   }
 }
 
+export const RICH_TEXT_BOX_CONTENT_KEYS = [
+  'content',
+  'contentBottom',
+  'contentLeft',
+  'contentCenter',
+  'contentRight',
+] as const;
+
+export type RichTextBoxContentKey = (typeof RICH_TEXT_BOX_CONTENT_KEYS)[number];
+
 export class RichTextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.RichTextBox;
   public content: string = '';

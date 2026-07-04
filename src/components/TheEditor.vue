@@ -141,6 +141,7 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RICH_TEXT_BOX_CONTENT_KEYS,
   RichTextBoxElement,
   TempoElement,
   TextBoxElement,
@@ -7274,13 +7275,7 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
       element.inline,
     );
 
-    for (const contentKey of [
-      'content',
-      'contentBottom',
-      'contentLeft',
-      'contentCenter',
-      'contentRight',
-    ] as const) {
+    for (const contentKey of RICH_TEXT_BOX_CONTENT_KEYS) {
       const rewrittenHtml = rewriteRichTextParagraphStyleClasses(
         element[contentKey],
         (styleId) =>

@@ -44,7 +44,7 @@ import {
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { getFontFamilyWithNeumeFallback } from '@/utils/getFontFamilyWithFallback';
 import {
   applyRichTextLanguageToEditor,
   getRichTextLanguage,
@@ -154,9 +154,9 @@ const style = computed(() => {
   return {
     left: withZoom(elementX.value),
     top: withZoom(elementY.value),
-    '--ck-content-font-family': getFontFamilyWithFallback(
+    '--ck-content-font-family': getFontFamilyWithNeumeFallback(
       annotationStyle.value.fontFamily,
-      props.pageSetup.neumeDefaultFontFamily + 'Legacy', // TODO what a terrible hack
+      props.pageSetup.neumeDefaultFontFamily,
     ),
     '--ck-content-font-size': `${annotationStyle.value.fontSize}px`, // no zoom because we will apply zooming on the whole editor
     '--ck-content-font-color': annotationStyle.value.color,

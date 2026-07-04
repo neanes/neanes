@@ -5,8 +5,6 @@ import { Unit } from '@/utils/Unit';
 
 import type { TextBoxAlignment } from './Element';
 
-export type ParagraphStyleAlignment = TextBoxAlignment;
-
 export const BUILT_IN_PARAGRAPH_STYLE_IDS = {
   DefaultText: 'default-text',
   Annotation: 'annotation',
@@ -23,7 +21,7 @@ export const BUILT_IN_PARAGRAPH_STYLE_IDS = {
 export type BuiltInParagraphStyleId =
   (typeof BUILT_IN_PARAGRAPH_STYLE_IDS)[keyof typeof BUILT_IN_PARAGRAPH_STYLE_IDS];
 
-export type ParagraphStyleNameSelector = SelectorParam<'dialog'>;
+type ParagraphStyleNameSelector = SelectorParam<'dialog'>;
 
 const BUILT_IN_PARAGRAPH_STYLE_NAME_SELECTORS: Record<
   BuiltInParagraphStyleId,
@@ -56,7 +54,7 @@ const builtInParagraphStyleIds = new Set<string>(
 );
 
 export interface ParagraphStyleOverrides {
-  alignment?: ParagraphStyleAlignment;
+  alignment?: TextBoxAlignment;
   fontFamily?: string;
   fontSize?: number;
   fontStyle?: string;
@@ -66,16 +64,7 @@ export interface ParagraphStyleOverrides {
   textDecoration?: 'underline' | null;
 }
 
-export interface ResolvedParagraphStyle {
-  alignment: ParagraphStyleAlignment;
-  fontFamily: string;
-  fontSize: number;
-  fontStyle: string;
-  color: string;
-  strokeWidth: number;
-  lineHeight: number | null;
-  textDecoration: 'underline' | null;
-}
+export type ResolvedParagraphStyle = Required<ParagraphStyleOverrides>;
 
 export class ParagraphStyle {
   public id: string = crypto.randomUUID();
@@ -140,7 +129,7 @@ export function getBuiltInParagraphStyleNameSelector(
   return BUILT_IN_PARAGRAPH_STYLE_NAME_SELECTORS[styleId];
 }
 
-export function getParagraphStyleById(
+function getParagraphStyleById(
   styles: ParagraphStyle[],
   styleId: string | null | undefined,
 ) {
@@ -225,12 +214,10 @@ export function getAvailableParagraphStyleParents(
   styles: ParagraphStyle[],
   styleId: string,
 ) {
-  return styles.filter((candidate) => {
-    return (
-      candidate.id !== styleId &&
-      !wouldCreateParagraphStyleCycle(styles, styleId, candidate.id)
-    );
-  });
+  return styles.filter(
+    (candidate) =>
+      !wouldCreateParagraphStyleCycle(styles, styleId, candidate.id),
+  );
 }
 
 function createBuiltInStyle(
@@ -249,11 +236,11 @@ function createBuiltInStyle(
 }
 
 export function createDefaultParagraphStyles() {
-  const defaultText = new ParagraphStyle();
-  defaultText.id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
-  defaultText.displayName = 'Default Text';
-  defaultText.builtIn = true;
-  defaultText.parentStyleId = null;
+  const defaultText = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    'Default Text',
+    null,
+  );
 
   const annotation = createBuiltInStyle(
     BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,

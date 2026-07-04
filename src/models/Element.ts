@@ -956,7 +956,7 @@ export class TextBoxElement extends ScoreElement {
       alignment: this.alignment ?? undefined,
       textDecoration:
         this.underline != null
-          ? this.underline === true
+          ? this.underline
             ? 'underline'
             : null
           : undefined,

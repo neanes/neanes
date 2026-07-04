@@ -5,8 +5,10 @@ import { Footers } from './Footers';
 import type { Header } from './Header';
 import { Headers } from './Headers';
 import { PageSetup } from './PageSetup';
-import type { ParagraphStyle } from './ParagraphStyle';
-import { createDefaultParagraphStyles } from './ParagraphStyle';
+import {
+  createDefaultParagraphStyles,
+  type ParagraphStyle,
+} from './ParagraphStyle';
 import { Staff } from './Staff';
 
 export class DocumentProperties {

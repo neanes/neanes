@@ -216,12 +216,9 @@ import ParagraphStyleField from '@/components/properties/ParagraphStyleField.vue
 import { Field, FieldLabel } from '@/components/ui/field';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { NoteElement } from '@/models/Element';
-import {
-  hasParagraphStyleOverrides as overridesHaveValues,
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
@@ -249,12 +246,14 @@ const emit = defineEmits([
   'update:open-sections',
 ]);
 
-const resolvedParagraphStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    props.element.lyricsParagraphStyleId,
-    props.element.getParagraphStyleOverrides(),
-  ),
+const {
+  resolvedParagraphStyle,
+  underlineValues,
+  hasOverrides: hasParagraphStyleOverrides,
+} = useResolvedParagraphStyle(
+  () => props.paragraphStyles,
+  () => props.element.lyricsParagraphStyleId,
+  () => props.element.getParagraphStyleOverrides(),
 );
 
 const {
@@ -268,19 +267,12 @@ const {
   () => resolvedParagraphStyle.value.fontStyle,
 );
 
-const underline = computed(
-  () => resolvedParagraphStyle.value.textDecoration === 'underline',
-);
 const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
-const underlineValues = computed(() => (underline.value ? ['underline'] : []));
 
 const lyricsFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
-const hasParagraphStyleOverrides = computed(() =>
-  overridesHaveValues(props.element.getParagraphStyleOverrides()),
-);
 
 function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];

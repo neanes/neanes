@@ -72,11 +72,9 @@ import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Toolbar, ToolbarSeparator } from '@/components/ui/toolbar';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { DropCapElement } from '@/models/Element';
-import {
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
@@ -96,12 +94,10 @@ const props = defineProps({
 
 const emit = defineEmits(['update']);
 
-const resolvedParagraphStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    props.element.paragraphStyleId,
-    props.element.getParagraphStyleOverrides(),
-  ),
+const { resolvedParagraphStyle } = useResolvedParagraphStyle(
+  () => props.paragraphStyles,
+  () => props.element.paragraphStyleId,
+  () => props.element.getParagraphStyleOverrides(),
 );
 
 const {

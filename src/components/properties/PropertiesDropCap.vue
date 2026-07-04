@@ -255,13 +255,10 @@ import ParagraphStyleField from '@/components/properties/ParagraphStyleField.vue
 import { Field, FieldLabel } from '@/components/ui/field';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { DropCapElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
-import {
-  hasParagraphStyleOverrides as overridesHaveValues,
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   fraction0FormatOptions,
@@ -298,13 +295,12 @@ const emit = defineEmits([
   'update:open-sections',
 ]);
 
-const resolvedParagraphStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    props.element.paragraphStyleId,
-    props.element.getParagraphStyleOverrides(),
-  ),
-);
+const { resolvedParagraphStyle, hasOverrides: hasParagraphStyleOverrides } =
+  useResolvedParagraphStyle(
+    () => props.paragraphStyles,
+    () => props.element.paragraphStyleId,
+    () => props.element.getParagraphStyleOverrides(),
+  );
 
 const {
   fontStyleOptions,
@@ -325,9 +321,6 @@ const dropCapFontFamilies = computed(() => [
 ]);
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
-const hasParagraphStyleOverrides = computed(() =>
-  overridesHaveValues(props.element.getParagraphStyleOverrides()),
-);
 
 function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];

@@ -133,11 +133,9 @@ import {
   ToolbarSeparator,
 } from '@/components/ui/toolbar';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { NoteElement } from '@/models/Element';
-import {
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   E_MACRON,
@@ -176,13 +174,12 @@ const props = defineProps({
 
 const emit = defineEmits(['insert:specialCharacter', 'update']);
 
-const resolvedParagraphStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    props.element.lyricsParagraphStyleId,
-    props.element.getParagraphStyleOverrides(),
-  ),
-);
+const { resolvedParagraphStyle, underline, underlineValues } =
+  useResolvedParagraphStyle(
+    () => props.paragraphStyles,
+    () => props.element.lyricsParagraphStyleId,
+    () => props.element.getParagraphStyleOverrides(),
+  );
 
 const {
   fontStyleOptions,
@@ -196,11 +193,7 @@ const {
   () => resolvedParagraphStyle.value.fontStyle,
 );
 
-const underline = computed(
-  () => resolvedParagraphStyle.value.textDecoration === 'underline',
-);
 const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
-const underlineValues = computed(() => (underline.value ? ['underline'] : []));
 
 const lyricsFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),

@@ -177,10 +177,10 @@ import {
   ToolbarSeparator,
 } from '@/components/ui/toolbar';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
-import { resolveParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
@@ -200,13 +200,12 @@ const props = defineProps({
 
 const emit = defineEmits(['insert:gorthmikon', 'insert:pelastikon', 'update']);
 
-const resolvedParagraphStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    props.element.paragraphStyleId,
-    props.element.getParagraphStyleOverrides(),
-  ),
-);
+const { resolvedParagraphStyle, underline, underlineValues } =
+  useResolvedParagraphStyle(
+    () => props.paragraphStyles,
+    () => props.element.paragraphStyleId,
+    () => props.element.getParagraphStyleOverrides(),
+  );
 
 const {
   fontStyleOptions,
@@ -220,12 +219,7 @@ const {
   () => resolvedParagraphStyle.value.fontStyle,
 );
 
-const underline = computed(
-  () => resolvedParagraphStyle.value.textDecoration === 'underline',
-);
-
 const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
-const underlineValues = computed(() => (underline.value ? ['underline'] : []));
 
 const currentAlignment = computed(() => resolvedParagraphStyle.value.alignment);
 

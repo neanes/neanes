@@ -494,14 +494,11 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
-import {
-  hasParagraphStyleOverrides as overridesHaveValues,
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   fraction1FormatOptions,
@@ -542,12 +539,14 @@ const emit = defineEmits([
   'update:open-sections',
 ]);
 
-const resolvedParagraphStyle = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    props.element.paragraphStyleId,
-    props.element.getParagraphStyleOverrides(),
-  ),
+const {
+  resolvedParagraphStyle,
+  underlineValues,
+  hasOverrides: hasParagraphStyleOverrides,
+} = useResolvedParagraphStyle(
+  () => props.paragraphStyles,
+  () => props.element.paragraphStyleId,
+  () => props.element.getParagraphStyleOverrides(),
 );
 
 const {
@@ -561,19 +560,9 @@ const {
   () => resolvedParagraphStyle.value.fontStyle,
 );
 
-const underline = computed(
-  () =>
-    props.element.underline === true ||
-    (props.element.underline == null &&
-      resolvedParagraphStyle.value.textDecoration === 'underline'),
-);
-
 const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
-const underlineValues = computed(() => (underline.value ? ['underline'] : []));
 
-const currentAlignment = computed(
-  () => props.element.alignment ?? resolvedParagraphStyle.value.alignment,
-);
+const currentAlignment = computed(() => resolvedParagraphStyle.value.alignment);
 
 const textBoxFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
@@ -583,9 +572,6 @@ const textBoxFontFamilies = computed(() => [
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 const RUNNING_MARKER_NONE_VALUE = '__none__';
-const hasParagraphStyleOverrides = computed(() =>
-  overridesHaveValues(props.element.getParagraphStyleOverrides()),
-);
 
 function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];

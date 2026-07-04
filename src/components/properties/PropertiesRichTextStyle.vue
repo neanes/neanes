@@ -29,7 +29,6 @@
         </div>
         <ParagraphStyleSelect
           :id="`${idPrefix}-paragraph-style`"
-          trigger-class="w-full"
           :model-value="paragraphStyleValue"
           :paragraph-styles="paragraphStyles"
           :disabled="!isCommandEnabled('style')"

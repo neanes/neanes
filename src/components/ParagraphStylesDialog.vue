@@ -34,101 +34,46 @@
                 :value="style.id"
                 class="min-h-9 w-full flex-none justify-start whitespace-normal text-left"
               >
-                {{ getParagraphStyleDisplayName(style) }}
+                {{ styleDisplayName(style) }}
               </TabsTrigger>
             </TabsList>
           </ScrollArea>
 
           <div class="flex flex-wrap items-center gap-2">
             <AppTooltip
-              :tooltip="
-                $t(($) => $.dialog.paragraphStyles.new, { ns: 'dialog' })
-              "
+              v-for="action in creationActions"
+              :key="action.key"
+              :tooltip="action.label"
             >
               <span class="inline-flex" @mousedown.prevent>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  :aria-label="
-                    $t(($) => $.dialog.paragraphStyles.new, { ns: 'dialog' })
-                  "
-                  @click="createStyle"
+                  :disabled="action.disabled"
+                  :aria-label="action.label"
+                  @click="action.onClick"
                 >
-                  <PhPlus />
-                </Button>
-              </span>
-            </AppTooltip>
-            <AppTooltip
-              :tooltip="
-                $t(($) => $.dialog.paragraphStyles.duplicate, { ns: 'dialog' })
-              "
-            >
-              <span class="inline-flex" @mousedown.prevent>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  :disabled="selectedStyle == null"
-                  :aria-label="
-                    $t(($) => $.dialog.paragraphStyles.duplicate, {
-                      ns: 'dialog',
-                    })
-                  "
-                  @click="duplicateSelectedStyle"
-                >
-                  <PhCopy />
+                  <component :is="action.icon" />
                 </Button>
               </span>
             </AppTooltip>
             <div class="ml-auto flex items-center gap-2">
-              <AppTooltip :tooltip="resetStyleToDefaultLabel">
-                <span class="inline-flex" @mousedown.prevent>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    :disabled="!selectedStyleCanResetToDefault"
-                    :aria-label="resetStyleToDefaultLabel"
-                    @click="resetSelectedStyleToDefault"
-                  >
-                    <PhArrowCounterClockwise />
-                  </Button>
-                </span>
-              </AppTooltip>
-              <AppTooltip :tooltip="clearFormattingLabel">
-                <span class="inline-flex" @mousedown.prevent>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    :disabled="!selectedStyleHasOverrides"
-                    :aria-label="clearFormattingLabel"
-                    @click="clearSelectedStyleFormatting"
-                  >
-                    <PhTextTSlash />
-                  </Button>
-                </span>
-              </AppTooltip>
               <AppTooltip
-                :tooltip="
-                  $t(($) => $.dialog.paragraphStyles.delete, { ns: 'dialog' })
-                "
+                v-for="action in selectionActions"
+                :key="action.key"
+                :tooltip="action.label"
               >
                 <span class="inline-flex" @mousedown.prevent>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    :disabled="selectedStyle == null || selectedStyle.builtIn"
-                    :aria-label="
-                      $t(($) => $.dialog.paragraphStyles.delete, {
-                        ns: 'dialog',
-                      })
-                    "
-                    @click="deleteSelectedStyle"
+                    :disabled="action.disabled"
+                    :aria-label="action.label"
+                    @click="action.onClick"
                   >
-                    <PhTrash />
+                    <component :is="action.icon" />
                   </Button>
                 </span>
               </AppTooltip>
@@ -137,9 +82,8 @@
         </div>
 
         <TabsContent
-          v-for="style in styles"
-          :key="style.id"
-          :value="style.id"
+          :key="selectedStyleId"
+          :value="selectedStyleId"
           class="col-start-1 row-start-2 min-h-0 min-w-0 overflow-hidden sm:col-start-2 sm:row-start-1"
         >
           <ScrollArea class="h-full min-h-0 border">
@@ -156,9 +100,7 @@
                   id="paragraph-styles-dialog-name"
                   class="ml-auto w-64 shrink-0"
                   :model-value="
-                    selectedStyle == null
-                      ? ''
-                      : getParagraphStyleDisplayName(selectedStyle)
+                    selectedStyle == null ? '' : styleDisplayName(selectedStyle)
                   "
                   :disabled="selectedStyle?.builtIn ?? false"
                   @update:model-value="updateSelectedStyleName"
@@ -177,7 +119,6 @@
                 </div>
                 <ParagraphStyleSelect
                   id="paragraph-styles-dialog-parent"
-                  class="ml-auto w-64 shrink-0"
                   :disabled="selectedStyle?.id === defaultParagraphStyleId"
                   :model-value="
                     selectedStyle?.parentStyleId ?? PARAGRAPH_STYLE_NONE_VALUE
@@ -192,20 +133,13 @@
 
               <FieldSeparator />
 
-              <Field orientation="horizontal">
-                <div class="flex min-w-0 flex-1 items-center gap-3">
-                  <Switch
-                    v-if="showOverrideToggles"
-                    :model-value="hasOverride('fontFamily')"
-                    @update:model-value="toggleOverride('fontFamily', $event)"
-                  />
-                  <FieldLabel
-                    for="paragraph-styles-dialog-font"
-                    class="shrink-0"
-                  >
-                    {{ $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' }) }}
-                  </FieldLabel>
-                </div>
+              <ParagraphStyleOverrideRow
+                :label="$t(($) => $.dialog.pageSetup.font, { ns: 'dialog' })"
+                label-for="paragraph-styles-dialog-font"
+                :active="hasOverride('fontFamily')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('fontFamily', $event)"
+              >
                 <FontCombobox
                   id="paragraph-styles-dialog-font"
                   class="ml-auto w-64 min-w-0 shrink-0"
@@ -214,22 +148,15 @@
                   :disabled="isOverrideDisabled('fontFamily')"
                   @update:model-value="onFontFamilyChanged"
                 />
-              </Field>
+              </ParagraphStyleOverrideRow>
 
-              <Field orientation="horizontal">
-                <div class="flex min-w-0 flex-1 items-center gap-3">
-                  <Switch
-                    v-if="showOverrideToggles"
-                    :model-value="hasOverride('fontStyle')"
-                    @update:model-value="toggleOverride('fontStyle', $event)"
-                  />
-                  <FieldLabel
-                    for="paragraph-styles-dialog-font-style"
-                    class="shrink-0"
-                  >
-                    {{ $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' }) }}
-                  </FieldLabel>
-                </div>
+              <ParagraphStyleOverrideRow
+                :label="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
+                label-for="paragraph-styles-dialog-font-style"
+                :active="hasOverride('fontStyle')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('fontStyle', $event)"
+              >
                 <FontStyleSelect
                   id="paragraph-styles-dialog-font-style"
                   class="ml-auto w-64 min-w-0 shrink-0"
@@ -240,22 +167,15 @@
                     updateSelectedStyleOverride('fontStyle', $event)
                   "
                 />
-              </Field>
+              </ParagraphStyleOverrideRow>
 
-              <Field orientation="horizontal">
-                <div class="flex min-w-0 flex-1 items-center gap-3">
-                  <Switch
-                    v-if="showOverrideToggles"
-                    :model-value="hasOverride('fontSize')"
-                    @update:model-value="toggleOverride('fontSize', $event)"
-                  />
-                  <FieldLabel
-                    for="paragraph-styles-dialog-font-size"
-                    class="shrink-0"
-                  >
-                    {{ $t(($) => $.dialog.pageSetup.size, { ns: 'dialog' }) }}
-                  </FieldLabel>
-                </div>
+              <ParagraphStyleOverrideRow
+                :label="$t(($) => $.dialog.pageSetup.size, { ns: 'dialog' })"
+                label-for="paragraph-styles-dialog-font-size"
+                :active="hasOverride('fontSize')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('fontSize', $event)"
+              >
                 <div class="ml-auto w-40 shrink-0">
                   <InputFontSize
                     id="paragraph-styles-dialog-font-size"
@@ -267,19 +187,16 @@
                     "
                   />
                 </div>
-              </Field>
+              </ParagraphStyleOverrideRow>
 
-              <Field orientation="horizontal">
-                <div class="flex min-w-0 flex-1 items-center gap-3">
-                  <Switch
-                    v-if="showOverrideToggles"
-                    :model-value="hasOverride('alignment')"
-                    @update:model-value="toggleOverride('alignment', $event)"
-                  />
-                  <FieldLabel class="min-w-0">{{
-                    $t(($) => $.toolbar.common.alignment, { ns: 'toolbar' })
-                  }}</FieldLabel>
-                </div>
+              <ParagraphStyleOverrideRow
+                :label="
+                  $t(($) => $.toolbar.common.alignment, { ns: 'toolbar' })
+                "
+                :active="hasOverride('alignment')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('alignment', $event)"
+              >
                 <ToggleGroup
                   class="ml-auto shrink-0"
                   type="single"
@@ -329,23 +246,18 @@
                     </ToggleGroupItem>
                   </AppTooltip>
                 </ToggleGroup>
-              </Field>
+              </ParagraphStyleOverrideRow>
 
-              <Field orientation="horizontal">
-                <div class="flex min-w-0 flex-1 items-center gap-3">
-                  <Switch
-                    v-if="showOverrideToggles"
-                    :model-value="hasOverride('textDecoration')"
-                    @update:model-value="
-                      toggleOverride('textDecoration', $event)
-                    "
-                  />
-                  <FieldLabel class="shrink-0">{{
-                    $t(($) => $.toolbar.richTextBox.textDecorations, {
-                      ns: 'toolbar',
-                    })
-                  }}</FieldLabel>
-                </div>
+              <ParagraphStyleOverrideRow
+                :label="
+                  $t(($) => $.toolbar.richTextBox.textDecorations, {
+                    ns: 'toolbar',
+                  })
+                "
+                :active="hasOverride('textDecoration')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('textDecoration', $event)"
+              >
                 <div class="ml-auto flex shrink-0 items-center gap-2">
                   <Checkbox
                     id="paragraph-styles-dialog-underline"
@@ -364,19 +276,14 @@
                     }}
                   </FieldLabel>
                 </div>
-              </Field>
+              </ParagraphStyleOverrideRow>
 
-              <Field orientation="horizontal">
-                <div class="flex min-w-0 flex-1 items-center gap-3">
-                  <Switch
-                    v-if="showOverrideToggles"
-                    :model-value="hasOverride('color')"
-                    @update:model-value="toggleOverride('color', $event)"
-                  />
-                  <FieldLabel class="shrink-0">
-                    {{ $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' }) }}
-                  </FieldLabel>
-                </div>
+              <ParagraphStyleOverrideRow
+                :label="$t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })"
+                :active="hasOverride('color')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('color', $event)"
+              >
                 <div class="ml-auto shrink-0">
                   <ColorPicker
                     :model-value="resolvedStyle.color"
@@ -386,24 +293,15 @@
                     "
                   />
                 </div>
-              </Field>
+              </ParagraphStyleOverrideRow>
 
-              <Field orientation="horizontal">
-                <div class="flex min-w-0 flex-1 items-center gap-3">
-                  <Switch
-                    v-if="showOverrideToggles"
-                    :model-value="hasOverride('strokeWidth')"
-                    @update:model-value="toggleOverride('strokeWidth', $event)"
-                  />
-                  <FieldLabel
-                    for="paragraph-styles-dialog-stroke-width"
-                    class="shrink-0"
-                  >
-                    {{
-                      $t(($) => $.dialog.pageSetup.outline, { ns: 'dialog' })
-                    }}
-                  </FieldLabel>
-                </div>
+              <ParagraphStyleOverrideRow
+                :label="$t(($) => $.dialog.pageSetup.outline, { ns: 'dialog' })"
+                label-for="paragraph-styles-dialog-stroke-width"
+                :active="hasOverride('strokeWidth')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('strokeWidth', $event)"
+              >
                 <div class="ml-auto w-40 shrink-0">
                   <InputStrokeWidth
                     id="paragraph-styles-dialog-stroke-width"
@@ -415,24 +313,17 @@
                     "
                   />
                 </div>
-              </Field>
+              </ParagraphStyleOverrideRow>
 
-              <Field orientation="horizontal">
-                <div class="flex min-w-0 flex-1 items-center gap-3">
-                  <Switch
-                    v-if="showOverrideToggles"
-                    :model-value="hasOverride('lineHeight')"
-                    @update:model-value="toggleOverride('lineHeight', $event)"
-                  />
-                  <FieldLabel
-                    for="paragraph-styles-dialog-line-height"
-                    class="shrink-0"
-                  >
-                    {{
-                      $t(($) => $.dialog.pageSetup.lineHeight, { ns: 'dialog' })
-                    }}
-                  </FieldLabel>
-                </div>
+              <ParagraphStyleOverrideRow
+                :label="
+                  $t(($) => $.dialog.pageSetup.lineHeight, { ns: 'dialog' })
+                "
+                label-for="paragraph-styles-dialog-line-height"
+                :active="hasOverride('lineHeight')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('lineHeight', $event)"
+              >
                 <div class="ml-auto w-40 shrink-0">
                   <InputUnit
                     id="paragraph-styles-dialog-line-height"
@@ -450,7 +341,7 @@
                     "
                   />
                 </div>
-              </Field>
+              </ParagraphStyleOverrideRow>
             </FieldGroup>
           </ScrollArea>
         </TabsContent>
@@ -485,7 +376,7 @@ import {
 } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
@@ -494,6 +385,7 @@ import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import ParagraphStyleOverrideRow from '@/components/ParagraphStyleOverrideRow.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -514,7 +406,6 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
@@ -524,7 +415,8 @@ import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   createDefaultBuiltInParagraphStyle,
   getAvailableParagraphStyleParents,
-  getBuiltInParagraphStyleNameSelector,
+  getParagraphStyleDisplayName,
+  hasParagraphStyleOverrides,
   isBuiltInParagraphStyleId,
   ParagraphStyle,
   type ParagraphStyleOverrides,
@@ -555,30 +447,17 @@ const emit = defineEmits<{
 const open = defineModel<boolean>('open', { required: true });
 const { t } = useTranslation();
 
-const styles = ref<ParagraphStyle[]>([]);
-const selectedStyleId = ref<string>(BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText);
-
 const defaultParagraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
 
-watch(
-  [
-    () => open.value,
-    () => props.paragraphStyles,
-    () => props.initialSelectedStyleId,
-  ],
-  () => {
-    if (!open.value) {
-      return;
-    }
-
-    styles.value = props.paragraphStyles.map((style) => style.clone());
-    selectedStyleId.value =
-      styles.value.find((style) => style.id === props.initialSelectedStyleId)
-        ?.id ??
-      styles.value[0]?.id ??
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
-  },
-  { immediate: true },
+// The dialog is mounted per open (v-if in TheEditor), so the working copy is
+// snapshotted once at setup and edited in place until Update is pressed.
+const styles = ref<ParagraphStyle[]>(
+  props.paragraphStyles.map((style) => style.clone()),
+);
+const selectedStyleId = ref<string>(
+  styles.value.find((style) => style.id === props.initialSelectedStyleId)?.id ??
+    styles.value[0]?.id ??
+    defaultParagraphStyleId,
 );
 
 const selectedStyle = computed(
@@ -587,9 +466,10 @@ const selectedStyle = computed(
 );
 
 const resolvedStyle = computed(() =>
-  selectedStyle.value == null
-    ? resolveParagraphStyle(styles.value, defaultParagraphStyleId)
-    : resolveParagraphStyle(styles.value, selectedStyle.value.id),
+  resolveParagraphStyle(
+    styles.value,
+    selectedStyle.value?.id ?? defaultParagraphStyleId,
+  ),
 );
 
 const availableParents = computed(() => {
@@ -625,7 +505,7 @@ const canSubmit = computed(() => {
   const names = new Set<string>();
 
   return styles.value.every((style) => {
-    const name = getParagraphStyleDisplayName(style).trim();
+    const name = styleDisplayName(style).trim();
 
     if (name.length === 0 || names.has(name)) {
       return false;
@@ -636,8 +516,8 @@ const canSubmit = computed(() => {
   });
 });
 
-const selectedStyleHasOverrides = computed(
-  () => Object.keys(selectedStyle.value?.overrides ?? {}).length > 0,
+const selectedStyleHasOverrides = computed(() =>
+  hasParagraphStyleOverrides(selectedStyle.value?.overrides ?? {}),
 );
 const showOverrideToggles = computed(
   () =>
@@ -663,16 +543,50 @@ const selectedStyleCanResetToDefault = computed(() => {
 
   return style?.builtIn === true && !selectedBuiltInStyleMatchesDefault.value;
 });
-const clearFormattingLabel = computed(() =>
-  t(($) => $.dialog.paragraphStyles.clearFormatting, {
-    ns: 'dialog',
-  }),
-);
-const resetStyleToDefaultLabel = computed(() =>
-  t(($) => $.dialog.paragraphStyles.resetStyleToDefault, {
-    ns: 'dialog',
-  }),
-);
+const creationActions = computed(() => [
+  {
+    key: 'new',
+    label: t(($) => $.dialog.paragraphStyles.new, { ns: 'dialog' }),
+    icon: PhPlus,
+    disabled: false,
+    onClick: createStyle,
+  },
+  {
+    key: 'duplicate',
+    label: t(($) => $.dialog.paragraphStyles.duplicate, { ns: 'dialog' }),
+    icon: PhCopy,
+    disabled: selectedStyle.value == null,
+    onClick: duplicateSelectedStyle,
+  },
+]);
+
+const selectionActions = computed(() => [
+  {
+    key: 'reset',
+    label: t(($) => $.dialog.paragraphStyles.resetStyleToDefault, {
+      ns: 'dialog',
+    }),
+    icon: PhArrowCounterClockwise,
+    disabled: !selectedStyleCanResetToDefault.value,
+    onClick: resetSelectedStyleToDefault,
+  },
+  {
+    key: 'clear',
+    label: t(($) => $.dialog.paragraphStyles.clearFormatting, {
+      ns: 'dialog',
+    }),
+    icon: PhTextTSlash,
+    disabled: !selectedStyleHasOverrides.value,
+    onClick: clearSelectedStyleFormatting,
+  },
+  {
+    key: 'delete',
+    label: t(($) => $.dialog.paragraphStyles.delete, { ns: 'dialog' }),
+    icon: PhTrash,
+    disabled: selectedStyle.value == null || selectedStyle.value.builtIn,
+    onClick: deleteSelectedStyle,
+  },
+]);
 
 function hasOverride(key: keyof ParagraphStyle['overrides']) {
   return selectedStyle.value?.overrides[key] !== undefined;
@@ -682,10 +596,8 @@ function isOverrideDisabled(key: keyof ParagraphStyle['overrides']) {
   return showOverrideToggles.value && !hasOverride(key);
 }
 
-function getParagraphStyleDisplayName(style: ParagraphStyle) {
-  const selector = getBuiltInParagraphStyleNameSelector(style.id);
-
-  return selector == null ? style.displayName : t(selector, { ns: 'dialog' });
+function styleDisplayName(style: ParagraphStyle) {
+  return getParagraphStyleDisplayName(style, t);
 }
 
 function toggleOverride(
@@ -697,10 +609,10 @@ function toggleOverride(
   }
 
   if (value) {
-    const resolved = resolvedStyle.value;
-    (selectedStyle.value.overrides as Record<string, string | number | null>)[
-      key
-    ] = resolved[key as keyof typeof resolved] as string | number | null;
+    updateSelectedStyleOverride(
+      key,
+      resolvedStyle.value[key] as string | number | null,
+    );
   } else {
     delete selectedStyle.value.overrides[key];
   }
@@ -797,7 +709,7 @@ function createStyle() {
   style.displayName = getNextStyleName(
     t(($) => $.dialog.paragraphStyles.newStyleName, { ns: 'dialog' }),
   );
-  style.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  style.parentStyleId = defaultParagraphStyleId;
   styles.value.push(style);
   selectedStyleId.value = style.id;
 }
@@ -814,7 +726,7 @@ function duplicateSelectedStyle() {
   clone.displayName = getNextStyleName(
     t(($) => $.dialog.paragraphStyles.copyStyleName, {
       ns: 'dialog',
-      name: getParagraphStyleDisplayName(style),
+      name: styleDisplayName(style),
     }),
   );
   styles.value.push(clone);
@@ -841,12 +753,12 @@ function deleteSelectedStyle() {
       updated.parentStyleId = parentStyleId;
       return updated;
     });
-  selectedStyleId.value = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  selectedStyleId.value = defaultParagraphStyleId;
 }
 
 function getNextStyleName(baseName: string) {
   const existingNames = new Set(
-    styles.value.map((style) => getParagraphStyleDisplayName(style)),
+    styles.value.map((style) => styleDisplayName(style)),
   );
 
   if (!existingNames.has(baseName)) {

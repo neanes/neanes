@@ -25,9 +25,9 @@
           :key="style.id"
           :value="style.id"
           :disabled="isStyleDisabled(style.id)"
-          :text-value="getParagraphStyleDisplayName(style)"
+          :text-value="styleDisplayName(style)"
         >
-          {{ getParagraphStyleDisplayName(style) }}
+          {{ styleDisplayName(style) }}
         </SelectItem>
       </SelectGroup>
     </component>
@@ -46,7 +46,7 @@ import {
 } from '@/composables/useRichTextStyleCommands';
 import { cn } from '@/lib/utils';
 import {
-  getBuiltInParagraphStyleNameSelector,
+  getParagraphStyleDisplayName,
   type ParagraphStyle,
 } from '@/models/ParagraphStyle';
 
@@ -124,10 +124,8 @@ function isStyleDisabled(styleId: string) {
   return disabledStyleIds.value.has(styleId);
 }
 
-function getParagraphStyleDisplayName(style: ParagraphStyle) {
-  const selector = getBuiltInParagraphStyleNameSelector(style.id);
-
-  return selector == null ? style.displayName : t(selector, { ns: 'dialog' });
+function styleDisplayName(style: ParagraphStyle) {
+  return getParagraphStyleDisplayName(style, t);
 }
 
 function onUpdate(value: AcceptableValue) {

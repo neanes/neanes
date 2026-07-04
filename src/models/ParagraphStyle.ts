@@ -1,4 +1,4 @@
-import type { SelectorParam } from 'i18next';
+import type { Namespace, SelectorParam, TFunction } from 'i18next';
 
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { Unit } from '@/utils/Unit';
@@ -134,6 +134,18 @@ export function getBuiltInParagraphStyleNameSelector(
   }
 
   return BUILT_IN_PARAGRAPH_STYLE_NAME_SELECTORS[styleId];
+}
+
+// Built-in styles display their localized names; custom styles display the
+// user-entered name. Both the style selects and the dialog's name validation
+// must agree on this resolution, so it lives here.
+export function getParagraphStyleDisplayName(
+  style: ParagraphStyle,
+  t: TFunction<Namespace>,
+) {
+  const selector = getBuiltInParagraphStyleNameSelector(style.id);
+
+  return selector == null ? style.displayName : t(selector, { ns: 'dialog' });
 }
 
 function getParagraphStyleById(

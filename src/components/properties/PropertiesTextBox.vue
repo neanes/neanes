@@ -147,7 +147,7 @@
         <ToggleGroup
           type="multiple"
           variant="outline"
-          :model-value="fontStyleValues"
+          :model-value="activeStyleAxisValues"
           @update:model-value="onFontStyleValuesChanged"
         >
           <ToggleGroupItem
@@ -498,7 +498,10 @@ import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphSty
 import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import {
+  isTextBoxAlignment,
+  type ParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   fraction1FormatOptions,
@@ -559,8 +562,6 @@ const {
   () => resolvedParagraphStyle.value.fontFamily,
   () => resolvedParagraphStyle.value.fontStyle,
 );
-
-const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
 
 const currentAlignment = computed(() => resolvedParagraphStyle.value.alignment);
 
@@ -635,9 +636,5 @@ function onRunningMarkerTextChanged(value: string | number) {
   emit('update', {
     runningMarkerText: text.trim() === '' ? null : text,
   } as Partial<TextBoxElement>);
-}
-
-function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
-  return Object.values(TextBoxAlignment).includes(value as TextBoxAlignment);
 }
 </script>

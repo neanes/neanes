@@ -126,7 +126,7 @@ import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import RichTextEditor from '@/components/RichTextEditor.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
-import { useRichTextParagraphStyleDefinitions } from '@/composables/useRichTextParagraphStyles';
+import { useRichTextParagraphStyleDefinitions } from '@/composables/useRichTextParagraphStyleDefinitions';
 import type InlineEditor from '@/customEditor';
 import type {
   RichTextBoxContentKey,

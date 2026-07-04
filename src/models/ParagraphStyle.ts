@@ -10,6 +10,10 @@ export enum TextBoxAlignment {
   Right = 'right',
 }
 
+export function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
+  return Object.values(TextBoxAlignment).includes(value as TextBoxAlignment);
+}
+
 export const BUILT_IN_PARAGRAPH_STYLE_IDS = {
   DefaultText: 'default-text',
   Annotation: 'annotation',

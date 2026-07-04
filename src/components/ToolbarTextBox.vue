@@ -34,7 +34,7 @@
     <ToggleGroup
       type="multiple"
       variant="outline"
-      :model-value="fontStyleValues"
+      :model-value="activeStyleAxisValues"
       @update:model-value="onFontStyleValuesChanged"
     >
       <ToggleGroupItem
@@ -180,7 +180,10 @@ import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import {
+  isTextBoxAlignment,
+  type ParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
@@ -219,8 +222,6 @@ const {
   () => resolvedParagraphStyle.value.fontStyle,
 );
 
-const fontStyleValues = computed(() => [...activeStyleAxisValues.value]);
-
 const currentAlignment = computed(() => resolvedParagraphStyle.value.alignment);
 
 const textBoxFontFamilies = computed(() => [
@@ -257,9 +258,5 @@ function onAlignmentChanged(value: unknown) {
       alignment: value,
     } as Partial<TextBoxElement>);
   }
-}
-
-function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
-  return Object.values(TextBoxAlignment).includes(value as TextBoxAlignment);
 }
 </script>

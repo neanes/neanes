@@ -102,7 +102,7 @@
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    :disabled="!selectedStyleCanClearFormatting"
+                    :disabled="!selectedStyleHasOverrides"
                     :aria-label="clearFormattingLabel"
                     @click="clearSelectedStyleFormatting"
                   >
@@ -146,14 +146,14 @@
             <FieldGroup class="p-4">
               <Field orientation="horizontal">
                 <div class="min-w-0 flex-1">
-                  <FieldLabel for="text-style-name">
+                  <FieldLabel for="paragraph-styles-dialog-name">
                     {{
                       $t(($) => $.dialog.paragraphStyles.name, { ns: 'dialog' })
                     }}
                   </FieldLabel>
                 </div>
                 <Input
-                  id="text-style-name"
+                  id="paragraph-styles-dialog-name"
                   class="ml-auto w-64 shrink-0"
                   :model-value="
                     selectedStyle == null
@@ -167,7 +167,7 @@
 
               <Field orientation="horizontal">
                 <div class="min-w-0 flex-1">
-                  <FieldLabel for="text-style-parent">
+                  <FieldLabel for="paragraph-styles-dialog-parent">
                     {{
                       $t(($) => $.dialog.paragraphStyles.parentStyle, {
                         ns: 'dialog',
@@ -176,14 +176,14 @@
                   </FieldLabel>
                 </div>
                 <ParagraphStyleSelect
-                  id="text-style-parent"
+                  id="paragraph-styles-dialog-parent"
                   class="ml-auto w-64 shrink-0"
                   :disabled="selectedStyle?.id === defaultParagraphStyleId"
                   :model-value="
                     selectedStyle?.parentStyleId ?? PARAGRAPH_STYLE_NONE_VALUE
                   "
                   :paragraph-styles="availableParents"
-                  :show-none-option="true"
+                  show-none-option
                   :none-label="parentNoneLabel"
                   trigger-class="w-64"
                   @update:model-value="updateSelectedStyleParent"
@@ -199,18 +199,19 @@
                     :model-value="hasOverride('fontFamily')"
                     @update:model-value="toggleOverride('fontFamily', $event)"
                   />
-                  <FieldLabel for="text-style-font" class="shrink-0">
+                  <FieldLabel
+                    for="paragraph-styles-dialog-font"
+                    class="shrink-0"
+                  >
                     {{ $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' }) }}
                   </FieldLabel>
                 </div>
                 <FontCombobox
-                  id="text-style-font"
+                  id="paragraph-styles-dialog-font"
                   class="ml-auto w-64 min-w-0 shrink-0"
                   :model-value="resolvedStyle.fontFamily"
                   :options="fontOptions"
-                  :disabled="
-                    showOverrideToggles ? !hasOverride('fontFamily') : false
-                  "
+                  :disabled="isOverrideDisabled('fontFamily')"
                   @update:model-value="onFontFamilyChanged"
                 />
               </Field>
@@ -222,18 +223,19 @@
                     :model-value="hasOverride('fontStyle')"
                     @update:model-value="toggleOverride('fontStyle', $event)"
                   />
-                  <FieldLabel for="text-style-font-style" class="shrink-0">
+                  <FieldLabel
+                    for="paragraph-styles-dialog-font-style"
+                    class="shrink-0"
+                  >
                     {{ $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' }) }}
                   </FieldLabel>
                 </div>
                 <FontStyleSelect
-                  id="text-style-font-style"
+                  id="paragraph-styles-dialog-font-style"
                   class="ml-auto w-64 min-w-0 shrink-0"
                   :model-value="resolvedStyle.fontStyle"
                   :options="fontStyleOptions"
-                  :disabled="
-                    showOverrideToggles ? !hasOverride('fontStyle') : false
-                  "
+                  :disabled="isOverrideDisabled('fontStyle')"
                   @update:model-value="
                     updateSelectedStyleOverride('fontStyle', $event)
                   "
@@ -247,18 +249,19 @@
                     :model-value="hasOverride('fontSize')"
                     @update:model-value="toggleOverride('fontSize', $event)"
                   />
-                  <FieldLabel for="text-style-font-size" class="shrink-0">
+                  <FieldLabel
+                    for="paragraph-styles-dialog-font-size"
+                    class="shrink-0"
+                  >
                     {{ $t(($) => $.dialog.pageSetup.size, { ns: 'dialog' }) }}
                   </FieldLabel>
                 </div>
                 <div class="ml-auto w-40 shrink-0">
                   <InputFontSize
-                    id="text-style-font-size"
+                    id="paragraph-styles-dialog-font-size"
                     class="w-full"
                     :model-value="resolvedStyle.fontSize"
-                    :disabled="
-                      showOverrideToggles ? !hasOverride('fontSize') : false
-                    "
+                    :disabled="isOverrideDisabled('fontSize')"
                     @update:model-value="
                       updateSelectedStyleOverride('fontSize', $event)
                     "
@@ -282,9 +285,7 @@
                   type="single"
                   variant="outline"
                   :model-value="resolvedStyle.alignment"
-                  :disabled="
-                    showOverrideToggles ? !hasOverride('alignment') : false
-                  "
+                  :disabled="isOverrideDisabled('alignment')"
                   @update:model-value="updateAlignmentOverride"
                 >
                   <AppTooltip
@@ -347,16 +348,15 @@
                 </div>
                 <div class="ml-auto flex shrink-0 items-center gap-2">
                   <Checkbox
-                    id="text-style-underline"
+                    id="paragraph-styles-dialog-underline"
                     :model-value="textDecorationCheckboxValue"
-                    :disabled="
-                      showOverrideToggles
-                        ? !hasOverride('textDecoration')
-                        : false
-                    "
+                    :disabled="isOverrideDisabled('textDecoration')"
                     @update:model-value="updateTextDecorationOverride"
                   />
-                  <FieldLabel for="text-style-underline" class="shrink-0">
+                  <FieldLabel
+                    for="paragraph-styles-dialog-underline"
+                    class="shrink-0"
+                  >
                     {{
                       $t(($) => $.toolbar.richTextBox.underline, {
                         ns: 'toolbar',
@@ -380,9 +380,7 @@
                 <div class="ml-auto shrink-0">
                   <ColorPicker
                     :model-value="resolvedStyle.color"
-                    :disabled="
-                      showOverrideToggles ? !hasOverride('color') : false
-                    "
+                    :disabled="isOverrideDisabled('color')"
                     @update:model-value="
                       updateSelectedStyleOverride('color', $event)
                     "
@@ -397,7 +395,10 @@
                     :model-value="hasOverride('strokeWidth')"
                     @update:model-value="toggleOverride('strokeWidth', $event)"
                   />
-                  <FieldLabel for="text-style-stroke-width" class="shrink-0">
+                  <FieldLabel
+                    for="paragraph-styles-dialog-stroke-width"
+                    class="shrink-0"
+                  >
                     {{
                       $t(($) => $.dialog.pageSetup.outline, { ns: 'dialog' })
                     }}
@@ -405,12 +406,10 @@
                 </div>
                 <div class="ml-auto w-40 shrink-0">
                   <InputStrokeWidth
-                    id="text-style-stroke-width"
+                    id="paragraph-styles-dialog-stroke-width"
                     class="w-full"
                     :model-value="resolvedStyle.strokeWidth"
-                    :disabled="
-                      showOverrideToggles ? !hasOverride('strokeWidth') : false
-                    "
+                    :disabled="isOverrideDisabled('strokeWidth')"
                     @update:model-value="
                       updateSelectedStyleOverride('strokeWidth', $event)
                     "
@@ -425,7 +424,10 @@
                     :model-value="hasOverride('lineHeight')"
                     @update:model-value="toggleOverride('lineHeight', $event)"
                   />
-                  <FieldLabel for="text-style-line-height" class="shrink-0">
+                  <FieldLabel
+                    for="paragraph-styles-dialog-line-height"
+                    class="shrink-0"
+                  >
                     {{
                       $t(($) => $.dialog.pageSetup.lineHeight, { ns: 'dialog' })
                     }}
@@ -433,7 +435,7 @@
                 </div>
                 <div class="ml-auto w-40 shrink-0">
                   <InputUnit
-                    id="text-style-line-height"
+                    id="paragraph-styles-dialog-line-height"
                     class="w-full"
                     unit="unitless"
                     :nullable="true"
@@ -441,9 +443,7 @@
                     :step="0.1"
                     :model-value="resolvedStyle.lineHeight"
                     :format-options="fraction2FormatOptions"
-                    :disabled="
-                      showOverrideToggles ? !hasOverride('lineHeight') : false
-                    "
+                    :disabled="isOverrideDisabled('lineHeight')"
                     placeholder="normal"
                     @update:model-value="
                       updateSelectedStyleOverride('lineHeight', $event)
@@ -571,9 +571,9 @@ watch(
     }
 
     styles.value = props.paragraphStyles.map((style) => style.clone());
-    selectedStyleId.value = props.initialSelectedStyleId;
     selectedStyleId.value =
-      styles.value.find((style) => style.id === selectedStyleId.value)?.id ??
+      styles.value.find((style) => style.id === props.initialSelectedStyleId)
+        ?.id ??
       styles.value[0]?.id ??
       BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
   },
@@ -616,13 +616,9 @@ const { fontStyleOptions, remapStyleForFamily } = useFontStyleControls(
   () => resolvedStyle.value.fontStyle,
 );
 
-const textDecorationCheckboxValue = computed(() => {
-  if (selectedStyle.value?.overrides.textDecoration !== undefined) {
-    return selectedStyle.value.overrides.textDecoration === 'underline';
-  }
-
-  return resolvedStyle.value.textDecoration === 'underline';
-});
+const textDecorationCheckboxValue = computed(
+  () => resolvedStyle.value.textDecoration === 'underline',
+);
 
 const canSubmit = computed(() => {
   const names = new Set<string>();
@@ -642,13 +638,10 @@ const canSubmit = computed(() => {
 const selectedStyleHasOverrides = computed(
   () => Object.keys(selectedStyle.value?.overrides ?? {}).length > 0,
 );
-const selectedStyleCanClearFormatting = computed(
-  () => selectedStyle.value != null && selectedStyleHasOverrides.value,
-);
 const showOverrideToggles = computed(
   () =>
     selectedStyle.value?.parentStyleId != null ||
-    selectedStyleCanClearFormatting.value,
+    selectedStyleHasOverrides.value,
 );
 
 const selectedBuiltInStyleMatchesDefault = computed(() => {
@@ -690,6 +683,10 @@ const resetStyleToDefaultLabel = computed(() =>
 
 function hasOverride(key: keyof ParagraphStyle['overrides']) {
   return selectedStyle.value?.overrides[key] !== undefined;
+}
+
+function isOverrideDisabled(key: keyof ParagraphStyle['overrides']) {
+  return showOverrideToggles.value && !hasOverride(key);
 }
 
 function getParagraphStyleDisplayName(style: ParagraphStyle) {
@@ -763,7 +760,7 @@ function updateTextDecorationOverride(value: boolean | 'indeterminate') {
 function clearSelectedStyleFormatting() {
   const style = selectedStyle.value;
 
-  if (style == null || !selectedStyleCanClearFormatting.value) {
+  if (style == null || !selectedStyleHasOverrides.value) {
     return;
   }
 

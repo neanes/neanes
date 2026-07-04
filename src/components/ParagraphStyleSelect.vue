@@ -10,10 +10,14 @@
     </SelectTrigger>
     <component :is="contentComponent">
       <SelectGroup>
-        <SelectItem v-if="showNoneOption" :value="noneValue">
+        <SelectItem v-if="showNoneOption" :value="PARAGRAPH_STYLE_NONE_VALUE">
           {{ noneLabel }}
         </SelectItem>
-        <SelectItem v-if="showMixedOption" :value="mixedValue" disabled>
+        <SelectItem
+          v-if="showMixedOption"
+          :value="PARAGRAPH_STYLE_MIXED_VALUE"
+          disabled
+        >
           {{ mixedLabel }}
         </SelectItem>
         <SelectItem
@@ -44,7 +48,7 @@ import { cn } from '@/lib/utils';
 import {
   getBuiltInParagraphStyleNameSelector,
   type ParagraphStyle,
-} from '@/models/ParagraphStyle.js';
+} from '@/models/ParagraphStyle';
 
 import RichTextSelectContent from './RichTextSelectContent.vue';
 import {
@@ -54,7 +58,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from './ui/select/index.js';
+} from './ui/select';
 
 const props = defineProps({
   id: {
@@ -85,19 +89,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  noneValue: {
-    type: String,
-    default: PARAGRAPH_STYLE_NONE_VALUE,
-  },
-  mixedValue: {
-    type: String,
-    default: PARAGRAPH_STYLE_MIXED_VALUE,
-  },
   noneLabel: {
-    type: String,
-    default: undefined,
-  },
-  mixedLabel: {
     type: String,
     default: undefined,
   },
@@ -117,7 +109,6 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useTranslation();
-const paragraphStyles = computed(() => props.paragraphStyles);
 const disabledStyleIds = computed(() => new Set(props.disabledStyleIds));
 const contentComponent = computed(() =>
   props.richTextPortal ? RichTextSelectContent : SelectContent,
@@ -125,8 +116,8 @@ const contentComponent = computed(() =>
 const noneLabel = computed(
   () => props.noneLabel ?? t(($) => $.toolbar.common.none, { ns: 'toolbar' }),
 );
-const mixedLabel = computed(
-  () => props.mixedLabel ?? t(($) => $.toolbar.common.mixed, { ns: 'toolbar' }),
+const mixedLabel = computed(() =>
+  t(($) => $.toolbar.common.mixed, { ns: 'toolbar' }),
 );
 
 function isStyleDisabled(styleId: string) {

@@ -1998,11 +1998,7 @@ function getFooterHorizontalRuleStyle(page: Page, footerHeight: number) {
 }
 
 function getLyricStyle(element: NoteElement) {
-  const resolvedLyricsStyle = resolveParagraphStyle(
-    score.value.paragraphStyles,
-    element.lyricsParagraphStyleId,
-    element.getParagraphStyleOverrides(),
-  );
+  const resolvedLyricsStyle = getResolvedLyricsStyle(element);
   const resolvedLyricsFont = resolveFontStyle(
     resolvedLyricsStyle.fontFamily,
     resolvedLyricsStyle.fontStyle,
@@ -2030,12 +2026,9 @@ function getLyricStyle(element: NoteElement) {
     fontWeight: resolvedLyricsFont.cssFontWeight,
     fontStyle: resolvedLyricsFont.cssFontStyle,
     textDecoration:
-      element.lyricsTextDecoration != null &&
-      element.lyricsTextDecoration !== 'none'
-        ? element.lyricsTextDecoration
-        : element.lyricsTextDecoration === 'none'
-          ? 'none'
-          : (resolvedLyricsStyle.textDecoration ?? undefined),
+      element.lyricsTextDecoration ??
+      resolvedLyricsStyle.textDecoration ??
+      undefined,
     color: resolvedLyricsStyle.color,
     webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
     lineHeight: withZoom(element.lyricsFontHeight),
@@ -2047,11 +2040,7 @@ function getLyricStyle(element: NoteElement) {
 }
 
 function getLeadingLyricHyphenStyle(element: NoteElement) {
-  const resolvedLyricsStyle = resolveParagraphStyle(
-    score.value.paragraphStyles,
-    element.lyricsParagraphStyleId,
-    element.getParagraphStyleOverrides(),
-  );
+  const resolvedLyricsStyle = getResolvedLyricsStyle(element);
   const resolvedLyricsFont = resolveFontStyle(
     resolvedLyricsStyle.fontFamily,
     resolvedLyricsStyle.fontStyle,
@@ -2068,12 +2057,9 @@ function getLeadingLyricHyphenStyle(element: NoteElement) {
     fontWeight: resolvedLyricsFont.cssFontWeight,
     fontStyle: resolvedLyricsFont.cssFontStyle,
     textDecoration:
-      element.lyricsTextDecoration != null &&
-      element.lyricsTextDecoration !== 'none'
-        ? element.lyricsTextDecoration
-        : element.lyricsTextDecoration === 'none'
-          ? 'none'
-          : (resolvedLyricsStyle.textDecoration ?? undefined),
+      element.lyricsTextDecoration ??
+      resolvedLyricsStyle.textDecoration ??
+      undefined,
     color: resolvedLyricsStyle.color,
     webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
     lineHeight: withZoom(element.lyricsFontHeight),
@@ -7040,12 +7026,12 @@ function getDefaultLyricsFont() {
   return resolveFontCss(getResolvedLyricsStyle());
 }
 
-type ResizableTextStyleSnapshot = Map<string, ResolvedParagraphStyle>;
+type ResizableParagraphStyleSnapshot = Map<string, ResolvedParagraphStyle>;
 
-function getResizableTextStyleSnapshot(
+function getResizableParagraphStyleSnapshot(
   currentScore: Score,
-): ResizableTextStyleSnapshot {
-  const snapshot: ResizableTextStyleSnapshot = new Map();
+): ResizableParagraphStyleSnapshot {
+  const snapshot: ResizableParagraphStyleSnapshot = new Map();
 
   for (const style of currentScore.paragraphStyles) {
     snapshot.set(
@@ -7057,9 +7043,9 @@ function getResizableTextStyleSnapshot(
   return snapshot;
 }
 
-function resizableTextStylesChanged(
-  previous: ResizableTextStyleSnapshot,
-  current: ResizableTextStyleSnapshot,
+function resizableParagraphStylesChanged(
+  previous: ResizableParagraphStyleSnapshot,
+  current: ResizableParagraphStyleSnapshot,
 ) {
   if (previous.size !== current.size) {
     return true;
@@ -7156,7 +7142,7 @@ function updateDocumentProperties(documentProperties: DocumentProperties) {
   save();
 }
 
-function getAllTextStyleElements(score: Score) {
+function getAllTextBoxElements(score: Score) {
   return [...score.staff.elements, ...score.headersAndFooters].filter(
     (element): element is TextBoxElement => isTextBoxElement(element),
   );
@@ -7246,7 +7232,7 @@ function getDeletedStyleFallbackId(
 function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
   flushPendingRichTextEditors(selectedWorkspace.value);
 
-  const previousResizableTextStyles = getResizableTextStyleSnapshot(
+  const previousResizableParagraphStyles = getResizableParagraphStyleSnapshot(
     score.value,
   );
   const previousStylesById = new Map(
@@ -7265,7 +7251,7 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
     }),
   ];
 
-  for (const element of getAllTextStyleElements(score.value)) {
+  for (const element of getAllTextBoxElements(score.value)) {
     if (nextStyleIds.has(element.paragraphStyleId)) {
       continue;
     }
@@ -7275,11 +7261,8 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
         target: element,
         newValues: {
           paragraphStyleId:
-            getDeletedStyleFallbackId(
-              element.paragraphStyleId,
-              deletedStyleFallbacks,
-              getTextBoxParagraphStyleFallbackId(element.inline),
-            ) ?? getTextBoxParagraphStyleFallbackId(element.inline),
+            deletedStyleFallbacks.get(element.paragraphStyleId) ??
+            getTextBoxParagraphStyleFallbackId(element.inline),
         },
       }),
     );
@@ -7332,20 +7315,12 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
           target: note,
           newValues: {
             lyricsParagraphStyleId:
-              getDeletedStyleFallbackId(
-                note.lyricsParagraphStyleId,
-                deletedStyleFallbacks,
-                BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-              ) ?? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+              deletedStyleFallbacks.get(note.lyricsParagraphStyleId) ??
+              BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
           },
         }),
       );
     }
-
-    const updatedAnnotations: Array<{
-      annotation: AnnotationElement;
-      text: string;
-    }> = [];
 
     for (const annotation of note.annotations) {
       const rewrittenText = rewriteRichTextParagraphStyleClasses(
@@ -7359,22 +7334,15 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
       );
 
       if (rewrittenText !== annotation.text) {
-        updatedAnnotations.push({
-          annotation,
-          text: rewrittenText,
-        });
+        commands.push(
+          annotationCommandFactory.create('update-properties', {
+            target: annotation,
+            newValues: {
+              text: rewrittenText,
+            },
+          }),
+        );
       }
-    }
-
-    for (const { annotation, text } of updatedAnnotations) {
-      commands.push(
-        annotationCommandFactory.create('update-properties', {
-          target: annotation,
-          newValues: {
-            text,
-          },
-        }),
-      );
     }
   }
 
@@ -7388,11 +7356,8 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
         target: dropCap,
         newValues: {
           paragraphStyleId:
-            getDeletedStyleFallbackId(
-              dropCap.paragraphStyleId,
-              deletedStyleFallbacks,
-              BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
-            ) ?? BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
+            deletedStyleFallbacks.get(dropCap.paragraphStyleId) ??
+            BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
         },
       }),
     );
@@ -7401,9 +7366,9 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
   commandService.value.executeAsBatch(commands);
 
   if (
-    resizableTextStylesChanged(
-      previousResizableTextStyles,
-      getResizableTextStyleSnapshot(score.value),
+    resizableParagraphStylesChanged(
+      previousResizableParagraphStyles,
+      getResizableParagraphStyleSnapshot(score.value),
     )
   ) {
     recalculateRichTextBoxHeights();
@@ -7527,7 +7492,7 @@ function getDefaultHeaderFooterPanels(
   };
 }
 
-function createRichHeaderFooterWithStyle(
+function createRichHeaderFooter(
   left: string,
   center: string,
   right: string,
@@ -7570,7 +7535,7 @@ function createDefaultRichHeaderFooter(
     kind === 'header'
       ? BUILT_IN_PARAGRAPH_STYLE_IDS.Header
       : BUILT_IN_PARAGRAPH_STYLE_IDS.Footer;
-  const textbox = createRichHeaderFooterWithStyle(
+  const textbox = createRichHeaderFooter(
     panel.left,
     panel.center,
     panel.right,
@@ -8830,7 +8795,7 @@ async function onFileMenuSaveAs() {
 
 function onFileMenuUndo() {
   const currentIndex = selectedElementIndex.value;
-  const previousResizableTextStyles = getResizableTextStyleSnapshot(
+  const previousResizableParagraphStyles = getResizableParagraphStyleSnapshot(
     score.value,
   );
 
@@ -8853,9 +8818,9 @@ function onFileMenuUndo() {
   }
 
   if (
-    resizableTextStylesChanged(
-      previousResizableTextStyles,
-      getResizableTextStyleSnapshot(score.value),
+    resizableParagraphStylesChanged(
+      previousResizableParagraphStyles,
+      getResizableParagraphStyleSnapshot(score.value),
     )
   ) {
     recalculateRichTextBoxHeights();
@@ -8867,7 +8832,7 @@ function onFileMenuUndo() {
 
 function onFileMenuRedo() {
   const currentIndex = selectedElementIndex.value;
-  const previousResizableTextStyles = getResizableTextStyleSnapshot(
+  const previousResizableParagraphStyles = getResizableParagraphStyleSnapshot(
     score.value,
   );
 
@@ -8890,9 +8855,9 @@ function onFileMenuRedo() {
   }
 
   if (
-    resizableTextStylesChanged(
-      previousResizableTextStyles,
-      getResizableTextStyleSnapshot(score.value),
+    resizableParagraphStylesChanged(
+      previousResizableParagraphStyles,
+      getResizableParagraphStyleSnapshot(score.value),
     )
   ) {
     recalculateRichTextBoxHeights();
@@ -9527,14 +9492,10 @@ function getContextMenuTargetForHomogeneousSelection<T extends ScoreElement>(
     : null;
 }
 
-const contextMenuUseDefaultStyleTarget = computed(
-  () => contextMenuModeKey.value,
-);
-
 const contextMenuHasElementProperties = computed(
   () =>
     contextMenuMartyria.value != null ||
-    contextMenuUseDefaultStyleTarget.value != null ||
+    contextMenuModeKey.value != null ||
     contextMenuImageBox.value != null,
 );
 
@@ -10800,13 +10761,11 @@ function renderTabLabel(tab: Tab) {
                     }}
                   </ContextMenuCheckboxItem>
                   <ContextMenuCheckboxItem
-                    v-if="contextMenuUseDefaultStyleTarget != null"
-                    :model-value="
-                      contextMenuUseDefaultStyleTarget.useDefaultStyle
-                    "
+                    v-if="contextMenuModeKey != null"
+                    :model-value="contextMenuModeKey.useDefaultStyle"
                     @update:model-value="
                       setContextMenuUseDefaultStyle(
-                        contextMenuUseDefaultStyleTarget,
+                        contextMenuModeKey,
                         $event === true,
                       )
                     "

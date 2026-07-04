@@ -8,21 +8,19 @@ import {
   createDefaultParagraphStyles,
   createParagraphStyleFallback,
   ParagraphStyle,
+  resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
 import { ALIGNMENT_OVERRIDE_MIXED_VALUE } from '@/utils/alignmentOverride';
 
 const registryMocks = vi.hoisted(() => ({
   execForActiveOrLastOwner: vi.fn(),
   useActiveOrLastEditorForOwner: vi.fn(),
-  useEditorCommandObservableState: vi.fn(),
   useEditorCommandStates: vi.fn(),
 }));
 
 vi.mock('@/composables/useRichTextEditorRegistry', () => ({
   execForActiveOrLastOwner: registryMocks.execForActiveOrLastOwner,
   useActiveOrLastEditorForOwner: registryMocks.useActiveOrLastEditorForOwner,
-  useEditorCommandObservableState:
-    registryMocks.useEditorCommandObservableState,
   useEditorCommandStates: registryMocks.useEditorCommandStates,
 }));
 
@@ -51,7 +49,6 @@ describe('resolveRichTextParagraphStyleState', () => {
     );
 
     expect(state.paragraphStyleValue).toBe(PARAGRAPH_STYLE_NONE_VALUE);
-    expect(state.activeParagraphStyle).toBeNull();
     expect(state.resolvedActiveParagraphStyle).toEqual(fallbackParagraphStyle);
   });
 
@@ -63,11 +60,11 @@ describe('resolveRichTextParagraphStyleState', () => {
     );
 
     expect(state.paragraphStyleValue).toBe(BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics);
-    expect(state.activeParagraphStyle?.fontFamily).toBe(
-      fallbackParagraphStyle.fontFamily,
-    );
     expect(state.resolvedActiveParagraphStyle).toEqual(
-      state.activeParagraphStyle,
+      resolveParagraphStyle(
+        paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+      ),
     );
   });
 
@@ -79,40 +76,43 @@ describe('resolveRichTextParagraphStyleState', () => {
     );
 
     expect(state.paragraphStyleValue).toBe(PARAGRAPH_STYLE_MIXED_VALUE);
-    expect(state.activeParagraphStyle).toBeNull();
     expect(state.resolvedActiveParagraphStyle).toEqual(fallbackParagraphStyle);
   });
 });
 
 describe('useRichTextStyleCommands', () => {
-  function createCommandState(value: unknown, isEnabled = true) {
+  function createCommandState(
+    value: unknown,
+    isEnabled = true,
+    properties: Record<string, unknown> = {},
+  ) {
     return {
       value,
       isEnabled,
       exists: true,
-      properties: {},
+      properties,
     };
   }
 
-  function setupCommands(
-    paragraphStyles: ParagraphStyle[] = createDefaultParagraphStyles(),
+  type CommandOverrides = {
+    fontFamily?: string;
+    fontStyle?: string;
+    fontSize?: string;
+    fontColor?: string;
+    bold?: boolean;
+    italic?: boolean;
+    alignment?: string;
+  };
+
+  function createCommandStates(
     activeStyleIds: string[] = [],
     underlineActive = false,
-    commandOverrides: {
-      fontFamily?: string;
-      fontStyle?: string;
-      fontSize?: string;
-      fontColor?: string;
-      bold?: boolean;
-      italic?: boolean;
-      alignment?: string;
-    } = {},
+    commandOverrides: CommandOverrides = {},
   ) {
-    const element = {};
-    const pageSetup = new PageSetup();
-    const fallbackParagraphStyle = createParagraphStyleFallback();
-    const commandStates = {
-      style: createCommandState(activeStyleIds, true),
+    return {
+      style: createCommandState(activeStyleIds, true, {
+        enabledStyles: [BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics, ...activeStyleIds],
+      }),
       fontFamily: createCommandState(commandOverrides.fontFamily ?? '', true),
       fontSize: createCommandState(commandOverrides.fontSize ?? '', true),
       fontColor: createCommandState(commandOverrides.fontColor ?? '', true),
@@ -128,20 +128,28 @@ describe('useRichTextStyleCommands', () => {
       underline: createCommandState(underlineActive, true),
       alignment: createCommandState(commandOverrides.alignment, true),
     };
+  }
+
+  function setupCommands(
+    paragraphStyles: ParagraphStyle[] = createDefaultParagraphStyles(),
+    activeStyleIds: string[] = [],
+    underlineActive = false,
+    commandOverrides: CommandOverrides = {},
+  ) {
+    const element = {};
+    const pageSetup = new PageSetup();
+    const fallbackParagraphStyle = createParagraphStyleFallback();
+    const commandStates = createCommandStates(
+      activeStyleIds,
+      underlineActive,
+      commandOverrides,
+    );
 
     registryMocks.execForActiveOrLastOwner.mockReset();
     registryMocks.useActiveOrLastEditorForOwner.mockReturnValue({ value: {} });
     registryMocks.useEditorCommandStates.mockReturnValue(
       commandStates as unknown as Record<string, unknown>,
     );
-    registryMocks.useEditorCommandObservableState.mockReturnValue({
-      value: undefined,
-      isEnabled: true,
-      exists: true,
-      properties: {
-        enabledStyles: [BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics, ...activeStyleIds],
-      },
-    });
 
     return {
       commands: useRichTextStyleCommands(
@@ -212,31 +220,13 @@ describe('useRichTextStyleCommands', () => {
     nextStyle.overrides.fontFamily = 'Next Family';
     nextStyle.overrides.fontStyle = 'Italic';
 
-    const commandStates = reactive({
-      style: reactive(createCommandState([initialStyle.id], true)),
-      fontFamily: reactive(createCommandState('', true)),
-      fontSize: reactive(createCommandState('', true)),
-      fontColor: reactive(createCommandState('', true)),
-      fontStyle: reactive(createCommandState('', true)),
-      fontStyleToggleBold: reactive(createCommandState(false, true)),
-      fontStyleToggleItalic: reactive(createCommandState(false, true)),
-      underline: reactive(createCommandState(false, true)),
-      alignment: reactive(createCommandState(undefined, true)),
-    });
+    const commandStates = reactive(createCommandStates([initialStyle.id]));
 
     registryMocks.execForActiveOrLastOwner.mockReset();
     registryMocks.useActiveOrLastEditorForOwner.mockReturnValue(ref(editor));
     registryMocks.useEditorCommandStates.mockReturnValue(
       commandStates as unknown as Record<string, unknown>,
     );
-    registryMocks.useEditorCommandObservableState.mockReturnValue({
-      value: undefined,
-      isEnabled: true,
-      exists: true,
-      properties: {
-        enabledStyles: [initialStyle.id, nextStyle.id],
-      },
-    });
 
     useRichTextStyleCommands(
       {

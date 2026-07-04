@@ -6,7 +6,6 @@ import type { FontComboboxOption } from '@/components/FontCombobox.vue';
 import {
   execForActiveOrLastOwner,
   useActiveOrLastEditorForOwner,
-  useEditorCommandObservableState,
   useEditorCommandStates,
 } from '@/composables/useRichTextEditorRegistry';
 import type { PageSetup } from '@/models/PageSetup';
@@ -86,17 +85,13 @@ export function resolveRichTextParagraphStyleState(
         ? activeParagraphStyleIds[0]
         : PARAGRAPH_STYLE_MIXED_VALUE;
 
-  const activeParagraphStyle =
-    paragraphStyleValue === PARAGRAPH_STYLE_NONE_VALUE ||
-    paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE
-      ? null
-      : resolveParagraphStyle(paragraphStyles, paragraphStyleValue);
-
   return {
     paragraphStyleValue,
-    activeParagraphStyle,
     resolvedActiveParagraphStyle:
-      activeParagraphStyle ?? fallbackParagraphStyle,
+      paragraphStyleValue === PARAGRAPH_STYLE_NONE_VALUE ||
+      paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE
+        ? fallbackParagraphStyle
+        : resolveParagraphStyle(paragraphStyles, paragraphStyleValue),
   };
 }
 
@@ -113,18 +108,13 @@ export function useRichTextStyleCommands(
   const { t } = useTranslation();
   const scopedEditor = useActiveOrLastEditorForOwner(() => props.element);
 
-  const commandStates = useEditorCommandStates(scopedEditor, [
-    ...STYLE_COMMAND_NAMES,
-    ...extraCommandNames,
-  ]);
-  const styleCommandState = useEditorCommandObservableState(
+  const commandStates = useEditorCommandStates(
     scopedEditor,
-    'style',
-    ['enabledStyles'],
+    [...STYLE_COMMAND_NAMES, ...extraCommandNames],
+    { style: ['enabledStyles'] },
   );
-  const paragraphStyleOptions = computed(() => props.paragraphStyles);
   const neanesParagraphStyleIds = computed(
-    () => new Set(paragraphStyleOptions.value.map((style) => style.id)),
+    () => new Set(props.paragraphStyles.map((style) => style.id)),
   );
 
   const activeParagraphStyleIds = computed(() =>
@@ -134,7 +124,14 @@ export function useRichTextStyleCommands(
   );
   const enabledParagraphStyleIds = computed(
     () =>
-      new Set(toToggleGroupValues(styleCommandState.properties.enabledStyles)),
+      new Set(
+        toToggleGroupValues(commandStates.style.properties.enabledStyles),
+      ),
+  );
+  const disabledParagraphStyleIds = computed(() =>
+    props.paragraphStyles
+      .filter((style) => !isParagraphStyleEnabled(style.id))
+      .map((style) => style.id),
   );
 
   const paragraphStyleState = computed(() =>
@@ -199,7 +196,7 @@ export function useRichTextStyleCommands(
   const fontStyleValue = computed(() => {
     const value = commandValue('fontStyle');
 
-    return typeof value === 'string' && value !== ''
+    return isNonEmptyString(value)
       ? value
       : resolvedActiveParagraphStyle.value.fontStyle;
   });
@@ -244,10 +241,8 @@ export function useRichTextStyleCommands(
     () => typeof commandValue('fontColor') === 'string',
   );
 
-  const fontStyleHasExplicitValue = computed(
-    () =>
-      typeof commandValue('fontStyle') === 'string' &&
-      commandValue('fontStyle') !== '',
+  const fontStyleHasExplicitValue = computed(() =>
+    isNonEmptyString(commandValue('fontStyle')),
   );
 
   const alignmentHasExplicitValue = computed(() => {
@@ -437,26 +432,34 @@ export function useRichTextStyleCommands(
     runCommand('alignment');
   }
 
-  function onFontStyleValuesChanged(value: unknown) {
+  function applyToggleGroupChange(
+    commands: Record<string, string>,
+    previous: string[],
+    value: unknown,
+  ) {
     const next = toToggleGroupValues(value);
-    const previous = fontStyleValues.value;
 
-    for (const style of Object.keys(FONT_STYLE_TOGGLE_COMMANDS)) {
+    for (const style of Object.keys(commands)) {
       if (next.includes(style) !== previous.includes(style)) {
-        runCommand(FONT_STYLE_TOGGLE_COMMANDS[style]);
+        runCommand(commands[style]);
       }
     }
   }
 
-  function onTextDecorationValuesChanged(value: unknown) {
-    const next = toToggleGroupValues(value);
-    const previous = textDecorationValues.value;
+  function onFontStyleValuesChanged(value: unknown) {
+    applyToggleGroupChange(
+      FONT_STYLE_TOGGLE_COMMANDS,
+      fontStyleValues.value,
+      value,
+    );
+  }
 
-    for (const style of Object.keys(TEXT_DECORATION_TOGGLE_COMMANDS)) {
-      if (next.includes(style) !== previous.includes(style)) {
-        runCommand(TEXT_DECORATION_TOGGLE_COMMANDS[style]);
-      }
-    }
+  function onTextDecorationValuesChanged(value: unknown) {
+    applyToggleGroupChange(
+      TEXT_DECORATION_TOGGLE_COMMANDS,
+      textDecorationValues.value,
+      value,
+    );
   }
 
   function onAlignmentChanged(value: unknown) {
@@ -516,7 +519,7 @@ export function useRichTextStyleCommands(
     fontFamilyOptions,
     paragraphStyleValue,
     resolvedActiveParagraphStyle,
-    paragraphStyleOptions,
+    disabledParagraphStyleIds,
     fontStyleValue,
     fontStyleOptions,
     fontStyleDisabled,

@@ -475,7 +475,7 @@ const {
   alignmentValue,
   isCommandEnabled,
   isStyleToggleEnabled,
-  isParagraphStyleEnabled,
+  disabledParagraphStyleIds,
   runCommand,
   onFontFamilyChanged,
   onFontStyleChanged,
@@ -486,12 +486,6 @@ const {
   onParagraphStyleChanged,
   onClearFormatting,
 } = useRichTextStyleCommands(props, EXTRA_COMMAND_NAMES);
-
-const disabledParagraphStyleIds = computed(() =>
-  props.paragraphStyles
-    .filter((style) => !isParagraphStyleEnabled(style.id))
-    .map((style) => style.id),
-);
 
 const scopedEditor = useActiveOrLastEditorForOwner(() => props.element);
 

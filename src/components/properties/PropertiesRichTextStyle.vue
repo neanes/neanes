@@ -31,7 +31,7 @@
           :id="`${idPrefix}-paragraph-style`"
           trigger-class="w-full"
           :model-value="paragraphStyleValue"
-          :paragraph-styles="paragraphStyleOptions"
+          :paragraph-styles="paragraphStyles"
           :disabled="!isCommandEnabled('style')"
           :disabled-style-ids="disabledParagraphStyleIds"
           show-none-option
@@ -907,7 +907,7 @@ const {
   fontFamilyValue,
   fontFamilyOptions,
   paragraphStyleValue,
-  paragraphStyleOptions,
+  disabledParagraphStyleIds,
   resolvedActiveParagraphStyle,
   fontStyleValue,
   fontStyleOptions,
@@ -925,7 +925,6 @@ const {
   isCommandEnabled,
   isCommandActive,
   isStyleToggleEnabled,
-  isParagraphStyleEnabled,
   commandValue,
   runCommand,
   onParagraphStyleChanged,
@@ -982,11 +981,6 @@ const languageOptions = computed(() =>
   })),
 );
 
-const disabledParagraphStyleIds = computed(() =>
-  paragraphStyleOptions.value
-    .filter((style) => !isParagraphStyleEnabled(style.id))
-    .map((style) => style.id),
-);
 const currentDialogParagraphStyleId = computed(() =>
   paragraphStyleValue.value === PARAGRAPH_STYLE_NONE_VALUE ||
   paragraphStyleValue.value === PARAGRAPH_STYLE_MIXED_VALUE

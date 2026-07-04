@@ -209,6 +209,7 @@ export function execForActiveOrLastOwner(
 export function useEditorCommandStates(
   editorRef: Ref<Editor | null>,
   commandNames: string[],
+  propertyNamesByCommand: Record<string, string[]> = {},
 ) {
   const states = reactive({}) as Record<string, EditorCommandObservableState>;
 
@@ -216,7 +217,7 @@ export function useEditorCommandStates(
     states[commandName] = createEditorCommandState();
   }
 
-  watchEditorCommandStates(editorRef, states);
+  watchEditorCommandStates(editorRef, states, propertyNamesByCommand);
 
   return states;
 }
@@ -364,8 +365,6 @@ function watchEditorCommandStates(
       return;
     }
 
-    const syncCallbacks: Array<() => void> = [];
-
     for (const [commandName, state] of stateEntries) {
       const command = editor.commands.get(commandName);
 
@@ -375,7 +374,6 @@ function watchEditorCommandStates(
 
       const propertyNames = propertyNamesByCommand[commandName] ?? [];
       const syncAll = () => syncCommandState(command, state, propertyNames);
-      syncCallbacks.push(syncAll);
 
       syncAll();
       listenToObservablePropertyChange(command, 'value', syncAll, addCleanup);
@@ -395,25 +393,6 @@ function watchEditorCommandStates(
         );
       }
     }
-
-    const syncSelectionDrivenStates = () => {
-      for (const sync of syncCallbacks) {
-        sync();
-      }
-    };
-
-    listenToEditorEvent(
-      editor.model.document.selection,
-      'change:range',
-      syncSelectionDrivenStates,
-      addCleanup,
-    );
-    listenToEditorEvent(
-      editor.model.document.selection,
-      'change:attribute',
-      syncSelectionDrivenStates,
-      addCleanup,
-    );
   });
 }
 

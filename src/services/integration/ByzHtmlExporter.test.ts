@@ -17,6 +17,21 @@ import glyphnames from '../../assets/fonts/sbmufl/glyphnames.json';
 import type { SbmuflGlyphName } from './../NeumeMappingService';
 import { ByzHtmlExporter } from './ByzHtmlExporter';
 
+function createComputedTextBox(overrides: Partial<TextBoxElement> = {}) {
+  const element = new TextBoxElement();
+
+  element.computedAlignment = TextBoxAlignment.Left;
+  element.computedColor = '#000000';
+  element.computedFontFamily = 'Source Serif';
+  element.computedFontSize = Unit.fromPt(12);
+  element.computedFontWeight = '400';
+  element.computedFontStyle = 'normal';
+  element.computedStrokeWidth = 0;
+  element.computedLineHeight = null;
+
+  return Object.assign(element, overrides);
+}
+
 describe('ByzHtmlExporter', () => {
   it('should have a tag mapping for every glyphname', () => {
     const exporter = new ByzHtmlExporter();
@@ -89,52 +104,33 @@ describe('ByzHtmlExporter', () => {
     expect(css).toContain('text-decoration:underline;');
   });
 
-  it('exports paragraph-style text boxes with underline through shared CSS and inline text', () => {
+  it('exports paragraph-style text boxes with inline underline text decoration', () => {
     const exporter = new ByzHtmlExporter();
-    const element = new TextBoxElement();
-
-    vi.spyOn(exporter, 'getDropCapAdjustment').mockReturnValue(0);
-
-    element.content = 'Styled text';
-    element.paragraphStyleId = 'custom-style';
-    element.computedAlignment = TextBoxAlignment.Left;
-    element.computedColor = '#000000';
-    element.computedFontFamily = 'Source Serif';
-    element.computedFontSize = Unit.fromPt(12);
-    element.computedFontWeight = '400';
-    element.computedFontStyle = 'normal';
-    element.computedStrokeWidth = 0;
-    element.computedLineHeight = null;
+    const element = createComputedTextBox({
+      content: 'Styled text',
+      paragraphStyleId: 'custom-style',
+    });
 
     const customStyle = new ParagraphStyle();
     customStyle.id = 'custom-style';
     customStyle.overrides.textDecoration = 'underline';
 
-    const html = exporter.exportTextBox(element, [customStyle], 0);
-    const css = exporter.exportPageSetup(new PageSetup(), [customStyle]);
-
-    expect(css).toContain('text-decoration:underline;');
-    expect(html).toContain('text-decoration: underline;');
+    expect(exporter.exportTextBox(element, [customStyle], 0)).toContain(
+      'text-decoration: underline;',
+    );
   });
 
   it('exports explicit underline clears against an underlined default as none', () => {
     const exporter = new ByzHtmlExporter();
-    const element = new TextBoxElement();
     const style = new ParagraphStyle();
 
     style.id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
     style.overrides.textDecoration = 'underline';
 
-    element.content = 'Styled text';
-    element.underline = false;
-    element.computedAlignment = TextBoxAlignment.Left;
-    element.computedColor = '#000000';
-    element.computedFontFamily = 'Source Serif';
-    element.computedFontSize = Unit.fromPt(12);
-    element.computedFontWeight = '400';
-    element.computedFontStyle = 'normal';
-    element.computedStrokeWidth = 0;
-    element.computedLineHeight = null;
+    const element = createComputedTextBox({
+      content: 'Styled text',
+      underline: false,
+    });
 
     expect(exporter.exportTextBox(element, [style], 0)).toContain(
       'text-decoration: none;',
@@ -147,40 +143,34 @@ describe('ByzHtmlExporter', () => {
 
     element.inline = true;
     element.content = 'Inline text';
+    element.paragraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics;
     element.computedAlignment = TextBoxAlignment.Center;
-    element.computedColor = '#123456';
-    element.computedFontFamily = 'Alegreya';
-    element.computedFontSize = Unit.fromPt(18);
-    element.computedFontWeight = '700';
-    element.computedFontStyle = 'italic';
-    element.computedStrokeWidth = 2;
-    element.computedLineHeight = 1.4;
 
     expect(exporter.exportTextBox(element, [], 0)).toBe(
-      `<div dir="auto" class="byz--text-box byz--text-box-inline" style="color: #123456;font-family: 'Alegreya', 'Source Serif';font-size: 18pt;font-weight: 700;font-style: italic;line-height: 1.4;-webkit-text-stroke-width: 2;text-align: center;">Inline text</div
+      `<div dir="auto" class="byz--text-box byz--text-box-inline" style="text-align: center;">Inline text</div
 >`,
     );
   });
 
   it('exports computed styles for inline text boxes with explicit paragraph-style overrides', () => {
     const exporter = new ByzHtmlExporter();
-    const element = new TextBoxElement();
-
-    element.inline = true;
-    element.content = 'Inline override';
-    element.fontSize = Unit.fromPt(16);
-    element.color = '#abcdef';
-    element.fontFamily = 'Alegreya';
-    element.fontStyle = 'Bold Italic';
-    element.strokeWidth = 1.5;
-    element.computedAlignment = TextBoxAlignment.Right;
-    element.computedColor = '#123456';
-    element.computedFontFamily = 'Alegreya';
-    element.computedFontSize = Unit.fromPt(18);
-    element.computedFontWeight = '700';
-    element.computedFontStyle = 'italic';
-    element.computedStrokeWidth = 2;
-    element.computedLineHeight = 1.4;
+    const element = createComputedTextBox({
+      inline: true,
+      content: 'Inline override',
+      fontSize: Unit.fromPt(16),
+      color: '#abcdef',
+      fontFamily: 'Alegreya',
+      fontStyle: 'Bold Italic',
+      strokeWidth: 1.5,
+      computedAlignment: TextBoxAlignment.Right,
+      computedColor: '#123456',
+      computedFontFamily: 'Alegreya',
+      computedFontSize: Unit.fromPt(18),
+      computedFontWeight: '700',
+      computedFontStyle: 'italic',
+      computedStrokeWidth: 2,
+      computedLineHeight: 1.4,
+    });
 
     expect(exporter.exportTextBox(element, [], 0)).toBe(
       `<div dir="auto" class="byz--text-box byz--text-box-inline" style="color: #123456;font-family: 'Alegreya', 'Source Serif';font-size: 18pt;font-weight: 700;font-style: italic;line-height: 1.4;-webkit-text-stroke-width: 2;text-align: right;">Inline override</div\n>`,

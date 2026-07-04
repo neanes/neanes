@@ -97,6 +97,16 @@ interface ByzHtmlExporterConfig {
 export class ByzHtmlExporter {
   neumeToTagMap: Map<Neume, TagInfo> = new Map<Neume, TagInfo>();
 
+  // The built-in default styles are invariant for a given style list, so they
+  // are resolved once per export instead of per element. The cache is keyed by
+  // the style array reference.
+  private resolvedDefaultStyles: {
+    paragraphStyles: ParagraphStyle[];
+    defaultTextBoxStyle: ResolvedParagraphStyle;
+    lyricsStyle: ResolvedParagraphStyle;
+    defaultDropCapStyle: ResolvedParagraphStyle;
+  } | null = null;
+
   config: ByzHtmlExporterConfig = {
     classFthora: 'byz--f',
     classGorgon: 'byz--g',
@@ -132,6 +142,28 @@ export class ByzHtmlExporter {
 
     mapNeumeTag: this.createNeumeTagMap(),
   };
+
+  private getResolvedDefaultStyles(paragraphStyles: ParagraphStyle[]) {
+    if (this.resolvedDefaultStyles?.paragraphStyles !== paragraphStyles) {
+      this.resolvedDefaultStyles = {
+        paragraphStyles,
+        defaultTextBoxStyle: resolveParagraphStyle(
+          paragraphStyles,
+          BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+        ),
+        lyricsStyle: resolveParagraphStyle(
+          paragraphStyles,
+          BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+        ),
+        defaultDropCapStyle: resolveParagraphStyle(
+          paragraphStyles,
+          BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
+        ),
+      };
+    }
+
+    return this.resolvedDefaultStyles;
+  }
 
   exportScore(score: Score) {
     const style = this.exportPageSetup(score.pageSetup, score.paragraphStyles);
@@ -200,18 +232,8 @@ export class ByzHtmlExporter {
     );
 
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
-    const defaultTextBoxStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    );
-    const lyricsStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-    );
-    const defaultDropCapStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
-    );
+    const { defaultTextBoxStyle, lyricsStyle, defaultDropCapStyle } =
+      this.getResolvedDefaultStyles(paragraphStyles);
     const defaultTextBoxFont = resolveFontStyle(
       defaultTextBoxStyle.fontFamily,
       defaultTextBoxStyle.fontStyle,
@@ -667,10 +689,7 @@ export class ByzHtmlExporter {
     paragraphStyles: ParagraphStyle[],
     pageSetup: PageSetup,
   ): string {
-    const lyricsStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-    );
+    const { lyricsStyle } = this.getResolvedDefaultStyles(paragraphStyles);
     const resolvedLyricsStyle = resolveParagraphStyle(
       paragraphStyles,
       element.lyricsParagraphStyleId,
@@ -857,11 +876,10 @@ export class ByzHtmlExporter {
       });
     }
 
-    const lyricStyleAttribute = this.getCustomLyricStyleAttribute(
-      element,
-      paragraphStyles,
-      pageSetup,
-    );
+    const lyricStyleAttribute =
+      element.lyrics.trim() != '' || element.melismaText.trim() != ''
+        ? this.getCustomLyricStyleAttribute(element, paragraphStyles, pageSetup)
+        : '';
 
     if (element.lyrics.trim() != '') {
       const lyrics = element.lyrics
@@ -974,15 +992,16 @@ export class ByzHtmlExporter {
     indentation: number,
   ) {
     let styleAttribute = '';
+    const overrides = element.getParagraphStyleOverrides();
 
     if (
-      hasParagraphStyleOverrides(element.getParagraphStyleOverrides()) ||
+      hasParagraphStyleOverrides(overrides) ||
       element.paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap
     ) {
       const resolvedDropCapStyle = resolveParagraphStyle(
         paragraphStyles,
         element.paragraphStyleId,
-        element.getParagraphStyleOverrides(),
+        overrides,
       );
       const resolvedDropCapFont = resolveFontStyle(
         resolvedDropCapStyle.fontFamily,
@@ -1027,18 +1046,13 @@ export class ByzHtmlExporter {
 
     let className = this.config.classTextBox;
 
-    const defaultTextBoxStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    );
-    const lyricsStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-    );
+    const { defaultTextBoxStyle, lyricsStyle } =
+      this.getResolvedDefaultStyles(paragraphStyles);
+    const overrides = element.getParagraphStyleOverrides();
     const resolvedParagraphStyle = resolveParagraphStyle(
       paragraphStyles,
       element.paragraphStyleId,
-      element.getParagraphStyleOverrides(),
+      overrides,
     );
 
     let style = '';
@@ -1048,7 +1062,7 @@ export class ByzHtmlExporter {
 
     if (
       !element.inline ||
-      hasParagraphStyleOverrides(element.getParagraphStyleOverrides()) ||
+      hasParagraphStyleOverrides(overrides) ||
       element.paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
     ) {
       style += `color: ${element.computedColor};`;

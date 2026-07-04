@@ -635,18 +635,12 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             options.includeTextBoxes
           ) {
             const textBox = element as TextBoxElement;
-            const defaultFontFamily = textBox.inline
-              ? lyricsStyle.fontFamily
-              : defaultTextBoxStyle.fontFamily;
-            const defaultFontSize = textBox.inline
-              ? lyricsStyle.fontSize
-              : defaultTextBoxStyle.fontSize;
+            const defaultStyle = textBox.inline
+              ? lyricsStyle
+              : defaultTextBoxStyle;
             const defaultFont = textBox.inline
               ? defaultLyricsFont
               : defaultTextBoxFont;
-            const defaultColor = textBox.inline
-              ? lyricsStyle.color
-              : defaultTextBoxStyle.color;
             const resolvedParagraphStyle = resolveParagraphStyle(
               paragraphStyles,
               textBox.paragraphStyleId,
@@ -656,9 +650,6 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               resolvedParagraphStyle.fontFamily,
               resolvedParagraphStyle.fontStyle,
             );
-            const defaultTextDecoration = textBox.inline
-              ? lyricsStyle.textDecoration
-              : defaultTextBoxStyle.textDecoration;
 
             pushExportedElement({
               type: 'textbox',
@@ -685,11 +676,11 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? toPt(textBox.marginBottom)
                   : undefined,
               fontFamily:
-                resolvedParagraphStyle.fontFamily != defaultFontFamily
+                resolvedParagraphStyle.fontFamily != defaultStyle.fontFamily
                   ? convertFontName(resolvedParagraphStyle.fontFamily)
                   : undefined,
               fontSize:
-                resolvedParagraphStyle.fontSize != defaultFontSize
+                resolvedParagraphStyle.fontSize != defaultStyle.fontSize
                   ? toPt(resolvedParagraphStyle.fontSize)
                   : undefined,
               fontStyle:
@@ -701,11 +692,12 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? resolvedTextBoxFont.cssFontWeight
                   : undefined,
               color:
-                resolvedParagraphStyle.color != defaultColor
+                resolvedParagraphStyle.color != defaultStyle.color
                   ? resolvedParagraphStyle.color.substring(1)
                   : undefined,
               textDecoration:
-                resolvedParagraphStyle.textDecoration !== defaultTextDecoration
+                resolvedParagraphStyle.textDecoration !==
+                defaultStyle.textDecoration
                   ? (resolvedParagraphStyle.textDecoration ?? 'none')
                   : undefined,
             } as LatexTextBoxElement);

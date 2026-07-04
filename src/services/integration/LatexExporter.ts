@@ -445,12 +445,6 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 note.lyricsParagraphStyleId,
                 note.getParagraphStyleOverrides(),
               );
-              const resolvedLyricsTextDecoration =
-                note.lyricsTextDecoration === 'underline'
-                  ? 'underline'
-                  : note.lyricsTextDecoration === 'none'
-                    ? 'none'
-                    : resolvedLyricsStyle.textDecoration;
               const lyricsFont = resolveFontStyle(
                 resolvedLyricsStyle.fontFamily,
                 resolvedLyricsStyle.fontStyle,
@@ -484,8 +478,9 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? lyricsFont.cssFontWeight
                   : undefined;
               noteInfo.lyricsTextDecoration =
-                resolvedLyricsTextDecoration !== lyricsStyle.textDecoration
-                  ? (resolvedLyricsTextDecoration ?? 'none')
+                resolvedLyricsStyle.textDecoration !==
+                lyricsStyle.textDecoration
+                  ? (resolvedLyricsStyle.textDecoration ?? 'none')
                   : undefined;
             }
 
@@ -661,12 +656,6 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               resolvedParagraphStyle.fontFamily,
               resolvedParagraphStyle.fontStyle,
             );
-            const resolvedTextDecoration =
-              textBox.underline === true
-                ? 'underline'
-                : textBox.underline === false
-                  ? 'none'
-                  : resolvedParagraphStyle.textDecoration;
             const defaultTextDecoration = textBox.inline
               ? lyricsStyle.textDecoration
               : defaultTextBoxStyle.textDecoration;
@@ -716,8 +705,8 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? resolvedParagraphStyle.color.substring(1)
                   : undefined,
               textDecoration:
-                resolvedTextDecoration !== defaultTextDecoration
-                  ? (resolvedTextDecoration ?? 'none')
+                resolvedParagraphStyle.textDecoration !== defaultTextDecoration
+                  ? (resolvedParagraphStyle.textDecoration ?? 'none')
                   : undefined,
             } as LatexTextBoxElement);
           }

@@ -251,9 +251,7 @@ const textBoxStyleBottom = computed(() => {
 
 const textBoxClass = computed(() => {
   return {
-    underline:
-      props.element.underline === true ||
-      (props.element.underline == null && props.element.computedUnderline),
+    underline: props.element.computedUnderline,
   };
 });
 

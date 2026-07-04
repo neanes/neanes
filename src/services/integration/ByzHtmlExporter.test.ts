@@ -6,7 +6,10 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
-import { ParagraphStyle } from '@/models/ParagraphStyle';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  ParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { setRichTextLanguage } from '@/utils/richTextLanguage';
 import { Unit } from '@/utils/Unit';
 
@@ -114,16 +117,15 @@ describe('ByzHtmlExporter', () => {
     expect(html).toContain('text-decoration: underline;');
   });
 
-  it('exports explicit text-box underline clears as none', () => {
+  it('exports explicit underline clears against an underlined default as none', () => {
     const exporter = new ByzHtmlExporter();
     const element = new TextBoxElement();
     const style = new ParagraphStyle();
 
-    style.id = 'custom-style';
+    style.id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
     style.overrides.textDecoration = 'underline';
 
     element.content = 'Styled text';
-    element.paragraphStyleId = 'custom-style';
     element.underline = false;
     element.computedAlignment = TextBoxAlignment.Left;
     element.computedColor = '#000000';

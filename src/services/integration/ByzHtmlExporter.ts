@@ -676,27 +676,6 @@ export class ByzHtmlExporter {
       element.lyricsParagraphStyleId,
       element.getParagraphStyleOverrides(),
     );
-    const resolvedLyricsTextDecoration =
-      element.lyricsTextDecoration === 'underline'
-        ? 'underline'
-        : element.lyricsTextDecoration === 'none'
-          ? 'none'
-          : resolvedLyricsStyle.textDecoration;
-    const hasTextDecorationOverride =
-      resolvedLyricsTextDecoration !== lyricsStyle.textDecoration;
-
-    if (
-      resolvedLyricsStyle.color === lyricsStyle.color &&
-      resolvedLyricsStyle.fontFamily === lyricsStyle.fontFamily &&
-      resolvedLyricsStyle.fontStyle === lyricsStyle.fontStyle &&
-      resolvedLyricsStyle.fontSize === lyricsStyle.fontSize &&
-      resolvedLyricsStyle.strokeWidth === lyricsStyle.strokeWidth &&
-      resolvedLyricsStyle.lineHeight === lyricsStyle.lineHeight &&
-      !hasTextDecorationOverride
-    ) {
-      return '';
-    }
-
     let style = '';
 
     if (resolvedLyricsStyle.color !== lyricsStyle.color) {
@@ -733,11 +712,11 @@ export class ByzHtmlExporter {
       style += `line-height: ${resolvedLyricsStyle.lineHeight ?? 'normal'};`;
     }
 
-    if (hasTextDecorationOverride) {
-      style += `text-decoration: ${resolvedLyricsTextDecoration ?? 'none'};`;
+    if (resolvedLyricsStyle.textDecoration !== lyricsStyle.textDecoration) {
+      style += `text-decoration: ${resolvedLyricsStyle.textDecoration ?? 'none'};`;
     }
 
-    return ` style="${style}"`;
+    return style === '' ? '' : ` style="${style}"`;
   }
 
   exportNote(
@@ -1066,12 +1045,6 @@ export class ByzHtmlExporter {
     const defaultTextDecoration = element.inline
       ? lyricsStyle.textDecoration
       : defaultTextBoxStyle.textDecoration;
-    const resolvedTextDecoration =
-      element.underline === true
-        ? 'underline'
-        : element.underline === false
-          ? 'none'
-          : resolvedParagraphStyle.textDecoration;
 
     if (
       !element.inline ||
@@ -1091,8 +1064,8 @@ export class ByzHtmlExporter {
       //style += `height: ${element.height};`;
     }
 
-    if (resolvedTextDecoration !== defaultTextDecoration) {
-      style += `text-decoration: ${resolvedTextDecoration ?? 'none'};`;
+    if (resolvedParagraphStyle.textDecoration !== defaultTextDecoration) {
+      style += `text-decoration: ${resolvedParagraphStyle.textDecoration ?? 'none'};`;
     }
 
     style += `text-align: ${element.computedAlignment};`;

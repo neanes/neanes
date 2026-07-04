@@ -1,20 +1,15 @@
 import type {
-  AlternateLineElement,
-  AnnotationElement,
-  DropCapElement,
   NoteElement,
-  RichTextBoxElement,
   ScoreElement,
   TextBoxElement,
 } from '@/models/Element';
-import { ElementType, RICH_TEXT_BOX_CONTENT_KEYS } from '@/models/Element';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   getTextBoxParagraphStyleFallbackId,
   type ParagraphStyle,
 } from '@/models/ParagraphStyle';
 
-import { rewriteRichTextParagraphStyleClasses } from './richTextParagraphStyleClasses';
+import { planParagraphStyleReferenceRemap } from './paragraphStyleReferences';
 
 function createParagraphStyleIdSet(paragraphStyles: ParagraphStyle[]) {
   return new Set(paragraphStyles.map((style) => style.id));
@@ -28,108 +23,22 @@ function resolveClipboardParagraphStyleId(
   return paragraphStyleIds.has(styleId) ? styleId : fallbackStyleId;
 }
 
-function rewriteClipboardRichTextHtml(
-  html: string,
-  paragraphStyleIds: Set<string>,
-  fallbackStyleId: string,
-) {
-  return rewriteRichTextParagraphStyleClasses(html, (styleId) =>
-    paragraphStyleIds.has(styleId) ? null : fallbackStyleId,
-  );
-}
-
+// Pasted content may reference styles the destination score does not have,
+// so every unknown id -- in direct fields and rich text classes alike --
+// falls back to the surface's built-in default.
 export function sanitizeClipboardElementParagraphStyleIds(
   element: ScoreElement,
   paragraphStyles: ParagraphStyle[],
 ) {
   const paragraphStyleIds = createParagraphStyleIdSet(paragraphStyles);
+  const resolveStyleId = (styleId: string, fallbackStyleId: string) =>
+    paragraphStyleIds.has(styleId) ? null : fallbackStyleId;
 
-  sanitizeElementParagraphStyleIds(element, paragraphStyleIds);
-}
-
-function sanitizeAlternateLineParagraphStyleIds(
-  alternateLine: AlternateLineElement,
-  paragraphStyleIds: Set<string>,
-) {
-  for (const childElement of alternateLine.elements) {
-    sanitizeElementParagraphStyleIds(childElement, paragraphStyleIds);
-  }
-}
-
-function sanitizeElementParagraphStyleIds(
-  element: ScoreElement,
-  paragraphStyleIds: Set<string>,
-) {
-  switch (element.elementType) {
-    case ElementType.Note: {
-      const note = element as NoteElement;
-      note.lyricsParagraphStyleId = resolveClipboardParagraphStyleId(
-        note.lyricsParagraphStyleId,
-        paragraphStyleIds,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-      );
-
-      for (const annotation of note.annotations) {
-        sanitizeElementParagraphStyleIds(annotation, paragraphStyleIds);
-      }
-
-      for (const alternateLine of note.alternateLines) {
-        sanitizeAlternateLineParagraphStyleIds(
-          alternateLine,
-          paragraphStyleIds,
-        );
-      }
-      break;
-    }
-    case ElementType.Annotation: {
-      const annotation = element as AnnotationElement;
-      annotation.text = rewriteClipboardRichTextHtml(
-        annotation.text,
-        paragraphStyleIds,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
-      );
-      break;
-    }
-    case ElementType.RichTextBox: {
-      const richTextBox = element as RichTextBoxElement;
-      const fallbackStyleId = getTextBoxParagraphStyleFallbackId(
-        richTextBox.inline,
-      );
-
-      for (const contentKey of RICH_TEXT_BOX_CONTENT_KEYS) {
-        richTextBox[contentKey] = rewriteClipboardRichTextHtml(
-          richTextBox[contentKey],
-          paragraphStyleIds,
-          fallbackStyleId,
-        );
-      }
-      break;
-    }
-    case ElementType.TextBox: {
-      const textBox = element as TextBoxElement;
-      textBox.paragraphStyleId = resolveClipboardParagraphStyleId(
-        textBox.paragraphStyleId,
-        paragraphStyleIds,
-        getTextBoxParagraphStyleFallbackId(textBox.inline),
-      );
-      break;
-    }
-    case ElementType.DropCap: {
-      const dropCap = element as DropCapElement;
-      dropCap.paragraphStyleId = resolveClipboardParagraphStyleId(
-        dropCap.paragraphStyleId,
-        paragraphStyleIds,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
-      );
-      break;
-    }
-    case ElementType.AlternateLine: {
-      sanitizeAlternateLineParagraphStyleIds(
-        element as AlternateLineElement,
-        paragraphStyleIds,
-      );
-      break;
-    }
+  for (const remap of planParagraphStyleReferenceRemap(element, {
+    resolveStyleId,
+    resolveRichTextStyleId: resolveStyleId,
+  })) {
+    Object.assign(remap.target, remap.newValues);
   }
 }
 

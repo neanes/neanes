@@ -141,7 +141,6 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
-  RICH_TEXT_BOX_CONTENT_KEYS,
   RichTextBoxElement,
   TempoElement,
   TextBoxElement,
@@ -245,15 +244,16 @@ import {
   isDisplayedPageNumberOdd,
   isRightHandPage,
 } from '@/utils/PageNumbering';
+import {
+  type ParagraphStyleReferenceResolvers,
+  planParagraphStyleReferenceRemap,
+} from '@/utils/paragraphStyleReferences';
 import type { TokenMetadata } from '@/utils/replaceTokens';
 import {
   hasMeaningfulRichTextHtmlContent,
   setRichTextLanguage,
 } from '@/utils/richTextLanguage';
-import {
-  rewriteRichTextParagraphStyleClasses,
-  richTextParagraphStyleClassName,
-} from '@/utils/richTextParagraphStyleClasses';
+import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleClasses';
 import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import {
   resolveRunningMarkerPageMetadata,
@@ -7169,45 +7169,6 @@ function updateDocumentProperties(documentProperties: DocumentProperties) {
   save();
 }
 
-function getAllTextBoxElements(score: Score) {
-  return [...score.staff.elements, ...score.headersAndFooters].filter(
-    isTextBoxElement,
-  );
-}
-
-function getAllRichTextBoxes(score: Score) {
-  return [...score.staff.elements, ...score.headersAndFooters].filter(
-    isRichTextBoxElement,
-  );
-}
-
-function getAllNoteElements(score: Score) {
-  const notes: NoteElement[] = [];
-
-  function collectNotes(elements: ScoreElement[]) {
-    for (const element of elements) {
-      if (element.elementType !== ElementType.Note) {
-        continue;
-      }
-
-      const note = element as NoteElement;
-      notes.push(note);
-
-      for (const alternateLine of note.alternateLines) {
-        collectNotes(alternateLine.elements);
-      }
-    }
-  }
-
-  collectNotes(score.staff.elements);
-
-  return notes;
-}
-
-function getAllDropCapElements(score: Score) {
-  return score.staff.elements.filter(isDropCapElement);
-}
-
 function getDeletedStyleFallbacks(
   previousStylesById: Map<string, ParagraphStyle>,
   nextStyleIds: Set<string>,
@@ -7241,18 +7202,6 @@ function getDeletedStyleFallbacks(
   return deletedStyleFallbacks;
 }
 
-function getDeletedStyleFallbackId(
-  styleId: string,
-  deletedStyleFallbacks: Map<string, string | null>,
-  defaultFallbackStyleId: string,
-) {
-  if (!deletedStyleFallbacks.has(styleId)) {
-    return null;
-  }
-
-  return deletedStyleFallbacks.get(styleId) ?? defaultFallbackStyleId;
-}
-
 function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
   flushPendingRichTextEditors(selectedWorkspace.value);
 
@@ -7265,6 +7214,19 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
     previousStylesById,
     nextStyleIds,
   );
+  // References to a deleted style move to its nearest surviving ancestor,
+  // then to the surface default. Rich text classes whose ids this deletion
+  // did not remove are left untouched.
+  const remapResolvers: ParagraphStyleReferenceResolvers = {
+    resolveStyleId: (styleId, fallbackStyleId) =>
+      nextStyleIds.has(styleId)
+        ? null
+        : (deletedStyleFallbacks.get(styleId) ?? fallbackStyleId),
+    resolveRichTextStyleId: (styleId, fallbackStyleId) =>
+      deletedStyleFallbacks.has(styleId)
+        ? (deletedStyleFallbacks.get(styleId) ?? fallbackStyleId)
+        : null,
+  };
   const commands: Command[] = [
     scoreCommandFactory.create('update-properties', {
       target: score.value,
@@ -7272,110 +7234,21 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
     }),
   ];
 
-  for (const element of getAllTextBoxElements(score.value)) {
-    if (nextStyleIds.has(element.paragraphStyleId)) {
-      continue;
-    }
-
-    commands.push(
-      textBoxCommandFactory.create('update-properties', {
-        target: element,
-        newValues: {
-          paragraphStyleId:
-            deletedStyleFallbacks.get(element.paragraphStyleId) ??
-            getTextBoxParagraphStyleFallbackId(element.inline),
-        },
-      }),
-    );
-  }
-
-  for (const element of getAllRichTextBoxes(score.value)) {
-    const updatedValues: Partial<RichTextBoxElement> = {};
-    const defaultFallbackStyleId = getTextBoxParagraphStyleFallbackId(
-      element.inline,
-    );
-
-    for (const contentKey of RICH_TEXT_BOX_CONTENT_KEYS) {
-      const rewrittenHtml = rewriteRichTextParagraphStyleClasses(
-        element[contentKey],
-        (styleId) =>
-          getDeletedStyleFallbackId(
-            styleId,
-            deletedStyleFallbacks,
-            defaultFallbackStyleId,
-          ),
-      );
-
-      if (rewrittenHtml !== element[contentKey]) {
-        updatedValues[contentKey] = rewrittenHtml;
-      }
-    }
-
-    if (Object.keys(updatedValues).length === 0) {
-      continue;
-    }
-
-    commands.push(
-      richTextBoxCommandFactory.create('update-properties', {
-        target: element,
-        newValues: updatedValues,
-      }),
-    );
-  }
-
-  for (const note of getAllNoteElements(score.value)) {
-    if (!nextStyleIds.has(note.lyricsParagraphStyleId)) {
+  for (const element of [
+    ...score.value.staff.elements,
+    ...score.value.headersAndFooters,
+  ]) {
+    for (const remap of planParagraphStyleReferenceRemap(
+      element,
+      remapResolvers,
+    )) {
       commands.push(
-        noteElementCommandFactory.create('update-properties', {
-          target: note,
-          newValues: {
-            lyricsParagraphStyleId:
-              deletedStyleFallbacks.get(note.lyricsParagraphStyleId) ??
-              BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-          },
+        scoreElementCommandFactory.create('update-properties', {
+          target: remap.target,
+          newValues: remap.newValues,
         }),
       );
     }
-
-    for (const annotation of note.annotations) {
-      const rewrittenText = rewriteRichTextParagraphStyleClasses(
-        annotation.text,
-        (styleId) =>
-          getDeletedStyleFallbackId(
-            styleId,
-            deletedStyleFallbacks,
-            BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
-          ),
-      );
-
-      if (rewrittenText !== annotation.text) {
-        commands.push(
-          annotationCommandFactory.create('update-properties', {
-            target: annotation,
-            newValues: {
-              text: rewrittenText,
-            },
-          }),
-        );
-      }
-    }
-  }
-
-  for (const dropCap of getAllDropCapElements(score.value)) {
-    if (nextStyleIds.has(dropCap.paragraphStyleId)) {
-      continue;
-    }
-
-    commands.push(
-      dropCapCommandFactory.create('update-properties', {
-        target: dropCap,
-        newValues: {
-          paragraphStyleId:
-            deletedStyleFallbacks.get(dropCap.paragraphStyleId) ??
-            BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
-        },
-      }),
-    );
   }
 
   runWithResizableParagraphStyleRecalc(() =>

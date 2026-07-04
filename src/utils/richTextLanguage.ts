@@ -119,11 +119,8 @@ export function hasMeaningfulRichTextEditorContent(
 }
 
 export function hasMeaningfulRichTextHtmlContent(html: string): boolean {
-  return (
-    html
-      .replace(HTML_NBSP_ENTITY_REGEX, ' ')
-      .replace(HTML_TAG_REGEX, '')
-      .replace(/[\s\u00a0]/g, '').length > 0
+  return isMeaningfulText(
+    html.replace(HTML_NBSP_ENTITY_REGEX, ' ').replace(HTML_TAG_REGEX, ''),
   );
 }
 

@@ -1,11 +1,11 @@
-import type { Batch, ModelElement, ModelWriter } from 'ckeditor5';
+import type { Batch, ModelWriter } from 'ckeditor5';
 import { Command } from 'ckeditor5';
 
 import { ALIGNMENT_OVERRIDE_MIXED_VALUE } from '@/utils/alignmentOverride';
 
 export const ALIGNMENT_OVERRIDE = 'alignmentOverride';
 
-const ALIGNMENT_VALUES = ['left', 'center', 'right', 'justify'] as const;
+export const ALIGNMENT_VALUES = ['left', 'center', 'right', 'justify'] as const;
 
 export type AlignmentOverrideValue = (typeof ALIGNMENT_VALUES)[number];
 
@@ -74,9 +74,9 @@ export class AlignmentOverrideCommand extends Command {
         }
 
         if (isAlignmentOverrideValue(value)) {
-          writer.setAttribute(ALIGNMENT_OVERRIDE, value, block as ModelElement);
+          writer.setAttribute(ALIGNMENT_OVERRIDE, value, block);
         } else {
-          writer.removeAttribute(ALIGNMENT_OVERRIDE, block as ModelElement);
+          writer.removeAttribute(ALIGNMENT_OVERRIDE, block);
         }
       }
     };

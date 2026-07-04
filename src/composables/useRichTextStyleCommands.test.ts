@@ -36,7 +36,7 @@ import {
   PARAGRAPH_STYLE_MIXED_VALUE,
   PARAGRAPH_STYLE_NONE_VALUE,
   resolveRichTextParagraphStyleState,
-  useRichParagraphStyleCommands,
+  useRichTextStyleCommands,
 } from './useRichTextStyleCommands';
 
 describe('resolveRichTextParagraphStyleState', () => {
@@ -84,7 +84,7 @@ describe('resolveRichTextParagraphStyleState', () => {
   });
 });
 
-describe('useRichParagraphStyleCommands', () => {
+describe('useRichTextStyleCommands', () => {
   function createCommandState(value: unknown, isEnabled = true) {
     return {
       value,
@@ -144,7 +144,7 @@ describe('useRichParagraphStyleCommands', () => {
     });
 
     return {
-      commands: useRichParagraphStyleCommands(
+      commands: useRichTextStyleCommands(
         {
           element,
           pageSetup,
@@ -238,7 +238,7 @@ describe('useRichParagraphStyleCommands', () => {
       },
     });
 
-    useRichParagraphStyleCommands(
+    useRichTextStyleCommands(
       {
         element: {},
         pageSetup: new PageSetup(),

@@ -418,7 +418,7 @@ import {
 } from '@/composables/useRichTextSelectionGuard';
 import {
   PARAGRAPH_STYLE_MIXED_VALUE,
-  useRichParagraphStyleCommands,
+  useRichTextStyleCommands,
 } from '@/composables/useRichTextStyleCommands';
 import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
 import { ElementType } from '@/models/Element';
@@ -514,7 +514,7 @@ const {
   onAlignmentChanged,
   onParagraphStyleChanged,
   onClearFormatting,
-} = useRichParagraphStyleCommands(styleCommandProps, EXTRA_COMMAND_NAMES);
+} = useRichTextStyleCommands(styleCommandProps, EXTRA_COMMAND_NAMES);
 
 const toolbarParagraphStyleValue = computed(() => paragraphStyleValue.value);
 const disabledParagraphStyleIds = computed(() =>

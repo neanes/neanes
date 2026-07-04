@@ -870,7 +870,7 @@ import {
 import {
   PARAGRAPH_STYLE_MIXED_VALUE,
   PARAGRAPH_STYLE_NONE_VALUE,
-  useRichParagraphStyleCommands,
+  useRichTextStyleCommands,
 } from '@/composables/useRichTextStyleCommands';
 import { supportedLocales } from '@/i18n';
 import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
@@ -943,7 +943,7 @@ const {
   onTextDecorationValuesChanged,
   onAlignmentChanged,
   clearParagraphStyleFormatting,
-} = useRichParagraphStyleCommands(props, [
+} = useRichTextStyleCommands(props, [
   'subscript',
   'superscript',
   'textPartLanguage',

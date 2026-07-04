@@ -160,12 +160,6 @@ function getActiveEditorForOwner(owner: object | null | undefined) {
     : null;
 }
 
-export function useActiveEditorForOwner(
-  owner: MaybeRefOrGetter<object | null | undefined>,
-) {
-  return computed(() => getActiveEditorForOwner(toValue(owner)));
-}
-
 export function useActiveOrLastEditorForOwner(
   owner: MaybeRefOrGetter<object | null | undefined>,
 ) {
@@ -194,21 +188,6 @@ export function focusLastActiveEditorForOwner(
   }
 
   editor.editing.view.focus();
-  return true;
-}
-
-export function execForOwner(
-  owner: object | null | undefined,
-  commandName: string,
-  ...args: unknown[]
-) {
-  const editor = getActiveEditorForOwner(owner);
-
-  if (editor == null) {
-    return false;
-  }
-
-  editor.execute(commandName, ...args);
   return true;
 }
 

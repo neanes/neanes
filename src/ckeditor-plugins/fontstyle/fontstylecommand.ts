@@ -32,8 +32,9 @@ type ResolvedParagraphStyleFallback = {
 };
 
 // The family whose styles the Bold/Italic shortcuts and the style list
-// operate against: the explicit fontFamily on the selection, or the text box's
-// default family when none is set (so default-font text can still be bolded).
+// operate against: the explicit fontFamily on the selection, the resolved
+// paragraph style's family, or the text box's default family when neither is
+// set (so default-font text can still be bolded).
 function effectiveFamily(
   editor: Editor,
   fallback?: ResolvedParagraphStyleFallback | null,

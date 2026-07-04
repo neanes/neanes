@@ -4,7 +4,7 @@
 // Model attribute keys. Each maps to one CSS property of the same name, and the
 // model value is that property's value verbatim. Commands are registered under
 // these names, so the properties pane drives them via
-// execForOwner(owner, FONT_VARIANT_NUMERIC, ...).
+// execForActiveOrLastOwner(owner, FONT_VARIANT_NUMERIC, ...).
 export const FONT_VARIANT_NUMERIC = 'fontVariantNumeric';
 export const FONT_VARIANT_LIGATURES = 'fontVariantLigatures';
 export const FONT_VARIANT_CAPS = 'fontVariantCaps';

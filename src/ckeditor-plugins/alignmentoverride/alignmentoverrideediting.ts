@@ -2,16 +2,9 @@ import { Plugin } from 'ckeditor5';
 
 import {
   ALIGNMENT_OVERRIDE,
+  ALIGNMENT_VALUES,
   AlignmentOverrideCommand,
-  type AlignmentOverrideValue,
 } from './alignmentoverridecommand';
-
-const ALIGNMENT_VALUES: AlignmentOverrideValue[] = [
-  'left',
-  'center',
-  'right',
-  'justify',
-];
 
 export default class AlignmentOverrideEditing extends Plugin {
   static get pluginName() {
@@ -52,7 +45,7 @@ export default class AlignmentOverrideEditing extends Plugin {
     editor.conversion.for('downcast').attributeToAttribute({
       model: {
         key: ALIGNMENT_OVERRIDE,
-        values: ALIGNMENT_VALUES,
+        values: [...ALIGNMENT_VALUES],
       },
       view: {
         left: {
@@ -82,12 +75,7 @@ export default class AlignmentOverrideEditing extends Plugin {
       },
     });
 
-    for (const [value, styleValue] of [
-      ['left', 'left'],
-      ['center', 'center'],
-      ['right', 'right'],
-      ['justify', 'justify'],
-    ] as const) {
+    for (const value of ALIGNMENT_VALUES) {
       editor.conversion.for('upcast').attributeToAttribute({
         view: {
           classes: `text-align-${value}`,
@@ -101,7 +89,7 @@ export default class AlignmentOverrideEditing extends Plugin {
       editor.conversion.for('upcast').attributeToAttribute({
         view: {
           styles: {
-            'text-align': styleValue,
+            'text-align': value,
           },
         },
         model: {

@@ -66,6 +66,7 @@ export class PageSetup {
 
   public melkiteRtl: boolean | undefined = false;
 
+  // Deprecated load-only compatibility for pre-paragraph-style lyrics.
   public lyricsDefaultFontFamily: string | undefined = undefined;
   public lyricsDefaultFontSize: number | undefined = undefined;
   public lyricsDefaultFontSubfamily: string | undefined = undefined;
@@ -73,6 +74,7 @@ export class PageSetup {
   public lyricsDefaultFontWeight: string | undefined = undefined;
   public lyricsDefaultColor: string | undefined = undefined;
   public lyricsDefaultStrokeWidth: number | undefined = undefined;
+
   public lyricsVerticalOffset = -Unit.fromInch(0.05);
   public lyricsMinimumSpacing = Unit.fromInch(0.05);
   public lyricsMelismaCutoffWidth = Unit.fromPt(5);
@@ -118,6 +120,7 @@ export class PageSetup {
   public tempoDefaultColor = '#ED0000';
   public tempoDefaultStrokeWidth = 0;
 
+  // Deprecated load-only compatibility for pre-paragraph-style drop caps.
   public dropCapDefaultFontFamily: string | undefined = undefined;
   public dropCapDefaultFontSize: number | undefined = undefined;
   public dropCapDefaultFontSubfamily: string | undefined = undefined;
@@ -126,6 +129,7 @@ export class PageSetup {
   public dropCapDefaultColor: string | undefined = undefined;
   public dropCapDefaultStrokeWidth: number | undefined = undefined;
   public dropCapDefaultLineHeight: number | undefined = undefined;
+
   public dropCapDefaultLineSpan = 1;
 
   // Deprecated load-only compatibility for pre-paragraph-style text boxes.

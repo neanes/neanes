@@ -88,10 +88,10 @@ export class NoteElement extends ScoreElement {
   public lyricsFontSize: number | undefined = undefined;
   public lyricsStrokeWidth: number | undefined = undefined;
   public lyricsFontSubfamily: string | undefined = undefined;
+  public lyricsTextDecoration: string | undefined = undefined;
   // Deprecated load-only compatibility for legacy lyrics font-style fields.
   public lyricsFontStyle: string | undefined = undefined;
   public lyricsFontWeight: string | undefined = undefined;
-  public lyricsTextDecoration: string | undefined = undefined;
   public lyricsParagraphStyleId: string | undefined = undefined;
   // Deprecated load-only compatibility for pre-paragraph-style lyrics.
   public lyricsUseDefaultStyle: boolean | undefined = undefined;
@@ -207,10 +207,10 @@ export class TextBoxElement extends ScoreElement {
   public multipanel: boolean | undefined = undefined;
   public inline: boolean | undefined = undefined;
   public fontSubfamily: string | undefined = undefined;
+  public underline: boolean | undefined = undefined;
   // Deprecated load-only compatibility for legacy text-box font-style fields.
   public bold: boolean | undefined = undefined;
   public italic: boolean | undefined = undefined;
-  public underline: boolean | undefined = undefined;
   public lineHeight: number | null | undefined = undefined;
   public height: number = 20;
   public customWidth: number | undefined = undefined;

@@ -55,13 +55,9 @@ function createLegacyScore(pageSetupOverrides: Partial<PageSetup_v1> = {}) {
 function loadLegacyDefaultParagraphStyle(
   pageSetupOverrides: Partial<PageSetup_v1> = {},
 ) {
-  const score = SaveService.LoadScoreFromJson(
-    createLegacyScore(pageSetupOverrides),
-  );
-
-  return resolveParagraphStyle(
-    score.paragraphStyles,
+  return loadLegacyBuiltInStyle(
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    pageSetupOverrides,
   );
 }
 
@@ -148,15 +144,6 @@ describe('SaveService font styles', () => {
   });
 
   it('loads legacy page setup weight/style pairs as font styles', () => {
-    const pageSetup = new PageSetup();
-    const legacy = new PageSetup_v1();
-
-    legacy.dropCapDefaultFontWeight = '700';
-    legacy.dropCapDefaultFontStyle = 'italic';
-    legacy.lyricsDefaultFontWeight = '600';
-    legacy.textBoxDefaultFontStyle = 'italic';
-
-    SaveService.LoadPageSetup_v1(pageSetup, legacy);
     const lyricsStyle = loadLegacyBuiltInStyle(
       BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
       {
@@ -180,14 +167,6 @@ describe('SaveService font styles', () => {
   });
 
   it('loads legacy page setup face names as base families and styles', () => {
-    const pageSetup = new PageSetup();
-    const legacy = new PageSetup_v1();
-
-    legacy.lyricsDefaultFontFamily = 'Minion Pro Semibold';
-    legacy.dropCapDefaultFontFamily = 'Minion Pro Semibold';
-    legacy.textBoxDefaultFontFamily = 'Minion Pro Semibold';
-
-    SaveService.LoadPageSetup_v1(pageSetup, legacy);
     const lyricsStyle = loadLegacyBuiltInStyle(
       BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
       {
@@ -213,13 +192,6 @@ describe('SaveService font styles', () => {
   });
 
   it('merges legacy page setup numeric weights into face-name styles', () => {
-    const pageSetup = new PageSetup();
-    const legacy = new PageSetup_v1();
-
-    legacy.textBoxDefaultFontFamily = 'Source Serif Caption';
-    legacy.textBoxDefaultFontWeight = '600';
-
-    SaveService.LoadPageSetup_v1(pageSetup, legacy);
     const defaultParagraphStyle = loadLegacyDefaultParagraphStyle({
       textBoxDefaultFontFamily: 'Source Serif Caption',
       textBoxDefaultFontWeight: '600',
@@ -230,13 +202,6 @@ describe('SaveService font styles', () => {
   });
 
   it('remaps legacy numeric weights to the catalog face spelling', () => {
-    const pageSetup = new PageSetup();
-    const legacy = new PageSetup_v1();
-
-    legacy.textBoxDefaultFontFamily = 'Source Serif';
-    legacy.textBoxDefaultFontWeight = '200';
-
-    SaveService.LoadPageSetup_v1(pageSetup, legacy);
     const defaultParagraphStyle = loadLegacyDefaultParagraphStyle({
       textBoxDefaultFontFamily: 'Source Serif',
       textBoxDefaultFontWeight: '200',
@@ -294,7 +259,6 @@ describe('SaveService font styles', () => {
 
   it('loads current font face style fields', () => {
     const pageSetup = new PageSetup();
-    const pageSetupSave = new PageSetup_v1();
     const dropCap = new DropCapElement();
     const dropCapSave = new DropCapElement_v1();
     const note = new NoteElement();
@@ -302,16 +266,12 @@ describe('SaveService font styles', () => {
     const textBox = new TextBoxElement();
     const textBoxSave = new TextBoxElement_v1();
 
-    pageSetupSave.lyricsDefaultFontSubfamily = 'Semibold';
-    pageSetupSave.dropCapDefaultFontSubfamily = 'Caption';
-    pageSetupSave.textBoxDefaultFontSubfamily = 'Bold Italic';
     dropCapSave.fontSubfamily = 'Semibold';
     noteSave.lyricsUseDefaultStyle = false;
     noteSave.lyricsFontSubfamily = 'Bold Italic';
     textBoxSave.useDefaultStyle = false;
     textBoxSave.fontSubfamily = 'Caption Semibold';
 
-    SaveService.LoadPageSetup_v1(pageSetup, pageSetupSave);
     const lyricsStyle = loadLegacyBuiltInStyle(
       BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
       {
@@ -526,28 +486,7 @@ describe('SaveService font styles', () => {
   });
 
   it('loads old scores without paragraphStyles by seeding defaults', () => {
-    const legacy = {
-      version: '1.1',
-      appVersion: 'test',
-      pageSetup: new PageSetup_v1(),
-      headers: {
-        default: { elements: [new TextBoxElement_v1()] },
-        chapterOpening: { elements: [new TextBoxElement_v1()] },
-        even: { elements: [new TextBoxElement_v1()] },
-        odd: { elements: [new TextBoxElement_v1()] },
-        firstPage: { elements: [new TextBoxElement_v1()] },
-      },
-      footers: {
-        default: { elements: [new TextBoxElement_v1()] },
-        chapterOpening: { elements: [new TextBoxElement_v1()] },
-        even: { elements: [new TextBoxElement_v1()] },
-        odd: { elements: [new TextBoxElement_v1()] },
-        firstPage: { elements: [new TextBoxElement_v1()] },
-      },
-      staff: { elements: [], lyrics: { text: '' } },
-    } as any;
-
-    const loaded = SaveService.LoadScoreFromJson(legacy);
+    const loaded = SaveService.LoadScoreFromJson(createLegacyScore());
 
     expect(loaded.paragraphStyles.length).toBeGreaterThan(0);
   });

@@ -25,6 +25,7 @@ import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   createDefaultParagraphStyles,
   getRequiredParagraphStyleById,
+  getTextBoxParagraphStyleFallbackId,
   isBuiltInParagraphStyleId,
   ParagraphStyle,
   type ParagraphStyleOverrides,
@@ -81,25 +82,19 @@ interface LegacyTextBoxCssFontCompatibility {
 interface LegacyPageSetupStyleDefaults {
   textBoxDefaultFontFamily?: string | null;
   textBoxDefaultFontSize?: number | null;
-  textBoxDefaultFontSubfamily?: string | null;
   textBoxDefaultFontStyle?: string | null;
-  textBoxDefaultFontWeight?: string | null;
   textBoxDefaultColor?: string | null;
   textBoxDefaultStrokeWidth?: number | null;
   textBoxDefaultLineHeight?: number | null;
   dropCapDefaultFontFamily?: string | null;
   dropCapDefaultFontSize?: number | null;
-  dropCapDefaultFontSubfamily?: string | null;
   dropCapDefaultFontStyle?: string | null;
-  dropCapDefaultFontWeight?: string | null;
   dropCapDefaultColor?: string | null;
   dropCapDefaultStrokeWidth?: number | null;
   dropCapDefaultLineHeight?: number | null;
   lyricsDefaultFontFamily?: string | null;
   lyricsDefaultFontSize?: number | null;
-  lyricsDefaultFontSubfamily?: string | null;
   lyricsDefaultFontStyle?: string | null;
-  lyricsDefaultFontWeight?: string | null;
   lyricsDefaultColor?: string | null;
   lyricsDefaultStrokeWidth?: number | null;
 }
@@ -422,21 +417,22 @@ function migrateLegacyParagraphStyleOverrides(
   score: Score_v1,
   paragraphStyles: ParagraphStyle[],
 ) {
-  const headerGroups: Array<[Header_v1 | Footer_v1 | undefined, string]> = [
-    [score.headers?.default, BUILT_IN_PARAGRAPH_STYLE_IDS.Header],
-    [score.headers?.chapterOpening, BUILT_IN_PARAGRAPH_STYLE_IDS.Header],
-    [score.headers?.even, BUILT_IN_PARAGRAPH_STYLE_IDS.Header],
-    [score.headers?.odd, BUILT_IN_PARAGRAPH_STYLE_IDS.Header],
-    [score.headers?.firstPage, BUILT_IN_PARAGRAPH_STYLE_IDS.Header],
-    [score.footers?.default, BUILT_IN_PARAGRAPH_STYLE_IDS.Footer],
-    [score.footers?.chapterOpening, BUILT_IN_PARAGRAPH_STYLE_IDS.Footer],
-    [score.footers?.even, BUILT_IN_PARAGRAPH_STYLE_IDS.Footer],
-    [score.footers?.odd, BUILT_IN_PARAGRAPH_STYLE_IDS.Footer],
-    [score.footers?.firstPage, BUILT_IN_PARAGRAPH_STYLE_IDS.Footer],
-  ];
+  const headerFooterGroups: Array<[Header_v1 | Footer_v1 | undefined, string]> =
+    [
+      [score.headers?.default, BUILT_IN_PARAGRAPH_STYLE_IDS.Header],
+      [score.headers?.chapterOpening, BUILT_IN_PARAGRAPH_STYLE_IDS.Header],
+      [score.headers?.even, BUILT_IN_PARAGRAPH_STYLE_IDS.Header],
+      [score.headers?.odd, BUILT_IN_PARAGRAPH_STYLE_IDS.Header],
+      [score.headers?.firstPage, BUILT_IN_PARAGRAPH_STYLE_IDS.Header],
+      [score.footers?.default, BUILT_IN_PARAGRAPH_STYLE_IDS.Footer],
+      [score.footers?.chapterOpening, BUILT_IN_PARAGRAPH_STYLE_IDS.Footer],
+      [score.footers?.even, BUILT_IN_PARAGRAPH_STYLE_IDS.Footer],
+      [score.footers?.odd, BUILT_IN_PARAGRAPH_STYLE_IDS.Footer],
+      [score.footers?.firstPage, BUILT_IN_PARAGRAPH_STYLE_IDS.Footer],
+    ];
 
-  for (const [header, defaultParagraphStyleId] of headerGroups) {
-    const element = header?.elements[0];
+  for (const [headerOrFooter, defaultParagraphStyleId] of headerFooterGroups) {
+    const element = headerOrFooter?.elements[0];
 
     if (element?.elementType === ElementType_v1.TextBox) {
       migrateLegacyTextBoxParagraphStyleOverrides(
@@ -467,9 +463,9 @@ function migrateLegacyParagraphStyleOverrides(
           score.version,
           element as TextBoxElement_v1,
           paragraphStyles,
-          (element as TextBoxElement_v1).inline === true
-            ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
-            : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+          getTextBoxParagraphStyleFallbackId(
+            (element as TextBoxElement_v1).inline === true,
+          ),
         );
         break;
     }
@@ -816,16 +812,12 @@ function migrateLegacyTextBoxParagraphStyleOverrides(
   const fontSize = element.fontSize;
   const lineHeight = element.lineHeight;
   const strokeWidth = element.strokeWidth;
-  let fontStyleOverride: string | null = null;
+  const baseStyle = parsedFace?.fontStyle ?? DEFAULT_FONT_STYLE;
+  let fontStyleOverride: string;
 
   if (savedFontStyle != null) {
     fontStyleOverride = savedFontStyle;
   } else if (legacyCssFontStyle != null) {
-    const baseStyle =
-      parsedFace != null && parsedFace.fontStyle !== DEFAULT_FONT_STYLE
-        ? parsedFace.fontStyle
-        : DEFAULT_FONT_STYLE;
-
     fontStyleOverride = applyAxes(
       baseStyle,
       {
@@ -837,11 +829,6 @@ function migrateLegacyTextBoxParagraphStyleOverrides(
       ),
     );
   } else if (hasLegacyStyleFlags) {
-    const baseStyle =
-      parsedFace != null && parsedFace.fontStyle !== DEFAULT_FONT_STYLE
-        ? parsedFace.fontStyle
-        : DEFAULT_FONT_STYLE;
-
     fontStyleOverride = applyAxes(
       baseStyle,
       { bold: element.bold || undefined, italic: element.italic || undefined },
@@ -849,13 +836,8 @@ function migrateLegacyTextBoxParagraphStyleOverrides(
         parsedFace?.fontFamily ?? fallbackParagraphStyle.fontFamily,
       ),
     );
-  } else if (
-    parsedFace != null &&
-    parsedFace.fontStyle !== DEFAULT_FONT_STYLE
-  ) {
-    fontStyleOverride = parsedFace.fontStyle;
   } else {
-    fontStyleOverride = DEFAULT_FONT_STYLE;
+    fontStyleOverride = baseStyle;
   }
 
   clearLegacyTextBoxParagraphStyleOverrides(element);
@@ -872,7 +854,6 @@ function migrateLegacyTextBoxParagraphStyleOverrides(
   }
 
   if (
-    fontStyleOverride != null &&
     shouldKeepMigratedParagraphStyleOverride(
       fallbackParagraphStyle,
       'fontStyle',
@@ -1291,30 +1272,19 @@ export class SaveService {
   }
 
   public static SaveDropCap(element: DropCapElement_v1, e: DropCapElement) {
-    const paragraphStyleId =
-      e.paragraphStyleId ?? BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap;
-
-    if (paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap) {
-      element.paragraphStyleId = paragraphStyleId;
+    if (e.paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap) {
+      element.paragraphStyleId = e.paragraphStyleId;
     }
     element.content = e.content;
     element.customWidth = e.customWidth ?? undefined;
     element.lineSpan = e.lineSpan;
 
-    if (e.color != null) {
-      element.color = e.color;
-    }
-    if (e.fontFamily != null) {
-      element.fontFamily = e.fontFamily;
-    }
-    if (e.fontSize != null) {
-      element.fontSize = e.fontSize;
-    }
+    element.color = e.color ?? undefined;
+    element.fontFamily = e.fontFamily ?? undefined;
+    element.fontSize = e.fontSize ?? undefined;
     element.fontSubfamily = e.fontStyle ?? undefined;
     element.lineHeight = e.lineHeight;
-    if (e.strokeWidth != null) {
-      element.strokeWidth = e.strokeWidth;
-    }
+    element.strokeWidth = e.strokeWidth ?? undefined;
   }
 
   public static SaveImageBox(element: ImageBoxElement_v1, e: ImageBoxElement) {
@@ -1357,11 +1327,8 @@ export class SaveService {
   }
 
   public static SaveNote(element: NoteElement_v1, e: NoteElement) {
-    const lyricsParagraphStyleId =
-      e.lyricsParagraphStyleId ?? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics;
-
-    if (lyricsParagraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics) {
-      element.lyricsParagraphStyleId = lyricsParagraphStyleId;
+    if (e.lyricsParagraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics) {
+      element.lyricsParagraphStyleId = e.lyricsParagraphStyleId;
     }
     element.quantitativeNeume = e.quantitativeNeume;
     element.spaceAfter = e.spaceAfter || undefined;
@@ -1550,14 +1517,12 @@ export class SaveService {
   public static SaveTextBox(
     element: TextBoxElement_v1,
     e: TextBoxElement,
-    defaultParagraphStyleId: string = e.inline === true
-      ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
-      : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    defaultParagraphStyleId: string = getTextBoxParagraphStyleFallbackId(
+      e.inline,
+    ),
   ) {
-    const paragraphStyleId = e.paragraphStyleId ?? defaultParagraphStyleId;
-
-    if (paragraphStyleId !== defaultParagraphStyleId) {
-      element.paragraphStyleId = paragraphStyleId;
+    if (e.paragraphStyleId !== defaultParagraphStyleId) {
+      element.paragraphStyleId = e.paragraphStyleId;
     }
     element.alignment = e.alignment ?? undefined;
     element.color = e.color ?? undefined;
@@ -1708,26 +1673,20 @@ export class SaveService {
       createParagraphStylesFromLegacyPageSetupDefaults({
         textBoxDefaultColor: s.pageSetup.textBoxDefaultColor,
         textBoxDefaultFontFamily: legacyTextBoxDefaultFont.fontFamily,
-        textBoxDefaultFontSubfamily: s.pageSetup.textBoxDefaultFontSubfamily,
         textBoxDefaultFontSize: s.pageSetup.textBoxDefaultFontSize,
         textBoxDefaultFontStyle: legacyTextBoxDefaultFont.fontStyle,
-        textBoxDefaultFontWeight: s.pageSetup.textBoxDefaultFontWeight,
         textBoxDefaultStrokeWidth: s.pageSetup.textBoxDefaultStrokeWidth,
         textBoxDefaultLineHeight: s.pageSetup.textBoxDefaultLineHeight,
         dropCapDefaultColor: s.pageSetup.dropCapDefaultColor,
         dropCapDefaultFontFamily: legacyDropCapDefaultFont.fontFamily,
-        dropCapDefaultFontSubfamily: s.pageSetup.dropCapDefaultFontSubfamily,
         dropCapDefaultFontSize: s.pageSetup.dropCapDefaultFontSize,
         dropCapDefaultFontStyle: legacyDropCapDefaultFont.fontStyle,
-        dropCapDefaultFontWeight: s.pageSetup.dropCapDefaultFontWeight,
         dropCapDefaultStrokeWidth: s.pageSetup.dropCapDefaultStrokeWidth,
         dropCapDefaultLineHeight: s.pageSetup.dropCapDefaultLineHeight,
         lyricsDefaultColor: s.pageSetup.lyricsDefaultColor,
         lyricsDefaultFontFamily: legacyLyricsDefaultFont.fontFamily,
-        lyricsDefaultFontSubfamily: s.pageSetup.lyricsDefaultFontSubfamily,
         lyricsDefaultFontSize: s.pageSetup.lyricsDefaultFontSize,
         lyricsDefaultFontStyle: legacyLyricsDefaultFont.fontStyle,
-        lyricsDefaultFontWeight: s.pageSetup.lyricsDefaultFontWeight,
         lyricsDefaultStrokeWidth: s.pageSetup.lyricsDefaultStrokeWidth,
       });
     score.paragraphStyles = this.LoadParagraphStyles_v1(
@@ -1748,31 +1707,14 @@ export class SaveService {
           ? s.headers.chapterOpening
           : s.headers.default;
 
-      this.LoadHeader_v1(
-        score.headers.default,
-        s.headers.default,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
-      );
+      this.LoadHeader_v1(score.headers.default, s.headers.default);
       this.LoadHeader_v1(
         score.headers.chapterOpening,
         savedChapterOpeningHeader,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
       );
-      this.LoadHeader_v1(
-        score.headers.even,
-        s.headers.even,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
-      );
-      this.LoadHeader_v1(
-        score.headers.odd,
-        s.headers.odd,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
-      );
-      this.LoadHeader_v1(
-        score.headers.firstPage,
-        s.headers.firstPage,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
-      );
+      this.LoadHeader_v1(score.headers.even, s.headers.even);
+      this.LoadHeader_v1(score.headers.odd, s.headers.odd);
+      this.LoadHeader_v1(score.headers.firstPage, s.headers.firstPage);
     }
 
     if (s.footers) {
@@ -1781,31 +1723,14 @@ export class SaveService {
           ? s.footers.chapterOpening
           : s.footers.default;
 
-      this.LoadFooter_v1(
-        score.footers.default,
-        s.footers.default,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
-      );
+      this.LoadFooter_v1(score.footers.default, s.footers.default);
       this.LoadFooter_v1(
         score.footers.chapterOpening,
         savedChapterOpeningFooter,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
       );
-      this.LoadFooter_v1(
-        score.footers.even,
-        s.footers.even,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
-      );
-      this.LoadFooter_v1(
-        score.footers.odd,
-        s.footers.odd,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
-      );
-      this.LoadFooter_v1(
-        score.footers.firstPage,
-        s.footers.firstPage,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
-      );
+      this.LoadFooter_v1(score.footers.even, s.footers.even);
+      this.LoadFooter_v1(score.footers.odd, s.footers.odd);
+      this.LoadFooter_v1(score.footers.firstPage, s.footers.firstPage);
     }
 
     for (const e of s.staff.elements) {
@@ -1843,9 +1768,6 @@ export class SaveService {
           this.LoadTextBox_v1(
             element as TextBoxElement,
             e as TextBoxElement_v1,
-            (e as TextBoxElement_v1).inline === true
-              ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
-              : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
           );
           break;
         case ElementType_v1.RichTextBox:
@@ -2189,11 +2111,7 @@ export class SaveService {
     lyricSetup.text = l.text;
   }
 
-  public static LoadHeader_v1(
-    header: Header,
-    h: Header_v1,
-    defaultParagraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
-  ) {
+  public static LoadHeader_v1(header: Header, h: Header_v1) {
     // Currently, headers only support a single element
     const e = h.elements[0];
 
@@ -2203,7 +2121,7 @@ export class SaveService {
       this.LoadTextBox_v1(
         element,
         e as TextBoxElement_v1,
-        defaultParagraphStyleId,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Header,
       );
 
       header.elements[0] = element;
@@ -2216,11 +2134,7 @@ export class SaveService {
     }
   }
 
-  public static LoadFooter_v1(
-    footer: Footer,
-    f: Footer_v1,
-    defaultParagraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
-  ) {
+  public static LoadFooter_v1(footer: Footer, f: Footer_v1) {
     // Currently, footers only support a single element
     const e = f.elements[0];
 
@@ -2230,7 +2144,7 @@ export class SaveService {
       this.LoadTextBox_v1(
         element,
         e as TextBoxElement_v1,
-        defaultParagraphStyleId,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
       );
 
       footer.elements[0] = element;
@@ -2538,9 +2452,9 @@ export class SaveService {
   public static LoadTextBox_v1(
     element: TextBoxElement,
     e: TextBoxElement_v1,
-    defaultParagraphStyleId: string = e.inline === true
-      ? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
-      : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    defaultParagraphStyleId: string = getTextBoxParagraphStyleFallbackId(
+      e.inline === true,
+    ),
   ) {
     element.paragraphStyleId = e.paragraphStyleId ?? defaultParagraphStyleId;
     element.content = e.content;

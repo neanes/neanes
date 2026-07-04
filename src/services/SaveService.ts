@@ -78,26 +78,6 @@ interface LegacyTextBoxCssFontCompatibility {
   fontStyle?: string | null;
 }
 
-interface LegacyPageSetupStyleDefaults {
-  textBoxDefaultFontFamily?: string | null;
-  textBoxDefaultFontSize?: number | null;
-  textBoxDefaultFontStyle?: string | null;
-  textBoxDefaultColor?: string | null;
-  textBoxDefaultStrokeWidth?: number | null;
-  textBoxDefaultLineHeight?: number | null;
-  dropCapDefaultFontFamily?: string | null;
-  dropCapDefaultFontSize?: number | null;
-  dropCapDefaultFontStyle?: string | null;
-  dropCapDefaultColor?: string | null;
-  dropCapDefaultStrokeWidth?: number | null;
-  dropCapDefaultLineHeight?: number | null;
-  lyricsDefaultFontFamily?: string | null;
-  lyricsDefaultFontSize?: number | null;
-  lyricsDefaultFontStyle?: string | null;
-  lyricsDefaultColor?: string | null;
-  lyricsDefaultStrokeWidth?: number | null;
-}
-
 function readLegacyCssFontStyle(fontStyle: string | null | undefined) {
   const trimmed = fontStyle?.trim();
 
@@ -243,7 +223,7 @@ function loadFontFaceFromWeightFields({
 }
 
 function createParagraphStylesFromLegacyPageSetupDefaults(
-  legacyDefaults: LegacyPageSetupStyleDefaults,
+  pageSetup: PageSetup_v1,
 ) {
   const styles = createDefaultParagraphStyles();
   const defaultText = getRequiredParagraphStyleById(
@@ -263,125 +243,80 @@ function createParagraphStylesFromLegacyPageSetupDefaults(
     BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
   );
 
+  const textBoxDefaultFont = loadFontFaceFromWeightFields({
+    savedFontFamily: pageSetup.textBoxDefaultFontFamily,
+    fallbackFontFamily: 'Source Serif',
+    fontSubfamily: pageSetup.textBoxDefaultFontSubfamily,
+    legacyFontWeight: pageSetup.textBoxDefaultFontWeight,
+    legacyCssFontStyle: pageSetup.textBoxDefaultFontStyle,
+  });
+  const lyricsDefaultFont = loadFontFaceFromWeightFields({
+    savedFontFamily: pageSetup.lyricsDefaultFontFamily,
+    fallbackFontFamily: 'Source Serif',
+    fontSubfamily: pageSetup.lyricsDefaultFontSubfamily,
+    legacyFontWeight: pageSetup.lyricsDefaultFontWeight,
+    legacyCssFontStyle: pageSetup.lyricsDefaultFontStyle,
+  });
+  const dropCapDefaultFont = loadFontFaceFromWeightFields({
+    savedFontFamily: pageSetup.dropCapDefaultFontFamily,
+    fallbackFontFamily: 'Source Serif',
+    fontSubfamily: pageSetup.dropCapDefaultFontSubfamily,
+    legacyFontWeight: pageSetup.dropCapDefaultFontWeight,
+    legacyCssFontStyle: pageSetup.dropCapDefaultFontStyle,
+  });
+
   const defaultTextInherited = resolveParagraphStyle(
     styles,
     defaultText.parentStyleId,
   );
 
-  applyGeneratedParagraphStyleOverride(
-    defaultText,
-    defaultTextInherited,
-    'fontFamily',
-    legacyDefaults.textBoxDefaultFontFamily ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    defaultText,
-    defaultTextInherited,
-    'fontSize',
-    legacyDefaults.textBoxDefaultFontSize ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    defaultText,
-    defaultTextInherited,
-    'fontStyle',
-    legacyDefaults.textBoxDefaultFontStyle ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    defaultText,
-    defaultTextInherited,
-    'color',
-    legacyDefaults.textBoxDefaultColor ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    defaultText,
-    defaultTextInherited,
-    'strokeWidth',
-    legacyDefaults.textBoxDefaultStrokeWidth ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    defaultText,
-    defaultTextInherited,
-    'lineHeight',
-    legacyDefaults.textBoxDefaultLineHeight ?? undefined,
-  );
+  applyGeneratedParagraphStyleOverrides(defaultText, defaultTextInherited, {
+    fontFamily: textBoxDefaultFont.fontFamily,
+    fontSize: pageSetup.textBoxDefaultFontSize,
+    fontStyle: textBoxDefaultFont.fontStyle,
+    color: pageSetup.textBoxDefaultColor,
+    strokeWidth: pageSetup.textBoxDefaultStrokeWidth,
+    lineHeight: pageSetup.textBoxDefaultLineHeight,
+  });
 
-  if (legacyDefaults.lyricsDefaultFontSize != null) {
-    annotation.overrides.fontSize = legacyDefaults.lyricsDefaultFontSize;
+  if (pageSetup.lyricsDefaultFontSize != null) {
+    annotation.overrides.fontSize = pageSetup.lyricsDefaultFontSize;
   }
 
   const lyricsInherited = resolveParagraphStyle(styles, lyrics.parentStyleId);
 
-  applyGeneratedParagraphStyleOverride(
-    lyrics,
-    lyricsInherited,
-    'fontFamily',
-    legacyDefaults.lyricsDefaultFontFamily ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    lyrics,
-    lyricsInherited,
-    'fontSize',
-    legacyDefaults.lyricsDefaultFontSize ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    lyrics,
-    lyricsInherited,
-    'fontStyle',
-    legacyDefaults.lyricsDefaultFontStyle ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    lyrics,
-    lyricsInherited,
-    'color',
-    legacyDefaults.lyricsDefaultColor ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    lyrics,
-    lyricsInherited,
-    'strokeWidth',
-    legacyDefaults.lyricsDefaultStrokeWidth ?? undefined,
-  );
+  applyGeneratedParagraphStyleOverrides(lyrics, lyricsInherited, {
+    fontFamily: lyricsDefaultFont.fontFamily,
+    fontSize: pageSetup.lyricsDefaultFontSize,
+    fontStyle: lyricsDefaultFont.fontStyle,
+    color: pageSetup.lyricsDefaultColor,
+    strokeWidth: pageSetup.lyricsDefaultStrokeWidth,
+  });
 
   const dropCapInherited = resolveParagraphStyle(styles, dropCap.parentStyleId);
 
-  applyGeneratedParagraphStyleOverride(
-    dropCap,
-    dropCapInherited,
-    'fontFamily',
-    legacyDefaults.dropCapDefaultFontFamily ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    dropCap,
-    dropCapInherited,
-    'fontSize',
-    legacyDefaults.dropCapDefaultFontSize ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    dropCap,
-    dropCapInherited,
-    'fontStyle',
-    legacyDefaults.dropCapDefaultFontStyle ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    dropCap,
-    dropCapInherited,
-    'color',
-    legacyDefaults.dropCapDefaultColor ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    dropCap,
-    dropCapInherited,
-    'strokeWidth',
-    legacyDefaults.dropCapDefaultStrokeWidth ?? undefined,
-  );
-  applyGeneratedParagraphStyleOverride(
-    dropCap,
-    dropCapInherited,
-    'lineHeight',
-    legacyDefaults.dropCapDefaultLineHeight ?? undefined,
-  );
+  applyGeneratedParagraphStyleOverrides(dropCap, dropCapInherited, {
+    fontFamily: dropCapDefaultFont.fontFamily,
+    fontSize: pageSetup.dropCapDefaultFontSize,
+    fontStyle: dropCapDefaultFont.fontStyle,
+    color: pageSetup.dropCapDefaultColor,
+    strokeWidth: pageSetup.dropCapDefaultStrokeWidth,
+    lineHeight: pageSetup.dropCapDefaultLineHeight,
+  });
 
   return styles;
+}
+
+function applyGeneratedParagraphStyleOverrides(
+  style: ParagraphStyle,
+  inherited: ResolvedParagraphStyle,
+  values: ParagraphStyleOverrides,
+) {
+  for (const key of Object.keys(values) as Array<
+    keyof ParagraphStyleOverrides
+  >) {
+    applyGeneratedParagraphStyleOverride(style, inherited, key, values[key]);
+  }
 }
 
 function applyGeneratedParagraphStyleOverride<
@@ -416,6 +351,18 @@ function migrateLegacyParagraphStyleOverrides(
   score: Score_v1,
   paragraphStyles: ParagraphStyle[],
 ) {
+  const resolvedFallbackStyles = new Map<string, ResolvedParagraphStyle>();
+  const resolveFallbackStyle = (styleId: string) => {
+    let resolved = resolvedFallbackStyles.get(styleId);
+
+    if (resolved == null) {
+      resolved = resolveParagraphStyle(paragraphStyles, styleId);
+      resolvedFallbackStyles.set(styleId, resolved);
+    }
+
+    return resolved;
+  };
+
   const headerFooterGroups: Array<[Header_v1 | Footer_v1 | undefined, string]> =
     [
       [score.headers?.default, BUILT_IN_PARAGRAPH_STYLE_IDS.Header],
@@ -437,8 +384,8 @@ function migrateLegacyParagraphStyleOverrides(
       migrateLegacyTextBoxParagraphStyleOverrides(
         score.version,
         element as TextBoxElement_v1,
-        paragraphStyles,
         defaultParagraphStyleId,
+        resolveFallbackStyle(defaultParagraphStyleId),
       );
     }
   }
@@ -448,32 +395,35 @@ function migrateLegacyParagraphStyleOverrides(
       case ElementType_v1.DropCap:
         migrateLegacyDropCapParagraphStyleOverrides(
           element as DropCapElement_v1,
-          paragraphStyles,
+          resolveFallbackStyle(BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap),
         );
         break;
       case ElementType_v1.Note:
         migrateLegacyNoteLyricsParagraphStyleOverrides(
           element as NoteElement_v1,
-          paragraphStyles,
+          resolveFallbackStyle(BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics),
         );
         break;
-      case ElementType_v1.TextBox:
+      case ElementType_v1.TextBox: {
+        const fallbackStyleId = getTextBoxParagraphStyleFallbackId(
+          (element as TextBoxElement_v1).inline === true,
+        );
+
         migrateLegacyTextBoxParagraphStyleOverrides(
           score.version,
           element as TextBoxElement_v1,
-          paragraphStyles,
-          getTextBoxParagraphStyleFallbackId(
-            (element as TextBoxElement_v1).inline === true,
-          ),
+          fallbackStyleId,
+          resolveFallbackStyle(fallbackStyleId),
         );
         break;
+      }
     }
   }
 }
 
 function migrateLegacyDropCapParagraphStyleOverrides(
   element: DropCapElement_v1,
-  paragraphStyles: ParagraphStyle[],
+  fallbackStyle: ResolvedParagraphStyle,
 ) {
   if (element.paragraphStyleId != null) {
     return;
@@ -498,10 +448,6 @@ function migrateLegacyDropCapParagraphStyleOverrides(
     return;
   }
 
-  const fallbackStyle = resolveParagraphStyle(
-    paragraphStyles,
-    element.paragraphStyleId,
-  );
   const font = loadFontFaceFromWeightFields({
     savedFontFamily: element.fontFamily,
     fallbackFontFamily: fallbackStyle.fontFamily,
@@ -599,7 +545,7 @@ function clearLegacyDropCapParagraphStyleOverrides(element: DropCapElement_v1) {
 
 function migrateLegacyNoteLyricsParagraphStyleOverrides(
   element: NoteElement_v1,
-  paragraphStyles: ParagraphStyle[],
+  fallbackStyle: ResolvedParagraphStyle,
 ) {
   if (element.lyricsParagraphStyleId != null) {
     return;
@@ -621,14 +567,10 @@ function migrateLegacyNoteLyricsParagraphStyleOverrides(
 
   if (usesLegacyDefaultLyrics) {
     clearLegacyNoteLyricsParagraphStyleOverrides(element);
-    migrateLegacyAlternateLineParagraphStyleOverrides(element, paragraphStyles);
+    migrateLegacyAlternateLineParagraphStyleOverrides(element, fallbackStyle);
     return;
   }
 
-  const fallbackStyle = resolveParagraphStyle(
-    paragraphStyles,
-    element.lyricsParagraphStyleId,
-  );
   const lyricsFont = loadFontFaceFromWeightFields({
     savedFontFamily: element.lyricsFontFamily,
     fallbackFontFamily: fallbackStyle.fontFamily,
@@ -721,7 +663,7 @@ function migrateLegacyNoteLyricsParagraphStyleOverrides(
     element.lyricsStrokeWidth = lyricsStrokeWidth;
   }
 
-  migrateLegacyAlternateLineParagraphStyleOverrides(element, paragraphStyles);
+  migrateLegacyAlternateLineParagraphStyleOverrides(element, fallbackStyle);
 }
 
 function clearLegacyNoteLyricsParagraphStyleOverrides(element: NoteElement_v1) {
@@ -737,7 +679,7 @@ function clearLegacyNoteLyricsParagraphStyleOverrides(element: NoteElement_v1) {
 
 function migrateLegacyAlternateLineParagraphStyleOverrides(
   element: NoteElement_v1,
-  paragraphStyles: ParagraphStyle[],
+  fallbackStyle: ResolvedParagraphStyle,
 ) {
   if (element.alternateLines == null) {
     return;
@@ -751,7 +693,7 @@ function migrateLegacyAlternateLineParagraphStyleOverrides(
 
       migrateLegacyNoteLyricsParagraphStyleOverrides(
         child as NoteElement_v1,
-        paragraphStyles,
+        fallbackStyle,
       );
     }
   }
@@ -760,8 +702,8 @@ function migrateLegacyAlternateLineParagraphStyleOverrides(
 function migrateLegacyTextBoxParagraphStyleOverrides(
   scoreVersion: string,
   element: TextBoxElement_v1,
-  paragraphStyles: ParagraphStyle[],
   defaultParagraphStyleId: string,
+  fallbackParagraphStyle: ResolvedParagraphStyle,
 ) {
   if (element.paragraphStyleId != null) {
     return;
@@ -778,10 +720,6 @@ function migrateLegacyTextBoxParagraphStyleOverrides(
 
   element.paragraphStyleId = defaultParagraphStyleId;
 
-  const fallbackParagraphStyle = resolveParagraphStyle(
-    paragraphStyles,
-    element.paragraphStyleId,
-  );
   const alignment = element.alignment;
 
   if (
@@ -1646,53 +1584,14 @@ export class SaveService {
       s.documentProperties ?? new DocumentProperties_v1(),
     );
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
-    const legacyTextBoxDefaultFont = loadFontFaceFromWeightFields({
-      savedFontFamily: s.pageSetup.textBoxDefaultFontFamily,
-      fallbackFontFamily: 'Source Serif',
-      fontSubfamily: s.pageSetup.textBoxDefaultFontSubfamily,
-      legacyFontWeight: s.pageSetup.textBoxDefaultFontWeight,
-      legacyCssFontStyle: s.pageSetup.textBoxDefaultFontStyle,
-    });
-    const legacyDropCapDefaultFont = loadFontFaceFromWeightFields({
-      savedFontFamily: s.pageSetup.dropCapDefaultFontFamily,
-      fallbackFontFamily: 'Source Serif',
-      fontSubfamily: s.pageSetup.dropCapDefaultFontSubfamily,
-      legacyFontWeight: s.pageSetup.dropCapDefaultFontWeight,
-      legacyCssFontStyle: s.pageSetup.dropCapDefaultFontStyle,
-    });
-    const legacyLyricsDefaultFont = loadFontFaceFromWeightFields({
-      savedFontFamily: s.pageSetup.lyricsDefaultFontFamily,
-      fallbackFontFamily: 'Source Serif',
-      fontSubfamily: s.pageSetup.lyricsDefaultFontSubfamily,
-      legacyFontWeight: s.pageSetup.lyricsDefaultFontWeight,
-      legacyCssFontStyle: s.pageSetup.lyricsDefaultFontStyle,
-    });
-    const savedParagraphStyles = s.paragraphStyles ?? [];
-    const defaultParagraphStyles =
-      createParagraphStylesFromLegacyPageSetupDefaults({
-        textBoxDefaultColor: s.pageSetup.textBoxDefaultColor,
-        textBoxDefaultFontFamily: legacyTextBoxDefaultFont.fontFamily,
-        textBoxDefaultFontSize: s.pageSetup.textBoxDefaultFontSize,
-        textBoxDefaultFontStyle: legacyTextBoxDefaultFont.fontStyle,
-        textBoxDefaultStrokeWidth: s.pageSetup.textBoxDefaultStrokeWidth,
-        textBoxDefaultLineHeight: s.pageSetup.textBoxDefaultLineHeight,
-        dropCapDefaultColor: s.pageSetup.dropCapDefaultColor,
-        dropCapDefaultFontFamily: legacyDropCapDefaultFont.fontFamily,
-        dropCapDefaultFontSize: s.pageSetup.dropCapDefaultFontSize,
-        dropCapDefaultFontStyle: legacyDropCapDefaultFont.fontStyle,
-        dropCapDefaultStrokeWidth: s.pageSetup.dropCapDefaultStrokeWidth,
-        dropCapDefaultLineHeight: s.pageSetup.dropCapDefaultLineHeight,
-        lyricsDefaultColor: s.pageSetup.lyricsDefaultColor,
-        lyricsDefaultFontFamily: legacyLyricsDefaultFont.fontFamily,
-        lyricsDefaultFontSize: s.pageSetup.lyricsDefaultFontSize,
-        lyricsDefaultFontStyle: legacyLyricsDefaultFont.fontStyle,
-        lyricsDefaultStrokeWidth: s.pageSetup.lyricsDefaultStrokeWidth,
-      });
+    const hasLegacyStyleDefaults = hasLegacyPageSetupStyleDefaults(s.pageSetup);
     score.paragraphStyles = this.LoadParagraphStyles_v1(
-      savedParagraphStyles,
-      defaultParagraphStyles,
+      s.paragraphStyles ?? [],
+      hasLegacyStyleDefaults
+        ? createParagraphStylesFromLegacyPageSetupDefaults(s.pageSetup)
+        : createDefaultParagraphStyles(),
     );
-    if (hasLegacyPageSetupStyleDefaults(s.pageSetup)) {
+    if (hasLegacyStyleDefaults) {
       migrateLegacyParagraphStyleOverrides(s, score.paragraphStyles);
     }
     this.LoadLyricSetup_v1(

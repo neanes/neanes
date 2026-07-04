@@ -130,6 +130,17 @@ function loadLegacyDropCap(
   return loadLegacyElement(legacy, paragraphStyles) as DropCapElement;
 }
 
+function resolveElementParagraphStyle(
+  paragraphStyles: ParagraphStyle[],
+  element: TextBoxElement | DropCapElement,
+) {
+  return resolveParagraphStyle(
+    paragraphStyles,
+    element.paragraphStyleId,
+    element.getParagraphStyleOverrides(),
+  );
+}
+
 describe('SaveService font styles', () => {
   it('loads legacy text box bold/italic booleans as a font style', () => {
     const legacy = new TextBoxElement_v1();
@@ -332,17 +343,6 @@ describe('SaveService font styles', () => {
     expect(saved.lyricsParagraphStyleId).toBe('custom-lyrics');
   });
 
-  it('saves explicit text-box normal line height as null', () => {
-    const element = new TextBoxElement();
-    const saved = new TextBoxElement_v1();
-
-    element.lineHeight = null;
-
-    SaveService.SaveTextBox(saved, element);
-
-    expect(saved.lineHeight).toBeNull();
-  });
-
   it('loads explicit and omitted text-box line height values as-is', () => {
     const omitted = new TextBoxElement_v1();
     const explicit = new TextBoxElement_v1();
@@ -377,11 +377,7 @@ describe('SaveService font styles', () => {
     expect(saved.lineHeight).toBeNull();
     expect(loaded.lineHeight).toBeNull();
     expect(
-      resolveParagraphStyle(
-        paragraphStyles,
-        loaded.paragraphStyleId,
-        loaded.getParagraphStyleOverrides(),
-      ).lineHeight,
+      resolveElementParagraphStyle(paragraphStyles, loaded).lineHeight,
     ).toBeNull();
   });
 
@@ -649,11 +645,7 @@ describe('SaveService font styles', () => {
 
     expect(element.fontStyle).toBe('Regular');
     expect(
-      resolveParagraphStyle(
-        paragraphStyles,
-        element.paragraphStyleId,
-        element.getParagraphStyleOverrides(),
-      ).fontStyle,
+      resolveElementParagraphStyle(paragraphStyles, element).fontStyle,
     ).toBe('Regular');
   });
 
@@ -670,11 +662,7 @@ describe('SaveService font styles', () => {
     expect(element.paragraphStyleId).toBe('default-text');
     expect(element.fontStyle).toBe('Regular');
     expect(
-      resolveParagraphStyle(
-        paragraphStyles,
-        element.paragraphStyleId,
-        element.getParagraphStyleOverrides(),
-      ).fontStyle,
+      resolveElementParagraphStyle(paragraphStyles, element).fontStyle,
     ).toBe('Regular');
   });
 
@@ -693,11 +681,7 @@ describe('SaveService font styles', () => {
 
     expect(element.fontStyle).toBe('Regular');
     expect(
-      resolveParagraphStyle(
-        paragraphStyles,
-        element.paragraphStyleId,
-        element.getParagraphStyleOverrides(),
-      ).fontStyle,
+      resolveElementParagraphStyle(paragraphStyles, element).fontStyle,
     ).toBe('Regular');
   });
 
@@ -716,11 +700,7 @@ describe('SaveService font styles', () => {
 
     expect(element.fontStyle).toBe('Italic');
     expect(
-      resolveParagraphStyle(
-        paragraphStyles,
-        element.paragraphStyleId,
-        element.getParagraphStyleOverrides(),
-      ).fontStyle,
+      resolveElementParagraphStyle(paragraphStyles, element).fontStyle,
     ).toBe('Italic');
   });
 
@@ -927,11 +907,7 @@ describe('SaveService font styles', () => {
 
     expect(element.alignment).toBeNull();
     expect(
-      resolveParagraphStyle(
-        paragraphStyles,
-        element.paragraphStyleId,
-        element.getParagraphStyleOverrides(),
-      ).alignment,
+      resolveElementParagraphStyle(paragraphStyles, element).alignment,
     ).toBe(TextBoxAlignment.Center);
   });
 
@@ -1217,10 +1193,9 @@ describe('SaveService font styles', () => {
 
     const element = loadLegacyDropCap(legacy, paragraphStyles);
 
-    const resolvedDropCapStyle = resolveParagraphStyle(
+    const resolvedDropCapStyle = resolveElementParagraphStyle(
       paragraphStyles,
-      element.paragraphStyleId,
-      element.getParagraphStyleOverrides(),
+      element,
     );
 
     expect(element.fontFamily).toBeNull();
@@ -1251,23 +1226,8 @@ describe('SaveService font styles', () => {
 
     expect(element.lineHeight).toBeNull();
     expect(
-      resolveParagraphStyle(
-        paragraphStyles,
-        element.paragraphStyleId,
-        element.getParagraphStyleOverrides(),
-      ).lineHeight,
+      resolveElementParagraphStyle(paragraphStyles, element).lineHeight,
     ).toBeNull();
-  });
-
-  it('saves explicit normal drop-cap line height as null', () => {
-    const element = new DropCapElement();
-    const saved = new DropCapElement_v1();
-
-    element.lineHeight = null;
-
-    SaveService.SaveDropCap(saved, element);
-
-    expect(saved.lineHeight).toBeNull();
   });
 
   it('round-trips explicit normal drop-cap line height through inherited numeric paragraph styles', () => {
@@ -1289,11 +1249,7 @@ describe('SaveService font styles', () => {
     expect(saved.lineHeight).toBeNull();
     expect(loaded.lineHeight).toBeNull();
     expect(
-      resolveParagraphStyle(
-        paragraphStyles,
-        loaded.paragraphStyleId,
-        loaded.getParagraphStyleOverrides(),
-      ).lineHeight,
+      resolveElementParagraphStyle(paragraphStyles, loaded).lineHeight,
     ).toBeNull();
   });
 

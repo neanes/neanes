@@ -478,30 +478,35 @@ export class LayoutService {
         pageSetup,
         neumeHeight,
         score.paragraphStyles,
+        defaultLyricsFontCss,
       );
       this.processHeader(
         score.headers.chapterOpening,
         pageSetup,
         neumeHeight,
         score.paragraphStyles,
+        defaultLyricsFontCss,
       );
       this.processHeader(
         score.headers.odd,
         pageSetup,
         neumeHeight,
         score.paragraphStyles,
+        defaultLyricsFontCss,
       );
       this.processHeader(
         score.headers.even,
         pageSetup,
         neumeHeight,
         score.paragraphStyles,
+        defaultLyricsFontCss,
       );
       this.processHeader(
         score.headers.firstPage,
         pageSetup,
         neumeHeight,
         score.paragraphStyles,
+        defaultLyricsFontCss,
       );
     }
 
@@ -511,30 +516,35 @@ export class LayoutService {
         pageSetup,
         neumeHeight,
         score.paragraphStyles,
+        defaultLyricsFontCss,
       );
       this.processFooter(
         score.footers.chapterOpening,
         pageSetup,
         neumeHeight,
         score.paragraphStyles,
+        defaultLyricsFontCss,
       );
       this.processFooter(
         score.footers.odd,
         pageSetup,
         neumeHeight,
         score.paragraphStyles,
+        defaultLyricsFontCss,
       );
       this.processFooter(
         score.footers.even,
         pageSetup,
         neumeHeight,
         score.paragraphStyles,
+        defaultLyricsFontCss,
       );
       this.processFooter(
         score.footers.firstPage,
         pageSetup,
         neumeHeight,
         score.paragraphStyles,
+        defaultLyricsFontCss,
       );
     }
 
@@ -594,6 +604,7 @@ export class LayoutService {
             pageSetup,
             neumeHeight,
             score.paragraphStyles,
+            defaultLyricsFontCss,
           );
 
           if (isFillWidthTextBox) {
@@ -655,7 +666,7 @@ export class LayoutService {
             richTextBoxElement.defaultLyricsFontHeight =
               this.getLyricsFontHeightFromCache(
                 fontHeightCache,
-                this.getDefaultLyricsFont(score.paragraphStyles),
+                defaultLyricsFontCss,
               );
 
             richTextBoxElement.defaultNeumeFontAscent = neumeAscent;
@@ -665,7 +676,7 @@ export class LayoutService {
             elementWidthPx = isFillWidthRichTextBox
               ? this.getFillWidthPlaceholderWidth(
                   richTextBoxElement,
-                  score.paragraphStyles,
+                  defaultLyricsFontCss,
                 )
               : richTextBoxElement.customWidth!;
             richTextBoxElement.height = neumeHeight;
@@ -885,12 +896,7 @@ export class LayoutService {
 
           const hyphenWidthForThisElement =
             noteElement.isMelismaStart && noteElement.isHyphen
-              ? this.getTextWidthFromCache(
-                  textWidthCache,
-                  noteElement,
-                  score.paragraphStyles,
-                  '-',
-                )
+              ? this.getTextWidthFromCache(textWidthCache, noteElement, '-')
               : 0;
           // In the absorbed-hyphen case, the visible gap between syllables must
           // hold both the hyphen glyph and the ordinary lyric spacing before
@@ -931,7 +937,6 @@ export class LayoutService {
             const leadingLyricHyphenWidth = this.getTextWidthFromCache(
               textWidthCache,
               nextNoteElement,
-              score.paragraphStyles,
               '-',
             );
             const leadingLyricHyphenGeometry =
@@ -1882,7 +1887,7 @@ export class LayoutService {
     }
 
     this.centerMeasureBars(pages, pageSetup, measureBarWidthMap);
-    this.addMelismas(pages, pageSetup, score.paragraphStyles);
+    this.addMelismas(pages, pageSetup, defaultLyricsFontCss);
 
     if (pageSetup.alignIsonIndicators) {
       this.alignIsonIndicators(pages, pageSetup);
@@ -2203,21 +2208,18 @@ export class LayoutService {
 
   private static measureRichTextWidth(
     html: string,
-    paragraphStyles: ParagraphStyle[],
+    defaultLyricsFontCss: string,
   ) {
     const template = document.createElement('template');
     template.innerHTML = html;
     const plainText = template.content.textContent ?? '';
 
-    return this.measurePlainTextWidth(
-      plainText,
-      this.getDefaultLyricsFont(paragraphStyles),
-    );
+    return this.measurePlainTextWidth(plainText, defaultLyricsFontCss);
   }
 
   private static getFillWidthPlaceholderWidth(
     element: ScoreElement,
-    paragraphStyles: ParagraphStyle[],
+    defaultLyricsFontCss: string,
   ) {
     if (
       element.elementType === ElementType.TextBox &&
@@ -2242,18 +2244,18 @@ export class LayoutService {
     ) {
       const richTextBoxElement = element as RichTextBoxElement;
       return Math.max(
-        this.measureRichTextWidth(richTextBoxElement.content, paragraphStyles),
+        this.measureRichTextWidth(
+          richTextBoxElement.content,
+          defaultLyricsFontCss,
+        ),
         this.measureRichTextWidth(
           richTextBoxElement.contentBottom,
-          paragraphStyles,
+          defaultLyricsFontCss,
         ),
       );
     }
 
-    return this.measurePlainTextWidth(
-      '',
-      this.getDefaultLyricsFont(paragraphStyles),
-    );
+    return this.measurePlainTextWidth('', defaultLyricsFontCss);
   }
 
   private static addLyricReservation(
@@ -2912,10 +2914,12 @@ export class LayoutService {
       noteElement.leadingLyricHyphenReservationWidth = 0;
 
       noteElement.computedIsonOffsetY = noteElement.isonOffsetY;
-      noteElement.lyricsFontHeight = this.getNoteLyricsFontHeightFromCache(
+      noteElement.lyricsFontCss = resolveFontCss(
+        this.getResolvedLyricsStyle(noteElement, noteWidthArgs.paragraphStyles),
+      );
+      noteElement.lyricsFontHeight = this.getLyricsFontHeightFromCache(
         fontHeightCache,
-        noteElement,
-        noteWidthArgs.paragraphStyles,
+        noteElement.lyricsFontCss,
       );
       this.getNoteWidth(noteElement, pageSetup, noteWidthArgs);
     }
@@ -4778,6 +4782,7 @@ export class LayoutService {
     pageSetup: PageSetup,
     neumeHeight: number,
     paragraphStyles: ParagraphStyle[],
+    defaultLyricsFontCss: string,
   ) {
     // Currently headers may only contain a single text box.
     // It may be a rich textbox, but we don't need to do any
@@ -4793,6 +4798,7 @@ export class LayoutService {
         pageSetup,
         neumeHeight,
         paragraphStyles,
+        defaultLyricsFontCss,
       );
     } else if (
       header.elements.length > 0 &&
@@ -4808,6 +4814,7 @@ export class LayoutService {
     pageSetup: PageSetup,
     neumeHeight: number,
     paragraphStyles: ParagraphStyle[],
+    defaultLyricsFontCss: string,
   ) {
     // Currently footers may only contain a single text box.
     // It may be a rich textbox, but we don't need to do any
@@ -4823,6 +4830,7 @@ export class LayoutService {
         pageSetup,
         neumeHeight,
         paragraphStyles,
+        defaultLyricsFontCss,
       );
     } else if (
       footer.elements.length > 0 &&
@@ -4838,6 +4846,7 @@ export class LayoutService {
     pageSetup: PageSetup,
     neumeHeight: number,
     paragraphStyles: ParagraphStyle[],
+    defaultLyricsFontCss: string,
   ) {
     let elementWidthPx = 0;
     const resolvedParagraphStyle = resolveParagraphStyle(
@@ -4871,7 +4880,7 @@ export class LayoutService {
         // move it to the next line when the remaining space is too small.
         elementWidthPx = this.getFillWidthPlaceholderWidth(
           textBoxElement,
-          paragraphStyles,
+          defaultLyricsFontCss,
         );
       } else if (textBoxElement.customWidth != null) {
         elementWidthPx = textBoxElement.customWidth;
@@ -5109,7 +5118,6 @@ export class LayoutService {
       measureBarWidthMap,
       runningElaphronWidth,
       elaphronWidth,
-      paragraphStyles,
     } = args;
 
     noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
@@ -5130,7 +5138,6 @@ export class LayoutService {
       noteElement.lyricsWidth = this.getTextWidthFromCache(
         textWidthCache,
         noteElement,
-        paragraphStyles,
       );
 
       if (pageSetup.ignorePunctuationWhenPositioningLyrics) {
@@ -5138,7 +5145,6 @@ export class LayoutService {
         noteElement.lyricsLeadingPunctuationWidth = this.getTextWidthFromCache(
           textWidthCache,
           noteElement,
-          paragraphStyles,
           null,
           true,
         );
@@ -5147,7 +5153,6 @@ export class LayoutService {
         noteElement.lyricsTrailingPunctuationWidth = this.getTextWidthFromCache(
           textWidthCache,
           noteElement,
-          paragraphStyles,
           null,
           false,
           true,
@@ -5366,13 +5371,13 @@ export class LayoutService {
   public static addMelismas(
     pages: Page[],
     pageSetup: PageSetup,
-    paragraphStyles: ParagraphStyle[],
+    defaultLyricsFontCss: string,
   ) {
     // First calculate some constants
 
     const widthOfSpace = TextMeasurementService.getTextWidth(
       ' ',
-      this.getDefaultLyricsFont(paragraphStyles),
+      defaultLyricsFontCss,
     );
 
     const elaphronMapping = NeumeMappingService.getMapping(
@@ -5541,7 +5546,6 @@ export class LayoutService {
                 const lyricsWidth = this.getTextWidthFromCache(
                   textWidthCache,
                   element,
-                  paragraphStyles,
                   element.melismaText,
                 );
 
@@ -5673,7 +5677,6 @@ export class LayoutService {
               const widthOfHyphenForThisElement = this.getTextWidthFromCache(
                 textWidthCache,
                 element,
-                paragraphStyles,
                 '-',
               );
 
@@ -5848,7 +5851,6 @@ export class LayoutService {
                 -this.getLyricsFontBoundingBoxDescentFromCache(
                   fontBoundingBoxDescentCache,
                   element,
-                  paragraphStyles,
                 );
             } else if (pageSetup.melkiteRtl) {
               const nextNoteElement = nextElement as NoteElement;
@@ -5888,7 +5890,6 @@ export class LayoutService {
               const widthOfTatweelForThisElement = this.getTextWidthFromCache(
                 textWidthCache,
                 element,
-                paragraphStyles,
                 TATWEEL,
               );
 
@@ -8254,14 +8255,14 @@ export class LayoutService {
   private static getTextWidthFromCache(
     cache: Map<string, number>,
     element: NoteElement,
-    paragraphStyles: ParagraphStyle[],
     textOverride: string | null = null,
     trimLeadingPunctuation: boolean = false,
     trimTrailingPunctuation: boolean = false,
   ) {
-    const font = resolveFontCss(
-      this.getResolvedLyricsStyle(element, paragraphStyles),
-    );
+    // The note's lyric font is resolved once per pass in
+    // precomputeNoteGeometry; re-resolving it here would put the full
+    // style-chain walk on the per-measurement hot path.
+    const font = element.lyricsFontCss;
 
     let text = textOverride ?? element.lyrics;
 
@@ -8295,11 +8296,8 @@ export class LayoutService {
   private static getLyricsFontBoundingBoxDescentFromCache(
     cache: Map<string, number>,
     element: NoteElement,
-    paragraphStyles: ParagraphStyle[],
   ) {
-    const font = resolveFontCss(
-      this.getResolvedLyricsStyle(element, paragraphStyles),
-    );
+    const font = element.lyricsFontCss;
 
     const key = font;
 
@@ -8312,18 +8310,6 @@ export class LayoutService {
     }
 
     return descent;
-  }
-
-  private static getNoteLyricsFontHeightFromCache(
-    cache: Map<string, number>,
-    element: NoteElement,
-    paragraphStyles: ParagraphStyle[],
-  ) {
-    const font = resolveFontCss(
-      this.getResolvedLyricsStyle(element, paragraphStyles),
-    );
-
-    return this.getLyricsFontHeightFromCache(cache, font);
   }
 
   private static getLyricsFontHeightFromCache(

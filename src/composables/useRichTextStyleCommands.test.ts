@@ -253,22 +253,24 @@ describe('useRichParagraphStyleCommands', () => {
       fontFamily: 'Initial Family',
       fontStyle: 'Bold',
     });
-    expect(italicToggle.setResolvedParagraphStyleFallback).toHaveBeenCalledWith({
-      fontFamily: 'Initial Family',
-      fontStyle: 'Bold',
-    });
+    expect(italicToggle.setResolvedParagraphStyleFallback).toHaveBeenCalledWith(
+      {
+        fontFamily: 'Initial Family',
+        fontStyle: 'Bold',
+      },
+    );
     expect(boldToggle.refresh).toHaveBeenCalledTimes(1);
     expect(italicToggle.refresh).toHaveBeenCalledTimes(1);
 
     commandStates.style.value = [nextStyle.id];
     await nextTick();
 
-    expect(boldToggle.setResolvedParagraphStyleFallback).toHaveBeenLastCalledWith(
-      {
-        fontFamily: 'Next Family',
-        fontStyle: 'Italic',
-      },
-    );
+    expect(
+      boldToggle.setResolvedParagraphStyleFallback,
+    ).toHaveBeenLastCalledWith({
+      fontFamily: 'Next Family',
+      fontStyle: 'Italic',
+    });
     expect(
       italicToggle.setResolvedParagraphStyleFallback,
     ).toHaveBeenLastCalledWith({
@@ -289,8 +291,8 @@ describe('useRichParagraphStyleCommands', () => {
       ['bold-style'],
       false,
       {
-      bold: true,
-      italic: false,
+        bold: true,
+        italic: false,
       },
     );
 

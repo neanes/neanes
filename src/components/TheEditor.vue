@@ -254,6 +254,7 @@ import {
   rewriteRichTextParagraphStyleClasses,
   richTextParagraphStyleClassName,
 } from '@/utils/richTextParagraphStyleClasses';
+import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import {
   resolveRunningMarkerPageMetadata,
   resolveRunningMarkerText,
@@ -7016,6 +7017,17 @@ const resolvedDefaultLyricsStyle = computed(() =>
   ),
 );
 
+// Global stylesheet for the rich text paragraph classes. Rendered once here
+// rather than per editor instance; the CSS depends only on score-level state
+// and applies to every .ck-content in the document, including print.
+const richTextParagraphStyleCss = computed(() =>
+  buildRichTextParagraphStyleCss(
+    score.value.paragraphStyles,
+    score.value.pageSetup,
+    '.ck-content',
+  ),
+);
+
 function getResolvedLyricsStyle(element: NoteElement) {
   return resolveParagraphStyle(
     score.value.paragraphStyles,
@@ -11054,6 +11066,7 @@ function renderTabLabel(tab: Tab) {
       :fonts="fonts"
       @update="updatePageSetup($event)"
     />
+    <component :is="'style'">{{ richTextParagraphStyleCss }}</component>
     <ParagraphStylesDialog
       v-if="paragraphStylesDialogIsOpen"
       v-model:open="paragraphStylesDialogIsOpen"

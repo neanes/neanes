@@ -107,7 +107,6 @@
       @ready="onEditorReady"
       @select-neume="emit('select-neume')"
     />
-    <component :is="'style'">{{ paragraphStyleCss }}</component>
   </div>
 </template>
 
@@ -127,6 +126,7 @@ import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import RichTextEditor from '@/components/RichTextEditor.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
+import { useRichTextParagraphStyleDefinitions } from '@/composables/useRichTextParagraphStyles';
 import type InlineEditor from '@/customEditor';
 import type {
   RichTextBoxContentKey,
@@ -152,8 +152,6 @@ import {
   inferSharedRichTextEditorLanguage,
   RICH_TEXT_LANGUAGE_OPTIONS,
 } from '@/utils/richTextLanguage';
-import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleClasses';
-import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import { Unit } from '@/utils/Unit';
 import { withZoom } from '@/utils/withZoom';
 
@@ -277,25 +275,8 @@ const resolvedParagraphStyle = computed(() =>
   resolveParagraphStyle(props.paragraphStyles, fallbackParagraphStyleId.value),
 );
 
-const paragraphStyleDefinitions = computed(() =>
-  props.paragraphStyles.map((style) => ({
-    name: style.id,
-    element: 'p',
-    classes: [richTextParagraphStyleClassName(style.id)],
-  })),
-);
-
-const paragraphStyleDefinitionKey = computed(() =>
-  props.paragraphStyles.map((style) => style.id).join('|'),
-);
-
-const paragraphStyleCss = computed(() =>
-  buildRichTextParagraphStyleCss(
-    props.paragraphStyles,
-    props.pageSetup,
-    '.ck-content',
-  ),
-);
+const { paragraphStyleDefinitions, paragraphStyleDefinitionKey } =
+  useRichTextParagraphStyleDefinitions(() => props.paragraphStyles);
 
 const editorConfig = computed((): EditorConfig => {
   const fontSizeOptions: FontSizeOption[] = [];

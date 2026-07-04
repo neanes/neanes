@@ -18,7 +18,6 @@
       @blur="handleEditorBlur"
       @select-neume="emit('select-neume')"
     />
-    <component :is="'style'">{{ paragraphStyleCss }}</component>
   </div>
 </template>
 
@@ -36,6 +35,7 @@ import {
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import RichTextEditor from '@/components/RichTextEditor.vue';
+import { useRichTextParagraphStyleDefinitions } from '@/composables/useRichTextParagraphStyles';
 import type InlineEditor from '@/customEditor';
 import type { AnnotationElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
@@ -55,8 +55,6 @@ import {
   inferRichTextEditorLanguage,
   RICH_TEXT_LANGUAGE_OPTIONS,
 } from '@/utils/richTextLanguage';
-import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleClasses';
-import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import { withZoom } from '@/utils/withZoom';
 
 const ANNOTATION_LOCK_ID = 'ANNOTATION_LOCK_ID';
@@ -130,25 +128,8 @@ const annotationStyle = computed(() =>
   ),
 );
 
-const paragraphStyleDefinitions = computed(() =>
-  props.paragraphStyles.map((style) => ({
-    name: style.id,
-    element: 'p',
-    classes: [richTextParagraphStyleClassName(style.id)],
-  })),
-);
-
-const paragraphStyleDefinitionKey = computed(() =>
-  props.paragraphStyles.map((style) => style.id).join('|'),
-);
-
-const paragraphStyleCss = computed(() =>
-  buildRichTextParagraphStyleCss(
-    props.paragraphStyles,
-    props.pageSetup,
-    '.ck-content',
-  ),
-);
+const { paragraphStyleDefinitions, paragraphStyleDefinitionKey } =
+  useRichTextParagraphStyleDefinitions(() => props.paragraphStyles);
 
 const style = computed(() => {
   return {

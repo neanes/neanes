@@ -419,6 +419,7 @@ import {
   isBuiltInParagraphStyleId,
   isTextBoxAlignment,
   ParagraphStyle,
+  pruneParentlessParagraphStyleRootFallbackOverrides,
   type ParagraphStyleOverrides,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
@@ -644,6 +645,7 @@ function updateSelectedStyleOverride(
   (selectedStyle.value.overrides as Record<string, string | number | null>)[
     key
   ] = value;
+  pruneParentlessParagraphStyleRootFallbackOverrides(selectedStyle.value);
 }
 
 function onFontFamilyChanged(fontFamily: string) {
@@ -801,6 +803,8 @@ function prepareParagraphStyleForSubmit(style: ParagraphStyle) {
   if (!updated.builtIn) {
     updated.displayName = updated.displayName.trim();
   }
+
+  pruneParentlessParagraphStyleRootFallbackOverrides(updated);
 
   return updated;
 }

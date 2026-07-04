@@ -75,6 +75,17 @@ export interface ParagraphStyleOverrides {
 
 export type ResolvedParagraphStyle = Required<ParagraphStyleOverrides>;
 
+const PARAGRAPH_STYLE_OVERRIDE_KEYS: Array<keyof ParagraphStyleOverrides> = [
+  'alignment',
+  'fontFamily',
+  'fontSize',
+  'fontStyle',
+  'color',
+  'strokeWidth',
+  'lineHeight',
+  'textDecoration',
+];
+
 export function hasParagraphStyleOverrides(overrides: ParagraphStyleOverrides) {
   return Object.values(overrides).some((value) => value !== undefined);
 }
@@ -110,6 +121,25 @@ export function createParagraphStyleFallback(): ResolvedParagraphStyle {
     lineHeight: null,
     textDecoration: null,
   };
+}
+
+export function pruneParentlessParagraphStyleRootFallbackOverrides(
+  style: ParagraphStyle,
+) {
+  if (style.parentStyleId != null) {
+    return;
+  }
+
+  const fallback = createParagraphStyleFallback();
+
+  for (const key of PARAGRAPH_STYLE_OVERRIDE_KEYS) {
+    if (
+      style.overrides[key] !== undefined &&
+      Object.is(style.overrides[key], fallback[key])
+    ) {
+      delete style.overrides[key];
+    }
+  }
 }
 
 export function createDefaultBuiltInParagraphStyle(

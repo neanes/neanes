@@ -4,6 +4,12 @@ export function richTextParagraphStyleClassName(styleId: string) {
   return `${RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX}${styleId}`;
 }
 
+export function richTextParagraphStyleIdFromClassName(className: string) {
+  return className.startsWith(RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX)
+    ? className.slice(RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX.length)
+    : null;
+}
+
 export function rewriteRichTextParagraphStyleClasses(
   html: string,
   resolveFallbackStyleId: (styleId: string) => string | null,
@@ -20,13 +26,12 @@ export function rewriteRichTextParagraphStyleClasses(
 
   for (const element of styledElements) {
     for (const className of Array.from(element.classList)) {
-      if (!className.startsWith(RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX)) {
+      const styleId = richTextParagraphStyleIdFromClassName(className);
+
+      if (styleId == null) {
         continue;
       }
 
-      const styleId = className.slice(
-        RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX.length,
-      );
       const fallbackStyleId = resolveFallbackStyleId(styleId);
 
       if (fallbackStyleId == null) {

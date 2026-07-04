@@ -1,3 +1,4 @@
+import { type Editor, GeneralHtmlSupport } from 'ckeditor5';
 import { useTranslation } from 'i18next-vue';
 import { computed, watch } from 'vue';
 
@@ -33,6 +34,7 @@ import {
   remapFontStyleForOptions,
 } from '@/utils/fontStyle';
 import { fontStyleNeedsExplicitFamily } from '@/utils/fontStyleAxes';
+import { richTextParagraphStyleIdFromClassName } from '@/utils/richTextParagraphStyleClasses';
 import { Unit } from '@/utils/Unit';
 
 // Placeholder/label numbers track the field's pt display but drop trailing
@@ -468,30 +470,68 @@ export function useRichTextStyleCommands(
     }
   }
 
+  // The style command's value only reflects the first selected block, so
+  // basing removals on it would leave stale style classes on the remaining
+  // blocks of a multi-paragraph selection. Collect the union of paragraph
+  // styles across all selected blocks from the model instead.
+  function collectSelectedParagraphStyleIds(editor: Editor) {
+    const ghsAttributeName = editor.plugins
+      .get(GeneralHtmlSupport)
+      .getGhsAttributeNameForElement('p');
+    const styleIds = new Set<string>();
+
+    for (const block of editor.model.document.selection.getSelectedBlocks()) {
+      const ghsAttributeValue = block.getAttribute(ghsAttributeName) as
+        | { classes?: unknown }
+        | undefined;
+
+      if (!Array.isArray(ghsAttributeValue?.classes)) {
+        continue;
+      }
+
+      for (const className of ghsAttributeValue.classes) {
+        const styleId =
+          typeof className === 'string'
+            ? richTextParagraphStyleIdFromClassName(className)
+            : null;
+
+        if (styleId != null && neanesParagraphStyleIds.value.has(styleId)) {
+          styleIds.add(styleId);
+        }
+      }
+    }
+
+    return styleIds;
+  }
+
   function onParagraphStyleChanged(value: string) {
-    if (!isCommandEnabled('style')) {
+    const editor = scopedEditor.value;
+
+    if (editor == null || !isCommandEnabled('style')) {
       return;
     }
 
-    if (value === PARAGRAPH_STYLE_NONE_VALUE) {
-      for (const styleId of activeParagraphStyleIds.value) {
-        runCommand('style', { styleName: styleId, forceValue: false });
+    const targetStyleId = value === PARAGRAPH_STYLE_NONE_VALUE ? null : value;
+
+    if (
+      targetStyleId != null &&
+      !neanesParagraphStyleIds.value.has(targetStyleId)
+    ) {
+      return;
+    }
+
+    // One outer change block so a style switch is a single undo step.
+    editor.model.change(() => {
+      for (const styleId of collectSelectedParagraphStyleIds(editor)) {
+        if (styleId !== targetStyleId) {
+          runCommand('style', { styleName: styleId, forceValue: false });
+        }
       }
 
-      return;
-    }
-
-    if (!neanesParagraphStyleIds.value.has(value)) {
-      return;
-    }
-
-    for (const styleId of activeParagraphStyleIds.value) {
-      if (styleId !== value) {
-        runCommand('style', { styleName: styleId, forceValue: false });
+      if (targetStyleId != null) {
+        runCommand('style', { styleName: targetStyleId, forceValue: true });
       }
-    }
-
-    runCommand('style', { styleName: value, forceValue: true });
+    });
   }
 
   function onClearFormatting() {

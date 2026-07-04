@@ -11,40 +11,19 @@
       value="style"
       :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
     >
-      <Field>
-        <div class="mb-2 flex items-center justify-between gap-2">
-          <FieldLabel for="properties-text-box-text-style">{{
-            $t(($) => $.toolbar.common.paragraphStyle, { ns: 'toolbar' })
-          }}</FieldLabel>
-          <div class="flex items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              @click="openParagraphStylesDialog"
-            >
-              <PhTextAa />
-              {{
-                $t(($) => $.dialog.paragraphStyles.openDialog, { ns: 'dialog' })
-              }}
-            </Button>
-            <ParagraphStyleClearButton
-              :disabled="!hasParagraphStyleOverrides"
-              @clear="clearParagraphStyleFormatting"
-            />
-          </div>
-        </div>
-        <ParagraphStyleSelect
-          id="properties-text-box-text-style"
-          :model-value="element.paragraphStyleId"
-          :paragraph-styles="paragraphStyles"
-          @update:model-value="
-            $emit('update', {
-              paragraphStyleId: $event,
-            } as Partial<TextBoxElement>)
-          "
-        />
-      </Field>
+      <ParagraphStyleField
+        id="properties-text-box-text-style"
+        :model-value="element.paragraphStyleId"
+        :paragraph-styles="paragraphStyles"
+        :has-overrides="hasParagraphStyleOverrides"
+        @update:model-value="
+          $emit('update', {
+            paragraphStyleId: $event,
+          } as Partial<TextBoxElement>)
+        "
+        @clear="clearParagraphStyleFormatting"
+        @open-dialog="openParagraphStylesDialog"
+      />
 
       <Field>
         <div class="mb-2 flex items-center justify-between gap-2">
@@ -479,7 +458,6 @@
 
 <script setup lang="ts">
 import {
-  PhTextAa,
   PhTextAlignCenter,
   PhTextAlignJustify,
   PhTextAlignLeft,
@@ -501,9 +479,8 @@ import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
-import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
-import { Button } from '@/components/ui/button';
+import ParagraphStyleField from '@/components/properties/ParagraphStyleField.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {

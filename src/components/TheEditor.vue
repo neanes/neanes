@@ -7098,34 +7098,33 @@ function runWithResizableParagraphStyleRecalc(operation: () => void) {
 
 function updatePageSetup(pageSetup: PageSetup) {
   const currentPageSetup = score.value.pageSetup;
-  const nextPageSetup = pageSetup;
 
   const updateCommands: Command[] = [
     pageSetupCommandFactory.create('update-properties', {
       target: currentPageSetup,
-      newValues: nextPageSetup,
+      newValues: pageSetup,
     }),
   ];
 
-  if (nextPageSetup.richHeaderFooter !== currentPageSetup.richHeaderFooter) {
+  if (pageSetup.richHeaderFooter !== currentPageSetup.richHeaderFooter) {
     pushHeaderFooterReplacementCommands(
       updateCommands,
       score.value,
       createGeneratedHeaderFooterTemplates(
-        nextPageSetup,
-        nextPageSetup.richHeaderFooter,
+        pageSetup,
+        pageSetup.richHeaderFooter,
       ),
     );
   } else if (
-    generatedHeaderFooterDefaultsChanged(currentPageSetup, nextPageSetup)
+    generatedHeaderFooterDefaultsChanged(currentPageSetup, pageSetup)
   ) {
     const oldGeneratedTemplates = createGeneratedHeaderFooterTemplates(
       currentPageSetup,
       currentPageSetup.richHeaderFooter,
     );
     const newGeneratedTemplates = createGeneratedHeaderFooterTemplates(
-      nextPageSetup,
-      nextPageSetup.richHeaderFooter,
+      pageSetup,
+      pageSetup.richHeaderFooter,
     );
 
     for (const slot of headerFooterSlots) {

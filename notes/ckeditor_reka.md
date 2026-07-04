@@ -6,9 +6,9 @@ Neanes embeds a CKEditor 5 editor inside each rich-text box and annotation, and
 drives it through a custom Vue 3 + Reka-UI toolbar and properties panel. This
 arrangement creates two problems that the subsystem solves:
 
-1. **Focus & selection.** The custom controls (font combobox, size field, color
-   picker, and CKEditor's own link/image/table/find balloons) take DOM focus
-   away from the editable. Left alone, the app reads that as the editor losing
+1. **Focus & selection.** The custom controls (font combobox, style selects,
+   size field, color picker, and CKEditor's own link/image/table/find balloons)
+   take DOM focus away from the editable. Left alone, the app reads that as the editor losing
    focus -- it disables the toolbar, drops the command, and persists prematurely --
    and the text selection the control is meant to act on stops being painted.
 2. **Content persistence.** Rich-text content lives inside the live editor and is
@@ -30,10 +30,12 @@ that owns it.
 `src/customEditor.ts` defines the editor class `InlineEditor`, a subclass of
 CKEditor's **`DecoupledEditor`**. It is configured with an **empty
 `toolbar.items`** and a hidden menu bar, so the editing UI comes entirely from the
-Vue components. Editing features (bold, font, lists, links, images, tables,
-find-and-replace, plus the custom `InsertNeume` and `NeanesFakeSelectionEditing`
-plugins) are registered as `builtinPlugins`, which provides their editing
-commands; the Vue toolbar and panel are what invoke those commands.
+Vue components. Editing features (bold, font, the stock `Style` feature that
+carries the paragraph styles, lists, links, images, tables, find-and-replace,
+plus the custom `InsertNeume`, `FontStyle`, `OpenType`, `AlignmentOverride`, and
+`NeanesFakeSelectionEditing` plugins) are registered as `builtinPlugins`, which
+provides their editing commands; the Vue toolbar and panel are what invoke those
+commands.
 
 This has a consequence the whole of section 2 turns on: CKEditor's focus tracker
 covers **only its own UI** -- the editable DOM root and the balloons/dialogs in its
@@ -88,11 +90,12 @@ sub-editors share one owner.
 
 ### 1.4 The custom UI and where content gets persisted
 
-- **`RichTextToolbar.vue`** -- the floating toolbar (undo/redo, font, size, bold/
-  italic/underline, alignment, remove-format, lists, indent, neume insertion, and
-  the native link/image/table/find buttons).
-- **`PropertiesRichTextStyle.vue`** -- the properties-panel section (font, size,
-  color, style, alignment, script, and neume-attribute controls).
+- **`RichTextToolbar.vue`** -- the floating toolbar (undo/redo, paragraph style,
+  font, size, bold/italic/underline, alignment, remove-format, lists, indent,
+  neume insertion, and the native link/image/table/find buttons).
+- **`PropertiesRichTextStyle.vue`** -- the properties-panel section (paragraph
+  style, font, size, color, font style, alignment, script, and neume-attribute
+  controls).
 - **`TextBoxRich.vue`** -- lays out an element's sub-editors and, on
   `RichTextEditor`'s `blur`, calls `getPendingUpdates()` (which diffs each
   sub-editor's `getData()` against the model) and emits `update`. **Blur is the
@@ -116,10 +119,11 @@ sub-editors share one owner.
 
 ### 2.1 The problem
 
-Three toolbar/panel controls own keyboard focus while operating on the editor's
+Several toolbar/panel controls own keyboard focus while operating on the editor's
 selection -- the **font combobox** (has a search input), the **font-size field**,
-and the **color picker** (hex input + canvas) -- as do CKEditor's own **link,
-image, table, and find** balloons. Each takes DOM focus away from the editable,
+the **color picker** (hex input + canvas), and the **paragraph-style and
+font-style selects** (their listboxes take focus for arrow-key navigation) -- as
+do CKEditor's own **link, image, table, and find** balloons. Each takes DOM focus away from the editable,
 and without the mechanisms in this section that reads as the editor blurring. Two
 independent things then break:
 
@@ -294,7 +298,7 @@ deliberate next target.)
   `attachFocusZone(() => props.element, toolbarRoot)`. The font combobox and the
   paragraph-style and font-style selects wire
   `@update:open` -> `beginSelectionGuard` / `endSelectionGuard({ refocus: true })`; the size field wires
-  `@focuscapture` -> `beginSelectionGuard` and `@blurcapture` -> `endSelectionGuard({ refocus: false })`.
+  `@focus-within` -> `beginSelectionGuard` and `@blur-within` -> `endSelectionGuard({ refocus: false })`.
 - **`PropertiesRichTextStyle.vue`** is a fragment, so it is wrapped in
   `<div ref="panelRoot" class="contents">`. Tailwind's `contents`
   (`display: contents`) removes the wrapper's own box -- preserving the panel's
@@ -302,7 +306,7 @@ deliberate next target.)
   containment and capture-phase listeners need. Font combobox, paragraph-style and
   font-style selects, and color picker
   wire `@update:open` -> `beginSelectionGuard` / `endSelectionGuard({ refocus: true })`; the size field wires
-  focus/blur capture.
+  `focus-within` / `blur-within`.
 - **Select-shaped controls** (`ParagraphStyleSelect`, `FontStyleSelect`) ride the
   same zone, with two `richTextPortal`-gated preventions of their own: the trigger
   `preventDefault`s its mousedown (the editable keeps focus while opening), and
@@ -333,7 +337,7 @@ deliberate next target.)
 non-rich-text dialogs and panels, so their focus-related behavior is scoped so
 those other usages are unaffected:
 
-- The `update:open`, `focuscapture`, and `blurcapture` emits are inert wherever a
+- The `update:open`, `focus-within`, and `blur-within` emits are inert wherever a
   parent doesn't handle them.
 - `ColorPicker`'s focus interception (preventing trigger refocus on close, staying
   a _non-modal_ popover so the user can click back into the editor) is gated on its
@@ -377,7 +381,7 @@ A, whose toolbar root and the shared portal are already registered (sticky).
    editable, toolbar, and portal together -> `isFocused -> false` fires natively
    -> the normal clear + `blur`/persist runs.
 
-The size field is the same shape but simpler (`@focuscapture` / `@blurcapture`
+The size field is the same shape but simpler (`@focus-within` / `@blur-within`
 with `refocus: false`, since the user is usually tabbing to a deliberate next
 target). The color picker is also the same shape but, being a `Popover`, cancels
 its own close refocus with `@close-auto-focus.prevent`; the combobox has no such
@@ -578,6 +582,11 @@ load-bearing third-party contracts; a major version bump should re-check them.
 - `Combobox` focuses its input on open; `ComboboxContentImpl` refocuses the
   trigger on unmount **only** when `!activeElement || activeElement ===
 document.body`, and defers that unmount behind its open/close animation. (section 2.6)
+- `Select` focuses its selected item (or content) once positioned;
+  `SelectContentImpl` refocuses the trigger on content unmount
+  **unconditionally** unless its cancelable `close-auto-focus` is prevented, and
+  that unmount trails the close animation. Its trigger `preventDefault`s plain
+  left-click mousedown itself. (section 2.7)
 - `Popover` distinguishes modal vs non-modal and, when non-modal, exposes a
   cancelable `close-auto-focus`. (section 2.6, section 2.8)
 - `NumberField` re-focuses its input on stepper activation, which the size field's
@@ -625,7 +634,8 @@ The subsystem spans these files, grouped by concern.
 - `src/components/RichTextToolbar.vue`,
   `src/components/properties/PropertiesRichTextStyle.vue` -- the toolbar and
   properties panel; they attach the focus zone and wire the marker (section 2.7).
-- `src/components/FontCombobox.vue`, `ColorPicker.vue`, `InputUnit.vue`,
+- `src/components/FontCombobox.vue`, `ColorPicker.vue`,
+  `ParagraphStyleSelect.vue`, `FontStyleSelect.vue`, `InputUnit.vue`,
   `InputFontSize.vue` -- controls shared with non-rich-text usages, carrying
   reuse-safe focus events (section 2.8).
 

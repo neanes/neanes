@@ -202,28 +202,34 @@ export class FontStyleToggleCommand extends Command {
   }
 
   public override execute(): void {
-    if (this.target == null) {
+    const target = this.target;
+
+    if (target == null) {
       return;
     }
 
-    if (
-      !hasExplicitFamily(this.editor) &&
-      fontStyleNeedsExplicitFamily(this.target)
-    ) {
-      const family = effectiveFamily(
-        this.editor,
-        this.resolvedParagraphStyleFallback,
-      );
+    // One outer change block so the family+style pair lands as a single undo
+    // step.
+    this.editor.model.change(() => {
+      if (
+        !hasExplicitFamily(this.editor) &&
+        fontStyleNeedsExplicitFamily(target)
+      ) {
+        const family = effectiveFamily(
+          this.editor,
+          this.resolvedParagraphStyleFallback,
+        );
 
-      if (family != null) {
-        const modelValue = toEditorFontFamilyModelValue(this.editor, family);
+        if (family != null) {
+          const modelValue = toEditorFontFamilyModelValue(this.editor, family);
 
-        if (modelValue != null) {
-          this.editor.execute(FONT_FAMILY, { value: modelValue });
+          if (modelValue != null) {
+            this.editor.execute(FONT_FAMILY, { value: modelValue });
+          }
         }
       }
-    }
 
-    this.editor.execute(FONT_STYLE, { value: this.target });
+      this.editor.execute(FONT_STYLE, { value: target });
+    });
   }
 }

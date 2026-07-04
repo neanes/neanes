@@ -18,7 +18,11 @@ import {
   normalizeFontFamily,
   splitFontFamilyList,
 } from '@/utils/fontFamily';
-import { applyLegacyStyle } from '@/utils/fontStyle';
+import {
+  applyLegacyStyle,
+  isCssItalicStyle,
+  isNormalCssFontStyle,
+} from '@/utils/fontStyle';
 import { applyAxes, fontStyleNeedsExplicitFamily } from '@/utils/fontStyleAxes';
 
 import {
@@ -206,17 +210,17 @@ export default class FontStyleEditing extends Plugin {
         },
       );
 
-      // A non-basic fontStyle span embeds the base family (an exact face such as
-      // "Source Serif Caption"), but only attribute:fontStyle reconverts it. When
-      // the family changes while the style name stays the same (e.g. Semibold to
-      // Semibold across families), the fontStyle command no-ops, so without this
-      // the span keeps rendering the old family in the editing view. We rebuild
-      // the dependent span here without consuming the family event, leaving the
-      // separate FontFamilyEditing span to CKEditor.
+      // The fontStyle span embeds the family it was resolved against, but only
+      // attribute:fontStyle reconverts it. When the family changes while the
+      // style name stays the same (e.g. Semibold to Semibold across families),
+      // the fontStyle command no-ops, so without this the span keeps rendering
+      // the old family in the editing view. We rebuild the dependent span here
+      // without consuming the family event, leaving the separate
+      // FontFamilyEditing span to CKEditor.
       dispatcher.on<DowncastAttributeEvent>(
         `attribute:${FONT_FAMILY}`,
         (evt, data, conversionApi) => {
-          this._reconvertExactFaceForFamilyChange(
+          this._reconvertFontStyleForFamilyChange(
             data,
             conversionApi,
             createFontStyleElements,
@@ -226,10 +230,10 @@ export default class FontStyleEditing extends Plugin {
     });
   }
 
-  // Rebuilds the exact-face fontStyle span when only the sibling family changes.
-  // Basic styles (no embedded family) and same-batch fontStyle changes (already
-  // handled by the fontStyle converter) are left untouched.
-  private _reconvertExactFaceForFamilyChange(
+  // Rebuilds the fontStyle span when only the sibling family changes. Same-batch
+  // fontStyle changes are left untouched (the fontStyle converter rebuilds the
+  // span itself, reading the sibling family change).
+  private _reconvertFontStyleForFamilyChange(
     data: DowncastAttributeEvent['args'][0],
     conversionApi: DowncastConversionApi,
     createElement: (
@@ -437,19 +441,27 @@ export default class FontStyleEditing extends Plugin {
     });
 
     editor.conversion.for('upcast').elementToAttribute({
-      view: { name: 'span', styles: { 'font-style': /^(italic|oblique)$/ } },
+      view: { name: 'span', styles: { 'font-style': /.*/ } },
       model: {
         key: LEGACY_ITALIC,
-        value: true,
+        // Classify via the shared CSS helper so casing and oblique angles
+        // ('Italic', 'oblique 14deg') fold like plain 'italic'. Returning null
+        // skips the conversion without consuming the style, leaving it to the
+        // LEGACY_NORMAL converter below.
+        value: (viewElement: ViewElement) =>
+          isCssItalicStyle(viewElement.getStyle('font-style')) ? true : null,
       },
       converterPriority: 'high',
     });
 
     editor.conversion.for('upcast').elementToAttribute({
-      view: { name: 'span', styles: { 'font-style': /^normal$/ } },
+      view: { name: 'span', styles: { 'font-style': /.*/ } },
       model: {
         key: LEGACY_NORMAL,
-        value: true,
+        value: (viewElement: ViewElement) =>
+          isNormalCssFontStyle(viewElement.getStyle('font-style'))
+            ? true
+            : null,
       },
       converterPriority: 'high',
     });

@@ -194,7 +194,15 @@ function legacyWeightVariant(fontWeight: string | null | undefined) {
 
 export function isCssItalicStyle(fontStyle: string | null | undefined) {
   const style = fontStyle?.trim().toLowerCase();
-  return style === 'italic' || style === 'oblique';
+
+  if (style == null) {
+    return false;
+  }
+
+  // 'oblique' may carry an angle, e.g. 'oblique 14deg'.
+  return (
+    style === 'italic' || style === 'oblique' || style.startsWith('oblique ')
+  );
 }
 
 export function isRegularCssFontWeight(fontWeight: string | null | undefined) {

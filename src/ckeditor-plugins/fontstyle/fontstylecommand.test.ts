@@ -62,6 +62,7 @@ function createEditor({
       schema: {
         checkAttributeInSelection: () => true,
       },
+      change: (callback: () => void) => callback(),
     },
   };
 }

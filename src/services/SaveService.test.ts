@@ -487,6 +487,45 @@ describe('SaveService font styles', () => {
     expect(loaded.paragraphStyles.length).toBeGreaterThan(0);
   });
 
+  it('keeps the first custom paragraph style when a duplicate id is saved', () => {
+    const saved = createLegacyScore();
+    const first = new ParagraphStyle();
+
+    first.id = 'custom-style';
+    first.displayName = 'Custom Style';
+    first.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    first.overrides.fontSize = 11;
+
+    const duplicate = new ParagraphStyle();
+
+    duplicate.id = 'custom-style';
+    duplicate.displayName = 'Duplicate Style';
+    duplicate.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    duplicate.overrides.fontSize = 22;
+
+    saved.paragraphStyles = [
+      SaveService.SaveParagraphStyle(first),
+      SaveService.SaveParagraphStyle(duplicate),
+    ];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const customStyles = loaded.paragraphStyles.filter(
+      (style) => style.id === 'custom-style',
+    );
+
+    expect(customStyles).toHaveLength(1);
+    expect(customStyles[0].overrides.fontSize).toBe(11);
+  });
+
+  it('does not save the derived builtIn flag', () => {
+    const style = new ParagraphStyle();
+
+    style.id = BUILT_IN_PARAGRAPH_STYLE_IDS.Title;
+    style.displayName = 'Title';
+
+    expect(SaveService.SaveParagraphStyle(style)).not.toHaveProperty('builtIn');
+  });
+
   it('fills missing built-in paragraph styles when only custom styles are saved', () => {
     const saved = createLegacyScore();
     const customStyle = new ParagraphStyle();
@@ -1098,6 +1137,40 @@ describe('SaveService font styles', () => {
     expect(lyricsStyle.fontSize).toBe(33);
     expect(lyricsStyle.color).toBe('#123456');
     expect(lyricsStyle.strokeWidth).toBe(2);
+  });
+
+  it('loads the legacy lyrics size into the built-in Annotation style', () => {
+    const saved = createLegacyScore({
+      textBoxDefaultFontSize: 42,
+      lyricsDefaultFontSize: 33,
+    });
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const annotationStyle = loaded.paragraphStyles.find(
+      (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+    );
+
+    expect(annotationStyle?.overrides.fontSize).toBe(33);
+  });
+
+  it('prunes a redundant annotation size override when the legacy lyrics and text box sizes match', () => {
+    const saved = createLegacyScore({
+      textBoxDefaultFontSize: 42,
+      lyricsDefaultFontSize: 42,
+    });
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const annotationStyle = loaded.paragraphStyles.find(
+      (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+    );
+
+    expect(annotationStyle?.overrides.fontSize).toBeUndefined();
+    expect(
+      resolveParagraphStyle(
+        loaded.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+      ).fontSize,
+    ).toBe(42);
   });
 
   it('loads legacy drop-cap defaults into the built-in Drop Cap style', () => {

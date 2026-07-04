@@ -3,7 +3,6 @@ import type { TextBoxAlignment } from './Element';
 export class ParagraphStyle {
   public id: string = '';
   public displayName: string = '';
-  public builtIn: boolean | undefined = undefined;
   public parentStyleId: string | undefined = undefined;
   public alignment: TextBoxAlignment | undefined = undefined;
   public fontFamily: string | undefined = undefined;

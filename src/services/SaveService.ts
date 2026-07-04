@@ -279,9 +279,17 @@ function createParagraphStylesFromLegacyPageSetupDefaults(
     lineHeight: pageSetup.textBoxDefaultLineHeight,
   });
 
-  if (pageSetup.lyricsDefaultFontSize != null) {
-    annotation.overrides.fontSize = pageSetup.lyricsDefaultFontSize;
-  }
+  const annotationInherited = resolveParagraphStyle(
+    styles,
+    annotation.parentStyleId,
+  );
+
+  applyGeneratedParagraphStyleOverride(
+    annotation,
+    annotationInherited,
+    'fontSize',
+    pageSetup.lyricsDefaultFontSize,
+  );
 
   const lyricsInherited = resolveParagraphStyle(styles, lyrics.parentStyleId);
 
@@ -1149,7 +1157,6 @@ export class SaveService {
     const saved = new ParagraphStyleSave_v1();
     saved.id = style.id;
     saved.displayName = style.displayName;
-    saved.builtIn = style.builtIn || undefined;
     saved.parentStyleId = style.parentStyleId ?? undefined;
     saved.alignment = style.overrides.alignment;
     saved.fontFamily = style.overrides.fontFamily;
@@ -1982,15 +1989,15 @@ export class SaveService {
       defaultParagraphStyles.map((style) => style.id),
     );
     const savedBuiltIns = new Map<string, ParagraphStyle>();
-    const customStyles: ParagraphStyle[] = [];
+    const customStyles = new Map<string, ParagraphStyle>();
 
     for (const style of loadedParagraphStyles) {
-      if (builtInStyleIds.has(style.id)) {
-        if (!savedBuiltIns.has(style.id)) {
-          savedBuiltIns.set(style.id, style);
-        }
-      } else {
-        customStyles.push(style);
+      const target = builtInStyleIds.has(style.id)
+        ? savedBuiltIns
+        : customStyles;
+
+      if (!target.has(style.id)) {
+        target.set(style.id, style);
       }
     }
 
@@ -1998,7 +2005,7 @@ export class SaveService {
       ...defaultParagraphStyles.map(
         (defaultStyle) => savedBuiltIns.get(defaultStyle.id) ?? defaultStyle,
       ),
-      ...customStyles,
+      ...customStyles.values(),
     ];
   }
 

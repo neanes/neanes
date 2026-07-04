@@ -182,7 +182,7 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import type { Line, Page } from '@/models/Page';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
 import type {
   ParagraphStyle,
   ResolvedParagraphStyle,

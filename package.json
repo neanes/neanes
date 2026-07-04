@@ -75,6 +75,7 @@
     "i18next-browser-languagedetector": "^8.2.1",
     "i18next-vue": "^5.4.0",
     "jest-matcher-deep-close-to": "^3.0.2",
+    "jsdom": "^29.1.1",
     "mitt": "^3.0.1",
     "prettier": "^3.8.5",
     "register-service-worker": "^1.7.2",

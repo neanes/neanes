@@ -1,7 +1,9 @@
 import type {
   AlternateLineElement,
+  AnnotationElement,
   DropCapElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
   TextBoxElement,
 } from '@/models/Element';
@@ -11,6 +13,8 @@ import {
   getTextBoxParagraphStyleFallbackId,
   type ParagraphStyle,
 } from '@/models/ParagraphStyle';
+
+import { rewriteRichTextParagraphStyleClasses } from './richTextParagraphStyleClasses';
 
 function createParagraphStyleIdSet(paragraphStyles: ParagraphStyle[]) {
   return new Set(paragraphStyles.map((style) => style.id));
@@ -22,6 +26,16 @@ function resolveClipboardParagraphStyleId(
   fallbackStyleId: string,
 ) {
   return paragraphStyleIds.has(styleId) ? styleId : fallbackStyleId;
+}
+
+function rewriteClipboardRichTextHtml(
+  html: string,
+  paragraphStyleIds: Set<string>,
+  fallbackStyleId: string,
+) {
+  return rewriteRichTextParagraphStyleClasses(html, (styleId) =>
+    paragraphStyleIds.has(styleId) ? null : fallbackStyleId,
+  );
 }
 
 export function sanitizeClipboardElementParagraphStyleIds(
@@ -55,12 +69,58 @@ function sanitizeElementParagraphStyleIds(
         BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
       );
 
+      for (const annotation of note.annotations) {
+        sanitizeElementParagraphStyleIds(annotation, paragraphStyleIds);
+      }
+
       for (const alternateLine of note.alternateLines) {
         sanitizeAlternateLineParagraphStyleIds(
           alternateLine,
           paragraphStyleIds,
         );
       }
+      break;
+    }
+    case ElementType.Annotation: {
+      const annotation = element as AnnotationElement;
+      annotation.text = rewriteClipboardRichTextHtml(
+        annotation.text,
+        paragraphStyleIds,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+      );
+      break;
+    }
+    case ElementType.RichTextBox: {
+      const richTextBox = element as RichTextBoxElement;
+      const fallbackStyleId = getTextBoxParagraphStyleFallbackId(
+        richTextBox.inline,
+      );
+
+      richTextBox.content = rewriteClipboardRichTextHtml(
+        richTextBox.content,
+        paragraphStyleIds,
+        fallbackStyleId,
+      );
+      richTextBox.contentBottom = rewriteClipboardRichTextHtml(
+        richTextBox.contentBottom,
+        paragraphStyleIds,
+        fallbackStyleId,
+      );
+      richTextBox.contentLeft = rewriteClipboardRichTextHtml(
+        richTextBox.contentLeft,
+        paragraphStyleIds,
+        fallbackStyleId,
+      );
+      richTextBox.contentCenter = rewriteClipboardRichTextHtml(
+        richTextBox.contentCenter,
+        paragraphStyleIds,
+        fallbackStyleId,
+      );
+      richTextBox.contentRight = rewriteClipboardRichTextHtml(
+        richTextBox.contentRight,
+        paragraphStyleIds,
+        fallbackStyleId,
+      );
       break;
     }
     case ElementType.TextBox: {

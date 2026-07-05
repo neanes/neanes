@@ -1,6 +1,6 @@
 {
   "version": "1.1",
-  "appVersion": "0.5.5",
+  "appVersion": "0.5.40",
   "pageSetup": {
     "pageSize": "Letter",
     "pageSizeUnit": "in",
@@ -14,12 +14,6 @@
     "footerMargin": 48,
     "firstPageNumber": 1,
     "lineHeight": 72,
-    "lyricsDefaultFontFamily": "GFS Didot",
-    "lyricsDefaultFontSize": 16,
-    "lyricsDefaultFontWeight": "400",
-    "lyricsDefaultFontStyle": "normal",
-    "lyricsDefaultColor": "#000000",
-    "lyricsDefaultStrokeWidth": 0,
     "lyricsVerticalOffset": -5.76,
     "lyricsMinimumSpacing": 4.800000000000001,
     "lyricsMelismaCutoffWidth": 6.666666666666667,
@@ -60,20 +54,7 @@
     "martyriaDefaultStrokeWidth": 0,
     "tempoDefaultColor": "#800000",
     "tempoDefaultStrokeWidth": 0,
-    "dropCapDefaultFontFamily": "Source Serif",
-    "dropCapDefaultFontSize": 80,
-    "dropCapDefaultFontWeight": "400",
-    "dropCapDefaultFontStyle": "normal",
-    "dropCapDefaultColor": "#800000",
-    "dropCapDefaultStrokeWidth": 0,
-    "dropCapDefaultLineHeight": 1,
     "dropCapDefaultLineSpan": 1,
-    "textBoxDefaultFontFamily": "Source Serif",
-    "textBoxDefaultFontSize": 26.666666666666668,
-    "textBoxDefaultFontWeight": "400",
-    "textBoxDefaultFontStyle": "normal",
-    "textBoxDefaultColor": "#000000",
-    "textBoxDefaultStrokeWidth": 0,
     "hyphenSpacing": 49.632000000000005,
     "minimumSyllableToHyphenClearance": 13.228346456692915,
     "martyriaVerticalOffset": 4,
@@ -81,21 +62,84 @@
     "alignIsonIndicators": true,
     "ignorePunctuationWhenPositioningLyrics": true
   },
+  "paragraphStyles": [
+    {
+      "id": "default-text",
+      "displayName": "Default Text",
+      "fontFamily": "GFS Didot"
+    },
+    {
+      "id": "annotation",
+      "displayName": "Annotation",
+      "parentStyleId": "default-text",
+      "fontSize": 16
+    },
+    {
+      "id": "title",
+      "displayName": "Title",
+      "parentStyleId": "default-text",
+      "alignment": "center",
+      "fontSize": 26.666666666666668,
+      "color": "#000080"
+    },
+    {
+      "id": "subtitle",
+      "displayName": "Subtitle",
+      "parentStyleId": "default-text",
+      "alignment": "center",
+      "fontSize": 29.333333333333332
+    },
+    {
+      "id": "chapter",
+      "displayName": "Chapter",
+      "parentStyleId": "default-text",
+      "alignment": "center",
+      "fontSize": 32
+    },
+    {
+      "id": "section",
+      "displayName": "Section",
+      "parentStyleId": "default-text",
+      "fontSize": 26.666666666666668
+    },
+    {
+      "id": "header",
+      "displayName": "Header",
+      "parentStyleId": "default-text",
+      "alignment": "center"
+    },
+    {
+      "id": "footer",
+      "displayName": "Footer",
+      "parentStyleId": "default-text",
+      "alignment": "center"
+    },
+    {
+      "id": "lyrics",
+      "displayName": "Lyrics",
+      "parentStyleId": "default-text"
+    },
+    {
+      "id": "drop-cap",
+      "displayName": "Drop Cap",
+      "parentStyleId": "default-text",
+      "fontSize": 80,
+      "color": "#800000",
+      "lineHeight": 1
+    }
+  ],
   "headers": {
     "default": {
       "elements": [
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
           "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Source Serif",
-          "strokeWidth": 0,
           "height": 19,
           "marginTop": 0,
           "marginBottom": 0
@@ -107,15 +151,12 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
           "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Source Serif",
-          "strokeWidth": 0,
           "height": 19,
           "marginTop": 0,
           "marginBottom": 0
@@ -127,15 +168,12 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
           "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Source Serif",
-          "strokeWidth": 0,
           "height": 19,
           "marginTop": 0,
           "marginBottom": 0
@@ -147,15 +185,29 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
           "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Source Serif",
-          "strokeWidth": 0,
+          "height": 19,
+          "marginTop": 0,
+          "marginBottom": 0
+        }
+      ]
+    },
+    "chapterOpening": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "content": "",
+          "contentBottom": "",
+          "contentLeft": "",
+          "contentCenter": "",
+          "contentRight": "",
+          "fontSize": 16,
           "height": 19,
           "marginTop": 0,
           "marginBottom": 0
@@ -169,15 +221,12 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
           "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Source Serif",
-          "strokeWidth": 0,
           "height": 19,
           "marginTop": 0,
           "marginBottom": 0
@@ -189,15 +238,12 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
           "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Source Serif",
-          "strokeWidth": 0,
           "height": 19,
           "marginTop": 0,
           "marginBottom": 0
@@ -209,15 +255,12 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
           "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Source Serif",
-          "strokeWidth": 0,
           "height": 19,
           "marginTop": 0,
           "marginBottom": 0
@@ -229,15 +272,29 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
           "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Source Serif",
-          "strokeWidth": 0,
+          "height": 19,
+          "marginTop": 0,
+          "marginBottom": 0
+        }
+      ]
+    },
+    "chapterOpening": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "content": "",
+          "contentBottom": "",
+          "contentLeft": "",
+          "contentCenter": "",
+          "contentRight": "",
+          "fontSize": 16,
           "height": 19,
           "marginTop": 0,
           "marginBottom": 0
@@ -250,6 +307,7 @@
       {
         "id": 1,
         "elementType": "TextBox",
+        "paragraphStyleId": "title",
         "alignment": "center",
         "color": "#000080",
         "content": "Αναστάσιμον Απολυτίκιον, Ήχος Β'",
@@ -257,10 +315,7 @@
         "contentLeft": "",
         "contentCenter": "",
         "contentRight": "",
-        "fontSize": 26.666666666666668,
-        "fontFamily": "GFS Didot",
-        "strokeWidth": 0,
-        "height": 33.5,
+        "height": 32.86335372924805,
         "marginTop": 0,
         "marginBottom": 0
       },
@@ -274,10 +329,7 @@
         "contentLeft": "",
         "contentCenter": "",
         "contentRight": "",
-        "fontSize": 16,
-        "fontFamily": "GFS Didot",
-        "strokeWidth": 0,
-        "height": 20,
+        "height": 20.265735626220703,
         "marginTop": 0,
         "marginBottom": 0
       },
@@ -310,12 +362,6 @@
         "id": 4,
         "elementType": "DropCap",
         "content": "Ο",
-        "fontFamily": "Source Serif",
-        "fontSize": 80,
-        "fontWeight": "400",
-        "fontStyle": "normal",
-        "strokeWidth": 0,
-        "color": "#800000",
         "lineSpan": 1
       },
       {

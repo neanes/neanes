@@ -10,7 +10,7 @@
       :class="cn('bg-background', triggerClass)"
       @mousedown="onTriggerMousedown"
     >
-      <SelectValue />
+      <SelectValue>{{ selectedLabel }}</SelectValue>
     </SelectTrigger>
     <component
       :is="contentComponent"
@@ -126,6 +126,21 @@ const noneLabel = computed(
 const mixedLabel = computed(() =>
   t(($) => $.toolbar.common.mixed, { ns: 'toolbar' }),
 );
+const selectedLabel = computed(() => {
+  if (props.modelValue === PARAGRAPH_STYLE_NONE_VALUE) {
+    return noneLabel.value;
+  }
+
+  if (props.modelValue === PARAGRAPH_STYLE_MIXED_VALUE) {
+    return mixedLabel.value;
+  }
+
+  const selectedStyle = props.paragraphStyles.find(
+    (style) => style.id === props.modelValue,
+  );
+
+  return selectedStyle == null ? '' : styleDisplayName(selectedStyle);
+});
 
 function isStyleDisabled(styleId: string) {
   return disabledStyleIds.value.has(styleId);

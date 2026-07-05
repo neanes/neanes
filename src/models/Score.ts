@@ -5,6 +5,10 @@ import { Footers } from './Footers';
 import type { Header } from './Header';
 import { Headers } from './Headers';
 import { PageSetup } from './PageSetup';
+import {
+  createDefaultParagraphStyles,
+  type ParagraphStyle,
+} from './ParagraphStyle';
 import { Staff } from './Staff';
 
 export class DocumentProperties {
@@ -15,6 +19,7 @@ export class DocumentProperties {
 export class Score {
   public documentProperties: DocumentProperties = new DocumentProperties();
   public pageSetup: PageSetup = new PageSetup();
+  public paragraphStyles: ParagraphStyle[] = createDefaultParagraphStyles();
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();

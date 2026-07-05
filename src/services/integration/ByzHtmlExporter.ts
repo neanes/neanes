@@ -18,10 +18,17 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  hasParagraphStyleOverrides,
+  type ParagraphStyle,
+  type ResolvedParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import type { Score } from '@/models/Score';
 import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
-import { resolveFontStyle } from '@/utils/fontStyle';
+import { type ResolvedFontStyle, resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { isRightHandPage } from '@/utils/PageNumbering';
@@ -29,6 +36,7 @@ import {
   getRichTextLanguage,
   getRichTextLanguageAttributes,
 } from '@/utils/richTextLanguage';
+import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import { Unit } from '@/utils/Unit';
 
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
@@ -89,6 +97,16 @@ interface ByzHtmlExporterConfig {
 export class ByzHtmlExporter {
   neumeToTagMap: Map<Neume, TagInfo> = new Map<Neume, TagInfo>();
 
+  // The built-in default styles are invariant for a given style list, so they
+  // are resolved once per export instead of per element. The cache is keyed by
+  // the style array reference.
+  private resolvedDefaultStyles: {
+    paragraphStyles: ParagraphStyle[];
+    defaultTextBoxStyle: ResolvedParagraphStyle;
+    lyricsStyle: ResolvedParagraphStyle;
+    defaultDropCapStyle: ResolvedParagraphStyle;
+  } | null = null;
+
   config: ByzHtmlExporterConfig = {
     classFthora: 'byz--f',
     classGorgon: 'byz--g',
@@ -125,10 +143,37 @@ export class ByzHtmlExporter {
     mapNeumeTag: this.createNeumeTagMap(),
   };
 
-  exportScore(score: Score) {
-    const style = this.exportPageSetup(score.pageSetup);
+  private getResolvedDefaultStyles(paragraphStyles: ParagraphStyle[]) {
+    if (this.resolvedDefaultStyles?.paragraphStyles !== paragraphStyles) {
+      this.resolvedDefaultStyles = {
+        paragraphStyles,
+        defaultTextBoxStyle: resolveParagraphStyle(
+          paragraphStyles,
+          BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+        ),
+        lyricsStyle: resolveParagraphStyle(
+          paragraphStyles,
+          BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+        ),
+        defaultDropCapStyle: resolveParagraphStyle(
+          paragraphStyles,
+          BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
+        ),
+      };
+    }
 
-    const body = this.exportElements(score.staff.elements, score.pageSetup, 4);
+    return this.resolvedDefaultStyles;
+  }
+
+  exportScore(score: Score) {
+    const style = this.exportPageSetup(score.pageSetup, score.paragraphStyles);
+
+    const body = this.exportElements(
+      score.staff.elements,
+      score.pageSetup,
+      score.paragraphStyles,
+      4,
+    );
     const fontFaceCss = fontCatalog.getRegisteredFontFaceCss();
 
     let injectRtl = '';
@@ -170,7 +215,7 @@ export class ByzHtmlExporter {
     return result;
   }
 
-  exportPageSetup(pageSetup: PageSetup) {
+  exportPageSetup(pageSetup: PageSetup, paragraphStyles: ParagraphStyle[]) {
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
     const firstPageMargins = resolvePageMargins(pageSetup, 1);
     const secondPageMargins = resolvePageMargins(pageSetup, 2);
@@ -187,17 +232,19 @@ export class ByzHtmlExporter {
     );
 
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
-    const defaultLyricsFont = resolveFontStyle(
-      pageSetup.lyricsDefaultFontFamily,
-      pageSetup.lyricsDefaultFontStyle,
+    const { defaultTextBoxStyle, lyricsStyle, defaultDropCapStyle } =
+      this.getResolvedDefaultStyles(paragraphStyles);
+    const defaultTextBoxFont = resolveFontStyle(
+      defaultTextBoxStyle.fontFamily,
+      defaultTextBoxStyle.fontStyle,
     );
     const defaultDropCapFont = resolveFontStyle(
-      pageSetup.dropCapDefaultFontFamily,
-      pageSetup.dropCapDefaultFontStyle,
+      defaultDropCapStyle.fontFamily,
+      defaultDropCapStyle.fontStyle,
     );
-    const defaultTextBoxFont = resolveFontStyle(
-      pageSetup.textBoxDefaultFontFamily,
-      pageSetup.textBoxDefaultFontStyle,
+    const defaultLyricsFont = resolveFontStyle(
+      lyricsStyle.fontFamily,
+      lyricsStyle.fontStyle,
     );
     const defaultLyricsFontFamily = getFontFamilyWithFallback(
       defaultLyricsFont.cssFontFamily,
@@ -210,11 +257,11 @@ export class ByzHtmlExporter {
       defaultTextBoxFont.cssFontFamily,
     ).replaceAll('"', "'");
     const defaultRichTextBoxFontFamily = getFontFamilyWithFallback(
-      pageSetup.textBoxDefaultFontFamily,
+      defaultTextBoxStyle.fontFamily,
       pageSetup.neumeDefaultFontFamily,
     ).replaceAll('"', "'");
     const defaultInlineRichTextBoxFontFamily = getFontFamilyWithFallback(
-      pageSetup.lyricsDefaultFontFamily,
+      lyricsStyle.fontFamily,
       pageSetup.neumeDefaultFontFamily,
     ).replaceAll('"', "'");
 
@@ -224,18 +271,21 @@ export class ByzHtmlExporter {
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
         --byz-lyric-font-family: ${defaultLyricsFontFamily};
-        --byz-lyric-font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+        --byz-lyric-font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
         --byz-lyric-offset-h: ${lyricOffsetH};
         --byz-lyric-offset-v: ${Unit.toPt(pageSetup.lyricsVerticalOffset)}pt;
 
         --byz-drop-cap-font-family: ${defaultDropCapFontFamily};
-        --byz-drop-cap-font-size: ${Unit.toPt(
-          pageSetup.dropCapDefaultFontSize,
-        )}pt;
+        --byz-drop-cap-font-size: ${Unit.toPt(defaultDropCapStyle.fontSize)}pt;
         --byz-drop-cap-offset-v: ${Unit.toPt(
-          this.getDropCapAdjustment(pageSetup),
+          this.getDropCapAdjustment(
+            pageSetup,
+            defaultDropCapStyle,
+            defaultDropCapFont,
+            lyricsStyle,
+          ),
         )}pt;
-        --byz-drop-cap-color: ${pageSetup.dropCapDefaultColor};
+        --byz-drop-cap-color: ${defaultDropCapStyle.color};
 
         --byz-color-accidental: ${pageSetup.accidentalDefaultColor};
         --byz-color-agogi: ${pageSetup.tempoDefaultColor};
@@ -304,20 +354,21 @@ export class ByzHtmlExporter {
       }
 
       ${this.config.tagLyric} {
-        color: ${pageSetup.lyricsDefaultColor};
+        color: ${lyricsStyle.color};
         font-weight: ${defaultLyricsFont.cssFontWeight};
         font-style: ${defaultLyricsFont.cssFontStyle};
+        text-decoration: ${lyricsStyle.textDecoration ?? 'none'};
       }
 
       ${this.config.tagDropCap} {
         font-weight: ${defaultDropCapFont.cssFontWeight};
         font-style: ${defaultDropCapFont.cssFontStyle};
-        -webkit-text-stroke-width: ${pageSetup.dropCapDefaultStrokeWidth};
+        -webkit-text-stroke-width: ${defaultDropCapStyle.strokeWidth};
       }
 
       ${this.getTag('gorthmikon')}, ${this.getTag('pelastikon')} {
-        --byz-neume-font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
-        line-height: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+        --byz-neume-font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
+        line-height: ${Unit.toPt(lyricsStyle.fontSize)}pt;
       }
 
       ${this.config.tagMartyria}.${this.config.classMartyriaAlignRight} {
@@ -331,11 +382,12 @@ export class ByzHtmlExporter {
       .${this.config.classTextBox} {
         white-space: break-spaces;
         font-family: ${defaultTextBoxFontFamily};
-        font-size: ${Unit.toPt(pageSetup.textBoxDefaultFontSize)}pt;
+        font-size: ${Unit.toPt(defaultTextBoxStyle.fontSize)}pt;
         font-weight: ${defaultTextBoxFont.cssFontWeight};
         font-style: ${defaultTextBoxFont.cssFontStyle};
-        color: ${pageSetup.textBoxDefaultColor};
-        -webkit-text-stroke-width: ${pageSetup.textBoxDefaultStrokeWidth};
+        color: ${defaultTextBoxStyle.color};
+        -webkit-text-stroke-width: ${defaultTextBoxStyle.strokeWidth};
+        text-decoration: ${defaultTextBoxStyle.textDecoration ?? 'none'};
       }
 
       .${this.config.classTextBoxInline} {
@@ -344,29 +396,32 @@ export class ByzHtmlExporter {
       }
 
       .${this.config.classTextBox}.${this.config.classTextBoxInline} {
-        font-family: ${defaultLyricsFontFamily};
-        font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+        font-family: ${defaultInlineRichTextBoxFontFamily};
+        font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
         font-weight: ${defaultLyricsFont.cssFontWeight};
         font-style: ${defaultLyricsFont.cssFontStyle};
-        color: ${pageSetup.lyricsDefaultColor};
-        -webkit-text-stroke-width: ${pageSetup.lyricsDefaultStrokeWidth};
+        color: ${lyricsStyle.color};
+        -webkit-text-stroke-width: ${lyricsStyle.strokeWidth};
+        text-decoration: ${lyricsStyle.textDecoration ?? 'none'};
       }
 
       .${this.config.classRichTextBox} {
         font-family: ${defaultRichTextBoxFontFamily};
-        font-size: ${Unit.toPt(pageSetup.textBoxDefaultFontSize)}pt;
+        font-size: ${Unit.toPt(defaultTextBoxStyle.fontSize)}pt;
         font-weight: 400;
         font-style: normal;
-        color: ${pageSetup.textBoxDefaultColor};
+        color: ${defaultTextBoxStyle.color};
       }
 
       .${this.config.classRichTextBox}.${this.config.classTextBoxInline} {
         font-family: ${defaultInlineRichTextBoxFontFamily};
-        font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+        font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
         font-weight: 400;
         font-style: normal;
-        color: ${pageSetup.lyricsDefaultColor};
+        color: ${lyricsStyle.color};
       }
+
+      ${this.getRichTextStyleCss(paragraphStyles, pageSetup)}
 
       .${this.config.classImageBox} {
         display: flex;
@@ -437,6 +492,17 @@ export class ByzHtmlExporter {
     return style;
   }
 
+  private getRichTextStyleCss(
+    paragraphStyles: ParagraphStyle[],
+    pageSetup: PageSetup,
+  ) {
+    return buildRichTextParagraphStyleCss(
+      paragraphStyles,
+      pageSetup,
+      `.${this.config.classRichTextBox}`,
+    );
+  }
+
   private getPageProgressionCss(
     pageSetup: PageSetup,
     firstPageIsRight: boolean,
@@ -476,6 +542,7 @@ export class ByzHtmlExporter {
   exportElements(
     elements: ScoreElement[],
     pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
     indentation: number,
     startInsidePage: boolean = false,
   ) {
@@ -497,6 +564,7 @@ export class ByzHtmlExporter {
           result += this.exportNote(
             element as NoteElement,
             pageSetup,
+            paragraphStyles,
             indentation + 2,
           );
           needLineBreak = true;
@@ -529,6 +597,7 @@ export class ByzHtmlExporter {
 
           result += this.exportDropCap(
             element as DropCapElement,
+            paragraphStyles,
             indentation + 2,
           );
 
@@ -551,7 +620,11 @@ export class ByzHtmlExporter {
             needLineBreak = false;
           }
 
-          result += this.exportTextBox(element as TextBoxElement, indentation);
+          result += this.exportTextBox(
+            element as TextBoxElement,
+            paragraphStyles,
+            indentation,
+          );
           break;
         case ElementType.RichTextBox:
           if (insidePage) {
@@ -609,40 +682,68 @@ export class ByzHtmlExporter {
     return result;
   }
 
-  // Inline typography for a note whose lyrics override the page-setup default.
-  // Returns '' for notes that use the default style, so those keep inheriting the
-  // x-ly defaults. Mirrors the family+style resolution used for the defaults.
+  // Inline typography for lyric overrides. Missing fields continue to inherit
+  // from the x-ly defaults.
   private getCustomLyricStyleAttribute(
     element: NoteElement,
+    paragraphStyles: ParagraphStyle[],
     pageSetup: PageSetup,
   ): string {
-    if (element.lyricsUseDefaultStyle) {
-      return '';
-    }
-
-    const font = resolveFontStyle(
-      element.lyricsFontFamily,
-      element.lyricsFontStyle,
+    const { lyricsStyle } = this.getResolvedDefaultStyles(paragraphStyles);
+    const resolvedLyricsStyle = resolveParagraphStyle(
+      paragraphStyles,
+      element.lyricsParagraphStyleId,
+      element.getParagraphStyleOverrides(),
     );
-    const fontFamily = getFontFamilyWithFallback(
-      font.cssFontFamily,
-      pageSetup.neumeDefaultFontFamily,
-    ).replaceAll('"', "'");
+    let style = '';
 
-    let style = `color: ${element.lyricsColor};`;
-    style += `font-family: ${fontFamily};`;
-    style += `font-size: ${Unit.toPt(element.lyricsFontSize)}pt;`;
-    style += `font-weight: ${font.cssFontWeight};`;
-    style += `font-style: ${font.cssFontStyle};`;
-
-    if (element.lyricsTextDecoration !== 'none') {
-      style += `text-decoration: ${element.lyricsTextDecoration};`;
+    if (resolvedLyricsStyle.color !== lyricsStyle.color) {
+      style += `color: ${resolvedLyricsStyle.color};`;
     }
 
-    return ` style="${style}"`;
+    if (
+      resolvedLyricsStyle.fontFamily !== lyricsStyle.fontFamily ||
+      resolvedLyricsStyle.fontStyle !== lyricsStyle.fontStyle
+    ) {
+      const font = resolveFontStyle(
+        resolvedLyricsStyle.fontFamily,
+        resolvedLyricsStyle.fontStyle,
+      );
+      const fontFamily = getFontFamilyWithFallback(
+        font.cssFontFamily,
+        pageSetup.neumeDefaultFontFamily,
+      ).replaceAll('"', "'");
+
+      style += `font-family: ${fontFamily};`;
+      style += `font-weight: ${font.cssFontWeight};`;
+      style += `font-style: ${font.cssFontStyle};`;
+    }
+
+    if (resolvedLyricsStyle.fontSize !== lyricsStyle.fontSize) {
+      style += `font-size: ${Unit.toPt(resolvedLyricsStyle.fontSize)}pt;`;
+    }
+
+    if (resolvedLyricsStyle.strokeWidth !== lyricsStyle.strokeWidth) {
+      style += `-webkit-text-stroke-width: ${resolvedLyricsStyle.strokeWidth};`;
+    }
+
+    if (resolvedLyricsStyle.lineHeight !== lyricsStyle.lineHeight) {
+      style += `line-height: ${resolvedLyricsStyle.lineHeight ?? 'normal'};`;
+    }
+
+    if (resolvedLyricsStyle.textDecoration !== lyricsStyle.textDecoration) {
+      style += `text-decoration: ${resolvedLyricsStyle.textDecoration ?? 'none'};`;
+    }
+
+    return style === '' ? '' : ` style="${style}"`;
   }
 
-  exportNote(element: NoteElement, pageSetup: PageSetup, indentation: number) {
+  exportNote(
+    element: NoteElement,
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    indentation: number,
+  ) {
     let inner = '';
 
     if (element.measureBarLeft) {
@@ -775,10 +876,10 @@ export class ByzHtmlExporter {
       });
     }
 
-    const lyricStyleAttribute = this.getCustomLyricStyleAttribute(
-      element,
-      pageSetup,
-    );
+    const lyricStyleAttribute =
+      element.lyrics.trim() != '' || element.melismaText.trim() != ''
+        ? this.getCustomLyricStyleAttribute(element, paragraphStyles, pageSetup)
+        : '';
 
     if (element.lyrics.trim() != '') {
       const lyrics = element.lyrics
@@ -885,21 +986,39 @@ export class ByzHtmlExporter {
     )}>`;
   }
 
-  exportDropCap(element: DropCapElement, indentation: number) {
+  exportDropCap(
+    element: DropCapElement,
+    paragraphStyles: ParagraphStyle[],
+    indentation: number,
+  ) {
     let styleAttribute = '';
+    const overrides = element.getParagraphStyleOverrides();
 
-    if (!element.useDefaultStyle) {
+    if (
+      hasParagraphStyleOverrides(overrides) ||
+      element.paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap
+    ) {
+      const resolvedDropCapStyle = resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        overrides,
+      );
+      const resolvedDropCapFont = resolveFontStyle(
+        resolvedDropCapStyle.fontFamily,
+        resolvedDropCapStyle.fontStyle,
+      );
+
       let style = '';
 
-      style += `color: ${element.computedColor};`;
+      style += `color: ${resolvedDropCapStyle.color};`;
       style += `font-family: ${getFontFamilyWithFallback(
-        element.computedFontFamily,
+        resolvedDropCapFont.cssFontFamily,
       ).replaceAll('"', "'")};`;
-      style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
-      style += `font-weight: ${element.computedFontWeight};`;
-      style += `font-style: ${element.computedFontStyle};`;
-      style += `line-height: ${element.computedLineHeight};`;
-      style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
+      style += `font-size: ${Unit.toPt(resolvedDropCapStyle.fontSize)}pt;`;
+      style += `font-weight: ${resolvedDropCapFont.cssFontWeight};`;
+      style += `font-style: ${resolvedDropCapFont.cssFontStyle};`;
+      style += `line-height: ${resolvedDropCapStyle.lineHeight ?? 'normal'};`;
+      style += `-webkit-text-stroke-width: ${resolvedDropCapStyle.strokeWidth};`;
 
       styleAttribute = ` style="${style}"`;
     }
@@ -918,14 +1037,34 @@ export class ByzHtmlExporter {
     );
   }
 
-  exportTextBox(element: TextBoxElement, indentation: number) {
+  exportTextBox(
+    element: TextBoxElement,
+    paragraphStyles: ParagraphStyle[],
+    indentation: number,
+  ) {
     let styleAttribute = '';
 
     let className = this.config.classTextBox;
 
-    let style = '';
+    const { defaultTextBoxStyle, lyricsStyle } =
+      this.getResolvedDefaultStyles(paragraphStyles);
+    const overrides = element.getParagraphStyleOverrides();
+    const resolvedParagraphStyle = resolveParagraphStyle(
+      paragraphStyles,
+      element.paragraphStyleId,
+      overrides,
+    );
 
-    if (!element.inline || !element.useDefaultStyle) {
+    let style = '';
+    const defaultTextDecoration = element.inline
+      ? lyricsStyle.textDecoration
+      : defaultTextBoxStyle.textDecoration;
+
+    if (
+      !element.inline ||
+      hasParagraphStyleOverrides(overrides) ||
+      element.paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
+    ) {
       style += `color: ${element.computedColor};`;
       style += `font-family: ${getFontFamilyWithFallback(
         element.computedFontFamily,
@@ -933,13 +1072,17 @@ export class ByzHtmlExporter {
       style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
       style += `font-weight: ${element.computedFontWeight};`;
       style += `font-style: ${element.computedFontStyle};`;
-      style += `line-height: ${element.computedLineHeight};`;
+      style += `line-height: ${element.computedLineHeight ?? 'normal'};`;
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
       //style += `width: ${element.width};`;
       //style += `height: ${element.height};`;
     }
 
-    style += `text-align: ${element.alignment};`;
+    if (resolvedParagraphStyle.textDecoration !== defaultTextDecoration) {
+      style += `text-decoration: ${resolvedParagraphStyle.textDecoration ?? 'none'};`;
+    }
+
+    style += `text-align: ${element.computedAlignment};`;
 
     styleAttribute = ` style="${style}"`;
 
@@ -1245,19 +1388,19 @@ export class ByzHtmlExporter {
     return result;
   }
 
-  getDropCapAdjustment(pageSetup: PageSetup) {
+  getDropCapAdjustment(
+    pageSetup: PageSetup,
+    defaultDropCapStyle: ResolvedParagraphStyle,
+    defaultDropCapFont: ResolvedFontStyle,
+    lyricsStyle: ResolvedParagraphStyle,
+  ) {
     const neumeHeight = TextMeasurementService.getFontHeight(
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
-
-    const defaultDropCapFont = resolveFontStyle(
-      pageSetup.dropCapDefaultFontFamily,
-      pageSetup.dropCapDefaultFontStyle,
-    );
     const font = `${defaultDropCapFont.cssFontStyle} normal ${
       defaultDropCapFont.cssFontWeight
-    } ${pageSetup.dropCapDefaultFontSize}px/${
-      pageSetup.dropCapDefaultLineHeight ?? 'normal'
+    } ${defaultDropCapStyle.fontSize}px/${
+      defaultDropCapStyle.lineHeight ?? 'normal'
     } "${defaultDropCapFont.cssFontFamily}"`;
 
     const fontBoundingBoxDescent =
@@ -1266,7 +1409,7 @@ export class ByzHtmlExporter {
     // TODO this doesn't work correctly for every font
     return (
       neumeHeight +
-      pageSetup.lyricsDefaultFontSize +
+      lyricsStyle.fontSize +
       pageSetup.lyricsVerticalOffset -
       fontBoundingBoxDescent
     );

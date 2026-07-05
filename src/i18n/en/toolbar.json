@@ -13,6 +13,8 @@
     "insertPelastikon": "Insert Pelastikon",
     "measureBar": "Measure Bar",
     "outline": "Outline",
+    "paragraphStyle": "Paragraph Style",
+    "clearFormatting": "Clear Formatting",
     "spaceAfter": "Space After",
     "tempoSign": "Tempo Sign",
     "useDefaultStyle": "Use Default Style",
@@ -28,6 +30,7 @@
     "marginBottom": "Gap Below",
     "verticalOffset": "Vertical Offset",
     "none": "None",
+    "mixed": "Mixed",
     "inline": "Inline",
     "neume": "Neume"
   },
@@ -125,6 +128,7 @@
   },
   "richTextBox": {
     "default": "Default",
+    "textDecorations": "Text Decorations",
     "underline": "Underline",
     "outdent": "Outdent",
     "indent": "Indent",
@@ -146,7 +150,6 @@
     "discretionaryLigatures": "Discretionary Ligatures",
     "historicalLigatures": "Historical Ligatures",
     "contextualAlternates": "Contextual Alternates",
-    "removeFormat": "Remove Format",
     "insertNeume": "Insert Neume",
     "insertMartyria": "Insert Martyria",
     "insertPlagal": "Insert Plagal",

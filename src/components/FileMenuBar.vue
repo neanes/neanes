@@ -248,6 +248,18 @@
 
       <MenubarMenu>
         <MenubarTrigger>
+          {{ $t(($) => $.menu.format.root, { ns: 'menu' }) }}
+        </MenubarTrigger>
+        <MenubarContent class="chrome-menubar-content">
+          <MenubarItem @select="onClickParagraphStyles">
+            <PhTextAa />
+            {{ $t(($) => $.menu.format.paragraphStyles, { ns: 'menu' }) }}
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+
+      <MenubarMenu>
+        <MenubarTrigger>
           {{ $t(($) => $.menu.view.root, { ns: 'menu' }) }}
         </MenubarTrigger>
         <MenubarContent class="chrome-menubar-content">
@@ -744,6 +756,10 @@ function onClickPrint() {
 
 function onClickPageSetup() {
   EventBus.$emit(IpcMainChannels.FileMenuPageSetup);
+}
+
+function onClickParagraphStyles() {
+  EventBus.$emit(IpcMainChannels.FileMenuParagraphStyles);
 }
 
 function onClickDocumentProperties() {

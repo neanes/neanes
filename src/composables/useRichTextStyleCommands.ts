@@ -1,6 +1,8 @@
+import { type Editor, GeneralHtmlSupport } from 'ckeditor5';
 import { useTranslation } from 'i18next-vue';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 
+import type { FontStyleToggleCommand } from '@/ckeditor-plugins/fontstyle/fontstylecommand';
 import type { FontComboboxOption } from '@/components/FontCombobox.vue';
 import {
   execForOwner,
@@ -8,7 +10,16 @@ import {
   useEditorCommandStates,
 } from '@/composables/useRichTextEditorRegistry';
 import type { PageSetup } from '@/models/PageSetup';
+import type {
+  ParagraphStyle,
+  ResolvedParagraphStyle,
+} from '@/models/ParagraphStyle';
+import { resolveParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
+import {
+  ALIGNMENT_OVERRIDE_MIXED_VALUE,
+  isAlignmentOverrideValue,
+} from '@/utils/alignmentOverride';
 import {
   DEFAULT_FONT_STYLE,
   RICH_TEXT_DEFAULT_FONT_FAMILY,
@@ -23,6 +34,7 @@ import {
   remapFontStyleForOptions,
 } from '@/utils/fontStyle';
 import { fontStyleNeedsExplicitFamily } from '@/utils/fontStyleAxes';
+import { richTextParagraphStyleIdFromClassName } from '@/utils/richTextParagraphStyleClasses';
 import { Unit } from '@/utils/Unit';
 
 // Placeholder/label numbers track the field's pt display but drop trailing
@@ -33,10 +45,12 @@ const defaultSizeFormat = new Intl.NumberFormat(undefined, {
   useGrouping: false,
 });
 
-// 'fontStyle' carries the chosen style; the toggle commands drive the Bold and
-// Italic shortcut buttons (which now flip an axis of the font style). Underline
-// stays a standalone command.
+// 'style' carries the active paragraph styles; 'fontStyle' carries the chosen
+// font style; the toggle commands drive the Bold and Italic shortcut buttons
+// (which flip an axis of the font style). Underline stays a standalone
+// command.
 const STYLE_COMMAND_NAMES = [
+  'style',
   'fontFamily',
   'fontSize',
   'fontColor',
@@ -47,31 +61,115 @@ const STYLE_COMMAND_NAMES = [
   'alignment',
 ];
 
-// Maps a Bold/Italic/Underline toggle value to the command that backs it.
-const STYLE_TOGGLE_COMMANDS: Record<string, string> = {
+// Bold/Italic and underline share the same toggle-group UI shape, but they are
+// handled by different commands so changing one lane cannot mutate the other.
+const FONT_STYLE_TOGGLE_COMMANDS: Record<string, string> = {
   bold: 'fontStyleToggleBold',
   italic: 'fontStyleToggleItalic',
+};
+
+const TEXT_DECORATION_TOGGLE_COMMANDS: Record<string, string> = {
   underline: 'underline',
 };
+
+export const PARAGRAPH_STYLE_NONE_VALUE = '__none__';
+export const PARAGRAPH_STYLE_MIXED_VALUE = '__mixed__';
+
+export function resolveRichTextParagraphStyleState(
+  paragraphStyles: ParagraphStyle[],
+  activeParagraphStyleIds: string[],
+  fallbackParagraphStyle: ResolvedParagraphStyle,
+) {
+  const paragraphStyleValue =
+    activeParagraphStyleIds.length === 0
+      ? PARAGRAPH_STYLE_NONE_VALUE
+      : activeParagraphStyleIds.length === 1
+        ? activeParagraphStyleIds[0]
+        : PARAGRAPH_STYLE_MIXED_VALUE;
+
+  return {
+    paragraphStyleValue,
+    resolvedActiveParagraphStyle:
+      paragraphStyleValue === PARAGRAPH_STYLE_NONE_VALUE ||
+      paragraphStyleValue === PARAGRAPH_STYLE_MIXED_VALUE
+        ? fallbackParagraphStyle
+        : resolveParagraphStyle(paragraphStyles, paragraphStyleValue),
+  };
+}
 
 export function useRichTextStyleCommands(
   props: {
     element: object;
     pageSetup: PageSetup;
     fonts: string[];
-    defaultFontFamily: string;
-    defaultFontSize: number;
-    defaultFontColor: string;
+    paragraphStyles: ParagraphStyle[];
+    fallbackParagraphStyle: ResolvedParagraphStyle;
   },
   extraCommandNames: string[] = [],
 ) {
   const { t } = useTranslation();
   const scopedEditor = useActiveEditorForOwner(() => props.element);
 
-  const commandStates = useEditorCommandStates(scopedEditor, [
-    ...STYLE_COMMAND_NAMES,
-    ...extraCommandNames,
-  ]);
+  const commandStates = useEditorCommandStates(
+    scopedEditor,
+    [...STYLE_COMMAND_NAMES, ...extraCommandNames],
+    { style: ['enabledStyles'] },
+  );
+  const neanesParagraphStyleIds = computed(
+    () => new Set(props.paragraphStyles.map((style) => style.id)),
+  );
+
+  const activeParagraphStyleIds = computed(() =>
+    toToggleGroupValues(commandValue('style')).filter((styleId) =>
+      neanesParagraphStyleIds.value.has(styleId),
+    ),
+  );
+  const enabledParagraphStyleIds = computed(
+    () =>
+      new Set(
+        toToggleGroupValues(commandStates.style.properties.enabledStyles),
+      ),
+  );
+  const disabledParagraphStyleIds = computed(() =>
+    props.paragraphStyles
+      .filter((style) => !isParagraphStyleEnabled(style.id))
+      .map((style) => style.id),
+  );
+
+  const paragraphStyleState = computed(() =>
+    resolveRichTextParagraphStyleState(
+      props.paragraphStyles,
+      activeParagraphStyleIds.value,
+      props.fallbackParagraphStyle,
+    ),
+  );
+  const paragraphStyleValue = computed(
+    () => paragraphStyleState.value.paragraphStyleValue,
+  );
+  const resolvedActiveParagraphStyle = computed(
+    () => paragraphStyleState.value.resolvedActiveParagraphStyle,
+  );
+
+  watch(
+    [
+      scopedEditor,
+      () => resolvedActiveParagraphStyle.value.fontFamily,
+      () => resolvedActiveParagraphStyle.value.fontStyle,
+    ],
+    ([editor, fontFamily, fontStyle]) => {
+      const fallback = { fontFamily, fontStyle };
+
+      for (const commandName of Object.values(FONT_STYLE_TOGGLE_COMMANDS)) {
+        const command = editor?.commands.get(commandName) as
+          | FontStyleToggleCommand
+          | undefined;
+
+        command?.setResolvedParagraphStyleFallback(fallback);
+        command?.refresh();
+      }
+    },
+    { immediate: true },
+  );
 
   const fontFamilyValue = computed(() =>
     fromRichTextFontFamilyModelValue(commandValue('fontFamily')),
@@ -82,12 +180,13 @@ export function useRichTextStyleCommands(
   );
 
   const fontFamilyOptions = computed<FontComboboxOption[]>(() => {
-    const resolvedDefault = props.defaultFontFamily.trim();
+    const resolvedDefault = resolvedActiveParagraphStyle.value.fontFamily;
+    const normalizedDefault = resolvedDefault.trim();
 
     return [
       {
-        label: resolvedDefault
-          ? `${defaultLabel.value} (${resolvedDefault})`
+        label: normalizedDefault
+          ? `${defaultLabel.value} (${normalizedDefault})`
           : defaultLabel.value,
         value: RICH_TEXT_DEFAULT_FONT_FAMILY,
       },
@@ -99,9 +198,9 @@ export function useRichTextStyleCommands(
   const fontStyleValue = computed(() => {
     const value = commandValue('fontStyle');
 
-    return typeof value === 'string' && value !== ''
+    return isNonEmptyString(value)
       ? value
-      : DEFAULT_FONT_STYLE;
+      : resolvedActiveParagraphStyle.value.fontStyle;
   });
 
   const fontStyleFamilyValue = computed(() => {
@@ -109,7 +208,7 @@ export function useRichTextStyleCommands(
       return fontFamilyValue.value;
     }
 
-    return normalizeFontFamily(props.defaultFontFamily);
+    return normalizeFontFamily(resolvedActiveParagraphStyle.value.fontFamily);
   });
 
   const fontStyleOptions = computed(() =>
@@ -130,30 +229,75 @@ export function useRichTextStyleCommands(
 
   const fontSizePlaceholder = computed(
     () =>
-      `${defaultLabel.value} (${defaultSizeFormat.format(Unit.toPt(props.defaultFontSize))})`,
+      `${defaultLabel.value} (${defaultSizeFormat.format(Unit.toPt(resolvedActiveParagraphStyle.value.fontSize))})`,
   );
 
   const fontColorValue = computed(() => {
     const value = commandValue('fontColor');
-    return typeof value === 'string' ? value : props.defaultFontColor;
+    return typeof value === 'string'
+      ? value
+      : resolvedActiveParagraphStyle.value.color;
   });
 
   const fontColorHasExplicitValue = computed(
     () => typeof commandValue('fontColor') === 'string',
   );
 
-  const styleValues = computed(() =>
-    Object.keys(STYLE_TOGGLE_COMMANDS).filter((style) =>
-      isCommandActive(STYLE_TOGGLE_COMMANDS[style]),
+  const fontStyleHasExplicitValue = computed(() =>
+    isNonEmptyString(commandValue('fontStyle')),
+  );
+
+  const alignmentHasExplicitValue = computed(() => {
+    return commandValue('alignment') !== undefined;
+  });
+
+  const fontStyleValues = computed(() =>
+    Object.keys(FONT_STYLE_TOGGLE_COMMANDS).filter((style) =>
+      isCommandActive(FONT_STYLE_TOGGLE_COMMANDS[style]),
+    ),
+  );
+
+  const textDecorationValues = computed(() =>
+    Object.keys(TEXT_DECORATION_TOGGLE_COMMANDS).filter((style) =>
+      isCommandActive(TEXT_DECORATION_TOGGLE_COMMANDS[style]),
     ),
   );
 
   const alignmentValue = computed(() => {
     const value = commandValue('alignment');
-    return typeof value === 'string' && isAlignmentValue(value)
-      ? value
-      : 'left';
+    if (
+      isAlignmentOverrideValue(value) ||
+      value === ALIGNMENT_OVERRIDE_MIXED_VALUE
+    ) {
+      return value;
+    }
+
+    return paragraphStyleValue.value === PARAGRAPH_STYLE_MIXED_VALUE
+      ? resolveMixedParagraphStyleAlignmentValue()
+      : resolvedActiveParagraphStyle.value.alignment;
   });
+
+  function resolveMixedParagraphStyleAlignmentValue() {
+    const alignments = new Set(
+      activeParagraphStyleIds.value.map(
+        (styleId) =>
+          resolveParagraphStyle(props.paragraphStyles, styleId).alignment,
+      ),
+    );
+
+    return alignments.size === 1
+      ? [...alignments][0]
+      : ALIGNMENT_OVERRIDE_MIXED_VALUE;
+  }
+
+  const hasParagraphStyleOverrides = computed(
+    () =>
+      fontFamilyValue.value !== RICH_TEXT_DEFAULT_FONT_FAMILY ||
+      fontStyleHasExplicitValue.value ||
+      fontSizeValue.value != null ||
+      fontColorHasExplicitValue.value ||
+      alignmentHasExplicitValue.value,
+  );
 
   function isCommandEnabled(commandName: string) {
     return scopedEditor.value != null && commandStates[commandName]?.isEnabled;
@@ -176,7 +320,19 @@ export function useRichTextStyleCommands(
   }
 
   function isStyleToggleEnabled(style: string) {
-    return isCommandEnabled(STYLE_TOGGLE_COMMANDS[style] ?? style);
+    return isCommandEnabled(
+      FONT_STYLE_TOGGLE_COMMANDS[style] ??
+        TEXT_DECORATION_TOGGLE_COMMANDS[style] ??
+        style,
+    );
+  }
+
+  function isParagraphStyleEnabled(styleId: string) {
+    return (
+      isCommandEnabled('style') &&
+      neanesParagraphStyleIds.value.has(styleId) &&
+      enabledParagraphStyleIds.value.has(styleId)
+    );
   }
 
   function onFontFamilyChanged(value: string) {
@@ -190,7 +346,9 @@ export function useRichTextStyleCommands(
       // Clearing the family returns to inherited text. Only basic axes remain
       // valid without an explicit family; non-basic styles fall back to the
       // nearest basic style the inherited family offers.
-      const inheritedFamily = normalizeFontFamily(props.defaultFontFamily);
+      const inheritedFamily = normalizeFontFamily(
+        resolvedActiveParagraphStyle.value.fontFamily,
+      );
       const inheritedStyle = remapFontStyleAxesForOptions(
         fontStyleValue.value,
         inheritedFamily === '' ? [] : fontCatalog.getStyles(inheritedFamily),
@@ -268,24 +426,115 @@ export function useRichTextStyleCommands(
     runCommand('fontColor', { value });
   }
 
-  function onStyleValuesChanged(value: unknown) {
-    const next = Array.isArray(value) ? value : [];
-    const previous = styleValues.value;
+  function clearFontStyleOverride() {
+    runCommand('fontStyle');
+  }
 
-    for (const style of Object.keys(STYLE_TOGGLE_COMMANDS)) {
+  function clearAlignmentOverride() {
+    runCommand('alignment');
+  }
+
+  function applyToggleGroupChange(
+    commands: Record<string, string>,
+    previous: string[],
+    value: unknown,
+  ) {
+    const next = toToggleGroupValues(value);
+
+    for (const style of Object.keys(commands)) {
       if (next.includes(style) !== previous.includes(style)) {
-        runCommand(STYLE_TOGGLE_COMMANDS[style]);
+        runCommand(commands[style]);
       }
     }
   }
 
+  function onFontStyleValuesChanged(value: unknown) {
+    applyToggleGroupChange(
+      FONT_STYLE_TOGGLE_COMMANDS,
+      fontStyleValues.value,
+      value,
+    );
+  }
+
+  function onTextDecorationValuesChanged(value: unknown) {
+    applyToggleGroupChange(
+      TEXT_DECORATION_TOGGLE_COMMANDS,
+      textDecorationValues.value,
+      value,
+    );
+  }
+
   function onAlignmentChanged(value: unknown) {
-    if (typeof value === 'string' && isAlignmentValue(value)) {
+    if (isAlignmentOverrideValue(value)) {
       runCommand('alignment', { value });
     }
   }
 
-  function onRemoveFormat() {
+  // The style command's value only reflects the first selected block, so
+  // basing removals on it would leave stale style classes on the remaining
+  // blocks of a multi-paragraph selection. Collect the union of paragraph
+  // styles across all selected blocks from the model instead.
+  function collectSelectedParagraphStyleIds(editor: Editor) {
+    const ghsAttributeName = editor.plugins
+      .get(GeneralHtmlSupport)
+      .getGhsAttributeNameForElement('p');
+    const styleIds = new Set<string>();
+
+    for (const block of editor.model.document.selection.getSelectedBlocks()) {
+      const ghsAttributeValue = block.getAttribute(ghsAttributeName) as
+        | { classes?: unknown }
+        | undefined;
+
+      if (!Array.isArray(ghsAttributeValue?.classes)) {
+        continue;
+      }
+
+      for (const className of ghsAttributeValue.classes) {
+        const styleId =
+          typeof className === 'string'
+            ? richTextParagraphStyleIdFromClassName(className)
+            : null;
+
+        if (styleId != null && neanesParagraphStyleIds.value.has(styleId)) {
+          styleIds.add(styleId);
+        }
+      }
+    }
+
+    return styleIds;
+  }
+
+  function onParagraphStyleChanged(value: string) {
+    const editor = scopedEditor.value;
+
+    if (editor == null || !isCommandEnabled('style')) {
+      return;
+    }
+
+    const targetStyleId = value === PARAGRAPH_STYLE_NONE_VALUE ? null : value;
+
+    if (
+      targetStyleId != null &&
+      !neanesParagraphStyleIds.value.has(targetStyleId)
+    ) {
+      return;
+    }
+
+    // One outer change block so a style switch is a single undo step.
+    editor.model.change(() => {
+      for (const styleId of collectSelectedParagraphStyleIds(editor)) {
+        if (styleId !== targetStyleId) {
+          runCommand('style', { styleName: styleId, forceValue: false });
+        }
+      }
+
+      if (targetStyleId != null) {
+        runCommand('style', { styleName: targetStyleId, forceValue: true });
+      }
+    });
+  }
+
+  function onClearFormatting() {
     if (!isCommandEnabled('removeFormat')) {
       return;
     }
@@ -297,27 +546,20 @@ export function useRichTextStyleCommands(
     execForOwner(props.element, 'removeFormat');
   }
 
-  function executeChangedToggleCommands(
-    commandNames: string[],
-    previousValues: string[],
-    nextValue: unknown,
-  ) {
-    const nextValues = Array.isArray(nextValue) ? nextValue : [];
-
-    for (const commandName of commandNames) {
-      if (
-        nextValues.includes(commandName) !==
-        previousValues.includes(commandName)
-      ) {
-        runCommand(commandName);
-      }
-    }
+  function clearParagraphStyleFormatting() {
+    runCommand('fontFamily');
+    clearFontStyleOverride();
+    onFontSizeChanged(null);
+    onFontColorChanged(null);
+    clearAlignmentOverride();
   }
 
   return {
-    commandStates,
     fontFamilyValue,
     fontFamilyOptions,
+    paragraphStyleValue,
+    resolvedActiveParagraphStyle,
+    disabledParagraphStyleIds,
     fontStyleValue,
     fontStyleOptions,
     fontStyleDisabled,
@@ -325,21 +567,29 @@ export function useRichTextStyleCommands(
     fontSizePlaceholder,
     fontColorValue,
     fontColorHasExplicitValue,
-    styleValues,
+    fontStyleHasExplicitValue,
+    alignmentHasExplicitValue,
+    hasParagraphStyleOverrides,
+    fontStyleValues,
+    textDecorationValues,
     alignmentValue,
     isCommandEnabled,
     isCommandActive,
     isStyleToggleEnabled,
     commandValue,
     runCommand,
+    onParagraphStyleChanged,
     onFontFamilyChanged,
     onFontStyleChanged,
     onFontSizeChanged,
     onFontColorChanged,
-    onStyleValuesChanged,
+    clearFontStyleOverride,
+    clearAlignmentOverride,
+    onFontStyleValuesChanged,
+    onTextDecorationValuesChanged,
     onAlignmentChanged,
-    onRemoveFormat,
-    executeChangedToggleCommands,
+    clearParagraphStyleFormatting,
+    onClearFormatting,
   };
 }
 
@@ -363,8 +613,14 @@ function fromRichTextFontSizeModelValue(value: unknown) {
   return match[2] === 'pt' ? Unit.fromPt(size) : size;
 }
 
-function isAlignmentValue(
-  value: string,
-): value is 'left' | 'center' | 'right' | 'justify' {
-  return ['left', 'center', 'right', 'justify'].includes(value);
+function toToggleGroupValues(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.filter(isNonEmptyString);
+  }
+
+  return isNonEmptyString(value) ? [value] : [];
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value !== '';
 }

@@ -209,6 +209,7 @@ export function execForOwner(
 export function useEditorCommandStates(
   editorRef: Ref<Editor | null>,
   commandNames: string[],
+  propertyNamesByCommand: Record<string, string[]> = {},
 ) {
   const states = reactive({}) as Record<string, EditorCommandObservableState>;
 
@@ -216,7 +217,7 @@ export function useEditorCommandStates(
     states[commandName] = createEditorCommandState();
   }
 
-  watchEditorCommandStates(editorRef, states);
+  watchEditorCommandStates(editorRef, states, propertyNamesByCommand);
 
   return states;
 }

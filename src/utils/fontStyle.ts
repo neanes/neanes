@@ -101,6 +101,16 @@ export function resolveFontStyle(
   };
 }
 
+export function resolveFontCss(style: {
+  fontFamily: string;
+  fontStyle: string;
+  fontSize: number;
+}) {
+  const font = resolveFontStyle(style.fontFamily, style.fontStyle);
+
+  return `${font.cssFontStyle} normal ${font.cssFontWeight} ${style.fontSize}px "${font.cssFontFamily}"`;
+}
+
 export function getFontStyleOptions(fontFamily: string) {
   return fontFamily.trim() === ''
     ? [DEFAULT_FONT_STYLE]
@@ -184,7 +194,15 @@ function legacyWeightVariant(fontWeight: string | null | undefined) {
 
 export function isCssItalicStyle(fontStyle: string | null | undefined) {
   const style = fontStyle?.trim().toLowerCase();
-  return style === 'italic' || style === 'oblique';
+
+  if (style == null) {
+    return false;
+  }
+
+  // 'oblique' may carry an angle, e.g. 'oblique 14deg'.
+  return (
+    style === 'italic' || style === 'oblique' || style.startsWith('oblique ')
+  );
 }
 
 export function isRegularCssFontWeight(fontWeight: string | null | undefined) {

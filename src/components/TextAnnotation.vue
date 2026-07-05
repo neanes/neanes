@@ -8,7 +8,7 @@
     @dblclick="handleDoubleClick"
   >
     <RichTextEditor
-      :key="`${editorLanguage}-${contentLanguage}`"
+      :key="`${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
       ref="editor"
       class="rich-text-editor"
       :owner="element"
@@ -35,16 +35,23 @@ import {
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import RichTextEditor from '@/components/RichTextEditor.vue';
+import { useRichTextParagraphStyleDefinitions } from '@/composables/useRichTextParagraphStyleDefinitions';
 import type InlineEditor from '@/customEditor';
 import type { AnnotationElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
-import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
+import { getFontFamilyWithNeumeFallback } from '@/utils/getFontFamilyWithFallback';
 import {
   applyRichTextLanguageToEditor,
   getRichTextLanguage,
   getRichTextLanguageCode,
   getRichTextLanguageDirection,
   hasMeaningfulRichTextEditorContent,
+  hasMeaningfulRichTextHtmlContent,
   inferRichTextEditorLanguage,
   RICH_TEXT_LANGUAGE_OPTIONS,
 } from '@/utils/richTextLanguage';
@@ -64,6 +71,10 @@ const props = defineProps({
   },
   fonts: {
     type: Array as PropType<string[]>,
+    required: true,
+  },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
   editorLanguage: {
@@ -86,7 +97,9 @@ const zoom = ref(1);
 
 let clampingInterval: ReturnType<typeof setInterval> | null = null;
 
-const hasStoredContent = computed(() => props.element.text.trim() !== '');
+const hasStoredContent = computed(() =>
+  hasMeaningfulRichTextHtmlContent(props.element.text),
+);
 
 const defaultInitialLanguage = computed(() => {
   const storedLanguage = getRichTextLanguage(props.element);
@@ -108,17 +121,27 @@ const contentLanguage = computed(() => {
   return language == null ? 'en' : getRichTextLanguageCode(language);
 });
 
+const annotationStyle = computed(() =>
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation,
+  ),
+);
+
+const { paragraphStyleDefinitions, paragraphStyleDefinitionKey } =
+  useRichTextParagraphStyleDefinitions(() => props.paragraphStyles);
+
 const style = computed(() => {
   return {
     left: withZoom(elementX.value),
     top: withZoom(elementY.value),
-    '--ck-content-font-family': getFontFamilyWithFallback(
-      props.pageSetup.textBoxDefaultFontFamily,
-      props.pageSetup.neumeDefaultFontFamily + 'Legacy', // TODO what a terrible hack
+    '--ck-content-font-family': getFontFamilyWithNeumeFallback(
+      annotationStyle.value.fontFamily,
+      props.pageSetup.neumeDefaultFontFamily,
     ),
-    '--ck-content-font-size': `${props.pageSetup.lyricsDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
-    '--ck-content-font-color': props.pageSetup.textBoxDefaultColor,
-    '--ck-content-line-height': 'normal',
+    '--ck-content-font-size': `${annotationStyle.value.fontSize}px`, // no zoom because we will apply zooming on the whole editor
+    '--ck-content-font-color': annotationStyle.value.color,
+    '--ck-content-line-height': annotationStyle.value.lineHeight ?? 'normal',
   };
 });
 
@@ -159,11 +182,14 @@ const editorConfig = computed((): EditorConfig => {
       content: contentLanguage.value,
       textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
     },
+    style: {
+      definitions: paragraphStyleDefinitions.value,
+    },
     licenseKey: 'GPL',
     insertNeume: {
       neumeDefaultFontFamily: props.pageSetup.neumeDefaultFontFamily,
-      defaultFontSize: props.pageSetup.lyricsDefaultFontSize,
-      defaultFontFamily: props.pageSetup.textBoxDefaultFontFamily,
+      defaultFontSize: annotationStyle.value.fontSize,
+      defaultFontFamily: annotationStyle.value.fontFamily,
     },
   };
 });
@@ -204,7 +230,7 @@ function getEditorInstance() {
 function onEditorReady(editor: InlineEditor) {
   applyInitialLanguage(editor);
 
-  if (focusOnReady.value || props.element.text.trim() === '') {
+  if (focusOnReady.value || !hasStoredContent.value) {
     focusOnReady.value = false;
     focusEditor(editor);
   } else {
@@ -218,7 +244,7 @@ function handleEditorBlur(editor: InlineEditor) {
   const updates = getPendingUpdates();
   const text = updates.text ?? props.element.text;
 
-  if (text.trim() === '') {
+  if (!hasMeaningfulRichTextHtmlContent(text)) {
     emit('delete');
   } else if (Object.keys(updates).length > 0) {
     emit('update', updates);

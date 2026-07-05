@@ -18,12 +18,12 @@ import {
   normalizeFontFamily,
   splitFontFamilyList,
 } from '@/utils/fontFamily';
-import { applyLegacyStyle, isCssItalicStyle } from '@/utils/fontStyle';
 import {
-  applyAxes,
-  fontStyleNeedsExplicitFamily,
-  parseStyleAxes,
-} from '@/utils/fontStyleAxes';
+  applyLegacyStyle,
+  isCssItalicStyle,
+  isNormalCssFontStyle,
+} from '@/utils/fontStyle';
+import { applyAxes, fontStyleNeedsExplicitFamily } from '@/utils/fontStyleAxes';
 
 import {
   composeFontStyleCss,
@@ -45,7 +45,20 @@ const FONT_FAMILY = 'fontFamily';
 // folds them into fontStyle and removes them, so they never survive a save.
 const LEGACY_BOLD = 'neanesLegacyBold';
 const LEGACY_ITALIC = 'neanesLegacyItalic';
+const LEGACY_NORMAL = 'neanesLegacyNormal';
 const LEGACY_WEIGHT = 'neanesLegacyWeight';
+const LEGACY_MARKER_KEYS = [
+  LEGACY_BOLD,
+  LEGACY_ITALIC,
+  LEGACY_NORMAL,
+  LEGACY_WEIGHT,
+];
+
+function removeLegacyMarkers(writer: ModelWriter, range: ModelRange) {
+  for (const key of LEGACY_MARKER_KEYS) {
+    writer.removeAttribute(key, range);
+  }
+}
 
 interface ItemSnapshot {
   isText: boolean;
@@ -53,6 +66,7 @@ interface ItemSnapshot {
   fontStyle: string | null;
   bold: boolean;
   italic: boolean;
+  normal: boolean;
   weight: string | null;
   hasMarkers: boolean;
   range: ModelRange;
@@ -107,7 +121,7 @@ export default class FontStyleEditing extends Plugin {
     const schema = editor.model.schema;
 
     schema.extend('$text', {
-      allowAttributes: [FONT_STYLE, LEGACY_BOLD, LEGACY_ITALIC, LEGACY_WEIGHT],
+      allowAttributes: [FONT_STYLE, ...LEGACY_MARKER_KEYS],
     });
     schema.setAttributeProperties(FONT_STYLE, {
       isFormatting: true,
@@ -148,8 +162,8 @@ export default class FontStyleEditing extends Plugin {
     );
   }
 
-  // Basic faces use stock semantic elements. Non-basic faces (named weights,
-  // optical sizes, etc.) use an exact-face CSS span.
+  // Explicit font styles always serialize as CSS so the rendered axes are
+  // pinned even when the surrounding paragraph style already sets weight/slant.
   private _registerDowncast() {
     const editor = this.editor;
 
@@ -162,15 +176,6 @@ export default class FontStyleEditing extends Plugin {
 
       if (explicitFontStyle == null || explicitFontStyle === '') {
         return [];
-      }
-
-      const axes = parseStyleAxes(explicitFontStyle);
-
-      if (axes.rest.length === 0) {
-        return [
-          ...(axes.bold ? [writer.createAttributeElement('strong')] : []),
-          ...(axes.italic ? [writer.createAttributeElement('i')] : []),
-        ];
       }
 
       const neumeFallback = editor.config.get(
@@ -205,17 +210,17 @@ export default class FontStyleEditing extends Plugin {
         },
       );
 
-      // A non-basic fontStyle span embeds the base family (an exact face such as
-      // "Source Serif Caption"), but only attribute:fontStyle reconverts it. When
-      // the family changes while the style name stays the same (e.g. Semibold to
-      // Semibold across families), the fontStyle command no-ops, so without this
-      // the span keeps rendering the old family in the editing view. We rebuild
-      // the dependent span here without consuming the family event, leaving the
-      // separate FontFamilyEditing span to CKEditor.
+      // The fontStyle span embeds the family it was resolved against, but only
+      // attribute:fontStyle reconverts it. When the family changes while the
+      // style name stays the same (e.g. Semibold to Semibold across families),
+      // the fontStyle command no-ops, so without this the span keeps rendering
+      // the old family in the editing view. We rebuild the dependent span here
+      // without consuming the family event, leaving the separate
+      // FontFamilyEditing span to CKEditor.
       dispatcher.on<DowncastAttributeEvent>(
         `attribute:${FONT_FAMILY}`,
         (evt, data, conversionApi) => {
-          this._reconvertExactFaceForFamilyChange(
+          this._reconvertFontStyleForFamilyChange(
             data,
             conversionApi,
             createFontStyleElements,
@@ -225,10 +230,10 @@ export default class FontStyleEditing extends Plugin {
     });
   }
 
-  // Rebuilds the exact-face fontStyle span when only the sibling family changes.
-  // Basic styles (no embedded family) and same-batch fontStyle changes (already
-  // handled by the fontStyle converter) are left untouched.
-  private _reconvertExactFaceForFamilyChange(
+  // Rebuilds the fontStyle span when only the sibling family changes. Same-batch
+  // fontStyle changes are left untouched (the fontStyle converter rebuilds the
+  // span itself, reading the sibling family change).
+  private _reconvertFontStyleForFamilyChange(
     data: DowncastAttributeEvent['args'][0],
     conversionApi: DowncastConversionApi,
     createElement: (
@@ -248,9 +253,7 @@ export default class FontStyleEditing extends Plugin {
       | string
       | undefined;
 
-    // Only non-basic faces embed the family in their span; basic styles use
-    // stock semantic markup that does not depend on the family.
-    if (!fontStyleNeedsExplicitFamily(fontStyle)) {
+    if (fontStyle == null || fontStyle.trim() === '') {
       return;
     }
 
@@ -320,29 +323,19 @@ export default class FontStyleEditing extends Plugin {
 
     const oldFontStyle = data.attributeOldValue as string | undefined;
     const newFontStyle = data.attributeNewValue as string | undefined;
-    const needsFamily =
-      fontStyleNeedsExplicitFamily(oldFontStyle) ||
-      fontStyleNeedsExplicitFamily(newFontStyle);
-    let oldFamily: string | null | undefined;
-    let newFamily: string | null | undefined;
+    const siblingChange = this._getSiblingFontFamilyChange(data);
+    const currentFamily =
+      data.item instanceof ModelSelection ||
+      data.item instanceof ModelDocumentSelection
+        ? (data.item.getAttribute(FONT_FAMILY) as string | undefined)
+        : ((data.item as ModelItem).getAttribute(FONT_FAMILY) as
+            | string
+            | undefined);
 
-    if (needsFamily) {
-      const siblingChange = this._getSiblingFontFamilyChange(data);
-      const currentFamily =
-        data.item instanceof ModelSelection ||
-        data.item instanceof ModelDocumentSelection
-          ? (data.item.getAttribute(FONT_FAMILY) as string | undefined)
-          : ((data.item as ModelItem).getAttribute(FONT_FAMILY) as
-              | string
-              | undefined);
-
-      oldFamily =
-        (siblingChange?.attributeOldValue as string | undefined) ??
-        currentFamily;
-      newFamily =
-        (siblingChange?.attributeNewValue as string | undefined) ??
-        currentFamily;
-    }
+    const oldFamily =
+      (siblingChange?.attributeOldValue as string | undefined) ?? currentFamily;
+    const newFamily =
+      (siblingChange?.attributeNewValue as string | undefined) ?? currentFamily;
 
     const writer = conversionApi.writer;
     const oldElements = createElement(oldFamily, oldFontStyle, writer);
@@ -409,10 +402,10 @@ export default class FontStyleEditing extends Plugin {
     return null;
   }
 
-  // Recognise legacy bold/italic (as separate <strong>/<em> wrappers or as
-  // font-weight/font-style on the family span) and mark them for the post-fixer.
-  // These do not consume font-family, so the built-in fontFamily upcast still
-  // stores the raw value for the post-fixer to split.
+  // Recognise legacy bold/italic/normal (as separate <strong>/<em> wrappers or
+  // as font-weight/font-style on the family span) and mark them for the
+  // post-fixer. These do not consume font-family, so the built-in fontFamily
+  // upcast still stores the raw value for the post-fixer to split.
   private _registerLegacyUpcast() {
     const editor = this.editor;
 
@@ -451,8 +444,24 @@ export default class FontStyleEditing extends Plugin {
       view: { name: 'span', styles: { 'font-style': /.*/ } },
       model: {
         key: LEGACY_ITALIC,
+        // Classify via the shared CSS helper so casing and oblique angles
+        // ('Italic', 'oblique 14deg') fold like plain 'italic'. Returning null
+        // skips the conversion without consuming the style, leaving it to the
+        // LEGACY_NORMAL converter below.
         value: (viewElement: ViewElement) =>
-          isCssItalicStyle(viewElement.getStyle('font-style')),
+          isCssItalicStyle(viewElement.getStyle('font-style')) ? true : null,
+      },
+      converterPriority: 'high',
+    });
+
+    editor.conversion.for('upcast').elementToAttribute({
+      view: { name: 'span', styles: { 'font-style': /.*/ } },
+      model: {
+        key: LEGACY_NORMAL,
+        value: (viewElement: ViewElement) =>
+          isNormalCssFontStyle(viewElement.getStyle('font-style'))
+            ? true
+            : null,
       },
       converterPriority: 'high',
     });
@@ -509,6 +518,7 @@ export default class FontStyleEditing extends Plugin {
 
         const boldMarker = item.getAttribute(LEGACY_BOLD);
         const italicMarker = item.getAttribute(LEGACY_ITALIC);
+        const normalMarker = item.getAttribute(LEGACY_NORMAL);
         const weightMarker = item.getAttribute(LEGACY_WEIGHT);
 
         snapshots.push({
@@ -517,10 +527,12 @@ export default class FontStyleEditing extends Plugin {
           fontStyle: (item.getAttribute(FONT_STYLE) as string) ?? null,
           bold: boldMarker === true,
           italic: italicMarker === true,
+          normal: normalMarker === true,
           weight: typeof weightMarker === 'string' ? weightMarker : null,
           hasMarkers:
             boldMarker !== undefined ||
             italicMarker !== undefined ||
+            normalMarker !== undefined ||
             weightMarker !== undefined,
           range: writer.createRangeOn(item),
         });
@@ -540,6 +552,7 @@ export default class FontStyleEditing extends Plugin {
       fontStyle,
       bold,
       italic,
+      normal,
       weight,
       hasMarkers,
       range,
@@ -548,9 +561,7 @@ export default class FontStyleEditing extends Plugin {
     // Non-text items (neumes) only need stray markers cleaned off.
     if (!isText) {
       if (hasMarkers) {
-        writer.removeAttribute(LEGACY_BOLD, range);
-        writer.removeAttribute(LEGACY_ITALIC, range);
-        writer.removeAttribute(LEGACY_WEIGHT, range);
+        removeLegacyMarkers(writer, range);
         return true;
       }
 
@@ -594,13 +605,23 @@ export default class FontStyleEditing extends Plugin {
     }
 
     if (
+      normal &&
+      !bold &&
+      !italic &&
+      weight == null &&
+      (fontStyle == null || fontStyle === DEFAULT_FONT_STYLE)
+    ) {
+      desired = DEFAULT_FONT_STYLE;
+    }
+
+    if (
       (newFamily == null || newFamily === '') &&
       fontStyleNeedsExplicitFamily(desired)
     ) {
       newFamily = getEditorDefaultFontFamilyModelValue(this.editor);
     }
 
-    if (desired === DEFAULT_FONT_STYLE) {
+    if (desired === DEFAULT_FONT_STYLE && fontStyle == null && !normal) {
       desired = null;
     }
 
@@ -612,9 +633,7 @@ export default class FontStyleEditing extends Plugin {
     }
 
     if (hasMarkers) {
-      writer.removeAttribute(LEGACY_BOLD, range);
-      writer.removeAttribute(LEGACY_ITALIC, range);
-      writer.removeAttribute(LEGACY_WEIGHT, range);
+      removeLegacyMarkers(writer, range);
     }
 
     if (familyChanged) {

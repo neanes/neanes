@@ -11,193 +11,302 @@
       value="style"
       :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
     >
-      <Field orientation="horizontal">
-        <Switch
-          id="properties-text-box-use-default-style"
-          :model-value="element.useDefaultStyle"
-          @update:model-value="
-            $emit('update', {
-              useDefaultStyle: $event === true,
-            } as Partial<TextBoxElement>)
-          "
-        />
-        <FieldLabel for="properties-text-box-use-default-style">{{
-          $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
-        }}</FieldLabel>
-      </Field>
+      <ParagraphStyleField
+        id="properties-text-box-paragraph-style"
+        :model-value="element.paragraphStyleId"
+        :paragraph-styles="paragraphStyles"
+        :has-overrides="hasParagraphStyleOverrides"
+        @update:model-value="
+          $emit('update', {
+            paragraphStyleId: $event,
+          } as Partial<TextBoxElement>)
+        "
+        @clear="clearParagraphStyleFormatting"
+        @open-dialog="openParagraphStylesDialog"
+      />
 
-      <template v-if="!element.useDefaultStyle">
-        <Field>
+      <Field>
+        <div class="mb-2 flex items-center justify-between gap-2">
           <FieldLabel for="properties-text-box-font">{{
             $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' })
           }}</FieldLabel>
-          <FontCombobox
-            id="properties-text-box-font"
-            class="w-full max-w-full"
-            :model-value="element.fontFamily"
-            :options="textBoxFontFamilies"
-            @update:model-value="onFontFamilyChanged"
+          <ParagraphStyleClearButton
+            :disabled="element.fontFamily == null"
+            @clear="
+              $emit('update', { fontFamily: null } as Partial<TextBoxElement>)
+            "
           />
-        </Field>
+        </div>
+        <FontCombobox
+          id="properties-text-box-font"
+          class="w-full max-w-full"
+          :model-value="resolvedParagraphStyle.fontFamily"
+          :options="textBoxFontFamilies"
+          @update:model-value="onFontFamilyChanged"
+        />
+      </Field>
 
-        <Field>
+      <Field>
+        <div class="mb-2 flex items-center justify-between gap-2">
           <FieldLabel for="properties-text-box-font-style">{{
             $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
           }}</FieldLabel>
-          <FontStyleSelect
-            id="properties-text-box-font-style"
-            class="w-full max-w-full"
-            :model-value="element.fontStyle"
-            :options="fontStyleOptions"
-            :disabled="fontStyleOptions.length <= 1"
-            @update:model-value="
-              $emit('update', {
-                fontStyle: $event,
-              } as Partial<TextBoxElement>)
+          <ParagraphStyleClearButton
+            :disabled="element.fontStyle == null"
+            @clear="
+              $emit('update', { fontStyle: null } as Partial<TextBoxElement>)
             "
           />
-        </Field>
+        </div>
+        <FontStyleSelect
+          id="properties-text-box-font-style"
+          class="w-full max-w-full"
+          :model-value="resolvedParagraphStyle.fontStyle"
+          :options="fontStyleOptions"
+          :disabled="fontStyleOptions.length <= 1"
+          @update:model-value="
+            $emit('update', {
+              fontStyle: $event,
+            } as Partial<TextBoxElement>)
+          "
+        />
+      </Field>
 
-        <Field orientation="horizontal">
-          <FieldLabel>{{
-            $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
-          }}</FieldLabel>
-          <ToggleGroup
-            type="multiple"
-            variant="outline"
-            :model-value="styleValues"
-            @update:model-value="onStyleValuesChanged"
-          >
-            <ToggleGroupItem
-              value="bold"
-              aria-label="Toggle bold"
-              :disabled="!isFontStyleAxisToggleEnabled('bold')"
-            >
-              <PhTextB />
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="italic"
-              aria-label="Toggle italic"
-              :disabled="!isFontStyleAxisToggleEnabled('italic')"
-            >
-              <PhTextItalic />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="underline" aria-label="Toggle underline">
-              <PhTextUnderline />
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </Field>
-
-        <Field orientation="horizontal">
-          <FieldLabel for="properties-text-box-font-size">{{
-            $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
-          }}</FieldLabel>
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-text-box-font-size">{{
+          $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
           <InputFontSize
             id="properties-text-box-font-size"
-            :model-value="element.fontSize"
+            :model-value="resolvedParagraphStyle.fontSize"
             @update:model-value="
               $emit('update', { fontSize: $event } as Partial<TextBoxElement>)
             "
           />
-        </Field>
+          <ParagraphStyleClearButton
+            :disabled="element.fontSize == null"
+            @clear="
+              $emit('update', { fontSize: null } as Partial<TextBoxElement>)
+            "
+          />
+        </div>
+      </Field>
 
-        <Field orientation="horizontal">
-          <FieldLabel for="properties-text-box-line-height">{{
-            $t(($) => $.dialog.pageSetup.lineHeight, { ns: 'dialog' })
-          }}</FieldLabel>
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-text-box-line-height">{{
+          $t(($) => $.dialog.pageSetup.lineHeight, { ns: 'dialog' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
           <InputUnit
             id="properties-text-box-line-height"
             unit="unitless"
             :nullable="true"
             :min="0"
             :step="0.1"
-            :model-value="element.lineHeight"
+            :model-value="resolvedParagraphStyle.lineHeight"
             :format-options="fraction2FormatOptions"
             placeholder="normal"
             @update:model-value="
               $emit('update', { lineHeight: $event } as Partial<TextBoxElement>)
             "
           />
-        </Field>
+          <ParagraphStyleClearButton
+            :disabled="element.lineHeight === undefined"
+            @clear="
+              $emit('update', {
+                lineHeight: undefined,
+              } as Partial<TextBoxElement>)
+            "
+          />
+        </div>
+      </Field>
 
-        <Field orientation="horizontal">
-          <FieldLabel>{{
-            $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
-          }}</FieldLabel>
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
           <ColorPicker
-            :model-value="element.color"
+            :model-value="resolvedParagraphStyle.color"
             @update:model-value="
               $emit('update', { color: $event } as Partial<TextBoxElement>)
             "
           />
-        </Field>
-
-        <Field orientation="horizontal">
-          <FieldLabel for="properties-text-box-outline">{{
-            $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-          }}</FieldLabel>
-          <InputStrokeWidth
-            id="properties-text-box-outline"
-            :model-value="element.strokeWidth"
-            @update:model-value="
-              $emit('update', {
-                strokeWidth: $event,
-              } as Partial<TextBoxElement>)
-            "
+          <ParagraphStyleClearButton
+            :disabled="element.color == null"
+            @clear="$emit('update', { color: null } as Partial<TextBoxElement>)"
           />
-        </Field>
-      </template>
+        </div>
+      </Field>
 
-      <Field v-else orientation="horizontal">
+      <Field orientation="horizontal">
         <FieldLabel>{{
           $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
         }}</FieldLabel>
         <ToggleGroup
           type="multiple"
           variant="outline"
-          :model-value="styleValues"
-          @update:model-value="onStyleValuesChanged"
+          :model-value="activeStyleAxisValues"
+          @update:model-value="onFontStyleValuesChanged"
         >
-          <ToggleGroupItem value="underline" aria-label="Toggle underline">
-            <PhTextUnderline />
+          <ToggleGroupItem
+            value="bold"
+            aria-label="Toggle bold"
+            :disabled="!isFontStyleAxisToggleEnabled('bold')"
+          >
+            <PhTextB />
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="italic"
+            aria-label="Toggle italic"
+            :disabled="!isFontStyleAxisToggleEnabled('italic')"
+          >
+            <PhTextItalic />
           </ToggleGroupItem>
         </ToggleGroup>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.toolbar.richTextBox.textDecorations, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
+          <ToggleGroup
+            type="multiple"
+            variant="outline"
+            :model-value="underlineValues"
+            @update:model-value="onTextDecorationValuesChanged"
+          >
+            <ToggleGroupItem value="underline" aria-label="Toggle underline">
+              <PhTextUnderline />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <ParagraphStyleClearButton
+            :disabled="element.underline == null"
+            @clear="
+              $emit('update', { underline: null } as Partial<TextBoxElement>)
+            "
+          />
+        </div>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-text-box-outline">{{
+          $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
+          <InputStrokeWidth
+            id="properties-text-box-outline"
+            :model-value="resolvedParagraphStyle.strokeWidth"
+            @update:model-value="
+              $emit('update', {
+                strokeWidth: $event,
+              } as Partial<TextBoxElement>)
+            "
+          />
+          <ParagraphStyleClearButton
+            :disabled="element.strokeWidth == null"
+            @clear="
+              $emit('update', { strokeWidth: null } as Partial<TextBoxElement>)
+            "
+          />
+        </div>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-text-box-gap-above">{{
+          $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <InputUnit
+          id="properties-text-box-gap-above"
+          class="w-28"
+          unit="pt"
+          :min="-maxHeight"
+          :max="maxHeight"
+          :step="0.5"
+          :model-value="element.marginTop"
+          :format-options="fraction1FormatOptions"
+          @update:model-value="
+            $emit('update', { marginTop: $event } as Partial<TextBoxElement>)
+          "
+        />
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-text-box-gap-below">{{
+          $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <InputUnit
+          id="properties-text-box-gap-below"
+          class="w-28"
+          unit="pt"
+          :min="0"
+          :max="maxHeight"
+          :step="0.5"
+          :model-value="element.marginBottom"
+          :format-options="fraction1FormatOptions"
+          @update:model-value="
+            $emit('update', { marginBottom: $event } as Partial<TextBoxElement>)
+          "
+        />
       </Field>
 
       <Field v-if="!element.multipanel" orientation="horizontal">
         <FieldLabel>{{
           $t(($) => $.toolbar.common.alignment, { ns: 'toolbar' })
         }}</FieldLabel>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          :model-value="element.alignment"
-          @update:model-value="onAlignmentChanged"
-        >
-          <AppTooltip
-            :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
+        <div class="flex items-center gap-2">
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            :model-value="currentAlignment"
+            @update:model-value="onAlignmentChanged"
           >
-            <ToggleGroupItem :value="TextBoxAlignment.Left">
-              <PhTextAlignLeft />
-            </ToggleGroupItem>
-          </AppTooltip>
-          <AppTooltip
-            :tooltip="
-              $t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })
+            <AppTooltip
+              :tooltip="
+                $t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })
+              "
+            >
+              <ToggleGroupItem :value="TextBoxAlignment.Left">
+                <PhTextAlignLeft />
+              </ToggleGroupItem>
+            </AppTooltip>
+            <AppTooltip
+              :tooltip="
+                $t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })
+              "
+            >
+              <ToggleGroupItem :value="TextBoxAlignment.Center">
+                <PhTextAlignCenter />
+              </ToggleGroupItem>
+            </AppTooltip>
+            <AppTooltip
+              :tooltip="
+                $t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })
+              "
+            >
+              <ToggleGroupItem :value="TextBoxAlignment.Right">
+                <PhTextAlignRight />
+              </ToggleGroupItem>
+            </AppTooltip>
+            <AppTooltip
+              :tooltip="
+                $t(($) => $.toolbar.common.alignJustify, { ns: 'toolbar' })
+              "
+            >
+              <ToggleGroupItem :value="TextBoxAlignment.Justify">
+                <PhTextAlignJustify />
+              </ToggleGroupItem>
+            </AppTooltip>
+          </ToggleGroup>
+          <ParagraphStyleClearButton
+            :disabled="element.alignment == null"
+            @clear="
+              $emit('update', { alignment: null } as Partial<TextBoxElement>)
             "
-          >
-            <ToggleGroupItem :value="TextBoxAlignment.Center">
-              <PhTextAlignCenter />
-            </ToggleGroupItem>
-          </AppTooltip>
-          <AppTooltip
-            :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
-          >
-            <ToggleGroupItem :value="TextBoxAlignment.Right">
-              <PhTextAlignRight />
-            </ToggleGroupItem>
-          </AppTooltip>
-        </ToggleGroup>
+          />
+        </div>
       </Field>
     </PaneSection>
 
@@ -282,44 +391,6 @@
           }}</FieldLabel>
         </Field>
       </template>
-
-      <Field orientation="horizontal">
-        <FieldLabel for="properties-text-box-margin-top">{{
-          $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <InputUnit
-          id="properties-text-box-margin-top"
-          class="w-28"
-          unit="pt"
-          :min="-maxHeight"
-          :max="maxHeight"
-          :step="0.5"
-          :model-value="element.marginTop"
-          :format-options="fraction1FormatOptions"
-          @update:model-value="
-            $emit('update', { marginTop: $event } as Partial<TextBoxElement>)
-          "
-        />
-      </Field>
-
-      <Field orientation="horizontal">
-        <FieldLabel for="properties-text-box-margin-bottom">{{
-          $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <InputUnit
-          id="properties-text-box-margin-bottom"
-          class="w-28"
-          unit="pt"
-          :min="0"
-          :max="maxHeight"
-          :step="0.5"
-          :model-value="element.marginBottom"
-          :format-options="fraction1FormatOptions"
-          @update:model-value="
-            $emit('update', { marginBottom: $event } as Partial<TextBoxElement>)
-          "
-        />
-      </Field>
     </PaneSection>
 
     <PaneSection
@@ -388,6 +459,7 @@
 <script setup lang="ts">
 import {
   PhTextAlignCenter,
+  PhTextAlignJustify,
   PhTextAlignLeft,
   PhTextAlignRight,
   PhTextB,
@@ -407,6 +479,8 @@ import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
+import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
+import ParagraphStyleField from '@/components/properties/ParagraphStyleField.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
@@ -420,9 +494,14 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
+import {
+  isTextBoxAlignment,
+  type ParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   fraction1FormatOptions,
@@ -447,13 +526,31 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
   source: {
     type: String as PropType<'score' | 'header-footer'>,
     required: true,
   },
 });
 
-const emit = defineEmits(['update', 'update:open-sections']);
+const emit = defineEmits([
+  'open-paragraph-styles-dialog',
+  'update',
+  'update:open-sections',
+]);
+
+const {
+  resolvedParagraphStyle,
+  underlineValues,
+  hasOverrides: hasParagraphStyleOverrides,
+} = useResolvedParagraphStyle(
+  () => props.paragraphStyles,
+  () => props.element.paragraphStyleId,
+  () => props.element.getParagraphStyleOverrides(),
+);
 
 const {
   fontStyleOptions,
@@ -462,14 +559,11 @@ const {
   applyStyleAxisToggles,
   remapStyleForFamily,
 } = useFontStyleControls(
-  () => props.element.fontFamily,
-  () => props.element.fontStyle,
+  () => resolvedParagraphStyle.value.fontFamily,
+  () => resolvedParagraphStyle.value.fontStyle,
 );
 
-const styleValues = computed(() => [
-  ...(props.element.useDefaultStyle ? [] : activeStyleAxisValues.value),
-  ...(props.element.underline ? ['underline'] : []),
-]);
+const currentAlignment = computed(() => resolvedParagraphStyle.value.alignment);
 
 const textBoxFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
@@ -480,17 +574,19 @@ const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 const RUNNING_MARKER_NONE_VALUE = '__none__';
 
-function onStyleValuesChanged(value: unknown) {
+function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
-  const update: Partial<TextBoxElement> = {
+  emit('update', {
+    fontStyle: applyStyleAxisToggles(values),
+  } as Partial<TextBoxElement>);
+}
+
+function onTextDecorationValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
     underline: values.includes('underline'),
-  };
-
-  if (!props.element.useDefaultStyle) {
-    update.fontStyle = applyStyleAxisToggles(values);
-  }
-
-  emit('update', update);
+  } as Partial<TextBoxElement>);
 }
 
 function onFontFamilyChanged(fontFamily: string) {
@@ -498,6 +594,23 @@ function onFontFamilyChanged(fontFamily: string) {
     fontFamily,
     fontStyle: remapStyleForFamily(fontFamily),
   } as Partial<TextBoxElement>);
+}
+
+function clearParagraphStyleFormatting() {
+  emit('update', {
+    alignment: null,
+    color: null,
+    fontFamily: null,
+    fontSize: null,
+    fontStyle: null,
+    lineHeight: undefined,
+    underline: null,
+    strokeWidth: null,
+  } as Partial<TextBoxElement>);
+}
+
+function openParagraphStylesDialog() {
+  emit('open-paragraph-styles-dialog', props.element.paragraphStyleId);
 }
 
 function onAlignmentChanged(value: unknown) {
@@ -511,7 +624,7 @@ function onAlignmentChanged(value: unknown) {
 function onRunningMarkerRoleChanged(value: AcceptableValue) {
   emit('update', {
     runningMarkerRole:
-      value === RUNNING_MARKER_NONE_VALUE
+      value === RUNNING_MARKER_NONE_VALUE || value == null
         ? null
         : (value as TextBoxElement['runningMarkerRole']),
   } as Partial<TextBoxElement>);
@@ -523,9 +636,5 @@ function onRunningMarkerTextChanged(value: string | number) {
   emit('update', {
     runningMarkerText: text.trim() === '' ? null : text,
   } as Partial<TextBoxElement>);
-}
-
-function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
-  return Object.values(TextBoxAlignment).includes(value as TextBoxAlignment);
 }
 </script>

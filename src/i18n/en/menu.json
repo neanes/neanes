@@ -52,6 +52,10 @@
     "header": "Header",
     "footer": "Footer"
   },
+  "format": {
+    "root": "Format",
+    "paragraphStyles": "Paragraph Styles…"
+  },
   "view": {
     "root": "View",
     "developer": "Developer",

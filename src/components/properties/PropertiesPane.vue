@@ -30,8 +30,12 @@
       :fonts="fonts"
       :open-sections="openSections"
       :page-setup="pageSetup"
+      :paragraph-styles="paragraphStyles"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:annotation', annotationElement, $event)"
+      @open-paragraph-styles-dialog="
+        emit('open-paragraph-styles-dialog', $event)
+      "
     />
 
     <PropertiesTextBox
@@ -41,9 +45,13 @@
       :fonts="fonts"
       :open-sections="openSections"
       :page-setup="pageSetup"
+      :paragraph-styles="paragraphStyles"
       :source="textBoxSource"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:text-box', textBoxElement, $event)"
+      @open-paragraph-styles-dialog="
+        emit('open-paragraph-styles-dialog', $event)
+      "
     />
 
     <PropertiesRichTextBox
@@ -53,9 +61,13 @@
       :fonts="fonts"
       :open-sections="openSections"
       :page-setup="pageSetup"
+      :paragraph-styles="paragraphStyles"
       :source="richTextBoxSource"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:rich-text-box', richTextBoxElement, $event)"
+      @open-paragraph-styles-dialog="
+        emit('open-paragraph-styles-dialog', $event)
+      "
     />
 
     <PropertiesDropCap
@@ -65,8 +77,12 @@
       :fonts="fonts"
       :open-sections="openSections"
       :page-setup="pageSetup"
+      :paragraph-styles="paragraphStyles"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:drop-cap', dropCapElement, $event)"
+      @open-paragraph-styles-dialog="
+        emit('open-paragraph-styles-dialog', $event)
+      "
     />
 
     <PropertiesImageBox
@@ -84,9 +100,13 @@
       :key="`lyrics-${lyricsElement.id}`"
       :element="lyricsElement"
       :fonts="fonts"
+      :paragraph-styles="paragraphStyles"
       :open-sections="openSections"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:lyrics', lyricsElement, $event)"
+      @open-paragraph-styles-dialog="
+        emit('open-paragraph-styles-dialog', $event)
+      "
     />
 
     <PropertiesModeKey
@@ -133,6 +153,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import type { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 
 import type { InspectorContext } from './InspectorContext';
 import PropertiesAnnotation from './PropertiesAnnotation.vue';
@@ -163,6 +184,10 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
   openSections: {
     type: Array as PropType<string[]>,
     required: true,
@@ -170,6 +195,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
+  'open-paragraph-styles-dialog',
   'update:open-sections',
   'update:annotation',
   'update:drop-cap',

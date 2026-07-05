@@ -12,20 +12,11 @@
       :element="element"
       :fonts="fonts"
       :page-setup="pageSetup"
-      :default-font-color="
-        element.inline
-          ? pageSetup.lyricsDefaultColor
-          : pageSetup.textBoxDefaultColor
-      "
-      :default-font-size="
-        element.inline
-          ? pageSetup.lyricsDefaultFontSize
-          : pageSetup.textBoxDefaultFontSize
-      "
-      :default-font-family="
-        element.inline
-          ? pageSetup.lyricsDefaultFontFamily
-          : pageSetup.textBoxDefaultFontFamily
+      :paragraph-styles="paragraphStyles"
+      :fallback-paragraph-style-id="fallbackParagraphStyleId"
+      :fallback-paragraph-style="resolvedParagraphStyle"
+      @open-paragraph-styles-dialog="
+        emit('open-paragraph-styles-dialog', $event)
       "
     />
 
@@ -114,28 +105,30 @@
       </template>
 
       <Field orientation="horizontal">
-        <FieldLabel for="properties-rich-text-box-margin-top">{{
+        <FieldLabel for="properties-rich-text-box-gap-above">{{
           $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
         }}</FieldLabel>
         <InputUnit
-          id="properties-rich-text-box-margin-top"
+          id="properties-rich-text-box-gap-above"
           class="w-28"
           unit="pt"
-          :min="0"
+          :min="-maxHeight"
           :max="maxHeight"
           :step="0.5"
           :model-value="element.marginTop"
           :format-options="fraction1FormatOptions"
-          @update:model-value="updateNumberProperty('marginTop', $event)"
+          @update:model-value="
+            updateElement({ marginTop: $event } as Partial<RichTextBoxElement>)
+          "
         />
       </Field>
 
       <Field orientation="horizontal">
-        <FieldLabel for="properties-rich-text-box-margin-bottom">{{
+        <FieldLabel for="properties-rich-text-box-gap-below">{{
           $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
         }}</FieldLabel>
         <InputUnit
-          id="properties-rich-text-box-margin-bottom"
+          id="properties-rich-text-box-gap-below"
           class="w-28"
           unit="pt"
           :min="0"
@@ -143,7 +136,11 @@
           :step="0.5"
           :model-value="element.marginBottom"
           :format-options="fraction1FormatOptions"
-          @update:model-value="updateNumberProperty('marginBottom', $event)"
+          @update:model-value="
+            updateElement({
+              marginBottom: $event,
+            } as Partial<RichTextBoxElement>)
+          "
         />
       </Field>
     </PaneSection>
@@ -401,6 +398,11 @@ import {
   getScaleLabelSelector,
 } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
+import {
+  getTextBoxParagraphStyleFallbackId,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { Scale, ScaleNote } from '@/models/Scales';
 import { fraction1FormatOptions } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
@@ -445,6 +447,10 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
   source: {
     type: String as PropType<'score' | 'header-footer'>,
     required: true,
@@ -452,6 +458,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits<{
+  'open-paragraph-styles-dialog': [styleId: string];
   'update:open-sections': [value: string[]];
   update: [value: Partial<RichTextBoxElement>];
 }>();
@@ -461,6 +468,12 @@ const RUNNING_MARKER_NONE_VALUE = '__none__';
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
+const fallbackParagraphStyleId = computed(() =>
+  getTextBoxParagraphStyleFallbackId(props.element.inline),
+);
+const resolvedParagraphStyle = computed(() =>
+  resolveParagraphStyle(props.paragraphStyles, fallbackParagraphStyleId.value),
+);
 
 function updateElement(value: Partial<RichTextBoxElement>) {
   emit('update', value);
@@ -519,7 +532,7 @@ function onModeChangeVirtualNoteChanged(value: AcceptableValue) {
 function onRunningMarkerRoleChanged(value: AcceptableValue) {
   updateElement({
     runningMarkerRole:
-      value === RUNNING_MARKER_NONE_VALUE
+      value === RUNNING_MARKER_NONE_VALUE || value == null
         ? null
         : (value as RichTextBoxElement['runningMarkerRole']),
   });

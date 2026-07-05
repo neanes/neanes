@@ -52,6 +52,10 @@
     "header": "Header",
     "footer": "Footer"
   },
+  "format": {
+    "root": "Format",
+    "paragraphStyles": "Gaya Paragraf…"
+  },
   "view": {
     "root": "Tampilan",
     "developer": "Pengembang",

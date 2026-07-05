@@ -1,11 +1,35 @@
 import { describe, expect, it } from 'vitest';
 
-import { RichTextBoxElement } from '@/models/Element';
+import {
+  RichTextBoxElement,
+  TextBoxAlignment,
+  TextBoxElement,
+} from '@/models/Element';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  ParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { setRichTextLanguage } from '@/utils/richTextLanguage';
+import { Unit } from '@/utils/Unit';
 
 import glyphnames from '../../assets/fonts/sbmufl/glyphnames.json';
 import type { SbmuflGlyphName } from './../NeumeMappingService';
 import { ByzHtmlExporter } from './ByzHtmlExporter';
+
+function createComputedTextBox(overrides: Partial<TextBoxElement> = {}) {
+  const element = new TextBoxElement();
+
+  element.computedAlignment = TextBoxAlignment.Left;
+  element.computedColor = '#000000';
+  element.computedFontFamily = 'Source Serif';
+  element.computedFontSize = Unit.fromPt(12);
+  element.computedFontWeight = '400';
+  element.computedFontStyle = 'normal';
+  element.computedStrokeWidth = 0;
+  element.computedLineHeight = null;
+
+  return Object.assign(element, overrides);
+}
 
 describe('ByzHtmlExporter', () => {
   it('should have a tag mapping for every glyphname', () => {
@@ -46,6 +70,79 @@ describe('ByzHtmlExporter', () => {
 
     expect(exporter.exportRichTextBox(element, 0)).toBe(
       '<div class="byz---rich-text-box" lang="ar" dir="rtl"><p><span lang="ar" dir="rtl">Hello</span></p></div\n>',
+    );
+  });
+
+  it('exports paragraph-style text boxes with inline underline text decoration', () => {
+    const exporter = new ByzHtmlExporter();
+    const element = createComputedTextBox({
+      content: 'Styled text',
+      paragraphStyleId: 'custom-style',
+    });
+
+    const customStyle = new ParagraphStyle();
+    customStyle.id = 'custom-style';
+    customStyle.overrides.textDecoration = 'underline';
+
+    expect(exporter.exportTextBox(element, [customStyle], 0)).toContain(
+      'text-decoration: underline;',
+    );
+  });
+
+  it('exports explicit underline clears against an underlined default as none', () => {
+    const exporter = new ByzHtmlExporter();
+    const style = new ParagraphStyle();
+
+    style.id = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    style.overrides.textDecoration = 'underline';
+
+    const element = createComputedTextBox({
+      content: 'Styled text',
+      underline: false,
+    });
+
+    expect(exporter.exportTextBox(element, [style], 0)).toContain(
+      'text-decoration: none;',
+    );
+  });
+
+  it('keeps inherited inline text boxes on the shared inline CSS defaults', () => {
+    const exporter = new ByzHtmlExporter();
+    const element = new TextBoxElement();
+
+    element.inline = true;
+    element.content = 'Inline text';
+    element.paragraphStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics;
+    element.computedAlignment = TextBoxAlignment.Center;
+
+    expect(exporter.exportTextBox(element, [], 0)).toBe(
+      `<div dir="auto" class="byz--text-box byz--text-box-inline" style="text-align: center;">Inline text</div
+>`,
+    );
+  });
+
+  it('exports computed styles for inline text boxes with explicit paragraph-style overrides', () => {
+    const exporter = new ByzHtmlExporter();
+    const element = createComputedTextBox({
+      inline: true,
+      content: 'Inline override',
+      fontSize: Unit.fromPt(16),
+      color: '#abcdef',
+      fontFamily: 'Alegreya',
+      fontStyle: 'Bold Italic',
+      strokeWidth: 1.5,
+      computedAlignment: TextBoxAlignment.Right,
+      computedColor: '#123456',
+      computedFontFamily: 'Alegreya',
+      computedFontSize: Unit.fromPt(18),
+      computedFontWeight: '700',
+      computedFontStyle: 'italic',
+      computedStrokeWidth: 2,
+      computedLineHeight: 1.4,
+    });
+
+    expect(exporter.exportTextBox(element, [], 0)).toBe(
+      `<div dir="auto" class="byz--text-box byz--text-box-inline" style="color: #123456;font-family: 'Alegreya', 'Source Serif';font-size: 18pt;font-weight: 700;font-style: italic;line-height: 1.4;-webkit-text-stroke-width: 2;text-align: right;">Inline override</div\n>`,
     );
   });
 });

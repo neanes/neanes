@@ -17,8 +17,6 @@ import {
   TempoSign,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
-import { resolveFontStyle } from '@/utils/fontStyle';
 import { Unit } from '@/utils/Unit';
 
 import type { ModeKeyTemplate } from './ModeKeys';
@@ -34,6 +32,11 @@ import {
   measureBarAboveToLeft,
   measureBarLeftToAbove,
 } from './NeumeReplacements';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyleOverrides,
+  TextBoxAlignment,
+} from './ParagraphStyle';
 import { Scale, ScaleNote } from './Scales';
 
 export enum ElementType {
@@ -108,13 +111,13 @@ export class NoteElement extends ScoreElement {
   public koronis: boolean = false;
   public stavros: boolean = false;
   public lyrics: string = '';
-  public lyricsColor: string = '#000000';
-  public lyricsFontFamily: string = 'Source Serif';
-  public lyricsFontSize: number = Unit.fromPt(12);
-  public lyricsStrokeWidth: number = 0;
-  public lyricsUseDefaultStyle: boolean = true;
-  public lyricsFontStyle: string = DEFAULT_FONT_STYLE;
-  public lyricsTextDecoration: string = 'none';
+  public lyricsColor: string | null = null;
+  public lyricsFontFamily: string | null = null;
+  public lyricsFontSize: number | null = null;
+  public lyricsStrokeWidth: number | null = null;
+  public lyricsParagraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics;
+  public lyricsFontStyle: string | null = null;
+  public lyricsTextDecoration: string | null = null;
   public acceptsLyrics: AcceptsLyricsOption = AcceptsLyricsOption.Default;
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
@@ -186,15 +189,6 @@ export class NoteElement extends ScoreElement {
   public secondaryFthoraCarry: Fthora | null = null;
   public tertiaryFthoraCarry: Fthora | null = null;
 
-  public get lyricsFont() {
-    const resolved = resolveFontStyle(
-      this.lyricsFontFamily,
-      this.lyricsFontStyle,
-    );
-
-    return `${resolved.cssFontStyle} normal ${resolved.cssFontWeight} ${this.lyricsFontSize}px "${resolved.cssFontFamily}"`;
-  }
-
   public clone(args?: ElementCloneArgs) {
     const clone = new NoteElement();
 
@@ -214,11 +208,12 @@ export class NoteElement extends ScoreElement {
             isHyphen: this.isHyphen,
             isMelismaStart: this.isMelismaStart,
             isMelisma: this.isMelisma,
-            lyricsUseDefaultStyle: this.lyricsUseDefaultStyle,
+            lyricsParagraphStyleId: this.lyricsParagraphStyleId,
             lyricsColor: this.lyricsColor,
             lyricsFontFamily: this.lyricsFontFamily,
             lyricsFontSize: this.lyricsFontSize,
             lyricsFontStyle: this.lyricsFontStyle,
+            lyricsTextDecoration: this.lyricsTextDecoration,
             lyricsStrokeWidth: this.lyricsStrokeWidth,
           }
         : null),
@@ -295,9 +290,25 @@ export class NoteElement extends ScoreElement {
       lyricsFontFamily: this.lyricsFontFamily,
       lyricsFontSize: this.lyricsFontSize,
       lyricsStrokeWidth: this.lyricsStrokeWidth,
-      lyricsUseDefaultStyle: this.lyricsUseDefaultStyle,
+      lyricsParagraphStyleId: this.lyricsParagraphStyleId,
       lyricsFontStyle: this.lyricsFontStyle,
       lyricsTextDecoration: this.lyricsTextDecoration,
+    };
+  }
+
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
+    return {
+      fontFamily: this.lyricsFontFamily ?? undefined,
+      fontSize: this.lyricsFontSize ?? undefined,
+      fontStyle: this.lyricsFontStyle ?? undefined,
+      color: this.lyricsColor ?? undefined,
+      strokeWidth: this.lyricsStrokeWidth ?? undefined,
+      textDecoration:
+        this.lyricsTextDecoration != null
+          ? this.lyricsTextDecoration === 'underline'
+            ? 'underline'
+            : null
+          : undefined,
     };
   }
 
@@ -442,6 +453,7 @@ export class NoteElement extends ScoreElement {
   public melismaText: string = '';
   public melismaOffsetTop: number = 0;
   public lyricsFontHeight: number = 0;
+  public lyricsFontCss: string = '';
   public hyphenOffsets: number[] = [];
   public showLeadingLyricHyphen: boolean = false;
   public leadingLyricHyphenOffset: number = 0;
@@ -829,32 +841,28 @@ export class EmptyElement extends ScoreElement {
   }
 }
 
-export enum TextBoxAlignment {
-  Center = 'center',
-  Left = 'left',
-  Right = 'right',
-}
+export { TextBoxAlignment };
 
 export type RunningMarkerRole = 'chapter' | 'section';
 
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
-  public alignment: TextBoxAlignment = TextBoxAlignment.Left;
-  public color: string = '#000000';
+  public paragraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  public alignment: TextBoxAlignment | null = null;
+  public color: string | null = null;
   public content: string = '';
   public contentBottom: string = '';
   public contentLeft: string = '';
   public contentCenter: string = '';
   public contentRight: string = '';
-  public fontSize: number = 16;
-  public fontFamily: string = 'Source Serif';
-  public strokeWidth: number = 0;
+  public fontSize: number | null = null;
+  public fontFamily: string | null = null;
+  public strokeWidth: number | null = null;
   public multipanel: boolean = false;
   public inline: boolean = false;
-  public fontStyle: string = DEFAULT_FONT_STYLE;
-  public underline: boolean = false;
-  public lineHeight: number | null = null;
-  public useDefaultStyle: boolean = true;
+  public fontStyle: string | null = null;
+  public underline: boolean | null = null;
+  public lineHeight: number | null | undefined = undefined;
   public height: number = 20;
   public customWidth: number | null = null;
   public customHeight: number | null = null;
@@ -872,6 +880,8 @@ export class TextBoxElement extends ScoreElement {
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
   public computedLineHeight: number | null = null;
+  public computedUnderline: boolean = false;
+  public computedAlignment: TextBoxAlignment = TextBoxAlignment.Left;
   public minHeight: number = 10;
 
   // Re-render helpers
@@ -883,6 +893,8 @@ export class TextBoxElement extends ScoreElement {
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
   public computedLineHeightPrevious: number | null = null;
+  public computedUnderlinePrevious: boolean = false;
+  public computedAlignmentPrevious: TextBoxAlignment = TextBoxAlignment.Left;
 
   public get computedFont() {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
@@ -898,6 +910,7 @@ export class TextBoxElement extends ScoreElement {
 
   public getClipboardProperties() {
     return {
+      paragraphStyleId: this.paragraphStyleId,
       alignment: this.alignment,
       color: this.color,
       content: this.content,
@@ -916,7 +929,7 @@ export class TextBoxElement extends ScoreElement {
       inline: this.inline,
       fontStyle: this.fontStyle,
       underline: this.underline,
-      useDefaultStyle: this.useDefaultStyle,
+      lineHeight: this.lineHeight,
       multipanel: this.multipanel,
       runningMarkerRole: this.runningMarkerRole,
       runningMarkerText: this.runningMarkerText,
@@ -928,7 +941,35 @@ export class TextBoxElement extends ScoreElement {
     delete format.content;
     return format;
   }
+
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
+    return {
+      fontFamily: this.fontFamily ?? undefined,
+      fontSize: this.fontSize ?? undefined,
+      fontStyle: this.fontStyle ?? undefined,
+      color: this.color ?? undefined,
+      strokeWidth: this.strokeWidth ?? undefined,
+      lineHeight: this.lineHeight,
+      alignment: this.alignment ?? undefined,
+      textDecoration:
+        this.underline != null
+          ? this.underline
+            ? 'underline'
+            : null
+          : undefined,
+    };
+  }
 }
+
+export const RICH_TEXT_BOX_CONTENT_KEYS = [
+  'content',
+  'contentBottom',
+  'contentLeft',
+  'contentCenter',
+  'contentRight',
+] as const;
+
+export type RichTextBoxContentKey = (typeof RICH_TEXT_BOX_CONTENT_KEYS)[number];
 
 export class RichTextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.RichTextBox;
@@ -1192,13 +1233,13 @@ export class AlternateLineElement extends ScoreElement {
 export class DropCapElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.DropCap;
   public content: string = 'A';
-  public fontFamily: string = 'Source Serif';
-  public fontSize: number = Unit.fromPt(60);
-  public fontStyle: string = DEFAULT_FONT_STYLE;
-  public lineHeight: number | null = null;
-  public strokeWidth: number = 0;
-  public color: string = '#000000';
-  public useDefaultStyle: boolean = true;
+  public paragraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap;
+  public fontFamily: string | null = null;
+  public fontSize: number | null = null;
+  public fontStyle: string | null = null;
+  public lineHeight: number | null | undefined = undefined;
+  public strokeWidth: number | null = null;
+  public color: string | null = null;
   public customWidth: number | null = null;
   public lineSpan: number = 1;
 
@@ -1236,6 +1277,7 @@ export class DropCapElement extends ScoreElement {
 
   public getClipboardProperties() {
     return {
+      paragraphStyleId: this.paragraphStyleId,
       color: this.color,
       content: this.content,
       fontSize: this.fontSize,
@@ -1244,8 +1286,19 @@ export class DropCapElement extends ScoreElement {
       lineHeight: this.lineHeight,
       strokeWidth: this.strokeWidth,
       customWidth: this.customWidth,
-      useDefaultStyle: this.useDefaultStyle,
+      lineSpan: this.lineSpan,
     } as Partial<DropCapElement>;
+  }
+
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
+    return {
+      fontFamily: this.fontFamily ?? undefined,
+      fontSize: this.fontSize ?? undefined,
+      fontStyle: this.fontStyle ?? undefined,
+      color: this.color ?? undefined,
+      strokeWidth: this.strokeWidth ?? undefined,
+      lineHeight: this.lineHeight,
+    };
   }
 }
 

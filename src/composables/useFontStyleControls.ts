@@ -37,7 +37,7 @@ export function useFontStyleControls(
   }
 
   // The active Bold/Italic axes as toggle-group values, e.g. [] or ['bold'] or
-  // ['bold', 'italic']. Callers append their own 'underline' entry.
+  // ['bold', 'italic'].
   const activeStyleAxisValues = computed(() =>
     FONT_STYLE_AXES.filter((axis) => isFontStyleAxisActive(axis)),
   );

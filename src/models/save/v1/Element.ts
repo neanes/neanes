@@ -16,7 +16,6 @@ import {
   RootSign,
   TempoSign,
 } from '@/models/save/v1/Neumes';
-import { Unit } from '@/utils/Unit';
 
 import { Scale, ScaleNote } from './Scales';
 
@@ -89,10 +88,15 @@ export class NoteElement extends ScoreElement {
   public lyricsFontSize: number | undefined = undefined;
   public lyricsStrokeWidth: number | undefined = undefined;
   public lyricsFontSubfamily: string | undefined = undefined;
+  public lyricsTextDecoration: string | undefined = undefined;
+  public lyricsParagraphStyleId: string | undefined = undefined;
+
+  // Deprecated load-only compatibility for legacy lyrics font-style fields.
   public lyricsFontStyle: string | undefined = undefined;
   public lyricsFontWeight: string | undefined = undefined;
-  public lyricsTextDecoration: string | undefined = undefined;
+  // Deprecated load-only compatibility for pre-paragraph-style lyrics.
   public lyricsUseDefaultStyle: boolean | undefined = undefined;
+
   public acceptsLyrics: AcceptsLyricsOption | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;
@@ -182,6 +186,7 @@ export class EmptyElement extends ScoreElement {
 
 export enum TextBoxAlignment {
   Center = 'center',
+  Justify = 'justify',
   Left = 'left',
   Right = 'right',
 }
@@ -190,29 +195,34 @@ export type RunningMarkerRole = 'chapter' | 'section';
 
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
-  public alignment: TextBoxAlignment = TextBoxAlignment.Left;
-  public color: string = '#000000';
+  public paragraphStyleId: string | undefined = undefined;
+  public alignment: TextBoxAlignment | undefined = undefined;
+  public color: string | undefined = undefined;
   public content: string = '';
   public contentBottom: string = '';
   public contentLeft: string = '';
   public contentCenter: string = '';
   public contentRight: string = '';
-  public fontSize: number = 16;
-  public fontFamily: string = 'Source Serif';
-  public strokeWidth: number = 0;
+  public fontSize: number | undefined = undefined;
+  public fontFamily: string | undefined = undefined;
+  public strokeWidth: number | undefined = undefined;
   public multipanel: boolean | undefined = undefined;
   public inline: boolean | undefined = undefined;
   public fontSubfamily: string | undefined = undefined;
+  public underline: boolean | undefined = undefined;
+  public lineHeight: number | null | undefined = undefined;
+
+  // Deprecated load-only compatibility for legacy text-box font-style fields.
   public bold: boolean | undefined = undefined;
   public italic: boolean | undefined = undefined;
-  public underline: boolean | undefined = undefined;
-  public lineHeight: number | undefined = undefined;
+
   public height: number = 20;
   public customWidth: number | undefined = undefined;
   public customHeight: number | undefined = undefined;
   public fillWidth: boolean | undefined = undefined;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
+  // Deprecated load-only compatibility for pre-paragraph-style text boxes.
   public useDefaultStyle: boolean | undefined = undefined;
   public runningMarkerRole: RunningMarkerRole | undefined = undefined;
   public runningMarkerText: string | undefined = undefined;
@@ -304,17 +314,21 @@ export class AlternateLineElement extends ScoreElement {
 export class DropCapElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.DropCap;
   public content: string = 'A';
-  public fontFamily: string = 'Source Serif';
-  public fontSize: number = Unit.fromPt(60);
+  public paragraphStyleId: string | undefined = undefined;
+  public fontFamily: string | undefined = undefined;
+  public fontSize: number | undefined = undefined;
   public fontSubfamily: string | undefined = undefined;
-  public fontStyle: string | undefined = undefined;
-  public fontWeight: string | undefined = undefined;
-  public lineHeight: number | undefined = undefined;
-  public strokeWidth: number = 0;
-  public color: string = '#000000';
-  public useDefaultStyle: boolean | undefined = undefined;
+  public lineHeight: number | null | undefined = undefined;
+  public strokeWidth: number | undefined = undefined;
+  public color: string | undefined = undefined;
   public customWidth: number | undefined = undefined;
   public lineSpan: number = 1;
+
+  // Deprecated load-only compatibility for legacy drop-cap font-style fields.
+  public fontStyle: string | undefined = undefined;
+  public fontWeight: string | undefined = undefined;
+  // Deprecated load-only compatibility for pre-paragraph-style drop caps.
+  public useDefaultStyle: boolean | undefined = undefined;
 }
 
 export class ImageBoxElement extends ScoreElement {

@@ -52,6 +52,10 @@
     "header": "Antet",
     "footer": "Subsol"
   },
+  "format": {
+    "root": "Format",
+    "paragraphStyles": "Stiluri paragraf…"
+  },
   "view": {
     "root": "Vizualizare",
     "developer": "Dezvoltator",

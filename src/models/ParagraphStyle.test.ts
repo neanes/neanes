@@ -17,6 +17,7 @@ import {
 describe('ParagraphStyle', () => {
   it('creates built-in styles from the default paragraph-style graph', () => {
     const styles = createDefaultParagraphStyles();
+    const customStyle = new ParagraphStyle();
 
     expect(styles.map((style) => style.id)).toEqual([
       BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
@@ -31,6 +32,13 @@ describe('ParagraphStyle', () => {
       BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
     ]);
     expect(styles[0].overrides).toEqual({});
+    expect(styles[0].parentStyleId).toBeNull();
+    expect(styles.slice(1).every((style) => style.parentStyleId != null)).toBe(
+      true,
+    );
+    expect(customStyle.parentStyleId).toBe(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    );
     expect(resolveParagraphStyle(styles, styles[0].id).fontFamily).toBe(
       'Source Serif',
     );

@@ -121,10 +121,15 @@
                   id="paragraph-styles-dialog-parent"
                   :disabled="selectedStyle?.id === defaultParagraphStyleId"
                   :model-value="
-                    selectedStyle?.parentStyleId ?? PARAGRAPH_STYLE_NONE_VALUE
+                    selectedStyle?.id === defaultParagraphStyleId
+                      ? PARAGRAPH_STYLE_NONE_VALUE
+                      : (selectedStyle?.parentStyleId ??
+                        defaultParagraphStyleId)
                   "
                   :paragraph-styles="availableParents"
-                  show-none-option
+                  :show-none-option="
+                    selectedStyle?.id === defaultParagraphStyleId
+                  "
                   :none-label="parentNoneLabel"
                   trigger-class="w-64"
                   @update:model-value="updateSelectedStyleParent"
@@ -725,6 +730,9 @@ function duplicateSelectedStyle() {
       name: styleDisplayName(style),
     }),
   );
+  if (style.id === defaultParagraphStyleId) {
+    clone.parentStyleId = defaultParagraphStyleId;
+  }
   styles.value.push(clone);
   selectedStyleId.value = clone.id;
 }
@@ -738,6 +746,7 @@ function deleteSelectedStyle() {
 
   const styleId = style.id;
   const parentStyleId = style.parentStyleId;
+  const fallbackParentStyleId = parentStyleId ?? defaultParagraphStyleId;
   styles.value = styles.value
     .filter((style) => style.id !== styleId)
     .map((style) => {
@@ -746,7 +755,7 @@ function deleteSelectedStyle() {
       }
 
       const updated = style.clone();
-      updated.parentStyleId = parentStyleId;
+      updated.parentStyleId = fallbackParentStyleId;
       return updated;
     });
   selectedStyleId.value = defaultParagraphStyleId;
@@ -802,6 +811,9 @@ function prepareParagraphStyleForSubmit(style: ParagraphStyle) {
 
   if (!updated.builtIn) {
     updated.displayName = updated.displayName.trim();
+    if (updated.parentStyleId == null) {
+      updated.parentStyleId = defaultParagraphStyleId;
+    }
   }
 
   pruneParentlessParagraphStyleRootFallbackOverrides(updated);

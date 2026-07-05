@@ -93,7 +93,8 @@ export function hasParagraphStyleOverrides(overrides: ParagraphStyleOverrides) {
 export class ParagraphStyle {
   public id: string = crypto.randomUUID();
   public displayName: string = 'Paragraph Style';
-  public parentStyleId: string | null = null;
+  public parentStyleId: string | null =
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
   public overrides: ParagraphStyleOverrides = {};
 
   public get builtIn() {
@@ -126,6 +127,10 @@ export function createParagraphStyleFallback(): ResolvedParagraphStyle {
 export function pruneParentlessParagraphStyleRootFallbackOverrides(
   style: ParagraphStyle,
 ) {
+  if (style.id !== BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText) {
+    return;
+  }
+
   if (style.parentStyleId != null) {
     return;
   }

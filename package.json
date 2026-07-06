@@ -76,7 +76,7 @@
     "i18next-vue": "^5.4.0",
     "jest-matcher-deep-close-to": "^3.0.2",
     "mitt": "^3.0.1",
-    "prettier": "^3.9.1",
+    "prettier": "^3.9.4",
     "register-service-worker": "^1.7.2",
     "reka-ui": "^2.10.1",
     "shadcn-vue": "^2.7.4",

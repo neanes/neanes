@@ -5618,13 +5618,6 @@ async function load() {
 
   selectedElement.value =
     score.value.staff.elements[score.value.staff.elements.length - 1];
-
-  pages.value = LayoutService.processPages(
-    selectedWorkspace.value,
-    shouldCollectLayoutDiagnostics.value
-      ? { collectDiagnostics: true }
-      : undefined,
-  );
 }
 
 /**

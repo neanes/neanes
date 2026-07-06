@@ -1,4 +1,4 @@
-const RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX = 'neanes-style-';
+const RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX = 'neanes-paragraph-style-';
 
 export function richTextParagraphStyleClassName(styleId: string) {
   return `${RICH_TEXT_PARAGRAPH_STYLE_CLASS_PREFIX}${styleId}`;

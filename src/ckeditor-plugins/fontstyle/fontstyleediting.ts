@@ -41,8 +41,9 @@ import {
 const FONT_FAMILY = 'fontFamily';
 
 // Transient markers used only during upcast to carry a legacy <strong>/<em> (or
-// a bundled-style font-weight/font-style) onto the wrapped text. The post-fixer
-// folds them into fontStyle and removes them, so they never survive a save.
+// a bundled-style font-weight/font-style) onto text and inline neume objects.
+// The post-fixer folds them into fontStyle and removes them, so they never
+// survive a save.
 const LEGACY_BOLD = 'neanesLegacyBold';
 const LEGACY_ITALIC = 'neanesLegacyItalic';
 const LEGACY_NORMAL = 'neanesLegacyNormal';
@@ -566,7 +567,7 @@ export default class FontStyleEditing extends Plugin {
     let desired: string | null;
 
     if (fontStyle == null) {
-      // Fresh from upcast (including neumes) or default-font text: derive the
+      // Fresh from upcast, including neumes, or default-font text: derive the
       // font style from the face name, then fold in any legacy markers.
       if (family == null || family === '') {
         newFamily = null;

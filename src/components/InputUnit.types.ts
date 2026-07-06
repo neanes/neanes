@@ -1,13 +1,7 @@
 import { Unit } from '@/utils/Unit';
 
 export type UnitOfMeasure =
-  | 'pc'
-  | 'pt'
-  | 'in'
-  | 'cm'
-  | 'mm'
-  | 'percent'
-  | 'unitless';
+  'pc' | 'pt' | 'in' | 'cm' | 'mm' | 'percent' | 'unitless';
 
 export function toStorage(value: number, unit: UnitOfMeasure) {
   switch (unit) {

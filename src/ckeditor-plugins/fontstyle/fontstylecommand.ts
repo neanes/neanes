@@ -39,8 +39,7 @@ function effectiveFamily(
   fallback?: ResolvedParagraphStyleFallback | null,
 ): string | null {
   const family = editor.model.document.selection.getAttribute(FONT_FAMILY) as
-    | string
-    | undefined;
+    string | undefined;
 
   if (family != null && family.trim() !== '') {
     return firstFontFamilyToken(family);
@@ -53,8 +52,7 @@ function effectiveFamily(
   }
 
   const defaultFamily = editor.config.get('insertNeume.defaultFontFamily') as
-    | string
-    | undefined;
+    string | undefined;
 
   return defaultFamily != null && defaultFamily.trim() !== ''
     ? firstFontFamilyToken(defaultFamily)
@@ -83,8 +81,7 @@ function effectiveFontStyle(
 
 function hasExplicitFamily(editor: Editor): boolean {
   const family = editor.model.document.selection.getAttribute(FONT_FAMILY) as
-    | string
-    | undefined;
+    string | undefined;
 
   return family != null && family.trim() !== '';
 }

@@ -161,8 +161,7 @@ export function useRichTextStyleCommands(
 
       for (const commandName of Object.values(FONT_STYLE_TOGGLE_COMMANDS)) {
         const command = editor?.commands.get(commandName) as
-          | FontStyleToggleCommand
-          | undefined;
+          FontStyleToggleCommand | undefined;
 
         command?.setResolvedParagraphStyleFallback(fallback);
         command?.refresh();
@@ -482,8 +481,7 @@ export function useRichTextStyleCommands(
 
     for (const block of editor.model.document.selection.getSelectedBlocks()) {
       const ghsAttributeValue = block.getAttribute(ghsAttributeName) as
-        | { classes?: unknown }
-        | undefined;
+        { classes?: unknown } | undefined;
 
       if (!Array.isArray(ghsAttributeValue?.classes)) {
         continue;

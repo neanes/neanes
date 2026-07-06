@@ -10,9 +10,7 @@ export const ALIGNMENT_OVERRIDE = 'alignmentOverride';
 
 export class AlignmentOverrideCommand extends Command {
   declare public value:
-    | AlignmentOverrideValue
-    | typeof ALIGNMENT_OVERRIDE_MIXED_VALUE
-    | undefined;
+    AlignmentOverrideValue | typeof ALIGNMENT_OVERRIDE_MIXED_VALUE | undefined;
 
   public override refresh(): void {
     const selection = this.editor.model.document.selection;

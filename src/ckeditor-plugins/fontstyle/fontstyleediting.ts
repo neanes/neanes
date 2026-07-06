@@ -41,8 +41,9 @@ import {
 const FONT_FAMILY = 'fontFamily';
 
 // Transient markers used only during upcast to carry a legacy <strong>/<em> (or
-// a bundled-style font-weight/font-style) onto the wrapped text. The post-fixer
-// folds them into fontStyle and removes them, so they never survive a save.
+// a bundled-style font-weight/font-style) onto text and inline neume objects.
+// The post-fixer folds them into fontStyle and removes them, so they never
+// survive a save.
 const LEGACY_BOLD = 'neanesLegacyBold';
 const LEGACY_ITALIC = 'neanesLegacyItalic';
 const LEGACY_NORMAL = 'neanesLegacyNormal';
@@ -61,7 +62,6 @@ function removeLegacyMarkers(writer: ModelWriter, range: ModelRange) {
 }
 
 interface ItemSnapshot {
-  isText: boolean;
   family: string | null;
   fontStyle: string | null;
   bold: boolean;
@@ -144,6 +144,14 @@ export default class FontStyleEditing extends Plugin {
   }
 
   afterInit() {
+    const schema = this.editor.model.schema;
+
+    if (schema.isRegistered('neume')) {
+      schema.extend('neume', {
+        allowAttributes: LEGACY_MARKER_KEYS,
+      });
+    }
+
     this._registerRemoveFormatIntegration();
   }
 
@@ -509,10 +517,9 @@ export default class FontStyleEditing extends Plugin {
 
     for (const range of ranges) {
       for (const item of range.getItems()) {
-        const isText = item.is('$textProxy');
         const isNeume = item.is('element', 'neume');
 
-        if (!isText && !isNeume) {
+        if (!item.is('$textProxy') && !isNeume) {
           continue;
         }
 
@@ -522,7 +529,6 @@ export default class FontStyleEditing extends Plugin {
         const weightMarker = item.getAttribute(LEGACY_WEIGHT);
 
         snapshots.push({
-          isText,
           family: (item.getAttribute(FONT_FAMILY) as string) ?? null,
           fontStyle: (item.getAttribute(FONT_STYLE) as string) ?? null,
           bold: boldMarker === true,
@@ -547,7 +553,6 @@ export default class FontStyleEditing extends Plugin {
     snapshot: ItemSnapshot,
   ): boolean {
     const {
-      isText,
       family,
       fontStyle,
       bold,
@@ -558,22 +563,12 @@ export default class FontStyleEditing extends Plugin {
       range,
     } = snapshot;
 
-    // Non-text items (neumes) only need stray markers cleaned off.
-    if (!isText) {
-      if (hasMarkers) {
-        removeLegacyMarkers(writer, range);
-        return true;
-      }
-
-      return false;
-    }
-
     let newFamily = family;
     let desired: string | null;
 
     if (fontStyle == null) {
-      // Fresh from upcast (or default-font text): derive the font style from the
-      // face name, then fold in any legacy markers.
+      // Fresh from upcast, including neumes, or default-font text: derive the
+      // font style from the face name, then fold in any legacy markers.
       if (family == null || family === '') {
         newFamily = null;
         const fallbackFamily = getEditorDefaultFontFamily(this.editor);

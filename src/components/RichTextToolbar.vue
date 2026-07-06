@@ -586,8 +586,7 @@ function getDefaultAttributesForNeume(neume: Neume) {
     props.pageSetup.neumeDefaultFontFamily,
   );
   const defaultAttributeSet = defaultAttributesConfig[neumeFont] as
-    | InsertNeumeAttributeSet[]
-    | undefined;
+    InsertNeumeAttributeSet[] | undefined;
 
   return defaultAttributeSet?.find((x) => x.neume === neume)?.attributes ?? {};
 }

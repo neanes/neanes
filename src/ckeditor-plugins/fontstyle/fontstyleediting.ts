@@ -157,8 +157,7 @@ export default class FontStyleEditing extends Plugin {
 
   private _registerRemoveFormatIntegration() {
     const removeFormatCommand = this.editor.commands.get('removeFormat') as
-      | Partial<RemoveFormatCommandWithCustomAttributes>
-      | undefined;
+      Partial<RemoveFormatCommandWithCustomAttributes> | undefined;
 
     removeFormatCommand?.registerCustomAttribute?.(
       (attributeName) =>
@@ -258,8 +257,7 @@ export default class FontStyleEditing extends Plugin {
     }
 
     const fontStyle = (data.item as ModelItem).getAttribute(FONT_STYLE) as
-      | string
-      | undefined;
+      string | undefined;
 
     if (fontStyle == null || fontStyle.trim() === '') {
       return;
@@ -337,8 +335,7 @@ export default class FontStyleEditing extends Plugin {
       data.item instanceof ModelDocumentSelection
         ? (data.item.getAttribute(FONT_FAMILY) as string | undefined)
         : ((data.item as ModelItem).getAttribute(FONT_FAMILY) as
-            | string
-            | undefined);
+            string | undefined);
 
     const oldFamily =
       (siblingChange?.attributeOldValue as string | undefined) ?? currentFamily;

@@ -18,8 +18,7 @@ import {
 
 export function getEditorDefaultFontFamily(editor: Editor): string | null {
   const family = editor.config.get('insertNeume.defaultFontFamily') as
-    | string
-    | undefined;
+    string | undefined;
 
   return family != null && family.trim() !== '' ? family : null;
 }

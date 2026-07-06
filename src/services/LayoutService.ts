@@ -8430,11 +8430,8 @@ export class LayoutService {
     startIndex: number,
   ) {
     let finalElement:
-      | NoteElement
-      | MartyriaElement
-      | TempoElement
-      | TextBoxElement
-      | null = null;
+      NoteElement | MartyriaElement | TempoElement | TextBoxElement | null =
+      null;
 
     let nextElement: ScoreElement | null = null;
 
@@ -8467,17 +8464,11 @@ export class LayoutService {
         !this.isPartOfSameMelisma(firstElementOnNextLine)
       ) {
         finalElement = this.previousNoteElement(line, line.elements.length) as
-          | NoteElement
-          | MartyriaElement
-          | TempoElement
-          | TextBoxElement;
+          NoteElement | MartyriaElement | TempoElement | TextBoxElement;
         nextElement = null;
       } else {
         finalElement = line.elements[line.elements.length - 1] as
-          | NoteElement
-          | MartyriaElement
-          | TempoElement
-          | TextBoxElement;
+          NoteElement | MartyriaElement | TempoElement | TextBoxElement;
         nextElement = firstElementOnNextLine;
       }
     }

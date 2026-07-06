@@ -478,12 +478,10 @@ const generalSharpTitle = computed(() =>
     : tooltip(Fthora.GeneralSharp_Top),
 );
 
-const alignRightTooltip = computed(
-  (): AppTooltipValue => ({
-    label: t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' }),
-    shortcut: props.neumeKeyboard.getMartyriaRightAlignTooltipKeys(),
-  }),
-);
+const alignRightTooltip = computed((): AppTooltipValue => ({
+  label: t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' }),
+  shortcut: props.neumeKeyboard.getMartyriaRightAlignTooltipKeys(),
+}));
 
 function translateNeumeDisplayName(neume: Fthora | MeasureBar.MeasureBarRight) {
   if (neume === MeasureBar.MeasureBarRight) {

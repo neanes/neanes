@@ -7327,11 +7327,7 @@ function createRegularHeaderFooter(
 
 type HeaderFooterKind = 'header' | 'footer';
 type HeaderFooterVariant =
-  | 'default'
-  | 'firstPage'
-  | 'odd'
-  | 'even'
-  | 'chapterOpening';
+  'default' | 'firstPage' | 'odd' | 'even' | 'chapterOpening';
 type HeaderFooterSlot = {
   kind: HeaderFooterKind;
   variant: HeaderFooterVariant;
@@ -7510,8 +7506,7 @@ function getHeaderFooterSlotCollection(score: Score, slot: HeaderFooterSlot) {
 
 function getHeaderFooterSlotElement(score: Score, slot: HeaderFooterSlot) {
   return getHeaderFooterSlotCollection(score, slot)[0] as
-    | HeaderFooterTemplateElement
-    | undefined;
+    HeaderFooterTemplateElement | undefined;
 }
 
 function getHeaderFooterTemplateSlotElement(

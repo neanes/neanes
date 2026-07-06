@@ -266,6 +266,7 @@ import { withZoom } from '@/utils/withZoom';
 
 interface Vue3TabsChromeComponent {
   addTab: (...newTabs: Array<Tab>) => void;
+  doLayout: () => void;
   removeTab: (tabKey: string | number) => void;
 }
 
@@ -356,6 +357,9 @@ const navigableElements = [
 
 const keydownThrottleIntervalMs = 100;
 const tabsRef = useTemplateRef<Vue3TabsChromeComponent>('tabsRef');
+const workspaceTabStripRef = useTemplateRef<HTMLElement>(
+  'workspaceTabStripRef',
+);
 const searchTextRef =
   useTemplateRef<InstanceType<typeof SearchText>>('searchTextRef');
 const pageBackgroundRef = useTemplateRef<HTMLElement>('pageBackgroundRef');
@@ -374,6 +378,31 @@ const {
 } = useEditorServices();
 const { t } = useTranslation();
 const { observe: observePageBackgroundResize } = useResizeObserver();
+const { observe: observeWorkspaceTabStripResize } = useResizeObserver();
+
+let workspaceTabLayoutFrameId: number | null = null;
+let workspaceTabLayoutPending = false;
+
+function scheduleWorkspaceTabLayout() {
+  // Dockview can change the center width without a window resize, so defer the
+  // tab relayout until the pane geometry has settled.
+  if (workspaceTabLayoutPending) {
+    return;
+  }
+
+  workspaceTabLayoutPending = true;
+  void nextTick(() => {
+    if (!workspaceTabLayoutPending) {
+      return;
+    }
+
+    workspaceTabLayoutFrameId = window.requestAnimationFrame(() => {
+      workspaceTabLayoutFrameId = null;
+      workspaceTabLayoutPending = false;
+      tabsRef.value?.doLayout();
+    });
+  });
+}
 
 const dynamicTemplateRefs = new Map<string, unknown[]>();
 const dynamicTemplateRefSetters = new Map<string, (value: unknown) => void>();
@@ -1669,6 +1698,13 @@ onMounted(() => {
     });
   }
 
+  if (workspaceTabStripRef.value != null) {
+    observeWorkspaceTabStripResize(workspaceTabStripRef.value, () => {
+      scheduleWorkspaceTabLayout();
+    });
+    scheduleWorkspaceTabLayout();
+  }
+
   EventBus.$on(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$on(IpcMainChannels.CloseApplication, onCloseApplication);
   EventBus.$on(IpcRendererChannels.SetCanUndo, onSetCanUndo);
@@ -1774,6 +1810,12 @@ onMounted(() => {
 onBeforeUnmount(() => {
   // Remove the debugging variable from window
   (window as any)._editor = undefined;
+
+  if (workspaceTabLayoutFrameId != null) {
+    window.cancelAnimationFrame(workspaceTabLayoutFrameId);
+    workspaceTabLayoutFrameId = null;
+  }
+  workspaceTabLayoutPending = false;
 
   window.removeEventListener('keydown', onKeydown);
   window.removeEventListener('keyup', onKeyup);
@@ -9498,71 +9540,79 @@ function renderTabLabel(tab: Tab) {
 
         <template #center>
           <div class="page-container chrome-paper-canvas">
-            <ContextMenu>
-              <ContextMenuTrigger
-                as="div"
-                @contextmenu.capture="resetContextMenuWorkspace"
-                @contextmenu="onWorkspaceTabContextMenu"
-              >
-                <!-- @vue-ignore -->
-                <Vue3TabsChrome
-                  ref="tabsRef"
-                  v-model="selectedWorkspaceId"
-                  class="workspace-tab-container"
-                  :tabs="tabs"
-                  :gap="0"
-                  :on-close="onTabClosed"
-                  :render-label="renderTabLabel"
-                  @contextmenu="selectContextMenuWorkspace"
+            <div ref="workspaceTabStripRef" class="workspace-tab-strip-host">
+              <ContextMenu>
+                <ContextMenuTrigger
+                  as="div"
+                  @contextmenu.capture="resetContextMenuWorkspace"
+                  @contextmenu="onWorkspaceTabContextMenu"
                 >
-                  <template #after>
-                    <button
-                      class="workspace-tab-new-button"
-                      type="button"
-                      @click="onFileMenuNewScore"
-                    >
-                      +
-                    </button>
-                  </template>
-                </Vue3TabsChrome>
-              </ContextMenuTrigger>
-              <ContextMenuContent class="chrome-menu">
-                <ContextMenuItem
-                  @select="
-                    closeContextMenuWorkspaces(CloseWorkspacesDisposition.SELF)
-                  "
-                >
-                  <PhX />
-                  {{ $t(($) => $.menu.tab.close, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  @select="
-                    closeContextMenuWorkspaces(
-                      CloseWorkspacesDisposition.OTHERS,
-                    )
-                  "
-                >
-                  <PhXCircle />
-                  {{ $t(($) => $.menu.tab.closeOthers, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  @select="
-                    closeContextMenuWorkspaces(CloseWorkspacesDisposition.LEFT)
-                  "
-                >
-                  <PhArrowLineLeft />
-                  {{ $t(($) => $.menu.tab.closeToTheLeft, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  @select="
-                    closeContextMenuWorkspaces(CloseWorkspacesDisposition.RIGHT)
-                  "
-                >
-                  <PhArrowLineRight />
-                  {{ $t(($) => $.menu.tab.closeToTheRight, { ns: 'menu' }) }}
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
+                  <!-- @vue-ignore -->
+                  <Vue3TabsChrome
+                    ref="tabsRef"
+                    v-model="selectedWorkspaceId"
+                    class="workspace-tab-container"
+                    :tabs="tabs"
+                    :gap="0"
+                    :on-close="onTabClosed"
+                    :render-label="renderTabLabel"
+                    @contextmenu="selectContextMenuWorkspace"
+                  >
+                    <template #after>
+                      <button
+                        class="workspace-tab-new-button"
+                        type="button"
+                        @click="onFileMenuNewScore"
+                      >
+                        +
+                      </button>
+                    </template>
+                  </Vue3TabsChrome>
+                </ContextMenuTrigger>
+                <ContextMenuContent class="chrome-menu">
+                  <ContextMenuItem
+                    @select="
+                      closeContextMenuWorkspaces(
+                        CloseWorkspacesDisposition.SELF,
+                      )
+                    "
+                  >
+                    <PhX />
+                    {{ $t(($) => $.menu.tab.close, { ns: 'menu' }) }}
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    @select="
+                      closeContextMenuWorkspaces(
+                        CloseWorkspacesDisposition.OTHERS,
+                      )
+                    "
+                  >
+                    <PhXCircle />
+                    {{ $t(($) => $.menu.tab.closeOthers, { ns: 'menu' }) }}
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    @select="
+                      closeContextMenuWorkspaces(
+                        CloseWorkspacesDisposition.LEFT,
+                      )
+                    "
+                  >
+                    <PhArrowLineLeft />
+                    {{ $t(($) => $.menu.tab.closeToTheLeft, { ns: 'menu' }) }}
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    @select="
+                      closeContextMenuWorkspaces(
+                        CloseWorkspacesDisposition.RIGHT,
+                      )
+                    "
+                  >
+                    <PhArrowLineRight />
+                    {{ $t(($) => $.menu.tab.closeToTheRight, { ns: 'menu' }) }}
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+            </div>
             <SearchText
               v-if="searchTextPanelIsOpen"
               ref="searchTextRef"
@@ -11250,7 +11300,6 @@ function renderTabLabel(tab: Tab) {
 }
 
 :deep(.vue3-tabs-chrome .tabs-after) {
-  position: relative;
   z-index: 1;
   display: inline-flex !important;
   right: auto !important;
@@ -11259,7 +11308,18 @@ function renderTabLabel(tab: Tab) {
   overflow: visible;
 }
 
+.workspace-tab-strip-host {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
 .workspace-tab-container {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   background-color: var(--chrome-tab-strip);
 }
 

@@ -48,9 +48,9 @@ function collectParagraphStyleIdsFromElement(
     },
   };
 
-  for (const remap of planParagraphStyleReferenceRemap(element, resolvers)) {
-    void remap;
-  }
+  // The resolvers record every referenced style id as a side effect and
+  // return null, so no remaps are produced; we only need that traversal.
+  planParagraphStyleReferenceRemap(element, resolvers);
 }
 
 function collectCustomParagraphStylesFromIds(

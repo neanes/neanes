@@ -8987,7 +8987,10 @@ function onFileMenuPasteFormat() {
         applyCopiedFormat(elements.value[i], targetCommands, styleIdRemap);
       }
     }
-  } else if (selectedElement.value != null) {
+  } else if (
+    selectedElement.value != null &&
+    selectedElement.value.elementType === formatType.value
+  ) {
     applyCopiedFormat(selectedElement.value, targetCommands, styleIdRemap);
   }
 

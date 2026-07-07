@@ -92,9 +92,8 @@ function collectCustomParagraphStylesFromIds(
   return [...collectedParagraphStyles.values()];
 }
 
-export function collectClipboardParagraphStylesFromElements(
+export function collectClipboardParagraphStyleIdsFromElements(
   elements: ScoreElement[],
-  paragraphStyles: ParagraphStyle[],
 ) {
   const paragraphStyleIds = new Set<string>();
 
@@ -102,8 +101,15 @@ export function collectClipboardParagraphStylesFromElements(
     collectParagraphStyleIdsFromElement(element, paragraphStyleIds);
   }
 
+  return [...paragraphStyleIds];
+}
+
+export function collectClipboardParagraphStylesFromElements(
+  elements: ScoreElement[],
+  paragraphStyles: ParagraphStyle[],
+) {
   return collectCustomParagraphStylesFromIds(
-    paragraphStyleIds,
+    collectClipboardParagraphStyleIdsFromElements(elements),
     paragraphStyles,
   );
 }
@@ -146,6 +152,71 @@ function resolveClipboardParagraphStyleReference(
   return targetParagraphStyleIds.has(styleId) ? null : fallbackStyleId;
 }
 
+function resolveClipboardParagraphStyleId(
+  styleId: string,
+  targetParagraphStyleIds: Set<string>,
+  targetCustomStylesByName: Map<string, ParagraphStyle>,
+  clipboardStylesById: Map<string, ParagraphStyle>,
+  styleIdRemap: Map<string, string>,
+  resolvingStyleIds: Set<string>,
+  importedParagraphStyles: ParagraphStyle[],
+) {
+  const remappedStyleId = styleIdRemap.get(styleId);
+
+  if (remappedStyleId != null) {
+    return remappedStyleId;
+  }
+
+  if (targetParagraphStyleIds.has(styleId)) {
+    styleIdRemap.set(styleId, styleId);
+    return styleId;
+  }
+
+  const clipboardStyle = clipboardStylesById.get(styleId);
+
+  if (clipboardStyle == null) {
+    const fallbackStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    styleIdRemap.set(styleId, fallbackStyleId);
+    return fallbackStyleId;
+  }
+
+  const targetCustomStyle = targetCustomStylesByName.get(
+    clipboardStyle.displayName.trim(),
+  );
+
+  if (targetCustomStyle != null) {
+    styleIdRemap.set(styleId, targetCustomStyle.id);
+    return targetCustomStyle.id;
+  }
+
+  if (resolvingStyleIds.has(styleId)) {
+    const fallbackStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    styleIdRemap.set(styleId, fallbackStyleId);
+    return fallbackStyleId;
+  }
+
+  resolvingStyleIds.add(styleId);
+
+  const importedStyle = clipboardStyle.clone();
+  importedStyle.id = crypto.randomUUID();
+  importedStyle.parentStyleId = resolveClipboardImportedStyleParentId(
+    clipboardStyle.parentStyleId,
+    targetParagraphStyleIds,
+    targetCustomStylesByName,
+    clipboardStylesById,
+    styleIdRemap,
+    resolvingStyleIds,
+    importedParagraphStyles,
+  );
+
+  resolvingStyleIds.delete(styleId);
+
+  styleIdRemap.set(styleId, importedStyle.id);
+  importedParagraphStyles.push(importedStyle);
+
+  return importedStyle.id;
+}
+
 function resolveClipboardImportedStyleParentId(
   parentStyleId: string | null,
   targetParagraphStyleIds: Set<string>,
@@ -166,6 +237,7 @@ function resolveClipboardImportedStyleParentId(
   }
 
   if (targetParagraphStyleIds.has(parentStyleId)) {
+    styleIdRemap.set(parentStyleId, parentStyleId);
     return parentStyleId;
   }
 
@@ -175,8 +247,8 @@ function resolveClipboardImportedStyleParentId(
     return BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
   }
 
-  return resolveClipboardParagraphStyle(
-    parentStyle,
+  return resolveClipboardParagraphStyleId(
+    parentStyle.id,
     targetParagraphStyleIds,
     targetCustomStylesByName,
     clipboardStylesById,
@@ -186,66 +258,13 @@ function resolveClipboardImportedStyleParentId(
   );
 }
 
-function resolveClipboardParagraphStyle(
-  clipboardStyle: ParagraphStyle,
-  targetParagraphStyleIds: Set<string>,
-  targetCustomStylesByName: Map<string, ParagraphStyle>,
-  clipboardStylesById: Map<string, ParagraphStyle>,
-  styleIdRemap: Map<string, string>,
-  resolvingStyleIds: Set<string>,
-  importedParagraphStyles: ParagraphStyle[],
-) {
-  const remappedStyleId = styleIdRemap.get(clipboardStyle.id);
-
-  if (remappedStyleId != null) {
-    return remappedStyleId;
-  }
-
-  if (targetParagraphStyleIds.has(clipboardStyle.id)) {
-    styleIdRemap.set(clipboardStyle.id, clipboardStyle.id);
-    return clipboardStyle.id;
-  }
-
-  const targetCustomStyle = targetCustomStylesByName.get(
-    clipboardStyle.displayName.trim(),
-  );
-
-  if (targetCustomStyle != null) {
-    styleIdRemap.set(clipboardStyle.id, targetCustomStyle.id);
-    return targetCustomStyle.id;
-  }
-
-  if (resolvingStyleIds.has(clipboardStyle.id)) {
-    const fallbackStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
-    styleIdRemap.set(clipboardStyle.id, fallbackStyleId);
-    return fallbackStyleId;
-  }
-
-  resolvingStyleIds.add(clipboardStyle.id);
-
-  const importedStyle = clipboardStyle.clone();
-  importedStyle.id = crypto.randomUUID();
-  importedStyle.parentStyleId = resolveClipboardImportedStyleParentId(
-    clipboardStyle.parentStyleId,
-    targetParagraphStyleIds,
-    targetCustomStylesByName,
-    clipboardStylesById,
-    styleIdRemap,
-    resolvingStyleIds,
-    importedParagraphStyles,
-  );
-
-  resolvingStyleIds.delete(clipboardStyle.id);
-
-  styleIdRemap.set(clipboardStyle.id, importedStyle.id);
-  importedParagraphStyles.push(importedStyle);
-
-  return importedStyle.id;
-}
-
+// `clipboardParagraphStyles` is the collected custom style graph from the
+// clipboard, and `clipboardStyleIds` are the direct style ids actually referenced
+// by pasted content or copied formats.
 export function resolveClipboardParagraphStyles(
   clipboardParagraphStyles: ParagraphStyle[],
   targetParagraphStyles: ParagraphStyle[],
+  clipboardStyleIds: Iterable<string>,
 ): ResolvedClipboardParagraphStyles {
   const targetParagraphStyleIds = new Set(
     targetParagraphStyles.map((style) => style.id),
@@ -258,44 +277,27 @@ export function resolveClipboardParagraphStyles(
   const importedParagraphStyles: ParagraphStyle[] = [];
   const resolvingStyleIds = new Set<string>();
 
-  for (const clipboardStyle of clipboardParagraphStyles) {
-    if (styleIdRemap.has(clipboardStyle.id)) {
-      continue;
+  for (const clipboardStyleId of clipboardStyleIds) {
+    const clipboardStyle = clipboardStylesById.get(clipboardStyleId);
+
+    if (clipboardStyle != null) {
+      resolveClipboardParagraphStyleId(
+        clipboardStyle.id,
+        targetParagraphStyleIds,
+        targetCustomStylesByName,
+        clipboardStylesById,
+        styleIdRemap,
+        resolvingStyleIds,
+        importedParagraphStyles,
+      );
+    } else if (targetParagraphStyleIds.has(clipboardStyleId)) {
+      styleIdRemap.set(clipboardStyleId, clipboardStyleId);
+    } else {
+      styleIdRemap.set(
+        clipboardStyleId,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+      );
     }
-
-    if (targetParagraphStyleIds.has(clipboardStyle.id)) {
-      styleIdRemap.set(clipboardStyle.id, clipboardStyle.id);
-      continue;
-    }
-
-    if (clipboardStyle.builtIn) {
-      styleIdRemap.set(clipboardStyle.id, clipboardStyle.id);
-      continue;
-    }
-
-    const matchingTargetStyle = targetCustomStylesByName.get(
-      clipboardStyle.displayName.trim(),
-    );
-
-    if (matchingTargetStyle != null) {
-      styleIdRemap.set(clipboardStyle.id, matchingTargetStyle.id);
-      continue;
-    }
-
-    const importedStyle = clipboardStyle.clone();
-    importedStyle.id = crypto.randomUUID();
-    importedStyle.parentStyleId = resolveClipboardImportedStyleParentId(
-      clipboardStyle.parentStyleId,
-      targetParagraphStyleIds,
-      targetCustomStylesByName,
-      clipboardStylesById,
-      styleIdRemap,
-      resolvingStyleIds,
-      importedParagraphStyles,
-    );
-
-    styleIdRemap.set(clipboardStyle.id, importedStyle.id);
-    importedParagraphStyles.push(importedStyle);
   }
 
   return {

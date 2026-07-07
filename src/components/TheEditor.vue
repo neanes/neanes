@@ -228,6 +228,7 @@ import {
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import {
+  collectClipboardParagraphStyleIdsFromElements,
   collectClipboardParagraphStylesFromElements,
   collectClipboardParagraphStylesFromPasteElements,
   collectClipboardParagraphStylesFromStyleIds,
@@ -503,25 +504,30 @@ const exportDialogIsOpen = ref(false);
 const exportFormat = ref(ExportFormat.PNG);
 interface ClipboardState {
   elements: ScoreElement[];
+  paragraphStyleIds: string[];
   paragraphStyles: ParagraphStyle[];
 }
 
 interface ClipboardFormatState<T> {
   format: Partial<T> | null;
+  paragraphStyleIds: string[];
   paragraphStyles: ParagraphStyle[];
 }
 
 const clipboard = ref<ClipboardState>({
   elements: [],
+  paragraphStyleIds: [],
   paragraphStyles: [],
 });
 const formatType = ref<ElementType | null>(null);
 const textBoxFormat = ref<ClipboardFormatState<TextBoxElement>>({
   format: null,
+  paragraphStyleIds: [],
   paragraphStyles: [],
 });
 const noteFormat = ref<ClipboardFormatState<NoteElement>>({
   format: null,
+  paragraphStyleIds: [],
   paragraphStyles: [],
 });
 const richTextBoxCalculation = ref(false);
@@ -3393,9 +3399,14 @@ function addQuantitativeNeume(
 function addNeumeCombination(combo: NeumeCombination) {
   const backup: ClipboardState = {
     elements: clipboard.value.elements.slice(),
+    paragraphStyleIds: clipboard.value.paragraphStyleIds.slice(),
     paragraphStyles: clipboard.value.paragraphStyles.slice(),
   };
-  clipboard.value = { elements: combo.elements, paragraphStyles: [] };
+  clipboard.value = {
+    elements: combo.elements,
+    paragraphStyleIds: [],
+    paragraphStyles: [],
+  };
   onPasteScoreElements(false);
 
   clipboard.value = backup;
@@ -4898,8 +4909,12 @@ function flushAndCloneForClipboard(
 }
 
 function createClipboardState(elementsToCopy: ScoreElement[]): ClipboardState {
+  const elements = flushAndCloneForClipboard(elementsToCopy);
+
   return {
-    elements: flushAndCloneForClipboard(elementsToCopy),
+    elements,
+    paragraphStyleIds:
+      collectClipboardParagraphStyleIdsFromElements(elementsToCopy),
     paragraphStyles: collectClipboardParagraphStylesFromElements(
       elementsToCopy,
       score.value.paragraphStyles,
@@ -5052,6 +5067,7 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
     resolveClipboardParagraphStyles(
       clipboardParagraphStyles,
       score.value.paragraphStyles,
+      clipboard.value.paragraphStyleIds,
     );
   const newElements = cloneClipboardForPaste(includeLyrics, styleIdRemap);
   const commands: Command[] = [];
@@ -5100,6 +5116,7 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
     resolveClipboardParagraphStyles(
       clipboardParagraphStyles,
       score.value.paragraphStyles,
+      clipboard.value.paragraphStyleIds,
     );
   const pastedElements = cloneClipboardForPaste(includeLyrics, styleIdRemap);
 
@@ -7418,7 +7435,11 @@ function createRegularHeaderFooter(
 
 type HeaderFooterKind = 'header' | 'footer';
 type HeaderFooterVariant =
-  'default' | 'firstPage' | 'odd' | 'even' | 'chapterOpening';
+  | 'default'
+  | 'firstPage'
+  | 'odd'
+  | 'even'
+  | 'chapterOpening';
 type HeaderFooterSlot = {
   kind: HeaderFooterKind;
   variant: HeaderFooterVariant;
@@ -7597,7 +7618,8 @@ function getHeaderFooterSlotCollection(score: Score, slot: HeaderFooterSlot) {
 
 function getHeaderFooterSlotElement(score: Score, slot: HeaderFooterSlot) {
   return getHeaderFooterSlotCollection(score, slot)[0] as
-    HeaderFooterTemplateElement | undefined;
+    | HeaderFooterTemplateElement
+    | undefined;
 }
 
 function getHeaderFooterTemplateSlotElement(
@@ -8826,6 +8848,7 @@ function onFileMenuCopyFormat() {
     const paragraphStyleId = format.paragraphStyleId;
     textBoxFormat.value = {
       format,
+      paragraphStyleIds: paragraphStyleId == null ? [] : [paragraphStyleId],
       paragraphStyles:
         paragraphStyleId == null
           ? []
@@ -8840,6 +8863,8 @@ function onFileMenuCopyFormat() {
     const lyricsParagraphStyleId = format.lyricsParagraphStyleId;
     noteFormat.value = {
       format,
+      paragraphStyleIds:
+        lyricsParagraphStyleId == null ? [] : [lyricsParagraphStyleId],
       paragraphStyles:
         lyricsParagraphStyleId == null
           ? []
@@ -8941,7 +8966,6 @@ function onFileMenuSelectAll() {
 function onFileMenuPasteFormat() {
   const normalizedRange = getNormalizedSelectionRange();
 
-  const commands: Command[] = [];
   const clipboardFormat =
     formatType.value === ElementType.TextBox
       ? textBoxFormat.value
@@ -8957,33 +8981,40 @@ function onFileMenuPasteFormat() {
     resolveClipboardParagraphStyles(
       clipboardFormat.paragraphStyles,
       score.value.paragraphStyles,
+      clipboardFormat.paragraphStyleIds,
     );
 
-  if (importedParagraphStyles.length > 0) {
-    commands.push(
-      scoreCommandFactory.create('update-properties', {
-        target: score.value,
-        newValues: {
-          paragraphStyles: [
-            ...score.value.paragraphStyles,
-            ...importedParagraphStyles,
-          ],
-        },
-      }),
-    );
-  }
+  const targetCommands: Command[] = [];
 
   if (normalizedRange != null) {
     for (let i = normalizedRange.start; i <= normalizedRange.end; i++) {
       if (elements.value[i].elementType === formatType.value) {
-        applyCopiedFormat(elements.value[i], commands, styleIdRemap);
+        applyCopiedFormat(elements.value[i], targetCommands, styleIdRemap);
       }
     }
   } else if (selectedElement.value != null) {
-    applyCopiedFormat(selectedElement.value, commands, styleIdRemap);
+    applyCopiedFormat(selectedElement.value, targetCommands, styleIdRemap);
   }
 
-  if (commands.length > 0) {
+  if (targetCommands.length > 0) {
+    const commands: Command[] = [];
+
+    if (importedParagraphStyles.length > 0) {
+      commands.push(
+        scoreCommandFactory.create('update-properties', {
+          target: score.value,
+          newValues: {
+            paragraphStyles: [
+              ...score.value.paragraphStyles,
+              ...importedParagraphStyles,
+            ],
+          },
+        }),
+      );
+    }
+
+    commands.push(...targetCommands);
+
     runWithResizableParagraphStyleRecalc(() => {
       if (commands.length > 1) {
         commandService.value.executeAsBatch(commands);
@@ -8999,7 +9030,7 @@ function applyCopiedFormat(
   element: ScoreElement,
   commands: Command[],
   styleIdRemap: Map<string, string>,
-) {
+): boolean {
   if (
     element.elementType === ElementType.TextBox &&
     textBoxFormat.value.format != null
@@ -9017,6 +9048,8 @@ function applyCopiedFormat(
         newValues: sanitizedFormat,
       }),
     );
+
+    return true;
   } else if (
     element.elementType === ElementType.Note &&
     noteFormat.value.format != null
@@ -9033,7 +9066,11 @@ function applyCopiedFormat(
         newValues: sanitizedFormat,
       }),
     );
+
+    return true;
   }
+
+  return false;
 }
 
 function onFileMenuFind() {

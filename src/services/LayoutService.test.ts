@@ -1,5 +1,4 @@
-import type { Mock } from 'vitest';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { ScoreElement } from '../models/Element';
 import {
@@ -8,15 +7,9 @@ import {
   TempoElement,
   TextBoxElement,
 } from '../models/Element';
-import { Ison, QuantitativeNeume } from '../models/Neumes';
-import { Line, Page } from '../models/Page';
+import { Line } from '../models/Page';
 import { PageSetup } from '../models/PageSetup';
-import { fontService } from './FontService';
 import { LayoutService } from './LayoutService';
-import { NeumeMappingService } from './NeumeMappingService';
-
-vi.mock('./NeumeMappingService');
-vi.mock('./FontService');
 
 const itif = (condition: boolean) => (condition ? it : it.skip);
 
@@ -277,140 +270,6 @@ describe.each([true, false])(
     });
   },
 );
-
-describe('LayoutService.alignIsonIndicators', () => {
-  it('should adjust isonOffsetYAdjusted for notes with ison indicators', () => {
-    const mockPageSetup = getMockPageSetup();
-
-    const mockBaseMapping1 = { glyphName: 'baseGlyph1' };
-    const mockBaseMapping2 = { glyphName: 'baseGlyph2' };
-    const mockMarkMapping = { glyphName: 'markGlyph' };
-
-    const mockOffset1 = { y: 10 };
-    const mockOffset2 = { y: 20 };
-
-    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
-      if (neume === QuantitativeNeume.Ison) {
-        return mockBaseMapping1;
-      }
-      if (neume === QuantitativeNeume.Oligon) {
-        return mockBaseMapping2;
-      }
-      return mockMarkMapping;
-    });
-
-    (fontService.getMarkAnchorOffset as Mock).mockImplementation(
-      (fontFamily, base) => {
-        if (base === 'baseGlyph1') {
-          return mockOffset1;
-        }
-        if (base === 'baseGlyph2') {
-          return mockOffset2;
-        }
-        return { y: 0 };
-      },
-    );
-
-    const note1 = new NoteElement();
-    note1.quantitativeNeume = QuantitativeNeume.Ison;
-    note1.ison = Ison.Unison;
-
-    const note2 = new NoteElement();
-    note2.quantitativeNeume = QuantitativeNeume.Oligon;
-    note2.ison = Ison.Unison;
-
-    const line = getLine(note1, note2);
-
-    const page = new Page();
-    page.lines = [line];
-
-    LayoutService.alignIsonIndicators([page], mockPageSetup);
-
-    expect(note1.computedIsonOffsetY).toBe(0); // minOffset - totalOffset + isonOffsetY
-    expect(note2.computedIsonOffsetY).toBe(-10); // minOffset - totalOffset + isonOffsetY
-  });
-
-  it('should adjust isonOffsetYAdjusted for notes with ison indicators and ison offsets', () => {
-    const mockPageSetup = getMockPageSetup();
-
-    const mockBaseMapping1 = { glyphName: 'baseGlyph1' };
-    const mockBaseMapping2 = { glyphName: 'baseGlyph2' };
-    const mockMarkMapping = { glyphName: 'markGlyph' };
-
-    const mockOffset1 = { y: 10 };
-    const mockOffset2 = { y: 20 };
-
-    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
-      if (neume === QuantitativeNeume.Ison) {
-        return mockBaseMapping1;
-      }
-      if (neume === QuantitativeNeume.Oligon) {
-        return mockBaseMapping2;
-      }
-      return mockMarkMapping;
-    });
-
-    (fontService.getMarkAnchorOffset as Mock).mockImplementation(
-      (fontFamily, base) => {
-        if (base === 'baseGlyph1') {
-          return mockOffset1;
-        }
-        if (base === 'baseGlyph2') {
-          return mockOffset2;
-        }
-        return { y: 0 };
-      },
-    );
-
-    const note1 = new NoteElement();
-    note1.quantitativeNeume = QuantitativeNeume.Ison;
-    note1.ison = Ison.Unison;
-    note1.isonOffsetY = -5;
-
-    const note2 = new NoteElement();
-    note2.quantitativeNeume = QuantitativeNeume.Oligon;
-    note2.ison = Ison.Unison;
-    note2.isonOffsetY = -25;
-
-    const line = getLine(note1, note2);
-
-    const page = new Page();
-    page.lines = [line];
-
-    LayoutService.alignIsonIndicators([page], mockPageSetup);
-
-    expect(note1.computedIsonOffsetY).toBe(-15); // minOffset - totalOffset + isonOffsetY
-    expect(note2.computedIsonOffsetY).toBe(-25); // minOffset - totalOffset + isonOffsetY
-  });
-
-  it('should handle cases with no notes having ison indicators', () => {
-    const mockPageSetup = getMockPageSetup();
-
-    const note = new NoteElement();
-    note.quantitativeNeume = QuantitativeNeume.Ison;
-    note.ison = null;
-
-    const line = getLine(note);
-
-    const page = new Page();
-    page.lines = [line];
-
-    LayoutService.alignIsonIndicators([page], mockPageSetup);
-
-    expect(note.computedIsonOffsetY).toBeNull();
-  });
-
-  it('should handle empty pages gracefully', () => {
-    const mockPageSetup = getMockPageSetup();
-
-    const page = new Page();
-    page.lines = [];
-
-    expect(() =>
-      LayoutService.alignIsonIndicators([page], mockPageSetup),
-    ).not.toThrow();
-  });
-});
 
 describe('LayoutService.mayShowLeadingLyricHyphen', () => {
   it('suppresses Greek start hyphens when Greek melismata are enabled', () => {

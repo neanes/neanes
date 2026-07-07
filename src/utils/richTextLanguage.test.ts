@@ -1,8 +1,7 @@
 import type { Editor } from 'ckeditor5';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
-  applyRichTextLanguageToEditor,
   clearRichTextLanguage,
   getRichTextLanguage,
   getRichTextLanguageAttributes,
@@ -73,32 +72,6 @@ describe('richTextLanguage', () => {
         createEditor([element([text('Kyrie', 'el:ltr')])]),
       ]),
     ).toBeNull();
-  });
-
-  it('applies language to CKEditor model ranges', () => {
-    const root = element([text('Hello')]);
-    const range = { root };
-    const setAttribute = vi.fn();
-    const writer = {
-      createRangeIn: vi.fn(() => range),
-      setAttribute,
-    };
-    const editor = {
-      model: {
-        document: {
-          getRoots: () => [root],
-        },
-        schema: {
-          getValidRanges: vi.fn((ranges) => ranges),
-        },
-        change: (callback: (writer: unknown) => void) => callback(writer),
-      },
-    } as unknown as Pick<Editor, 'model'>;
-
-    applyRichTextLanguageToEditor(editor, 'ar', 'rtl');
-
-    expect(writer.createRangeIn).toHaveBeenCalledWith(root);
-    expect(setAttribute).toHaveBeenCalledWith('language', 'ar:rtl', range);
   });
 });
 

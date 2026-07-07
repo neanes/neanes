@@ -9,6 +9,11 @@
     "setAsDefault": "Set as Default",
     "useSystemDefault": "Use System Default"
   },
+  "neumeCombinations": {
+    "deleteTitle": "Delete combo?",
+    "deleteDescription": "Delete this combo from the list?",
+    "delete": "Delete"
+  },
   "export": {
     "root": "Export",
     "description": "Choose an export format and configure its options.",

@@ -1,10 +1,18 @@
 <template>
-  <div class="neume-selector-panel">
-    <div class="row">
-      <template v-for="(neume, index) in ascendingNeumes">
-        <template v-if="neume === QuantitativeNeume.VareiaDotted">
+  <div
+    ref="panelElement"
+    class="neume-selector-panel"
+    :style="neumeSelectorStyle"
+  >
+    <template v-for="(row, rowIndex) in neumeRows" :key="rowIndex">
+      <div
+        v-for="(neume, columnIndex) in row"
+        :key="`${rowIndex}-${columnIndex}-${neume ?? 'empty'}`"
+        class="neume-cell"
+      >
+        <template v-if="neume != null">
           <div
-            :key="`ascendingNeumes-${index}`"
+            v-if="neume === QuantitativeNeume.VareiaDotted"
             class="menu-container"
             @mousedown="openVareiaDottedMenu"
             @mouseleave="selectedVareiaDotted = null"
@@ -16,9 +24,18 @@
               :tooltip="tooltip(neume)"
             />
 
-            <div v-if="showVareiaDottedMenu" class="menu chrome-menu">
+            <div
+              v-if="showVareiaDottedMenu"
+              class="menu chrome-menu"
+              :class="{
+                down: shouldOpenMenuDown(
+                  rowIndex,
+                  vareiaDottedMenuItems.length,
+                ),
+              }"
+            >
               <div
-                v-for="menuItem in vareiaDottedMenuItems"
+                v-for="menuItem in getVareiaDottedMenuItems(rowIndex)"
                 :key="menuItem"
                 class="menu-item chrome-menu-item"
                 @mouseenter="selectedVareiaDotted = menuItem"
@@ -32,370 +49,397 @@
               </div>
             </div>
           </div>
-        </template>
-        <template v-else>
-          <Neume
-            :key="`ascendingNeumes-${index}`"
-            class="neume"
-            :neume="neume"
-            :font-family="pageSetup.neumeDefaultFontFamily"
-            :tooltip="tooltip(neume)"
-            @click="$emit('select-quantitative-neume', neume)"
-          />
-        </template>
-      </template>
-    </div>
-    <div class="row">
-      <Neume
-        v-for="(neume, index) in ascendingNeumesWithPetasti"
-        :key="`ascendingNeumesWithPetasti-${index}`"
-        class="neume"
-        :neume="neume"
-        :font-family="pageSetup.neumeDefaultFontFamily"
-        :tooltip="tooltip(neume)"
-        @click="$emit('select-quantitative-neume', neume)"
-      />
-    </div>
-    <div class="row">
-      <Neume
-        v-for="(neume, index) in descendingNeumes"
-        :key="`descendingNeumes-${index}`"
-        class="neume"
-        :neume="neume"
-        :font-family="pageSetup.neumeDefaultFontFamily"
-        :tooltip="tooltip(neume)"
-        @click="$emit('select-quantitative-neume', neume)"
-      />
-    </div>
-    <div class="row">
-      <template v-for="(neume, index) in combinationNeumes">
-        <template
-          v-if="neume === QuantitativeNeume.OligonPlusHyporoePlusKentemata"
-        >
-          <div
-            :key="`combinationNeumes-${index}`"
-            class="menu-container"
-            @mousedown="openHyporoeKentemataMenu"
-            @mouseleave="selectedSecondaryGorgon = null"
+          <template
+            v-else-if="
+              neume === QuantitativeNeume.OligonPlusHyporoePlusKentemata
+            "
           >
-            <Neume
-              class="neume"
-              :neume="QuantitativeNeume.OligonPlusHyporoePlusKentemata"
-              :font-family="pageSetup.neumeDefaultFontFamily"
-              :tooltip="tooltip(neume)"
-            />
-
-            <div v-if="showHyporoeKentemataMenu" class="menu chrome-menu">
-              <div
-                v-for="menuItem in secondaryGorgonMenuItems"
-                :key="menuItem.gorgon as string"
-                class="menu-item chrome-menu-item"
-                @mouseenter="selectedSecondaryGorgon = menuItem"
-              >
-                <Neume
-                  class="neume"
-                  :neume="QuantitativeNeume.OligonPlusHyporoePlusKentemata"
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
-                <Neume
-                  v-if="menuItem.gorgon != null"
-                  class="neume"
-                  :neume="menuItem.gorgon"
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
-              </div>
-            </div>
-          </div>
-        </template>
-        <template
-          v-else-if="neume === QuantitativeNeume.OligonPlusIsonPlusKentemata"
-        >
-          <div
-            :key="`combinationNeumes-${index}`"
-            class="menu-container"
-            @mousedown="openIsonKentemataMenu"
-            @mouseleave="selectedSecondaryGorgon = null"
-          >
-            <Neume
-              class="neume"
-              :neume="QuantitativeNeume.OligonPlusIsonPlusKentemata"
-              :font-family="pageSetup.neumeDefaultFontFamily"
-              :tooltip="tooltip(neume)"
-            />
-
-            <div v-if="showIsonKentemataMenu" class="menu down chrome-menu">
-              <div
-                v-for="menuItem in secondaryGorgonMenuItemsDown"
-                :key="menuItem.gorgon as string"
-                class="menu-item chrome-menu-item"
-                @mouseenter="selectedSecondaryGorgon = menuItem"
-              >
-                <Neume
-                  class="neume"
-                  :neume="QuantitativeNeume.OligonPlusIsonPlusKentemata"
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
-                <Neume
-                  v-if="menuItem.gorgon != null"
-                  class="neume"
-                  :neume="menuItem.gorgon"
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
-              </div>
-            </div>
-          </div>
-        </template>
-        <template
-          v-else-if="
-            neume === QuantitativeNeume.OligonPlusApostrophosPlusKentemata
-          "
-        >
-          <div
-            :key="`combinationNeumes-${index}`"
-            class="menu-container"
-            @mousedown="openApostrophosKentemataMenu"
-            @mouseleave="selectedSecondaryGorgon = null"
-          >
-            <Neume
-              class="neume"
-              :neume="QuantitativeNeume.OligonPlusApostrophosPlusKentemata"
-              :font-family="pageSetup.neumeDefaultFontFamily"
-              :tooltip="tooltip(neume)"
-            />
-
-            <div v-if="showApostrophosKentemataMenu" class="menu chrome-menu">
-              <div
-                v-for="menuItem in secondaryGorgonMenuItems"
-                :key="menuItem.gorgon as string"
-                class="menu-item chrome-menu-item"
-                @mouseenter="selectedSecondaryGorgon = menuItem"
-              >
-                <Neume
-                  class="neume"
-                  :neume="QuantitativeNeume.OligonPlusApostrophosPlusKentemata"
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
-                <Neume
-                  v-if="menuItem.gorgon != null"
-                  class="neume"
-                  :neume="menuItem.gorgon"
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
-              </div>
-            </div>
-          </div>
-        </template>
-        <template
-          v-else-if="
-            neume === QuantitativeNeume.OligonPlusElaphronPlusKentemata
-          "
-        >
-          <div
-            :key="`combinationNeumes-${index}`"
-            class="menu-container"
-            @mousedown="openElaphronKentemataMenu"
-            @mouseleave="selectedSecondaryGorgon = null"
-          >
-            <Neume
-              class="neume"
-              :neume="QuantitativeNeume.OligonPlusElaphronPlusKentemata"
-              :font-family="pageSetup.neumeDefaultFontFamily"
-              :tooltip="tooltip(neume)"
-            />
-
-            <div v-if="showElaphronKentemataMenu" class="menu chrome-menu">
-              <div
-                v-for="menuItem in secondaryGorgonMenuItems"
-                :key="menuItem.gorgon as string"
-                class="menu-item chrome-menu-item"
-                @mouseenter="selectedSecondaryGorgon = menuItem"
-              >
-                <Neume
-                  class="neume"
-                  :neume="QuantitativeNeume.OligonPlusElaphronPlusKentemata"
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
-                <Neume
-                  v-if="menuItem.gorgon != null"
-                  class="neume"
-                  :neume="menuItem.gorgon"
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
-              </div>
-            </div>
-          </div>
-        </template>
-        <template
-          v-else-if="
-            neume ===
-            QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
-          "
-        >
-          <div
-            :key="`combinationNeumes-${index}`"
-            class="menu-container"
-            @mousedown="openElaphronApostrophosKentemataMenu"
-            @mouseleave="selectedSecondaryGorgon = null"
-          >
-            <Neume
-              class="neume"
-              :neume="
-                QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
-              "
-              :font-family="pageSetup.neumeDefaultFontFamily"
-              :tooltip="tooltip(neume)"
-            />
-
             <div
-              v-if="showElaphronApostrophosKentemataMenu"
-              class="menu chrome-menu"
+              class="menu-container"
+              @mousedown="openHyporoeKentemataMenu"
+              @mouseleave="selectedSecondaryGorgon = null"
             >
+              <Neume
+                class="neume"
+                :neume="QuantitativeNeume.OligonPlusHyporoePlusKentemata"
+                :font-family="pageSetup.neumeDefaultFontFamily"
+                :tooltip="tooltip(neume)"
+              />
+
               <div
-                v-for="menuItem in secondaryGorgonMenuItems"
-                :key="menuItem.gorgon as string"
-                class="menu-item chrome-menu-item"
-                @mouseenter="selectedSecondaryGorgon = menuItem"
+                v-if="showHyporoeKentemataMenu"
+                class="menu chrome-menu"
+                :class="{
+                  down: shouldOpenMenuDown(
+                    rowIndex,
+                    secondaryGorgonMenuItems.length,
+                  ),
+                }"
               >
-                <Neume
-                  class="neume"
-                  :neume="
-                    QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
-                  "
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
-                <Neume
-                  v-if="menuItem.gorgon != null"
-                  class="neume"
-                  :neume="menuItem.gorgon"
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
+                <div
+                  v-for="menuItem in getSecondaryGorgonMenuItems(rowIndex)"
+                  :key="menuItem.gorgon as string"
+                  class="menu-item chrome-menu-item"
+                  @mouseenter="selectedSecondaryGorgon = menuItem"
+                >
+                  <Neume
+                    class="neume"
+                    :neume="QuantitativeNeume.OligonPlusHyporoePlusKentemata"
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                  <Neume
+                    v-if="menuItem.gorgon != null"
+                    class="neume"
+                    :neume="menuItem.gorgon"
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </template>
-        <template
-          v-else-if="neume === QuantitativeNeume.OligonPlusHamiliPlusKentemata"
-        >
-          <div
-            :key="`combinationNeumes-${index}`"
-            class="menu-container"
-            @mousedown="openHamiliKentemataMenu"
-            @mouseleave="selectedSecondaryGorgon = null"
+          </template>
+          <template
+            v-else-if="neume === QuantitativeNeume.OligonPlusIsonPlusKentemata"
           >
-            <Neume
-              class="neume"
-              :neume="QuantitativeNeume.OligonPlusHamiliPlusKentemata"
-              :font-family="pageSetup.neumeDefaultFontFamily"
-              :tooltip="tooltip(neume)"
-            />
-
-            <div v-if="showHamiliKentemataMenu" class="menu chrome-menu">
-              <div
-                v-for="menuItem in secondaryGorgonMenuItems"
-                :key="menuItem.gorgon as string"
-                class="menu-item chrome-menu-item"
-                @mouseenter="selectedSecondaryGorgon = menuItem"
-              >
-                <Neume
-                  class="neume"
-                  :neume="QuantitativeNeume.OligonPlusHamiliPlusKentemata"
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
-                <Neume
-                  v-if="menuItem.gorgon != null"
-                  class="neume"
-                  :neume="menuItem.gorgon"
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
-              </div>
-            </div>
-          </div>
-        </template>
-        <template
-          v-else-if="
-            neume === QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
-          "
-        >
-          <div
-            :key="`combinationNeumes-${index}`"
-            class="menu-container"
-            @mousedown="openRunningElaphronKentemataMenu"
-            @mouseleave="selectedSecondaryGorgon = null"
-          >
-            <Neume
-              class="neume"
-              :neume="QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata"
-              :font-family="pageSetup.neumeDefaultFontFamily"
-              :tooltip="tooltip(neume)"
-            />
-
             <div
-              v-if="showRunningElaphronKentemataMenu"
-              class="menu chrome-menu"
+              class="menu-container"
+              @mousedown="openIsonKentemataMenu"
+              @mouseleave="selectedSecondaryGorgon = null"
             >
+              <Neume
+                class="neume"
+                :neume="QuantitativeNeume.OligonPlusIsonPlusKentemata"
+                :font-family="pageSetup.neumeDefaultFontFamily"
+                :tooltip="tooltip(neume)"
+              />
+
               <div
-                v-for="menuItem in secondaryGorgonMenuItems"
-                :key="menuItem.gorgon as string"
-                class="menu-item chrome-menu-item"
-                @mouseenter="selectedSecondaryGorgon = menuItem"
+                v-if="showIsonKentemataMenu"
+                class="menu chrome-menu"
+                :class="{
+                  down: shouldOpenMenuDown(
+                    rowIndex,
+                    secondaryGorgonMenuItems.length,
+                  ),
+                }"
               >
-                <Neume
-                  class="neume"
-                  :neume="
-                    QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
-                  "
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
-                <Neume
-                  v-if="menuItem.gorgon != null"
-                  class="neume"
-                  :neume="menuItem.gorgon"
-                  :font-family="pageSetup.neumeDefaultFontFamily"
-                  :tooltip="tooltip(neume)"
-                />
+                <div
+                  v-for="menuItem in getSecondaryGorgonMenuItems(rowIndex)"
+                  :key="menuItem.gorgon as string"
+                  class="menu-item chrome-menu-item"
+                  @mouseenter="selectedSecondaryGorgon = menuItem"
+                >
+                  <Neume
+                    class="neume"
+                    :neume="QuantitativeNeume.OligonPlusIsonPlusKentemata"
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                  <Neume
+                    v-if="menuItem.gorgon != null"
+                    class="neume"
+                    :neume="menuItem.gorgon"
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          </template>
+          <template
+            v-else-if="
+              neume === QuantitativeNeume.OligonPlusApostrophosPlusKentemata
+            "
+          >
+            <div
+              class="menu-container"
+              @mousedown="openApostrophosKentemataMenu"
+              @mouseleave="selectedSecondaryGorgon = null"
+            >
+              <Neume
+                class="neume"
+                :neume="QuantitativeNeume.OligonPlusApostrophosPlusKentemata"
+                :font-family="pageSetup.neumeDefaultFontFamily"
+                :tooltip="tooltip(neume)"
+              />
+
+              <div
+                v-if="showApostrophosKentemataMenu"
+                class="menu chrome-menu"
+                :class="{
+                  down: shouldOpenMenuDown(
+                    rowIndex,
+                    secondaryGorgonMenuItems.length,
+                  ),
+                }"
+              >
+                <div
+                  v-for="menuItem in getSecondaryGorgonMenuItems(rowIndex)"
+                  :key="menuItem.gorgon as string"
+                  class="menu-item chrome-menu-item"
+                  @mouseenter="selectedSecondaryGorgon = menuItem"
+                >
+                  <Neume
+                    class="neume"
+                    :neume="
+                      QuantitativeNeume.OligonPlusApostrophosPlusKentemata
+                    "
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                  <Neume
+                    v-if="menuItem.gorgon != null"
+                    class="neume"
+                    :neume="menuItem.gorgon"
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                </div>
+              </div>
+            </div>
+          </template>
+          <template
+            v-else-if="
+              neume === QuantitativeNeume.OligonPlusElaphronPlusKentemata
+            "
+          >
+            <div
+              class="menu-container"
+              @mousedown="openElaphronKentemataMenu"
+              @mouseleave="selectedSecondaryGorgon = null"
+            >
+              <Neume
+                class="neume"
+                :neume="QuantitativeNeume.OligonPlusElaphronPlusKentemata"
+                :font-family="pageSetup.neumeDefaultFontFamily"
+                :tooltip="tooltip(neume)"
+              />
+
+              <div
+                v-if="showElaphronKentemataMenu"
+                class="menu chrome-menu"
+                :class="{
+                  down: shouldOpenMenuDown(
+                    rowIndex,
+                    secondaryGorgonMenuItems.length,
+                  ),
+                }"
+              >
+                <div
+                  v-for="menuItem in getSecondaryGorgonMenuItems(rowIndex)"
+                  :key="menuItem.gorgon as string"
+                  class="menu-item chrome-menu-item"
+                  @mouseenter="selectedSecondaryGorgon = menuItem"
+                >
+                  <Neume
+                    class="neume"
+                    :neume="QuantitativeNeume.OligonPlusElaphronPlusKentemata"
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                  <Neume
+                    v-if="menuItem.gorgon != null"
+                    class="neume"
+                    :neume="menuItem.gorgon"
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                </div>
+              </div>
+            </div>
+          </template>
+          <template
+            v-else-if="
+              neume ===
+              QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
+            "
+          >
+            <div
+              class="menu-container"
+              @mousedown="openElaphronApostrophosKentemataMenu"
+              @mouseleave="selectedSecondaryGorgon = null"
+            >
+              <Neume
+                class="neume"
+                :neume="
+                  QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
+                "
+                :font-family="pageSetup.neumeDefaultFontFamily"
+                :tooltip="tooltip(neume)"
+              />
+
+              <div
+                v-if="showElaphronApostrophosKentemataMenu"
+                class="menu chrome-menu"
+                :class="{
+                  down: shouldOpenMenuDown(
+                    rowIndex,
+                    secondaryGorgonMenuItems.length,
+                  ),
+                }"
+              >
+                <div
+                  v-for="menuItem in getSecondaryGorgonMenuItems(rowIndex)"
+                  :key="menuItem.gorgon as string"
+                  class="menu-item chrome-menu-item"
+                  @mouseenter="selectedSecondaryGorgon = menuItem"
+                >
+                  <Neume
+                    class="neume"
+                    :neume="
+                      QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
+                    "
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                  <Neume
+                    v-if="menuItem.gorgon != null"
+                    class="neume"
+                    :neume="menuItem.gorgon"
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                </div>
+              </div>
+            </div>
+          </template>
+          <template
+            v-else-if="
+              neume === QuantitativeNeume.OligonPlusHamiliPlusKentemata
+            "
+          >
+            <div
+              class="menu-container"
+              @mousedown="openHamiliKentemataMenu"
+              @mouseleave="selectedSecondaryGorgon = null"
+            >
+              <Neume
+                class="neume"
+                :neume="QuantitativeNeume.OligonPlusHamiliPlusKentemata"
+                :font-family="pageSetup.neumeDefaultFontFamily"
+                :tooltip="tooltip(neume)"
+              />
+
+              <div
+                v-if="showHamiliKentemataMenu"
+                class="menu chrome-menu"
+                :class="{
+                  down: shouldOpenMenuDown(
+                    rowIndex,
+                    secondaryGorgonMenuItems.length,
+                  ),
+                }"
+              >
+                <div
+                  v-for="menuItem in getSecondaryGorgonMenuItems(rowIndex)"
+                  :key="menuItem.gorgon as string"
+                  class="menu-item chrome-menu-item"
+                  @mouseenter="selectedSecondaryGorgon = menuItem"
+                >
+                  <Neume
+                    class="neume"
+                    :neume="QuantitativeNeume.OligonPlusHamiliPlusKentemata"
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                  <Neume
+                    v-if="menuItem.gorgon != null"
+                    class="neume"
+                    :neume="menuItem.gorgon"
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                </div>
+              </div>
+            </div>
+          </template>
+          <template
+            v-else-if="
+              neume === QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
+            "
+          >
+            <div
+              class="menu-container"
+              @mousedown="openRunningElaphronKentemataMenu"
+              @mouseleave="selectedSecondaryGorgon = null"
+            >
+              <Neume
+                class="neume"
+                :neume="
+                  QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
+                "
+                :font-family="pageSetup.neumeDefaultFontFamily"
+                :tooltip="tooltip(neume)"
+              />
+
+              <div
+                v-if="showRunningElaphronKentemataMenu"
+                class="menu chrome-menu"
+                :class="{
+                  down: shouldOpenMenuDown(
+                    rowIndex,
+                    secondaryGorgonMenuItems.length,
+                  ),
+                }"
+              >
+                <div
+                  v-for="menuItem in getSecondaryGorgonMenuItems(rowIndex)"
+                  :key="menuItem.gorgon as string"
+                  class="menu-item chrome-menu-item"
+                  @mouseenter="selectedSecondaryGorgon = menuItem"
+                >
+                  <Neume
+                    class="neume"
+                    :neume="
+                      QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
+                    "
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                  <Neume
+                    v-if="menuItem.gorgon != null"
+                    class="neume"
+                    :neume="menuItem.gorgon"
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                    :tooltip="tooltip(neume)"
+                  />
+                </div>
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <Neume
+              class="neume"
+              :neume="neume"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :tooltip="tooltip(neume)"
+              @click="$emit('select-quantitative-neume', neume)"
+            />
+          </template>
         </template>
-        <template v-else>
-          <Neume
-            :key="`combinationNeumes-${index}`"
-            class="neume"
-            :neume="neume"
-            :font-family="pageSetup.neumeDefaultFontFamily"
-            :tooltip="tooltip(neume)"
-            @click="$emit('select-quantitative-neume', neume)"
-          />
-        </template>
-      </template>
-    </div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
-import { ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 import type { AppTooltipValue } from '@/components/AppTooltip.types';
 import Neume from '@/components/NeumeGlyph.vue';
+import { useResizeObserver } from '@/composables/useResizeObserver';
 import { getQuantitativeNeumeLabelSelector } from '@/models/NeumeI18nMappings';
 import { GorgonNeume, QuantitativeNeume } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
+import { fontService } from '@/services/FontService';
 import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import {
+  NeumeMappingService,
+  type SbmuflGlyphName,
+} from '@/services/NeumeMappingService';
 
 interface SecondaryGorgonMenuItem {
   gorgon: GorgonNeume | null;
@@ -423,7 +467,7 @@ const ascendingNeumes: QuantitativeNeume[] = [
   QuantitativeNeume.OligonKentimaTripleYpsili,
 ];
 
-const ascendingNeumesWithPetasti: QuantitativeNeume[] = [
+const ascendingPetastiNeumes: QuantitativeNeume[] = [
   QuantitativeNeume.PetastiWithIson,
   QuantitativeNeume.Petasti,
   QuantitativeNeume.PetastiPlusOligon,
@@ -439,7 +483,9 @@ const ascendingNeumesWithPetasti: QuantitativeNeume[] = [
   QuantitativeNeume.PetastiTripleYpsili,
   QuantitativeNeume.PetastiKentimataTripleYpsili,
   QuantitativeNeume.PetastiKentimaTripleYpsili,
+];
 
+const descendingPetastiNeumes: QuantitativeNeume[] = [
   QuantitativeNeume.PetastiPlusApostrophos,
   QuantitativeNeume.PetastiPlusElaphron,
   QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
@@ -515,6 +561,8 @@ const vareiaDottedMenuItems: QuantitativeNeume[] = [
   QuantitativeNeume.VareiaDotted,
 ];
 
+const vareiaDottedMenuItemsDown = vareiaDottedMenuItems.slice().reverse();
+
 const props = defineProps({
   pageSetup: {
     type: Object as PropType<PageSetup>,
@@ -533,6 +581,7 @@ const emit = defineEmits<{
   ];
 }>();
 const { t } = useTranslation();
+const { observe: observePanelResize } = useResizeObserver();
 
 const showHyporoeKentemataMenu = ref(false);
 const showIsonKentemataMenu = ref(false);
@@ -544,6 +593,238 @@ const showHamiliKentemataMenu = ref(false);
 const showVareiaDottedMenu = ref(false);
 const selectedSecondaryGorgon = ref<SecondaryGorgonMenuItem | null>(null);
 const selectedVareiaDotted = ref<QuantitativeNeume | null>(null);
+const panelElement = ref<HTMLElement | null>(null);
+const currentColumnCount = ref(5);
+
+const sourceMatrixColumns: QuantitativeNeume[][] = [
+  ascendingNeumes,
+  ascendingPetastiNeumes,
+  descendingPetastiNeumes,
+  descendingNeumes,
+  combinationNeumes,
+];
+
+const maxColumnCount = sourceMatrixColumns.reduce(
+  (sum, range) => sum + range.length,
+  0,
+);
+
+const neumeSelectorStyle = computed(() => ({
+  '--neume-column-count': normalizeColumnCount(
+    currentColumnCount.value,
+  ).toString(),
+}));
+const neumeRows = computed(() => getNeumeRows(currentColumnCount.value));
+
+onMounted(() => {
+  refreshColumnLayout();
+});
+
+watch(
+  () => props.pageSetup.neumeDefaultFontFamily,
+  () => {
+    updateCurrentColumnCount();
+  },
+);
+
+function refreshColumnLayout() {
+  const panel = panelElement.value;
+
+  if (!panel) {
+    return;
+  }
+
+  observePanelResize(panel, () => {
+    updateColumnCount(panel);
+  });
+  updateColumnCount(panel);
+}
+
+function updateCurrentColumnCount() {
+  const panel = panelElement.value;
+
+  if (!panel) {
+    return;
+  }
+
+  updateColumnCount(panel);
+}
+
+function updateColumnCount(panel: HTMLElement) {
+  panel.scrollLeft = 0;
+  currentColumnCount.value = getColumnCount(panel.clientWidth);
+}
+
+function getNeumeRows(
+  targetColumnCount: number,
+): (QuantitativeNeume | null)[][] {
+  const columnCount = normalizeColumnCount(targetColumnCount);
+
+  return transposeColumnsToRows(fitSourceColumns(columnCount));
+}
+
+function fitSourceColumns(targetColumnCount: number) {
+  const bands: QuantitativeNeume[][][] = sourceMatrixColumns.map((column) => [
+    column,
+  ]);
+
+  while (bands.length > targetColumnCount) {
+    let mergeIndex = 0;
+    let mergeLength =
+      getSourceBandNeumeCount(bands[0]) + getSourceBandNeumeCount(bands[1]);
+
+    for (let index = 1; index < bands.length - 1; index++) {
+      const length =
+        getSourceBandNeumeCount(bands[index]) +
+        getSourceBandNeumeCount(bands[index + 1]);
+
+      if (length < mergeLength) {
+        mergeIndex = index;
+        mergeLength = length;
+      }
+    }
+
+    bands.splice(mergeIndex, 2, [
+      ...bands[mergeIndex],
+      ...bands[mergeIndex + 1],
+    ]);
+  }
+
+  // A merged column stacks its source groups top to bottom, in order.
+  const columns = bands.map((band) => band.flat());
+
+  while (columns.length < targetColumnCount) {
+    let splitIndex = -1;
+
+    for (let index = 0; index < columns.length; index++) {
+      if (columns[index].length < 2) {
+        continue;
+      }
+
+      if (
+        splitIndex < 0 ||
+        columns[index].length > columns[splitIndex].length
+      ) {
+        splitIndex = index;
+      }
+    }
+
+    if (splitIndex < 0) {
+      break;
+    }
+
+    const column = columns[splitIndex];
+    const splitPoint = Math.ceil(column.length / 2);
+
+    columns.splice(
+      splitIndex,
+      1,
+      column.slice(0, splitPoint),
+      column.slice(splitPoint),
+    );
+  }
+
+  return columns;
+}
+
+function getSourceBandNeumeCount(band: QuantitativeNeume[][]) {
+  return band.reduce((sum, range) => sum + range.length, 0);
+}
+
+function transposeColumnsToRows(
+  columns: QuantitativeNeume[][],
+): (QuantitativeNeume | null)[][] {
+  const rowCount = Math.max(0, ...columns.map((column) => column.length));
+
+  return Array.from({ length: rowCount }, (_, rowIndex) =>
+    columns.map((column) =>
+      rowIndex < column.length ? column[rowIndex] : null,
+    ),
+  );
+}
+
+function normalizeColumnCount(columnCount: number) {
+  return Math.max(1, Math.min(maxColumnCount, Math.floor(columnCount)));
+}
+
+function getColumnCount(width: number) {
+  const minColumnWidth = getMinColumnWidth();
+
+  if (minColumnWidth <= 0) {
+    return 1;
+  }
+
+  let columnCount = Math.max(
+    1,
+    Math.min(maxColumnCount, Math.floor(width / minColumnWidth)),
+  );
+
+  while (columnCount > 1 && getLayoutWidth(columnCount) > width) {
+    columnCount--;
+  }
+
+  return columnCount;
+}
+
+function getLayoutWidth(columnCount: number) {
+  return fitSourceColumns(columnCount).reduce(
+    (sum, column) => sum + getColumnWidth(column),
+    0,
+  );
+}
+
+function getColumnWidth(column: QuantitativeNeume[]) {
+  return Math.max(getMinColumnWidth(), ...column.map(getNeumeWidth));
+}
+
+function getNeumeWidth(neume: QuantitativeNeume) {
+  const mapping = NeumeMappingService.getMapping(neume);
+  const advanceWidth =
+    getAdvanceWidth(
+      props.pageSetup.neumeDefaultFontFamily,
+      mapping.glyphName,
+    ) ??
+    getAdvanceWidth('Neanes', mapping.glyphName) ??
+    1;
+
+  return Math.max(getMinColumnWidth(), advanceWidth * getNeumeFontSize());
+}
+
+function getAdvanceWidth(fontFamily: string, glyphName: SbmuflGlyphName) {
+  try {
+    return fontService.getAdvanceWidth(fontFamily, glyphName);
+  } catch {
+    return undefined;
+  }
+}
+
+function getMinColumnWidth() {
+  return (
+    Number.parseFloat(getComputedStyle(document.documentElement).fontSize) * 2.5
+  );
+}
+
+function getNeumeFontSize() {
+  return (
+    Number.parseFloat(getComputedStyle(document.documentElement).fontSize) * 1.6
+  );
+}
+
+function shouldOpenMenuDown(rowIndex: number, menuItemCount: number) {
+  return rowIndex + 1 < menuItemCount;
+}
+
+function getSecondaryGorgonMenuItems(rowIndex: number) {
+  return shouldOpenMenuDown(rowIndex, secondaryGorgonMenuItems.length)
+    ? secondaryGorgonMenuItemsDown
+    : secondaryGorgonMenuItems;
+}
+
+function getVareiaDottedMenuItems(rowIndex: number) {
+  return shouldOpenMenuDown(rowIndex, vareiaDottedMenuItems.length)
+    ? vareiaDottedMenuItemsDown
+    : vareiaDottedMenuItems;
+}
 
 function openHyporoeKentemataMenu() {
   showHyporoeKentemataMenu.value = true;
@@ -711,8 +992,16 @@ function tooltip(neume: QuantitativeNeume): AppTooltipValue {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .neume-selector-panel {
-  display: flex;
+  display: grid;
+  grid-auto-rows: var(--neume-height);
+  grid-template-columns: repeat(
+    var(--neume-column-count),
+    minmax(var(--neume-height), max-content)
+  );
+  align-content: start;
+  justify-content: start;
   flex: 1;
+  min-width: 0;
   min-height: 0;
   overflow: auto;
   color: var(--chrome-menu-foreground);
@@ -720,9 +1009,11 @@ function tooltip(neume: QuantitativeNeume): AppTooltipValue {
   --neume-height: 2.5rem;
 }
 
-.row {
+.neume-cell {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  min-width: var(--neume-height);
+  height: var(--neume-height);
 }
 
 .neume-selector-panel :deep(.neume) {
@@ -735,7 +1026,20 @@ function tooltip(neume: QuantitativeNeume): AppTooltipValue {
 
   min-width: var(--neume-height);
   height: var(--neume-height);
-  width: 100%;
+}
+
+.neume-cell > :deep(.neume) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+}
+
+.menu-container > :deep(.neume) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
 }
 
 .neume-selector-panel :deep(.neume:hover) {
@@ -749,15 +1053,17 @@ function tooltip(neume: QuantitativeNeume): AppTooltipValue {
 .menu-container {
   display: flex;
   position: relative;
-  height: var(--neume-height);
-  width: 100%;
+  min-width: var(--neume-height);
+  width: max-content;
+  height: 100%;
 }
 
 .menu {
   position: absolute;
   z-index: 40;
   bottom: 0;
-  width: 100%;
+  min-width: 100%;
+  width: max-content;
 }
 
 .menu.down {
@@ -767,7 +1073,9 @@ function tooltip(neume: QuantitativeNeume): AppTooltipValue {
 
 .menu-item {
   height: var(--neume-height);
-  width: 100%;
+  min-width: 100%;
+  width: max-content;
   padding: 3px 0;
+  white-space: nowrap;
 }
 </style>

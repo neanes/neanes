@@ -594,7 +594,7 @@ const showVareiaDottedMenu = ref(false);
 const selectedSecondaryGorgon = ref<SecondaryGorgonMenuItem | null>(null);
 const selectedVareiaDotted = ref<QuantitativeNeume | null>(null);
 const panelElement = ref<HTMLElement | null>(null);
-const columnCount = ref(5);
+const currentColumnCount = ref(5);
 
 const sourceMatrixColumns: QuantitativeNeume[][] = [
   ascendingNeumes,
@@ -610,9 +610,11 @@ const maxColumnCount = sourceMatrixColumns.reduce(
 );
 
 const neumeSelectorStyle = computed(() => ({
-  '--neume-column-count': normalizeColumnCount(columnCount.value).toString(),
+  '--neume-column-count': normalizeColumnCount(
+    currentColumnCount.value,
+  ).toString(),
 }));
-const neumeRows = computed(() => getNeumeRows(columnCount.value));
+const neumeRows = computed(() => getNeumeRows(currentColumnCount.value));
 
 onMounted(() => {
   refreshColumnLayout();
@@ -650,7 +652,7 @@ function updateCurrentColumnCount() {
 
 function updateColumnCount(panel: HTMLElement) {
   panel.scrollLeft = 0;
-  columnCount.value = getColumnCount(panel.clientWidth);
+  currentColumnCount.value = getColumnCount(panel.clientWidth);
 }
 
 function getNeumeRows(

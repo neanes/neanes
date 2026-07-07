@@ -9033,7 +9033,7 @@ function applyCopiedFormat(
     element.elementType === ElementType.TextBox &&
     textBoxFormat.value.format != null
   ) {
-    const sanitizedFormat = rewriteClipboardTextBoxFormatParagraphStyleId(
+    const rewrittenFormat = rewriteClipboardTextBoxFormatParagraphStyleId(
       textBoxFormat.value.format,
       score.value.paragraphStyles,
       styleIdRemap,
@@ -9043,14 +9043,14 @@ function applyCopiedFormat(
     commands.push(
       textBoxCommandFactory.create('update-properties', {
         target: element as TextBoxElement,
-        newValues: sanitizedFormat,
+        newValues: rewrittenFormat,
       }),
     );
   } else if (
     element.elementType === ElementType.Note &&
     noteFormat.value.format != null
   ) {
-    const sanitizedFormat = rewriteClipboardNoteFormatParagraphStyleId(
+    const rewrittenFormat = rewriteClipboardNoteFormatParagraphStyleId(
       noteFormat.value.format,
       score.value.paragraphStyles,
       styleIdRemap,
@@ -9059,7 +9059,7 @@ function applyCopiedFormat(
     commands.push(
       noteElementCommandFactory.create('update-properties', {
         target: element as NoteElement,
-        newValues: sanitizedFormat,
+        newValues: rewrittenFormat,
       }),
     );
   }

@@ -65,7 +65,7 @@ Vue 3 (`script setup` / Composition API), Tailwind CSS v4, `shadcn-vue` componen
 
 - **Do not modify `src/components/ui/`.** These are vendored/generated `shadcn-vue` components, regenerated upstream; local edits get clobbered and break the vendoring contract. When a UI component lacks something a consumer needs, add it at the call site, not in the component. This is enforced strictly.
 - **Switch vs Checkbox.** Use `Switch` (`@/components/ui/switch`) for a boolean toggle that takes effect immediately. Use `Checkbox` (`@/components/ui/checkbox`) when the choice stays pending until the user clicks a confirm action (Export / Update / OK / Save).
-- **Tests: no spies or mocks.** Pure unit tests are welcome, but do not write tests that use spies or mocks.
+- **Tests: no spies, mocks, stubs, fakes, or DOM emulation.** Pure unit tests are welcome. Do not use spies or mocks; do not add `jsdom`, DOM stubs, handwritten stubs, or fakes to make tests pass.
 - **No pointless defensive null checks.** Check for null when a value can genuinely be null; do not sprinkle defensive null checks everywhere. Tighten these before committing.
 - **Plain ASCII in content that is not user-visible.** Prefer plain ASCII in code comments and internal documentation; avoid Unicode punctuation and symbols (e.g., em-dashes, smart quotes, arrows).
 - **Imports.** `eslint` enforces `simple-import-sort` ordering and `consistent-type-imports` (use `import type` for type-only imports); `@` aliases to `src/`. Run `npm run lint:fix` rather than hand-sorting.

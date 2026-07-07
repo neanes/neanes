@@ -9028,7 +9028,7 @@ function applyCopiedFormat(
   element: ScoreElement,
   commands: Command[],
   styleIdRemap: Map<string, string>,
-): boolean {
+) {
   if (
     element.elementType === ElementType.TextBox &&
     textBoxFormat.value.format != null
@@ -9046,8 +9046,6 @@ function applyCopiedFormat(
         newValues: sanitizedFormat,
       }),
     );
-
-    return true;
   } else if (
     element.elementType === ElementType.Note &&
     noteFormat.value.format != null
@@ -9064,11 +9062,7 @@ function applyCopiedFormat(
         newValues: sanitizedFormat,
       }),
     );
-
-    return true;
   }
-
-  return false;
 }
 
 function onFileMenuFind() {

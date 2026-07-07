@@ -189,10 +189,10 @@ function resolveClipboardParagraphStyleId(
     return targetCustomStyle.id;
   }
 
+  // Reaching a style that is still being resolved means its parent chain
+  // cycles back to it; break the cycle by falling back to the default.
   if (resolvingStyleIds.has(styleId)) {
-    const fallbackStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
-    styleIdRemap.set(styleId, fallbackStyleId);
-    return fallbackStyleId;
+    return BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
   }
 
   resolvingStyleIds.add(styleId);
@@ -230,25 +230,10 @@ function resolveClipboardImportedStyleParentId(
     return BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
   }
 
-  const remappedStyleId = styleIdRemap.get(parentStyleId);
-
-  if (remappedStyleId != null) {
-    return remappedStyleId;
-  }
-
-  if (targetParagraphStyleIds.has(parentStyleId)) {
-    styleIdRemap.set(parentStyleId, parentStyleId);
-    return parentStyleId;
-  }
-
-  const parentStyle = clipboardStylesById.get(parentStyleId);
-
-  if (parentStyle == null || resolvingStyleIds.has(parentStyleId)) {
-    return BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
-  }
-
+  // The parent is resolved like any other reference: reused by id or name,
+  // imported, or broken to the default if it cycles back.
   return resolveClipboardParagraphStyleId(
-    parentStyle.id,
+    parentStyleId,
     targetParagraphStyleIds,
     targetCustomStylesByName,
     clipboardStylesById,

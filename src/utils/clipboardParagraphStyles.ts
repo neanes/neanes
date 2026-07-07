@@ -278,26 +278,15 @@ export function resolveClipboardParagraphStyles(
   const resolvingStyleIds = new Set<string>();
 
   for (const clipboardStyleId of clipboardStyleIds) {
-    const clipboardStyle = clipboardStylesById.get(clipboardStyleId);
-
-    if (clipboardStyle != null) {
-      resolveClipboardParagraphStyleId(
-        clipboardStyle.id,
-        targetParagraphStyleIds,
-        targetCustomStylesByName,
-        clipboardStylesById,
-        styleIdRemap,
-        resolvingStyleIds,
-        importedParagraphStyles,
-      );
-    } else if (targetParagraphStyleIds.has(clipboardStyleId)) {
-      styleIdRemap.set(clipboardStyleId, clipboardStyleId);
-    } else {
-      styleIdRemap.set(
-        clipboardStyleId,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-      );
-    }
+    resolveClipboardParagraphStyleId(
+      clipboardStyleId,
+      targetParagraphStyleIds,
+      targetCustomStylesByName,
+      clipboardStylesById,
+      styleIdRemap,
+      resolvingStyleIds,
+      importedParagraphStyles,
+    );
   }
 
   return {

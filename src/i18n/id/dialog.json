@@ -183,6 +183,8 @@
     "alternateLineDescription": "Gaya default untuk semua baris alternatif dalam partitur.",
     "dropCaps": "Huruf Awal Besar",
     "color": "Warna",
+    "outlineColor": "Warna garis luar",
+    "sameAsText": "Sama seperti teks",
     "size": "Ukuran",
     "lineHeight": "Tinggi Baris",
     "lineSpan": "Baris untuk Turun",

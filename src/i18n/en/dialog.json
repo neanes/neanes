@@ -183,6 +183,8 @@
     "alternateLineDescription": "The default styling for all alternate lines in the score.",
     "dropCaps": "Drop Caps",
     "color": "Color",
+    "outlineColor": "Outline Color",
+    "sameAsText": "Same as text",
     "size": "Size",
     "lineHeight": "Line Height",
     "lineSpan": "Lines to Drop",

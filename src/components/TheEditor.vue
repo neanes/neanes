@@ -2104,6 +2104,7 @@ function getLyricStyle(element: NoteElement) {
     textDecoration: resolvedLyricsStyle.textDecoration ?? undefined,
     color: resolvedLyricsStyle.color,
     webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
+    webkitTextStrokeColor: resolvedLyricsStyle.strokeColor,
     lineHeight: withZoom(element.lyricsFontHeight),
     left: element.alignLeft
       ? withZoom(Math.min(0, element.lyricsHorizontalOffset))
@@ -2132,6 +2133,7 @@ function getLeadingLyricHyphenStyle(element: NoteElement) {
     textDecoration: resolvedLyricsStyle.textDecoration ?? undefined,
     color: resolvedLyricsStyle.color,
     webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
+    webkitTextStrokeColor: resolvedLyricsStyle.strokeColor,
     lineHeight: withZoom(element.lyricsFontHeight),
   } as CSSProperties;
 }

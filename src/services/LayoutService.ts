@@ -1414,6 +1414,7 @@ export class LayoutService {
           dropCapElement.computedColor = resolvedDropCapStyle.color;
 
           dropCapElement.computedStrokeWidth = resolvedDropCapStyle.strokeWidth;
+          dropCapElement.computedStrokeColor = resolvedDropCapStyle.strokeColor;
 
           dropCapElement.computedFontWeight = resolvedDropCapFont.cssFontWeight;
           dropCapElement.computedFontStyle = resolvedDropCapFont.cssFontStyle;
@@ -4866,6 +4867,7 @@ export class LayoutService {
     textBoxElement.computedColor = resolvedParagraphStyle.color;
 
     textBoxElement.computedStrokeWidth = resolvedParagraphStyle.strokeWidth;
+    textBoxElement.computedStrokeColor = resolvedParagraphStyle.strokeColor;
     textBoxElement.computedUnderline =
       resolvedParagraphStyle.textDecoration === 'underline';
 
@@ -4981,6 +4983,7 @@ export class LayoutService {
       textbox.computedFontStylePrevious = textbox.computedFontStyle;
       textbox.computedColorPrevious = textbox.computedColor;
       textbox.computedStrokeWidthPrevious = textbox.computedStrokeWidth;
+      textbox.computedStrokeColorPrevious = textbox.computedStrokeColor;
       textbox.computedLineHeightPrevious = textbox.computedLineHeight;
       textbox.computedUnderlinePrevious = textbox.computedUnderline;
       textbox.computedAlignmentPrevious = textbox.computedAlignment;
@@ -5004,6 +5007,7 @@ export class LayoutService {
       dropCap.computedFontStylePrevious = dropCap.computedFontStyle;
       dropCap.computedColorPrevious = dropCap.computedColor;
       dropCap.computedStrokeWidthPrevious = dropCap.computedStrokeWidth;
+      dropCap.computedStrokeColorPrevious = dropCap.computedStrokeColor;
       dropCap.computedLineHeightPrevious = dropCap.computedLineHeight;
     }
   }
@@ -5064,6 +5068,7 @@ export class LayoutService {
         textbox.computedFontStylePrevious !== textbox.computedFontStyle ||
         textbox.computedColorPrevious !== textbox.computedColor ||
         textbox.computedStrokeWidthPrevious !== textbox.computedStrokeWidth ||
+        textbox.computedStrokeColorPrevious !== textbox.computedStrokeColor ||
         textbox.computedLineHeightPrevious !== textbox.computedLineHeight ||
         textbox.computedUnderlinePrevious !== textbox.computedUnderline ||
         textbox.computedAlignmentPrevious !== textbox.computedAlignment;
@@ -5103,6 +5108,7 @@ export class LayoutService {
         dropCap.computedFontStylePrevious !== dropCap.computedFontStyle ||
         dropCap.computedColorPrevious !== dropCap.computedColor ||
         dropCap.computedStrokeWidthPrevious !== dropCap.computedStrokeWidth ||
+        dropCap.computedStrokeColorPrevious !== dropCap.computedStrokeColor ||
         dropCap.computedLineHeightPrevious !== dropCap.computedLineHeight;
     }
   }

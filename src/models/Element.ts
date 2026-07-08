@@ -115,6 +115,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontFamily: string | null = null;
   public lyricsFontSize: number | null = null;
   public lyricsStrokeWidth: number | null = null;
+  public lyricsStrokeColor: string | null = null;
   public lyricsParagraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics;
   public lyricsFontStyle: string | null = null;
   public lyricsTextDecoration: string | null = null;
@@ -215,6 +216,7 @@ export class NoteElement extends ScoreElement {
             lyricsFontStyle: this.lyricsFontStyle,
             lyricsTextDecoration: this.lyricsTextDecoration,
             lyricsStrokeWidth: this.lyricsStrokeWidth,
+            lyricsStrokeColor: this.lyricsStrokeColor,
           }
         : null),
       quantitativeNeume: this.quantitativeNeume,
@@ -290,6 +292,7 @@ export class NoteElement extends ScoreElement {
       lyricsFontFamily: this.lyricsFontFamily,
       lyricsFontSize: this.lyricsFontSize,
       lyricsStrokeWidth: this.lyricsStrokeWidth,
+      lyricsStrokeColor: this.lyricsStrokeColor,
       lyricsParagraphStyleId: this.lyricsParagraphStyleId,
       lyricsFontStyle: this.lyricsFontStyle,
       lyricsTextDecoration: this.lyricsTextDecoration,
@@ -303,6 +306,7 @@ export class NoteElement extends ScoreElement {
       fontStyle: this.lyricsFontStyle ?? undefined,
       color: this.lyricsColor ?? undefined,
       strokeWidth: this.lyricsStrokeWidth ?? undefined,
+      strokeColor: this.lyricsStrokeColor ?? undefined,
       textDecoration:
         this.lyricsTextDecoration != null
           ? this.lyricsTextDecoration === 'underline'
@@ -858,6 +862,7 @@ export class TextBoxElement extends ScoreElement {
   public fontSize: number | null = null;
   public fontFamily: string | null = null;
   public strokeWidth: number | null = null;
+  public strokeColor: string | null = null;
   public multipanel: boolean = false;
   public inline: boolean = false;
   public fontStyle: string | null = null;
@@ -879,6 +884,7 @@ export class TextBoxElement extends ScoreElement {
   public computedFontStyle: string = 'normal';
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
+  public computedStrokeColor: string = 'currentcolor';
   public computedLineHeight: number | null = null;
   public computedUnderline: boolean = false;
   public computedAlignment: TextBoxAlignment = TextBoxAlignment.Left;
@@ -892,6 +898,7 @@ export class TextBoxElement extends ScoreElement {
   public computedFontStylePrevious: string = 'normal';
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
+  public computedStrokeColorPrevious: string = 'currentcolor';
   public computedLineHeightPrevious: number | null = null;
   public computedUnderlinePrevious: boolean = false;
   public computedAlignmentPrevious: TextBoxAlignment = TextBoxAlignment.Left;
@@ -921,6 +928,7 @@ export class TextBoxElement extends ScoreElement {
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
       strokeWidth: this.strokeWidth,
+      strokeColor: this.strokeColor,
       customWidth: this.customWidth,
       customHeight: this.customHeight,
       fillWidth: this.fillWidth,
@@ -949,6 +957,7 @@ export class TextBoxElement extends ScoreElement {
       fontStyle: this.fontStyle ?? undefined,
       color: this.color ?? undefined,
       strokeWidth: this.strokeWidth ?? undefined,
+      strokeColor: this.strokeColor ?? undefined,
       lineHeight: this.lineHeight,
       alignment: this.alignment ?? undefined,
       textDecoration:
@@ -1239,6 +1248,7 @@ export class DropCapElement extends ScoreElement {
   public fontStyle: string | null = null;
   public lineHeight: number | null | undefined = undefined;
   public strokeWidth: number | null = null;
+  public strokeColor: string | null = null;
   public color: string | null = null;
   public customWidth: number | null = null;
   public lineSpan: number = 1;
@@ -1250,6 +1260,7 @@ export class DropCapElement extends ScoreElement {
   public computedFontStyle: string = 'normal';
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
+  public computedStrokeColor: string = 'currentcolor';
   public computedLineHeight: number | null = null;
   public computedLineSpan: number = 1;
   public contentWidth: number = 0;
@@ -1261,6 +1272,7 @@ export class DropCapElement extends ScoreElement {
   public computedFontStylePrevious: string = 'normal';
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
+  public computedStrokeColorPrevious: string = 'currentcolor';
   public computedLineHeightPrevious: number | null = null;
 
   public get computedFont() {
@@ -1285,6 +1297,7 @@ export class DropCapElement extends ScoreElement {
       fontStyle: this.fontStyle,
       lineHeight: this.lineHeight,
       strokeWidth: this.strokeWidth,
+      strokeColor: this.strokeColor,
       customWidth: this.customWidth,
       lineSpan: this.lineSpan,
     } as Partial<DropCapElement>;
@@ -1297,6 +1310,7 @@ export class DropCapElement extends ScoreElement {
       fontStyle: this.fontStyle ?? undefined,
       color: this.color ?? undefined,
       strokeWidth: this.strokeWidth ?? undefined,
+      strokeColor: this.strokeColor ?? undefined,
       lineHeight: this.lineHeight,
     };
   }

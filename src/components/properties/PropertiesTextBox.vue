@@ -215,6 +215,38 @@
       </Field>
 
       <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
+          <ColorPicker
+            :model-value="strokeColorPickerValue"
+            :disabled="strokeColorSameAsText"
+            @update:model-value="
+              $emit('update', {
+                strokeColor: $event,
+              } as Partial<TextBoxElement>)
+            "
+          />
+          <div class="flex items-center gap-2">
+            <Switch
+              :model-value="strokeColorSameAsText"
+              @update:model-value="onStrokeColorSameAsTextChanged"
+            />
+            <span class="text-sm text-muted-foreground">
+              {{ $t(($) => $.dialog.pageSetup.sameAsText, { ns: 'dialog' }) }}
+            </span>
+          </div>
+          <ParagraphStyleClearButton
+            :disabled="element.strokeColor == null"
+            @clear="
+              $emit('update', { strokeColor: null } as Partial<TextBoxElement>)
+            "
+          />
+        </div>
+      </Field>
+
+      <Field orientation="horizontal">
         <FieldLabel for="properties-text-box-gap-above">{{
           $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
         }}</FieldLabel>
@@ -564,6 +596,14 @@ const {
 );
 
 const currentAlignment = computed(() => resolvedParagraphStyle.value.alignment);
+const strokeColorPickerValue = computed(() =>
+  resolvedParagraphStyle.value.strokeColor === 'currentcolor'
+    ? resolvedParagraphStyle.value.color
+    : resolvedParagraphStyle.value.strokeColor,
+);
+const strokeColorSameAsText = computed(
+  () => resolvedParagraphStyle.value.strokeColor === 'currentcolor',
+);
 
 const textBoxFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
@@ -596,6 +636,21 @@ function onFontFamilyChanged(fontFamily: string) {
   } as Partial<TextBoxElement>);
 }
 
+function onStrokeColorSameAsTextChanged(value: boolean | 'indeterminate') {
+  if (value === true) {
+    emit('update', {
+      strokeColor: 'currentcolor',
+    } as Partial<TextBoxElement>);
+    return;
+  }
+
+  if (resolvedParagraphStyle.value.strokeColor === 'currentcolor') {
+    emit('update', {
+      strokeColor: resolvedParagraphStyle.value.color,
+    } as Partial<TextBoxElement>);
+  }
+}
+
 function clearParagraphStyleFormatting() {
   emit('update', {
     alignment: null,
@@ -606,6 +661,7 @@ function clearParagraphStyleFormatting() {
     lineHeight: undefined,
     underline: null,
     strokeWidth: null,
+    strokeColor: null,
   } as Partial<TextBoxElement>);
 }
 

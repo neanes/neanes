@@ -322,6 +322,41 @@
 
               <ParagraphStyleOverrideRow
                 :label="
+                  $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
+                "
+                :active="hasOverride('strokeColor')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('strokeColor', $event)"
+              >
+                <div class="ml-auto flex shrink-0 items-center gap-2">
+                  <ColorPicker
+                    :model-value="strokeColorPickerValue"
+                    :disabled="
+                      isOverrideDisabled('strokeColor') || strokeColorSameAsText
+                    "
+                    @update:model-value="
+                      updateSelectedStyleOverride('strokeColor', $event)
+                    "
+                  />
+                  <div class="flex items-center gap-2">
+                    <Switch
+                      :model-value="strokeColorSameAsText"
+                      :disabled="isOverrideDisabled('strokeColor')"
+                      @update:model-value="updateStrokeColorSameAsText"
+                    />
+                    <span class="text-sm text-muted-foreground">
+                      {{
+                        $t(($) => $.dialog.pageSetup.sameAsText, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </span>
+                  </div>
+                </div>
+              </ParagraphStyleOverrideRow>
+
+              <ParagraphStyleOverrideRow
+                :label="
                   $t(($) => $.dialog.pageSetup.lineHeight, { ns: 'dialog' })
                 "
                 label-for="paragraph-styles-dialog-line-height"
@@ -411,6 +446,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
@@ -505,6 +541,14 @@ const { fontStyleOptions, remapStyleForFamily } = useFontStyleControls(
 
 const textDecorationCheckboxValue = computed(
   () => resolvedStyle.value.textDecoration === 'underline',
+);
+const strokeColorPickerValue = computed(() =>
+  resolvedStyle.value.strokeColor === 'currentcolor'
+    ? resolvedStyle.value.color
+    : resolvedStyle.value.strokeColor,
+);
+const strokeColorSameAsText = computed(
+  () => resolvedStyle.value.strokeColor === 'currentcolor',
 );
 
 const canSubmit = computed(() => {
@@ -665,6 +709,17 @@ function updateTextDecorationOverride(value: boolean | 'indeterminate') {
     'textDecoration',
     value === true ? 'underline' : null,
   );
+}
+
+function updateStrokeColorSameAsText(value: boolean | 'indeterminate') {
+  if (value === true) {
+    updateSelectedStyleOverride('strokeColor', 'currentcolor');
+    return;
+  }
+
+  if (resolvedStyle.value.strokeColor === 'currentcolor') {
+    updateSelectedStyleOverride('strokeColor', resolvedStyle.value.color);
+  }
 }
 
 function clearSelectedStyleFormatting() {

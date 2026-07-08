@@ -87,6 +87,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontFamily: string | undefined = undefined;
   public lyricsFontSize: number | undefined = undefined;
   public lyricsStrokeWidth: number | undefined = undefined;
+  public lyricsStrokeColor: string | undefined = undefined;
   public lyricsFontSubfamily: string | undefined = undefined;
   public lyricsTextDecoration: string | undefined = undefined;
   public lyricsParagraphStyleId: string | undefined = undefined;
@@ -206,6 +207,7 @@ export class TextBoxElement extends ScoreElement {
   public fontSize: number | undefined = undefined;
   public fontFamily: string | undefined = undefined;
   public strokeWidth: number | undefined = undefined;
+  public strokeColor: string | undefined = undefined;
   public multipanel: boolean | undefined = undefined;
   public inline: boolean | undefined = undefined;
   public fontSubfamily: string | undefined = undefined;
@@ -320,6 +322,7 @@ export class DropCapElement extends ScoreElement {
   public fontSubfamily: string | undefined = undefined;
   public lineHeight: number | null | undefined = undefined;
   public strokeWidth: number | undefined = undefined;
+  public strokeColor: string | undefined = undefined;
   public color: string | undefined = undefined;
   public customWidth: number | undefined = undefined;
   public lineSpan: number = 1;

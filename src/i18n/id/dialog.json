@@ -9,6 +9,12 @@
     "setAsDefault": "Jadikan Default",
     "useSystemDefault": "Gunakan Default Sistem"
   },
+  "neumeCombinations": {
+    "deleteTitle": "Hapus kombinasi?",
+    "deleteDescription": "Hapus kombinasi ini dari daftar?",
+    "delete": "Hapus",
+    "dragHandle": "Seret untuk mengurutkan"
+  },
   "export": {
     "root": "Ekspor",
     "description": "Pilih format ekspor dan konfigurasikan opsinya.",

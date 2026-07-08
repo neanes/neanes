@@ -5,6 +5,7 @@ import {
   PhAlignRight,
   PhArrowLineLeft,
   PhArrowLineRight,
+  PhBookmarkSimple,
   PhClipboardText,
   PhCopy,
   PhCrosshair,
@@ -96,6 +97,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import WorkspaceDockLayout from '@/components/WorkspaceDockLayout.vue';
 import { useEditorServices } from '@/composables/useEditorServices';
+import { useNeumeCombinations } from '@/composables/useNeumeCombinations';
 import { useResizeObserver } from '@/composables/useResizeObserver';
 import {
   clearActiveEditor,
@@ -381,6 +383,7 @@ const {
   playbackService,
   textSearchService,
 } = useEditorServices();
+const { addUserNeumeCombination } = useNeumeCombinations();
 const { t } = useTranslation();
 const { observe: observePageBackgroundResize } = useResizeObserver();
 const { observe: observeWorkspaceTabStripResize } = useResizeObserver();
@@ -9495,6 +9498,19 @@ function getContextMenuSelectedNonEmptyElements() {
   return element.elementType !== ElementType.Empty ? [element] : [];
 }
 
+function getContextMenuSelectedNoteElements() {
+  const selectedElements = getContextMenuSelectedNonEmptyElements();
+
+  if (
+    selectedElements.length < 2 ||
+    !selectedElements.every(isSyllableElement)
+  ) {
+    return [];
+  }
+
+  return selectedElements;
+}
+
 function getContextMenuTargetForHomogeneousSelection<T extends ScoreElement>(
   predicate: (element: ScoreElement) => element is T,
 ) {
@@ -9518,6 +9534,10 @@ const contextMenuHasElementProperties = computed(
     contextMenuImageBox.value != null,
 );
 
+const canSaveContextMenuSelectionAsCombo = computed(
+  () => getContextMenuSelectedNoteElements().length >= 2,
+);
+
 function setContextMenuUseDefaultStyle(
   element: ModeKeyElement,
   value: boolean,
@@ -9536,6 +9556,16 @@ function openContextMenuPositioning(element: NoteElement) {
   // selected element), then open it as the Properties pane button does.
   selectedElement.value = element;
   openSyllablePositioningDialog();
+}
+
+function saveContextMenuSelectionAsCombo() {
+  const selectedElements = getContextMenuSelectedNoteElements();
+
+  if (selectedElements.length < 2) {
+    return;
+  }
+
+  addUserNeumeCombination(selectedElements);
 }
 
 function openContextMenuChangeKey(element: ModeKeyElement) {
@@ -10835,6 +10865,13 @@ function renderTabLabel(tab: Tab) {
                   </ContextMenuCheckboxItem>
                 </template>
                 <ContextMenuSeparator />
+                <ContextMenuItem
+                  v-if="canSaveContextMenuSelectionAsCombo"
+                  @select="saveContextMenuSelectionAsCombo"
+                >
+                  <PhBookmarkSimple />
+                  {{ $t(($) => $.menu.edit.saveAsCombo, { ns: 'menu' }) }}
+                </ContextMenuItem>
                 <ContextMenuItem
                   v-if="contextMenuNote != null"
                   @select="openContextMenuPositioning(contextMenuNote)"

@@ -9,6 +9,12 @@
     "setAsDefault": "Setează ca implicit",
     "useSystemDefault": "Folosește implicitul sistemului"
   },
+  "neumeCombinations": {
+    "deleteTitle": "Ștergeți combinația?",
+    "deleteDescription": "Ștergeți această combinație din listă?",
+    "delete": "Șterge",
+    "dragHandle": "Trageți pentru reordonare"
+  },
   "export": {
     "root": "Exportă",
     "description": "Alegeți un format de export și configurați opțiunile acestuia.",

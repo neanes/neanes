@@ -9,6 +9,13 @@ import {
   serializeNeumeCombinationNote,
 } from '@/models/NeumeCommonCombinations';
 
+import {
+  loadNeumeCombinationOrderIds,
+  reorderNeumeCombinationOrderIds,
+  resolveNeumeCombinationOrderIds,
+  saveNeumeCombinationOrderIds,
+} from './neumeCombinationOrder';
+
 const USER_NEUME_COMBINATIONS_STORAGE_KEY = 'neanes.userNeumeCombinations.v1';
 
 interface StoredUserNeumeCombination {
@@ -93,15 +100,30 @@ function saveUserNeumeCombinations(combinations: NeumeCombination[]) {
 const userNeumeCombinations = ref<NeumeCombination[]>(
   loadUserNeumeCombinations() as NeumeCombination[],
 );
+const userNeumeCombinationOrder = ref<string[]>(loadNeumeCombinationOrderIds());
 
 export function useNeumeCombinations() {
-  const allNeumeCombinations = computed(
-    () =>
-      [
-        ...builtInNeumeCombinations,
-        ...userNeumeCombinations.value,
-      ] as NeumeCombination[],
+  const orderedNeumeCombinationIds = computed(() =>
+    resolveNeumeCombinationOrderIds({
+      builtInIds: builtInNeumeCombinations.map((combination) => combination.id),
+      userIds: userNeumeCombinations.value.map((combination) => combination.id),
+      storedOrder: userNeumeCombinationOrder.value,
+    }),
   );
+
+  const allNeumeCombinations = computed(() => {
+    const combinationsById = new Map(
+      [...builtInNeumeCombinations, ...userNeumeCombinations.value].map(
+        (combination) => [combination.id, combination] as const,
+      ),
+    );
+
+    return orderedNeumeCombinationIds.value
+      .map((id) => combinationsById.get(id))
+      .filter(
+        (combination): combination is NeumeCombination => combination != null,
+      );
+  });
 
   function addUserNeumeCombination(elements: NoteElement[]) {
     const noteElements = elements.filter(isNoteElement);
@@ -129,14 +151,39 @@ export function useNeumeCombinations() {
     );
   }
 
+  function reorderNeumeCombination(
+    draggedId: string,
+    targetId: string,
+    placement: 'before' | 'after',
+  ) {
+    const currentOrder = orderedNeumeCombinationIds.value;
+    const nextOrder = reorderNeumeCombinationOrderIds(
+      currentOrder,
+      draggedId,
+      targetId,
+      placement,
+    );
+
+    if (nextOrder === currentOrder) {
+      return;
+    }
+
+    userNeumeCombinationOrder.value = nextOrder;
+    saveNeumeCombinationOrderIds(userNeumeCombinationOrder.value);
+  }
+
   function deleteUserNeumeCombination(id: string) {
     userNeumeCombinations.value = userNeumeCombinations.value.filter(
       (combination) => combination.id !== id,
+    );
+    userNeumeCombinationOrder.value = userNeumeCombinationOrder.value.filter(
+      (combinationId) => combinationId !== id,
     );
 
     saveUserNeumeCombinations(
       userNeumeCombinations.value as NeumeCombination[],
     );
+    saveNeumeCombinationOrderIds(userNeumeCombinationOrder.value);
   }
 
   return {
@@ -144,6 +191,7 @@ export function useNeumeCombinations() {
     addUserNeumeCombination,
     builtInNeumeCombinations,
     deleteUserNeumeCombination,
+    reorderNeumeCombination,
     userNeumeCombinations,
   };
 }

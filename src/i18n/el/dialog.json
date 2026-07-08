@@ -12,7 +12,8 @@
   "neumeCombinations": {
     "deleteTitle": "Διαγραφή συνδυασμού;",
     "deleteDescription": "Διαγραφή αυτού του συνδυασμού από τη λίστα;",
-    "delete": "Διαγραφή"
+    "delete": "Διαγραφή",
+    "dragHandle": "Σύρετε για αναδιάταξη"
   },
   "export": {
     "root": "Εξαγωγή",

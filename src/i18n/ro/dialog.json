@@ -12,7 +12,8 @@
   "neumeCombinations": {
     "deleteTitle": "Ștergeți combinația?",
     "deleteDescription": "Ștergeți această combinație din listă?",
-    "delete": "Șterge"
+    "delete": "Șterge",
+    "dragHandle": "Trageți pentru reordonare"
   },
   "export": {
     "root": "Exportă",

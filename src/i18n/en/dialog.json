@@ -12,7 +12,8 @@
   "neumeCombinations": {
     "deleteTitle": "Delete combo?",
     "deleteDescription": "Delete this combo from the list?",
-    "delete": "Delete"
+    "delete": "Delete",
+    "dragHandle": "Drag to reorder"
   },
   "export": {
     "root": "Export",

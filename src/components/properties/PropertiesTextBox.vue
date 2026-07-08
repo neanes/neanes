@@ -219,24 +219,27 @@
           $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
         }}</FieldLabel>
         <div class="flex items-center gap-1">
-          <ColorPicker
-            :model-value="strokeColorPickerValue"
-            :disabled="strokeColorSameAsText"
+          <StrokeColorPicker
+            :model-value="resolvedParagraphStyle.strokeColor"
+            :preview-color="
+              resolvedParagraphStyle.strokeColor === 'currentcolor'
+                ? resolvedParagraphStyle.color
+                : resolvedParagraphStyle.strokeColor
+            "
+            :text-color="resolvedParagraphStyle.color"
+            :same-as-text="strokeColorSameAsText"
+            :label="
+              $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
+            "
+            :same-as-text-label="
+              $t(($) => $.dialog.pageSetup.sameAsText, { ns: 'dialog' })
+            "
             @update:model-value="
               $emit('update', {
                 strokeColor: $event,
               } as Partial<TextBoxElement>)
             "
           />
-          <div class="flex items-center gap-2">
-            <Switch
-              :model-value="strokeColorSameAsText"
-              @update:model-value="onStrokeColorSameAsTextChanged"
-            />
-            <span class="text-sm text-muted-foreground">
-              {{ $t(($) => $.dialog.pageSetup.sameAsText, { ns: 'dialog' }) }}
-            </span>
-          </div>
           <ParagraphStyleClearButton
             :disabled="element.strokeColor == null"
             @clear="
@@ -503,7 +506,6 @@ import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
-import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
@@ -513,6 +515,7 @@ import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
 import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import ParagraphStyleField from '@/components/properties/ParagraphStyleField.vue';
+import StrokeColorPicker from '@/components/StrokeColorPicker.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
@@ -596,11 +599,6 @@ const {
 );
 
 const currentAlignment = computed(() => resolvedParagraphStyle.value.alignment);
-const strokeColorPickerValue = computed(() =>
-  resolvedParagraphStyle.value.strokeColor === 'currentcolor'
-    ? resolvedParagraphStyle.value.color
-    : resolvedParagraphStyle.value.strokeColor,
-);
 const strokeColorSameAsText = computed(
   () => resolvedParagraphStyle.value.strokeColor === 'currentcolor',
 );
@@ -634,21 +632,6 @@ function onFontFamilyChanged(fontFamily: string) {
     fontFamily,
     fontStyle: remapStyleForFamily(fontFamily),
   } as Partial<TextBoxElement>);
-}
-
-function onStrokeColorSameAsTextChanged(value: boolean | 'indeterminate') {
-  if (value === true) {
-    emit('update', {
-      strokeColor: 'currentcolor',
-    } as Partial<TextBoxElement>);
-    return;
-  }
-
-  if (resolvedParagraphStyle.value.strokeColor === 'currentcolor') {
-    emit('update', {
-      strokeColor: resolvedParagraphStyle.value.color,
-    } as Partial<TextBoxElement>);
-  }
 }
 
 function clearParagraphStyleFormatting() {

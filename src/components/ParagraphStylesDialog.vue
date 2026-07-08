@@ -328,30 +328,29 @@
                 :show-toggle="showOverrideToggles"
                 @toggle="toggleOverride('strokeColor', $event)"
               >
-                <div class="ml-auto flex shrink-0 items-center gap-2">
-                  <ColorPicker
-                    :model-value="strokeColorPickerValue"
-                    :disabled="
-                      isOverrideDisabled('strokeColor') || strokeColorSameAsText
+                <div class="ml-auto shrink-0">
+                  <StrokeColorPicker
+                    :model-value="resolvedStyle.strokeColor"
+                    :preview-color="
+                      resolvedStyle.strokeColor === 'currentcolor'
+                        ? resolvedStyle.color
+                        : resolvedStyle.strokeColor
+                    "
+                    :text-color="resolvedStyle.color"
+                    :same-as-text="strokeColorSameAsText"
+                    :disabled="isOverrideDisabled('strokeColor')"
+                    :label="
+                      $t(($) => $.dialog.pageSetup.outlineColor, {
+                        ns: 'dialog',
+                      })
+                    "
+                    :same-as-text-label="
+                      $t(($) => $.dialog.pageSetup.sameAsText, { ns: 'dialog' })
                     "
                     @update:model-value="
                       updateSelectedStyleOverride('strokeColor', $event)
                     "
                   />
-                  <div class="flex items-center gap-2">
-                    <Switch
-                      :model-value="strokeColorSameAsText"
-                      :disabled="isOverrideDisabled('strokeColor')"
-                      @update:model-value="updateStrokeColorSameAsText"
-                    />
-                    <span class="text-sm text-muted-foreground">
-                      {{
-                        $t(($) => $.dialog.pageSetup.sameAsText, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </span>
-                  </div>
                 </div>
               </ParagraphStyleOverrideRow>
 
@@ -427,6 +426,7 @@ import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import ParagraphStyleOverrideRow from '@/components/ParagraphStyleOverrideRow.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import StrokeColorPicker from '@/components/StrokeColorPicker.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -446,7 +446,6 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
@@ -541,11 +540,6 @@ const { fontStyleOptions, remapStyleForFamily } = useFontStyleControls(
 
 const textDecorationCheckboxValue = computed(
   () => resolvedStyle.value.textDecoration === 'underline',
-);
-const strokeColorPickerValue = computed(() =>
-  resolvedStyle.value.strokeColor === 'currentcolor'
-    ? resolvedStyle.value.color
-    : resolvedStyle.value.strokeColor,
 );
 const strokeColorSameAsText = computed(
   () => resolvedStyle.value.strokeColor === 'currentcolor',
@@ -709,17 +703,6 @@ function updateTextDecorationOverride(value: boolean | 'indeterminate') {
     'textDecoration',
     value === true ? 'underline' : null,
   );
-}
-
-function updateStrokeColorSameAsText(value: boolean | 'indeterminate') {
-  if (value === true) {
-    updateSelectedStyleOverride('strokeColor', 'currentcolor');
-    return;
-  }
-
-  if (resolvedStyle.value.strokeColor === 'currentcolor') {
-    updateSelectedStyleOverride('strokeColor', resolvedStyle.value.color);
-  }
 }
 
 function clearSelectedStyleFormatting() {

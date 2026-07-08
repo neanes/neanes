@@ -214,24 +214,27 @@
           $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
         }}</FieldLabel>
         <div class="flex items-center gap-1">
-          <ColorPicker
-            :model-value="strokeColorPickerValue"
-            :disabled="strokeColorSameAsText"
+          <StrokeColorPicker
+            :model-value="resolvedParagraphStyle.strokeColor"
+            :preview-color="
+              resolvedParagraphStyle.strokeColor === 'currentcolor'
+                ? resolvedParagraphStyle.color
+                : resolvedParagraphStyle.strokeColor
+            "
+            :text-color="resolvedParagraphStyle.color"
+            :same-as-text="strokeColorSameAsText"
+            :label="
+              $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
+            "
+            :same-as-text-label="
+              $t(($) => $.dialog.pageSetup.sameAsText, { ns: 'dialog' })
+            "
             @update:model-value="
               $emit('update', {
                 strokeColor: $event,
               } as Partial<DropCapElement>)
             "
           />
-          <div class="flex items-center gap-2">
-            <Switch
-              :model-value="strokeColorSameAsText"
-              @update:model-value="onStrokeColorSameAsTextChanged"
-            />
-            <span class="text-sm text-muted-foreground">
-              {{ $t(($) => $.dialog.pageSetup.sameAsText, { ns: 'dialog' }) }}
-            </span>
-          </div>
           <ParagraphStyleClearButton
             :disabled="element.strokeColor == null"
             @clear="
@@ -284,8 +287,8 @@ import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
 import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import ParagraphStyleField from '@/components/properties/ParagraphStyleField.vue';
+import StrokeColorPicker from '@/components/StrokeColorPicker.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
-import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
@@ -334,11 +337,6 @@ const { resolvedParagraphStyle, hasOverrides: hasParagraphStyleOverrides } =
     () => props.element.paragraphStyleId,
     () => props.element.getParagraphStyleOverrides(),
   );
-const strokeColorPickerValue = computed(() =>
-  resolvedParagraphStyle.value.strokeColor === 'currentcolor'
-    ? resolvedParagraphStyle.value.color
-    : resolvedParagraphStyle.value.strokeColor,
-);
 const strokeColorSameAsText = computed(
   () => resolvedParagraphStyle.value.strokeColor === 'currentcolor',
 );
@@ -374,21 +372,6 @@ function onFontFamilyChanged(fontFamily: string) {
     fontFamily,
     fontStyle: remapStyleForFamily(fontFamily),
   } as Partial<DropCapElement>);
-}
-
-function onStrokeColorSameAsTextChanged(value: boolean | 'indeterminate') {
-  if (value === true) {
-    emit('update', {
-      strokeColor: 'currentcolor',
-    } as Partial<DropCapElement>);
-    return;
-  }
-
-  if (resolvedParagraphStyle.value.strokeColor === 'currentcolor') {
-    emit('update', {
-      strokeColor: resolvedParagraphStyle.value.color,
-    } as Partial<DropCapElement>);
-  }
 }
 
 function clearParagraphStyleFormatting() {

@@ -20,9 +20,7 @@
       </Button>
     </PopoverTrigger>
     <PopoverContent
-      align="end"
-      :collision-padding="8"
-      :side-offset="6"
+      align="start"
       class="w-auto border-0 bg-transparent p-0 shadow-none"
     >
       <ColorPickerRoot

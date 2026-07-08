@@ -322,6 +322,40 @@
 
               <ParagraphStyleOverrideRow
                 :label="
+                  $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
+                "
+                :active="hasOverride('strokeColor')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('strokeColor', $event)"
+              >
+                <div class="ml-auto shrink-0">
+                  <StrokeColorPicker
+                    :model-value="resolvedStyle.strokeColor"
+                    :preview-color="
+                      resolvedStyle.strokeColor === 'currentcolor'
+                        ? resolvedStyle.color
+                        : resolvedStyle.strokeColor
+                    "
+                    :text-color="resolvedStyle.color"
+                    :same-as-text="strokeColorSameAsText"
+                    :disabled="isOverrideDisabled('strokeColor')"
+                    :label="
+                      $t(($) => $.dialog.pageSetup.outlineColor, {
+                        ns: 'dialog',
+                      })
+                    "
+                    :same-as-text-label="
+                      $t(($) => $.dialog.pageSetup.sameAsText, { ns: 'dialog' })
+                    "
+                    @update:model-value="
+                      updateSelectedStyleOverride('strokeColor', $event)
+                    "
+                  />
+                </div>
+              </ParagraphStyleOverrideRow>
+
+              <ParagraphStyleOverrideRow
+                :label="
                   $t(($) => $.dialog.pageSetup.lineHeight, { ns: 'dialog' })
                 "
                 label-for="paragraph-styles-dialog-line-height"
@@ -392,6 +426,7 @@ import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import ParagraphStyleOverrideRow from '@/components/ParagraphStyleOverrideRow.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import StrokeColorPicker from '@/components/StrokeColorPicker.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -505,6 +540,9 @@ const { fontStyleOptions, remapStyleForFamily } = useFontStyleControls(
 
 const textDecorationCheckboxValue = computed(
   () => resolvedStyle.value.textDecoration === 'underline',
+);
+const strokeColorSameAsText = computed(
+  () => resolvedStyle.value.strokeColor === 'currentcolor',
 );
 
 const canSubmit = computed(() => {

@@ -22,7 +22,7 @@ export function buildRichTextParagraphStyleCss(
       return `${selectorPrefix} p.${richTextParagraphStyleClassName(style.id)}{font-family:${getFontFamilyWithNeumeFallback(
         font.cssFontFamily,
         pageSetup.neumeDefaultFontFamily,
-      )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;line-height:${resolved.lineHeight ?? 'normal'};text-align:${resolved.alignment};${textDecoration}}`;
+      )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;-webkit-text-stroke-color:${resolved.strokeColor};line-height:${resolved.lineHeight ?? 'normal'};text-align:${resolved.alignment};${textDecoration}}`;
     })
     .join('\n');
 }

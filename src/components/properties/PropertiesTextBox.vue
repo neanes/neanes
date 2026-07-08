@@ -215,6 +215,41 @@
       </Field>
 
       <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
+          <StrokeColorPicker
+            :model-value="resolvedParagraphStyle.strokeColor"
+            :preview-color="
+              resolvedParagraphStyle.strokeColor === 'currentcolor'
+                ? resolvedParagraphStyle.color
+                : resolvedParagraphStyle.strokeColor
+            "
+            :text-color="resolvedParagraphStyle.color"
+            :same-as-text="strokeColorSameAsText"
+            :label="
+              $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
+            "
+            :same-as-text-label="
+              $t(($) => $.dialog.pageSetup.sameAsText, { ns: 'dialog' })
+            "
+            @update:model-value="
+              $emit('update', {
+                strokeColor: $event,
+              } as Partial<TextBoxElement>)
+            "
+          />
+          <ParagraphStyleClearButton
+            :disabled="element.strokeColor == null"
+            @clear="
+              $emit('update', { strokeColor: null } as Partial<TextBoxElement>)
+            "
+          />
+        </div>
+      </Field>
+
+      <Field orientation="horizontal">
         <FieldLabel for="properties-text-box-gap-above">{{
           $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
         }}</FieldLabel>
@@ -471,7 +506,6 @@ import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
-import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
@@ -481,6 +515,7 @@ import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
 import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import ParagraphStyleField from '@/components/properties/ParagraphStyleField.vue';
+import StrokeColorPicker from '@/components/StrokeColorPicker.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
@@ -564,6 +599,9 @@ const {
 );
 
 const currentAlignment = computed(() => resolvedParagraphStyle.value.alignment);
+const strokeColorSameAsText = computed(
+  () => resolvedParagraphStyle.value.strokeColor === 'currentcolor',
+);
 
 const textBoxFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
@@ -606,6 +644,7 @@ function clearParagraphStyleFormatting() {
     lineHeight: undefined,
     underline: null,
     strokeWidth: null,
+    strokeColor: null,
   } as Partial<TextBoxElement>);
 }
 

@@ -183,6 +183,8 @@
     "alternateLineDescription": "Stilizarea implicită pentru toate liniile alternative din partitură.",
     "dropCaps": "Majuscule decorative",
     "color": "Culoare",
+    "outlineColor": "Culoare contur",
+    "sameAsText": "La fel ca textul",
     "size": "Mărime",
     "lineHeight": "Înălțime linie",
     "lineSpan": "Linii de coborâre",

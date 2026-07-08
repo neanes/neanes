@@ -357,6 +357,8 @@ export class ByzHtmlExporter {
         color: ${lyricsStyle.color};
         font-weight: ${defaultLyricsFont.cssFontWeight};
         font-style: ${defaultLyricsFont.cssFontStyle};
+        -webkit-text-stroke-width: ${lyricsStyle.strokeWidth};
+        -webkit-text-stroke-color: ${lyricsStyle.strokeColor};
         text-decoration: ${lyricsStyle.textDecoration ?? 'none'};
       }
 
@@ -364,6 +366,7 @@ export class ByzHtmlExporter {
         font-weight: ${defaultDropCapFont.cssFontWeight};
         font-style: ${defaultDropCapFont.cssFontStyle};
         -webkit-text-stroke-width: ${defaultDropCapStyle.strokeWidth};
+        -webkit-text-stroke-color: ${defaultDropCapStyle.strokeColor};
       }
 
       ${this.getTag('gorthmikon')}, ${this.getTag('pelastikon')} {
@@ -387,6 +390,7 @@ export class ByzHtmlExporter {
         font-style: ${defaultTextBoxFont.cssFontStyle};
         color: ${defaultTextBoxStyle.color};
         -webkit-text-stroke-width: ${defaultTextBoxStyle.strokeWidth};
+        -webkit-text-stroke-color: ${defaultTextBoxStyle.strokeColor};
         text-decoration: ${defaultTextBoxStyle.textDecoration ?? 'none'};
       }
 
@@ -402,6 +406,7 @@ export class ByzHtmlExporter {
         font-style: ${defaultLyricsFont.cssFontStyle};
         color: ${lyricsStyle.color};
         -webkit-text-stroke-width: ${lyricsStyle.strokeWidth};
+        -webkit-text-stroke-color: ${lyricsStyle.strokeColor};
         text-decoration: ${lyricsStyle.textDecoration ?? 'none'};
       }
 
@@ -727,6 +732,10 @@ export class ByzHtmlExporter {
       style += `-webkit-text-stroke-width: ${resolvedLyricsStyle.strokeWidth};`;
     }
 
+    if (resolvedLyricsStyle.strokeColor !== lyricsStyle.strokeColor) {
+      style += `-webkit-text-stroke-color: ${resolvedLyricsStyle.strokeColor};`;
+    }
+
     if (resolvedLyricsStyle.lineHeight !== lyricsStyle.lineHeight) {
       style += `line-height: ${resolvedLyricsStyle.lineHeight ?? 'normal'};`;
     }
@@ -1019,6 +1028,7 @@ export class ByzHtmlExporter {
       style += `font-style: ${resolvedDropCapFont.cssFontStyle};`;
       style += `line-height: ${resolvedDropCapStyle.lineHeight ?? 'normal'};`;
       style += `-webkit-text-stroke-width: ${resolvedDropCapStyle.strokeWidth};`;
+      style += `-webkit-text-stroke-color: ${resolvedDropCapStyle.strokeColor};`;
 
       styleAttribute = ` style="${style}"`;
     }
@@ -1074,6 +1084,7 @@ export class ByzHtmlExporter {
       style += `font-style: ${element.computedFontStyle};`;
       style += `line-height: ${element.computedLineHeight ?? 'normal'};`;
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
+      style += `-webkit-text-stroke-color: ${element.computedStrokeColor};`;
       //style += `width: ${element.width};`;
       //style += `height: ${element.height};`;
     }

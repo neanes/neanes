@@ -69,6 +69,7 @@ export interface ParagraphStyleOverrides {
   fontStyle?: string;
   color?: string;
   strokeWidth?: number;
+  strokeColor?: string;
   lineHeight?: number | null;
   textDecoration?: 'underline' | null;
 }
@@ -82,6 +83,7 @@ const PARAGRAPH_STYLE_OVERRIDE_KEYS: Array<keyof ParagraphStyleOverrides> = [
   'fontStyle',
   'color',
   'strokeWidth',
+  'strokeColor',
   'lineHeight',
   'textDecoration',
 ];
@@ -119,6 +121,7 @@ export function createParagraphStyleFallback(): ResolvedParagraphStyle {
     fontStyle: DEFAULT_FONT_STYLE,
     color: '#000000',
     strokeWidth: 0,
+    strokeColor: 'currentcolor',
     lineHeight: null,
     textDecoration: null,
   };
@@ -406,6 +409,10 @@ function applyParagraphStyleOverrides(
 
   if (overrides.strokeWidth != null) {
     target.strokeWidth = overrides.strokeWidth;
+  }
+
+  if (overrides.strokeColor != null) {
+    target.strokeColor = overrides.strokeColor;
   }
 
   if (overrides.lineHeight !== undefined) {

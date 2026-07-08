@@ -208,6 +208,41 @@
           />
         </div>
       </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
+          <StrokeColorPicker
+            :model-value="resolvedParagraphStyle.strokeColor"
+            :preview-color="
+              resolvedParagraphStyle.strokeColor === 'currentcolor'
+                ? resolvedParagraphStyle.color
+                : resolvedParagraphStyle.strokeColor
+            "
+            :text-color="resolvedParagraphStyle.color"
+            :same-as-text="strokeColorSameAsText"
+            :label="
+              $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
+            "
+            :same-as-text-label="
+              $t(($) => $.dialog.pageSetup.sameAsText, { ns: 'dialog' })
+            "
+            @update:model-value="
+              $emit('update', {
+                strokeColor: $event,
+              } as Partial<DropCapElement>)
+            "
+          />
+          <ParagraphStyleClearButton
+            :disabled="element.strokeColor == null"
+            @clear="
+              $emit('update', { strokeColor: null } as Partial<DropCapElement>)
+            "
+          />
+        </div>
+      </Field>
     </PaneSection>
 
     <PaneSection
@@ -252,6 +287,7 @@ import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
 import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import ParagraphStyleField from '@/components/properties/ParagraphStyleField.vue';
+import StrokeColorPicker from '@/components/StrokeColorPicker.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
@@ -301,6 +337,9 @@ const { resolvedParagraphStyle, hasOverrides: hasParagraphStyleOverrides } =
     () => props.element.paragraphStyleId,
     () => props.element.getParagraphStyleOverrides(),
   );
+const strokeColorSameAsText = computed(
+  () => resolvedParagraphStyle.value.strokeColor === 'currentcolor',
+);
 
 const {
   fontStyleOptions,
@@ -343,6 +382,7 @@ function clearParagraphStyleFormatting() {
     fontStyle: null,
     lineHeight: undefined,
     strokeWidth: null,
+    strokeColor: null,
   } as Partial<DropCapElement>);
 }
 

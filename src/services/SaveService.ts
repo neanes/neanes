@@ -1164,6 +1164,7 @@ export class SaveService {
     saved.fontSubfamily = style.overrides.fontStyle;
     saved.color = style.overrides.color;
     saved.strokeWidth = style.overrides.strokeWidth;
+    saved.strokeColor = style.overrides.strokeColor;
     saved.lineHeight = style.overrides.lineHeight;
     saved.textDecoration = style.overrides.textDecoration;
     return saved;
@@ -1229,6 +1230,7 @@ export class SaveService {
     element.fontSubfamily = e.fontStyle ?? undefined;
     element.lineHeight = e.lineHeight;
     element.strokeWidth = e.strokeWidth ?? undefined;
+    element.strokeColor = e.strokeColor ?? undefined;
   }
 
   public static SaveImageBox(element: ImageBoxElement_v1, e: ImageBoxElement) {
@@ -1417,6 +1419,7 @@ export class SaveService {
     element.lyricsFontSize = e.lyricsFontSize ?? undefined;
     element.lyricsTextDecoration = e.lyricsTextDecoration ?? undefined;
     element.lyricsStrokeWidth = e.lyricsStrokeWidth ?? undefined;
+    element.lyricsStrokeColor = e.lyricsStrokeColor ?? undefined;
 
     element.ignoreAttractions = e.ignoreAttractions || undefined;
 
@@ -1486,6 +1489,7 @@ export class SaveService {
     element.fontFamily = e.fontFamily ?? undefined;
     element.fontSize = e.fontSize ?? undefined;
     element.strokeWidth = e.strokeWidth ?? undefined;
+    element.strokeColor = e.strokeColor ?? undefined;
     element.fontSubfamily = e.fontStyle ?? undefined;
     element.underline = e.underline ?? undefined;
     element.lineHeight = e.lineHeight;
@@ -1962,6 +1966,10 @@ export class SaveService {
       overrides.strokeWidth = saved.strokeWidth;
     }
 
+    if (saved.strokeColor !== undefined) {
+      overrides.strokeColor = saved.strokeColor;
+    }
+
     if (saved.lineHeight !== undefined) {
       overrides.lineHeight = saved.lineHeight;
     }
@@ -2076,6 +2084,7 @@ export class SaveService {
     element.lineHeight = e.lineHeight;
     element.fontStyle = normalizeSavedFontSubfamily(e.fontSubfamily) ?? null;
     element.strokeWidth = e.strokeWidth ?? null;
+    element.strokeColor = e.strokeColor ?? null;
   }
 
   public static LoadImageBox_v1(
@@ -2304,6 +2313,7 @@ export class SaveService {
       normalizeSavedFontSubfamily(e.lyricsFontSubfamily) ?? null;
     element.lyricsTextDecoration = e.lyricsTextDecoration ?? null;
     element.lyricsStrokeWidth = e.lyricsStrokeWidth ?? null;
+    element.lyricsStrokeColor = e.lyricsStrokeColor ?? null;
 
     if (e.acceptsLyrics !== undefined) {
       element.acceptsLyrics = e.acceptsLyrics;
@@ -2389,6 +2399,7 @@ export class SaveService {
     element.fontSize = e.fontSize ?? null;
     element.color = e.color ?? null;
     element.strokeWidth = e.strokeWidth ?? null;
+    element.strokeColor = e.strokeColor ?? null;
     element.lineHeight = e.lineHeight;
   }
 

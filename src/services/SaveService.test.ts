@@ -603,6 +603,7 @@ describe('SaveService font styles', () => {
     expect(defaultParagraphStyle.fontSize).toBe(42);
     expect(defaultParagraphStyle.color).toBe('#123456');
     expect(defaultParagraphStyle.strokeWidth).toBe(3);
+    expect(defaultParagraphStyle.strokeColor).toBe('currentcolor');
     expect(defaultParagraphStyle.lineHeight).toBe(1.7);
   });
 
@@ -635,6 +636,22 @@ describe('SaveService font styles', () => {
     expect(resolvedDefaultText.fontStyle).toBe('Semibold');
   });
 
+  it('saves and loads paragraph-style stroke color', () => {
+    const style = new ParagraphStyle();
+    style.id = 'custom';
+    style.displayName = 'Custom';
+    style.overrides.strokeColor = 'currentcolor';
+
+    const saved = SaveService.SaveParagraphStyle(style);
+    const loaded = SaveService.LoadParagraphStyle_v1(saved);
+
+    expect(saved.strokeColor).toBe('currentcolor');
+    expect(loaded.overrides.strokeColor).toBe('currentcolor');
+    expect(resolveParagraphStyle([loaded], loaded.id).strokeColor).toBe(
+      'currentcolor',
+    );
+  });
+
   it('preserves legacy non-default text box styling as element overrides', () => {
     const legacy = new TextBoxElement_v1();
 
@@ -644,6 +661,7 @@ describe('SaveService font styles', () => {
     legacy.fontSize = 18;
     legacy.color = '#123456';
     legacy.strokeWidth = 2;
+    legacy.strokeColor = '#223344';
     legacy.lineHeight = 1.5;
 
     const element = loadLegacyTextBox(legacy);
@@ -653,6 +671,7 @@ describe('SaveService font styles', () => {
     expect(element.fontSize).toBe(18);
     expect(element.color).toBe('#123456');
     expect(element.strokeWidth).toBe(2);
+    expect(element.strokeColor).toBe('#223344');
     expect(element.lineHeight).toBe(1.5);
   });
 
@@ -761,6 +780,7 @@ describe('SaveService font styles', () => {
     legacy.fontSize = 18;
     legacy.color = '#123456';
     legacy.strokeWidth = 2;
+    legacy.strokeColor = '#223344';
     legacy.lineHeight = 1.5;
 
     const element = loadLegacyTextBox(legacy);
@@ -770,6 +790,7 @@ describe('SaveService font styles', () => {
     expect(element.fontSize).toBe(18);
     expect(element.color).toBe('#123456');
     expect(element.strokeWidth).toBe(2);
+    expect(element.strokeColor).toBe('#223344');
     expect(element.lineHeight).toBe(1.5);
   });
 
@@ -786,6 +807,7 @@ describe('SaveService font styles', () => {
     expect(element.fontSize).toBe(18);
     expect(element.color).toBeNull();
     expect(element.strokeWidth).toBeNull();
+    expect(element.strokeColor).toBeNull();
     expect(element.lineHeight).toBeUndefined();
   });
 
@@ -807,6 +829,7 @@ describe('SaveService font styles', () => {
     legacy.fontSize = 16;
     legacy.color = '#000000';
     legacy.strokeWidth = 0;
+    legacy.strokeColor = '#000000';
 
     const element = loadLegacyTextBox(legacy, paragraphStyles);
 
@@ -814,6 +837,7 @@ describe('SaveService font styles', () => {
     expect(element.fontSize).toBeNull();
     expect(element.fontStyle).toBeNull();
     expect(element.strokeWidth).toBeNull();
+    expect(element.strokeColor).toBe('#000000');
     expect(element.color).toBeNull();
     expect(element.lineHeight).toBeUndefined();
   });
@@ -828,6 +852,7 @@ describe('SaveService font styles', () => {
     saved.fontSize = 18;
     saved.color = '#123456';
     saved.strokeWidth = 2;
+    saved.strokeColor = '#223344';
     saved.lineHeight = 1.5;
 
     SaveService.LoadTextBox_v1(element, saved);
@@ -838,6 +863,7 @@ describe('SaveService font styles', () => {
     expect(element.fontSize).toBe(18);
     expect(element.color).toBe('#123456');
     expect(element.strokeWidth).toBe(2);
+    expect(element.strokeColor).toBe('#223344');
     expect(element.lineHeight).toBe(1.5);
   });
 
@@ -872,6 +898,7 @@ describe('SaveService font styles', () => {
     expect(element.fontSize).toBeNull();
     expect(element.fontStyle).toBeNull();
     expect(element.strokeWidth).toBeNull();
+    expect(element.strokeColor).toBeNull();
     expect(element.color).toBeNull();
     expect(element.lineHeight).toBeUndefined();
   });
@@ -915,6 +942,9 @@ describe('SaveService font styles', () => {
     expect(
       resolveParagraphStyle([loaded], loaded.id).textDecoration,
     ).toBeNull();
+    expect(resolveParagraphStyle([loaded], loaded.id).strokeColor).toBe(
+      'currentcolor',
+    );
   });
 
   it('defaults missing text-box alignment to the paragraph style', () => {
@@ -933,6 +963,45 @@ describe('SaveService font styles', () => {
     expect(
       resolveElementParagraphStyle(paragraphStyles, element).alignment,
     ).toBe(TextBoxAlignment.Center);
+  });
+
+  it('round-trips note, text box, and drop cap stroke colors', () => {
+    (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+    const score = new Score();
+    const note = new NoteElement();
+    const textBox = new TextBoxElement();
+    const dropCap = new DropCapElement();
+
+    note.lyrics = 'la';
+    note.lyricsStrokeColor = 'currentcolor';
+    textBox.strokeColor = '#123456';
+    dropCap.strokeColor = '#654321';
+
+    score.staff.elements.push(note, textBox, dropCap);
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+    const loadedNote = loaded.staff.elements[1] as NoteElement;
+    const loadedTextBox = loaded.staff.elements[2] as TextBoxElement;
+    const loadedDropCap = loaded.staff.elements[3] as DropCapElement;
+    const savedNote = saved.staff.elements[1] as NoteElement_v1;
+    const savedTextBox = saved.staff.elements[2] as TextBoxElement_v1;
+    const savedDropCap = saved.staff.elements[3] as DropCapElement_v1;
+
+    expect(savedNote.lyricsStrokeColor).toBe('currentcolor');
+    expect(savedTextBox.strokeColor).toBe('#123456');
+    expect(savedDropCap.strokeColor).toBe('#654321');
+    expect(loadedNote.lyricsStrokeColor).toBe('currentcolor');
+    expect(loadedTextBox.strokeColor).toBe('#123456');
+    expect(loadedDropCap.strokeColor).toBe('#654321');
+    expect(
+      resolveElementParagraphStyle(loaded.paragraphStyles, loadedTextBox)
+        .strokeColor,
+    ).toBe('#123456');
+    expect(
+      resolveElementParagraphStyle(loaded.paragraphStyles, loadedDropCap)
+        .strokeColor,
+    ).toBe('#654321');
   });
 
   it('saves rich text language fields instead of legacy rtl', () => {
@@ -1122,6 +1191,7 @@ describe('SaveService font styles', () => {
     expect(lyricsStyle.fontSize).toBe(33);
     expect(lyricsStyle.color).toBe('#123456');
     expect(lyricsStyle.strokeWidth).toBe(2);
+    expect(lyricsStyle.strokeColor).toBe('currentcolor');
   });
 
   it('loads the legacy lyrics size into the built-in Annotation style', () => {
@@ -1175,6 +1245,7 @@ describe('SaveService font styles', () => {
     expect(dropCapStyle.fontSize).toBe(72);
     expect(dropCapStyle.color).toBe('#654321');
     expect(dropCapStyle.strokeWidth).toBe(4);
+    expect(dropCapStyle.strokeColor).toBe('currentcolor');
     expect(dropCapStyle.lineHeight).toBe(1.5);
   });
 
@@ -1191,7 +1262,9 @@ describe('SaveService font styles', () => {
     SaveService.LoadDropCap_v1(explicitElement, explicit, pageSetup);
 
     expect(omittedElement.lineHeight).toBeUndefined();
+    expect(omittedElement.strokeColor).toBeNull();
     expect(explicitElement.lineHeight).toBeNull();
+    expect(explicitElement.strokeColor).toBeNull();
   });
 
   it('uses built-in Lyrics style as the fallback for legacy note overrides', () => {
@@ -1202,12 +1275,14 @@ describe('SaveService font styles', () => {
         fontSize: 15,
         color: '#abcdef',
         strokeWidth: 3,
+        strokeColor: '#fedcba',
       },
     });
     const legacy = new NoteElement_v1();
 
     legacy.lyricsUseDefaultStyle = false;
     legacy.lyricsFontSubfamily = 'Italic';
+    legacy.lyricsStrokeColor = '#123456';
 
     const element = loadLegacyNote(legacy, paragraphStyles);
 
@@ -1222,11 +1297,13 @@ describe('SaveService font styles', () => {
     expect(element.lyricsFontSize).toBeNull();
     expect(element.lyricsColor).toBeNull();
     expect(element.lyricsStrokeWidth).toBeNull();
+    expect(element.lyricsStrokeColor).toBe('#123456');
     expect(resolvedLyricsStyle.fontFamily).toBe('Minion Pro');
     expect(resolvedLyricsStyle.fontStyle).toBe('Italic');
     expect(resolvedLyricsStyle.fontSize).toBe(15);
     expect(resolvedLyricsStyle.color).toBe('#abcdef');
     expect(resolvedLyricsStyle.strokeWidth).toBe(3);
+    expect(resolvedLyricsStyle.strokeColor).toBe('#123456');
   });
 
   it('uses built-in Drop Cap style as the fallback for legacy drop-cap overrides', () => {
@@ -1237,6 +1314,7 @@ describe('SaveService font styles', () => {
         fontSize: 80,
         color: '#fedcba',
         strokeWidth: 5,
+        strokeColor: '#123456',
         lineHeight: 1.25,
       },
     });
@@ -1246,6 +1324,7 @@ describe('SaveService font styles', () => {
     legacy.fontSize = undefined as unknown as number;
     legacy.color = undefined as unknown as string;
     legacy.strokeWidth = undefined as unknown as number;
+    legacy.strokeColor = '#abcdef';
     legacy.fontSubfamily = 'Italic';
     legacy.lineHeight = undefined;
 
@@ -1261,12 +1340,14 @@ describe('SaveService font styles', () => {
     expect(element.fontSize).toBeNull();
     expect(element.color).toBeNull();
     expect(element.strokeWidth).toBeNull();
+    expect(element.strokeColor).toBe('#abcdef');
     expect(element.lineHeight).toBeUndefined();
     expect(resolvedDropCapStyle.fontFamily).toBe('Minion Pro');
     expect(resolvedDropCapStyle.fontStyle).toBe('Italic');
     expect(resolvedDropCapStyle.fontSize).toBe(80);
     expect(resolvedDropCapStyle.color).toBe('#fedcba');
     expect(resolvedDropCapStyle.strokeWidth).toBe(5);
+    expect(resolvedDropCapStyle.strokeColor).toBe('#abcdef');
     expect(resolvedDropCapStyle.lineHeight).toBe(1.25);
   });
 

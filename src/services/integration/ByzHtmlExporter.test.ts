@@ -142,7 +142,7 @@ describe('ByzHtmlExporter', () => {
     });
 
     expect(exporter.exportTextBox(element, [], 0)).toBe(
-      `<div dir="auto" class="byz--text-box byz--text-box-inline" style="color: #123456;font-family: 'Alegreya', 'Source Serif';font-size: 18pt;font-weight: 700;font-style: italic;line-height: 1.4;-webkit-text-stroke-width: 2;text-align: right;">Inline override</div\n>`,
+      `<div dir="auto" class="byz--text-box byz--text-box-inline" style="color: #123456;font-family: 'Alegreya', 'Source Serif';font-size: 18pt;font-weight: 700;font-style: italic;line-height: 1.4;-webkit-text-stroke-width: 2;-webkit-text-stroke-color: currentcolor;text-align: right;">Inline override</div\n>`,
     );
   });
 });

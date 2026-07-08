@@ -10,6 +10,7 @@ export class ParagraphStyle {
   public fontSubfamily: string | undefined = undefined;
   public color: string | undefined = undefined;
   public strokeWidth: number | undefined = undefined;
+  public strokeColor: string | undefined = undefined;
   public lineHeight: number | null | undefined = undefined;
   public textDecoration: 'underline' | null | undefined = undefined;
 }

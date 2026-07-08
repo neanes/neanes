@@ -206,6 +206,7 @@ const containerStyle = computed(() => {
     height: withZoom(props.element.height),
     minHeight: withZoom(props.element.minHeight),
     webkitTextStrokeWidth: withZoom(props.element.computedStrokeWidth),
+    webkitTextStrokeColor: props.element.computedStrokeColor,
     lineHeight: `${props.element.computedLineHeight ?? 'normal'}`,
   } as StyleValue;
 

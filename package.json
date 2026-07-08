@@ -19,7 +19,7 @@
     "build": "vue-tsc --noEmit && vite build && electron-builder --publish never",
     "release": "vue-tsc --noEmit && vite build && electron-builder --publish always",
     "lint": "eslint . && prettier --check .",
-    "lint:fix": "eslint --fix . && prettier --write .",
+    "lint:fix": "eslint --quiet --fix . && prettier --log-level silent --write .",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",

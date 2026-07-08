@@ -50,7 +50,7 @@
           <div class="h-px bg-border/70" />
 
           <div
-            class="px-2.5"
+            class="space-y-2 px-2.5"
             :class="pickerDisabled ? 'pointer-events-none opacity-50' : ''"
           >
             <ColorPickerCanvas />

@@ -139,7 +139,10 @@ import {
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import { getFontFamilyWithNeumeFallback } from '@/utils/getFontFamilyWithFallback';
+import {
+  getFontFamilyWithNeumeFallback,
+  getLegacyNeumeFontFamily,
+} from '@/utils/getFontFamilyWithFallback';
 import type { TokenMetadata, TokenScope } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
 import {
@@ -436,6 +439,9 @@ const containerStyle = computed(() => {
     height: withZoom(props.element.height),
     '--ck-content-font-family': getFontFamilyWithNeumeFallback(
       resolvedParagraphStyle.value.fontFamily,
+      props.pageSetup.neumeDefaultFontFamily,
+    ),
+    '--ck-content-neume-font-family': getLegacyNeumeFontFamily(
       props.pageSetup.neumeDefaultFontFamily,
     ),
     '--ck-content-font-size': props.element.inline

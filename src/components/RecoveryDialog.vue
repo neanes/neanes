@@ -134,6 +134,12 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { RecoveryCandidateArgs } from '@/ipc/ipcChannels';
+import {
+  getRecoveryCandidateGroupKey,
+  getRecoveryCandidateSourceState,
+  groupRecoveryCandidates,
+  selectDefaultRecoveryCandidates,
+} from '@/services/recovery/recoveryCandidates';
 
 const open = defineModel<boolean>('open', { required: true });
 
@@ -149,69 +155,21 @@ const emit = defineEmits<{
 
 const { t } = useTranslation();
 const selectedRecoveryIds = ref<string[]>([]);
-const groupedCandidates = computed(() => {
-  const candidateGroups = new Map<string, RecoveryCandidateArgs[]>();
-  const orderedGroupKeys: string[] = [];
-
-  for (const candidate of props.candidates) {
-    const groupKey = getCandidateGroupKey(candidate);
-    const groupCandidates = candidateGroups.get(groupKey);
-
-    if (groupCandidates == null) {
-      candidateGroups.set(groupKey, [candidate]);
-      orderedGroupKeys.push(groupKey);
-    } else {
-      groupCandidates.push(candidate);
-    }
-  }
-
-  return orderedGroupKeys.map((groupKey) => {
-    const candidates = (candidateGroups.get(groupKey) ?? []).sort(
-      (left, right) => right.updatedAt - left.updatedAt,
-    );
-
-    return {
-      groupKey,
-      candidates,
-    };
-  });
-});
+const groupedCandidates = computed(() =>
+  groupRecoveryCandidates(props.candidates),
+);
 
 watch(
   () => [open.value, props.candidates],
   ([isOpen]) => {
     if (isOpen) {
-      selectedRecoveryIds.value = selectDefaultCandidates(props.candidates).map(
-        (candidate) => candidate.recoveryId,
-      );
+      selectedRecoveryIds.value = selectDefaultRecoveryCandidates(
+        props.candidates,
+      ).map((candidate) => candidate.recoveryId);
     }
   },
   { immediate: true },
 );
-
-function getCandidateGroupKey(candidate: RecoveryCandidateArgs) {
-  return candidate.isUntitled
-    ? candidate.workspaceId
-    : (candidate.filePath ?? candidate.workspaceId);
-}
-
-function selectDefaultCandidates(candidates: RecoveryCandidateArgs[]) {
-  const selectedCandidates = new Map<string, RecoveryCandidateArgs>();
-
-  for (const candidate of candidates) {
-    const groupKey = getCandidateGroupKey(candidate);
-    const existingCandidate = selectedCandidates.get(groupKey);
-
-    if (
-      existingCandidate == null ||
-      candidate.updatedAt > existingCandidate.updatedAt
-    ) {
-      selectedCandidates.set(groupKey, candidate);
-    }
-  }
-
-  return [...selectedCandidates.values()];
-}
 
 function isSelected(recoveryId: string) {
   return selectedRecoveryIds.value.includes(recoveryId);
@@ -233,7 +191,7 @@ function toggleSelection(recoveryId: string) {
     return;
   }
 
-  const groupKey = getCandidateGroupKey(candidate);
+  const groupKey = getRecoveryCandidateGroupKey(candidate);
 
   selectedRecoveryIds.value = [
     ...selectedRecoveryIds.value.filter((id) => {
@@ -243,7 +201,7 @@ function toggleSelection(recoveryId: string) {
 
       return (
         selectedCandidate == null ||
-        getCandidateGroupKey(selectedCandidate) !== groupKey
+        getRecoveryCandidateGroupKey(selectedCandidate) !== groupKey
       );
     }),
     candidate.recoveryId,
@@ -261,11 +219,13 @@ function getCandidateOriginalPath(candidate: RecoveryCandidateArgs) {
 }
 
 function getCandidateStatus(candidate: RecoveryCandidateArgs) {
-  if (!candidate.isUntitled && !candidate.sourceExists) {
+  const sourceState = getRecoveryCandidateSourceState(candidate);
+
+  if (sourceState === 'missing') {
     return t(($) => $.dialog.recovery.recoverableCopy, { ns: 'dialog' });
   }
 
-  if (!candidate.isUntitled && !candidate.sourceMatches) {
+  if (sourceState === 'changed') {
     return t(($) => $.dialog.recovery.sourceChanged, { ns: 'dialog' });
   }
 
@@ -275,11 +235,13 @@ function getCandidateStatus(candidate: RecoveryCandidateArgs) {
 }
 
 function getCandidateStatusDetail(candidate: RecoveryCandidateArgs) {
-  if (!candidate.isUntitled && !candidate.sourceExists) {
+  const sourceState = getRecoveryCandidateSourceState(candidate);
+
+  if (sourceState === 'missing') {
     return t(($) => $.dialog.recovery.originalFileMissing, { ns: 'dialog' });
   }
 
-  if (!candidate.isUntitled && !candidate.sourceMatches) {
+  if (sourceState === 'changed') {
     return t(($) => $.dialog.recovery.originalFileChanged, { ns: 'dialog' });
   }
 

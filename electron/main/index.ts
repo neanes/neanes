@@ -97,7 +97,10 @@ process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 const isDevelopment = import.meta.env.DEV;
 
 const userDataPath = app.getPath('userData');
-const recoveryStore = new RecoveryStore(path.join(userDataPath, 'recovery'));
+const recoveryStore = new RecoveryStore(
+  path.join(userDataPath, 'recovery'),
+  () => app.getVersion(),
+);
 
 const maxRecentFiles = 20;
 const storeFilePath = path.join(userDataPath, 'settings.json');

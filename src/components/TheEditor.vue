@@ -230,6 +230,7 @@ import {
   LayoutService,
   type OverlayDiagnosticsContext,
 } from '@/services/LayoutService';
+import { classifyRecoveryCandidates } from '@/services/recovery/recoveryCandidates';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import {
@@ -5729,44 +5730,8 @@ async function load() {
     !openWorkspaceResults.silentLatex
   ) {
     const recoveryResults = await ipcService.listRecoveryCandidates();
-
-    const groupedRecoveryCandidates = new Map<
-      string,
-      RecoveryCandidateArgs[]
-    >();
-    const orderedRecoveryGroupKeys: string[] = [];
-
-    for (const candidate of recoveryResults.candidates) {
-      const groupKey = getRecoveryCandidateGroupKey(candidate);
-      const existingCandidates = groupedRecoveryCandidates.get(groupKey);
-
-      if (existingCandidates == null) {
-        groupedRecoveryCandidates.set(groupKey, [candidate]);
-        orderedRecoveryGroupKeys.push(groupKey);
-      } else {
-        existingCandidates.push(candidate);
-      }
-    }
-
-    const autoRecoveryCandidates: RecoveryCandidateArgs[] = [];
-    const pendingRecoveryCandidates: RecoveryCandidateArgs[] = [];
-
-    for (const groupKey of orderedRecoveryGroupKeys) {
-      const groupedCandidates = groupedRecoveryCandidates.get(groupKey) ?? [];
-
-      if (groupedCandidates.length === 0) {
-        continue;
-      }
-
-      if (
-        groupedCandidates[0]?.isUntitled ||
-        (groupedCandidates.length === 1 && groupedCandidates[0].sourceMatches)
-      ) {
-        autoRecoveryCandidates.push(groupedCandidates[0]);
-      } else {
-        pendingRecoveryCandidates.push(...groupedCandidates);
-      }
-    }
+    const { autoRecoveryCandidates, pendingRecoveryCandidates } =
+      classifyRecoveryCandidates(recoveryResults.candidates);
 
     if (autoRecoveryCandidates.length > 0) {
       for (const candidate of autoRecoveryCandidates) {
@@ -9489,12 +9454,6 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
       },
     );
   }
-}
-
-function getRecoveryCandidateGroupKey(candidate: RecoveryCandidateArgs) {
-  return candidate.isUntitled
-    ? candidate.workspaceId
-    : (candidate.filePath ?? candidate.workspaceId);
 }
 
 async function recoverSelectedRecoveryCandidates(candidateIds: string[]) {

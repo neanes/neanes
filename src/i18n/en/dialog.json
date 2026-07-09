@@ -24,6 +24,7 @@
     "recoverableCopy": "Recoverable copy",
     "originalFileMissing": "Original file missing",
     "originalFileChanged": "Original file changed",
+    "sourceMissing": "Original file missing",
     "sourceChanged": "Original file changed",
     "recoveredDraft": "Recovered draft",
     "recoveredCopy": "Recovered copy"

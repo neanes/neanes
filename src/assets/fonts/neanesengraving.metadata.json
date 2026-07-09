@@ -1,6 +1,6 @@
 {
   "fontName": "NeanesEngraving",
-  "fontVersion": "1.0.7",
+  "fontVersion": "1.0.8",
   "metrics": {
     "ascent": 0.8,
     "descent": 0.2,
@@ -924,6 +924,10 @@
       ]
     },
     "apostrofosSyndesmos": {
+      "diesisSecondary": [
+        0.603,
+        -0.272
+      ],
       "yfenAbove": [
         0.851,
         0.891

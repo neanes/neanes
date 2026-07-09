@@ -9,6 +9,18 @@
     "setAsDefault": "Setează ca implicit",
     "useSystemDefault": "Folosește implicitul sistemului"
   },
+  "recovery": {
+    "root": "Recuperează lucrul nesalvat",
+    "description": "Alegeți ce snapshot-uri de recuperare să fie deschise, eliminate sau amânate.",
+    "recoverSelected": "Recuperează selectate",
+    "discardSelected": "Renunță la selectate",
+    "decideLater": "Decide mai târziu",
+    "untitled": "Fără titlu",
+    "sourceMissing": "Fișierul original lipsește",
+    "sourceChanged": "Fișierul original s-a schimbat",
+    "recoveredDraft": "Ciornă recuperată",
+    "recoveredCopy": "Copie recuperată"
+  },
   "neumeCombinations": {
     "deleteTitle": "Ștergeți combinația?",
     "deleteDescription": "Ștergeți această combinație din listă?",

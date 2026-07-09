@@ -108,11 +108,16 @@ export enum IpcRendererChannels {
   Paste = 'Paste',
 
   SetLanguage = 'SetLanguage',
+  ListRecoveryCandidates = 'ListRecoveryCandidates',
+  SaveRecoverySnapshot = 'SaveRecoverySnapshot',
+  DiscardRecoverySnapshot = 'DiscardRecoverySnapshot',
 }
 
 export interface FileMenuOpenScoreArgs {
   data: string;
   filePath: string;
+  sourceMtimeMs?: number | null;
+  sourceSize?: number | null;
   success: boolean;
 }
 
@@ -212,12 +217,16 @@ export interface SaveWorkspaceAsArgs {
 
 export interface SaveWorkspaceAsReplyArgs {
   filePath: string;
+  sourceMtimeMs?: number | null;
+  sourceSize?: number | null;
   success: boolean;
   canceled?: boolean;
   errorMessage?: string;
 }
 
 export interface SaveWorkspaceReplyArgs {
+  sourceMtimeMs?: number | null;
+  sourceSize?: number | null;
   success: boolean;
   canceled?: boolean;
   errorMessage?: string;
@@ -287,6 +296,45 @@ export interface ExportPageAsImageReplyArgs {
 export interface ClipboardReplyArgs {
   success: boolean;
   errorMessage?: string;
+}
+
+export interface RecoverySnapshotArgs {
+  workspaceId: string;
+  filePath: string | null;
+  tempFileName: string;
+  hasUnsavedChanges: boolean;
+  score: string;
+  sourceMtimeMs: number | null;
+  sourceSize: number | null;
+}
+
+export interface RecoveryCandidateArgs {
+  recoveryId: string;
+  workspaceId: string;
+  filePath: string | null;
+  tempFileName: string;
+  hasUnsavedChanges: boolean;
+  score: string;
+  updatedAt: number;
+  sourceMtimeMs: number | null;
+  sourceSize: number | null;
+  sourceExists: boolean;
+  sourceMatches: boolean;
+  isUntitled: boolean;
+}
+
+export interface SaveRecoverySnapshotReplyArgs {
+  success: boolean;
+  errorMessage?: string;
+}
+
+export interface DiscardRecoverySnapshotReplyArgs {
+  success: boolean;
+  errorMessage?: string;
+}
+
+export interface ListRecoveryCandidatesReplyArgs {
+  candidates: RecoveryCandidateArgs[];
 }
 
 export interface PrintWorkspaceArgs {

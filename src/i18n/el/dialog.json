@@ -9,6 +9,18 @@
     "setAsDefault": "Ορισμός ως Προεπιλογή",
     "useSystemDefault": "Χρήση Προεπιλογής Συστήματος"
   },
+  "recovery": {
+    "root": "Ανάκτηση μη αποθηκευμένης εργασίας",
+    "description": "Επιλέξτε ποια στιγμιότυπα ανάκτησης θα ανοίξουν, θα απορριφθούν ή θα αναβληθούν.",
+    "recoverSelected": "Ανάκτηση επιλεγμένων",
+    "discardSelected": "Απόρριψη επιλεγμένων",
+    "decideLater": "Αργότερα",
+    "untitled": "Χωρίς τίτλο",
+    "sourceMissing": "Λείπει το αρχικό αρχείο",
+    "sourceChanged": "Το αρχικό αρχείο άλλαξε",
+    "recoveredDraft": "Ανακτημένο πρόχειρο",
+    "recoveredCopy": "Ανακτημένο αντίγραφο"
+  },
   "neumeCombinations": {
     "deleteTitle": "Διαγραφή συνδυασμού;",
     "deleteDescription": "Διαγραφή αυτού του συνδυασμού από τη λίστα;",

@@ -2,10 +2,14 @@ import JSZip from 'jszip';
 
 import type {
   ClipboardReplyArgs,
+  DiscardRecoverySnapshotReplyArgs,
   ExportPageAsImageReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceReplyArgs,
+  ListRecoveryCandidatesReplyArgs,
   OpenWorkspaceFromArgvArgs,
+  RecoverySnapshotArgs,
+  SaveRecoverySnapshotReplyArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxReplyArgs,
@@ -176,6 +180,24 @@ export class BrowserIpcService implements IIpcService {
 
   public async openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs> {
     return { files: [] };
+  }
+
+  public async listRecoveryCandidates(): Promise<ListRecoveryCandidatesReplyArgs> {
+    return { candidates: [] };
+  }
+
+  public async saveRecoverySnapshot(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    snapshot: RecoverySnapshotArgs,
+  ): Promise<SaveRecoverySnapshotReplyArgs> {
+    return { success: true };
+  }
+
+  public async discardRecoverySnapshot(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    workspaceId: string,
+  ): Promise<DiscardRecoverySnapshotReplyArgs> {
+    return { success: true };
   }
 
   public async showMessageBox(): Promise<ShowMessageBoxReplyArgs> {

@@ -60,6 +60,9 @@ export class Workspace {
   public filePath: string | null = null;
   public tempFileName: string = '';
   public hasUnsavedChanges: boolean = false;
+  public isRecovered: boolean = false;
+  public sourceMtimeMs: number | null = null;
+  public sourceSize: number | null = null;
   public commandService: CommandService = new CommandService();
   public selectedElement: ScoreElement | null = null;
   public selectedAnnotationElement: AnnotationElement | null = null;

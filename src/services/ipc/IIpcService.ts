@@ -1,9 +1,13 @@
 import type {
   ClipboardReplyArgs,
+  DiscardRecoverySnapshotReplyArgs,
   ExportPageAsImageReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceReplyArgs,
+  ListRecoveryCandidatesReplyArgs,
   OpenWorkspaceFromArgvArgs,
+  RecoverySnapshotArgs,
+  SaveRecoverySnapshotReplyArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxArgs,
@@ -48,6 +52,16 @@ export interface IIpcService {
   printWorkspace(workspace: Workspace): Promise<void>;
 
   openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs>;
+
+  listRecoveryCandidates(): Promise<ListRecoveryCandidatesReplyArgs>;
+
+  saveRecoverySnapshot(
+    snapshot: RecoverySnapshotArgs,
+  ): Promise<SaveRecoverySnapshotReplyArgs>;
+
+  discardRecoverySnapshot(
+    workspaceId: string,
+  ): Promise<DiscardRecoverySnapshotReplyArgs>;
 
   showMessageBox(args: ShowMessageBoxArgs): Promise<ShowMessageBoxReplyArgs>;
 

@@ -9,6 +9,18 @@
     "setAsDefault": "Jadikan Default",
     "useSystemDefault": "Gunakan Default Sistem"
   },
+  "recovery": {
+    "root": "Pulihkan kerja yang belum disimpan",
+    "description": "Pilih snapshot pemulihan yang akan dibuka, dibuang, atau ditunda.",
+    "recoverSelected": "Pulihkan yang Dipilih",
+    "discardSelected": "Buang yang Dipilih",
+    "decideLater": "Nanti Saja",
+    "untitled": "Tanpa judul",
+    "sourceMissing": "File asli hilang",
+    "sourceChanged": "File asli berubah",
+    "recoveredDraft": "Draf pulihan",
+    "recoveredCopy": "Salinan pulihan"
+  },
   "neumeCombinations": {
     "deleteTitle": "Hapus kombinasi?",
     "deleteDescription": "Hapus kombinasi ini dari daftar?",

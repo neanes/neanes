@@ -9,6 +9,18 @@
     "setAsDefault": "Set as Default",
     "useSystemDefault": "Use System Default"
   },
+  "recovery": {
+    "root": "Recover Unsaved Work",
+    "description": "Choose which recovery snapshots to open, discard, or postpone.",
+    "recoverSelected": "Recover Selected",
+    "discardSelected": "Discard Selected",
+    "decideLater": "Decide Later",
+    "untitled": "Untitled",
+    "sourceMissing": "Original file missing",
+    "sourceChanged": "Original file changed",
+    "recoveredDraft": "Recovered draft",
+    "recoveredCopy": "Recovered copy"
+  },
   "neumeCombinations": {
     "deleteTitle": "Delete combo?",
     "deleteDescription": "Delete this combo from the list?",

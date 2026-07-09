@@ -1,6 +1,6 @@
 {
   "fontName": "NeanesStathisSeries",
-  "fontVersion": "1.0.7",
+  "fontVersion": "1.0.8",
   "metrics": {
     "ascent": 0.8,
     "descent": 0.2,
@@ -1990,6 +1990,10 @@
       ]
     },
     "apostrofosSyndesmos": {
+      "diesisSecondary": [
+        0.779,
+        -0.134
+      ],
       "gorgonTop": [
         0.938,
         0.193

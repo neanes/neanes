@@ -148,6 +148,7 @@ const secondaryNeumeMap: Map<QuantitativeNeume, QuantitativeNeume> = new Map<
   [QuantitativeNeume.PetastiPlusRunningElaphron, QuantitativeNeume.Apostrophos],
   [QuantitativeNeume.KentemataPlusOligon, QuantitativeNeume.Kentemata],
   [QuantitativeNeume.Hyporoe, QuantitativeNeume.Apostrophos],
+  [QuantitativeNeume.DoubleApostrophos, QuantitativeNeume.Apostrophos],
 ]);
 
 const tertiaryNeumeMap: Map<QuantitativeNeume, QuantitativeNeume> = new Map<
@@ -197,6 +198,7 @@ const primaryNeumeMap: Map<QuantitativeNeume, QuantitativeNeume> = new Map<
   ],
   [QuantitativeNeume.KentemataPlusOligon, QuantitativeNeume.Oligon],
   [QuantitativeNeume.Hyporoe, QuantitativeNeume.Apostrophos],
+  [QuantitativeNeume.DoubleApostrophos, QuantitativeNeume.Apostrophos],
 ]);
 
 const measureBarAboveNeumes: Neume[] = [

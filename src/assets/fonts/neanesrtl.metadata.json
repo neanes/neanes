@@ -1,6 +1,6 @@
 {
   "fontName": "NeanesRTL",
-  "fontVersion": "1.0.4",
+  "fontVersion": "1.0.8",
   "metrics": {
     "ascent": 0.8,
     "descent": 0.2,
@@ -924,6 +924,10 @@
       ]
     },
     "apostrofosSyndesmos": {
+      "diesisSecondary": [
+        0.682,
+        -0.272
+      ],
       "yfenAbove": [
         0.247,
         0.891

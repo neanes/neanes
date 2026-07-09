@@ -11,7 +11,7 @@
   },
   "recovery": {
     "root": "Recover Unsaved Work",
-    "description": "Choose which recovery snapshots to open, discard, or postpone. Recovering opens an in-memory copy and only writes to the real .byz or .byzx file when you Save.",
+    "description": "Choose which files to recover, discard, or leave for later. Recovered files are opened as recovered copies and won't overwrite the original file until you save them.",
     "recoverSelected": "Recover Selected",
     "discardSelected": "Discard Selected",
     "decideLater": "Decide Later",

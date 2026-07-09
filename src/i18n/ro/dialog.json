@@ -11,7 +11,7 @@
   },
   "recovery": {
     "root": "Recuperează lucrul nesalvat",
-    "description": "Alegeți ce snapshot-uri de recuperare să fie deschise, eliminate sau amânate. Recuperarea deschide o copie în memorie și scrie în fișierul real .byz sau .byzx numai când Salvați.",
+    "description": "Alegeți ce fișiere să fie recuperate, eliminate sau lăsate pentru mai târziu. Fișierele recuperate se deschid ca copii recuperate și nu vor suprascrie fișierul original până când nu le salvați.",
     "recoverSelected": "Recuperează selectate",
     "discardSelected": "Renunță la selectate",
     "decideLater": "Decide mai târziu",

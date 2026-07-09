@@ -1,6 +1,6 @@
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="flex max-h-[90vh] max-w-4xl flex-col">
+    <DialogContent class="flex max-h-[90vh] flex-col sm:max-w-4xl">
       <DialogHeader>
         <DialogTitle>
           {{ $t(($) => $.dialog.recovery.root, { ns: 'dialog' }) }}
@@ -20,7 +20,10 @@
             <div class="border-b px-4 py-3">
               <div class="flex items-start justify-between gap-4">
                 <div class="min-w-0 space-y-1">
-                  <div class="truncate font-medium">
+                  <div
+                    class="truncate font-medium"
+                    :title="getGroupTitle(group)"
+                  >
                     {{ getGroupTitle(group) }}
                   </div>
                   <div class="text-muted-foreground text-sm">
@@ -45,9 +48,6 @@
                 />
                 <div class="min-w-0 flex-1 space-y-2">
                   <div class="flex flex-wrap items-center gap-2">
-                    <div class="min-w-0 truncate font-medium">
-                      {{ getCandidateName(candidate) }}
-                    </div>
                     <Badge variant="secondary">
                       {{ getCandidateRecordKind(candidate) }}
                     </Badge>
@@ -56,37 +56,27 @@
                     </Badge>
                   </div>
 
-                  <div
-                    class="grid gap-x-6 gap-y-1 text-sm text-muted-foreground md:grid-cols-2"
-                  >
-                    <div>
-                      <span class="font-medium text-foreground">
-                        {{
-                          $t(($) => $.dialog.recovery.originalPath, {
-                            ns: 'dialog',
-                          })
-                        }}:
-                      </span>
-                      <span class="ml-1 break-all">
-                        {{ getCandidateOriginalPath(candidate) }}
-                      </span>
-                    </div>
-                    <div>
-                      <span class="font-medium text-foreground">
-                        {{
-                          $t(($) => $.dialog.recovery.recoveredAt, {
-                            ns: 'dialog',
-                          })
-                        }}:
-                      </span>
-                      <span class="ml-1">
-                        {{ getCandidateRecoveredAt(candidate) }}
-                      </span>
-                    </div>
+                  <div class="text-sm text-muted-foreground">
+                    <span class="font-medium text-foreground">
+                      {{
+                        $t(($) => $.dialog.recovery.recoveredAt, {
+                          ns: 'dialog',
+                        })
+                      }}:
+                    </span>
+                    <span class="ml-1">
+                      {{ getCandidateRecoveredAt(candidate) }}
+                    </span>
                   </div>
 
-                  <div class="text-xs text-muted-foreground">
-                    {{ getCandidateStatusDetail(candidate) }}
+                  <div
+                    v-if="
+                      group.candidates.length > 1 &&
+                      getCandidateSourceDetail(candidate) != null
+                    "
+                    class="text-xs text-muted-foreground"
+                  >
+                    {{ getCandidateSourceDetail(candidate) }}
                   </div>
                 </div>
               </label>
@@ -95,7 +85,7 @@
         </div>
       </ScrollArea>
 
-      <DialogFooter class="gap-2 sm:gap-0">
+      <DialogFooter class="w-full !flex-row flex-wrap !justify-end gap-2">
         <Button variant="secondary" @click="emitDecideLater">
           {{ $t(($) => $.dialog.recovery.decideLater, { ns: 'dialog' }) }}
         </Button>
@@ -208,16 +198,6 @@ function toggleSelection(recoveryId: string) {
   ];
 }
 
-function getCandidateName(candidate: RecoveryCandidateArgs) {
-  return candidate.filePath ?? candidate.tempFileName;
-}
-
-function getCandidateOriginalPath(candidate: RecoveryCandidateArgs) {
-  return (
-    candidate.filePath ?? t(($) => $.dialog.recovery.untitled, { ns: 'dialog' })
-  );
-}
-
 function getCandidateStatus(candidate: RecoveryCandidateArgs) {
   const sourceState = getRecoveryCandidateSourceState(candidate);
 
@@ -234,7 +214,7 @@ function getCandidateStatus(candidate: RecoveryCandidateArgs) {
     : t(($) => $.dialog.recovery.recoveredCopy, { ns: 'dialog' });
 }
 
-function getCandidateStatusDetail(candidate: RecoveryCandidateArgs) {
+function getCandidateSourceDetail(candidate: RecoveryCandidateArgs) {
   const sourceState = getRecoveryCandidateSourceState(candidate);
 
   if (sourceState === 'missing') {
@@ -245,9 +225,7 @@ function getCandidateStatusDetail(candidate: RecoveryCandidateArgs) {
     return t(($) => $.dialog.recovery.originalFileChanged, { ns: 'dialog' });
   }
 
-  return candidate.hasUnsavedChanges
-    ? t(($) => $.dialog.recovery.recoveredDraft, { ns: 'dialog' })
-    : t(($) => $.dialog.recovery.recoveredCopy, { ns: 'dialog' });
+  return null;
 }
 
 function getCandidateRecordKind(candidate: RecoveryCandidateArgs) {
@@ -277,7 +255,11 @@ function getGroupDescription(group: {
     return t(($) => $.dialog.recovery.groupDescription, { ns: 'dialog' });
   }
 
-  return getCandidateStatusDetail(group.candidates[0] as RecoveryCandidateArgs);
+  const candidate = group.candidates[0] as RecoveryCandidateArgs;
+
+  return candidate.hasUnsavedChanges
+    ? t(($) => $.dialog.recovery.recoveredDraft, { ns: 'dialog' })
+    : t(($) => $.dialog.recovery.recoveredCopy, { ns: 'dialog' });
 }
 
 function getCandidateRecoveredAt(candidate: RecoveryCandidateArgs) {

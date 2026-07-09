@@ -230,7 +230,10 @@ import {
   LayoutService,
   type OverlayDiagnosticsContext,
 } from '@/services/LayoutService';
-import { classifyRecoveryCandidates } from '@/services/recovery/recoveryCandidates';
+import {
+  classifyRecoveryCandidates,
+  getRecoveryCandidateSiblingRecoveryIds,
+} from '@/services/recovery/recoveryCandidates';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import {
@@ -5633,7 +5636,7 @@ function save(markUnsavedChanges: boolean = true) {
   } else {
     if (selectedWorkspace.value.hasUnsavedChanges) {
       scheduleRecoverySnapshot(selectedWorkspace.value);
-    } else {
+    } else if (!selectedWorkspace.value.isRecovered) {
       void discardRecoverySnapshot(selectedWorkspace.value.id);
     }
   }
@@ -5788,6 +5791,7 @@ function getRecoverySnapshotArgs(workspace: Workspace): RecoverySnapshotArgs {
     filePath: workspace.filePath,
     tempFileName: workspace.tempFileName,
     hasUnsavedChanges: workspace.hasUnsavedChanges,
+    preserveCurrentSnapshot: workspace.isRecovered,
     score: JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
     sourceMtimeMs: workspace.sourceMtimeMs,
     sourceSize: workspace.sourceSize,
@@ -5826,7 +5830,7 @@ async function persistRecoverySnapshot(workspace: Workspace) {
 
   const snapshot = getRecoverySnapshotArgs(workspace);
 
-  if (!snapshot.hasUnsavedChanges) {
+  if (!snapshot.hasUnsavedChanges && !workspace.isRecovered) {
     await ipcService.discardRecoverySnapshot(workspace.id);
     return;
   }
@@ -5880,6 +5884,7 @@ async function saveWorkspaceAs(workspace: Workspace) {
 
 async function closeWorkspace(workspace: Workspace) {
   let shouldClose = true;
+  let savedSuccessfully = false;
 
   flushPendingRichTextEditors(workspace);
 
@@ -5925,6 +5930,7 @@ async function closeWorkspace(workspace: Workspace) {
 
         // If they successfully saved, then we can close the workspace
         shouldClose = saveResult.success;
+        savedSuccessfully = saveResult.success;
 
         if (!saveResult.success && !saveResult.canceled) {
           showReplyErrorToast(
@@ -5953,7 +5959,9 @@ async function closeWorkspace(workspace: Workspace) {
   }
 
   if (shouldClose) {
-    await discardRecoverySnapshot(workspace.id);
+    if (savedSuccessfully || !workspace.isRecovered) {
+      await discardRecoverySnapshot(workspace.id);
+    }
 
     // If using the browser, remove the item from local storage
     if (isBrowser.value) {
@@ -6019,7 +6027,9 @@ async function onCloseApplication() {
   }
 
   for (const workspace of [...workspaces.value]) {
-    await discardRecoverySnapshot(workspace.id);
+    if (!workspace.isRecovered) {
+      await discardRecoverySnapshot(workspace.id);
+    }
   }
 
   saveEditorEnvironment();
@@ -9465,13 +9475,40 @@ async function recoverSelectedRecoveryCandidates(candidateIds: string[]) {
   const selectedCandidates = recoveryCandidates.value.filter((candidate) =>
     candidateIds.includes(candidate.recoveryId),
   );
+  const siblingRecoveryIds = getRecoveryCandidateSiblingRecoveryIds(
+    recoveryCandidates.value,
+    candidateIds,
+  );
+  const selectedRecoveryIdSet = new Set(candidateIds);
+  const discardedSiblingRecoveryIdSet = new Set<string>();
 
   for (const candidate of selectedCandidates) {
     openRecoveryCandidate(candidate);
   }
 
+  if (siblingRecoveryIds.length > 0) {
+    const result =
+      await ipcService.discardRecoverySnapshots(siblingRecoveryIds);
+
+    if (!result.success) {
+      showReplyErrorToast(
+        t(($) => $.toast.editor.recoveryDiscardFailed, { ns: 'toast' }),
+        result,
+        t(($) => $.toast.editor.recoveryDiscardFailedDescription, {
+          ns: 'toast',
+        }),
+      );
+    } else {
+      siblingRecoveryIds.forEach((recoveryId) =>
+        discardedSiblingRecoveryIdSet.add(recoveryId),
+      );
+    }
+  }
+
   recoveryCandidates.value = recoveryCandidates.value.filter(
-    (candidate) => !candidateIds.includes(candidate.recoveryId),
+    (candidate) =>
+      !selectedRecoveryIdSet.has(candidate.recoveryId) &&
+      !discardedSiblingRecoveryIdSet.has(candidate.recoveryId),
   );
   recoveryDialogIsOpen.value = recoveryCandidates.value.length > 0;
 }

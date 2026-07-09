@@ -304,6 +304,7 @@ export interface RecoverySnapshotArgs {
   filePath: string | null;
   tempFileName: string;
   hasUnsavedChanges: boolean;
+  preserveCurrentSnapshot?: boolean;
   score: string;
   sourceMtimeMs: number | null;
   sourceSize: number | null;

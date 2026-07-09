@@ -5,6 +5,7 @@ import type { RecoveryCandidateArgs } from '@/ipc/ipcChannels';
 import {
   classifyRecoveryCandidates,
   getRecoveryCandidateSourceState,
+  getRecoveryCandidateSiblingRecoveryIds,
   groupRecoveryCandidates,
   selectDefaultRecoveryCandidates,
 } from './recoveryCandidates';
@@ -192,5 +193,38 @@ describe('recovery candidate helpers', () => {
         }),
       ),
     ).toBe('available');
+  });
+
+  it('returns sibling recovery ids for the selected recovery group(s)', () => {
+    const sharedPath = '/tmp/shared.byzx';
+
+    const siblingIds = getRecoveryCandidateSiblingRecoveryIds(
+      [
+        candidate({
+          recoveryId: 'current',
+          workspaceId: 'workspace-shared',
+          filePath: sharedPath,
+          isUntitled: false,
+          updatedAt: 20,
+        }),
+        candidate({
+          recoveryId: 'previous',
+          workspaceId: 'workspace-shared',
+          filePath: sharedPath,
+          isUntitled: false,
+          updatedAt: 10,
+        }),
+        candidate({
+          recoveryId: 'other',
+          workspaceId: 'workspace-other',
+          filePath: '/tmp/other.byzx',
+          isUntitled: false,
+          updatedAt: 30,
+        }),
+      ],
+      ['current'],
+    );
+
+    expect(siblingIds).toEqual(['previous']);
   });
 });

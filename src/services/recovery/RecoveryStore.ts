@@ -128,6 +128,12 @@ export class RecoveryStore {
       const tempPath = this.getTempPath(snapshot.workspaceId);
       const existing = await this.readRecoveryFile(currentPath);
       const now = Date.now();
+      const preserveCurrentSnapshot = snapshot.preserveCurrentSnapshot === true;
+      const preserveCurrentSnapshotId =
+        preserveCurrentSnapshot && existing != null
+          ? existing.envelope.snapshotId
+          : uuidv4();
+      const createdAt = existing?.envelope.createdAt ?? now;
       const score = snapshot.score;
       const contentLength = Buffer.byteLength(score, 'utf8');
       const contentSha256 = crypto
@@ -136,9 +142,9 @@ export class RecoveryStore {
         .digest('hex');
       const envelope: RecoverySnapshotEnvelope = {
         schemaVersion: recoverySchemaVersion,
-        snapshotId: uuidv4(),
+        snapshotId: preserveCurrentSnapshotId,
         workspaceId: snapshot.workspaceId,
-        createdAt: existing?.envelope.createdAt ?? now,
+        createdAt,
         updatedAt: now,
         filePath: snapshot.filePath,
         tempFileName: snapshot.tempFileName,
@@ -159,6 +165,27 @@ export class RecoveryStore {
         await tempFile.sync();
       } finally {
         await tempFile.close();
+      }
+
+      if (preserveCurrentSnapshot) {
+        try {
+          await fs.access(currentPath);
+          await fs.rename(currentPath, prevPath);
+        } catch {
+          // Current file may not exist yet. That's fine.
+        }
+
+        await fs.rename(tempPath, currentPath);
+
+        try {
+          await fs.rm(prevPath, { force: true });
+        } catch {
+          // Ignore best-effort cleanup.
+        }
+
+        await this.syncDirectory(this.recoveryDir);
+
+        return { success: true };
       }
 
       try {

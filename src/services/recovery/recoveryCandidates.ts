@@ -93,6 +93,26 @@ export function classifyRecoveryCandidates(
   };
 }
 
+export function getRecoveryCandidateSiblingRecoveryIds(
+  candidates: RecoveryCandidateArgs[],
+  selectedRecoveryIds: string[],
+) {
+  const selectedRecoveryIdSet = new Set(selectedRecoveryIds);
+  const selectedGroupKeys = new Set(
+    candidates
+      .filter((candidate) => selectedRecoveryIdSet.has(candidate.recoveryId))
+      .map((candidate) => getRecoveryCandidateGroupKey(candidate)),
+  );
+
+  return candidates
+    .filter(
+      (candidate) =>
+        selectedGroupKeys.has(getRecoveryCandidateGroupKey(candidate)) &&
+        !selectedRecoveryIdSet.has(candidate.recoveryId),
+    )
+    .map((candidate) => candidate.recoveryId);
+}
+
 export function getRecoveryCandidateSourceState(
   candidate: RecoveryCandidateArgs,
 ): RecoveryCandidateSourceState {

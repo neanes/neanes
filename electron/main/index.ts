@@ -96,6 +96,14 @@ process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
 const isDevelopment = import.meta.env.DEV;
 
+if (isDevelopment) {
+  const devUserDataDir = process.env.NEANES_DEV_USER_DATA_DIR;
+
+  if (devUserDataDir) {
+    app.setPath('userData', path.resolve(devUserDataDir));
+  }
+}
+
 const userDataPath = app.getPath('userData');
 const recoveryStore = new RecoveryStore(
   path.join(userDataPath, 'recovery'),

@@ -11,7 +11,7 @@
   },
   "recovery": {
     "root": "Pulihkan kerja yang belum disimpan",
-    "description": "Pilih snapshot pemulihan yang akan dibuka, dibuang, atau ditunda. Pemulihan membuka salinan di memori dan hanya menulis ke file .byz atau .byzx yang asli saat Anda Menyimpan.",
+    "description": "Pilih file yang akan dipulihkan, dibuang, atau disimpan untuk nanti. File yang dipulihkan dibuka sebagai salinan pulihan dan tidak akan menimpa file asli sampai Anda menyimpannya.",
     "recoverSelected": "Pulihkan yang Dipilih",
     "discardSelected": "Buang yang Dipilih",
     "decideLater": "Nanti Saja",

@@ -72,6 +72,7 @@ async function readEnvelope(filePath: string) {
     appVersion: string;
     snapshotId: string;
     workspaceId: string;
+    filePath: string | null;
   };
 }
 
@@ -124,6 +125,98 @@ describe('RecoveryStore', () => {
     expect(previous.appVersion).toBe('test-app');
     expect(current.createdAt).toBe(firstCurrent.createdAt);
     expect(previous.createdAt).toBe(firstCurrent.createdAt);
+
+    await fs.rm(recoveryDir, { recursive: true, force: true });
+  });
+
+  it('preserves a recovered draft as a single current snapshot without rotating to .prev', async () => {
+    const { recoveryDir, store } = await createTempStore();
+    const workspaceId = '88888888-8888-4888-8888-888888888888';
+    const currentPath = path.join(recoveryDir, `${workspaceId}.json`);
+    const prevPath = path.join(recoveryDir, `${workspaceId}.prev.json`);
+
+    const firstResult = await store.saveRecoverySnapshot({
+      workspaceId,
+      filePath: '/tmp/missing.byzx',
+      tempFileName: 'missing.byzx',
+      hasUnsavedChanges: false,
+      preserveCurrentSnapshot: true,
+      score: '{"version":1}',
+      sourceMtimeMs: null,
+      sourceSize: null,
+    });
+
+    expect(firstResult).toEqual({ success: true });
+    expect(await exists(currentPath)).toBe(true);
+    expect(await exists(prevPath)).toBe(false);
+
+    const firstCurrent = await readEnvelope(currentPath);
+
+    const secondResult = await store.saveRecoverySnapshot({
+      workspaceId,
+      filePath: '/tmp/missing.byzx',
+      tempFileName: 'missing.byzx',
+      hasUnsavedChanges: true,
+      preserveCurrentSnapshot: true,
+      score: '{"version":2}',
+      sourceMtimeMs: null,
+      sourceSize: null,
+    });
+
+    expect(secondResult).toEqual({ success: true });
+    expect(await exists(currentPath)).toBe(true);
+    expect(await exists(prevPath)).toBe(false);
+
+    const current = await readEnvelope(currentPath);
+
+    expect(current.snapshotId).toBe(firstCurrent.snapshotId);
+    expect(current.createdAt).toBe(firstCurrent.createdAt);
+    expect(current.score).toBe('{"version":2}');
+
+    await fs.rm(recoveryDir, { recursive: true, force: true });
+  });
+
+  it('preserves a recovered draft when only the previous snapshot exists', async () => {
+    const { recoveryDir, store } = await createTempStore();
+    const workspaceId = '99999999-9999-4999-8999-999999999999';
+    const currentPath = path.join(recoveryDir, `${workspaceId}.json`);
+    const prevPath = path.join(recoveryDir, `${workspaceId}.prev.json`);
+
+    await fs.writeFile(
+      prevPath,
+      JSON.stringify({
+        envelope: createEnvelope({
+          appVersion: 'test-app',
+          filePath: '/tmp/missing.byzx',
+          hasUnsavedChanges: false,
+          score: '{"version":1}',
+          snapshotId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+          tempFileName: 'missing.byzx',
+          workspaceId,
+        }),
+      }),
+      'utf8',
+    );
+
+    const result = await store.saveRecoverySnapshot({
+      workspaceId,
+      filePath: '/tmp/missing.byzx',
+      tempFileName: 'missing.byzx',
+      hasUnsavedChanges: true,
+      preserveCurrentSnapshot: true,
+      score: '{"version":2}',
+      sourceMtimeMs: null,
+      sourceSize: null,
+    });
+
+    expect(result).toEqual({ success: true });
+    expect(await exists(currentPath)).toBe(true);
+    expect(await exists(prevPath)).toBe(false);
+
+    const current = await readEnvelope(currentPath);
+
+    expect(current.score).toBe('{"version":2}');
+    expect(current.filePath).toBe('/tmp/missing.byzx');
 
     await fs.rm(recoveryDir, { recursive: true, force: true });
   });

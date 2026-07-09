@@ -111,6 +111,7 @@ export enum IpcRendererChannels {
   ListRecoveryCandidates = 'ListRecoveryCandidates',
   SaveRecoverySnapshot = 'SaveRecoverySnapshot',
   DiscardRecoverySnapshot = 'DiscardRecoverySnapshot',
+  DiscardRecoverySnapshots = 'DiscardRecoverySnapshots',
 }
 
 export interface FileMenuOpenScoreArgs {
@@ -321,6 +322,7 @@ export interface RecoveryCandidateArgs {
   sourceExists: boolean;
   sourceMatches: boolean;
   isUntitled: boolean;
+  recordKind: 'current' | 'previous';
 }
 
 export interface SaveRecoverySnapshotReplyArgs {
@@ -329,6 +331,11 @@ export interface SaveRecoverySnapshotReplyArgs {
 }
 
 export interface DiscardRecoverySnapshotReplyArgs {
+  success: boolean;
+  errorMessage?: string;
+}
+
+export interface DiscardRecoverySnapshotsReplyArgs {
   success: boolean;
   errorMessage?: string;
 }

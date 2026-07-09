@@ -18,6 +18,8 @@
     "saveSuccess": "Salvat",
     "saveFailed": "Salvarea a eșuat",
     "saveFailedDescription": "Nu s-a putut salva partitura.",
+    "recoveryDiscardFailed": "Eliminarea recuperării a eșuat",
+    "recoveryDiscardFailedDescription": "Nu s-a putut elimina snapshot-ul de recuperare selectat.",
     "copyFailed": "Copierea a eșuat",
     "copyElementLinkSuccess": "Linkul elementului a fost copiat",
     "copyHtmlSuccess": "HTML copiat",

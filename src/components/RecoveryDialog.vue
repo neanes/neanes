@@ -11,33 +11,87 @@
       </DialogHeader>
 
       <ScrollArea class="min-h-0 flex-1 border">
-        <div class="space-y-3 p-4">
-          <label
-            v-for="candidate in candidates"
-            :key="candidate.recoveryId"
-            class="flex cursor-pointer gap-3 rounded-lg border p-3 hover:bg-muted/40"
+        <div class="space-y-4 p-4">
+          <section
+            v-for="group in groupedCandidates"
+            :key="group.groupKey"
+            class="overflow-hidden rounded-xl border bg-card"
           >
-            <Checkbox
-              :model-value="isSelected(candidate.recoveryId)"
-              @update:model-value="toggleSelection(candidate.recoveryId)"
-            />
-            <div class="min-w-0 flex-1 space-y-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <div class="font-medium">
-                  {{ getCandidateName(candidate) }}
+            <div class="border-b px-4 py-3">
+              <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0 space-y-1">
+                  <div class="truncate font-medium">
+                    {{ getGroupTitle(group) }}
+                  </div>
+                  <div class="text-muted-foreground text-sm">
+                    {{ getGroupDescription(group) }}
+                  </div>
                 </div>
-                <div class="text-muted-foreground text-sm">
-                  {{ getCandidateStatus(candidate) }}
-                </div>
-              </div>
-              <div class="text-muted-foreground truncate text-sm">
-                {{ getCandidatePath(candidate) }}
-              </div>
-              <div class="text-muted-foreground text-xs">
-                {{ getCandidateRecoveredAt(candidate) }}
+                <Badge variant="outline">
+                  {{ group.candidates.length }}
+                </Badge>
               </div>
             </div>
-          </label>
+
+            <div class="divide-y">
+              <label
+                v-for="candidate in group.candidates"
+                :key="candidate.recoveryId"
+                class="flex cursor-pointer gap-3 px-4 py-3 hover:bg-muted/40"
+              >
+                <Checkbox
+                  :model-value="isSelected(candidate.recoveryId)"
+                  @update:model-value="toggleSelection(candidate.recoveryId)"
+                />
+                <div class="min-w-0 flex-1 space-y-2">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <div class="min-w-0 truncate font-medium">
+                      {{ getCandidateName(candidate) }}
+                    </div>
+                    <Badge variant="secondary">
+                      {{ getCandidateRecordKind(candidate) }}
+                    </Badge>
+                    <Badge variant="outline">
+                      {{ getCandidateStatus(candidate) }}
+                    </Badge>
+                  </div>
+
+                  <div
+                    class="grid gap-x-6 gap-y-1 text-sm text-muted-foreground md:grid-cols-2"
+                  >
+                    <div>
+                      <span class="font-medium text-foreground">
+                        {{
+                          $t(($) => $.dialog.recovery.originalPath, {
+                            ns: 'dialog',
+                          })
+                        }}:
+                      </span>
+                      <span class="ml-1 break-all">
+                        {{ getCandidateOriginalPath(candidate) }}
+                      </span>
+                    </div>
+                    <div>
+                      <span class="font-medium text-foreground">
+                        {{
+                          $t(($) => $.dialog.recovery.recoveredAt, {
+                            ns: 'dialog',
+                          })
+                        }}:
+                      </span>
+                      <span class="ml-1">
+                        {{ getCandidateRecoveredAt(candidate) }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="text-xs text-muted-foreground">
+                    {{ getCandidateStatusDetail(candidate) }}
+                  </div>
+                </div>
+              </label>
+            </div>
+          </section>
         </div>
       </ScrollArea>
 
@@ -45,10 +99,17 @@
         <Button variant="secondary" @click="emitDecideLater">
           {{ $t(($) => $.dialog.recovery.decideLater, { ns: 'dialog' }) }}
         </Button>
-        <Button variant="outline" @click="emitDiscardSelected">
+        <Button
+          variant="outline"
+          :disabled="selectedRecoveryIds.length === 0"
+          @click="emitDiscardSelected"
+        >
           {{ $t(($) => $.dialog.recovery.discardSelected, { ns: 'dialog' }) }}
         </Button>
-        <Button @click="emitRecoverSelected">
+        <Button
+          :disabled="selectedRecoveryIds.length === 0"
+          @click="emitRecoverSelected"
+        >
           {{ $t(($) => $.dialog.recovery.recoverSelected, { ns: 'dialog' }) }}
         </Button>
       </DialogFooter>
@@ -58,8 +119,9 @@
 
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
-import { ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -87,6 +149,33 @@ const emit = defineEmits<{
 
 const { t } = useTranslation();
 const selectedRecoveryIds = ref<string[]>([]);
+const groupedCandidates = computed(() => {
+  const candidateGroups = new Map<string, RecoveryCandidateArgs[]>();
+  const orderedGroupKeys: string[] = [];
+
+  for (const candidate of props.candidates) {
+    const groupKey = getCandidateGroupKey(candidate);
+    const groupCandidates = candidateGroups.get(groupKey);
+
+    if (groupCandidates == null) {
+      candidateGroups.set(groupKey, [candidate]);
+      orderedGroupKeys.push(groupKey);
+    } else {
+      groupCandidates.push(candidate);
+    }
+  }
+
+  return orderedGroupKeys.map((groupKey) => {
+    const candidates = (candidateGroups.get(groupKey) ?? []).sort(
+      (left, right) => right.updatedAt - left.updatedAt,
+    );
+
+    return {
+      groupKey,
+      candidates,
+    };
+  });
+});
 
 watch(
   () => [open.value, props.candidates],
@@ -101,7 +190,9 @@ watch(
 );
 
 function getCandidateGroupKey(candidate: RecoveryCandidateArgs) {
-  return candidate.filePath ?? candidate.recoveryId;
+  return candidate.isUntitled
+    ? candidate.workspaceId
+    : (candidate.filePath ?? candidate.workspaceId);
 }
 
 function selectDefaultCandidates(candidates: RecoveryCandidateArgs[]) {
@@ -142,13 +233,18 @@ function toggleSelection(recoveryId: string) {
     return;
   }
 
+  const groupKey = getCandidateGroupKey(candidate);
+
   selectedRecoveryIds.value = [
     ...selectedRecoveryIds.value.filter((id) => {
       const selectedCandidate = props.candidates.find(
         (item) => item.recoveryId === id,
       );
 
-      return selectedCandidate?.filePath !== candidate.filePath;
+      return (
+        selectedCandidate == null ||
+        getCandidateGroupKey(selectedCandidate) !== groupKey
+      );
     }),
     candidate.recoveryId,
   ];
@@ -158,7 +254,7 @@ function getCandidateName(candidate: RecoveryCandidateArgs) {
   return candidate.filePath ?? candidate.tempFileName;
 }
 
-function getCandidatePath(candidate: RecoveryCandidateArgs) {
+function getCandidateOriginalPath(candidate: RecoveryCandidateArgs) {
   return (
     candidate.filePath ?? t(($) => $.dialog.recovery.untitled, { ns: 'dialog' })
   );
@@ -166,7 +262,7 @@ function getCandidatePath(candidate: RecoveryCandidateArgs) {
 
 function getCandidateStatus(candidate: RecoveryCandidateArgs) {
   if (!candidate.isUntitled && !candidate.sourceExists) {
-    return t(($) => $.dialog.recovery.sourceMissing, { ns: 'dialog' });
+    return t(($) => $.dialog.recovery.recoverableCopy, { ns: 'dialog' });
   }
 
   if (!candidate.isUntitled && !candidate.sourceMatches) {
@@ -178,19 +274,87 @@ function getCandidateStatus(candidate: RecoveryCandidateArgs) {
     : t(($) => $.dialog.recovery.recoveredCopy, { ns: 'dialog' });
 }
 
+function getCandidateStatusDetail(candidate: RecoveryCandidateArgs) {
+  if (!candidate.isUntitled && !candidate.sourceExists) {
+    return t(($) => $.dialog.recovery.originalFileMissing, { ns: 'dialog' });
+  }
+
+  if (!candidate.isUntitled && !candidate.sourceMatches) {
+    return t(($) => $.dialog.recovery.originalFileChanged, { ns: 'dialog' });
+  }
+
+  return candidate.hasUnsavedChanges
+    ? t(($) => $.dialog.recovery.recoveredDraft, { ns: 'dialog' })
+    : t(($) => $.dialog.recovery.recoveredCopy, { ns: 'dialog' });
+}
+
+function getCandidateRecordKind(candidate: RecoveryCandidateArgs) {
+  return candidate.recordKind === 'current'
+    ? t(($) => $.dialog.recovery.currentSnapshot, { ns: 'dialog' })
+    : t(($) => $.dialog.recovery.previousSnapshot, { ns: 'dialog' });
+}
+
+function getGroupTitle(group: {
+  groupKey: string;
+  candidates: RecoveryCandidateArgs[];
+}) {
+  const candidate = group.candidates[0];
+
+  if (candidate == null) {
+    return '';
+  }
+
+  return candidate.filePath ?? candidate.tempFileName;
+}
+
+function getGroupDescription(group: {
+  groupKey: string;
+  candidates: RecoveryCandidateArgs[];
+}) {
+  if (group.candidates.length > 1) {
+    return t(($) => $.dialog.recovery.groupDescription, { ns: 'dialog' });
+  }
+
+  return getCandidateStatusDetail(group.candidates[0] as RecoveryCandidateArgs);
+}
+
 function getCandidateRecoveredAt(candidate: RecoveryCandidateArgs) {
   return new Date(candidate.updatedAt).toLocaleString();
 }
 
 function emitRecoverSelected() {
+  markCloseAsExplicit();
   emit('recover-selected', selectedRecoveryIds.value);
 }
 
 function emitDiscardSelected() {
+  markCloseAsExplicit();
   emit('discard-selected', selectedRecoveryIds.value);
 }
 
 function emitDecideLater() {
+  markCloseAsExplicit();
   emit('decide-later');
+}
+
+const explicitCloseRequested = ref(false);
+
+watch(open, (isOpen, wasOpen) => {
+  if (wasOpen && !isOpen) {
+    if (!explicitCloseRequested.value) {
+      emit('decide-later');
+    }
+
+    explicitCloseRequested.value = false;
+  }
+});
+
+function markCloseAsExplicit() {
+  explicitCloseRequested.value = true;
+  void nextTick(() => {
+    if (open.value) {
+      explicitCloseRequested.value = false;
+    }
+  });
 }
 </script>

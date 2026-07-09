@@ -18,6 +18,8 @@
     "saveSuccess": "Saved",
     "saveFailed": "Save failed",
     "saveFailedDescription": "Unable to save the score.",
+    "recoveryDiscardFailed": "Discard recovery failed",
+    "recoveryDiscardFailedDescription": "Unable to discard the selected recovery snapshot.",
     "copyFailed": "Copy failed",
     "copyElementLinkSuccess": "Element link copied",
     "copyHtmlSuccess": "HTML copied",

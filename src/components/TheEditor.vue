@@ -5730,33 +5730,43 @@ async function load() {
   ) {
     const recoveryResults = await ipcService.listRecoveryCandidates();
 
-    const savedFileCandidateCounts = new Map<string, number>();
+    const groupedRecoveryCandidates = new Map<
+      string,
+      RecoveryCandidateArgs[]
+    >();
+    const orderedRecoveryGroupKeys: string[] = [];
 
     for (const candidate of recoveryResults.candidates) {
-      if (candidate.filePath == null) {
+      const groupKey = getRecoveryCandidateGroupKey(candidate);
+      const existingCandidates = groupedRecoveryCandidates.get(groupKey);
+
+      if (existingCandidates == null) {
+        groupedRecoveryCandidates.set(groupKey, [candidate]);
+        orderedRecoveryGroupKeys.push(groupKey);
+      } else {
+        existingCandidates.push(candidate);
+      }
+    }
+
+    const autoRecoveryCandidates: RecoveryCandidateArgs[] = [];
+    const pendingRecoveryCandidates: RecoveryCandidateArgs[] = [];
+
+    for (const groupKey of orderedRecoveryGroupKeys) {
+      const groupedCandidates = groupedRecoveryCandidates.get(groupKey) ?? [];
+
+      if (groupedCandidates.length === 0) {
         continue;
       }
 
-      savedFileCandidateCounts.set(
-        candidate.filePath,
-        (savedFileCandidateCounts.get(candidate.filePath) ?? 0) + 1,
-      );
+      if (
+        groupedCandidates[0]?.isUntitled ||
+        (groupedCandidates.length === 1 && groupedCandidates[0].sourceMatches)
+      ) {
+        autoRecoveryCandidates.push(groupedCandidates[0]);
+      } else {
+        pendingRecoveryCandidates.push(...groupedCandidates);
+      }
     }
-
-    const autoRecoveryCandidates = recoveryResults.candidates.filter(
-      (candidate) =>
-        candidate.isUntitled ||
-        (candidate.sourceMatches &&
-          (candidate.filePath == null ||
-            (savedFileCandidateCounts.get(candidate.filePath) ?? 0) === 1)),
-    );
-    const pendingRecoveryCandidates = recoveryResults.candidates.filter(
-      (candidate) =>
-        !candidate.isUntitled &&
-        (!candidate.sourceMatches ||
-          (candidate.filePath != null &&
-            (savedFileCandidateCounts.get(candidate.filePath) ?? 0) > 1)),
-    );
 
     if (autoRecoveryCandidates.length > 0) {
       for (const candidate of autoRecoveryCandidates) {
@@ -5973,6 +5983,8 @@ async function closeWorkspace(workspace: Workspace) {
   }
 
   if (shouldClose) {
+    await discardRecoverySnapshot(workspace.id);
+
     // If using the browser, remove the item from local storage
     if (isBrowser.value) {
       localStorage.removeItem(`workspace-${workspace.id}`);
@@ -5980,7 +5992,6 @@ async function closeWorkspace(workspace: Workspace) {
 
     // If the last tab has closed, then exit
     if (workspaces.value.length == 1) {
-      await discardRecoverySnapshot(workspace.id);
       await ipcService.exitApplication();
     }
 
@@ -9480,6 +9491,12 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
   }
 }
 
+function getRecoveryCandidateGroupKey(candidate: RecoveryCandidateArgs) {
+  return candidate.isUntitled
+    ? candidate.workspaceId
+    : (candidate.filePath ?? candidate.workspaceId);
+}
+
 async function recoverSelectedRecoveryCandidates(candidateIds: string[]) {
   const selectedCandidates = recoveryCandidates.value.filter((candidate) =>
     candidateIds.includes(candidate.recoveryId),
@@ -9496,14 +9513,23 @@ async function recoverSelectedRecoveryCandidates(candidateIds: string[]) {
 }
 
 async function discardSelectedRecoveryCandidates(candidateIds: string[]) {
-  for (const candidateId of candidateIds) {
-    const candidateWorkspace = recoveryCandidates.value.find(
-      (candidate) => candidate.recoveryId === candidateId,
-    );
+  const selectedCandidateIds = recoveryCandidates.value
+    .filter((candidate) => candidateIds.includes(candidate.recoveryId))
+    .map((candidate) => candidate.recoveryId);
 
-    if (candidateWorkspace != null) {
-      clearRecoverySnapshotTimer(candidateWorkspace.recoveryId);
-      await discardRecoverySnapshot(candidateWorkspace.recoveryId);
+  if (selectedCandidateIds.length > 0) {
+    const result =
+      await ipcService.discardRecoverySnapshots(selectedCandidateIds);
+
+    if (!result.success) {
+      showReplyErrorToast(
+        t(($) => $.toast.editor.recoveryDiscardFailed, { ns: 'toast' }),
+        result,
+        t(($) => $.toast.editor.recoveryDiscardFailedDescription, {
+          ns: 'toast',
+        }),
+      );
+      return;
     }
   }
 
@@ -9539,7 +9565,6 @@ function addWorkspace(workspace: Workspace) {
 function removeWorkspace(workspace: Workspace) {
   cancelLyricsAssignment(workspace);
   clearRecoverySnapshotTimer(workspace.id);
-  void discardRecoverySnapshot(workspace.id);
 
   const index = workspaces.value.indexOf(workspace);
 

@@ -6,6 +6,7 @@ import { v4 as uuidv4, validate as validateUuid } from 'uuid';
 
 import type {
   DiscardRecoverySnapshotReplyArgs,
+  DiscardRecoverySnapshotsReplyArgs,
   ListRecoveryCandidatesReplyArgs,
   RecoveryCandidateArgs,
   RecoverySnapshotArgs,
@@ -13,6 +14,7 @@ import type {
 } from '../../src/ipc/ipcChannels';
 
 const recoverySchemaVersion = 1;
+const abandonedTempCleanupAgeMs = 24 * 60 * 60 * 1000;
 
 interface RecoverySnapshotEnvelope {
   schemaVersion: number;
@@ -46,6 +48,7 @@ export class RecoveryStore {
     });
 
     const workspaceIds = new Set<string>();
+    const tempWorkspaceIds = new Set<string>();
 
     for (const entry of entries) {
       if (!entry.isFile()) {
@@ -54,9 +57,11 @@ export class RecoveryStore {
 
       if (entry.name.endsWith('.prev.json')) {
         workspaceIds.add(entry.name.replace(/\.prev\.json$/, ''));
+      } else if (entry.name.endsWith('.tmp.json')) {
+        tempWorkspaceIds.add(entry.name.replace(/\.tmp\.json$/, ''));
       } else if (
         entry.name.endsWith('.json') &&
-        !entry.name.endsWith('.tmp.json')
+        !entry.name.endsWith('.prev.json')
       ) {
         workspaceIds.add(entry.name.replace(/\.json$/, ''));
       }
@@ -65,25 +70,44 @@ export class RecoveryStore {
     const candidates: RecoveryCandidateArgs[] = [];
 
     for (const workspaceId of workspaceIds) {
-      let currentPath: string;
-      let prevPath: string;
-
       try {
-        currentPath = this.getCurrentPath(workspaceId);
-        prevPath = currentPath.replace(/\.json$/, '.prev.json');
+        const currentPath = this.getCurrentPath(workspaceId);
+        const prevPath = this.getPreviousPath(workspaceId);
+        const tempPath = this.getTempPath(workspaceId);
+
+        const currentRecoveryFile = await this.readRecoveryFile(currentPath);
+        const previousRecoveryFile = await this.readRecoveryFile(prevPath);
+
+        if (currentRecoveryFile != null) {
+          candidates.push(
+            await this.toCandidate(currentRecoveryFile, 'current'),
+          );
+        }
+
+        if (previousRecoveryFile != null) {
+          candidates.push(
+            await this.toCandidate(previousRecoveryFile, 'previous'),
+          );
+        }
+
+        if (currentRecoveryFile != null || previousRecoveryFile != null) {
+          await this.cleanupAbandonedTempFile(tempPath);
+        }
       } catch {
         continue;
       }
+    }
 
-      const recoveryFile =
-        (await this.readRecoveryFile(currentPath)) ??
-        (await this.readRecoveryFile(prevPath));
-
-      if (recoveryFile == null) {
+    for (const workspaceId of tempWorkspaceIds) {
+      if (workspaceIds.has(workspaceId)) {
         continue;
       }
 
-      candidates.push(await this.toCandidate(recoveryFile));
+      try {
+        await this.cleanupAbandonedTempFile(this.getTempPath(workspaceId));
+      } catch {
+        continue;
+      }
     }
 
     candidates.sort((a, b) => b.updatedAt - a.updatedAt);
@@ -189,6 +213,61 @@ export class RecoveryStore {
     }
   }
 
+  public async discardRecoverySnapshots(
+    recoveryIds: string[],
+  ): Promise<DiscardRecoverySnapshotsReplyArgs> {
+    try {
+      await fs.mkdir(this.recoveryDir, { recursive: true });
+
+      const recoveryIdSet = new Set(recoveryIds);
+      if (recoveryIdSet.size === 0) {
+        return { success: true };
+      }
+
+      const entries = await fs.readdir(this.recoveryDir, {
+        withFileTypes: true,
+      });
+
+      const workspaceIds = new Set<string>();
+
+      for (const entry of entries) {
+        if (!entry.isFile()) {
+          continue;
+        }
+
+        if (entry.name.endsWith('.prev.json')) {
+          workspaceIds.add(entry.name.replace(/\.prev\.json$/, ''));
+        } else if (entry.name.endsWith('.tmp.json')) {
+          workspaceIds.add(entry.name.replace(/\.tmp\.json$/, ''));
+        } else if (entry.name.endsWith('.json')) {
+          workspaceIds.add(entry.name.replace(/\.json$/, ''));
+        }
+      }
+
+      for (const workspaceId of workspaceIds) {
+        const currentPath = this.getCurrentPath(workspaceId);
+        const previousPath = this.getPreviousPath(workspaceId);
+        const tempPath = this.getTempPath(workspaceId);
+
+        await this.discardMatchingRecoveryFile(currentPath, recoveryIdSet);
+        await this.discardMatchingRecoveryFile(previousPath, recoveryIdSet);
+        await this.discardMatchingRecoveryFile(tempPath, recoveryIdSet);
+      }
+
+      await this.syncDirectory(this.recoveryDir);
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        errorMessage:
+          error instanceof Error
+            ? error.message
+            : 'Unable to discard recovery snapshot.',
+      };
+    }
+  }
+
   private async readRecoveryFile(filePath: string) {
     try {
       const raw = await fs.readFile(filePath, 'utf8');
@@ -198,6 +277,7 @@ export class RecoveryStore {
       if (
         envelope == null ||
         envelope.schemaVersion !== recoverySchemaVersion ||
+        typeof envelope.snapshotId !== 'string' ||
         envelope.workspaceId == null ||
         typeof envelope.score !== 'string' ||
         envelope.contentLength !== Buffer.byteLength(envelope.score, 'utf8') ||
@@ -218,6 +298,7 @@ export class RecoveryStore {
 
   private async toCandidate(
     recoveryFile: RecoverySnapshotFile,
+    recordKind: 'current' | 'previous',
   ): Promise<RecoveryCandidateArgs> {
     const envelope = recoveryFile.envelope;
     const sourceStats =
@@ -232,7 +313,7 @@ export class RecoveryStore {
       sourceStats.size === envelope.sourceSize;
 
     return {
-      recoveryId: envelope.workspaceId,
+      recoveryId: envelope.snapshotId,
       workspaceId: envelope.workspaceId,
       filePath: envelope.filePath,
       tempFileName: envelope.tempFileName,
@@ -244,7 +325,39 @@ export class RecoveryStore {
       sourceExists,
       sourceMatches,
       isUntitled: envelope.filePath == null,
+      recordKind,
     };
+  }
+
+  private async discardMatchingRecoveryFile(
+    filePath: string,
+    recoveryIds: Set<string>,
+  ) {
+    try {
+      const recoveryFile = await this.readRecoveryFile(filePath);
+
+      if (recoveryFile?.envelope.snapshotId != null) {
+        if (recoveryIds.has(recoveryFile.envelope.snapshotId)) {
+          await fs.rm(filePath, { force: true });
+        }
+      }
+    } catch {
+      // Leave unreadable files untouched.
+    }
+  }
+
+  private async cleanupAbandonedTempFile(tempPath: string) {
+    try {
+      const stats = await fs.stat(tempPath);
+
+      if (Date.now() - stats.mtimeMs < abandonedTempCleanupAgeMs) {
+        return;
+      }
+
+      await fs.rm(tempPath, { force: true });
+    } catch {
+      // Best-effort cleanup only.
+    }
   }
 
   private async readSourceStats(filePath: string) {

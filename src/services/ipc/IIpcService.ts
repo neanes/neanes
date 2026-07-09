@@ -1,6 +1,7 @@
 import type {
   ClipboardReplyArgs,
   DiscardRecoverySnapshotReplyArgs,
+  DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceReplyArgs,
@@ -62,6 +63,10 @@ export interface IIpcService {
   discardRecoverySnapshot(
     workspaceId: string,
   ): Promise<DiscardRecoverySnapshotReplyArgs>;
+
+  discardRecoverySnapshots(
+    recoveryIds: string[],
+  ): Promise<DiscardRecoverySnapshotsReplyArgs>;
 
   showMessageBox(args: ShowMessageBoxArgs): Promise<ShowMessageBoxReplyArgs>;
 

@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import type {
   ClipboardReplyArgs,
   DiscardRecoverySnapshotReplyArgs,
+  DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceReplyArgs,
@@ -197,6 +198,13 @@ export class BrowserIpcService implements IIpcService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     workspaceId: string,
   ): Promise<DiscardRecoverySnapshotReplyArgs> {
+    return { success: true };
+  }
+
+  public async discardRecoverySnapshots(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    recoveryIds: string[],
+  ): Promise<DiscardRecoverySnapshotsReplyArgs> {
     return { success: true };
   }
 

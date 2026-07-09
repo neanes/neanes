@@ -1,6 +1,7 @@
 import type {
   ClipboardReplyArgs,
   DiscardRecoverySnapshotReplyArgs,
+  DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageArgs,
   ExportPageAsImageReplyArgs,
   ExportWorkspaceAsHtmlArgs,
@@ -179,6 +180,15 @@ export class IpcService implements IIpcService {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.DiscardRecoverySnapshot,
       workspaceId,
+    );
+  }
+
+  public async discardRecoverySnapshots(
+    recoveryIds: string[],
+  ): Promise<DiscardRecoverySnapshotsReplyArgs> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.DiscardRecoverySnapshots,
+      recoveryIds,
     );
   }
 

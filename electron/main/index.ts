@@ -26,6 +26,7 @@ import { initializeI18n, resolveLanguagePreference } from '../../src/i18n';
 import type {
   ClipboardReplyArgs,
   CloseWorkspacesArgs,
+  DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageArgs,
   ExportPageAsImageReplyArgs,
   ExportWorkspaceAsHtmlArgs,
@@ -2818,6 +2819,16 @@ ipcMain.handle(
   IpcRendererChannels.DiscardRecoverySnapshot,
   async (event, workspaceId: string) => {
     return await recoveryStore.discardRecoverySnapshot(workspaceId);
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.DiscardRecoverySnapshots,
+  async (
+    event,
+    recoveryIds: string[],
+  ): Promise<DiscardRecoverySnapshotsReplyArgs> => {
+    return await recoveryStore.discardRecoverySnapshots(recoveryIds);
   },
 );
 

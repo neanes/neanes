@@ -51,14 +51,13 @@ The document model uses `fontStyle` as the document-level typography primitive:
 
 **The Bold axis means the 700-weight face in document state and in rich-text
 output.** Semibold, Light, Caption, Display, and the rest are styles chosen from
-the style list, never evidence that the Bold shortcut is active. For rich text,
-the four basic faces
-(Regular, Bold, Italic, Bold Italic) serialize as stock CKEditor markup --
-`<strong>`, `<i>`, and nothing for Regular -- because the rich-text container base
-is always Regular, so those tags cannot misrender (section 5.2). Only non-basic
-faces (named weights such as Semibold or Black, optical sizes such as Caption or
-Display) serialize as explicit CSS, because no semantic tag can express them.
-Semantic `<strong>`/`<b>` and `<em>`/`<i>` are also accepted on import.
+the style list, never evidence that the Bold shortcut is active. In rich text,
+any explicit `fontStyle` value serializes as CSS that pins both axes. That means
+`Regular` is a real override, not "clear the attribute", and `Bold`, `Italic`,
+and `Bold Italic` all downcast to CSS spans as well. A missing `fontStyle`
+attribute means the run inherits the active paragraph/text style. Semantic
+`<strong>`/`<b>` and `<em>`/`<i>` are still accepted on import, but they are just
+one input shape for the same explicit override path.
 
 CKEditor is the most delicate integration point because its conversion pipeline
 has strict previous/next attribute semantics, but it is only one adapter over the
@@ -105,16 +104,14 @@ output when CSS cannot otherwise select the face.
 
 The shared model covers all text whose typography is saved in the score:
 
-| Surface                     | Runtime field(s)                                                       |
-| --------------------------- | ---------------------------------------------------------------------- |
-| rich text boxes/headers     | HTML in `RichTextBoxElement.content*`; CKEditor model uses `fontStyle` |
-| text annotations            | HTML in `AnnotationElement.text`; CKEditor model uses `fontStyle`      |
-| plain text boxes            | `TextBoxElement.fontFamily` + `fontStyle`                              |
-| lyrics custom overrides     | `NoteElement.lyricsFontFamily` + `lyricsFontStyle`                     |
-| drop caps                   | `DropCapElement.fontFamily` + `fontStyle`                              |
-| page setup lyrics default   | `PageSetup.lyricsDefaultFontFamily` + `lyricsDefaultFontStyle`         |
-| page setup drop-cap default | `PageSetup.dropCapDefaultFontFamily` + `dropCapDefaultFontStyle`       |
-| page setup text-box default | `PageSetup.textBoxDefaultFontFamily` + `textBoxDefaultFontStyle`       |
+| Surface                 | Runtime field(s)                                                                                               |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| rich text boxes/headers | HTML in `RichTextBoxElement.content*`; CKEditor model uses `fontStyle`                                         |
+| text annotations        | HTML in `AnnotationElement.text`; CKEditor model uses `fontStyle`                                              |
+| plain text boxes        | `TextBoxElement.fontFamily` + `fontStyle`                                                                      |
+| lyrics custom overrides | `NoteElement.lyricsFontFamily` + `lyricsFontStyle`                                                             |
+| drop caps               | `DropCapElement.fontFamily` + `fontStyle`                                                                      |
+| paragraph styles        | `ParagraphStyle.overrides.fontFamily` + `fontStyle` (the built-in styles carry the former page-setup defaults) |
 
 Music fonts remain ordinary font families with only the `Regular` style. They
 participate in the catalog so the controls can disable style and Bold/Italic
@@ -133,9 +130,9 @@ Style is not a toolbar convenience. It affects:
 
 That is why non-rich fields store `fontStyle` directly and why rich text
 normalizes its HTML into the same concept on editor load. CKEditor may import
-legacy semantic wrappers; normalized output uses stock semantic tags for basic
-faces and CSS spans for explicit non-basic faces, so the browser renders the same
-score typography model the rest of the app uses.
+legacy semantic wrappers; normalized output serializes every explicit face as
+CSS spans (section 5.2), so the browser renders the same score typography model
+the rest of the app uses.
 
 ### 1.4 Regular, defaults, and inherited rich text
 
@@ -145,36 +142,34 @@ because the document model needs a stable way to say "plain for this family."
 
 The two storage formats use that baseline differently:
 
-- **Non-rich score fields** store their face style explicitly (including
-  `Regular`) because they are structured JSON fields whose value participates in
-  clone, page setup, and UI state. Inheriting the page-setup default is a
-  separate, explicit switch -- a `useDefaultStyle` / `lyricsUseDefaultStyle`
-  boolean on the element (section 4.1) -- not the absence of a value.
+- **Non-rich score fields** store an explicit face style (including
+  `Regular`) when the element overrides its paragraph style, and store null to
+  inherit the face of the style referenced by the element's `paragraphStyleId`
+  (or `lyricsParagraphStyleId`). The legacy `useDefaultStyle` /
+  `lyricsUseDefaultStyle` booleans are load-only compatibility (section 4.2),
+  not runtime state.
 - **CKEditor rich text** omits the `fontStyle` attribute when the run has no
-  explicit face-style override. A run with neither `fontFamily` nor `fontStyle`
-  fully inherits the container default family; its weight and slant are always
-  plain, because the rich-text container base is Regular-only (section 5.2). A run
-  with an explicit `fontFamily` but no `fontStyle` overrides only the family. A
-  present `fontStyle` is an explicit override: the basic faces serialize as stock
-  semantic markup and the non-basic faces as exact-face CSS (section 5.2).
+  explicit face-style override. In that case the run inherits the active
+  paragraph/text style's family and axes. A run with an explicit `fontFamily`
+  but no `fontStyle` overrides only the family. A present `fontStyle` is always
+  an explicit override and serializes as CSS that pins both axes, including
+  `Regular`.
 
-Unlike the non-rich surfaces, the rich-text container does **not** inherit a
-non-Regular default face. Non-Regular page/text-box defaults (Source Serif
-Caption, Semibold, ...) still apply to plain text boxes, lyrics, and drop caps,
-which resolve straight to CSS; rich text deliberately keeps a Regular base so the
-basic Bold/Italic shortcuts can serialize as plain `<strong>`/`<i>` without
-leaking an inherited weight or slant. The Regular-only root behavior is described
-in section 5.2.
-Because the base is always Regular, explicit `Regular` is never needed in rich
-text and always compacts to the absence of `fontStyle`.
+Unlike the non-rich surfaces, rich text does **not** inherit a non-regular
+default face from the content root. The root may still supply the base family,
+size, and color, but it is the active paragraph/text style that contributes the
+default face axes when `fontStyle` is absent. Non-Regular page/text-box defaults
+(`Source Serif Caption`, `Semibold`, ...) still apply to plain text boxes,
+lyrics, and drop caps, which resolve straight to CSS; rich text deliberately
+keeps inheritance in the paragraph/style layer instead of baking a separate root
+face into the content.
 
-Named non-basic styles, such as Caption, Display, or Condensed, need a concrete
-family to render. If the user chooses such a style while the rich-text family
-control is "Default", the UI first materializes the current default family as an
-explicit `fontFamily` value, then writes the style. Basic styles behave
-differently: `Regular`, `Bold`, `Italic`, and `Bold Italic` may remain familyless
-and serialize as stock semantic markup (`<strong>`/`<i>`), inheriting the current
-family from a separate `fontFamily` span when one is present.
+Named non-basic styles, such as Caption, Display, or Condensed, still need a
+concrete family to render. If the user chooses such a style while the rich-text
+family control is "Default", the UI first materializes the current default family
+as an explicit `fontFamily` value, then writes the style. Reset/remove-format
+remains the way to clear `fontStyle` so the run falls back to inherited
+paragraph/style axes.
 
 ---
 
@@ -357,9 +352,8 @@ The runtime model stores:
 - `TextBoxElement.fontStyle`
 - `NoteElement.lyricsFontStyle`
 - `DropCapElement.fontStyle`
-- `PageSetup.lyricsDefaultFontStyle`
-- `PageSetup.dropCapDefaultFontStyle`
-- `PageSetup.textBoxDefaultFontStyle`
+- `ParagraphStyle.overrides.fontStyle` (the built-in styles carry the former
+  page-setup defaults)
 
 The score JSON save model writes those face styles to `fontSubfamily` field
 names:
@@ -367,9 +361,8 @@ names:
 - `TextBoxElement_v1.fontSubfamily`
 - `NoteElement_v1.lyricsFontSubfamily`
 - `DropCapElement_v1.fontSubfamily`
-- `PageSetup_v1.lyricsDefaultFontSubfamily`
-- `PageSetup_v1.dropCapDefaultFontSubfamily`
-- `PageSetup_v1.textBoxDefaultFontSubfamily`
+- `ParagraphStyle_v1.fontSubfamily` (in `score.paragraphStyles`; the
+  `PageSetup_v1.*DefaultFontSubfamily` fields are legacy load-only)
 
 The deserializer still recognizes the legacy fields and meanings that predate
 `fontSubfamily`:
@@ -387,12 +380,13 @@ used `fontStyle` for CSS slant values such as `normal`, `italic`, or `oblique`.
 Score JSON therefore avoids overloading that legacy key. App score JSON does not
 write a separate CSS slant field; CSS slant is derived from the face at runtime.
 
-Each non-rich surface also has an inherit switch: a `useDefaultStyle` (text boxes,
-drop caps) or `lyricsUseDefaultStyle` (custom lyrics) boolean. When set, the
-element inherits the matching page-setup default family and style; when cleared,
-it uses its own stored `fontFamily` + `fontStyle`. So "inherit the default" for
-non-rich text is this boolean, not an absent value -- which is why the structured
-fields can always store a concrete face, including `Regular`.
+Each non-rich surface inherits by omission: a null/absent `fontFamily` +
+`fontSubfamily` falls through to the element's paragraph style
+(`paragraphStyleId`, or `lyricsParagraphStyleId` for lyrics). The legacy
+`useDefaultStyle` (text boxes, drop caps) and `lyricsUseDefaultStyle` (custom
+lyrics) booleans are recognized on load and folded into this model (section
+4.2); mode keys still use `useDefaultStyle` because they are not
+paragraph-styled.
 
 **Compatibility is backward-only.** Deserializing legacy files is fully supported
 (the classifier and folding in section 4.2). The reverse is not: a file written
@@ -507,65 +501,42 @@ Rich text uses two text attributes:
   Enter.
 
 `BoldEditing` and `ItalicEditing` are not part of the editor build. Bold and
-Italic are represented as `fontStyle` axes, but they downcast to the same stock
-`<strong>` and `<i>` markup those plugins would emit (section 5.2), so the model
-is unified on `fontStyle` while the output stays conventional. `UnderlineEditing`
-is part of the build because underline is decoration, not a font face.
+Italic are represented as `fontStyle` axes and downcast to CSS spans like every
+other explicit face (section 5.2), so the model and the output are both unified
+on `fontStyle`. `UnderlineEditing` is part of the build because underline is
+decoration, not a font face.
 
 ### 5.2 Rich-text output
 
-Rich text serializes the four basic faces as stock CKEditor markup and only the
-non-basic faces as CSS:
+Rich text serializes every explicit `fontStyle` as CSS so both axes are pinned:
 
-| Explicit style | Rich-text output              |
-| -------------- | ----------------------------- |
-| `Regular`      | no `fontStyle` markup (plain) |
-| `Bold`         | `<strong>...</strong>`        |
-| `Italic`       | `<i>...</i>`                  |
-| `Bold Italic`  | `<strong><i>...</i></strong>` |
+| Explicit style | Rich-text output                                   |
+| -------------- | -------------------------------------------------- |
+| `Regular`      | CSS span with `font-weight:400;font-style:normal;` |
+| `Bold`         | CSS span with `font-weight:700;font-style:normal;` |
+| `Italic`       | CSS span with `font-weight:400;font-style:italic;` |
+| `Bold Italic`  | CSS span with `font-weight:700;font-style:italic;` |
 
 The base family, when explicit, is a separate `<span style="font-family:...">`
-emitted by CKEditor's built-in `FontFamilyEditing`; the rich-text adapter does not
-compose family and basic style into one element. A bold run in `GFS Didot` thus
-serializes exactly as stock would:
+emitted by CKEditor's built-in `FontFamilyEditing`; the rich-text adapter then
+adds a nested style span for the explicit face. A bold run in `GFS Didot` thus
+serializes as:
 
 ```html
-<span style="font-family:GFS Didot,Neanes;"><strong>...</strong></span>
+<span style="font-family:GFS Didot,Neanes;"
+  ><span style="font-weight:700;font-style:normal;">...</span></span
+>
 ```
 
-This is faithful only because **the rich-text container base is Regular-only.**
-The content root sets `font-family`, `font-size`, and `color` from the
-text-box/page default, but never a non-Regular `font-weight` or `font-style`, so a
-run with no `fontStyle` inherits a plain (400/upright) base and `<strong>`/`<i>` --
-which set one axis and inherit the other -- land on exactly the intended face.
-Were the base italic or Semibold, `<strong>` would inherit the off-axis and
-misrender, which is why the base is pinned to Regular.
+This is now faithful because explicit rich-text styles pin both axes via CSS
+spans, even when the active paragraph/text style contributes italic or bold.
+The content root may still set `font-family`, `font-size`, and `color`, but the
+paragraph/style layer can contribute its own face axes. That is why every
+explicit `fontStyle` downcast pins both `font-weight` and `font-style`: a bare
+`<strong>` would only pin weight and could still inherit an italic paragraph,
+which would misrender `Bold` as `Bold Italic`.
 
-#### Regular-only rich-text root
-
-The CKEditor hosts -- **rich text boxes** (`TextBoxRich.vue`) and **text
-annotations** (`TextAnnotation.vue`) -- put family, size, color, and line-height
-on the content root. They do not put a resolved default face's weight or slant on
-that root. Rich text therefore inherits the default family over a plain
-400/upright base.
-
-That Regular-only base is required by the serialization contract. Stock
-`<strong>` and `<i>` set one axis and inherit the other; if the root supplied a
-non-Regular weight or slant, a basic run could inherit an off-axis value and
-render as the wrong face. Keeping the root plain lets the common basic
-Bold/Italic output stay conventional and small while non-basic faces carry exact
-CSS. Consequences:
-
-- **Asymmetry.** Plain text boxes, lyrics, and drop caps can still have
-  non-Regular defaults (they resolve to CSS and never used semantic tags); rich
-  text cannot inherit one. A rich-text run that wants Semibold must set it
-  explicitly.
-- **UA-stylesheet dependency.** `<strong>`/`<i>` render bold/italic only via the
-  consumer's user-agent stylesheet -- fine in the app, print, and browser exports,
-  and the same dependency stock CKEditor output carries.
-
-Non-basic faces have no semantic-tag equivalent, so they still serialize as CSS
-through the resolved face:
+Non-basic faces still serialize as CSS through the resolved face:
 
 - named-weight style (Semibold, Extra Bold, Black, ...) -> base-family span plus
   absolute `font-weight`;
@@ -585,8 +556,9 @@ through the resolved face:
 
 Non-basic styles need a concrete family because CSS cannot express "Caption of
 whatever family I inherit," so the UI materializes the current default family
-before writing a familyless non-basic style. Because the base is Regular-only, an
-explicit `Regular` always compacts to the absence of `fontStyle`.
+before writing a familyless non-basic style. Explicit `Regular` is now retained
+and serialized as CSS, while reset/remove-format clears `fontStyle` entirely so
+the run falls back to the inherited paragraph/style axes.
 
 ### 5.3 Importing old rich HTML
 
@@ -603,9 +575,10 @@ Old rich HTML normalizes through the same path as paste/import:
 3. The post-fixer splits a face-name first token into family + style when no
    style is already present.
 4. The post-fixer folds legacy markers into `fontStyle` and removes the markers.
-5. Regular is compacted by removing `fontStyle`. The rich-text base is
-   Regular-only, so absence always renders plain and explicit `Regular` is never
-   retained.
+   Explicit `font-style: normal` is preserved as `Regular` instead of being
+   treated as "no style".
+5. Only inferred default cases compact by removing `fontStyle`; explicit
+   `Regular` remains stored so it can downcast back to CSS and pin both axes.
 
 This handles both common old shapes:
 
@@ -615,9 +588,9 @@ This handles both common old shapes:
 ```
 
 After normalization, a subsequent edit/save re-emits the output described in
-section 5.2: stock `<strong>`/`<i>` for the basic faces, CSS only for non-basic
-ones. Imported markup is renormalized through `fontStyle` first, so the exact
-element and attribute order are canonicalized even for the basic cases.
+section 5.2: explicit `fontStyle` values always serialize as CSS spans that pin
+both axes. Imported markup is renormalized through `fontStyle` first, so the
+exact element and attribute order are canonicalized even for the basic cases.
 
 ### 5.4 Lazy migration
 
@@ -626,25 +599,25 @@ CKEditor normalizes the live editor model when that editor is created, but
 `element.content` is only rewritten when the box is edited and flushed back
 (usually on blur). Opening and saving without touching a rich-text box preserves
 that box's bytes (the non-rich structured fields around it are still re-serialized
-into the current shape on save). The first real edit may rewrite that box; basic
-Bold/Italic serializes as stock `<strong>`/`<i>`, and only non-basic faces
-(Semibold, Caption, ...) serialize as CSS.
+into the current shape on save). The first real edit may rewrite that box;
+explicit rich-text styles serialize as CSS spans that pin both axes, and only
+the exact-family non-basic cases need a derived family name.
 
 ### 5.5 The CKEditor downcast rule
 
-Family and basic style are independent in the view: `FontFamilyEditing` emits its
-own `<span style="font-family:...">`, and the `fontStyle` downcast emits
-`<strong>`/`<i>` for basic faces. Neither reads the other, so toggling Bold or
-changing family is a clean, self-contained wrap/unwrap -- the common path has no
-cross-attribute coupling.
-
-The coupling survives only for **non-basic faces**, where the `fontStyle` span
-must name an exact face derived from the base family (`Source Serif` +
-`Caption Bold` -> `Source Serif Caption`). That converter reads the sibling
-`fontFamily` off the model node, which makes it subject to the fragile rule:
+Family and style are independent in the view: `FontFamilyEditing` emits its own
+`<span style="font-family:...">`, and the `fontStyle` downcast emits a CSS span
+for any explicit style. The style span does not need the family for basic faces,
+but non-basic ones still need an exact face derived from the base family. That
+converter reads the sibling `fontFamily` off the model node, which makes it
+subject to the fragile rule:
 
 > A downcast converter must compose the view element from its own converted
 > value, reading only sibling attributes from the model node.
+
+The same explicit CSS path now handles `Regular`, `Bold`, `Italic`, and
+`Bold Italic`, so a paragraph-style italic base cannot leak through a basic
+override.
 
 CKEditor's attribute converter is called once for the previous value and once for
 the next value, while the model node already holds the next state. A converter
@@ -657,8 +630,7 @@ User flows keep this safe by changing one attribute per transaction: a family
 change writes `fontFamily`, then remaps `fontStyle` in a separate command, so the
 exact-face span is recomposed. Remove-format can clear both attributes in one
 batch; the converter detects the sibling change and unwraps the old exact-face
-span using both old values. The basic `<strong>`/`<i>` path needs none of this,
-because it never reads the family.
+span using both old values.
 
 ---
 
@@ -701,21 +673,22 @@ symmetry.
 
 ### 6.2 On-screen and print layout
 
-`PageSetup.lyricsFont` and `NoteElement.lyricsFont` resolve styles before
-constructing CSS font strings. For text boxes and drop caps, `LayoutService`
-resolves the stored family+style pair and writes computed CSS family, weight, and
-slant fields before measurement and rendering. This matters because a Semibold
-or Caption face can change width and line breaks; treating style as toolbar-only
-state would make the printed score disagree with the editor.
+Default and per-note lyrics resolve through paragraph styles plus
+`NoteElement.getParagraphStyleOverrides()` before constructing CSS font strings
+at the layout, editor-rendering, and export call sites. For text boxes and drop
+caps, `LayoutService` resolves the stored family+style pair and writes computed
+CSS family, weight, and slant fields before measurement and rendering. This
+matters because a Semibold or Caption face can change width and line breaks;
+treating style as toolbar-only state would make the printed score disagree with
+the editor.
 
 ### 6.3 Exporters
 
 `ByzHtmlExporter` resolves page setup defaults and element-specific overrides
 before writing CSS custom properties or inline styles. `LatexExporter` resolves
 the same structured model for non-rich text. Rich-text HTML export is
-browser-renderable: basic Bold/Italic are stock `<strong>`/`<i>` (rendered via the
-target's user-agent stylesheet, as with any CKEditor output), and non-basic faces
-carry absolute weight/style CSS or exact face families.
+browser-renderable: explicit rich-text styles use CSS spans that pin both axes,
+and non-basic faces carry absolute weight/style CSS or exact face families.
 
 The LaTeX JSON export has its own compatibility contract. Its schema remains at
 version `2`: exported `fontStyle` fields are still CSS slant values
@@ -806,9 +779,9 @@ This subsystem preserves these invariants:
   compatibility.
 - `Regular` is the virtual baseline style and is always legal even when a font
   source does not report a Regular face.
-- The Bold axis is the document shortcut for the 700-weight face. In rich text it
-  serializes as stock `<strong>`; in non-rich CSS resolution it is
-  `font-weight:700`. Semibold, Light, Caption, Display, Extra Bold, and Black are
+- The Bold axis is the document shortcut for the 700-weight face. It resolves
+  to `font-weight:700` in both rich-text CSS spans and non-rich CSS
+  resolution. Semibold, Light, Caption, Display, Extra Bold, and Black are
   styles; numeric `800` and `900` fold to those named styles rather than to the
   Bold axis.
 - Style lists come from `fontCatalog.getStyles`; controls do not invent
@@ -818,28 +791,24 @@ This subsystem preserves these invariants:
 - Rich text keeps CKEditor's existing `fontFamily` value shape as an adapter
   exception: the model stores the raw CSS family list, while typography helpers
   extract the base family for catalog operations.
-- The rich-text container base is Regular-only: the content root inherits the
-  default family, size, and color, but never a non-Regular weight or slant. Rich
-  text does not inherit a non-Regular default face, unlike the non-rich surfaces.
-- A rich-text run with no `fontFamily` and no `fontStyle` inherits the default
-  family over a plain (400/upright) base. A run with an explicit `fontFamily` but
-  no `fontStyle` overrides only the family.
-- A present rich-text `fontStyle` serializes by face class: the basic faces use
-  stock markup (`Bold` -> `<strong>`, `Italic` -> `<i>`, `Bold Italic` ->
-  `<strong><i>`, `Regular` -> no markup); non-basic faces use exact-face CSS, and
-  the base family, when explicit, is a separate `FontFamilyEditing` span.
-- Familyless explicit basic styles are valid (they are just `<strong>`/`<i>`).
-  Familyless explicit non-basic styles are not valid save output; the UI
-  materializes the current default family before writing them.
-- Because the rich-text base is Regular-only, explicit `Regular` always compacts
-  to the absence of `fontStyle`; it is never retained.
+- A rich-text run with no `fontStyle` inherits the active paragraph/text style
+  axes. A run with an explicit `fontFamily` but no `fontStyle` overrides only the
+  family.
+- A present rich-text `fontStyle` serializes as CSS that pins both axes.
+  `Regular`, `Bold`, `Italic`, and `Bold Italic` all use the same explicit CSS
+  path; the base family, when explicit, is a separate `FontFamilyEditing` span.
+- Familyless explicit basic styles are valid. Familyless explicit non-basic
+  styles are not valid save output; the UI materializes the current default
+  family before writing them.
+- `Regular` is retained when it is explicit. Only inferred default cases compact
+  to the absence of `fontStyle`.
 - The non-basic `fontStyle` converter -- the only one that reads the sibling
   family -- uses its own passed converted value for previous/next diffing. Family
-  and basic style are otherwise independent view elements.
+  and style are otherwise independent view elements.
 - CKEditor legacy markers always consume matched weight/style and are stripped
   before save. Semantic `<b>`/`<em>` and CSS weight/slant are import syntax; the
-  canonical output is stock `<strong>`/`<i>` for a basic face and exact-face CSS
-  for a non-basic one.
+  canonical output is explicit CSS for rich-text fontStyle and exact-face CSS for
+  non-basic faces.
 - CKEditor legacy `font-weight` must be carried as a raw marker so Light,
   Semibold, Extra Bold, Black, and other specific weights survive import instead
   of collapsing to generic Bold/not-Bold state.
@@ -901,8 +870,10 @@ This subsystem preserves these invariants:
 
 - `src/models/Element.ts` -- runtime `fontStyle` fields for lyrics, text boxes,
   and drop caps, plus saved annotation rich-text HTML.
-- `src/models/PageSetup.ts` -- default typography styles and resolved lyrics
-  font getter.
+- `src/models/ParagraphStyle.ts` -- paragraph styles whose overrides carry the
+  default text typography, plus the resolution helpers.
+- `src/models/PageSetup.ts` -- neume, mode-key, and alternate-line font
+  defaults (text defaults live in the paragraph styles).
 - `src/models/save/v1/Element.ts`, `src/models/save/v1/PageSetup.ts` -- saved
   `fontSubfamily` fields plus legacy optional fields.
 - `src/services/SaveService.ts` -- writes `fontSubfamily` fields, splits legacy

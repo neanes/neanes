@@ -1,37 +1,43 @@
 <template>
   <Toolbar class="chrome-toolbar" loop>
-    <template v-if="!element.useDefaultStyle">
-      <FontCombobox
-        :model-value="element.fontFamily"
-        :options="textBoxFontFamilies"
-        @update:model-value="onFontFamilyChanged"
-      />
-      <FontStyleSelect
-        class="w-40"
-        :model-value="element.fontStyle"
-        :options="fontStyleOptions"
-        :disabled="fontStyleOptions.length <= 1"
-        @update:model-value="
-          $emit('update', { fontStyle: $event } as Partial<TextBoxElement>)
-        "
-      />
-      <InputFontSize
-        id="toolbar-text-box-font-size"
-        :model-value="element.fontSize"
-        @update:model-value="
-          $emit('update', { fontSize: $event } as Partial<TextBoxElement>)
-        "
-      />
-      <ToolbarSeparator />
-    </template>
+    <ParagraphStyleSelect
+      trigger-class="w-48"
+      :model-value="element.paragraphStyleId"
+      :paragraph-styles="paragraphStyles"
+      @update:model-value="
+        $emit('update', { paragraphStyleId: $event } as Partial<TextBoxElement>)
+      "
+    />
+    <ToolbarSeparator />
+    <FontCombobox
+      :model-value="resolvedParagraphStyle.fontFamily"
+      :options="textBoxFontFamilies"
+      @update:model-value="onFontFamilyChanged"
+    />
+    <FontStyleSelect
+      class="w-40"
+      :model-value="resolvedParagraphStyle.fontStyle"
+      :options="fontStyleOptions"
+      :disabled="fontStyleOptions.length <= 1"
+      @update:model-value="
+        $emit('update', { fontStyle: $event } as Partial<TextBoxElement>)
+      "
+    />
+    <InputFontSize
+      id="toolbar-text-box-font-size"
+      :model-value="resolvedParagraphStyle.fontSize"
+      @update:model-value="
+        $emit('update', { fontSize: $event } as Partial<TextBoxElement>)
+      "
+    />
+    <ToolbarSeparator />
     <ToggleGroup
       type="multiple"
       variant="outline"
-      :model-value="styleValues"
-      @update:model-value="onStyleValuesChanged"
+      :model-value="activeStyleAxisValues"
+      @update:model-value="onFontStyleValuesChanged"
     >
       <ToggleGroupItem
-        v-if="!element.useDefaultStyle"
         value="bold"
         class="chrome-button"
         :class="{ selected: isFontStyleAxisActive('bold') }"
@@ -41,7 +47,6 @@
         <PhTextB class="size-4" />
       </ToggleGroupItem>
       <ToggleGroupItem
-        v-if="!element.useDefaultStyle"
         value="italic"
         class="chrome-button"
         :class="{ selected: isFontStyleAxisActive('italic') }"
@@ -50,10 +55,17 @@
       >
         <PhTextItalic class="size-4" />
       </ToggleGroupItem>
+    </ToggleGroup>
+    <ToggleGroup
+      type="multiple"
+      variant="outline"
+      :model-value="underlineValues"
+      @update:model-value="onTextDecorationValuesChanged"
+    >
       <ToggleGroupItem
         value="underline"
         class="chrome-button"
-        :class="{ selected: element.underline }"
+        :class="{ selected: underline }"
         aria-label="Toggle underline"
       >
         <PhTextUnderline class="size-4" />
@@ -64,7 +76,7 @@
       <ToggleGroup
         type="single"
         variant="outline"
-        :model-value="element.alignment"
+        :model-value="currentAlignment"
         @update:model-value="onAlignmentChanged"
       >
         <AppTooltip
@@ -73,7 +85,7 @@
           <ToggleGroupItem
             :value="TextBoxAlignment.Left"
             class="chrome-button"
-            :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+            :class="{ selected: currentAlignment === TextBoxAlignment.Left }"
           >
             <PhTextAlignLeft class="size-4" />
           </ToggleGroupItem>
@@ -84,7 +96,7 @@
           <ToggleGroupItem
             :value="TextBoxAlignment.Center"
             class="chrome-button"
-            :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+            :class="{ selected: currentAlignment === TextBoxAlignment.Center }"
           >
             <PhTextAlignCenter class="size-4" />
           </ToggleGroupItem>
@@ -95,9 +107,20 @@
           <ToggleGroupItem
             :value="TextBoxAlignment.Right"
             class="chrome-button"
-            :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+            :class="{ selected: currentAlignment === TextBoxAlignment.Right }"
           >
             <PhTextAlignRight class="size-4" />
+          </ToggleGroupItem>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.common.alignJustify, { ns: 'toolbar' })"
+        >
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Justify"
+            class="chrome-button"
+            :class="{ selected: currentAlignment === TextBoxAlignment.Justify }"
+          >
+            <PhTextAlignJustify class="size-4" />
           </ToggleGroupItem>
         </AppTooltip>
       </ToggleGroup>
@@ -131,6 +154,7 @@
 <script setup lang="ts">
 import {
   PhTextAlignCenter,
+  PhTextAlignJustify,
   PhTextAlignLeft,
   PhTextAlignRight,
   PhTextB,
@@ -145,6 +169,7 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import NeumeIcon from '@/components/NeumeIcon.vue';
+import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Toolbar,
@@ -152,8 +177,13 @@ import {
   ToolbarSeparator,
 } from '@/components/ui/toolbar';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
+import {
+  isTextBoxAlignment,
+  type ParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
@@ -165,9 +195,20 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
 });
 
 const emit = defineEmits(['insert:gorthmikon', 'insert:pelastikon', 'update']);
+
+const { resolvedParagraphStyle, underline, underlineValues } =
+  useResolvedParagraphStyle(
+    () => props.paragraphStyles,
+    () => props.element.paragraphStyleId,
+    () => props.element.getParagraphStyleOverrides(),
+  );
 
 const {
   fontStyleOptions,
@@ -177,31 +218,31 @@ const {
   applyStyleAxisToggles,
   remapStyleForFamily,
 } = useFontStyleControls(
-  () => props.element.fontFamily,
-  () => props.element.fontStyle,
+  () => resolvedParagraphStyle.value.fontFamily,
+  () => resolvedParagraphStyle.value.fontStyle,
 );
 
-const styleValues = computed(() => [
-  ...(props.element.useDefaultStyle ? [] : activeStyleAxisValues.value),
-  ...(props.element.underline ? ['underline'] : []),
-]);
+const currentAlignment = computed(() => resolvedParagraphStyle.value.alignment);
 
 const textBoxFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 
-function onStyleValuesChanged(value: unknown) {
+function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
-  const update: Partial<TextBoxElement> = {
+
+  emit('update', {
+    fontStyle: applyStyleAxisToggles(values),
+  } as Partial<TextBoxElement>);
+}
+
+function onTextDecorationValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
     underline: values.includes('underline'),
-  };
-
-  if (!props.element.useDefaultStyle) {
-    update.fontStyle = applyStyleAxisToggles(values);
-  }
-
-  emit('update', update);
+  } as Partial<TextBoxElement>);
 }
 
 function onFontFamilyChanged(fontFamily: string) {
@@ -217,9 +258,5 @@ function onAlignmentChanged(value: unknown) {
       alignment: value,
     } as Partial<TextBoxElement>);
   }
-}
-
-function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
-  return Object.values(TextBoxAlignment).includes(value as TextBoxAlignment);
 }
 </script>

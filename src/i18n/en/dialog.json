@@ -9,6 +9,12 @@
     "setAsDefault": "Set as Default",
     "useSystemDefault": "Use System Default"
   },
+  "neumeCombinations": {
+    "deleteTitle": "Delete combo?",
+    "deleteDescription": "Delete this combo from the list?",
+    "delete": "Delete",
+    "dragHandle": "Drag to reorder"
+  },
   "export": {
     "root": "Export",
     "description": "Choose an export format and configure its options.",
@@ -39,6 +45,32 @@
     "title": "Title",
     "author": "Author"
   },
+  "paragraphStyles": {
+    "root": "Paragraph Styles",
+    "description": "Configure reusable paragraph styles.",
+    "new": "New Style",
+    "duplicate": "Duplicate Style",
+    "delete": "Delete Style",
+    "clearFormatting": "Clear Formatting",
+    "resetStyleToDefault": "Reset Style to Default",
+    "name": "Name",
+    "parentStyle": "Parent",
+    "openDialog": "Edit Styles",
+    "newStyleName": "New Paragraph Style",
+    "copyStyleName": "{{name}} Copy",
+    "builtIn": {
+      "defaultText": "Default Text",
+      "annotation": "Annotation",
+      "title": "Title",
+      "subtitle": "Subtitle",
+      "chapter": "Chapter",
+      "section": "Section",
+      "header": "Header",
+      "footer": "Footer",
+      "lyrics": "Lyrics",
+      "dropCap": "Drop Cap"
+    }
+  },
   "neumePositioning": {
     "root": "Neume Positioning",
     "description": "Adjust supporting neume offsets and preview their positions.",
@@ -65,7 +97,6 @@
   "pageSetup": {
     "root": "Page Setup",
     "description": "Configure page dimensions, margins, spacing, fonts, and default styling for the score.",
-    "pageDimensions": "Page Dimensions",
     "pageSize": "Page Size",
     "in": "in",
     "cm": "cm",
@@ -151,8 +182,9 @@
     "alternateLineStyling": "Alternate Line Styling",
     "alternateLineDescription": "The default styling for all alternate lines in the score.",
     "dropCaps": "Drop Caps",
-    "dropCapsDescription": "The default styling for all drop caps in the score.",
     "color": "Color",
+    "outlineColor": "Outline Color",
+    "sameAsText": "Same as text",
     "size": "Size",
     "lineHeight": "Line Height",
     "lineSpan": "Lines to Drop",
@@ -162,9 +194,6 @@
     "italic": "Italic",
     "outline": "Outline",
     "lyrics": "Lyrics",
-    "lyricsDescription": "The default styling for all lyrics in the score.",
-    "textBoxes": "Text Boxes",
-    "textBoxesDescription": "The default styling for all text boxes in the score.",
     "initialMartyriae": "Initial Martyriæ",
     "initialMartyriaeDescription": "The default styling for all initial martyriæ in the score.",
     "neumesDescription": "The default styling for all neumes in the score.",
@@ -185,7 +214,6 @@
     "noteIndicators": "Note Indicators",
     "tempos": "Tempos",
     "preview": "Preview",
-    "visible": "Visible",
     "marginTop": "Gap Above",
     "marginBottom": "Gap Below",
     "thickness": "Thickness",

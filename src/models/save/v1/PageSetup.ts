@@ -66,13 +66,15 @@ export class PageSetup {
 
   public melkiteRtl: boolean | undefined = false;
 
-  public lyricsDefaultFontFamily = 'Source Serif';
-  public lyricsDefaultFontSize = Unit.fromPt(12);
+  // Deprecated load-only compatibility for pre-paragraph-style lyrics.
+  public lyricsDefaultFontFamily: string | undefined = undefined;
+  public lyricsDefaultFontSize: number | undefined = undefined;
   public lyricsDefaultFontSubfamily: string | undefined = undefined;
   public lyricsDefaultFontStyle: string | undefined = undefined;
   public lyricsDefaultFontWeight: string | undefined = undefined;
-  public lyricsDefaultColor = '#000000';
-  public lyricsDefaultStrokeWidth = 0;
+  public lyricsDefaultColor: string | undefined = undefined;
+  public lyricsDefaultStrokeWidth: number | undefined = undefined;
+
   public lyricsVerticalOffset = -Unit.fromInch(0.05);
   public lyricsMinimumSpacing = Unit.fromInch(0.05);
   public lyricsMelismaCutoffWidth = Unit.fromPt(5);
@@ -118,23 +120,26 @@ export class PageSetup {
   public tempoDefaultColor = '#ED0000';
   public tempoDefaultStrokeWidth = 0;
 
-  public dropCapDefaultFontFamily = 'Source Serif';
-  public dropCapDefaultFontSize = Unit.fromPt(60);
+  // Deprecated load-only compatibility for pre-paragraph-style drop caps.
+  public dropCapDefaultFontFamily: string | undefined = undefined;
+  public dropCapDefaultFontSize: number | undefined = undefined;
   public dropCapDefaultFontSubfamily: string | undefined = undefined;
   public dropCapDefaultFontStyle: string | undefined = undefined;
   public dropCapDefaultFontWeight: string | undefined = undefined;
-  public dropCapDefaultColor = '#000000';
-  public dropCapDefaultStrokeWidth = 0;
+  public dropCapDefaultColor: string | undefined = undefined;
+  public dropCapDefaultStrokeWidth: number | undefined = undefined;
   public dropCapDefaultLineHeight: number | undefined = undefined;
+
   public dropCapDefaultLineSpan = 1;
 
-  public textBoxDefaultFontFamily = 'Source Serif';
-  public textBoxDefaultFontSize = Unit.fromPt(20);
+  // Deprecated load-only compatibility for pre-paragraph-style text boxes.
+  public textBoxDefaultFontFamily: string | undefined = undefined;
+  public textBoxDefaultFontSize: number | undefined = undefined;
   public textBoxDefaultFontSubfamily: string | undefined = undefined;
   public textBoxDefaultFontStyle: string | undefined = undefined;
   public textBoxDefaultFontWeight: string | undefined = undefined;
-  public textBoxDefaultColor = '#000000';
-  public textBoxDefaultStrokeWidth = 0;
+  public textBoxDefaultColor: string | undefined = undefined;
+  public textBoxDefaultStrokeWidth: number | undefined = undefined;
   public textBoxDefaultLineHeight: number | undefined = undefined;
 
   public hyphenSpacing: number = Unit.fromMm(13.125);

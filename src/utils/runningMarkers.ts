@@ -93,8 +93,7 @@ function getFirstRunningMarkerForPage(
         element.elementType === ElementType.RichTextBox
       ) {
         const runningMarkerElement = element as
-          | TextBoxElement
-          | RichTextBoxElement;
+          TextBoxElement | RichTextBoxElement;
 
         if (runningMarkerElement.runningMarkerRole !== role) {
           continue;

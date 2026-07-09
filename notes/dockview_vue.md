@@ -633,6 +633,12 @@ re-renders for the selected workspace), but the dock structure -- edges, panes, 
 floating windows -- is untouched. Panel arrangement is a property of the editor
 session, not of any document.
 
+The center panel also hosts the workspace tab strip. Because Dockview can change the
+center width when edge panes open, close, resize, or restore without a window resize,
+`TheEditor.vue` observes the tab-strip host and schedules `Vue3TabsChrome.doLayout()`
+after those geometry changes settle. That keeps the tab widths in sync with the live
+center pane without storing any extra layout state.
+
 ### 5.3 The menu sync (the one cross-process channel)
 
 The cross-process state wiring keeps the OS application menu's checkboxes in

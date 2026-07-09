@@ -99,8 +99,7 @@ const emit = defineEmits<{
 }>();
 
 type DockDropEvent =
-  | DockviewWillDropEvent
-  | DockviewWillShowOverlayLocationEvent;
+  DockviewWillDropEvent | DockviewWillShowOverlayLocationEvent;
 type PanelDragPayload = PanelTransfer & {
   panelId: string;
 };
@@ -643,8 +642,7 @@ function getEdgeGroupId(side: EdgeGroupPosition) {
 
 function findEdgeGroup(side: EdgeGroupPosition, api: DockviewApi) {
   const group = api.getGroup(getEdgeGroupId(side)) as
-    | DockviewGroupPanel
-    | undefined;
+    DockviewGroupPanel | undefined;
 
   if (group == null) {
     return undefined;

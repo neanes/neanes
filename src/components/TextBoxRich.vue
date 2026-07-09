@@ -13,7 +13,7 @@
       :style="multipanelContainerStyle"
     >
       <RichTextEditor
-        :key="`left-${editorLanguage}-${contentLanguage}`"
+        :key="`left-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
         ref="editorLeft"
         class="rich-text-editor multipanel left"
         :owner="element"
@@ -24,7 +24,7 @@
         @select-neume="emit('select-neume')"
       />
       <RichTextEditor
-        :key="`center-${editorLanguage}-${contentLanguage}`"
+        :key="`center-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
         ref="editorCenter"
         class="rich-text-editor multipanel center"
         :owner="element"
@@ -35,7 +35,7 @@
         @select-neume="emit('select-neume')"
       />
       <RichTextEditor
-        :key="`right-${editorLanguage}-${contentLanguage}`"
+        :key="`right-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
         ref="editorRight"
         class="rich-text-editor multipanel right"
         :owner="element"
@@ -53,7 +53,7 @@
           :style="textBoxTopInnerContainerStyle"
         >
           <RichTextEditor
-            :key="`inline-top-${editorLanguage}-${contentLanguage}`"
+            :key="`inline-top-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
             ref="editor"
             class="rich-text-editor inline-top"
             :style="textBoxStyleTop"
@@ -68,7 +68,7 @@
       </div>
       <div class="inline-bottom-container" :style="textBoxBottomContainerStyle">
         <RichTextEditor
-          :key="`inline-bottom-${editorLanguage}-${contentLanguage}`"
+          :key="`inline-bottom-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
           ref="editorBottom"
           class="rich-text-editor inline-bottom"
           :style="textBoxStyleBottom"
@@ -83,7 +83,7 @@
     </div>
     <RichTextEditor
       v-else-if="element.scrollable"
-      :key="`scrollable-${editorLanguage}-${contentLanguage}`"
+      :key="`scrollable-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
       ref="editor"
       class="rich-text-editor single scrollable"
       :owner="element"
@@ -96,7 +96,7 @@
     />
     <RichTextEditor
       v-else
-      :key="`single-${editorLanguage}-${contentLanguage}`"
+      :key="`single-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
       ref="editor"
       class="rich-text-editor single"
       :owner="element"
@@ -126,11 +126,23 @@ import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import RichTextEditor from '@/components/RichTextEditor.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
+import { useRichTextParagraphStyleDefinitions } from '@/composables/useRichTextParagraphStyleDefinitions';
 import type InlineEditor from '@/customEditor';
-import type { RichTextBoxElement } from '@/models/Element';
+import type {
+  RichTextBoxContentKey,
+  RichTextBoxElement,
+} from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
-import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import {
+  getTextBoxParagraphStyleFallbackId,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
+import {
+  getFontFamilyWithNeumeFallback,
+  getLegacyNeumeFontFamily,
+} from '@/utils/getFontFamilyWithFallback';
 import type { TokenMetadata, TokenScope } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
 import {
@@ -163,6 +175,10 @@ const props = defineProps({
   },
   fonts: {
     type: Array as PropType<string[]>,
+    required: true,
+  },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
   editMode: {
@@ -254,6 +270,17 @@ const contentLanguage = computed(() => {
   return language == null ? 'en' : getRichTextLanguageCode(language);
 });
 
+const fallbackParagraphStyleId = computed(() =>
+  getTextBoxParagraphStyleFallbackId(props.element.inline),
+);
+
+const resolvedParagraphStyle = computed(() =>
+  resolveParagraphStyle(props.paragraphStyles, fallbackParagraphStyleId.value),
+);
+
+const { paragraphStyleDefinitions, paragraphStyleDefinitionKey } =
+  useRichTextParagraphStyleDefinitions(() => props.paragraphStyles);
+
 const editorConfig = computed((): EditorConfig => {
   const fontSizeOptions: FontSizeOption[] = [];
 
@@ -292,15 +319,14 @@ const editorConfig = computed((): EditorConfig => {
       content: contentLanguage.value,
       textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
     },
+    style: {
+      definitions: paragraphStyleDefinitions.value,
+    },
     licenseKey: 'GPL',
     insertNeume: {
       neumeDefaultFontFamily: props.pageSetup.neumeDefaultFontFamily,
-      defaultFontSize: props.element.inline
-        ? props.pageSetup.lyricsDefaultFontSize
-        : props.pageSetup.textBoxDefaultFontSize,
-      defaultFontFamily: props.element.inline
-        ? props.pageSetup.lyricsDefaultFontFamily
-        : props.pageSetup.textBoxDefaultFontFamily,
+      defaultFontSize: resolvedParagraphStyle.value.fontSize,
+      defaultFontFamily: resolvedParagraphStyle.value.fontFamily,
     },
   };
 });
@@ -383,7 +409,7 @@ function getFontSizeInPt(value: unknown) {
 function getMinimumFontSizeInEditor(editor: Editor) {
   const sizes: number[] = [];
 
-  sizes.push(Unit.toPt(props.pageSetup.textBoxDefaultFontSize));
+  sizes.push(Unit.toPt(resolvedParagraphStyle.value.fontSize));
 
   const selectedFontSize = getSelectedFontSize(editor);
 
@@ -409,23 +435,21 @@ function getMinimumFontSizeInEditor(editor: Editor) {
 }
 
 const containerStyle = computed(() => {
-  const defaultFontFamily = props.element.inline
-    ? props.pageSetup.lyricsDefaultFontFamily
-    : props.pageSetup.textBoxDefaultFontFamily;
   const style: StyleValue = {
     width: withZoom(props.element.width),
     height: withZoom(props.element.height),
-    '--ck-content-font-family': getFontFamilyWithFallback(
-      defaultFontFamily,
-      props.pageSetup.neumeDefaultFontFamily + 'Legacy', // TODO what a terrible hack
+    '--ck-content-font-family': getFontFamilyWithNeumeFallback(
+      resolvedParagraphStyle.value.fontFamily,
+      props.pageSetup.neumeDefaultFontFamily,
+    ),
+    '--ck-content-neume-font-family': getLegacyNeumeFontFamily(
+      props.pageSetup.neumeDefaultFontFamily,
     ),
     '--ck-content-font-size': props.element.inline
-      ? `${props.pageSetup.lyricsDefaultFontSize}px`
+      ? `${resolvedParagraphStyle.value.fontSize}px`
       : ckContentFontSize.value, // no zoom because we will apply zooming on the whole editor
-    '--ck-content-font-color': props.element.inline
-      ? props.pageSetup.lyricsDefaultColor
-      : props.pageSetup.textBoxDefaultColor,
-    '--ck-content-line-height': 'normal',
+    '--ck-content-font-color': resolvedParagraphStyle.value.color,
+    '--ck-content-line-height': `${resolvedParagraphStyle.value.lineHeight ?? 'normal'}`,
   };
 
   return style;
@@ -515,7 +539,7 @@ watch(
 );
 
 watch(
-  () => props.pageSetup.textBoxDefaultFontSize,
+  () => resolvedParagraphStyle.value.fontSize,
   () => {
     refreshCkContentFontSize();
   },
@@ -568,7 +592,7 @@ function phoneHome(height: number) {
   emit('update:height', height);
 }
 
-const ckContentFontSize = ref(`${props.pageSetup.textBoxDefaultFontSize}px`);
+const ckContentFontSize = ref(`${resolvedParagraphStyle.value.fontSize}px`);
 
 function getMinimumFontSizeInActiveEditors() {
   const activeEditors = getActiveEditorInstances().filter(
@@ -576,7 +600,7 @@ function getMinimumFontSizeInActiveEditors() {
   );
 
   if (activeEditors.length === 0) {
-    return `${props.pageSetup.textBoxDefaultFontSize}px`;
+    return `${resolvedParagraphStyle.value.fontSize}px`;
   }
 
   const minimumSizes = activeEditors.map((editor) =>
@@ -827,12 +851,7 @@ function getPendingUpdates() {
 
 function addPendingEditorData(
   updates: Partial<RichTextBoxElement>,
-  propertyName:
-    | 'content'
-    | 'contentBottom'
-    | 'contentLeft'
-    | 'contentCenter'
-    | 'contentRight',
+  propertyName: RichTextBoxContentKey,
   editor: Editor | undefined,
 ) {
   if (!props.editMode || editor == null) {

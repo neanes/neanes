@@ -9,6 +9,12 @@
     "setAsDefault": "Setează ca implicit",
     "useSystemDefault": "Folosește implicitul sistemului"
   },
+  "neumeCombinations": {
+    "deleteTitle": "Ștergeți combinația?",
+    "deleteDescription": "Ștergeți această combinație din listă?",
+    "delete": "Șterge",
+    "dragHandle": "Trageți pentru reordonare"
+  },
   "export": {
     "root": "Exportă",
     "description": "Alegeți un format de export și configurați opțiunile acestuia.",
@@ -39,6 +45,32 @@
     "title": "Titlu",
     "author": "Autor"
   },
+  "paragraphStyles": {
+    "root": "Stiluri paragraf",
+    "description": "Configurați stiluri de paragraf reutilizabile.",
+    "new": "Stil nou",
+    "duplicate": "Duplică stilul",
+    "delete": "Șterge stilul",
+    "clearFormatting": "Elimină formatarea",
+    "resetStyleToDefault": "Resetează stilul la implicit",
+    "name": "Nume",
+    "parentStyle": "Stil părinte",
+    "openDialog": "Editează stilurile",
+    "newStyleName": "Stil de paragraf nou",
+    "copyStyleName": "Copie {{name}}",
+    "builtIn": {
+      "defaultText": "Text implicit",
+      "annotation": "Adnotare",
+      "title": "Titlu",
+      "subtitle": "Subtitlu",
+      "chapter": "Capitol",
+      "section": "Secțiune",
+      "header": "Antet",
+      "footer": "Subsol",
+      "lyrics": "Versuri",
+      "dropCap": "Majusculă decorativă"
+    }
+  },
   "neumePositioning": {
     "root": "Poziționarea neumei",
     "description": "Ajustează decalajele neumelor de sprijin și previzualizează pozițiile lor.",
@@ -65,7 +97,6 @@
   "pageSetup": {
     "root": "Configurare pagină",
     "description": "Configurați dimensiunile paginii, marginile, spațierea, fonturile și stilizarea implicită pentru partitură.",
-    "pageDimensions": "Dimensiuni pagină",
     "pageSize": "Dimensiune pagină",
     "in": "in",
     "cm": "cm",
@@ -151,8 +182,9 @@
     "alternateLineStyling": "Stilizare linie alternativă",
     "alternateLineDescription": "Stilizarea implicită pentru toate liniile alternative din partitură.",
     "dropCaps": "Majuscule decorative",
-    "dropCapsDescription": "Stilizarea implicită pentru toate majusculele decorative din partitură.",
     "color": "Culoare",
+    "outlineColor": "Culoare contur",
+    "sameAsText": "La fel ca textul",
     "size": "Mărime",
     "lineHeight": "Înălțime linie",
     "lineSpan": "Linii de coborâre",
@@ -162,9 +194,6 @@
     "italic": "Italic",
     "outline": "Contur",
     "lyrics": "Versuri",
-    "lyricsDescription": "Stilizarea implicită pentru toate versurile din partitură.",
-    "textBoxes": "Casete de text",
-    "textBoxesDescription": "Stilizarea implicită pentru toate casetele de text din partitură.",
     "initialMartyriae": "Mărturii inițiale",
     "initialMartyriaeDescription": "Stilizarea implicită pentru toate mărturiile inițiale din partitură.",
     "neumesDescription": "Stilizarea implicită pentru toate neumele din partitură.",
@@ -185,7 +214,6 @@
     "noteIndicators": "Indicatori de notă",
     "tempos": "Tempouri",
     "preview": "Previzualizare",
-    "visible": "Vizibil",
     "marginTop": "Spațiu sus",
     "marginBottom": "Spațiu jos",
     "thickness": "Grosime",

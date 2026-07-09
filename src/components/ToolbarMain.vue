@@ -773,21 +773,17 @@ function onZoomInputEscape(event: KeyboardEvent) {
   resetZoomInput();
 }
 
-const martyriaTooltip = computed(
-  (): AppTooltipValue => ({
-    label: t(($) => $.toolbar.main.martyria, { ns: 'toolbar' }),
-    shortcut: props.neumeKeyboard.getMartyriaKeyTooltipKeys(),
-  }),
-);
+const martyriaTooltip = computed((): AppTooltipValue => ({
+  label: t(($) => $.toolbar.main.martyria, { ns: 'toolbar' }),
+  shortcut: props.neumeKeyboard.getMartyriaKeyTooltipKeys(),
+}));
 
-const tempoTooltip = computed(
-  (): AppTooltipValue => ({
-    label: t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' }),
-    shortcut: props.neumeKeyboard.generateTooltipKeys(
-      props.neumeKeyboard.findMappingForNeume(TempoSign.VerySlow)!,
-    ),
-  }),
-);
+const tempoTooltip = computed((): AppTooltipValue => ({
+  label: t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' }),
+  shortcut: props.neumeKeyboard.generateTooltipKeys(
+    props.neumeKeyboard.findMappingForNeume(TempoSign.VerySlow)!,
+  ),
+}));
 
 function updateZoom(value: string) {
   const zoomFitMode = getZoomFitModeFromValue(value);

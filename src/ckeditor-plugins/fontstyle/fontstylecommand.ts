@@ -17,7 +17,7 @@ import {
   resolveAxisToggle,
 } from '@/utils/fontStyleAxes';
 
-import { getEditorDefaultFontFamilyModelValue } from './fontstyle-util';
+import { toEditorFontFamilyModelValue } from './fontstyle-util';
 
 export const FONT_STYLE = 'fontStyle';
 export const FONT_STYLE_TOGGLE_BOLD = 'fontStyleToggleBold';
@@ -25,26 +25,44 @@ export const FONT_STYLE_TOGGLE_ITALIC = 'fontStyleToggleItalic';
 
 const FONT_FAMILY = 'fontFamily';
 
+type ResolvedParagraphStyleFallback = {
+  fontFamily: string;
+  fontStyle: string;
+};
+
 // The family whose styles the Bold/Italic shortcuts and the style list
-// operate against: the explicit fontFamily on the selection, or the text box's
-// default family when none is set (so default-font text can still be bolded).
-function effectiveFamily(editor: Editor): string | null {
+// operate against: the explicit fontFamily on the selection, the resolved
+// paragraph style's family, or the text box's default family when neither is
+// set (so default-font text can still be bolded).
+function effectiveFamily(
+  editor: Editor,
+  fallback?: ResolvedParagraphStyleFallback | null,
+): string | null {
   const family = editor.model.document.selection.getAttribute(FONT_FAMILY) as
-    | string
-    | undefined;
+    string | undefined;
 
   if (family != null && family.trim() !== '') {
     return firstFontFamilyToken(family);
   }
 
-  const fallback = editor.config.get('insertNeume.defaultFontFamily') as
-    | string
-    | undefined;
+  const resolvedFallback = fallback?.fontFamily;
 
-  return fallback != null && fallback.trim() !== '' ? fallback : null;
+  if (resolvedFallback != null && resolvedFallback.trim() !== '') {
+    return firstFontFamilyToken(resolvedFallback);
+  }
+
+  const defaultFamily = editor.config.get('insertNeume.defaultFontFamily') as
+    string | undefined;
+
+  return defaultFamily != null && defaultFamily.trim() !== ''
+    ? firstFontFamilyToken(defaultFamily)
+    : null;
 }
 
-function effectiveFontStyle(editor: Editor): string {
+function effectiveFontStyle(
+  editor: Editor,
+  fallback?: ResolvedParagraphStyleFallback | null,
+): string {
   const selection = editor.model.document.selection;
   const fontStyle = selection.getAttribute(FONT_STYLE) as string | undefined;
 
@@ -52,13 +70,18 @@ function effectiveFontStyle(editor: Editor): string {
     return fontStyle;
   }
 
+  const resolvedFallback = fallback?.fontStyle;
+
+  if (resolvedFallback != null && resolvedFallback.trim() !== '') {
+    return resolvedFallback;
+  }
+
   return DEFAULT_FONT_STYLE;
 }
 
 function hasExplicitFamily(editor: Editor): boolean {
   const family = editor.model.document.selection.getAttribute(FONT_FAMILY) as
-    | string
-    | undefined;
+    string | undefined;
 
   return family != null && family.trim() !== '';
 }
@@ -139,17 +162,31 @@ export class FontStyleToggleCommand extends Command {
 
   private readonly axis: StyleAxis;
   private target: string | null = null;
+  private resolvedParagraphStyleFallback: ResolvedParagraphStyleFallback | null =
+    null;
 
   constructor(editor: Editor, axis: StyleAxis) {
     super(editor);
     this.axis = axis;
   }
 
+  public setResolvedParagraphStyleFallback(
+    fallback: ResolvedParagraphStyleFallback | null,
+  ) {
+    this.resolvedParagraphStyleFallback = fallback;
+  }
+
   public override refresh(): void {
     const selection = this.editor.model.document.selection;
-    const fontStyle = effectiveFontStyle(this.editor);
+    const fontStyle = effectiveFontStyle(
+      this.editor,
+      this.resolvedParagraphStyleFallback,
+    );
 
-    const family = effectiveFamily(this.editor);
+    const family = effectiveFamily(
+      this.editor,
+      this.resolvedParagraphStyleFallback,
+    );
     const available = family
       ? fontCatalog.getStyles(family)
       : [DEFAULT_FONT_STYLE, 'Bold', 'Italic', 'Bold Italic'];
@@ -162,21 +199,34 @@ export class FontStyleToggleCommand extends Command {
   }
 
   public override execute(): void {
-    if (this.target == null) {
+    const target = this.target;
+
+    if (target == null) {
       return;
     }
 
-    if (
-      !hasExplicitFamily(this.editor) &&
-      fontStyleNeedsExplicitFamily(this.target)
-    ) {
-      const family = getEditorDefaultFontFamilyModelValue(this.editor);
+    // One outer change block so the family+style pair lands as a single undo
+    // step.
+    this.editor.model.change(() => {
+      if (
+        !hasExplicitFamily(this.editor) &&
+        fontStyleNeedsExplicitFamily(target)
+      ) {
+        const family = effectiveFamily(
+          this.editor,
+          this.resolvedParagraphStyleFallback,
+        );
 
-      if (family != null) {
-        this.editor.execute(FONT_FAMILY, { value: family });
+        if (family != null) {
+          const modelValue = toEditorFontFamilyModelValue(this.editor, family);
+
+          if (modelValue != null) {
+            this.editor.execute(FONT_FAMILY, { value: modelValue });
+          }
+        }
       }
-    }
 
-    this.editor.execute(FONT_STYLE, { value: this.target });
+      this.editor.execute(FONT_STYLE, { value: target });
+    });
   }
 }

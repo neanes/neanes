@@ -13,6 +13,8 @@
     "insertPelastikon": "Sisipkan Pelastikon",
     "measureBar": "Garis Birama",
     "outline": "Garis Luar",
+    "paragraphStyle": "Gaya Paragraf",
+    "clearFormatting": "Hapus Format",
     "spaceAfter": "Ruang Setelah",
     "tempoSign": "Tanda Tempo",
     "useDefaultStyle": "Gunakan Gaya Default",
@@ -28,6 +30,7 @@
     "marginBottom": "Celah Bawah",
     "verticalOffset": "Offset Vertikal",
     "none": "Tidak Ada",
+    "mixed": "Campuran",
     "inline": "Sebaris",
     "neume": "Neuma"
   },
@@ -125,6 +128,7 @@
   },
   "richTextBox": {
     "default": "Bawaan",
+    "textDecorations": "Dekorasi Teks",
     "underline": "Garis bawah",
     "outdent": "Kurangi inden",
     "indent": "Inden",
@@ -146,7 +150,6 @@
     "discretionaryLigatures": "Ligatur opsional",
     "historicalLigatures": "Ligatur historis",
     "contextualAlternates": "Alternatif kontekstual",
-    "removeFormat": "Hapus Format",
     "insertNeume": "Sisipkan Neume",
     "insertMartyria": "Sisipkan Martyria",
     "insertPlagal": "Sisipkan Plagal",

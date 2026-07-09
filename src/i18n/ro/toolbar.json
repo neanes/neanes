@@ -13,6 +13,8 @@
     "insertPelastikon": "Inserează pelastikon",
     "measureBar": "Bară de măsură",
     "outline": "Contur",
+    "paragraphStyle": "Stil paragraf",
+    "clearFormatting": "Elimină formatarea",
     "spaceAfter": "Spațiu după",
     "tempoSign": "Semn de tempo",
     "useDefaultStyle": "Folosește stilul implicit",
@@ -28,6 +30,7 @@
     "marginBottom": "Spațiu jos",
     "verticalOffset": "Offset vertical",
     "none": "Niciunul",
+    "mixed": "Mixt",
     "inline": "În linie",
     "neume": "Neumă"
   },
@@ -125,6 +128,7 @@
   },
   "richTextBox": {
     "default": "Implicit",
+    "textDecorations": "Decorațiuni text",
     "underline": "Subliniat",
     "outdent": "Micșorează indentarea",
     "indent": "Mărește indentarea",
@@ -146,7 +150,6 @@
     "discretionaryLigatures": "Ligaturi discreționare",
     "historicalLigatures": "Ligaturi istorice",
     "contextualAlternates": "Alternative contextuale",
-    "removeFormat": "Elimină formatarea",
     "insertNeume": "Inserează neumă",
     "insertMartyria": "Inserează mărturie",
     "insertPlagal": "Inserează plagal",

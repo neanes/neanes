@@ -1,5 +1,6 @@
 .neanes-ck-neume {
   display: inline-block;
+  font-family: var(--ck-content-neume-font-family);
 }
 
 .neanes-ck-neume-align-right {
@@ -7,9 +8,12 @@
   left: initial !important;
 }
 
+/* Plagal widgets store the base neume class for compatibility, but render Greek
+   letters that should match the surrounding text face. */
 .neanes-ck-neume-plagal {
   display: inline-flex;
   flex-direction: column;
   vertical-align: middle;
   align-items: center;
+  font-family: inherit;
 }

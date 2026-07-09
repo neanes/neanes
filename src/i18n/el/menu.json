@@ -29,6 +29,7 @@
     "copyAsHtml": "Αντιγραφή ως HTML",
     "paste": "Επικόλληση",
     "pasteWithLyrics": "Επικόλληση με Στίχους",
+    "saveAsCombo": "Αποθήκευση ως Συνδυασμό",
     "selectAll": "Επιλογή Όλων",
     "copyFormat": "Αντιγραφή Μορφής",
     "pasteFormat": "Επικόλληση Μορφής",
@@ -51,6 +52,10 @@
     "headersAndFooters": "Κεφαλίδες και Υποσέλιδα",
     "header": "Κεφαλίδα",
     "footer": "Υποσέλιδο"
+  },
+  "format": {
+    "root": "Μορφή",
+    "paragraphStyles": "Στυλ Παραγράφου…"
   },
   "view": {
     "root": "Προβολή",

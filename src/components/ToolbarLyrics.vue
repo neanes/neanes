@@ -1,67 +1,83 @@
 <template>
   <Toolbar class="chrome-toolbar" loop>
-    <template v-if="!element.lyricsUseDefaultStyle">
-      <FontCombobox
-        :model-value="element.lyricsFontFamily"
-        :options="lyricsFontFamilies"
-        @update:model-value="onFontFamilyChanged"
-      />
-      <FontStyleSelect
-        class="w-40"
-        :model-value="element.lyricsFontStyle"
-        :options="fontStyleOptions"
-        :disabled="fontStyleOptions.length <= 1"
-        @update:model-value="
-          $emit('update', {
-            lyricsFontStyle: $event,
-          } as Partial<NoteElement>)
-        "
-      />
-      <InputFontSize
-        id="toolbar-lyrics-font-size"
-        :model-value="element.lyricsFontSize"
-        @update:model-value="
-          $emit('update', {
-            lyricsFontSize: $event,
-          } as Partial<NoteElement>)
-        "
-      />
-      <ToolbarSeparator />
-      <ToggleGroup
-        type="multiple"
-        variant="outline"
-        :model-value="styleValues"
-        @update:model-value="onStyleValuesChanged"
+    <ParagraphStyleSelect
+      trigger-class="w-48"
+      :model-value="element.lyricsParagraphStyleId"
+      :paragraph-styles="paragraphStyles"
+      @update:model-value="
+        $emit('update', {
+          lyricsParagraphStyleId: $event,
+        } as Partial<NoteElement>)
+      "
+    />
+    <ToolbarSeparator />
+    <FontCombobox
+      :model-value="resolvedParagraphStyle.fontFamily"
+      :options="lyricsFontFamilies"
+      @update:model-value="onFontFamilyChanged"
+    />
+    <FontStyleSelect
+      class="w-40"
+      :model-value="resolvedParagraphStyle.fontStyle"
+      :options="fontStyleOptions"
+      :disabled="fontStyleOptions.length <= 1"
+      @update:model-value="
+        $emit('update', {
+          lyricsFontStyle: $event,
+        } as Partial<NoteElement>)
+      "
+    />
+    <InputFontSize
+      id="toolbar-lyrics-font-size"
+      :model-value="resolvedParagraphStyle.fontSize"
+      @update:model-value="
+        $emit('update', {
+          lyricsFontSize: $event,
+        } as Partial<NoteElement>)
+      "
+    />
+    <ToolbarSeparator />
+    <ToggleGroup
+      type="multiple"
+      variant="outline"
+      :model-value="activeStyleAxisValues"
+      @update:model-value="onFontStyleValuesChanged"
+    >
+      <ToggleGroupItem
+        value="bold"
+        class="chrome-button"
+        :class="{ selected: isFontStyleAxisActive('bold') }"
+        :disabled="!isFontStyleAxisToggleEnabled('bold')"
+        aria-label="Toggle bold"
       >
-        <ToggleGroupItem
-          value="bold"
-          class="chrome-button"
-          :class="{ selected: isFontStyleAxisActive('bold') }"
-          :disabled="!isFontStyleAxisToggleEnabled('bold')"
-          aria-label="Toggle bold"
-        >
-          <PhTextB class="size-4" />
-        </ToggleGroupItem>
-        <ToggleGroupItem
-          value="italic"
-          class="chrome-button"
-          :class="{ selected: isFontStyleAxisActive('italic') }"
-          :disabled="!isFontStyleAxisToggleEnabled('italic')"
-          aria-label="Toggle italic"
-        >
-          <PhTextItalic class="size-4" />
-        </ToggleGroupItem>
-        <ToggleGroupItem
-          value="underline"
-          class="chrome-button"
-          :class="{ selected: underline }"
-          aria-label="Toggle underline"
-        >
-          <PhTextUnderline class="size-4" />
-        </ToggleGroupItem>
-      </ToggleGroup>
-      <ToolbarSeparator />
-    </template>
+        <PhTextB class="size-4" />
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="italic"
+        class="chrome-button"
+        :class="{ selected: isFontStyleAxisActive('italic') }"
+        :disabled="!isFontStyleAxisToggleEnabled('italic')"
+        aria-label="Toggle italic"
+      >
+        <PhTextItalic class="size-4" />
+      </ToggleGroupItem>
+    </ToggleGroup>
+    <ToggleGroup
+      type="multiple"
+      variant="outline"
+      :model-value="underlineValues"
+      @update:model-value="onTextDecorationValuesChanged"
+    >
+      <ToggleGroupItem
+        value="underline"
+        class="chrome-button"
+        :class="{ selected: underline }"
+        aria-label="Toggle underline"
+      >
+        <PhTextUnderline class="size-4" />
+      </ToggleGroupItem>
+    </ToggleGroup>
+    <ToolbarSeparator />
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.common.insertPelastikon, { ns: 'toolbar' })"
     >
@@ -109,6 +125,7 @@ import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import NeumeIcon from '@/components/NeumeIcon.vue';
+import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Toolbar,
@@ -116,7 +133,9 @@ import {
   ToolbarSeparator,
 } from '@/components/ui/toolbar';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { NoteElement } from '@/models/Element';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   E_MACRON,
@@ -147,9 +166,20 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
 });
 
 const emit = defineEmits(['insert:specialCharacter', 'update']);
+
+const { resolvedParagraphStyle, underline, underlineValues } =
+  useResolvedParagraphStyle(
+    () => props.paragraphStyles,
+    () => props.element.lyricsParagraphStyleId,
+    () => props.element.getParagraphStyleOverrides(),
+  );
 
 const {
   fontStyleOptions,
@@ -159,28 +189,27 @@ const {
   applyStyleAxisToggles,
   remapStyleForFamily,
 } = useFontStyleControls(
-  () => props.element.lyricsFontFamily,
-  () => props.element.lyricsFontStyle,
+  () => resolvedParagraphStyle.value.fontFamily,
+  () => resolvedParagraphStyle.value.fontStyle,
 );
-
-const underline = computed(
-  () => props.element.lyricsTextDecoration === 'underline',
-);
-const styleValues = computed(() => [
-  ...activeStyleAxisValues.value,
-  ...(underline.value ? ['underline'] : []),
-]);
 
 const lyricsFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 
-function onStyleValuesChanged(value: unknown) {
+function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {
     lyricsFontStyle: applyStyleAxisToggles(values),
+  } as Partial<NoteElement>);
+}
+
+function onTextDecorationValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
     lyricsTextDecoration: values.includes('underline') ? 'underline' : 'none',
   } as Partial<NoteElement>);
 }

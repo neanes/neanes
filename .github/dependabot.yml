@@ -13,6 +13,10 @@ updates:
     labels:
       - 'Type: Dependencies'
     groups:
+      tailwindcss:
+        patterns:
+          - 'tailwindcss'
+          - '@tailwindcss/vite'
       vitest:
         patterns:
           - 'vitest'

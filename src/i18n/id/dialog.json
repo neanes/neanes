@@ -9,6 +9,12 @@
     "setAsDefault": "Jadikan Default",
     "useSystemDefault": "Gunakan Default Sistem"
   },
+  "neumeCombinations": {
+    "deleteTitle": "Hapus kombinasi?",
+    "deleteDescription": "Hapus kombinasi ini dari daftar?",
+    "delete": "Hapus",
+    "dragHandle": "Seret untuk mengurutkan"
+  },
   "export": {
     "root": "Ekspor",
     "description": "Pilih format ekspor dan konfigurasikan opsinya.",
@@ -39,6 +45,32 @@
     "title": "Judul",
     "author": "Penulis"
   },
+  "paragraphStyles": {
+    "root": "Gaya Paragraf",
+    "description": "Atur gaya paragraf yang dapat digunakan kembali.",
+    "new": "Gaya Baru",
+    "duplicate": "Gandakan Gaya",
+    "delete": "Hapus Gaya",
+    "clearFormatting": "Hapus Format",
+    "resetStyleToDefault": "Atur Ulang Gaya ke Default",
+    "name": "Nama",
+    "parentStyle": "Gaya Induk",
+    "openDialog": "Sunting Gaya",
+    "newStyleName": "Gaya Paragraf Baru",
+    "copyStyleName": "Salinan {{name}}",
+    "builtIn": {
+      "defaultText": "Teks Default",
+      "annotation": "Anotasi",
+      "title": "Judul",
+      "subtitle": "Subjudul",
+      "chapter": "Bab",
+      "section": "Bagian",
+      "header": "Header",
+      "footer": "Footer",
+      "lyrics": "Lirik",
+      "dropCap": "Huruf Awal Besar"
+    }
+  },
   "neumePositioning": {
     "root": "Penempatan Neuma",
     "description": "Sesuaikan offset neuma pendukung dan pratinjau posisinya.",
@@ -65,7 +97,6 @@
   "pageSetup": {
     "root": "Pengaturan Halaman",
     "description": "Atur dimensi halaman, margin, spasi, font, dan gaya default untuk partitur.",
-    "pageDimensions": "Dimensi Halaman",
     "pageSize": "Ukuran Halaman",
     "in": "in",
     "cm": "cm",
@@ -151,8 +182,9 @@
     "alternateLineStyling": "Gaya Baris Alternatif",
     "alternateLineDescription": "Gaya default untuk semua baris alternatif dalam partitur.",
     "dropCaps": "Huruf Awal Besar",
-    "dropCapsDescription": "Gaya default untuk semua huruf awal besar dalam partitur.",
     "color": "Warna",
+    "outlineColor": "Warna garis luar",
+    "sameAsText": "Sama seperti teks",
     "size": "Ukuran",
     "lineHeight": "Tinggi Baris",
     "lineSpan": "Baris untuk Turun",
@@ -162,9 +194,6 @@
     "italic": "Miring",
     "outline": "Garis Luar",
     "lyrics": "Lirik",
-    "lyricsDescription": "Gaya default untuk semua lirik dalam partitur.",
-    "textBoxes": "Kotak Teks",
-    "textBoxesDescription": "Gaya default untuk semua kotak teks dalam partitur.",
     "initialMartyriae": "Martyria Awal",
     "initialMartyriaeDescription": "Gaya default untuk semua martyria awal dalam partitur.",
     "neumesDescription": "Gaya default untuk semua neuma dalam partitur.",
@@ -185,7 +214,6 @@
     "noteIndicators": "Indikator Nada",
     "tempos": "Tempo",
     "preview": "Pratinjau",
-    "visible": "Terlihat",
     "marginTop": "Celah Atas",
     "marginBottom": "Celah Bawah",
     "thickness": "Ketebalan",

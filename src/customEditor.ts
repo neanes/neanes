@@ -1,7 +1,6 @@
 import 'ckeditor5/ckeditor5.css';
 
 import {
-  AlignmentEditing,
   AutoImage,
   AutoLink,
   Base64UploadAdapter,
@@ -32,6 +31,7 @@ import {
   RemoveFormatEditing,
   SelectAllEditing,
   ShiftEnter,
+  Style,
   SubscriptEditing,
   SuperscriptEditing,
   Table,
@@ -51,6 +51,7 @@ import elTranslations from 'ckeditor5/translations/el.js';
 import idTranslations from 'ckeditor5/translations/id.js';
 import roTranslations from 'ckeditor5/translations/ro.js';
 
+import AlignmentOverride from './ckeditor-plugins/alignmentoverride/alignmentoverride';
 import FontStyle from './ckeditor-plugins/fontstyle/fontstyle';
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
 import OpenType from './ckeditor-plugins/opentype/opentype';
@@ -78,7 +79,6 @@ class DisableWidgetTypeAround extends Plugin {
 }
 
 InlineEditor.builtinPlugins = [
-  AlignmentEditing,
   AutoImage,
   AutoLink,
   Base64UploadAdapter,
@@ -100,6 +100,7 @@ InlineEditor.builtinPlugins = [
   ImageUpload,
   IndentEditing,
   IndentBlock,
+  AlignmentOverride,
   FontStyle,
   OpenType,
   InsertNeume,
@@ -112,6 +113,7 @@ InlineEditor.builtinPlugins = [
   RemoveFormatEditing,
   SelectAllEditing,
   ShiftEnter,
+  Style,
   SubscriptEditing,
   SuperscriptEditing,
   Table,

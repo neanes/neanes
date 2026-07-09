@@ -11,126 +11,227 @@
       value="style"
       :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
     >
-      <Field orientation="horizontal">
-        <Switch
-          id="properties-lyrics-use-default-style"
-          :model-value="element.lyricsUseDefaultStyle"
-          @update:model-value="
-            $emit('update', {
-              lyricsUseDefaultStyle: $event === true,
-            } as Partial<NoteElement>)
-          "
-        />
-        <FieldLabel for="properties-lyrics-use-default-style">{{
-          $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
-        }}</FieldLabel>
-      </Field>
+      <ParagraphStyleField
+        id="properties-lyrics-paragraph-style"
+        :model-value="element.lyricsParagraphStyleId"
+        :paragraph-styles="paragraphStyles"
+        :has-overrides="hasParagraphStyleOverrides"
+        @update:model-value="
+          $emit('update', {
+            lyricsParagraphStyleId: $event,
+          } as Partial<NoteElement>)
+        "
+        @clear="clearParagraphStyleFormatting"
+        @open-dialog="openParagraphStylesDialog"
+      />
 
-      <template v-if="!element.lyricsUseDefaultStyle">
-        <Field>
+      <Field>
+        <div class="mb-2 flex items-center justify-between gap-2">
           <FieldLabel for="properties-lyrics-font">{{
             $t(($) => $.dialog.pageSetup.font, { ns: 'dialog' })
           }}</FieldLabel>
-          <FontCombobox
-            id="properties-lyrics-font"
-            class="w-full max-w-full"
-            :model-value="element.lyricsFontFamily"
-            :options="lyricsFontFamilies"
-            @update:model-value="onFontFamilyChanged"
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel for="properties-lyrics-font-style">{{
-            $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
-          }}</FieldLabel>
-          <FontStyleSelect
-            id="properties-lyrics-font-style"
-            class="w-full max-w-full"
-            :model-value="element.lyricsFontStyle"
-            :options="fontStyleOptions"
-            :disabled="fontStyleOptions.length <= 1"
-            @update:model-value="
+          <ParagraphStyleClearButton
+            :disabled="element.lyricsFontFamily == null"
+            @clear="
               $emit('update', {
-                lyricsFontStyle: $event,
+                lyricsFontFamily: null,
               } as Partial<NoteElement>)
             "
           />
-        </Field>
+        </div>
+        <FontCombobox
+          id="properties-lyrics-font"
+          class="w-full max-w-full"
+          :model-value="resolvedParagraphStyle.fontFamily"
+          :options="lyricsFontFamilies"
+          @update:model-value="onFontFamilyChanged"
+        />
+      </Field>
 
-        <Field orientation="horizontal">
-          <FieldLabel>{{
+      <Field>
+        <div class="mb-2 flex items-center justify-between gap-2">
+          <FieldLabel for="properties-lyrics-font-style">{{
             $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
           }}</FieldLabel>
-          <ToggleGroup
-            type="multiple"
-            variant="outline"
-            :model-value="styleValues"
-            @update:model-value="onStyleValuesChanged"
-          >
-            <ToggleGroupItem
-              value="bold"
-              aria-label="Toggle bold"
-              :disabled="!isFontStyleAxisToggleEnabled('bold')"
-            >
-              <PhTextB />
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="italic"
-              aria-label="Toggle italic"
-              :disabled="!isFontStyleAxisToggleEnabled('italic')"
-            >
-              <PhTextItalic />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="underline" aria-label="Toggle underline">
-              <PhTextUnderline />
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </Field>
+          <ParagraphStyleClearButton
+            :disabled="element.lyricsFontStyle == null"
+            @clear="
+              $emit('update', { lyricsFontStyle: null } as Partial<NoteElement>)
+            "
+          />
+        </div>
+        <FontStyleSelect
+          id="properties-lyrics-font-style"
+          class="w-full max-w-full"
+          :model-value="resolvedParagraphStyle.fontStyle"
+          :options="fontStyleOptions"
+          :disabled="fontStyleOptions.length <= 1"
+          @update:model-value="
+            $emit('update', {
+              lyricsFontStyle: $event,
+            } as Partial<NoteElement>)
+          "
+        />
+      </Field>
 
-        <Field orientation="horizontal">
-          <FieldLabel for="properties-lyrics-font-size">{{
-            $t(($) => $.dialog.pageSetup.size, { ns: 'dialog' })
-          }}</FieldLabel>
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-lyrics-font-size">{{
+          $t(($) => $.dialog.pageSetup.size, { ns: 'dialog' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
           <InputFontSize
             id="properties-lyrics-font-size"
-            :model-value="element.lyricsFontSize"
+            :model-value="resolvedParagraphStyle.fontSize"
             @update:model-value="
               $emit('update', {
                 lyricsFontSize: $event,
               } as Partial<NoteElement>)
             "
           />
-        </Field>
+          <ParagraphStyleClearButton
+            :disabled="element.lyricsFontSize == null"
+            @clear="
+              $emit('update', { lyricsFontSize: null } as Partial<NoteElement>)
+            "
+          />
+        </div>
+      </Field>
 
-        <Field orientation="horizontal">
-          <FieldLabel>{{
-            $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
-          }}</FieldLabel>
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
           <ColorPicker
-            :model-value="element.lyricsColor"
+            :model-value="resolvedParagraphStyle.color"
             @update:model-value="
               $emit('update', {
                 lyricsColor: $event,
               } as Partial<NoteElement>)
             "
           />
-        </Field>
+          <ParagraphStyleClearButton
+            :disabled="element.lyricsColor == null"
+            @clear="
+              $emit('update', { lyricsColor: null } as Partial<NoteElement>)
+            "
+          />
+        </div>
+      </Field>
 
-        <Field orientation="horizontal">
-          <FieldLabel>{{
-            $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-          }}</FieldLabel>
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
+        }}</FieldLabel>
+        <ToggleGroup
+          type="multiple"
+          variant="outline"
+          :model-value="activeStyleAxisValues"
+          @update:model-value="onFontStyleValuesChanged"
+        >
+          <ToggleGroupItem
+            value="bold"
+            aria-label="Toggle bold"
+            :disabled="!isFontStyleAxisToggleEnabled('bold')"
+          >
+            <PhTextB />
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="italic"
+            aria-label="Toggle italic"
+            :disabled="!isFontStyleAxisToggleEnabled('italic')"
+          >
+            <PhTextItalic />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.toolbar.richTextBox.textDecorations, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
+          <ToggleGroup
+            type="multiple"
+            variant="outline"
+            :model-value="underlineValues"
+            @update:model-value="onTextDecorationValuesChanged"
+          >
+            <ToggleGroupItem value="underline" aria-label="Toggle underline">
+              <PhTextUnderline />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <ParagraphStyleClearButton
+            :disabled="element.lyricsTextDecoration == null"
+            @clear="
+              $emit('update', {
+                lyricsTextDecoration: null,
+              } as Partial<NoteElement>)
+            "
+          />
+        </div>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
           <InputStrokeWidth
-            :model-value="element.lyricsStrokeWidth"
+            :model-value="resolvedParagraphStyle.strokeWidth"
             @update:model-value="
               $emit('update', {
                 lyricsStrokeWidth: $event,
               } as Partial<NoteElement>)
             "
           />
-        </Field>
-      </template>
+          <ParagraphStyleClearButton
+            :disabled="element.lyricsStrokeWidth == null"
+            @clear="
+              $emit('update', {
+                lyricsStrokeWidth: null,
+              } as Partial<NoteElement>)
+            "
+          />
+        </div>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
+          <StrokeColorPicker
+            :model-value="resolvedParagraphStyle.strokeColor"
+            :preview-color="
+              resolvedParagraphStyle.strokeColor === 'currentcolor'
+                ? resolvedParagraphStyle.color
+                : resolvedParagraphStyle.strokeColor
+            "
+            :text-color="resolvedParagraphStyle.color"
+            :same-as-text="strokeColorSameAsText"
+            :label="
+              $t(($) => $.dialog.pageSetup.outlineColor, { ns: 'dialog' })
+            "
+            :same-as-text-label="
+              $t(($) => $.dialog.pageSetup.sameAsText, { ns: 'dialog' })
+            "
+            @update:model-value="
+              $emit('update', {
+                lyricsStrokeColor: $event,
+              } as Partial<NoteElement>)
+            "
+          />
+          <ParagraphStyleClearButton
+            :disabled="element.lyricsStrokeColor == null"
+            @clear="
+              $emit('update', {
+                lyricsStrokeColor: null,
+              } as Partial<NoteElement>)
+            "
+          />
+        </div>
+      </Field>
     </PaneSection>
   </PaneAccordion>
 </template>
@@ -147,11 +248,15 @@ import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
+import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
+import ParagraphStyleField from '@/components/properties/ParagraphStyleField.vue';
+import StrokeColorPicker from '@/components/StrokeColorPicker.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
-import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { NoteElement } from '@/models/Element';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
@@ -167,9 +272,30 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
 });
 
-const emit = defineEmits(['update', 'update:open-sections']);
+const emit = defineEmits([
+  'open-paragraph-styles-dialog',
+  'update',
+  'update:open-sections',
+]);
+
+const {
+  resolvedParagraphStyle,
+  underlineValues,
+  hasOverrides: hasParagraphStyleOverrides,
+} = useResolvedParagraphStyle(
+  () => props.paragraphStyles,
+  () => props.element.lyricsParagraphStyleId,
+  () => props.element.getParagraphStyleOverrides(),
+);
+const strokeColorSameAsText = computed(
+  () => resolvedParagraphStyle.value.strokeColor === 'currentcolor',
+);
 
 const {
   fontStyleOptions,
@@ -178,28 +304,27 @@ const {
   applyStyleAxisToggles,
   remapStyleForFamily,
 } = useFontStyleControls(
-  () => props.element.lyricsFontFamily,
-  () => props.element.lyricsFontStyle,
+  () => resolvedParagraphStyle.value.fontFamily,
+  () => resolvedParagraphStyle.value.fontStyle,
 );
-
-const underline = computed(
-  () => props.element.lyricsTextDecoration === 'underline',
-);
-const styleValues = computed(() => [
-  ...activeStyleAxisValues.value,
-  ...(underline.value ? ['underline'] : []),
-]);
 
 const lyricsFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 
-function onStyleValuesChanged(value: unknown) {
+function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {
     lyricsFontStyle: applyStyleAxisToggles(values),
+  } as Partial<NoteElement>);
+}
+
+function onTextDecorationValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
     lyricsTextDecoration: values.includes('underline') ? 'underline' : 'none',
   } as Partial<NoteElement>);
 }
@@ -209,5 +334,21 @@ function onFontFamilyChanged(lyricsFontFamily: string) {
     lyricsFontFamily,
     lyricsFontStyle: remapStyleForFamily(lyricsFontFamily),
   } as Partial<NoteElement>);
+}
+
+function clearParagraphStyleFormatting() {
+  emit('update', {
+    lyricsColor: null,
+    lyricsFontFamily: null,
+    lyricsFontSize: null,
+    lyricsFontStyle: null,
+    lyricsStrokeWidth: null,
+    lyricsStrokeColor: null,
+    lyricsTextDecoration: null,
+  } as Partial<NoteElement>);
+}
+
+function openParagraphStylesDialog() {
+  emit('open-paragraph-styles-dialog', props.element.lyricsParagraphStyleId);
 }
 </script>

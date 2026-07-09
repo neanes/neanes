@@ -148,7 +148,7 @@ const content = computed(() => {
     : replaceTokens(
         props.element.content,
         props.metadata,
-        props.element.alignment,
+        props.element.computedAlignment,
       );
 });
 
@@ -158,7 +158,7 @@ const contentBottom = computed(() => {
     : replaceTokens(
         props.element.contentBottom,
         props.metadata,
-        props.element.alignment,
+        props.element.computedAlignment,
       );
 });
 
@@ -201,11 +201,12 @@ const containerStyle = computed(() => {
     fontSize: withZoom(props.element.computedFontSize),
     fontWeight: props.element.computedFontWeight,
     fontStyle: props.element.computedFontStyle,
-    textAlign: props.element.alignment,
+    textAlign: props.element.computedAlignment,
     width: width.value,
     height: withZoom(props.element.height),
     minHeight: withZoom(props.element.minHeight),
     webkitTextStrokeWidth: withZoom(props.element.computedStrokeWidth),
+    webkitTextStrokeColor: props.element.computedStrokeColor,
     lineHeight: `${props.element.computedLineHeight ?? 'normal'}`,
   } as StyleValue;
 
@@ -220,7 +221,8 @@ const textBoxStyle = computed(() => {
         ? withZoom(props.element.height)
         : undefined,
     minHeight: withZoom(props.element.minHeight),
-    textWrap: props.element.alignment === 'center' ? 'balance' : 'pretty',
+    textWrap:
+      props.element.computedAlignment === 'center' ? 'balance' : 'pretty',
   };
 
   return style;
@@ -230,7 +232,8 @@ const textBoxStyleTop = computed(() => {
   const style: any = {
     width: width.value,
     height: withZoom(props.element.height),
-    textWrap: props.element.alignment === 'center' ? 'balance' : 'pretty',
+    textWrap:
+      props.element.computedAlignment === 'center' ? 'balance' : 'pretty',
   };
 
   return style;
@@ -239,7 +242,8 @@ const textBoxStyleTop = computed(() => {
 const textBoxStyleBottom = computed(() => {
   const style: any = {
     width: width.value,
-    textWrap: props.element.alignment === 'center' ? 'balance' : 'pretty',
+    textWrap:
+      props.element.computedAlignment === 'center' ? 'balance' : 'pretty',
     top: withZoom(props.pageSetup.lyricsVerticalOffset),
   };
 
@@ -248,7 +252,7 @@ const textBoxStyleBottom = computed(() => {
 
 const textBoxClass = computed(() => {
   return {
-    underline: props.element.underline,
+    underline: props.element.computedUnderline,
   };
 });
 
@@ -506,6 +510,7 @@ defineExpose({
 .text-box.left {
   position: absolute;
   left: 0;
+  text-align: left;
 }
 
 .text-box.center {

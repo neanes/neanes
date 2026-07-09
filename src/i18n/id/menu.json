@@ -29,6 +29,7 @@
     "copyAsHtml": "Salin sebagai HTML",
     "paste": "Tempel",
     "pasteWithLyrics": "Tempel dengan Lirik",
+    "saveAsCombo": "Simpan sebagai kombinasi",
     "selectAll": "Pilih Semua",
     "copyFormat": "Salin Format",
     "pasteFormat": "Tempel Format",
@@ -51,6 +52,10 @@
     "headersAndFooters": "Header dan Footer",
     "header": "Header",
     "footer": "Footer"
+  },
+  "format": {
+    "root": "Format",
+    "paragraphStyles": "Gaya Paragraf…"
   },
   "view": {
     "root": "Tampilan",

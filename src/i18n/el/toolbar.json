@@ -13,6 +13,8 @@
     "insertPelastikon": "Εισαγωγή Πελαστικού",
     "measureBar": "Διαστολή",
     "outline": "Περίγραμμα",
+    "paragraphStyle": "Στυλ Παραγράφου",
+    "clearFormatting": "Αφαίρεση μορφοποίησης",
     "spaceAfter": "Διάστημα Μετά",
     "tempoSign": "Σημείο Χρονικής Αγωγής",
     "useDefaultStyle": "Χρήση Προεπιλεγμένης Μορφοποίησης",
@@ -28,6 +30,7 @@
     "marginBottom": "Διάστημα Κάτω",
     "verticalOffset": "Κάθετη Μετατόπιση",
     "none": "Κανένα",
+    "mixed": "Μικτό",
     "inline": "Εντός Γραμμής",
     "neume": "Ποσοτικό Σημείο"
   },
@@ -125,6 +128,7 @@
   },
   "richTextBox": {
     "default": "Προεπιλογή",
+    "textDecorations": "Διακοσμήσεις κειμένου",
     "underline": "Υπογράμμιση",
     "outdent": "Μείωση εσοχής",
     "indent": "Αύξηση εσοχής",
@@ -146,7 +150,6 @@
     "discretionaryLigatures": "Προαιρετικά συμπλέγματα",
     "historicalLigatures": "Ιστορικά συμπλέγματα",
     "contextualAlternates": "Συμφραστικές εναλλακτικές",
-    "removeFormat": "Αφαίρεση μορφοποίησης",
     "insertNeume": "Εισαγωγή νεύματος",
     "insertMartyria": "Εισαγωγή μαρτυρίας",
     "insertPlagal": "Εισαγωγή πλαγίου",

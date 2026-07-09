@@ -1,55 +1,62 @@
 <template>
   <Toolbar class="chrome-toolbar" loop>
-    <template v-if="!element.useDefaultStyle">
-      <FontCombobox
-        :model-value="element.fontFamily"
-        :options="dropCapFontFamilies"
-        @update:model-value="onFontFamilyChanged"
-      />
-      <FontStyleSelect
-        class="w-40"
-        :model-value="element.fontStyle"
-        :options="fontStyleOptions"
-        :disabled="fontStyleOptions.length <= 1"
-        @update:model-value="
-          $emit('update', { fontStyle: $event } as Partial<DropCapElement>)
-        "
-      />
-      <InputFontSize
-        id="toolbar-drop-cap-font-size"
-        :max="500"
-        :model-value="element.fontSize"
-        @update:model-value="
-          $emit('update', { fontSize: $event } as Partial<DropCapElement>)
-        "
-      />
-      <ToolbarSeparator />
-      <ToggleGroup
-        type="multiple"
-        variant="outline"
-        :model-value="styleValues"
-        @update:model-value="onStyleValuesChanged"
+    <ParagraphStyleSelect
+      trigger-class="w-48"
+      :model-value="element.paragraphStyleId"
+      :paragraph-styles="paragraphStyles"
+      @update:model-value="
+        $emit('update', { paragraphStyleId: $event } as Partial<DropCapElement>)
+      "
+    />
+    <ToolbarSeparator />
+    <FontCombobox
+      :model-value="resolvedParagraphStyle.fontFamily"
+      :options="dropCapFontFamilies"
+      @update:model-value="onFontFamilyChanged"
+    />
+    <FontStyleSelect
+      class="w-40"
+      :model-value="resolvedParagraphStyle.fontStyle"
+      :options="fontStyleOptions"
+      :disabled="fontStyleOptions.length <= 1"
+      @update:model-value="
+        $emit('update', { fontStyle: $event } as Partial<DropCapElement>)
+      "
+    />
+    <InputFontSize
+      id="toolbar-drop-cap-font-size"
+      :max="500"
+      :model-value="resolvedParagraphStyle.fontSize"
+      @update:model-value="
+        $emit('update', { fontSize: $event } as Partial<DropCapElement>)
+      "
+    />
+    <ToolbarSeparator />
+    <ToggleGroup
+      type="multiple"
+      variant="outline"
+      :model-value="activeStyleAxisValues"
+      @update:model-value="onFontStyleValuesChanged"
+    >
+      <ToggleGroupItem
+        value="bold"
+        class="chrome-button"
+        :class="{ selected: isFontStyleAxisActive('bold') }"
+        :disabled="!isFontStyleAxisToggleEnabled('bold')"
+        aria-label="Toggle bold"
       >
-        <ToggleGroupItem
-          value="bold"
-          class="chrome-button"
-          :class="{ selected: isFontStyleAxisActive('bold') }"
-          :disabled="!isFontStyleAxisToggleEnabled('bold')"
-          aria-label="Toggle bold"
-        >
-          <PhTextB class="size-4" />
-        </ToggleGroupItem>
-        <ToggleGroupItem
-          value="italic"
-          class="chrome-button"
-          :class="{ selected: isFontStyleAxisActive('italic') }"
-          :disabled="!isFontStyleAxisToggleEnabled('italic')"
-          aria-label="Toggle italic"
-        >
-          <PhTextItalic class="size-4" />
-        </ToggleGroupItem>
-      </ToggleGroup>
-    </template>
+        <PhTextB class="size-4" />
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="italic"
+        class="chrome-button"
+        :class="{ selected: isFontStyleAxisActive('italic') }"
+        :disabled="!isFontStyleAxisToggleEnabled('italic')"
+        aria-label="Toggle italic"
+      >
+        <PhTextItalic class="size-4" />
+      </ToggleGroupItem>
+    </ToggleGroup>
   </Toolbar>
 </template>
 
@@ -61,10 +68,13 @@ import { computed } from 'vue';
 import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
+import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Toolbar, ToolbarSeparator } from '@/components/ui/toolbar';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { DropCapElement } from '@/models/Element';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
@@ -76,9 +86,19 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
 });
 
 const emit = defineEmits(['update']);
+
+const { resolvedParagraphStyle } = useResolvedParagraphStyle(
+  () => props.paragraphStyles,
+  () => props.element.paragraphStyleId,
+  () => props.element.getParagraphStyleOverrides(),
+);
 
 const {
   fontStyleOptions,
@@ -88,18 +108,16 @@ const {
   applyStyleAxisToggles,
   remapStyleForFamily,
 } = useFontStyleControls(
-  () => props.element.fontFamily,
-  () => props.element.fontStyle,
+  () => resolvedParagraphStyle.value.fontFamily,
+  () => resolvedParagraphStyle.value.fontStyle,
 );
-
-const styleValues = computed(() => [...activeStyleAxisValues.value]);
 
 const dropCapFontFamilies = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
 
-function onStyleValuesChanged(value: unknown) {
+function onFontStyleValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
   emit('update', {

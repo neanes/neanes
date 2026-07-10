@@ -76,8 +76,8 @@ recovery id, including current, previous, and temp files.
 ## When snapshots show up in dialogs
 
 At startup, the Electron main process asks the recovery store for candidates.
-The store scans the recovery directory and returns every readable current and
-previous snapshot, plus it may clean abandoned temp files.
+The store scans the recovery directory, may clean abandoned temp files, and
+prefers the newest readable snapshot for each recovery group.
 
 The editor then classifies candidates into two buckets:
 
@@ -94,8 +94,8 @@ Pending dialog behavior happens for:
 
 - a saved workspace whose source file is missing
 - a saved workspace whose source file changed since the snapshot was taken
-- any multi-snapshot group where the app needs the user to choose the copy to
-  recover
+- any multi-snapshot group where the app needs to recover a single newest copy
+  for the workspace/file group
 
 The dialog now shows only the newest valid snapshot per workspace/file group. It
 does not expose `current` versus `previous` in the UI anymore.

@@ -24,7 +24,7 @@ The Electron main process reads `NEANES_DEV_USER_DATA_DIR` only in dev mode, so 
 - `saved-source-changed` - one saved-file snapshot whose source file changed after the snapshot was taken. It should appear in the recovery dialog.
 - `saved-source-missing` - one saved-file snapshot whose source file is missing. It should appear in the recovery dialog.
 - `two-files-to-recover` - two different saved-file snapshots with missing sources. The recovery dialog should show both files as separate recoverable candidates.
-- `current-and-previous` - writes both `.json` and `.prev.json` for the same workspace. The recovery dialog should show both and default-select the newest.
+- `current-and-previous` - writes both `.json` and `.prev.json` for the same workspace. The recovery dialog should show only the newest valid snapshot.
 - `corrupt-current` - writes a corrupt current snapshot and a valid `.prev.json`. The store should recover from the previous file.
 - `stale-temp` - writes an abandoned `.tmp.json` older than 24 hours. Startup should clean it up.
 - `recent-temp` - writes a recent `.tmp.json`. Startup should leave it alone and show no recovery candidate.

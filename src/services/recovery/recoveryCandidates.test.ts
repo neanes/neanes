@@ -4,8 +4,8 @@ import type { RecoveryCandidateArgs } from '@/ipc/ipcChannels';
 
 import {
   classifyRecoveryCandidates,
-  getRecoveryCandidateSourceState,
   getRecoveryCandidateSiblingRecoveryIds,
+  getRecoveryCandidateSourceState,
   groupRecoveryCandidates,
   selectDefaultRecoveryCandidates,
 } from './recoveryCandidates';

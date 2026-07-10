@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-
 import { describe, expect, it } from 'vitest';
 
 import { createRecoveryEnvelope } from './seed-recovery.mjs';

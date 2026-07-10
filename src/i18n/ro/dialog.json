@@ -11,7 +11,7 @@
   },
   "recovery": {
     "root": "Recuperează lucrul nesalvat",
-    "description": "Alegeți ce fișiere să fie recuperate sau lăsate pentru mai târziu. Recuperarea deschide o copie și nu va suprascrie fișierul original până când nu îl salvați.",
+    "description": "Partiturile de mai jos nu au fost salvate corect data trecută când a rulat Neanes și pot fi recuperate automat. După ce recuperați o partitură, salvați-o pentru a vă asigura că modificările au fost scrise pe disc.",
     "recoverSelected": "Recuperează selectate",
     "discardSelected": "Renunță la selectate",
     "skip": "Omite",

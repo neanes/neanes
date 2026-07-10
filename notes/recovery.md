@@ -6,12 +6,14 @@ understand how recovery files are created, shown, kept, and removed.
 
 ## High-level model
 
-Each workspace can have its own recovery data under the Electron `userData`
-directory:
+Each workspace can have its own recovery data under Electron `app.getPath('userData')`:
 
 - `recovery/<workspaceId>.json`
 - `recovery/<workspaceId>.prev.json`
 - `recovery/<workspaceId>.tmp.json`
+
+For the local recovery harness, the seeded profile lives under the OS temp
+directory, at `<os-temp-dir>/neanes-recovery-scenarios/<scenario>/userData`.
 
 The recovery data is a JSON envelope that contains:
 

@@ -30,7 +30,7 @@
 
       <DialogFooter class="w-full !flex-row flex-wrap !justify-end gap-2">
         <Button variant="secondary" @click="emitDecideLater">
-          {{ $t(($) => $.dialog.recovery.skip, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.recovery.notNow, { ns: 'dialog' }) }}
         </Button>
         <Button
           variant="destructive"

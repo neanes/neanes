@@ -14,7 +14,7 @@
     "description": "Partitur berikut tidak tersimpan dengan benar terakhir kali Neanes dijalankan dan dapat dipulihkan secara otomatis. Setelah memulihkan partitur, simpanlah untuk memastikan perubahan Anda ditulis ke disk.",
     "recoverSelected": "Pulihkan yang Dipilih",
     "discardSelected": "Buang yang Dipilih",
-    "skip": "Lewati",
+    "notNow": "Tidak sekarang",
     "untitled": "Tanpa judul",
     "originalPath": "Jalur asli",
     "recoveredAt": "Dipulihkan pada",

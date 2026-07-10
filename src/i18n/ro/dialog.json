@@ -14,7 +14,7 @@
     "description": "Partiturile de mai jos nu au fost salvate corect data trecută când a rulat Neanes și pot fi recuperate automat. După ce recuperați o partitură, salvați-o pentru a vă asigura că modificările au fost scrise pe disc.",
     "recoverSelected": "Recuperează selectate",
     "discardSelected": "Renunță la selectate",
-    "skip": "Omite",
+    "notNow": "Nu acum",
     "untitled": "Fără titlu",
     "originalPath": "Calea originală",
     "recoveredAt": "Recuperat la",

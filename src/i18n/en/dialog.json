@@ -14,7 +14,7 @@
     "description": "The following scores were not saved properly the last time Neanes ran and can be recovered automatically. After recovering a score, save it to ensure your changes are written to disk.",
     "recoverSelected": "Recover Selected",
     "discardSelected": "Discard Selected",
-    "skip": "Skip",
+    "notNow": "Not Now",
     "untitled": "Untitled",
     "originalPath": "Original path",
     "recoveredAt": "Recovered at",

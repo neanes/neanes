@@ -113,6 +113,24 @@ export function getRecoveryCandidateSiblingRecoveryIds(
     .map((candidate) => candidate.recoveryId);
 }
 
+export function getRecoveryCandidateGroupRecoveryIds(
+  candidates: RecoveryCandidateArgs[],
+  selectedRecoveryIds: string[],
+) {
+  const selectedRecoveryIdSet = new Set(selectedRecoveryIds);
+  const selectedGroupKeys = new Set(
+    candidates
+      .filter((candidate) => selectedRecoveryIdSet.has(candidate.recoveryId))
+      .map((candidate) => getRecoveryCandidateGroupKey(candidate)),
+  );
+
+  return candidates
+    .filter((candidate) =>
+      selectedGroupKeys.has(getRecoveryCandidateGroupKey(candidate)),
+    )
+    .map((candidate) => candidate.recoveryId);
+}
+
 export function getRecoveryCandidateSourceState(
   candidate: RecoveryCandidateArgs,
 ): RecoveryCandidateSourceState {

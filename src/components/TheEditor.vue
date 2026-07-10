@@ -232,6 +232,7 @@ import {
 } from '@/services/LayoutService';
 import {
   classifyRecoveryCandidates,
+  getRecoveryCandidateGroupRecoveryIds,
   getRecoveryCandidateSiblingRecoveryIds,
 } from '@/services/recovery/recoveryCandidates';
 import { SaveService } from '@/services/SaveService';
@@ -9525,9 +9526,10 @@ async function recoverSelectedRecoveryCandidates(candidateIds: string[]) {
 }
 
 async function discardSelectedRecoveryCandidates(candidateIds: string[]) {
-  const selectedCandidateIds = recoveryCandidates.value
-    .filter((candidate) => candidateIds.includes(candidate.recoveryId))
-    .map((candidate) => candidate.recoveryId);
+  const selectedCandidateIds = getRecoveryCandidateGroupRecoveryIds(
+    recoveryCandidates.value,
+    candidateIds,
+  );
 
   if (selectedCandidateIds.length > 0) {
     const result =
@@ -9546,7 +9548,7 @@ async function discardSelectedRecoveryCandidates(candidateIds: string[]) {
   }
 
   recoveryCandidates.value = recoveryCandidates.value.filter(
-    (candidate) => !candidateIds.includes(candidate.recoveryId),
+    (candidate) => !selectedCandidateIds.includes(candidate.recoveryId),
   );
   recoveryDialogIsOpen.value = recoveryCandidates.value.length > 0;
 }

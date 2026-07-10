@@ -4,6 +4,7 @@ import type { RecoveryCandidateArgs } from '@/ipc/ipcChannels';
 
 import {
   classifyRecoveryCandidates,
+  getRecoveryCandidateGroupRecoveryIds,
   getRecoveryCandidateSiblingRecoveryIds,
   getRecoveryCandidateSourceState,
   groupRecoveryCandidates,
@@ -226,5 +227,38 @@ describe('recovery candidate helpers', () => {
     );
 
     expect(siblingIds).toEqual(['previous']);
+  });
+
+  it('returns every recovery id in the selected group(s)', () => {
+    const sharedPath = '/tmp/shared.byzx';
+
+    const groupedIds = getRecoveryCandidateGroupRecoveryIds(
+      [
+        candidate({
+          recoveryId: 'current',
+          workspaceId: 'workspace-shared',
+          filePath: sharedPath,
+          isUntitled: false,
+          updatedAt: 20,
+        }),
+        candidate({
+          recoveryId: 'previous',
+          workspaceId: 'workspace-shared',
+          filePath: sharedPath,
+          isUntitled: false,
+          updatedAt: 10,
+        }),
+        candidate({
+          recoveryId: 'other',
+          workspaceId: 'workspace-other',
+          filePath: '/tmp/other.byzx',
+          isUntitled: false,
+          updatedAt: 30,
+        }),
+      ],
+      ['current'],
+    );
+
+    expect(groupedIds).toEqual(['current', 'previous']);
   });
 });

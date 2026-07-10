@@ -5894,7 +5894,7 @@ async function saveWorkspaceAs(workspace: Workspace) {
 
 async function closeWorkspace(workspace: Workspace) {
   let shouldClose = true;
-  let savedSuccessfully = false;
+  let shouldDiscardRecoverySnapshot = false;
 
   flushPendingRichTextEditors(workspace);
 
@@ -5940,7 +5940,7 @@ async function closeWorkspace(workspace: Workspace) {
 
         // If they successfully saved, then we can close the workspace
         shouldClose = saveResult.success;
-        savedSuccessfully = saveResult.success;
+        shouldDiscardRecoverySnapshot = saveResult.success;
 
         if (!saveResult.success && !saveResult.canceled) {
           showReplyErrorToast(
@@ -5962,6 +5962,9 @@ async function closeWorkspace(workspace: Workspace) {
           },
         );
       }
+    } else if (dialogResult.response === 1) {
+      // User chose "Don't Save", so discard any recovery snapshot.
+      shouldDiscardRecoverySnapshot = true;
     } else if (dialogResult.response === 2) {
       // User chose "Cancel", so don't close the workspace.
       shouldClose = false;
@@ -5969,7 +5972,7 @@ async function closeWorkspace(workspace: Workspace) {
   }
 
   if (shouldClose) {
-    if (savedSuccessfully || !workspace.isRecovered) {
+    if (shouldDiscardRecoverySnapshot || !workspace.isRecovered) {
       await discardRecoverySnapshot(workspace.id);
     }
 

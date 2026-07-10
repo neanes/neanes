@@ -2,10 +2,11 @@
 
 import crypto from 'crypto';
 import { promises as fs } from 'fs';
+import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const allowedRoot = '/tmp/neanes-recovery-scenarios';
+const allowedRoot = path.join(os.tmpdir(), 'neanes-recovery-scenarios');
 const schemaVersion = 1;
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -49,7 +50,11 @@ export async function seedRecoveryScenario({
   }
 
   const resolvedUserDataDir = path.resolve(userDataDir);
-  ensureSafeToDelete(resolvedUserDataDir, force);
+  await ensureSafeToDelete({
+    force,
+    scenario,
+    targetPath: resolvedUserDataDir,
+  });
 
   await fs.rm(resolvedUserDataDir, { force: true, recursive: true });
   await fs.mkdir(resolvedUserDataDir, { recursive: true });
@@ -71,6 +76,67 @@ export async function seedRecoveryScenario({
     resolvedUserDataDir,
     scenario,
   };
+}
+
+export async function ensureSafeToDelete({
+  force = false,
+  scenario,
+  targetPath,
+} = {}) {
+  if (typeof scenario !== 'string' || scenario.length === 0) {
+    throw new Error('A recovery scenario name is required.');
+  }
+
+  if (typeof targetPath !== 'string' || targetPath.length === 0) {
+    throw new Error('A user-data directory is required.');
+  }
+
+  const resolvedTargetPath = path.resolve(targetPath);
+  const resolvedRoot = path.parse(resolvedTargetPath).root;
+  const resolvedHomeDir = path.resolve(os.homedir());
+  const resolvedRepoRoot = path.resolve(repoRoot);
+  const resolvedScenarioUserDataDir = path.resolve(
+    allowedRoot,
+    scenario,
+    'userData',
+  );
+
+  if (resolvedTargetPath === resolvedRoot) {
+    throw new Error(
+      `Refusing to delete filesystem root: ${resolvedTargetPath}`,
+    );
+  }
+
+  if (resolvedTargetPath === resolvedHomeDir) {
+    throw new Error(`Refusing to delete home directory: ${resolvedTargetPath}`);
+  }
+
+  if (resolvedTargetPath === resolvedRepoRoot) {
+    throw new Error(
+      `Refusing to delete repository root: ${resolvedTargetPath}`,
+    );
+  }
+
+  const targetStats = await fs.stat(resolvedTargetPath).catch(() => null);
+  const targetExists = targetStats != null;
+
+  if (targetExists && resolvedTargetPath !== resolvedScenarioUserDataDir) {
+    throw new Error(
+      `Refusing to delete existing non-scenario directory: ${resolvedTargetPath}`,
+    );
+  }
+
+  if (!force) {
+    const rootWithSeparator = `${allowedRoot}${path.sep}`;
+    if (
+      resolvedTargetPath !== allowedRoot &&
+      !resolvedTargetPath.startsWith(rootWithSeparator)
+    ) {
+      throw new Error(
+        `Refusing to delete ${resolvedTargetPath}. Use --force to allow paths outside ${allowedRoot}.`,
+      );
+    }
+  }
 }
 
 export function createRecoveryEnvelope({
@@ -410,21 +476,6 @@ async function readExampleScore(exampleRelativePath) {
 async function loadAppVersion() {
   const raw = await fs.readFile(path.join(repoRoot, 'package.json'), 'utf8');
   return JSON.parse(raw).version ?? 'unknown';
-}
-
-function ensureSafeToDelete(targetPath, force) {
-  if (force) {
-    return;
-  }
-
-  const rootWithSeparator = `${allowedRoot}${path.sep}`;
-  if (targetPath === allowedRoot || targetPath.startsWith(rootWithSeparator)) {
-    return;
-  }
-
-  throw new Error(
-    `Refusing to delete ${targetPath}. Use --force to allow paths outside ${allowedRoot}.`,
-  );
 }
 
 function parseArgs(argv) {

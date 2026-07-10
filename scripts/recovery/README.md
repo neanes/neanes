@@ -7,7 +7,7 @@ This folder contains a local-only harness for starting Neanes against an isolate
 Each scenario seeds into:
 
 ```text
-/tmp/neanes-recovery-scenarios/<scenario>/userData
+<tmpdir>/neanes-recovery-scenarios/<scenario>/userData
 ```
 
 The Electron main process reads `NEANES_DEV_USER_DATA_DIR` only in dev mode, so production and packaged builds keep using the normal profile path.

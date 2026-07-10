@@ -16,7 +16,8 @@ fi
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "$script_dir/../.." && pwd)"
-user_data_dir="/tmp/neanes-recovery-scenarios/$scenario/userData"
+tmp_dir="$(node -e "process.stdout.write(require('node:os').tmpdir())")"
+user_data_dir="$tmp_dir/neanes-recovery-scenarios/$scenario/userData"
 
 node "$script_dir/seed-recovery.mjs" $force_flag --user-data-dir "$user_data_dir" "$scenario"
 

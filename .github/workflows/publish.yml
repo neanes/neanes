@@ -35,7 +35,7 @@ jobs:
         run: npm run lint
 
       - name: Lint Markdown
-        uses: DavidAnson/markdownlint-cli2-action@v23.2.0
+        uses: DavidAnson/markdownlint-cli2-action@v24.0.0
 
       - name: Build Windows
         if: runner.os == 'Windows'

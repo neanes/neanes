@@ -219,7 +219,7 @@ candidate, but the store still understands both files.
 
 If the current file cannot be read but the previous file can, the previous one
 can still be used. This is why `prev.json` is kept in the store even though the
-dialog no longer exposes it as a separate choice.
+dialog does not expose it as a separate choice.
 
 ### Stale temp and recent temp
 

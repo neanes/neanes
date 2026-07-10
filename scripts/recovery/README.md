@@ -7,7 +7,7 @@ This folder contains a local-only harness for starting Neanes against an isolate
 Each scenario seeds into:
 
 ```text
-/tmp/neanes-recovery-scenarios/<scenario>/userData
+<os-temp-dir>/neanes-recovery-scenarios/<scenario>/userData
 ```
 
 The Electron main process reads `NEANES_DEV_USER_DATA_DIR` only in dev mode, so production and packaged builds keep using the normal profile path.
@@ -40,5 +40,5 @@ scripts/recovery/run-scenario.sh saved-source-changed
 Allow deleting an out-of-tree user-data directory:
 
 ```sh
-node scripts/recovery/seed-recovery.mjs --force --user-data-dir /tmp/custom-neanes-profile saved-source-missing
+node scripts/recovery/seed-recovery.mjs --force --user-data-dir <custom-user-data-dir> saved-source-missing
 ```

@@ -9,6 +9,28 @@
     "setAsDefault": "Setează ca implicit",
     "useSystemDefault": "Folosește implicitul sistemului"
   },
+  "recovery": {
+    "root": "Recuperează lucrul nesalvat",
+    "description": "Partiturile de mai jos nu au fost salvate corect data trecută când a rulat Neanes și pot fi recuperate automat. După ce recuperați o partitură, salvați-o pentru a vă asigura că modificările au fost scrise pe disc.",
+    "recoverSelected": "Recuperează selectate",
+    "discardSelected": "Renunță la selectate",
+    "notNow": "Nu acum",
+    "untitled": "Fără titlu",
+    "originalPath": "Calea originală",
+    "recoveredAt": "Recuperat la",
+    "groupDescription": "Cel mai nou snapshot este selectat implicit.",
+    "currentSnapshot": "Snapshot curent",
+    "previousSnapshot": "Snapshot anterior",
+    "recoverableCopy": "Copie recuperabilă",
+    "originalFileMissing": "Fișierul original lipsește",
+    "originalFileChanged": "Fișierul original s-a schimbat",
+    "sourceMissing": "Fișierul original lipsește",
+    "sourceChanged": "Fișierul original s-a schimbat",
+    "recoveredDraft": "Ciornă recuperată",
+    "recoveredCopy": "Copie recuperată",
+    "discardConfirmTitle": "Renunțați definitiv la partiturile recuperate?",
+    "discardConfirmDescription": "Această acțiune nu poate fi anulată."
+  },
   "neumeCombinations": {
     "deleteTitle": "Ștergeți combinația?",
     "deleteDescription": "Ștergeți această combinație din listă?",

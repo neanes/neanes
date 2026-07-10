@@ -9,6 +9,28 @@
     "setAsDefault": "Set as Default",
     "useSystemDefault": "Use System Default"
   },
+  "recovery": {
+    "root": "Recover Unsaved Work",
+    "description": "The following scores were not saved properly the last time Neanes ran and can be recovered automatically. After recovering a score, save it to ensure your changes are written to disk.",
+    "recoverSelected": "Recover Selected",
+    "discardSelected": "Discard Selected",
+    "notNow": "Not Now",
+    "untitled": "Untitled",
+    "originalPath": "Original path",
+    "recoveredAt": "Recovered at",
+    "groupDescription": "Newest snapshot selected by default.",
+    "currentSnapshot": "Current snapshot",
+    "previousSnapshot": "Previous snapshot",
+    "recoverableCopy": "Recoverable copy",
+    "originalFileMissing": "Original file missing",
+    "originalFileChanged": "Original file changed",
+    "sourceMissing": "Original file missing",
+    "sourceChanged": "Original file changed",
+    "recoveredDraft": "Recovered draft",
+    "recoveredCopy": "Recovered copy",
+    "discardConfirmTitle": "Permanently discard recovered scores?",
+    "discardConfirmDescription": "This action cannot be undone."
+  },
   "neumeCombinations": {
     "deleteTitle": "Delete combo?",
     "deleteDescription": "Delete this combo from the list?",

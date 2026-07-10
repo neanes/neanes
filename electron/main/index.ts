@@ -26,6 +26,7 @@ import { initializeI18n, resolveLanguagePreference } from '../../src/i18n';
 import type {
   ClipboardReplyArgs,
   CloseWorkspacesArgs,
+  DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageArgs,
   ExportPageAsImageReplyArgs,
   ExportWorkspaceAsHtmlArgs,
@@ -42,8 +43,10 @@ import type {
   FileMenuViewPaneVisibilityArgs,
   FileMenuViewStatusBarVisibilityArgs,
   FileMenuViewZoomArgs,
+  ListRecoveryCandidatesReplyArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
+  RecoverySnapshotArgs,
   SaveWorkspaceArgs,
   SaveWorkspaceAsArgs,
   SaveWorkspaceAsReplyArgs,
@@ -64,6 +67,7 @@ import {
   type WorkspacePaneVisibility,
 } from '../../src/models/WorkspacePane';
 import { TestFileType } from '../../src/utils/TestFileType';
+import { RecoveryStore } from './recovery';
 
 // The built directory structure
 //
@@ -92,7 +96,19 @@ process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
 const isDevelopment = import.meta.env.DEV;
 
+if (isDevelopment) {
+  const devUserDataDir = process.env.NEANES_DEV_USER_DATA_DIR;
+
+  if (devUserDataDir) {
+    app.setPath('userData', path.resolve(devUserDataDir));
+  }
+}
+
 const userDataPath = app.getPath('userData');
+const recoveryStore = new RecoveryStore(
+  path.join(userDataPath, 'recovery'),
+  () => app.getVersion(),
+);
 
 const maxRecentFiles = 20;
 const storeFilePath = path.join(userDataPath, 'settings.json');
@@ -546,6 +562,7 @@ async function readScoreFile(filePath: string) {
 
 async function openFile(filePath: string) {
   const data = await readScoreFile(filePath);
+  const stats = await fs.stat(filePath);
 
   if (!silent) {
     await addToRecentFiles(filePath);
@@ -553,7 +570,11 @@ async function openFile(filePath: string) {
     createMenu();
   }
 
-  return data;
+  return {
+    data,
+    sourceMtimeMs: stats.mtimeMs,
+    sourceSize: stats.size,
+  };
 }
 
 async function openFileFromArgs(argv: string[]) {
@@ -577,9 +598,13 @@ async function openFileFromArgs(argv: string[]) {
     }
 
     try {
+      const openedFile = await openFile(parameter);
+
       result.push({
-        data: await openFile(parameter),
+        data: openedFile.data,
         filePath: parameter,
+        sourceMtimeMs: openedFile.sourceMtimeMs,
+        sourceSize: openedFile.sourceSize,
         success: true,
       });
     } catch (error) {
@@ -617,7 +642,10 @@ async function saveWorkspace(args: SaveWorkspaceArgs) {
     saving = true;
 
     await writeScoreFile(args.filePath, args.data);
+    const stats = await fs.stat(args.filePath);
 
+    result.sourceMtimeMs = stats.mtimeMs;
+    result.sourceSize = stats.size;
     result.success = true;
   } catch (error) {
     console.error(error);
@@ -675,11 +703,14 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
 
       if (doWrite) {
         await writeScoreFile(result.filePath, args.data);
+        const stats = await fs.stat(result.filePath);
 
         await addToRecentFiles(result.filePath);
         createMenu();
 
         result.success = true;
+        result.sourceMtimeMs = stats.mtimeMs;
+        result.sourceSize = stats.size;
 
         store.lastDirectory = path.dirname(result.filePath);
         await saveStore();
@@ -1408,9 +1439,13 @@ async function openWorkspaces() {
 
     if (!dialogResult.canceled) {
       for (const filePath of dialogResult.filePaths) {
+        const openedFile = await openFile(filePath);
+
         workspaces.push({
-          data: await openFile(filePath),
+          data: openedFile.data,
           filePath: filePath,
+          sourceMtimeMs: openedFile.sourceMtimeMs,
+          sourceSize: openedFile.sourceSize,
           success: true,
         });
       }
@@ -1798,7 +1833,7 @@ function createMenu() {
             label: `${index + 1}: ${x}`,
             async click() {
               try {
-                const data = await openFile(x);
+                const openedFile = await openFile(x);
 
                 if (!win) {
                   darwinPath = x;
@@ -1806,7 +1841,9 @@ function createMenu() {
                 } else {
                   win?.webContents.send(IpcMainChannels.FileMenuOpenScore, {
                     filePath: x,
-                    data,
+                    data: openedFile.data,
+                    sourceMtimeMs: openedFile.sourceMtimeMs,
+                    sourceSize: openedFile.sourceSize,
                     success: true,
                   } as FileMenuOpenScoreArgs);
                 }
@@ -2749,9 +2786,12 @@ ipcMain.handle(
 
 ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
   if (isMac && darwinPath != null) {
+    const openedFile = await openFile(darwinPath);
     const result = {
-      data: await openFile(darwinPath),
+      data: openedFile.data,
       filePath: darwinPath,
+      sourceMtimeMs: openedFile.sourceMtimeMs,
+      sourceSize: openedFile.sourceSize,
       success: true,
     };
 
@@ -2783,6 +2823,37 @@ ipcMain.handle(
   },
 );
 
+ipcMain.handle(
+  IpcRendererChannels.ListRecoveryCandidates,
+  async (): Promise<ListRecoveryCandidatesReplyArgs> => {
+    return await recoveryStore.listRecoveryCandidates();
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.SaveRecoverySnapshot,
+  async (event, snapshot: RecoverySnapshotArgs) => {
+    return await recoveryStore.saveRecoverySnapshot(snapshot);
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.DiscardRecoverySnapshot,
+  async (event, workspaceId: string) => {
+    return await recoveryStore.discardRecoverySnapshot(workspaceId);
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.DiscardRecoverySnapshots,
+  async (
+    event,
+    recoveryIds: string[],
+  ): Promise<DiscardRecoverySnapshotsReplyArgs> => {
+    return await recoveryStore.discardRecoverySnapshots(recoveryIds);
+  },
+);
+
 // macOS-only
 // This is called in two cases:
 // 1. The app is already running and the user opens a file
@@ -2796,9 +2867,12 @@ app.on('open-file', async (event, path) => {
     if (!win) {
       createWindow();
     } else if (loaded) {
+      const openedFile = await openFile(path);
       const result = {
-        data: await openFile(path),
+        data: openedFile.data,
         filePath: path,
+        sourceMtimeMs: openedFile.sourceMtimeMs,
+        sourceSize: openedFile.sourceSize,
         success: true,
       };
 

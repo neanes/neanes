@@ -18,6 +18,8 @@
     "saveSuccess": "Αποθηκεύτηκε",
     "saveFailed": "Η αποθήκευση απέτυχε",
     "saveFailedDescription": "Δεν ήταν δυνατή η αποθήκευση του μουσικού κειμένου.",
+    "recoveryDiscardFailed": "Η απόρριψη της ανάκτησης απέτυχε",
+    "recoveryDiscardFailedDescription": "Δεν ήταν δυνατή η απόρριψη του επιλεγμένου στιγμιότυπου ανάκτησης.",
     "copyFailed": "Η αντιγραφή απέτυχε",
     "copyElementLinkSuccess": "Ο σύνδεσμος στοιχείου αντιγράφηκε",
     "copyHtmlSuccess": "Το HTML αντιγράφηκε",

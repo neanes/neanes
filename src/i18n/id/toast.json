@@ -18,6 +18,8 @@
     "saveSuccess": "Tersimpan",
     "saveFailed": "Gagal menyimpan",
     "saveFailedDescription": "Tidak dapat menyimpan partitur.",
+    "recoveryDiscardFailed": "Gagal membuang pemulihan",
+    "recoveryDiscardFailedDescription": "Tidak dapat membuang snapshot pemulihan yang dipilih.",
     "copyFailed": "Gagal menyalin",
     "copyElementLinkSuccess": "Tautan elemen disalin",
     "copyHtmlSuccess": "HTML disalin",

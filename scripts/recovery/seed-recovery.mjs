@@ -19,6 +19,7 @@ const scenarios = {
   'saved-source-matches': seedSavedSourceMatches,
   'saved-source-changed': seedSavedSourceChanged,
   'saved-source-missing': seedSavedSourceMissing,
+  'two-files-to-recover': seedTwoFilesToRecover,
   'current-and-previous': seedCurrentAndPrevious,
   'corrupt-current': seedCorruptCurrent,
   'stale-temp': seedStaleTemp,
@@ -208,6 +209,47 @@ async function seedSavedSourceMissing(context) {
       tempFileName: 'saved-source-missing.byzx',
       updatedAt: timestamps.savedSourceMissing,
       workspaceId: workspaceIds.savedSourceMissing,
+    }),
+  );
+}
+
+async function seedTwoFilesToRecover(context) {
+  const firstScore = await readExampleScore(
+    'examples/Greek - Resurrectional Apolytikion - First Mode.byzx',
+  );
+  const secondScore = await readExampleScore(
+    'examples/English - Lord I Have Cried - First Mode.byzx',
+  );
+
+  await writeSnapshotFile(
+    path.join(context.recoveryDir, `${workspaceIds.twoFilesFirst}.json`),
+    createRecoveryEnvelope({
+      appVersion: context.appVersion,
+      filePath: path.join(context.resolvedUserDataDir, 'missing-a.byzx'),
+      hasUnsavedChanges: false,
+      score: firstScore,
+      snapshotId: snapshotIds.twoFilesFirst,
+      sourceMtimeMs: null,
+      sourceSize: null,
+      tempFileName: 'missing-a.byzx',
+      updatedAt: timestamps.twoFilesFirst,
+      workspaceId: workspaceIds.twoFilesFirst,
+    }),
+  );
+
+  await writeSnapshotFile(
+    path.join(context.recoveryDir, `${workspaceIds.twoFilesSecond}.json`),
+    createRecoveryEnvelope({
+      appVersion: context.appVersion,
+      filePath: path.join(context.resolvedUserDataDir, 'missing-b.byzx'),
+      hasUnsavedChanges: false,
+      score: secondScore,
+      snapshotId: snapshotIds.twoFilesSecond,
+      sourceMtimeMs: null,
+      sourceSize: null,
+      tempFileName: 'missing-b.byzx',
+      updatedAt: timestamps.twoFilesSecond,
+      workspaceId: workspaceIds.twoFilesSecond,
     }),
   );
 }
@@ -437,6 +479,8 @@ const workspaceIds = {
   savedSourceMissing: '10000000-0000-4000-8000-000000000006',
   staleTemp: '10000000-0000-4000-8000-000000000007',
   untitledAuto: '10000000-0000-4000-8000-000000000008',
+  twoFilesFirst: '10000000-0000-4000-8000-000000000009',
+  twoFilesSecond: '10000000-0000-4000-8000-00000000000a',
 };
 
 const snapshotIds = {
@@ -449,6 +493,8 @@ const snapshotIds = {
   savedSourceMissing: '20000000-0000-4000-8000-000000000007',
   staleTemp: '20000000-0000-4000-8000-000000000008',
   untitledAuto: '20000000-0000-4000-8000-000000000009',
+  twoFilesFirst: '20000000-0000-4000-8000-00000000000a',
+  twoFilesSecond: '20000000-0000-4000-8000-00000000000b',
 };
 
 const timestamps = {
@@ -461,6 +507,8 @@ const timestamps = {
   savedSourceMissing: Date.UTC(2024, 0, 1, 12, 10, 0),
   staleTemp: Date.UTC(2024, 0, 1, 8, 0, 0),
   untitledAuto: Date.UTC(2024, 0, 1, 12, 0, 0),
+  twoFilesFirst: Date.UTC(2024, 0, 1, 12, 20, 0),
+  twoFilesSecond: Date.UTC(2024, 0, 1, 12, 18, 0),
 };
 
 if (

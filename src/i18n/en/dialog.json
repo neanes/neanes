@@ -11,10 +11,10 @@
   },
   "recovery": {
     "root": "Recover Unsaved Work",
-    "description": "Choose which files to recover, discard, or leave for later. Recovered files are opened as recovered copies and won't overwrite the original file until you save them.",
+    "description": "The following scores were not saved properly the last time Neanes ran and can be recovered automatically. After recovering a score, save it to ensure your changes are written to disk.",
     "recoverSelected": "Recover Selected",
     "discardSelected": "Discard Selected",
-    "decideLater": "Decide Later",
+    "skip": "Skip",
     "untitled": "Untitled",
     "originalPath": "Original path",
     "recoveredAt": "Recovered at",
@@ -27,7 +27,9 @@
     "sourceMissing": "Original file missing",
     "sourceChanged": "Original file changed",
     "recoveredDraft": "Recovered draft",
-    "recoveredCopy": "Recovered copy"
+    "recoveredCopy": "Recovered copy",
+    "discardConfirmTitle": "Permanently discard recovered scores?",
+    "discardConfirmDescription": "This action cannot be undone."
   },
   "neumeCombinations": {
     "deleteTitle": "Delete combo?",

@@ -11,10 +11,10 @@
   },
   "recovery": {
     "root": "Recuperează lucrul nesalvat",
-    "description": "Alegeți ce fișiere să fie recuperate, eliminate sau lăsate pentru mai târziu. Fișierele recuperate se deschid ca copii recuperate și nu vor suprascrie fișierul original până când nu le salvați.",
+    "description": "Alegeți ce fișiere să fie recuperate sau lăsate pentru mai târziu. Recuperarea deschide o copie și nu va suprascrie fișierul original până când nu îl salvați.",
     "recoverSelected": "Recuperează selectate",
     "discardSelected": "Renunță la selectate",
-    "decideLater": "Decide mai târziu",
+    "skip": "Omite",
     "untitled": "Fără titlu",
     "originalPath": "Calea originală",
     "recoveredAt": "Recuperat la",
@@ -27,7 +27,9 @@
     "sourceMissing": "Fișierul original lipsește",
     "sourceChanged": "Fișierul original s-a schimbat",
     "recoveredDraft": "Ciornă recuperată",
-    "recoveredCopy": "Copie recuperată"
+    "recoveredCopy": "Copie recuperată",
+    "discardConfirmTitle": "Renunțați definitiv la partiturile recuperate?",
+    "discardConfirmDescription": "Această acțiune nu poate fi anulată."
   },
   "neumeCombinations": {
     "deleteTitle": "Ștergeți combinația?",

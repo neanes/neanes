@@ -1,6 +1,6 @@
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="flex max-h-[90vh] flex-col sm:max-w-4xl">
+    <DialogContent class="flex max-h-[90vh] flex-col sm:max-w-2xl">
       <DialogHeader>
         <DialogTitle>
           {{ $t(($) => $.dialog.recovery.root, { ns: 'dialog' }) }}
@@ -11,88 +11,31 @@
       </DialogHeader>
 
       <ScrollArea class="min-h-0 flex-1 border">
-        <div class="space-y-4 p-4">
-          <section
-            v-for="group in groupedCandidates"
-            :key="group.groupKey"
-            class="overflow-hidden rounded-xl border bg-card"
+        <div class="divide-y">
+          <label
+            v-for="candidate in displayedCandidates"
+            :key="candidate.recoveryId"
+            class="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-muted/40"
           >
-            <div class="border-b px-4 py-3">
-              <div class="flex items-start justify-between gap-4">
-                <div class="min-w-0 space-y-1">
-                  <div
-                    class="truncate font-medium"
-                    :title="getGroupTitle(group)"
-                  >
-                    {{ getGroupTitle(group) }}
-                  </div>
-                  <div class="text-muted-foreground text-sm">
-                    {{ getGroupDescription(group) }}
-                  </div>
-                </div>
-                <Badge variant="outline">
-                  {{ group.candidates.length }}
-                </Badge>
-              </div>
+            <Checkbox
+              :model-value="isSelected(candidate.recoveryId)"
+              @update:model-value="toggleSelection(candidate.recoveryId)"
+            />
+            <div class="min-w-0 flex-1 truncate font-medium">
+              {{ getCandidateTitle(candidate) }}
             </div>
-
-            <div class="divide-y">
-              <label
-                v-for="candidate in group.candidates"
-                :key="candidate.recoveryId"
-                class="flex cursor-pointer gap-3 px-4 py-3 hover:bg-muted/40"
-              >
-                <Checkbox
-                  :model-value="isSelected(candidate.recoveryId)"
-                  @update:model-value="toggleSelection(candidate.recoveryId)"
-                />
-                <div class="min-w-0 flex-1 space-y-2">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">
-                      {{ getCandidateRecordKind(candidate) }}
-                    </Badge>
-                    <Badge variant="outline">
-                      {{ getCandidateStatus(candidate) }}
-                    </Badge>
-                  </div>
-
-                  <div class="text-sm text-muted-foreground">
-                    <span class="font-medium text-foreground">
-                      {{
-                        $t(($) => $.dialog.recovery.recoveredAt, {
-                          ns: 'dialog',
-                        })
-                      }}:
-                    </span>
-                    <span class="ml-1">
-                      {{ getCandidateRecoveredAt(candidate) }}
-                    </span>
-                  </div>
-
-                  <div
-                    v-if="
-                      group.candidates.length > 1 &&
-                      getCandidateSourceDetail(candidate) != null
-                    "
-                    class="text-xs text-muted-foreground"
-                  >
-                    {{ getCandidateSourceDetail(candidate) }}
-                  </div>
-                </div>
-              </label>
-            </div>
-          </section>
+          </label>
         </div>
       </ScrollArea>
 
       <DialogFooter class="w-full !flex-row flex-wrap !justify-end gap-2">
         <Button variant="secondary" @click="emitDecideLater">
-          {{ $t(($) => $.dialog.recovery.decideLater, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.recovery.skip, { ns: 'dialog' }) }}
         </Button>
         <Button
-          variant="outline"
+          variant="destructive"
           :disabled="selectedRecoveryIds.length === 0"
-          @click="emitDiscardSelected"
+          @click="discardConfirmOpen = true"
         >
           {{ $t(($) => $.dialog.recovery.discardSelected, { ns: 'dialog' }) }}
         </Button>
@@ -105,13 +48,43 @@
       </DialogFooter>
     </DialogContent>
   </Dialog>
+
+  <AlertDialog v-model:open="discardConfirmOpen">
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>
+          {{ discardConfirmTitle }}
+        </AlertDialogTitle>
+        <AlertDialogDescription>
+          {{ discardConfirmDescription }}
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel>
+          {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
+        </AlertDialogCancel>
+        <AlertDialogAction @click="emitDiscardSelected">
+          {{ $t(($) => $.dialog.recovery.discardSelected, { ns: 'dialog' }) }}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>
 
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
 import { computed, nextTick, ref, watch } from 'vue';
 
-import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -124,12 +97,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { RecoveryCandidateArgs } from '@/ipc/ipcChannels';
-import {
-  getRecoveryCandidateGroupKey,
-  getRecoveryCandidateSourceState,
-  groupRecoveryCandidates,
-  selectDefaultRecoveryCandidates,
-} from '@/services/recovery/recoveryCandidates';
+import { selectDefaultRecoveryCandidates } from '@/services/recovery/recoveryCandidates';
 
 const open = defineModel<boolean>('open', { required: true });
 
@@ -145,17 +113,26 @@ const emit = defineEmits<{
 
 const { t } = useTranslation();
 const selectedRecoveryIds = ref<string[]>([]);
-const groupedCandidates = computed(() =>
-  groupRecoveryCandidates(props.candidates),
+const discardConfirmOpen = ref(false);
+const displayedCandidates = computed(() =>
+  selectDefaultRecoveryCandidates(props.candidates).sort(
+    (left, right) => right.updatedAt - left.updatedAt,
+  ),
+);
+const discardConfirmTitle = computed(() =>
+  t(($) => $.dialog.recovery.discardConfirmTitle, { ns: 'dialog' }),
+);
+const discardConfirmDescription = computed(() =>
+  t(($) => $.dialog.recovery.discardConfirmDescription, { ns: 'dialog' }),
 );
 
 watch(
   () => [open.value, props.candidates],
   ([isOpen]) => {
     if (isOpen) {
-      selectedRecoveryIds.value = selectDefaultRecoveryCandidates(
-        props.candidates,
-      ).map((candidate) => candidate.recoveryId);
+      selectedRecoveryIds.value = displayedCandidates.value.map(
+        (candidate) => candidate.recoveryId,
+      );
     }
   },
   { immediate: true },
@@ -166,7 +143,7 @@ function isSelected(recoveryId: string) {
 }
 
 function toggleSelection(recoveryId: string) {
-  const candidate = props.candidates.find(
+  const candidate = displayedCandidates.value.find(
     (item) => item.recoveryId === recoveryId,
   );
 
@@ -181,104 +158,31 @@ function toggleSelection(recoveryId: string) {
     return;
   }
 
-  const groupKey = getRecoveryCandidateGroupKey(candidate);
-
   selectedRecoveryIds.value = [
-    ...selectedRecoveryIds.value.filter((id) => {
-      const selectedCandidate = props.candidates.find(
-        (item) => item.recoveryId === id,
-      );
-
-      return (
-        selectedCandidate == null ||
-        getRecoveryCandidateGroupKey(selectedCandidate) !== groupKey
-      );
-    }),
+    ...selectedRecoveryIds.value,
     candidate.recoveryId,
   ];
 }
 
-function getCandidateStatus(candidate: RecoveryCandidateArgs) {
-  const sourceState = getRecoveryCandidateSourceState(candidate);
+function getCandidateTitle(candidate: RecoveryCandidateArgs) {
+  const fileName =
+    candidate.filePath?.split(/[\\/]/).pop() ?? candidate.tempFileName;
 
-  if (sourceState === 'missing') {
-    return t(($) => $.dialog.recovery.recoverableCopy, { ns: 'dialog' });
-  }
-
-  if (sourceState === 'changed') {
-    return t(($) => $.dialog.recovery.sourceChanged, { ns: 'dialog' });
-  }
-
-  return candidate.hasUnsavedChanges
-    ? t(($) => $.dialog.recovery.recoveredDraft, { ns: 'dialog' })
-    : t(($) => $.dialog.recovery.recoveredCopy, { ns: 'dialog' });
-}
-
-function getCandidateSourceDetail(candidate: RecoveryCandidateArgs) {
-  const sourceState = getRecoveryCandidateSourceState(candidate);
-
-  if (sourceState === 'missing') {
-    return t(($) => $.dialog.recovery.originalFileMissing, { ns: 'dialog' });
-  }
-
-  if (sourceState === 'changed') {
-    return t(($) => $.dialog.recovery.originalFileChanged, { ns: 'dialog' });
-  }
-
-  return null;
-}
-
-function getCandidateRecordKind(candidate: RecoveryCandidateArgs) {
-  return candidate.recordKind === 'current'
-    ? t(($) => $.dialog.recovery.currentSnapshot, { ns: 'dialog' })
-    : t(($) => $.dialog.recovery.previousSnapshot, { ns: 'dialog' });
-}
-
-function getGroupTitle(group: {
-  groupKey: string;
-  candidates: RecoveryCandidateArgs[];
-}) {
-  const candidate = group.candidates[0];
-
-  if (candidate == null) {
-    return '';
-  }
-
-  return candidate.filePath ?? candidate.tempFileName;
-}
-
-function getGroupDescription(group: {
-  groupKey: string;
-  candidates: RecoveryCandidateArgs[];
-}) {
-  if (group.candidates.length > 1) {
-    return t(($) => $.dialog.recovery.groupDescription, { ns: 'dialog' });
-  }
-
-  const candidate = group.candidates[0] as RecoveryCandidateArgs;
-
-  return candidate.hasUnsavedChanges
-    ? t(($) => $.dialog.recovery.recoveredDraft, { ns: 'dialog' })
-    : t(($) => $.dialog.recovery.recoveredCopy, { ns: 'dialog' });
-}
-
-function getCandidateRecoveredAt(candidate: RecoveryCandidateArgs) {
-  return new Date(candidate.updatedAt).toLocaleString();
+  return fileName;
 }
 
 function emitRecoverSelected() {
-  markCloseAsExplicit();
   emit('recover-selected', selectedRecoveryIds.value);
-}
-
-function emitDiscardSelected() {
-  markCloseAsExplicit();
-  emit('discard-selected', selectedRecoveryIds.value);
 }
 
 function emitDecideLater() {
   markCloseAsExplicit();
   emit('decide-later');
+}
+
+function emitDiscardSelected() {
+  discardConfirmOpen.value = false;
+  emit('discard-selected', selectedRecoveryIds.value);
 }
 
 const explicitCloseRequested = ref(false);

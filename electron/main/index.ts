@@ -126,6 +126,7 @@ const fakeUpdateMode = process.env.FAKE_UPDATE_AVAILABLE === '1';
 
 let win: BrowserWindow | null = null;
 let readyToExit = false;
+let pendingUpdateInstall = false;
 let creatingWindow = false;
 let quitting = false;
 let developerPaneEnabled = false;
@@ -2585,6 +2586,22 @@ ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
     }
   }
 
+  if (pendingUpdateInstall) {
+    pendingUpdateInstall = false;
+
+    if (fakeUpdateMode) {
+      console.info(
+        'FAKE_UPDATE_AVAILABLE=1: update shutdown completed; skipping quitAndInstall().',
+      );
+      app.exit();
+      return;
+    }
+
+    readyToExit = true;
+    autoUpdater.quitAndInstall(false, true);
+    return;
+  }
+
   // In macOS, there is a distinction between "close" and "quit".
   if (quitting) {
     app.exit();
@@ -2641,19 +2658,13 @@ ipcMain.handle(IpcRendererChannels.RestartToInstallUpdate, async () => {
     return;
   }
 
-  if (fakeUpdateMode) {
-    console.info(
-      'FAKE_UPDATE_AVAILABLE=1: restart-and-install requested; skipping quitAndInstall().',
-    );
-    return;
-  }
-
-  readyToExit = true;
-  autoUpdater.quitAndInstall(false, true);
+  pendingUpdateInstall = true;
+  win?.webContents.send(IpcMainChannels.CloseApplication);
 });
 
 ipcMain.handle(IpcRendererChannels.CancelExit, async () => {
   quitting = false;
+  pendingUpdateInstall = false;
 });
 
 ipcMain.handle(

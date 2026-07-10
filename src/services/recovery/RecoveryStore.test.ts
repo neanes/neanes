@@ -221,6 +221,38 @@ describe('RecoveryStore', () => {
     await fs.rm(recoveryDir, { recursive: true, force: true });
   });
 
+  it('serializes save and discard operations for the same workspace', async () => {
+    const { recoveryDir, store } = await createTempStore();
+    const workspaceId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const currentPath = path.join(recoveryDir, `${workspaceId}.json`);
+    const prevPath = path.join(recoveryDir, `${workspaceId}.prev.json`);
+    const tempPath = path.join(recoveryDir, `${workspaceId}.tmp.json`);
+
+    const savePromise = store.saveRecoverySnapshot({
+      workspaceId,
+      filePath: '/tmp/race.byzx',
+      tempFileName: 'race.byzx',
+      hasUnsavedChanges: true,
+      score: '{"version":1}',
+      sourceMtimeMs: null,
+      sourceSize: null,
+    });
+    const discardPromise = store.discardRecoverySnapshot(workspaceId);
+
+    const [saveResult, discardResult] = await Promise.all([
+      savePromise,
+      discardPromise,
+    ]);
+
+    expect(saveResult).toEqual({ success: true });
+    expect(discardResult).toEqual({ success: true });
+    expect(await exists(currentPath)).toBe(false);
+    expect(await exists(prevPath)).toBe(false);
+    expect(await exists(tempPath)).toBe(false);
+
+    await fs.rm(recoveryDir, { recursive: true, force: true });
+  });
+
   it('falls back to .prev snapshots when the current file is corrupt', async () => {
     const { recoveryDir, store } = await createTempStore();
     const workspaceId = '22222222-2222-4222-8222-222222222222';

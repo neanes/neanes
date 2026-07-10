@@ -37,6 +37,8 @@ interface RecoverySnapshotFile {
 }
 
 export class RecoveryStore {
+  private readonly workspaceOperationQueues = new Map<string, Promise<void>>();
+
   constructor(
     private readonly recoveryDir: string,
     private readonly getAppVersion: () => string = () => 'unknown',
@@ -120,62 +122,75 @@ export class RecoveryStore {
   public async saveRecoverySnapshot(
     snapshot: RecoverySnapshotArgs,
   ): Promise<SaveRecoverySnapshotReplyArgs> {
-    try {
-      await fs.mkdir(this.recoveryDir, { recursive: true });
-
-      const currentPath = this.getCurrentPath(snapshot.workspaceId);
-      const prevPath = this.getPreviousPath(snapshot.workspaceId);
-      const tempPath = this.getTempPath(snapshot.workspaceId);
-      const existing = await this.readRecoveryFile(currentPath);
-      const now = Date.now();
-      const preserveCurrentSnapshot = snapshot.preserveCurrentSnapshot === true;
-      const preserveCurrentSnapshotId =
-        preserveCurrentSnapshot && existing != null
-          ? existing.envelope.snapshotId
-          : uuidv4();
-      const createdAt = existing?.envelope.createdAt ?? now;
-      const score = snapshot.score;
-      const contentLength = Buffer.byteLength(score, 'utf8');
-      const contentSha256 = crypto
-        .createHash('sha256')
-        .update(score, 'utf8')
-        .digest('hex');
-      const envelope: RecoverySnapshotEnvelope = {
-        schemaVersion: recoverySchemaVersion,
-        snapshotId: preserveCurrentSnapshotId,
-        workspaceId: snapshot.workspaceId,
-        createdAt,
-        updatedAt: now,
-        filePath: snapshot.filePath,
-        tempFileName: snapshot.tempFileName,
-        hasUnsavedChanges: snapshot.hasUnsavedChanges,
-        score,
-        sourceMtimeMs: snapshot.sourceMtimeMs,
-        sourceSize: snapshot.sourceSize,
-        appVersion: this.getAppVersion(),
-        contentLength,
-        contentSha256,
-      };
-
-      const data = JSON.stringify({ envelope }, null, 2);
-      const tempFile = await fs.open(tempPath, 'w');
-
+    return this.runWorkspaceOperation(snapshot.workspaceId, async () => {
       try {
-        await tempFile.writeFile(data, 'utf8');
-        await tempFile.sync();
-      } finally {
-        await tempFile.close();
-      }
+        await fs.mkdir(this.recoveryDir, { recursive: true });
 
-      if (preserveCurrentSnapshot) {
+        const currentPath = this.getCurrentPath(snapshot.workspaceId);
+        const prevPath = this.getPreviousPath(snapshot.workspaceId);
+        const tempPath = this.getTempPath(snapshot.workspaceId);
+        const existing = await this.readRecoveryFile(currentPath);
+        const now = Date.now();
+        const preserveCurrentSnapshot =
+          snapshot.preserveCurrentSnapshot === true;
+        const preserveCurrentSnapshotId =
+          preserveCurrentSnapshot && existing != null
+            ? existing.envelope.snapshotId
+            : uuidv4();
+        const createdAt = existing?.envelope.createdAt ?? now;
+        const score = snapshot.score;
+        const contentLength = Buffer.byteLength(score, 'utf8');
+        const contentSha256 = crypto
+          .createHash('sha256')
+          .update(score, 'utf8')
+          .digest('hex');
+        const envelope: RecoverySnapshotEnvelope = {
+          schemaVersion: recoverySchemaVersion,
+          snapshotId: preserveCurrentSnapshotId,
+          workspaceId: snapshot.workspaceId,
+          createdAt,
+          updatedAt: now,
+          filePath: snapshot.filePath,
+          tempFileName: snapshot.tempFileName,
+          hasUnsavedChanges: snapshot.hasUnsavedChanges,
+          score,
+          sourceMtimeMs: snapshot.sourceMtimeMs,
+          sourceSize: snapshot.sourceSize,
+          appVersion: this.getAppVersion(),
+          contentLength,
+          contentSha256,
+        };
+
+        const data = JSON.stringify({ envelope }, null, 2);
+        const tempFile = await fs.open(tempPath, 'w');
+
         try {
-          await fs.access(currentPath);
-          await fs.rename(currentPath, prevPath);
-        } catch {
-          // Current file may not exist yet. That's fine.
+          await tempFile.writeFile(data, 'utf8');
+          await tempFile.sync();
+        } finally {
+          await tempFile.close();
         }
 
-        await fs.rename(tempPath, currentPath);
+        if (preserveCurrentSnapshot) {
+          try {
+            await fs.access(currentPath);
+            await fs.rename(currentPath, prevPath);
+          } catch {
+            // Current file may not exist yet. That's fine.
+          }
+
+          await fs.rename(tempPath, currentPath);
+
+          try {
+            await fs.rm(prevPath, { force: true });
+          } catch {
+            // Ignore best-effort cleanup.
+          }
+
+          await this.syncDirectory(this.recoveryDir);
+
+          return { success: true };
+        }
 
         try {
           await fs.rm(prevPath, { force: true });
@@ -183,65 +198,59 @@ export class RecoveryStore {
           // Ignore best-effort cleanup.
         }
 
+        try {
+          await fs.access(currentPath);
+          await fs.rename(currentPath, prevPath);
+          await this.syncDirectory(this.recoveryDir);
+        } catch {
+          // Current file may not exist yet. That's fine.
+        }
+
+        await fs.rename(tempPath, currentPath);
         await this.syncDirectory(this.recoveryDir);
 
         return { success: true };
-      }
-
-      try {
-        await fs.rm(prevPath, { force: true });
-      } catch {
-        // Ignore best-effort cleanup.
-      }
-
-      try {
-        await fs.access(currentPath);
-        await fs.rename(currentPath, prevPath);
-        await this.syncDirectory(this.recoveryDir);
-      } catch {
-        // Current file may not exist yet. That's fine.
-      }
-
-      await fs.rename(tempPath, currentPath);
-      await this.syncDirectory(this.recoveryDir);
-
-      return { success: true };
-    } catch (error) {
-      try {
-        if (validateUuid(snapshot.workspaceId)) {
-          await fs.rm(this.getTempPath(snapshot.workspaceId), { force: true });
+      } catch (error) {
+        try {
+          if (validateUuid(snapshot.workspaceId)) {
+            await fs.rm(this.getTempPath(snapshot.workspaceId), {
+              force: true,
+            });
+          }
+        } catch {
+          // Ignore cleanup failures after a write error.
         }
-      } catch {
-        // Ignore cleanup failures after a write error.
-      }
 
-      return {
-        success: false,
-        errorMessage:
-          error instanceof Error
-            ? error.message
-            : 'Unable to save recovery snapshot.',
-      };
-    }
+        return {
+          success: false,
+          errorMessage:
+            error instanceof Error
+              ? error.message
+              : 'Unable to save recovery snapshot.',
+        };
+      }
+    });
   }
 
   public async discardRecoverySnapshot(
     workspaceId: string,
   ): Promise<DiscardRecoverySnapshotReplyArgs> {
-    try {
-      await fs.rm(this.getCurrentPath(workspaceId), { force: true });
-      await fs.rm(this.getPreviousPath(workspaceId), { force: true });
-      await fs.rm(this.getTempPath(workspaceId), { force: true });
-      return { success: true };
-    } catch (error) {
-      return {
-        success: false,
-        errorMessage:
-          error instanceof Error
-            ? error.message
-            : 'Unable to discard recovery snapshot.',
-      };
-    }
+    return this.runWorkspaceOperation(workspaceId, async () => {
+      try {
+        await fs.rm(this.getCurrentPath(workspaceId), { force: true });
+        await fs.rm(this.getPreviousPath(workspaceId), { force: true });
+        await fs.rm(this.getTempPath(workspaceId), { force: true });
+        return { success: true };
+      } catch (error) {
+        return {
+          success: false,
+          errorMessage:
+            error instanceof Error
+              ? error.message
+              : 'Unable to discard recovery snapshot.',
+        };
+      }
+    });
   }
 
   public async discardRecoverySnapshots(
@@ -276,13 +285,15 @@ export class RecoveryStore {
       }
 
       for (const workspaceId of workspaceIds) {
-        const currentPath = this.getCurrentPath(workspaceId);
-        const previousPath = this.getPreviousPath(workspaceId);
-        const tempPath = this.getTempPath(workspaceId);
+        await this.runWorkspaceOperation(workspaceId, async () => {
+          const currentPath = this.getCurrentPath(workspaceId);
+          const previousPath = this.getPreviousPath(workspaceId);
+          const tempPath = this.getTempPath(workspaceId);
 
-        await this.discardMatchingRecoveryFile(currentPath, recoveryIdSet);
-        await this.discardMatchingRecoveryFile(previousPath, recoveryIdSet);
-        await this.discardMatchingRecoveryFile(tempPath, recoveryIdSet);
+          await this.discardMatchingRecoveryFile(currentPath, recoveryIdSet);
+          await this.discardMatchingRecoveryFile(previousPath, recoveryIdSet);
+          await this.discardMatchingRecoveryFile(tempPath, recoveryIdSet);
+        });
       }
 
       await this.syncDirectory(this.recoveryDir);
@@ -445,5 +456,35 @@ export class RecoveryStore {
     }
 
     return workspaceId;
+  }
+
+  private async runWorkspaceOperation<T>(
+    workspaceId: string,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    const previousOperation =
+      this.workspaceOperationQueues.get(workspaceId) ?? Promise.resolve();
+
+    let releaseCurrentOperation!: () => void;
+    const currentOperation = previousOperation.then(
+      () =>
+        new Promise<void>((resolve) => {
+          releaseCurrentOperation = resolve;
+        }),
+    );
+
+    this.workspaceOperationQueues.set(workspaceId, currentOperation);
+
+    await previousOperation;
+
+    try {
+      return await operation();
+    } finally {
+      releaseCurrentOperation();
+
+      if (this.workspaceOperationQueues.get(workspaceId) === currentOperation) {
+        this.workspaceOperationQueues.delete(workspaceId);
+      }
+    }
   }
 }

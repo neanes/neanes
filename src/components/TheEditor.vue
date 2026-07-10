@@ -5743,7 +5743,16 @@ async function load() {
 
     if (autoRecoveryCandidates.length > 0) {
       for (const candidate of autoRecoveryCandidates) {
-        openRecoveryCandidate(candidate);
+        const workspace = openRecoveryCandidate(candidate);
+
+        if (
+          workspace != null &&
+          candidate.sourceMatches &&
+          !candidate.hasUnsavedChanges
+        ) {
+          workspace.isRecovered = false;
+          await discardRecoverySnapshot(workspace.id);
+        }
       }
     }
 
@@ -9435,7 +9444,7 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
       selectedWorkspace.value = existingWorkspace;
       selectedElement.value = null;
       save(false);
-      return;
+      return existingWorkspace;
     }
 
     const score: Score = SaveService.LoadScoreFromJson(
@@ -9457,6 +9466,7 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
     selectedWorkspace.value = workspace;
     selectedElement.value = null;
     save(false);
+    return workspace;
   } catch (error) {
     console.error(error);
     showErrorToast(
@@ -9468,6 +9478,7 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
         }),
       },
     );
+    return null;
   }
 }
 

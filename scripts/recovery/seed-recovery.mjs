@@ -2,11 +2,10 @@
 
 import crypto from 'crypto';
 import { promises as fs } from 'fs';
-import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const allowedRoot = path.join(os.tmpdir(), 'neanes-recovery-scenarios');
+const allowedRoot = '/tmp/neanes-recovery-scenarios';
 const schemaVersion = 1;
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

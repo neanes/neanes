@@ -43,6 +43,11 @@ const petastiNeumesNoGorgon = petastiNeumes.filter(
   (x) => x !== QuantitativeNeume.PetastiPlusHyporoe,
 );
 
+const noGorgon = [
+  ...petastiNeumesNoGorgon,
+  QuantitativeNeume.IsonPlusApostrophos,
+];
+
 const bottomAllowedGorgonNeumes: Neume[] = [
   QuantitativeNeume.Apostrophos,
   QuantitativeNeume.Ison,
@@ -220,7 +225,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.Gorgon_Top,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -240,7 +245,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.GorgonDottedLeft,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -250,7 +255,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.GorgonDottedRight,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -260,7 +265,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.Digorgon,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -270,7 +275,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.DigorgonDottedLeft1,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -280,7 +285,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.DigorgonDottedLeft2,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -290,7 +295,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.DigorgonDottedRight,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -300,7 +305,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.Trigorgon,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -310,7 +315,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.TrigorgonDottedLeft1,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -320,7 +325,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.TrigorgonDottedLeft2,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -330,7 +335,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.TrigorgonDottedRight,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],

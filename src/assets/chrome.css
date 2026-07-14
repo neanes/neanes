@@ -383,6 +383,51 @@
   box-shadow: var(--chrome-menu-shadow);
 }
 
+/* Shared picker triggers and the @vuelor/picker adapter both borrow chrome
+ * token semantics so the library stops carrying its own light-biased palette. */
+.chrome-button.color-picker-trigger {
+  height: 1.5rem;
+  width: 46px;
+  padding: 5px;
+  border-radius: 1px;
+}
+
+.chrome-color-picker {
+  --color-vuelor-primary: var(--chrome-focus);
+  --color-vuelor-surface: var(--chrome-menu-bg);
+  --color-vuelor-shadow-inner: var(--chrome-menu-border);
+  --color-vuelor-input: var(--chrome-surface);
+  --shadow-vuelor-card: none;
+
+  color: var(--chrome-menu-foreground);
+}
+
+.chrome-color-picker-input-group {
+  border: 1px solid var(--input);
+  background: var(--chrome-menu-bg);
+}
+
+.chrome-color-picker-input-label {
+  color: var(--chrome-foreground-muted) !important;
+  background: var(--chrome-menu-bg);
+
+  opacity: 1 !important;
+}
+
+.chrome-color-picker-input-item {
+  background-color: var(--chrome-menu-bg) !important;
+}
+
+.chrome-color-picker-input-field {
+  color: var(--chrome-menu-foreground) !important;
+  caret-color: var(--chrome-menu-foreground) !important;
+  background: var(--chrome-menu-bg);
+}
+
+.chrome-color-picker .vuelor-picker-swatch-root {
+  border: 1px solid #666 !important;
+}
+
 /* Menus (button dropdowns + context menus) */
 .chrome-menu {
   box-sizing: border-box;

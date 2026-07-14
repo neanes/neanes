@@ -61,18 +61,6 @@
                 <PhCopy weight="duotone" />
               </ToolbarButton>
             </AppTooltip>
-            <AppTooltip
-              :tooltip="$t(($) => $.menu.edit.copyElementLink, { ns: 'menu' })"
-            >
-              <ToolbarButton
-                variant="secondary"
-                class="chrome-button toolbar-icon"
-                :disabled="!canCopyElementLink"
-                @click="$emit('copy-element-link')"
-              >
-                <PhLinkSimple weight="duotone" />
-              </ToolbarButton>
-            </AppTooltip>
             <AppTooltip :tooltip="$t(($) => $.menu.edit.paste, { ns: 'menu' })">
               <ToolbarButton
                 variant="secondary"
@@ -514,7 +502,6 @@ import {
   PhFolderOpen,
   PhGearFine,
   PhImageSquare,
-  PhLinkSimple,
   PhMagnifyingGlass,
   PhNotePencil,
   PhParagraph,
@@ -652,10 +639,6 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
-  canCopyElementLink: {
-    type: Boolean,
-    required: true,
-  },
 });
 
 const emit = defineEmits([
@@ -669,7 +652,6 @@ const emit = defineEmits([
   'add-text-box',
   'add-text-box-rich',
   'copy',
-  'copy-element-link',
   'cut',
   'delete-selected-element',
   'find',
@@ -939,8 +921,9 @@ function resetZoomInput() {
 }
 
 .toolbar-rest {
-  min-width: 0;
-  flex-wrap: wrap;
+  justify-self: start;
+  min-width: max-content;
+  flex-wrap: nowrap;
 }
 
 .main-toolbar :deep(.chrome-button:not(.is-text)) {

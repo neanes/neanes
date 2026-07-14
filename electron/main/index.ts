@@ -2042,6 +2042,14 @@ function createMenu() {
           },
         },
         {
+          id: copyElementLinkMenuItemId,
+          enabled: copyElementLinkMenuEnabled,
+          label: i18next.t(($) => $.menu.edit.copyElementLink),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuEditCopyElementLink);
+          },
+        },
+        {
           label: i18next.t(($) => $.menu.edit.paste),
           accelerator: 'CmdOrCtrl+V',
           click(menuItem, browserWindow, event) {
@@ -2084,6 +2092,14 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: i18next.t(($) => $.menu.edit.find),
+          accelerator: 'CmdOrCtrl+F',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuFind);
+          },
+        },
+        { type: 'separator' },
+        {
           label: i18next.t(($) => $.menu.edit.copyFormat),
           accelerator: 'CmdOrCtrl+Shift+R',
           click() {
@@ -2095,23 +2111,6 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+R',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPasteFormat);
-          },
-        },
-        { type: 'separator' },
-        {
-          label: i18next.t(($) => $.menu.edit.find),
-          accelerator: 'CmdOrCtrl+F',
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuFind);
-          },
-        },
-        { type: 'separator' },
-        {
-          id: copyElementLinkMenuItemId,
-          enabled: copyElementLinkMenuEnabled,
-          label: i18next.t(($) => $.menu.edit.copyElementLink),
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuEditCopyElementLink);
           },
         },
         { type: 'separator' },

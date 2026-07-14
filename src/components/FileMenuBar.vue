@@ -140,6 +140,13 @@
             <PhFileHtml />
             {{ $t(($) => $.menu.edit.copyAsHtml, { ns: 'menu' }) }}
           </MenubarItem>
+          <MenubarItem
+            :disabled="!props.canCopyElementLink"
+            @select="onClickCopyElementLink"
+          >
+            <PhLinkSimple />
+            {{ $t(($) => $.menu.edit.copyElementLink, { ns: 'menu' }) }}
+          </MenubarItem>
           <MenubarItem @select="onClickPaste">
             <PhClipboardText />
             {{ $t(($) => $.menu.edit.paste, { ns: 'menu' }) }}
@@ -152,6 +159,11 @@
             {{ $t(($) => $.menu.edit.selectAll, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
+          <MenubarItem @select="onClickFind">
+            <PhMagnifyingGlass />
+            {{ $t(($) => $.menu.edit.find, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSeparator />
           <MenubarItem @select="onClickCopyFormat">
             <PhPaintBrush />
             {{ $t(($) => $.menu.edit.copyFormat, { ns: 'menu' }) }}
@@ -159,19 +171,6 @@
           <MenubarItem @select="onClickPasteFormat">
             <PhPaintBucket />
             {{ $t(($) => $.menu.edit.pasteFormat, { ns: 'menu' }) }}
-          </MenubarItem>
-          <MenubarSeparator />
-          <MenubarItem @select="onClickFind">
-            <PhMagnifyingGlass />
-            {{ $t(($) => $.menu.edit.find, { ns: 'menu' }) }}
-          </MenubarItem>
-          <MenubarSeparator />
-          <MenubarItem
-            :disabled="!props.canCopyElementLink"
-            @select="onClickCopyElementLink"
-          >
-            <PhLinkSimple />
-            {{ $t(($) => $.menu.edit.copyElementLink, { ns: 'menu' }) }}
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem @select="onClickPreferences">

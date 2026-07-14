@@ -516,7 +516,6 @@
             />
           </ToolbarToggleItem>
           <ToolbarToggleItem
-            v-if="!isDoubleApostrophos"
             :value="NeumeSelection.Secondary"
             class="chrome-button neume-select-button"
             :aria-label="NeumeSelection.Secondary"
@@ -533,17 +532,6 @@
           >
             <Neume
               :neume="primaryNeume!"
-              :font-family="pageSetup.neumeDefaultFontFamily"
-            />
-          </ToolbarToggleItem>
-          <ToolbarToggleItem
-            v-if="isDoubleApostrophos"
-            :value="NeumeSelection.Secondary"
-            class="chrome-button neume-select-button"
-            :aria-label="NeumeSelection.Secondary"
-          >
-            <Neume
-              :neume="secondaryNeume"
               :font-family="pageSetup.neumeDefaultFontFamily"
             />
           </ToolbarToggleItem>
@@ -947,10 +935,6 @@ const secondaryNeume = computed(() =>
 
 const tertiaryNeume = computed(() =>
   getTertiaryNeume(props.element.quantitativeNeume),
-);
-
-const isDoubleApostrophos = computed(
-  () => props.element.quantitativeNeume === QuantitativeNeume.DoubleApostrophos,
 );
 
 const fthoresDisabled = computed(() =>

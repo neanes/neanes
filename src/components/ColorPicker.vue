@@ -5,7 +5,7 @@
         v-bind="$attrs"
         :id="id"
         type="button"
-        variant="outline"
+        variant="secondary"
         :disabled="disabled"
         :aria-label="$t(($) => $.toolbar.common.chooseColor, { ns: 'toolbar' })"
         :class="triggerClass"
@@ -20,7 +20,12 @@
       :class="contentClass"
       @close-auto-focus="onContentCloseAutoFocus"
     >
-      <ColorPickerRoot v-model="color" format="hex">
+      <ColorPickerRoot
+        v-model="color"
+        class="chrome-color-picker"
+        :ui="pickerUi"
+        format="hex"
+      >
         <ColorPickerCanvas />
         <ColorPickerSliderHue />
         <ColorPickerInputHex />
@@ -104,15 +109,24 @@ const popoverContentComponent = computed(() =>
 );
 
 const triggerClass = computed(() =>
-  cn(
-    'h-6 w-[46px] rounded-[1px] bg-background p-[5px] hover:bg-background',
-    props.class,
-  ),
+  cn('chrome-button color-picker-trigger', props.class),
 );
 
 const contentClass = computed(() =>
-  cn('w-auto border-0 bg-transparent p-0 shadow-none', props.contentClass),
+  cn('chrome-menu w-auto p-0', props.contentClass),
 );
+
+const pickerUi = {
+  input: {
+    group: 'chrome-color-picker-input-group',
+    item: 'chrome-color-picker-input-item',
+    label: 'chrome-color-picker-input-label',
+    field: 'chrome-color-picker-input-field',
+  },
+  swatch: {
+    root: 'vuelor-picker-swatch-root',
+  },
+};
 
 const colorStyle = computed(() => {
   return {

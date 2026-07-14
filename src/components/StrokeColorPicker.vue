@@ -3,10 +3,10 @@
     <PopoverTrigger as-child>
       <Button
         type="button"
-        variant="outline"
+        variant="secondary"
         :disabled="disabled"
         :aria-label="label"
-        class="h-6 w-[46px] rounded-[1px] bg-background p-[5px] hover:bg-background"
+        class="chrome-button color-picker-trigger"
       >
         <span
           class="relative block size-full overflow-hidden rounded-sm"
@@ -19,12 +19,11 @@
         </span>
       </Button>
     </PopoverTrigger>
-    <PopoverContent
-      align="start"
-      class="w-auto border-0 bg-transparent p-0 shadow-none"
-    >
+    <PopoverContent align="start" class="chrome-menu w-auto p-0">
       <ColorPickerRoot
         v-model="pickerColor"
+        class="chrome-color-picker"
+        :ui="pickerUi"
         format="hex"
         :disabled="pickerDisabled"
       >
@@ -45,7 +44,7 @@
             </label>
           </div>
 
-          <div class="h-px bg-border/70" />
+          <div class="h-px chrome-separator" />
 
           <div
             class="space-y-2 px-2.5"
@@ -140,6 +139,18 @@ const sameAsTextCheckboxId = useId();
 const pickerDisabled = computed(() => props.disabled || props.sameAsText);
 
 const sameAsTextDisabled = computed(() => props.disabled);
+
+const pickerUi = {
+  input: {
+    group: 'chrome-color-picker-input-group',
+    item: 'chrome-color-picker-input-item',
+    label: 'chrome-color-picker-input-label',
+    field: 'chrome-color-picker-input-field',
+  },
+  swatch: {
+    root: 'vuelor-picker-swatch-root',
+  },
+};
 
 const swatchStyle = computed(() => ({
   backgroundColor: props.previewColor,

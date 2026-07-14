@@ -815,12 +815,7 @@ const selectedElement = computed({
       selectedLyrics.value = null;
       selectionRange.value = null;
       selectedHeaderFooterElement.value = null;
-      toolbarInnerNeume.value =
-        element.elementType === ElementType.Note &&
-        (element as NoteElement).quantitativeNeume ===
-          QuantitativeNeume.DoubleApostrophos
-          ? NeumeSelection.Secondary
-          : NeumeSelection.Primary;
+      toolbarInnerNeume.value = NeumeSelection.Primary;
 
       if (audioService.state === AudioState.Playing) {
         const event = playbackEvents.value.find(

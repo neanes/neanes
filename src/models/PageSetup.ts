@@ -141,6 +141,7 @@ export class PageSetup {
   public modeKeyDefaultStrokeWidth = 0;
   public modeKeyDefaultFontSize = Unit.fromPt(20);
   public modeKeyDefaultHeightAdjustment = 0;
+  public initialMartyriaStyleId: string | undefined = undefined;
 
   public accidentalDefaultColor = '#ED0000';
   public accidentalDefaultStrokeWidth = 0;

@@ -299,6 +299,7 @@ export interface InitialMartyriaStyleResolverOptions {
   pageSetup: Pick<
     PageSetup,
     | 'direction'
+    | 'neumeDefaultFontFamily'
     | 'modeKeyDefaultColor'
     | 'modeKeyDefaultFontSize'
     | 'modeKeyDefaultStrokeWidth'
@@ -371,7 +372,8 @@ function resolveComponent(
     return [];
   }
 
-  const defaultAppearance: InitialMartyriaAppearance = {
+  const notationDefaultAppearance: InitialMartyriaAppearance = {
+    fontFamily: pageSetup.neumeDefaultFontFamily,
     color: pageSetup.modeKeyDefaultColor,
     fontSize: pageSetup.modeKeyDefaultFontSize,
     strokeWidth: pageSetup.modeKeyDefaultStrokeWidth,
@@ -385,13 +387,14 @@ function resolveComponent(
         }
       : {};
   const textAppearance = {
-    ...defaultAppearance,
+    ...notationDefaultAppearance,
+    fontFamily: 'Source Serif',
     ...style.textAppearance,
     ...component.appearance,
     ...explicitAppearance,
   };
   const notationAppearance = {
-    ...defaultAppearance,
+    ...notationDefaultAppearance,
     ...style.notationAppearance,
     ...component.appearance,
     ...explicitAppearance,

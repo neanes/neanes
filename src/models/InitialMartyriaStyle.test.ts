@@ -174,6 +174,27 @@ describe('InitialMartyriaStyleResolver', () => {
     expect(resolution.runs).toEqual([]);
   });
 
+  it('uses a bundled text font without changing notation defaults', () => {
+    const resolution = resolveInitialMartyriaStyle({
+      activeStyleId: 'mixed-fonts',
+      context: getInitialMartyriaContext(new ModeKeyElement()),
+      styles: [
+        {
+          ...traditionalGreekInitialMartyriaStyle,
+          id: 'mixed-fonts',
+          components: [
+            { id: 'text', kind: 'literal', text: 'Mode' },
+            { id: 'notation', kind: 'notationGlyph', source: 'modeWord' },
+          ],
+        },
+      ],
+      pageSetup: new PageSetup(),
+    });
+
+    expect(resolution.runs[0].appearance.fontFamily).toBe('Source Serif');
+    expect(resolution.runs[1].appearance.fontFamily).toBe('Neanes');
+  });
+
   it('validates style terminology references and locale formatting', () => {
     expect(
       validateInitialMartyriaStyle(

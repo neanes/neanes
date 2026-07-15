@@ -24,6 +24,10 @@ import type {
 import { ElementType, EmptyElement, LineBreakType } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
+import {
+  getInitialMartyriaContext,
+  resolveInitialMartyriaStyle,
+} from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
   ElementOverlayDiagnostics,
@@ -73,6 +77,7 @@ import {
   type SbmuflGlyphName,
 } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { resolveRunningMarkerPageMetadata } from '@/utils/runningMarkers';
@@ -764,8 +769,11 @@ export class LayoutService {
               : modeKeyElement.heightAdjustment;
 
           modeKeyElement.height =
-            TextMeasurementService.getFontHeight(
-              `${modeKeyElement.computedFontSize}px ${modeKeyElement.computedFontFamily}`,
+            this.getInitialMartyriaHeight(
+              modeKeyElement,
+              pageSetup,
+              score.initialMartyriaStyles,
+              score.modeTerminologies,
             ) + modeKeyElement.computedHeightAdjustment;
 
           this.addBox(
@@ -2320,6 +2328,50 @@ export class LayoutService {
         !(element as ImageBoxElement).inline) ||
       element.elementType === ElementType.ModeKey
     );
+  }
+
+  private static getInitialMartyriaHeight(
+    element: ModeKeyElement,
+    pageSetup: PageSetup,
+    styles: Workspace['score']['initialMartyriaStyles'],
+    terminologies: Workspace['score']['modeTerminologies'],
+  ) {
+    const resolution = resolveInitialMartyriaStyle({
+      context: getInitialMartyriaContext(element),
+      activeStyleId: pageSetup.initialMartyriaStyleId,
+      styles,
+      terminologies,
+      pageSetup,
+      element,
+    });
+    let top = 0;
+    let bottom = 0;
+
+    for (const run of resolution.runs) {
+      const appearance = run.appearance;
+      const fontFamily = appearance.fontFamily ?? element.computedFontFamily;
+      const fontSize = appearance.fontSize ?? element.computedFontSize;
+      const font = resolveFontCss({
+        fontFamily,
+        fontStyle: appearance.fontStyle ?? DEFAULT_FONT_STYLE,
+        fontSize,
+      });
+      const baselineShift = appearance.baselineShift ?? 0;
+      const strokeOverflow = (appearance.strokeWidth ?? 0) / 2;
+      const ascent = TextMeasurementService.getFontBoundingBoxAscent(font);
+      let descent = TextMeasurementService.getFontBoundingBoxDescent(font);
+
+      if (run.kind === 'stackedText') {
+        const upperHeight = TextMeasurementService.getFontHeight(font);
+        const lowerHeight = TextMeasurementService.getFontHeight(font);
+        descent = upperHeight + (run.gap ?? 0) + lowerHeight - ascent;
+      }
+
+      top = Math.min(top, baselineShift - ascent - strokeOverflow);
+      bottom = Math.max(bottom, baselineShift + descent + strokeOverflow);
+    }
+
+    return bottom - top;
   }
 
   private static addBox(

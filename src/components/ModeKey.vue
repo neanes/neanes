@@ -4,42 +4,45 @@
     :style="style"
     @click="$emit('select-single')"
   >
-    <Neume :neume="ModeSign.Ekhos" />
-    <Neume v-if="element.isPlagal" :neume="ModeSign.Plagal" />
-    <Neume v-if="element.isVarys" :neume="ModeSign.Varys" />
-    <Neume :neume="element.martyria" />
-    <Neume v-if="element.note != null" :neume="element.note" />
-    <Neume
-      v-if="element.fthoraAboveNote != null"
-      :neume="element.fthoraAboveNote"
-    />
-    <Neume
-      v-if="element.quantitativeNeumeAboveNote != null"
-      :neume="element.quantitativeNeumeAboveNote"
-    />
-    <Neume v-if="element.note2 != null" :neume="element.note2" />
-    <Neume
-      v-if="element.fthoraAboveNote2 != null"
-      :neume="element.fthoraAboveNote2"
-    />
-    <Neume
-      v-if="element.quantitativeNeumeAboveNote2 != null"
-      :neume="element.quantitativeNeumeAboveNote2"
-    />
-    <Neume
-      v-if="element.quantitativeNeumeRight != null"
-      :neume="element.quantitativeNeumeRight"
-    />
-    <Neume
-      v-if="element.fthoraAboveQuantitativeNeumeRight != null"
-      :neume="element.fthoraAboveQuantitativeNeumeRight"
-    />
-    <Neume
-      v-if="element.tempo != null && !element.tempoAlignRight"
-      :neume="element.tempo"
-      :style="tempoStyle"
-    />
-    <span class="right-container">
+    <span class="mode-key-main" :style="mainStyle">
+      <span class="mode-key-signature" :dir="signatureResolution.flowDirection">
+        <template v-for="run in resolvedRuns" :key="run.componentId">
+          <span
+            v-if="run.kind === 'notation' || run.kind === 'pitchCluster'"
+            class="mode-key-run"
+            :style="getRunStyle(run)"
+          >
+            <Neume
+              v-for="neume in run.notation ?? []"
+              :key="neume"
+              :neume="neume"
+            />
+          </span>
+          <span
+            v-else-if="run.kind === 'text'"
+            class="mode-key-run"
+            :lang="run.languageTag"
+            :dir="run.direction"
+            :style="getRunStyle(run)"
+            >{{ run.text }}</span
+          >
+          <span
+            v-else
+            class="mode-key-run mode-key-stacked-text"
+            :style="getRunStyle(run)"
+          >
+            <span>{{ run.upper }}</span>
+            <span>{{ run.lower }}</span>
+          </span>
+        </template>
+      </span>
+      <Neume
+        v-if="element.tempo != null && !element.tempoAlignRight"
+        :neume="element.tempo"
+        :style="tempoStyle"
+      />
+    </span>
+    <span ref="rightContainer" class="right-container">
       <span v-if="element.showAmbitus" class="ambitus">
         <span class="ambitus-text">(</span>
         <span class="ambitus-low" :style="ambitusStyleLow">
@@ -65,14 +68,21 @@
 
 <script setup lang="ts">
 import type { CSSProperties, PropType, StyleValue } from 'vue';
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
-import type { ModeKeyElement } from '@/models/Element';
-import { ModeSign } from '@/models/Neumes';
+import { type ModeKeyElement, TextBoxAlignment } from '@/models/Element';
+import {
+  getInitialMartyriaContext,
+  type InitialMartyriaStyle,
+  type ModeTerminology,
+  type ResolvedInitialMartyriaRun,
+  resolveInitialMartyriaStyle,
+} from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
+import { resolveFontStyle } from '@/utils/fontStyle';
 import { withZoom } from '@/utils/withZoom';
 
 defineEmits(['select-single']);
@@ -85,6 +95,57 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
+    default: () => [],
+  },
+  modeTerminologies: {
+    type: Array as PropType<ModeTerminology[]>,
+    default: () => [],
+  },
+});
+
+const signatureResolution = computed(() =>
+  resolveInitialMartyriaStyle({
+    context: getInitialMartyriaContext(props.element),
+    activeStyleId: props.pageSetup.initialMartyriaStyleId,
+    styles: props.initialMartyriaStyles,
+    terminologies: props.modeTerminologies,
+    pageSetup: props.pageSetup,
+    element: props.element,
+  }),
+);
+const resolvedRuns = computed(() => signatureResolution.value.runs);
+const rightContainer = ref<HTMLElement | null>(null);
+const rightAccessoryWidth = ref(0);
+let rightAccessoryResizeObserver: ResizeObserver | null = null;
+
+const mainStyle = computed(
+  () =>
+    ({
+      clipPath:
+        props.element.alignment === TextBoxAlignment.Right
+          ? undefined
+          : `inset(0 ${rightAccessoryWidth.value}px 0 0)`,
+    }) as CSSProperties,
+);
+
+onMounted(() => {
+  if (rightContainer.value == null) {
+    return;
+  }
+
+  const updateRightAccessoryWidth = () => {
+    rightAccessoryWidth.value = rightContainer.value?.offsetWidth ?? 0;
+  };
+
+  rightAccessoryResizeObserver = new ResizeObserver(updateRightAccessoryWidth);
+  rightAccessoryResizeObserver.observe(rightContainer.value);
+  updateRightAccessoryWidth();
+});
+
+onBeforeUnmount(() => {
+  rightAccessoryResizeObserver?.disconnect();
 });
 
 const style = computed(() => {
@@ -161,6 +222,47 @@ const ambitusStyleHigh = computed(() => {
 
   return style;
 });
+
+function getRunStyle(run: ResolvedInitialMartyriaRun) {
+  const appearance = run.appearance;
+  const font = resolveFontStyle(
+    appearance.fontFamily ?? props.element.computedFontFamily,
+    appearance.fontStyle,
+  );
+
+  return {
+    color: appearance.color,
+    fontFamily: font.cssFontFamily,
+    fontSize:
+      appearance.fontSize == null ? undefined : withZoom(appearance.fontSize),
+    fontStyle: font.cssFontStyle,
+    fontWeight: font.cssFontWeight,
+    webkitTextStrokeColor: appearance.strokeColor,
+    webkitTextStrokeWidth:
+      appearance.strokeWidth == null
+        ? undefined
+        : withZoom(appearance.strokeWidth),
+    top:
+      appearance.baselineShift == null
+        ? undefined
+        : withZoom(appearance.baselineShift),
+    insetInlineStart:
+      appearance.offsetInline == null
+        ? undefined
+        : withZoom(appearance.offsetInline),
+    marginInlineStart:
+      appearance.spacingBefore == null
+        ? undefined
+        : withZoom(appearance.spacingBefore),
+    marginInlineEnd:
+      appearance.spacingAfter == null
+        ? undefined
+        : withZoom(appearance.spacingAfter),
+    rowGap: run.kind === 'stackedText' ? withZoom(run.gap ?? 0) : undefined,
+    direction: run.direction,
+    unicodeBidi: 'isolate',
+  } as CSSProperties;
+}
 </script>
 
 <style scoped>
@@ -175,7 +277,31 @@ const ambitusStyleHigh = computed(() => {
 
 .right-container {
   position: absolute;
+  top: 0;
   right: 0;
+  white-space: nowrap;
+}
+
+.mode-key-main {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mode-key-run {
+  position: relative;
+}
+
+.mode-key-signature {
+  unicode-bidi: isolate;
+}
+
+.mode-key-stacked-text {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .ambitus {

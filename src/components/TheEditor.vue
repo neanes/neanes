@@ -10790,6 +10790,10 @@ function renderTabLabel(tab: Tab) {
                               "
                               :element="element as ModeKeyElement"
                               :page-setup="score.pageSetup"
+                              :initial-martyria-styles="
+                                score.initialMartyriaStyles
+                              "
+                              :mode-terminologies="score.modeTerminologies"
                               :class="[
                                 {
                                   selectedTextbox: isSelected(element),
@@ -11368,6 +11372,8 @@ function renderTabLabel(tab: Tab) {
       v-model:open="modeKeyDialogIsOpen"
       :element="selectedElement as ModeKeyElement"
       :page-setup="score.pageSetup"
+      :initial-martyria-styles="score.initialMartyriaStyles"
+      :mode-terminologies="score.modeTerminologies"
       @update="
         updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
       "

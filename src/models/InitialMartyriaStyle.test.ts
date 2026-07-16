@@ -197,6 +197,15 @@ describe('InitialMartyriaStyleResolver', () => {
 
   it('validates style terminology references and locale formatting', () => {
     expect(
+      validateModeTerminology({
+        id: 'blank-display-name',
+        displayName: '   ',
+        languageTag: 'en',
+        direction: 'ltr',
+        values: {},
+      }),
+    ).toContain('A terminology display name is required.');
+    expect(
       validateInitialMartyriaStyle(
         {
           ...traditionalGreekInitialMartyriaStyle,

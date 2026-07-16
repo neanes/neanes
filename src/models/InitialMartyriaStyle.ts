@@ -230,6 +230,9 @@ export function validateModeTerminology(terminology: ModeTerminology) {
   if (terminology.id.trim() === '') {
     errors.push('A terminology id is required.');
   }
+  if (terminology.displayName.trim() === '') {
+    errors.push('A terminology display name is required.');
+  }
   if (terminology.languageTag.trim() === '') {
     errors.push('A terminology language tag is required.');
   } else {

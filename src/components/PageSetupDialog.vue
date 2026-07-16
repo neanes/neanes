@@ -1183,6 +1183,38 @@
                 </template>
 
                 <template v-else-if="section.value === 'modeKeys'">
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-dialog-initial-martyria-style">
+                      {{
+                        $t(($) => $.dialog.initialMartyriaStyles.root, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldLabel>
+                    <Select v-model="initialMartyriaStyleId">
+                      <SelectTrigger
+                        id="page-setup-dialog-initial-martyria-style"
+                        ><SelectValue
+                      /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="style in availableInitialMartyriaStyles"
+                          :key="style.id"
+                          :value="style.id"
+                          >{{
+                            style.id === traditionalGreekInitialMartyriaStyle.id
+                              ? $t(
+                                  ($) =>
+                                    $.dialog.initialMartyriaStyles
+                                      .traditionalGreek,
+                                  { ns: 'dialog' },
+                                )
+                              : style.displayName
+                          }}</SelectItem
+                        >
+                      </SelectContent>
+                    </Select>
+                  </Field>
                   <FieldSet>
                     <FieldLegend variant="label">
                       {{
@@ -1586,6 +1618,10 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { MartyriaElement, TempoElement } from '@/models/Element';
 import { ElementType, NoteElement } from '@/models/Element';
 import {
+  type InitialMartyriaStyle,
+  traditionalGreekInitialMartyriaStyle,
+} from '@/models/InitialMartyriaStyle';
+import {
   Accidental,
   GorgonNeume,
   Ison,
@@ -1749,6 +1785,10 @@ const props = defineProps({
     type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
+    default: () => [],
+  },
   fonts: {
     type: Array as PropType<string[]>,
     required: true,
@@ -1756,6 +1796,10 @@ const props = defineProps({
 });
 
 const open = defineModel<boolean>('open', { required: true });
+const availableInitialMartyriaStyles = computed(() => [
+  traditionalGreekInitialMartyriaStyle,
+  ...props.initialMartyriaStyles,
+]);
 
 const isonIcon = NeumeMappingService.getMapping(QuantitativeNeume.Ison).text;
 
@@ -1838,6 +1882,14 @@ const numeralsOptions = new Map<PageNumerals, DialogSelector>([
 ]);
 
 const form = ref(new PageSetup());
+const initialMartyriaStyleId = computed({
+  get: () =>
+    form.value.initialMartyriaStyleId ??
+    traditionalGreekInitialMartyriaStyle.id,
+  set: (value) => {
+    form.value.initialMartyriaStyleId = value;
+  },
+});
 const neumeBulkColor = ref('#000000');
 
 const previewNeumes = computed(() => {

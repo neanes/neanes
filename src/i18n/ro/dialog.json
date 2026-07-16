@@ -61,6 +61,36 @@
     "root": "Selectează mărturia inițială",
     "description": "Alege mărturia inițială."
   },
+  "initialMartyriaStyles": {
+    "root": "Stiluri de martyria inițială",
+    "description": "Configurează stilurile de prezentare pentru martyria inițială în tot documentul.",
+    "active": "Activ",
+    "traditionalGreek": "Grecesc tradițional",
+    "moveUp": "Mută componenta în sus",
+    "removeComponent": "Elimină componenta",
+    "componentKinds": {
+      "notationGlyph": "Glică de notație",
+      "terminology": "Terminologie",
+      "modeNumber": "Număr mod",
+      "startingPitchCluster": "Grup de înălțime inițială",
+      "literal": "Text",
+      "stackedText": "Text suprapus"
+    },
+    "moveDown": "Mută componenta în jos",
+    "new": "Nou",
+    "newStyle": "Stil de martyria inițială",
+    "duplicate": "Duplică",
+    "copy": "Copie",
+    "delete": "Șterge",
+    "name": "Nume",
+    "flowDirection": "Direcția fluxului",
+    "page": "Direcția paginii",
+    "components": "Componente",
+    "addNotation": "Adaugă notație",
+    "addPitch": "Adaugă grup de înălțime",
+    "addText": "Adaugă text",
+    "useForDocument": "Folosește pentru acest document"
+  },
   "documentProperties": {
     "root": "Proprietăți document",
     "description": "Setează metadatele documentului pentru antete curente și alte tokenuri.",

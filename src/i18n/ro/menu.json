@@ -55,7 +55,8 @@
   },
   "format": {
     "root": "Format",
-    "paragraphStyles": "Stiluri paragraf…"
+    "paragraphStyles": "Stiluri paragraf…",
+    "initialMartyriaStyles": "Stiluri de martyria inițială…"
   },
   "view": {
     "root": "Vizualizare",

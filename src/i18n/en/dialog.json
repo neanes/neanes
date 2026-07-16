@@ -61,6 +61,36 @@
     "root": "Select Initial Martyria",
     "description": "Choose an initial martyria."
   },
+  "initialMartyriaStyles": {
+    "root": "Initial Martyria Styles",
+    "description": "Configure document-wide initial martyria presentation styles.",
+    "active": "Active",
+    "traditionalGreek": "Traditional Greek",
+    "moveUp": "Move component up",
+    "moveDown": "Move component down",
+    "removeComponent": "Remove component",
+    "componentKinds": {
+      "notationGlyph": "Notation glyph",
+      "terminology": "Terminology",
+      "modeNumber": "Mode number",
+      "startingPitchCluster": "Starting pitch cluster",
+      "literal": "Text",
+      "stackedText": "Stacked text"
+    },
+    "new": "New",
+    "newStyle": "Initial Martyria Style",
+    "duplicate": "Duplicate",
+    "copy": "Copy",
+    "delete": "Delete",
+    "name": "Name",
+    "flowDirection": "Flow direction",
+    "page": "Page direction",
+    "components": "Components",
+    "addNotation": "Add notation",
+    "addPitch": "Add pitch cluster",
+    "addText": "Add text",
+    "useForDocument": "Use for this document"
+  },
   "documentProperties": {
     "root": "Document Properties",
     "description": "Set document metadata for running heads and other tokens.",

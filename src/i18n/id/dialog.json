@@ -61,6 +61,36 @@
     "root": "Pilih Martyria Awal",
     "description": "Pilih martyria awal."
   },
+  "initialMartyriaStyles": {
+    "root": "Gaya Martyria Awal",
+    "description": "Atur gaya tampilan martyria awal untuk seluruh dokumen.",
+    "active": "Aktif",
+    "traditionalGreek": "Yunani Tradisional",
+    "moveUp": "Pindahkan komponen ke atas",
+    "removeComponent": "Hapus komponen",
+    "componentKinds": {
+      "notationGlyph": "Glif notasi",
+      "terminology": "Terminologi",
+      "modeNumber": "Nomor modus",
+      "startingPitchCluster": "Kelompok nada awal",
+      "literal": "Teks",
+      "stackedText": "Teks bertumpuk"
+    },
+    "moveDown": "Pindahkan komponen ke bawah",
+    "new": "Baru",
+    "newStyle": "Gaya Martyria Awal",
+    "duplicate": "Duplikat",
+    "copy": "Salinan",
+    "delete": "Hapus",
+    "name": "Nama",
+    "flowDirection": "Arah alur",
+    "page": "Arah halaman",
+    "components": "Komponen",
+    "addNotation": "Tambah notasi",
+    "addPitch": "Tambah kelompok nada",
+    "addText": "Tambah teks",
+    "useForDocument": "Gunakan untuk dokumen ini"
+  },
   "documentProperties": {
     "root": "Properti Dokumen",
     "description": "Atur metadata dokumen untuk kepala berjalan dan token lainnya.",

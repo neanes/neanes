@@ -57,6 +57,7 @@ import { ExportFormat } from '@/components/ExportDialog.types';
 import ExportDialog from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
+import InitialMartyriaStylesDialog from '@/components/InitialMartyriaStylesDialog.vue';
 import LyricsPane from '@/components/LyricsPane.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
@@ -151,6 +152,10 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
+import type {
+  InitialMartyriaStyle,
+  ModeTerminology,
+} from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
   ElementOverlayBox,
@@ -508,6 +513,7 @@ const syllablePositioningDialogIsOpen = ref(false);
 const playbackSettingsDialogIsOpen = ref(false);
 const pageSetupDialogIsOpen = ref(false);
 const paragraphStylesDialogIsOpen = ref(false);
+const initialMartyriaStylesDialogIsOpen = ref(false);
 const paragraphStylesDialogSelectedStyleId = ref<string>(
   BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
 );
@@ -1462,6 +1468,7 @@ const dialogOpen = computed(() => {
     modeKeyDialogIsOpen.value ||
     pageSetupDialogIsOpen.value ||
     paragraphStylesDialogIsOpen.value ||
+    initialMartyriaStylesDialogIsOpen.value ||
     documentPropertiesDialogIsOpen.value ||
     playbackSettingsDialogIsOpen.value ||
     syllablePositioningDialogIsOpen.value ||
@@ -1764,6 +1771,10 @@ onMounted(() => {
     onFileMenuParagraphStyles,
   );
   EventBus.$on(
+    IpcMainChannels.FileMenuInitialMartyriaStyles,
+    onFileMenuInitialMartyriaStyles,
+  );
+  EventBus.$on(
     IpcMainChannels.FileMenuDocumentProperties,
     onFileMenuDocumentProperties,
   );
@@ -1882,6 +1893,10 @@ onBeforeUnmount(() => {
   EventBus.$off(
     IpcMainChannels.FileMenuParagraphStyles,
     onFileMenuParagraphStyles,
+  );
+  EventBus.$off(
+    IpcMainChannels.FileMenuInitialMartyriaStyles,
+    onFileMenuInitialMartyriaStyles,
   );
   EventBus.$off(
     IpcMainChannels.FileMenuDocumentProperties,
@@ -7437,6 +7452,35 @@ function updatePageSetup(pageSetup: PageSetup) {
   save();
 }
 
+function updateInitialMartyriaStyles({
+  styles,
+  terminologies,
+}: {
+  styles: InitialMartyriaStyle[];
+  terminologies: ModeTerminology[];
+}) {
+  commandService.value.execute(
+    scoreCommandFactory.create('update-properties', {
+      target: score.value,
+      newValues: {
+        initialMartyriaStyles: styles,
+        modeTerminologies: terminologies,
+      },
+    }),
+  );
+  save();
+}
+
+function useInitialMartyriaStyle(styleId: string) {
+  commandService.value.execute(
+    pageSetupCommandFactory.create('update-properties', {
+      target: score.value.pageSetup,
+      newValues: { initialMartyriaStyleId: styleId },
+    }),
+  );
+  save();
+}
+
 function updateDocumentProperties(documentProperties: DocumentProperties) {
   commandService.value.execute(
     documentPropertiesCommandFactory.create('update-properties', {
@@ -8296,6 +8340,10 @@ function onFileMenuPageSetup() {
 
 function onFileMenuParagraphStyles() {
   openParagraphStylesDialog();
+}
+
+function onFileMenuInitialMartyriaStyles() {
+  initialMartyriaStylesDialogIsOpen.value = true;
 }
 
 function onFileMenuDocumentProperties() {
@@ -11418,6 +11466,7 @@ function renderTabLabel(tab: Tab) {
       v-model:open="pageSetupDialogIsOpen"
       :page-setup="score.pageSetup"
       :paragraph-styles="score.paragraphStyles"
+      :initial-martyria-styles="score.initialMartyriaStyles"
       :fonts="fonts"
       @update="updatePageSetup($event)"
     />
@@ -11429,6 +11478,15 @@ function renderTabLabel(tab: Tab) {
       :initial-selected-style-id="paragraphStylesDialogSelectedStyleId"
       :fonts="fonts"
       @update="updateParagraphStyles($event)"
+    />
+    <InitialMartyriaStylesDialog
+      v-if="initialMartyriaStylesDialogIsOpen"
+      v-model:open="initialMartyriaStylesDialogIsOpen"
+      :styles="score.initialMartyriaStyles"
+      :terminologies="score.modeTerminologies"
+      :active-style-id="score.pageSetup.initialMartyriaStyleId"
+      @update="updateInitialMartyriaStyles($event)"
+      @use-style="useInitialMartyriaStyle($event)"
     />
     <DocumentPropertiesDialog
       v-if="documentPropertiesDialogIsOpen"

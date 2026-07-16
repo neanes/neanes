@@ -1064,7 +1064,7 @@ const generalSharpTitle = computed(() =>
 function translateNeumeDisplayName(neume: ToolbarNeumeTooltipNeume) {
   switch (neume) {
     case Tie.YfenBelow:
-      return t(($) => $.toolbar.neume.yfen, { ns: 'toolbar' });
+      return t(($) => $.model.neume.vocalExpression.yfen, { ns: 'model' });
     case Accidental.Flat_2_Right:
       return t(($) => $.toolbar.neume.flat, { ns: 'toolbar' });
     case Accidental.Sharp_2_Left:

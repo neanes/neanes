@@ -311,7 +311,7 @@
               :id="getOffsetRowLabelId(row)"
               class="flex h-7 min-w-0 items-center text-xs"
             >
-              {{ $t(row.label, { ns: 'dialog' }) }}
+              {{ $t(row.label, { ns: ['dialog', 'model'] }) }}
             </div>
             <InputUnit
               :id="getOffsetInputId(row, 'x')"
@@ -426,7 +426,7 @@ const zoom = 2;
 const leftOffsetHeaderId = 'syllable-positioning-left-header';
 const topOffsetHeaderId = 'syllable-positioning-top-header';
 
-type DialogSelector = SelectorParam<'dialog'>;
+type OffsetLabelSelector = SelectorParam<['dialog', 'model']>;
 type NoteOffsetKey =
   | 'accidentalOffsetX'
   | 'accidentalOffsetY'
@@ -471,7 +471,7 @@ type OffsetAxis = 'x' | 'y';
 
 type OffsetRow = {
   id: string;
-  label: DialogSelector;
+  label: OffsetLabelSelector;
   xKey: NoteOffsetKey;
   yKey: NoteOffsetKey;
 };
@@ -569,7 +569,7 @@ const offsetRows = [
   },
   {
     id: 'tie',
-    label: ($) => $.dialog.neumePositioning.tie,
+    label: ($) => $.model.neume.vocalExpression.yfen,
     xKey: 'tieOffsetX',
     yKey: 'tieOffsetY',
   },

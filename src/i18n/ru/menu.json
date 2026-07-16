@@ -1,0 +1,100 @@
+{
+  "file": {
+    "root": "Файл",
+    "new": "Создать",
+    "open": "Открыть…",
+    "openRecent": "Недавние файлы",
+    "import": "Импорт",
+    "importFromOcr": "Результат распознавания…",
+    "save": "Сохранить",
+    "saveAs": "Сохранить как…",
+    "pageSetup": "Параметры документа…",
+    "documentProperties": "Свойства документа…",
+    "exportAs": "Экспорт",
+    "exportAsPdf": "Экспорт в PDF…",
+    "exportAsHtml": "Экспорт в HTML…",
+    "exportAsLatex": "Экспорт в LaTeX…",
+    "exportAsMusicXml": "Экспорт в MusicXML…",
+    "exportAsImage": "Экспорт как изображение…",
+    "print": "Печать…",
+    "close": "Закрыть",
+    "closeOthers": "Закрыть остальные"
+  },
+  "edit": {
+    "root": "Правка",
+    "undo": "Отменить",
+    "redo": "Повторить",
+    "cut": "Вырезать",
+    "copy": "Копировать",
+    "copyAsHtml": "Копировать как HTML",
+    "paste": "Вставить",
+    "pasteWithLyrics": "Вставить с текстом песнопения",
+    "saveAsCombo": "Сохранить как комбинацию",
+    "selectAll": "Выделить все",
+    "copyFormat": "Копировать форматирование",
+    "pasteFormat": "Вставить форматирование",
+    "find": "Найти",
+    "copyElementLink": "Копировать ссылку на элемент",
+    "preferences": "Настройки"
+  },
+  "insert": {
+    "root": "Вставка",
+    "alternateLine": "Альтернативная строка",
+    "annotation": "Аннотация",
+    "dropCap": "Буквица",
+    "dropCapBefore": "Буквица перед элементом",
+    "dropCapAfter": "Буквица после элемента",
+    "textBox": "Текстовый фрейм",
+    "richTextBox": "Текстовый фрейм с форматированием",
+    "inlineTextBox": "Текстовый фрейм в строке",
+    "initialMartyria": "Начальная мартирия",
+    "image": "Изображение",
+    "headersAndFooters": "Колонтитулы",
+    "header": "Верхний колонтитул",
+    "footer": "Нижний колонтитул"
+  },
+  "format": {
+    "root": "Формат",
+    "paragraphStyles": "Стили абзацев…"
+  },
+  "view": {
+    "root": "Вид",
+    "developer": "Разработка",
+    "neumeSelector": "Выбор невм",
+    "commonCombos": "Частые комбинации",
+    "properties": "Свойства",
+    "lyrics": "Текст песнопения",
+    "statusBar": "Строка состояния",
+    "showDeveloperPanels": "Показывать панели разработчика",
+    "zoom": {
+      "root": "Масштаб",
+      "zoomIn": "Увеличить",
+      "zoomOut": "Уменьшить",
+      "actualSize": "Реальный размер",
+      "pageWidth": "По ширине страницы",
+      "textWidth": "По ширине текста",
+      "wholePage": "Вся страница"
+    },
+    "resetLayout": "Восстановить расположение панелей",
+    "generateTestFiles": "Создать тестовые файлы (отладка)"
+  },
+  "window": {
+    "root": "Окно",
+    "previousTab": "Предыдущая вкладка",
+    "nextTab": "Следующая вкладка"
+  },
+  "help": {
+    "root": "Справка",
+    "guide": "Руководство",
+    "requestAFeature": "Предложить функцию",
+    "reportAnIssue": "Сообщить о проблеме",
+    "about": "О программе"
+  },
+  "tab": {
+    "close": "Закрыть",
+    "closeOthers": "Закрыть остальные",
+    "closeToTheLeft": "Закрыть вкладки слева",
+    "closeToTheRight": "Закрыть вкладки справа"
+  },
+  "warning": "Предупреждение: это приложение лучше всего работает в браузерах на основе Chromium. В других браузерах некоторые функции могут быть недоступны или работать с ошибками."
+}

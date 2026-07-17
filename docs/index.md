@@ -26,7 +26,7 @@ features:
   - title: WYSIWYG Design
     details: Point and click to add neumes and see how they will appear on the page.
   - title: Rapid Entry of Neumes and Lyrics
-    details: Neumes and lyrics are automatically aligned and martyria are automatically calculated.
+    details: Neumes and lyrics are automatically aligned and martyriæ are automatically calculated.
   - title: Multilingual Support
     details: Write lyrics in any language, and switch the user interface language at any time from Preferences.
   - title: Advanced Typography

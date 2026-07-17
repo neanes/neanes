@@ -35,7 +35,7 @@ Quantitative neumes are inserted by clicking the desired neume in the Neume Sele
 
 ![Neume Entry Panel](./images/guide-neume-entry-panel.png)
 
-Supporting neumes such as fthoras, gorgons, accidentals, etc. can be inserted by using the toolbar that appears on the bottom of the screen when a neume is selected.
+Supporting neumes such as fthoræ, gorgons, accidentals, etc. can be inserted by using the toolbar that appears on the bottom of the screen when a neume is selected.
 
 ![Neume Toolbar](./images/guide-neume-toolbar.png)
 
@@ -54,7 +54,7 @@ Most common neumes have keyboard shortcuts. See [Neume Keyboard](./keyboard.html
 
 ### Martyria
 
-To insert a martyria, use the martyria button in the main toolbar. The note and martyria sign are automatically calculated based on the initial martyria and fthoras placed above neumes. If the melody leaves the range generally used by traditional Byzantine Chant, the martyria will not display properly.
+To insert a martyria, use the martyria button in the main toolbar. The note and martyria sign are automatically calculated based on the initial martyria and fthoræ placed above neumes. If the melody leaves the range generally used by traditional Byzantine Chant, the martyria will not display properly.
 
 ![Main Toolbar Martyria](./images/guide-main-toolbar-martyria.png)
 
@@ -329,11 +329,11 @@ You may configure the default tempos for each tempo sign in the `Preferences` di
 
 #### Permanent Enharmonic Zo
 
-It is common to write hymns of the third mode and the grave mode without the proper fthores and alterations on Zo. In order to get the correct playback with a flattened Zo, click the initial martyria and check `Permanent Enharmonic Zo`. This will make all Zo notes enharmonic, even if not specified.
+It is common to write hymns of the third mode and the grave mode without the proper fthoræ and alterations on Zo. In order to get the correct playback with a flattened Zo, click the initial martyria and check `Permanent Enharmonic Zo`. This will make all Zo notes enharmonic, even if not specified.
 
 #### Chromatic Fthora Note
 
-Chromatic fthoras are sometimes ambiguous. Use the `Fthora Note` dropdown in the Properties pane to specify the correct note for audio playback. This selection will also determine the note indicator that appears above the note, if the note indicator has been enabled for that note.
+Chromatic fthoræ are sometimes ambiguous. Use the `Fthora Note` dropdown in the Properties pane to specify the correct note for audio playback. This selection will also determine the note indicator that appears above the note, if the note indicator has been enabled for that note.
 
 <style>
 kbd {

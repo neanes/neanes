@@ -9,7 +9,7 @@
 
 Most common neumes have a keyboard shortcut. The keyboard layout is such that you can rest your hands on the home row keys. The right hand is used to enter neumes, while the left hand is used to change the neumes available to the right hand.
 
-By default, the right-hand keys enter characters of quantity such as the ison, oligon, apostrophos, etc. But by pressing and holding a modifier with the left-hand, the right-hand keys may be used to enter fthores, gorgons, etc.
+By default, the right-hand keys enter characters of quantity such as the ison, oligon, apostrophos, etc. But by pressing and holding a modifier with the left-hand, the right-hand keys may be used to enter fthoræ, gorgons, etc.
 
 For example, pressing <kbd>J</kbd> enters an ison and pressing <kbd>K</kbd> enters an oligon. But if you press and hold <kbd>T</kbd>, then `fthora mode` is activated and now pressing <kbd>J</kbd> enters the diatonic fthora for Ni, and pressing <kbd>K</kbd> enters a diatonic fthora for Pa.
 
@@ -21,7 +21,7 @@ Below is a list of modifiers.
 | <kbd> W </kbd> | Measure Bars        |
 | <kbd> E </kbd> | Signs of Alteration |
 | <kbd> R </kbd> | Kentēmata           |
-| <kbd> T </kbd> | Fthores             |
+| <kbd> T </kbd> | Fthoræ              |
 | <kbd> A </kbd> | Ison Indicators     |
 | <kbd> S </kbd> | Quantity Modifier 1 |
 | <kbd> D </kbd> | Quantity Modifier 2 |
@@ -229,7 +229,7 @@ Tempo characters may be placed above a martyria with the following shortcuts.
 | <span class="neume">&#xe121;</span> | <kbd>Shift</kbd> + <kbd>X</kbd> + <kbd>,</kbd> |
 | <span class="neume">&#xe120;</span> | <kbd>Shift</kbd> + <kbd>X</kbd> + <kbd>.</kbd> |
 
-## Fthores
+## Fthoræ
 
 |                    Neume                    | Keyboard Shortcut           |
 | :-----------------------------------------: | --------------------------- |

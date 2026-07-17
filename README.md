@@ -10,8 +10,8 @@ Neanes (pronounced neh-ah-ness) is a free and open source scorewriter for notati
 
 - WYSIWYG design
 - Rapid entry of neumes and lyrics
-- Automatic alignment of supporting neumes (i.e. fthoras, accidentals, klasmas, gorgons, et al)
-- Automatic calculation of martyria
+- Automatic alignment of supporting neumes (i.e. fthoræ, accidentals, klasmas, gorgons, et al)
+- Automatic calculation of martyriæ
 - Multilingual lyric entry and user interface
 - [Optimal line breaking](notes/knuth_plass.md) for beautifully even spacing across every line, just like TeX and Adobe InDesign
 - Print or export to PDF

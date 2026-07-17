@@ -1504,7 +1504,7 @@ export class NeumeKeyboard {
       )} </kbd> | Kentimata |\n`,
     );
     result.push(
-      `| <kbd> ${this.__formatKeyForDocs(this.fthoraKey)} </kbd> | Fthores |\n`,
+      `| <kbd> ${this.__formatKeyForDocs(this.fthoraKey)} </kbd> | Fthoræ |\n`,
     );
 
     result.push(
@@ -1599,7 +1599,7 @@ export class NeumeKeyboard {
 
     this.__generateMappingTableForDocs(
       result,
-      'Fthores',
+      'Fthoræ',
       this.fthoraKeyboardMap,
     );
 

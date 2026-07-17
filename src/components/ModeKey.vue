@@ -85,7 +85,7 @@ import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontService } from '@/services/FontService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
-import { resolveFontStyle } from '@/utils/fontStyle';
+import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { withZoom } from '@/utils/withZoom';
 
 defineEmits(['select-single']);
@@ -118,6 +118,42 @@ const signatureResolution = computed(() =>
   }),
 );
 const resolvedRuns = computed(() => signatureResolution.value.runs);
+const neumeFontFamily = computed(
+  () =>
+    props.element.computedFontFamily || props.pageSetup.neumeDefaultFontFamily,
+);
+const neumeFontSize = computed(
+  () =>
+    props.element.computedFontSize || props.pageSetup.modeKeyDefaultFontSize,
+);
+const matchedNeumeFontSize = computed(() => {
+  const textRun = resolvedRuns.value.find((run) => run.kind === 'text');
+
+  if (textRun == null || textRun.kind !== 'text') {
+    return null;
+  }
+
+  const textFontSize = textRun.appearance.fontSize ?? neumeFontSize.value;
+  const textFont = resolveFontCss({
+    fontFamily: textRun.appearance.fontFamily ?? neumeFontFamily.value,
+    fontStyle: textRun.appearance.fontStyle ?? '',
+    fontSize: textFontSize,
+  });
+  const textCapitalHeight = TextMeasurementService.getTextHeight('H', textFont);
+  const capitalHeight = fontService.getMetrics(
+    neumeFontFamily.value,
+  ).capitalHeight;
+
+  if (
+    !Number.isFinite(textCapitalHeight) ||
+    !Number.isFinite(capitalHeight) ||
+    capitalHeight <= 0
+  ) {
+    return null;
+  }
+
+  return textCapitalHeight / capitalHeight;
+});
 const rightContainer = ref<HTMLElement | null>(null);
 const rightAccessoryWidth = ref(0);
 let rightAccessoryResizeObserver: ResizeObserver | null = null;
@@ -231,26 +267,30 @@ const ambitusStyleHigh = computed(() => {
 
 function getRunStyle(run: ResolvedInitialMartyriaRun) {
   const appearance = run.appearance;
-  const neumeFontFamily =
-    props.element.computedFontFamily || props.pageSetup.neumeDefaultFontFamily;
-  const neumeFontSize =
-    props.element.computedFontSize || props.pageSetup.modeKeyDefaultFontSize;
   const font = resolveFontStyle(
-    appearance.fontFamily || neumeFontFamily,
+    appearance.fontFamily || neumeFontFamily.value,
     appearance.fontStyle,
   );
+  const renderedNeumeFontSize =
+    run.kind === 'glyph' && appearance.fontSize != null
+      ? appearance.fontSize
+      : (matchedNeumeFontSize.value ?? neumeFontSize.value);
   const baselineShift =
     (appearance.baselineShift ?? 0) +
     (run.kind === 'text'
-      ? fontService.getMetrics(neumeFontFamily).initialMartyriaBaseline *
-        neumeFontSize
+      ? (fontService.getMetrics(neumeFontFamily.value)
+          .initialMartyriaBaseline ?? 0) * renderedNeumeFontSize
       : 0);
 
   return {
     color: appearance.color,
     fontFamily: font.cssFontFamily,
     fontSize:
-      appearance.fontSize == null ? undefined : withZoom(appearance.fontSize),
+      run.kind === 'glyph'
+        ? withZoom(renderedNeumeFontSize)
+        : appearance.fontSize == null
+          ? undefined
+          : withZoom(appearance.fontSize),
     fontStyle: font.cssFontStyle,
     fontWeight: font.cssFontWeight,
     webkitTextStrokeColor: appearance.strokeColor,

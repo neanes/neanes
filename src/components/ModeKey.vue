@@ -29,6 +29,7 @@
     <Neume
       v-if="element.quantitativeNeumeRight != null"
       :neume="element.quantitativeNeumeRight"
+      :style="quantitativeNeumeRightStyle"
     />
     <Neume
       v-if="element.fthoraAboveQuantitativeNeumeRight != null"
@@ -71,6 +72,7 @@ import Neume from '@/components/NeumeGlyph.vue';
 import type { ModeKeyElement } from '@/models/Element';
 import { ModeSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
+import { fontService } from '@/services/FontService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { withZoom } from '@/utils/withZoom';
@@ -110,6 +112,15 @@ const tempoStyle = computed(() => {
   } as StyleValue;
 
   return style;
+});
+
+const quantitativeNeumeRightStyle = computed(() => {
+  return {
+    marginLeft: withZoom(
+      props.element.computedFontSize *
+        fontService.getStandardGlue(props.element.computedFontFamily).width,
+    ),
+  } as CSSProperties;
 });
 
 const ambitusStyle = computed(() => {

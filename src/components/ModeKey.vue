@@ -82,6 +82,7 @@ import {
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { fontService } from '@/services/FontService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { resolveFontStyle } from '@/utils/fontStyle';
@@ -230,12 +231,20 @@ const ambitusStyleHigh = computed(() => {
 
 function getRunStyle(run: ResolvedInitialMartyriaRun) {
   const appearance = run.appearance;
+  const neumeFontFamily =
+    props.element.computedFontFamily || props.pageSetup.neumeDefaultFontFamily;
+  const neumeFontSize =
+    props.element.computedFontSize || props.pageSetup.modeKeyDefaultFontSize;
   const font = resolveFontStyle(
-    appearance.fontFamily ||
-      props.element.computedFontFamily ||
-      props.pageSetup.neumeDefaultFontFamily,
+    appearance.fontFamily || neumeFontFamily,
     appearance.fontStyle,
   );
+  const baselineShift =
+    (appearance.baselineShift ?? 0) +
+    (run.kind === 'text'
+      ? fontService.getMetrics(neumeFontFamily).initialMartyriaBaseline *
+        neumeFontSize
+      : 0);
 
   return {
     color: appearance.color,
@@ -249,10 +258,7 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
       appearance.strokeWidth == null
         ? undefined
         : withZoom(appearance.strokeWidth),
-    top:
-      appearance.baselineShift == null
-        ? undefined
-        : withZoom(appearance.baselineShift),
+    top: baselineShift === 0 ? undefined : withZoom(-baselineShift),
     insetInlineStart:
       appearance.offsetInline == null
         ? undefined

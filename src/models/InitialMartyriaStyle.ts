@@ -229,7 +229,18 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
   builtIn(
     BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalNumberV1,
     'English Plagal Number',
-    [text('number', 'Plagal Mode 2', [6]), plagal(), sign(), pitch()],
+    [
+      text('plagal', 'Plagal', [5, 6, 8]),
+      text('grave', 'Grave', [7]),
+      text('mode', 'Mode'),
+      text('number-1', '1', [1, 5]),
+      text('number-2', '2', [2, 6]),
+      text('number-3', '3', [3]),
+      text('number-4', '4', [4, 8]),
+      plagal(),
+      sign(),
+      pitch(),
+    ],
   ),
   builtIn(
     BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalPlagalV1,
@@ -239,7 +250,20 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
   builtIn(
     BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1,
     'Romanian Glas Number',
-    [text('glas-five', 'Glas 5', [5]), plagal(), sign(), pitch()],
+    [
+      text('glas', 'Glas'),
+      text('glas-one', '1', [1]),
+      text('glas-two', '2', [2]),
+      text('glas-three', '3', [3]),
+      text('glas-four', '4', [4]),
+      text('glas-five', '5', [5]),
+      text('glas-six', '6', [6]),
+      text('glas-seven', '7', [7]),
+      text('glas-eight', '8', [8]),
+      plagal(),
+      sign(),
+      pitch(),
+    ],
   ),
   builtIn(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1, 'Romanian Glas', [
     text('glas', 'Glas'),

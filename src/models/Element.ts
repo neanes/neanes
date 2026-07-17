@@ -970,6 +970,30 @@ export class TextBoxElement extends ScoreElement {
   }
 }
 
+/**
+ * A single page-sized slice of a rich text box that flows across page
+ * boundaries. The box is edited and measured as one continuous piece, then
+ * cut at line boundaries so each slice can be shown through a fixed-height
+ * clip window on its own page. Fragments are computed by the layout service
+ * and are not persisted.
+ */
+export interface RichTextBoxFragment {
+  // Position of this slice on its page (px, unzoomed).
+  x: number;
+  y: number;
+  // The vertical band of the full content that this slice reveals
+  // (px, unzoomed, relative to the top of the content).
+  offsetTop: number;
+  height: number;
+  // The vertical space this slice consumes on its page, including the box's
+  // top margin (first slice) and bottom margin (last slice). Used by the
+  // layout service for page-height bookkeeping; may differ from `height`.
+  layoutHeight: number;
+  // Index of this slice within the box (0 = the origin slice).
+  index: number;
+  isLast: boolean;
+}
+
 export const RICH_TEXT_BOX_CONTENT_KEYS = [
   'content',
   'contentBottom',
@@ -1014,6 +1038,38 @@ export class RichTextBoxElement extends ScoreElement {
   public defaultLyricsFontHeight: number = 0;
   public defaultNeumeFontAscent: number = 0;
   public oligonMidpoint: number = 0;
+
+  // The vertical offsets (px, unzoomed, relative to the top of the content)
+  // at which the rendered content may be cut without slicing through a line
+  // of text. Measured in the DOM by the rich text box component and fed back
+  // into the layout so a too-tall box can be flowed across pages. The final
+  // entry is the total content height. Not persisted.
+  public lineOffsets: number[] = [];
+
+  // Flow fragments are transient layout state. They let one mounted fragment
+  // measure the full rich text content once, then every visible continuation
+  // slice can render its pre-cut band without duplicating a hidden full-content
+  // DOM.
+  public flowFragments: RichTextBoxFragment[] = [];
+
+  // Whether this kind of box may be flowed across pages at all. The rich text
+  // box component measures lineOffsets only for such boxes, and the layout
+  // service flows only such boxes; both must apply the same predicate or a
+  // measured box would never be flowed (or vice versa). A centerOnPage box is
+  // excluded because its editor wraps text at a narrower width (a
+  // padding-right reserves the centering gutter), while read-only continuation
+  // slices render at the full element width -- the line breaks would not match
+  // the measured cut points.
+  public get canFlowAcrossPages() {
+    return (
+      !this.inline && !this.multipanel && !this.scrollable && !this.centerOnPage
+    );
+  }
+
+  // The total rendered content height: the bottom of the last measured line.
+  public get flowContentHeight() {
+    return this.lineOffsets[this.lineOffsets.length - 1];
+  }
 
   public clone() {
     const clone = new RichTextBoxElement();

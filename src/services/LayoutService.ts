@@ -17,6 +17,7 @@ import type {
   ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
+  RichTextBoxFragment,
   ScoreElement,
   TempoElement,
   TextBoxElement,
@@ -92,6 +93,9 @@ const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
 const noteInkBoundsCache = new Map<string, InkBounds>();
 const emptyElementWidth = 39;
+// Tolerance (px) for rich text box slice math, to absorb sub-pixel rounding
+// in DOM measurements when deciding where a slice may be cut.
+const richTextBoxSplitEpsilon = 0.5;
 const idealMaxAdjustmentRatio = 1;
 const adjustmentRatioCapStep = 0.05;
 const maxAdjustmentRatioSearchLimit = 4096;
@@ -337,6 +341,19 @@ interface LineBreakSolution {
   requestedMaxAdjustmentRatio: number | null;
 }
 
+export interface RichTextBoxSlice {
+  offsetTop: number;
+  height: number;
+}
+
+interface RichTextBoxFlowPlan {
+  box: RichTextBoxElement;
+  firstFragment: RichTextBoxFragment;
+  lastFragment: RichTextBoxFragment;
+  lastContinuationPage: Page;
+  continuationPages: Page[];
+}
+
 export class LayoutService {
   public static processPages(
     workspace: Workspace,
@@ -351,6 +368,11 @@ export class LayoutService {
 
       if (element.id == null && element.elementType !== ElementType.Empty) {
         element.id = workspace.nextId;
+      }
+
+      if (element.elementType === ElementType.RichTextBox) {
+        const richBox = element as RichTextBoxElement;
+        richBox.flowFragments = [];
       }
 
       this.saveElementState(element);
@@ -1659,6 +1681,40 @@ export class LayoutService {
           continue;
         }
         const element = (item as ElementBox).element;
+        let currentLine = page.lines[page.lines.length - 1];
+        let isFirstElementOnLine = currentLine.elements.length === 0;
+
+        // A flowable rich text box whose first line cannot fit in what is left
+        // of this page, but would fit on a fresh page with a shorter
+        // header/footer: move the just-started line there before positioning.
+        if (
+          isFirstElementOnLine &&
+          this.shouldPlaceRichTextBoxOnFreshPage(
+            score,
+            pageSetup,
+            element,
+            pages,
+            currentPageHeightPx - lastLineHeightPx,
+            extraHeaderHeightPx,
+            extraFooterHeightPx,
+          )
+        ) {
+          const lastLine = page.lines.pop()!;
+
+          page = new Page();
+          page.physicalPageNumber = pages.length + 1;
+          page.lines.push(lastLine);
+          pages.push(page);
+          currentPageHeightPx = lastLineHeightPx;
+          lastElementWasPageBreak = false;
+
+          ({ extraHeaderHeightPx, extraFooterHeightPx } =
+            getCachedExtraHeaderFooterHeight());
+
+          currentLine = page.lines[page.lines.length - 1];
+          isFirstElementOnLine = currentLine.elements.length === 0;
+        }
+
         const resolvedMargins = resolvePageMargins(
           pageSetup,
           page.physicalPageNumber,
@@ -1666,9 +1722,6 @@ export class LayoutService {
         const contentStart = pageSetup.melkiteRtl
           ? resolvedMargins.right
           : resolvedMargins.contentLeft;
-
-        const currentLine = page.lines[page.lines.length - 1];
-        const isFirstElementOnLine = currentLine.elements.length === 0;
 
         // Indent only the continuation lines covered by a multiline drop cap.
         if (
@@ -1741,6 +1794,31 @@ export class LayoutService {
 
         element.line = page.lines.length;
         element.page = pages.length;
+
+        const richTextFlowPlan = this.createRichTextBoxFlowPlan(
+          score,
+          pageSetup,
+          element,
+          pages,
+          currentPageHeightPx - lastLineHeightPx,
+          extraHeaderHeightPx,
+          extraFooterHeightPx,
+        );
+
+        if (richTextFlowPlan != null) {
+          currentLine.richTextFragment = {
+            element: richTextFlowPlan.box,
+            fragment: richTextFlowPlan.firstFragment,
+          };
+          currentLine.elements.push(element);
+
+          pages.push(...richTextFlowPlan.continuationPages);
+          page = richTextFlowPlan.lastContinuationPage;
+          currentPageHeightPx = richTextFlowPlan.lastFragment.layoutHeight;
+          lastLineHeightPx = richTextFlowPlan.lastFragment.layoutHeight;
+          lastElementWasPageBreak = element.pageBreak;
+          continue;
+        }
 
         this.adjustDropCapPosition(
           element,
@@ -2979,28 +3057,31 @@ export class LayoutService {
   }
 
   private static getExtraHeaderFooterHeight(
-    score: {
-      pageSetup: PageSetup;
-      getHeaderForPage: (page: number, isChapterOpening?: boolean) => Header;
-      getFooterForPage: (page: number, isChapterOpening?: boolean) => Footer;
-      shouldShowHeaderRuleForPageIndex: (
-        page: number,
-        isChapterOpening?: boolean,
-      ) => boolean;
-      shouldShowFooterRuleOnPage: (
-        page: number,
-        isChapterOpening?: boolean,
-      ) => boolean;
-    },
+    score: Workspace['score'],
     pageSetup: PageSetup,
     pages: Page[],
   ): { extraHeaderHeightPx: number; extraFooterHeightPx: number } {
-    let extraHeaderHeightPx = 0;
-    let extraFooterHeightPx = 0;
     const pageNumber = pages.length;
     const runningMarkerPageMetadata = resolveRunningMarkerPageMetadata(pages);
     const isChapterOpening =
       runningMarkerPageMetadata[pageNumber - 1]?.isChapterOpening ?? false;
+
+    return this.getExtraHeaderFooterHeightForPage(
+      score,
+      pageSetup,
+      pageNumber,
+      isChapterOpening,
+    );
+  }
+
+  private static getExtraHeaderFooterHeightForPage(
+    score: Workspace['score'],
+    pageSetup: PageSetup,
+    pageNumber: number,
+    isChapterOpening: boolean,
+  ): { extraHeaderHeightPx: number; extraFooterHeightPx: number } {
+    let extraHeaderHeightPx = 0;
+    let extraFooterHeightPx = 0;
 
     if (score.pageSetup.showHeader) {
       const header = score.getHeaderForPage(pageNumber, isChapterOpening);
@@ -3029,22 +3110,41 @@ export class LayoutService {
 
       // Currently, headers and footers may only contain a single
       // text box.
-      let footerHeightPx = (footer.elements[0] as TextBoxElement).height;
-
-      if (score.shouldShowFooterRuleOnPage(pageNumber, isChapterOpening)) {
-        footerHeightPx +=
-          score.pageSetup.footerHorizontalRuleMarginBottom +
-          score.pageSetup.footerHorizontalRuleMarginTop +
-          score.pageSetup.footerHorizontalRuleThickness;
-      }
-
-      extraFooterHeightPx = Math.max(
-        0,
-        footerHeightPx - (pageSetup.bottomMargin - pageSetup.footerMargin),
+      extraFooterHeightPx = this.getFooterOverflowReservation(
+        pageSetup,
+        (footer.elements[0] as TextBoxElement).height,
+        score.shouldShowFooterRuleOnPage(pageNumber, isChapterOpening),
       );
     }
 
     return { extraHeaderHeightPx, extraFooterHeightPx };
+  }
+
+  /**
+   * The vertical space (px) that a footer of the given height consumes beyond
+   * the configured bottom margin, including the footer rule when shown. The
+   * editor reserves this same amount when measuring where a rich text box may
+   * flow (see TextBoxRich's pageBottomOverflowReservation), so measurement and
+   * slicing agree by construction.
+   */
+  public static getFooterOverflowReservation(
+    pageSetup: PageSetup,
+    footerHeight: number,
+    showRule: boolean,
+  ): number {
+    let footerHeightPx = footerHeight;
+
+    if (showRule) {
+      footerHeightPx +=
+        pageSetup.footerHorizontalRuleMarginBottom +
+        pageSetup.footerHorizontalRuleMarginTop +
+        pageSetup.footerHorizontalRuleThickness;
+    }
+
+    return Math.max(
+      0,
+      footerHeightPx - (pageSetup.bottomMargin - pageSetup.footerMargin),
+    );
   }
 
   private static adjustDropCapPosition(
@@ -4703,12 +4803,374 @@ export class LayoutService {
     );
   }
 
+  /**
+   * Flow a too-tall rich text box across pages by cutting it into page-sized
+   * slices at line boundaries. The box stays a single editable element on its
+   * origin line; continuation pages render read-only clip windows backed by the
+   * same element.
+   */
+  private static createRichTextBoxFlowPlan(
+    score: Workspace['score'],
+    pageSetup: PageSetup,
+    element: ScoreElement,
+    pages: Page[],
+    boxTopWithinContent: number,
+    extraHeaderHeightPx: number,
+    extraFooterHeightPx: number,
+  ): RichTextBoxFlowPlan | null {
+    const overflow = this.getRichTextBoxOverflow(
+      pageSetup,
+      element,
+      boxTopWithinContent,
+      extraHeaderHeightPx,
+      extraFooterHeightPx,
+    );
+
+    if (overflow == null) {
+      return null;
+    }
+
+    const { richBox, contentHeight, firstAvailable } = overflow;
+
+    // Continuation slice s (1-based) lands on physical page
+    // `pages.length + s`. Headers and footers may differ by first/odd/even
+    // page, so resolve each continuation page's extra header/footer height
+    // once, shared by the slice sizing and the fragment positioning below.
+    const continuationExtras = new Map<
+      number,
+      { extraHeaderHeightPx: number; extraFooterHeightPx: number }
+    >();
+    const getContinuationExtras = (physicalPageNumber: number) => {
+      let extras = continuationExtras.get(physicalPageNumber);
+
+      if (extras == null) {
+        extras = this.getExtraHeaderFooterHeightForPage(
+          score,
+          pageSetup,
+          physicalPageNumber,
+          false,
+        );
+        continuationExtras.set(physicalPageNumber, extras);
+      }
+
+      return extras;
+    };
+
+    // Size each slice for the page it actually falls on, so a slice is never
+    // sized for a page with a shorter header than its own (which would let it
+    // overflow the footer / bottom margin).
+    const slices = this.computeRichTextBoxSlices(
+      richBox.lineOffsets,
+      contentHeight,
+      firstAvailable,
+      (continuationIndex) => {
+        const { extraHeaderHeightPx, extraFooterHeightPx } =
+          getContinuationExtras(pages.length + continuationIndex);
+        return (
+          pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx
+        );
+      },
+    );
+
+    if (slices.length <= 1) {
+      return null;
+    }
+
+    const flowFragments: RichTextBoxFragment[] = [];
+    const firstFragment: RichTextBoxFragment = {
+      x: element.x,
+      y: element.y,
+      offsetTop: slices[0].offsetTop,
+      height: slices[0].height,
+      layoutHeight: slices[0].height + richBox.marginTop,
+      index: 0,
+      isLast: false,
+    };
+    flowFragments.push(firstFragment);
+
+    let lastFragment = firstFragment;
+    const continuationPages: Page[] = [];
+
+    for (let s = 1; s < slices.length; s++) {
+      const physicalPageNumber = pages.length + s;
+      const continuationPage = new Page();
+      continuationPage.physicalPageNumber = physicalPageNumber;
+
+      const { extraHeaderHeightPx: contHeaderPx } =
+        getContinuationExtras(physicalPageNumber);
+      const contMargins = resolvePageMargins(pageSetup, physicalPageNumber);
+      const contStart = pageSetup.melkiteRtl
+        ? contMargins.right
+        : contMargins.contentLeft;
+      const isLast = s === slices.length - 1;
+
+      lastFragment = {
+        x: contStart,
+        y: pageSetup.topMargin + contHeaderPx,
+        offsetTop: slices[s].offsetTop,
+        height: slices[s].height,
+        layoutHeight: slices[s].height + (isLast ? richBox.marginBottom : 0),
+        index: s,
+        isLast,
+      };
+      flowFragments.push(lastFragment);
+
+      const continuationLine = new Line();
+      continuationLine.richTextFragment = {
+        element: richBox,
+        fragment: lastFragment,
+      };
+      continuationPage.lines.push(continuationLine);
+      continuationPages.push(continuationPage);
+    }
+
+    richBox.flowFragments = flowFragments;
+
+    return {
+      box: richBox,
+      firstFragment,
+      lastFragment,
+      lastContinuationPage: continuationPages[continuationPages.length - 1],
+      continuationPages,
+    };
+  }
+
+  private static shouldPlaceRichTextBoxOnFreshPage(
+    score: Workspace['score'],
+    pageSetup: PageSetup,
+    element: ScoreElement,
+    pages: Page[],
+    boxTopWithinContent: number,
+    extraHeaderHeightPx: number,
+    extraFooterHeightPx: number,
+  ) {
+    const overflow = this.getRichTextBoxOverflow(
+      pageSetup,
+      element,
+      boxTopWithinContent,
+      extraHeaderHeightPx,
+      extraFooterHeightPx,
+    );
+
+    if (overflow == null) {
+      return false;
+    }
+
+    const { richBox, firstAvailable } = overflow;
+
+    if (this.pickRichTextCut(richBox.lineOffsets, 0, firstAvailable) != null) {
+      return false;
+    }
+
+    const nextPageNumber = pages.length + 1;
+    const {
+      extraHeaderHeightPx: freshHeaderHeightPx,
+      extraFooterHeightPx: freshFooterHeightPx,
+    } = this.getExtraHeaderFooterHeightForPage(
+      score,
+      pageSetup,
+      nextPageNumber,
+      false,
+    );
+    const freshAvailable =
+      pageSetup.innerPageHeight -
+      freshHeaderHeightPx -
+      freshFooterHeightPx -
+      richBox.marginTop;
+
+    return (
+      freshAvailable > firstAvailable + richTextBoxSplitEpsilon &&
+      this.pickRichTextCut(richBox.lineOffsets, 0, freshAvailable) != null
+    );
+  }
+
+  /**
+   * The shared overflow gate for the two flow decision points
+   * (shouldPlaceRichTextBoxOnFreshPage, createRichTextBoxFlowPlan): when
+   * `element` is a flowable rich text box whose content overflows the space
+   * left on its page, returns the box and its flow geometry; otherwise null.
+   *
+   * The available height is recomputed from the passed header/footer heights
+   * because the caller's cached innerPageHeight is not refreshed when a new
+   * page was just started for this line.
+   */
+  private static getRichTextBoxOverflow(
+    pageSetup: PageSetup,
+    element: ScoreElement,
+    boxTopWithinContent: number,
+    extraHeaderHeightPx: number,
+    extraFooterHeightPx: number,
+  ): {
+    richBox: RichTextBoxElement;
+    contentHeight: number;
+    firstAvailable: number;
+  } | null {
+    if (element.elementType !== ElementType.RichTextBox) {
+      return null;
+    }
+
+    const richBox = element as RichTextBoxElement;
+
+    if (!this.canFlowRichTextBox(richBox)) {
+      return null;
+    }
+
+    const originInnerPageHeight =
+      pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
+    const firstAvailable =
+      originInnerPageHeight - boxTopWithinContent - richBox.marginTop;
+
+    // The true rendered content height. `richBox.height` is measured from the
+    // box's bounding rect, which is clamped to its page-sized CSS box and
+    // cannot grow past one page.
+    const contentHeight = richBox.flowContentHeight;
+
+    if (contentHeight <= firstAvailable + richTextBoxSplitEpsilon) {
+      return null;
+    }
+
+    return { richBox, contentHeight, firstAvailable };
+  }
+
+  private static canFlowRichTextBox(richBox: RichTextBoxElement) {
+    return richBox.canFlowAcrossPages && richBox.lineOffsets.length > 0;
+  }
+
+  /**
+   * Find the lowest cut point for a slice: the largest line offset that fits
+   * within `(top, top + available]`. Returns null if not even the first line
+   * below `top` fits in the available space.
+   */
+  public static pickRichTextCut(
+    lineOffsets: number[],
+    top: number,
+    available: number,
+  ): number | null {
+    const limit = top + available + richTextBoxSplitEpsilon;
+    const firstAfterLimit = this.firstRichTextOffsetGreaterThan(
+      lineOffsets,
+      limit,
+    );
+    const cut = lineOffsets[firstAfterLimit - 1];
+
+    if (cut == null || cut <= top + richTextBoxSplitEpsilon) {
+      return null;
+    }
+
+    return cut;
+  }
+
+  private static firstRichTextOffsetGreaterThan(
+    lineOffsets: number[],
+    value: number,
+  ) {
+    let lo = 0;
+    let hi = lineOffsets.length;
+
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+
+      if (lineOffsets[mid] > value) {
+        hi = mid;
+      } else {
+        lo = mid + 1;
+      }
+    }
+
+    return lo;
+  }
+
+  /**
+   * Slice a rich text box's content into page-sized pieces at line boundaries.
+   *
+   * @param lineOffsets ascending vertical cut candidates (px); each is the
+   *   bottom of a rendered line. The total content height is always included as
+   *   a final cut candidate.
+   * @param totalHeight total content height (px).
+   * @param firstAvailable vertical space available on the page where the box
+   *   begins.
+   * @param continuationAvailable maps a 1-based continuation index (the first
+   *   continuation page is 1, the second is 2, ...) to the vertical space
+   *   available on that page. Each continuation slice occupies its own page, so
+   *   this lets the available height vary across pages when headers/footers
+   *   differ by first/odd/even page.
+   * @returns one slice per page as `{ offsetTop, height }`, in content
+   *   coordinates. Always at least one slice.
+   */
+  public static computeRichTextBoxSlices(
+    lineOffsets: number[],
+    totalHeight: number,
+    firstAvailable: number,
+    continuationAvailable: (continuationIndex: number) => number,
+  ): RichTextBoxSlice[] {
+    if (totalHeight <= richTextBoxSplitEpsilon) {
+      return [{ offsetTop: 0, height: totalHeight }];
+    }
+
+    const offsets = this.getRichTextSliceOffsets(lineOffsets, totalHeight);
+
+    const slices: RichTextBoxSlice[] = [];
+    let consumed = 0;
+
+    while (consumed < totalHeight - richTextBoxSplitEpsilon) {
+      // The origin slice (index 0) uses the space left on the box's own page;
+      // every later slice lands on its own continuation page, whose available
+      // height can differ when headers/footers vary by first/odd/even page.
+      const available =
+        slices.length === 0
+          ? firstAvailable
+          : continuationAvailable(slices.length);
+
+      let cut = this.pickRichTextCut(offsets, consumed, available);
+
+      if (cut == null) {
+        // Not even one line fits in this page-sized slice. The origin slice is
+        // deferred to a fresh page when that would help; reaching this fallback
+        // means the next line is too tall for the relevant slice, so force it
+        // to make progress.
+        const nextIndex = this.firstRichTextOffsetGreaterThan(
+          offsets,
+          consumed + richTextBoxSplitEpsilon,
+        );
+        cut = offsets[nextIndex];
+      }
+
+      cut = Math.min(cut, totalHeight);
+      slices.push({ offsetTop: consumed, height: cut - consumed });
+      consumed = cut;
+    }
+
+    return slices;
+  }
+
+  private static getRichTextSliceOffsets(
+    lineOffsets: number[],
+    totalHeight: number,
+  ) {
+    const offsets = lineOffsets.filter(
+      (offset) =>
+        offset > richTextBoxSplitEpsilon &&
+        offset < totalHeight - richTextBoxSplitEpsilon,
+    );
+
+    offsets.push(totalHeight);
+
+    return offsets;
+  }
+
   private static getLineHeight(
     line: Line,
     defaultLineHeight: number,
     neumeLineHeight: number,
     neumeHeight: number,
   ) {
+    // A line that carries a slice of a flowed rich text box consumes exactly
+    // the height of that slice (plus the box's top/bottom margins where they
+    // apply), regardless of the box's full content height.
+    if (line.richTextFragment != null) {
+      return line.richTextFragment.fragment.layoutHeight;
+    }
+
     let textBox: TextBoxElement | null = null;
     let richTextBox: RichTextBoxElement | null = null;
     let modeKey: ModeKeyElement | null = null;

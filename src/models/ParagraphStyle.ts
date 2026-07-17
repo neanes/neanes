@@ -72,6 +72,12 @@ export interface ParagraphStyleOverrides {
   strokeColor?: string;
   lineHeight?: number | null;
   textDecoration?: 'underline' | null;
+  // OpenType feature values, one per CSS font-variant-* longhand, stored as
+  // that property's value verbatim (the same shape the rich-text model
+  // attributes use). undefined inherits; null is an explicit "normal".
+  fontVariantCaps?: string | null;
+  fontVariantNumeric?: string | null;
+  fontVariantLigatures?: string | null;
 }
 
 export type ResolvedParagraphStyle = Required<ParagraphStyleOverrides>;
@@ -86,6 +92,9 @@ const PARAGRAPH_STYLE_OVERRIDE_KEYS: Array<keyof ParagraphStyleOverrides> = [
   'strokeColor',
   'lineHeight',
   'textDecoration',
+  'fontVariantCaps',
+  'fontVariantNumeric',
+  'fontVariantLigatures',
 ];
 
 export function hasParagraphStyleOverrides(overrides: ParagraphStyleOverrides) {
@@ -124,6 +133,9 @@ export function createParagraphStyleFallback(): ResolvedParagraphStyle {
     strokeColor: 'currentcolor',
     lineHeight: null,
     textDecoration: null,
+    fontVariantCaps: null,
+    fontVariantNumeric: null,
+    fontVariantLigatures: null,
   };
 }
 
@@ -421,5 +433,17 @@ function applyParagraphStyleOverrides(
 
   if (overrides.textDecoration !== undefined) {
     target.textDecoration = overrides.textDecoration;
+  }
+
+  if (overrides.fontVariantCaps !== undefined) {
+    target.fontVariantCaps = overrides.fontVariantCaps;
+  }
+
+  if (overrides.fontVariantNumeric !== undefined) {
+    target.fontVariantNumeric = overrides.fontVariantNumeric;
+  }
+
+  if (overrides.fontVariantLigatures !== undefined) {
+    target.fontVariantLigatures = overrides.fontVariantLigatures;
   }
 }

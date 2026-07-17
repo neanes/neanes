@@ -154,9 +154,11 @@ Lyrics Baseline -->  |----------------|  ---
 Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Ascent 
 */
     // TODO: Extend the LaTeX export schema to carry exact font face styles
-    // such as Semibold, Caption, and Display. Until then, preserve the v2
-    // output contract by projecting document styles onto CSS font-style and
-    // font-weight, even though that loses non-CSS face information.
+    // such as Semibold, Caption, and Display, plus the font-variant OpenType
+    // features (caps, numeric, ligatures). Until then, preserve the v2 output
+    // contract by projecting document styles onto CSS font-style and
+    // font-weight, even though that loses non-CSS face information and drops
+    // the font-variant features.
     const defaultTextBoxStyle = resolveParagraphStyle(
       paragraphStyles,
       BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,

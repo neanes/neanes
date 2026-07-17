@@ -3,12 +3,13 @@ import { FontCommand, Plugin } from 'ckeditor5';
 
 import {
   FONT_VARIANT_CAPS,
+  FONT_VARIANT_CSS_NAMES,
   FONT_VARIANT_LIGATURES,
   FONT_VARIANT_NUMERIC,
   normalizeLigatureStyle,
   normalizeNumericStyle,
   parseFontVariantCaps,
-} from './opentype-util';
+} from '@/utils/fontVariants';
 
 // Each attribute maps to exactly one CSS property; the model value is that
 // property's value verbatim. Downcast prefixes the property name, upcast
@@ -22,17 +23,17 @@ interface StyleAttribute {
 
 const STYLE_ATTRIBUTES: StyleAttribute[] = [
   {
-    property: 'font-variant-numeric',
+    property: FONT_VARIANT_CSS_NAMES[FONT_VARIANT_NUMERIC],
     model: FONT_VARIANT_NUMERIC,
     toModel: normalizeNumericStyle,
   },
   {
-    property: 'font-variant-ligatures',
+    property: FONT_VARIANT_CSS_NAMES[FONT_VARIANT_LIGATURES],
     model: FONT_VARIANT_LIGATURES,
     toModel: normalizeLigatureStyle,
   },
   {
-    property: 'font-variant-caps',
+    property: FONT_VARIANT_CSS_NAMES[FONT_VARIANT_CAPS],
     model: FONT_VARIANT_CAPS,
     toModel: parseFontVariantCaps,
   },

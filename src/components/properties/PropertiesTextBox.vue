@@ -142,33 +142,6 @@
 
       <Field orientation="horizontal">
         <FieldLabel>{{
-          $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
-        }}</FieldLabel>
-        <ToggleGroup
-          type="multiple"
-          variant="outline"
-          :model-value="activeStyleAxisValues"
-          @update:model-value="onFontStyleValuesChanged"
-        >
-          <ToggleGroupItem
-            value="bold"
-            aria-label="Toggle bold"
-            :disabled="!isFontStyleAxisToggleEnabled('bold')"
-          >
-            <PhTextB />
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="italic"
-            aria-label="Toggle italic"
-            :disabled="!isFontStyleAxisToggleEnabled('italic')"
-          >
-            <PhTextItalic />
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </Field>
-
-      <Field orientation="horizontal">
-        <FieldLabel>{{
           $t(($) => $.toolbar.richTextBox.textDecorations, { ns: 'toolbar' })
         }}</FieldLabel>
         <div class="flex items-center gap-1">
@@ -343,6 +316,23 @@
           />
         </div>
       </Field>
+
+      <!--
+        The controls reflect the resolved style (element overrides folded
+        in); a change writes an explicit element value and clear restores
+        inheritance from the paragraph style.
+      -->
+      <FontVariantFields
+        id-prefix="properties-text-box"
+        :caps="resolvedParagraphStyle.fontVariantCaps"
+        :numeric="resolvedParagraphStyle.fontVariantNumeric"
+        :ligatures="resolvedParagraphStyle.fontVariantLigatures"
+        :caps-clearable="element.fontVariantCaps != null"
+        :numeric-clearable="element.fontVariantNumeric != null"
+        :ligatures-clearable="element.fontVariantLigatures != null"
+        @change="onFontVariantChanged"
+        @clear="onFontVariantClear"
+      />
     </PaneSection>
 
     <PaneSection
@@ -497,8 +487,6 @@ import {
   PhTextAlignJustify,
   PhTextAlignLeft,
   PhTextAlignRight,
-  PhTextB,
-  PhTextItalic,
   PhTextUnderline,
 } from '@phosphor-icons/vue';
 import type { AcceptableValue } from 'reka-ui';
@@ -514,6 +502,7 @@ import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
+import FontVariantFields from '@/components/properties/FontVariantFields.vue';
 import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import ParagraphStyleField from '@/components/properties/ParagraphStyleField.vue';
 import StrokeColorPicker from '@/components/StrokeColorPicker.vue';
@@ -537,8 +526,13 @@ import type { PageSetup } from '@/models/PageSetup';
 import {
   isTextBoxAlignment,
   type ParagraphStyle,
+  resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
+import {
+  composeExplicitFontVariant,
+  type FontVariantProperty,
+} from '@/utils/fontVariants';
 import {
   fraction1FormatOptions,
   fraction2FormatOptions,
@@ -588,13 +582,7 @@ const {
   () => props.element.getParagraphStyleOverrides(),
 );
 
-const {
-  fontStyleOptions,
-  activeStyleAxisValues,
-  isFontStyleAxisToggleEnabled,
-  applyStyleAxisToggles,
-  remapStyleForFamily,
-} = useFontStyleControls(
+const { fontStyleOptions, remapStyleForFamily } = useFontStyleControls(
   () => resolvedParagraphStyle.value.fontFamily,
   () => resolvedParagraphStyle.value.fontStyle,
 );
@@ -613,13 +601,6 @@ const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 const RUNNING_MARKER_NONE_VALUE = '__none__';
 
-function onFontStyleValuesChanged(value: unknown) {
-  const values = Array.isArray(value) ? value : [];
-  emit('update', {
-    fontStyle: applyStyleAxisToggles(values),
-  } as Partial<TextBoxElement>);
-}
-
 function onTextDecorationValuesChanged(value: unknown) {
   const values = Array.isArray(value) ? value : [];
 
@@ -635,6 +616,26 @@ function onFontFamilyChanged(fontFamily: string) {
   } as Partial<TextBoxElement>);
 }
 
+// The paragraph style's own values (element overrides excluded), used to
+// decide whether "no features" needs an explicit 'normal' or can clear back
+// to inheritance.
+const styleFontVariants = computed(() =>
+  resolveParagraphStyle(props.paragraphStyles, props.element.paragraphStyleId),
+);
+
+function onFontVariantChanged(property: FontVariantProperty, value: string) {
+  emit('update', {
+    [property]: composeExplicitFontVariant(
+      value,
+      styleFontVariants.value[property],
+    ),
+  } as Partial<TextBoxElement>);
+}
+
+function onFontVariantClear(property: FontVariantProperty) {
+  emit('update', { [property]: null } as Partial<TextBoxElement>);
+}
+
 function clearParagraphStyleFormatting() {
   emit('update', {
     alignment: null,
@@ -642,6 +643,9 @@ function clearParagraphStyleFormatting() {
     fontFamily: null,
     fontSize: null,
     fontStyle: null,
+    fontVariantCaps: null,
+    fontVariantNumeric: null,
+    fontVariantLigatures: null,
     lineHeight: undefined,
     underline: null,
     strokeWidth: null,

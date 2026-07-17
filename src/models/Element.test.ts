@@ -100,6 +100,89 @@ describe('Element clipboard and paragraph-style overrides', () => {
       styleId: BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
     },
   ])(
+    'keeps $label font variants in clipboard data and maps them to overrides',
+    ({ createElement, styleId }) => {
+      const element = createElement();
+      element.fontVariantCaps = 'all-small-caps';
+      element.fontVariantNumeric = 'normal';
+      element.fontVariantLigatures = null;
+
+      expect(element.getClipboardProperties()).toMatchObject({
+        fontVariantCaps: 'all-small-caps',
+        fontVariantNumeric: 'normal',
+        fontVariantLigatures: null,
+      });
+
+      const styles = [
+        createStyle(styleId, {
+          fontVariantCaps: 'small-caps',
+          fontVariantNumeric: 'oldstyle-nums',
+          fontVariantLigatures: 'discretionary-ligatures',
+        }),
+      ];
+      const resolved = resolveElementStyle(
+        styles,
+        element.paragraphStyleId,
+        element,
+      );
+
+      expect(resolved.fontVariantCaps).toBe('all-small-caps');
+      // An element-level 'normal' is an explicit reset of the style value.
+      expect(resolved.fontVariantNumeric).toBeNull();
+      // A null element value inherits the style value.
+      expect(resolved.fontVariantLigatures).toBe('discretionary-ligatures');
+    },
+  );
+
+  it('keeps lyric font variants in clipboard data and maps them to overrides', () => {
+    const note = new NoteElement();
+    note.lyricsFontVariantCaps = 'all-small-caps';
+    note.lyricsFontVariantNumeric = 'normal';
+    note.lyricsFontVariantLigatures = null;
+
+    expect(note.getClipboardProperties(true)).toMatchObject({
+      lyricsFontVariantCaps: 'all-small-caps',
+      lyricsFontVariantNumeric: 'normal',
+      lyricsFontVariantLigatures: null,
+    });
+    expect(note.cloneFormat()).toMatchObject({
+      lyricsFontVariantCaps: 'all-small-caps',
+      lyricsFontVariantNumeric: 'normal',
+      lyricsFontVariantLigatures: null,
+    });
+
+    const styles = [
+      createStyle(BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics, {
+        fontVariantCaps: 'small-caps',
+        fontVariantNumeric: 'oldstyle-nums',
+        fontVariantLigatures: 'discretionary-ligatures',
+      }),
+    ];
+    const resolved = resolveElementStyle(
+      styles,
+      note.lyricsParagraphStyleId,
+      note,
+    );
+
+    expect(resolved.fontVariantCaps).toBe('all-small-caps');
+    // A per-note 'normal' is an explicit reset of the style value.
+    expect(resolved.fontVariantNumeric).toBeNull();
+    // A null per-note value inherits the style value.
+    expect(resolved.fontVariantLigatures).toBe('discretionary-ligatures');
+  });
+
+  it.each([
+    {
+      label: 'text-box',
+      createElement: () => new TextBoxElement(),
+      styleId: BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    },
+    {
+      label: 'drop-cap',
+      createElement: () => new DropCapElement(),
+      styleId: BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
+    },
+  ])(
     'preserves inherited, explicit normal, and numeric $label line height overrides',
     ({ createElement, styleId }) => {
       const styles = [createStyle(styleId, { lineHeight: 1.7 })];

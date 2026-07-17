@@ -1,6 +1,6 @@
 {
   "fontName": "NeanesStathisSeries",
-  "fontVersion": "1.0.7",
+  "fontVersion": "1.0.9",
   "metrics": {
     "ascent": 0.8,
     "descent": 0.2,
@@ -16,7 +16,7 @@
       ],
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaTop": [
         0.873,
@@ -102,7 +102,7 @@
       ],
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaTop": [
         0.793,
@@ -188,7 +188,7 @@
       ],
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaTop": [
         0.793,
@@ -274,7 +274,7 @@
       ],
       "apli": [
         0.763,
-        -0.18
+        -0.173
       ],
       "klasmaTop": [
         0.793,
@@ -360,7 +360,7 @@
       ],
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -450,7 +450,7 @@
       ],
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -540,7 +540,7 @@
       ],
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -630,7 +630,7 @@
       ],
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -720,7 +720,7 @@
       ],
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -806,7 +806,7 @@
       ],
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -888,7 +888,7 @@
     "oligonKentimataDoubleYpsili": {
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -970,7 +970,7 @@
     "oligonKentimaDoubleYpsiliRight": {
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -1052,7 +1052,7 @@
     "oligonKentimaDoubleYpsiliLeft": {
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -1134,7 +1134,7 @@
     "oligonTripleYpsili": {
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -1216,7 +1216,7 @@
     "oligonKentimataTripleYpsili": {
       "apli": [
         0.803,
-        0.013
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -1298,7 +1298,7 @@
     "oligonKentimaTripleYpsili": {
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -1380,7 +1380,7 @@
     "oligonIson": {
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -1462,7 +1462,7 @@
     "oligonApostrofos": {
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -1544,7 +1544,7 @@
     "oligonYporroi": {
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -1630,7 +1630,7 @@
     "oligonElafron": {
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -1712,7 +1712,7 @@
     "oligonElafronApostrofos": {
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -1794,7 +1794,7 @@
     "oligonChamili": {
       "apli": [
         0.803,
-        0.03
+        0.047
       ],
       "klasmaBottom": [
         0.785,
@@ -1926,7 +1926,7 @@
       ],
       "apli": [
         0.5,
-        0.018
+        0.005
       ],
       "klasmaTop": [
         0.408,
@@ -1990,6 +1990,10 @@
       ]
     },
     "apostrofosSyndesmos": {
+      "diesisSecondary": [
+        0.779,
+        -0.134
+      ],
       "gorgonTop": [
         0.938,
         0.193
@@ -2042,7 +2046,7 @@
       ],
       "apli": [
         0.161,
-        0.042
+        0.004
       ],
       "yfesis": [
         0.308,
@@ -2120,7 +2124,7 @@
       ],
       "apli": [
         0.588,
-        -0.001
+        -0.048
       ],
       "klasmaTop": [
         0.56,
@@ -2194,7 +2198,7 @@
       ],
       "apli": [
         1.132,
-        0.013
+        -0.017
       ],
       "klasmaTop": [
         1.06,
@@ -2284,7 +2288,7 @@
       ],
       "apli": [
         0.6,
-        -0.093
+        -0.147
       ],
       "klasmaTop": [
         0.56,
@@ -2358,7 +2362,7 @@
       ],
       "apli": [
         0.64,
-        0.076
+        0.051
       ],
       "klasmaTop": [
         0.747,
@@ -2432,7 +2436,7 @@
       ],
       "apli": [
         0.576,
-        -0.211
+        -0.247
       ],
       "klasmaTop": [
         0.747,
@@ -2502,7 +2506,7 @@
       ],
       "apli": [
         0.575,
-        -0.01
+        -0.027
       ],
       "klasmaTop": [
         0.807,
@@ -2572,7 +2576,7 @@
       ],
       "apli": [
         0.575,
-        -0.11
+        -0.136
       ],
       "klasmaTop": [
         0.807,
@@ -2642,7 +2646,7 @@
       ],
       "apli": [
         0.595,
-        0.07
+        0.057
       ],
       "klasmaTop": [
         0.707,
@@ -2712,7 +2716,7 @@
       ],
       "apli": [
         0.575,
-        -0.23
+        -0.288
       ],
       "klasmaTop": [
         0.707,
@@ -2728,7 +2732,7 @@
       ],
       "antikenoma": [
         0.581,
-        -0.12
+        -0.17
       ],
       "fthoraTop": [
         0.773,
@@ -2782,7 +2786,7 @@
       ],
       "apli": [
         0.575,
-        -0.2
+        -0.341
       ],
       "klasmaTop": [
         0.707,
@@ -2798,7 +2802,7 @@
       ],
       "antikenoma": [
         0.644,
-        -0.123
+        -0.223
       ],
       "fthoraTop": [
         0.773,
@@ -2852,7 +2856,7 @@
       ],
       "apli": [
         0.575,
-        -0.32
+        -0.41
       ],
       "klasmaTop": [
         0.707,
@@ -2868,7 +2872,7 @@
       ],
       "antikenoma": [
         0.572,
-        -0.232
+        -0.292
       ],
       "fthoraTop": [
         0.773,
@@ -2922,7 +2926,7 @@
       ],
       "apli": [
         0.575,
-        0.01
+        -0.057
       ],
       "klasmaTop": [
         0.687,
@@ -2938,7 +2942,7 @@
       ],
       "antikenoma": [
         0.571,
-        0.131
+        0.061
       ],
       "fthoraTop": [
         0.773,
@@ -2988,7 +2992,7 @@
     "petastiIson": {
       "apli": [
         0.765,
-        -0.01
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3054,7 +3058,7 @@
     "petasti": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3120,7 +3124,7 @@
     "petastiOligon": {
       "apli": [
         0.785,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3186,7 +3190,7 @@
     "petastiKentima": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3252,7 +3256,7 @@
     "petastiYpsiliRight": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3318,7 +3322,7 @@
     "petastiYpsiliLeft": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3384,7 +3388,7 @@
     "petastiKentimaYpsiliRight": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3450,7 +3454,7 @@
     "petastiKentimaYpsiliMiddle": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3516,7 +3520,7 @@
     "petastiDoubleYpsili": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3582,7 +3586,7 @@
     "petastiKentimataDoubleYpsili": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3648,7 +3652,7 @@
     "petastiKentimaDoubleYpsiliRight": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3714,7 +3718,7 @@
     "petastiKentimaDoubleYpsiliLeft": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3780,7 +3784,7 @@
     "petastiTripleYpsili": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3846,7 +3850,7 @@
     "petastiKentimataTripleYpsili": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3912,7 +3916,7 @@
     "petastiKentimaTripleYpsili": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -3978,7 +3982,7 @@
     "petastiApostrofos": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -4048,7 +4052,7 @@
       ],
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -4118,7 +4122,7 @@
     "petastiElafron": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -4184,7 +4188,7 @@
     "petastiRunningElafron": {
       "apli": [
         1.095,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         1.071,
@@ -4266,7 +4270,7 @@
     "petastiElafronApostrofos": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -4332,7 +4336,7 @@
     "petastiChamili": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -4398,7 +4402,7 @@
     "petastiChamiliApostrofos": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -4464,7 +4468,7 @@
     "petastiChamiliElafron": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -4530,7 +4534,7 @@
     "petastiChamiliElafronApostrofos": {
       "apli": [
         0.765,
-        -0.08
+        -0.034
       ],
       "klasmaBottom": [
         0.8,
@@ -4596,7 +4600,7 @@
     "petastiDoubleChamili": {
       "apli": [
         0.765,
-        -0.25
+        -0.164
       ],
       "klasmaBottom": [
         0.8,
@@ -4662,7 +4666,7 @@
     "petastiDoubleChamiliApostrofos": {
       "apli": [
         0.765,
-        -0.25
+        -0.164
       ],
       "klasmaBottom": [
         0.8,
@@ -4786,7 +4790,7 @@
       ],
       "apli": [
         0.803,
-        -0.227
+        -0.203
       ],
       "klasmaTop": [
         0.793,
@@ -7540,7 +7544,7 @@
       ],
       "apli": [
         0.803,
-        -0.227
+        -0.203
       ],
       "klasmaTop": [
         0.793,
@@ -7664,7 +7668,7 @@
       ],
       "apli": [
         0.161,
-        0.042
+        -0.018
       ],
       "yfesis": [
         0.308,
@@ -7742,7 +7746,7 @@
       ],
       "apli": [
         0.161,
-        0.042
+        -0.018
       ],
       "yfesis": [
         0.308,
@@ -7820,7 +7824,7 @@
       ],
       "apli": [
         0.161,
-        0.042
+        -0.018
       ],
       "yfesis": [
         0.308,

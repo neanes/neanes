@@ -98,14 +98,13 @@
   "neume": {
     "neumeSelect": "Pilih Neuma",
     "positioning": "Penempatan",
-    "yfen": "Yfen",
     "flat": "Bemol",
     "sharp": "Kres",
     "measureNumber": "Nomor Birama",
     "noteIndicator": "Indikator Nada",
     "isonIndicator": "Indikator Ison",
     "acceptsLyrics": "Menerima Lirik",
-    "acceptsLyricsDefault": "Default",
+    "acceptsLyricsDefault": "Bawaan",
     "acceptsLyricsYes": "Ya",
     "acceptsLyricsNo": "Tidak",
     "acceptsLyricsMelismaOnly": "Hanya Melisma"

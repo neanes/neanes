@@ -59,7 +59,7 @@ Forward compatibility (an older app opening a newer file) is explicitly out of s
 ### UI stack
 
 Vue 3 (`script setup` / Composition API), Tailwind CSS v4, `shadcn-vue` components (vendored under `src/components/ui/`), `reka-ui` primitives, `dockview` for the pane layout, and CKEditor 5 for rich text (custom plugins in `src/ckeditor-plugins/`: `insertneume`, `fontstyle`, `alignmentoverride`, `opentype`, `richtextselection`).
-`i18n` is `i18next` with locales under `src/i18n/` (`en`, `el`, `ro`, `id`), managed via Crowdin.
+`i18n` is `i18next` with locales under `src/i18n/` (`en`, `el`, `ro`, `id`, `ru`), managed via Crowdin.
 
 ## Conventions
 

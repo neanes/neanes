@@ -19,7 +19,7 @@
     "tempoSign": "Semn de tempo",
     "useDefaultStyle": "Folosește stilul implicit",
     "enharmonicDisabled": "Ftoraua agem poate fi plasată doar pe Ga, Zo sau Vu",
-    "generalFlatDisabled": "Bemolul general poate fi plasat doar pe Ke",
+    "generalFlatDisabled": "Ifesul general poate fi plasat doar pe Ke",
     "generalSharpDisabled": "Diezul general poate fi plasat doar pe Ga",
     "zygosDisabled": "Muștar poate fi plasat doar pe Di",
     "klitonDisabled": "Nisabur poate fi plasat doar pe Di",
@@ -98,7 +98,6 @@
   "neume": {
     "neumeSelect": "Selectare neumă",
     "positioning": "Poziționare",
-    "yfen": "Ifen",
     "flat": "Ifes",
     "sharp": "Diez",
     "measureNumber": "Număr măsură",

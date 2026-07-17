@@ -506,6 +506,7 @@ import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
+import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';

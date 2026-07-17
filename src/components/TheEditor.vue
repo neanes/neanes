@@ -71,6 +71,7 @@ import ParagraphStylesDialog from '@/components/ParagraphStylesDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
 import type { InspectorContext } from '@/components/properties/InspectorContext';
 import PropertiesPane from '@/components/properties/PropertiesPane.vue';
+import RecoveryDialog from '@/components/RecoveryDialog.vue';
 import RichTextToolbar from '@/components/RichTextToolbar.vue';
 import SearchText from '@/components/SearchText.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
@@ -118,6 +119,8 @@ import type {
   FileMenuViewPaneVisibilityArgs,
   FileMenuViewStatusBarVisibilityArgs,
   FileMenuViewZoomArgs,
+  RecoveryCandidateArgs,
+  RecoverySnapshotArgs,
   ShowMessageBoxReplyArgs,
   WorkspaceZoomState,
 } from '@/ipc/ipcChannels';
@@ -227,6 +230,11 @@ import {
   LayoutService,
   type OverlayDiagnosticsContext,
 } from '@/services/LayoutService';
+import {
+  classifyRecoveryCandidates,
+  getRecoveryCandidateGroupRecoveryIds,
+  getRecoveryCandidateSiblingRecoveryIds,
+} from '@/services/recovery/recoveryCandidates';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import {
@@ -486,6 +494,9 @@ const propertiesPaneOpenSections = computed({
 const workspaces = ref<Workspace[]>([]);
 const selectedWorkspaceValue = ref(new Workspace());
 const pendingLyricsAssignmentTimers = new Map<string, number>();
+const recoverySnapshotTimers = new Map<string, number>();
+const recoveryCandidates = ref<RecoveryCandidateArgs[]>([]);
+const recoveryDialogIsOpen = ref(false);
 const tabs = ref<Tab[]>([]);
 const contextMenuWorkspaceId = ref<string | null>(null);
 const scoreContextMenuTarget = ref<ScoreElement | null>(null);
@@ -1848,6 +1859,8 @@ onBeforeUnmount(() => {
     workspaceTabLayoutFrameId = null;
   }
   workspaceTabLayoutPending = false;
+  recoverySnapshotTimers.forEach((timer) => window.clearTimeout(timer));
+  recoverySnapshotTimers.clear();
 
   window.removeEventListener('keydown', onKeydown);
   window.removeEventListener('keyup', onKeyup);
@@ -2414,12 +2427,15 @@ function getTempFilename() {
 function getFileName(workspace: Workspace, showUnsavedChanges: boolean = true) {
   const unsavedChangesMarker =
     workspace.hasUnsavedChanges && showUnsavedChanges ? '*' : '';
+  const recoveredMarker = workspace.isRecovered
+    ? ` (${t(($) => $.model.recovered, { ns: 'model' })})`
+    : '';
 
   if (workspace.filePath != null) {
     const fileName = getFileNameFromPath(workspace.filePath);
-    return `${unsavedChangesMarker}${fileName}`;
+    return `${unsavedChangesMarker}${fileName}${recoveredMarker}`;
   } else {
-    return `${unsavedChangesMarker}${workspace.tempFileName}`;
+    return `${unsavedChangesMarker}${workspace.tempFileName}${recoveredMarker}`;
   }
 }
 
@@ -5591,14 +5607,15 @@ function save(markUnsavedChanges: boolean = true) {
     });
   }
 
-  // Auto-persist to local/dev storage. This deliberately serializes WITHOUT
-  // flushing the live rich-text editors: `save()` runs frequently -- often via the
-  // 250 ms-debounced `saveDebounced` (e.g. on every height change while editing) --
-  // and flushing here would force a getData() + full layout round-trip each time
-  // (updateRichTextBox calls save(), so it would also re-enter). The trade is
-  // intentional -- the snapshot may lag the in-editor text by one flush, which is
-  // corrected on the next blur or explicit save; the authoritative save
-  // (saveWorkspace -> prepareWorkspaceForSerialization) always flushes first.
+  // Persist a background recovery snapshot. This deliberately serializes
+  // WITHOUT flushing the live rich-text editors: `save()` runs frequently --
+  // often via the 250 ms-debounced `saveDebounced` (e.g. on every height change
+  // while editing) -- and flushing here would force a getData() + full layout
+  // round-trip each time (updateRichTextBox calls save(), so it would also
+  // re-enter). The trade is intentional -- the snapshot may lag the in-editor
+  // text by one flush, which is corrected on the next blur or explicit save;
+  // the authoritative save (saveWorkspace ->
+  // prepareWorkspaceForSerialization) always flushes first.
   if (isBrowser.value) {
     const workspaceLocalStorage = {
       id: selectedWorkspace.value.id,
@@ -5612,22 +5629,12 @@ function save(markUnsavedChanges: boolean = true) {
       `workspace-${selectedWorkspace.value.id}`,
       JSON.stringify(workspaceLocalStorage),
     );
-  } else if (isDevelopment.value) {
-    localStorage.setItem(
-      'score',
-      JSON.stringify(SaveService.SaveScoreToJson(score.value)),
-    );
-
-    if (currentFilePath.value != null) {
-      localStorage.setItem('filePath', currentFilePath.value);
-    } else {
-      localStorage.removeItem('filePath');
+  } else {
+    if (selectedWorkspace.value.hasUnsavedChanges) {
+      scheduleRecoverySnapshot(selectedWorkspace.value);
+    } else if (!selectedWorkspace.value.isRecovered) {
+      void discardRecoverySnapshot(selectedWorkspace.value.id);
     }
-
-    localStorage.setItem(
-      'hasUnsavedChanges',
-      hasUnsavedChanges.value.toString(),
-    );
   }
 }
 
@@ -5721,7 +5728,36 @@ async function load() {
     .filter((x) => x.success)
     .forEach((x) => openScore(x));
 
-  if (openWorkspaceResults.files.some((x) => x.success)) {
+  if (
+    !openWorkspaceResults.silentPdf &&
+    !openWorkspaceResults.silentHtml &&
+    !openWorkspaceResults.silentLatex
+  ) {
+    const recoveryResults = await ipcService.listRecoveryCandidates();
+    const { autoRecoveryCandidates, pendingRecoveryCandidates } =
+      classifyRecoveryCandidates(recoveryResults.candidates);
+
+    if (autoRecoveryCandidates.length > 0) {
+      for (const candidate of autoRecoveryCandidates) {
+        const workspace = openRecoveryCandidate(candidate);
+
+        if (
+          workspace != null &&
+          candidate.sourceMatches &&
+          !candidate.hasUnsavedChanges
+        ) {
+          workspace.isRecovered = false;
+          await discardRecoverySnapshot(workspace.id);
+        }
+      }
+    }
+
+    recoveryCandidates.value = pendingRecoveryCandidates;
+    recoveryDialogIsOpen.value = pendingRecoveryCandidates.length > 0;
+  }
+
+  if (workspaces.value.length > 0) {
+    selectedWorkspace.value = workspaces.value[0] as Workspace;
     return;
   }
 
@@ -5730,22 +5766,6 @@ async function load() {
   workspace.score = createDefaultScore();
 
   addWorkspace(workspace);
-
-  if (isDevelopment.value) {
-    const scoreString = localStorage.getItem('score');
-
-    if (scoreString) {
-      const score: Score = SaveService.LoadScoreFromJson(
-        JSON.parse(scoreString),
-      );
-      currentFilePath.value = localStorage.getItem('filePath');
-      hasUnsavedChanges.value =
-        localStorage.getItem('hasUnsavedChanges') === 'true';
-
-      workspace.score = score;
-    }
-  }
-
   selectedWorkspace.value = workspace;
 
   selectedElement.value =
@@ -5770,22 +5790,113 @@ function prepareWorkspaceForSerialization(workspace: Workspace) {
   }
 }
 
+function getRecoverySnapshotArgs(workspace: Workspace): RecoverySnapshotArgs {
+  return {
+    workspaceId: workspace.id,
+    filePath: workspace.filePath,
+    tempFileName: workspace.tempFileName,
+    hasUnsavedChanges: workspace.hasUnsavedChanges,
+    preserveCurrentSnapshot: workspace.isRecovered,
+    score: JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+    sourceMtimeMs: workspace.sourceMtimeMs,
+    sourceSize: workspace.sourceSize,
+  };
+}
+
+function scheduleRecoverySnapshot(workspace: Workspace) {
+  if (isBrowser.value || workspace == null) {
+    return;
+  }
+
+  clearRecoverySnapshotTimer(workspace.id);
+
+  recoverySnapshotTimers.set(
+    workspace.id,
+    window.setTimeout(() => {
+      recoverySnapshotTimers.delete(workspace.id);
+      void persistRecoverySnapshot(workspace);
+    }, 1500),
+  );
+}
+
+function clearRecoverySnapshotTimer(workspaceId: string) {
+  const existingTimer = recoverySnapshotTimers.get(workspaceId);
+
+  if (existingTimer != null) {
+    window.clearTimeout(existingTimer);
+    recoverySnapshotTimers.delete(workspaceId);
+  }
+}
+
+async function persistRecoverySnapshot(workspace: Workspace) {
+  if (isBrowser.value) {
+    return;
+  }
+
+  const snapshot = getRecoverySnapshotArgs(workspace);
+
+  if (!snapshot.hasUnsavedChanges && !workspace.isRecovered) {
+    await ipcService.discardRecoverySnapshot(workspace.id);
+    return;
+  }
+
+  const result = await ipcService.saveRecoverySnapshot(snapshot);
+
+  if (!result.success) {
+    console.error(result.errorMessage ?? 'Unable to save recovery snapshot.');
+  }
+}
+
+async function discardRecoverySnapshot(workspaceId: string) {
+  if (isBrowser.value) {
+    return;
+  }
+
+  clearRecoverySnapshotTimer(workspaceId);
+
+  const result = await ipcService.discardRecoverySnapshot(workspaceId);
+
+  if (!result.success) {
+    console.error(
+      result.errorMessage ?? 'Unable to discard recovery snapshot.',
+    );
+  }
+}
+
 async function saveWorkspace(workspace: Workspace) {
   prepareWorkspaceForSerialization(workspace);
+  const result = await ipcService.saveWorkspace(workspace);
 
-  return await ipcService.saveWorkspace(workspace);
+  if (result.success) {
+    workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
+    workspace.sourceSize = result.sourceSize ?? null;
+  }
+
+  return result;
 }
 
 async function saveWorkspaceAs(workspace: Workspace) {
   prepareWorkspaceForSerialization(workspace);
+  const result = await ipcService.saveWorkspaceAs(workspace);
 
-  return await ipcService.saveWorkspaceAs(workspace);
+  if (result.success) {
+    workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
+    workspace.sourceSize = result.sourceSize ?? null;
+  }
+
+  return result;
 }
 
 async function closeWorkspace(workspace: Workspace) {
   let shouldClose = true;
+  let shouldDiscardRecoverySnapshot = false;
 
   flushPendingRichTextEditors(workspace);
+
+  if (workspace.hasUnsavedChanges) {
+    prepareWorkspaceForSerialization(workspace);
+    await persistRecoverySnapshot(workspace);
+  }
 
   if (workspace.hasUnsavedChanges) {
     const fileName =
@@ -5824,6 +5935,7 @@ async function closeWorkspace(workspace: Workspace) {
 
         // If they successfully saved, then we can close the workspace
         shouldClose = saveResult.success;
+        shouldDiscardRecoverySnapshot = saveResult.success;
 
         if (!saveResult.success && !saveResult.canceled) {
           showReplyErrorToast(
@@ -5845,6 +5957,9 @@ async function closeWorkspace(workspace: Workspace) {
           },
         );
       }
+    } else if (dialogResult.response === 1) {
+      // User chose "Don't Save", so discard any recovery snapshot.
+      shouldDiscardRecoverySnapshot = true;
     } else if (dialogResult.response === 2) {
       // User chose "Cancel", so don't close the workspace.
       shouldClose = false;
@@ -5852,6 +5967,10 @@ async function closeWorkspace(workspace: Workspace) {
   }
 
   if (shouldClose) {
+    if (shouldDiscardRecoverySnapshot || !workspace.isRecovered) {
+      await discardRecoverySnapshot(workspace.id);
+    }
+
     // If using the browser, remove the item from local storage
     if (isBrowser.value) {
       localStorage.removeItem(`workspace-${workspace.id}`);
@@ -5912,6 +6031,12 @@ async function onCloseApplication() {
     if (!(await closeWorkspace(workspace))) {
       await ipcService.cancelExit();
       return false;
+    }
+  }
+
+  for (const workspace of [...workspaces.value]) {
+    if (!workspace.isRecovered) {
+      await discardRecoverySnapshot(workspace.id);
     }
   }
 
@@ -8688,6 +8813,8 @@ async function onFileMenuSave() {
       const result = await saveWorkspace(workspace);
       if (result.success) {
         workspace.hasUnsavedChanges = false;
+        workspace.isRecovered = false;
+        await discardRecoverySnapshot(workspace.id);
         toast.success(
           t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
           {
@@ -8706,6 +8833,8 @@ async function onFileMenuSave() {
       if (result.success) {
         workspace.filePath = result.filePath;
         workspace.hasUnsavedChanges = false;
+        workspace.isRecovered = false;
+        await discardRecoverySnapshot(workspace.id);
         toast.success(
           t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
           {
@@ -8742,6 +8871,8 @@ async function onFileMenuSaveAs() {
     if (result.success) {
       workspace.filePath = result.filePath;
       workspace.hasUnsavedChanges = false;
+      workspace.isRecovered = false;
+      await discardRecoverySnapshot(workspace.id);
       toast.success(
         t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
         {
@@ -9264,6 +9395,8 @@ function openScore(args: FileMenuOpenScoreArgs) {
     const workspace = new Workspace();
     workspace.filePath = args.filePath;
     workspace.tempFileName = getTempFilename();
+    workspace.sourceMtimeMs = args.sourceMtimeMs ?? null;
+    workspace.sourceSize = args.sourceSize ?? null;
     workspace.score = score;
 
     addWorkspace(workspace);
@@ -9289,6 +9422,139 @@ function openScore(args: FileMenuOpenScoreArgs) {
   }
 }
 
+function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
+  try {
+    const existingWorkspace = workspaces.value.find((workspace) => {
+      if (candidate.filePath != null) {
+        return workspace.filePath === candidate.filePath;
+      }
+
+      return workspace.id === candidate.workspaceId;
+    }) as Workspace | undefined;
+
+    if (existingWorkspace != null) {
+      existingWorkspace.isRecovered = true;
+      existingWorkspace.hasUnsavedChanges = candidate.hasUnsavedChanges;
+      existingWorkspace.sourceMtimeMs = candidate.sourceMtimeMs;
+      existingWorkspace.sourceSize = candidate.sourceSize;
+      existingWorkspace.score = SaveService.LoadScoreFromJson(
+        JSON.parse(candidate.score),
+      );
+      selectedWorkspace.value = existingWorkspace;
+      selectedElement.value = null;
+      save(false);
+      return existingWorkspace;
+    }
+
+    const score: Score = SaveService.LoadScoreFromJson(
+      JSON.parse(candidate.score),
+    );
+
+    const workspace = new Workspace();
+    workspace.id = candidate.workspaceId;
+    workspace.filePath = candidate.filePath;
+    workspace.tempFileName = candidate.tempFileName;
+    workspace.hasUnsavedChanges = candidate.hasUnsavedChanges;
+    workspace.isRecovered = true;
+    workspace.sourceMtimeMs = candidate.sourceMtimeMs;
+    workspace.sourceSize = candidate.sourceSize;
+    workspace.score = score;
+
+    addWorkspace(workspace);
+
+    selectedWorkspace.value = workspace;
+    selectedElement.value = null;
+    save(false);
+    return workspace;
+  } catch (error) {
+    console.error(error);
+    showErrorToast(
+      t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
+      error,
+      {
+        fallback: t(($) => $.toast.editor.openFailedDescription, {
+          ns: 'toast',
+        }),
+      },
+    );
+    return null;
+  }
+}
+
+async function recoverSelectedRecoveryCandidates(candidateIds: string[]) {
+  const selectedCandidates = recoveryCandidates.value.filter((candidate) =>
+    candidateIds.includes(candidate.recoveryId),
+  );
+  const siblingRecoveryIds = getRecoveryCandidateSiblingRecoveryIds(
+    recoveryCandidates.value,
+    candidateIds,
+  );
+  const selectedRecoveryIdSet = new Set(candidateIds);
+  const discardedSiblingRecoveryIdSet = new Set<string>();
+
+  for (const candidate of selectedCandidates) {
+    openRecoveryCandidate(candidate);
+  }
+
+  if (siblingRecoveryIds.length > 0) {
+    const result =
+      await ipcService.discardRecoverySnapshots(siblingRecoveryIds);
+
+    if (!result.success) {
+      showReplyErrorToast(
+        t(($) => $.toast.editor.recoveryDiscardFailed, { ns: 'toast' }),
+        result,
+        t(($) => $.toast.editor.recoveryDiscardFailedDescription, {
+          ns: 'toast',
+        }),
+      );
+    } else {
+      siblingRecoveryIds.forEach((recoveryId) =>
+        discardedSiblingRecoveryIdSet.add(recoveryId),
+      );
+    }
+  }
+
+  recoveryCandidates.value = recoveryCandidates.value.filter(
+    (candidate) =>
+      !selectedRecoveryIdSet.has(candidate.recoveryId) &&
+      !discardedSiblingRecoveryIdSet.has(candidate.recoveryId),
+  );
+  recoveryDialogIsOpen.value = recoveryCandidates.value.length > 0;
+}
+
+async function discardSelectedRecoveryCandidates(candidateIds: string[]) {
+  const selectedCandidateIds = getRecoveryCandidateGroupRecoveryIds(
+    recoveryCandidates.value,
+    candidateIds,
+  );
+
+  if (selectedCandidateIds.length > 0) {
+    const result =
+      await ipcService.discardRecoverySnapshots(selectedCandidateIds);
+
+    if (!result.success) {
+      showReplyErrorToast(
+        t(($) => $.toast.editor.recoveryDiscardFailed, { ns: 'toast' }),
+        result,
+        t(($) => $.toast.editor.recoveryDiscardFailedDescription, {
+          ns: 'toast',
+        }),
+      );
+      return;
+    }
+  }
+
+  recoveryCandidates.value = recoveryCandidates.value.filter(
+    (candidate) => !selectedCandidateIds.includes(candidate.recoveryId),
+  );
+  recoveryDialogIsOpen.value = recoveryCandidates.value.length > 0;
+}
+
+function decideLaterOnRecoveryCandidates() {
+  recoveryDialogIsOpen.value = false;
+}
+
 function addWorkspace(workspace: Workspace) {
   // Newly opened documents inherit the last-used zoom settings.
   workspace.zoom = editorEnvironment.value.defaultZoom;
@@ -9310,6 +9576,7 @@ function addWorkspace(workspace: Workspace) {
 
 function removeWorkspace(workspace: Workspace) {
   cancelLyricsAssignment(workspace);
+  clearRecoverySnapshotTimer(workspace.id);
 
   const index = workspaces.value.indexOf(workspace);
 
@@ -9622,14 +9889,12 @@ function renderTabLabel(tab: Tab) {
       :neume-keyboard="neumeKeyboard"
       :can-undo="canUndo"
       :can-redo="canRedo"
-      :can-copy-element-link="canCopyElementLink"
       @new-score="onFileMenuNewScore"
       @open-score="onClickOpenScore"
       @save-score="onFileMenuSave"
       @print-score="onClickPrintScore"
       @cut="onFileMenuCut"
       @copy="onFileMenuCopy"
-      @copy-element-link="onFileMenuEditCopyElementLink"
       @paste="onFileMenuPaste"
       @undo="onFileMenuUndo"
       @redo="onFileMenuRedo"
@@ -11134,6 +11399,14 @@ function renderTabLabel(tab: Tab) {
       @update="updateEditorPreferences"
     />
     <AboutDialog v-if="aboutDialogIsOpen" v-model:open="aboutDialogIsOpen" />
+    <RecoveryDialog
+      v-if="recoveryDialogIsOpen"
+      v-model:open="recoveryDialogIsOpen"
+      :candidates="recoveryCandidates"
+      @recover-selected="recoverSelectedRecoveryCandidates"
+      @discard-selected="discardSelectedRecoveryCandidates"
+      @decide-later="decideLaterOnRecoveryCandidates"
+    />
     <PageSetupDialog
       v-if="pageSetupDialogIsOpen"
       v-model:open="pageSetupDialogIsOpen"

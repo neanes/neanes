@@ -1,5 +1,7 @@
 import type {
   ClipboardReplyArgs,
+  DiscardRecoverySnapshotReplyArgs,
+  DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageArgs,
   ExportPageAsImageReplyArgs,
   ExportWorkspaceAsHtmlArgs,
@@ -8,8 +10,11 @@ import type {
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
   ExportWorkspaceReplyArgs,
+  ListRecoveryCandidatesReplyArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
+  RecoverySnapshotArgs,
+  SaveRecoverySnapshotReplyArgs,
   SaveWorkspaceArgs,
   SaveWorkspaceAsArgs,
   SaveWorkspaceAsReplyArgs,
@@ -151,6 +156,39 @@ export class IpcService implements IIpcService {
   public async openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.OpenWorkspaceFromArgv,
+    );
+  }
+
+  public async listRecoveryCandidates(): Promise<ListRecoveryCandidatesReplyArgs> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.ListRecoveryCandidates,
+    );
+  }
+
+  public async saveRecoverySnapshot(
+    snapshot: RecoverySnapshotArgs,
+  ): Promise<SaveRecoverySnapshotReplyArgs> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.SaveRecoverySnapshot,
+      snapshot,
+    );
+  }
+
+  public async discardRecoverySnapshot(
+    workspaceId: string,
+  ): Promise<DiscardRecoverySnapshotReplyArgs> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.DiscardRecoverySnapshot,
+      workspaceId,
+    );
+  }
+
+  public async discardRecoverySnapshots(
+    recoveryIds: string[],
+  ): Promise<DiscardRecoverySnapshotsReplyArgs> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.DiscardRecoverySnapshots,
+      recoveryIds,
     );
   }
 

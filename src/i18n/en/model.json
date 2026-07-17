@@ -98,7 +98,8 @@
       "psifiston": "Psifiston",
       "heteron": "Heteron",
       "connectingHeteron": "Connecting Heteron",
-      "endofonon": "Endofonon"
+      "endofonon": "Endofonon",
+      "yfen": "Yfen"
     },
     "martyriaSign": {
       "ananes": "Ananes",
@@ -153,6 +154,7 @@
       "veryQuick": "Very Quick"
     }
   },
+  "recovered": "Recovered",
   "note": {
     "zoLow": "zo",
     "niLow": "ni",

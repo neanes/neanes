@@ -6,7 +6,7 @@
   >
     <span class="mode-key-main" :style="mainStyle">
       <span class="mode-key-signature" :dir="signatureResolution.flowDirection">
-        <template v-for="run in resolvedRuns" :key="run.componentId">
+        <template v-for="(run, index) in resolvedRuns" :key="run.componentId">
           <span
             v-if="run.kind === 'glyph'"
             class="mode-key-run"
@@ -20,7 +20,7 @@
             :lang="run.languageTag"
             :dir="run.direction"
             :style="getRunStyle(run)"
-            >{{ run.content.layout === 'inline' ? run.content.text : '' }}</span
+            >{{ getTextRunContent(run, index) }}</span
           >
           <span
             v-else
@@ -278,6 +278,14 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
     direction: run.direction,
     unicodeBidi: 'isolate',
   } as CSSProperties;
+}
+
+function getTextRunContent(run: ResolvedInitialMartyriaRun, index: number) {
+  if (run.kind !== 'text' || run.content.layout !== 'inline') {
+    return '';
+  }
+
+  return `${resolvedRuns.value[index - 1]?.kind === 'text' ? ' ' : ''}${run.content.text}`;
 }
 </script>
 

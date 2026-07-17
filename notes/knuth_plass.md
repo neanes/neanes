@@ -75,7 +75,7 @@ A line break is prohibited in the following cases:
 A line break is strongly discouraged in the following cases:
 
 1. Between two neumes when the first neume has a vareia. We add a penalty of 0.5 of `MAX_COST`, comparable to $\TeX$'s `\relpenalty`.
-2. Between a kentimata, or kentimata beneath an oligon, and the preceding neume. The kentimata are the upbeat associated with the previous neume's downbeat, so it is awkward to place a break before them. We add a penalty of 0.5 of `MAX_COST`, comparable to $\TeX$'s `\relpenalty`.
+2. Between kentēmata, or kentēmata beneath an oligon, and the preceding neume. The kentēmata are the upbeat associated with the previous neume's downbeat, so it is awkward to place a break before them. We add a penalty of 0.5 of `MAX_COST`, comparable to $\TeX$'s `\relpenalty`.
 
 ### Discouraged breaks
 
@@ -110,7 +110,7 @@ The three weaker penalties can stack only to 0.45 of `MAX_COST` ($0.2 + 0.15 + 0
 |         `MAX_COST` | Before a martyria                                      | none            |
 |         `MAX_COST` | Across a tie (heteron, homalon, yfen)                  | none            |
 |  0.5 of `MAX_COST` | After a vareia                                         | `\relpenalty`   |
-|  0.5 of `MAX_COST` | Before a kentimata                                     | `\relpenalty`   |
+|  0.5 of `MAX_COST` | Before kentēmata                                       | `\relpenalty`   |
 |  0.1 of `MAX_COST` | Before beat-stealing neumes (gorgon, running elaphron) | none            |
 |  0.2 of `MAX_COST` | Melisma start to first continuation (0 to 1)           | `\clubpenalty`  |
 | 0.15 of `MAX_COST` | Penultimate to last melisma note ($n-2$ to $n-1$)      | `\widowpenalty` |
@@ -132,7 +132,7 @@ Layout proceeds in two phases. In Phase 1, the code builds the box/glue/penalty 
 ### Lyricless scores
 
 Consider first a lyricless score of Byzantine music.
-Each neume group, for example a simple oligon or an ison with kentimata over a supporting oligon, and each martyria can be modeled as a box whose width is simply the width of the notated group itself.
+Each neume group, for example a simple oligon or an ison with kentēmata over a supporting oligon, and each martyria can be modeled as a box whose width is simply the width of the notated group itself.
 The space between ordinary neumes is modeled as glue.
 Its natural width is `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, where `standardGlue` comes from the active font's `engravingDefaults`.
 The font-size-scaled engraving default supplies the default gap, and `neumeDefaultSpacing` remains a user-configurable adjustment.

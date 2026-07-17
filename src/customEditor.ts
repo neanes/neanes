@@ -50,6 +50,7 @@ import {
 import elTranslations from 'ckeditor5/translations/el.js';
 import idTranslations from 'ckeditor5/translations/id.js';
 import roTranslations from 'ckeditor5/translations/ro.js';
+import ruTranslations from 'ckeditor5/translations/ru.js';
 
 import AlignmentOverride from './ckeditor-plugins/alignmentoverride/alignmentoverride';
 import FontStyle from './ckeditor-plugins/fontstyle/fontstyle';
@@ -141,7 +142,12 @@ InlineEditor.defaultConfig = {
     content: 'en',
     textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
   },
-  translations: [elTranslations, idTranslations, roTranslations],
+  translations: [
+    elTranslations,
+    idTranslations,
+    roTranslations,
+    ruTranslations,
+  ],
   fontFamily: {
     supportAllValues: true,
   },

@@ -2,19 +2,19 @@
 
 ## Apostrophos
 
-- The apostrophos cannot accept a psefiston.
+- The apostrophos cannot accept a psēfiston.
 
-## Kentemata
+## Kentēmata
 
-- Kentemata may never hold more than one beat, and thus cannot take a klasma, hapli, etc. If a kentemata needs to be held for more than one beat, an ison must placed after it and given the appropriate duration. This also applies to compound neumes that end in kentemata.
-- Kentemata may never take vocal expression neumes (except for the heteron).
+- Kentēmata may never hold more than one beat, and thus cannot take a klasma, haplē, etc. If kentēmata need to be held for more than one beat, an ison must be placed after them and given the appropriate duration. This also applies to compound neumes that end in kentēmata.
+- Kentēmata may never take vocal expression neumes (except for the heteron).
 
 ## Gorgon
 
 - Compound neumes may only accept a gorgon on the top.
-- Hyporoe only accepts a gorgon on the top.
-- Neumes containing a petasti cannot accept a gorgon.
-- Neumes containg a psefiston cannot accept a gorgon, except for the oligon with a kentemata below it.
+- Yporroē only accepts a gorgon on the top.
+- Neumes containing a petastē cannot accept a gorgon.
+- Neumes containing a psēfiston cannot accept a gorgon, except for the oligon with kentēmata below it.
 
 ## Klasmas
 
@@ -74,16 +74,16 @@ QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
 QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
 ```
 
-## Petasti
+## Petastē
 
-- The petasti can never be held for more than one beat.
-- The petasti can never take a gorgon.
+- The petastē can never be held for more than one beat.
+- The petastē can never take a gorgon.
 
-## Psefiston
+## Psēfiston
 
-### Psefiston not allowed
+### Psēfiston not allowed
 
-The following neumes cannot accpet a psefiston.
+The following neumes cannot accept a psēfiston.
 
 ```text
 QuantitativeNeume.Apostrophos,
@@ -99,6 +99,6 @@ QuantitativeNeume.ElaphronPlusApostrophos,
 QuantitativeNeume.RunningElaphron,
 ```
 
-## Hyporoe
+## Yporroē
 
-The hyporoe cannot take a klasma.
+The yporroē cannot take a klasma.

@@ -6,8 +6,9 @@ import el from './el';
 import en from './en';
 import id from './id';
 import ro from './ro';
+import ru from './ru';
 
-export const supportedLngs = ['el', 'en', 'id', 'ro'] as const;
+export const supportedLngs = ['el', 'en', 'id', 'ro', 'ru'] as const;
 export type SupportedLanguage = (typeof supportedLngs)[number];
 
 const supportedLanguageNames: Record<SupportedLanguage, string> = {
@@ -15,12 +16,14 @@ const supportedLanguageNames: Record<SupportedLanguage, string> = {
   en: 'English',
   id: 'Bahasa Indonesia',
   ro: 'Română',
+  ru: 'Русский',
 };
 const supportedLanguageFlags: Record<SupportedLanguage, string> = {
   el: '🇬🇷',
   en: '🇺🇸',
   id: '🇮🇩',
   ro: '🇷🇴',
+  ru: '🇷🇺',
 };
 
 // Language names are shown in their native script so users can find their
@@ -39,6 +42,7 @@ export const resources = {
   en,
   id,
   ro,
+  ru,
 } as const;
 
 function resolveSupportedLanguage(language: string | null | undefined) {

@@ -743,6 +743,7 @@ async function openImage() {
     const dialogResult = await dialog.showOpenDialog(win!, {
       properties: ['openFile'],
       title: 'Insert Image',
+      defaultPath: await generateFilePath(''),
       filters: [
         {
           name: `All image types`,
@@ -763,6 +764,8 @@ async function openImage() {
 
     if (!dialogResult.canceled) {
       const filePath = dialogResult.filePaths[0];
+      store.lastDirectory = path.dirname(filePath);
+      await saveStore();
 
       const mimeType = mimetypes.lookup(filePath);
       const base64 = await fs.readFile(filePath, { encoding: 'base64' });
@@ -811,6 +814,7 @@ async function openOcrFile() {
     const dialogResult = await dialog.showOpenDialog(win!, {
       properties: ['openFile'],
       title: 'Import OCR Result',
+      defaultPath: await generateFilePath(''),
       filters: [
         {
           name: `OCR File`,
@@ -821,6 +825,8 @@ async function openOcrFile() {
 
     if (!dialogResult.canceled) {
       const filePath = dialogResult.filePaths[0];
+      store.lastDirectory = path.dirname(filePath);
+      await saveStore();
 
       result.data = await fs.readFile(filePath, { encoding: 'utf8' });
 
@@ -1429,6 +1435,7 @@ async function openWorkspaces() {
     const dialogResult = await dialog.showOpenDialog(win!, {
       properties: ['openFile', 'multiSelections'],
       title: 'Open Score',
+      defaultPath: await generateFilePath(''),
       filters: [
         {
           name: `${app.name} Files`,
@@ -1438,6 +1445,11 @@ async function openWorkspaces() {
     });
 
     if (!dialogResult.canceled) {
+      if (dialogResult.filePaths.length > 0) {
+        store.lastDirectory = path.dirname(dialogResult.filePaths[0]);
+        await saveStore();
+      }
+
       for (const filePath of dialogResult.filePaths) {
         const openedFile = await openFile(filePath);
 

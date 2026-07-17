@@ -167,8 +167,8 @@ Any rich text box can function as an initial martyria in the score. To enable th
 2. Open `View -> Properties` and check the `Change Mode` option.
 3. Choose the starting note and scale.
 
-If the initial martyria includes a **fthora**, specify the **parallage note**.
-_For example, triphonic hymns in the plagal of the fourth mode typically have a NI fthora on GA—so GA is the starting note, and NI is the parallage note._
+If the initial martyria includes a **fthora**, specify the **parallagē note**.
+_For example, triphonic hymns in the plagal of the fourth mode typically have a NI fthora on GA—so GA is the starting note, and NI is the parallagē note._
 
 Custom initial martyriæ can be adapted for other languages by replacing the Greek term `ήχος` with a localized equivalent, such as `glas`, `mode`, `глас`, etc.
 
@@ -229,7 +229,7 @@ You can move neumes by either clicking a drag handle (the small blue box near th
 - To move a neume **up**, **decrease** the `Top` number.
 - To move a neume **down**, **increase** the `Top` number.
 
-In the example below, we have corrected the collision between the heteron and the dipli.
+In the example below, we have corrected the collision between the heteron and the diplē.
 
 ![Neume Positioning Dialog](./images/guide-neume-positioning-dialog-2.png)
 

@@ -16,6 +16,7 @@ export const RICH_TEXT_LANGUAGE_OPTIONS = [
   { title: 'Romanian', languageCode: 'ro', textDirection: 'ltr' },
   { title: 'English', languageCode: 'en', textDirection: 'ltr' },
   { title: 'Indonesian', languageCode: 'id', textDirection: 'ltr' },
+  { title: 'Russian', languageCode: 'ru', textDirection: 'ltr' },
 ] satisfies TextPartLanguageOption[];
 
 export const RICH_TEXT_NO_LANGUAGE_VALUE = '__none__';

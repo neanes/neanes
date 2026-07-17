@@ -98,7 +98,6 @@
   "neume": {
     "neumeSelect": "Neume Select",
     "positioning": "Positioning",
-    "yfen": "Yfen",
     "flat": "Flat",
     "sharp": "Sharp",
     "measureNumber": "Measure Number",
@@ -114,7 +113,7 @@
     "multipanel": "Multipanel",
     "scrollable": "Scrollable",
     "modeChange": "Change Mode",
-    "virtualNote": "Parallage Note",
+    "virtualNote": "Parallagē Note",
     "centerOnPage": "Center on Page",
     "offsetYTop": "Top Y Offset",
     "offsetYBottom": "Bottom Y Offset",

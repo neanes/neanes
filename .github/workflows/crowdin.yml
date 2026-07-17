@@ -21,22 +21,42 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  synchronize-with-crowdin:
+  upload-to-crowdin:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Check out
         uses: actions/checkout@v7.0.0
 
-      - name: Synchronize with Crowdin
+      - name: Upload translations to Crowdin
         uses: crowdin/github-action@v2.16.3
         with:
-          # Upload source strings (en/*.json) to Crowdin when they change.
           upload_sources: true
-          # Translations are authored in Crowdin, never pushed up from the repo.
+          upload_sources_args: '--delete-obsolete'
+          upload_translations: true
+          auto_approve_imported: true
+          import_eq_suggestions: true
+          download_translations: false
+          create_pull_request: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+
+  download-from-crowdin:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7.0.0
+
+      - name: Download approved translations from Crowdin
+        uses: crowdin/github-action@v2.16.3
+        with:
+          upload_sources: false
           upload_translations: false
-          # Download translations and open a PR with the result.
           download_translations: true
-          # Skip untranslated files when downloading translations
+          export_only_approved: true
           skip_untranslated_files: true
           localization_branch_name: l10n_crowdin
           create_pull_request: true

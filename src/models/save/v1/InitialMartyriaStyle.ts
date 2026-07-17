@@ -1,23 +1,19 @@
+import type { Neume } from '@/models/Neumes';
+
 export type ModeKeyMode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
-export type TerminologyField =
-  | 'completeModeName'
-  | 'modeWord'
-  | 'plagalWord'
-  | 'ordinal'
-  | 'absoluteModeLabel'
-  | 'fromWord';
-
-export interface ModeTerminology {
-  id: string;
-  displayName: string;
-  languageTag: string;
-  direction: 'ltr' | 'rtl';
-  numberingSystem?: string;
-  values: Partial<
-    Record<TerminologyField, Partial<Record<ModeKeyMode, string>>>
-  >;
+export interface InitialMartyriaVisibility {
+  modes: ModeKeyMode[];
+  variationOverrides: Array<{ templateId: number; visible: boolean }>;
 }
+
+export type InitialMartyriaTextContent =
+  | { layout: 'inline'; text: string }
+  | { layout: 'stacked'; lines: string[]; gap: number };
+
+export type InitialMartyriaGlyphSource =
+  | { type: 'fixed'; neume: Neume }
+  | { type: 'derived'; value: 'modeSign' | 'startingPitchCluster' };
 
 export interface InitialMartyriaAppearance {
   fontFamily?: string;
@@ -34,43 +30,24 @@ export interface InitialMartyriaAppearance {
 
 interface ComponentBase {
   id: string;
-  visibleForModes?: ModeKeyMode[];
+  visibility: InitialMartyriaVisibility;
   appearance?: InitialMartyriaAppearance;
 }
-
 export type InitialMartyriaComponent =
   | (ComponentBase & {
-      kind: 'notationGlyph';
-      source: 'modeWord' | 'plagalWord' | 'graveWord' | 'traditionalModeSign';
-    })
-  | (ComponentBase & { kind: 'terminology'; field: TerminologyField })
-  | (ComponentBase & {
-      kind: 'modeNumber';
-      scheme: 'absolute' | 'familyOrdinal';
-    })
-  | (ComponentBase & { kind: 'startingPitchCluster' })
-  | (ComponentBase & {
-      kind: 'literal';
-      text: string;
+      kind: 'text';
+      content: InitialMartyriaTextContent;
       languageTag?: string;
       direction?: 'ltr' | 'rtl';
     })
-  | (ComponentBase & {
-      kind: 'stackedText';
-      upper: string;
-      lower: string;
-      gap: number;
-    });
+  | (ComponentBase & { kind: 'glyph'; source: InitialMartyriaGlyphSource });
 
 export interface InitialMartyriaStyle {
   id: string;
   displayName: string;
-  terminologyId: string | null;
-  flowDirection: 'page' | 'terminology' | 'ltr' | 'rtl';
+  textParagraphStyleId?: string | null;
+  flowDirection: 'page' | 'ltr' | 'rtl';
   textAppearance: InitialMartyriaAppearance;
-  notationAppearance: InitialMartyriaAppearance;
+  glyphAppearance: InitialMartyriaAppearance;
   components: InitialMartyriaComponent[];
-  modeOverrides?: Partial<
-    Record<ModeKeyMode, { components: InitialMartyriaComponent[] }>
-  >;
 }

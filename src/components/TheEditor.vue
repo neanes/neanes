@@ -152,10 +152,7 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
-import type {
-  InitialMartyriaStyle,
-  ModeTerminology,
-} from '@/models/InitialMartyriaStyle';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
   ElementOverlayBox,
@@ -7452,19 +7449,12 @@ function updatePageSetup(pageSetup: PageSetup) {
   save();
 }
 
-function updateInitialMartyriaStyles({
-  styles,
-  terminologies,
-}: {
-  styles: InitialMartyriaStyle[];
-  terminologies: ModeTerminology[];
-}) {
+function updateInitialMartyriaStyles(styles: InitialMartyriaStyle[]) {
   commandService.value.execute(
     scoreCommandFactory.create('update-properties', {
       target: score.value,
       newValues: {
         initialMartyriaStyles: styles,
-        modeTerminologies: terminologies,
       },
     }),
   );
@@ -10841,7 +10831,7 @@ function renderTabLabel(tab: Tab) {
                               :initial-martyria-styles="
                                 score.initialMartyriaStyles
                               "
-                              :mode-terminologies="score.modeTerminologies"
+                              :paragraph-styles="score.paragraphStyles"
                               :class="[
                                 {
                                   selectedTextbox: isSelected(element),
@@ -11421,7 +11411,7 @@ function renderTabLabel(tab: Tab) {
       :element="selectedElement as ModeKeyElement"
       :page-setup="score.pageSetup"
       :initial-martyria-styles="score.initialMartyriaStyles"
-      :mode-terminologies="score.modeTerminologies"
+      :paragraph-styles="score.paragraphStyles"
       @update="
         updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
       "
@@ -11483,7 +11473,9 @@ function renderTabLabel(tab: Tab) {
       v-if="initialMartyriaStylesDialogIsOpen"
       v-model:open="initialMartyriaStylesDialogIsOpen"
       :styles="score.initialMartyriaStyles"
-      :terminologies="score.modeTerminologies"
+      :page-setup="score.pageSetup"
+      :fonts="fonts"
+      :paragraph-styles="score.paragraphStyles"
       :active-style-id="score.pageSetup.initialMartyriaStyleId"
       @update="updateInitialMartyriaStyles($event)"
       @use-style="useInitialMartyriaStyle($event)"

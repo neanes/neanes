@@ -72,7 +72,7 @@
                       :element="template"
                       :page-setup="pageSetup"
                       :initial-martyria-styles="initialMartyriaStyles"
-                      :mode-terminologies="modeTerminologies"
+                      :paragraph-styles="paragraphStyles"
                     />
                   </div>
                   <ItemDescription>
@@ -154,13 +154,11 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
-import type {
-  InitialMartyriaStyle,
-  ModeTerminology,
-} from '@/models/InitialMartyriaStyle';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 const emit = defineEmits<{
@@ -180,8 +178,8 @@ const props = defineProps({
     type: Array as PropType<InitialMartyriaStyle[]>,
     default: () => [],
   },
-  modeTerminologies: {
-    type: Array as PropType<ModeTerminology[]>,
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     default: () => [],
   },
 });

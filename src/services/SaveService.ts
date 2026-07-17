@@ -22,7 +22,6 @@ import {
   type InitialMartyriaComponent,
   type InitialMartyriaStyle,
   isBuiltInInitialMartyriaStyleId,
-  type ModeTerminology,
 } from '@/models/InitialMartyriaStyle';
 import { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -59,7 +58,6 @@ import type {
   InitialMartyriaAppearance as InitialMartyriaAppearance_v1,
   InitialMartyriaComponent as InitialMartyriaComponent_v1,
   InitialMartyriaStyle as InitialMartyriaStyle_v1,
-  ModeTerminology as ModeTerminology_v1,
 } from '@/models/save/v1/InitialMartyriaStyle';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import {
@@ -925,41 +923,23 @@ function saveInitialMartyriaComponents(
   return components.map((component) => {
     const base = {
       id: component.id,
-      visibleForModes:
-        component.visibleForModes == null
-          ? undefined
-          : [...component.visibleForModes],
+      visibility: {
+        modes: [...component.visibility.modes],
+        variationOverrides: component.visibility.variationOverrides.map(
+          (override) => ({ ...override }),
+        ),
+      },
       appearance: saveInitialMartyriaAppearance(component.appearance),
     };
-
-    if (component.kind === 'notationGlyph') {
-      return { ...base, kind: component.kind, source: component.source };
-    }
-    if (component.kind === 'terminology') {
-      return { ...base, kind: component.kind, field: component.field };
-    }
-    if (component.kind === 'modeNumber') {
-      return { ...base, kind: component.kind, scheme: component.scheme };
-    }
-    if (component.kind === 'startingPitchCluster') {
-      return { ...base, kind: component.kind };
-    }
-    if (component.kind === 'literal') {
-      return {
-        ...base,
-        kind: component.kind,
-        text: component.text,
-        languageTag: component.languageTag,
-        direction: component.direction,
-      };
-    }
-    return {
-      ...base,
-      kind: component.kind,
-      upper: component.upper,
-      lower: component.lower,
-      gap: component.gap,
-    };
+    return component.kind === 'text'
+      ? {
+          ...base,
+          kind: component.kind,
+          content: structuredClone(component.content),
+          languageTag: component.languageTag,
+          direction: component.direction,
+        }
+      : { ...base, kind: component.kind, source: { ...component.source } };
   });
 }
 
@@ -969,49 +949,17 @@ function loadInitialMartyriaComponents(
   return saveInitialMartyriaComponents(components);
 }
 
-function saveModeTerminology(terminology: ModeTerminology): ModeTerminology_v1 {
-  return {
-    id: terminology.id,
-    displayName: terminology.displayName,
-    languageTag: terminology.languageTag,
-    direction: terminology.direction,
-    numberingSystem: terminology.numberingSystem,
-    values: Object.fromEntries(
-      Object.entries(terminology.values).map(([field, values]) => [
-        field,
-        { ...values },
-      ]),
-    ),
-  } as ModeTerminology_v1;
-}
-
-function loadModeTerminology(terminology: ModeTerminology_v1): ModeTerminology {
-  return saveModeTerminology(terminology);
-}
-
 function saveInitialMartyriaStyle(
   style: InitialMartyriaStyle,
 ): InitialMartyriaStyle_v1 {
   return {
     id: style.id,
     displayName: style.displayName,
-    terminologyId: style.terminologyId,
+    textParagraphStyleId: style.textParagraphStyleId,
     flowDirection: style.flowDirection,
     textAppearance: saveInitialMartyriaAppearance(style.textAppearance) ?? {},
-    notationAppearance:
-      saveInitialMartyriaAppearance(style.notationAppearance) ?? {},
+    glyphAppearance: saveInitialMartyriaAppearance(style.glyphAppearance) ?? {},
     components: saveInitialMartyriaComponents(style.components),
-    modeOverrides:
-      style.modeOverrides == null
-        ? undefined
-        : Object.fromEntries(
-            Object.entries(style.modeOverrides).map(([mode, override]) => [
-              mode,
-              {
-                components: saveInitialMartyriaComponents(override.components),
-              },
-            ]),
-          ),
   } as InitialMartyriaStyle_v1;
 }
 
@@ -1021,20 +969,8 @@ function loadInitialMartyriaStyle(
   return {
     ...saveInitialMartyriaStyle(style),
     textAppearance: loadInitialMartyriaAppearance(style.textAppearance) ?? {},
-    notationAppearance:
-      loadInitialMartyriaAppearance(style.notationAppearance) ?? {},
+    glyphAppearance: loadInitialMartyriaAppearance(style.glyphAppearance) ?? {},
     components: loadInitialMartyriaComponents(style.components),
-    modeOverrides:
-      style.modeOverrides == null
-        ? undefined
-        : Object.fromEntries(
-            Object.entries(style.modeOverrides).map(([mode, override]) => [
-              mode,
-              {
-                components: loadInitialMartyriaComponents(override.components),
-              },
-            ]),
-          ),
   } as InitialMartyriaStyle;
 }
 
@@ -1075,10 +1011,6 @@ export class SaveService {
     score.paragraphStyles = s.paragraphStyles.map((style) =>
       this.SaveParagraphStyle(style),
     );
-    score.modeTerminologies =
-      s.modeTerminologies.length === 0
-        ? undefined
-        : s.modeTerminologies.map(saveModeTerminology);
     score.initialMartyriaStyles =
       s.initialMartyriaStyles.length === 0
         ? undefined
@@ -1765,9 +1697,6 @@ export class SaveService {
       s.documentProperties ?? new DocumentProperties_v1(),
     );
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
-    score.modeTerminologies = (s.modeTerminologies ?? []).map(
-      loadModeTerminology,
-    );
     score.initialMartyriaStyles = (s.initialMartyriaStyles ?? [])
       .filter((style) => !isBuiltInInitialMartyriaStyleId(style.id))
       .map(loadInitialMartyriaStyle);

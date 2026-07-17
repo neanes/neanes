@@ -4,10 +4,7 @@ import type { Footer } from './Footer';
 import { Footers } from './Footers';
 import type { Header } from './Header';
 import { Headers } from './Headers';
-import type {
-  InitialMartyriaStyle,
-  ModeTerminology,
-} from './InitialMartyriaStyle';
+import type { InitialMartyriaStyle } from './InitialMartyriaStyle';
 import { PageSetup } from './PageSetup';
 import {
   createDefaultParagraphStyles,
@@ -24,7 +21,6 @@ export class Score {
   public documentProperties: DocumentProperties = new DocumentProperties();
   public pageSetup: PageSetup = new PageSetup();
   public paragraphStyles: ParagraphStyle[] = createDefaultParagraphStyles();
-  public modeTerminologies: ModeTerminology[] = [];
   public initialMartyriaStyles: InitialMartyriaStyle[] = [];
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();

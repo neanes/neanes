@@ -8,31 +8,33 @@
       <span class="mode-key-signature" :dir="signatureResolution.flowDirection">
         <template v-for="run in resolvedRuns" :key="run.componentId">
           <span
-            v-if="run.kind === 'notation' || run.kind === 'pitchCluster'"
+            v-if="run.kind === 'glyph'"
             class="mode-key-run"
             :style="getRunStyle(run)"
           >
-            <Neume
-              v-for="neume in run.notation ?? []"
-              :key="neume"
-              :neume="neume"
-            />
+            <Neume v-for="neume in run.glyphs" :key="neume" :neume="neume" />
           </span>
           <span
-            v-else-if="run.kind === 'text'"
+            v-else-if="run.kind === 'text' && run.content.layout === 'inline'"
             class="mode-key-run"
             :lang="run.languageTag"
             :dir="run.direction"
             :style="getRunStyle(run)"
-            >{{ run.text }}</span
+            >{{ run.content.layout === 'inline' ? run.content.text : '' }}</span
           >
           <span
             v-else
             class="mode-key-run mode-key-stacked-text"
             :style="getRunStyle(run)"
           >
-            <span>{{ run.upper }}</span>
-            <span>{{ run.lower }}</span>
+            <span
+              v-for="line in run.kind === 'text' &&
+              run.content.layout === 'stacked'
+                ? run.content.lines
+                : []"
+              :key="line"
+              >{{ line }}</span
+            >
           </span>
         </template>
       </span>
@@ -75,11 +77,11 @@ import { type ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import {
   getInitialMartyriaContext,
   type InitialMartyriaStyle,
-  type ModeTerminology,
   type ResolvedInitialMartyriaRun,
   resolveInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { resolveFontStyle } from '@/utils/fontStyle';
@@ -99,8 +101,8 @@ const props = defineProps({
     type: Array as PropType<InitialMartyriaStyle[]>,
     default: () => [],
   },
-  modeTerminologies: {
-    type: Array as PropType<ModeTerminology[]>,
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
     default: () => [],
   },
 });
@@ -110,9 +112,8 @@ const signatureResolution = computed(() =>
     context: getInitialMartyriaContext(props.element),
     activeStyleId: props.pageSetup.initialMartyriaStyleId,
     styles: props.initialMartyriaStyles,
-    terminologies: props.modeTerminologies,
+    paragraphStyles: props.paragraphStyles,
     pageSetup: props.pageSetup,
-    element: props.element,
   }),
 );
 const resolvedRuns = computed(() => signatureResolution.value.runs);
@@ -151,8 +152,12 @@ onBeforeUnmount(() => {
 const style = computed(() => {
   return {
     color: props.element.computedColor,
-    fontFamily: props.element.computedFontFamily,
-    fontSize: withZoom(props.element.computedFontSize),
+    fontFamily:
+      props.element.computedFontFamily ||
+      props.pageSetup.neumeDefaultFontFamily,
+    fontSize: withZoom(
+      props.element.computedFontSize || props.pageSetup.modeKeyDefaultFontSize,
+    ),
     textAlign: props.element.alignment,
     width: withZoom(props.element.width),
     height: withZoom(props.element.height),
@@ -226,7 +231,9 @@ const ambitusStyleHigh = computed(() => {
 function getRunStyle(run: ResolvedInitialMartyriaRun) {
   const appearance = run.appearance;
   const font = resolveFontStyle(
-    appearance.fontFamily ?? props.element.computedFontFamily,
+    appearance.fontFamily ||
+      props.element.computedFontFamily ||
+      props.pageSetup.neumeDefaultFontFamily,
     appearance.fontStyle,
   );
 
@@ -258,7 +265,10 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
       appearance.spacingAfter == null
         ? undefined
         : withZoom(appearance.spacingAfter),
-    rowGap: run.kind === 'stackedText' ? withZoom(run.gap ?? 0) : undefined,
+    rowGap:
+      run.kind === 'text' && run.content.layout === 'stacked'
+        ? withZoom(run.content.gap)
+        : undefined,
     direction: run.direction,
     unicodeBidi: 'isolate',
   } as CSSProperties;

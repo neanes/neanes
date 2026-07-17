@@ -1620,6 +1620,7 @@ import { ElementType, NoteElement } from '@/models/Element';
 import {
   type InitialMartyriaStyle,
   traditionalGreekInitialMartyriaStyle,
+  builtInInitialMartyriaStyles,
 } from '@/models/InitialMartyriaStyle';
 import {
   Accidental,
@@ -1797,7 +1798,7 @@ const props = defineProps({
 
 const open = defineModel<boolean>('open', { required: true });
 const availableInitialMartyriaStyles = computed(() => [
-  traditionalGreekInitialMartyriaStyle,
+  ...builtInInitialMartyriaStyles,
   ...props.initialMartyriaStyles,
 ]);
 

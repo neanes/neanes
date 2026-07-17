@@ -773,7 +773,7 @@ export class LayoutService {
               modeKeyElement,
               pageSetup,
               score.initialMartyriaStyles,
-              score.modeTerminologies,
+              score.paragraphStyles,
             ) + modeKeyElement.computedHeightAdjustment;
 
           this.addBox(
@@ -2334,15 +2334,14 @@ export class LayoutService {
     element: ModeKeyElement,
     pageSetup: PageSetup,
     styles: Workspace['score']['initialMartyriaStyles'],
-    terminologies: Workspace['score']['modeTerminologies'],
+    paragraphStyles: Workspace['score']['paragraphStyles'],
   ) {
     const resolution = resolveInitialMartyriaStyle({
       context: getInitialMartyriaContext(element),
       activeStyleId: pageSetup.initialMartyriaStyleId,
       styles,
-      terminologies,
+      paragraphStyles,
       pageSetup,
-      element,
     });
     let top = 0;
     let bottom = 0;
@@ -2361,10 +2360,12 @@ export class LayoutService {
       const ascent = TextMeasurementService.getFontBoundingBoxAscent(font);
       let descent = TextMeasurementService.getFontBoundingBoxDescent(font);
 
-      if (run.kind === 'stackedText') {
-        const upperHeight = TextMeasurementService.getFontHeight(font);
-        const lowerHeight = TextMeasurementService.getFontHeight(font);
-        descent = upperHeight + (run.gap ?? 0) + lowerHeight - ascent;
+      if (run.kind === 'text' && run.content.layout === 'stacked') {
+        const lineHeight = TextMeasurementService.getFontHeight(font);
+        descent =
+          lineHeight * run.content.lines.length +
+          run.content.gap * (run.content.lines.length - 1) -
+          ascent;
       }
 
       top = Math.min(top, baselineShift - ascent - strokeOverflow);

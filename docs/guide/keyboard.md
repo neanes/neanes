@@ -20,7 +20,7 @@ Below is a list of modifiers.
 | <kbd> Q </kbd> | Note Indicators     |
 | <kbd> W </kbd> | Measure Bars        |
 | <kbd> E </kbd> | Signs of Alteration |
-| <kbd> R </kbd> | Kentimata           |
+| <kbd> R </kbd> | Kentēmata           |
 | <kbd> T </kbd> | Fthores             |
 | <kbd> A </kbd> | Ison Indicators     |
 | <kbd> S </kbd> | Quantity Modifier 1 |
@@ -31,7 +31,7 @@ Below is a list of modifiers.
 | <kbd> X </kbd> | Tempo               |
 | <kbd> C </kbd> | Martyria 2          |
 | <kbd> V </kbd> | Quality             |
-| <kbd> B </kbd> | Apli                |
+| <kbd> B </kbd> | Haplē               |
 
 ## Characters of Quantity
 

@@ -75,7 +75,7 @@ A line break is prohibited in the following cases:
 A line break is strongly discouraged in the following cases:
 
 1. Between two neumes when the first neume has a vareia. We add a penalty of 0.5 of `MAX_COST`, comparable to $\TeX$'s `\relpenalty`.
-2. Between a kentimata, or kentimata beneath an oligon, and the preceding neume. The kentimata are the upbeat associated with the previous neume's downbeat, so it is awkward to place a break before them. We add a penalty of 0.5 of `MAX_COST`, comparable to $\TeX$'s `\relpenalty`.
+2. Between kentēmata, or kentēmata beneath an oligon, and the preceding neume. The kentēmata are the upbeat associated with the previous neume's downbeat, so it is awkward to place a break before them. We add a penalty of 0.5 of `MAX_COST`, comparable to $\TeX$'s `\relpenalty`.
 
 ### Discouraged breaks
 
@@ -110,7 +110,7 @@ The three weaker penalties can stack only to 0.45 of `MAX_COST` ($0.2 + 0.15 + 0
 |         `MAX_COST` | Before a martyria                                      | none            |
 |         `MAX_COST` | Across a tie (heteron, homalon, yfen)                  | none            |
 |  0.5 of `MAX_COST` | After a vareia                                         | `\relpenalty`   |
-|  0.5 of `MAX_COST` | Before a kentimata                                     | `\relpenalty`   |
+|  0.5 of `MAX_COST` | Before kentēmata                                       | `\relpenalty`   |
 |  0.1 of `MAX_COST` | Before beat-stealing neumes (gorgon, running elaphron) | none            |
 |  0.2 of `MAX_COST` | Melisma start to first continuation (0 to 1)           | `\clubpenalty`  |
 | 0.15 of `MAX_COST` | Penultimate to last melisma note ($n-2$ to $n-1$)      | `\widowpenalty` |
@@ -123,7 +123,7 @@ The 19th-century publications also use several techniques to improve the quality
 1. To compress a line, reduced-width versions of neumes such as the ison and oligon are sometimes used.
 2. To compress a line, an ison followed by an apostrophos is sometimes written with the apostrophos beneath the ison rather than after it.
 3. To compress a line, two apostrophoi are sometimes written with the second apostrophos beneath the first rather than after it.
-4. When a line is too narrow, extra space is often added first to the martyriae and only then to the other neumes, so that the spacing of the ordinary neumes stays more consistent with the surrounding lines.
+4. When a line is too narrow, extra space is often added first to the martyriæ and only then to the other neumes, so that the spacing of the ordinary neumes stays more consistent with the surrounding lines.
 
 ## Box/glue/penalty algebra
 
@@ -132,7 +132,7 @@ Layout proceeds in two phases. In Phase 1, the code builds the box/glue/penalty 
 ### Lyricless scores
 
 Consider first a lyricless score of Byzantine music.
-Each neume group, for example a simple oligon or an ison with kentimata over a supporting oligon, and each martyria can be modeled as a box whose width is simply the width of the notated group itself.
+Each neume group, for example a simple oligon or an ison with kentēmata over a supporting oligon, and each martyria can be modeled as a box whose width is simply the width of the notated group itself.
 The space between ordinary neumes is modeled as glue.
 Its natural width is `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, where `standardGlue` comes from the active font's `engravingDefaults`.
 The font-size-scaled engraving default supplies the default gap, and `neumeDefaultSpacing` remains a user-configurable adjustment.
@@ -164,9 +164,9 @@ For note-to-note boundaries, the collision check uses glyph boxes for the notes,
 Vareia-to-barline clearance is checked separately, with a tiny vertical tolerance, so that a barline region and vareia that are effectively tangent in font metadata still reserve the normal barline spacing horizontally.
 When a right barline becomes terminal at a line break, at a paragraph ending, before an empty element, or before a right-aligned martyria, its clearance from the preceding neume is reserved as terminal width, including any note ink overhang that overlaps the barline clearance region.
 
-Ordinary martyriae use the active font's `martyriaGlue` engraving defaults instead of standard fixed inline glue.
+Ordinary martyriæ use the active font's `martyriaGlue` engraving defaults instead of standard fixed inline glue.
 Its natural width is `neumeDefaultFontSize * martyriaGlue.width`.
-This gives martyriae font-specific surrounding space that can differ from ordinary neume spacing.
+This gives martyriæ font-specific surrounding space that can differ from ordinary neume spacing.
 An inline left martyria bar contributes to that box width, but a short left bar that has been converted into an above-style mark does not own horizontal side spacing.
 Above-style left bars and the central tempo mark are still measured as martyria body ink, in render order, so their visible protrusion can widen visual minimums without adding inline box width.
 During justification, stretch and shrink are based on the martyria glue defaults while the same-line width is still protected by any visual-ink and measure-bar minimums.
@@ -174,7 +174,7 @@ Tempo-adjacent martyria boundaries are the exception: when a non-right-aligned m
 For standalone tempo-to-martyria and martyria-to-tempo boundaries, the lyric-collision spacer is also skipped; the explicit standard glue owns the base boundary spacing, while the lyric bookkeeping is still advanced for the current element.
 After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single trailing glue whose preferred width is usually martyria glue, or standard fixed inline glue for the tempo cases above.
 As a result, the full trailing spacing appears after the martyria only when it stays mid-line; if a break is taken there, that spacing becomes leading glue on the next line and is skipped.
-Visible spacing around notes, martyriae, and standalone tempo signs may be widened beyond the base glue when shaped ink overhangs would otherwise collide.
+Visible spacing around notes, martyriæ, and standalone tempo signs may be widened beyond the base glue when shaped ink overhangs would otherwise collide.
 For the ordinary non-right-aligned note-martyria-note case, where the martyria owns both sides of the boundary glue and no inline side measure bars or side tempo signs intervene, the code also balances the martyria between the nearest visible boundary on each side.
 The visible endpoint on a given side is whichever extends farther toward the martyria: the neume ink boundary or a lyric overhang.
 Thus a rightward lyric overhang on the left note replaces that note's right ink edge as the left balancing endpoint, and a leftward lyric overhang on the right note replaces that note's left ink edge as the right balancing endpoint.
@@ -190,7 +190,7 @@ The post-break glue's shrink is capped so that justification cannot reduce that 
 At a break the post-break glue vanishes; the spacer remains at the start of the next line and reserves fixed leading space for the transferred bar.
 In Phase 2, when the break is actually taken, the note element is shifted left by the bar width plus fixed leading clearance so that the rendered barline glyph and spacing occupy the space reserved by the spacer rather than adding extra width.
 
-Line-start non-right-aligned martyriae use the same spacer-and-cancel pattern for left ink overhang.
+Line-start non-right-aligned martyriæ use the same spacer-and-cancel pattern for left ink overhang.
 If the martyria's body, inline left bar, or left tempo sign would protrude past the left margin, Phase 1 inserts an anonymous spacer of that overhang width before the martyria and narrows the martyria's owned leading glue by the same amount.
 On the same line these widths cancel, so ordinary inline note-to-martyria spacing is unchanged.
 When the martyria starts a line, `positionItems` skips the leading glue but keeps the spacer, so the line breaker reserves the same width that Phase 2 later adds as indentation.

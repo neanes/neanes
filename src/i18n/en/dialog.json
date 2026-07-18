@@ -61,6 +61,13 @@
     "root": "Select Initial Martyria",
     "description": "Choose an initial martyria."
   },
+  "initialMartyriaGlyphSources": {
+    "ekhos": "Ekhos",
+    "plagal": "Plagal",
+    "varys": "Varys",
+    "modeSign": "Mode Sign",
+    "startingNoteCluster": "Starting Note Cluster"
+  },
   "initialMartyriaStyles": {
     "root": "Initial Martyria Styles",
     "description": "Configure document-wide initial martyria presentation styles.",

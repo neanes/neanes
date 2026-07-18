@@ -61,6 +61,13 @@
     "root": "Επιλογή Αρκτικής Μαρτυρίας",
     "description": "Επιλέξτε αρκτική μαρτυρία."
   },
+  "initialMartyriaGlyphSources": {
+    "ekhos": "Ήχος",
+    "plagal": "Πλάγιος",
+    "varys": "Βαρύς",
+    "modeSign": "Σημάδι ήχου",
+    "startingNoteCluster": "Σύμπλεγμα αρχικού φθόγγου"
+  },
   "initialMartyriaStyles": {
     "root": "Στυλ αρχικής μαρτυρίας",
     "description": "Ρυθμίστε στυλ παρουσίασης αρχικής μαρτυρίας για όλο το έγγραφο.",

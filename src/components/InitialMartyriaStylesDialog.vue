@@ -240,9 +240,12 @@
                         }}</SelectItem></SelectContent
                       ></Select
                     >
-                    <span class="min-w-0 flex-1 text-sm">{{
-                      componentSummary(component)
-                    }}</span>
+                    <span
+                      v-if="component.kind === 'text'"
+                      class="min-w-0 flex-1 text-sm"
+                      >{{ componentSummary(component) }}</span
+                    >
+                    <span v-else class="flex-1" aria-hidden="true" />
                     <Button
                       size="icon-sm"
                       variant="ghost"
@@ -310,22 +313,26 @@
                   <div v-else class="mt-2">
                     <Select
                       :disabled="selectedCustomStyle == null"
-                      :model-value="component.source.type"
+                      :model-value="glyphSourceOption(component)"
                       @update:model-value="
-                        (value) => updateGlyphSourceType(index, value)
+                        (value) => updateGlyphSource(index, value)
                       "
                       ><SelectTrigger><SelectValue /></SelectTrigger
                       ><SelectContent
-                        ><SelectItem value="fixed">{{
-                          $t(($) => $.dialog.initialMartyriaStyles.fixedGlyph, {
-                            ns: 'dialog',
-                          })
+                        ><SelectItem value="ekhos">{{
+                          glyphSourceLabel('ekhos')
                         }}</SelectItem
-                        ><SelectItem value="derived">{{
-                          $t(
-                            ($) => $.dialog.initialMartyriaStyles.derivedGlyph,
-                            { ns: 'dialog' },
-                          )
+                        ><SelectItem value="plagal">{{
+                          glyphSourceLabel('plagal')
+                        }}</SelectItem
+                        ><SelectItem value="varys">{{
+                          glyphSourceLabel('varys')
+                        }}</SelectItem
+                        ><SelectItem value="mode-sign">{{
+                          glyphSourceLabel('mode-sign')
+                        }}</SelectItem
+                        ><SelectItem value="starting-pitch-cluster">{{
+                          glyphSourceLabel('starting-pitch-cluster')
                         }}</SelectItem></SelectContent
                       ></Select
                     >
@@ -463,6 +470,7 @@ import {
   validateInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
+import { ModeSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -696,13 +704,28 @@ function updateStackedLine(
     item.content.lines[line] = String(value);
   }
 }
-function updateGlyphSourceType(index: number, value: unknown) {
+function updateGlyphSource(index: number, value: unknown) {
   const item = getComponent(index);
-  if (item?.kind === 'glyph') {
-    item.source =
-      value === 'fixed'
-        ? { type: 'fixed', neume: 'Ekhos' as never }
-        : { type: 'derived', value: 'modeSign' };
+  if (item?.kind !== 'glyph') {
+    return;
+  }
+
+  switch (value) {
+    case 'ekhos':
+      item.source = { type: 'fixed', neume: ModeSign.Ekhos };
+      break;
+    case 'plagal':
+      item.source = { type: 'fixed', neume: ModeSign.Plagal };
+      break;
+    case 'varys':
+      item.source = { type: 'fixed', neume: ModeSign.Varys };
+      break;
+    case 'mode-sign':
+      item.source = { type: 'derived', value: 'modeSign' };
+      break;
+    case 'starting-pitch-cluster':
+      item.source = { type: 'derived', value: 'startingPitchCluster' };
+      break;
   }
 }
 function updateVisibility(
@@ -730,12 +753,64 @@ function styleDisplayName(style: InitialMartyriaStyle) {
     : style.displayName;
 }
 function componentSummary(component: InitialMartyriaComponent) {
-  return component.kind === 'text'
-    ? component.content.layout === 'inline'
+  if (component.kind === 'text') {
+    return component.content.layout === 'inline'
       ? component.content.text
-      : component.content.lines.join(' / ')
-    : component.source.type === 'fixed'
-      ? String(component.source.neume)
-      : component.source.value;
+      : component.content.lines.join(' / ');
+  }
+
+  const source = glyphSourceOption(component);
+  return source == null && component.source.type === 'fixed'
+    ? String(component.source.neume)
+    : glyphSourceLabel(source!);
+}
+function glyphSourceOption(
+  component: Extract<InitialMartyriaComponent, { kind: 'glyph' }>,
+) {
+  if (component.source.type === 'fixed') {
+    if (component.source.neume === ModeSign.Ekhos) {
+      return 'ekhos';
+    }
+    if (component.source.neume === ModeSign.Plagal) {
+      return 'plagal';
+    }
+    if (component.source.neume === ModeSign.Varys) {
+      return 'varys';
+    }
+    return undefined;
+  }
+
+  return component.source.value === 'startingPitchCluster'
+    ? 'starting-pitch-cluster'
+    : 'mode-sign';
+}
+function glyphSourceLabel(
+  source: 'ekhos' | 'plagal' | 'varys' | 'mode-sign' | 'starting-pitch-cluster',
+) {
+  switch (source) {
+    case 'ekhos':
+      return t(($) => $.dialog.initialMartyriaGlyphSources.ekhos, {
+        ns: 'dialog',
+      });
+    case 'plagal':
+      return t(($) => $.dialog.initialMartyriaGlyphSources.plagal, {
+        ns: 'dialog',
+      });
+    case 'varys':
+      return t(($) => $.dialog.initialMartyriaGlyphSources.varys, {
+        ns: 'dialog',
+      });
+    case 'mode-sign':
+      return t(($) => $.dialog.initialMartyriaGlyphSources.modeSign, {
+        ns: 'dialog',
+      });
+    case 'starting-pitch-cluster':
+      return t(
+        ($) => $.dialog.initialMartyriaGlyphSources.startingNoteCluster,
+        {
+          ns: 'dialog',
+        },
+      );
+  }
 }
 </script>

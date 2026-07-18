@@ -61,6 +61,13 @@
     "root": "Pilih Martyria Awal",
     "description": "Pilih martyria awal."
   },
+  "initialMartyriaGlyphSources": {
+    "ekhos": "Ekhos",
+    "plagal": "Plagal",
+    "varys": "Varys",
+    "modeSign": "Tanda mode",
+    "startingNoteCluster": "Kelompok nada awal"
+  },
   "initialMartyriaStyles": {
     "root": "Gaya Martyria Awal",
     "description": "Atur gaya tampilan martyria awal untuk seluruh dokumen.",

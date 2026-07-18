@@ -61,6 +61,13 @@
     "root": "Selectează mărturia inițială",
     "description": "Alege mărturia inițială."
   },
+  "initialMartyriaGlyphSources": {
+    "ekhos": "Ehos",
+    "plagal": "Plagal",
+    "varys": "Varys",
+    "modeSign": "Semn de glas",
+    "startingNoteCluster": "Grup de note inițiale"
+  },
   "initialMartyriaStyles": {
     "root": "Stiluri de martyria inițială",
     "description": "Configurează stilurile de prezentare pentru martyria inițială în tot documentul.",

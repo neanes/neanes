@@ -18,6 +18,7 @@ import {
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
 import {
+  createInitialMartyriaStartingNoteText,
   type InitialMartyriaAppearance,
   type InitialMartyriaComponent,
   type InitialMartyriaStyle,
@@ -959,6 +960,7 @@ function saveInitialMartyriaStyle(
     flowDirection: style.flowDirection,
     textAppearance: saveInitialMartyriaAppearance(style.textAppearance) ?? {},
     glyphAppearance: saveInitialMartyriaAppearance(style.glyphAppearance) ?? {},
+    startingNoteText: structuredClone(style.startingNoteText),
     components: saveInitialMartyriaComponents(style.components),
   } as InitialMartyriaStyle_v1;
 }
@@ -966,10 +968,23 @@ function saveInitialMartyriaStyle(
 function loadInitialMartyriaStyle(
   style: InitialMartyriaStyle_v1,
 ): InitialMartyriaStyle {
+  const defaults = createInitialMartyriaStartingNoteText();
+  const saved = style.startingNoteText;
+  const startingNoteText = {
+    names: { ...defaults.names, ...(saved?.names ?? {}) },
+    languageTag: saved?.languageTag ?? defaults.languageTag,
+    direction: saved?.direction ?? defaults.direction,
+    appearance: {
+      ...defaults.appearance,
+      ...(saved?.appearance ?? {}),
+    },
+  };
+
   return {
-    ...saveInitialMartyriaStyle(style),
+    ...saveInitialMartyriaStyle({ ...style, startingNoteText }),
     textAppearance: loadInitialMartyriaAppearance(style.textAppearance) ?? {},
     glyphAppearance: loadInitialMartyriaAppearance(style.glyphAppearance) ?? {},
+    startingNoteText,
     components: loadInitialMartyriaComponents(style.components),
   } as InitialMartyriaStyle;
 }

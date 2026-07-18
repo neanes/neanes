@@ -1,4 +1,4 @@
-import type { Neume } from '@/models/Neumes';
+import type { ModeSign, Neume } from '@/models/Neumes';
 
 export type ModeKeyMode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -13,7 +13,37 @@ export type InitialMartyriaTextContent =
 
 export type InitialMartyriaGlyphSource =
   | { type: 'fixed'; neume: Neume }
-  | { type: 'derived'; value: 'modeSign' | 'startingPitchCluster' };
+  | { type: 'derived'; value: 'modeSign' }
+  | {
+      type: 'derived';
+      value: 'startingPitchCluster';
+      noteRendering?: 'neume' | 'customText';
+    };
+
+export type InitialMartyriaCanonicalNote =
+  | ModeSign.Ni
+  | ModeSign.Pa
+  | ModeSign.Vou
+  | ModeSign.Ga
+  | ModeSign.Thi
+  | ModeSign.Ke
+  | ModeSign.Zo;
+
+export interface InitialMartyriaStartingNoteText {
+  names: Record<InitialMartyriaCanonicalNote, string>;
+  languageTag?: string;
+  direction?: 'ltr' | 'rtl';
+  appearance: Pick<
+    InitialMartyriaAppearance,
+    | 'fontFamily'
+    | 'fontStyle'
+    | 'fontSize'
+    | 'color'
+    | 'strokeWidth'
+    | 'strokeColor'
+    | 'baselineShift'
+  >;
+}
 
 export interface InitialMartyriaAppearance {
   fontFamily?: string;
@@ -49,5 +79,6 @@ export interface InitialMartyriaStyle {
   flowDirection: 'page' | 'ltr' | 'rtl';
   textAppearance: InitialMartyriaAppearance;
   glyphAppearance: InitialMartyriaAppearance;
+  startingNoteText?: InitialMartyriaStartingNoteText;
   components: InitialMartyriaComponent[];
 }

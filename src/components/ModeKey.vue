@@ -23,10 +23,72 @@
             >{{ getTextRunContent(run, index) }}</span
           >
           <span
+            v-else-if="run.kind === 'startingPitch'"
+            class="mode-key-run starting-pitch"
+            :style="getRunStyle(run)"
+            ><span
+              v-if="getStartingPitchPrefix(index) !== ''"
+              :style="getStartingNoteTextStyle(run)"
+              >{{ getStartingPitchPrefix(index) }}</span
+            >
+            <span
+              v-for="[role, pitchNote] in [
+                ['primary', run.cluster.primary],
+                ['secondary', run.cluster.secondary],
+              ] as const"
+              v-show="pitchNote != null"
+              :key="`${run.componentId}-${role}`"
+              class="starting-pitch-note"
+              :style="getPitchCellStyle(run, pitchNote)"
+            >
+              <span
+                v-if="pitchNote != null"
+                :lang="run.noteText.languageTag"
+                :dir="run.noteText.direction"
+                :style="getPitchTextStyle(run, pitchNote)"
+                >{{ run.noteText.names[pitchNote.note] }}</span
+              >
+              <span
+                v-if="pitchNote?.fthoraAbove != null"
+                class="pitch-mark"
+                :style="getPitchMarkStyle(run, pitchNote, 'fthora')"
+              >
+                <Neume
+                  :neume="pitchNote.fthoraAbove"
+                  :style="getPitchGlyphStyle(run)"
+                />
+              </span>
+              <span
+                v-if="pitchNote?.quantitativeNeumeAbove != null"
+                class="pitch-mark"
+                :style="getPitchMarkStyle(run, pitchNote, 'quantitative')"
+              >
+                <Neume
+                  :neume="pitchNote.quantitativeNeumeAbove"
+                  :style="getPitchGlyphStyle(run)"
+                />
+              </span>
+            </span>
+            <Neume
+              v-for="neume in run.cluster.trailingGlyphs"
+              :key="neume"
+              :neume="neume"
+              :style="getPitchGlyphStyle(run)"
+            />
+          </span>
+          <span
             v-else
             class="mode-key-run mode-key-stacked-text"
             :style="getRunStyle(run)"
           >
+            <template
+              v-if="
+                run.kind === 'text' &&
+                run.content.layout === 'stacked' &&
+                hasTextBoundaryBefore(index)
+              "
+              >{{ ' ' }}</template
+            >
             <span
               v-for="line in run.kind === 'text' &&
               run.content.layout === 'stacked'
@@ -83,6 +145,10 @@ import {
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontService } from '@/services/FontService';
+import {
+  measureInitialMartyriaPitchGeometry,
+  resolveInitialMartyriaPitchFontSizes,
+} from '@/services/InitialMartyriaPitchMeasurementService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
@@ -272,7 +338,8 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
     appearance.fontStyle,
   );
   const renderedNeumeFontSize =
-    run.kind === 'glyph' && appearance.fontSize != null
+    (run.kind === 'glyph' || run.kind === 'startingPitch') &&
+    appearance.fontSize != null
       ? appearance.fontSize
       : (matchedNeumeFontSize.value ?? neumeFontSize.value);
   const baselineShift =
@@ -286,7 +353,7 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
     color: appearance.color,
     fontFamily: font.cssFontFamily,
     fontSize:
-      run.kind === 'glyph'
+      run.kind === 'glyph' || run.kind === 'startingPitch'
         ? withZoom(renderedNeumeFontSize)
         : appearance.fontSize == null
           ? undefined
@@ -320,12 +387,182 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
   } as CSSProperties;
 }
 
+function getStartingNoteTextStyle(
+  run: Extract<ResolvedInitialMartyriaRun, { kind: 'startingPitch' }>,
+) {
+  const appearance = run.noteText.appearance;
+  const font = resolveFontStyle(
+    appearance.fontFamily || neumeFontFamily.value,
+    appearance.fontStyle,
+  );
+  const renderedNeumeFontSize =
+    run.glyphAppearance.fontSize ??
+    matchedNeumeFontSize.value ??
+    neumeFontSize.value;
+  const baselineShift =
+    (appearance.baselineShift ?? 0) +
+    (fontService.getMetrics(neumeFontFamily.value).initialMartyriaBaseline ??
+      0) *
+      renderedNeumeFontSize;
+
+  return {
+    color: appearance.color,
+    position: 'relative',
+    fontFamily: font.cssFontFamily,
+    fontSize:
+      appearance.fontSize == null ? undefined : withZoom(appearance.fontSize),
+    fontStyle: font.cssFontStyle,
+    fontWeight: font.cssFontWeight,
+    webkitTextStrokeColor: appearance.strokeColor,
+    webkitTextStrokeWidth:
+      appearance.strokeWidth == null
+        ? undefined
+        : withZoom(appearance.strokeWidth),
+    top: baselineShift === 0 ? undefined : withZoom(-baselineShift),
+  } as CSSProperties;
+}
+
+type StartingPitchRun = Extract<
+  ResolvedInitialMartyriaRun,
+  { kind: 'startingPitch' }
+>;
+type StartingPitchNote = NonNullable<StartingPitchRun['cluster']['primary']>;
+
+function getPitchGeometry(run: StartingPitchRun, pitchNote: StartingPitchNote) {
+  const textAppearance = run.noteText.appearance;
+  const glyphAppearance = run.glyphAppearance;
+  const fontSizes = resolveInitialMartyriaPitchFontSizes({
+    textFontFamily: textAppearance.fontFamily || neumeFontFamily.value,
+    textFontStyle: textAppearance.fontStyle,
+    textFontSize: textAppearance.fontSize,
+    glyphFontSize: glyphAppearance.fontSize,
+    matchedNeumeFontSize: matchedNeumeFontSize.value,
+    neumeFontFamily: neumeFontFamily.value,
+    neumeFontSize: neumeFontSize.value,
+  });
+  return measureInitialMartyriaPitchGeometry(
+    pitchNote,
+    run.noteText.names[pitchNote.note],
+    {
+      textFontFamily: textAppearance.fontFamily || neumeFontFamily.value,
+      textFontStyle: textAppearance.fontStyle,
+      textFontSize: fontSizes.textFontSize,
+      glyphFontFamily: glyphAppearance.fontFamily || neumeFontFamily.value,
+      glyphFontStyle: glyphAppearance.fontStyle,
+      glyphFontSize: fontSizes.glyphFontSize,
+      textStrokeWidth: textAppearance.strokeWidth,
+      glyphStrokeWidth: glyphAppearance.strokeWidth,
+      baselineShift: getStartingNoteBaselineShift(run),
+    },
+  );
+}
+
+function getPitchCellStyle(
+  run: StartingPitchRun,
+  pitchNote: StartingPitchNote | null,
+) {
+  if (pitchNote == null) {
+    return undefined;
+  }
+  const geometry = getPitchGeometry(run, pitchNote);
+  return {
+    display: 'inline-block',
+    height: withZoom(geometry.bottom - geometry.top),
+    position: 'relative',
+    verticalAlign: withZoom(-geometry.bottom),
+    width: withZoom(geometry.width),
+  } as CSSProperties;
+}
+
+function getPitchTextStyle(
+  run: StartingPitchRun,
+  pitchNote: StartingPitchNote,
+) {
+  const geometry = getPitchGeometry(run, pitchNote);
+  return {
+    ...getStartingNoteTextStyle(run),
+    left: withZoom(geometry.text.left),
+    position: 'absolute',
+    top: withZoom(geometry.text.top),
+  } as CSSProperties;
+}
+
+function getPitchMarkStyle(
+  run: StartingPitchRun,
+  pitchNote: StartingPitchNote,
+  kind: 'fthora' | 'quantitative',
+) {
+  const geometry = getPitchGeometry(run, pitchNote);
+  const placement = geometry[kind];
+  if (placement == null) {
+    return undefined;
+  }
+  return {
+    left: withZoom(placement.left),
+    position: 'absolute',
+    top: withZoom(placement.top),
+  } as CSSProperties;
+}
+
+function getStartingNoteBaselineShift(run: StartingPitchRun) {
+  const appearance = run.noteText.appearance;
+  const renderedNeumeFontSize = resolveInitialMartyriaPitchFontSizes({
+    textFontFamily: appearance.fontFamily || neumeFontFamily.value,
+    textFontStyle: appearance.fontStyle,
+    textFontSize: appearance.fontSize,
+    glyphFontSize: run.glyphAppearance.fontSize,
+    matchedNeumeFontSize: matchedNeumeFontSize.value,
+    neumeFontFamily: neumeFontFamily.value,
+    neumeFontSize: neumeFontSize.value,
+  }).glyphFontSize;
+  return (
+    (appearance.baselineShift ?? 0) +
+    (fontService.getMetrics(neumeFontFamily.value).initialMartyriaBaseline ??
+      0) *
+      renderedNeumeFontSize
+  );
+}
+
+function getPitchGlyphStyle(
+  run: Extract<ResolvedInitialMartyriaRun, { kind: 'startingPitch' }>,
+) {
+  const appearance = run.glyphAppearance;
+  const font = resolveFontStyle(
+    appearance.fontFamily || neumeFontFamily.value,
+    appearance.fontStyle,
+  );
+
+  return {
+    color: appearance.color,
+    fontFamily: font.cssFontFamily,
+    fontSize: withZoom(
+      appearance.fontSize ?? matchedNeumeFontSize.value ?? neumeFontSize.value,
+    ),
+    fontStyle: font.cssFontStyle,
+    fontWeight: font.cssFontWeight,
+    webkitTextStrokeColor: appearance.strokeColor,
+    webkitTextStrokeWidth:
+      appearance.strokeWidth == null
+        ? undefined
+        : withZoom(appearance.strokeWidth),
+  } as CSSProperties;
+}
+
 function getTextRunContent(run: ResolvedInitialMartyriaRun, index: number) {
   if (run.kind !== 'text' || run.content.layout !== 'inline') {
     return '';
   }
 
-  return `${resolvedRuns.value[index - 1]?.kind === 'text' ? ' ' : ''}${run.content.text}`;
+  return `${hasTextBoundaryBefore(index) ? ' ' : ''}${run.content.text}`;
+}
+
+function getStartingPitchPrefix(index: number) {
+  return hasTextBoundaryBefore(index) ? ' ' : '';
+}
+
+function hasTextBoundaryBefore(index: number) {
+  const previousKind = resolvedRuns.value[index - 1]?.kind;
+  return previousKind === 'text' || previousKind === 'startingPitch';
 }
 </script>
 
@@ -366,6 +603,15 @@ function getTextRunContent(run: ResolvedInitialMartyriaRun, index: number) {
   flex-direction: column;
   line-height: 1;
   vertical-align: middle;
+}
+
+.starting-pitch-note {
+  display: inline-block;
+  position: relative;
+}
+
+.pitch-mark {
+  position: absolute;
 }
 
 .ambitus {

@@ -206,6 +206,138 @@
                 </Field>
               </div>
             </details>
+            <details
+              v-if="usesCustomStartingNoteText"
+              class="rounded border p-2"
+            >
+              <summary class="cursor-pointer text-sm font-medium">
+                {{
+                  $t(($) => $.dialog.initialMartyriaStyles.startingNoteNames, {
+                    ns: 'dialog',
+                  })
+                }}
+              </summary>
+              <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                <Field
+                  v-for="note in initialMartyriaCanonicalNotes"
+                  :key="note"
+                  orientation="horizontal"
+                  ><FieldLabel>{{
+                    $t(startingNoteLabel(note), { ns: 'model' })
+                  }}</FieldLabel
+                  ><Input
+                    :disabled="selectedCustomStyle == null"
+                    :model-value="selectedStyle.startingNoteText.names[note]"
+                    @update:model-value="
+                      (value) => updateStartingNoteName(note, value)
+                    "
+                /></Field>
+                <Field orientation="horizontal"
+                  ><FieldLabel>{{
+                    $t(($) => $.dialog.initialMartyriaStyles.languageTag, {
+                      ns: 'dialog',
+                    })
+                  }}</FieldLabel
+                  ><Input
+                    :disabled="selectedCustomStyle == null"
+                    :model-value="selectedStyle.startingNoteText.languageTag"
+                    @update:model-value="updateStartingNoteLanguageTag"
+                /></Field>
+                <Field orientation="horizontal"
+                  ><FieldLabel>{{
+                    $t(($) => $.dialog.initialMartyriaStyles.writingDirection, {
+                      ns: 'dialog',
+                    })
+                  }}</FieldLabel
+                  ><Select
+                    :disabled="selectedCustomStyle == null"
+                    :model-value="selectedStyle.startingNoteText.direction"
+                    @update:model-value="updateStartingNoteDirection"
+                    ><SelectTrigger><SelectValue /></SelectTrigger
+                    ><SelectContent
+                      ><SelectItem value="ltr">LTR</SelectItem
+                      ><SelectItem value="rtl">RTL</SelectItem></SelectContent
+                    ></Select
+                  ></Field
+                >
+                <Field orientation="horizontal">
+                  <FieldLabel>{{
+                    $t(($) => $.dialog.initialMartyriaStyles.fontFamily, {
+                      ns: 'dialog',
+                    })
+                  }}</FieldLabel>
+                  <FontCombobox
+                    :model-value="
+                      selectedStyle.startingNoteText.appearance.fontFamily ?? ''
+                    "
+                    :options="fonts"
+                    :disabled="selectedCustomStyle == null"
+                    @update:model-value="
+                      updateStartingNoteAppearance('fontFamily', $event)
+                    "
+                  />
+                </Field>
+                <Field orientation="horizontal">
+                  <FieldLabel>{{
+                    $t(($) => $.dialog.initialMartyriaStyles.fontStyle, {
+                      ns: 'dialog',
+                    })
+                  }}</FieldLabel>
+                  <FontStyleSelect
+                    :model-value="
+                      selectedStyle.startingNoteText.appearance.fontStyle ?? ''
+                    "
+                    :options="startingNoteFontStyleOptions"
+                    :disabled="selectedCustomStyle == null"
+                    @update:model-value="
+                      updateStartingNoteAppearance('fontStyle', $event)
+                    "
+                  />
+                </Field>
+                <Field
+                  v-for="property in [
+                    'fontSize',
+                    'color',
+                    'strokeColor',
+                    'strokeWidth',
+                    'baselineShift',
+                  ] as const"
+                  :key="property"
+                  orientation="horizontal"
+                >
+                  <FieldLabel>{{
+                    startingNoteAppearanceLabel(property)
+                  }}</FieldLabel>
+                  <Input
+                    :type="
+                      property === 'color' || property === 'strokeColor'
+                        ? 'text'
+                        : 'number'
+                    "
+                    :disabled="selectedCustomStyle == null"
+                    :model-value="
+                      selectedStyle.startingNoteText.appearance[property]
+                    "
+                    @update:model-value="
+                      updateStartingNoteAppearance(property, $event)
+                    "
+                  />
+                </Field>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  :disabled="selectedCustomStyle == null"
+                  @click="resetStartingNoteNames"
+                  >{{
+                    $t(
+                      ($) =>
+                        $.dialog.initialMartyriaStyles.resetStartingNoteNames,
+                      { ns: 'dialog' },
+                    )
+                  }}</Button
+                >
+              </div>
+            </details>
             <Field
               ><FieldLabel>{{
                 $t(($) => $.dialog.initialMartyriaStyles.components, {
@@ -336,6 +468,36 @@
                         }}</SelectItem></SelectContent
                       ></Select
                     >
+                    <Select
+                      v-if="
+                        component.source.type === 'derived' &&
+                        component.source.value === 'startingPitchCluster'
+                      "
+                      class="mt-2"
+                      :disabled="selectedCustomStyle == null"
+                      :model-value="component.source.noteRendering ?? 'neume'"
+                      @update:model-value="
+                        (value) => updateStartingNoteRendering(index, value)
+                      "
+                      ><SelectTrigger><SelectValue /></SelectTrigger
+                      ><SelectContent
+                        ><SelectItem value="neume">{{
+                          $t(
+                            ($) =>
+                              $.dialog.initialMartyriaStyles.startingNoteNeumes,
+                            { ns: 'dialog' },
+                          )
+                        }}</SelectItem
+                        ><SelectItem value="customText">{{
+                          $t(
+                            ($) =>
+                              $.dialog.initialMartyriaStyles
+                                .startingNoteCustomText,
+                            { ns: 'dialog' },
+                          )
+                        }}</SelectItem></SelectContent
+                      ></Select
+                    >
                   </div>
                   <div class="mt-2 flex flex-wrap gap-2">
                     <label
@@ -462,14 +624,19 @@ import { ModeKeyElement } from '@/models/Element';
 import {
   BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   builtInInitialMartyriaStyles,
+  createInitialMartyriaStartingNoteText,
   type InitialMartyriaAppearance,
+  type InitialMartyriaCanonicalNote,
+  initialMartyriaCanonicalNotes,
   type InitialMartyriaComponent,
+  type InitialMartyriaStartingNoteText,
   type InitialMartyriaStyle,
   type ModeKeyMode,
   traditionalGreekInitialMartyriaStyle,
   validateInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
+import { getModeSignLabelSelector } from '@/models/NeumeI18nMappings';
 import { ModeSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import {
@@ -525,9 +692,22 @@ const { fontStyleOptions } = useFontStyleControls(
   () => selectedStyle.value.textAppearance.fontFamily ?? '',
   () => selectedStyle.value.textAppearance.fontStyle ?? '',
 );
+const { fontStyleOptions: startingNoteFontStyleOptions } = useFontStyleControls(
+  () => selectedStyle.value.startingNoteText.appearance.fontFamily ?? '',
+  () => selectedStyle.value.startingNoteText.appearance.fontStyle ?? '',
+);
 const stylesAreValid = computed(() =>
   workingStyles.value.every(
     (style) => validateInitialMartyriaStyle(style).length === 0,
+  ),
+);
+const usesCustomStartingNoteText = computed(() =>
+  selectedStyle.value.components.some(
+    (component) =>
+      component.kind === 'glyph' &&
+      component.source.type === 'derived' &&
+      component.source.value === 'startingPitchCluster' &&
+      component.source.noteRendering === 'customText',
   ),
 );
 watch(
@@ -724,9 +904,119 @@ function updateGlyphSource(index: number, value: unknown) {
       item.source = { type: 'derived', value: 'modeSign' };
       break;
     case 'starting-pitch-cluster':
-      item.source = { type: 'derived', value: 'startingPitchCluster' };
+      item.source = {
+        type: 'derived',
+        value: 'startingPitchCluster',
+        noteRendering: 'neume',
+      };
       break;
   }
+}
+function updateStartingNoteRendering(index: number, value: unknown) {
+  const item = getComponent(index);
+  if (
+    item?.kind === 'glyph' &&
+    item.source.type === 'derived' &&
+    item.source.value === 'startingPitchCluster' &&
+    (value === 'neume' || value === 'customText')
+  ) {
+    item.source.noteRendering = value;
+  }
+}
+function startingNoteLabel(note: InitialMartyriaCanonicalNote) {
+  return getModeSignLabelSelector(note)!;
+}
+function updateStartingNoteName(
+  note: InitialMartyriaCanonicalNote,
+  value: string | number,
+) {
+  updateSelected((style) => {
+    style.startingNoteText.names[note] = String(value);
+  });
+}
+function updateStartingNoteLanguageTag(value: string | number) {
+  updateSelected((style) => {
+    style.startingNoteText.languageTag = String(value);
+  });
+}
+function updateStartingNoteDirection(value: unknown) {
+  if (value !== 'ltr' && value !== 'rtl') {
+    return;
+  }
+  updateSelected((style) => {
+    style.startingNoteText.direction = value;
+  });
+}
+function updateStartingNoteAppearance(
+  property: keyof InitialMartyriaStartingNoteText['appearance'],
+  value: string | number,
+) {
+  updateSelected((style) => {
+    const input = String(value).trim();
+    if (
+      property === 'fontFamily' ||
+      property === 'fontStyle' ||
+      property === 'color' ||
+      property === 'strokeColor'
+    ) {
+      if (input === '') {
+        delete style.startingNoteText.appearance[property];
+      } else {
+        style.startingNoteText.appearance[property] = input;
+      }
+      return;
+    }
+    const number = Number(input);
+    if (input === '' || !Number.isFinite(number)) {
+      delete style.startingNoteText.appearance[property];
+    } else {
+      style.startingNoteText.appearance[property] = number;
+    }
+  });
+}
+function startingNoteAppearanceLabel(
+  property: keyof InitialMartyriaStartingNoteText['appearance'],
+) {
+  switch (property) {
+    case 'fontFamily':
+      return t(($) => $.dialog.initialMartyriaStyles.fontFamily, {
+        ns: 'dialog',
+      });
+    case 'fontStyle':
+      return t(($) => $.dialog.initialMartyriaStyles.fontStyle, {
+        ns: 'dialog',
+      });
+    case 'fontSize':
+      return t(
+        ($) => $.dialog.initialMartyriaStyles.appearanceProperties.fontSize,
+        { ns: 'dialog' },
+      );
+    case 'color':
+      return t(($) => $.dialog.initialMartyriaStyles.color, { ns: 'dialog' });
+    case 'strokeColor':
+      return t(($) => $.dialog.initialMartyriaStyles.strokeColor, {
+        ns: 'dialog',
+      });
+    case 'strokeWidth':
+      return t(
+        ($) => $.dialog.initialMartyriaStyles.appearanceProperties.strokeWidth,
+        { ns: 'dialog' },
+      );
+    case 'baselineShift':
+      return t(
+        ($) =>
+          $.dialog.initialMartyriaStyles.appearanceProperties.baselineShift,
+        { ns: 'dialog' },
+      );
+  }
+}
+function resetStartingNoteNames() {
+  updateSelected((style) => {
+    const defaults = createInitialMartyriaStartingNoteText();
+    style.startingNoteText.names = defaults.names;
+    style.startingNoteText.languageTag = defaults.languageTag;
+    style.startingNoteText.direction = defaults.direction;
+  });
 }
 function updateVisibility(
   index: number,
@@ -746,11 +1036,17 @@ function updateVisibility(
   item.visibility.modes = [...visible].sort((a, b) => a - b) as ModeKeyMode[];
 }
 function styleDisplayName(style: InitialMartyriaStyle) {
-  return style.id === BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1
-    ? t(($) => $.dialog.initialMartyriaStyles.traditionalGreek, {
-        ns: 'dialog',
-      })
-    : style.displayName;
+  if (style.id === BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1) {
+    return t(($) => $.dialog.initialMartyriaStyles.traditionalGreek, {
+      ns: 'dialog',
+    });
+  }
+  if (style.id === BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV2) {
+    return t(($) => $.dialog.initialMartyriaStyles.traditionalGreekV2, {
+      ns: 'dialog',
+    });
+  }
+  return style.displayName;
 }
 function componentSummary(component: InitialMartyriaComponent) {
   if (component.kind === 'text') {

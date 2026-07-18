@@ -102,6 +102,7 @@
     "editTerminology": "Edit terminologi...",
     "newTerminology": "Terminologi baru...",
     "traditionalGreek": "Yunani Tradisional",
+    "traditionalGreekV2": "Yunani Tradisional V2",
     "moveUp": "Pindahkan komponen ke atas",
     "removeComponent": "Hapus komponen",
     "componentKinds": {
@@ -132,6 +133,10 @@
     "fixedGlyph": "Glif tetap",
     "derivedGlyph": "Glif turunan",
     "addGlyph": "Tambah glif",
+    "startingNoteNeumes": "Glif font notasi",
+    "startingNoteCustomText": "Teks kustom",
+    "startingNoteNames": "Nama nada awal",
+    "resetStartingNoteNames": "Atur ulang ke default Yunani",
     "preview": "Pratinjau",
     "sequence": "Urutan",
     "baseSequence": "Urutan dasar",

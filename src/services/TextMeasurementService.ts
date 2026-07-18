@@ -33,6 +33,13 @@ export class TextMeasurementService {
     return metrics.width;
   }
 
+  public static getTextMetrics(text: string, font: string) {
+    const context = this.getContext();
+
+    context.font = font;
+    return context.measureText(text);
+  }
+
   public static getInkBounds(text: string, font: string): InkBounds {
     const context = this.getContext();
 

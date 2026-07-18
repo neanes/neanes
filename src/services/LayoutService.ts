@@ -84,6 +84,8 @@ import { resolveRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
+import { measureInitialMartyriaPitchGeometry } from './InitialMartyriaPitchMeasurementService';
+import { resolveInitialMartyriaPitchFontSizes } from './InitialMartyriaPitchMeasurementService';
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
 import {
@@ -2347,7 +2349,8 @@ export class LayoutService {
     let bottom = 0;
 
     for (const run of resolution.runs) {
-      const appearance = run.appearance;
+      const appearance =
+        run.kind === 'startingPitch' ? run.noteText.appearance : run.appearance;
       const fontFamily = appearance.fontFamily ?? element.computedFontFamily;
       const fontSize = appearance.fontSize ?? element.computedFontSize;
       const font = resolveFontCss({
@@ -2366,6 +2369,75 @@ export class LayoutService {
           lineHeight * run.content.lines.length +
           run.content.gap * (run.content.lines.length - 1) -
           ascent;
+      }
+
+      if (run.kind === 'startingPitch') {
+        const noteAppearance = run.noteText.appearance;
+        const glyphAppearance = run.glyphAppearance;
+        const textRun = resolution.runs.find((item) => item.kind === 'text');
+        let matchedNeumeFontSize: number | null = null;
+        if (textRun?.kind === 'text') {
+          const matchingTextFont = resolveFontCss({
+            fontFamily:
+              textRun.appearance.fontFamily ?? element.computedFontFamily,
+            fontStyle: textRun.appearance.fontStyle ?? DEFAULT_FONT_STYLE,
+            fontSize: textRun.appearance.fontSize ?? element.computedFontSize,
+          });
+          const matchingTextCapitalHeight =
+            TextMeasurementService.getTextHeight('H', matchingTextFont);
+          const neumeCapitalHeight = fontService.getMetrics(
+            element.computedFontFamily,
+          ).capitalHeight;
+          if (
+            Number.isFinite(matchingTextCapitalHeight) &&
+            Number.isFinite(neumeCapitalHeight) &&
+            neumeCapitalHeight > 0
+          ) {
+            matchedNeumeFontSize =
+              matchingTextCapitalHeight / neumeCapitalHeight;
+          }
+        }
+        const fontSizes = resolveInitialMartyriaPitchFontSizes({
+          textFontFamily:
+            noteAppearance.fontFamily ?? element.computedFontFamily,
+          textFontStyle: noteAppearance.fontStyle,
+          textFontSize: noteAppearance.fontSize,
+          glyphFontSize: glyphAppearance.fontSize,
+          matchedNeumeFontSize,
+          neumeFontFamily: element.computedFontFamily,
+          neumeFontSize: element.computedFontSize,
+        });
+        const effectiveBaselineShift =
+          (noteAppearance.baselineShift ?? 0) +
+          (fontService.getMetrics(element.computedFontFamily)
+            .initialMartyriaBaseline ?? 0) *
+            fontSizes.glyphFontSize;
+        const wrapperBaselineShift = run.appearance.baselineShift ?? 0;
+        for (const note of [run.cluster.primary, run.cluster.secondary]) {
+          if (note == null) {
+            continue;
+          }
+          const geometry = measureInitialMartyriaPitchGeometry(
+            note,
+            run.noteText.names[note.note],
+            {
+              textFontFamily:
+                noteAppearance.fontFamily ?? element.computedFontFamily,
+              textFontStyle: noteAppearance.fontStyle,
+              textFontSize: fontSizes.textFontSize,
+              glyphFontFamily:
+                glyphAppearance.fontFamily ?? element.computedFontFamily,
+              glyphFontStyle: glyphAppearance.fontStyle,
+              glyphFontSize: fontSizes.glyphFontSize,
+              textStrokeWidth: noteAppearance.strokeWidth,
+              glyphStrokeWidth: glyphAppearance.strokeWidth,
+              baselineShift: effectiveBaselineShift,
+            },
+          );
+          top = Math.min(top, geometry.top - wrapperBaselineShift);
+          bottom = Math.max(bottom, geometry.bottom - wrapperBaselineShift);
+        }
+        continue;
       }
 
       top = Math.min(top, baselineShift - ascent - strokeOverflow);

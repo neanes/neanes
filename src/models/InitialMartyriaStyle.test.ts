@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ModeKeyElement } from '@/models/Element';
 import {
+  createInitialMartyriaStartingNoteText,
   getInitialMartyriaContext,
   isInitialMartyriaComponentVisible,
   resolveInitialMartyriaStyle,
@@ -9,6 +10,7 @@ import {
   validateInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
+import { ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 describe('InitialMartyriaStyleResolver', () => {
   it('resolves traditional glyphs for every template', () => {
@@ -56,5 +58,46 @@ describe('InitialMartyriaStyleResolver', () => {
         components: [],
       }),
     ).toContain('A style must contain at least one component.');
+  });
+  it('resolves custom starting-note text with associated pitch notes', () => {
+    const element = ModeKeyElement.createFromTemplate(
+      modeKeyTemplates.find((template) => template.id === 603)!,
+    );
+    const style = structuredClone(traditionalGreekInitialMartyriaStyle);
+    style.id = 'custom-starting-notes';
+    style.startingNoteText = createInitialMartyriaStartingNoteText();
+    style.startingNoteText.names[ModeSign.Ni] = 'Ni';
+    const component = style.components.find(
+      (item) =>
+        item.kind === 'glyph' &&
+        item.source.type === 'derived' &&
+        item.source.value === 'startingPitchCluster',
+    );
+    if (
+      component?.kind === 'glyph' &&
+      component.source.type === 'derived' &&
+      component.source.value === 'startingPitchCluster'
+    ) {
+      component.source.noteRendering = 'customText';
+    }
+
+    const run = resolveInitialMartyriaStyle({
+      activeStyleId: style.id,
+      styles: [style],
+      context: getInitialMartyriaContext(element),
+      pageSetup: new PageSetup(),
+    }).runs.find((item) => item.kind === 'startingPitch');
+
+    expect(run?.kind).toBe('startingPitch');
+    if (run?.kind === 'startingPitch') {
+      expect(run.cluster.primary?.note).toBe(element.note);
+      expect(run.cluster.secondary?.note).toBe(element.note2);
+      expect(run.cluster.trailingGlyphs).toEqual(
+        [
+          element.quantitativeNeumeRight,
+          element.fthoraAboveQuantitativeNeumeRight,
+        ].filter((item) => item != null),
+      );
+    }
   });
 });

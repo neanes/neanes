@@ -102,6 +102,7 @@
     "editTerminology": "Editează terminologia...",
     "newTerminology": "Terminologie nouă...",
     "traditionalGreek": "Grecesc tradițional",
+    "traditionalGreekV2": "Grecesc tradițional V2",
     "moveUp": "Mută componenta în sus",
     "removeComponent": "Elimină componenta",
     "componentKinds": {
@@ -132,6 +133,10 @@
     "fixedGlyph": "Glică fixă",
     "derivedGlyph": "Glică derivată",
     "addGlyph": "Adaugă glică",
+    "startingNoteNeumes": "Glice din fontul de notație",
+    "startingNoteCustomText": "Text personalizat",
+    "startingNoteNames": "Numele notelor inițiale",
+    "resetStartingNoteNames": "Restabilește valorile implicite grecești",
     "preview": "Previzualizare",
     "sequence": "Secvență",
     "baseSequence": "Secvența de bază",

@@ -102,6 +102,7 @@
     "editTerminology": "Επεξεργασία ορολογίας...",
     "newTerminology": "Νέα ορολογία...",
     "traditionalGreek": "Παραδοσιακό ελληνικό",
+    "traditionalGreekV2": "Παραδοσιακό ελληνικό V2",
     "moveUp": "Μετακίνηση στοιχείου επάνω",
     "removeComponent": "Αφαίρεση στοιχείου",
     "componentKinds": {
@@ -132,6 +133,10 @@
     "fixedGlyph": "Σταθερή γλυφή",
     "derivedGlyph": "Παράγωγη γλυφή",
     "addGlyph": "Προσθήκη γλυφής",
+    "startingNoteNeumes": "Γλυφές γραμματοσειράς νευμάτων",
+    "startingNoteCustomText": "Προσαρμοσμένο κείμενο",
+    "startingNoteNames": "Ονόματα αρχικών φθόγγων",
+    "resetStartingNoteNames": "Επαναφορά στις ελληνικές προεπιλογές",
     "preview": "Προεπισκόπηση",
     "sequence": "Ακολουθία",
     "baseSequence": "Βασική ακολουθία",

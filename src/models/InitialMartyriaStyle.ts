@@ -1,5 +1,5 @@
 import type { ModeKeyElement } from '@/models/Element';
-import type { Neume } from '@/models/Neumes';
+import type { Fthora, Neume } from '@/models/Neumes';
 import { ModeSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
@@ -9,6 +9,7 @@ export type ModeKeyMode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   TraditionalGreekV1: 'builtin:traditional-greek-v1',
+  TraditionalGreekV2: 'builtin:traditional-greek-v2',
   EnglishPlagalFirstV1: 'builtin:english-plagal-first-v1',
   EnglishSignFirstV1: 'builtin:english-sign-first-v1',
   EnglishModeBeforeSignV1: 'builtin:english-mode-before-sign-v1',
@@ -32,7 +33,38 @@ export type InitialMartyriaTextContent =
 
 export type InitialMartyriaGlyphSource =
   | { type: 'fixed'; neume: Neume }
-  | { type: 'derived'; value: 'modeSign' | 'startingPitchCluster' };
+  | { type: 'derived'; value: 'modeSign' }
+  | {
+      type: 'derived';
+      value: 'startingPitchCluster';
+      noteRendering?: StartingNoteRendering;
+    };
+
+export type InitialMartyriaCanonicalNote =
+  | ModeSign.Ni
+  | ModeSign.Pa
+  | ModeSign.Vou
+  | ModeSign.Ga
+  | ModeSign.Thi
+  | ModeSign.Ke
+  | ModeSign.Zo;
+export type StartingNoteRendering = 'neume' | 'customText';
+
+export interface InitialMartyriaStartingNoteText {
+  names: Record<InitialMartyriaCanonicalNote, string>;
+  languageTag?: string;
+  direction?: 'ltr' | 'rtl';
+  appearance: Pick<
+    InitialMartyriaAppearance,
+    | 'fontFamily'
+    | 'fontStyle'
+    | 'fontSize'
+    | 'color'
+    | 'strokeWidth'
+    | 'strokeColor'
+    | 'baselineShift'
+  >;
+}
 
 export interface InitialMartyriaAppearance {
   fontFamily?: string;
@@ -72,14 +104,27 @@ export interface InitialMartyriaStyle {
   flowDirection: 'page' | 'ltr' | 'rtl';
   textAppearance: InitialMartyriaAppearance;
   glyphAppearance: InitialMartyriaAppearance;
+  startingNoteText: InitialMartyriaStartingNoteText;
   components: InitialMartyriaComponent[];
+}
+
+export interface InitialMartyriaPitchNote {
+  note: InitialMartyriaCanonicalNote;
+  fthoraAbove: Fthora | null;
+  quantitativeNeumeAbove: ModeSign | null;
+}
+
+export interface InitialMartyriaPitchCluster {
+  primary: InitialMartyriaPitchNote | null;
+  secondary: InitialMartyriaPitchNote | null;
+  trailingGlyphs: Neume[];
 }
 
 export interface InitialMartyriaContext {
   mode: ModeKeyMode;
   templateId: number | null;
   traditionalModeSign: Neume;
-  pitchCluster: Neume[];
+  pitchCluster: InitialMartyriaPitchCluster;
 }
 
 export function getInitialMartyriaContext(
@@ -92,16 +137,53 @@ export function getInitialMartyriaContext(
     mode: element.mode,
     templateId: element.templateId,
     traditionalModeSign: element.martyria,
-    pitchCluster: [
-      element.note,
-      element.fthoraAboveNote,
-      element.quantitativeNeumeAboveNote,
-      element.note2,
-      element.fthoraAboveNote2,
-      element.quantitativeNeumeAboveNote2,
-      element.quantitativeNeumeRight,
-      element.fthoraAboveQuantitativeNeumeRight,
-    ].filter((neume) => neume != null) as Neume[],
+    pitchCluster: {
+      primary: isInitialMartyriaCanonicalNote(element.note)
+        ? {
+            note: element.note,
+            fthoraAbove: element.fthoraAboveNote,
+            quantitativeNeumeAbove: element.quantitativeNeumeAboveNote,
+          }
+        : null,
+      secondary: isInitialMartyriaCanonicalNote(element.note2)
+        ? {
+            note: element.note2,
+            fthoraAbove: element.fthoraAboveNote2,
+            quantitativeNeumeAbove: element.quantitativeNeumeAboveNote2,
+          }
+        : null,
+      trailingGlyphs: [
+        element.quantitativeNeumeRight,
+        element.fthoraAboveQuantitativeNeumeRight,
+      ].filter((neume) => neume != null) as Neume[],
+    },
+  };
+}
+
+export const initialMartyriaCanonicalNotes: InitialMartyriaCanonicalNote[] = [
+  ModeSign.Ni,
+  ModeSign.Pa,
+  ModeSign.Vou,
+  ModeSign.Ga,
+  ModeSign.Thi,
+  ModeSign.Ke,
+  ModeSign.Zo,
+];
+
+export function createInitialMartyriaStartingNoteText(): InitialMartyriaStartingNoteText {
+  return {
+    names: {
+      [ModeSign.Ni]: 'Νη',
+      [ModeSign.Pa]: 'Πα',
+      [ModeSign.Vou]: 'Βου',
+      [ModeSign.Ga]: 'Γα',
+      [ModeSign.Thi]: 'Δι',
+      [ModeSign.Ke]: 'Κε',
+      [ModeSign.Zo]: 'Ζο',
+    },
+    languageTag: 'el',
+    direction: 'ltr',
+    appearance: {},
   };
 }
 
@@ -117,6 +199,7 @@ export const traditionalGreekInitialMartyriaStyle: InitialMartyriaStyle = {
   flowDirection: 'page',
   textAppearance: {},
   glyphAppearance: {},
+  startingNoteText: createInitialMartyriaStartingNoteText(),
   components: [
     {
       id: 'mode-word',
@@ -145,7 +228,11 @@ export const traditionalGreekInitialMartyriaStyle: InitialMartyriaStyle = {
     {
       id: 'starting-pitch-cluster',
       kind: 'glyph',
-      source: { type: 'derived', value: 'startingPitchCluster' },
+      source: {
+        type: 'derived',
+        value: 'startingPitchCluster',
+        noteRendering: 'neume',
+      },
       visibility: visibleFor(allModes),
     },
   ],
@@ -177,7 +264,11 @@ function sign() {
   return glyph('mode-sign', { type: 'derived', value: 'modeSign' });
 }
 function pitch() {
-  return glyph('pitch', { type: 'derived', value: 'startingPitchCluster' });
+  return glyph('pitch', {
+    type: 'derived',
+    value: 'startingPitchCluster',
+    noteRendering: 'neume',
+  });
 }
 function builtIn(
   id: string,
@@ -190,11 +281,38 @@ function builtIn(
     flowDirection: 'page',
     textAppearance: {},
     glyphAppearance: {},
+    startingNoteText: createInitialMartyriaStartingNoteText(),
     components,
   };
 }
+
+const traditionalGreekV2InitialMartyriaStyle: InitialMartyriaStyle = {
+  id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV2,
+  displayName: 'Traditional Greek V2',
+  flowDirection: 'page',
+  textAppearance: {},
+  glyphAppearance: {},
+  startingNoteText: createInitialMartyriaStartingNoteText(),
+  components: [
+    text('mode-word', 'Ἦχος'),
+    {
+      id: 'plagal-word',
+      kind: 'text',
+      content: { layout: 'stacked', lines: ['π', 'λ'], gap: 0 },
+      visibility: visibleFor([5, 6, 8]),
+    },
+    glyph('traditional-mode-sign', { type: 'derived', value: 'modeSign' }),
+    text('grave-mode', 'Βαρύς', [7]),
+    glyph('starting-pitch-cluster', {
+      type: 'derived',
+      value: 'startingPitchCluster',
+      noteRendering: 'customText',
+    }),
+  ],
+};
 export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
   traditionalGreekInitialMartyriaStyle,
+  traditionalGreekV2InitialMartyriaStyle,
   builtIn(
     BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalFirstV1,
     'English Plagal First',
@@ -334,20 +452,43 @@ export function validateInitialMartyriaStyle(style: InitialMartyriaStyle) {
         errors.push(`Stacked text component ${component.id} is invalid.`);
       }
     } else if (
-      component.source.type === 'derived' &&
-      component.source.value !== 'modeSign' &&
-      component.source.value !== 'startingPitchCluster'
-    ) {
-      errors.push(`Unknown derived glyph source: ${component.source.value}.`);
-    } else if (
       component.source.type === 'fixed' &&
       typeof component.source.neume !== 'string'
     ) {
       errors.push(`Fixed glyph component ${component.id} is invalid.`);
+    } else if (
+      component.source.type === 'derived' &&
+      component.source.value === 'startingPitchCluster' &&
+      component.source.noteRendering != null &&
+      component.source.noteRendering !== 'neume' &&
+      component.source.noteRendering !== 'customText'
+    ) {
+      errors.push(`Starting note rendering for ${component.id} is invalid.`);
     }
   }
   validateAppearance(style.textAppearance, errors);
   validateAppearance(style.glyphAppearance, errors);
+  validateAppearance(style.startingNoteText.appearance, errors);
+  const noteNames = style.startingNoteText.names;
+  for (const note of initialMartyriaCanonicalNotes) {
+    if (noteNames[note].trim() === '') {
+      errors.push(`Starting note mapping ${note} is blank.`);
+    }
+  }
+  if (style.startingNoteText.languageTag != null) {
+    try {
+      new Intl.Locale(style.startingNoteText.languageTag);
+    } catch {
+      errors.push('Starting note language tag is invalid.');
+    }
+  }
+  if (
+    style.startingNoteText.direction != null &&
+    style.startingNoteText.direction !== 'ltr' &&
+    style.startingNoteText.direction !== 'rtl'
+  ) {
+    errors.push('Starting note direction is invalid.');
+  }
   return errors;
 }
 
@@ -396,6 +537,13 @@ function validateAppearance(
 export function isModeKeyMode(value: number): value is ModeKeyMode {
   return Number.isInteger(value) && value >= 1 && value <= 8;
 }
+export function isInitialMartyriaCanonicalNote(
+  value: ModeSign | null,
+): value is InitialMartyriaCanonicalNote {
+  return initialMartyriaCanonicalNotes.includes(
+    value as InitialMartyriaCanonicalNote,
+  );
+}
 
 export type ResolvedInitialMartyriaRun =
   | {
@@ -412,6 +560,15 @@ export type ResolvedInitialMartyriaRun =
       direction: 'ltr' | 'rtl';
       languageTag?: string;
       content: InitialMartyriaTextContent;
+    }
+  | {
+      kind: 'startingPitch';
+      componentId: string;
+      appearance: InitialMartyriaAppearance;
+      glyphAppearance: InitialMartyriaAppearance;
+      noteText: InitialMartyriaStartingNoteText;
+      direction: 'ltr' | 'rtl';
+      cluster: InitialMartyriaPitchCluster;
     };
 
 export interface InitialMartyriaStyleResolution {
@@ -493,7 +650,37 @@ function resolveComponent(
       ? [component.source.neume]
       : component.source.value === 'modeSign'
         ? [context.traditionalModeSign]
-        : context.pitchCluster;
+        : flattenPitchCluster(context.pitchCluster);
+  if (
+    component.source.type === 'derived' &&
+    component.source.value === 'startingPitchCluster' &&
+    component.source.noteRendering === 'customText' &&
+    hasCompleteStartingNoteText(style.startingNoteText, context.pitchCluster)
+  ) {
+    return [
+      {
+        kind: 'startingPitch',
+        componentId: component.id,
+        appearance: { ...style.glyphAppearance, ...component.appearance },
+        glyphAppearance: { ...style.glyphAppearance, ...component.appearance },
+        noteText: {
+          ...style.startingNoteText,
+          appearance: {
+            ...(paragraphStyles == null
+              ? {}
+              : resolveParagraphStyle(
+                  paragraphStyles,
+                  style.textParagraphStyleId,
+                )),
+            ...style.textAppearance,
+            ...style.startingNoteText.appearance,
+          },
+        },
+        direction: style.startingNoteText.direction ?? flowDirection,
+        cluster: context.pitchCluster,
+      },
+    ];
+  }
   return glyphs.length === 0
     ? []
     : [
@@ -505,4 +692,25 @@ function resolveComponent(
           glyphs,
         },
       ];
+}
+
+function hasCompleteStartingNoteText(
+  noteText: InitialMartyriaStartingNoteText,
+  cluster: InitialMartyriaPitchCluster,
+) {
+  return [cluster.primary, cluster.secondary]
+    .filter((note): note is InitialMartyriaPitchNote => note != null)
+    .every((note) => noteText.names[note.note].trim() !== '');
+}
+
+function flattenPitchCluster(cluster: InitialMartyriaPitchCluster) {
+  return [
+    cluster.primary?.note,
+    cluster.primary?.fthoraAbove,
+    cluster.primary?.quantitativeNeumeAbove,
+    cluster.secondary?.note,
+    cluster.secondary?.fthoraAbove,
+    cluster.secondary?.quantitativeNeumeAbove,
+    ...cluster.trailingGlyphs,
+  ].filter((neume) => neume != null) as Neume[];
 }

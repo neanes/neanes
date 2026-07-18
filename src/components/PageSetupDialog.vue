@@ -1618,9 +1618,9 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { MartyriaElement, TempoElement } from '@/models/Element';
 import { ElementType, NoteElement } from '@/models/Element';
 import {
+  builtInInitialMartyriaStyles,
   type InitialMartyriaStyle,
   traditionalGreekInitialMartyriaStyle,
-  builtInInitialMartyriaStyles,
 } from '@/models/InitialMartyriaStyle';
 import {
   Accidental,

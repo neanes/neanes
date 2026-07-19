@@ -63,4 +63,21 @@ describe('initial martyria stacked text geometry', () => {
     expect(geometry.rows).toHaveLength(3);
     expect(geometry.bottom).toBeGreaterThan(geometry.top);
   });
+
+  it('raises only the top row by the requested offset', () => {
+    const baseline = getInitialMartyriaStackedTextGeometry([row(), row()], 2);
+    const raised = getInitialMartyriaStackedTextGeometry(
+      [row(), row()],
+      2,
+      0,
+      0.8,
+    );
+
+    expect(raised.top + raised.rows[0].top).toBe(
+      baseline.top + baseline.rows[0].top - 0.8,
+    );
+    expect(raised.top + raised.rows[1].top).toBe(
+      baseline.top + baseline.rows[1].top,
+    );
+  });
 });

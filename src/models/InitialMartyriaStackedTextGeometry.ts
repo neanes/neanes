@@ -17,10 +17,13 @@ export interface InitialMartyriaStackedTextGeometry {
   rows: Array<{ left: number; top: number }>;
 }
 
+export const INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM = 0.08;
+
 export function getInitialMartyriaStackedTextGeometry(
   rows: StackedTextRowBounds[],
   gap: number,
   baselineShift = 0,
+  topRowOffset = 0,
 ): InitialMartyriaStackedTextGeometry {
   if (rows.length < 2) {
     throw new Error('Stacked text requires at least two rows');
@@ -54,6 +57,7 @@ export function getInitialMartyriaStackedTextGeometry(
     gap +
     rows[1].inkTop -
     anchorOverflow;
+  baselines[0] -= topRowOffset;
 
   const left = Math.min(
     ...rows.map((row) => row.inkLeft - (row.strokeWidth ?? 0) / 2),

@@ -24,6 +24,7 @@ import type {
 import { ElementType, EmptyElement, LineBreakType } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
+import { INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM } from '@/models/InitialMartyriaStackedTextGeometry';
 import {
   getInitialMartyriaContext,
   resolveInitialMartyriaStyle,
@@ -2398,6 +2399,8 @@ export class LayoutService {
           strokeWidth: appearance.strokeWidth,
           gap: run.content.gap,
           baselineShift: effectiveBaselineShift,
+          topRowOffset:
+            fontSize * INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM,
         });
         top = Math.min(top, geometry.top);
         bottom = Math.max(bottom, geometry.bottom);

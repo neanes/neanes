@@ -130,6 +130,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
 import { type ModeKeyElement, TextBoxAlignment } from '@/models/Element';
+import { INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM } from '@/models/InitialMartyriaStackedTextGeometry';
 import {
   getInitialMartyriaContext,
   type InitialMartyriaStyle,
@@ -401,6 +402,7 @@ function getStackedTextGeometry(run: TextRun) {
     strokeWidth: appearance.strokeWidth,
     gap: run.content.gap,
     baselineShift,
+    topRowOffset: fontSize * INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM,
   });
 }
 

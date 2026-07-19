@@ -15,6 +15,7 @@ export function measureInitialMartyriaStackedText(
     strokeWidth?: number;
     gap: number;
     baselineShift?: number;
+    topRowOffset?: number;
   },
 ): InitialMartyriaStackedTextGeometry {
   const font = resolveFontStyle(options.fontFamily, options.fontStyle);
@@ -41,5 +42,6 @@ export function measureInitialMartyriaStackedText(
     rows,
     options.gap,
     options.baselineShift,
+    options.topRowOffset,
   );
 }

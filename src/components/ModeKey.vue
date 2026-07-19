@@ -76,28 +76,22 @@
               :style="getPitchGlyphStyle(run)"
             />
           </span>
-          <span
-            v-else
-            class="mode-key-run mode-key-stacked-text"
-            :style="getRunStyle(run)"
+          <template
+            v-else-if="run.kind === 'text' && run.content.layout === 'stacked'"
           >
-            <template
-              v-if="
-                run.kind === 'text' &&
-                run.content.layout === 'stacked' &&
-                hasTextBoundaryBefore(index)
-              "
-              >{{ ' ' }}</template
-            >
+            <span v-if="hasTextBoundaryBefore(index)">{{ ' ' }}</span>
             <span
-              v-for="line in run.kind === 'text' &&
-              run.content.layout === 'stacked'
-                ? run.content.lines
-                : []"
-              :key="line"
-              >{{ line }}</span
+              class="mode-key-run mode-key-stacked-text"
+              :style="getStackedTextStyle(run)"
             >
-          </span>
+              <span
+                v-for="(line, lineIndex) in run.content.lines"
+                :key="`${run.componentId}-${lineIndex}`"
+                :style="getStackedTextRowStyle(run, lineIndex)"
+                >{{ line }}</span
+              >
+            </span>
+          </template>
         </template>
       </span>
       <Neume
@@ -149,6 +143,7 @@ import {
   measureInitialMartyriaPitchGeometry,
   resolveInitialMartyriaPitchFontSizes,
 } from '@/services/InitialMartyriaPitchMeasurementService';
+import { measureInitialMartyriaStackedText } from '@/services/InitialMartyriaStackedTextMeasurementService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
@@ -365,7 +360,11 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
       appearance.strokeWidth == null
         ? undefined
         : withZoom(appearance.strokeWidth),
-    top: baselineShift === 0 ? undefined : withZoom(-baselineShift),
+    top:
+      baselineShift === 0 ||
+      (run.kind === 'text' && run.content.layout === 'stacked')
+        ? undefined
+        : withZoom(-baselineShift),
     insetInlineStart:
       appearance.offsetInline == null
         ? undefined
@@ -378,12 +377,70 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
       appearance.spacingAfter == null
         ? undefined
         : withZoom(appearance.spacingAfter),
-    rowGap:
-      run.kind === 'text' && run.content.layout === 'stacked'
-        ? withZoom(run.content.gap)
-        : undefined,
     direction: run.direction,
     unicodeBidi: 'isolate',
+  } as CSSProperties;
+}
+
+function getStackedTextGeometry(run: TextRun) {
+  if (run.content.layout !== 'stacked') {
+    throw new Error('Expected stacked text run');
+  }
+  const appearance = run.appearance;
+  const fontSize = appearance.fontSize ?? neumeFontSize.value;
+  const baselineShift =
+    (appearance.baselineShift ?? 0) +
+    (fontService.getMetrics(neumeFontFamily.value).initialMartyriaBaseline ??
+      0) *
+      (matchedNeumeFontSize.value ?? neumeFontSize.value);
+
+  return measureInitialMartyriaStackedText(run.content.lines, {
+    fontFamily: appearance.fontFamily || neumeFontFamily.value,
+    fontStyle: appearance.fontStyle,
+    fontSize,
+    strokeWidth: appearance.strokeWidth,
+    gap: run.content.gap,
+    baselineShift,
+  });
+}
+
+function getStackedTextStyle(run: TextRun) {
+  const geometry = getStackedTextGeometry(run);
+  const style = getRunStyle(run);
+  const height = geometry.bottom - geometry.top;
+
+  return {
+    ...style,
+    display: 'inline-block',
+    height: withZoom(height),
+    position: 'relative',
+    verticalAlign: withZoom(-geometry.bottom),
+    width: withZoom(geometry.width),
+  } as CSSProperties;
+}
+
+function getStackedTextRowStyle(run: TextRun, index: number) {
+  const geometry = getStackedTextGeometry(run);
+  const row = geometry.rows[index];
+
+  return {
+    display: 'block',
+    left: withZoom(row.left),
+    lineHeight: withZoom(
+      TextMeasurementService.getFontHeight(
+        resolveFontCss({
+          fontFamily: run.appearance.fontFamily || neumeFontFamily.value,
+          fontStyle: resolveFontStyle(
+            run.appearance.fontFamily || neumeFontFamily.value,
+            run.appearance.fontStyle,
+          ).cssFontStyle,
+          fontSize: run.appearance.fontSize ?? neumeFontSize.value,
+        }),
+      ),
+    ),
+    position: 'absolute',
+    top: withZoom(row.top),
+    whiteSpace: 'nowrap',
   } as CSSProperties;
 }
 
@@ -426,6 +483,7 @@ type StartingPitchRun = Extract<
   ResolvedInitialMartyriaRun,
   { kind: 'startingPitch' }
 >;
+type TextRun = Extract<ResolvedInitialMartyriaRun, { kind: 'text' }>;
 type StartingPitchNote = NonNullable<StartingPitchRun['cluster']['primary']>;
 
 function getPitchGeometry(run: StartingPitchRun, pitchNote: StartingPitchNote) {
@@ -599,10 +657,7 @@ function hasTextBoundaryBefore(index: number) {
 }
 
 .mode-key-stacked-text {
-  display: inline-flex;
-  flex-direction: column;
-  line-height: 1;
-  vertical-align: middle;
+  position: relative;
 }
 
 .starting-pitch-note {

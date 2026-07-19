@@ -298,7 +298,7 @@ const traditionalGreekV2InitialMartyriaStyle: InitialMartyriaStyle = {
     {
       id: 'plagal-word',
       kind: 'text',
-      content: { layout: 'stacked', lines: ['π', 'λ'], gap: 0 },
+      content: { layout: 'stacked', lines: ['λ', 'π'], gap: 0 },
       visibility: visibleFor([5, 6, 8]),
     },
     glyph('traditional-mode-sign', { type: 'derived', value: 'modeSign' }),

@@ -431,15 +431,42 @@
                         (value) => updateInlineText(index, value)
                       "
                     />
-                    <div v-else class="flex gap-2">
-                      <Input
+                    <div v-else class="space-y-2">
+                      <Field
                         v-for="(_, line) in component.content.lines"
                         :key="line"
-                        :model-value="component.content.lines[line]"
-                        @update:model-value="
-                          (value) => updateStackedLine(index, line, value)
-                        "
-                      />
+                        orientation="horizontal"
+                      >
+                        <FieldLabel>
+                          {{
+                            line === 0
+                              ? $t(
+                                  ($) =>
+                                    $.dialog.initialMartyriaStyles
+                                      .stackedTopRow,
+                                  { ns: 'dialog' },
+                                )
+                              : line === 1
+                                ? $t(
+                                    ($) =>
+                                      $.dialog.initialMartyriaStyles
+                                        .stackedBottomRow,
+                                    { ns: 'dialog' },
+                                  )
+                                : $t(
+                                    ($) =>
+                                      $.dialog.initialMartyriaStyles.stackedRow,
+                                    { ns: 'dialog', row: line + 1 },
+                                  )
+                          }}
+                        </FieldLabel>
+                        <Input
+                          :model-value="component.content.lines[line]"
+                          @update:model-value="
+                            (value) => updateStackedLine(index, line, value)
+                          "
+                        />
+                      </Field>
                     </div>
                   </div>
                   <div v-else class="mt-2">
@@ -865,7 +892,7 @@ function updateTextLayout(index: number, value: unknown) {
   }
   item.content =
     value === 'stacked'
-      ? { layout: 'stacked', lines: ['π', 'λ'], gap: 0 }
+      ? { layout: 'stacked', lines: ['λ', 'π'], gap: 0 }
       : { layout: 'inline', text: 'Text' };
 }
 function updateInlineText(index: number, value: string | number) {

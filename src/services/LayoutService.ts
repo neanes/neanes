@@ -86,6 +86,7 @@ import { Unit } from '@/utils/Unit';
 import { fontService } from './FontService';
 import { measureInitialMartyriaPitchGeometry } from './InitialMartyriaPitchMeasurementService';
 import { resolveInitialMartyriaPitchFontSizes } from './InitialMartyriaPitchMeasurementService';
+import { measureInitialMartyriaStackedText } from './InitialMartyriaStackedTextMeasurementService';
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
 import {
@@ -2347,6 +2348,29 @@ export class LayoutService {
     });
     let top = 0;
     let bottom = 0;
+    const textRun = resolution.runs.find((run) => run.kind === 'text');
+    let matchedNeumeFontSize: number | null = null;
+    if (textRun?.kind === 'text') {
+      const matchingTextFont = resolveFontCss({
+        fontFamily: textRun.appearance.fontFamily ?? element.computedFontFamily,
+        fontStyle: textRun.appearance.fontStyle ?? DEFAULT_FONT_STYLE,
+        fontSize: textRun.appearance.fontSize ?? element.computedFontSize,
+      });
+      const matchingTextCapitalHeight = TextMeasurementService.getTextHeight(
+        'H',
+        matchingTextFont,
+      );
+      const neumeCapitalHeight = fontService.getMetrics(
+        element.computedFontFamily,
+      ).capitalHeight;
+      if (
+        Number.isFinite(matchingTextCapitalHeight) &&
+        Number.isFinite(neumeCapitalHeight) &&
+        neumeCapitalHeight > 0
+      ) {
+        matchedNeumeFontSize = matchingTextCapitalHeight / neumeCapitalHeight;
+      }
+    }
 
     for (const run of resolution.runs) {
       const appearance =
@@ -2360,16 +2384,28 @@ export class LayoutService {
       });
       const baselineShift = appearance.baselineShift ?? 0;
       const strokeOverflow = (appearance.strokeWidth ?? 0) / 2;
-      const ascent = TextMeasurementService.getFontBoundingBoxAscent(font);
-      let descent = TextMeasurementService.getFontBoundingBoxDescent(font);
 
       if (run.kind === 'text' && run.content.layout === 'stacked') {
-        const lineHeight = TextMeasurementService.getFontHeight(font);
-        descent =
-          lineHeight * run.content.lines.length +
-          run.content.gap * (run.content.lines.length - 1) -
-          ascent;
+        const effectiveBaselineShift =
+          baselineShift +
+          (fontService.getMetrics(element.computedFontFamily)
+            .initialMartyriaBaseline ?? 0) *
+            (matchedNeumeFontSize ?? element.computedFontSize);
+        const geometry = measureInitialMartyriaStackedText(run.content.lines, {
+          fontFamily,
+          fontStyle: appearance.fontStyle,
+          fontSize,
+          strokeWidth: appearance.strokeWidth,
+          gap: run.content.gap,
+          baselineShift: effectiveBaselineShift,
+        });
+        top = Math.min(top, geometry.top);
+        bottom = Math.max(bottom, geometry.bottom);
+        continue;
       }
+
+      const ascent = TextMeasurementService.getFontBoundingBoxAscent(font);
+      const descent = TextMeasurementService.getFontBoundingBoxDescent(font);
 
       if (run.kind === 'startingPitch') {
         const noteAppearance = run.noteText.appearance;

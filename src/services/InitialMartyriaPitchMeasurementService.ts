@@ -116,6 +116,13 @@ export function resolveInitialMartyriaPitchFontSizes(options: {
   };
 }
 
+export function getInitialMartyriaPitchTrailingGlueWidth(
+  neumeFontFamily: string,
+  glyphFontSize: number,
+) {
+  return fontService.getStandardGlue(neumeFontFamily).width * glyphFontSize;
+}
+
 function getMatchedNeumeFontSize(options: {
   textFontFamily: string;
   textFontStyle?: string;

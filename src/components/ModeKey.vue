@@ -26,7 +26,19 @@
             class="mode-key-run"
             :style="getRunStyle(run)"
           >
-            <Neume v-for="neume in run.glyphs" :key="neume" :neume="neume" />
+            <template v-for="(neume, glyphIndex) in run.glyphs" :key="neume">
+              <Neume :neume="neume" />
+              <span
+                v-if="
+                  run.pitchCluster != null &&
+                  glyphIndex + 1 === getPitchGlyphCount(run) &&
+                  run.pitchCluster.trailingGlyphs.length > 0
+                "
+                class="pitch-trailing-glue"
+                :style="getPitchTrailingGlueStyle(run)"
+                aria-hidden="true"
+              />
+            </template>
           </span>
           <span
             v-else-if="run.kind === 'text' && run.content.layout === 'inline'"
@@ -78,6 +90,15 @@
                 />
               </span>
             </span>
+            <span
+              v-if="
+                hasPitchNote(run.cluster) &&
+                run.cluster.trailingGlyphs.length > 0
+              "
+              class="pitch-trailing-glue"
+              :style="getPitchTrailingGlueStyle(run)"
+              aria-hidden="true"
+            />
             <Neume
               v-for="neume in run.cluster.trailingGlyphs"
               :key="neume"
@@ -155,9 +176,11 @@ import { type ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import { INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM } from '@/models/InitialMartyriaStackedTextGeometry';
 import {
   getInitialMartyriaContext,
+  getInitialMartyriaFixedSeparatorWidth,
   getInitialMartyriaSeparatorAfter,
   getInitialMartyriaSeparatorBefore,
   type InitialMartyriaAppearance,
+  type InitialMartyriaSeparator,
   type InitialMartyriaStyle,
   type ResolvedInitialMartyriaRun,
   resolveInitialMartyriaBaseTextAppearance,
@@ -167,6 +190,7 @@ import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontService } from '@/services/FontService';
 import {
+  getInitialMartyriaPitchTrailingGlueWidth,
   measureInitialMartyriaPitchGeometry,
   resolveInitialMartyriaPitchFontSizes,
 } from '@/services/InitialMartyriaPitchMeasurementService';
@@ -248,7 +272,6 @@ const matchedNeumeFontSize = computed(() => {
   return textCapitalHeight / capitalHeight;
 });
 const rightContainer = ref<HTMLElement | null>(null);
-const MARTYRIA_SEPARATOR_EM = 0.43;
 const rightAccessoryWidth = ref(0);
 let rightAccessoryResizeObserver: ResizeObserver | null = null;
 
@@ -437,7 +460,13 @@ function getSeparatorStyle(run: ResolvedInitialMartyriaRun, index: number) {
     before.semantic === 'modeSign'
       ? before
       : (resolvedRuns.value[index] ?? run);
-  return getFixedSeparatorStyle(run, getEffectiveRunFontSize(owner));
+  return getFixedSeparatorStyle(
+    run,
+    separator,
+    separator === 'varys'
+      ? getEffectiveRunFontSize(resolvedRuns.value[index])
+      : getEffectiveRunFontSize(owner),
+  );
 }
 
 function getWordSpaceTextMetrics(run: ResolvedInitialMartyriaRun | undefined) {
@@ -457,16 +486,28 @@ function getWordSpaceTextMetrics(run: ResolvedInitialMartyriaRun | undefined) {
 }
 
 function getTrailingSeparatorStyle(run: ResolvedInitialMartyriaRun) {
-  return getFixedSeparatorStyle(run, getEffectiveRunFontSize(run));
+  return getFixedSeparatorStyle(
+    run,
+    getInitialMartyriaSeparatorAfter(
+      resolvedRuns.value,
+      resolvedRuns.value.length - 1,
+    ),
+    getEffectiveRunFontSize(run),
+  );
 }
 
 function getFixedSeparatorStyle(
   run: ResolvedInitialMartyriaRun,
+  separator: InitialMartyriaSeparator,
   ownerSize: number,
 ) {
+  const width = getInitialMartyriaFixedSeparatorWidth(separator);
+  if (width == null) {
+    return undefined;
+  }
   return {
     display: 'inline-block',
-    width: withZoom(MARTYRIA_SEPARATOR_EM * ownerSize),
+    width: withZoom(width * ownerSize),
     direction: run.direction,
   } as CSSProperties;
 }
@@ -580,6 +621,7 @@ type StartingPitchRun = Extract<
   ResolvedInitialMartyriaRun,
   { kind: 'startingPitch' }
 >;
+type PitchGlyphRun = Extract<ResolvedInitialMartyriaRun, { kind: 'glyph' }>;
 type TextRun = Extract<ResolvedInitialMartyriaRun, { kind: 'text' }>;
 type StartingPitchNote = NonNullable<StartingPitchRun['cluster']['primary']>;
 
@@ -693,6 +735,41 @@ function getPitchGlyphStyle(run: StartingPitchRun) {
         ? undefined
         : withZoom(appearance.strokeWidth),
   } as CSSProperties;
+}
+
+function hasPitchNote(cluster: StartingPitchRun['cluster']) {
+  return cluster.primary != null || cluster.secondary != null;
+}
+
+function getPitchTrailingGlueStyle(run: StartingPitchRun | PitchGlyphRun) {
+  const glyphFontSize =
+    run.kind === 'startingPitch'
+      ? getPitchFontSizes(run).glyphFontSize
+      : getEffectiveRunFontSize(run);
+  return {
+    display: 'inline-block',
+    width: withZoom(
+      getInitialMartyriaPitchTrailingGlueWidth(
+        neumeFontFamily.value,
+        glyphFontSize,
+      ),
+    ),
+  } as CSSProperties;
+}
+
+function getPitchGlyphCount(run: PitchGlyphRun) {
+  const cluster = run.pitchCluster;
+  if (cluster == null) {
+    return run.glyphs.length;
+  }
+  return [
+    cluster.primary?.note,
+    cluster.primary?.fthoraAbove,
+    cluster.primary?.quantitativeNeumeAbove,
+    cluster.secondary?.note,
+    cluster.secondary?.fthoraAbove,
+    cluster.secondary?.quantitativeNeumeAbove,
+  ].filter((neume) => neume != null).length;
 }
 
 function getTextRunContent(run: ResolvedInitialMartyriaRun) {

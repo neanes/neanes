@@ -4,6 +4,7 @@ import { ModeKeyElement } from '@/models/Element';
 import {
   createInitialMartyriaStartingNoteText,
   getInitialMartyriaContext,
+  getInitialMartyriaFixedSeparatorWidth,
   getInitialMartyriaSeparatorAfter,
   getInitialMartyriaSeparatorBefore,
   isInitialMartyriaComponentVisible,
@@ -127,7 +128,7 @@ describe('InitialMartyriaStyleResolver', () => {
   });
 
   it('resolves separators from semantic adjacent runs', () => {
-    const glyph = (semantic: 'ekhos' | 'modeSign') => ({
+    const glyph = (semantic: 'ekhos' | 'modeSign' | 'varys') => ({
       kind: 'glyph' as const,
       componentId: semantic,
       semantic,
@@ -159,5 +160,30 @@ describe('InitialMartyriaStyleResolver', () => {
       'plagal',
     );
     expect(getInitialMartyriaSeparatorAfter([text, stacked], 1)).toBe('plagal');
+  });
+
+  it('resolves the Varys separator from logical signature flow', () => {
+    const glyph = (semantic: 'ekhos' | 'modeSign' | 'varys') => ({
+      kind: 'glyph' as const,
+      componentId: semantic,
+      semantic,
+      appearance: {},
+      direction: 'rtl' as const,
+      glyphs: [],
+    });
+
+    expect(
+      getInitialMartyriaSeparatorBefore([glyph('ekhos'), glyph('varys')], 1),
+    ).toBe('varys');
+    expect(getInitialMartyriaSeparatorBefore([glyph('varys')], 0)).toBe('none');
+    expect(
+      getInitialMartyriaSeparatorBefore([glyph('modeSign'), glyph('varys')], 1),
+    ).toBe('varys');
+  });
+
+  it('uses the fixed separator widths', () => {
+    expect(getInitialMartyriaFixedSeparatorWidth('varys')).toBe(0.415);
+    expect(getInitialMartyriaFixedSeparatorWidth('plagal')).toBe(0.43);
+    expect(getInitialMartyriaFixedSeparatorWidth('modeSign')).toBe(0.43);
   });
 });

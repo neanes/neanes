@@ -579,6 +579,7 @@ export type ResolvedInitialMartyriaRun =
       appearance: InitialMartyriaAppearance;
       direction: 'ltr' | 'rtl';
       glyphs: Neume[];
+      pitchCluster?: InitialMartyriaPitchCluster;
     }
   | {
       kind: 'text';
@@ -618,7 +619,21 @@ export function resolveInitialMartyriaBaseTextAppearance(
 }
 
 export type InitialMartyriaSeparator =
-  'none' | 'wordSpace' | 'modeSign' | 'plagal';
+  'none' | 'wordSpace' | 'modeSign' | 'plagal' | 'varys';
+
+export function getInitialMartyriaFixedSeparatorWidth(
+  separator: InitialMartyriaSeparator,
+) {
+  switch (separator) {
+    case 'varys':
+      return 0.415;
+    case 'modeSign':
+    case 'plagal':
+      return 0.43;
+    default:
+      return null;
+  }
+}
 
 /** Resolves spacing from the visible adjacent pair, so hidden components never add gaps. */
 export function getInitialMartyriaSeparatorBefore(
@@ -643,6 +658,9 @@ export function getInitialMartyriaSeparatorBefore(
       (run.semantic === 'ekhos' ||
         run.semantic === 'plagal' ||
         run.semantic === 'varys'));
+  if (after.kind === 'glyph' && after.semantic === 'varys') {
+    return 'varys';
+  }
   if (isModeSign(before) || isModeSign(after)) {
     return 'modeSign';
   }
@@ -834,6 +852,7 @@ function resolveStartingNoteComponent(
           appearance: {},
           direction: component.direction ?? flowDirection,
           glyphs,
+          pitchCluster: context.pitchCluster,
         },
       ];
 }

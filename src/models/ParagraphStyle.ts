@@ -25,6 +25,7 @@ export const BUILT_IN_PARAGRAPH_STYLE_IDS = {
   Footer: 'footer',
   Lyrics: 'lyrics',
   DropCap: 'drop-cap',
+  InitialMartyria: 'initial-martyria',
 } as const;
 
 export type BuiltInParagraphStyleId =
@@ -56,6 +57,8 @@ const BUILT_IN_PARAGRAPH_STYLE_NAME_SELECTORS: Record<
     $.dialog.paragraphStyles.builtIn.lyrics,
   [BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap]: ($) =>
     $.dialog.paragraphStyles.builtIn.dropCap,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria]: ($) =>
+    $.dialog.paragraphStyles.builtIn.initialMartyria,
 };
 
 const builtInParagraphStyleIds = new Set<string>(
@@ -364,6 +367,15 @@ export function createDefaultParagraphStyles() {
       fontSize: Unit.fromPt(60),
     },
   );
+  const initialMartyria = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    'Initial Martyria',
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    {
+      color: '#ED0000',
+      fontSize: Unit.fromPt(14.5),
+    },
+  );
 
   return [
     defaultText,
@@ -376,6 +388,7 @@ export function createDefaultParagraphStyles() {
     footer,
     lyrics,
     dropCap,
+    initialMartyria,
   ];
 }
 

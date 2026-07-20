@@ -211,7 +211,8 @@
       "header": "Κεφαλίδα",
       "footer": "Υποσέλιδο",
       "lyrics": "Στίχοι",
-      "dropCap": "Αρχίγραμμα"
+      "dropCap": "Αρχίγραμμα",
+      "initialMartyria": "Αρχική Μαρτυρία"
     }
   },
   "neumePositioning": {

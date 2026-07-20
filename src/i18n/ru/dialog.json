@@ -211,7 +211,8 @@
       "header": "Верхний колонтитул",
       "footer": "Нижний колонтитул",
       "lyrics": "Текст песнопения",
-      "dropCap": "Буквица"
+      "dropCap": "Буквица",
+      "initialMartyria": "Начальная мартирия"
     }
   },
   "neumePositioning": {

@@ -2,8 +2,11 @@ import type { ModeKeyElement } from '@/models/Element';
 import type { Fthora, Neume } from '@/models/Neumes';
 import { ModeSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
-import { resolveParagraphStyle } from '@/models/ParagraphStyle';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 
 export type ModeKeyMode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -349,6 +352,7 @@ const visibleFor = (modes: ModeKeyMode[]): InitialMartyriaVisibility => ({
 export const traditionalGreekInitialMartyriaStyle: InitialMartyriaStyle = {
   id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1,
   displayName: 'Traditional Greek',
+  textParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
   flowDirection: 'page',
   textAppearance: {},
   startingNoteText: createInitialMartyriaStartingNoteText(),
@@ -415,6 +419,7 @@ function builtIn(
   return {
     id,
     displayName,
+    textParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     flowDirection: 'page',
     textAppearance: {},
     startingNoteText: createInitialMartyriaStartingNoteText(),
@@ -425,6 +430,7 @@ function builtIn(
 const traditionalGreekV2InitialMartyriaStyle: InitialMartyriaStyle = {
   id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV2,
   displayName: 'Traditional Greek V2',
+  textParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
   flowDirection: 'page',
   textAppearance: {},
   startingNoteText: createInitialMartyriaStartingNoteText(),

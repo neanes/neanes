@@ -211,7 +211,8 @@
       "header": "Header",
       "footer": "Footer",
       "lyrics": "Lyrics",
-      "dropCap": "Drop Cap"
+      "dropCap": "Drop Cap",
+      "initialMartyria": "Initial Martyria"
     }
   },
   "neumePositioning": {

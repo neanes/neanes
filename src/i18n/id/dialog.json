@@ -211,7 +211,8 @@
       "header": "Header",
       "footer": "Footer",
       "lyrics": "Lirik",
-      "dropCap": "Huruf Awal Besar"
+      "dropCap": "Huruf Awal Besar",
+      "initialMartyria": "Martyria Awal"
     }
   },
   "neumePositioning": {

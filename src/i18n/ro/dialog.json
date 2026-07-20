@@ -211,7 +211,8 @@
       "header": "Antet",
       "footer": "Subsol",
       "lyrics": "Versuri",
-      "dropCap": "Majusculă decorativă"
+      "dropCap": "Majusculă decorativă",
+      "initialMartyria": "Martyria inițială"
     }
   },
   "neumePositioning": {

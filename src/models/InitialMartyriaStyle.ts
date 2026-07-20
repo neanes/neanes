@@ -754,6 +754,21 @@ export type ResolvedInitialMartyriaRun =
       cluster: InitialMartyriaPitchCluster;
     };
 
+export type InitialMartyriaStartingNoteRun =
+  | Extract<ResolvedInitialMartyriaRun, { kind: 'startingPitch' }>
+  | (Extract<ResolvedInitialMartyriaRun, { kind: 'glyph' }> & {
+      pitchCluster: InitialMartyriaPitchCluster;
+    });
+
+export function isInitialMartyriaStartingNoteRun(
+  run: ResolvedInitialMartyriaRun,
+): run is InitialMartyriaStartingNoteRun {
+  return (
+    run.kind === 'startingPitch' ||
+    (run.kind === 'glyph' && run.pitchCluster != null)
+  );
+}
+
 export interface InitialMartyriaStyleResolution {
   style: InitialMartyriaStyle;
   runs: ResolvedInitialMartyriaRun[];
@@ -854,10 +869,10 @@ export function getInitialMartyriaSeparatorBefore(
       (run.semantic === 'ekhos' ||
         run.semantic === 'plagal' ||
         run.semantic === 'varys'));
-  const isStartingNote = (run: ResolvedInitialMartyriaRun) =>
-    run.kind === 'startingPitch' ||
-    (run.kind === 'glyph' && run.pitchCluster != null);
-  if (isStartingNote(after)) {
+  if (isInitialMartyriaStartingNoteRun(after)) {
+    return 'startingNote';
+  }
+  if (isInitialMartyriaStartingNoteRun(before) && after.kind === 'text') {
     return 'startingNote';
   }
   if (after.kind === 'glyph' && after.semantic === 'varys') {
@@ -882,11 +897,13 @@ export function getInitialMartyriaSeparatorAfter(
   if (index < 0 || index >= runs.length) {
     return 'none';
   }
-  return index === runs.length - 1
-    ? runs[index].kind === 'text' && runs[index].content.layout === 'stacked'
-      ? 'plagal'
-      : 'none'
-    : getInitialMartyriaSeparatorBefore(runs, index + 1);
+  if (index !== runs.length - 1) {
+    return getInitialMartyriaSeparatorBefore(runs, index + 1);
+  }
+  if (runs[index].kind !== 'text' || runs[index].content.layout !== 'stacked') {
+    return 'none';
+  }
+  return 'plagal';
 }
 
 export function resolveInitialMartyriaStyle(options: {

@@ -14,6 +14,7 @@ import {
   getInitialMartyriaSeparatorAfter,
   getInitialMartyriaSeparatorBefore,
   isInitialMartyriaComponentVisible,
+  isInitialMartyriaStartingNoteRun,
   resolveInitialMartyriaBaseTextAppearance,
   resolveInitialMartyriaStyle,
   traditionalGreekInitialMartyriaStyle,
@@ -451,6 +452,32 @@ describe('InitialMartyriaStyleResolver', () => {
     }
     expect(getInitialMartyriaSeparatorBefore([startingPitch], 0)).toBe('none');
     expect(getInitialMartyriaSeparatorBefore([startingGlyph], 0)).toBe('none');
+    expect(getInitialMartyriaSeparatorBefore([startingPitch, text], 1)).toBe(
+      'startingNote',
+    );
+    expect(getInitialMartyriaSeparatorBefore([startingGlyph, text], 1)).toBe(
+      'startingNote',
+    );
+    const stacked = {
+      kind: 'text' as const,
+      componentId: 'stacked',
+      appearance: {},
+      direction: 'ltr' as const,
+      content: { layout: 'stacked' as const, lines: ['λ', 'π'], gap: 0 },
+    };
+    expect(getInitialMartyriaSeparatorBefore([startingPitch, stacked], 1)).toBe(
+      'startingNote',
+    );
+    expect(getInitialMartyriaSeparatorBefore([startingGlyph, stacked], 1)).toBe(
+      'startingNote',
+    );
+    expect(getInitialMartyriaSeparatorAfter([startingPitch, stacked], 1)).toBe(
+      'plagal',
+    );
+    expect(getInitialMartyriaSeparatorAfter([text, stacked], 1)).toBe('plagal');
+    expect(isInitialMartyriaStartingNoteRun(startingPitch)).toBe(true);
+    expect(isInitialMartyriaStartingNoteRun(startingGlyph)).toBe(true);
+    expect(isInitialMartyriaStartingNoteRun(text)).toBe(false);
     expect(getInitialMartyriaFixedSeparatorWidth('startingNote')).toBe(0.43);
   });
 

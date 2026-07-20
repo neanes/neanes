@@ -87,8 +87,12 @@ import { resolveRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
-import { measureInitialMartyriaPitchGeometry } from './InitialMartyriaPitchMeasurementService';
-import { resolveInitialMartyriaPitchFontSizes } from './InitialMartyriaPitchMeasurementService';
+import {
+  getInitialMartyriaBaselineCorrection,
+  getMatchedNeumeFontSize,
+  measureInitialMartyriaPitchGeometry,
+  resolveInitialMartyriaPitchFontSizes,
+} from './InitialMartyriaPitchMeasurementService';
 import { measureInitialMartyriaStackedText } from './InitialMartyriaStackedTextMeasurementService';
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
@@ -2356,32 +2360,26 @@ export class LayoutService {
       resolution.style,
       paragraphStyles,
     );
-    let matchedNeumeFontSize: number | null = null;
-    if (
-      resolution.runs.some(
-        (run) => run.kind === 'text' || run.kind === 'startingPitch',
-      )
-    ) {
-      const matchingTextFont = resolveFontCss({
-        fontFamily: baseTextAppearance.fontFamily ?? element.computedFontFamily,
-        fontStyle: baseTextAppearance.fontStyle ?? DEFAULT_FONT_STYLE,
-        fontSize: baseTextAppearance.fontSize ?? element.computedFontSize,
-      });
-      const matchingTextCapitalHeight = TextMeasurementService.getTextHeight(
-        'H',
-        matchingTextFont,
-      );
-      const neumeCapitalHeight = fontService.getMetrics(
-        element.computedFontFamily,
-      ).capitalHeight;
-      if (
-        Number.isFinite(matchingTextCapitalHeight) &&
-        Number.isFinite(neumeCapitalHeight) &&
-        neumeCapitalHeight > 0
-      ) {
-        matchedNeumeFontSize = matchingTextCapitalHeight / neumeCapitalHeight;
-      }
-    }
+    const hasCustomText = resolution.runs.some(
+      (run) => run.kind === 'text' || run.kind === 'startingPitch',
+    );
+    const matchedNeumeFontSize = hasCustomText
+      ? getMatchedNeumeFontSize({
+          textFontFamily:
+            baseTextAppearance.fontFamily ?? element.computedFontFamily,
+          textFontStyle: baseTextAppearance.fontStyle,
+          textFontSize: baseTextAppearance.fontSize ?? element.computedFontSize,
+          neumeFontFamily: element.computedFontFamily,
+          neumeFontSize: element.computedFontSize,
+        })
+      : null;
+    const signatureBaselineCorrection = getInitialMartyriaBaselineCorrection({
+      initialMartyriaBaseline:
+        fontService.getMetrics(element.computedFontFamily)
+          .initialMartyriaBaseline ?? 0,
+      matchedNeumeFontSize,
+      neumeFontSize: element.computedFontSize,
+    });
 
     for (const run of resolution.runs) {
       const appearance =
@@ -2403,10 +2401,7 @@ export class LayoutService {
 
       if (run.kind === 'text' && run.content.layout === 'stacked') {
         const effectiveBaselineShift =
-          baselineShift +
-          (fontService.getMetrics(element.computedFontFamily)
-            .initialMartyriaBaseline ?? 0) *
-            (matchedNeumeFontSize ?? element.computedFontSize);
+          baselineShift + signatureBaselineCorrection;
         const geometry = measureInitialMartyriaStackedText(run.content.lines, {
           fontFamily,
           fontStyle: appearance.fontStyle,
@@ -2438,10 +2433,7 @@ export class LayoutService {
           neumeFontSize: element.computedFontSize,
         });
         const effectiveBaselineShift =
-          (noteAppearance.baselineShift ?? 0) +
-          (fontService.getMetrics(element.computedFontFamily)
-            .initialMartyriaBaseline ?? 0) *
-            fontSizes.glyphFontSize;
+          (noteAppearance.baselineShift ?? 0) + signatureBaselineCorrection;
         const wrapperBaselineShift = run.appearance.baselineShift ?? 0;
         for (const note of [run.cluster.primary, run.cluster.secondary]) {
           if (note == null) {
@@ -2484,8 +2476,13 @@ export class LayoutService {
         continue;
       }
 
-      top = Math.min(top, baselineShift - ascent - strokeOverflow);
-      bottom = Math.max(bottom, baselineShift + descent + strokeOverflow);
+      const effectiveBaselineShift =
+        baselineShift + (run.kind === 'text' ? signatureBaselineCorrection : 0);
+      top = Math.min(top, -effectiveBaselineShift - ascent - strokeOverflow);
+      bottom = Math.max(
+        bottom,
+        -effectiveBaselineShift + descent + strokeOverflow,
+      );
     }
 
     return bottom - top;

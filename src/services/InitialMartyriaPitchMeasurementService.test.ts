@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { fontService } from '@/services/FontService';
 import {
+  getInitialMartyriaBaselineCorrection,
   getInitialMartyriaPitchTrailingGlueWidth,
   resolveInitialMartyriaPitchFontSizes,
 } from '@/services/InitialMartyriaPitchMeasurementService';
@@ -43,5 +44,27 @@ describe('initial martyria pitch font sizes', () => {
     expect(getInitialMartyriaPitchTrailingGlueWidth('NeanesLegacy', 48)).toBe(
       0,
     );
+  });
+});
+
+describe('initial martyria baseline correction', () => {
+  it('uses the signature-wide matched size instead of a starting-note glyph size', () => {
+    expect(
+      getInitialMartyriaBaselineCorrection({
+        initialMartyriaBaseline: 0.08,
+        matchedNeumeFontSize: 52,
+        neumeFontSize: 42,
+      }),
+    ).toBeCloseTo(4.16);
+  });
+
+  it('falls back to the effective neume size when matching is unavailable', () => {
+    expect(
+      getInitialMartyriaBaselineCorrection({
+        initialMartyriaBaseline: 0.08,
+        matchedNeumeFontSize: null,
+        neumeFontSize: 42,
+      }),
+    ).toBeCloseTo(3.36);
   });
 });

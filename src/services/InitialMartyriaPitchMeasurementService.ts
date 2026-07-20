@@ -123,7 +123,7 @@ export function getInitialMartyriaPitchTrailingGlueWidth(
   return fontService.getStandardGlue(neumeFontFamily).width * glyphFontSize;
 }
 
-function getMatchedNeumeFontSize(options: {
+export function getMatchedNeumeFontSize(options: {
   textFontFamily: string;
   textFontStyle?: string;
   textFontSize?: number;
@@ -150,6 +150,17 @@ function getMatchedNeumeFontSize(options: {
     capitalHeight > 0
     ? textCapitalHeight / capitalHeight
     : null;
+}
+
+export function getInitialMartyriaBaselineCorrection(options: {
+  initialMartyriaBaseline: number;
+  matchedNeumeFontSize: number | null;
+  neumeFontSize: number;
+}) {
+  return (
+    options.initialMartyriaBaseline *
+    (options.matchedNeumeFontSize ?? options.neumeFontSize)
+  );
 }
 
 export function getInitialMartyriaPitchTextBounds(

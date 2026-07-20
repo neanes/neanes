@@ -208,6 +208,7 @@ import {
   type InitialMartyriaAppearance,
   type InitialMartyriaSeparator,
   type InitialMartyriaStyle,
+  isInitialMartyriaStartingNoteRun,
   type ResolvedInitialMartyriaRun,
   resolveInitialMartyriaBaseTextAppearance,
   resolveInitialMartyriaStyle,
@@ -216,7 +217,9 @@ import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontService } from '@/services/FontService';
 import {
+  getInitialMartyriaBaselineCorrection,
   getInitialMartyriaPitchTrailingGlueWidth,
+  getMatchedNeumeFontSize,
   measureInitialMartyriaPitchGeometry,
   resolveInitialMartyriaPitchFontSizes,
 } from '@/services/InitialMartyriaPitchMeasurementService';
@@ -277,26 +280,23 @@ const matchedNeumeFontSize = computed(() => {
     props.paragraphStyles,
   );
   const textFontSize = textAppearance.fontSize ?? neumeFontSize.value;
-  const textFont = resolveFontCss({
-    fontFamily: textAppearance.fontFamily ?? neumeFontFamily.value,
-    fontStyle: textAppearance.fontStyle ?? '',
-    fontSize: textFontSize,
+  return getMatchedNeumeFontSize({
+    textFontFamily: textAppearance.fontFamily ?? neumeFontFamily.value,
+    textFontStyle: textAppearance.fontStyle,
+    textFontSize,
+    neumeFontFamily: neumeFontFamily.value,
+    neumeFontSize: neumeFontSize.value,
   });
-  const textCapitalHeight = TextMeasurementService.getTextHeight('H', textFont);
-  const capitalHeight = fontService.getMetrics(
-    neumeFontFamily.value,
-  ).capitalHeight;
-
-  if (
-    !Number.isFinite(textCapitalHeight) ||
-    !Number.isFinite(capitalHeight) ||
-    capitalHeight <= 0
-  ) {
-    return null;
-  }
-
-  return textCapitalHeight / capitalHeight;
 });
+const signatureBaselineCorrection = computed(() =>
+  getInitialMartyriaBaselineCorrection({
+    initialMartyriaBaseline:
+      fontService.getMetrics(neumeFontFamily.value).initialMartyriaBaseline ??
+      0,
+    matchedNeumeFontSize: matchedNeumeFontSize.value,
+    neumeFontSize: neumeFontSize.value,
+  }),
+);
 const rightContainer = ref<HTMLElement | null>(null);
 const rightAccessoryWidth = ref(0);
 let rightAccessoryResizeObserver: ResizeObserver | null = null;
@@ -415,14 +415,9 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
     appearance.fontStyle,
   );
   const renderedNeumeFontSize = getEffectiveRunFontSize(run);
-  const matchedBaselineFontSize =
-    matchedNeumeFontSize.value ?? neumeFontSize.value;
   const baselineShift =
     (appearance.baselineShift ?? 0) +
-    (run.kind === 'text'
-      ? (fontService.getMetrics(neumeFontFamily.value)
-          .initialMartyriaBaseline ?? 0) * matchedBaselineFontSize
-      : 0);
+    (run.kind === 'text' ? signatureBaselineCorrection.value : 0);
   return {
     color: appearance.color,
     fontFamily: font.cssFontFamily,
@@ -481,11 +476,15 @@ function getSeparatorStyle(run: ResolvedInitialMartyriaRun, index: number) {
   }
   const before = resolvedRuns.value[index - 1];
   const owner =
-    separator === 'modeSign' &&
-    before?.kind === 'glyph' &&
-    before.semantic === 'modeSign'
+    separator === 'startingNote' &&
+    before != null &&
+    isInitialMartyriaStartingNoteRun(before)
       ? before
-      : (resolvedRuns.value[index] ?? run);
+      : separator === 'modeSign' &&
+          before?.kind === 'glyph' &&
+          before.semantic === 'modeSign'
+        ? before
+        : (resolvedRuns.value[index] ?? run);
   return getFixedSeparatorStyle(
     run,
     separator,
@@ -556,10 +555,7 @@ function getStackedTextGeometry(run: TextRun) {
   const appearance = run.appearance;
   const fontSize = appearance.fontSize ?? neumeFontSize.value;
   const baselineShift =
-    (appearance.baselineShift ?? 0) +
-    (fontService.getMetrics(neumeFontFamily.value).initialMartyriaBaseline ??
-      0) *
-      (matchedNeumeFontSize.value ?? neumeFontSize.value);
+    (appearance.baselineShift ?? 0) + signatureBaselineCorrection.value;
 
   return measureInitialMartyriaStackedText(run.content.lines, {
     fontFamily: appearance.fontFamily || neumeFontFamily.value,
@@ -621,25 +617,30 @@ function getStartingNoteTextStyle(
     appearance.fontStyle,
   );
   const fontSizes = getPitchFontSizes(run);
-  const baselineShift =
-    (appearance.baselineShift ?? 0) +
-    (fontService.getMetrics(neumeFontFamily.value).initialMartyriaBaseline ??
-      0) *
-      fontSizes.glyphFontSize;
 
   return {
     color: appearance.color,
+    display: 'block',
     position: 'relative',
     fontFamily: font.cssFontFamily,
     fontSize: withZoom(fontSizes.textFontSize),
     fontStyle: font.cssFontStyle,
     fontWeight: font.cssFontWeight,
+    lineHeight: withZoom(
+      TextMeasurementService.getFontHeight(
+        resolveFontCss({
+          fontFamily: appearance.fontFamily || neumeFontFamily.value,
+          fontStyle: appearance.fontStyle ?? '',
+          fontSize: fontSizes.textFontSize,
+        }),
+      ),
+    ),
     webkitTextStrokeColor: appearance.strokeColor,
     webkitTextStrokeWidth:
       appearance.strokeWidth == null
         ? undefined
         : withZoom(appearance.strokeWidth),
-    top: baselineShift === 0 ? undefined : withZoom(-baselineShift),
+    whiteSpace: 'nowrap',
   } as CSSProperties;
 }
 
@@ -733,13 +734,7 @@ function getPitchMarkStyle(
 
 function getStartingNoteBaselineShift(run: StartingPitchRun) {
   const appearance = run.noteText.appearance;
-  const renderedNeumeFontSize = getPitchFontSizes(run).glyphFontSize;
-  return (
-    (appearance.baselineShift ?? 0) +
-    (fontService.getMetrics(neumeFontFamily.value).initialMartyriaBaseline ??
-      0) *
-      renderedNeumeFontSize
-  );
+  return (appearance.baselineShift ?? 0) + signatureBaselineCorrection.value;
 }
 
 function getPitchGlyphStyle(run: StartingPitchRun) {

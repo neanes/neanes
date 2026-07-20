@@ -22,7 +22,11 @@ import {
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { Fthora, ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
-import { ParagraphStyle } from '@/models/ParagraphStyle';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  createDefaultParagraphStyles,
+  ParagraphStyle,
+} from '@/models/ParagraphStyle';
 describe('InitialMartyriaStyleResolver', () => {
   it('preserves absent appearance overrides when cloning', () => {
     const v2 = builtInInitialMartyriaStyles[1];
@@ -67,6 +71,118 @@ describe('InitialMartyriaStyleResolver', () => {
       });
       expect(resolution.runs.some((run) => run.kind === 'glyph')).toBe(true);
     }
+  });
+  it('applies paragraph-style appearance to neume runs', () => {
+    const paragraphStyles = createDefaultParagraphStyles();
+    const paragraphStyle = paragraphStyles.find(
+      (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    )!;
+    paragraphStyle.overrides.color = 'inherited color';
+
+    const resolution = resolveInitialMartyriaStyle({
+      context: getInitialMartyriaContext(new ModeKeyElement()),
+      pageSetup: new PageSetup(),
+      paragraphStyles,
+    });
+
+    expect(
+      resolution.runs
+        .filter((run) => run.kind === 'glyph' || run.kind === 'startingPitch')
+        .every((run) => run.appearance.color === 'inherited color'),
+    ).toBe(true);
+  });
+  it('projects only color into neume runs', () => {
+    const paragraphStyles = createDefaultParagraphStyles();
+    const paragraphStyle = paragraphStyles.find(
+      (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    )!;
+    paragraphStyle.overrides = {
+      color: 'paragraph color',
+      fontFamily: 'Paragraph Font',
+      fontSize: 18,
+      fontStyle: 'Paragraph Style',
+      strokeWidth: 2,
+      lineHeight: 1.5,
+    };
+    const style = cloneInitialMartyriaStyle(
+      traditionalGreekInitialMartyriaStyle,
+    );
+    style.id = 'color-only-neumes';
+    style.textAppearance = {
+      color: 'text default color',
+      fontFamily: 'Text Font',
+      fontSize: 17,
+      fontStyle: 'Text Style',
+      strokeWidth: 3,
+      baselineShift: 4,
+    };
+    style.startingNoteText.appearance = {
+      color: 'starting color',
+      fontFamily: 'Starting Font',
+      fontSize: 16,
+      baselineShift: 2,
+    };
+
+    const resolution = resolveInitialMartyriaStyle({
+      activeStyleId: style.id,
+      styles: [style],
+      context: getInitialMartyriaContext(new ModeKeyElement()),
+      pageSetup: new PageSetup(),
+      paragraphStyles,
+    });
+
+    for (const run of resolution.runs.filter((item) => item.kind === 'glyph')) {
+      expect(run.appearance).toEqual({ color: 'text default color' });
+    }
+  });
+  it('keeps custom note text appearance separate from neume appearance', () => {
+    const paragraphStyles = createDefaultParagraphStyles();
+    const paragraphStyle = paragraphStyles.find(
+      (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    )!;
+    paragraphStyle.overrides = {
+      color: 'paragraph color',
+      fontFamily: 'Paragraph Font',
+      fontSize: 18,
+    };
+    const style = cloneInitialMartyriaStyle(
+      traditionalGreekInitialMartyriaStyle,
+    );
+    style.id = 'custom-text-neumes';
+    style.startingNoteText.appearance = {
+      color: 'starting color',
+      fontFamily: 'Starting Font',
+      fontSize: 16,
+      baselineShift: 2,
+    };
+    const component = style.components.find(
+      (item) => item.kind === 'startingNoteCluster',
+    );
+    if (component?.kind !== 'startingNoteCluster') {
+      throw new Error('Expected a starting note cluster component');
+    }
+    component.rendering = 'customText';
+    component.appearance = {
+      color: 'component color',
+      fontStyle: 'Component Style',
+    };
+
+    const run = resolveInitialMartyriaStyle({
+      activeStyleId: style.id,
+      styles: [style],
+      context: getInitialMartyriaContext(new ModeKeyElement()),
+      pageSetup: new PageSetup(),
+      paragraphStyles,
+    }).runs.find((item) => item.kind === 'startingPitch');
+
+    expect(run?.appearance).toEqual({ color: 'component color' });
+    expect(run?.noteText.appearance).toMatchObject({
+      color: 'component color',
+      fontFamily: 'Starting Font',
+      fontSize: 16,
+      fontStyle: 'Component Style',
+      baselineShift: 2,
+    });
   });
   it('gives exact variation overrides precedence', () => {
     expect(

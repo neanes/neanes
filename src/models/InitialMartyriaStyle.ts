@@ -773,6 +773,21 @@ export function resolveInitialMartyriaBaseTextAppearance(
   };
 }
 
+function projectInitialMartyriaColorAppearance(
+  appearance: InitialMartyriaAppearance,
+): InitialMartyriaAppearance {
+  return appearance.color === undefined ? {} : { color: appearance.color };
+}
+
+function resolveInitialMartyriaColorAppearance(
+  style: InitialMartyriaStyle,
+  paragraphStyles: ParagraphStyle[] | undefined,
+) {
+  return projectInitialMartyriaColorAppearance(
+    resolveInitialMartyriaBaseTextAppearance(style, paragraphStyles),
+  );
+}
+
 export type InitialMartyriaSeparator =
   'none' | 'wordSpace' | 'modeSign' | 'plagal' | 'varys' | 'startingNote';
 
@@ -989,7 +1004,7 @@ function resolveComponent(
             : component.kind === 'varysGlyph'
               ? 'varys'
               : 'modeSign',
-      appearance: {},
+      appearance: resolveInitialMartyriaColorAppearance(style, paragraphStyles),
       direction: flowDirection,
       glyphs,
     },
@@ -1011,6 +1026,7 @@ function resolveStartingNoteComponent(
     ...style.startingNoteText.appearance,
     ...component.appearance,
   };
+  const colorAppearance = projectInitialMartyriaColorAppearance(appearance);
   if (
     component.rendering === 'customText' &&
     hasCompleteStartingNoteText(style.startingNoteText, context.pitchCluster)
@@ -1019,7 +1035,7 @@ function resolveStartingNoteComponent(
       {
         kind: 'startingPitch',
         componentId: component.id,
-        appearance: {},
+        appearance: colorAppearance,
         noteText: { ...style.startingNoteText, appearance },
         direction:
           component.direction ??
@@ -1030,13 +1046,17 @@ function resolveStartingNoteComponent(
     ];
   }
   const glyphs = flattenPitchCluster(context.pitchCluster);
+  const neumeColorAppearance = resolveInitialMartyriaColorAppearance(
+    style,
+    paragraphStyles,
+  );
   return glyphs.length === 0
     ? []
     : [
         {
           kind: 'glyph',
           componentId: component.id,
-          appearance: {},
+          appearance: neumeColorAppearance,
           direction: component.direction ?? flowDirection,
           glyphs,
           pitchCluster: context.pitchCluster,

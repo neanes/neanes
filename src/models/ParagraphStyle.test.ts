@@ -52,7 +52,7 @@ describe('ParagraphStyle', () => {
     expect(styles[9].overrides).toEqual({ fontSize: Unit.fromPt(60) });
     expect(styles[10].overrides).toEqual({
       color: '#ED0000',
-      fontSize: Unit.fromPt(20),
+      fontSize: Unit.fromPt(14.5),
     });
   });
 

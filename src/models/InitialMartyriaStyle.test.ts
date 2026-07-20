@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { reactive } from 'vue';
 
 import { ModeKeyElement } from '@/models/Element';
 import {
+  builtInInitialMartyriaStyles,
+  cloneInitialMartyriaStyle,
   createInitialMartyriaStartingNoteText,
   getInitialMartyriaContext,
   getInitialMartyriaFixedSeparatorWidth,
@@ -11,6 +14,7 @@ import {
   getInitialMartyriaSeparatorAfter,
   getInitialMartyriaSeparatorBefore,
   isInitialMartyriaComponentVisible,
+  resolveInitialMartyriaBaseTextAppearance,
   resolveInitialMartyriaStyle,
   traditionalGreekInitialMartyriaStyle,
   validateInitialMartyriaStyle,
@@ -18,7 +22,41 @@ import {
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { Fthora, ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
+import { ParagraphStyle } from '@/models/ParagraphStyle';
 describe('InitialMartyriaStyleResolver', () => {
+  it('preserves absent appearance overrides when cloning', () => {
+    const v2 = builtInInitialMartyriaStyles[1];
+    const clone = cloneInitialMartyriaStyle(v2);
+
+    expect(clone.textAppearance).toStrictEqual({});
+    expect(clone.startingNoteText.appearance).toStrictEqual({});
+  });
+  it('keeps Traditional Greek V2 inheritance unchanged when cloned', () => {
+    const v2 = {
+      ...builtInInitialMartyriaStyles[1],
+      textParagraphStyleId: 'inherited-paragraph',
+    };
+    const clone = cloneInitialMartyriaStyle(v2);
+    const paragraphStyle = new ParagraphStyle();
+    paragraphStyle.id = 'inherited-paragraph';
+    paragraphStyle.overrides = {
+      fontFamily: 'Inherited Family',
+      fontStyle: 'Inherited Style',
+      fontSize: 42,
+      color: 'Inherited Color',
+      strokeWidth: 3,
+      strokeColor: 'Inherited Stroke',
+    };
+
+    expect(
+      resolveInitialMartyriaBaseTextAppearance(v2, [paragraphStyle]),
+    ).toStrictEqual(
+      resolveInitialMartyriaBaseTextAppearance(clone, [paragraphStyle]),
+    );
+    expect(
+      resolveInitialMartyriaBaseTextAppearance(clone, [paragraphStyle]),
+    ).toMatchObject(paragraphStyle.overrides);
+  });
   it('resolves traditional glyphs for every template', () => {
     for (const template of modeKeyTemplates) {
       const resolution = resolveInitialMartyriaStyle({
@@ -66,7 +104,9 @@ describe('InitialMartyriaStyleResolver', () => {
     ).toContain('A style must contain at least one component.');
   });
   it('rejects non-positive font dimensions', () => {
-    const style = structuredClone(traditionalGreekInitialMartyriaStyle);
+    const style = cloneInitialMartyriaStyle(
+      traditionalGreekInitialMartyriaStyle,
+    );
     style.id = 'invalid-appearance';
     style.textAppearance.fontSize = 0;
     style.textAppearance.strokeWidth = -1;
@@ -80,11 +120,92 @@ describe('InitialMartyriaStyleResolver', () => {
       'Component appearance contains an invalid stroke width.',
     );
   });
+  it('deeply clones every component kind and accepts reactive styles', () => {
+    const source = reactive({
+      ...cloneInitialMartyriaStyle(traditionalGreekInitialMartyriaStyle),
+      id: 'clone-source',
+      textAppearance: { fontFamily: 'Source', fontSize: 12 },
+      startingNoteText: {
+        ...createInitialMartyriaStartingNoteText(),
+        names: { ...createInitialMartyriaStartingNoteText().names },
+        appearance: { fontFamily: 'Starting', fontSize: 10 },
+      },
+      components: [
+        {
+          id: 'text',
+          kind: 'text' as const,
+          content: 'Text',
+          appearance: { fontFamily: 'Text', fontSize: 11 },
+          visibility: {
+            modes: [1 as const],
+            variationOverrides: [{ templateId: 1, visible: true }],
+          },
+        },
+        {
+          id: 'stacked',
+          kind: 'stackedText' as const,
+          top: 'Top',
+          bottom: 'Bottom',
+          appearance: { color: 'red' },
+          visibility: { modes: [2 as const], variationOverrides: [] },
+        },
+        ...(
+          ['ekhosGlyph', 'plagalGlyph', 'modeSignGlyph', 'varysGlyph'] as const
+        ).map((kind) => ({
+          id: kind,
+          kind,
+          visibility: { modes: [3 as const], variationOverrides: [] },
+        })),
+        {
+          id: 'starting',
+          kind: 'startingNoteCluster' as const,
+          rendering: 'customText' as const,
+          appearance: { baselineShift: 2 },
+          visibility: { modes: [4 as const], variationOverrides: [] },
+        },
+      ],
+    });
+
+    const clone = cloneInitialMartyriaStyle(source);
+
+    expect(clone.id).toBe(source.id);
+    expect(clone.displayName).toBe(source.displayName);
+    clone.textAppearance.fontSize = 24;
+    clone.startingNoteText.names[ModeSign.Ni] = 'Changed';
+    clone.startingNoteText.appearance.fontSize = 20;
+    clone.components[0].visibility.modes[0] = 8;
+    clone.components[0].visibility.variationOverrides[0].visible = false;
+    if (clone.components[0].kind === 'text') {
+      clone.components[0].appearance!.fontSize = 30;
+    }
+
+    expect(source.textAppearance.fontSize).toBe(12);
+    expect(source.startingNoteText.names[ModeSign.Ni]).toBe('Νη');
+    expect(source.startingNoteText.appearance.fontSize).toBe(10);
+    expect(source.components[0].visibility.modes).toEqual([1]);
+    expect(source.components[0].visibility.variationOverrides[0].visible).toBe(
+      true,
+    );
+    if (source.components[0].kind === 'text') {
+      expect(source.components[0].appearance?.fontSize).toBe(11);
+    }
+    expect(clone.components.map((component) => component.kind)).toEqual([
+      'text',
+      'stackedText',
+      'ekhosGlyph',
+      'plagalGlyph',
+      'modeSignGlyph',
+      'varysGlyph',
+      'startingNoteCluster',
+    ]);
+  });
   it('resolves custom starting-note text with associated pitch notes', () => {
     const element = ModeKeyElement.createFromTemplate(
       modeKeyTemplates.find((template) => template.id === 603)!,
     );
-    const style = structuredClone(traditionalGreekInitialMartyriaStyle);
+    const style = cloneInitialMartyriaStyle(
+      traditionalGreekInitialMartyriaStyle,
+    );
     style.id = 'custom-starting-notes';
     style.startingNoteText = createInitialMartyriaStartingNoteText();
     style.startingNoteText.names[ModeSign.Ni] = 'Ni';

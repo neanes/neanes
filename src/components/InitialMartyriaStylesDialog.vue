@@ -835,6 +835,7 @@ import { ModeKeyElement } from '@/models/Element';
 import {
   BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   builtInInitialMartyriaStyles,
+  cloneInitialMartyriaStyle,
   createInitialMartyriaStartingNoteText,
   type InitialMartyriaAppearance,
   type InitialMartyriaCanonicalNote,
@@ -989,7 +990,7 @@ watch(
   () => [open.value, props.styles, props.activeStyleId] as const,
   () => {
     if (open.value) {
-      const styles = structuredClone(toRaw(props.styles));
+      const styles = props.styles.map(cloneInitialMartyriaStyle);
       workingStyles.value = styles;
       const availableIds = new Set([
         ...builtInInitialMartyriaStyles.map((style) => style.id),
@@ -1021,7 +1022,7 @@ function updateSelected(update: (style: InitialMartyriaStyle) => void) {
 }
 function applyStyles() {
   if (stylesAreValid.value) {
-    emit('update', structuredClone(toRaw(workingStyles.value)));
+    emit('update', workingStyles.value.map(cloneInitialMartyriaStyle));
   }
 }
 function useForDocument() {
@@ -1029,7 +1030,7 @@ function useForDocument() {
   emit('use-style', selectedStyleId.value);
 }
 function createStyle() {
-  const style = structuredClone(traditionalGreekInitialMartyriaStyle);
+  const style = cloneInitialMartyriaStyle(traditionalGreekInitialMartyriaStyle);
   style.id = crypto.randomUUID();
   style.displayName = t(($) => $.dialog.initialMartyriaStyles.newStyle, {
     ns: 'dialog',
@@ -1038,7 +1039,7 @@ function createStyle() {
   selectedStyleId.value = style.id;
 }
 function duplicateStyle() {
-  const style = structuredClone(selectedStyle.value);
+  const style = cloneInitialMartyriaStyle(selectedStyle.value);
   style.id = crypto.randomUUID();
   style.displayName = `${style.displayName} ${t(($) => $.dialog.initialMartyriaStyles.copy, { ns: 'dialog' })}`;
   workingStyles.value.push(style);

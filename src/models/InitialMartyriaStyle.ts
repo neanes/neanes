@@ -117,6 +117,121 @@ export interface InitialMartyriaStyle {
   components: InitialMartyriaComponent[];
 }
 
+function cloneInitialMartyriaAppearance(
+  appearance: InitialMartyriaAppearance | undefined,
+): InitialMartyriaAppearance | undefined {
+  if (appearance == null) {
+    return undefined;
+  }
+
+  return { ...appearance };
+}
+
+function cloneInitialMartyriaVisibility(
+  visibility: InitialMartyriaVisibility,
+): InitialMartyriaVisibility {
+  return {
+    modes: [...visibility.modes],
+    variationOverrides: visibility.variationOverrides.map((override) => ({
+      templateId: override.templateId,
+      visible: override.visible,
+    })),
+  };
+}
+
+function cloneInitialMartyriaComponentBase(
+  component: InitialMartyriaComponentBase,
+) {
+  return {
+    id: component.id,
+    visibility: cloneInitialMartyriaVisibility(component.visibility),
+  };
+}
+
+export function cloneInitialMartyriaComponent(
+  component: InitialMartyriaComponent,
+): InitialMartyriaComponent {
+  const base = cloneInitialMartyriaComponentBase(component);
+
+  switch (component.kind) {
+    case 'text':
+      return {
+        ...base,
+        kind: component.kind,
+        content: component.content,
+        languageTag: component.languageTag,
+        direction: component.direction,
+        appearance: cloneInitialMartyriaAppearance(component.appearance),
+      };
+    case 'stackedText':
+      return {
+        ...base,
+        kind: component.kind,
+        top: component.top,
+        bottom: component.bottom,
+        languageTag: component.languageTag,
+        direction: component.direction,
+        appearance: cloneInitialMartyriaAppearance(component.appearance),
+      };
+    case 'ekhosGlyph':
+    case 'plagalGlyph':
+    case 'modeSignGlyph':
+    case 'varysGlyph':
+      return { ...base, kind: component.kind };
+    case 'startingNoteCluster':
+      return {
+        ...base,
+        kind: component.kind,
+        rendering: component.rendering,
+        languageTag: component.languageTag,
+        direction: component.direction,
+        appearance: cloneInitialMartyriaAppearance(component.appearance),
+      };
+    default:
+      return assertNeverInitialMartyriaComponent(component);
+  }
+}
+
+export function cloneInitialMartyriaStartingNoteText(
+  startingNoteText: InitialMartyriaStartingNoteText,
+): InitialMartyriaStartingNoteText {
+  return {
+    names: {
+      [ModeSign.Ni]: startingNoteText.names[ModeSign.Ni],
+      [ModeSign.Pa]: startingNoteText.names[ModeSign.Pa],
+      [ModeSign.Vou]: startingNoteText.names[ModeSign.Vou],
+      [ModeSign.Ga]: startingNoteText.names[ModeSign.Ga],
+      [ModeSign.Thi]: startingNoteText.names[ModeSign.Thi],
+      [ModeSign.Ke]: startingNoteText.names[ModeSign.Ke],
+      [ModeSign.Zo]: startingNoteText.names[ModeSign.Zo],
+    },
+    languageTag: startingNoteText.languageTag,
+    direction: startingNoteText.direction,
+    appearance:
+      cloneInitialMartyriaAppearance(startingNoteText.appearance) ?? {},
+  };
+}
+
+export function cloneInitialMartyriaStyle(
+  style: InitialMartyriaStyle,
+): InitialMartyriaStyle {
+  return {
+    id: style.id,
+    displayName: style.displayName,
+    textParagraphStyleId: style.textParagraphStyleId,
+    flowDirection: style.flowDirection,
+    textAppearance: cloneInitialMartyriaAppearance(style.textAppearance) ?? {},
+    startingNoteText: cloneInitialMartyriaStartingNoteText(
+      style.startingNoteText,
+    ),
+    components: style.components.map(cloneInitialMartyriaComponent),
+  };
+}
+
+function assertNeverInitialMartyriaComponent(component: never): never {
+  throw new Error(`Unknown initial martyria component kind: ${component}`);
+}
+
 type ResolvedInitialMartyriaTextContent =
   | { layout: 'inline'; text: string }
   | { layout: 'stacked'; lines: string[]; gap: number };

@@ -31,6 +31,17 @@
               <span
                 v-if="
                   run.pitchCluster != null &&
+                  run.pitchCluster.primary != null &&
+                  run.pitchCluster.secondary != null &&
+                  glyphIndex + 1 === getPitchPrimaryGlyphCount(run)
+                "
+                class="pitch-cluster-separator"
+                :style="getPitchClusterSeparatorStyle(run)"
+                aria-hidden="true"
+              />
+              <span
+                v-if="
+                  run.pitchCluster != null &&
                   glyphIndex + 1 === getPitchGlyphCount(run) &&
                   run.pitchCluster.trailingGlyphs.length > 0
                 "
@@ -52,44 +63,57 @@
             v-else-if="run.kind === 'startingPitch'"
             class="mode-key-run starting-pitch"
             :style="getRunStyle(run)"
-            ><span
+            ><template
               v-for="[role, pitchNote] in [
                 ['primary', run.cluster.primary],
                 ['secondary', run.cluster.secondary],
               ] as const"
-              v-show="pitchNote != null"
               :key="`${run.componentId}-${role}`"
-              class="starting-pitch-note"
-              :style="getPitchCellStyle(run, pitchNote)"
             >
               <span
-                v-if="pitchNote != null"
-                :lang="run.noteText.languageTag"
-                :dir="run.noteText.direction"
-                :style="getPitchTextStyle(run, pitchNote)"
-                >{{ run.noteText.names[pitchNote.note] }}</span
+                v-show="pitchNote != null"
+                class="starting-pitch-note"
+                :style="getPitchCellStyle(run, pitchNote)"
               >
-              <span
-                v-if="pitchNote?.fthoraAbove != null"
-                class="pitch-mark"
-                :style="getPitchMarkStyle(run, pitchNote, 'fthora')"
-              >
-                <Neume
-                  :neume="pitchNote.fthoraAbove"
-                  :style="getPitchGlyphStyle(run)"
-                />
+                <span
+                  v-if="pitchNote != null"
+                  :lang="run.noteText.languageTag"
+                  :dir="run.noteText.direction"
+                  :style="getPitchTextStyle(run, pitchNote)"
+                  >{{ run.noteText.names[pitchNote.note] }}</span
+                >
+                <span
+                  v-if="pitchNote?.fthoraAbove != null"
+                  class="pitch-mark"
+                  :style="getPitchMarkStyle(run, pitchNote, 'fthora')"
+                >
+                  <Neume
+                    :neume="pitchNote.fthoraAbove"
+                    :style="getPitchGlyphStyle(run)"
+                  />
+                </span>
+                <span
+                  v-if="pitchNote?.quantitativeNeumeAbove != null"
+                  class="pitch-mark"
+                  :style="getPitchMarkStyle(run, pitchNote, 'quantitative')"
+                >
+                  <Neume
+                    :neume="pitchNote.quantitativeNeumeAbove"
+                    :style="getPitchGlyphStyle(run)"
+                  />
+                </span>
               </span>
               <span
-                v-if="pitchNote?.quantitativeNeumeAbove != null"
-                class="pitch-mark"
-                :style="getPitchMarkStyle(run, pitchNote, 'quantitative')"
-              >
-                <Neume
-                  :neume="pitchNote.quantitativeNeumeAbove"
-                  :style="getPitchGlyphStyle(run)"
-                />
-              </span>
-            </span>
+                v-if="
+                  role === 'primary' &&
+                  run.cluster.primary != null &&
+                  run.cluster.secondary != null
+                "
+                class="pitch-cluster-separator"
+                :style="getPitchClusterSeparatorStyle(run)"
+                aria-hidden="true"
+              />
+            </template>
             <span
               v-if="
                 hasPitchNote(run.cluster) &&
@@ -177,6 +201,8 @@ import { INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM } from '@/models/Initia
 import {
   getInitialMartyriaContext,
   getInitialMartyriaFixedSeparatorWidth,
+  getInitialMartyriaPitchClusterGlyphCount,
+  getInitialMartyriaPitchClusterPrimaryGlyphCount,
   getInitialMartyriaSeparatorAfter,
   getInitialMartyriaSeparatorBefore,
   type InitialMartyriaAppearance,
@@ -757,19 +783,28 @@ function getPitchTrailingGlueStyle(run: StartingPitchRun | PitchGlyphRun) {
   } as CSSProperties;
 }
 
+function getPitchClusterSeparatorStyle(run: StartingPitchRun | PitchGlyphRun) {
+  return getFixedSeparatorStyle(
+    run,
+    'plagal',
+    run.kind === 'startingPitch'
+      ? getPitchFontSizes(run).glyphFontSize
+      : getEffectiveRunFontSize(run),
+  );
+}
+
+function getPitchPrimaryGlyphCount(run: PitchGlyphRun) {
+  return run.pitchCluster == null
+    ? 0
+    : getInitialMartyriaPitchClusterPrimaryGlyphCount(run.pitchCluster);
+}
+
 function getPitchGlyphCount(run: PitchGlyphRun) {
   const cluster = run.pitchCluster;
   if (cluster == null) {
     return run.glyphs.length;
   }
-  return [
-    cluster.primary?.note,
-    cluster.primary?.fthoraAbove,
-    cluster.primary?.quantitativeNeumeAbove,
-    cluster.secondary?.note,
-    cluster.secondary?.fthoraAbove,
-    cluster.secondary?.quantitativeNeumeAbove,
-  ].filter((neume) => neume != null).length;
+  return getInitialMartyriaPitchClusterGlyphCount(cluster);
 }
 
 function getTextRunContent(run: ResolvedInitialMartyriaRun) {

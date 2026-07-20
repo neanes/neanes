@@ -635,6 +635,31 @@ export function getInitialMartyriaFixedSeparatorWidth(
   }
 }
 
+export function getInitialMartyriaPitchNoteGlyphCount(
+  note: InitialMartyriaPitchNote | null,
+) {
+  return note == null
+    ? 0
+    : [note.note, note.fthoraAbove, note.quantitativeNeumeAbove].filter(
+        (neume) => neume != null,
+      ).length;
+}
+
+export function getInitialMartyriaPitchClusterPrimaryGlyphCount(
+  cluster: InitialMartyriaPitchCluster,
+) {
+  return getInitialMartyriaPitchNoteGlyphCount(cluster.primary);
+}
+
+export function getInitialMartyriaPitchClusterGlyphCount(
+  cluster: InitialMartyriaPitchCluster,
+) {
+  return [cluster.primary, cluster.secondary].reduce(
+    (count, note) => count + getInitialMartyriaPitchNoteGlyphCount(note),
+    0,
+  );
+}
+
 /** Resolves spacing from the visible adjacent pair, so hidden components never add gaps. */
 export function getInitialMartyriaSeparatorBefore(
   runs: ResolvedInitialMartyriaRun[],

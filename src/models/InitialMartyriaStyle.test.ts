@@ -5,6 +5,9 @@ import {
   createInitialMartyriaStartingNoteText,
   getInitialMartyriaContext,
   getInitialMartyriaFixedSeparatorWidth,
+  getInitialMartyriaPitchClusterGlyphCount,
+  getInitialMartyriaPitchClusterPrimaryGlyphCount,
+  getInitialMartyriaPitchNoteGlyphCount,
   getInitialMartyriaSeparatorAfter,
   getInitialMartyriaSeparatorBefore,
   isInitialMartyriaComponentVisible,
@@ -13,7 +16,7 @@ import {
   validateInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
-import { ModeSign } from '@/models/Neumes';
+import { Fthora, ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 describe('InitialMartyriaStyleResolver', () => {
   it('resolves traditional glyphs for every template', () => {
@@ -185,5 +188,36 @@ describe('InitialMartyriaStyleResolver', () => {
     expect(getInitialMartyriaFixedSeparatorWidth('varys')).toBe(0.415);
     expect(getInitialMartyriaFixedSeparatorWidth('plagal')).toBe(0.43);
     expect(getInitialMartyriaFixedSeparatorWidth('modeSign')).toBe(0.43);
+  });
+
+  it('counts pitch note groups separately from trailing glyphs', () => {
+    const note = {
+      note: ModeSign.Ni,
+      fthoraAbove: null,
+      quantitativeNeumeAbove: null,
+    } as const;
+    const markedNote = {
+      ...note,
+      fthoraAbove: Fthora.DiatonicNiLow,
+      quantitativeNeumeAbove: ModeSign.Pa,
+    };
+
+    expect(getInitialMartyriaPitchNoteGlyphCount(null)).toBe(0);
+    expect(getInitialMartyriaPitchNoteGlyphCount(note)).toBe(1);
+    expect(getInitialMartyriaPitchNoteGlyphCount(markedNote)).toBe(3);
+    expect(
+      getInitialMartyriaPitchClusterPrimaryGlyphCount({
+        primary: markedNote,
+        secondary: note,
+        trailingGlyphs: [ModeSign.Ga],
+      }),
+    ).toBe(3);
+    expect(
+      getInitialMartyriaPitchClusterGlyphCount({
+        primary: markedNote,
+        secondary: note,
+        trailingGlyphs: [ModeSign.Ga],
+      }),
+    ).toBe(4);
   });
 });

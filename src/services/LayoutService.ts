@@ -2377,7 +2377,12 @@ export class LayoutService {
       const appearance =
         run.kind === 'startingPitch' ? run.noteText.appearance : run.appearance;
       const fontFamily = appearance.fontFamily ?? element.computedFontFamily;
-      const fontSize = appearance.fontSize ?? element.computedFontSize;
+      const fontSize =
+        run.kind === 'glyph'
+          ? (appearance.fontSize ??
+            matchedNeumeFontSize ??
+            element.computedFontSize)
+          : (appearance.fontSize ?? element.computedFontSize);
       const font = resolveFontCss({
         fontFamily,
         fontStyle: appearance.fontStyle ?? DEFAULT_FONT_STYLE,

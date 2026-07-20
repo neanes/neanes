@@ -165,6 +165,58 @@ describe('InitialMartyriaStyleResolver', () => {
     expect(getInitialMartyriaSeparatorAfter([text, stacked], 1)).toBe('plagal');
   });
 
+  it('uses one fixed starting-note separator for every preceding component', () => {
+    const glyph = (semantic: 'ekhos' | 'modeSign' | 'plagal' | 'varys') => ({
+      kind: 'glyph' as const,
+      componentId: semantic,
+      semantic,
+      appearance: {},
+      direction: 'ltr' as const,
+      glyphs: [],
+    });
+    const text = {
+      kind: 'text' as const,
+      componentId: 'text',
+      appearance: {},
+      direction: 'ltr' as const,
+      content: { layout: 'inline' as const, text: 'Mode' },
+    };
+    const startingPitch = {
+      kind: 'startingPitch' as const,
+      componentId: 'starting-pitch',
+      appearance: {},
+      noteText: createInitialMartyriaStartingNoteText(),
+      direction: 'ltr' as const,
+      cluster: { primary: null, secondary: null, trailingGlyphs: [] },
+    };
+    const startingGlyph = {
+      kind: 'glyph' as const,
+      componentId: 'starting-glyph',
+      appearance: {},
+      direction: 'ltr' as const,
+      glyphs: [],
+      pitchCluster: { primary: null, secondary: null, trailingGlyphs: [] },
+    };
+
+    for (const before of [
+      text,
+      glyph('ekhos'),
+      glyph('modeSign'),
+      glyph('plagal'),
+      glyph('varys'),
+    ]) {
+      expect(
+        getInitialMartyriaSeparatorBefore([before, startingPitch], 1),
+      ).toBe('startingNote');
+      expect(
+        getInitialMartyriaSeparatorBefore([before, startingGlyph], 1),
+      ).toBe('startingNote');
+    }
+    expect(getInitialMartyriaSeparatorBefore([startingPitch], 0)).toBe('none');
+    expect(getInitialMartyriaSeparatorBefore([startingGlyph], 0)).toBe('none');
+    expect(getInitialMartyriaFixedSeparatorWidth('startingNote')).toBe(0.43);
+  });
+
   it('resolves the Varys separator from logical signature flow', () => {
     const glyph = (semantic: 'ekhos' | 'modeSign' | 'varys') => ({
       kind: 'glyph' as const,

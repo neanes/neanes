@@ -619,7 +619,7 @@ export function resolveInitialMartyriaBaseTextAppearance(
 }
 
 export type InitialMartyriaSeparator =
-  'none' | 'wordSpace' | 'modeSign' | 'plagal' | 'varys';
+  'none' | 'wordSpace' | 'modeSign' | 'plagal' | 'varys' | 'startingNote';
 
 export function getInitialMartyriaFixedSeparatorWidth(
   separator: InitialMartyriaSeparator,
@@ -629,6 +629,7 @@ export function getInitialMartyriaFixedSeparatorWidth(
       return 0.415;
     case 'modeSign':
     case 'plagal':
+    case 'startingNote':
       return 0.43;
     default:
       return null;
@@ -683,6 +684,12 @@ export function getInitialMartyriaSeparatorBefore(
       (run.semantic === 'ekhos' ||
         run.semantic === 'plagal' ||
         run.semantic === 'varys'));
+  const isStartingNote = (run: ResolvedInitialMartyriaRun) =>
+    run.kind === 'startingPitch' ||
+    (run.kind === 'glyph' && run.pitchCluster != null);
+  if (isStartingNote(after)) {
+    return 'startingNote';
+  }
   if (after.kind === 'glyph' && after.semantic === 'varys') {
     return 'varys';
   }

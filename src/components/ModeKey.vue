@@ -217,6 +217,7 @@ const matchedNeumeFontSize = computed(() => {
   return textCapitalHeight / capitalHeight;
 });
 const rightContainer = ref<HTMLElement | null>(null);
+const PLAGAL_SIGN_SPACING_EM = 0.43;
 const rightAccessoryWidth = ref(0);
 let rightAccessoryResizeObserver: ResizeObserver | null = null;
 
@@ -344,6 +345,9 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
       ? (fontService.getMetrics(neumeFontFamily.value)
           .initialMartyriaBaseline ?? 0) * renderedNeumeFontSize
       : 0);
+  const plagalSpacing = isPlagalSignRun(run)
+    ? withZoom(PLAGAL_SIGN_SPACING_EM * renderedNeumeFontSize)
+    : undefined;
 
   return {
     color: appearance.color,
@@ -371,16 +375,32 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
         ? undefined
         : withZoom(appearance.offsetInline),
     marginInlineStart:
-      appearance.spacingBefore == null
+      plagalSpacing ??
+      (appearance.spacingBefore == null
         ? undefined
-        : withZoom(appearance.spacingBefore),
+        : withZoom(appearance.spacingBefore)),
     marginInlineEnd:
-      appearance.spacingAfter == null
+      plagalSpacing ??
+      (appearance.spacingAfter == null
         ? undefined
-        : withZoom(appearance.spacingAfter),
+        : withZoom(appearance.spacingAfter)),
     direction: run.direction,
     unicodeBidi: 'isolate',
   } as CSSProperties;
+}
+
+function isPlagalSignRun(run: ResolvedInitialMartyriaRun) {
+  if (run.kind === 'text') {
+    return run.content.layout === 'stacked';
+  }
+
+  return (
+    run.kind === 'glyph' &&
+    run.glyphs.some(
+      (neume) =>
+        NeumeMappingService.getMapping(neume).glyphName === 'modePlagal',
+    )
+  );
 }
 
 function getStackedTextGeometry(run: TextRun) {

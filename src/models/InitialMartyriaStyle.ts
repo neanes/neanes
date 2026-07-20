@@ -322,8 +322,8 @@ const traditionalGreekV2InitialMartyriaStyle: InitialMartyriaStyle = {
       bottom: 'π',
       visibility: visibleFor([5, 6, 8]),
     },
-    glyph('traditional-mode-sign', 'modeSignGlyph'),
     text('grave-mode', 'Βαρύς', [7]),
+    glyph('traditional-mode-sign', 'modeSignGlyph'),
     {
       id: 'starting-pitch-cluster',
       kind: 'startingNoteCluster',

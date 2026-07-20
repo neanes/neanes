@@ -906,9 +906,6 @@ function saveInitialMartyriaAppearance(
     strokeWidth: appearance.strokeWidth,
     strokeColor: appearance.strokeColor,
     baselineShift: appearance.baselineShift,
-    offsetInline: appearance.offsetInline,
-    spacingBefore: appearance.spacingBefore,
-    spacingAfter: appearance.spacingAfter,
   };
 }
 
@@ -930,24 +927,54 @@ function saveInitialMartyriaComponents(
           (override) => ({ ...override }),
         ),
       },
-      appearance: saveInitialMartyriaAppearance(component.appearance),
     };
-    return component.kind === 'text'
-      ? {
-          ...base,
-          kind: component.kind,
-          content: structuredClone(component.content),
-          languageTag: component.languageTag,
-          direction: component.direction,
-        }
-      : { ...base, kind: component.kind, source: { ...component.source } };
+    if (component.kind === 'text') {
+      return {
+        ...base,
+        kind: component.kind,
+        content: structuredClone(component.content),
+        appearance: saveInitialMartyriaAppearance(component.appearance),
+        languageTag: component.languageTag,
+        direction: component.direction,
+      };
+    }
+    if (component.kind === 'stackedText') {
+      return {
+        ...base,
+        kind: component.kind,
+        top: component.top,
+        bottom: component.bottom,
+        appearance: saveInitialMartyriaAppearance(component.appearance),
+        languageTag: component.languageTag,
+        direction: component.direction,
+      };
+    }
+    if (component.kind === 'startingNoteCluster') {
+      return {
+        ...base,
+        kind: component.kind,
+        rendering: component.rendering,
+        appearance: saveInitialMartyriaAppearance(component.appearance),
+        languageTag: component.languageTag,
+        direction: component.direction,
+      };
+    }
+    if (
+      component.kind === 'ekhosGlyph' ||
+      component.kind === 'plagalGlyph' ||
+      component.kind === 'modeSignGlyph' ||
+      component.kind === 'varysGlyph'
+    ) {
+      return { ...base, kind: component.kind };
+    }
+    return { ...base, kind: component.kind };
   });
 }
 
 function loadInitialMartyriaComponents(
   components: InitialMartyriaComponent_v1[],
 ): InitialMartyriaComponent[] {
-  return saveInitialMartyriaComponents(components);
+  return structuredClone(components);
 }
 
 function saveInitialMartyriaStyle(
@@ -959,10 +986,9 @@ function saveInitialMartyriaStyle(
     textParagraphStyleId: style.textParagraphStyleId,
     flowDirection: style.flowDirection,
     textAppearance: saveInitialMartyriaAppearance(style.textAppearance) ?? {},
-    glyphAppearance: saveInitialMartyriaAppearance(style.glyphAppearance) ?? {},
     startingNoteText: structuredClone(style.startingNoteText),
     components: saveInitialMartyriaComponents(style.components),
-  } as InitialMartyriaStyle_v1;
+  };
 }
 
 function loadInitialMartyriaStyle(
@@ -983,7 +1009,6 @@ function loadInitialMartyriaStyle(
   return {
     ...saveInitialMartyriaStyle({ ...style, startingNoteText }),
     textAppearance: loadInitialMartyriaAppearance(style.textAppearance) ?? {},
-    glyphAppearance: loadInitialMartyriaAppearance(style.glyphAppearance) ?? {},
     startingNoteText,
     components: loadInitialMartyriaComponents(style.components),
   } as InitialMartyriaStyle;
@@ -1695,6 +1720,7 @@ export class SaveService {
     element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.showAmbitus = e.showAmbitus || undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
+    element.initialMartyriaStyleId = e.initialMartyriaStyleId ?? null;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo || undefined;
   }
 
@@ -2637,6 +2663,7 @@ export class SaveService {
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.showAmbitus = e.showAmbitus === true;
     element.useDefaultStyle = e.useDefaultStyle === true;
+    element.initialMartyriaStyleId = e.initialMartyriaStyleId ?? null;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo === true;
 
     // For backwards compatibility, we check the current mode key templates

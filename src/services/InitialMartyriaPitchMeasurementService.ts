@@ -111,7 +111,7 @@ export function resolveInitialMartyriaPitchFontSizes(options: {
   const glyphFontSize =
     options.glyphFontSize ?? matchedNeumeFontSize ?? options.neumeFontSize;
   return {
-    textFontSize: options.textFontSize ?? glyphFontSize,
+    textFontSize: options.textFontSize ?? options.neumeFontSize,
     glyphFontSize,
   };
 }

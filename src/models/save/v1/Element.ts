@@ -288,6 +288,7 @@ export class ModeKeyElement extends ScoreElement {
   public marginBottom: number | undefined = undefined;
   public bpm: number = 120;
   public useDefaultStyle: boolean | undefined = undefined;
+  public initialMartyriaStyleId: string | null = null;
   public ignoreAttractions: boolean | undefined = undefined;
   public permanentEnharmonicZo: boolean | undefined = undefined;
   public ambitusLowNote: Note = Note.Pa;

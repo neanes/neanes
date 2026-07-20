@@ -4,6 +4,8 @@ import { ModeKeyElement } from '@/models/Element';
 import {
   createInitialMartyriaStartingNoteText,
   getInitialMartyriaContext,
+  getInitialMartyriaSeparatorAfter,
+  getInitialMartyriaSeparatorBefore,
   isInitialMartyriaComponentVisible,
   resolveInitialMartyriaStyle,
   traditionalGreekInitialMartyriaStyle,
@@ -59,6 +61,21 @@ describe('InitialMartyriaStyleResolver', () => {
       }),
     ).toContain('A style must contain at least one component.');
   });
+  it('rejects non-positive font dimensions', () => {
+    const style = structuredClone(traditionalGreekInitialMartyriaStyle);
+    style.id = 'invalid-appearance';
+    style.textAppearance.fontSize = 0;
+    style.textAppearance.strokeWidth = -1;
+
+    const errors = validateInitialMartyriaStyle(style);
+
+    expect(errors).toContain(
+      'Component appearance contains an invalid font size.',
+    );
+    expect(errors).toContain(
+      'Component appearance contains an invalid stroke width.',
+    );
+  });
   it('resolves custom starting-note text with associated pitch notes', () => {
     const element = ModeKeyElement.createFromTemplate(
       modeKeyTemplates.find((template) => template.id === 603)!,
@@ -68,17 +85,10 @@ describe('InitialMartyriaStyleResolver', () => {
     style.startingNoteText = createInitialMartyriaStartingNoteText();
     style.startingNoteText.names[ModeSign.Ni] = 'Ni';
     const component = style.components.find(
-      (item) =>
-        item.kind === 'glyph' &&
-        item.source.type === 'derived' &&
-        item.source.value === 'startingPitchCluster',
+      (item) => item.kind === 'startingNoteCluster',
     );
-    if (
-      component?.kind === 'glyph' &&
-      component.source.type === 'derived' &&
-      component.source.value === 'startingPitchCluster'
-    ) {
-      component.source.noteRendering = 'customText';
+    if (component?.kind === 'startingNoteCluster') {
+      component.rendering = 'customText';
     }
 
     const run = resolveInitialMartyriaStyle({
@@ -99,5 +109,55 @@ describe('InitialMartyriaStyleResolver', () => {
         ].filter((item) => item != null),
       );
     }
+  });
+
+  it('round-trips current stacked text shape', () => {
+    const stacked = {
+      id: 'stacked-text',
+      kind: 'stackedText' as const,
+      top: 'λ',
+      bottom: 'π',
+      visibility: { modes: [1 as const], variationOverrides: [] },
+    };
+    expect(stacked).toMatchObject({
+      kind: 'stackedText',
+      top: 'λ',
+      bottom: 'π',
+    });
+  });
+
+  it('resolves separators from semantic adjacent runs', () => {
+    const glyph = (semantic: 'ekhos' | 'modeSign') => ({
+      kind: 'glyph' as const,
+      componentId: semantic,
+      semantic,
+      appearance: {},
+      direction: 'ltr' as const,
+      glyphs: [],
+    });
+    const text = {
+      kind: 'text' as const,
+      componentId: 'text',
+      appearance: {},
+      direction: 'ltr' as const,
+      content: { layout: 'inline' as const, text: 'Mode' },
+    };
+    expect(
+      getInitialMartyriaSeparatorBefore([glyph('ekhos'), glyph('modeSign')], 1),
+    ).toBe('modeSign');
+    expect(
+      getInitialMartyriaSeparatorBefore([text, glyph('modeSign')], 1),
+    ).toBe('modeSign');
+    const stacked = {
+      kind: 'text' as const,
+      componentId: 'stacked',
+      appearance: {},
+      direction: 'ltr' as const,
+      content: { layout: 'stacked' as const, lines: ['λ', 'π'], gap: 0 },
+    };
+    expect(getInitialMartyriaSeparatorBefore([stacked, text], 1)).toBe(
+      'plagal',
+    );
+    expect(getInitialMartyriaSeparatorAfter([text, stacked], 1)).toBe('plagal');
   });
 });

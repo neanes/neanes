@@ -1,4 +1,4 @@
-import type { ModeSign, Neume } from '@/models/Neumes';
+import type { ModeSign } from '@/models/Neumes';
 
 export type ModeKeyMode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -6,19 +6,6 @@ export interface InitialMartyriaVisibility {
   modes: ModeKeyMode[];
   variationOverrides: Array<{ templateId: number; visible: boolean }>;
 }
-
-export type InitialMartyriaTextContent =
-  | { layout: 'inline'; text: string }
-  | { layout: 'stacked'; lines: string[]; gap: number };
-
-export type InitialMartyriaGlyphSource =
-  | { type: 'fixed'; neume: Neume }
-  | { type: 'derived'; value: 'modeSign' }
-  | {
-      type: 'derived';
-      value: 'startingPitchCluster';
-      noteRendering?: 'neume' | 'customText';
-    };
 
 export type InitialMartyriaCanonicalNote =
   | ModeSign.Ni
@@ -53,24 +40,38 @@ export interface InitialMartyriaAppearance {
   strokeWidth?: number;
   strokeColor?: string;
   baselineShift?: number;
-  offsetInline?: number;
-  spacingBefore?: number;
-  spacingAfter?: number;
 }
 
 interface ComponentBase {
   id: string;
   visibility: InitialMartyriaVisibility;
-  appearance?: InitialMartyriaAppearance;
 }
 export type InitialMartyriaComponent =
   | (ComponentBase & {
       kind: 'text';
-      content: InitialMartyriaTextContent;
+      content: string;
       languageTag?: string;
       direction?: 'ltr' | 'rtl';
+      appearance?: InitialMartyriaAppearance;
     })
-  | (ComponentBase & { kind: 'glyph'; source: InitialMartyriaGlyphSource });
+  | (ComponentBase & {
+      kind: 'stackedText';
+      top: string;
+      bottom: string;
+      languageTag?: string;
+      direction?: 'ltr' | 'rtl';
+      appearance?: InitialMartyriaAppearance;
+    })
+  | (ComponentBase & {
+      kind: 'ekhosGlyph' | 'plagalGlyph' | 'modeSignGlyph' | 'varysGlyph';
+    })
+  | (ComponentBase & {
+      kind: 'startingNoteCluster';
+      rendering: 'neume' | 'customText';
+      languageTag?: string;
+      direction?: 'ltr' | 'rtl';
+      appearance?: InitialMartyriaAppearance;
+    });
 
 export interface InitialMartyriaStyle {
   id: string;
@@ -78,7 +79,6 @@ export interface InitialMartyriaStyle {
   textParagraphStyleId?: string | null;
   flowDirection: 'page' | 'ltr' | 'rtl';
   textAppearance: InitialMartyriaAppearance;
-  glyphAppearance: InitialMartyriaAppearance;
   startingNoteText?: InitialMartyriaStartingNoteText;
   components: InitialMartyriaComponent[];
 }

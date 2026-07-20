@@ -1079,6 +1079,7 @@ export class ModeKeyElement extends ScoreElement {
   public heightAdjustment: number = 0;
   public bpm: number = 120;
   public useDefaultStyle: boolean = true;
+  public initialMartyriaStyleId: string | null = null;
   public ignoreAttractions: boolean = false;
   public permanentEnharmonicZo: boolean = false;
   public ambitusLowNote: Note = Note.Pa;
@@ -1187,6 +1188,7 @@ export class ModeKeyElement extends ScoreElement {
       marginBottom: this.marginBottom,
       marginTop: this.marginTop,
       useDefaultStyle: this.useDefaultStyle,
+      initialMartyriaStyleId: this.initialMartyriaStyleId,
       ignoreAttractions: this.ignoreAttractions,
       permanentEnharmonicZo: this.permanentEnharmonicZo,
       showAmbitus: this.showAmbitus,

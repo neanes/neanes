@@ -14,4 +14,16 @@ describe('initial martyria pitch font sizes', () => {
       }),
     ).toEqual({ textFontSize: 42, glyphFontSize: 42 });
   });
+
+  it('does not resize automatic source text to the matched glyph size', () => {
+    expect(
+      resolveInitialMartyriaPitchFontSizes({
+        textFontFamily: 'Text Font',
+        glyphFontSize: undefined,
+        matchedNeumeFontSize: 60,
+        neumeFontFamily: 'Neume Font',
+        neumeFontSize: 42,
+      }),
+    ).toEqual({ textFontSize: 42, glyphFontSize: 60 });
+  });
 });

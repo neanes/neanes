@@ -7,6 +7,7 @@ import {
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
+import { traditionalGreekInitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -1002,6 +1003,50 @@ describe('SaveService font styles', () => {
       resolveElementParagraphStyle(loaded.paragraphStyles, loadedDropCap)
         .strokeColor,
     ).toBe('#654321');
+  });
+
+  it('round-trips current initial martyria component schemas', () => {
+    const score = new Score();
+    const style = structuredClone(traditionalGreekInitialMartyriaStyle);
+    style.id = 'custom:current-martyria';
+    style.components = [
+      {
+        id: 'text',
+        kind: 'text',
+        content: 'Mode',
+        languageTag: 'en',
+        direction: 'ltr',
+        visibility: { modes: [1], variationOverrides: [] },
+      },
+      {
+        id: 'stacked',
+        kind: 'stackedText',
+        top: 'λ',
+        bottom: 'π',
+        visibility: { modes: [1], variationOverrides: [] },
+      },
+      {
+        id: 'sign',
+        kind: 'modeSignGlyph',
+        visibility: { modes: [1], variationOverrides: [] },
+      },
+      {
+        id: 'pitch',
+        kind: 'startingNoteCluster',
+        rendering: 'customText',
+        visibility: { modes: [1], variationOverrides: [] },
+      },
+    ];
+    score.initialMartyriaStyles = [style];
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+    const components = loaded.initialMartyriaStyles[0].components;
+
+    expect(saved.initialMartyriaStyles?.[0].components).toEqual(
+      style.components,
+    );
+    expect(components).toEqual(style.components);
   });
 
   it('saves rich text language fields instead of legacy rtl', () => {

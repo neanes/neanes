@@ -27,6 +27,8 @@ import type { Header } from '@/models/Header';
 import { INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM } from '@/models/InitialMartyriaStackedTextGeometry';
 import {
   getInitialMartyriaContext,
+  type InitialMartyriaAppearance,
+  resolveInitialMartyriaBaseTextAppearance,
   resolveInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import type {
@@ -2342,20 +2344,28 @@ export class LayoutService {
   ) {
     const resolution = resolveInitialMartyriaStyle({
       context: getInitialMartyriaContext(element),
-      activeStyleId: pageSetup.initialMartyriaStyleId,
+      activeStyleId: element.initialMartyriaStyleId ?? undefined,
+      fallbackStyleId: pageSetup.initialMartyriaStyleId,
       styles,
       paragraphStyles,
       pageSetup,
     });
     let top = 0;
     let bottom = 0;
-    const textRun = resolution.runs.find((run) => run.kind === 'text');
+    const baseTextAppearance = resolveInitialMartyriaBaseTextAppearance(
+      resolution.style,
+      paragraphStyles,
+    );
     let matchedNeumeFontSize: number | null = null;
-    if (textRun?.kind === 'text') {
+    if (
+      resolution.runs.some(
+        (run) => run.kind === 'text' || run.kind === 'startingPitch',
+      )
+    ) {
       const matchingTextFont = resolveFontCss({
-        fontFamily: textRun.appearance.fontFamily ?? element.computedFontFamily,
-        fontStyle: textRun.appearance.fontStyle ?? DEFAULT_FONT_STYLE,
-        fontSize: textRun.appearance.fontSize ?? element.computedFontSize,
+        fontFamily: baseTextAppearance.fontFamily ?? element.computedFontFamily,
+        fontStyle: baseTextAppearance.fontStyle ?? DEFAULT_FONT_STYLE,
+        fontSize: baseTextAppearance.fontSize ?? element.computedFontSize,
       });
       const matchingTextCapitalHeight = TextMeasurementService.getTextHeight(
         'H',
@@ -2417,37 +2427,13 @@ export class LayoutService {
 
       if (run.kind === 'startingPitch') {
         const noteAppearance = run.noteText.appearance;
-        const glyphAppearance = run.glyphAppearance;
-        const textRun = resolution.runs.find((item) => item.kind === 'text');
-        let matchedNeumeFontSize: number | null = null;
-        if (textRun?.kind === 'text') {
-          const matchingTextFont = resolveFontCss({
-            fontFamily:
-              textRun.appearance.fontFamily ?? element.computedFontFamily,
-            fontStyle: textRun.appearance.fontStyle ?? DEFAULT_FONT_STYLE,
-            fontSize: textRun.appearance.fontSize ?? element.computedFontSize,
-          });
-          const matchingTextCapitalHeight =
-            TextMeasurementService.getTextHeight('H', matchingTextFont);
-          const neumeCapitalHeight = fontService.getMetrics(
-            element.computedFontFamily,
-          ).capitalHeight;
-          if (
-            Number.isFinite(matchingTextCapitalHeight) &&
-            Number.isFinite(neumeCapitalHeight) &&
-            neumeCapitalHeight > 0
-          ) {
-            matchedNeumeFontSize =
-              matchingTextCapitalHeight / neumeCapitalHeight;
-          }
-        }
+        const glyphAppearance: InitialMartyriaAppearance = {};
         const fontSizes = resolveInitialMartyriaPitchFontSizes({
           textFontFamily:
             noteAppearance.fontFamily ?? element.computedFontFamily,
           textFontStyle: noteAppearance.fontStyle,
           textFontSize: noteAppearance.fontSize,
           glyphFontSize: glyphAppearance.fontSize,
-          matchedNeumeFontSize,
           neumeFontFamily: element.computedFontFamily,
           neumeFontSize: element.computedFontSize,
         });
@@ -2480,6 +2466,20 @@ export class LayoutService {
           );
           top = Math.min(top, geometry.top - wrapperBaselineShift);
           bottom = Math.max(bottom, geometry.bottom - wrapperBaselineShift);
+        }
+        if (run.cluster.trailingGlyphs.length > 0) {
+          const trailingGlyphFont = resolveFontCss({
+            fontFamily:
+              glyphAppearance.fontFamily ?? element.computedFontFamily,
+            fontStyle: glyphAppearance.fontStyle ?? DEFAULT_FONT_STYLE,
+            fontSize: fontSizes.glyphFontSize,
+          });
+          const trailingAscent =
+            TextMeasurementService.getFontBoundingBoxAscent(trailingGlyphFont);
+          const trailingDescent =
+            TextMeasurementService.getFontBoundingBoxDescent(trailingGlyphFont);
+          top = Math.min(top, -trailingAscent - wrapperBaselineShift);
+          bottom = Math.max(bottom, trailingDescent - wrapperBaselineShift);
         }
         continue;
       }

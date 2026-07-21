@@ -167,9 +167,9 @@ The following toggles are available for existing quantitative neumes.
 | <span class="neume">&#xe121;</span> | <kbd>X</kbd> + <kbd>,</kbd> |
 | <span class="neume">&#xe120;</span> | <kbd>X</kbd> + <kbd>.</kbd> |
 
-## Martyria of the Notes
+## Martyriæ of the Notes
 
-Martyria may be inserted with the following shortcuts. To insert a right-aligned martyria, hold <kbd>Shift</kbd> while typing the shortcut.
+Martyriæ may be inserted with the following shortcuts. To insert a right-aligned martyria, hold <kbd>Shift</kbd> while typing the shortcut.
 
 |      Note       |        | Keyboard Shortcut           |
 | :-------------: | ------ | --------------------------- |
@@ -193,7 +193,7 @@ Martyria may be inserted with the following shortcuts. To insert a right-aligned
 |       Ga        | (Low)  | <kbd>C</kbd> + <kbd>.</kbd> |
 |       Vou       | (Low)  | <kbd>C</kbd> + <kbd>/</kbd> |
 
-The following toggles are available for existing martyria.
+The following toggles are available for existing martyriæ.
 
 | Toggle                 | Keyboard Shortcut           |
 | ---------------------- | --------------------------- |

@@ -319,7 +319,7 @@ Tempo is measured in beats per minute (BPM) and can be set via the `BPM` propert
 
 - Initial martyriæ
 - Tempo signs
-- Martyria with tempo signs above them
+- Martyriæ with tempo signs above them
 
 The property is found in the Properties pane when the element is selected.
 

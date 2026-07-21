@@ -1588,7 +1588,7 @@ export class NeumeKeyboard {
       this.tempoKeyboardMap,
     );
 
-    result.push('## Martyria of the Notes\n\n');
+    result.push('## Martyriæ of the Notes\n\n');
     result.push('| Neume | Keyboard Shortcut |\n');
     result.push('| ----- | ----------------- |\n');
     result.push(

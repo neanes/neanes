@@ -325,7 +325,7 @@ If you change the second and third neumes to `Melisma Only`, then the lyrics wil
 With what fair
 ```
 
-You can tell Neanes to automatically set the `Accepts Lyrics` value for every neume in the score based on the current lyrics by pressing the `Save Current Melismas` button in the Lyrics pane. So if your score looks like the image above, then pressing the `Save Current Melismas` button, will result in the second and third neumes being set to `Melisma Only` because they contain melismas. The other three neumes will be set to `Default`.
+You can tell Neanes to automatically set the `Accepts Lyrics` value for every neume in the score based on the current lyrics by pressing the `Save Current Melismas` button in the Lyrics pane. So if your score looks like the image above, then pressing the `Save Current Melismas` button will result in the second and third neumes being set to `Melisma Only` because they contain melismas. The other three neumes will be set to `Default`.
 
 ### An Example with Prosomoia
 

@@ -246,7 +246,7 @@ Increasing this number will increase the space between lines.
 
 #### Hyphen Spacing
 
-The amount of space between the hyphens that are automatically drawn between melismatic syllables. To draw more hyphens between syllables, decrease this number. To draw less hyphens between syllables, increase this number.
+The amount of space between the hyphens that are automatically drawn between melismatic syllables. To draw more hyphens between syllables, decrease this number. To draw fewer hyphens between syllables, increase this number.
 
 ![Page Setup Hyphen Spacing Example](./images/guide-page-setup-hyphen-spacing-example-1.png)
 

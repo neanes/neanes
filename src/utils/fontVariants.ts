@@ -1,32 +1,98 @@
-// Shared command names and pure mapping helpers for the OpenType plugin. Kept
-// free of CKEditor imports so they can be reused by the properties-pane UI.
+// Pure helpers for the OpenType font-variant model shared by the CKEditor
+// OpenType plugin, the paragraph-style model, the properties panes, layout,
+// and export. Free of CKEditor imports on purpose.
+//
+// Everywhere in the app a font-variant field maps to one CSS
+// font-variant-* longhand and stores that property's value verbatim.
 
-// Model attribute keys. Each maps to one CSS property of the same name, and the
-// model value is that property's value verbatim. Commands are registered under
-// these names, so the properties pane drives them via
-// execForOwner(owner, FONT_VARIANT_NUMERIC, ...).
+// The three font-variant property names. Each name is simultaneously the
+// CKEditor command/attribute name, the ParagraphStyleOverrides key, the
+// TextBoxElement field, and the save-format field, so this one vocabulary is
+// shared by every layer (e.g. the properties pane drives CKEditor via
+// execForOwner(owner, FONT_VARIANT_NUMERIC, ...)).
 export const FONT_VARIANT_NUMERIC = 'fontVariantNumeric';
 export const FONT_VARIANT_LIGATURES = 'fontVariantLigatures';
 export const FONT_VARIANT_CAPS = 'fontVariantCaps';
 
-// The four figure x spacing combinations the properties pane exposes as one
-// button group. Purely a presentation grouping: the data model stores the two
-// axes independently (see NumericVariant) so a partial value is not upcast.
-export type NumericKey =
-  | 'lining-tabular'
-  | 'oldstyle-tabular'
-  | 'oldstyle-proportional'
-  | 'lining-proportional';
+export type FontVariantProperty =
+  | typeof FONT_VARIANT_CAPS
+  | typeof FONT_VARIANT_NUMERIC
+  | typeof FONT_VARIANT_LIGATURES;
 
-export type CapsKey = 'small-caps' | 'all-small-caps';
+// Canonical enumeration (in CSS emission order) and the CSS longhand each
+// property renders to.
+export const FONT_VARIANT_PROPERTIES: readonly FontVariantProperty[] = [
+  FONT_VARIANT_CAPS,
+  FONT_VARIANT_NUMERIC,
+  FONT_VARIANT_LIGATURES,
+];
+
+export const FONT_VARIANT_CSS_NAMES: Record<FontVariantProperty, string> = {
+  [FONT_VARIANT_CAPS]: 'font-variant-caps',
+  [FONT_VARIANT_NUMERIC]: 'font-variant-numeric',
+  [FONT_VARIANT_LIGATURES]: 'font-variant-ligatures',
+};
+
+// The explicit "no features" value, owned for all three properties so a run
+// (or element) can defeat a non-normal paragraph-style value. A stored/model
+// value of 'normal' is an explicit override; an absent value inherits.
+const FONT_VARIANT_NORMAL = 'normal';
+
+export function isFontVariantNormal(value: string) {
+  return value.trim().toLowerCase() === FONT_VARIANT_NORMAL;
+}
+
+// Decide what a recomposed control value writes back as an explicit override.
+// An empty (or normal) composition needs an explicit 'normal' only to defeat
+// a non-normal inherited value; otherwise it returns null so the caller can
+// clear the override back to inheritance.
+export function composeExplicitFontVariant(
+  composed: string,
+  inheritedValue: string | null,
+): string | null {
+  if (composed !== '' && !isFontVariantNormal(composed)) {
+    return composed;
+  }
+
+  return inheritedValue != null && !isFontVariantNormal(inheritedValue)
+    ? FONT_VARIANT_NORMAL
+    : null;
+}
+
+// Emit the three font-variant longhand declarations, in canonical order, for a
+// resolved style. A null (or absent) value folds to an explicit 'normal' so
+// the emitted rule defeats any inherited value.
+export function fontVariantCssDeclarations(
+  values: Partial<Record<FontVariantProperty, string | null>>,
+): string[] {
+  return FONT_VARIANT_PROPERTIES.map(
+    (property) =>
+      `${FONT_VARIANT_CSS_NAMES[property]}: ${values[property] ?? FONT_VARIANT_NORMAL};`,
+  );
+}
+
+// The four figure x spacing combinations the properties pane exposes as one
+// button group, in display order. Purely a presentation grouping: the data
+// model stores the two axes independently (see NumericVariant) so a partial
+// value is not upcast. The key types, guards, and UI option lists all derive
+// from these arrays so the vocabulary has one spelling.
+export const NUMERIC_KEYS = [
+  'lining-tabular',
+  'oldstyle-tabular',
+  'oldstyle-proportional',
+  'lining-proportional',
+] as const;
+
+export type NumericKey = (typeof NUMERIC_KEYS)[number];
+
+// The caps keywords the controls offer, in display order. parseFontVariantCaps
+// recognizes the wider OWNED_CAPS_VALUES set.
+export const CAPS_KEYS = ['small-caps', 'all-small-caps'] as const;
+
+export type CapsKey = (typeof CAPS_KEYS)[number];
 
 export function isNumericKey(value: unknown): value is NumericKey {
-  return (
-    value === 'lining-tabular' ||
-    value === 'oldstyle-tabular' ||
-    value === 'oldstyle-proportional' ||
-    value === 'lining-proportional'
-  );
+  return NUMERIC_KEYS.includes(value as NumericKey);
 }
 
 // Split a UI button id into its two axes. Safe because neither axis value
@@ -43,8 +109,32 @@ export function splitNumericKey(key: NumericKey): {
   return { figure, spacing };
 }
 
+// Inverse of splitNumericKey: the button-group key when both axes are set,
+// otherwise undefined (a partially specified value shows no selection but
+// still survives recompose).
+export function toNumericKey(variant: NumericVariant): NumericKey | undefined {
+  const { figure, spacing } = variant;
+
+  return figure && spacing ? `${figure}-${spacing}` : undefined;
+}
+
+// Apply a button-group selection to a variant: a key sets both axes, anything
+// else (the group reporting deselection) clears both. The fractions, ordinal,
+// and slashed-zero flags carry over unchanged.
+export function applyNumericKey(
+  variant: NumericVariant,
+  value: unknown,
+): NumericVariant {
+  return {
+    ...variant,
+    ...(isNumericKey(value)
+      ? splitNumericKey(value)
+      : { figure: null, spacing: null }),
+  };
+}
+
 export function isCapsKey(value: unknown): value is CapsKey {
-  return value === 'small-caps' || value === 'all-small-caps';
+  return CAPS_KEYS.includes(value as CapsKey);
 }
 
 // ---------------------------------------------------------------------------
@@ -139,10 +229,14 @@ export function composeNumericVariant(variant: NumericVariant): string {
 }
 
 // Normalize an arbitrary `font-variant-numeric` value to our canonical token
-// order, or null when it carries none of the tokens we manage (i.e. it is
-// `normal`-equivalent). The plugin models every non-default token of this
-// property, so a null result means there is nothing worth owning.
+// order, or null when it carries none of the tokens we manage. An explicit
+// `normal` is owned (it must survive as an override that can defeat a
+// paragraph-style value); a token-less non-normal value is not ours.
 export function normalizeNumericStyle(style: string): string | null {
+  if (isFontVariantNormal(style)) {
+    return FONT_VARIANT_NORMAL;
+  }
+
   const composed = composeNumericVariant(parseNumericVariant(style));
 
   return composed === '' ? null : composed;
@@ -207,6 +301,10 @@ export function composeLigatureVariant(variant: LigatureVariant): string {
 }
 
 export function normalizeLigatureStyle(style: string): string | null {
+  if (isFontVariantNormal(style)) {
+    return FONT_VARIANT_NORMAL;
+  }
+
   const composed = composeLigatureVariant(parseLigatureVariant(style));
 
   return composed === '' ? null : composed;
@@ -231,10 +329,14 @@ const OWNED_CAPS_VALUES = [
 ];
 
 // CSS `font-variant-caps` value -> model value (identical to the CSS value), or
-// null for `normal`, empty, or any non-standard value, which carry no feature
-// worth owning.
+// null for empty or any non-standard value, which carry no feature worth
+// owning. An explicit `normal` is owned like the keyword values.
 export function parseFontVariantCaps(value: string): string | null {
   const normalized = value.trim().toLowerCase();
+
+  if (normalized === FONT_VARIANT_NORMAL) {
+    return FONT_VARIANT_NORMAL;
+  }
 
   return OWNED_CAPS_VALUES.includes(normalized) ? normalized : null;
 }

@@ -115,39 +115,6 @@
 
       <Field orientation="horizontal">
         <FieldLabel>{{
-          $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })
-        }}</FieldLabel>
-        <div class="flex flex-wrap gap-1">
-          <ToggleGroup
-            type="multiple"
-            variant="outline"
-            :model-value="fontStyleValues"
-            @update:model-value="onFontStyleValuesChanged"
-          >
-            <ToggleGroupItem
-              value="bold"
-              :aria-label="$t(($) => $.dialog.pageSetup.bold, { ns: 'dialog' })"
-              :disabled="!isStyleToggleEnabled('bold')"
-              @mousedown.prevent
-            >
-              <PhTextB />
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="italic"
-              :aria-label="
-                $t(($) => $.dialog.pageSetup.italic, { ns: 'dialog' })
-              "
-              :disabled="!isStyleToggleEnabled('italic')"
-              @mousedown.prevent
-            >
-              <PhTextItalic />
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-      </Field>
-
-      <Field orientation="horizontal">
-        <FieldLabel>{{
           $t(($) => $.toolbar.richTextBox.textDecorations, { ns: 'toolbar' })
         }}</FieldLabel>
         <div class="flex flex-wrap items-center gap-1">
@@ -372,175 +339,27 @@
         </ToggleGroup>
       </Field>
 
-      <Field orientation="horizontal">
-        <FieldLabel>{{
-          $t(($) => $.toolbar.richTextBox.case, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          :model-value="capsValue"
-          @update:model-value="onCapsChanged"
-        >
-          <AppTooltip
-            v-for="option in capsOptions"
-            :key="option.value"
-            :tooltip="option.label"
-          >
-            <ToggleGroupItem
-              :value="option.value"
-              :aria-label="option.label"
-              :disabled="!isCommandEnabled(FONT_VARIANT_CAPS)"
-              :style="caseOptionStyle(option.value)"
-              @mousedown.prevent
-            >
-              Aa
-            </ToggleGroupItem>
-          </AppTooltip>
-        </ToggleGroup>
-      </Field>
-
-      <Field orientation="horizontal">
-        <FieldLabel>{{
-          $t(($) => $.toolbar.richTextBox.numbers, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          :model-value="numericValue"
-          @update:model-value="onNumericChanged"
-        >
-          <AppTooltip
-            v-for="option in numericOptions"
-            :key="option.value"
-            :tooltip="option.label"
-          >
-            <ToggleGroupItem
-              :value="option.value"
-              :aria-label="option.label"
-              :disabled="!isCommandEnabled(FONT_VARIANT_NUMERIC)"
-              :style="numericOptionStyle(option.value)"
-              @mousedown.prevent
-            >
-              19
-            </ToggleGroupItem>
-          </AppTooltip>
-        </ToggleGroup>
-      </Field>
-
-      <Field orientation="horizontal">
-        <Switch
-          :id="`${idPrefix}-fractions`"
-          :model-value="numericVariant.fractions !== null"
-          :disabled="!isCommandEnabled(FONT_VARIANT_NUMERIC)"
-          @mousedown.prevent
-          @update:model-value="onFractionsChanged($event)"
-        />
-        <FieldLabel :for="`${idPrefix}-fractions`" @mousedown.prevent>
-          {{ $t(($) => $.toolbar.richTextBox.fractions, { ns: 'toolbar' }) }}
-        </FieldLabel>
-      </Field>
-
-      <Field orientation="horizontal">
-        <Switch
-          :id="`${idPrefix}-slashed-zero`"
-          :model-value="numericVariant.slashedZero"
-          :disabled="!isCommandEnabled(FONT_VARIANT_NUMERIC)"
-          @mousedown.prevent
-          @update:model-value="onNumericFlagChanged('slashedZero', $event)"
-        />
-        <FieldLabel :for="`${idPrefix}-slashed-zero`" @mousedown.prevent>
-          {{ $t(($) => $.toolbar.richTextBox.slashedZero, { ns: 'toolbar' }) }}
-        </FieldLabel>
-      </Field>
-
-      <Field orientation="horizontal">
-        <Switch
-          :id="`${idPrefix}-ordinals`"
-          :model-value="numericVariant.ordinal"
-          :disabled="!isCommandEnabled(FONT_VARIANT_NUMERIC)"
-          @mousedown.prevent
-          @update:model-value="onNumericFlagChanged('ordinal', $event)"
-        />
-        <FieldLabel :for="`${idPrefix}-ordinals`" @mousedown.prevent>
-          {{ $t(($) => $.toolbar.richTextBox.ordinals, { ns: 'toolbar' }) }}
-        </FieldLabel>
-      </Field>
-
-      <Field orientation="horizontal">
-        <Switch
-          :id="`${idPrefix}-common-ligatures`"
-          :model-value="ligatureVariant.common"
-          :disabled="!isCommandEnabled(FONT_VARIANT_LIGATURES)"
-          @mousedown.prevent
-          @update:model-value="onLigatureFlagChanged('common', $event)"
-        />
-        <FieldLabel :for="`${idPrefix}-common-ligatures`" @mousedown.prevent>
-          {{
-            $t(($) => $.toolbar.richTextBox.commonLigatures, { ns: 'toolbar' })
-          }}
-        </FieldLabel>
-      </Field>
-
-      <Field orientation="horizontal">
-        <Switch
-          :id="`${idPrefix}-discretionary-ligatures`"
-          :model-value="ligatureVariant.discretionary"
-          :disabled="!isCommandEnabled(FONT_VARIANT_LIGATURES)"
-          @mousedown.prevent
-          @update:model-value="onLigatureFlagChanged('discretionary', $event)"
-        />
-        <FieldLabel
-          :for="`${idPrefix}-discretionary-ligatures`"
-          @mousedown.prevent
-        >
-          {{
-            $t(($) => $.toolbar.richTextBox.discretionaryLigatures, {
-              ns: 'toolbar',
-            })
-          }}
-        </FieldLabel>
-      </Field>
-
-      <Field orientation="horizontal">
-        <Switch
-          :id="`${idPrefix}-historical-ligatures`"
-          :model-value="ligatureVariant.historical"
-          :disabled="!isCommandEnabled(FONT_VARIANT_LIGATURES)"
-          @mousedown.prevent
-          @update:model-value="onLigatureFlagChanged('historical', $event)"
-        />
-        <FieldLabel
-          :for="`${idPrefix}-historical-ligatures`"
-          @mousedown.prevent
-        >
-          {{
-            $t(($) => $.toolbar.richTextBox.historicalLigatures, {
-              ns: 'toolbar',
-            })
-          }}
-        </FieldLabel>
-      </Field>
-
-      <Field orientation="horizontal">
-        <Switch
-          :id="`${idPrefix}-contextual-alternates`"
-          :model-value="ligatureVariant.contextual"
-          :disabled="!isCommandEnabled(FONT_VARIANT_LIGATURES)"
-          @mousedown.prevent
-          @update:model-value="onLigatureFlagChanged('contextual', $event)"
-        />
-        <FieldLabel
-          :for="`${idPrefix}-contextual-alternates`"
-          @mousedown.prevent
-        >
-          {{
-            $t(($) => $.toolbar.richTextBox.contextualAlternates, {
-              ns: 'toolbar',
-            })
-          }}
-        </FieldLabel>
-      </Field>
+      <!--
+        The controls reflect the effective value (an explicit selection
+        attribute, or the active paragraph style's value); a change writes an
+        explicit value and clear restores style inheritance.
+      -->
+      <FontVariantFields
+        :id-prefix="idPrefix"
+        :caps="fontVariantEffectiveValue(FONT_VARIANT_CAPS)"
+        :numeric="fontVariantEffectiveValue(FONT_VARIANT_NUMERIC)"
+        :ligatures="fontVariantEffectiveValue(FONT_VARIANT_LIGATURES)"
+        :caps-enabled="isCommandEnabled(FONT_VARIANT_CAPS)"
+        :numeric-enabled="isCommandEnabled(FONT_VARIANT_NUMERIC)"
+        :ligatures-enabled="isCommandEnabled(FONT_VARIANT_LIGATURES)"
+        :caps-clearable="fontVariantHasExplicitValue(FONT_VARIANT_CAPS)"
+        :numeric-clearable="fontVariantHasExplicitValue(FONT_VARIANT_NUMERIC)"
+        :ligatures-clearable="
+          fontVariantHasExplicitValue(FONT_VARIANT_LIGATURES)
+        "
+        @change="applyFontVariant"
+        @clear="clearFontVariant"
+      />
     </PaneSection>
 
     <PaneSection
@@ -805,33 +624,15 @@ import {
   PhTextAlignJustify,
   PhTextAlignLeft,
   PhTextAlignRight,
-  PhTextB,
-  PhTextItalic,
   PhTextSubscript,
   PhTextSuperscript,
   PhTextUnderline,
 } from '@phosphor-icons/vue';
-import { useTranslation } from 'i18next-vue';
 import type { AcceptableValue } from 'reka-ui';
-import type { CSSProperties } from 'vue';
 import { computed, ref } from 'vue';
 
 import type { InsertNeumeType } from '@/ckeditor-plugins/insertneume/insertneumeediting';
 import { UPDATE_NEUME_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertneume/updateneumeattributescommand';
-import {
-  composeLigatureVariant,
-  composeNumericVariant,
-  FONT_VARIANT_CAPS,
-  FONT_VARIANT_LIGATURES,
-  FONT_VARIANT_NUMERIC,
-  isCapsKey,
-  isNumericKey,
-  type LigatureVariant,
-  type NumericVariant,
-  parseLigatureVariant,
-  parseNumericVariant,
-  splitNumericKey,
-} from '@/ckeditor-plugins/opentype/opentype-util';
 import AppTooltip from '@/components/AppTooltip.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
@@ -840,6 +641,7 @@ import InputFontSize from '@/components/InputFontSize.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import FontVariantFields from '@/components/properties/FontVariantFields.vue';
 import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import { Button } from '@/components/ui/button';
@@ -882,6 +684,11 @@ import {
 } from '@/models/ParagraphStyle';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
+import {
+  FONT_VARIANT_CAPS,
+  FONT_VARIANT_LIGATURES,
+  FONT_VARIANT_NUMERIC,
+} from '@/utils/fontVariants';
 import { fraction3FormatOptions } from '@/utils/numberFormatOptions';
 import {
   RICH_TEXT_LANGUAGE_OPTIONS,
@@ -911,7 +718,6 @@ const {
   fontStyleValue,
   fontStyleOptions,
   fontStyleDisabled,
-  fontStyleValues,
   textDecorationValues,
   fontSizeValue,
   fontSizePlaceholder,
@@ -926,6 +732,10 @@ const {
   isStyleToggleEnabled,
   commandValue,
   runCommand,
+  fontVariantEffectiveValue,
+  fontVariantHasExplicitValue,
+  applyFontVariant,
+  clearFontVariant,
   onParagraphStyleChanged,
   onFontFamilyChanged,
   onFontStyleChanged,
@@ -933,7 +743,6 @@ const {
   onFontColorChanged,
   clearFontStyleOverride,
   clearAlignmentOverride,
-  onFontStyleValuesChanged,
   onTextDecorationValuesChanged,
   onAlignmentChanged,
   clearParagraphStyleFormatting,
@@ -941,12 +750,7 @@ const {
   'subscript',
   'superscript',
   'textPartLanguage',
-  FONT_VARIANT_NUMERIC,
-  FONT_VARIANT_LIGATURES,
-  FONT_VARIANT_CAPS,
 ]);
-
-const { t } = useTranslation();
 
 const scopedEditor = useActiveEditorForOwner(() => props.element);
 
@@ -995,151 +799,8 @@ const positionValue = computed<
   POSITION_COMMAND_NAMES.find((commandName) => isCommandActive(commandName)),
 );
 
-// "Numbers" combines the figure/spacing button group with the fractions and
-// slashed-zero switches into a single `font-variant-numeric` value. Decompose
-// the stored value so each control reflects its own axis, then recompose on
-// change so toggling one axis preserves the others.
-const DEFAULT_OPTION = 'default';
-
-const numericVariant = computed(() => {
-  const value = commandValue(FONT_VARIANT_NUMERIC);
-
-  return parseNumericVariant(typeof value === 'string' ? value : '');
-});
-
-// The button group shows a concrete combination only when both axes are set; a
-// partially specified value (e.g. just tabular spacing) falls back to "default"
-// but is still preserved on recompose.
-const numericValue = computed(() => {
-  const { figure, spacing } = numericVariant.value;
-
-  return figure && spacing ? `${figure}-${spacing}` : DEFAULT_OPTION;
-});
-
-const capsValue = computed(() => {
-  const value = commandValue(FONT_VARIANT_CAPS);
-
-  return isCapsKey(value) ? value : DEFAULT_OPTION;
-});
-
-const numericOptions = computed(() => [
-  {
-    value: DEFAULT_OPTION,
-    label: t(($) => $.toolbar.richTextBox.default, { ns: 'toolbar' }),
-  },
-  {
-    value: 'lining-tabular',
-    label: t(($) => $.toolbar.richTextBox.numbersTabularLining, {
-      ns: 'toolbar',
-    }),
-  },
-  {
-    value: 'oldstyle-tabular',
-    label: t(($) => $.toolbar.richTextBox.numbersTabularOldstyle, {
-      ns: 'toolbar',
-    }),
-  },
-  {
-    value: 'oldstyle-proportional',
-    label: t(($) => $.toolbar.richTextBox.numbersProportionalOldstyle, {
-      ns: 'toolbar',
-    }),
-  },
-  {
-    value: 'lining-proportional',
-    label: t(($) => $.toolbar.richTextBox.numbersProportionalLining, {
-      ns: 'toolbar',
-    }),
-  },
-]);
-
-const capsOptions = computed(() => [
-  {
-    value: DEFAULT_OPTION,
-    label: t(($) => $.toolbar.richTextBox.default, { ns: 'toolbar' }),
-  },
-  {
-    value: 'small-caps',
-    label: t(($) => $.toolbar.richTextBox.caseSmallCaps, { ns: 'toolbar' }),
-  },
-  {
-    value: 'all-small-caps',
-    label: t(($) => $.toolbar.richTextBox.caseAllSmallCaps, { ns: 'toolbar' }),
-  },
-]);
-
 function openParagraphStylesDialog() {
   emit('open-paragraph-styles-dialog', currentDialogParagraphStyleId.value);
-}
-
-function applyNumericVariant(variant: NumericVariant) {
-  const value = composeNumericVariant(variant);
-
-  if (value === '') {
-    runCommand(FONT_VARIANT_NUMERIC);
-  } else {
-    runCommand(FONT_VARIANT_NUMERIC, { value });
-  }
-}
-
-const OPEN_TYPE_SAMPLE_STYLE: CSSProperties = {
-  fontFamily: "'Source Serif', serif",
-};
-
-function numericOptionStyle(value: string): CSSProperties {
-  return {
-    ...OPEN_TYPE_SAMPLE_STYLE,
-    fontVariantNumeric: isNumericKey(value)
-      ? composeNumericVariant({
-          ...splitNumericKey(value),
-          fractions: null,
-          ordinal: false,
-          slashedZero: false,
-        })
-      : 'normal',
-  };
-}
-
-function caseOptionStyle(value: string): CSSProperties {
-  return {
-    ...OPEN_TYPE_SAMPLE_STYLE,
-    fontVariantCaps: isCapsKey(value) ? value : 'normal',
-  };
-}
-
-function onNumericChanged(value: unknown) {
-  // Picking a combo sets both axes; "default" clears both. Either way the
-  // fractions/ordinal/slashed-zero switches carry over unchanged.
-  const axes = isNumericKey(value)
-    ? splitNumericKey(value)
-    : { figure: null, spacing: null };
-
-  applyNumericVariant({ ...numericVariant.value, ...axes });
-}
-
-function onNumericFlagChanged(
-  flag: Exclude<keyof NumericVariant, 'figure' | 'spacing' | 'fractions'>,
-  value: boolean | 'indeterminate',
-) {
-  applyNumericVariant({ ...numericVariant.value, [flag]: value === true });
-}
-
-// Fractions is its own axis (diagonal vs stacked), not a boolean flag. The switch
-// only sets diagonal; turning it off clears the axis. A loaded `stacked` value is
-// preserved by the spread above whenever another control changes.
-function onFractionsChanged(value: boolean | 'indeterminate') {
-  applyNumericVariant({
-    ...numericVariant.value,
-    fractions: value === true ? 'diagonal' : null,
-  });
-}
-
-function onCapsChanged(value: unknown) {
-  if (isCapsKey(value)) {
-    runCommand(FONT_VARIANT_CAPS, { value });
-  } else {
-    runCommand(FONT_VARIANT_CAPS);
-  }
 }
 
 function onLanguageChanged(value: AcceptableValue) {
@@ -1169,31 +830,6 @@ function onLanguageChanged(value: AcceptableValue) {
     languageCode,
     textDirection,
   });
-}
-
-// The four ligature switches compose into one `font-variant-ligatures` value the
-// same way the numeric switches do.
-const ligatureVariant = computed(() => {
-  const value = commandValue(FONT_VARIANT_LIGATURES);
-
-  return parseLigatureVariant(typeof value === 'string' ? value : '');
-});
-
-function applyLigatureVariant(variant: LigatureVariant) {
-  const value = composeLigatureVariant(variant);
-
-  if (value === '') {
-    runCommand(FONT_VARIANT_LIGATURES);
-  } else {
-    runCommand(FONT_VARIANT_LIGATURES, { value });
-  }
-}
-
-function onLigatureFlagChanged(
-  flag: keyof LigatureVariant,
-  value: boolean | 'indeterminate',
-) {
-  applyLigatureVariant({ ...ligatureVariant.value, [flag]: value === true });
 }
 
 const martyriaNotes = Object.values(Note).map((x) => ({

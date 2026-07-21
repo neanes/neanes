@@ -947,6 +947,94 @@ describe('SaveService font styles', () => {
     );
   });
 
+  it('saves and loads paragraph-style font variants, including explicit normal', () => {
+    const style = new ParagraphStyle();
+    style.id = 'custom';
+    style.displayName = 'Custom';
+    style.overrides.fontVariantCaps = 'all-small-caps';
+    style.overrides.fontVariantNumeric = 'oldstyle-nums proportional-nums';
+    // An explicit normal that defeats an inherited value.
+    style.overrides.fontVariantLigatures = null;
+
+    const saved = SaveService.SaveParagraphStyle(style);
+    const loaded = SaveService.LoadParagraphStyle_v1(saved);
+
+    expect(saved.fontVariantCaps).toBe('all-small-caps');
+    expect(saved.fontVariantNumeric).toBe('oldstyle-nums proportional-nums');
+    expect(saved.fontVariantLigatures).toBeNull();
+    expect(loaded.overrides.fontVariantCaps).toBe('all-small-caps');
+    expect(loaded.overrides.fontVariantNumeric).toBe(
+      'oldstyle-nums proportional-nums',
+    );
+    expect(loaded.overrides.fontVariantLigatures).toBeNull();
+
+    const unset = SaveService.LoadParagraphStyle_v1(new ParagraphStyle_v1());
+
+    expect(unset.overrides.fontVariantCaps).toBeUndefined();
+    expect(unset.overrides.fontVariantNumeric).toBeUndefined();
+    expect(unset.overrides.fontVariantLigatures).toBeUndefined();
+  });
+
+  it('saves and loads text-box font variants', () => {
+    const element = new TextBoxElement();
+    element.fontVariantCaps = 'small-caps';
+    element.fontVariantNumeric = 'normal';
+
+    const saved = new TextBoxElement_v1();
+    SaveService.SaveTextBox(saved, element);
+
+    expect(saved.fontVariantCaps).toBe('small-caps');
+    expect(saved.fontVariantNumeric).toBe('normal');
+    expect(saved.fontVariantLigatures).toBeUndefined();
+
+    const loaded = new TextBoxElement();
+    SaveService.LoadTextBox_v1(loaded, saved);
+
+    expect(loaded.fontVariantCaps).toBe('small-caps');
+    expect(loaded.fontVariantNumeric).toBe('normal');
+    expect(loaded.fontVariantLigatures).toBeNull();
+  });
+
+  it('saves and loads drop-cap font variants', () => {
+    const element = new DropCapElement();
+    element.fontVariantCaps = 'small-caps';
+    element.fontVariantNumeric = 'normal';
+
+    const saved = new DropCapElement_v1();
+    SaveService.SaveDropCap(saved, element);
+
+    expect(saved.fontVariantCaps).toBe('small-caps');
+    expect(saved.fontVariantNumeric).toBe('normal');
+    expect(saved.fontVariantLigatures).toBeUndefined();
+
+    const loaded = new DropCapElement();
+    SaveService.LoadDropCap_v1(loaded, saved, new PageSetup());
+
+    expect(loaded.fontVariantCaps).toBe('small-caps');
+    expect(loaded.fontVariantNumeric).toBe('normal');
+    expect(loaded.fontVariantLigatures).toBeNull();
+  });
+
+  it('saves and loads per-note lyric font variants', () => {
+    const element = new NoteElement();
+    element.lyricsFontVariantCaps = 'small-caps';
+    element.lyricsFontVariantNumeric = 'normal';
+
+    const saved = new NoteElement_v1();
+    SaveService.SaveNote(saved, element);
+
+    expect(saved.lyricsFontVariantCaps).toBe('small-caps');
+    expect(saved.lyricsFontVariantNumeric).toBe('normal');
+    expect(saved.lyricsFontVariantLigatures).toBeUndefined();
+
+    const loaded = new NoteElement();
+    SaveService.LoadNote_v1(loaded, saved);
+
+    expect(loaded.lyricsFontVariantCaps).toBe('small-caps');
+    expect(loaded.lyricsFontVariantNumeric).toBe('normal');
+    expect(loaded.lyricsFontVariantLigatures).toBeNull();
+  });
+
   it('defaults missing text-box alignment to the paragraph style', () => {
     const element = new TextBoxElement();
     const saved = new TextBoxElement_v1();

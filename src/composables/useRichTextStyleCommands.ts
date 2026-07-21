@@ -34,6 +34,11 @@ import {
   remapFontStyleForOptions,
 } from '@/utils/fontStyle';
 import { fontStyleNeedsExplicitFamily } from '@/utils/fontStyleAxes';
+import {
+  composeExplicitFontVariant,
+  FONT_VARIANT_PROPERTIES,
+  type FontVariantProperty,
+} from '@/utils/fontVariants';
 import { richTextParagraphStyleIdFromClassName } from '@/utils/richTextParagraphStyleClasses';
 import { Unit } from '@/utils/Unit';
 
@@ -59,6 +64,7 @@ const STYLE_COMMAND_NAMES = [
   'fontStyleToggleItalic',
   'underline',
   'alignment',
+  ...FONT_VARIANT_PROPERTIES,
 ];
 
 // Bold/Italic and underline share the same toggle-group UI shape, but they are
@@ -250,6 +256,42 @@ export function useRichTextStyleCommands(
     return commandValue('alignment') !== undefined;
   });
 
+  // The effective value each font-variant control reflects: the selection's
+  // explicit attribute when present (including an explicit 'normal'),
+  // otherwise the active paragraph style's value. The property name doubles
+  // as the command name and the ResolvedParagraphStyle key.
+  function fontVariantEffectiveValue(commandName: FontVariantProperty) {
+    const value = commandValue(commandName);
+
+    return typeof value === 'string'
+      ? value
+      : resolvedActiveParagraphStyle.value[commandName];
+  }
+
+  function fontVariantHasExplicitValue(commandName: FontVariantProperty) {
+    return typeof commandValue(commandName) === 'string';
+  }
+
+  // Write a composed font-variant value. An empty composition compacts back
+  // to inheritance by removing the attribute unless an explicit 'normal' is
+  // needed to defeat the paragraph style's value.
+  function applyFontVariant(commandName: FontVariantProperty, value: string) {
+    const explicit = composeExplicitFontVariant(
+      value,
+      resolvedActiveParagraphStyle.value[commandName],
+    );
+
+    if (explicit == null) {
+      runCommand(commandName);
+    } else {
+      runCommand(commandName, { value: explicit });
+    }
+  }
+
+  function clearFontVariant(commandName: FontVariantProperty) {
+    runCommand(commandName);
+  }
+
   const fontStyleValues = computed(() =>
     Object.keys(FONT_STYLE_TOGGLE_COMMANDS).filter((style) =>
       isCommandActive(FONT_STYLE_TOGGLE_COMMANDS[style]),
@@ -295,7 +337,8 @@ export function useRichTextStyleCommands(
       fontStyleHasExplicitValue.value ||
       fontSizeValue.value != null ||
       fontColorHasExplicitValue.value ||
-      alignmentHasExplicitValue.value,
+      alignmentHasExplicitValue.value ||
+      FONT_VARIANT_PROPERTIES.some(fontVariantHasExplicitValue),
   );
 
   function isCommandEnabled(commandName: string) {
@@ -550,6 +593,10 @@ export function useRichTextStyleCommands(
     onFontSizeChanged(null);
     onFontColorChanged(null);
     clearAlignmentOverride();
+
+    for (const commandName of FONT_VARIANT_PROPERTIES) {
+      clearFontVariant(commandName);
+    }
   }
 
   return {
@@ -576,6 +623,10 @@ export function useRichTextStyleCommands(
     isStyleToggleEnabled,
     commandValue,
     runCommand,
+    fontVariantEffectiveValue,
+    fontVariantHasExplicitValue,
+    applyFontVariant,
+    clearFontVariant,
     onParagraphStyleChanged,
     onFontFamilyChanged,
     onFontStyleChanged,

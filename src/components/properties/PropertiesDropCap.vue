@@ -243,6 +243,23 @@
           />
         </div>
       </Field>
+
+      <!--
+        The controls reflect the resolved style (element overrides folded
+        in); a change writes an explicit element value and clear restores
+        inheritance from the paragraph style.
+      -->
+      <FontVariantFields
+        id-prefix="properties-drop-cap"
+        :caps="resolvedParagraphStyle.fontVariantCaps"
+        :numeric="resolvedParagraphStyle.fontVariantNumeric"
+        :ligatures="resolvedParagraphStyle.fontVariantLigatures"
+        :caps-clearable="element.fontVariantCaps != null"
+        :numeric-clearable="element.fontVariantNumeric != null"
+        :ligatures-clearable="element.fontVariantLigatures != null"
+        @change="onFontVariantChanged"
+        @clear="onFontVariantClear"
+      />
     </PaneSection>
 
     <PaneSection
@@ -285,6 +302,7 @@ import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
+import FontVariantFields from '@/components/properties/FontVariantFields.vue';
 import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import ParagraphStyleField from '@/components/properties/ParagraphStyleField.vue';
 import StrokeColorPicker from '@/components/StrokeColorPicker.vue';
@@ -295,7 +313,10 @@ import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphSty
 import type { DropCapElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { resolveParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
+import type { FontVariantProperty } from '@/utils/fontVariants';
+import { composeExplicitFontVariant } from '@/utils/fontVariants';
 import {
   fraction0FormatOptions,
   fraction2FormatOptions,
@@ -374,12 +395,35 @@ function onFontFamilyChanged(fontFamily: string) {
   } as Partial<DropCapElement>);
 }
 
+// The paragraph style's own values (element overrides excluded), used to
+// decide whether "no features" needs an explicit 'normal' or can clear back
+// to inheritance.
+const styleFontVariants = computed(() =>
+  resolveParagraphStyle(props.paragraphStyles, props.element.paragraphStyleId),
+);
+
+function onFontVariantChanged(property: FontVariantProperty, value: string) {
+  emit('update', {
+    [property]: composeExplicitFontVariant(
+      value,
+      styleFontVariants.value[property],
+    ),
+  } as Partial<DropCapElement>);
+}
+
+function onFontVariantClear(property: FontVariantProperty) {
+  emit('update', { [property]: null } as Partial<DropCapElement>);
+}
+
 function clearParagraphStyleFormatting() {
   emit('update', {
     color: null,
     fontFamily: null,
     fontSize: null,
     fontStyle: null,
+    fontVariantCaps: null,
+    fontVariantNumeric: null,
+    fontVariantLigatures: null,
     lineHeight: undefined,
     strokeWidth: null,
     strokeColor: null,

@@ -29,6 +29,11 @@ import type { Score } from '@/models/Score';
 import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
 import { type ResolvedFontStyle, resolveFontStyle } from '@/utils/fontStyle';
+import {
+  FONT_VARIANT_CSS_NAMES,
+  FONT_VARIANT_PROPERTIES,
+  fontVariantCssDeclarations,
+} from '@/utils/fontVariants';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { isRightHandPage } from '@/utils/PageNumbering';
@@ -357,6 +362,7 @@ export class ByzHtmlExporter {
         color: ${lyricsStyle.color};
         font-weight: ${defaultLyricsFont.cssFontWeight};
         font-style: ${defaultLyricsFont.cssFontStyle};
+        ${fontVariantCssDeclarations(lyricsStyle).join('\n        ')}
         -webkit-text-stroke-width: ${lyricsStyle.strokeWidth};
         -webkit-text-stroke-color: ${lyricsStyle.strokeColor};
         text-decoration: ${lyricsStyle.textDecoration ?? 'none'};
@@ -365,6 +371,7 @@ export class ByzHtmlExporter {
       ${this.config.tagDropCap} {
         font-weight: ${defaultDropCapFont.cssFontWeight};
         font-style: ${defaultDropCapFont.cssFontStyle};
+        ${fontVariantCssDeclarations(defaultDropCapStyle).join('\n        ')}
         -webkit-text-stroke-width: ${defaultDropCapStyle.strokeWidth};
         -webkit-text-stroke-color: ${defaultDropCapStyle.strokeColor};
       }
@@ -388,6 +395,7 @@ export class ByzHtmlExporter {
         font-size: ${Unit.toPt(defaultTextBoxStyle.fontSize)}pt;
         font-weight: ${defaultTextBoxFont.cssFontWeight};
         font-style: ${defaultTextBoxFont.cssFontStyle};
+        ${fontVariantCssDeclarations(defaultTextBoxStyle).join('\n        ')}
         color: ${defaultTextBoxStyle.color};
         -webkit-text-stroke-width: ${defaultTextBoxStyle.strokeWidth};
         -webkit-text-stroke-color: ${defaultTextBoxStyle.strokeColor};
@@ -404,6 +412,7 @@ export class ByzHtmlExporter {
         font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
         font-weight: ${defaultLyricsFont.cssFontWeight};
         font-style: ${defaultLyricsFont.cssFontStyle};
+        ${fontVariantCssDeclarations(lyricsStyle).join('\n        ')}
         color: ${lyricsStyle.color};
         -webkit-text-stroke-width: ${lyricsStyle.strokeWidth};
         -webkit-text-stroke-color: ${lyricsStyle.strokeColor};
@@ -744,6 +753,12 @@ export class ByzHtmlExporter {
       style += `text-decoration: ${resolvedLyricsStyle.textDecoration ?? 'none'};`;
     }
 
+    for (const property of FONT_VARIANT_PROPERTIES) {
+      if (resolvedLyricsStyle[property] !== lyricsStyle[property]) {
+        style += `${FONT_VARIANT_CSS_NAMES[property]}: ${resolvedLyricsStyle[property] ?? 'normal'};`;
+      }
+    }
+
     return style === '' ? '' : ` style="${style}"`;
   }
 
@@ -1026,6 +1041,7 @@ export class ByzHtmlExporter {
       style += `font-size: ${Unit.toPt(resolvedDropCapStyle.fontSize)}pt;`;
       style += `font-weight: ${resolvedDropCapFont.cssFontWeight};`;
       style += `font-style: ${resolvedDropCapFont.cssFontStyle};`;
+      style += fontVariantCssDeclarations(resolvedDropCapStyle).join('');
       style += `line-height: ${resolvedDropCapStyle.lineHeight ?? 'normal'};`;
       style += `-webkit-text-stroke-width: ${resolvedDropCapStyle.strokeWidth};`;
       style += `-webkit-text-stroke-color: ${resolvedDropCapStyle.strokeColor};`;
@@ -1082,6 +1098,9 @@ export class ByzHtmlExporter {
       style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
       style += `font-weight: ${element.computedFontWeight};`;
       style += `font-style: ${element.computedFontStyle};`;
+      style += `font-variant-caps: ${element.computedFontVariantCaps};`;
+      style += `font-variant-numeric: ${element.computedFontVariantNumeric};`;
+      style += `font-variant-ligatures: ${element.computedFontVariantLigatures};`;
       style += `line-height: ${element.computedLineHeight ?? 'normal'};`;
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
       style += `-webkit-text-stroke-color: ${element.computedStrokeColor};`;

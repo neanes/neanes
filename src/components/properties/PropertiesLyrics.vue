@@ -232,6 +232,23 @@
           />
         </div>
       </Field>
+
+      <!--
+        The controls reflect the resolved style (per-note overrides folded
+        in); a change writes an explicit per-note value and clear restores
+        inheritance from the paragraph style.
+      -->
+      <FontVariantFields
+        id-prefix="properties-lyrics"
+        :caps="resolvedParagraphStyle.fontVariantCaps"
+        :numeric="resolvedParagraphStyle.fontVariantNumeric"
+        :ligatures="resolvedParagraphStyle.fontVariantLigatures"
+        :caps-clearable="element.lyricsFontVariantCaps != null"
+        :numeric-clearable="element.lyricsFontVariantNumeric != null"
+        :ligatures-clearable="element.lyricsFontVariantLigatures != null"
+        @change="onFontVariantChanged"
+        @clear="onFontVariantClear"
+      />
     </PaneSection>
   </PaneAccordion>
 </template>
@@ -248,6 +265,7 @@ import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
+import FontVariantFields from '@/components/properties/FontVariantFields.vue';
 import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import ParagraphStyleField from '@/components/properties/ParagraphStyleField.vue';
 import StrokeColorPicker from '@/components/StrokeColorPicker.vue';
@@ -257,7 +275,10 @@ import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
 import type { NoteElement } from '@/models/Element';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { resolveParagraphStyle } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
+import type { FontVariantProperty } from '@/utils/fontVariants';
+import { composeExplicitFontVariant } from '@/utils/fontVariants';
 
 const props = defineProps({
   element: {
@@ -336,12 +357,52 @@ function onFontFamilyChanged(lyricsFontFamily: string) {
   } as Partial<NoteElement>);
 }
 
+// Maps each font-variant property onto its per-note override field.
+const LYRIC_FONT_VARIANT_FIELDS: Record<
+  FontVariantProperty,
+  | 'lyricsFontVariantCaps'
+  | 'lyricsFontVariantNumeric'
+  | 'lyricsFontVariantLigatures'
+> = {
+  fontVariantCaps: 'lyricsFontVariantCaps',
+  fontVariantNumeric: 'lyricsFontVariantNumeric',
+  fontVariantLigatures: 'lyricsFontVariantLigatures',
+};
+
+// The paragraph style's own values (per-note overrides excluded), used to
+// decide whether "no features" needs an explicit 'normal' or can clear back
+// to inheritance.
+const styleFontVariants = computed(() =>
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    props.element.lyricsParagraphStyleId,
+  ),
+);
+
+function onFontVariantChanged(property: FontVariantProperty, value: string) {
+  emit('update', {
+    [LYRIC_FONT_VARIANT_FIELDS[property]]: composeExplicitFontVariant(
+      value,
+      styleFontVariants.value[property],
+    ),
+  } as Partial<NoteElement>);
+}
+
+function onFontVariantClear(property: FontVariantProperty) {
+  emit('update', {
+    [LYRIC_FONT_VARIANT_FIELDS[property]]: null,
+  } as Partial<NoteElement>);
+}
+
 function clearParagraphStyleFormatting() {
   emit('update', {
     lyricsColor: null,
     lyricsFontFamily: null,
     lyricsFontSize: null,
     lyricsFontStyle: null,
+    lyricsFontVariantCaps: null,
+    lyricsFontVariantNumeric: null,
+    lyricsFontVariantLigatures: null,
     lyricsStrokeWidth: null,
     lyricsStrokeColor: null,
     lyricsTextDecoration: null,

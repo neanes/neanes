@@ -1,16 +1,25 @@
 <template>
-  <Field orientation="horizontal">
-    <div class="flex min-w-0 flex-1 items-center gap-3">
+  <!--
+    Every row shares one grid: the label (and optional activation switch) in a
+    flexible left column, the control in a fixed-width right column with a
+    single left edge. Both sides center within the standard control height, so
+    single-line rows align exactly and multi-line clusters hang from their
+    first line instead of floating around a centered label.
+  -->
+  <Field orientation="horizontal" class="items-start">
+    <div class="flex min-h-9 min-w-0 flex-1 items-center gap-3">
       <Switch
         v-if="showToggle"
         :model-value="active"
         @update:model-value="emit('toggle', $event)"
       />
-      <FieldLabel :for="labelFor" class="shrink-0">
+      <FieldLabel :for="labelFor">
         {{ label }}
       </FieldLabel>
     </div>
-    <slot />
+    <div class="flex min-h-9 w-64 shrink-0 flex-col items-start justify-center">
+      <slot />
+    </div>
   </Field>
 </template>
 

@@ -936,3 +936,47 @@ This subsystem preserves these invariants:
 - `src/services/integration/LatexExporter.ts` -- writes schema v2-compatible
   CSS slant/weight fields and leaves exact face-style export as a future schema
   extension.
+
+---
+
+## 11. Font-variant (OpenType) features
+
+The face model above covers weight/slant/optical identity. The OpenType
+feature settings -- case (small caps), figure style and spacing, fractions,
+ordinals, slashed zero, and the ligature switches -- are a parallel, simpler
+contract:
+
+- One document field per CSS longhand: `fontVariantCaps`,
+  `fontVariantNumeric`, `fontVariantLigatures`. The value is that CSS
+  property's value verbatim, canonicalized to the token order in
+  `src/utils/fontVariants.ts` (the shared parser/composer, free of CKEditor
+  imports).
+- The same three names are used everywhere: CKEditor text attributes (the
+  OpenType plugin), `ParagraphStyle.overrides`, `TextBoxElement` and
+  `DropCapElement` fields, the `lyricsFontVariant*` fields on `NoteElement`,
+  and the matching score JSON fields on the v1 save shapes.
+- Inheritance is by omission, and `normal` is the explicit reset. A rich-text
+  run or an element with no value inherits its paragraph style; an override
+  stores `null` (`ParagraphStyle.overrides`) or the literal `'normal'`
+  (rich-text attribute, element field) to defeat an inherited non-normal
+  value. Each element's `getParagraphStyleOverrides` folds `'normal'` to the
+  override `null`, so resolved values use `null` for "no features".
+- Surfaces: paragraph styles define the features; rich-text runs, plain text
+  boxes, drop caps, and lyrics (per note) may override them per element with
+  per-property clear actions, all through the shared `FontVariantFields`
+  cluster. Position (sub/superscript) stays a rich-text-only character
+  format; it is deliberately not a paragraph-style or element property
+  (Chromium has no `font-variant-position`, so a style-level position would
+  have to be synthesized through layout).
+- Rendering: `buildRichTextParagraphStyleCss` emits `font-variant-*` for the
+  editor, print, and byzhtml rich-text classes; `LayoutService` writes
+  `computedFontVariant*` for text boxes and drop caps; lyric spans read the
+  resolved style directly. `ByzHtmlExporter` emits the same declarations for
+  its default tag/class CSS and per-element overrides. The LaTeX JSON schema
+  stays at v2 and drops the features (see the TODO next to the exact-face
+  projection).
+- Measurement: canvas `fontVariantCaps` covers the caps values, so
+  small-caps/all-small-caps affect measured widths (lyrics, inline text
+  boxes, drop caps). The numeric and ligature properties cannot be expressed
+  on a canvas context; their (small) width effects are an accepted
+  approximation between measurement and rendering.

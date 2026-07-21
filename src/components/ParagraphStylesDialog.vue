@@ -88,35 +88,35 @@
         >
           <ScrollArea class="h-full min-h-0 border">
             <FieldGroup class="p-4">
-              <Field orientation="horizontal">
-                <div class="min-w-0 flex-1">
-                  <FieldLabel for="paragraph-styles-dialog-name">
-                    {{
-                      $t(($) => $.dialog.paragraphStyles.name, { ns: 'dialog' })
-                    }}
-                  </FieldLabel>
-                </div>
+              <ParagraphStyleOverrideRow
+                :label="
+                  $t(($) => $.dialog.paragraphStyles.name, { ns: 'dialog' })
+                "
+                label-for="paragraph-styles-dialog-name"
+                :active="false"
+                :show-toggle="false"
+              >
                 <Input
                   id="paragraph-styles-dialog-name"
-                  class="ml-auto w-64 shrink-0"
+                  class="w-full"
                   :model-value="
                     selectedStyle == null ? '' : styleDisplayName(selectedStyle)
                   "
                   :disabled="selectedStyle?.builtIn ?? false"
                   @update:model-value="updateSelectedStyleName"
                 />
-              </Field>
+              </ParagraphStyleOverrideRow>
 
-              <Field orientation="horizontal">
-                <div class="min-w-0 flex-1">
-                  <FieldLabel for="paragraph-styles-dialog-parent">
-                    {{
-                      $t(($) => $.dialog.paragraphStyles.parentStyle, {
-                        ns: 'dialog',
-                      })
-                    }}
-                  </FieldLabel>
-                </div>
+              <ParagraphStyleOverrideRow
+                :label="
+                  $t(($) => $.dialog.paragraphStyles.parentStyle, {
+                    ns: 'dialog',
+                  })
+                "
+                label-for="paragraph-styles-dialog-parent"
+                :active="false"
+                :show-toggle="false"
+              >
                 <ParagraphStyleSelect
                   id="paragraph-styles-dialog-parent"
                   :disabled="selectedStyle?.id === defaultParagraphStyleId"
@@ -131,10 +131,10 @@
                     selectedStyle?.id === defaultParagraphStyleId
                   "
                   :none-label="parentNoneLabel"
-                  trigger-class="w-64"
+                  trigger-class="w-full"
                   @update:model-value="updateSelectedStyleParent"
                 />
-              </Field>
+              </ParagraphStyleOverrideRow>
 
               <FieldSeparator />
 
@@ -147,7 +147,7 @@
               >
                 <FontCombobox
                   id="paragraph-styles-dialog-font"
-                  class="ml-auto w-64 min-w-0 shrink-0"
+                  class="w-full min-w-0"
                   :model-value="resolvedStyle.fontFamily"
                   :options="fontOptions"
                   :disabled="isOverrideDisabled('fontFamily')"
@@ -164,7 +164,7 @@
               >
                 <FontStyleSelect
                   id="paragraph-styles-dialog-font-style"
-                  class="ml-auto w-64 min-w-0 shrink-0"
+                  class="w-full min-w-0"
                   :model-value="resolvedStyle.fontStyle"
                   :options="fontStyleOptions"
                   :disabled="isOverrideDisabled('fontStyle')"
@@ -181,17 +181,15 @@
                 :show-toggle="showOverrideToggles"
                 @toggle="toggleOverride('fontSize', $event)"
               >
-                <div class="ml-auto w-40 shrink-0">
-                  <InputFontSize
-                    id="paragraph-styles-dialog-font-size"
-                    class="w-full"
-                    :model-value="resolvedStyle.fontSize"
-                    :disabled="isOverrideDisabled('fontSize')"
-                    @update:model-value="
-                      updateSelectedStyleOverride('fontSize', $event)
-                    "
-                  />
-                </div>
+                <InputFontSize
+                  id="paragraph-styles-dialog-font-size"
+                  class="w-40"
+                  :model-value="resolvedStyle.fontSize"
+                  :disabled="isOverrideDisabled('fontSize')"
+                  @update:model-value="
+                    updateSelectedStyleOverride('fontSize', $event)
+                  "
+                />
               </ParagraphStyleOverrideRow>
 
               <ParagraphStyleOverrideRow
@@ -203,7 +201,6 @@
                 @toggle="toggleOverride('alignment', $event)"
               >
                 <ToggleGroup
-                  class="ml-auto shrink-0"
                   type="single"
                   variant="outline"
                   :model-value="resolvedStyle.alignment"
@@ -263,17 +260,14 @@
                 :show-toggle="showOverrideToggles"
                 @toggle="toggleOverride('textDecoration', $event)"
               >
-                <div class="ml-auto flex shrink-0 items-center gap-2">
+                <div class="flex items-center gap-2">
                   <Checkbox
                     id="paragraph-styles-dialog-underline"
                     :model-value="textDecorationCheckboxValue"
                     :disabled="isOverrideDisabled('textDecoration')"
                     @update:model-value="updateTextDecorationOverride"
                   />
-                  <FieldLabel
-                    for="paragraph-styles-dialog-underline"
-                    class="shrink-0"
-                  >
+                  <FieldLabel for="paragraph-styles-dialog-underline">
                     {{
                       $t(($) => $.toolbar.richTextBox.underline, {
                         ns: 'toolbar',
@@ -289,15 +283,13 @@
                 :show-toggle="showOverrideToggles"
                 @toggle="toggleOverride('color', $event)"
               >
-                <div class="ml-auto shrink-0">
-                  <ColorPicker
-                    :model-value="resolvedStyle.color"
-                    :disabled="isOverrideDisabled('color')"
-                    @update:model-value="
-                      updateSelectedStyleOverride('color', $event)
-                    "
-                  />
-                </div>
+                <ColorPicker
+                  :model-value="resolvedStyle.color"
+                  :disabled="isOverrideDisabled('color')"
+                  @update:model-value="
+                    updateSelectedStyleOverride('color', $event)
+                  "
+                />
               </ParagraphStyleOverrideRow>
 
               <ParagraphStyleOverrideRow
@@ -307,17 +299,15 @@
                 :show-toggle="showOverrideToggles"
                 @toggle="toggleOverride('strokeWidth', $event)"
               >
-                <div class="ml-auto w-40 shrink-0">
-                  <InputStrokeWidth
-                    id="paragraph-styles-dialog-stroke-width"
-                    class="w-full"
-                    :model-value="resolvedStyle.strokeWidth"
-                    :disabled="isOverrideDisabled('strokeWidth')"
-                    @update:model-value="
-                      updateSelectedStyleOverride('strokeWidth', $event)
-                    "
-                  />
-                </div>
+                <InputStrokeWidth
+                  id="paragraph-styles-dialog-stroke-width"
+                  class="w-40"
+                  :model-value="resolvedStyle.strokeWidth"
+                  :disabled="isOverrideDisabled('strokeWidth')"
+                  @update:model-value="
+                    updateSelectedStyleOverride('strokeWidth', $event)
+                  "
+                />
               </ParagraphStyleOverrideRow>
 
               <ParagraphStyleOverrideRow
@@ -328,30 +318,28 @@
                 :show-toggle="showOverrideToggles"
                 @toggle="toggleOverride('strokeColor', $event)"
               >
-                <div class="ml-auto shrink-0">
-                  <StrokeColorPicker
-                    :model-value="resolvedStyle.strokeColor"
-                    :preview-color="
-                      resolvedStyle.strokeColor === 'currentcolor'
-                        ? resolvedStyle.color
-                        : resolvedStyle.strokeColor
-                    "
-                    :text-color="resolvedStyle.color"
-                    :same-as-text="strokeColorSameAsText"
-                    :disabled="isOverrideDisabled('strokeColor')"
-                    :label="
-                      $t(($) => $.dialog.pageSetup.outlineColor, {
-                        ns: 'dialog',
-                      })
-                    "
-                    :same-as-text-label="
-                      $t(($) => $.dialog.pageSetup.sameAsText, { ns: 'dialog' })
-                    "
-                    @update:model-value="
-                      updateSelectedStyleOverride('strokeColor', $event)
-                    "
-                  />
-                </div>
+                <StrokeColorPicker
+                  :model-value="resolvedStyle.strokeColor"
+                  :preview-color="
+                    resolvedStyle.strokeColor === 'currentcolor'
+                      ? resolvedStyle.color
+                      : resolvedStyle.strokeColor
+                  "
+                  :text-color="resolvedStyle.color"
+                  :same-as-text="strokeColorSameAsText"
+                  :disabled="isOverrideDisabled('strokeColor')"
+                  :label="
+                    $t(($) => $.dialog.pageSetup.outlineColor, {
+                      ns: 'dialog',
+                    })
+                  "
+                  :same-as-text-label="
+                    $t(($) => $.dialog.pageSetup.sameAsText, { ns: 'dialog' })
+                  "
+                  @update:model-value="
+                    updateSelectedStyleOverride('strokeColor', $event)
+                  "
+                />
               </ParagraphStyleOverrideRow>
 
               <ParagraphStyleOverrideRow
@@ -363,22 +351,134 @@
                 :show-toggle="showOverrideToggles"
                 @toggle="toggleOverride('lineHeight', $event)"
               >
-                <div class="ml-auto w-40 shrink-0">
-                  <InputUnit
-                    id="paragraph-styles-dialog-line-height"
-                    class="w-full"
-                    unit="unitless"
-                    :nullable="true"
-                    :min="0"
-                    :step="0.1"
-                    :model-value="resolvedStyle.lineHeight"
-                    :format-options="fraction2FormatOptions"
-                    :disabled="isOverrideDisabled('lineHeight')"
-                    placeholder="normal"
-                    @update:model-value="
-                      updateSelectedStyleOverride('lineHeight', $event)
-                    "
-                  />
+                <InputUnit
+                  id="paragraph-styles-dialog-line-height"
+                  class="w-40"
+                  unit="unitless"
+                  :nullable="true"
+                  :min="0"
+                  :step="0.1"
+                  :model-value="resolvedStyle.lineHeight"
+                  :format-options="fraction2FormatOptions"
+                  :disabled="isOverrideDisabled('lineHeight')"
+                  placeholder="normal"
+                  @update:model-value="
+                    updateSelectedStyleOverride('lineHeight', $event)
+                  "
+                />
+              </ParagraphStyleOverrideRow>
+
+              <ParagraphStyleOverrideRow
+                :label="
+                  $t(($) => $.toolbar.richTextBox.case, { ns: 'toolbar' })
+                "
+                :active="hasOverride('fontVariantCaps')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('fontVariantCaps', $event)"
+              >
+                <ToggleGroup
+                  type="single"
+                  variant="outline"
+                  :model-value="capsValue"
+                  :disabled="isOverrideDisabled('fontVariantCaps')"
+                  @update:model-value="onCapsChanged"
+                >
+                  <AppTooltip
+                    v-for="option in capsOptions"
+                    :key="option.value"
+                    :tooltip="option.label"
+                  >
+                    <ToggleGroupItem
+                      :value="option.value"
+                      :aria-label="option.label"
+                      :style="caseOptionStyle(option.value)"
+                    >
+                      Aa
+                    </ToggleGroupItem>
+                  </AppTooltip>
+                </ToggleGroup>
+              </ParagraphStyleOverrideRow>
+
+              <ParagraphStyleOverrideRow
+                :label="
+                  $t(($) => $.toolbar.richTextBox.numbers, { ns: 'toolbar' })
+                "
+                :active="hasOverride('fontVariantNumeric')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('fontVariantNumeric', $event)"
+              >
+                <div class="flex flex-col items-start gap-1">
+                  <ToggleGroup
+                    type="single"
+                    variant="outline"
+                    :model-value="numericValue"
+                    :disabled="isOverrideDisabled('fontVariantNumeric')"
+                    @update:model-value="onNumericChanged"
+                  >
+                    <AppTooltip
+                      v-for="option in numericOptions"
+                      :key="option.value"
+                      :tooltip="option.label"
+                    >
+                      <ToggleGroupItem
+                        :value="option.value"
+                        :aria-label="option.label"
+                        :style="numericOptionStyle(option.value)"
+                      >
+                        19
+                      </ToggleGroupItem>
+                    </AppTooltip>
+                  </ToggleGroup>
+                  <div
+                    v-for="flag in NUMERIC_FLAGS"
+                    :key="flag.id"
+                    class="flex min-h-8 items-center gap-2"
+                  >
+                    <Checkbox
+                      :id="`paragraph-styles-dialog-${flag.id}`"
+                      :model-value="flag.value(numericVariant)"
+                      :disabled="isOverrideDisabled('fontVariantNumeric')"
+                      @update:model-value="
+                        onNumericVariantChanged(
+                          flag.set(numericVariant, $event),
+                        )
+                      "
+                    />
+                    <FieldLabel :for="`paragraph-styles-dialog-${flag.id}`">
+                      {{ $t(flag.label, { ns: 'toolbar' }) }}
+                    </FieldLabel>
+                  </div>
+                </div>
+              </ParagraphStyleOverrideRow>
+
+              <ParagraphStyleOverrideRow
+                :label="
+                  $t(($) => $.toolbar.richTextBox.ligatures, { ns: 'toolbar' })
+                "
+                :active="hasOverride('fontVariantLigatures')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('fontVariantLigatures', $event)"
+              >
+                <div class="flex flex-col items-start gap-1">
+                  <div
+                    v-for="flag in LIGATURE_FLAGS"
+                    :key="flag.id"
+                    class="flex min-h-8 items-center gap-2"
+                  >
+                    <Checkbox
+                      :id="`paragraph-styles-dialog-${flag.id}`"
+                      :model-value="flag.value(ligatureVariant)"
+                      :disabled="isOverrideDisabled('fontVariantLigatures')"
+                      @update:model-value="
+                        onLigatureVariantChanged(
+                          flag.set(ligatureVariant, $event),
+                        )
+                      "
+                    />
+                    <FieldLabel :for="`paragraph-styles-dialog-${flag.id}`">
+                      {{ $t(flag.label, { ns: 'toolbar' }) }}
+                    </FieldLabel>
+                  </div>
                 </div>
               </ParagraphStyleOverrideRow>
             </FieldGroup>
@@ -438,17 +538,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-} from '@/components/ui/field';
+import { FieldGroup, FieldLabel, FieldSeparator } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import {
+  caseOptionStyle,
+  LIGATURE_FLAGS,
+  NUMERIC_FLAGS,
+  numericOptionStyle,
+  useFontVariantControls,
+  useFontVariantOptions,
+} from '@/composables/useFontVariantOptions';
 import { PARAGRAPH_STYLE_NONE_VALUE } from '@/composables/useRichTextStyleCommands';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -543,6 +646,27 @@ const textDecorationCheckboxValue = computed(
 );
 const strokeColorSameAsText = computed(
   () => resolvedStyle.value.strokeColor === 'currentcolor',
+);
+
+const { capsOptions, numericOptions } = useFontVariantOptions();
+
+// A composition with no features stores a null override, i.e. an explicit
+// "normal" that defeats any value inherited from the parent style.
+const {
+  capsValue,
+  numericVariant,
+  numericValue,
+  ligatureVariant,
+  onCapsChanged,
+  onNumericChanged,
+  onNumericVariantChanged,
+  onLigatureVariantChanged,
+} = useFontVariantControls(
+  () => resolvedStyle.value.fontVariantCaps,
+  () => resolvedStyle.value.fontVariantNumeric,
+  () => resolvedStyle.value.fontVariantLigatures,
+  (property, composed) =>
+    updateSelectedStyleOverride(property, composed === '' ? null : composed),
 );
 
 const canSubmit = computed(() => {

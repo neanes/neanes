@@ -83,6 +83,43 @@ describe('ParagraphStyle', () => {
     expect(resolved.textDecoration).toBeNull();
   });
 
+  it('resolves font-variant overrides, including explicit normal', () => {
+    const parent = new ParagraphStyle();
+    parent.id = 'parent';
+    parent.overrides = {
+      fontVariantCaps: 'all-small-caps',
+      fontVariantNumeric: 'oldstyle-nums proportional-nums',
+      fontVariantLigatures: 'discretionary-ligatures',
+    };
+
+    const child = new ParagraphStyle();
+    child.id = 'child';
+    child.parentStyleId = parent.id;
+    child.overrides = {
+      // An explicit normal that defeats the parent value.
+      fontVariantCaps: null,
+      fontVariantNumeric: 'lining-nums tabular-nums slashed-zero',
+    };
+
+    const inherited = resolveParagraphStyle([parent, child], parent.id);
+
+    expect(inherited.fontVariantCaps).toBe('all-small-caps');
+    expect(inherited.fontVariantNumeric).toBe(
+      'oldstyle-nums proportional-nums',
+    );
+    expect(inherited.fontVariantLigatures).toBe('discretionary-ligatures');
+
+    const resolved = resolveParagraphStyle([parent, child], child.id, {
+      fontVariantLigatures: null,
+    });
+
+    expect(resolved.fontVariantCaps).toBeNull();
+    expect(resolved.fontVariantNumeric).toBe(
+      'lining-nums tabular-nums slashed-zero',
+    );
+    expect(resolved.fontVariantLigatures).toBeNull();
+  });
+
   it('detects inheritance cycles', () => {
     const left = new ParagraphStyle();
     left.id = 'left';

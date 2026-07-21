@@ -55,7 +55,7 @@
     "@types/throttle-debounce": "^5.0.2",
     "@types/web-bluetooth": "^0.0.21",
     "@types/webpack-env": "^1.18.8",
-    "@vitejs/plugin-vue": "^6.0.7",
+    "@vitejs/plugin-vue": "^6.0.8",
     "@vitest/coverage-istanbul": "^4.1.10",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.9.0",

@@ -64,6 +64,7 @@
 
 <script setup lang="ts">
 import { PhCaretUpDown, PhCheck } from '@phosphor-icons/vue';
+import { ComboboxVirtualizer } from 'reka-ui';
 import type { HTMLAttributes, PropType } from 'vue';
 import { computed, ref, watch } from 'vue';
 
@@ -79,7 +80,6 @@ import {
   ComboboxList,
   ComboboxTrigger,
   ComboboxViewport,
-  ComboboxVirtualizer,
 } from '@/components/ui/combobox';
 import { cn } from '@/lib/utils';
 

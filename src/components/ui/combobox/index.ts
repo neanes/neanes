@@ -9,4 +9,4 @@ export { default as ComboboxList } from './ComboboxList.vue';
 export { default as ComboboxSeparator } from './ComboboxSeparator.vue';
 export { default as ComboboxTrigger } from './ComboboxTrigger.vue';
 export { default as ComboboxViewport } from './ComboboxViewport.vue';
-export { ComboboxCancel, ComboboxVirtualizer } from 'reka-ui';
+export { ComboboxCancel } from 'reka-ui';

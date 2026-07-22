@@ -79,7 +79,7 @@
     "prettier": "^3.9.5",
     "register-service-worker": "^1.7.2",
     "reka-ui": "^2.10.1",
-    "shadcn-vue": "^2.7.4",
+    "shadcn-vue": "^2.8.0",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.2",
     "tone": "^15.1.22",

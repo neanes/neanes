@@ -141,33 +141,10 @@
 }
 
 @layer base {
-  /*
-   * Tailwind v4 changed the default border color to currentColor, so shadcn-vue
-   * ships `* { @apply border-border }` to give bare `border` utilities the
-   * --border token. But setting an author border-color on a native <button>
-   * (or other form control) knocks it out of the OS theme, exposing the UA
-   * `outset` bevel and making every legacy button look embossed. Excluding form
-   * controls keeps shadcn's borders correct while leaving native controls alone.
-   */
-  *:where(
-    :not(
-      button,
-      [type='button'],
-      [type='reset'],
-      [type='submit'],
-      input,
-      select,
-      textarea,
-      [role='button']
-    )
-  ) {
-    @apply border-border;
-  }
   * {
-    @apply outline-ring/50;
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
-    @apply font-sans;
   }
 }

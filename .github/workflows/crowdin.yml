@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v7.0.0
 
       - name: Upload translations to Crowdin
-        uses: crowdin/github-action@v2.16.3
+        uses: crowdin/github-action@v2.16.4
         with:
           upload_sources: true
           upload_sources_args: '--delete-obsolete'
@@ -51,7 +51,7 @@ jobs:
         uses: actions/checkout@v7.0.0
 
       - name: Download approved translations from Crowdin
-        uses: crowdin/github-action@v2.16.3
+        uses: crowdin/github-action@v2.16.4
         with:
           upload_sources: false
           upload_translations: false

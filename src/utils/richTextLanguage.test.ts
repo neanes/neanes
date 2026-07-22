@@ -6,6 +6,7 @@ import {
   getRichTextLanguage,
   getRichTextLanguageAttributes,
   hasMeaningfulRichTextEditorContent,
+  inferRichTextEditorDirection,
   inferRichTextEditorLanguage,
   inferSharedRichTextEditorLanguage,
   setRichTextLanguage,
@@ -55,6 +56,24 @@ describe('richTextLanguage', () => {
           element([text('Hello', 'ar:rtl'), text('Kyrie', 'el:ltr')]),
         ]),
       ),
+    ).toBeNull();
+  });
+
+  it('infers the direction from the editor language', () => {
+    expect(
+      inferRichTextEditorDirection(
+        createEditor([element([text('Hello', 'ar:rtl')])]),
+      ),
+    ).toBe('rtl');
+
+    expect(
+      inferRichTextEditorDirection(
+        createEditor([element([text('Hello', 'en:ltr')])]),
+      ),
+    ).toBe('ltr');
+
+    expect(
+      inferRichTextEditorDirection(createEditor([element([text('Hello')])])),
     ).toBeNull();
   });
 

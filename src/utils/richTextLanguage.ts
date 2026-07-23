@@ -104,6 +104,14 @@ export function inferRichTextEditorLanguage(
   return isMixedOrMissing ? null : inferred;
 }
 
+export function inferRichTextEditorDirection(
+  editor: Pick<Editor, 'model'>,
+): LanguageDirection | null {
+  const language = inferRichTextEditorLanguage(editor);
+
+  return language == null ? null : getRichTextLanguageDirection(language);
+}
+
 export function hasMeaningfulRichTextEditorContent(
   editor: Pick<Editor, 'model'>,
 ): boolean {

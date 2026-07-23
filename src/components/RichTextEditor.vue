@@ -24,6 +24,7 @@ import {
   unregisterEditor,
 } from '@/composables/useRichTextEditorRegistry';
 import InlineEditor from '@/customEditor';
+import { inferRichTextEditorDirection } from '@/utils/richTextLanguage';
 
 defineOptions({
   inheritAttrs: false,
@@ -94,10 +95,30 @@ onBeforeUnmount(() => {
   unregisterRichTextEditor();
 });
 
+// CKEditor writes the editable root's `dir` from `config.language.content` when
+// it renders, so on its own the base direction only catches up with the text on
+// a remount. That direction is what `text-align: justify` resolves its last line
+// against, and the `<span dir="rtl">` the language dropdown applies cannot supply
+// it -- an inline span is bidi-isolated, so it reorders its own glyphs and
+// contributes nothing to the block. Keep the root in step with the text instead.
+function refreshBaseDirection(editor: InlineEditor) {
+  const view = editor.editing.view;
+  const direction =
+    inferRichTextEditorDirection(editor) ??
+    editor.locale.contentLanguageDirection;
+
+  view.change((writer) => {
+    writer.setAttribute('dir', direction, view.document.getRoot()!);
+  });
+}
+
 function onReady(editor: InlineEditor) {
   registerEditor(editor, props.owner);
   registeredEditor = editor;
   editorIsFocused = editor.ui.focusTracker.isFocused;
+
+  refreshBaseDirection(editor);
+  editor.model.document.on('change:data', () => refreshBaseDirection(editor));
 
   const onFocusChanged = (
     _event: unknown,

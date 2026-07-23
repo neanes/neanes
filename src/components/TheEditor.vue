@@ -556,7 +556,7 @@ const playbackEvents = ref<PlaybackSequenceEvent[]>([]);
 const playbackTimeInterval = ref<ReturnType<typeof setInterval> | null>(null);
 const audioOptions = reactive<PlaybackOptions>({
   useLegetos: false,
-  useDefaultAttractionZo: true,
+  useAgiaAttraction: true,
   frequencyDi: 196,
   speed: 1,
 
@@ -569,8 +569,8 @@ const audioOptions = reactive<PlaybackOptions>({
   spathiIntervals: [20, 4, 4, 14],
   klitonIntervals: [14, 12, 4],
 
-  defaultAttractionZoMoria: -4,
-  defaultAttractionKeMoria: 5,
+  agiaAttractionZoMoria: -4,
+  agiaAttractionKeMoria: 5,
 
   volumeIson: -4,
   volumeMelody: 0,
@@ -1716,11 +1716,34 @@ watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
   }
 });
 
+// The "Agia attraction" feature was formerly named "diatonic zo attraction"
+// and stored its settings under different keys. Fold any values saved under the
+// old keys into the new ones so that a user's saved preferences survive the
+// rename.
+function migrateAgiaAttractionOptions(options: Record<string, unknown>) {
+  const renamedKeys: { [oldKey: string]: string } = {
+    useDefaultAttractionZo: 'useAgiaAttraction',
+    defaultAttractionZoMoria: 'agiaAttractionZoMoria',
+    defaultAttractionKeMoria: 'agiaAttractionKeMoria',
+  };
+
+  for (const [oldKey, newKey] of Object.entries(renamedKeys)) {
+    if (oldKey in options) {
+      if (!(newKey in options)) {
+        options[newKey] = options[oldKey];
+      }
+      delete options[oldKey];
+    }
+  }
+}
+
 onMounted(() => {
   const savedAudioOptions = localStorage.getItem('audioOptionsDefault');
 
   if (savedAudioOptions != null) {
-    Object.assign(audioOptions, JSON.parse(savedAudioOptions));
+    const parsedAudioOptions = JSON.parse(savedAudioOptions);
+    migrateAgiaAttractionOptions(parsedAudioOptions);
+    Object.assign(audioOptions, parsedAudioOptions);
 
     // -Infinity is not valid JSON, so it is serialized as null.
     // Deserialize as -Infinity

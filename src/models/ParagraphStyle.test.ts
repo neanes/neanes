@@ -90,6 +90,7 @@ describe('ParagraphStyle', () => {
       fontVariantCaps: 'all-small-caps',
       fontVariantNumeric: 'oldstyle-nums proportional-nums',
       fontVariantLigatures: 'discretionary-ligatures',
+      fontVariantAlternates: 'historical-forms',
     };
 
     const child = new ParagraphStyle();
@@ -108,9 +109,11 @@ describe('ParagraphStyle', () => {
       'oldstyle-nums proportional-nums',
     );
     expect(inherited.fontVariantLigatures).toBe('discretionary-ligatures');
+    expect(inherited.fontVariantAlternates).toBe('historical-forms');
 
     const resolved = resolveParagraphStyle([parent, child], child.id, {
       fontVariantLigatures: null,
+      fontVariantAlternates: null,
     });
 
     expect(resolved.fontVariantCaps).toBeNull();
@@ -118,6 +121,7 @@ describe('ParagraphStyle', () => {
       'lining-nums tabular-nums slashed-zero',
     );
     expect(resolved.fontVariantLigatures).toBeNull();
+    expect(resolved.fontVariantAlternates).toBeNull();
   });
 
   it('detects inheritance cycles', () => {

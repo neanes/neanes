@@ -1,3 +1,13 @@
+import { isTokenNode } from '@csstools/css-parser-algorithms';
+import { isTokenString } from '@csstools/css-tokenizer';
+
+import {
+  cssComponentValuesToString,
+  cssIdentifier,
+  parseCssCommaSeparatedComponentValues,
+  parseCssComponentValues,
+  significantCssComponentValues,
+} from './cssValues';
 import {
   NEUME_FONT_FAMILIES,
   RICH_TEXT_DEFAULT_FONT_FAMILY,
@@ -8,35 +18,44 @@ import {
 export function quoteFontFamily(name: string): string {
   return /^[A-Za-z][A-Za-z0-9-]*$/.test(name)
     ? name
-    : `'${name.replace(/'/g, "\\'")}'`;
+    : `'${name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+}
+
+// Escape a font name for use inside a double-quoted CSS string (@font-face
+// local() sources, @font-feature-values family lists).
+export function escapeFontName(name: string): string {
+  return name.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
 export function normalizeFontFamily(fontFamily: string): string {
+  const values = significantCssComponentValues(
+    parseCssComponentValues(fontFamily),
+  );
+
+  if (
+    values.length === 1 &&
+    isTokenNode(values[0]) &&
+    isTokenString(values[0].value)
+  ) {
+    return values[0].value[4].value;
+  }
+
+  const identifiers = values.map(cssIdentifier);
+
+  if (identifiers.length > 0 && identifiers.every((value) => value != null)) {
+    return identifiers.join(' ');
+  }
+
+  // Keep malformed or functional values as raw text. Callers use this helper
+  // for UI and comparison as well as valid font-family grammar, so preserving
+  // an unfamiliar value is safer than silently turning it into another name.
   return fontFamily.trim().replace(/^['"]|['"]$/g, '');
 }
 
 export function splitFontFamilyList(value: string): string[] {
-  const fontFamilies: string[] = [];
-  let current = '';
-  let quote: '"' | "'" | null = null;
-
-  for (const character of value) {
-    if ((character === '"' || character === "'") && quote == null) {
-      quote = character;
-    } else if (character === quote) {
-      quote = null;
-    }
-
-    if (character === ',' && quote == null) {
-      fontFamilies.push(current);
-      current = '';
-    } else {
-      current += character;
-    }
-  }
-
-  fontFamilies.push(current);
-  return fontFamilies;
+  return parseCssCommaSeparatedComponentValues(value).map(
+    cssComponentValuesToString,
+  );
 }
 
 // The first family in a CSS font-family list, unquoted. Handles a quoted first

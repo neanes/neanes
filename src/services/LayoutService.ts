@@ -1427,6 +1427,8 @@ export class LayoutService {
             resolvedDropCapStyle.fontVariantNumeric ?? 'normal';
           dropCapElement.computedFontVariantLigatures =
             resolvedDropCapStyle.fontVariantLigatures ?? 'normal';
+          dropCapElement.computedFontVariantAlternates =
+            resolvedDropCapStyle.fontVariantAlternates ?? 'normal';
 
           dropCapElement.computedLineSpan = 1;
 
@@ -4902,6 +4904,8 @@ export class LayoutService {
       resolvedParagraphStyle.fontVariantNumeric ?? 'normal';
     textBoxElement.computedFontVariantLigatures =
       resolvedParagraphStyle.fontVariantLigatures ?? 'normal';
+    textBoxElement.computedFontVariantAlternates =
+      resolvedParagraphStyle.fontVariantAlternates ?? 'normal';
 
     if (textBoxElement.inline) {
       if (textBoxElement.fillWidth) {
@@ -5021,6 +5025,8 @@ export class LayoutService {
         textbox.computedFontVariantNumeric;
       textbox.computedFontVariantLigaturesPrevious =
         textbox.computedFontVariantLigatures;
+      textbox.computedFontVariantAlternatesPrevious =
+        textbox.computedFontVariantAlternates;
     } else if (element.elementType === ElementType.ModeKey) {
       const modeKey = element as ModeKeyElement;
       modeKey.computedFontFamilyPrevious = modeKey.computedFontFamily;
@@ -5048,6 +5054,8 @@ export class LayoutService {
         dropCap.computedFontVariantNumeric;
       dropCap.computedFontVariantLigaturesPrevious =
         dropCap.computedFontVariantLigatures;
+      dropCap.computedFontVariantAlternatesPrevious =
+        dropCap.computedFontVariantAlternates;
     }
   }
 
@@ -5116,7 +5124,9 @@ export class LayoutService {
         textbox.computedFontVariantNumericPrevious !==
           textbox.computedFontVariantNumeric ||
         textbox.computedFontVariantLigaturesPrevious !==
-          textbox.computedFontVariantLigatures;
+          textbox.computedFontVariantLigatures ||
+        textbox.computedFontVariantAlternatesPrevious !==
+          textbox.computedFontVariantAlternates;
     }
 
     if (!element.updated && element.elementType === ElementType.RichTextBox) {
@@ -5160,7 +5170,9 @@ export class LayoutService {
         dropCap.computedFontVariantNumericPrevious !==
           dropCap.computedFontVariantNumeric ||
         dropCap.computedFontVariantLigaturesPrevious !==
-          dropCap.computedFontVariantLigatures;
+          dropCap.computedFontVariantLigatures ||
+        dropCap.computedFontVariantAlternatesPrevious !==
+          dropCap.computedFontVariantAlternates;
     }
   }
 

@@ -243,9 +243,13 @@
         :caps="resolvedParagraphStyle.fontVariantCaps"
         :numeric="resolvedParagraphStyle.fontVariantNumeric"
         :ligatures="resolvedParagraphStyle.fontVariantLigatures"
+        :alternates="resolvedParagraphStyle.fontVariantAlternates"
+        :font-family="resolvedParagraphStyle.fontFamily"
+        :font-style="resolvedParagraphStyle.fontStyle"
         :caps-clearable="element.lyricsFontVariantCaps != null"
         :numeric-clearable="element.lyricsFontVariantNumeric != null"
         :ligatures-clearable="element.lyricsFontVariantLigatures != null"
+        :alternates-clearable="element.lyricsFontVariantAlternates != null"
         @change="onFontVariantChanged"
         @clear="onFontVariantClear"
       />
@@ -363,10 +367,12 @@ const LYRIC_FONT_VARIANT_FIELDS: Record<
   | 'lyricsFontVariantCaps'
   | 'lyricsFontVariantNumeric'
   | 'lyricsFontVariantLigatures'
+  | 'lyricsFontVariantAlternates'
 > = {
   fontVariantCaps: 'lyricsFontVariantCaps',
   fontVariantNumeric: 'lyricsFontVariantNumeric',
   fontVariantLigatures: 'lyricsFontVariantLigatures',
+  fontVariantAlternates: 'lyricsFontVariantAlternates',
 };
 
 // The paragraph style's own values (per-note overrides excluded), used to
@@ -403,6 +409,7 @@ function clearParagraphStyleFormatting() {
     lyricsFontVariantCaps: null,
     lyricsFontVariantNumeric: null,
     lyricsFontVariantLigatures: null,
+    lyricsFontVariantAlternates: null,
     lyricsStrokeWidth: null,
     lyricsStrokeColor: null,
     lyricsTextDecoration: null,

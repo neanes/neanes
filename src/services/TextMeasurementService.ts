@@ -13,8 +13,8 @@ export interface InkBounds {
 // than small-caps, so caps are applied through the context's fontVariantCaps
 // property instead. The owned CSS keywords are all valid canvas values;
 // anything unknown measures as normal. The other font-variant properties
-// (numeric, ligatures) have no canvas equivalent, so their width effects are
-// not measurable and are accepted as approximation.
+// (numeric, ligatures, alternates) have no canvas equivalent, so their width
+// effects are not measurable and are accepted as approximation.
 function toCanvasFontVariantCaps(fontVariantCaps: string) {
   return (parseFontVariantCaps(fontVariantCaps) ??
     'normal') as CanvasFontVariantCaps;

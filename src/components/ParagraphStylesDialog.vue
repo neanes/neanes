@@ -481,6 +481,41 @@
                   </div>
                 </div>
               </ParagraphStyleOverrideRow>
+
+              <ParagraphStyleOverrideRow
+                v-if="
+                  alternateFlags.length > 0 ||
+                  (showOverrideToggles && hasOverride('fontVariantAlternates'))
+                "
+                :label="
+                  $t(($) => $.toolbar.richTextBox.alternates, { ns: 'toolbar' })
+                "
+                :active="hasOverride('fontVariantAlternates')"
+                :show-toggle="showOverrideToggles"
+                @toggle="toggleOverride('fontVariantAlternates', $event)"
+              >
+                <div class="flex flex-col items-start gap-1">
+                  <div
+                    v-for="flag in alternateFlags"
+                    :key="flag.id"
+                    class="flex min-h-8 items-center gap-2"
+                  >
+                    <Checkbox
+                      :id="`paragraph-styles-dialog-${flag.id}`"
+                      :model-value="flag.value(alternatesVariant)"
+                      :disabled="isOverrideDisabled('fontVariantAlternates')"
+                      @update:model-value="
+                        onAlternatesVariantChanged(
+                          flag.set(alternatesVariant, $event),
+                        )
+                      "
+                    />
+                    <FieldLabel :for="`paragraph-styles-dialog-${flag.id}`">
+                      {{ flag.label }}
+                    </FieldLabel>
+                  </div>
+                </div>
+              </ParagraphStyleOverrideRow>
             </FieldGroup>
           </ScrollArea>
         </TabsContent>
@@ -543,6 +578,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useAlternateFlags } from '@/composables/useFontAlternates';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import {
   caseOptionStyle,
@@ -657,16 +693,25 @@ const {
   numericVariant,
   numericValue,
   ligatureVariant,
+  alternatesVariant,
   onCapsChanged,
   onNumericChanged,
   onNumericVariantChanged,
   onLigatureVariantChanged,
+  onAlternatesVariantChanged,
 } = useFontVariantControls(
   () => resolvedStyle.value.fontVariantCaps,
   () => resolvedStyle.value.fontVariantNumeric,
   () => resolvedStyle.value.fontVariantLigatures,
+  () => resolvedStyle.value.fontVariantAlternates,
   (property, composed) =>
     updateSelectedStyleOverride(property, composed === '' ? null : composed),
+);
+
+const alternateFlags = useAlternateFlags(
+  () => resolvedStyle.value.fontFamily,
+  () => resolvedStyle.value.fontStyle,
+  () => alternatesVariant.value,
 );
 
 const canSubmit = computed(() => {

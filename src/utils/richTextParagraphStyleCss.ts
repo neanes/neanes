@@ -32,11 +32,12 @@ export function buildRichTextParagraphStyleCss(
             `${FONT_VARIANT_CSS_NAMES[property]}:${resolved[property]};`,
         )
         .join('');
-
-      return `${selectorPrefix} p.${richTextParagraphStyleClassName(style.id)}{font-family:${getFontFamilyWithNeumeFallback(
+      const fontFamily = getFontFamilyWithNeumeFallback(
         font.cssFontFamily,
         pageSetup.neumeDefaultFontFamily,
-      )};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;-webkit-text-stroke-color:${resolved.strokeColor};line-height:${resolved.lineHeight ?? 'normal'};text-align:${resolved.alignment};${textDecoration}${fontVariants}}`;
+      );
+
+      return `${selectorPrefix} p.${richTextParagraphStyleClassName(style.id)}{font-family:${fontFamily};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;-webkit-text-stroke-color:${resolved.strokeColor};line-height:${resolved.lineHeight ?? 'normal'};text-align:${resolved.alignment};${textDecoration}${fontVariants}}`;
     })
     .join('\n');
 }

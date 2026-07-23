@@ -61,6 +61,7 @@ const style = computed(() => {
     fontVariantCaps: props.element.computedFontVariantCaps,
     fontVariantNumeric: props.element.computedFontVariantNumeric,
     fontVariantLigatures: props.element.computedFontVariantLigatures,
+    fontVariantAlternates: props.element.computedFontVariantAlternates,
     lineHeight: `${props.element.computedLineHeight ?? 'normal'}`,
     webkitTextStrokeWidth: withZoom(props.element.computedStrokeWidth),
     webkitTextStrokeColor: props.element.computedStrokeColor,

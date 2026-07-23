@@ -47,7 +47,7 @@
     "@fontsource-variable/inter": "^5.2.8",
     "@nabla/vite-plugin-eslint": "^3.0.1",
     "@phosphor-icons/vue": "^2.2.1",
-    "@tailwindcss/vite": "^4.3.2",
+    "@tailwindcss/vite": "^4.3.3",
     "@tanstack/vue-table": "^8.21.3",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^26.1.1",

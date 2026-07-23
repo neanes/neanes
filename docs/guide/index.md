@@ -280,11 +280,11 @@ You may adjust the pitch of this note to be higher or lower, which raises or low
 
 Use the volume sliders to adjust the volume of the melody and the ison. The volume is measured in decibels (dB), which is a logarithmic scale. The maximum value is `0 dB`, which corresponds to playing at your speaker's volume setting. The minimum value is `-Infinity`, which corresponds to muting the volume. `-10 dB` is approximately "half as loud" as `0 dB`.
 
-#### Diatonic Zo Attraction
+#### Agia Attraction
 
-If checked, hymns that use the diatonic scale will automatically have the note Zo' lowered if the melody does not ascend past Zo', and the note does not already have a sharp, flat, or fthora explicitly specified. You may adjust the number of moria to lower Zo'.
+If checked, hymns that use the diatonic scale will automatically have the note Zo' lowered when the melody does not ascend past Zo', and the note Ke raised when it leads back up to a natural Zo'. This applies only to notes that do not already have a sharp, flat, or fthora explicitly specified. You may adjust the number of moria used to lower Zo' and to raise Ke independently.
 
-This setting may be temporarily overridden for a particular note by selecting the note and checking `Ignore Attractions` in the Properties pane. This is helpful when the software incorrectly guesses that you want the Zo flattened. By checking `Ignore Attractions`, the note will be natural unless you explicitly place an alteration on it.
+This setting may be temporarily overridden for a particular note by selecting the note and checking `Ignore Attractions` in the Properties pane. This is helpful when the software incorrectly guesses that you want Zo flattened or Ke sharpened. By checking `Ignore Attractions`, the note will be natural unless you explicitly place an alteration on it.
 
 It may also be overridden for an entire hymn by clicking on the initial martyria and checking `Ignore Attractions` in the Properties pane. This is useful for hymns of the plagal first mode from Ke, which are sometimes sung as if from Pa, but without the proper Pa fthora placed above Ke.
 

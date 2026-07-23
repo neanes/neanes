@@ -9,12 +9,13 @@ import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   ParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { fontCatalog } from '@/services/FontCatalog';
 import { setRichTextLanguage } from '@/utils/richTextLanguage';
 import { Unit } from '@/utils/Unit';
 
 import glyphnames from '../../assets/fonts/sbmufl/glyphnames.json';
 import type { SbmuflGlyphName } from './../NeumeMappingService';
-import { ByzHtmlExporter } from './ByzHtmlExporter';
+import { ByzHtmlExporter, createByzHtmlDocument } from './ByzHtmlExporter';
 
 function createComputedTextBox(overrides: Partial<TextBoxElement> = {}) {
   const element = new TextBoxElement();
@@ -142,7 +143,29 @@ describe('ByzHtmlExporter', () => {
     });
 
     expect(exporter.exportTextBox(element, [], 0)).toBe(
-      `<div dir="auto" class="byz--text-box byz--text-box-inline" style="color: #123456;font-family: 'Alegreya', 'Source Serif';font-size: 18pt;font-weight: 700;font-style: italic;font-variant-caps: normal;font-variant-numeric: normal;font-variant-ligatures: normal;line-height: 1.4;-webkit-text-stroke-width: 2;-webkit-text-stroke-color: currentcolor;text-align: right;">Inline override</div\n>`,
+      `<div dir="auto" class="byz--text-box byz--text-box-inline" style="color: #123456;font-family: 'Alegreya', 'Source Serif';font-size: 18pt;font-weight: 700;font-style: italic;font-variant-caps: normal;font-variant-numeric: normal;font-variant-ligatures: normal;font-variant-alternates: normal;line-height: 1.4;-webkit-text-stroke-width: 2;-webkit-text-stroke-color: currentcolor;text-align: right;">Inline override</div\n>`,
     );
+  });
+
+  it('exports all registered exact faces and alternate mappings', () => {
+    const registeredFamily = 'Previously Registered Export Family';
+    const registeredFace = fontCatalog.resolveFace(registeredFamily, 'Caption');
+    const unregisteredFamily = 'Unregistered Regular Export Family';
+
+    fontCatalog.resolveFace(unregisteredFamily, 'Regular');
+
+    const html = createByzHtmlDocument(
+      "body { font-family: 'Source Serif'; }",
+      '<p>Text</p>',
+      false,
+    );
+
+    expect(html).toContain(
+      `@font-face { font-family: "${registeredFace.cssFamily}"`,
+    );
+    expect(html).toMatch(
+      new RegExp(`@font-feature-values [^{]*"${registeredFace.cssFamily}"`),
+    );
+    expect(html).not.toContain(unregisteredFamily);
   });
 });

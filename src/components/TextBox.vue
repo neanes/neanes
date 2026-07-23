@@ -204,6 +204,7 @@ const containerStyle = computed(() => {
     fontVariantCaps: props.element.computedFontVariantCaps,
     fontVariantNumeric: props.element.computedFontVariantNumeric,
     fontVariantLigatures: props.element.computedFontVariantLigatures,
+    fontVariantAlternates: props.element.computedFontVariantAlternates,
     textAlign: props.element.computedAlignment,
     width: width.value,
     height: withZoom(props.element.height),

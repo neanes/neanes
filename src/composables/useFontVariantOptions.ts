@@ -4,6 +4,7 @@ import type { CSSProperties } from 'vue';
 import { computed } from 'vue';
 
 import type {
+  AlternatesVariant,
   CapsKey,
   FontVariantProperty,
   LigatureVariant,
@@ -13,14 +14,17 @@ import type {
 import {
   applyNumericKey,
   CAPS_KEYS,
+  composeAlternatesVariant,
   composeLigatureVariant,
   composeNumericVariant,
+  FONT_VARIANT_ALTERNATES,
   FONT_VARIANT_CAPS,
   FONT_VARIANT_LIGATURES,
   FONT_VARIANT_NUMERIC,
   isCapsKey,
   isNumericKey,
   NUMERIC_KEYS,
+  parseAlternatesVariant,
   parseLigatureVariant,
   parseNumericVariant,
   splitNumericKey,
@@ -63,16 +67,17 @@ export function useFontVariantOptions() {
   return { capsOptions, numericOptions };
 }
 
-// The decompose/recompose glue between the three longhand values and the
-// caps/numeric/ligature controls, shared by FontVariantFields and the
-// paragraph styles dialog so the control-model semantics cannot drift. Each
-// surface supplies its own reads and write sink: FontVariantFields emits the
-// recomposed longhand ('' when no features remain), while the dialog folds ''
-// to a null override (an explicit "normal" that defeats the parent style).
+// The decompose/recompose glue between the four longhand values and the
+// caps/numeric/ligature/alternates controls, shared by FontVariantFields and
+// the paragraph styles dialog so the control-model semantics cannot drift.
+// Each surface supplies its own reads and write sink: FontVariantFields emits
+// the recomposed longhand ('' when no features remain), while the dialog folds
+// '' to a null override (an explicit "normal" that defeats the parent style).
 export function useFontVariantControls(
   caps: () => string | null,
   numeric: () => string | null,
   ligatures: () => string | null,
+  alternates: () => string | null,
   write: (property: FontVariantProperty, composed: string) => void,
 ) {
   const capsValue = computed(() => {
@@ -87,6 +92,10 @@ export function useFontVariantControls(
 
   const ligatureVariant = computed(() =>
     parseLigatureVariant(ligatures() ?? ''),
+  );
+
+  const alternatesVariant = computed(() =>
+    parseAlternatesVariant(alternates() ?? ''),
   );
 
   function onCapsChanged(value: unknown) {
@@ -105,22 +114,27 @@ export function useFontVariantControls(
     write(FONT_VARIANT_LIGATURES, composeLigatureVariant(variant));
   }
 
+  function onAlternatesVariantChanged(variant: AlternatesVariant) {
+    write(FONT_VARIANT_ALTERNATES, composeAlternatesVariant(variant));
+  }
+
   return {
     capsValue,
     numericVariant,
     numericValue,
     ligatureVariant,
+    alternatesVariant,
     onCapsChanged,
     onNumericChanged,
     onNumericVariantChanged,
     onLigatureVariantChanged,
+    onAlternatesVariantChanged,
   };
 }
 
-// One entry per switch/checkbox in the numeric and ligature flag clusters:
+// One entry per switch/checkbox in the fixed numeric and ligature clusters:
 // the stable DOM id suffix, the i18n label selector, and the pure read/update
-// of the axis it controls, so the properties panes and the paragraph styles
-// dialog stay in lockstep on flag semantics while keeping their own widgets.
+// of the axis it controls.
 export interface FontVariantFlag<V> {
   id: string;
   label: SelectorParam<'toolbar'>;

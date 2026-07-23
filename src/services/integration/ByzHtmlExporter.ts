@@ -99,6 +99,52 @@ interface ByzHtmlExporterConfig {
   mapNeumeTag: Map<string, string>;
 }
 
+export function createByzHtmlDocument(
+  style: string,
+  body: string,
+  melkiteRtl: boolean,
+): string {
+  const fontFaceCss = fontCatalog.getRegisteredFontFaceCss();
+  const fontFeatureValuesCss = fontCatalog.getExportFontFeatureValuesCss();
+
+  let injectRtl = '';
+
+  if (melkiteRtl) {
+    injectRtl = `<script>
+  byzhtml.options.melkiteRtl = true;
+</script>`;
+  }
+
+  return `<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/neanes/byzhtml@${byzhtmlVersion}/dist/Neanes.css"
+    />
+
+    <script src="https://cdn.jsdelivr.net/gh/neanes/byzhtml@${byzhtmlVersion}/dist/byzhtml.min.js"></script>
+
+    ${injectRtl}
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
+    />
+
+    <meta charset="UTF-8">
+
+    <style>
+      ${fontFaceCss}
+      ${fontFeatureValuesCss}
+      ${style}
+    </style>
+  </head>
+  <body>
+    ${body}
+  </body>
+</html>`;
+}
+
 export class ByzHtmlExporter {
   neumeToTagMap: Map<Neume, TagInfo> = new Map<Neume, TagInfo>();
 
@@ -179,45 +225,8 @@ export class ByzHtmlExporter {
       score.paragraphStyles,
       4,
     );
-    const fontFaceCss = fontCatalog.getRegisteredFontFaceCss();
 
-    let injectRtl = '';
-
-    if (score.pageSetup.melkiteRtl) {
-      injectRtl = `<script>      
-  byzhtml.options.melkiteRtl = true;
-</script>`;
-    }
-
-    const result = `<html>
-  <head>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/neanes/byzhtml@${byzhtmlVersion}/dist/Neanes.css"
-    />
-    
-    <script src="https://cdn.jsdelivr.net/gh/neanes/byzhtml@${byzhtmlVersion}/dist/byzhtml.min.js"></script>
-
-    ${injectRtl}
-
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
-    />
-
-    <meta charset="UTF-8">
-
-    <style>
-      ${fontFaceCss}
-      ${style}
-    </style>
-  </head>
-  <body>
-    ${body}
-  </body>
-</html>`;
-
-    return result;
+    return createByzHtmlDocument(style, body, score.pageSetup.melkiteRtl);
   }
 
   exportPageSetup(pageSetup: PageSetup, paragraphStyles: ParagraphStyle[]) {
@@ -1098,9 +1107,12 @@ export class ByzHtmlExporter {
       style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
       style += `font-weight: ${element.computedFontWeight};`;
       style += `font-style: ${element.computedFontStyle};`;
-      style += `font-variant-caps: ${element.computedFontVariantCaps};`;
-      style += `font-variant-numeric: ${element.computedFontVariantNumeric};`;
-      style += `font-variant-ligatures: ${element.computedFontVariantLigatures};`;
+      style += fontVariantCssDeclarations({
+        fontVariantCaps: element.computedFontVariantCaps,
+        fontVariantNumeric: element.computedFontVariantNumeric,
+        fontVariantLigatures: element.computedFontVariantLigatures,
+        fontVariantAlternates: element.computedFontVariantAlternates,
+      }).join('');
       style += `line-height: ${element.computedLineHeight ?? 'normal'};`;
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
       style += `-webkit-text-stroke-color: ${element.computedStrokeColor};`;

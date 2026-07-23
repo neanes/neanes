@@ -2,19 +2,22 @@ import type { ViewElement } from 'ckeditor5';
 import { FontCommand, Plugin } from 'ckeditor5';
 
 import {
+  FONT_VARIANT_ALTERNATES,
   FONT_VARIANT_CAPS,
   FONT_VARIANT_CSS_NAMES,
   FONT_VARIANT_LIGATURES,
   FONT_VARIANT_NUMERIC,
+  normalizeAlternatesStyle,
   normalizeLigatureStyle,
   normalizeNumericStyle,
   parseFontVariantCaps,
 } from '@/utils/fontVariants';
 
 // Each attribute maps to exactly one CSS property; the model value is that
-// property's value verbatim. Downcast prefixes the property name, upcast
-// normalizes the parsed style back to a model value (null = not ours, leave it
-// to GeneralHtmlSupport).
+// property's canonical owned value. Downcast prefixes the property name;
+// upcast parses and canonicalizes supported values and drops the rest.
+// GeneralHtmlSupport is disallowed from owning these properties, so there is
+// never a competing declaration for the same text.
 interface StyleAttribute {
   property: string;
   model: string;
@@ -37,6 +40,11 @@ const STYLE_ATTRIBUTES: StyleAttribute[] = [
     model: FONT_VARIANT_CAPS,
     toModel: parseFontVariantCaps,
   },
+  {
+    property: FONT_VARIANT_CSS_NAMES[FONT_VARIANT_ALTERNATES],
+    model: FONT_VARIANT_ALTERNATES,
+    toModel: normalizeAlternatesStyle,
+  },
 ];
 
 class OpenTypeCommand extends FontCommand {}
@@ -48,6 +56,8 @@ class OpenTypeCommand extends FontCommand {}
 //   - fontVariantLigatures -> font-variant-ligatures (common/discretionary/
 //     historical ligatures, contextual alternates)
 //   - fontVariantCaps      -> font-variant-caps      (small caps / all small caps)
+//   - fontVariantAlternates -> font-variant-alternates (historical forms,
+//     stylistic sets, character variants, swash, stylistic alternates)
 // All downcast to a priority-7 span so compatible attributes can merge into one
 // combined style.
 export default class OpenType extends Plugin {

@@ -13,11 +13,7 @@ import { ModelDocumentSelection, ModelSelection, Plugin } from 'ckeditor5';
 
 import { fontCatalog } from '@/services/FontCatalog';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
-import {
-  firstFontFamilyToken,
-  normalizeFontFamily,
-  splitFontFamilyList,
-} from '@/utils/fontFamily';
+import { firstFontFamilyToken } from '@/utils/fontFamily';
 import {
   applyLegacyStyle,
   isCssItalicStyle,
@@ -29,6 +25,7 @@ import {
   composeFontStyleCss,
   getEditorDefaultFontFamily,
   getEditorDefaultFontFamilyModelValue,
+  normalizeFamilyListForSplitFace,
 } from './fontstyle-util';
 import {
   FONT_STYLE,
@@ -91,24 +88,41 @@ type RemoveFormatCommandWithCustomAttributes = {
   ): void;
 };
 
-function normalizeFamilyListForSplitFace(
-  fontFamily: string,
-  split: { family: string; style: string },
+function isSelectionItem(
+  item: DowncastAttributeEvent['args'][0]['item'],
+): boolean {
+  return (
+    item instanceof ModelSelection || item instanceof ModelDocumentSelection
+  );
+}
+
+function wrapViewSelection(
+  writer: ViewDowncastWriter,
+  newElements: ViewAttributeElement[],
 ) {
-  if (split.style === DEFAULT_FONT_STYLE) {
-    return fontFamily;
+  let wrappedRange = writer.document.selection.getFirstRange()!;
+
+  for (const newElement of newElements) {
+    wrappedRange = writer.wrap(wrappedRange, newElement);
+  }
+}
+
+function rewrapViewRange(
+  data: DowncastAttributeEvent['args'][0],
+  conversionApi: DowncastConversionApi,
+  oldElements: ViewAttributeElement[],
+  newElements: ViewAttributeElement[],
+) {
+  const writer = conversionApi.writer;
+  let viewRange = conversionApi.mapper.toViewRange(data.range);
+
+  for (const oldElement of oldElements) {
+    viewRange = writer.unwrap(viewRange, oldElement);
   }
 
-  const families = splitFontFamilyList(fontFamily)
-    .map((family) => family.trim())
-    .filter((family) => family !== '');
-  const rest = families.slice(1);
-
-  if (rest.length > 0 && normalizeFontFamily(rest[0]) === split.family) {
-    return rest.join(',');
+  for (const newElement of newElements) {
+    viewRange = writer.wrap(viewRange, newElement);
   }
-
-  return [split.family, ...rest].join(',');
 }
 
 export default class FontStyleEditing extends Plugin {
@@ -174,26 +188,16 @@ export default class FontStyleEditing extends Plugin {
   private _registerDowncast() {
     const editor = this.editor;
 
-    const createFontStyleElements = (
+    const createFontElements = (
       family: string | null | undefined,
       fontStyle: string | null | undefined,
       writer: ViewDowncastWriter,
     ): ViewAttributeElement[] => {
-      const explicitFontStyle = fontStyle?.trim();
-
-      if (explicitFontStyle == null || explicitFontStyle === '') {
-        return [];
-      }
-
       const neumeFallback = editor.config.get(
         'insertNeume.neumeDefaultFontFamily',
       ) as string | undefined;
 
-      const style = composeFontStyleCss(
-        family,
-        explicitFontStyle,
-        neumeFallback,
-      );
+      const style = composeFontStyleCss(family, fontStyle, neumeFallback);
 
       if (style === '') {
         return [];
@@ -212,35 +216,31 @@ export default class FontStyleEditing extends Plugin {
             evt,
             data,
             conversionApi,
-            createFontStyleElements,
+            createFontElements,
           );
         },
       );
 
-      // The fontStyle span embeds the family it was resolved against, but only
-      // attribute:fontStyle reconverts it. When the family changes while the
-      // style name stays the same (e.g. Semibold to Semibold across families),
-      // the fontStyle command no-ops, so without this the span keeps rendering
-      // the old family in the editing view. We rebuild the dependent span here
-      // without consuming the family event, leaving the separate
-      // FontFamilyEditing span to CKEditor.
+      // Replace FontFamilyEditing's generic downcast: the exact system-face
+      // alias depends on the sibling fontStyle, so both model attributes must
+      // render through the same combined span.
       dispatcher.on<DowncastAttributeEvent>(
         `attribute:${FONT_FAMILY}`,
         (evt, data, conversionApi) => {
-          this._reconvertFontStyleForFamilyChange(
+          this._convertFontFamilyAttribute(
+            evt,
             data,
             conversionApi,
-            createFontStyleElements,
+            createFontElements,
           );
         },
+        { priority: 'high' },
       );
     });
   }
 
-  // Rebuilds the fontStyle span when only the sibling family changes. Same-batch
-  // fontStyle changes are left untouched (the fontStyle converter rebuilds the
-  // span itself, reading the sibling family change).
-  private _reconvertFontStyleForFamilyChange(
+  private _convertFontFamilyAttribute(
+    evt: EventInfo,
     data: DowncastAttributeEvent['args'][0],
     conversionApi: DowncastConversionApi,
     createElement: (
@@ -249,68 +249,38 @@ export default class FontStyleEditing extends Plugin {
       writer: ViewDowncastWriter,
     ) => ViewAttributeElement[],
   ) {
-    if (
-      data.item instanceof ModelSelection ||
-      data.item instanceof ModelDocumentSelection
-    ) {
+    // Always consume: the combined span replaces CKEditor's generic fontFamily
+    // downcast, which must never add a nested base-family span.
+    if (!conversionApi.consumable.consume(data.item, evt.name)) {
       return;
     }
 
-    const fontStyle = (data.item as ModelItem).getAttribute(FONT_STYLE) as
-      string | undefined;
-
-    if (fontStyle == null || fontStyle.trim() === '') {
+    // A same-batch fontStyle conversion reads the sibling family change and
+    // rebuilds the combined span itself.
+    if (this._getSiblingAttributeChange(data, FONT_STYLE) != null) {
       return;
     }
 
-    // When fontStyle also changes in this batch, its own converter rebuilds the
-    // span (reading the sibling family change); rebuilding here too would
-    // double-unwrap.
-    if (this._hasSiblingFontStyleChange(data.range)) {
-      return;
-    }
-
+    const fontStyle = data.item.getAttribute(FONT_STYLE) as string | undefined;
     const writer = conversionApi.writer;
-    const oldElements = createElement(
-      data.attributeOldValue as string | undefined,
-      fontStyle,
-      writer,
-    );
     const newElements = createElement(
       data.attributeNewValue as string | undefined,
       fontStyle,
       writer,
     );
 
-    if (oldElements.length === 0 && newElements.length === 0) {
+    if (isSelectionItem(data.item)) {
+      wrapViewSelection(writer, newElements);
       return;
     }
 
-    let viewRange = conversionApi.mapper.toViewRange(data.range);
+    const oldElements = createElement(
+      data.attributeOldValue as string | undefined,
+      fontStyle,
+      writer,
+    );
 
-    for (const oldElement of oldElements) {
-      viewRange = writer.unwrap(viewRange, oldElement);
-    }
-
-    for (const newElement of newElements) {
-      viewRange = writer.wrap(viewRange, newElement);
-    }
-  }
-
-  private _hasSiblingFontStyleChange(range: ModelRange): boolean {
-    const changes = this.editor.model.document.differ.getChanges();
-
-    for (const change of changes) {
-      if (
-        change.type === 'attribute' &&
-        change.attributeKey === FONT_STYLE &&
-        change.range.isIntersecting(range)
-      ) {
-        return true;
-      }
-    }
-
-    return false;
+    rewrapViewRange(data, conversionApi, oldElements, newElements);
   }
 
   private _convertFontStyleAttribute(
@@ -329,13 +299,9 @@ export default class FontStyleEditing extends Plugin {
 
     const oldFontStyle = data.attributeOldValue as string | undefined;
     const newFontStyle = data.attributeNewValue as string | undefined;
-    const siblingChange = this._getSiblingFontFamilyChange(data);
-    const currentFamily =
-      data.item instanceof ModelSelection ||
-      data.item instanceof ModelDocumentSelection
-        ? (data.item.getAttribute(FONT_FAMILY) as string | undefined)
-        : ((data.item as ModelItem).getAttribute(FONT_FAMILY) as
-            string | undefined);
+    const siblingChange = this._getSiblingAttributeChange(data, FONT_FAMILY);
+    const currentFamily = data.item.getAttribute(FONT_FAMILY) as
+      string | undefined;
 
     const oldFamily =
       (siblingChange?.attributeOldValue as string | undefined) ?? currentFamily;
@@ -352,38 +318,19 @@ export default class FontStyleEditing extends Plugin {
 
     conversionApi.consumable.consume(data.item, evt.name);
 
-    if (
-      data.item instanceof ModelSelection ||
-      data.item instanceof ModelDocumentSelection
-    ) {
-      const viewRange = writer.document.selection.getFirstRange()!;
-      let wrappedRange = viewRange;
-
-      for (const newElement of newElements) {
-        wrappedRange = writer.wrap(wrappedRange, newElement);
-      }
-
+    if (isSelectionItem(data.item)) {
+      wrapViewSelection(writer, newElements);
       return;
     }
 
-    let viewRange = conversionApi.mapper.toViewRange(data.range);
-
-    for (const oldElement of oldElements) {
-      viewRange = writer.unwrap(viewRange, oldElement);
-    }
-
-    for (const newElement of newElements) {
-      viewRange = writer.wrap(viewRange, newElement);
-    }
+    rewrapViewRange(data, conversionApi, oldElements, newElements);
   }
 
-  private _getSiblingFontFamilyChange(
+  private _getSiblingAttributeChange(
     data: DowncastAttributeEvent['args'][0],
+    attributeKey: string,
   ): SiblingAttributeChange | null {
-    if (
-      data.item instanceof ModelSelection ||
-      data.item instanceof ModelDocumentSelection
-    ) {
+    if (isSelectionItem(data.item)) {
       return null;
     }
 
@@ -391,17 +338,15 @@ export default class FontStyleEditing extends Plugin {
 
     for (const change of changes) {
       if (
-        change.type !== 'attribute' ||
-        change.attributeKey !== FONT_FAMILY ||
-        !change.range.isIntersecting(data.range)
+        change.type === 'attribute' &&
+        change.attributeKey === attributeKey &&
+        change.range.isIntersecting(data.range)
       ) {
-        continue;
+        return {
+          attributeOldValue: change.attributeOldValue,
+          attributeNewValue: change.attributeNewValue,
+        };
       }
-
-      return {
-        attributeOldValue: change.attributeOldValue,
-        attributeNewValue: change.attributeNewValue,
-      };
     }
 
     return null;

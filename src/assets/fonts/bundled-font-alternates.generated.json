@@ -1,0 +1,1410 @@
+{
+  "GFSDidot.otf": {
+    "stylisticSets": [],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": true
+  },
+  "GFSDidotBold.otf": {
+    "stylisticSets": [],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": true
+  },
+  "GFSDidotBoldItalic.otf": {
+    "stylisticSets": [],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": true
+  },
+  "GFSDidotItalic.otf": {
+    "stylisticSets": [],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": true
+  },
+  "OldStandard-Bold.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Localized Forms for Romanian"
+      },
+      {
+        "number": 2,
+        "name": "Insular Forms for Old English"
+      },
+      {
+        "number": 5,
+        "name": "Closed Greek Theta"
+      },
+      {
+        "number": 6,
+        "name": "Medial/Final Forms for Greek"
+      },
+      {
+        "number": 12,
+        "name": "Optional Serbian Variant Forms"
+      },
+      {
+        "number": 14,
+        "name": "Localized Forms for Old Slavonic"
+      },
+      {
+        "number": 15,
+        "name": "Old Cyrillic I and N"
+      }
+    ],
+    "characterVariants": [
+      {
+        "number": 1,
+        "name": null
+      }
+    ],
+    "hasSwash": false,
+    "hasStylistic": true,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "OldStandard-BoldItalic.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Localized Forms for Romanian"
+      },
+      {
+        "number": 2,
+        "name": "Insular Forms for Old English"
+      },
+      {
+        "number": 5,
+        "name": "Closed Greek Theta"
+      },
+      {
+        "number": 6,
+        "name": "Medial/Final Forms for Greek"
+      },
+      {
+        "number": 11,
+        "name": "Localized Forms for Serbian"
+      },
+      {
+        "number": 12,
+        "name": "Optional Serbian Variant Forms"
+      },
+      {
+        "number": 14,
+        "name": "Localized Forms for Old Slavonic"
+      }
+    ],
+    "characterVariants": [
+      {
+        "number": 1,
+        "name": null
+      }
+    ],
+    "hasSwash": false,
+    "hasStylistic": true,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "OldStandard-Italic.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Localized Forms for Romanian"
+      },
+      {
+        "number": 2,
+        "name": "Insular Forms for Old English"
+      },
+      {
+        "number": 5,
+        "name": "Closed Greek Theta"
+      },
+      {
+        "number": 6,
+        "name": "Medial/Final Forms for Greek"
+      },
+      {
+        "number": 11,
+        "name": "Localized Forms for Serbian"
+      },
+      {
+        "number": 12,
+        "name": "Optional Serbian Variant Forms"
+      },
+      {
+        "number": 14,
+        "name": "Localized Forms for Old Slavonic"
+      }
+    ],
+    "characterVariants": [
+      {
+        "number": 1,
+        "name": null
+      }
+    ],
+    "hasSwash": false,
+    "hasStylistic": true,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "OldStandard-Regular.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Localized Forms for Romanian"
+      },
+      {
+        "number": 2,
+        "name": "Insular Forms for Old English"
+      },
+      {
+        "number": 5,
+        "name": "Closed Greek Theta"
+      },
+      {
+        "number": 6,
+        "name": "Medial/Final Forms for Greek"
+      },
+      {
+        "number": 12,
+        "name": "Optional Serbian Variant Forms"
+      },
+      {
+        "number": 14,
+        "name": "Localized Forms for Old Slavonic"
+      },
+      {
+        "number": 15,
+        "name": "Old Cyrillic I and N"
+      }
+    ],
+    "characterVariants": [
+      {
+        "number": 1,
+        "name": null
+      }
+    ],
+    "hasSwash": false,
+    "hasStylistic": true,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4-Black.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4-BlackIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4-Bold.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4-BoldIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4-ExtraLight.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4-ExtraLightIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4-It.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4-Light.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4-LightIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4-Regular.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4-Semibold.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4-SemiboldIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Caption-Black.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Caption-BlackIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Caption-Bold.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Caption-BoldIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Caption-ExtraLight.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Caption-ExtraLightIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Caption-It.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Caption-Light.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Caption-LightIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Caption-Regular.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Caption-Semibold.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Caption-SemiboldIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Display-Black.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Display-BlackIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Display-Bold.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Display-BoldIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Display-ExtraLight.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Display-ExtraLightIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Display-It.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Display-Light.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Display-LightIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Display-Regular.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Display-Semibold.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Display-SemiboldIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4SmText-Black.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4SmText-BlackIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4SmText-Bold.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4SmText-BoldIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4SmText-ExtraLight.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4SmText-ExtraLightIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4SmText-It.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4SmText-Light.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4SmText-LightIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4SmText-Regular.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4SmText-Semibold.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4SmText-SemiboldIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Subhead-Black.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Subhead-BlackIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Subhead-Bold.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Subhead-BoldIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Subhead-ExtraLight.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Subhead-ExtraLightIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Subhead-It.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Subhead-Light.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Subhead-LightIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Subhead-Regular.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Subhead-Semibold.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  },
+  "SourceSerif4Subhead-SemiboldIt.otf": {
+    "stylisticSets": [
+      {
+        "number": 1,
+        "name": "Cyrillic: Bulgarian alternates"
+      },
+      {
+        "number": 2,
+        "name": "Cyrillic: Serbian and Macedonian alternates"
+      },
+      {
+        "number": 3,
+        "name": null
+      }
+    ],
+    "characterVariants": [],
+    "hasSwash": false,
+    "hasStylistic": false,
+    "hasOrnaments": false,
+    "hasAnnotation": false,
+    "hasHistoricalForms": false
+  }
+}

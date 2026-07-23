@@ -8,6 +8,7 @@ declare global {
     readonly fullName: string;
     readonly postscriptName: string;
     readonly style: string;
+    blob(): Promise<Blob>;
   }
 
   interface Window {

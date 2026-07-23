@@ -78,6 +78,7 @@ export interface ParagraphStyleOverrides {
   fontVariantCaps?: string | null;
   fontVariantNumeric?: string | null;
   fontVariantLigatures?: string | null;
+  fontVariantAlternates?: string | null;
 }
 
 export type ResolvedParagraphStyle = Required<ParagraphStyleOverrides>;
@@ -95,6 +96,7 @@ const PARAGRAPH_STYLE_OVERRIDE_KEYS: Array<keyof ParagraphStyleOverrides> = [
   'fontVariantCaps',
   'fontVariantNumeric',
   'fontVariantLigatures',
+  'fontVariantAlternates',
 ];
 
 export function hasParagraphStyleOverrides(overrides: ParagraphStyleOverrides) {
@@ -136,6 +138,7 @@ export function createParagraphStyleFallback(): ResolvedParagraphStyle {
     fontVariantCaps: null,
     fontVariantNumeric: null,
     fontVariantLigatures: null,
+    fontVariantAlternates: null,
   };
 }
 
@@ -445,5 +448,9 @@ function applyParagraphStyleOverrides(
 
   if (overrides.fontVariantLigatures !== undefined) {
     target.fontVariantLigatures = overrides.fontVariantLigatures;
+  }
+
+  if (overrides.fontVariantAlternates !== undefined) {
+    target.fontVariantAlternates = overrides.fontVariantAlternates;
   }
 }

@@ -349,13 +349,20 @@
         :caps="fontVariantEffectiveValue(FONT_VARIANT_CAPS)"
         :numeric="fontVariantEffectiveValue(FONT_VARIANT_NUMERIC)"
         :ligatures="fontVariantEffectiveValue(FONT_VARIANT_LIGATURES)"
+        :alternates="fontVariantEffectiveValue(FONT_VARIANT_ALTERNATES)"
+        :font-family="fontStyleFamilyValue"
+        :font-style="fontStyleValue"
         :caps-enabled="isCommandEnabled(FONT_VARIANT_CAPS)"
         :numeric-enabled="isCommandEnabled(FONT_VARIANT_NUMERIC)"
         :ligatures-enabled="isCommandEnabled(FONT_VARIANT_LIGATURES)"
+        :alternates-enabled="isCommandEnabled(FONT_VARIANT_ALTERNATES)"
         :caps-clearable="fontVariantHasExplicitValue(FONT_VARIANT_CAPS)"
         :numeric-clearable="fontVariantHasExplicitValue(FONT_VARIANT_NUMERIC)"
         :ligatures-clearable="
           fontVariantHasExplicitValue(FONT_VARIANT_LIGATURES)
+        "
+        :alternates-clearable="
+          fontVariantHasExplicitValue(FONT_VARIANT_ALTERNATES)
         "
         @change="applyFontVariant"
         @clear="clearFontVariant"
@@ -685,6 +692,7 @@ import {
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
 import {
+  FONT_VARIANT_ALTERNATES,
   FONT_VARIANT_CAPS,
   FONT_VARIANT_LIGATURES,
   FONT_VARIANT_NUMERIC,
@@ -716,6 +724,7 @@ const {
   disabledParagraphStyleIds,
   resolvedActiveParagraphStyle,
   fontStyleValue,
+  fontStyleFamilyValue,
   fontStyleOptions,
   fontStyleDisabled,
   textDecorationValues,

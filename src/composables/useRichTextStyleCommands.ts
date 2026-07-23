@@ -606,6 +606,7 @@ export function useRichTextStyleCommands(
     resolvedActiveParagraphStyle,
     disabledParagraphStyleIds,
     fontStyleValue,
+    fontStyleFamilyValue,
     fontStyleOptions,
     fontStyleDisabled,
     fontSizeValue,

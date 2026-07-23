@@ -11,6 +11,36 @@ import VueDevTools from 'vite-plugin-vue-devtools';
 
 import pkg from './package.json';
 
+// lib-font probes for Node's fs and zlib at module load, behind runtime
+// guards that never fire in the renderer: the fetch shim only activates when
+// globalThis.fetch is missing, and the zlib decompressors only run for
+// WOFF/WOFF2 input, while Local Font Access hands lib-font raw SFNT bytes.
+// Resolve those two imports to an empty stub so the client build does not
+// warn about externalized Node builtins. Scoped to lib-font importers so a
+// genuine Node-builtin import anywhere else still warns loudly.
+const libFontNodeBuiltinStub = () => {
+  const stubId = '\0lib-font-node-builtin-stub';
+
+  return {
+    name: 'lib-font-node-builtin-stub',
+    enforce: 'pre',
+    resolveId(source, importer) {
+      if (
+        (source === 'fs' || source === 'zlib') &&
+        importer != null &&
+        /node_modules[\\/]lib-font[\\/]/.test(importer)
+      ) {
+        return stubId;
+      }
+    },
+    load(id) {
+      if (id === stubId) {
+        return 'export default {};';
+      }
+    },
+  };
+};
+
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
   const isServe = command === 'serve';
@@ -34,6 +64,7 @@ export default defineConfig(({ command, mode }) => {
       APP_VERSION: JSON.stringify(pkg.version),
     },
     plugins: [
+      libFontNodeBuiltinStub(),
       !isElectron
         ? VitePWA({
             registerType: null, // We'll inject the service worker ourselves
@@ -178,7 +209,13 @@ export default defineConfig(({ command, mode }) => {
       // calls are emitted without imports in pre-bundled chunks. This only
       // affects dev mode; production builds do not use optimizeDeps.
       // See https://github.com/rolldown/rolldown/issues/9502.
-      exclude: ['@ckeditor/ckeditor5-vue'],
+      //
+      // lib-font is excluded because the dep optimizer resolves with its own
+      // pipeline, ignoring the libFontNodeBuiltinStub plugin, so a
+      // pre-bundled lib-font still warns about externalized fs/zlib in dev.
+      // Excluded, it is served through the transform pipeline where the stub
+      // applies.
+      exclude: ['@ckeditor/ckeditor5-vue', 'lib-font'],
     },
     clearScreen: false,
   };

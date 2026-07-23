@@ -955,6 +955,10 @@ describe('SaveService font styles', () => {
     style.overrides.fontVariantNumeric = 'oldstyle-nums proportional-nums';
     // An explicit normal that defeats an inherited value.
     style.overrides.fontVariantLigatures = null;
+    // The styleset/character-variant idents are raw feature tags and the
+    // single-alternate idents are alternate indices, stored verbatim.
+    style.overrides.fontVariantAlternates =
+      'stylistic(stylistic-1) historical-forms styleset(ss01, ss06) character-variant(cv03, cv27) swash(swash-1) ornaments(ornaments-2) annotation(annotation-3)';
 
     const saved = SaveService.SaveParagraphStyle(style);
     const loaded = SaveService.LoadParagraphStyle_v1(saved);
@@ -962,23 +966,31 @@ describe('SaveService font styles', () => {
     expect(saved.fontVariantCaps).toBe('all-small-caps');
     expect(saved.fontVariantNumeric).toBe('oldstyle-nums proportional-nums');
     expect(saved.fontVariantLigatures).toBeNull();
+    expect(saved.fontVariantAlternates).toBe(
+      'stylistic(stylistic-1) historical-forms styleset(ss01, ss06) character-variant(cv03, cv27) swash(swash-1) ornaments(ornaments-2) annotation(annotation-3)',
+    );
     expect(loaded.overrides.fontVariantCaps).toBe('all-small-caps');
     expect(loaded.overrides.fontVariantNumeric).toBe(
       'oldstyle-nums proportional-nums',
     );
     expect(loaded.overrides.fontVariantLigatures).toBeNull();
+    expect(loaded.overrides.fontVariantAlternates).toBe(
+      'stylistic(stylistic-1) historical-forms styleset(ss01, ss06) character-variant(cv03, cv27) swash(swash-1) ornaments(ornaments-2) annotation(annotation-3)',
+    );
 
     const unset = SaveService.LoadParagraphStyle_v1(new ParagraphStyle_v1());
 
     expect(unset.overrides.fontVariantCaps).toBeUndefined();
     expect(unset.overrides.fontVariantNumeric).toBeUndefined();
     expect(unset.overrides.fontVariantLigatures).toBeUndefined();
+    expect(unset.overrides.fontVariantAlternates).toBeUndefined();
   });
 
   it('saves and loads text-box font variants', () => {
     const element = new TextBoxElement();
     element.fontVariantCaps = 'small-caps';
     element.fontVariantNumeric = 'normal';
+    element.fontVariantAlternates = 'historical-forms';
 
     const saved = new TextBoxElement_v1();
     SaveService.SaveTextBox(saved, element);
@@ -986,6 +998,7 @@ describe('SaveService font styles', () => {
     expect(saved.fontVariantCaps).toBe('small-caps');
     expect(saved.fontVariantNumeric).toBe('normal');
     expect(saved.fontVariantLigatures).toBeUndefined();
+    expect(saved.fontVariantAlternates).toBe('historical-forms');
 
     const loaded = new TextBoxElement();
     SaveService.LoadTextBox_v1(loaded, saved);
@@ -993,12 +1006,14 @@ describe('SaveService font styles', () => {
     expect(loaded.fontVariantCaps).toBe('small-caps');
     expect(loaded.fontVariantNumeric).toBe('normal');
     expect(loaded.fontVariantLigatures).toBeNull();
+    expect(loaded.fontVariantAlternates).toBe('historical-forms');
   });
 
   it('saves and loads drop-cap font variants', () => {
     const element = new DropCapElement();
     element.fontVariantCaps = 'small-caps';
     element.fontVariantNumeric = 'normal';
+    element.fontVariantAlternates = 'historical-forms';
 
     const saved = new DropCapElement_v1();
     SaveService.SaveDropCap(saved, element);
@@ -1006,6 +1021,7 @@ describe('SaveService font styles', () => {
     expect(saved.fontVariantCaps).toBe('small-caps');
     expect(saved.fontVariantNumeric).toBe('normal');
     expect(saved.fontVariantLigatures).toBeUndefined();
+    expect(saved.fontVariantAlternates).toBe('historical-forms');
 
     const loaded = new DropCapElement();
     SaveService.LoadDropCap_v1(loaded, saved, new PageSetup());
@@ -1013,12 +1029,14 @@ describe('SaveService font styles', () => {
     expect(loaded.fontVariantCaps).toBe('small-caps');
     expect(loaded.fontVariantNumeric).toBe('normal');
     expect(loaded.fontVariantLigatures).toBeNull();
+    expect(loaded.fontVariantAlternates).toBe('historical-forms');
   });
 
   it('saves and loads per-note lyric font variants', () => {
     const element = new NoteElement();
     element.lyricsFontVariantCaps = 'small-caps';
     element.lyricsFontVariantNumeric = 'normal';
+    element.lyricsFontVariantAlternates = 'historical-forms';
 
     const saved = new NoteElement_v1();
     SaveService.SaveNote(saved, element);
@@ -1026,6 +1044,7 @@ describe('SaveService font styles', () => {
     expect(saved.lyricsFontVariantCaps).toBe('small-caps');
     expect(saved.lyricsFontVariantNumeric).toBe('normal');
     expect(saved.lyricsFontVariantLigatures).toBeUndefined();
+    expect(saved.lyricsFontVariantAlternates).toBe('historical-forms');
 
     const loaded = new NoteElement();
     SaveService.LoadNote_v1(loaded, saved);
@@ -1033,6 +1052,7 @@ describe('SaveService font styles', () => {
     expect(loaded.lyricsFontVariantCaps).toBe('small-caps');
     expect(loaded.lyricsFontVariantNumeric).toBe('normal');
     expect(loaded.lyricsFontVariantLigatures).toBeNull();
+    expect(loaded.lyricsFontVariantAlternates).toBe('historical-forms');
   });
 
   it('defaults missing text-box alignment to the paragraph style', () => {

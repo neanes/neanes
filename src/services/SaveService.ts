@@ -1170,6 +1170,7 @@ export class SaveService {
     saved.fontVariantCaps = style.overrides.fontVariantCaps;
     saved.fontVariantNumeric = style.overrides.fontVariantNumeric;
     saved.fontVariantLigatures = style.overrides.fontVariantLigatures;
+    saved.fontVariantAlternates = style.overrides.fontVariantAlternates;
     return saved;
   }
 
@@ -1237,6 +1238,7 @@ export class SaveService {
     element.fontVariantCaps = e.fontVariantCaps ?? undefined;
     element.fontVariantNumeric = e.fontVariantNumeric ?? undefined;
     element.fontVariantLigatures = e.fontVariantLigatures ?? undefined;
+    element.fontVariantAlternates = e.fontVariantAlternates ?? undefined;
   }
 
   public static SaveImageBox(element: ImageBoxElement_v1, e: ImageBoxElement) {
@@ -1430,6 +1432,8 @@ export class SaveService {
     element.lyricsFontVariantNumeric = e.lyricsFontVariantNumeric ?? undefined;
     element.lyricsFontVariantLigatures =
       e.lyricsFontVariantLigatures ?? undefined;
+    element.lyricsFontVariantAlternates =
+      e.lyricsFontVariantAlternates ?? undefined;
 
     element.ignoreAttractions = e.ignoreAttractions || undefined;
 
@@ -1506,6 +1510,7 @@ export class SaveService {
     element.fontVariantCaps = e.fontVariantCaps ?? undefined;
     element.fontVariantNumeric = e.fontVariantNumeric ?? undefined;
     element.fontVariantLigatures = e.fontVariantLigatures ?? undefined;
+    element.fontVariantAlternates = e.fontVariantAlternates ?? undefined;
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
     element.fillWidth = e.fillWidth || undefined;
@@ -2003,6 +2008,10 @@ export class SaveService {
       overrides.fontVariantLigatures = saved.fontVariantLigatures;
     }
 
+    if (saved.fontVariantAlternates !== undefined) {
+      overrides.fontVariantAlternates = saved.fontVariantAlternates;
+    }
+
     style.overrides = overrides;
     return style;
   }
@@ -2113,6 +2122,7 @@ export class SaveService {
     element.fontVariantCaps = e.fontVariantCaps ?? null;
     element.fontVariantNumeric = e.fontVariantNumeric ?? null;
     element.fontVariantLigatures = e.fontVariantLigatures ?? null;
+    element.fontVariantAlternates = e.fontVariantAlternates ?? null;
   }
 
   public static LoadImageBox_v1(
@@ -2345,6 +2355,7 @@ export class SaveService {
     element.lyricsFontVariantCaps = e.lyricsFontVariantCaps ?? null;
     element.lyricsFontVariantNumeric = e.lyricsFontVariantNumeric ?? null;
     element.lyricsFontVariantLigatures = e.lyricsFontVariantLigatures ?? null;
+    element.lyricsFontVariantAlternates = e.lyricsFontVariantAlternates ?? null;
 
     if (e.acceptsLyrics !== undefined) {
       element.acceptsLyrics = e.acceptsLyrics;
@@ -2435,6 +2446,7 @@ export class SaveService {
     element.fontVariantCaps = e.fontVariantCaps ?? null;
     element.fontVariantNumeric = e.fontVariantNumeric ?? null;
     element.fontVariantLigatures = e.fontVariantLigatures ?? null;
+    element.fontVariantAlternates = e.fontVariantAlternates ?? null;
   }
 
   public static LoadRichTextBox_v1(

@@ -943,18 +943,86 @@ This subsystem preserves these invariants:
 
 The face model above covers weight/slant/optical identity. The OpenType
 feature settings -- case (small caps), figure style and spacing, fractions,
-ordinals, slashed zero, and the ligature switches -- are a parallel, simpler
-contract:
+ordinals, slashed zero, the ligature switches, historical forms, stylistic
+sets, character variants, and the swash, stylistic, ornament, and
+annotation alternates -- are a parallel, simpler contract:
 
 - One document field per CSS longhand: `fontVariantCaps`,
-  `fontVariantNumeric`, `fontVariantLigatures`. The value is that CSS
-  property's value verbatim, canonicalized to the token order in
+  `fontVariantNumeric`, `fontVariantLigatures`, `fontVariantAlternates`. The
+  value is that CSS property's canonical owned value. CKEditor upcast and the
+  controls canonicalize supported values to the token order in
   `src/utils/fontVariants.ts` (the shared parser/composer, free of CKEditor
-  imports).
-- The same three names are used everywhere: CKEditor text attributes (the
+  imports) and drop unsupported values. GeneralHtmlSupport is disallowed from
+  owning the same declarations.
+- The same four names are used everywhere: CKEditor text attributes (the
   OpenType plugin), `ParagraphStyle.overrides`, `TextBoxElement` and
   `DropCapElement` fields, the `lyricsFontVariant*` fields on `NoteElement`,
   and the matching score JSON fields on the v1 save shapes.
+- `fontVariantAlternates` is owned outright, like the numeric and ligature
+  values: the plain `historical-forms` keyword (the hist feature; one switch
+  in the UI), `styleset()` and `character-variant()` notations whose idents
+  are raw feature tags (`ss01`-`ss20`, `cv01`-`cv99`), the four
+  single-alternate notations `stylistic()`, `swash()`, `ornaments()`, and
+  `annotation()` (salt, swsh/cswh, ornm, nalt) whose ident is the notation's
+  own name plus a 1-based alternate index (`swash-1`..`swash-99` and so on),
+  and the explicit `normal`. Unknown keywords, notations, and idents outside
+  the owned ranges are dropped during upcast and control edits. A repeated
+  notation merges its tags or keeps its last alternate. Canonical order
+  follows the CSS grammar: `stylistic(...)` first, then
+  historical-forms, `styleset(...)` and `character-variant(...)` with the
+  tags ascending and comma-separated, then `swash(...)`, `ornaments(...)`,
+  and `annotation(...)`. Unsupported CSS-wide keywords such as `initial`,
+  `inherit`, `unset`, `revert`, and `revert-layer` fold to an absent text
+  override. The idents are the future-proofing: a stored value
+  like `historical-forms styleset(ss01) character-variant(cv27)
+swash(swash-1)` is standard CSS that names OpenType features and
+  alternate indices directly, independent of any font's display names or of
+  the app version that wrote it. (OpenType does not bound alternates per
+  glyph, so the shared 99 is the app's own owned range; the switches only
+  ever write the first alternate, and the wider range keeps values naming a
+  later alternate owned.)
+- The idents get their meaning from a generated `@font-feature-values` rule
+  that maps every styleset and character-variant tag to its feature number
+  and every single-alternate ident to its alternate index. `FontCatalog` owns
+  the rule: its managed editor style covers every known text family (bundled
+  CSS families, system families, and lazily registered exact faces), and
+  window print/PDF reuses that document. Serialized PNG and byzhtml exports
+  use `getExportFontFeatureValuesCss`, which deliberately includes only
+  bundled text families and exact-face aliases already exposed by the
+  pre-alternates `@font-face` export. Alternates on a base system family may
+  therefore be unavailable in those two export formats. Activating a feature
+  a font lacks is a no-op, so the uniform mapping is harmless. Note that CSS
+  `swash()` turns on both swash features (swsh and cswh), so contextual swash
+  comes bundled with plain swash by design.
+- The alternates controls list the features the effective face actually
+  has: `FontAlternatesService` walks the face's GSUB feature list, resolving
+  each ssXX featureParams UINameID and each cvXX featureParams
+  featUiLabelNameId against the name table for the row labels (preferring
+  the Windows en-US or Unicode name record; lib-font's name.get returns
+  whichever record sorts first, which for Source Serif is Bulgarian) and
+  recording whether the historical-forms (hist), swash (swsh or cswh),
+  stylistic-alternates (salt), ornaments (ornm), and annotation (nalt)
+  features exist at all, which gates those switches. Bundled faces are fixed at
+  build time, so their capabilities are precomputed into the checked-in
+  `src/assets/fonts/bundled-font-alternates.generated.json` (checked by
+  prettier like any source file; the snapshot is written in prettier's
+  JSON style, so the regenerated artifact stays lint-clean): the
+  drift-guard test in `FontAlternatesService.test.ts` recomputes the
+  artifact from the real font files, so it fails when a bundled font
+  changes or a face stops mapping to a file, and `vitest -u` regenerates
+  it. Only system faces are parsed at runtime, with lib-font from the Local
+  Font Access `FontData.blob()` bytes, cached per face. Names are
+  display-only and never persisted. No bundled font has a swash, ornaments,
+  or annotation feature, so those switches only ever appear for system
+  fonts (e.g. EB Garamond Italic for swash, Junicode for ornaments and
+  annotation forms); Old Standard has cv01 and salt and GFS Didot has
+  hist, so the character-variant row, the stylistic-alternates switch, and
+  the historical-forms switch appear for bundled fonts too. The neume fonts
+  are deliberately not read even though they carry salt: their alternates
+  are neume-rendering plumbing, not text typography. A feature that is
+  active in the value but missing from the current face keeps its row so it
+  can be switched off; toggles recompose from the parsed value, so such
+  axes survive unrelated edits.
 - Inheritance is by omission, and `normal` is the explicit reset. A rich-text
   run or an element with no value inherits its paragraph style; an override
   stores `null` (`ParagraphStyle.overrides`) or the literal `'normal'`
@@ -977,6 +1045,9 @@ contract:
   projection).
 - Measurement: canvas `fontVariantCaps` covers the caps values, so
   small-caps/all-small-caps affect measured widths (lyrics, inline text
-  boxes, drop caps). The numeric and ligature properties cannot be expressed
-  on a canvas context; their (small) width effects are an accepted
-  approximation between measurement and rendering.
+  boxes, drop caps). The numeric, ligature, and alternates properties cannot
+  be expressed on a canvas context; their (small) width effects are an
+  accepted approximation between measurement and rendering. Swash stresses
+  that approximation hardest: flourished forms can change advance widths
+  more than any other alternate, so swashed lyrics or inline text boxes are
+  where the gap would show first.

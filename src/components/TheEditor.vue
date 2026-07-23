@@ -2107,6 +2107,8 @@ function getLyricStyleBase(element: NoteElement): CSSProperties {
     fontVariantCaps: resolvedLyricsStyle.fontVariantCaps ?? undefined,
     fontVariantNumeric: resolvedLyricsStyle.fontVariantNumeric ?? undefined,
     fontVariantLigatures: resolvedLyricsStyle.fontVariantLigatures ?? undefined,
+    fontVariantAlternates:
+      resolvedLyricsStyle.fontVariantAlternates ?? undefined,
     textDecoration: resolvedLyricsStyle.textDecoration ?? undefined,
     color: resolvedLyricsStyle.color,
     webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
@@ -8426,7 +8428,9 @@ async function exportAsPng(args: ExportAsPngSettings) {
     let firstExportedPagePath = '';
 
     if (pageElements.length > 0) {
-      const fontEmbedCSS = await getFontEmbedCSS(pageElements[0]);
+      const fontEmbedCSS =
+        (await getFontEmbedCSS(pageElements[0])) +
+        fontCatalog.getExportFontFeatureValuesCss();
 
       for (const [index, page] of pageElements.entries()) {
         const options = {

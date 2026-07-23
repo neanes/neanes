@@ -16,11 +16,17 @@ describe('font-family list parsing', () => {
       "'Family, Display'",
       ' Neanes',
     ]);
+    expect(splitFontFamilyList('"A; B", "C, D", serif')).toEqual([
+      '"A; B"',
+      ' "C, D"',
+      ' serif',
+    ]);
   });
 
   it('normalizes the first family token', () => {
     expect(firstFontFamilyToken("'GFS Didot', Neanes")).toBe('GFS Didot');
     expect(firstFontFamilyToken('Source Serif,Neanes')).toBe('Source Serif');
+    expect(firstFontFamilyToken("'O\\'Brien', serif")).toBe("O'Brien");
   });
 
   it('matches family-list entries after quote normalization', () => {
@@ -37,6 +43,8 @@ describe('font-family serialization', () => {
   it('quotes non-bare CSS font family names', () => {
     expect(quoteFontFamily('Neanes')).toBe('Neanes');
     expect(quoteFontFamily('GFS Didot')).toBe("'GFS Didot'");
+    expect(quoteFontFamily("O'Brien")).toBe("'O\\'Brien'");
+    expect(quoteFontFamily('A\\B')).toBe("'A\\\\B'");
   });
 
   it('converts rich-text font-family model values for UI controls', () => {

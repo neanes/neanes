@@ -327,9 +327,13 @@
         :caps="resolvedParagraphStyle.fontVariantCaps"
         :numeric="resolvedParagraphStyle.fontVariantNumeric"
         :ligatures="resolvedParagraphStyle.fontVariantLigatures"
+        :alternates="resolvedParagraphStyle.fontVariantAlternates"
+        :font-family="resolvedParagraphStyle.fontFamily"
+        :font-style="resolvedParagraphStyle.fontStyle"
         :caps-clearable="element.fontVariantCaps != null"
         :numeric-clearable="element.fontVariantNumeric != null"
         :ligatures-clearable="element.fontVariantLigatures != null"
+        :alternates-clearable="element.fontVariantAlternates != null"
         @change="onFontVariantChanged"
         @clear="onFontVariantClear"
       />
@@ -646,6 +650,7 @@ function clearParagraphStyleFormatting() {
     fontVariantCaps: null,
     fontVariantNumeric: null,
     fontVariantLigatures: null,
+    fontVariantAlternates: null,
     lineHeight: undefined,
     underline: null,
     strokeWidth: null,

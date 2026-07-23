@@ -57,6 +57,7 @@ import FontStyle from './ckeditor-plugins/fontstyle/fontstyle';
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
 import OpenType from './ckeditor-plugins/opentype/opentype';
 import NeanesFakeSelectionEditing from './ckeditor-plugins/richtextselection/richtextselection';
+import { FONT_VARIANT_CSS_NAMES } from './utils/fontVariants';
 import { RICH_TEXT_LANGUAGE_OPTIONS } from './utils/richTextLanguage';
 
 export default class InlineEditor extends DecoupledEditor {}
@@ -200,10 +201,10 @@ InlineEditor.defaultConfig = {
         attributes: true,
       },
     ],
-    // The OpenType plugin is the sole owner of these three properties: it upcasts
-    // the values it models and drops the rest. Keep GeneralHtmlSupport from also
-    // capturing them, which would otherwise leave a competing inner declaration
-    // that overrides the plugin's own span.
+    // The OpenType plugin is the sole owner of the font-variant longhands. Keep
+    // GeneralHtmlSupport from also capturing them, which would otherwise leave a
+    // competing inner declaration that overrides the plugin's own span. Values
+    // outside the plugin's supported vocabulary are dropped during upcast.
     // TextPartLanguage similarly owns language metadata. If GHS also preserves
     // `dir`, removing the language leaves a stale `<span dir="...">`.
     disallow: [
@@ -213,11 +214,7 @@ InlineEditor.defaultConfig = {
       },
       {
         name: 'span',
-        styles: [
-          'font-variant-numeric',
-          'font-variant-ligatures',
-          'font-variant-caps',
-        ],
+        styles: Object.values(FONT_VARIANT_CSS_NAMES),
       },
     ],
   },

@@ -1,12 +1,14 @@
 import type { Editor } from 'ckeditor5';
 
 import { fontCatalog } from '@/services/FontCatalog';
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import {
   firstFontFamilyToken,
   fontFamilyListContains,
   isNeumeFontFamily,
   normalizeFontFamily,
   quoteFontFamily,
+  splitFontFamilyList,
   toRichTextFontFamilyModelValue,
 } from '@/utils/fontFamily';
 import { isCssItalicStyle, normalizeCssFontWeight } from '@/utils/fontStyle';
@@ -67,12 +69,18 @@ export function composeFontFamilyCss(
     return '';
   }
 
-  const baseFamily = firstFontFamilyToken(family);
-  if (!fontStyleNeedsExplicitFamily(fontStyle)) {
+  const explicitFontStyle = fontStyle?.trim();
+
+  if (explicitFontStyle == null || explicitFontStyle === '') {
     return `font-family:${family};`;
   }
 
-  const face = fontCatalog.resolveFace(baseFamily, fontStyle);
+  const baseFamily = firstFontFamilyToken(family);
+
+  // FontCatalog also uses explicit aliases for enumerated basic system faces.
+  // Resolve every explicit style rather than limiting this to optical and
+  // other non-weight styles.
+  const face = fontCatalog.resolveFace(baseFamily, explicitFontStyle);
   const familyList = composeStyleFamilyList(
     face.cssFamily,
     family,
@@ -147,4 +155,30 @@ function composeStyleFamilyList(
   }
 
   return familyList;
+}
+
+// Fold a downcast-produced family list back to its model form: the inverse of
+// composeStyleFamilyList. The list may lead with a derived face alias
+// ("Minion Pro Regular") followed by the base family it was derived from; drop
+// the alias when that pattern is present. The duplicated-base check must run
+// before the Regular early return below: Regular faces are aliased too, so
+// alias-led lists have to fold even when the split style is the default.
+export function normalizeFamilyListForSplitFace(
+  fontFamily: string,
+  split: { family: string; style: string },
+) {
+  const families = splitFontFamilyList(fontFamily)
+    .map((family) => family.trim())
+    .filter((family) => family !== '');
+  const rest = families.slice(1);
+
+  if (rest.length > 0 && normalizeFontFamily(rest[0]) === split.family) {
+    return rest.join(',');
+  }
+
+  if (split.style === DEFAULT_FONT_STYLE) {
+    return fontFamily;
+  }
+
+  return [split.family, ...rest].join(',');
 }

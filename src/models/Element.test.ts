@@ -106,11 +106,13 @@ describe('Element clipboard and paragraph-style overrides', () => {
       element.fontVariantCaps = 'all-small-caps';
       element.fontVariantNumeric = 'normal';
       element.fontVariantLigatures = null;
+      element.fontVariantAlternates = 'historical-forms';
 
       expect(element.getClipboardProperties()).toMatchObject({
         fontVariantCaps: 'all-small-caps',
         fontVariantNumeric: 'normal',
         fontVariantLigatures: null,
+        fontVariantAlternates: 'historical-forms',
       });
 
       const styles = [
@@ -131,6 +133,7 @@ describe('Element clipboard and paragraph-style overrides', () => {
       expect(resolved.fontVariantNumeric).toBeNull();
       // A null element value inherits the style value.
       expect(resolved.fontVariantLigatures).toBe('discretionary-ligatures');
+      expect(resolved.fontVariantAlternates).toBe('historical-forms');
     },
   );
 
@@ -139,16 +142,19 @@ describe('Element clipboard and paragraph-style overrides', () => {
     note.lyricsFontVariantCaps = 'all-small-caps';
     note.lyricsFontVariantNumeric = 'normal';
     note.lyricsFontVariantLigatures = null;
+    note.lyricsFontVariantAlternates = 'normal';
 
     expect(note.getClipboardProperties(true)).toMatchObject({
       lyricsFontVariantCaps: 'all-small-caps',
       lyricsFontVariantNumeric: 'normal',
       lyricsFontVariantLigatures: null,
+      lyricsFontVariantAlternates: 'normal',
     });
     expect(note.cloneFormat()).toMatchObject({
       lyricsFontVariantCaps: 'all-small-caps',
       lyricsFontVariantNumeric: 'normal',
       lyricsFontVariantLigatures: null,
+      lyricsFontVariantAlternates: 'normal',
     });
 
     const styles = [
@@ -156,6 +162,7 @@ describe('Element clipboard and paragraph-style overrides', () => {
         fontVariantCaps: 'small-caps',
         fontVariantNumeric: 'oldstyle-nums',
         fontVariantLigatures: 'discretionary-ligatures',
+        fontVariantAlternates: 'historical-forms',
       }),
     ];
     const resolved = resolveElementStyle(
@@ -169,6 +176,7 @@ describe('Element clipboard and paragraph-style overrides', () => {
     expect(resolved.fontVariantNumeric).toBeNull();
     // A null per-note value inherits the style value.
     expect(resolved.fontVariantLigatures).toBe('discretionary-ligatures');
+    expect(resolved.fontVariantAlternates).toBeNull();
   });
 
   it.each([

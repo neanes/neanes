@@ -42,7 +42,7 @@
     "throttle-debounce": "^5.0.2"
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.29.7",
+    "@babel/preset-typescript": "^8.0.1",
     "@ckeditor/ckeditor5-vue": "^8.2.0",
     "@csstools/css-parser-algorithms": "^4.0.0",
     "@csstools/css-tokenizer": "^4.0.0",

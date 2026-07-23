@@ -1111,6 +1111,47 @@
                 <template v-else-if="section.value === 'lyrics'">
                   <Field orientation="horizontal">
                     <FieldContent>
+                      <FieldLabel for="page-setup-dialog-melisma-style">
+                        {{
+                          $t(($) => $.dialog.pageSetup.melismaStyle, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(
+                            ($) => $.dialog.pageSetup.melismaStyleDescription,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <Select v-model="form.melismaStyle">
+                      <SelectTrigger id="page-setup-dialog-melisma-style">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem
+                            v-for="[
+                              melismaStyle,
+                              labelSelector,
+                            ] in melismaStyleOptions"
+                            :key="melismaStyle"
+                            :value="melismaStyle"
+                          >
+                            {{ $t(labelSelector, { ns: 'dialog' }) }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
                       <FieldLabel for="page-setup-dialog-lyrics-melisma-cutoff">
                         {{
                           $t(
@@ -1596,7 +1637,7 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import type { PageSize, PageSizeUnit } from '@/models/PageSetup';
-import { PageSetup, pageSizes } from '@/models/PageSetup';
+import { MelismaStyle, PageSetup, pageSizes } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   type ParagraphStyle,
@@ -1835,6 +1876,12 @@ const directionOptions = new Map<PageDirection, DialogSelector>([
 const numeralsOptions = new Map<PageNumerals, DialogSelector>([
   ['westernArabic', ($) => $.dialog.pageSetup.westernArabic],
   ['easternArabic', ($) => $.dialog.pageSetup.easternArabic],
+]);
+
+const melismaStyleOptions = new Map<MelismaStyle, DialogSelector>([
+  [MelismaStyle.Auto, ($) => $.dialog.pageSetup.melismaStyleAuto],
+  [MelismaStyle.Western, ($) => $.dialog.pageSetup.melismaStyleWestern],
+  [MelismaStyle.Vocalic, ($) => $.dialog.pageSetup.melismaStyleVocalic],
 ]);
 
 const form = ref(new PageSetup());
@@ -2138,13 +2185,6 @@ const miscellaneousCheckboxRows = [
     labelSelector: ($) => $.dialog.pageSetup.melkiteRtl,
     descriptionSelector: ($) => $.dialog.pageSetup.melkiteRtlDescription,
     modelKey: 'melkiteRtl',
-  },
-  {
-    id: 'page-setup-dialog-disable-melismata',
-    labelSelector: ($) => $.dialog.pageSetup.disableGreekMelismata,
-    descriptionSelector: ($) =>
-      $.dialog.pageSetup.disableGreekMelismataDescription,
-    modelKey: 'disableGreekMelismata',
   },
 ] as const satisfies ReadonlyArray<{
   id: string;

@@ -79,6 +79,11 @@ import { resolveRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
+import {
+  findMelismaFinalNote,
+  getMelismaRunMiddle,
+  isMelismaContinuationElement,
+} from './LyricService';
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
 import {
@@ -584,7 +589,7 @@ export class LayoutService {
     };
 
     // Phase 1: Build paragraphs as sequences of boxes, glue, and penalties
-    let phase1GreekMelismaIsActive = false;
+    let phase1VocalicMelismaIsActive = false;
     for (let i = 0; i < elements.length; i++) {
       if (layoutWorkspace.diagnostics != null) {
         layoutWorkspace.diagnostics.currentOwner = elements[i];
@@ -924,6 +929,10 @@ export class LayoutService {
             nextNoteElement.leadingLyricHyphenOffset = 0;
             nextNoteElement.leadingLyricHyphenReservationWidth = 0;
           }
+          const phase1RunStartText = LayoutService.getVocalicRunStartText(
+            elements,
+            i,
+          );
           if (
             noteElement.isHyphen &&
             nextNoteElement != null &&
@@ -931,7 +940,8 @@ export class LayoutService {
             LayoutService.mayShowLeadingLyricHyphen(
               noteElement,
               pageSetup,
-              phase1GreekMelismaIsActive,
+              phase1VocalicMelismaIsActive,
+              phase1RunStartText,
             )
           ) {
             const leadingLyricHyphenWidth = this.getTextWidthFromCache(
@@ -954,11 +964,12 @@ export class LayoutService {
           }
           layoutWorkspace.pendingLeadingLyricHyphenReservationWidth =
             nextLeadingLyricHyphenReservation;
-          phase1GreekMelismaIsActive =
-            LayoutService.getGreekMelismaIsActiveAfterNote(
+          phase1VocalicMelismaIsActive =
+            LayoutService.getVocalicMelismaIsActiveAfterNote(
               noteElement,
               pageSetup,
-              phase1GreekMelismaIsActive,
+              phase1VocalicMelismaIsActive,
+              phase1RunStartText,
             );
 
           const m_i = this.calculateInterNoteSpacing(
@@ -3170,47 +3181,81 @@ export class LayoutService {
     };
   }
 
+  /**
+   * Returns the text that starts the vocalic melisma run at `elements[index]`,
+   * or null when no run starts there. A run starts at a melisma start note,
+   * whose syllable may begin with a directly preceding drop cap, or at a
+   * melisma note directly preceded by a drop cap: the drop cap carries the
+   * syllable (e.g. a drop cap followed by an empty hyphen note in a staged
+   * Greek word) and such a note has no melisma start of its own.
+   */
+  private static getVocalicRunStartText(
+    elements: ScoreElement[],
+    index: number,
+  ): string | null {
+    const note = elements[index] as NoteElement;
+
+    if (
+      (note.isMelisma || note.isMelismaStart) &&
+      index > 0 &&
+      elements[index - 1].elementType === ElementType.DropCap
+    ) {
+      return `${(elements[index - 1] as DropCapElement).content}${note.lyrics}`;
+    }
+
+    return note.isMelismaStart ? note.lyrics : null;
+  }
+
   public static mayShowLeadingLyricHyphen(
     noteElement: NoteElement,
     pageSetup: PageSetup,
-    greekMelismaIsActive: boolean = false,
+    vocalicMelismaIsActive: boolean = false,
+    startText: string | null = null,
   ): boolean {
     if (!noteElement.isHyphen) {
       return false;
     }
 
-    if (pageSetup.disableGreekMelismata) {
-      return true;
+    const runStartText =
+      startText ?? (noteElement.isMelismaStart ? noteElement.lyrics : null);
+
+    if (runStartText != null) {
+      return !MelismaHelperGreek.usesVocalicMelisma(
+        pageSetup.melismaStyle,
+        runStartText,
+      );
     }
 
-    if (noteElement.isMelismaStart) {
-      return !MelismaHelperGreek.isGreek(noteElement.lyrics);
-    }
-
-    if (noteElement.isMelisma && greekMelismaIsActive) {
+    if (noteElement.isMelisma && vocalicMelismaIsActive) {
       return false;
     }
 
     return (
-      !MelismaHelperGreek.isGreek(noteElement.lyrics) &&
-      !MelismaHelperGreek.isGreek(noteElement.melismaText)
+      !MelismaHelperGreek.usesVocalicMelisma(
+        pageSetup.melismaStyle,
+        noteElement.lyrics,
+      ) &&
+      !MelismaHelperGreek.usesVocalicMelisma(
+        pageSetup.melismaStyle,
+        noteElement.melismaText,
+      )
     );
   }
 
-  private static getGreekMelismaIsActiveAfterNote(
+  private static getVocalicMelismaIsActiveAfterNote(
     noteElement: NoteElement,
     pageSetup: PageSetup,
-    greekMelismaIsActive: boolean,
+    vocalicMelismaIsActive: boolean,
+    startText: string | null,
   ) {
-    if (pageSetup.disableGreekMelismata) {
-      return false;
+    if (startText != null) {
+      return MelismaHelperGreek.usesVocalicMelisma(
+        pageSetup.melismaStyle,
+        startText,
+      );
     }
 
-    if (noteElement.isMelismaStart) {
-      return MelismaHelperGreek.isGreek(noteElement.lyrics);
-    }
-
-    return noteElement.isMelisma && greekMelismaIsActive;
+    return noteElement.isMelisma && vocalicMelismaIsActive;
   }
 
   private static preventBreak(workspace: LayoutWorkspace) {
@@ -5482,9 +5527,50 @@ export class LayoutService {
       );
     }
 
+    // For each vocalic hyphen-connected melisma start note, the run's
+    // repeated vowel corrected against the run's final form. Re-analyzing the
+    // stored initial alone can pick the wrong repeated vowel (see
+    // MelismaHelperGreek.getMelismaMiddle), so the middle shown on
+    // intermediate notes is corrected against the run's final form.
+    const vocalicMiddleByStart = new Map<NoteElement, string>();
+    const flattenedElements = pages.flatMap((page) =>
+      page.lines.flatMap((line) => line.elements),
+    );
+
+    for (let i = 0; i < flattenedElements.length; i++) {
+      const scoreElement = flattenedElements[i];
+
+      if (scoreElement.elementType !== ElementType.Note) {
+        continue;
+      }
+
+      const note = scoreElement as NoteElement;
+
+      const startText = LayoutService.getVocalicRunStartText(
+        flattenedElements,
+        i,
+      );
+
+      if (
+        startText != null &&
+        note.isHyphen &&
+        MelismaHelperGreek.usesVocalicMelisma(pageSetup.melismaStyle, startText)
+      ) {
+        const finalNote = findMelismaFinalNote(flattenedElements, i);
+        const middle =
+          finalNote != null
+            ? getMelismaRunMiddle(startText, finalNote, finalNote.lyrics)
+            : null;
+
+        if (middle != null) {
+          vocalicMiddleByStart.set(note, middle);
+        }
+      }
+    }
+
     let melismaSyllables: MelismaSyllables | null = null;
     let melismaLyricsEnd: number | null = null;
-    let phase2GreekMelismaIsActive = false;
+    let phase2VocalicMelismaIsActive = false;
     let previousLineEndingMayShowLeadingLyricHyphen = false;
 
     for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
@@ -5520,7 +5606,7 @@ export class LayoutService {
 
           if (this.isBreakElement(currentElement)) {
             melismaSyllables = null;
-            phase2GreekMelismaIsActive = false;
+            phase2VocalicMelismaIsActive = false;
             previousLineEndingMayShowLeadingLyricHyphen = false;
             lineEndingMayShowLeadingLyricHyphen = false;
             continue;
@@ -5539,11 +5625,16 @@ export class LayoutService {
             index === indexOfFirstNote &&
             element.isMelisma &&
             !element.isMelismaStart;
+          const startText = LayoutService.getVocalicRunStartText(
+            line.elements,
+            index,
+          );
           const mayShowLeadingLyricHyphen =
             LayoutService.mayShowLeadingLyricHyphen(
               element,
               pageSetup,
-              phase2GreekMelismaIsActive,
+              phase2VocalicMelismaIsActive,
+              startText,
             );
 
           // First, clear melisma fields, since
@@ -5566,30 +5657,30 @@ export class LayoutService {
             lineEndingMayShowLeadingLyricHyphen = mayShowLeadingLyricHyphen;
           }
 
-          phase2GreekMelismaIsActive =
-            LayoutService.getGreekMelismaIsActiveAfterNote(
+          phase2VocalicMelismaIsActive =
+            LayoutService.getVocalicMelismaIsActiveAfterNote(
               element,
               pageSetup,
-              phase2GreekMelismaIsActive,
+              phase2VocalicMelismaIsActive,
+              startText,
             );
 
           if (
-            !pageSetup.disableGreekMelismata &&
-            MelismaHelperGreek.isGreek(element.lyrics)
+            (element.isMelisma || element.isMelismaStart) &&
+            MelismaHelperGreek.usesVocalicMelisma(
+              pageSetup.melismaStyle,
+              startText ?? element.lyrics,
+            )
           ) {
-            if (element.isMelismaStart) {
-              let text = element.lyrics;
+            if (startText != null) {
+              melismaSyllables =
+                MelismaHelperGreek.getMelismaSyllable(startText);
 
-              // If the previous element is a drop cap, we need to
-              // prepend the drop cap content to the melisma text
-              if (index > 0) {
-                const previousElement = line.elements[index - 1];
-                if (previousElement.elementType === ElementType.DropCap) {
-                  text = `${(previousElement as DropCapElement).content}${text}`;
-                }
+              const correctedMiddle = vocalicMiddleByStart.get(element);
+
+              if (correctedMiddle != null) {
+                melismaSyllables.middle = correctedMiddle;
               }
-
-              melismaSyllables = MelismaHelperGreek.getMelismaSyllable(text);
 
               melismaLyricsEnd =
                 element.x +
@@ -6249,7 +6340,7 @@ export class LayoutService {
       if (this.isMeasureBarAnchorElement(element)) {
         return element;
       }
-      if (!this.isMelismaContinuationElement(element)) {
+      if (!isMelismaContinuationElement(element)) {
         return null;
       }
     }
@@ -8441,18 +8532,6 @@ export class LayoutService {
     );
   }
 
-  /**
-   * Returns true if a melisma can continue through this element.
-   */
-  private static isMelismaContinuationElement(element: ScoreElement) {
-    return (
-      element.elementType === ElementType.Martyria ||
-      element.elementType === ElementType.Tempo ||
-      (element.elementType === ElementType.TextBox &&
-        (element as TextBoxElement).inline)
-    );
-  }
-
   private static nextNoteElement(
     line: Line,
     startIndex: number,
@@ -8479,7 +8558,7 @@ export class LayoutService {
 
   private static isBreakElement(element: ScoreElement) {
     return (
-      !this.isMelismaContinuationElement(element) &&
+      !isMelismaContinuationElement(element) &&
       element.elementType !== ElementType.Note
     );
   }
@@ -8517,7 +8596,7 @@ export class LayoutService {
       if (
         (line.elements[i].elementType === ElementType.Note &&
           !this.isPartOfSameMelisma(line.elements[i])) ||
-        (this.isMelismaContinuationElement(line.elements[i]) &&
+        (isMelismaContinuationElement(line.elements[i]) &&
           nextNoteElement != null &&
           !this.isPartOfSameMelisma(nextNoteElement)) ||
         this.isBreakElement(line.elements[i])

@@ -230,6 +230,7 @@ import {
   LayoutService,
   type OverlayDiagnosticsContext,
 } from '@/services/LayoutService';
+import type { NoteLyricUpdate } from '@/services/LyricService';
 import {
   classifyRecoveryCandidates,
   getRecoveryCandidateGroupRecoveryIds,
@@ -6602,7 +6603,7 @@ function assignLyrics(workspace: Workspace = selectedWorkspace.value) {
     workspaceScore.staff.lyrics.text,
     workspaceElements,
     workspaceScore.pageSetup.melkiteRtl,
-    workspaceScore.pageSetup.disableGreekMelismata,
+    workspaceScore.pageSetup.melismaStyle,
     (note, lyrics) => {
       if (workspaceIsSelected) {
         setLyrics(getElementIndex(note), lyrics);
@@ -6647,7 +6648,7 @@ function assignLyrics(workspace: Workspace = selectedWorkspace.value) {
 function extractStaffLyrics(workspace: Workspace) {
   workspace.score.staff.lyrics.text = lyricService.extractLyrics(
     workspace.score.staff.elements,
-    workspace.score.pageSetup.disableGreekMelismata,
+    workspace.score.pageSetup.melismaStyle,
   );
 }
 
@@ -6656,7 +6657,7 @@ function assignAcceptsLyricsFromCurrentLyrics() {
 
   lyricService.assignAcceptsLyricsFromCurrentLyrics(
     elements.value,
-    score.value.pageSetup.disableGreekMelismata,
+    score.value.pageSetup.melismaStyle,
     (note, acceptsLyrics) => {
       commands.push(
         noteElementCommandFactory.create('update-properties', {
@@ -6681,6 +6682,31 @@ function updateLyrics(
   lyrics: string,
   clearMelisma: boolean = false,
 ) {
+  const inlineVocalicUpdates = lyricService.getInlineVocalicMelismaUpdates(
+    element,
+    lyrics,
+    elements.value,
+    rtl.value,
+    score.value.pageSetup.melismaStyle,
+  );
+
+  if (inlineVocalicUpdates != null) {
+    // An empty update list means the run already matches the entered melisma.
+    // Falling through would apply the raw melisma text to the note.
+    if (inlineVocalicUpdates.length > 0) {
+      executeLyricUpdateBatch(inlineVocalicUpdates);
+    }
+
+    // The batch re-syncs only the notes whose lyrics changed. When the raw
+    // entered melisma differs from the note's stored form but produced no
+    // update for this note, the lyric box would keep displaying the raw text.
+    if (lyrics !== element.lyrics) {
+      setLyrics(getElementIndex(element), element.lyrics);
+    }
+
+    return;
+  }
+
   const newValues = lyricService.getLyricUpdateValues(
     element,
     lyrics,
@@ -6700,6 +6726,26 @@ function updateLyrics(
     refreshStaffLyrics();
     save();
   }
+}
+
+function executeLyricUpdateBatch(updates: NoteLyricUpdate[]) {
+  commandService.value.executeAsBatch(
+    updates.map(({ note, newValues }) =>
+      noteElementCommandFactory.create('update-properties', {
+        target: note,
+        newValues,
+      }),
+    ),
+  );
+
+  for (const { note, newValues } of updates) {
+    if ('lyrics' in newValues) {
+      setLyrics(getElementIndex(note), note.lyrics);
+    }
+  }
+
+  refreshStaffLyrics();
+  save();
 }
 
 function refreshStaffLyrics() {
@@ -7374,6 +7420,19 @@ function runWithResizableParagraphStyleRecalc(operation: () => void) {
 function updatePageSetup(pageSetup: PageSetup) {
   const currentPageSetup = score.value.pageSetup;
 
+  // Changing the melisma style changes how the lyrics are distributed across
+  // the notes, so the lyrics must be re-assigned. Re-derive the lyrics source
+  // from the current notes (under the previous style) so that lyrics entered
+  // either through the Lyrics pane or inline are re-assigned with the new
+  // style below. When lyrics are locked, the Lyrics pane is the authoritative
+  // source and must not be overwritten from the currently notated notes.
+  const melismaStyleChanged =
+    pageSetup.melismaStyle !== currentPageSetup.melismaStyle;
+
+  if (melismaStyleChanged && !score.value.staff.lyrics.locked) {
+    extractStaffLyrics(selectedWorkspace.value);
+  }
+
   const updateCommands: Command[] = [
     pageSetupCommandFactory.create('update-properties', {
       target: currentPageSetup,
@@ -7428,6 +7487,10 @@ function updatePageSetup(pageSetup: PageSetup) {
   }
 
   commandService.value.executeAsBatch(updateCommands);
+
+  if (melismaStyleChanged) {
+    assignLyrics();
+  }
 
   save();
 }

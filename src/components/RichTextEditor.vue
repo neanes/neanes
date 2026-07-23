@@ -37,6 +37,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   blur: [editor: InlineEditor];
+  'data-change': [editor: InlineEditor];
   ready: [editor: InlineEditor];
   'select-neume': [];
 }>();
@@ -71,6 +72,7 @@ watch([() => props.modelValue, instance], ([next, editor]) => {
 });
 
 let registeredEditor: InlineEditor | null = null;
+let unregisterDataChange: (() => void) | null = null;
 let unregisterFocusTracker: (() => void) | null = null;
 let unregisterViewClick: (() => void) | null = null;
 let editorIsFocused = false;
@@ -116,6 +118,15 @@ function onReady(editor: InlineEditor) {
     editor.ui.focusTracker.off('change:isFocused', onFocusChanged);
   };
 
+  const onDataChange = () => {
+    emit('data-change', editor);
+  };
+
+  editor.model.document.on('change:data', onDataChange);
+  unregisterDataChange = () => {
+    editor.model.document.off('change:data', onDataChange);
+  };
+
   const onViewClick = () => {
     window.setTimeout(() => {
       if (registeredEditor !== editor) {
@@ -146,6 +157,8 @@ function onDestroy(editor: InlineEditor) {
 }
 
 function unregisterRichTextEditor() {
+  unregisterDataChange?.();
+  unregisterDataChange = null;
   unregisterViewClick?.();
   unregisterViewClick = null;
   unregisterFocusTracker?.();

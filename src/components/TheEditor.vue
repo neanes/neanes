@@ -502,6 +502,11 @@ const contextMenuWorkspaceId = ref<string | null>(null);
 const scoreContextMenuTarget = ref<ScoreElement | null>(null);
 const scoreMenuPointerDownInside = ref(false);
 const pages = ref<Page[]>([]);
+// Bumped after every layout pass. processPages mutates element geometry (x, y,
+// flowFragments) on the raw score objects, invisibly to Vue; components whose
+// computeds read that geometry (TextBoxRich's flow measurement) take this as a
+// prop and reference it to re-evaluate after each pass.
+const layoutVersion = ref(0);
 const currentPageNumber = ref(0);
 const modeKeyDialogIsOpen = ref(false);
 const syllablePositioningDialogIsOpen = ref(false);
@@ -545,7 +550,16 @@ const noteFormat = ref<ClipboardFormatState<NoteElement>>({
   paragraphStyles: [],
 });
 const richTextBoxCalculation = ref(false);
-const richTextBoxCalculationCount = ref(0);
+// ids of resizable rich text boxes that have reported a completed measurement
+// during the current recalc pass. Only read by the recalc poll, so a plain Set
+// suffices (see recalculateRichTextBoxHeights).
+const richTextBoxCalculationDone = new Set<number>();
+// While true, the "a workspace became active" watcher does not auto-measure
+// rich text boxes. Raised across the silent CLI export loops, which drive
+// their own awaited measurement before capture; a concurrent fire-and-forget
+// activation pass would race the awaited one over the shared measurement
+// state (see recalculateRichTextBoxHeights and the load() bulk section).
+const suppressActivationMeasure = ref(false);
 const textBoxCalculation = ref(false);
 const textBoxCalculationCount = ref(0);
 const fonts = ref<string[]>([]);
@@ -1604,6 +1618,15 @@ watch(selectedWorkspaceId, () => {
   if (paneVisibility.value.lyrics) {
     refreshStaffLyrics();
   }
+
+  // A workspace just became active. Its rich text boxes may never have been
+  // measured (lineOffsets are not persisted, and virtualization defers
+  // off-screen boxes), so page flow could not split a tall box until now.
+  // Measure eagerly; every activation path runs through this watcher. Only the
+  // headless CLI export loops opt out (see suppressActivationMeasure).
+  if (!suppressActivationMeasure.value) {
+    void recalculateRichTextBoxHeights();
+  }
 });
 
 // Keep this before the annotation post-flush watcher; handoff focus depends on declaration order.
@@ -2343,7 +2366,9 @@ function getNextElementOnSameLine(element: ScoreElement) {
     : null;
 }
 
-function getElementStyle(element: ScoreElement) {
+// Positions an element -- or a continuation slice of a flowed rich text box --
+// on its page.
+function getElementStyle(element: { x: number; y: number }) {
   return {
     left: !rtl.value ? withZoom(element.x) : undefined,
     right: rtl.value ? withZoom(element.x) : undefined,
@@ -2506,6 +2531,40 @@ function getFooterForPageIndex(pageIndex: number) {
   // Currently, footers only support a single text box element.
   return footer.elements[0] as TextBoxElement | RichTextBoxElement;
 }
+
+function getFooterOverflowReservationForPageIndex(pageIndex: number) {
+  if (!score.value.pageSetup.showFooter) {
+    return 0;
+  }
+
+  return LayoutService.getFooterOverflowReservation(
+    score.value.pageSetup,
+    getFooterForPageIndex(pageIndex).height,
+    shouldShowFooterRuleForPageIndex(pageIndex),
+  );
+}
+
+const maximumFooterOverflowReservation = computed(() => {
+  const pageSetup = score.value.pageSetup;
+
+  if (!pageSetup.showFooter) {
+    return 0;
+  }
+
+  return Math.max(
+    0,
+    ...headerFooterVariants.map((variant) =>
+      LayoutService.getFooterOverflowReservation(
+        pageSetup,
+        (
+          score.value.footers[variant].elements[0] as
+            TextBoxElement | RichTextBoxElement
+        ).height,
+        pageSetup.showFooterHorizontalRule,
+      ),
+    ),
+  );
+});
 
 function getHeaderFooterVariantForPageIndex(
   pageIndex: number,
@@ -5593,6 +5652,7 @@ function save(markUnsavedChanges: boolean = true) {
     });
 
   pages.value = processedPages;
+  layoutVersion.value++;
 
   if (lyricSelection != null) {
     nextTick(() => {
@@ -5667,55 +5727,69 @@ async function load() {
   // If there are none, then create a default workspace.
   const openWorkspaceResults = await ipcService.openWorkspaceFromArgv();
 
-  if (openWorkspaceResults.silentPdf) {
-    for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
-      openScore(file);
-      await onFileMenuExportAsPdf();
-      removeWorkspace(selectedWorkspace.value);
-    }
-  }
+  // The silent CLI export loops drive their own awaited measurement before
+  // capture; keep the activation watcher out of their way (see
+  // suppressActivationMeasure) and restore it even when an export throws.
+  suppressActivationMeasure.value = true;
 
-  if (openWorkspaceResults.silentHtml) {
-    for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
-      openScore(file);
-      await onFileMenuExportAsHtml();
-      removeWorkspace(selectedWorkspace.value);
+  try {
+    if (openWorkspaceResults.silentPdf) {
+      for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
+        openScore(file);
+        await onFileMenuExportAsPdf();
+        removeWorkspace(selectedWorkspace.value);
+      }
     }
-  }
 
-  if (openWorkspaceResults.silentLatex) {
-    for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
-      const options = new LatexExporterOptions();
-      options.includeModeKeys =
-        openWorkspaceResults.silentLatexIncludeModeKeys ?? false;
-      options.includeTextBoxes =
-        openWorkspaceResults.silentLatexIncludeTextBoxes ?? false;
-      openScore(file);
-      await nextTick();
-      await ipcService.exportWorkspaceAsLatex(
-        selectedWorkspace.value,
-        JSON.stringify(
-          latexExporter.export(
-            pages.value,
-            score.value.pageSetup,
-            score.value.paragraphStyles,
-            options,
+    if (openWorkspaceResults.silentHtml) {
+      for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
+        openScore(file);
+        await onFileMenuExportAsHtml();
+        removeWorkspace(selectedWorkspace.value);
+      }
+    }
+
+    if (openWorkspaceResults.silentLatex) {
+      for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
+        const options = new LatexExporterOptions();
+        options.includeModeKeys =
+          openWorkspaceResults.silentLatexIncludeModeKeys ?? false;
+        options.includeTextBoxes =
+          openWorkspaceResults.silentLatexIncludeTextBoxes ?? false;
+        openScore(file);
+        await flowRichTextBoxesForCapture();
+        await ipcService.exportWorkspaceAsLatex(
+          selectedWorkspace.value,
+          JSON.stringify(
+            latexExporter.export(
+              pages.value,
+              score.value.pageSetup,
+              score.value.paragraphStyles,
+              options,
+            ),
+            null,
+            2,
           ),
-          null,
-          2,
-        ),
-      );
-      removeWorkspace(selectedWorkspace.value);
+        );
+        removeWorkspace(selectedWorkspace.value);
+      }
     }
+
+    if (
+      openWorkspaceResults.silentPdf ||
+      openWorkspaceResults.silentLatex ||
+      openWorkspaceResults.silentHtml
+    ) {
+      await ipcService.exitApplication();
+    }
+  } finally {
+    suppressActivationMeasure.value = false;
   }
 
-  if (
-    openWorkspaceResults.silentPdf ||
-    openWorkspaceResults.silentLatex ||
-    openWorkspaceResults.silentHtml
-  ) {
-    await ipcService.exitApplication();
-  }
+  // Vue coalesces the forEach's synchronous per-file workspace switches into a
+  // single activation-watcher callback, which measures the finally-selected
+  // workspace. The other files are background tabs, measured by the watcher
+  // when first switched to.
 
   openWorkspaceResults.files
     .filter((x) => x.success)
@@ -6904,8 +6978,25 @@ function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   // The height could be updated by many rich text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
-  richTextBoxCalculationCount.value++;
   saveDebounced(false);
+}
+
+function updateRichTextBoxLineOffsets(
+  element: RichTextBoxElement,
+  lineOffsets: number[],
+) {
+  // Pure geometry, like the height: store the cut points and re-layout without
+  // creating undo history.
+  element.lineOffsets = lineOffsets;
+  saveDebounced(false);
+}
+
+function onRichTextBoxMeasured(element: RichTextBoxElement) {
+  // A hidden measurement box finished a recalc pass (its height and line
+  // offsets, if changed, have already been committed). Record it by id so
+  // recalculateRichTextBoxHeights knows when every box has reported -- whether
+  // or not anything actually changed.
+  richTextBoxCalculationDone.add(element.id!);
 }
 
 function updateTextBox(
@@ -7269,6 +7360,22 @@ function deletePreviousElement() {
   }
 }
 
+function getResizableTextLayoutSnapshot(pageSetup: PageSetup) {
+  return {
+    // Non-inline text and rich text boxes are laid out at innerPageWidth. If
+    // page width or horizontal margins change, wrapped lines and rich-text cut
+    // offsets must be measured again, even when font defaults are unchanged.
+    innerPageWidth: pageSetup.innerPageWidth,
+  };
+}
+
+function resizableTextLayoutChanged(previous: PageSetup, current: PageSetup) {
+  return !shallowEquals(
+    getResizableTextLayoutSnapshot(previous),
+    getResizableTextLayoutSnapshot(current),
+  );
+}
+
 const resolvedAnnotationStyle = computed(() =>
   resolveParagraphStyle(
     score.value.paragraphStyles,
@@ -7349,11 +7456,15 @@ function resizableParagraphStylesChanged(
   return false;
 }
 
-// Brackets an operation that may change paragraph styles and recalculates the
-// text box heights that depend on the resolved styles when they changed.
+// Brackets an operation that may change resolved paragraph styles or the
+// laid-out page width (e.g. an undone page setup change) and recalculates the
+// text box heights that depend on them when either changed.
 function runWithResizableParagraphStyleRecalc(operation: () => void) {
   const previousResizableParagraphStyles = getResizableParagraphStyleSnapshot(
     score.value,
+  );
+  const previousTextLayout = getResizableTextLayoutSnapshot(
+    score.value.pageSetup,
   );
 
   operation();
@@ -7362,15 +7473,23 @@ function runWithResizableParagraphStyleRecalc(operation: () => void) {
     resizableParagraphStylesChanged(
       previousResizableParagraphStyles,
       getResizableParagraphStyleSnapshot(score.value),
+    ) ||
+    !shallowEquals(
+      previousTextLayout,
+      getResizableTextLayoutSnapshot(score.value.pageSetup),
     )
   ) {
-    recalculateRichTextBoxHeights();
+    void recalculateRichTextBoxHeights();
     recalculateTextBoxHeights();
   }
 }
 
 function updatePageSetup(pageSetup: PageSetup) {
   const currentPageSetup = score.value.pageSetup;
+  const needToRecalcRichTextBoxes = resizableTextLayoutChanged(
+    currentPageSetup,
+    pageSetup,
+  );
 
   const updateCommands: Command[] = [
     pageSetupCommandFactory.create('update-properties', {
@@ -7426,6 +7545,11 @@ function updatePageSetup(pageSetup: PageSetup) {
   }
 
   commandService.value.executeAsBatch(updateCommands);
+
+  if (needToRecalcRichTextBoxes) {
+    void recalculateRichTextBoxHeights();
+    recalculateTextBoxHeights();
+  }
 
   save();
 }
@@ -8160,31 +8284,45 @@ function onAudioServiceStop() {
   stopPlaybackClock();
 }
 
-function recalculateRichTextBoxHeights() {
+function recalculateRichTextBoxHeights(): Promise<void> {
+  const expectedIds = resizableRichTextBoxElements.value.map((x) => x.id!);
+
+  // Nothing to measure -> nothing to wait for. Also avoids needlessly mounting
+  // the hidden measurement template on scores with no resizable rich text boxes.
+  if (expectedIds.length === 0) {
+    return Promise.resolve();
+  }
+
   if (richTextBoxCalculation.value) {
     richTextBoxCalculation.value = false;
   }
 
-  nextTick(async () => {
-    const expectedCount = resizableRichTextBoxElements.value.length;
-    richTextBoxCalculationCount.value = 0;
+  // Resolves once every box has been measured and the resulting layout has been
+  // requested, so callers that must read a correct layout before acting on it
+  // (export, print) can await the measurement instead of racing it. Fire-and-
+  // forget callers (page setup, undo, redo) ignore the promise; a re-entrant
+  // call still restarts the pass as before.
+  return nextTick().then(async () => {
+    richTextBoxCalculationDone.clear();
     richTextBoxCalculation.value = true;
 
     const maxTries = 4 * 30; // 30 seconds
     let tries = 1;
-    let lastCount = 0;
 
-    // Wait until all rich text boxes have updated
+    // Wait until every rich text box has reported a completed measurement. We
+    // track completion by id rather than a bare count: a box emits `measured`
+    // once it has settled even when its height and line offsets are unchanged
+    // (and it may re-report if it later resizes), so a count could over- or
+    // under-shoot the expected total, whereas id coverage cannot.
     const poll = (resolve: (value: unknown) => void) => {
-      if (
-        richTextBoxCalculationCount.value === expectedCount ||
-        tries >= maxTries ||
-        richTextBoxCalculationCount.value < lastCount
-      ) {
+      const done = expectedIds.every((id) =>
+        richTextBoxCalculationDone.has(id),
+      );
+
+      if (done || tries >= maxTries) {
         resolve(true);
       } else {
         tries++;
-        lastCount = richTextBoxCalculationCount.value;
         setTimeout(() => poll(resolve), 250);
       }
     };
@@ -8248,6 +8386,8 @@ function onFileMenuNewScore() {
 
 async function onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
   if (!dialogOpen.value && args.success) {
+    // openScore selects the workspace; the activation watcher then measures its
+    // rich text boxes (see watch(selectedWorkspaceId)).
     openScore(args);
   }
 }
@@ -8295,8 +8435,19 @@ function onFileMenuDocumentProperties() {
   documentPropertiesDialogIsOpen.value = true;
 }
 
+// Flow rich text boxes before a capture that reads the laid-out pages
+// (print, PDF/PNG/LaTeX export): their line offsets are measured at runtime,
+// not persisted, so a freshly opened score would otherwise capture unflowed,
+// overflowing pages.
+async function flowRichTextBoxesForCapture() {
+  await recalculateRichTextBoxHeights();
+  save(false);
+}
+
 async function onFileMenuPrint() {
   prepareWorkspaceForSerialization(selectedWorkspace.value);
+
+  await flowRichTextBoxesForCapture();
 
   printMode.value = true;
 
@@ -8319,6 +8470,8 @@ async function onFileMenuPrint() {
 
 async function onFileMenuExportAsPdf() {
   prepareWorkspaceForSerialization(selectedWorkspace.value);
+
+  await flowRichTextBoxesForCapture();
 
   printMode.value = true;
 
@@ -8402,6 +8555,8 @@ async function exportAsPng(args: ExportAsPngSettings) {
     );
     return;
   }
+
+  await flowRichTextBoxesForCapture();
 
   printMode.value = true;
   exportInProgress.value = true;
@@ -8601,6 +8756,8 @@ async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
 async function exportAsLatex(args: ExportAsLatexSettings) {
   try {
     prepareWorkspaceForSerialization(selectedWorkspace.value);
+
+    await flowRichTextBoxesForCapture();
 
     const reply = await ipcService.exportWorkspaceAsLatex(
       selectedWorkspace.value,
@@ -10744,7 +10901,17 @@ function renderTabLabel(tab: Tab) {
                                 )
                               "
                               :element="element as RichTextBoxElement"
+                              :fragment="
+                                line.richTextFragment?.fragment ?? null
+                              "
+                              :edit-mode="!printMode"
                               :page-setup="score.pageSetup"
+                              :page-bottom-overflow-reservation="
+                                getFooterOverflowReservationForPageIndex(
+                                  pageIndex,
+                                )
+                              "
+                              :layout-version="layoutVersion"
                               :fonts="fonts"
                               :paragraph-styles="score.paragraphStyles"
                               :editor-language="ckeditorLanguage"
@@ -10762,6 +10929,12 @@ function renderTabLabel(tab: Tab) {
                               "
                               @update:height="
                                 updateRichTextBoxHeight(
+                                  element as RichTextBoxElement,
+                                  $event,
+                                )
+                              "
+                              @update:line-offsets="
+                                updateRichTextBoxLineOffsets(
                                   element as RichTextBoxElement,
                                   $event,
                                 )
@@ -10885,6 +11058,32 @@ function renderTabLabel(tab: Tab) {
                           :style="getAdjustmentRatioStyle(line, page)"
                           >{{ line.adjustmentRatio.toFixed(2) }}</span
                         >
+                        <div
+                          v-if="
+                            line.richTextFragment != null &&
+                            line.elements.length === 0
+                          "
+                          :key="`rich-text-fragment-${selectedWorkspace.id}-${line.richTextFragment.element.id}-${line.richTextFragment.fragment.index}`"
+                          class="element-box"
+                          :style="
+                            getElementStyle(line.richTextFragment.fragment)
+                          "
+                        >
+                          <TextBoxRich
+                            :element="line.richTextFragment.element"
+                            :fragment="line.richTextFragment.fragment"
+                            :page-setup="score.pageSetup"
+                            :fonts="fonts"
+                            :paragraph-styles="score.paragraphStyles"
+                            :editor-language="ckeditorLanguage"
+                            :selected="
+                              isSelected(line.richTextFragment.element)
+                            "
+                            @select-single="
+                              selectedElement = line.richTextFragment.element
+                            "
+                          />
+                        </div>
                       </div>
                       <template v-if="score.pageSetup.showFooter">
                         <Badge
@@ -11440,6 +11639,7 @@ function renderTabLabel(tab: Tab) {
         class="richTextBoxCalculation"
         :element="element as RichTextBoxElement"
         :page-setup="score.pageSetup"
+        :page-bottom-overflow-reservation="maximumFooterOverflowReservation"
         :fonts="fonts"
         :paragraph-styles="score.paragraphStyles"
         :editor-language="ckeditorLanguage"
@@ -11447,6 +11647,10 @@ function renderTabLabel(tab: Tab) {
         @update:height="
           updateRichTextBoxHeight(element as RichTextBoxElement, $event)
         "
+        @update:line-offsets="
+          updateRichTextBoxLineOffsets(element as RichTextBoxElement, $event)
+        "
+        @measured="onRichTextBoxMeasured(element as RichTextBoxElement)"
       />
     </template>
     <template v-if="textBoxCalculation">

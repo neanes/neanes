@@ -8,7 +8,7 @@ import {
   TextBoxElement,
 } from '../models/Element';
 import { Line } from '../models/Page';
-import { PageSetup } from '../models/PageSetup';
+import { MelismaStyle, PageSetup } from '../models/PageSetup';
 import { LayoutService } from './LayoutService';
 
 const itif = (condition: boolean) => (condition ? it : it.skip);
@@ -307,9 +307,9 @@ describe('LayoutService.mayShowLeadingLyricHyphen', () => {
     expect(LayoutService.mayShowLeadingLyricHyphen(note, pageSetup)).toBe(true);
   });
 
-  it('allows Greek hyphens when Greek melismata are disabled', () => {
+  it('allows Greek hyphens in Western melisma style', () => {
     const pageSetup = getMockPageSetup();
-    pageSetup.disableGreekMelismata = true;
+    pageSetup.melismaStyle = MelismaStyle.Western;
 
     const note = new NoteElement();
     note.isHyphen = true;
@@ -343,18 +343,47 @@ describe('LayoutService.mayShowLeadingLyricHyphen', () => {
     ).toBe(true);
   });
 
-  it('allows Greek continuation hyphens when Greek melismata are disabled', () => {
+  it('allows continuation hyphens in Western melisma style', () => {
     const pageSetup = getMockPageSetup();
-    pageSetup.disableGreekMelismata = true;
+    pageSetup.melismaStyle = MelismaStyle.Western;
 
     const note = new NoteElement();
     note.isHyphen = true;
     note.isMelisma = true;
     note.lyrics = '';
 
-    expect(LayoutService.mayShowLeadingLyricHyphen(note, pageSetup, true)).toBe(
-      true,
-    );
+    expect(
+      LayoutService.mayShowLeadingLyricHyphen(note, pageSetup, false),
+    ).toBe(true);
+  });
+
+  it('suppresses the hyphen of a melisma staged as a drop cap plus an empty hyphen note', () => {
+    const pageSetup = getMockPageSetup();
+
+    // The staged representation has no melisma start of its own: the drop
+    // cap carries the whole syllable and the note is only a hyphen melisma.
+    const note = new NoteElement();
+    note.isHyphen = true;
+    note.isMelisma = true;
+    note.lyrics = '';
+
+    expect(
+      LayoutService.mayShowLeadingLyricHyphen(note, pageSetup, false, 'Ο'),
+    ).toBe(false);
+  });
+
+  it('allows the hyphen of a drop cap staged melisma in Western melisma style', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.melismaStyle = MelismaStyle.Western;
+
+    const note = new NoteElement();
+    note.isHyphen = true;
+    note.isMelisma = true;
+    note.lyrics = '';
+
+    expect(
+      LayoutService.mayShowLeadingLyricHyphen(note, pageSetup, false, 'Ο'),
+    ).toBe(true);
   });
 });
 

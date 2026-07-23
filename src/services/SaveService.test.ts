@@ -7,7 +7,7 @@ import {
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import { MelismaStyle, PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   type BuiltInParagraphStyleId,
@@ -1512,5 +1512,55 @@ describe('SaveService font styles', () => {
 
     expect(saved.pageSetup.dropCapDefaultLineSpan).toBe(4);
     expect(loaded.pageSetup.dropCapDefaultLineSpan).toBe(4);
+  });
+});
+
+describe('SaveService melisma style', () => {
+  it('should fold legacy disableGreekMelismata into a global Western melisma style', () => {
+    const scoreInput = {
+      version: '1.1',
+      pageSetup: Object.assign(new PageSetup_v1(), {
+        disableGreekMelismata: true,
+      }),
+      staff: {
+        elements: [],
+        lyrics: { text: '' },
+      },
+    };
+
+    const score = SaveService.LoadScoreFromJson(scoreInput);
+
+    expect(score.pageSetup.melismaStyle).toEqual(MelismaStyle.Western);
+    expect('disableGreekMelismata' in score.pageSetup).toEqual(false);
+  });
+
+  it('should default to Auto melisma style when no legacy flag is present', () => {
+    const scoreInput = {
+      version: '1.1',
+      pageSetup: new PageSetup_v1(),
+      staff: {
+        elements: [],
+        lyrics: { text: '' },
+      },
+    };
+
+    const score = SaveService.LoadScoreFromJson(scoreInput);
+
+    expect(score.pageSetup.melismaStyle).toEqual(MelismaStyle.Auto);
+  });
+
+  it('should round-trip a global melisma style', () => {
+    const pageSetup = new PageSetup();
+    pageSetup.melismaStyle = MelismaStyle.Vocalic;
+
+    const saved = new PageSetup_v1();
+    SaveService.SavePageSetup(saved, pageSetup);
+
+    expect(saved.melismaStyle).toEqual(MelismaStyle.Vocalic);
+
+    const loaded = new PageSetup();
+    SaveService.LoadPageSetup_v1(loaded, saved);
+
+    expect(loaded.melismaStyle).toEqual(MelismaStyle.Vocalic);
   });
 });

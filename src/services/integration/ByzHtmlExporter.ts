@@ -930,9 +930,11 @@ export class ByzHtmlExporter {
       }\n${this.getIndentationString(indentation)}>`;
 
       if (
-        !pageSetup.disableGreekMelismata &&
         element.isMelismaStart &&
-        !MelismaHelperGreek.isGreek(element.lyrics)
+        !MelismaHelperGreek.usesVocalicMelisma(
+          pageSetup.melismaStyle,
+          element.lyrics,
+        )
       ) {
         const hyphenAttribute = element.isHyphen
           ? ` ${this.config.attributeMelismaHyphen}`

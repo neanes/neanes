@@ -45,6 +45,7 @@ const BUNDLED_FAMILIES = [
   'NeanesStathisSeries',
   'NeanesLegacy',
   'NeanesStathisSeriesLegacy',
+  'Almouzios',
 ];
 
 // The standard four-face set shared by our bundled text families, matching the
@@ -102,6 +103,7 @@ const BUNDLED_FACES: Record<string, BundledFace[]> = {
   ],
   Neanes: [{ style: DEFAULT_FONT_STYLE }],
   NeanesStathisSeries: [{ style: DEFAULT_FONT_STYLE }],
+  Almouzios: [{ style: DEFAULT_FONT_STYLE }],
 };
 
 // Tokens used to recognise a trailing style in a face name when the family is

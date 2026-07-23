@@ -1874,6 +1874,7 @@ const neumeFontFamilies = computed(() => {
     return [
       { label: 'EZ Psaltica', value: 'Neanes' },
       { label: 'Stathis Series', value: 'NeanesStathisSeries' },
+      { label: 'Almouzios', value: 'Almouzios' },
     ];
   }
 });

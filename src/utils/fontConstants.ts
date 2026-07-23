@@ -8,4 +8,5 @@ export const RICH_TEXT_DEFAULT_FONT_FAMILY = 'default';
 export const NEUME_FONT_FAMILIES: ReadonlySet<string> = new Set([
   'Neanes',
   'NeanesStathisSeries',
+  'Almouzios',
 ]);

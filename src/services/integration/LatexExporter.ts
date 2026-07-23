@@ -201,6 +201,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
         NeanesRTL: fontService.getMetadata('NeanesRTL').fontVersion,
         NeanesStathisSeries: fontService.getMetadata('NeanesStathisSeries')
           .fontVersion,
+        Almouzios: fontService.getMetadata('Almouzios').fontVersion,
       },
       pageSetup: {
         lineHeight: toPt(pageSetup.lineHeight),

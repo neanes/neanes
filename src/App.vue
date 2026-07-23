@@ -285,6 +285,11 @@ onBeforeUnmount(() => {
 }
 
 @font-face {
+  font-family: Almouzios;
+  src: url('./assets/fonts/Almouzios.otf');
+}
+
+@font-face {
   font-family: 'GFS Didot';
   src: url('./assets/fonts/GFSDidot.otf');
 }

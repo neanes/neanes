@@ -141,7 +141,7 @@
     "paragraphStyleOverride": "Suprascriere stil de paragraf",
     "useDefaultParagraphStyle": "Folosește stilul de paragraf implicit",
     "glyphAppearance": "Aspectul glifelor",
-    "glyphAppearanceFromPageSetup": "Glifele folosesc culoarea și conturul Cheii modale din Configurarea paginii.",
+    "glyphAppearanceFromPageSetup": "Glifele folosesc culoarea și conturul Mărturiei inițiale din Configurarea paginii.",
     "text": "Text",
     "glyph": "Glică",
     "inline": "În linie",

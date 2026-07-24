@@ -140,7 +140,7 @@
     "paragraphStyleOverride": "Paragraph style override",
     "useDefaultParagraphStyle": "Use default paragraph style",
     "glyphAppearance": "Glyph appearance",
-    "glyphAppearanceFromPageSetup": "Glyphs use the Mode Key color and outline from Page Setup.",
+    "glyphAppearanceFromPageSetup": "Glyphs use the Initial Martyria color and outline from Page Setup.",
     "text": "Text",
     "glyph": "Glyph",
     "inline": "Inline",

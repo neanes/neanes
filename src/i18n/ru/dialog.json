@@ -141,7 +141,7 @@
     "paragraphStyleOverride": "Переопределение стиля абзаца",
     "useDefaultParagraphStyle": "Использовать стиль абзаца по умолчанию",
     "glyphAppearance": "Оформление глифов",
-    "glyphAppearanceFromPageSetup": "Глифы используют цвет и обводку ключа гласа из параметров страницы.",
+    "glyphAppearanceFromPageSetup": "Глифы используют цвет и обводку начальной мартирии из параметров страницы.",
     "text": "Текст",
     "glyph": "Глиф",
     "inline": "В строке",

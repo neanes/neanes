@@ -1441,6 +1441,10 @@ export class SaveService {
     saved.strokeColor = style.overrides.strokeColor;
     saved.lineHeight = style.overrides.lineHeight;
     saved.textDecoration = style.overrides.textDecoration;
+    saved.fontVariantCaps = style.overrides.fontVariantCaps;
+    saved.fontVariantNumeric = style.overrides.fontVariantNumeric;
+    saved.fontVariantLigatures = style.overrides.fontVariantLigatures;
+    saved.fontVariantAlternates = style.overrides.fontVariantAlternates;
     return saved;
   }
 
@@ -1505,6 +1509,10 @@ export class SaveService {
     element.lineHeight = e.lineHeight;
     element.strokeWidth = e.strokeWidth ?? undefined;
     element.strokeColor = e.strokeColor ?? undefined;
+    element.fontVariantCaps = e.fontVariantCaps ?? undefined;
+    element.fontVariantNumeric = e.fontVariantNumeric ?? undefined;
+    element.fontVariantLigatures = e.fontVariantLigatures ?? undefined;
+    element.fontVariantAlternates = e.fontVariantAlternates ?? undefined;
   }
 
   public static SaveImageBox(element: ImageBoxElement_v1, e: ImageBoxElement) {
@@ -1694,6 +1702,12 @@ export class SaveService {
     element.lyricsTextDecoration = e.lyricsTextDecoration ?? undefined;
     element.lyricsStrokeWidth = e.lyricsStrokeWidth ?? undefined;
     element.lyricsStrokeColor = e.lyricsStrokeColor ?? undefined;
+    element.lyricsFontVariantCaps = e.lyricsFontVariantCaps ?? undefined;
+    element.lyricsFontVariantNumeric = e.lyricsFontVariantNumeric ?? undefined;
+    element.lyricsFontVariantLigatures =
+      e.lyricsFontVariantLigatures ?? undefined;
+    element.lyricsFontVariantAlternates =
+      e.lyricsFontVariantAlternates ?? undefined;
 
     element.ignoreAttractions = e.ignoreAttractions || undefined;
 
@@ -1767,6 +1781,10 @@ export class SaveService {
     element.fontSubfamily = e.fontStyle ?? undefined;
     element.underline = e.underline ?? undefined;
     element.lineHeight = e.lineHeight;
+    element.fontVariantCaps = e.fontVariantCaps ?? undefined;
+    element.fontVariantNumeric = e.fontVariantNumeric ?? undefined;
+    element.fontVariantLigatures = e.fontVariantLigatures ?? undefined;
+    element.fontVariantAlternates = e.fontVariantAlternates ?? undefined;
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
     element.fillWidth = e.fillWidth || undefined;
@@ -2257,6 +2275,22 @@ export class SaveService {
       overrides.textDecoration = saved.textDecoration;
     }
 
+    if (saved.fontVariantCaps !== undefined) {
+      overrides.fontVariantCaps = saved.fontVariantCaps;
+    }
+
+    if (saved.fontVariantNumeric !== undefined) {
+      overrides.fontVariantNumeric = saved.fontVariantNumeric;
+    }
+
+    if (saved.fontVariantLigatures !== undefined) {
+      overrides.fontVariantLigatures = saved.fontVariantLigatures;
+    }
+
+    if (saved.fontVariantAlternates !== undefined) {
+      overrides.fontVariantAlternates = saved.fontVariantAlternates;
+    }
+
     style.overrides = overrides;
     return style;
   }
@@ -2364,6 +2398,10 @@ export class SaveService {
     element.fontStyle = normalizeSavedFontSubfamily(e.fontSubfamily) ?? null;
     element.strokeWidth = e.strokeWidth ?? null;
     element.strokeColor = e.strokeColor ?? null;
+    element.fontVariantCaps = e.fontVariantCaps ?? null;
+    element.fontVariantNumeric = e.fontVariantNumeric ?? null;
+    element.fontVariantLigatures = e.fontVariantLigatures ?? null;
+    element.fontVariantAlternates = e.fontVariantAlternates ?? null;
   }
 
   public static LoadImageBox_v1(
@@ -2593,6 +2631,10 @@ export class SaveService {
     element.lyricsTextDecoration = e.lyricsTextDecoration ?? null;
     element.lyricsStrokeWidth = e.lyricsStrokeWidth ?? null;
     element.lyricsStrokeColor = e.lyricsStrokeColor ?? null;
+    element.lyricsFontVariantCaps = e.lyricsFontVariantCaps ?? null;
+    element.lyricsFontVariantNumeric = e.lyricsFontVariantNumeric ?? null;
+    element.lyricsFontVariantLigatures = e.lyricsFontVariantLigatures ?? null;
+    element.lyricsFontVariantAlternates = e.lyricsFontVariantAlternates ?? null;
 
     if (e.acceptsLyrics !== undefined) {
       element.acceptsLyrics = e.acceptsLyrics;
@@ -2680,6 +2722,10 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth ?? null;
     element.strokeColor = e.strokeColor ?? null;
     element.lineHeight = e.lineHeight;
+    element.fontVariantCaps = e.fontVariantCaps ?? null;
+    element.fontVariantNumeric = e.fontVariantNumeric ?? null;
+    element.fontVariantLigatures = e.fontVariantLigatures ?? null;
+    element.fontVariantAlternates = e.fontVariantAlternates ?? null;
   }
 
   public static LoadRichTextBox_v1(

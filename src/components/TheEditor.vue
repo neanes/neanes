@@ -2101,7 +2101,9 @@ function getFooterHorizontalRuleStyle(page: Page, footerHeight: number) {
   } as StyleValue;
 }
 
-function getLyricStyle(element: NoteElement) {
+// The style properties the lyrics span and the leading-hyphen span share: the
+// resolved lyrics style plus the element's vertical metrics.
+function getLyricStyleBase(element: NoteElement): CSSProperties {
   const resolvedLyricsStyle = getResolvedLyricsStyle(element);
   const resolvedLyricsFont = resolveFontStyle(
     resolvedLyricsStyle.fontFamily,
@@ -2110,6 +2112,29 @@ function getLyricStyle(element: NoteElement) {
 
   return {
     top: withZoom(element.lyricsVerticalOffset),
+    fontSize: withZoom(resolvedLyricsStyle.fontSize),
+    fontFamily: getFontFamilyWithFallback(
+      resolvedLyricsFont.cssFontFamily,
+      score.value.pageSetup.neumeDefaultFontFamily,
+    ),
+    fontWeight: resolvedLyricsFont.cssFontWeight,
+    fontStyle: resolvedLyricsFont.cssFontStyle,
+    fontVariantCaps: resolvedLyricsStyle.fontVariantCaps ?? undefined,
+    fontVariantNumeric: resolvedLyricsStyle.fontVariantNumeric ?? undefined,
+    fontVariantLigatures: resolvedLyricsStyle.fontVariantLigatures ?? undefined,
+    fontVariantAlternates:
+      resolvedLyricsStyle.fontVariantAlternates ?? undefined,
+    textDecoration: resolvedLyricsStyle.textDecoration ?? undefined,
+    color: resolvedLyricsStyle.color,
+    webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
+    webkitTextStrokeColor: resolvedLyricsStyle.strokeColor,
+    lineHeight: withZoom(element.lyricsFontHeight),
+  } as CSSProperties;
+}
+
+function getLyricStyle(element: NoteElement) {
+  return {
+    ...getLyricStyleBase(element),
     paddingLeft:
       (!element.isFullMelisma ||
         (element.melismaText && !element.melismaText.endsWith(TATWEEL))) &&
@@ -2122,18 +2147,6 @@ function getLyricStyle(element: NoteElement) {
       element.lyricsHorizontalOffset < 0
         ? withZoom(-element.lyricsHorizontalOffset)
         : undefined,
-    fontSize: withZoom(resolvedLyricsStyle.fontSize),
-    fontFamily: getFontFamilyWithFallback(
-      resolvedLyricsFont.cssFontFamily,
-      score.value.pageSetup.neumeDefaultFontFamily,
-    ),
-    fontWeight: resolvedLyricsFont.cssFontWeight,
-    fontStyle: resolvedLyricsFont.cssFontStyle,
-    textDecoration: resolvedLyricsStyle.textDecoration ?? undefined,
-    color: resolvedLyricsStyle.color,
-    webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
-    webkitTextStrokeColor: resolvedLyricsStyle.strokeColor,
-    lineHeight: withZoom(element.lyricsFontHeight),
     left: element.alignLeft
       ? withZoom(Math.min(0, element.lyricsHorizontalOffset))
       : undefined,
@@ -2142,27 +2155,9 @@ function getLyricStyle(element: NoteElement) {
 }
 
 function getLeadingLyricHyphenStyle(element: NoteElement) {
-  const resolvedLyricsStyle = getResolvedLyricsStyle(element);
-  const resolvedLyricsFont = resolveFontStyle(
-    resolvedLyricsStyle.fontFamily,
-    resolvedLyricsStyle.fontStyle,
-  );
-
   return {
-    top: withZoom(element.lyricsVerticalOffset),
+    ...getLyricStyleBase(element),
     left: withZoom(element.leadingLyricHyphenOffset),
-    fontSize: withZoom(resolvedLyricsStyle.fontSize),
-    fontFamily: getFontFamilyWithFallback(
-      resolvedLyricsFont.cssFontFamily,
-      score.value.pageSetup.neumeDefaultFontFamily,
-    ),
-    fontWeight: resolvedLyricsFont.cssFontWeight,
-    fontStyle: resolvedLyricsFont.cssFontStyle,
-    textDecoration: resolvedLyricsStyle.textDecoration ?? undefined,
-    color: resolvedLyricsStyle.color,
-    webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
-    webkitTextStrokeColor: resolvedLyricsStyle.strokeColor,
-    lineHeight: withZoom(element.lyricsFontHeight),
   } as CSSProperties;
 }
 
@@ -8474,7 +8469,9 @@ async function exportAsPng(args: ExportAsPngSettings) {
     let firstExportedPagePath = '';
 
     if (pageElements.length > 0) {
-      const fontEmbedCSS = await getFontEmbedCSS(pageElements[0]);
+      const fontEmbedCSS =
+        (await getFontEmbedCSS(pageElements[0])) +
+        fontCatalog.getExportFontFeatureValuesCss();
 
       for (const [index, page] of pageElements.entries()) {
         const options = {

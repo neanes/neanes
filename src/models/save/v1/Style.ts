@@ -13,4 +13,8 @@ export class ParagraphStyle {
   public strokeColor: string | undefined = undefined;
   public lineHeight: number | null | undefined = undefined;
   public textDecoration: 'underline' | null | undefined = undefined;
+  public fontVariantCaps: string | null | undefined = undefined;
+  public fontVariantNumeric: string | null | undefined = undefined;
+  public fontVariantLigatures: string | null | undefined = undefined;
+  public fontVariantAlternates: string | null | undefined = undefined;
 }

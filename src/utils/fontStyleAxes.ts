@@ -130,6 +130,11 @@ function styleKey(axes: StyleAxes): string {
   return tokens.sort().join('\0');
 }
 
+// The canonical key of a style string; see styleKey.
+export function fontStyleKey(style: string | null | undefined): string {
+  return styleKey(parseStyleAxes(style));
+}
+
 function matchStyleAxes(
   axes: StyleAxes,
   availableStyles: string[],
@@ -184,7 +189,7 @@ export function resolveAxisToggle(
 // True when a style has no explicit weight/italic/optical tokens (it is the
 // family's default face).
 export function isRegularStyle(style: string | null | undefined): boolean {
-  return styleKey(parseStyleAxes(style)) === '';
+  return fontStyleKey(style) === '';
 }
 
 // Build a display style string from axes: rest tokens, then Bold, then Italic.

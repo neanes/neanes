@@ -1457,6 +1457,15 @@ export class LayoutService {
 
           dropCapElement.computedLineHeight = resolvedDropCapStyle.lineHeight;
 
+          dropCapElement.computedFontVariantCaps =
+            resolvedDropCapStyle.fontVariantCaps ?? 'normal';
+          dropCapElement.computedFontVariantNumeric =
+            resolvedDropCapStyle.fontVariantNumeric ?? 'normal';
+          dropCapElement.computedFontVariantLigatures =
+            resolvedDropCapStyle.fontVariantLigatures ?? 'normal';
+          dropCapElement.computedFontVariantAlternates =
+            resolvedDropCapStyle.fontVariantAlternates ?? 'normal';
+
           dropCapElement.computedLineSpan = 1;
 
           let elementWidthPx: number;
@@ -1467,6 +1476,7 @@ export class LayoutService {
             elementWidthPx = TextMeasurementService.getTextWidth(
               dropCapElement.content,
               dropCapElement.computedFont,
+              dropCapElement.computedFontVariantCaps,
             );
           }
 
@@ -2225,19 +2235,27 @@ export class LayoutService {
     );
   }
 
-  private static measurePlainTextWidth(text: string, font: string) {
+  private static measurePlainTextWidth(
+    text: string,
+    font: string,
+    fontVariantCaps: string = 'normal',
+  ) {
     const lines = text.split(/(?:\r\n|\r|\n)/g);
     let maxWidth = 0;
 
     for (const line of lines) {
-      const lineWidth = TextMeasurementService.getTextWidth(line, font);
+      const lineWidth = TextMeasurementService.getTextWidth(
+        line,
+        font,
+        fontVariantCaps,
+      );
       if (lineWidth > maxWidth) {
         maxWidth = lineWidth;
       }
     }
 
     return Math.max(
-      TextMeasurementService.getTextWidth(' ', font),
+      TextMeasurementService.getTextWidth(' ', font, fontVariantCaps),
       maxWidth,
       1,
     );
@@ -2267,10 +2285,12 @@ export class LayoutService {
         this.measurePlainTextWidth(
           textBoxElement.content,
           textBoxElement.computedFont,
+          textBoxElement.computedFontVariantCaps,
         ),
         this.measurePlainTextWidth(
           textBoxElement.contentBottom,
           textBoxElement.computedFont,
+          textBoxElement.computedFontVariantCaps,
         ),
       );
     }
@@ -3113,9 +3133,13 @@ export class LayoutService {
       noteElement.leadingLyricHyphenReservationWidth = 0;
 
       noteElement.computedIsonOffsetY = noteElement.isonOffsetY;
-      noteElement.lyricsFontCss = resolveFontCss(
-        this.getResolvedLyricsStyle(noteElement, noteWidthArgs.paragraphStyles),
+      const resolvedLyricsStyle = this.getResolvedLyricsStyle(
+        noteElement,
+        noteWidthArgs.paragraphStyles,
       );
+      noteElement.lyricsFontCss = resolveFontCss(resolvedLyricsStyle);
+      noteElement.computedLyricsFontVariantCaps =
+        resolvedLyricsStyle.fontVariantCaps ?? 'normal';
       noteElement.lyricsFontHeight = this.getLyricsFontHeightFromCache(
         fontHeightCache,
         noteElement.lyricsFontCss,
@@ -5072,6 +5096,14 @@ export class LayoutService {
     textBoxElement.computedFontWeight = resolvedTextBoxFont.cssFontWeight;
     textBoxElement.computedFontStyle = resolvedTextBoxFont.cssFontStyle;
     textBoxElement.computedAlignment = resolvedParagraphStyle.alignment;
+    textBoxElement.computedFontVariantCaps =
+      resolvedParagraphStyle.fontVariantCaps ?? 'normal';
+    textBoxElement.computedFontVariantNumeric =
+      resolvedParagraphStyle.fontVariantNumeric ?? 'normal';
+    textBoxElement.computedFontVariantLigatures =
+      resolvedParagraphStyle.fontVariantLigatures ?? 'normal';
+    textBoxElement.computedFontVariantAlternates =
+      resolvedParagraphStyle.fontVariantAlternates ?? 'normal';
 
     if (textBoxElement.inline) {
       if (textBoxElement.fillWidth) {
@@ -5088,6 +5120,7 @@ export class LayoutService {
         elementWidthPx = this.measurePlainTextWidth(
           textBoxElement.content,
           textBoxElement.computedFont,
+          textBoxElement.computedFontVariantCaps,
         );
       }
     } else {
@@ -5185,6 +5218,13 @@ export class LayoutService {
       textbox.computedLineHeightPrevious = textbox.computedLineHeight;
       textbox.computedUnderlinePrevious = textbox.computedUnderline;
       textbox.computedAlignmentPrevious = textbox.computedAlignment;
+      textbox.computedFontVariantCapsPrevious = textbox.computedFontVariantCaps;
+      textbox.computedFontVariantNumericPrevious =
+        textbox.computedFontVariantNumeric;
+      textbox.computedFontVariantLigaturesPrevious =
+        textbox.computedFontVariantLigatures;
+      textbox.computedFontVariantAlternatesPrevious =
+        textbox.computedFontVariantAlternates;
     } else if (element.elementType === ElementType.ModeKey) {
       const modeKey = element as ModeKeyElement;
       modeKey.computedFontFamilyPrevious = modeKey.computedFontFamily;
@@ -5207,6 +5247,13 @@ export class LayoutService {
       dropCap.computedStrokeWidthPrevious = dropCap.computedStrokeWidth;
       dropCap.computedStrokeColorPrevious = dropCap.computedStrokeColor;
       dropCap.computedLineHeightPrevious = dropCap.computedLineHeight;
+      dropCap.computedFontVariantCapsPrevious = dropCap.computedFontVariantCaps;
+      dropCap.computedFontVariantNumericPrevious =
+        dropCap.computedFontVariantNumeric;
+      dropCap.computedFontVariantLigaturesPrevious =
+        dropCap.computedFontVariantLigatures;
+      dropCap.computedFontVariantAlternatesPrevious =
+        dropCap.computedFontVariantAlternates;
     }
   }
 
@@ -5269,7 +5316,15 @@ export class LayoutService {
         textbox.computedStrokeColorPrevious !== textbox.computedStrokeColor ||
         textbox.computedLineHeightPrevious !== textbox.computedLineHeight ||
         textbox.computedUnderlinePrevious !== textbox.computedUnderline ||
-        textbox.computedAlignmentPrevious !== textbox.computedAlignment;
+        textbox.computedAlignmentPrevious !== textbox.computedAlignment ||
+        textbox.computedFontVariantCapsPrevious !==
+          textbox.computedFontVariantCaps ||
+        textbox.computedFontVariantNumericPrevious !==
+          textbox.computedFontVariantNumeric ||
+        textbox.computedFontVariantLigaturesPrevious !==
+          textbox.computedFontVariantLigatures ||
+        textbox.computedFontVariantAlternatesPrevious !==
+          textbox.computedFontVariantAlternates;
     }
 
     if (!element.updated && element.elementType === ElementType.RichTextBox) {
@@ -5307,7 +5362,15 @@ export class LayoutService {
         dropCap.computedColorPrevious !== dropCap.computedColor ||
         dropCap.computedStrokeWidthPrevious !== dropCap.computedStrokeWidth ||
         dropCap.computedStrokeColorPrevious !== dropCap.computedStrokeColor ||
-        dropCap.computedLineHeightPrevious !== dropCap.computedLineHeight;
+        dropCap.computedLineHeightPrevious !== dropCap.computedLineHeight ||
+        dropCap.computedFontVariantCapsPrevious !==
+          dropCap.computedFontVariantCaps ||
+        dropCap.computedFontVariantNumericPrevious !==
+          dropCap.computedFontVariantNumeric ||
+        dropCap.computedFontVariantLigaturesPrevious !==
+          dropCap.computedFontVariantLigatures ||
+        dropCap.computedFontVariantAlternatesPrevious !==
+          dropCap.computedFontVariantAlternates;
     }
   }
 
@@ -8484,12 +8547,13 @@ export class LayoutService {
       return 0;
     }
 
-    const key = `${text} | ${font}`;
+    const fontVariantCaps = element.computedLyricsFontVariantCaps;
+    const key = `${text} | ${font} | ${fontVariantCaps}`;
 
     let width = cache.get(key);
 
     if (width == null) {
-      width = TextMeasurementService.getTextWidth(text, font);
+      width = TextMeasurementService.getTextWidth(text, font, fontVariantCaps);
 
       cache.set(key, width);
     }

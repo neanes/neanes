@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { normalizeFamilyListForSplitFace } from '@/ckeditor-plugins/fontstyle/fontstyle-util';
 import { fontCatalog } from '@/services/FontCatalog';
 import { applyLegacyStyle } from '@/utils/fontStyle';
 
@@ -100,5 +101,56 @@ describe('applyLegacyStyle', () => {
     expect(applyLegacyStyle('Regular', { weight: '600' }, ['Regular'])).toBe(
       'Semibold',
     );
+  });
+});
+
+describe('normalizeFamilyListForSplitFace', () => {
+  it('strips a derived alias followed by its base family', () => {
+    expect(
+      normalizeFamilyListForSplitFace(
+        "'Minion Pro Semibold', Minion Pro, Neanes",
+        { family: 'Minion Pro', style: 'Semibold' },
+      ),
+    ).toBe('Minion Pro,Neanes');
+  });
+
+  it('strips a Regular alias despite the default-style early return', () => {
+    // Regression guard: the duplicated-base check must run before the default
+    // style early return, or Regular aliases stick as the model family.
+    expect(
+      normalizeFamilyListForSplitFace(
+        "'Minion Pro Regular', Minion Pro, Neanes",
+        { family: 'Minion Pro', style: 'Regular' },
+      ),
+    ).toBe('Minion Pro,Neanes');
+  });
+
+  it('keeps a plain default-style list unchanged', () => {
+    expect(
+      normalizeFamilyListForSplitFace('Minion Pro,Neanes', {
+        family: 'Minion Pro',
+        style: 'Regular',
+      }),
+    ).toBe('Minion Pro,Neanes');
+  });
+
+  it('substitutes the split family for a bare face name', () => {
+    expect(
+      normalizeFamilyListForSplitFace('Minion Pro Semibold, Neanes', {
+        family: 'Minion Pro',
+        style: 'Semibold',
+      }),
+    ).toBe('Minion Pro,Neanes');
+  });
+
+  it('does not strip a family merely named like a face', () => {
+    // Stripping requires the base family as the next token; a real family
+    // whose name ends in a style word stays intact.
+    expect(
+      normalizeFamilyListForSplitFace('Foo Regular, Neanes', {
+        family: 'Foo',
+        style: 'Regular',
+      }),
+    ).toBe('Foo Regular, Neanes');
   });
 });

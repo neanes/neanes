@@ -17,6 +17,7 @@ import {
   TempoSign,
   VocalExpressionNeume,
 } from '@/models/Neumes';
+import { isFontVariantNormal } from '@/utils/fontVariants';
 import { Unit } from '@/utils/Unit';
 
 import type { ModeKeyTemplate } from './ModeKeys';
@@ -61,6 +62,20 @@ export enum LineBreakType {
 
 export interface ElementCloneArgs {
   includeLyrics?: boolean;
+}
+
+// An element-level font-variant field stores the CSS property value verbatim:
+// null inherits from the element's paragraph style, and 'normal' is an
+// explicit reset, which the override model represents as null (see
+// ParagraphStyleOverrides).
+function toFontVariantOverride(
+  value: string | null,
+): string | null | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  return isFontVariantNormal(value) ? null : value;
 }
 
 export abstract class ScoreElement {
@@ -119,6 +134,10 @@ export class NoteElement extends ScoreElement {
   public lyricsParagraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics;
   public lyricsFontStyle: string | null = null;
   public lyricsTextDecoration: string | null = null;
+  public lyricsFontVariantCaps: string | null = null;
+  public lyricsFontVariantNumeric: string | null = null;
+  public lyricsFontVariantLigatures: string | null = null;
+  public lyricsFontVariantAlternates: string | null = null;
   public acceptsLyrics: AcceptsLyricsOption = AcceptsLyricsOption.Default;
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
@@ -217,6 +236,10 @@ export class NoteElement extends ScoreElement {
             lyricsTextDecoration: this.lyricsTextDecoration,
             lyricsStrokeWidth: this.lyricsStrokeWidth,
             lyricsStrokeColor: this.lyricsStrokeColor,
+            lyricsFontVariantCaps: this.lyricsFontVariantCaps,
+            lyricsFontVariantNumeric: this.lyricsFontVariantNumeric,
+            lyricsFontVariantLigatures: this.lyricsFontVariantLigatures,
+            lyricsFontVariantAlternates: this.lyricsFontVariantAlternates,
           }
         : null),
       quantitativeNeume: this.quantitativeNeume,
@@ -296,6 +319,10 @@ export class NoteElement extends ScoreElement {
       lyricsParagraphStyleId: this.lyricsParagraphStyleId,
       lyricsFontStyle: this.lyricsFontStyle,
       lyricsTextDecoration: this.lyricsTextDecoration,
+      lyricsFontVariantCaps: this.lyricsFontVariantCaps,
+      lyricsFontVariantNumeric: this.lyricsFontVariantNumeric,
+      lyricsFontVariantLigatures: this.lyricsFontVariantLigatures,
+      lyricsFontVariantAlternates: this.lyricsFontVariantAlternates,
     };
   }
 
@@ -313,6 +340,14 @@ export class NoteElement extends ScoreElement {
             ? 'underline'
             : null
           : undefined,
+      fontVariantCaps: toFontVariantOverride(this.lyricsFontVariantCaps),
+      fontVariantNumeric: toFontVariantOverride(this.lyricsFontVariantNumeric),
+      fontVariantLigatures: toFontVariantOverride(
+        this.lyricsFontVariantLigatures,
+      ),
+      fontVariantAlternates: toFontVariantOverride(
+        this.lyricsFontVariantAlternates,
+      ),
     };
   }
 
@@ -458,6 +493,9 @@ export class NoteElement extends ScoreElement {
   public melismaOffsetTop: number = 0;
   public lyricsFontHeight: number = 0;
   public lyricsFontCss: string = '';
+  // Resolved alongside lyricsFontCss because the CSS font shorthand cannot
+  // carry all-small-caps and canvas measurement needs it separately.
+  public computedLyricsFontVariantCaps: string = 'normal';
   public hyphenOffsets: number[] = [];
   public showLeadingLyricHyphen: boolean = false;
   public leadingLyricHyphenOffset: number = 0;
@@ -868,6 +906,10 @@ export class TextBoxElement extends ScoreElement {
   public fontStyle: string | null = null;
   public underline: boolean | null = null;
   public lineHeight: number | null | undefined = undefined;
+  public fontVariantCaps: string | null = null;
+  public fontVariantNumeric: string | null = null;
+  public fontVariantLigatures: string | null = null;
+  public fontVariantAlternates: string | null = null;
   public height: number = 20;
   public customWidth: number | null = null;
   public customHeight: number | null = null;
@@ -888,6 +930,10 @@ export class TextBoxElement extends ScoreElement {
   public computedLineHeight: number | null = null;
   public computedUnderline: boolean = false;
   public computedAlignment: TextBoxAlignment = TextBoxAlignment.Left;
+  public computedFontVariantCaps: string = 'normal';
+  public computedFontVariantNumeric: string = 'normal';
+  public computedFontVariantLigatures: string = 'normal';
+  public computedFontVariantAlternates: string = 'normal';
   public minHeight: number = 10;
 
   // Re-render helpers
@@ -902,6 +948,10 @@ export class TextBoxElement extends ScoreElement {
   public computedLineHeightPrevious: number | null = null;
   public computedUnderlinePrevious: boolean = false;
   public computedAlignmentPrevious: TextBoxAlignment = TextBoxAlignment.Left;
+  public computedFontVariantCapsPrevious: string = 'normal';
+  public computedFontVariantNumericPrevious: string = 'normal';
+  public computedFontVariantLigaturesPrevious: string = 'normal';
+  public computedFontVariantAlternatesPrevious: string = 'normal';
 
   public get computedFont() {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
@@ -938,6 +988,10 @@ export class TextBoxElement extends ScoreElement {
       fontStyle: this.fontStyle,
       underline: this.underline,
       lineHeight: this.lineHeight,
+      fontVariantCaps: this.fontVariantCaps,
+      fontVariantNumeric: this.fontVariantNumeric,
+      fontVariantLigatures: this.fontVariantLigatures,
+      fontVariantAlternates: this.fontVariantAlternates,
       multipanel: this.multipanel,
       runningMarkerRole: this.runningMarkerRole,
       runningMarkerText: this.runningMarkerText,
@@ -966,6 +1020,10 @@ export class TextBoxElement extends ScoreElement {
             ? 'underline'
             : null
           : undefined,
+      fontVariantCaps: toFontVariantOverride(this.fontVariantCaps),
+      fontVariantNumeric: toFontVariantOverride(this.fontVariantNumeric),
+      fontVariantLigatures: toFontVariantOverride(this.fontVariantLigatures),
+      fontVariantAlternates: toFontVariantOverride(this.fontVariantAlternates),
     };
   }
 }
@@ -1252,6 +1310,10 @@ export class DropCapElement extends ScoreElement {
   public strokeWidth: number | null = null;
   public strokeColor: string | null = null;
   public color: string | null = null;
+  public fontVariantCaps: string | null = null;
+  public fontVariantNumeric: string | null = null;
+  public fontVariantLigatures: string | null = null;
+  public fontVariantAlternates: string | null = null;
   public customWidth: number | null = null;
   public lineSpan: number = 1;
 
@@ -1264,6 +1326,10 @@ export class DropCapElement extends ScoreElement {
   public computedStrokeWidth: number = 0;
   public computedStrokeColor: string = 'currentcolor';
   public computedLineHeight: number | null = null;
+  public computedFontVariantCaps: string = 'normal';
+  public computedFontVariantNumeric: string = 'normal';
+  public computedFontVariantLigatures: string = 'normal';
+  public computedFontVariantAlternates: string = 'normal';
   public computedLineSpan: number = 1;
   public contentWidth: number = 0;
 
@@ -1276,6 +1342,10 @@ export class DropCapElement extends ScoreElement {
   public computedStrokeWidthPrevious: number = 0;
   public computedStrokeColorPrevious: string = 'currentcolor';
   public computedLineHeightPrevious: number | null = null;
+  public computedFontVariantCapsPrevious: string = 'normal';
+  public computedFontVariantNumericPrevious: string = 'normal';
+  public computedFontVariantLigaturesPrevious: string = 'normal';
+  public computedFontVariantAlternatesPrevious: string = 'normal';
 
   public get computedFont() {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
@@ -1300,6 +1370,10 @@ export class DropCapElement extends ScoreElement {
       lineHeight: this.lineHeight,
       strokeWidth: this.strokeWidth,
       strokeColor: this.strokeColor,
+      fontVariantCaps: this.fontVariantCaps,
+      fontVariantNumeric: this.fontVariantNumeric,
+      fontVariantLigatures: this.fontVariantLigatures,
+      fontVariantAlternates: this.fontVariantAlternates,
       customWidth: this.customWidth,
       lineSpan: this.lineSpan,
     } as Partial<DropCapElement>;
@@ -1314,6 +1388,10 @@ export class DropCapElement extends ScoreElement {
       strokeWidth: this.strokeWidth ?? undefined,
       strokeColor: this.strokeColor ?? undefined,
       lineHeight: this.lineHeight,
+      fontVariantCaps: toFontVariantOverride(this.fontVariantCaps),
+      fontVariantNumeric: toFontVariantOverride(this.fontVariantNumeric),
+      fontVariantLigatures: toFontVariantOverride(this.fontVariantLigatures),
+      fontVariantAlternates: toFontVariantOverride(this.fontVariantAlternates),
     };
   }
 }

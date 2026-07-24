@@ -11490,7 +11490,6 @@ function renderTabLabel(tab: Tab) {
       v-model:open="initialMartyriaStylesDialogIsOpen"
       :styles="score.initialMartyriaStyles"
       :page-setup="score.pageSetup"
-      :fonts="fonts"
       :paragraph-styles="score.paragraphStyles"
       :active-style-id="score.pageSetup.initialMartyriaStyleId"
       @update="updateInitialMartyriaStyles($event)"

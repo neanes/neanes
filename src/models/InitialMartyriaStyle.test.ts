@@ -15,6 +15,7 @@ import {
   getInitialMartyriaSeparatorBefore,
   isInitialMartyriaComponentVisible,
   isInitialMartyriaStartingNoteRun,
+  resolveInitialMartyriaBaseTextAppearance,
   resolveInitialMartyriaStyle,
   resolveInitialMartyriaStyleSelection,
   traditionalGreekInitialMartyriaStyle,
@@ -23,6 +24,10 @@ import {
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { Fthora, ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  createDefaultParagraphStyles,
+} from '@/models/ParagraphStyle';
 
 describe('InitialMartyriaStyle', () => {
   it('resolves the Standard, inherited, and explicit custom style states', () => {
@@ -141,6 +146,44 @@ describe('InitialMartyriaStyle', () => {
     );
   });
 
+  it('uses the default paragraph style unless a text component overrides it', () => {
+    const style = cloneInitialMartyriaStyle(
+      traditionalGreekInitialMartyriaStyle,
+    );
+    style.defaultParagraphStyleId =
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria;
+    style.components = [
+      {
+        id: 'default-text',
+        kind: 'text',
+        content: 'Mode',
+        visibility: { modes: [1], variationOverrides: [] },
+      },
+      {
+        id: 'greek-text',
+        kind: 'text',
+        content: 'Πα',
+        paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+        visibility: { modes: [1], variationOverrides: [] },
+      },
+    ];
+    const paragraphStyles = createDefaultParagraphStyles();
+    const runs = resolveInitialMartyriaStyle({
+      style,
+      context: getInitialMartyriaContext(new ModeKeyElement()),
+      paragraphStyles,
+      pageSetup: new PageSetup(),
+    }).runs;
+
+    expect(runs[0].appearance.fontFamily).toBe('Source Serif');
+    expect(runs[1].appearance.fontFamily).toBe('GFS Didot');
+    expect(
+      resolveInitialMartyriaBaseTextAppearance(style, paragraphStyles),
+    ).toMatchObject({
+      fontFamily: 'Source Serif',
+    });
+  });
+
   it('resolves custom starting-note text with its pitch notes', () => {
     const element = ModeKeyElement.createFromTemplate(
       modeKeyTemplates.find((template) => template.id === 603)!,
@@ -233,7 +276,10 @@ describe('InitialMartyriaStyle', () => {
       kind: 'startingPitch' as const,
       componentId: 'starting-pitch',
       appearance: {},
-      noteText: createInitialMartyriaStartingNoteText(),
+      noteText: {
+        ...createInitialMartyriaStartingNoteText(),
+        appearance: {},
+      },
       direction: 'ltr' as const,
       cluster: { primary: null, secondary: null, trailingGlyphs: [] },
     };

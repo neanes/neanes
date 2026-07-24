@@ -1123,11 +1123,14 @@ describe('SaveService font styles', () => {
       traditionalGreekInitialMartyriaStyle,
     );
     style.id = 'custom:current-martyria';
+    style.defaultParagraphStyleId =
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria;
     style.components = [
       {
         id: 'text',
         kind: 'text',
         content: 'Mode',
+        paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
         languageTag: 'en',
         direction: 'ltr',
         visibility: {
@@ -1166,6 +1169,7 @@ describe('SaveService font styles', () => {
         id: 'pitch',
         kind: 'startingNoteCluster',
         rendering: 'customText',
+        paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
         languageTag: 'en',
         direction: 'ltr',
         visibility: { modes: [7], variationOverrides: [] },
@@ -1183,6 +1187,9 @@ describe('SaveService font styles', () => {
     expect(components).toEqual(style.components);
 
     const savedStyle = saved.initialMartyriaStyles![0];
+    expect(savedStyle.defaultParagraphStyleId).toBe(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
     savedStyle.components[0].visibility.modes[0] = 8;
     expect(style.components[0].visibility.modes[0]).toBe(1);
     loaded.initialMartyriaStyles[0].components[0].visibility.modes[0] = 2;

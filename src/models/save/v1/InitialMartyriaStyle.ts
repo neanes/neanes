@@ -20,26 +20,6 @@ export interface InitialMartyriaStartingNoteText {
   names: Record<InitialMartyriaCanonicalNote, string>;
   languageTag?: string;
   direction?: 'ltr' | 'rtl';
-  appearance: Pick<
-    InitialMartyriaAppearance,
-    | 'fontFamily'
-    | 'fontStyle'
-    | 'fontSize'
-    | 'color'
-    | 'strokeWidth'
-    | 'strokeColor'
-    | 'baselineShift'
-  >;
-}
-
-export interface InitialMartyriaAppearance {
-  fontFamily?: string;
-  fontStyle?: string;
-  fontSize?: number;
-  color?: string;
-  strokeWidth?: number;
-  strokeColor?: string;
-  baselineShift?: number;
 }
 
 interface ComponentBase {
@@ -52,7 +32,7 @@ export type InitialMartyriaComponent =
       content: string;
       languageTag?: string;
       direction?: 'ltr' | 'rtl';
-      appearance?: InitialMartyriaAppearance;
+      paragraphStyleId?: string;
     })
   | (ComponentBase & {
       kind: 'stackedText';
@@ -60,7 +40,7 @@ export type InitialMartyriaComponent =
       bottom: string;
       languageTag?: string;
       direction?: 'ltr' | 'rtl';
-      appearance?: InitialMartyriaAppearance;
+      paragraphStyleId?: string;
     })
   | (ComponentBase & {
       kind: 'ekhosGlyph' | 'plagalGlyph' | 'modeSignGlyph' | 'varysGlyph';
@@ -70,15 +50,14 @@ export type InitialMartyriaComponent =
       rendering: 'neume' | 'customText';
       languageTag?: string;
       direction?: 'ltr' | 'rtl';
-      appearance?: InitialMartyriaAppearance;
+      paragraphStyleId?: string;
     });
 
 export interface InitialMartyriaStyle {
   id: string;
   displayName: string;
-  textParagraphStyleId?: string | null;
+  defaultParagraphStyleId: string;
   flowDirection: 'page' | 'ltr' | 'rtl';
-  textAppearance: InitialMartyriaAppearance;
   startingNoteText?: InitialMartyriaStartingNoteText;
   components: InitialMartyriaComponent[];
 }

@@ -54,18 +54,9 @@ export interface InitialMartyriaStartingNoteText {
   names: Record<InitialMartyriaCanonicalNote, string>;
   languageTag?: string;
   direction?: 'ltr' | 'rtl';
-  appearance: Pick<
-    InitialMartyriaAppearance,
-    | 'fontFamily'
-    | 'fontStyle'
-    | 'fontSize'
-    | 'color'
-    | 'strokeWidth'
-    | 'strokeColor'
-    | 'baselineShift'
-  >;
 }
 
+/** Resolved text styling used by layout and rendering, never persisted. */
 export interface InitialMartyriaAppearance {
   fontFamily?: string;
   fontStyle?: string;
@@ -76,7 +67,9 @@ export interface InitialMartyriaAppearance {
   baselineShift?: number;
 }
 
-export type InitialMartyriaTextAppearance = InitialMartyriaAppearance;
+export interface ResolvedInitialMartyriaStartingNoteText extends InitialMartyriaStartingNoteText {
+  appearance: InitialMartyriaAppearance;
+}
 
 interface InitialMartyriaComponentBase {
   id: string;
@@ -89,7 +82,7 @@ export type InitialMartyriaComponent =
       content: string;
       languageTag?: string;
       direction?: 'ltr' | 'rtl';
-      appearance?: InitialMartyriaTextAppearance;
+      paragraphStyleId?: string;
     })
   | (InitialMartyriaComponentBase & {
       kind: 'stackedText';
@@ -97,7 +90,7 @@ export type InitialMartyriaComponent =
       bottom: string;
       languageTag?: string;
       direction?: 'ltr' | 'rtl';
-      appearance?: InitialMartyriaTextAppearance;
+      paragraphStyleId?: string;
     })
   | (InitialMartyriaComponentBase & {
       kind: 'ekhosGlyph' | 'plagalGlyph' | 'modeSignGlyph' | 'varysGlyph';
@@ -107,27 +100,16 @@ export type InitialMartyriaComponent =
       rendering: StartingNoteRendering;
       languageTag?: string;
       direction?: 'ltr' | 'rtl';
-      appearance?: InitialMartyriaTextAppearance;
+      paragraphStyleId?: string;
     });
 
 export interface InitialMartyriaStyle {
   id: string;
   displayName: string;
-  textParagraphStyleId?: string | null;
+  defaultParagraphStyleId: string;
   flowDirection: 'page' | 'ltr' | 'rtl';
-  textAppearance: InitialMartyriaAppearance;
   startingNoteText: InitialMartyriaStartingNoteText;
   components: InitialMartyriaComponent[];
-}
-
-function cloneInitialMartyriaAppearance(
-  appearance: InitialMartyriaAppearance | undefined,
-): InitialMartyriaAppearance | undefined {
-  if (appearance == null) {
-    return undefined;
-  }
-
-  return { ...appearance };
 }
 
 function cloneInitialMartyriaVisibility(
@@ -164,7 +146,7 @@ export function cloneInitialMartyriaComponent(
         content: component.content,
         languageTag: component.languageTag,
         direction: component.direction,
-        appearance: cloneInitialMartyriaAppearance(component.appearance),
+        paragraphStyleId: component.paragraphStyleId,
       };
     case 'stackedText':
       return {
@@ -174,7 +156,7 @@ export function cloneInitialMartyriaComponent(
         bottom: component.bottom,
         languageTag: component.languageTag,
         direction: component.direction,
-        appearance: cloneInitialMartyriaAppearance(component.appearance),
+        paragraphStyleId: component.paragraphStyleId,
       };
     case 'ekhosGlyph':
     case 'plagalGlyph':
@@ -188,7 +170,7 @@ export function cloneInitialMartyriaComponent(
         rendering: component.rendering,
         languageTag: component.languageTag,
         direction: component.direction,
-        appearance: cloneInitialMartyriaAppearance(component.appearance),
+        paragraphStyleId: component.paragraphStyleId,
       };
     default:
       return assertNeverInitialMartyriaComponent(component);
@@ -210,8 +192,6 @@ export function cloneInitialMartyriaStartingNoteText(
     },
     languageTag: startingNoteText.languageTag,
     direction: startingNoteText.direction,
-    appearance:
-      cloneInitialMartyriaAppearance(startingNoteText.appearance) ?? {},
   };
 }
 
@@ -221,9 +201,8 @@ export function cloneInitialMartyriaStyle(
   return {
     id: style.id,
     displayName: style.displayName,
-    textParagraphStyleId: style.textParagraphStyleId,
+    defaultParagraphStyleId: style.defaultParagraphStyleId,
     flowDirection: style.flowDirection,
-    textAppearance: cloneInitialMartyriaAppearance(style.textAppearance) ?? {},
     startingNoteText: cloneInitialMartyriaStartingNoteText(
       style.startingNoteText,
     ),
@@ -339,7 +318,6 @@ export function createInitialMartyriaStartingNoteText(): InitialMartyriaStarting
     },
     languageTag: 'el',
     direction: 'ltr',
-    appearance: {},
   };
 }
 
@@ -352,9 +330,8 @@ const visibleFor = (modes: ModeKeyMode[]): InitialMartyriaVisibility => ({
 export const traditionalGreekInitialMartyriaStyle: InitialMartyriaStyle = {
   id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1,
   displayName: 'Traditional Greek',
-  textParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+  defaultParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
   flowDirection: 'page',
-  textAppearance: {},
   startingNoteText: createInitialMartyriaStartingNoteText(),
   components: [
     { id: 'mode-word', kind: 'ekhosGlyph', visibility: visibleFor(allModes) },
@@ -419,9 +396,8 @@ function builtIn(
   return {
     id,
     displayName,
-    textParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    defaultParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     flowDirection: 'page',
-    textAppearance: {},
     startingNoteText: createInitialMartyriaStartingNoteText(),
     components,
   };
@@ -430,9 +406,8 @@ function builtIn(
 const traditionalGreekV2InitialMartyriaStyle: InitialMartyriaStyle = {
   id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV2,
   displayName: 'Traditional Greek V2',
-  textParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+  defaultParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
   flowDirection: 'page',
-  textAppearance: {},
   startingNoteText: createInitialMartyriaStartingNoteText(),
   components: [
     text('mode-word', 'Ἦχος'),
@@ -602,6 +577,9 @@ export function validateInitialMartyriaStyle(style: InitialMartyriaStyle) {
   if (style.displayName.trim() === '') {
     errors.push('A style display name is required.');
   }
+  if (style.defaultParagraphStyleId.trim() === '') {
+    errors.push('A default paragraph style is required.');
+  }
   if (style.components.length === 0) {
     errors.push('A style must contain at least one component.');
   }
@@ -612,13 +590,6 @@ export function validateInitialMartyriaStyle(style: InitialMartyriaStyle) {
     }
     ids.add(component.id);
     validateVisibility(component.visibility, errors);
-    if (
-      component.kind === 'text' ||
-      component.kind === 'stackedText' ||
-      component.kind === 'startingNoteCluster'
-    ) {
-      validateAppearance(component.appearance, errors);
-    }
     if (component.kind === 'text') {
       const content = component.content;
       if (content === '') {
@@ -642,8 +613,6 @@ export function validateInitialMartyriaStyle(style: InitialMartyriaStyle) {
       errors.push(`Only one ${kind} component is allowed.`);
     }
   }
-  validateAppearance(style.textAppearance, errors);
-  validateAppearance(style.startingNoteText.appearance, errors);
   const noteNames = style.startingNoteText.names;
   for (const note of initialMartyriaCanonicalNotes) {
     if (noteNames[note].trim() === '') {
@@ -689,32 +658,6 @@ function validateVisibility(
     variations.add(override.templateId);
   }
 }
-function validateAppearance(
-  appearance: InitialMartyriaAppearance | undefined,
-  errors: string[],
-) {
-  if (appearance == null) {
-    return;
-  }
-  if (
-    appearance.fontSize != null &&
-    (!Number.isFinite(appearance.fontSize) || appearance.fontSize <= 0)
-  ) {
-    errors.push('Component appearance contains an invalid font size.');
-  }
-  if (
-    appearance.strokeWidth != null &&
-    (!Number.isFinite(appearance.strokeWidth) || appearance.strokeWidth < 0)
-  ) {
-    errors.push('Component appearance contains an invalid stroke width.');
-  }
-  if (
-    appearance.baselineShift != null &&
-    !Number.isFinite(appearance.baselineShift)
-  ) {
-    errors.push('Component appearance contains an invalid baseline shift.');
-  }
-}
 export function isModeKeyMode(value: number): value is ModeKeyMode {
   return Number.isInteger(value) && value >= 1 && value <= 8;
 }
@@ -742,14 +685,14 @@ export type ResolvedInitialMartyriaRun =
       appearance: InitialMartyriaAppearance;
       direction: 'ltr' | 'rtl';
       languageTag?: string;
-      usesComponentAppearance?: boolean;
+      usesParagraphStyleOverride?: boolean;
       content: ResolvedInitialMartyriaTextContent;
     }
   | {
       kind: 'startingPitch';
       componentId: string;
       appearance: InitialMartyriaAppearance;
-      noteText: InitialMartyriaStartingNoteText;
+      noteText: ResolvedInitialMartyriaStartingNoteText;
       direction: 'ltr' | 'rtl';
       cluster: InitialMartyriaPitchCluster;
     };
@@ -848,11 +791,28 @@ export function resolveInitialMartyriaBaseTextAppearance(
   style: InitialMartyriaStyle,
   paragraphStyles: ParagraphStyle[] | undefined,
 ): InitialMartyriaAppearance {
+  return resolveInitialMartyriaParagraphStyle(
+    style.defaultParagraphStyleId,
+    paragraphStyles,
+  );
+}
+
+function resolveInitialMartyriaParagraphStyle(
+  paragraphStyleId: string,
+  paragraphStyles: ParagraphStyle[] | undefined,
+): InitialMartyriaAppearance {
+  if (paragraphStyles == null) {
+    return {};
+  }
+
+  const resolved = resolveParagraphStyle(paragraphStyles, paragraphStyleId);
   return {
-    ...(paragraphStyles == null
-      ? {}
-      : resolveParagraphStyle(paragraphStyles, style.textParagraphStyleId)),
-    ...style.textAppearance,
+    fontFamily: resolved.fontFamily,
+    fontStyle: resolved.fontStyle,
+    fontSize: resolved.fontSize,
+    color: resolved.color,
+    strokeWidth: resolved.strokeWidth,
+    strokeColor: resolved.strokeColor,
   };
 }
 
@@ -1008,19 +968,13 @@ function resolveComponent(
       {
         kind: 'text',
         componentId: component.id,
-        appearance: {
-          ...(paragraphStyles == null
-            ? {}
-            : resolveParagraphStyle(
-                paragraphStyles,
-                style.textParagraphStyleId,
-              )),
-          ...style.textAppearance,
-          ...component.appearance,
-        },
+        appearance: resolveInitialMartyriaParagraphStyle(
+          component.paragraphStyleId ?? style.defaultParagraphStyleId,
+          paragraphStyles,
+        ),
         direction: component.direction ?? flowDirection,
         languageTag: component.languageTag,
-        usesComponentAppearance: component.appearance != null,
+        usesParagraphStyleOverride: component.paragraphStyleId != null,
         content,
       },
     ];
@@ -1068,14 +1022,10 @@ function resolveStartingNoteComponent(
   flowDirection: 'ltr' | 'rtl',
   paragraphStyles: ParagraphStyle[] | undefined,
 ): ResolvedInitialMartyriaRun[] {
-  const appearance = {
-    ...(paragraphStyles == null
-      ? {}
-      : resolveParagraphStyle(paragraphStyles, style.textParagraphStyleId)),
-    ...style.textAppearance,
-    ...style.startingNoteText.appearance,
-    ...component.appearance,
-  };
+  const appearance = resolveInitialMartyriaParagraphStyle(
+    component.paragraphStyleId ?? style.defaultParagraphStyleId,
+    paragraphStyles,
+  );
   if (
     component.rendering === 'customText' &&
     hasCompleteStartingNoteText(style.startingNoteText, context.pitchCluster)

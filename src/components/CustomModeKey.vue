@@ -500,7 +500,7 @@ function getWordSpaceTextMetrics(run: ResolvedInitialMartyriaRun | undefined) {
       fontSize: getPitchFontSizes(run).textFontSize,
     };
   }
-  if (run?.kind === 'text' && run.usesComponentAppearance) {
+  if (run?.kind === 'text' && run.usesParagraphStyleOverride) {
     return {
       appearance: run.appearance,
       fontSize: run.appearance.fontSize,

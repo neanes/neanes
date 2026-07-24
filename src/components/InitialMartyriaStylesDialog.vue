@@ -93,119 +93,51 @@
             </Field>
             <Field orientation="horizontal">
               <FieldLabel>{{
-                $t(($) => $.dialog.initialMartyriaStyles.paragraphStyle, {
-                  ns: 'dialog',
-                })
+                $t(
+                  ($) => $.dialog.initialMartyriaStyles.defaultParagraphStyle,
+                  { ns: 'dialog' },
+                )
               }}</FieldLabel>
               <ParagraphStyleSelect
                 class="flex-1"
                 trigger-class="w-full"
                 :disabled="selectedCustomStyle == null"
-                :model-value="
-                  selectedStyle.textParagraphStyleId ??
-                  BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText
-                "
+                :model-value="selectedStyle.defaultParagraphStyleId"
                 :paragraph-styles="paragraphStyles"
-                @update:model-value="updateTextParagraphStyle"
+                @update:model-value="updateDefaultParagraphStyle"
               />
             </Field>
-            <details class="rounded border p-2">
-              <summary class="cursor-pointer text-sm font-medium">
+            <div class="rounded border bg-muted/30 p-3 text-sm">
+              <div class="font-medium">
                 {{
-                  $t(($) => $.dialog.initialMartyriaStyles.textDefaults, {
+                  $t(($) => $.dialog.initialMartyriaStyles.glyphAppearance, {
                     ns: 'dialog',
                   })
                 }}
-              </summary>
-              <div class="mt-3 grid gap-2 sm:grid-cols-2">
-                <Field orientation="horizontal">
-                  <FieldLabel>{{
-                    $t(($) => $.dialog.initialMartyriaStyles.fontFamily, {
-                      ns: 'dialog',
-                    })
-                  }}</FieldLabel>
-                  <FontCombobox
-                    :model-value="selectedStyle.textAppearance.fontFamily ?? ''"
-                    :options="fonts"
-                    @update:model-value="
-                      updateTextAppearance('fontFamily', $event)
-                    "
-                  />
-                </Field>
-                <Field orientation="horizontal">
-                  <FieldLabel>{{
-                    $t(($) => $.dialog.initialMartyriaStyles.fontStyle, {
-                      ns: 'dialog',
-                    })
-                  }}</FieldLabel>
-                  <FontStyleSelect
-                    :model-value="selectedStyle.textAppearance.fontStyle ?? ''"
-                    :options="fontStyleOptions"
-                    @update:model-value="
-                      updateTextAppearance('fontStyle', $event)
-                    "
-                  />
-                </Field>
-                <Field orientation="horizontal">
-                  <FieldLabel>{{
-                    $t(
-                      ($) =>
-                        $.dialog.initialMartyriaStyles.appearanceProperties
-                          .fontSize,
-                      { ns: 'dialog' },
-                    )
-                  }}</FieldLabel>
-                  <Input
-                    type="number"
-                    :model-value="selectedStyle.textAppearance.fontSize"
-                    @update:model-value="
-                      updateTextAppearance('fontSize', $event)
-                    "
-                  />
-                </Field>
-                <Field orientation="horizontal">
-                  <FieldLabel>{{
-                    $t(($) => $.dialog.initialMartyriaStyles.color, {
-                      ns: 'dialog',
-                    })
-                  }}</FieldLabel>
-                  <Input
-                    :model-value="selectedStyle.textAppearance.color"
-                    @update:model-value="updateTextAppearance('color', $event)"
-                  />
-                </Field>
-                <Field orientation="horizontal">
-                  <FieldLabel>{{
-                    $t(($) => $.dialog.initialMartyriaStyles.strokeColor, {
-                      ns: 'dialog',
-                    })
-                  }}</FieldLabel>
-                  <Input
-                    :model-value="selectedStyle.textAppearance.strokeColor"
-                    @update:model-value="
-                      updateTextAppearance('strokeColor', $event)
-                    "
-                  />
-                </Field>
-                <Field orientation="horizontal">
-                  <FieldLabel>{{
-                    $t(
-                      ($) =>
-                        $.dialog.initialMartyriaStyles.appearanceProperties
-                          .strokeWidth,
-                      { ns: 'dialog' },
-                    )
-                  }}</FieldLabel>
-                  <Input
-                    type="number"
-                    :model-value="selectedStyle.textAppearance.strokeWidth"
-                    @update:model-value="
-                      updateTextAppearance('strokeWidth', $event)
-                    "
-                  />
-                </Field>
               </div>
-            </details>
+              <div class="mt-1 text-muted-foreground">
+                {{
+                  $t(
+                    ($) =>
+                      $.dialog.initialMartyriaStyles
+                        .glyphAppearanceFromPageSetup,
+                    { ns: 'dialog' },
+                  )
+                }}
+              </div>
+              <div class="mt-2 flex items-center gap-2">
+                <span
+                  class="size-4 rounded-sm border"
+                  :style="{ backgroundColor: pageSetup.modeKeyDefaultColor }"
+                />
+                <span>{{ pageSetup.modeKeyDefaultColor }}</span>
+                <span class="text-muted-foreground">·</span>
+                <span>
+                  {{ $t(($) => $.dialog.pageSetup.outline, { ns: 'dialog' }) }}:
+                  {{ glyphStrokeWidth }} pt
+                </span>
+              </div>
+            </div>
             <details
               v-if="usesCustomStartingNoteText"
               class="rounded border p-2"
@@ -260,69 +192,6 @@
                     ></Select
                   ></Field
                 >
-                <Field orientation="horizontal">
-                  <FieldLabel>{{
-                    $t(($) => $.dialog.initialMartyriaStyles.fontFamily, {
-                      ns: 'dialog',
-                    })
-                  }}</FieldLabel>
-                  <FontCombobox
-                    :model-value="
-                      selectedStyle.startingNoteText.appearance.fontFamily ?? ''
-                    "
-                    :options="fonts"
-                    :disabled="selectedCustomStyle == null"
-                    @update:model-value="
-                      updateStartingNoteAppearance('fontFamily', $event)
-                    "
-                  />
-                </Field>
-                <Field orientation="horizontal">
-                  <FieldLabel>{{
-                    $t(($) => $.dialog.initialMartyriaStyles.fontStyle, {
-                      ns: 'dialog',
-                    })
-                  }}</FieldLabel>
-                  <FontStyleSelect
-                    :model-value="
-                      selectedStyle.startingNoteText.appearance.fontStyle ?? ''
-                    "
-                    :options="startingNoteFontStyleOptions"
-                    :disabled="selectedCustomStyle == null"
-                    @update:model-value="
-                      updateStartingNoteAppearance('fontStyle', $event)
-                    "
-                  />
-                </Field>
-                <Field
-                  v-for="property in [
-                    'fontSize',
-                    'color',
-                    'strokeColor',
-                    'strokeWidth',
-                    'baselineShift',
-                  ] as const"
-                  :key="property"
-                  orientation="horizontal"
-                >
-                  <FieldLabel>{{
-                    startingNoteAppearanceLabel(property)
-                  }}</FieldLabel>
-                  <Input
-                    :type="
-                      property === 'color' || property === 'strokeColor'
-                        ? 'text'
-                        : 'number'
-                    "
-                    :disabled="selectedCustomStyle == null"
-                    :model-value="
-                      selectedStyle.startingNoteText.appearance[property]
-                    "
-                    @update:model-value="
-                      updateStartingNoteAppearance(property, $event)
-                    "
-                  />
-                </Field>
                 <Button
                   size="sm"
                   variant="outline"
@@ -450,159 +319,41 @@
                         />
                       </Field>
                     </div>
-                    <details class="rounded border p-2">
-                      <summary class="cursor-pointer text-sm">
-                        {{
-                          $t(($) => $.dialog.initialMartyriaStyles.appearance, {
-                            ns: 'dialog',
-                          })
-                        }}
-                      </summary>
-                      <div class="mt-3 grid gap-2 sm:grid-cols-2">
-                        <Field orientation="horizontal">
-                          <FieldLabel>{{
-                            $t(
-                              ($) => $.dialog.initialMartyriaStyles.fontFamily,
-                              {
-                                ns: 'dialog',
-                              },
-                            )
-                          }}</FieldLabel>
-                          <FontCombobox
-                            :disabled="selectedCustomStyle == null"
-                            :model-value="
-                              component.appearance?.fontFamily ?? ''
-                            "
-                            :options="fonts"
-                            @update:model-value="
-                              updateComponentAppearance(
-                                index,
-                                'fontFamily',
-                                $event,
-                              )
-                            "
-                          />
-                        </Field>
-                        <Field orientation="horizontal">
-                          <FieldLabel>{{
-                            $t(
-                              ($) => $.dialog.initialMartyriaStyles.fontStyle,
-                              {
-                                ns: 'dialog',
-                              },
-                            )
-                          }}</FieldLabel>
-                          <FontStyleSelect
-                            :disabled="selectedCustomStyle == null"
-                            :model-value="component.appearance?.fontStyle ?? ''"
-                            :options="componentFontStyleOptions(component)"
-                            @update:model-value="
-                              updateComponentAppearance(
-                                index,
-                                'fontStyle',
-                                $event,
-                              )
-                            "
-                          />
-                        </Field>
-                        <Field
-                          v-for="property in componentAppearanceProperties"
-                          :key="property"
-                          orientation="horizontal"
-                        >
-                          <FieldLabel>{{
-                            appearanceLabel(property)
-                          }}</FieldLabel>
-                          <Input
-                            :disabled="selectedCustomStyle == null"
-                            :type="
-                              property === 'color' || property === 'strokeColor'
-                                ? 'text'
-                                : 'number'
-                            "
-                            :model-value="component.appearance?.[property]"
-                            @update:model-value="
-                              updateComponentAppearance(index, property, $event)
-                            "
-                          />
-                        </Field>
-                      </div>
-                    </details>
                   </div>
-                  <details
-                    v-else-if="
-                      component.kind === 'startingNoteCluster' &&
-                      component.rendering === 'customText'
-                    "
-                    class="mt-2 rounded border p-2"
+                  <Field
+                    v-if="isCustomTextComponent(component)"
+                    class="mt-2"
+                    orientation="horizontal"
                   >
-                    <summary class="cursor-pointer text-sm">
-                      {{
-                        $t(($) => $.dialog.initialMartyriaStyles.appearance, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </summary>
-                    <div class="mt-3 grid gap-2 sm:grid-cols-2">
-                      <Field orientation="horizontal">
-                        <FieldLabel>{{
-                          $t(($) => $.dialog.initialMartyriaStyles.fontFamily, {
-                            ns: 'dialog',
-                          })
-                        }}</FieldLabel>
-                        <FontCombobox
-                          :disabled="selectedCustomStyle == null"
-                          :model-value="component.appearance?.fontFamily ?? ''"
-                          :options="fonts"
-                          @update:model-value="
-                            updateComponentAppearance(
-                              index,
-                              'fontFamily',
-                              $event,
-                            )
-                          "
-                        />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel>{{
-                          $t(($) => $.dialog.initialMartyriaStyles.fontStyle, {
-                            ns: 'dialog',
-                          })
-                        }}</FieldLabel>
-                        <FontStyleSelect
-                          :disabled="selectedCustomStyle == null"
-                          :model-value="component.appearance?.fontStyle ?? ''"
-                          :options="componentFontStyleOptions(component)"
-                          @update:model-value="
-                            updateComponentAppearance(
-                              index,
-                              'fontStyle',
-                              $event,
-                            )
-                          "
-                        />
-                      </Field>
-                      <Field
-                        v-for="property in componentAppearanceProperties"
-                        :key="property"
-                        orientation="horizontal"
-                      >
-                        <FieldLabel>{{ appearanceLabel(property) }}</FieldLabel>
-                        <Input
-                          :disabled="selectedCustomStyle == null"
-                          :type="
-                            property === 'color' || property === 'strokeColor'
-                              ? 'text'
-                              : 'number'
-                          "
-                          :model-value="component.appearance?.[property]"
-                          @update:model-value="
-                            updateComponentAppearance(index, property, $event)
-                          "
-                        />
-                      </Field>
-                    </div>
-                  </details>
+                    <FieldLabel>{{
+                      $t(
+                        ($) =>
+                          $.dialog.initialMartyriaStyles.paragraphStyleOverride,
+                        { ns: 'dialog' },
+                      )
+                    }}</FieldLabel>
+                    <ParagraphStyleSelect
+                      class="flex-1"
+                      trigger-class="w-full"
+                      :disabled="selectedCustomStyle == null"
+                      :model-value="
+                        component.paragraphStyleId ?? PARAGRAPH_STYLE_NONE_VALUE
+                      "
+                      :paragraph-styles="paragraphStyles"
+                      show-none-option
+                      :none-label="
+                        $t(
+                          ($) =>
+                            $.dialog.initialMartyriaStyles
+                              .useDefaultParagraphStyle,
+                          { ns: 'dialog' },
+                        )
+                      "
+                      @update:model-value="
+                        (value) => updateComponentParagraphStyle(index, value)
+                      "
+                    />
+                  </Field>
                   <div class="mt-2 flex flex-wrap gap-2">
                     <label
                       v-for="mode in modes"
@@ -805,8 +556,6 @@
 import { useTranslation } from 'i18next-vue';
 import { computed, ref, toRaw, watch } from 'vue';
 
-import FontCombobox from '@/components/FontCombobox.vue';
-import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import ModeKeyRenderer from '@/components/ModeKeyRenderer.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { Button } from '@/components/ui/button';
@@ -830,41 +579,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { PARAGRAPH_STYLE_NONE_VALUE } from '@/composables/useRichTextStyleCommands';
 import { ModeKeyElement } from '@/models/Element';
 import {
   BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   builtInInitialMartyriaStyles,
   cloneInitialMartyriaStyle,
   createInitialMartyriaStartingNoteText,
-  type InitialMartyriaAppearance,
   type InitialMartyriaCanonicalNote,
   initialMartyriaCanonicalNotes,
   type InitialMartyriaComponent,
-  type InitialMartyriaStartingNoteText,
   type InitialMartyriaStyle,
   type ModeKeyMode,
-  resolveInitialMartyriaBaseTextAppearance,
   traditionalGreekInitialMartyriaStyle,
   validateInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { getModeSignLabelSelector } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
-import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
-import {
-  getFontStyleOptions,
-  remapFontStyleForFamily,
-} from '@/utils/fontStyle';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { Unit } from '@/utils/Unit';
 
 const props = defineProps<{
   styles: InitialMartyriaStyle[];
   pageSetup: PageSetup;
-  fonts: string[];
   paragraphStyles: ParagraphStyle[];
   activeStyleId?: string | null;
 }>();
@@ -875,17 +613,15 @@ const emit = defineEmits<{
 const open = defineModel<boolean>('open', { required: true });
 const { t } = useTranslation();
 const modes: ModeKeyMode[] = [1, 2, 3, 4, 5, 6, 7, 8];
-const componentAppearanceProperties = [
-  'fontSize',
-  'color',
-  'strokeColor',
-  'strokeWidth',
-  'baselineShift',
-] as const;
 const workingStyles = ref<InitialMartyriaStyle[]>([]);
 const draggedComponentId = ref<string | null>(null);
 const componentKindSelection = ref('');
 const variationSelection = ref('');
+const glyphStrokeWidth = computed(() =>
+  new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
+    Unit.toPt(props.pageSetup.modeKeyDefaultStrokeWidth),
+  ),
+);
 const selectedStyleId = ref(
   props.activeStyleId ?? BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1,
 );
@@ -914,32 +650,6 @@ const selectedCustomStyle = computed(
   () =>
     workingStyles.value.find((style) => style.id === selectedStyleId.value) ??
     null,
-);
-const paragraphTextAppearance = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    selectedStyle.value.textParagraphStyleId,
-  ),
-);
-const baseTextAppearance = computed(() =>
-  resolveInitialMartyriaBaseTextAppearance(
-    selectedStyle.value,
-    props.paragraphStyles,
-  ),
-);
-const { fontStyleOptions } = useFontStyleControls(
-  () =>
-    selectedStyle.value.textAppearance.fontFamily ??
-    paragraphTextAppearance.value.fontFamily ??
-    '',
-  () => selectedStyle.value.textAppearance.fontStyle ?? '',
-);
-const { fontStyleOptions: startingNoteFontStyleOptions } = useFontStyleControls(
-  () =>
-    selectedStyle.value.startingNoteText.appearance.fontFamily ??
-    baseTextAppearance.value.fontFamily ??
-    '',
-  () => selectedStyle.value.startingNoteText.appearance.fontStyle ?? '',
 );
 const stylesAreValid = computed(() =>
   workingStyles.value.every(
@@ -1060,226 +770,10 @@ function updateName(value: string | number) {
     style.displayName = String(value);
   });
 }
-type ComponentFontSnapshot = {
-  component: Extract<
-    InitialMartyriaComponent,
-    { kind: 'text' | 'stackedText' | 'startingNoteCluster' }
-  >;
-  effectiveStyle: string;
-  hadStyleOverride: boolean;
-};
-function isFontComponent(
-  component: InitialMartyriaComponent,
-): component is ComponentFontSnapshot['component'] {
-  return (
-    component.kind === 'text' ||
-    component.kind === 'stackedText' ||
-    component.kind === 'startingNoteCluster'
-  );
-}
-function getInheritedComponentFontSettingsForStyle(
-  style: InitialMartyriaStyle,
-  component: ComponentFontSnapshot['component'],
-) {
-  const baseAppearance = resolveInitialMartyriaBaseTextAppearance(
-    style,
-    props.paragraphStyles,
-  );
-  return component.kind === 'startingNoteCluster'
-    ? { ...baseAppearance, ...style.startingNoteText.appearance }
-    : baseAppearance;
-}
-function snapshotComponentFontStyles(style: InitialMartyriaStyle) {
-  return new Map(
-    style.components.filter(isFontComponent).map((component) => {
-      const inherited = getInheritedComponentFontSettingsForStyle(
-        style,
-        component,
-      );
-      return [
-        component.id,
-        {
-          component,
-          effectiveStyle:
-            component.appearance?.fontStyle ?? inherited.fontStyle ?? '',
-          hadStyleOverride: component.appearance?.fontStyle != null,
-        },
-      ] as const;
-    }),
-  );
-}
-function reconcileDescendantFontStyles(
-  style: InitialMartyriaStyle,
-  snapshots: Map<string, ComponentFontSnapshot>,
-) {
-  for (const component of style.components) {
-    if (
-      !isFontComponent(component) ||
-      component.appearance?.fontFamily != null
-    ) {
-      continue;
-    }
-    const snapshot = snapshots.get(component.id);
-    if (!snapshot?.hadStyleOverride) {
-      continue;
-    }
-    const inherited = getInheritedComponentFontSettingsForStyle(
-      style,
-      component,
-    );
-    updateComponentFontStyleOverride(
-      component,
-      remapFontStyleForFamily(
-        snapshot.effectiveStyle,
-        inherited.fontFamily ?? '',
-      ),
-      inherited.fontStyle,
-    );
-  }
-}
-function updateTextParagraphStyle(value: string) {
+function updateDefaultParagraphStyle(value: string) {
   updateSelected((style) => {
-    const snapshots = snapshotComponentFontStyles(style);
-    const previousBaseTextAppearance = resolveInitialMartyriaBaseTextAppearance(
-      style,
-      props.paragraphStyles,
-    );
-    style.textParagraphStyleId = value;
-    reconcileTextAppearanceFontStyle(style);
-    reconcileStartingNoteDefaultFontStyle(style, previousBaseTextAppearance);
-    reconcileDescendantFontStyles(style, snapshots);
+    style.defaultParagraphStyleId = value;
   });
-}
-function updateTextAppearance(
-  property: keyof InitialMartyriaAppearance,
-  value: string | number,
-) {
-  updateSelected((style) => {
-    const snapshots =
-      property === 'fontFamily' ? snapshotComponentFontStyles(style) : null;
-    const previousBaseTextAppearance =
-      property === 'fontFamily'
-        ? resolveInitialMartyriaBaseTextAppearance(style, props.paragraphStyles)
-        : null;
-    const input = String(value).trim();
-    if (
-      property === 'fontFamily' ||
-      property === 'fontStyle' ||
-      property === 'color' ||
-      property === 'strokeColor'
-    ) {
-      if (input === '') {
-        if (property === 'fontFamily') {
-          const paragraphAppearance = resolveParagraphStyle(
-            props.paragraphStyles,
-            style.textParagraphStyleId,
-          );
-          const effectiveStyle =
-            style.textAppearance.fontStyle ??
-            paragraphAppearance.fontStyle ??
-            '';
-          delete style.textAppearance.fontFamily;
-          updateDefaultFontStyle(
-            style.textAppearance,
-            remapFontStyleForFamily(
-              effectiveStyle,
-              paragraphAppearance.fontFamily ?? '',
-            ),
-            paragraphAppearance.fontStyle,
-          );
-          reconcileStartingNoteDefaultFontStyle(
-            style,
-            previousBaseTextAppearance!,
-          );
-          reconcileDescendantFontStyles(style, snapshots!);
-        } else {
-          delete style.textAppearance[property];
-        }
-      } else {
-        if (property === 'fontFamily') {
-          const paragraphAppearance = resolveParagraphStyle(
-            props.paragraphStyles,
-            style.textParagraphStyleId,
-          );
-          const effectiveStyle =
-            style.textAppearance.fontStyle ??
-            paragraphAppearance.fontStyle ??
-            '';
-          style.textAppearance.fontFamily = input;
-          updateDefaultFontStyle(
-            style.textAppearance,
-            remapFontStyleForFamily(effectiveStyle, input),
-            paragraphAppearance.fontStyle,
-          );
-          reconcileStartingNoteDefaultFontStyle(
-            style,
-            previousBaseTextAppearance!,
-          );
-          reconcileDescendantFontStyles(style, snapshots!);
-        } else {
-          style.textAppearance[property] = input;
-        }
-      }
-      return;
-    }
-    const number = Number(input);
-    if (input === '' || !Number.isFinite(number)) {
-      delete style.textAppearance[property];
-    } else {
-      style.textAppearance[property] = number;
-    }
-  });
-}
-function updateDefaultFontStyle(
-  appearance: InitialMartyriaAppearance,
-  style: string,
-  inheritedStyle: string | undefined,
-) {
-  if (style === inheritedStyle || style === '') {
-    delete appearance.fontStyle;
-  } else {
-    appearance.fontStyle = style;
-  }
-}
-function reconcileTextAppearanceFontStyle(style: InitialMartyriaStyle) {
-  if (style.textAppearance.fontStyle == null) {
-    return;
-  }
-  const paragraphAppearance = resolveParagraphStyle(
-    props.paragraphStyles,
-    style.textParagraphStyleId,
-  );
-  const effectiveFamily =
-    style.textAppearance.fontFamily ?? paragraphAppearance.fontFamily ?? '';
-  updateDefaultFontStyle(
-    style.textAppearance,
-    remapFontStyleForFamily(style.textAppearance.fontStyle, effectiveFamily),
-    paragraphAppearance.fontStyle,
-  );
-}
-function reconcileStartingNoteDefaultFontStyle(
-  style: InitialMartyriaStyle,
-  previousBaseTextAppearance: InitialMartyriaAppearance,
-) {
-  const startingAppearance = style.startingNoteText.appearance;
-  if (
-    startingAppearance.fontFamily != null ||
-    startingAppearance.fontStyle == null
-  ) {
-    return;
-  }
-  const nextBaseTextAppearance = resolveInitialMartyriaBaseTextAppearance(
-    style,
-    props.paragraphStyles,
-  );
-  updateDefaultFontStyle(
-    startingAppearance,
-    remapFontStyleForFamily(
-      startingAppearance.fontStyle,
-      nextBaseTextAppearance.fontFamily ?? '',
-    ),
-    nextBaseTextAppearance.fontStyle ?? previousBaseTextAppearance.fontStyle,
-  );
 }
 function updateFlowDirection(value: unknown) {
   if (value === 'page' || value === 'ltr' || value === 'rtl') {
@@ -1375,6 +869,19 @@ function isTextComponent(
 > {
   return component.kind === 'text' || component.kind === 'stackedText';
 }
+function isCustomTextComponent(
+  component: InitialMartyriaComponent,
+): component is Extract<
+  InitialMartyriaComponent,
+  { kind: 'text' | 'stackedText' | 'startingNoteCluster' }
+> {
+  return (
+    component.kind === 'text' ||
+    component.kind === 'stackedText' ||
+    (component.kind === 'startingNoteCluster' &&
+      component.rendering === 'customText')
+  );
+}
 function textComponentLines(component: InitialMartyriaComponent) {
   if (component.kind === 'stackedText') {
     return [component.top, component.bottom];
@@ -1387,143 +894,15 @@ function updateInlineText(index: number, value: string | number) {
     item.content = String(value);
   }
 }
-function updateComponentAppearance(
-  index: number,
-  property: keyof InitialMartyriaAppearance,
-  value: string | number,
-) {
+function updateComponentParagraphStyle(index: number, value: string) {
   const item = getComponent(index);
-  if (
-    item == null ||
-    (item.kind !== 'text' &&
-      item.kind !== 'stackedText' &&
-      item.kind !== 'startingNoteCluster')
-  ) {
+  if (item == null || !isCustomTextComponent(item)) {
     return;
   }
-  item.appearance ??= {};
-  const input = String(value).trim();
-  if (
-    property === 'fontFamily' ||
-    property === 'fontStyle' ||
-    property === 'color' ||
-    property === 'strokeColor'
-  ) {
-    if (input === '') {
-      if (property === 'fontFamily') {
-        const inherited = getInheritedComponentFontSettings(item);
-        const effectiveStyle =
-          item.appearance.fontStyle ?? inherited.fontStyle ?? '';
-        delete item.appearance.fontFamily;
-        updateComponentFontStyle(
-          item,
-          remapFontStyleForFamily(effectiveStyle, inherited.fontFamily ?? ''),
-        );
-      } else {
-        delete item.appearance[property];
-      }
-    } else {
-      if (property === 'fontFamily') {
-        const inherited = getInheritedComponentFontSettings(item);
-        const effectiveStyle =
-          item.appearance.fontStyle ?? inherited.fontStyle ?? '';
-        item.appearance.fontFamily = input;
-        updateComponentFontStyle(
-          item,
-          remapFontStyleForFamily(effectiveStyle, input),
-        );
-      } else {
-        item.appearance[property] = input;
-      }
-    }
-    return;
-  }
-  const number = Number(input);
-  if (input === '' || !Number.isFinite(number)) {
-    delete item.appearance[property];
+  if (value === PARAGRAPH_STYLE_NONE_VALUE) {
+    delete item.paragraphStyleId;
   } else {
-    item.appearance[property] = number;
-  }
-}
-function getInheritedComponentFontSettings(
-  component: Extract<
-    InitialMartyriaComponent,
-    { kind: 'text' | 'stackedText' | 'startingNoteCluster' }
-  >,
-) {
-  const baseAppearance = resolveInitialMartyriaBaseTextAppearance(
-    selectedStyle.value,
-    props.paragraphStyles,
-  );
-  return component.kind === 'startingNoteCluster'
-    ? {
-        ...baseAppearance,
-        ...selectedStyle.value.startingNoteText.appearance,
-      }
-    : baseAppearance;
-}
-function updateComponentFontStyle(
-  component: Extract<
-    InitialMartyriaComponent,
-    { kind: 'text' | 'stackedText' | 'startingNoteCluster' }
-  >,
-  style: string | undefined,
-) {
-  const inheritedStyle = getInheritedComponentFontSettings(component).fontStyle;
-  updateComponentFontStyleOverride(component, style, inheritedStyle);
-}
-function updateComponentFontStyleOverride(
-  component: ComponentFontSnapshot['component'],
-  style: string | undefined,
-  inheritedStyle: string | undefined,
-) {
-  if (style == null || style === inheritedStyle) {
-    delete component.appearance?.fontStyle;
-  } else {
-    component.appearance!.fontStyle = style;
-  }
-}
-function componentFontStyleOptions(component: InitialMartyriaComponent) {
-  const inherited =
-    component.kind === 'text' ||
-    component.kind === 'stackedText' ||
-    component.kind === 'startingNoteCluster'
-      ? getInheritedComponentFontSettings(component)
-      : {};
-  const componentFamily =
-    component.kind === 'text' ||
-    component.kind === 'stackedText' ||
-    component.kind === 'startingNoteCluster'
-      ? component.appearance?.fontFamily
-      : undefined;
-  return getFontStyleOptions(componentFamily ?? inherited.fontFamily ?? '');
-}
-function appearanceLabel(property: keyof InitialMartyriaAppearance) {
-  switch (property) {
-    case 'fontSize':
-      return t(
-        ($) => $.dialog.initialMartyriaStyles.appearanceProperties.fontSize,
-        { ns: 'dialog' },
-      );
-    case 'color':
-      return t(($) => $.dialog.initialMartyriaStyles.color, { ns: 'dialog' });
-    case 'strokeColor':
-      return t(($) => $.dialog.initialMartyriaStyles.strokeColor, {
-        ns: 'dialog',
-      });
-    case 'strokeWidth':
-      return t(
-        ($) => $.dialog.initialMartyriaStyles.appearanceProperties.strokeWidth,
-        { ns: 'dialog' },
-      );
-    case 'baselineShift':
-      return t(
-        ($) =>
-          $.dialog.initialMartyriaStyles.appearanceProperties.baselineShift,
-        { ns: 'dialog' },
-      );
-    default:
-      return property;
+    item.paragraphStyleId = value;
   }
 }
 function updateStackedLine(
@@ -1564,110 +943,6 @@ function updateStartingNoteDirection(value: unknown) {
   updateSelected((style) => {
     style.startingNoteText.direction = value;
   });
-}
-function updateStartingNoteAppearance(
-  property: keyof InitialMartyriaStartingNoteText['appearance'],
-  value: string | number,
-) {
-  updateSelected((style) => {
-    const snapshots =
-      property === 'fontFamily' ? snapshotComponentFontStyles(style) : null;
-    const input = String(value).trim();
-    if (
-      property === 'fontFamily' ||
-      property === 'fontStyle' ||
-      property === 'color' ||
-      property === 'strokeColor'
-    ) {
-      if (input === '') {
-        if (property === 'fontFamily') {
-          const baseAppearance = resolveInitialMartyriaBaseTextAppearance(
-            style,
-            props.paragraphStyles,
-          );
-          const effectiveStyle =
-            style.startingNoteText.appearance.fontStyle ??
-            baseAppearance.fontStyle ??
-            '';
-          delete style.startingNoteText.appearance.fontFamily;
-          updateDefaultFontStyle(
-            style.startingNoteText.appearance,
-            remapFontStyleForFamily(
-              effectiveStyle,
-              baseAppearance.fontFamily ?? '',
-            ),
-            baseAppearance.fontStyle,
-          );
-          reconcileDescendantFontStyles(style, snapshots!);
-        } else {
-          delete style.startingNoteText.appearance[property];
-        }
-      } else {
-        if (property === 'fontFamily') {
-          const baseAppearance = resolveInitialMartyriaBaseTextAppearance(
-            style,
-            props.paragraphStyles,
-          );
-          const effectiveStyle =
-            style.startingNoteText.appearance.fontStyle ??
-            baseAppearance.fontStyle ??
-            '';
-          style.startingNoteText.appearance.fontFamily = input;
-          updateDefaultFontStyle(
-            style.startingNoteText.appearance,
-            remapFontStyleForFamily(effectiveStyle, input),
-            baseAppearance.fontStyle,
-          );
-          reconcileDescendantFontStyles(style, snapshots!);
-        } else {
-          style.startingNoteText.appearance[property] = input;
-        }
-      }
-      return;
-    }
-    const number = Number(input);
-    if (input === '' || !Number.isFinite(number)) {
-      delete style.startingNoteText.appearance[property];
-    } else {
-      style.startingNoteText.appearance[property] = number;
-    }
-  });
-}
-function startingNoteAppearanceLabel(
-  property: keyof InitialMartyriaStartingNoteText['appearance'],
-) {
-  switch (property) {
-    case 'fontFamily':
-      return t(($) => $.dialog.initialMartyriaStyles.fontFamily, {
-        ns: 'dialog',
-      });
-    case 'fontStyle':
-      return t(($) => $.dialog.initialMartyriaStyles.fontStyle, {
-        ns: 'dialog',
-      });
-    case 'fontSize':
-      return t(
-        ($) => $.dialog.initialMartyriaStyles.appearanceProperties.fontSize,
-        { ns: 'dialog' },
-      );
-    case 'color':
-      return t(($) => $.dialog.initialMartyriaStyles.color, { ns: 'dialog' });
-    case 'strokeColor':
-      return t(($) => $.dialog.initialMartyriaStyles.strokeColor, {
-        ns: 'dialog',
-      });
-    case 'strokeWidth':
-      return t(
-        ($) => $.dialog.initialMartyriaStyles.appearanceProperties.strokeWidth,
-        { ns: 'dialog' },
-      );
-    case 'baselineShift':
-      return t(
-        ($) =>
-          $.dialog.initialMartyriaStyles.appearanceProperties.baselineShift,
-        { ns: 'dialog' },
-      );
-  }
 }
 function resetStartingNoteNames() {
   updateSelected((style) => {

@@ -65,9 +65,7 @@ export class TextMeasurementService {
   }
 
   public static getTextMetrics(text: string, font: string) {
-    const context = this.getContext();
-
-    context.font = font;
+    const context = this.prepareContext(font);
     return context.measureText(text);
   }
 

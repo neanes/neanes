@@ -70,6 +70,7 @@
   },
   "initialMartyriaStyles": {
     "root": "Стили начальной мартирии",
+    "styleLabel": "Стиль начальной мартирии",
     "description": "Настройте стили отображения начальной мартирии для всего документа.",
     "styles": "Стили",
     "searchStyles": "Поиск стилей",
@@ -102,6 +103,8 @@
     "editTerminology": "Изменить терминологию...",
     "newTerminology": "Новая терминология...",
     "traditionalGreek": "Традиционный греческий",
+    "standard": "Стандартный",
+    "documentDefault": "По умолчанию для документа",
     "traditionalGreekV2": "Традиционный греческий V2",
     "moveUp": "Переместить компонент вверх",
     "moveDown": "Переместить компонент вниз",
@@ -212,7 +215,8 @@
       "footer": "Нижний колонтитул",
       "lyrics": "Текст песнопения",
       "dropCap": "Буквица",
-      "initialMartyria": "Начальная мартирия"
+      "initialMartyria": "Начальная мартирия",
+      "initialMartyriaGreek": "Начальная мартирия - греческая"
     }
   },
   "neumePositioning": {

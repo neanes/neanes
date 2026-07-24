@@ -113,6 +113,7 @@
       v-else-if="modeKeyElement != null"
       :key="`mode-key-${modeKeyElement.id}`"
       :element="modeKeyElement"
+      :initial-martyria-styles="initialMartyriaStyles"
       :open-sections="openSections"
       :page-setup="pageSetup"
       @update:open-sections="emit('update:open-sections', $event)"
@@ -152,6 +153,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 
@@ -178,6 +180,10 @@ const props = defineProps({
   },
   innerNeume: {
     type: String,
+    required: true,
+  },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
     required: true,
   },
   pageSetup: {

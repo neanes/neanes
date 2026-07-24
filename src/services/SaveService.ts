@@ -1301,7 +1301,7 @@ export class SaveService {
     pageSetup.modeKeyDefaultStrokeWidth = p.modeKeyDefaultStrokeWidth;
     pageSetup.modeKeyDefaultFontSize = p.modeKeyDefaultFontSize;
     pageSetup.modeKeyDefaultHeightAdjustment = p.modeKeyDefaultHeightAdjustment;
-    pageSetup.initialMartyriaStyleId = p.initialMartyriaStyleId;
+    pageSetup.initialMartyriaStyleId = p.initialMartyriaStyleId ?? null;
 
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
@@ -1852,7 +1852,7 @@ export class SaveService {
     element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.showAmbitus = e.showAmbitus || undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
-    element.initialMartyriaStyleId = e.initialMartyriaStyleId ?? null;
+    element.initialMartyriaStyleId = e.initialMartyriaStyleId;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo || undefined;
   }
 
@@ -2129,7 +2129,7 @@ export class SaveService {
     pageSetup.modeKeyDefaultHeightAdjustment =
       p.modeKeyDefaultHeightAdjustment ??
       pageSetup.modeKeyDefaultHeightAdjustment;
-    pageSetup.initialMartyriaStyleId = p.initialMartyriaStyleId;
+    pageSetup.initialMartyriaStyleId = p.initialMartyriaStyleId ?? null;
 
     pageSetup.accidentalDefaultColor =
       p.accidentalDefaultColor ?? pageSetup.accidentalDefaultColor;
@@ -2795,7 +2795,7 @@ export class SaveService {
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.showAmbitus = e.showAmbitus === true;
     element.useDefaultStyle = e.useDefaultStyle === true;
-    element.initialMartyriaStyleId = e.initialMartyriaStyleId ?? null;
+    element.initialMartyriaStyleId = e.initialMartyriaStyleId;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo === true;
 
     // For backwards compatibility, we check the current mode key templates

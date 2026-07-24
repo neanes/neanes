@@ -11,83 +11,121 @@
       value="style"
       :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
     >
-      <Field orientation="horizontal">
-        <Switch
-          id="properties-mode-key-use-default-style"
-          :model-value="element.useDefaultStyle"
-          @update:model-value="
-            $emit('update', {
-              useDefaultStyle: $event === true,
-            } as Partial<ModeKeyElement>)
-          "
-        />
-        <FieldLabel for="properties-mode-key-use-default-style">{{
-          $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
+      <Field>
+        <FieldLabel for="properties-mode-key-style">{{
+          $t(($) => $.dialog.initialMartyriaStyles.styleLabel, {
+            ns: 'dialog',
+          })
         }}</FieldLabel>
+        <Select v-model="modeKeyStyleValue">
+          <SelectTrigger id="properties-mode-key-style">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem :value="inheritStyleValue">
+              {{
+                $t(($) => $.dialog.initialMartyriaStyles.documentDefault, {
+                  ns: 'dialog',
+                })
+              }}
+            </SelectItem>
+            <SelectItem :value="standardStyleValue">
+              {{
+                $t(($) => $.dialog.initialMartyriaStyles.standard, {
+                  ns: 'dialog',
+                })
+              }}
+            </SelectItem>
+            <SelectItem
+              v-for="style in availableInitialMartyriaStyles"
+              :key="style.id"
+              :value="style.id"
+            >
+              {{ style.displayName }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </Field>
 
-      <template v-if="!element.useDefaultStyle">
+      <template v-if="usesStandardModeKey">
         <Field orientation="horizontal">
-          <FieldLabel for="properties-mode-key-font-size">{{
-            $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
-          }}</FieldLabel>
-          <InputFontSize
-            id="properties-mode-key-font-size"
-            :model-value="element.fontSize"
-            @update:model-value="
-              $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
-            "
-          />
-        </Field>
-
-        <Field orientation="horizontal">
-          <FieldLabel>{{
-            $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
-          }}</FieldLabel>
-          <ColorPicker
-            :model-value="element.color"
-            @update:model-value="
-              $emit('update', { color: $event } as Partial<ModeKeyElement>)
-            "
-          />
-        </Field>
-
-        <Field orientation="horizontal">
-          <FieldLabel for="properties-mode-key-outline">{{
-            $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-          }}</FieldLabel>
-          <InputStrokeWidth
-            id="properties-mode-key-outline"
-            :model-value="element.strokeWidth"
+          <Switch
+            id="properties-mode-key-use-default-style"
+            :model-value="element.useDefaultStyle"
             @update:model-value="
               $emit('update', {
-                strokeWidth: $event,
+                useDefaultStyle: $event === true,
               } as Partial<ModeKeyElement>)
             "
           />
+          <FieldLabel for="properties-mode-key-use-default-style">{{
+            $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
+          }}</FieldLabel>
         </Field>
 
-        <Field orientation="horizontal">
-          <FieldLabel for="properties-mode-key-height-adjustment">{{
-            $t(($) => $.toolbar.initialMartyria.heightAdjustment, {
-              ns: 'toolbar',
-            })
-          }}</FieldLabel>
-          <InputUnit
-            id="properties-mode-key-height-adjustment"
-            unit="pt"
-            :min="heightAdjustmentMin"
-            :max="heightAdjustmentMax"
-            :step="0.5"
-            :format-options="fraction2FormatOptions"
-            :model-value="element.heightAdjustment"
-            @update:model-value="
-              $emit('update', {
-                heightAdjustment: $event,
-              } as Partial<ModeKeyElement>)
-            "
-          />
-        </Field>
+        <template v-if="!element.useDefaultStyle">
+          <Field orientation="horizontal">
+            <FieldLabel for="properties-mode-key-font-size">{{
+              $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
+            }}</FieldLabel>
+            <InputFontSize
+              id="properties-mode-key-font-size"
+              :model-value="element.fontSize"
+              @update:model-value="
+                $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
+              "
+            />
+          </Field>
+
+          <Field orientation="horizontal">
+            <FieldLabel>{{
+              $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
+            }}</FieldLabel>
+            <ColorPicker
+              :model-value="element.color"
+              @update:model-value="
+                $emit('update', { color: $event } as Partial<ModeKeyElement>)
+              "
+            />
+          </Field>
+
+          <Field orientation="horizontal">
+            <FieldLabel for="properties-mode-key-outline">{{
+              $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
+            }}</FieldLabel>
+            <InputStrokeWidth
+              id="properties-mode-key-outline"
+              :model-value="element.strokeWidth"
+              @update:model-value="
+                $emit('update', {
+                  strokeWidth: $event,
+                } as Partial<ModeKeyElement>)
+              "
+            />
+          </Field>
+
+          <Field orientation="horizontal">
+            <FieldLabel for="properties-mode-key-height-adjustment">{{
+              $t(($) => $.toolbar.initialMartyria.heightAdjustment, {
+                ns: 'toolbar',
+              })
+            }}</FieldLabel>
+            <InputUnit
+              id="properties-mode-key-height-adjustment"
+              unit="pt"
+              :min="heightAdjustmentMin"
+              :max="heightAdjustmentMax"
+              :step="0.5"
+              :format-options="fraction2FormatOptions"
+              :model-value="element.heightAdjustment"
+              @update:model-value="
+                $emit('update', {
+                  heightAdjustment: $event,
+                } as Partial<ModeKeyElement>)
+              "
+            />
+          </Field>
+        </template>
       </template>
     </PaneSection>
 
@@ -258,10 +296,22 @@ import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
+import {
+  builtInInitialMartyriaStyles,
+  type InitialMartyriaStyle,
+  resolveInitialMartyriaStyleSelection,
+} from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import {
   fraction1FormatOptions,
@@ -282,9 +332,46 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
 });
 
 const emit = defineEmits(['update', 'update:open-sections']);
+
+const inheritStyleValue = '__inherit__';
+const standardStyleValue = '__standard__';
+const availableInitialMartyriaStyles = computed(() => [
+  ...builtInInitialMartyriaStyles,
+  ...props.initialMartyriaStyles,
+]);
+const styleSelection = computed(() =>
+  resolveInitialMartyriaStyleSelection({
+    elementStyleId: props.element.initialMartyriaStyleId,
+    pageStyleId: props.pageSetup.initialMartyriaStyleId,
+    styles: props.initialMartyriaStyles,
+  }),
+);
+const usesStandardModeKey = computed(
+  () => styleSelection.value.kind === 'standard',
+);
+const modeKeyStyleValue = computed({
+  get: () =>
+    props.element.initialMartyriaStyleId === undefined
+      ? inheritStyleValue
+      : (props.element.initialMartyriaStyleId ?? standardStyleValue),
+  set: (value: string) => {
+    emit('update', {
+      initialMartyriaStyleId:
+        value === inheritStyleValue
+          ? undefined
+          : value === standardStyleValue
+            ? null
+            : value,
+    } as Partial<ModeKeyElement>);
+  },
+});
 
 const heightAdjustmentMin = computed(
   () => -Math.round(Unit.fromPt(props.element.height)),

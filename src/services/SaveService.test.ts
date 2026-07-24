@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import {
   DropCapElement,
+  ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
 import {
-  builtInInitialMartyriaStyles,
   cloneInitialMartyriaStyle,
   traditionalGreekInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
@@ -1009,7 +1009,7 @@ describe('SaveService font styles', () => {
     ).toBe('#654321');
   });
 
-  it('round-trips current initial martyria component schemas', () => {
+  it('round-trips initial martyria structure without sharing mutable data', () => {
     const score = new Score();
     const style = cloneInitialMartyriaStyle(
       traditionalGreekInitialMartyriaStyle,
@@ -1022,7 +1022,6 @@ describe('SaveService font styles', () => {
         content: 'Mode',
         languageTag: 'en',
         direction: 'ltr',
-        appearance: { fontFamily: 'Text', fontSize: 11 },
         visibility: {
           modes: [1],
           variationOverrides: [{ templateId: 101, visible: false }],
@@ -1033,7 +1032,6 @@ describe('SaveService font styles', () => {
         kind: 'stackedText',
         top: 'λ',
         bottom: 'π',
-        appearance: { color: 'red' },
         visibility: { modes: [2], variationOverrides: [] },
       },
       {
@@ -1062,15 +1060,9 @@ describe('SaveService font styles', () => {
         rendering: 'customText',
         languageTag: 'en',
         direction: 'ltr',
-        appearance: { baselineShift: 2 },
         visibility: { modes: [7], variationOverrides: [] },
       },
     ];
-    style.textAppearance = { fontFamily: 'Style', fontSize: 13 };
-    style.startingNoteText.appearance = {
-      fontFamily: 'Starting',
-      fontSize: 10,
-    };
     score.initialMartyriaStyles = [style];
 
     const saved = SaveService.SaveScoreToJson(score);
@@ -1083,52 +1075,59 @@ describe('SaveService font styles', () => {
     expect(components).toEqual(style.components);
 
     const savedStyle = saved.initialMartyriaStyles![0];
-    savedStyle.textAppearance.fontSize = 99;
     savedStyle.components[0].visibility.modes[0] = 8;
-    expect(style.textAppearance.fontSize).toBe(13);
     expect(style.components[0].visibility.modes[0]).toBe(1);
     loaded.initialMartyriaStyles[0].components[0].visibility.modes[0] = 2;
     expect(savedStyle.components[0].visibility.modes[0]).toBe(8);
-    savedStyle.startingNoteText!.appearance.fontSize = 99;
-    expect(style.startingNoteText.appearance.fontSize).toBe(10);
   });
 
-  it('defaults missing deployed starting-note data when loading', () => {
+  it('round-trips inherited, explicit Standard, and custom mode key styles', () => {
     const score = new Score();
-    const style = cloneInitialMartyriaStyle(
-      traditionalGreekInitialMartyriaStyle,
+    score.pageSetup.initialMartyriaStyleId = 'custom:document-style';
+
+    const inherited = new ModeKeyElement();
+    const standard = new ModeKeyElement();
+    standard.initialMartyriaStyleId = null;
+    const custom = new ModeKeyElement();
+    custom.initialMartyriaStyleId = 'custom:element-style';
+    score.staff.elements = [inherited, standard, custom];
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+    const savedModeKeys = saved.staff.elements as ModeKeyElement[];
+    const loadedModeKeys = loaded.staff.elements as ModeKeyElement[];
+
+    expect(saved.pageSetup.initialMartyriaStyleId).toBe(
+      'custom:document-style',
     );
-    style.id = 'custom:missing-starting-note-data';
-    score.initialMartyriaStyles = [style];
-
-    const saved = SaveService.SaveScoreToJson(score);
-    saved.initialMartyriaStyles![0].startingNoteText = undefined;
-
-    const loaded = SaveService.LoadScore_v1(saved);
-    const startingNoteText = loaded.initialMartyriaStyles[0].startingNoteText;
-
-    expect(startingNoteText.languageTag).toBe('el');
-    expect(startingNoteText.direction).toBe('ltr');
-    expect(startingNoteText.names).toEqual(style.startingNoteText.names);
+    expect(savedModeKeys[0].initialMartyriaStyleId).toBeUndefined();
+    expect(savedModeKeys[1].initialMartyriaStyleId).toBeNull();
+    expect(savedModeKeys[2].initialMartyriaStyleId).toBe(
+      'custom:element-style',
+    );
+    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
+      'custom:document-style',
+    );
+    expect(loadedModeKeys[0].initialMartyriaStyleId).toBeUndefined();
+    expect(loadedModeKeys[1].initialMartyriaStyleId).toBeNull();
+    expect(loadedModeKeys[2].initialMartyriaStyleId).toBe(
+      'custom:element-style',
+    );
   });
 
-  it('preserves inherited appearances through save and load', () => {
+  it('loads old scores without mode key style fields as Standard by default', () => {
     const score = new Score();
-    const style = cloneInitialMartyriaStyle(builtInInitialMartyriaStyles[1]);
-    style.id = 'custom:inherited-appearance';
-    score.initialMartyriaStyles = [style];
-
+    score.staff.elements = [new ModeKeyElement()];
     const saved = SaveService.SaveScoreToJson(score);
+    delete saved.pageSetup.initialMartyriaStyleId;
+    delete (saved.staff.elements[0] as ModeKeyElement).initialMartyriaStyleId;
+
     const loaded = SaveService.LoadScore_v1(saved);
 
-    expect(saved.initialMartyriaStyles![0].textAppearance).toStrictEqual({});
+    expect(loaded.pageSetup.initialMartyriaStyleId).toBeNull();
     expect(
-      saved.initialMartyriaStyles![0].startingNoteText!.appearance,
-    ).toStrictEqual({});
-    expect(loaded.initialMartyriaStyles[0].textAppearance).toStrictEqual({});
-    expect(
-      loaded.initialMartyriaStyles[0].startingNoteText.appearance,
-    ).toStrictEqual({});
+      (loaded.staff.elements[0] as ModeKeyElement).initialMartyriaStyleId,
+    ).toBeUndefined();
   });
 
   it('saves rich text language fields instead of legacy rtl', () => {

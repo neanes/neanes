@@ -59,8 +59,8 @@ import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
 import InitialMartyriaStylesDialog from '@/components/InitialMartyriaStylesDialog.vue';
 import LyricsPane from '@/components/LyricsPane.vue';
-import ModeKey from '@/components/ModeKey.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
+import ModeKeyRenderer from '@/components/ModeKeyRenderer.vue';
 import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
@@ -152,7 +152,10 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
-import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
+import {
+  type InitialMartyriaStyle,
+  resolveInitialMartyriaStyleSelection,
+} from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
   ElementOverlayBox,
@@ -9858,6 +9861,16 @@ function setContextMenuUseDefaultStyle(
   }
 }
 
+function usesStandardModeKey(element: ModeKeyElement) {
+  return (
+    resolveInitialMartyriaStyleSelection({
+      elementStyleId: element.initialMartyriaStyleId,
+      pageStyleId: score.value.pageSetup.initialMartyriaStyleId,
+      styles: score.value.initialMartyriaStyles,
+    }).kind === 'standard'
+  );
+}
+
 function openContextMenuPositioning(element: NoteElement) {
   // Make sure the dialog targets the right-clicked note (it reads the
   // selected element), then open it as the Properties pane button does.
@@ -9989,6 +10002,7 @@ function renderTabLabel(tab: Tab) {
             :context="inspectorContext"
             :fonts="fonts"
             :inner-neume="toolbarInnerNeume"
+            :initial-martyria-styles="score.initialMartyriaStyles"
             :open-sections="propertiesPaneOpenSections"
             :page-setup="score.pageSetup"
             :paragraph-styles="score.paragraphStyles"
@@ -10820,7 +10834,7 @@ function renderTabLabel(tab: Tab) {
                             <span v-if="element.lineBreak" class="line-break-2"
                               ><PhParagraph weight="fill"
                             /></span>
-                            <ModeKey
+                            <ModeKeyRenderer
                               :ref="
                                 setTemplateRef(
                                   `element-${getElementIndex(element)}`,
@@ -11127,7 +11141,10 @@ function renderTabLabel(tab: Tab) {
                     }}
                   </ContextMenuCheckboxItem>
                   <ContextMenuCheckboxItem
-                    v-if="contextMenuModeKey != null"
+                    v-if="
+                      contextMenuModeKey != null &&
+                      usesStandardModeKey(contextMenuModeKey)
+                    "
                     :model-value="contextMenuModeKey.useDefaultStyle"
                     @update:model-value="
                       setContextMenuUseDefaultStyle(
@@ -11299,6 +11316,8 @@ function renderTabLabel(tab: Tab) {
       <template v-else-if="inspectorContext.kind === 'mode-key'">
         <ToolbarModeKey
           :element="inspectorContext.element"
+          :initial-martyria-styles="score.initialMartyriaStyles"
+          :page-setup="score.pageSetup"
           @update="updateModeKey(inspectorContext.element, $event)"
           @update:tempo="setModeKeyTempo(inspectorContext.element, $event)"
           @open-mode-key-dialog="openModeKeyDialog"

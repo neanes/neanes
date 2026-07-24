@@ -67,7 +67,7 @@
               >
                 <ItemContent class="items-start">
                   <div class="mode-key-preview w-full px-2 py-1">
-                    <ModeKey
+                    <ModeKeyRenderer
                       class="!w-auto !border-0 [--zoom:1]"
                       :element="template"
                       :page-setup="pageSetup"
@@ -132,7 +132,7 @@ import {
 import type { Component, PropType } from 'vue';
 import { computed, ref, watch } from 'vue';
 
-import ModeKey from '@/components/ModeKey.vue';
+import ModeKeyRenderer from '@/components/ModeKeyRenderer.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -249,7 +249,10 @@ function getModeKeyTemplatesForMode(mode: number) {
           useOptionalDiatonicFthoras.value,
           TextBoxAlignment.Left,
         ),
-        { descriptionSelector: x.description },
+        {
+          descriptionSelector: x.description,
+          initialMartyriaStyleId: props.element.initialMartyriaStyleId,
+        },
       ),
     );
 

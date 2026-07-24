@@ -766,7 +766,7 @@
               :key="preview.template.id"
               class="rounded border px-2 py-1"
             >
-              <ModeKey
+              <ModeKeyRenderer
                 class="!w-auto !border-0 [--zoom:1]"
                 :element="preview.element"
                 :page-setup="previewPageSetup"
@@ -807,7 +807,7 @@ import { computed, ref, toRaw, watch } from 'vue';
 
 import FontCombobox from '@/components/FontCombobox.vue';
 import FontStyleSelect from '@/components/FontStyleSelect.vue';
-import ModeKey from '@/components/ModeKey.vue';
+import ModeKeyRenderer from '@/components/ModeKeyRenderer.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -866,7 +866,7 @@ const props = defineProps<{
   pageSetup: PageSetup;
   fonts: string[];
   paragraphStyles: ParagraphStyle[];
-  activeStyleId?: string;
+  activeStyleId?: string | null;
 }>();
 const emit = defineEmits<{
   update: [styles: InitialMartyriaStyle[]];

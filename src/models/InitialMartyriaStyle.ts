@@ -352,7 +352,7 @@ const visibleFor = (modes: ModeKeyMode[]): InitialMartyriaVisibility => ({
 export const traditionalGreekInitialMartyriaStyle: InitialMartyriaStyle = {
   id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1,
   displayName: 'Traditional Greek',
-  textParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+  textParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
   flowDirection: 'page',
   textAppearance: {},
   startingNoteText: createInitialMartyriaStartingNoteText(),
@@ -430,7 +430,7 @@ function builtIn(
 const traditionalGreekV2InitialMartyriaStyle: InitialMartyriaStyle = {
   id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV2,
   displayName: 'Traditional Greek V2',
-  textParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+  textParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
   flowDirection: 'page',
   textAppearance: {},
   startingNoteText: createInitialMartyriaStartingNoteText(),
@@ -773,7 +773,75 @@ export interface InitialMartyriaStyleResolution {
   style: InitialMartyriaStyle;
   runs: ResolvedInitialMartyriaRun[];
   flowDirection: 'ltr' | 'rtl';
-  missingStyleId: string | null;
+}
+
+export type InitialMartyriaStyleSelection =
+  | {
+      kind: 'standard';
+      missingStyleId: string | null;
+    }
+  | {
+      kind: 'custom';
+      style: InitialMartyriaStyle;
+      missingStyleId: string | null;
+    };
+
+function findInitialMartyriaStyle(
+  id: string,
+  styles: InitialMartyriaStyle[] | undefined,
+) {
+  return (
+    getBuiltInInitialMartyriaStyle(id) ??
+    styles?.find((style) => style.id === id) ??
+    null
+  );
+}
+
+export function resolveInitialMartyriaStyleSelection(options: {
+  elementStyleId: string | null | undefined;
+  pageStyleId: string | null | undefined;
+  styles?: InitialMartyriaStyle[];
+}): InitialMartyriaStyleSelection {
+  const requestedStyleId =
+    options.elementStyleId === undefined
+      ? options.pageStyleId
+      : options.elementStyleId;
+
+  if (requestedStyleId == null) {
+    return { kind: 'standard', missingStyleId: null };
+  }
+
+  const requestedStyle = findInitialMartyriaStyle(
+    requestedStyleId,
+    options.styles,
+  );
+  if (requestedStyle != null) {
+    return {
+      kind: 'custom',
+      style: requestedStyle,
+      missingStyleId: null,
+    };
+  }
+
+  if (
+    options.elementStyleId !== undefined &&
+    options.pageStyleId != null &&
+    options.pageStyleId !== requestedStyleId
+  ) {
+    const pageStyle = findInitialMartyriaStyle(
+      options.pageStyleId,
+      options.styles,
+    );
+    if (pageStyle != null) {
+      return {
+        kind: 'custom',
+        style: pageStyle,
+        missingStyleId: requestedStyleId,
+      };
+    }
+  }
+
+  return { kind: 'standard', missingStyleId: requestedStyleId };
 }
 
 export function resolveInitialMartyriaBaseTextAppearance(
@@ -786,21 +854,6 @@ export function resolveInitialMartyriaBaseTextAppearance(
       : resolveParagraphStyle(paragraphStyles, style.textParagraphStyleId)),
     ...style.textAppearance,
   };
-}
-
-function projectInitialMartyriaColorAppearance(
-  appearance: InitialMartyriaAppearance,
-): InitialMartyriaAppearance {
-  return appearance.color === undefined ? {} : { color: appearance.color };
-}
-
-function resolveInitialMartyriaColorAppearance(
-  style: InitialMartyriaStyle,
-  paragraphStyles: ParagraphStyle[] | undefined,
-) {
-  return projectInitialMartyriaColorAppearance(
-    resolveInitialMartyriaBaseTextAppearance(style, paragraphStyles),
-  );
 }
 
 export type InitialMartyriaSeparator =
@@ -908,27 +961,11 @@ export function getInitialMartyriaSeparatorAfter(
 
 export function resolveInitialMartyriaStyle(options: {
   context: InitialMartyriaContext;
-  activeStyleId?: string;
-  fallbackStyleId?: string;
-  styles?: InitialMartyriaStyle[];
+  style: InitialMartyriaStyle;
   paragraphStyles?: ParagraphStyle[];
   pageSetup: Pick<PageSetup, 'direction'>;
 }): InitialMartyriaStyleResolution {
-  const selected =
-    options.activeStyleId == null
-      ? options.fallbackStyleId == null
-        ? traditionalGreekInitialMartyriaStyle
-        : (getBuiltInInitialMartyriaStyle(options.fallbackStyleId) ??
-          options.styles?.find((style) => style.id === options.fallbackStyleId))
-      : (getBuiltInInitialMartyriaStyle(options.activeStyleId) ??
-        options.styles?.find((style) => style.id === options.activeStyleId) ??
-        (options.fallbackStyleId == null
-          ? undefined
-          : (getBuiltInInitialMartyriaStyle(options.fallbackStyleId) ??
-            options.styles?.find(
-              (style) => style.id === options.fallbackStyleId,
-            ))));
-  const style = selected ?? traditionalGreekInitialMartyriaStyle;
+  const style = options.style;
   const flowDirection =
     style.flowDirection === 'page'
       ? options.pageSetup.direction
@@ -936,10 +973,6 @@ export function resolveInitialMartyriaStyle(options: {
   return {
     style,
     flowDirection,
-    missingStyleId:
-      selected == null && options.activeStyleId != null
-        ? options.activeStyleId
-        : null,
     runs: style.components.flatMap((component) =>
       resolveComponent(
         component,
@@ -1021,7 +1054,7 @@ function resolveComponent(
             : component.kind === 'varysGlyph'
               ? 'varys'
               : 'modeSign',
-      appearance: resolveInitialMartyriaColorAppearance(style, paragraphStyles),
+      appearance: {},
       direction: flowDirection,
       glyphs,
     },
@@ -1043,7 +1076,6 @@ function resolveStartingNoteComponent(
     ...style.startingNoteText.appearance,
     ...component.appearance,
   };
-  const colorAppearance = projectInitialMartyriaColorAppearance(appearance);
   if (
     component.rendering === 'customText' &&
     hasCompleteStartingNoteText(style.startingNoteText, context.pitchCluster)
@@ -1052,7 +1084,7 @@ function resolveStartingNoteComponent(
       {
         kind: 'startingPitch',
         componentId: component.id,
-        appearance: colorAppearance,
+        appearance: {},
         noteText: { ...style.startingNoteText, appearance },
         direction:
           component.direction ??
@@ -1063,17 +1095,13 @@ function resolveStartingNoteComponent(
     ];
   }
   const glyphs = flattenPitchCluster(context.pitchCluster);
-  const neumeColorAppearance = resolveInitialMartyriaColorAppearance(
-    style,
-    paragraphStyles,
-  );
   return glyphs.length === 0
     ? []
     : [
         {
           kind: 'glyph',
           componentId: component.id,
-          appearance: neumeColorAppearance,
+          appearance: {},
           direction: component.direction ?? flowDirection,
           glyphs,
           pitchCluster: context.pitchCluster,

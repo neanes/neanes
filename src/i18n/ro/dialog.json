@@ -70,6 +70,7 @@
   },
   "initialMartyriaStyles": {
     "root": "Stiluri de martyria inițială",
+    "styleLabel": "Stil de martyria inițială",
     "description": "Configurează stilurile de prezentare pentru martyria inițială în tot documentul.",
     "styles": "Stiluri",
     "searchStyles": "Caută stiluri",
@@ -102,6 +103,8 @@
     "editTerminology": "Editează terminologia...",
     "newTerminology": "Terminologie nouă...",
     "traditionalGreek": "Grecesc tradițional",
+    "standard": "Standard",
+    "documentDefault": "Implicit pentru document",
     "traditionalGreekV2": "Grecesc tradițional V2",
     "moveUp": "Mută componenta în sus",
     "removeComponent": "Elimină componenta",
@@ -212,7 +215,8 @@
       "footer": "Subsol",
       "lyrics": "Versuri",
       "dropCap": "Majusculă decorativă",
-      "initialMartyria": "Martyria inițială"
+      "initialMartyria": "Martyria inițială",
+      "initialMartyriaGreek": "Martyria inițială - Greacă"
     }
   },
   "neumePositioning": {

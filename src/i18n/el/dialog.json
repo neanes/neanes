@@ -70,6 +70,7 @@
   },
   "initialMartyriaStyles": {
     "root": "Στυλ αρχικής μαρτυρίας",
+    "styleLabel": "Στυλ αρχικής μαρτυρίας",
     "description": "Ρυθμίστε στυλ παρουσίασης αρχικής μαρτυρίας για όλο το έγγραφο.",
     "styles": "Στυλ",
     "searchStyles": "Αναζήτηση στυλ",
@@ -102,6 +103,8 @@
     "editTerminology": "Επεξεργασία ορολογίας...",
     "newTerminology": "Νέα ορολογία...",
     "traditionalGreek": "Παραδοσιακό ελληνικό",
+    "standard": "Τυπικό",
+    "documentDefault": "Προεπιλογή εγγράφου",
     "traditionalGreekV2": "Παραδοσιακό ελληνικό V2",
     "moveUp": "Μετακίνηση στοιχείου επάνω",
     "removeComponent": "Αφαίρεση στοιχείου",
@@ -212,7 +215,8 @@
       "footer": "Υποσέλιδο",
       "lyrics": "Στίχοι",
       "dropCap": "Αρχίγραμμα",
-      "initialMartyria": "Αρχική Μαρτυρία"
+      "initialMartyria": "Αρχική Μαρτυρία",
+      "initialMartyriaGreek": "Αρχική Μαρτυρία - Ελληνικά"
     }
   },
   "neumePositioning": {

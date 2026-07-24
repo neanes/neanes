@@ -31,6 +31,20 @@ describe('initial martyria pitch font sizes', () => {
       }),
     ).toEqual({ textFontSize: 42, glyphFontSize: 60 });
   });
+
+  it('uses the signature-wide matched size for starting-note glyphs', () => {
+    expect(
+      resolveInitialMartyriaPitchFontSizes({
+        textFontFamily: 'Overridden Text Font',
+        textFontSize: 24,
+        glyphFontSize: undefined,
+        matchedNeumeFontSize: 60,
+        neumeFontFamily: 'Neume Font',
+        neumeFontSize: 42,
+      }),
+    ).toEqual({ textFontSize: 24, glyphFontSize: 60 });
+  });
+
   it('scales the selected font standard glue by glyph size', () => {
     const fontFamily = 'Neanes';
     const glyphSize = 48;

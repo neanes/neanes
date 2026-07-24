@@ -1079,7 +1079,7 @@ export class ModeKeyElement extends ScoreElement {
   public heightAdjustment: number = 0;
   public bpm: number = 120;
   public useDefaultStyle: boolean = true;
-  public initialMartyriaStyleId: string | null = null;
+  public initialMartyriaStyleId: string | null | undefined = undefined;
   public ignoreAttractions: boolean = false;
   public permanentEnharmonicZo: boolean = false;
   public ambitusLowNote: Note = Note.Pa;

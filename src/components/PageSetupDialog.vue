@@ -1186,7 +1186,7 @@
                   <Field orientation="horizontal">
                     <FieldLabel for="page-setup-dialog-initial-martyria-style">
                       {{
-                        $t(($) => $.dialog.initialMartyriaStyles.root, {
+                        $t(($) => $.dialog.initialMartyriaStyles.styleLabel, {
                           ns: 'dialog',
                         })
                       }}
@@ -1197,6 +1197,13 @@
                         ><SelectValue
                       /></SelectTrigger>
                       <SelectContent>
+                        <SelectItem :value="standardInitialMartyriaStyleValue">
+                          {{
+                            $t(($) => $.dialog.initialMartyriaStyles.standard, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </SelectItem>
                         <SelectItem
                           v-for="style in availableInitialMartyriaStyles"
                           :key="style.id"
@@ -1882,13 +1889,14 @@ const numeralsOptions = new Map<PageNumerals, DialogSelector>([
   ['easternArabic', ($) => $.dialog.pageSetup.easternArabic],
 ]);
 
+const standardInitialMartyriaStyleValue = '__standard__';
 const form = ref(new PageSetup());
 const initialMartyriaStyleId = computed({
   get: () =>
-    form.value.initialMartyriaStyleId ??
-    traditionalGreekInitialMartyriaStyle.id,
+    form.value.initialMartyriaStyleId ?? standardInitialMartyriaStyleValue,
   set: (value) => {
-    form.value.initialMartyriaStyleId = value;
+    form.value.initialMartyriaStyleId =
+      value === standardInitialMartyriaStyleValue ? null : value;
   },
 });
 const neumeBulkColor = ref('#000000');

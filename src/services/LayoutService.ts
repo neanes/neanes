@@ -28,8 +28,10 @@ import { INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM } from '@/models/Initia
 import {
   getInitialMartyriaContext,
   type InitialMartyriaAppearance,
+  type InitialMartyriaStyle,
   resolveInitialMartyriaBaseTextAppearance,
   resolveInitialMartyriaStyle,
+  resolveInitialMartyriaStyleSelection,
 } from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
@@ -761,30 +763,46 @@ export class LayoutService {
           // Compute properties
           modeKeyElement.computedFontFamily = pageSetup.neumeDefaultFontFamily;
 
-          modeKeyElement.computedFontSize = modeKeyElement.useDefaultStyle
-            ? pageSetup.modeKeyDefaultFontSize
-            : modeKeyElement.fontSize;
+          const initialMartyriaStyleSelection =
+            resolveInitialMartyriaStyleSelection({
+              elementStyleId: modeKeyElement.initialMartyriaStyleId,
+              pageStyleId: pageSetup.initialMartyriaStyleId,
+              styles: score.initialMartyriaStyles,
+            });
+          const usesStandardModeKey =
+            initialMartyriaStyleSelection.kind === 'standard';
 
-          modeKeyElement.computedColor = modeKeyElement.useDefaultStyle
-            ? pageSetup.modeKeyDefaultColor
-            : modeKeyElement.color;
+          modeKeyElement.computedFontSize =
+            usesStandardModeKey && !modeKeyElement.useDefaultStyle
+              ? modeKeyElement.fontSize
+              : pageSetup.modeKeyDefaultFontSize;
 
-          modeKeyElement.computedStrokeWidth = modeKeyElement.useDefaultStyle
-            ? pageSetup.modeKeyDefaultStrokeWidth
-            : modeKeyElement.strokeWidth;
+          modeKeyElement.computedColor =
+            usesStandardModeKey && !modeKeyElement.useDefaultStyle
+              ? modeKeyElement.color
+              : pageSetup.modeKeyDefaultColor;
 
-          modeKeyElement.computedHeightAdjustment =
-            modeKeyElement.useDefaultStyle
+          modeKeyElement.computedStrokeWidth =
+            usesStandardModeKey && !modeKeyElement.useDefaultStyle
+              ? modeKeyElement.strokeWidth
+              : pageSetup.modeKeyDefaultStrokeWidth;
+
+          modeKeyElement.computedHeightAdjustment = usesStandardModeKey
+            ? modeKeyElement.useDefaultStyle
               ? pageSetup.modeKeyDefaultHeightAdjustment
-              : modeKeyElement.heightAdjustment;
+              : modeKeyElement.heightAdjustment
+            : 0;
 
-          modeKeyElement.height =
-            this.getInitialMartyriaHeight(
-              modeKeyElement,
-              pageSetup,
-              score.initialMartyriaStyles,
-              score.paragraphStyles,
-            ) + modeKeyElement.computedHeightAdjustment;
+          modeKeyElement.height = usesStandardModeKey
+            ? TextMeasurementService.getFontHeight(
+                `${modeKeyElement.computedFontSize}px ${modeKeyElement.computedFontFamily}`,
+              ) + modeKeyElement.computedHeightAdjustment
+            : this.getInitialMartyriaHeight(
+                modeKeyElement,
+                pageSetup,
+                initialMartyriaStyleSelection.style,
+                score.paragraphStyles,
+              );
 
           this.addBox(
             pageSetup.innerPageWidth,
@@ -2343,14 +2361,12 @@ export class LayoutService {
   private static getInitialMartyriaHeight(
     element: ModeKeyElement,
     pageSetup: PageSetup,
-    styles: Workspace['score']['initialMartyriaStyles'],
+    style: InitialMartyriaStyle,
     paragraphStyles: Workspace['score']['paragraphStyles'],
   ) {
     const resolution = resolveInitialMartyriaStyle({
       context: getInitialMartyriaContext(element),
-      activeStyleId: element.initialMartyriaStyleId ?? undefined,
-      fallbackStyleId: pageSetup.initialMartyriaStyleId,
-      styles,
+      style,
       paragraphStyles,
       pageSetup,
     });
@@ -2397,7 +2413,10 @@ export class LayoutService {
         fontSize,
       });
       const baselineShift = appearance.baselineShift ?? 0;
-      const strokeOverflow = (appearance.strokeWidth ?? 0) / 2;
+      const strokeOverflow =
+        (run.kind === 'glyph'
+          ? pageSetup.modeKeyDefaultStrokeWidth
+          : (appearance.strokeWidth ?? 0)) / 2;
 
       if (run.kind === 'text' && run.content.layout === 'stacked') {
         const effectiveBaselineShift =
@@ -2422,13 +2441,16 @@ export class LayoutService {
 
       if (run.kind === 'startingPitch') {
         const noteAppearance = run.noteText.appearance;
-        const glyphAppearance: InitialMartyriaAppearance = {};
+        const glyphAppearance: InitialMartyriaAppearance = {
+          strokeWidth: pageSetup.modeKeyDefaultStrokeWidth,
+        };
         const fontSizes = resolveInitialMartyriaPitchFontSizes({
           textFontFamily:
             noteAppearance.fontFamily ?? element.computedFontFamily,
           textFontStyle: noteAppearance.fontStyle,
           textFontSize: noteAppearance.fontSize,
           glyphFontSize: glyphAppearance.fontSize,
+          matchedNeumeFontSize,
           neumeFontFamily: element.computedFontFamily,
           neumeFontSize: element.computedFontSize,
         });
@@ -2470,8 +2492,18 @@ export class LayoutService {
             TextMeasurementService.getFontBoundingBoxAscent(trailingGlyphFont);
           const trailingDescent =
             TextMeasurementService.getFontBoundingBoxDescent(trailingGlyphFont);
-          top = Math.min(top, -trailingAscent - wrapperBaselineShift);
-          bottom = Math.max(bottom, trailingDescent - wrapperBaselineShift);
+          top = Math.min(
+            top,
+            -trailingAscent -
+              wrapperBaselineShift -
+              pageSetup.modeKeyDefaultStrokeWidth / 2,
+          );
+          bottom = Math.max(
+            bottom,
+            trailingDescent -
+              wrapperBaselineShift +
+              pageSetup.modeKeyDefaultStrokeWidth / 2,
+          );
         }
         continue;
       }

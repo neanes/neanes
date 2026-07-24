@@ -70,6 +70,7 @@
   },
   "initialMartyriaStyles": {
     "root": "Initial Martyria Styles",
+    "styleLabel": "Initial martyria style",
     "description": "Configure document-wide initial martyria presentation styles.",
     "styles": "Styles",
     "searchStyles": "Search styles",
@@ -102,6 +103,8 @@
     "editTerminology": "Edit terminology...",
     "newTerminology": "New terminology...",
     "traditionalGreek": "Traditional Greek",
+    "standard": "Standard",
+    "documentDefault": "Document default",
     "traditionalGreekV2": "Traditional Greek V2",
     "moveUp": "Move component up",
     "moveDown": "Move component down",
@@ -131,7 +134,6 @@
     "addVariationOverride": "Add variation override",
     "visible": "Visible",
     "hidden": "Hidden",
-    "removeOverride": "Remove override",
     "textDefaults": "Text defaults",
     "paragraphStyle": "Paragraph style",
     "text": "Text",
@@ -212,7 +214,8 @@
       "footer": "Footer",
       "lyrics": "Lyrics",
       "dropCap": "Drop Cap",
-      "initialMartyria": "Initial Martyria"
+      "initialMartyria": "Initial Martyria",
+      "initialMartyriaGreek": "Initial Martyria - Greek"
     }
   },
   "neumePositioning": {

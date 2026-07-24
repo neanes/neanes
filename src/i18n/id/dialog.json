@@ -70,6 +70,7 @@
   },
   "initialMartyriaStyles": {
     "root": "Gaya Martyria Awal",
+    "styleLabel": "Gaya martyria awal",
     "description": "Atur gaya tampilan martyria awal untuk seluruh dokumen.",
     "styles": "Gaya",
     "searchStyles": "Cari gaya",
@@ -102,6 +103,8 @@
     "editTerminology": "Edit terminologi...",
     "newTerminology": "Terminologi baru...",
     "traditionalGreek": "Yunani Tradisional",
+    "standard": "Standar",
+    "documentDefault": "Bawaan dokumen",
     "traditionalGreekV2": "Yunani Tradisional V2",
     "moveUp": "Pindahkan komponen ke atas",
     "removeComponent": "Hapus komponen",
@@ -212,7 +215,8 @@
       "footer": "Footer",
       "lyrics": "Lirik",
       "dropCap": "Huruf Awal Besar",
-      "initialMartyria": "Martyria Awal"
+      "initialMartyria": "Martyria Awal",
+      "initialMartyriaGreek": "Martyria Awal - Yunani"
     }
   },
   "neumePositioning": {

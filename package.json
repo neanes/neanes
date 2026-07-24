@@ -71,7 +71,7 @@
     "electron-builder": "^26.15.3",
     "eslint": "^10.7.0",
     "eslint-plugin-prettier": "^5.5.6",
-    "eslint-plugin-simple-import-sort": "^13.0.0",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
     "eslint-plugin-vue": "^10.9.2",
     "html-to-image": "^1.11.13",
     "i18next-browser-languagedetector": "^8.2.1",

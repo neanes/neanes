@@ -1209,14 +1209,7 @@
                           :key="style.id"
                           :value="style.id"
                           >{{
-                            style.id === traditionalGreekInitialMartyriaStyle.id
-                              ? $t(
-                                  ($) =>
-                                    $.dialog.initialMartyriaStyles
-                                      .traditionalGreek,
-                                  { ns: 'dialog' },
-                                )
-                              : style.displayName
+                            initialMartyriaStyleDisplayName(style)
                           }}</SelectItem
                         >
                       </SelectContent>
@@ -1578,6 +1571,7 @@ import {
   PhTextT,
 } from '@phosphor-icons/vue';
 import type { SelectorParam } from 'i18next';
+import { useTranslation } from 'i18next-vue';
 import type { Component, PropType } from 'vue';
 import { computed, ref } from 'vue';
 
@@ -1626,8 +1620,8 @@ import type { MartyriaElement, TempoElement } from '@/models/Element';
 import { ElementType, NoteElement } from '@/models/Element';
 import {
   builtInInitialMartyriaStyles,
+  getInitialMartyriaStyleDisplayName,
   type InitialMartyriaStyle,
-  traditionalGreekInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import {
   Accidental,
@@ -1803,11 +1797,16 @@ const props = defineProps({
   },
 });
 
+const { t } = useTranslation();
 const open = defineModel<boolean>('open', { required: true });
 const availableInitialMartyriaStyles = computed(() => [
   ...builtInInitialMartyriaStyles,
   ...props.initialMartyriaStyles,
 ]);
+
+function initialMartyriaStyleDisplayName(style: InitialMartyriaStyle) {
+  return getInitialMartyriaStyleDisplayName(style, t);
+}
 
 const isonIcon = NeumeMappingService.getMapping(QuantitativeNeume.Ison).text;
 

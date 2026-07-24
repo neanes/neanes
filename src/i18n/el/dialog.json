@@ -102,10 +102,21 @@
     "completeModeName": "Πλήρες όνομα για ήχο {{mode}}",
     "editTerminology": "Επεξεργασία ορολογίας...",
     "newTerminology": "Νέα ορολογία...",
-    "traditionalGreek": "Παραδοσιακό ελληνικό",
     "standard": "Τυπικό",
     "documentDefault": "Προεπιλογή εγγράφου",
-    "traditionalGreekV2": "Παραδοσιακό ελληνικό V2",
+    "builtInStyles": {
+      "traditionalGreek": "Παραδοσιακό ελληνικό",
+      "traditionalGreekV2": "Παραδοσιακό ελληνικό V2",
+      "englishPlagalFirst": "Αγγλικό - Πλάγιος πρώτα",
+      "englishSignFirst": "Αγγλικό - Σημάδι πρώτα",
+      "englishModeBeforeSign": "Αγγλικό - Ήχος πριν από το σημάδι",
+      "englishOrdinal": "Αγγλικό - Τακτικό αριθμητικό",
+      "englishNumbered": "Αγγλικό - Αριθμημένο",
+      "englishFullName": "Αγγλικό - Πλήρες όνομα",
+      "englishPlagalNumber": "Αγγλικό - Αριθμός πλαγίου",
+      "romanianGlasNumber": "Ρουμανικό - Αριθμός Glas",
+      "romanianGlas": "Ρουμανικό - Glas"
+    },
     "moveUp": "Μετακίνηση στοιχείου επάνω",
     "removeComponent": "Αφαίρεση στοιχείου",
     "componentKinds": {

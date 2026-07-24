@@ -66,7 +66,7 @@
               }}</FieldLabel
               ><Input
                 :disabled="selectedCustomStyle == null"
-                :model-value="selectedStyle.displayName"
+                :model-value="styleDisplayName(selectedStyle)"
                 @update:model-value="updateName"
             /></Field>
             <Field orientation="horizontal"
@@ -586,6 +586,7 @@ import {
   builtInInitialMartyriaStyles,
   cloneInitialMartyriaStyle,
   createInitialMartyriaStartingNoteText,
+  getInitialMartyriaStyleDisplayName,
   type InitialMartyriaCanonicalNote,
   initialMartyriaCanonicalNotes,
   type InitialMartyriaComponent,
@@ -749,9 +750,10 @@ function createStyle() {
   selectedStyleId.value = style.id;
 }
 function duplicateStyle() {
-  const style = cloneInitialMartyriaStyle(selectedStyle.value);
+  const source = selectedStyle.value;
+  const style = cloneInitialMartyriaStyle(source);
   style.id = crypto.randomUUID();
-  style.displayName = `${style.displayName} ${t(($) => $.dialog.initialMartyriaStyles.copy, { ns: 'dialog' })}`;
+  style.displayName = `${styleDisplayName(source)} ${t(($) => $.dialog.initialMartyriaStyles.copy, { ns: 'dialog' })}`;
   workingStyles.value.push(style);
   selectedStyleId.value = style.id;
 }
@@ -1084,17 +1086,7 @@ function handleComponentDragEnd() {
   draggedComponentId.value = null;
 }
 function styleDisplayName(style: InitialMartyriaStyle) {
-  if (style.id === BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1) {
-    return t(($) => $.dialog.initialMartyriaStyles.traditionalGreek, {
-      ns: 'dialog',
-    });
-  }
-  if (style.id === BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV2) {
-    return t(($) => $.dialog.initialMartyriaStyles.traditionalGreekV2, {
-      ns: 'dialog',
-    });
-  }
-  return style.displayName;
+  return getInitialMartyriaStyleDisplayName(style, t);
 }
 function componentKindLabel(
   value: InitialMartyriaComponent | ComponentAuthoringKind,

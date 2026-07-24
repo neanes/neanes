@@ -102,10 +102,21 @@
     "completeModeName": "Nama lengkap untuk modus {{mode}}",
     "editTerminology": "Edit terminologi...",
     "newTerminology": "Terminologi baru...",
-    "traditionalGreek": "Yunani Tradisional",
     "standard": "Standar",
     "documentDefault": "Bawaan dokumen",
-    "traditionalGreekV2": "Yunani Tradisional V2",
+    "builtInStyles": {
+      "traditionalGreek": "Yunani Tradisional",
+      "traditionalGreekV2": "Yunani Tradisional V2",
+      "englishPlagalFirst": "Inggris - Plagal di Awal",
+      "englishSignFirst": "Inggris - Tanda di Awal",
+      "englishModeBeforeSign": "Inggris - Modus sebelum Tanda",
+      "englishOrdinal": "Inggris - Ordinal",
+      "englishNumbered": "Inggris - Bernomor",
+      "englishFullName": "Inggris - Nama Lengkap",
+      "englishPlagalNumber": "Inggris - Nomor Plagal",
+      "romanianGlasNumber": "Rumania - Glas Bernomor",
+      "romanianGlas": "Rumania - Glas"
+    },
     "moveUp": "Pindahkan komponen ke atas",
     "removeComponent": "Hapus komponen",
     "componentKinds": {

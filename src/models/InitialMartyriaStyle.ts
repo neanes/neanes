@@ -1,3 +1,5 @@
+import type { Namespace, SelectorParam, TFunction } from 'i18next';
+
 import type { ModeKeyElement } from '@/models/Element';
 import type { Fthora, Neume } from '@/models/Neumes';
 import { ModeSign } from '@/models/Neumes';
@@ -24,6 +26,38 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   RomanianGlasNumberV1: 'builtin:romanian-glas-number-v1',
   RomanianGlasV1: 'builtin:romanian-glas-v1',
 } as const;
+
+export type BuiltInInitialMartyriaStyleId =
+  (typeof BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS)[keyof typeof BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS];
+
+type InitialMartyriaStyleNameSelector = SelectorParam<'dialog'>;
+
+const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Partial<
+  Record<BuiltInInitialMartyriaStyleId, InitialMartyriaStyleNameSelector>
+> = {
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.traditionalGreek,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV2]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.traditionalGreekV2,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalFirstV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishPlagalFirst,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishSignFirst,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeBeforeSignV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishModeBeforeSign,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishFifthV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishOrdinal,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishNumberV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishNumbered,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalOfSecondV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishFullName,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalNumberV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishPlagalNumber,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.romanianGlasNumber,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.romanianGlas,
+};
 
 export interface InitialMartyriaVisibility {
   modes: ModeKeyMode[];
@@ -547,10 +581,31 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
   ]),
 ];
 
-export function isBuiltInInitialMartyriaStyleId(id: string) {
+export function isBuiltInInitialMartyriaStyleId(
+  id: string,
+): id is BuiltInInitialMartyriaStyleId {
   return Object.values(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS).includes(
-    id as (typeof BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS)[keyof typeof BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS],
+    id as BuiltInInitialMartyriaStyleId,
   );
+}
+
+export function getBuiltInInitialMartyriaStyleNameSelector(
+  styleId: string | null | undefined,
+) {
+  if (styleId == null || !isBuiltInInitialMartyriaStyleId(styleId)) {
+    return null;
+  }
+
+  return BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS[styleId] ?? null;
+}
+
+export function getInitialMartyriaStyleDisplayName(
+  style: InitialMartyriaStyle,
+  t: TFunction<Namespace>,
+) {
+  const selector = getBuiltInInitialMartyriaStyleNameSelector(style.id);
+
+  return selector == null ? style.displayName : t(selector, { ns: 'dialog' });
 }
 
 export function getBuiltInInitialMartyriaStyle(id: string) {

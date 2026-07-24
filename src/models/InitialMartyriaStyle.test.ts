@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { reactive } from 'vue';
 
+import { resources } from '@/i18n';
 import { ModeKeyElement } from '@/models/Element';
 import {
+  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   builtInInitialMartyriaStyles,
   cloneInitialMartyriaStyle,
   createInitialMartyriaStartingNoteText,
+  getBuiltInInitialMartyriaStyleNameSelector,
   getInitialMartyriaContext,
   getInitialMartyriaFixedSeparatorWidth,
   getInitialMartyriaPitchClusterGlyphCount,
@@ -30,6 +33,22 @@ import {
 } from '@/models/ParagraphStyle';
 
 describe('InitialMartyriaStyle', () => {
+  it('maps every available built-in style to a localized name', () => {
+    for (const style of builtInInitialMartyriaStyles) {
+      expect(
+        getBuiltInInitialMartyriaStyleNameSelector(style.id),
+      ).not.toBeNull();
+    }
+
+    const selector = getBuiltInInitialMartyriaStyleNameSelector(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1,
+    );
+    expect(selector?.(resources.ro)).toBe('Română - Glas numerotat');
+    expect(
+      getBuiltInInitialMartyriaStyleNameSelector('custom-style'),
+    ).toBeNull();
+  });
+
   it('resolves the Standard, inherited, and explicit custom style states', () => {
     const documentStyle = builtInInitialMartyriaStyles[2];
     const elementStyle = builtInInitialMartyriaStyles[3];

@@ -41,7 +41,7 @@
               :key="style.id"
               :value="style.id"
             >
-              {{ style.displayName }}
+              {{ initialMartyriaStyleDisplayName(style) }}
             </SelectItem>
           </SelectContent>
         </Select>
@@ -284,6 +284,7 @@ import {
   PhTextAlignLeft,
   PhTextAlignRight,
 } from '@phosphor-icons/vue';
+import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
@@ -309,6 +310,7 @@ import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import {
   builtInInitialMartyriaStyles,
+  getInitialMartyriaStyleDisplayName,
   type InitialMartyriaStyle,
   resolveInitialMartyriaStyleSelection,
 } from '@/models/InitialMartyriaStyle';
@@ -338,6 +340,7 @@ const props = defineProps({
   },
 });
 
+const { t } = useTranslation();
 const emit = defineEmits(['update', 'update:open-sections']);
 
 const inheritStyleValue = '__inherit__';
@@ -346,6 +349,10 @@ const availableInitialMartyriaStyles = computed(() => [
   ...builtInInitialMartyriaStyles,
   ...props.initialMartyriaStyles,
 ]);
+
+function initialMartyriaStyleDisplayName(style: InitialMartyriaStyle) {
+  return getInitialMartyriaStyleDisplayName(style, t);
+}
 const styleSelection = computed(() =>
   resolveInitialMartyriaStyleSelection({
     elementStyleId: props.element.initialMartyriaStyleId,

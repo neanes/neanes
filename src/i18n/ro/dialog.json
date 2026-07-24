@@ -102,10 +102,21 @@
     "completeModeName": "Nume complet pentru modul {{mode}}",
     "editTerminology": "Editează terminologia...",
     "newTerminology": "Terminologie nouă...",
-    "traditionalGreek": "Grecesc tradițional",
     "standard": "Standard",
     "documentDefault": "Implicit pentru document",
-    "traditionalGreekV2": "Grecesc tradițional V2",
+    "builtInStyles": {
+      "traditionalGreek": "Grecesc tradițional",
+      "traditionalGreekV2": "Grecesc tradițional V2",
+      "englishPlagalFirst": "Engleză - Plagal la început",
+      "englishSignFirst": "Engleză - Semnul la început",
+      "englishModeBeforeSign": "Engleză - Mod înaintea semnului",
+      "englishOrdinal": "Engleză - Ordinal",
+      "englishNumbered": "Engleză - Numerotat",
+      "englishFullName": "Engleză - Nume complet",
+      "englishPlagalNumber": "Engleză - Număr plagal",
+      "romanianGlasNumber": "Română - Glas numerotat",
+      "romanianGlas": "Română - Glas"
+    },
     "moveUp": "Mută componenta în sus",
     "removeComponent": "Elimină componenta",
     "componentKinds": {

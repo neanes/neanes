@@ -84,6 +84,7 @@ import {
 import { TATWEEL } from '@/utils/constants';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
+import { getLegacyNeumeFontFamily } from '@/utils/getFontFamilyWithFallback';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { resolveRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
@@ -760,9 +761,6 @@ export class LayoutService {
           // PROCESS MODEKEY
           const modeKeyElement = elements[i] as ModeKeyElement;
 
-          // Compute properties
-          modeKeyElement.computedFontFamily = pageSetup.neumeDefaultFontFamily;
-
           const initialMartyriaStyleSelection =
             resolveInitialMartyriaStyleSelection({
               elementStyleId: modeKeyElement.initialMartyriaStyleId,
@@ -771,6 +769,12 @@ export class LayoutService {
             });
           const usesStandardModeKey =
             initialMartyriaStyleSelection.kind === 'standard';
+
+          // The standard Initial Martyria depends on the spacing built into
+          // the legacy font glyphs. Custom styles use engraving font metrics.
+          modeKeyElement.computedFontFamily = usesStandardModeKey
+            ? getLegacyNeumeFontFamily(pageSetup.neumeDefaultFontFamily)
+            : pageSetup.neumeDefaultFontFamily;
 
           modeKeyElement.computedFontSize =
             usesStandardModeKey && !modeKeyElement.useDefaultStyle

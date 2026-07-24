@@ -61,6 +61,10 @@ export interface InitialMartyriaAppearance {
   fontFamily?: string;
   fontStyle?: string;
   fontSize?: number;
+  fontVariantCaps?: string | null;
+  fontVariantNumeric?: string | null;
+  fontVariantLigatures?: string | null;
+  fontVariantAlternates?: string | null;
   color?: string;
   strokeWidth?: number;
   strokeColor?: string;
@@ -810,6 +814,10 @@ function resolveInitialMartyriaParagraphStyle(
     fontFamily: resolved.fontFamily,
     fontStyle: resolved.fontStyle,
     fontSize: resolved.fontSize,
+    fontVariantCaps: resolved.fontVariantCaps,
+    fontVariantNumeric: resolved.fontVariantNumeric,
+    fontVariantLigatures: resolved.fontVariantLigatures,
+    fontVariantAlternates: resolved.fontVariantAlternates,
     color: resolved.color,
     strokeWidth: resolved.strokeWidth,
     strokeColor: resolved.strokeColor,

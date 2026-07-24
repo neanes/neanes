@@ -2409,6 +2409,7 @@ export class LayoutService {
             baseTextAppearance.fontFamily ?? element.computedFontFamily,
           textFontStyle: baseTextAppearance.fontStyle,
           textFontSize: baseTextAppearance.fontSize ?? element.computedFontSize,
+          textFontVariantCaps: baseTextAppearance.fontVariantCaps,
           neumeFontFamily: element.computedFontFamily,
           neumeFontSize: element.computedFontSize,
         })
@@ -2449,6 +2450,7 @@ export class LayoutService {
           fontFamily,
           fontStyle: appearance.fontStyle,
           fontSize,
+          fontVariantCaps: appearance.fontVariantCaps,
           strokeWidth: appearance.strokeWidth,
           gap: run.content.gap,
           baselineShift: effectiveBaselineShift,
@@ -2493,6 +2495,7 @@ export class LayoutService {
                 noteAppearance.fontFamily ?? element.computedFontFamily,
               textFontStyle: noteAppearance.fontStyle,
               textFontSize: fontSizes.textFontSize,
+              textFontVariantCaps: noteAppearance.fontVariantCaps,
               glyphFontFamily:
                 glyphAppearance.fontFamily ?? element.computedFontFamily,
               glyphFontStyle: glyphAppearance.fontStyle,

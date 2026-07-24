@@ -168,6 +168,23 @@ describe('InitialMartyriaStyle', () => {
       },
     ];
     const paragraphStyles = createDefaultParagraphStyles();
+    const defaultStyle = paragraphStyles.find(
+      (paragraphStyle) =>
+        paragraphStyle.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    )!;
+    defaultStyle.overrides.fontVariantCaps = 'small-caps';
+    defaultStyle.overrides.fontVariantNumeric =
+      'oldstyle-nums proportional-nums';
+    defaultStyle.overrides.fontVariantLigatures = 'no-common-ligatures';
+    defaultStyle.overrides.fontVariantAlternates = 'historical-forms';
+    const greekStyle = paragraphStyles.find(
+      (paragraphStyle) =>
+        paragraphStyle.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+    )!;
+    greekStyle.overrides.fontVariantCaps = 'all-small-caps';
+    greekStyle.overrides.fontVariantNumeric = 'lining-nums tabular-nums';
+    greekStyle.overrides.fontVariantLigatures = 'discretionary-ligatures';
+    greekStyle.overrides.fontVariantAlternates = 'stylistic(swash)';
     const runs = resolveInitialMartyriaStyle({
       style,
       context: getInitialMartyriaContext(new ModeKeyElement()),
@@ -175,12 +192,28 @@ describe('InitialMartyriaStyle', () => {
       pageSetup: new PageSetup(),
     }).runs;
 
-    expect(runs[0].appearance.fontFamily).toBe('Source Serif');
-    expect(runs[1].appearance.fontFamily).toBe('GFS Didot');
+    expect(runs[0].appearance).toMatchObject({
+      fontFamily: 'Source Serif',
+      fontVariantCaps: 'small-caps',
+      fontVariantNumeric: 'oldstyle-nums proportional-nums',
+      fontVariantLigatures: 'no-common-ligatures',
+      fontVariantAlternates: 'historical-forms',
+    });
+    expect(runs[1].appearance).toMatchObject({
+      fontFamily: 'GFS Didot',
+      fontVariantCaps: 'all-small-caps',
+      fontVariantNumeric: 'lining-nums tabular-nums',
+      fontVariantLigatures: 'discretionary-ligatures',
+      fontVariantAlternates: 'stylistic(swash)',
+    });
     expect(
       resolveInitialMartyriaBaseTextAppearance(style, paragraphStyles),
     ).toMatchObject({
       fontFamily: 'Source Serif',
+      fontVariantCaps: 'small-caps',
+      fontVariantNumeric: 'oldstyle-nums proportional-nums',
+      fontVariantLigatures: 'no-common-ligatures',
+      fontVariantAlternates: 'historical-forms',
     });
   });
 

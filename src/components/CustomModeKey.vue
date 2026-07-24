@@ -282,6 +282,7 @@ const matchedNeumeFontSize = computed(() => {
     textFontFamily: textAppearance.fontFamily ?? neumeFontFamily.value,
     textFontStyle: textAppearance.fontStyle,
     textFontSize,
+    textFontVariantCaps: textAppearance.fontVariantCaps,
     neumeFontFamily: neumeFontFamily.value,
     neumeFontSize: neumeFontSize.value,
   });
@@ -409,6 +410,7 @@ const ambitusStyleHigh = computed(() => {
 function getRunStyle(run: ResolvedInitialMartyriaRun) {
   const appearance = run.appearance;
   const isGlyph = run.kind === 'glyph';
+  const isText = run.kind === 'text';
   const font = resolveFontStyle(
     appearance.fontFamily || neumeFontFamily.value,
     appearance.fontStyle,
@@ -428,6 +430,18 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
           : withZoom(appearance.fontSize),
     fontStyle: font.cssFontStyle,
     fontWeight: font.cssFontWeight,
+    fontVariantCaps: isText
+      ? (appearance.fontVariantCaps ?? 'normal')
+      : undefined,
+    fontVariantNumeric: isText
+      ? (appearance.fontVariantNumeric ?? 'normal')
+      : undefined,
+    fontVariantLigatures: isText
+      ? (appearance.fontVariantLigatures ?? 'normal')
+      : undefined,
+    fontVariantAlternates: isText
+      ? (appearance.fontVariantAlternates ?? 'normal')
+      : undefined,
     webkitTextStrokeColor: isGlyph ? undefined : appearance.strokeColor,
     webkitTextStrokeWidth:
       isGlyph || appearance.strokeWidth == null
@@ -560,6 +574,7 @@ function getStackedTextGeometry(run: TextRun) {
     fontFamily: appearance.fontFamily || neumeFontFamily.value,
     fontStyle: appearance.fontStyle,
     fontSize,
+    fontVariantCaps: appearance.fontVariantCaps,
     strokeWidth: appearance.strokeWidth,
     gap: run.content.gap,
     baselineShift,
@@ -625,6 +640,10 @@ function getStartingNoteTextStyle(
     fontSize: withZoom(fontSizes.textFontSize),
     fontStyle: font.cssFontStyle,
     fontWeight: font.cssFontWeight,
+    fontVariantCaps: appearance.fontVariantCaps ?? 'normal',
+    fontVariantNumeric: appearance.fontVariantNumeric ?? 'normal',
+    fontVariantLigatures: appearance.fontVariantLigatures ?? 'normal',
+    fontVariantAlternates: appearance.fontVariantAlternates ?? 'normal',
     lineHeight: withZoom(
       TextMeasurementService.getFontHeight(
         resolveFontCss({
@@ -677,6 +696,7 @@ function getPitchGeometry(run: StartingPitchRun, pitchNote: StartingPitchNote) {
       textFontFamily: textAppearance.fontFamily || neumeFontFamily.value,
       textFontStyle: textAppearance.fontStyle,
       textFontSize: fontSizes.textFontSize,
+      textFontVariantCaps: textAppearance.fontVariantCaps,
       glyphFontFamily: glyphAppearance.fontFamily || neumeFontFamily.value,
       glyphFontStyle: glyphAppearance.fontStyle,
       glyphFontSize: fontSizes.glyphFontSize,

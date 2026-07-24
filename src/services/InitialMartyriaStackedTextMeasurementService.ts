@@ -12,6 +12,7 @@ export function measureInitialMartyriaStackedText(
     fontFamily: string;
     fontStyle?: string;
     fontSize: number;
+    fontVariantCaps?: string | null;
     strokeWidth?: number;
     gap: number;
     baselineShift?: number;
@@ -25,7 +26,11 @@ export function measureInitialMartyriaStackedText(
     fontSize: options.fontSize,
   });
   const rows: StackedTextRowBounds[] = lines.map((line) => {
-    const metrics = TextMeasurementService.getTextMetrics(line, cssFont);
+    const metrics = TextMeasurementService.getTextMetrics(
+      line,
+      cssFont,
+      options.fontVariantCaps ?? 'normal',
+    );
     return {
       advanceWidth: metrics.width,
       inkLeft: -metrics.actualBoundingBoxLeft,

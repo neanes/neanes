@@ -14,6 +14,7 @@ export interface InitialMartyriaPitchMeasurementOptions {
   textFontFamily: string;
   textFontStyle?: string;
   textFontSize: number;
+  textFontVariantCaps?: string | null;
   glyphFontFamily: string;
   glyphFontStyle?: string;
   glyphFontSize: number;
@@ -28,6 +29,7 @@ function atomBounds(
   fontStyle: string | undefined,
   fontSize: number,
   strokeWidth?: number,
+  fontVariantCaps?: string | null,
 ): PitchAtomBounds {
   const font = resolveFontStyle(fontFamily, fontStyle);
   const metrics = TextMeasurementService.getTextMetrics(
@@ -37,6 +39,7 @@ function atomBounds(
       fontStyle: font.cssFontStyle,
       fontSize,
     }),
+    fontVariantCaps ?? 'normal',
   );
   return {
     advanceWidth: metrics.width,
@@ -65,6 +68,7 @@ export function measureInitialMartyriaPitchGeometry(
     options.textFontStyle,
     options.textFontSize,
     options.textStrokeWidth,
+    options.textFontVariantCaps,
   );
   const fthora =
     note.fthoraAbove == null
@@ -99,6 +103,7 @@ export function resolveInitialMartyriaPitchFontSizes(options: {
   textFontFamily: string;
   textFontStyle?: string;
   textFontSize?: number;
+  textFontVariantCaps?: string | null;
   glyphFontSize?: number;
   matchedNeumeFontSize?: number | null;
   neumeFontFamily: string;
@@ -127,6 +132,7 @@ export function getMatchedNeumeFontSize(options: {
   textFontFamily: string;
   textFontStyle?: string;
   textFontSize?: number;
+  textFontVariantCaps?: string | null;
   neumeFontFamily: string;
   neumeFontSize: number;
 }) {
@@ -141,6 +147,7 @@ export function getMatchedNeumeFontSize(options: {
       fontStyle: textFont.cssFontStyle,
       fontSize: options.textFontSize ?? options.neumeFontSize,
     }),
+    options.textFontVariantCaps ?? 'normal',
   );
   const capitalHeight = fontService.getMetrics(
     options.neumeFontFamily,

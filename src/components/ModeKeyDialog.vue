@@ -154,12 +154,16 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
-import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
+import {
+  type InitialMartyriaStyle,
+  resolveInitialMartyriaStyleSelection,
+} from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
+import { getLegacyNeumeFontFamily } from '@/utils/getFontFamilyWithFallback';
 
 const emit = defineEmits<{
   update: [modeKey: ModeKeyElement];
@@ -240,6 +244,15 @@ const modeKeyTemplatesForSelectedMode = computed(() => {
 });
 
 function getModeKeyTemplatesForMode(mode: number) {
+  const styleSelection = resolveInitialMartyriaStyleSelection({
+    elementStyleId: props.element.initialMartyriaStyleId,
+    pageStyleId: props.pageSetup.initialMartyriaStyleId,
+    styles: props.initialMartyriaStyles,
+  });
+  const neumeFontFamily =
+    styleSelection.kind === 'standard'
+      ? getLegacyNeumeFontFamily(props.pageSetup.neumeDefaultFontFamily)
+      : props.pageSetup.neumeDefaultFontFamily;
   const elements = modeKeyTemplates
     .filter((x) => x.mode === mode)
     .map((x) =>
@@ -257,12 +270,12 @@ function getModeKeyTemplatesForMode(mode: number) {
     );
 
   const height = TextMeasurementService.getFontHeight(
-    `${elements[0].fontSize}px ${props.pageSetup.neumeDefaultFontFamily}`,
+    `${elements[0].fontSize}px ${neumeFontFamily}`,
   );
 
   for (const element of elements) {
     element.height = height;
-    element.computedFontFamily = props.pageSetup.neumeDefaultFontFamily;
+    element.computedFontFamily = neumeFontFamily;
   }
 
   return elements;

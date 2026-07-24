@@ -299,15 +299,15 @@ const rightContainer = ref<HTMLElement | null>(null);
 const rightAccessoryWidth = ref(0);
 let rightAccessoryResizeObserver: ResizeObserver | null = null;
 
-const mainStyle = computed(
-  () =>
-    ({
-      clipPath:
-        props.element.alignment === TextBoxAlignment.Right
-          ? undefined
-          : `inset(0 ${rightAccessoryWidth.value}px 0 0)`,
-    }) as CSSProperties,
-);
+const mainStyle = computed(() => {
+  const verticalClipMargin = withZoom(-props.element.height);
+  return {
+    clipPath:
+      props.element.alignment === TextBoxAlignment.Right
+        ? undefined
+        : `inset(${verticalClipMargin} ${rightAccessoryWidth.value}px ${verticalClipMargin} 0)`,
+  } as CSSProperties;
+});
 
 onMounted(() => {
   if (rightContainer.value == null) {
@@ -829,7 +829,8 @@ function getTextRunContent(run: ResolvedInitialMartyriaRun) {
 
 .mode-key-main {
   display: block;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

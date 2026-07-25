@@ -604,6 +604,10 @@ import {
 } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
 import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
+import {
+  areStyleDisplayNamesValid,
+  getNextAvailableStyleName,
+} from '@/utils/styleNames';
 
 const props = defineProps({
   paragraphStyles: {
@@ -715,18 +719,9 @@ const alternateFlags = useAlternateFlags(
 );
 
 const canSubmit = computed(() => {
-  const names = new Set<string>();
-
-  return styles.value.every((style) => {
-    const name = styleDisplayName(style).trim();
-
-    if (name.length === 0 || names.has(name)) {
-      return false;
-    }
-
-    names.add(name);
-    return true;
-  });
+  return areStyleDisplayNamesValid(
+    styles.value.map((style) => styleDisplayName(style)),
+  );
 });
 
 const selectedStyleHasOverrides = computed(() =>
@@ -914,8 +909,9 @@ function updateAlignmentOverride(value: unknown) {
 
 function createStyle() {
   const style = new ParagraphStyle();
-  style.displayName = getNextStyleName(
+  style.displayName = getNextAvailableStyleName(
     t(($) => $.dialog.paragraphStyles.newStyleName, { ns: 'dialog' }),
+    styles.value.map((item) => styleDisplayName(item)),
   );
   style.parentStyleId = defaultParagraphStyleId;
   styles.value.push(style);
@@ -931,11 +927,12 @@ function duplicateSelectedStyle() {
 
   const clone = style.clone();
   clone.id = crypto.randomUUID();
-  clone.displayName = getNextStyleName(
+  clone.displayName = getNextAvailableStyleName(
     t(($) => $.dialog.paragraphStyles.copyStyleName, {
       ns: 'dialog',
       name: styleDisplayName(style),
     }),
+    styles.value.map((item) => styleDisplayName(item)),
   );
   if (style.id === defaultParagraphStyleId) {
     clone.parentStyleId = defaultParagraphStyleId;
@@ -966,24 +963,6 @@ function deleteSelectedStyle() {
       return updated;
     });
   selectedStyleId.value = defaultParagraphStyleId;
-}
-
-function getNextStyleName(baseName: string) {
-  const existingNames = new Set(
-    styles.value.map((style) => styleDisplayName(style)),
-  );
-
-  if (!existingNames.has(baseName)) {
-    return baseName;
-  }
-
-  let suffix = 2;
-
-  while (existingNames.has(`${baseName} ${suffix}`)) {
-    suffix++;
-  }
-
-  return `${baseName} ${suffix}`;
 }
 
 function paragraphStylesEqual(a: ParagraphStyle, b: ParagraphStyle) {

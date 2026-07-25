@@ -634,6 +634,10 @@ import { modeKeyTemplates } from '@/models/ModeKeys';
 import { getModeSignLabelSelector } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import {
+  areStyleDisplayNamesValid,
+  getNextAvailableStyleName,
+} from '@/utils/styleNames';
 import { Unit } from '@/utils/Unit';
 
 const props = defineProps<{
@@ -687,10 +691,14 @@ const selectedCustomStyle = computed(
     workingStyles.value.find((style) => style.id === selectedStyleId.value) ??
     null,
 );
-const stylesAreValid = computed(() =>
-  workingStyles.value.every(
-    (style) => validateInitialMartyriaStyle(style).length === 0,
-  ),
+const stylesAreValid = computed(
+  () =>
+    areStyleDisplayNamesValid(
+      allStyles.value.map((style) => styleDisplayName(style)),
+    ) &&
+    workingStyles.value.every(
+      (style) => validateInitialMartyriaStyle(style).length === 0,
+    ),
 );
 const usesCustomStartingNoteText = computed(() =>
   selectedStyle.value.components.some(
@@ -770,7 +778,14 @@ function applyStyles() {
   if (!stylesAreValid.value) {
     return false;
   }
-  emit('update', workingStyles.value.map(cloneInitialMartyriaStyle));
+  emit(
+    'update',
+    workingStyles.value.map((style) => {
+      const updated = cloneInitialMartyriaStyle(style);
+      updated.displayName = updated.displayName.trim();
+      return updated;
+    }),
+  );
   return true;
 }
 function submit() {
@@ -788,9 +803,12 @@ function useForDocument() {
 function createStyle() {
   const style = cloneInitialMartyriaStyle(traditionalGreekInitialMartyriaStyle);
   style.id = crypto.randomUUID();
-  style.displayName = t(($) => $.dialog.initialMartyriaStyles.newStyle, {
-    ns: 'dialog',
-  });
+  style.displayName = getNextAvailableStyleName(
+    t(($) => $.dialog.initialMartyriaStyles.newStyle, {
+      ns: 'dialog',
+    }),
+    allStyles.value.map((item) => styleDisplayName(item)),
+  );
   workingStyles.value.push(style);
   selectedStyleId.value = style.id;
 }
@@ -798,7 +816,10 @@ function duplicateStyle() {
   const source = selectedStyle.value;
   const style = cloneInitialMartyriaStyle(source);
   style.id = crypto.randomUUID();
-  style.displayName = `${styleDisplayName(source)} ${t(($) => $.dialog.initialMartyriaStyles.copy, { ns: 'dialog' })}`;
+  style.displayName = getNextAvailableStyleName(
+    `${styleDisplayName(source)} ${t(($) => $.dialog.initialMartyriaStyles.copy, { ns: 'dialog' })}`,
+    allStyles.value.map((item) => styleDisplayName(item)),
+  );
   workingStyles.value.push(style);
   selectedStyleId.value = style.id;
 }

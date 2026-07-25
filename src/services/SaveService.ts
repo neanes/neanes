@@ -1790,6 +1790,7 @@ export class SaveService {
     element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.showAmbitus = e.showAmbitus || undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
+    element.inline = e.inline || undefined;
     element.initialMartyriaStyleId = e.initialMartyriaStyleId;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo || undefined;
   }
@@ -2761,6 +2762,7 @@ export class SaveService {
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.showAmbitus = e.showAmbitus === true;
     element.useDefaultStyle = e.useDefaultStyle === true;
+    element.inline = e.inline === true;
     element.initialMartyriaStyleId = e.initialMartyriaStyleId;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo === true;
 

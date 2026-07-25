@@ -61,6 +61,13 @@ describe('initial martyria pitch geometry', () => {
     expect(geometry.fthora!.top).toBe(-12);
   });
 
+  it('uses painted ink rather than the full line box for outer extents', () => {
+    const geometry = getInitialMartyriaPitchGeometry(atom());
+
+    expect(geometry.top).toBe(-8);
+    expect(geometry.bottom).toBe(2);
+  });
+
   it('includes stroke expansion in the union bounds', () => {
     const withoutStroke = getInitialMartyriaPitchGeometry(atom());
     const withStroke = getInitialMartyriaPitchGeometry(

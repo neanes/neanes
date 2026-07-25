@@ -1204,6 +1204,7 @@ describe('SaveService font styles', () => {
     standard.initialMartyriaStyleId = null;
     const custom = new ModeKeyElement();
     custom.initialMartyriaStyleId = 'custom:element-style';
+    custom.inline = true;
     score.staff.elements = [inherited, standard, custom];
 
     const saved = SaveService.SaveScoreToJson(score);
@@ -1219,6 +1220,7 @@ describe('SaveService font styles', () => {
     expect(savedModeKeys[2].initialMartyriaStyleId).toBe(
       'custom:element-style',
     );
+    expect(savedModeKeys[2].inline).toBe(true);
     expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
       'custom:document-style',
     );
@@ -1227,6 +1229,7 @@ describe('SaveService font styles', () => {
     expect(loadedModeKeys[2].initialMartyriaStyleId).toBe(
       'custom:element-style',
     );
+    expect(loadedModeKeys[2].inline).toBe(true);
   });
 
   it('loads old scores without mode key style fields as Standard by default', () => {

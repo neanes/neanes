@@ -161,13 +161,19 @@
         />
       </span>
       <Neume
-        v-if="element.tempo != null && !element.tempoAlignRight"
+        v-if="
+          element.tempo != null && (!element.tempoAlignRight || element.inline)
+        "
         :neume="element.tempo"
         :style="tempoStyle"
       />
     </span>
-    <span ref="rightContainer" class="right-container">
-      <span v-if="element.showAmbitus" class="ambitus">
+    <span
+      ref="rightContainer"
+      class="right-container"
+      :style="rightContainerStyle"
+    >
+      <span v-if="element.showAmbitus && !element.inline" class="ambitus">
         <span class="ambitus-text">(</span>
         <span class="ambitus-low" :style="ambitusStyleLow">
           <Neume :neume="element.ambitusLowNote" />
@@ -182,7 +188,9 @@
       </span>
 
       <Neume
-        v-if="element.tempo != null && element.tempoAlignRight"
+        v-if="
+          element.tempo != null && element.tempoAlignRight && !element.inline
+        "
         :neume="element.tempo"
         :style="tempoStyle"
       />
@@ -305,12 +313,18 @@ let rightAccessoryResizeObserver: ResizeObserver | null = null;
 const mainStyle = computed(() => {
   const verticalClipMargin = withZoom(-props.element.height);
   return {
+    position: 'relative',
+    top: withZoom(props.element.computedFlowTop - props.element.computedTop),
     clipPath:
       props.element.alignment === TextBoxAlignment.Right
         ? undefined
         : `inset(${verticalClipMargin} ${rightAccessoryWidth.value}px ${verticalClipMargin} 0)`,
   } as CSSProperties;
 });
+
+const rightContainerStyle = computed(() => ({
+  top: withZoom(props.element.computedFlowTop - props.element.computedTop),
+}));
 
 onMounted(() => {
   if (rightContainer.value == null) {
@@ -841,7 +855,7 @@ function getTextRunContent(run: ResolvedInitialMartyriaRun) {
 
 <style scoped>
 .mode-key-container {
-  border: 1px dotted black;
+  outline: 1px dotted black;
   box-sizing: border-box;
   line-height: normal;
   user-select: none;

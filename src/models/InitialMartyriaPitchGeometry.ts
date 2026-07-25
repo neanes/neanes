@@ -127,11 +127,11 @@ export function getInitialMartyriaPitchGeometry(
     ...atoms.map((atom) => atom.left + atom.bounds.inkRight),
   );
   const top = Math.min(
-    textPlacement.baseline - text.lineAscent - strokeOverflow,
+    textPlacement.baseline + text.inkTop - strokeOverflow,
     ...atoms.map((atom) => atom.baseline + atom.bounds.inkTop),
   );
   const bottom = Math.max(
-    textPlacement.baseline + text.lineDescent + strokeOverflow,
+    textPlacement.baseline + text.inkBottom + strokeOverflow,
     ...atoms.map((atom) => atom.baseline + atom.bounds.inkBottom),
   );
 

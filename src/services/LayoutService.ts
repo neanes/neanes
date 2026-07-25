@@ -27,8 +27,13 @@ import type { Header } from '@/models/Header';
 import { INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM } from '@/models/InitialMartyriaStackedTextGeometry';
 import {
   getInitialMartyriaContext,
+  getInitialMartyriaFixedSeparatorWidth,
+  getInitialMartyriaSeparatorAfter,
+  getInitialMartyriaSeparatorBefore,
   type InitialMartyriaAppearance,
   type InitialMartyriaStyle,
+  isInitialMartyriaStartingNoteRun,
+  type ResolvedInitialMartyriaRun,
   resolveInitialMartyriaBaseTextAppearance,
   resolveInitialMartyriaStyle,
   resolveInitialMartyriaStyleSelection,
@@ -46,6 +51,7 @@ import type { Fthora, Neume } from '@/models/Neumes';
 import {
   GorgonNeume,
   MeasureBar,
+  ModeSign,
   NeumeSelection,
   Note,
   NoteIndicator,
@@ -92,6 +98,7 @@ import { Unit } from '@/utils/Unit';
 import { fontService } from './FontService';
 import {
   getInitialMartyriaNeumeBaselineCorrection,
+  getInitialMartyriaPitchTrailingGlueWidth,
   getMatchedNeumeFontSize,
   measureInitialMartyriaPitchGeometry,
   resolveInitialMartyriaPitchFontSizes,
@@ -450,6 +457,11 @@ export class LayoutService {
 
     const lyricAscent =
       TextMeasurementService.getFontBoundingBoxAscent(defaultLyricsFontCss);
+    const notationTextBaseline =
+      neumeAscent -
+      pageSetup.neumeDefaultFontSize * oligonMidpoint -
+      lyricHeight / 2 +
+      lyricAscent;
 
     const vareiaMapping = NeumeMappingService.getMapping(
       VocalExpressionNeume.Vareia,
@@ -797,25 +809,72 @@ export class LayoutService {
               : modeKeyElement.heightAdjustment
             : 0;
 
-          modeKeyElement.height = usesStandardModeKey
-            ? TextMeasurementService.getFontHeight(
-                `${modeKeyElement.computedFontSize}px ${modeKeyElement.computedFontFamily}`,
-              ) + modeKeyElement.computedHeightAdjustment
-            : this.getInitialMartyriaHeight(
-                modeKeyElement,
-                pageSetup,
-                initialMartyriaStyleSelection.style,
-                score.paragraphStyles,
+          if (usesStandardModeKey) {
+            const font = `${modeKeyElement.computedFontSize}px ${modeKeyElement.computedFontFamily}`;
+            const ascent =
+              TextMeasurementService.getFontBoundingBoxAscent(font);
+            const descent =
+              TextMeasurementService.getFontBoundingBoxDescent(font);
+            modeKeyElement.computedTop = -ascent;
+            modeKeyElement.computedBottom =
+              descent + modeKeyElement.computedHeightAdjustment;
+            modeKeyElement.computedFlowTop = -ascent;
+            if (modeKeyElement.inline && modeKeyElement.tempo != null) {
+              const tempoMetrics = TextMeasurementService.getTextMetrics(
+                NeumeMappingService.getMapping(modeKeyElement.tempo).text,
+                font,
               );
+              const tempoBaseline = -0.45 * modeKeyElement.computedFontSize;
+              const tempoStrokeOverflow = pageSetup.tempoDefaultStrokeWidth / 2;
+              modeKeyElement.computedTop = Math.min(
+                modeKeyElement.computedTop,
+                tempoBaseline -
+                  tempoMetrics.actualBoundingBoxAscent -
+                  tempoStrokeOverflow,
+              );
+              modeKeyElement.computedBottom = Math.max(
+                modeKeyElement.computedBottom,
+                tempoBaseline +
+                  tempoMetrics.actualBoundingBoxDescent +
+                  tempoStrokeOverflow,
+              );
+            }
+            modeKeyElement.height =
+              modeKeyElement.computedBottom - modeKeyElement.computedTop;
+            if (modeKeyElement.inline) {
+              modeKeyElement.width =
+                this.getStandardInitialMartyriaWidth(modeKeyElement);
+            }
+          } else {
+            const geometry = this.getInitialMartyriaGeometry(
+              modeKeyElement,
+              pageSetup,
+              initialMartyriaStyleSelection.style,
+              score.paragraphStyles,
+            );
+            modeKeyElement.computedTop = geometry.top;
+            modeKeyElement.computedBottom = geometry.bottom;
+            modeKeyElement.computedFlowTop = geometry.flowTop;
+            modeKeyElement.height = geometry.bottom - geometry.top;
+            if (modeKeyElement.inline) {
+              modeKeyElement.width = geometry.width;
+            }
+          }
 
-          this.addBox(
-            pageSetup.innerPageWidth,
-            modeKeyElement,
-            layoutWorkspace,
-          );
+          const elementWidthPx = modeKeyElement.inline
+            ? modeKeyElement.width
+            : pageSetup.innerPageWidth;
+          if (modeKeyElement.inline) {
+            this.addLyricReservation(
+              elementWidthPx,
+              modeKeyElement,
+              layoutWorkspace,
+            );
+          }
+          this.addBox(elementWidthPx, modeKeyElement, layoutWorkspace);
           this.addGlue(standardGlue, layoutWorkspace, 'standard');
 
-          if (!lineBreak) {
+          if (!modeKeyElement.inline && !lineBreak) {
             lineBreak = true;
             lineBreakType = LineBreakType.Justify;
           }
@@ -1562,8 +1621,9 @@ export class LayoutService {
             lineBreak = true;
           }
         } else if (nextElement?.elementType === ElementType.ModeKey) {
-          // TODO support inline mode keys
-          lineBreak = true;
+          if (!(nextElement as ModeKeyElement).inline) {
+            lineBreak = true;
+          }
         }
       }
 
@@ -1751,15 +1811,25 @@ export class LayoutService {
         } else if (element.elementType === ElementType.RichTextBox) {
           marginTop = (element as RichTextBoxElement).marginTop;
         } else if (element.elementType === ElementType.ModeKey) {
-          marginTop = (element as ModeKeyElement).marginTop;
+          const modeKey = element as ModeKeyElement;
+          if (!modeKey.inline) {
+            marginTop = modeKey.marginTop;
+          }
         }
 
-        element.y =
+        const lineTop =
           pageSetup.topMargin +
           extraHeaderHeightPx +
           marginTop +
           currentPageHeightPx -
           lastLineHeightPx;
+        element.y =
+          element.elementType === ElementType.ModeKey &&
+          (element as ModeKeyElement).inline
+            ? lineTop +
+              notationTextBaseline +
+              (element as ModeKeyElement).computedTop
+            : lineTop;
         element.width = position.width;
 
         // Fill-width elements were encoded using their intrinsic placeholder
@@ -2378,11 +2448,71 @@ export class LayoutService {
         !(element as RichTextBoxElement).inline) ||
       (element.elementType === ElementType.ImageBox &&
         !(element as ImageBoxElement).inline) ||
-      element.elementType === ElementType.ModeKey
+      (element.elementType === ElementType.ModeKey &&
+        !(element as ModeKeyElement).inline)
     );
   }
 
-  private static getInitialMartyriaHeight(
+  private static getStandardInitialMartyriaWidth(element: ModeKeyElement) {
+    const neumes: Neume[] = [ModeSign.Ekhos];
+    if (element.isPlagal) {
+      neumes.push(ModeSign.Plagal);
+    }
+    if (element.isVarys) {
+      neumes.push(ModeSign.Varys);
+    }
+    neumes.push(element.martyria);
+    for (const neume of [
+      element.note,
+      element.fthoraAboveNote,
+      element.quantitativeNeumeAboveNote,
+      element.note2,
+      element.fthoraAboveNote2,
+      element.quantitativeNeumeAboveNote2,
+    ]) {
+      if (neume != null) {
+        neumes.push(neume);
+      }
+    }
+    let width = TextMeasurementService.getTextWidth(
+      neumes
+        .map((neume) => NeumeMappingService.getMapping(neume).text)
+        .join(''),
+      `${element.computedFontSize}px ${element.computedFontFamily}`,
+    );
+    if (element.quantitativeNeumeRight != null) {
+      width +=
+        element.computedFontSize *
+        fontService.getStandardGlue(element.computedFontFamily).width;
+      width += TextMeasurementService.getTextWidth(
+        [
+          element.quantitativeNeumeRight,
+          element.fthoraAboveQuantitativeNeumeRight,
+        ]
+          .filter((neume): neume is QuantitativeNeume | Fthora => neume != null)
+          .map((neume) => NeumeMappingService.getMapping(neume).text)
+          .join(''),
+        `${element.computedFontSize}px ${element.computedFontFamily}`,
+      );
+    } else if (element.fthoraAboveQuantitativeNeumeRight != null) {
+      width += TextMeasurementService.getTextWidth(
+        NeumeMappingService.getMapping(
+          element.fthoraAboveQuantitativeNeumeRight,
+        ).text,
+        `${element.computedFontSize}px ${element.computedFontFamily}`,
+      );
+    }
+    if (element.tempo != null) {
+      width += 8;
+      width += TextMeasurementService.getTextWidth(
+        NeumeMappingService.getMapping(element.tempo).text,
+        `${element.computedFontSize}px ${element.computedFontFamily}`,
+      );
+    }
+    return width;
+  }
+
+  private static getInitialMartyriaGeometry(
     element: ModeKeyElement,
     pageSetup: PageSetup,
     style: InitialMartyriaStyle,
@@ -2394,8 +2524,6 @@ export class LayoutService {
       paragraphStyles,
       pageSetup,
     });
-    let top = 0;
-    let bottom = 0;
     const baseTextAppearance = resolveInitialMartyriaBaseTextAppearance(
       resolution.style,
       paragraphStyles,
@@ -2422,8 +2550,111 @@ export class LayoutService {
       matchedNeumeFontSize,
       neumeFontSize: element.computedFontSize,
     });
+    const baseFont = resolveFontCss({
+      fontFamily: hasCustomText
+        ? (baseTextAppearance.fontFamily ?? element.computedFontFamily)
+        : element.computedFontFamily,
+      fontStyle: hasCustomText
+        ? (baseTextAppearance.fontStyle ?? DEFAULT_FONT_STYLE)
+        : DEFAULT_FONT_STYLE,
+      fontSize: hasCustomText
+        ? (baseTextAppearance.fontSize ?? element.computedFontSize)
+        : element.computedFontSize,
+    });
+    let top = -TextMeasurementService.getFontBoundingBoxAscent(baseFont);
+    let bottom = TextMeasurementService.getFontBoundingBoxDescent(baseFont);
+    const flowFont = resolveFontCss({
+      fontFamily: element.computedFontFamily,
+      fontStyle: DEFAULT_FONT_STYLE,
+      fontSize: element.computedFontSize,
+    });
+    let flowTop = -TextMeasurementService.getFontBoundingBoxAscent(flowFont);
+    let width = 0;
 
-    for (const run of resolution.runs) {
+    const getEffectiveRunFontSize = (run: ResolvedInitialMartyriaRun) => {
+      if (run.kind === 'startingPitch') {
+        return resolveInitialMartyriaPitchFontSizes({
+          textFontFamily:
+            run.noteText.appearance.fontFamily ?? element.computedFontFamily,
+          textFontStyle: run.noteText.appearance.fontStyle,
+          textFontSize: run.noteText.appearance.fontSize,
+          matchedNeumeFontSize,
+          neumeFontFamily: element.computedFontFamily,
+          neumeFontSize: element.computedFontSize,
+        }).glyphFontSize;
+      }
+      return (
+        run.appearance.fontSize ??
+        (run.kind === 'glyph' ? matchedNeumeFontSize : undefined) ??
+        element.computedFontSize
+      );
+    };
+    const getWordSpaceOwner = (run: ResolvedInitialMartyriaRun | undefined) => {
+      if (run?.kind === 'startingPitch') {
+        const appearance = run.noteText.appearance;
+        const sizes = resolveInitialMartyriaPitchFontSizes({
+          textFontFamily: appearance.fontFamily ?? element.computedFontFamily,
+          textFontStyle: appearance.fontStyle,
+          textFontSize: appearance.fontSize,
+          matchedNeumeFontSize,
+          neumeFontFamily: element.computedFontFamily,
+          neumeFontSize: element.computedFontSize,
+        });
+        return { appearance, fontSize: sizes.textFontSize };
+      }
+      if (run?.kind === 'text' && run.usesParagraphStyleOverride) {
+        return {
+          appearance: run.appearance,
+          fontSize: run.appearance.fontSize ?? element.computedFontSize,
+        };
+      }
+      return null;
+    };
+    const getSeparatorWidth = (index: number, trailing = false) => {
+      const run = resolution.runs[index];
+      const separator = trailing
+        ? getInitialMartyriaSeparatorAfter(resolution.runs, index)
+        : getInitialMartyriaSeparatorBefore(resolution.runs, index);
+      if (separator === 'none') {
+        return 0;
+      }
+      if (separator === 'wordSpace') {
+        const owner =
+          getWordSpaceOwner(resolution.runs[index - 1]) ??
+          getWordSpaceOwner(run);
+        const appearance = owner?.appearance ?? baseTextAppearance;
+        const font = resolveFontCss({
+          fontFamily: appearance.fontFamily ?? element.computedFontFamily,
+          fontStyle: appearance.fontStyle ?? DEFAULT_FONT_STYLE,
+          fontSize:
+            owner?.fontSize ?? appearance.fontSize ?? element.computedFontSize,
+        });
+        return TextMeasurementService.getTextWidth(
+          ' ',
+          font,
+          appearance.fontVariantCaps ?? 'normal',
+        );
+      }
+      const before = resolution.runs[index - 1];
+      const owner =
+        separator === 'startingNote' &&
+        before != null &&
+        isInitialMartyriaStartingNoteRun(before)
+          ? before
+          : separator === 'modeSign' &&
+              before?.kind === 'glyph' &&
+              before.semantic === 'modeSign'
+            ? before
+            : run;
+      const size =
+        separator === 'varys'
+          ? getEffectiveRunFontSize(run)
+          : getEffectiveRunFontSize(owner);
+      return (getInitialMartyriaFixedSeparatorWidth(separator) ?? 0) * size;
+    };
+
+    for (const [runIndex, run] of resolution.runs.entries()) {
+      width += getSeparatorWidth(runIndex);
       const appearance =
         run.kind === 'startingPitch' ? run.noteText.appearance : run.appearance;
       const fontFamily = appearance.fontFamily ?? element.computedFontFamily;
@@ -2458,11 +2689,10 @@ export class LayoutService {
         });
         top = Math.min(top, geometry.top);
         bottom = Math.max(bottom, geometry.bottom);
+        flowTop = Math.min(flowTop, geometry.top);
+        width += geometry.width;
         continue;
       }
-
-      const ascent = TextMeasurementService.getFontBoundingBoxAscent(font);
-      const descent = TextMeasurementService.getFontBoundingBoxDescent(font);
 
       if (run.kind === 'startingPitch') {
         const noteAppearance = run.noteText.appearance;
@@ -2505,46 +2735,126 @@ export class LayoutService {
           );
           top = Math.min(top, geometry.top - wrapperBaselineShift);
           bottom = Math.max(bottom, geometry.bottom - wrapperBaselineShift);
+          flowTop = Math.min(flowTop, geometry.top);
+          width += geometry.width;
+          if (note === run.cluster.primary && run.cluster.secondary != null) {
+            width +=
+              (getInitialMartyriaFixedSeparatorWidth('plagal') ?? 0) *
+              fontSizes.glyphFontSize;
+          }
         }
         if (run.cluster.trailingGlyphs.length > 0) {
+          const trailingGlyphText = run.cluster.trailingGlyphs
+            .map((neume) => NeumeMappingService.getMapping(neume)?.text ?? '?')
+            .join('');
           const trailingGlyphFont = resolveFontCss({
             fontFamily:
               glyphAppearance.fontFamily ?? element.computedFontFamily,
             fontStyle: glyphAppearance.fontStyle ?? DEFAULT_FONT_STYLE,
             fontSize: fontSizes.glyphFontSize,
           });
-          const trailingAscent =
-            TextMeasurementService.getFontBoundingBoxAscent(trailingGlyphFont);
-          const trailingDescent =
-            TextMeasurementService.getFontBoundingBoxDescent(trailingGlyphFont);
+          const trailingMetrics = TextMeasurementService.getTextMetrics(
+            trailingGlyphText,
+            trailingGlyphFont,
+          );
           top = Math.min(
             top,
             neumeBaselineCorrection -
-              trailingAscent -
+              trailingMetrics.actualBoundingBoxAscent -
               wrapperBaselineShift -
               pageSetup.modeKeyDefaultStrokeWidth / 2,
           );
           bottom = Math.max(
             bottom,
             neumeBaselineCorrection +
-              trailingDescent -
+              trailingMetrics.actualBoundingBoxDescent -
               wrapperBaselineShift +
               pageSetup.modeKeyDefaultStrokeWidth / 2,
           );
+          flowTop = Math.min(
+            flowTop,
+            -TextMeasurementService.getFontBoundingBoxAscent(trailingGlyphFont),
+          );
+          if (run.cluster.primary != null || run.cluster.secondary != null) {
+            width += getInitialMartyriaPitchTrailingGlueWidth(
+              element.computedFontFamily,
+              fontSizes.glyphFontSize,
+            );
+          }
+          width += trailingMetrics.width;
         }
         continue;
       }
 
+      const text =
+        run.kind === 'glyph'
+          ? run.glyphs
+              .map(
+                (neume) => NeumeMappingService.getMapping(neume)?.text ?? '?',
+              )
+              .join('')
+          : run.content.layout === 'inline'
+            ? run.content.text
+            : '';
+      const metrics = TextMeasurementService.getTextMetrics(
+        text,
+        font,
+        run.kind === 'text'
+          ? (appearance.fontVariantCaps ?? 'normal')
+          : 'normal',
+      );
+      width += metrics.width;
+      flowTop = Math.min(
+        flowTop,
+        -TextMeasurementService.getFontBoundingBoxAscent(font),
+      );
       const effectiveBaselineShift =
         baselineShift - (run.kind === 'glyph' ? neumeBaselineCorrection : 0);
-      top = Math.min(top, -effectiveBaselineShift - ascent - strokeOverflow);
+      top = Math.min(
+        top,
+        -effectiveBaselineShift -
+          metrics.actualBoundingBoxAscent -
+          strokeOverflow,
+      );
       bottom = Math.max(
         bottom,
-        -effectiveBaselineShift + descent + strokeOverflow,
+        -effectiveBaselineShift +
+          metrics.actualBoundingBoxDescent +
+          strokeOverflow,
       );
     }
 
-    return bottom - top;
+    if (resolution.runs.length > 0) {
+      width += getSeparatorWidth(resolution.runs.length - 1, true);
+    }
+    if (element.tempo != null) {
+      const tempoFont = resolveFontCss({
+        fontFamily: element.computedFontFamily,
+        fontStyle: DEFAULT_FONT_STYLE,
+        fontSize: element.computedFontSize,
+      });
+      const tempoMetrics = TextMeasurementService.getTextMetrics(
+        NeumeMappingService.getMapping(element.tempo).text,
+        tempoFont,
+      );
+      const tempoBaseline = -0.45 * element.computedFontSize;
+      const tempoStrokeOverflow = pageSetup.tempoDefaultStrokeWidth / 2;
+      top = Math.min(
+        top,
+        tempoBaseline -
+          tempoMetrics.actualBoundingBoxAscent -
+          tempoStrokeOverflow,
+      );
+      bottom = Math.max(
+        bottom,
+        tempoBaseline +
+          tempoMetrics.actualBoundingBoxDescent +
+          tempoStrokeOverflow,
+      );
+      width += 8 + tempoMetrics.width;
+    }
+
+    return { bottom, flowTop, top, width };
   }
 
   private static addBox(
@@ -3578,6 +3888,8 @@ export class LayoutService {
         return (element as RichTextBoxElement).inline;
       case ElementType.ImageBox:
         return (element as ImageBoxElement).inline;
+      case ElementType.ModeKey:
+        return (element as ModeKeyElement).inline;
       default:
         return false;
     }
@@ -4957,7 +5269,9 @@ export class LayoutService {
           }
           break;
         case ElementType.ModeKey:
-          if (modeKey === null) {
+          if ((element as ModeKeyElement).inline) {
+            hasNeumeContent = true;
+          } else if (modeKey === null) {
             modeKey = element as ModeKeyElement;
           }
           break;
@@ -5240,6 +5554,9 @@ export class LayoutService {
         modeKey.computedHeightAdjustment;
       modeKey.computedColorPrevious = modeKey.computedColor;
       modeKey.computedStrokeWidthPrevious = modeKey.computedStrokeWidth;
+      modeKey.computedTopPrevious = modeKey.computedTop;
+      modeKey.computedBottomPrevious = modeKey.computedBottom;
+      modeKey.computedFlowTopPrevious = modeKey.computedFlowTop;
       modeKey.ambitusHighNotePrevious = modeKey.ambitusHighNote;
       modeKey.ambitusHighRootSignPrevious = modeKey.ambitusHighRootSign;
       modeKey.ambitusLowNotePrevious = modeKey.ambitusLowNote;
@@ -5351,6 +5668,9 @@ export class LayoutService {
           modeKey.computedHeightAdjustment ||
         modeKey.computedColorPrevious !== modeKey.computedColor ||
         modeKey.computedStrokeWidthPrevious !== modeKey.computedStrokeWidth ||
+        modeKey.computedTopPrevious !== modeKey.computedTop ||
+        modeKey.computedBottomPrevious !== modeKey.computedBottom ||
+        modeKey.computedFlowTopPrevious !== modeKey.computedFlowTop ||
         modeKey.ambitusHighNote !== modeKey.ambitusHighNotePrevious ||
         modeKey.ambitusHighRootSign !== modeKey.ambitusHighRootSignPrevious ||
         modeKey.ambitusLowNote !== modeKey.ambitusLowNotePrevious ||
@@ -6473,7 +6793,9 @@ export class LayoutService {
       (element.elementType === ElementType.RichTextBox &&
         (element as RichTextBoxElement).inline) ||
       (element.elementType === ElementType.ImageBox &&
-        (element as ImageBoxElement).inline)
+        (element as ImageBoxElement).inline) ||
+      (element.elementType === ElementType.ModeKey &&
+        (element as ModeKeyElement).inline)
     );
   }
 

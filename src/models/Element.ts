@@ -1137,6 +1137,7 @@ export class ModeKeyElement extends ScoreElement {
   public heightAdjustment: number = 0;
   public bpm: number = 120;
   public useDefaultStyle: boolean = true;
+  public inline: boolean = false;
   public initialMartyriaStyleId: string | null | undefined = undefined;
   public ignoreAttractions: boolean = false;
   public permanentEnharmonicZo: boolean = false;
@@ -1155,12 +1156,18 @@ export class ModeKeyElement extends ScoreElement {
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
   public computedHeightAdjustment: number = 0;
+  public computedTop: number = 0;
+  public computedBottom: number = 0;
+  public computedFlowTop: number = 0;
 
   // Re-render helpers
   public computedFontFamilyPrevious: string = '';
   public computedFontSizePrevious: number = Unit.fromPt(20);
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
+  public computedTopPrevious: number = 0;
+  public computedBottomPrevious: number = 0;
+  public computedFlowTopPrevious: number = 0;
   public computedHeightAdjustmentPrevious: number = 0;
   public ambitusLowNotePrevious: Note = Note.Pa;
   public ambitusLowRootSignPrevious: RootSign = RootSign.Alpha;
@@ -1246,6 +1253,7 @@ export class ModeKeyElement extends ScoreElement {
       marginBottom: this.marginBottom,
       marginTop: this.marginTop,
       useDefaultStyle: this.useDefaultStyle,
+      inline: this.inline,
       initialMartyriaStyleId: this.initialMartyriaStyleId,
       ignoreAttractions: this.ignoreAttractions,
       permanentEnharmonicZo: this.permanentEnharmonicZo,

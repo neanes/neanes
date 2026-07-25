@@ -134,6 +134,21 @@
       :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
     >
       <Field orientation="horizontal">
+        <Switch
+          id="properties-mode-key-inline"
+          :model-value="element.inline"
+          @update:model-value="
+            $emit('update', {
+              inline: $event === true,
+            } as Partial<ModeKeyElement>)
+          "
+        />
+        <FieldLabel for="properties-mode-key-inline">
+          {{ $t(($) => $.toolbar.common.inline, { ns: 'toolbar' }) }}
+        </FieldLabel>
+      </Field>
+
+      <Field v-if="!element.inline" orientation="horizontal">
         <FieldLabel>{{
           $t(($) => $.toolbar.common.alignment, { ns: 'toolbar' })
         }}</FieldLabel>
@@ -182,7 +197,7 @@
         />
       </Field>
 
-      <Field orientation="horizontal">
+      <Field v-if="!element.inline" orientation="horizontal">
         <FieldLabel for="properties-mode-key-margin-top">{{
           $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
         }}</FieldLabel>
@@ -201,7 +216,7 @@
         />
       </Field>
 
-      <Field orientation="horizontal">
+      <Field v-if="!element.inline" orientation="horizontal">
         <FieldLabel for="properties-mode-key-margin-bottom">{{
           $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
         }}</FieldLabel>
@@ -225,7 +240,7 @@
       value="initial-martyria"
       :title="$t(($) => $.menu.insert.initialMartyria, { ns: 'menu' })"
     >
-      <Field orientation="horizontal">
+      <Field v-if="!element.inline" orientation="horizontal">
         <Switch
           id="properties-mode-key-show-ambitus"
           :model-value="element.showAmbitus"

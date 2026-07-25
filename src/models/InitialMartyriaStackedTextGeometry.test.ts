@@ -26,14 +26,14 @@ describe('initial martyria stacked text geometry', () => {
     expect(geometry.top + geometry.rows[1].top + 10 - 6).toBe(0);
   });
 
-  it('includes stroke overflow in the anchor and extents', () => {
+  it('uses painted ink and stroke overflow for outer extents', () => {
     const geometry = getInitialMartyriaStackedTextGeometry(
       [row({ strokeWidth: 4 }), row({ strokeWidth: 4 })],
       0,
     );
 
-    expect(geometry.top).toBe(-16);
-    expect(geometry.bottom).toBe(15);
+    expect(geometry.top).toBe(-14);
+    expect(geometry.bottom).toBe(14);
   });
 
   it('separates adjacent painted ink bounds by the configured gap', () => {

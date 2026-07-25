@@ -72,13 +72,13 @@ export function getInitialMartyriaStackedTextGeometry(
   const top = Math.min(
     ...rows.map(
       (row, index) =>
-        baselines[index] - row.lineAscent - (row.strokeWidth ?? 0) / 2,
+        baselines[index] + row.inkTop - (row.strokeWidth ?? 0) / 2,
     ),
   );
   const bottom = Math.max(
     ...rows.map(
       (row, index) =>
-        baselines[index] + row.lineDescent + (row.strokeWidth ?? 0) / 2,
+        baselines[index] + row.inkBottom + (row.strokeWidth ?? 0) / 2,
     ),
   );
   const shift = -left;

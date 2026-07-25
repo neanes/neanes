@@ -164,6 +164,7 @@
     "addGlyph": "Add glyph",
     "startingNoteNeumes": "Neume font glyphs",
     "startingNoteCustomText": "Custom text",
+    "startingNoteRendering": "Starting note rendering",
     "startingNoteNames": "Starting Note Names",
     "resetStartingNoteNames": "Reset to Greek defaults",
     "preview": "Preview",

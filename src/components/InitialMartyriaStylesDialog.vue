@@ -321,6 +321,52 @@
                     </div>
                   </div>
                   <Field
+                    v-if="component.kind === 'startingNoteCluster'"
+                    class="mt-2"
+                    orientation="horizontal"
+                  >
+                    <FieldLabel>{{
+                      $t(
+                        ($) =>
+                          $.dialog.initialMartyriaStyles.startingNoteRendering,
+                        { ns: 'dialog' },
+                      )
+                    }}</FieldLabel>
+                    <Select
+                      :disabled="selectedCustomStyle == null"
+                      :model-value="component.rendering"
+                      @update:model-value="
+                        (value) => updateStartingNoteRendering(index, value)
+                      "
+                    >
+                      <SelectTrigger class="flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="neume">
+                          {{
+                            $t(
+                              ($) =>
+                                $.dialog.initialMartyriaStyles
+                                  .startingNoteNeumes,
+                              { ns: 'dialog' },
+                            )
+                          }}
+                        </SelectItem>
+                        <SelectItem value="customText">
+                          {{
+                            $t(
+                              ($) =>
+                                $.dialog.initialMartyriaStyles
+                                  .startingNoteCustomText,
+                              { ns: 'dialog' },
+                            )
+                          }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field
                     v-if="isCustomTextComponent(component)"
                     class="mt-2"
                     orientation="horizontal"
@@ -545,7 +591,7 @@
           ><Button variant="outline">{{
             $t(($) => $.dialog.common.cancel, { ns: 'dialog' })
           }}</Button></DialogClose
-        ><Button :disabled="!stylesAreValid" @click="applyStyles">{{
+        ><Button :disabled="!stylesAreValid" @click="submit">{{
           $t(($) => $.dialog.common.update, { ns: 'dialog' })
         }}</Button></DialogFooter
       >
@@ -732,13 +778,23 @@ function updateSelected(update: (style: InitialMartyriaStyle) => void) {
   }
 }
 function applyStyles() {
-  if (stylesAreValid.value) {
-    emit('update', workingStyles.value.map(cloneInitialMartyriaStyle));
+  if (!stylesAreValid.value) {
+    return false;
+  }
+  emit('update', workingStyles.value.map(cloneInitialMartyriaStyle));
+  return true;
+}
+function submit() {
+  if (applyStyles()) {
+    open.value = false;
   }
 }
 function useForDocument() {
-  applyStyles();
+  if (!applyStyles()) {
+    return;
+  }
   emit('use-style', selectedStyleId.value);
+  open.value = false;
 }
 function createStyle() {
   const style = cloneInitialMartyriaStyle(traditionalGreekInitialMartyriaStyle);
@@ -905,6 +961,15 @@ function updateComponentParagraphStyle(index: number, value: string) {
     delete item.paragraphStyleId;
   } else {
     item.paragraphStyleId = value;
+  }
+}
+function updateStartingNoteRendering(index: number, value: unknown) {
+  if (value !== 'neume' && value !== 'customText') {
+    return;
+  }
+  const item = getComponent(index);
+  if (item?.kind === 'startingNoteCluster') {
+    item.rendering = value;
   }
 }
 function updateStackedLine(

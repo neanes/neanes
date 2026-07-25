@@ -165,6 +165,7 @@
     "addGlyph": "Добавить глиф",
     "startingNoteNeumes": "Глифы нотного шрифта",
     "startingNoteCustomText": "Пользовательский текст",
+    "startingNoteRendering": "Отображение начального тона",
     "startingNoteNames": "Названия начальных нот",
     "resetStartingNoteNames": "Сбросить к греческим значениям по умолчанию",
     "preview": "Предпросмотр",

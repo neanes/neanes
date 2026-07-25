@@ -165,6 +165,7 @@
     "addGlyph": "Προσθήκη γλυφής",
     "startingNoteNeumes": "Γλυφές γραμματοσειράς νευμάτων",
     "startingNoteCustomText": "Προσαρμοσμένο κείμενο",
+    "startingNoteRendering": "Απόδοση αρχικού φθόγγου",
     "startingNoteNames": "Ονόματα αρχικών φθόγγων",
     "resetStartingNoteNames": "Επαναφορά στις ελληνικές προεπιλογές",
     "preview": "Προεπισκόπηση",

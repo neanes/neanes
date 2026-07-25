@@ -165,6 +165,7 @@
     "addGlyph": "Adaugă glică",
     "startingNoteNeumes": "Glice din fontul de notație",
     "startingNoteCustomText": "Text personalizat",
+    "startingNoteRendering": "Redarea notei inițiale",
     "startingNoteNames": "Numele notelor inițiale",
     "resetStartingNoteNames": "Restabilește valorile implicite grecești",
     "preview": "Previzualizare",

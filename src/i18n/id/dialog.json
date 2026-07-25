@@ -165,6 +165,7 @@
     "addGlyph": "Tambah glif",
     "startingNoteNeumes": "Glif font notasi",
     "startingNoteCustomText": "Teks kustom",
+    "startingNoteRendering": "Tampilan nada awal",
     "startingNoteNames": "Nama nada awal",
     "resetStartingNoteNames": "Atur ulang ke default Yunani",
     "preview": "Pratinjau",

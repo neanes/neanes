@@ -815,16 +815,24 @@ export class LayoutService {
               TextMeasurementService.getFontBoundingBoxAscent(font);
             const descent =
               TextMeasurementService.getFontBoundingBoxDescent(font);
-            modeKeyElement.computedTop = -ascent;
+            const inlineBaselineCorrection = modeKeyElement.inline
+              ? fontService.getMetrics(modeKeyElement.computedFontFamily)
+                  .initialMartyriaBaseline * modeKeyElement.computedFontSize
+              : 0;
+            modeKeyElement.computedTop = -ascent + inlineBaselineCorrection;
             modeKeyElement.computedBottom =
-              descent + modeKeyElement.computedHeightAdjustment;
-            modeKeyElement.computedFlowTop = -ascent;
+              descent +
+              inlineBaselineCorrection +
+              modeKeyElement.computedHeightAdjustment;
+            modeKeyElement.computedFlowTop = -ascent + inlineBaselineCorrection;
             if (modeKeyElement.inline && modeKeyElement.tempo != null) {
               const tempoMetrics = TextMeasurementService.getTextMetrics(
                 NeumeMappingService.getMapping(modeKeyElement.tempo).text,
                 font,
               );
-              const tempoBaseline = -0.45 * modeKeyElement.computedFontSize;
+              const tempoBaseline =
+                inlineBaselineCorrection -
+                0.45 * modeKeyElement.computedFontSize;
               const tempoStrokeOverflow = pageSetup.tempoDefaultStrokeWidth / 2;
               modeKeyElement.computedTop = Math.min(
                 modeKeyElement.computedTop,

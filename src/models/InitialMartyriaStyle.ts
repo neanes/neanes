@@ -86,7 +86,6 @@ export type StartingNoteRendering = 'neume' | 'customText';
 
 export interface InitialMartyriaStartingNoteText {
   names: Record<InitialMartyriaCanonicalNote, string>;
-  languageTag?: string;
   direction?: 'ltr' | 'rtl';
 }
 
@@ -136,7 +135,6 @@ export type InitialMartyriaComponent =
   | (InitialMartyriaComponentBase & {
       kind: 'startingNoteCluster';
       rendering: StartingNoteRendering;
-      languageTag?: string;
       direction?: 'ltr' | 'rtl';
       paragraphStyleId?: string;
     });
@@ -206,7 +204,6 @@ export function cloneInitialMartyriaComponent(
         ...base,
         kind: component.kind,
         rendering: component.rendering,
-        languageTag: component.languageTag,
         direction: component.direction,
         paragraphStyleId: component.paragraphStyleId,
       };
@@ -228,7 +225,6 @@ export function cloneInitialMartyriaStartingNoteText(
       [ModeSign.Ke]: startingNoteText.names[ModeSign.Ke],
       [ModeSign.Zo]: startingNoteText.names[ModeSign.Zo],
     },
-    languageTag: startingNoteText.languageTag,
     direction: startingNoteText.direction,
   };
 }
@@ -354,7 +350,6 @@ export function createInitialMartyriaStartingNoteText(): InitialMartyriaStarting
       [ModeSign.Ke]: 'Κε',
       [ModeSign.Zo]: 'Ζο',
     },
-    languageTag: 'el',
     direction: 'ltr',
   };
 }
@@ -676,13 +671,6 @@ export function validateInitialMartyriaStyle(style: InitialMartyriaStyle) {
   for (const note of initialMartyriaCanonicalNotes) {
     if (noteNames[note].trim() === '') {
       errors.push(`Starting note mapping ${note} is blank.`);
-    }
-  }
-  if (style.startingNoteText.languageTag != null) {
-    try {
-      new Intl.Locale(style.startingNoteText.languageTag);
-    } catch {
-      errors.push('Starting note language tag is invalid.');
     }
   }
   if (

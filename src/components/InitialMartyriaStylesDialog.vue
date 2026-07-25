@@ -166,17 +166,6 @@
                 /></Field>
                 <Field orientation="horizontal"
                   ><FieldLabel>{{
-                    $t(($) => $.dialog.initialMartyriaStyles.languageTag, {
-                      ns: 'dialog',
-                    })
-                  }}</FieldLabel
-                  ><Input
-                    :disabled="selectedCustomStyle == null"
-                    :model-value="selectedStyle.startingNoteText.languageTag"
-                    @update:model-value="updateStartingNoteLanguageTag"
-                /></Field>
-                <Field orientation="horizontal"
-                  ><FieldLabel>{{
                     $t(($) => $.dialog.initialMartyriaStyles.writingDirection, {
                       ns: 'dialog',
                     })
@@ -998,11 +987,6 @@ function updateStartingNoteName(
     style.startingNoteText.names[note] = String(value);
   });
 }
-function updateStartingNoteLanguageTag(value: string | number) {
-  updateSelected((style) => {
-    style.startingNoteText.languageTag = String(value);
-  });
-}
 function updateStartingNoteDirection(value: unknown) {
   if (value !== 'ltr' && value !== 'rtl') {
     return;
@@ -1015,7 +999,6 @@ function resetStartingNoteNames() {
   updateSelected((style) => {
     const defaults = createInitialMartyriaStartingNoteText();
     style.startingNoteText.names = defaults.names;
-    style.startingNoteText.languageTag = defaults.languageTag;
     style.startingNoteText.direction = defaults.direction;
   });
 }

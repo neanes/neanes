@@ -18,7 +18,6 @@ export type InitialMartyriaCanonicalNote =
 
 export interface InitialMartyriaStartingNoteText {
   names: Record<InitialMartyriaCanonicalNote, string>;
-  languageTag?: string;
   direction?: 'ltr' | 'rtl';
 }
 
@@ -48,7 +47,6 @@ export type InitialMartyriaComponent =
   | (ComponentBase & {
       kind: 'startingNoteCluster';
       rendering: 'neume' | 'customText';
-      languageTag?: string;
       direction?: 'ltr' | 'rtl';
       paragraphStyleId?: string;
     });

@@ -932,7 +932,6 @@ function saveInitialMartyriaComponents(
           kind: component.kind,
           rendering: component.rendering,
           paragraphStyleId: component.paragraphStyleId,
-          languageTag: component.languageTag,
           direction: component.direction,
         };
       case 'ekhosGlyph':
@@ -988,7 +987,6 @@ function loadInitialMartyriaComponents(
           ...base,
           kind: component.kind,
           rendering: component.rendering,
-          languageTag: component.languageTag,
           direction: component.direction,
           paragraphStyleId: component.paragraphStyleId,
         };
@@ -1021,7 +1019,6 @@ function saveInitialMartyriaStyle(
         [ModeSign.Ke]: style.startingNoteText.names[ModeSign.Ke],
         [ModeSign.Zo]: style.startingNoteText.names[ModeSign.Zo],
       },
-      languageTag: style.startingNoteText.languageTag,
       direction: style.startingNoteText.direction,
     },
     components: saveInitialMartyriaComponents(style.components),
@@ -1045,7 +1042,6 @@ function loadInitialMartyriaStyle(
       [ModeSign.Ke]: saved?.names?.[ModeSign.Ke] ?? defaults.names[ModeSign.Ke],
       [ModeSign.Zo]: saved?.names?.[ModeSign.Zo] ?? defaults.names[ModeSign.Zo],
     },
-    languageTag: saved?.languageTag ?? defaults.languageTag,
     direction: saved?.direction ?? defaults.direction,
   };
 
@@ -1060,7 +1056,6 @@ function loadInitialMartyriaStyle(
       names: {
         ...startingNoteText.names,
       },
-      languageTag: startingNoteText.languageTag,
       direction: startingNoteText.direction,
     },
     components: loadInitialMartyriaComponents(style.components),

@@ -1170,7 +1170,6 @@ describe('SaveService font styles', () => {
         kind: 'startingNoteCluster',
         rendering: 'customText',
         paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
-        languageTag: 'en',
         direction: 'ltr',
         visibility: { modes: [7], variationOverrides: [] },
       },

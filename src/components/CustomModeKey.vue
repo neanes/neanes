@@ -77,7 +77,6 @@
               >
                 <span
                   v-if="pitchNote != null"
-                  :lang="run.noteText.languageTag"
                   :dir="run.noteText.direction"
                   :style="getPitchTextStyle(run, pitchNote)"
                   >{{ run.noteText.names[pitchNote.note] }}</span

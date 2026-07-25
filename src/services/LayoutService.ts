@@ -91,7 +91,7 @@ import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
 import {
-  getInitialMartyriaBaselineCorrection,
+  getInitialMartyriaNeumeBaselineCorrection,
   getMatchedNeumeFontSize,
   measureInitialMartyriaPitchGeometry,
   resolveInitialMartyriaPitchFontSizes,
@@ -2414,7 +2414,8 @@ export class LayoutService {
           neumeFontSize: element.computedFontSize,
         })
       : null;
-    const signatureBaselineCorrection = getInitialMartyriaBaselineCorrection({
+    const neumeBaselineCorrection = getInitialMartyriaNeumeBaselineCorrection({
+      hasCustomText,
       initialMartyriaBaseline:
         fontService.getMetrics(element.computedFontFamily)
           .initialMartyriaBaseline ?? 0,
@@ -2444,8 +2445,6 @@ export class LayoutService {
           : (appearance.strokeWidth ?? 0)) / 2;
 
       if (run.kind === 'text' && run.content.layout === 'stacked') {
-        const effectiveBaselineShift =
-          baselineShift + signatureBaselineCorrection;
         const geometry = measureInitialMartyriaStackedText(run.content.lines, {
           fontFamily,
           fontStyle: appearance.fontStyle,
@@ -2453,7 +2452,7 @@ export class LayoutService {
           fontVariantCaps: appearance.fontVariantCaps,
           strokeWidth: appearance.strokeWidth,
           gap: run.content.gap,
-          baselineShift: effectiveBaselineShift,
+          baselineShift,
           topRowOffset:
             fontSize * INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM,
         });
@@ -2480,8 +2479,7 @@ export class LayoutService {
           neumeFontFamily: element.computedFontFamily,
           neumeFontSize: element.computedFontSize,
         });
-        const effectiveBaselineShift =
-          (noteAppearance.baselineShift ?? 0) + signatureBaselineCorrection;
+        const effectiveBaselineShift = noteAppearance.baselineShift ?? 0;
         const wrapperBaselineShift = run.appearance.baselineShift ?? 0;
         for (const note of [run.cluster.primary, run.cluster.secondary]) {
           if (note == null) {
@@ -2521,13 +2519,15 @@ export class LayoutService {
             TextMeasurementService.getFontBoundingBoxDescent(trailingGlyphFont);
           top = Math.min(
             top,
-            -trailingAscent -
+            neumeBaselineCorrection -
+              trailingAscent -
               wrapperBaselineShift -
               pageSetup.modeKeyDefaultStrokeWidth / 2,
           );
           bottom = Math.max(
             bottom,
-            trailingDescent -
+            neumeBaselineCorrection +
+              trailingDescent -
               wrapperBaselineShift +
               pageSetup.modeKeyDefaultStrokeWidth / 2,
           );
@@ -2536,7 +2536,7 @@ export class LayoutService {
       }
 
       const effectiveBaselineShift =
-        baselineShift + (run.kind === 'text' ? signatureBaselineCorrection : 0);
+        baselineShift - (run.kind === 'glyph' ? neumeBaselineCorrection : 0);
       top = Math.min(top, -effectiveBaselineShift - ascent - strokeOverflow);
       bottom = Math.max(
         bottom,

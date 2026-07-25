@@ -159,15 +159,16 @@ export function getMatchedNeumeFontSize(options: {
     : null;
 }
 
-export function getInitialMartyriaBaselineCorrection(options: {
+export function getInitialMartyriaNeumeBaselineCorrection(options: {
+  hasCustomText: boolean;
   initialMartyriaBaseline: number;
   matchedNeumeFontSize: number | null;
   neumeFontSize: number;
 }) {
-  return (
-    options.initialMartyriaBaseline *
-    (options.matchedNeumeFontSize ?? options.neumeFontSize)
-  );
+  return options.hasCustomText
+    ? options.initialMartyriaBaseline *
+        (options.matchedNeumeFontSize ?? options.neumeFontSize)
+    : 0;
 }
 
 export function getInitialMartyriaPitchTextBounds(

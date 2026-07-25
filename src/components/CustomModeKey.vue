@@ -126,7 +126,7 @@
               v-for="neume in run.cluster.trailingGlyphs"
               :key="neume"
               :neume="neume"
-              :style="getPitchGlyphStyle(run)"
+              :style="getTrailingPitchGlyphStyle(run)"
             />
           </span>
           <template
@@ -216,7 +216,7 @@ import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontService } from '@/services/FontService';
 import {
-  getInitialMartyriaBaselineCorrection,
+  getInitialMartyriaNeumeBaselineCorrection,
   getInitialMartyriaPitchTrailingGlueWidth,
   getMatchedNeumeFontSize,
   measureInitialMartyriaPitchGeometry,
@@ -265,11 +265,13 @@ const neumeFontSize = computed(
   () =>
     props.element.computedFontSize || props.pageSetup.modeKeyDefaultFontSize,
 );
-const matchedNeumeFontSize = computed(() => {
-  const hasCustomText = resolvedRuns.value.some(
+const hasCustomText = computed(() =>
+  resolvedRuns.value.some(
     (run) => run.kind === 'text' || run.kind === 'startingPitch',
-  );
-  if (!hasCustomText) {
+  ),
+);
+const matchedNeumeFontSize = computed(() => {
+  if (!hasCustomText.value) {
     return null;
   }
   const textAppearance = resolveInitialMartyriaBaseTextAppearance(
@@ -286,8 +288,9 @@ const matchedNeumeFontSize = computed(() => {
     neumeFontSize: neumeFontSize.value,
   });
 });
-const signatureBaselineCorrection = computed(() =>
-  getInitialMartyriaBaselineCorrection({
+const neumeBaselineCorrection = computed(() =>
+  getInitialMartyriaNeumeBaselineCorrection({
+    hasCustomText: hasCustomText.value,
     initialMartyriaBaseline:
       fontService.getMetrics(neumeFontFamily.value).initialMartyriaBaseline ??
       0,
@@ -416,8 +419,8 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
   );
   const renderedNeumeFontSize = getEffectiveRunFontSize(run);
   const baselineShift =
-    (appearance.baselineShift ?? 0) +
-    (run.kind === 'text' ? signatureBaselineCorrection.value : 0);
+    (appearance.baselineShift ?? 0) -
+    (isGlyph ? neumeBaselineCorrection.value : 0);
   return {
     color: isGlyph ? undefined : appearance.color,
     fontFamily: font.cssFontFamily,
@@ -566,8 +569,7 @@ function getStackedTextGeometry(run: TextRun) {
   }
   const appearance = run.appearance;
   const fontSize = appearance.fontSize ?? neumeFontSize.value;
-  const baselineShift =
-    (appearance.baselineShift ?? 0) + signatureBaselineCorrection.value;
+  const baselineShift = appearance.baselineShift ?? 0;
 
   return measureInitialMartyriaStackedText(run.content.lines, {
     fontFamily: appearance.fontFamily || neumeFontFamily.value,
@@ -755,7 +757,7 @@ function getPitchMarkStyle(
 
 function getStartingNoteBaselineShift(run: StartingPitchRun) {
   const appearance = run.noteText.appearance;
-  return (appearance.baselineShift ?? 0) + signatureBaselineCorrection.value;
+  return appearance.baselineShift ?? 0;
 }
 
 function getPitchGlyphStyle(run: StartingPitchRun) {
@@ -773,6 +775,14 @@ function getPitchGlyphStyle(run: StartingPitchRun) {
     fontWeight: font.cssFontWeight,
     webkitTextStrokeColor: props.pageSetup.modeKeyDefaultColor,
     webkitTextStrokeWidth: withZoom(props.pageSetup.modeKeyDefaultStrokeWidth),
+  } as CSSProperties;
+}
+
+function getTrailingPitchGlyphStyle(run: StartingPitchRun) {
+  return {
+    ...getPitchGlyphStyle(run),
+    position: 'relative',
+    top: withZoom(neumeBaselineCorrection.value),
   } as CSSProperties;
 }
 

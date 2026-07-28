@@ -79,7 +79,7 @@
     "jest-matcher-deep-close-to": "^3.0.2",
     "lib-font": "^3.0.1",
     "mitt": "^3.0.1",
-    "prettier": "^3.9.5",
+    "prettier": "^3.9.6",
     "register-service-worker": "^1.7.2",
     "reka-ui": "^2.10.1",
     "shadcn-vue": "^2.8.0",

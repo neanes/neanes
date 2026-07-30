@@ -517,6 +517,58 @@ describe('SaveService font styles', () => {
     expect(customStyles[0].overrides.fontSize).toBe(11);
   });
 
+  it('loads a saved default paragraph style collection against factory built-ins', () => {
+    const title = new ParagraphStyle();
+    title.id = BUILT_IN_PARAGRAPH_STYLE_IDS.Title;
+    title.displayName = 'Title';
+    title.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+    title.overrides.fontSize = 77;
+    title.overrides.lineHeight = null;
+    title.overrides.fontVariantCaps = null;
+    title.overrides.fontVariantNumeric = 'oldstyle-nums';
+
+    const custom = new ParagraphStyle();
+    custom.id = 'custom-style';
+    custom.displayName = 'Custom Style';
+    custom.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.Title;
+    custom.overrides.fontVariantLigatures = 'no-common-ligatures';
+    custom.overrides.fontVariantAlternates = 'historical-forms';
+
+    const duplicate = custom.clone();
+    duplicate.displayName = 'Duplicate Style';
+
+    const loaded = SaveService.LoadParagraphStyles_v1(
+      [title, custom, duplicate].map(SaveService.SaveParagraphStyle),
+      createDefaultParagraphStyles(),
+    );
+    const builtInIds = Object.values(BUILT_IN_PARAGRAPH_STYLE_IDS);
+
+    expect(loaded.slice(0, builtInIds.length).map((style) => style.id)).toEqual(
+      builtInIds,
+    );
+    expect(loaded).toHaveLength(builtInIds.length + 1);
+
+    const loadedTitle = loaded.find(
+      (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
+    );
+    expect(loadedTitle?.overrides).toMatchObject({
+      fontSize: 77,
+      lineHeight: null,
+      fontVariantCaps: null,
+      fontVariantNumeric: 'oldstyle-nums',
+    });
+
+    const loadedCustom = loaded.at(-1);
+    expect(loadedCustom?.displayName).toBe('Custom Style');
+    expect(loadedCustom?.parentStyleId).toBe(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
+    );
+    expect(loadedCustom?.overrides).toMatchObject({
+      fontVariantLigatures: 'no-common-ligatures',
+      fontVariantAlternates: 'historical-forms',
+    });
+  });
+
   it('does not save the derived builtIn flag', () => {
     const style = new ParagraphStyle();
 

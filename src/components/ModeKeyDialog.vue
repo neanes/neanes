@@ -71,8 +71,6 @@
                       class="!w-auto !border-0 [--zoom:1]"
                       :element="template"
                       :page-setup="pageSetup"
-                      :initial-martyria-styles="initialMartyriaStyles"
-                      :paragraph-styles="paragraphStyles"
                     />
                   </div>
                   <ItemDescription>
@@ -154,14 +152,10 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
-import {
-  type InitialMartyriaStyle,
-  resolveInitialMartyriaStyleSelection,
-} from '@/models/InitialMartyriaStyle';
+import { resolveInitialMartyriaStyleSelection } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { getLegacyNeumeFontFamily } from '@/utils/getFontFamilyWithFallback';
 
@@ -177,14 +171,6 @@ const props = defineProps({
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
-  },
-  initialMartyriaStyles: {
-    type: Array as PropType<InitialMartyriaStyle[]>,
-    default: () => [],
-  },
-  paragraphStyles: {
-    type: Array as PropType<ParagraphStyle[]>,
-    default: () => [],
   },
 });
 
@@ -245,9 +231,8 @@ const modeKeyTemplatesForSelectedMode = computed(() => {
 
 function getModeKeyTemplatesForMode(mode: number) {
   const styleSelection = resolveInitialMartyriaStyleSelection({
-    elementStyleId: props.element.initialMartyriaStyleId,
-    pageStyleId: props.pageSetup.initialMartyriaStyleId,
-    styles: props.initialMartyriaStyles,
+    elementConfiguration: props.element.initialMartyriaConfiguration,
+    pageConfiguration: props.pageSetup.initialMartyriaConfiguration,
   });
   const neumeFontFamily =
     styleSelection.kind === 'standard'
@@ -264,18 +249,42 @@ function getModeKeyTemplatesForMode(mode: number) {
         ),
         {
           descriptionSelector: x.description,
-          initialMartyriaStyleId: props.element.initialMartyriaStyleId,
+          initialMartyriaConfiguration:
+            props.element.initialMartyriaConfiguration,
         },
       ),
     );
 
-  const height = TextMeasurementService.getFontHeight(
-    `${elements[0].fontSize}px ${neumeFontFamily}`,
-  );
+  const fontSize =
+    styleSelection.kind === 'custom'
+      ? styleSelection.mainAppearance.fontSize!
+      : props.pageSetup.modeKeyDefaultFontSize;
+  const color =
+    styleSelection.kind === 'custom'
+      ? styleSelection.mainAppearance.color!
+      : props.pageSetup.modeKeyDefaultColor;
+  const strokeWidth =
+    styleSelection.kind === 'custom'
+      ? styleSelection.mainAppearance.strokeWidth!
+      : props.pageSetup.modeKeyDefaultStrokeWidth;
+  const height =
+    styleSelection.kind === 'custom'
+      ? fontSize * 4
+      : TextMeasurementService.getFontHeight(
+          `${fontSize}px ${neumeFontFamily}`,
+        );
 
   for (const element of elements) {
     element.height = height;
     element.computedFontFamily = neumeFontFamily;
+    element.computedFontSize = fontSize;
+    element.computedColor = color;
+    element.computedStrokeWidth = strokeWidth;
+    if (styleSelection.kind === 'custom') {
+      element.computedTop = -fontSize * 2.5;
+      element.computedBottom = fontSize * 1.5;
+      element.computedFlowTop = -fontSize;
+    }
   }
 
   return elements;

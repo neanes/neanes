@@ -104,6 +104,10 @@ export function resolveInitialMartyriaPitchFontSizes(options: {
   textFontStyle?: string;
   textFontSize?: number;
   textFontVariantCaps?: string | null;
+  referenceTextFontFamily?: string;
+  referenceTextFontStyle?: string;
+  referenceTextFontSize?: number;
+  referenceTextFontVariantCaps?: string | null;
   glyphFontSize?: number;
   matchedNeumeFontSize?: number | null;
   neumeFontFamily: string;
@@ -115,10 +119,63 @@ export function resolveInitialMartyriaPitchFontSizes(options: {
       : getMatchedNeumeFontSize(options);
   const glyphFontSize =
     options.glyphFontSize ?? matchedNeumeFontSize ?? options.neumeFontSize;
+  const nominalTextFontSize = options.textFontSize ?? options.neumeFontSize;
+  const textFontSize =
+    options.referenceTextFontFamily == null
+      ? nominalTextFontSize
+      : getCapHeightMatchedTextFontSize({
+          fontFamily: options.textFontFamily,
+          fontStyle: options.textFontStyle,
+          fontVariantCaps: options.textFontVariantCaps,
+          referenceFontFamily: options.referenceTextFontFamily,
+          referenceFontStyle: options.referenceTextFontStyle,
+          referenceFontSize:
+            options.referenceTextFontSize ?? options.neumeFontSize,
+          referenceFontVariantCaps: options.referenceTextFontVariantCaps,
+        });
   return {
-    textFontSize: options.textFontSize ?? options.neumeFontSize,
+    textFontSize,
     glyphFontSize,
   };
+}
+
+export function getCapHeightMatchedTextFontSize(options: {
+  fontFamily: string;
+  fontStyle?: string;
+  fontVariantCaps?: string | null;
+  referenceFontFamily: string;
+  referenceFontStyle?: string;
+  referenceFontSize: number;
+  referenceFontVariantCaps?: string | null;
+}) {
+  const font = resolveFontStyle(options.fontFamily, options.fontStyle);
+  const referenceFont = resolveFontStyle(
+    options.referenceFontFamily,
+    options.referenceFontStyle,
+  );
+  const targetCapitalHeight = TextMeasurementService.getTextHeight(
+    'H',
+    resolveFontCss({
+      fontFamily: font.cssFontFamily,
+      fontStyle: font.cssFontStyle,
+      fontSize: 1,
+    }),
+    options.fontVariantCaps ?? 'normal',
+  );
+  const referenceCapitalHeight = TextMeasurementService.getTextHeight(
+    'H',
+    resolveFontCss({
+      fontFamily: referenceFont.cssFontFamily,
+      fontStyle: referenceFont.cssFontStyle,
+      fontSize: options.referenceFontSize,
+    }),
+    options.referenceFontVariantCaps ?? 'normal',
+  );
+  return Number.isFinite(targetCapitalHeight) &&
+    targetCapitalHeight > 0 &&
+    Number.isFinite(referenceCapitalHeight)
+    ? referenceCapitalHeight / targetCapitalHeight
+    : options.referenceFontSize;
 }
 
 export function getInitialMartyriaPitchTrailingGlueWidth(

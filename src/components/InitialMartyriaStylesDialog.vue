@@ -1,598 +1,331 @@
 <template>
   <Dialog v-model:open="open">
     <DialogContent
-      class="grid h-[42rem] max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-6xl"
+      class="grid h-[48rem] max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-7xl"
     >
       <DialogHeader>
-        <DialogTitle>{{
-          $t(($) => $.dialog.initialMartyriaStyles.root, { ns: 'dialog' })
-        }}</DialogTitle>
-        <DialogDescription>{{
-          $t(($) => $.dialog.initialMartyriaStyles.description, {
-            ns: 'dialog',
-          })
-        }}</DialogDescription>
+        <DialogTitle>
+          {{ $t(($) => $.dialog.initialMartyriaStyles.root, { ns: 'dialog' }) }}
+        </DialogTitle>
+        <DialogDescription>
+          {{
+            $t(($) => $.dialog.initialMartyriaStyles.selectionDescription, {
+              ns: 'dialog',
+            })
+          }}
+        </DialogDescription>
       </DialogHeader>
-      <div class="grid min-h-0 gap-4 sm:grid-cols-[13rem_minmax(0,1fr)_18rem]">
-        <div class="flex min-h-0 flex-col gap-2">
-          <ScrollArea class="min-h-0 flex-1 border"
-            ><div class="p-1">
-              <Button
-                v-for="style in allStyles"
-                :key="style.id"
-                variant="ghost"
-                class="w-full justify-start"
-                :class="selectedStyleId === style.id && 'bg-accent'"
-                @click="selectedStyleId = style.id"
-                >{{ styleDisplayName(style) }}</Button
-              >
-            </div></ScrollArea
-          >
-          <div class="flex gap-1">
-            <Button size="sm" variant="outline" @click="createStyle">{{
-              $t(($) => $.dialog.initialMartyriaStyles.new, { ns: 'dialog' })
-            }}</Button>
-            <Button
-              size="sm"
-              variant="outline"
-              :disabled="selectedStyle == null"
-              @click="duplicateStyle"
-              >{{
-                $t(($) => $.dialog.initialMartyriaStyles.duplicate, {
-                  ns: 'dialog',
-                })
-              }}</Button
-            >
-            <Button
-              size="sm"
-              variant="outline"
-              :disabled="
-                selectedCustomStyle == null || selectedStyleId === activeStyleId
-              "
-              @click="deleteStyle"
-              >{{
-                $t(($) => $.dialog.initialMartyriaStyles.delete, {
-                  ns: 'dialog',
-                })
-              }}</Button
-            >
-          </div>
-        </div>
-        <ScrollArea class="min-h-0 border">
-          <FieldGroup v-if="selectedStyle != null" class="p-4">
-            <Field orientation="horizontal"
-              ><FieldLabel>{{
-                $t(($) => $.dialog.initialMartyriaStyles.name, { ns: 'dialog' })
-              }}</FieldLabel
-              ><Input
-                :disabled="selectedCustomStyle == null"
-                :model-value="styleDisplayName(selectedStyle)"
-                @update:model-value="updateName"
-            /></Field>
-            <Field orientation="horizontal"
-              ><FieldLabel>{{
-                $t(($) => $.dialog.initialMartyriaStyles.flowDirection, {
-                  ns: 'dialog',
-                })
-              }}</FieldLabel>
-              <Select
-                :disabled="selectedCustomStyle == null"
-                :model-value="selectedStyle.flowDirection"
-                @update:model-value="updateFlowDirection"
-                ><SelectTrigger><SelectValue /></SelectTrigger
-                ><SelectContent
-                  ><SelectItem value="page">{{
-                    $t(($) => $.dialog.initialMartyriaStyles.page, {
-                      ns: 'dialog',
-                    })
-                  }}</SelectItem
-                  ><SelectItem value="ltr">LTR</SelectItem
-                  ><SelectItem value="rtl">RTL</SelectItem></SelectContent
-                ></Select
-              >
-            </Field>
-            <Field orientation="horizontal">
-              <FieldLabel>{{
-                $t(
-                  ($) => $.dialog.initialMartyriaStyles.defaultParagraphStyle,
-                  { ns: 'dialog' },
-                )
-              }}</FieldLabel>
-              <ParagraphStyleSelect
-                class="flex-1"
-                trigger-class="w-full"
-                :disabled="selectedCustomStyle == null"
-                :model-value="selectedStyle.defaultParagraphStyleId"
-                :paragraph-styles="paragraphStyles"
-                @update:model-value="updateDefaultParagraphStyle"
-              />
-            </Field>
-            <div class="rounded border bg-muted/30 p-3 text-sm">
-              <div class="font-medium">
+
+      <ScrollArea class="min-h-0">
+        <div
+          class="grid gap-5 p-1"
+          :class="
+            workingConfiguration == null
+              ? 'lg:grid-cols-[minmax(0,1fr)_22rem]'
+              : 'lg:grid-cols-[minmax(0,1fr)_19rem_22rem]'
+          "
+        >
+          <div class="space-y-4">
+            <Field>
+              <FieldLabel for="initial-martyria-language">
                 {{
-                  $t(($) => $.dialog.initialMartyriaStyles.glyphAppearance, {
+                  $t(($) => $.dialog.initialMartyriaStyles.language, {
                     ns: 'dialog',
                   })
                 }}
-              </div>
-              <div class="mt-1 text-muted-foreground">
+              </FieldLabel>
+              <Select
+                :model-value="selectedLanguageId"
+                @update:model-value="selectLanguage"
+              >
+                <SelectTrigger id="initial-martyria-language">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="language in initialMartyriaLanguages"
+                    :key="language.id"
+                    :value="language.id"
+                  >
+                    {{ languageName(language.id) }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <button
+              type="button"
+              class="w-full rounded-md border p-3 text-left transition-colors hover:bg-accent"
+              :class="
+                workingConfiguration == null &&
+                'border-primary bg-primary/5 ring-1 ring-primary'
+              "
+              @click="workingConfiguration = null"
+            >
+              <span class="font-medium">
+                {{
+                  $t(($) => $.dialog.initialMartyriaStyles.standard, {
+                    ns: 'dialog',
+                  })
+                }}
+              </span>
+              <span class="mt-1 block text-sm text-muted-foreground">
                 {{
                   $t(
-                    ($) =>
-                      $.dialog.initialMartyriaStyles
-                        .glyphAppearanceFromPageSetup,
-                    { ns: 'dialog' },
+                    ($) => $.dialog.initialMartyriaStyles.standardDescription,
+                    {
+                      ns: 'dialog',
+                    },
                   )
                 }}
-              </div>
-              <div class="mt-2 flex items-center gap-2">
-                <span
-                  class="size-4 rounded-sm border"
-                  :style="{ backgroundColor: pageSetup.modeKeyDefaultColor }"
+              </span>
+              <span
+                class="mt-3 flex min-h-16 items-center gap-3 overflow-hidden"
+              >
+                <ModeKeyRenderer
+                  v-for="preview in standardPreviews"
+                  :key="String(preview.templateId)"
+                  class="initial-martyria-preview !w-auto !border-0 [--zoom:1]"
+                  :element="preview"
+                  :page-setup="previewPageSetup"
                 />
-                <span>{{ pageSetup.modeKeyDefaultColor }}</span>
-                <span class="text-muted-foreground">·</span>
-                <span>
-                  {{ $t(($) => $.dialog.pageSetup.outline, { ns: 'dialog' }) }}:
-                  {{ glyphStrokeWidth }} pt
+              </span>
+            </button>
+
+            <div class="grid gap-3 sm:grid-cols-2">
+              <button
+                v-for="style in filteredStyles"
+                :key="style.id"
+                type="button"
+                class="min-w-0 rounded-md border p-3 text-left transition-colors hover:bg-accent"
+                :class="
+                  workingConfiguration?.styleId === style.id &&
+                  'border-primary bg-primary/5 ring-1 ring-primary'
+                "
+                @click="selectStyle(style.id)"
+              >
+                <span class="font-medium">
+                  {{ getInitialMartyriaStyleDisplayName(style, t) }}
                 </span>
-              </div>
+                <span
+                  class="mt-3 flex min-h-16 flex-col items-start gap-1 overflow-hidden"
+                >
+                  <ModeKeyRenderer
+                    v-for="preview in previewsForStyle(style.id)"
+                    :key="String(preview.templateId)"
+                    class="initial-martyria-preview !border-0 [--zoom:1]"
+                    :element="preview"
+                    :page-setup="previewPageSetup"
+                  />
+                </span>
+              </button>
             </div>
-            <details
-              v-if="usesCustomStartingNoteText"
-              class="rounded border p-2"
-            >
+          </div>
+
+          <div
+            v-if="workingConfiguration != null && selectedStyle != null"
+            class="sticky top-0 self-start space-y-4 rounded-md border bg-background p-4"
+          >
+            <Field orientation="horizontal">
+              <Checkbox
+                id="initial-martyria-transliterate"
+                :model-value="workingConfiguration.transliterateNoteNames"
+                @update:model-value="
+                  workingConfiguration.transliterateNoteNames = $event === true
+                "
+              />
+              <FieldLabel for="initial-martyria-transliterate">
+                {{
+                  $t(($) => $.dialog.initialMartyriaStyles.transliterate, {
+                    ns: 'dialog',
+                  })
+                }}
+              </FieldLabel>
+            </Field>
+
+            <Field>
+              <FieldLabel for="initial-martyria-main-font">
+                {{
+                  $t(($) => $.dialog.initialMartyriaStyles.mainFont, {
+                    ns: 'dialog',
+                  })
+                }}
+              </FieldLabel>
+              <FontCombobox
+                id="initial-martyria-main-font"
+                v-model="mainFontValue"
+                :options="mainFontOptions"
+              />
+            </Field>
+
+            <Field v-if="showGreekFontControl">
+              <FieldLabel for="initial-martyria-greek-font">
+                {{
+                  $t(($) => $.dialog.initialMartyriaStyles.greekTextFont, {
+                    ns: 'dialog',
+                  })
+                }}
+              </FieldLabel>
+              <FontCombobox
+                id="initial-martyria-greek-font"
+                v-model="greekFontValue"
+                :options="greekFontOptions"
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel for="initial-martyria-font-style">
+                {{ $t(($) => $.dialog.pageSetup.style, { ns: 'dialog' }) }}
+              </FieldLabel>
+              <FontStyleSelect
+                id="initial-martyria-font-style"
+                v-model="fontStyleValue"
+                :options="fontStyleOptions"
+              />
+            </Field>
+
+            <Field orientation="horizontal">
+              <FieldLabel for="initial-martyria-font-size">
+                {{ $t(($) => $.dialog.pageSetup.size, { ns: 'dialog' }) }}
+              </FieldLabel>
+              <InputFontSize
+                id="initial-martyria-font-size"
+                :model-value="effectiveAppearance.fontSize!"
+                @update:model-value="setFontSize"
+              />
+            </Field>
+
+            <Field orientation="horizontal">
+              <FieldLabel>
+                {{ $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' }) }}
+              </FieldLabel>
+              <ColorPicker
+                :model-value="effectiveAppearance.color!"
+                @update:model-value="setAppearanceOverride('color', $event)"
+              />
+            </Field>
+
+            <Field orientation="horizontal">
+              <FieldLabel for="initial-martyria-outline">
+                {{ $t(($) => $.dialog.pageSetup.outline, { ns: 'dialog' }) }}
+              </FieldLabel>
+              <InputStrokeWidth
+                id="initial-martyria-outline"
+                :model-value="effectiveAppearance.strokeWidth!"
+                @update:model-value="
+                  setAppearanceOverride('strokeWidth', $event)
+                "
+              />
+            </Field>
+
+            <details class="rounded-md border p-3">
               <summary class="cursor-pointer text-sm font-medium">
                 {{
-                  $t(($) => $.dialog.initialMartyriaStyles.startingNoteNames, {
+                  $t(($) => $.dialog.initialMartyriaStyles.advancedTypography, {
                     ns: 'dialog',
                   })
                 }}
               </summary>
-              <div class="mt-3 grid gap-2 sm:grid-cols-2">
-                <Field
-                  v-for="note in initialMartyriaCanonicalNotes"
-                  :key="note"
-                  orientation="horizontal"
-                  ><FieldLabel>{{
-                    $t(startingNoteLabel(note), { ns: 'model' })
-                  }}</FieldLabel
-                  ><Input
-                    :disabled="selectedCustomStyle == null"
-                    :model-value="selectedStyle.startingNoteText.names[note]"
-                    @update:model-value="
-                      (value) => updateStartingNoteName(note, value)
-                    "
-                /></Field>
-                <Field orientation="horizontal"
-                  ><FieldLabel>{{
-                    $t(($) => $.dialog.initialMartyriaStyles.writingDirection, {
-                      ns: 'dialog',
-                    })
-                  }}</FieldLabel
-                  ><Select
-                    :disabled="selectedCustomStyle == null"
-                    :model-value="selectedStyle.startingNoteText.direction"
-                    @update:model-value="updateStartingNoteDirection"
-                    ><SelectTrigger><SelectValue /></SelectTrigger
-                    ><SelectContent
-                      ><SelectItem value="ltr">LTR</SelectItem
-                      ><SelectItem value="rtl">RTL</SelectItem></SelectContent
-                    ></Select
-                  ></Field
-                >
-                <Button
-                  size="sm"
-                  variant="outline"
-                  :disabled="selectedCustomStyle == null"
-                  @click="resetStartingNoteNames"
-                  >{{
-                    $t(
-                      ($) =>
-                        $.dialog.initialMartyriaStyles.resetStartingNoteNames,
-                      { ns: 'dialog' },
-                    )
-                  }}</Button
-                >
+              <div class="mt-3 space-y-3">
+                <FontVariantFields
+                  id-prefix="initial-martyria"
+                  :caps="effectiveAppearance.fontVariantCaps ?? null"
+                  :numeric="effectiveAppearance.fontVariantNumeric ?? null"
+                  :ligatures="effectiveAppearance.fontVariantLigatures ?? null"
+                  :alternates="
+                    effectiveAppearance.fontVariantAlternates ?? null
+                  "
+                  :font-family="effectiveAppearance.fontFamily ?? null"
+                  :font-style="effectiveAppearance.fontStyle ?? null"
+                  :caps-clearable="false"
+                  :numeric-clearable="false"
+                  :ligatures-clearable="false"
+                  :alternates-clearable="false"
+                  @change="setFontVariant"
+                />
               </div>
             </details>
-            <Field
-              ><FieldLabel>{{
-                $t(($) => $.dialog.initialMartyriaStyles.components, {
+
+            <Button variant="ghost" class="w-full" @click="resetAppearance">
+              {{
+                $t(($) => $.dialog.initialMartyriaStyles.useStyleDefaults, {
                   ns: 'dialog',
                 })
-              }}</FieldLabel>
-              <div class="space-y-2">
-                <div
-                  v-for="(component, index) in selectedStyle.components"
-                  :key="component.id"
-                  class="rounded border p-2"
-                  :class="draggedComponentId === component.id && 'opacity-50'"
-                  @dragover="handleComponentDragOver(component, $event)"
-                  @drop="handleComponentDrop(component, $event)"
-                >
-                  <div class="flex items-center gap-2">
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      class="cursor-grab active:cursor-grabbing"
-                      :disabled="selectedCustomStyle == null"
-                      draggable="true"
-                      :aria-label="
-                        $t(
-                          ($) => $.dialog.initialMartyriaStyles.dragComponent,
-                          {
-                            ns: 'dialog',
-                          },
-                        )
-                      "
-                      @dragstart="handleComponentDragStart(component, $event)"
-                      @dragend="handleComponentDragEnd"
-                      >⋮⋮</Button
-                    >
-                    <span class="min-w-0 flex-1 text-sm font-medium">
-                      {{ componentKindLabel(component) }}
-                    </span>
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      :disabled="selectedCustomStyle == null || index === 0"
-                      @click="moveComponent(index, -1)"
-                      >↑</Button
-                    ><Button
-                      size="icon-sm"
-                      variant="ghost"
-                      :disabled="
-                        selectedCustomStyle == null ||
-                        index === selectedStyle.components.length - 1
-                      "
-                      @click="moveComponent(index, 1)"
-                      >↓</Button
-                    ><Button
-                      size="icon-sm"
-                      variant="ghost"
-                      :disabled="
-                        selectedCustomStyle == null ||
-                        selectedStyle.components.length <= 1
-                      "
-                      @click="removeComponent(index)"
-                      >×</Button
-                    >
-                  </div>
-                  <div v-if="isTextComponent(component)" class="mt-2 space-y-2">
-                    <Input
-                      v-if="component.kind === 'text'"
-                      :disabled="selectedCustomStyle == null"
-                      :model-value="component.content"
-                      @update:model-value="
-                        (value) => updateInlineText(index, value)
-                      "
-                    />
-                    <div v-else class="space-y-2">
-                      <Field
-                        v-for="(_, line) in textComponentLines(component)"
-                        :key="line"
-                        orientation="horizontal"
-                      >
-                        <FieldLabel>
-                          {{
-                            line === 0
-                              ? $t(
-                                  ($) =>
-                                    $.dialog.initialMartyriaStyles
-                                      .stackedTopRow,
-                                  { ns: 'dialog' },
-                                )
-                              : line === 1
-                                ? $t(
-                                    ($) =>
-                                      $.dialog.initialMartyriaStyles
-                                        .stackedBottomRow,
-                                    { ns: 'dialog' },
-                                  )
-                                : $t(
-                                    ($) =>
-                                      $.dialog.initialMartyriaStyles.stackedRow,
-                                    { ns: 'dialog', row: Number(line) + 1 },
-                                  )
-                          }}
-                        </FieldLabel>
-                        <Input
-                          :model-value="
-                            textComponentLines(component)[Number(line)]
-                          "
-                          @update:model-value="
-                            (value) =>
-                              updateStackedLine(index, Number(line), value)
-                          "
-                        />
-                      </Field>
-                    </div>
-                  </div>
-                  <Field
-                    v-if="component.kind === 'startingNoteCluster'"
-                    class="mt-2"
-                    orientation="horizontal"
-                  >
-                    <FieldLabel>{{
-                      $t(
-                        ($) =>
-                          $.dialog.initialMartyriaStyles.startingNoteRendering,
-                        { ns: 'dialog' },
-                      )
-                    }}</FieldLabel>
-                    <Select
-                      :disabled="selectedCustomStyle == null"
-                      :model-value="component.rendering"
-                      @update:model-value="
-                        (value) => updateStartingNoteRendering(index, value)
-                      "
-                    >
-                      <SelectTrigger class="flex-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="neume">
-                          {{
-                            $t(
-                              ($) =>
-                                $.dialog.initialMartyriaStyles
-                                  .startingNoteNeumes,
-                              { ns: 'dialog' },
-                            )
-                          }}
-                        </SelectItem>
-                        <SelectItem value="customText">
-                          {{
-                            $t(
-                              ($) =>
-                                $.dialog.initialMartyriaStyles
-                                  .startingNoteCustomText,
-                              { ns: 'dialog' },
-                            )
-                          }}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <Field
-                    v-if="isCustomTextComponent(component)"
-                    class="mt-2"
-                    orientation="horizontal"
-                  >
-                    <FieldLabel>{{
-                      $t(
-                        ($) =>
-                          $.dialog.initialMartyriaStyles.paragraphStyleOverride,
-                        { ns: 'dialog' },
-                      )
-                    }}</FieldLabel>
-                    <ParagraphStyleSelect
-                      class="flex-1"
-                      trigger-class="w-full"
-                      :disabled="selectedCustomStyle == null"
-                      :model-value="
-                        component.paragraphStyleId ?? PARAGRAPH_STYLE_NONE_VALUE
-                      "
-                      :paragraph-styles="paragraphStyles"
-                      show-none-option
-                      :none-label="
-                        $t(
-                          ($) =>
-                            $.dialog.initialMartyriaStyles
-                              .useDefaultParagraphStyle,
-                          { ns: 'dialog' },
-                        )
-                      "
-                      @update:model-value="
-                        (value) => updateComponentParagraphStyle(index, value)
-                      "
-                    />
-                  </Field>
-                  <div class="mt-2 flex flex-wrap gap-2">
-                    <label
-                      v-for="mode in modes"
-                      :key="mode"
-                      class="flex items-center gap-1 text-sm"
-                      ><Checkbox
-                        :disabled="selectedCustomStyle == null"
-                        :model-value="component.visibility.modes.includes(mode)"
-                        @update:model-value="
-                          (value) => updateVisibility(index, mode, value)
-                        "
-                      />{{ mode }}</label
-                    >
-                  </div>
-                  <details class="mt-2 rounded border p-2">
-                    <summary class="cursor-pointer text-sm">
-                      {{
-                        $t(
-                          ($) =>
-                            $.dialog.initialMartyriaStyles.variationOverrides,
-                          { ns: 'dialog' },
-                        )
-                      }}
-                    </summary>
-                    <div class="mt-2 space-y-2">
-                      <div
-                        v-for="override in component.visibility
-                          .variationOverrides"
-                        :key="override.templateId"
-                        class="flex items-center gap-2"
-                      >
-                        <span class="min-w-0 flex-1 text-sm">
-                          {{ variationTemplateLabel(override.templateId) }}
-                        </span>
-                        <Select
-                          :disabled="selectedCustomStyle == null"
-                          :model-value="override.visible ? 'visible' : 'hidden'"
-                          @update:model-value="
-                            (value) =>
-                              updateVariationVisibility(
-                                index,
-                                override.templateId,
-                                value,
-                              )
-                          "
-                        >
-                          <SelectTrigger class="w-28"
-                            ><SelectValue
-                          /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="visible">{{
-                              $t(
-                                ($) => $.dialog.initialMartyriaStyles.visible,
-                                { ns: 'dialog' },
-                              )
-                            }}</SelectItem>
-                            <SelectItem value="hidden">{{
-                              $t(($) => $.dialog.initialMartyriaStyles.hidden, {
-                                ns: 'dialog',
-                              })
-                            }}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          :disabled="selectedCustomStyle == null"
-                          :aria-label="
-                            $t(
-                              ($) =>
-                                $.dialog.initialMartyriaStyles.removeOverride,
-                              { ns: 'dialog' },
-                            )
-                          "
-                          @click="
-                            removeVariationOverride(index, override.templateId)
-                          "
-                          >×</Button
-                        >
-                      </div>
-                      <Select
-                        v-model="variationSelection"
-                        :disabled="
-                          selectedCustomStyle == null ||
-                          availableVariationTemplates(component).length === 0
-                        "
-                        @update:model-value="
-                          (value) => addVariationOverride(index, value)
-                        "
-                      >
-                        <SelectTrigger class="w-full"
-                          ><SelectValue
-                            :placeholder="
-                              $t(
-                                ($) =>
-                                  $.dialog.initialMartyriaStyles
-                                    .addVariationOverride,
-                                { ns: 'dialog' },
-                              )
-                            "
-                        /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem
-                            v-for="template in availableVariationTemplates(
-                              component,
-                            )"
-                            :key="template.id"
-                            :value="String(template.id)"
-                          >
-                            {{ variationTemplateLabel(template.id) }}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </details>
-                </div>
-              </div>
-              <div class="mt-2 flex gap-2">
-                <Select
-                  v-model="componentKindSelection"
-                  :disabled="
-                    selectedCustomStyle == null ||
-                    availableComponentKinds.length === 0
-                  "
-                  @update:model-value="addComponent"
-                >
-                  <SelectTrigger class="w-full">
-                    <SelectValue
-                      :placeholder="
-                        $t(($) => $.dialog.initialMartyriaStyles.addComponent, {
-                          ns: 'dialog',
-                        })
-                      "
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem
-                      v-for="kind in availableComponentKinds"
-                      :key="kind"
-                      :value="kind"
-                    >
-                      {{ componentKindLabel(kind) }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </Field>
-          </FieldGroup>
-        </ScrollArea>
-        <ScrollArea class="min-h-0 border">
-          <div class="space-y-2 p-3">
-            <p class="text-sm font-medium">
+              }}
+            </Button>
+          </div>
+
+          <div
+            class="sticky top-0 flex h-[calc(100dvh-12rem)] max-h-[40rem] min-h-0 flex-col rounded-md border bg-background"
+          >
+            <p class="border-b px-4 py-3 text-sm font-medium">
               {{
                 $t(($) => $.dialog.initialMartyriaStyles.preview, {
                   ns: 'dialog',
                 })
               }}
             </p>
-            <div
-              v-for="preview in previewTemplates"
-              :key="preview.template.id"
-              class="rounded border px-2 py-1"
-            >
-              <ModeKeyRenderer
-                class="!w-auto !border-0 [--zoom:1]"
-                :element="preview.element"
-                :page-setup="previewPageSetup"
-                :initial-martyria-styles="workingStyles"
-                :paragraph-styles="paragraphStyles"
-              />
-              <p class="text-xs text-muted-foreground">
-                {{ $t(preview.template.description, { ns: 'model' }) }}
-              </p>
-            </div>
+            <ScrollArea class="min-h-0 flex-1">
+              <div class="space-y-2 p-3">
+                <div
+                  v-for="preview in allTemplatePreviews"
+                  :key="preview.template.id"
+                  class="overflow-hidden rounded-md border px-2 py-1"
+                >
+                  <ModeKeyRenderer
+                    class="initial-martyria-preview !w-auto !border-0 [--zoom:1]"
+                    :element="preview.element"
+                    :page-setup="previewPageSetup"
+                  />
+                  <p class="text-xs text-muted-foreground">
+                    {{ $t(preview.template.description, { ns: 'model' }) }}
+                  </p>
+                </div>
+              </div>
+            </ScrollArea>
           </div>
-        </ScrollArea>
-      </div>
-      <DialogFooter
-        ><Button
+        </div>
+      </ScrollArea>
+
+      <DialogFooter>
+        <DialogClose as-child>
+          <Button variant="outline" type="button">
+            {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
+          </Button>
+        </DialogClose>
+        <Button
+          v-if="target === 'element'"
+          type="button"
           variant="outline"
-          :disabled="selectedStyleId === activeStyleId || !stylesAreValid"
-          @click="useForDocument"
-          >{{
+          @click="updateElement"
+        >
+          {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
+        </Button>
+        <Button type="button" @click="useForDocument">
+          {{
             $t(($) => $.dialog.initialMartyriaStyles.useForDocument, {
               ns: 'dialog',
             })
-          }}</Button
-        ><DialogClose as-child
-          ><Button variant="outline">{{
-            $t(($) => $.dialog.common.cancel, { ns: 'dialog' })
-          }}</Button></DialogClose
-        ><Button :disabled="!stylesAreValid" @click="submit">{{
-          $t(($) => $.dialog.common.update, { ns: 'dialog' })
-        }}</Button></DialogFooter
-      >
+          }}
+        </Button>
+      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>
+
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
-import { computed, ref, toRaw, watch } from 'vue';
+import { computed, ref, toRaw } from 'vue';
 
+import ColorPicker from '@/components/ColorPicker.vue';
+import FontCombobox, {
+  type FontComboboxOption,
+} from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
+import InputFontSize from '@/components/InputFontSize.vue';
+import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import ModeKeyRenderer from '@/components/ModeKeyRenderer.vue';
-import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import FontVariantFields from '@/components/properties/FontVariantFields.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -604,8 +337,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
@@ -614,610 +346,312 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PARAGRAPH_STYLE_NONE_VALUE } from '@/composables/useRichTextStyleCommands';
-import { ModeKeyElement } from '@/models/Element';
+import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
+  type BuiltInInitialMartyriaStyleId,
   builtInInitialMartyriaStyles,
-  cloneInitialMartyriaStyle,
-  createInitialMartyriaStartingNoteText,
+  cloneInitialMartyriaConfiguration,
+  createInitialMartyriaConfiguration,
   getInitialMartyriaStyleDisplayName,
-  type InitialMartyriaCanonicalNote,
-  initialMartyriaCanonicalNotes,
-  type InitialMartyriaComponent,
-  type InitialMartyriaStyle,
-  type ModeKeyMode,
-  traditionalGreekInitialMartyriaStyle,
-  validateInitialMartyriaStyle,
+  type InitialMartyriaAppearanceOverrides,
+  type InitialMartyriaConfiguration,
+  type InitialMartyriaLanguageId,
+  initialMartyriaLanguages,
+  resolveInitialMartyriaConfiguration,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
-import { getModeSignLabelSelector } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
-import {
-  areStyleDisplayNamesValid,
-  getNextAvailableStyleName,
-} from '@/utils/styleNames';
-import { Unit } from '@/utils/Unit';
+import { fontCatalog } from '@/services/FontCatalog';
+import type { FontVariantProperty } from '@/utils/fontVariants';
+import { getLegacyNeumeFontFamily } from '@/utils/getFontFamilyWithFallback';
 
-const props = defineProps<{
-  styles: InitialMartyriaStyle[];
-  pageSetup: PageSetup;
-  paragraphStyles: ParagraphStyle[];
-  activeStyleId?: string | null;
-}>();
+const DEFAULT_FONT_VALUE = '__style_default__';
+const representativeTemplateIds = [100, 500, 700];
+
+const props = withDefaults(
+  defineProps<{
+    configuration: InitialMartyriaConfiguration | null | undefined;
+    pageSetup: PageSetup;
+    fonts: string[];
+    target?: 'document' | 'element';
+  }>(),
+  { target: 'document' },
+);
 const emit = defineEmits<{
-  update: [styles: InitialMartyriaStyle[]];
-  'use-style': [id: string];
+  update: [configuration: InitialMartyriaConfiguration | null];
+  'use-for-document': [configuration: InitialMartyriaConfiguration | null];
 }>();
 const open = defineModel<boolean>('open', { required: true });
 const { t } = useTranslation();
-const modes: ModeKeyMode[] = [1, 2, 3, 4, 5, 6, 7, 8];
-const workingStyles = ref<InitialMartyriaStyle[]>([]);
-const draggedComponentId = ref<string | null>(null);
-const componentKindSelection = ref('');
-const variationSelection = ref('');
-const glyphStrokeWidth = computed(() =>
-  new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
-    Unit.toPt(props.pageSetup.modeKeyDefaultStrokeWidth),
+
+const initialConfiguration =
+  props.configuration === undefined
+    ? props.pageSetup.initialMartyriaConfiguration
+    : props.configuration;
+const workingConfiguration = ref<InitialMartyriaConfiguration | null>(
+  initialConfiguration == null
+    ? null
+    : cloneInitialMartyriaConfiguration(initialConfiguration),
+);
+const selectedLanguageId = ref<InitialMartyriaLanguageId>(
+  builtInInitialMartyriaStyles.find(
+    (style) => style.id === workingConfiguration.value?.styleId,
+  )?.languageId ?? initialMartyriaLanguages[0].id,
+);
+
+const filteredStyles = computed(() =>
+  builtInInitialMartyriaStyles.filter(
+    (style) => style.languageId === selectedLanguageId.value,
   ),
 );
-const selectedStyleId = ref(
-  props.activeStyleId ?? BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1,
+const selectedStyle = computed(
+  () =>
+    builtInInitialMartyriaStyles.find(
+      (style) => style.id === workingConfiguration.value?.styleId,
+    ) ?? null,
 );
-const previewTemplates = modeKeyTemplates.map((template) => ({
-  template,
-  element: ModeKeyElement.createFromTemplate(template),
-}));
+const resolvedConfiguration = computed(() =>
+  workingConfiguration.value == null
+    ? null
+    : resolveInitialMartyriaConfiguration(workingConfiguration.value),
+);
+const effectiveAppearance = computed(
+  () => resolvedConfiguration.value?.mainAppearance ?? {},
+);
+const fontOptions = computed(() => [
+  ...fontCatalog.bundledTextFamilies(),
+  ...props.fonts,
+]);
+const mainFontOptions = computed<FontComboboxOption[]>(() => [
+  {
+    value: DEFAULT_FONT_VALUE,
+    label: t(($) => $.dialog.initialMartyriaStyles.styleDefaultFont, {
+      ns: 'dialog',
+      font: selectedStyle.value?.defaultAppearance.mainFontFamily ?? '',
+    }),
+  },
+  ...fontOptions.value,
+]);
+const greekFontOptions = computed<FontComboboxOption[]>(() => [
+  {
+    value: DEFAULT_FONT_VALUE,
+    label: t(($) => $.dialog.initialMartyriaStyles.styleDefaultFont, {
+      ns: 'dialog',
+      font: selectedStyle.value?.defaultAppearance.greekFontFamily ?? '',
+    }),
+  },
+  ...fontOptions.value,
+]);
+const mainFontValue = computed({
+  get: () =>
+    workingConfiguration.value?.appearanceOverrides.mainFontFamily ??
+    DEFAULT_FONT_VALUE,
+  set: (value: string) =>
+    setOptionalAppearanceOverride('mainFontFamily', value),
+});
+const greekFontValue = computed({
+  get: () =>
+    workingConfiguration.value?.appearanceOverrides.greekFontFamily ??
+    DEFAULT_FONT_VALUE,
+  set: (value: string) =>
+    setOptionalAppearanceOverride('greekFontFamily', value),
+});
+const showGreekFontControl = computed(
+  () =>
+    workingConfiguration.value?.transliterateNoteNames !== true ||
+    selectedStyle.value?.components.some(
+      (component) =>
+        (component.kind === 'text' || component.kind === 'stackedText') &&
+        component.fontRole === 'greek',
+    ) === true,
+);
+const fontStyleValue = computed({
+  get: () => effectiveAppearance.value.fontStyle ?? '',
+  set: (value: string) => setAppearanceOverride('fontStyle', value),
+});
+const { fontStyleOptions, remapStyleForFamily } = useFontStyleControls(
+  () => effectiveAppearance.value.fontFamily ?? '',
+  () => effectiveAppearance.value.fontStyle ?? '',
+);
+
 const previewPageSetup = computed(() => {
   const pageSetup = Object.assign(
     Object.create(Object.getPrototypeOf(props.pageSetup)),
     toRaw(props.pageSetup),
   ) as PageSetup;
-  pageSetup.initialMartyriaStyleId = selectedStyleId.value;
+  pageSetup.initialMartyriaConfiguration =
+    workingConfiguration.value == null
+      ? null
+      : cloneInitialMartyriaConfiguration(workingConfiguration.value);
   return pageSetup;
 });
-const allStyles = computed(() => [
-  ...builtInInitialMartyriaStyles,
-  ...workingStyles.value,
-]);
-const selectedStyle = computed(
-  () =>
-    allStyles.value.find((style) => style.id === selectedStyleId.value) ??
-    traditionalGreekInitialMartyriaStyle,
+const standardPreviews = computed(() =>
+  representativeTemplateIds.map((templateId) => {
+    const template = modeKeyTemplates.find((item) => item.id === templateId)!;
+    return createPreviewElement(template, null);
+  }),
 );
-const selectedCustomStyle = computed(
-  () =>
-    workingStyles.value.find((style) => style.id === selectedStyleId.value) ??
-    null,
+const allTemplatePreviews = computed(() =>
+  modeKeyTemplates.map((template) => ({
+    template,
+    element: createPreviewElement(template, workingConfiguration.value),
+  })),
 );
-const stylesAreValid = computed(
-  () =>
-    areStyleDisplayNamesValid(
-      allStyles.value.map((style) => styleDisplayName(style)),
-    ) &&
-    workingStyles.value.every(
-      (style) => validateInitialMartyriaStyle(style).length === 0,
-    ),
-);
-const usesCustomStartingNoteText = computed(() =>
-  selectedStyle.value.components.some(
-    (component) =>
-      component.kind === 'startingNoteCluster' &&
-      component.rendering === 'customText',
-  ),
-);
-type ComponentAuthoringKind =
-  | 'text'
-  | 'stackedText'
-  | 'ekhosGlyph'
-  | 'plagalGlyph'
-  | 'modeSignGlyph'
-  | 'varysGlyph'
-  | 'startingNoteClusterNeume'
-  | 'startingNoteClusterText';
-const availableComponentKinds = computed<ComponentAuthoringKind[]>(() => {
-  const components = selectedStyle.value.components;
-  const hasKind = (kind: InitialMartyriaComponent['kind']) =>
-    components.some((component) => component.kind === kind);
-  const hasStartingNoteCluster = hasKind('startingNoteCluster');
-  return [
-    'text',
-    'stackedText',
-    'ekhosGlyph',
-    'plagalGlyph',
-    'modeSignGlyph',
-    'varysGlyph',
-    ...(hasStartingNoteCluster
-      ? []
-      : ['startingNoteClusterNeume', 'startingNoteClusterText']),
-  ].filter((kind) =>
-    kind === 'text'
-      ? true
-      : kind === 'startingNoteClusterNeume' ||
-          kind === 'startingNoteClusterText'
-        ? !hasStartingNoteCluster
-        : !hasKind(kind as InitialMartyriaComponent['kind']),
-  ) as ComponentAuthoringKind[];
-});
-watch(
-  () => [open.value, props.styles, props.activeStyleId] as const,
-  () => {
-    if (open.value) {
-      const styles = props.styles.map(cloneInitialMartyriaStyle);
-      workingStyles.value = styles;
-      const availableIds = new Set([
-        ...builtInInitialMartyriaStyles.map((style) => style.id),
-        ...styles.map((style) => style.id),
-      ]);
-      if (
-        props.activeStyleId != null &&
-        availableIds.has(props.activeStyleId)
-      ) {
-        selectedStyleId.value = props.activeStyleId;
-      } else if (!availableIds.has(selectedStyleId.value)) {
-        selectedStyleId.value =
-          BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1;
-      }
-      componentKindSelection.value = '';
-      variationSelection.value = '';
-      draggedComponentId.value = null;
-    }
-  },
-  { immediate: true },
-);
-function updateSelected(update: (style: InitialMartyriaStyle) => void) {
-  const style = workingStyles.value.find(
-    (item) => item.id === selectedStyleId.value,
-  );
-  if (style != null) {
-    update(style);
+
+function languageName(languageId: InitialMartyriaLanguageId) {
+  switch (languageId) {
+    case 'el':
+      return t(($) => $.dialog.initialMartyriaStyles.languages.greek, {
+        ns: 'dialog',
+      });
+    case 'en':
+      return t(($) => $.dialog.initialMartyriaStyles.languages.english, {
+        ns: 'dialog',
+      });
+    case 'ro':
+      return t(($) => $.dialog.initialMartyriaStyles.languages.romanian, {
+        ns: 'dialog',
+      });
   }
 }
-function applyStyles() {
-  if (!stylesAreValid.value) {
-    return false;
-  }
-  emit(
-    'update',
-    workingStyles.value.map((style) => {
-      const updated = cloneInitialMartyriaStyle(style);
-      updated.displayName = updated.displayName.trim();
-      return updated;
-    }),
-  );
-  return true;
-}
-function submit() {
-  if (applyStyles()) {
-    open.value = false;
-  }
-}
-function useForDocument() {
-  if (!applyStyles()) {
+
+function selectLanguage(value: unknown) {
+  const language = initialMartyriaLanguages.find((item) => item.id === value);
+  if (language == null) {
     return;
   }
-  emit('use-style', selectedStyleId.value);
+  selectedLanguageId.value = language.id;
+  const firstStyle = builtInInitialMartyriaStyles.find(
+    (style) => style.languageId === language.id,
+  );
+  if (firstStyle != null) {
+    selectStyle(firstStyle.id);
+  }
+}
+
+function selectStyle(styleId: BuiltInInitialMartyriaStyleId) {
+  if (workingConfiguration.value == null) {
+    workingConfiguration.value = createInitialMartyriaConfiguration(styleId);
+  } else {
+    workingConfiguration.value.styleId = styleId;
+  }
+}
+
+function setAppearanceOverride<
+  K extends keyof InitialMartyriaAppearanceOverrides,
+>(property: K, value: InitialMartyriaAppearanceOverrides[K]) {
+  if (workingConfiguration.value != null) {
+    workingConfiguration.value.appearanceOverrides[property] = value;
+  }
+}
+
+function setOptionalAppearanceOverride(
+  property: 'mainFontFamily' | 'greekFontFamily',
+  value: string,
+) {
+  if (workingConfiguration.value == null) {
+    return;
+  }
+  if (value === DEFAULT_FONT_VALUE) {
+    delete workingConfiguration.value.appearanceOverrides[property];
+  } else {
+    workingConfiguration.value.appearanceOverrides[property] = value;
+    if (property === 'mainFontFamily') {
+      const remapped = remapStyleForFamily(value);
+      workingConfiguration.value.appearanceOverrides.fontStyle = remapped;
+    }
+  }
+}
+
+function setFontVariant(property: FontVariantProperty, value: string) {
+  setAppearanceOverride(
+    property as keyof InitialMartyriaAppearanceOverrides,
+    (value === '' ? null : value) as never,
+  );
+}
+
+function setFontSize(value: number | null) {
+  if (value != null) {
+    setAppearanceOverride('fontSize', value);
+  }
+}
+
+function resetAppearance() {
+  if (workingConfiguration.value != null) {
+    workingConfiguration.value.appearanceOverrides = {};
+  }
+}
+
+function previewsForStyle(styleId: BuiltInInitialMartyriaStyleId) {
+  const configuration =
+    workingConfiguration.value?.styleId === styleId
+      ? cloneInitialMartyriaConfiguration(workingConfiguration.value)
+      : createInitialMartyriaConfiguration(styleId);
+  return representativeTemplateIds.map((templateId) => {
+    const template = modeKeyTemplates.find((item) => item.id === templateId)!;
+    return createPreviewElement(template, configuration);
+  });
+}
+
+function createPreviewElement(
+  template: (typeof modeKeyTemplates)[number],
+  configuration: InitialMartyriaConfiguration | null,
+) {
+  const element = ModeKeyElement.createFromTemplate(
+    template,
+    props.pageSetup.useOptionalDiatonicFthoras,
+    TextBoxAlignment.Left,
+  );
+  element.initialMartyriaConfiguration =
+    configuration == null
+      ? null
+      : cloneInitialMartyriaConfiguration(configuration);
+  element.width = 320;
+
+  if (configuration == null) {
+    element.computedFontFamily = getLegacyNeumeFontFamily(
+      props.pageSetup.neumeDefaultFontFamily,
+    );
+    element.computedFontSize = props.pageSetup.modeKeyDefaultFontSize;
+    element.computedColor = props.pageSetup.modeKeyDefaultColor;
+    element.computedStrokeWidth = props.pageSetup.modeKeyDefaultStrokeWidth;
+    element.height = props.pageSetup.modeKeyDefaultFontSize * 1.5;
+    return element;
+  }
+
+  const resolved = resolveInitialMartyriaConfiguration(configuration)!;
+  element.computedFontFamily = props.pageSetup.neumeDefaultFontFamily;
+  element.computedFontSize = resolved.mainAppearance.fontSize!;
+  element.computedColor = resolved.mainAppearance.color!;
+  element.computedStrokeWidth = resolved.mainAppearance.strokeWidth!;
+  element.computedTop = -40;
+  element.computedBottom = 20;
+  element.computedFlowTop = -20;
+  element.height = 60;
+  return element;
+}
+
+function getWorkingCopy() {
+  return workingConfiguration.value == null
+    ? null
+    : cloneInitialMartyriaConfiguration(workingConfiguration.value);
+}
+
+function updateElement() {
+  emit('update', getWorkingCopy());
   open.value = false;
 }
-function createStyle() {
-  const style = cloneInitialMartyriaStyle(traditionalGreekInitialMartyriaStyle);
-  style.id = crypto.randomUUID();
-  style.displayName = getNextAvailableStyleName(
-    t(($) => $.dialog.initialMartyriaStyles.newStyle, {
-      ns: 'dialog',
-    }),
-    allStyles.value.map((item) => styleDisplayName(item)),
-  );
-  workingStyles.value.push(style);
-  selectedStyleId.value = style.id;
-}
-function duplicateStyle() {
-  const source = selectedStyle.value;
-  const style = cloneInitialMartyriaStyle(source);
-  style.id = crypto.randomUUID();
-  style.displayName = getNextAvailableStyleName(
-    `${styleDisplayName(source)} ${t(($) => $.dialog.initialMartyriaStyles.copy, { ns: 'dialog' })}`,
-    allStyles.value.map((item) => styleDisplayName(item)),
-  );
-  workingStyles.value.push(style);
-  selectedStyleId.value = style.id;
-}
-function deleteStyle() {
-  workingStyles.value.splice(
-    workingStyles.value.findIndex(
-      (style) => style.id === selectedStyleId.value,
-    ),
-    1,
-  );
-  selectedStyleId.value =
-    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1;
-}
-function updateName(value: string | number) {
-  updateSelected((style) => {
-    style.displayName = String(value);
-  });
-}
-function updateDefaultParagraphStyle(value: string) {
-  updateSelected((style) => {
-    style.defaultParagraphStyleId = value;
-  });
-}
-function updateFlowDirection(value: unknown) {
-  if (value === 'page' || value === 'ltr' || value === 'rtl') {
-    updateSelected((style) => {
-      style.flowDirection = value;
-    });
-  }
-}
-function getComponent(index: number) {
-  return selectedCustomStyle.value?.components[index];
-}
-function textComponent(): InitialMartyriaComponent {
-  return {
-    id: crypto.randomUUID(),
-    kind: 'text',
-    content: 'Text',
-    visibility: { modes: [...modes], variationOverrides: [] },
-  };
-}
-function stackedTextComponent(): InitialMartyriaComponent {
-  return {
-    id: crypto.randomUUID(),
-    kind: 'stackedText',
-    top: 'λ',
-    bottom: 'π',
-    visibility: { modes: [...modes], variationOverrides: [] },
-  };
-}
-function glyphComponent(
-  kind: Extract<
-    InitialMartyriaComponent['kind'],
-    'ekhosGlyph' | 'plagalGlyph' | 'modeSignGlyph' | 'varysGlyph'
-  >,
-): InitialMartyriaComponent {
-  return {
-    id: crypto.randomUUID(),
-    kind,
-    visibility: { modes: [...modes], variationOverrides: [] },
-  };
-}
-function startingNoteComponent(
-  rendering: 'neume' | 'customText',
-): InitialMartyriaComponent {
-  return {
-    id: crypto.randomUUID(),
-    kind: 'startingNoteCluster',
-    rendering,
-    visibility: { modes: [...modes], variationOverrides: [] },
-  };
-}
-function addComponent(value: unknown) {
-  componentKindSelection.value = '';
-  if (
-    typeof value !== 'string' ||
-    !availableComponentKinds.value.includes(value as ComponentAuthoringKind)
-  ) {
-    return;
-  }
-  const component =
-    value === 'text'
-      ? textComponent()
-      : value === 'stackedText'
-        ? stackedTextComponent()
-        : value === 'startingNoteClusterNeume'
-          ? startingNoteComponent('neume')
-          : value === 'startingNoteClusterText'
-            ? startingNoteComponent('customText')
-            : glyphComponent(
-                value as Extract<
-                  InitialMartyriaComponent['kind'],
-                  'ekhosGlyph' | 'plagalGlyph' | 'modeSignGlyph' | 'varysGlyph'
-                >,
-              );
-  updateSelected((style) => style.components.push(component));
-}
-function moveComponent(index: number, direction: number) {
-  updateSelected((style) => {
-    const target = index + direction;
-    [style.components[index], style.components[target]] = [
-      style.components[target],
-      style.components[index],
-    ];
-  });
-}
-function removeComponent(index: number) {
-  updateSelected((style) => style.components.splice(index, 1));
-}
-function isTextComponent(
-  component: InitialMartyriaComponent,
-): component is Extract<
-  InitialMartyriaComponent,
-  { kind: 'text' | 'stackedText' }
-> {
-  return component.kind === 'text' || component.kind === 'stackedText';
-}
-function isCustomTextComponent(
-  component: InitialMartyriaComponent,
-): component is Extract<
-  InitialMartyriaComponent,
-  { kind: 'text' | 'stackedText' | 'startingNoteCluster' }
-> {
-  return (
-    component.kind === 'text' ||
-    component.kind === 'stackedText' ||
-    (component.kind === 'startingNoteCluster' &&
-      component.rendering === 'customText')
-  );
-}
-function textComponentLines(component: InitialMartyriaComponent) {
-  if (component.kind === 'stackedText') {
-    return [component.top, component.bottom];
-  }
-  return [];
-}
-function updateInlineText(index: number, value: string | number) {
-  const item = getComponent(index);
-  if (item?.kind === 'text') {
-    item.content = String(value);
-  }
-}
-function updateComponentParagraphStyle(index: number, value: string) {
-  const item = getComponent(index);
-  if (item == null || !isCustomTextComponent(item)) {
-    return;
-  }
-  if (value === PARAGRAPH_STYLE_NONE_VALUE) {
-    delete item.paragraphStyleId;
-  } else {
-    item.paragraphStyleId = value;
-  }
-}
-function updateStartingNoteRendering(index: number, value: unknown) {
-  if (value !== 'neume' && value !== 'customText') {
-    return;
-  }
-  const item = getComponent(index);
-  if (item?.kind === 'startingNoteCluster') {
-    item.rendering = value;
-  }
-}
-function updateStackedLine(
-  index: number,
-  line: number,
-  value: string | number,
-) {
-  const item = getComponent(index);
-  if (item?.kind === 'stackedText') {
-    if (line === 0) {
-      item.top = String(value);
-    }
-    if (line === 1) {
-      item.bottom = String(value);
-    }
-  }
-}
-function startingNoteLabel(note: InitialMartyriaCanonicalNote) {
-  return getModeSignLabelSelector(note)!;
-}
-function updateStartingNoteName(
-  note: InitialMartyriaCanonicalNote,
-  value: string | number,
-) {
-  updateSelected((style) => {
-    style.startingNoteText.names[note] = String(value);
-  });
-}
-function updateStartingNoteDirection(value: unknown) {
-  if (value !== 'ltr' && value !== 'rtl') {
-    return;
-  }
-  updateSelected((style) => {
-    style.startingNoteText.direction = value;
-  });
-}
-function resetStartingNoteNames() {
-  updateSelected((style) => {
-    const defaults = createInitialMartyriaStartingNoteText();
-    style.startingNoteText.names = defaults.names;
-    style.startingNoteText.direction = defaults.direction;
-  });
-}
-function updateVisibility(
-  index: number,
-  mode: ModeKeyMode,
-  value: boolean | string,
-) {
-  const item = getComponent(index);
-  if (item == null) {
-    return;
-  }
-  const visible = new Set(item.visibility.modes);
-  if (value === true) {
-    visible.add(mode);
-  } else {
-    visible.delete(mode);
-  }
-  item.visibility.modes = [...visible].sort((a, b) => a - b) as ModeKeyMode[];
-}
-function availableVariationTemplates(component: InitialMartyriaComponent) {
-  const existing = new Set(
-    component.visibility.variationOverrides.map(
-      (override) => override.templateId,
-    ),
-  );
-  return modeKeyTemplates.filter((template) => !existing.has(template.id));
-}
-function variationTemplateLabel(templateId: number) {
-  const template = modeKeyTemplates.find((item) => item.id === templateId);
-  return template == null
-    ? String(templateId)
-    : `${template.id} - ${t(template.description, { ns: 'model' })}`;
-}
-function addVariationOverride(index: number, value: unknown) {
-  variationSelection.value = '';
-  const templateId = Number(value);
-  if (!Number.isInteger(templateId)) {
-    return;
-  }
-  const item = getComponent(index);
-  if (
-    item == null ||
-    item.visibility.variationOverrides.some(
-      (override) => override.templateId === templateId,
-    )
-  ) {
-    return;
-  }
-  item.visibility.variationOverrides.push({ templateId, visible: true });
-}
-function updateVariationVisibility(
-  index: number,
-  templateId: number,
-  value: unknown,
-) {
-  const item = getComponent(index);
-  const override = item?.visibility.variationOverrides.find(
-    (candidate) => candidate.templateId === templateId,
-  );
-  if (override != null && (value === 'visible' || value === 'hidden')) {
-    override.visible = value === 'visible';
-  }
-}
-function removeVariationOverride(index: number, templateId: number) {
-  const item = getComponent(index);
-  if (item == null) {
-    return;
-  }
-  item.visibility.variationOverrides =
-    item.visibility.variationOverrides.filter(
-      (override) => override.templateId !== templateId,
-    );
-}
-function handleComponentDragStart(
-  component: InitialMartyriaComponent,
-  event: DragEvent,
-) {
-  if (event.dataTransfer == null) {
-    return;
-  }
-  draggedComponentId.value = component.id;
-  event.dataTransfer.effectAllowed = 'move';
-  event.dataTransfer.setData('text/plain', component.id);
-}
-function handleComponentDragOver(
-  component: InitialMartyriaComponent,
-  event: DragEvent,
-) {
-  if (
-    draggedComponentId.value == null ||
-    draggedComponentId.value === component.id
-  ) {
-    return;
-  }
-  event.preventDefault();
-  if (event.dataTransfer != null) {
-    event.dataTransfer.dropEffect = 'move';
-  }
-}
-function handleComponentDrop(
-  component: InitialMartyriaComponent,
-  event: DragEvent,
-) {
-  event.preventDefault();
-  const draggedId = draggedComponentId.value;
-  draggedComponentId.value = null;
-  if (draggedId == null || draggedId === component.id) {
-    return;
-  }
-  const target = event.currentTarget;
-  const after =
-    target instanceof HTMLElement &&
-    event.clientY >=
-      target.getBoundingClientRect().top + target.offsetHeight / 2;
-  updateSelected((style) => {
-    const fromIndex = style.components.findIndex(
-      (item) => item.id === draggedId,
-    );
-    const targetIndex = style.components.findIndex(
-      (item) => item.id === component.id,
-    );
-    if (fromIndex < 0 || targetIndex < 0) {
-      return;
-    }
-    const [moved] = style.components.splice(fromIndex, 1);
-    const adjustedTargetIndex = targetIndex - (fromIndex < targetIndex ? 1 : 0);
-    const insertionIndex = adjustedTargetIndex + (after ? 1 : 0);
-    style.components.splice(insertionIndex, 0, moved);
-  });
-}
-function handleComponentDragEnd() {
-  draggedComponentId.value = null;
-}
-function styleDisplayName(style: InitialMartyriaStyle) {
-  return getInitialMartyriaStyleDisplayName(style, t);
-}
-function componentKindLabel(
-  value: InitialMartyriaComponent | ComponentAuthoringKind,
-) {
-  const kind = typeof value === 'string' ? value : value.kind;
-  if (typeof value !== 'string' && value.kind === 'startingNoteCluster') {
-    return value.rendering === 'customText'
-      ? t(($) => $.dialog.initialMartyriaStyles.startingNoteCustomText, {
-          ns: 'dialog',
-        })
-      : t(($) => $.dialog.initialMartyriaStyles.startingNoteNeumes, {
-          ns: 'dialog',
-        });
-  }
-  if (kind === 'text') {
-    return t(($) => $.dialog.initialMartyriaStyles.componentKinds.literal, {
-      ns: 'dialog',
-    });
-  }
-  if (kind === 'stackedText') {
-    return t(($) => $.dialog.initialMartyriaStyles.componentKinds.stackedText, {
-      ns: 'dialog',
-    });
-  }
-  if (kind === 'startingNoteClusterNeume') {
-    return t(($) => $.dialog.initialMartyriaStyles.startingNoteNeumes, {
-      ns: 'dialog',
-    });
-  }
-  if (kind === 'startingNoteClusterText') {
-    return t(($) => $.dialog.initialMartyriaStyles.startingNoteCustomText, {
-      ns: 'dialog',
-    });
-  }
-  const source =
-    kind === 'ekhosGlyph'
-      ? 'ekhos'
-      : kind === 'plagalGlyph'
-        ? 'plagal'
-        : kind === 'varysGlyph'
-          ? 'varys'
-          : 'mode-sign';
-  return glyphSourceLabel(source);
-}
-function glyphSourceLabel(source: 'ekhos' | 'plagal' | 'varys' | 'mode-sign') {
-  switch (source) {
-    case 'ekhos':
-      return t(($) => $.dialog.initialMartyriaGlyphSources.ekhos, {
-        ns: 'dialog',
-      });
-    case 'plagal':
-      return t(($) => $.dialog.initialMartyriaGlyphSources.plagal, {
-        ns: 'dialog',
-      });
-    case 'varys':
-      return t(($) => $.dialog.initialMartyriaGlyphSources.varys, {
-        ns: 'dialog',
-      });
-    case 'mode-sign':
-      return t(($) => $.dialog.initialMartyriaGlyphSources.modeSign, {
-        ns: 'dialog',
-      });
-  }
+
+function useForDocument() {
+  emit('use-for-document', getWorkingCopy());
+  open.value = false;
 }
 </script>
+
+<style scoped>
+:deep(.initial-martyria-preview.mode-key-container) {
+  border: 0;
+  outline: 0;
+}
+</style>

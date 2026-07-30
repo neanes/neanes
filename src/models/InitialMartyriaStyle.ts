@@ -4,23 +4,52 @@ import type { ModeKeyElement } from '@/models/Element';
 import type { Fthora, Neume } from '@/models/Neumes';
 import { ModeSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
-import {
-  BUILT_IN_PARAGRAPH_STYLE_IDS,
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
+import { Unit } from '@/utils/Unit';
 
 export type ModeKeyMode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
+export const INITIAL_MARTYRIA_LANGUAGE_IDS = {
+  Greek: 'el',
+  English: 'en',
+  Romanian: 'ro',
+} as const;
+
+export type InitialMartyriaLanguageId =
+  (typeof INITIAL_MARTYRIA_LANGUAGE_IDS)[keyof typeof INITIAL_MARTYRIA_LANGUAGE_IDS];
+
+export interface InitialMartyriaLanguage {
+  id: InitialMartyriaLanguageId;
+  languageTag: string;
+  direction: 'ltr' | 'rtl';
+}
+
+export const initialMartyriaLanguages: InitialMartyriaLanguage[] = [
+  {
+    id: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
+    languageTag: 'el',
+    direction: 'ltr',
+  },
+  {
+    id: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    languageTag: 'en',
+    direction: 'ltr',
+  },
+  {
+    id: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
+    languageTag: 'ro',
+    direction: 'ltr',
+  },
+];
+
 export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   TraditionalGreekV1: 'builtin:traditional-greek-v1',
-  TraditionalGreekV2: 'builtin:traditional-greek-v2',
   EnglishPlagalFirstV1: 'builtin:english-plagal-first-v1',
   EnglishSignFirstV1: 'builtin:english-sign-first-v1',
   EnglishModeBeforeSignV1: 'builtin:english-mode-before-sign-v1',
-  EnglishFifthV1: 'builtin:english-fifth-v1',
-  EnglishNumberV1: 'builtin:english-number-v1',
-  EnglishPlagalOfSecondV1: 'builtin:english-plagal-of-second-v1',
+  EnglishOrdinalV1: 'builtin:english-ordinal-v1',
+  EnglishNumberedV1: 'builtin:english-numbered-v1',
+  EnglishFullNameV1: 'builtin:english-full-name-v1',
   EnglishPlagalNumberV1: 'builtin:english-plagal-number-v1',
   EnglishOrdinalPlagalV1: 'builtin:english-ordinal-plagal-v1',
   RomanianGlasNumberV1: 'builtin:romanian-glas-number-v1',
@@ -32,47 +61,33 @@ export type BuiltInInitialMartyriaStyleId =
 
 type InitialMartyriaStyleNameSelector = SelectorParam<'dialog'>;
 
-const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Partial<
-  Record<BuiltInInitialMartyriaStyleId, InitialMartyriaStyleNameSelector>
+const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
+  BuiltInInitialMartyriaStyleId,
+  InitialMartyriaStyleNameSelector
 > = {
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.traditionalGreek,
-  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV2]: ($) =>
-    $.dialog.initialMartyriaStyles.builtInStyles.traditionalGreekV2,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalFirstV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishPlagalFirst,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishSignFirst,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeBeforeSignV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishModeBeforeSign,
-  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishFifthV1]: ($) =>
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishOrdinal,
-  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishNumberV1]: ($) =>
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishNumberedV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishNumbered,
-  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalOfSecondV1]: ($) =>
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishFullNameV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishFullName,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalNumberV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishPlagalNumber,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalPlagalV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishFullName,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.romanianGlasNumber,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.romanianGlas,
 };
-
-export interface InitialMartyriaVisibility {
-  modes: ModeKeyMode[];
-  variationOverrides: Array<{ templateId: number; visible: boolean }>;
-}
-
-/** The authorable Stage 1 component kinds. */
-export type InitialMartyriaComponentKind =
-  | 'text'
-  | 'stackedText'
-  | 'ekhosGlyph'
-  | 'plagalGlyph'
-  | 'modeSignGlyph'
-  | 'varysGlyph'
-  | 'startingNoteCluster';
 
 export type InitialMartyriaCanonicalNote =
   | ModeSign.Ni
@@ -82,14 +97,79 @@ export type InitialMartyriaCanonicalNote =
   | ModeSign.Thi
   | ModeSign.Ke
   | ModeSign.Zo;
-export type StartingNoteRendering = 'neume' | 'customText';
 
-export interface InitialMartyriaStartingNoteText {
+export interface InitialMartyriaNoteNames {
   names: Record<InitialMartyriaCanonicalNote, string>;
-  direction?: 'ltr' | 'rtl';
+  direction: 'ltr' | 'rtl';
+  languageTag: string;
 }
 
-/** Resolved text styling used by layout and rendering, never persisted. */
+export type InitialMartyriaComponent =
+  | {
+      kind: 'text';
+      content: string;
+      modes?: ModeKeyMode[];
+      fontRole?: 'main' | 'greek';
+    }
+  | {
+      kind: 'stackedText';
+      top: string;
+      bottom: string;
+      modes?: ModeKeyMode[];
+      fontRole?: 'main' | 'greek';
+    }
+  | {
+      kind: 'modeSign';
+      modes?: ModeKeyMode[];
+    }
+  | {
+      kind: 'startingNoteCluster';
+      modes?: ModeKeyMode[];
+    };
+
+export interface InitialMartyriaDefaultAppearance {
+  mainFontFamily: string;
+  greekFontFamily: string;
+  fontStyle: string;
+  fontSize: number;
+  color: string;
+  strokeWidth: number;
+  fontVariantCaps: string | null;
+  fontVariantNumeric: string | null;
+  fontVariantLigatures: string | null;
+  fontVariantAlternates: string | null;
+}
+
+export interface InitialMartyriaAppearanceOverrides {
+  mainFontFamily?: string;
+  greekFontFamily?: string;
+  fontStyle?: string;
+  fontSize?: number;
+  color?: string;
+  strokeWidth?: number;
+  fontVariantCaps?: string | null;
+  fontVariantNumeric?: string | null;
+  fontVariantLigatures?: string | null;
+  fontVariantAlternates?: string | null;
+}
+
+export interface InitialMartyriaConfiguration {
+  styleId: BuiltInInitialMartyriaStyleId;
+  transliterateNoteNames: boolean;
+  appearanceOverrides: InitialMartyriaAppearanceOverrides;
+}
+
+export interface InitialMartyriaStyle {
+  id: BuiltInInitialMartyriaStyleId;
+  languageId: InitialMartyriaLanguageId;
+  flowDirection: 'page' | 'ltr' | 'rtl';
+  defaultAppearance: InitialMartyriaDefaultAppearance;
+  originalNoteNames: InitialMartyriaNoteNames;
+  transliteratedNoteNames: InitialMartyriaNoteNames;
+  components: InitialMartyriaComponent[];
+}
+
+/** Resolved text and glyph styling used by layout and rendering. */
 export interface InitialMartyriaAppearance {
   fontFamily?: string;
   fontStyle?: string;
@@ -104,177 +184,11 @@ export interface InitialMartyriaAppearance {
   baselineShift?: number;
 }
 
-export interface ResolvedInitialMartyriaStartingNoteText extends InitialMartyriaStartingNoteText {
-  appearance: InitialMartyriaAppearance;
-}
-
-interface InitialMartyriaComponentBase {
-  id: string;
-  visibility: InitialMartyriaVisibility;
-}
-
-export type InitialMartyriaComponent =
-  | (InitialMartyriaComponentBase & {
-      kind: 'text';
-      content: string;
-      languageTag?: string;
-      direction?: 'ltr' | 'rtl';
-      paragraphStyleId?: string;
-    })
-  | (InitialMartyriaComponentBase & {
-      kind: 'stackedText';
-      top: string;
-      bottom: string;
-      languageTag?: string;
-      direction?: 'ltr' | 'rtl';
-      paragraphStyleId?: string;
-    })
-  | (InitialMartyriaComponentBase & {
-      kind: 'ekhosGlyph' | 'plagalGlyph' | 'modeSignGlyph' | 'varysGlyph';
-    })
-  | (InitialMartyriaComponentBase & {
-      kind: 'startingNoteCluster';
-      rendering: StartingNoteRendering;
-      direction?: 'ltr' | 'rtl';
-      paragraphStyleId?: string;
-    });
-
-export interface InitialMartyriaStyle {
-  id: string;
-  displayName: string;
-  defaultParagraphStyleId: string;
-  flowDirection: 'page' | 'ltr' | 'rtl';
-  startingNoteText: InitialMartyriaStartingNoteText;
-  components: InitialMartyriaComponent[];
-}
-
-function cloneInitialMartyriaVisibility(
-  visibility: InitialMartyriaVisibility,
-): InitialMartyriaVisibility {
-  return {
-    modes: [...visibility.modes],
-    variationOverrides: visibility.variationOverrides.map((override) => ({
-      templateId: override.templateId,
-      visible: override.visible,
-    })),
-  };
-}
-
-function cloneInitialMartyriaComponentBase(
-  component: InitialMartyriaComponentBase,
-) {
-  return {
-    id: component.id,
-    visibility: cloneInitialMartyriaVisibility(component.visibility),
-  };
-}
-
-export function cloneInitialMartyriaComponent(
-  component: InitialMartyriaComponent,
-): InitialMartyriaComponent {
-  const base = cloneInitialMartyriaComponentBase(component);
-
-  switch (component.kind) {
-    case 'text':
-      return {
-        ...base,
-        kind: component.kind,
-        content: component.content,
-        languageTag: component.languageTag,
-        direction: component.direction,
-        paragraphStyleId: component.paragraphStyleId,
-      };
-    case 'stackedText':
-      return {
-        ...base,
-        kind: component.kind,
-        top: component.top,
-        bottom: component.bottom,
-        languageTag: component.languageTag,
-        direction: component.direction,
-        paragraphStyleId: component.paragraphStyleId,
-      };
-    case 'ekhosGlyph':
-    case 'plagalGlyph':
-    case 'modeSignGlyph':
-    case 'varysGlyph':
-      return { ...base, kind: component.kind };
-    case 'startingNoteCluster':
-      return {
-        ...base,
-        kind: component.kind,
-        rendering: component.rendering,
-        direction: component.direction,
-        paragraphStyleId: component.paragraphStyleId,
-      };
-    default:
-      return assertNeverInitialMartyriaComponent(component);
-  }
-}
-
-export function cloneInitialMartyriaStartingNoteText(
-  startingNoteText: InitialMartyriaStartingNoteText,
-): InitialMartyriaStartingNoteText {
-  return {
-    names: {
-      [ModeSign.Ni]: startingNoteText.names[ModeSign.Ni],
-      [ModeSign.Pa]: startingNoteText.names[ModeSign.Pa],
-      [ModeSign.Vou]: startingNoteText.names[ModeSign.Vou],
-      [ModeSign.Ga]: startingNoteText.names[ModeSign.Ga],
-      [ModeSign.Thi]: startingNoteText.names[ModeSign.Thi],
-      [ModeSign.Ke]: startingNoteText.names[ModeSign.Ke],
-      [ModeSign.Zo]: startingNoteText.names[ModeSign.Zo],
-    },
-    direction: startingNoteText.direction,
-  };
-}
-
-export function cloneInitialMartyriaStyle(
-  style: InitialMartyriaStyle,
-): InitialMartyriaStyle {
-  return {
-    id: style.id,
-    displayName: style.displayName,
-    defaultParagraphStyleId: style.defaultParagraphStyleId,
-    flowDirection: style.flowDirection,
-    startingNoteText: cloneInitialMartyriaStartingNoteText(
-      style.startingNoteText,
-    ),
-    components: style.components.map(cloneInitialMartyriaComponent),
-  };
-}
-
-function assertNeverInitialMartyriaComponent(component: never): never {
-  throw new Error(`Unknown initial martyria component kind: ${component}`);
-}
-
-type ResolvedInitialMartyriaTextContent =
-  | { layout: 'inline'; text: string }
-  | { layout: 'stacked'; lines: string[]; gap: number };
-
-export const initialMartyriaSingletonKinds: InitialMartyriaComponentKind[] = [
-  'stackedText',
-  'ekhosGlyph',
-  'plagalGlyph',
-  'modeSignGlyph',
-  'varysGlyph',
-  'startingNoteCluster',
-];
-
-export function isInitialMartyriaComponentKind(
-  kind: string,
-): kind is InitialMartyriaComponentKind {
-  return ['text', ...initialMartyriaSingletonKinds].includes(
-    kind as InitialMartyriaComponentKind,
-  );
-}
-
-function graphemeCount(value: string) {
-  return [
-    ...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(
-      value,
-    ),
-  ].length;
+export interface ResolvedInitialMartyriaConfiguration {
+  style: InitialMartyriaStyle;
+  configuration: InitialMartyriaConfiguration;
+  mainAppearance: InitialMartyriaAppearance;
+  greekAppearance: InitialMartyriaAppearance;
 }
 
 export interface InitialMartyriaPitchNote {
@@ -291,9 +205,357 @@ export interface InitialMartyriaPitchCluster {
 
 export interface InitialMartyriaContext {
   mode: ModeKeyMode;
-  templateId: number | null;
   traditionalModeSign: Neume;
   pitchCluster: InitialMartyriaPitchCluster;
+}
+
+type ResolvedInitialMartyriaTextContent =
+  | { layout: 'inline'; text: string }
+  | { layout: 'stacked'; lines: string[]; gap: number };
+
+export type ResolvedInitialMartyriaRun =
+  | {
+      kind: 'glyph';
+      semantic: 'modeSign';
+      appearance: InitialMartyriaAppearance;
+      direction: 'ltr' | 'rtl';
+      glyphs: Neume[];
+    }
+  | {
+      kind: 'text';
+      appearance: InitialMartyriaAppearance;
+      fontRole: 'main' | 'greek';
+      direction: 'ltr' | 'rtl';
+      languageTag: string;
+      content: ResolvedInitialMartyriaTextContent;
+    }
+  | {
+      kind: 'startingPitch';
+      appearance: InitialMartyriaAppearance;
+      noteText: InitialMartyriaNoteNames & {
+        appearance: InitialMartyriaAppearance;
+      };
+      direction: 'ltr' | 'rtl';
+      cluster: InitialMartyriaPitchCluster;
+    };
+
+export type InitialMartyriaStartingNoteRun = Extract<
+  ResolvedInitialMartyriaRun,
+  { kind: 'startingPitch' }
+>;
+
+export interface InitialMartyriaStyleResolution {
+  style: InitialMartyriaStyle;
+  runs: ResolvedInitialMartyriaRun[];
+  flowDirection: 'ltr' | 'rtl';
+}
+
+export type InitialMartyriaStyleSelection =
+  | {
+      kind: 'standard';
+      missingStyleId: string | null;
+    }
+  | ({
+      kind: 'custom';
+      missingStyleId: string | null;
+    } & ResolvedInitialMartyriaConfiguration);
+
+export const initialMartyriaCanonicalNotes: InitialMartyriaCanonicalNote[] = [
+  ModeSign.Ni,
+  ModeSign.Pa,
+  ModeSign.Vou,
+  ModeSign.Ga,
+  ModeSign.Thi,
+  ModeSign.Ke,
+  ModeSign.Zo,
+];
+
+const originalGreekNoteNames: InitialMartyriaNoteNames = {
+  names: {
+    [ModeSign.Ni]: 'Νη',
+    [ModeSign.Pa]: 'Πα',
+    [ModeSign.Vou]: 'Βου',
+    [ModeSign.Ga]: 'Γα',
+    [ModeSign.Thi]: 'Δι',
+    [ModeSign.Ke]: 'Κε',
+    [ModeSign.Zo]: 'Ζω',
+  },
+  direction: 'ltr',
+  languageTag: 'el',
+};
+
+const transliteratedGreekNoteNames: InitialMartyriaNoteNames = {
+  names: {
+    [ModeSign.Ni]: 'Ni',
+    [ModeSign.Pa]: 'Pa',
+    [ModeSign.Vou]: 'Vou',
+    [ModeSign.Ga]: 'Ga',
+    [ModeSign.Thi]: 'Di',
+    [ModeSign.Ke]: 'Ke',
+    [ModeSign.Zo]: 'Zo',
+  },
+  direction: 'ltr',
+  languageTag: 'en',
+};
+
+function text(
+  content: string,
+  modes?: ModeKeyMode[],
+): InitialMartyriaComponent {
+  return { kind: 'text', content, modes };
+}
+
+function stackedText(
+  top: string,
+  bottom: string,
+  modes?: ModeKeyMode[],
+  fontRole: 'main' | 'greek' = 'main',
+): InitialMartyriaComponent {
+  return {
+    kind: 'stackedText',
+    top,
+    bottom,
+    modes,
+    fontRole,
+  };
+}
+
+function plagalAbbreviation() {
+  return stackedText('λ', 'π', [5, 6, 8], 'greek');
+}
+
+function modeSign(): InitialMartyriaComponent {
+  return { kind: 'modeSign' };
+}
+
+function startingPitch(): InitialMartyriaComponent {
+  return { kind: 'startingNoteCluster' };
+}
+
+function defaultAppearance(
+  mainFontFamily: string,
+  greekFontFamily = mainFontFamily,
+): InitialMartyriaDefaultAppearance {
+  return {
+    mainFontFamily,
+    greekFontFamily,
+    fontStyle: DEFAULT_FONT_STYLE,
+    fontSize: Unit.fromPt(14.5),
+    color: '#ED0000',
+    strokeWidth: 0,
+    fontVariantCaps: null,
+    fontVariantNumeric: null,
+    fontVariantLigatures: null,
+    fontVariantAlternates: null,
+  };
+}
+
+function builtIn(options: {
+  id: BuiltInInitialMartyriaStyleId;
+  languageId: InitialMartyriaLanguageId;
+  defaultAppearance: InitialMartyriaDefaultAppearance;
+  components: InitialMartyriaComponent[];
+}): InitialMartyriaStyle {
+  return {
+    ...options,
+    flowDirection: 'page',
+    originalNoteNames: originalGreekNoteNames,
+    transliteratedNoteNames: transliteratedGreekNoteNames,
+  };
+}
+
+export const traditionalGreekInitialMartyriaStyle = builtIn({
+  id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1,
+  languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
+  defaultAppearance: defaultAppearance('GFS Didot'),
+  components: [
+    text('Ἦχος'),
+    stackedText('λ', 'π', [5, 6, 8], 'greek'),
+    text('Βαρύς', [7]),
+    modeSign(),
+    startingPitch(),
+  ],
+});
+
+const sourceSerifAppearance = () => defaultAppearance('Source Serif');
+
+// Curated styles are developer-owned. A new option needs an ID and localized
+// name selector above, then one entry here describing its language, defaults,
+// and ordered real-text/musical components.
+export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
+  traditionalGreekInitialMartyriaStyle,
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalFirstV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      plagalAbbreviation(),
+      modeSign(),
+      text('Mode'),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      modeSign(),
+      plagalAbbreviation(),
+      text('Mode'),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeBeforeSignV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      plagalAbbreviation(),
+      text('Mode'),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      text('First', [1]),
+      text('Second', [2]),
+      text('Third', [3]),
+      text('Fourth', [4]),
+      text('Fifth', [5]),
+      text('Sixth', [6]),
+      text('Grave', [7]),
+      text('Eighth', [8]),
+      text('Mode'),
+      plagalAbbreviation(),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishNumberedV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      text('Mode'),
+      text('1', [1]),
+      text('2', [2]),
+      text('3', [3]),
+      text('4', [4]),
+      text('5', [5]),
+      text('6', [6]),
+      text('7', [7]),
+      text('8', [8]),
+      plagalAbbreviation(),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishFullNameV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      text('Plagal of', [5, 6, 8]),
+      text('First', [1]),
+      text('Second', [2]),
+      text('Third', [3]),
+      text('Fourth', [4]),
+      text('Fifth', [5]),
+      text('Sixth', [6]),
+      text('Grave', [7]),
+      text('Eighth', [8]),
+      text('Mode'),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalNumberV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      text('Plagal', [5, 6, 8]),
+      text('Grave', [7]),
+      text('Mode'),
+      text('1', [1, 5]),
+      text('2', [2, 6]),
+      text('3', [3]),
+      text('4', [4, 8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalPlagalV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      text('First', [1, 5]),
+      text('Second', [2, 6]),
+      text('Third', [3]),
+      text('Fourth', [4, 8]),
+      text('Grave', [7]),
+      text('Mode'),
+      text('Plagal', [5, 6, 8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      text('Glas'),
+      text('1', [1]),
+      text('2', [2]),
+      text('3', [3]),
+      text('4', [4]),
+      text('5', [5]),
+      text('6', [6]),
+      text('7', [7]),
+      text('8', [8]),
+      plagalAbbreviation(),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      text('Glas'),
+      plagalAbbreviation(),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+];
+
+export function createInitialMartyriaConfiguration(
+  styleId: BuiltInInitialMartyriaStyleId,
+): InitialMartyriaConfiguration {
+  return {
+    styleId,
+    transliterateNoteNames: false,
+    appearanceOverrides: {},
+  };
+}
+
+export function cloneInitialMartyriaConfiguration(
+  configuration: InitialMartyriaConfiguration,
+): InitialMartyriaConfiguration {
+  return {
+    styleId: configuration.styleId,
+    transliterateNoteNames: configuration.transliterateNoteNames,
+    appearanceOverrides: { ...configuration.appearanceOverrides },
+  };
 }
 
 export function getInitialMartyriaContext(
@@ -304,7 +566,6 @@ export function getInitialMartyriaContext(
   }
   return {
     mode: element.mode,
-    templateId: element.templateId,
     traditionalModeSign: element.martyria,
     pitchCluster: {
       primary: isInitialMartyriaCanonicalNote(element.note)
@@ -329,253 +590,6 @@ export function getInitialMartyriaContext(
   };
 }
 
-export const initialMartyriaCanonicalNotes: InitialMartyriaCanonicalNote[] = [
-  ModeSign.Ni,
-  ModeSign.Pa,
-  ModeSign.Vou,
-  ModeSign.Ga,
-  ModeSign.Thi,
-  ModeSign.Ke,
-  ModeSign.Zo,
-];
-
-export function createInitialMartyriaStartingNoteText(): InitialMartyriaStartingNoteText {
-  return {
-    names: {
-      [ModeSign.Ni]: 'Νη',
-      [ModeSign.Pa]: 'Πα',
-      [ModeSign.Vou]: 'Βου',
-      [ModeSign.Ga]: 'Γα',
-      [ModeSign.Thi]: 'Δι',
-      [ModeSign.Ke]: 'Κε',
-      [ModeSign.Zo]: 'Ζω',
-    },
-    direction: 'ltr',
-  };
-}
-
-const allModes: ModeKeyMode[] = [1, 2, 3, 4, 5, 6, 7, 8];
-const visibleFor = (modes: ModeKeyMode[]): InitialMartyriaVisibility => ({
-  modes,
-  variationOverrides: [],
-});
-
-export const traditionalGreekInitialMartyriaStyle: InitialMartyriaStyle = {
-  id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1,
-  displayName: 'Traditional Greek',
-  defaultParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
-  flowDirection: 'page',
-  startingNoteText: createInitialMartyriaStartingNoteText(),
-  components: [
-    { id: 'mode-word', kind: 'ekhosGlyph', visibility: visibleFor(allModes) },
-    {
-      id: 'plagal-word',
-      kind: 'plagalGlyph',
-      visibility: visibleFor([5, 6, 8]),
-    },
-    { id: 'grave-word', kind: 'varysGlyph', visibility: visibleFor([7]) },
-    {
-      id: 'traditional-mode-sign',
-      kind: 'modeSignGlyph',
-      visibility: visibleFor(allModes),
-    },
-    {
-      id: 'starting-pitch-cluster',
-      kind: 'startingNoteCluster',
-      rendering: 'neume',
-      visibility: visibleFor(allModes),
-    },
-  ],
-};
-
-function text(
-  id: string,
-  value: string,
-  modes: ModeKeyMode[] = allModes,
-): InitialMartyriaComponent {
-  return {
-    id,
-    kind: 'text',
-    content: value,
-    visibility: visibleFor(modes),
-  };
-}
-function glyph(
-  id: string,
-  kind: 'ekhosGlyph' | 'plagalGlyph' | 'modeSignGlyph' | 'varysGlyph',
-  modes: ModeKeyMode[] = allModes,
-): InitialMartyriaComponent {
-  return { id, kind, visibility: visibleFor(modes) };
-}
-function plagal() {
-  return glyph('plagal', 'plagalGlyph', [5, 6, 8]);
-}
-function sign() {
-  return glyph('mode-sign', 'modeSignGlyph');
-}
-function pitch(): InitialMartyriaComponent {
-  return {
-    id: 'pitch',
-    kind: 'startingNoteCluster',
-    rendering: 'neume',
-    visibility: visibleFor(allModes),
-  };
-}
-function builtIn(
-  id: string,
-  displayName: string,
-  components: InitialMartyriaComponent[],
-): InitialMartyriaStyle {
-  return {
-    id,
-    displayName,
-    defaultParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
-    flowDirection: 'page',
-    startingNoteText: createInitialMartyriaStartingNoteText(),
-    components,
-  };
-}
-
-const traditionalGreekV2InitialMartyriaStyle: InitialMartyriaStyle = {
-  id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV2,
-  displayName: 'Traditional Greek V2',
-  defaultParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
-  flowDirection: 'page',
-  startingNoteText: createInitialMartyriaStartingNoteText(),
-  components: [
-    text('mode-word', 'Ἦχος'),
-    {
-      id: 'plagal-word',
-      kind: 'stackedText',
-      top: 'λ',
-      bottom: 'π',
-      visibility: visibleFor([5, 6, 8]),
-    },
-    text('grave-mode', 'Βαρύς', [7]),
-    glyph('traditional-mode-sign', 'modeSignGlyph'),
-    {
-      id: 'starting-pitch-cluster',
-      kind: 'startingNoteCluster',
-      rendering: 'customText',
-      visibility: visibleFor(allModes),
-    },
-  ],
-};
-export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
-  traditionalGreekInitialMartyriaStyle,
-  traditionalGreekV2InitialMartyriaStyle,
-  builtIn(
-    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalFirstV1,
-    'English Plagal First',
-    [plagal(), sign(), text('mode', 'Mode'), pitch()],
-  ),
-  builtIn(
-    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1,
-    'English Sign First',
-    [sign(), plagal(), text('mode', 'Mode'), pitch()],
-  ),
-  builtIn(
-    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeBeforeSignV1,
-    'English Mode Before Sign',
-    [plagal(), text('mode', 'Mode'), sign(), pitch()],
-  ),
-  builtIn(
-    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishFifthV1,
-    'English Ordinal',
-    [
-      text('first', 'First', [1]),
-      text('second', 'Second', [2]),
-      text('third', 'Third', [3]),
-      text('fourth', 'Fourth', [4]),
-      text('fifth', 'Fifth', [5]),
-      text('sixth', 'Sixth', [6]),
-      text('seventh', 'Grave', [7]),
-      text('eighth', 'Eighth', [8]),
-      text('mode', 'Mode'),
-      plagal(),
-      sign(),
-      pitch(),
-    ],
-  ),
-  builtIn(
-    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishNumberV1,
-    'English Numbered',
-    [
-      text('mode', 'Mode'),
-      text('number-1', '1', [1]),
-      text('number-2', '2', [2]),
-      text('number-3', '3', [3]),
-      text('number-4', '4', [4]),
-      text('number-5', '5', [5]),
-      text('number-6', '6', [6]),
-      text('number-7', '7', [7]),
-      text('number-8', '8', [8]),
-      plagal(),
-      sign(),
-      pitch(),
-    ],
-  ),
-  builtIn(
-    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalOfSecondV1,
-    'English Full Name',
-    [
-      text('plagal-word', 'Plagal of', [5, 6, 8]),
-      text('first', 'First', [1]),
-      text('second', 'Second', [2]),
-      text('third', 'Third', [3]),
-      text('fourth', 'Fourth', [4]),
-      text('fifth', 'Fifth', [5]),
-      text('sixth', 'Sixth', [6]),
-      text('seventh', 'Grave', [7]),
-      text('eighth', 'Eighth', [8]),
-      text('mode', 'Mode'),
-      plagal(),
-      sign(),
-      pitch(),
-    ],
-  ),
-  builtIn(
-    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalNumberV1,
-    'English Plagal Number',
-    [
-      text('plagal', 'Plagal', [5, 6, 8]),
-      text('grave', 'Grave', [7]),
-      text('mode', 'Mode'),
-      text('number-1', '1', [1, 5]),
-      text('number-2', '2', [2, 6]),
-      text('number-3', '3', [3]),
-      text('number-4', '4', [4, 8]),
-      plagal(),
-      sign(),
-      pitch(),
-    ],
-  ),
-  builtIn(
-    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1,
-    'Romanian Glas Number',
-    [
-      text('glas', 'Glas'),
-      text('glas-one', '1', [1]),
-      text('glas-two', '2', [2]),
-      text('glas-three', '3', [3]),
-      text('glas-four', '4', [4]),
-      text('glas-five', '5', [5]),
-      text('glas-six', '6', [6]),
-      text('glas-seven', '7', [7]),
-      text('glas-eight', '8', [8]),
-      plagal(),
-      sign(),
-      pitch(),
-    ],
-  ),
-  builtIn(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1, 'Romanian Glas', [
-    text('glas', 'Glas'),
-    plagal(),
-    sign(),
-    pitch(),
-  ]),
-];
-
 export function isBuiltInInitialMartyriaStyleId(
   id: string,
 ): id is BuiltInInitialMartyriaStyleId {
@@ -590,292 +604,216 @@ export function getBuiltInInitialMartyriaStyleNameSelector(
   if (styleId == null || !isBuiltInInitialMartyriaStyleId(styleId)) {
     return null;
   }
-
-  return BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS[styleId] ?? null;
+  return BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS[styleId];
 }
 
 export function getInitialMartyriaStyleDisplayName(
   style: InitialMartyriaStyle,
   t: TFunction<Namespace>,
 ) {
-  const selector = getBuiltInInitialMartyriaStyleNameSelector(style.id);
-
-  return selector == null ? style.displayName : t(selector, { ns: 'dialog' });
+  return t(BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS[style.id], {
+    ns: 'dialog',
+  });
 }
 
 export function getBuiltInInitialMartyriaStyle(id: string) {
   return builtInInitialMartyriaStyles.find((style) => style.id === id) ?? null;
 }
 
-export function isInitialMartyriaComponentVisible(
-  visibility: InitialMartyriaVisibility,
-  context: Pick<InitialMartyriaContext, 'mode' | 'templateId'>,
-) {
-  const override =
-    context.templateId == null
-      ? undefined
-      : visibility.variationOverrides.find(
-          (item) => item.templateId === context.templateId,
-        );
-  return override?.visible ?? visibility.modes.includes(context.mode);
+function resolveAppearance(
+  style: InitialMartyriaStyle,
+  configuration: InitialMartyriaConfiguration,
+  fontRole: 'main' | 'greek',
+): InitialMartyriaAppearance {
+  const defaults = style.defaultAppearance;
+  const overrides = configuration.appearanceOverrides;
+  const fontFamily =
+    fontRole === 'main'
+      ? (overrides.mainFontFamily ?? defaults.mainFontFamily)
+      : (overrides.greekFontFamily ?? defaults.greekFontFamily);
+  const color = overrides.color ?? defaults.color;
+  const resolveVariant = (
+    override: string | null | undefined,
+    defaultValue: string | null,
+  ) =>
+    override === undefined
+      ? (defaultValue ?? 'normal')
+      : (override ?? 'normal');
+  return {
+    fontFamily,
+    fontStyle: overrides.fontStyle ?? defaults.fontStyle,
+    fontSize: overrides.fontSize ?? defaults.fontSize,
+    fontVariantCaps: resolveVariant(
+      overrides.fontVariantCaps,
+      defaults.fontVariantCaps,
+    ),
+    fontVariantNumeric: resolveVariant(
+      overrides.fontVariantNumeric,
+      defaults.fontVariantNumeric,
+    ),
+    fontVariantLigatures: resolveVariant(
+      overrides.fontVariantLigatures,
+      defaults.fontVariantLigatures,
+    ),
+    fontVariantAlternates: resolveVariant(
+      overrides.fontVariantAlternates,
+      defaults.fontVariantAlternates,
+    ),
+    color,
+    strokeWidth: overrides.strokeWidth ?? defaults.strokeWidth,
+    strokeColor: color,
+  };
 }
 
-export function validateInitialMartyriaStyle(style: InitialMartyriaStyle) {
-  const errors: string[] = [];
-  if (style.id.trim() === '') {
-    errors.push('A style id is required.');
+export function resolveInitialMartyriaConfiguration(
+  configuration: InitialMartyriaConfiguration,
+): ResolvedInitialMartyriaConfiguration | null {
+  const style = getBuiltInInitialMartyriaStyle(configuration.styleId);
+  if (style == null) {
+    return null;
   }
-  if (isBuiltInInitialMartyriaStyleId(style.id)) {
-    errors.push('Built-in initial martyria styles are immutable.');
+  return {
+    style,
+    configuration,
+    mainAppearance: resolveAppearance(style, configuration, 'main'),
+    greekAppearance: resolveAppearance(style, configuration, 'greek'),
+  };
+}
+
+export function resolveInitialMartyriaStyleSelection(options: {
+  elementConfiguration: InitialMartyriaConfiguration | null | undefined;
+  pageConfiguration: InitialMartyriaConfiguration | null | undefined;
+}): InitialMartyriaStyleSelection {
+  const requested =
+    options.elementConfiguration === undefined
+      ? options.pageConfiguration
+      : options.elementConfiguration;
+  if (requested == null) {
+    return { kind: 'standard', missingStyleId: null };
   }
-  if (style.displayName.trim() === '') {
-    errors.push('A style display name is required.');
-  }
-  if (style.defaultParagraphStyleId.trim() === '') {
-    errors.push('A default paragraph style is required.');
-  }
-  if (style.components.length === 0) {
-    errors.push('A style must contain at least one component.');
-  }
-  const ids = new Set<string>();
-  for (const component of style.components) {
-    if (ids.has(component.id)) {
-      errors.push(`Duplicate component id: ${component.id}.`);
-    }
-    ids.add(component.id);
-    validateVisibility(component.visibility, errors);
-    if (component.kind === 'text') {
-      const content = component.content;
-      if (content === '') {
-        errors.push(`Text component ${component.id} is empty.`);
-      }
-    } else if (component.kind === 'stackedText') {
-      if (
-        graphemeCount(component.top) !== 1 ||
-        graphemeCount(component.bottom) !== 1
-      ) {
-        errors.push(
-          `Stacked text component ${component.id} must contain two graphemes.`,
-        );
-      }
-    }
-  }
-  for (const kind of initialMartyriaSingletonKinds) {
-    if (
-      style.components.filter((component) => component.kind === kind).length > 1
-    ) {
-      errors.push(`Only one ${kind} component is allowed.`);
-    }
-  }
-  const noteNames = style.startingNoteText.names;
-  for (const note of initialMartyriaCanonicalNotes) {
-    if (noteNames[note].trim() === '') {
-      errors.push(`Starting note mapping ${note} is blank.`);
-    }
+  const resolved = resolveInitialMartyriaConfiguration(requested);
+  if (resolved != null) {
+    return { kind: 'custom', missingStyleId: null, ...resolved };
   }
   if (
-    style.startingNoteText.direction != null &&
-    style.startingNoteText.direction !== 'ltr' &&
-    style.startingNoteText.direction !== 'rtl'
+    options.elementConfiguration !== undefined &&
+    options.pageConfiguration != null
   ) {
-    errors.push('Starting note direction is invalid.');
+    const pageResolved = resolveInitialMartyriaConfiguration(
+      options.pageConfiguration,
+    );
+    if (pageResolved != null) {
+      return {
+        kind: 'custom',
+        missingStyleId: requested.styleId,
+        ...pageResolved,
+      };
+    }
   }
-  return errors;
+  return { kind: 'standard', missingStyleId: requested.styleId };
 }
 
-function validateVisibility(
-  visibility: InitialMartyriaVisibility,
-  errors: string[],
+export function resolveInitialMartyriaBaseTextAppearance(
+  resolved: ResolvedInitialMartyriaConfiguration,
 ) {
-  const modes = new Set<ModeKeyMode>();
-  for (const mode of visibility.modes) {
-    if (!isModeKeyMode(mode) || modes.has(mode)) {
-      errors.push('Component visibility modes are invalid.');
-    }
-    modes.add(mode);
-  }
-  const variations = new Set<number>();
-  for (const override of visibility.variationOverrides) {
-    if (
-      !Number.isInteger(override.templateId) ||
-      variations.has(override.templateId)
-    ) {
-      errors.push('Component variation overrides are invalid.');
-    }
-    variations.add(override.templateId);
-  }
-}
-export function isModeKeyMode(value: number): value is ModeKeyMode {
-  return Number.isInteger(value) && value >= 1 && value <= 8;
-}
-export function isInitialMartyriaCanonicalNote(
-  value: ModeSign | null,
-): value is InitialMartyriaCanonicalNote {
-  return initialMartyriaCanonicalNotes.includes(
-    value as InitialMartyriaCanonicalNote,
-  );
+  return resolved.mainAppearance;
 }
 
-export type ResolvedInitialMartyriaRun =
-  | {
-      kind: 'glyph';
-      componentId: string;
-      semantic?: 'ekhos' | 'plagal' | 'modeSign' | 'varys';
-      appearance: InitialMartyriaAppearance;
-      direction: 'ltr' | 'rtl';
-      glyphs: Neume[];
-      pitchCluster?: InitialMartyriaPitchCluster;
-    }
-  | {
-      kind: 'text';
-      componentId: string;
-      appearance: InitialMartyriaAppearance;
-      direction: 'ltr' | 'rtl';
-      languageTag?: string;
-      usesParagraphStyleOverride?: boolean;
-      content: ResolvedInitialMartyriaTextContent;
-    }
-  | {
-      kind: 'startingPitch';
-      componentId: string;
-      appearance: InitialMartyriaAppearance;
-      noteText: ResolvedInitialMartyriaStartingNoteText;
-      direction: 'ltr' | 'rtl';
-      cluster: InitialMartyriaPitchCluster;
-    };
+function isInitialMartyriaComponentVisible(
+  component: InitialMartyriaComponent,
+  mode: ModeKeyMode,
+) {
+  return component.modes?.includes(mode) ?? true;
+}
 
-export type InitialMartyriaStartingNoteRun =
-  | Extract<ResolvedInitialMartyriaRun, { kind: 'startingPitch' }>
-  | (Extract<ResolvedInitialMartyriaRun, { kind: 'glyph' }> & {
-      pitchCluster: InitialMartyriaPitchCluster;
+export function resolveInitialMartyriaStyle(options: {
+  context: InitialMartyriaContext;
+  resolvedConfiguration: ResolvedInitialMartyriaConfiguration;
+  pageSetup: Pick<PageSetup, 'direction'>;
+}): InitialMartyriaStyleResolution {
+  const { style, configuration, mainAppearance, greekAppearance } =
+    options.resolvedConfiguration;
+  const language = initialMartyriaLanguages.find(
+    (item) => item.id === style.languageId,
+  )!;
+  const flowDirection =
+    style.flowDirection === 'page'
+      ? options.pageSetup.direction
+      : style.flowDirection;
+  const noteNames = configuration.transliterateNoteNames
+    ? style.transliteratedNoteNames
+    : style.originalNoteNames;
+  const noteAppearance = configuration.transliterateNoteNames
+    ? mainAppearance
+    : greekAppearance;
+  const glyphAppearance: InitialMartyriaAppearance = {
+    color: mainAppearance.color,
+    strokeWidth: mainAppearance.strokeWidth,
+    strokeColor: mainAppearance.strokeColor,
+  };
+
+  const runs: ResolvedInitialMartyriaRun[] = [];
+  for (const component of style.components) {
+    if (!isInitialMartyriaComponentVisible(component, options.context.mode)) {
+      continue;
+    }
+    if (component.kind === 'text' || component.kind === 'stackedText') {
+      const fontRole = component.fontRole ?? 'main';
+      runs.push({
+        kind: 'text',
+        appearance: fontRole === 'greek' ? greekAppearance : mainAppearance,
+        fontRole,
+        direction: fontRole === 'greek' ? 'ltr' : language.direction,
+        languageTag: fontRole === 'greek' ? 'el' : language.languageTag,
+        content:
+          component.kind === 'text'
+            ? { layout: 'inline', text: component.content }
+            : {
+                layout: 'stacked',
+                lines: [component.top, component.bottom],
+                gap: 0,
+              },
+      });
+      continue;
+    }
+    if (component.kind === 'modeSign') {
+      runs.push({
+        kind: 'glyph',
+        semantic: 'modeSign',
+        appearance: glyphAppearance,
+        direction: flowDirection,
+        glyphs: [options.context.traditionalModeSign],
+      });
+      continue;
+    }
+    runs.push({
+      kind: 'startingPitch',
+      appearance: glyphAppearance,
+      noteText: { ...noteNames, appearance: noteAppearance },
+      direction: noteNames.direction,
+      cluster: options.context.pitchCluster,
     });
+  }
+  return {
+    style,
+    flowDirection,
+    runs,
+  };
+}
 
 export function isInitialMartyriaStartingNoteRun(
   run: ResolvedInitialMartyriaRun,
 ): run is InitialMartyriaStartingNoteRun {
-  return (
-    run.kind === 'startingPitch' ||
-    (run.kind === 'glyph' && run.pitchCluster != null)
-  );
-}
-
-export interface InitialMartyriaStyleResolution {
-  style: InitialMartyriaStyle;
-  runs: ResolvedInitialMartyriaRun[];
-  flowDirection: 'ltr' | 'rtl';
-}
-
-export type InitialMartyriaStyleSelection =
-  | {
-      kind: 'standard';
-      missingStyleId: string | null;
-    }
-  | {
-      kind: 'custom';
-      style: InitialMartyriaStyle;
-      missingStyleId: string | null;
-    };
-
-function findInitialMartyriaStyle(
-  id: string,
-  styles: InitialMartyriaStyle[] | undefined,
-) {
-  return (
-    getBuiltInInitialMartyriaStyle(id) ??
-    styles?.find((style) => style.id === id) ??
-    null
-  );
-}
-
-export function resolveInitialMartyriaStyleSelection(options: {
-  elementStyleId: string | null | undefined;
-  pageStyleId: string | null | undefined;
-  styles?: InitialMartyriaStyle[];
-}): InitialMartyriaStyleSelection {
-  const requestedStyleId =
-    options.elementStyleId === undefined
-      ? options.pageStyleId
-      : options.elementStyleId;
-
-  if (requestedStyleId == null) {
-    return { kind: 'standard', missingStyleId: null };
-  }
-
-  const requestedStyle = findInitialMartyriaStyle(
-    requestedStyleId,
-    options.styles,
-  );
-  if (requestedStyle != null) {
-    return {
-      kind: 'custom',
-      style: requestedStyle,
-      missingStyleId: null,
-    };
-  }
-
-  if (
-    options.elementStyleId !== undefined &&
-    options.pageStyleId != null &&
-    options.pageStyleId !== requestedStyleId
-  ) {
-    const pageStyle = findInitialMartyriaStyle(
-      options.pageStyleId,
-      options.styles,
-    );
-    if (pageStyle != null) {
-      return {
-        kind: 'custom',
-        style: pageStyle,
-        missingStyleId: requestedStyleId,
-      };
-    }
-  }
-
-  return { kind: 'standard', missingStyleId: requestedStyleId };
-}
-
-export function resolveInitialMartyriaBaseTextAppearance(
-  style: InitialMartyriaStyle,
-  paragraphStyles: ParagraphStyle[] | undefined,
-): InitialMartyriaAppearance {
-  return resolveInitialMartyriaParagraphStyle(
-    style.defaultParagraphStyleId,
-    paragraphStyles,
-  );
-}
-
-function resolveInitialMartyriaParagraphStyle(
-  paragraphStyleId: string,
-  paragraphStyles: ParagraphStyle[] | undefined,
-): InitialMartyriaAppearance {
-  if (paragraphStyles == null) {
-    return {};
-  }
-
-  const resolved = resolveParagraphStyle(paragraphStyles, paragraphStyleId);
-  return {
-    fontFamily: resolved.fontFamily,
-    fontStyle: resolved.fontStyle,
-    fontSize: resolved.fontSize,
-    fontVariantCaps: resolved.fontVariantCaps,
-    fontVariantNumeric: resolved.fontVariantNumeric,
-    fontVariantLigatures: resolved.fontVariantLigatures,
-    fontVariantAlternates: resolved.fontVariantAlternates,
-    color: resolved.color,
-    strokeWidth: resolved.strokeWidth,
-    strokeColor: resolved.strokeColor,
-  };
+  return run.kind === 'startingPitch';
 }
 
 export type InitialMartyriaSeparator =
-  'none' | 'wordSpace' | 'modeSign' | 'plagal' | 'varys' | 'startingNote';
+  'none' | 'wordSpace' | 'modeSign' | 'plagal' | 'startingNote';
 
 export function getInitialMartyriaFixedSeparatorWidth(
   separator: InitialMartyriaSeparator,
 ) {
   switch (separator) {
-    case 'varys':
-      return 0.415;
     case 'modeSign':
     case 'plagal':
     case 'startingNote':
@@ -885,32 +823,6 @@ export function getInitialMartyriaFixedSeparatorWidth(
   }
 }
 
-export function getInitialMartyriaPitchNoteGlyphCount(
-  note: InitialMartyriaPitchNote | null,
-) {
-  return note == null
-    ? 0
-    : [note.note, note.fthoraAbove, note.quantitativeNeumeAbove].filter(
-        (neume) => neume != null,
-      ).length;
-}
-
-export function getInitialMartyriaPitchClusterPrimaryGlyphCount(
-  cluster: InitialMartyriaPitchCluster,
-) {
-  return getInitialMartyriaPitchNoteGlyphCount(cluster.primary);
-}
-
-export function getInitialMartyriaPitchClusterGlyphCount(
-  cluster: InitialMartyriaPitchCluster,
-) {
-  return [cluster.primary, cluster.secondary].reduce(
-    (count, note) => count + getInitialMartyriaPitchNoteGlyphCount(note),
-    0,
-  );
-}
-
-/** Resolves spacing from the visible adjacent pair, so hidden components never add gaps. */
 export function getInitialMartyriaSeparatorBefore(
   runs: ResolvedInitialMartyriaRun[],
   index: number,
@@ -923,24 +835,12 @@ export function getInitialMartyriaSeparatorBefore(
   const isModeSign = (run: ResolvedInitialMartyriaRun) =>
     run.kind === 'glyph' && run.semantic === 'modeSign';
   const isPlagal = (run: ResolvedInitialMartyriaRun) =>
-    run.kind === 'text'
-      ? run.content.layout === 'stacked'
-      : run.kind === 'glyph' && run.semantic === 'plagal';
-  const isWordLike = (run: ResolvedInitialMartyriaRun) =>
-    run.kind === 'text' ||
-    run.kind === 'startingPitch' ||
-    (run.kind === 'glyph' &&
-      (run.semantic === 'ekhos' ||
-        run.semantic === 'plagal' ||
-        run.semantic === 'varys'));
+    run.kind === 'text' && run.content.layout === 'stacked';
   if (isInitialMartyriaStartingNoteRun(after)) {
     return 'startingNote';
   }
   if (isInitialMartyriaStartingNoteRun(before) && after.kind === 'text') {
     return 'startingNote';
-  }
-  if (after.kind === 'glyph' && after.semantic === 'varys') {
-    return 'varys';
   }
   if (isModeSign(before) || isModeSign(after)) {
     return 'modeSign';
@@ -948,10 +848,7 @@ export function getInitialMartyriaSeparatorBefore(
   if (isPlagal(before) || isPlagal(after)) {
     return 'plagal';
   }
-  if (isWordLike(before) && isWordLike(after)) {
-    return 'wordSpace';
-  }
-  return 'none';
+  return 'wordSpace';
 }
 
 export function getInitialMartyriaSeparatorAfter(
@@ -970,163 +867,14 @@ export function getInitialMartyriaSeparatorAfter(
   return 'plagal';
 }
 
-export function resolveInitialMartyriaStyle(options: {
-  context: InitialMartyriaContext;
-  style: InitialMartyriaStyle;
-  paragraphStyles?: ParagraphStyle[];
-  pageSetup: Pick<PageSetup, 'direction'>;
-}): InitialMartyriaStyleResolution {
-  const style = options.style;
-  const flowDirection =
-    style.flowDirection === 'page'
-      ? options.pageSetup.direction
-      : style.flowDirection;
-  return {
-    style,
-    flowDirection,
-    runs: style.components.flatMap((component) =>
-      resolveComponent(
-        component,
-        style,
-        options.context,
-        flowDirection,
-        options.paragraphStyles,
-      ),
-    ),
-  };
+export function isModeKeyMode(value: number): value is ModeKeyMode {
+  return Number.isInteger(value) && value >= 1 && value <= 8;
 }
 
-function resolveComponent(
-  component: InitialMartyriaComponent,
-  style: InitialMartyriaStyle,
-  context: InitialMartyriaContext,
-  flowDirection: 'ltr' | 'rtl',
-  paragraphStyles: ParagraphStyle[] | undefined,
-): ResolvedInitialMartyriaRun[] {
-  if (!isInitialMartyriaComponentVisible(component.visibility, context)) {
-    return [];
-  }
-  if (component.kind === 'text' || component.kind === 'stackedText') {
-    const content: ResolvedInitialMartyriaTextContent =
-      component.kind === 'stackedText'
-        ? {
-            layout: 'stacked',
-            lines: [component.top, component.bottom],
-            gap: 0,
-          }
-        : { layout: 'inline', text: component.content };
-    return [
-      {
-        kind: 'text',
-        componentId: component.id,
-        appearance: resolveInitialMartyriaParagraphStyle(
-          component.paragraphStyleId ?? style.defaultParagraphStyleId,
-          paragraphStyles,
-        ),
-        direction: component.direction ?? flowDirection,
-        languageTag: component.languageTag,
-        usesParagraphStyleOverride: component.paragraphStyleId != null,
-        content,
-      },
-    ];
-  }
-  if (component.kind === 'startingNoteCluster') {
-    return resolveStartingNoteComponent(
-      component,
-      style,
-      context,
-      flowDirection,
-      paragraphStyles,
-    );
-  }
-  const glyphs =
-    component.kind === 'ekhosGlyph'
-      ? [ModeSign.Ekhos]
-      : component.kind === 'plagalGlyph'
-        ? [ModeSign.Plagal]
-        : component.kind === 'varysGlyph'
-          ? [ModeSign.Varys]
-          : [context.traditionalModeSign];
-  return [
-    {
-      kind: 'glyph',
-      componentId: component.id,
-      semantic:
-        component.kind === 'ekhosGlyph'
-          ? 'ekhos'
-          : component.kind === 'plagalGlyph'
-            ? 'plagal'
-            : component.kind === 'varysGlyph'
-              ? 'varys'
-              : 'modeSign',
-      appearance: {},
-      direction: flowDirection,
-      glyphs,
-    },
-  ];
-}
-
-function resolveStartingNoteComponent(
-  component: Extract<InitialMartyriaComponent, { kind: 'startingNoteCluster' }>,
-  style: InitialMartyriaStyle,
-  context: InitialMartyriaContext,
-  flowDirection: 'ltr' | 'rtl',
-  paragraphStyles: ParagraphStyle[] | undefined,
-): ResolvedInitialMartyriaRun[] {
-  const appearance = resolveInitialMartyriaParagraphStyle(
-    component.paragraphStyleId ?? style.defaultParagraphStyleId,
-    paragraphStyles,
+export function isInitialMartyriaCanonicalNote(
+  value: ModeSign | null,
+): value is InitialMartyriaCanonicalNote {
+  return initialMartyriaCanonicalNotes.includes(
+    value as InitialMartyriaCanonicalNote,
   );
-  if (
-    component.rendering === 'customText' &&
-    hasCompleteStartingNoteText(style.startingNoteText, context.pitchCluster)
-  ) {
-    return [
-      {
-        kind: 'startingPitch',
-        componentId: component.id,
-        appearance: {},
-        noteText: { ...style.startingNoteText, appearance },
-        direction:
-          component.direction ??
-          style.startingNoteText.direction ??
-          flowDirection,
-        cluster: context.pitchCluster,
-      },
-    ];
-  }
-  const glyphs = flattenPitchCluster(context.pitchCluster);
-  return glyphs.length === 0
-    ? []
-    : [
-        {
-          kind: 'glyph',
-          componentId: component.id,
-          appearance: {},
-          direction: component.direction ?? flowDirection,
-          glyphs,
-          pitchCluster: context.pitchCluster,
-        },
-      ];
-}
-
-function hasCompleteStartingNoteText(
-  noteText: InitialMartyriaStartingNoteText,
-  cluster: InitialMartyriaPitchCluster,
-) {
-  return [cluster.primary, cluster.secondary]
-    .filter((note): note is InitialMartyriaPitchNote => note != null)
-    .every((note) => noteText.names[note.note].trim() !== '');
-}
-
-function flattenPitchCluster(cluster: InitialMartyriaPitchCluster) {
-  return [
-    cluster.primary?.note,
-    cluster.primary?.fthoraAbove,
-    cluster.primary?.quantitativeNeumeAbove,
-    cluster.secondary?.note,
-    cluster.secondary?.fthoraAbove,
-    cluster.secondary?.quantitativeNeumeAbove,
-    ...cluster.trailingGlyphs,
-  ].filter((neume) => neume != null) as Neume[];
 }

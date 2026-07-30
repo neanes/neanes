@@ -20,6 +20,7 @@ import {
 import { isFontVariantNormal } from '@/utils/fontVariants';
 import { Unit } from '@/utils/Unit';
 
+import type { InitialMartyriaConfiguration } from './InitialMartyriaStyle';
 import type { ModeKeyTemplate } from './ModeKeys';
 import {
   getFthoraReplacements,
@@ -1138,7 +1139,8 @@ export class ModeKeyElement extends ScoreElement {
   public bpm: number = 120;
   public useDefaultStyle: boolean = true;
   public inline: boolean = false;
-  public initialMartyriaStyleId: string | null | undefined = undefined;
+  public initialMartyriaConfiguration:
+    InitialMartyriaConfiguration | null | undefined = undefined;
   public ignoreAttractions: boolean = false;
   public permanentEnharmonicZo: boolean = false;
   public ambitusLowNote: Note = Note.Pa;
@@ -1254,7 +1256,15 @@ export class ModeKeyElement extends ScoreElement {
       marginTop: this.marginTop,
       useDefaultStyle: this.useDefaultStyle,
       inline: this.inline,
-      initialMartyriaStyleId: this.initialMartyriaStyleId,
+      initialMartyriaConfiguration:
+        this.initialMartyriaConfiguration == null
+          ? this.initialMartyriaConfiguration
+          : {
+              ...this.initialMartyriaConfiguration,
+              appearanceOverrides: {
+                ...this.initialMartyriaConfiguration.appearanceOverrides,
+              },
+            },
       ignoreAttractions: this.ignoreAttractions,
       permanentEnharmonicZo: this.permanentEnharmonicZo,
       showAmbitus: this.showAmbitus,

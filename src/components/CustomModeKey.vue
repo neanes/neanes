@@ -6,7 +6,7 @@
   >
     <span class="mode-key-main" :style="mainStyle">
       <span class="mode-key-signature" :dir="signatureResolution.flowDirection">
-        <template v-for="(run, index) in resolvedRuns" :key="run.componentId">
+        <template v-for="(run, index) in resolvedRuns" :key="index">
           <span
             v-if="
               getInitialMartyriaSeparatorBefore(resolvedRuns, index) !== 'none'
@@ -26,29 +26,8 @@
             class="mode-key-run"
             :style="getRunStyle(run)"
           >
-            <template v-for="(neume, glyphIndex) in run.glyphs" :key="neume">
+            <template v-for="neume in run.glyphs" :key="neume">
               <Neume :neume="neume" />
-              <span
-                v-if="
-                  run.pitchCluster != null &&
-                  run.pitchCluster.primary != null &&
-                  run.pitchCluster.secondary != null &&
-                  glyphIndex + 1 === getPitchPrimaryGlyphCount(run)
-                "
-                class="pitch-cluster-separator"
-                :style="getPitchClusterSeparatorStyle(run)"
-                aria-hidden="true"
-              />
-              <span
-                v-if="
-                  run.pitchCluster != null &&
-                  glyphIndex + 1 === getPitchGlyphCount(run) &&
-                  run.pitchCluster.trailingGlyphs.length > 0
-                "
-                class="pitch-trailing-glue"
-                :style="getPitchTrailingGlueStyle(run)"
-                aria-hidden="true"
-              />
             </template>
           </span>
           <span
@@ -68,7 +47,7 @@
                 ['primary', run.cluster.primary],
                 ['secondary', run.cluster.secondary],
               ] as const"
-              :key="`${run.componentId}-${role}`"
+              :key="role"
             >
               <span
                 v-show="pitchNote != null"
@@ -138,7 +117,7 @@
             >
               <span
                 v-for="(line, lineIndex) in run.content.lines"
-                :key="`${run.componentId}-${lineIndex}`"
+                :key="lineIndex"
                 :style="getStackedTextRowStyle(run, lineIndex)"
                 >{{ line }}</span
               >
@@ -208,22 +187,19 @@ import { INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM } from '@/models/Initia
 import {
   getInitialMartyriaContext,
   getInitialMartyriaFixedSeparatorWidth,
-  getInitialMartyriaPitchClusterGlyphCount,
-  getInitialMartyriaPitchClusterPrimaryGlyphCount,
   getInitialMartyriaSeparatorAfter,
   getInitialMartyriaSeparatorBefore,
-  type InitialMartyriaAppearance,
   type InitialMartyriaSeparator,
-  type InitialMartyriaStyle,
   isInitialMartyriaStartingNoteRun,
+  type ResolvedInitialMartyriaConfiguration,
   type ResolvedInitialMartyriaRun,
   resolveInitialMartyriaBaseTextAppearance,
   resolveInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fontService } from '@/services/FontService';
 import {
+  getCapHeightMatchedTextFontSize,
   getInitialMartyriaNeumeBaselineCorrection,
   getInitialMartyriaPitchTrailingGlueWidth,
   getMatchedNeumeFontSize,
@@ -246,21 +222,16 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
-  initialMartyriaStyle: {
-    type: Object as PropType<InitialMartyriaStyle>,
+  initialMartyriaConfiguration: {
+    type: Object as PropType<ResolvedInitialMartyriaConfiguration>,
     required: true,
-  },
-  paragraphStyles: {
-    type: Array as PropType<ParagraphStyle[]>,
-    default: () => [],
   },
 });
 
 const signatureResolution = computed(() =>
   resolveInitialMartyriaStyle({
     context: getInitialMartyriaContext(props.element),
-    style: props.initialMartyriaStyle,
-    paragraphStyles: props.paragraphStyles,
+    resolvedConfiguration: props.initialMartyriaConfiguration,
     pageSetup: props.pageSetup,
   }),
 );
@@ -283,8 +254,7 @@ const matchedNeumeFontSize = computed(() => {
     return null;
   }
   const textAppearance = resolveInitialMartyriaBaseTextAppearance(
-    signatureResolution.value.style,
-    props.paragraphStyles,
+    props.initialMartyriaConfiguration,
   );
   const textFontSize = textAppearance.fontSize ?? neumeFontSize.value;
   return getMatchedNeumeFontSize({
@@ -346,7 +316,7 @@ onBeforeUnmount(() => {
 
 const style = computed(() => {
   return {
-    color: props.pageSetup.modeKeyDefaultColor,
+    color: props.element.computedColor,
     fontFamily:
       props.element.computedFontFamily ||
       props.pageSetup.neumeDefaultFontFamily,
@@ -356,7 +326,7 @@ const style = computed(() => {
     textAlign: props.element.alignment,
     width: withZoom(props.element.width),
     height: withZoom(props.element.height),
-    webkitTextStrokeWidth: withZoom(props.pageSetup.modeKeyDefaultStrokeWidth),
+    webkitTextStrokeWidth: withZoom(props.element.computedStrokeWidth),
   } as StyleValue;
 });
 
@@ -431,19 +401,14 @@ function getRunStyle(run: ResolvedInitialMartyriaRun) {
     appearance.fontFamily || neumeFontFamily.value,
     appearance.fontStyle,
   );
-  const renderedNeumeFontSize = getEffectiveRunFontSize(run);
+  const renderedFontSize = getEffectiveRunFontSize(run);
   const baselineShift =
     (appearance.baselineShift ?? 0) -
     (isGlyph ? neumeBaselineCorrection.value : 0);
   return {
     color: isGlyph ? undefined : appearance.color,
     fontFamily: font.cssFontFamily,
-    fontSize:
-      run.kind === 'glyph' || run.kind === 'startingPitch'
-        ? withZoom(renderedNeumeFontSize)
-        : appearance.fontSize == null
-          ? undefined
-          : withZoom(appearance.fontSize),
+    fontSize: withZoom(renderedFontSize),
     fontStyle: font.cssFontStyle,
     fontWeight: font.cssFontWeight,
     fontVariantCaps: isText
@@ -486,8 +451,7 @@ function getSeparatorStyle(run: ResolvedInitialMartyriaRun, index: number) {
     const appearance =
       textOwner?.appearance ??
       resolveInitialMartyriaBaseTextAppearance(
-        signatureResolution.value.style,
-        props.paragraphStyles,
+        props.initialMartyriaConfiguration,
       );
     const font = resolveFontStyle(
       appearance.fontFamily ?? neumeFontFamily.value,
@@ -514,13 +478,7 @@ function getSeparatorStyle(run: ResolvedInitialMartyriaRun, index: number) {
           before.semantic === 'modeSign'
         ? before
         : (resolvedRuns.value[index] ?? run);
-  return getFixedSeparatorStyle(
-    run,
-    separator,
-    separator === 'varys'
-      ? getEffectiveRunFontSize(resolvedRuns.value[index])
-      : getEffectiveRunFontSize(owner),
-  );
+  return getFixedSeparatorStyle(run, separator, getEffectiveRunFontSize(owner));
 }
 
 function getWordSpaceTextMetrics(run: ResolvedInitialMartyriaRun | undefined) {
@@ -530,10 +488,10 @@ function getWordSpaceTextMetrics(run: ResolvedInitialMartyriaRun | undefined) {
       fontSize: getPitchFontSizes(run).textFontSize,
     };
   }
-  if (run?.kind === 'text' && run.usesParagraphStyleOverride) {
+  if (run?.kind === 'text') {
     return {
       appearance: run.appearance,
-      fontSize: run.appearance.fontSize,
+      fontSize: getEffectiveTextFontSize(run),
     };
   }
   return null;
@@ -570,6 +528,9 @@ function getEffectiveRunFontSize(run: ResolvedInitialMartyriaRun) {
   if (run.kind === 'startingPitch') {
     return getPitchFontSizes(run).glyphFontSize;
   }
+  if (run.kind === 'text') {
+    return getEffectiveTextFontSize(run);
+  }
   return (
     run.appearance.fontSize ??
     (run.kind === 'glyph' ? matchedNeumeFontSize.value : undefined) ??
@@ -577,12 +538,32 @@ function getEffectiveRunFontSize(run: ResolvedInitialMartyriaRun) {
   );
 }
 
+function getEffectiveTextFontSize(run: TextRun) {
+  const nominalFontSize = run.appearance.fontSize ?? neumeFontSize.value;
+  if (run.fontRole === 'main') {
+    return nominalFontSize;
+  }
+  const referenceAppearance = resolveInitialMartyriaBaseTextAppearance(
+    props.initialMartyriaConfiguration,
+  );
+  return getCapHeightMatchedTextFontSize({
+    fontFamily: run.appearance.fontFamily || neumeFontFamily.value,
+    fontStyle: run.appearance.fontStyle,
+    fontVariantCaps: run.appearance.fontVariantCaps,
+    referenceFontFamily:
+      referenceAppearance.fontFamily || neumeFontFamily.value,
+    referenceFontStyle: referenceAppearance.fontStyle,
+    referenceFontSize: referenceAppearance.fontSize ?? neumeFontSize.value,
+    referenceFontVariantCaps: referenceAppearance.fontVariantCaps,
+  });
+}
+
 function getStackedTextGeometry(run: TextRun) {
   if (run.content.layout !== 'stacked') {
     throw new Error('Expected stacked text run');
   }
   const appearance = run.appearance;
-  const fontSize = appearance.fontSize ?? neumeFontSize.value;
+  const fontSize = getEffectiveTextFontSize(run);
   const baselineShift = appearance.baselineShift ?? 0;
 
   return measureInitialMartyriaStackedText(run.content.lines, {
@@ -615,6 +596,7 @@ function getStackedTextStyle(run: TextRun) {
 function getStackedTextRowStyle(run: TextRun, index: number) {
   const geometry = getStackedTextGeometry(run);
   const row = geometry.rows[index];
+  const fontSize = getEffectiveTextFontSize(run);
 
   return {
     display: 'block',
@@ -627,7 +609,7 @@ function getStackedTextRowStyle(run: TextRun, index: number) {
             run.appearance.fontFamily || neumeFontFamily.value,
             run.appearance.fontStyle,
           ).cssFontStyle,
-          fontSize: run.appearance.fontSize ?? neumeFontSize.value,
+          fontSize,
         }),
       ),
     ),
@@ -681,16 +663,23 @@ type StartingPitchRun = Extract<
   ResolvedInitialMartyriaRun,
   { kind: 'startingPitch' }
 >;
-type PitchGlyphRun = Extract<ResolvedInitialMartyriaRun, { kind: 'glyph' }>;
 type TextRun = Extract<ResolvedInitialMartyriaRun, { kind: 'text' }>;
 type StartingPitchNote = NonNullable<StartingPitchRun['cluster']['primary']>;
 
 function getPitchFontSizes(run: StartingPitchRun) {
   const appearance = run.noteText.appearance;
+  const referenceAppearance = resolveInitialMartyriaBaseTextAppearance(
+    props.initialMartyriaConfiguration,
+  );
   return resolveInitialMartyriaPitchFontSizes({
     textFontFamily: appearance.fontFamily || neumeFontFamily.value,
     textFontStyle: appearance.fontStyle,
     textFontSize: appearance.fontSize,
+    referenceTextFontFamily:
+      referenceAppearance.fontFamily || neumeFontFamily.value,
+    referenceTextFontStyle: referenceAppearance.fontStyle,
+    referenceTextFontSize: referenceAppearance.fontSize,
+    referenceTextFontVariantCaps: referenceAppearance.fontVariantCaps,
     glyphFontSize: undefined,
     matchedNeumeFontSize: matchedNeumeFontSize.value,
     neumeFontFamily: neumeFontFamily.value,
@@ -700,9 +689,7 @@ function getPitchFontSizes(run: StartingPitchRun) {
 
 function getPitchGeometry(run: StartingPitchRun, pitchNote: StartingPitchNote) {
   const textAppearance = run.noteText.appearance;
-  const glyphAppearance: InitialMartyriaAppearance = {
-    strokeWidth: props.pageSetup.modeKeyDefaultStrokeWidth,
-  };
+  const glyphAppearance = run.appearance;
   const fontSizes = getPitchFontSizes(run);
   return measureInitialMartyriaPitchGeometry(
     pitchNote,
@@ -775,20 +762,20 @@ function getStartingNoteBaselineShift(run: StartingPitchRun) {
 }
 
 function getPitchGlyphStyle(run: StartingPitchRun) {
-  const appearance: InitialMartyriaAppearance = {};
+  const appearance = run.appearance;
   const font = resolveFontStyle(
     appearance.fontFamily || neumeFontFamily.value,
     appearance.fontStyle,
   );
 
   return {
-    color: props.pageSetup.modeKeyDefaultColor,
+    color: appearance.color,
     fontFamily: font.cssFontFamily,
     fontSize: withZoom(getPitchFontSizes(run).glyphFontSize),
     fontStyle: font.cssFontStyle,
     fontWeight: font.cssFontWeight,
-    webkitTextStrokeColor: props.pageSetup.modeKeyDefaultColor,
-    webkitTextStrokeWidth: withZoom(props.pageSetup.modeKeyDefaultStrokeWidth),
+    webkitTextStrokeColor: appearance.strokeColor,
+    webkitTextStrokeWidth: withZoom(appearance.strokeWidth ?? 0),
   } as CSSProperties;
 }
 
@@ -804,11 +791,8 @@ function hasPitchNote(cluster: StartingPitchRun['cluster']) {
   return cluster.primary != null || cluster.secondary != null;
 }
 
-function getPitchTrailingGlueStyle(run: StartingPitchRun | PitchGlyphRun) {
-  const glyphFontSize =
-    run.kind === 'startingPitch'
-      ? getPitchFontSizes(run).glyphFontSize
-      : getEffectiveRunFontSize(run);
+function getPitchTrailingGlueStyle(run: StartingPitchRun) {
+  const glyphFontSize = getPitchFontSizes(run).glyphFontSize;
   return {
     display: 'inline-block',
     width: withZoom(
@@ -820,28 +804,12 @@ function getPitchTrailingGlueStyle(run: StartingPitchRun | PitchGlyphRun) {
   } as CSSProperties;
 }
 
-function getPitchClusterSeparatorStyle(run: StartingPitchRun | PitchGlyphRun) {
+function getPitchClusterSeparatorStyle(run: StartingPitchRun) {
   return getFixedSeparatorStyle(
     run,
     'plagal',
-    run.kind === 'startingPitch'
-      ? getPitchFontSizes(run).glyphFontSize
-      : getEffectiveRunFontSize(run),
+    getPitchFontSizes(run).glyphFontSize,
   );
-}
-
-function getPitchPrimaryGlyphCount(run: PitchGlyphRun) {
-  return run.pitchCluster == null
-    ? 0
-    : getInitialMartyriaPitchClusterPrimaryGlyphCount(run.pitchCluster);
-}
-
-function getPitchGlyphCount(run: PitchGlyphRun) {
-  const cluster = run.pitchCluster;
-  if (cluster == null) {
-    return run.glyphs.length;
-  }
-  return getInitialMartyriaPitchClusterGlyphCount(cluster);
 }
 
 function getTextRunContent(run: ResolvedInitialMartyriaRun) {

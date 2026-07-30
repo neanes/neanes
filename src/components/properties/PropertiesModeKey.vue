@@ -46,6 +46,13 @@
           </SelectContent>
         </Select>
       </Field>
+      <Button variant="outline" @click="$emit('open-style-dialog')">
+        {{
+          $t(($) => $.dialog.initialMartyriaStyles.customize, {
+            ns: 'dialog',
+          })
+        }}
+      </Button>
 
       <template v-if="usesStandardModeKey">
         <Field orientation="horizontal">
@@ -311,6 +318,7 @@ import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
+import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import {
   Select,
@@ -325,6 +333,7 @@ import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import {
   builtInInitialMartyriaStyles,
+  createInitialMartyriaConfiguration,
   getInitialMartyriaStyleDisplayName,
   type InitialMartyriaStyle,
   resolveInitialMartyriaStyleSelection,
@@ -349,30 +358,26 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
-  initialMartyriaStyles: {
-    type: Array as PropType<InitialMartyriaStyle[]>,
-    required: true,
-  },
 });
 
 const { t } = useTranslation();
-const emit = defineEmits(['update', 'update:open-sections']);
+const emit = defineEmits([
+  'open-style-dialog',
+  'update',
+  'update:open-sections',
+]);
 
 const inheritStyleValue = '__inherit__';
 const standardStyleValue = '__standard__';
-const availableInitialMartyriaStyles = computed(() => [
-  ...builtInInitialMartyriaStyles,
-  ...props.initialMartyriaStyles,
-]);
+const availableInitialMartyriaStyles = builtInInitialMartyriaStyles;
 
 function initialMartyriaStyleDisplayName(style: InitialMartyriaStyle) {
   return getInitialMartyriaStyleDisplayName(style, t);
 }
 const styleSelection = computed(() =>
   resolveInitialMartyriaStyleSelection({
-    elementStyleId: props.element.initialMartyriaStyleId,
-    pageStyleId: props.pageSetup.initialMartyriaStyleId,
-    styles: props.initialMartyriaStyles,
+    elementConfiguration: props.element.initialMartyriaConfiguration,
+    pageConfiguration: props.pageSetup.initialMartyriaConfiguration,
   }),
 );
 const usesStandardModeKey = computed(
@@ -380,17 +385,23 @@ const usesStandardModeKey = computed(
 );
 const modeKeyStyleValue = computed({
   get: () =>
-    props.element.initialMartyriaStyleId === undefined
+    props.element.initialMartyriaConfiguration === undefined
       ? inheritStyleValue
-      : (props.element.initialMartyriaStyleId ?? standardStyleValue),
+      : (props.element.initialMartyriaConfiguration?.styleId ??
+        standardStyleValue),
   set: (value: string) => {
+    const style = builtInInitialMartyriaStyles.find(
+      (item) => item.id === value,
+    );
     emit('update', {
-      initialMartyriaStyleId:
+      initialMartyriaConfiguration:
         value === inheritStyleValue
           ? undefined
           : value === standardStyleValue
             ? null
-            : value,
+            : style == null
+              ? undefined
+              : createInitialMartyriaConfiguration(style.id),
     } as Partial<ModeKeyElement>);
   },
 });

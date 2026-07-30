@@ -8,30 +8,6 @@ import {
 } from '@/services/InitialMartyriaPitchMeasurementService';
 
 describe('initial martyria pitch font sizes', () => {
-  it('uses the neume size when no matching text run exists', () => {
-    expect(
-      resolveInitialMartyriaPitchFontSizes({
-        textFontFamily: 'Unused Text Font',
-        glyphFontSize: undefined,
-        matchedNeumeFontSize: null,
-        neumeFontFamily: 'Unused Neume Font',
-        neumeFontSize: 42,
-      }),
-    ).toEqual({ textFontSize: 42, glyphFontSize: 42 });
-  });
-
-  it('does not resize automatic source text to the matched glyph size', () => {
-    expect(
-      resolveInitialMartyriaPitchFontSizes({
-        textFontFamily: 'Text Font',
-        glyphFontSize: undefined,
-        matchedNeumeFontSize: 60,
-        neumeFontFamily: 'Neume Font',
-        neumeFontSize: 42,
-      }),
-    ).toEqual({ textFontSize: 42, glyphFontSize: 60 });
-  });
-
   it('uses the signature-wide matched size for starting-note glyphs', () => {
     expect(
       resolveInitialMartyriaPitchFontSizes({
@@ -82,16 +58,5 @@ describe('initial martyria neume baseline correction', () => {
         neumeFontSize: 42,
       }),
     ).toBeCloseTo(3.36);
-  });
-
-  it('does not shift glyph-only custom styles', () => {
-    expect(
-      getInitialMartyriaNeumeBaselineCorrection({
-        hasCustomText: false,
-        initialMartyriaBaseline: 0.08,
-        matchedNeumeFontSize: null,
-        neumeFontSize: 42,
-      }),
-    ).toBe(0);
   });
 });

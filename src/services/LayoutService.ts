@@ -31,8 +31,8 @@ import {
   getInitialMartyriaSeparatorAfter,
   getInitialMartyriaSeparatorBefore,
   type InitialMartyriaAppearance,
-  type InitialMartyriaStyle,
   isInitialMartyriaStartingNoteRun,
+  type ResolvedInitialMartyriaConfiguration,
   type ResolvedInitialMartyriaRun,
   resolveInitialMartyriaBaseTextAppearance,
   resolveInitialMartyriaStyle,
@@ -97,6 +97,7 @@ import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
 import {
+  getCapHeightMatchedTextFontSize,
   getInitialMartyriaNeumeBaselineCorrection,
   getInitialMartyriaPitchTrailingGlueWidth,
   getMatchedNeumeFontSize,
@@ -775,9 +776,8 @@ export class LayoutService {
 
           const initialMartyriaStyleSelection =
             resolveInitialMartyriaStyleSelection({
-              elementStyleId: modeKeyElement.initialMartyriaStyleId,
-              pageStyleId: pageSetup.initialMartyriaStyleId,
-              styles: score.initialMartyriaStyles,
+              elementConfiguration: modeKeyElement.initialMartyriaConfiguration,
+              pageConfiguration: pageSetup.initialMartyriaConfiguration,
             });
           const usesStandardModeKey =
             initialMartyriaStyleSelection.kind === 'standard';
@@ -788,20 +788,29 @@ export class LayoutService {
             ? getLegacyNeumeFontFamily(pageSetup.neumeDefaultFontFamily)
             : pageSetup.neumeDefaultFontFamily;
 
-          modeKeyElement.computedFontSize =
-            usesStandardModeKey && !modeKeyElement.useDefaultStyle
-              ? modeKeyElement.fontSize
-              : pageSetup.modeKeyDefaultFontSize;
+          const customAppearance =
+            initialMartyriaStyleSelection.kind === 'custom'
+              ? resolveInitialMartyriaBaseTextAppearance(
+                  initialMartyriaStyleSelection,
+                )
+              : null;
+          modeKeyElement.computedFontSize = usesStandardModeKey
+            ? modeKeyElement.useDefaultStyle
+              ? pageSetup.modeKeyDefaultFontSize
+              : modeKeyElement.fontSize
+            : customAppearance!.fontSize!;
 
-          modeKeyElement.computedColor =
-            usesStandardModeKey && !modeKeyElement.useDefaultStyle
-              ? modeKeyElement.color
-              : pageSetup.modeKeyDefaultColor;
+          modeKeyElement.computedColor = usesStandardModeKey
+            ? modeKeyElement.useDefaultStyle
+              ? pageSetup.modeKeyDefaultColor
+              : modeKeyElement.color
+            : customAppearance!.color!;
 
-          modeKeyElement.computedStrokeWidth =
-            usesStandardModeKey && !modeKeyElement.useDefaultStyle
-              ? modeKeyElement.strokeWidth
-              : pageSetup.modeKeyDefaultStrokeWidth;
+          modeKeyElement.computedStrokeWidth = usesStandardModeKey
+            ? modeKeyElement.useDefaultStyle
+              ? pageSetup.modeKeyDefaultStrokeWidth
+              : modeKeyElement.strokeWidth
+            : customAppearance!.strokeWidth!;
 
           modeKeyElement.computedHeightAdjustment = usesStandardModeKey
             ? modeKeyElement.useDefaultStyle
@@ -857,8 +866,7 @@ export class LayoutService {
             const geometry = this.getInitialMartyriaGeometry(
               modeKeyElement,
               pageSetup,
-              initialMartyriaStyleSelection.style,
-              score.paragraphStyles,
+              initialMartyriaStyleSelection,
             );
             modeKeyElement.computedTop = geometry.top;
             modeKeyElement.computedBottom = geometry.bottom;
@@ -2523,18 +2531,15 @@ export class LayoutService {
   private static getInitialMartyriaGeometry(
     element: ModeKeyElement,
     pageSetup: PageSetup,
-    style: InitialMartyriaStyle,
-    paragraphStyles: Workspace['score']['paragraphStyles'],
+    resolvedConfiguration: ResolvedInitialMartyriaConfiguration,
   ) {
     const resolution = resolveInitialMartyriaStyle({
       context: getInitialMartyriaContext(element),
-      style,
-      paragraphStyles,
+      resolvedConfiguration,
       pageSetup,
     });
     const baseTextAppearance = resolveInitialMartyriaBaseTextAppearance(
-      resolution.style,
-      paragraphStyles,
+      resolvedConfiguration,
     );
     const hasCustomText = resolution.runs.some(
       (run) => run.kind === 'text' || run.kind === 'startingPitch',
@@ -2579,6 +2584,26 @@ export class LayoutService {
     let flowTop = -TextMeasurementService.getFontBoundingBoxAscent(flowFont);
     let width = 0;
 
+    const getEffectiveTextFontSize = (
+      run: Extract<ResolvedInitialMartyriaRun, { kind: 'text' }>,
+    ) => {
+      const nominalFontSize =
+        run.appearance.fontSize ?? element.computedFontSize;
+      if (run.fontRole === 'main') {
+        return nominalFontSize;
+      }
+      return getCapHeightMatchedTextFontSize({
+        fontFamily: run.appearance.fontFamily ?? element.computedFontFamily,
+        fontStyle: run.appearance.fontStyle,
+        fontVariantCaps: run.appearance.fontVariantCaps,
+        referenceFontFamily:
+          baseTextAppearance.fontFamily ?? element.computedFontFamily,
+        referenceFontStyle: baseTextAppearance.fontStyle,
+        referenceFontSize:
+          baseTextAppearance.fontSize ?? element.computedFontSize,
+        referenceFontVariantCaps: baseTextAppearance.fontVariantCaps,
+      });
+    };
     const getEffectiveRunFontSize = (run: ResolvedInitialMartyriaRun) => {
       if (run.kind === 'startingPitch') {
         return resolveInitialMartyriaPitchFontSizes({
@@ -2586,10 +2611,18 @@ export class LayoutService {
             run.noteText.appearance.fontFamily ?? element.computedFontFamily,
           textFontStyle: run.noteText.appearance.fontStyle,
           textFontSize: run.noteText.appearance.fontSize,
+          referenceTextFontFamily:
+            baseTextAppearance.fontFamily ?? element.computedFontFamily,
+          referenceTextFontStyle: baseTextAppearance.fontStyle,
+          referenceTextFontSize: baseTextAppearance.fontSize,
+          referenceTextFontVariantCaps: baseTextAppearance.fontVariantCaps,
           matchedNeumeFontSize,
           neumeFontFamily: element.computedFontFamily,
           neumeFontSize: element.computedFontSize,
         }).glyphFontSize;
+      }
+      if (run.kind === 'text') {
+        return getEffectiveTextFontSize(run);
       }
       return (
         run.appearance.fontSize ??
@@ -2604,16 +2637,21 @@ export class LayoutService {
           textFontFamily: appearance.fontFamily ?? element.computedFontFamily,
           textFontStyle: appearance.fontStyle,
           textFontSize: appearance.fontSize,
+          referenceTextFontFamily:
+            baseTextAppearance.fontFamily ?? element.computedFontFamily,
+          referenceTextFontStyle: baseTextAppearance.fontStyle,
+          referenceTextFontSize: baseTextAppearance.fontSize,
+          referenceTextFontVariantCaps: baseTextAppearance.fontVariantCaps,
           matchedNeumeFontSize,
           neumeFontFamily: element.computedFontFamily,
           neumeFontSize: element.computedFontSize,
         });
         return { appearance, fontSize: sizes.textFontSize };
       }
-      if (run?.kind === 'text' && run.usesParagraphStyleOverride) {
+      if (run?.kind === 'text') {
         return {
           appearance: run.appearance,
-          fontSize: run.appearance.fontSize ?? element.computedFontSize,
+          fontSize: getEffectiveTextFontSize(run),
         };
       }
       return null;
@@ -2654,10 +2692,7 @@ export class LayoutService {
               before.semantic === 'modeSign'
             ? before
             : run;
-      const size =
-        separator === 'varys'
-          ? getEffectiveRunFontSize(run)
-          : getEffectiveRunFontSize(owner);
+      const size = getEffectiveRunFontSize(owner);
       return (getInitialMartyriaFixedSeparatorWidth(separator) ?? 0) * size;
     };
 
@@ -2671,17 +2706,16 @@ export class LayoutService {
           ? (appearance.fontSize ??
             matchedNeumeFontSize ??
             element.computedFontSize)
-          : (appearance.fontSize ?? element.computedFontSize);
+          : run.kind === 'text'
+            ? getEffectiveTextFontSize(run)
+            : (appearance.fontSize ?? element.computedFontSize);
       const font = resolveFontCss({
         fontFamily,
         fontStyle: appearance.fontStyle ?? DEFAULT_FONT_STYLE,
         fontSize,
       });
       const baselineShift = appearance.baselineShift ?? 0;
-      const strokeOverflow =
-        (run.kind === 'glyph'
-          ? pageSetup.modeKeyDefaultStrokeWidth
-          : (appearance.strokeWidth ?? 0)) / 2;
+      const strokeOverflow = (appearance.strokeWidth ?? 0) / 2;
 
       if (run.kind === 'text' && run.content.layout === 'stacked') {
         const geometry = measureInitialMartyriaStackedText(run.content.lines, {
@@ -2704,14 +2738,17 @@ export class LayoutService {
 
       if (run.kind === 'startingPitch') {
         const noteAppearance = run.noteText.appearance;
-        const glyphAppearance: InitialMartyriaAppearance = {
-          strokeWidth: pageSetup.modeKeyDefaultStrokeWidth,
-        };
+        const glyphAppearance: InitialMartyriaAppearance = run.appearance;
         const fontSizes = resolveInitialMartyriaPitchFontSizes({
           textFontFamily:
             noteAppearance.fontFamily ?? element.computedFontFamily,
           textFontStyle: noteAppearance.fontStyle,
           textFontSize: noteAppearance.fontSize,
+          referenceTextFontFamily:
+            baseTextAppearance.fontFamily ?? element.computedFontFamily,
+          referenceTextFontStyle: baseTextAppearance.fontStyle,
+          referenceTextFontSize: baseTextAppearance.fontSize,
+          referenceTextFontVariantCaps: baseTextAppearance.fontVariantCaps,
           glyphFontSize: glyphAppearance.fontSize,
           matchedNeumeFontSize,
           neumeFontFamily: element.computedFontFamily,
@@ -2770,14 +2807,14 @@ export class LayoutService {
             neumeBaselineCorrection -
               trailingMetrics.actualBoundingBoxAscent -
               wrapperBaselineShift -
-              pageSetup.modeKeyDefaultStrokeWidth / 2,
+              (glyphAppearance.strokeWidth ?? 0) / 2,
           );
           bottom = Math.max(
             bottom,
             neumeBaselineCorrection +
               trailingMetrics.actualBoundingBoxDescent -
               wrapperBaselineShift +
-              pageSetup.modeKeyDefaultStrokeWidth / 2,
+              (glyphAppearance.strokeWidth ?? 0) / 2,
           );
           flowTop = Math.min(
             flowTop,

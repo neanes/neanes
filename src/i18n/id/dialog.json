@@ -69,9 +69,24 @@
     "startingNoteCluster": "Kelompok nada awal"
   },
   "initialMartyriaStyles": {
-    "root": "Gaya Martyria Awal",
+    "root": "Pemilihan Gaya Martyria Awal",
     "styleLabel": "Gaya martyria awal",
     "description": "Atur gaya tampilan martyria awal untuk seluruh dokumen.",
+    "selectionDescription": "Pilih cara Martyria Awal ditampilkan, lalu sesuaikan tipografinya bila perlu.",
+    "language": "Bahasa",
+    "languages": {
+      "greek": "Yunani",
+      "english": "Inggris",
+      "romanian": "Rumania"
+    },
+    "standardDescription": "Gunakan Martyria Awal tradisional berbasis glif.",
+    "transliterate": "Transliterasikan nama nada",
+    "mainFont": "Font teks utama",
+    "greekTextFont": "Font teks Yunani",
+    "styleDefaultFont": "Bawaan gaya — {{font}}",
+    "advancedTypography": "Tipografi lanjutan",
+    "useStyleDefaults": "Gunakan bawaan gaya",
+    "customize": "Sesuaikan Martyria Awal…",
     "styles": "Gaya",
     "searchStyles": "Cari gaya",
     "searchTerminology": "Cari terminologi",
@@ -105,7 +120,6 @@
     "documentDefault": "Bawaan dokumen",
     "builtInStyles": {
       "traditionalGreek": "Yunani Tradisional",
-      "traditionalGreekV2": "Yunani Tradisional V2",
       "englishPlagalFirst": "Inggris - Plagal di Awal",
       "englishSignFirst": "Inggris - Tanda di Awal",
       "englishModeBeforeSign": "Inggris - Modus sebelum Tanda",
@@ -230,9 +244,7 @@
       "header": "Header",
       "footer": "Footer",
       "lyrics": "Lirik",
-      "dropCap": "Huruf Awal Besar",
-      "initialMartyria": "Martyria Awal",
-      "initialMartyriaGreek": "Martyria Awal - Yunani"
+      "dropCap": "Huruf Awal Besar"
     }
   },
   "neumePositioning": {
@@ -358,7 +370,7 @@
     "outline": "Garis Luar",
     "lyrics": "Lirik",
     "initialMartyriae": "Martyria Awal",
-    "initialMartyriaeDescription": "Gaya default untuk semua martyria awal dalam partitur.",
+    "initialMartyriaeDescription": "Gaya bawaan untuk Martyria Awal Standar.",
     "neumesDescription": "Gaya default untuk semua neuma dalam partitur.",
     "heightAdjust": "Penyesuaian Tinggi",
     "neumeStyles": "Gaya Neuma",

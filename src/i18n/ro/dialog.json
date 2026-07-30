@@ -69,9 +69,24 @@
     "startingNoteCluster": "Grup de note inițiale"
   },
   "initialMartyriaStyles": {
-    "root": "Stiluri de martyria inițială",
+    "root": "Selectarea stilului de martyria inițială",
     "styleLabel": "Stil de martyria inițială",
     "description": "Configurează stilurile de prezentare pentru martyria inițială în tot documentul.",
+    "selectionDescription": "Alegeți modul de prezentare al martyria inițiale, apoi ajustați opțional tipografia.",
+    "language": "Limbă",
+    "languages": {
+      "greek": "Greacă",
+      "english": "Engleză",
+      "romanian": "Română"
+    },
+    "standardDescription": "Folosește martyria inițială tradițională bazată pe glife.",
+    "transliterate": "Transliterează numele notelor",
+    "mainFont": "Fontul textului principal",
+    "greekTextFont": "Font pentru textul grecesc",
+    "styleDefaultFont": "Valoarea implicită a stilului — {{font}}",
+    "advancedTypography": "Tipografie avansată",
+    "useStyleDefaults": "Folosește valorile implicite ale stilului",
+    "customize": "Personalizează martyria inițială…",
     "styles": "Stiluri",
     "searchStyles": "Caută stiluri",
     "searchTerminology": "Caută terminologie",
@@ -105,7 +120,6 @@
     "documentDefault": "Implicit pentru document",
     "builtInStyles": {
       "traditionalGreek": "Grecesc tradițional",
-      "traditionalGreekV2": "Grecesc tradițional V2",
       "englishPlagalFirst": "Engleză - Plagal la început",
       "englishSignFirst": "Engleză - Semnul la început",
       "englishModeBeforeSign": "Engleză - Mod înaintea semnului",
@@ -230,9 +244,7 @@
       "header": "Antet",
       "footer": "Subsol",
       "lyrics": "Versuri",
-      "dropCap": "Majusculă decorativă",
-      "initialMartyria": "Martyria inițială",
-      "initialMartyriaGreek": "Martyria inițială - Greacă"
+      "dropCap": "Majusculă decorativă"
     }
   },
   "neumePositioning": {
@@ -358,7 +370,7 @@
     "outline": "Contur",
     "lyrics": "Versuri",
     "initialMartyriae": "Mărturii inițiale",
-    "initialMartyriaeDescription": "Stilizarea implicită pentru toate mărturiile inițiale din partitură.",
+    "initialMartyriaeDescription": "Stilizarea implicită pentru martyria inițială standard.",
     "neumesDescription": "Stilizarea implicită pentru toate neumele din partitură.",
     "heightAdjust": "Ajustare înălțime",
     "neumeStyles": "Stiluri neume",

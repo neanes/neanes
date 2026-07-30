@@ -153,7 +153,7 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import {
-  type InitialMartyriaStyle,
+  type InitialMartyriaConfiguration,
   resolveInitialMartyriaStyleSelection,
 } from '@/models/InitialMartyriaStyle';
 import type {
@@ -514,6 +514,7 @@ const playbackSettingsDialogIsOpen = ref(false);
 const pageSetupDialogIsOpen = ref(false);
 const paragraphStylesDialogIsOpen = ref(false);
 const initialMartyriaStylesDialogIsOpen = ref(false);
+const initialMartyriaStylesDialogElement = ref<ModeKeyElement | null>(null);
 const paragraphStylesDialogSelectedStyleId = ref<string>(
   BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
 );
@@ -7447,23 +7448,13 @@ function updatePageSetup(pageSetup: PageSetup) {
   save();
 }
 
-function updateInitialMartyriaStyles(styles: InitialMartyriaStyle[]) {
-  commandService.value.execute(
-    scoreCommandFactory.create('update-properties', {
-      target: score.value,
-      newValues: {
-        initialMartyriaStyles: styles,
-      },
-    }),
-  );
-  save();
-}
-
-function useInitialMartyriaStyle(styleId: string) {
+function useInitialMartyriaConfiguration(
+  configuration: InitialMartyriaConfiguration | null,
+) {
   commandService.value.execute(
     pageSetupCommandFactory.create('update-properties', {
       target: score.value.pageSetup,
-      newValues: { initialMartyriaStyleId: styleId },
+      newValues: { initialMartyriaConfiguration: configuration },
     }),
   );
   save();
@@ -8331,7 +8322,45 @@ function onFileMenuParagraphStyles() {
 }
 
 function onFileMenuInitialMartyriaStyles() {
+  initialMartyriaStylesDialogElement.value = null;
   initialMartyriaStylesDialogIsOpen.value = true;
+}
+
+function openInitialMartyriaStyleDialog(element: ModeKeyElement) {
+  initialMartyriaStylesDialogElement.value = element;
+  initialMartyriaStylesDialogIsOpen.value = true;
+}
+
+function updateInitialMartyriaElementConfiguration(
+  configuration: InitialMartyriaConfiguration | null,
+) {
+  if (initialMartyriaStylesDialogElement.value != null) {
+    updateModeKey(initialMartyriaStylesDialogElement.value, {
+      initialMartyriaConfiguration: configuration,
+    });
+  }
+}
+
+function useInitialMartyriaConfigurationForDocument(
+  configuration: InitialMartyriaConfiguration | null,
+) {
+  const element = initialMartyriaStylesDialogElement.value;
+  if (element == null) {
+    useInitialMartyriaConfiguration(configuration);
+    return;
+  }
+
+  commandService.value.executeAsBatch([
+    pageSetupCommandFactory.create('update-properties', {
+      target: score.value.pageSetup,
+      newValues: { initialMartyriaConfiguration: configuration },
+    }),
+    modeKeyCommandFactory.create('update-properties', {
+      target: element,
+      newValues: { initialMartyriaConfiguration: undefined },
+    }),
+  ]);
+  save();
 }
 
 function onFileMenuDocumentProperties() {
@@ -9861,9 +9890,8 @@ function setContextMenuUseDefaultStyle(
 function usesStandardModeKey(element: ModeKeyElement) {
   return (
     resolveInitialMartyriaStyleSelection({
-      elementStyleId: element.initialMartyriaStyleId,
-      pageStyleId: score.value.pageSetup.initialMartyriaStyleId,
-      styles: score.value.initialMartyriaStyles,
+      elementConfiguration: element.initialMartyriaConfiguration,
+      pageConfiguration: score.value.pageSetup.initialMartyriaConfiguration,
     }).kind === 'standard'
   );
 }
@@ -9999,7 +10027,6 @@ function renderTabLabel(tab: Tab) {
             :context="inspectorContext"
             :fonts="fonts"
             :inner-neume="toolbarInnerNeume"
-            :initial-martyria-styles="score.initialMartyriaStyles"
             :open-sections="propertiesPaneOpenSections"
             :page-setup="score.pageSetup"
             :paragraph-styles="score.paragraphStyles"
@@ -10014,6 +10041,7 @@ function renderTabLabel(tab: Tab) {
             @update:martyria="updateMartyria"
             @update:open-sections="propertiesPaneOpenSections = $event"
             @update:tempo="updateTempo"
+            @open-initial-martyria-style-dialog="openInitialMartyriaStyleDialog"
             @open-paragraph-styles-dialog="openParagraphStylesDialog"
           />
         </template>
@@ -10839,10 +10867,6 @@ function renderTabLabel(tab: Tab) {
                               "
                               :element="element as ModeKeyElement"
                               :page-setup="score.pageSetup"
-                              :initial-martyria-styles="
-                                score.initialMartyriaStyles
-                              "
-                              :paragraph-styles="score.paragraphStyles"
                               :class="[
                                 {
                                   selectedTextbox: isSelected(element),
@@ -11313,7 +11337,6 @@ function renderTabLabel(tab: Tab) {
       <template v-else-if="inspectorContext.kind === 'mode-key'">
         <ToolbarModeKey
           :element="inspectorContext.element"
-          :initial-martyria-styles="score.initialMartyriaStyles"
           :page-setup="score.pageSetup"
           @update="updateModeKey(inspectorContext.element, $event)"
           @update:tempo="setModeKeyTempo(inspectorContext.element, $event)"
@@ -11426,8 +11449,6 @@ function renderTabLabel(tab: Tab) {
       v-model:open="modeKeyDialogIsOpen"
       :element="selectedElement as ModeKeyElement"
       :page-setup="score.pageSetup"
-      :initial-martyria-styles="score.initialMartyriaStyles"
-      :paragraph-styles="score.paragraphStyles"
       @update="
         updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
       "
@@ -11472,7 +11493,6 @@ function renderTabLabel(tab: Tab) {
       v-model:open="pageSetupDialogIsOpen"
       :page-setup="score.pageSetup"
       :paragraph-styles="score.paragraphStyles"
-      :initial-martyria-styles="score.initialMartyriaStyles"
       :fonts="fonts"
       @update="updatePageSetup($event)"
     />
@@ -11488,12 +11508,18 @@ function renderTabLabel(tab: Tab) {
     <InitialMartyriaStylesDialog
       v-if="initialMartyriaStylesDialogIsOpen"
       v-model:open="initialMartyriaStylesDialogIsOpen"
-      :styles="score.initialMartyriaStyles"
+      :configuration="
+        initialMartyriaStylesDialogElement == null
+          ? score.pageSetup.initialMartyriaConfiguration
+          : initialMartyriaStylesDialogElement.initialMartyriaConfiguration
+      "
       :page-setup="score.pageSetup"
-      :paragraph-styles="score.paragraphStyles"
-      :active-style-id="score.pageSetup.initialMartyriaStyleId"
-      @update="updateInitialMartyriaStyles($event)"
-      @use-style="useInitialMartyriaStyle($event)"
+      :fonts="fonts"
+      :target="
+        initialMartyriaStylesDialogElement == null ? 'document' : 'element'
+      "
+      @update="updateInitialMartyriaElementConfiguration($event)"
+      @use-for-document="useInitialMartyriaConfigurationForDocument($event)"
     />
     <DocumentPropertiesDialog
       v-if="documentPropertiesDialogIsOpen"

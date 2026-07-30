@@ -56,7 +56,7 @@
   "format": {
     "root": "Format",
     "paragraphStyles": "Gaya Paragraf…",
-    "initialMartyriaStyles": "Gaya Martyria Awal…"
+    "initialMartyriaStyles": "Pemilihan Gaya Martyria Awal…"
   },
   "view": {
     "root": "Tampilan",

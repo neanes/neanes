@@ -56,7 +56,7 @@
   "format": {
     "root": "Format",
     "paragraphStyles": "Paragraph Styles…",
-    "initialMartyriaStyles": "Initial Martyria Styles…"
+    "initialMartyriaStyles": "Initial Martyria Style Selection…"
   },
   "view": {
     "root": "View",

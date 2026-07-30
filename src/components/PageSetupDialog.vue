@@ -1183,38 +1183,6 @@
                 </template>
 
                 <template v-else-if="section.value === 'modeKeys'">
-                  <Field orientation="horizontal">
-                    <FieldLabel for="page-setup-dialog-initial-martyria-style">
-                      {{
-                        $t(($) => $.dialog.initialMartyriaStyles.styleLabel, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </FieldLabel>
-                    <Select v-model="initialMartyriaStyleId">
-                      <SelectTrigger
-                        id="page-setup-dialog-initial-martyria-style"
-                        ><SelectValue
-                      /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem :value="standardInitialMartyriaStyleValue">
-                          {{
-                            $t(($) => $.dialog.initialMartyriaStyles.standard, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </SelectItem>
-                        <SelectItem
-                          v-for="style in availableInitialMartyriaStyles"
-                          :key="style.id"
-                          :value="style.id"
-                          >{{
-                            initialMartyriaStyleDisplayName(style)
-                          }}</SelectItem
-                        >
-                      </SelectContent>
-                    </Select>
-                  </Field>
                   <FieldSet>
                     <FieldLegend variant="label">
                       {{
@@ -1571,7 +1539,6 @@ import {
   PhTextT,
 } from '@phosphor-icons/vue';
 import type { SelectorParam } from 'i18next';
-import { useTranslation } from 'i18next-vue';
 import type { Component, PropType } from 'vue';
 import { computed, ref } from 'vue';
 
@@ -1618,11 +1585,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { MartyriaElement, TempoElement } from '@/models/Element';
 import { ElementType, NoteElement } from '@/models/Element';
-import {
-  builtInInitialMartyriaStyles,
-  getInitialMartyriaStyleDisplayName,
-  type InitialMartyriaStyle,
-} from '@/models/InitialMartyriaStyle';
 import {
   Accidental,
   GorgonNeume,
@@ -1787,27 +1749,13 @@ const props = defineProps({
     type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
-  initialMartyriaStyles: {
-    type: Array as PropType<InitialMartyriaStyle[]>,
-    default: () => [],
-  },
   fonts: {
     type: Array as PropType<string[]>,
     required: true,
   },
 });
 
-const { t } = useTranslation();
 const open = defineModel<boolean>('open', { required: true });
-const availableInitialMartyriaStyles = computed(() => [
-  ...builtInInitialMartyriaStyles,
-  ...props.initialMartyriaStyles,
-]);
-
-function initialMartyriaStyleDisplayName(style: InitialMartyriaStyle) {
-  return getInitialMartyriaStyleDisplayName(style, t);
-}
-
 const isonIcon = NeumeMappingService.getMapping(QuantitativeNeume.Ison).text;
 
 const sections = [
@@ -1888,16 +1836,7 @@ const numeralsOptions = new Map<PageNumerals, DialogSelector>([
   ['easternArabic', ($) => $.dialog.pageSetup.easternArabic],
 ]);
 
-const standardInitialMartyriaStyleValue = '__standard__';
 const form = ref(new PageSetup());
-const initialMartyriaStyleId = computed({
-  get: () =>
-    form.value.initialMartyriaStyleId ?? standardInitialMartyriaStyleValue,
-  set: (value) => {
-    form.value.initialMartyriaStyleId =
-      value === standardInitialMartyriaStyleValue ? null : value;
-  },
-});
 const neumeBulkColor = ref('#000000');
 
 const previewNeumes = computed(() => {

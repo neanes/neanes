@@ -30,8 +30,6 @@ describe('ParagraphStyle', () => {
       BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
       BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
       BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
     ]);
     expect(styles[0].overrides).toEqual({});
     expect(styles[0].parentStyleId).toBeNull();
@@ -51,11 +49,6 @@ describe('ParagraphStyle', () => {
     expect(styles[5].overrides.alignment).toBeUndefined();
     expect(styles[8].overrides).toEqual({});
     expect(styles[9].overrides).toEqual({ fontSize: Unit.fromPt(60) });
-    expect(styles[10].overrides).toEqual({
-      color: '#ED0000',
-      fontSize: Unit.fromPt(14.5),
-    });
-    expect(styles[11].overrides).toEqual({ fontFamily: 'GFS Didot' });
   });
 
   it('resolves inheritance through parent styles and element overrides', () => {

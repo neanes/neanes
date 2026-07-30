@@ -3,7 +3,6 @@ import { EmptyElement } from '@/models/save/v1/Element';
 
 import { Footers } from './Footers';
 import { Headers } from './Headers';
-import type { InitialMartyriaStyle } from './InitialMartyriaStyle';
 import { PageSetup } from './PageSetup';
 import type { ParagraphStyle } from './Style';
 
@@ -22,7 +21,6 @@ export class Score {
   public documentProperties: DocumentProperties | undefined = undefined;
   public pageSetup: PageSetup = new PageSetup();
   public paragraphStyles: ParagraphStyle[] = [];
-  public initialMartyriaStyles: InitialMartyriaStyle[] | undefined = undefined;
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();

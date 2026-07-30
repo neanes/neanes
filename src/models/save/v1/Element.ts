@@ -17,6 +17,7 @@ import {
   TempoSign,
 } from '@/models/save/v1/Neumes';
 
+import type { InitialMartyriaConfiguration } from './InitialMartyriaStyle';
 import { Scale, ScaleNote } from './Scales';
 
 export enum ElementType {
@@ -297,7 +298,8 @@ export class ModeKeyElement extends ScoreElement {
   public bpm: number = 120;
   public useDefaultStyle: boolean | undefined = undefined;
   public inline: boolean | undefined = undefined;
-  public initialMartyriaStyleId: string | null | undefined = undefined;
+  public initialMartyriaConfiguration:
+    InitialMartyriaConfiguration | null | undefined = undefined;
   public ignoreAttractions: boolean | undefined = undefined;
   public permanentEnharmonicZo: boolean | undefined = undefined;
   public ambitusLowNote: Note = Note.Pa;

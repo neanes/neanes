@@ -9,8 +9,8 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import {
-  cloneInitialMartyriaStyle,
-  traditionalGreekInitialMartyriaStyle,
+  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
+  createInitialMartyriaConfiguration,
 } from '@/models/InitialMartyriaStyle';
 import { PageSetup } from '@/models/PageSetup';
 import {
@@ -1117,93 +1117,29 @@ describe('SaveService font styles', () => {
     ).toBe('#654321');
   });
 
-  it('round-trips initial martyria structure without sharing mutable data', () => {
+  it('round-trips inherited, Standard, and complete Initial Martyria configurations', () => {
     const score = new Score();
-    const style = cloneInitialMartyriaStyle(
-      traditionalGreekInitialMartyriaStyle,
-    );
-    style.id = 'custom:current-martyria';
-    style.defaultParagraphStyleId =
-      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria;
-    style.components = [
-      {
-        id: 'text',
-        kind: 'text',
-        content: 'Mode',
-        paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
-        languageTag: 'en',
-        direction: 'ltr',
-        visibility: {
-          modes: [1],
-          variationOverrides: [{ templateId: 101, visible: false }],
-        },
-      },
-      {
-        id: 'stacked',
-        kind: 'stackedText',
-        top: 'λ',
-        bottom: 'π',
-        visibility: { modes: [2], variationOverrides: [] },
-      },
-      {
-        id: 'ekhos',
-        kind: 'ekhosGlyph',
-        visibility: { modes: [3], variationOverrides: [] },
-      },
-      {
-        id: 'plagal',
-        kind: 'plagalGlyph',
-        visibility: { modes: [4], variationOverrides: [] },
-      },
-      {
-        id: 'sign',
-        kind: 'modeSignGlyph',
-        visibility: { modes: [5], variationOverrides: [] },
-      },
-      {
-        id: 'varys',
-        kind: 'varysGlyph',
-        visibility: { modes: [6], variationOverrides: [] },
-      },
-      {
-        id: 'pitch',
-        kind: 'startingNoteCluster',
-        rendering: 'customText',
-        paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
-        direction: 'ltr',
-        visibility: { modes: [7], variationOverrides: [] },
-      },
-    ];
-    score.initialMartyriaStyles = [style];
-
-    const saved = SaveService.SaveScoreToJson(score);
-    const loaded = SaveService.LoadScore_v1(saved);
-    const components = loaded.initialMartyriaStyles[0].components;
-
-    expect(saved.initialMartyriaStyles?.[0].components).toEqual(
-      style.components,
-    );
-    expect(components).toEqual(style.components);
-
-    const savedStyle = saved.initialMartyriaStyles![0];
-    expect(savedStyle.defaultParagraphStyleId).toBe(
-      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
-    );
-    savedStyle.components[0].visibility.modes[0] = 8;
-    expect(style.components[0].visibility.modes[0]).toBe(1);
-    loaded.initialMartyriaStyles[0].components[0].visibility.modes[0] = 2;
-    expect(savedStyle.components[0].visibility.modes[0]).toBe(8);
-  });
-
-  it('round-trips inherited, explicit Standard, and custom mode key styles', () => {
-    const score = new Score();
-    score.pageSetup.initialMartyriaStyleId = 'custom:document-style';
+    score.pageSetup.initialMartyriaConfiguration =
+      createInitialMartyriaConfiguration(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1,
+      );
+    score.pageSetup.initialMartyriaConfiguration.appearanceOverrides = {
+      mainFontFamily: 'Source Serif',
+      greekFontFamily: 'GFS Didot',
+      fontSize: 17,
+      color: '#123456',
+      strokeWidth: 0.2,
+      fontVariantCaps: 'small-caps',
+    };
 
     const inherited = new ModeKeyElement();
     const standard = new ModeKeyElement();
-    standard.initialMartyriaStyleId = null;
+    standard.initialMartyriaConfiguration = null;
     const custom = new ModeKeyElement();
-    custom.initialMartyriaStyleId = 'custom:element-style';
+    custom.initialMartyriaConfiguration = createInitialMartyriaConfiguration(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1,
+    );
+    custom.initialMartyriaConfiguration.transliterateNoteNames = true;
     custom.inline = true;
     score.staff.elements = [inherited, standard, custom];
 
@@ -1212,38 +1148,44 @@ describe('SaveService font styles', () => {
     const savedModeKeys = saved.staff.elements as ModeKeyElement[];
     const loadedModeKeys = loaded.staff.elements as ModeKeyElement[];
 
-    expect(saved.pageSetup.initialMartyriaStyleId).toBe(
-      'custom:document-style',
-    );
-    expect(savedModeKeys[0].initialMartyriaStyleId).toBeUndefined();
-    expect(savedModeKeys[1].initialMartyriaStyleId).toBeNull();
-    expect(savedModeKeys[2].initialMartyriaStyleId).toBe(
-      'custom:element-style',
+    expect(saved.pageSetup.initialMartyriaConfiguration).toMatchObject({
+      styleId: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1,
+      appearanceOverrides:
+        score.pageSetup.initialMartyriaConfiguration.appearanceOverrides,
+    });
+    expect(
+      saved.pageSetup.initialMartyriaConfiguration?.transliterateNoteNames,
+    ).toBeUndefined();
+    expect(savedModeKeys[0].initialMartyriaConfiguration).toBeUndefined();
+    expect(savedModeKeys[1].initialMartyriaConfiguration).toBeNull();
+    expect(savedModeKeys[2].initialMartyriaConfiguration).toEqual(
+      custom.initialMartyriaConfiguration,
     );
     expect(savedModeKeys[2].inline).toBe(true);
-    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
-      'custom:document-style',
+    expect(loaded.pageSetup.initialMartyriaConfiguration).toEqual(
+      score.pageSetup.initialMartyriaConfiguration,
     );
-    expect(loadedModeKeys[0].initialMartyriaStyleId).toBeUndefined();
-    expect(loadedModeKeys[1].initialMartyriaStyleId).toBeNull();
-    expect(loadedModeKeys[2].initialMartyriaStyleId).toBe(
-      'custom:element-style',
+    expect(loadedModeKeys[0].initialMartyriaConfiguration).toBeUndefined();
+    expect(loadedModeKeys[1].initialMartyriaConfiguration).toBeNull();
+    expect(loadedModeKeys[2].initialMartyriaConfiguration).toEqual(
+      custom.initialMartyriaConfiguration,
     );
     expect(loadedModeKeys[2].inline).toBe(true);
   });
 
-  it('loads old scores without mode key style fields as Standard by default', () => {
+  it('loads scores without Initial Martyria configuration as Standard', () => {
     const score = new Score();
     score.staff.elements = [new ModeKeyElement()];
     const saved = SaveService.SaveScoreToJson(score);
-    delete saved.pageSetup.initialMartyriaStyleId;
-    delete (saved.staff.elements[0] as ModeKeyElement).initialMartyriaStyleId;
+    delete saved.pageSetup.initialMartyriaConfiguration;
+    delete (saved.staff.elements[0] as ModeKeyElement)
+      .initialMartyriaConfiguration;
 
     const loaded = SaveService.LoadScore_v1(saved);
 
-    expect(loaded.pageSetup.initialMartyriaStyleId).toBeNull();
+    expect(loaded.pageSetup.initialMartyriaConfiguration).toBeNull();
     expect(
-      (loaded.staff.elements[0] as ModeKeyElement).initialMartyriaStyleId,
+      (loaded.staff.elements[0] as ModeKeyElement).initialMartyriaConfiguration,
     ).toBeUndefined();
   });
 

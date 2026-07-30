@@ -69,9 +69,24 @@
     "startingNoteCluster": "Starting Note Cluster"
   },
   "initialMartyriaStyles": {
-    "root": "Initial Martyria Styles",
+    "root": "Initial Martyria Style Selection",
     "styleLabel": "Initial martyria style",
     "description": "Configure document-wide initial martyria presentation styles.",
+    "selectionDescription": "Choose how the Initial Martyria is presented, then optionally adjust its typography.",
+    "language": "Language",
+    "languages": {
+      "greek": "Greek",
+      "english": "English",
+      "romanian": "Romanian"
+    },
+    "standardDescription": "Use the traditional glyph-based Initial Martyria.",
+    "transliterate": "Transliterate note names",
+    "mainFont": "Main text font",
+    "greekTextFont": "Greek text font",
+    "styleDefaultFont": "Style default — {{font}}",
+    "advancedTypography": "Advanced typography",
+    "useStyleDefaults": "Use style defaults",
+    "customize": "Customize Initial Martyria…",
     "styles": "Styles",
     "searchStyles": "Search styles",
     "searchTerminology": "Search terminology",
@@ -105,7 +120,6 @@
     "documentDefault": "Document default",
     "builtInStyles": {
       "traditionalGreek": "Traditional Greek",
-      "traditionalGreekV2": "Traditional Greek V2",
       "englishPlagalFirst": "English - Plagal First",
       "englishSignFirst": "English - Sign First",
       "englishModeBeforeSign": "English - Mode Before Sign",
@@ -229,9 +243,7 @@
       "header": "Header",
       "footer": "Footer",
       "lyrics": "Lyrics",
-      "dropCap": "Drop Cap",
-      "initialMartyria": "Initial Martyria",
-      "initialMartyriaGreek": "Initial Martyria - Greek"
+      "dropCap": "Drop Cap"
     }
   },
   "neumePositioning": {
@@ -356,8 +368,8 @@
     "italic": "Italic",
     "outline": "Outline",
     "lyrics": "Lyrics",
-    "initialMartyriae": "Initial Martyriæ",
-    "initialMartyriaeDescription": "The default styling for all initial martyriæ in the score.",
+    "initialMartyriae": "Initial Martyria",
+    "initialMartyriaeDescription": "The default styling for the Standard Initial Martyria.",
     "neumesDescription": "The default styling for all neumes in the score.",
     "heightAdjust": "Height Adjust",
     "neumeStyles": "Neume Styles",

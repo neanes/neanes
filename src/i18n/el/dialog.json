@@ -69,9 +69,24 @@
     "startingNoteCluster": "Σύμπλεγμα αρχικού φθόγγου"
   },
   "initialMartyriaStyles": {
-    "root": "Στυλ αρχικής μαρτυρίας",
+    "root": "Επιλογή στυλ Αρχικής Μαρτυρίας",
     "styleLabel": "Στυλ αρχικής μαρτυρίας",
     "description": "Ρυθμίστε στυλ παρουσίασης αρχικής μαρτυρίας για όλο το έγγραφο.",
+    "selectionDescription": "Επιλέξτε την εμφάνιση των Αρχικών Μαρτυριών και, προαιρετικά, προσαρμόστε την τυπογραφία τους.",
+    "language": "Γλώσσα",
+    "languages": {
+      "greek": "Ελληνικά",
+      "english": "Αγγλικά",
+      "romanian": "Ρουμανικά"
+    },
+    "standardDescription": "Χρήση της παραδοσιακής Αρχικής Μαρτυρίας με χαρακτήρες συμβόλων.",
+    "transliterate": "Μεταγραφή ονομάτων φθόγγων",
+    "mainFont": "Κύρια γραμματοσειρά κειμένου",
+    "greekTextFont": "Γραμματοσειρά ελληνικού κειμένου",
+    "styleDefaultFont": "Προεπιλογή στυλ — {{font}}",
+    "advancedTypography": "Προχωρημένη τυπογραφία",
+    "useStyleDefaults": "Χρήση προεπιλογών στυλ",
+    "customize": "Προσαρμογή Αρχικής Μαρτυρίας…",
     "styles": "Στυλ",
     "searchStyles": "Αναζήτηση στυλ",
     "searchTerminology": "Αναζήτηση ορολογίας",
@@ -105,7 +120,6 @@
     "documentDefault": "Προεπιλογή εγγράφου",
     "builtInStyles": {
       "traditionalGreek": "Παραδοσιακό ελληνικό",
-      "traditionalGreekV2": "Παραδοσιακό ελληνικό V2",
       "englishPlagalFirst": "Αγγλικό - Πλάγιος πρώτα",
       "englishSignFirst": "Αγγλικό - Σημάδι πρώτα",
       "englishModeBeforeSign": "Αγγλικό - Ήχος πριν από το σημάδι",
@@ -230,9 +244,7 @@
       "header": "Κεφαλίδα",
       "footer": "Υποσέλιδο",
       "lyrics": "Στίχοι",
-      "dropCap": "Αρχίγραμμα",
-      "initialMartyria": "Αρχική Μαρτυρία",
-      "initialMartyriaGreek": "Αρχική Μαρτυρία - Ελληνικά"
+      "dropCap": "Αρχίγραμμα"
     }
   },
   "neumePositioning": {
@@ -358,7 +370,7 @@
     "outline": "Περίγραμμα",
     "lyrics": "Στίχοι",
     "initialMartyriae": "Αρκτικές Μαρτυρίες",
-    "initialMartyriaeDescription": "Η προεπιλεγμένη μορφοποίηση για όλες τις αρκτικές μαρτυρίες στο μουσικό κείμενο.",
+    "initialMartyriaeDescription": "Η προεπιλεγμένη μορφοποίηση για την Τυπική Αρχική Μαρτυρία.",
     "neumesDescription": "Η προεπιλεγμένη μορφοποίηση για όλα τα μουσικά σημεία στο μουσικό κείμενο.",
     "heightAdjust": "Ρύθμιση Ύψους",
     "neumeStyles": "Μορφοποίηση Μουσικών Σημείων",

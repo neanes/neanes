@@ -69,9 +69,24 @@
     "startingNoteCluster": "Группа начальных нот"
   },
   "initialMartyriaStyles": {
-    "root": "Стили начальной мартирии",
+    "root": "Выбор стиля начальной мартирии",
     "styleLabel": "Стиль начальной мартирии",
     "description": "Настройте стили отображения начальной мартирии для всего документа.",
+    "selectionDescription": "Выберите вид начальных мартирий и при необходимости настройте их типографику.",
+    "language": "Язык",
+    "languages": {
+      "greek": "Греческий",
+      "english": "Английский",
+      "romanian": "Румынский"
+    },
+    "standardDescription": "Использовать традиционную начальную мартирию на основе глифов.",
+    "transliterate": "Транслитерировать названия нот",
+    "mainFont": "Шрифт основного текста",
+    "greekTextFont": "Шрифт греческого текста",
+    "styleDefaultFont": "По умолчанию для стиля — {{font}}",
+    "advancedTypography": "Расширенная типографика",
+    "useStyleDefaults": "Использовать настройки стиля",
+    "customize": "Настроить начальную мартирию…",
     "styles": "Стили",
     "searchStyles": "Поиск стилей",
     "searchTerminology": "Поиск терминологии",
@@ -105,7 +120,6 @@
     "documentDefault": "По умолчанию для документа",
     "builtInStyles": {
       "traditionalGreek": "Традиционный греческий",
-      "traditionalGreekV2": "Традиционный греческий V2",
       "englishPlagalFirst": "Английский - плагальный в начале",
       "englishSignFirst": "Английский - знак в начале",
       "englishModeBeforeSign": "Английский - глас перед знаком",
@@ -230,9 +244,7 @@
       "header": "Верхний колонтитул",
       "footer": "Нижний колонтитул",
       "lyrics": "Текст песнопения",
-      "dropCap": "Буквица",
-      "initialMartyria": "Начальная мартирия",
-      "initialMartyriaGreek": "Начальная мартирия - греческая"
+      "dropCap": "Буквица"
     }
   },
   "neumePositioning": {
@@ -358,7 +370,7 @@
     "outline": "Обводка",
     "lyrics": "Текст песнопения",
     "initialMartyriae": "Начальные мартирии",
-    "initialMartyriaeDescription": "Оформление по умолчанию для всех начальных мартирий партитуры.",
+    "initialMartyriaeDescription": "Оформление стандартной начальной мартирии по умолчанию.",
     "neumesDescription": "Оформление по умолчанию для всех невм партитуры.",
     "heightAdjust": "Коррекция высоты",
     "neumeStyles": "Стили невм",

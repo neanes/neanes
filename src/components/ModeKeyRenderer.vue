@@ -10,9 +10,8 @@
     v-else
     v-bind="$attrs"
     :element="element"
-    :initial-martyria-style="styleSelection.style"
+    :initial-martyria-configuration="styleSelection"
     :page-setup="pageSetup"
-    :paragraph-styles="paragraphStyles"
     @select-single="$emit('select-single')"
   />
 </template>
@@ -24,12 +23,8 @@ import { computed } from 'vue';
 import CustomModeKey from '@/components/CustomModeKey.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import type { ModeKeyElement } from '@/models/Element';
-import {
-  type InitialMartyriaStyle,
-  resolveInitialMartyriaStyleSelection,
-} from '@/models/InitialMartyriaStyle';
+import { resolveInitialMartyriaStyleSelection } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
 
 defineOptions({ inheritAttrs: false });
 defineEmits(['select-single']);
@@ -43,21 +38,12 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
-  initialMartyriaStyles: {
-    type: Array as PropType<InitialMartyriaStyle[]>,
-    default: () => [],
-  },
-  paragraphStyles: {
-    type: Array as PropType<ParagraphStyle[]>,
-    default: () => [],
-  },
 });
 
 const styleSelection = computed(() =>
   resolveInitialMartyriaStyleSelection({
-    elementStyleId: props.element.initialMartyriaStyleId,
-    pageStyleId: props.pageSetup.initialMartyriaStyleId,
-    styles: props.initialMartyriaStyles,
+    elementConfiguration: props.element.initialMartyriaConfiguration,
+    pageConfiguration: props.pageSetup.initialMartyriaConfiguration,
   }),
 );
 </script>

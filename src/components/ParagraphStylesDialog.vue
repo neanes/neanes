@@ -526,6 +526,15 @@
             {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
           </Button>
         </DialogClose>
+        <Button
+          variant="outline"
+          type="button"
+          :disabled="!canSubmit"
+          @click="saveAsDefault"
+        >
+          <PhFloppyDisk />
+          {{ $t(($) => $.dialog.common.setAsDefault, { ns: 'dialog' }) }}
+        </Button>
         <Button type="button" :disabled="!canSubmit" @click="submit">
           <PhCheck />
           {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
@@ -540,6 +549,7 @@ import {
   PhArrowCounterClockwise,
   PhCheck,
   PhCopy,
+  PhFloppyDisk,
   PhPlus,
   PhTextAlignCenter,
   PhTextAlignJustify,
@@ -603,6 +613,7 @@ import {
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
+import { SaveService } from '@/services/SaveService';
 import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
 import {
   areStyleDisplayNamesValid,
@@ -1005,6 +1016,18 @@ function prepareParagraphStyleForSubmit(style: ParagraphStyle) {
   pruneParentlessParagraphStyleRootFallbackOverrides(updated);
 
   return updated;
+}
+
+function saveAsDefault() {
+  if (!canSubmit.value) {
+    return;
+  }
+
+  const defaults = styles.value.map((style) =>
+    SaveService.SaveParagraphStyle(prepareParagraphStyleForSubmit(style)),
+  );
+
+  localStorage.setItem('paragraphStylesDefault', JSON.stringify(defaults));
 }
 
 function submit() {

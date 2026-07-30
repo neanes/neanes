@@ -2061,7 +2061,7 @@ export class SaveService {
     return style;
   }
 
-  private static LoadParagraphStyles_v1(
+  public static LoadParagraphStyles_v1(
     savedParagraphStyles: ParagraphStyle_v1[],
     defaultParagraphStyles: ParagraphStyle[],
   ) {

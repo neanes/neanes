@@ -899,6 +899,7 @@ async function exportWorkspaceAsPdf(
             args.pageHeightInches,
           ),
           landscape: args.landscape,
+          printBackground: true,
         });
         const newPath = replaceExtension(args.filePath!, 'pdf');
 
@@ -949,6 +950,7 @@ async function exportWorkspaceAsPdf(
             args.pageHeightInches,
           ),
           landscape: args.landscape,
+          printBackground: true,
         });
         await fs.writeFile(filePath, data);
 

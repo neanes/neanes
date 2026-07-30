@@ -231,6 +231,10 @@ onBeforeUnmount(() => {
     overflow: visible !important;
   }
 
+  .page {
+    print-color-adjust: exact;
+  }
+
   /*
    * Reka/Vue portal components leave teleport anchor elements as direct body
    * children. If any remain after #app, Blink may honor the final printed

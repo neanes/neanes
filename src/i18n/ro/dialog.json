@@ -228,7 +228,7 @@
     "duplicate": "Duplică stilul",
     "delete": "Șterge stilul",
     "clearFormatting": "Elimină formatarea",
-    "resetStyleToDefault": "Resetează stilul la implicit",
+    "resetStyleToDefault": "Resetează stilul la valorile implicite din fabrică",
     "name": "Nume",
     "parentStyle": "Stil părinte",
     "openDialog": "Editează stilurile",

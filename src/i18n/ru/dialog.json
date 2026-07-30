@@ -228,7 +228,7 @@
     "duplicate": "Дублировать стиль",
     "delete": "Удалить стиль",
     "clearFormatting": "Восстановить базовые",
-    "resetStyleToDefault": "Восстановить стиль по умолчанию",
+    "resetStyleToDefault": "Восстановить заводские настройки стиля",
     "name": "Имя стиля",
     "parentStyle": "На основе",
     "openDialog": "Изменить стили",

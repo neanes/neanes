@@ -198,6 +198,7 @@ import type {
 } from '@/models/ParagraphStyle';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
+  createDefaultParagraphStyles,
   getTextBoxParagraphStyleFallbackId,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
@@ -9419,6 +9420,21 @@ function createDefaultScore() {
       SaveService.LoadPageSetup_v1(
         score.pageSetup,
         JSON.parse(pageSetupDefault),
+      );
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  try {
+    const paragraphStylesDefault = localStorage.getItem(
+      'paragraphStylesDefault',
+    );
+
+    if (paragraphStylesDefault) {
+      score.paragraphStyles = SaveService.LoadParagraphStyles_v1(
+        JSON.parse(paragraphStylesDefault),
+        createDefaultParagraphStyles(),
       );
     }
   } catch (error) {

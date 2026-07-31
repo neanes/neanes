@@ -27,10 +27,11 @@ import type { SbmuflGlyphName } from '../NeumeMappingService';
 import { NeumeMappingService } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
-const schemaVersion = 2;
+const schemaVersion = 3;
 
 // Schema changes
 // 1 to 2: Positive lyricsVerticalOffset now moves lyrics down, making it consistent with other offsets in the schema
+// 2 to 3: Measure bar positioning includes offsets and adjacent spacing calculated by the layout engine
 
 export class LatexExporterOptions {
   includeModeKeys: boolean = false;
@@ -430,6 +431,22 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               measureBarRight:
                 glyphName(note.measureBarRight) ??
                 glyphName(note.computedMeasureBarRight),
+              computedMeasureBarLeftOffsetX:
+                note.computedMeasureBarLeftOffsetX != 0
+                  ? toPt(note.computedMeasureBarLeftOffsetX)
+                  : undefined,
+              computedMeasureBarRightOffsetX:
+                note.computedMeasureBarRightOffsetX != 0
+                  ? toPt(note.computedMeasureBarRightOffsetX)
+                  : undefined,
+              computedMeasureBarLeftLeadingSpacing:
+                note.computedMeasureBarLeftLeadingSpacing != 0
+                  ? toPt(note.computedMeasureBarLeftLeadingSpacing)
+                  : undefined,
+              computedMeasureBarRightTrailingSpacing:
+                note.computedMeasureBarRightTrailingSpacing != 0
+                  ? toPt(note.computedMeasureBarRightTrailingSpacing)
+                  : undefined,
               melismaWidth:
                 note.melismaWidth > 0 ? toPt(note.melismaWidth) : undefined,
               isFullMelisma: note.isFullMelisma || undefined,
@@ -503,6 +520,22 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               fthora: glyphName(martyria.fthora),
               measureBarLeft: glyphName(martyria.measureBarLeft),
               measureBarRight: glyphName(martyria.measureBarRight),
+              computedMeasureBarLeftOffsetX:
+                martyria.computedMeasureBarLeftOffsetX != 0
+                  ? toPt(martyria.computedMeasureBarLeftOffsetX)
+                  : undefined,
+              computedMeasureBarRightOffsetX:
+                martyria.computedMeasureBarRightOffsetX != 0
+                  ? toPt(martyria.computedMeasureBarRightOffsetX)
+                  : undefined,
+              computedMeasureBarLeftLeadingSpacing:
+                martyria.computedMeasureBarLeftLeadingSpacing != 0
+                  ? toPt(martyria.computedMeasureBarLeftLeadingSpacing)
+                  : undefined,
+              computedMeasureBarRightTrailingSpacing:
+                martyria.computedMeasureBarRightTrailingSpacing != 0
+                  ? toPt(martyria.computedMeasureBarRightTrailingSpacing)
+                  : undefined,
               tempoLeft: glyphName(martyria.tempoLeft),
               tempo: glyphName(martyria.tempo),
               tempoRight: glyphName(martyria.tempoRight),
@@ -853,6 +886,10 @@ interface LatexNoteElement extends LatexBaseElement {
   measureNumberOffset?: LatexOffset;
   measureBarLeft?: SbmuflGlyphName;
   measureBarRight?: SbmuflGlyphName;
+  computedMeasureBarLeftOffsetX?: number;
+  computedMeasureBarRightOffsetX?: number;
+  computedMeasureBarLeftLeadingSpacing?: number;
+  computedMeasureBarRightTrailingSpacing?: number;
   melismaWidth?: number;
   isFullMelisma?: boolean;
   isHyphen?: boolean;
@@ -876,6 +913,10 @@ interface LatexMartyriaElement extends LatexBaseElement {
   fthora?: SbmuflGlyphName;
   measureBarLeft?: SbmuflGlyphName;
   measureBarRight?: SbmuflGlyphName;
+  computedMeasureBarLeftOffsetX?: number;
+  computedMeasureBarRightOffsetX?: number;
+  computedMeasureBarLeftLeadingSpacing?: number;
+  computedMeasureBarRightTrailingSpacing?: number;
   tempoLeft?: SbmuflGlyphName;
   tempo?: SbmuflGlyphName;
   tempoRight?: SbmuflGlyphName;

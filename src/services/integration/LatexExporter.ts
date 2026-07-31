@@ -31,7 +31,7 @@ const schemaVersion = 3;
 
 // Schema changes
 // 1 to 2: Positive lyricsVerticalOffset now moves lyrics down, making it consistent with other offsets in the schema
-// 2 to 3: Measure bar positioning includes offsets and adjacent spacing calculated by the layout engine
+// 2 to 3: Glyph positioning includes layout-resolved spacing, offsets, transferred measure-bar placement, and leading lyric hyphens
 
 export class LatexExporterOptions {
   includeModeKeys: boolean = false;
@@ -343,6 +343,18 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 note.vareiaOffsetX,
                 note.vareiaOffsetY,
               ),
+              vareiaInternalSpacing:
+                note.vareiaInternalSpacing != 0
+                  ? toPt(note.vareiaInternalSpacing)
+                  : undefined,
+              stavros: note.stavros || undefined,
+              stavrosOffset: note.stavros
+                ? getOffset(
+                    VocalExpressionNeume.Cross_Top,
+                    note.stavrosOffsetX,
+                    note.stavrosOffsetY,
+                  )
+                : undefined,
               time: glyphName(note.timeNeume),
               timeOffset: getOffset(
                 note.timeNeume,
@@ -419,6 +431,14 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 note.isonOffsetX,
                 note.computedIsonOffsetY,
               ),
+              noteIndicator: glyphName(
+                note.noteIndicator ? note.noteIndicatorNeume : null,
+              ),
+              noteIndicatorOffset: getOffset(
+                note.noteIndicator ? note.noteIndicatorNeume : null,
+                note.noteIndicatorOffsetX,
+                note.noteIndicatorOffsetY,
+              ),
               measureNumber: glyphName(note.measureNumber),
               measureNumberOffset: getOffset(
                 note.measureNumber,
@@ -431,6 +451,20 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               measureBarRight:
                 glyphName(note.measureBarRight) ??
                 glyphName(note.computedMeasureBarRight),
+              measureBarLeftOffset: getOffset(
+                note.measureBarLeft ?? note.computedMeasureBarLeft,
+                note.measureBarLeftOffsetX,
+                note.measureBarLeftOffsetY,
+              ),
+              measureBarRightOffset: getOffset(
+                note.measureBarRight ?? note.computedMeasureBarRight,
+                note.measureBarRightOffsetX,
+                note.measureBarRightOffsetY,
+              ),
+              measureBarRightIsTransferred:
+                (note.measureBarRight == null &&
+                  note.computedMeasureBarRight != null) ||
+                undefined,
               computedMeasureBarLeftOffsetX:
                 note.computedMeasureBarLeftOffsetX != 0
                   ? toPt(note.computedMeasureBarLeftOffsetX)
@@ -456,6 +490,9 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 note.hyphenOffsets.length > 0
                   ? note.hyphenOffsets.map((x) => toPt(x))
                   : undefined,
+              leadingLyricHyphenOffset: note.showLeadingLyricHyphen
+                ? toPt(note.leadingLyricHyphenOffset)
+                : undefined,
             } as LatexNoteElement;
 
             if (note.lyrics != '' || note.melismaText != '') {
@@ -510,7 +547,12 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             pushExportedElement({
               type: 'martyria',
               x: toPt(element.x - resolvedMargins.left),
-              width: toPt(martyria.neumeWidth),
+              width: toPt(
+                martyria.neumeWidth +
+                  martyria.computedMeasureBarLeftLeadingSpacing +
+                  martyria.computedMeasureBarRightTrailingSpacing +
+                  martyria.padding,
+              ),
               verticalOffset:
                 martyria.verticalOffset != 0
                   ? toPt(martyria.verticalOffset)
@@ -537,8 +579,26 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? toPt(martyria.computedMeasureBarRightTrailingSpacing)
                   : undefined,
               tempoLeft: glyphName(martyria.tempoLeft),
+              tempoLeftOffsetX:
+                martyria.computedTempoLeftOffsetX != 0
+                  ? toPt(martyria.computedTempoLeftOffsetX)
+                  : undefined,
+              tempoLeftSpacing:
+                martyria.tempoLeftSpacing != 0
+                  ? toPt(martyria.tempoLeftSpacing)
+                  : undefined,
               tempo: glyphName(martyria.tempo),
               tempoRight: glyphName(martyria.tempoRight),
+              tempoRightSpacing:
+                martyria.tempoRightSpacing != 0
+                  ? toPt(martyria.tempoRightSpacing)
+                  : undefined,
+              quantitativeNeume:
+                martyria.alignRight && martyria.quantitativeNeume != null
+                  ? glyphName(martyria.quantitativeNeume)
+                  : undefined,
+              quantitativeNeumeSpacing:
+                martyria.padding != 0 ? toPt(martyria.padding) : undefined,
             } as LatexMartyriaElement);
           } else if (element.elementType === ElementType.Tempo) {
             const tempo = element as TempoElement;
@@ -856,6 +916,9 @@ interface LatexNoteElement extends LatexBaseElement {
   quantitativeNeume: SbmuflGlyphName;
   vareia?: boolean;
   vareiaOffset?: LatexOffset;
+  vareiaInternalSpacing?: number;
+  stavros?: boolean;
+  stavrosOffset?: LatexOffset;
   time?: SbmuflGlyphName;
   timeOffset?: LatexOffset;
   koronis?: boolean;
@@ -882,10 +945,15 @@ interface LatexNoteElement extends LatexBaseElement {
   accidentalTertiaryOffset?: LatexOffset;
   ison?: SbmuflGlyphName;
   isonOffset?: LatexOffset;
+  noteIndicator?: SbmuflGlyphName;
+  noteIndicatorOffset?: LatexOffset;
   measureNumber?: SbmuflGlyphName;
   measureNumberOffset?: LatexOffset;
   measureBarLeft?: SbmuflGlyphName;
   measureBarRight?: SbmuflGlyphName;
+  measureBarLeftOffset?: LatexOffset;
+  measureBarRightOffset?: LatexOffset;
+  measureBarRightIsTransferred?: boolean;
   computedMeasureBarLeftOffsetX?: number;
   computedMeasureBarRightOffsetX?: number;
   computedMeasureBarLeftLeadingSpacing?: number;
@@ -894,6 +962,7 @@ interface LatexNoteElement extends LatexBaseElement {
   isFullMelisma?: boolean;
   isHyphen?: boolean;
   hyphenOffsets?: number[];
+  leadingLyricHyphenOffset?: number;
   lyrics?: string;
   lyricsLeftAlign?: boolean;
   lyricsHorizontalOffset?: number;
@@ -918,8 +987,13 @@ interface LatexMartyriaElement extends LatexBaseElement {
   computedMeasureBarLeftLeadingSpacing?: number;
   computedMeasureBarRightTrailingSpacing?: number;
   tempoLeft?: SbmuflGlyphName;
+  tempoLeftOffsetX?: number;
+  tempoLeftSpacing?: number;
   tempo?: SbmuflGlyphName;
   tempoRight?: SbmuflGlyphName;
+  tempoRightSpacing?: number;
+  quantitativeNeume?: SbmuflGlyphName;
+  quantitativeNeumeSpacing?: number;
 }
 
 interface LatexTempoElement extends LatexBaseElement {

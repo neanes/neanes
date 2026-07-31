@@ -1,6 +1,6 @@
 import type { Font } from 'lib-font';
 
-import bundledFontAlternates from '@/assets/fonts/bundled-font-alternates.generated.json';
+import { bundledFontEntry } from '@/services/bundledFonts';
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   parseCharacterVariantTag,
@@ -14,7 +14,7 @@ import {
 // single-alternate notations (swash, stylistic alternates, ornaments,
 // annotation forms) and the plain historical-forms keyword (hist).
 // Bundled faces are fixed, so their alternates are precomputed into
-// bundled-font-alternates.generated.json and drift-guarded by
+// bundled-fonts.generated.json and drift-guarded by
 // FontAlternatesService.test.ts. Only system faces are parsed at runtime,
 // from the Local Font Access FontData bytes. The results feed the alternates
 // controls: the stored document value only ever contains raw feature tags
@@ -60,14 +60,6 @@ export const EMPTY_FONT_ALTERNATES: FontAlternates = {
   hasAnnotation: false,
   hasHistoricalForms: false,
 };
-
-// The precomputed alternates of the bundled text faces, keyed by font file
-// name. Only faces with at least one alternate feature have an entry. The
-// artifact is generated from the real font files by the drift-guard test in
-// FontAlternatesService.test.ts; regenerate it with vitest -u after
-// changing a bundled font.
-const BUNDLED_ALTERNATES: Record<string, FontAlternates> =
-  bundledFontAlternates;
 
 // The plain-switch features, by the GSUB feature tag that turns each one on.
 // The CSS swash() notation activates both swash features, so either tag
@@ -225,9 +217,7 @@ export function getFontAlternates(
   const fileName = fontCatalog.getBundledFaceFileName(fontFamily, fontStyle);
 
   if (fileName != null) {
-    return Promise.resolve(
-      BUNDLED_ALTERNATES[fileName] ?? EMPTY_FONT_ALTERNATES,
-    );
+    return Promise.resolve(bundledFontEntry(fileName).alternates);
   }
 
   // Bundled neume faces intentionally have no alternates artifact. Do not

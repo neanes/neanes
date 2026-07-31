@@ -670,3 +670,112 @@ export function fontFeatureValuesCss(families: string[]): string {
 
   return `@font-feature-values ${names} { ${FONT_FEATURE_VALUE_BLOCKS} }`;
 }
+
+// ---------------------------------------------------------------------------
+// Resolved OpenType feature settings
+// ---------------------------------------------------------------------------
+
+// OpenType feature tags mapped to the values they select. Renderer-neutral on
+// purpose: value 0 disables a feature, 1 enables it, and anything higher picks
+// a numbered alternate. Consumers adapt this to whatever their renderer spells
+// it as (fontspec RawFeature, CSS font-feature-settings, and so on).
+export type OpenTypeFeatures = Record<string, number>;
+
+// Resolve the four font-variant longhands into the OpenType features they
+// select. This is the single mapping from the CSS vocabulary the app stores to
+// the tags a font actually exposes, so no consumer has to parse CSS itself.
+export function resolveOpenTypeFeatures(
+  style: Partial<Record<FontVariantProperty, string | null>>,
+): OpenTypeFeatures {
+  const result: OpenTypeFeatures = {};
+  const add = (tag: string, value: number = 1) => {
+    result[tag] = value;
+  };
+
+  switch (parseFontVariantCaps(style.fontVariantCaps ?? FONT_VARIANT_NORMAL)) {
+    case 'small-caps':
+      add('smcp');
+      break;
+    case 'all-small-caps':
+      add('smcp');
+      add('c2sc');
+      break;
+    case 'petite-caps':
+      add('pcap');
+      break;
+    case 'all-petite-caps':
+      add('pcap');
+      add('c2pc');
+      break;
+    case 'titling-caps':
+      add('titl');
+      break;
+    case 'unicase':
+      add('unic');
+      break;
+  }
+
+  const numeric = parseNumericVariant(
+    style.fontVariantNumeric ?? FONT_VARIANT_NORMAL,
+  );
+  if (numeric.figure != null) {
+    add(numeric.figure === 'lining' ? 'lnum' : 'onum');
+  }
+  if (numeric.spacing != null) {
+    add(numeric.spacing === 'proportional' ? 'pnum' : 'tnum');
+  }
+  if (numeric.fractions != null) {
+    add(numeric.fractions === 'diagonal' ? 'frac' : 'afrc');
+  }
+  if (numeric.ordinal) {
+    add('ordn');
+  }
+  if (numeric.slashedZero) {
+    add('zero');
+  }
+
+  const ligatures = parseLigatureVariant(
+    style.fontVariantLigatures ?? FONT_VARIANT_NORMAL,
+  );
+  if (!ligatures.common) {
+    add('liga', 0);
+    add('clig', 0);
+  }
+  if (ligatures.discretionary) {
+    add('dlig');
+  }
+  if (ligatures.historical) {
+    add('hlig');
+  }
+  if (!ligatures.contextual) {
+    add('calt', 0);
+  }
+
+  const alternates = parseAlternatesVariant(
+    style.fontVariantAlternates ?? FONT_VARIANT_NORMAL,
+  );
+  if (alternates.stylistic != null) {
+    add('salt', alternates.stylistic);
+  }
+  if (alternates.historicalForms) {
+    add('hist');
+  }
+  for (const stylisticSet of alternates.stylisticSets) {
+    add(stylisticSetTag(stylisticSet));
+  }
+  for (const characterVariant of alternates.characterVariants) {
+    add(characterVariantTag(characterVariant));
+  }
+  if (alternates.swash != null) {
+    add('swsh', alternates.swash);
+    add('cswh', alternates.swash);
+  }
+  if (alternates.ornaments != null) {
+    add('ornm', alternates.ornaments);
+  }
+  if (alternates.annotation != null) {
+    add('nalt', alternates.annotation);
+  }
+
+  return result;
+}

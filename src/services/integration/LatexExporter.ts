@@ -5,33 +5,48 @@ import type {
   NoteElement,
   RichTextBoxElement,
   TempoElement,
+  TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
-import { ElementType, TextBoxAlignment } from '@/models/Element';
+import { ElementType } from '@/models/Element';
 import type { Neume } from '@/models/Neumes';
 import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import type { Page } from '@/models/Page';
 import type { PageSetup } from '@/models/PageSetup';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  type ParagraphStyleOverrides,
+  type ResolvedParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
+import { resolveFontCss } from '@/utils/fontStyle';
+import {
+  type OpenTypeFeatures,
+  resolveOpenTypeFeatures,
+} from '@/utils/fontVariants';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { resolveRunningMarkerText } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
+import { fontCatalog } from '../FontCatalog';
 import { fontService } from '../FontService';
 import type { SbmuflGlyphName } from '../NeumeMappingService';
 import { NeumeMappingService } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
-const schemaVersion = 3;
+export const LATEX_SCHEMA_VERSION = 3;
 
 // Schema changes
 // 1 to 2: Positive lyricsVerticalOffset now moves lyrics down, making it consistent with other offsets in the schema
-// 2 to 3: Glyph positioning includes layout-resolved spacing, offsets, transferred measure-bar placement, and leading lyric hyphens
+// 2 to 3: Glyph positioning includes layout-resolved spacing, offsets,
+// transferred measure-bar placement, and leading lyric hyphens. Text typography
+// moved from page setup and element-specific font fields to an interned table of
+// fully resolved text styles. Elements reference the final style they render
+// with. Exact font face names and structured OpenType feature settings are
+// preserved. Alignment is spelled out everywhere it appears, including on mode
+// keys, which used to abbreviate it to a single letter. Every text style carries
+// the exact PostScript name; export fails if Neanes cannot resolve one.
 
 export class LatexExporterOptions {
   includeModeKeys: boolean = false;
@@ -69,30 +84,139 @@ function getOffset(
   return { x, y };
 }
 
-function convertAlignment(alignment: TextBoxAlignment) {
-  switch (alignment) {
-    case TextBoxAlignment.Center:
-      return 'c';
-    case TextBoxAlignment.Justify:
-      return 'l';
-    case TextBoxAlignment.Left:
-      return 'l';
-    case TextBoxAlignment.Right:
-      return 'r';
-  }
-}
-
 function convertFontName(fontFamily: string) {
-  switch (fontFamily) {
-    case 'Source Serif':
-      return 'Source Serif 4';
-    default:
-      return fontFamily;
-  }
+  return fontFamily === 'Source Serif' ? 'Source Serif 4' : fontFamily;
 }
 
 function toPt(value: number) {
   return Number(Unit.toPt(value).toFixed(4));
+}
+
+export function getLatexNeumeFont(fontFamily: string) {
+  const metadata = fontService.getMetadata(fontFamily);
+
+  return {
+    fontFamily,
+    fontVersion: metadata.fontVersion,
+  };
+}
+
+function convertColor(color: string) {
+  return color.startsWith('#') ? color.substring(1) : color;
+}
+
+export class LatexFontFaceResolutionError extends Error {
+  constructor(
+    readonly fontFamily: string,
+    readonly fontStyle: string,
+  ) {
+    super('latex-font-face-resolution-failed');
+    this.name = 'LatexFontFaceResolutionError';
+  }
+}
+
+export function convertResolvedTextStyle(
+  style: ResolvedParagraphStyle,
+): LatexTextStyle {
+  const face = fontCatalog.resolveExportFace(style.fontFamily, style.fontStyle);
+
+  if (face.postscriptName == null) {
+    throw new LatexFontFaceResolutionError(style.fontFamily, style.fontStyle);
+  }
+
+  return {
+    alignment: style.alignment,
+    fontFamily: convertFontName(style.fontFamily),
+    fontSize: toPt(style.fontSize),
+    fontStyle: face.style,
+    postscriptName: face.postscriptName,
+    color: convertColor(style.color),
+    strokeWidth: toPt(style.strokeWidth),
+    strokeColor: convertColor(style.strokeColor),
+    lineHeight: style.lineHeight === null ? 'normal' : style.lineHeight,
+    textDecoration:
+      style.textDecoration === null ? 'none' : style.textDecoration,
+    fontFeatures: resolveOpenTypeFeatures(style),
+  };
+}
+
+export class LatexTextStyleRegistry {
+  readonly styles: LatexTextStyleDefinition[] = [];
+
+  // The document's own paragraph style ids, and every id handed out so far. A
+  // resolved style keeps the id of the paragraph style it came from when it is
+  // that style unmodified, so the exported ids stay readable; everything else
+  // gets a generated id that must not collide with either set.
+  private readonly paragraphStyleIds: Set<string>;
+  private readonly usedStyleIds: Set<string>;
+  private readonly styleIdByValue = new Map<string, string>();
+  private readonly styleIdBySource = new Map<string, string>();
+  private readonly baseStyleValueByParagraphStyleId = new Map<string, string>();
+  private nextGeneratedId = 1;
+
+  constructor(private readonly paragraphStyles: ParagraphStyle[]) {
+    this.paragraphStyleIds = new Set(paragraphStyles.map((style) => style.id));
+    this.usedStyleIds = new Set(this.paragraphStyleIds);
+  }
+
+  getStyleId(
+    paragraphStyleId: string,
+    overrides: ParagraphStyleOverrides,
+  ): string {
+    const source = JSON.stringify([paragraphStyleId, overrides]);
+    const existingSourceStyleId = this.styleIdBySource.get(source);
+    if (existingSourceStyleId != null) {
+      return existingSourceStyleId;
+    }
+
+    const style = convertResolvedTextStyle(
+      resolveParagraphStyle(this.paragraphStyles, paragraphStyleId, overrides),
+    );
+    const value = JSON.stringify(style);
+    const existingStyleId = this.styleIdByValue.get(value);
+    if (existingStyleId != null) {
+      this.styleIdBySource.set(source, existingStyleId);
+      return existingStyleId;
+    }
+
+    const styleId =
+      this.paragraphStyleIds.has(paragraphStyleId) &&
+      value === this.baseStyleValue(paragraphStyleId)
+        ? paragraphStyleId
+        : this.nextStyleId();
+
+    this.styles.push({ id: styleId, ...style });
+    this.usedStyleIds.add(styleId);
+    this.styleIdByValue.set(value, styleId);
+    this.styleIdBySource.set(source, styleId);
+
+    return styleId;
+  }
+
+  // What a paragraph style resolves to with no element overrides applied.
+  private baseStyleValue(paragraphStyleId: string): string {
+    let value = this.baseStyleValueByParagraphStyleId.get(paragraphStyleId);
+
+    if (value == null) {
+      value = JSON.stringify(
+        convertResolvedTextStyle(
+          resolveParagraphStyle(this.paragraphStyles, paragraphStyleId),
+        ),
+      );
+      this.baseStyleValueByParagraphStyleId.set(paragraphStyleId, value);
+    }
+
+    return value;
+  }
+
+  private nextStyleId() {
+    let styleId: string;
+    do {
+      styleId = `resolved-${this.nextGeneratedId++}`;
+    } while (this.usedStyleIds.has(styleId));
+
+    return styleId;
+  }
 }
 
 function getSectionMarkerName(element: LatexExporterElement): string | null {
@@ -154,35 +278,9 @@ Lyrics Baseline -->  |----------------|  ---
 
 Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Ascent 
 */
-    // TODO: Extend the LaTeX export schema to carry exact font face styles
-    // such as Semibold, Caption, and Display, plus the font-variant OpenType
-    // features (caps, numeric, ligatures). Until then, preserve the v2 output
-    // contract by projecting document styles onto CSS font-style and
-    // font-weight, even though that loses non-CSS face information and drops
-    // the font-variant features.
-    const defaultTextBoxStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-    );
-    const defaultDropCapStyle = resolveParagraphStyle(
-      paragraphStyles,
-      BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
-    );
     const lyricsStyle = resolveParagraphStyle(
       paragraphStyles,
       BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-    );
-    const defaultTextBoxFont = resolveFontStyle(
-      defaultTextBoxStyle.fontFamily,
-      defaultTextBoxStyle.fontStyle,
-    );
-    const defaultDropCapFont = resolveFontStyle(
-      defaultDropCapStyle.fontFamily,
-      defaultDropCapStyle.fontStyle,
-    );
-    const defaultLyricsFont = resolveFontStyle(
-      lyricsStyle.fontFamily,
-      lyricsStyle.fontStyle,
     );
 
     const lyricsFont = resolveFontCss(lyricsStyle);
@@ -192,17 +290,17 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
 
     const lyricsVerticalOffset =
       pageSetup.lyricsVerticalOffset + neumeDescent + lyricAscent;
+    const neumeFont = getLatexNeumeFont(pageSetup.neumeDefaultFontFamily);
+    const textStyleRegistry = new LatexTextStyleRegistry(paragraphStyles);
 
     const result: LatexScore = {
       appVersion: APP_VERSION,
-      schemaVersion,
+      schemaVersion: LATEX_SCHEMA_VERSION,
       sectionNames: [],
       fontVersions: {
-        Neanes: fontService.getMetadata('Neanes').fontVersion,
-        NeanesRTL: fontService.getMetadata('NeanesRTL').fontVersion,
-        NeanesStathisSeries: fontService.getMetadata('NeanesStathisSeries')
-          .fontVersion,
+        [neumeFont.fontFamily]: neumeFont.fontVersion,
       },
+      textStyles: textStyleRegistry.styles,
       pageSetup: {
         lineHeight: toPt(pageSetup.lineHeight),
         martyriaVerticalOffset:
@@ -210,67 +308,31 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             ? toPt(pageSetup.martyriaVerticalOffset)
             : undefined,
         fontFamilies: {
-          dropCap: convertFontName(defaultDropCapStyle.fontFamily),
-          lyrics: convertFontName(lyricsStyle.fontFamily),
-          neume: convertFontName(pageSetup.neumeDefaultFontFamily),
-          textBox: convertFontName(defaultTextBoxStyle.fontFamily),
+          neume: neumeFont.fontFamily,
         },
         fontSizes: {
-          dropCap: toPt(defaultDropCapStyle.fontSize),
-          lyrics: toPt(lyricsStyle.fontSize),
           modeKey: toPt(pageSetup.modeKeyDefaultFontSize),
           neume: toPt(pageSetup.neumeDefaultFontSize),
-          textBox: toPt(defaultTextBoxStyle.fontSize),
         },
-        dropCapDefaultFontWeight:
-          defaultDropCapFont.cssFontWeight != '400'
-            ? defaultDropCapFont.cssFontWeight
-            : undefined,
-        lyricsDefaultFontWeight:
-          defaultLyricsFont.cssFontWeight != '400'
-            ? defaultLyricsFont.cssFontWeight
-            : undefined,
-        textBoxDefaultFontWeight:
-          defaultTextBoxFont.cssFontWeight != '400'
-            ? defaultTextBoxFont.cssFontWeight
-            : undefined,
-        dropCapDefaultFontStyle:
-          defaultDropCapFont.cssFontStyle != 'normal'
-            ? defaultDropCapFont.cssFontStyle
-            : undefined,
-        lyricsDefaultFontStyle:
-          defaultLyricsFont.cssFontStyle != 'normal'
-            ? defaultLyricsFont.cssFontStyle
-            : undefined,
-        textBoxDefaultFontStyle:
-          defaultTextBoxFont.cssFontStyle != 'normal'
-            ? defaultTextBoxFont.cssFontStyle
-            : undefined,
-        lyricsDefaultTextDecoration: lyricsStyle.textDecoration ?? undefined,
-        textBoxDefaultTextDecoration:
-          defaultTextBoxStyle.textDecoration ?? undefined,
         lyricsVerticalOffset: toPt(lyricsVerticalOffset),
         lyricsMelismaSpacing: toPt(pageSetup.lyricsMelismaSpacing),
         lyricsMelismaThickness: toPt(pageSetup.lyricsMelismaThickness),
         colors: {
-          accidental: pageSetup.accidentalDefaultColor.substring(1),
-          breath: pageSetup.breathDefaultColor.substring(1),
-          cross: pageSetup.crossDefaultColor.substring(1),
-          dropCap: defaultDropCapStyle.color.substring(1),
-          fthora: pageSetup.fthoraDefaultColor.substring(1),
-          gorgon: pageSetup.gorgonDefaultColor.substring(1),
-          heteron: pageSetup.heteronDefaultColor.substring(1),
-          ison: pageSetup.isonDefaultColor.substring(1),
-          koronis: pageSetup.koronisDefaultColor.substring(1),
-          lyrics: lyricsStyle.color.substring(1),
-          martyria: pageSetup.martyriaDefaultColor.substring(1),
-          measureBar: pageSetup.measureBarDefaultColor.substring(1),
-          measureNumber: pageSetup.measureNumberDefaultColor.substring(1),
-          modeKey: pageSetup.modeKeyDefaultColor.substring(1),
-          neume: pageSetup.neumeDefaultColor.substring(1),
-          noteIndicator: pageSetup.noteIndicatorDefaultColor.substring(1),
-          tempo: pageSetup.tempoDefaultColor.substring(1),
-          textBox: defaultTextBoxStyle.color.substring(1),
+          accidental: convertColor(pageSetup.accidentalDefaultColor),
+          breath: convertColor(pageSetup.breathDefaultColor),
+          cross: convertColor(pageSetup.crossDefaultColor),
+          fthora: convertColor(pageSetup.fthoraDefaultColor),
+          gorgon: convertColor(pageSetup.gorgonDefaultColor),
+          heteron: convertColor(pageSetup.heteronDefaultColor),
+          ison: convertColor(pageSetup.isonDefaultColor),
+          koronis: convertColor(pageSetup.koronisDefaultColor),
+          martyria: convertColor(pageSetup.martyriaDefaultColor),
+          measureBar: convertColor(pageSetup.measureBarDefaultColor),
+          measureNumber: convertColor(pageSetup.measureNumberDefaultColor),
+          modeKey: convertColor(pageSetup.modeKeyDefaultColor),
+          neume: convertColor(pageSetup.neumeDefaultColor),
+          noteIndicator: convertColor(pageSetup.noteIndicatorDefaultColor),
+          tempo: convertColor(pageSetup.tempoDefaultColor),
         },
       },
       sections: [],
@@ -495,17 +557,9 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 : undefined,
             } as LatexNoteElement;
 
-            if (note.lyrics != '' || note.melismaText != '') {
-              const resolvedLyricsStyle = resolveParagraphStyle(
-                paragraphStyles,
-                note.lyricsParagraphStyleId,
-                note.getParagraphStyleOverrides(),
-              );
-              const lyricsFont = resolveFontStyle(
-                resolvedLyricsStyle.fontFamily,
-                resolvedLyricsStyle.fontStyle,
-              );
+            const hasLyrics = note.lyrics != '' || note.melismaText != '';
 
+            if (hasLyrics) {
               noteInfo.lyrics =
                 note.lyrics != '' ? note.lyrics : note.melismaText;
               noteInfo.lyricsLeftAlign = note.alignLeft || undefined;
@@ -513,31 +567,13 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 note.lyricsHorizontalOffset != 0
                   ? toPt(note.lyricsHorizontalOffset)
                   : undefined;
-              noteInfo.lyricsColor =
-                resolvedLyricsStyle.color != lyricsStyle.color
-                  ? resolvedLyricsStyle.color.substring(1)
-                  : undefined;
-              noteInfo.lyricsFontFamily =
-                resolvedLyricsStyle.fontFamily != lyricsStyle.fontFamily
-                  ? convertFontName(resolvedLyricsStyle.fontFamily)
-                  : undefined;
-              noteInfo.lyricsFontSize =
-                resolvedLyricsStyle.fontSize != lyricsStyle.fontSize
-                  ? toPt(resolvedLyricsStyle.fontSize)
-                  : undefined;
-              noteInfo.lyricsFontStyle =
-                lyricsFont.cssFontStyle != defaultLyricsFont.cssFontStyle
-                  ? lyricsFont.cssFontStyle
-                  : undefined;
-              noteInfo.lyricsFontWeight =
-                lyricsFont.cssFontWeight != defaultLyricsFont.cssFontWeight
-                  ? lyricsFont.cssFontWeight
-                  : undefined;
-              noteInfo.lyricsTextDecoration =
-                resolvedLyricsStyle.textDecoration !==
-                lyricsStyle.textDecoration
-                  ? (resolvedLyricsStyle.textDecoration ?? 'none')
-                  : undefined;
+            }
+
+            if (hasLyrics || note.isFullMelisma) {
+              noteInfo.lyricsStyleId = textStyleRegistry.getStyleId(
+                note.lyricsParagraphStyleId,
+                note.getParagraphStyleOverrides(),
+              );
             }
 
             pushExportedElement(noteInfo);
@@ -610,16 +646,12 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             } as LatexTempoElement);
           } else if (element.elementType === ElementType.DropCap) {
             const dropCap = element as DropCapElement;
+            const dropCapOverrides = dropCap.getParagraphStyleOverrides();
             const resolvedDropCapStyle = resolveParagraphStyle(
               paragraphStyles,
               dropCap.paragraphStyleId,
-              dropCap.getParagraphStyleOverrides(),
+              dropCapOverrides,
             );
-            const resolvedDropCapFont = resolveFontStyle(
-              resolvedDropCapStyle.fontFamily,
-              resolvedDropCapStyle.fontStyle,
-            );
-
             let verticalAdjustment = 0;
 
             if (resolvedDropCapStyle.lineHeight != null) {
@@ -642,29 +674,10 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               verticalAdjustment:
                 verticalAdjustment != 0 ? toPt(verticalAdjustment) : undefined,
               content: dropCap.content,
-              fontFamily:
-                resolvedDropCapStyle.fontFamily !=
-                defaultDropCapStyle.fontFamily
-                  ? convertFontName(resolvedDropCapStyle.fontFamily)
-                  : undefined,
-              fontSize:
-                resolvedDropCapStyle.fontSize != defaultDropCapStyle.fontSize
-                  ? toPt(resolvedDropCapStyle.fontSize)
-                  : undefined,
-              fontStyle:
-                resolvedDropCapFont.cssFontStyle !=
-                defaultDropCapFont.cssFontStyle
-                  ? resolvedDropCapFont.cssFontStyle
-                  : undefined,
-              fontWeight:
-                resolvedDropCapFont.cssFontWeight !=
-                defaultDropCapFont.cssFontWeight
-                  ? resolvedDropCapFont.cssFontWeight
-                  : undefined,
-              color:
-                resolvedDropCapStyle.color != defaultDropCapStyle.color
-                  ? resolvedDropCapStyle.color.substring(1)
-                  : undefined,
+              styleId: textStyleRegistry.getStyleId(
+                dropCap.paragraphStyleId,
+                dropCapOverrides,
+              ),
             } as LatexDropCapElement);
           } else if (
             element.elementType === ElementType.ModeKey &&
@@ -681,11 +694,11 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 modeKey.marginBottom != 0
                   ? toPt(modeKey.marginBottom)
                   : undefined,
-              alignment: convertAlignment(modeKey.alignment),
+              alignment: modeKey.alignment,
               color:
                 !modeKey.useDefaultStyle &&
                 modeKey.color != pageSetup.modeKeyDefaultColor
-                  ? modeKey.color.substring(1)
+                  ? convertColor(modeKey.color)
                   : undefined,
               fontSize:
                 !modeKey.useDefaultStyle &&
@@ -730,32 +743,14 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
             options.includeTextBoxes
           ) {
             const textBox = element as TextBoxElement;
-            const defaultStyle = textBox.inline
-              ? lyricsStyle
-              : defaultTextBoxStyle;
-            const defaultFont = textBox.inline
-              ? defaultLyricsFont
-              : defaultTextBoxFont;
-            const resolvedParagraphStyle = resolveParagraphStyle(
-              paragraphStyles,
-              textBox.paragraphStyleId,
-              textBox.getParagraphStyleOverrides(),
-            );
-            const resolvedTextBoxFont = resolveFontStyle(
-              resolvedParagraphStyle.fontFamily,
-              resolvedParagraphStyle.fontStyle,
-            );
-
             pushExportedElement({
               type: 'textbox',
               x: toPt(element.x - resolvedMargins.left),
               width: toPt(textBox.width),
               height: toPt(textBox.height),
-              alignment: !textBox.multipanel
-                ? convertAlignment(resolvedParagraphStyle.alignment)
-                : undefined,
               inline: textBox.inline || undefined,
               content: textBox.content,
+              contentBottom: textBox.inline ? textBox.contentBottom : undefined,
               multipanel: textBox.multipanel || undefined,
               contentLeft: textBox.multipanel ? textBox.contentLeft : undefined,
               contentCenter: textBox.multipanel
@@ -770,31 +765,10 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 textBox.marginBottom != 0
                   ? toPt(textBox.marginBottom)
                   : undefined,
-              fontFamily:
-                resolvedParagraphStyle.fontFamily != defaultStyle.fontFamily
-                  ? convertFontName(resolvedParagraphStyle.fontFamily)
-                  : undefined,
-              fontSize:
-                resolvedParagraphStyle.fontSize != defaultStyle.fontSize
-                  ? toPt(resolvedParagraphStyle.fontSize)
-                  : undefined,
-              fontStyle:
-                resolvedTextBoxFont.cssFontStyle != defaultFont.cssFontStyle
-                  ? resolvedTextBoxFont.cssFontStyle
-                  : undefined,
-              fontWeight:
-                resolvedTextBoxFont.cssFontWeight != defaultFont.cssFontWeight
-                  ? resolvedTextBoxFont.cssFontWeight
-                  : undefined,
-              color:
-                resolvedParagraphStyle.color != defaultStyle.color
-                  ? resolvedParagraphStyle.color.substring(1)
-                  : undefined,
-              textDecoration:
-                resolvedParagraphStyle.textDecoration !==
-                defaultStyle.textDecoration
-                  ? (resolvedParagraphStyle.textDecoration ?? 'none')
-                  : undefined,
+              styleId: textStyleRegistry.getStyleId(
+                textBox.paragraphStyleId,
+                textBox.getParagraphStyleOverrides(),
+              ),
             } as LatexTextBoxElement);
           }
         }
@@ -821,6 +795,7 @@ interface LatexScore {
   schemaVersion: number;
   sectionNames: string[];
   fontVersions: Record<string, string>;
+  textStyles: LatexTextStyleDefinition[];
   pageSetup: LatexPageSetup;
   sections: LatexSection[];
 }
@@ -835,26 +810,12 @@ interface LatexPageSetup {
   lineHeight: number;
   martyriaVerticalOffset?: number;
   fontFamilies: {
-    dropCap: string;
-    lyrics: string;
     neume: string;
-    textBox: string;
   };
   fontSizes: {
-    dropCap: number;
     modeKey: number;
     neume: number;
-    lyrics: number;
-    textBox: number;
   };
-  dropCapDefaultFontWeight: string | undefined;
-  lyricsDefaultFontWeight: string | undefined;
-  textBoxDefaultFontWeight: string | undefined;
-  dropCapDefaultFontStyle: string | undefined;
-  lyricsDefaultFontStyle: string | undefined;
-  textBoxDefaultFontStyle: string | undefined;
-  lyricsDefaultTextDecoration: 'underline' | undefined;
-  textBoxDefaultTextDecoration: 'underline' | undefined;
   lyricsVerticalOffset: number;
   lyricsMelismaSpacing: number;
   lyricsMelismaThickness: number;
@@ -862,13 +823,11 @@ interface LatexPageSetup {
     accidental: string;
     breath: string;
     cross: string;
-    dropCap: string;
     fthora: string;
     gorgon: string;
     heteron: string;
     ison: string;
     koronis: string;
-    lyrics: string;
     martyria: string;
     measureBar: string;
     measureNumber: string;
@@ -876,7 +835,6 @@ interface LatexPageSetup {
     neume: string;
     noteIndicator: string;
     tempo: string;
-    textBox: string;
   };
 }
 
@@ -966,12 +924,7 @@ interface LatexNoteElement extends LatexBaseElement {
   lyrics?: string;
   lyricsLeftAlign?: boolean;
   lyricsHorizontalOffset?: number;
-  lyricsColor?: string;
-  lyricsFontFamily?: string;
-  lyricsFontSize?: number;
-  lyricsFontStyle?: string;
-  lyricsFontWeight?: string;
-  lyricsTextDecoration?: 'underline' | 'none';
+  lyricsStyleId?: string;
 }
 
 interface LatexMartyriaElement extends LatexBaseElement {
@@ -1005,38 +958,47 @@ interface LatexDropCapElement extends LatexBaseElement {
   x: number;
   content: string;
   verticalAdjustment?: number;
-  fontFamily?: string;
-  fontSize?: number;
-  fontStyle?: string;
-  fontWeight?: string;
-  color?: string;
+  styleId: string;
 }
 
 interface LatexTextBoxElement extends LatexBaseElement {
   x: number;
   height: number;
-  alignment: 'l' | 'c' | 'r';
   inline?: boolean;
   content: string;
+  contentBottom?: string;
   multipanel?: boolean;
   contentLeft?: string;
   contentCenter?: string;
   contentRight?: string;
   marginTop?: number;
   marginBottom?: number;
-  fontFamily?: string;
-  fontSize?: number;
-  fontStyle?: string;
-  fontWeight?: string;
-  color?: string;
-  textDecoration?: 'underline' | 'none';
+  styleId: string;
+}
+
+export interface LatexTextStyle {
+  alignment: TextBoxAlignment;
+  fontFamily: string;
+  fontSize: number;
+  fontStyle: string;
+  postscriptName: string;
+  color: string;
+  strokeWidth: number;
+  strokeColor: string;
+  lineHeight: number | 'normal';
+  textDecoration: 'underline' | 'none';
+  fontFeatures: OpenTypeFeatures;
+}
+
+export interface LatexTextStyleDefinition extends LatexTextStyle {
+  id: string;
 }
 
 interface LatexModeKeyElement extends LatexBaseElement {
   height: number;
   marginTop?: number;
   marginBottom?: number;
-  alignment: 'l' | 'c' | 'r';
+  alignment: TextBoxAlignment;
   color?: string;
   fontSize?: number;
   isPlagal?: boolean;

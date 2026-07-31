@@ -226,7 +226,10 @@ import { fontCatalog } from '@/services/FontCatalog';
 import type { Command } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
-import { LatexExporterOptions } from '@/services/integration/LatexExporter';
+import {
+  LatexExporterOptions,
+  LatexFontFaceResolutionError,
+} from '@/services/integration/LatexExporter';
 import {
   LayoutService,
   type OverlayDiagnosticsContext,
@@ -8633,9 +8636,18 @@ async function exportAsLatex(args: ExportAsLatexSettings) {
     }
   } catch (error) {
     console.error(error);
+    const description =
+      error instanceof LatexFontFaceResolutionError
+        ? t(($) => $.toast.export.latexFontFaceUnresolvedDescription, {
+            ns: 'toast',
+            fontFamily: error.fontFamily,
+            fontStyle: error.fontStyle,
+          })
+        : error;
+
     showErrorToast(
       t(($) => $.toast.export.latexFailed, { ns: 'toast' }),
-      error,
+      description,
       {
         fallback: t(($) => $.toast.export.latexFailedDescription, {
           ns: 'toast',

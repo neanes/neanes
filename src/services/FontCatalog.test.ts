@@ -15,36 +15,8 @@ import {
   resolveSystemFontFace,
   selectFontFaceByStyle,
 } from '@/services/FontCatalog';
-import { loadBundledFont } from '@/services/loadBundledFont.testHelper';
+import { loadBundledFontFace } from '@/services/loadBundledFont.testHelper';
 import { compareFontStyles } from '@/utils/fontStyleAxes';
-
-interface BundledFontFace {
-  family: string;
-  fullName: string;
-  postscriptName: string;
-  style: string;
-}
-
-async function loadBundledFontFace(fileName: string): Promise<BundledFontFace> {
-  const font = await loadBundledFont(fileName);
-
-  const names = font.opentype.tables.name;
-  const family = names.get(16) ?? names.get(1);
-  const style = names.get(17) ?? names.get(2);
-  const fullName = names.get(4);
-  const postscriptName = names.get(6);
-
-  if (
-    family == null ||
-    style == null ||
-    fullName == null ||
-    postscriptName == null
-  ) {
-    throw new Error(`Missing required name metadata in ${fileName}`);
-  }
-
-  return { family, fullName, postscriptName, style };
-}
 
 describe('FontCatalog bundled fonts', () => {
   it('lists the bundled families', () => {
@@ -175,6 +147,12 @@ describe('FontCatalog bundled fonts', () => {
       cssFontStyle: undefined,
     });
   });
+
+  it('does not substitute a bundled export face when the style is absent', () => {
+    expect(fontCatalog.resolveExportFace('GFS Didot', 'Semibold')).toEqual({
+      style: 'Semibold',
+    });
+  });
 });
 
 describe('FontCatalog font feature values', () => {
@@ -238,6 +216,58 @@ describe('FontCatalog font feature values', () => {
       'SourceSerif4-Regular',
     );
     expect(selectFontFaceByStyle([], null)).toBeUndefined();
+  });
+
+  // Zapf Renaissance Antiqua has no face named Regular; its text face is Book.
+  // Unresolved, an export names no face and fontspec picks Book Italic Swashed.
+  it('resolves Regular to the face CSS matching would pick', () => {
+    const faces = [
+      { style: 'Book Italic Swashed' },
+      { style: 'Book Small Caps & Oldstyle Figures' },
+      { style: 'Light' },
+      { style: 'Book' },
+      { style: 'Bold' },
+    ];
+
+    const resolved = resolveSystemFontFace(faces, 'Regular');
+
+    expect(resolved.face?.style).toBe('Book');
+    expect(resolved.canonicalStyle).toBe('Book');
+    expect(resolved.needsFaceAlias).toBe(true);
+  });
+
+  it.each([
+    ['Light', 'Medium'],
+    ['Medium', 'Light'],
+  ])(
+    'prefers Medium to Light for a Regular request ordered %s, %s',
+    (first, second) => {
+      const resolved = resolveSystemFontFace(
+        [first, second].map((style) => ({ style })),
+        'Regular',
+      );
+
+      expect(resolved.face?.style).toBe('Medium');
+    },
+  );
+
+  it('prefers an upright Roman face to Italic', () => {
+    const resolved = resolveSystemFontFace(
+      [{ style: 'Roman' }, { style: 'Italic' }],
+      'Regular',
+    );
+
+    expect(resolved.face?.style).toBe('Roman');
+  });
+
+  it('leaves a specifically requested style unresolved when absent', () => {
+    const resolved = resolveSystemFontFace(
+      [{ style: 'Book' }, { style: 'Bold' }],
+      'Semibold',
+    );
+
+    expect(resolved.face).toBeUndefined();
+    expect(resolved.canonicalStyle).toBe('Semibold');
   });
 });
 

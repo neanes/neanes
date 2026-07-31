@@ -1,6 +1,8 @@
+import { bundledFontEntry } from '@/services/bundledFonts';
 import { DEFAULT_FONT_STYLE, NEUME_FONT_FAMILIES } from '@/utils/fontConstants';
 import { escapeFontName, normalizeFontFamily } from '@/utils/fontFamily';
 import {
+  axesHaveNonWeightToken,
   compareFontStyles,
   cssFontWeight,
   fontStyleKey,
@@ -8,6 +10,7 @@ import {
   isRegularStyle,
   normalizeDocumentFontStyle,
   parseStyleAxes,
+  styleWeight,
 } from '@/utils/fontStyleAxes';
 import { fontFeatureValuesCss } from '@/utils/fontVariants';
 import { isElectron } from '@/utils/isElectron';
@@ -296,6 +299,50 @@ export function selectFontFaceByStyle<T extends FontFaceValue>(
   );
 }
 
+// The face a family renders as when nothing is asked of it beyond "the plain
+// upright one". A family need not have a face named Regular: Zapf Renaissance
+// Antiqua calls its text face Book, so a Regular request matches nothing by
+// name. Left unresolved, the CSS path emits the bare family and the browser
+// picks the face by CSS font matching, while an exporter -- which has to name a
+// concrete face -- has nothing to write, and a family-only request resolves
+// differently outside the browser (fontspec lands on Book Italic Swashed). So
+// make the same choice the browser makes, once, here: upright, no optical or
+// decorative tokens, then CSS's normal-weight search order. Resolving it for
+// every caller keeps the editor, exports, and text measurement on one face.
+function matchDefaultFontFace<T extends FontFaceValue>(
+  faces: readonly T[],
+): T | undefined {
+  let best: T | undefined;
+  let bestScore = 0;
+
+  for (const face of faces) {
+    const axes = parseStyleAxes(face.style);
+    const weight = styleWeight(axes);
+    const weightScore =
+      weight >= 400 && weight <= 500
+        ? weight - 400
+        : weight < 400
+          ? 500 - weight
+          : weight;
+    const score =
+      // CSS matches normal/italic before weight. Keep this penalty above every
+      // possible combination of the remaining criteria so an upright face
+      // named Roman still beats an Italic face.
+      (axes.italic ? 1000000 : 0) +
+      (axesHaveNonWeightToken(axes) ? 10000 : 0) +
+      // For a 400 request CSS checks 400..500 first, then weights below 400
+      // descending, then weights above 500 ascending.
+      weightScore;
+
+    if (best == null || score < bestScore) {
+      best = face;
+      bestScore = score;
+    }
+  }
+
+  return best;
+}
+
 // Return only a face whose style is semantically equivalent to the requested
 // style. Token ordering does not matter, and there is deliberately no fallback.
 export function matchFontFaceByStyle<T extends FontFaceValue>(
@@ -315,7 +362,11 @@ export function resolveSystemFontFace<T extends FontFaceValue>(
   canonicalStyle: string;
   needsFaceAlias: boolean;
 } {
-  const face = matchFontFaceByStyle(faces, style);
+  // Only a Regular request falls back. A specifically named style the family
+  // lacks stays unresolved rather than silently rendering as something else.
+  const face =
+    matchFontFaceByStyle(faces, style) ??
+    (isRegularStyle(style) ? matchDefaultFontFace(faces) : undefined);
 
   return {
     face,
@@ -491,10 +542,52 @@ class FontCatalog {
     return [DEFAULT_FONT_STYLE];
   }
 
+  // Resolve a document family and style to the exact face an exporter should
+  // name. postscriptName is what makes the selection exact outside the browser:
+  // a font system cannot reliably pick a face from a family plus a multi-word
+  // style label ("Book Italic", "Caption Semibold"), and silently returns some
+  // other face of the family when it fails. It is undefined for a face whose
+  // binary we do not know, such as a system family that was never enumerated.
+  resolveExportFace(
+    family: string,
+    fontStyle: string | null | undefined,
+  ): { style: string; postscriptName?: string } {
+    const style = normalizeDocumentFontStyle(fontStyle);
+    const bundledFaces = BUNDLED_FACES[family];
+
+    if (bundledFaces != null) {
+      const bundled = matchFontFaceByStyle(bundledFaces, style);
+
+      if (bundled == null) {
+        return { style };
+      }
+
+      const { fileName } = bundled;
+
+      return {
+        style: bundled.style,
+        postscriptName:
+          fileName != null
+            ? bundledFontEntry(fileName).postscriptName
+            : undefined,
+      };
+    }
+
+    const resolved = resolveSystemFontFace(
+      this.systemFaces.get(family) ?? [],
+      style,
+    );
+
+    return {
+      style: resolved.canonicalStyle,
+      postscriptName: resolved.face?.postscriptName,
+    };
+  }
+
   // The per-face FontData of a system family, used by the stylistic-set
-  // inspection to read the face's bytes (FontData.blob()). Prefers the face
-  // whose style axes match, then the family's Regular face, then the first
-  // face.
+  // inspection to read the face's bytes (FontData.blob()). Use the same
+  // resolution as rendering and export so the inspected OpenType features
+  // always belong to the selected face.
   getSystemFaceData(family: string, fontStyle: string | null): FontData | null {
     const faces = this.systemFaces.get(family);
 
@@ -502,7 +595,10 @@ class FontCatalog {
       return null;
     }
 
-    return selectFontFaceByStyle(faces, fontStyle) ?? null;
+    return (
+      resolveSystemFontFace(faces, normalizeDocumentFontStyle(fontStyle))
+        .face ?? null
+    );
   }
 
   // Split a face name ("Minion Pro Semibold") into its family and style, using
@@ -569,11 +665,7 @@ class FontCatalog {
     family: string,
     fontStyle: string | null | undefined,
   ): ResolvedFace {
-    const style =
-      fontStyle != null && fontStyle.trim() !== ''
-        ? normalizeDocumentFontStyle(fontStyle)
-        : DEFAULT_FONT_STYLE;
-
+    const style = normalizeDocumentFontStyle(fontStyle);
     const face = this.matchBundledFace(family, style);
 
     if (face != null) {

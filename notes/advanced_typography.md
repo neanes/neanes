@@ -685,18 +685,39 @@ the editor.
 ### 6.3 Exporters
 
 `ByzHtmlExporter` resolves page setup defaults and element-specific overrides
-before writing CSS custom properties or inline styles. `LatexExporter` resolves
+before writing CSS custom properties or inline styles. `LatexExporter` writes
 the same structured model for non-rich text. Rich-text HTML export is
 browser-renderable: explicit rich-text styles use CSS spans that pin both axes,
 and non-basic faces carry absolute weight/style CSS or exact face families.
 
-The LaTeX JSON export has its own compatibility contract. Its schema remains at
-version `2`: exported `fontStyle` fields are still CSS slant values
-(`normal`/`italic`) and CSS weight stays in `fontWeight`. Exact document face
-styles such as `Semibold`, `Caption`, and `Display` are projected onto those CSS
-axes, so non-CSS face information may be lost. The exporter carries a TODO for a
-future schema extension that can represent exact face/style labels without
-breaking v2 consumers.
+LaTeX JSON schema v3 resolves paragraph inheritance and element overrides
+before interning identical effective styles in `textStyles`. Elements reference
+their final style by ID, and NeanesTeX only adapts the resolved values to TeX.
+`fontStyle` preserves the document style label, while the required
+`postscriptName` selects the exact face. Export fails if that face is unavailable
+instead of substituting another, including when malformed or imported data names
+a style that a bundled family does not have. NeanesTeX retains family plus
+bold/italic selection only for v1 and v2 input.
+
+For a `Regular` request when the family uses another name for its upright face,
+`resolveSystemFontFace` uses `matchDefaultFontFace` to choose an upright,
+non-decorative face with CSS's 400-weight search order: 400 through 500, then
+weights below 400, then weights above 500. This keeps editor rendering,
+measurement, HTML export, and LaTeX export on the same face. An unavailable
+explicitly named style remains unresolved.
+
+`resolveOpenTypeFeatures` converts the four `fontVariant*` CSS values into
+renderer-neutral OpenType tag/value records. Each interned style contains its
+complete effective feature list; NeanesTeX validates and converts it to
+fontspec syntax. Schema v3 omits the text defaults and per-element
+`fontWeight`/CSS-slant fields used by v2.
+
+NeanesTeX currently ignores paragraph-style `lineHeight` and uses conventional
+1.2-times-font-size text leading. Precise line-height rendering remains a TODO;
+the score-wide `pageSetup.lineHeight` continues to control staff spacing only.
+
+Schema v3 also writes the selected neume font family and its corresponding
+engraving font version to `pageSetup.fontFamilies.neume` and `fontVersions`.
 
 Export portability is limited by font availability. System fonts are not
 embedded. The exported CSS names the intended face as precisely as the browser
@@ -825,8 +846,14 @@ This subsystem preserves these invariants:
   deserialize.
 - Layout and exporters resolve styles through the shared helper before
   measuring or writing CSS.
-- LaTeX JSON preserves schema v2 for compatibility; exact face styles are
-  lossy until a future schema extension is added.
+- LaTeX JSON schema v3 interns fully resolved text styles. Each requires an exact
+  `postscriptName`; export fails if it cannot be resolved. NeanesTeX adapts v3
+  features and retains family/style selection for v1 and v2.
+- `resolveSystemFontFace` maps `Regular` to the family's default upright face for
+  consistent rendering and export. Other missing named styles stay unresolved.
+- `bundled-fonts.generated.json` records each bundled face's PostScript name and
+  alternates. `FontAlternatesService.test.ts` guards it against the font files,
+  and `src/services/bundledFonts.ts` reports missing catalog entries.
 - The bundled font catalog and CSS declarations must stay in sync, including the
   Source Serif optical families in `source-serif.css`; bundled exact families are
   declared/preloaded, while system exact faces may be lazily bound with local
@@ -933,9 +960,13 @@ This subsystem preserves these invariants:
   styles.
 - `src/services/integration/ByzHtmlExporter.ts` -- exports resolved styles to
   byzhtml CSS.
-- `src/services/integration/LatexExporter.ts` -- writes schema v2-compatible
-  CSS slant/weight fields and leaves exact face-style export as a future schema
-  extension.
+- `src/utils/fontVariants.ts` -- `resolveOpenTypeFeatures` maps the four CSS
+  longhands to the OpenType features they select, for any renderer.
+- `src/services/bundledFonts.ts` -- owns `bundled-fonts.generated.json`: the
+  PostScript name and alternates of every bundled face, behind one lookup that
+  reports a stale artifact rather than returning undefined.
+- `src/services/integration/LatexExporter.ts` -- writes schema v3 interned,
+  fully resolved text styles with exact face names and OpenType values.
 
 ---
 
@@ -1003,17 +1034,13 @@ swash(swash-1)` is standard CSS that names OpenType features and
   recording whether the historical-forms (hist), swash (swsh or cswh),
   stylistic-alternates (salt), ornaments (ornm), and annotation (nalt)
   features exist at all, which gates those switches. Bundled faces are fixed at
-  build time, so their capabilities are precomputed into the checked-in
-  `src/assets/fonts/bundled-font-alternates.generated.json` (checked by
-  prettier like any source file; the snapshot is written in prettier's
-  JSON style, so the regenerated artifact stays lint-clean): the
-  drift-guard test in `FontAlternatesService.test.ts` recomputes the
-  artifact from the real font files, so it fails when a bundled font
-  changes or a face stops mapping to a file, and `vitest -u` regenerates
-  it. Only system faces are parsed at runtime, with lib-font from the Local
-  Font Access `FontData.blob()` bytes, cached per face. Names are
-  display-only and never persisted. No bundled font has a swash, ornaments,
-  or annotation feature, so those switches only ever appear for system
+  build time, so their capabilities and PostScript names are precomputed into
+  `src/assets/fonts/bundled-fonts.generated.json`, with one uniform entry per
+  face. `FontAlternatesService.test.ts` detects drift from the font files, and
+  `vitest -u` regenerates the artifact. Only system faces are parsed at runtime
+  from Local Font Access `FontData.blob()` bytes, using lib-font and caching per
+  face. Names are display-only and never persisted. No bundled font has a swash,
+  ornaments, or annotation feature, so those switches only ever appear for system
   fonts (e.g. EB Garamond Italic for swash, Junicode for ornaments and
   annotation forms); Old Standard has cv01 and salt and GFS Didot has
   hist, so the character-variant row, the stylistic-alternates switch, and
@@ -1040,9 +1067,10 @@ swash(swash-1)` is standard CSS that names OpenType features and
   editor, print, and byzhtml rich-text classes; `LayoutService` writes
   `computedFontVariant*` for text boxes and drop caps; lyric spans read the
   resolved style directly. `ByzHtmlExporter` emits the same declarations for
-  its default tag/class CSS and per-element overrides. The LaTeX JSON schema
-  stays at v2 and drops the features (see the TODO next to the exact-face
-  projection).
+  its default tag/class CSS and per-element overrides. For LaTeX JSON v3,
+  Neanes parses the same four values into structured OpenType feature settings
+  on interned effective styles; NeanesTeX does not parse CSS or paragraph-style
+  inheritance.
 - Measurement: canvas `fontVariantCaps` covers the caps values, so
   small-caps/all-small-caps affect measured widths (lyrics, inline text
   boxes, drop caps). The numeric, ligature, and alternates properties cannot

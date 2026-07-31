@@ -40,6 +40,7 @@
     "latexSuccess": "LaTeX diekspor",
     "latexFailed": "Gagal mengekspor LaTeX",
     "latexFailedDescription": "Tidak dapat mengekspor LaTeX.",
+    "latexFontFaceUnresolvedDescription": "Wajah PostScript yang tepat untuk “{{fontFamily}}” dengan gaya “{{fontStyle}}” tidak dapat ditemukan. Instal font tersebut lalu coba lagi.",
     "pngFailed": "Gagal mengekspor PNG",
     "pngStartFailedDescription": "Tidak dapat memulai ekspor PNG.",
     "pngFileFailedDescription": "Tidak dapat mengekspor file PNG.",

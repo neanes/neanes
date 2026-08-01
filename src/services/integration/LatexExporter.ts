@@ -244,7 +244,7 @@ export class LatexExporter {
     options: LatexExporterOptions,
   ) {
     const neumeDescent = TextMeasurementService.getFontBoundingBoxDescent(
-      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+      pageSetup.neumeDefaultFontCss,
     );
 
     /* 

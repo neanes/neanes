@@ -671,7 +671,7 @@ const mainStyle = computed(() => {
 
 const topPaneStyle = computed(() => {
   const neumeHeight = TextMeasurementService.getFontHeight(
-    `${props.pageSetup.neumeDefaultFontSize}px ${props.pageSetup.neumeDefaultFontFamily}`,
+    props.pageSetup.neumeDefaultFontCss,
   );
 
   return {

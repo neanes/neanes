@@ -188,6 +188,10 @@ export class PageSetup {
     return this.pageWidth - this.leftMargin - this.rightMargin;
   }
 
+  public get neumeDefaultFontCss() {
+    return `${this.neumeDefaultFontSize}px ${this.neumeDefaultFontFamily}`;
+  }
+
   public get innerPageHeight() {
     return this.pageHeight - this.topMargin - this.bottomMargin;
   }

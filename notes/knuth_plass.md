@@ -24,7 +24,7 @@ In their seminal 1981 paper "[Breaking Paragraphs into Lines](https://gwern.net/
 This "optimum-fit" algorithm can choose an earlier breakpoint strategically in order to eliminate especially unattractive breakpoints later in the paragraph.
 The result is not only fewer overly wide spaces, but also more even spacing and fewer abrupt changes between adjacent lines.
 The Knuth-Plass approach is based on three simple primitives, _boxes,_ _glue,_ and _penalties,_
-and scores candidate layouts from cubic adjustment-ratio badness, breakpoint costs, and squared line demerits.
+and scores candidate layouts from cubic adjustment-ratio badness and breakpoint costs, combined into per-line demerits by squaring their sum.
 Its flagship implementation is in the $\TeX$ typesetting system, where the source code describes it as "probably the most interesting algorithm of $\TeX$."
 Adobe InDesign includes a related approach called the [Adobe Paragraph Composer](https://helpx.adobe.com/indesign/using/text-composition.html).
 
@@ -81,12 +81,13 @@ A line break is strongly discouraged in the following cases:
 
 In addition to the strongly discouraged cases, we identify several breaks that are permissible but undesirable:
 
-1. A line that begins with a supported primary or secondary time mark on a configured quantitative neume takes time from the neume at the end of the previous line. The current sets cover selected gorgon-family combinations; digorgon and trigorgon remain TODOs in the implementation. Although such breaks are not uncommon in the classical 19th-century publications, they require the reader to look one line ahead. This is manageable within a page, but more annoying at a page boundary, so it is better to avoid such breaks when possible.
+1. A line that begins with a neume carrying a time mark that takes time from the neume before it, such as a gorgon or an argon, shortens the neume at the end of the previous line. Although such breaks are not uncommon in the classical 19th-century publications, they require the reader to look one line ahead. This is manageable within a page, but more annoying at a page boundary, so it is better to avoid such breaks when possible.
 2. Between a running elaphron and the preceding neume. Like the gorgon, a running elaphron steals a beat from the preceding neume, so a break before it is awkward.
 3. Immediately after a melisma start, before its first continuation neume, that is, between notes 0 and 1 of the melisma, 0-indexed. The melisma-start syllable extends to the right under subsequent neumes, and breaking here can isolate it on a line where the lyric may overflow. Long melismas may legitimately break later on, so only the break immediately after the start is discouraged. The penalty-width mechanism described below handles overflow at any breakpoint inside the melisma.
 4. Between the second-to-last and last notes of a melisma, that is, between notes $n-2$ and $n-1$, 0-indexed. This is the converse of the previous rule: just as the melisma start should stay with its first continuation, the penultimate note should stay with the final note that closes the melisma. Breaking here would strand a single melisma note at the start of a line. Interior melisma breaks, between notes 1 and $n-2$, remain free.
 
 We assign a penalty of 0.1 of `MAX_COST` to beat-stealing breaks, because these are awkward but not uncommon in the classical 19th-century publications.
+`getBreakCost` recognizes the time-mark case for a configured set of quantitative neumes paired with a supported primary or secondary gorgon-family mark, and the running elaphron case from the quantitative neume alone; digorgon and trigorgon are not yet covered.
 For melisma-edge breaks, we use larger penalties:
 0.2 of `MAX_COST` immediately after a melisma start, and 0.15 of `MAX_COST` between the penultimate and final melisma notes.
 These cases are closer to $\TeX$'s `\clubpenalty` and `\widowpenalty`, because they orphan a single note at the start or end of a melisma;
@@ -197,7 +198,7 @@ The post-break glue's shrink is capped so that justification cannot reduce that 
 At a break the post-break glue vanishes; the spacer remains at the start of the next line and reserves non-stretching leading space for the transferred bar.
 In Phase 2, when the break is actually taken, the note element is shifted left by the bar width plus the same collision-aware leading clearance so that the rendered barline glyph and spacing occupy the space reserved by the spacer rather than adding extra width.
 
-Line-start non-right-aligned martyriæ after a note or standalone tempo in the same paragraph use the same spacer-and-cancel pattern for left ink overhang.
+Non-right-aligned martyriæ reserve their left ink overhang in a similar way, but only the reservation is unconditional: the cancelling glue reduction applies after a note or standalone tempo in the same paragraph.
 If the martyria's body, inline left bar, or left tempo sign would protrude past the left margin, Phase 1 inserts an anonymous spacer of that overhang width before the martyria.
 After a note or standalone tempo, the code also narrows the martyria's owned leading glue by the same amount; on the same line these widths cancel, so the original boundary spacing is unchanged.
 After another inline element type, the preceding glue is not replaced or narrowed, so the spacer remains as additional same-line width.
@@ -212,16 +213,15 @@ As in Knuth & Plass, each paragraph ends with finishing glue, preceded by a maxi
 When a paragraph ends immediately after a note, `endParagraph` first materializes that note's trailing reservation into the finishing glue before removing the trailing post-break glue.
 When it ends after a martyria, the finishing glue similarly reserves terminal right-barline clearance or, if there is no right barline, the martyria's right ink overhang.
 For other trailing element types, the finishing glue has width 0.
-For non-justified endings the finishing glue uses effectively infinite stretch (`MAX_COST`); for justified endings it uses stretch 0. In all cases its shrink is 0.
+For non-justified endings the finishing glue uses dominant stretch (`MAX_COST`), like the right-martyria glue above; for justified endings it uses stretch 0. In all cases its shrink is 0.
 
 ### Lyrics
 
 Lyrics introduce additional complexity because they can collide when they extend beyond the width of the neume.
 We draw on the Hegazy-Gourlay approach used for Western staff notation in LilyPond.
 LilyPond's `LyricSpace` and `LyricHyphen` grobs both call `ly:lyric-hyphen::set-spacing-rods` to create "an invisible object that prevents lyric words from being spaced too closely."
-Here the term _rod_ is used for what Knuth & Plass call a _box._
-This applies the Hegazy-Gourlay pre-spacing idea to the glue's preferred natural width.
-For ordinary note boundaries, the resulting width may still shrink during justification as described below.
+There the term _rod_ is used for what Knuth & Plass call a _box,_ and the rod acts as a hard minimum.
+We instead apply the Hegazy-Gourlay pre-spacing idea to the glue's preferred natural width, so an ordinary note boundary has no rod-like box and the resulting width may still shrink during justification, as described below.
 
 The paragraph encoding is easiest to understand one note boundary at a time.
 For each boundary between note $i$ and note $i{+}1$, the code computes two quantities:
@@ -278,8 +278,8 @@ Ordinary note-to-note spacing retains the full standard-glue shrink budget.
 Visual collision, measure-bar, lyric, and melisma clearance affect the preferred width $m_i$ but remain compressible during justification.
 The current implementation keeps stretch and shrink non-negative, but item widths may be negative.
 Negative glue widths can come from tuck absorption, user-requested negative inline spacing, or glue reductions paired with line-start reservation boxes.
+A negative user spacing adjustment survives at an ordinary note pair when the visual helper reports only its generic zero clamp rather than a real positive collision requirement; lyric and measure-bar preferences still take precedence when computing $m_i$.
 Because `spaceAfter` is part of a note, martyria, or tempo box advance and may itself be negative, an extreme value can also make that box width negative.
-It also preserves a negative user spacing adjustment for ordinary note pairs when the visual helper has only its generic zero clamp rather than a real positive collision requirement; lyric and measure-bar preferences still take precedence when computing $m_i$.
 In other words, all stretchability lives in the same glue that carries the same-line boundary width.
 The implementation does not use a second glue of the form $\text{glue}(m_i, -s^+, -s^-)$.
 

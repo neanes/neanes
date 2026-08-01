@@ -674,6 +674,12 @@ for (const [key, value] of measureBarLeftToAbove) {
   measureBarAboveToLeft.set(value, key);
 }
 
+export function isMeasureBarAboveVariant(
+  measureBar: MeasureBar | null | undefined,
+): measureBar is MeasureBar {
+  return measureBar != null && measureBarAboveToLeft.has(measureBar);
+}
+
 export const quantitativeNeumeReplacementMap = new Map<
   QuantitativeNeume,
   QuantitativeNeumeReplacement<QuantitativeNeume>[]

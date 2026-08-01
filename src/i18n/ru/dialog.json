@@ -74,6 +74,18 @@
     "description": "Настройте стили отображения начальной мартирии для всего документа.",
     "selectionDescription": "Выберите вид начальных мартирий и при необходимости настройте их типографику.",
     "language": "Язык",
+    "numeralStyle": "Стиль числительного",
+    "all": "Все",
+    "usePlagalTerminology": "Использовать плагальную терминологию",
+    "numeralStyleExamples": {
+      "digits": "1",
+      "romanNumerals": "I",
+      "englishCardinal": "One",
+      "englishOrdinal": "First",
+      "spanishOrdinal": "Primero / Primer",
+      "churchSlavonicOrdinal": "пе́рвый",
+      "russianOrdinal": "первый"
+    },
     "languages": {
       "greek": "Греческий",
       "english": "Английский",

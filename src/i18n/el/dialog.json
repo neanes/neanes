@@ -74,6 +74,18 @@
     "description": "Ρυθμίστε στυλ παρουσίασης αρχικής μαρτυρίας για όλο το έγγραφο.",
     "selectionDescription": "Επιλέξτε την εμφάνιση των Αρχικών Μαρτυριών και, προαιρετικά, προσαρμόστε την τυπογραφία τους.",
     "language": "Γλώσσα",
+    "numeralStyle": "Στυλ αριθμητικού",
+    "all": "Όλα",
+    "usePlagalTerminology": "Χρήση ορολογίας πλαγίων",
+    "numeralStyleExamples": {
+      "digits": "1",
+      "romanNumerals": "I",
+      "englishCardinal": "One",
+      "englishOrdinal": "First",
+      "spanishOrdinal": "Primero / Primer",
+      "churchSlavonicOrdinal": "пе́рвый",
+      "russianOrdinal": "первый"
+    },
     "languages": {
       "greek": "Ελληνικά",
       "english": "Αγγλικά",

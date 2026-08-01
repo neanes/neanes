@@ -93,6 +93,7 @@
       "spanish": "Spanyol",
       "churchSlavonic": "Slavonik Gerejawi",
       "russian": "Rusia",
+      "arabic": "Arab",
       "romanian": "Rumania"
     },
     "standardDescription": "Gunakan Martyria Awal tradisional berbasis glif.",
@@ -156,6 +157,7 @@
       "churchSlavonicGlasOrdinal": "Slavonik Gerejawi - Гласъ пе́рвый",
       "russianGlasNumber": "Rusia - Глас 1",
       "russianGlasOrdinal": "Rusia - Глас первый",
+      "arabicOrdinal": "Arab - اللحن الأول",
       "romanianGlasNumber": "Rumania - Glas Bernomor",
       "romanianGlas": "Rumania - Glas"
     },

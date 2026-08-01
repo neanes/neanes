@@ -93,6 +93,7 @@
       "spanish": "Испанский",
       "churchSlavonic": "Церковнославянский",
       "russian": "Русский",
+      "arabic": "Арабский",
       "romanian": "Румынский"
     },
     "standardDescription": "Использовать традиционную начальную мартирию на основе глифов.",
@@ -156,6 +157,7 @@
       "churchSlavonicGlasOrdinal": "Церковнославянский - Гласъ пе́рвый",
       "russianGlasNumber": "Русский - Глас 1",
       "russianGlasOrdinal": "Русский - Глас первый",
+      "arabicOrdinal": "Арабский - اللحن الأول",
       "romanianGlasNumber": "Румынский - глас с номером",
       "romanianGlas": "Румынский - глас"
     },

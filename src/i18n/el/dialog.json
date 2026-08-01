@@ -93,6 +93,7 @@
       "spanish": "Ισπανικά",
       "churchSlavonic": "Εκκλησιαστικά Σλαβονικά",
       "russian": "Ρωσικά",
+      "arabic": "Αραβικά",
       "romanian": "Ρουμανικά"
     },
     "standardDescription": "Χρήση της παραδοσιακής Αρχικής Μαρτυρίας με χαρακτήρες συμβόλων.",
@@ -156,6 +157,7 @@
       "churchSlavonicGlasOrdinal": "Εκκλησιαστικό σλαβονικό - Гласъ пе́рвый",
       "russianGlasNumber": "Ρωσικό - Глас 1",
       "russianGlasOrdinal": "Ρωσικό - Глас первый",
+      "arabicOrdinal": "Αραβικό - اللحن الأول",
       "romanianGlasNumber": "Ρουμανικό - Αριθμός Glas",
       "romanianGlas": "Ρουμανικό - Glas"
     },

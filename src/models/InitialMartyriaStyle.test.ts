@@ -107,6 +107,31 @@ describe('InitialMartyriaStyle', () => {
         [ModeSign.Ga]: 'Га',
       },
     });
+
+    const arabicStyle = builtInInitialMartyriaStyles.find(
+      (item) => item.id === BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalV1,
+    )!;
+
+    expect(arabicStyle).toMatchObject({
+      flowDirection: 'rtl',
+      defaultAppearance: {
+        mainFontFamily: 'Noto Naskh Arabic',
+        greekFontFamily: 'GFS Didot',
+      },
+      transliteratedNoteNames: {
+        languageTag: 'ar',
+        direction: 'rtl',
+        names: {
+          [ModeSign.Ni]: 'ني',
+          [ModeSign.Pa]: 'با',
+          [ModeSign.Vou]: 'فو',
+          [ModeSign.Ga]: 'غا',
+          [ModeSign.Thi]: 'دي',
+          [ModeSign.Ke]: 'كي',
+          [ModeSign.Zo]: 'زو',
+        },
+      },
+    });
   });
 
   it('applies one configuration appearance to text and musical glyphs', () => {

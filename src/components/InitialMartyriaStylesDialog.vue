@@ -635,6 +635,10 @@ function languageName(languageId: InitialMartyriaLanguageId) {
       return t(($) => $.dialog.initialMartyriaStyles.languages.russian, {
         ns: 'dialog',
       });
+    case 'ar':
+      return t(($) => $.dialog.initialMartyriaStyles.languages.arabic, {
+        ns: 'dialog',
+      });
     case 'ro':
       return t(($) => $.dialog.initialMartyriaStyles.languages.romanian, {
         ns: 'dialog',

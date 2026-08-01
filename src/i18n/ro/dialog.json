@@ -93,6 +93,7 @@
       "spanish": "Spaniolă",
       "churchSlavonic": "Slavonă bisericească",
       "russian": "Rusă",
+      "arabic": "Arabă",
       "romanian": "Română"
     },
     "standardDescription": "Folosește martyria inițială tradițională bazată pe glife.",
@@ -156,6 +157,7 @@
       "churchSlavonicGlasOrdinal": "Slavonă bisericească - Гласъ пе́рвый",
       "russianGlasNumber": "Rusă - Глас 1",
       "russianGlasOrdinal": "Rusă - Глас первый",
+      "arabicOrdinal": "Arabă - اللحن الأول",
       "romanianGlasNumber": "Română - Glas numerotat",
       "romanianGlas": "Română - Glas"
     },

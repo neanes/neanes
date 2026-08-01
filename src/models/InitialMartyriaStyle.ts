@@ -27,6 +27,7 @@ export const INITIAL_MARTYRIA_LANGUAGE_IDS = {
   Spanish: 'es',
   ChurchSlavonic: 'cu',
   Russian: 'ru',
+  Arabic: 'ar',
   Romanian: 'ro',
 } as const;
 
@@ -66,6 +67,11 @@ export const initialMartyriaLanguages: InitialMartyriaLanguage[] = [
     direction: 'ltr',
   },
   {
+    id: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+    languageTag: 'ar',
+    direction: 'rtl',
+  },
+  {
     id: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
     languageTag: 'ro',
     direction: 'ltr',
@@ -95,6 +101,7 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   ChurchSlavonicGlasOrdinalV1: 'builtin:church-slavonic-glas-ordinal-v1',
   RussianGlasNumberV1: 'builtin:russian-glas-number-v1',
   RussianGlasOrdinalV1: 'builtin:russian-glas-ordinal-v1',
+  ArabicOrdinalV1: 'builtin:arabic-ordinal-v1',
   RomanianGlasNumberV1: 'builtin:romanian-glas-number-v1',
   RomanianGlasV1: 'builtin:romanian-glas-v1',
 } as const;
@@ -153,6 +160,8 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
     $.dialog.initialMartyriaStyles.builtInStyles.russianGlasNumber,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasOrdinalV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.russianGlasOrdinal,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.arabicOrdinal,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.romanianGlasNumber,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1]: ($) =>
@@ -408,6 +417,20 @@ const russianTransliteratedNoteNames: InitialMartyriaNoteNames = {
   languageTag: 'ru',
 };
 
+const arabicTransliteratedNoteNames: InitialMartyriaNoteNames = {
+  names: {
+    [ModeSign.Ni]: 'ني',
+    [ModeSign.Pa]: 'با',
+    [ModeSign.Vou]: 'فو',
+    [ModeSign.Ga]: 'غا',
+    [ModeSign.Thi]: 'دي',
+    [ModeSign.Ke]: 'كي',
+    [ModeSign.Zo]: 'زو',
+  },
+  direction: 'rtl',
+  languageTag: 'ar',
+};
+
 function text(
   content: string,
   modes?: ModeKeyMode[],
@@ -467,14 +490,16 @@ function builtIn(options: {
   filters: InitialMartyriaStyle['filters'];
   components: InitialMartyriaComponent[];
   transliteratedNoteNames?: InitialMartyriaNoteNames;
+  flowDirection?: InitialMartyriaStyle['flowDirection'];
 }): InitialMartyriaStyle {
   const {
     transliteratedNoteNames = transliteratedGreekNoteNames,
+    flowDirection = 'page',
     ...styleOptions
   } = options;
   return {
     ...styleOptions,
-    flowDirection: 'page',
+    flowDirection,
     originalNoteNames: originalGreekNoteNames,
     transliteratedNoteNames,
   };
@@ -927,6 +952,29 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
       text('шестой', [6]),
       text('седьмой', [7]),
       text('восьмой', [8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+    defaultAppearance: defaultAppearance('Noto Naskh Arabic', 'GFS Didot'),
+    filters: {
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords,
+      usesPlagalTerminology: false,
+    },
+    transliteratedNoteNames: arabicTransliteratedNoteNames,
+    flowDirection: 'rtl',
+    components: [
+      text('اللحن الأول', [1]),
+      text('اللحن الثاني', [2]),
+      text('اللحن الثالث', [3]),
+      text('اللحن الرابع', [4]),
+      text('اللحن الخامس', [5]),
+      text('اللحن السادس', [6]),
+      text('اللحن السابع', [7]),
+      text('اللحن الثامن', [8]),
       modeSign(),
       startingPitch(),
     ],

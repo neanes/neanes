@@ -93,6 +93,7 @@
       "spanish": "Spanish",
       "churchSlavonic": "Church Slavonic",
       "russian": "Russian",
+      "arabic": "Arabic",
       "romanian": "Romanian"
     },
     "standardDescription": "Use the traditional glyph-based Initial Martyria.",
@@ -156,6 +157,7 @@
       "churchSlavonicGlasOrdinal": "Church Slavonic - Гласъ пе́рвый",
       "russianGlasNumber": "Russian - Глас 1",
       "russianGlasOrdinal": "Russian - Глас первый",
+      "arabicOrdinal": "Arabic - اللحن الأول",
       "romanianGlasNumber": "Romanian - Glas Number",
       "romanianGlas": "Romanian - Glas"
     },

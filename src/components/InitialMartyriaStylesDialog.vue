@@ -425,6 +425,7 @@ const numeralStyleOrder = [
   INITIAL_MARTYRIA_NUMERAL_STYLES.None,
   INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
   INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+  INITIAL_MARTYRIA_NUMERAL_STYLES.CyrillicNumerals,
   INITIAL_MARTYRIA_NUMERAL_STYLES.CardinalWords,
   INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords,
 ];
@@ -654,6 +655,12 @@ function numeralStyleLabel(numeralStyle: InitialMartyriaNumeralStyle) {
       return t(
         ($) =>
           $.dialog.initialMartyriaStyles.numeralStyleExamples.romanNumerals,
+        { ns: 'dialog' },
+      );
+    case INITIAL_MARTYRIA_NUMERAL_STYLES.CyrillicNumerals:
+      return t(
+        ($) =>
+          $.dialog.initialMartyriaStyles.numeralStyleExamples.cyrillicNumerals,
         { ns: 'dialog' },
       );
     case INITIAL_MARTYRIA_NUMERAL_STYLES.CardinalWords:

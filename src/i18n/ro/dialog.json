@@ -80,6 +80,7 @@
     "numeralStyleExamples": {
       "digits": "1",
       "romanNumerals": "I",
+      "cyrillicNumerals": "а҃",
       "englishCardinal": "One",
       "englishOrdinal": "First",
       "spanishOrdinal": "Primero / Primer",
@@ -151,6 +152,7 @@
       "spanishTonoOrdinal": "Spaniolă - Tono Primero",
       "spanishOrdinalTono": "Spaniolă - Primer Tono",
       "churchSlavonicGlasNumber": "Slavonă bisericească - Гласъ 1",
+      "churchSlavonicGlasCyrillicNumeral": "Slavonă bisericească - Гласъ а҃",
       "churchSlavonicGlasOrdinal": "Slavonă bisericească - Гласъ пе́рвый",
       "russianGlasNumber": "Rusă - Глас 1",
       "russianGlasOrdinal": "Rusă - Глас первый",

@@ -13,6 +13,7 @@ export const INITIAL_MARTYRIA_NUMERAL_STYLES = {
   None: 'none',
   Digits: 'digits',
   RomanNumerals: 'roman-numerals',
+  CyrillicNumerals: 'cyrillic-numerals',
   CardinalWords: 'cardinal-words',
   OrdinalWords: 'ordinal-words',
 } as const;
@@ -89,6 +90,8 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   SpanishTonoOrdinalV1: 'builtin:spanish-tono-ordinal-v1',
   SpanishOrdinalTonoV1: 'builtin:spanish-ordinal-tono-v1',
   ChurchSlavonicGlasNumberV1: 'builtin:church-slavonic-glas-number-v1',
+  ChurchSlavonicGlasCyrillicNumeralV1:
+    'builtin:church-slavonic-glas-cyrillic-numeral-v1',
   ChurchSlavonicGlasOrdinalV1: 'builtin:church-slavonic-glas-ordinal-v1',
   RussianGlasNumberV1: 'builtin:russian-glas-number-v1',
   RussianGlasOrdinalV1: 'builtin:russian-glas-ordinal-v1',
@@ -139,6 +142,11 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
     $.dialog.initialMartyriaStyles.builtInStyles.spanishOrdinalTono,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasNumberV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.churchSlavonicGlasNumber,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasCyrillicNumeralV1]: (
+    $,
+  ) =>
+    $.dialog.initialMartyriaStyles.builtInStyles
+      .churchSlavonicGlasCyrillicNumeral,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasOrdinalV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.churchSlavonicGlasOrdinal,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasNumberV1]: ($) =>
@@ -827,6 +835,29 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
       text('6', [6]),
       text('7', [7]),
       text('8', [8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasCyrillicNumeralV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+    defaultAppearance: sourceSerifAppearance(),
+    filters: {
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.CyrillicNumerals,
+      usesPlagalTerminology: false,
+    },
+    transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
+    components: [
+      text('Гласъ'),
+      text('а҃', [1]),
+      text('в҃', [2]),
+      text('г҃', [3]),
+      text('д҃', [4]),
+      text('є҃', [5]),
+      text('ѕ҃', [6]),
+      text('з҃', [7]),
+      text('и҃', [8]),
       modeSign(),
       startingPitch(),
     ],

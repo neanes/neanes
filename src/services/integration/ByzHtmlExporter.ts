@@ -29,6 +29,11 @@ import type { Score } from '@/models/Score';
 import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
 import { type ResolvedFontStyle, resolveFontStyle } from '@/utils/fontStyle';
+import {
+  FONT_VARIANT_CSS_NAMES,
+  FONT_VARIANT_PROPERTIES,
+  fontVariantCssDeclarations,
+} from '@/utils/fontVariants';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { isRightHandPage } from '@/utils/PageNumbering';
@@ -92,6 +97,52 @@ interface ByzHtmlExporterConfig {
   attributeMelismaHyphen: string;
 
   mapNeumeTag: Map<string, string>;
+}
+
+export function createByzHtmlDocument(
+  style: string,
+  body: string,
+  melkiteRtl: boolean,
+): string {
+  const fontFaceCss = fontCatalog.getRegisteredFontFaceCss();
+  const fontFeatureValuesCss = fontCatalog.getExportFontFeatureValuesCss();
+
+  let injectRtl = '';
+
+  if (melkiteRtl) {
+    injectRtl = `<script>
+  byzhtml.options.melkiteRtl = true;
+</script>`;
+  }
+
+  return `<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/neanes/byzhtml@${byzhtmlVersion}/dist/Neanes.css"
+    />
+
+    <script src="https://cdn.jsdelivr.net/gh/neanes/byzhtml@${byzhtmlVersion}/dist/byzhtml.min.js"></script>
+
+    ${injectRtl}
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
+    />
+
+    <meta charset="UTF-8">
+
+    <style>
+      ${fontFaceCss}
+      ${fontFeatureValuesCss}
+      ${style}
+    </style>
+  </head>
+  <body>
+    ${body}
+  </body>
+</html>`;
 }
 
 export class ByzHtmlExporter {
@@ -174,45 +225,8 @@ export class ByzHtmlExporter {
       score.paragraphStyles,
       4,
     );
-    const fontFaceCss = fontCatalog.getRegisteredFontFaceCss();
 
-    let injectRtl = '';
-
-    if (score.pageSetup.melkiteRtl) {
-      injectRtl = `<script>      
-  byzhtml.options.melkiteRtl = true;
-</script>`;
-    }
-
-    const result = `<html>
-  <head>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/neanes/byzhtml@${byzhtmlVersion}/dist/Neanes.css"
-    />
-    
-    <script src="https://cdn.jsdelivr.net/gh/neanes/byzhtml@${byzhtmlVersion}/dist/byzhtml.min.js"></script>
-
-    ${injectRtl}
-
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
-    />
-
-    <meta charset="UTF-8">
-
-    <style>
-      ${fontFaceCss}
-      ${style}
-    </style>
-  </head>
-  <body>
-    ${body}
-  </body>
-</html>`;
-
-    return result;
+    return createByzHtmlDocument(style, body, score.pageSetup.melkiteRtl);
   }
 
   exportPageSetup(pageSetup: PageSetup, paragraphStyles: ParagraphStyle[]) {
@@ -357,6 +371,7 @@ export class ByzHtmlExporter {
         color: ${lyricsStyle.color};
         font-weight: ${defaultLyricsFont.cssFontWeight};
         font-style: ${defaultLyricsFont.cssFontStyle};
+        ${fontVariantCssDeclarations(lyricsStyle).join('\n        ')}
         -webkit-text-stroke-width: ${lyricsStyle.strokeWidth};
         -webkit-text-stroke-color: ${lyricsStyle.strokeColor};
         text-decoration: ${lyricsStyle.textDecoration ?? 'none'};
@@ -365,6 +380,7 @@ export class ByzHtmlExporter {
       ${this.config.tagDropCap} {
         font-weight: ${defaultDropCapFont.cssFontWeight};
         font-style: ${defaultDropCapFont.cssFontStyle};
+        ${fontVariantCssDeclarations(defaultDropCapStyle).join('\n        ')}
         -webkit-text-stroke-width: ${defaultDropCapStyle.strokeWidth};
         -webkit-text-stroke-color: ${defaultDropCapStyle.strokeColor};
       }
@@ -388,6 +404,7 @@ export class ByzHtmlExporter {
         font-size: ${Unit.toPt(defaultTextBoxStyle.fontSize)}pt;
         font-weight: ${defaultTextBoxFont.cssFontWeight};
         font-style: ${defaultTextBoxFont.cssFontStyle};
+        ${fontVariantCssDeclarations(defaultTextBoxStyle).join('\n        ')}
         color: ${defaultTextBoxStyle.color};
         -webkit-text-stroke-width: ${defaultTextBoxStyle.strokeWidth};
         -webkit-text-stroke-color: ${defaultTextBoxStyle.strokeColor};
@@ -404,6 +421,7 @@ export class ByzHtmlExporter {
         font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
         font-weight: ${defaultLyricsFont.cssFontWeight};
         font-style: ${defaultLyricsFont.cssFontStyle};
+        ${fontVariantCssDeclarations(lyricsStyle).join('\n        ')}
         color: ${lyricsStyle.color};
         -webkit-text-stroke-width: ${lyricsStyle.strokeWidth};
         -webkit-text-stroke-color: ${lyricsStyle.strokeColor};
@@ -744,6 +762,12 @@ export class ByzHtmlExporter {
       style += `text-decoration: ${resolvedLyricsStyle.textDecoration ?? 'none'};`;
     }
 
+    for (const property of FONT_VARIANT_PROPERTIES) {
+      if (resolvedLyricsStyle[property] !== lyricsStyle[property]) {
+        style += `${FONT_VARIANT_CSS_NAMES[property]}: ${resolvedLyricsStyle[property] ?? 'normal'};`;
+      }
+    }
+
     return style === '' ? '' : ` style="${style}"`;
   }
 
@@ -1026,6 +1050,7 @@ export class ByzHtmlExporter {
       style += `font-size: ${Unit.toPt(resolvedDropCapStyle.fontSize)}pt;`;
       style += `font-weight: ${resolvedDropCapFont.cssFontWeight};`;
       style += `font-style: ${resolvedDropCapFont.cssFontStyle};`;
+      style += fontVariantCssDeclarations(resolvedDropCapStyle).join('');
       style += `line-height: ${resolvedDropCapStyle.lineHeight ?? 'normal'};`;
       style += `-webkit-text-stroke-width: ${resolvedDropCapStyle.strokeWidth};`;
       style += `-webkit-text-stroke-color: ${resolvedDropCapStyle.strokeColor};`;
@@ -1082,6 +1107,12 @@ export class ByzHtmlExporter {
       style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
       style += `font-weight: ${element.computedFontWeight};`;
       style += `font-style: ${element.computedFontStyle};`;
+      style += fontVariantCssDeclarations({
+        fontVariantCaps: element.computedFontVariantCaps,
+        fontVariantNumeric: element.computedFontVariantNumeric,
+        fontVariantLigatures: element.computedFontVariantLigatures,
+        fontVariantAlternates: element.computedFontVariantAlternates,
+      }).join('');
       style += `line-height: ${element.computedLineHeight ?? 'normal'};`;
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
       style += `-webkit-text-stroke-color: ${element.computedStrokeColor};`;
@@ -1406,7 +1437,7 @@ export class ByzHtmlExporter {
     lyricsStyle: ResolvedParagraphStyle,
   ) {
     const neumeHeight = TextMeasurementService.getFontHeight(
-      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+      pageSetup.neumeDefaultFontCss,
     );
     const font = `${defaultDropCapFont.cssFontStyle} normal ${
       defaultDropCapFont.cssFontWeight

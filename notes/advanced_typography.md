@@ -685,18 +685,39 @@ the editor.
 ### 6.3 Exporters
 
 `ByzHtmlExporter` resolves page setup defaults and element-specific overrides
-before writing CSS custom properties or inline styles. `LatexExporter` resolves
+before writing CSS custom properties or inline styles. `LatexExporter` writes
 the same structured model for non-rich text. Rich-text HTML export is
 browser-renderable: explicit rich-text styles use CSS spans that pin both axes,
 and non-basic faces carry absolute weight/style CSS or exact face families.
 
-The LaTeX JSON export has its own compatibility contract. Its schema remains at
-version `2`: exported `fontStyle` fields are still CSS slant values
-(`normal`/`italic`) and CSS weight stays in `fontWeight`. Exact document face
-styles such as `Semibold`, `Caption`, and `Display` are projected onto those CSS
-axes, so non-CSS face information may be lost. The exporter carries a TODO for a
-future schema extension that can represent exact face/style labels without
-breaking v2 consumers.
+LaTeX JSON schema v3 resolves paragraph inheritance and element overrides
+before interning identical effective styles in `textStyles`. Elements reference
+their final style by ID, and NeanesTeX only adapts the resolved values to TeX.
+`fontStyle` preserves the document style label, while the required
+`postscriptName` selects the exact face. Export fails if that face is unavailable
+instead of substituting another, including when malformed or imported data names
+a style that a bundled family does not have. NeanesTeX retains family plus
+bold/italic selection only for v1 and v2 input.
+
+For a `Regular` request when the family uses another name for its upright face,
+`resolveSystemFontFace` uses `matchDefaultFontFace` to choose an upright,
+non-decorative face with CSS's 400-weight search order: 400 through 500, then
+weights below 400, then weights above 500. This keeps editor rendering,
+measurement, HTML export, and LaTeX export on the same face. An unavailable
+explicitly named style remains unresolved.
+
+`resolveOpenTypeFeatures` converts the four `fontVariant*` CSS values into
+renderer-neutral OpenType tag/value records. Each interned style contains its
+complete effective feature list; NeanesTeX validates and converts it to
+fontspec syntax. Schema v3 omits the text defaults and per-element
+`fontWeight`/CSS-slant fields used by v2.
+
+NeanesTeX currently ignores paragraph-style `lineHeight` and uses conventional
+1.2-times-font-size text leading. Precise line-height rendering remains a TODO;
+the score-wide `pageSetup.lineHeight` continues to control staff spacing only.
+
+Schema v3 also writes the selected neume font family and its corresponding
+engraving font version to `pageSetup.fontFamilies.neume` and `fontVersions`.
 
 Export portability is limited by font availability. System fonts are not
 embedded. The exported CSS names the intended face as precisely as the browser
@@ -825,8 +846,14 @@ This subsystem preserves these invariants:
   deserialize.
 - Layout and exporters resolve styles through the shared helper before
   measuring or writing CSS.
-- LaTeX JSON preserves schema v2 for compatibility; exact face styles are
-  lossy until a future schema extension is added.
+- LaTeX JSON schema v3 interns fully resolved text styles. Each requires an exact
+  `postscriptName`; export fails if it cannot be resolved. NeanesTeX adapts v3
+  features and retains family/style selection for v1 and v2.
+- `resolveSystemFontFace` maps `Regular` to the family's default upright face for
+  consistent rendering and export. Other missing named styles stay unresolved.
+- `bundled-fonts.generated.json` records each bundled face's PostScript name and
+  alternates. `FontAlternatesService.test.ts` guards it against the font files,
+  and `src/services/bundledFonts.ts` reports missing catalog entries.
 - The bundled font catalog and CSS declarations must stay in sync, including the
   Source Serif optical families in `source-serif.css`; bundled exact families are
   declared/preloaded, while system exact faces may be lazily bound with local
@@ -933,6 +960,122 @@ This subsystem preserves these invariants:
   styles.
 - `src/services/integration/ByzHtmlExporter.ts` -- exports resolved styles to
   byzhtml CSS.
-- `src/services/integration/LatexExporter.ts` -- writes schema v2-compatible
-  CSS slant/weight fields and leaves exact face-style export as a future schema
-  extension.
+- `src/utils/fontVariants.ts` -- `resolveOpenTypeFeatures` maps the four CSS
+  longhands to the OpenType features they select, for any renderer.
+- `src/services/bundledFonts.ts` -- owns `bundled-fonts.generated.json`: the
+  PostScript name and alternates of every bundled face, behind one lookup that
+  reports a stale artifact rather than returning undefined.
+- `src/services/integration/LatexExporter.ts` -- writes schema v3 interned,
+  fully resolved text styles with exact face names and OpenType values.
+
+---
+
+## 11. Font-variant (OpenType) features
+
+The face model above covers weight/slant/optical identity. The OpenType
+feature settings -- case (small caps), figure style and spacing, fractions,
+ordinals, slashed zero, the ligature switches, historical forms, stylistic
+sets, character variants, and the swash, stylistic, ornament, and
+annotation alternates -- are a parallel, simpler contract:
+
+- One document field per CSS longhand: `fontVariantCaps`,
+  `fontVariantNumeric`, `fontVariantLigatures`, `fontVariantAlternates`. The
+  value is that CSS property's canonical owned value. CKEditor upcast and the
+  controls canonicalize supported values to the token order in
+  `src/utils/fontVariants.ts` (the shared parser/composer, free of CKEditor
+  imports) and drop unsupported values. GeneralHtmlSupport is disallowed from
+  owning the same declarations.
+- The same four names are used everywhere: CKEditor text attributes (the
+  OpenType plugin), `ParagraphStyle.overrides`, `TextBoxElement` and
+  `DropCapElement` fields, the `lyricsFontVariant*` fields on `NoteElement`,
+  and the matching score JSON fields on the v1 save shapes.
+- `fontVariantAlternates` is owned outright, like the numeric and ligature
+  values: the plain `historical-forms` keyword (the hist feature; one switch
+  in the UI), `styleset()` and `character-variant()` notations whose idents
+  are raw feature tags (`ss01`-`ss20`, `cv01`-`cv99`), the four
+  single-alternate notations `stylistic()`, `swash()`, `ornaments()`, and
+  `annotation()` (salt, swsh/cswh, ornm, nalt) whose ident is the notation's
+  own name plus a 1-based alternate index (`swash-1`..`swash-99` and so on),
+  and the explicit `normal`. Unknown keywords, notations, and idents outside
+  the owned ranges are dropped during upcast and control edits. A repeated
+  notation merges its tags or keeps its last alternate. Canonical order
+  follows the CSS grammar: `stylistic(...)` first, then
+  historical-forms, `styleset(...)` and `character-variant(...)` with the
+  tags ascending and comma-separated, then `swash(...)`, `ornaments(...)`,
+  and `annotation(...)`. Unsupported CSS-wide keywords such as `initial`,
+  `inherit`, `unset`, `revert`, and `revert-layer` fold to an absent text
+  override. The idents are the future-proofing: a stored value
+  like `historical-forms styleset(ss01) character-variant(cv27)
+swash(swash-1)` is standard CSS that names OpenType features and
+  alternate indices directly, independent of any font's display names or of
+  the app version that wrote it. (OpenType does not bound alternates per
+  glyph, so the shared 99 is the app's own owned range; the switches only
+  ever write the first alternate, and the wider range keeps values naming a
+  later alternate owned.)
+- The idents get their meaning from a generated `@font-feature-values` rule
+  that maps every styleset and character-variant tag to its feature number
+  and every single-alternate ident to its alternate index. `FontCatalog` owns
+  the rule: its managed editor style covers every known text family (bundled
+  CSS families, system families, and lazily registered exact faces), and
+  window print/PDF reuses that document. Serialized PNG and byzhtml exports
+  use `getExportFontFeatureValuesCss`, which deliberately includes only
+  bundled text families and exact-face aliases already exposed by the
+  pre-alternates `@font-face` export. Alternates on a base system family may
+  therefore be unavailable in those two export formats. Activating a feature
+  a font lacks is a no-op, so the uniform mapping is harmless. Note that CSS
+  `swash()` turns on both swash features (swsh and cswh), so contextual swash
+  comes bundled with plain swash by design.
+- The alternates controls list the features the effective face actually
+  has: `FontAlternatesService` walks the face's GSUB feature list, resolving
+  each ssXX featureParams UINameID and each cvXX featureParams
+  featUiLabelNameId against the name table for the row labels (preferring
+  the Windows en-US or Unicode name record; lib-font's name.get returns
+  whichever record sorts first, which for Source Serif is Bulgarian) and
+  recording whether the historical-forms (hist), swash (swsh or cswh),
+  stylistic-alternates (salt), ornaments (ornm), and annotation (nalt)
+  features exist at all, which gates those switches. Bundled faces are fixed at
+  build time, so their capabilities and PostScript names are precomputed into
+  `src/assets/fonts/bundled-fonts.generated.json`, with one uniform entry per
+  face. `FontAlternatesService.test.ts` detects drift from the font files, and
+  `vitest -u` regenerates the artifact. Only system faces are parsed at runtime
+  from Local Font Access `FontData.blob()` bytes, using lib-font and caching per
+  face. Names are display-only and never persisted. No bundled font has a swash,
+  ornaments, or annotation feature, so those switches only ever appear for system
+  fonts (e.g. EB Garamond Italic for swash, Junicode for ornaments and
+  annotation forms); Old Standard has cv01 and salt and GFS Didot has
+  hist, so the character-variant row, the stylistic-alternates switch, and
+  the historical-forms switch appear for bundled fonts too. The neume fonts
+  are deliberately not read even though they carry salt: their alternates
+  are neume-rendering plumbing, not text typography. A feature that is
+  active in the value but missing from the current face keeps its row so it
+  can be switched off; toggles recompose from the parsed value, so such
+  axes survive unrelated edits.
+- Inheritance is by omission, and `normal` is the explicit reset. A rich-text
+  run or an element with no value inherits its paragraph style; an override
+  stores `null` (`ParagraphStyle.overrides`) or the literal `'normal'`
+  (rich-text attribute, element field) to defeat an inherited non-normal
+  value. Each element's `getParagraphStyleOverrides` folds `'normal'` to the
+  override `null`, so resolved values use `null` for "no features".
+- Surfaces: paragraph styles define the features; rich-text runs, plain text
+  boxes, drop caps, and lyrics (per note) may override them per element with
+  per-property clear actions, all through the shared `FontVariantFields`
+  cluster. Position (sub/superscript) stays a rich-text-only character
+  format; it is deliberately not a paragraph-style or element property
+  (Chromium has no `font-variant-position`, so a style-level position would
+  have to be synthesized through layout).
+- Rendering: `buildRichTextParagraphStyleCss` emits `font-variant-*` for the
+  editor, print, and byzhtml rich-text classes; `LayoutService` writes
+  `computedFontVariant*` for text boxes and drop caps; lyric spans read the
+  resolved style directly. `ByzHtmlExporter` emits the same declarations for
+  its default tag/class CSS and per-element overrides. For LaTeX JSON v3,
+  Neanes parses the same four values into structured OpenType feature settings
+  on interned effective styles; NeanesTeX does not parse CSS or paragraph-style
+  inheritance.
+- Measurement: canvas `fontVariantCaps` covers the caps values, so
+  small-caps/all-small-caps affect measured widths (lyrics, inline text
+  boxes, drop caps). The numeric, ligature, and alternates properties cannot
+  be expressed on a canvas context; their (small) width effects are an
+  accepted approximation between measurement and rendering. Swash stresses
+  that approximation hardest: flourished forms can change advance widths
+  more than any other alternate, so swashed lyrics or inline text boxes are
+  where the gap would show first.

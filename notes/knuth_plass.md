@@ -24,7 +24,7 @@ In their seminal 1981 paper "[Breaking Paragraphs into Lines](https://gwern.net/
 This "optimum-fit" algorithm can choose an earlier breakpoint strategically in order to eliminate especially unattractive breakpoints later in the paragraph.
 The result is not only fewer overly wide spaces, but also more even spacing and fewer abrupt changes between adjacent lines.
 The Knuth-Plass approach is based on three simple primitives, _boxes,_ _glue,_ and _penalties,_
-and scores candidate layouts using a function based on the squared lengths of the spaces at the ends of lines.
+and scores candidate layouts from cubic adjustment-ratio badness and breakpoint costs, combined into per-line demerits by squaring their sum.
 Its flagship implementation is in the $\TeX$ typesetting system, where the source code describes it as "probably the most interesting algorithm of $\TeX$."
 Adobe InDesign includes a related approach called the [Adobe Paragraph Composer](https://helpx.adobe.com/indesign/using/text-composition.html).
 
@@ -67,7 +67,7 @@ From many examples in classical 19th-century publications, we derive the followi
 
 A line break is prohibited in the following cases:
 
-1. Between a martyria and the preceding neume. We add a penalty of `MAX_COST`.
+1. Between a note and a following martyria. We add a penalty of `MAX_COST`.
 2. Between two neumes tied by a connecting heteron, connecting homalon, or yfen. We add a penalty of `MAX_COST`.
 
 ### Strongly discouraged breaks
@@ -81,12 +81,13 @@ A line break is strongly discouraged in the following cases:
 
 In addition to the strongly discouraged cases, we identify several breaks that are permissible but undesirable:
 
-1. A line that begins with a gorgon steals half a beat from the neume at the end of the previous line. Although this is not uncommon in the classical 19th-century publications, it requires the reader to look one line ahead. This is manageable within a page, but more annoying at a page boundary, so it is better to avoid such breaks when possible.
+1. A line that begins with a neume carrying a time mark that takes time from the neume before it, such as a gorgon or an argon, shortens the neume at the end of the previous line. Although such breaks are not uncommon in the classical 19th-century publications, they require the reader to look one line ahead. This is manageable within a page, but more annoying at a page boundary, so it is better to avoid such breaks when possible.
 2. Between a running elaphron and the preceding neume. Like the gorgon, a running elaphron steals a beat from the preceding neume, so a break before it is awkward.
 3. Immediately after a melisma start, before its first continuation neume, that is, between notes 0 and 1 of the melisma, 0-indexed. The melisma-start syllable extends to the right under subsequent neumes, and breaking here can isolate it on a line where the lyric may overflow. Long melismas may legitimately break later on, so only the break immediately after the start is discouraged. The penalty-width mechanism described below handles overflow at any breakpoint inside the melisma.
 4. Between the second-to-last and last notes of a melisma, that is, between notes $n-2$ and $n-1$, 0-indexed. This is the converse of the previous rule: just as the melisma start should stay with its first continuation, the penultimate note should stay with the final note that closes the melisma. Breaking here would strand a single melisma note at the start of a line. Interior melisma breaks, between notes 1 and $n-2$, remain free.
 
 We assign a penalty of 0.1 of `MAX_COST` to beat-stealing breaks, because these are awkward but not uncommon in the classical 19th-century publications.
+`getBreakCost` recognizes the time-mark case for a configured set of quantitative neumes paired with a supported primary or secondary gorgon-family mark, and the running elaphron case from the quantitative neume alone; digorgon and trigorgon are not yet covered.
 For melisma-edge breaks, we use larger penalties:
 0.2 of `MAX_COST` immediately after a melisma start, and 0.15 of `MAX_COST` between the penultimate and final melisma notes.
 These cases are closer to $\TeX$'s `\clubpenalty` and `\widowpenalty`, because they orphan a single note at the start or end of a melisma;
@@ -105,16 +106,16 @@ The three weaker penalties can stack only to 0.45 of `MAX_COST` ($0.2 + 0.15 + 0
 
 ### Summary of penalties
 
-|               Cost | Break location                                         | $\TeX$ analogue |
-| -----------------: | ------------------------------------------------------ | --------------- |
-|         `MAX_COST` | Before a martyria                                      | none            |
-|         `MAX_COST` | Across a tie (heteron, homalon, yfen)                  | none            |
-|  0.5 of `MAX_COST` | After a vareia                                         | `\relpenalty`   |
-|  0.5 of `MAX_COST` | Before kentēmata                                       | `\relpenalty`   |
-|  0.1 of `MAX_COST` | Before beat-stealing neumes (gorgon, running elaphron) | none            |
-|  0.2 of `MAX_COST` | Melisma start to first continuation (0 to 1)           | `\clubpenalty`  |
-| 0.15 of `MAX_COST` | Penultimate to last melisma note ($n-2$ to $n-1$)      | `\widowpenalty` |
-|                  0 | All other inter-note breaks                            | none            |
+|               Cost | Break location                                    | $\TeX$ analogue |
+| -----------------: | ------------------------------------------------- | --------------- |
+|         `MAX_COST` | From a note to a following martyria               | none            |
+|         `MAX_COST` | Across a tie (heteron, homalon, yfen)             | none            |
+|  0.5 of `MAX_COST` | After a vareia                                    | `\relpenalty`   |
+|  0.5 of `MAX_COST` | Before kentēmata                                  | `\relpenalty`   |
+|  0.1 of `MAX_COST` | Before configured beat-stealing neumes/time marks | none            |
+|  0.2 of `MAX_COST` | Melisma start to first continuation (0 to 1)      | `\clubpenalty`  |
+| 0.15 of `MAX_COST` | Penultimate to last melisma note ($n-2$ to $n-1$) | `\widowpenalty` |
+|                  0 | All other inter-note breaks                       | none            |
 
 ### Classical compression techniques
 
@@ -132,19 +133,24 @@ Layout proceeds in two phases. In Phase 1, the code builds the box/glue/penalty 
 ### Lyricless scores
 
 Consider first a lyricless score of Byzantine music.
-Each neume group, for example a simple oligon or an ison with kentēmata over a supporting oligon, and each martyria can be modeled as a box whose width is simply the width of the notated group itself.
+Each neume group, for example a simple oligon or an ison with kentēmata over a supporting oligon, and each martyria is modeled as a box.
+A note box uses the layout advance `neumeWidth + spaceAfter`; `neumeWidth` already includes owned prefixes and inline measure bars.
+A martyria box similarly includes the notated group, its `spaceAfter`, and any horizontal spacing owned inside the element.
 The space between ordinary neumes is modeled as glue.
 Its natural width is `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, where `standardGlue` comes from the active font's `engravingDefaults`.
 The font-size-scaled engraving default supplies the default gap, and `neumeDefaultSpacing` remains a user-configurable adjustment.
-The stretch and shrink budgets are also scaled from the active font's `standardGlue` defaults.
+The standard-glue stretch and shrink use the active font's default elasticity ratios, applied to the full natural width $s_0$, including `neumeDefaultSpacing`.
+If the engraving defaults are $(d_w, d^+, d^-)$ and $d_w \ne 0$, the ratios are $d^+/d_w$ and $d^-/d_w$; when $d_w = 0$, the code falls back to $0.5$ and $1/3$.
+Thus the actual budgets are $\max(s_0 d^+/d_w, 0.1\text{ px})$ and $\max(s_0 d^-/d_w, 0)$, with the fallback ratios substituted when necessary.
 Users may also set the inter-note spacing adjustment to a negative value, so that successive neumes visibly overlap and the layout becomes tighter.
 When the computed inline spacing is negative, the glue keeps its negative natural width so that the overlap remains visible, but the stretch and shrink budgets are floored at small non-negative values: stretch at 0.1 px and shrink at 0.
-The same floors apply uniformly to every inter-element spacing glue: the standard glue's stretch and shrink, the note post-break glue's stretch and shrink, the martyria glue's stretch and shrink, and the right-martyria glue's shrink.
-The martyria glue's base width, stretch, and shrink come from the martyria engraving defaults described below rather than from the inline spacing.
-These floors preserve the Knuth-Plass invariants while keeping the user-chosen overlap intact, because ordinary glues no longer stretch enough to push neumes apart and any line-end slack is absorbed by the right-martyria glue's `MAX_COST` stretch instead.
-The 0.1 px stretch floor is a tiny positive epsilon rather than zero so that every line has at least some stretchability, which keeps the adjustment ratio finite and the line-breaking problem well-defined.
-Without this floor, a line that contains no martyria would have a total stretch of zero, and `breakLines` could only treat its natural width as feasible.
-At 0.1 px per glue, the cumulative stretch across a typical line is far below the neume scale and so has no visible effect on the layout.
+Ordinary note-to-note post-break glue inherits these standard budgets without an additional shrink cap.
+A note immediately before a martyria instead emits fixed post-break glue with zero stretch and shrink, because the martyria path replaces that glue and owns the boundary elasticity.
+Martyria glue applies the same non-negative floors to its own font-size-scaled engraving defaults, while right-martyria glue uses `MAX_COST` stretch and inherits the martyria shrink.
+These floors preserve conventional adjustment-ratio semantics while keeping the user-chosen negative natural width intact.
+The 0.1 px stretch floor is a small positive epsilon rather than zero so that an underfull line without other stretchable glue still has a finite adjustment ratio.
+Under the preferred cap $r \le 1$, each floored glue grows by at most 0.1 px, so the contribution is negligible.
+If no solution exists under that cap, the cap search described below may magnify the epsilon; a right-aligned martyria's `MAX_COST` stretch dominates the slack allocation whenever that glue is present.
 
 The active font's OpenType shaping is applied implicitly when each note's neume text run is measured, so contextual substitutions contribute their actual rendered widths without separately resolving the substitutions first.
 Layout resolves contextual substitutions explicitly where it needs the substituted glyph identities themselves, for example when measuring collision ink, but inter-neume spacing comes from the fixed inline spacing rather than from substituted glyph leading or trailing metadata.
@@ -152,27 +158,29 @@ A vareia contributes fixed internal spacing before the main neume; in right-to-l
 
 Visible barlines also participate in spacing.
 In the following formulas, $s_0$ is the fixed inline spacing described above.
-For a barline between elements $A$ and $B$, the minimum boundary width starts from fixed clearance rather than glyph bearings, then grows if note ink or configured collision regions require more room.
-If a visible barline lies between two neume anchors, the boundary reserves one fixed inline space on each side of the barline:
+For a barline between elements $A$ and $B$, the preferred boundary width starts from fixed clearance rather than glyph bearings, then grows if note ink or configured collision regions require more room.
+When $s_0 \ge 0$ and no larger collision requirement binds, a visible barline between two neume anchors has a natural boundary target of one inline space on each side of the barline:
 
 $$2s_0.$$
 
-The barline is centered in the available space while respecting that minimum.
-The trailing barline-to-$B$ clearance is modeled inside the box for a left-owned barline, so a barline at the start of a line keeps the same fixed clearance.
-The remaining minimum is preserved during justification and after lyric tucking.
+For negative $s_0$, the external glue clamp and any collision requirement may raise that target.
+At natural width, the barline is centered in the resulting available space.
+The trailing barline-to-$B$ clearance is modeled inside the box for a left-owned barline, so a barline at the start of a line keeps that fixed clearance.
+The external portion raises the preferred glue width after lyric tucking.
+At an ordinary note-to-note boundary it remains compressible through the full standard-glue shrink budget; martyria-boundary glue instead caps shrink at its computed hard visual and measure-bar floor.
 For note-to-note boundaries, the collision check uses glyph boxes for the notes, marks, and barline regions that vertically overlap; tie-like marks are ignored because adding space would break their intended connection.
 Vareia-to-barline clearance is checked separately, with a tiny vertical tolerance, so that a barline region and vareia that are effectively tangent in font metadata still reserve the normal barline spacing horizontally.
 When a right barline becomes terminal at a line break, at a paragraph ending, before an empty element, or before a right-aligned martyria, its clearance from the preceding neume is reserved as terminal width, including any note ink overhang that overlaps the barline clearance region.
 
-Ordinary martyriæ use the active font's `martyriaGlue` engraving defaults instead of standard fixed inline glue.
+Ordinary martyriæ use the active font's `martyriaGlue` engraving defaults instead of standard glue.
 Its natural width is `neumeDefaultFontSize * martyriaGlue.width`.
 This gives martyriæ font-specific surrounding space that can differ from ordinary neume spacing.
 An inline left martyria bar contributes to that box width, but a short left bar that has been converted into an above-style mark does not own horizontal side spacing.
 Above-style left bars and the central tempo mark are still measured as martyria body ink, in render order, so their visible protrusion can widen visual minimums without adding inline box width.
 During justification, stretch and shrink are based on the martyria glue defaults while the same-line width is still protected by any visual-ink and measure-bar minimums.
-Tempo-adjacent martyria boundaries are the exception: when a non-right-aligned martyria contains `tempoLeft` or `tempoRight`, or when a standalone tempo sign sits immediately beside a non-right-aligned martyria in the same paragraph, that side uses standard fixed inline glue instead of martyria glue.
+Tempo-adjacent martyria boundaries are the exception: when a non-right-aligned martyria contains `tempoLeft` or `tempoRight`, or when a standalone tempo sign sits immediately beside a non-right-aligned martyria in the same paragraph, that side uses standard glue instead of martyria glue.
 For standalone tempo-to-martyria and martyria-to-tempo boundaries, the lyric-collision spacer is also skipped; the explicit standard glue owns the base boundary spacing, while the lyric bookkeeping is still advanced for the current element.
-After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single trailing glue whose preferred width is usually martyria glue, or standard fixed inline glue for the tempo cases above.
+After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single trailing glue whose preferred width is usually martyria glue, or standard glue for the tempo cases above.
 As a result, the full trailing spacing appears after the martyria only when it stays mid-line; if a break is taken there, that spacing becomes leading glue on the next line and is skipped.
 Visible spacing around notes, martyriæ, and standalone tempo signs may be widened beyond the base glue when shaped ink overhangs would otherwise collide.
 For the ordinary non-right-aligned note-martyria-note case, where the martyria owns both sides of the boundary glue and no inline side measure bars or side tempo signs intervene, the code also balances the martyria between the nearest visible boundary on each side.
@@ -183,38 +191,42 @@ The two martyria-side glues are then assigned equal natural visible whitespace f
 During compression they keep the same shrink, so the visual balance holds under justification, but that shrink is floored by hard ink, lyric, and measure-bar clearance rather than by the natural martyria glue width.
 For plain neighboring neumes, this lets each martyria glue shrink from `martyriaGlue.width` toward ordinary `standardGlue.width`; the shrink is reduced only when a visible collision floor actually binds.
 
-When a martyria has a transferable measure bar and is followed by a note, the bar transfers to the next line's first note at a break.
-To reserve space for this, the martyria's post-break glue is narrowed by the bar width plus fixed leading clearance, and an anonymous spacer box of the same width is inserted before the following note's box.
+When a martyria has a transferable measure bar and is followed in the same paragraph by a note without its own left bar, the martyria bar transfers to that note at an automatic line break.
+To reserve space for this, the martyria's post-break glue is narrowed by the bar width plus collision-aware leading clearance, and an anonymous spacer box of the same width is inserted before the following note's box.
 On the same line the reduced glue and the spacer cancel, leaving the note's own box position unchanged.
-The post-break glue's shrink is capped so that justification cannot reduce that same-line boundary below the fixed measure-bar clearance.
-At a break the post-break glue vanishes; the spacer remains at the start of the next line and reserves fixed leading space for the transferred bar.
-In Phase 2, when the break is actually taken, the note element is shifted left by the bar width plus fixed leading clearance so that the rendered barline glyph and spacing occupy the space reserved by the spacer rather than adding extra width.
+The post-break glue's shrink is capped so that justification cannot reduce that same-line boundary below its hard, collision-aware measure-bar and visual minimum.
+At a break the post-break glue vanishes; the spacer remains at the start of the next line and reserves non-stretching leading space for the transferred bar.
+In Phase 2, when the break is actually taken, the note element is shifted left by the bar width plus the same collision-aware leading clearance so that the rendered barline glyph and spacing occupy the space reserved by the spacer rather than adding extra width.
 
-Line-start non-right-aligned martyriæ use the same spacer-and-cancel pattern for left ink overhang.
-If the martyria's body, inline left bar, or left tempo sign would protrude past the left margin, Phase 1 inserts an anonymous spacer of that overhang width before the martyria and narrows the martyria's owned leading glue by the same amount.
-On the same line these widths cancel, so ordinary inline note-to-martyria spacing is unchanged.
-When the martyria starts a line, `positionItems` skips the leading glue but keeps the spacer, so the line breaker reserves the same width that Phase 2 later adds as indentation.
+Non-right-aligned martyriæ reserve their left ink overhang in a similar way, but only the reservation is unconditional: the cancelling glue reduction applies after a note or standalone tempo in the same paragraph.
+If the martyria's body, inline left bar, or left tempo sign would protrude past the left margin, Phase 1 inserts an anonymous spacer of that overhang width before the martyria.
+After a note or standalone tempo, the code also narrows the martyria's owned leading glue by the same amount; on the same line these widths cancel, so the original boundary spacing is unchanged.
+After another inline element type, the preceding glue is not replaced or narrowed, so the spacer remains as additional same-line width.
+At paragraph start there is no owned leading glue to narrow, so the spacer alone reserves the required indentation.
+When a break places a martyria after a note or tempo at line start, `positionItems` skips the leading glue but keeps the spacer.
+In either case the martyria's positioned offset normally contains the full reservation; Phase 2 computes indentation only for any remaining overhang deficit.
 
-When a right-aligned martyria follows existing content, its leading glue is a separate case: the code uses effectively infinite stretch (`MAX_COST`) so that this glue absorbs all remaining line slack.
+When a right-aligned martyria follows existing content, its leading glue is a separate case: the code uses dominant stretch (`MAX_COST`) so that this glue absorbs most of the remaining line slack and ordinary neume gaps stay comparatively stable.
 If a right-aligned martyria starts a paragraph, that leading glue is still encoded in the input stream, but `positionItems` skips it at line start, so Phase 2 places the martyria flush right explicitly.
 
-As in Knuth & Plass, each paragraph ends with finishing glue, preceded by a maximum-cost penalty to forbid an earlier break and followed by a minimum-cost penalty to force the paragraph break.
-When a paragraph does not end immediately after a note, the finishing glue has width 0.
-If a paragraph does end immediately after a note, `endParagraph` first materializes that note's trailing reservation into the finishing glue before removing the trailing post-break glue.
-For non-justified endings the finishing glue uses effectively infinite stretch (`MAX_COST`); for justified endings it uses stretch 0. In all cases its shrink is 0.
+As in Knuth & Plass, each paragraph ends with finishing glue, preceded by a maximum-cost penalty so the glue is not itself a breakpoint and followed by a minimum-cost penalty to force the paragraph break.
+When a paragraph ends immediately after a note, `endParagraph` first materializes that note's trailing reservation into the finishing glue before removing the trailing post-break glue.
+When it ends after a martyria, the finishing glue similarly reserves terminal right-barline clearance or, if there is no right barline, the martyria's right ink overhang.
+For other trailing element types, the finishing glue has width 0.
+For non-justified endings the finishing glue uses dominant stretch (`MAX_COST`), like the right-martyria glue above; for justified endings it uses stretch 0. In all cases its shrink is 0.
 
 ### Lyrics
 
 Lyrics introduce additional complexity because they can collide when they extend beyond the width of the neume.
-We handle lyrics in the same way as Western staff notation in LilyPond, using the Hegazy-Gourlay approach.
+We draw on the Hegazy-Gourlay approach used for Western staff notation in LilyPond.
 LilyPond's `LyricSpace` and `LyricHyphen` grobs both call `ly:lyric-hyphen::set-spacing-rods` to create "an invisible object that prevents lyric words from being spaced too closely."
-Here the term _rod_ is used for what Knuth & Plass call a _box._
-This is an application of the Hegazy-Gourlay technique of pre-stretching glue to a minimum extent.
+There the term _rod_ is used for what Knuth & Plass call a _box,_ and the rod acts as a hard minimum.
+We instead apply the Hegazy-Gourlay pre-spacing idea to the glue's preferred natural width, so an ordinary note boundary has no rod-like box and the resulting width may still shrink during justification, as described below.
 
 The paragraph encoding is easiest to understand one note boundary at a time.
 For each boundary between note $i$ and note $i{+}1$, the code computes two quantities:
 
-- $m_i$: the minimum width required when both notes remain on the same line.
+- $m_i$: the preferred width when both notes remain on the same line.
 - $w_i$: extra width that matters only if a line break is taken at that boundary.
 
 The paragraph encoding itself is fixed.
@@ -242,26 +254,32 @@ Rewriting the centered projections to apply $h_i$ at full width (for example $L_
 
 ### Paragraph encoding
 
-Let $B_i = W^n_i$ be the neume width, $c_i$ the break cost, $w_i$ the break-only reservation at breakpoint $i$, and $m_i$ the minimum same-line width between notes $i$ and $i{+}1$.
+Let $a_i$ be note $i$'s `spaceAfter` and $B_i = W^n_i + a_i$ be its layout advance.
+Let $c_i$ be the break cost, $w_i$ the break-only reservation at breakpoint $i$, and $m_i$ the preferred same-line width between notes $i$ and $i{+}1$.
 Let $s_0$ be the fixed inline spacing between successive notes, `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, and let $s^+$ and $s^-$ be the stretch and shrink budgets for an inter-note gap.
 
-Each note is encoded in the paragraph as
+For an ordinary note-to-note boundary, note $i$ is encoded in the paragraph as
 
 $$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(B_i) \quad \text{penalty}(c_i, w_i) \quad \text{glue}(m_i, s^+, s^-).$$
 
 Here:
 
-- $B_i$ is the neume width. An anonymous spacer box may be inserted before $B_i$ to hold a break-only leading reservation: the bar width plus fixed leading clearance when the preceding martyria has a transferable bar (see above), and a leading-hyphen reservation when the preceding note is hyphenated (see below). $B_i$ itself is unchanged.
+- $B_i$ is the note's layout advance, including `spaceAfter`. An anonymous spacer box may be inserted before $B_i$ to hold a break-only leading reservation: the bar width plus collision-aware leading clearance when the preceding martyria has a transferable bar (see above), and a leading-hyphen reservation when the preceding note is hyphenated (see below). $B_i$ itself is unchanged.
 - $L_i$ is the left projection, fixed and unbreakable, and omitted when zero.
 - The leading $\text{penalty}(\infty)$ is an unbreakable barrier that protects $L_i$ at a line start. `positionItems` discards leading glue after a break only up to the first box or forbidden ($\infty$) penalty, so the leading penalty keeps $\text{glue}(L_i, 0, 0)$ out of the discarded region and it is counted rather than skipped. It is emitted together with $L_i$ and omitted when $L_i$ is zero; the note's first box then stops the discard scan instead.
 - $s^+$ and $s^-$ are the standard stretch and shrink budgets for an inter-note gap.
 - $c_i$ is the break cost: 0 for a normal break, $\infty$ to prohibit a break, or an intermediate value to discourage one.
-- $w_i$ is the penalty width, a conditional width counted only when a break occurs at this point. It reserves space for the current note's right projection, any melisma overhang that would extend past the right margin, terminal right-barline clearance, and measure-bar transfers, when the next note's left measure bar moves to this note's right side at a line break.
-- $m_i$ is the minimum same-line width required between notes $i$ and $i{+}1$.
+- $w_i$ is the penalty width, a conditional width counted only when a break occurs at this point. It reserves space for the current note's right projection, any melisma overhang that would extend past the right margin, terminal right-barline clearance, and a following note's left measure-bar transfer.
+- $m_i$ is the preferred same-line width between notes $i$ and $i{+}1$.
 
-On the same line, each inter-note gap contributes $m_i$ of width plus $s^+$ of stretch for distributed justification.
-The candidate penalty sits immediately after the neume; the post-break glue $\text{glue}(m_i, s^+, s^-)$ contributes both the fixed minimum distance and the stretch or shrink budget.
-The current implementation allows negative values only in the width $m_i$, when tuck absorption exceeds the base spacing; stretch and shrink are never negative.
+On the same line, each inter-note gap starts at $m_i$ and may use $s^+$ of stretch or $s^-$ of shrink during distributed justification.
+The candidate penalty sits immediately after the neume; the post-break glue $\text{glue}(m_i, s^+, s^-)$ carries both the preferred distance and its elasticity.
+Ordinary note-to-note spacing retains the full standard-glue shrink budget.
+Visual collision, measure-bar, lyric, and melisma clearance affect the preferred width $m_i$ but remain compressible during justification.
+The current implementation keeps stretch and shrink non-negative, but item widths may be negative.
+Negative glue widths can come from tuck absorption, user-requested negative inline spacing, or glue reductions paired with line-start reservation boxes.
+A negative user spacing adjustment survives at an ordinary note pair when the visual helper reports only its generic zero clamp rather than a real positive collision requirement; lyric and measure-bar preferences still take precedence when computing $m_i$.
+Because `spaceAfter` is part of a note, martyria, or tempo box advance and may itself be negative, an extreme value can also make that box width negative.
 In other words, all stretchability lives in the same glue that carries the same-line boundary width.
 The implementation does not use a second glue of the form $\text{glue}(m_i, -s^+, -s^-)$.
 
@@ -270,8 +288,11 @@ This prevents positive adjustment ratio from being spent as invisible stretch af
 The next note's left projection $\text{glue}(L_{i+1}, 0, 0)$ lies past that barrier, so it is not discarded and protects the left edge of the new line.
 The penalty width $w_i$ remains the break-only quantity: it cannot live in the post-break glue, because that glue disappears at breaks.
 Its job is to reserve space for the right projection, melisma lyric overhang, terminal right-barline clearance, and measure-bar transfers that matter only at line end.
+`getBreakPenaltyWidth` also calculates the left-bar transfer for a following martyria, but the automatic note-to-martyria breakpoint has `MAX_COST` and cannot select that width.
+When an explicit break starts the next paragraph with that martyria, Phase 2 performs the visual transfer directly.
 
-When a hyphenated note is immediately followed by a note that carries lyrics, and a break is taken between them, a lyric hyphen is drawn at the start of the next line, before that lyric.
+When a hyphenated note is eligible for a leading hyphen, is immediately followed by a note that carries lyrics, and a break is taken between them, a lyric hyphen is drawn at the start of the next line, before that lyric.
+Eligibility depends on the Greek-melisma settings and the active lyric run; `mayShowLeadingLyricHyphen` contains the exact test.
 Like the measure-bar transfer, this reserves space at the start of the next line rather than at the end of the current one, so it uses a spacer-and-cancel pattern rather than the penalty width $w_i$.
 The boundary's post-break glue is narrowed by the extra leading width the line-start hyphen needs, and an anonymous spacer box of that width is inserted before the next note's box.
 On the same line the narrowed glue and the spacer cancel, leaving the note's position unchanged.
@@ -283,13 +304,13 @@ If a paragraph ends immediately after a note, `endParagraph` materializes that n
 It also reserves the clearance before a terminal right barline.
 It must do this because `removeGlue` strips the trailing post-break glue, while the forced break itself contributes penalty width 0.
 
-When a martyria follows a note, the martyria path replaces the note's trailing post-break glue with martyria glue: font-default martyria glue in the usual case, or the infinite-stretch right-martyria glue when the martyria is right-aligned.
+When a martyria follows a note, the martyria path replaces the note's trailing post-break glue: with font-default martyria glue in the usual case, standard glue when the martyria has a left tempo sign, or the dominant-stretch right-martyria glue when the martyria is right-aligned.
 When a non-right-aligned martyria follows a standalone tempo sign, the same replacement path uses standard glue and skips the pre-martyria lyric-collision spacer.
 Ordinary note-to-martyria lyric collision is still handled by `addLyricReservation`.
 However, if a melisma lyric overhang extends past the last neume, that remaining overhang is first materialized into the replacement martyria glue width so that it is not lost when the note's post-break glue is removed.
 A right-aligned martyria also preserves terminal right-barline clearance when it replaces the note's trailing glue.
 
-### Computing the minimum same-line width
+### Computing the preferred same-line width
 
 The code computes $m_i$ directly, rather than trying to force all lyric behavior into a single "reserve the full overshoot" rule.
 Conceptually,
@@ -305,7 +326,7 @@ First, some reservation can be _reclaimed_ when lyrics tuck under neighboring ne
 
 Second, if the resulting lyric gap is still too small, a collision correction is added back.
 So the code does not reserve lyric overshoot mechanically.
-It reserves only the width that is actually needed on the same line after tuck opportunities have been taken into account.
+It reserves only the preferred natural width needed on the same line after tuck opportunities have been taken into account.
 
 Before applying visual-ink and measure-bar floors, the same-line width is computed as
 
@@ -321,7 +342,7 @@ There is one deliberate exception to the ordinary base expression.
 When `exitsMelismaIntoCenteredLyric` is true, a carried melisma is ending at a non-melisma note whose centered lyric has a positive left projection.
 In that case the current cursor is already after the previous note's `spaceAfter`, so the code starts from base width 0 instead of $s_0 + R_i - T_i^\text{left} - T_i^\text{right}$.
 This aligns the next centered lyric's left edge with that cursor while preserving the user-defined extra spacing already included in the cursor position.
-The collision correction $\ell_i$ still runs afterward, including the carried-melisma check against `melismaLyricsEndPx`, and the final result is still floored by the visible note and measure-bar minimums.
+The collision correction $\ell_i$ still runs afterward, including the carried-melisma check against `melismaLyricsEndPx`, and the final result is still raised to the preferred visible-note and measure-bar widths.
 
 The collision check is geometry-based.
 When both notes carry lyrics, the code computes the actual visual gap between them from the neume overhangs relative to their lyrics, then adds back only the missing amount.
@@ -330,12 +351,12 @@ If the hyphen extends past the current neume, it appears in the carried melisma 
 If the hyphen fits entirely inside a wide current neume, there is no positive line-end overhang to reserve, so the same-line collision correction must still reserve enough visible gap for the hyphen glyph plus the ordinary lyric spacing.
 The same mechanism also handles melisma-to-non-melisma transitions.
 For same-line spacing, the carried lyric end is treated as a signed distance from the current cursor, so the next syllable is pushed right only as much as necessary whether the carried lyric ends before or after that cursor.
-After this lyric calculation, the boundary is floored by any visible note collision minimum and by any visible measure-bar minimum, with the next note's absorbed left projection subtracted so that long lyrics can still tuck left on the same line.
+After this lyric calculation, the boundary is raised to any larger preferred visible-note or measure-bar width, with the next note's absorbed left projection subtracted so that long lyrics can still tuck left on the same line.
 
 ### Break-only reservation
 
 The break-only reservation is simpler.
-Let $\textit{melismaOverhang}_i$ be the distance by which the current syllable, tracked by `melismaLyricsEndPx`, still extends past the current neume; let $\textit{terminalBarline}_i$ be the clearance reserved when the current note's right barline remains terminal at a break; and let $\textit{measureBarTransfer}_i$ be the width that must be reserved when a left measure bar on the next note transfers to the right side of the current note at a break:
+Let $\textit{melismaOverhang}_i$ be the distance by which the current syllable, tracked by `melismaLyricsEndPx`, still extends past the current neume; let $\textit{terminalBarline}_i$ be the clearance reserved when the current note's right barline remains terminal at a break; and let $\textit{measureBarTransfer}_i$ be the width that must be reserved when the following note's left measure bar transfers to the right side of the current note at a break:
 
 $$w_i = \max(R_i, \textit{melismaOverhang}_i) + \textit{terminalBarline}_i + \textit{measureBarTransfer}_i.$$
 
@@ -351,7 +372,7 @@ After all of the lyric geometry has been reduced to these quantities:
 ### Melismas
 
 Melisma lyrics require special treatment.
-When a melisma starts with a lyric wider than the neume, the lyric is left-aligned and extends to the right under subsequent melisma neumes.
+When an eligible melisma start passes `shouldAlignLeft`'s lyric-vs-neume width test, the lyric is left-aligned and extends to the right under subsequent melisma neumes.
 Therefore the code does _not_ encode the entire excess width as a right projection on the start note.
 
 Instead:
@@ -372,31 +393,31 @@ The `tex-linebreak` library exposes this through `initialMaxAdjustmentRatio` and
 We use those parameters, but not in the library's built-in "try one pass, then relax and accept the first feasible answer" style.
 Since Byzantine notation has no analogue of hyphenation, the candidate note sequence is the same on every pass, so we can search over the ratio cap itself.
 
-The optimization is therefore lexicographic:
+The policy is tiered rather than globally lexicographic:
 
-1. Minimize the worst positive adjustment ratio in the paragraph.
-2. Subject to that minimal cap, minimize the ordinary Knuth-Plass demerits.
+1. If a solution exists with every positive adjustment ratio at or below 1, minimize the ordinary Knuth-Plass demerits within that cap. The code does not try to minimize the worst ratio below 1.
+2. Otherwise, approximate the smallest feasible cap above 1, round it up to a small bucket, and minimize ordinary demerits within that relaxed cap.
 
 In code, we first ask whether the paragraph can be broken with $r \le 1$ by setting
 `maxAdjustmentRatio = 1` and `initialMaxAdjustmentRatio = 1`.
-If that fails, we search for the smallest finite cap $R > 1$ for which the paragraph becomes feasible.
+If that fails, we search for an approximation to the smallest finite cap $R > 1$ for which the paragraph becomes feasible.
 We do this by doubling upward until a feasible cap is found and then binary-searching that interval.
-Once the minimal feasible cap has been located, we round it up to the next small bucket before the final solve.
+Once the search has narrowed the feasible cap, we round the best feasible solution's maximum positive ratio up to the next small bucket before the final solve.
 At present that bucket size is `0.05`, so a paragraph whose true minimum is, say, `1.12` is finally solved at cap `1.15`.
 This deliberately gives the optimizer a small tolerance band in which breakpoint penalties can still break ties, rather than forcing it to spend a strong semantic penalty merely to shave a few hundredths off the worst line.
 
 The important point is that, whenever a finite cap is in force, we set both ratio options to the same value.
 This library takes the effective cap to be the minimum of `initialMaxAdjustmentRatio` and `maxAdjustmentRatio`, so leaving the initial pass at a different value would quietly impose a different threshold than the one we are searching for.
-If the upward search fails to find any finite feasible cap before the hard ceiling (currently `4096`), the code falls back to an uncapped solve by using `maxAdjustmentRatio = null` and `initialMaxAdjustmentRatio = Infinity`.
+If the upward search fails to find any finite feasible cap at or below the hard ceiling (currently `4096`), the code falls back to an uncapped solve by using `maxAdjustmentRatio = null` and `initialMaxAdjustmentRatio = Infinity`.
 
 This formulation cleanly separates the two use cases we care about:
 
-- when all candidate lines can stay at or below $r = 1$, the solver fully uses the breakpoint penalties to choose among those tight and neutral layouts;
+- when the paragraph has a feasible layout at or below $r = 1$, the solver fully uses the ordinary demerits and breakpoint penalties to choose among all layouts under that cap;
 - once every solution requires some looseness, the primary objective becomes keeping the maximum ratio as small as possible, so a breakpoint that yields $r = 1.1$ can beat one that yields $r = 1.3$ even if the former is discouraged.
 
-Within a fixed cap, the ordinary Knuth-Plass scoring still applies.
-That means breakpoint penalties continue to matter as tie-breakers among layouts whose worst line is equally loose, and `adjacentLooseTightPenalty` still discourages abrupt fitness-class jumps between neighboring lines.
-The `0.05` bucket makes this tie-breaking zone slightly wider on purpose.
+Within a fixed cap, the ordinary Knuth-Plass scoring applies across all layouts that satisfy the cap; it does not separately prefer the smallest maximum ratio inside that feasible set.
+Breakpoint penalties therefore can select a semantically preferable layout with a slightly larger ratio inside the same bucket, and `adjacentLooseTightPenalty` still discourages abrupt fitness-class jumps between neighboring lines.
+The `0.05` bucket creates this small tradeoff zone on purpose.
 
 ## Relaxing $\TeX$'s Restriction 1
 
@@ -510,7 +531,8 @@ $$F(c) > L + a.\text{totalWidth} - a.\text{totalShrink},$$
 then every later segment floor satisfies $F_a(c) > L$, so every such line remains overfull.
 In that case no future breakpoint can rescue $a$, and pruning is safe.
 
-This is exactly what the implementation computes: the suffix minimum of $F(b)$ over strictly later breakpoints, followed by a comparison with the node-dependent threshold.
+For ordinary active nodes, this is what the implementation computes: the suffix minimum of $F(b)$ over strictly later breakpoints, followed by a comparison with the node-dependent threshold.
+There is one conservative exception: if the paragraph contains any negative width, fallback active nodes are not pruned with this test.
 
 ### What can go wrong
 
@@ -557,7 +579,7 @@ For that reason the implementation also disables the optimization whenever any g
 
 ### Implementation
 
-The relaxation adds a small $O(n)$ precomputation ahead of the usual dynamic-programming pass:
+When no glue has negative stretch or shrink, the relaxation adds a small $O(n)$ precomputation ahead of the usual dynamic-programming pass:
 
 1. A forward pass walks the paragraph once and records the floor
 
@@ -571,6 +593,7 @@ During the main search, the pruning rule becomes:
 
 - keep the classic $\TeX$ check $r < -1$ for the current breakpoint;
 - prune only if the suffix-minimum floor is still above the active node's overfull threshold;
+- do not apply the pruning test to a fallback active node if any item in the paragraph has negative width;
 - disable the optimization entirely if any glue has negative stretch or negative shrink.
 
 This preserves the original asymptotic complexity.
@@ -578,15 +601,15 @@ The extra work is linear in the number of items and requires one additional arra
 
 ### Results
 
-For the Byzantine music inputs that motivated this work, the relaxation preserves the useful $\TeX$ pruning behavior even when negative widths appear in the paragraph encoding.
+For the Byzantine music inputs that motivated this work, the relaxation preserves useful $\TeX$ pruning behavior for ordinary active nodes even when negative widths appear in the paragraph encoding.
 The old "any negative value disables pruning" rule was safe, but it threw away pruning in exactly the cases where a later breakpoint could still rescue the line.
-The new rule keeps those rescuing cases alive while still pruning nodes that are genuinely irrecoverable.
+The new rule keeps those rescuing cases alive while still pruning ordinary nodes that are genuinely irrecoverable; fallback nodes remain conservative when any width is negative.
 
 The asymptotic worst-case bound does not change.
 With or without the relaxation, the dynamic-programming search is still worst-case $O(\min(wn, n^2))$.
 What changes is the practical behavior on negative-width inputs.
 Under the old rule, any negative value disabled pruning entirely, so those inputs were pushed much more often toward the unpruned quadratic search.
-Under the new rule, the supported negative-width cases recover the same pruning logic used in the ordinary non-negative setting, so they avoid that needless loss of pruning.
+Under the new rule, the supported negative-width cases recover the ordinary pruning logic for non-fallback active nodes, so they avoid much of that needless loss of pruning.
 In other words, the relaxation does not improve the formal worst-case bound; it prevents negative-width music inputs from suffering an avoidable practical degradation toward that worst case.
 
 ## Future work

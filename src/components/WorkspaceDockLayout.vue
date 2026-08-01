@@ -1910,7 +1910,7 @@ watch(
 }
 
 .workspace-dock-layout-container,
-.workspace-dock-layout {
+.workspace-dock-layout-container > :deep(.workspace-dock-layout) {
   flex: 1;
   min-width: 0;
   min-height: 0;
@@ -1983,7 +1983,7 @@ watch(
   outline: none !important;
 }
 
-.workspace-dock-layout,
+.workspace-dock-layout-container > :deep(.workspace-dock-layout),
 .workspace-dock-layout-container :deep(.dv-shell),
 .workspace-dock-layout-container :deep(.dv-floating-overlay-host),
 .workspace-dock-layout-container :deep(.dv-render-overlay),
@@ -2072,7 +2072,7 @@ watch(
    * branch while leaving the rest hideable.
    */
   .workspace-dock-layout-container,
-  .workspace-dock-layout,
+  .workspace-dock-layout-container > :deep(.workspace-dock-layout),
   :deep(.dv-shell:has(.workspace-center-editor)),
   :deep(.dv-dockview:has(.workspace-center-editor)),
   :deep(.dv-grid-view:has(.workspace-center-editor)),

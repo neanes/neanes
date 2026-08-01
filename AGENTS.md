@@ -21,7 +21,7 @@ Enable the pinned npm first with `corepack enable npm`.
 - `npm run coverage` - Vitest with `istanbul` coverage.
 - `npm run docs:dev` - VitePress docs site (`docs/`).
 
-Useful development environment variables (put in `.env.local`, or `.env.web.local` for web): `FAKE_UPDATE_AVAILABLE=1` simulates the updater flow without publishing; `VITE_ENABLE_DEV_TOOLS=true` enables Vue Devtools; `VITE_PSEUDOLOCALIZATION=true` pseudolocalizes all strings; `VITE_AUDIO_SERVICE_LOGGING_ENABLED` and `VITE_PLAYBACK_SERVICE_LOGGING_ENABLED` enable audio/playback logs.
+Useful development environment variables (put in `.env.local`, or `.env.web.local` for web): `FAKE_UPDATE_AVAILABLE=1` simulates the updater flow without publishing; `VITE_ENABLE_DEV_TOOLS=true` enables Vue Devtools; `VITE_PSEUDOLOCALIZATION=true` pseudolocalizes all strings; `VITE_AUDIO_SERVICE_LOGGING_ENABLED`, `VITE_PLAYBACK_SERVICE_LOGGING_ENABLED`, and `VITE_LAYOUT_SERVICE_LOGGING_ENABLED` enable audio/playback/layout logs.
 
 ## Architecture
 

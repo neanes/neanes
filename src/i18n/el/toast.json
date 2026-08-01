@@ -40,6 +40,7 @@
     "latexSuccess": "Το LaTeX εξήχθη",
     "latexFailed": "Η εξαγωγή LaTeX απέτυχε",
     "latexFailedDescription": "Δεν ήταν δυνατή η εξαγωγή LaTeX.",
+    "latexFontFaceUnresolvedDescription": "Δεν ήταν δυνατή η εύρεση της ακριβούς γραμματοσειράς PostScript για «{{fontFamily}}», στυλ «{{fontStyle}}». Εγκαταστήστε τη γραμματοσειρά και δοκιμάστε ξανά.",
     "pngFailed": "Η εξαγωγή PNG απέτυχε",
     "pngStartFailedDescription": "Δεν ήταν δυνατή η έναρξη της εξαγωγής PNG.",
     "pngFileFailedDescription": "Δεν ήταν δυνατή η εξαγωγή του αρχείου PNG.",

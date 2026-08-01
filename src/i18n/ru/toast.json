@@ -40,6 +40,7 @@
     "latexSuccess": "LaTeX экспортирован",
     "latexFailed": "Не удалось экспортировать LaTeX",
     "latexFailedDescription": "Не удалось экспортировать LaTeX.",
+    "latexFontFaceUnresolvedDescription": "Не удалось определить точное начертание PostScript для «{{fontFamily}}» со стилем «{{fontStyle}}». Установите шрифт и повторите попытку.",
     "pngFailed": "Не удалось экспортировать PNG",
     "pngStartFailedDescription": "Не удалось начать экспорт PNG.",
     "pngFileFailedDescription": "Не удалось экспортировать файл PNG.",

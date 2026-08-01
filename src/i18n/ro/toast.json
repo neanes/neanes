@@ -40,6 +40,7 @@
     "latexSuccess": "LaTeX exportat",
     "latexFailed": "Exportul LaTeX a eșuat",
     "latexFailedDescription": "Nu s-a putut exporta LaTeX.",
+    "latexFontFaceUnresolvedDescription": "Nu s-a putut determina fața PostScript exactă pentru „{{fontFamily}}”, stilul „{{fontStyle}}”. Instalați fontul și încercați din nou.",
     "pngFailed": "Exportul PNG a eșuat",
     "pngStartFailedDescription": "Nu s-a putut porni exportul PNG.",
     "pngFileFailedDescription": "Nu s-a putut exporta fișierul PNG.",

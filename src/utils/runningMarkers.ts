@@ -45,38 +45,39 @@ export interface RunningMarkerPageMetadata {
   isChapterOpening: boolean;
 }
 
-interface RunningMarkerState {
-  chapter: string;
-  section: string;
+// Resolves one page against the previous page's metadata (null for the first
+// page). Page metadata is a left fold: it depends only on the page's own
+// content and the previous page's metadata, so callers that build pages
+// incrementally can resolve each page once instead of re-resolving the whole
+// array as it grows.
+export function resolveNextRunningMarkerPageMetadata(
+  page: Page,
+  previous: RunningMarkerPageMetadata | null,
+): RunningMarkerPageMetadata {
+  const firstChapter = getFirstRunningMarkerForPage(page, 'chapter');
+  const firstSection = getFirstRunningMarkerForPage(page, 'section');
+
+  const previousChapter = previous?.chapter ?? '';
+  const chapter = firstChapter ?? previousChapter;
+  const section =
+    firstSection ?? (firstChapter != null ? '' : (previous?.section ?? ''));
+
+  return {
+    chapter,
+    section,
+    isChapterOpening: firstChapter != null && chapter !== previousChapter,
+  };
 }
 
 export function resolveRunningMarkerPageMetadata(
   pages: Page[],
 ): RunningMarkerPageMetadata[] {
   const metadata: RunningMarkerPageMetadata[] = [];
-  let state: RunningMarkerState = {
-    chapter: '',
-    section: '',
-  };
+  let previous: RunningMarkerPageMetadata | null = null;
 
   for (const page of pages) {
-    const firstChapter = getFirstRunningMarkerForPage(page, 'chapter');
-    const firstSection = getFirstRunningMarkerForPage(page, 'section');
-
-    const nextChapter = firstChapter ?? state.chapter;
-    const nextSection =
-      firstSection ?? (firstChapter != null ? '' : state.section);
-
-    metadata.push({
-      chapter: nextChapter,
-      section: nextSection,
-      isChapterOpening: firstChapter != null && nextChapter !== state.chapter,
-    });
-
-    state = {
-      chapter: nextChapter,
-      section: nextSection,
-    };
+    previous = resolveNextRunningMarkerPageMetadata(page, previous);
+    metadata.push(previous);
   }
 
   return metadata;

@@ -6,7 +6,9 @@ export function getFontFamilyWithFallback(
 }
 
 export function getLegacyNeumeFontFamily(family: string) {
-  return family === 'Neanes' || family === 'NeanesStathisSeries'
+  return family === 'Neanes' ||
+    family === 'NeanesRTL' ||
+    family === 'NeanesStathisSeries'
     ? family + 'Legacy'
     : family;
 }

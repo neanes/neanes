@@ -844,7 +844,7 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasNumberV1,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
-    defaultAppearance: sourceSerifAppearance(),
+    defaultAppearance: defaultAppearance('Old Standard'),
     filters: {
       numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
       usesPlagalTerminology: false,
@@ -867,7 +867,7 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasCyrillicNumeralV1,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
-    defaultAppearance: sourceSerifAppearance(),
+    defaultAppearance: defaultAppearance('Old Standard'),
     filters: {
       numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.CyrillicNumerals,
       usesPlagalTerminology: false,
@@ -890,7 +890,7 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasOrdinalV1,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
-    defaultAppearance: sourceSerifAppearance(),
+    defaultAppearance: defaultAppearance('Old Standard'),
     filters: {
       numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords,
       usesPlagalTerminology: false,

@@ -509,6 +509,18 @@ function languageName(languageId: InitialMartyriaLanguageId) {
       return t(($) => $.dialog.initialMartyriaStyles.languages.english, {
         ns: 'dialog',
       });
+    case 'es':
+      return t(($) => $.dialog.initialMartyriaStyles.languages.spanish, {
+        ns: 'dialog',
+      });
+    case 'cu':
+      return t(($) => $.dialog.initialMartyriaStyles.languages.churchSlavonic, {
+        ns: 'dialog',
+      });
+    case 'ru':
+      return t(($) => $.dialog.initialMartyriaStyles.languages.russian, {
+        ns: 'dialog',
+      });
     case 'ro':
       return t(($) => $.dialog.initialMartyriaStyles.languages.romanian, {
         ns: 'dialog',
@@ -585,9 +597,12 @@ function resetAppearance() {
 
 function previewsForStyle(styleId: BuiltInInitialMartyriaStyleId) {
   const configuration =
-    workingConfiguration.value?.styleId === styleId
-      ? cloneInitialMartyriaConfiguration(workingConfiguration.value)
-      : createInitialMartyriaConfiguration(styleId);
+    workingConfiguration.value == null
+      ? createInitialMartyriaConfiguration(styleId)
+      : {
+          ...cloneInitialMartyriaConfiguration(workingConfiguration.value),
+          styleId,
+        };
   return representativeTemplateIds.map((templateId) => {
     const template = modeKeyTemplates.find((item) => item.id === templateId)!;
     return createPreviewElement(template, configuration);

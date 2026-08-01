@@ -12,6 +12,9 @@ export type ModeKeyMode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export const INITIAL_MARTYRIA_LANGUAGE_IDS = {
   Greek: 'el',
   English: 'en',
+  Spanish: 'es',
+  ChurchSlavonic: 'cu',
+  Russian: 'ru',
   Romanian: 'ro',
 } as const;
 
@@ -36,6 +39,21 @@ export const initialMartyriaLanguages: InitialMartyriaLanguage[] = [
     direction: 'ltr',
   },
   {
+    id: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    languageTag: 'es',
+    direction: 'ltr',
+  },
+  {
+    id: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+    languageTag: 'cu',
+    direction: 'ltr',
+  },
+  {
+    id: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
+    languageTag: 'ru',
+    direction: 'ltr',
+  },
+  {
     id: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
     languageTag: 'ro',
     direction: 'ltr',
@@ -48,10 +66,21 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   EnglishSignFirstV1: 'builtin:english-sign-first-v1',
   EnglishModeBeforeSignV1: 'builtin:english-mode-before-sign-v1',
   EnglishOrdinalV1: 'builtin:english-ordinal-v1',
-  EnglishNumberedV1: 'builtin:english-numbered-v1',
+  EnglishModeNumberV1: 'builtin:english-mode-number-v1',
+  EnglishModeRomanNumeralV1: 'builtin:english-mode-roman-numeral-v1',
+  EnglishModeNumberWordV1: 'builtin:english-mode-number-word-v1',
   EnglishFullNameV1: 'builtin:english-full-name-v1',
   EnglishPlagalNumberV1: 'builtin:english-plagal-number-v1',
-  EnglishOrdinalPlagalV1: 'builtin:english-ordinal-plagal-v1',
+  EnglishPlagalRomanNumeralV1: 'builtin:english-plagal-roman-numeral-v1',
+  EnglishPlagalNumberWordV1: 'builtin:english-plagal-number-word-v1',
+  SpanishTonoNumberV1: 'builtin:spanish-tono-number-v1',
+  SpanishTonoRomanNumeralV1: 'builtin:spanish-tono-roman-numeral-v1',
+  SpanishTonoOrdinalV1: 'builtin:spanish-tono-ordinal-v1',
+  SpanishOrdinalTonoV1: 'builtin:spanish-ordinal-tono-v1',
+  ChurchSlavonicGlasNumberV1: 'builtin:church-slavonic-glas-number-v1',
+  ChurchSlavonicGlasOrdinalV1: 'builtin:church-slavonic-glas-ordinal-v1',
+  RussianGlasNumberV1: 'builtin:russian-glas-number-v1',
+  RussianGlasOrdinalV1: 'builtin:russian-glas-ordinal-v1',
   RomanianGlasNumberV1: 'builtin:romanian-glas-number-v1',
   RomanianGlasV1: 'builtin:romanian-glas-v1',
 } as const;
@@ -75,14 +104,36 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
     $.dialog.initialMartyriaStyles.builtInStyles.englishModeBeforeSign,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishOrdinal,
-  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishNumberedV1]: ($) =>
-    $.dialog.initialMartyriaStyles.builtInStyles.englishNumbered,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNumberV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishModeNumber,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeRomanNumeralV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishModeRomanNumeral,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNumberWordV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishModeNumberWord,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishFullNameV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishFullName,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalNumberV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishPlagalNumber,
-  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalPlagalV1]: ($) =>
-    $.dialog.initialMartyriaStyles.builtInStyles.englishFullName,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalRomanNumeralV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishPlagalRomanNumeral,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalNumberWordV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishPlagalNumberWord,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumberV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.spanishTonoNumber,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoRomanNumeralV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.spanishTonoRomanNumeral,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoOrdinalV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.spanishTonoOrdinal,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishOrdinalTonoV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.spanishOrdinalTono,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasNumberV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.churchSlavonicGlasNumber,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasOrdinalV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.churchSlavonicGlasOrdinal,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasNumberV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.russianGlasNumber,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasOrdinalV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.russianGlasOrdinal,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.romanianGlasNumber,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1]: ($) =>
@@ -298,6 +349,42 @@ const transliteratedGreekNoteNames: InitialMartyriaNoteNames = {
   languageTag: 'en',
 };
 
+const spanishTransliteratedNoteNames: InitialMartyriaNoteNames = {
+  names: {
+    [ModeSign.Ni]: 'Ni',
+    [ModeSign.Pa]: 'Pa',
+    [ModeSign.Vou]: 'Vu',
+    [ModeSign.Ga]: 'Ga',
+    [ModeSign.Thi]: 'Di',
+    [ModeSign.Ke]: 'Ke',
+    [ModeSign.Zo]: 'Zo',
+  },
+  direction: 'ltr',
+  languageTag: 'es',
+};
+
+const cyrillicTransliteratedNoteNames: InitialMartyriaNoteNames['names'] = {
+  [ModeSign.Ni]: 'Ни',
+  [ModeSign.Pa]: 'Па',
+  [ModeSign.Vou]: 'Ву',
+  [ModeSign.Ga]: 'Га',
+  [ModeSign.Thi]: 'Ди',
+  [ModeSign.Ke]: 'Ке',
+  [ModeSign.Zo]: 'Зо',
+};
+
+const churchSlavonicTransliteratedNoteNames: InitialMartyriaNoteNames = {
+  names: cyrillicTransliteratedNoteNames,
+  direction: 'ltr',
+  languageTag: 'cu',
+};
+
+const russianTransliteratedNoteNames: InitialMartyriaNoteNames = {
+  names: cyrillicTransliteratedNoteNames,
+  direction: 'ltr',
+  languageTag: 'ru',
+};
+
 function text(
   content: string,
   modes?: ModeKeyMode[],
@@ -355,12 +442,17 @@ function builtIn(options: {
   languageId: InitialMartyriaLanguageId;
   defaultAppearance: InitialMartyriaDefaultAppearance;
   components: InitialMartyriaComponent[];
+  transliteratedNoteNames?: InitialMartyriaNoteNames;
 }): InitialMartyriaStyle {
+  const {
+    transliteratedNoteNames = transliteratedGreekNoteNames,
+    ...styleOptions
+  } = options;
   return {
-    ...options,
+    ...styleOptions,
     flowDirection: 'page',
     originalNoteNames: originalGreekNoteNames,
-    transliteratedNoteNames: transliteratedGreekNoteNames,
+    transliteratedNoteNames,
   };
 }
 
@@ -437,7 +529,7 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     ],
   }),
   builtIn({
-    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishNumberedV1,
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNumberV1,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     defaultAppearance: sourceSerifAppearance(),
     components: [
@@ -456,6 +548,44 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     ],
   }),
   builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeRomanNumeralV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      text('Mode'),
+      text('I', [1]),
+      text('II', [2]),
+      text('III', [3]),
+      text('IV', [4]),
+      text('V', [5]),
+      text('VI', [6]),
+      text('VII', [7]),
+      text('VIII', [8]),
+      plagalAbbreviation(),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNumberWordV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      text('Mode'),
+      text('One', [1]),
+      text('Two', [2]),
+      text('Three', [3]),
+      text('Four', [4]),
+      text('Five', [5]),
+      text('Six', [6]),
+      text('Seven', [7]),
+      text('Eight', [8]),
+      plagalAbbreviation(),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishFullNameV1,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     defaultAppearance: sourceSerifAppearance(),
@@ -465,10 +595,10 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
       text('Second', [2]),
       text('Third', [3]),
       text('Fourth', [4]),
-      text('Fifth', [5]),
-      text('Sixth', [6]),
+      text('First', [5]),
+      text('Second', [6]),
       text('Grave', [7]),
-      text('Eighth', [8]),
+      text('Fourth', [8]),
       text('Mode'),
       modeSign(),
       startingPitch(),
@@ -491,17 +621,185 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     ],
   }),
   builtIn({
-    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalPlagalV1,
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalRomanNumeralV1,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     defaultAppearance: sourceSerifAppearance(),
     components: [
-      text('First', [1, 5]),
-      text('Second', [2, 6]),
-      text('Third', [3]),
-      text('Fourth', [4, 8]),
+      text('Plagal', [5, 6, 8]),
       text('Grave', [7]),
       text('Mode'),
+      text('I', [1, 5]),
+      text('II', [2, 6]),
+      text('III', [3]),
+      text('IV', [4, 8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalNumberWordV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
       text('Plagal', [5, 6, 8]),
+      text('Grave', [7]),
+      text('Mode'),
+      text('One', [1, 5]),
+      text('Two', [2, 6]),
+      text('Three', [3]),
+      text('Four', [4, 8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumberV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    defaultAppearance: sourceSerifAppearance(),
+    transliteratedNoteNames: spanishTransliteratedNoteNames,
+    components: [
+      text('Tono'),
+      text('1', [1]),
+      text('2', [2]),
+      text('3', [3]),
+      text('4', [4]),
+      text('5', [5]),
+      text('6', [6]),
+      text('7', [7]),
+      text('8', [8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoRomanNumeralV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    defaultAppearance: sourceSerifAppearance(),
+    transliteratedNoteNames: spanishTransliteratedNoteNames,
+    components: [
+      text('Tono'),
+      text('I', [1]),
+      text('II', [2]),
+      text('III', [3]),
+      text('IV', [4]),
+      text('V', [5]),
+      text('VI', [6]),
+      text('VII', [7]),
+      text('VIII', [8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoOrdinalV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    defaultAppearance: sourceSerifAppearance(),
+    transliteratedNoteNames: spanishTransliteratedNoteNames,
+    components: [
+      text('Tono'),
+      text('Primero', [1]),
+      text('Segundo', [2]),
+      text('Tercero', [3]),
+      text('Cuarto', [4]),
+      text('Quinto', [5]),
+      text('Sexto', [6]),
+      text('Séptimo', [7]),
+      text('Octavo', [8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishOrdinalTonoV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    defaultAppearance: sourceSerifAppearance(),
+    transliteratedNoteNames: spanishTransliteratedNoteNames,
+    components: [
+      text('Primer', [1]),
+      text('Segundo', [2]),
+      text('Tercer', [3]),
+      text('Cuarto', [4]),
+      text('Quinto', [5]),
+      text('Sexto', [6]),
+      text('Séptimo', [7]),
+      text('Octavo', [8]),
+      text('Tono'),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasNumberV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+    defaultAppearance: sourceSerifAppearance(),
+    transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
+    components: [
+      text('Гласъ'),
+      text('1', [1]),
+      text('2', [2]),
+      text('3', [3]),
+      text('4', [4]),
+      text('5', [5]),
+      text('6', [6]),
+      text('7', [7]),
+      text('8', [8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasOrdinalV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+    defaultAppearance: sourceSerifAppearance(),
+    transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
+    components: [
+      text('Гласъ'),
+      text('пе́рвый', [1]),
+      text('вторы́й', [2]),
+      text('тре́тій', [3]),
+      text('четве́ртый', [4]),
+      text('пяты́й', [5]),
+      text('шесты́й', [6]),
+      text('седьмы́й', [7]),
+      text('осмы́й', [8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasNumberV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
+    defaultAppearance: sourceSerifAppearance(),
+    transliteratedNoteNames: russianTransliteratedNoteNames,
+    components: [
+      text('Глас'),
+      text('1', [1]),
+      text('2', [2]),
+      text('3', [3]),
+      text('4', [4]),
+      text('5', [5]),
+      text('6', [6]),
+      text('7', [7]),
+      text('8', [8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasOrdinalV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
+    defaultAppearance: sourceSerifAppearance(),
+    transliteratedNoteNames: russianTransliteratedNoteNames,
+    components: [
+      text('Глас'),
+      text('первый', [1]),
+      text('второй', [2]),
+      text('третий', [3]),
+      text('четвёртый', [4]),
+      text('пятый', [5]),
+      text('шестой', [6]),
+      text('седьмой', [7]),
+      text('восьмой', [8]),
       modeSign(),
       startingPitch(),
     ],

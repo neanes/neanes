@@ -14,10 +14,18 @@ import {
   resolveInitialMartyriaStyleSelection,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
+import { ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 
 describe('InitialMartyriaStyle', () => {
-  it('gives every curated style a localized display name', () => {
+  it('defines every built-in ID exactly once with a localized display name', () => {
+    const styleIds = builtInInitialMartyriaStyles.map((style) => style.id);
+
+    expect(new Set(styleIds).size).toBe(styleIds.length);
+    expect(new Set(styleIds)).toEqual(
+      new Set(Object.values(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS)),
+    );
+
     for (const style of builtInInitialMartyriaStyles) {
       expect(
         getBuiltInInitialMartyriaStyleNameSelector(style.id),
@@ -67,6 +75,37 @@ describe('InitialMartyriaStyle', () => {
     ).toMatchObject({
       kind: 'custom',
       configuration: elementConfiguration,
+    });
+  });
+
+  it('uses language-specific note-name transliterations', () => {
+    const spanishStyle = builtInInitialMartyriaStyles.find(
+      (item) =>
+        item.id === BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumberV1,
+    )!;
+
+    expect(spanishStyle.transliteratedNoteNames).toMatchObject({
+      languageTag: 'es',
+      names: {
+        [ModeSign.Pa]: 'Pa',
+        [ModeSign.Vou]: 'Vu',
+        [ModeSign.Ga]: 'Ga',
+      },
+    });
+
+    const churchSlavonicStyle = builtInInitialMartyriaStyles.find(
+      (item) =>
+        item.id ===
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasNumberV1,
+    )!;
+
+    expect(churchSlavonicStyle.transliteratedNoteNames).toMatchObject({
+      languageTag: 'cu',
+      names: {
+        [ModeSign.Pa]: 'Па',
+        [ModeSign.Vou]: 'Ву',
+        [ModeSign.Ga]: 'Га',
+      },
     });
   });
 

@@ -237,6 +237,37 @@ describe('InitialMartyriaStyle', () => {
     }
   });
 
+  it('uses one font for every Greek style text role', () => {
+    const configuration = createInitialMartyriaConfiguration(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1,
+    );
+    configuration.appearanceOverrides.mainFontFamily = 'Source Serif';
+    configuration.appearanceOverrides.greekFontFamily = 'GFS Didot';
+    const element = ModeKeyElement.createFromTemplate(
+      modeKeyTemplates.find((template) => template.id === 500)!,
+    );
+
+    const resolved = resolveInitialMartyriaConfiguration(configuration)!;
+    const runs = resolveInitialMartyriaStyle({
+      context: getInitialMartyriaContext(element),
+      resolvedConfiguration: resolved,
+      pageSetup: new PageSetup(),
+    }).runs;
+
+    expect(resolved.mainAppearance.fontFamily).toBe('Source Serif');
+    expect(resolved.greekAppearance.fontFamily).toBe('Source Serif');
+    expect(
+      runs
+        .filter((run) => run.kind === 'text')
+        .every((run) => run.appearance.fontFamily === 'Source Serif'),
+    ).toBe(true);
+    const startingPitch = runs.find((run) => run.kind === 'startingPitch');
+    expect(startingPitch?.kind).toBe('startingPitch');
+    if (startingPitch?.kind === 'startingPitch') {
+      expect(startingPitch.noteText.appearance.fontFamily).toBe('Source Serif');
+    }
+  });
+
   it('clones appearance overrides without sharing mutable state', () => {
     const source = createInitialMartyriaConfiguration(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1,

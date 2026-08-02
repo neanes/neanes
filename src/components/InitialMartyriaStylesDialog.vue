@@ -195,9 +195,14 @@
             <Field>
               <FieldLabel for="initial-martyria-main-font">
                 {{
-                  $t(($) => $.dialog.initialMartyriaStyles.mainFont, {
-                    ns: 'dialog',
-                  })
+                  selectedStyle?.languageId ===
+                  INITIAL_MARTYRIA_LANGUAGE_IDS.Greek
+                    ? $t(($) => $.dialog.initialMartyriaStyles.textFont, {
+                        ns: 'dialog',
+                      })
+                    : $t(($) => $.dialog.initialMartyriaStyles.mainFont, {
+                        ns: 'dialog',
+                      })
                 }}
               </FieldLabel>
               <FontCombobox
@@ -570,12 +575,13 @@ const greekFontValue = computed({
 });
 const showGreekFontControl = computed(
   () =>
-    workingConfiguration.value?.transliterateNoteNames !== true ||
-    selectedStyle.value?.components.some(
-      (component) =>
-        (component.kind === 'text' || component.kind === 'stackedText') &&
-        component.fontRole === 'greek',
-    ) === true,
+    selectedStyle.value?.languageId !== INITIAL_MARTYRIA_LANGUAGE_IDS.Greek &&
+    (workingConfiguration.value?.transliterateNoteNames !== true ||
+      selectedStyle.value?.components.some(
+        (component) =>
+          (component.kind === 'text' || component.kind === 'stackedText') &&
+          component.fontRole === 'greek',
+      ) === true),
 );
 const showTransliterationControl = computed(
   () => selectedStyle.value?.languageId !== INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,

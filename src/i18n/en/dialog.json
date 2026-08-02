@@ -98,6 +98,7 @@
     },
     "standardDescription": "Use the traditional glyph-based Initial Martyria.",
     "transliterate": "Transliterate note names",
+    "textFont": "Text font",
     "mainFont": "Main text font",
     "greekTextFont": "Greek text font",
     "styleDefaultFont": "Style default — {{font}}",

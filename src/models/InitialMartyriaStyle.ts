@@ -1109,7 +1109,8 @@ function resolveAppearance(
   const defaults = style.defaultAppearance;
   const overrides = configuration.appearanceOverrides;
   const fontFamily =
-    fontRole === 'main'
+    fontRole === 'main' ||
+    style.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Greek
       ? (overrides.mainFontFamily ?? defaults.mainFontFamily)
       : (overrides.greekFontFamily ?? defaults.greekFontFamily);
   const color = overrides.color ?? defaults.color;

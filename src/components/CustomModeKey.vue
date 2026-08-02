@@ -199,7 +199,6 @@ import {
 import type { PageSetup } from '@/models/PageSetup';
 import { fontService } from '@/services/FontService';
 import {
-  getCapHeightMatchedTextFontSize,
   getInitialMartyriaNeumeBaselineCorrection,
   getInitialMartyriaPitchTrailingGlueWidth,
   getMatchedNeumeFontSize,
@@ -539,23 +538,7 @@ function getEffectiveRunFontSize(run: ResolvedInitialMartyriaRun) {
 }
 
 function getEffectiveTextFontSize(run: TextRun) {
-  const nominalFontSize = run.appearance.fontSize ?? neumeFontSize.value;
-  if (run.fontRole === 'main') {
-    return nominalFontSize;
-  }
-  const referenceAppearance = resolveInitialMartyriaBaseTextAppearance(
-    props.initialMartyriaConfiguration,
-  );
-  return getCapHeightMatchedTextFontSize({
-    fontFamily: run.appearance.fontFamily || neumeFontFamily.value,
-    fontStyle: run.appearance.fontStyle,
-    fontVariantCaps: run.appearance.fontVariantCaps,
-    referenceFontFamily:
-      referenceAppearance.fontFamily || neumeFontFamily.value,
-    referenceFontStyle: referenceAppearance.fontStyle,
-    referenceFontSize: referenceAppearance.fontSize ?? neumeFontSize.value,
-    referenceFontVariantCaps: referenceAppearance.fontVariantCaps,
-  });
+  return run.appearance.fontSize ?? neumeFontSize.value;
 }
 
 function getStackedTextGeometry(run: TextRun) {
@@ -668,18 +651,10 @@ type StartingPitchNote = NonNullable<StartingPitchRun['cluster']['primary']>;
 
 function getPitchFontSizes(run: StartingPitchRun) {
   const appearance = run.noteText.appearance;
-  const referenceAppearance = resolveInitialMartyriaBaseTextAppearance(
-    props.initialMartyriaConfiguration,
-  );
   return resolveInitialMartyriaPitchFontSizes({
     textFontFamily: appearance.fontFamily || neumeFontFamily.value,
     textFontStyle: appearance.fontStyle,
     textFontSize: appearance.fontSize,
-    referenceTextFontFamily:
-      referenceAppearance.fontFamily || neumeFontFamily.value,
-    referenceTextFontStyle: referenceAppearance.fontStyle,
-    referenceTextFontSize: referenceAppearance.fontSize,
-    referenceTextFontVariantCaps: referenceAppearance.fontVariantCaps,
     glyphFontSize: undefined,
     matchedNeumeFontSize: matchedNeumeFontSize.value,
     neumeFontFamily: neumeFontFamily.value,

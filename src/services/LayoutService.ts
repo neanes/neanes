@@ -97,7 +97,6 @@ import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
 import {
-  getCapHeightMatchedTextFontSize,
   getInitialMartyriaNeumeBaselineCorrection,
   getInitialMartyriaPitchTrailingGlueWidth,
   getMatchedNeumeFontSize,
@@ -2586,24 +2585,7 @@ export class LayoutService {
 
     const getEffectiveTextFontSize = (
       run: Extract<ResolvedInitialMartyriaRun, { kind: 'text' }>,
-    ) => {
-      const nominalFontSize =
-        run.appearance.fontSize ?? element.computedFontSize;
-      if (run.fontRole === 'main') {
-        return nominalFontSize;
-      }
-      return getCapHeightMatchedTextFontSize({
-        fontFamily: run.appearance.fontFamily ?? element.computedFontFamily,
-        fontStyle: run.appearance.fontStyle,
-        fontVariantCaps: run.appearance.fontVariantCaps,
-        referenceFontFamily:
-          baseTextAppearance.fontFamily ?? element.computedFontFamily,
-        referenceFontStyle: baseTextAppearance.fontStyle,
-        referenceFontSize:
-          baseTextAppearance.fontSize ?? element.computedFontSize,
-        referenceFontVariantCaps: baseTextAppearance.fontVariantCaps,
-      });
-    };
+    ) => run.appearance.fontSize ?? element.computedFontSize;
     const getEffectiveRunFontSize = (run: ResolvedInitialMartyriaRun) => {
       if (run.kind === 'startingPitch') {
         return resolveInitialMartyriaPitchFontSizes({
@@ -2611,11 +2593,6 @@ export class LayoutService {
             run.noteText.appearance.fontFamily ?? element.computedFontFamily,
           textFontStyle: run.noteText.appearance.fontStyle,
           textFontSize: run.noteText.appearance.fontSize,
-          referenceTextFontFamily:
-            baseTextAppearance.fontFamily ?? element.computedFontFamily,
-          referenceTextFontStyle: baseTextAppearance.fontStyle,
-          referenceTextFontSize: baseTextAppearance.fontSize,
-          referenceTextFontVariantCaps: baseTextAppearance.fontVariantCaps,
           matchedNeumeFontSize,
           neumeFontFamily: element.computedFontFamily,
           neumeFontSize: element.computedFontSize,
@@ -2637,11 +2614,6 @@ export class LayoutService {
           textFontFamily: appearance.fontFamily ?? element.computedFontFamily,
           textFontStyle: appearance.fontStyle,
           textFontSize: appearance.fontSize,
-          referenceTextFontFamily:
-            baseTextAppearance.fontFamily ?? element.computedFontFamily,
-          referenceTextFontStyle: baseTextAppearance.fontStyle,
-          referenceTextFontSize: baseTextAppearance.fontSize,
-          referenceTextFontVariantCaps: baseTextAppearance.fontVariantCaps,
           matchedNeumeFontSize,
           neumeFontFamily: element.computedFontFamily,
           neumeFontSize: element.computedFontSize,
@@ -2744,11 +2716,6 @@ export class LayoutService {
             noteAppearance.fontFamily ?? element.computedFontFamily,
           textFontStyle: noteAppearance.fontStyle,
           textFontSize: noteAppearance.fontSize,
-          referenceTextFontFamily:
-            baseTextAppearance.fontFamily ?? element.computedFontFamily,
-          referenceTextFontStyle: baseTextAppearance.fontStyle,
-          referenceTextFontSize: baseTextAppearance.fontSize,
-          referenceTextFontVariantCaps: baseTextAppearance.fontVariantCaps,
           glyphFontSize: glyphAppearance.fontSize,
           matchedNeumeFontSize,
           neumeFontFamily: element.computedFontFamily,

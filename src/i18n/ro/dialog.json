@@ -138,6 +138,7 @@
     "documentDefault": "Implicit pentru document",
     "builtInStyles": {
       "traditionalGreek": "Grecesc tradițional",
+      "greekModeNames": "Denumiri grecești ale glasurilor",
       "englishPlagalFirst": "Engleză - Plagal la început",
       "englishSignFirst": "Engleză - Semnul la început",
       "englishModeBeforeSign": "Engleză - Mod înaintea semnului",

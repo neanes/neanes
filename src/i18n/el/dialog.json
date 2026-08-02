@@ -138,6 +138,7 @@
     "documentDefault": "Προεπιλογή εγγράφου",
     "builtInStyles": {
       "traditionalGreek": "Παραδοσιακό ελληνικό",
+      "greekModeNames": "Ελληνικά ονόματα ήχων",
       "englishPlagalFirst": "Αγγλικό - Πλάγιος πρώτα",
       "englishSignFirst": "Αγγλικό - Σημάδι πρώτα",
       "englishModeBeforeSign": "Αγγλικό - Ήχος πριν από το σημάδι",

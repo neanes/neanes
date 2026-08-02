@@ -134,6 +134,46 @@ describe('InitialMartyriaStyle', () => {
     });
   });
 
+  it('defines Greek mode names without a mode-sign glyph', () => {
+    const configuration = createInitialMartyriaConfiguration(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekModeNamesV1,
+    );
+    const expectedText = new Map([
+      [1, ['ἦχος', 'αʹ']],
+      [2, ['ἦχος', 'βʹ']],
+      [3, ['ἦχος', 'γʹ']],
+      [4, ['ἦχος', 'δʹ']],
+      [5, ['ἦχος', 'λ', 'π', 'αʹ']],
+      [6, ['ἦχος', 'λ', 'π', 'βʹ']],
+      [7, ['ἦχος', 'βαρύς']],
+      [8, ['ἦχος', 'λ', 'π', 'δʹ']],
+    ]);
+
+    for (const [mode, expected] of expectedText) {
+      const element = ModeKeyElement.createFromTemplate(
+        modeKeyTemplates.find((template) => template.mode === mode)!,
+      );
+      const runs = resolveInitialMartyriaStyle({
+        context: getInitialMartyriaContext(element),
+        resolvedConfiguration:
+          resolveInitialMartyriaConfiguration(configuration)!,
+        pageSetup: new PageSetup(),
+      }).runs;
+      const text = runs.flatMap((run) => {
+        if (run.kind !== 'text') {
+          return [];
+        }
+        return run.content.layout === 'inline'
+          ? [run.content.text]
+          : run.content.lines;
+      });
+
+      expect(text).toEqual(expected);
+      expect(runs.some((run) => run.kind === 'glyph')).toBe(false);
+      expect(runs.some((run) => run.kind === 'startingPitch')).toBe(true);
+    }
+  });
+
   it('applies one configuration appearance to text and musical glyphs', () => {
     const configuration = createInitialMartyriaConfiguration(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1,

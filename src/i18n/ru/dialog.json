@@ -138,6 +138,7 @@
     "documentDefault": "По умолчанию для документа",
     "builtInStyles": {
       "traditionalGreek": "Традиционный греческий",
+      "greekModeNames": "Греческие наименования гласов",
       "englishPlagalFirst": "Английский - плагальный в начале",
       "englishSignFirst": "Английский - знак в начале",
       "englishModeBeforeSign": "Английский - глас перед знаком",

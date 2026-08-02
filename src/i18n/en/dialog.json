@@ -138,6 +138,7 @@
     "documentDefault": "Document default",
     "builtInStyles": {
       "traditionalGreek": "Traditional Greek",
+      "greekModeNames": "Greek mode names",
       "englishPlagalFirst": "English - Plagal First",
       "englishSignFirst": "English - Sign First",
       "englishModeBeforeSign": "English - Mode Before Sign",

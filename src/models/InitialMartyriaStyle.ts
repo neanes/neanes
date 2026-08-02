@@ -80,6 +80,7 @@ export const initialMartyriaLanguages: InitialMartyriaLanguage[] = [
 
 export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   TraditionalGreekV1: 'builtin:traditional-greek-v1',
+  GreekModeNamesV1: 'builtin:greek-mode-names-v1',
   EnglishPlagalFirstV1: 'builtin:english-plagal-first-v1',
   EnglishSignFirstV1: 'builtin:english-sign-first-v1',
   EnglishModeBeforeSignV1: 'builtin:english-mode-before-sign-v1',
@@ -117,6 +118,8 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
 > = {
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.traditionalGreek,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekModeNamesV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.greekModeNames,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalFirstV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishPlagalFirst,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1]: ($) =>
@@ -522,6 +525,29 @@ export const traditionalGreekInitialMartyriaStyle = builtIn({
   ],
 });
 
+export const greekModeNamesInitialMartyriaStyle = builtIn({
+  id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekModeNamesV1,
+  languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
+  defaultAppearance: defaultAppearance('GFS Didot'),
+  filters: {
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.None,
+    usesPlagalTerminology: false,
+  },
+  components: [
+    text('Ἦχος'),
+    text('αʹ.', [1]),
+    text('βʹ.', [2]),
+    text('γʹ.', [3]),
+    text('δʹ.', [4]),
+    plagalAbbreviation(),
+    text('αʹ.', [5]),
+    text('βʹ.', [6]),
+    text('βαρύς.', [7]),
+    text('δʹ.', [8]),
+    startingPitch(),
+  ],
+});
+
 const sourceSerifAppearance = () => defaultAppearance('Source Serif');
 
 // Curated styles are developer-owned. A new option needs an ID and localized
@@ -529,6 +555,7 @@ const sourceSerifAppearance = () => defaultAppearance('Source Serif');
 // and ordered real-text/musical components.
 export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
   traditionalGreekInitialMartyriaStyle,
+  greekModeNamesInitialMartyriaStyle,
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalFirstV1,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,

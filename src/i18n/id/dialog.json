@@ -138,6 +138,7 @@
     "documentDefault": "Bawaan dokumen",
     "builtInStyles": {
       "traditionalGreek": "Yunani Tradisional",
+      "greekModeNames": "Nama modus Yunani",
       "englishPlagalFirst": "Inggris - Plagal di Awal",
       "englishSignFirst": "Inggris - Tanda di Awal",
       "englishModeBeforeSign": "Inggris - Modus sebelum Tanda",

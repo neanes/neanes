@@ -15,6 +15,7 @@ import {
   parseFontVariantCaps,
   parseLigatureVariant,
   parseNumericVariant,
+  resolveOpenTypeFeatures,
   toNumericKey,
 } from './fontVariants';
 
@@ -381,5 +382,35 @@ describe('fontVariants', () => {
     expect(composeExplicitFontVariant('', 'small-caps')).toBe('normal');
     expect(composeExplicitFontVariant('normal', 'small-caps')).toBe('normal');
     expect(composeExplicitFontVariant('normal', null)).toBeNull();
+  });
+});
+
+describe('resolveOpenTypeFeatures', () => {
+  it('resolves the four longhands into structured OpenType settings', () => {
+    expect(
+      resolveOpenTypeFeatures({
+        fontVariantCaps: 'all-small-\\63 aps',
+        fontVariantNumeric:
+          'slashed-zero proportional-nums/**/oldstyle-\\6e ums',
+        fontVariantLigatures:
+          'no-contextual discretionary-\\6c igatures no-common-ligatures',
+        fontVariantAlternates:
+          'swash(swash-2) var(--ignored, styleset(ss09)) styleset(ss05/**/, ss01)',
+      }),
+    ).toEqual({
+      smcp: 1,
+      c2sc: 1,
+      onum: 1,
+      pnum: 1,
+      zero: 1,
+      liga: 0,
+      clig: 0,
+      dlig: 1,
+      calt: 0,
+      ss01: 1,
+      ss05: 1,
+      swsh: 2,
+      cswh: 2,
+    });
   });
 });

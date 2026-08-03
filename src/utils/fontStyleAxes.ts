@@ -70,10 +70,14 @@ function isCompoundWeight(previous: string, current: string): boolean {
   return WEIGHT_MODIFIERS[previous.toLowerCase()]?.has(current) === true;
 }
 
+export function axesHaveNonWeightToken(axes: StyleAxes): boolean {
+  return axes.rest.some((token) => !isWeightToken(token));
+}
+
 export function hasNonWeightStyleToken(
   style: string | null | undefined,
 ): boolean {
-  return parseStyleAxes(style).rest.some((token) => !isWeightToken(token));
+  return axesHaveNonWeightToken(parseStyleAxes(style));
 }
 
 export function fontStyleNeedsExplicitFamily(
@@ -298,7 +302,8 @@ export function cssFontWeight(
   return weight === 400 ? undefined : String(weight);
 }
 
-function styleWeight(axes: StyleAxes): number {
+// The numeric CSS weight a style carries, 400 when it names none.
+export function styleWeight(axes: StyleAxes): number {
   if (axes.bold) {
     return 700;
   }

@@ -1,14 +1,15 @@
-import { isDeepStrictEqual } from 'node:util';
-
 import { describe, expect, it } from 'vitest';
 
-import type { FontAlternates } from './FontAlternatesService';
+import type { BundledFontEntry } from './bundledFonts';
 import {
   EMPTY_FONT_ALTERNATES,
   readFontAlternates,
 } from './FontAlternatesService';
 import { fontCatalog } from './FontCatalog';
-import { loadBundledFont } from './loadBundledFont.testHelper';
+import {
+  loadBundledFont,
+  loadBundledFontFace,
+} from './loadBundledFont.testHelper';
 
 // These tests parse the real bundled fonts, so they also pin down the sets
 // the alternates UI offers for them.
@@ -79,12 +80,14 @@ describe('FontAlternatesService', () => {
     ).toEqual(EMPTY_FONT_ALTERNATES);
   });
 
-  // bundled-font-alternates.generated.json is the precomputed artifact that
-  // getFontAlternates serves bundled faces from. This test recomputes it from
-  // the real font files, so it fails when a bundled font changes or a face
-  // stops mapping to a file on disk. Regenerate the artifact with
+  // bundled-fonts.generated.json is the precomputed artifact holding what
+  // the app reads out of the bundled font binaries: the PostScript name of
+  // every face, and the alternates of the faces that have any. This test
+  // recomputes it from the real font files, so it fails when a bundled font
+  // changes or a face stops mapping to a file on disk. Regenerate the artifact
+  // with
   //   npx vitest run src/services/FontAlternatesService.test.ts -u
-  it('keeps the bundled font alternates artifact in sync', async () => {
+  it('keeps the bundled fonts artifact in sync', async () => {
     const fileNames = new Set<string>();
 
     for (const family of fontCatalog.bundledTextFamilies()) {
@@ -106,18 +109,18 @@ describe('FontAlternatesService', () => {
       expect(unmappedStyles, family).toEqual([]);
     }
 
-    const artifact: Record<string, FontAlternates> = {};
+    // One entry per face: its PostScript name and its alternates.
+    const artifact: Record<string, BundledFontEntry> = {};
 
     for (const fileName of [...fileNames].sort()) {
+      const { postscriptName } = await loadBundledFontFace(fileName);
       const alternates = readFontAlternates(await loadBundledFont(fileName));
 
-      if (!isDeepStrictEqual(alternates, EMPTY_FONT_ALTERNATES)) {
-        artifact[fileName] = alternates;
-      }
+      artifact[fileName] = { postscriptName, alternates };
     }
 
     await expect(JSON.stringify(artifact, null, 2) + '\n').toMatchFileSnapshot(
-      '../assets/fonts/bundled-font-alternates.generated.json',
+      '../assets/fonts/bundled-fonts.generated.json',
     );
   });
 });

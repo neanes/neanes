@@ -40,6 +40,7 @@
     "latexSuccess": "LaTeX exported",
     "latexFailed": "LaTeX export failed",
     "latexFailedDescription": "Unable to export LaTeX.",
+    "latexFontFaceUnresolvedDescription": "The exact PostScript face for “{{fontFamily}}” style “{{fontStyle}}” could not be resolved. Install the font and try again.",
     "pngFailed": "PNG export failed",
     "pngStartFailedDescription": "Unable to start the PNG export.",
     "pngFileFailedDescription": "Unable to export the PNG file.",

@@ -1445,7 +1445,7 @@ export class ByzHtmlExporter {
     lyricsStyle: ResolvedParagraphStyle,
   ) {
     const neumeHeight = TextMeasurementService.getFontHeight(
-      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+      pageSetup.neumeDefaultFontCss,
     );
     const font = `${defaultDropCapFont.cssFontStyle} normal ${
       defaultDropCapFont.cssFontWeight

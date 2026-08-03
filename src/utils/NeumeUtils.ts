@@ -1,7 +1,7 @@
 import { Note, RootSign } from '@/models/Neumes';
 import { getNoteValue } from '@/models/Scales';
 
-const lowRootSignMap = new Map<RootSign, RootSign>([
+export const lowRootSignMap = new Map<RootSign, RootSign>([
   [RootSign.Legetos, RootSign.LegetosLow],
   [RootSign.Nana, RootSign.NanaLow],
   [RootSign.Delta, RootSign.DeltaLow],

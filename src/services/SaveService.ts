@@ -20,7 +20,7 @@ import type { Header } from '@/models/Header';
 import { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { QuantitativeNeume } from '@/models/Neumes';
-import { PageSetup, pageSizes } from '@/models/PageSetup';
+import { MelismaStyle, PageSetup, pageSizes } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   createDefaultParagraphStyles,
@@ -48,7 +48,10 @@ import {
 } from '@/models/save/v1/Element';
 import type { Footer as Footer_v1 } from '@/models/save/v1/Footer';
 import type { Header as Header_v1 } from '@/models/save/v1/Header';
-import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
+import {
+  type MelismaStyle as MelismaStyle_v1,
+  PageSetup as PageSetup_v1,
+} from '@/models/save/v1/PageSetup';
 import {
   DocumentProperties as DocumentProperties_v1,
   type LyricSetup as LyricSetup_v1,
@@ -1129,7 +1132,10 @@ export class SaveService {
 
     pageSetup.chrysanthineAccidentals = p.chrysanthineAccidentals;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions || undefined;
-    pageSetup.disableGreekMelismata = p.disableGreekMelismata || undefined;
+    pageSetup.melismaStyle =
+      p.melismaStyle !== MelismaStyle.Auto
+        ? (p.melismaStyle as MelismaStyle_v1)
+        : undefined;
     pageSetup.alignIsonIndicators = p.alignIsonIndicators || undefined;
     pageSetup.ignorePunctuationWhenPositioningLyrics =
       p.ignorePunctuationWhenPositioningLyrics || undefined;
@@ -1930,7 +1936,15 @@ export class SaveService {
       p.chrysanthineAccidentals === true ||
       p.chrysanthineAccidentals === undefined;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions === true;
-    pageSetup.disableGreekMelismata = p.disableGreekMelismata === true;
+    const savedMelismaStyle = p.melismaStyle as MelismaStyle;
+
+    if (Object.values(MelismaStyle).includes(savedMelismaStyle)) {
+      pageSetup.melismaStyle = savedMelismaStyle;
+    } else if (p.disableGreekMelismata === true) {
+      pageSetup.melismaStyle = MelismaStyle.Western;
+    } else {
+      pageSetup.melismaStyle = MelismaStyle.Auto;
+    }
     pageSetup.alignIsonIndicators = p.alignIsonIndicators === true;
     pageSetup.ignorePunctuationWhenPositioningLyrics =
       p.ignorePunctuationWhenPositioningLyrics === true;

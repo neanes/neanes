@@ -1342,6 +1342,14 @@ export function getInitialMartyriaFixedSeparatorWidth(
   }
 }
 
+export function getInitialMartyriaFixedSeparatorSize(
+  separator: InitialMartyriaSeparator,
+  mainTextFontSize: number,
+) {
+  const width = getInitialMartyriaFixedSeparatorWidth(separator);
+  return width == null ? null : width * mainTextFontSize;
+}
+
 export function getInitialMartyriaSeparatorBefore(
   runs: ResolvedInitialMartyriaRun[],
   index: number,

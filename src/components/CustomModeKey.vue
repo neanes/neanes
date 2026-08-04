@@ -195,11 +195,10 @@ import { type ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import { INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM } from '@/models/InitialMartyriaStackedTextGeometry';
 import {
   getInitialMartyriaContext,
-  getInitialMartyriaFixedSeparatorWidth,
+  getInitialMartyriaFixedSeparatorSize,
   getInitialMartyriaSeparatorAfter,
   getInitialMartyriaSeparatorBefore,
   type InitialMartyriaSeparator,
-  isInitialMartyriaStartingNoteRun,
   type ResolvedInitialMartyriaConfiguration,
   type ResolvedInitialMartyriaRun,
   resolveInitialMartyriaBaseTextAppearance,
@@ -256,6 +255,9 @@ const neumeFontSize = computed(
 );
 const baseTextAppearance = computed(() =>
   resolveInitialMartyriaBaseTextAppearance(props.initialMartyriaConfiguration),
+);
+const fixedSeparatorFontSize = computed(
+  () => baseTextAppearance.value.fontSize ?? neumeFontSize.value,
 );
 const hasCustomText = computed(() =>
   resolvedRuns.value.some(
@@ -527,18 +529,7 @@ function getSeparatorStyle(run: ResolvedInitialMartyriaRun, index: number) {
       direction: run.direction,
     } as CSSProperties;
   }
-  const before = resolvedRuns.value[index - 1];
-  const owner =
-    separator === 'startingNote' &&
-    before != null &&
-    isInitialMartyriaStartingNoteRun(before)
-      ? before
-      : separator === 'modeSign' &&
-          before?.kind === 'glyph' &&
-          before.semantic === 'modeSign'
-        ? before
-        : (resolvedRuns.value[index] ?? run);
-  return getFixedSeparatorStyle(run, separator, getEffectiveRunFontSize(owner));
+  return getFixedSeparatorStyle(run, separator);
 }
 
 function getWordSpaceTextMetrics(run: ResolvedInitialMartyriaRun | undefined) {
@@ -564,22 +555,23 @@ function getTrailingSeparatorStyle(run: ResolvedInitialMartyriaRun) {
       resolvedRuns.value,
       resolvedRuns.value.length - 1,
     ),
-    getEffectiveRunFontSize(run),
   );
 }
 
 function getFixedSeparatorStyle(
   run: ResolvedInitialMartyriaRun,
   separator: InitialMartyriaSeparator,
-  ownerSize: number,
 ) {
-  const width = getInitialMartyriaFixedSeparatorWidth(separator);
+  const width = getInitialMartyriaFixedSeparatorSize(
+    separator,
+    fixedSeparatorFontSize.value,
+  );
   if (width == null) {
     return undefined;
   }
   return {
     display: 'inline-block',
-    width: withZoom(width * ownerSize),
+    width: withZoom(width),
     direction: run.direction,
   } as CSSProperties;
 }
@@ -841,11 +833,7 @@ function getPitchTrailingGlueStyle(run: StartingPitchRun) {
 }
 
 function getPitchClusterSeparatorStyle(run: StartingPitchRun) {
-  return getFixedSeparatorStyle(
-    run,
-    'plagal',
-    getPitchFontSizes(run).glyphFontSize,
-  );
+  return getFixedSeparatorStyle(run, 'plagal');
 }
 
 function getTextRunContent(run: ResolvedInitialMartyriaRun) {

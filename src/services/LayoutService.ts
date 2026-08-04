@@ -27,11 +27,10 @@ import type { Header } from '@/models/Header';
 import { INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM } from '@/models/InitialMartyriaStackedTextGeometry';
 import {
   getInitialMartyriaContext,
-  getInitialMartyriaFixedSeparatorWidth,
+  getInitialMartyriaFixedSeparatorSize,
   getInitialMartyriaSeparatorAfter,
   getInitialMartyriaSeparatorBefore,
   type InitialMartyriaAppearance,
-  isInitialMartyriaStartingNoteRun,
   type ResolvedInitialMartyriaConfiguration,
   type ResolvedInitialMartyriaRun,
   resolveInitialMartyriaBaseTextAppearance,
@@ -2421,6 +2420,8 @@ export class LayoutService {
     const baseTextAppearance = resolveInitialMartyriaBaseTextAppearance(
       resolvedConfiguration,
     );
+    const fixedSeparatorFontSize =
+      baseTextAppearance.fontSize ?? element.computedFontSize;
     const hasCustomText = resolution.runs.some(
       (run) => run.kind === 'text' || run.kind === 'startingPitch',
     );
@@ -2472,27 +2473,6 @@ export class LayoutService {
     const getEffectiveTextFontSize = (
       run: Extract<ResolvedInitialMartyriaRun, { kind: 'text' }>,
     ) => run.appearance.fontSize ?? element.computedFontSize;
-    const getEffectiveRunFontSize = (run: ResolvedInitialMartyriaRun) => {
-      if (run.kind === 'startingPitch') {
-        return resolveInitialMartyriaPitchFontSizes({
-          textFontFamily:
-            run.noteText.appearance.fontFamily ?? element.computedFontFamily,
-          textFontStyle: run.noteText.appearance.fontStyle,
-          textFontSize: run.noteText.appearance.fontSize,
-          matchedNeumeFontSize,
-          neumeFontFamily: element.computedFontFamily,
-          neumeFontSize: element.computedFontSize,
-        }).glyphFontSize;
-      }
-      if (run.kind === 'text') {
-        return getEffectiveTextFontSize(run);
-      }
-      return (
-        run.appearance.fontSize ??
-        (run.kind === 'glyph' ? matchedNeumeFontSize : undefined) ??
-        element.computedFontSize
-      );
-    };
     const getWordSpaceOwner = (run: ResolvedInitialMartyriaRun | undefined) => {
       if (run?.kind === 'startingPitch') {
         const appearance = run.noteText.appearance;
@@ -2539,19 +2519,12 @@ export class LayoutService {
           appearance.fontVariantCaps ?? 'normal',
         );
       }
-      const before = resolution.runs[index - 1];
-      const owner =
-        separator === 'startingNote' &&
-        before != null &&
-        isInitialMartyriaStartingNoteRun(before)
-          ? before
-          : separator === 'modeSign' &&
-              before?.kind === 'glyph' &&
-              before.semantic === 'modeSign'
-            ? before
-            : run;
-      const size = getEffectiveRunFontSize(owner);
-      return (getInitialMartyriaFixedSeparatorWidth(separator) ?? 0) * size;
+      return (
+        getInitialMartyriaFixedSeparatorSize(
+          separator,
+          fixedSeparatorFontSize,
+        ) ?? 0
+      );
     };
 
     for (const [runIndex, run] of resolution.runs.entries()) {
@@ -2637,8 +2610,10 @@ export class LayoutService {
           width += geometry.width;
           if (note === run.cluster.primary && run.cluster.secondary != null) {
             width +=
-              (getInitialMartyriaFixedSeparatorWidth('plagal') ?? 0) *
-              fontSizes.glyphFontSize;
+              getInitialMartyriaFixedSeparatorSize(
+                'plagal',
+                fixedSeparatorFontSize,
+              ) ?? 0;
           }
         }
         if (run.cluster.trailingGlyphs.length > 0) {

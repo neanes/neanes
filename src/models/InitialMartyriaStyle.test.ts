@@ -9,6 +9,7 @@ import {
   createInitialMartyriaConfiguration,
   getBuiltInInitialMartyriaStyleNameSelector,
   getInitialMartyriaContext,
+  getInitialMartyriaFixedSeparatorSize,
   resolveInitialMartyriaConfiguration,
   resolveInitialMartyriaStyle,
   resolveInitialMartyriaStyleSelection,
@@ -18,6 +19,13 @@ import { ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 
 describe('InitialMartyriaStyle', () => {
+  it('sizes fixed separators from the main text font size', () => {
+    for (const separator of ['plagal', 'modeSign', 'startingNote'] as const) {
+      expect(getInitialMartyriaFixedSeparatorSize(separator, 20)).toBe(8.6);
+    }
+    expect(getInitialMartyriaFixedSeparatorSize('wordSpace', 20)).toBeNull();
+  });
+
   it('defines every built-in ID exactly once with a localized display name', () => {
     const styleIds = builtInInitialMartyriaStyles.map((style) => style.id);
 

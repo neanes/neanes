@@ -111,6 +111,7 @@ import {
   getInitialMartyriaPitchTrailingGlueWidth,
   getMatchedNeumeFontSize,
   measureInitialMartyriaPitchGeometry,
+  resolveInitialMartyriaAccessoryLayout,
   resolveInitialMartyriaPitchFontSizes,
 } from './InitialMartyriaPitchMeasurementService';
 import { measureInitialMartyriaStackedText } from './InitialMartyriaStackedTextMeasurementService';
@@ -2442,6 +2443,11 @@ export class LayoutService {
       matchedNeumeFontSize,
       neumeFontSize: element.computedFontSize,
     });
+    const accessoryLayout = resolveInitialMartyriaAccessoryLayout({
+      matchedNeumeFontSize,
+      neumeBaselineCorrection,
+      neumeFontSize: element.computedFontSize,
+    });
     const baseFont = resolveFontCss({
       fontFamily: hasCustomText
         ? (baseTextAppearance.fontFamily ?? element.computedFontFamily)
@@ -2723,27 +2729,75 @@ export class LayoutService {
       const tempoFont = resolveFontCss({
         fontFamily: element.computedFontFamily,
         fontStyle: DEFAULT_FONT_STYLE,
-        fontSize: element.computedFontSize,
+        fontSize: accessoryLayout.fontSize,
       });
       const tempoMetrics = TextMeasurementService.getTextMetrics(
         NeumeMappingService.getMapping(element.tempo).text,
         tempoFont,
       );
-      const tempoBaseline = -0.45 * element.computedFontSize;
       const tempoStrokeOverflow = pageSetup.tempoDefaultStrokeWidth / 2;
       top = Math.min(
         top,
-        tempoBaseline -
+        accessoryLayout.baselineOffset -
           tempoMetrics.actualBoundingBoxAscent -
           tempoStrokeOverflow,
       );
       bottom = Math.max(
         bottom,
-        tempoBaseline +
+        accessoryLayout.baselineOffset +
           tempoMetrics.actualBoundingBoxDescent +
           tempoStrokeOverflow,
       );
       width += 8 + tempoMetrics.width;
+    }
+
+    if (element.showAmbitus && !element.inline) {
+      const punctuationMetrics = TextMeasurementService.getTextMetrics(
+        '(-)',
+        baseFont,
+        baseTextAppearance.fontVariantCaps ?? 'normal',
+      );
+      const punctuationStrokeOverflow =
+        (baseTextAppearance.strokeWidth ?? 0) / 2;
+      top = Math.min(
+        top,
+        -punctuationMetrics.actualBoundingBoxAscent - punctuationStrokeOverflow,
+      );
+      bottom = Math.max(
+        bottom,
+        punctuationMetrics.actualBoundingBoxDescent + punctuationStrokeOverflow,
+      );
+
+      const ambitusFont = resolveFontCss({
+        fontFamily: element.computedFontFamily,
+        fontStyle: DEFAULT_FONT_STYLE,
+        fontSize: accessoryLayout.fontSize,
+      });
+      const ambitusStrokeOverflow = pageSetup.martyriaDefaultStrokeWidth / 2;
+      const ambitusBaseline = accessoryLayout.baselineOffset;
+      for (const neumes of [
+        [element.ambitusLowNote, element.ambitusLowRootSign],
+        [element.ambitusHighNote, element.ambitusHighRootSign],
+      ]) {
+        const metrics = TextMeasurementService.getTextMetrics(
+          neumes
+            .map((neume) => NeumeMappingService.getMapping(neume).text)
+            .join(''),
+          ambitusFont,
+        );
+        top = Math.min(
+          top,
+          ambitusBaseline -
+            metrics.actualBoundingBoxAscent -
+            ambitusStrokeOverflow,
+        );
+        bottom = Math.max(
+          bottom,
+          ambitusBaseline +
+            metrics.actualBoundingBoxDescent +
+            ambitusStrokeOverflow,
+        );
+      }
     }
 
     return { bottom, flowTop, top, width };

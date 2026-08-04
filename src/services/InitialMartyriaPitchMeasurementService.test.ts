@@ -4,6 +4,7 @@ import { fontService } from '@/services/FontService';
 import {
   getInitialMartyriaNeumeBaselineCorrection,
   getInitialMartyriaPitchTrailingGlueWidth,
+  resolveInitialMartyriaAccessoryLayout,
   resolveInitialMartyriaPitchFontSizes,
 } from '@/services/InitialMartyriaPitchMeasurementService';
 
@@ -58,5 +59,27 @@ describe('initial martyria neume baseline correction', () => {
         neumeFontSize: 42,
       }),
     ).toBeCloseTo(3.36);
+  });
+});
+
+describe('initial martyria accessory layout', () => {
+  it('uses the matched neume size and its corrected raised baseline', () => {
+    expect(
+      resolveInitialMartyriaAccessoryLayout({
+        matchedNeumeFontSize: 60,
+        neumeBaselineCorrection: 4,
+        neumeFontSize: 42,
+      }),
+    ).toEqual({ fontSize: 60, baselineOffset: -23 });
+  });
+
+  it('falls back to the nominal neume size', () => {
+    expect(
+      resolveInitialMartyriaAccessoryLayout({
+        matchedNeumeFontSize: null,
+        neumeBaselineCorrection: 0,
+        neumeFontSize: 40,
+      }),
+    ).toEqual({ fontSize: 40, baselineOffset: -18 });
   });
 });

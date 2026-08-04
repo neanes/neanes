@@ -152,7 +152,16 @@
       class="right-container"
       :style="rightContainerStyle"
     >
-      <span v-if="element.showAmbitus && !element.inline" class="ambitus">
+      <span
+        class="mode-key-baseline-strut"
+        :style="baselineStrutStyle"
+        aria-hidden="true"
+      />
+      <span
+        v-if="element.showAmbitus && !element.inline"
+        class="ambitus"
+        :style="ambitusContainerStyle"
+      >
         <span class="ambitus-text">(</span>
         <span class="ambitus-low" :style="ambitusStyleLow">
           <Neume :neume="element.ambitusLowNote" />
@@ -203,11 +212,13 @@ import {
   getInitialMartyriaPitchTrailingGlueWidth,
   getMatchedNeumeFontSize,
   measureInitialMartyriaPitchGeometry,
+  resolveInitialMartyriaAccessoryLayout,
   resolveInitialMartyriaPitchFontSizes,
 } from '@/services/InitialMartyriaPitchMeasurementService';
 import { measureInitialMartyriaStackedText } from '@/services/InitialMartyriaStackedTextMeasurementService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { withZoom } from '@/utils/withZoom';
 
@@ -243,6 +254,9 @@ const neumeFontSize = computed(
   () =>
     props.element.computedFontSize || props.pageSetup.modeKeyDefaultFontSize,
 );
+const baseTextAppearance = computed(() =>
+  resolveInitialMartyriaBaseTextAppearance(props.initialMartyriaConfiguration),
+);
 const hasCustomText = computed(() =>
   resolvedRuns.value.some(
     (run) => run.kind === 'text' || run.kind === 'startingPitch',
@@ -252,9 +266,7 @@ const matchedNeumeFontSize = computed(() => {
   if (!hasCustomText.value) {
     return null;
   }
-  const textAppearance = resolveInitialMartyriaBaseTextAppearance(
-    props.initialMartyriaConfiguration,
-  );
+  const textAppearance = baseTextAppearance.value;
   const textFontSize = textAppearance.fontSize ?? neumeFontSize.value;
   return getMatchedNeumeFontSize({
     textFontFamily: textAppearance.fontFamily ?? neumeFontFamily.value,
@@ -275,9 +287,19 @@ const neumeBaselineCorrection = computed(() =>
     neumeFontSize: neumeFontSize.value,
   }),
 );
+const accessoryLayout = computed(() =>
+  resolveInitialMartyriaAccessoryLayout({
+    matchedNeumeFontSize: matchedNeumeFontSize.value,
+    neumeBaselineCorrection: neumeBaselineCorrection.value,
+    neumeFontSize: neumeFontSize.value,
+  }),
+);
 const rightContainer = ref<HTMLElement | null>(null);
 const rightAccessoryWidth = ref(0);
 let rightAccessoryResizeObserver: ResizeObserver | null = null;
+// Keep the CSS line box anchored by the explicit baseline strut rather than
+// by zoom-dependent font metrics from any visible signature run.
+const baselineFlowGuard = computed(() => props.element.height);
 
 const mainStyle = computed(() => {
   const verticalClipMargin = withZoom(-props.element.height);
@@ -292,7 +314,17 @@ const mainStyle = computed(() => {
 });
 
 const rightContainerStyle = computed(() => ({
-  top: withZoom(props.element.computedFlowTop - props.element.computedTop),
+  top: withZoom(
+    props.element.computedFlowTop -
+      props.element.computedTop -
+      baselineFlowGuard.value,
+  ),
+}));
+
+const baselineStrutStyle = computed(() => ({
+  height: withZoom(
+    Math.max(0, -props.element.computedFlowTop) + baselineFlowGuard.value,
+  ),
 }));
 
 onMounted(() => {
@@ -330,12 +362,12 @@ const style = computed(() => {
 });
 
 const tempoStyle = computed(() => {
-  // TODO figure out a way to remove the hard-coded -.45em
-  // maybe put it in the font metadata json?
   const style = {
     color: props.pageSetup.tempoDefaultColor,
+    fontSize: withZoom(accessoryLayout.value.fontSize),
+    lineHeight: 'normal',
     webkitTextStrokeWidth: withZoom(props.pageSetup.tempoDefaultStrokeWidth),
-    top: '-0.45em',
+    top: withZoom(accessoryLayout.value.baselineOffset),
     marginLeft: withZoom(8),
   } as StyleValue;
 
@@ -343,23 +375,52 @@ const tempoStyle = computed(() => {
 });
 
 const ambitusStyle = computed(() => {
-  // TODO figure out a way to remove the hard-coded -.45em
-  // maybe put it in the font metadata json?
+  const neumeFont = resolveFontStyle(neumeFontFamily.value, DEFAULT_FONT_STYLE);
   const style = {
     color: props.pageSetup.martyriaDefaultColor,
+    fontFamily: neumeFont.cssFontFamily,
+    fontSize: withZoom(accessoryLayout.value.fontSize),
+    fontStyle: neumeFont.cssFontStyle,
+    fontWeight: neumeFont.cssFontWeight,
     webkitTextStrokeWidth: withZoom(props.pageSetup.martyriaDefaultStrokeWidth),
     position: 'relative',
-    top: '-0.45em',
+    top: withZoom(accessoryLayout.value.baselineOffset),
   } as CSSProperties;
 
   return style;
+});
+
+const ambitusContainerStyle = computed(() => {
+  const appearance = baseTextAppearance.value;
+  const font = resolveFontStyle(
+    appearance.fontFamily ?? neumeFontFamily.value,
+    appearance.fontStyle,
+  );
+
+  return {
+    color: appearance.color,
+    fontFamily: font.cssFontFamily,
+    fontSize: withZoom(appearance.fontSize ?? neumeFontSize.value),
+    fontStyle: font.cssFontStyle,
+    fontWeight: font.cssFontWeight,
+    fontVariantCaps: appearance.fontVariantCaps ?? 'normal',
+    fontVariantNumeric: appearance.fontVariantNumeric ?? 'normal',
+    fontVariantLigatures: appearance.fontVariantLigatures ?? 'normal',
+    fontVariantAlternates: appearance.fontVariantAlternates ?? 'normal',
+    lineHeight: 'normal',
+    webkitTextStrokeColor: appearance.strokeColor,
+    webkitTextStrokeWidth:
+      appearance.strokeWidth == null
+        ? undefined
+        : withZoom(appearance.strokeWidth),
+  } as CSSProperties;
 });
 
 const ambitusStyleLow = computed(() => {
   const text = [props.element.ambitusLowNote, props.element.ambitusLowRootSign]
     .map((neume) => NeumeMappingService.getMapping(neume).text)
     .join('');
-  const font = `${props.element.computedFontSize}px ${props.element.computedFontFamily}`;
+  const font = `${accessoryLayout.value.fontSize}px ${props.element.computedFontFamily}`;
 
   const bounds = TextMeasurementService.getInkBounds(text, font);
 
@@ -379,7 +440,7 @@ const ambitusStyleHigh = computed(() => {
   ]
     .map((neume) => NeumeMappingService.getMapping(neume).text)
     .join('');
-  const font = `${props.element.computedFontSize}px ${props.element.computedFontFamily}`;
+  const font = `${accessoryLayout.value.fontSize}px ${props.element.computedFontFamily}`;
 
   const bounds = TextMeasurementService.getInkBounds(text, font);
 
@@ -807,6 +868,7 @@ function getTextRunContent(run: ResolvedInitialMartyriaRun) {
 }
 
 .right-container {
+  line-height: 0;
   position: absolute;
   top: 0;
   right: 0;
@@ -819,6 +881,12 @@ function getTextRunContent(run: ResolvedInitialMartyriaRun) {
   overflow-y: visible;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.mode-key-baseline-strut {
+  display: inline-block;
+  width: 0;
+  vertical-align: baseline;
 }
 
 .mode-key-run {
@@ -844,10 +912,5 @@ function getTextRunContent(run: ResolvedInitialMartyriaRun) {
 
 .ambitus {
   position: relative;
-  top: calc(-4px * var(--zoom));
-}
-
-.ambitus-text {
-  font-family: Arial, Helvetica, sans-serif;
 }
 </style>

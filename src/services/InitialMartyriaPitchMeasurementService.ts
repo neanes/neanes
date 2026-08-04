@@ -171,6 +171,19 @@ export function getInitialMartyriaNeumeBaselineCorrection(options: {
     : 0;
 }
 
+export function resolveInitialMartyriaAccessoryLayout(options: {
+  matchedNeumeFontSize: number | null;
+  neumeBaselineCorrection: number;
+  neumeFontSize: number;
+}) {
+  const fontSize = options.matchedNeumeFontSize ?? options.neumeFontSize;
+
+  return {
+    fontSize,
+    baselineOffset: options.neumeBaselineCorrection - 0.45 * fontSize,
+  };
+}
+
 export function getInitialMartyriaPitchTextBounds(
   note: InitialMartyriaPitchNote | null,
   noteText: string,

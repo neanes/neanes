@@ -358,6 +358,109 @@ describe('LayoutService.mayShowLeadingLyricHyphen', () => {
   });
 });
 
+describe('LayoutService.pickRichTextCut', () => {
+  it('returns the largest offset that fits in the available space', () => {
+    expect(LayoutService.pickRichTextCut([20, 40, 60], 0, 50)).toBe(40);
+  });
+
+  it('returns null when not even the first line fits', () => {
+    expect(LayoutService.pickRichTextCut([20, 40, 60], 0, 10)).toBeNull();
+  });
+
+  it('ignores offsets at or below the current top', () => {
+    expect(LayoutService.pickRichTextCut([20, 40, 60], 40, 30)).toBe(60);
+    expect(LayoutService.pickRichTextCut([20, 40, 60], 40, 5)).toBeNull();
+  });
+
+  it('returns null when there are no offsets', () => {
+    expect(LayoutService.pickRichTextCut([], 0, 50)).toBeNull();
+  });
+
+  it('accepts an offset within the sub-pixel tolerance of the limit', () => {
+    expect(LayoutService.pickRichTextCut([50.4], 0, 50)).toBe(50.4);
+  });
+});
+
+describe('LayoutService.computeRichTextBoxSlices', () => {
+  const offsets = [20, 40, 60, 80, 100];
+
+  it('returns a single slice when everything fits', () => {
+    expect(
+      LayoutService.computeRichTextBoxSlices(offsets, 100, 100, () => 100),
+    ).toEqual([{ offsetTop: 0, height: 100 }]);
+  });
+
+  it('cuts at line boundaries across two pages', () => {
+    expect(
+      LayoutService.computeRichTextBoxSlices(offsets, 100, 50, () => 100),
+    ).toEqual([
+      { offsetTop: 0, height: 40 },
+      { offsetTop: 40, height: 60 },
+    ]);
+  });
+
+  it('flows across three pages when continuation space is limited', () => {
+    expect(
+      LayoutService.computeRichTextBoxSlices(offsets, 100, 45, () => 45),
+    ).toEqual([
+      { offsetTop: 0, height: 40 },
+      { offsetTop: 40, height: 40 },
+      { offsetTop: 80, height: 20 },
+    ]);
+  });
+
+  it('resolves available space per continuation page', () => {
+    // The first continuation page is short (30px) while later pages are tall
+    // (90px) -- e.g. a taller odd-page header. A single shared continuation
+    // height would flow everything after the origin slice onto one page;
+    // resolving per page forces the extra cut on the short page.
+    expect(
+      LayoutService.computeRichTextBoxSlices(
+        [30, 60, 90, 120, 150],
+        150,
+        90,
+        (continuationIndex) => (continuationIndex === 1 ? 30 : 90),
+      ),
+    ).toEqual([
+      { offsetTop: 0, height: 90 },
+      { offsetTop: 90, height: 30 },
+      { offsetTop: 120, height: 30 },
+    ]);
+  });
+
+  it('forces at least one line when the first line overflows the space', () => {
+    expect(
+      LayoutService.computeRichTextBoxSlices(offsets, 100, 15, () => 100),
+    ).toEqual([
+      { offsetTop: 0, height: 20 },
+      { offsetTop: 20, height: 80 },
+    ]);
+  });
+
+  it('keeps a single unbreakable line as one slice', () => {
+    expect(
+      LayoutService.computeRichTextBoxSlices([100], 100, 50, () => 100),
+    ).toEqual([{ offsetTop: 0, height: 100 }]);
+  });
+
+  it('appends the total height when the offsets do not reach it', () => {
+    // Final line offset is 80 but the content is 100px tall; the slicer must
+    // still flow the remaining 20px (e.g. trailing padding) onto a page.
+    expect(
+      LayoutService.computeRichTextBoxSlices(
+        [20, 40, 60, 80],
+        100,
+        50,
+        () => 50,
+      ),
+    ).toEqual([
+      { offsetTop: 0, height: 40 },
+      { offsetTop: 40, height: 40 },
+      { offsetTop: 80, height: 20 },
+    ]);
+  });
+});
+
 function getInlineTextBox() {
   const inlineTextBox = new TextBoxElement();
   inlineTextBox.inline = true;

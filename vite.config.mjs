@@ -9,7 +9,7 @@ import electron from 'vite-plugin-electron';
 import { VitePWA } from 'vite-plugin-pwa';
 import VueDevTools from 'vite-plugin-vue-devtools';
 
-import pkg from './package.json';
+import pkg from './package.json' with { type: 'json' };
 
 // lib-font probes for Node's fs and zlib at module load, behind runtime
 // guards that never fire in the renderer: the fetch shim only activates when
@@ -57,7 +57,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
+        '@': path.resolve(import.meta.dirname, './src'),
       },
     },
     define: {

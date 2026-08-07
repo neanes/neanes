@@ -1756,7 +1756,6 @@ const props = defineProps({
 });
 
 const open = defineModel<boolean>('open', { required: true });
-
 const isonIcon = NeumeMappingService.getMapping(QuantitativeNeume.Ison).text;
 
 const sections = [

@@ -662,7 +662,7 @@ export class ByzHtmlExporter {
           );
           break;
         case ElementType.ModeKey:
-          if (insidePage) {
+          if (insidePage && !(element as ModeKeyElement).inline) {
             result += this.endPage(indentation + 2, needLineBreak);
             insidePage = false;
           }
@@ -1197,7 +1197,7 @@ export class ByzHtmlExporter {
 
     let rightContainer = false;
 
-    if (element.showAmbitus) {
+    if (element.showAmbitus && !element.inline) {
       inner += `<span class="${this.config.classModeKeyRightContainer}">`;
       rightContainer = true;
 
@@ -1234,7 +1234,12 @@ export class ByzHtmlExporter {
       inner += '</span>';
     }
 
-    if (element.tempo && element.tempoAlignRight && !rightContainer) {
+    if (
+      element.tempo &&
+      element.tempoAlignRight &&
+      !element.inline &&
+      !rightContainer
+    ) {
       inner += `<span class="${this.config.classModeKeyRightContainer}">`;
       rightContainer = true;
     }
@@ -1266,9 +1271,11 @@ export class ByzHtmlExporter {
 
     styleAttribute = ` style="${style}"`;
 
-    return `<div class="${
-      this.config.classModeKey
-    }"${styleAttribute}\n${this.getIndentationString(
+    const className = element.inline
+      ? `${this.config.classModeKey} ${this.config.classTextBoxInline}`
+      : this.config.classModeKey;
+
+    return `<div class="${className}"${styleAttribute}\n${this.getIndentationString(
       indentation + 2,
     )}>${inner}</div\n${this.getIndentationString(indentation)}>`;
   }
@@ -1376,7 +1383,8 @@ export class ByzHtmlExporter {
       if (
         element.lineBreak ||
         element.pageBreak ||
-        element.elementType === ElementType.ModeKey
+        (element.elementType === ElementType.ModeKey &&
+          !(element as ModeKeyElement).inline)
       ) {
         return false;
       }

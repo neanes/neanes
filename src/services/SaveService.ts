@@ -17,6 +17,10 @@ import {
 } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
+import {
+  type InitialMartyriaConfiguration,
+  isBuiltInInitialMartyriaStyleId,
+} from '@/models/InitialMartyriaStyle';
 import { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { QuantitativeNeume } from '@/models/Neumes';
@@ -48,6 +52,7 @@ import {
 } from '@/models/save/v1/Element';
 import type { Footer as Footer_v1 } from '@/models/save/v1/Footer';
 import type { Header as Header_v1 } from '@/models/save/v1/Header';
+import type { InitialMartyriaConfiguration as InitialMartyriaConfiguration_v1 } from '@/models/save/v1/InitialMartyriaStyle';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import {
   DocumentProperties as DocumentProperties_v1,
@@ -879,6 +884,33 @@ function splitSavedFontFamily(
   };
 }
 
+function saveInitialMartyriaConfiguration(
+  configuration: InitialMartyriaConfiguration,
+): InitialMartyriaConfiguration_v1 {
+  return {
+    styleId: configuration.styleId,
+    transliterateNoteNames: configuration.transliterateNoteNames || undefined,
+    appearanceOverrides: {
+      ...configuration.appearanceOverrides,
+    },
+  };
+}
+
+function loadInitialMartyriaConfiguration(
+  configuration: InitialMartyriaConfiguration_v1,
+): InitialMartyriaConfiguration | null {
+  if (!isBuiltInInitialMartyriaStyleId(configuration.styleId)) {
+    return null;
+  }
+  return {
+    styleId: configuration.styleId,
+    transliterateNoteNames: configuration.transliterateNoteNames === true,
+    appearanceOverrides: {
+      ...configuration.appearanceOverrides,
+    },
+  };
+}
+
 export class SaveService {
   public static LoadScoreFromJson(s: IScore) {
     let score: Score = new Score();
@@ -1028,6 +1060,10 @@ export class SaveService {
     pageSetup.modeKeyDefaultStrokeWidth = p.modeKeyDefaultStrokeWidth;
     pageSetup.modeKeyDefaultFontSize = p.modeKeyDefaultFontSize;
     pageSetup.modeKeyDefaultHeightAdjustment = p.modeKeyDefaultHeightAdjustment;
+    pageSetup.initialMartyriaConfiguration =
+      p.initialMartyriaConfiguration == null
+        ? null
+        : saveInitialMartyriaConfiguration(p.initialMartyriaConfiguration);
 
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
@@ -1596,6 +1632,11 @@ export class SaveService {
     element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.showAmbitus = e.showAmbitus || undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
+    element.inline = e.inline || undefined;
+    element.initialMartyriaConfiguration =
+      e.initialMartyriaConfiguration == null
+        ? e.initialMartyriaConfiguration
+        : saveInitialMartyriaConfiguration(e.initialMartyriaConfiguration);
     element.permanentEnharmonicZo = e.permanentEnharmonicZo || undefined;
   }
 
@@ -1869,6 +1910,10 @@ export class SaveService {
     pageSetup.modeKeyDefaultHeightAdjustment =
       p.modeKeyDefaultHeightAdjustment ??
       pageSetup.modeKeyDefaultHeightAdjustment;
+    pageSetup.initialMartyriaConfiguration =
+      p.initialMartyriaConfiguration == null
+        ? null
+        : loadInitialMartyriaConfiguration(p.initialMartyriaConfiguration);
 
     pageSetup.accidentalDefaultColor =
       p.accidentalDefaultColor ?? pageSetup.accidentalDefaultColor;
@@ -2562,6 +2607,13 @@ export class SaveService {
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.showAmbitus = e.showAmbitus === true;
     element.useDefaultStyle = e.useDefaultStyle === true;
+    element.inline = e.inline === true;
+    element.initialMartyriaConfiguration =
+      e.initialMartyriaConfiguration === undefined
+        ? undefined
+        : e.initialMartyriaConfiguration === null
+          ? null
+          : loadInitialMartyriaConfiguration(e.initialMartyriaConfiguration);
     element.permanentEnharmonicZo = e.permanentEnharmonicZo === true;
 
     // For backwards compatibility, we check the current mode key templates

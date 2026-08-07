@@ -1,47 +1,52 @@
 <template>
   <div
     class="mode-key-container"
+    :class="{ 'inline-mode-key': element.inline }"
     :style="style"
     @click="$emit('select-single')"
   >
-    <Neume :neume="ModeSign.Ekhos" />
-    <Neume v-if="element.isPlagal" :neume="ModeSign.Plagal" />
-    <Neume v-if="element.isVarys" :neume="ModeSign.Varys" />
-    <Neume :neume="element.martyria" />
-    <Neume v-if="element.note != null" :neume="element.note" />
-    <Neume
-      v-if="element.fthoraAboveNote != null"
-      :neume="element.fthoraAboveNote"
-    />
-    <Neume
-      v-if="element.quantitativeNeumeAboveNote != null"
-      :neume="element.quantitativeNeumeAboveNote"
-    />
-    <Neume v-if="element.note2 != null" :neume="element.note2" />
-    <Neume
-      v-if="element.fthoraAboveNote2 != null"
-      :neume="element.fthoraAboveNote2"
-    />
-    <Neume
-      v-if="element.quantitativeNeumeAboveNote2 != null"
-      :neume="element.quantitativeNeumeAboveNote2"
-    />
-    <Neume
-      v-if="element.quantitativeNeumeRight != null"
-      :neume="element.quantitativeNeumeRight"
-      :style="quantitativeNeumeRightStyle"
-    />
-    <Neume
-      v-if="element.fthoraAboveQuantitativeNeumeRight != null"
-      :neume="element.fthoraAboveQuantitativeNeumeRight"
-    />
-    <Neume
-      v-if="element.tempo != null && !element.tempoAlignRight"
-      :neume="element.tempo"
-      :style="tempoStyle"
-    />
-    <span class="right-container">
-      <span v-if="element.showAmbitus" class="ambitus">
+    <span class="mode-key-main" :style="mainStyle">
+      <Neume :neume="ModeSign.Ekhos" />
+      <Neume v-if="element.isPlagal" :neume="ModeSign.Plagal" />
+      <Neume v-if="element.isVarys" :neume="ModeSign.Varys" />
+      <Neume :neume="element.martyria" />
+      <Neume v-if="element.note != null" :neume="element.note" />
+      <Neume
+        v-if="element.fthoraAboveNote != null"
+        :neume="element.fthoraAboveNote"
+      />
+      <Neume
+        v-if="element.quantitativeNeumeAboveNote != null"
+        :neume="element.quantitativeNeumeAboveNote"
+      />
+      <Neume v-if="element.note2 != null" :neume="element.note2" />
+      <Neume
+        v-if="element.fthoraAboveNote2 != null"
+        :neume="element.fthoraAboveNote2"
+      />
+      <Neume
+        v-if="element.quantitativeNeumeAboveNote2 != null"
+        :neume="element.quantitativeNeumeAboveNote2"
+      />
+      <Neume
+        v-if="element.quantitativeNeumeRight != null"
+        :neume="element.quantitativeNeumeRight"
+        :style="quantitativeNeumeRightStyle"
+      />
+      <Neume
+        v-if="element.fthoraAboveQuantitativeNeumeRight != null"
+        :neume="element.fthoraAboveQuantitativeNeumeRight"
+      />
+      <Neume
+        v-if="
+          element.tempo != null && (!element.tempoAlignRight || element.inline)
+        "
+        :neume="element.tempo"
+        :style="tempoStyle"
+      />
+    </span>
+    <span class="right-container" :style="rightContainerStyle">
+      <span v-if="element.showAmbitus && !element.inline" class="ambitus">
         <span class="ambitus-text">(</span>
         <span class="ambitus-low" :style="ambitusStyleLow">
           <Neume :neume="element.ambitusLowNote" />
@@ -56,7 +61,9 @@
       </span>
 
       <Neume
-        v-if="element.tempo != null && element.tempoAlignRight"
+        v-if="
+          element.tempo != null && element.tempoAlignRight && !element.inline
+        "
         :neume="element.tempo"
         :style="tempoStyle"
       />
@@ -100,6 +107,17 @@ const style = computed(() => {
     webkitTextStrokeWidth: withZoom(props.element.computedStrokeWidth),
   } as StyleValue;
 });
+
+const mainStyle = computed(() => {
+  return {
+    position: 'relative',
+    top: withZoom(props.element.computedFlowTop - props.element.computedTop),
+  } as CSSProperties;
+});
+
+const rightContainerStyle = computed(() => ({
+  top: withZoom(props.element.computedFlowTop - props.element.computedTop),
+}));
 
 const tempoStyle = computed(() => {
   // TODO figure out a way to remove the hard-coded -.45em
@@ -184,8 +202,14 @@ const ambitusStyleHigh = computed(() => {
   position: relative;
 }
 
+.mode-key-container.inline-mode-key {
+  border: none;
+  outline: 1px dotted black;
+}
+
 .right-container {
   position: absolute;
+  top: 0;
   right: 0;
 }
 

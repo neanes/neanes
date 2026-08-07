@@ -12,6 +12,8 @@ interface Metrics {
   winAscent: number;
   winDescent: number;
   oligonMidpoint: number;
+  initialMartyriaBaseline: number;
+  capitalHeight: number;
 }
 
 interface EngravingGlue {

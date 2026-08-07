@@ -67,7 +67,7 @@
               >
                 <ItemContent class="items-start">
                   <div class="mode-key-preview w-full px-2 py-1">
-                    <ModeKey
+                    <ModeKeyRenderer
                       class="!w-auto !border-0 [--zoom:1]"
                       :element="template"
                       :page-setup="pageSetup"
@@ -130,7 +130,7 @@ import {
 import type { Component, PropType } from 'vue';
 import { computed, ref, watch } from 'vue';
 
-import ModeKey from '@/components/ModeKey.vue';
+import ModeKeyRenderer from '@/components/ModeKeyRenderer.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -152,10 +152,12 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
+import { resolveInitialMartyriaStyleSelection } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
+import { getLegacyNeumeFontFamily } from '@/utils/getFontFamilyWithFallback';
 
 const emit = defineEmits<{
   update: [modeKey: ModeKeyElement];
@@ -228,6 +230,14 @@ const modeKeyTemplatesForSelectedMode = computed(() => {
 });
 
 function getModeKeyTemplatesForMode(mode: number) {
+  const styleSelection = resolveInitialMartyriaStyleSelection({
+    elementConfiguration: props.element.initialMartyriaConfiguration,
+    pageConfiguration: props.pageSetup.initialMartyriaConfiguration,
+  });
+  const neumeFontFamily =
+    styleSelection.kind === 'standard'
+      ? getLegacyNeumeFontFamily(props.pageSetup.neumeDefaultFontFamily)
+      : props.pageSetup.neumeDefaultFontFamily;
   const elements = modeKeyTemplates
     .filter((x) => x.mode === mode)
     .map((x) =>
@@ -237,17 +247,44 @@ function getModeKeyTemplatesForMode(mode: number) {
           useOptionalDiatonicFthoras.value,
           TextBoxAlignment.Left,
         ),
-        { descriptionSelector: x.description },
+        {
+          descriptionSelector: x.description,
+          initialMartyriaConfiguration:
+            props.element.initialMartyriaConfiguration,
+        },
       ),
     );
 
-  const height = TextMeasurementService.getFontHeight(
-    `${elements[0].fontSize}px ${props.pageSetup.neumeDefaultFontFamily}`,
-  );
+  const fontSize =
+    styleSelection.kind === 'custom'
+      ? styleSelection.mainAppearance.fontSize!
+      : props.pageSetup.modeKeyDefaultFontSize;
+  const color =
+    styleSelection.kind === 'custom'
+      ? styleSelection.mainAppearance.color!
+      : props.pageSetup.modeKeyDefaultColor;
+  const strokeWidth =
+    styleSelection.kind === 'custom'
+      ? styleSelection.mainAppearance.strokeWidth!
+      : props.pageSetup.modeKeyDefaultStrokeWidth;
+  const height =
+    styleSelection.kind === 'custom'
+      ? fontSize * 4
+      : TextMeasurementService.getFontHeight(
+          `${fontSize}px ${neumeFontFamily}`,
+        );
 
   for (const element of elements) {
     element.height = height;
-    element.computedFontFamily = props.pageSetup.neumeDefaultFontFamily;
+    element.computedFontFamily = neumeFontFamily;
+    element.computedFontSize = fontSize;
+    element.computedColor = color;
+    element.computedStrokeWidth = strokeWidth;
+    if (styleSelection.kind === 'custom') {
+      element.computedTop = -fontSize * 2.5;
+      element.computedBottom = fontSize * 1.5;
+      element.computedFlowTop = -fontSize;
+    }
   }
 
   return elements;

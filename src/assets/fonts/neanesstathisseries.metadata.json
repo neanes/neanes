@@ -6,7 +6,9 @@
     "descent": 0.2,
     "winAscent": 1.4,
     "winDescent": 0.466,
-    "oligonMidpoint": 0.309
+    "oligonMidpoint": 0.309,
+    "initialMartyriaBaseline": 0.33,
+    "capitalHeight": 0.547
   },
   "glyphsWithAnchors": {
     "ison": {

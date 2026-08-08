@@ -8314,6 +8314,7 @@ async function onFileMenuPrint() {
   window.document.title = getFileName(selectedWorkspace.value, false);
 
   nextTick(async () => {
+    await waitForPrintImages();
     await ipcService.printWorkspace(selectedWorkspace.value);
     printMode.value = false;
     window.document.title = previousTitle;
@@ -8337,6 +8338,7 @@ async function onFileMenuExportAsPdf() {
 
   try {
     await nextTick();
+    await waitForPrintImages();
     const reply = await ipcService.exportWorkspaceAsPdf(
       selectedWorkspace.value,
     );
@@ -8365,6 +8367,17 @@ async function onFileMenuExportAsPdf() {
     // Re-focus the active element
     focusElement(activeElement);
   }
+}
+
+async function waitForPrintImages() {
+  const images = pagesRef.value!.flatMap((page) =>
+    Array.from(page.querySelectorAll('img')),
+  );
+
+  // Print mode mounts content for every page, including images that were
+  // previously virtualized. A Vue tick mounts the image elements but does not
+  // guarantee that Chromium has decoded them before printing starts.
+  await Promise.allSettled(images.map((image) => image.decode()));
 }
 
 async function onFileMenuExportAsImage() {

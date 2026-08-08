@@ -8377,7 +8377,15 @@ async function waitForPrintImages() {
   // Print mode mounts content for every page, including images that were
   // previously virtualized. A Vue tick mounts the image elements but does not
   // guarantee that Chromium has decoded them before printing starts.
-  await Promise.allSettled(images.map((image) => image.decode()));
+  await new Promise<void>((resolve) => {
+    // A stalled resource must not prevent the print operation indefinitely.
+    const timeoutId = window.setTimeout(resolve, 5000);
+
+    void Promise.allSettled(images.map((image) => image.decode())).then(() => {
+      window.clearTimeout(timeoutId);
+      resolve();
+    });
+  });
 }
 
 async function onFileMenuExportAsImage() {

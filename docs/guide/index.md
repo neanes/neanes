@@ -150,23 +150,46 @@ To create a melisma, end your lyrics with an underscore or hyphen (`_` or `-`). 
 
 To insert hyphens or underscores without creating a melisma, hold <kbd>Ctrl</kbd> while typing the character.
 
+For Greek, Romanian, and Church Slavonic text, melismas can repeat the vowel being sung, as described in the sections below. This behavior is controlled by the [`Melisma Style` option](#lyrics-melisma-style) in the Page Setup dialog.
+
 #### Greek
 
-To continue the final vowel or vowels of a syllable that ends in a vowel, use an underscore (`_`). The vowel or vowels will appear slightly transparent to distinguish them from non-melismatic vowels.
+Greek melismas repeat the vowel or vowels that are sung. Enter them like any other melisma: use underscores (`_`) when the melisma ends the word, and hyphens (`-`) when another syllable of the word follows. The repeated vowels appear slightly transparent to distinguish them from non-melismatic vowels.
 
 For example, to add a melisma to the word `και`, type <kbd>και\_</kbd> <kbd>\_</kbd> <kbd>\_</kbd>.
 ![Greek Lyrics Example 2](./images/guide-lyrics-greek-example-2.png)
 
-To continue the inner vowel or vowels in a single syllable that ends with a consonant, use a hyphen (`-`).
-
-For example, to add a melisma to the word `των`, type <kbd>τω-</kbd> <kbd>-</kbd> <kbd>ων</kbd>.
+If the syllable ends in a consonant, the ending is displayed on the last note of the melisma. For example, to add a melisma to the word `των`, type <kbd>των\_</kbd> <kbd>\_</kbd> <kbd>\_</kbd>.
 ![Greek Lyrics Example 1](./images/guide-lyrics-greek-example-1.png)
 
+To continue a melisma into the next syllable of a word, use hyphens instead: <kbd>Σω-</kbd> <kbd>-</kbd> <kbd>μα</kbd> displays as <kbd>Σω</kbd> <kbd>ω</kbd> <kbd>μα</kbd>.
+
 > [!IMPORTANT]
-> Although there is no visual distinction between using a hyphen or underscore, the character chosen is used to distinguish between `των` and `τω ων` in the [Lyrics pane](./advanced.html#advanced-lyrics-entry). For example, the following will be interpreted as two words (`τω ων`) in the Lyrics pane: <kbd>τω\_</kbd> <kbd>\_</kbd> <kbd>ων</kbd>.
->
+> Because the sung vowels are repeated, the word `των` (<kbd>των\_</kbd> <kbd>\_</kbd> <kbd>\_</kbd>) and the two words `τω ων` (<kbd>τω\_</kbd> <kbd>\_</kbd> <kbd>ων</kbd>) appear identical in the score. Type the one you mean: the difference is preserved in the [Lyrics pane](./advanced.html#advanced-lyrics-entry) and when changing the [`Melisma Style`](#lyrics-melisma-style).
+
+<!-- -->
+
 > [!NOTE]
-> If you do not want the usual behavior for Greek melismata, you can disable it in the Page Setup dialog by checking `Disable Greek Melismata`. If you do this, the melismata will instead work similar to English with hyphens and underscores.
+> If you do not want the vocalic behavior for Greek melismata, set `Melisma Style` to `Western` in the Page Setup dialog.
+
+#### Romanian
+
+To use vocalic melismas with Romanian lyrics, set `Melisma Style` to `Vocalic` in the Page Setup dialog. The melisma repeats the vowel that is sung, which is not always the last written vowel.
+
+For example, type <kbd>greu\_\_\_</kbd> to display <kbd>gre</kbd> <kbd>e</kbd> <kbd>eu</kbd>.
+
+See the [Romanian section of Advanced Lyrics Entry](./advanced.html#romanian) for the full rules and more examples.
+
+#### Church Slavonic
+
+Church Slavonic melismas repeat the vowel of the syllable being sung. Accents and breathings stay on the first note and are not repeated.
+
+For example, type <kbd>гла́съ\_\_\_</kbd> to display <kbd>гла́</kbd> <kbd>а</kbd> <kbd>асъ</kbd>.
+
+See the [Church Slavonic section of Advanced Lyrics Entry](./advanced.html#church-slavonic) for the full rules and more examples.
+
+> [!NOTE]
+> If you do not want the vocalic behavior for Church Slavonic melismata, set `Melisma Style` to `Western` in the Page Setup dialog.
 
 ## Page Breaks and Line Breaks
 
@@ -217,6 +240,18 @@ To open the page setup dialog, click `File -> Page Setup` in the main menu. This
 ![Page Setup Dialog](./images/guide-page-setup-dialog.png)
 
 Most of the options are self-explanatory, but a few are not.
+
+### Lyrics: Melisma Style
+
+The `Melisma Style` option controls how melismas are interpreted throughout the score. When you change this setting, Neanes reassigns the current lyrics using the new style.
+
+| Value            | Behavior                                                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `Auto` (default) | Greek and Church Slavonic text uses vocalic melismas; all other text, including Romanian, uses western-style hyphens and underscores. |
+| `Western`        | All text, including Greek and Church Slavonic, uses western-style hyphens and underscores.                                            |
+| `Vocalic`        | All text, including Romanian, uses vocalic melismas, which repeat the vowel that is sung.                                             |
+
+Files saved with the older `Disable Greek Melismata` option load with `Melisma Style` set to `Western`.
 
 ### Spacing
 

@@ -427,6 +427,11 @@ onBeforeUnmount(() => {
   cursor: grabbing;
 }
 
+.neume-combo-selector-panel :is(.drag-handle, .user-combo-delete):hover {
+  background: var(--chrome-paper-hover);
+  color: var(--chrome-paper-foreground);
+}
+
 .combo-preview {
   display: flex;
   align-items: center;

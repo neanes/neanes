@@ -62,10 +62,11 @@
   --chrome-menubar-content-bg: var(--chrome-surface);
   --chrome-menubar-content-foreground: var(--chrome-foreground);
 
-  /* Document page -- the paper itself stays white in both modes */
+  /* Document paper palette -- the surface and its interactions stay light in
+   * both modes so score colors render as they do on the page. */
   --chrome-paper: white;
   --chrome-paper-foreground: oklch(0.148 0.004 228.8);
-  --chrome-paper-hover: var(--accent);
+  --chrome-paper-hover: oklch(0.963 0.002 197.1);
   --chrome-paper-canvas: var(--chrome-canvas);
 
   /* Adapter palette: dockview (library-specific light theme) */

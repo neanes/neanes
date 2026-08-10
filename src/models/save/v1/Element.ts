@@ -109,7 +109,6 @@ export class NoteElement extends ScoreElement {
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;
   public isHyphen: boolean | undefined = undefined;
-  public spaceAfter: number | undefined = undefined;
   public ignoreAttractions: boolean | undefined = undefined;
 
   public annotations: AnnotationElement[] | undefined = undefined;
@@ -175,7 +174,6 @@ export class MartyriaElement extends ScoreElement {
   public measureBar: MeasureBar | undefined = undefined;
   public alignRight: boolean | undefined = undefined;
   public bpm: number | undefined = undefined;
-  public spaceAfter: number | undefined = undefined;
   public verticalOffset: number | undefined = undefined;
 }
 
@@ -183,7 +181,6 @@ export class TempoElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Tempo;
   public neume: TempoSign = TempoSign.Moderate;
   public bpm: number = 0;
-  public spaceAfter: number | undefined = undefined;
 
   public error: boolean = false;
 }

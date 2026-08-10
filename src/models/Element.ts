@@ -152,7 +152,6 @@ export class NoteElement extends ScoreElement {
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;
-  public spaceAfter: number = 0;
   public ignoreAttractions: boolean = false;
 
   public annotations: AnnotationElement[] = [];
@@ -743,7 +742,6 @@ export class MartyriaElement extends ScoreElement {
   public quantitativeNeume: QuantitativeNeume | null = null;
   public alignRight: boolean = false;
   public bpm: number = 0;
-  public spaceAfter: number = 0;
   public verticalOffset: number = 0;
 
   public error: boolean = false;
@@ -841,7 +839,6 @@ export class TempoElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Tempo;
   public neume: TempoSign = TempoSign.Moderate;
   public bpm: number = TempoElement.getDefaultBpm(TempoSign.Moderate);
-  public spaceAfter: number = 0;
 
   // Used for display
   public neumeWidth: number = 0;

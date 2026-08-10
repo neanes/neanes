@@ -13,6 +13,7 @@ export enum ExportFormat {
 export interface ExportAsPngSettings {
   dpi: number;
   openFolder: boolean;
+  pageNumbers: number[] | null;
   transparentBackground: boolean;
 }
 

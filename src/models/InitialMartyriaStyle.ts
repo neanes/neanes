@@ -1011,9 +1011,9 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
       text('اللحن السادس', [6]),
       text('اللحن السابع', [7]),
       text('اللحن الثامن', [8]),
-      plagalAbbreviation(),
-      modeSign(),
       startingPitch(),
+      modeSign(),
+      plagalAbbreviation(),
     ],
   }),
   builtIn({

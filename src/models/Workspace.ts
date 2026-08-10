@@ -77,6 +77,7 @@ export class Workspace {
   public scrollTop: number = 0;
   public playbackTime: number = 0;
   public playbackBpm: number = 0;
+  public exportPageRange: string = '';
 
   private _nextId: number | null = null;
 

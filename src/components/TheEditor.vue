@@ -792,6 +792,10 @@ const pageCount = computed(() => {
   return filteredPages.value.length;
 });
 
+const exportPageCount = computed(() => {
+  return pages.value.filter((page) => !page.isEmpty).length;
+});
+
 const statusPageCount = computed(() => Math.max(1, pageCount.value));
 
 const commandService = computed(() => {
@@ -8428,15 +8432,21 @@ async function exportAsPng(args: ExportAsPngSettings) {
     await nextTick();
 
     const pageElements = pagesRef.value as HTMLElement[];
+    const selectedPages = pageElements
+      .map((page, index) => ({ page, pageNumber: index + 1 }))
+      .filter(
+        ({ pageNumber }) =>
+          args.pageNumbers == null || args.pageNumbers.includes(pageNumber),
+      );
     let exportedPageCount = 0;
     let firstExportedPagePath = '';
 
-    if (pageElements.length > 0) {
+    if (selectedPages.length > 0) {
       const fontEmbedCSS =
-        (await getFontEmbedCSS(pageElements[0])) +
+        (await getFontEmbedCSS(selectedPages[0].page)) +
         fontCatalog.getExportFontFeatureValuesCss();
 
-      for (const [index, page] of pageElements.entries()) {
+      for (const { page, pageNumber } of selectedPages) {
         const options = {
           fontEmbedCSS,
           pixelRatio: args.dpi / 96,
@@ -8447,7 +8457,10 @@ async function exportAsPng(args: ExportAsPngSettings) {
           options.style.backgroundColor = 'transparent';
         }
 
-        const fileName = reply.filePath.replace(/\.png$/i, `-${index + 1}.png`);
+        const fileName = reply.filePath.replace(
+          /\.png$/i,
+          `-${pageNumber}.png`,
+        );
 
         const data = (await toPng(page, options)).replace(
           /^data:image\/png;base64,/,
@@ -11458,8 +11471,10 @@ function renderTabLabel(tab: Tab) {
     <ExportDialog
       v-if="exportDialogIsOpen"
       v-model:open="exportDialogIsOpen"
+      v-model:page-range="selectedWorkspace.exportPageRange"
       :loading="exportInProgress"
       :default-format="exportFormat"
+      :page-count="exportPageCount"
       :show-item-in-folder-supported="ipcService.isShowItemInFolderSupported()"
       @export-as-png="exportAsPng"
       @export-as-music-xml="exportAsMusicXml"

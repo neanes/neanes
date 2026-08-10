@@ -122,6 +122,7 @@
     <PropertiesNeume
       v-else-if="neumeElement != null"
       :key="`neume-${neumeElement.id}`"
+      :can-keep-with-next="canKeepWithNext"
       :element="neumeElement"
       :inner-neume="innerNeume"
       :open-sections="openSections"
@@ -168,6 +169,10 @@ import PropertiesTempo from './PropertiesTempo.vue';
 import PropertiesTextBox from './PropertiesTextBox.vue';
 
 const props = defineProps({
+  canKeepWithNext: {
+    type: Boolean,
+    required: true,
+  },
   context: {
     type: Object as PropType<InspectorContext>,
     required: true,

@@ -9,7 +9,11 @@ import type {
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
-import { ElementType, LineBreakType } from '@/models/Element';
+import {
+  ElementType,
+  isRightAlignedMartyria,
+  LineBreakType,
+} from '@/models/Element';
 import type { Neume } from '@/models/Neumes';
 import {
   MeasureBar,
@@ -683,18 +687,12 @@ export class ByzHtmlExporter {
           break;
       }
 
-      if (
-        (element.lineBreak &&
-          element.lineBreakType !== LineBreakType.Justify) ||
-        element.pageBreak
-      ) {
-        if (insidePage) {
-          result += this.endPage(
-            indentation + 2,
-            element.pageBreak || element.lineBreakType !== LineBreakType.Center,
-          );
-          insidePage = false;
-        }
+      if ((element.lineBreak || element.pageBreak) && insidePage) {
+        result += this.endPage(
+          indentation + 2,
+          element.pageBreak || element.lineBreakType !== LineBreakType.Center,
+        );
+        insidePage = false;
       }
     }
 
@@ -1395,10 +1393,7 @@ export class ByzHtmlExporter {
         return false;
       }
 
-      if (
-        element.elementType === ElementType.Martyria &&
-        (element as MartyriaElement).alignRight
-      ) {
+      if (isRightAlignedMartyria(element)) {
         return false;
       }
     }

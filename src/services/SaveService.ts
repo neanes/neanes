@@ -12,6 +12,7 @@ import {
   ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
+  supportsKeepWithNext,
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
@@ -39,6 +40,7 @@ import {
   ElementType as ElementType_v1,
   EmptyElement as EmptyElement_v1,
   ImageBoxElement as ImageBoxElement_v1,
+  LineBreakType as LineBreakType_v1,
   MartyriaElement as MartyriaElement_v1,
   ModeKeyElement as ModeKeyElement_v1,
   NoteElement as NoteElement_v1,
@@ -985,8 +987,10 @@ export class SaveService {
       element.id = e.id ?? undefined;
       element.lineBreak = e.lineBreak || undefined;
 
-      if (e.lineBreak) {
-        element.lineBreakType = e.lineBreakType || undefined;
+      // Only a centered break writes an alignment; a left-aligned break is the
+      // default and omits the field, exactly as the model represents it.
+      if (e.lineBreak && e.lineBreakType === LineBreakType.Center) {
+        element.lineBreakType = LineBreakType_v1.Center;
       }
 
       element.pageBreak = e.pageBreak || undefined;
@@ -1286,6 +1290,7 @@ export class SaveService {
     }
     element.quantitativeNeume = e.quantitativeNeume;
     element.spaceAfter = e.spaceAfter || undefined;
+    element.keepWithNext = e.keepWithNext || undefined;
 
     if (e.timeNeume != null) {
       element.timeNeume = e.timeNeume;
@@ -1660,7 +1665,8 @@ export class SaveService {
       this.LoadFooter_v1(score.footers.firstPage, s.footers.firstPage);
     }
 
-    for (const e of s.staff.elements) {
+    for (let i = 0; i < s.staff.elements.length; i++) {
+      const e = s.staff.elements[i];
       let element: ScoreElement = new EmptyElement();
 
       switch (e.elementType) {
@@ -1731,9 +1737,25 @@ export class SaveService {
         LegacySectionNameCompatibility;
 
       element.id = e.id ?? null;
-      element.lineBreak = e.lineBreak === true;
-      element.lineBreakType = e.lineBreakType ?? LineBreakType.Left;
+      element.lineBreak =
+        e.lineBreak === true && !this.isLegacyJustifiedBreak(e);
+      // Every alignment other than Center, including the retired Justify and an
+      // absent field, folds onto a left-aligned break.
+      element.lineBreakType =
+        element.lineBreak && e.lineBreakType === LineBreakType_v1.Center
+          ? LineBreakType.Center
+          : null;
       element.pageBreak = e.pageBreak === true;
+
+      // Product decision: a retired justified break is dropped, and the
+      // element that followed it keeps with its own successor instead.
+      if (
+        supportsKeepWithNext(element) &&
+        this.isLegacyJustifiedBreak(s.staff.elements[i - 1])
+      ) {
+        element.keepWithNext = true;
+      }
+
       this.applyLegacySectionNameToRunningMarker(
         element,
         normalizeLegacySectionName(legacyElement.sectionName),
@@ -2202,6 +2224,7 @@ export class SaveService {
     )
       ? e.quantitativeNeume
       : QuantitativeNeume.Ison;
+    element.keepWithNext = e.keepWithNext === true;
 
     if (e.timeNeume != null) {
       element.timeNeume = e.timeNeume;
@@ -2501,6 +2524,17 @@ export class SaveService {
 
     element.runningMarkerRole = e.runningMarkerRole ?? null;
     element.runningMarkerText = e.runningMarkerText?.trim() || null;
+  }
+
+  // The justified line break was retired. Documents that still contain one are
+  // migrated on load; it is never written.
+  private static isLegacyJustifiedBreak(
+    element: ScoreElement_v1 | undefined,
+  ): boolean {
+    return (
+      element?.lineBreak === true &&
+      element.lineBreakType === LineBreakType_v1.Justify
+    );
   }
 
   private static applyLegacySectionNameToRunningMarker(

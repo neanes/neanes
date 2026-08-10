@@ -44,6 +44,7 @@ import {
   Note,
   NoteIndicator,
   QuantitativeNeume,
+  restNeumes,
   RootSign,
   Tie,
   TimeNeume,
@@ -4360,6 +4361,108 @@ export class LayoutService {
     return this.breakParagraphWithRatioCap(items, lineLengths, relaxedCap);
   }
 
+  private static isNoteBox(
+    item: InputItem,
+  ): item is ElementBox & { element: NoteElement } {
+    return (
+      item.type === 'box' &&
+      'element' in item &&
+      (item as ElementBox).element.elementType === ElementType.Note
+    );
+  }
+
+  private static isRuntPenaltyNote(
+    noteElement: NoteElement,
+    nextNoteElement: NoteElement | null,
+  ) {
+    return (
+      restNeumes.includes(noteElement.quantitativeNeume) ||
+      (this.isPartOfSameMelisma(noteElement) &&
+        !this.isPartOfSameMelisma(nextNoteElement))
+    );
+  }
+
+  /**
+   * Penalizes breakpoints that would leave only one or two notes on the
+   * paragraph's final line, walking the tail backwards until both candidate
+   * breakpoints have been passed.
+   *
+   * At each candidate breakpoint exactly one note is tested: the note that
+   * would begin the final line. It earns a penalty only when it is a rest or
+   * the last continuation note of a melisma. Breakpoints that are already
+   * prohibited (cost >= MAX_COST) are left untouched.
+   *
+   * Only breakpoints that immediately follow a note box are considered, so the
+   * free breakpoint after a martyria is out of scope even though it can strand
+   * a tail of its own.
+   *
+   * Only note boxes count toward the tail. Every other box is transparent to
+   * this rule, including a terminal right-aligned martyria, which is visually
+   * the last element but is not part of the short musical tail being measured.
+   *
+   * @param items The paragraph's items, mutated in place.
+   * @param diagnosticItems The parallel diagnostics mirror, or null when
+   *   diagnostics are not being collected.
+   */
+  public static applyRuntPenalty(
+    items: InputItem[],
+    diagnosticItems: LayoutDiagnosticItem[] | null,
+  ) {
+    let tailNoteCount = 0;
+    let tailNote: NoteElement | null = null;
+    let nextTailNote: NoteElement | null = null;
+
+    for (let i = items.length - 1; i >= 1; i--) {
+      const item = items[i];
+
+      if (this.isNoteBox(item)) {
+        tailNoteCount++;
+
+        if (tailNoteCount > 2) {
+          return;
+        }
+
+        nextTailNote = tailNote;
+        tailNote = item.element;
+        continue;
+      }
+
+      if (
+        tailNote == null ||
+        item.type !== 'penalty' ||
+        item.cost >= MAX_COST ||
+        !this.isNoteBox(items[i - 1]) ||
+        !this.isRuntPenaltyNote(tailNote, nextTailNote)
+      ) {
+        continue;
+      }
+
+      // Discourage a short tail with a flat penalty, weighted like the melisma
+      // penalties in getBreakCost. This deliberately stacks with those rules
+      // when the tail is a melisma tail: they describe the shape of the
+      // melisma, this one describes the shape of the final line.
+      //
+      // The total is capped at 0.95 * MAX_COST, the worst cost getBreakCost
+      // can assign to a breakpoint that is still a legal break: one strong
+      // penalty (0.5) plus all three weaker ones (0.45). That keeps the break
+      // a preference rather than a prohibition, keeps the result inside the
+      // range the break rules themselves use, and keeps it monotone in the
+      // base cost, so an intrinsically worse breakpoint never ends up cheaper.
+      if (item.cost < MAX_COST * 0.95) {
+        item.cost = Math.min(item.cost + MAX_COST * 0.15, MAX_COST * 0.95);
+      }
+
+      if (diagnosticItems != null) {
+        // The only penalty that can immediately follow a note box is the
+        // unlabeled break opportunity pushed after the neume, so there is no
+        // existing label to preserve here.
+        const diagnosticItem = diagnosticItems[i];
+        diagnosticItem.cost = item.cost;
+        diagnosticItem.label = `runt-${tailNoteCount}-note`;
+      }
+    }
+  }
+
   private static endParagraph(
     lineBreakType: LineBreakType,
     workspace: LayoutWorkspace,
@@ -4407,6 +4510,12 @@ export class LayoutService {
 
     // Force break and end paragraph
     this.forceBreak(workspace);
+
+    // Discourage breakpoints that leave a one- or two-note final line.
+    this.applyRuntPenalty(
+      pendingParagraph,
+      workspace.diagnostics?.items ?? null,
+    );
 
     // Compute per-line widths for multiline drop caps
     let lineLengths: number | number[];

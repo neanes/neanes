@@ -61,7 +61,7 @@
     "@vitest/coverage-istanbul": "^4.1.10",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.9.0",
-    "@vuelor/picker": "^1.0.2",
+    "@vuelor/picker": "^1.2.0",
     "@vueuse/core": "^14.4.0",
     "ckeditor5": "^48.4.0",
     "class-variance-authority": "^0.7.1",

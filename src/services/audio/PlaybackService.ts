@@ -31,7 +31,7 @@ export interface PlaybackSequenceEvent {
 
 export interface PlaybackOptions {
   useLegetos: boolean;
-  useDefaultAttractionZo: boolean;
+  useAgiaAttraction: boolean;
 
   frequencyDi: number;
 
@@ -49,8 +49,8 @@ export interface PlaybackOptions {
   alterationMultipliers: number[];
   alterationMoriaMap: { [key in Accidental]?: number };
 
-  defaultAttractionZoMoria: number;
-  defaultAttractionKeMoria: number;
+  agiaAttractionZoMoria: number;
+  agiaAttractionKeMoria: number;
 
   volumeIson: number;
   volumeMelody: number;
@@ -94,11 +94,39 @@ export interface PlaybackWorkspace {
 
   permanentEnharmonicZo: boolean;
 
-  zoFlatPivotActivated: boolean;
-  zoNaturalPivotActivated: boolean;
-
   // debug
   loggingEnabled: boolean;
+}
+
+const KE_VALUE = getScaleNoteValue(ScaleNote.Ke);
+const ZO_VALUE = getScaleNoteValue(ScaleNote.ZoHigh);
+const NI_VALUE = getScaleNoteValue(ScaleNote.NiHigh);
+
+/**
+ * The maximum number of nodes that may be examined while deciding the
+ * attraction of a single note. The attraction rules are not recursive, so this
+ * only bounds how far a single scan looks; it is a performance cap, not a
+ * correctness guard.
+ */
+const MAX_ATTRACTION_SCAN_NODES = 25;
+
+/**
+ * Where a scanned note sits relative to the zo/ke band. Ke, Zo' and Ni' are
+ * consecutive scale degrees. Ni' -- zo's upper neighbor -- is tracked on its own
+ * because it is zo's resolution: the melody counts as ascending past zo' only by
+ * stepping into ni', not by leaping over it to pa' or higher ('above'). Likewise
+ * 'below' is everything under ke. A sharpened ke is a leading tone up to zo', so
+ * it shares ni's register. Every other note is one of the band notes ke/zo'.
+ */
+type Register = 'above' | 'below' | 'ke' | 'zo' | 'ni';
+
+/**
+ * A note encountered while scanning the melody to decide an attraction, reduced
+ * to the facts the attraction rules care about: its index and its register.
+ */
+interface ScanNote {
+  index: number;
+  register: Register;
 }
 
 export enum PlaybackScaleName {
@@ -135,7 +163,7 @@ export class PlaybackService {
 
       options: {
         useLegetos: false,
-        useDefaultAttractionZo: true,
+        useAgiaAttraction: true,
         frequencyDi: defaultFrequencyDi,
         speed: 1,
 
@@ -148,8 +176,8 @@ export class PlaybackService {
         spathiIntervals: [20, 4, 4, 14],
         klitonIntervals: [14, 12, 4],
 
-        defaultAttractionZoMoria: -4,
-        defaultAttractionKeMoria: 5,
+        agiaAttractionZoMoria: -4,
+        agiaAttractionKeMoria: 5,
 
         volumeIson: -4,
         volumeMelody: 0,
@@ -188,9 +216,6 @@ export class PlaybackService {
 
       permanentEnharmonicZo: false,
 
-      zoFlatPivotActivated: false,
-      zoNaturalPivotActivated: false,
-
       loggingEnabled:
         import.meta.env.VITE_PLAYBACK_SERVICE_LOGGING_ENABLED === 'true',
     };
@@ -207,9 +232,11 @@ export class PlaybackService {
       elements,
       chrysanthineAccidentals,
     );
-    for (const node of nodes) {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+
       if (node.nodeType === NodeType.NoteAtomNode) {
-        this.handleNoteAtom(node as NoteAtomNode, nodes, workspace);
+        this.handleNoteAtom(node as NoteAtomNode, nodes, i, workspace);
       } else if (node.nodeType === NodeType.RestNode) {
         this.handleRest(node as RestNode, workspace);
       } else if (node.nodeType === NodeType.ModeKeyNode) {
@@ -420,6 +447,7 @@ export class PlaybackService {
   applyAlterations(
     noteAtomNode: Readonly<NoteAtomNode>,
     nodes: AnalysisNode[],
+    nodeIndex: number,
     workspace: PlaybackWorkspace,
   ) {
     let alteredFrequency = workspace.frequency;
@@ -482,6 +510,7 @@ export class PlaybackService {
         alteredFrequency,
         noteAtomNode,
         nodes,
+        nodeIndex,
         workspace,
       );
     }
@@ -493,91 +522,257 @@ export class PlaybackService {
     frequency: number,
     noteAtomNode: Readonly<NoteAtomNode>,
     nodes: AnalysisNode[],
+    nodeIndex: number,
     workspace: PlaybackWorkspace,
   ) {
     const { scale } = workspace;
 
-    // If melody descends after zo, flatten zo
+    // applyAlterations already gates on ignoreAttractions and on the frequency
+    // being unaltered. Here we additionally require the feature to be enabled,
+    // zo to not be permanently enharmonic, and both the workspace scale and the
+    // note's own scale to be one that has the ke/zo' relationship. The
+    // !accidental check is not redundant with the frequency-unchanged gate,
+    // since an accidental can resolve to 0 moria.
     if (
-      workspace.options.useDefaultAttractionZo &&
+      workspace.options.useAgiaAttraction &&
       !workspace.permanentEnharmonicZo &&
       (scale.name === PlaybackScaleName.Diatonic ||
         scale.name === PlaybackScaleName.Kliton ||
-        scale.name === PlaybackScaleName.Zygos)
+        scale.name === PlaybackScaleName.Zygos) &&
+      !noteAtomNode.accidental &&
+      (noteAtomNode.scale === Scale.Diatonic ||
+        noteAtomNode.scale === Scale.Kliton ||
+        noteAtomNode.scale === Scale.Zygos)
     ) {
       if (noteAtomNode.virtualNote === ScaleNote.ZoHigh) {
-        // If we are not in a pivot, check to see if we need to pivot
-        if (!workspace.zoFlatPivotActivated) {
-          this.setPivots(noteAtomNode, nodes, workspace);
-        }
-
-        // If we are in a pivot, then flatten zo
-        if (workspace.zoFlatPivotActivated) {
+        if (this.zoIsFlattened(nodeIndex, nodes)) {
           frequency = this.changeFrequency(
             frequency,
-            workspace.options.defaultAttractionZoMoria,
+            workspace.options.agiaAttractionZoMoria,
           );
         }
-      } else {
-        // Clear zo flat pivot
-        workspace.zoFlatPivotActivated = false;
-      }
-
-      // Check whether ke is attracted toward zo
-      if (
-        noteAtomNode.virtualNote === ScaleNote.Ke &&
-        workspace.zoNaturalPivotActivated
-      ) {
-        frequency = this.changeFrequency(
-          frequency,
-          workspace.options.defaultAttractionKeMoria,
-        );
-      }
-
-      // Clear the zo natural pivot if we descend below ke
-      if (
-        getScaleNoteValue(noteAtomNode.virtualNote) <
-        getScaleNoteValue(ScaleNote.Ke)
-      ) {
-        workspace.zoNaturalPivotActivated = false;
+      } else if (noteAtomNode.virtualNote === ScaleNote.Ke) {
+        if (this.keIsSharpened(nodeIndex, nodes)) {
+          frequency = this.changeFrequency(
+            frequency,
+            workspace.options.agiaAttractionKeMoria,
+          );
+        }
       }
     }
 
     return frequency;
   }
 
-  setPivots(
-    noteAtomNode: Readonly<NoteAtomNode>,
+  private register(node: NoteAtomNode): Register {
+    const value = getScaleNoteValue(node.virtualNote);
+    const sharp =
+      node.accidental != null && node.accidental.startsWith('Sharp');
+
+    // Ni' is zo's upper neighbor and resolution note. A sharpened ke is a leading
+    // tone up to zo, so it resolves toward the same place and shares ni's register.
+    if (value === NI_VALUE || (value === KE_VALUE && sharp)) {
+      return 'ni';
+    }
+    // Anything strictly above ni' is reached from the band only by a leap.
+    if (value > NI_VALUE) {
+      return 'above';
+    }
+    if (value < KE_VALUE) {
+      return 'below';
+    }
+    return value === ZO_VALUE ? 'zo' : 'ke';
+  }
+
+  /**
+   * Walks the melody outward from `index` in the given direction, yielding each
+   * note classified by its register. Non-notes (ison, tempo) are skipped, and
+   * the scan stops at a phrase boundary (rest, fthora, mode key) or once the
+   * lookahead cap is reached.
+   */
+  private *scan(
     nodes: AnalysisNode[],
-    workspace: PlaybackWorkspace,
-  ) {
-    const index: number = nodes.indexOf(noteAtomNode);
+    index: number,
+    step: 1 | -1,
+  ): Generator<ScanNote> {
+    let remaining = MAX_ATTRACTION_SCAN_NODES;
 
-    for (let i = index + 1; i < nodes.length; i++) {
-      const nextNoteAtomNode = nodes[i] as NoteAtomNode;
+    for (
+      let i = index + step;
+      i >= 0 && i < nodes.length && remaining > 0;
+      i += step
+    ) {
+      remaining--;
 
-      const next: number = getScaleNoteValue(nextNoteAtomNode.virtualNote);
+      const node = nodes[i];
 
-      if (next <= getScaleNoteValue(ScaleNote.Ke)) {
-        workspace.zoFlatPivotActivated = true;
-        workspace.zoNaturalPivotActivated = false;
+      if (
+        node.nodeType === NodeType.RestNode ||
+        node.nodeType === NodeType.FthoraNode ||
+        node.nodeType === NodeType.ModeKeyNode
+      ) {
         return;
       }
 
-      // TODO this is too simplistic. Disabling for now.
-      // if (next >= getScaleNoteValue(ScaleNote.ZoHigh)) {
-      //   workspace.zoNaturalPivotActivated = true;
-      // }
-
-      if (next > getScaleNoteValue(ScaleNote.ZoHigh)) {
-        return;
+      if (node.nodeType === NodeType.NoteAtomNode) {
+        yield { index: i, register: this.register(node as NoteAtomNode) };
       }
     }
+  }
+
+  /**
+   * Zo is flattened when the melody settles on ke rather than ascending past zo'
+   * into ni'. Attraction follows stepwise motion to a neighbor; a leap over a
+   * neighbor does not count. There are two ways a zo flattens:
+   *
+   *  - It is an ascending peak: the melody climbed into the band from below and
+   *    this zo steps straight back down to ke (see isAscendingPeak). Such a zo
+   *    reads as a peak even when the line later recovers above zo, so it is flat.
+   *
+   *  - Looking forward, a step up into ni' settles it natural -- that is the only
+   *    way to ascend past zo'. Leaving the band any other way -- down below ke, or
+   *    by leaping up over ni' to pa' -- flattens it only if it had settled on ke
+   *    on the way out (endedOnKe). A bare leap straight off zo' does not flatten
+   *    it, and neither does a dip that recovers above the band.
+   */
+  private zoIsFlattened(index: number, nodes: AnalysisNode[]): boolean {
+    if (this.isAscendingPeak(index, nodes)) {
+      return true;
+    }
+
+    let endedOnKe = false;
+
+    for (const n of this.scan(nodes, index, 1)) {
+      // Stepping up into ni' is the only ascent past zo'; it stays natural.
+      if (n.register === 'ni') {
+        return false;
+      }
+      // Leaving the band otherwise -- down below ke, or by leaping up over ni' --
+      // flattens zo only if the melody had settled on ke on its way out.
+      if (n.register === 'above' || n.register === 'below') {
+        return endedOnKe;
+      }
+      endedOnKe = n.register === 'ke';
+    }
+
+    return endedOnKe;
+  }
+
+  /**
+   * A zo is an ascending peak when the melody climbs into the ke/zo band from
+   * below and then steps straight back down -- the top of a rising-then-falling
+   * arch. This is the approach the bare forward scan cannot see: a zo entered by
+   * ascent that falls back is flat regardless of whether the line later climbs
+   * past zo again, because that later climb is a separate gesture.
+   *
+   * The departure must step straight down to ke (a leap off zo' down past ke does
+   * not flatten it) and, scanning back through the transparent band, the first
+   * decisive note must be `below` -- entered by ascent. An `above` or `ni` note
+   * instead means the band was entered from the upper register (ni-zo-ke-zo merely
+   * ornaments a natural zo), which is not a peak.
+   */
+  private isAscendingPeak(index: number, nodes: AnalysisNode[]): boolean {
+    const next = this.firstRegister(nodes, index, 1);
+
+    if (next !== 'ke') {
+      return false;
+    }
+
+    for (const n of this.scan(nodes, index, -1)) {
+      if (n.register === 'above' || n.register === 'ni') {
+        return false;
+      }
+      if (n.register === 'below') {
+        return true;
+      }
+      // ke and zo are transparent: keep scanning back through the band.
+    }
+
+    return false;
+  }
+
+  private firstRegister(
+    nodes: AnalysisNode[],
+    index: number,
+    step: 1 | -1,
+  ): Register | undefined {
+    for (const n of this.scan(nodes, index, step)) {
+      return n.register;
+    }
+
+    return undefined;
+  }
+
+  private zoIsNatural(index: number, nodes: AnalysisNode[]): boolean {
+    const node = nodes[index];
+
+    if (node.nodeType !== NodeType.NoteAtomNode) {
+      return false;
+    }
+
+    const noteNode = node as NoteAtomNode;
+
+    // A note flagged to ignore attractions is played natural regardless of the
+    // contour (applyAlterations gates the flattening on this flag), so it must
+    // read as natural here too. Otherwise a neighboring ke that leads up to a
+    // zo the user forced natural would wrongly fail to sharpen.
+    return (
+      noteNode.virtualNote === ScaleNote.ZoHigh &&
+      !noteNode.accidental &&
+      (noteNode.ignoreAttractions || !this.zoIsFlattened(index, nodes))
+    );
+  }
+
+  /**
+   * A ke is sharpened into a leading tone when it sits between a natural zo'
+   * behind it and a return up into the zo'/ni' neighborhood ahead -- the melody
+   * ornaments around zo' rather than resting on ke or leaping away past it.
+   */
+  private keIsSharpened(index: number, nodes: AnalysisNode[]): boolean {
+    return (
+      this.leadsToNaturalZo(nodes, index, -1) &&
+      this.leadsToNaturalZo(nodes, index, 1)
+    );
+  }
+
+  /**
+   * Scans for the note that decides whether ke leads back toward a natural zo. A
+   * note below ke breaks the line; a ke is passed over. Looking ahead, the line
+   * leads back to zo only by stepping up into ni' (zo's neighbor); a leap on past
+   * ni' to pa' overshoots and breaks the line. Looking behind, the upper register
+   * is transparent and we must reach an actual natural zo, since that is the note
+   * the ke leads back up to.
+   */
+  private leadsToNaturalZo(
+    nodes: AnalysisNode[],
+    index: number,
+    step: 1 | -1,
+  ): boolean {
+    for (const n of this.scan(nodes, index, step)) {
+      if (n.register === 'below') {
+        return false;
+      }
+      if (n.register === 'ke') {
+        continue;
+      }
+      if (n.register === 'ni' || n.register === 'above') {
+        if (step === 1) {
+          // Ahead, ke leads back to zo only by stepping up into ni'. A leap on
+          // past ni' to pa' (an 'above' note) overshoots and does not.
+          return n.register === 'ni';
+        }
+        continue;
+      }
+      return this.zoIsNatural(n.index, nodes); // 'zo'
+    }
+
+    return false;
   }
 
   handleNoteAtom(
     noteAtomNode: Readonly<NoteAtomNode>,
     nodes: AnalysisNode[],
+    nodeIndex: number,
     workspace: PlaybackWorkspace,
   ) {
     const { events } = workspace;
@@ -611,6 +806,7 @@ export class PlaybackService {
     const alteredFrequency = this.applyAlterations(
       noteAtomNode,
       nodes,
+      nodeIndex,
       workspace,
     );
 

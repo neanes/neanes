@@ -5,9 +5,10 @@ const defaultNav = [
   {
     text: 'Guide',
     items: [
-      { text: 'Getting Started', link: '/guide/' },
+      { text: 'Quick Start', link: '/guide/' },
+      { text: 'Writing Music', link: '/guide/writing-music.html' },
       { text: 'Neume Keyboard', link: '/guide/keyboard.html' },
-      { text: 'Advanced', link: '/guide/advanced.html' },
+      { text: 'Advanced Workflows', link: '/guide/advanced.html' },
     ],
   },
   { text: 'Download', link: '/download/' },
@@ -43,14 +44,39 @@ export default defineConfig({
     },
     nav: defaultNav,
     sidebar: {
-      '/guide/': defaultNav,
+      '/guide/': [
+        {
+          text: 'Guide',
+          items: [
+            { text: 'Quick Start', link: '/guide/' },
+            { text: 'Editor Basics', link: '/guide/editor-basics.html' },
+            { text: 'Writing Music', link: '/guide/writing-music.html' },
+            { text: 'Lyrics', link: '/guide/lyrics.html' },
+            {
+              text: 'Text, Images, and Styles',
+              link: '/guide/text-and-styles.html',
+            },
+            { text: 'Page Layout and Books', link: '/guide/page-layout.html' },
+            { text: 'Playback', link: '/guide/playback.html' },
+            {
+              text: 'Saving, Importing, and Exporting',
+              link: '/guide/saving-and-exporting.html',
+            },
+            { text: 'Advanced Workflows', link: '/guide/advanced.html' },
+          ],
+        },
+        {
+          text: 'Reference',
+          items: [{ text: 'Neume Keyboard', link: '/guide/keyboard.html' }],
+        },
+      ],
       '/download/': defaultNav,
       '/web-app/': defaultNav,
     },
     socialLinks: [{ icon: 'github', link: 'https://github.com/neanes/neanes' }],
     docsDir: 'docs',
     editLink: {
-      pattern: 'https://github.com/neanes/neanes/tree/master/:path',
+      pattern: 'https://github.com/neanes/neanes/edit/master/docs/:path',
       text: 'Suggest changes to this page',
     },
   },

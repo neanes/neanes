@@ -379,7 +379,6 @@ export function createDefaultParagraphStyles() {
       fontSize: Unit.fromPt(60),
     },
   );
-
   return [
     defaultText,
     annotation,

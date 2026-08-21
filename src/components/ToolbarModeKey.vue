@@ -1,6 +1,6 @@
 <template>
   <Toolbar class="chrome-toolbar" loop>
-    <template v-if="!element.useDefaultStyle">
+    <template v-if="usesStandardModeKey && !element.useDefaultStyle">
       <Label for="toolbar-mode-key-font-size">{{
         $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
       }}</Label>
@@ -14,6 +14,7 @@
       <ToolbarSeparator />
     </template>
     <ToggleGroup
+      v-if="!element.inline"
       type="single"
       variant="outline"
       :model-value="element.alignment"
@@ -53,13 +54,14 @@
         </ToggleGroupItem>
       </AppTooltip>
     </ToggleGroup>
-    <ToolbarSeparator />
+    <ToolbarSeparator v-if="!element.inline" />
     <ButtonWithMenu
       :options="tempoMenuOptions"
       :tooltip="$t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' })"
       @select="$emit('update:tempo', $event)"
     />
     <AppTooltip
+      v-if="!element.inline"
       :tooltip="
         $t(($) => $.toolbar.initialMartyria.rightAlignTempo, { ns: 'toolbar' })
       "
@@ -109,6 +111,7 @@ import {
   PhTextAlignRight,
 } from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
+import { computed } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
@@ -121,7 +124,9 @@ import {
 } from '@/components/ui/toolbar';
 import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
+import { resolveInitialMartyriaStyleSelection } from '@/models/InitialMartyriaStyle';
 import { TempoSign } from '@/models/Neumes';
+import type { PageSetup } from '@/models/PageSetup';
 
 import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
 import ButtonWithMenu from './ButtonWithMenu.vue';
@@ -161,14 +166,25 @@ const tempoMenuOptions: ButtonWithMenuOption[] = [
   },
 ];
 
-defineProps({
+const props = defineProps({
   element: {
     type: Object as PropType<ModeKeyElement>,
+    required: true,
+  },
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
     required: true,
   },
 });
 
 const emit = defineEmits(['open-mode-key-dialog', 'update', 'update:tempo']);
+const usesStandardModeKey = computed(
+  () =>
+    resolveInitialMartyriaStyleSelection({
+      elementConfiguration: props.element.initialMartyriaConfiguration,
+      pageConfiguration: props.pageSetup.initialMartyriaConfiguration,
+    }).kind === 'standard',
+);
 
 function onAlignmentChanged(value: unknown) {
   if (isTextBoxAlignment(value)) {

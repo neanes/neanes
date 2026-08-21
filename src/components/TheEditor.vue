@@ -57,9 +57,10 @@ import { ExportFormat } from '@/components/ExportDialog.types';
 import ExportDialog from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
+import InitialMartyriaStylesDialog from '@/components/InitialMartyriaStylesDialog.vue';
 import LyricsPane from '@/components/LyricsPane.vue';
-import ModeKey from '@/components/ModeKey.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
+import ModeKeyRenderer from '@/components/ModeKeyRenderer.vue';
 import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
@@ -153,6 +154,10 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
+import {
+  type InitialMartyriaConfiguration,
+  resolveInitialMartyriaStyleSelection,
+} from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
   ElementOverlayBox,
@@ -514,6 +519,8 @@ const syllablePositioningDialogIsOpen = ref(false);
 const playbackSettingsDialogIsOpen = ref(false);
 const pageSetupDialogIsOpen = ref(false);
 const paragraphStylesDialogIsOpen = ref(false);
+const initialMartyriaStylesDialogIsOpen = ref(false);
+const initialMartyriaStylesDialogElement = ref<ModeKeyElement | null>(null);
 const paragraphStylesDialogSelectedStyleId = ref<string>(
   BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
 );
@@ -1484,6 +1491,7 @@ const dialogOpen = computed(() => {
     modeKeyDialogIsOpen.value ||
     pageSetupDialogIsOpen.value ||
     paragraphStylesDialogIsOpen.value ||
+    initialMartyriaStylesDialogIsOpen.value ||
     documentPropertiesDialogIsOpen.value ||
     playbackSettingsDialogIsOpen.value ||
     syllablePositioningDialogIsOpen.value ||
@@ -1786,6 +1794,10 @@ onMounted(() => {
     onFileMenuParagraphStyles,
   );
   EventBus.$on(
+    IpcMainChannels.FileMenuInitialMartyriaStyles,
+    onFileMenuInitialMartyriaStyles,
+  );
+  EventBus.$on(
     IpcMainChannels.FileMenuDocumentProperties,
     onFileMenuDocumentProperties,
   );
@@ -1904,6 +1916,10 @@ onBeforeUnmount(() => {
   EventBus.$off(
     IpcMainChannels.FileMenuParagraphStyles,
     onFileMenuParagraphStyles,
+  );
+  EventBus.$off(
+    IpcMainChannels.FileMenuInitialMartyriaStyles,
+    onFileMenuInitialMartyriaStyles,
   );
   EventBus.$off(
     IpcMainChannels.FileMenuDocumentProperties,
@@ -7457,6 +7473,18 @@ function updatePageSetup(pageSetup: PageSetup) {
   save();
 }
 
+function useInitialMartyriaConfiguration(
+  configuration: InitialMartyriaConfiguration | null,
+) {
+  commandService.value.execute(
+    pageSetupCommandFactory.create('update-properties', {
+      target: score.value.pageSetup,
+      newValues: { initialMartyriaConfiguration: configuration },
+    }),
+  );
+  save();
+}
+
 function updateDocumentProperties(documentProperties: DocumentProperties) {
   commandService.value.execute(
     documentPropertiesCommandFactory.create('update-properties', {
@@ -8316,6 +8344,48 @@ function onFileMenuPageSetup() {
 
 function onFileMenuParagraphStyles() {
   openParagraphStylesDialog();
+}
+
+function onFileMenuInitialMartyriaStyles() {
+  initialMartyriaStylesDialogElement.value = null;
+  initialMartyriaStylesDialogIsOpen.value = true;
+}
+
+function openInitialMartyriaStyleDialog(element: ModeKeyElement) {
+  initialMartyriaStylesDialogElement.value = element;
+  initialMartyriaStylesDialogIsOpen.value = true;
+}
+
+function updateInitialMartyriaElementConfiguration(
+  configuration: InitialMartyriaConfiguration | null,
+) {
+  if (initialMartyriaStylesDialogElement.value != null) {
+    updateModeKey(initialMartyriaStylesDialogElement.value, {
+      initialMartyriaConfiguration: configuration,
+    });
+  }
+}
+
+function useInitialMartyriaConfigurationForDocument(
+  configuration: InitialMartyriaConfiguration | null,
+) {
+  const element = initialMartyriaStylesDialogElement.value;
+  if (element == null) {
+    useInitialMartyriaConfiguration(configuration);
+    return;
+  }
+
+  commandService.value.executeAsBatch([
+    pageSetupCommandFactory.create('update-properties', {
+      target: score.value.pageSetup,
+      newValues: { initialMartyriaConfiguration: configuration },
+    }),
+    modeKeyCommandFactory.create('update-properties', {
+      target: element,
+      newValues: { initialMartyriaConfiguration: undefined },
+    }),
+  ]);
+  save();
 }
 
 function onFileMenuDocumentProperties() {
@@ -9875,6 +9945,15 @@ function setContextMenuUseDefaultStyle(
   }
 }
 
+function usesStandardModeKey(element: ModeKeyElement) {
+  return (
+    resolveInitialMartyriaStyleSelection({
+      elementConfiguration: element.initialMartyriaConfiguration,
+      pageConfiguration: score.value.pageSetup.initialMartyriaConfiguration,
+    }).kind === 'standard'
+  );
+}
+
 function openContextMenuPositioning(element: NoteElement) {
   // Make sure the dialog targets the right-clicked note (it reads the
   // selected element), then open it as the Properties pane button does.
@@ -10021,6 +10100,7 @@ function renderTabLabel(tab: Tab) {
             @update:martyria="updateMartyria"
             @update:open-sections="propertiesPaneOpenSections = $event"
             @update:tempo="updateTempo"
+            @open-initial-martyria-style-dialog="openInitialMartyriaStyleDialog"
             @open-paragraph-styles-dialog="openParagraphStylesDialog"
           />
         </template>
@@ -10831,7 +10911,7 @@ function renderTabLabel(tab: Tab) {
                             <span v-if="element.lineBreak" class="line-break-2"
                               ><PhParagraph weight="fill"
                             /></span>
-                            <ModeKey
+                            <ModeKeyRenderer
                               :ref="
                                 setTemplateRef(
                                   `element-${getElementIndex(element)}`,
@@ -11134,7 +11214,10 @@ function renderTabLabel(tab: Tab) {
                     }}
                   </ContextMenuCheckboxItem>
                   <ContextMenuCheckboxItem
-                    v-if="contextMenuModeKey != null"
+                    v-if="
+                      contextMenuModeKey != null &&
+                      usesStandardModeKey(contextMenuModeKey)
+                    "
                     :model-value="contextMenuModeKey.useDefaultStyle"
                     @update:model-value="
                       setContextMenuUseDefaultStyle(
@@ -11306,6 +11389,7 @@ function renderTabLabel(tab: Tab) {
       <template v-else-if="inspectorContext.kind === 'mode-key'">
         <ToolbarModeKey
           :element="inspectorContext.element"
+          :page-setup="score.pageSetup"
           @update="updateModeKey(inspectorContext.element, $event)"
           @update:tempo="setModeKeyTempo(inspectorContext.element, $event)"
           @open-mode-key-dialog="openModeKeyDialog"
@@ -11472,6 +11556,22 @@ function renderTabLabel(tab: Tab) {
       :initial-selected-style-id="paragraphStylesDialogSelectedStyleId"
       :fonts="fonts"
       @update="updateParagraphStyles($event)"
+    />
+    <InitialMartyriaStylesDialog
+      v-if="initialMartyriaStylesDialogIsOpen"
+      v-model:open="initialMartyriaStylesDialogIsOpen"
+      :configuration="
+        initialMartyriaStylesDialogElement == null
+          ? score.pageSetup.initialMartyriaConfiguration
+          : initialMartyriaStylesDialogElement.initialMartyriaConfiguration
+      "
+      :page-setup="score.pageSetup"
+      :fonts="fonts"
+      :target="
+        initialMartyriaStylesDialogElement == null ? 'document' : 'element'
+      "
+      @update="updateInitialMartyriaElementConfiguration($event)"
+      @use-for-document="useInitialMartyriaConfigurationForDocument($event)"
     />
     <DocumentPropertiesDialog
       v-if="documentPropertiesDialogIsOpen"

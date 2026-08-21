@@ -208,34 +208,14 @@
         <InputUnit
           id="properties-martyria-vertical-offset"
           unit="pt"
-          :min="-spaceAfterMax"
-          :max="spaceAfterMax"
+          :min="-verticalOffsetMax"
+          :max="verticalOffsetMax"
           :step="0.5"
           :format-options="fraction2FormatOptions"
           :model-value="element.verticalOffset"
           @update:model-value="
             $emit('update', {
               verticalOffset: $event,
-            } as Partial<MartyriaElement>)
-          "
-        />
-      </Field>
-
-      <Field orientation="horizontal">
-        <FieldLabel for="properties-martyria-space-after">{{
-          $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <InputUnit
-          id="properties-martyria-space-after"
-          unit="pt"
-          :min="-spaceAfterMax"
-          :max="spaceAfterMax"
-          :step="0.5"
-          :format-options="fraction2FormatOptions"
-          :model-value="element.spaceAfter"
-          @update:model-value="
-            $emit('update', {
-              spaceAfter: $event,
             } as Partial<MartyriaElement>)
           "
         />
@@ -344,9 +324,7 @@ const props = defineProps({
 const emit = defineEmits(['update', 'update:open-sections']);
 const SELECT_NONE_VALUE = '__none__';
 
-const spaceAfterMax = computed(() =>
-  Math.round(Unit.toPt(props.pageSetup.pageWidth)),
-);
+const verticalOffsetMax = computed(() => Unit.toPt(props.pageSetup.pageHeight));
 
 const rootSignGlyphStyle = computed(() => ({
   fontFamily: props.pageSetup.neumeDefaultFontFamily,

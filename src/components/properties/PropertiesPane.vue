@@ -18,7 +18,6 @@
       :key="`tempo-${tempoElement.id}`"
       :element="tempoElement"
       :open-sections="openSections"
-      :page-setup="pageSetup"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:tempo', tempoElement, $event)"
     />
@@ -126,7 +125,6 @@
       :element="neumeElement"
       :inner-neume="innerNeume"
       :open-sections="openSections"
-      :page-setup="pageSetup"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:neume', neumeElement, $event)"
     />

@@ -102,22 +102,6 @@
       value="positioning"
       :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
     >
-      <Field orientation="horizontal">
-        <FieldLabel for="properties-neume-space-after">{{
-          $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <InputUnit
-          id="properties-neume-space-after"
-          unit="pt"
-          :min="-spaceAfterMax"
-          :max="spaceAfterMax"
-          :step="0.5"
-          :format-options="fraction2FormatOptions"
-          :model-value="element.spaceAfter"
-          @update:model-value="$emit('update', { spaceAfter: $event })"
-        />
-      </Field>
-
       <Field orientation="horizontal" :data-disabled="!canKeepWithNext">
         <Switch
           id="properties-neume-keep-with-next"
@@ -142,7 +126,6 @@ import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
-import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
@@ -160,10 +143,7 @@ import { AcceptsLyricsOption } from '@/models/Element';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
 import { Fthora } from '@/models/Neumes';
-import type { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
-import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
-import { Unit } from '@/utils/Unit';
 
 const chromaticFthoras = [
   Fthora.SoftChromaticPa_Top,
@@ -204,10 +184,6 @@ const props = defineProps({
   },
   openSections: {
     type: Array as PropType<string[]>,
-    required: true,
-  },
-  pageSetup: {
-    type: Object as PropType<PageSetup>,
     required: true,
   },
 });
@@ -334,10 +310,6 @@ const chromaticFthoraNote = computed(() => {
     return props.element.chromaticFthoraNote;
   }
 });
-
-const spaceAfterMax = computed(() =>
-  Math.round(Unit.toPt(props.pageSetup.pageWidth)),
-);
 
 function updateChromaticFthoraNote(value: AcceptableValue) {
   if (typeof value !== 'string') {

@@ -8,13 +8,30 @@ updates:
       interval: 'daily'
     commit-message:
       prefix: 'chore'
+    cooldown:
+      default-days: 7
     labels:
       - 'Type: Dependencies'
+    groups:
+      tailwindcss:
+        patterns:
+          - 'tailwindcss'
+          - '@tailwindcss/vite'
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/coverage-istanbul'
+      vuejs-language-tools:
+        patterns:
+          - 'vue-component-type-helpers'
+          - 'vue-tsc'
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
       interval: 'daily'
     commit-message:
       prefix: 'chore'
+    cooldown:
+      default-days: 7
     labels:
       - 'Type: Dependencies'

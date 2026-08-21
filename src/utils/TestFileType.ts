@@ -1,6 +1,7 @@
 export enum TestFileType {
   FthoraTop = 'FthoraTop',
   FthoraBottom = 'FthoraBottom',
+  MartyriaFthora = 'MartyriaFthora',
   Gorgon = 'Gorgon',
   Klasma = 'Klasma',
   Hapli = 'Hapli',
@@ -9,6 +10,7 @@ export enum TestFileType {
   Measures = 'Measures',
   NoteIndicators = 'NoteIndicators',
   Ison = 'Ison',
+  Koronis = 'Koronis',
   ModeKey = 'ModeKey',
   Random = 'Random',
   DropCaps = 'DropCaps',

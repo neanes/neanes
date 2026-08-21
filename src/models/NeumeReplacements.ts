@@ -1,8 +1,7 @@
+import type { Fthora, Neume } from '@/models/Neumes';
 import {
-  Fthora,
   GorgonNeume,
   MeasureBar,
-  Neume,
   petastiNeumes,
   QuantitativeNeume,
   TimeNeume,
@@ -44,6 +43,11 @@ const petastiNeumesNoGorgon = petastiNeumes.filter(
   (x) => x !== QuantitativeNeume.PetastiPlusHyporoe,
 );
 
+const noGorgon = [
+  ...petastiNeumesNoGorgon,
+  QuantitativeNeume.IsonPlusApostrophos,
+];
+
 const bottomAllowedGorgonNeumes: Neume[] = [
   QuantitativeNeume.Apostrophos,
   QuantitativeNeume.Ison,
@@ -76,8 +80,13 @@ const bottomAllowedGorgonNeumes: Neume[] = [
 
 const bottomOnlyKlasmaNeumes: Neume[] = [
   ...petastiNeumes,
-
   QuantitativeNeume.OligonPlusDoubleHypsili,
+  QuantitativeNeume.OligonKentimataDoubleYpsili,
+  QuantitativeNeume.OligonKentimaDoubleYpsiliRight,
+  QuantitativeNeume.OligonKentimaDoubleYpsiliLeft,
+  QuantitativeNeume.OligonTripleYpsili,
+  QuantitativeNeume.OligonKentimataTripleYpsili,
+  QuantitativeNeume.OligonKentimaTripleYpsili,
   QuantitativeNeume.OligonPlusApostrophos,
   QuantitativeNeume.OligonPlusElaphron,
   QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
@@ -97,6 +106,10 @@ const topOnlyKlasmaNeumes: Neume[] = [
   QuantitativeNeume.HamiliPlusElaphron,
   QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
   QuantitativeNeume.DoubleHamili,
+  QuantitativeNeume.DoubleHamiliApostrofos,
+  QuantitativeNeume.DoubleHamiliElafron,
+  QuantitativeNeume.DoubleHamiliElafronApostrofos,
+  QuantitativeNeume.TripleHamili,
   QuantitativeNeume.Apostrophos,
   QuantitativeNeume.Elaphron,
   QuantitativeNeume.ElaphronPlusApostrophos,
@@ -140,6 +153,7 @@ const secondaryNeumeMap: Map<QuantitativeNeume, QuantitativeNeume> = new Map<
   [QuantitativeNeume.PetastiPlusRunningElaphron, QuantitativeNeume.Apostrophos],
   [QuantitativeNeume.KentemataPlusOligon, QuantitativeNeume.Kentemata],
   [QuantitativeNeume.Hyporoe, QuantitativeNeume.Apostrophos],
+  [QuantitativeNeume.DoubleApostrophos, QuantitativeNeume.Apostrophos],
 ]);
 
 const tertiaryNeumeMap: Map<QuantitativeNeume, QuantitativeNeume> = new Map<
@@ -189,6 +203,7 @@ const primaryNeumeMap: Map<QuantitativeNeume, QuantitativeNeume> = new Map<
   ],
   [QuantitativeNeume.KentemataPlusOligon, QuantitativeNeume.Oligon],
   [QuantitativeNeume.Hyporoe, QuantitativeNeume.Apostrophos],
+  [QuantitativeNeume.DoubleApostrophos, QuantitativeNeume.Apostrophos],
 ]);
 
 const measureBarAboveNeumes: Neume[] = [
@@ -210,7 +225,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.Gorgon_Top,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -230,7 +245,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.GorgonDottedLeft,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -240,7 +255,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.GorgonDottedRight,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -250,7 +265,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.Digorgon,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -260,7 +275,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.DigorgonDottedLeft1,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -270,7 +285,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.DigorgonDottedLeft2,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -280,7 +295,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.DigorgonDottedRight,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -290,7 +305,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.Trigorgon,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -300,7 +315,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.TrigorgonDottedLeft1,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -310,7 +325,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.TrigorgonDottedLeft2,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -320,7 +335,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.TrigorgonDottedRight,
     [
       {
-        isPairedWith: [...petastiNeumesNoGorgon],
+        isPairedWith: noGorgon,
         replaceWith: null,
       },
     ],
@@ -362,7 +377,16 @@ export const timeReplacementMap = new Map<
     TimeNeume.Hapli,
     [
       {
-        isPairedWith: [...kentemataNeumes],
+        isPairedWith: [
+          ...kentemataNeumes,
+          QuantitativeNeume.PetastiPlusRunningElaphron,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
+        ],
         replaceWith: null,
       },
     ],
@@ -372,7 +396,18 @@ export const timeReplacementMap = new Map<
     TimeNeume.Dipli,
     [
       {
-        isPairedWith: [...kentemataNeumes, ...petastiNeumes],
+        isPairedWith: [
+          ...kentemataNeumes,
+          ...petastiNeumes,
+          QuantitativeNeume.KentemataPlusOligon,
+          QuantitativeNeume.OligonPlusKentimaBelow,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
+        ],
         replaceWith: null,
       },
     ],
@@ -382,7 +417,39 @@ export const timeReplacementMap = new Map<
     TimeNeume.Tripli,
     [
       {
-        isPairedWith: [...kentemataNeumes, ...petastiNeumes],
+        isPairedWith: [
+          ...kentemataNeumes,
+          ...petastiNeumes,
+          QuantitativeNeume.KentemataPlusOligon,
+          QuantitativeNeume.OligonPlusKentimaBelow,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
+        ],
+        replaceWith: null,
+      },
+    ],
+  ],
+
+  [
+    TimeNeume.Tetrapli,
+    [
+      {
+        isPairedWith: [
+          ...kentemataNeumes,
+          ...petastiNeumes,
+          QuantitativeNeume.KentemataPlusOligon,
+          QuantitativeNeume.OligonPlusKentimaBelow,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
+        ],
         replaceWith: null,
       },
     ],
@@ -432,11 +499,17 @@ export const vocalExpressionReplacementMap = new Map<
     [
       {
         isPairedWith: [
+          ...kentemataNeumes,
           ...rests,
-          QuantitativeNeume.Kentemata,
           QuantitativeNeume.IsonPlusApostrophos,
           QuantitativeNeume.DoubleApostrophos,
           QuantitativeNeume.PetastiPlusRunningElaphron,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
         ],
         replaceWith: null,
       },
@@ -478,20 +551,24 @@ export const vocalExpressionReplacementMap = new Map<
       {
         isPairedWith: [
           ...rests,
-          QuantitativeNeume.Apostrophos,
           QuantitativeNeume.Kentemata,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.IsonPlusApostrophos,
+          QuantitativeNeume.DoubleApostrophos,
           QuantitativeNeume.Hyporoe,
+          QuantitativeNeume.Elaphron,
+          QuantitativeNeume.ElaphronPlusApostrophos,
+          QuantitativeNeume.RunningElaphron,
+          QuantitativeNeume.PetastiPlusRunningElaphron,
           QuantitativeNeume.Hamili,
           QuantitativeNeume.HamiliPlusApostrophos,
           QuantitativeNeume.HamiliPlusElaphron,
           QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
           QuantitativeNeume.DoubleHamili,
-          QuantitativeNeume.Elaphron,
-          QuantitativeNeume.ElaphronPlusApostrophos,
-          QuantitativeNeume.RunningElaphron,
-          QuantitativeNeume.PetastiPlusRunningElaphron,
-          QuantitativeNeume.IsonPlusApostrophos,
-          QuantitativeNeume.DoubleApostrophos,
+          QuantitativeNeume.DoubleHamiliApostrofos,
+          QuantitativeNeume.DoubleHamiliElafron,
+          QuantitativeNeume.DoubleHamiliElafronApostrofos,
+          QuantitativeNeume.TripleHamili,
         ],
         replaceWith: null,
       },
@@ -505,10 +582,28 @@ export const vocalExpressionReplacementMap = new Map<
           ...petastiNeumes,
           ...kentemataNeumes,
           ...rests,
-          QuantitativeNeume.PetastiPlusRunningElaphron,
+          QuantitativeNeume.Apostrophos,
           QuantitativeNeume.DoubleApostrophos,
           QuantitativeNeume.IsonPlusApostrophos,
           QuantitativeNeume.Hyporoe,
+          QuantitativeNeume.Elaphron,
+          QuantitativeNeume.ElaphronPlusApostrophos,
+          QuantitativeNeume.RunningElaphron,
+          QuantitativeNeume.Hamili,
+          QuantitativeNeume.HamiliPlusApostrophos,
+          QuantitativeNeume.HamiliPlusElaphron,
+          QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+          QuantitativeNeume.DoubleHamili,
+          QuantitativeNeume.DoubleHamiliApostrofos,
+          QuantitativeNeume.DoubleHamiliElafron,
+          QuantitativeNeume.DoubleHamiliElafronApostrofos,
+          QuantitativeNeume.TripleHamili,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
         ],
         replaceWith: null,
       },
@@ -522,10 +617,15 @@ export const vocalExpressionReplacementMap = new Map<
           ...petastiNeumes,
           ...kentemataNeumesNoOmalon,
           ...rests,
-          QuantitativeNeume.PetastiPlusRunningElaphron,
           QuantitativeNeume.DoubleApostrophos,
           QuantitativeNeume.IsonPlusApostrophos,
           QuantitativeNeume.Hyporoe,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
         ],
         replaceWith: null,
       },
@@ -535,7 +635,20 @@ export const vocalExpressionReplacementMap = new Map<
     VocalExpressionNeume.Vareia,
     [
       {
-        isPairedWith: [...petastiNeumes, ...kentemataNeumes, ...rests],
+        isPairedWith: [
+          ...kentemataNeumesNoOmalon,
+          ...rests,
+          QuantitativeNeume.KentemataPlusOligon,
+          QuantitativeNeume.RunningElaphron,
+          QuantitativeNeume.PetastiPlusRunningElaphron,
+          QuantitativeNeume.Hyporoe,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
+        ],
         replaceWith: null,
       },
     ],
@@ -559,6 +672,12 @@ export const measureBarAboveToLeft = new Map<MeasureBar, MeasureBar>();
 
 for (const [key, value] of measureBarLeftToAbove) {
   measureBarAboveToLeft.set(value, key);
+}
+
+export function isMeasureBarAboveVariant(
+  measureBar: MeasureBar | null | undefined,
+): measureBar is MeasureBar {
+  return measureBar != null && measureBarAboveToLeft.has(measureBar);
 }
 
 export const quantitativeNeumeReplacementMap = new Map<
@@ -649,6 +768,35 @@ export const onlyTakesBottomKlasma = (neume: QuantitativeNeume) =>
 
 export const onlyTakesTopGorgon = (neume: QuantitativeNeume) =>
   !bottomAllowedGorgonNeumes.includes(neume);
+
+const secondaryGorgonNeumeMap = new Map<GorgonNeume, GorgonNeume>([
+  [GorgonNeume.Gorgon_Top, GorgonNeume.GorgonSecondary],
+  [GorgonNeume.Gorgon_Bottom, GorgonNeume.GorgonSecondary],
+  [GorgonNeume.GorgonDottedLeft, GorgonNeume.GorgonDottedLeftSecondary],
+  [GorgonNeume.GorgonDottedRight, GorgonNeume.GorgonDottedRightSecondary],
+  [GorgonNeume.Digorgon, GorgonNeume.DigorgonSecondary],
+  [GorgonNeume.DigorgonDottedLeft1, GorgonNeume.DigorgonDottedLeft1Secondary],
+  [GorgonNeume.DigorgonDottedLeft2, GorgonNeume.DigorgonDottedLeft2Secondary],
+  [GorgonNeume.DigorgonDottedRight, GorgonNeume.DigorgonDottedRightSecondary],
+  [GorgonNeume.Trigorgon, GorgonNeume.TrigorgonSecondary],
+  [GorgonNeume.TrigorgonDottedLeft1, GorgonNeume.TrigorgonDottedLeft1Secondary],
+  [GorgonNeume.TrigorgonDottedLeft2, GorgonNeume.TrigorgonDottedLeft2Secondary],
+  [GorgonNeume.TrigorgonDottedRight, GorgonNeume.TrigorgonDottedRightSecondary],
+]);
+
+export const getSecondaryGorgonNeume = (neume: GorgonNeume | GorgonNeume[]) => {
+  const neumes = Array.isArray(neume) ? neume : [neume];
+
+  for (const item of neumes) {
+    const secondaryNeume = secondaryGorgonNeumeMap.get(item);
+
+    if (secondaryNeume != null) {
+      return secondaryNeume;
+    }
+  }
+
+  return null;
+};
 
 export const getPrimaryNeume = (neume: QuantitativeNeume) =>
   primaryNeumeMap.get(neume) ?? null;

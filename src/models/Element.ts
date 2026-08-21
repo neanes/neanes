@@ -1,23 +1,27 @@
-import {
+import type {
   Accidental,
   Fthora,
   GorgonNeume,
   Ison,
   MeasureBar,
   MeasureNumber,
+  Neume,
+  NoteIndicator,
+  TimeNeume,
+} from '@/models/Neumes';
+import {
   ModeSign,
   Note,
-  NoteIndicator,
   QuantitativeNeume,
   RootSign,
   TempoSign,
   Tie,
-  TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
+import { isFontVariantNormal } from '@/utils/fontVariants';
 import { Unit } from '@/utils/Unit';
 
-import { ModeKeyTemplate } from './ModeKeys';
+import type { ModeKeyTemplate } from './ModeKeys';
 import {
   getFthoraReplacements,
   getGorgonReplacements,
@@ -30,6 +34,11 @@ import {
   measureBarAboveToLeft,
   measureBarLeftToAbove,
 } from './NeumeReplacements';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyleOverrides,
+  TextBoxAlignment,
+} from './ParagraphStyle';
 import { Scale, ScaleNote } from './Scales';
 
 export enum ElementType {
@@ -42,16 +51,32 @@ export enum ElementType {
   DropCap = 'DropCap',
   ModeKey = 'ModeKey',
   ImageBox = 'ImageBox',
+  Annotation = 'Annotation',
+  AlternateLine = 'AlternateLine',
 }
 
+// A left-aligned break is the default and is represented by a null
+// lineBreakType, matching the save format, which omits the field entirely.
 export enum LineBreakType {
-  Justify = 'Justify',
   Center = 'Center',
-  Left = 'Left',
 }
 
 export interface ElementCloneArgs {
   includeLyrics?: boolean;
+}
+
+// An element-level font-variant field stores the CSS property value verbatim:
+// null inherits from the element's paragraph style, and 'normal' is an
+// explicit reset, which the override model represents as null (see
+// ParagraphStyleOverrides).
+function toFontVariantOverride(
+  value: string | null,
+): string | null | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  return isFontVariantNormal(value) ? null : value;
 }
 
 export abstract class ScoreElement {
@@ -61,7 +86,6 @@ export abstract class ScoreElement {
   public lineBreak: boolean = false;
   public lineBreakType: LineBreakType | null = null;
   public pageBreak: boolean = false;
-  public sectionName: string | null = null;
 
   public x: number = 0;
   public y: number = 0;
@@ -78,6 +102,14 @@ export abstract class ScoreElement {
   // Used internally, not saved
   public line: number = 0;
   public page: number = 0;
+
+  // Break state belongs to the position, so it transfers when one element
+  // replaces another at the same position.
+  public copyBreakStateFrom(source: ScoreElement) {
+    this.pageBreak = source.pageBreak;
+    this.lineBreak = source.lineBreak;
+    this.lineBreakType = source.lineBreakType;
+  }
 
   public static isShort(measureBar: MeasureBar): boolean {
     return (
@@ -96,28 +128,35 @@ export enum AcceptsLyricsOption {
 
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
+  public keepWithNext: boolean = false;
   public measureNumber: MeasureNumber | null = null;
   public tie: Tie | null = null;
   public noteIndicator: boolean = false;
   public ison: Ison | null = null;
-  public vareia: boolean = false;
   public koronis: boolean = false;
   public stavros: boolean = false;
   public lyrics: string = '';
-  public lyricsColor: string = '#000000';
-  public lyricsFontFamily: string = 'Source Serif';
-  public lyricsFontSize: number = Unit.fromPt(12);
-  public lyricsStrokeWidth: number = 0;
-  public lyricsUseDefaultStyle: boolean = true;
-  public lyricsFontStyle: string = 'normal';
-  public lyricsFontWeight: string = '400';
-  public lyricsTextDecoration: string = 'none';
+  public lyricsColor: string | null = null;
+  public lyricsFontFamily: string | null = null;
+  public lyricsFontSize: number | null = null;
+  public lyricsStrokeWidth: number | null = null;
+  public lyricsStrokeColor: string | null = null;
+  public lyricsParagraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics;
+  public lyricsFontStyle: string | null = null;
+  public lyricsTextDecoration: string | null = null;
+  public lyricsFontVariantCaps: string | null = null;
+  public lyricsFontVariantNumeric: string | null = null;
+  public lyricsFontVariantLigatures: string | null = null;
+  public lyricsFontVariantAlternates: string | null = null;
   public acceptsLyrics: AcceptsLyricsOption = AcceptsLyricsOption.Default;
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;
   public spaceAfter: number = 0;
   public ignoreAttractions: boolean = false;
+
+  public annotations: AnnotationElement[] = [];
+  public alternateLines: AlternateLineElement[] = [];
 
   public chromaticFthoraNote: ScaleNote | null = null;
   public secondaryChromaticFthoraNote: ScaleNote | null = null;
@@ -168,16 +207,17 @@ export class NoteElement extends ScoreElement {
   public tertiaryFthoraPrevious: Fthora | null = null;
   public computedMeasureBarLeftPrevious: MeasureBar | null = null;
   public computedMeasureBarRightPrevious: MeasureBar | null = null;
+  public computedMeasureBarLeftOffsetXPrevious: number = 0;
+  public computedMeasureBarRightOffsetXPrevious: number = 0;
+  public computedMeasureBarLeftLeadingSpacingPrevious: number = 0;
+  public computedMeasureBarRightTrailingSpacingPrevious: number = 0;
   public computedIsonOffsetYPrevious: number | null = null;
+  public vareiaInternalSpacingPrevious: number = 0;
 
   // Fthora helper
   public fthoraCarry: Fthora | null = null;
   public secondaryFthoraCarry: Fthora | null = null;
   public tertiaryFthoraCarry: Fthora | null = null;
-
-  public get lyricsFont() {
-    return `${this.lyricsFontStyle} normal ${this.lyricsFontWeight} ${this.lyricsFontSize}px "${this.lyricsFontFamily}"`;
-  }
 
   public clone(args?: ElementCloneArgs) {
     const clone = new NoteElement();
@@ -190,6 +230,11 @@ export class NoteElement extends ScoreElement {
     return clone;
   }
 
+  public override copyBreakStateFrom(source: ScoreElement) {
+    super.copyBreakStateFrom(source);
+    this.keepWithNext = supportsKeepWithNext(source) && source.keepWithNext;
+  }
+
   public getClipboardProperties(includeLyrics: boolean) {
     return {
       ...(includeLyrics
@@ -198,11 +243,18 @@ export class NoteElement extends ScoreElement {
             isHyphen: this.isHyphen,
             isMelismaStart: this.isMelismaStart,
             isMelisma: this.isMelisma,
-            lyricsUseDefaultStyle: this.lyricsUseDefaultStyle,
+            lyricsParagraphStyleId: this.lyricsParagraphStyleId,
             lyricsColor: this.lyricsColor,
             lyricsFontFamily: this.lyricsFontFamily,
             lyricsFontSize: this.lyricsFontSize,
+            lyricsFontStyle: this.lyricsFontStyle,
+            lyricsTextDecoration: this.lyricsTextDecoration,
             lyricsStrokeWidth: this.lyricsStrokeWidth,
+            lyricsStrokeColor: this.lyricsStrokeColor,
+            lyricsFontVariantCaps: this.lyricsFontVariantCaps,
+            lyricsFontVariantNumeric: this.lyricsFontVariantNumeric,
+            lyricsFontVariantLigatures: this.lyricsFontVariantLigatures,
+            lyricsFontVariantAlternates: this.lyricsFontVariantAlternates,
           }
         : null),
       quantitativeNeume: this.quantitativeNeume,
@@ -249,6 +301,15 @@ export class NoteElement extends ScoreElement {
       secondaryGorgonNeume: this.secondaryGorgonNeume,
       secondaryGorgonNeumeOffsetX: this.secondaryGorgonNeumeOffsetX,
       secondaryGorgonNeumeOffsetY: this.secondaryGorgonNeumeOffsetY,
+      koronis: this.koronis,
+      koronisOffsetX: this.koronisOffsetX,
+      koronisOffsetY: this.koronisOffsetY,
+      stavros: this.stavros,
+      stavrosOffsetX: this.stavrosOffsetX,
+      stavrosOffsetY: this.stavrosOffsetY,
+      tie: this.tie,
+      tieOffsetX: this.tieOffsetX,
+      tieOffsetY: this.tieOffsetY,
       timeNeume: this.timeNeume,
       timeNeumeOffsetX: this.timeNeumeOffsetX,
       timeNeumeOffsetY: this.timeNeumeOffsetY,
@@ -258,7 +319,51 @@ export class NoteElement extends ScoreElement {
       vareia: this.vareia,
       vareiaOffsetX: this.vareiaOffsetX,
       vareiaOffsetY: this.vareiaOffsetY,
+      alternateLines: this.alternateLines.map((x) => x.clone()),
+      annotations: this.annotations.map((x) => x.clone()),
     } as Partial<NoteElement>;
+  }
+
+  public cloneFormat() {
+    return {
+      lyricsColor: this.lyricsColor,
+      lyricsFontFamily: this.lyricsFontFamily,
+      lyricsFontSize: this.lyricsFontSize,
+      lyricsStrokeWidth: this.lyricsStrokeWidth,
+      lyricsStrokeColor: this.lyricsStrokeColor,
+      lyricsParagraphStyleId: this.lyricsParagraphStyleId,
+      lyricsFontStyle: this.lyricsFontStyle,
+      lyricsTextDecoration: this.lyricsTextDecoration,
+      lyricsFontVariantCaps: this.lyricsFontVariantCaps,
+      lyricsFontVariantNumeric: this.lyricsFontVariantNumeric,
+      lyricsFontVariantLigatures: this.lyricsFontVariantLigatures,
+      lyricsFontVariantAlternates: this.lyricsFontVariantAlternates,
+    };
+  }
+
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
+    return {
+      fontFamily: this.lyricsFontFamily ?? undefined,
+      fontSize: this.lyricsFontSize ?? undefined,
+      fontStyle: this.lyricsFontStyle ?? undefined,
+      color: this.lyricsColor ?? undefined,
+      strokeWidth: this.lyricsStrokeWidth ?? undefined,
+      strokeColor: this.lyricsStrokeColor ?? undefined,
+      textDecoration:
+        this.lyricsTextDecoration != null
+          ? this.lyricsTextDecoration === 'underline'
+            ? 'underline'
+            : null
+          : undefined,
+      fontVariantCaps: toFontVariantOverride(this.lyricsFontVariantCaps),
+      fontVariantNumeric: toFontVariantOverride(this.lyricsFontVariantNumeric),
+      fontVariantLigatures: toFontVariantOverride(
+        this.lyricsFontVariantLigatures,
+      ),
+      fontVariantAlternates: toFontVariantOverride(
+        this.lyricsFontVariantAlternates,
+      ),
+    };
   }
 
   public get quantitativeNeume() {
@@ -314,6 +419,15 @@ export class NoteElement extends ScoreElement {
 
   public set vocalExpressionNeume(neume: VocalExpressionNeume | null) {
     this._vocalExpressionNeume = neume;
+    this.replaceNeumes();
+  }
+
+  public get vareia() {
+    return this._vareia;
+  }
+
+  public set vareia(vareia: boolean | false) {
+    this._vareia = vareia;
     this.replaceNeumes();
   }
 
@@ -393,19 +507,33 @@ export class NoteElement extends ScoreElement {
   public melismaText: string = '';
   public melismaOffsetTop: number = 0;
   public lyricsFontHeight: number = 0;
+  public lyricsFontCss: string = '';
+  // Resolved alongside lyricsFontCss because the CSS font shorthand cannot
+  // carry all-small-caps and canvas measurement needs it separately.
+  public computedLyricsFontVariantCaps: string = 'normal';
   public hyphenOffsets: number[] = [];
+  public showLeadingLyricHyphen: boolean = false;
+  public leadingLyricHyphenOffset: number = 0;
+  public leadingLyricHyphenReservationWidth: number = 0;
   public isFullMelisma: boolean = false;
   public melismaWidth: number = 0;
   public lyricsVerticalOffset: number = 0;
   public lyricsHorizontalOffset: number = 0;
   public neumeWidth: number = 0;
   public lyricsWidth: number = 0;
+  public lyricsLeadingPunctuationWidth: number = 0;
+  public lyricsTrailingPunctuationWidth: number = 0;
   public alignLeft: boolean = false;
+  public vareiaInternalSpacing: number = 0;
   public noteIndicatorNeume: NoteIndicator | null = null;
   public scaleNotes: ScaleNote[] = [];
   public scaleNotesVirtual: ScaleNote[] = [];
   public computedMeasureBarLeft: MeasureBar | null = null;
   public computedMeasureBarRight: MeasureBar | null = null;
+  public computedMeasureBarLeftOffsetX: number = 0;
+  public computedMeasureBarRightOffsetX: number = 0;
+  public computedMeasureBarLeftLeadingSpacing: number = 0;
+  public computedMeasureBarRightTrailingSpacing: number = 0;
   public computedIsonOffsetY: number | null = null;
   public isonOffsetYBeforeAdjustment: number = 0;
 
@@ -414,6 +542,7 @@ export class NoteElement extends ScoreElement {
   private _gorgonNeume: GorgonNeume | null = null;
   private _secondaryGorgonNeume: GorgonNeume | null = null;
   private _vocalExpressionNeume: VocalExpressionNeume | null = null;
+  private _vareia: boolean = false;
   private _fthora: Fthora | null = null;
   private _secondaryFthora: Fthora | null = null;
   private _tertiaryFthora: Fthora | null = null;
@@ -428,6 +557,7 @@ export class NoteElement extends ScoreElement {
     this.replaceGorgons();
     this.replaceTimeNeumes();
     this.replaceVocalExpressions();
+    this.replaceVareia();
     this.replaceFthora();
     this.replaceMeasureBars();
   }
@@ -526,6 +656,31 @@ export class NoteElement extends ScoreElement {
     }
   }
 
+  private replaceVareia() {
+    if (this.vareia) {
+      const replacements = getVocalExpressionReplacements(
+        VocalExpressionNeume.Vareia,
+      );
+
+      if (replacements) {
+        const replacement =
+          replacements.find(
+            (x) =>
+              x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume),
+          ) ||
+          replacements.find(
+            (x) =>
+              x.isNotPairedWith &&
+              !x.isNotPairedWith.includes(this.quantitativeNeume),
+          );
+
+        if (replacement) {
+          this.vareia = replacement.replaceWith != null;
+        }
+      }
+    }
+  }
+
   private replaceQuantitativeNeumes() {
     const replacements = getQuantitativeReplacements(this.quantitativeNeume);
 
@@ -585,6 +740,7 @@ export class MartyriaElement extends ScoreElement {
   public tempoLeft: TempoSign | null = null;
   public tempo: TempoSign | null = null;
   public tempoRight: TempoSign | null = null;
+  public quantitativeNeume: QuantitativeNeume | null = null;
   public alignRight: boolean = false;
   public bpm: number = 0;
   public spaceAfter: number = 0;
@@ -612,6 +768,14 @@ export class MartyriaElement extends ScoreElement {
 
   // Used for display
   public neumeWidth: number = 0;
+  public padding: number = 0;
+  public tempoLeftSpacing: number = 0;
+  public tempoRightSpacing: number = 0;
+  public computedTempoLeftOffsetX: number = 0;
+  public computedMeasureBarLeftOffsetX: number = 0;
+  public computedMeasureBarRightOffsetX: number = 0;
+  public computedMeasureBarLeftLeadingSpacing: number = 0;
+  public computedMeasureBarRightTrailingSpacing: number = 0;
 
   private _measureBarLeft: MeasureBar | null = null;
   private _measureBarRight: MeasureBar | null = null;
@@ -633,8 +797,16 @@ export class MartyriaElement extends ScoreElement {
   }
 
   // Re-render helpers
+  public errorPrevious: boolean = false;
   public notePrevious: Note = Note.Pa;
   public rootSignPrevious: RootSign = RootSign.Alpha;
+  public computedTempoLeftOffsetXPrevious: number = 0;
+  public computedMeasureBarLeftOffsetXPrevious: number = 0;
+  public computedMeasureBarRightOffsetXPrevious: number = 0;
+  public tempoLeftSpacingPrevious: number = 0;
+  public tempoRightSpacingPrevious: number = 0;
+  public computedMeasureBarLeftLeadingSpacingPrevious: number = 0;
+  public computedMeasureBarRightTrailingSpacingPrevious: number = 0;
 
   // Fthora helper
   public fthoraCarry: Fthora | null = null;
@@ -724,37 +896,41 @@ export class EmptyElement extends ScoreElement {
   }
 }
 
-export enum TextBoxAlignment {
-  Center = 'center',
-  Left = 'left',
-  Right = 'right',
-}
+export { TextBoxAlignment };
+
+export type RunningMarkerRole = 'chapter' | 'section';
 
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
-  public alignment: TextBoxAlignment = TextBoxAlignment.Left;
-  public color: string = '#000000';
+  public paragraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  public alignment: TextBoxAlignment | null = null;
+  public color: string | null = null;
   public content: string = '';
   public contentBottom: string = '';
   public contentLeft: string = '';
   public contentCenter: string = '';
   public contentRight: string = '';
-  public fontSize: number = 16;
-  public fontFamily: string = 'Source Serif';
-  public strokeWidth: number = 0;
+  public fontSize: number | null = null;
+  public fontFamily: string | null = null;
+  public strokeWidth: number | null = null;
+  public strokeColor: string | null = null;
   public multipanel: boolean = false;
   public inline: boolean = false;
-  public bold: boolean = false;
-  public italic: boolean = false;
-  public underline: boolean = false;
-  public lineHeight: number | null = null;
-  public useDefaultStyle: boolean = true;
+  public fontStyle: string | null = null;
+  public underline: boolean | null = null;
+  public lineHeight: number | null | undefined = undefined;
+  public fontVariantCaps: string | null = null;
+  public fontVariantNumeric: string | null = null;
+  public fontVariantLigatures: string | null = null;
+  public fontVariantAlternates: string | null = null;
   public height: number = 20;
   public customWidth: number | null = null;
   public customHeight: number | null = null;
   public marginTop: number = 0;
   public marginBottom: number = 0;
   public fillWidth: boolean = false;
+  public runningMarkerRole: RunningMarkerRole | null = null;
+  public runningMarkerText: string | null = null;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -763,19 +939,32 @@ export class TextBoxElement extends ScoreElement {
   public computedFontStyle: string = 'normal';
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
+  public computedStrokeColor: string = 'currentcolor';
   public computedLineHeight: number | null = null;
+  public computedUnderline: boolean = false;
+  public computedAlignment: TextBoxAlignment = TextBoxAlignment.Left;
+  public computedFontVariantCaps: string = 'normal';
+  public computedFontVariantNumeric: string = 'normal';
+  public computedFontVariantLigatures: string = 'normal';
+  public computedFontVariantAlternates: string = 'normal';
   public minHeight: number = 10;
   public trueWidth: number = 0;
 
   // Re-render helpers
-  public heightPrevious: number = 0;
   public computedFontFamilyPrevious: string = '';
   public computedFontSizePrevious: number = Unit.fromPt(20);
   public computedFontWeightPrevious: string = '400';
   public computedFontStylePrevious: string = 'normal';
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
+  public computedStrokeColorPrevious: string = 'currentcolor';
   public computedLineHeightPrevious: number | null = null;
+  public computedUnderlinePrevious: boolean = false;
+  public computedAlignmentPrevious: TextBoxAlignment = TextBoxAlignment.Left;
+  public computedFontVariantCapsPrevious: string = 'normal';
+  public computedFontVariantNumericPrevious: string = 'normal';
+  public computedFontVariantLigaturesPrevious: string = 'normal';
+  public computedFontVariantAlternatesPrevious: string = 'normal';
 
   public get computedFont() {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
@@ -791,25 +980,34 @@ export class TextBoxElement extends ScoreElement {
 
   public getClipboardProperties() {
     return {
+      paragraphStyleId: this.paragraphStyleId,
       alignment: this.alignment,
       color: this.color,
       content: this.content,
+      contentBottom: this.contentBottom,
       contentLeft: this.contentLeft,
       contentCenter: this.contentCenter,
       contentRight: this.contentRight,
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
       strokeWidth: this.strokeWidth,
+      strokeColor: this.strokeColor,
       customWidth: this.customWidth,
       customHeight: this.customHeight,
+      fillWidth: this.fillWidth,
       marginTop: this.marginTop,
       marginBottom: this.marginBottom,
       inline: this.inline,
-      bold: this.bold,
-      italic: this.italic,
+      fontStyle: this.fontStyle,
       underline: this.underline,
-      useDefaultStyle: this.useDefaultStyle,
+      lineHeight: this.lineHeight,
+      fontVariantCaps: this.fontVariantCaps,
+      fontVariantNumeric: this.fontVariantNumeric,
+      fontVariantLigatures: this.fontVariantLigatures,
+      fontVariantAlternates: this.fontVariantAlternates,
       multipanel: this.multipanel,
+      runningMarkerRole: this.runningMarkerRole,
+      runningMarkerText: this.runningMarkerText,
     } as Partial<TextBoxElement>;
   }
 
@@ -818,7 +1016,40 @@ export class TextBoxElement extends ScoreElement {
     delete format.content;
     return format;
   }
+
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
+    return {
+      fontFamily: this.fontFamily ?? undefined,
+      fontSize: this.fontSize ?? undefined,
+      fontStyle: this.fontStyle ?? undefined,
+      color: this.color ?? undefined,
+      strokeWidth: this.strokeWidth ?? undefined,
+      strokeColor: this.strokeColor ?? undefined,
+      lineHeight: this.lineHeight,
+      alignment: this.alignment ?? undefined,
+      textDecoration:
+        this.underline != null
+          ? this.underline
+            ? 'underline'
+            : null
+          : undefined,
+      fontVariantCaps: toFontVariantOverride(this.fontVariantCaps),
+      fontVariantNumeric: toFontVariantOverride(this.fontVariantNumeric),
+      fontVariantLigatures: toFontVariantOverride(this.fontVariantLigatures),
+      fontVariantAlternates: toFontVariantOverride(this.fontVariantAlternates),
+    };
+  }
 }
+
+export const RICH_TEXT_BOX_CONTENT_KEYS = [
+  'content',
+  'contentBottom',
+  'contentLeft',
+  'contentCenter',
+  'contentRight',
+] as const;
+
+export type RichTextBoxContentKey = (typeof RICH_TEXT_BOX_CONTENT_KEYS)[number];
 
 export class RichTextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.RichTextBox;
@@ -827,8 +1058,10 @@ export class RichTextBoxElement extends ScoreElement {
   public contentLeft: string = '';
   public contentRight: string = '';
   public contentCenter: string = '';
+  public scrollable: boolean = false;
   public multipanel: boolean = false;
-  public rtl: boolean = false;
+  public languageCode: string | null = null;
+  public textDirection: 'ltr' | 'rtl' | null = null;
   public inline: boolean = false;
   public centerOnPage: boolean = false;
   public modeChange: boolean = false;
@@ -845,6 +1078,8 @@ export class RichTextBoxElement extends ScoreElement {
   public marginBottom: number = 0;
   public offsetYTop: number = 0;
   public offsetYBottom: number = 0;
+  public runningMarkerRole: RunningMarkerRole | null = null;
+  public runningMarkerText: string | null = null;
 
   // Values computed by the layout service
   public defaultLyricsFontHeight: number = 0;
@@ -866,13 +1101,17 @@ export class RichTextBoxElement extends ScoreElement {
       contentLeft: this.contentLeft,
       contentRight: this.contentRight,
       contentCenter: this.contentCenter,
-      rtl: this.rtl,
+      languageCode: this.languageCode,
+      textDirection: this.textDirection,
       multipanel: this.multipanel,
       inline: this.inline,
+      centerOnPage: this.centerOnPage,
       height: this.height,
       customWidth: this.customWidth,
       marginBottom: this.marginBottom,
       marginTop: this.marginTop,
+      offsetYBottom: this.offsetYBottom,
+      offsetYTop: this.offsetYTop,
       modeChange: this.modeChange,
       modeChangePhysicalNote: this.modeChangePhysicalNote,
       modeChangeScale: this.modeChangeScale,
@@ -880,6 +1119,8 @@ export class RichTextBoxElement extends ScoreElement {
       modeChangeIgnoreAttractions: this.modeChangeIgnoreAttractions,
       modeChangePermanentEnharmonicZo: this.modeChangePermanentEnharmonicZo,
       modeChangeBpm: this.modeChangeBpm,
+      runningMarkerRole: this.runningMarkerRole,
+      runningMarkerText: this.runningMarkerText,
     } as Partial<RichTextBoxElement>;
   }
 }
@@ -892,7 +1133,6 @@ export class ModeKeyElement extends ScoreElement {
   public scale: Scale = Scale.Diatonic;
   public scaleNote: ScaleNote = ScaleNote.Pa;
   public fthora: Fthora | null = null;
-  public description: string = '';
   public tempo: TempoSign | null = null;
   public tempoAlignRight: boolean = false;
   public martyria: ModeSign = ModeSign.Alpha;
@@ -934,6 +1174,10 @@ export class ModeKeyElement extends ScoreElement {
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
   public computedHeightAdjustmentPrevious: number = 0;
+  public ambitusLowNotePrevious: Note = Note.Pa;
+  public ambitusLowRootSignPrevious: RootSign = RootSign.Alpha;
+  public ambitusHighNotePrevious: Note = Note.Pa;
+  public ambitusHighRootSignPrevious: RootSign = RootSign.Alpha;
 
   public get isPlagal() {
     return this.mode > 4 && this.mode !== 7;
@@ -955,7 +1199,6 @@ export class ModeKeyElement extends ScoreElement {
     element.scale = template.scale;
     element.scaleNote = template.scaleNote;
     element.fthora = template.fthora ?? null;
-    element.description = template.description;
     element.martyria = template.martyria;
     element.fthoraAboveNote = template.fthoraAboveNote || null;
     element.fthoraAboveNote2 = template.fthoraAboveNote2 || null;
@@ -1022,17 +1265,66 @@ export class ModeKeyElement extends ScoreElement {
   }
 }
 
+export class AnnotationElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.Annotation;
+  public text: string = '';
+  public languageCode: string | null = null;
+  public textDirection: 'ltr' | 'rtl' | null = null;
+
+  public clone() {
+    const clone = new AnnotationElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      text: this.text,
+      x: this.x,
+      y: this.y,
+      languageCode: this.languageCode,
+      textDirection: this.textDirection,
+    } as Partial<AnnotationElement>;
+  }
+}
+
+export class AlternateLineElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.AlternateLine;
+  public elements: ScoreElement[] = [];
+
+  public clone() {
+    const clone = new AlternateLineElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      elements: this.elements.map((note) => note.clone()),
+      x: this.x,
+      y: this.y,
+    } as Partial<AlternateLineElement>;
+  }
+}
 export class DropCapElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.DropCap;
   public content: string = 'A';
-  public fontFamily: string = 'Source Serif';
-  public fontSize: number = Unit.fromPt(60);
-  public fontWeight: string = '400';
-  public fontStyle: string = 'normal';
-  public lineHeight: number | null = null;
-  public strokeWidth: number = 0;
-  public color: string = '#000000';
-  public useDefaultStyle: boolean = true;
+  public paragraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap;
+  public fontFamily: string | null = null;
+  public fontSize: number | null = null;
+  public fontStyle: string | null = null;
+  public lineHeight: number | null | undefined = undefined;
+  public strokeWidth: number | null = null;
+  public strokeColor: string | null = null;
+  public color: string | null = null;
+  public fontVariantCaps: string | null = null;
+  public fontVariantNumeric: string | null = null;
+  public fontVariantLigatures: string | null = null;
+  public fontVariantAlternates: string | null = null;
   public customWidth: number | null = null;
   public lineSpan: number = 1;
 
@@ -1043,7 +1335,12 @@ export class DropCapElement extends ScoreElement {
   public computedFontStyle: string = 'normal';
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
+  public computedStrokeColor: string = 'currentcolor';
   public computedLineHeight: number | null = null;
+  public computedFontVariantCaps: string = 'normal';
+  public computedFontVariantNumeric: string = 'normal';
+  public computedFontVariantLigatures: string = 'normal';
+  public computedFontVariantAlternates: string = 'normal';
   public computedLineSpan: number = 1;
   public contentWidth: number = 0;
 
@@ -1054,7 +1351,12 @@ export class DropCapElement extends ScoreElement {
   public computedFontStylePrevious: string = 'normal';
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
+  public computedStrokeColorPrevious: string = 'currentcolor';
   public computedLineHeightPrevious: number | null = null;
+  public computedFontVariantCapsPrevious: string = 'normal';
+  public computedFontVariantNumericPrevious: string = 'normal';
+  public computedFontVariantLigaturesPrevious: string = 'normal';
+  public computedFontVariantAlternatesPrevious: string = 'normal';
 
   public get computedFont() {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
@@ -1070,17 +1372,38 @@ export class DropCapElement extends ScoreElement {
 
   public getClipboardProperties() {
     return {
+      paragraphStyleId: this.paragraphStyleId,
       color: this.color,
       content: this.content,
       fontSize: this.fontSize,
-      fontStyle: this.fontStyle,
       fontFamily: this.fontFamily,
-      fontWeight: this.fontWeight,
+      fontStyle: this.fontStyle,
       lineHeight: this.lineHeight,
       strokeWidth: this.strokeWidth,
+      strokeColor: this.strokeColor,
+      fontVariantCaps: this.fontVariantCaps,
+      fontVariantNumeric: this.fontVariantNumeric,
+      fontVariantLigatures: this.fontVariantLigatures,
+      fontVariantAlternates: this.fontVariantAlternates,
       customWidth: this.customWidth,
-      useDefaultStyle: this.useDefaultStyle,
+      lineSpan: this.lineSpan,
     } as Partial<DropCapElement>;
+  }
+
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
+    return {
+      fontFamily: this.fontFamily ?? undefined,
+      fontSize: this.fontSize ?? undefined,
+      fontStyle: this.fontStyle ?? undefined,
+      color: this.color ?? undefined,
+      strokeWidth: this.strokeWidth ?? undefined,
+      strokeColor: this.strokeColor ?? undefined,
+      lineHeight: this.lineHeight,
+      fontVariantCaps: toFontVariantOverride(this.fontVariantCaps),
+      fontVariantNumeric: toFontVariantOverride(this.fontVariantNumeric),
+      fontVariantLigatures: toFontVariantOverride(this.fontVariantLigatures),
+      fontVariantAlternates: toFontVariantOverride(this.fontVariantAlternates),
+    };
   }
 }
 
@@ -1117,6 +1440,100 @@ export class ImageBoxElement extends ScoreElement {
       alignment: this.alignment,
     } as Partial<ImageBoxElement>;
   }
+}
+
+export function isBlockElement(element: ScoreElement | null): boolean {
+  return (
+    (element?.elementType === ElementType.TextBox &&
+      !(element as TextBoxElement).inline) ||
+    (element?.elementType === ElementType.RichTextBox &&
+      !(element as RichTextBoxElement).inline) ||
+    (element?.elementType === ElementType.ImageBox &&
+      !(element as ImageBoxElement).inline) ||
+    element?.elementType === ElementType.ModeKey
+  );
+}
+
+export function isRightAlignedMartyria(element: ScoreElement | null): boolean {
+  return (
+    element?.elementType === ElementType.Martyria &&
+    (element as MartyriaElement).alignRight
+  );
+}
+
+// These marks tie two notes together. Automatic breaks across them are
+// prohibited, and collisions with them should not add space between the neumes
+// because that would ruin the position of the ties.
+const tieSet = new Set<Neume>([
+  VocalExpressionNeume.HeteronConnecting,
+  VocalExpressionNeume.HeteronConnectingLong,
+  VocalExpressionNeume.HomalonConnecting,
+  Tie.YfenAbove,
+  Tie.YfenBelow,
+]);
+
+export function isTieNeume(neume: Neume | null): boolean {
+  return neume != null && tieSet.has(neume);
+}
+
+function isTiedToNext(element: NoteElement): boolean {
+  return isTieNeume(element.vocalExpressionNeume) || isTieNeume(element.tie);
+}
+
+// The boundaries the layout refuses to break at on its own, regardless of the
+// graded penalties that apply elsewhere.
+export function isAutomaticBreakProhibited(
+  element: ScoreElement,
+  nextElement: ScoreElement | null,
+): boolean {
+  if (element.elementType !== ElementType.Note) {
+    return false;
+  }
+
+  // A martyria belongs with the notes it summarizes.
+  if (nextElement?.elementType === ElementType.Martyria) {
+    return true;
+  }
+
+  // A tie spans both notes, so a break would strand the mark at the line end.
+  // An explicit break is not subject to the automatic prohibition.
+  return (
+    nextElement?.elementType === ElementType.Note &&
+    !element.lineBreak &&
+    !element.pageBreak &&
+    isTiedToNext(element as NoteElement)
+  );
+}
+
+export function supportsKeepWithNext(
+  element: ScoreElement,
+): element is NoteElement {
+  return element.elementType === ElementType.Note;
+}
+
+export function canKeepWithNext(
+  element: ScoreElement,
+  nextElement: ScoreElement | null,
+): element is NoteElement {
+  return (
+    supportsKeepWithNext(element) &&
+    !element.lineBreak &&
+    !element.pageBreak &&
+    nextElement !== null &&
+    nextElement.elementType !== ElementType.Empty &&
+    !isBlockElement(nextElement) &&
+    !isAutomaticBreakProhibited(element, nextElement)
+  );
+}
+
+// A stored keep only takes effect where there is an optional breakpoint to
+// constrain. An inactive keep is retained rather than cleared, so that it
+// becomes active again once the obstruction is removed.
+export function isKeepWithNextActive(
+  element: ScoreElement,
+  nextElement: ScoreElement | null,
+): boolean {
+  return canKeepWithNext(element, nextElement) && element.keepWithNext;
 }
 
 export class ScoreElementOffset {

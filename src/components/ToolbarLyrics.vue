@@ -1,117 +1,142 @@
 <template>
-  <div class="lyrics-toolbar">
-    <input
-      id="toolbar-lyrics-use-default-style"
-      type="checkbox"
-      :checked="element.lyricsUseDefaultStyle"
-      @change="
-        $emit(
-          'update:lyricsUseDefaultStyle',
-          ($event.target as HTMLInputElement).checked,
-        )
+  <Toolbar class="chrome-toolbar" loop>
+    <ParagraphStyleSelect
+      trigger-class="w-48"
+      :model-value="element.lyricsParagraphStyleId"
+      :paragraph-styles="paragraphStyles"
+      @update:model-value="
+        $emit('update', {
+          lyricsParagraphStyleId: $event,
+        } as Partial<NoteElement>)
       "
     />
-    <label for="toolbar-lyrics-use-default-style">{{
-      $t('toolbar:common.useDefaultStyle')
-    }}</label>
-    <span class="divider" />
-    <template v-if="!element.lyricsUseDefaultStyle">
-      <select
-        :value="element.lyricsFontFamily"
-        @change="
-          $emit(
-            'update:lyricsFontFamily',
-            ($event.target as HTMLInputElement).value,
-          )
-        "
+    <ToolbarSeparator />
+    <FontCombobox
+      :model-value="resolvedParagraphStyle.fontFamily"
+      :options="lyricsFontFamilies"
+      @update:model-value="onFontFamilyChanged"
+    />
+    <FontStyleSelect
+      class="w-40"
+      :model-value="resolvedParagraphStyle.fontStyle"
+      :options="fontStyleOptions"
+      :disabled="fontStyleOptions.length <= 1"
+      @update:model-value="
+        $emit('update', {
+          lyricsFontStyle: $event,
+        } as Partial<NoteElement>)
+      "
+    />
+    <InputFontSize
+      id="toolbar-lyrics-font-size"
+      :model-value="resolvedParagraphStyle.fontSize"
+      @update:model-value="
+        $emit('update', {
+          lyricsFontSize: $event,
+        } as Partial<NoteElement>)
+      "
+    />
+    <ToolbarSeparator />
+    <ToggleGroup
+      type="multiple"
+      variant="outline"
+      :model-value="activeStyleAxisValues"
+      @update:model-value="onFontStyleValuesChanged"
+    >
+      <ToggleGroupItem
+        value="bold"
+        class="chrome-button"
+        :class="{ selected: isFontStyleAxisActive('bold') }"
+        :disabled="!isFontStyleAxisToggleEnabled('bold')"
+        aria-label="Toggle bold"
       >
-        <option v-for="font in lyricsFontFamilies" :key="font" :value="font">
-          {{ font }}
-        </option>
-      </select>
-      <span class="space"></span>
-      <InputFontSize
-        class="lyrics-input"
-        :modelValue="element.lyricsFontSize"
-        @update:modelValue="$emit('update:lyricsFontSize', $event)"
-      />
-      <span class="space"></span>
-      <ColorPicker
-        :modelValue="element.lyricsColor"
-        @update:modelValue="$emit('update:lyricsColor', $event)"
-      />
-      <span class="space"></span>
-      <button
-        class="icon-btn"
-        :class="{ selected: bold }"
-        @click="$emit('update:lyricsFontWeight', !bold)"
+        <PhTextB class="size-4" />
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="italic"
+        class="chrome-button"
+        :class="{ selected: isFontStyleAxisActive('italic') }"
+        :disabled="!isFontStyleAxisToggleEnabled('italic')"
+        aria-label="Toggle italic"
       >
-        <b>B</b>
-      </button>
-      <button
-        class="icon-btn"
-        :class="{ selected: italic }"
-        @click="$emit('update:lyricsFontStyle', !italic)"
-      >
-        <i>I</i>
-      </button>
-      <button
-        class="icon-btn"
+        <PhTextItalic class="size-4" />
+      </ToggleGroupItem>
+    </ToggleGroup>
+    <ToggleGroup
+      type="multiple"
+      variant="outline"
+      :model-value="underlineValues"
+      @update:model-value="onTextDecorationValuesChanged"
+    >
+      <ToggleGroupItem
+        value="underline"
+        class="chrome-button"
         :class="{ selected: underline }"
-        @click="$emit('update:lyricsTextDecoration', !underline)"
+        aria-label="Toggle underline"
       >
-        <u>U</u>
-      </button>
-      <span class="space"></span>
-      <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
-      <InputStrokeWidth
-        :modelValue="element.lyricsStrokeWidth"
-        @update:modelValue="$emit('update:lyricsStrokeWidth', $event)"
-      />
-    </template>
-    <span class="space" />
-    <button
-      class="icon-btn"
-      @mousedown.prevent="$emit('insert:specialCharacter', PELASTIKON)"
+        <PhTextUnderline class="size-4" />
+      </ToggleGroupItem>
+    </ToggleGroup>
+    <ToolbarSeparator />
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.common.insertPelastikon, { ns: 'toolbar' })"
     >
-      <img
-        src="@/assets/icons/letterPelastikon.svg"
-        width="32"
-        height="32"
-        :title="$t('toolbar:common.insertPelastikon')"
-      />
-    </button>
-    <button
-      class="icon-btn"
-      @mousedown.prevent="$emit('insert:specialCharacter', GORTHMIKON)"
-    >
-      <img
-        src="@/assets/icons/letterGorthmikon.svg"
-        width="32"
-        height="32"
-        :title="$t('toolbar:common.insertGorthmikon')"
-      />
-    </button>
-    <span class="space" />
-    <template v-for="character in specialCharacters" :key="character.value">
-      <button
-        class="icon-btn"
-        :class="character.language"
-        @mousedown.prevent="$emit('insert:specialCharacter', character.value)"
+      <ToolbarButton
+        variant="secondary"
+        class="chrome-button"
+        @mousedown.prevent="$emit('insert:specialCharacter', PELASTIKON)"
       >
-        {{ character.value }}
-      </button>
-    </template>
-  </div>
+        <NeumeIcon name="letterPelastikon" />
+      </ToolbarButton>
+    </AppTooltip>
+    <AppTooltip
+      :tooltip="$t(($) => $.toolbar.common.insertGorthmikon, { ns: 'toolbar' })"
+    >
+      <ToolbarButton
+        variant="secondary"
+        class="chrome-button"
+        @mousedown.prevent="$emit('insert:specialCharacter', GORTHMIKON)"
+      >
+        <NeumeIcon name="letterGorthmikon" />
+      </ToolbarButton>
+    </AppTooltip>
+    <ToolbarSeparator />
+    <ToolbarButton
+      v-for="character in specialCharacters"
+      :key="character"
+      variant="secondary"
+      class="chrome-button character-button"
+      :class="getCharacterLanguage(character)"
+      :aria-label="character"
+      @mousedown.prevent="$emit('insert:specialCharacter', character)"
+    >
+      {{ character }}
+    </ToolbarButton>
+  </Toolbar>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+<script setup lang="ts">
+import { PhTextB, PhTextItalic, PhTextUnderline } from '@phosphor-icons/vue';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 
-import ColorPicker from '@/components/ColorPicker.vue';
+import AppTooltip from '@/components/AppTooltip.vue';
+import FontCombobox from '@/components/FontCombobox.vue';
+import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
-import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import { NoteElement } from '@/models/Element';
+import NeumeIcon from '@/components/NeumeIcon.vue';
+import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  Toolbar,
+  ToolbarButton,
+  ToolbarSeparator,
+} from '@/components/ui/toolbar';
+import { useFontStyleControls } from '@/composables/useFontStyleControls';
+import { useResolvedParagraphStyle } from '@/composables/useResolvedParagraphStyle';
+import type { NoteElement } from '@/models/Element';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { fontCatalog } from '@/services/FontCatalog';
 import {
   E_MACRON,
   E_MACRON_SMALL,
@@ -123,93 +148,89 @@ import {
   STIGMA_SMALL,
 } from '@/utils/constants';
 
-@Component({
-  components: { ColorPicker, InputFontSize, InputStrokeWidth },
-  emits: [
-    'insert:specialCharacter',
-    'update:lyricsColor',
-    'update:lyricsFontFamily',
-    'update:lyricsFontSize',
-    'update:lyricsFontStyle',
-    'update:lyricsFontWeight',
-    'update:lyricsStrokeWidth',
-    'update:lyricsTextDecoration',
-    'update:lyricsUseDefaultStyle',
-  ],
-})
-export default class ToolbarLyrics extends Vue {
-  @Prop() element!: NoteElement;
-  @Prop() fonts!: string[];
+const specialCharacters = [
+  E_MACRON_SMALL,
+  E_MACRON,
+  STIGMA_SMALL,
+  STIGMA,
+  GREEK_OU_SMALL,
+  GREEK_OU,
+];
 
-  GORTHMIKON = GORTHMIKON;
-  PELASTIKON = PELASTIKON;
+const props = defineProps({
+  element: {
+    type: Object as PropType<NoteElement>,
+    required: true,
+  },
+  fonts: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
+});
 
-  specialCharacters = [
-    { value: E_MACRON_SMALL, language: 'english' },
-    { value: E_MACRON, language: 'english' },
-    { value: STIGMA_SMALL, language: 'greek' },
-    { value: STIGMA, language: 'greek' },
-    { value: GREEK_OU_SMALL, language: 'greek' },
-    { value: GREEK_OU, language: 'greek' },
-  ];
+const emit = defineEmits(['insert:specialCharacter', 'update']);
 
-  get bold() {
-    return this.element.lyricsFontWeight === '700';
-  }
+const { resolvedParagraphStyle, underline, underlineValues } =
+  useResolvedParagraphStyle(
+    () => props.paragraphStyles,
+    () => props.element.lyricsParagraphStyleId,
+    () => props.element.getParagraphStyleOverrides(),
+  );
 
-  get italic() {
-    return this.element.lyricsFontStyle === 'italic';
-  }
+const {
+  fontStyleOptions,
+  activeStyleAxisValues,
+  isFontStyleAxisActive,
+  isFontStyleAxisToggleEnabled,
+  applyStyleAxisToggles,
+  remapStyleForFamily,
+} = useFontStyleControls(
+  () => resolvedParagraphStyle.value.fontFamily,
+  () => resolvedParagraphStyle.value.fontStyle,
+);
 
-  get underline() {
-    return this.element.lyricsTextDecoration === 'underline';
-  }
+const lyricsFontFamilies = computed(() => [
+  ...fontCatalog.bundledTextFamilies(),
+  ...props.fonts,
+]);
 
-  get lyricsFontFamilies() {
-    return [
-      'Source Serif',
-      'GFS Didot',
-      'Noto Naskh Arabic',
-      'Omega',
-      ...this.fonts,
-    ];
-  }
+function onFontStyleValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
+    lyricsFontStyle: applyStyleAxisToggles(values),
+  } as Partial<NoteElement>);
+}
+
+function onTextDecorationValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
+    lyricsTextDecoration: values.includes('underline') ? 'underline' : 'none',
+  } as Partial<NoteElement>);
+}
+
+function onFontFamilyChanged(lyricsFontFamily: string) {
+  emit('update', {
+    lyricsFontFamily,
+    lyricsFontStyle: remapStyleForFamily(lyricsFontFamily),
+  } as Partial<NoteElement>);
+}
+
+function getCharacterLanguage(character: string) {
+  return character === E_MACRON_SMALL || character === E_MACRON
+    ? 'english'
+    : 'greek';
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.lyrics-toolbar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-
-  background-color: lightgray;
-
-  padding: 0.25rem;
-}
-
-.icon-btn {
-  height: 32px;
-  width: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.character-button {
   font-size: 1.25rem;
-}
-
-.divider {
-  height: 32px;
-  border-right: 1px solid #666;
-  margin: 0 0.5rem;
-}
-
-.icon-btn.selected {
-  background-color: var(--btn-color-selected);
-}
-
-.space {
-  width: 16px;
 }
 
 .english {

@@ -1,135 +1,180 @@
 import 'ckeditor5/ckeditor5.css';
 
 import {
-  Alignment,
   AutoImage,
   AutoLink,
   Base64UploadAdapter,
-  Bold,
-  Essentials,
+  Clipboard,
+  DecoupledEditor,
+  Enter,
   FindAndReplace,
-  FontColor,
-  FontFamily,
-  FontSize,
+  FontColorEditing,
+  FontFamilyEditing,
+  FontSizeEditing,
   GeneralHtmlSupport,
+  HorizontalLine,
   Image,
   ImageCaption,
   ImageResize,
   ImageStyle,
+  ImageTextAlternative,
   ImageToolbar,
   ImageUpload,
-  Indent,
   IndentBlock,
-  InlineEditor as InlineEditorBase,
-  Italic,
+  IndentEditing,
   Link,
-  List,
+  ListEditing,
+  ListProperties,
   Paragraph,
   PasteFromOffice,
-  RemoveFormat,
-  SelectAll,
-  Subscript,
-  Superscript,
+  Plugin,
+  RemoveFormatEditing,
+  SelectAllEditing,
+  ShiftEnter,
+  Style,
+  SubscriptEditing,
+  SuperscriptEditing,
   Table,
   TableCaption,
   TableCellProperties,
   TableColumnResize,
   TableProperties,
   TableToolbar,
+  TextPartLanguage,
   TextTransformation,
-  Underline,
-  Undo,
+  Typing,
+  UnderlineEditing,
+  UndoEditing,
+  WidgetTypeAround,
 } from 'ckeditor5';
+import elTranslations from 'ckeditor5/translations/el.js';
+import idTranslations from 'ckeditor5/translations/id.js';
+import roTranslations from 'ckeditor5/translations/ro.js';
+import ruTranslations from 'ckeditor5/translations/ru.js';
 
+import AlignmentOverride from './ckeditor-plugins/alignmentoverride/alignmentoverride';
+import FontStyle from './ckeditor-plugins/fontstyle/fontstyle';
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
+import OpenType from './ckeditor-plugins/opentype/opentype';
+import NeanesFakeSelectionEditing from './ckeditor-plugins/richtextselection/richtextselection';
+import { FONT_VARIANT_CSS_NAMES } from './utils/fontVariants';
+import { RICH_TEXT_LANGUAGE_OPTIONS } from './utils/richTextLanguage';
 
-export default class InlineEditor extends InlineEditorBase {}
+export default class InlineEditor extends DecoupledEditor {}
+
+// Widget is required by images, tables, and neumes, but CKEditor's type-around
+// UI adds block-widget insertion handles and keyboard behavior we do not want.
+class DisableWidgetTypeAround extends Plugin {
+  public static get pluginName() {
+    return 'DisableWidgetTypeAround' as const;
+  }
+
+  public static get requires() {
+    return [WidgetTypeAround] as const;
+  }
+
+  public init() {
+    this.editor.plugins
+      .get(WidgetTypeAround)
+      .forceDisabled('NeanesHeadlessRichText');
+  }
+}
 
 InlineEditor.builtinPlugins = [
-  Alignment,
   AutoImage,
   AutoLink,
   Base64UploadAdapter,
-  Bold,
-  Essentials,
+  Clipboard,
+  DisableWidgetTypeAround,
+  Enter,
   FindAndReplace,
-  FontColor,
-  FontFamily,
-  FontSize,
+  FontColorEditing,
+  FontFamilyEditing,
+  FontSizeEditing,
   GeneralHtmlSupport,
+  HorizontalLine,
   Image,
   ImageCaption,
   ImageResize,
   ImageStyle,
+  ImageTextAlternative,
   ImageToolbar,
   ImageUpload,
-  Indent,
+  IndentEditing,
   IndentBlock,
+  AlignmentOverride,
+  FontStyle,
+  OpenType,
   InsertNeume,
-  Italic,
   Link,
-  List,
+  ListEditing,
+  ListProperties,
+  NeanesFakeSelectionEditing,
   Paragraph,
   PasteFromOffice,
-  RemoveFormat,
-  SelectAll,
-  Subscript,
-  Superscript,
+  RemoveFormatEditing,
+  SelectAllEditing,
+  ShiftEnter,
+  Style,
+  SubscriptEditing,
+  SuperscriptEditing,
   Table,
   TableCaption,
   TableCellProperties,
   TableColumnResize,
   TableProperties,
   TableToolbar,
+  TextPartLanguage,
   TextTransformation,
-  Underline,
-  Undo,
+  Typing,
+  UnderlineEditing,
+  UndoEditing,
 ];
 
 InlineEditor.defaultConfig = {
   toolbar: {
-    items: [
-      'fontFamily',
-      'fontSize',
-      '|',
-      'bold',
-      'italic',
-      'underline',
-      '|',
-      'alignment:left',
-      'alignment:center',
-      'alignment:right',
-      'alignment:justify',
-      '|',
-      'bulletedList',
-      'numberedList',
-      'outdent',
-      'indent',
-      '|',
-      'fontColor',
-      '|',
-      'subscript',
-      'superscript',
-      '|',
-      'undo',
-      'redo',
-      '|',
-      'link',
-      'imageUpload',
-      'insertTable',
-      '|',
-      'findAndReplace',
-      'selectAll',
-      '|',
-      'removeFormat',
-      '|',
-      'insertNeume',
-      'insertMartyria',
-      'insertPlagal',
-    ],
-    shouldNotGroupWhenFull: true,
+    items: [],
   },
-  language: 'en',
+  menuBar: {
+    isVisible: false,
+  },
+  language: {
+    ui: 'en',
+    content: 'en',
+    textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
+  },
+  translations: [
+    elTranslations,
+    idTranslations,
+    roTranslations,
+    ruTranslations,
+  ],
+  fontFamily: {
+    supportAllValues: true,
+  },
+  fontSize: {
+    supportAllValues: true,
+  },
+  list: {
+    properties: {
+      styles: {
+        listStyleTypes: {
+          bulleted: ['disc', 'circle', 'square'],
+          numbered: [
+            'decimal',
+            'decimal-leading-zero',
+            'lower-roman',
+            'upper-roman',
+            'lower-latin',
+            'upper-latin',
+            'arabic-indic',
+          ],
+        },
+      },
+      startIndex: true,
+      reversed: true,
+    },
+  },
   image: {
     toolbar: [
       'imageTextAlternative',
@@ -154,6 +199,22 @@ InlineEditor.defaultConfig = {
         name: 'span',
         styles: true,
         attributes: true,
+      },
+    ],
+    // The OpenType plugin is the sole owner of the font-variant longhands. Keep
+    // GeneralHtmlSupport from also capturing them, which would otherwise leave a
+    // competing inner declaration that overrides the plugin's own span. Values
+    // outside the plugin's supported vocabulary are dropped during upcast.
+    // TextPartLanguage similarly owns language metadata. If GHS also preserves
+    // `dir`, removing the language leaves a stale `<span dir="...">`.
+    disallow: [
+      {
+        name: 'span',
+        attributes: ['lang', 'dir'],
+      },
+      {
+        name: 'span',
+        styles: Object.values(FONT_VARIANT_CSS_NAMES),
       },
     ],
   },

@@ -1,60 +1,217 @@
 <template>
-  <router-view />
-  <div class="update-notification" v-if="updateExists">
-    An update is available.
-    <button class="ok" @click="refreshApp">Update</button>
-    <button class="cancel" @click="updateExists = false">Not now</button>
+  <TooltipProvider :delay-duration="500" :skip-delay-duration="0">
+    <router-view />
+  </TooltipProvider>
+  <div class="toaster-wrapper contents">
+    <Toaster />
+  </div>
+  <div v-if="updateExists" class="update-notification">
+    {{ t(($) => $.toast.update.available, { ns: 'toast' }) }}
+    <button class="ok" @click="refreshApp">
+      {{ t(($) => $.toast.update.update, { ns: 'toast' }) }}
+    </button>
+    <button class="cancel" @click="updateExists = false">
+      {{ t(($) => $.toast.update.notNow, { ns: 'toast' }) }}
+    </button>
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+<script setup lang="ts">
+import { useColorMode } from '@vueuse/core';
+import { useTranslation } from 'i18next-vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { toast } from 'vue-sonner';
 
-@Component
-export default class App extends Vue {
-  registration: ServiceWorkerRegistration | null = null;
-  updateExists: boolean = false;
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { EventBus } from '@/eventBus';
+import type { UpdateAvailableArgs, UpdateErrorArgs } from '@/ipc/ipcChannels';
+import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
 
-  created() {
-    if (navigator.serviceWorker) {
-      document.addEventListener(
-        'swUpdated',
-        this.onUpdateAvailable as EventListener,
-        {
-          once: true,
-        },
-      );
+const registration = ref<ServiceWorkerRegistration | null>(null);
+const updateExists = ref(false);
+const electronUpdateAvailableToastId = 'electron-update-available';
+const electronUpdateDownloadingToastId = 'electron-update-downloading';
+const electronUpdateDownloadedToastId = 'electron-update-downloaded';
+const electronUpdateErrorToastId = 'electron-update-error';
+const { t } = useTranslation();
 
-      let refreshing = false;
+useColorMode();
 
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-          window.location.reload();
-          refreshing = true;
-        }
-      });
-    }
-  }
-
-  onUpdateAvailable(event: CustomEvent) {
-    this.registration = event.detail;
-    this.updateExists = true;
-  }
-
-  refreshApp() {
-    this.updateExists = false;
-    if (this.registration && this.registration.waiting) {
-      this.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-    }
+async function downloadElectronUpdate() {
+  try {
+    await window.ipcRenderer?.invoke(IpcRendererChannels.DownloadUpdate);
+  } catch (error) {
+    showElectronUpdateErrorToast({
+      message:
+        error instanceof Error
+          ? error.message
+          : t(($) => $.toast.update.downloadFailedDescription, {
+              ns: 'toast',
+            }),
+    });
   }
 }
+
+async function restartToInstallElectronUpdate() {
+  try {
+    await window.ipcRenderer?.invoke(
+      IpcRendererChannels.RestartToInstallUpdate,
+    );
+  } catch (error) {
+    showElectronUpdateErrorToast({
+      message:
+        error instanceof Error
+          ? error.message
+          : t(($) => $.toast.update.restartFailedDescription, {
+              ns: 'toast',
+            }),
+    });
+  }
+}
+
+function showElectronUpdateAvailableToast(args?: UpdateAvailableArgs) {
+  toast.info(
+    t(($) => $.toast.update.available, { ns: 'toast' }),
+    {
+      id: electronUpdateAvailableToastId,
+      duration: Infinity,
+      description: args?.version
+        ? t(($) => $.toast.update.versionAvailable, {
+            ns: 'toast',
+            version: args.version,
+          })
+        : undefined,
+      action: {
+        label: t(($) => $.toast.update.download, { ns: 'toast' }),
+        onClick: () => {
+          void downloadElectronUpdate();
+        },
+      },
+      cancel: {
+        label: t(($) => $.toast.update.later, { ns: 'toast' }),
+      },
+    },
+  );
+}
+
+function showElectronUpdateDownloadingToast() {
+  toast.loading(
+    t(($) => $.toast.update.downloading, { ns: 'toast' }),
+    {
+      id: electronUpdateDownloadingToastId,
+      duration: Infinity,
+    },
+  );
+}
+
+function showElectronUpdateDownloadedToast(args?: UpdateAvailableArgs) {
+  toast.dismiss(electronUpdateDownloadingToastId);
+
+  toast.success(
+    t(($) => $.toast.update.downloaded, { ns: 'toast' }),
+    {
+      id: electronUpdateDownloadedToastId,
+      duration: Infinity,
+      description: args?.version
+        ? t(($) => $.toast.update.versionReady, {
+            ns: 'toast',
+            version: args.version,
+          })
+        : undefined,
+      action: {
+        label: t(($) => $.toast.update.restartNow, { ns: 'toast' }),
+        onClick: () => {
+          void restartToInstallElectronUpdate();
+        },
+      },
+      cancel: {
+        label: t(($) => $.toast.update.later, { ns: 'toast' }),
+      },
+    },
+  );
+}
+
+function showElectronUpdateErrorToast(args: UpdateErrorArgs) {
+  toast.error(
+    t(($) => $.toast.update.failed, { ns: 'toast' }),
+    {
+      id: electronUpdateErrorToastId,
+      description: args.message,
+    },
+  );
+}
+
+if (navigator.serviceWorker) {
+  document.addEventListener('swUpdated', onUpdateAvailable as EventListener, {
+    once: true,
+  });
+
+  let refreshing = false;
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      window.location.reload();
+      refreshing = true;
+    }
+  });
+}
+
+function onUpdateAvailable(event: CustomEvent) {
+  registration.value = event.detail;
+  updateExists.value = true;
+}
+
+function refreshApp() {
+  updateExists.value = false;
+  if (registration.value?.waiting) {
+    registration.value.waiting.postMessage({ type: 'SKIP_WAITING' });
+  }
+}
+
+const onElectronUpdateAvailable = (args?: UpdateAvailableArgs) =>
+  showElectronUpdateAvailableToast(args);
+const onElectronUpdateDownloadStarted = () =>
+  showElectronUpdateDownloadingToast();
+const onElectronUpdateDownloaded = (args?: UpdateAvailableArgs) =>
+  showElectronUpdateDownloadedToast(args);
+const onElectronUpdateError = (args?: UpdateErrorArgs) => {
+  toast.dismiss(electronUpdateDownloadingToastId);
+  showElectronUpdateErrorToast(
+    args ?? {
+      message: t(($) => $.toast.update.failedDescription, { ns: 'toast' }),
+    },
+  );
+};
+
+onMounted(() => {
+  if (window.ipcRenderer == null) {
+    return;
+  }
+
+  EventBus.$on(IpcMainChannels.UpdateAvailable, onElectronUpdateAvailable);
+  EventBus.$on(
+    IpcMainChannels.UpdateDownloadStarted,
+    onElectronUpdateDownloadStarted,
+  );
+  EventBus.$on(IpcMainChannels.UpdateDownloaded, onElectronUpdateDownloaded);
+  EventBus.$on(IpcMainChannels.UpdateError, onElectronUpdateError);
+});
+
+onBeforeUnmount(() => {
+  EventBus.$off(IpcMainChannels.UpdateAvailable, onElectronUpdateAvailable);
+  EventBus.$off(
+    IpcMainChannels.UpdateDownloadStarted,
+    onElectronUpdateDownloadStarted,
+  );
+  EventBus.$off(IpcMainChannels.UpdateDownloaded, onElectronUpdateDownloaded);
+  EventBus.$off(IpcMainChannels.UpdateError, onElectronUpdateError);
+});
 </script>
 
 <style>
 :root {
   --zoom: 1;
-
-  --btn-color-selected: lightsteelblue;
 }
 
 #app {
@@ -74,7 +231,25 @@ export default class App extends Vue {
     overflow: visible !important;
   }
 
+  .page {
+    print-color-adjust: exact;
+  }
+
+  /*
+   * Reka/Vue portal components leave teleport anchor elements as direct body
+   * children. If any remain after #app, Blink may honor the final printed
+   * page's break-after and keep a blank trailing page alive.
+   */
+  body > :not(#app) {
+    display: none !important;
+  }
+
   .ck-body-wrapper {
+    display: none !important;
+  }
+
+  .toaster-wrapper,
+  .toaster-wrapper * {
     display: none !important;
   }
 }
@@ -84,33 +259,33 @@ export default class App extends Vue {
 }
 
 @font-face {
-  font-family: Neanes;
+  font-family: NeanesLegacy;
   src: url('./assets/fonts/Neanes.otf');
 }
 
 @font-face {
-  font-family: NeanesStathisSeries;
+  font-family: Neanes;
+  src: url('./assets/fonts/NeanesEngraving.otf');
+}
+
+@font-face {
+  font-family: NeanesStathisSeriesLegacy;
   src: url('./assets/fonts/NeanesStathisSeries.otf');
 }
 
 @font-face {
-  font-family: NeanesRTL;
+  font-family: NeanesStathisSeries;
+  src: url('./assets/fonts/NeanesStathisSeriesEngraving.otf');
+}
+
+@font-face {
+  font-family: NeanesRTLLegacy;
   src: url('./assets/fonts/NeanesRTL.otf');
 }
 
 @font-face {
-  font-family: Omega;
-  src: url('./assets/fonts/EZ Omega.ttf');
-}
-
-@font-face {
-  font-family: Athonite;
-  src: url('./assets/fonts/Athonite.ttf');
-}
-
-@font-face {
-  font-family: PFGoudyInitials;
-  src: url('./assets/fonts/PFGoudyInitials.ttf');
+  font-family: NeanesRTL;
+  src: url('./assets/fonts/NeanesRTLEngraving.otf');
 }
 
 @font-face {
@@ -138,6 +313,30 @@ export default class App extends Vue {
 }
 
 @font-face {
+  font-family: 'Old Standard';
+  src: url('./assets/fonts/OldStandard-Bold.otf');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Old Standard';
+  src: url('./assets/fonts/OldStandard-BoldItalic.otf');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Old Standard';
+  src: url('./assets/fonts/OldStandard-Italic.otf');
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Old Standard';
+  src: url('./assets/fonts/OldStandard-Regular.otf');
+}
+
+@font-face {
   font-family: 'Noto Naskh Arabic';
   src: url('./assets/fonts/NotoNaskhArabic-Regular.otf');
 }
@@ -146,30 +345,6 @@ export default class App extends Vue {
   font-family: 'Noto Naskh Arabic';
   src: url('./assets/fonts/NotoNaskhArabic-Bold.otf');
   font-weight: bold;
-}
-
-@font-face {
-  font-family: 'Source Serif';
-  src: url('./assets/fonts/SourceSerif4-Regular.otf');
-}
-
-@font-face {
-  font-family: 'Source Serif';
-  src: url('./assets/fonts/SourceSerif4-Bold.otf');
-  font-weight: bold;
-}
-
-@font-face {
-  font-family: 'Source Serif';
-  src: url('./assets/fonts/SourceSerif4-It.otf');
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Source Serif';
-  src: url('./assets/fonts/SourceSerif4-BoldIt.otf');
-  font-weight: bold;
-  font-style: italic;
 }
 
 html {
@@ -192,34 +367,7 @@ button,
 input,
 select,
 textarea {
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica,
-    Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
-}
-
-.ok-btn {
-  padding: 0.5rem;
-  border: none;
-  background-color: rgb(66, 139, 202);
-  color: white;
-  border-radius: 4px;
-}
-
-.ok-btn:hover {
-  background-color: rgb(81, 157, 223);
-}
-
-.neutral-btn,
-.cancel-btn {
-  padding: 0.5rem;
-  border: 1px solid black;
-  background-color: white;
-  border-radius: 4px;
-}
-
-.neutral-btn:hover,
-.cancel-btn:hover {
-  background-color: #f8fbff;
+  font-family: var(--font-sans);
 }
 </style>
 

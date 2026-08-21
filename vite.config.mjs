@@ -1,40 +1,75 @@
 import { rmSync } from 'node:fs';
 
+import eslintPlugin from '@nabla/vite-plugin-eslint';
+import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import electron from 'vite-plugin-electron';
-import eslintPlugin from 'vite-plugin-eslint';
 import { VitePWA } from 'vite-plugin-pwa';
 import VueDevTools from 'vite-plugin-vue-devtools';
 
-import pkg from './package.json';
+import pkg from './package.json' with { type: 'json' };
+
+// lib-font probes for Node's fs and zlib at module load, behind runtime
+// guards that never fire in the renderer: the fetch shim only activates when
+// globalThis.fetch is missing, and the zlib decompressors only run for
+// WOFF/WOFF2 input, while Local Font Access hands lib-font raw SFNT bytes.
+// Resolve those two imports to an empty stub so the client build does not
+// warn about externalized Node builtins. Scoped to lib-font importers so a
+// genuine Node-builtin import anywhere else still warns loudly.
+const libFontNodeBuiltinStub = () => {
+  const stubId = '\0lib-font-node-builtin-stub';
+
+  return {
+    name: 'lib-font-node-builtin-stub',
+    enforce: 'pre',
+    resolveId(source, importer) {
+      if (
+        (source === 'fs' || source === 'zlib') &&
+        importer != null &&
+        /node_modules[\\/]lib-font[\\/]/.test(importer)
+      ) {
+        return stubId;
+      }
+    },
+    load(id) {
+      if (id === stubId) {
+        return 'export default {};';
+      }
+    },
+  };
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-  rmSync('dist-electron', { recursive: true, force: true });
-
   const isServe = command === 'serve';
   const isBuild = command === 'build';
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG;
 
-  process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
+  Object.assign(process.env, loadEnv(mode, process.cwd()));
+  const isElectron = process.env.VITE_IS_ELECTRON === 'true';
+
+  if (isElectron) {
+    rmSync('dist-electron', { recursive: true, force: true });
+  }
 
   return {
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
+        '@': path.resolve(import.meta.dirname, './src'),
       },
     },
     define: {
-      APP_VERSION: JSON.stringify(process.env.npm_package_version),
+      APP_VERSION: JSON.stringify(pkg.version),
     },
     plugins: [
-      mode === 'web'
+      libFontNodeBuiltinStub(),
+      !isElectron
         ? VitePWA({
             registerType: null, // We'll inject the service worker ourselves
             workbox: {
-              maximumFileSizeToCacheInBytes: 3000000,
+              maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
             },
             includeAssets: [
               'favicon-32.png',
@@ -102,9 +137,15 @@ export default defineConfig(({ command, mode }) => {
           })
         : undefined,
       vue(),
+      tailwindcss(),
       process.env.VITE_ENABLE_DEV_TOOLS === 'true' ? VueDevTools() : undefined,
-      eslintPlugin(),
-      !mode.includes('web')
+      eslintPlugin({
+        eslintOptions: {
+          cache: false,
+          overrideConfigFile: 'eslint.config.mjs',
+        },
+      }),
+      isElectron
         ? electron([
             {
               // Main-Process entry file of the Electron App.
@@ -123,7 +164,7 @@ export default defineConfig(({ command, mode }) => {
                   sourcemap,
                   minify: isBuild,
                   outDir: 'dist-electron/main',
-                  rollupOptions: {
+                  rolldownOptions: {
                     external: Object.keys(
                       'dependencies' in pkg ? pkg.dependencies : {},
                     ),
@@ -143,7 +184,7 @@ export default defineConfig(({ command, mode }) => {
                   sourcemap: sourcemap ? 'inline' : undefined, // #332
                   minify: isBuild,
                   outDir: 'dist-electron/preload',
-                  rollupOptions: {
+                  rolldownOptions: {
                     external: Object.keys(
                       'dependencies' in pkg ? pkg.dependencies : {},
                     ),
@@ -163,8 +204,18 @@ export default defineConfig(({ command, mode }) => {
           port: +url.port,
         };
       })(),
-    test: {
-      globals: true,
+    optimizeDeps: {
+      // Work around a Vite 8/Rolldown dep optimizer bug where Vue init helper
+      // calls are emitted without imports in pre-bundled chunks. This only
+      // affects dev mode; production builds do not use optimizeDeps.
+      // See https://github.com/rolldown/rolldown/issues/9502.
+      //
+      // lib-font is excluded because the dep optimizer resolves with its own
+      // pipeline, ignoring the libFontNodeBuiltinStub plugin, so a
+      // pre-bundled lib-font still warns about externalized fs/zlib in dev.
+      // Excluded, it is served through the transform pipeline where the stub
+      // applies.
+      exclude: ['@ckeditor/ckeditor5-vue', 'lib-font'],
     },
     clearScreen: false,
   };

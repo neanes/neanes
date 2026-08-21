@@ -1,12 +1,46 @@
 import { TempoElement } from './Element';
 import { TempoSign } from './Neumes';
 
+export enum ButtonMenuMode {
+  Click = 'Click',
+  Hold = 'Hold',
+}
+
 export interface IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
+  buttonMenuMode: ButtonMenuMode;
+  // Empty string means "follow the system / browser locale".
+  language: string;
+  showDeveloperPanels: boolean;
+  overlaysEnabled: boolean;
+  printOverlays: boolean;
+  showGuides: boolean;
+  showAdjustmentRatios: boolean;
+  showAnonymousBoxes: boolean;
+  showElementBoxes: boolean;
+  showInkBoundingBoxes: boolean;
+  showLyricBoundingBoxes: boolean;
+  showNeumeBoundingBoxes: boolean;
+  showCollisionRegions: boolean;
+  showGlueWidths: boolean;
 }
 
 export class EditorPreferences implements IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
+  buttonMenuMode = ButtonMenuMode.Hold;
+  language = '';
+  showDeveloperPanels = false;
+  overlaysEnabled = true;
+  printOverlays = false;
+  showGuides = false;
+  showAdjustmentRatios = false;
+  showAnonymousBoxes = false;
+  showElementBoxes = false;
+  showInkBoundingBoxes = false;
+  showLyricBoundingBoxes = false;
+  showNeumeBoundingBoxes = false;
+  showCollisionRegions = false;
+  showGlueWidths = false;
 
   constructor() {
     this.tempoDefaults = {
@@ -21,7 +55,7 @@ export class EditorPreferences implements IEditorPreferences {
     };
   }
 
-  static createFrom(data: IEditorPreferences) {
+  static createFrom(data: Partial<IEditorPreferences>) {
     return Object.assign(new EditorPreferences(), data);
   }
 

@@ -1,520 +1,1057 @@
 <template>
-  <div class="file-menu-bar" @focusout="isMenuOpen = false" tabindex="-1">
-    <FileMenuBarItem
-      :label="$t('menu:file.root')"
-      @click="toggleMenu"
-      @mouseenter="selectedMenu = 'File'"
-      :isOpen="isMenuOpen && selectedMenu === 'File'"
-    >
-      <FileMenuItem :label="$t('menu:file.new')" @click="onClickNew" />
-      <FileMenuItem :label="$t('menu:file.open')" @click="onClickOpen" />
-      <FileMenuItem :label="$t('menu:file.save')" @click="onClickSave" />
-      <div class="separator" />
-      <FileMenuItem
-        :label="$t('menu:file.pageSetup')"
-        @click="onClickPageSetup"
-      />
-      <FileMenuItem
-        :label="$t('menu:file.exportAsHtml')"
-        @click="onClickExportAsHtml"
-      />
-      <FileMenuItem
-        :label="$t('menu:file.exportAsMusicXml')"
-        @click="onClickExportAsMusicXml"
-      />
-      <FileMenuItem
-        :label="$t('menu:file.exportAsLatex')"
-        @click="onClickExportAsLatex"
-      />
-      <div class="separator" />
-      <FileMenuItem :label="$t('menu:file.close')" @click="onClickClose" />
-      <FileMenuItem
-        :label="$t('menu:file.closeOthers')"
-        @click="onClickCloseOthers"
-      />
-    </FileMenuBarItem>
-    <FileMenuBarItem
-      :label="$t('menu:edit.root')"
-      @click="toggleMenu"
-      @mouseenter="selectedMenu = 'Edit'"
-      :isOpen="isMenuOpen && selectedMenu === 'Edit'"
-    >
-      <FileMenuItem :label="$t('menu:edit.undo')" @click="onClickUndo" />
-      <FileMenuItem :label="$t('menu:edit.redo')" @click="onClickRedo" />
-      <div class="separator" />
-      <FileMenuItem :label="$t('menu:edit.cut')" @click="onClickCut" />
-      <FileMenuItem :label="$t('menu:edit.copy')" @click="onClickCopy" />
-      <FileMenuItem
-        :label="$t('menu:edit.copyAsHtml')"
-        @click="onClickCopyAsHtml"
-      />
-      <FileMenuItem :label="$t('menu:edit.paste')" @click="onClickPaste" />
-      <FileMenuItem
-        :label="$t('menu:edit.pasteWithLyrics')"
-        @click="onClickPasteWithLyrics"
-      />
-      <div class="separator" />
-      <FileMenuItem
-        :label="$t('menu:edit.copyFormat')"
-        @click="onClickCopyFormat"
-      />
-      <FileMenuItem
-        :label="$t('menu:edit.pasteFormat')"
-        @click="onClickPasteFormat"
-      />
-      <div class="separator" />
-      <FileMenuItem :label="$t('menu:edit.find')" @click="onClickFind" />
-      <div class="separator" />
-      <FileMenuItem :label="$t('menu:edit.lyrics')" @click="onClickLyrics" />
-      <div class="separator" />
-      <FileMenuItem
-        :label="$t('menu:edit.preferences')"
-        @click="onClickPreferences"
-      />
-    </FileMenuBarItem>
-    <FileMenuBarItem
-      :label="$t('menu:insert.root')"
-      @click="toggleMenu"
-      @mouseenter="selectedMenu = 'Insert'"
-      :isOpen="isMenuOpen && selectedMenu === 'Insert'"
-    >
-      <FileMenuItem
-        :label="$t('menu:insert.dropCapBefore')"
-        @click="onClickAddDropCapBefore"
-      />
-      <FileMenuItem
-        :label="$t('menu:insert.dropCapAfter')"
-        @click="onClickAddDropCapAfter"
-      />
-      <FileMenuItem
-        :label="$t('menu:insert.textBox')"
-        @click="onClickAddTextBox"
-      />
-      <FileMenuItem
-        :label="$t('menu:insert.richTextBox')"
-        @click="onClickAddRichTextBox"
-      />
-      <FileMenuItem
-        :label="$t('menu:insert.inlineTextBox')"
-        @click="onClickAddInlineTextBox"
-      />
-      <FileMenuItem
-        :label="$t('menu:insert.modeKey')"
-        @click="onClickAddModeKey"
-      />
-      <FileMenuItem :label="$t('menu:insert.image')" @click="onClickAddImage" />
-      <div class="separator" />
-      <FileMenuItem
-        :label="$t('menu:insert.header')"
-        @click="onClickAddHeader"
-      />
-      <FileMenuItem
-        :label="$t('menu:insert.footer')"
-        @click="onClickAddFooter"
-      />
-    </FileMenuBarItem>
-    <FileMenuBarItem
-      :label="$t('menu:help.root')"
-      @click="toggleMenu"
-      @mouseenter="selectedMenu = 'Help'"
-      :isOpen="isMenuOpen && selectedMenu === 'Help'"
-    >
-      <FileMenuItem :label="$t('menu:help.guide')" @click="onClickGuide" />
-      <div class="separator" />
-      <FileMenuItem
-        :label="$t('menu:help.requestAFeature')"
-        @click="onClickRequestFeature"
-      />
-      <FileMenuItem
-        :label="$t('menu:help.reportAnIssue')"
-        @click="onClickReportIssue"
-      />
-      <div class="separator" />
-      <FileMenuItem :label="$t('menu:help.about')" @click="onClickAbout" />
-    </FileMenuBarItem>
-    <div class="browser-warning" v-if="!isChrome">
-      {{ $t('menu:warning') }}
-    </div>
+  <div>
+    <Alert v-if="!isChrome" variant="destructive">
+      <AlertDescription>
+        {{ $t(($) => $.menu.warning, { ns: 'menu' }) }}
+      </AlertDescription>
+    </Alert>
+
+    <Menubar class="chrome-menubar">
+      <MenubarMenu>
+        <MenubarTrigger>
+          {{ $t(($) => $.menu.file.root, { ns: 'menu' }) }}
+        </MenubarTrigger>
+        <MenubarContent class="chrome-menubar-content">
+          <MenubarItem @select="onClickNew">
+            <PhFilePlus />
+            {{ $t(($) => $.menu.file.new, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickOpen">
+            <PhFolderOpen />
+            {{ $t(($) => $.menu.file.open, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSub>
+            <MenubarSubTrigger
+              :class="openRecentIsEnabled ? undefined : disabledSubmenuClass"
+              :disabled="!openRecentIsEnabled"
+            >
+              <PhClockCounterClockwise />
+              {{ $t(($) => $.menu.file.openRecent, { ns: 'menu' }) }}
+            </MenubarSubTrigger>
+            <MenubarSubContent
+              v-if="openRecentIsEnabled"
+              class="chrome-menubar-content"
+            >
+              <MenubarItem
+                v-for="(recentFile, index) in recentFiles"
+                :key="recentFile.id"
+                @select="onClickOpenRecent(recentFile.id)"
+              >
+                {{ index + 1 }}: {{ recentFile.name }}
+              </MenubarItem>
+            </MenubarSubContent>
+          </MenubarSub>
+          <MenubarSub>
+            <MenubarSubTrigger>
+              <PhTrayArrowDown />
+              {{ $t(($) => $.menu.file.import, { ns: 'menu' }) }}
+            </MenubarSubTrigger>
+            <MenubarSubContent class="chrome-menubar-content">
+              <MenubarItem @select="onClickImportOcr">
+                <PhFileText />
+                {{ $t(($) => $.menu.file.importFromOcr, { ns: 'menu' }) }}
+              </MenubarItem>
+            </MenubarSubContent>
+          </MenubarSub>
+          <MenubarItem @select="onClickSave">
+            <PhFloppyDisk />
+            {{ $t(($) => $.menu.file.save, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickSaveAs">
+            <PhFloppyDiskBack />
+            {{ $t(($) => $.menu.file.saveAs, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem @select="onClickPageSetup">
+            <PhScroll />
+            {{ $t(($) => $.menu.file.pageSetup, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickDocumentProperties">
+            <PhFileText />
+            {{ $t(($) => $.menu.file.documentProperties, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSub>
+            <MenubarSubTrigger>
+              <PhExport />
+              {{ $t(($) => $.menu.file.exportAs, { ns: 'menu' }) }}
+            </MenubarSubTrigger>
+            <MenubarSubContent class="chrome-menubar-content">
+              <MenubarItem @select="onClickExportAsPdf">
+                <PhFilePdf />
+                {{ $t(($) => $.menu.file.exportAsPdf, { ns: 'menu' }) }}
+              </MenubarItem>
+              <MenubarItem @select="onClickExportAsHtml">
+                <PhFileHtml />
+                {{ $t(($) => $.menu.file.exportAsHtml, { ns: 'menu' }) }}
+              </MenubarItem>
+              <MenubarItem @select="onClickExportAsMusicXml">
+                <PhFileCode />
+                {{ $t(($) => $.menu.file.exportAsMusicXml, { ns: 'menu' }) }}
+              </MenubarItem>
+              <MenubarItem @select="onClickExportAsLatex">
+                <PhFileText />
+                {{ $t(($) => $.menu.file.exportAsLatex, { ns: 'menu' }) }}
+              </MenubarItem>
+              <MenubarItem @select="onClickExportAsImage">
+                <PhFileImage />
+                {{ $t(($) => $.menu.file.exportAsImage, { ns: 'menu' }) }}
+              </MenubarItem>
+            </MenubarSubContent>
+          </MenubarSub>
+          <MenubarItem @select="onClickPrint">
+            <PhPrinter />
+            {{ $t(($) => $.menu.file.print, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem @select="onClickClose">
+            <PhX />
+            {{ $t(($) => $.menu.file.close, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickCloseOthers">
+            <PhXCircle />
+            {{ $t(($) => $.menu.file.closeOthers, { ns: 'menu' }) }}
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+
+      <MenubarMenu>
+        <MenubarTrigger>
+          {{ $t(($) => $.menu.edit.root, { ns: 'menu' }) }}
+        </MenubarTrigger>
+        <MenubarContent class="chrome-menubar-content">
+          <MenubarItem @select="onClickUndo">
+            <PhArrowCounterClockwise />
+            {{ $t(($) => $.menu.edit.undo, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickRedo">
+            <PhArrowClockwise />
+            {{ $t(($) => $.menu.edit.redo, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem @select="onClickCut">
+            <PhScissors />
+            {{ $t(($) => $.menu.edit.cut, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickCopy">
+            <PhCopy />
+            {{ $t(($) => $.menu.edit.copy, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickCopyAsHtml">
+            <PhFileHtml />
+            {{ $t(($) => $.menu.edit.copyAsHtml, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem
+            :disabled="!props.canCopyElementLink"
+            @select="onClickCopyElementLink"
+          >
+            <PhLinkSimple />
+            {{ $t(($) => $.menu.edit.copyElementLink, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickPaste">
+            <PhClipboardText />
+            {{ $t(($) => $.menu.edit.paste, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickPasteWithLyrics">
+            {{ $t(($) => $.menu.edit.pasteWithLyrics, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickSelectAll">
+            <PhSelectionAll />
+            {{ $t(($) => $.menu.edit.selectAll, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem @select="onClickFind">
+            <PhMagnifyingGlass />
+            {{ $t(($) => $.menu.edit.find, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem @select="onClickCopyFormat">
+            <PhPaintBrush />
+            {{ $t(($) => $.menu.edit.copyFormat, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickPasteFormat">
+            <PhPaintBucket />
+            {{ $t(($) => $.menu.edit.pasteFormat, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem @select="onClickPreferences">
+            <PhGearFine />
+            {{ $t(($) => $.menu.edit.preferences, { ns: 'menu' }) }}
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+
+      <MenubarMenu>
+        <MenubarTrigger>
+          {{ $t(($) => $.menu.insert.root, { ns: 'menu' }) }}
+        </MenubarTrigger>
+        <MenubarContent class="chrome-menubar-content">
+          <MenubarItem @select="onClickAddAlternateLine">
+            <PhPencilLine />
+            {{ $t(($) => $.menu.insert.alternateLine, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickAddAnnotation">
+            <PhNotePencil />
+            {{ $t(($) => $.menu.insert.annotation, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickAddDropCapBefore">
+            <PhArticleNyTimes />
+            {{ $t(($) => $.menu.insert.dropCapBefore, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickAddDropCapAfter">
+            <PhArticleNyTimes />
+            {{ $t(($) => $.menu.insert.dropCapAfter, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickAddTextBox">
+            <PhTextbox />
+            {{ $t(($) => $.menu.insert.textBox, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickAddRichTextBox">
+            <PhTextAa />
+            {{ $t(($) => $.menu.insert.richTextBox, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickAddInlineTextBox">
+            {{ $t(($) => $.menu.insert.inlineTextBox, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickAddModeKey">
+            <span
+              class="inline-grid size-4 shrink-0 place-items-center font-['Source_Serif'] text-sm leading-none"
+              aria-hidden="true"
+            >
+              Ηχ
+            </span>
+            {{ $t(($) => $.menu.insert.initialMartyria, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickAddImage">
+            <PhImageSquare />
+            {{ $t(($) => $.menu.insert.image, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarSub>
+            <MenubarSubTrigger>
+              <PhBookOpenText />
+              {{ $t(($) => $.menu.insert.headersAndFooters, { ns: 'menu' }) }}
+            </MenubarSubTrigger>
+            <MenubarSubContent class="chrome-menubar-content">
+              <MenubarItem @select="onClickAddHeader">
+                <PhRowsPlusTop />
+                {{ $t(($) => $.menu.insert.header, { ns: 'menu' }) }}
+              </MenubarItem>
+              <MenubarItem @select="onClickAddFooter">
+                <PhRowsPlusBottom />
+                {{ $t(($) => $.menu.insert.footer, { ns: 'menu' }) }}
+              </MenubarItem>
+            </MenubarSubContent>
+          </MenubarSub>
+        </MenubarContent>
+      </MenubarMenu>
+
+      <MenubarMenu>
+        <MenubarTrigger>
+          {{ $t(($) => $.menu.format.root, { ns: 'menu' }) }}
+        </MenubarTrigger>
+        <MenubarContent class="chrome-menubar-content">
+          <MenubarItem @select="onClickParagraphStyles">
+            <PhTextAa />
+            {{ $t(($) => $.menu.format.paragraphStyles, { ns: 'menu' }) }}
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+
+      <MenubarMenu>
+        <MenubarTrigger>
+          {{ $t(($) => $.menu.view.root, { ns: 'menu' }) }}
+        </MenubarTrigger>
+        <MenubarContent class="chrome-menubar-content">
+          <MenubarSub>
+            <MenubarSubTrigger>
+              <PhMagnifyingGlass />
+              {{ $t(($) => $.menu.view.zoom.root, { ns: 'menu' }) }}
+            </MenubarSubTrigger>
+            <MenubarSubContent class="chrome-menubar-content">
+              <MenubarItem @select="onZoomInClick">
+                <PhMagnifyingGlassPlus />
+                {{ $t(($) => $.menu.view.zoom.zoomIn, { ns: 'menu' }) }}
+              </MenubarItem>
+              <MenubarItem @select="onZoomOutClick">
+                <PhMagnifyingGlassMinus />
+                {{ $t(($) => $.menu.view.zoom.zoomOut, { ns: 'menu' }) }}
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarCheckboxItem
+                :model-value="actualSizeZoomIsSelected"
+                @select="onActualSizeZoomClick"
+              >
+                {{ $t(($) => $.menu.view.zoom.actualSize, { ns: 'menu' }) }}
+              </MenubarCheckboxItem>
+              <MenubarSeparator />
+              <MenubarCheckboxItem
+                :model-value="props.zoomFitMode === 'page-width'"
+                @select="onZoomFitModeClick('page-width')"
+              >
+                {{ $t(($) => $.menu.view.zoom.pageWidth, { ns: 'menu' }) }}
+              </MenubarCheckboxItem>
+              <MenubarCheckboxItem
+                :model-value="props.zoomFitMode === 'text-width'"
+                @select="onZoomFitModeClick('text-width')"
+              >
+                {{ $t(($) => $.menu.view.zoom.textWidth, { ns: 'menu' }) }}
+              </MenubarCheckboxItem>
+              <MenubarCheckboxItem
+                :model-value="props.zoomFitMode === 'whole-page'"
+                @select="onZoomFitModeClick('whole-page')"
+              >
+                {{ $t(($) => $.menu.view.zoom.wholePage, { ns: 'menu' }) }}
+              </MenubarCheckboxItem>
+            </MenubarSubContent>
+          </MenubarSub>
+          <MenubarSeparator />
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility['neume-selector']"
+            @update:model-value="
+              onTogglePaneClick('neume-selector', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.neumeSelector, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility['common-combos']"
+            @update:model-value="
+              onTogglePaneClick('common-combos', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.commonCombos, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility.properties"
+            @update:model-value="
+              onTogglePaneClick('properties', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.properties, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            :model-value="props.paneVisibility.lyrics"
+            @update:model-value="onTogglePaneClick('lyrics', $event === true)"
+          >
+            {{ $t(($) => $.menu.view.lyrics, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            v-if="props.showDeveloperPanels"
+            :model-value="props.paneVisibility.developer"
+            @update:model-value="
+              onTogglePaneClick('developer', $event === true)
+            "
+          >
+            {{ $t(($) => $.menu.view.developer, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarSeparator />
+          <MenubarCheckboxItem
+            :model-value="props.statusBarVisible"
+            @update:model-value="onToggleStatusBarClick($event === true)"
+          >
+            {{ $t(($) => $.menu.view.statusBar, { ns: 'menu' }) }}
+          </MenubarCheckboxItem>
+          <MenubarSeparator />
+          <MenubarItem @select="onResetLayoutClick">
+            <PhArrowCounterClockwise />
+            {{ $t(($) => $.menu.view.resetLayout, { ns: 'menu' }) }}
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+
+      <MenubarMenu>
+        <MenubarTrigger>
+          {{ $t(($) => $.menu.window.root, { ns: 'menu' }) }}
+        </MenubarTrigger>
+        <MenubarContent class="chrome-menubar-content">
+          <MenubarItem
+            :disabled="!props.canNavigateWorkspaceTabs"
+            @select="onClickPreviousTab"
+          >
+            <PhArrowLineLeft />
+            {{ $t(($) => $.menu.window.previousTab, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem
+            :disabled="!props.canNavigateWorkspaceTabs"
+            @select="onClickNextTab"
+          >
+            <PhArrowLineRight />
+            {{ $t(($) => $.menu.window.nextTab, { ns: 'menu' }) }}
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+
+      <MenubarMenu>
+        <MenubarTrigger>
+          {{ $t(($) => $.menu.help.root, { ns: 'menu' }) }}
+        </MenubarTrigger>
+        <MenubarContent class="chrome-menubar-content">
+          <MenubarItem @select="onClickGuide">
+            <PhBookOpen />
+            {{ $t(($) => $.menu.help.guide, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem @select="onClickRequestFeature">
+            <PhLightbulb />
+            {{ $t(($) => $.menu.help.requestAFeature, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickReportIssue">
+            <PhBug />
+            {{ $t(($) => $.menu.help.reportAnIssue, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem @select="onClickAbout">
+            <PhInfo />
+            {{ $t(($) => $.menu.help.about, { ns: 'menu' }) }}
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+    </Menubar>
+
     <input
       ref="file"
+      class="hidden"
       type="file"
       :accept="accept"
-      v-show="false"
       @change="onSelectFile"
     />
     <input
       ref="imagefile"
+      class="hidden"
       type="file"
       :accept="acceptImage"
-      v-show="false"
       @change="onSelectImageFile"
+    />
+    <input
+      ref="ocrfile"
+      class="hidden"
+      type="file"
+      :accept="acceptOcr"
+      @change="onSelectOcrFile"
     />
   </div>
 </template>
 
-<script lang="ts">
-import JSZip from 'jszip';
-import { Component, Vue } from 'vue-facing-decorator';
-
-import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
-import FileMenuItem from '@/components/FileMenuItem.vue';
-import { EventBus } from '@/eventBus';
+<script setup lang="ts">
 import {
+  PhArrowClockwise,
+  PhArrowCounterClockwise,
+  PhArrowLineLeft,
+  PhArrowLineRight,
+  PhArticleNyTimes,
+  PhBookOpen,
+  PhBookOpenText,
+  PhBug,
+  PhClipboardText,
+  PhClockCounterClockwise,
+  PhCopy,
+  PhExport,
+  PhFileCode,
+  PhFileHtml,
+  PhFileImage,
+  PhFilePdf,
+  PhFilePlus,
+  PhFileText,
+  PhFloppyDisk,
+  PhFloppyDiskBack,
+  PhFolderOpen,
+  PhGearFine,
+  PhImageSquare,
+  PhInfo,
+  PhLightbulb,
+  PhLinkSimple,
+  PhMagnifyingGlass,
+  PhMagnifyingGlassMinus,
+  PhMagnifyingGlassPlus,
+  PhNotePencil,
+  PhPaintBrush,
+  PhPaintBucket,
+  PhPencilLine,
+  PhPrinter,
+  PhRowsPlusBottom,
+  PhRowsPlusTop,
+  PhScissors,
+  PhScroll,
+  PhSelectionAll,
+  PhTextAa,
+  PhTextbox,
+  PhTrayArrowDown,
+  PhX,
+  PhXCircle,
+} from '@phosphor-icons/vue';
+import { useTranslation } from 'i18next-vue';
+import JSZip from 'jszip';
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { toast } from 'vue-sonner';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Menubar,
+  MenubarCheckboxItem,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
+  MenubarTrigger,
+} from '@/components/ui/menubar';
+import { EventBus } from '@/eventBus';
+import type {
   CloseWorkspacesArgs,
-  CloseWorkspacesDisposition,
+  FileMenuImportOcrArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
+  FileMenuViewPaneVisibilityArgs,
+  FileMenuViewStatusBarVisibilityArgs,
+  FileMenuViewZoomArgs,
+} from '@/ipc/ipcChannels';
+import {
+  CloseWorkspacesDisposition,
   IpcMainChannels,
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
+import type { ZoomFitMode } from '@/models/Workspace';
+import type {
+  WorkspacePaneId,
+  WorkspacePaneVisibility,
+} from '@/models/WorkspacePane';
+import {
+  type BrowserRecentFile,
+  BrowserRecentFilesService,
+} from '@/services/BrowserRecentFilesService';
 
-@Component({
-  components: {
-    FileMenuBarItem,
-    FileMenuItem,
-  },
-})
-export default class FileMenuBar extends Vue {
-  isMenuOpen = false;
-  selectedMenu = '';
-  accept = '.byz,.byzx';
-  acceptImage = '.bmp,.jpg,.jpeg,.jpe,.png,.gif,.svg,.webp,.ico';
-  isChrome = (window as any).chrome != null;
+const props = defineProps<{
+  canCopyElementLink: boolean;
+  canNavigateWorkspaceTabs: boolean;
+  paneVisibility: WorkspacePaneVisibility;
+  showDeveloperPanels: boolean;
+  statusBarVisible: boolean;
+  zoom: number;
+  zoomFitMode: ZoomFitMode | null;
+}>();
 
-  get fileSelector() {
-    return this.$refs.file as HTMLInputElement;
+const fileSelector = useTemplateRef<HTMLInputElement>('file');
+const imageFileSelector = useTemplateRef<HTMLInputElement>('imagefile');
+const ocrFileSelector = useTemplateRef<HTMLInputElement>('ocrfile');
+const recentFilesService = new BrowserRecentFilesService();
+const { t } = useTranslation();
+
+const accept = '.byz,.byzx';
+const acceptImage = '.bmp,.jpg,.jpeg,.jpe,.png,.gif,.svg,.webp,.ico';
+const acceptOcr = '.byzocr';
+const disabledSubmenuClass =
+  'data-[disabled]:pointer-events-none data-[disabled]:opacity-50';
+const isChrome = (window as any).chrome != null;
+const openRecentIsSupported = recentFilesService.isSupported();
+const recentFiles = ref<BrowserRecentFile[]>([]);
+const openRecentIsEnabled = computed(
+  () => openRecentIsSupported && recentFiles.value.length > 0,
+);
+const ZOOM_COMPARISON_EPSILON = 0.000001;
+const actualSizeZoomIsSelected = computed(
+  () =>
+    props.zoomFitMode == null &&
+    Math.abs(props.zoom - 1) <= ZOOM_COMPARISON_EPSILON,
+);
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    return error.message;
   }
 
-  get imageFileSelector() {
-    return this.$refs.imagefile as HTMLInputElement;
+  if (typeof error === 'string') {
+    return error;
   }
 
-  mounted() {
-    // If using the browser, then we need to hook into the key down
-    // to listen for Ctrl+O for oven, Ctrl+S for save, etc.
-    window.addEventListener('keydown', this.onKeyDown);
+  return fallback;
+}
 
-    EventBus.$on(IpcRendererChannels.OpenImageDialog, this.onClickAddImage);
-  }
+onMounted(() => {
+  // If using the browser, then we need to hook into the key down
+  // to listen for Ctrl+O for open, Ctrl+S for save, etc.
+  window.addEventListener('keydown', onKeyDown);
 
-  beforeUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-    EventBus.$off(IpcRendererChannels.OpenImageDialog, this.onClickAddImage);
-  }
+  EventBus.$on(IpcRendererChannels.OpenScoreDialog, onClickOpen);
+  EventBus.$on(IpcRendererChannels.OpenImageDialog, onClickAddImage);
+  void loadRecentFiles();
+});
 
-  onKeyDown(event: KeyboardEvent) {
-    if (event.ctrlKey || event.metaKey) {
-      if (event.code === 'KeyO') {
-        this.onClickOpen();
-        event.preventDefault();
-        return;
-      } else if (event.code === 'KeyS') {
-        this.onClickSave();
-        event.preventDefault();
-        return;
-      } else if (event.code === 'KeyN') {
-        // Note: this doesn't actually work in Chrome.
-        // Chrome prevents you from capturing Ctrl+N.
-        this.onClickNew();
-        event.preventDefault();
-        return;
-      } else if (event.code === 'KeyD') {
-        if (event.shiftKey) {
-          this.onClickAddDropCapAfter();
-        } else {
-          this.onClickAddDropCapBefore();
-        }
-        event.preventDefault();
-        return;
-      } else if (event.shiftKey && event.code === 'KeyP') {
-        this.onClickPageSetup();
-        event.preventDefault();
-        return;
-      } else if (event.code === 'Comma') {
-        this.onClickPreferences();
-        event.preventDefault();
-        return;
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeyDown);
+  EventBus.$off(IpcRendererChannels.OpenScoreDialog, onClickOpen);
+  EventBus.$off(IpcRendererChannels.OpenImageDialog, onClickAddImage);
+});
+
+function onKeyDown(event: KeyboardEvent) {
+  if (event.ctrlKey || event.metaKey) {
+    if (event.code === 'KeyO') {
+      void onClickOpen();
+      event.preventDefault();
+      return;
+    } else if (event.shiftKey && event.code === 'KeyS') {
+      onClickSaveAs();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'KeyS') {
+      onClickSave();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'KeyN') {
+      // Note: this doesn't actually work in Chrome.
+      // Chrome prevents you from capturing Ctrl+N.
+      onClickNew();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'KeyD') {
+      if (event.shiftKey) {
+        onClickAddDropCapAfter();
+      } else {
+        onClickAddDropCapBefore();
       }
+      event.preventDefault();
+      return;
+    } else if (event.shiftKey && event.code === 'KeyP') {
+      onClickPageSetup();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'Comma') {
+      onClickPreferences();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'KeyL') {
+      onTogglePaneClick('lyrics');
+      event.preventDefault();
+      return;
     }
   }
+}
 
-  toggleMenu() {
-    this.isMenuOpen = !this.isMenuOpen;
+function onClickNew() {
+  EventBus.$emit(IpcMainChannels.FileMenuNewScore);
+}
+
+async function onClickOpen() {
+  if (openRecentIsSupported) {
+    let handle: Awaited<
+      ReturnType<typeof recentFilesService.showOpenFilePicker>
+    > | null = null;
+
+    try {
+      handle = await recentFilesService.showOpenFilePicker();
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return;
+      }
+
+      console.error(error);
+      fileSelector.value!.click();
+      return;
+    }
+
+    if (handle == null) {
+      return;
+    }
+
+    try {
+      const file = await handle.getFile();
+      await openScoreFile(file);
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
+        {
+          description: getErrorMessage(
+            error,
+            t(($) => $.toast.editor.openFailedDescription, { ns: 'toast' }),
+          ),
+        },
+      );
+      return;
+    }
+
+    try {
+      await recentFilesService.add(handle);
+      await loadRecentFiles();
+    } catch (error) {
+      console.error(error);
+    }
+
+    return;
   }
 
-  onClickNew() {
-    EventBus.$emit(IpcMainChannels.FileMenuNewScore);
-    this.isMenuOpen = false;
+  fileSelector.value!.click();
+}
+
+async function onClickOpenRecent(id: string) {
+  try {
+    const recentFile = await recentFilesService.open(id);
+
+    if (recentFile != null) {
+      await openScoreFile(recentFile.file, recentFile.filePath);
+    } else {
+      toast.error(
+        t(($) => $.toast.editor.openRecentFailed, { ns: 'toast' }),
+        {
+          description: t(($) => $.toast.editor.openRecentUnavailable, {
+            ns: 'toast',
+          }),
+        },
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error(
+      t(($) => $.toast.editor.openRecentFailed, { ns: 'toast' }),
+      {
+        description: getErrorMessage(
+          error,
+          t(($) => $.toast.editor.openRecentReadFailed, { ns: 'toast' }),
+        ),
+      },
+    );
+  } finally {
+    await loadRecentFiles();
+  }
+}
+
+function onClickImportOcr() {
+  ocrFileSelector.value!.click();
+}
+
+function onClickSave() {
+  EventBus.$emit(IpcMainChannels.FileMenuSave);
+}
+
+function onClickSaveAs() {
+  EventBus.$emit(IpcMainChannels.FileMenuSaveAs);
+}
+
+function onClickExportAsPdf() {
+  EventBus.$emit(IpcMainChannels.FileMenuExportAsPdf);
+}
+
+function onClickExportAsHtml() {
+  EventBus.$emit(IpcMainChannels.FileMenuExportAsHtml);
+}
+
+function onClickExportAsMusicXml() {
+  EventBus.$emit(IpcMainChannels.FileMenuExportAsMusicXml);
+}
+
+function onClickExportAsLatex() {
+  EventBus.$emit(IpcMainChannels.FileMenuExportAsLatex);
+}
+
+function onClickExportAsImage() {
+  EventBus.$emit(IpcMainChannels.FileMenuExportAsImage);
+}
+
+function onClickPrint() {
+  window.print();
+}
+
+function onClickPageSetup() {
+  EventBus.$emit(IpcMainChannels.FileMenuPageSetup);
+}
+
+function onClickParagraphStyles() {
+  EventBus.$emit(IpcMainChannels.FileMenuParagraphStyles);
+}
+
+function onClickDocumentProperties() {
+  EventBus.$emit(IpcMainChannels.FileMenuDocumentProperties);
+}
+
+function onClickClose() {
+  EventBus.$emit(IpcMainChannels.CloseWorkspaces, {
+    disposition: CloseWorkspacesDisposition.SELF,
+  } as CloseWorkspacesArgs);
+}
+
+function onClickCloseOthers() {
+  EventBus.$emit(IpcMainChannels.CloseWorkspaces, {
+    disposition: CloseWorkspacesDisposition.OTHERS,
+  } as CloseWorkspacesArgs);
+}
+
+async function onSelectFile() {
+  const files = fileSelector.value!.files!;
+
+  if (files.length > 0) {
+    try {
+      await openScoreFile(files[0]);
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
+        {
+          description: getErrorMessage(
+            error,
+            t(($) => $.toast.editor.openFailedDescription, { ns: 'toast' }),
+          ),
+        },
+      );
+    } finally {
+      resetFileSelector(fileSelector.value);
+    }
+  }
+}
+
+async function loadRecentFiles() {
+  recentFiles.value = await recentFilesService.list();
+}
+
+async function openScoreFile(file: File, filePath = file.name) {
+  const data = await readScoreFile(file);
+
+  EventBus.$emit(IpcMainChannels.FileMenuOpenScore, {
+    data,
+    filePath,
+    success: true,
+  } as FileMenuOpenScoreArgs);
+}
+
+async function readScoreFile(file: File) {
+  if (file.name.endsWith('.byz')) {
+    const zip = await JSZip.loadAsync(file);
+    const scoreFile = zip.file(/\.(byzx)$/)[0];
+
+    if (scoreFile == null) {
+      throw new Error('Could not find a .byzx score inside the .byz file.');
+    }
+
+    return await scoreFile.async('text');
   }
 
-  onClickOpen() {
-    this.fileSelector.click();
-    this.isMenuOpen = false;
+  return await file.text();
+}
+
+function resetFileSelector(selector: HTMLInputElement | null) {
+  if (selector != null) {
+    selector.value = '';
   }
+}
 
-  onClickSave() {
-    EventBus.$emit(IpcMainChannels.FileMenuSaveAs);
-    this.isMenuOpen = false;
-  }
+async function onSelectImageFile() {
+  const files = imageFileSelector.value!.files!;
 
-  onClickExportAsHtml() {
-    EventBus.$emit(IpcMainChannels.FileMenuExportAsHtml);
-    this.isMenuOpen = false;
-  }
+  if (files.length > 0) {
+    const file = files[0];
 
-  onClickExportAsMusicXml() {
-    EventBus.$emit(IpcMainChannels.FileMenuExportAsMusicXml);
-    this.isMenuOpen = false;
-  }
+    const reader = new FileReader();
 
-  onClickExportAsLatex() {
-    EventBus.$emit(IpcMainChannels.FileMenuExportAsLatex);
-    this.isMenuOpen = false;
-  }
+    reader.onload = () => {
+      const data = reader.result as string;
 
-  onClickPageSetup() {
-    EventBus.$emit(IpcMainChannels.FileMenuPageSetup);
-    this.isMenuOpen = false;
-  }
+      // Create an instance of Image to determine the
+      // original image's height and width
+      const image = new Image();
 
-  onClickClose() {
-    EventBus.$emit(IpcMainChannels.CloseWorkspaces, {
-      disposition: CloseWorkspacesDisposition.SELF,
-    } as CloseWorkspacesArgs);
-    this.isMenuOpen = false;
-  }
-
-  onClickCloseOthers() {
-    EventBus.$emit(IpcMainChannels.CloseWorkspaces, {
-      disposition: CloseWorkspacesDisposition.OTHERS,
-    } as CloseWorkspacesArgs);
-    this.isMenuOpen = false;
-  }
-
-  async onSelectFile() {
-    const files = this.fileSelector.files!;
-
-    if (files.length > 0) {
-      const file = files[0];
-
-      if (file.name.endsWith('.byz')) {
-        const zip = await JSZip.loadAsync(file);
-        const data = await zip.file(/\.(byzx)$/)[0].async('text');
-
-        EventBus.$emit(IpcMainChannels.FileMenuOpenScore, {
+      image.onload = () => {
+        EventBus.$emit(IpcMainChannels.FileMenuInsertImage, {
           data,
+          imageHeight: image.height,
+          imageWidth: image.width,
           filePath: file.name,
           success: true,
-        } as FileMenuOpenScoreArgs);
-
-        // Reset the selector so that if the user selects
-        // the same file twice, it will load
-        this.fileSelector.value = '';
-      } else {
-        const reader = new FileReader();
-
-        reader.onload = () => {
-          EventBus.$emit(IpcMainChannels.FileMenuOpenScore, {
-            data: reader.result as string,
-            filePath: file.name,
-            success: true,
-          } as FileMenuOpenScoreArgs);
-
-          // Reset the selector so that if the user selects
-          // the same file twice, it will load
-          this.fileSelector.value = '';
-        };
-
-        reader.readAsText(file);
-      }
-    }
-  }
-
-  async onSelectImageFile() {
-    const files = this.imageFileSelector.files!;
-
-    if (files.length > 0) {
-      const file = files[0];
-
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        const data = reader.result as string;
-
-        // Create an instance of Image to determine the
-        // original image's height and width
-        const image = new Image();
-
-        image.onload = () => {
-          EventBus.$emit(IpcMainChannels.FileMenuInsertImage, {
-            data,
-            imageHeight: image.height,
-            imageWidth: image.width,
-            filePath: file.name,
-            success: true,
-          } as FileMenuOpenImageArgs);
-        };
-
-        image.src = data;
-
-        // Reset the selector so that if the user selects
-        // the same file twice, it will load
-        this.fileSelector.value = '';
+        } as FileMenuOpenImageArgs);
       };
 
-      reader.readAsDataURL(file);
-    }
-  }
+      image.src = data;
 
-  onClickCut() {
-    EventBus.$emit(IpcMainChannels.FileMenuCut);
-    this.isMenuOpen = false;
-  }
+      // Reset the selector so that if the user selects
+      // the same file twice, it will load
+      imageFileSelector.value!.value = '';
+    };
 
-  onClickCopy() {
-    EventBus.$emit(IpcMainChannels.FileMenuCopy);
-    this.isMenuOpen = false;
+    reader.readAsDataURL(file);
   }
+}
 
-  onClickCopyAsHtml() {
-    EventBus.$emit(IpcMainChannels.FileMenuCopyAsHtml);
-    this.isMenuOpen = false;
-  }
+async function onSelectOcrFile() {
+  const files = ocrFileSelector.value!.files!;
 
-  onClickCopyFormat() {
-    EventBus.$emit(IpcMainChannels.FileMenuCopyFormat);
-    this.isMenuOpen = false;
-  }
+  if (files.length > 0) {
+    const file = files[0];
+    const reader = new FileReader();
 
-  onClickPaste() {
-    EventBus.$emit(IpcMainChannels.FileMenuPaste);
-    this.isMenuOpen = false;
-  }
+    reader.onload = () => {
+      EventBus.$emit(IpcMainChannels.FileMenuImportOcr, {
+        data: reader.result as string,
+        filePath: file.name,
+        success: true,
+      } as FileMenuImportOcrArgs);
 
-  onClickPasteWithLyrics() {
-    EventBus.$emit(IpcMainChannels.FileMenuPasteWithLyrics);
-    this.isMenuOpen = false;
-  }
+      // Reset the selector so that if the user selects
+      // the same file twice, it will load
+      ocrFileSelector.value!.value = '';
+    };
 
-  onClickPasteFormat() {
-    EventBus.$emit(IpcMainChannels.FileMenuPasteFormat);
-    this.isMenuOpen = false;
+    reader.readAsText(file);
   }
+}
 
-  onClickFind() {
-    EventBus.$emit(IpcMainChannels.FileMenuFind);
-    this.isMenuOpen = false;
-  }
+function onClickCut() {
+  EventBus.$emit(IpcMainChannels.FileMenuCut);
+}
 
-  onClickLyrics() {
-    EventBus.$emit(IpcMainChannels.FileMenuLyrics);
-    this.isMenuOpen = false;
-  }
+function onClickCopy() {
+  EventBus.$emit(IpcMainChannels.FileMenuCopy);
+}
 
-  onClickPreferences() {
-    EventBus.$emit(IpcMainChannels.FileMenuPreferences);
-    this.isMenuOpen = false;
-  }
+function onClickCopyAsHtml() {
+  EventBus.$emit(IpcMainChannels.FileMenuCopyAsHtml);
+}
 
-  onClickUndo() {
-    EventBus.$emit(IpcMainChannels.FileMenuUndo);
-    this.isMenuOpen = false;
-  }
+function onClickCopyFormat() {
+  EventBus.$emit(IpcMainChannels.FileMenuCopyFormat);
+}
 
-  onClickRedo() {
-    EventBus.$emit(IpcMainChannels.FileMenuRedo);
-    this.isMenuOpen = false;
-  }
+function onClickPaste() {
+  EventBus.$emit(IpcMainChannels.FileMenuPaste);
+}
 
-  onClickAddTextBox() {
-    EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox, {
-      inline: false,
-    } as FileMenuInsertTextboxArgs);
-    this.isMenuOpen = false;
-  }
+function onClickPasteWithLyrics() {
+  EventBus.$emit(IpcMainChannels.FileMenuPasteWithLyrics);
+}
 
-  onClickAddRichTextBox() {
-    EventBus.$emit(IpcMainChannels.FileMenuInsertRichTextBox);
-    this.isMenuOpen = false;
-  }
+function onClickSelectAll() {
+  EventBus.$emit(IpcMainChannels.FileMenuSelectAll);
+}
 
-  onClickAddInlineTextBox() {
-    EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox, {
-      inline: true,
-    } as FileMenuInsertTextboxArgs);
-    this.isMenuOpen = false;
-  }
+function onClickPasteFormat() {
+  EventBus.$emit(IpcMainChannels.FileMenuPasteFormat);
+}
 
-  onClickAddModeKey() {
-    EventBus.$emit(IpcMainChannels.FileMenuInsertModeKey);
-    this.isMenuOpen = false;
-  }
+function onClickFind() {
+  EventBus.$emit(IpcMainChannels.FileMenuFind);
+}
 
-  onClickAddDropCapBefore() {
-    EventBus.$emit(IpcMainChannels.FileMenuInsertDropCapBefore);
-    this.isMenuOpen = false;
-  }
+function onClickPreviousTab() {
+  EventBus.$emit(IpcMainChannels.FileMenuWindowPreviousTab);
+}
 
-  onClickAddDropCapAfter() {
-    EventBus.$emit(IpcMainChannels.FileMenuInsertDropCapAfter);
-    this.isMenuOpen = false;
-  }
+function onClickNextTab() {
+  EventBus.$emit(IpcMainChannels.FileMenuWindowNextTab);
+}
 
-  onClickAddImage() {
-    this.imageFileSelector.click();
-    this.isMenuOpen = false;
-  }
+function onTogglePaneClick(paneId: WorkspacePaneId, visible?: boolean) {
+  EventBus.$emit(IpcMainChannels.FileMenuViewPaneVisibility, {
+    paneId,
+    visible,
+  } as FileMenuViewPaneVisibilityArgs);
+}
 
-  onClickAddHeader() {
-    EventBus.$emit(IpcMainChannels.FileMenuInsertHeader);
-    this.isMenuOpen = false;
-  }
+function onToggleStatusBarClick(visible?: boolean) {
+  EventBus.$emit(IpcMainChannels.FileMenuViewStatusBarVisibility, {
+    visible,
+  } as FileMenuViewStatusBarVisibilityArgs);
+}
 
-  onClickAddFooter() {
-    EventBus.$emit(IpcMainChannels.FileMenuInsertFooter);
-    this.isMenuOpen = false;
-  }
+function onResetLayoutClick() {
+  EventBus.$emit(IpcMainChannels.FileMenuViewResetLayout);
+}
 
-  onClickAbout() {
-    alert(`Neanes\nVersion: ${APP_VERSION}`);
-    this.isMenuOpen = false;
-  }
+function emitViewZoom(args: FileMenuViewZoomArgs) {
+  EventBus.$emit(IpcMainChannels.FileMenuViewZoom, args);
+}
 
-  onClickGuide() {
-    window.open(import.meta.env.VITE_GUIDE_URL, '_blank');
-    this.isMenuOpen = false;
-  }
+function onZoomInClick() {
+  emitViewZoom({ type: 'zoom-in' });
+}
 
-  onClickRequestFeature() {
-    window.open(import.meta.env.VITE_ISSUES_URL, '_blank');
-    this.isMenuOpen = false;
-  }
+function onZoomOutClick() {
+  emitViewZoom({ type: 'zoom-out' });
+}
 
-  onClickReportIssue() {
-    window.open(import.meta.env.VITE_ISSUES_URL, '_blank');
-    this.isMenuOpen = false;
-  }
+function onActualSizeZoomClick() {
+  emitViewZoom({ type: 'actual-size' });
+}
+
+function onZoomFitModeClick(mode: ZoomFitMode) {
+  emitViewZoom({ type: 'fit', mode });
+}
+
+function onClickPreferences() {
+  EventBus.$emit(IpcMainChannels.FileMenuPreferences);
+}
+
+function onClickUndo() {
+  EventBus.$emit(IpcMainChannels.FileMenuUndo);
+}
+
+function onClickRedo() {
+  EventBus.$emit(IpcMainChannels.FileMenuRedo);
+}
+
+function onClickAddTextBox() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox, {
+    inline: false,
+  } as FileMenuInsertTextboxArgs);
+}
+
+function onClickAddRichTextBox() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertRichTextBox);
+}
+
+function onClickAddInlineTextBox() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox, {
+    inline: true,
+  } as FileMenuInsertTextboxArgs);
+}
+
+function onClickAddModeKey() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertModeKey);
+}
+
+function onClickAddAlternateLine() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertAlternateLine);
+}
+
+function onClickAddAnnotation() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertAnnotation);
+}
+
+function onClickAddDropCapBefore() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertDropCapBefore);
+}
+
+function onClickAddDropCapAfter() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertDropCapAfter);
+}
+
+function onClickAddImage() {
+  imageFileSelector.value!.click();
+}
+
+function onClickAddHeader() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertHeader);
+}
+
+function onClickAddFooter() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertFooter);
+}
+
+function onClickCopyElementLink() {
+  EventBus.$emit(IpcMainChannels.FileMenuEditCopyElementLink);
+}
+
+function onClickAbout() {
+  EventBus.$emit(IpcMainChannels.OpenAboutDialog);
+}
+
+function onClickGuide() {
+  window.open(import.meta.env.VITE_GUIDE_URL, '_blank');
+}
+
+function onClickRequestFeature() {
+  window.open(import.meta.env.VITE_ISSUES_URL, '_blank');
+}
+
+function onClickReportIssue() {
+  window.open(import.meta.env.VITE_ISSUES_URL, '_blank');
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-.file-menu-bar {
-  display: flex;
-  background-color: #aaa;
-
-  user-select: none;
-
-  align-items: center;
-}
-
-.separator {
-  margin: 0 10px;
-  border-top: 1px solid #999;
-}
-
-.browser-warning {
-  color: red;
-}
-</style>

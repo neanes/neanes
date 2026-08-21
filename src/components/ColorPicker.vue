@@ -1,152 +1,217 @@
 <template>
-  <div class="color-picker-container">
-    <div ref="swatch" class="swatch" @click="open">
-      <div class="swatch--color" :style="colorStyle" />
-    </div>
-    <template v-if="isOpen">
-      <div class="popover" :style="popupStyle">
-        <div class="cover" @click="close" />
-        <Sketch
-          @update:modelValue="onColorChanged"
-          :modelValue="color"
-          :presetColors="presetColors"
-          :disableAlpha="true"
-        />
-      </div>
-    </template>
-  </div>
+  <Popover :open="isOpen" @update:open="onOpenChange">
+    <PopoverTrigger as-child>
+      <Button
+        v-bind="$attrs"
+        :id="id"
+        type="button"
+        variant="secondary"
+        :disabled="disabled"
+        :aria-label="$t(($) => $.toolbar.common.chooseColor, { ns: 'toolbar' })"
+        :class="triggerClass"
+        @mousedown="onTriggerMousedown"
+      >
+        <span class="block size-full rounded-sm" :style="colorStyle" />
+      </Button>
+    </PopoverTrigger>
+    <component
+      :is="popoverContentComponent"
+      align="start"
+      :class="contentClass"
+      @close-auto-focus="onContentCloseAutoFocus"
+    >
+      <ColorPickerRoot
+        v-model="color"
+        class="chrome-color-picker"
+        :ui="pickerUi"
+        format="hex"
+      >
+        <ColorPickerCanvas />
+        <ColorPickerSliderHue />
+        <ColorPickerInputHex />
+        <div class="flex flex-wrap gap-1">
+          <ColorPickerSwatch
+            v-for="preset in presetColors"
+            :key="preset"
+            :value="preset"
+          />
+        </div>
+      </ColorPickerRoot>
+    </component>
+  </Popover>
 </template>
 
-<script lang="ts">
-import { Sketch } from '@ckpack/vue-color';
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
+<script setup lang="ts">
+import {
+  ColorPickerCanvas,
+  ColorPickerInputHex,
+  ColorPickerRoot,
+  ColorPickerSliderHue,
+  ColorPickerSwatch,
+} from '@vuelor/picker';
+import type { HTMLAttributes, PropType } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-interface Color {
-  hex: string;
+import RichTextPopoverContent from '@/components/RichTextPopoverContent.vue';
+import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+
+defineOptions({ inheritAttrs: false });
+
+const emit = defineEmits(['update:modelValue', 'update:open']);
+const props = defineProps({
+  id: {
+    type: String,
+    default: undefined,
+  },
+  modelValue: {
+    type: String,
+    required: true,
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+  historyKey: {
+    type: String,
+    default: 'colorPicker_presetColors',
+  },
+  richTextPortal: {
+    type: Boolean,
+    default: false,
+  },
+  defaultColors: {
+    type: Array as PropType<string[]>,
+    default: () => ['#000000', '#800000', '#FF0000'],
+  },
+  class: {
+    type: [String, Array, Object] as PropType<HTMLAttributes['class']>,
+    default: undefined,
+  },
+  contentClass: {
+    type: [String, Array, Object] as PropType<HTMLAttributes['class']>,
+    default: undefined,
+  },
+});
+
+const isOpen = ref(false);
+const presetColors = ref<string[]>([]);
+const maxHistorySize = 8;
+const color = ref(props.modelValue);
+
+const popoverContentComponent = computed(() =>
+  props.richTextPortal ? RichTextPopoverContent : PopoverContent,
+);
+
+const triggerClass = computed(() =>
+  cn('chrome-button color-picker-trigger', props.class),
+);
+
+const contentClass = computed(() =>
+  cn('chrome-menu w-auto p-0', props.contentClass),
+);
+
+const pickerUi = {
+  input: {
+    group: 'chrome-color-picker-input-group',
+    item: 'chrome-color-picker-input-item',
+    label: 'chrome-color-picker-input-label',
+    field: 'chrome-color-picker-input-field',
+  },
+  swatch: {
+    root: 'vuelor-picker-swatch-root',
+  },
+};
+
+const colorStyle = computed(() => {
+  return {
+    backgroundColor: color.value,
+  };
+});
+
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    color.value = newValue;
+  },
+);
+
+// In rich-text mode the selection guard owns focus: keep the editable focused
+// when opening, and let the guard (not Reka) decide where focus goes on close.
+// Elsewhere keep Reka's default behavior so dialogs stay keyboard-accessible.
+function onTriggerMousedown(event: MouseEvent) {
+  if (props.richTextPortal) {
+    event.preventDefault();
+  }
 }
 
-@Component({
-  components: { Sketch },
-  emits: ['update:modelValue'],
-})
-export default class ColorPicker extends Vue {
-  @Prop() modelValue!: string;
-  @Prop({ default: 'colorPicker_presetColors' }) historyKey!: string;
+function onContentCloseAutoFocus(event: Event) {
+  if (props.richTextPortal) {
+    event.preventDefault();
+  }
+}
 
-  isOpen: boolean = false;
-
-  presetColors: string[] = [];
-
-  popupPositionTop: number = 0;
-
-  maxHistorySize = 8;
-
-  color: string = '#000000';
-
-  created() {
-    this.color = this.modelValue;
+function onOpenChange(open: boolean) {
+  if (open) {
+    presetColors.value = getPresetColors();
+    isOpen.value = true;
+    emit('update:open', true);
+    return;
   }
 
-  @Watch('modelValue')
-  onModelValueChanged(newValue: string) {
-    this.color = newValue;
+  commitColor();
+}
+
+function commitColor() {
+  const index = presetColors.value.indexOf(color.value);
+
+  if (index >= 0) {
+    presetColors.value.splice(index, 1);
   }
 
-  get swatch() {
-    return this.$refs.swatch as HTMLElement;
+  presetColors.value.unshift(color.value);
+  presetColors.value = presetColors.value.slice(0, maxHistorySize);
+  localStorage.setItem(props.historyKey, JSON.stringify(presetColors.value));
+
+  isOpen.value = false;
+
+  if (color.value !== props.modelValue) {
+    emit('update:modelValue', color.value);
   }
 
-  get colorStyle() {
-    return {
-      backgroundColor: this.color,
-    } as StyleValue;
+  emit('update:open', false);
+}
+
+function getPresetColors() {
+  const defaultColors = normalizePresetColors(props.defaultColors);
+  const savedColors = localStorage.getItem(props.historyKey);
+
+  if (!savedColors) {
+    return defaultColors;
   }
 
-  get popupStyle() {
-    return {
-      top: `${this.popupPositionTop}px`,
-    } as StyleValue;
+  try {
+    const parsedColors = JSON.parse(savedColors);
+    return Array.isArray(parsedColors)
+      ? mergePresetColors(parsedColors, defaultColors)
+      : defaultColors;
+  } catch {
+    return defaultColors;
   }
+}
 
-  open() {
-    this.presetColors = JSON.parse(localStorage.getItem(this.historyKey)!) || [
-      '#000000',
-      '#800000',
-      '#FF0000',
-    ];
+function normalizePresetColors(colors: unknown[]) {
+  return colors.filter((color): color is string => typeof color === 'string');
+}
 
-    // Fist, try to position the popup underneath the swatch
-    this.popupPositionTop =
-      this.swatch.getBoundingClientRect().top + this.swatch.offsetHeight;
-
-    // If the popover goes off the bottom of the screen, position above the swatch
-    const popoverHeightPx = 260;
-
-    if (this.popupPositionTop + popoverHeightPx > window.innerHeight) {
-      this.popupPositionTop -= popoverHeightPx + this.swatch.offsetHeight;
-    }
-
-    this.isOpen = true;
-  }
-
-  onColorChanged(color: Color) {
-    this.color = color.hex;
-  }
-
-  close() {
-    const index = this.presetColors.indexOf(this.color);
-
-    if (index >= 0) {
-      this.presetColors.splice(index, 1);
-    }
-
-    this.presetColors.unshift(this.color);
-    this.presetColors = this.presetColors.slice(0, this.maxHistorySize);
-    localStorage.setItem(this.historyKey, JSON.stringify(this.presetColors));
-
-    this.isOpen = false;
-
-    if (this.color !== this.modelValue) {
-      this.$emit('update:modelValue', this.color);
-    }
-  }
+function mergePresetColors(savedColors: unknown[], defaultColors: string[]) {
+  return Array.from(
+    new Set([...normalizePresetColors(savedColors), ...defaultColors]),
+  ).slice(0, maxHistorySize);
 }
 </script>
-
-<style scoped>
-.color-picker-container {
-  display: flex;
-  width: 46px;
-  height: 24px;
-}
-
-.swatch {
-  padding: 5px;
-  background: white;
-  border-radius: 1px;
-  box-shadow: rgb(0 0 0 / 10%) 0px 0px 0px 1px;
-  display: flex;
-  cursor: pointer;
-  flex: 1;
-}
-
-.swatch--color {
-  border-radius: 2px;
-  flex: 1;
-}
-
-.popover {
-  position: fixed;
-  z-index: 1;
-}
-
-.cover {
-  position: fixed;
-  top: 0px;
-  right: 0px;
-  bottom: 0px;
-  left: 0px;
-  /* pointer-events: none; */
-}
-</style>

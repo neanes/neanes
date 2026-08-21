@@ -7,15 +7,16 @@
   >
     <Neume
       v-if="hasMeasureBarLeft && !isMeasureBarAbove"
-      :neume="getMeasureBarLeft"
+      :neume="getMeasureBarLeft!"
       :style="measureBarLeftStyle"
+      class="measure-bar"
     />
     <Neume
       v-if="note.vareia && !pageSetup.melkiteRtl"
       :neume="VocalExpressionNeume.Vareia"
       :style="vareiaStyle"
     />
-    <Neume :neume="note.quantitativeNeume" />
+    <Neume :neume="note.quantitativeNeume" :style="neumeStyle" />
     <Neume
       v-if="note.stavros"
       :neume="VocalExpressionNeume.Cross_Top"
@@ -23,10 +24,10 @@
     />
     <Neume
       v-if="hasVocalExpressionNeume"
-      :neume="note.vocalExpressionNeume"
+      :neume="note.vocalExpressionNeume!"
       :style="vocalExpressionStyle"
     />
-    <Neume v-if="hasTimeNeume" :neume="note.timeNeume" :style="timeStyle" />
+    <Neume v-if="hasTimeNeume" :neume="note.timeNeume!" :style="timeStyle" />
     <Neume
       v-if="note.koronis"
       :neume="TimeNeume.Koronis"
@@ -34,62 +35,63 @@
     />
     <Neume
       v-if="hasGorgonNeume"
-      :neume="note.gorgonNeume"
+      :neume="note.gorgonNeume!"
       :style="gorgonStyle"
     />
     <Neume
       v-if="hasSecondaryGorgonNeume"
-      :neume="note.secondaryGorgonNeume"
+      :neume="note.secondaryGorgonNeume!"
       :style="secondaryGorgonStyle"
     />
-    <Neume v-if="hasFthora" :neume="note.fthora" :style="fthoraStyle" />
+    <Neume v-if="hasFthora" :neume="note.fthora!" :style="fthoraStyle" />
     <Neume
       v-if="hasSecondaryFthora"
-      :neume="note.secondaryFthora"
+      :neume="note.secondaryFthora!"
       :style="secondaryFthoraStyle"
     />
     <Neume
       v-if="hasTertiaryFthora"
-      :neume="note.tertiaryFthora"
+      :neume="note.tertiaryFthora!"
       :style="tertiaryFthoraStyle"
     />
     <Neume
       v-if="hasAccidental"
-      :neume="note.accidental"
+      :neume="note.accidental!"
       :style="accidentalStyle"
     />
     <Neume
       v-if="hasSecondaryAccidental"
-      :neume="note.secondaryAccidental"
+      :neume="note.secondaryAccidental!"
       :style="secondaryAccidentalStyle"
     />
     <Neume
       v-if="hasTertiaryAccidental"
-      :neume="note.tertiaryAccidental"
+      :neume="note.tertiaryAccidental!"
       :style="tertiaryAccidentalStyle"
     />
     <Neume
-      v-if="note.noteIndicator"
+      v-if="note.noteIndicator && note.noteIndicatorNeume"
       :neume="note.noteIndicatorNeume"
       :style="noteIndicatorStyle"
     />
-    <Neume v-if="hasIson" :neume="note.ison" :style="isonStyle" />
+    <Neume v-if="hasIson" :neume="note.ison!" :style="isonStyle" />
     <Neume
       v-if="hasMeasureNumber"
-      :neume="note.measureNumber"
+      :neume="note.measureNumber!"
       :style="measureNumberStyle"
     />
     <Neume
       v-if="hasMeasureBarLeft && isMeasureBarAbove"
-      :neume="getMeasureBarLeft"
+      :neume="getMeasureBarLeft!"
       :style="measureBarLeftStyle"
     />
     <Neume
       v-if="hasMeasureBarRight"
-      :neume="getMeasureBarRight"
+      :neume="getMeasureBarRight!"
       :style="measureBarRightStyle"
+      class="measure-bar"
     />
-    <Neume v-if="hasTie" :neume="note.tie" :style="tieStyle" />
+    <Neume v-if="hasTie" :neume="note.tie!" :style="tieStyle" />
     <Neume
       v-if="note.vareia && pageSetup.melkiteRtl"
       :neume="VocalExpressionNeume.Vareia"
@@ -98,431 +100,393 @@
   </div>
 </template>
 
-<script lang="ts">
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+<script setup lang="ts">
+import type { PropType, StyleValue } from 'vue';
+import { computed } from 'vue';
 
-import NeumeVue from '@/components/Neume.vue';
-import { NoteElement } from '@/models/Element';
-import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
+import Neume from '@/components/NeumeGlyph.vue';
+import type { NoteElement } from '@/models/Element';
+import {
+  QuantitativeNeume,
+  TimeNeume,
+  VocalExpressionNeume,
+} from '@/models/Neumes';
+import type { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
-@Component({
-  components: {
-    Neume: NeumeVue,
+const props = defineProps({
+  note: {
+    type: Object as PropType<NoteElement>,
+    required: true,
   },
-  emits: ['select-single', 'select-range'],
-})
-export default class NeumeBoxSyllable extends Vue {
-  @Prop() note!: NoteElement;
-  @Prop() pageSetup!: PageSetup;
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
+  },
+  alternateLine: {
+    type: Boolean,
+    default: false,
+  },
+});
 
-  TimeNeume = TimeNeume;
-  VocalExpressionNeume = VocalExpressionNeume;
+defineEmits(['select-single', 'select-range']);
 
-  get hasVocalExpressionNeume() {
-    return this.note.vocalExpressionNeume != null;
-  }
+const hasVocalExpressionNeume = computed(
+  () => props.note.vocalExpressionNeume != null,
+);
+const hasTimeNeume = computed(() => props.note.timeNeume != null);
+const hasGorgonNeume = computed(() => props.note.gorgonNeume != null);
+const hasSecondaryGorgonNeume = computed(
+  () => props.note.secondaryGorgonNeume != null,
+);
+const hasFthora = computed(() => props.note.fthora != null);
+const hasSecondaryFthora = computed(() => props.note.secondaryFthora != null);
+const hasTertiaryFthora = computed(() => props.note.tertiaryFthora != null);
+const hasAccidental = computed(() => props.note.accidental != null);
+const hasSecondaryAccidental = computed(
+  () => props.note.secondaryAccidental != null,
+);
+const hasTertiaryAccidental = computed(
+  () => props.note.tertiaryAccidental != null,
+);
+const hasMeasureBarLeft = computed(
+  () =>
+    props.note.measureBarLeft != null ||
+    props.note.computedMeasureBarLeft != null,
+);
+const hasMeasureBarRight = computed(
+  () =>
+    props.note.measureBarRight != null ||
+    props.note.computedMeasureBarRight != null,
+);
+const hasTransferredMeasureBarRight = computed(
+  () =>
+    props.note.measureBarRight == null &&
+    props.note.computedMeasureBarRight != null,
+);
+const getMeasureBarLeft = computed(() =>
+  props.note.measureBarLeft
+    ? props.note.measureBarLeft
+    : props.note.computedMeasureBarLeft,
+);
+const getMeasureBarRight = computed(() =>
+  props.note.measureBarRight
+    ? props.note.measureBarRight
+    : props.note.computedMeasureBarRight,
+);
+const isMeasureBarAbove = computed(() =>
+  (props.note.measureBarLeft
+    ? props.note.measureBarLeft
+    : props.note.computedMeasureBarLeft
+  )?.endsWith('Above'),
+);
+const hasMeasureNumber = computed(() => props.note.measureNumber != null);
+const hasIson = computed(() => props.note.ison != null);
+const hasTie = computed(() => props.note.tie != null);
 
-  get hasTimeNeume() {
-    return this.note.timeNeume != null;
-  }
-
-  get hasGorgonNeume() {
-    return this.note.gorgonNeume != null;
-  }
-
-  get hasSecondaryGorgonNeume() {
-    return this.note.secondaryGorgonNeume != null;
-  }
-
-  get hasFthora() {
-    return this.note.fthora != null;
-  }
-
-  get hasSecondaryFthora() {
-    return this.note.secondaryFthora != null;
-  }
-
-  get hasTertiaryFthora() {
-    return this.note.tertiaryFthora != null;
-  }
-
-  get hasAccidental() {
-    return this.note.accidental != null;
-  }
-
-  get hasSecondaryAccidental() {
-    return this.note.secondaryAccidental != null;
-  }
-
-  get hasTertiaryAccidental() {
-    return this.note.tertiaryAccidental != null;
-  }
-
-  get hasMeasureBarLeft() {
-    return (
-      this.note.measureBarLeft != null ||
-      this.note.computedMeasureBarLeft != null
-    );
-  }
-
-  get hasMeasureBarRight() {
-    return (
-      this.note.measureBarRight != null ||
-      this.note.computedMeasureBarRight != null
-    );
-  }
-
-  get getMeasureBarLeft() {
-    return this.note.measureBarLeft
-      ? this.note.measureBarLeft
-      : this.note.computedMeasureBarLeft;
-  }
-
-  get getMeasureBarRight() {
-    return this.note.measureBarRight
-      ? this.note.measureBarRight
-      : this.note.computedMeasureBarRight;
-  }
-
-  get isMeasureBarAbove() {
-    return (
-      this.note.measureBarLeft
-        ? this.note.measureBarLeft
-        : this.note.computedMeasureBarLeft
-    )?.endsWith('Above');
-  }
-
-  get hasMeasureNumber() {
-    return this.note.measureNumber != null;
-  }
-
-  get hasIson() {
-    return this.note.ison != null;
-  }
-
-  get hasTie() {
-    return this.note.tie != null;
-  }
-
-  get style() {
-    return {
-      fontFamily: this.pageSetup.neumeDefaultFontFamily,
-      fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
-      color: this.pageSetup.neumeDefaultColor,
-      webkitTextStrokeWidth: withZoom(this.pageSetup.neumeDefaultStrokeWidth),
-    } as StyleValue;
-  }
-
-  get gorgonStyle() {
-    return {
-      color: this.pageSetup.gorgonDefaultColor,
-      webkitTextStrokeWidth: withZoom(this.pageSetup.gorgonDefaultStrokeWidth),
-      left:
-        this.note.gorgonNeumeOffsetX != null
-          ? `${this.note.gorgonNeumeOffsetX}em`
-          : undefined,
-      top:
-        this.note.gorgonNeumeOffsetY != null
-          ? `${this.note.gorgonNeumeOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get secondaryGorgonStyle() {
-    return {
-      color: this.pageSetup.gorgonDefaultColor,
-      webkitTextStrokeWidth: withZoom(this.pageSetup.gorgonDefaultStrokeWidth),
-      left:
-        this.note.secondaryGorgonNeumeOffsetX != null
-          ? `${this.note.secondaryGorgonNeumeOffsetX}em`
-          : undefined,
-      top:
-        this.note.secondaryGorgonNeumeOffsetY != null
-          ? `${this.note.secondaryGorgonNeumeOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get fthoraStyle() {
-    return {
-      color: this.pageSetup.fthoraDefaultColor,
-      webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
-      left:
-        this.note.fthoraOffsetX != null
-          ? `${this.note.fthoraOffsetX}em`
-          : undefined,
-      top:
-        this.note.fthoraOffsetY != null
-          ? `${this.note.fthoraOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get secondaryFthoraStyle() {
-    return {
-      color: this.pageSetup.fthoraDefaultColor,
-      webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
-      left:
-        this.note.secondaryFthoraOffsetX != null
-          ? `${this.note.secondaryFthoraOffsetX}em`
-          : undefined,
-      top:
-        this.note.secondaryFthoraOffsetY != null
-          ? `${this.note.secondaryFthoraOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get tertiaryFthoraStyle() {
-    return {
-      color: this.pageSetup.fthoraDefaultColor,
-      webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
-      left:
-        this.note.tertiaryFthoraOffsetX != null
-          ? `${this.note.tertiaryFthoraOffsetX}em`
-          : undefined,
-      top:
-        this.note.tertiaryFthoraOffsetY != null
-          ? `${this.note.tertiaryFthoraOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get accidentalStyle() {
-    return {
-      color: this.pageSetup.accidentalDefaultColor,
-      webkitTextStrokeWidth: withZoom(
-        this.pageSetup.accidentalDefaultStrokeWidth,
-      ),
-      left:
-        this.note.accidentalOffsetX != null
-          ? `${this.note.accidentalOffsetX}em`
-          : undefined,
-      top:
-        this.note.accidentalOffsetY != null
-          ? `${this.note.accidentalOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get secondaryAccidentalStyle() {
-    return {
-      color: this.pageSetup.accidentalDefaultColor,
-      webkitTextStrokeWidth: withZoom(
-        this.pageSetup.accidentalDefaultStrokeWidth,
-      ),
-      left:
-        this.note.secondaryAccidentalOffsetX != null
-          ? `${this.note.secondaryAccidentalOffsetX}em`
-          : undefined,
-      top:
-        this.note.secondaryAccidentalOffsetY != null
-          ? `${this.note.secondaryAccidentalOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get tertiaryAccidentalStyle() {
-    return {
-      color: this.pageSetup.accidentalDefaultColor,
-      webkitTextStrokeWidth: withZoom(
-        this.pageSetup.accidentalDefaultStrokeWidth,
-      ),
-      left:
-        this.note.tertiaryAccidentalOffsetX != null
-          ? `${this.note.tertiaryAccidentalOffsetX}em`
-          : undefined,
-      top:
-        this.note.tertiaryAccidentalOffsetY != null
-          ? `${this.note.tertiaryAccidentalOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get measureBarLeftStyle() {
-    return {
-      color: this.pageSetup.measureBarDefaultColor,
-      webkitTextStrokeWidth: withZoom(
-        this.pageSetup.measureBarDefaultStrokeWidth,
-      ),
-      left:
-        this.note.measureBarLeftOffsetX != null
-          ? `${this.note.measureBarLeftOffsetX}em`
-          : undefined,
-      top:
-        this.note.measureBarLeftOffsetY != null
-          ? `${this.note.measureBarLeftOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get measureBarRightStyle() {
-    return {
-      color: this.pageSetup.measureBarDefaultColor,
-      webkitTextStrokeWidth: withZoom(
-        this.pageSetup.measureBarDefaultStrokeWidth,
-      ),
-      left:
-        this.note.measureBarRightOffsetX != null
-          ? `${this.note.measureBarRightOffsetX}em`
-          : undefined,
-      top:
-        this.note.measureBarRightOffsetY != null
-          ? `${this.note.measureBarRightOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get measureNumberStyle() {
-    return {
-      color: this.pageSetup.measureNumberDefaultColor,
-      webkitTextStrokeWidth: withZoom(
-        this.pageSetup.measureNumberDefaultStrokeWidth,
-      ),
-      left:
-        this.note.measureNumberOffsetX != null
-          ? `${this.note.measureNumberOffsetX}em`
-          : undefined,
-      top:
-        this.note.measureNumberOffsetY != null
-          ? `${this.note.measureNumberOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get noteIndicatorStyle() {
-    return {
-      color: this.pageSetup.noteIndicatorDefaultColor,
-      webkitTextStrokeWidth: withZoom(
-        this.pageSetup.noteIndicatorDefaultStrokeWidth,
-      ),
-      left:
-        this.note.noteIndicatorOffsetX != null
-          ? `${this.note.noteIndicatorOffsetX}em`
-          : undefined,
-      top:
-        this.note.noteIndicatorOffsetY != null
-          ? `${this.note.noteIndicatorOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get isonStyle() {
-    return {
-      color: this.pageSetup.isonDefaultColor,
-      webkitTextStrokeWidth: withZoom(this.pageSetup.isonDefaultStrokeWidth),
-      left:
-        this.note.isonOffsetX != null
-          ? `${this.note.isonOffsetX}em`
-          : undefined,
-      top:
-        this.note.computedIsonOffsetY != null
-          ? `${this.note.computedIsonOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get timeStyle() {
-    return {
-      left:
-        this.note.timeNeumeOffsetX != null
-          ? `${this.note.timeNeumeOffsetX}em`
-          : undefined,
-      top:
-        this.note.timeNeumeOffsetY != null
-          ? `${this.note.timeNeumeOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get koronisStyle() {
-    return {
-      color: this.pageSetup.koronisDefaultColor,
-      webkitTextStrokeWidth: withZoom(this.pageSetup.koronisDefaultStrokeWidth),
-      left:
-        this.note.koronisOffsetX != null
-          ? `${this.note.koronisOffsetX}em`
-          : undefined,
-      top:
-        this.note.koronisOffsetY != null
-          ? `${this.note.koronisOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get stavrosStyle() {
-    return {
-      left:
-        this.note.stavrosOffsetX != null
-          ? `${this.note.stavrosOffsetX}em`
-          : undefined,
-      top:
-        this.note.stavrosOffsetY != null
-          ? `${this.note.stavrosOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get vareiaStyle() {
-    return {
-      left:
-        this.note.vareiaOffsetX != null
-          ? `${this.note.vareiaOffsetX}em`
-          : undefined,
-      top:
-        this.note.vareiaOffsetY != null
-          ? `${this.note.vareiaOffsetY}em`
-          : undefined,
-    } as StyleValue;
-  }
-
-  get vocalExpressionStyle() {
-    const style = {
-      left:
-        this.note.vocalExpressionNeumeOffsetX != null
-          ? `${this.note.vocalExpressionNeumeOffsetX}em`
-          : undefined,
-      top:
-        this.note.vocalExpressionNeumeOffsetY != null
-          ? `${this.note.vocalExpressionNeumeOffsetY}em`
-          : undefined,
-    } as Partial<CSSStyleDeclaration>;
-
-    if (
-      this.note.vocalExpressionNeume === VocalExpressionNeume.Heteron ||
-      this.note.vocalExpressionNeume ===
-        VocalExpressionNeume.HeteronConnecting ||
-      this.note.vocalExpressionNeume ===
-        VocalExpressionNeume.HeteronConnectingLong ||
-      this.note.vocalExpressionNeume === VocalExpressionNeume.Endofonon
-    ) {
-      style.color = this.pageSetup.heteronDefaultColor;
-      style.webkitTextStrokeWidth = withZoom(
-        this.pageSetup.heteronDefaultStrokeWidth,
-      );
-    }
-
-    return style;
-  }
-
-  get tieStyle() {
-    return {
-      left:
-        this.note.tieOffsetX != null ? `${this.note.tieOffsetX}em` : undefined,
-      top:
-        this.note.tieOffsetY != null ? `${this.note.tieOffsetY}em` : undefined,
-    } as StyleValue;
-  }
+function offsetStyle(
+  left: number | null | undefined,
+  top: number | null | undefined,
+) {
+  return {
+    left: left != null ? `${left}em` : undefined,
+    top: top != null ? `${top}em` : undefined,
+  };
 }
+
+const style = computed(() => {
+  return {
+    fontFamily: props.pageSetup.neumeDefaultFontFamily,
+    fontSize: props.alternateLine
+      ? withZoom(props.pageSetup.alternateLineDefaultFontSize)
+      : withZoom(props.pageSetup.neumeDefaultFontSize),
+    color: props.alternateLine
+      ? props.pageSetup.alternateLineDefaultColor
+      : props.pageSetup.neumeDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.neumeDefaultStrokeWidth),
+  } as StyleValue;
+});
+
+const gorgonStyle = computed(() => {
+  return {
+    color: props.pageSetup.gorgonDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.gorgonDefaultStrokeWidth),
+    ...offsetStyle(
+      props.note.gorgonNeumeOffsetX,
+      props.note.gorgonNeumeOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const secondaryGorgonStyle = computed(() => {
+  return {
+    color: props.pageSetup.gorgonDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.gorgonDefaultStrokeWidth),
+    ...offsetStyle(
+      props.note.secondaryGorgonNeumeOffsetX,
+      props.note.secondaryGorgonNeumeOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const fthoraStyle = computed(() => {
+  return {
+    color: props.pageSetup.fthoraDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.fthoraDefaultStrokeWidth),
+    ...offsetStyle(props.note.fthoraOffsetX, props.note.fthoraOffsetY),
+  } as StyleValue;
+});
+
+const secondaryFthoraStyle = computed(() => {
+  return {
+    color: props.pageSetup.fthoraDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.fthoraDefaultStrokeWidth),
+    ...offsetStyle(
+      props.note.secondaryFthoraOffsetX,
+      props.note.secondaryFthoraOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const tertiaryFthoraStyle = computed(() => {
+  return {
+    color: props.pageSetup.fthoraDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.fthoraDefaultStrokeWidth),
+    ...offsetStyle(
+      props.note.tertiaryFthoraOffsetX,
+      props.note.tertiaryFthoraOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const accidentalStyle = computed(() => {
+  return {
+    color: props.pageSetup.accidentalDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.accidentalDefaultStrokeWidth,
+    ),
+    ...offsetStyle(props.note.accidentalOffsetX, props.note.accidentalOffsetY),
+  } as StyleValue;
+});
+
+const secondaryAccidentalStyle = computed(() => {
+  return {
+    color: props.pageSetup.accidentalDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.accidentalDefaultStrokeWidth,
+    ),
+    ...offsetStyle(
+      props.note.secondaryAccidentalOffsetX,
+      props.note.secondaryAccidentalOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const tertiaryAccidentalStyle = computed(() => {
+  return {
+    color: props.pageSetup.accidentalDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.accidentalDefaultStrokeWidth,
+    ),
+    ...offsetStyle(
+      props.note.tertiaryAccidentalOffsetX,
+      props.note.tertiaryAccidentalOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const measureBarLeftStyle = computed(() => {
+  return {
+    color: props.pageSetup.measureBarDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.measureBarDefaultStrokeWidth,
+    ),
+    transform: `translateX(${withZoom(
+      props.note.computedMeasureBarLeftOffsetX,
+    )})`,
+    marginInlineEnd: withZoom(props.note.computedMeasureBarLeftLeadingSpacing),
+    ...offsetStyle(
+      props.note.measureBarLeftOffsetX,
+      props.note.measureBarLeftOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const measureBarRightStyle = computed(() => {
+  const offsetX =
+    props.note.measureBarRightOffsetX != null
+      ? `${props.note.measureBarRightOffsetX}em`
+      : '0em';
+  const offsetY =
+    props.note.measureBarRightOffsetY != null
+      ? `${props.note.measureBarRightOffsetY}em`
+      : undefined;
+
+  if (hasTransferredMeasureBarRight.value) {
+    return {
+      color: props.pageSetup.measureBarDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        props.pageSetup.measureBarDefaultStrokeWidth,
+      ),
+      position: 'absolute',
+      insetInlineStart: `calc(100% + ${withZoom(
+        props.note.computedMeasureBarRightTrailingSpacing,
+      )})`,
+      top: offsetY,
+      transform: `translateX(calc(${withZoom(
+        props.note.computedMeasureBarRightOffsetX,
+      )} + ${offsetX}))`,
+    } as StyleValue;
+  }
+
+  return {
+    color: props.pageSetup.measureBarDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.measureBarDefaultStrokeWidth,
+    ),
+    transform: `translateX(${withZoom(
+      props.note.computedMeasureBarRightOffsetX,
+    )})`,
+    marginInlineStart: withZoom(
+      props.note.computedMeasureBarRightTrailingSpacing,
+    ),
+    ...offsetStyle(
+      props.note.measureBarRightOffsetX,
+      props.note.measureBarRightOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const measureNumberStyle = computed(() => {
+  return {
+    color: props.pageSetup.measureNumberDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.measureNumberDefaultStrokeWidth,
+    ),
+    ...offsetStyle(
+      props.note.measureNumberOffsetX,
+      props.note.measureNumberOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const noteIndicatorStyle = computed(() => {
+  return {
+    color: props.pageSetup.noteIndicatorDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.noteIndicatorDefaultStrokeWidth,
+    ),
+    ...offsetStyle(
+      props.note.noteIndicatorOffsetX,
+      props.note.noteIndicatorOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const isonStyle = computed(() => {
+  return {
+    color: props.pageSetup.isonDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.isonDefaultStrokeWidth),
+    ...offsetStyle(props.note.isonOffsetX, props.note.computedIsonOffsetY),
+  } as StyleValue;
+});
+
+const timeStyle = computed(() => {
+  return offsetStyle(
+    props.note.timeNeumeOffsetX,
+    props.note.timeNeumeOffsetY,
+  ) as StyleValue;
+});
+
+const neumeStyle = computed(() => {
+  if (props.note.quantitativeNeume == QuantitativeNeume.Cross) {
+    return {
+      color: props.pageSetup.crossDefaultColor,
+      webkitTextStrokeWidth: withZoom(props.pageSetup.crossDefaultStrokeWidth),
+    } as StyleValue;
+  } else if (props.note.quantitativeNeume == QuantitativeNeume.Breath) {
+    return {
+      color: props.pageSetup.breathDefaultColor,
+      webkitTextStrokeWidth: withZoom(props.pageSetup.breathDefaultStrokeWidth),
+    } as StyleValue;
+  }
+
+  return {};
+});
+
+const koronisStyle = computed(() => {
+  return {
+    color: props.pageSetup.koronisDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.koronisDefaultStrokeWidth),
+    ...offsetStyle(props.note.koronisOffsetX, props.note.koronisOffsetY),
+  } as StyleValue;
+});
+
+const stavrosStyle = computed(() => {
+  return {
+    color: props.pageSetup.crossDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.crossDefaultStrokeWidth),
+    ...offsetStyle(props.note.stavrosOffsetX, props.note.stavrosOffsetY),
+  } as StyleValue;
+});
+
+const vareiaStyle = computed(() => {
+  const style = offsetStyle(
+    props.note.vareiaOffsetX,
+    props.note.vareiaOffsetY,
+  ) as Partial<CSSStyleDeclaration>;
+
+  return {
+    ...style,
+    marginRight: !props.pageSetup.melkiteRtl
+      ? withZoom(props.note.vareiaInternalSpacing)
+      : undefined,
+    marginLeft: props.pageSetup.melkiteRtl
+      ? withZoom(props.note.vareiaInternalSpacing)
+      : undefined,
+  } as StyleValue;
+});
+
+const vocalExpressionStyle = computed(() => {
+  const style = offsetStyle(
+    props.note.vocalExpressionNeumeOffsetX,
+    props.note.vocalExpressionNeumeOffsetY,
+  ) as Partial<CSSStyleDeclaration>;
+
+  if (
+    props.note.vocalExpressionNeume === VocalExpressionNeume.Heteron ||
+    props.note.vocalExpressionNeume ===
+      VocalExpressionNeume.HeteronConnecting ||
+    props.note.vocalExpressionNeume ===
+      VocalExpressionNeume.HeteronConnectingLong ||
+    props.note.vocalExpressionNeume === VocalExpressionNeume.Endofonon
+  ) {
+    style.color = props.pageSetup.heteronDefaultColor;
+    style.webkitTextStrokeWidth = withZoom(
+      props.pageSetup.heteronDefaultStrokeWidth,
+    );
+  }
+
+  return style;
+});
+
+const tieStyle = computed(() => {
+  return offsetStyle(
+    props.note.tieOffsetX,
+    props.note.tieOffsetY,
+  ) as StyleValue;
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .neume {
   cursor: default;
+  position: relative;
   user-select: none;
+}
+
+.measure-bar {
+  display: inline-block;
 }
 </style>

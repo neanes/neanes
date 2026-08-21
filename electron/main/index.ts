@@ -1,12 +1,12 @@
 'use strict';
 
+import type { Input, MenuItemConstructorOptions } from 'electron';
 import {
   app,
   BrowserWindow,
   dialog,
   ipcMain,
   Menu,
-  MenuItemConstructorOptions,
   protocol,
   screen,
   shell,
@@ -14,53 +14,70 @@ import {
 import { autoUpdater } from 'electron-updater';
 import { promises as fs } from 'fs';
 import i18next from 'i18next';
-import Pseudo from 'i18next-pseudo';
 import { imageSizeFromFile } from 'image-size/fromFile';
 import JSZip from 'jszip';
 import mimetypes from 'mime-types';
 import path from 'path';
 import { debounce } from 'throttle-debounce';
 
-import { PageSize } from '@/models/PageSetup';
+import type { PageSize } from '@/models/PageSetup';
 
-import { defaultNS, resources } from '../../src/i18n';
-import {
+import { initializeI18n, resolveLanguagePreference } from '../../src/i18n';
+import type {
+  ClipboardReplyArgs,
   CloseWorkspacesArgs,
-  CloseWorkspacesDisposition,
+  DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageArgs,
+  ExportPageAsImageReplyArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
+  ExportWorkspaceReplyArgs,
+  FileMenuImportOcrArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
-  IpcMainChannels,
-  IpcRendererChannels,
-  OpenContextMenuForTabArgs,
+  FileMenuViewPaneVisibilityArgs,
+  FileMenuViewStatusBarVisibilityArgs,
+  FileMenuViewZoomArgs,
+  ListRecoveryCandidatesReplyArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
+  RecoverySnapshotArgs,
   SaveWorkspaceArgs,
   SaveWorkspaceAsArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxArgs,
+  WorkspaceZoomState,
 } from '../../src/ipc/ipcChannels';
-import { Score } from '../../src/models/save/v1/Score';
-import { getSystemFonts } from '../../src/utils/getSystemFonts';
+import {
+  CloseWorkspacesDisposition,
+  IpcMainChannels,
+  IpcRendererChannels,
+} from '../../src/ipc/ipcChannels';
+import type { Score } from '../../src/models/save/v1/Score';
+import type { ZoomFitMode } from '../../src/models/Workspace';
+import {
+  createDefaultPaneVisibility,
+  type WorkspacePaneId,
+  type WorkspacePaneVisibility,
+} from '../../src/models/WorkspacePane';
 import { TestFileType } from '../../src/utils/TestFileType';
+import { RecoveryStore } from './recovery';
 
 // The built directory structure
 //
-// ├─┬ dist-electron
-// │ ├─┬ main
-// │ │ └── index.js    > Electron-Main
-// │ └─┬ preload
-// │   └── index.js    > Preload-Scripts
-// ├─┬ dist
-// │ └── index.html    > Electron-Renderer
+// +-+ dist-electron
+// | +-+ main
+// | | +-- index.js    > Electron-Main
+// | +-+ preload
+// |   +-- index.js    > Preload-Scripts
+// +-+ dist
+// | +-- index.html    > Electron-Renderer
 //
 process.env.DIST_ELECTRON = path.join(__dirname, '..');
 process.env.DIST = path.join(process.env.DIST_ELECTRON, '../dist');
@@ -79,7 +96,19 @@ process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
 const isDevelopment = import.meta.env.DEV;
 
+if (isDevelopment) {
+  const devUserDataDir = process.env.NEANES_DEV_USER_DATA_DIR;
+
+  if (devUserDataDir) {
+    app.setPath('userData', path.resolve(devUserDataDir));
+  }
+}
+
 const userDataPath = app.getPath('userData');
+const recoveryStore = new RecoveryStore(
+  path.join(userDataPath, 'recovery'),
+  () => app.getVersion(),
+);
 
 const maxRecentFiles = 20;
 const storeFilePath = path.join(userDataPath, 'settings.json');
@@ -94,14 +123,65 @@ const silentLatexIncludeModeKeys = process.argv.includes(
 const silentLatexIncludeTextBoxes = process.argv.includes(
   '--latex-include-text-boxes',
 );
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return undefined;
+}
 const silent = silentPdf || silentLatex || silentHtml;
 
 const disableUpdates = process.argv.includes('--no-update');
+const fakeUpdateMode = process.env.FAKE_UPDATE_AVAILABLE === '1';
 
 let win: BrowserWindow | null = null;
 let readyToExit = false;
+let pendingUpdateInstall = false;
 let creatingWindow = false;
 let quitting = false;
+let developerPaneEnabled = false;
+let copyElementLinkMenuEnabled = false;
+let paneMenuVisibility = createDefaultPaneVisibility();
+let statusBarMenuVisible = true;
+let workspaceTabNavigationMenuEnabled = false;
+let zoomMenuState: WorkspaceZoomState = {
+  zoom: 1,
+  zoomFitMode: null,
+};
+
+const paneMenuItemIds: Record<WorkspacePaneId, string> = {
+  'common-combos': 'view-pane-common-combos',
+  developer: 'view-pane-developer',
+  'neume-selector': 'view-pane-neume-selector',
+  lyrics: 'view-pane-lyrics',
+  properties: 'view-pane-properties',
+};
+const zoomMenuItemIds = {
+  actualSize: 'view-zoom-actual-size',
+} as const;
+const zoomFitMenuItemIds: Record<ZoomFitMode, string> = {
+  'page-width': 'view-zoom-page-width',
+  'text-width': 'view-zoom-text-width',
+  'whole-page': 'view-zoom-whole-page',
+};
+const copyElementLinkMenuItemId = 'edit-copy-element-link';
+const statusBarMenuItemId = 'view-status-bar';
+const workspaceTabNavigationMenuItemIds = [
+  'window-previous-tab',
+  'window-next-tab',
+];
+let updateAvailable = false;
+let updateDownloaded = false;
+let updateDownloadInProgress = false;
+let pendingUpdateVersion: string | undefined;
+let didReportUpdateError = false;
+let fakeDownloadProgressTimer: NodeJS.Timeout | null = null;
 
 const minWidth = 800;
 const minHeight = 600;
@@ -118,6 +198,7 @@ interface Store {
   recentFiles: string[];
   windowState: WindowState;
   lastDirectory?: string;
+  language?: string;
 }
 
 const defaultWindowState: WindowState = {
@@ -147,12 +228,12 @@ enum OnConflictChoice {
 }
 
 let saving = false;
-let exporting = false;
 let loaded = false;
 
 let exportAsImageOnConflict: OnConflictChoice | null = null;
 
 let darwinPath: string | null = null;
+let autoUpdaterInitialized = false;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -186,6 +267,165 @@ async function generateFilePath(filename: string) {
   }
 
   return path.join(targetDirectory, filename);
+}
+
+// Returns the source path with its extension swapped for the given one,
+// keeping the same directory and base name (e.g. /scores/song.byz -> /scores/song.pdf).
+function replaceExtension(filePath: string, extension: string) {
+  const directory = path.dirname(filePath);
+  const baseName = path.basename(filePath, path.extname(filePath));
+  return path.join(directory, `${baseName}.${extension}`);
+}
+
+// Computes the default path for an export save dialog. When the score has been
+// saved, the export defaults to the score's own folder and base name with the
+// export's extension. Otherwise it falls back to the last-used directory.
+async function getExportDefaultPath(
+  sourceFilePath: string | null,
+  tempFileName: string,
+  extension: string,
+) {
+  return sourceFilePath != null
+    ? replaceExtension(sourceFilePath, extension)
+    : await generateFilePath(`${tempFileName}.${extension}`);
+}
+
+function sendToRenderer(channel: IpcMainChannels, payload?: unknown) {
+  if (win == null || !loaded) {
+    return;
+  }
+
+  win.webContents.send(channel, payload);
+}
+
+function sendPendingUpdateState() {
+  if (updateDownloaded) {
+    sendToRenderer(IpcMainChannels.UpdateDownloaded, {
+      version: pendingUpdateVersion,
+    });
+    return;
+  }
+
+  if (updateDownloadInProgress) {
+    sendToRenderer(IpcMainChannels.UpdateDownloadStarted);
+    return;
+  }
+
+  if (updateAvailable) {
+    sendToRenderer(IpcMainChannels.UpdateAvailable, {
+      version: pendingUpdateVersion,
+    });
+  }
+}
+
+function clearFakeDownloadProgressTimer() {
+  if (fakeDownloadProgressTimer != null) {
+    clearInterval(fakeDownloadProgressTimer);
+    fakeDownloadProgressTimer = null;
+  }
+}
+
+function simulateFakeUpdateDownload() {
+  const progressSteps = [18, 42, 69, 91, 100];
+  const total = 100;
+  let stepIndex = 0;
+
+  clearFakeDownloadProgressTimer();
+
+  fakeDownloadProgressTimer = setInterval(() => {
+    if (win == null || !loaded || !updateDownloadInProgress) {
+      clearFakeDownloadProgressTimer();
+      return;
+    }
+
+    const percent = progressSteps[stepIndex] ?? 100;
+    const transferred = percent;
+
+    sendToRenderer(IpcMainChannels.UpdateDownloadProgress, {
+      percent,
+      transferred,
+      total,
+    });
+
+    stepIndex += 1;
+
+    if (percent >= 100) {
+      clearFakeDownloadProgressTimer();
+      updateDownloaded = true;
+      updateDownloadInProgress = false;
+      sendToRenderer(IpcMainChannels.UpdateDownloaded, {
+        version: pendingUpdateVersion,
+      });
+    }
+  }, 250);
+}
+
+function setupAutoUpdater() {
+  if (autoUpdaterInitialized) {
+    return;
+  }
+
+  autoUpdaterInitialized = true;
+
+  if (fakeUpdateMode) {
+    updateAvailable = true;
+    updateDownloaded = false;
+    updateDownloadInProgress = false;
+    pendingUpdateVersion = undefined;
+    didReportUpdateError = false;
+    return;
+  }
+
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = false;
+
+  autoUpdater.on('update-available', (info) => {
+    updateAvailable = true;
+    updateDownloaded = false;
+    updateDownloadInProgress = false;
+    pendingUpdateVersion = info.version;
+    didReportUpdateError = false;
+
+    sendToRenderer(IpcMainChannels.UpdateAvailable, {
+      version: info.version,
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    updateDownloaded = true;
+    updateDownloadInProgress = false;
+    pendingUpdateVersion = info.version;
+    didReportUpdateError = false;
+
+    sendToRenderer(IpcMainChannels.UpdateDownloaded, {
+      version: info.version,
+    });
+  });
+
+  autoUpdater.on('download-progress', (info) => {
+    sendToRenderer(IpcMainChannels.UpdateDownloadProgress, {
+      percent: info.percent,
+      transferred: info.transferred,
+      total: info.total,
+    });
+  });
+
+  autoUpdater.on('error', (error) => {
+    const shouldReportError =
+      updateDownloadInProgress || updateAvailable || updateDownloaded;
+
+    updateDownloadInProgress = false;
+
+    if (!shouldReportError || didReportUpdateError) {
+      return;
+    }
+
+    didReportUpdateError = true;
+
+    sendToRenderer(IpcMainChannels.UpdateError, {
+      message: error == null ? 'Unable to update.' : error.message,
+    });
+  });
 }
 
 async function loadStore() {
@@ -248,7 +488,7 @@ async function showReplaceOrSkipFileDialog(filePath: string) {
       )}" already exists. Do you want to replace it?`,
       buttons: ['Replace', 'Replace all', 'Skip', 'Skip all'],
       defaultId: 0,
-      cancelId: 0,
+      cancelId: 2,
     });
 
     return replaceFileResult.response as OnConflictChoice;
@@ -322,6 +562,7 @@ async function readScoreFile(filePath: string) {
 
 async function openFile(filePath: string) {
   const data = await readScoreFile(filePath);
+  const stats = await fs.stat(filePath);
 
   if (!silent) {
     await addToRecentFiles(filePath);
@@ -329,7 +570,11 @@ async function openFile(filePath: string) {
     createMenu();
   }
 
-  return data;
+  return {
+    data,
+    sourceMtimeMs: stats.mtimeMs,
+    sourceSize: stats.size,
+  };
 }
 
 async function openFileFromArgs(argv: string[]) {
@@ -353,9 +598,13 @@ async function openFileFromArgs(argv: string[]) {
     }
 
     try {
+      const openedFile = await openFile(parameter);
+
       result.push({
-        data: await openFile(parameter),
+        data: openedFile.data,
         filePath: parameter,
+        sourceMtimeMs: openedFile.sourceMtimeMs,
+        sourceSize: openedFile.sourceSize,
         success: true,
       });
     } catch (error) {
@@ -384,26 +633,23 @@ async function openFileFromArgs(argv: string[]) {
 async function saveWorkspace(args: SaveWorkspaceArgs) {
   const result: SaveWorkspaceReplyArgs = { success: false };
 
-  try {
-    if (saving) {
-      return false;
-    }
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
 
+  try {
     saving = true;
 
     await writeScoreFile(args.filePath, args.data);
+    const stats = await fs.stat(args.filePath);
 
+    result.sourceMtimeMs = stats.mtimeMs;
+    result.sourceSize = stats.size;
     result.success = true;
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Save failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
@@ -414,16 +660,18 @@ async function saveWorkspace(args: SaveWorkspaceArgs) {
 async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
   const result: SaveWorkspaceAsReplyArgs = { success: false, filePath: '' };
 
-  try {
-    if (saving) {
-      return false;
-    }
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
 
+  try {
     saving = true;
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Save Score',
       defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: `${app.name} File`,
@@ -455,26 +703,26 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
 
       if (doWrite) {
         await writeScoreFile(result.filePath, args.data);
+        const stats = await fs.stat(result.filePath);
 
         await addToRecentFiles(result.filePath);
         createMenu();
 
         result.success = true;
+        result.sourceMtimeMs = stats.mtimeMs;
+        result.sourceSize = stats.size;
 
         store.lastDirectory = path.dirname(result.filePath);
         await saveStore();
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Save As failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
@@ -495,6 +743,7 @@ async function openImage() {
     const dialogResult = await dialog.showOpenDialog(win!, {
       properties: ['openFile'],
       title: 'Insert Image',
+      defaultPath: await generateFilePath(''),
       filters: [
         {
           name: `All image types`,
@@ -515,6 +764,8 @@ async function openImage() {
 
     if (!dialogResult.canceled) {
       const filePath = dialogResult.filePaths[0];
+      store.lastDirectory = path.dirname(filePath);
+      await saveStore();
 
       const mimeType = mimetypes.lookup(filePath);
       const base64 = await fs.readFile(filePath, { encoding: 'base64' });
@@ -552,6 +803,51 @@ async function openImage() {
   return result;
 }
 
+async function openOcrFile() {
+  const result: FileMenuImportOcrArgs = {
+    filePath: '',
+    data: '',
+    success: false,
+  };
+
+  try {
+    const dialogResult = await dialog.showOpenDialog(win!, {
+      properties: ['openFile'],
+      title: 'Import OCR Result',
+      defaultPath: await generateFilePath(''),
+      filters: [
+        {
+          name: `OCR File`,
+          extensions: ['byzocr'],
+        },
+      ],
+    });
+
+    if (!dialogResult.canceled) {
+      const filePath = dialogResult.filePaths[0];
+      store.lastDirectory = path.dirname(filePath);
+      await saveStore();
+
+      result.data = await fs.readFile(filePath, { encoding: 'utf8' });
+
+      result.filePath = filePath;
+      result.success = true;
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      await dialog.showMessageBox(win!, {
+        type: 'error',
+        title: 'Open OCR file failed',
+        message: error.message,
+      });
+    }
+  }
+
+  return result;
+}
+
 function getPageSize(pageSize: PageSize, width: number, height: number) {
   switch (pageSize) {
     case 'Half-Legal':
@@ -577,11 +873,22 @@ function getPageSize(pageSize: PageSize, width: number, height: number) {
 let silentPdfSuccessCount = 0;
 let silentPdfFailCount = 0;
 
-async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
+async function exportWorkspaceAsPdf(
+  args: ExportWorkspaceAsPdfArgs,
+): Promise<ExportWorkspaceReplyArgs> {
+  const result: ExportWorkspaceReplyArgs = { success: false };
+
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (!win) {
+    return result;
+  }
+
   try {
-    if (exporting || !win) {
-      return;
-    }
+    saving = true;
 
     if (silentPdf) {
       try {
@@ -592,34 +899,35 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
             args.pageHeightInches,
           ),
           landscape: args.landscape,
+          // Keep app chrome backgrounds out of the PDF. Score color fidelity
+          // is controlled by print-color-adjust: exact in the print stylesheet.
+          printBackground: false,
         });
-        let newPath = args.filePath!.replace(/\.byzx?$/, '.pdf');
-
-        // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePath) {
-          newPath += '.pdf';
-        }
+        const newPath = replaceExtension(args.filePath!, 'pdf');
 
         await fs.writeFile(newPath, data);
+        result.success = true;
+        result.filePath = newPath;
         silentPdfSuccessCount++;
         console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
+        result.errorMessage = getErrorMessage(error);
         silentPdfFailCount++;
         console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
-      return;
+      return result;
     }
-
-    exporting = true;
 
     const dialogResult = await dialog.showSaveDialog(win, {
       title: 'Export Score as PDF',
       filters: [{ name: 'PDF File', extensions: ['pdf'] }],
-      defaultPath:
-        args.filePath != null
-          ? path.basename(args.filePath, path.extname(args.filePath))
-          : await generateFilePath(args.tempFileName),
+      properties: ['showOverwriteConfirmation'],
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        'pdf',
+      ),
     });
 
     if (!dialogResult.canceled) {
@@ -644,64 +952,95 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
             args.pageHeightInches,
           ),
           landscape: args.landscape,
+          // Keep app chrome backgrounds out of the PDF. Score color fidelity
+          // is controlled by print-color-adjust: exact in the print stylesheet.
+          printBackground: false,
         });
         await fs.writeFile(filePath, data);
 
-        await shell.openPath(filePath);
+        // On Linux, shell.openPath() may not resolve until the external viewer
+        // exits. Opening the written export is a non-critical side effect, so
+        // do not let it hold the shared `saving` lock.
+        void shell
+          .openPath(filePath)
+          .then((openError) => {
+            if (openError) {
+              console.error(`Failed to open ${filePath}: ${openError}`);
+            }
+          })
+          .catch((error) => {
+            console.error(
+              `Failed to open ${filePath}: ${getErrorMessage(error)}`,
+            );
+          });
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
+
+        result.success = true;
+        result.filePath = filePath;
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export to PDF failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
-    exporting = false;
+    saving = false;
   }
+
+  return result;
 }
 
 let silentHtmlSuccessCount = 0;
 let silentHtmlFailCount = 0;
 
-async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
-  try {
-    if (saving || !win) {
-      return false;
-    }
+async function exportWorkspaceAsHtml(
+  args: ExportWorkspaceAsHtmlArgs,
+): Promise<ExportWorkspaceReplyArgs> {
+  const result: ExportWorkspaceReplyArgs = { success: false };
 
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (!win) {
+    return result;
+  }
+
+  try {
     if (silentHtml) {
       try {
-        let newPath = args.filePathFull!.replace(/\.byzx?$/, '.html');
-
-        // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePathFull) {
-          newPath += '.html';
-        }
+        const newPath = replaceExtension(args.filePath!, 'html');
 
         await fs.writeFile(newPath, args.data);
+        result.success = true;
+        result.filePath = newPath;
         silentHtmlSuccessCount++;
-        console.log(`DONE ${args.filePathFull} => ${newPath}`);
+        console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
+        result.errorMessage = getErrorMessage(error);
         silentHtmlFailCount++;
-        console.error(`FAIL ${args.filePathFull} | ${error}`);
+        console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
-      return;
+      return result;
     }
 
     saving = true;
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as HTML',
-      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        'html',
+      ),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: `HTML File`,
@@ -726,40 +1065,71 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
 
       if (doWrite) {
         await fs.writeFile(filePath, args.data);
-        await shell.openPath(filePath);
+
+        // On Linux, shell.openPath() may not resolve until the external viewer
+        // exits. Opening the written export is a non-critical side effect, so
+        // do not let it hold the shared `saving` lock.
+        void shell
+          .openPath(filePath)
+          .then((openError) => {
+            if (openError) {
+              console.error(`Failed to open ${filePath}: ${openError}`);
+            }
+          })
+          .catch((error) => {
+            console.error(
+              `Failed to open ${filePath}: ${getErrorMessage(error)}`,
+            );
+          });
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
+
+        result.success = true;
+        result.filePath = filePath;
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as HTML failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
+
+  return result;
 }
 
-async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
-  try {
-    if (saving) {
-      return false;
-    }
+async function exportWorkspaceAsMusicXml(
+  args: ExportWorkspaceAsMusicXmlArgs,
+): Promise<ExportWorkspaceReplyArgs> {
+  const result: ExportWorkspaceReplyArgs = { success: false };
 
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (!win) {
+    return result;
+  }
+
+  try {
     saving = true;
 
     const extension = args.compressed ? 'mxl' : 'musicxml';
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as MusicXML',
-      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        extension,
+      ),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: args.compressed
@@ -778,8 +1148,8 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
       // See https://github.com/electron/electron/issues/21935
       let doWrite = true;
 
-      if (!filePath.endsWith(extension)) {
-        filePath += extension;
+      if (!filePath.endsWith(`.${extension}`)) {
+        filePath += `.${extension}`;
 
         doWrite = await showReplaceFileDialog(filePath);
       }
@@ -793,57 +1163,71 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
+
+        result.success = true;
+        result.filePath = filePath;
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as MusicXML failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
+
+  return result;
 }
 
 let silentLatexSuccessCount = 0;
 let silentLatexFailCount = 0;
 
-async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
-  try {
-    if (saving) {
-      return false;
-    }
+async function exportWorkspaceAsLatex(
+  args: ExportWorkspaceAsLatexArgs,
+): Promise<ExportWorkspaceReplyArgs> {
+  const result: ExportWorkspaceReplyArgs = { success: false };
 
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (!win) {
+    return result;
+  }
+
+  try {
     if (silentLatex) {
       try {
-        let newPath = args.filePathFull!.replace(/\.byzx?$/, '.byztex');
-
-        // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePathFull) {
-          newPath += '.byztex';
-        }
+        const newPath = replaceExtension(args.filePath!, 'byztex');
 
         await fs.writeFile(newPath, args.data);
+        result.success = true;
+        result.filePath = newPath;
         silentLatexSuccessCount++;
-        console.log(`DONE ${args.filePathFull} => ${newPath}`);
+        console.log(`DONE ${args.filePath} => ${newPath}`);
       } catch (error) {
+        result.errorMessage = getErrorMessage(error);
         silentLatexFailCount++;
-        console.error(`FAIL ${args.filePathFull} | ${error}`);
+        console.error(`FAIL ${args.filePath} | ${error}`);
       }
 
-      return;
+      return result;
     }
 
     saving = true;
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as Latex',
-      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        'byztex',
+      ),
+      properties: ['showOverwriteConfirmation'],
       filters: [
         {
           name: 'neanestex File',
@@ -871,41 +1255,50 @@ async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
 
         store.lastDirectory = path.dirname(filePath);
         await saveStore();
+
+        result.success = true;
+        result.filePath = filePath;
+      } else {
+        result.canceled = true;
       }
+    } else {
+      result.canceled = true;
     }
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as Latex failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
   } finally {
     saving = false;
   }
+
+  return result;
 }
 
 async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
   const result = {
-    filePath: args.filePath,
+    filePath: '',
     success: false,
   } as ExportWorkspaceAsImageReplyArgs;
 
-  try {
-    if (saving) {
-      return result;
-    }
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
 
+  if (!win) {
+    return result;
+  }
+
+  try {
     saving = true;
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as Images',
-      defaultPath:
-        args.filePath?.replace(/\.byzx?$/, '') ||
-        (await generateFilePath(args.tempFileName)),
+      defaultPath: await getExportDefaultPath(
+        args.filePath,
+        args.tempFileName,
+        args.imageFormat,
+      ),
       filters: [
         {
           name: args.imageFormat === 'png' ? `PNG File` : `SVG File`,
@@ -916,7 +1309,7 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
 
     if (!dialogResult.canceled) {
       let filePath = dialogResult.filePath;
-      if (!filePath.endsWith(args.imageFormat)) {
+      if (!filePath.endsWith(`.${args.imageFormat}`)) {
         filePath += `.${args.imageFormat}`;
       }
 
@@ -926,19 +1319,14 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
 
       store.lastDirectory = path.dirname(filePath);
       await saveStore();
+    } else {
+      result.canceled = true;
     }
 
     return result;
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as Image failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
 
     return result;
   } finally {
@@ -946,12 +1334,22 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
   }
 }
 
-async function exportPageAsImage(args: ExportPageAsImageArgs) {
-  try {
-    if (saving || exportAsImageOnConflict === OnConflictChoice.SkipAll) {
-      return false;
-    }
+async function exportPageAsImage(
+  args: ExportPageAsImageArgs,
+): Promise<ExportPageAsImageReplyArgs> {
+  const result: ExportPageAsImageReplyArgs = { success: false };
 
+  if (saving) {
+    result.canceled = true;
+    return result;
+  }
+
+  if (exportAsImageOnConflict === OnConflictChoice.SkipAll) {
+    result.canceled = true;
+    return result;
+  }
+
+  try {
     saving = true;
 
     if (exportAsImageOnConflict !== OnConflictChoice.ReplaceAll) {
@@ -960,7 +1358,13 @@ async function exportPageAsImage(args: ExportPageAsImageArgs) {
       );
 
       if (exportAsImageOnConflict === OnConflictChoice.SkipAll) {
-        return false;
+        result.canceled = true;
+        return result;
+      }
+
+      if (exportAsImageOnConflict === OnConflictChoice.Skip) {
+        result.skipped = true;
+        return result;
       }
     }
 
@@ -971,17 +1375,12 @@ async function exportPageAsImage(args: ExportPageAsImageArgs) {
       await fs.writeFile(args.filePath, args.data, 'base64');
     }
 
-    return true;
+    result.success = true;
+    return result;
   } catch (error) {
     console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Export as Image failed',
-        message: error.message,
-      });
-    }
+    result.errorMessage = getErrorMessage(error);
+    return result;
   } finally {
     saving = false;
   }
@@ -1042,6 +1441,7 @@ async function openWorkspaces() {
     const dialogResult = await dialog.showOpenDialog(win!, {
       properties: ['openFile', 'multiSelections'],
       title: 'Open Score',
+      defaultPath: await generateFilePath(''),
       filters: [
         {
           name: `${app.name} Files`,
@@ -1051,10 +1451,19 @@ async function openWorkspaces() {
     });
 
     if (!dialogResult.canceled) {
+      if (dialogResult.filePaths.length > 0) {
+        store.lastDirectory = path.dirname(dialogResult.filePaths[0]);
+        await saveStore();
+      }
+
       for (const filePath of dialogResult.filePaths) {
+        const openedFile = await openFile(filePath);
+
         workspaces.push({
-          data: await openFile(filePath),
+          data: openedFile.data,
           filePath: filePath,
+          sourceMtimeMs: openedFile.sourceMtimeMs,
+          sourceSize: openedFile.sourceSize,
           success: true,
         });
       }
@@ -1117,6 +1526,266 @@ function ensureVisibleOnSomeDisplay(windowState: WindowState) {
   return windowState;
 }
 
+function syncPaneMenuItems(visibility: WorkspacePaneVisibility) {
+  paneMenuVisibility = {
+    ...paneMenuVisibility,
+    ...visibility,
+  };
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  (Object.entries(visibility) as Array<[WorkspacePaneId, boolean]>).forEach(
+    ([paneId, isVisible]) => {
+      const item = menu.getMenuItemById(paneMenuItemIds[paneId]);
+
+      if (item != null) {
+        item.checked = isVisible;
+      }
+    },
+  );
+}
+
+function syncStatusBarMenuItem(isVisible: boolean) {
+  statusBarMenuVisible = isVisible;
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  const item = menu.getMenuItemById(statusBarMenuItemId);
+
+  if (item != null) {
+    item.checked = isVisible;
+  }
+}
+
+function syncCopyElementLinkMenuItemEnabled(isEnabled: boolean) {
+  copyElementLinkMenuEnabled = isEnabled;
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  const item = menu.getMenuItemById(copyElementLinkMenuItemId);
+
+  if (item != null) {
+    item.enabled = isEnabled;
+  }
+}
+
+function syncWorkspaceTabNavigationMenuItemsEnabled(isEnabled: boolean) {
+  workspaceTabNavigationMenuEnabled = isEnabled;
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  for (const id of workspaceTabNavigationMenuItemIds) {
+    const item = menu.getMenuItemById(id);
+
+    if (item != null) {
+      item.enabled = isEnabled;
+    }
+  }
+}
+
+const ZOOM_COMPARISON_EPSILON = 0.000001;
+
+function zoomMenuStateIsActualSize() {
+  return (
+    zoomMenuState.zoomFitMode == null &&
+    Math.abs(zoomMenuState.zoom - 1) <= ZOOM_COMPARISON_EPSILON
+  );
+}
+
+function sendViewZoomCommand(args: FileMenuViewZoomArgs) {
+  win?.webContents.send(IpcMainChannels.FileMenuViewZoom, args);
+}
+
+type WorkspaceTabNavigationDirection = 'previous' | 'next';
+
+function sendWindowTabNavigationCommand(
+  direction: WorkspaceTabNavigationDirection,
+) {
+  win?.webContents.send(
+    direction === 'previous'
+      ? IpcMainChannels.FileMenuWindowPreviousTab
+      : IpcMainChannels.FileMenuWindowNextTab,
+  );
+}
+
+function getWindowTabNavigationInput(
+  input: Input,
+): WorkspaceTabNavigationDirection | null {
+  if (input.type !== 'keyDown') {
+    return null;
+  }
+
+  const isCtrlOnly = input.control && !input.alt && !input.meta;
+
+  if (isCtrlOnly && input.shift && input.code === 'Tab') {
+    return 'previous';
+  }
+
+  if (isCtrlOnly && !input.shift && input.code === 'Tab') {
+    return 'next';
+  }
+
+  if (isMac && input.meta && input.shift && !input.control && !input.alt) {
+    if (input.code === 'BracketLeft') {
+      return 'previous';
+    }
+
+    if (input.code === 'BracketRight') {
+      return 'next';
+    }
+  }
+
+  if (!isMac && isCtrlOnly) {
+    if (!input.shift && input.code === 'PageUp') {
+      return 'previous';
+    }
+
+    if (!input.shift && input.code === 'PageDown') {
+      return 'next';
+    }
+  }
+
+  return null;
+}
+
+function syncZoomMenuItems(state: WorkspaceZoomState) {
+  zoomMenuState = {
+    ...state,
+  };
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  const actualSizeItem = menu.getMenuItemById(zoomMenuItemIds.actualSize);
+
+  if (actualSizeItem != null) {
+    actualSizeItem.checked = zoomMenuStateIsActualSize();
+  }
+
+  (Object.entries(zoomFitMenuItemIds) as Array<[ZoomFitMode, string]>).forEach(
+    ([mode, id]) => {
+      const item = menu.getMenuItemById(id);
+
+      if (item != null) {
+        item.checked = zoomMenuState.zoomFitMode === mode;
+      }
+    },
+  );
+}
+
+function createZoomFitMenuItem(
+  mode: ZoomFitMode,
+  label: string,
+): MenuItemConstructorOptions {
+  return {
+    checked: zoomMenuState.zoomFitMode === mode,
+    id: zoomFitMenuItemIds[mode],
+    label,
+    type: 'checkbox',
+    click(menuItem) {
+      menuItem.checked = zoomMenuState.zoomFitMode === mode;
+      sendViewZoomCommand({ type: 'fit', mode });
+    },
+  };
+}
+
+function createPaneMenuItem(
+  paneId: WorkspacePaneId,
+  label: string,
+  accelerator?: string,
+): MenuItemConstructorOptions {
+  return {
+    accelerator,
+    checked: paneMenuVisibility[paneId],
+    id: paneMenuItemIds[paneId],
+    label,
+    visible: paneId !== 'developer' || developerPaneEnabled,
+    type: 'checkbox',
+    click(menuItem) {
+      const requestedVisibility = menuItem.checked;
+
+      menuItem.checked = paneMenuVisibility[paneId];
+      win?.webContents.send(IpcMainChannels.FileMenuViewPaneVisibility, {
+        paneId,
+        visible: requestedVisibility,
+      } as FileMenuViewPaneVisibilityArgs);
+    },
+  };
+}
+
+function createStatusBarMenuItem(label: string): MenuItemConstructorOptions {
+  return {
+    checked: statusBarMenuVisible,
+    id: statusBarMenuItemId,
+    label,
+    type: 'checkbox',
+    click(menuItem) {
+      const requestedVisibility = menuItem.checked;
+
+      menuItem.checked = statusBarMenuVisible;
+      win?.webContents.send(IpcMainChannels.FileMenuViewStatusBarVisibility, {
+        visible: requestedVisibility,
+      } as FileMenuViewStatusBarVisibilityArgs);
+    },
+  };
+}
+
+function createWindowTabNavigationMenuItem(
+  direction: WorkspaceTabNavigationDirection,
+  label: string,
+  accelerator: string,
+  id = `window-${direction}-tab`,
+): MenuItemConstructorOptions {
+  return {
+    accelerator,
+    enabled: workspaceTabNavigationMenuEnabled,
+    id,
+    label,
+    click(menuItem, browserWindow, event) {
+      // The accelerator is handled by before-input-event so aliases share one
+      // path. Mouse menu selection still dispatches.
+      if (!event.triggeredByAccelerator) {
+        sendWindowTabNavigationCommand(direction);
+      }
+    },
+  };
+}
+
+function syncDeveloperPaneMenuItemEnabled(isEnabled: boolean) {
+  developerPaneEnabled = isEnabled;
+
+  const menu = Menu.getApplicationMenu();
+
+  if (menu == null) {
+    return;
+  }
+
+  const item = menu.getMenuItemById(paneMenuItemIds.developer);
+
+  if (item != null) {
+    item.visible = isEnabled;
+  }
+}
+
 function createMenu() {
   const menu = Menu.buildFromTemplate([
     ...(isMac
@@ -1127,17 +1796,7 @@ function createMenu() {
               {
                 label: `About ${app.name}`,
                 click() {
-                  let detail = `Version: ${app.getVersion()}\n`;
-                  detail += `Electron: ${process.versions.electron}\n`;
-                  detail += `Chromium: ${process.versions.chrome}\n`;
-                  detail += `Node.js: ${process.version}`;
-
-                  dialog.showMessageBox(win!, {
-                    title: app.name,
-                    message: app.name,
-                    detail: detail,
-                    type: 'info',
-                  });
+                  void openAboutDialog();
                 },
               },
               { type: 'separator' },
@@ -1153,10 +1812,10 @@ function createMenu() {
         ] as MenuItemConstructorOptions[])
       : []),
     {
-      label: i18next.t('menu:file.root'),
+      label: i18next.t(($) => $.menu.file.root),
       submenu: [
         {
-          label: i18next.t('menu:file.new'),
+          label: i18next.t(($) => $.menu.file.new),
           accelerator: 'CmdOrCtrl+N',
           click() {
             if (!win) {
@@ -1167,7 +1826,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:file.open'),
+          label: i18next.t(($) => $.menu.file.open),
           accelerator: 'CmdOrCtrl+O',
           async click() {
             const workspaces: FileMenuOpenScoreArgs[] = await openWorkspaces();
@@ -1187,12 +1846,12 @@ function createMenu() {
         },
         {
           id: 'recentfiles',
-          label: i18next.t('menu:file.openRecent'),
+          label: i18next.t(($) => $.menu.file.openRecent),
           submenu: store.recentFiles.map((x, index) => ({
             label: `${index + 1}: ${x}`,
             async click() {
               try {
-                const data = await openFile(x);
+                const openedFile = await openFile(x);
 
                 if (!win) {
                   darwinPath = x;
@@ -1200,7 +1859,9 @@ function createMenu() {
                 } else {
                   win?.webContents.send(IpcMainChannels.FileMenuOpenScore, {
                     filePath: x,
-                    data,
+                    data: openedFile.data,
+                    sourceMtimeMs: openedFile.sourceMtimeMs,
+                    sourceSize: openedFile.sourceSize,
                     success: true,
                   } as FileMenuOpenScoreArgs);
                 }
@@ -1219,14 +1880,32 @@ function createMenu() {
           })),
         },
         {
-          label: i18next.t('menu:file.save'),
+          label: i18next.t(($) => $.menu.file.import),
+          submenu: [
+            {
+              label: i18next.t(($) => $.menu.file.importFromOcr),
+              async click() {
+                const data = await openOcrFile();
+
+                if (data.success) {
+                  win?.webContents.send(
+                    IpcMainChannels.FileMenuImportOcr,
+                    data,
+                  );
+                }
+              },
+            },
+          ],
+        },
+        {
+          label: i18next.t(($) => $.menu.file.save),
           accelerator: 'CmdOrCtrl+S',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuSave);
           },
         },
         {
-          label: i18next.t('menu:file.saveAs'),
+          label: i18next.t(($) => $.menu.file.saveAs),
           accelerator: 'CmdOrCtrl+Shift+S',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuSaveAs);
@@ -1234,43 +1913,49 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:file.pageSetup'),
+          label: i18next.t(($) => $.menu.file.pageSetup),
           accelerator: 'CmdOrCtrl+Shift+P',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPageSetup);
           },
         },
         {
-          label: i18next.t('menu:file.exportAsPdf'),
-          accelerator: 'CmdOrCtrl+E',
+          label: i18next.t(($) => $.menu.file.documentProperties),
           click() {
-            win?.webContents.send(IpcMainChannels.FileMenuExportAsPdf);
+            win?.webContents.send(IpcMainChannels.FileMenuDocumentProperties);
           },
         },
         {
-          label: i18next.t('menu:file.exportAs'),
+          label: i18next.t(($) => $.menu.file.exportAs),
           submenu: [
             {
-              label: i18next.t('menu:file.exportAsHtml'),
+              label: i18next.t(($) => $.menu.file.exportAsPdf),
+              accelerator: 'CmdOrCtrl+E',
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsPdf);
+              },
+            },
+            {
+              label: i18next.t(($) => $.menu.file.exportAsHtml),
               accelerator: 'CmdOrCtrl+Shift+E',
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
               },
             },
             {
-              label: i18next.t('menu:file.exportAsMusicXml'),
+              label: i18next.t(($) => $.menu.file.exportAsMusicXml),
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuExportAsMusicXml);
               },
             },
             {
-              label: i18next.t('menu:file.exportAsLatex'),
+              label: i18next.t(($) => $.menu.file.exportAsLatex),
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuExportAsLatex);
               },
             },
             {
-              label: i18next.t('menu:file.exportAsImage'),
+              label: i18next.t(($) => $.menu.file.exportAsImage),
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuExportAsImage);
               },
@@ -1278,7 +1963,7 @@ function createMenu() {
           ],
         },
         {
-          label: i18next.t('menu:file.print'),
+          label: i18next.t(($) => $.menu.file.print),
           accelerator: 'CmdOrCtrl+P',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPrint);
@@ -1286,7 +1971,7 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:file.close'),
+          label: i18next.t(($) => $.menu.file.close),
           accelerator: 'CmdOrCtrl+W',
           click() {
             win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
@@ -1295,7 +1980,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:file.closeOthers'),
+          label: i18next.t(($) => $.menu.file.closeOthers),
           click() {
             win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
               disposition: CloseWorkspacesDisposition.OTHERS,
@@ -1307,11 +1992,11 @@ function createMenu() {
       ],
     },
     {
-      label: i18next.t('menu:edit.root'),
+      label: i18next.t(($) => $.menu.edit.root),
       submenu: [
         {
           id: 'undo',
-          label: i18next.t('menu:edit.undo'),
+          label: i18next.t(($) => $.menu.edit.undo),
           accelerator: 'CmdOrCtrl+Z',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1323,7 +2008,7 @@ function createMenu() {
         },
         {
           id: 'redo',
-          label: i18next.t('menu:edit.redo'),
+          label: i18next.t(($) => $.menu.edit.redo),
           accelerator: isMac ? 'CmdOrCtrl+Shift+Z' : 'CmdOrCtrl+Y',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1335,9 +2020,13 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:edit.cut'),
+          label: i18next.t(($) => $.menu.edit.cut),
           accelerator: 'CmdOrCtrl+X',
           click(menuItem, browserWindow, event) {
+            if (win?.webContents?.isDevToolsFocused()) {
+              win.webContents.devToolsWebContents?.cut();
+            }
+
             // The accelerator is handled in the renderer process because of
             // https://github.com/electron/electron/issues/3682.
             if (!event.triggeredByAccelerator) {
@@ -1346,9 +2035,12 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:edit.copy'),
+          label: i18next.t(($) => $.menu.edit.copy),
           accelerator: 'CmdOrCtrl+C',
           click(menuItem, browserWindow, event) {
+            if (win?.webContents?.isDevToolsFocused()) {
+              win.webContents.devToolsWebContents?.copy();
+            }
             // The accelerator is handled in the renderer process because of
             // https://github.com/electron/electron/issues/3682.
             if (!event.triggeredByAccelerator) {
@@ -1357,7 +2049,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:edit.copyAsHtml'),
+          label: i18next.t(($) => $.menu.edit.copyAsHtml),
           accelerator: 'CmdOrCtrl+Shift+C',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1368,9 +2060,21 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:edit.paste'),
+          id: copyElementLinkMenuItemId,
+          enabled: copyElementLinkMenuEnabled,
+          label: i18next.t(($) => $.menu.edit.copyElementLink),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuEditCopyElementLink);
+          },
+        },
+        {
+          label: i18next.t(($) => $.menu.edit.paste),
           accelerator: 'CmdOrCtrl+V',
           click(menuItem, browserWindow, event) {
+            if (win?.webContents?.isDevToolsFocused()) {
+              win.webContents.devToolsWebContents?.paste();
+            }
+
             // The accelerator is handled in the renderer process because of
             // https://github.com/electron/electron/issues/3682.
             if (!event.triggeredByAccelerator) {
@@ -1379,7 +2083,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:edit.pasteWithLyrics'),
+          label: i18next.t(($) => $.menu.edit.pasteWithLyrics),
           accelerator: 'CmdOrCtrl+Shift+V',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1389,24 +2093,24 @@ function createMenu() {
             }
           },
         },
-        { type: 'separator' },
         {
-          label: i18next.t('menu:edit.copyFormat'),
-          accelerator: 'CmdOrCtrl+Shift+R',
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuCopyFormat);
+          label: i18next.t(($) => $.menu.edit.selectAll),
+          accelerator: 'CmdOrCtrl+A',
+          click(menuItem, browserWindow, event) {
+            if (win?.webContents?.isDevToolsFocused()) {
+              win.webContents.devToolsWebContents?.selectAll();
+            }
+
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win?.webContents.send(IpcMainChannels.FileMenuSelectAll);
+            }
           },
         },
-        {
-          label: i18next.t('menu:edit.pasteFormat'),
-          accelerator: 'CmdOrCtrl+R',
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuPasteFormat);
-          },
-        },
         { type: 'separator' },
         {
-          label: i18next.t('menu:edit.find'),
+          label: i18next.t(($) => $.menu.edit.find),
           accelerator: 'CmdOrCtrl+F',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuFind);
@@ -1414,15 +2118,22 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:edit.lyrics'),
-          accelerator: 'CmdOrCtrl+L',
+          label: i18next.t(($) => $.menu.edit.copyFormat),
+          accelerator: 'CmdOrCtrl+Shift+R',
           click() {
-            win?.webContents.send(IpcMainChannels.FileMenuLyrics);
+            win?.webContents.send(IpcMainChannels.FileMenuCopyFormat);
+          },
+        },
+        {
+          label: i18next.t(($) => $.menu.edit.pasteFormat),
+          accelerator: 'CmdOrCtrl+R',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuPasteFormat);
           },
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:edit.preferences'),
+          label: i18next.t(($) => $.menu.edit.preferences),
           accelerator: 'CmdOrCtrl+,',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPreferences);
@@ -1431,24 +2142,36 @@ function createMenu() {
       ],
     },
     {
-      label: i18next.t('menu:insert.root'),
+      label: i18next.t(($) => $.menu.insert.root),
       submenu: [
         {
-          label: i18next.t('menu:insert.dropCapBefore'),
+          label: i18next.t(($) => $.menu.insert.alternateLine),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuInsertAlternateLine);
+          },
+        },
+        {
+          label: i18next.t(($) => $.menu.insert.annotation),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuInsertAnnotation);
+          },
+        },
+        {
+          label: i18next.t(($) => $.menu.insert.dropCapBefore),
           accelerator: 'CmdOrCtrl+D',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertDropCapBefore);
           },
         },
         {
-          label: i18next.t('menu:insert.dropCapAfter'),
+          label: i18next.t(($) => $.menu.insert.dropCapAfter),
           accelerator: 'CmdOrCtrl+Shift+D',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertDropCapAfter);
           },
         },
         {
-          label: i18next.t('menu:insert.textBox'),
+          label: i18next.t(($) => $.menu.insert.textBox),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
               inline: false,
@@ -1456,13 +2179,13 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:insert.richTextBox'),
+          label: i18next.t(($) => $.menu.insert.richTextBox),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertRichTextBox);
           },
         },
         {
-          label: i18next.t('menu:insert.inlineTextBox'),
+          label: i18next.t(($) => $.menu.insert.inlineTextBox),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
               inline: true,
@@ -1470,13 +2193,13 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:insert.modeKey'),
+          label: i18next.t(($) => $.menu.insert.initialMartyria),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertModeKey);
           },
         },
         {
-          label: i18next.t('menu:insert.image'),
+          label: i18next.t(($) => $.menu.insert.image),
           async click() {
             const data = await openImage();
 
@@ -1487,16 +2210,16 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:insert.headersAndFooters'),
+          label: i18next.t(($) => $.menu.insert.headersAndFooters),
           submenu: [
             {
-              label: i18next.t('menu:insert.header'),
+              label: i18next.t(($) => $.menu.insert.header),
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuInsertHeader);
               },
             },
             {
-              label: i18next.t('menu:insert.footer'),
+              label: i18next.t(($) => $.menu.insert.footer),
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuInsertFooter);
               },
@@ -1506,34 +2229,134 @@ function createMenu() {
       ],
     },
     {
-      label: i18next.t('menu:tools.root'),
+      label: i18next.t(($) => $.menu.format.root),
       submenu: [
         {
-          label: i18next.t('menu:tools.copyElementLink'),
+          label: i18next.t(($) => $.menu.format.paragraphStyles),
           click() {
-            win?.webContents.send(IpcMainChannels.FileMenuToolsCopyElementLink);
+            win?.webContents.send(IpcMainChannels.FileMenuParagraphStyles);
           },
         },
+      ],
+    },
+    {
+      label: i18next.t(($) => $.menu.view.root),
+      submenu: [
+        {
+          label: i18next.t(($) => $.menu.view.zoom.root),
+          submenu: [
+            {
+              label: i18next.t(($) => $.menu.view.zoom.zoomIn),
+              accelerator: 'CmdOrCtrl+Plus',
+              click() {
+                sendViewZoomCommand({ type: 'zoom-in' });
+              },
+            },
+            {
+              label: i18next.t(($) => $.menu.view.zoom.zoomIn),
+              accelerator: 'CmdOrCtrl+=',
+              visible: false,
+              click() {
+                sendViewZoomCommand({ type: 'zoom-in' });
+              },
+            },
+            {
+              label: i18next.t(($) => $.menu.view.zoom.zoomOut),
+              accelerator: 'CmdOrCtrl+-',
+              click() {
+                sendViewZoomCommand({ type: 'zoom-out' });
+              },
+            },
+            { type: 'separator' },
+            {
+              checked: zoomMenuStateIsActualSize(),
+              id: zoomMenuItemIds.actualSize,
+              label: i18next.t(($) => $.menu.view.zoom.actualSize),
+              accelerator: 'CmdOrCtrl+0',
+              type: 'checkbox',
+              click(menuItem) {
+                menuItem.checked = zoomMenuStateIsActualSize();
+                sendViewZoomCommand({ type: 'actual-size' });
+              },
+            },
+            { type: 'separator' },
+            createZoomFitMenuItem(
+              'page-width',
+              i18next.t(($) => $.menu.view.zoom.pageWidth),
+            ),
+            createZoomFitMenuItem(
+              'text-width',
+              i18next.t(($) => $.menu.view.zoom.textWidth),
+            ),
+            createZoomFitMenuItem(
+              'whole-page',
+              i18next.t(($) => $.menu.view.zoom.wholePage),
+            ),
+          ],
+        },
+        { type: 'separator' },
+        createPaneMenuItem(
+          'neume-selector',
+          i18next.t(($) => $.menu.view.neumeSelector),
+        ),
+        createPaneMenuItem(
+          'common-combos',
+          i18next.t(($) => $.menu.view.commonCombos),
+        ),
+        createPaneMenuItem(
+          'properties',
+          i18next.t(($) => $.menu.view.properties),
+        ),
+        createPaneMenuItem(
+          'lyrics',
+          i18next.t(($) => $.menu.view.lyrics),
+          'CmdOrCtrl+L',
+        ),
+        createPaneMenuItem(
+          'developer',
+          i18next.t(($) => $.menu.view.developer),
+        ),
+        { type: 'separator' },
+        createStatusBarMenuItem(i18next.t(($) => $.menu.view.statusBar)),
+        { type: 'separator' },
+        {
+          label: i18next.t(($) => $.menu.view.resetLayout),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuViewResetLayout);
+          },
+        },
+        ...(isDevelopment
+          ? ([
+              { type: 'separator' },
+              { role: 'reload' },
+              { role: 'forceReload' },
+              { role: 'toggleDevTools' },
+              { type: 'separator' },
+              { role: 'togglefullscreen' },
+            ] as MenuItemConstructorOptions[])
+          : []),
+      ],
+    },
+    {
+      label: i18next.t(($) => $.menu.window.root),
+      role: 'windowMenu',
+      submenu: [
+        createWindowTabNavigationMenuItem(
+          'previous',
+          i18next.t(($) => $.menu.window.previousTab),
+          isMac ? 'Command+Shift+[' : 'Ctrl+PageUp',
+        ),
+        createWindowTabNavigationMenuItem(
+          'next',
+          i18next.t(($) => $.menu.window.nextTab),
+          isMac ? 'Command+Shift+]' : 'Ctrl+PageDown',
+        ),
       ],
     },
     ...(isDevelopment
       ? [
           {
-            label: i18next.t('menu:view.root'),
-            submenu: [
-              { role: 'reload' },
-              { role: 'forceReload' },
-              { role: 'toggleDevTools' },
-              { type: 'separator' },
-              { role: 'resetZoom' },
-              { role: 'zoomIn' },
-              { role: 'zoomOut' },
-              { type: 'separator' },
-              { role: 'togglefullscreen' },
-            ],
-          } as MenuItemConstructorOptions,
-          {
-            label: i18next.t('menu:view.generateTestFiles'),
+            label: i18next.t(($) => $.menu.view.generateTestFiles),
             submenu: Object.values(TestFileType).map((testFileType) => ({
               label: testFileType,
               click() {
@@ -1554,20 +2377,20 @@ function createMenu() {
       role: 'help',
       submenu: [
         {
-          label: i18next.t('menu:help.guide'),
+          label: i18next.t(($) => $.menu.help.guide),
           click() {
             shell.openExternal(import.meta.env.VITE_GUIDE_URL);
           },
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:help.requestAFeature'),
+          label: i18next.t(($) => $.menu.help.requestAFeature),
           click() {
             shell.openExternal(import.meta.env.VITE_ISSUES_URL);
           },
         },
         {
-          label: i18next.t('menu:help.reportAnIssue'),
+          label: i18next.t(($) => $.menu.help.reportAnIssue),
           click() {
             shell.openExternal(import.meta.env.VITE_ISSUES_URL);
           },
@@ -1578,19 +2401,9 @@ function createMenu() {
         ...(!isMac
           ? ([
               {
-                label: i18next.t('menu:help.about'),
+                label: i18next.t(($) => $.menu.help.about),
                 click() {
-                  let detail = `Version: ${app.getVersion()}\n`;
-                  detail += `Electron: ${process.versions.electron}\n`;
-                  detail += `Chromium: ${process.versions.chrome}\n`;
-                  detail += `Node.js: ${process.version}`;
-
-                  dialog.showMessageBox(win!, {
-                    title: app.name,
-                    message: app.name,
-                    detail: detail,
-                    type: 'info',
-                  });
+                  void openAboutDialog();
                 },
               },
             ] as MenuItemConstructorOptions[])
@@ -1600,6 +2413,31 @@ function createMenu() {
   ]);
 
   Menu.setApplicationMenu(menu);
+}
+
+async function openAboutDialog() {
+  if (!win) {
+    await createWindow();
+  }
+
+  if (!win) {
+    return;
+  }
+
+  if (loaded) {
+    win.webContents.send(IpcMainChannels.OpenAboutDialog);
+  } else {
+    win.webContents.once('did-finish-load', () => {
+      win?.webContents.send(IpcMainChannels.OpenAboutDialog);
+    });
+  }
+
+  if (win.isMinimized()) {
+    win.restore();
+  }
+
+  win.show();
+  win.focus();
 }
 
 async function createWindow() {
@@ -1625,11 +2463,6 @@ async function createWindow() {
     minWidth,
     minHeight,
     webPreferences: {
-      // Use pluginOptions.nodeIntegration, leave this alone
-      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
-      nodeIntegration: process.env
-        .ELECTRON_NODE_INTEGRATION as unknown as boolean,
-      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
       preload,
       spellcheck: false,
     },
@@ -1647,6 +2480,14 @@ async function createWindow() {
     shell.openExternal(details.url);
     return { action: 'deny' };
   });
+  win.webContents.on('before-input-event', (event, input) => {
+    const direction = getWindowTabNavigationInput(input);
+
+    if (direction != null && workspaceTabNavigationMenuEnabled) {
+      event.preventDefault();
+      sendWindowTabNavigationCommand(direction);
+    }
+  });
 
   if (!silent) {
     win.once('ready-to-show', () => {
@@ -1654,7 +2495,10 @@ async function createWindow() {
     });
   }
 
-  win.webContents.once('did-finish-load', () => (loaded = true));
+  win.webContents.once('did-finish-load', () => {
+    loaded = true;
+    sendPendingUpdateState();
+  });
 
   // Prevent the user from accidentally
   // closing the app with unsaved changes
@@ -1669,6 +2513,7 @@ async function createWindow() {
     win = null;
     loaded = false;
     darwinPath = null;
+    clearFakeDownloadProgressTimer();
   });
 
   createMenu();
@@ -1681,8 +2526,8 @@ async function createWindow() {
     }
   } else {
     // Load the index.html when not in development
-    if (!silent && !disableUpdates) {
-      autoUpdater.checkForUpdatesAndNotify();
+    if (!silent && !disableUpdates && !fakeUpdateMode) {
+      autoUpdater.checkForUpdates();
     }
 
     await win.loadFile(indexHtml);
@@ -1691,9 +2536,13 @@ async function createWindow() {
   creatingWindow = false;
 }
 
-app.setAboutPanelOptions({
-  applicationName: app.getName(),
-  applicationVersion: app.getVersion(),
+ipcMain.on(IpcRendererChannels.SetLanguage, async (event, language: string) => {
+  store.language = language || undefined;
+  await saveStore();
+  await i18next.changeLanguage(
+    resolveLanguagePreference(store.language, app.getLocale()),
+  );
+  createMenu();
 });
 
 ipcMain.on(IpcRendererChannels.SetCanUndo, async (event, data) => {
@@ -1704,6 +2553,48 @@ ipcMain.on(IpcRendererChannels.SetCanRedo, async (event, data) => {
   Menu.getApplicationMenu()!.getMenuItemById('redo')!.enabled = data;
 });
 
+ipcMain.on(
+  IpcRendererChannels.SetDeveloperPaneEnabled,
+  (event, isEnabled: boolean) => {
+    syncDeveloperPaneMenuItemEnabled(isEnabled);
+  },
+);
+
+ipcMain.on(
+  IpcRendererChannels.SetCopyElementLinkEnabled,
+  (event, isEnabled: boolean) => {
+    syncCopyElementLinkMenuItemEnabled(isEnabled);
+  },
+);
+
+ipcMain.on(
+  IpcRendererChannels.SetWorkspaceTabNavigationEnabled,
+  (event, isEnabled: boolean) => {
+    syncWorkspaceTabNavigationMenuItemsEnabled(isEnabled);
+  },
+);
+
+ipcMain.on(
+  IpcRendererChannels.SetWorkspacePaneVisibility,
+  (event, visibility: WorkspacePaneVisibility) => {
+    syncPaneMenuItems(visibility);
+  },
+);
+
+ipcMain.on(
+  IpcRendererChannels.SetStatusBarVisibility,
+  (event, isVisible: boolean) => {
+    syncStatusBarMenuItem(isVisible);
+  },
+);
+
+ipcMain.on(
+  IpcRendererChannels.SetWorkspaceZoomState,
+  (event, state: WorkspaceZoomState) => {
+    syncZoomMenuItems(state);
+  },
+);
+
 ipcMain.on(IpcRendererChannels.OpenImageDialog, async () => {
   const data = await openImage();
 
@@ -1712,53 +2603,15 @@ ipcMain.on(IpcRendererChannels.OpenImageDialog, async () => {
   }
 });
 
-ipcMain.on(
-  IpcRendererChannels.OpenContextMenuForTab,
-  async (event, args: OpenContextMenuForTabArgs) => {
-    const menu = Menu.buildFromTemplate([
-      {
-        label: i18next.t('menu:tab.close'),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.SELF,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
+ipcMain.on(IpcRendererChannels.OpenScoreDialog, async () => {
+  const workspaces = await openWorkspaces();
 
-      {
-        label: i18next.t('menu:tab.closeOthers'),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.OTHERS,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-
-      {
-        label: i18next.t('menu:tab.closeToTheLeft'),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.LEFT,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-      {
-        label: i18next.t('menu:tab.closeToTheRight'),
-        click() {
-          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
-            disposition: CloseWorkspacesDisposition.RIGHT,
-            workspaceId: args.workspaceId,
-          } as CloseWorkspacesArgs);
-        },
-      },
-    ]);
-
-    menu.popup();
-  },
-);
+  for (const workspace of workspaces) {
+    if (workspace.success) {
+      win?.webContents.send(IpcMainChannels.FileMenuOpenScore, workspace);
+    }
+  }
+});
 
 ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
   readyToExit = true;
@@ -1787,6 +2640,22 @@ ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
     }
   }
 
+  if (pendingUpdateInstall) {
+    pendingUpdateInstall = false;
+
+    if (fakeUpdateMode) {
+      console.info(
+        'FAKE_UPDATE_AVAILABLE=1: update shutdown completed; skipping quitAndInstall().',
+      );
+      app.exit();
+      return;
+    }
+
+    readyToExit = true;
+    autoUpdater.quitAndInstall(false, true);
+    return;
+  }
+
   // In macOS, there is a distinction between "close" and "quit".
   if (quitting) {
     app.exit();
@@ -1795,8 +2664,61 @@ ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
   }
 });
 
+ipcMain.handle(IpcRendererChannels.DownloadUpdate, async () => {
+  if (updateDownloaded) {
+    sendPendingUpdateState();
+    return;
+  }
+
+  if (!updateAvailable || updateDownloadInProgress) {
+    return;
+  }
+
+  if (fakeUpdateMode) {
+    updateDownloadInProgress = true;
+    didReportUpdateError = false;
+    sendToRenderer(IpcMainChannels.UpdateDownloadStarted);
+    simulateFakeUpdateDownload();
+    return;
+  }
+
+  // MacOS requires code-signing in order for auto-update to work.
+  // Since we don't code sign, just send the user to the download URL.
+  if (isMac) {
+    shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL);
+    return;
+  }
+
+  updateDownloadInProgress = true;
+  didReportUpdateError = false;
+  sendToRenderer(IpcMainChannels.UpdateDownloadStarted);
+
+  try {
+    autoUpdater.autoInstallOnAppQuit = true;
+    await autoUpdater.downloadUpdate();
+  } catch (error) {
+    updateDownloadInProgress = false;
+    didReportUpdateError = true;
+
+    sendToRenderer(IpcMainChannels.UpdateError, {
+      message:
+        error instanceof Error ? error.message : 'Unable to download update.',
+    });
+  }
+});
+
+ipcMain.handle(IpcRendererChannels.RestartToInstallUpdate, async () => {
+  if (!updateDownloaded) {
+    return;
+  }
+
+  pendingUpdateInstall = true;
+  win?.webContents.send(IpcMainChannels.CloseApplication);
+});
+
 ipcMain.handle(IpcRendererChannels.CancelExit, async () => {
   quitting = false;
+  pendingUpdateInstall = false;
 });
 
 ipcMain.handle(
@@ -1881,9 +2803,12 @@ ipcMain.handle(
 
 ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
   if (isMac && darwinPath != null) {
+    const openedFile = await openFile(darwinPath);
     const result = {
-      data: await openFile(darwinPath),
+      data: openedFile.data,
       filePath: darwinPath,
+      sourceMtimeMs: openedFile.sourceMtimeMs,
+      sourceSize: openedFile.sourceSize,
       success: true,
     };
 
@@ -1893,21 +2818,58 @@ ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
   }
 });
 
-ipcMain.handle(IpcRendererChannels.GetSystemFonts, async () => {
-  let fonts: string[] = [];
+ipcMain.handle(
+  IpcRendererChannels.Paste,
+  async (): Promise<ClipboardReplyArgs> => {
+    try {
+      if (!win) {
+        return {
+          success: false,
+        };
+      }
 
-  try {
-    fonts = await getSystemFonts();
-  } catch (error) {
-    console.error(error);
-  }
+      await win.webContents.paste();
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      return {
+        success: false,
+        errorMessage: getErrorMessage(error),
+      };
+    }
+  },
+);
 
-  return fonts;
-});
+ipcMain.handle(
+  IpcRendererChannels.ListRecoveryCandidates,
+  async (): Promise<ListRecoveryCandidatesReplyArgs> => {
+    return await recoveryStore.listRecoveryCandidates();
+  },
+);
 
-ipcMain.handle(IpcRendererChannels.Paste, async () => {
-  return await win?.webContents.paste();
-});
+ipcMain.handle(
+  IpcRendererChannels.SaveRecoverySnapshot,
+  async (event, snapshot: RecoverySnapshotArgs) => {
+    return await recoveryStore.saveRecoverySnapshot(snapshot);
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.DiscardRecoverySnapshot,
+  async (event, workspaceId: string) => {
+    return await recoveryStore.discardRecoverySnapshot(workspaceId);
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.DiscardRecoverySnapshots,
+  async (
+    event,
+    recoveryIds: string[],
+  ): Promise<DiscardRecoverySnapshotsReplyArgs> => {
+    return await recoveryStore.discardRecoverySnapshots(recoveryIds);
+  },
+);
 
 // macOS-only
 // This is called in two cases:
@@ -1922,9 +2884,12 @@ app.on('open-file', async (event, path) => {
     if (!win) {
       createWindow();
     } else if (loaded) {
+      const openedFile = await openFile(path);
       const result = {
-        data: await openFile(path),
+        data: openedFile.data,
         filePath: path,
+        sourceMtimeMs: openedFile.sourceMtimeMs,
+        sourceSize: openedFile.sourceSize,
         success: true,
       };
 
@@ -1992,54 +2957,27 @@ app.on('before-quit', () => {
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
 });
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  i18next
-    .use(
-      new Pseudo({
-        enabled:
-          'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
-          import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
-        languageToPseudo: 'en-US',
-      }),
-    )
-    .init({
-      debug:
-        'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
-        import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
-      lng: app.getLocale(),
-      fallbackLng: 'en',
-      ns: Object.keys(resources['en']),
-      postProcess: ['pseudo'],
-      defaultNS,
-      resources,
-    });
+  // Load the persisted store first so the user's chosen language (if any)
+  // is honored when we initialize i18next and build the native menu.
+  await loadStore();
+
+  await initializeI18n({
+    lng: resolveLanguagePreference(store.language, app.getLocale()),
+  });
+
+  setupAutoUpdater();
 
   if (!win) {
     createWindow();
-  }
-
-  if (isMac) {
-    autoUpdater.once('update-available', async (info) => {
-      const result = await dialog.showMessageBox(win!, {
-        type: 'info',
-        title: 'Update Available',
-        message: 'An update is available.',
-        detail: `Version ${info.version} is available.`,
-        buttons: ['Download', 'Not now'],
-        defaultId: 0,
-        cancelId: 1,
-      });
-
-      if (result.response === 0) {
-        shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL);
-      }
-    });
   }
 });
 

@@ -1,1422 +1,1661 @@
 <template>
-  <ModalDialog>
-    <div class="outer-container">
-      <div class="container">
-        <div class="header">{{ $t('dialog:pageSetup.root') }}</div>
-        <div class="pane-container">
-          <div class="left-pane">
-            <div
-              class="nav-item"
-              :class="{ active: currentSection === 'pageSizeRef' }"
-              @click="scrollTo($refs.pageSizeRef as HTMLElement)"
+  <Dialog v-model:open="open">
+    <DialogContent
+      class="h-[42rem] max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto_auto] overflow-hidden sm:max-w-3xl"
+    >
+      <DialogHeader>
+        <DialogTitle>
+          {{ $t(($) => $.dialog.pageSetup.root, { ns: 'dialog' }) }}
+        </DialogTitle>
+        <DialogDescription>
+          {{ $t(($) => $.dialog.pageSetup.description, { ns: 'dialog' }) }}
+        </DialogDescription>
+      </DialogHeader>
+
+      <form
+        id="page-setup-form"
+        class="contents"
+        @submit.prevent="updatePageSetup"
+      >
+        <Tabs
+          default-value="pageSize"
+          orientation="vertical"
+          class="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden sm:grid-cols-[13rem_minmax(0,1fr)] sm:grid-rows-[minmax(0,1fr)]"
+        >
+          <ScrollArea class="col-start-1 row-start-1 min-h-0">
+            <TabsList
+              class="h-auto w-full flex-col items-stretch justify-start p-1"
             >
-              {{ $t('dialog:pageSetup.pageSize') }}
-            </div>
-            <div
-              class="nav-item"
-              :class="{ active: currentSection === 'marginsRef' }"
-              @click="scrollTo($refs.marginsRef as HTMLElement)"
-            >
-              {{ $t('dialog:pageSetup.margins') }}
-            </div>
-            <div
-              class="nav-item"
-              :class="{ active: currentSection === 'spacingRef' }"
-              @click="scrollTo($refs.spacingRef as HTMLElement)"
-            >
-              {{ $t('dialog:pageSetup.spacing') }}
-            </div>
-            <div
-              class="nav-item"
-              :class="{ active: currentSection === 'headersFootersRef' }"
-              @click="scrollTo($refs.headersFootersRef as HTMLElement)"
-            >
-              {{ $t('dialog:pageSetup.headersAndFooters') }}
-            </div>
-            <div
-              class="nav-item"
-              :class="{ active: currentSection === 'miscellaneousRef' }"
-              @click="scrollTo($refs.miscellaneousRef as HTMLElement)"
-            >
-              {{ $t('dialog:pageSetup.miscellaneous') }}
-            </div>
-            <div
-              class="nav-item"
-              :class="{ active: currentSection === 'dropCapsRef' }"
-              @click="scrollTo($refs.dropCapsRef as HTMLElement)"
-            >
-              {{ $t('dialog:pageSetup.dropCaps') }}
-            </div>
-            <div
-              class="nav-item"
-              :class="{ active: currentSection === 'lyricsRef' }"
-              @click="scrollTo($refs.lyricsRef as HTMLElement)"
-            >
-              {{ $t('dialog:pageSetup.lyrics') }}
-            </div>
-            <div
-              class="nav-item"
-              :class="{ active: currentSection === 'textBoxesRef' }"
-              @click="scrollTo($refs.textBoxesRef as HTMLElement)"
-            >
-              {{ $t('dialog:pageSetup.textBoxes') }}
-            </div>
-            <div
-              class="nav-item"
-              :class="{ active: currentSection === 'modeKeysRef' }"
-              @click="scrollTo($refs.modeKeysRef as HTMLElement)"
-            >
-              {{ $t('dialog:pageSetup.modeKeys') }}
-            </div>
-            <div
-              class="nav-item"
-              :class="{ active: currentSection === 'neumesRef' }"
-              @click="scrollTo($refs.neumesRef as HTMLElement)"
-            >
-              {{ $t('dialog:pageSetup.neumes') }}
-            </div>
-            <div
-              class="nav-item"
-              :class="{ active: currentSection === 'neumeStylesRef' }"
-              @click="scrollTo($refs.neumeStylesRef as HTMLElement)"
-            >
-              {{ $t('dialog:pageSetup.neumeStyles') }}
-            </div>
-          </div>
-          <div
-            class="right-pane"
-            ref="rightPaneRef"
-            @scroll="updateCurrentSectionThrottled"
+              <TabsTrigger
+                v-for="section in sections"
+                :key="section.value"
+                :value="section.value"
+                class="min-h-9 w-full flex-none justify-start whitespace-normal text-left"
+              >
+                <span
+                  v-if="section.value === 'modeKeys'"
+                  class="inline-grid size-4 shrink-0 place-items-center font-['Source_Serif'] text-sm leading-none"
+                  aria-hidden="true"
+                >
+                  Ηχ
+                </span>
+                <span
+                  v-else-if="section.value === 'neumes'"
+                  class="inline-grid size-4 shrink-0 place-items-center font-['Neanes'] text-[0.75rem] leading-none"
+                  aria-hidden="true"
+                >
+                  {{ isonIcon }}
+                </span>
+                <component :is="section.icon" v-else />
+                {{ $t(section.labelSelector, { ns: 'dialog' }) }}
+              </TabsTrigger>
+            </TabsList>
+          </ScrollArea>
+
+          <TabsContent
+            v-for="section in sections"
+            :key="section.value"
+            :value="section.value"
+            class="col-start-1 row-start-2 min-h-0 min-w-0 overflow-hidden sm:col-start-2 sm:row-start-1"
           >
-            <div class="subheader" ref="pageSizeRef">
-              {{ $t('dialog:pageSetup.pageSize') }}
-            </div>
-            <div class="form-group full">
-              <div class="name">
-                {{ $t('dialog:pageSetup.paperSize') }}
-              </div>
-              <select class="standard-select" v-model="pageSize">
-                <!-- TODO localize -->
-                <option v-for="size in pageSizes" :key="size.name">
-                  {{ size.name }}
-                </option>
-              </select>
-            </div>
-            <template v-if="form.pageSize === 'Custom'">
-              <div class="form-group">
-                <label class="custom-page-size-label name">{{
-                  $t('dialog:pageSetup.width')
-                }}</label>
-                <InputUnit
-                  class="unit-input"
-                  type="number"
-                  :unit="form.pageSizeUnit"
-                  :min="1"
-                  :max="10000"
-                  :step="marginStep"
-                  :precision="2"
-                  v-model="form.pageWidthCustom"
-                  @change="updatePageSize"
-                />
-                <span class="units">{{ $t(marginUnitLabel!) }}</span>
-              </div>
-              <div class="form-group">
-                <label class="custom-page-size-label name">{{
-                  $t('dialog:pageSetup.height')
-                }}</label>
-                <InputUnit
-                  class="unit-input"
-                  type="number"
-                  :unit="form.pageSizeUnit"
-                  :min="1"
-                  :max="10000"
-                  :step="marginStep"
-                  :precision="2"
-                  v-model="form.pageHeightCustom"
-                  @change="updatePageSize"
-                />
-                <span class="units">{{ $t(marginUnitLabel!) }}</span>
-              </div>
-            </template>
-            <div class="form-group full">
-              <div class="name">
-                {{ $t('dialog:pageSetup.orientation') }}
-              </div>
-              <div class="row">
-                <div
-                  class="radio-button page-orientation-button"
-                  :class="{ selected: !landscape }"
-                  @click="landscape = false"
-                >
-                  {{ $t('dialog:pageSetup.portrait') }}
-                </div>
-                <div
-                  class="radio-button page-orientation-button"
-                  :class="{ selected: landscape }"
-                  @click="landscape = true"
-                >
-                  {{ $t('dialog:pageSetup.landscape') }}
-                </div>
-              </div>
-            </div>
-            <div class="form-group full">
-              <div class="name">{{ $t('dialog:pageSetup.unit') }}</div>
-              <div class="description">
-                {{ $t('dialog:pageSetup.unitDescription') }}
-              </div>
-              <select v-model="form.pageSizeUnit" class="standard-select">
-                <option value="in">
-                  {{ $t('dialog:pageSetup.in') }}
-                </option>
-                <option value="cm">
-                  {{ $t('dialog:pageSetup.cm') }}
-                </option>
-                <option value="mm">
-                  {{ $t('dialog:pageSetup.mm') }}
-                </option>
-                <option value="pt">
-                  {{ $t('dialog:pageSetup.pt') }}
-                </option>
-                <option value="pc">
-                  {{ $t('dialog:pageSetup.pc') }}
-                </option>
-              </select>
-            </div>
-            <div class="subheader" ref="marginsRef">
-              {{ $t('dialog:pageSetup.margins') }}
-            </div>
-            <div class="form-group">
-              <label class="margin-label name">{{
-                $t('dialog:common.top')
-              }}</label>
-              <input
-                class="margin-input"
-                type="number"
-                min="0"
-                :step="marginStep"
-                :value="topMargin"
-                @change="
-                  updateTopMargin(
-                    Number(($event.target as HTMLInputElement).value),
-                  )
-                "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
-            </div>
-            <div class="form-group">
-              <label class="margin-label name">{{
-                $t('dialog:common.bottom')
-              }}</label>
-              <input
-                class="margin-input"
-                type="number"
-                min="0"
-                :step="marginStep"
-                :value="bottomMargin"
-                @change="
-                  updateBottomMargin(
-                    Number(($event.target as HTMLInputElement).value),
-                  )
-                "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
-            </div>
-            <div class="form-group">
-              <label class="margin-label name">{{
-                $t('dialog:common.left')
-              }}</label>
-              <input
-                class="margin-input"
-                type="number"
-                min="0"
-                :step="marginStep"
-                :value="leftMargin"
-                @change="
-                  updateLeftMargin(
-                    Number(($event.target as HTMLInputElement).value),
-                  )
-                "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
-            </div>
-            <div class="form-group">
-              <label class="margin-label name">{{
-                $t('dialog:common.right')
-              }}</label>
-              <input
-                class="margin-input"
-                type="number"
-                min="0"
-                :step="marginStep"
-                :value="rightMargin"
-                @change="
-                  updateRightMargin(
-                    Number(($event.target as HTMLInputElement).value),
-                  )
-                "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
-            </div>
-            <div class="form-group">
-              <label class="margin-label name">{{
-                $t('dialog:pageSetup.header')
-              }}</label>
-              <input
-                class="margin-input"
-                type="number"
-                min="0"
-                :step="marginStep"
-                :value="headerMargin"
-                @change="
-                  updateHeaderMargin(
-                    Number(($event.target as HTMLInputElement).value),
-                  )
-                "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
-            </div>
-            <div class="form-group">
-              <label class="margin-label name">{{
-                $t('dialog:pageSetup.footer')
-              }}</label>
-              <input
-                class="margin-input"
-                type="number"
-                min="0"
-                :step="marginStep"
-                :value="footerMargin"
-                @change="
-                  updateFooterMargin(
-                    Number(($event.target as HTMLInputElement).value),
-                  )
-                "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
-            </div>
-            <div class="subheader" ref="spacingRef">
-              {{ $t('dialog:pageSetup.spacing') }}
-            </div>
-            <div class="form-group full">
-              <label class="name">{{
-                $t('dialog:pageSetup.neumeSpacing')
-              }}</label>
-              <div class="description">
-                {{ $t('dialog:pageSetup.neumeSpacingDescription') }}
-              </div>
-              <InputUnit
-                class="unit-input"
-                type="number"
-                :unit="form.pageSizeUnit"
-                :min="-neumeSpacingMax"
-                :max="neumeSpacingMax"
-                :step="spacingStep"
-                :precision="3"
-                v-model="form.neumeDefaultSpacing"
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
-            </div>
-            <div class="form-group full">
-              <label class="name">{{
-                $t('dialog:pageSetup.martyriaVerticalOffset')
-              }}</label>
-              <div class="description">
-                {{ $t('dialog:pageSetup.martyriaVerticalOffsetDescription') }}
-              </div>
-              <InputUnit
-                class="unit-input"
-                type="number"
-                :unit="form.pageSizeUnit"
-                :min="-neumeSpacingMax"
-                :max="neumeSpacingMax"
-                :step="spacingStep"
-                :precision="3"
-                v-model="form.martyriaVerticalOffset"
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
-            </div>
-            <div class="form-group full">
-              <label class="name">{{ $t('dialog:pageSetup.lyricsV') }}</label>
-              <div class="description">
-                {{ $t('dialog:pageSetup.lyricsVDescription') }}
-              </div>
-              <input
-                class="unit-input"
-                type="number"
-                :step="spacingStep"
-                :value="lyricsVerticalOffset"
-                @change="
-                  updateLyricsVerticalOffset(
-                    Number(($event.target as HTMLInputElement).value),
-                  )
-                "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
-            </div>
-            <div class="form-group full">
-              <label class="name">{{ $t('dialog:pageSetup.lyricsH') }}</label>
-              <div class="description">
-                {{ $t('dialog:pageSetup.lyricsHDescription') }}
-              </div>
-              <input
-                class="unit-input"
-                type="number"
-                :step="spacingStep"
-                :value="lyricsMinimumSpacing"
-                @change="
-                  updateLyricsMinimumSpacing(
-                    Number(($event.target as HTMLInputElement).value),
-                  )
-                "
-              />
-              <span class="units">{{ $t(marginUnitLabel!) }}</span>
-            </div>
-            <div class="form-group full">
-              <label class="name">{{ $t('dialog:pageSetup.line') }}</label>
-              <div class="description">
-                {{ $t('dialog:pageSetup.lineSpacingDescription') }}
-              </div>
-              <input
-                class="unit-input"
-                type="number"
-                min="0"
-                :step="spacingStep"
-                :value="lineHeight"
-                @change="
-                  updateLineHeight(
-                    Number(($event.target as HTMLInputElement).value),
-                  )
-                "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
-            </div>
-            <div class="form-group full">
-              <label class="name">{{ $t('dialog:pageSetup.hyphens') }}</label>
-              <div class="description">
-                {{ $t('dialog:pageSetup.hyphenSpacingDescription') }}
-              </div>
-              <input
-                class="unit-input"
-                type="number"
-                min="0"
-                :step="spacingStep"
-                :value="hyphenSpacing"
-                @change="
-                  updateHyphenSpacing(
-                    Number(($event.target as HTMLInputElement).value),
-                  )
-                "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
-            </div>
-            <div class="subheader" ref="headersFootersRef">
-              {{ $t('dialog:pageSetup.headersAndFooters') }}
-            </div>
+            <ScrollArea class="h-full min-h-0 border">
+              <FieldGroup class="p-4">
+                <template v-if="section.value === 'pageSize'">
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-dialog-paper-size">
+                      {{
+                        $t(($) => $.dialog.pageSetup.paperSize, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldLabel>
+                    <Select v-model="pageSize">
+                      <SelectTrigger id="page-setup-dialog-paper-size">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem
+                            v-for="size in pageSizes"
+                            :key="size.name"
+                            :value="size.name"
+                          >
+                            {{ size.name }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
 
-            <div class="form-group">
-              <input
-                id="page-setup-dialog-show-header"
-                type="checkbox"
-                v-model="form.showHeader"
-              />
-              <label for="page-setup-dialog-show-header">{{
-                $t('dialog:pageSetup.includeHeader')
-              }}</label>
-            </div>
-
-            <div class="form-group">
-              <input
-                id="page-setup-dialog-show-footer"
-                type="checkbox"
-                v-model="form.showFooter"
-              />
-              <label for="page-setup-dialog-show-footer">{{
-                $t('dialog:pageSetup.includeFooter')
-              }}</label>
-            </div>
-
-            <div class="form-group">
-              <input
-                id="page-setup-dialog-different-first-page"
-                type="checkbox"
-                v-model="form.headerDifferentFirstPage"
-              />
-              <label for="page-setup-dialog-different-first-page">{{
-                $t('dialog:pageSetup.differentFirstPage')
-              }}</label>
-            </div>
-            <div class="form-group">
-              <input
-                id="page-setup-dialog-different-odd-even"
-                type="checkbox"
-                v-model="form.headerDifferentOddEven"
-              />
-              <label for="page-setup-dialog-different-odd-even">{{
-                $t('dialog:pageSetup.differentOddAndEven')
-              }}</label>
-            </div>
-            <div class="form-group">
-              <input
-                id="page-setup-dialog-rich-header-footer"
-                type="checkbox"
-                v-model="form.richHeaderFooter"
-              />
-              <label for="page-setup-dialog-rich-header-footer">{{
-                $t('dialog:pageSetup.richHeaderFooter')
-              }}</label>
-            </div>
-
-            <div class="form-group full">
-              <label class="name">{{
-                $t('dialog:pageSetup.firstPageNumber')
-              }}</label>
-              <div class="description">
-                {{ $t('dialog:pageSetup.firstPageNumberDescription') }}
-              </div>
-              <InputUnit
-                class="unit-input"
-                unit="unitless"
-                :step="1"
-                :precision="0"
-                :defaultValue="1"
-                v-model="form.firstPageNumber"
-              />
-            </div>
-
-            <div class="form-group full">
-              <div class="name">
-                {{ $t('dialog:pageSetup.headerHorizontalRule') }}
-              </div>
-              <input
-                id="page-setup-dialog-header-hr"
-                type="checkbox"
-                v-model="form.showHeaderHorizontalRule"
-              />
-              <label for="page-setup-dialog-header-hr">
-                {{ $t('dialog:pageSetup.showHeaderHorizontalRuleDescription') }}
-              </label>
-
-              <template v-if="form.showHeaderHorizontalRule">
-                <div class="form-group row">
-                  <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.color')
-                  }}</label>
-                  <ColorPicker
-                    class="neume-colors-input"
-                    v-model="form.headerHorizontalRuleColor"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.thickness')
-                  }}</label>
-                  <InputUnit
-                    class="margin-input"
-                    unit="pt"
-                    :min="0"
-                    :max="100"
-                    :step="0.5"
-                    v-model="form.headerHorizontalRuleThickness"
-                    :precision="1"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.marginTop')
-                  }}</label>
-                  <InputUnit
-                    class="margin-input"
-                    unit="pt"
-                    :min="0"
-                    :max="1000"
-                    :step="0.5"
-                    v-model="form.headerHorizontalRuleMarginTop"
-                    :precision="1"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.marginBottom')
-                  }}</label>
-                  <InputUnit
-                    class="margin-input"
-                    unit="pt"
-                    :min="0"
-                    :max="1000"
-                    :step="0.5"
-                    v-model="form.headerHorizontalRuleMarginBottom"
-                    :precision="1"
-                  />
-                </div>
-              </template>
-            </div>
-
-            <div class="form-group full">
-              <div class="name">
-                {{ $t('dialog:pageSetup.footerHorizontalRule') }}
-              </div>
-              <input
-                id="page-setup-dialog-footer-hr"
-                type="checkbox"
-                v-model="form.showFooterHorizontalRule"
-              />
-              <label for="page-setup-dialog-footer-hr">{{
-                $t('dialog:pageSetup.showFooterHorizontalRuleDescription')
-              }}</label>
-
-              <template v-if="form.showFooterHorizontalRule">
-                <div class="form-group row">
-                  <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.color')
-                  }}</label>
-                  <ColorPicker
-                    class="neume-colors-input"
-                    v-model="form.footerHorizontalRuleColor"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.thickness')
-                  }}</label>
-                  <InputUnit
-                    class="margin-input"
-                    unit="pt"
-                    :min="0"
-                    :max="100"
-                    :step="0.5"
-                    v-model="form.footerHorizontalRuleThickness"
-                    :precision="1"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.marginTop')
-                  }}</label>
-                  <InputUnit
-                    class="margin-input"
-                    unit="pt"
-                    :min="0"
-                    :max="1000"
-                    :step="0.5"
-                    v-model="form.footerHorizontalRuleMarginTop"
-                    :precision="1"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.marginBottom')
-                  }}</label>
-                  <InputUnit
-                    class="margin-input"
-                    unit="pt"
-                    :min="0"
-                    :max="1000"
-                    :step="0.5"
-                    v-model="form.footerHorizontalRuleMarginBottom"
-                    :precision="1"
-                  />
-                </div>
-              </template>
-            </div>
-
-            <div class="subheader" ref="miscellaneousRef">
-              {{ $t('dialog:pageSetup.miscellaneous') }}
-            </div>
-
-            <div class="form-group">
-              <div class="name">
-                {{ $t('dialog:pageSetup.useChrysanthineAccidentals') }}
-              </div>
-              <input
-                id="page-setup-dialog-chrysanthine-accidentals"
-                type="checkbox"
-                v-model="form.chrysanthineAccidentals"
-              />
-              <label for="page-setup-dialog-chrysanthine-accidentals">{{
-                $t('dialog:pageSetup.useChrysanthineAccidentalsDescription')
-              }}</label>
-            </div>
-
-            <div class="form-group">
-              <div class="name">
-                {{ $t('dialog:pageSetup.disableFthoraRestrictions') }}
-              </div>
-              <input
-                id="page-setup-dialog-no-fthora-restrictions"
-                type="checkbox"
-                v-model="form.noFthoraRestrictions"
-              />
-              <label for="page-setup-dialog-no-fthora-restrictions">{{
-                $t('dialog:pageSetup.disableFthoraRestrictionsDescription')
-              }}</label>
-            </div>
-
-            <div class="form-group">
-              <div class="name">
-                {{ $t('dialog:pageSetup.alignIsonIndicators') }}
-              </div>
-              <input
-                id="page-setup-dialog-align-ison-indicators"
-                type="checkbox"
-                v-model="form.alignIsonIndicators"
-              />
-              <label for="page-setup-dialog-align-ison-indicators">{{
-                $t('dialog:pageSetup.alignIsonIndicatorsDescription')
-              }}</label>
-            </div>
-
-            <div class="form-group">
-              <div class="name">
-                {{ $t('dialog:pageSetup.melkiteRtl') }}
-              </div>
-              <input
-                id="page-setup-dialog-melkite-rtl"
-                type="checkbox"
-                v-model="form.melkiteRtl"
-                @change="onChangeMelkiteRtl"
-              />
-              <label for="page-setup-dialog-melkite-rtl">{{
-                $t('dialog:pageSetup.melkiteRtlDescription')
-              }}</label>
-            </div>
-            <div class="form-group">
-              <div class="name">
-                {{ $t('dialog:pageSetup.disableGreekMelismata') }}
-              </div>
-              <input
-                id="page-setup-dialog-disable-melismata"
-                type="checkbox"
-                v-model="form.disableGreekMelismata"
-              />
-              <label for="page-setup-dialog-disable-melismata">{{
-                $t('dialog:pageSetup.disableGreekMelismataDescription')
-              }}</label>
-            </div>
-            <div class="form-group">
-              <label class="name">{{
-                $t('dialog:pageSetup.lyricsMelismaCutoffWidth')
-              }}</label>
-              <div class="description">
-                {{ $t('dialog:pageSetup.lyricsMelismaCutoffWidthDescription') }}
-              </div>
-              <InputUnit
-                class="unit-input"
-                unit="pt"
-                :min="0"
-                :step="1"
-                :precision="0"
-                v-model="form.lyricsMelismaCutoffWidth"
-              />
-            </div>
-
-            <div class="subheader" ref="dropCapsRef">
-              {{ $t('dialog:pageSetup.dropCaps') }}
-            </div>
-            <div class="form-group">
-              <div class="name">
-                {{ $t('dialog:pageSetup.defaultStyling') }}
-              </div>
-              <div class="description">
-                {{ $t('dialog:pageSetup.dropCapsDescription') }}
-              </div>
-
-              <div class="form-group row">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.color')
-                }}</label>
-                <ColorPicker v-model="form.dropCapDefaultColor" />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.size')
-                }}</label>
-                <InputFontSize
-                  class="drop-caps-input"
-                  :max="500"
-                  v-model="form.dropCapDefaultFontSize"
-                />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.lineSpan')
-                }}</label>
-                <InputUnit
-                  class="drop-caps-input"
-                  unit="unitless"
-                  :min="1"
-                  :max="10"
-                  :step="1"
-                  :precision="0"
-                  v-model="form.dropCapDefaultLineSpan"
-                />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.lineHeight')
-                }}</label>
-                <InputUnit
-                  class="drop-caps-input"
-                  :min="0"
-                  :step="0.1"
-                  unit="unitless"
-                  :precision="2"
-                  placeholder="normal"
-                  :nullable="true"
-                  v-model="form.dropCapDefaultLineHeight"
-                />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.font')
-                }}</label>
-                <select
-                  class="drop-caps-select"
-                  v-model="form.dropCapDefaultFontFamily"
-                >
-                  <option v-for="family in dropCapFontFamilies" :key="family">
-                    {{ family }}
-                  </option>
-                </select>
-              </div>
-              <div class="form-group row">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.style')
-                }}</label>
-                <input
-                  id="page-setup-dialog-drop-cap-bold"
-                  type="checkbox"
-                  v-model="form.dropCapDefaultFontWeight"
-                  true-value="700"
-                  false-value="400"
-                />
-                <label for="page-setup-dialog-drop-cap-bold">{{
-                  $t('dialog:pageSetup.bold')
-                }}</label>
-                <span class="checkbox-spacer"></span>
-                <input
-                  id="page-setup-dialog-drop-cap-italic"
-                  type="checkbox"
-                  v-model="form.dropCapDefaultFontStyle"
-                  true-value="italic"
-                  false-value="normal"
-                />
-                <label for="page-setup-dialog-drop-cap-italic">{{
-                  $t('dialog:pageSetup.italic')
-                }}</label>
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.outline')
-                }}</label>
-
-                <InputStrokeWidth
-                  class="drop-caps-input"
-                  v-model="form.dropCapDefaultStrokeWidth"
-                />
-              </div>
-            </div>
-
-            <div class="subheader" ref="lyricsRef">
-              {{ $t('dialog:pageSetup.lyrics') }}
-            </div>
-            <div class="form-group">
-              <div class="name">
-                {{ $t('dialog:pageSetup.defaultStyling') }}
-              </div>
-              <div class="description">
-                {{ $t('dialog:pageSetup.lyricsDescription') }}
-              </div>
-              <div class="form-group row">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.color')
-                }}</label>
-                <ColorPicker v-model="form.lyricsDefaultColor" />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.size')
-                }}</label>
-                <InputFontSize
-                  class="drop-caps-input"
-                  v-model="form.lyricsDefaultFontSize"
-                />
-              </div>
-
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.font')
-                }}</label>
-                <select
-                  class="drop-caps-select"
-                  v-model="form.lyricsDefaultFontFamily"
-                >
-                  <option v-for="family in lyricsFontFamilies" :key="family">
-                    {{ family }}
-                  </option>
-                </select>
-              </div>
-              <div class="form-group row">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.style')
-                }}</label>
-                <input
-                  id="page-setup-dialog-lyrics-bold"
-                  type="checkbox"
-                  v-model="form.lyricsDefaultFontWeight"
-                  true-value="700"
-                  false-value="400"
-                />
-                <label for="page-setup-dialog-lyrics-bold">{{
-                  $t('dialog:pageSetup.bold')
-                }}</label>
-                <span class="checkbox-spacer"></span>
-
-                <input
-                  id="page-setup-dialog-lyrics-italic"
-                  type="checkbox"
-                  v-model="form.lyricsDefaultFontStyle"
-                  true-value="italic"
-                  false-value="normal"
-                />
-                <label for="page-setup-dialog-lyrics-italic">{{
-                  $t('dialog:pageSetup.italic')
-                }}</label>
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.outline')
-                }}</label>
-                <InputStrokeWidth
-                  class="drop-caps-input"
-                  v-model="form.lyricsDefaultStrokeWidth"
-                />
-              </div>
-            </div>
-            <div class="subheader" ref="textBoxesRef">
-              {{ $t('dialog:pageSetup.textBoxes') }}
-            </div>
-            <div class="form-group">
-              <div class="name">
-                {{ $t('dialog:pageSetup.defaultStyling') }}
-              </div>
-              <div class="description">
-                {{ $t('dialog:pageSetup.textBoxesDescription') }}
-              </div>
-              <div class="form-group row">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.color')
-                }}</label>
-                <ColorPicker v-model="form.textBoxDefaultColor" />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.size')
-                }}</label>
-                <InputFontSize
-                  class="drop-caps-input"
-                  v-model="form.textBoxDefaultFontSize"
-                />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.lineHeight')
-                }}</label>
-                <InputUnit
-                  class="drop-caps-input"
-                  :min="0"
-                  :step="0.1"
-                  unit="unitless"
-                  :precision="2"
-                  placeholder="normal"
-                  :nullable="true"
-                  v-model="form.textBoxDefaultLineHeight"
-                />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.font')
-                }}</label>
-                <select
-                  class="drop-caps-select"
-                  v-model="form.textBoxDefaultFontFamily"
-                >
-                  <option v-for="family in lyricsFontFamilies" :key="family">
-                    {{ family }}
-                  </option>
-                </select>
-              </div>
-              <div class="form-group row">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.style')
-                }}</label>
-                <input
-                  id="page-setup-dialog-text-box-bold"
-                  type="checkbox"
-                  v-model="form.textBoxDefaultFontWeight"
-                  true-value="700"
-                  false-value="400"
-                />
-                <label for="page-setup-dialog-text-box-bold">{{
-                  $t('dialog:pageSetup.bold')
-                }}</label>
-                <span class="checkbox-spacer"></span>
-
-                <input
-                  id="page-setup-dialog-text-box-italic"
-                  type="checkbox"
-                  v-model="form.textBoxDefaultFontStyle"
-                  true-value="italic"
-                  false-value="normal"
-                />
-                <label for="page-setup-dialog-text-box-italic">{{
-                  $t('dialog:pageSetup.italic')
-                }}</label>
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.outline')
-                }}</label>
-
-                <InputStrokeWidth
-                  class="drop-caps-input"
-                  v-model="form.textBoxDefaultStrokeWidth"
-                />
-              </div>
-            </div>
-
-            <div class="subheader" ref="modeKeysRef">
-              {{ $t('dialog:pageSetup.modeKeys') }}
-            </div>
-            <div class="form-group">
-              <div class="name">
-                {{ $t('dialog:pageSetup.defaultStyling') }}
-              </div>
-              <div class="description">
-                {{ $t('dialog:pageSetup.modeKeysDescription') }}
-              </div>
-              <div class="form-group row">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.color')
-                }}</label>
-                <ColorPicker v-model="form.modeKeyDefaultColor" />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.size')
-                }}</label>
-                <InputFontSize
-                  class="drop-caps-input"
-                  v-model="form.modeKeyDefaultFontSize"
-                />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.outline')
-                }}</label>
-                <InputStrokeWidth
-                  class="drop-caps-input"
-                  v-model="form.modeKeyDefaultStrokeWidth"
-                />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.heightAdjust')
-                }}</label>
-
-                <InputUnit
-                  class="drop-caps-input"
-                  unit="pt"
-                  :min="heightAdjustmentMin"
-                  :max="heightAdjustmentMax"
-                  :step="0.5"
-                  :precision="2"
-                  v-model="form.modeKeyDefaultHeightAdjustment"
-                />
-              </div>
-            </div>
-            <div class="subheader" ref="neumesRef">
-              {{ $t('dialog:pageSetup.neumes') }}
-            </div>
-            <div class="form-group">
-              <div class="name">
-                {{ $t('dialog:pageSetup.defaultStyling') }}
-              </div>
-              <div class="description">
-                {{ $t('dialog:pageSetup.neumesDescription') }}
-              </div>
-              <div class="form-group row">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.color')
-                }}</label>
-                <ColorPicker v-model="form.neumeDefaultColor" />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.size')
-                }}</label>
-                <InputFontSize
-                  class="drop-caps-input"
-                  v-model="form.neumeDefaultFontSize"
-                />
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.font')
-                }}</label>
-                <select
-                  class="drop-caps-select"
-                  v-model="form.neumeDefaultFontFamily"
-                  :disabled="form.melkiteRtl"
-                >
-                  <option
-                    v-for="family in neumeFontFamilies"
-                    :key="family.value"
-                    :value="family.value"
+                  <FieldGroup
+                    v-if="form.pageSize === 'Custom'"
+                    class="grid gap-4 sm:grid-cols-2"
                   >
-                    {{ family.displayName }}
-                  </option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.outline')
-                }}</label>
-                <InputStrokeWidth
-                  class="drop-caps-input"
-                  v-model="form.neumeDefaultStrokeWidth"
-                />
-              </div>
-            </div>
+                    <Field orientation="horizontal">
+                      <FieldLabel for="page-setup-dialog-custom-width">
+                        {{
+                          $t(($) => $.dialog.pageSetup.width, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <div class="flex items-center gap-2">
+                        <InputUnit
+                          id="page-setup-dialog-custom-width"
+                          v-model="form.pageWidthCustom"
+                          :unit="form.pageSizeUnit"
+                          :min="1"
+                          :max="10000"
+                          :step="marginStep"
+                          :format-options="fraction2FormatOptions"
+                          @update:model-value="updatePageSize"
+                        />
+                        <span class="text-xs text-muted-foreground">
+                          {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
+                        </span>
+                      </div>
+                    </Field>
 
-            <div class="subheader" ref="neumeStylesRef">
-              {{ $t('dialog:pageSetup.neumeStyles') }}
-            </div>
-            <div class="form-group row">
-              <div class="neume-colors-checkbox-container"></div>
-              <label class="neume-colors-label small-header">{{
-                $t('dialog:pageSetup.type')
-              }}</label>
-              <label class="neume-colors-input small-header">{{
-                $t('dialog:pageSetup.color')
-              }}</label>
-              <label class="small-header">{{
-                $t('dialog:pageSetup.outline')
-              }}</label>
-            </div>
-            <div class="form-group row">
-              <div class="neume-colors-checkbox-container">
-                <input
-                  type="checkbox"
-                  class="neume-colors-checkbox"
-                  :value="NeumeColorOptions.Accidentals"
-                  v-model="selectedNeumeColorOptions"
-                />
-              </div>
-              <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.accidentals')
-              }}</label>
-              <ColorPicker
-                class="neume-colors-input"
-                v-model="form.accidentalDefaultColor"
-              />
-              <InputStrokeWidth
-                class="drop-caps-input"
-                v-model="form.accidentalDefaultStrokeWidth"
-              />
-            </div>
-            <div class="form-group row">
-              <div class="neume-colors-checkbox-container">
-                <input
-                  type="checkbox"
-                  class="neume-colors-checkbox"
-                  :value="NeumeColorOptions.Fthoras"
-                  v-model="selectedNeumeColorOptions"
-                />
-              </div>
-              <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.fthoras')
-              }}</label>
-              <ColorPicker
-                class="neume-colors-input"
-                v-model="form.fthoraDefaultColor"
-              />
-              <InputStrokeWidth
-                class="drop-caps-input"
-                v-model="form.fthoraDefaultStrokeWidth"
-              />
-            </div>
-            <div class="form-group row">
-              <div class="neume-colors-checkbox-container">
-                <input
-                  type="checkbox"
-                  class="neume-colors-checkbox"
-                  :value="NeumeColorOptions.Gorgons"
-                  v-model="selectedNeumeColorOptions"
-                />
-              </div>
-              <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.gorgons')
-              }}</label>
-              <ColorPicker
-                class="neume-colors-input"
-                v-model="form.gorgonDefaultColor"
-              />
-              <InputStrokeWidth
-                class="drop-caps-input"
-                v-model="form.gorgonDefaultStrokeWidth"
-              />
-            </div>
-            <div class="form-group row">
-              <div class="neume-colors-checkbox-container">
-                <input
-                  type="checkbox"
-                  class="neume-colors-checkbox"
-                  :value="NeumeColorOptions.Heterons"
-                  v-model="selectedNeumeColorOptions"
-                />
-              </div>
-              <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.heterons')
-              }}</label>
-              <ColorPicker
-                class="neume-colors-input"
-                v-model="form.heteronDefaultColor"
-              />
-              <InputStrokeWidth
-                class="drop-caps-input"
-                v-model="form.heteronDefaultStrokeWidth"
-              />
-            </div>
-            <div class="form-group row">
-              <div class="neume-colors-checkbox-container">
-                <input
-                  type="checkbox"
-                  class="neume-colors-checkbox"
-                  :value="NeumeColorOptions.Ison"
-                  v-model="selectedNeumeColorOptions"
-                />
-              </div>
-              <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.ison')
-              }}</label>
-              <ColorPicker
-                class="neume-colors-input"
-                v-model="form.isonDefaultColor"
-              />
-              <InputStrokeWidth
-                class="drop-caps-input"
-                v-model="form.isonDefaultStrokeWidth"
-              />
-            </div>
-            <div class="form-group row">
-              <div class="neume-colors-checkbox-container">
-                <input
-                  type="checkbox"
-                  class="neume-colors-checkbox"
-                  :value="NeumeColorOptions.Koronis"
-                  v-model="selectedNeumeColorOptions"
-                />
-              </div>
-              <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.koronis')
-              }}</label>
-              <ColorPicker
-                class="neume-colors-input"
-                v-model="form.koronisDefaultColor"
-              />
-              <InputStrokeWidth
-                class="drop-caps-input"
-                v-model="form.koronisDefaultStrokeWidth"
-              />
-            </div>
-            <div class="form-group row">
-              <div class="neume-colors-checkbox-container">
-                <input
-                  type="checkbox"
-                  class="neume-colors-checkbox"
-                  :value="NeumeColorOptions.Martyria"
-                  v-model="selectedNeumeColorOptions"
-                />
-              </div>
-              <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.martyriae')
-              }}</label>
-              <ColorPicker
-                class="neume-colors-input"
-                v-model="form.martyriaDefaultColor"
-              />
-              <InputStrokeWidth
-                class="drop-caps-input"
-                v-model="form.martyriaDefaultStrokeWidth"
-              />
-            </div>
-            <div class="form-group row">
-              <div class="neume-colors-checkbox-container">
-                <input
-                  type="checkbox"
-                  class="neume-colors-checkbox"
-                  :value="NeumeColorOptions.MeasureBars"
-                  v-model="selectedNeumeColorOptions"
-                />
-              </div>
-              <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.measureBars')
-              }}</label>
-              <ColorPicker
-                class="neume-colors-input"
-                v-model="form.measureBarDefaultColor"
-              />
-              <InputStrokeWidth
-                class="drop-caps-input"
-                v-model="form.measureBarDefaultStrokeWidth"
-              />
-            </div>
-            <div class="form-group row">
-              <div class="neume-colors-checkbox-container">
-                <input
-                  type="checkbox"
-                  class="neume-colors-checkbox"
-                  :value="NeumeColorOptions.MeasureNumbers"
-                  v-model="selectedNeumeColorOptions"
-                />
-              </div>
-              <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.measureNo')
-              }}</label>
-              <ColorPicker
-                class="neume-colors-input"
-                v-model="form.measureNumberDefaultColor"
-              />
-              <InputStrokeWidth
-                class="drop-caps-input"
-                v-model="form.measureNumberDefaultStrokeWidth"
-              />
-            </div>
-            <div class="form-group row">
-              <div class="neume-colors-checkbox-container">
-                <input
-                  type="checkbox"
-                  class="neume-colors-checkbox"
-                  :value="NeumeColorOptions.NoteIndicators"
-                  v-model="selectedNeumeColorOptions"
-                />
-              </div>
-              <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.noteIndicators')
-              }}</label>
-              <ColorPicker
-                class="neume-colors-input"
-                v-model="form.noteIndicatorDefaultColor"
-              />
-              <InputStrokeWidth
-                class="drop-caps-input"
-                v-model="form.noteIndicatorDefaultStrokeWidth"
-              />
-            </div>
-            <div class="form-group row">
-              <div class="neume-colors-checkbox-container">
-                <input
-                  type="checkbox"
-                  class="neume-colors-checkbox"
-                  :value="NeumeColorOptions.Tempos"
-                  v-model="selectedNeumeColorOptions"
-                />
-              </div>
-              <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.tempos')
-              }}</label>
-              <ColorPicker
-                class="neume-colors-input"
-                v-model="form.tempoDefaultColor"
-              />
-              <InputStrokeWidth
-                class="drop-caps-input"
-                v-model="form.tempoDefaultStrokeWidth"
-              />
-            </div>
-            <div class="form-group">
-              <div class="name">
-                {{ $t('dialog:pageSetup.neumeBulkColor') }}
-              </div>
-              <div class="description">
-                {{ $t('dialog:pageSetup.neumeBulkColorDescription') }}
-              </div>
-              <div class="row">
-                <ColorPicker
-                  class="neume-colors-input"
-                  v-model="neumeBulkColor"
-                />
-                <button @click="changeNeumeColorInBulk">Apply Color</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="preview-container">
-        <div class="small-header">{{ $t('dialog:pageSetup.preview') }}</div>
-        <div class="preview-elements">
-          <template v-for="(element, index) in previewNeumes">
+                    <Field orientation="horizontal">
+                      <FieldLabel for="page-setup-dialog-custom-height">
+                        {{
+                          $t(($) => $.dialog.pageSetup.height, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <div class="flex items-center gap-2">
+                        <InputUnit
+                          id="page-setup-dialog-custom-height"
+                          v-model="form.pageHeightCustom"
+                          :unit="form.pageSizeUnit"
+                          :min="1"
+                          :max="10000"
+                          :step="marginStep"
+                          :format-options="fraction2FormatOptions"
+                          @update:model-value="updatePageSize"
+                        />
+                        <span class="text-xs text-muted-foreground">
+                          {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
+                        </span>
+                      </div>
+                    </Field>
+                  </FieldGroup>
+
+                  <Field orientation="horizontal">
+                    <FieldLabel>
+                      {{
+                        $t(($) => $.dialog.pageSetup.orientation, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldLabel>
+                    <ToggleGroup
+                      v-model="orientation"
+                      type="single"
+                      variant="outline"
+                    >
+                      <ToggleGroupItem value="portrait">
+                        {{
+                          $t(($) => $.dialog.pageSetup.portrait, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="landscape">
+                        {{
+                          $t(($) => $.dialog.pageSetup.landscape, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-unit">
+                        {{
+                          $t(($) => $.dialog.pageSetup.unit, { ns: 'dialog' })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(($) => $.dialog.pageSetup.unitDescription, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <Select v-model="form.pageSizeUnit">
+                      <SelectTrigger id="page-setup-dialog-unit">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem
+                            v-for="unit in pageSizeUnitOptions"
+                            :key="unit.value"
+                            :value="unit.value"
+                          >
+                            {{ $t(unit.labelSelector, { ns: 'dialog' }) }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </template>
+
+                <template v-else-if="section.value === 'margins'">
+                  <Field orientation="horizontal">
+                    <Checkbox
+                      id="page-setup-dialog-facing-pages"
+                      :model-value="form.facingPages"
+                      @update:model-value="updateFacingPages"
+                    />
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-facing-pages">
+                        {{
+                          $t(($) => $.dialog.pageSetup.facingPages, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                    </FieldContent>
+                  </Field>
+                  <Field v-if="form.facingPages" orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-page-layout-direction">
+                        {{
+                          $t(($) => $.dialog.pageSetup.direction, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(($) => $.dialog.pageSetup.directionDescription, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <Select v-model="form.direction">
+                      <SelectTrigger
+                        id="page-setup-dialog-page-layout-direction"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem
+                            v-for="[
+                              direction,
+                              labelSelector,
+                            ] in directionOptions"
+                            :key="direction"
+                            :value="direction"
+                          >
+                            {{ $t(labelSelector, { ns: 'dialog' }) }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field
+                    v-for="row in marginRows"
+                    :key="row.id"
+                    orientation="horizontal"
+                  >
+                    <FieldLabel :for="row.id">
+                      {{
+                        $t(row.labelSelector(form.facingPages), {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldLabel>
+                    <div class="flex items-center gap-2">
+                      <InputUnit
+                        :id="row.id"
+                        :model-value="form[row.modelKey]"
+                        :unit="form.pageSizeUnit"
+                        :min="0"
+                        :max="row.max.value"
+                        :step="marginStep"
+                        :format-options="fraction2FormatOptions"
+                        @update:model-value="row.update"
+                      />
+                      <span class="text-xs text-muted-foreground">
+                        {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
+                      </span>
+                    </div>
+                  </Field>
+                </template>
+
+                <template v-else-if="section.value === 'spacing'">
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-neume-spacing">
+                        {{
+                          $t(($) => $.dialog.pageSetup.neumeSpacing, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(
+                            ($) => $.dialog.pageSetup.neumeSpacingDescription,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <div class="flex items-center gap-2">
+                      <InputUnit
+                        id="page-setup-dialog-neume-spacing"
+                        v-model="form.neumeDefaultSpacing"
+                        :unit="form.pageSizeUnit"
+                        :min="-neumeSpacingMax"
+                        :max="neumeSpacingMax"
+                        :step="spacingStep"
+                        :format-options="fraction3FormatOptions"
+                      />
+                      <span class="text-xs text-muted-foreground">
+                        {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
+                      </span>
+                    </div>
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel
+                        for="page-setup-dialog-martyria-vertical-offset"
+                      >
+                        {{
+                          $t(($) => $.dialog.pageSetup.martyriaVerticalOffset, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(
+                            ($) =>
+                              $.dialog.pageSetup
+                                .martyriaVerticalOffsetDescription,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <div class="flex items-center gap-2">
+                      <InputUnit
+                        id="page-setup-dialog-martyria-vertical-offset"
+                        v-model="form.martyriaVerticalOffset"
+                        :unit="form.pageSizeUnit"
+                        :min="-neumeSpacingMax"
+                        :max="neumeSpacingMax"
+                        :step="spacingStep"
+                        :format-options="fraction3FormatOptions"
+                      />
+                      <span class="text-xs text-muted-foreground">
+                        {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
+                      </span>
+                    </div>
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel
+                        for="page-setup-dialog-lyrics-vertical-offset"
+                      >
+                        {{
+                          $t(($) => $.dialog.pageSetup.lyricsV, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(($) => $.dialog.pageSetup.lyricsVDescription, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <div class="flex items-center gap-2">
+                      <InputUnit
+                        id="page-setup-dialog-lyrics-vertical-offset"
+                        :model-value="form.lyricsVerticalOffset"
+                        :unit="form.pageSizeUnit"
+                        :max="lyricsVerticalOffsetMax"
+                        :step="spacingStep"
+                        :format-options="fraction3FormatOptions"
+                        @update:model-value="updateLyricsVerticalOffset"
+                      />
+                      <span class="text-xs text-muted-foreground">
+                        {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
+                      </span>
+                    </div>
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel
+                        for="page-setup-dialog-lyrics-minimum-spacing"
+                      >
+                        {{
+                          $t(($) => $.dialog.pageSetup.lyricsH, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(($) => $.dialog.pageSetup.lyricsHDescription, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <div class="flex items-center gap-2">
+                      <InputUnit
+                        id="page-setup-dialog-lyrics-minimum-spacing"
+                        :model-value="form.lyricsMinimumSpacing"
+                        :unit="form.pageSizeUnit"
+                        :max="lyricsMinimumSpacingMax"
+                        :step="spacingStep"
+                        :format-options="fraction3FormatOptions"
+                        @update:model-value="updateLyricsMinimumSpacing"
+                      />
+                      <span class="text-xs text-muted-foreground">
+                        {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
+                      </span>
+                    </div>
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-hyphen-spacing">
+                        {{
+                          $t(($) => $.dialog.pageSetup.hyphens, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(
+                            ($) => $.dialog.pageSetup.hyphenSpacingDescription,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <div class="flex items-center gap-2">
+                      <InputUnit
+                        id="page-setup-dialog-hyphen-spacing"
+                        :model-value="form.hyphenSpacing"
+                        :unit="form.pageSizeUnit"
+                        :min="0"
+                        :max="hyphenSpacingMax"
+                        :step="spacingStep"
+                        :format-options="fraction3FormatOptions"
+                        @update:model-value="updateHyphenSpacing"
+                      />
+                      <span class="text-xs text-muted-foreground">
+                        {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
+                      </span>
+                    </div>
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-hyphen-clearance">
+                        {{
+                          $t(
+                            ($) =>
+                              $.dialog.pageSetup
+                                .minimumSyllableToHyphenClearance,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(
+                            ($) =>
+                              $.dialog.pageSetup
+                                .minimumSyllableToHyphenClearanceDescription,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <div class="flex items-center gap-2">
+                      <InputUnit
+                        id="page-setup-dialog-hyphen-clearance"
+                        :model-value="form.minimumSyllableToHyphenClearance"
+                        :unit="form.pageSizeUnit"
+                        :min="0"
+                        :max="minimumSyllableToHyphenClearanceMax"
+                        :step="spacingStep"
+                        :format-options="fraction3FormatOptions"
+                        @update:model-value="
+                          updateMinimumSyllableToHyphenClearance
+                        "
+                      />
+                      <span class="text-xs text-muted-foreground">
+                        {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
+                      </span>
+                    </div>
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-line-height">
+                        {{
+                          $t(($) => $.dialog.pageSetup.line, { ns: 'dialog' })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(($) => $.dialog.pageSetup.lineSpacingDescription, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <div class="flex items-center gap-2">
+                      <InputUnit
+                        id="page-setup-dialog-line-height"
+                        :model-value="form.lineHeight"
+                        :unit="form.pageSizeUnit"
+                        :min="0"
+                        :max="lineHeightMax"
+                        :step="spacingStep"
+                        :format-options="fraction3FormatOptions"
+                        @update:model-value="updateLineHeight"
+                      />
+                      <span class="text-xs text-muted-foreground">
+                        {{ $t(marginUnitLabel!, { ns: 'dialog' }) }}
+                      </span>
+                    </div>
+                  </Field>
+                </template>
+
+                <template v-else-if="section.value === 'headersAndFooters'">
+                  <Field
+                    v-for="row in headerFooterCheckboxRows"
+                    :key="row.id"
+                    orientation="horizontal"
+                  >
+                    <Checkbox
+                      :id="row.id"
+                      :model-value="form[row.modelKey]"
+                      @update:model-value="setBoolean(row.modelKey, $event)"
+                    />
+                    <FieldLabel :for="row.id">
+                      {{ $t(row.labelSelector, { ns: 'dialog' }) }}
+                    </FieldLabel>
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-first-page-number">
+                        {{
+                          $t(($) => $.dialog.pageSetup.firstPageNumber, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(
+                            ($) =>
+                              $.dialog.pageSetup.firstPageNumberDescription,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <InputUnit
+                      id="page-setup-dialog-first-page-number"
+                      v-model="form.firstPageNumber"
+                      unit="unitless"
+                      :step="1"
+                      :format-options="fraction0FormatOptions"
+                      :default-value="1"
+                    />
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-page-number-format">
+                        {{
+                          $t(($) => $.dialog.pageSetup.numerals, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(($) => $.dialog.pageSetup.numeralsDescription, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <Select
+                      :model-value="form.numerals"
+                      @update:model-value="updateNumerals"
+                    >
+                      <SelectTrigger id="page-setup-dialog-page-number-format">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem
+                            v-for="[numerals, labelSelector] in numeralsOptions"
+                            :key="numerals"
+                            :value="numerals"
+                          >
+                            {{ $t(labelSelector, { ns: 'dialog' }) }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+
+                  <FieldSet>
+                    <FieldLegend variant="label">
+                      {{
+                        $t(($) => $.dialog.pageSetup.headerHorizontalRule, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldLegend>
+                    <FieldGroup>
+                      <Field orientation="horizontal">
+                        <Checkbox
+                          id="page-setup-dialog-header-hr"
+                          :model-value="form.showHeaderHorizontalRule"
+                          @update:model-value="
+                            form.showHeaderHorizontalRule = $event === true
+                          "
+                        />
+                        <FieldContent>
+                          <FieldLabel for="page-setup-dialog-header-hr">
+                            {{
+                              $t(
+                                ($) =>
+                                  $.dialog.pageSetup
+                                    .showHeaderHorizontalRuleDescription,
+                                {
+                                  ns: 'dialog',
+                                },
+                              )
+                            }}
+                          </FieldLabel>
+                        </FieldContent>
+                      </Field>
+
+                      <template v-if="form.showHeaderHorizontalRule">
+                        <FieldGroup class="grid gap-4 sm:grid-cols-3">
+                          <Field orientation="horizontal">
+                            <FieldLabel>
+                              {{
+                                $t(($) => $.dialog.pageSetup.color, {
+                                  ns: 'dialog',
+                                })
+                              }}
+                            </FieldLabel>
+                            <ColorPicker
+                              v-model="form.headerHorizontalRuleColor"
+                            />
+                          </Field>
+                          <Field orientation="horizontal">
+                            <FieldLabel>
+                              {{
+                                $t(($) => $.dialog.pageSetup.thickness, {
+                                  ns: 'dialog',
+                                })
+                              }}
+                            </FieldLabel>
+                            <InputUnit
+                              v-model="form.headerHorizontalRuleThickness"
+                              unit="pt"
+                              :min="0"
+                              :max="100"
+                              :step="0.5"
+                              :format-options="fraction1FormatOptions"
+                            />
+                          </Field>
+                          <Field orientation="horizontal">
+                            <FieldLabel>
+                              {{
+                                $t(($) => $.dialog.pageSetup.marginTop, {
+                                  ns: 'dialog',
+                                })
+                              }}
+                            </FieldLabel>
+                            <InputUnit
+                              v-model="form.headerHorizontalRuleMarginTop"
+                              unit="pt"
+                              :min="0"
+                              :max="1000"
+                              :step="0.5"
+                              :format-options="fraction1FormatOptions"
+                            />
+                          </Field>
+                          <Field orientation="horizontal">
+                            <FieldLabel>
+                              {{
+                                $t(($) => $.dialog.pageSetup.marginBottom, {
+                                  ns: 'dialog',
+                                })
+                              }}
+                            </FieldLabel>
+                            <InputUnit
+                              v-model="form.headerHorizontalRuleMarginBottom"
+                              unit="pt"
+                              :min="0"
+                              :max="1000"
+                              :step="0.5"
+                              :format-options="fraction1FormatOptions"
+                            />
+                          </Field>
+                        </FieldGroup>
+
+                        <Field
+                          v-if="form.headerDifferentFirstPage"
+                          orientation="horizontal"
+                        >
+                          <Checkbox
+                            id="page-setup-dialog-header-excludeHeaderHorizontalRuleFirstPage"
+                            :model-value="
+                              form.excludeHeaderHorizontalRuleFirstPage
+                            "
+                            @update:model-value="
+                              form.excludeHeaderHorizontalRuleFirstPage =
+                                $event === true
+                            "
+                          />
+                          <FieldLabel
+                            for="page-setup-dialog-header-excludeHeaderHorizontalRuleFirstPage"
+                          >
+                            {{
+                              $t(
+                                ($) =>
+                                  $.dialog.pageSetup
+                                    .excludeHorizontalRuleFirstPageDescription,
+                                { ns: 'dialog' },
+                              )
+                            }}
+                          </FieldLabel>
+                        </Field>
+
+                        <Field
+                          v-if="form.headerFooterDifferentChapterOpening"
+                          orientation="horizontal"
+                        >
+                          <Checkbox
+                            id="page-setup-dialog-header-excludeHeaderHorizontalRuleChapterOpening"
+                            :model-value="
+                              form.excludeHeaderHorizontalRuleChapterOpening
+                            "
+                            @update:model-value="
+                              form.excludeHeaderHorizontalRuleChapterOpening =
+                                $event === true
+                            "
+                          />
+                          <FieldLabel
+                            for="page-setup-dialog-header-excludeHeaderHorizontalRuleChapterOpening"
+                          >
+                            {{
+                              $t(
+                                ($) =>
+                                  $.dialog.pageSetup
+                                    .excludeHorizontalRuleChapterOpeningDescription,
+                                { ns: 'dialog' },
+                              )
+                            }}
+                          </FieldLabel>
+                        </Field>
+
+                        <template v-if="form.headerDifferentOddEven">
+                          <Field orientation="horizontal">
+                            <Checkbox
+                              id="page-setup-dialog-header-excludeHeaderHorizontalRuleOddPage"
+                              :model-value="
+                                form.excludeHeaderHorizontalRuleOddPage
+                              "
+                              @update:model-value="
+                                form.excludeHeaderHorizontalRuleOddPage =
+                                  $event === true
+                              "
+                            />
+                            <FieldLabel
+                              for="page-setup-dialog-header-excludeHeaderHorizontalRuleOddPage"
+                            >
+                              {{
+                                $t(
+                                  ($) =>
+                                    $.dialog.pageSetup
+                                      .excludeHorizontalRuleOddPageDescription,
+                                  { ns: 'dialog' },
+                                )
+                              }}
+                            </FieldLabel>
+                          </Field>
+                          <Field orientation="horizontal">
+                            <Checkbox
+                              id="page-setup-dialog-header-excludeHeaderHorizontalRuleEvenPage"
+                              :model-value="
+                                form.excludeHeaderHorizontalRuleEvenPage
+                              "
+                              @update:model-value="
+                                form.excludeHeaderHorizontalRuleEvenPage =
+                                  $event === true
+                              "
+                            />
+                            <FieldLabel
+                              for="page-setup-dialog-header-excludeHeaderHorizontalRuleEvenPage"
+                            >
+                              {{
+                                $t(
+                                  ($) =>
+                                    $.dialog.pageSetup
+                                      .excludeHorizontalRuleEvenPageDescription,
+                                  { ns: 'dialog' },
+                                )
+                              }}
+                            </FieldLabel>
+                          </Field>
+                        </template>
+                      </template>
+                    </FieldGroup>
+                  </FieldSet>
+
+                  <FieldSet>
+                    <FieldLegend variant="label">
+                      {{
+                        $t(($) => $.dialog.pageSetup.footerHorizontalRule, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldLegend>
+                    <FieldGroup>
+                      <Field orientation="horizontal">
+                        <Checkbox
+                          id="page-setup-dialog-footer-hr"
+                          :model-value="form.showFooterHorizontalRule"
+                          @update:model-value="
+                            form.showFooterHorizontalRule = $event === true
+                          "
+                        />
+                        <FieldContent>
+                          <FieldLabel for="page-setup-dialog-footer-hr">
+                            {{
+                              $t(
+                                ($) =>
+                                  $.dialog.pageSetup
+                                    .showFooterHorizontalRuleDescription,
+                                {
+                                  ns: 'dialog',
+                                },
+                              )
+                            }}
+                          </FieldLabel>
+                        </FieldContent>
+                      </Field>
+
+                      <template v-if="form.showFooterHorizontalRule">
+                        <FieldGroup class="grid gap-4 sm:grid-cols-3">
+                          <Field orientation="horizontal">
+                            <FieldLabel>
+                              {{
+                                $t(($) => $.dialog.pageSetup.color, {
+                                  ns: 'dialog',
+                                })
+                              }}
+                            </FieldLabel>
+                            <ColorPicker
+                              v-model="form.footerHorizontalRuleColor"
+                            />
+                          </Field>
+                          <Field orientation="horizontal">
+                            <FieldLabel>
+                              {{
+                                $t(($) => $.dialog.pageSetup.thickness, {
+                                  ns: 'dialog',
+                                })
+                              }}
+                            </FieldLabel>
+                            <InputUnit
+                              v-model="form.footerHorizontalRuleThickness"
+                              unit="pt"
+                              :min="0"
+                              :max="100"
+                              :step="0.5"
+                              :format-options="fraction1FormatOptions"
+                            />
+                          </Field>
+                          <Field orientation="horizontal">
+                            <FieldLabel>
+                              {{
+                                $t(($) => $.dialog.pageSetup.marginTop, {
+                                  ns: 'dialog',
+                                })
+                              }}
+                            </FieldLabel>
+                            <InputUnit
+                              v-model="form.footerHorizontalRuleMarginTop"
+                              unit="pt"
+                              :min="0"
+                              :max="1000"
+                              :step="0.5"
+                              :format-options="fraction1FormatOptions"
+                            />
+                          </Field>
+                          <Field orientation="horizontal">
+                            <FieldLabel>
+                              {{
+                                $t(($) => $.dialog.pageSetup.marginBottom, {
+                                  ns: 'dialog',
+                                })
+                              }}
+                            </FieldLabel>
+                            <InputUnit
+                              v-model="form.footerHorizontalRuleMarginBottom"
+                              unit="pt"
+                              :min="0"
+                              :max="1000"
+                              :step="0.5"
+                              :format-options="fraction1FormatOptions"
+                            />
+                          </Field>
+                        </FieldGroup>
+
+                        <Field
+                          v-if="form.headerDifferentFirstPage"
+                          orientation="horizontal"
+                        >
+                          <Checkbox
+                            id="page-setup-dialog-header-excludeFooterHorizontalRuleFirstPage"
+                            :model-value="
+                              form.excludeFooterHorizontalRuleFirstPage
+                            "
+                            @update:model-value="
+                              form.excludeFooterHorizontalRuleFirstPage =
+                                $event === true
+                            "
+                          />
+                          <FieldLabel
+                            for="page-setup-dialog-header-excludeFooterHorizontalRuleFirstPage"
+                          >
+                            {{
+                              $t(
+                                ($) =>
+                                  $.dialog.pageSetup
+                                    .excludeHorizontalRuleFirstPageDescription,
+                                { ns: 'dialog' },
+                              )
+                            }}
+                          </FieldLabel>
+                        </Field>
+
+                        <Field
+                          v-if="form.headerFooterDifferentChapterOpening"
+                          orientation="horizontal"
+                        >
+                          <Checkbox
+                            id="page-setup-dialog-footer-excludeFooterHorizontalRuleChapterOpening"
+                            :model-value="
+                              form.excludeFooterHorizontalRuleChapterOpening
+                            "
+                            @update:model-value="
+                              form.excludeFooterHorizontalRuleChapterOpening =
+                                $event === true
+                            "
+                          />
+                          <FieldLabel
+                            for="page-setup-dialog-footer-excludeFooterHorizontalRuleChapterOpening"
+                          >
+                            {{
+                              $t(
+                                ($) =>
+                                  $.dialog.pageSetup
+                                    .excludeHorizontalRuleChapterOpeningDescription,
+                                { ns: 'dialog' },
+                              )
+                            }}
+                          </FieldLabel>
+                        </Field>
+
+                        <template v-if="form.headerDifferentOddEven">
+                          <Field orientation="horizontal">
+                            <Checkbox
+                              id="page-setup-dialog-footer-excludeFooterHorizontalRuleOddPage"
+                              :model-value="
+                                form.excludeFooterHorizontalRuleOddPage
+                              "
+                              @update:model-value="
+                                form.excludeFooterHorizontalRuleOddPage =
+                                  $event === true
+                              "
+                            />
+                            <FieldLabel
+                              for="page-setup-dialog-footer-excludeFooterHorizontalRuleOddPage"
+                            >
+                              {{
+                                $t(
+                                  ($) =>
+                                    $.dialog.pageSetup
+                                      .excludeHorizontalRuleOddPageDescription,
+                                  { ns: 'dialog' },
+                                )
+                              }}
+                            </FieldLabel>
+                          </Field>
+                          <Field orientation="horizontal">
+                            <Checkbox
+                              id="page-setup-dialog-footer-excludeFooterHorizontalRuleEvenPage"
+                              :model-value="
+                                form.excludeFooterHorizontalRuleEvenPage
+                              "
+                              @update:model-value="
+                                form.excludeFooterHorizontalRuleEvenPage =
+                                  $event === true
+                              "
+                            />
+                            <FieldLabel
+                              for="page-setup-dialog-footer-excludeFooterHorizontalRuleEvenPage"
+                            >
+                              {{
+                                $t(
+                                  ($) =>
+                                    $.dialog.pageSetup
+                                      .excludeHorizontalRuleEvenPageDescription,
+                                  { ns: 'dialog' },
+                                )
+                              }}
+                            </FieldLabel>
+                          </Field>
+                        </template>
+                      </template>
+                    </FieldGroup>
+                  </FieldSet>
+                </template>
+
+                <template v-else-if="section.value === 'miscellaneous'">
+                  <Field
+                    v-for="row in miscellaneousCheckboxRows"
+                    :key="row.id"
+                    orientation="horizontal"
+                  >
+                    <Checkbox
+                      :id="row.id"
+                      :model-value="form[row.modelKey]"
+                      @update:model-value="
+                        row.modelKey === 'melkiteRtl'
+                          ? onMelkiteRtlChanged($event)
+                          : setBoolean(row.modelKey, $event)
+                      "
+                    />
+                    <FieldContent>
+                      <FieldLabel :for="row.id">
+                        {{ $t(row.labelSelector, { ns: 'dialog' }) }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{ $t(row.descriptionSelector, { ns: 'dialog' }) }}
+                      </FieldDescription>
+                    </FieldContent>
+                  </Field>
+                </template>
+
+                <template v-else-if="section.value === 'dropCaps'">
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-dialog-drop-cap-line-span">
+                      {{
+                        $t(($) => $.dialog.pageSetup.lineSpan, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldLabel>
+                    <InputUnit
+                      id="page-setup-dialog-drop-cap-line-span"
+                      v-model="form.dropCapDefaultLineSpan"
+                      unit="unitless"
+                      :min="1"
+                      :max="10"
+                      :step="1"
+                      :format-options="fraction0FormatOptions"
+                    />
+                  </Field>
+                </template>
+
+                <template v-else-if="section.value === 'lyrics'">
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-dialog-lyrics-melisma-cutoff">
+                        {{
+                          $t(
+                            ($) => $.dialog.pageSetup.lyricsMelismaCutoffWidth,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(
+                            ($) =>
+                              $.dialog.pageSetup
+                                .lyricsMelismaCutoffWidthDescription,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <InputUnit
+                      id="page-setup-dialog-lyrics-melisma-cutoff"
+                      v-model="form.lyricsMelismaCutoffWidth"
+                      unit="pt"
+                      :min="0"
+                      :step="1"
+                      :format-options="fraction0FormatOptions"
+                    />
+                  </Field>
+
+                  <Field orientation="horizontal">
+                    <Checkbox
+                      id="page-setup-dialog-ignore-punctuation-when-positioning-lyrics"
+                      :model-value="form.ignorePunctuationWhenPositioningLyrics"
+                      @update:model-value="
+                        form.ignorePunctuationWhenPositioningLyrics =
+                          $event === true
+                      "
+                    />
+                    <FieldContent>
+                      <FieldLabel
+                        for="page-setup-dialog-ignore-punctuation-when-positioning-lyrics"
+                      >
+                        {{
+                          $t(
+                            ($) =>
+                              $.dialog.pageSetup
+                                .ignorePunctuationWhenPositioningLyrics,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(
+                            ($) =>
+                              $.dialog.pageSetup
+                                .ignorePunctuationWhenPositioningLyricsDescription,
+                            { ns: 'dialog' },
+                          )
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                  </Field>
+                </template>
+
+                <template v-else-if="section.value === 'modeKeys'">
+                  <FieldSet>
+                    <FieldLegend variant="label">
+                      {{
+                        $t(($) => $.dialog.pageSetup.defaultStyling, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldLegend>
+                    <FieldDescription>
+                      {{
+                        $t(
+                          ($) => $.dialog.pageSetup.initialMartyriaeDescription,
+                          {
+                            ns: 'dialog',
+                          },
+                        )
+                      }}
+                    </FieldDescription>
+                    <FieldGroup class="gap-4">
+                      <Field orientation="horizontal">
+                        <FieldLabel>
+                          {{
+                            $t(($) => $.dialog.pageSetup.color, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </FieldLabel>
+                        <ColorPicker v-model="form.modeKeyDefaultColor" />
+                      </Field>
+                      <Field orientation="horizontal">
+                        <FieldLabel>
+                          {{
+                            $t(($) => $.dialog.pageSetup.size, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </FieldLabel>
+                        <InputFontSize v-model="form.modeKeyDefaultFontSize" />
+                      </Field>
+                      <Field orientation="horizontal">
+                        <FieldLabel>
+                          {{
+                            $t(($) => $.dialog.pageSetup.outline, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </FieldLabel>
+                        <InputStrokeWidth
+                          v-model="form.modeKeyDefaultStrokeWidth"
+                        />
+                      </Field>
+                      <Field orientation="horizontal">
+                        <FieldLabel
+                          for="page-setup-dialog-mode-key-height-adjust"
+                        >
+                          {{
+                            $t(($) => $.dialog.pageSetup.heightAdjust, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </FieldLabel>
+                        <InputUnit
+                          id="page-setup-dialog-mode-key-height-adjust"
+                          v-model="form.modeKeyDefaultHeightAdjustment"
+                          unit="pt"
+                          :min="heightAdjustmentMin"
+                          :max="heightAdjustmentMax"
+                          :step="0.5"
+                          :format-options="fraction2FormatOptions"
+                        />
+                      </Field>
+                    </FieldGroup>
+                  </FieldSet>
+                </template>
+
+                <template v-else-if="section.value === 'neumes'">
+                  <FieldSet>
+                    <FieldLegend variant="label">
+                      {{
+                        $t(($) => $.dialog.pageSetup.defaultStyling, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldLegend>
+                    <FieldDescription>
+                      {{
+                        $t(($) => $.dialog.pageSetup.neumesDescription, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldDescription>
+                    <FieldGroup class="gap-4">
+                      <Field orientation="horizontal">
+                        <FieldLabel>
+                          {{
+                            $t(($) => $.dialog.pageSetup.color, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </FieldLabel>
+                        <ColorPicker v-model="form.neumeDefaultColor" />
+                      </Field>
+                      <Field orientation="horizontal">
+                        <FieldLabel>
+                          {{
+                            $t(($) => $.dialog.pageSetup.size, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </FieldLabel>
+                        <InputFontSize v-model="form.neumeDefaultFontSize" />
+                      </Field>
+                      <Field orientation="horizontal">
+                        <FieldLabel for="page-setup-dialog-neume-font">
+                          {{
+                            $t(($) => $.dialog.pageSetup.font, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </FieldLabel>
+                        <FontCombobox
+                          id="page-setup-dialog-neume-font"
+                          v-model="form.neumeDefaultFontFamily"
+                          :options="neumeFontFamilies"
+                          :disabled="form.melkiteRtl"
+                        />
+                      </Field>
+                      <Field orientation="horizontal">
+                        <FieldLabel>
+                          {{
+                            $t(($) => $.dialog.pageSetup.outline, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </FieldLabel>
+                        <InputStrokeWidth
+                          v-model="form.neumeDefaultStrokeWidth"
+                        />
+                      </Field>
+                    </FieldGroup>
+                  </FieldSet>
+
+                  <FieldSet>
+                    <FieldLegend variant="label">
+                      {{
+                        $t(($) => $.dialog.pageSetup.alternateLineStyling, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldLegend>
+                    <FieldDescription>
+                      {{
+                        $t(($) => $.dialog.pageSetup.alternateLineDescription, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </FieldDescription>
+                    <FieldGroup class="gap-4">
+                      <Field orientation="horizontal">
+                        <FieldLabel>
+                          {{
+                            $t(($) => $.dialog.pageSetup.color, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </FieldLabel>
+                        <ColorPicker v-model="form.alternateLineDefaultColor" />
+                      </Field>
+                      <Field orientation="horizontal">
+                        <FieldLabel>
+                          {{
+                            $t(($) => $.dialog.pageSetup.size, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </FieldLabel>
+                        <InputFontSize
+                          v-model="form.alternateLineDefaultFontSize"
+                        />
+                      </Field>
+                    </FieldGroup>
+                  </FieldSet>
+                </template>
+
+                <template v-else-if="section.value === 'neumeStyles'">
+                  <FieldSet>
+                    <FieldLegend variant="label">
+                      {{ $t(section.labelSelector, { ns: 'dialog' }) }}
+                    </FieldLegend>
+                    <div
+                      class="grid grid-cols-[1.5rem_minmax(0,1fr)_auto_auto] items-center gap-x-2 gap-y-1"
+                    >
+                      <div aria-hidden="true" />
+                      <div class="h-6 text-xs font-medium text-foreground">
+                        {{
+                          $t(($) => $.dialog.pageSetup.type, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </div>
+                      <div class="h-6 text-xs font-medium text-foreground">
+                        {{
+                          $t(($) => $.dialog.pageSetup.color, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </div>
+                      <div class="h-6 text-xs font-medium text-foreground">
+                        {{
+                          $t(($) => $.dialog.pageSetup.outline, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </div>
+
+                      <template v-for="row in neumeColorRows" :key="row.option">
+                        <Checkbox
+                          :id="getNeumeColorOptionId(row.option)"
+                          :model-value="
+                            selectedNeumeColorOptions.includes(row.option)
+                          "
+                          @update:model-value="
+                            toggleNeumeColorOption(row.option, $event)
+                          "
+                        />
+                        <FieldLabel
+                          :for="getNeumeColorOptionId(row.option)"
+                          class="min-w-0"
+                        >
+                          {{ $t(row.labelSelector, { ns: 'dialog' }) }}
+                        </FieldLabel>
+                        <ColorPicker v-model="form[row.colorKey]" />
+                        <InputStrokeWidth v-model="form[row.strokeKey]" />
+                      </template>
+                    </div>
+                  </FieldSet>
+
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel>
+                        {{
+                          $t(($) => $.dialog.pageSetup.neumeBulkColor, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {{
+                          $t(
+                            ($) => $.dialog.pageSetup.neumeBulkColorDescription,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </FieldDescription>
+                    </FieldContent>
+                    <div class="flex flex-wrap items-center gap-3">
+                      <ColorPicker v-model="neumeBulkColor" />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        @click="changeNeumeColorInBulk"
+                      >
+                        <PhPaintBucket />
+                        {{
+                          $t(($) => $.dialog.pageSetup.applyColor, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </Button>
+                    </div>
+                  </Field>
+                </template>
+              </FieldGroup>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+      </form>
+
+      <div class="flex flex-col items-center border-y bg-white py-2 [--zoom:1]">
+        <FieldTitle>
+          {{ $t(($) => $.dialog.pageSetup.preview, { ns: 'dialog' }) }}
+        </FieldTitle>
+        <div class="flex justify-center">
+          <div
+            v-for="(element, index) in previewNeumes"
+            :key="index"
+            class="inline-flex"
+            :style="getPreviewGapStyle(element, index)"
+          >
             <template v-if="isSyllableElement(element.elementType)">
               <NeumeBoxSyllable
                 class="syllable-box"
-                :key="index"
-                :note="element"
-                :pageSetup="form"
+                :note="element as NoteElement"
+                :page-setup="form"
               />
             </template>
             <template v-if="isMartyriaElement(element.elementType)">
               <NeumeBoxMartyria
                 class="marytria-neume-box"
-                :key="index"
-                :neume="element"
-                :pageSetup="form"
+                :neume="element as MartyriaElement"
+                :page-setup="form"
               />
             </template>
             <template v-if="isTempoElement(element.elementType)">
               <NeumeBoxTempo
                 class="tempo-neume-box"
-                :key="index"
-                :neume="element"
-                :pageSetup="form"
+                :neume="element as TempoElement"
+                :page-setup="form"
               />
             </template>
-          </template>
-        </div>
-        <div class="button-container">
-          <button class="ok-btn" @click="updatePageSetup">
-            {{ $t('dialog:common.update') }}
-          </button>
-          <button class="reset-btn neutral-btn" @click="saveAsDefault">
-            {{ $t('dialog:common.setAsDefault') }}
-          </button>
-          <button class="reset-btn neutral-btn" @click="resetToSystemDefaults">
-            {{ $t('dialog:common.useSystemDefault') }}
-          </button>
-          <button class="cancel-btn" @click="$emit('close')">
-            {{ $t('dialog:common.cancel') }}
-          </button>
+          </div>
         </div>
       </div>
-    </div>
-  </ModalDialog>
+
+      <DialogFooter>
+        <DialogClose as-child>
+          <Button variant="outline" type="button">
+            {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
+          </Button>
+        </DialogClose>
+        <Button variant="outline" type="button" @click="saveAsDefault">
+          <PhFloppyDisk />
+          {{ $t(($) => $.dialog.common.setAsDefault, { ns: 'dialog' }) }}
+        </Button>
+        <Button variant="outline" type="button" @click="resetToSystemDefaults">
+          <PhArrowCounterClockwise />
+          {{ $t(($) => $.dialog.common.useSystemDefault, { ns: 'dialog' }) }}
+        </Button>
+        <Button type="submit" form="page-setup-form">
+          <PhCheck />
+          {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
 
-<script lang="ts">
-import { throttle } from 'throttle-debounce';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+<script setup lang="ts">
+import {
+  PhArrowCounterClockwise,
+  PhArrowsInLineHorizontal,
+  PhArticleNyTimes,
+  PhBookOpenText,
+  PhCheck,
+  PhFile,
+  PhFloppyDisk,
+  PhGearFine,
+  PhMusicNotes,
+  PhPaintBucket,
+  PhPalette,
+  PhSplitHorizontal,
+  PhTextT,
+} from '@phosphor-icons/vue';
+import type { SelectorParam } from 'i18next';
+import type { Component, PropType } from 'vue';
+import { computed, ref } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
+import FontCombobox from '@/components/FontCombobox.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
+import { toDisplay } from '@/components/InputUnit.types';
 import InputUnit from '@/components/InputUnit.vue';
-import ModalDialog from '@/components/ModalDialog.vue';
-import NeumeVue from '@/components/Neume.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
-import { ElementType } from '@/models/Element';
-import { Accidental, QuantitativeNeume } from '@/models/Neumes';
-import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from '@/components/ui/field';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import type { MartyriaElement, TempoElement } from '@/models/Element';
+import { ElementType, NoteElement } from '@/models/Element';
+import {
+  Accidental,
+  GorgonNeume,
+  Ison,
+  MeasureBar,
+  MeasureNumber,
+  QuantitativeNeume,
+  TimeNeume,
+  VocalExpressionNeume,
+} from '@/models/Neumes';
+import type { PageSize, PageSizeUnit } from '@/models/PageSetup';
+import { PageSetup, pageSizes } from '@/models/PageSetup';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
+import { fontService } from '@/services/FontService';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { SaveService } from '@/services/SaveService';
+import {
+  fraction0FormatOptions,
+  fraction1FormatOptions,
+  fraction2FormatOptions,
+  fraction3FormatOptions,
+} from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
+import { withZoom } from '@/utils/withZoom';
+
+type CheckboxValue = boolean | 'indeterminate';
+type DialogSelector = SelectorParam<'dialog'>;
+type BooleanPageSetupKey = {
+  [K in keyof PageSetup]: PageSetup[K] extends boolean ? K : never;
+}[keyof PageSetup] &
+  keyof PageSetup;
+type NeumeColorKey =
+  | 'accidentalDefaultColor'
+  | 'breathDefaultColor'
+  | 'crossDefaultColor'
+  | 'fthoraDefaultColor'
+  | 'gorgonDefaultColor'
+  | 'heteronDefaultColor'
+  | 'isonDefaultColor'
+  | 'koronisDefaultColor'
+  | 'martyriaDefaultColor'
+  | 'measureBarDefaultColor'
+  | 'measureNumberDefaultColor'
+  | 'noteIndicatorDefaultColor'
+  | 'tempoDefaultColor';
+type NeumeStrokeKey =
+  | 'accidentalDefaultStrokeWidth'
+  | 'breathDefaultStrokeWidth'
+  | 'crossDefaultStrokeWidth'
+  | 'fthoraDefaultStrokeWidth'
+  | 'gorgonDefaultStrokeWidth'
+  | 'heteronDefaultStrokeWidth'
+  | 'isonDefaultStrokeWidth'
+  | 'koronisDefaultStrokeWidth'
+  | 'martyriaDefaultStrokeWidth'
+  | 'measureBarDefaultStrokeWidth'
+  | 'measureNumberDefaultStrokeWidth'
+  | 'noteIndicatorDefaultStrokeWidth'
+  | 'tempoDefaultStrokeWidth';
+type PageDirection = PageSetup['direction'];
+type PageNumerals = PageSetup['numerals'];
 
 enum NeumeColorOptions {
   Accidentals = 'Accidentals',
+  Breath = 'Breath',
+  Cross = 'Cross',
   Fthoras = 'Fthoras',
   Gorgons = 'Gorgons',
   Heterons = 'Heterons',
@@ -1429,78 +1668,192 @@ enum NeumeColorOptions {
   Tempos = 'Tempos',
 }
 
-@Component({
-  components: {
-    ModalDialog,
-    ColorPicker,
-    InputUnit,
-    InputStrokeWidth,
-    InputFontSize,
-    Neume: NeumeVue,
-    NeumeBoxSyllable,
-    NeumeBoxMartyria,
-    NeumeBoxTempo,
+const previewNoteConfigs = [
+  {
+    quantitativeNeume: QuantitativeNeume.Ison,
+    gorgonNeume: GorgonNeume.Gorgon_Bottom,
+    ison: Ison.Ga,
   },
-  emits: ['close', 'update'],
-})
-export default class PageSetupDialog extends Vue {
-  @Prop() pageSetup!: PageSetup;
-  @Prop() fonts!: string[];
-  form: PageSetup = new PageSetup();
-  currentSection: string = 'pageSizeRef';
-  neumeBulkColor: string = '#000000';
+  {
+    quantitativeNeume: QuantitativeNeume.Ison,
+    timeNeume: TimeNeume.Dipli,
+    measureBarLeft: MeasureBar.MeasureBarRight,
+    measureBarRight: MeasureBar.MeasureBarRight,
+    measureNumber: MeasureNumber.Three,
+  },
+  {
+    quantitativeNeume: QuantitativeNeume.Oligon,
+    vocalExpressionNeume: VocalExpressionNeume.Antikenoma,
+    ison: Ison.Ni,
+  },
+  {
+    quantitativeNeume: QuantitativeNeume.Apostrophos,
+  },
+  {
+    quantitativeNeume: QuantitativeNeume.Oligon,
+    timeNeume: TimeNeume.Klasma_Top,
+  },
+  {
+    quantitativeNeume: QuantitativeNeume.Oligon,
+    gorgonNeume: GorgonNeume.Gorgon_Top,
+    vocalExpressionNeume: VocalExpressionNeume.Psifiston,
+    accidental: Accidental.Flat_2_Right,
+  },
+  {
+    quantitativeNeume: QuantitativeNeume.Apostrophos,
+  },
+];
 
-  QuantitativeNeume = QuantitativeNeume;
-  Accidental = Accidental;
-  NeumeColorOptions = NeumeColorOptions;
+function createPreviewNote(
+  args: Partial<NoteElement>,
+  measureBarSpacing: number,
+): NoteElement {
+  const note = new NoteElement();
+  Object.assign(note, args);
+  note.computedMeasureBarLeftLeadingSpacing =
+    note.measureBarLeft != null ? measureBarSpacing : 0;
+  note.computedMeasureBarRightTrailingSpacing =
+    note.measureBarRight != null ? measureBarSpacing : 0;
+  return note;
+}
 
-  selectedNeumeColorOptions: NeumeColorOptions[] = [];
+function getPreviewGapStyle(
+  element: { elementType: ElementType } & Partial<NoteElement>,
+  index: number | string,
+) {
+  const numericIndex = Number(index);
+  const glue =
+    element.elementType === ElementType.Martyria
+      ? fontService.getMartyriaGlue(form.value.neumeDefaultFontFamily)
+      : fontService.getStandardGlue(form.value.neumeDefaultFontFamily);
 
-  previewNeumes = [
+  const gapWidth =
+    form.value.neumeDefaultFontSize * glue.width +
+    form.value.neumeDefaultSpacing;
+
+  return {
+    marginInlineStart: numericIndex > 0 ? withZoom(gapWidth) : undefined,
+  };
+}
+
+const emit = defineEmits<{
+  update: [pageSetup: PageSetup];
+}>();
+
+const props = defineProps({
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
+  },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
+  fonts: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
+});
+
+const open = defineModel<boolean>('open', { required: true });
+
+const isonIcon = NeumeMappingService.getMapping(QuantitativeNeume.Ison).text;
+
+const sections = [
+  {
+    value: 'pageSize',
+    labelSelector: ($) => $.dialog.pageSetup.pageSize,
+    icon: PhFile,
+  },
+  {
+    value: 'margins',
+    labelSelector: ($) => $.dialog.pageSetup.margins,
+    icon: PhArrowsInLineHorizontal,
+  },
+  {
+    value: 'spacing',
+    labelSelector: ($) => $.dialog.pageSetup.spacing,
+    icon: PhSplitHorizontal,
+  },
+  {
+    value: 'headersAndFooters',
+    labelSelector: ($) => $.dialog.pageSetup.headersAndFooters,
+    icon: PhBookOpenText,
+  },
+  {
+    value: 'miscellaneous',
+    labelSelector: ($) => $.dialog.pageSetup.miscellaneous,
+    icon: PhGearFine,
+  },
+  {
+    value: 'dropCaps',
+    labelSelector: ($) => $.dialog.pageSetup.dropCaps,
+    icon: PhArticleNyTimes,
+  },
+  {
+    value: 'lyrics',
+    labelSelector: ($) => $.dialog.pageSetup.lyrics,
+    icon: PhTextT,
+  },
+  {
+    value: 'modeKeys',
+    labelSelector: ($) => $.dialog.pageSetup.initialMartyriae,
+    icon: PhMusicNotes,
+  },
+  {
+    value: 'neumes',
+    labelSelector: ($) => $.dialog.pageSetup.neumes,
+    icon: PhMusicNotes,
+  },
+  {
+    value: 'neumeStyles',
+    labelSelector: ($) => $.dialog.pageSetup.neumeStyles,
+    icon: PhPalette,
+  },
+] as const satisfies ReadonlyArray<{
+  value: string;
+  labelSelector: DialogSelector;
+  icon: Component;
+}>;
+
+const pageSizeUnitOptions = [
+  { value: 'in', labelSelector: ($) => $.dialog.pageSetup.in },
+  { value: 'cm', labelSelector: ($) => $.dialog.pageSetup.cm },
+  { value: 'mm', labelSelector: ($) => $.dialog.pageSetup.mm },
+  { value: 'pt', labelSelector: ($) => $.dialog.pageSetup.pt },
+  { value: 'pc', labelSelector: ($) => $.dialog.pageSetup.pc },
+] as const satisfies ReadonlyArray<{
+  value: PageSizeUnit;
+  labelSelector: DialogSelector;
+}>;
+
+const directionOptions = new Map<PageDirection, DialogSelector>([
+  ['ltr', ($) => $.dialog.pageSetup.leftToRight],
+  ['rtl', ($) => $.dialog.pageSetup.rightToLeft],
+]);
+
+const numeralsOptions = new Map<PageNumerals, DialogSelector>([
+  ['westernArabic', ($) => $.dialog.pageSetup.westernArabic],
+  ['easternArabic', ($) => $.dialog.pageSetup.easternArabic],
+]);
+
+const form = ref(new PageSetup());
+const neumeBulkColor = ref('#000000');
+
+const previewNeumes = computed(() => {
+  const measureBarSpacing =
+    form.value.neumeDefaultFontSize *
+      fontService.getStandardGlue(form.value.neumeDefaultFontFamily).width +
+    form.value.neumeDefaultSpacing;
+
+  return [
     {
       elementType: ElementType.Tempo,
       neume: 'Moderate',
     },
-    {
-      elementType: ElementType.Note,
-      quantitativeNeume: 'Ison',
-      gorgonNeume: 'Gorgon_Bottom',
-      ison: 'Ison.Ga',
-    },
-    {
-      elementType: ElementType.Note,
-      quantitativeNeume: 'Ison',
-      timeNeume: 'Dipli',
-      measureBarLeft: 'MeasureBarRight',
-      measureBarRight: 'MeasureBarRight',
-      measureNumber: 'Three',
-    },
-    {
-      elementType: ElementType.Note,
-      quantitativeNeume: 'Oligon',
-      vocalExpressionNeume: 'Antikenoma',
-      ison: 'Ison.Ni',
-    },
-    {
-      elementType: ElementType.Note,
-      quantitativeNeume: 'Apostrophos',
-    },
-    {
-      elementType: ElementType.Note,
-      quantitativeNeume: 'Oligon',
-      timeNeume: 'Klasma_Top',
-    },
-    {
-      elementType: ElementType.Note,
-      quantitativeNeume: 'Oligon',
-      gorgonNeume: 'Gorgon_Top',
-      vocalExpressionNeume: 'Psifiston',
-      accidental: 'Flat_2_Right',
-    },
-    {
-      elementType: ElementType.Note,
-      quantitativeNeume: 'Apostrophos',
-    },
+    ...previewNoteConfigs.map((config) =>
+      createPreviewNote(config, measureBarSpacing),
+    ),
     {
       elementType: ElementType.Martyria,
       auto: true,
@@ -1508,681 +1861,594 @@ export default class PageSetupDialog extends Vue {
       rootSign: 'DeltaDotted',
       scale: 'Diatonic',
       fthora: 'HardChromaticPa_Top',
-      verticalOffset: 0,
+      verticalOffset: form.value.martyriaVerticalOffset,
     },
-  ];
+  ] as any;
+});
+const selectedNeumeColorOptions = ref<NeumeColorOptions[]>([]);
 
-  get dropCapFontFamilies() {
+const neumeFontFamilies = computed(() => {
+  if (form.value.melkiteRtl) {
+    return [{ label: 'EZ Psaltica RTL', value: 'NeanesRTL' }];
+  } else {
     return [
-      'Source Serif',
-      'Athonite',
-      'GFS Didot',
-      'Noto Naskh Arabic',
-      'Omega',
-      'PFGoudyInitials',
-      ...this.fonts,
+      { label: 'EZ Psaltica', value: 'Neanes' },
+      { label: 'Stathis Series', value: 'NeanesStathisSeries' },
     ];
   }
-
-  get lyricsFontFamilies() {
-    return [
-      'Source Serif',
-      'GFS Didot',
-      'Noto Naskh Arabic',
-      'Omega',
-      ...this.fonts,
-    ];
-  }
-
-  get neumeFontFamilies() {
-    if (this.form.melkiteRtl) {
-      return [{ displayName: 'EZ Psaltica RTL', value: 'NeanesRTL' }];
-    } else {
-      return [
-        { displayName: 'EZ Psaltica', value: 'Neanes' },
-        { displayName: 'Stathis Series', value: 'NeanesStathisSeries' },
-      ];
-    }
-  }
-
-  get neumeSpacingMax() {
-    return Math.round(this.toDisplayUnit(this.form.pageWidth));
-  }
-
-  get heightAdjustmentMin() {
-    return -Math.round(Unit.fromPt(this.pageSetup.pageHeight));
-  }
-
-  get heightAdjustmentMax() {
-    return Unit.toPt(this.pageSetup.pageHeight);
-  }
-
-  created() {
-    Object.assign(this.form, this.pageSetup);
-
-    window.addEventListener('keydown', this.onKeyDown);
-  }
-
-  beforeUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-  }
-
-  get pageSizes() {
-    return pageSizes;
-  }
-
-  get pageSize() {
-    return this.form.pageSize;
-  }
-
-  set pageSize(value: PageSize) {
-    this.form.pageSize = value;
-
-    this.updatePageSize();
-  }
-
-  get landscape() {
-    return this.form.landscape;
-  }
-
-  set landscape(value: boolean) {
-    this.form.landscape = value;
-    this.updatePageSize();
-  }
-
-  get marginUnitLabel() {
-    switch (this.form.pageSizeUnit) {
-      case 'pc':
-        return 'dialog:pageSetup.pc';
-      case 'pt':
-        return 'dialog:pageSetup.pt';
-      case 'cm':
-        return 'dialog:pageSetup.cm';
-      case 'mm':
-        return 'dialog:pageSetup.mm';
-      case 'in':
-        return 'dialog:pageSetup.in';
-      default:
-        console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
-        return null;
-    }
-  }
-
-  get marginStep() {
-    switch (this.form.pageSizeUnit) {
-      case 'pc':
-        return 1;
-      case 'pt':
-        return 1;
-      case 'cm':
-        return 0.1;
-      case 'mm':
-        return 1;
-      case 'in':
-        return 0.1;
-      default:
-        console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
-        return 1;
-    }
-  }
-
-  get spacingStep() {
-    switch (this.form.pageSizeUnit) {
-      case 'pc':
-        return 0.05;
-      case 'pt':
-        return 0.5;
-      case 'cm':
-        return 0.01;
-      case 'mm':
-        return 0.1;
-      case 'in':
-        return 0.005;
-      default:
-        console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
-        return 1;
-    }
-  }
-
-  toDisplayUnit(value: number) {
-    switch (this.form.pageSizeUnit) {
-      case 'pc':
-        return Unit.toPc(value);
-      case 'pt':
-        return Unit.toPt(value);
-      case 'cm':
-        return Unit.toCm(value);
-      case 'mm':
-        return Unit.toMm(value);
-      case 'in':
-        return Unit.toInch(value);
-      default:
-        console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
-        return 0;
-    }
-  }
-
-  toStorageUnit(value: number) {
-    switch (this.form.pageSizeUnit) {
-      case 'pc':
-        return Unit.fromPc(value);
-      case 'pt':
-        return Unit.fromPt(value);
-      case 'cm':
-        return Unit.fromCm(value);
-      case 'mm':
-        return Unit.fromMm(value);
-      case 'in':
-        return Unit.fromInch(value);
-      default:
-        console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
-        return 0;
-    }
-  }
-
-  get topMargin() {
-    return this.toDisplayUnit(this.form.topMargin).toFixed(2);
-  }
-
-  updateTopMargin(value: number) {
-    this.form.topMargin = Math.min(
-      Math.max(this.toStorageUnit(value), 0),
-      this.form.pageHeight - this.form.bottomMargin - Unit.fromInch(0.5),
-    );
-
-    this.$forceUpdate();
-  }
-
-  get bottomMargin() {
-    return this.toDisplayUnit(this.form.bottomMargin).toFixed(2);
-  }
-
-  updateBottomMargin(value: number) {
-    this.form.bottomMargin = Math.min(
-      Math.max(this.toStorageUnit(value), 0),
-      this.form.pageHeight - this.form.topMargin - Unit.fromInch(0.5),
-    );
-
-    this.$forceUpdate();
-  }
-
-  get leftMargin() {
-    return this.toDisplayUnit(this.form.leftMargin).toFixed(2);
-  }
-
-  updateLeftMargin(value: number) {
-    this.form.leftMargin = Math.min(
-      Math.max(this.toStorageUnit(value), 0),
-      this.form.pageWidth - this.form.rightMargin - Unit.fromInch(0.5),
-    );
-
-    this.$forceUpdate();
-  }
-
-  get rightMargin() {
-    return this.toDisplayUnit(this.form.rightMargin).toFixed(2);
-  }
-
-  updateRightMargin(value: number) {
-    this.form.rightMargin = Math.min(
-      Math.max(this.toStorageUnit(value), 0),
-      this.form.pageWidth - this.form.leftMargin - Unit.fromInch(0.5),
-    );
-
-    this.$forceUpdate();
-  }
-
-  get headerMargin() {
-    return this.toDisplayUnit(this.form.headerMargin).toFixed(2);
-  }
-
-  updateHeaderMargin(value: number) {
-    this.form.headerMargin = Math.min(
-      Math.max(this.toStorageUnit(value), 0),
-      this.form.innerPageHeight,
-    );
-
-    this.$forceUpdate();
-  }
-
-  get footerMargin() {
-    return this.toDisplayUnit(this.form.footerMargin).toFixed(2);
-  }
-
-  updateFooterMargin(value: number) {
-    this.form.footerMargin = Math.min(
-      Math.max(this.toStorageUnit(value), 0),
-      this.form.innerPageHeight,
-    );
-
-    this.$forceUpdate();
-  }
-
-  get lyricsVerticalOffset() {
-    return this.toDisplayUnit(this.form.lyricsVerticalOffset).toFixed(3);
-  }
-
-  updateLyricsVerticalOffset(value: number) {
-    this.form.lyricsVerticalOffset = Math.min(
-      this.toStorageUnit(value),
-      this.form.innerPageHeight -
-        this.form.lyricsDefaultFontSize -
-        this.form.neumeDefaultFontSize,
-    );
-
-    this.$forceUpdate();
-  }
-
-  get lyricsMinimumSpacing() {
-    return this.toDisplayUnit(this.form.lyricsMinimumSpacing).toFixed(3);
-  }
-
-  updateLyricsMinimumSpacing(value: number) {
-    this.form.lyricsMinimumSpacing = Math.min(
-      this.toStorageUnit(value),
-      this.form.innerPageWidth,
-    );
-
-    this.$forceUpdate();
-  }
-
-  get lineHeight() {
-    return this.toDisplayUnit(this.form.lineHeight).toFixed(3);
-  }
-
-  get hyphenSpacing() {
-    return this.toDisplayUnit(this.form.hyphenSpacing).toFixed(3);
-  }
-
-  updateLineHeight(value: number) {
-    this.form.lineHeight = Math.min(
-      Math.max(this.toStorageUnit(value), 0),
-      this.form.innerPageHeight,
-    );
-
-    this.$forceUpdate();
-  }
-
-  updateHyphenSpacing(value: number) {
-    this.form.hyphenSpacing = Math.min(
-      Math.max(this.toStorageUnit(value), 0),
-      this.form.innerPageWidth,
-    );
-
-    this.$forceUpdate();
-  }
-
-  onChangeMelkiteRtl() {
-    this.form.neumeDefaultFontFamily = this.form.melkiteRtl
-      ? 'NeanesRTL'
-      : 'Neanes';
-  }
-
-  isSyllableElement(elementType: ElementType) {
-    return elementType == ElementType.Note;
-  }
-
-  isMartyriaElement(elementType: ElementType) {
-    return elementType == ElementType.Martyria;
-  }
-
-  isTempoElement(elementType: ElementType) {
-    return elementType == ElementType.Tempo;
-  }
-
-  onKeyDown(event: KeyboardEvent) {
-    if (event.code === 'Escape') {
-      this.$emit('close');
-    }
-  }
-
-  updatePageSize() {
-    if (this.form.pageSize === 'Custom') {
-      if (this.form.landscape) {
-        this.form.pageWidth = this.form.pageHeightCustom;
-        this.form.pageHeight = this.form.pageWidthCustom;
-      } else {
-        this.form.pageWidth = this.form.pageWidthCustom;
-        this.form.pageHeight = this.form.pageHeightCustom;
-      }
+});
+const neumeSpacingMax = computed(() =>
+  Math.round(toDisplay(form.value.pageWidth, form.value.pageSizeUnit) ?? 0),
+);
+const heightAdjustmentMin = computed(
+  () => -Math.round(Unit.fromPt(props.pageSetup.pageHeight)),
+);
+const heightAdjustmentMax = computed(() =>
+  Unit.toPt(props.pageSetup.pageHeight),
+);
+const pageSize = computed({
+  get: () => form.value.pageSize,
+  set: (value: PageSize) => {
+    form.value.pageSize = value;
+    updatePageSize();
+  },
+});
+const landscape = computed({
+  get: () => form.value.landscape,
+  set: (value: boolean) => {
+    form.value.landscape = value;
+    updatePageSize();
+  },
+});
+const orientation = computed({
+  get: () => (landscape.value ? 'landscape' : 'portrait'),
+  set: (value: 'portrait' | 'landscape' | undefined) => {
+    if (value == null) {
       return;
     }
 
-    const pageSize = pageSizes.find((x) => x.name === this.form.pageSize);
-    if (pageSize) {
-      if (this.form.landscape) {
-        this.form.pageWidth = pageSize.height;
-        this.form.pageHeight = pageSize.width;
-      } else {
-        this.form.pageWidth = pageSize.width;
-        this.form.pageHeight = pageSize.height;
-      }
+    landscape.value = value === 'landscape';
+  },
+});
+const marginUnitLabel = computed<SelectorParam<'dialog'> | undefined>(() => {
+  switch (form.value.pageSizeUnit) {
+    case 'pc':
+      return ($) => $.dialog.pageSetup.pc;
+    case 'pt':
+      return ($) => $.dialog.pageSetup.pt;
+    case 'cm':
+      return ($) => $.dialog.pageSetup.cm;
+    case 'mm':
+      return ($) => $.dialog.pageSetup.mm;
+    case 'in':
+      return ($) => $.dialog.pageSetup.in;
+    default:
+      console.warn(`Unknown page size unit: ${form.value.pageSizeUnit}`);
+      return undefined;
+  }
+});
+const marginStep = computed(() => {
+  switch (form.value.pageSizeUnit) {
+    case 'pc':
+      return 1;
+    case 'pt':
+      return 1;
+    case 'cm':
+      return 0.1;
+    case 'mm':
+      return 1;
+    case 'in':
+      return 0.1;
+    default:
+      console.warn(`Unknown page size unit: ${form.value.pageSizeUnit}`);
+      return 1;
+  }
+});
+const spacingStep = computed(() => {
+  switch (form.value.pageSizeUnit) {
+    case 'pc':
+      return 0.05;
+    case 'pt':
+      return 0.5;
+    case 'cm':
+      return 0.01;
+    case 'mm':
+      return 0.1;
+    case 'in':
+      return 0.005;
+    default:
+      console.warn(`Unknown page size unit: ${form.value.pageSizeUnit}`);
+      return 1;
+  }
+});
+
+const topMarginMax = computed(() =>
+  toPositiveDisplay(
+    form.value.pageHeight - form.value.bottomMargin - Unit.fromInch(0.5),
+  ),
+);
+const bottomMarginMax = computed(() =>
+  toPositiveDisplay(
+    form.value.pageHeight - form.value.topMargin - Unit.fromInch(0.5),
+  ),
+);
+const leftMarginMax = computed(() =>
+  toPositiveDisplay(
+    form.value.pageWidth - form.value.rightMargin - Unit.fromInch(0.5),
+  ),
+);
+const rightMarginMax = computed(() =>
+  toPositiveDisplay(
+    form.value.pageWidth - form.value.leftMargin - Unit.fromInch(0.5),
+  ),
+);
+const headerMarginMax = computed(() =>
+  toPositiveDisplay(form.value.innerPageHeight),
+);
+const footerMarginMax = computed(() =>
+  toPositiveDisplay(form.value.innerPageHeight),
+);
+const lyricsVerticalOffsetMax = computed(
+  () =>
+    toDisplay(
+      form.value.innerPageHeight -
+        resolvedLyricsStyle.value.fontSize -
+        form.value.neumeDefaultFontSize,
+      form.value.pageSizeUnit,
+    ) ?? 0,
+);
+const lyricsMinimumSpacingMax = computed(() =>
+  toPositiveDisplay(form.value.innerPageWidth),
+);
+const lineHeightMax = computed(() =>
+  toPositiveDisplay(form.value.innerPageHeight),
+);
+const hyphenSpacingMax = computed(() =>
+  toPositiveDisplay(form.value.innerPageWidth),
+);
+
+const minimumSyllableToHyphenClearanceMax = computed(() =>
+  toPositiveDisplay(form.value.innerPageWidth),
+);
+
+const marginRows = [
+  {
+    id: 'page-setup-dialog-top-margin',
+    labelSelector: () => ($) => $.dialog.common.top,
+    modelKey: 'topMargin',
+    max: topMarginMax,
+    update: updateTopMargin,
+  },
+  {
+    id: 'page-setup-dialog-bottom-margin',
+    labelSelector: () => ($) => $.dialog.common.bottom,
+    modelKey: 'bottomMargin',
+    max: bottomMarginMax,
+    update: updateBottomMargin,
+  },
+  {
+    id: 'page-setup-dialog-left-margin',
+    labelSelector: (facingPages: boolean) =>
+      facingPages
+        ? ($) => $.dialog.pageSetup.inside
+        : ($) => $.dialog.common.left,
+    modelKey: 'leftMargin',
+    max: leftMarginMax,
+    update: updateLeftMargin,
+  },
+  {
+    id: 'page-setup-dialog-right-margin',
+    labelSelector: (facingPages: boolean) =>
+      facingPages
+        ? ($) => $.dialog.pageSetup.outside
+        : ($) => $.dialog.common.right,
+    modelKey: 'rightMargin',
+    max: rightMarginMax,
+    update: updateRightMargin,
+  },
+  {
+    id: 'page-setup-dialog-header-margin',
+    labelSelector: () => ($) => $.dialog.pageSetup.header,
+    modelKey: 'headerMargin',
+    max: headerMarginMax,
+    update: updateHeaderMargin,
+  },
+  {
+    id: 'page-setup-dialog-footer-margin',
+    labelSelector: () => ($) => $.dialog.pageSetup.footer,
+    modelKey: 'footerMargin',
+    max: footerMarginMax,
+    update: updateFooterMargin,
+  },
+] as const satisfies ReadonlyArray<{
+  id: string;
+  labelSelector: (facingPages: boolean) => DialogSelector;
+  modelKey:
+    | 'topMargin'
+    | 'bottomMargin'
+    | 'leftMargin'
+    | 'rightMargin'
+    | 'headerMargin'
+    | 'footerMargin';
+  max: typeof topMarginMax;
+  update: (value: number | null) => void;
+}>;
+
+const headerFooterCheckboxRows = [
+  {
+    id: 'page-setup-dialog-show-header',
+    labelSelector: ($) => $.dialog.pageSetup.includeHeader,
+    modelKey: 'showHeader',
+  },
+  {
+    id: 'page-setup-dialog-show-footer',
+    labelSelector: ($) => $.dialog.pageSetup.includeFooter,
+    modelKey: 'showFooter',
+  },
+  {
+    id: 'page-setup-dialog-different-first-page',
+    labelSelector: ($) => $.dialog.pageSetup.differentFirstPage,
+    modelKey: 'headerDifferentFirstPage',
+  },
+  {
+    id: 'page-setup-dialog-different-odd-even',
+    labelSelector: ($) => $.dialog.pageSetup.differentOddAndEven,
+    modelKey: 'headerDifferentOddEven',
+  },
+  {
+    id: 'page-setup-dialog-rich-header-footer',
+    labelSelector: ($) => $.dialog.pageSetup.richHeaderFooter,
+    modelKey: 'richHeaderFooter',
+  },
+  {
+    id: 'page-setup-dialog-different-chapter-opening',
+    labelSelector: ($) => $.dialog.pageSetup.differentChapterOpening,
+    modelKey: 'headerFooterDifferentChapterOpening',
+  },
+] as const satisfies ReadonlyArray<{
+  id: string;
+  labelSelector: DialogSelector;
+  modelKey: BooleanPageSetupKey;
+}>;
+
+const miscellaneousCheckboxRows = [
+  {
+    id: 'page-setup-dialog-chrysanthine-accidentals',
+    labelSelector: ($) => $.dialog.pageSetup.useChrysanthineAccidentals,
+    descriptionSelector: ($) =>
+      $.dialog.pageSetup.useChrysanthineAccidentalsDescription,
+    modelKey: 'chrysanthineAccidentals',
+  },
+  {
+    id: 'page-setup-dialog-no-fthora-restrictions',
+    labelSelector: ($) => $.dialog.pageSetup.disableFthoraRestrictions,
+    descriptionSelector: ($) =>
+      $.dialog.pageSetup.disableFthoraRestrictionsDescription,
+    modelKey: 'noFthoraRestrictions',
+  },
+  {
+    id: 'page-setup-dialog-align-ison-indicators',
+    labelSelector: ($) => $.dialog.pageSetup.alignIsonIndicators,
+    descriptionSelector: ($) =>
+      $.dialog.pageSetup.alignIsonIndicatorsDescription,
+    modelKey: 'alignIsonIndicators',
+  },
+  {
+    id: 'page-setup-dialog-melkite-rtl',
+    labelSelector: ($) => $.dialog.pageSetup.melkiteRtl,
+    descriptionSelector: ($) => $.dialog.pageSetup.melkiteRtlDescription,
+    modelKey: 'melkiteRtl',
+  },
+  {
+    id: 'page-setup-dialog-disable-melismata',
+    labelSelector: ($) => $.dialog.pageSetup.disableGreekMelismata,
+    descriptionSelector: ($) =>
+      $.dialog.pageSetup.disableGreekMelismataDescription,
+    modelKey: 'disableGreekMelismata',
+  },
+] as const satisfies ReadonlyArray<{
+  id: string;
+  labelSelector: DialogSelector;
+  descriptionSelector: DialogSelector;
+  modelKey: BooleanPageSetupKey;
+}>;
+
+const neumeColorRows = [
+  {
+    option: NeumeColorOptions.Accidentals,
+    labelSelector: ($) => $.dialog.pageSetup.accidentals,
+    colorKey: 'accidentalDefaultColor',
+    strokeKey: 'accidentalDefaultStrokeWidth',
+  },
+  {
+    option: NeumeColorOptions.Breath,
+    labelSelector: ($) => $.dialog.pageSetup.breath,
+    colorKey: 'breathDefaultColor',
+    strokeKey: 'breathDefaultStrokeWidth',
+  },
+  {
+    option: NeumeColorOptions.Cross,
+    labelSelector: ($) => $.dialog.pageSetup.cross,
+    colorKey: 'crossDefaultColor',
+    strokeKey: 'crossDefaultStrokeWidth',
+  },
+  {
+    option: NeumeColorOptions.Fthoras,
+    labelSelector: ($) => $.dialog.pageSetup.fthoras,
+    colorKey: 'fthoraDefaultColor',
+    strokeKey: 'fthoraDefaultStrokeWidth',
+  },
+  {
+    option: NeumeColorOptions.Gorgons,
+    labelSelector: ($) => $.dialog.pageSetup.gorgons,
+    colorKey: 'gorgonDefaultColor',
+    strokeKey: 'gorgonDefaultStrokeWidth',
+  },
+  {
+    option: NeumeColorOptions.Heterons,
+    labelSelector: ($) => $.dialog.pageSetup.heterons,
+    colorKey: 'heteronDefaultColor',
+    strokeKey: 'heteronDefaultStrokeWidth',
+  },
+  {
+    option: NeumeColorOptions.Ison,
+    labelSelector: ($) => $.dialog.pageSetup.ison,
+    colorKey: 'isonDefaultColor',
+    strokeKey: 'isonDefaultStrokeWidth',
+  },
+  {
+    option: NeumeColorOptions.Koronis,
+    labelSelector: ($) => $.dialog.pageSetup.koronis,
+    colorKey: 'koronisDefaultColor',
+    strokeKey: 'koronisDefaultStrokeWidth',
+  },
+  {
+    option: NeumeColorOptions.Martyria,
+    labelSelector: ($) => $.dialog.pageSetup.martyriae,
+    colorKey: 'martyriaDefaultColor',
+    strokeKey: 'martyriaDefaultStrokeWidth',
+  },
+  {
+    option: NeumeColorOptions.MeasureBars,
+    labelSelector: ($) => $.dialog.pageSetup.measureBars,
+    colorKey: 'measureBarDefaultColor',
+    strokeKey: 'measureBarDefaultStrokeWidth',
+  },
+  {
+    option: NeumeColorOptions.MeasureNumbers,
+    labelSelector: ($) => $.dialog.pageSetup.measureNo,
+    colorKey: 'measureNumberDefaultColor',
+    strokeKey: 'measureNumberDefaultStrokeWidth',
+  },
+  {
+    option: NeumeColorOptions.NoteIndicators,
+    labelSelector: ($) => $.dialog.pageSetup.noteIndicators,
+    colorKey: 'noteIndicatorDefaultColor',
+    strokeKey: 'noteIndicatorDefaultStrokeWidth',
+  },
+  {
+    option: NeumeColorOptions.Tempos,
+    labelSelector: ($) => $.dialog.pageSetup.tempos,
+    colorKey: 'tempoDefaultColor',
+    strokeKey: 'tempoDefaultStrokeWidth',
+  },
+] as const satisfies ReadonlyArray<{
+  option: NeumeColorOptions;
+  labelSelector: DialogSelector;
+  colorKey: NeumeColorKey;
+  strokeKey: NeumeStrokeKey;
+}>;
+
+Object.assign(form.value, props.pageSetup);
+normalizeDirection();
+
+const resolvedLyricsStyle = computed(() =>
+  resolveParagraphStyle(
+    props.paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+  ),
+);
+
+function toPositiveDisplay(value: number) {
+  return Math.max(0, toDisplay(value, form.value.pageSizeUnit) ?? 0);
+}
+
+function storageValue(value: number | null) {
+  return value ?? 0;
+}
+
+function setBoolean(key: BooleanPageSetupKey, value: CheckboxValue) {
+  form.value[key] = value === true;
+}
+
+function updateFacingPages(value: CheckboxValue) {
+  form.value.facingPages = value === true;
+  normalizeDirection();
+}
+
+function normalizeDirection() {
+  if (!form.value.facingPages) {
+    form.value.direction = 'ltr';
+  }
+}
+
+function toggleNeumeColorOption(
+  option: NeumeColorOptions,
+  value: CheckboxValue,
+) {
+  const checked = value === true;
+  const index = selectedNeumeColorOptions.value.indexOf(option);
+
+  if (checked && index < 0) {
+    selectedNeumeColorOptions.value.push(option);
+  } else if (!checked && index >= 0) {
+    selectedNeumeColorOptions.value.splice(index, 1);
+  }
+}
+
+function getNeumeColorOptionId(option: NeumeColorOptions) {
+  return `page-setup-dialog-neume-color-${option}`;
+}
+
+function changeNeumeColorInBulk() {
+  const selectedOptions = new Set(selectedNeumeColorOptions.value);
+
+  for (const row of neumeColorRows) {
+    if (selectedOptions.has(row.option)) {
+      form.value[row.colorKey] = neumeBulkColor.value;
     }
   }
+}
 
-  updatePageSetup() {
-    this.$emit('update', this.form);
-    this.$emit('close');
+function updateTopMargin(value: number | null) {
+  form.value.topMargin = Math.min(
+    Math.max(storageValue(value), 0),
+    form.value.pageHeight - form.value.bottomMargin - Unit.fromInch(0.5),
+  );
+}
+
+function updateBottomMargin(value: number | null) {
+  form.value.bottomMargin = Math.min(
+    Math.max(storageValue(value), 0),
+    form.value.pageHeight - form.value.topMargin - Unit.fromInch(0.5),
+  );
+}
+
+function updateLeftMargin(value: number | null) {
+  form.value.leftMargin = Math.min(
+    Math.max(storageValue(value), 0),
+    form.value.pageWidth - form.value.rightMargin - Unit.fromInch(0.5),
+  );
+}
+
+function updateRightMargin(value: number | null) {
+  form.value.rightMargin = Math.min(
+    Math.max(storageValue(value), 0),
+    form.value.pageWidth - form.value.leftMargin - Unit.fromInch(0.5),
+  );
+}
+
+function updateHeaderMargin(value: number | null) {
+  form.value.headerMargin = Math.min(
+    Math.max(storageValue(value), 0),
+    form.value.innerPageHeight,
+  );
+}
+
+function updateFooterMargin(value: number | null) {
+  form.value.footerMargin = Math.min(
+    Math.max(storageValue(value), 0),
+    form.value.innerPageHeight,
+  );
+}
+
+function updateLyricsVerticalOffset(value: number | null) {
+  form.value.lyricsVerticalOffset = Math.min(
+    storageValue(value),
+    form.value.innerPageHeight -
+      resolvedLyricsStyle.value.fontSize -
+      form.value.neumeDefaultFontSize,
+  );
+}
+
+function updateLyricsMinimumSpacing(value: number | null) {
+  form.value.lyricsMinimumSpacing = Math.min(
+    storageValue(value),
+    form.value.innerPageWidth,
+  );
+}
+
+function updateLineHeight(value: number | null) {
+  form.value.lineHeight = Math.min(
+    Math.max(storageValue(value), 0),
+    form.value.innerPageHeight,
+  );
+}
+
+function updateHyphenSpacing(value: number | null) {
+  form.value.hyphenSpacing = Math.min(
+    Math.max(storageValue(value), 0),
+    form.value.innerPageWidth,
+  );
+}
+
+function updateMinimumSyllableToHyphenClearance(value: number | null) {
+  form.value.minimumSyllableToHyphenClearance = Math.min(
+    Math.max(storageValue(value), 0),
+    form.value.innerPageWidth,
+  );
+}
+
+function onMelkiteRtlChanged(value: CheckboxValue) {
+  form.value.melkiteRtl = value === true;
+  onChangeMelkiteRtl();
+}
+
+function onChangeMelkiteRtl() {
+  form.value.neumeDefaultFontFamily = form.value.melkiteRtl
+    ? 'NeanesRTL'
+    : 'Neanes';
+}
+
+function updateNumerals(value: unknown) {
+  if (value !== 'westernArabic' && value !== 'easternArabic') {
+    return;
   }
 
-  saveAsDefault() {
-    const defaults = new PageSetup_v1();
-    SaveService.SavePageSetup(defaults, this.form);
+  form.value.numerals = value;
+}
 
-    localStorage.setItem('pageSetupDefault', JSON.stringify(defaults));
-  }
+function isSyllableElement(elementType: ElementType) {
+  return elementType == ElementType.Note;
+}
 
-  resetToSystemDefaults() {
-    this.form = new PageSetup();
-  }
+function isMartyriaElement(elementType: ElementType) {
+  return elementType == ElementType.Martyria;
+}
 
-  scrollTo(el: HTMLElement) {
-    el.scrollIntoView({ behavior: 'instant', block: 'start' });
-  }
+function isTempoElement(elementType: ElementType) {
+  return elementType == ElementType.Tempo;
+}
 
-  updateCurrentSectionThrottled = throttle(50, this.updateCurrentSection);
-
-  updateCurrentSection() {
-    const scrollParentTop = (
-      this.$refs.rightPaneRef as HTMLElement
-    ).getBoundingClientRect().top;
-
-    let closest: string | null = null;
-    let closestDistance = Infinity;
-
-    const sectionIds = [
-      'dropCapsRef',
-      'headersFootersRef',
-      'lyricsRef',
-      'marginsRef',
-      'miscellaneousRef',
-      'modeKeysRef',
-      'neumesRef',
-      'neumeStylesRef',
-      'pageSizeRef',
-      'textBoxesRef',
-      'spacingRef',
-    ];
-
-    for (const id of sectionIds) {
-      const el = this.$refs[id] as HTMLElement;
-
-      const top = Math.abs(el.getBoundingClientRect().top - scrollParentTop);
-
-      if (top < closestDistance) {
-        closest = id;
-        closestDistance = top;
-      }
+function updatePageSize() {
+  if (form.value.pageSize === 'Custom') {
+    if (form.value.landscape) {
+      form.value.pageWidth = form.value.pageHeightCustom;
+      form.value.pageHeight = form.value.pageWidthCustom;
+    } else {
+      form.value.pageWidth = form.value.pageWidthCustom;
+      form.value.pageHeight = form.value.pageHeightCustom;
     }
-
-    if (closest !== null) {
-      this.currentSection = closest;
-    }
+    return;
   }
 
-  changeNeumeColorInBulk() {
-    for (const neume of this.selectedNeumeColorOptions) {
-      switch (neume) {
-        case NeumeColorOptions.Accidentals:
-          this.form.accidentalDefaultColor = this.neumeBulkColor;
-          break;
-        case NeumeColorOptions.Fthoras:
-          this.form.fthoraDefaultColor = this.neumeBulkColor;
-          break;
-        case NeumeColorOptions.Gorgons:
-          this.form.gorgonDefaultColor = this.neumeBulkColor;
-          break;
-        case NeumeColorOptions.Heterons:
-          this.form.heteronDefaultColor = this.neumeBulkColor;
-          break;
-        case NeumeColorOptions.Ison:
-          this.form.isonDefaultColor = this.neumeBulkColor;
-          break;
-        case NeumeColorOptions.Koronis:
-          this.form.koronisDefaultColor = this.neumeBulkColor;
-          break;
-        case NeumeColorOptions.Martyria:
-          this.form.martyriaDefaultColor = this.neumeBulkColor;
-          break;
-        case NeumeColorOptions.MeasureBars:
-          this.form.measureBarDefaultColor = this.neumeBulkColor;
-          break;
-        case NeumeColorOptions.MeasureNumbers:
-          this.form.accidentalDefaultColor = this.neumeBulkColor;
-          break;
-        case NeumeColorOptions.NoteIndicators:
-          this.form.noteIndicatorDefaultColor = this.neumeBulkColor;
-          break;
-        case NeumeColorOptions.Tempos:
-          this.form.tempoDefaultColor = this.neumeBulkColor;
-          break;
-      }
+  const pageSize = pageSizes.find((x) => x.name === form.value.pageSize);
+  if (pageSize) {
+    if (form.value.landscape) {
+      form.value.pageWidth = pageSize.height;
+      form.value.pageHeight = pageSize.width;
+    } else {
+      form.value.pageWidth = pageSize.width;
+      form.value.pageHeight = pageSize.height;
     }
   }
+}
+
+function updatePageSetup() {
+  normalizeDirection();
+  emit('update', form.value);
+  open.value = false;
+}
+
+function saveAsDefault() {
+  normalizeDirection();
+  const defaults = new PageSetup_v1();
+  SaveService.SavePageSetup(defaults, form.value);
+
+  localStorage.setItem('pageSetupDefault', JSON.stringify(defaults));
+}
+
+function resetToSystemDefaults() {
+  form.value = new PageSetup();
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-.outer-container {
-  display: flex;
-  flex-direction: column;
-  width: 60vw;
-  height: 80vh;
-}
-
-.container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.preview-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border-top: 1px solid lightgray;
-  border-bottom: 1px solid lightgray;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-  --zoom: 1;
-}
-
-.preview-elements {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-
-.pane-container {
-  display: flex;
-  min-width: 250px;
-  max-width: 95vw;
-  margin-bottom: 1.5rem;
-  overflow: hidden;
-}
-
-.right-pane {
-  flex: 1;
-  overflow: auto;
-}
-
-.header {
-  font-size: 1.5rem;
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-
-.subheader {
-  font-weight: bold;
-  padding: 0.5rem;
-  font-size: 1.2rem;
-}
-
-.subheader:hover {
-  background-color: #f0f0f0;
-}
-
-.form-group.full {
-  padding: 1rem 0.5rem;
-  margin: 0;
-}
-
-.form-group:hover {
-  background-color: #f0f0f0;
-}
-
-.form-group .name,
-.subsubheader {
-  font-weight: bold;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
-.form-group .description {
-  margin-bottom: 0.5rem;
-}
-
-.form-group .unit-input {
-  width: 5rem;
-}
-
-.form-group .standard-select {
-  width: 6.5rem;
-}
-
-.form-group input[type='checkbox'] {
-  margin: 0 0.5rem 0 0;
-}
-
-.small-header {
-  font-weight: bold;
-  font-size: 0.9rem;
-}
-
-.units {
-  font-weight: normal;
-  color: gray;
-  margin-left: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.form-group {
-  padding: 0.5rem;
-}
-
-.row {
-  display: flex;
-}
-
-.margin-label {
-  display: inline-block;
-  text-align: right;
-  margin-right: 0.5rem;
-  width: 3.5rem;
-}
-
-.custom-page-size-label {
-  display: inline-block;
-  text-align: right;
-  margin-right: 0.5rem;
-  width: 3rem;
-}
-
-.margin-input {
-  width: 3.5rem;
-}
-
-.left-pane {
-  width: 175px;
-  margin-right: 2rem;
-  border-right: 1px solid lightgray;
-  overflow: auto;
-}
-
-.nav-item {
-  cursor: default;
-  padding: 0.25rem;
-}
-
-.nav-item.active {
-  font-weight: bold;
-}
-
-.header-rule-label {
-  display: inline-block;
-  width: 6rem;
-  padding-left: 2rem;
-}
-
-.checkbox-spacer {
-  width: 1rem;
-}
-
-.drop-caps-label {
-  display: inline-block;
-  text-align: right;
-  margin-right: 0.5rem;
-  margin-bottom: 0 !important;
-  width: 6rem;
-}
-
-.drop-caps-input {
-  width: 4rem;
-}
-
-.drop-caps-select {
-  width: auto;
-}
-
-.neume-colors-label {
-  display: inline-block;
-  width: 7rem;
-}
-
-.neume-colors-input {
-  width: 2.85rem;
-  height: 1.5rem;
-  margin-right: 2rem;
-}
-
-.neume-colors-checkbox-container {
-  width: 2rem;
-}
-
-.button-container {
-  display: flex;
-  justify-content: center;
-}
-
-.ok-btn,
-.reset-btn {
-  margin-right: 2rem;
-}
-
-.melisma-label {
-  margin-right: 0.5rem;
-}
-
-.melisma-input {
-  width: 2rem;
-}
-
-.radio-button {
-  padding: 0.25rem 0.5rem;
-  background-color: white;
-  border: 1px solid rgb(66, 139, 202);
-  text-align: center;
-  cursor: default;
-}
-
-.radio-button.selected {
-  background-color: rgb(66, 139, 202);
-  color: white;
-}
-
-.page-orientation-button {
-  width: 5rem;
-}
-</style>

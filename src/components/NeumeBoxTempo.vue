@@ -7,38 +7,40 @@
   >
     <Neume
       :neume="neume.neume"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
+      :font-family="pageSetup.neumeDefaultFontFamily"
     />
   </div>
 </template>
 
-<script lang="ts">
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+<script setup lang="ts">
+import type { PropType, StyleValue } from 'vue';
+import { computed } from 'vue';
 
-import Neume from '@/components/Neume.vue';
-import { TempoElement } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import Neume from '@/components/NeumeGlyph.vue';
+import type { TempoElement } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
-@Component({
-  components: {
-    Neume,
+const props = defineProps({
+  neume: {
+    type: Object as PropType<TempoElement>,
+    required: true,
   },
-  emits: ['select-single', 'select-range'],
-})
-export default class NeumeBoxMartyria extends Vue {
-  @Prop() neume!: TempoElement;
-  @Prop() pageSetup!: PageSetup;
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
+  },
+});
 
-  get style() {
-    return {
-      color: this.pageSetup.tempoDefaultColor,
-      fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
-      webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
-    } as StyleValue;
-  }
-}
+defineEmits(['select-single', 'select-range']);
+
+const style = computed(() => {
+  return {
+    color: props.pageSetup.tempoDefaultColor,
+    fontSize: withZoom(props.pageSetup.neumeDefaultFontSize),
+    webkitTextStrokeWidth: withZoom(props.pageSetup.tempoDefaultStrokeWidth),
+  } as StyleValue;
+});
 </script>
 
 <style scoped>

@@ -1,12 +1,21 @@
-import { PageSize } from '@/models/PageSetup';
-import { Score } from '@/models/save/v1/Score';
+import type { PageSize } from '@/models/PageSetup';
+import type { Score } from '@/models/save/v1/Score';
+import type { ZoomFitMode } from '@/models/Workspace';
+import type { WorkspacePaneId } from '@/models/WorkspacePane';
 
 export enum IpcMainChannels {
+  UpdateAvailable = 'UpdateAvailable',
+  UpdateDownloadStarted = 'UpdateDownloadStarted',
+  UpdateDownloadProgress = 'UpdateDownloadProgress',
+  UpdateDownloaded = 'UpdateDownloaded',
+  UpdateError = 'UpdateError',
+
   FileMenuNewScore = 'FileMenuNewScore',
   FileMenuOpenScore = 'FileMenuOpenScore',
   FileMenuPrint = 'FileMenuPrint',
   FileMenuSave = 'FileMenuSave',
   FileMenuSaveAs = 'FileMenuSaveAs',
+  FileMenuImportOcr = 'FileMenuImportOcr',
   FileMenuExportAsPdf = 'FileMenuExportAsPdf',
   FileMenuExportAsHtml = 'FileMenuExportAsHtml',
   FileMenuExportAsMusicXml = 'FileMenuExportAsMusicXml',
@@ -14,6 +23,8 @@ export enum IpcMainChannels {
   FileMenuExportAsImage = 'FileMenuExportAsImage',
 
   FileMenuPageSetup = 'FileMenuPageSetup',
+  FileMenuParagraphStyles = 'FileMenuParagraphStyles',
+  FileMenuDocumentProperties = 'FileMenuDocumentProperties',
 
   FileMenuUndo = 'FileMenuUndo',
   FileMenuRedo = 'FileMenuRedo',
@@ -26,12 +37,23 @@ export enum IpcMainChannels {
   FileMenuPasteWithLyrics = 'FileMenuPasteWithLyrics',
   FileMenuPasteFormat = 'FileMenuPasteFormat',
 
+  FileMenuSelectAll = 'FileMenuSelectAll',
+
   FileMenuFind = 'FileMenuFind',
 
-  FileMenuLyrics = 'FileMenuLyrics',
+  FileMenuWindowPreviousTab = 'FileMenuWindowPreviousTab',
+  FileMenuWindowNextTab = 'FileMenuWindowNextTab',
+
+  FileMenuViewPaneVisibility = 'FileMenuViewPaneVisibility',
+  FileMenuViewStatusBarVisibility = 'FileMenuViewStatusBarVisibility',
+  FileMenuViewResetLayout = 'FileMenuViewResetLayout',
+  FileMenuViewZoom = 'FileMenuViewZoom',
 
   FileMenuPreferences = 'FileMenuPreferences',
+  OpenAboutDialog = 'OpenAboutDialog',
 
+  FileMenuInsertAnnotation = 'FileMenuInsertAnnotation',
+  FileMenuInsertAlternateLine = 'FileMenuInsertAlternateLine',
   FileMenuInsertTextBox = 'FileMenuInsertTextBox',
   FileMenuInsertRichTextBox = 'FileMenuInsertRichTextBox',
   FileMenuInsertModeKey = 'FileMenuInsertModeKey',
@@ -42,7 +64,7 @@ export enum IpcMainChannels {
   FileMenuInsertHeader = 'FileMenuInsertHeader',
   FileMenuInsertFooter = 'FileMenuInsertFooter',
 
-  FileMenuToolsCopyElementLink = 'FileMenuToolsCopyElementLink',
+  FileMenuEditCopyElementLink = 'FileMenuEditCopyElementLink',
 
   FileMenuGenerateTestFile = 'GenerateTestFile',
 
@@ -52,8 +74,17 @@ export enum IpcMainChannels {
 }
 
 export enum IpcRendererChannels {
+  DownloadUpdate = 'DownloadUpdate',
+  RestartToInstallUpdate = 'RestartToInstallUpdate',
+
   SetCanUndo = 'SetCanUndo',
   SetCanRedo = 'SetCanRedo',
+  SetDeveloperPaneEnabled = 'SetDeveloperPaneEnabled',
+  SetCopyElementLinkEnabled = 'SetCopyElementLinkEnabled',
+  SetWorkspaceTabNavigationEnabled = 'SetWorkspaceTabNavigationEnabled',
+  SetWorkspacePaneVisibility = 'SetWorkspacePaneVisibility',
+  SetStatusBarVisibility = 'SetStatusBarVisibility',
+  SetWorkspaceZoomState = 'SetWorkspaceZoomState',
 
   ShowMessageBox = 'ShowMessageBox',
   ShowItemInFolder = 'ShowItemInFolder',
@@ -68,21 +99,26 @@ export enum IpcRendererChannels {
   ExportPageAsImage = 'ExportPageAsImage',
   PrintWorkspace = 'PrintWorkspace',
   OpenWorkspaceFromArgv = 'OpenWorkspaceFromArgv',
+  OpenScoreDialog = 'OpenScoreDialog',
   OpenImageDialog = 'OpenImageDialog',
-
-  GetSystemFonts = 'GetSystemFonts',
 
   ExitApplication = 'ExitApplication',
   CancelExit = 'CancelExit',
 
-  OpenContextMenuForTab = 'OpenContextMenuForTab',
-
   Paste = 'Paste',
+
+  SetLanguage = 'SetLanguage',
+  ListRecoveryCandidates = 'ListRecoveryCandidates',
+  SaveRecoverySnapshot = 'SaveRecoverySnapshot',
+  DiscardRecoverySnapshot = 'DiscardRecoverySnapshot',
+  DiscardRecoverySnapshots = 'DiscardRecoverySnapshots',
 }
 
 export interface FileMenuOpenScoreArgs {
   data: string;
   filePath: string;
+  sourceMtimeMs?: number | null;
+  sourceSize?: number | null;
   success: boolean;
 }
 
@@ -99,6 +135,26 @@ export interface FileMenuOpenImageArgs {
   data: string;
   imageWidth: number;
   imageHeight: number;
+  filePath: string;
+  success: boolean;
+}
+
+export interface UpdateAvailableArgs {
+  version?: string;
+}
+
+export interface UpdateDownloadProgressArgs {
+  percent: number;
+  transferred: number;
+  total: number;
+}
+
+export interface UpdateErrorArgs {
+  message: string;
+}
+
+export interface FileMenuImportOcrArgs {
+  data: string;
   filePath: string;
   success: boolean;
 }
@@ -126,6 +182,29 @@ export interface FileMenuInsertTextboxArgs {
   inline: boolean;
 }
 
+export interface FileMenuViewPaneVisibilityArgs {
+  paneId: WorkspacePaneId;
+  visible?: boolean;
+}
+
+export interface FileMenuViewStatusBarVisibilityArgs {
+  visible?: boolean;
+}
+
+export type FileMenuViewZoomArgs =
+  | {
+      type: 'zoom-in' | 'zoom-out' | 'actual-size';
+    }
+  | {
+      type: 'fit';
+      mode: ZoomFitMode;
+    };
+
+export interface WorkspaceZoomState {
+  zoom: number;
+  zoomFitMode: ZoomFitMode | null;
+}
+
 export interface SaveWorkspaceArgs {
   filePath: string;
   data: Score;
@@ -139,11 +218,26 @@ export interface SaveWorkspaceAsArgs {
 
 export interface SaveWorkspaceAsReplyArgs {
   filePath: string;
+  sourceMtimeMs?: number | null;
+  sourceSize?: number | null;
   success: boolean;
+  canceled?: boolean;
+  errorMessage?: string;
 }
 
 export interface SaveWorkspaceReplyArgs {
+  sourceMtimeMs?: number | null;
+  sourceSize?: number | null;
   success: boolean;
+  canceled?: boolean;
+  errorMessage?: string;
+}
+
+export interface ExportWorkspaceReplyArgs {
+  success: boolean;
+  canceled?: boolean;
+  filePath?: string;
+  errorMessage?: string;
 }
 
 export interface ExportWorkspaceAsPdfArgs {
@@ -157,7 +251,6 @@ export interface ExportWorkspaceAsPdfArgs {
 
 export interface ExportWorkspaceAsHtmlArgs {
   filePath: string | null;
-  filePathFull: string | null;
   tempFileName: string;
   data: string;
 }
@@ -171,7 +264,6 @@ export interface ExportWorkspaceAsMusicXmlArgs {
 }
 
 export interface ExportWorkspaceAsLatexArgs {
-  filePathFull: string | null;
   filePath: string | null;
   tempFileName: string;
   data: string;
@@ -186,11 +278,71 @@ export interface ExportWorkspaceAsImageArgs {
 export interface ExportWorkspaceAsImageReplyArgs {
   filePath: string;
   success: boolean;
+  canceled?: boolean;
+  errorMessage?: string;
 }
 
 export interface ExportPageAsImageArgs {
   filePath: string;
   data: string;
+}
+
+export interface ExportPageAsImageReplyArgs {
+  success: boolean;
+  canceled?: boolean;
+  skipped?: boolean;
+  errorMessage?: string;
+}
+
+export interface ClipboardReplyArgs {
+  success: boolean;
+  errorMessage?: string;
+}
+
+export interface RecoverySnapshotArgs {
+  workspaceId: string;
+  filePath: string | null;
+  tempFileName: string;
+  hasUnsavedChanges: boolean;
+  preserveCurrentSnapshot?: boolean;
+  score: string;
+  sourceMtimeMs: number | null;
+  sourceSize: number | null;
+}
+
+export interface RecoveryCandidateArgs {
+  recoveryId: string;
+  workspaceId: string;
+  filePath: string | null;
+  tempFileName: string;
+  hasUnsavedChanges: boolean;
+  score: string;
+  updatedAt: number;
+  sourceMtimeMs: number | null;
+  sourceSize: number | null;
+  sourceExists: boolean;
+  sourceMatches: boolean;
+  isUntitled: boolean;
+  recordKind: 'current' | 'previous';
+}
+
+export interface SaveRecoverySnapshotReplyArgs {
+  success: boolean;
+  errorMessage?: string;
+}
+
+export interface DiscardRecoverySnapshotReplyArgs {
+  success: boolean;
+  errorMessage?: string;
+}
+
+export interface DiscardRecoverySnapshotsReplyArgs {
+  success: boolean;
+  errorMessage?: string;
+}
+
+export interface ListRecoveryCandidatesReplyArgs {
+  candidates: RecoveryCandidateArgs[];
 }
 
 export interface PrintWorkspaceArgs {
@@ -210,8 +362,4 @@ export enum CloseWorkspacesDisposition {
 export interface CloseWorkspacesArgs {
   disposition: CloseWorkspacesDisposition;
   workspaceId?: string;
-}
-
-export interface OpenContextMenuForTabArgs {
-  workspaceId: string;
 }

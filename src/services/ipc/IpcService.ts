@@ -1,14 +1,20 @@
-import {
+import type {
+  ClipboardReplyArgs,
+  DiscardRecoverySnapshotReplyArgs,
+  DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageArgs,
+  ExportPageAsImageReplyArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
-  IpcRendererChannels,
-  OpenContextMenuForTabArgs,
+  ExportWorkspaceReplyArgs,
+  ListRecoveryCandidatesReplyArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
+  RecoverySnapshotArgs,
+  SaveRecoverySnapshotReplyArgs,
   SaveWorkspaceArgs,
   SaveWorkspaceAsArgs,
   SaveWorkspaceAsReplyArgs,
@@ -16,12 +22,12 @@ import {
   ShowMessageBoxArgs,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
-import { Workspace } from '@/models/Workspace';
-import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
+import { IpcRendererChannels } from '@/ipc/ipcChannels';
+import type { Workspace } from '@/models/Workspace';
 import { Unit } from '@/utils/Unit';
 
 import { SaveService } from '../SaveService';
-import { IIpcService } from './IIpcService';
+import type { IIpcService } from './IIpcService';
 
 export class IpcService implements IIpcService {
   public async saveWorkspace(
@@ -47,7 +53,9 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public async exportWorkspaceAsPdf(workspace: Workspace) {
+  public async exportWorkspaceAsPdf(
+    workspace: Workspace,
+  ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsPdf,
       {
@@ -80,7 +88,7 @@ export class IpcService implements IIpcService {
   public async exportPageAsImage(
     filePath: string,
     data: string,
-  ): Promise<boolean> {
+  ): Promise<ExportPageAsImageReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportPageAsImage,
       {
@@ -90,16 +98,15 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public async exportWorkspaceAsHtml(workspace: Workspace, data: string) {
+  public async exportWorkspaceAsHtml(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsHtml,
       {
-        filePathFull: workspace.filePath,
-        filePath:
-          workspace.filePath != null
-            ? `${getFileNameFromPath(workspace.filePath)}.html`
-            : null,
-        tempFileName: `${workspace.tempFileName}.html`,
+        filePath: workspace.filePath,
+        tempFileName: workspace.tempFileName,
         data,
       } as ExportWorkspaceAsHtmlArgs,
     );
@@ -110,17 +117,12 @@ export class IpcService implements IIpcService {
     data: string,
     compressed: boolean,
     openFolder: boolean,
-  ) {
-    const extension = compressed ? 'mxl' : 'musicxml';
-
+  ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsMusicXml,
       {
-        filePath:
-          workspace.filePath != null
-            ? `${getFileNameFromPath(workspace.filePath)}.${extension}`
-            : null,
-        tempFileName: `${workspace.tempFileName}.${extension}`,
+        filePath: workspace.filePath,
+        tempFileName: workspace.tempFileName,
         data,
         compressed,
         openFolder,
@@ -128,16 +130,15 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public async exportWorkspaceAsLatex(workspace: Workspace, data: string) {
+  public async exportWorkspaceAsLatex(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsLatex,
       {
-        filePathFull: workspace.filePath,
-        filePath:
-          workspace.filePath != null
-            ? `${getFileNameFromPath(workspace.filePath)}.byztex`
-            : null,
-        tempFileName: `${workspace.tempFileName}.byztex`,
+        filePath: workspace.filePath,
+        tempFileName: workspace.tempFileName,
         data,
       } as ExportWorkspaceAsLatexArgs,
     );
@@ -158,6 +159,39 @@ export class IpcService implements IIpcService {
     );
   }
 
+  public async listRecoveryCandidates(): Promise<ListRecoveryCandidatesReplyArgs> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.ListRecoveryCandidates,
+    );
+  }
+
+  public async saveRecoverySnapshot(
+    snapshot: RecoverySnapshotArgs,
+  ): Promise<SaveRecoverySnapshotReplyArgs> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.SaveRecoverySnapshot,
+      snapshot,
+    );
+  }
+
+  public async discardRecoverySnapshot(
+    workspaceId: string,
+  ): Promise<DiscardRecoverySnapshotReplyArgs> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.DiscardRecoverySnapshot,
+      workspaceId,
+    );
+  }
+
+  public async discardRecoverySnapshots(
+    recoveryIds: string[],
+  ): Promise<DiscardRecoverySnapshotsReplyArgs> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.DiscardRecoverySnapshots,
+      recoveryIds,
+    );
+  }
+
   public async showMessageBox(
     args: ShowMessageBoxArgs,
   ): Promise<ShowMessageBoxReplyArgs> {
@@ -167,10 +201,6 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public openContextMenuForTab(args: OpenContextMenuForTabArgs): void {
-    window.ipcRenderer.send(IpcRendererChannels.OpenContextMenuForTab, args);
-  }
-
   public async showItemInFolder(path: string) {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ShowItemInFolder,
@@ -178,12 +208,12 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public isShowMessageBoxSupported(): boolean {
+  public isShowItemInFolderSupported(): boolean {
     return true;
   }
 
-  public async getSystemFonts(): Promise<string[]> {
-    return await window.ipcRenderer.invoke(IpcRendererChannels.GetSystemFonts);
+  public isShowMessageBoxSupported(): boolean {
+    return true;
   }
 
   public async exitApplication(): Promise<void> {
@@ -194,7 +224,7 @@ export class IpcService implements IIpcService {
     return await window.ipcRenderer.invoke(IpcRendererChannels.CancelExit);
   }
 
-  public async paste(): Promise<void> {
+  public async paste(): Promise<ClipboardReplyArgs> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.Paste);
   }
 }

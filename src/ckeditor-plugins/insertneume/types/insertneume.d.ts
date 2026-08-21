@@ -1,6 +1,9 @@
 import 'ckeditor5';
 
-import { InsertNeumeDefaultAttributesType } from '../insertneumeutil';
+import type {
+  InsertNeumeDefaultAttributesMartyriaType,
+  InsertNeumeDefaultAttributesType,
+} from '../insertneumeutil';
 
 declare module 'ckeditor5' {
   interface EditorConfig {
@@ -8,9 +11,8 @@ declare module 'ckeditor5' {
       neumeDefaultFontFamily?: string;
       defaultFontFamily?: string;
       defaultFontSize?: number;
-      fthoraDefaultColor?: string;
       defaultAttributes?: InsertNeumeDefaultAttributesType;
-      defaultAttributesMartyria?: Partial<InsertNeumeAttributes>;
+      defaultAttributesMartyria?: InsertNeumeDefaultAttributesMartyriaType;
     };
   }
 }

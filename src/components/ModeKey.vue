@@ -8,40 +8,47 @@
     <Neume v-if="element.isPlagal" :neume="ModeSign.Plagal" />
     <Neume v-if="element.isVarys" :neume="ModeSign.Varys" />
     <Neume :neume="element.martyria" />
-    <Neume v-if="hasNote" :neume="element.note" />
-    <Neume v-if="hasFthoraAboveNote" :neume="element.fthoraAboveNote" />
+    <Neume v-if="element.note != null" :neume="element.note" />
     <Neume
-      v-if="hasQuantitativeNeumeAboveNote"
+      v-if="element.fthoraAboveNote != null"
+      :neume="element.fthoraAboveNote"
+    />
+    <Neume
+      v-if="element.quantitativeNeumeAboveNote != null"
       :neume="element.quantitativeNeumeAboveNote"
     />
-    <Neume v-if="hasNote2" :neume="element.note2" />
-    <Neume v-if="hasFthoraAboveNote2" :neume="element.fthoraAboveNote2" />
+    <Neume v-if="element.note2 != null" :neume="element.note2" />
     <Neume
-      v-if="hasQuantitativeNeumeAboveNote2"
+      v-if="element.fthoraAboveNote2 != null"
+      :neume="element.fthoraAboveNote2"
+    />
+    <Neume
+      v-if="element.quantitativeNeumeAboveNote2 != null"
       :neume="element.quantitativeNeumeAboveNote2"
     />
     <Neume
-      v-if="hasQuantitativeNeumeRight"
+      v-if="element.quantitativeNeumeRight != null"
       :neume="element.quantitativeNeumeRight"
+      :style="quantitativeNeumeRightStyle"
     />
     <Neume
-      v-if="hasFthoraAboveQuantitativeNeumeRight"
+      v-if="element.fthoraAboveQuantitativeNeumeRight != null"
       :neume="element.fthoraAboveQuantitativeNeumeRight"
     />
     <Neume
-      v-if="hasTempo && !element.tempoAlignRight"
+      v-if="element.tempo != null && !element.tempoAlignRight"
       :neume="element.tempo"
       :style="tempoStyle"
     />
     <span class="right-container">
-      <span class="ambitus" v-if="element.showAmbitus">
+      <span v-if="element.showAmbitus" class="ambitus">
         <span class="ambitus-text">(</span>
-        <span class="ambitus-low" :style="ambitusStyle">
+        <span class="ambitus-low" :style="ambitusStyleLow">
           <Neume :neume="element.ambitusLowNote" />
           <Neume :neume="element.ambitusLowRootSign" />
         </span>
         <span class="ambitus-text">-</span>
-        <span class="ambitus-high" :style="ambitusStyle">
+        <span class="ambitus-high" :style="ambitusStyleHigh">
           <Neume :neume="element.ambitusHighNote" />
           <Neume :neume="element.ambitusHighRootSign" />
         </span>
@@ -49,7 +56,7 @@
       </span>
 
       <Neume
-        v-if="hasTempo && element.tempoAlignRight"
+        v-if="element.tempo != null && element.tempoAlignRight"
         :neume="element.tempo"
         :style="tempoStyle"
       />
@@ -57,109 +64,121 @@
   </div>
 </template>
 
-<script lang="ts">
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+<script setup lang="ts">
+import type { CSSProperties, PropType, StyleValue } from 'vue';
+import { computed } from 'vue';
 
-import Neume from '@/components/Neume.vue';
-import { ModeKeyElement } from '@/models/Element';
+import Neume from '@/components/NeumeGlyph.vue';
+import type { ModeKeyElement } from '@/models/Element';
 import { ModeSign } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
+import { fontService } from '@/services/FontService';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { withZoom } from '@/utils/withZoom';
 
-@Component({
-  components: {
-    Neume,
+defineEmits(['select-single']);
+const props = defineProps({
+  element: {
+    type: Object as PropType<ModeKeyElement>,
+    required: true,
   },
-  emits: ['select-single'],
-})
-export default class ModeKey extends Vue {
-  @Prop() element!: ModeKeyElement;
-  @Prop() pageSetup!: PageSetup;
-  ModeSign = ModeSign;
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
+  },
+});
 
-  get hasFthoraAboveNote() {
-    return this.element.fthoraAboveNote != null;
-  }
+const style = computed(() => {
+  return {
+    color: props.element.computedColor,
+    fontFamily: props.element.computedFontFamily,
+    fontSize: withZoom(props.element.computedFontSize),
+    textAlign: props.element.alignment,
+    width: withZoom(props.element.width),
+    height: withZoom(props.element.height),
+    webkitTextStrokeWidth: withZoom(props.element.computedStrokeWidth),
+  } as StyleValue;
+});
 
-  get hasNote() {
-    return this.element.note != null;
-  }
+const tempoStyle = computed(() => {
+  // TODO figure out a way to remove the hard-coded -.45em
+  // maybe put it in the font metadata json?
+  const style = {
+    color: props.pageSetup.tempoDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.tempoDefaultStrokeWidth),
+    top: '-0.45em',
+    marginLeft: withZoom(8),
+  } as StyleValue;
 
-  get hasNote2() {
-    return this.element.note2 != null;
-  }
+  return style;
+});
 
-  get hasFthoraAboveNote2() {
-    return this.element.fthoraAboveNote2 != null;
-  }
+const quantitativeNeumeRightStyle = computed(() => {
+  return {
+    marginLeft: withZoom(
+      props.element.computedFontSize *
+        fontService.getStandardGlue(props.element.computedFontFamily).width,
+    ),
+  } as CSSProperties;
+});
 
-  get hasFthoraAboveQuantitativeNeumeRight() {
-    return this.element.fthoraAboveQuantitativeNeumeRight != null;
-  }
+const ambitusStyle = computed(() => {
+  // TODO figure out a way to remove the hard-coded -.45em
+  // maybe put it in the font metadata json?
+  const style = {
+    color: props.pageSetup.martyriaDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.martyriaDefaultStrokeWidth),
+    position: 'relative',
+    top: '-0.45em',
+  } as CSSProperties;
 
-  get hasQuantitativeNeumeAboveNote() {
-    return this.element.quantitativeNeumeAboveNote != null;
-  }
+  return style;
+});
 
-  get hasQuantitativeNeumeAboveNote2() {
-    return this.element.quantitativeNeumeAboveNote2 != null;
-  }
+const ambitusStyleLow = computed(() => {
+  const text = [props.element.ambitusLowNote, props.element.ambitusLowRootSign]
+    .map((neume) => NeumeMappingService.getMapping(neume).text)
+    .join('');
+  const font = `${props.element.computedFontSize}px ${props.element.computedFontFamily}`;
 
-  get hasQuantitativeNeumeRight() {
-    return this.element.quantitativeNeumeRight != null;
-  }
+  const bounds = TextMeasurementService.getInkBounds(text, font);
 
-  get hasTempo() {
-    return this.element.tempo != null;
-  }
+  const style = {
+    ...ambitusStyle.value,
+    marginLeft: withZoom(4 - bounds.inkLeft),
+    marginRight: withZoom(10),
+  } as CSSProperties;
 
-  get style() {
-    return {
-      color: this.element.computedColor,
-      fontFamily: this.element.computedFontFamily,
-      fontSize: withZoom(this.element.computedFontSize),
-      textAlign: this.element.alignment,
-      width: withZoom(this.element.width),
-      height: withZoom(this.element.height),
-      webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-    } as StyleValue;
-  }
+  return style;
+});
 
-  get tempoStyle() {
-    // TODO figure out a way to remove the hard-coded -.45em
-    // maybe put it in the font metadata json?
-    const style = {
-      color: this.pageSetup.tempoDefaultColor,
-      webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
-      top: '-0.45em',
-      marginLeft: withZoom(8),
-    } as StyleValue;
+const ambitusStyleHigh = computed(() => {
+  const text = [
+    props.element.ambitusHighNote,
+    props.element.ambitusHighRootSign,
+  ]
+    .map((neume) => NeumeMappingService.getMapping(neume).text)
+    .join('');
+  const font = `${props.element.computedFontSize}px ${props.element.computedFontFamily}`;
 
-    return style;
-  }
+  const bounds = TextMeasurementService.getInkBounds(text, font);
 
-  get ambitusStyle() {
-    // TODO figure out a way to remove the hard-coded -.45em
-    // maybe put it in the font metadata json?
-    const style = {
-      color: this.pageSetup.martyriaDefaultColor,
-      webkitTextStrokeWidth: withZoom(
-        this.pageSetup.martyriaDefaultStrokeWidth,
-      ),
-      position: 'relative',
-      top: '-0.45em',
-    } as StyleValue;
+  const style = {
+    ...ambitusStyle.value,
+    marginLeft: withZoom(10),
+    marginRight: withZoom(4 - (bounds.advanceWidth - bounds.inkRight)),
+  } as CSSProperties;
 
-    return style;
-  }
-}
+  return style;
+});
 </script>
 
 <style scoped>
 .mode-key-container {
   border: 1px dotted black;
   box-sizing: border-box;
+  line-height: normal;
   user-select: none;
 
   position: relative;
@@ -177,14 +196,5 @@ export default class ModeKey extends Vue {
 
 .ambitus-text {
   font-family: Arial, Helvetica, sans-serif;
-}
-
-.ambitus-low {
-  margin-right: 10px;
-}
-
-.ambitus-high {
-  margin-left: 2px;
-  margin-right: 4px;
 }
 </style>

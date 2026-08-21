@@ -1,11 +1,11 @@
-import {
+import type {
   DropCapElement,
-  ElementType,
   NoteElement,
   RichTextBoxElement,
   ScoreElement,
   TextBoxElement,
 } from '@/models/Element';
+import { ElementType } from '@/models/Element';
 import { TATWEEL } from '@/utils/constants';
 
 export class TextSearchService {

@@ -1,56 +1,84 @@
-import {
+import type {
+  ClipboardReplyArgs,
+  DiscardRecoverySnapshotReplyArgs,
+  DiscardRecoverySnapshotsReplyArgs,
+  ExportPageAsImageReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
-  OpenContextMenuForTabArgs,
+  ExportWorkspaceReplyArgs,
+  ListRecoveryCandidatesReplyArgs,
   OpenWorkspaceFromArgvArgs,
+  RecoverySnapshotArgs,
+  SaveRecoverySnapshotReplyArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxArgs,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
-import { Workspace } from '@/models/Workspace';
+import type { Workspace } from '@/models/Workspace';
 
 export interface IIpcService {
   saveWorkspace(workspace: Workspace): Promise<SaveWorkspaceReplyArgs>;
 
   saveWorkspaceAs(workspace: Workspace): Promise<SaveWorkspaceAsReplyArgs>;
 
-  exportWorkspaceAsPdf(workspace: Workspace): Promise<void>;
+  exportWorkspaceAsPdf(workspace: Workspace): Promise<ExportWorkspaceReplyArgs>;
 
-  exportWorkspaceAsHtml(workspace: Workspace, data: string): Promise<void>;
+  exportWorkspaceAsHtml(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs>;
 
   exportWorkspaceAsMusicXml(
     workspace: Workspace,
     data: string,
     compressed: boolean,
     openFolder: boolean,
-  ): Promise<void>;
+  ): Promise<ExportWorkspaceReplyArgs>;
 
-  exportWorkspaceAsLatex(workspace: Workspace, data: string): Promise<void>;
+  exportWorkspaceAsLatex(
+    workspace: Workspace,
+    data: string,
+  ): Promise<ExportWorkspaceReplyArgs>;
 
   exportWorkspaceAsImage(
     workspace: Workspace,
     imageFormat: 'png' | 'svg',
   ): Promise<ExportWorkspaceAsImageReplyArgs>;
 
-  exportPageAsImage(fileName: string, data: string): Promise<boolean>;
+  exportPageAsImage(
+    fileName: string,
+    data: string,
+  ): Promise<ExportPageAsImageReplyArgs>;
 
   printWorkspace(workspace: Workspace): Promise<void>;
 
   openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs>;
 
-  showMessageBox(args: ShowMessageBoxArgs): Promise<ShowMessageBoxReplyArgs>;
+  listRecoveryCandidates(): Promise<ListRecoveryCandidatesReplyArgs>;
 
-  openContextMenuForTab(args: OpenContextMenuForTabArgs): void;
+  saveRecoverySnapshot(
+    snapshot: RecoverySnapshotArgs,
+  ): Promise<SaveRecoverySnapshotReplyArgs>;
+
+  discardRecoverySnapshot(
+    workspaceId: string,
+  ): Promise<DiscardRecoverySnapshotReplyArgs>;
+
+  discardRecoverySnapshots(
+    recoveryIds: string[],
+  ): Promise<DiscardRecoverySnapshotsReplyArgs>;
+
+  showMessageBox(args: ShowMessageBoxArgs): Promise<ShowMessageBoxReplyArgs>;
 
   showItemInFolder(path: string): Promise<void>;
 
-  isShowMessageBoxSupported(): boolean;
+  isShowItemInFolderSupported(): boolean;
 
-  getSystemFonts(): Promise<string[]>;
+  isShowMessageBoxSupported(): boolean;
 
   exitApplication(): Promise<void>;
 
   cancelExit(): Promise<void>;
 
-  paste(): Promise<void>;
+  paste(): Promise<ClipboardReplyArgs>;
 }

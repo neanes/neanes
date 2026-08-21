@@ -1,165 +1,409 @@
 <template>
-  <ModalDialog>
-    <div class="container">
-      <div class="header">{{ $t('dialog:preferences.root') }}</div>
-      <div class="pane-container">
-        <div class="subheader">
-          {{ $t('dialog:preferences.tempoDefaults') }}
-        </div>
-        <div v-for="tempo in tempoSigns" :key="tempo" class="form-group row">
-          <Neume
-            class="tempo-neume"
-            :neume="tempo"
-            :fontFamily="pageSetup.neumeDefaultFontFamily"
-          />
-          <InputBpm
-            :modelValue="form.tempoDefaults[tempo]"
-            @update:modelValue="onTempoChanged(tempo, $event)"
-          />
-          <span class="unit-label">{{ $t('dialog:preferences.bpm') }}</span>
-        </div>
-      </div>
-      <div class="button-container">
-        <button class="ok-btn" @click="$emit('update', form)">
-          {{ $t('dialog:common.update') }}
-        </button>
-        <button class="reset-btn neutral-btn" @click="resetToSystemDefaults">
-          {{ $t('dialog:common.useSystemDefault') }}
-        </button>
-        <button class="cancel-btn" @click="$emit('close')">
-          {{ $t('dialog:common.cancel') }}
-        </button>
-      </div>
-    </div>
-  </ModalDialog>
+  <Dialog v-model:open="open">
+    <DialogContent class="flex max-h-[90vh] flex-col sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>
+          {{ $t(($) => $.dialog.preferences.root, { ns: 'dialog' }) }}
+        </DialogTitle>
+        <DialogDescription>
+          {{ $t(($) => $.dialog.preferences.description, { ns: 'dialog' }) }}
+        </DialogDescription>
+      </DialogHeader>
+
+      <form
+        id="editor-preferences-form"
+        class="min-h-0 flex-1 overflow-y-auto pr-1"
+        @submit.prevent="submit"
+      >
+        <FieldGroup class="pb-1">
+          <Field>
+            <FieldLabel for="editor-preferences-language">
+              {{ $t(($) => $.dialog.preferences.language, { ns: 'dialog' }) }}
+            </FieldLabel>
+            <Select v-model="languageSelectValue">
+              <SelectTrigger id="editor-preferences-language" class="w-full">
+                <SelectValue>
+                  <span class="flex min-w-0 items-center gap-2">
+                    <span
+                      v-if="selectedLocale"
+                      aria-hidden="true"
+                      class="size-5 shrink-0 text-center"
+                    >
+                      {{ selectedLocale.flag }}
+                    </span>
+                    <span class="truncate">{{ selectedLanguageLabel }}</span>
+                  </span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem
+                    :value="LANGUAGE_SYSTEM_DEFAULT_VALUE"
+                    :text-value="
+                      $t(($) => $.dialog.preferences.languageSystemDefault, {
+                        ns: 'dialog',
+                      })
+                    "
+                  >
+                    <span class="flex items-center gap-2">
+                      <span aria-hidden="true" class="size-5 shrink-0" />
+                      <span>
+                        {{
+                          $t(
+                            ($) => $.dialog.preferences.languageSystemDefault,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </span>
+                    </span>
+                  </SelectItem>
+                  <SelectItem
+                    v-for="locale in supportedLocales"
+                    :key="locale.code"
+                    :value="locale.code"
+                    :text-value="locale.name"
+                  >
+                    <span class="flex items-center gap-2">
+                      <span
+                        aria-hidden="true"
+                        class="size-5 shrink-0 text-center"
+                      >
+                        {{ locale.flag }}
+                      </span>
+                      <span>{{ locale.name }}</span>
+                    </span>
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <FieldDescription>
+              <a
+                href="https://crowdin.com/project/neanes"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {{
+                  $t(($) => $.dialog.preferences.helpTranslate, {
+                    ns: 'dialog',
+                  })
+                }}
+              </a>
+            </FieldDescription>
+          </Field>
+
+          <Field>
+            <FieldLabel id="editor-preferences-color-mode-label">
+              {{
+                $t(($) => $.dialog.preferences.colorMode, {
+                  ns: 'dialog',
+                })
+              }}
+            </FieldLabel>
+            <ToggleGroup
+              id="editor-preferences-color-mode"
+              type="single"
+              variant="outline"
+              class="grid w-full grid-cols-3"
+              :model-value="colorModeDraft"
+              aria-labelledby="editor-preferences-color-mode-label"
+              @update:model-value="onColorModeChanged"
+            >
+              <ToggleGroupItem value="light" class="min-w-0 justify-center">
+                <PhSun data-icon="inline-start" />
+                <span class="min-w-0 truncate">
+                  {{
+                    $t(($) => $.dialog.preferences.colorModeLight, {
+                      ns: 'dialog',
+                    })
+                  }}
+                </span>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="dark" class="min-w-0 justify-center">
+                <PhMoon data-icon="inline-start" />
+                <span class="min-w-0 truncate">
+                  {{
+                    $t(($) => $.dialog.preferences.colorModeDark, {
+                      ns: 'dialog',
+                    })
+                  }}
+                </span>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="auto" class="min-w-0 justify-center">
+                <PhDesktop data-icon="inline-start" />
+                <span class="min-w-0 truncate">
+                  {{
+                    $t(($) => $.dialog.preferences.colorModeSystem, {
+                      ns: 'dialog',
+                    })
+                  }}
+                </span>
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </Field>
+
+          <Field>
+            <FieldLabel for="editor-preferences-menu-interaction">
+              {{
+                $t(($) => $.dialog.preferences.menuInteraction, {
+                  ns: 'dialog',
+                })
+              }}
+            </FieldLabel>
+            <Select v-model="form.buttonMenuMode">
+              <SelectTrigger
+                id="editor-preferences-menu-interaction"
+                class="w-full"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem :value="ButtonMenuMode.Hold">
+                    {{
+                      $t(($) => $.dialog.preferences.menuInteractionHold, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </SelectItem>
+                  <SelectItem :value="ButtonMenuMode.Click">
+                    {{
+                      $t(($) => $.dialog.preferences.menuInteractionClick, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field orientation="horizontal">
+            <Switch
+              id="editor-preferences-enable-developer-panel"
+              :model-value="form.showDeveloperPanels"
+              @update:model-value="form.showDeveloperPanels = $event === true"
+            />
+            <FieldLabel for="editor-preferences-enable-developer-panel">
+              {{
+                $t(($) => $.dialog.preferences.enableDeveloperPanel, {
+                  ns: 'dialog',
+                })
+              }}
+            </FieldLabel>
+          </Field>
+
+          <FieldSet class="gap-2">
+            <FieldLegend variant="label" class="mb-0">
+              {{
+                $t(($) => $.dialog.preferences.tempoDefaults, {
+                  ns: 'dialog',
+                })
+              }}
+            </FieldLegend>
+            <FieldGroup class="gap-1">
+              <Field
+                v-for="tempo in tempoSigns"
+                :key="tempo"
+                orientation="horizontal"
+              >
+                <FieldLabel
+                  :for="getTempoInputId(tempo)"
+                  class="items-center gap-1.5"
+                >
+                  <Neume
+                    aria-hidden="true"
+                    :neume="tempo"
+                    :font-family="pageSetup.neumeDefaultFontFamily"
+                  />
+                  <span>
+                    {{ $t(getTempoSignLabelSelector(tempo), { ns: 'model' }) }}
+                  </span>
+                </FieldLabel>
+                <InputBpm
+                  :id="getTempoInputId(tempo)"
+                  :model-value="form.tempoDefaults[tempo]!"
+                  @update:model-value="onTempoChanged(tempo, $event)"
+                />
+                <span>{{
+                  $t(($) => $.dialog.preferences.bpm, { ns: 'dialog' })
+                }}</span>
+              </Field>
+            </FieldGroup>
+          </FieldSet>
+        </FieldGroup>
+      </form>
+
+      <DialogFooter>
+        <DialogClose as-child>
+          <Button
+            variant="outline"
+            type="button"
+            class="h-auto min-h-8 max-w-full whitespace-normal text-center"
+          >
+            {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
+          </Button>
+        </DialogClose>
+        <Button
+          variant="outline"
+          type="button"
+          class="h-auto min-h-8 max-w-full whitespace-normal text-center"
+          @click="resetToSystemDefaults"
+        >
+          <PhArrowCounterClockwise />
+          {{ $t(($) => $.dialog.common.useSystemDefault, { ns: 'dialog' }) }}
+        </Button>
+        <Button
+          type="submit"
+          form="editor-preferences-form"
+          class="h-auto min-h-8 max-w-full whitespace-normal text-center"
+        >
+          <PhCheck />
+          {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+<script setup lang="ts">
+import {
+  PhArrowCounterClockwise,
+  PhCheck,
+  PhDesktop,
+  PhMoon,
+  PhSun,
+} from '@phosphor-icons/vue';
+import type { BasicColorSchema } from '@vueuse/core';
+import { useColorMode } from '@vueuse/core';
+import { useTranslation } from 'i18next-vue';
+import type { PropType } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 
-import ModalDialog from '@/components/ModalDialog.vue';
-import Neume from '@/components/Neume.vue';
-import { EditorPreferences } from '@/models/EditorPreferences';
+import Neume from '@/components/NeumeGlyph.vue';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from '@/components/ui/field';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { supportedLocales } from '@/i18n';
+import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
+import { getTempoSignLabelSelector } from '@/models/NeumeI18nMappings';
 import { TempoSign } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
 
 import InputBpm from './InputBpm.vue';
 
-@Component({
-  components: { ModalDialog, Neume, InputBpm },
-  emits: ['close', 'update'],
-})
-export default class PreferencesDialog extends Vue {
-  @Prop() options!: EditorPreferences;
-  @Prop() pageSetup!: PageSetup;
+const emit = defineEmits<{
+  update: [form: EditorPreferences];
+}>();
+const props = defineProps({
+  options: {
+    type: Object as PropType<EditorPreferences>,
+    required: true,
+  },
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
+  },
+});
+const open = defineModel<boolean>('open', { required: true });
 
-  form: EditorPreferences = new EditorPreferences();
-
-  tempoSigns = [
-    TempoSign.VerySlow,
-    TempoSign.Slower,
-    TempoSign.Slow,
-    TempoSign.Moderate,
-    TempoSign.Medium,
-    TempoSign.Quick,
-    TempoSign.Quicker,
-    TempoSign.VeryQuick,
-  ];
-
-  mounted() {
-    this.form = JSON.parse(JSON.stringify(this.options));
-
-    window.addEventListener('keydown', this.onKeyDown);
+const form = ref(cloneEditorPreferences(props.options));
+const LANGUAGE_SYSTEM_DEFAULT_VALUE = '__system_default__';
+const { t } = useTranslation();
+const colorMode = useColorMode();
+const colorModeDraft = ref<BasicColorSchema>(colorMode.store.value);
+const languageSelectValue = computed({
+  get() {
+    return form.value.language || LANGUAGE_SYSTEM_DEFAULT_VALUE;
+  },
+  set(value: string) {
+    form.value.language = value === LANGUAGE_SYSTEM_DEFAULT_VALUE ? '' : value;
+  },
+});
+const languageSystemDefaultLabel = computed(() =>
+  t(($) => $.dialog.preferences.languageSystemDefault, {
+    ns: 'dialog',
+  }),
+);
+const selectedLocale = computed(() =>
+  supportedLocales.find((locale) => locale.code === languageSelectValue.value),
+);
+const selectedLanguageLabel = computed(() => {
+  if (languageSelectValue.value === LANGUAGE_SYSTEM_DEFAULT_VALUE) {
+    return languageSystemDefaultLabel.value;
   }
 
-  beforeUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-  }
+  return selectedLocale.value?.name ?? languageSelectValue.value;
+});
+const tempoSigns = [
+  TempoSign.VerySlow,
+  TempoSign.Slower,
+  TempoSign.Slow,
+  TempoSign.Moderate,
+  TempoSign.Medium,
+  TempoSign.Quick,
+  TempoSign.Quicker,
+  TempoSign.VeryQuick,
+];
 
-  onKeyDown(event: KeyboardEvent) {
-    if (event.code === 'Escape') {
-      this.$emit('close');
-    }
-  }
+function onTempoChanged(neume: TempoSign, bpm: number) {
+  form.value.tempoDefaults[neume] = bpm;
+}
 
-  onTempoChanged(neume: TempoSign, bpm: number) {
-    this.form.tempoDefaults[neume] = bpm;
+function onColorModeChanged(value: unknown) {
+  if (value === 'light' || value === 'dark' || value === 'auto') {
+    colorModeDraft.value = value;
   }
+}
 
-  resetToSystemDefaults() {
-    this.form = new EditorPreferences();
+function resetToSystemDefaults() {
+  form.value = new EditorPreferences();
+  colorModeDraft.value = 'auto';
+}
+
+function getTempoInputId(tempo: TempoSign) {
+  return `editor-preferences-tempo-${tempo}`;
+}
+
+async function submit() {
+  colorMode.store.value = colorModeDraft.value;
+  await nextTick();
+  emit('update', form.value);
+}
+
+watch(open, (isOpen) => {
+  if (isOpen) {
+    colorModeDraft.value = colorMode.store.value;
   }
+});
+
+function cloneEditorPreferences(options: EditorPreferences) {
+  return EditorPreferences.createFrom(JSON.parse(JSON.stringify(options)));
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-.dialog-content {
-  display: flex;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  height: 80vh;
-}
-
-.pane-container {
-  display: flex;
-  flex-direction: column;
-  width: 420px;
-  margin-bottom: 1.5rem;
-  margin-top: 1.5rem;
-  overflow: auto;
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group.row {
-  display: flex;
-  align-items: center;
-}
-
-.form-group label {
-  display: inline-block;
-  font-weight: bold;
-}
-
-.form-group input {
-  margin-right: 0.5rem;
-}
-
-.header {
-  font-size: 1.5rem;
-  text-align: center;
-}
-
-.button-container {
-  display: flex;
-  justify-content: center;
-}
-
-.ok-btn,
-.reset-btn {
-  margin-right: 2rem;
-}
-
-.separator {
-  border-bottom: 1px solid lightgray;
-  margin-bottom: 1rem;
-  width: 100%;
-}
-
-.subheader {
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-
-.tempo-neume {
-  font-size: 1.25rem;
-  top: -8px;
-  width: 1.5rem;
-}
-</style>

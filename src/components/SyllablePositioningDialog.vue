@@ -1,995 +1,793 @@
 <template>
-  <ModalDialog>
-    <div class="container">
-      <div class="header">{{ $t('dialog:neumePositioning.root') }}</div>
-      <div class="pane-container" :style="paneContainerStyle">
-        <div class="top-pane" :style="topPaneStyle">
-          <template v-if="hasPreviousElement">
-            <NeumeBoxSyllable
-              v-if="previousElement.elementType === ElementType.Note"
-              class="other-neume"
-              :note="previousElement"
-              :pageSetup="pageSetup"
-              :style="previousElementStyle"
-            />
+  <Dialog v-model:open="open">
+    <DialogContent
+      class="max-h-[calc(100dvh-2rem)] max-w-md grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-md"
+    >
+      <DialogHeader>
+        <DialogTitle>
+          {{ $t(($) => $.dialog.neumePositioning.root, { ns: 'dialog' }) }}
+        </DialogTitle>
+        <DialogDescription>
+          {{
+            $t(($) => $.dialog.neumePositioning.description, {
+              ns: 'dialog',
+            })
+          }}
+        </DialogDescription>
+      </DialogHeader>
 
-            <NeumeBoxMartyria
-              v-if="previousElement.elementType === ElementType.Martyria"
-              class="other-neume"
-              :neume="previousElement"
-              :pageSetup="pageSetup"
-              :style="previousElementStyle"
-            />
+      <div class="top-pane bg-white" :style="topPaneStyle">
+        <template v-if="previousElement != null">
+          <NeumeBoxSyllable
+            v-if="previousElement.elementType === ElementType.Note"
+            class="other-neume"
+            :note="previousElement as NoteElement"
+            :page-setup="pageSetup"
+            :style="previousElementStyle"
+          />
 
-            <NeumeBoxTempo
-              v-if="previousElement.elementType === ElementType.Tempo"
-              class="other-neume"
-              :neume="previousElement"
-              :pageSetup="pageSetup"
-              :style="previousElementStyle"
-            />
-          </template>
+          <NeumeBoxMartyria
+            v-if="previousElement.elementType === ElementType.Martyria"
+            class="other-neume"
+            :neume="previousElement as MartyriaElement"
+            :page-setup="pageSetup"
+            :style="previousElementStyle"
+          />
 
-          <div class="neume-container" :style="mainStyle">
-            <NeumeBoxSyllable :note="form" :pageSetup="pageSetup" />
-            <DragHandle
-              v-if="hasAccidental"
-              :note="form"
-              :mark="form.accidental"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.accidentalOffsetX"
-              :y="form.accidentalOffsetY"
-              @update="updateAccidentalOffset($event)"
-            />
-            <DragHandle
-              v-if="hasSecondaryAccidental"
-              :note="form"
-              :mark="form.secondaryAccidental"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.secondaryAccidentalOffsetX"
-              :y="form.secondaryAccidentalOffsetY"
-              @update="updateSecondaryAccidentalOffset($event)"
-            />
-            <DragHandle
-              v-if="hasTertiaryAccidental"
-              :note="form"
-              :mark="form.tertiaryAccidental"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.tertiaryAccidentalOffsetX"
-              :y="form.tertiaryAccidentalOffsetY"
-              @update="updateTertiaryAccidentalOffset($event)"
-            />
-            <!-- <DragHandle
-              v-if="hasMeasureBarLeft"
-              :note="form"
-              :mark="form.measureBarLeft"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.measureBarLeftOffsetX"
-              :y="form.measureBarLeftOffsetY"
-              @update="updateMeasureBarLeftOffset($event)"
-            />
-            <DragHandle
-              v-if="hasMeasureBarRight"
-              :note="form"
-              :mark="form.measureBarRight"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.measureBarRightOffsetX"
-              :y="form.measureBarRightOffsetY"
-              @update="updateMeasureBarRightOffset($event)"
-            /> -->
-            <DragHandle
-              v-if="hasFthora"
-              :note="form"
-              :mark="form.fthora"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.fthoraOffsetX"
-              :y="form.fthoraOffsetY"
-              @update="updateFthoraOffset($event)"
-            />
-            <DragHandle
-              v-if="hasSecondaryFthora"
-              :note="form"
-              :mark="form.secondaryFthora"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.secondaryFthoraOffsetX"
-              :y="form.secondaryFthoraOffsetY"
-              @update="updateSecondaryFthoraOffset($event)"
-            />
-            <DragHandle
-              v-if="hasTertiaryFthora"
-              :note="form"
-              :mark="form.tertiaryFthora"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.tertiaryFthoraOffsetX"
-              :y="form.tertiaryFthoraOffsetY"
-              @update="updateTertiaryFthoraOffset($event)"
-            />
-            <DragHandle
-              v-if="hasGorgonNeume"
-              :note="form"
-              :mark="form.gorgonNeume"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.gorgonNeumeOffsetX"
-              :y="form.gorgonNeumeOffsetY"
-              @update="updateGorgonOffset($event)"
-            />
-            <DragHandle
-              v-if="hasSecondaryGorgonNeume"
-              :note="form"
-              :mark="form.secondaryGorgonNeume"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.secondaryGorgonNeumeOffsetX"
-              :y="form.secondaryGorgonNeumeOffsetY"
-              @update="updateGorgon2Offset($event)"
-            />
-            <DragHandle
-              v-if="hasIson"
-              :note="form"
-              :mark="form.ison"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.isonOffsetX"
-              :y="form.isonOffsetY"
-              @update="updateIsonOffset($event)"
-            />
-            <DragHandle
-              v-if="form.koronis"
-              :note="form"
-              :mark="TimeNeume.Koronis"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.koronisOffsetX"
-              :y="form.koronisOffsetY"
-              @update="updateKoronisOffset($event)"
-            />
-            <DragHandle
-              v-if="hasMeasureNumber"
-              :note="form"
-              :mark="form.measureNumber"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.measureNumberOffsetX"
-              :y="form.measureNumberOffsetY"
-              @update="updateMeasureNumberOffset($event)"
-            />
-            <DragHandle
-              v-if="form.noteIndicator"
-              :note="form"
-              :mark="form.noteIndicatorNeume"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.noteIndicatorOffsetX"
-              :y="form.noteIndicatorOffsetY"
-              @update="updateNoteIndicatorOffset($event)"
-            />
-            <DragHandle
-              v-if="form.stavros"
-              :note="form"
-              :mark="VocalExpressionNeume.Cross_Top"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.stavrosOffsetX"
-              :y="form.stavrosOffsetY"
-              @update="updateStavrosOffset($event)"
-            />
-            <DragHandle
-              v-if="hasTie"
-              :note="form"
-              :mark="form.tie"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.tieOffsetX"
-              :y="form.tieOffsetY"
-              @update="updateTieOffset($event)"
-            />
-            <DragHandle
-              v-if="hasTimeNeume"
-              :note="form"
-              :mark="form.timeNeume"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.timeNeumeOffsetX"
-              :y="form.timeNeumeOffsetY"
-              @update="updateTimeOffset($event)"
-            />
-            <!-- <DragHandle
-              v-if="form.vareia"
-              :note="form"
-              :mark="VocalExpressionNeume.Vareia"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.vareiaOffsetX"
-              :y="form.vareiaOffsetY"
-              @update="updateVareiaOffset($event)"
-            /> -->
-            <DragHandle
-              v-if="hasVocalExpressionNeume"
-              :note="form"
-              :mark="form.vocalExpressionNeume"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
-              :zoom="zoom"
-              :x="form.vocalExpressionNeumeOffsetX"
-              :y="form.vocalExpressionNeumeOffsetY"
-              @update="updateQualityOffset($event)"
-            />
+          <NeumeBoxTempo
+            v-if="previousElement.elementType === ElementType.Tempo"
+            class="other-neume"
+            :neume="previousElement as TempoElement"
+            :page-setup="pageSetup"
+            :style="previousElementStyle"
+          />
+        </template>
+
+        <div class="neume-container" :style="mainStyle">
+          <NeumeBoxSyllable
+            :note="form as NoteElement"
+            :page-setup="pageSetup"
+          />
+          <DragHandle
+            v-if="hasAccidental"
+            :note="form as NoteElement"
+            :mark="form.accidental!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.accidentalOffsetX"
+            :y="form.accidentalOffsetY"
+            @update="updateAccidentalOffset($event)"
+          />
+          <DragHandle
+            v-if="hasSecondaryAccidental"
+            :note="form as NoteElement"
+            :mark="form.secondaryAccidental!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.secondaryAccidentalOffsetX"
+            :y="form.secondaryAccidentalOffsetY"
+            @update="updateSecondaryAccidentalOffset($event)"
+          />
+          <DragHandle
+            v-if="hasTertiaryAccidental"
+            :note="form as NoteElement"
+            :mark="form.tertiaryAccidental!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.tertiaryAccidentalOffsetX"
+            :y="form.tertiaryAccidentalOffsetY"
+            @update="updateTertiaryAccidentalOffset($event)"
+          />
+          <!-- <DragHandle
+            v-if="hasMeasureBarLeft"
+            :note="form as NoteElement"
+            :mark="form.measureBarLeft"
+            :fontFamily="pageSetup.neumeDefaultFontFamily"
+            :fontSize="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.measureBarLeftOffsetX"
+            :y="form.measureBarLeftOffsetY"
+            @update="updateMeasureBarLeftOffset($event)"
+          />
+          <DragHandle
+            v-if="hasMeasureBarRight"
+            :note="form as NoteElement"
+            :mark="form.measureBarRight"
+            :fontFamily="pageSetup.neumeDefaultFontFamily"
+            :fontSize="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.measureBarRightOffsetX"
+            :y="form.measureBarRightOffsetY"
+            @update="updateMeasureBarRightOffset($event)"
+          /> -->
+          <DragHandle
+            v-if="hasFthora"
+            :note="form as NoteElement"
+            :mark="form.fthora!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.fthoraOffsetX"
+            :y="form.fthoraOffsetY"
+            @update="updateFthoraOffset($event)"
+          />
+          <DragHandle
+            v-if="hasSecondaryFthora"
+            :note="form as NoteElement"
+            :mark="form.secondaryFthora!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.secondaryFthoraOffsetX"
+            :y="form.secondaryFthoraOffsetY"
+            @update="updateSecondaryFthoraOffset($event)"
+          />
+          <DragHandle
+            v-if="hasTertiaryFthora"
+            :note="form as NoteElement"
+            :mark="form.tertiaryFthora!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.tertiaryFthoraOffsetX"
+            :y="form.tertiaryFthoraOffsetY"
+            @update="updateTertiaryFthoraOffset($event)"
+          />
+          <DragHandle
+            v-if="hasGorgonNeume"
+            :note="form as NoteElement"
+            :mark="form.gorgonNeume!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.gorgonNeumeOffsetX"
+            :y="form.gorgonNeumeOffsetY"
+            @update="updateGorgonOffset($event)"
+          />
+          <DragHandle
+            v-if="hasSecondaryGorgonNeume"
+            :note="form as NoteElement"
+            :mark="form.secondaryGorgonNeume!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.secondaryGorgonNeumeOffsetX"
+            :y="form.secondaryGorgonNeumeOffsetY"
+            @update="updateGorgon2Offset($event)"
+          />
+          <DragHandle
+            v-if="hasIson"
+            :note="form as NoteElement"
+            :mark="form.ison!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.isonOffsetX"
+            :y="form.isonOffsetY"
+            @update="updateIsonOffset($event)"
+          />
+          <DragHandle
+            v-if="form.koronis"
+            :note="form as NoteElement"
+            :mark="TimeNeume.Koronis"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.koronisOffsetX"
+            :y="form.koronisOffsetY"
+            @update="updateKoronisOffset($event)"
+          />
+          <DragHandle
+            v-if="hasMeasureNumber"
+            :note="form as NoteElement"
+            :mark="form.measureNumber!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.measureNumberOffsetX"
+            :y="form.measureNumberOffsetY"
+            @update="updateMeasureNumberOffset($event)"
+          />
+          <DragHandle
+            v-if="form.noteIndicator"
+            :note="form as NoteElement"
+            :mark="form.noteIndicatorNeume!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.noteIndicatorOffsetX"
+            :y="form.noteIndicatorOffsetY"
+            @update="updateNoteIndicatorOffset($event)"
+          />
+          <DragHandle
+            v-if="form.stavros"
+            :note="form as NoteElement"
+            :mark="VocalExpressionNeume.Cross_Top"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.stavrosOffsetX"
+            :y="form.stavrosOffsetY"
+            @update="updateStavrosOffset($event)"
+          />
+          <DragHandle
+            v-if="hasTie"
+            :note="form as NoteElement"
+            :mark="form.tie!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.tieOffsetX"
+            :y="form.tieOffsetY"
+            @update="updateTieOffset($event)"
+          />
+          <DragHandle
+            v-if="hasTimeNeume"
+            :note="form as NoteElement"
+            :mark="form.timeNeume!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.timeNeumeOffsetX"
+            :y="form.timeNeumeOffsetY"
+            @update="updateTimeOffset($event)"
+          />
+          <!-- <DragHandle
+            v-if="form.vareia"
+            :note="form as NoteElement"
+            :mark="VocalExpressionNeume.Vareia"
+            :fontFamily="pageSetup.neumeDefaultFontFamily"
+            :fontSize="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.vareiaOffsetX"
+            :y="form.vareiaOffsetY"
+            @update="updateVareiaOffset($event)"
+          /> -->
+          <DragHandle
+            v-if="hasVocalExpressionNeume"
+            :note="form as NoteElement"
+            :mark="form.vocalExpressionNeume!"
+            :font-family="pageSetup.neumeDefaultFontFamily"
+            :font-size="pageSetup.neumeDefaultFontSize"
+            :zoom="zoom"
+            :x="form.vocalExpressionNeumeOffsetX"
+            :y="form.vocalExpressionNeumeOffsetY"
+            @update="updateQualityOffset($event)"
+          />
+        </div>
+        <template v-if="nextElement != null">
+          <NeumeBoxSyllable
+            v-if="nextElement.elementType === ElementType.Note"
+            class="other-neume"
+            :note="nextElement as NoteElement"
+            :page-setup="pageSetup"
+            :style="nextElementStyle"
+          />
+
+          <NeumeBoxMartyria
+            v-if="nextElement.elementType === ElementType.Martyria"
+            class="other-neume"
+            :neume="nextElement as MartyriaElement"
+            :page-setup="pageSetup"
+            :style="nextElementStyle"
+          />
+
+          <NeumeBoxTempo
+            v-if="nextElement.elementType === ElementType.Tempo"
+            class="other-neume"
+            :neume="nextElement as TempoElement"
+            :page-setup="pageSetup"
+            :style="nextElementStyle"
+          />
+        </template>
+      </div>
+      <form
+        id="syllable-positioning-form"
+        class="min-h-0 overflow-y-auto pr-1"
+        @submit.prevent="update"
+      >
+        <div
+          class="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-2 gap-y-1"
+        >
+          <div aria-hidden="true" />
+          <div
+            :id="leftOffsetHeaderId"
+            class="h-6 text-xs font-medium text-foreground"
+          >
+            {{ $t(($) => $.dialog.common.left, { ns: 'dialog' }) }}
           </div>
-          <template v-if="hasNextElement">
-            <NeumeBoxSyllable
-              v-if="nextElement.elementType === ElementType.Note"
-              class="other-neume"
-              :note="nextElement"
-              :pageSetup="pageSetup"
-              :style="nextElementStyle"
-            />
+          <div
+            :id="topOffsetHeaderId"
+            class="h-6 text-xs font-medium text-foreground"
+          >
+            {{ $t(($) => $.dialog.common.top, { ns: 'dialog' }) }}
+          </div>
 
-            <NeumeBoxMartyria
-              v-if="nextElement.elementType === ElementType.Martyria"
-              class="other-neume"
-              :neume="nextElement"
-              :pageSetup="pageSetup"
-              :style="nextElementStyle"
+          <template v-for="row in offsetRows" :key="row.id">
+            <div
+              :id="getOffsetRowLabelId(row)"
+              class="flex h-7 min-w-0 items-center text-xs"
+            >
+              {{ $t(row.label, { ns: ['dialog', 'model'] }) }}
+            </div>
+            <InputUnit
+              :id="getOffsetInputId(row, 'x')"
+              class="min-w-16"
+              input-class="h-7 px-2"
+              button-class="p-1 [&>svg]:h-3 [&>svg]:w-3"
+              :aria-labelledby="`${getOffsetRowLabelId(row)} ${leftOffsetHeaderId}`"
+              :model-value="getOffsetValue(row.xKey)"
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :format-options="fraction2FormatOptions"
+              @update:model-value="updateOffsetValue(row.xKey, $event)"
             />
-
-            <NeumeBoxTempo
-              v-if="nextElement.elementType === ElementType.Tempo"
-              class="other-neume"
-              :neume="nextElement"
-              :pageSetup="pageSetup"
-              :style="nextElementStyle"
+            <InputUnit
+              :id="getOffsetInputId(row, 'y')"
+              class="min-w-16"
+              input-class="h-7 px-2"
+              button-class="p-1 [&>svg]:h-3 [&>svg]:w-3"
+              :aria-labelledby="`${getOffsetRowLabelId(row)} ${topOffsetHeaderId}`"
+              :model-value="getOffsetValue(row.yKey)"
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :format-options="fraction2FormatOptions"
+              @update:model-value="updateOffsetValue(row.yKey, $event)"
             />
           </template>
         </div>
-        <div class="bottom-pane">
-          <div class="form-group">
-            <label />
-            <span class="table-header">{{ $t('dialog:common.left') }}</span>
-            <span class="table-header">{{ $t('dialog:common.top') }}</span>
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.accidental') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.accidentalOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.accidentalOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.accidental2') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.secondaryAccidentalOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.secondaryAccidentalOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.accidental3') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.tertiaryAccidentalOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.tertiaryAccidentalOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.barLineL') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.measureBarLeftOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.measureBarLeftOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.barLineR') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.measureBarRightOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.measureBarRightOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.fthora') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.fthoraOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.fthoraOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.fthora2') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.secondaryFthoraOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.secondaryFthoraOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.fthora3') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.tertiaryFthoraOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.tertiaryFthoraOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.gorgon') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.gorgonNeumeOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.gorgonNeumeOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.gorgon2') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.secondaryGorgonNeumeOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.secondaryGorgonNeumeOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.ison') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.isonOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.isonOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.koronis') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.koronisOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.koronisOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.measureNo') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.measureNumberOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.measureNumberOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.note') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.noteIndicatorOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.noteIndicatorOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.cross') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.stavrosOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.stavrosOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.tie') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.tieOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.tieOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.time') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.timeNeumeOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.timeNeumeOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.vareia') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.vareiaOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.vareiaOffsetY"
-            />
-          </div>
-          <div class="form-group">
-            <label>{{ $t('dialog:neumePositioning.quality') }}</label>
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.vocalExpressionNeumeOffsetX"
-            />
-            <InputUnit
-              :unit="unit"
-              :min="min"
-              :max="max"
-              :step="stepSize"
-              :precision="precision"
-              v-model="form.vocalExpressionNeumeOffsetY"
-            />
-          </div>
-        </div>
-      </div>
-      <div class="button-container">
-        <button class="ok-btn" @click="update">
-          {{ $t('dialog:common.update') }}
-        </button>
-        <button class="cancel-btn" @click="$emit('close')">
-          {{ $t('dialog:common.cancel') }}
-        </button>
-      </div>
-    </div>
-  </ModalDialog>
+      </form>
+      <DialogFooter>
+        <DialogClose as-child>
+          <Button variant="outline" type="button">
+            {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
+          </Button>
+        </DialogClose>
+        <Button type="submit" form="syllable-positioning-form">
+          <PhCheck />
+          {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
 
-<script lang="ts">
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+<script setup lang="ts">
+import { PhCheck } from '@phosphor-icons/vue';
+import type { SelectorParam } from 'i18next';
+import type { PropType, StyleValue } from 'vue';
+import { computed, ref } from 'vue';
 
 import DragHandle from '@/components/DragHandle.vue';
+import type { UnitOfMeasure } from '@/components/InputUnit.types';
 import InputUnit from '@/components/InputUnit.vue';
-import ModalDialog from '@/components/ModalDialog.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
-import { ElementType, NoteElement, ScoreElementOffset } from '@/models/Element';
-import { VocalExpressionNeume } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
-import { TimeNeume } from '@/models/save/v1/Neumes';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import type {
+  MartyriaElement,
+  ScoreElement,
+  ScoreElementOffset,
+  TempoElement,
+} from '@/models/Element';
+import { ElementType, NoteElement } from '@/models/Element';
+import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
+import type { PageSetup } from '@/models/PageSetup';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
+import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
 
-@Component({
-  components: {
-    ModalDialog,
-    NeumeBoxSyllable,
-    NeumeBoxMartyria,
-    NeumeBoxTempo,
-    InputUnit,
-    DragHandle,
+const emit = defineEmits<{
+  update: [form: NoteElement];
+}>();
+const props = defineProps({
+  element: {
+    type: Object as PropType<NoteElement>,
+    required: true,
   },
-  emits: ['close', 'update'],
-})
-export default class SyllablePositioningDialog extends Vue {
-  @Prop() element!: NoteElement;
-  @Prop() previousElement!: NoteElement;
-  @Prop() nextElement!: NoteElement;
-  @Prop() pageSetup!: PageSetup;
+  previousElement: {
+    type: Object as PropType<ScoreElement>,
+    default: undefined,
+  },
+  nextElement: {
+    type: Object as PropType<ScoreElement>,
+    default: undefined,
+  },
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
+  },
+});
+const open = defineModel<boolean>('open', { required: true });
 
-  TimeNeume = TimeNeume;
-  VocalExpressionNeume = VocalExpressionNeume;
-  ElementType = ElementType;
+const form = ref(new NoteElement());
+const stepSize = 0.01;
+const min = -10;
+const max = 10;
+const unit = 'unitless' as UnitOfMeasure;
+const paneContainerWidthPx = 448;
+const zoom = 2;
+const leftOffsetHeaderId = 'syllable-positioning-left-header';
+const topOffsetHeaderId = 'syllable-positioning-top-header';
 
-  form: NoteElement = new NoteElement();
-  stepSize: number = 0.01;
-  min: number = -10;
-  max: number = 10;
-  precision: number = 2;
-  unit: string = 'unitless';
+type OffsetLabelSelector = SelectorParam<['dialog', 'model']>;
+type NoteOffsetKey =
+  | 'accidentalOffsetX'
+  | 'accidentalOffsetY'
+  | 'secondaryAccidentalOffsetX'
+  | 'secondaryAccidentalOffsetY'
+  | 'tertiaryAccidentalOffsetX'
+  | 'tertiaryAccidentalOffsetY'
+  | 'measureBarLeftOffsetX'
+  | 'measureBarLeftOffsetY'
+  | 'measureBarRightOffsetX'
+  | 'measureBarRightOffsetY'
+  | 'fthoraOffsetX'
+  | 'fthoraOffsetY'
+  | 'secondaryFthoraOffsetX'
+  | 'secondaryFthoraOffsetY'
+  | 'tertiaryFthoraOffsetX'
+  | 'tertiaryFthoraOffsetY'
+  | 'gorgonNeumeOffsetX'
+  | 'gorgonNeumeOffsetY'
+  | 'secondaryGorgonNeumeOffsetX'
+  | 'secondaryGorgonNeumeOffsetY'
+  | 'isonOffsetX'
+  | 'isonOffsetY'
+  | 'koronisOffsetX'
+  | 'koronisOffsetY'
+  | 'measureNumberOffsetX'
+  | 'measureNumberOffsetY'
+  | 'noteIndicatorOffsetX'
+  | 'noteIndicatorOffsetY'
+  | 'stavrosOffsetX'
+  | 'stavrosOffsetY'
+  | 'tieOffsetX'
+  | 'tieOffsetY'
+  | 'timeNeumeOffsetX'
+  | 'timeNeumeOffsetY'
+  | 'vareiaOffsetX'
+  | 'vareiaOffsetY'
+  | 'vocalExpressionNeumeOffsetX'
+  | 'vocalExpressionNeumeOffsetY';
 
-  paneContainerWidthPx = 420;
+type OffsetAxis = 'x' | 'y';
 
-  zoom = 2;
+type OffsetRow = {
+  id: string;
+  label: OffsetLabelSelector;
+  xKey: NoteOffsetKey;
+  yKey: NoteOffsetKey;
+};
 
-  get hasNextElement() {
-    return (
-      this.nextElement?.elementType === ElementType.Note ||
-      this.nextElement?.elementType === ElementType.Martyria ||
-      this.nextElement?.elementType === ElementType.Tempo
-    );
-  }
+const offsetRows = [
+  {
+    id: 'accidental',
+    label: ($) => $.dialog.neumePositioning.accidental,
+    xKey: 'accidentalOffsetX',
+    yKey: 'accidentalOffsetY',
+  },
+  {
+    id: 'secondary-accidental',
+    label: ($) => $.dialog.neumePositioning.accidental2,
+    xKey: 'secondaryAccidentalOffsetX',
+    yKey: 'secondaryAccidentalOffsetY',
+  },
+  {
+    id: 'tertiary-accidental',
+    label: ($) => $.dialog.neumePositioning.accidental3,
+    xKey: 'tertiaryAccidentalOffsetX',
+    yKey: 'tertiaryAccidentalOffsetY',
+  },
+  {
+    id: 'measure-bar-left',
+    label: ($) => $.dialog.neumePositioning.barLineL,
+    xKey: 'measureBarLeftOffsetX',
+    yKey: 'measureBarLeftOffsetY',
+  },
+  {
+    id: 'measure-bar-right',
+    label: ($) => $.dialog.neumePositioning.barLineR,
+    xKey: 'measureBarRightOffsetX',
+    yKey: 'measureBarRightOffsetY',
+  },
+  {
+    id: 'fthora',
+    label: ($) => $.dialog.neumePositioning.fthora,
+    xKey: 'fthoraOffsetX',
+    yKey: 'fthoraOffsetY',
+  },
+  {
+    id: 'secondary-fthora',
+    label: ($) => $.dialog.neumePositioning.fthora2,
+    xKey: 'secondaryFthoraOffsetX',
+    yKey: 'secondaryFthoraOffsetY',
+  },
+  {
+    id: 'tertiary-fthora',
+    label: ($) => $.dialog.neumePositioning.fthora3,
+    xKey: 'tertiaryFthoraOffsetX',
+    yKey: 'tertiaryFthoraOffsetY',
+  },
+  {
+    id: 'gorgon',
+    label: ($) => $.dialog.neumePositioning.gorgon,
+    xKey: 'gorgonNeumeOffsetX',
+    yKey: 'gorgonNeumeOffsetY',
+  },
+  {
+    id: 'secondary-gorgon',
+    label: ($) => $.dialog.neumePositioning.gorgon2,
+    xKey: 'secondaryGorgonNeumeOffsetX',
+    yKey: 'secondaryGorgonNeumeOffsetY',
+  },
+  {
+    id: 'ison',
+    label: ($) => $.dialog.neumePositioning.ison,
+    xKey: 'isonOffsetX',
+    yKey: 'isonOffsetY',
+  },
+  {
+    id: 'koronis',
+    label: ($) => $.dialog.neumePositioning.koronis,
+    xKey: 'koronisOffsetX',
+    yKey: 'koronisOffsetY',
+  },
+  {
+    id: 'measure-number',
+    label: ($) => $.dialog.neumePositioning.measureNo,
+    xKey: 'measureNumberOffsetX',
+    yKey: 'measureNumberOffsetY',
+  },
+  {
+    id: 'note-indicator',
+    label: ($) => $.dialog.neumePositioning.note,
+    xKey: 'noteIndicatorOffsetX',
+    yKey: 'noteIndicatorOffsetY',
+  },
+  {
+    id: 'cross',
+    label: ($) => $.dialog.neumePositioning.cross,
+    xKey: 'stavrosOffsetX',
+    yKey: 'stavrosOffsetY',
+  },
+  {
+    id: 'tie',
+    label: ($) => $.model.neume.vocalExpression.yfen,
+    xKey: 'tieOffsetX',
+    yKey: 'tieOffsetY',
+  },
+  {
+    id: 'time',
+    label: ($) => $.dialog.neumePositioning.time,
+    xKey: 'timeNeumeOffsetX',
+    yKey: 'timeNeumeOffsetY',
+  },
+  {
+    id: 'vareia',
+    label: ($) => $.dialog.neumePositioning.vareia,
+    xKey: 'vareiaOffsetX',
+    yKey: 'vareiaOffsetY',
+  },
+  {
+    id: 'quality',
+    label: ($) => $.dialog.neumePositioning.quality,
+    xKey: 'vocalExpressionNeumeOffsetX',
+    yKey: 'vocalExpressionNeumeOffsetY',
+  },
+] satisfies OffsetRow[];
 
-  get hasPreviousElement() {
-    return (
-      this.previousElement?.elementType === ElementType.Note ||
-      this.previousElement?.elementType === ElementType.Martyria ||
-      this.previousElement?.elementType === ElementType.Tempo
-    );
-  }
+const hasVocalExpressionNeume = computed(() => {
+  return form.value.vocalExpressionNeume != null;
+});
 
-  get hasVocalExpressionNeume() {
-    return this.form.vocalExpressionNeume != null;
-  }
+const hasTimeNeume = computed(() => {
+  return form.value.timeNeume != null;
+});
 
-  get hasTimeNeume() {
-    return this.form.timeNeume != null;
-  }
+const hasGorgonNeume = computed(() => {
+  return form.value.gorgonNeume != null;
+});
 
-  get hasGorgonNeume() {
-    return this.form.gorgonNeume != null;
-  }
+const hasSecondaryGorgonNeume = computed(() => {
+  return form.value.secondaryGorgonNeume != null;
+});
 
-  get hasSecondaryGorgonNeume() {
-    return this.form.secondaryGorgonNeume != null;
-  }
+const hasFthora = computed(() => {
+  return form.value.fthora != null;
+});
 
-  get hasFthora() {
-    return this.form.fthora != null;
-  }
+const hasSecondaryFthora = computed(() => {
+  return form.value.secondaryFthora != null;
+});
 
-  get hasSecondaryFthora() {
-    return this.form.secondaryFthora != null;
-  }
+const hasTertiaryFthora = computed(() => {
+  return form.value.tertiaryFthora != null;
+});
 
-  get hasTertiaryFthora() {
-    return this.form.tertiaryFthora != null;
-  }
+const hasAccidental = computed(() => {
+  return form.value.accidental != null;
+});
 
-  get hasAccidental() {
-    return this.form.accidental != null;
-  }
+const hasSecondaryAccidental = computed(() => {
+  return form.value.secondaryAccidental != null;
+});
 
-  get hasSecondaryAccidental() {
-    return this.form.secondaryAccidental != null;
-  }
+const hasTertiaryAccidental = computed(() => {
+  return form.value.tertiaryAccidental != null;
+});
 
-  get hasTertiaryAccidental() {
-    return this.form.tertiaryAccidental != null;
-  }
+const hasMeasureNumber = computed(() => {
+  return form.value.measureNumber != null;
+});
 
-  get hasMeasureBarLeft() {
-    return this.form.measureBarLeft != null;
-  }
+const hasIson = computed(() => {
+  return form.value.ison != null;
+});
 
-  get hasMeasureBarRight() {
-    return this.form.measureBarRight != null;
-  }
+const hasTie = computed(() => {
+  return form.value.tie != null;
+});
 
-  get hasMeasureNumber() {
-    return this.form.measureNumber != null;
-  }
+const centerLeft = computed(() => paneContainerWidthPx / 2);
 
-  get hasIson() {
-    return this.form.ison != null;
-  }
+const previousElementStyle = computed(() => {
+  return {
+    left: `calc(${centerLeft.value}px - ${
+      props.element.x - props.previousElement!.x
+    }px * var(--zoom, 1))`,
+  } as StyleValue;
+});
 
-  get hasTie() {
-    return this.form.tie != null;
-  }
+const nextElementStyle = computed(() => {
+  return {
+    left: `calc(${centerLeft.value}px + ${
+      props.nextElement!.x - props.element.x
+    }px * var(--zoom, 1))`,
+  } as StyleValue;
+});
 
-  get centerLeft() {
-    return this.paneContainerWidthPx / 2;
-  }
+const mainStyle = computed(() => {
+  return {
+    left: centerLeft.value + 'px',
+  } as StyleValue;
+});
 
-  get previousElementStyle() {
-    return {
-      left: `calc(${this.centerLeft}px - ${
-        this.element.x - this.previousElement.x
-      }px * var(--zoom, 1))`,
-    } as StyleValue;
-  }
+const topPaneStyle = computed(() => {
+  const neumeHeight = TextMeasurementService.getFontHeight(
+    props.pageSetup.neumeDefaultFontCss,
+  );
 
-  get nextElementStyle() {
-    return {
-      left: `calc(${this.centerLeft}px + ${
-        this.nextElement.x - this.element.x
-      }px * var(--zoom, 1))`,
-    } as StyleValue;
-  }
+  return {
+    height: neumeHeight * zoom + 'px',
+  } as StyleValue;
+});
 
-  get mainStyle() {
-    return {
-      left: this.centerLeft + 'px',
-    } as StyleValue;
-  }
+Object.assign(form.value, props.element);
 
-  get topPaneStyle() {
-    const neumeHeight = TextMeasurementService.getFontHeight(
-      `${this.pageSetup.neumeDefaultFontSize}px ${this.pageSetup.neumeDefaultFontFamily}`,
-    );
+function update() {
+  emit('update', form.value as NoteElement);
+  open.value = false;
+}
 
-    return {
-      height: neumeHeight * this.zoom + 'px',
-    } as StyleValue;
-  }
+function getOffsetRowLabelId(row: OffsetRow) {
+  return `syllable-positioning-${row.id}-label`;
+}
 
-  get paneContainerStyle() {
-    return {
-      width: this.paneContainerWidthPx + 'px',
-    } as StyleValue;
-  }
+function getOffsetInputId(row: OffsetRow, axis: OffsetAxis) {
+  return `syllable-positioning-${row.id}-${axis}`;
+}
 
-  created() {
-    Object.assign(this.form, this.element);
+function getOffsetValue(key: NoteOffsetKey) {
+  return form.value[key];
+}
 
-    window.addEventListener('keydown', this.onKeyDown);
-  }
+function updateOffsetValue(key: NoteOffsetKey, value: number | null) {
+  form.value[key] = value;
+}
 
-  beforeUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-  }
+function updateAccidentalOffset(args: ScoreElementOffset) {
+  form.value.accidentalOffsetX = args.x;
+  form.value.accidentalOffsetY = args.y;
+}
 
-  onKeyDown(event: KeyboardEvent) {
-    if (event.code === 'Escape') {
-      this.$emit('close');
-    }
-  }
+function updateSecondaryAccidentalOffset(args: ScoreElementOffset) {
+  form.value.secondaryAccidentalOffsetX = args.x;
+  form.value.secondaryAccidentalOffsetY = args.y;
+}
 
-  update() {
-    this.$emit('update', this.form);
-    this.$emit('close');
-  }
+function updateTertiaryAccidentalOffset(args: ScoreElementOffset) {
+  form.value.tertiaryAccidentalOffsetX = args.x;
+  form.value.tertiaryAccidentalOffsetY = args.y;
+}
 
-  updateAccidentalOffset(args: ScoreElementOffset) {
-    this.form.accidentalOffsetX = args.x;
-    this.form.accidentalOffsetY = args.y;
-  }
+function updateFthoraOffset(args: ScoreElementOffset) {
+  form.value.fthoraOffsetX = args.x;
+  form.value.fthoraOffsetY = args.y;
+}
 
-  updateSecondaryAccidentalOffset(args: ScoreElementOffset) {
-    this.form.secondaryAccidentalOffsetX = args.x;
-    this.form.secondaryAccidentalOffsetY = args.y;
-  }
+function updateSecondaryFthoraOffset(args: ScoreElementOffset) {
+  form.value.secondaryFthoraOffsetX = args.x;
+  form.value.secondaryFthoraOffsetY = args.y;
+}
 
-  updateTertiaryAccidentalOffset(args: ScoreElementOffset) {
-    this.form.tertiaryAccidentalOffsetX = args.x;
-    this.form.tertiaryAccidentalOffsetY = args.y;
-  }
+function updateTertiaryFthoraOffset(args: ScoreElementOffset) {
+  form.value.tertiaryFthoraOffsetX = args.x;
+  form.value.tertiaryFthoraOffsetY = args.y;
+}
 
-  updateMeasureBarLeftOffset(args: ScoreElementOffset) {
-    this.form.measureBarLeftOffsetX = args.x;
-    this.form.measureBarLeftOffsetY = args.y;
-  }
+function updateGorgonOffset(args: ScoreElementOffset) {
+  form.value.gorgonNeumeOffsetX = args.x;
+  form.value.gorgonNeumeOffsetY = args.y;
+}
 
-  updateMeasureBarRightOffset(args: ScoreElementOffset) {
-    this.form.measureBarRightOffsetX = args.x;
-    this.form.measureBarRightOffsetY = args.y;
-  }
+function updateGorgon2Offset(args: ScoreElementOffset) {
+  form.value.secondaryGorgonNeumeOffsetX = args.x;
+  form.value.secondaryGorgonNeumeOffsetY = args.y;
+}
 
-  updateFthoraOffset(args: ScoreElementOffset) {
-    this.form.fthoraOffsetX = args.x;
-    this.form.fthoraOffsetY = args.y;
-  }
+function updateIsonOffset(args: ScoreElementOffset) {
+  form.value.isonOffsetX = args.x;
+  form.value.isonOffsetY = args.y;
+}
 
-  updateSecondaryFthoraOffset(args: ScoreElementOffset) {
-    this.form.secondaryFthoraOffsetX = args.x;
-    this.form.secondaryFthoraOffsetY = args.y;
-  }
+function updateKoronisOffset(args: ScoreElementOffset) {
+  form.value.koronisOffsetX = args.x;
+  form.value.koronisOffsetY = args.y;
+}
 
-  updateTertiaryFthoraOffset(args: ScoreElementOffset) {
-    this.form.tertiaryFthoraOffsetX = args.x;
-    this.form.tertiaryFthoraOffsetY = args.y;
-  }
+function updateMeasureNumberOffset(args: ScoreElementOffset) {
+  form.value.measureNumberOffsetX = args.x;
+  form.value.measureNumberOffsetY = args.y;
+}
 
-  updateGorgonOffset(args: ScoreElementOffset) {
-    this.form.gorgonNeumeOffsetX = args.x;
-    this.form.gorgonNeumeOffsetY = args.y;
-  }
+function updateNoteIndicatorOffset(args: ScoreElementOffset) {
+  form.value.noteIndicatorOffsetX = args.x;
+  form.value.noteIndicatorOffsetY = args.y;
+}
 
-  updateGorgon2Offset(args: ScoreElementOffset) {
-    this.form.secondaryGorgonNeumeOffsetX = args.x;
-    this.form.secondaryGorgonNeumeOffsetY = args.y;
-  }
+function updateStavrosOffset(args: ScoreElementOffset) {
+  form.value.stavrosOffsetX = args.x;
+  form.value.stavrosOffsetY = args.y;
+}
 
-  updateIsonOffset(args: ScoreElementOffset) {
-    this.form.isonOffsetX = args.x;
-    this.form.isonOffsetY = args.y;
-  }
+function updateTieOffset(args: ScoreElementOffset) {
+  form.value.tieOffsetX = args.x;
+  form.value.tieOffsetY = args.y;
+}
 
-  updateKoronisOffset(args: ScoreElementOffset) {
-    this.form.koronisOffsetX = args.x;
-    this.form.koronisOffsetY = args.y;
-  }
+function updateTimeOffset(args: ScoreElementOffset) {
+  form.value.timeNeumeOffsetX = args.x;
+  form.value.timeNeumeOffsetY = args.y;
+}
 
-  updateMeasureNumberOffset(args: ScoreElementOffset) {
-    this.form.measureNumberOffsetX = args.x;
-    this.form.measureNumberOffsetY = args.y;
-  }
-
-  updateNoteIndicatorOffset(args: ScoreElementOffset) {
-    this.form.noteIndicatorOffsetX = args.x;
-    this.form.noteIndicatorOffsetY = args.y;
-  }
-
-  updateStavrosOffset(args: ScoreElementOffset) {
-    this.form.stavrosOffsetX = args.x;
-    this.form.stavrosOffsetY = args.y;
-  }
-
-  updateTieOffset(args: ScoreElementOffset) {
-    this.form.tieOffsetX = args.x;
-    this.form.tieOffsetY = args.y;
-  }
-
-  updateTimeOffset(args: ScoreElementOffset) {
-    this.form.timeNeumeOffsetX = args.x;
-    this.form.timeNeumeOffsetY = args.y;
-  }
-
-  updateVareiaOffset(args: ScoreElementOffset) {
-    this.form.vareiaOffsetX = args.x;
-    this.form.vareiaOffsetY = args.y;
-  }
-
-  updateQualityOffset(args: ScoreElementOffset) {
-    this.form.vocalExpressionNeumeOffsetX = args.x;
-    this.form.vocalExpressionNeumeOffsetY = args.y;
-  }
+function updateQualityOffset(args: ScoreElementOffset) {
+  form.value.vocalExpressionNeumeOffsetX = args.x;
+  form.value.vocalExpressionNeumeOffsetY = args.y;
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.dialog-content {
-  display: flex;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  height: 80vh;
-}
-
-.pane-container {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1.5rem;
-  overflow: auto;
-  flex: 1;
-}
-
-.form-group label {
-  display: inline-block;
-  width: 6.75rem;
-}
-
-.form-group input {
-  width: 3rem;
-}
-
-.form-group .table-header {
-  display: inline-block;
-  width: 3.5rem;
-}
-
 .top-pane {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.bottom-pane {
-  overflow: auto;
-  flex: 1;
-}
-
-.header {
-  font-size: 1.5rem;
-  text-align: center;
-}
-
-.button-container {
-  display: flex;
-  justify-content: center;
-}
-
-.ok-btn {
-  margin-right: 2rem;
 }
 
 .neume-container {

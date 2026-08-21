@@ -4,14 +4,16 @@
 
 Neanes (pronounced neh-ah-ness) is a free and open source scorewriter for notating Byzantine Chant.
 
-<img src="images/demo.png?raw=true" alt="Demo Screen" width="100%"/>
+![Demo Screen](images/demo.png?raw=true)
 
 ## Features
 
 - WYSIWYG design
 - Rapid entry of neumes and lyrics
-- Automatic alignment of supporting neumes (i.e. fthoras, accidentals, klasmas, gorgons, et al)
-- Automatic calculation of martyria
+- Automatic alignment of supporting neumes (i.e. fthoræ, accidentals, klasmas, gorgons, et al)
+- Automatic calculation of martyriæ
+- Multilingual lyric entry and user interface
+- [Optimal line breaking](notes/knuth_plass.md) for beautifully even spacing across every line, just like TeX and Adobe InDesign
 - Print or export to PDF
 - Export to HTML using [ByzHtml](https://danielgarthur.github.io/byzhtml) web components
 - Export to PNG
@@ -23,7 +25,7 @@ Neanes (pronounced neh-ah-ness) is a free and open source scorewriter for notati
 This software is intended to create simple scores that contain:
 
 - A title
-- A mode signature
+- An initial martyria
 - Neumes and lyrics
 
 It is not intended to be a fully-featured word processor.
@@ -34,13 +36,13 @@ Example files can be found in the [examples](examples/) folder.
 
 ## How to Download
 
-Download the latest release on the [releases page](https://github.com/neanes/neanes/releases). The latest release can also be found [here](https://neanes.github.io/neanes/download).
+Download the latest release on the [releases page](https://github.com/neanes/neanes/releases). The latest release can also be found on the [download page](https://neanes.github.io/neanes/download/).
 
-A web version of the app with reduced functionality can be found [here](https://neanes.github.io/neanes/web-app/).
+A web version of the app with reduced functionality can be found on the [web app page](https://neanes.github.io/neanes/web-app/).
 
 ## How-to Guide
 
-To learn how to use the software, read the [guide](https://neanes.github.io/neanes/guide).
+To learn how to use the software, read the [guide](https://neanes.github.io/neanes/guide/).
 
 ## Contributing
 
@@ -54,6 +56,7 @@ The following bundled fonts are licensed under the [SIL Open Font License (OFL),
 
 - [GFS Didot](https://www.greekfontsociety-gfs.gr/)
 - [Noto Naskh Arabic](https://github.com/notofonts/arabic)
+- [Old Standard](https://sr.ht/~ralessi/oldstandard/)
 - [Source Serif](https://github.com/adobe-fonts/source-serif)
 
 ## Acknowledgements

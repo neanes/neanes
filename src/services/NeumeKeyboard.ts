@@ -1,4 +1,5 @@
 import { AcceptsLyricsOption } from '@/models/Element';
+import type { Neume } from '@/models/Neumes';
 import {
   Accidental,
   Fthora,
@@ -6,7 +7,6 @@ import {
   Ison,
   MeasureBar,
   MeasureNumber,
-  Neume,
   Note,
   QuantitativeNeume,
   TempoSign,
@@ -1469,15 +1469,17 @@ export class NeumeKeyboard {
     );
   }
 
-  public generateTooltip(mapping: KeyboardMapping) {
-    let result = '';
+  public generateTooltipKeys(mapping: KeyboardMapping) {
+    const result: string[] = [];
+
     if (mapping.shiftKey) {
-      result += 'Shift + ';
+      result.push('Shift');
     }
     if (mapping.modifier != null && mapping.modifier !== mapping.code) {
-      result += this.__formatKeyForDocs(mapping.modifier) + ' + ';
+      result.push(this.__formatKeyForDocs(mapping.modifier));
     }
-    result += this.__formatKeyForDocs(mapping.code);
+    result.push(this.__formatKeyForDocs(mapping.code));
+
     return result;
   }
 
@@ -1502,7 +1504,7 @@ export class NeumeKeyboard {
       )} </kbd> | Kentimata |\n`,
     );
     result.push(
-      `| <kbd> ${this.__formatKeyForDocs(this.fthoraKey)} </kbd> | Fthores |\n`,
+      `| <kbd> ${this.__formatKeyForDocs(this.fthoraKey)} </kbd> | Fthoræ |\n`,
     );
 
     result.push(
@@ -1586,7 +1588,7 @@ export class NeumeKeyboard {
       this.tempoKeyboardMap,
     );
 
-    result.push('## Martyria of the Notes\n\n');
+    result.push('## Martyriæ of the Notes\n\n');
     result.push('| Neume | Keyboard Shortcut |\n');
     result.push('| ----- | ----------------- |\n');
     result.push(
@@ -1597,7 +1599,7 @@ export class NeumeKeyboard {
 
     this.__generateMappingTableForDocs(
       result,
-      'Fthores',
+      'Fthoræ',
       this.fthoraKeyboardMap,
     );
 
@@ -1809,21 +1811,22 @@ export class NeumeKeyboard {
     return this.findMapping(this.tieKeyboardMap, event, activeModifier);
   }
 
-  public getKlasmaKeyTooltip() {
-    return this.__formatKeyForDocs(this.klasmaKey);
+  public getKlasmaKeyTooltipKeys() {
+    return [this.__formatKeyForDocs(this.klasmaKey)];
   }
 
-  public getMartyriaKeyTooltip() {
-    return this.__formatKeyForDocs(this.martyriaKey);
+  public getMartyriaKeyTooltipKeys() {
+    return [this.__formatKeyForDocs(this.martyriaKey)];
   }
 
-  public getMaryriaRightAlignTooltip() {
-    return `${this.__formatKeyForDocs(
-      this.martyriaConfigKey,
-    )} + ${this.__formatKeyForDocs(this.martyriaKey)}`;
+  public getMartyriaRightAlignTooltipKeys() {
+    return [
+      this.__formatKeyForDocs(this.martyriaConfigKey),
+      this.__formatKeyForDocs(this.martyriaKey),
+    ];
   }
 
-  public getNoteIndicatorKeyTooltip() {
-    return this.__formatKeyForDocs(this.noteIndicatorKey);
+  public getNoteIndicatorKeyTooltipKeys() {
+    return [this.__formatKeyForDocs(this.noteIndicatorKey)];
   }
 }

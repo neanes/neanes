@@ -1,12 +1,11 @@
 import { readFile } from 'fs/promises';
 import { describe, expect, it } from 'vitest';
 
+import type { DropCapElement, ScoreElement } from '../models/Element';
 import {
   AcceptsLyricsOption,
-  DropCapElement,
   ElementType,
   NoteElement,
-  ScoreElement,
 } from '../models/Element';
 import { QuantitativeNeume } from '../models/Neumes';
 import { LyricService } from './LyricService';
@@ -223,7 +222,7 @@ describe('LyricService (English)', () => {
         .filter((x) =>
           [ElementType.Note, ElementType.DropCap].includes(x.elementType),
         )
-        .map((x: NoteElement | DropCapElement) =>
+        .map((x) =>
           x.elementType === ElementType.Note
             ? {
                 lyrics: (x as NoteElement).lyrics,

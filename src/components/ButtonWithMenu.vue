@@ -1,131 +1,214 @@
 <template>
-  <div
-    class="menu-container"
-    @mousedown="openMenu"
-    @mouseleave="selectedOption = null"
-  >
-    <button class="neume-button" :disabled="disabled">
-      <img draggable="false" :src="mainIcon" />
-    </button>
-    <div class="menu" v-if="showMenu">
+  <AppTooltip :tooltip="tooltip">
+    <template #default="{ ariaLabel }">
       <div
-        v-for="option in options"
-        :key="getKey(option)"
-        class="menu-item"
-        @mouseenter="selectedOption = option.neume"
+        ref="menu"
+        class="menu-container"
+        @mousedown="handleMouseDown"
+        @mouseleave="handleMouseLeave"
       >
-        <img draggable="false" :src="option.icon" />
+        <ToolbarButton
+          type="button"
+          variant="secondary"
+          class="chrome-button"
+          :aria-label="ariaLabel"
+          :disabled="disabled"
+          @click="handleButtonClick"
+        >
+          <NeumeIcon v-if="mainIcon" :name="mainIcon" :size="imgSize" />
+          <span v-if="mainText" :style="textStyle">{{ mainText }}</span>
+        </ToolbarButton>
+        <div v-if="showMenu" class="menu chrome-menu" :class="direction">
+          <div
+            v-for="option in options"
+            :key="getKey(option)"
+            class="menu-item chrome-menu-item"
+            @click="handleChoiceClick(option.neume)"
+            @mouseenter="handleMouseEnter(option.neume)"
+          >
+            <NeumeIcon v-if="option.icon" :name="option.icon" :size="imgSize" />
+            <span v-if="option.text" :style="textStyle">{{ option.text }}</span>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
+    </template>
+  </AppTooltip>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+<script setup lang="ts">
+import type { PropType, StyleValue } from 'vue';
+import {
+  computed,
+  inject,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useTemplateRef,
+} from 'vue';
 
-import { Neume } from '@/models/Neumes';
+import { editorPreferencesKey } from '@/injectionKeys';
+import { ButtonMenuMode } from '@/models/EditorPreferences';
+import type { Neume } from '@/models/Neumes';
 
-export interface ButtonWithMenuOption {
-  icon: string;
-  neume: Neume | Neume[];
+import type { AppTooltipValue } from './AppTooltip.types';
+import AppTooltip from './AppTooltip.vue';
+import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
+import NeumeIcon from './NeumeIcon.vue';
+import { ToolbarButton } from './ui/toolbar';
+
+const emit = defineEmits(['select']);
+const props = defineProps({
+  direction: {
+    type: String as PropType<'up' | 'down'>,
+    default: 'up',
+  },
+  options: {
+    type: Array as PropType<ButtonWithMenuOption[]>,
+    required: true,
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+  fontFamily: {
+    type: String,
+    default: 'Neanes',
+  },
+  imgSize: {
+    type: String,
+    default: undefined,
+  },
+  tooltip: {
+    type: [String, Object] as PropType<AppTooltipValue>,
+    default: undefined,
+  },
+});
+
+const editorPreferences = inject(editorPreferencesKey)!;
+
+const menu = useTemplateRef<HTMLElement>('menu');
+const showMenu = ref(false);
+const selectedOption = ref<Neume | Neume[] | null>(null);
+
+const menuMode = computed(() => editorPreferences.value.buttonMenuMode);
+
+const mainOption = computed(() => {
+  return props.direction === 'up' ? props.options.at(-1)! : props.options[0];
+});
+
+const mainIcon = computed(() => {
+  return mainOption.value.icon;
+});
+
+const mainText = computed(() => {
+  return mainOption.value.text;
+});
+
+const textStyle = computed(() => {
+  return {
+    fontFamily: props.fontFamily,
+  } as StyleValue;
+});
+
+onMounted(() => {
+  window.addEventListener('pointerdown', handleGlobalPointerDown);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('mouseup', onMouseUp);
+  window.removeEventListener('pointerdown', handleGlobalPointerDown);
+});
+
+function getKey(option: ButtonWithMenuOption) {
+  return Array.isArray(option.neume) ? option.neume[0] : option.neume;
 }
 
-@Component({
-  components: {},
-  emits: ['select'],
-})
-export default class ButtonWithMenu extends Vue {
-  @Prop({ default: 'up' }) direction!: 'up' | 'down';
-  @Prop({ required: true }) options!: ButtonWithMenuOption[];
-  @Prop({ default: false }) disabled!: boolean;
-
-  showMenu: boolean = false;
-  selectedOption: Neume | Neume[] | null = null;
-
-  get mainIcon() {
-    return this.direction === 'up'
-      ? this.options.at(-1)!.icon
-      : this.options[0].icon;
+function handleMouseDown() {
+  if (props.disabled) {
+    return;
   }
 
-  getKey(option: ButtonWithMenuOption) {
-    return Array.isArray(option.neume) ? option.neume[0] : option.neume;
+  showMenu.value = true;
+
+  if (menuMode.value === ButtonMenuMode.Hold) {
+    window.addEventListener('mouseup', onMouseUp);
+  }
+}
+
+function handleButtonClick(event: MouseEvent) {
+  if (props.disabled || event.detail !== 0) {
+    return;
   }
 
-  beforeUnmount() {
-    window.removeEventListener('mouseup', this.onMouseUp);
+  emit('select', mainOption.value.neume);
+
+  showMenu.value = false;
+}
+
+function handleMouseEnter(option: Neume | Neume[]) {
+  if (menuMode.value === ButtonMenuMode.Hold) {
+    selectedOption.value = option;
+  }
+}
+
+function handleMouseLeave() {
+  if (menuMode.value === ButtonMenuMode.Hold) {
+    selectedOption.value = null;
+  }
+}
+
+function handleGlobalPointerDown(e: MouseEvent) {
+  if (
+    menuMode.value === ButtonMenuMode.Click &&
+    !menu.value?.contains(e.target as Node)
+  ) {
+    showMenu.value = false;
+  }
+}
+
+function handleChoiceClick(option: Neume | Neume[]) {
+  if (menuMode.value === ButtonMenuMode.Click) {
+    emit('select', option);
+
+    showMenu.value = false;
+  }
+}
+
+function onMouseUp() {
+  if (selectedOption.value) {
+    emit('select', selectedOption.value);
   }
 
-  openMenu() {
-    if (this.disabled) {
-      return;
-    }
+  showMenu.value = false;
 
-    this.showMenu = true;
-    window.addEventListener('mouseup', this.onMouseUp);
-  }
-
-  onMouseUp() {
-    if (this.selectedOption) {
-      this.$emit('select', this.selectedOption);
-    }
-
-    this.showMenu = false;
-
-    window.removeEventListener('mouseup', this.onMouseUp);
-  }
+  window.removeEventListener('mouseup', onMouseUp);
 }
 </script>
 
 <style scoped>
-.neume-button {
-  height: var(--btn-size);
-  width: var(--btn-size);
-
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-
-  user-select: none;
-}
-
-.neume-button img {
-  height: var(--btn-size);
-  width: var(--btn-size);
-}
-
 .menu-container {
   display: flex;
   position: relative;
-  height: var(--btn-size);
+  height: var(--chrome-button-size);
 }
 
 .menu {
   position: absolute;
-  z-index: 999;
-  background-color: white;
-  border: 1px solid black;
-  box-sizing: border-box;
-  width: var(--btn-size);
+  z-index: 40;
+  width: var(--chrome-button-size);
+}
+
+.menu.up {
   bottom: 0;
 }
 
-.menu-item {
-  height: var(--btn-size);
-  width: 100%;
-  padding: 3px 0;
-  box-sizing: border-box;
-  text-align: center;
-  user-select: none;
-  overflow: hidden;
-  position: relative;
+.menu.down {
+  top: 0;
 }
 
-.menu-item:hover {
-  background-color: aliceblue;
+.menu-item {
+  height: var(--chrome-button-size);
+  width: 100%;
+  padding: 1px 0;
 }
 </style>

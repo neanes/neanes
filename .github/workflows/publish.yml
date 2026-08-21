@@ -1,39 +1,56 @@
+---
 name: Publish
 
 on: workflow_dispatch
 
-defaults:
-  run:
-    shell: bash
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out
+        uses: actions/checkout@v7.0.1
 
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v7.0.0
         with:
-          node-version: 20.x
+          node-version: 22
+          cache: 'npm'
 
-      - name: Cache dependencies
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: ./node_modules
-          key: ${{ runner.os }}-${{ runner.arch }}-modules-${{ hashFiles('package-lock.json') }}
+      - name: Enable Corepack
+        run: corepack enable npm
 
-      - run: corepack enable npm && corepack prepare --activate
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
 
-      - run: npm test
-      - run: npm run lint
-      - run: npm run release
+      - name: Test
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v24.2.0
+
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        run: npm run release -- --win
         env:
-          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Build Linux
+        if: runner.os == 'Linux'
+        run: npm run release -- --linux --x64 --arm64
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Build macOS
+        if: runner.os == 'macOS'
+        run: npm run release -- --mac --x64 --arm64
+        env:
+          GH_TOKEN: ${{ github.token }}

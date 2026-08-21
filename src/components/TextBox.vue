@@ -1,12 +1,14 @@
 <template>
   <div
+    ref="container"
     class="text-box-container"
     :style="containerStyle"
     :class="{ selected: selected }"
+    dir="auto"
     @click="$emit('select-single')"
   >
     <span class="handle"></span>
-    <div class="text-box-multipanel-container" v-if="element.multipanel">
+    <div v-if="element.multipanel" class="text-box-multipanel-container">
       <ContentEditable
         ref="textLeft"
         class="text-box multipanel left"
@@ -15,6 +17,7 @@
         :content="contentLeft"
         :editable="editMode"
         @blur="onBlur"
+        @on-editor-ready="onEditorReady"
       ></ContentEditable>
       <ContentEditable
         ref="textCenter"
@@ -24,6 +27,7 @@
         :content="contentCenter"
         :editable="editMode"
         @blur="onBlur"
+        @on-editor-ready="onEditorReady"
       ></ContentEditable>
       <ContentEditable
         ref="textRight"
@@ -33,9 +37,10 @@
         :content="contentRight"
         :editable="editMode"
         @blur="onBlur"
+        @on-editor-ready="onEditorReady"
       ></ContentEditable>
     </div>
-    <div class="inline-container" v-else-if="element.inline">
+    <div v-else-if="element.inline" class="inline-container">
       <ContentEditable
         ref="text"
         class="text-box inline-top"
@@ -44,6 +49,7 @@
         :content="content"
         :editable="editMode"
         @blur="onBlur"
+        @input="onContentInput('content', $event)"
       ></ContentEditable>
       <ContentEditable
         ref="textBottom"
@@ -53,6 +59,7 @@
         :content="contentBottom"
         :editable="editMode"
         @blur="onBlur"
+        @input="onContentInput('contentBottom', $event)"
       ></ContentEditable>
     </div>
     <ContentEditable
@@ -64,335 +71,427 @@
       :content="content"
       :editable="editMode"
       @blur="onBlur"
+      @on-editor-ready="onEditorReady"
     ></ContentEditable>
   </div>
 </template>
 
-<script lang="ts">
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
+<script setup lang="ts">
+import { debounce, throttle } from 'throttle-debounce';
+import type { PropType, StyleValue } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useTemplateRef,
+  watch,
+} from 'vue';
+import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import ContentEditable from '@/components/ContentEditable.vue';
-import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import { useResizeObserver } from '@/composables/useResizeObserver';
+import type { TextBoxElement } from '@/models/Element';
+import { TextBoxAlignment } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
+import { LayoutService } from '@/services/LayoutService';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
-import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
+import type { TokenMetadata, TokenScope } from '@/utils/replaceTokens';
+import { replaceTokens } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
-@Component({
-  components: { ContentEditable },
-  emits: ['update', 'update:height', 'select-single'],
-})
-export default class TextBox extends Vue {
-  @Prop() element!: TextBoxElement;
-  @Prop() pageSetup!: PageSetup;
-  @Prop({ default: true }) editMode!: boolean;
-  @Prop() selected!: boolean;
-  @Prop() metadata!: TokenMetadata;
+const emit = defineEmits([
+  'preview-content',
+  'select-single',
+  'update',
+  'update:height',
+]);
+const props = defineProps({
+  element: {
+    type: Object as PropType<TextBoxElement>,
+    required: true,
+  },
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
+  },
+  editMode: {
+    type: Boolean,
+    default: true,
+  },
+  selected: {
+    type: Boolean,
+    default: false,
+  },
+  metadata: {
+    type: Object as PropType<TokenMetadata>,
+    default: undefined,
+  },
+  tokenScope: {
+    type: String as PropType<TokenScope>,
+    default: 'body',
+  },
+});
 
-  resizeObserverHeight: ResizeObserver | null = null;
-  resizeObserverWidth: ResizeObserver | null = null;
-  unmounting = false;
+const container = useTemplateRef<HTMLElement>('container');
+const text = useTemplateRef<ComponentExposed<typeof ContentEditable>>('text');
+const textLeft =
+  useTemplateRef<ComponentExposed<typeof ContentEditable>>('textLeft');
+const textRight =
+  useTemplateRef<ComponentExposed<typeof ContentEditable>>('textRight');
+const textCenter =
+  useTemplateRef<ComponentExposed<typeof ContentEditable>>('textCenter');
+const textBottom =
+  useTemplateRef<ComponentExposed<typeof ContentEditable>>('textBottom');
 
-  get textElement() {
-    return this.$refs.text as ContentEditable;
-  }
+const unmounting = ref(false);
+const previewWidth = ref<number | null>(null);
+const { observe: observeResize } = useResizeObserver();
+const setupResizeObserverDebounced = debounce(100, setupResizeObserver);
 
-  get textElementLeft() {
-    return this.$refs.textLeft as ContentEditable;
-  }
+const htmlElement = computed(() => container.value!);
 
-  get textElementRight() {
-    return this.$refs.textRight as ContentEditable;
-  }
-
-  get textElementCenter() {
-    return this.$refs.textCenter as ContentEditable;
-  }
-
-  get textElementBottom() {
-    return this.$refs.textBottom as ContentEditable;
-  }
-
-  get content() {
-    return this.editMode
-      ? this.element.content
-      : replaceTokens(
-          this.element.content,
-          this.metadata,
-          this.element.alignment,
-        );
-  }
-
-  get contentBottom() {
-    return this.editMode
-      ? this.element.contentBottom
-      : replaceTokens(
-          this.element.contentBottom,
-          this.metadata,
-          this.element.alignment,
-        );
-  }
-
-  get contentLeft() {
-    return this.editMode
-      ? this.element.contentLeft
-      : replaceTokens(
-          this.element.contentLeft,
-          this.metadata,
-          TextBoxAlignment.Left,
-        );
-  }
-
-  get contentCenter() {
-    return this.editMode
-      ? this.element.contentCenter
-      : replaceTokens(
-          this.element.contentCenter,
-          this.metadata,
-          TextBoxAlignment.Center,
-        );
-  }
-
-  get contentRight() {
-    return this.editMode
-      ? this.element.contentRight
-      : replaceTokens(
-          this.element.contentRight,
-          this.metadata,
-          TextBoxAlignment.Right,
-        );
-  }
-
-  get width() {
-    return withZoom(this.element.width);
-  }
-
-  get containerStyle() {
-    const style = {
-      color: this.element.computedColor,
-      fontFamily: getFontFamilyWithFallback(this.element.computedFontFamily),
-      fontSize: withZoom(this.element.computedFontSize),
-      fontWeight: this.element.computedFontWeight,
-      fontStyle: this.element.computedFontStyle,
-      textAlign: this.element.alignment,
-      width:
-        this.element.fillWidth || this.element.customWidth != null
-          ? this.width
-          : undefined,
-      height: withZoom(this.element.height),
-      minHeight: withZoom(this.element.minHeight),
-      webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-      lineHeight: `${this.element.computedLineHeight ?? 'normal'}`,
-      direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
-    } as StyleValue;
-
-    return style;
-  }
-
-  get textBoxStyle() {
-    const style: any = {
-      width: !this.element.multipanel ? this.width : undefined,
-      height: this.element.inline ? withZoom(this.element.height) : undefined,
-      minHeight: withZoom(this.element.minHeight),
-      textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
-    };
-
-    return style;
-  }
-
-  get textBoxStyleTop() {
-    const style: any = {
-      width:
-        this.element.fillWidth || this.element.customWidth != null
-          ? this.width
-          : undefined,
-      height: withZoom(this.element.height),
-      textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
-    };
-
-    return style;
-  }
-
-  get textBoxStyleBottom() {
-    const style: any = {
-      width:
-        this.element.fillWidth || this.element.customWidth != null
-          ? this.width
-          : undefined,
-      textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
-      top: withZoom(this.pageSetup.lyricsVerticalOffset),
-    };
-
-    return style;
-  }
-
-  get textBoxClass() {
-    return {
-      underline: this.element.underline,
-    };
-  }
-
-  mounted() {
-    const height = this.getHeight();
-
-    if (height != null && this.element.height !== height) {
-      this.$emit('update:height', height);
-    }
-
-    if (this.textElement) {
-      const element = this.textElement.htmlElement;
-
-      if (this.resizeObserverHeight != null) {
-        this.resizeObserverHeight.disconnect();
-      }
-
-      this.resizeObserverHeight = new ResizeObserver(() => {
-        const resizedHeight = this.getHeight();
-
-        if (resizedHeight != null && this.element.height !== resizedHeight) {
-          this.$emit('update:height', resizedHeight);
-        }
-      });
-
-      this.resizeObserverHeight.observe(element);
-
-      this.configureResizeObserverWidth();
-    }
-  }
-
-  beforeUnmount() {
-    this.unmounting = true;
-    this.update();
-
-    if (this.resizeObserverHeight != null) {
-      this.resizeObserverHeight.disconnect();
-    }
-
-    if (this.resizeObserverWidth != null) {
-      this.resizeObserverWidth.disconnect();
-    }
-  }
-
-  configureResizeObserverWidth() {
-    const element = this.textElement.htmlElement;
-
-    if (this.resizeObserverWidth != null) {
-      this.resizeObserverWidth.disconnect();
-    }
-    if (
-      this.element.inline &&
-      !this.element.fillWidth &&
-      this.element.customWidth == null
-    ) {
-      this.resizeObserverWidth = new ResizeObserver(() => {
-        const resizedWidth = this.getWidth();
-
-        if (resizedWidth != null && this.element.trueWidth !== resizedWidth) {
-          console.log(this.element.trueWidth, resizedWidth);
-          this.$emit('update:trueWidth', resizedWidth);
-        }
-      });
-
-      this.resizeObserverWidth.observe(element);
-    }
-  }
-
-  @Watch('element.fillWidth')
-  onFillWidthChange() {
-    this.configureResizeObserverWidth();
-  }
-
-  @Watch('element.customWidth')
-  onCustomWidthChange() {
-    this.configureResizeObserverWidth();
-  }
-
-  getHeight() {
-    if (this.element.multipanel) {
-      return Math.max(
-        this.textElementLeft.htmlElement.getBoundingClientRect().height,
-        this.textElementCenter.htmlElement.getBoundingClientRect().height,
-        this.textElementRight.htmlElement.getBoundingClientRect().height,
+const content = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.content
+    : replaceTokens(
+        props.element.content,
+        props.metadata,
+        props.element.computedAlignment,
       );
-    }
+});
 
-    return this.textElement.htmlElement.getBoundingClientRect().height;
+const contentBottom = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentBottom
+    : replaceTokens(
+        props.element.contentBottom,
+        props.metadata,
+        props.element.computedAlignment,
+      );
+});
+
+const contentLeft = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentLeft
+    : replaceTokens(
+        props.element.contentLeft,
+        props.metadata,
+        TextBoxAlignment.Left,
+      );
+});
+
+const contentCenter = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentCenter
+    : replaceTokens(
+        props.element.contentCenter,
+        props.metadata,
+        TextBoxAlignment.Center,
+      );
+});
+
+const contentRight = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentRight
+    : replaceTokens(
+        props.element.contentRight,
+        props.metadata,
+        TextBoxAlignment.Right,
+      );
+});
+
+const width = computed(() =>
+  withZoom(previewWidth.value ?? props.element.width),
+);
+
+const containerStyle = computed(() => {
+  const style = {
+    color: props.element.computedColor,
+    fontFamily: getFontFamilyWithFallback(props.element.computedFontFamily),
+    fontSize: withZoom(props.element.computedFontSize),
+    fontWeight: props.element.computedFontWeight,
+    fontStyle: props.element.computedFontStyle,
+    fontVariantCaps: props.element.computedFontVariantCaps,
+    fontVariantNumeric: props.element.computedFontVariantNumeric,
+    fontVariantLigatures: props.element.computedFontVariantLigatures,
+    fontVariantAlternates: props.element.computedFontVariantAlternates,
+    textAlign: props.element.computedAlignment,
+    width: width.value,
+    height: withZoom(props.element.height),
+    minHeight: withZoom(props.element.minHeight),
+    webkitTextStrokeWidth: withZoom(props.element.computedStrokeWidth),
+    webkitTextStrokeColor: props.element.computedStrokeColor,
+    lineHeight: `${props.element.computedLineHeight ?? 'normal'}`,
+  } as StyleValue;
+
+  return style;
+});
+
+const textBoxStyle = computed(() => {
+  const style: any = {
+    width: !props.element.multipanel ? width.value : undefined,
+    height:
+      props.element.inline || props.element.customHeight
+        ? withZoom(props.element.height)
+        : undefined,
+    minHeight: withZoom(props.element.minHeight),
+    textWrap:
+      props.element.computedAlignment === 'center' ? 'balance' : 'pretty',
+  };
+
+  return style;
+});
+
+const textBoxStyleTop = computed(() => {
+  const style: any = {
+    width: width.value,
+    height: withZoom(props.element.height),
+    textWrap:
+      props.element.computedAlignment === 'center' ? 'balance' : 'pretty',
+  };
+
+  return style;
+});
+
+const textBoxStyleBottom = computed(() => {
+  const style: any = {
+    width: width.value,
+    textWrap:
+      props.element.computedAlignment === 'center' ? 'balance' : 'pretty',
+    top: withZoom(props.pageSetup.lyricsVerticalOffset),
+  };
+
+  return style;
+});
+
+const textBoxClass = computed(() => {
+  return {
+    underline: props.element.computedUnderline,
+  };
+});
+
+watch(
+  () => props.element.customHeight,
+  (newVal) => {
+    if (newVal == null) {
+      update();
+    }
+  },
+);
+
+onMounted(() => {
+  const height = getHeight();
+
+  if (height != null && Math.abs(props.element.height - height) > 0.001) {
+    emit('update:height', height);
   }
 
-  getWidth() {
-    return this.textElement.htmlElement.getBoundingClientRect().width;
-  }
+  setupResizeObserver();
+});
 
-  onBlur() {
-    if (!this.unmounting) {
-      this.update();
-    }
-  }
+onBeforeUnmount(() => {
+  unmounting.value = true;
+  update();
+  // Observer is disconnected automatically by useResizeObserver's own
+  // onBeforeUnmount hook.
+});
 
-  update() {
-    const updates: Partial<TextBoxElement> = {};
+function getTextElement() {
+  return text.value!;
+}
 
-    let updated = false;
+function getTextElementLeft() {
+  return textLeft.value!;
+}
 
-    const height = this.getHeight();
+function getTextElementRight() {
+  return textRight.value!;
+}
 
-    const content = this.textElement?.getContent() ?? '';
-    const contentBottom = this.textElementBottom?.getContent() ?? '';
-    const contentLeft = this.textElementLeft?.getContent() ?? '';
-    const contentRight = this.textElementRight?.getContent() ?? '';
-    const contentCenter = this.textElementCenter?.getContent() ?? '';
+function getTextElementCenter() {
+  return textCenter.value!;
+}
 
-    // This should never happen, but if it does, we don't want
-    // to save garbage values.
-    if (height == null) {
-      return;
-    }
+function getTextElementBottom() {
+  return textBottom.value!;
+}
 
-    // Nothing actually changed, so do nothing
-    if (this.editMode && this.element.content !== content) {
-      updates.content = content;
-      updated = true;
-    }
+function onEditorReady() {
+  setupResizeObserverDebounced();
+}
 
-    if (this.editMode && this.element.contentBottom !== contentBottom) {
-      updates.contentBottom = contentBottom;
-      updated = true;
-    }
-
-    if (this.editMode && this.element.contentLeft !== contentLeft) {
-      updates.contentLeft = contentLeft;
-      updated = true;
-    }
-
-    if (this.editMode && this.element.contentRight !== contentRight) {
-      updates.contentRight = contentRight;
-      updated = true;
-    }
-
-    if (this.editMode && this.element.contentCenter !== contentCenter) {
-      updates.contentCenter = contentCenter;
-      updated = true;
-    }
-
-    if (this.element.height != height) {
-      updates.height = height;
-      updated = true;
-    }
-
-    if (updated) {
-      this.$emit('update', updates);
-    }
-  }
-
-  blur() {
-    this.textElement.blur();
-  }
-
-  focus() {
-    this.textElement.focus(true);
+function onContentInput(property: 'content' | 'contentBottom', value: string) {
+  if (
+    props.element.inline &&
+    !props.element.fillWidth &&
+    props.element.customWidth == null
+  ) {
+    previewWidth.value = getIntrinsicWidth();
+    emit('preview-content', { [property]: value });
   }
 }
+
+function getIntrinsicWidth() {
+  return LayoutService.measureTextBoxIntrinsicWidth(
+    props.element,
+    getTextElement().getContent(),
+    getTextElementBottom().getContent(),
+  );
+}
+
+function update() {
+  const updates: Partial<TextBoxElement> = {};
+
+  let updated = false;
+
+  const height = getHeight();
+
+  const currentContent = getTextElement()?.getContent() ?? '';
+  const currentContentBottom = getTextElementBottom()?.getContent() ?? '';
+  const currentContentLeft = getTextElementLeft()?.getContent() ?? '';
+  const currentContentRight = getTextElementRight()?.getContent() ?? '';
+  const currentContentCenter = getTextElementCenter()?.getContent() ?? '';
+
+  // This should never happen, but if it does, we don't want
+  // to save garbage values.
+  if (height == null) {
+    return;
+  }
+
+  // Nothing actually changed, so do nothing
+  if (props.editMode && props.element.content !== currentContent) {
+    updates.content = currentContent;
+    updated = true;
+  }
+
+  if (props.editMode && props.element.contentBottom !== currentContentBottom) {
+    updates.contentBottom = currentContentBottom;
+    updated = true;
+  }
+
+  if (props.editMode && props.element.contentLeft !== currentContentLeft) {
+    updates.contentLeft = currentContentLeft;
+    updated = true;
+  }
+
+  if (props.editMode && props.element.contentRight !== currentContentRight) {
+    updates.contentRight = currentContentRight;
+    updated = true;
+  }
+
+  if (props.editMode && props.element.contentCenter !== currentContentCenter) {
+    updates.contentCenter = currentContentCenter;
+    updated = true;
+  }
+
+  if (
+    !props.element.inline &&
+    Math.abs(props.element.height - height) > 0.001
+  ) {
+    updates.height = height;
+    updated = true;
+  }
+
+  if (updated) {
+    emit('update', updates);
+  }
+
+  emit('preview-content', null);
+  previewWidth.value = null;
+}
+
+function blur() {
+  getTextElement()?.blur();
+}
+
+function focus() {
+  getTextElement()?.focus(true);
+}
+
+function setupResizeObserver() {
+  const textElement = getTextElement();
+  const textElementLeft = getTextElementLeft();
+  const textElementCenter = getTextElementCenter();
+  const textElementRight = getTextElementRight();
+
+  if (
+    textElement ||
+    (textElementLeft && textElementCenter && textElementRight)
+  ) {
+    const elements = [
+      textElement,
+      textElementLeft,
+      textElementCenter,
+      textElementRight,
+    ]
+      .filter((element) => element != null)
+      .map((element) => element.htmlElement);
+
+    observeResize(
+      elements,
+      throttle(100, () => {
+        const resizedHeight = getHeight();
+
+        if (
+          resizedHeight != null &&
+          Math.abs(props.element.height - resizedHeight) > 0.001
+        ) {
+          emit('update', { height: resizedHeight });
+        }
+      }),
+    );
+  }
+}
+
+function getHeight() {
+  if (props.element.multipanel) {
+    if (
+      getTextElementLeft() == null ||
+      getTextElementCenter() == null ||
+      getTextElementRight() == null
+    ) {
+      return null;
+    }
+
+    const zoom = Number(
+      getComputedStyle(getTextElementCenter()!.htmlElement).getPropertyValue(
+        '--zoom',
+      ),
+    );
+
+    return (
+      Math.max(
+        getTextElementLeft()!.htmlElement.getBoundingClientRect().height,
+        getTextElementCenter()!.htmlElement.getBoundingClientRect().height,
+        getTextElementRight()!.htmlElement.getBoundingClientRect().height,
+      ) / zoom
+    );
+  }
+
+  if (getTextElement() == null) {
+    return null;
+  }
+
+  const zoom = Number(
+    getComputedStyle(getTextElement()!.htmlElement).getPropertyValue('--zoom'),
+  );
+
+  return getTextElement()!.htmlElement.getBoundingClientRect().height / zoom;
+}
+
+function onBlur() {
+  if (!unmounting.value) {
+    update();
+  }
+}
+
+defineExpose({
+  blur,
+  focus,
+  getTextElement,
+  htmlElement,
+});
 </script>
 
 <style scoped>
@@ -448,6 +547,7 @@ export default class TextBox extends Vue {
 .text-box.left {
   position: absolute;
   left: 0;
+  text-align: left;
 }
 
 .text-box.center {
@@ -468,6 +568,10 @@ export default class TextBox extends Vue {
   z-index: 1;
 
   display: none;
+}
+
+.text-box-container.selected .handle {
+  display: inline;
 }
 
 .inline-container {

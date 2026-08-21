@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import type { ScoreElement } from '@/models/Element';
 import {
   DropCapElement,
-  LineBreakType,
+  MartyriaElement,
   ModeKeyElement,
   NoteElement,
-  ScoreElement,
 } from '@/models/Element';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
@@ -14,6 +14,7 @@ import {
   GorgonNeume,
   Ison,
   MeasureNumber,
+  Note,
   QuantitativeNeume,
   TimeNeume,
   VocalExpressionNeume,
@@ -28,6 +29,8 @@ export abstract class TestFileGenerator {
         return this.generateTestFile_Fthora('Top');
       case TestFileType.FthoraBottom:
         return this.generateTestFile_Fthora('Bottom');
+      case TestFileType.MartyriaFthora:
+        return this.generateTestFile_MartyriaFthora();
       case TestFileType.Gorgon:
         return this.generateTestFile_Gorgon();
       case TestFileType.Klasma:
@@ -44,6 +47,8 @@ export abstract class TestFileGenerator {
         return this.generateTestFile_NoteIndicators();
       case TestFileType.Ison:
         return this.generateTestFile_Isons();
+      case TestFileType.Koronis:
+        return this.generateTestFile_Koronis();
       case TestFileType.ModeKey:
         return this.generateTestFile_ModeKey();
       case TestFileType.Random:
@@ -66,8 +71,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -98,6 +107,38 @@ export abstract class TestFileGenerator {
     return elements;
   }
 
+  private static generateTestFile_MartyriaFthora() {
+    const elements: ScoreElement[] = [];
+
+    for (const n in Note) {
+      const note = n as Note;
+
+      for (const f in Fthora) {
+        const fthora = f as Fthora;
+
+        if (
+          fthora.startsWith('Zygos') ||
+          fthora.startsWith('Kliton') ||
+          fthora.startsWith('Spathi') ||
+          fthora.startsWith('Enharmonic') ||
+          fthora.startsWith('GeneralSharp') ||
+          fthora.startsWith('GeneralFlat') ||
+          !fthora.endsWith('_Top')
+        ) {
+          continue;
+        }
+
+        const martyria = new MartyriaElement();
+        martyria.auto = false;
+        martyria.note = note;
+        martyria.fthora = fthora;
+        elements.push(martyria);
+      }
+    }
+
+    return elements;
+  }
+
   private static generateTestFile_Gorgon() {
     const elements: ScoreElement[] = [];
 
@@ -107,9 +148,12 @@ export abstract class TestFileGenerator {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
-          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -126,9 +170,12 @@ export abstract class TestFileGenerator {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
-          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -145,9 +192,12 @@ export abstract class TestFileGenerator {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
-          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -164,9 +214,12 @@ export abstract class TestFileGenerator {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
-          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -192,8 +245,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -211,8 +268,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -238,8 +299,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -257,8 +322,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -276,8 +345,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -286,6 +359,53 @@ export abstract class TestFileGenerator {
       const note = new NoteElement();
       note.quantitativeNeume = quantitativeNeume;
       note.timeNeume = TimeNeume.Tripli;
+      note.lyrics = (counter++).toString();
+      elements.push(note);
+    }
+
+    for (const q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.quantitativeNeume = quantitativeNeume;
+      note.timeNeume = TimeNeume.Tetrapli;
+      note.lyrics = (counter++).toString();
+      elements.push(note);
+    }
+
+    for (const q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.quantitativeNeume = quantitativeNeume;
+      note.timeNeume = TimeNeume.Hapli;
+      note.vocalExpressionNeume = VocalExpressionNeume.Antikenoma;
       note.lyrics = (counter++).toString();
       elements.push(note);
     }
@@ -303,8 +423,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -334,8 +458,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -373,8 +501,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -392,8 +524,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -411,8 +547,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -430,8 +570,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -453,8 +597,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -471,6 +619,29 @@ export abstract class TestFileGenerator {
       elements.push(ison);
     }
 
+    for (const q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.quantitativeNeume = quantitativeNeume;
+      note.vareia = true;
+      note.lyrics = (counter++).toString();
+      elements.push(note);
+    }
+
     return elements;
   }
 
@@ -484,8 +655,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -503,8 +678,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -530,8 +709,12 @@ export abstract class TestFileGenerator {
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
@@ -548,30 +731,74 @@ export abstract class TestFileGenerator {
   }
 
   private static generateTestFile_Isons() {
+    return this.generateTestFile_WithGorgonVariants((note) => {
+      note.ison = Ison.Unison;
+    });
+  }
+
+  private static generateTestFile_Koronis() {
+    return this.generateTestFile_WithGorgonVariants((note) => {
+      note.koronis = true;
+    });
+  }
+
+  private static generateTestFile_WithGorgonVariants(
+    applyNeume: (note: NoteElement) => void,
+  ) {
     const elements: ScoreElement[] = [];
 
     let counter = 1;
+    const gorgonVariants = [
+      null,
+      GorgonNeume.Gorgon_Top,
+      GorgonNeume.Digorgon,
+      GorgonNeume.Trigorgon,
+    ];
 
     for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
           QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
           QuantitativeNeume.Cross,
           QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
         ].includes(quantitativeNeume)
       ) {
         continue;
       }
 
-      const note = new NoteElement();
-      note.quantitativeNeume = quantitativeNeume;
-      note.ison = Ison.Unison;
-      note.lyrics = (counter++).toString();
-      elements.push(note);
+      for (const gorgonNeume of gorgonVariants.filter((gorgonNeume) =>
+        this.canDisplayGorgonVariant(quantitativeNeume, gorgonNeume),
+      )) {
+        const note = new NoteElement();
+        note.quantitativeNeume = quantitativeNeume;
+        note.gorgonNeume = gorgonNeume;
+        applyNeume(note);
+        note.lyrics = (counter++).toString();
+        elements.push(note);
+      }
     }
 
     return elements;
+  }
+
+  private static canDisplayGorgonVariant(
+    quantitativeNeume: QuantitativeNeume,
+    gorgonNeume: GorgonNeume | null,
+  ) {
+    if (gorgonNeume == null) {
+      return true;
+    }
+
+    const note = new NoteElement();
+    note.quantitativeNeume = quantitativeNeume;
+    note.gorgonNeume = gorgonNeume;
+
+    return note.gorgonNeume === gorgonNeume;
   }
 
   private static generateTestFile_ModeKey() {
@@ -608,7 +835,6 @@ export abstract class TestFileGenerator {
 
     for (const font of fonts) {
       const dropCap = new DropCapElement();
-      dropCap.useDefaultStyle = false;
       dropCap.fontFamily = font;
       dropCap.fontSize = 80;
       elements.push(dropCap);
@@ -617,7 +843,6 @@ export abstract class TestFileGenerator {
       note.quantitativeNeume = QuantitativeNeume.Ison;
       note.lyrics = 'A';
       note.lineBreak = true;
-      note.lineBreakType = LineBreakType.Left;
       elements.push(note);
     }
 

@@ -4,13 +4,13 @@
 
 ### Prerequisites
 
-- Node.js 20.x or later
+- Node.js 22.x or later
 
 ### Project Setup
 
 First install the project dependencies:
 
-```
+```sh
 corepack enable npm
 npm install
 ```
@@ -19,42 +19,57 @@ npm install
 
 To create a release build, type:
 
-```
+```sh
 npm run build
 ```
 
-The build artifacts are found in `dist/`. For Windows, the installer will be called `Neanes Setup [version].exe`. The raw files can be found in `dist/win_unpacked`.
+The build artifacts are found in `release/`. For Windows, the installer will be called `Neanes Setup [version].exe`. The raw files can be found in `release/win-unpacked`.
 
 ### Development
 
 To run the development server, type:
 
-```
+```sh
 npm run dev
 ```
 
 This will launch the application in development mode. As changes are made to the source code, the app will reload automatically.
 
+To exercise the Electron update toast flow without publishing a release, set `FAKE_UPDATE_AVAILABLE=1` before starting the app. This simulates an available update, the download lifecycle, and the restart request without calling `electron-updater`.
+
+- macOS and Linux: `FAKE_UPDATE_AVAILABLE=1 npm run dev`
+- PowerShell: `$env:FAKE_UPDATE_AVAILABLE=1; npm run dev`
+- cmd.exe: `set FAKE_UPDATE_AVAILABLE=1 && npm run dev`
+
 The [Vue Devtools](https://devtools-next.vuejs.org/) extension is available in development mode.
 To enable it, add the following to `.env.local` and/or `.env.web.local`:
 
-```
+```sh
 VITE_ENABLE_DEV_TOOLS=true
 ```
 
 Any change that updates `package.json` _must_ include the corresponding update to `package-lock.json` after running `npm install`.
 
+#### Debugging the Audio and Playback services
+
+To turn on log messages for the audio and playback services, add the following to `.env.local`.
+
+```sh
+VITE_AUDIO_SERVICE_LOGGING_ENABLED=true
+VITE_PLAYBACK_SERVICE_LOGGING_ENABLED=true
+```
+
 ## Linting
 
 To check that the code is linted, type:
 
-```
+```sh
 npm run lint
 ```
 
 To automatically fix any lint issues, type:
 
-```
+```sh
 npm run lint:fix
 ```
 
@@ -62,7 +77,7 @@ npm run lint:fix
 
 To run tests before committing, type:
 
-```
+```sh
 npm test
 ```
 
@@ -74,9 +89,11 @@ When using [Visual Studio Code](https://github.com/microsoft/vscode), install th
 
 ## Localization
 
+Neanes uses [Crowdin](https://crowdin.com/project/neanes) to manage translations.
+
 To test localization support, add the following to `.env.local` and/or `.env.web.local`:
 
-```
+```sh
 VITE_PSEUDOLOCALIZATION=true
 ```
 

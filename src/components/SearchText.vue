@@ -1,14 +1,18 @@
 <template>
-  <div class="search-text-container" @keydown.esc="$emit('close')">
+  <div
+    class="flex justify-end chrome-toolbar-surface"
+    @keydown.esc="$emit('close')"
+  >
     <input
       ref="input"
-      :query="query"
+      :value="query"
       @keydown.enter="
         $emit('search', { query: ($event.target as HTMLInputElement).value })
       "
-      @change="$emit('update:query', ($event.target as HTMLInputElement).value)"
+      @input="$emit('update:query', ($event.target as HTMLInputElement).value)"
     />
     <button
+      class="chrome-button"
       @click="
         $emit('search', {
           query,
@@ -16,54 +20,38 @@
         })
       "
     >
-      <img src="@/assets/icons/arrow-up.svg" />
+      <PhArrowUp class="size-4" />
     </button>
-    <button @click="$emit('search', { query })">
-      <img src="@/assets/icons/arrow-down.svg" />
+    <button class="chrome-button" @click="$emit('search', { query })">
+      <PhArrowDown class="size-4" />
     </button>
-    <button @click="$emit('close')">
-      <img src="@/assets/icons/x.svg" />
+    <button class="chrome-button" @click="$emit('close')">
+      <PhX class="size-4" />
     </button>
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+<script setup lang="ts">
+import { PhArrowDown, PhArrowUp, PhX } from '@phosphor-icons/vue';
+import { onMounted, useTemplateRef } from 'vue';
 
-@Component({
-  emits: ['close', 'search', 'update:query'],
-})
-export default class TextBox extends Vue {
-  @Prop() query!: string;
+defineEmits(['close', 'search', 'update:query']);
+defineProps({
+  query: {
+    type: String,
+    required: true,
+  },
+});
 
-  mounted() {
-    this.focus();
-  }
+const input = useTemplateRef<HTMLInputElement>('input');
 
-  focus() {
-    (this.$refs.input as HTMLInputElement).select();
-  }
+onMounted(() => {
+  focus();
+});
+
+function focus() {
+  input.value!.select();
 }
+
+defineExpose({ focus });
 </script>
-
-<style scoped>
-.search-text-container {
-  display: flex;
-  justify-content: right;
-  background-color: #ddd;
-}
-
-.search-text-container button {
-  border: none;
-  background-color: darkgray;
-}
-
-.search-text-container button:hover {
-  background-color: lightgray;
-}
-
-.search-text-container button img {
-  width: 1rem;
-  height: 1rem;
-}
-</style>

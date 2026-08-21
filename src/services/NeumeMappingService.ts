@@ -1,5 +1,6 @@
 import metadata from '@/assets/fonts/neanes.metadata.json';
 import glyphnames from '@/assets/fonts/sbmufl/glyphnames.json';
+import type { Neume } from '@/models/Neumes';
 import {
   Accidental,
   Fthora,
@@ -9,7 +10,6 @@ import {
   MeasureBar,
   MeasureNumber,
   ModeSign,
-  Neume,
   Note,
   NoteIndicator,
   QuantitativeNeume,
@@ -56,9 +56,12 @@ function mapNeumeToSbmufl(
     salt,
     text: glyphNameToCodepointMap.get(glyphName)!,
   });
+
+  sbmuflGlyphToNeumeMap.set(glyphName, neume);
 }
 
 const neumeToSbmuflGlyphMap = new Map<Neume, NeumeMapping>();
+const sbmuflGlyphToNeumeMap = new Map<SbmuflGlyphName, Neume>();
 
 mapNeumeToSbmufl(QuantitativeNeume.Ison, 'ison');
 mapNeumeToSbmufl(QuantitativeNeume.Oligon, 'oligon');
@@ -151,7 +154,6 @@ mapNeumeToSbmufl(
 
 mapNeumeToSbmufl(QuantitativeNeume.Apostrophos, 'apostrofos');
 mapNeumeToSbmufl(QuantitativeNeume.Elaphron, 'elafron');
-mapNeumeToSbmufl(QuantitativeNeume.Apostrophos, 'apostrofos');
 mapNeumeToSbmufl(
   QuantitativeNeume.ElaphronPlusApostrophos,
   'elafronApostrofos',
@@ -652,5 +654,9 @@ mapNeumeToSbmufl(Letter.Pelastikon, 'pelastikon');
 export class NeumeMappingService {
   public static getMapping(neume: Neume): NeumeMapping {
     return neumeToSbmuflGlyphMap.get(neume)!;
+  }
+
+  public static getReverseMapping(sbmuflName: SbmuflGlyphName): Neume | null {
+    return sbmuflGlyphToNeumeMap.get(sbmuflName) ?? null;
   }
 }

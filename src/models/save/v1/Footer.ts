@@ -1,4 +1,4 @@
-import { ScoreElement } from './Element';
+import type { ScoreElement } from './Element';
 
 export class Footer {
   public elements: ScoreElement[] = [];

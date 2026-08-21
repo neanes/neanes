@@ -1,50 +1,59 @@
+---
 name: CI
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
   pull_request:
-    branches: [master]
+    types:
+      - opened
+      - reopened
+      - synchronize
+  workflow_dispatch:
 
-defaults:
-  run:
-    shell: bash
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out
+        uses: actions/checkout@v7.0.1
 
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v7.0.0
         with:
-          node-version: 20.x
+          node-version: 22
+          cache: 'npm'
 
-      - name: Cache dependencies
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: ./node_modules
-          key: ${{ runner.os }}-${{ runner.arch }}-modules-${{ hashFiles('package-lock.json') }}
+      - name: Enable Corepack
+        run: corepack enable npm
 
-      - run: corepack enable npm && corepack prepare --activate
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
 
-      - run: npm test
-      - run: npm run lint
-      - run: npm run build
-        env:
-          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Test
+        run: npm test
 
-      - name: Publish
-        uses: actions/upload-artifact@v4
-        with:
-          name: Neanes-${{ matrix.os }}
-          path: dist/Neanes-*
-          retention-days: 3
+      - name: Lint
+        run: npm run lint
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v24.2.0
+
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        run: npm run build -- --win
+
+      - name: Build Linux
+        if: runner.os == 'Linux'
+        run: npm run build -- --linux --x64 --arm64
+
+      - name: Build macOS
+        if: runner.os == 'macOS'
+        run: npm run build -- --mac --x64 --arm64

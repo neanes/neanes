@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { Neume } from '../models/Neumes';
 import {
   Accidental,
   Fthora,
@@ -7,7 +8,6 @@ import {
   Ison,
   MeasureBar,
   MeasureNumber,
-  Neume,
   Note,
   QuantitativeNeume,
   TempoSign,

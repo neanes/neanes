@@ -1,4 +1,5 @@
-import { Fthora, NeumeSelection, QuantitativeNeume } from '@/models/Neumes';
+import type { Fthora } from '@/models/Neumes';
+import { NeumeSelection, QuantitativeNeume } from '@/models/Neumes';
 
 const neumeValueMap = new Map<QuantitativeNeume, number>([
   [QuantitativeNeume.Ison, 0],

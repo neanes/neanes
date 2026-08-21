@@ -1,0 +1,19 @@
+# Crowdin configuration.
+# See https://crowdin.github.io/crowdin-cli/configuration
+---
+# Credentials are supplied via the CROWDIN_PROJECT_ID and CROWDIN_PERSONAL_TOKEN
+# environment variables (GitHub Actions secrets), so they are not stored here.
+
+project_id_env: CROWDIN_PROJECT_ID
+api_token_env: CROWDIN_PERSONAL_TOKEN
+
+# Keep the folder structure on the Crowdin side mirroring the repo.
+preserve_hierarchy: true
+
+files:
+  # English is the source language. Crowdin uploads these strings and writes
+  # each target language back to src/i18n/<code>/ using the same file names.
+  # The language index.ts files are code, not translations, so *.json excludes
+  # them automatically.
+  - source: /src/i18n/en/*.json
+    translation: /src/i18n/%two_letters_code%/%original_file_name%

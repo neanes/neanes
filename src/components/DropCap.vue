@@ -1,8 +1,9 @@
 <template>
   <div
+    ref="container"
     class="drop-cap-container"
+    dir="auto"
     @click="$emit('select-single')"
-    :style="containerStyle"
   >
     <span class="handle"></span>
 
@@ -17,68 +18,83 @@
   </div>
 </template>
 
-<script lang="ts">
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+<script setup lang="ts">
+import type { PropType, StyleValue } from 'vue';
+import { computed, useTemplateRef } from 'vue';
+import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import ContentEditable from '@/components/ContentEditable.vue';
-import { DropCapElement } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import type { DropCapElement } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { withZoom } from '@/utils/withZoom';
 
-@Component({
-  components: { ContentEditable },
-  emits: ['update:content', 'select-single'],
-})
-export default class DropCap extends Vue {
-  @Prop() element!: DropCapElement;
-  @Prop() pageSetup!: PageSetup;
-  @Prop() editable!: boolean;
+const emit = defineEmits(['update:content', 'select-single']);
+const props = defineProps({
+  element: {
+    type: Object as PropType<DropCapElement>,
+    required: true,
+  },
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
+  },
+  editable: {
+    type: Boolean,
+    required: true,
+  },
+});
 
-  get textElement() {
-    return this.$refs.text as ContentEditable;
-  }
+const container = useTemplateRef<HTMLElement>('container');
+const text = useTemplateRef<ComponentExposed<typeof ContentEditable>>('text');
 
-  get style() {
-    const style = {
-      color: this.element.computedColor,
-      fontFamily: getFontFamilyWithFallback(this.element.computedFontFamily),
-      fontSize: withZoom(this.element.computedFontSize),
-      fontWeight: this.element.computedFontWeight,
-      fontStyle: this.element.computedFontStyle,
-      lineHeight: `${this.element.computedLineHeight ?? 'normal'}`,
-      webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-    } as StyleValue;
+const htmlElement = computed(() => container.value!);
+const textElement = computed(() => text.value!);
 
-    return style;
-  }
+const style = computed(() => {
+  const style = {
+    color: props.element.computedColor,
+    fontFamily: getFontFamilyWithFallback(props.element.computedFontFamily),
+    fontSize: withZoom(props.element.computedFontSize),
+    fontWeight: props.element.computedFontWeight,
+    fontStyle: props.element.computedFontStyle,
+    fontVariantCaps: props.element.computedFontVariantCaps,
+    fontVariantNumeric: props.element.computedFontVariantNumeric,
+    fontVariantLigatures: props.element.computedFontVariantLigatures,
+    fontVariantAlternates: props.element.computedFontVariantAlternates,
+    lineHeight: `${props.element.computedLineHeight ?? 'normal'}`,
+    webkitTextStrokeWidth: withZoom(props.element.computedStrokeWidth),
+    webkitTextStrokeColor: props.element.computedStrokeColor,
+  } as StyleValue;
 
-  get containerStyle() {
-    return {
-      direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
-    } as StyleValue;
-  }
+  return style;
+});
 
-  focus() {
-    if (this.editable) {
-      this.textElement.focus(true);
-    }
-  }
-
-  blur() {
-    this.textElement.blur();
-  }
-
-  updateContent(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.content === content) {
-      return;
-    }
-
-    this.$emit('update:content', content);
+function focus() {
+  if (props.editable) {
+    textElement.value.focus(true);
   }
 }
+
+function blur() {
+  textElement.value.blur();
+}
+
+function updateContent(content: string) {
+  // Nothing actually changed, so do nothing
+  if (props.element.content === content) {
+    return;
+  }
+
+  emit('update:content', content);
+}
+
+defineExpose({
+  blur,
+  focus,
+  htmlElement,
+  textElement,
+});
 </script>
 
 <style scoped>

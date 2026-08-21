@@ -1,8 +1,6 @@
-import {
+import type {
   DropCapElement,
-  ElementType,
   ImageBoxElement,
-  LineBreakType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
@@ -12,20 +10,47 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import {
+  ElementType,
+  isRightAlignedMartyria,
+  LineBreakType,
+} from '@/models/Element';
+import type { Neume } from '@/models/Neumes';
+import {
   MeasureBar,
   ModeSign,
-  Neume,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
-import { Score } from '@/models/Score';
+import type { PageSetup } from '@/models/PageSetup';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  hasParagraphStyleOverrides,
+  type ParagraphStyle,
+  type ResolvedParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
+import type { Score } from '@/models/Score';
+import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
+import { type ResolvedFontStyle, resolveFontStyle } from '@/utils/fontStyle';
+import {
+  FONT_VARIANT_CSS_NAMES,
+  FONT_VARIANT_PROPERTIES,
+  fontVariantCssDeclarations,
+} from '@/utils/fontVariants';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { resolvePageMargins } from '@/utils/PageMargins';
+import { isRightHandPage } from '@/utils/PageNumbering';
+import {
+  getRichTextLanguage,
+  getRichTextLanguageAttributes,
+} from '@/utils/richTextLanguage';
+import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import { Unit } from '@/utils/Unit';
 
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
-import { NeumeMappingService, SbmuflGlyphName } from '../NeumeMappingService';
+import type { SbmuflGlyphName } from '../NeumeMappingService';
+import { NeumeMappingService } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
 interface NeumeOffset {
@@ -78,8 +103,64 @@ interface ByzHtmlExporterConfig {
   mapNeumeTag: Map<string, string>;
 }
 
+export function createByzHtmlDocument(
+  style: string,
+  body: string,
+  melkiteRtl: boolean,
+): string {
+  const fontFaceCss = fontCatalog.getRegisteredFontFaceCss();
+  const fontFeatureValuesCss = fontCatalog.getExportFontFeatureValuesCss();
+
+  let injectRtl = '';
+
+  if (melkiteRtl) {
+    injectRtl = `<script>
+  byzhtml.options.melkiteRtl = true;
+</script>`;
+  }
+
+  return `<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/neanes/byzhtml@${byzhtmlVersion}/dist/Neanes.css"
+    />
+
+    <script src="https://cdn.jsdelivr.net/gh/neanes/byzhtml@${byzhtmlVersion}/dist/byzhtml.min.js"></script>
+
+    ${injectRtl}
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
+    />
+
+    <meta charset="UTF-8">
+
+    <style>
+      ${fontFaceCss}
+      ${fontFeatureValuesCss}
+      ${style}
+    </style>
+  </head>
+  <body>
+    ${body}
+  </body>
+</html>`;
+}
+
 export class ByzHtmlExporter {
   neumeToTagMap: Map<Neume, TagInfo> = new Map<Neume, TagInfo>();
+
+  // The built-in default styles are invariant for a given style list, so they
+  // are resolved once per export instead of per element. The cache is keyed by
+  // the style array reference.
+  private resolvedDefaultStyles: {
+    paragraphStyles: ParagraphStyle[];
+    defaultTextBoxStyle: ResolvedParagraphStyle;
+    lyricsStyle: ResolvedParagraphStyle;
+    defaultDropCapStyle: ResolvedParagraphStyle;
+  } | null = null;
 
   config: ByzHtmlExporterConfig = {
     classFthora: 'byz--f',
@@ -117,72 +198,112 @@ export class ByzHtmlExporter {
     mapNeumeTag: this.createNeumeTagMap(),
   };
 
-  exportScore(score: Score) {
-    const style = this.exportPageSetup(score.pageSetup);
-
-    const body = this.exportElements(score.staff.elements, score.pageSetup, 4);
-
-    let injectRtl = '';
-
-    if (score.pageSetup.melkiteRtl) {
-      injectRtl = `<script>      
-  byzhtml.options.melkiteRtl = true;
-</script>`;
+  private getResolvedDefaultStyles(paragraphStyles: ParagraphStyle[]) {
+    if (this.resolvedDefaultStyles?.paragraphStyles !== paragraphStyles) {
+      this.resolvedDefaultStyles = {
+        paragraphStyles,
+        defaultTextBoxStyle: resolveParagraphStyle(
+          paragraphStyles,
+          BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+        ),
+        lyricsStyle: resolveParagraphStyle(
+          paragraphStyles,
+          BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+        ),
+        defaultDropCapStyle: resolveParagraphStyle(
+          paragraphStyles,
+          BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
+        ),
+      };
     }
 
-    const result = `<html>
-  <head>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/danielgarthur/byzhtml@${byzhtmlVersion}/dist/Neanes.css"
-    />
-    
-    <script src="https://cdn.jsdelivr.net/gh/danielgarthur/byzhtml@${byzhtmlVersion}/dist/byzhtml.min.js"></script>
-
-    ${injectRtl}
-
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
-    />
-
-    <meta charset="UTF-8">
-
-    <style>
-      ${style}
-    </style>
-  </head>
-  <body>
-    ${body}
-  </body>
-</html>`;
-
-    return result;
+    return this.resolvedDefaultStyles;
   }
 
-  exportPageSetup(pageSetup: PageSetup) {
-    const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
+  exportScore(score: Score) {
+    const style = this.exportPageSetup(score.pageSetup, score.paragraphStyles);
 
-    const rtlParagraph = pageSetup.melkiteRtl ? 'direction: rtl' : '';
+    const body = this.exportElements(
+      score.staff.elements,
+      score.pageSetup,
+      score.paragraphStyles,
+      4,
+    );
+
+    return createByzHtmlDocument(style, body, score.pageSetup.melkiteRtl);
+  }
+
+  exportPageSetup(pageSetup: PageSetup, paragraphStyles: ParagraphStyle[]) {
+    const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
+    const firstPageMargins = resolvePageMargins(pageSetup, 1);
+    const secondPageMargins = resolvePageMargins(pageSetup, 2);
+    const firstPageIsRight = isRightHandPage(pageSetup, 1);
+    const leftPageMargins = firstPageIsRight
+      ? secondPageMargins
+      : firstPageMargins;
+    const rightPageMargins = firstPageIsRight
+      ? firstPageMargins
+      : secondPageMargins;
+    const pageProgressionCss = this.getPageProgressionCss(
+      pageSetup,
+      firstPageIsRight,
+    );
+
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
+    const { defaultTextBoxStyle, lyricsStyle, defaultDropCapStyle } =
+      this.getResolvedDefaultStyles(paragraphStyles);
+    const defaultTextBoxFont = resolveFontStyle(
+      defaultTextBoxStyle.fontFamily,
+      defaultTextBoxStyle.fontStyle,
+    );
+    const defaultDropCapFont = resolveFontStyle(
+      defaultDropCapStyle.fontFamily,
+      defaultDropCapStyle.fontStyle,
+    );
+    const defaultLyricsFont = resolveFontStyle(
+      lyricsStyle.fontFamily,
+      lyricsStyle.fontStyle,
+    );
+    const defaultLyricsFontFamily = getFontFamilyWithFallback(
+      defaultLyricsFont.cssFontFamily,
+      pageSetup.neumeDefaultFontFamily,
+    ).replaceAll('"', "'");
+    const defaultDropCapFontFamily = getFontFamilyWithFallback(
+      defaultDropCapFont.cssFontFamily,
+    ).replaceAll('"', "'");
+    const defaultTextBoxFontFamily = getFontFamilyWithFallback(
+      defaultTextBoxFont.cssFontFamily,
+    ).replaceAll('"', "'");
+    const defaultRichTextBoxFontFamily = getFontFamilyWithFallback(
+      defaultTextBoxStyle.fontFamily,
+      pageSetup.neumeDefaultFontFamily,
+    ).replaceAll('"', "'");
+    const defaultInlineRichTextBoxFontFamily = getFontFamilyWithFallback(
+      lyricsStyle.fontFamily,
+      pageSetup.neumeDefaultFontFamily,
+    ).replaceAll('"', "'");
 
     const style = `:root {
+        ${pageProgressionCss.root}
         --byz-neume-font-family: ${pageSetup.neumeDefaultFontFamily};
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
-        --byz-lyric-font-family: ${pageSetup.lyricsDefaultFontFamily};
-        --byz-lyric-font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+        --byz-lyric-font-family: ${defaultLyricsFontFamily};
+        --byz-lyric-font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
         --byz-lyric-offset-h: ${lyricOffsetH};
         --byz-lyric-offset-v: ${Unit.toPt(pageSetup.lyricsVerticalOffset)}pt;
 
-        --byz-drop-cap-font-family: ${pageSetup.dropCapDefaultFontFamily};
-        --byz-drop-cap-font-size: ${Unit.toPt(
-          pageSetup.dropCapDefaultFontSize,
-        )}pt;
+        --byz-drop-cap-font-family: ${defaultDropCapFontFamily};
+        --byz-drop-cap-font-size: ${Unit.toPt(defaultDropCapStyle.fontSize)}pt;
         --byz-drop-cap-offset-v: ${Unit.toPt(
-          this.getDropCapAdjustment(pageSetup),
+          this.getDropCapAdjustment(
+            pageSetup,
+            defaultDropCapStyle,
+            defaultDropCapFont,
+            lyricsStyle,
+          ),
         )}pt;
-        --byz-drop-cap-color: ${pageSetup.dropCapDefaultColor};
+        --byz-drop-cap-color: ${defaultDropCapStyle.color};
 
         --byz-color-accidental: ${pageSetup.accidentalDefaultColor};
         --byz-color-agogi: ${pageSetup.tempoDefaultColor};
@@ -198,20 +319,44 @@ export class ByzHtmlExporter {
       }
       
       body {
-        margin: ${Unit.toPt(pageSetup.topMargin)}px ${Unit.toPt(
-          pageSetup.rightMargin,
-        )}px ${Unit.toPt(pageSetup.bottomMargin)}px ${Unit.toPt(
-          pageSetup.leftMargin,
-        )}px;
+        ${pageProgressionCss.body}
+        margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
+          firstPageMargins.right,
+        )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
+          firstPageMargins.left,
+        )}pt;
       }
 
+      ${pageProgressionCss.leadingBlankPage}
+
       @page {
-        margin: ${Unit.toPt(pageSetup.topMargin)}px ${Unit.toPt(
-          pageSetup.rightMargin,
-        )}px ${Unit.toPt(pageSetup.bottomMargin)}px ${Unit.toPt(
-          pageSetup.leftMargin,
-        )}px;
+        margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
+          firstPageMargins.right,
+        )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
+          firstPageMargins.left,
+        )}pt;
         size: ${pageSetup.pageSize} ${orientation}
+      }
+
+      ${
+        pageSetup.facingPages
+          ? `
+      @page :left {
+        margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
+          leftPageMargins.right,
+        )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
+          leftPageMargins.left,
+        )}pt;
+      }
+
+      @page :right {
+        margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
+          rightPageMargins.right,
+        )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
+          rightPageMargins.left,
+        )}pt;
+      }`
+          : ''
       }
 
       @media print {
@@ -227,18 +372,26 @@ export class ByzHtmlExporter {
       }
 
       ${this.config.tagLyric} {
-        color: ${pageSetup.lyricsDefaultColor};
+        color: ${lyricsStyle.color};
+        font-weight: ${defaultLyricsFont.cssFontWeight};
+        font-style: ${defaultLyricsFont.cssFontStyle};
+        ${fontVariantCssDeclarations(lyricsStyle).join('\n        ')}
+        -webkit-text-stroke-width: ${lyricsStyle.strokeWidth};
+        -webkit-text-stroke-color: ${lyricsStyle.strokeColor};
+        text-decoration: ${lyricsStyle.textDecoration ?? 'none'};
       }
 
       ${this.config.tagDropCap} {
-        font-weight: ${pageSetup.dropCapDefaultFontWeight};
-        font-style: ${pageSetup.dropCapDefaultFontStyle};
-        -webkit-text-stroke-width: ${pageSetup.dropCapDefaultStrokeWidth};
+        font-weight: ${defaultDropCapFont.cssFontWeight};
+        font-style: ${defaultDropCapFont.cssFontStyle};
+        ${fontVariantCssDeclarations(defaultDropCapStyle).join('\n        ')}
+        -webkit-text-stroke-width: ${defaultDropCapStyle.strokeWidth};
+        -webkit-text-stroke-color: ${defaultDropCapStyle.strokeColor};
       }
 
       ${this.getTag('gorthmikon')}, ${this.getTag('pelastikon')} {
-        --byz-neume-font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
-        line-height: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+        --byz-neume-font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
+        line-height: ${Unit.toPt(lyricsStyle.fontSize)}pt;
       }
 
       ${this.config.tagMartyria}.${this.config.classMartyriaAlignRight} {
@@ -251,12 +404,15 @@ export class ByzHtmlExporter {
 
       .${this.config.classTextBox} {
         white-space: break-spaces;
-        font-family: ${pageSetup.textBoxDefaultFontFamily};
-        font-size: ${Unit.toPt(pageSetup.textBoxDefaultFontSize)}pt;
-        font-weight: ${pageSetup.textBoxDefaultFontWeight};
-        font-style: ${pageSetup.textBoxDefaultFontStyle};
-        color: ${pageSetup.textBoxDefaultColor};
-        -webkit-text-stroke-width: ${pageSetup.textBoxDefaultStrokeWidth};
+        font-family: ${defaultTextBoxFontFamily};
+        font-size: ${Unit.toPt(defaultTextBoxStyle.fontSize)}pt;
+        font-weight: ${defaultTextBoxFont.cssFontWeight};
+        font-style: ${defaultTextBoxFont.cssFontStyle};
+        ${fontVariantCssDeclarations(defaultTextBoxStyle).join('\n        ')}
+        color: ${defaultTextBoxStyle.color};
+        -webkit-text-stroke-width: ${defaultTextBoxStyle.strokeWidth};
+        -webkit-text-stroke-color: ${defaultTextBoxStyle.strokeColor};
+        text-decoration: ${defaultTextBoxStyle.textDecoration ?? 'none'};
       }
 
       .${this.config.classTextBoxInline} {
@@ -264,10 +420,35 @@ export class ByzHtmlExporter {
         align-items: center;
       }
 
-      .${this.config.classRichTextBox} {
-        font-family: ${pageSetup.textBoxDefaultFontFamily};
-        font-size: ${Unit.toPt(pageSetup.textBoxDefaultFontSize)}pt;
+      .${this.config.classTextBox}.${this.config.classTextBoxInline} {
+        font-family: ${defaultInlineRichTextBoxFontFamily};
+        font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
+        font-weight: ${defaultLyricsFont.cssFontWeight};
+        font-style: ${defaultLyricsFont.cssFontStyle};
+        ${fontVariantCssDeclarations(lyricsStyle).join('\n        ')}
+        color: ${lyricsStyle.color};
+        -webkit-text-stroke-width: ${lyricsStyle.strokeWidth};
+        -webkit-text-stroke-color: ${lyricsStyle.strokeColor};
+        text-decoration: ${lyricsStyle.textDecoration ?? 'none'};
       }
+
+      .${this.config.classRichTextBox} {
+        font-family: ${defaultRichTextBoxFontFamily};
+        font-size: ${Unit.toPt(defaultTextBoxStyle.fontSize)}pt;
+        font-weight: 400;
+        font-style: normal;
+        color: ${defaultTextBoxStyle.color};
+      }
+
+      .${this.config.classRichTextBox}.${this.config.classTextBoxInline} {
+        font-family: ${defaultInlineRichTextBoxFontFamily};
+        font-size: ${Unit.toPt(lyricsStyle.fontSize)}pt;
+        font-weight: 400;
+        font-style: normal;
+        color: ${lyricsStyle.color};
+      }
+
+      ${this.getRichTextStyleCss(paragraphStyles, pageSetup)}
 
       .${this.config.classImageBox} {
         display: flex;
@@ -324,7 +505,6 @@ export class ByzHtmlExporter {
         flex-wrap: wrap;
         justify-content: space-between;
         margin-bottom: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
-        ${rtlParagraph}
       }
 
       .${this.config.classNeumeParagraph}:last-child {
@@ -339,9 +519,57 @@ export class ByzHtmlExporter {
     return style;
   }
 
+  private getRichTextStyleCss(
+    paragraphStyles: ParagraphStyle[],
+    pageSetup: PageSetup,
+  ) {
+    return buildRichTextParagraphStyleCss(
+      paragraphStyles,
+      pageSetup,
+      `.${this.config.classRichTextBox}`,
+    );
+  }
+
+  private getPageProgressionCss(
+    pageSetup: PageSetup,
+    firstPageIsRight: boolean,
+  ) {
+    const rootDeclarations: string[] = [];
+    const bodyDeclarations: string[] = [];
+    let leadingBlankPage = '';
+
+    if (pageSetup.facingPages) {
+      // CSS :left/:right follows page progression, not displayed page numbers.
+      const progression = pageSetup.direction;
+      const defaultFirstPageSide = progression === 'rtl' ? 'left' : 'right';
+      const firstPageSide = firstPageIsRight ? 'right' : 'left';
+
+      if (progression === 'rtl') {
+        rootDeclarations.push('direction: rtl;');
+        bodyDeclarations.push('direction: ltr;');
+      }
+
+      if (firstPageSide !== defaultFirstPageSide) {
+        leadingBlankPage = `body::before {
+        content: '';
+        display: block;
+        break-after: page;
+        page-break-after: always;
+      }`;
+      }
+    }
+
+    return {
+      root: rootDeclarations.join('\n        '),
+      body: bodyDeclarations.join('\n        '),
+      leadingBlankPage,
+    };
+  }
+
   exportElements(
     elements: ScoreElement[],
     pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
     indentation: number,
     startInsidePage: boolean = false,
   ) {
@@ -363,6 +591,7 @@ export class ByzHtmlExporter {
           result += this.exportNote(
             element as NoteElement,
             pageSetup,
+            paragraphStyles,
             indentation + 2,
           );
           needLineBreak = true;
@@ -395,6 +624,7 @@ export class ByzHtmlExporter {
 
           result += this.exportDropCap(
             element as DropCapElement,
+            paragraphStyles,
             indentation + 2,
           );
 
@@ -417,7 +647,11 @@ export class ByzHtmlExporter {
             needLineBreak = false;
           }
 
-          result += this.exportTextBox(element as TextBoxElement, indentation);
+          result += this.exportTextBox(
+            element as TextBoxElement,
+            paragraphStyles,
+            indentation,
+          );
           break;
         case ElementType.RichTextBox:
           if (insidePage) {
@@ -453,18 +687,12 @@ export class ByzHtmlExporter {
           break;
       }
 
-      if (
-        (element.lineBreak &&
-          element.lineBreakType !== LineBreakType.Justify) ||
-        element.pageBreak
-      ) {
-        if (insidePage) {
-          result += this.endPage(
-            indentation + 2,
-            element.pageBreak || element.lineBreakType !== LineBreakType.Center,
-          );
-          insidePage = false;
-        }
+      if ((element.lineBreak || element.pageBreak) && insidePage) {
+        result += this.endPage(
+          indentation + 2,
+          element.pageBreak || element.lineBreakType !== LineBreakType.Center,
+        );
+        insidePage = false;
       }
     }
 
@@ -475,7 +703,78 @@ export class ByzHtmlExporter {
     return result;
   }
 
-  exportNote(element: NoteElement, pageSetup: PageSetup, indentation: number) {
+  // Inline typography for lyric overrides. Missing fields continue to inherit
+  // from the x-ly defaults.
+  private getCustomLyricStyleAttribute(
+    element: NoteElement,
+    paragraphStyles: ParagraphStyle[],
+    pageSetup: PageSetup,
+  ): string {
+    const { lyricsStyle } = this.getResolvedDefaultStyles(paragraphStyles);
+    const resolvedLyricsStyle = resolveParagraphStyle(
+      paragraphStyles,
+      element.lyricsParagraphStyleId,
+      element.getParagraphStyleOverrides(),
+    );
+    let style = '';
+
+    if (resolvedLyricsStyle.color !== lyricsStyle.color) {
+      style += `color: ${resolvedLyricsStyle.color};`;
+    }
+
+    if (
+      resolvedLyricsStyle.fontFamily !== lyricsStyle.fontFamily ||
+      resolvedLyricsStyle.fontStyle !== lyricsStyle.fontStyle
+    ) {
+      const font = resolveFontStyle(
+        resolvedLyricsStyle.fontFamily,
+        resolvedLyricsStyle.fontStyle,
+      );
+      const fontFamily = getFontFamilyWithFallback(
+        font.cssFontFamily,
+        pageSetup.neumeDefaultFontFamily,
+      ).replaceAll('"', "'");
+
+      style += `font-family: ${fontFamily};`;
+      style += `font-weight: ${font.cssFontWeight};`;
+      style += `font-style: ${font.cssFontStyle};`;
+    }
+
+    if (resolvedLyricsStyle.fontSize !== lyricsStyle.fontSize) {
+      style += `font-size: ${Unit.toPt(resolvedLyricsStyle.fontSize)}pt;`;
+    }
+
+    if (resolvedLyricsStyle.strokeWidth !== lyricsStyle.strokeWidth) {
+      style += `-webkit-text-stroke-width: ${resolvedLyricsStyle.strokeWidth};`;
+    }
+
+    if (resolvedLyricsStyle.strokeColor !== lyricsStyle.strokeColor) {
+      style += `-webkit-text-stroke-color: ${resolvedLyricsStyle.strokeColor};`;
+    }
+
+    if (resolvedLyricsStyle.lineHeight !== lyricsStyle.lineHeight) {
+      style += `line-height: ${resolvedLyricsStyle.lineHeight ?? 'normal'};`;
+    }
+
+    if (resolvedLyricsStyle.textDecoration !== lyricsStyle.textDecoration) {
+      style += `text-decoration: ${resolvedLyricsStyle.textDecoration ?? 'none'};`;
+    }
+
+    for (const property of FONT_VARIANT_PROPERTIES) {
+      if (resolvedLyricsStyle[property] !== lyricsStyle[property]) {
+        style += `${FONT_VARIANT_CSS_NAMES[property]}: ${resolvedLyricsStyle[property] ?? 'normal'};`;
+      }
+    }
+
+    return style === '' ? '' : ` style="${style}"`;
+  }
+
+  exportNote(
+    element: NoteElement,
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    indentation: number,
+  ) {
     let inner = '';
 
     if (element.measureBarLeft) {
@@ -608,6 +907,11 @@ export class ByzHtmlExporter {
       });
     }
 
+    const lyricStyleAttribute =
+      element.lyrics.trim() != '' || element.melismaText.trim() != ''
+        ? this.getCustomLyricStyleAttribute(element, paragraphStyles, pageSetup)
+        : '';
+
     if (element.lyrics.trim() != '') {
       const lyrics = element.lyrics
         .replaceAll(
@@ -619,7 +923,7 @@ export class ByzHtmlExporter {
           `<${this.getTag('gorthmikon')}></${this.getTag('gorthmikon')}>`,
         );
 
-      inner += `<${this.config.tagLyric}>${lyrics}</${
+      inner += `<${this.config.tagLyric}${lyricStyleAttribute}>${lyrics}</${
         this.config.tagLyric
       }\n${this.getIndentationString(indentation)}>`;
 
@@ -639,9 +943,9 @@ export class ByzHtmlExporter {
         }\n${this.getIndentationString(indentation)}>`;
       }
     } else if (element.melismaText.trim() != '') {
-      inner += `<${this.config.tagLyric}>${element.melismaText}</${
-        this.config.tagLyric
-      }\n${this.getIndentationString(indentation)}>`;
+      inner += `<${this.config.tagLyric}${lyricStyleAttribute}>${
+        element.melismaText
+      }</${this.config.tagLyric}\n${this.getIndentationString(indentation)}>`;
     }
 
     return `<${this.config.tagNote}\n${this.getIndentationString(
@@ -713,21 +1017,41 @@ export class ByzHtmlExporter {
     )}>`;
   }
 
-  exportDropCap(element: DropCapElement, indentation: number) {
+  exportDropCap(
+    element: DropCapElement,
+    paragraphStyles: ParagraphStyle[],
+    indentation: number,
+  ) {
     let styleAttribute = '';
+    const overrides = element.getParagraphStyleOverrides();
 
-    if (!element.useDefaultStyle) {
+    if (
+      hasParagraphStyleOverrides(overrides) ||
+      element.paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap
+    ) {
+      const resolvedDropCapStyle = resolveParagraphStyle(
+        paragraphStyles,
+        element.paragraphStyleId,
+        overrides,
+      );
+      const resolvedDropCapFont = resolveFontStyle(
+        resolvedDropCapStyle.fontFamily,
+        resolvedDropCapStyle.fontStyle,
+      );
+
       let style = '';
 
-      style += `color: ${element.computedColor};`;
+      style += `color: ${resolvedDropCapStyle.color};`;
       style += `font-family: ${getFontFamilyWithFallback(
-        element.computedFontFamily,
+        resolvedDropCapFont.cssFontFamily,
       ).replaceAll('"', "'")};`;
-      style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
-      style += `font-weight: ${element.computedFontWeight};`;
-      style += `font-style: ${element.computedFontStyle};`;
-      style += `line-height: ${element.computedLineHeight};`;
-      style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
+      style += `font-size: ${Unit.toPt(resolvedDropCapStyle.fontSize)}pt;`;
+      style += `font-weight: ${resolvedDropCapFont.cssFontWeight};`;
+      style += `font-style: ${resolvedDropCapFont.cssFontStyle};`;
+      style += fontVariantCssDeclarations(resolvedDropCapStyle).join('');
+      style += `line-height: ${resolvedDropCapStyle.lineHeight ?? 'normal'};`;
+      style += `-webkit-text-stroke-width: ${resolvedDropCapStyle.strokeWidth};`;
+      style += `-webkit-text-stroke-color: ${resolvedDropCapStyle.strokeColor};`;
 
       styleAttribute = ` style="${style}"`;
     }
@@ -746,14 +1070,34 @@ export class ByzHtmlExporter {
     );
   }
 
-  exportTextBox(element: TextBoxElement, indentation: number) {
+  exportTextBox(
+    element: TextBoxElement,
+    paragraphStyles: ParagraphStyle[],
+    indentation: number,
+  ) {
     let styleAttribute = '';
 
     let className = this.config.classTextBox;
 
-    let style = '';
+    const { defaultTextBoxStyle, lyricsStyle } =
+      this.getResolvedDefaultStyles(paragraphStyles);
+    const overrides = element.getParagraphStyleOverrides();
+    const resolvedParagraphStyle = resolveParagraphStyle(
+      paragraphStyles,
+      element.paragraphStyleId,
+      overrides,
+    );
 
-    if (!element.inline || !element.useDefaultStyle) {
+    let style = '';
+    const defaultTextDecoration = element.inline
+      ? lyricsStyle.textDecoration
+      : defaultTextBoxStyle.textDecoration;
+
+    if (
+      !element.inline ||
+      hasParagraphStyleOverrides(overrides) ||
+      element.paragraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics
+    ) {
       style += `color: ${element.computedColor};`;
       style += `font-family: ${getFontFamilyWithFallback(
         element.computedFontFamily,
@@ -761,13 +1105,24 @@ export class ByzHtmlExporter {
       style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
       style += `font-weight: ${element.computedFontWeight};`;
       style += `font-style: ${element.computedFontStyle};`;
-      style += `line-height: ${element.computedLineHeight};`;
+      style += fontVariantCssDeclarations({
+        fontVariantCaps: element.computedFontVariantCaps,
+        fontVariantNumeric: element.computedFontVariantNumeric,
+        fontVariantLigatures: element.computedFontVariantLigatures,
+        fontVariantAlternates: element.computedFontVariantAlternates,
+      }).join('');
+      style += `line-height: ${element.computedLineHeight ?? 'normal'};`;
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
+      style += `-webkit-text-stroke-color: ${element.computedStrokeColor};`;
       //style += `width: ${element.width};`;
       //style += `height: ${element.height};`;
     }
 
-    style += `text-align: ${element.alignment};`;
+    if (resolvedParagraphStyle.textDecoration !== defaultTextDecoration) {
+      style += `text-decoration: ${resolvedParagraphStyle.textDecoration ?? 'none'};`;
+    }
+
+    style += `text-align: ${element.computedAlignment};`;
 
     styleAttribute = ` style="${style}"`;
 
@@ -775,24 +1130,23 @@ export class ByzHtmlExporter {
       className += ` ${this.config.classTextBoxInline}`;
     }
 
-    return `<div class="${className}"${styleAttribute}>${
+    return `<div dir="auto" class="${className}"${styleAttribute}>${
       element.content
     }</div\n${this.getIndentationString(indentation)}>`;
   }
 
   exportRichTextBox(element: RichTextBoxElement, indentation: number) {
-    const className = this.config.classRichTextBox;
+    let className = this.config.classRichTextBox;
 
-    let styleAttribute = '';
-    let style = '';
-
-    if (element.rtl) {
-      style += 'direction: rtl;';
+    if (element.inline) {
+      className += ` ${this.config.classTextBoxInline}`;
     }
 
-    styleAttribute = ` style="${style}"`;
+    const languageAttributes = getRichTextLanguageAttributes(
+      getRichTextLanguage(element),
+    );
 
-    return `<div class="${className}"${styleAttribute}>${
+    return `<div class="${className}"${languageAttributes}>${
       element.content
     }</div\n${this.getIndentationString(indentation)}>`;
   }
@@ -1039,10 +1393,7 @@ export class ByzHtmlExporter {
         return false;
       }
 
-      if (
-        element.elementType === ElementType.Martyria &&
-        (element as MartyriaElement).alignRight
-      ) {
+      if (isRightAlignedMartyria(element)) {
         return false;
       }
     }
@@ -1074,16 +1425,20 @@ export class ByzHtmlExporter {
     return result;
   }
 
-  getDropCapAdjustment(pageSetup: PageSetup) {
+  getDropCapAdjustment(
+    pageSetup: PageSetup,
+    defaultDropCapStyle: ResolvedParagraphStyle,
+    defaultDropCapFont: ResolvedFontStyle,
+    lyricsStyle: ResolvedParagraphStyle,
+  ) {
     const neumeHeight = TextMeasurementService.getFontHeight(
-      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+      pageSetup.neumeDefaultFontCss,
     );
-
-    const font = `${pageSetup.dropCapDefaultFontStyle} normal ${
-      pageSetup.dropCapDefaultFontWeight
-    } ${pageSetup.dropCapDefaultFontSize}px/${
-      pageSetup.dropCapDefaultLineHeight ?? 'normal'
-    } "${pageSetup.dropCapDefaultFontFamily}"`;
+    const font = `${defaultDropCapFont.cssFontStyle} normal ${
+      defaultDropCapFont.cssFontWeight
+    } ${defaultDropCapStyle.fontSize}px/${
+      defaultDropCapStyle.lineHeight ?? 'normal'
+    } "${defaultDropCapFont.cssFontFamily}"`;
 
     const fontBoundingBoxDescent =
       TextMeasurementService.getFontBoundingBoxDescent(font);
@@ -1091,7 +1446,7 @@ export class ByzHtmlExporter {
     // TODO this doesn't work correctly for every font
     return (
       neumeHeight +
-      pageSetup.lyricsDefaultFontSize +
+      lyricsStyle.fontSize +
       pageSetup.lyricsVerticalOffset -
       fontBoundingBoxDescent
     );
@@ -1174,7 +1529,7 @@ export class ByzHtmlExporter {
     map.set('oligonIsonKentimata', 'x-o-i-k');
     map.set('oligonKentimaMiddleKentimata', 'x-o2-m-k');
     map.set('oligonYpsiliRightKentimata', 'x-o4-k');
-    map.set('oligonYpsiliLeftKentimata', 'x-ο5-k');
+    map.set('oligonYpsiliLeftKentimata', 'x-o5-k');
     map.set('oligonApostrofosKentimata', 'x-o-a-k');
     map.set('oligonYporroiKentimata', 'x-o-y-k');
     map.set('oligonElafronKentimata', 'x-o-e-k');

@@ -1,20 +1,21 @@
-import {
+import type {
   Accidental,
   Fthora,
   GorgonNeume,
   Ison,
   MeasureBar,
   MeasureNumber,
+  Tie,
+  TimeNeume,
+  VocalExpressionNeume,
+} from '@/models/save/v1/Neumes';
+import {
   ModeSign,
   Note,
   QuantitativeNeume,
   RootSign,
   TempoSign,
-  Tie,
-  TimeNeume,
-  VocalExpressionNeume,
 } from '@/models/save/v1/Neumes';
-import { Unit } from '@/utils/Unit';
 
 import { Scale, ScaleNote } from './Scales';
 
@@ -28,8 +29,12 @@ export enum ElementType {
   ModeKey = 'ModeKey',
   Tempo = 'Tempo',
   ImageBox = 'ImageBox',
+  Annotation = 'Annotation',
+  AlternateLine = 'AlternateLine',
 }
 
+// Only Center is written. Justify and Left are recognized when loading legacy
+// documents and fold onto a left-aligned break, which omits the field.
 export enum LineBreakType {
   Justify = 'Justify',
   Center = 'Center',
@@ -42,7 +47,6 @@ export abstract class ScoreElement {
   public lineBreak: boolean | undefined = undefined;
   public pageBreak: boolean | undefined = undefined;
   public lineBreakType: LineBreakType | undefined = undefined;
-  public sectionName: string | undefined = undefined;
 }
 
 export enum AcceptsLyricsOption {
@@ -54,6 +58,7 @@ export enum AcceptsLyricsOption {
 
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
+  public keepWithNext: boolean | undefined = undefined;
   public quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
   public timeNeume: TimeNeume | undefined = undefined;
   public gorgonNeume: GorgonNeume | undefined = undefined;
@@ -85,16 +90,30 @@ export class NoteElement extends ScoreElement {
   public lyricsFontFamily: string | undefined = undefined;
   public lyricsFontSize: number | undefined = undefined;
   public lyricsStrokeWidth: number | undefined = undefined;
+  public lyricsStrokeColor: string | undefined = undefined;
+  public lyricsFontSubfamily: string | undefined = undefined;
+  public lyricsTextDecoration: string | undefined = undefined;
+  public lyricsFontVariantCaps: string | undefined = undefined;
+  public lyricsFontVariantNumeric: string | undefined = undefined;
+  public lyricsFontVariantLigatures: string | undefined = undefined;
+  public lyricsFontVariantAlternates: string | undefined = undefined;
+  public lyricsParagraphStyleId: string | undefined = undefined;
+
+  // Deprecated load-only compatibility for legacy lyrics font-style fields.
   public lyricsFontStyle: string | undefined = undefined;
   public lyricsFontWeight: string | undefined = undefined;
-  public lyricsTextDecoration: string | undefined = undefined;
+  // Deprecated load-only compatibility for pre-paragraph-style lyrics.
   public lyricsUseDefaultStyle: boolean | undefined = undefined;
+
   public acceptsLyrics: AcceptsLyricsOption | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;
   public isHyphen: boolean | undefined = undefined;
   public spaceAfter: number | undefined = undefined;
   public ignoreAttractions: boolean | undefined = undefined;
+
+  public annotations: AnnotationElement[] | undefined = undefined;
+  public alternateLines: AlternateLineElement[] | undefined = undefined;
 
   public accidentalOffsetX: number | undefined = undefined;
   public accidentalOffsetY: number | undefined = undefined;
@@ -148,6 +167,7 @@ export class MartyriaElement extends ScoreElement {
   public tempoLeft: TempoSign | undefined = undefined;
   public tempo: TempoSign | undefined = undefined;
   public tempoRight: TempoSign | undefined = undefined;
+  public quantitativeNeume: QuantitativeNeume | undefined = undefined;
   public measureBarLeft: MeasureBar | undefined = undefined;
   public measureBarRight: MeasureBar | undefined = undefined;
   // Deprecated
@@ -174,35 +194,51 @@ export class EmptyElement extends ScoreElement {
 
 export enum TextBoxAlignment {
   Center = 'center',
+  Justify = 'justify',
   Left = 'left',
   Right = 'right',
 }
 
+export type RunningMarkerRole = 'chapter' | 'section';
+
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
-  public alignment: TextBoxAlignment = TextBoxAlignment.Left;
-  public color: string = '#000000';
+  public paragraphStyleId: string | undefined = undefined;
+  public alignment: TextBoxAlignment | undefined = undefined;
+  public color: string | undefined = undefined;
   public content: string = '';
   public contentBottom: string = '';
   public contentLeft: string = '';
   public contentCenter: string = '';
   public contentRight: string = '';
-  public fontSize: number = 16;
-  public fontFamily: string = 'Omega';
-  public strokeWidth: number = 0;
+  public fontSize: number | undefined = undefined;
+  public fontFamily: string | undefined = undefined;
+  public strokeWidth: number | undefined = undefined;
+  public strokeColor: string | undefined = undefined;
   public multipanel: boolean | undefined = undefined;
   public inline: boolean | undefined = undefined;
+  public fontSubfamily: string | undefined = undefined;
+  public underline: boolean | undefined = undefined;
+  public lineHeight: number | null | undefined = undefined;
+  public fontVariantCaps: string | undefined = undefined;
+  public fontVariantNumeric: string | undefined = undefined;
+  public fontVariantLigatures: string | undefined = undefined;
+  public fontVariantAlternates: string | undefined = undefined;
+
+  // Deprecated load-only compatibility for legacy text-box font-style fields.
   public bold: boolean | undefined = undefined;
   public italic: boolean | undefined = undefined;
-  public underline: boolean | undefined = undefined;
-  public lineHeight: number | undefined = undefined;
+
   public height: number = 20;
   public customWidth: number | undefined = undefined;
   public customHeight: number | undefined = undefined;
   public fillWidth: boolean | undefined = undefined;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
+  // Deprecated load-only compatibility for pre-paragraph-style text boxes.
   public useDefaultStyle: boolean | undefined = undefined;
+  public runningMarkerRole: RunningMarkerRole | undefined = undefined;
+  public runningMarkerText: string | undefined = undefined;
 }
 
 export class RichTextBoxElement extends ScoreElement {
@@ -212,8 +248,10 @@ export class RichTextBoxElement extends ScoreElement {
   public contentLeft: string = '';
   public contentRight: string = '';
   public contentCenter: string = '';
+  public scrollable: boolean | undefined = undefined;
   public multipanel: boolean | undefined = undefined;
-  public rtl: boolean | undefined = undefined;
+  public languageCode: string | undefined = undefined;
+  public textDirection: 'ltr' | 'rtl' | undefined = undefined;
   public inline: boolean | undefined = undefined;
   public centerOnPage: boolean | undefined = undefined;
   public modeChange: boolean | undefined = undefined;
@@ -229,6 +267,8 @@ export class RichTextBoxElement extends ScoreElement {
   public marginBottom: number | undefined = undefined;
   public offsetYTop: number | undefined = undefined;
   public offsetYBottom: number | undefined = undefined;
+  public runningMarkerRole: RunningMarkerRole | undefined = undefined;
+  public runningMarkerText: string | undefined = undefined;
 }
 
 export class ModeKeyElement extends ScoreElement {
@@ -268,19 +308,45 @@ export class ModeKeyElement extends ScoreElement {
   public showAmbitus: boolean | undefined = undefined;
 }
 
+export class AnnotationElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.Annotation;
+  public x: number = 0;
+  public y: number = 0;
+  public text: string = '';
+  public languageCode: string | undefined = undefined;
+  public textDirection: 'ltr' | 'rtl' | undefined = undefined;
+}
+
+export class AlternateLineElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.AlternateLine;
+  public x: number = 0;
+  public y: number = 0;
+  public elements: ScoreElement[] = [];
+}
+
 export class DropCapElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.DropCap;
   public content: string = 'A';
-  public fontFamily: string = 'Athonite';
-  public fontSize: number = Unit.fromPt(60);
-  public fontWeight: string = '400';
-  public fontStyle: string = 'normal';
-  public lineHeight: number | undefined = undefined;
-  public strokeWidth: number = 0;
-  public color: string = '#000000';
-  public useDefaultStyle: boolean | undefined = undefined;
+  public paragraphStyleId: string | undefined = undefined;
+  public fontFamily: string | undefined = undefined;
+  public fontSize: number | undefined = undefined;
+  public fontSubfamily: string | undefined = undefined;
+  public lineHeight: number | null | undefined = undefined;
+  public strokeWidth: number | undefined = undefined;
+  public strokeColor: string | undefined = undefined;
+  public color: string | undefined = undefined;
+  public fontVariantCaps: string | undefined = undefined;
+  public fontVariantNumeric: string | undefined = undefined;
+  public fontVariantLigatures: string | undefined = undefined;
+  public fontVariantAlternates: string | undefined = undefined;
   public customWidth: number | undefined = undefined;
   public lineSpan: number = 1;
+
+  // Deprecated load-only compatibility for legacy drop-cap font-style fields.
+  public fontStyle: string | undefined = undefined;
+  public fontWeight: string | undefined = undefined;
+  // Deprecated load-only compatibility for pre-paragraph-style drop caps.
+  public useDefaultStyle: boolean | undefined = undefined;
 }
 
 export class ImageBoxElement extends ScoreElement {

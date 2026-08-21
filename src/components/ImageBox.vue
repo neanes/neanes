@@ -16,80 +16,103 @@
       :lock-aspect-ratio="element.lockAspectRatio"
       :w="imageWidthZoomed"
       :h="imageHeightZoomed"
-      :minHeight="10"
-      :minWidth="10"
+      :min-height="10"
+      :min-width="10"
       :draggable="false"
       :z="1"
       @resizing="onResize"
-      @resizestop="onResizeStop"
+      @resize-stop="onResizeStop"
     >
       <img class="image-box" :src="element.data" :style="imageStyle" />
     </vue-draggable-resizable>
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import 'vue-draggable-resizable/style.css';
 
-import { StyleValue } from 'vue';
+import type { PropType, StyleValue } from 'vue';
+import { computed, ref, watch } from 'vue';
 import VueDraggableResizable from 'vue-draggable-resizable';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
 
-import ContentEditable from '@/components/ContentEditable.vue';
-import { ImageBoxElement } from '@/models/Element';
+import type { ImageBoxElement } from '@/models/Element';
 import { withZoom } from '@/utils/withZoom';
 
-@Component({
-  components: { ContentEditable, VueDraggableResizable },
-  emits: ['update:size', 'select-single'],
-})
-export default class ImageBox extends Vue {
-  @Prop() element!: ImageBoxElement;
-  @Prop() zoom!: number;
-  @Prop() printMode!: boolean;
+const props = defineProps({
+  element: {
+    type: Object as PropType<ImageBoxElement>,
+    required: true,
+  },
+  zoom: {
+    type: Number,
+    required: true,
+  },
+  printMode: {
+    type: Boolean,
+    required: true,
+  },
+});
 
-  get imageWidthZoomed() {
-    return this.element.imageWidth * this.zoom;
+const emit = defineEmits(['update:size', 'select-single']);
+
+const imageWidth = ref(props.element.imageWidth);
+const imageHeight = ref(props.element.imageHeight);
+
+const imageWidthZoomed = computed(() => imageWidth.value * props.zoom);
+const imageHeightZoomed = computed(() => imageHeight.value * props.zoom);
+
+const containerStyle = computed(() => {
+  const style = {
+    justifyContent: props.element.alignment,
+    width: withZoom(props.element.width),
+    height: withZoom(imageHeight.value),
+  } as Partial<CSSStyleDeclaration>;
+
+  if (props.element.inline) {
+    style.border = 'none';
   }
 
-  get imageHeightZoomed() {
-    return this.element.imageHeight * this.zoom;
-  }
+  return style as StyleValue;
+});
 
-  get containerStyle() {
-    const style = {
-      justifyContent: this.element.alignment,
-      width: withZoom(this.element.width),
-      height: withZoom(this.element.imageHeight),
-    } as Partial<CSSStyleDeclaration>;
+const imageStyle = computed(() => {
+  const style: any = {
+    width: withZoom(imageWidth.value),
+    height: withZoom(imageHeight.value),
+  };
 
-    if (this.element.inline) {
-      style.border = 'none';
-    }
+  return style;
+});
 
-    return style as StyleValue;
-  }
+watch(
+  () => props.element.imageWidth,
+  (newValue) => {
+    imageWidth.value = newValue;
+  },
+);
 
-  get imageStyle() {
-    const style: any = {
-      width: withZoom(this.element.imageWidth),
-      height: withZoom(this.element.imageHeight),
-    };
+watch(
+  () => props.element.imageHeight,
+  (newValue) => {
+    imageHeight.value = newValue;
+  },
+);
 
-    return style;
-  }
+function onResize(x: number, y: number, width: number, height: number) {
+  imageWidth.value = width / props.zoom;
+  imageHeight.value = height / props.zoom;
+}
 
-  onResize(x: number, y: number, width: number, height: number) {
-    this.element.imageWidth = width / this.zoom;
-    this.element.imageHeight = height / this.zoom;
-  }
-
-  onResizeStop(left: number, top: number, width: number, height: number) {
-    this.$emit('update:size', {
-      width: width / this.zoom,
-      height: height / this.zoom,
-    });
-  }
+function onResizeStop(
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+) {
+  emit('update:size', {
+    width: width / props.zoom,
+    height: height / props.zoom,
+  });
 }
 </script>
 

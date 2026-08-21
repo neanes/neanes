@@ -1,5 +1,4 @@
-import {
-  ElementType,
+import type {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
@@ -7,6 +6,7 @@ import {
   ScoreElement,
   TempoElement,
 } from '@/models/Element';
+import { ElementType } from '@/models/Element';
 import {
   Accidental,
   Fthora,
@@ -79,6 +79,7 @@ export class ModeKeyNode implements PitchNode {
   public ignoreAttractions: boolean = false;
   public permanentEnharmonicZo: boolean = false;
   public legetos: boolean = false;
+  public skipScaleChange: boolean = false;
 }
 
 export class FthoraNode implements PitchNode {
@@ -855,9 +856,8 @@ export class AnalysisService {
     ) {
       modeKeyNode.legetos = true;
     }
-    workspace.nodes.push(modeKeyNode);
 
-    if (modeKeyElement.fthora) {
+    if (modeKeyElement.fthora === Fthora.Enharmonic_Top) {
       this.handleFthora(
         modeKeyNode.physicalNote,
         modeKeyElement.fthora,
@@ -865,6 +865,20 @@ export class AnalysisService {
         modeKeyElement.index,
         workspace,
       );
+      modeKeyNode.skipScaleChange = true;
+      workspace.nodes.push(modeKeyNode);
+    } else {
+      workspace.nodes.push(modeKeyNode);
+
+      if (modeKeyElement.fthora) {
+        this.handleFthora(
+          modeKeyNode.physicalNote,
+          modeKeyElement.fthora,
+          null,
+          modeKeyElement.index,
+          workspace,
+        );
+      }
     }
 
     const tempoNode: TempoNode = new TempoNode();
@@ -992,6 +1006,12 @@ export class AnalysisService {
         martyriaElement.index,
         workspace,
       );
+    }
+
+    if (martyriaElement.alignRight && martyriaElement.quantitativeNeume) {
+      workspace.currentNote += getNeumeValue(
+        martyriaElement.quantitativeNeume,
+      )!;
     }
 
     if (martyriaElement.tempo) {
@@ -1126,10 +1146,12 @@ const gorgonMap = new Map<GorgonNeume, number[]>([
   [GorgonNeume.GorgonDottedRightSecondary, [2 / 3, 1 / 3]],
   [GorgonNeume.DigorgonSecondary, [2 / 3, 2 / 3, 2 / 3]],
   [GorgonNeume.DigorgonDottedLeft1Secondary, [0.5, 0.75, 0.75]],
+  [GorgonNeume.DigorgonDottedLeft2Secondary, [0.75, 0.5, 0.75]],
   [GorgonNeume.DigorgonDottedRightSecondary, [0.75, 0.75, 0.5]],
   [GorgonNeume.TrigorgonSecondary, [0.75, 0.75, 0.75, 0.75]],
   // TODO handle trigorgon dotted
   [GorgonNeume.TrigorgonDottedLeft1Secondary, [0.75, 0.75, 0.75, 0.75]],
+  [GorgonNeume.TrigorgonDottedLeft2Secondary, [0.75, 0.75, 0.75, 0.75]],
   [GorgonNeume.TrigorgonDottedRightSecondary, [0.75, 0.75, 0.75, 0.75]],
 
   [GorgonNeume.Argon, [0.5, 0.5, -1]],

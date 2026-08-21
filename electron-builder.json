@@ -1,6 +1,9 @@
 {
   "appId": "com.danielgarthur.neanes",
   "files": ["dist-electron", "dist"],
+  "directories": {
+    "output": "release"
+  },
   "productName": "Neanes",
   "copyright": "Copyright © 2021 danielgarthur",
   "publish": ["github"],
@@ -17,7 +20,9 @@
     }
   ],
   "mac": {
-    "category": "public.app-category.graphics-design"
+    "category": "public.app-category.graphics-design",
+    "hardenedRuntime": false,
+    "identity": "-"
   },
   "linux": {
     "target": ["AppImage"]

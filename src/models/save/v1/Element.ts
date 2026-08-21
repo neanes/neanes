@@ -34,6 +34,8 @@ export enum ElementType {
   AlternateLine = 'AlternateLine',
 }
 
+// Only Center is written. Justify and Left are recognized when loading legacy
+// documents and fold onto a left-aligned break, which omits the field.
 export enum LineBreakType {
   Justify = 'Justify',
   Center = 'Center',
@@ -57,6 +59,7 @@ export enum AcceptsLyricsOption {
 
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
+  public keepWithNext: boolean | undefined = undefined;
   public quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
   public timeNeume: TimeNeume | undefined = undefined;
   public gorgonNeume: GorgonNeume | undefined = undefined;

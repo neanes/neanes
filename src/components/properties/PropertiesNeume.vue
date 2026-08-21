@@ -117,6 +117,22 @@
           @update:model-value="$emit('update', { spaceAfter: $event })"
         />
       </Field>
+
+      <Field orientation="horizontal" :data-disabled="!canKeepWithNext">
+        <Switch
+          id="properties-neume-keep-with-next"
+          :model-value="element.keepWithNext"
+          :disabled="!canKeepWithNext"
+          @update:model-value="
+            $emit('update', {
+              keepWithNext: $event === true,
+            } as Partial<NoteElement>)
+          "
+        />
+        <FieldLabel for="properties-neume-keep-with-next">{{
+          $t(($) => $.toolbar.common.keepWithNext, { ns: 'toolbar' })
+        }}</FieldLabel>
+      </Field>
     </PaneSection>
   </PaneAccordion>
 </template>
@@ -174,6 +190,10 @@ type ChromaticFthoraNoteOption = {
 };
 
 const props = defineProps({
+  canKeepWithNext: {
+    type: Boolean,
+    required: true,
+  },
   element: {
     type: Object as PropType<NoteElement>,
     required: true,

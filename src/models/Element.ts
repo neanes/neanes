@@ -5,8 +5,8 @@ import type {
   Ison,
   MeasureBar,
   MeasureNumber,
+  Neume,
   NoteIndicator,
-  Tie,
   TimeNeume,
 } from '@/models/Neumes';
 import {
@@ -15,6 +15,7 @@ import {
   QuantitativeNeume,
   RootSign,
   TempoSign,
+  Tie,
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import { isFontVariantNormal } from '@/utils/fontVariants';
@@ -55,10 +56,10 @@ export enum ElementType {
   AlternateLine = 'AlternateLine',
 }
 
+// A left-aligned break is the default and is represented by a null
+// lineBreakType, matching the save format, which omits the field entirely.
 export enum LineBreakType {
-  Justify = 'Justify',
   Center = 'Center',
-  Left = 'Left',
 }
 
 export interface ElementCloneArgs {
@@ -103,6 +104,14 @@ export abstract class ScoreElement {
   public line: number = 0;
   public page: number = 0;
 
+  // Break state belongs to the position, so it transfers when one element
+  // replaces another at the same position.
+  public copyBreakStateFrom(source: ScoreElement) {
+    this.pageBreak = source.pageBreak;
+    this.lineBreak = source.lineBreak;
+    this.lineBreakType = source.lineBreakType;
+  }
+
   public static isShort(measureBar: MeasureBar): boolean {
     return (
       measureBar.startsWith('MeasureBarTop') ||
@@ -120,6 +129,7 @@ export enum AcceptsLyricsOption {
 
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
+  public keepWithNext: boolean = false;
   public measureNumber: MeasureNumber | null = null;
   public tie: Tie | null = null;
   public noteIndicator: boolean = false;
@@ -219,6 +229,11 @@ export class NoteElement extends ScoreElement {
     );
 
     return clone;
+  }
+
+  public override copyBreakStateFrom(source: ScoreElement) {
+    super.copyBreakStateFrom(source);
+    this.keepWithNext = supportsKeepWithNext(source) && source.keepWithNext;
   }
 
   public getClipboardProperties(includeLyrics: boolean) {
@@ -819,8 +834,6 @@ export class MartyriaElement extends ScoreElement {
       chromaticFthoraNote: this.chromaticFthoraNote,
       tempo: this.tempo,
       bpm: this.bpm,
-      lineBreak: this.lineBreak,
-      lineBreakType: this.lineBreakType,
     } as Partial<MartyriaElement>;
   }
 }
@@ -1446,6 +1459,100 @@ export class ImageBoxElement extends ScoreElement {
       alignment: this.alignment,
     } as Partial<ImageBoxElement>;
   }
+}
+
+export function isBlockElement(element: ScoreElement | null): boolean {
+  return (
+    (element?.elementType === ElementType.TextBox &&
+      !(element as TextBoxElement).inline) ||
+    (element?.elementType === ElementType.RichTextBox &&
+      !(element as RichTextBoxElement).inline) ||
+    (element?.elementType === ElementType.ImageBox &&
+      !(element as ImageBoxElement).inline) ||
+    element?.elementType === ElementType.ModeKey
+  );
+}
+
+export function isRightAlignedMartyria(element: ScoreElement | null): boolean {
+  return (
+    element?.elementType === ElementType.Martyria &&
+    (element as MartyriaElement).alignRight
+  );
+}
+
+// These marks tie two notes together. Automatic breaks across them are
+// prohibited, and collisions with them should not add space between the neumes
+// because that would ruin the position of the ties.
+const tieSet = new Set<Neume>([
+  VocalExpressionNeume.HeteronConnecting,
+  VocalExpressionNeume.HeteronConnectingLong,
+  VocalExpressionNeume.HomalonConnecting,
+  Tie.YfenAbove,
+  Tie.YfenBelow,
+]);
+
+export function isTieNeume(neume: Neume | null): boolean {
+  return neume != null && tieSet.has(neume);
+}
+
+function isTiedToNext(element: NoteElement): boolean {
+  return isTieNeume(element.vocalExpressionNeume) || isTieNeume(element.tie);
+}
+
+// The boundaries the layout refuses to break at on its own, regardless of the
+// graded penalties that apply elsewhere.
+export function isAutomaticBreakProhibited(
+  element: ScoreElement,
+  nextElement: ScoreElement | null,
+): boolean {
+  if (element.elementType !== ElementType.Note) {
+    return false;
+  }
+
+  // A martyria belongs with the notes it summarizes.
+  if (nextElement?.elementType === ElementType.Martyria) {
+    return true;
+  }
+
+  // A tie spans both notes, so a break would strand the mark at the line end.
+  // An explicit break is not subject to the automatic prohibition.
+  return (
+    nextElement?.elementType === ElementType.Note &&
+    !element.lineBreak &&
+    !element.pageBreak &&
+    isTiedToNext(element as NoteElement)
+  );
+}
+
+export function supportsKeepWithNext(
+  element: ScoreElement,
+): element is NoteElement {
+  return element.elementType === ElementType.Note;
+}
+
+export function canKeepWithNext(
+  element: ScoreElement,
+  nextElement: ScoreElement | null,
+): element is NoteElement {
+  return (
+    supportsKeepWithNext(element) &&
+    !element.lineBreak &&
+    !element.pageBreak &&
+    nextElement !== null &&
+    nextElement.elementType !== ElementType.Empty &&
+    !isBlockElement(nextElement) &&
+    !isAutomaticBreakProhibited(element, nextElement)
+  );
+}
+
+// A stored keep only takes effect where there is an optional breakpoint to
+// constrain. An inactive keep is retained rather than cleared, so that it
+// becomes active again once the obstruction is removed.
+export function isKeepWithNextActive(
+  element: ScoreElement,
+  nextElement: ScoreElement | null,
+): boolean {
+  return canKeepWithNext(element, nextElement) && element.keepWithNext;
 }
 
 export class ScoreElementOffset {

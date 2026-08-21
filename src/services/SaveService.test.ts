@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   DropCapElement,
+  EmptyElement,
+  LineBreakType,
+  MartyriaElement,
   ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
@@ -23,8 +26,11 @@ import {
 } from '@/models/ParagraphStyle';
 import {
   DropCapElement as DropCapElement_v1,
+  EmptyElement as EmptyElement_v1,
+  LineBreakType as LineBreakType_v1,
   NoteElement as NoteElement_v1,
   RichTextBoxElement as RichTextBoxElement_v1,
+  type ScoreElement as ScoreElement_v1,
   TextBoxElement as TextBoxElement_v1,
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
@@ -95,6 +101,14 @@ function createParagraphStylesWithBuiltInOverrides(
   return styles;
 }
 
+function loadLegacyElements(...legacyElements: ScoreElement_v1[]) {
+  const saved = createLegacyScore();
+
+  saved.staff.elements = legacyElements;
+
+  return SaveService.LoadScore_v1(saved);
+}
+
 function loadLegacyElement(
   legacyElement: DropCapElement_v1 | NoteElement_v1 | TextBoxElement_v1,
   paragraphStyles?: ParagraphStyle[],
@@ -145,6 +159,135 @@ function resolveElementParagraphStyle(
     element.getParagraphStyleOverrides(),
   );
 }
+
+describe('SaveService break constraints', () => {
+  (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+
+  function withLegacyJustifiedBreak<T extends ScoreElement_v1>(element: T) {
+    element.lineBreak = true;
+    element.lineBreakType = LineBreakType_v1.Justify;
+
+    return element;
+  }
+
+  it('migrates a legacy justified line break to the following element', () => {
+    const loaded = loadLegacyElements(
+      withLegacyJustifiedBreak(new NoteElement_v1()),
+      new NoteElement_v1(),
+      new EmptyElement_v1(),
+    );
+
+    expect(loaded.staff.elements[0].lineBreak).toBe(false);
+    expect(loaded.staff.elements[1]).toMatchObject({ keepWithNext: true });
+  });
+
+  it('writes only the migrated keep-with-next representation', () => {
+    const loaded = loadLegacyElements(
+      withLegacyJustifiedBreak(new NoteElement_v1()),
+      new NoteElement_v1(),
+      new EmptyElement_v1(),
+    );
+
+    const resaved = SaveService.SaveScoreToJson(loaded);
+    const reloaded = SaveService.LoadScore_v1(resaved);
+
+    expect(resaved.staff.elements[0].lineBreak).toBeUndefined();
+    expect(resaved.staff.elements[0].lineBreakType).toBeUndefined();
+    expect(resaved.staff.elements[1]).toMatchObject({ keepWithNext: true });
+    expect(reloaded.staff.elements[1]).toMatchObject({ keepWithNext: true });
+  });
+
+  it('does not carry a legacy justified break onto the trailing empty element', () => {
+    const loaded = loadLegacyElements(
+      new NoteElement_v1(),
+      withLegacyJustifiedBreak(new NoteElement_v1()),
+      new EmptyElement_v1(),
+    );
+
+    expect(loaded.staff.elements[1].lineBreak).toBe(false);
+    expect(loaded.staff.elements[2]).not.toHaveProperty('keepWithNext');
+
+    const resaved = SaveService.SaveScoreToJson(loaded);
+
+    expect(resaved.staff.elements[2]).not.toHaveProperty('keepWithNext');
+  });
+
+  it('does not carry a legacy justified break onto an unsupported element', () => {
+    const textBox = new TextBoxElement_v1();
+    textBox.inline = true;
+
+    const loaded = loadLegacyElements(
+      withLegacyJustifiedBreak(new NoteElement_v1()),
+      textBox,
+      new EmptyElement_v1(),
+    );
+
+    expect(loaded.staff.elements[0].lineBreak).toBe(false);
+    expect(loaded.staff.elements[1]).not.toHaveProperty('keepWithNext');
+  });
+
+  it('does not write keep-with-next when disabled or unsupported', () => {
+    const score = new Score();
+    const martyria = new MartyriaElement();
+    const textBox = new TextBoxElement();
+
+    score.staff.elements = [
+      new NoteElement(),
+      martyria,
+      textBox,
+      new EmptyElement(),
+    ];
+
+    const saved = SaveService.SaveScoreToJson(score);
+
+    expect(saved.staff.elements[0]).toHaveProperty('keepWithNext', undefined);
+    expect(saved.staff.elements[1]).not.toHaveProperty('keepWithNext');
+    expect(saved.staff.elements[2]).not.toHaveProperty('keepWithNext');
+  });
+
+  // An inactive keep on a supported element is still the author's stated
+  // intent, so the serializer stores it and it becomes active again once the
+  // obstruction is removed.
+  it('preserves a keep that is currently inactive', () => {
+    const score = new Score();
+    const note = new NoteElement();
+
+    note.keepWithNext = true;
+    note.lineBreak = true;
+    score.staff.elements = [note, new NoteElement(), new EmptyElement()];
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(saved.staff.elements[0]).toMatchObject({ keepWithNext: true });
+    expect(loaded.staff.elements[0]).toMatchObject({ keepWithNext: true });
+  });
+
+  it('round-trips centered and plain line breaks', () => {
+    const score = new Score();
+    const centered = new NoteElement();
+    const plain = new NoteElement();
+
+    centered.lineBreak = true;
+    centered.lineBreakType = LineBreakType.Center;
+    plain.lineBreak = true;
+    score.staff.elements = [centered, plain, new EmptyElement()];
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    // Only a centered break writes an alignment; a left-aligned break is the
+    // default and omits the field, in the file and in memory alike.
+    expect(saved.staff.elements[0].lineBreak).toBe(true);
+    expect(saved.staff.elements[0].lineBreakType).toBe('Center');
+    expect(saved.staff.elements[1].lineBreak).toBe(true);
+    expect(saved.staff.elements[1].lineBreakType).toBeUndefined();
+
+    expect(loaded.staff.elements[0].lineBreak).toBe(true);
+    expect(loaded.staff.elements[0].lineBreakType).toBe(LineBreakType.Center);
+    expect(loaded.staff.elements[1].lineBreak).toBe(true);
+    expect(loaded.staff.elements[1].lineBreakType).toBeNull();
+  });
+});
 
 describe('SaveService font styles', () => {
   it('loads legacy text box bold/italic booleans as a font style', () => {

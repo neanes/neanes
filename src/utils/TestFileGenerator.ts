@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 import type { ScoreElement } from '@/models/Element';
 import {
   DropCapElement,
-  LineBreakType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
@@ -844,7 +843,6 @@ export abstract class TestFileGenerator {
       note.quantitativeNeume = QuantitativeNeume.Ison;
       note.lyrics = 'A';
       note.lineBreak = true;
-      note.lineBreakType = LineBreakType.Left;
       elements.push(note);
     }
 

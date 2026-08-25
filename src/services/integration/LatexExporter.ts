@@ -47,6 +47,9 @@ export const LATEX_SCHEMA_VERSION = 3;
 // preserved. Alignment is spelled out everywhere it appears, including on mode
 // keys, which used to abbreviate it to a single letter. Every text style carries
 // the exact PostScript name; export fails if Neanes cannot resolve one.
+// Lines retain the paragraph boundaries used by LayoutService when it runs
+// Knuth-Plass, allowing consumers to distinguish paragraph ends from ordinary
+// automatic line breaks.
 
 export class LatexExporterOptions {
   includeModeKeys: boolean = false;
@@ -340,6 +343,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
 
     let section: LatexSection = { default: true, lines: [] };
     let pendingSectionName: string | null = null;
+    let lastExportedLine: LatexLine | null = null;
 
     for (const page of pages) {
       const resolvedMargins = resolvePageMargins(
@@ -351,9 +355,14 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
 
         const pushCurrentLine = () => {
           if (resultLine.elements.length > 0) {
+            const exportedLine = resultLine;
             section.lines.push(resultLine);
+            lastExportedLine = resultLine;
             resultLine = { elements: [] };
+            return exportedLine;
           }
+
+          return null;
         };
 
         const startSection = (name: string) => {
@@ -773,7 +782,15 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           }
         }
 
-        pushCurrentLine();
+        const exportedLine = pushCurrentLine();
+
+        if (line.paragraphEnd) {
+          const paragraphEndLine = exportedLine ?? lastExportedLine;
+          if (paragraphEndLine != null) {
+            paragraphEndLine.paragraphEnd = true;
+          }
+          lastExportedLine = null;
+        }
       }
     }
 
@@ -840,6 +857,7 @@ interface LatexPageSetup {
 
 interface LatexLine {
   elements: LatexElement[];
+  paragraphEnd?: boolean;
 }
 
 interface LatexOffset {

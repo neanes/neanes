@@ -1777,6 +1777,11 @@ export class LayoutService {
 
         lastElementWasPageBreak = element.pageBreak;
       }
+
+      // Preserve the paragraph boundary after Knuth-Plass has expanded this
+      // completed paragraph into one or more positioned lines. Exporters need
+      // this distinction because a visual line is not necessarily a paragraph.
+      page.lines[page.lines.length - 1].paragraphEnd = true;
     }
 
     this.centerMeasureBars(pages, pageSetup, measureBarWidthMap);

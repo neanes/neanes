@@ -49,4 +49,4 @@ If the same collision occurs throughout the score, begin with Page Setup or the 
 
 ## Design repeated text
 
-Use `Format > Paragraph Styles` when titles, headings, lyrics, or other repeated text should share their formatting. The [Text, Images, and Styles guide](/guide/text-and-styles.html#apply-paragraph-styles) explains how to apply styles, inherit settings, and handle local formatting.
+Use `Format > Paragraph Styles` when titles, headings, lyrics, or other repeated text should share their formatting. The [Text, Images, and Paragraph Styles guide](/guide/text-and-styles.html#apply-a-paragraph-style) explains how to apply styles, inherit settings, and handle local formatting.

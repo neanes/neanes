@@ -18,3 +18,24 @@ kbd {
   padding: 2px 4px;
   white-space: nowrap;
 }
+
+.paragraph-style-action-icon {
+  display: inline-block;
+  margin-inline: 0.15em;
+  vertical-align: -0.15em;
+}
+
+.paragraph-style-callout-number {
+  display: inline-grid;
+  width: 1.65em;
+  height: 1.65em;
+  margin-right: 0.25em;
+  place-items: center;
+  border: 2px solid currentcolor;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 0.75em;
+  line-height: 1;
+  vertical-align: 0.1em;
+}

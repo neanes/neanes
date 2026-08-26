@@ -53,7 +53,7 @@ export default defineConfig({
             { text: 'Writing Music', link: '/guide/writing-music.html' },
             { text: 'Lyrics', link: '/guide/lyrics.html' },
             {
-              text: 'Text, Images, and Styles',
+              text: 'Text, Images, and Paragraph Styles',
               link: '/guide/text-and-styles.html',
             },
             { text: 'Page Layout and Books', link: '/guide/page-layout.html' },

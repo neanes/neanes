@@ -344,36 +344,9 @@
             <ToolbarButton
               variant="secondary"
               class="chrome-button toolbar-icon"
-              @click="$emit('toggle-line-break', LineBreakType.Left)"
+              @click="$emit('toggle-line-break', null)"
             >
               <PhParagraph weight="duotone" />
-            </ToolbarButton>
-          </AppTooltip>
-          <AppTooltip
-            :tooltip="
-              $t(
-                ($) =>
-                  $.toolbar.main
-                    .insertOrRemoveJustifiedLineBreakAfterSelectedElement,
-                {
-                  ns: 'toolbar',
-                },
-              )
-            "
-          >
-            <ToolbarButton
-              variant="secondary"
-              class="chrome-button toolbar-icon"
-              @click="$emit('toggle-line-break', LineBreakType.Justify)"
-            >
-              <svg viewBox="0 0 24 24">
-                <PhParagraph
-                  size="24"
-                  weight="duotone"
-                  transform="matrix(0.75 0 0 1 -2 0)"
-                />
-                <PhTextAlignJustify size="12" x="12" y="12" />
-              </svg>
             </ToolbarButton>
           </AppTooltip>
           <AppTooltip
@@ -512,7 +485,6 @@ import {
   PhScissors,
   PhScroll,
   PhTextAlignCenter,
-  PhTextAlignJustify,
   PhTextbox,
   PhTrash,
 } from '@phosphor-icons/vue';

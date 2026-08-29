@@ -21,7 +21,16 @@ import type {
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
-import { ElementType, EmptyElement, LineBreakType } from '@/models/Element';
+import {
+  ElementType,
+  EmptyElement,
+  isAutomaticBreakProhibited,
+  isBlockElement,
+  isKeepWithNextActive,
+  isRightAlignedMartyria,
+  isTieNeume,
+  LineBreakType,
+} from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
 import type {
@@ -44,8 +53,8 @@ import {
   Note,
   NoteIndicator,
   QuantitativeNeume,
+  restNeumes,
   RootSign,
-  Tie,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
@@ -122,16 +131,13 @@ interface BalancedMartyriaBoundary {
   trailingWidth: number;
 }
 
-// These marks tie two notes together. Automatic breaks across them are
-// prohibited, and collisions with them should not add space between the neumes
-// because that would ruin the position of the ties.
-const tieSet = new Set<VocalExpressionNeume | Tie>([
-  VocalExpressionNeume.HeteronConnecting,
-  VocalExpressionNeume.HeteronConnectingLong,
-  VocalExpressionNeume.HomalonConnecting,
-  Tie.YfenAbove,
-  Tie.YfenBelow,
-]);
+// The resolved constraint contribution for the optional breakpoint that
+// follows a note. A zero cost means that no structural prohibition or active
+// user keep applies; the label identifies the result in diagnostics.
+interface BreakConstraint {
+  cost: number;
+  label: string;
+}
 
 const kentemataSet = new Set<QuantitativeNeume>([
   QuantitativeNeume.Kentemata,
@@ -522,8 +528,8 @@ export class LayoutService {
       }
 
       let lineBreak: boolean = elements[i].lineBreak || elements[i].pageBreak;
-      let lineBreakType: LineBreakType =
-        elements[i].lineBreakType || LineBreakType.Left;
+      let justifyLastLine = false;
+      const nextElement = this.getElementAt(elements, i + 1);
 
       switch (elements[i].elementType) {
         case ElementType.TextBox: {
@@ -784,7 +790,6 @@ export class LayoutService {
           // The note box advance (unchanged by the bar transfer).
           this.addBox(elementWidthPx, noteElement, layoutWorkspace);
 
-          const nextElement = this.getElementAt(elements, i + 1);
           const nextNoteElement = this.getNoteIfPresentAt(elements, i + 1);
           const afterNextNoteElement = this.getNoteIfPresentAt(elements, i + 2);
           let nextLeadingLyricHyphenReservation = 0;
@@ -838,13 +843,16 @@ export class LayoutService {
             measureBarWidthMap,
           );
 
-          // Compute the break penalty cost for this inter-note space. Penalties
-          // are additive: when multiple conditions apply to the same
-          // breakpoint, their costs are summed.
-          const breakCost = this.getBreakCost(
+          // Combine the graded automatic penalties with the resolved absolute
+          // constraint for this boundary, then clamp the total to MAX_COST.
+          const breakConstraint = this.getBreakConstraint(
             noteElement,
             nextElement,
-            afterNextNoteElement,
+          );
+          const breakCost = Math.min(
+            MAX_COST,
+            this.getBreakCost(noteElement, nextElement, afterNextNoteElement) +
+              breakConstraint.cost,
           );
 
           // Penalty width is conditional: only counted when a break occurs
@@ -883,7 +891,12 @@ export class LayoutService {
           // same-line spacing and, ordinarily, elasticity. When a break is
           // taken, that glue becomes leading glue on the next line and is
           // skipped by positionItems.
-          this.addPenalty(layoutWorkspace, breakCost, penaltyWidth);
+          this.addPenalty(
+            layoutWorkspace,
+            breakCost,
+            penaltyWidth,
+            breakConstraint.label,
+          );
           this.addGlue(postBreakGlue, layoutWorkspace);
 
           break;
@@ -892,7 +905,6 @@ export class LayoutService {
           // PROCESS MARTYRIA
           const martyriaElement = elements[i] as MartyriaElement;
           const previousElement = this.getElementAt(elements, i - 1);
-          const nextElement = this.getElementAt(elements, i + 1);
           const elementWidthPx = this.getMartyriaWidth(
             martyriaElement,
             pageSetup,
@@ -1221,13 +1233,13 @@ export class LayoutService {
                 ),
           );
 
-          // Must run even when lineBreak is already true (from pageBreak or
-          // an explicit lineBreak): endParagraph reads lineBreakType to pick
-          // the finishing-glue stretch, and Left's MAX_COST stretch would
-          // compete with rightMartyriaGlue and strand the martyria mid-line.
+          // Must run even when lineBreak is already true (from pageBreak or an
+          // explicit lineBreak): the finishing glue must not stretch and
+          // compete with rightMartyriaGlue, which would strand the martyria
+          // mid-line.
           if (martyriaElement.alignRight) {
             lineBreak = true;
-            lineBreakType = LineBreakType.Justify;
+            justifyLastLine = true;
           }
 
           break;
@@ -1353,30 +1365,28 @@ export class LayoutService {
       }
 
       // A block element terminates its own line.
-      if (!lineBreak && this.isBlockElement(elements[i])) {
+      if (!lineBreak && isBlockElement(elements[i])) {
         lineBreak = true;
-        lineBreakType = LineBreakType.Justify;
+        justifyLastLine = true;
       }
 
       // A fill-width element must terminate the paragraph so Phase 2 can
-      // resolve its width against the line end. Use Left so the rest of the
-      // line is not justified. Exception: if the next element is a
-      // right-aligned martyria, let the martyria handler terminate the
+      // resolve its width against the line end. Leave justifyLastLine false so
+      // the rest of the line is not justified. Exception: if the next element
+      // is a right-aligned martyria, let the martyria handler terminate the
       // paragraph instead so the box fills up to that martyria.
       if (
         this.isFillWidthElement(elements[i]) &&
         !lineBreak &&
-        this.shouldTerminateAfterFillWidthElement(elements, i)
+        !isRightAlignedMartyria(nextElement)
       ) {
         lineBreak = true;
-        lineBreakType = LineBreakType.Left;
       }
 
       // A line break is implied before a block text box, rich-text box, image
       // box, or mode key element.
       // TODO support inline mode keys
-      const nextElement = this.getElementAt(elements, i + 1);
-      if (nextElement != null && this.isBlockElement(nextElement)) {
+      if (isBlockElement(nextElement)) {
         lineBreak = true;
       }
 
@@ -1387,7 +1397,7 @@ export class LayoutService {
       // and the paragraph is about to end. In the latter case, endParagraph()
       // removes that trailing glue and replaces it with finishing glue.
       if (lineBreak) {
-        this.endParagraph(lineBreakType, layoutWorkspace, measureBarWidthMap);
+        this.endParagraph(justifyLastLine, layoutWorkspace, measureBarWidthMap);
       }
 
       if (layoutWorkspace.diagnostics != null) {
@@ -1729,8 +1739,7 @@ export class LayoutService {
         // 1 is skipped at line start by positionItems, so it cannot push the
         // martyria to the right edge on its own.
         if (
-          element.elementType === ElementType.Martyria &&
-          (element as MartyriaElement).alignRight &&
+          isRightAlignedMartyria(element) &&
           currentLine.elements.length === 1
         ) {
           const martyriaElement = element as MartyriaElement;
@@ -1768,6 +1777,11 @@ export class LayoutService {
 
         lastElementWasPageBreak = element.pageBreak;
       }
+
+      // Preserve the paragraph boundary after Knuth-Plass has expanded this
+      // completed paragraph into one or more positioned lines. Exporters need
+      // this distinction because a visual line is not necessarily a paragraph.
+      page.lines[page.lines.length - 1].paragraphEnd = true;
     }
 
     this.centerMeasureBars(pages, pageSetup, measureBarWidthMap);
@@ -2069,18 +2083,6 @@ export class LayoutService {
     return -this.getInlineSpacing(pageSetup);
   }
 
-  private static shouldTerminateAfterFillWidthElement(
-    elements: ScoreElement[],
-    index: number,
-  ) {
-    const nextEl = elements[index + 1];
-
-    return !(
-      nextEl?.elementType === ElementType.Martyria &&
-      (nextEl as MartyriaElement).alignRight
-    );
-  }
-
   private static measurePlainTextWidth(
     text: string,
     font: string,
@@ -2176,7 +2178,7 @@ export class LayoutService {
     // to collide with. Fill-width inline elements still need collision
     // handling: their width is deferred to Phase 2, but their left edge is
     // already known in Phase 1.
-    if (this.isBlockElement(element)) {
+    if (isBlockElement(element)) {
       return;
     }
 
@@ -2210,18 +2212,6 @@ export class LayoutService {
 
     workspace.lyricsEndPx =
       workspace.neumesEndPx + elementWidthPx + lyricEndGlueWidth;
-  }
-
-  private static isBlockElement(element: ScoreElement): boolean {
-    return (
-      (element.elementType === ElementType.TextBox &&
-        !(element as TextBoxElement).inline) ||
-      (element.elementType === ElementType.RichTextBox &&
-        !(element as RichTextBoxElement).inline) ||
-      (element.elementType === ElementType.ImageBox &&
-        !(element as ImageBoxElement).inline) ||
-      element.elementType === ElementType.ModeKey
-    );
   }
 
   private static addBox(
@@ -2261,6 +2251,23 @@ export class LayoutService {
   ) {
     this.pushParagraphItem(glue, workspace, undefined, false, label);
     workspace.neumesEndPx += glue.width;
+  }
+
+  // Resolves the structural or user-set constraint on the explicit penalty
+  // breakpoint that follows a note.
+  private static getBreakConstraint(
+    element: ScoreElement,
+    nextElement: ScoreElement | null,
+  ): BreakConstraint {
+    if (isKeepWithNextActive(element, nextElement)) {
+      return { cost: MAX_COST, label: 'keep-with-next' };
+    }
+
+    if (isAutomaticBreakProhibited(element, nextElement)) {
+      return { cost: MAX_COST, label: 'prevent-automatic-break' };
+    }
+
+    return { cost: 0, label: 'break-penalty' };
   }
 
   private static fixedGlue(width: number): Glue {
@@ -3570,7 +3577,7 @@ export class LayoutService {
       offsetX?: number | null,
       offsetY?: number | null,
     ) => {
-      if (neume != null && !tieSet.has(neume as VocalExpressionNeume | Tie)) {
+      if (neume != null && !isTieNeume(neume)) {
         marks.push({ neume, offsetX, offsetY });
       }
     };
@@ -3952,31 +3959,18 @@ export class LayoutService {
     nextElement: ScoreElement | null,
     afterNextNoteElement: NoteElement | null,
   ) {
-    const noteTied =
-      !noteElement.pageBreak &&
-      !noteElement.lineBreak &&
-      (tieSet.has(noteElement.vocalExpressionNeume!) ||
-        tieSet.has(noteElement.tie!));
-
     // TODO handle digorgon/trigorgon
 
-    // Penalties are additive and clamped at MAX_COST. Some breakpoints
-    // are prohibited outright with MAX_COST; combinations of softer
-    // penalties can also saturate to MAX_COST and become prohibited.
-    // The three weaker penalties can stack to at most 0.45 * MAX_COST, which
-    // stays below the strongly discouraged threshold.
+    // Penalties are additive. Combinations of softer penalties can saturate to
+    // MAX_COST and become prohibited. The three weaker penalties can stack to
+    // at most 0.45 * MAX_COST, which stays below the strongly discouraged
+    // threshold. Outright prohibitions are resolved in getBreakConstraint; the
+    // caller adds that constraint to this total and clamps the result to
+    // MAX_COST.
     let breakCost = 0;
 
-    if (nextElement?.elementType === ElementType.Martyria) {
-      // Prohibit a break before a martyria.
-      breakCost += MAX_COST;
-    } else if (nextElement?.elementType === ElementType.Note) {
+    if (nextElement?.elementType === ElementType.Note) {
       const nextNoteElement = nextElement as NoteElement;
-      if (noteTied) {
-        // Prohibit a break across a tie (connecting heteron,
-        // homalon, or yfen).
-        breakCost += MAX_COST;
-      }
       if (noteElement.vareia) {
         // Strongly discourage break after a vareia, comparable to
         // TeX's \relpenalty (0.5 * MAX_COST).
@@ -4037,7 +4031,7 @@ export class LayoutService {
       }
     }
 
-    return Math.min(breakCost, MAX_COST);
+    return breakCost;
   }
 
   private static getBreakPenaltyWidth(
@@ -4360,8 +4354,110 @@ export class LayoutService {
     return this.breakParagraphWithRatioCap(items, lineLengths, relaxedCap);
   }
 
+  private static isNoteBox(
+    item: InputItem,
+  ): item is ElementBox & { element: NoteElement } {
+    return (
+      item.type === 'box' &&
+      'element' in item &&
+      (item as ElementBox).element.elementType === ElementType.Note
+    );
+  }
+
+  private static isRuntPenaltyNote(
+    noteElement: NoteElement,
+    nextNoteElement: NoteElement | null,
+  ) {
+    return (
+      restNeumes.includes(noteElement.quantitativeNeume) ||
+      (this.isPartOfSameMelisma(noteElement) &&
+        !this.isPartOfSameMelisma(nextNoteElement))
+    );
+  }
+
+  /**
+   * Penalizes breakpoints that would leave only one or two notes on the
+   * paragraph's final line, walking the tail backwards until both candidate
+   * breakpoints have been passed.
+   *
+   * At each candidate breakpoint exactly one note is tested: the note that
+   * would begin the final line. It earns a penalty only when it is a rest or
+   * the last continuation note of a melisma. Breakpoints that are already
+   * prohibited (cost >= MAX_COST) are left untouched.
+   *
+   * Only breakpoints that immediately follow a note box are considered, so the
+   * free breakpoint after a martyria is out of scope even though it can strand
+   * a tail of its own.
+   *
+   * Only note boxes count toward the tail. Every other box is transparent to
+   * this rule, including a terminal right-aligned martyria, which is visually
+   * the last element but is not part of the short musical tail being measured.
+   *
+   * @param items The paragraph's items, mutated in place.
+   * @param diagnosticItems The parallel diagnostics mirror, or null when
+   *   diagnostics are not being collected.
+   */
+  public static applyRuntPenalty(
+    items: InputItem[],
+    diagnosticItems: LayoutDiagnosticItem[] | null,
+  ) {
+    let tailNoteCount = 0;
+    let tailNote: NoteElement | null = null;
+    let nextTailNote: NoteElement | null = null;
+
+    for (let i = items.length - 1; i >= 1; i--) {
+      const item = items[i];
+
+      if (this.isNoteBox(item)) {
+        tailNoteCount++;
+
+        if (tailNoteCount > 2) {
+          return;
+        }
+
+        nextTailNote = tailNote;
+        tailNote = item.element;
+        continue;
+      }
+
+      if (
+        tailNote == null ||
+        item.type !== 'penalty' ||
+        item.cost >= MAX_COST ||
+        !this.isNoteBox(items[i - 1]) ||
+        !this.isRuntPenaltyNote(tailNote, nextTailNote)
+      ) {
+        continue;
+      }
+
+      // Discourage a short tail with a flat penalty, weighted like the melisma
+      // penalties in getBreakCost. This deliberately stacks with those rules
+      // when the tail is a melisma tail: they describe the shape of the
+      // melisma, this one describes the shape of the final line.
+      //
+      // The total is capped at 0.95 * MAX_COST, the worst cost getBreakCost
+      // can assign to a breakpoint that is still a legal break: one strong
+      // penalty (0.5) plus all three weaker ones (0.45). That keeps the break
+      // a preference rather than a prohibition, keeps the result inside the
+      // range the break rules themselves use, and keeps it monotone in the
+      // base cost, so an intrinsically worse breakpoint never ends up cheaper.
+      if (item.cost < MAX_COST * 0.95) {
+        item.cost = Math.min(item.cost + MAX_COST * 0.15, MAX_COST * 0.95);
+      }
+
+      if (diagnosticItems != null) {
+        // The only penalty that can immediately follow a note box is the
+        // unlabeled break opportunity pushed after the neume, so there is no
+        // existing label to preserve here.
+        const diagnosticItem = diagnosticItems[i];
+        diagnosticItem.cost = item.cost;
+        diagnosticItem.label = `runt-${tailNoteCount}-note`;
+      }
+    }
+  }
+
   private static endParagraph(
-    lineBreakType: LineBreakType,
+    justifyLastLine: boolean,
     workspace: LayoutWorkspace,
     measureBarWidthMap: Map<MeasureBar, number>,
   ) {
@@ -4392,8 +4488,7 @@ export class LayoutService {
     // element's right-edge lyric extent, when applicable, and any terminal
     // barline clearance. The stretch absorbs remaining line slack (0 for
     // justified paragraphs, `MAX_COST` otherwise).
-    const finishingGlueStretch =
-      lineBreakType === LineBreakType.Justify ? 0 : MAX_COST;
+    const finishingGlueStretch = justifyLastLine ? 0 : MAX_COST;
     this.addGlue(
       {
         type: 'glue',
@@ -4407,6 +4502,12 @@ export class LayoutService {
 
     // Force break and end paragraph
     this.forceBreak(workspace);
+
+    // Discourage breakpoints that leave a one- or two-note final line.
+    this.applyRuntPenalty(
+      pendingParagraph,
+      workspace.diagnostics?.items ?? null,
+    );
 
     // Compute per-line widths for multiline drop caps
     let lineLengths: number | number[];
@@ -5673,8 +5774,7 @@ export class LayoutService {
 
           const measureBarRight = this.getVisibleMeasureBarRight(owner);
           const followedByRightAlignedMartyria =
-            nextAnchor?.elementType === ElementType.Martyria &&
-            (nextAnchor as MartyriaElement).alignRight;
+            isRightAlignedMartyria(nextAnchor);
           if (
             measureBarRight &&
             nextAnchor &&
@@ -6830,7 +6930,7 @@ export class LayoutService {
 
   private static getNoteNeumesForInkMeasurement(noteElement: NoteElement) {
     return this.getNoteNeumesForMeasurement(noteElement).filter(
-      (neume) => !tieSet.has(neume as VocalExpressionNeume | Tie),
+      (neume) => !isTieNeume(neume),
     );
   }
 

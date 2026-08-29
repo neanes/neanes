@@ -10,12 +10,12 @@ import {
   PhCopy,
   PhCrosshair,
   PhFile,
+  PhLinkSimpleHorizontal,
   PhParagraph,
   PhScissors,
   PhSelectionAll,
   PhSlidersHorizontal,
   PhTextAlignCenter,
-  PhTextAlignJustify,
   PhX,
   PhXCircle,
 } from '@phosphor-icons/vue';
@@ -139,9 +139,11 @@ import type { EmptyElement, ScoreElement } from '@/models/Element';
 import {
   AlternateLineElement,
   AnnotationElement,
+  canKeepWithNext,
   DropCapElement,
   ElementType,
   ImageBoxElement,
+  isKeepWithNextActive,
   LineBreakType,
   MartyriaElement,
   ModeKeyElement,
@@ -792,6 +794,10 @@ const pageCount = computed(() => {
   return filteredPages.value.length;
 });
 
+const exportPageCount = computed(() => {
+  return pages.value.filter((page) => !page.isEmpty).length;
+});
+
 const statusPageCount = computed(() => Math.max(1, pageCount.value));
 
 const commandService = computed(() => {
@@ -802,6 +808,18 @@ const selectedElementIndex = computed(() => {
   return selectedElement.value != null
     ? elements.value.indexOf(selectedElement.value)
     : -1;
+});
+
+// The neume context can be an alternate-line child rather than the selected
+// staff element, and only a staff element has a next element to keep with.
+const canSelectedElementKeepWithNext = computed(() => {
+  const context = inspectorContext.value;
+
+  return (
+    context.kind === 'neume' &&
+    context.element === selectedElement.value &&
+    canKeepWithNext(context.element, getNextScoreElement(context.element))
+  );
 });
 
 const windowTitle = computed(() => {
@@ -3594,6 +3612,7 @@ function togglePageBreak() {
         newValues: {
           pageBreak: !selectedElement.value.pageBreak,
           lineBreak: false,
+          lineBreakType: null,
         },
       }),
     );
@@ -3604,15 +3623,12 @@ function togglePageBreak() {
 
 function toggleLineBreak(lineBreakType: LineBreakType | null) {
   if (selectedElement.value && !isLastElement(selectedElement.value)) {
-    let lineBreak = !selectedElement.value.lineBreak;
-
-    if (lineBreakType != selectedElement.value.lineBreakType) {
-      lineBreak = true;
-    }
-
-    if (!lineBreak) {
-      lineBreakType = null;
-    }
+    // Requesting the alignment a break already has removes it; requesting the
+    // other alignment switches the break rather than clearing it.
+    const lineBreak = !(
+      selectedElement.value.lineBreak &&
+      selectedElement.value.lineBreakType === lineBreakType
+    );
 
     commandService.value.execute(
       scoreElementCommandFactory.create('update-properties', {
@@ -3620,7 +3636,7 @@ function toggleLineBreak(lineBreakType: LineBreakType | null) {
         newValues: {
           lineBreak,
           pageBreak: false,
-          lineBreakType,
+          lineBreakType: lineBreak ? lineBreakType : null,
         },
       }),
     );
@@ -3633,8 +3649,7 @@ function switchToMartyria(element: ScoreElement) {
   const index = elements.value.indexOf(element);
 
   const newElement = new MartyriaElement();
-  newElement.pageBreak = element.pageBreak;
-  newElement.lineBreak = element.lineBreak;
+  newElement.copyBreakStateFrom(element);
 
   replaceScoreElement(newElement, index);
 
@@ -3644,8 +3659,7 @@ function switchToMartyria(element: ScoreElement) {
 function switchToTempo(oldElement: ScoreElement, newElement: TempoElement) {
   const index = elements.value.indexOf(oldElement);
 
-  newElement.pageBreak = oldElement.pageBreak;
-  newElement.lineBreak = oldElement.lineBreak;
+  newElement.copyBreakStateFrom(oldElement);
 
   replaceScoreElement(newElement, index);
 
@@ -3655,8 +3669,7 @@ function switchToTempo(oldElement: ScoreElement, newElement: TempoElement) {
 function switchToSyllable(oldElement: ScoreElement, newElement: NoteElement) {
   const index = elements.value.indexOf(oldElement);
 
-  newElement.pageBreak = oldElement.pageBreak;
-  newElement.lineBreak = oldElement.lineBreak;
+  newElement.copyBreakStateFrom(oldElement);
 
   replaceScoreElement(newElement, index);
 
@@ -5320,6 +5333,14 @@ function getLyricLength(element: NoteElement) {
   return getTemplateRef<InstanceType<typeof ContentEditable>[]>(
     `lyrics-${elements.value.indexOf(element)}`,
   )[0].getInnerText().length;
+}
+
+function getNextScoreElement(element: ScoreElement) {
+  return elements.value[element.index + 1] ?? null;
+}
+
+function hasActiveKeepWithNext(element: ScoreElement) {
+  return isKeepWithNextActive(element, getNextScoreElement(element));
 }
 
 function moveLeft() {
@@ -8428,15 +8449,21 @@ async function exportAsPng(args: ExportAsPngSettings) {
     await nextTick();
 
     const pageElements = pagesRef.value as HTMLElement[];
+    const selectedPages = pageElements
+      .map((page, index) => ({ page, pageNumber: index + 1 }))
+      .filter(
+        ({ pageNumber }) =>
+          args.pageNumbers == null || args.pageNumbers.includes(pageNumber),
+      );
     let exportedPageCount = 0;
     let firstExportedPagePath = '';
 
-    if (pageElements.length > 0) {
+    if (selectedPages.length > 0) {
       const fontEmbedCSS =
-        (await getFontEmbedCSS(pageElements[0])) +
+        (await getFontEmbedCSS(selectedPages[0].page)) +
         fontCatalog.getExportFontFeatureValuesCss();
 
-      for (const [index, page] of pageElements.entries()) {
+      for (const { page, pageNumber } of selectedPages) {
         const options = {
           fontEmbedCSS,
           pixelRatio: args.dpi / 96,
@@ -8447,7 +8474,10 @@ async function exportAsPng(args: ExportAsPngSettings) {
           options.style.backgroundColor = 'transparent';
         }
 
-        const fileName = reply.filePath.replace(/\.png$/i, `-${index + 1}.png`);
+        const fileName = reply.filePath.replace(
+          /\.png$/i,
+          `-${pageNumber}.png`,
+        );
 
         const data = (await toPng(page, options)).replace(
           /^data:image\/png;base64,/,
@@ -9973,6 +10003,7 @@ function renderTabLabel(tab: Tab) {
 
         <template #properties>
           <PropertiesPane
+            :can-keep-with-next="canSelectedElementKeepWithNext"
             :context="inspectorContext"
             :fonts="fonts"
             :inner-neume="toolbarInnerNeume"
@@ -10392,26 +10423,19 @@ function renderTabLabel(tab: Tab) {
                               <span v-if="element.pageBreak" class="page-break"
                                 ><PhFile
                               /></span>
+                              <span
+                                v-if="hasActiveKeepWithNext(element)"
+                                class="keep-with-next"
+                                :title="
+                                  $t(($) => $.toolbar.common.keepWithNext, {
+                                    ns: 'toolbar',
+                                  })
+                                "
+                                ><PhLinkSimpleHorizontal weight="bold"
+                              /></span>
                               <span v-if="element.lineBreak" class="line-break"
                                 ><svg
                                   v-if="
-                                    element.lineBreakType ===
-                                    LineBreakType.Justify
-                                  "
-                                  viewBox="0 0 24 24"
-                                >
-                                  <PhParagraph
-                                    size="24"
-                                    weight="fill"
-                                    transform="matrix(0.75 0 0 1 -2 0)"
-                                  />
-                                  <PhTextAlignJustify
-                                    size="12"
-                                    x="12"
-                                    y="12"
-                                  /></svg
-                                ><svg
-                                  v-else-if="
                                     element.lineBreakType ===
                                     LineBreakType.Center
                                   "
@@ -11458,8 +11482,10 @@ function renderTabLabel(tab: Tab) {
     <ExportDialog
       v-if="exportDialogIsOpen"
       v-model:open="exportDialogIsOpen"
+      v-model:page-range="selectedWorkspace.exportPageRange"
       :loading="exportInProgress"
       :default-format="exportFormat"
+      :page-count="exportPageCount"
       :show-item-in-folder-supported="ipcService.isShowItemInFolderSupported()"
       @export-as-png="exportAsPng"
       @export-as-music-xml="exportAsMusicXml"
@@ -11601,6 +11627,16 @@ function renderTabLabel(tab: Tab) {
 
 .element-box {
   position: absolute;
+}
+
+.keep-with-next {
+  position: absolute;
+  top: calc(-10px * var(--zoom, 1));
+}
+
+.keep-with-next > svg {
+  height: calc(16px * var(--zoom, 1));
+  width: calc(16px * var(--zoom, 1));
 }
 
 .developer-overlay-box {
@@ -12034,6 +12070,7 @@ function renderTabLabel(tab: Tab) {
 .page.print .line-break,
 .page.print .page-break-2,
 .page.print .line-break-2,
+.page.print .keep-with-next,
 .page.print :deep(.handle),
 .page.print :deep(.ck-widget__type-around) {
   display: none !important;
@@ -12129,7 +12166,8 @@ function renderTabLabel(tab: Tab) {
   .page-break,
   .line-break,
   .page-break-2,
-  .line-break-2 {
+  .line-break-2,
+  .keep-with-next {
     display: none !important;
   }
 

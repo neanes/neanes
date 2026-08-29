@@ -84,6 +84,71 @@
                   }}
                 </FieldLabel>
               </Field>
+              <Field v-if="format === ExportFormat.PNG">
+                <FieldLabel>
+                  {{ $t(($) => $.dialog.export.pages, { ns: 'dialog' }) }}
+                </FieldLabel>
+                <RadioGroup v-model="pageSelection">
+                  <Field orientation="horizontal">
+                    <RadioGroupItem id="export-dialog-all-pages" value="all" />
+                    <FieldLabel for="export-dialog-all-pages">
+                      {{
+                        $t(($) => $.dialog.export.allPages, { ns: 'dialog' })
+                      }}
+                    </FieldLabel>
+                  </Field>
+                  <Field
+                    orientation="horizontal"
+                    :data-invalid="visiblePageRangeError ? true : undefined"
+                  >
+                    <RadioGroupItem
+                      id="export-dialog-page-range-option"
+                      value="range"
+                    />
+                    <FieldContent>
+                      <FieldLabel
+                        id="export-dialog-page-range-label"
+                        for="export-dialog-page-range-option"
+                      >
+                        {{
+                          $t(($) => $.dialog.export.pageRange, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </FieldLabel>
+                      <Input
+                        id="export-dialog-page-range"
+                        ref="pageRangeInput"
+                        v-model="pageRange"
+                        type="text"
+                        :disabled="pageSelection !== 'range'"
+                        :placeholder="
+                          $t(($) => $.dialog.export.pageRangePlaceholder, {
+                            ns: 'dialog',
+                          })
+                        "
+                        aria-labelledby="export-dialog-page-range-label"
+                        :aria-invalid="visiblePageRangeError ? true : undefined"
+                        :aria-describedby="pageRangeDescribedBy"
+                        @blur="onPageRangeBlur"
+                      />
+                      <FieldDescription id="export-dialog-page-range-help">
+                        {{
+                          $t(($) => $.dialog.export.pageCount, {
+                            ns: 'dialog',
+                            pageCount,
+                          })
+                        }}
+                      </FieldDescription>
+                      <FieldError
+                        v-if="visiblePageRangeError"
+                        id="export-dialog-page-range-error"
+                        :errors="[visiblePageRangeError]"
+                      />
+                    </FieldContent>
+                  </Field>
+                </RadioGroup>
+              </Field>
               <Field>
                 <FieldDescription>
                   {{
@@ -231,7 +296,11 @@
               {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
             </Button>
           </DialogClose>
-          <Button type="submit" form="export-dialog-form">
+          <Button
+            type="submit"
+            form="export-dialog-form"
+            :disabled="!exportSettingsAreValid"
+          >
             <PhExport />
             {{ $t(($) => $.dialog.export.export, { ns: 'dialog' }) }}
           </Button>
@@ -248,8 +317,17 @@ import {
   PhFilePng,
   PhFileText,
 } from '@phosphor-icons/vue';
+import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
-import { computed, ref } from 'vue';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useTemplateRef,
+  watch,
+} from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 import { Button } from '@/components/ui/button';
@@ -265,13 +343,17 @@ import {
 } from '@/components/ui/dialog';
 import {
   Field,
+  FieldContent,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldLegend,
   FieldSeparator,
   FieldSet,
 } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -284,6 +366,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { LatexExporterOptions } from '@/services/integration/LatexExporter';
 import { MusicXmlExporterOptions } from '@/services/integration/MusicXmlExporter';
 import { fraction0FormatOptions } from '@/utils/numberFormatOptions';
+import { normalizePageRanges, parsePageRanges } from '@/utils/pageRanges';
 
 import type {
   ExportAsLatexSettings,
@@ -307,17 +390,29 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  pageCount: {
+    type: Number,
+    required: true,
+  },
   showItemInFolderSupported: {
     type: Boolean,
     required: true,
   },
 });
 
+const { t } = useTranslation();
+
 const open = defineModel<boolean>('open', { required: true });
+const pageRange = defineModel<string>('pageRange', { required: true });
+const pageRangeInput =
+  useTemplateRef<InstanceType<typeof Input>>('pageRangeInput');
 const format = ref(props.defaultFormat);
 const dpi = ref(300);
 const transparentBackground = ref(false);
 const openFolder = ref(props.showItemInFolderSupported);
+const pageSelection = ref<'all' | 'range'>('all');
+const visiblePageRangeError = ref<string | null>(null);
+let pageRangeErrorTimer: ReturnType<typeof setTimeout> | null = null;
 
 const musicXmlOptions = ref(new MusicXmlExporterOptions());
 const latexOptions = ref(new LatexExporterOptions());
@@ -326,6 +421,108 @@ const exportFormatIsImage = computed(() => {
   return format.value === ExportFormat.PNG || format.value === ExportFormat.SVG;
 });
 
+const allPagesRange = computed(() => {
+  if (props.pageCount === 1) {
+    return '1';
+  }
+
+  return props.pageCount > 1 ? `1-${props.pageCount}` : '';
+});
+
+const parsedPageRange = computed(() =>
+  parsePageRanges(
+    pageRange.value.trim() === '' ? allPagesRange.value : pageRange.value,
+    props.pageCount,
+  ),
+);
+
+const pageRangeError = computed(() => {
+  if (pageSelection.value !== 'range' || parsedPageRange.value.error == null) {
+    return null;
+  }
+
+  return parsedPageRange.value.error === 'outOfRange'
+    ? t(($) => $.dialog.export.pageRangeOutOfRange, {
+        ns: 'dialog',
+        pageCount: props.pageCount,
+      })
+    : t(($) => $.dialog.export.pageRangeInvalid, { ns: 'dialog' });
+});
+
+const pageRangeDescribedBy = computed(() =>
+  visiblePageRangeError.value
+    ? 'export-dialog-page-range-help export-dialog-page-range-error'
+    : 'export-dialog-page-range-help',
+);
+
+const exportSettingsAreValid = computed(() => {
+  return (
+    format.value !== ExportFormat.PNG ||
+    pageSelection.value === 'all' ||
+    parsedPageRange.value.error == null
+  );
+});
+
+watch(pageSelection, async (selection) => {
+  if (selection === 'range') {
+    await nextTick();
+
+    if (pageSelection.value === 'range') {
+      const input = pageRangeInput.value?.$el as HTMLInputElement | undefined;
+      input?.focus();
+      input?.select();
+    }
+  }
+});
+
+watch(pageRangeError, (error) => {
+  clearPageRangeErrorTimer();
+  visiblePageRangeError.value = null;
+
+  if (error != null) {
+    pageRangeErrorTimer = setTimeout(() => {
+      visiblePageRangeError.value = pageRangeError.value;
+      pageRangeErrorTimer = null;
+    }, 400);
+  }
+});
+
+onBeforeUnmount(clearPageRangeErrorTimer);
+
+onMounted(() => {
+  const normalizedPageRange = normalizePageRanges(
+    pageRange.value,
+    props.pageCount,
+  );
+
+  if (normalizedPageRange != null) {
+    pageRange.value = normalizedPageRange;
+  }
+});
+
+function clearPageRangeErrorTimer() {
+  if (pageRangeErrorTimer != null) {
+    clearTimeout(pageRangeErrorTimer);
+    pageRangeErrorTimer = null;
+  }
+}
+
+function fillEmptyPageRange() {
+  if (
+    pageSelection.value === 'range' &&
+    pageRange.value.trim() === '' &&
+    allPagesRange.value !== ''
+  ) {
+    pageRange.value = allPagesRange.value;
+  }
+}
+
+function onPageRangeBlur() {
+  fillEmptyPageRange();
+  clearPageRangeErrorTimer();
+  visiblePageRangeError.value = pageRangeError.value;
+}
+
 function doExport() {
   const shouldOpenFolder = props.showItemInFolderSupported && openFolder.value;
 
@@ -333,6 +530,10 @@ function doExport() {
     emit('exportAsPng', {
       dpi: dpi.value,
       openFolder: shouldOpenFolder,
+      pageNumbers:
+        pageSelection.value === 'range'
+          ? parsedPageRange.value.pageNumbers
+          : null,
       transparentBackground: transparentBackground.value,
     });
   } else if (format.value === ExportFormat.SVG) {
@@ -352,7 +553,11 @@ function doExport() {
 
 function submit() {
   if (!props.loading) {
-    doExport();
+    fillEmptyPageRange();
+
+    if (exportSettingsAreValid.value) {
+      doExport();
+    }
   }
 }
 </script>

@@ -188,6 +188,12 @@ A small symbol will appear above the neume to indicate the break.
 
 ![Page Break Example](./images/guide-page-break-example-1.png)
 
+### Keep with Next
+
+To keep two elements on the same line, select the first note, open `View -> Properties`, and enable `Keep with Next`. This prevents an automatic line break between the selected note and the element immediately after it. A small link symbol appears above the selected note while the option is active. Disable the option to allow an automatic line break at that position again.
+
+The option is available only on a note and where the layout permits an optional break. It does not override a forced line or page break. If an active `Keep with Next` becomes unavailable, the option remains selected but is grayed out and has no effect. It becomes active again when the conflicting condition is removed.
+
 ## Drop Caps
 
 Drop Caps may be inserted through the main menu by clicking `Insert -> Drop Cap Before` or `Insert -> Drop Cap After`, by pressing the drop cap button in the main toolbar, or by pressing <kbd>Ctrl</kbd>+<kbd>D</kbd>.

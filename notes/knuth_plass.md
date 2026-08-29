@@ -98,11 +98,28 @@ an optimum-fit algorithm can usually find a better solution in milliseconds.
 We do not use the flagged-penalty mechanism that Knuth & Plass employ to avoid consecutive hyphenated lines.
 In practice, the large stretchability of martyria glue is sufficient to keep neume spacing consistent across adjacent lines.
 
-Penalties are additive: when multiple conditions apply at the same breakpoint, their costs are summed and then clamped to `MAX_COST`.
+### User-set keep constraints
+
+The rules above are derived automatically from the notation.
+The author may also keep an eligible note with the element that follows it through the `keepWithNext` property.
+When active, this applies `MAX_COST` to the breakpoint after the marked element, prohibiting a break there.
+A stored keep is inactive on a note that already has an explicit line or page break, before a block or the terminal empty element, and wherever the layout already prohibits the break on its own: before a martyria and across a tie.
+Inactive values remain stored, so a keep becomes active again if the obstructing condition is removed.
+When loading a legacy justified line break, the loader removes that break and applies a keep when the following element is an eligible note; otherwise the migrated keep is discarded.
+
+At boundaries represented by a penalty, graded automatic costs are combined with the applicable structural or user-set constraint and clamped to `MAX_COST`.
+Notes already emit an explicit penalty item, so a structural prohibition or active user-set keep is added to its cost.
+The structural prohibitions, before a martyria and across a tie, are resolved together and are what makes a keep redundant at those boundaries.
+Keep with Next is not offered for element types whose break opportunity is represented only by trailing glue.
+No penalty is inserted before such glue for this feature.
+The editor displays a link marker for every active user-set keep.
+
+Automatic penalties are additive: when multiple conditions apply at the same breakpoint, their costs are summed and then clamped to `MAX_COST`.
 For example, a break after a vareia and before a beat-stealing neume incurs a total cost of 0.6 of `MAX_COST` ($0.5 + 0.1$),
 while a break after a vareia and immediately after a melisma start incurs a total cost of 0.7 of `MAX_COST` ($0.5 + 0.2$).
 A prohibited break remains prohibited, and some combinations of softer penalties, such as $0.5 + 0.5$, also saturate to `MAX_COST`, which bans the break altogether.
-The three weaker penalties can stack only to 0.45 of `MAX_COST` ($0.2 + 0.15 + 0.1$), which remains below the strongly discouraged threshold.
+The three weaker automatic penalties can stack only to 0.45 of `MAX_COST` ($0.2 + 0.15 + 0.1$), which remains below the strongly discouraged threshold.
+An author-set keep always prohibits the break, independently of the automatic penalty total.
 
 ### Summary of penalties
 
@@ -115,6 +132,7 @@ The three weaker penalties can stack only to 0.45 of `MAX_COST` ($0.2 + 0.15 + 0
 |  0.1 of `MAX_COST` | Before configured beat-stealing neumes/time marks | none            |
 |  0.2 of `MAX_COST` | Melisma start to first continuation (0 to 1)      | `\clubpenalty`  |
 | 0.15 of `MAX_COST` | Penultimate to last melisma note ($n-2$ to $n-1$) | `\widowpenalty` |
+|         `MAX_COST` | After a note with an active keep                  | none            |
 |                  0 | All other inter-note breaks                       | none            |
 
 ### Classical compression techniques

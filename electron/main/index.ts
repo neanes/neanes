@@ -899,7 +899,9 @@ async function exportWorkspaceAsPdf(
             args.pageHeightInches,
           ),
           landscape: args.landscape,
-          printBackground: true,
+          // Keep app chrome backgrounds out of the PDF. Score color fidelity
+          // is controlled by print-color-adjust: exact in the print stylesheet.
+          printBackground: false,
         });
         const newPath = replaceExtension(args.filePath!, 'pdf');
 
@@ -950,7 +952,9 @@ async function exportWorkspaceAsPdf(
             args.pageHeightInches,
           ),
           landscape: args.landscape,
-          printBackground: true,
+          // Keep app chrome backgrounds out of the PDF. Score color fidelity
+          // is controlled by print-color-adjust: exact in the print stylesheet.
+          printBackground: false,
         });
         await fs.writeFile(filePath, data);
 

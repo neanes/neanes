@@ -49,7 +49,10 @@ export default defineConfig({
           text: 'Guide',
           items: [
             { text: 'Quick Start', link: '/guide/' },
-            { text: 'Editor Basics', link: '/guide/editor-basics.html' },
+            {
+              text: 'Getting Around and Editing',
+              link: '/guide/editor-basics.html',
+            },
             { text: 'Writing Music', link: '/guide/writing-music.html' },
             { text: 'Lyrics', link: '/guide/lyrics.html' },
             {

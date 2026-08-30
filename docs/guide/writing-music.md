@@ -1,64 +1,130 @@
+<script setup>
+import {
+  PhAlignRight,
+  PhCrosshair,
+  PhFile,
+  PhParagraph,
+  PhTextAlignCenter,
+} from '@phosphor-icons/vue';
+import martyriaIcon from '../../src/assets/icons/martyria.svg';
+import tempoSignIcon from '../../src/assets/icons/agogi-poli-argi.svg';
+</script>
+
 # Writing Music
 
-## Enter quantitative and supporting signs
+This chapter follows the everyday process of building a musical passage: enter quantitative neumes, add supporting signs, mark its musical structure, and control where it breaks across lines and pages. If Auto, Insert, and Single are unfamiliar, begin with [Getting Around and Editing a Score](/guide/editor-basics.html#choose-how-new-music-is-entered).
 
-Choose quantitative neumes in the Neume Selector. With a note selected, use its bottom toolbar for fthoræ, gorgons, accidentals, barlines, and other supporting signs. A neume containing kentēmata can accept signs on more than one component; the toolbar's Neume Select controls choose the target component.
+## Enter a passage
 
-![The Neume Select controls choose the component that receives a supporting sign](./images/guide-neume-toolbar-neume-select.png)
+Leave **Auto** active when entering a new passage. Choose a quantitative neume in the Neume Selector, and Neanes advances to the next position. Continue choosing neumes to build the melody from left to right.
 
-The highlighted component shows where the next gorgon, fthora, or accidental will be placed.
+The outlined neume is both the current selection and the entry position. If Neanes replaces or inserts music somewhere unexpected, undo the edit and check the selection and entry mode before continuing.
 
-![A supporting sign applied to the selected component](./images/guide-neume-toolbar-neume-select-neume.png)
+As an alternative to clicking the Neume Selector, you may use the shortcuts in the [Neume Keyboard reference](/guide/keyboard.html).
 
-## Insert martyriæ and tempo
+## Add supporting signs
 
-Use the martyria control in the main toolbar to insert a martyria. Its note and scale are calculated from the initial martyria and preceding fthoræ. To set a specific result, select the martyria, open `View > Properties`, turn off `Auto`, then choose the note or scale.
+Select a quantitative neume to show its toolbar along the bottom of the editor. This toolbar contains the signs and settings that belong to that neume, including time signs, gorgons, vocal-expression signs, accidentals, fthoræ, barlines, measure numbers, note indicators, and ison indicators.
 
-![The martyria control in the main toolbar](./images/guide-main-toolbar-martyria.png)
+![The selected-neume toolbar in dark mode](./images/guide-neume-toolbar-dark.png)
 
-For example, a hymn may end on Di while the next hymn begins on Pa. In that case, you can override the final martyria so that it displays Pa even though the preceding melody ends on Di.
+Hover over a control to see the sign's name and, when available, its keyboard shortcut. Choose a control to apply its sign to the selected neume.
 
-![A martyria whose calculated note has been overridden](./images/guide-martyria-override-example-1.png)
+Some controls provide a family of related signs. By default, press and hold the control, move to the desired sign, and release. To open these menus with a click instead, choose `Edit > Preferences` and change **Menu Interaction** to **Click to open menu**.
 
-Use the main-toolbar tempo control to insert a tempo sign. A selected tempo sign has a BPM setting in Properties; newly inserted signs use the relevant default from Preferences when one is configured.
+Supporting signs do not follow Auto, Insert, or Single. They always change the selected neume and leave the selection in place.
 
-Click and hold the tempo control to choose from the available signs.
+Neanes also uses attached fthoræ when calculating the scale of subsequent notes and automatic martyriæ. They therefore affect more than the appearance of the selected neume.
 
-![The tempo control in the main toolbar](./images/guide-main-toolbar-tempo.png)
+For most supporting signs:
 
-![The expanded tempo-sign menu](./images/guide-main-toolbar-tempo-expanded.png)
+- Choose the applied sign again to remove it.
+- Choose a different sign in the same category to replace it.
+- Use **Undo** if the result is not what you intended.
 
-## Add barlines
+A disabled control means that the selected quantitative neume cannot accept that sign in the current position.
 
-Hold the barline control in the selected-neume toolbar and choose a long or short barline. Short barlines are positioned above a multi-neume group or martyria. For a break-safe result, apply a barline to the left of the neume it precedes; a martyria's barline can be applied at its top or right.
+### Target part of a compound neume
+
+Some quantitative neumes contain two or three components that can carry separate gorgons, fthoræ, or accidentals. When such a neume is selected, **Neume Select** appears at the end of the bottom toolbar.
+
+Choose the button showing the component you want to target, then add the supporting sign. The highlighted component is the target for the next applicable gorgon, fthora, or accidental. Choose another component before applying a sign that belongs elsewhere in the same neume.
+
+<div class="guide-screenshot-grid">
+  <figure>
+    <img
+      src="./images/guide-neume-select-target-dark.png"
+      alt="The secondary component selected in the Neume Select controls"
+    />
+    <figcaption><strong>Choose a component.</strong> The highlighted button is the current target.</figcaption>
+  </figure>
+</div>
+
+If a sign appears on the wrong component, undo it, choose the intended component under **Neume Select**, and apply the sign again.
+
+## Mark musical structure
+
+### Insert a martyria
+
+Select the element that should precede the martyria, then choose **Martyria** <img :src="martyriaIcon" class="guide-action-icon guide-neume-action-icon" alt="" aria-hidden="true" /> in the main toolbar. The active entry mode controls whether Neanes advances and replaces the next element, inserts a new martyria, or changes only the selected element.
+
+With **Auto** enabled, Neanes sets the martyria's note and scale from the initial martyria, the preceding melody, and any fthoræ. This usually gives the appropriate martyria for the music that came before it. This **Auto** setting belongs to the selected martyria and is separate from the **Auto** entry mode in the main toolbar.
+
+Choose the martyria manually when it needs to introduce what follows instead. For example, if one hymn ends on Di and the next hymn begins on Pa, the martyria between them may need to show Pa rather than the final note of the preceding hymn. A manual choice can also be useful for a scale such as Spathi, whose martyria is not well defined within the tradition.
+
+Select the martyria and open `View > Properties`. Turn off **Auto**, then choose its **Note** and **Scale**. Use **Martyria Sign Override** when the displayed martyria sign itself needs a different form.
+
+The bottom toolbar for a selected martyria also lets you add a fthora, barline, or tempo sign. These signs belong to that martyria rather than becoming separate score elements.
+
+To end a line with the martyria against the right margin, select it and choose **Align Right** <PhAlignRight class="guide-action-icon" weight="duotone" aria-hidden="true" /> in its bottom toolbar. You can also right-click the martyria and enable **Align Right**. Neanes moves the martyria to the right edge and begins the following material on a new line.
+
+When **Align Right** is enabled, a **Neume** <span class="guide-inline-neume" aria-hidden="true">&#xe082;</span> control appears in the martyria's bottom toolbar. Use this control to add a quantitative neume directly to the right of the martyria. The added neume belongs to the martyria; it is not the same as choosing a quantitative neume in the Neume Selector, which enters a separate score element according to the active entry mode.
+
+### Add a tempo sign
+
+Choose **Tempo Sign** <img :src="tempoSignIcon" class="guide-action-icon guide-neume-action-icon" alt="" aria-hidden="true" /> in the main toolbar to insert a separate tempo sign. Open its menu to choose from the available signs.
+
+Select a tempo sign and set its **BPM** in Properties when the playback speed should differ from its default. You can set the defaults for each tempo sign under `Edit > Preferences`.
+
+To attach a tempo sign to a martyria instead, select the martyria and use its bottom toolbar. A martyria can carry a tempo sign to its left, above it, or to its right.
+
+### Add barlines and measure numbers
+
+Select a quantitative neume or martyria, then use the barline control in its bottom toolbar. Open the control's menu to choose a long, short, double, or theseos barline.
+
+Choosing the same barline repeatedly cycles it through the left side, right side, both sides, and then removes it. For a barline that must stay before a particular element when the score reflows, attach it to the left side of that element.
+
+Short barlines appear above a multi-neume group or martyria. On a selected quantitative neume, the neighboring **Measure Number** control adds a number above the music; choose the same number again to remove it.
 
 ## Control line and page breaks
 
-Select the element after which a break should occur, then use the main-toolbar Line Break or Page Break control. Use the same control again on the selected element to remove the break.
+Neanes normally chooses line and page breaks automatically. Add a forced break only when the musical or textual structure requires one at a specific place.
 
-To prevent an automatic break between two notes, select the first note and enable `Keep with Next` in `View > Properties`. It cannot override a forced line or page break, and has no effect where the layout has no optional break.
+Select the element after which the break should occur, then choose one of these controls in the main toolbar:
 
-If another condition makes `Keep with Next` unavailable, the switch is disabled but its value is retained. It becomes active again when the forced break or other conflict is removed.
+- **Line Break** <PhParagraph class="guide-action-icon" weight="duotone" aria-hidden="true" /> starts the next element on a new line.
+- **Centered Line Break** <svg class="guide-action-icon" viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><PhParagraph size="24" weight="duotone" transform="matrix(0.75 0 0 1 -2 0)" /><PhTextAlignCenter size="12" x="12" y="12" /></svg> centers the current line and starts the next element on a new line.
+- **Page Break** <PhFile class="guide-action-icon" aria-hidden="true" /> starts the next element on a new page.
 
-![The Line Break control in the main toolbar](./images/guide-main-toolbar-line-break.png)
+Choose the active break control again to remove the break. Choosing a different break type replaces the existing one. A marker above the selected element shows where the forced break is attached.
 
-![A forced line break is marked above the selected neume](./images/guide-line-break-example-1.png)
+To discourage an automatic line break without forcing the next element onto a particular line, select the first of the two elements and enable **Keep with Next** in Properties. It cannot override a forced line or page break.
 
-![The Page Break control in the main toolbar](./images/guide-main-toolbar-page-break.png)
-
-![A forced page break is marked above the selected neume](./images/guide-page-break-example-1.png)
+::: tip Prefer automatic layout
+Forced breaks are useful for meaningful phrase boundaries and deliberate page turns. If many lines need manual breaks, adjust the spacing and line-width settings in [Page Layout and Books](/guide/page-layout.html) before placing more of them.
+:::
 
 ## Fine-tune positions
 
-Most spacing should be handled automatically. If two supporting signs still collide, double-click the neume, right-click it and choose `Positioning`, or select it and use the positioning control in its toolbar.
+Neanes positions supporting signs automatically. If one neume still has a collision, double-click it, right-click it and choose `Positioning`, or select it and choose **Positioning** <PhCrosshair class="guide-action-icon" aria-hidden="true" /> in the bottom toolbar.
 
-![The neume positioning dialog before a collision is corrected](./images/guide-neume-positioning-dialog-1.png)
+Choose the affected sign, then drag its blue handle or edit its **Left** and **Top** values:
 
-Drag a blue handle to move a sign, or edit its `Left` and `Top` values:
+- Decrease **Left** to move the sign left; increase it to move right.
+- Decrease **Top** to move the sign up; increase it to move down.
 
-- Decrease `Left` to move left; increase it to move right.
-- Decrease `Top` to move up; increase it to move down.
+The adjustment applies only to the selected neume. Use it for an isolated problem, not to correct spacing throughout the score. For repeated problems, change Page Setup or allow the automatic line breaking to reflow the passage.
 
-The adjustment applies only to the selected neume. This makes it useful for an isolated collision, but page spacing or line-breaking settings are usually better for a problem that occurs throughout the score.
+## Next steps
 
-![The corrected positions of the heteron and diplē](./images/guide-neume-positioning-dialog-2.png)
+Learn how to [enter and manage lyrics](/guide/lyrics.html), or consult the [Neume Keyboard reference](/guide/keyboard.html) for an alternative way to enter music.

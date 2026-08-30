@@ -26,6 +26,20 @@ kbd {
   vertical-align: -0.15em;
 }
 
+.guide-neume-action-icon {
+  height: 1.25em;
+  width: 1.25em;
+}
+
+.guide-inline-neume {
+  display: inline-block;
+  font-family: Neanes;
+  font-size: 1.5em;
+  line-height: 1;
+  margin-inline: 0.15em;
+  vertical-align: -0.2em;
+}
+
 .guide-editor-overview,
 .guide-entry-mode-before,
 .guide-screenshot-grid figure {

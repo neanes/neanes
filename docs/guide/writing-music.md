@@ -68,7 +68,7 @@ If a sign appears on the wrong component, undo it, choose the intended component
 
 Select the element that should precede the martyria, then choose **Martyria** <img :src="martyriaIcon" class="guide-action-icon guide-neume-action-icon" alt="" aria-hidden="true" /> in the main toolbar. The active entry mode controls whether Neanes advances and replaces the next element, inserts a new martyria, or changes only the selected element.
 
-With **Auto** enabled, Neanes sets the martyria's note and scale from the initial martyria, the preceding melody, and any fthoræ. This usually gives the appropriate martyria for the music that came before it. This **Auto** setting belongs to the selected martyria and is separate from the **Auto** entry mode in the main toolbar.
+With **Auto** enabled, Neanes sets the martyria's note and scale from the initial martyria, the preceding melody, and any fthoræ. This usually gives the appropriate martyria for the music that came before it.
 
 Choose the martyria manually when it needs to introduce what follows instead. For example, if one hymn ends on Di and the next hymn begins on Pa, the martyria between them may need to show Pa rather than the final note of the preceding hymn. A manual choice can also be useful for a scale such as Spathi, whose martyria is not well defined within the tradition.
 

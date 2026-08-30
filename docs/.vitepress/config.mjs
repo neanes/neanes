@@ -7,6 +7,7 @@ const defaultNav = [
     items: [
       { text: 'Quick Start', link: '/guide/' },
       { text: 'Writing Music', link: '/guide/writing-music.html' },
+      { text: 'FAQ', link: '/guide/faq.html' },
       { text: 'Neume Keyboard', link: '/guide/keyboard.html' },
       { text: 'Advanced Workflows', link: '/guide/advanced.html' },
     ],
@@ -66,6 +67,7 @@ export default defineConfig({
               link: '/guide/saving-and-exporting.html',
             },
             { text: 'Advanced Workflows', link: '/guide/advanced.html' },
+            { text: 'FAQ', link: '/guide/faq.html' },
           ],
         },
         {

@@ -39,3 +39,7 @@ Open the Initial Martyria dialog by double-clicking the initial martyria, right-
 Enable **Show Diatonic Fthoræ** at the bottom of the dialog. Select the desired mode and initial-martyria template, then choose **Update**. Templates that provide an optional diatonic fthora will show it in their preview and in the score.
 
 See [Choose the initial martyria](/guide/#_3-choose-the-initial-martyria) for the basic initial-martyria workflow.
+
+## Why doesn't Neanes include the extended notation associated with Simon Karas?
+
+Adding another notation system would require significant development effort. The extended notation associated with Simon Karas would substantially expand the scope of Neanes and includes conventions that are not uniformly adopted. For now, the project is focused on improving its engraving and editing capabilities for the well-established modern notation. There is currently no timeline for supporting extended notation.

@@ -971,20 +971,26 @@ export class ByzHtmlExporter {
     inner += this.exportNeume(element.note, indentation + 2);
     inner += this.exportNeume(element.rootSign, indentation + 2);
     inner += this.exportNeume(
-      element.tempo,
-      indentation + 2,
-      NoOffset,
-      this.config.classTempoAbove,
-    );
-    inner += this.exportNeume(
       element.fthora,
       indentation + 2,
       NoOffset,
       this.config.classFthora,
     );
+    inner += this.exportNeume(
+      element.tempo,
+      indentation + 2,
+      NoOffset,
+      this.config.classTempoAbove,
+    );
 
     if (element.alignRight) {
-      inner += this.exportNeume(element.quantitativeNeume, indentation + 2);
+      inner += this.exportNeume(
+        element.quantitativeNeume,
+        indentation + 2,
+        undefined,
+        undefined,
+        element.quantitativeNeumeSpacing,
+      );
       inner += this.exportNeume(
         element.quantitativeNeumeFthora,
         indentation + 2,
@@ -998,6 +1004,7 @@ export class ByzHtmlExporter {
       indentation + 2,
       NoOffset,
       this.config.classTempo,
+      element.tempoRightSpacing,
     );
 
     let classAttribute = '';
@@ -1314,6 +1321,7 @@ export class ByzHtmlExporter {
     indentation: number,
     offset?: NeumeOffset,
     classname?: string,
+    marginLeft?: number,
   ) {
     if (neume == null) {
       return '';
@@ -1332,6 +1340,10 @@ export class ByzHtmlExporter {
 
     if (offset?.y != null) {
       styleAttribute += ` top="${offset.y}em"`;
+    }
+
+    if (marginLeft != null && marginLeft !== 0) {
+      styleAttribute += ` style="margin-left: ${Unit.toPt(marginLeft)}pt;"`;
     }
 
     if (tagInfo.salt != null) {

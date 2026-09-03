@@ -773,7 +773,7 @@ export class MartyriaElement extends ScoreElement {
 
   // Used for display
   public neumeWidth: number = 0;
-  public padding: number = 0;
+  public quantitativeNeumeSpacing: number = 0;
   public tempoLeftSpacing: number = 0;
   public tempoRightSpacing: number = 0;
   public computedTempoLeftOffsetX: number = 0;

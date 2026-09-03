@@ -6,7 +6,7 @@ import {
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
-import { Fthora, QuantitativeNeume } from '@/models/Neumes';
+import { Fthora, QuantitativeNeume, TempoSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -42,6 +42,7 @@ describe('ByzHtmlExporter', () => {
     martyria.alignRight = true;
     martyria.quantitativeNeume = QuantitativeNeume.OligonPlusKentimaAbove;
     martyria.quantitativeNeumeFthora = Fthora.Zygos_Top;
+    martyria.quantitativeNeumeSpacing = Unit.fromPt(6);
 
     const html = exporter.exportMartyria(martyria, new PageSetup(), 0);
     const quantitativeNeumeIndex = html.indexOf('<x-o3');
@@ -49,6 +50,18 @@ describe('ByzHtmlExporter', () => {
 
     expect(quantitativeNeumeIndex).toBeGreaterThan(-1);
     expect(fthoraIndex).toBeGreaterThan(quantitativeNeumeIndex);
+    expect(html).toContain('style="margin-left: 6pt;"');
+  });
+
+  it('exports spacing before the right martyria tempo', () => {
+    const exporter = new ByzHtmlExporter();
+    const martyria = new MartyriaElement();
+    martyria.tempoRight = TempoSign.Moderate;
+    martyria.tempoRightSpacing = Unit.fromPt(4);
+
+    const html = exporter.exportMartyria(martyria, new PageSetup(), 0);
+
+    expect(html).toContain('style="margin-left: 4pt;"');
   });
 
   it('should have a tag mapping for every glyphname', () => {

@@ -114,7 +114,7 @@ const fthoraStyle = computed(() => {
 
 const quantitativeNeumeStyle = computed(() => {
   return {
-    marginLeft: withZoom(props.neume.padding),
+    marginLeft: withZoom(props.neume.quantitativeNeumeSpacing),
     color: props.pageSetup.neumeDefaultColor,
     webkitTextStrokeWidth: withZoom(props.pageSetup.neumeDefaultStrokeWidth),
   } as StyleValue;

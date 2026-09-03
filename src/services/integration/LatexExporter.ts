@@ -599,7 +599,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 martyria.neumeWidth +
                   martyria.computedMeasureBarLeftLeadingSpacing +
                   martyria.computedMeasureBarRightTrailingSpacing +
-                  martyria.padding,
+                  martyria.quantitativeNeumeSpacing,
               ),
               verticalOffset:
                 martyria.verticalOffset != 0
@@ -650,7 +650,9 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   ? glyphName(martyria.quantitativeNeumeFthora)
                   : undefined,
               quantitativeNeumeSpacing:
-                martyria.padding != 0 ? toPt(martyria.padding) : undefined,
+                martyria.quantitativeNeumeSpacing != 0
+                  ? toPt(martyria.quantitativeNeumeSpacing)
+                  : undefined,
             } as LatexMartyriaElement);
           } else if (element.elementType === ElementType.Tempo) {
             const tempo = element as TempoElement;

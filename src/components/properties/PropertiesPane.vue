@@ -117,6 +117,9 @@
       :page-setup="pageSetup"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:mode-key', modeKeyElement, $event)"
+      @open-style-dialog="
+        emit('open-initial-martyria-style-dialog', modeKeyElement)
+      "
     />
 
     <PropertiesNeume
@@ -200,6 +203,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
+  'open-initial-martyria-style-dialog',
   'open-paragraph-styles-dialog',
   'update:open-sections',
   'update:annotation',

@@ -1,0 +1,196 @@
+import type {
+  InitialMartyriaPitchGeometry,
+  PitchAtomBounds,
+} from '@/models/InitialMartyriaPitchGeometry';
+import { getInitialMartyriaPitchGeometry } from '@/models/InitialMartyriaPitchGeometry';
+import type { InitialMartyriaPitchNote } from '@/models/InitialMartyriaStyle';
+import type { Neume } from '@/models/Neumes';
+import { fontService } from '@/services/FontService';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
+import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
+
+export interface InitialMartyriaPitchMeasurementOptions {
+  textFontFamily: string;
+  textFontStyle?: string;
+  textFontSize: number;
+  textFontVariantCaps?: string | null;
+  glyphFontFamily: string;
+  glyphFontStyle?: string;
+  glyphFontSize: number;
+  textStrokeWidth?: number;
+  glyphStrokeWidth?: number;
+  baselineShift?: number;
+}
+
+function atomBounds(
+  text: string,
+  fontFamily: string,
+  fontStyle: string | undefined,
+  fontSize: number,
+  strokeWidth?: number,
+  fontVariantCaps?: string | null,
+): PitchAtomBounds {
+  const font = resolveFontStyle(fontFamily, fontStyle);
+  const metrics = TextMeasurementService.getTextMetrics(
+    text,
+    resolveFontCss({
+      fontFamily: font.cssFontFamily,
+      fontStyle: font.cssFontStyle,
+      fontSize,
+    }),
+    fontVariantCaps ?? 'normal',
+  );
+  return {
+    advanceWidth: metrics.width,
+    inkLeft: -metrics.actualBoundingBoxLeft,
+    inkRight: metrics.actualBoundingBoxRight,
+    inkTop: -metrics.actualBoundingBoxAscent,
+    inkBottom: metrics.actualBoundingBoxDescent,
+    lineAscent: metrics.fontBoundingBoxAscent,
+    lineDescent: metrics.fontBoundingBoxDescent,
+    strokeWidth,
+  };
+}
+
+function glyphText(neume: Neume) {
+  return NeumeMappingService.getMapping(neume)?.text ?? '?';
+}
+
+export function measureInitialMartyriaPitchGeometry(
+  note: InitialMartyriaPitchNote,
+  noteText: string,
+  options: InitialMartyriaPitchMeasurementOptions,
+): InitialMartyriaPitchGeometry {
+  const text = atomBounds(
+    noteText,
+    options.textFontFamily,
+    options.textFontStyle,
+    options.textFontSize,
+    options.textStrokeWidth,
+    options.textFontVariantCaps,
+  );
+  const fthora =
+    note.fthoraAbove == null
+      ? undefined
+      : atomBounds(
+          glyphText(note.fthoraAbove),
+          options.glyphFontFamily,
+          options.glyphFontStyle,
+          options.glyphFontSize,
+          options.glyphStrokeWidth,
+        );
+  const quantitative =
+    note.quantitativeNeumeAbove == null
+      ? undefined
+      : atomBounds(
+          glyphText(note.quantitativeNeumeAbove),
+          options.glyphFontFamily,
+          options.glyphFontStyle,
+          options.glyphFontSize,
+          options.glyphStrokeWidth,
+        );
+  return getInitialMartyriaPitchGeometry(
+    text,
+    fthora,
+    quantitative,
+    Math.max(options.textStrokeWidth ?? 0, options.glyphStrokeWidth ?? 0) / 2,
+    options.baselineShift,
+  );
+}
+
+export function resolveInitialMartyriaPitchFontSizes(options: {
+  textFontFamily: string;
+  textFontStyle?: string;
+  textFontSize?: number;
+  textFontVariantCaps?: string | null;
+  glyphFontSize?: number;
+  matchedNeumeFontSize?: number | null;
+  neumeFontFamily: string;
+  neumeFontSize: number;
+}) {
+  const matchedNeumeFontSize =
+    'matchedNeumeFontSize' in options
+      ? options.matchedNeumeFontSize
+      : getMatchedNeumeFontSize(options);
+  const glyphFontSize =
+    options.glyphFontSize ?? matchedNeumeFontSize ?? options.neumeFontSize;
+  return {
+    textFontSize: options.textFontSize ?? options.neumeFontSize,
+    glyphFontSize,
+  };
+}
+
+export function getInitialMartyriaPitchTrailingGlueWidth(
+  neumeFontFamily: string,
+  glyphFontSize: number,
+) {
+  return fontService.getStandardGlue(neumeFontFamily).width * glyphFontSize;
+}
+
+export function getMatchedNeumeFontSize(options: {
+  textFontFamily: string;
+  textFontStyle?: string;
+  textFontSize?: number;
+  textFontVariantCaps?: string | null;
+  neumeFontFamily: string;
+  neumeFontSize: number;
+}) {
+  const textFont = resolveFontStyle(
+    options.textFontFamily,
+    options.textFontStyle,
+  );
+  const textCapitalHeight = TextMeasurementService.getTextHeight(
+    'H',
+    resolveFontCss({
+      fontFamily: textFont.cssFontFamily,
+      fontStyle: textFont.cssFontStyle,
+      fontSize: options.textFontSize ?? options.neumeFontSize,
+    }),
+    options.textFontVariantCaps ?? 'normal',
+  );
+  const capitalHeight = fontService.getMetrics(
+    options.neumeFontFamily,
+  ).capitalHeight;
+  return Number.isFinite(textCapitalHeight) &&
+    Number.isFinite(capitalHeight) &&
+    capitalHeight > 0
+    ? textCapitalHeight / capitalHeight
+    : null;
+}
+
+export function getInitialMartyriaNeumeBaselineCorrection(options: {
+  hasCustomText: boolean;
+  initialMartyriaBaseline: number;
+  matchedNeumeFontSize: number | null;
+  neumeFontSize: number;
+}) {
+  return options.hasCustomText
+    ? options.initialMartyriaBaseline *
+        (options.matchedNeumeFontSize ?? options.neumeFontSize)
+    : 0;
+}
+
+export function resolveInitialMartyriaAccessoryLayout(options: {
+  matchedNeumeFontSize: number | null;
+  neumeBaselineCorrection: number;
+  neumeFontSize: number;
+}) {
+  const fontSize = options.matchedNeumeFontSize ?? options.neumeFontSize;
+
+  return {
+    fontSize,
+    baselineOffset: options.neumeBaselineCorrection - 0.45 * fontSize,
+  };
+}
+
+export function getInitialMartyriaPitchTextBounds(
+  note: InitialMartyriaPitchNote | null,
+  noteText: string,
+  options: InitialMartyriaPitchMeasurementOptions,
+) {
+  if (note == null) {
+    return null;
+  }
+  return measureInitialMartyriaPitchGeometry(note, noteText, options);
+}

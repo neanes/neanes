@@ -55,7 +55,8 @@
   },
   "format": {
     "root": "Μορφή",
-    "paragraphStyles": "Στυλ Παραγράφου…"
+    "paragraphStyles": "Στυλ Παραγράφου…",
+    "initialMartyriaStyles": "Επιλογή στυλ Αρχικής Μαρτυρίας…"
   },
   "view": {
     "root": "Προβολή",

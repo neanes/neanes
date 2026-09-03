@@ -1131,13 +1131,9 @@ export class LayoutService {
               'martyria-leading',
             );
           } else if (martyriaElement.alignRight) {
-            // Anchor the leading glue in Phase 1. positionItems skips glue at
-            // line start, so the zero-width box makes the glue part of the
-            // measured line while the penalty prevents an empty-line break at
-            // that anchor. This lets Knuth-Plass place paragraph-start right
-            // martyriae from their complete measured width.
-            this.addAnonymousBox(0, layoutWorkspace, 'right-martyria-anchor');
-            this.preventBreak(layoutWorkspace);
+            // A paragraph-start right martyria still needs its leading glue in
+            // the input stream, even though positionItems will skip it at line
+            // start. Phase 2 supplies the explicit flush-right placement.
             this.addGlue(
               rightMartyriaGlue,
               layoutWorkspace,
@@ -1153,9 +1149,8 @@ export class LayoutService {
             );
           }
 
-          const lyricReservationParagraphStart = isParagraphStartMartyria
-            ? true
-            : undefined;
+          const lyricReservationParagraphStart =
+            lineStartMartyriaShift > 0 ? isParagraphStartMartyria : undefined;
 
           if (skipLyricCollision) {
             layoutWorkspace.lyricsEndPx =
@@ -1738,6 +1733,27 @@ export class LayoutService {
         }
 
         currentLine.elements.push(element);
+
+        // Right-aligned martyriae need an explicit placement override when they
+        // start a paragraph: the leading `MAX_COST`-stretch glue used in Phase
+        // 1 is skipped at line start by positionItems, so it cannot push the
+        // martyria to the right edge on its own.
+        if (
+          isRightAlignedMartyria(element) &&
+          currentLine.elements.length === 1
+        ) {
+          const martyriaElement = element as MartyriaElement;
+          const rightInkReservation =
+            this.getVisibleMeasureBarRight(martyriaElement) == null
+              ? this.getMartyriaRightInkOverhang(martyriaElement, pageSetup)
+              : 0;
+          element.x = pageSetup.melkiteRtl
+            ? resolvedMargins.right + rightInkReservation
+            : pageSetup.pageWidth -
+              resolvedMargins.right -
+              element.width -
+              rightInkReservation;
+        }
 
         // Special logic for centered lines
         if (element.lineBreakType === LineBreakType.Center) {

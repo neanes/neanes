@@ -1,10 +1,5 @@
 import type { Box, InputItem, Penalty } from 'tex-linebreak';
-import {
-  breakLines,
-  forcedBreak,
-  MAX_COST,
-  positionItems,
-} from 'tex-linebreak';
+import { MAX_COST } from 'tex-linebreak';
 import { describe, expect, it } from 'vitest';
 
 import type { ScoreElement } from '../models/Element';
@@ -37,46 +32,6 @@ describe('LayoutService.calculateMartyriae', () => {
     expect(martyria.quantitativeNeumeFthora).toBe(Fthora.Zygos_Top);
     expect(martyria.quantitativeNeumeFthoraCarry).toBeNull();
     expect(nextMartyria.scale).toBe(Scale.Zygos);
-  });
-});
-
-describe('right-aligned martyria Phase 1 geometry', () => {
-  it('keeps the measured composite flush when an attached fthora changes its width', () => {
-    const lineWidth = 100;
-    const terminalInkReservation = 3;
-
-    const getRightAlignedMartyriaPosition = (compositeWidth: number) => {
-      const items: InputItem[] = [
-        // The zero-width box anchors the following stretch glue at paragraph
-        // start. The prohibited penalty keeps that anchor from becoming an
-        // empty-line breakpoint.
-        { type: 'box', width: 0 },
-        penaltyItem(MAX_COST),
-        glueItem(10, MAX_COST, 0),
-        { type: 'box', width: compositeWidth },
-        penaltyItem(MAX_COST),
-        glueItem(terminalInkReservation, 0, 0),
-        forcedBreak(),
-      ];
-      const positions = positionItems(
-        items,
-        lineWidth,
-        breakLines(items, lineWidth),
-      );
-
-      return positions.find((position) => position.item === 3)!;
-    };
-
-    const withoutFthora = getRightAlignedMartyriaPosition(40);
-    const withFthora = getRightAlignedMartyriaPosition(47);
-
-    expect(
-      withoutFthora.xOffset + withoutFthora.width + terminalInkReservation,
-    ).toBeCloseTo(lineWidth);
-    expect(
-      withFthora.xOffset + withFthora.width + terminalInkReservation,
-    ).toBeCloseTo(lineWidth);
-    expect(withFthora.xOffset).toBeLessThan(withoutFthora.xOffset);
   });
 });
 

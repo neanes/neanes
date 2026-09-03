@@ -983,6 +983,16 @@ export class ByzHtmlExporter {
       this.config.classFthora,
     );
 
+    if (element.alignRight) {
+      inner += this.exportNeume(element.quantitativeNeume, indentation + 2);
+      inner += this.exportNeume(
+        element.quantitativeNeumeFthora,
+        indentation + 2,
+        NoOffset,
+        this.config.classFthora,
+      );
+    }
+
     inner += this.exportNeume(
       element.tempoRight,
       indentation + 2,

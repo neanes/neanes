@@ -7144,6 +7144,41 @@ export class LayoutService {
           if (martyria.alignRight && martyria.quantitativeNeume) {
             currentNote += getNeumeValue(martyria.quantitativeNeume)!;
             currentNoteVirtual = currentNote + currentShift;
+
+            if (
+              martyria.quantitativeNeumeFthoraCarry &&
+              this.fthoraIsValid(
+                martyria.quantitativeNeumeFthoraCarry,
+                [currentNote],
+                pageSetup,
+              )
+            ) {
+              martyria.quantitativeNeumeFthora =
+                martyria.quantitativeNeumeFthoraCarry;
+              martyria.quantitativeNeumeFthoraCarry = null;
+            }
+
+            if (martyria.quantitativeNeumeFthora) {
+              const fthora = martyria.quantitativeNeumeFthora;
+
+              if (this.fthoraIsValid(fthora, [currentNote], pageSetup)) {
+                currentScale =
+                  this.getScaleFromFthora(fthora, currentNote) || currentScale;
+
+                currentShift = this.getShift(
+                  currentNote,
+                  currentNoteVirtual,
+                  currentScale,
+                  fthora,
+                  martyria.quantitativeNeumeChromaticFthoraNote,
+                );
+
+                martyria.quantitativeNeumeFthoraCarry = null;
+              } else {
+                martyria.quantitativeNeumeFthoraCarry = fthora;
+                martyria.quantitativeNeumeFthora = null;
+              }
+            }
           }
         }
       } else if (

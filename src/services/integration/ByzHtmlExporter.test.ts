@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  MartyriaElement,
   RichTextBoxElement,
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
+import { Fthora, QuantitativeNeume } from '@/models/Neumes';
+import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   ParagraphStyle,
@@ -33,6 +36,21 @@ function createComputedTextBox(overrides: Partial<TextBoxElement> = {}) {
 }
 
 describe('ByzHtmlExporter', () => {
+  it('exports a right-aligned martyria fthora after its quantitative neume', () => {
+    const exporter = new ByzHtmlExporter();
+    const martyria = new MartyriaElement();
+    martyria.alignRight = true;
+    martyria.quantitativeNeume = QuantitativeNeume.OligonPlusKentimaAbove;
+    martyria.quantitativeNeumeFthora = Fthora.Zygos_Top;
+
+    const html = exporter.exportMartyria(martyria, new PageSetup(), 0);
+    const quantitativeNeumeIndex = html.indexOf('<x-o3');
+    const fthoraIndex = html.indexOf('<x-f-zygos');
+
+    expect(quantitativeNeumeIndex).toBeGreaterThan(-1);
+    expect(fthoraIndex).toBeGreaterThan(quantitativeNeumeIndex);
+  });
+
   it('should have a tag mapping for every glyphname', () => {
     const exporter = new ByzHtmlExporter();
 

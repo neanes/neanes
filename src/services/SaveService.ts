@@ -1262,6 +1262,9 @@ export class SaveService {
     element.scale = e.scale;
     element.fthora = e.fthora || undefined;
     element.chromaticFthoraNote = e.chromaticFthoraNote || undefined;
+    element.quantitativeNeumeFthora = e.quantitativeNeumeFthora || undefined;
+    element.quantitativeNeumeChromaticFthoraNote =
+      e.quantitativeNeumeChromaticFthoraNote || undefined;
     element.tempoLeft = e.tempoLeft || undefined;
     element.tempo = e.tempo || undefined;
     element.tempoRight = e.tempoRight || undefined;
@@ -2178,6 +2181,15 @@ export class SaveService {
 
     if (e.chromaticFthoraNote != null) {
       element.chromaticFthoraNote = e.chromaticFthoraNote;
+    }
+
+    if (e.quantitativeNeumeFthora != null) {
+      element.quantitativeNeumeFthora = e.quantitativeNeumeFthora;
+    }
+
+    if (e.quantitativeNeumeChromaticFthoraNote != null) {
+      element.quantitativeNeumeChromaticFthoraNote =
+        e.quantitativeNeumeChromaticFthoraNote;
     }
 
     if (e.tempoLeft != null) {

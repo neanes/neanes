@@ -1274,14 +1274,12 @@ export class SaveService {
       element.bpm = e.bpm;
     }
 
-    element.spaceAfter = e.spaceAfter || undefined;
     element.verticalOffset = e.verticalOffset || undefined;
   }
 
   public static SaveTempo(element: TempoElement_v1, e: TempoElement) {
     element.neume = e.neume;
     element.bpm = e.bpm;
-    element.spaceAfter = e.spaceAfter || undefined;
   }
 
   public static SaveNote(element: NoteElement_v1, e: NoteElement) {
@@ -1289,7 +1287,6 @@ export class SaveService {
       element.lyricsParagraphStyleId = e.lyricsParagraphStyleId;
     }
     element.quantitativeNeume = e.quantitativeNeume;
-    element.spaceAfter = e.spaceAfter || undefined;
     element.keepWithNext = e.keepWithNext || undefined;
 
     if (e.timeNeume != null) {
@@ -2169,7 +2166,6 @@ export class SaveService {
     element.scale = e.scale;
     element.rootSign = e.rootSign;
     element.rootSignOverride = e.rootSignOverride || null;
-    element.spaceAfter = e.spaceAfter ?? 0;
     element.verticalOffset = e.verticalOffset ?? 0;
 
     if (e.fthora != null) {
@@ -2213,7 +2209,6 @@ export class SaveService {
   public static LoadTempo_v1(element: TempoElement, e: TempoElement_v1) {
     element.neume = e.neume;
     element.bpm = e.bpm ?? TempoElement.getDefaultBpm(element.neume);
-    element.spaceAfter = e.spaceAfter ?? 0;
   }
 
   public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {
@@ -2365,7 +2360,6 @@ export class SaveService {
     element.isMelismaStart = e.isMelismaStart === true;
     element.isHyphen = e.isHyphen === true;
     element.ignoreAttractions = e.ignoreAttractions === true;
-    element.spaceAfter = e.spaceAfter ?? 0;
 
     element.lyricsFontFamily = e.lyricsFontFamily ?? null;
     element.lyricsColor = e.lyricsColor ?? null;

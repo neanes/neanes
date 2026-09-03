@@ -666,7 +666,6 @@ export class LayoutService {
         case ElementType.Note: {
           // PROCESS NOTE
           const noteElement = elements[i] as NoteElement;
-          const elementWidthPx = this.getNoteBoxAdvance(noteElement);
 
           // Consume any pending martyria bar transfer width.
           const martyriaBarTransferWidth =
@@ -698,7 +697,7 @@ export class LayoutService {
           //
           //   penalty(inf)         protect the left projection
           //   glue(L_i, 0, 0)      fixed left projection
-          //   box(B_i)             note advance: neumeWidth + spaceAfter
+          //   box(W^n_i)           the note's neume width
           //   penalty(cost, w_i)   candidate breakpoint
           //   glue(m_i, s^+, s^-)  same-line spacing that vanishes at breaks
           //
@@ -731,7 +730,7 @@ export class LayoutService {
           // hold the hyphen glyph when that hyphen is absorbed inside the
           // current neume and therefore contributes no overhang. m_i may also
           // stay negative when the user requests overlapping notes and no real
-          // collision, lyric, or barline floor binds.
+          // collision, lyric, or barline width requirement binds.
           //
           // If a paragraph ends immediately after a note, endParagraph moves
           // that note's trailing reservation (right projection, melisma
@@ -768,8 +767,8 @@ export class LayoutService {
             inlineSpacing;
 
           layoutWorkspace.lyricsEndPx = noteElement.isMelismaStart
-            ? noteElement.spaceAfter + neumeEnd
-            : noteElement.spaceAfter + lyricsEnd;
+            ? neumeEnd
+            : lyricsEnd;
 
           const hyphenWidthForThisElement =
             noteElement.isMelismaStart && noteElement.isHyphen
@@ -782,13 +781,13 @@ export class LayoutService {
             pageSetup.lyricsMinimumSpacing + hyphenWidthForThisElement;
           if (noteElement.isMelismaStart) {
             layoutWorkspace.melismaLyricsEndPx =
-              noteElement.spaceAfter + lyricsEnd + hyphenWidthForThisElement;
+              lyricsEnd + hyphenWidthForThisElement;
           } else if (!noteElement.isMelisma) {
             layoutWorkspace.melismaLyricsEndPx = null;
           }
 
-          // The note box advance (unchanged by the bar transfer).
-          this.addBox(elementWidthPx, noteElement, layoutWorkspace);
+          // The note box (unchanged by the bar transfer).
+          this.addBox(noteElement.neumeWidth, noteElement, layoutWorkspace);
 
           const nextNoteElement = this.getNoteIfPresentAt(elements, i + 1);
           const afterNextNoteElement = this.getNoteIfPresentAt(elements, i + 2);
@@ -933,6 +932,7 @@ export class LayoutService {
             nextElement,
             trailingGlue.width,
             pageSetup,
+            measureBarWidthMap,
           );
           const rightSameLineMinimum = Math.max(
             this.getMeasureBarMinimumGlueWidth(
@@ -1002,6 +1002,7 @@ export class LayoutService {
               martyriaElement,
               baseGlue.width,
               pageSetup,
+              measureBarWidthMap,
             );
             const leadingSameLineMinimum = Math.max(
               this.getMeasureBarMinimumGlueWidth(
@@ -1071,7 +1072,11 @@ export class LayoutService {
                 this.getMartyriaLeftInkOverhang(martyriaElement, pageSetup) +
                 Math.max(
                   previousLyricRightOverhang,
-                  this.getElementRightInkOverhang(previousNote, pageSetup),
+                  this.getElementRightInkOverhang(
+                    previousNote,
+                    pageSetup,
+                    measureBarWidthMap,
+                  ),
                 );
               const rightVisibleBoundaryWidth =
                 this.getMartyriaRightInkOverhang(martyriaElement, pageSetup) +
@@ -1249,25 +1254,25 @@ export class LayoutService {
           const tempoElement = elements[i] as TempoElement;
           const previousElement = this.getElementAt(elements, i - 1);
 
-          const elementWidthPx =
-            this.getNeumeWidthFromCache(tempoElement.neume, pageSetup) +
-            tempoElement.spaceAfter;
-          tempoElement.neumeWidth = elementWidthPx;
+          tempoElement.neumeWidth = this.getNeumeWidthFromCache(
+            tempoElement.neume,
+            pageSetup,
+          );
           const skipLyricCollision =
             previousElement?.elementType === ElementType.Martyria &&
             layoutWorkspace.pendingParagraph.length > 0 &&
             !(previousElement as MartyriaElement).alignRight;
           if (skipLyricCollision) {
             layoutWorkspace.lyricsEndPx =
-              layoutWorkspace.neumesEndPx + elementWidthPx;
+              layoutWorkspace.neumesEndPx + tempoElement.neumeWidth;
           } else {
             this.addLyricReservation(
-              elementWidthPx,
+              tempoElement.neumeWidth,
               tempoElement,
               layoutWorkspace,
             );
           }
-          this.addBox(elementWidthPx, tempoElement, layoutWorkspace);
+          this.addBox(tempoElement.neumeWidth, tempoElement, layoutWorkspace);
           this.addGlue(standardGlue, layoutWorkspace, 'standard');
 
           break;
@@ -3046,15 +3051,11 @@ export class LayoutService {
     naturalWidth: number,
     preferredMinimumWidths: Array<number | null>,
   ) {
-    const preferredWidths = preferredMinimumWidths.filter(
-      (width): width is number => width != null,
-    );
-    const preferredMinimumWidth =
-      preferredWidths.length > 0 ? Math.max(...preferredWidths) : null;
-
     return Math.max(
       naturalWidth,
-      preferredMinimumWidth ?? Number.NEGATIVE_INFINITY,
+      ...preferredMinimumWidths.filter(
+        (width): width is number => width != null,
+      ),
     );
   }
 
@@ -3162,8 +3163,7 @@ export class LayoutService {
       inlineSpacing + rightProjection - leftTuck - rightTuck;
 
     // When a carried melisma ends at a centered lyric, align that lyric's
-    // left edge with the current cursor. The current cursor is already after
-    // noteElement.spaceAfter, so user-defined extra spacing is preserved.
+    // left edge with the current cursor at the end of the previous note.
     const baseWidth = exitsMelismaIntoCenteredLyric ? 0 : ordinaryBaseWidth;
 
     // Lyric collision check: the visual gap between lyrics on the
@@ -3305,28 +3305,23 @@ export class LayoutService {
     );
 
     return this.getMinimumSpacingForNoteGlyphBoxes(
-      this.getNoteBoxAdvance(left),
+      left.neumeWidth,
       leftBoxes,
       rightBoxes,
       clearance,
     );
   }
 
-  private static getNoteBoxAdvance(noteElement: NoteElement) {
-    return noteElement.neumeWidth + noteElement.spaceAfter;
-  }
-
-  private static getMartyriaBoxAdvance(martyriaElement: MartyriaElement) {
+  private static getMartyriaBoxWidth(martyriaElement: MartyriaElement) {
     return (
       martyriaElement.neumeWidth +
       martyriaElement.computedMeasureBarLeftLeadingSpacing +
-      martyriaElement.padding +
-      martyriaElement.spaceAfter
+      martyriaElement.padding
     );
   }
 
   private static getMinimumSpacingForNoteGlyphBoxes(
-    leftAdvanceWidth: number,
+    leftBoxWidth: number,
     leftBoxes: NoteGlyphBox[],
     rightBoxes: NoteGlyphBox[],
     clearance: number,
@@ -3348,7 +3343,7 @@ export class LayoutService {
 
         spacing = Math.max(
           spacing,
-          leftBox.right + clearance - leftAdvanceWidth - rightBox.left,
+          leftBox.right + clearance - leftBoxWidth - rightBox.left,
         );
       }
     }
@@ -3435,11 +3430,11 @@ export class LayoutService {
       measureBarWidthMap,
       leftBarReserveOverride,
     );
-    const bodyLeft =
-      leftBarReserve +
-      (!pageSetup.melkiteRtl
-        ? this.getVareiaPrefixWidth(noteElement, pageSetup)
-        : 0);
+    const bodyLeft = this.getNoteBodyLeft(
+      noteElement,
+      pageSetup,
+      leftBarReserve,
+    );
 
     if (noteElement.vareia && !pageSetup.melkiteRtl) {
       glyphs.push(
@@ -3562,6 +3557,22 @@ export class LayoutService {
     return (
       (measureBarWidthMap.get(measureBarLeft) ?? 0) +
       noteElement.computedMeasureBarLeftLeadingSpacing
+    );
+  }
+
+  // The offset of the note's main glyph run inside its box: everything the
+  // note owns to the left of that run. getVareiaPrefixWidth already returns 0
+  // for a note without a vareia.
+  private static getNoteBodyLeft(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    leftBarReserve: number,
+  ) {
+    return (
+      leftBarReserve +
+      (!pageSetup.melkiteRtl
+        ? this.getVareiaPrefixWidth(noteElement, pageSetup)
+        : 0)
     );
   }
 
@@ -3786,6 +3797,7 @@ export class LayoutService {
     right: ScoreElement | null,
     baseGlueWidth: number,
     pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
   ) {
     if (!this.isVisualCollisionBoundaryElement(left)) {
       return { deficit: 0, requiredWidth: 0 };
@@ -3797,7 +3809,7 @@ export class LayoutService {
 
     const requiredWidth =
       this.getInlineSpacing(pageSetup) +
-      this.getElementRightInkOverhang(left, pageSetup) +
+      this.getElementRightInkOverhang(left, pageSetup, measureBarWidthMap) +
       this.getElementLeftInkOverhang(right, pageSetup);
 
     return {
@@ -3852,16 +3864,20 @@ export class LayoutService {
   private static getElementRightInkOverhang(
     element: NoteElement | MartyriaElement | TempoElement,
     pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
   ) {
     if (element.elementType === ElementType.Note) {
-      return this.getNoteRightInkOverhang(element as NoteElement, pageSetup);
+      return this.getNoteRightInkOverhang(
+        element as NoteElement,
+        pageSetup,
+        measureBarWidthMap,
+      );
     }
 
     if (element.elementType === ElementType.Tempo) {
-      const tempoElement = element as TempoElement;
-      return this.getRightInkOverhangAfterSpace(
-        this.getSingleNeumeRightInkOverhang(tempoElement.neume, pageSetup),
-        tempoElement.spaceAfter,
+      return this.getSingleNeumeRightInkOverhang(
+        (element as TempoElement).neume,
+        pageSetup,
       );
     }
 
@@ -3912,21 +3928,12 @@ export class LayoutService {
     pageSetup: PageSetup,
   ) {
     const trailingNeume = this.getMartyriaTrailingNeume(martyriaElement);
-    const inkOverhang = trailingNeume
-      ? this.getSingleNeumeRightInkOverhang(trailingNeume, pageSetup)
-      : this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).right;
 
-    return this.getRightInkOverhangAfterSpace(
-      inkOverhang,
-      martyriaElement.spaceAfter,
-    );
-  }
+    if (trailingNeume) {
+      return this.getSingleNeumeRightInkOverhang(trailingNeume, pageSetup);
+    }
 
-  private static getRightInkOverhangAfterSpace(
-    inkOverhang: number,
-    spaceAfter: number,
-  ) {
-    return Math.max(0, inkOverhang - spaceAfter);
+    return this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).right;
   }
 
   private static hasInlineMeasureBarLeft(martyriaElement: MartyriaElement) {
@@ -5136,7 +5143,7 @@ export class LayoutService {
       }
     }
 
-    return this.getNoteBoxAdvance(noteElement);
+    return noteElement.neumeWidth;
   }
 
   public static getMartyriaWidth(
@@ -5212,7 +5219,7 @@ export class LayoutService {
       );
     }
 
-    return this.getMartyriaBoxAdvance(martyriaElement);
+    return this.getMartyriaBoxWidth(martyriaElement);
   }
 
   public static addMelismas(
@@ -6206,14 +6213,9 @@ export class LayoutService {
   }
 
   private static getMeasureBarOwnerWidth(owner: NoteElement | MartyriaElement) {
-    if (owner.elementType === ElementType.Note) {
-      return owner.neumeWidth;
-    }
-
-    const martyriaElement = owner as MartyriaElement;
-    return (
-      this.getMartyriaBoxAdvance(martyriaElement) - martyriaElement.spaceAfter
-    );
+    return owner.elementType === ElementType.Note
+      ? owner.neumeWidth
+      : this.getMartyriaBoxWidth(owner as MartyriaElement);
   }
 
   private static getTerminalMeasureBarSpacing(pageSetup: PageSetup) {
@@ -6564,7 +6566,7 @@ export class LayoutService {
     leftAnchor: NoteElement | MartyriaElement,
     rightAnchor: NoteElement | MartyriaElement,
     measureBar: MeasureBar,
-    leftAdvance: number,
+    leftBoxWidth: number,
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
   ) {
@@ -6608,14 +6610,14 @@ export class LayoutService {
       ownerBoundsRight +
         2 * clearance -
         ownerClampExtents.left -
-        leftAdvance -
+        leftBoxWidth -
         nextBoundsLeft +
         nextClampExtents.right,
     );
   }
 
   private static getMinimumSpacingForMeasureBarVareiaBoxes(
-    leftAdvanceWidth: number,
+    leftBoxWidth: number,
     barBoxes: NoteGlyphBox[],
     noteElement: NoteElement,
     clearance: number,
@@ -6629,7 +6631,7 @@ export class LayoutService {
     );
 
     return this.getMinimumSpacingForNoteGlyphBoxes(
-      leftAdvanceWidth,
+      leftBoxWidth,
       barBoxes,
       vareiaBoxes,
       clearance,
@@ -6656,9 +6658,15 @@ export class LayoutService {
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
   ) {
+    if (left == null || right == null || !this.isMeasureBarOwner(left)) {
+      return 0;
+    }
+
+    const leftBoxWidth = this.getMeasureBarOwnerWidth(left);
+
     if (
-      left?.elementType === ElementType.Note &&
-      right?.elementType === ElementType.Martyria
+      left.elementType === ElementType.Note &&
+      right.elementType === ElementType.Martyria
     ) {
       const leftNote = left as NoteElement;
       const rightMartyria = right as MartyriaElement;
@@ -6685,11 +6693,10 @@ export class LayoutService {
         pageSetup,
       );
       const clearance = this.getMeasureBarCollisionSpacing(pageSetup);
-      const leftAdvance = this.getNoteBoxAdvance(leftNote);
 
       return Math.max(
         this.getMinimumSpacingForNoteGlyphBoxes(
-          leftAdvance,
+          leftBoxWidth,
           barBoxes,
           rightBoxes,
           clearance,
@@ -6698,7 +6705,7 @@ export class LayoutService {
           leftNote,
           rightMartyria,
           measureBarRight,
-          leftAdvance,
+          leftBoxWidth,
           pageSetup,
           measureBarWidthMap,
         ),
@@ -6706,8 +6713,8 @@ export class LayoutService {
     }
 
     if (
-      left?.elementType === ElementType.Martyria &&
-      right?.elementType === ElementType.Note
+      left.elementType === ElementType.Martyria &&
+      right.elementType === ElementType.Note
     ) {
       const leftMartyria = left as MartyriaElement;
       const rightNote = right as NoteElement;
@@ -6728,11 +6735,10 @@ export class LayoutService {
         0,
         pageSetup,
       );
-      const leftAdvance = this.getMartyriaBoxAdvance(leftMartyria);
       const clearance = this.getMeasureBarCollisionSpacing(pageSetup);
 
       return this.getMinimumSpacingForNoteGlyphBoxes(
-        leftAdvance,
+        leftBoxWidth,
         leftBoxes,
         barBoxes,
         clearance,
@@ -6740,8 +6746,8 @@ export class LayoutService {
     }
 
     if (
-      left?.elementType !== ElementType.Note ||
-      right?.elementType !== ElementType.Note
+      left.elementType !== ElementType.Note ||
+      right.elementType !== ElementType.Note
     ) {
       return 0;
     }
@@ -6751,7 +6757,6 @@ export class LayoutService {
     const measureBarRight = this.getVisibleMeasureBarRight(leftNote);
     const measureBarLeft = this.getVisibleMeasureBarLeft(rightNote);
     const clearance = this.getMeasureBarCollisionSpacing(pageSetup);
-    const leftAdvance = this.getNoteBoxAdvance(leftNote);
 
     if (measureBarRight != null) {
       const fallbackBounds = this.getMeasureBarAnchorBounds(
@@ -6773,13 +6778,13 @@ export class LayoutService {
       );
       const collisionMinimum = Math.max(
         this.getMinimumSpacingForNoteGlyphBoxes(
-          leftAdvance,
+          leftBoxWidth,
           barBoxes,
           rightBoxes,
           clearance,
         ),
         this.getMinimumSpacingForMeasureBarVareiaBoxes(
-          leftAdvance,
+          leftBoxWidth,
           barBoxes,
           rightNote,
           clearance,
@@ -6797,7 +6802,7 @@ export class LayoutService {
           leftNote,
           rightNote,
           measureBarRight,
-          leftAdvance,
+          leftBoxWidth,
           pageSetup,
           measureBarWidthMap,
         ),
@@ -6819,7 +6824,7 @@ export class LayoutService {
       );
 
       return this.getMinimumSpacingForNoteGlyphBoxes(
-        leftAdvance,
+        leftBoxWidth,
         leftBoxes,
         barBoxes,
         clearance,
@@ -7542,24 +7547,18 @@ export class LayoutService {
   private static getNoteRightInkOverhang(
     noteElement: NoteElement,
     pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
   ) {
     const inkBounds = this.getNoteInkBoundsFromCache(noteElement, pageSetup);
-    const measureBarLeft = this.getVisibleMeasureBarLeft(noteElement);
     // Ink bounds are relative to the main glyph run. Translate its right edge
-    // into note-box coordinates before comparing it with the layout advance.
-    const bodyLeft =
-      (measureBarLeft != null
-        ? this.getNeumeWidthFromCache(measureBarLeft, pageSetup) +
-          noteElement.computedMeasureBarLeftLeadingSpacing
-        : 0) +
-      (!pageSetup.melkiteRtl && noteElement.vareia
-        ? this.getVareiaPrefixWidth(noteElement, pageSetup)
-        : 0);
-
-    return Math.max(
-      0,
-      bodyLeft + inkBounds.inkRight - this.getNoteBoxAdvance(noteElement),
+    // into note-box coordinates before comparing it with the neume width.
+    const bodyLeft = this.getNoteBodyLeft(
+      noteElement,
+      pageSetup,
+      this.getNoteLeftBarReserve(noteElement, measureBarWidthMap),
     );
+
+    return Math.max(0, bodyLeft + inkBounds.inkRight - noteElement.neumeWidth);
   }
 
   private static getNeumeSequenceInkBoundsFromCache(

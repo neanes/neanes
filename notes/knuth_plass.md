@@ -152,8 +152,8 @@ Layout proceeds in two phases. In Phase 1, the code builds the box/glue/penalty 
 
 Consider first a lyricless score of Byzantine music.
 Each neume group, for example a simple oligon or an ison with kentēmata over a supporting oligon, and each martyria is modeled as a box.
-A note box uses the layout advance `neumeWidth + spaceAfter`; `neumeWidth` already includes owned prefixes and inline measure bars.
-A martyria box similarly includes the notated group, its `spaceAfter`, and any horizontal spacing owned inside the element.
+A note box uses `neumeWidth`, which already includes owned prefixes and inline measure bars.
+A martyria box similarly includes the notated group and any horizontal spacing owned inside the element.
 The space between ordinary neumes is modeled as glue.
 Its natural width is `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, where `standardGlue` comes from the active font's `engravingDefaults`.
 The font-size-scaled engraving default supplies the default gap, and `neumeDefaultSpacing` remains a user-configurable adjustment.
@@ -272,17 +272,16 @@ Rewriting the centered projections to apply $h_i$ at full width (for example $L_
 
 ### Paragraph encoding
 
-Let $a_i$ be note $i$'s `spaceAfter` and $B_i = W^n_i + a_i$ be its layout advance.
 Let $c_i$ be the break cost, $w_i$ the break-only reservation at breakpoint $i$, and $m_i$ the preferred same-line width between notes $i$ and $i{+}1$.
 Let $s_0$ be the fixed inline spacing between successive notes, `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, and let $s^+$ and $s^-$ be the stretch and shrink budgets for an inter-note gap.
 
 For an ordinary note-to-note boundary, note $i$ is encoded in the paragraph as
 
-$$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(B_i) \quad \text{penalty}(c_i, w_i) \quad \text{glue}(m_i, s^+, s^-).$$
+$$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(W^n_i) \quad \text{penalty}(c_i, w_i) \quad \text{glue}(m_i, s^+, s^-).$$
 
 Here:
 
-- $B_i$ is the note's layout advance, including `spaceAfter`. An anonymous spacer box may be inserted before $B_i$ to hold a break-only leading reservation: the bar width plus collision-aware leading clearance when the preceding martyria has a transferable bar (see above), and a leading-hyphen reservation when the preceding note is hyphenated (see below). $B_i$ itself is unchanged.
+- An anonymous spacer box may be inserted before $\text{box}(W^n_i)$ to hold a break-only leading reservation: the bar width plus collision-aware leading clearance when the preceding martyria has a transferable bar (see above), and a leading-hyphen reservation when the preceding note is hyphenated (see below). The note box itself is unchanged.
 - $L_i$ is the left projection, fixed and unbreakable, and omitted when zero.
 - The leading $\text{penalty}(\infty)$ is an unbreakable barrier that protects $L_i$ at a line start. `positionItems` discards leading glue after a break only up to the first box or forbidden ($\infty$) penalty, so the leading penalty keeps $\text{glue}(L_i, 0, 0)$ out of the discarded region and it is counted rather than skipped. It is emitted together with $L_i$ and omitted when $L_i$ is zero; the note's first box then stops the discard scan instead.
 - $s^+$ and $s^-$ are the standard stretch and shrink budgets for an inter-note gap.
@@ -296,8 +295,8 @@ Ordinary note-to-note spacing retains the full standard-glue shrink budget.
 Visual collision, measure-bar, lyric, and melisma clearance affect the preferred width $m_i$ but remain compressible during justification.
 The current implementation keeps stretch and shrink non-negative, but item widths may be negative.
 Negative glue widths can come from tuck absorption, user-requested negative inline spacing, or glue reductions paired with line-start reservation boxes.
+A box width can also go negative, because a martyria folds inline spacing into its own box as `padding` and tempo spacing, so an extreme negative user spacing adjustment makes that box width negative.
 A negative user spacing adjustment survives at an ordinary note pair when the visual helper reports only its generic zero clamp rather than a real positive collision requirement; lyric and measure-bar preferences still take precedence when computing $m_i$.
-Because `spaceAfter` is part of a note, martyria, or tempo box advance and may itself be negative, an extreme value can also make that box width negative.
 In other words, all stretchability lives in the same glue that carries the same-line boundary width.
 The implementation does not use a second glue of the form $\text{glue}(m_i, -s^+, -s^-)$.
 
@@ -346,7 +345,7 @@ Second, if the resulting lyric gap is still too small, a collision correction is
 So the code does not reserve lyric overshoot mechanically.
 It reserves only the preferred natural width needed on the same line after tuck opportunities have been taken into account.
 
-Before applying visual-ink and measure-bar floors, the same-line width is computed as
+Before raising the result to the preferred visual-ink and measure-bar widths, the same-line width is computed as
 
 $$m_i = s_0 + R_i - T_i^\text{left} - T_i^\text{right} + \ell_i,$$
 
@@ -358,8 +357,8 @@ where:
 
 There is one deliberate exception to the ordinary base expression.
 When `exitsMelismaIntoCenteredLyric` is true, a carried melisma is ending at a non-melisma note whose centered lyric has a positive left projection.
-In that case the current cursor is already after the previous note's `spaceAfter`, so the code starts from base width 0 instead of $s_0 + R_i - T_i^\text{left} - T_i^\text{right}$.
-This aligns the next centered lyric's left edge with that cursor while preserving the user-defined extra spacing already included in the cursor position.
+In that case the code starts from base width 0 instead of $s_0 + R_i - T_i^\text{left} - T_i^\text{right}$.
+This aligns the next centered lyric's left edge with the cursor at the end of the previous note.
 The collision correction $\ell_i$ still runs afterward, including the carried-melisma check against `melismaLyricsEndPx`, and the final result is still raised to the preferred visible-note and measure-bar widths.
 
 The collision check is geometry-based.
@@ -431,7 +430,7 @@ If the upward search fails to find any finite feasible cap at or below the hard 
 This formulation cleanly separates the two use cases we care about:
 
 - when the paragraph has a feasible layout at or below $r = 1$, the solver fully uses the ordinary demerits and breakpoint penalties to choose among all layouts under that cap;
-- once every solution requires some looseness, the primary objective becomes keeping the maximum ratio as small as possible, so a breakpoint that yields $r = 1.1$ can beat one that yields $r = 1.3$ even if the former is discouraged.
+- once every solution requires some looseness, the bucketed cap excludes the loosest layouts rather than minimizing the worst ratio, so a breakpoint that yields $r = 1.1$ can beat one that yields $r = 1.3$ even if the former is discouraged, while ties inside the same bucket are left to the ordinary demerits.
 
 Within a fixed cap, the ordinary Knuth-Plass scoring applies across all layouts that satisfy the cap; it does not separately prefer the smallest maximum ratio inside that feasible set.
 Breakpoint penalties therefore can select a semantically preferable layout with a slightly larger ratio inside the same bucket, and `adjacentLooseTightPenalty` still discourages abrupt fitness-class jumps between neighboring lines.
@@ -550,6 +549,7 @@ then every later segment floor satisfies $F_a(c) > L$, so every such line remain
 In that case no future breakpoint can rescue $a$, and pruning is safe.
 
 For ordinary active nodes, this is what the implementation computes: the suffix minimum of $F(b)$ over strictly later breakpoints, followed by a comparison with the node-dependent threshold.
+When the active set empties out, `breakLines` synthesizes a fallback active node (`isFallback`) at the current breakpoint so the search can continue; such a node is forced in rather than reached feasibly, so its prefix totals are not a reliable baseline for the argument above.
 There is one conservative exception: if the paragraph contains any negative width, fallback active nodes are not pruned with this test.
 
 ### What can go wrong

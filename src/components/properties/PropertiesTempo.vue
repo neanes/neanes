@@ -24,47 +24,19 @@
         />
       </Field>
     </PaneSection>
-
-    <PaneSection
-      value="positioning"
-      :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
-    >
-      <Field orientation="horizontal">
-        <FieldLabel for="properties-tempo-space-after">{{
-          $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <InputUnit
-          id="properties-tempo-space-after"
-          unit="pt"
-          :min="-spaceAfterMax"
-          :max="spaceAfterMax"
-          :step="0.5"
-          :format-options="fraction2FormatOptions"
-          :model-value="element.spaceAfter"
-          @update:model-value="
-            $emit('update', { spaceAfter: $event } as Partial<TempoElement>)
-          "
-        />
-      </Field>
-    </PaneSection>
   </PaneAccordion>
 </template>
 
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import { computed } from 'vue';
 
 import InputBpm from '@/components/InputBpm.vue';
-import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
 import type { TempoElement } from '@/models/Element';
-import type { PageSetup } from '@/models/PageSetup';
-import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
-import { Unit } from '@/utils/Unit';
 
-const props = defineProps({
+defineProps({
   element: {
     type: Object as PropType<TempoElement>,
     required: true,
@@ -73,15 +45,7 @@ const props = defineProps({
     type: Array as PropType<string[]>,
     required: true,
   },
-  pageSetup: {
-    type: Object as PropType<PageSetup>,
-    required: true,
-  },
 });
 
 defineEmits(['update', 'update:open-sections']);
-
-const spaceAfterMax = computed(() =>
-  Math.round(Unit.toPt(props.pageSetup.pageWidth)),
-);
 </script>

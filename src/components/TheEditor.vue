@@ -556,6 +556,7 @@ const textBoxCalculation = ref(false);
 const textBoxCalculationCount = ref(0);
 const fonts = ref<string[]>([]);
 const toolbarInnerNeume = ref<NeumeSelection>(NeumeSelection.Primary);
+const toolbarMartyriaLayoutRevision = ref(0);
 const keyboardModifier = ref<string | null>(null);
 const audioElement = ref<ScoreElement | null>(null);
 const playbackEvents = ref<PlaybackSequenceEvent[]>([]);
@@ -4515,7 +4516,7 @@ function onKeydownNeume(event: KeyboardEvent) {
         handled = true;
         throttled.setFthoraMartyria(
           martyriaElement,
-          fthoraMapping.neumes![0] as Fthora,
+          fthoraMapping.neumes as Fthora[],
         );
       }
 
@@ -5594,6 +5595,13 @@ function save(markUnsavedChanges: boolean = true) {
       : undefined,
   );
 
+  if (
+    inspectorContext.value.kind === 'martyria' &&
+    inspectorContext.value.element.updated
+  ) {
+    toolbarMartyriaLayoutRevision.value++;
+  }
+
   // Set page visibility for the newly processed pages
   processedPages.forEach(
     (x, index) => (x.isVisible = visiblePages.includes(index)),
@@ -6138,28 +6146,19 @@ function setSecondaryGorgon(element: NoteElement, neume: GorgonNeume) {
   }
 }
 
+function getNextFthora(
+  current: Fthora | null,
+  variations: Fthora[],
+): Fthora | null {
+  const currentIndex = current == null ? -1 : variations.indexOf(current);
+
+  return currentIndex === -1
+    ? variations[0]
+    : (variations[currentIndex + 1] ?? null);
+}
+
 function setFthoraNote(element: NoteElement, neumes: Fthora[]) {
-  let equivalent = false;
-
-  for (const neume of neumes) {
-    // If previous neume was matched, set to the next neume in the cycle
-    if (equivalent) {
-      updateNoteFthora(element, neume);
-      return;
-    }
-
-    equivalent = element.fthora === neume;
-  }
-
-  // We've cycled through all the neumes.
-  // If we got to the end of the cycle, remove all
-  // fthora neumes. Otherwise set fthora to the first neume
-  // in the cycle.
-  if (equivalent) {
-    updateNoteFthora(element, null);
-  } else {
-    updateNoteFthora(element, neumes[0]);
-  }
+  updateNoteFthora(element, getNextFthora(element.fthora, neumes));
 }
 
 function setSecondaryFthora(element: NoteElement, neume: Fthora) {
@@ -6178,7 +6177,21 @@ function setTertiaryFthora(element: NoteElement, neume: Fthora) {
   }
 }
 
-function setFthoraMartyria(element: MartyriaElement, neume: Fthora) {
+function setFthoraMartyria(element: MartyriaElement, neumes: Fthora[]) {
+  if (
+    toolbarInnerNeume.value === NeumeSelection.Secondary &&
+    element.alignRight &&
+    element.quantitativeNeume != null
+  ) {
+    updateMartyriaQuantitativeNeumeFthora(
+      element,
+      getNextFthora(element.quantitativeNeumeFthora, neumes),
+    );
+    return;
+  }
+
+  const neume = neumes[0];
+
   if (element.fthora === neume) {
     updateMartyriaFthora(element, null);
   } else {
@@ -6223,7 +6236,13 @@ function setMartyriaQuantitativeNeume(
   neume: QuantitativeNeume,
 ) {
   if (element.quantitativeNeume === neume) {
-    updateMartyria(element, { quantitativeNeume: null });
+    toolbarInnerNeume.value = NeumeSelection.Primary;
+    updateMartyria(element, {
+      quantitativeNeume: null,
+      quantitativeNeumeFthora: null,
+      quantitativeNeumeChromaticFthoraNote: null,
+      quantitativeNeumeFthoraCarry: null,
+    });
   } else {
     updateMartyria(element, { quantitativeNeume: neume });
   }
@@ -7076,6 +7095,28 @@ function updateMartyriaFthora(element: MartyriaElement, fthora: Fthora | null) {
   }
 
   updateMartyria(element, { fthora, chromaticFthoraNote });
+}
+
+function updateMartyriaQuantitativeNeumeFthora(
+  element: MartyriaElement,
+  quantitativeNeumeFthora: Fthora | null,
+) {
+  let quantitativeNeumeChromaticFthoraNote: ScaleNote | null = null;
+
+  if (quantitativeNeumeFthora?.startsWith('SoftChromaticThi')) {
+    quantitativeNeumeChromaticFthoraNote = ScaleNote.Thi;
+  } else if (quantitativeNeumeFthora?.startsWith('SoftChromaticPa')) {
+    quantitativeNeumeChromaticFthoraNote = ScaleNote.Ga;
+  } else if (quantitativeNeumeFthora?.startsWith('HardChromaticThi')) {
+    quantitativeNeumeChromaticFthoraNote = ScaleNote.Thi;
+  } else if (quantitativeNeumeFthora?.startsWith('HardChromaticPa')) {
+    quantitativeNeumeChromaticFthoraNote = ScaleNote.Pa;
+  }
+
+  updateMartyria(element, {
+    quantitativeNeumeFthora,
+    quantitativeNeumeChromaticFthoraNote,
+  });
 }
 
 function updateMartyriaTempoLeft(
@@ -11286,7 +11327,10 @@ function renderTabLabel(tab: Tab) {
           :element="inspectorContext.element"
           :page-setup="score.pageSetup"
           :neume-keyboard="neumeKeyboard"
+          :inner-neume="toolbarInnerNeume"
+          :layout-revision="toolbarMartyriaLayoutRevision"
           @update="updateMartyria(inspectorContext.element, $event)"
+          @update:inner-neume="toolbarInnerNeume = $event"
           @update:fthora="setFthoraMartyria(inspectorContext.element, $event)"
           @update:tempo-left="
             setMartyriaTempoLeft(inspectorContext.element, $event)

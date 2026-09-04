@@ -33,6 +33,11 @@
         :style="quantitativeNeumeStyle"
       />
       <Neume
+        v-if="hasQuantitativeNeumeFthora"
+        :neume="neume.quantitativeNeumeFthora!"
+        :style="fthoraStyle"
+      />
+      <Neume
         v-if="hasTempoRight"
         :neume="neume.tempoRight!"
         :style="tempoRightStyle"
@@ -78,6 +83,10 @@ const hasMeasureBarRight = computed(() => props.neume.measureBarRight != null);
 const hasQuantitativeNeume = computed(
   () => props.neume.quantitativeNeume != null && props.neume.alignRight,
 );
+const hasQuantitativeNeumeFthora = computed(
+  () =>
+    hasQuantitativeNeume.value && props.neume.quantitativeNeumeFthora != null,
+);
 const isMeasureBarAbove = computed(() =>
   props.neume.measureBarLeft?.endsWith('Above'),
 );
@@ -105,7 +114,7 @@ const fthoraStyle = computed(() => {
 
 const quantitativeNeumeStyle = computed(() => {
   return {
-    marginLeft: withZoom(props.neume.padding),
+    marginLeft: withZoom(props.neume.quantitativeNeumeSpacing),
     color: props.pageSetup.neumeDefaultColor,
     webkitTextStrokeWidth: withZoom(props.pageSetup.neumeDefaultStrokeWidth),
   } as StyleValue;

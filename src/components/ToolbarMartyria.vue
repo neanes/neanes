@@ -4,7 +4,7 @@
       <ToolbarButton
         variant="secondary"
         class="chrome-button"
-        @click="$emit('update:fthora', Fthora.DiatonicNiLow_Top)"
+        @click="updateFthora(Fthora.DiatonicNiLow_Top)"
       >
         <NeumeIcon name="fthora-diatonic-ni-low" />
       </ToolbarButton>
@@ -13,7 +13,7 @@
       <ToolbarButton
         variant="secondary"
         class="chrome-button"
-        @click="$emit('update:fthora', Fthora.DiatonicPa_Top)"
+        @click="updateFthora(Fthora.DiatonicPa_Top)"
       >
         <NeumeIcon name="fthora-diatonic-pa" />
       </ToolbarButton>
@@ -22,7 +22,7 @@
       <ToolbarButton
         variant="secondary"
         class="chrome-button"
-        @click="$emit('update:fthora', Fthora.DiatonicVou_Top)"
+        @click="updateFthora(Fthora.DiatonicVou_Top)"
       >
         <NeumeIcon name="fthora-diatonic-vou" />
       </ToolbarButton>
@@ -31,7 +31,7 @@
       <ToolbarButton
         variant="secondary"
         class="chrome-button"
-        @click="$emit('update:fthora', Fthora.DiatonicGa_Top)"
+        @click="updateFthora(Fthora.DiatonicGa_Top)"
       >
         <NeumeIcon name="fthora-diatonic-ga" />
       </ToolbarButton>
@@ -40,7 +40,7 @@
       <ToolbarButton
         variant="secondary"
         class="chrome-button"
-        @click="$emit('update:fthora', Fthora.DiatonicThi_Top)"
+        @click="updateFthora(Fthora.DiatonicThi_Top)"
       >
         <NeumeIcon name="fthora-diatonic-di" />
       </ToolbarButton>
@@ -49,7 +49,7 @@
       <ToolbarButton
         variant="secondary"
         class="chrome-button"
-        @click="$emit('update:fthora', Fthora.DiatonicKe_Top)"
+        @click="updateFthora(Fthora.DiatonicKe_Top)"
       >
         <NeumeIcon name="fthora-diatonic-ke" />
       </ToolbarButton>
@@ -58,7 +58,7 @@
       <ToolbarButton
         variant="secondary"
         class="chrome-button"
-        @click="$emit('update:fthora', Fthora.DiatonicZo_Top)"
+        @click="updateFthora(Fthora.DiatonicZo_Top)"
       >
         <NeumeIcon name="fthora-diatonic-zo" />
       </ToolbarButton>
@@ -67,7 +67,7 @@
       <ToolbarButton
         variant="secondary"
         class="chrome-button"
-        @click="$emit('update:fthora', Fthora.DiatonicNiHigh_Top)"
+        @click="updateFthora(Fthora.DiatonicNiHigh_Top)"
       >
         <NeumeIcon name="fthora-diatonic-ni-high" />
       </ToolbarButton>
@@ -77,7 +77,7 @@
       <ToolbarButton
         variant="secondary"
         class="chrome-button"
-        @click="$emit('update:fthora', Fthora.SoftChromaticThi_Top)"
+        @click="updateFthora(Fthora.SoftChromaticThi_Top)"
       >
         <NeumeIcon name="fthora-soft-chromatic-di" />
       </ToolbarButton>
@@ -86,7 +86,7 @@
       <ToolbarButton
         variant="secondary"
         class="chrome-button"
-        @click="$emit('update:fthora', Fthora.SoftChromaticPa_Top)"
+        @click="updateFthora(Fthora.SoftChromaticPa_Top)"
       >
         <NeumeIcon name="fthora-soft-chromatic-ke" />
       </ToolbarButton>
@@ -96,7 +96,7 @@
       <ToolbarButton
         variant="secondary"
         class="chrome-button"
-        @click="$emit('update:fthora', Fthora.HardChromaticPa_Top)"
+        @click="updateFthora(Fthora.HardChromaticPa_Top)"
       >
         <NeumeIcon name="fthora-hard-chromatic-pa" />
       </ToolbarButton>
@@ -105,7 +105,7 @@
       <ToolbarButton
         variant="secondary"
         class="chrome-button"
-        @click="$emit('update:fthora', Fthora.HardChromaticThi_Top)"
+        @click="updateFthora(Fthora.HardChromaticThi_Top)"
       >
         <NeumeIcon name="fthora-hard-chromatic-di" />
       </ToolbarButton>
@@ -116,9 +116,7 @@
         variant="secondary"
         class="chrome-button"
         :aria-disabled="enharmonicDisabled"
-        @click="
-          !enharmonicDisabled && $emit('update:fthora', Fthora.Enharmonic_Top)
-        "
+        @click="!enharmonicDisabled && updateFthora(Fthora.Enharmonic_Top)"
       >
         <NeumeIcon name="fthora-enharmonic" />
       </ToolbarButton>
@@ -128,9 +126,7 @@
         variant="secondary"
         class="chrome-button"
         :aria-disabled="generalFlatDisabled"
-        @click="
-          !generalFlatDisabled && $emit('update:fthora', Fthora.GeneralFlat_Top)
-        "
+        @click="!generalFlatDisabled && updateFthora(Fthora.GeneralFlat_Top)"
       >
         <NeumeIcon name="fthora-general-flat" />
       </ToolbarButton>
@@ -140,10 +136,7 @@
         variant="secondary"
         class="chrome-button"
         :aria-disabled="generalSharpDisabled"
-        @click="
-          !generalSharpDisabled &&
-          $emit('update:fthora', Fthora.GeneralSharp_Top)
-        "
+        @click="!generalSharpDisabled && updateFthora(Fthora.GeneralSharp_Top)"
       >
         <NeumeIcon name="fthora-general-sharp" />
       </ToolbarButton>
@@ -154,7 +147,7 @@
         variant="secondary"
         class="chrome-button"
         :aria-disabled="zygosDisabled"
-        @click="!zygosDisabled && $emit('update:fthora', Fthora.Zygos_Top)"
+        @click="!zygosDisabled && updateFthora(Fthora.Zygos_Top)"
       >
         <NeumeIcon name="fthora-zygos" />
       </ToolbarButton>
@@ -164,7 +157,7 @@
         variant="secondary"
         class="chrome-button"
         :aria-disabled="klitonDisabled"
-        @click="!klitonDisabled && $emit('update:fthora', Fthora.Kliton_Top)"
+        @click="!klitonDisabled && updateFthora(Fthora.Kliton_Top)"
       >
         <NeumeIcon name="fthora-kliton" />
       </ToolbarButton>
@@ -174,7 +167,7 @@
         variant="secondary"
         class="chrome-button"
         :aria-disabled="spathiDisabled"
-        @click="!spathiDisabled && $emit('update:fthora', Fthora.Spathi_Top)"
+        @click="!spathiDisabled && updateFthora(Fthora.Spathi_Top)"
       >
         <NeumeIcon name="fthora-spathi" />
       </ToolbarButton>
@@ -229,6 +222,39 @@
         :tooltip="$t(($) => $.toolbar.common.neume, { ns: 'toolbar' })"
         @select="$emit('update:quantitativeNeume', $event)"
       />
+      <template v-if="element.quantitativeNeume != null">
+        <ToolbarSeparator />
+        <span :id="neumeSelectLabelId" class="chrome-toolbar-label">{{
+          $t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })
+        }}</span>
+        <ToolbarToggleGroup
+          type="single"
+          :model-value="innerNeume"
+          :aria-labelledby="neumeSelectLabelId"
+          @update:model-value="updateInnerNeume"
+        >
+          <ToolbarToggleItem
+            :value="NeumeSelection.Primary"
+            class="chrome-button"
+            :aria-label="NeumeSelection.Primary"
+          >
+            <span :style="martyriaPreviewStyle">
+              <Neume :neume="element.note" :style="martyriaGlyphStyle" />
+              <Neume :neume="element.rootSign" :style="martyriaGlyphStyle" />
+            </span>
+          </ToolbarToggleItem>
+          <ToolbarToggleItem
+            :value="NeumeSelection.Secondary"
+            class="chrome-button"
+            :aria-label="NeumeSelection.Secondary"
+          >
+            <Neume
+              :neume="element.quantitativeNeume"
+              :style="quantitativeNeumePreviewStyle"
+            />
+          </ToolbarToggleItem>
+        </ToolbarToggleGroup>
+      </template>
     </template>
   </Toolbar>
 </template>
@@ -237,7 +263,7 @@
 import { PhAlignRight } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
-import { computed } from 'vue';
+import { computed, useId } from 'vue';
 
 import type { AppTooltipValue } from '@/components/AppTooltip.types';
 import AppTooltip from '@/components/AppTooltip.vue';
@@ -245,27 +271,37 @@ import {
   Toolbar,
   ToolbarButton,
   ToolbarSeparator,
+  ToolbarToggleGroup,
+  ToolbarToggleItem,
 } from '@/components/ui/toolbar';
 import type { MartyriaElement } from '@/models/Element';
 import { getFthoraLabelSelector } from '@/models/NeumeI18nMappings';
 import {
   Fthora,
   MeasureBar,
+  NeumeSelection,
   Note,
   QuantitativeNeume,
   TempoSign,
 } from '@/models/Neumes';
+import { getNeumeValue } from '@/models/NeumeValues';
 import type { PageSetup } from '@/models/PageSetup';
+import { getNoteFromValue, getNoteValue } from '@/models/Scales';
 import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
 import ButtonWithMenu from './ButtonWithMenu.vue';
+import Neume from './NeumeGlyph.vue';
 import NeumeIcon from './NeumeIcon.vue';
 
 const quantitativeNeumeOptionsList = [
+  QuantitativeNeume.Hamili,
+  QuantitativeNeume.ElaphronPlusApostrophos,
   QuantitativeNeume.Elaphron,
   QuantitativeNeume.RunningElaphron,
+  QuantitativeNeume.Apostrophos,
   QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
   QuantitativeNeume.OligonPlusHypsiliLeft,
   QuantitativeNeume.OligonPlusHypsiliRight,
@@ -385,15 +421,24 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  innerNeume: {
+    type: String as PropType<NeumeSelection>,
+    required: true,
+  },
+  layoutRevision: {
+    type: Number,
+    required: true,
+  },
   neumeKeyboard: {
     type: Object as PropType<NeumeKeyboard>,
     required: true,
   },
 });
 
-defineEmits([
+const emit = defineEmits([
   'update',
   'update:fthora',
+  'update:innerNeume',
   'update:measureBar',
   'update:quantitativeNeume',
   'update:tempoLeft',
@@ -401,13 +446,67 @@ defineEmits([
   'update:tempoRight',
 ]);
 
+const neumeSelectLabelId = useId();
+const martyriaPreviewFontSize = 24;
+const quantitativeNeumePreviewFontSize = 16;
+
 const { t } = useTranslation();
+
+const martyriaGlyphStyle = computed(() => ({
+  fontFamily: props.pageSetup.neumeDefaultFontFamily,
+  fontSize: `${martyriaPreviewFontSize}px`,
+}));
+
+const quantitativeNeumePreviewStyle = computed(() => ({
+  fontFamily: props.pageSetup.neumeDefaultFontFamily,
+  fontSize: `${quantitativeNeumePreviewFontSize}px`,
+}));
+
+const martyriaPreviewMeasurement = computed(() => ({
+  // Layout updates derived martyria fields on the raw model. The editor
+  // increments this revision when LayoutService marks the element as updated.
+  layoutRevision: props.layoutRevision,
+  text: [props.element.note, props.element.rootSign]
+    .map((neume) => NeumeMappingService.getMapping(neume).text)
+    .join(''),
+}));
+
+const martyriaPreviewStyle = computed(() => {
+  const fontFamily = props.pageSetup.neumeDefaultFontFamily;
+  const font = `${martyriaPreviewFontSize}px ${fontFamily}`;
+  const { text } = martyriaPreviewMeasurement.value;
+  const bounds = TextMeasurementService.getInkBounds(text, font);
+  const fontCenter = (bounds.fontDescent - bounds.fontAscent) / 2;
+  const inkCenter = (bounds.inkDescent - bounds.inkAscent) / 2;
+
+  // The normal line box adds symmetric leading around the font box, but neume
+  // ink is vertically asymmetric within it. Align the measured font and ink
+  // centers without changing the line height or using a font-specific offset.
+  return {
+    transform: `translateY(${fontCenter - inkCenter}px)`,
+  };
+});
+
+const fthoraNote = computed(() => {
+  if (
+    props.innerNeume === NeumeSelection.Secondary &&
+    props.element.alignRight &&
+    props.element.quantitativeNeume != null
+  ) {
+    return getNoteFromValue(
+      getNoteValue(props.element.note) +
+        getNeumeValue(props.element.quantitativeNeume)!,
+    );
+  }
+
+  return props.element.note;
+});
 
 const spathiDisabled = computed(
   () =>
     !props.pageSetup.noFthoraRestrictions &&
-    props.element.note !== Note.Ke &&
-    props.element.note !== Note.Ga,
+    fthoraNote.value !== Note.Ke &&
+    fthoraNote.value !== Note.Ga,
 );
 
 const spathiTitle = computed(() =>
@@ -417,8 +516,7 @@ const spathiTitle = computed(() =>
 );
 
 const klitonDisabled = computed(
-  () =>
-    !props.pageSetup.noFthoraRestrictions && props.element.note !== Note.Thi,
+  () => !props.pageSetup.noFthoraRestrictions && fthoraNote.value !== Note.Thi,
 );
 
 const klitonTitle = computed(() =>
@@ -428,8 +526,7 @@ const klitonTitle = computed(() =>
 );
 
 const zygosDisabled = computed(
-  () =>
-    !props.pageSetup.noFthoraRestrictions && props.element.note !== Note.Thi,
+  () => !props.pageSetup.noFthoraRestrictions && fthoraNote.value !== Note.Thi,
 );
 
 const zygosTitle = computed(() =>
@@ -441,11 +538,11 @@ const zygosTitle = computed(() =>
 const enharmonicDisabled = computed(
   () =>
     !props.pageSetup.noFthoraRestrictions &&
-    props.element.note !== Note.Zo &&
-    props.element.note !== Note.ZoHigh &&
-    props.element.note !== Note.Vou &&
-    props.element.note !== Note.VouHigh &&
-    props.element.note !== Note.Ga,
+    fthoraNote.value !== Note.Zo &&
+    fthoraNote.value !== Note.ZoHigh &&
+    fthoraNote.value !== Note.Vou &&
+    fthoraNote.value !== Note.VouHigh &&
+    fthoraNote.value !== Note.Ga,
 );
 
 const enharmonicTitle = computed(() =>
@@ -455,7 +552,7 @@ const enharmonicTitle = computed(() =>
 );
 
 const generalFlatDisabled = computed(
-  () => !props.pageSetup.noFthoraRestrictions && props.element.note !== Note.Ke,
+  () => !props.pageSetup.noFthoraRestrictions && fthoraNote.value !== Note.Ke,
 );
 
 const generalFlatTitle = computed(() =>
@@ -467,8 +564,20 @@ const generalFlatTitle = computed(() =>
 );
 
 const generalSharpDisabled = computed(
-  () => !props.pageSetup.noFthoraRestrictions && props.element.note !== Note.Ga,
+  () => !props.pageSetup.noFthoraRestrictions && fthoraNote.value !== Note.Ga,
 );
+
+function updateFthora(fthora: Fthora) {
+  const variations = props.neumeKeyboard.findMappingForNeume(fthora)?.neumes;
+
+  emit('update:fthora', (variations ?? [fthora]) as Fthora[]);
+}
+
+function updateInnerNeume(value: unknown) {
+  if (Object.values(NeumeSelection).includes(value as NeumeSelection)) {
+    emit('update:innerNeume', value);
+  }
+}
 
 const generalSharpTitle = computed(() =>
   generalSharpDisabled.value

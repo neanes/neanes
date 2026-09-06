@@ -164,6 +164,9 @@ export class MartyriaElement extends ScoreElement {
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | undefined = undefined;
   public chromaticFthoraNote: ScaleNote | undefined = undefined;
+  public quantitativeNeumeFthora: Fthora | undefined = undefined;
+  public quantitativeNeumeChromaticFthoraNote: ScaleNote | undefined =
+    undefined;
   public tempoLeft: TempoSign | undefined = undefined;
   public tempo: TempoSign | undefined = undefined;
   public tempoRight: TempoSign | undefined = undefined;

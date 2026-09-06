@@ -2,6 +2,10 @@ import { parseFontVariantCaps } from '@/utils/fontVariants';
 
 export interface InkBounds {
   advanceWidth: number;
+  fontAscent: number;
+  fontDescent: number;
+  inkAscent: number;
+  inkDescent: number;
   inkLeft: number;
   inkRight: number;
   inkWidth: number;
@@ -75,6 +79,10 @@ export class TextMeasurementService {
 
     return {
       advanceWidth: metrics.width,
+      fontAscent: metrics.fontBoundingBoxAscent,
+      fontDescent: metrics.fontBoundingBoxDescent,
+      inkAscent: metrics.actualBoundingBoxAscent,
+      inkDescent: metrics.actualBoundingBoxDescent,
       inkLeft,
       inkRight,
       inkWidth,

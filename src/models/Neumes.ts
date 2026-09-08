@@ -477,6 +477,11 @@ export type Neume =
   | Tie
   | Letter;
 
+export const runningElaphronNeumes: ReadonlyArray<QuantitativeNeume> = [
+  QuantitativeNeume.RunningElaphron,
+  QuantitativeNeume.PetastiPlusRunningElaphron,
+];
+
 export const petastiNeumes: ReadonlyArray<QuantitativeNeume> = [
   QuantitativeNeume.PetastiWithIson,
   QuantitativeNeume.Petasti,

@@ -6,7 +6,17 @@
     "descent": 0.2,
     "winAscent": 1.4,
     "winDescent": 0.466,
-    "oligonMidpoint": 0.307
+    "oligonMidpoint": 0.307,
+    "elafronBounds": {
+      "runningElafron": {
+        "left": -0.002,
+        "right": 1.104
+      },
+      "petastiRunningElafron": {
+        "left": 0.019,
+        "right": 1.024
+      }
+    }
   },
   "glyphsWithAnchors": {
     "ison": {

@@ -55,6 +55,7 @@ import {
   QuantitativeNeume,
   restNeumes,
   RootSign,
+  runningElaphronNeumes,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
@@ -143,6 +144,8 @@ const kentemataSet = new Set<QuantitativeNeume>([
   QuantitativeNeume.Kentemata,
   QuantitativeNeume.KentemataPlusOligon,
 ]);
+
+const runningElaphronSet = new Set(runningElaphronNeumes);
 
 const beatStealingSet = new Set<QuantitativeNeume>([
   QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
@@ -5180,16 +5183,18 @@ export class LayoutService {
       noteElement.neumeWidth += measureBarRightWidth;
     }
 
-    // Handle special case for running elaphron: shift the lyrics toward the
+    // Handle special cases for running elaphron: shift the lyrics toward the
     // elaphron so that they remain centered beneath it.
-    if (noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron) {
-      const offset = this.getRunningElaphronOffset(pageSetup);
-
-      if (pageSetup.melkiteRtl) {
-        noteElement.lyricsHorizontalOffset -= offset;
-      } else {
-        noteElement.lyricsHorizontalOffset += offset;
-      }
+    if (runningElaphronSet.has(noteElement.quantitativeNeume)) {
+      const glyphName = NeumeMappingService.getMapping(
+        noteElement.quantitativeNeume,
+      ).glyphName;
+      noteElement.lyricsHorizontalOffset +=
+        pageSetup.neumeDefaultFontSize *
+        fontService.getLyricsHorizontalOffset(
+          pageSetup.neumeDefaultFontFamily,
+          glyphName,
+        );
     }
 
     return this.getNoteBoxAdvance(noteElement);
@@ -5281,11 +5286,23 @@ export class LayoutService {
       defaultLyricsFontCss,
     );
 
-    const elaphronWidth = this.getNeumeWidthFromCache(
-      QuantitativeNeume.Elaphron,
-      pageSetup,
-    );
-    const runningElaphronOffset = this.getRunningElaphronOffset(pageSetup);
+    const runningElaphronGeometry = new Map<
+      QuantitativeNeume,
+      { left: number; width: number }
+    >();
+
+    for (const quantitativeNeume of runningElaphronSet) {
+      const glyphName =
+        NeumeMappingService.getMapping(quantitativeNeume).glyphName;
+      const bounds = fontService.getElafronBounds(
+        pageSetup.neumeDefaultFontFamily,
+        glyphName,
+      );
+      runningElaphronGeometry.set(quantitativeNeume, {
+        left: bounds.left * pageSetup.neumeDefaultFontSize,
+        width: (bounds.right - bounds.left) * pageSetup.neumeDefaultFontSize,
+      });
+    }
 
     let melismaSyllables: MelismaSyllables | null = null;
     let melismaLyricsEnd: number | null = null;
@@ -5584,37 +5601,38 @@ export class LayoutService {
               }
             } else if (!pageSetup.melkiteRtl) {
               // Else not a hyphen, so an underscore
-              const nextElementIsRunningElaphron =
-                nextElement &&
-                nextElement.elementType === ElementType.Note &&
-                (nextElement as NoteElement).quantitativeNeume ===
-                  QuantitativeNeume.RunningElaphron;
+              const nextRunningElaphronGeometry =
+                nextNoteElement != null
+                  ? runningElaphronGeometry.get(
+                      nextNoteElement.quantitativeNeume,
+                    )
+                  : undefined;
 
               // Note the special case for when the next neume is a running elaphron.
               // The melisma, which by convention must always be a final melisma,
               // should run all the way to the elaphron, instead of stopping at
               // the apostrophos.
 
-              if (nextNoteElement != null && nextElementIsRunningElaphron) {
-                end = nextNoteElement.x + runningElaphronOffset;
+              if (
+                nextNoteElement != null &&
+                nextRunningElaphronGeometry != null
+              ) {
+                const { left: elaphronLeft, width: elaphronWidth } =
+                  nextRunningElaphronGeometry;
+                const elaphronLeftInNote =
+                  this.getNoteLeftBarReserve(
+                    nextNoteElement,
+                    measureBarWidthMap,
+                  ) + elaphronLeft;
+                end = nextNoteElement.x + elaphronLeftInNote;
 
                 if (nextNoteElement.lyricsWidth > elaphronWidth) {
-                  if (nextNoteElement.alignLeft) {
-                    end = Math.min(
-                      end,
-                      nextNoteElement.x +
-                        runningElaphronOffset -
-                        pageSetup.lyricsMinimumSpacing,
-                    );
-                  } else {
-                    end = Math.min(
-                      end,
-                      nextNoteElement.x +
-                        runningElaphronOffset -
-                        (nextNoteElement.lyricsWidth - elaphronWidth) / 2 -
-                        pageSetup.lyricsMinimumSpacing,
-                    );
-                  }
+                  end = Math.min(
+                    end,
+                    nextNoteElement.x +
+                      this.getLyricTextLeft(nextNoteElement) -
+                      pageSetup.lyricsMinimumSpacing,
+                  );
                 }
               } else {
                 if (finalElement == null) {
@@ -7580,19 +7598,6 @@ export class LayoutService {
 
   private static getNeumeWidthFromCache(neume: Neume, pageSetup: PageSetup) {
     return this.getNeumeSequenceWidthFromCache([neume], pageSetup);
-  }
-
-  // The stand-alone apostrophos is not the same width as the apostrophos in
-  // the running elaphron, but the elaphrons are the same width in both
-  // neumes, so this offset locates the elaphron body inside the composite
-  // glyph.
-  private static getRunningElaphronOffset(pageSetup: PageSetup) {
-    return (
-      this.getNeumeWidthFromCache(
-        QuantitativeNeume.RunningElaphron,
-        pageSetup,
-      ) - this.getNeumeWidthFromCache(QuantitativeNeume.Elaphron, pageSetup)
-    );
   }
 
   private static getNeumeSequenceWidthFromCache(

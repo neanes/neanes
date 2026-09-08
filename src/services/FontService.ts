@@ -12,6 +12,12 @@ interface Metrics {
   winAscent: number;
   winDescent: number;
   oligonMidpoint: number;
+  elafronBounds: Partial<Record<SbmuflGlyphName, HorizontalBounds>>;
+}
+
+interface HorizontalBounds {
+  left: number;
+  right: number;
 }
 
 interface EngravingGlue {
@@ -62,6 +68,27 @@ class FontService {
 
   getMetrics(fontFamily: string) {
     return this.getMetadata(fontFamily).metrics as Metrics;
+  }
+
+  getLyricsHorizontalOffset(
+    fontFamily: string,
+    glyph: SbmuflGlyphName,
+  ): number {
+    const { left, right } = this.getElafronBounds(fontFamily, glyph);
+    return left + right - this.getAdvanceWidth(fontFamily, glyph);
+  }
+
+  getElafronBounds(
+    fontFamily: string,
+    glyph: SbmuflGlyphName,
+  ): HorizontalBounds {
+    const bounds = this.getMetrics(fontFamily).elafronBounds[glyph];
+
+    if (bounds == null) {
+      throw new Error(`Missing elafron bounds for ${glyph}`);
+    }
+
+    return bounds;
   }
 
   getAdvanceWidth(fontFamily: string, glyph: SbmuflGlyphName) {

@@ -7898,6 +7898,20 @@
       ]
     }
   },
+  "markAttachmentClasses": {
+    "gorgon": [
+      "digorgon",
+      "digorgonDottedLeftAbove",
+      "digorgonDottedLeftBelow",
+      "digorgonDottedRight",
+      "gorgonAbove",
+      "gorgonDottedLeft",
+      "gorgonDottedRight",
+      "trigorgon",
+      "trigorgonDottedLeftAbove",
+      "trigorgonDottedRight"
+    ]
+  },
   "contextualSubstitutions": [
     {
       "inputGlyphs": [
@@ -7964,7 +7978,8 @@
           "from": "yporroi",
           "to": "yporroi.gorgon"
         }
-      ]
+      ],
+      "markAttachmentClass": "gorgon"
     },
     {
       "inputGlyphs": [
@@ -7987,7 +8002,8 @@
           "from": "yporroi",
           "to": "yporroi.digorgon"
         }
-      ]
+      ],
+      "markAttachmentClass": "gorgon"
     },
     {
       "inputGlyphs": [
@@ -8009,7 +8025,8 @@
           "from": "yporroi",
           "to": "yporroi.trigorgon"
         }
-      ]
+      ],
+      "markAttachmentClass": "gorgon"
     },
     {
       "inputGlyphs": [

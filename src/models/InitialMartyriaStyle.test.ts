@@ -11,6 +11,7 @@ import {
   getInitialMartyriaContext,
   getInitialMartyriaFixedSeparatorSize,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
@@ -62,6 +63,17 @@ const englishNumeralQualifierNames: Record<
   [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal]: 'Prenominal',
 };
 
+const englishModeIdentificationNames: Record<
+  InitialMartyriaStyle['modeIdentificationMethod'],
+  string
+> = {
+  [INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text]: 'Text Identification',
+  [INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign]:
+    'Mode-Sign Identification',
+  [INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign]:
+    'Text and Mode-Sign Identification',
+};
+
 function generateEnglishStyleName(style: InitialMartyriaStyle) {
   const qualifier = style.numeralQualifier
     ? `${englishNumeralQualifierNames[style.numeralQualifier]} `
@@ -71,9 +83,9 @@ function generateEnglishStyleName(style: InitialMartyriaStyle) {
   if (style.usesPlagalTerminology) {
     annotations.push('Plagal Terminology');
   }
-  if (style.hasRedundantModeIdentification) {
-    annotations.push('Redundant Mode Identification');
-  }
+  const modeIdentification =
+    englishModeIdentificationNames[style.modeIdentificationMethod];
+  annotations.push(modeIdentification);
 
   const annotationList =
     annotations.length > 0 ? ` (${annotations.join(', ')})` : '';
@@ -243,6 +255,51 @@ describe('InitialMartyriaStyle', () => {
       expect(text).toEqual(expected);
       expect(runs.some((run) => run.kind === 'glyph')).toBe(false);
       expect(runs.some((run) => run.kind === 'startingPitch')).toBe(true);
+    }
+  });
+
+  it('defines English mode names without a mode-sign glyph', () => {
+    const configuration = createInitialMartyriaConfiguration(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesV1,
+    );
+    configuration.transliterateNoteNames = true;
+    const expectedText = new Map([
+      [1, ['First', 'Mode.']],
+      [2, ['Second', 'Mode.']],
+      [3, ['Third', 'Mode.']],
+      [4, ['Fourth', 'Mode.']],
+      [5, ['Plagal of', 'First', 'Mode.']],
+      [6, ['Plagal of', 'Second', 'Mode.']],
+      [7, ['Grave', 'Mode.']],
+      [8, ['Plagal of', 'Fourth', 'Mode.']],
+    ]);
+
+    for (const [mode, expected] of expectedText) {
+      const element = ModeKeyElement.createFromTemplate(
+        modeKeyTemplates.find((template) => template.mode === mode)!,
+      );
+      const runs = resolveInitialMartyriaStyle({
+        context: getInitialMartyriaContext(element),
+        resolvedConfiguration:
+          resolveInitialMartyriaConfiguration(configuration)!,
+        pageSetup: new PageSetup(),
+      }).runs;
+      const text = runs.flatMap((run) => {
+        if (run.kind !== 'text') {
+          return [];
+        }
+        return run.content.layout === 'inline'
+          ? [run.content.text]
+          : run.content.lines;
+      });
+      const startingPitch = runs.find((run) => run.kind === 'startingPitch');
+
+      expect(text).toEqual(expected);
+      expect(runs.some((run) => run.kind === 'glyph')).toBe(false);
+      expect(startingPitch?.kind).toBe('startingPitch');
+      if (startingPitch?.kind === 'startingPitch') {
+        expect(startingPitch.noteText.names[ModeSign.Pa]).toBe('Pa');
+      }
     }
   });
 

@@ -37,6 +37,15 @@ export const INITIAL_MARTYRIA_NUMERAL_QUALIFIERS = {
 export type InitialMartyriaNumeralQualifier =
   (typeof INITIAL_MARTYRIA_NUMERAL_QUALIFIERS)[keyof typeof INITIAL_MARTYRIA_NUMERAL_QUALIFIERS];
 
+export const INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS = {
+  Text: 'text',
+  ModeSign: 'mode-sign',
+  TextAndModeSign: 'text-and-mode-sign',
+} as const;
+
+export type InitialMartyriaModeIdentificationMethod =
+  (typeof INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS)[keyof typeof INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS];
+
 export const INITIAL_MARTYRIA_LANGUAGE_IDS = {
   Greek: 'el',
   English: 'en',
@@ -98,6 +107,7 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   TraditionalGreekV1: 'builtin:traditional-greek-v1',
   GreekModeNamesV1: 'builtin:greek-mode-names-v1',
   EnglishPlagalFirstV1: 'builtin:english-plagal-first-v1',
+  EnglishModeNamesV1: 'builtin:english-mode-names-v1',
   EnglishSignFirstV1: 'builtin:english-sign-first-v1',
   EnglishModeBeforeSignV1: 'builtin:english-mode-before-sign-v1',
   EnglishOrdinalV1: 'builtin:english-ordinal-v1',
@@ -138,6 +148,8 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
     $.dialog.initialMartyriaStyles.builtInStyles.greekModeNames,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalFirstV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishPlagalFirst,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishModeNames,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishSignFirst,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeBeforeSignV1]: ($) =>
@@ -264,7 +276,7 @@ export interface InitialMartyriaStyle {
   numeralStyle: InitialMartyriaNumeralStyle;
   numeralQualifier?: InitialMartyriaNumeralQualifier;
   usesPlagalTerminology: boolean;
-  hasRedundantModeIdentification: boolean;
+  modeIdentificationMethod: InitialMartyriaModeIdentificationMethod;
   flowDirection: 'page' | 'ltr' | 'rtl';
   defaultAppearance: InitialMartyriaDefaultAppearance;
   originalNoteNames: InitialMartyriaNoteNames;
@@ -510,7 +522,7 @@ function builtIn(options: {
   numeralStyle: InitialMartyriaNumeralStyle;
   numeralQualifier?: InitialMartyriaNumeralQualifier;
   usesPlagalTerminology: boolean;
-  hasRedundantModeIdentification: boolean;
+  modeIdentificationMethod: InitialMartyriaModeIdentificationMethod;
   defaultAppearance: InitialMartyriaDefaultAppearance;
   components: InitialMartyriaComponent[];
   transliteratedNoteNames?: InitialMartyriaNoteNames;
@@ -535,7 +547,8 @@ export const traditionalGreekInitialMartyriaStyle = builtIn({
   numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
   numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
   usesPlagalTerminology: true,
-  hasRedundantModeIdentification: false,
+  modeIdentificationMethod:
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
   defaultAppearance: defaultAppearance('GFS Didot'),
   components: [
     text('Ἦχος'),
@@ -552,7 +565,7 @@ export const greekModeNamesInitialMartyriaStyle = builtIn({
   numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
   numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
   usesPlagalTerminology: true,
-  hasRedundantModeIdentification: false,
+  modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
   defaultAppearance: defaultAppearance('GFS Didot'),
   components: [
     text('Ἦχος'),
@@ -584,12 +597,33 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.AuthenticMode,
     usesPlagalTerminology: true,
-    hasRedundantModeIdentification: false,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       plagalAbbreviation(),
       modeSign(),
       text('Mode'),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.AuthenticMode,
+    usesPlagalTerminology: true,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      text('Plagal of', [5, 6, 8]),
+      text('First', [1, 5]),
+      text('Second', [2, 6]),
+      text('Third', [3]),
+      text('Fourth', [4, 8]),
+      text('Grave', [7]),
+      text('Mode.'),
       startingPitch(),
     ],
   }),
@@ -600,7 +634,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.PlagalMode,
     usesPlagalTerminology: true,
-    hasRedundantModeIdentification: false,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       modeSign(),
@@ -615,7 +650,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
     usesPlagalTerminology: true,
-    hasRedundantModeIdentification: false,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       plagalAbbreviation(),
@@ -630,7 +666,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       text('First', [1]),
@@ -653,7 +690,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       text('Mode'),
@@ -676,7 +714,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       text('Mode'),
@@ -699,7 +738,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       text('Mode'),
@@ -723,7 +763,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.AuthenticMode,
     usesPlagalTerminology: true,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       text('Plagal of', [5, 6, 8]),
@@ -746,7 +787,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
     usesPlagalTerminology: true,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       text('Plagal', [5, 6, 8]),
@@ -766,7 +808,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
     usesPlagalTerminology: true,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       text('Plagal', [5, 6, 8]),
@@ -786,7 +829,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     usesPlagalTerminology: true,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       text('Plagal', [5, 6, 8]),
@@ -806,7 +850,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     transliteratedNoteNames: spanishTransliteratedNoteNames,
     components: [
@@ -830,7 +875,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     transliteratedNoteNames: spanishTransliteratedNoteNames,
     components: [
@@ -855,7 +901,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     transliteratedNoteNames: spanishTransliteratedNoteNames,
     components: [
@@ -880,7 +927,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     transliteratedNoteNames: spanishTransliteratedNoteNames,
     components: [
@@ -904,7 +952,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: defaultAppearance('Old Standard'),
     transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
     components: [
@@ -928,7 +977,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: defaultAppearance('Old Standard'),
     transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
     components: [
@@ -952,7 +1002,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: defaultAppearance('Old Standard'),
     transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
     components: [
@@ -976,7 +1027,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     transliteratedNoteNames: russianTransliteratedNoteNames,
     components: [
@@ -1000,7 +1052,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     transliteratedNoteNames: russianTransliteratedNoteNames,
     components: [
@@ -1024,7 +1077,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: defaultAppearance('Noto Naskh Arabic', 'GFS Didot'),
     transliteratedNoteNames: arabicTransliteratedNoteNames,
     flowDirection: 'rtl',
@@ -1048,7 +1102,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
     usesPlagalTerminology: false,
-    hasRedundantModeIdentification: true,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       text('Glas'),
@@ -1071,7 +1126,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     usesPlagalTerminology: true,
-    hasRedundantModeIdentification: false,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     defaultAppearance: sourceSerifAppearance(),
     components: [
       text('Glas'),

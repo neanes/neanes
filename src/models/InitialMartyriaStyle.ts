@@ -13,6 +13,7 @@ export const INITIAL_MARTYRIA_NUMERAL_STYLES = {
   None: 'none',
   Digits: 'digits',
   RomanNumerals: 'roman-numerals',
+  GreekNumerals: 'greek-numerals',
   CyrillicNumerals: 'cyrillic-numerals',
   CardinalWords: 'cardinal-words',
   OrdinalWords: 'ordinal-words',
@@ -513,8 +514,8 @@ export const traditionalGreekInitialMartyriaStyle = builtIn({
   languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
   defaultAppearance: defaultAppearance('GFS Didot'),
   filters: {
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.None,
-    usesPlagalTerminology: false,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords,
+    usesPlagalTerminology: true,
   },
   components: [
     text('Ἦχος'),
@@ -530,8 +531,8 @@ export const greekModeNamesInitialMartyriaStyle = builtIn({
   languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
   defaultAppearance: defaultAppearance('GFS Didot'),
   filters: {
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.None,
-    usesPlagalTerminology: false,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.GreekNumerals,
+    usesPlagalTerminology: true,
   },
   components: [
     text('Ἦχος'),
@@ -561,8 +562,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     defaultAppearance: sourceSerifAppearance(),
     filters: {
-      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.None,
-      usesPlagalTerminology: false,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords,
+      usesPlagalTerminology: true,
     },
     components: [
       plagalAbbreviation(),
@@ -576,8 +577,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     defaultAppearance: sourceSerifAppearance(),
     filters: {
-      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.None,
-      usesPlagalTerminology: false,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords,
+      usesPlagalTerminology: true,
     },
     components: [
       modeSign(),
@@ -591,8 +592,8 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     defaultAppearance: sourceSerifAppearance(),
     filters: {
-      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.None,
-      usesPlagalTerminology: false,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+      usesPlagalTerminology: true,
     },
     components: [
       plagalAbbreviation(),
@@ -1044,7 +1045,7 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
     defaultAppearance: sourceSerifAppearance(),
     filters: {
-      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.None,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords,
       usesPlagalTerminology: false,
     },
     components: [

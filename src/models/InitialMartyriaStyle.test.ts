@@ -43,7 +43,9 @@ describe('InitialMartyriaStyle', () => {
     const selector = getBuiltInInitialMartyriaStyleNameSelector(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1,
     );
-    expect(selector?.(resources.ro)).toBe('Română - Glas numerotat');
+    expect(selector?.(resources.ro)).toBe(
+      'Română - Numerale cardinale în cifre (Identificare redundantă a modului)',
+    );
   });
 
   it('resolves inherited, Standard, and explicit element configurations', () => {

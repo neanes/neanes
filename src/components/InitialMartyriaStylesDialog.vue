@@ -88,15 +88,11 @@
               </Select>
             </Field>
 
-            <Field
-              v-if="
-                selectedLanguageId === INITIAL_MARTYRIA_LANGUAGE_IDS.English
-              "
-              orientation="horizontal"
-            >
+            <Field orientation="horizontal">
               <Checkbox
                 id="initial-martyria-plagal-terminology-filter"
                 :model-value="usePlagalTerminologyFilter"
+                :disabled="plagalTerminologyFilterDisabled"
                 @update:model-value="setPlagalTerminologyFilter"
               />
               <FieldLabel for="initial-martyria-plagal-terminology-filter">
@@ -430,6 +426,7 @@ const numeralStyleOrder = [
   INITIAL_MARTYRIA_NUMERAL_STYLES.None,
   INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
   INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+  INITIAL_MARTYRIA_NUMERAL_STYLES.GreekNumerals,
   INITIAL_MARTYRIA_NUMERAL_STYLES.CyrillicNumerals,
   INITIAL_MARTYRIA_NUMERAL_STYLES.CardinalWords,
   INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords,
@@ -468,12 +465,19 @@ const selectedLanguageId = ref<InitialMartyriaLanguageId>(
 const initialStyle = builtInInitialMartyriaStyles.find(
   (style) => style.id === workingConfiguration.value?.styleId,
 );
+function usesPlagalTerminologyByDefault(languageId: InitialMartyriaLanguageId) {
+  return (
+    languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Greek ||
+    languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.English
+  );
+}
+
 const selectedNumeralStyleFilter = ref<
   InitialMartyriaNumeralStyle | typeof ALL_NUMERAL_STYLES
 >(ALL_NUMERAL_STYLES);
 const usePlagalTerminologyFilter = ref(
-  initialStyle?.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.English &&
-    initialStyle.filters.usesPlagalTerminology,
+  initialStyle?.filters.usesPlagalTerminology ??
+    usesPlagalTerminologyByDefault(selectedLanguageId.value),
 );
 
 if (
@@ -489,9 +493,7 @@ const filteredStyles = computed(() =>
       style.languageId === selectedLanguageId.value &&
       (selectedNumeralStyleFilter.value === ALL_NUMERAL_STYLES ||
         style.filters.numeralStyle === selectedNumeralStyleFilter.value) &&
-      (selectedLanguageId.value !== INITIAL_MARTYRIA_LANGUAGE_IDS.English ||
-        style.filters.usesPlagalTerminology ===
-          usePlagalTerminologyFilter.value),
+      style.filters.usesPlagalTerminology === usePlagalTerminologyFilter.value,
   ),
 );
 const availableNumeralStyles = computed(() =>
@@ -506,19 +508,26 @@ const availableNumeralStyles = computed(() =>
 const showNumeralStyleFilter = computed(
   () => availableNumeralStyles.value.length > 1,
 );
+const plagalTerminologyFilterDisabled = computed(
+  () =>
+    !builtInInitialMartyriaStyles.some(
+      (style) =>
+        style.languageId === selectedLanguageId.value &&
+        style.filters.usesPlagalTerminology !==
+          usePlagalTerminologyFilter.value,
+    ),
+);
 const numeralStyleOptions = computed(() =>
   availableNumeralStyles.value.map((value) => ({
     value,
     label: numeralStyleLabel(value),
-    disabled:
-      selectedLanguageId.value === INITIAL_MARTYRIA_LANGUAGE_IDS.English &&
-      !builtInInitialMartyriaStyles.some(
-        (style) =>
-          style.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.English &&
-          style.filters.numeralStyle === value &&
-          style.filters.usesPlagalTerminology ===
-            usePlagalTerminologyFilter.value,
-      ),
+    disabled: !builtInInitialMartyriaStyles.some(
+      (style) =>
+        style.languageId === selectedLanguageId.value &&
+        style.filters.numeralStyle === value &&
+        style.filters.usesPlagalTerminology ===
+          usePlagalTerminologyFilter.value,
+    ),
   })),
 );
 const selectedStyle = computed(
@@ -667,10 +676,17 @@ function numeralStyleLabel(numeralStyle: InitialMartyriaNumeralStyle) {
           $.dialog.initialMartyriaStyles.numeralStyleExamples.romanNumerals,
         { ns: 'dialog' },
       );
+    case INITIAL_MARTYRIA_NUMERAL_STYLES.GreekNumerals:
+      return t(
+        ($) =>
+          $.dialog.initialMartyriaStyles.numeralStyleExamples.greekNumerals,
+        { ns: 'dialog' },
+      );
     case INITIAL_MARTYRIA_NUMERAL_STYLES.CyrillicNumerals:
       return t(
         ($) =>
-          $.dialog.initialMartyriaStyles.numeralStyleExamples.cyrillicNumerals,
+          $.dialog.initialMartyriaStyles.numeralStyleExamples
+            .churchSlavonicNumerals,
         { ns: 'dialog' },
       );
     case INITIAL_MARTYRIA_NUMERAL_STYLES.CardinalWords:
@@ -681,6 +697,12 @@ function numeralStyleLabel(numeralStyle: InitialMartyriaNumeralStyle) {
       );
     case INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords:
       switch (selectedLanguageId.value) {
+        case INITIAL_MARTYRIA_LANGUAGE_IDS.Greek:
+          return t(
+            ($) =>
+              $.dialog.initialMartyriaStyles.numeralStyleExamples.greekOrdinal,
+            { ns: 'dialog' },
+          );
         case INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish:
           return t(
             ($) =>
@@ -702,6 +724,13 @@ function numeralStyleLabel(numeralStyle: InitialMartyriaNumeralStyle) {
                 .russianOrdinal,
             { ns: 'dialog' },
           );
+        case INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian:
+          return t(
+            ($) =>
+              $.dialog.initialMartyriaStyles.numeralStyleExamples
+                .romanianOrdinal,
+            { ns: 'dialog' },
+          );
         default:
           return t(
             ($) =>
@@ -720,7 +749,9 @@ function selectLanguage(value: unknown) {
   }
   selectedLanguageId.value = language.id;
   selectedNumeralStyleFilter.value = ALL_NUMERAL_STYLES;
-  usePlagalTerminologyFilter.value = false;
+  usePlagalTerminologyFilter.value = usesPlagalTerminologyByDefault(
+    language.id,
+  );
   const firstStyle = builtInInitialMartyriaStyles.find(
     (style) => style.languageId === language.id,
   );
@@ -764,7 +795,7 @@ function setPlagalTerminologyFilter(value: boolean | 'indeterminate') {
     selectedNumeralStyle !== ALL_NUMERAL_STYLES &&
     !builtInInitialMartyriaStyles.some(
       (style) =>
-        style.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.English &&
+        style.languageId === selectedLanguageId.value &&
         style.filters.numeralStyle === selectedNumeralStyle &&
         style.filters.usesPlagalTerminology ===
           usePlagalTerminologyFilter.value,

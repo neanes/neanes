@@ -89,6 +89,8 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   GreekModeNamesV1: 'builtin:greek-mode-names-v1',
   EnglishPlagalFirstV1: 'builtin:english-plagal-first-v1',
   EnglishModeNamesV1: 'builtin:english-mode-names-v1',
+  EnglishAuthenticCounterpartOrdinalDigitsTextV1:
+    'builtin:english-authentic-counterpart-ordinal-digits-text-v1',
   EnglishAuthenticCounterpartNumberSignV1:
     'builtin:english-authentic-counterpart-number-sign-v1',
   EnglishAuthenticCounterpartNumberTextV1:
@@ -98,6 +100,10 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   EnglishAuthenticCounterpartNumberWordTextV1:
     'builtin:english-authentic-counterpart-number-word-text-v1',
   EnglishSignFirstV1: 'builtin:english-sign-first-v1',
+  EnglishPlagalClassOrdinalWordsTextV1:
+    'builtin:english-plagal-class-ordinal-words-text-v1',
+  EnglishPlagalClassOrdinalWordsV1:
+    'builtin:english-plagal-class-ordinal-words-v1',
   EnglishOrdinalPlagalTextV1: 'builtin:english-ordinal-plagal-text-v1',
   EnglishOrdinalPlagalV1: 'builtin:english-ordinal-plagal-v1',
   EnglishOrdinalV1: 'builtin:english-ordinal-v1',
@@ -105,6 +111,8 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   EnglishModeRomanNumeralV1: 'builtin:english-mode-roman-numeral-v1',
   EnglishModeNumberWordV1: 'builtin:english-mode-number-word-v1',
   EnglishFullNameV1: 'builtin:english-full-name-v1',
+  EnglishAuthenticCounterpartOrdinalDigitsV1:
+    'builtin:english-authentic-counterpart-ordinal-digits-v1',
   EnglishAuthenticCounterpartNumberV1:
     'builtin:english-authentic-counterpart-number-v1',
   EnglishAuthenticCounterpartRomanNumeralV1:
@@ -153,6 +161,10 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
     $.dialog.initialMartyriaStyles.builtInStyles.englishPlagalFirst,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishModeNames,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishAuthenticCounterpartOrdinalDigitsTextV1]:
+    ($) =>
+      $.dialog.initialMartyriaStyles.builtInStyles
+        .englishAuthenticCounterpartOrdinalDigitsText,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishAuthenticCounterpartNumberSignV1]:
     ($) =>
       $.dialog.initialMartyriaStyles.builtInStyles
@@ -171,6 +183,13 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
         .englishAuthenticCounterpartNumberWordText,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishSignFirst,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassOrdinalWordsTextV1]: (
+    $,
+  ) =>
+    $.dialog.initialMartyriaStyles.builtInStyles
+      .englishPlagalClassOrdinalWordsText,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassOrdinalWordsV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.englishPlagalClassOrdinalWords,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalPlagalTextV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishOrdinalPlagalText,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalPlagalV1]: ($) =>
@@ -185,6 +204,10 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
     $.dialog.initialMartyriaStyles.builtInStyles.englishModeNumberWord,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishFullNameV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.englishFullName,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishAuthenticCounterpartOrdinalDigitsV1]:
+    ($) =>
+      $.dialog.initialMartyriaStyles.builtInStyles
+        .englishAuthenticCounterpartOrdinalDigits,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishAuthenticCounterpartNumberV1]: (
     $,
   ) =>
@@ -1443,6 +1466,16 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     defaultAppearance: sourceSerifAppearance(),
   }),
   builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishAuthenticCounterpartOrdinalDigitsTextV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    defaultAppearance: sourceSerifAppearance(),
+  }),
+  builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishAuthenticCounterpartNumberSignV1,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
@@ -1492,6 +1525,27 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    defaultAppearance: sourceSerifAppearance(),
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassOrdinalWordsTextV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    defaultAppearance: sourceSerifAppearance(),
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassOrdinalWordsV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     defaultAppearance: sourceSerifAppearance(),
   }),
   builtIn({
@@ -1569,6 +1623,17 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    defaultAppearance: sourceSerifAppearance(),
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishAuthenticCounterpartOrdinalDigitsV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     modeIdentificationMethod:

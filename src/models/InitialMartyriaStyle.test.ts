@@ -174,6 +174,19 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
+    'builtin:english-authentic-counterpart-ordinal-digits-text-v1',
+    [
+      '1ˢᵗ | Mode. | <pitch>',
+      '2ⁿᵈ | Mode. | <pitch>',
+      '3ʳᵈ | Mode. | <pitch>',
+      '4ᵗʰ | Mode. | <pitch>',
+      'Plagal of | 1ˢᵗ | Mode. | <pitch>',
+      'Plagal of | 2ⁿᵈ | Mode. | <pitch>',
+      'Grave | Mode. | <pitch>',
+      'Plagal of | 4ᵗʰ | Mode. | <pitch>',
+    ],
+  ],
+  [
     'builtin:english-authentic-counterpart-number-sign-v1',
     [
       'Mode | <modeSign> | <pitch>',
@@ -236,6 +249,32 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
       '<modeSign> | greek:λ/π | Mode | <pitch>',
       '<modeSign> | Mode | <pitch>',
       '<modeSign> | greek:λ/π | Mode | <pitch>',
+    ],
+  ],
+  [
+    'builtin:english-plagal-class-ordinal-words-text-v1',
+    [
+      'First | Mode. | <pitch>',
+      'Second | Mode. | <pitch>',
+      'Third | Mode. | <pitch>',
+      'Fourth | Mode. | <pitch>',
+      'First | Plagal | Mode. | <pitch>',
+      'Second | Plagal | Mode. | <pitch>',
+      'Grave | Mode. | <pitch>',
+      'Fourth | Plagal | Mode. | <pitch>',
+    ],
+  ],
+  [
+    'builtin:english-plagal-class-ordinal-words-v1',
+    [
+      'First | Mode. | <modeSign> | <pitch>',
+      'Second | Mode. | <modeSign> | <pitch>',
+      'Third | Mode. | <modeSign> | <pitch>',
+      'Fourth | Mode. | <modeSign> | <pitch>',
+      'First | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch>',
+      'Second | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch>',
+      'Grave | Mode. | <modeSign> | <pitch>',
+      'Fourth | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -327,6 +366,19 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
       'Plagal of | Second | Mode. | greek:λ/π | <modeSign> | <pitch>',
       'Grave | Mode. | <modeSign> | <pitch>',
       'Plagal of | Fourth | Mode. | greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'builtin:english-authentic-counterpart-ordinal-digits-v1',
+    [
+      '1ˢᵗ | Mode. | <modeSign> | <pitch>',
+      '2ⁿᵈ | Mode. | <modeSign> | <pitch>',
+      '3ʳᵈ | Mode. | <modeSign> | <pitch>',
+      '4ᵗʰ | Mode. | <modeSign> | <pitch>',
+      'Plagal of | 1ˢᵗ | Mode. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal of | 2ⁿᵈ | Mode. | greek:λ/π | <modeSign> | <pitch>',
+      'Grave | Mode. | <modeSign> | <pitch>',
+      'Plagal of | 4ᵗʰ | Mode. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -842,6 +894,10 @@ const expectedPronunciationsByStyle: [
     englishAuthenticCounterpartOrdinalPronunciations,
   ],
   [
+    'builtin:english-authentic-counterpart-ordinal-digits-text-v1',
+    englishAuthenticCounterpartOrdinalPronunciations,
+  ],
+  [
     'builtin:english-authentic-counterpart-number-sign-v1',
     englishAuthenticCounterpartCardinalPronunciations,
   ],
@@ -858,6 +914,14 @@ const expectedPronunciationsByStyle: [
     englishAuthenticCounterpartCardinalPronunciations,
   ],
   ['builtin:english-sign-first-v1', englishPlagalClassOrdinalPronunciations],
+  [
+    'builtin:english-plagal-class-ordinal-words-text-v1',
+    englishPlagalClassOrdinalPronunciations,
+  ],
+  [
+    'builtin:english-plagal-class-ordinal-words-v1',
+    englishPlagalClassOrdinalPronunciations,
+  ],
   [
     'builtin:english-ordinal-plagal-text-v1',
     englishPlagalClassOrdinalPronunciations,
@@ -878,6 +942,10 @@ const expectedPronunciationsByStyle: [
   ],
   [
     'builtin:english-full-name-v1',
+    englishAuthenticCounterpartOrdinalPronunciations,
+  ],
+  [
+    'builtin:english-authentic-counterpart-ordinal-digits-v1',
     englishAuthenticCounterpartOrdinalPronunciations,
   ],
   [

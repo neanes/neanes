@@ -188,6 +188,7 @@
       "romanianGlasNumber": "Rumania - Digit kardinal (Identifikasi teks dan tanda mode)",
       "romanianGlasRomanNumeral": "Rumania - Angka Romawi kardinal (Identifikasi teks dan tanda mode)",
       "romanianGlasOrdinalNumber": "Rumania - Digit ordinal setelah nomina (Identifikasi teks dan tanda mode)",
+      "romanianGlasOrdinalRomanNumeral": "Rumania - Angka Romawi ordinal setelah nomina (Identifikasi teks dan tanda mode)",
       "romanianGlas": "Rumania - Kata ordinal (Terminologi plagal, identifikasi dengan tanda mode)"
     },
     "moveUp": "Pindahkan komponen ke atas",

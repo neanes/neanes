@@ -188,6 +188,7 @@
       "romanianGlasNumber": "Romanian - Cardinal Digits (Text and Mode-Sign Identification)",
       "romanianGlasRomanNumeral": "Romanian - Cardinal Roman Numerals (Text and Mode-Sign Identification)",
       "romanianGlasOrdinalNumber": "Romanian - Postnominal Ordinal Digits (Text and Mode-Sign Identification)",
+      "romanianGlasOrdinalRomanNumeral": "Romanian - Postnominal Ordinal Roman Numerals (Text and Mode-Sign Identification)",
       "romanianGlas": "Romanian - Ordinal Words (Plagal Terminology, Mode-Sign Identification)"
     },
     "moveUp": "Move component up",

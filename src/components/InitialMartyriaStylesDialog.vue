@@ -42,6 +42,13 @@
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem :value="ALL_LANGUAGES">
+                    {{
+                      $t(($) => $.dialog.initialMartyriaStyles.all, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </SelectItem>
                   <SelectItem
                     v-for="language in initialMartyriaLanguages"
                     :key="language.id"
@@ -198,6 +205,7 @@
             <div class="grid gap-3 sm:grid-cols-2">
               <button
                 v-if="
+                  selectedLanguageId === ALL_LANGUAGES ||
                   selectedLanguageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Greek
                 "
                 type="button"
@@ -515,6 +523,7 @@ import type { FontVariantProperty } from '@/utils/fontVariants';
 import { getLegacyNeumeFontFamily } from '@/utils/getFontFamilyWithFallback';
 
 const DEFAULT_FONT_VALUE = '__style_default__';
+const ALL_LANGUAGES = '__all_languages__';
 const ALL_MODE_IDENTIFICATION_METHODS = '__all_mode_identification_methods__';
 const ALL_NUMERAL_KINDS = '__all_numeral_kinds__';
 const ALL_NUMERAL_STYLES = '__all_numeral_styles__';
@@ -526,7 +535,7 @@ const PLAGAL_TERMINOLOGY_FILTERS = {
 type PlagalTerminologyFilter =
   (typeof PLAGAL_TERMINOLOGY_FILTERS)[keyof typeof PLAGAL_TERMINOLOGY_FILTERS];
 function defaultPlagalTerminologyFilter(
-  languageId: InitialMartyriaLanguageId,
+  languageId: InitialMartyriaLanguageId | typeof ALL_LANGUAGES,
 ): PlagalTerminologyFilter {
   return languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.English
     ? PLAGAL_TERMINOLOGY_FILTERS.Plagal
@@ -577,9 +586,9 @@ const workingConfiguration = ref<InitialMartyriaConfiguration | null>(
 const initialStyle = builtInInitialMartyriaStyles.find(
   (style) => style.id === workingConfiguration.value?.styleId,
 );
-const selectedLanguageId = ref<InitialMartyriaLanguageId>(
-  initialStyle?.languageId ?? initialMartyriaLanguages[0].id,
-);
+const selectedLanguageId = ref<
+  InitialMartyriaLanguageId | typeof ALL_LANGUAGES
+>(initialStyle?.languageId ?? initialMartyriaLanguages[0].id);
 const selectedNumeralStyleFilter = ref<
   InitialMartyriaNumeralStyle | typeof ALL_NUMERAL_STYLES
 >(ALL_NUMERAL_STYLES);
@@ -613,9 +622,11 @@ type BuiltInInitialMartyriaStyle =
   (typeof builtInInitialMartyriaStyles)[number];
 
 const stylesForSelectedLanguage = computed(() =>
-  builtInInitialMartyriaStyles.filter(
-    (style) => style.languageId === selectedLanguageId.value,
-  ),
+  selectedLanguageId.value === ALL_LANGUAGES
+    ? builtInInitialMartyriaStyles
+    : builtInInitialMartyriaStyles.filter(
+        (style) => style.languageId === selectedLanguageId.value,
+      ),
 );
 const styleFilters = computed<StyleFilters>(() => ({
   numeralKind: selectedNumeralKindFilter.value,
@@ -945,6 +956,20 @@ function plagalTerminologyLabel(
 
 function alphabeticNumeralStyleLabel() {
   switch (selectedLanguageId.value) {
+    case ALL_LANGUAGES:
+      return [
+        t(
+          ($) =>
+            $.dialog.initialMartyriaStyles.numeralStyleExamples.greekNumerals,
+          { ns: 'dialog' },
+        ),
+        t(
+          ($) =>
+            $.dialog.initialMartyriaStyles.numeralStyleExamples
+              .churchSlavonicNumerals,
+          { ns: 'dialog' },
+        ),
+      ].join(' / ');
     case INITIAL_MARTYRIA_LANGUAGE_IDS.Greek:
       return t(
         ($) =>
@@ -1032,6 +1057,17 @@ function numeralKindExampleLabel(numeralKind: InitialMartyriaNumeralKind) {
 }
 
 function selectLanguage(value: unknown) {
+  if (value === ALL_LANGUAGES) {
+    selectedLanguageId.value = ALL_LANGUAGES;
+    selectedNumeralKindFilter.value = ALL_NUMERAL_KINDS;
+    selectedNumeralStyleFilter.value = ALL_NUMERAL_STYLES;
+    selectedModeIdentificationMethodFilter.value =
+      ALL_MODE_IDENTIFICATION_METHODS;
+    selectedPlagalTerminologyFilter.value = PLAGAL_TERMINOLOGY_FILTERS.All;
+    selectFirstVisibleStyle();
+    return;
+  }
+
   const language = initialMartyriaLanguages.find((item) => item.id === value);
   if (language == null) {
     return;
@@ -1059,6 +1095,7 @@ function selectStyle(
   const style = builtInInitialMartyriaStyles.find(
     (item) => item.id === styleId,
   );
+  const previousLanguageId = selectedStyle.value?.languageId;
   if (workingConfiguration.value == null) {
     workingConfiguration.value = createInitialMartyriaConfiguration(styleId);
   } else {
@@ -1067,6 +1104,7 @@ function selectStyle(
   if (
     style != null &&
     (applyLanguageDefaults ||
+      style.languageId !== previousLanguageId ||
       style.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Greek)
   ) {
     workingConfiguration.value.transliterateNoteNames =

@@ -86,7 +86,17 @@
       "cardinal": "Cardinal",
       "ordinal": "Ordinal"
     },
+    "numeralKindExamples": {
+      "cardinal": "unu",
+      "ordinal": "întâi"
+    },
     "numeralStyle": "Stilul numeralului",
+    "numeralStyles": {
+      "digits": "Cifre",
+      "romanNumerals": "Numerale romane",
+      "alphabeticNumerals": "Numerale alfabetice",
+      "words": "Cuvinte"
+    },
     "modeIdentificationMethod": "Identificarea modului",
     "modeIdentificationMethods": {
       "text": "Text",
@@ -100,6 +110,12 @@
       "authenticCounterpart": "Corespondentul plagal al unui glas autentic",
       "plagalClass": "Membru al clasei glasurilor plagale"
     },
+    "modeNamingSchemeExamples": {
+      "absolute": "Glasul 5",
+      "authenticCounterpart": "Plagalul Glasului Întâi",
+      "plagalClass": "Primul glas plagal"
+    },
+    "optionWithExample": "{{option}} ({{example}})",
     "numeralStyleExamples": {
       "digits": "1",
       "romanNumerals": "I",

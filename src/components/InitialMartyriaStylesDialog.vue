@@ -779,6 +779,30 @@ const numeralKindSelectors: Record<InitialMartyriaNumeralKind, DialogSelector> =
       $.dialog.initialMartyriaStyles.numeralKinds.ordinal,
   };
 
+const numeralKindExampleSelectors: Record<
+  InitialMartyriaNumeralKind,
+  DialogSelector
+> = {
+  [INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal]: ($) =>
+    $.dialog.initialMartyriaStyles.numeralKindExamples.cardinal,
+  [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal]: ($) =>
+    $.dialog.initialMartyriaStyles.numeralKindExamples.ordinal,
+};
+
+const numeralStyleSelectors: Record<
+  InitialMartyriaNumeralStyle,
+  DialogSelector
+> = {
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.Digits]: ($) =>
+    $.dialog.initialMartyriaStyles.numeralStyles.digits,
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals]: ($) =>
+    $.dialog.initialMartyriaStyles.numeralStyles.romanNumerals,
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals]: ($) =>
+    $.dialog.initialMartyriaStyles.numeralStyles.alphabeticNumerals,
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.Words]: ($) =>
+    $.dialog.initialMartyriaStyles.numeralStyles.words,
+};
+
 const modeIdentificationMethodSelectors: Record<
   InitialMartyriaModeIdentificationMethod,
   DialogSelector
@@ -801,6 +825,19 @@ const modeNamingSchemeSelectors: Record<
     $.dialog.initialMartyriaStyles.modeNamingSchemes.authenticCounterpart,
   [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass]: ($) =>
     $.dialog.initialMartyriaStyles.modeNamingSchemes.plagalClass,
+};
+
+const modeNamingSchemeExampleSelectors: Record<
+  InitialMartyriaModeNamingScheme,
+  DialogSelector
+> = {
+  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute]: ($) =>
+    $.dialog.initialMartyriaStyles.modeNamingSchemeExamples.absolute,
+  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart]: ($) =>
+    $.dialog.initialMartyriaStyles.modeNamingSchemeExamples
+      .authenticCounterpart,
+  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass]: ($) =>
+    $.dialog.initialMartyriaStyles.modeNamingSchemeExamples.plagalClass,
 };
 
 const alphabeticNumeralExampleSelectors: Partial<
@@ -832,7 +869,11 @@ function languageName(languageId: InitialMartyriaLanguageId) {
 }
 
 function numeralKindLabel(numeralKind: InitialMartyriaNumeralKind) {
-  return t(numeralKindSelectors[numeralKind], { ns: 'dialog' });
+  return t(($) => $.dialog.initialMartyriaStyles.optionWithExample, {
+    ns: 'dialog',
+    option: t(numeralKindSelectors[numeralKind], { ns: 'dialog' }),
+    example: t(numeralKindExampleSelectors[numeralKind], { ns: 'dialog' }),
+  });
 }
 
 function modeIdentificationMethodLabel(
@@ -842,30 +883,46 @@ function modeIdentificationMethodLabel(
 }
 
 function modeNamingSchemeLabel(scheme: InitialMartyriaModeNamingScheme) {
-  return t(modeNamingSchemeSelectors[scheme], { ns: 'dialog' });
+  return t(($) => $.dialog.initialMartyriaStyles.optionWithExample, {
+    ns: 'dialog',
+    option: t(modeNamingSchemeSelectors[scheme], { ns: 'dialog' }),
+    example: t(modeNamingSchemeExampleSelectors[scheme], { ns: 'dialog' }),
+  });
 }
 
 function numeralStyleLabel(numeralStyle: InitialMartyriaNumeralStyle) {
+  let example: string;
+
   switch (numeralStyle) {
     case INITIAL_MARTYRIA_NUMERAL_STYLES.Digits:
-      return t(
+      example = t(
         ($) => $.dialog.initialMartyriaStyles.numeralStyleExamples.digits,
         { ns: 'dialog' },
       );
+      break;
     case INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals:
-      return t(
+      example = t(
         ($) =>
           $.dialog.initialMartyriaStyles.numeralStyleExamples.romanNumerals,
         { ns: 'dialog' },
       );
+      break;
     case INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals:
-      return alphabeticNumeralStyleLabel();
+      example = alphabeticNumeralStyleExample();
+      break;
     case INITIAL_MARTYRIA_NUMERAL_STYLES.Words:
-      return wordNumeralStyleLabel();
+      example = wordNumeralStyleExample();
+      break;
   }
+
+  return t(($) => $.dialog.initialMartyriaStyles.optionWithExample, {
+    ns: 'dialog',
+    option: t(numeralStyleSelectors[numeralStyle], { ns: 'dialog' }),
+    example,
+  });
 }
 
-function alphabeticNumeralStyleLabel() {
+function alphabeticNumeralStyleExample() {
   if (selectedLanguageId.value === ALL_LANGUAGES) {
     return Object.values(alphabeticNumeralExampleSelectors)
       .map((selector) => t(selector!, { ns: 'dialog' }))
@@ -880,7 +937,7 @@ function alphabeticNumeralStyleLabel() {
   return t(selector, { ns: 'dialog' });
 }
 
-function wordNumeralStyleLabel() {
+function wordNumeralStyleExample() {
   const availableKinds = numeralKindOrder.filter((numeralKind) =>
     stylesForSelectedLanguage.value.some(
       (style) =>

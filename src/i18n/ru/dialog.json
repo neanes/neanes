@@ -86,7 +86,17 @@
       "cardinal": "Количественное",
       "ordinal": "Порядковое"
     },
+    "numeralKindExamples": {
+      "cardinal": "один",
+      "ordinal": "первый"
+    },
     "numeralStyle": "Стиль числительного",
+    "numeralStyles": {
+      "digits": "Цифры",
+      "romanNumerals": "Римские цифры",
+      "alphabeticNumerals": "Буквенные числа",
+      "words": "Слова"
+    },
     "modeIdentificationMethod": "Обозначение гласа",
     "modeIdentificationMethods": {
       "text": "Текстом",
@@ -100,6 +110,12 @@
       "authenticCounterpart": "Плагальный аналог автентического гласа",
       "plagalClass": "Член класса плагальных гласов"
     },
+    "modeNamingSchemeExamples": {
+      "absolute": "Глас 5",
+      "authenticCounterpart": "Плагальный аналог первого гласа",
+      "plagalClass": "Первый плагальный глас"
+    },
+    "optionWithExample": "{{option}} ({{example}})",
     "numeralStyleExamples": {
       "digits": "1",
       "romanNumerals": "I",

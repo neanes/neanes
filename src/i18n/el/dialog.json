@@ -86,7 +86,17 @@
       "cardinal": "Απόλυτο",
       "ordinal": "Τακτικό"
     },
+    "numeralKindExamples": {
+      "cardinal": "ένα",
+      "ordinal": "πρώτος"
+    },
     "numeralStyle": "Στυλ αριθμητικού",
+    "numeralStyles": {
+      "digits": "Ψηφία",
+      "romanNumerals": "Ρωμαϊκοί αριθμοί",
+      "alphabeticNumerals": "Αλφαβητικοί αριθμοί",
+      "words": "Ολογράφως"
+    },
     "modeIdentificationMethod": "Δήλωση ήχου",
     "modeIdentificationMethods": {
       "text": "Κείμενο",
@@ -100,6 +110,12 @@
       "authenticCounterpart": "Πλάγιος αντίστοιχος αυθεντικού ήχου",
       "plagalClass": "Μέλος της τάξης των πλάγιων ήχων"
     },
+    "modeNamingSchemeExamples": {
+      "absolute": "Ήχος 5",
+      "authenticCounterpart": "Πλάγιος του Πρώτου Ήχου",
+      "plagalClass": "Πρώτος πλάγιος ήχος"
+    },
+    "optionWithExample": "{{option}} ({{example}})",
     "numeralStyleExamples": {
       "digits": "1",
       "romanNumerals": "I",

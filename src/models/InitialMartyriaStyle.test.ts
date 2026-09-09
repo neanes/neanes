@@ -98,7 +98,7 @@ function generateEnglishStyleName(style: InitialMartyriaStyle) {
     style.modeIdentificationMethod ===
     INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
   ) {
-    return `${englishLanguageNames[style.languageId]} - ${annotations.join(', ')}`;
+    return `${englishLanguageNames[style.languageId]} - Mode Label with Traditional Sign Group (${annotations.join(', ')})`;
   }
 
   const qualifier =

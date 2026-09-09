@@ -162,11 +162,11 @@
     "standard": "Standard",
     "documentDefault": "Document default",
     "builtInStyles": {
-      "traditionalGreek": "Greek - Authentic-Counterpart Naming, Mode-Sign Identification",
+      "traditionalGreek": "Greek - Mode Label with Traditional Sign Group (Authentic-Counterpart Naming, Mode-Sign Identification)",
       "greekModeNames": "Greek - Postnominal Ordinal Alphabetic Numerals (Authentic-Counterpart Naming, Text Identification)",
-      "englishPlagalFirst": "English - Authentic-Counterpart Naming, Mode-Sign Identification",
+      "englishPlagalFirst": "English - Mode Label with Traditional Sign Group (Authentic-Counterpart Naming, Mode-Sign Identification)",
       "englishModeNames": "English - Prenominal Ordinal Words (Authentic-Counterpart Naming, Text Identification)",
-      "englishSignFirst": "English - Plagal-Class Naming, Mode-Sign Identification",
+      "englishSignFirst": "English - Mode Label with Traditional Sign Group (Plagal-Class Naming, Mode-Sign Identification)",
       "englishOrdinalPlagal": "English - Prenominal Ordinal Digits (Plagal-Class Naming, Text and Mode-Sign Identification)",
       "englishOrdinal": "English - Prenominal Ordinal Words (Text and Mode-Sign Identification)",
       "englishModeNumber": "English - Cardinal Digits (Text and Mode-Sign Identification)",
@@ -194,7 +194,7 @@
       "romanianGlasRomanNumeral": "Romanian - Cardinal Roman Numerals (Text and Mode-Sign Identification)",
       "romanianGlasOrdinalNumber": "Romanian - Postnominal Ordinal Digits (Text and Mode-Sign Identification)",
       "romanianGlasOrdinalRomanNumeral": "Romanian - Postnominal Ordinal Roman Numerals (Text and Mode-Sign Identification)",
-      "romanianGlas": "Romanian - Authentic-Counterpart Naming, Mode-Sign Identification"
+      "romanianGlas": "Romanian - Mode Label with Traditional Sign Group (Authentic-Counterpart Naming, Mode-Sign Identification)"
     },
     "moveUp": "Move component up",
     "moveDown": "Move component down",

@@ -162,11 +162,11 @@
     "standard": "Standard",
     "documentDefault": "Implicit pentru document",
     "builtInStyles": {
-      "traditionalGreek": "Greacă - Denumire prin corespondent autentic-plagal, identificare prin semn de glas",
+      "traditionalGreek": "Greacă - Cuvânt de glas cu grup tradițional de semne (Denumire prin corespondent autentic-plagal, identificare prin semn de glas)",
       "greekModeNames": "Greacă - Numerale alfabetice ordinale postnominale (Denumire prin corespondent autentic-plagal, identificare prin text)",
-      "englishPlagalFirst": "Engleză - Denumire prin corespondent autentic-plagal, identificare prin semn de glas",
+      "englishPlagalFirst": "Engleză - Cuvânt de glas cu grup tradițional de semne (Denumire prin corespondent autentic-plagal, identificare prin semn de glas)",
       "englishModeNames": "Engleză - Numerale ordinale prenominale în cuvinte (Denumire prin corespondent autentic-plagal, identificare prin text)",
-      "englishSignFirst": "Engleză - Denumire în clasa glasurilor plagale, identificare prin semn de glas",
+      "englishSignFirst": "Engleză - Cuvânt de glas cu grup tradițional de semne (Denumire în clasa glasurilor plagale, identificare prin semn de glas)",
       "englishOrdinalPlagal": "Engleză - Numerale ordinale prenominale în cifre (Denumire în clasa glasurilor plagale, identificare prin text și semn de glas)",
       "englishOrdinal": "Engleză - Numerale ordinale prenominale în cuvinte (Identificare prin text și semn de glas)",
       "englishModeNumber": "Engleză - Numerale cardinale în cifre (Identificare prin text și semn de glas)",
@@ -194,7 +194,7 @@
       "romanianGlasRomanNumeral": "Română - Numerale cardinale cu cifre romane (Identificare prin text și semn de glas)",
       "romanianGlasOrdinalNumber": "Română - Numerale ordinale postnominale în cifre (Identificare prin text și semn de glas)",
       "romanianGlasOrdinalRomanNumeral": "Română - Numerale ordinale postnominale cu cifre romane (Identificare prin text și semn de glas)",
-      "romanianGlas": "Română - Denumire prin corespondent autentic-plagal, identificare prin semn de glas"
+      "romanianGlas": "Română - Cuvânt de glas cu grup tradițional de semne (Denumire prin corespondent autentic-plagal, identificare prin semn de glas)"
     },
     "moveUp": "Mută componenta în sus",
     "removeComponent": "Elimină componenta",

@@ -162,11 +162,11 @@
     "standard": "Standar",
     "documentDefault": "Bawaan dokumen",
     "builtInStyles": {
-      "traditionalGreek": "Yunani - Penamaan padanan autentik-plagal, identifikasi dengan tanda mode",
+      "traditionalGreek": "Yunani - Kata mode dengan kelompok tanda tradisional (Penamaan padanan autentik-plagal, identifikasi dengan tanda mode)",
       "greekModeNames": "Yunani - Angka alfabetis ordinal setelah nomina (Penamaan padanan autentik-plagal, identifikasi teks)",
-      "englishPlagalFirst": "Inggris - Penamaan padanan autentik-plagal, identifikasi dengan tanda mode",
+      "englishPlagalFirst": "Inggris - Kata mode dengan kelompok tanda tradisional (Penamaan padanan autentik-plagal, identifikasi dengan tanda mode)",
       "englishModeNames": "Inggris - Kata ordinal sebelum nomina (Penamaan padanan autentik-plagal, identifikasi teks)",
-      "englishSignFirst": "Inggris - Penamaan kelas mode plagal, identifikasi dengan tanda mode",
+      "englishSignFirst": "Inggris - Kata mode dengan kelompok tanda tradisional (Penamaan kelas mode plagal, identifikasi dengan tanda mode)",
       "englishOrdinalPlagal": "Inggris - Digit ordinal sebelum nomina (Penamaan kelas mode plagal, identifikasi teks dan tanda mode)",
       "englishOrdinal": "Inggris - Kata ordinal sebelum nomina (Identifikasi teks dan tanda mode)",
       "englishModeNumber": "Inggris - Digit kardinal (Identifikasi teks dan tanda mode)",
@@ -194,7 +194,7 @@
       "romanianGlasRomanNumeral": "Rumania - Angka Romawi kardinal (Identifikasi teks dan tanda mode)",
       "romanianGlasOrdinalNumber": "Rumania - Digit ordinal setelah nomina (Identifikasi teks dan tanda mode)",
       "romanianGlasOrdinalRomanNumeral": "Rumania - Angka Romawi ordinal setelah nomina (Identifikasi teks dan tanda mode)",
-      "romanianGlas": "Rumania - Penamaan padanan autentik-plagal, identifikasi dengan tanda mode"
+      "romanianGlas": "Rumania - Kata mode dengan kelompok tanda tradisional (Penamaan padanan autentik-plagal, identifikasi dengan tanda mode)"
     },
     "moveUp": "Pindahkan komponen ke atas",
     "removeComponent": "Hapus komponen",

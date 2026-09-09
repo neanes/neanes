@@ -63,8 +63,8 @@ const englishNumeralQualifierNames: Record<
   [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal]: 'Prenominal',
 };
 
-const englishPlagalAbbreviationPlacementNames: Record<
-  InitialMartyriaStyle['plagalAbbreviationPlacement'],
+const englishPlagalIndicatorPlacementNames: Record<
+  InitialMartyriaStyle['plagalIndicatorPlacement'],
   string | null
 > = {
   beforeModeSign: null,
@@ -96,7 +96,7 @@ function generateEnglishStyleName(style: InitialMartyriaStyle) {
     englishModeIdentificationNames[style.modeIdentificationMethod];
   annotations.push(modeIdentification);
   const placement =
-    englishPlagalAbbreviationPlacementNames[style.plagalAbbreviationPlacement];
+    englishPlagalIndicatorPlacementNames[style.plagalIndicatorPlacement];
   if (placement != null) {
     annotations.push(placement);
   }
@@ -523,10 +523,10 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
       'Glasul | al 2-lea. | <modeSign> | <pitch>',
       'Glasul | al 3-lea. | <modeSign> | <pitch>',
       'Glasul | al 4-lea. | <modeSign> | <pitch>',
-      'Glasul | al 5-lea | lăturaș. | <modeSign> | <pitch>',
-      'Glasul | al 6-lea | lăturaș. | <modeSign> | <pitch>',
+      'Glasul | al 5-lea. | Lăturaș | <modeSign> | <pitch>',
+      'Glasul | al 6-lea. | Lăturaș | <modeSign> | <pitch>',
       'Glasul | al 7-lea. | <modeSign> | <pitch>',
-      'Glasul | al 8-lea | lăturaș. | <modeSign> | <pitch>',
+      'Glasul | al 8-lea. | Lăturaș | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -536,10 +536,10 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
       'Glasul | al II-lea. | <modeSign> | <pitch>',
       'Glasul | al III-lea. | <modeSign> | <pitch>',
       'Glasul | al IV-lea. | <modeSign> | <pitch>',
-      'Glasul | al V-lea | lăturaș. | <modeSign> | <pitch>',
-      'Glasul | al VI-lea | lăturaș. | <modeSign> | <pitch>',
+      'Glasul | al V-lea. | Lăturaș | <modeSign> | <pitch>',
+      'Glasul | al VI-lea. | Lăturaș | <modeSign> | <pitch>',
       'Glasul | al VII-lea. | <modeSign> | <pitch>',
-      'Glasul | al VIII-lea | lăturaș. | <modeSign> | <pitch>',
+      'Glasul | al VIII-lea. | Lăturaș | <modeSign> | <pitch>',
     ],
   ],
   [

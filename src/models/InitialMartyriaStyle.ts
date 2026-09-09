@@ -308,12 +308,15 @@ export interface InitialMartyriaStyle {
   usesPlagalTerminology: boolean;
   modeIdentificationMethod: InitialMartyriaModeIdentificationMethod;
   /**
-   * Where the stacked plagal abbreviation sits when the traditional mode
-   * sign identifies the mode. It usually directly precedes the sign (a
-   * right-to-left flow mirrors the pair automatically).
+   * How plagal modes are marked beside the traditional mode sign.
    */
-  plagalAbbreviationPlacement:
-    'beforeModeSign' | 'afterModeSign' | 'beforeLabel';
+  plagalIndicator: 'stackedAbbreviation' | 'word';
+  /**
+   * Where the plagal indicator sits when the traditional mode sign identifies
+   * the mode. It usually directly precedes the sign (a right-to-left flow
+   * mirrors the pair automatically).
+   */
+  plagalIndicatorPlacement: 'beforeModeSign' | 'afterModeSign' | 'beforeLabel';
   flowDirection: 'page' | 'ltr' | 'rtl';
   defaultAppearance: InitialMartyriaDefaultAppearance;
   originalNoteNames: InitialMartyriaNoteNames;
@@ -539,16 +542,6 @@ interface InitialMartyriaLexicon {
   plagalWordPosition?: 'phraseStart' | 'beforeNumeral' | 'afterNumeral';
   /** Text phrases mark plagal modes with the stacked abbreviation (Greek). */
   plagalAbbreviationInText?: boolean;
-  /**
-   * Ordinal mode names carry the plagal word even though the numbering runs
-   * continuously through the plagal modes (Romanian 'al 5-lea laturas').
-   */
-  plagalWordWithOrdinals?: boolean;
-  /**
-   * The sign group drops the stacked abbreviation when the text phrase
-   * already carries the plagal word (Romanian; English editions keep both).
-   */
-  omitsPlagalAbbreviationAfterPlagalWord?: boolean;
   /** Grave-mode word used inside a text phrase. */
   graveWord?: string;
   /** Grave-mode word used as a standalone title next to the mode sign. */
@@ -689,10 +682,7 @@ const initialMartyriaLexicons: Record<
     label: 'Glas',
     labelWithOrdinal: 'Glasul',
     formatOrdinal: (base) => `al ${base}-lea`,
-    plagalWord: 'lăturaș',
-    plagalWordPosition: 'afterNumeral',
-    plagalWordWithOrdinals: true,
-    omitsPlagalAbbreviationAfterPlagalWord: true,
+    plagalWord: 'Lăturaș',
     usesTerminalPeriod: true,
   },
 };
@@ -789,6 +779,19 @@ function plagalAbbreviation(): InitialMartyriaComponent {
   return { kind: 'stackedText', top: 'λ', bottom: 'π', fontRole: 'greek' };
 }
 
+function getPlagalIndicator(
+  style: InitialMartyriaStyle,
+  lexicon: InitialMartyriaLexicon,
+): InitialMartyriaComponent {
+  if (style.plagalIndicator === 'word') {
+    if (lexicon.plagalWord == null) {
+      throw new Error(`Missing plagal word for ${style.languageId}`);
+    }
+    return text(lexicon.plagalWord);
+  }
+  return plagalAbbreviation();
+}
+
 /**
  * Derives the displayed components for one mode from the style's semantics
  * and its language's lexicon. The mode name is a phrase built from the
@@ -805,10 +808,10 @@ export function getInitialMartyriaComponents(
   const lexicon = initialMartyriaLexicons[style.languageId];
   const method = style.modeIdentificationMethod;
   const trailingLabel = usesTrailingLabel(style);
-  // A right-to-left flow mirrors the abbreviation-sign pair so the
-  // abbreviation keeps its traditional place beside the sign.
-  const signBeforeAbbreviation =
-    (style.plagalAbbreviationPlacement === 'afterModeSign') !==
+  // A right-to-left flow mirrors the indicator-sign pair so the indicator
+  // keeps its traditional place beside the sign.
+  const signBeforeIndicator =
+    (style.plagalIndicatorPlacement === 'afterModeSign') !==
     (flowDirection === 'rtl');
   const isPlagalMode = plagalModes.includes(mode);
   const labelText = getInitialMartyriaLabelText(style, lexicon);
@@ -825,14 +828,14 @@ export function getInitialMartyriaComponents(
     const graveTitle =
       mode === 7 && style.usesPlagalTerminology ? lexicon.graveWordTitle : null;
     const marker = isPlagalMode
-      ? plagalAbbreviation()
+      ? getPlagalIndicator(style, lexicon)
       : graveTitle != null
         ? text(graveTitle)
         : null;
-    if (style.plagalAbbreviationPlacement === 'beforeLabel') {
+    if (style.plagalIndicatorPlacement === 'beforeLabel') {
       ordered = [marker, label, modeSign];
     } else {
-      const group = signBeforeAbbreviation
+      const group = signBeforeIndicator
         ? [modeSign, marker]
         : [marker, modeSign];
       ordered = trailingLabel ? [...group, label] : [label, ...group];
@@ -845,17 +848,13 @@ export function getInitialMartyriaComponents(
     const markerPosition = lexicon.plagalWordPosition ?? 'phraseStart';
 
     let marker: InitialMartyriaComponent | null = null;
-    const marksPlagalModes =
-      style.usesPlagalTerminology ||
-      (lexicon.plagalWordWithOrdinals === true &&
-        style.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal);
     if (
       mode === 7 &&
       style.usesPlagalTerminology &&
       lexicon.graveWord != null
     ) {
       marker = text(lexicon.graveWord);
-    } else if (isPlagalMode && marksPlagalModes) {
+    } else if (isPlagalMode && style.usesPlagalTerminology) {
       if (lexicon.plagalAbbreviationInText) {
         marker = plagalAbbreviation();
       } else if (lexicon.plagalWord != null) {
@@ -887,20 +886,29 @@ export function getInitialMartyriaComponents(
           : [marker, label, numeral];
     }
 
+    if (lexicon.usesTerminalPeriod) {
+      const lastText = ordered
+        .filter(
+          (
+            component,
+          ): component is Extract<InitialMartyriaComponent, { kind: 'text' }> =>
+            component?.kind === 'text',
+        )
+        .at(-1);
+      if (lastText != null) {
+        lastText.content += '.';
+      }
+    }
+
     if (
       method === INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign
     ) {
-      const abbreviation =
-        isPlagalMode &&
-        !(
-          marker?.kind === 'text' &&
-          lexicon.omitsPlagalAbbreviationAfterPlagalWord
-        )
-          ? plagalAbbreviation()
-          : null;
-      const group = signBeforeAbbreviation
-        ? [modeSign, abbreviation]
-        : [abbreviation, modeSign];
+      const indicator = isPlagalMode
+        ? getPlagalIndicator(style, lexicon)
+        : null;
+      const group = signBeforeIndicator
+        ? [modeSign, indicator]
+        : [indicator, modeSign];
       if (lexicon.modeSignGroupTrailing) {
         ordered.push(startingPitch, ...group);
       } else {
@@ -914,22 +922,6 @@ export function getInitialMartyriaComponents(
   const components = ordered.filter(
     (component): component is InitialMartyriaComponent => component != null,
   );
-  if (
-    lexicon.usesTerminalPeriod &&
-    method !== INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-  ) {
-    const lastText = components
-      .filter(
-        (
-          component,
-        ): component is Extract<InitialMartyriaComponent, { kind: 'text' }> =>
-          component.kind === 'text',
-      )
-      .at(-1);
-    if (lastText != null) {
-      lastText.content += '.';
-    }
-  }
   return components;
 }
 
@@ -972,20 +964,23 @@ function builtIn(options: {
   numeralQualifier?: InitialMartyriaNumeralQualifier;
   usesPlagalTerminology: boolean;
   modeIdentificationMethod: InitialMartyriaModeIdentificationMethod;
-  plagalAbbreviationPlacement?: InitialMartyriaStyle['plagalAbbreviationPlacement'];
+  plagalIndicator?: InitialMartyriaStyle['plagalIndicator'];
+  plagalIndicatorPlacement?: InitialMartyriaStyle['plagalIndicatorPlacement'];
   defaultAppearance: InitialMartyriaDefaultAppearance;
   transliteratedNoteNames?: InitialMartyriaNoteNames;
   flowDirection?: InitialMartyriaStyle['flowDirection'];
 }): InitialMartyriaStyle {
   const {
-    plagalAbbreviationPlacement = 'beforeModeSign',
+    plagalIndicator = 'stackedAbbreviation',
+    plagalIndicatorPlacement = 'beforeModeSign',
     transliteratedNoteNames = transliteratedGreekNoteNames,
     flowDirection = 'page',
     ...styleOptions
   } = options;
   return {
     ...styleOptions,
-    plagalAbbreviationPlacement,
+    plagalIndicator,
+    plagalIndicatorPlacement,
     flowDirection,
     originalNoteNames: originalGreekNoteNames,
     transliteratedNoteNames,
@@ -1055,7 +1050,7 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     usesPlagalTerminology: true,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-    plagalAbbreviationPlacement: 'afterModeSign',
+    plagalIndicatorPlacement: 'afterModeSign',
     defaultAppearance: sourceSerifAppearance(),
   }),
   builtIn({
@@ -1066,7 +1061,7 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     usesPlagalTerminology: true,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-    plagalAbbreviationPlacement: 'beforeLabel',
+    plagalIndicatorPlacement: 'beforeLabel',
     defaultAppearance: sourceSerifAppearance(),
   }),
   builtIn({
@@ -1353,6 +1348,7 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     usesPlagalTerminology: false,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    plagalIndicator: 'word',
     defaultAppearance: sourceSerifAppearance(),
   }),
   builtIn({
@@ -1364,6 +1360,7 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     usesPlagalTerminology: false,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    plagalIndicator: 'word',
     defaultAppearance: sourceSerifAppearance(),
   }),
   /*

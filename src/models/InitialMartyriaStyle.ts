@@ -539,7 +539,7 @@ interface InitialMartyriaLexicon {
   /** Plagal word form used directly before a numeral (Plagal of). */
   plagalWordBeforeNumeral?: string;
   /** Where the plagal word sits inside the mode-name phrase. */
-  plagalWordPosition?: 'phraseStart' | 'beforeNumeral' | 'afterNumeral';
+  plagalWordPosition?: 'phraseStart' | 'beforeNumeral';
   /** Text phrases mark plagal modes with the stacked abbreviation (Greek). */
   plagalAbbreviationInText?: boolean;
   /** Grave-mode word used inside a text phrase. */
@@ -874,11 +874,6 @@ export function getInitialMartyriaComponents(
         ordered = trailingLabel
           ? [marker, numeral, label]
           : [label, marker, numeral];
-        break;
-      case 'afterNumeral':
-        ordered = trailingLabel
-          ? [numeral, marker, label]
-          : [label, numeral, marker];
         break;
       default:
         ordered = trailingLabel

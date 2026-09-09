@@ -1220,7 +1220,7 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
       text('al 6-lea', [6]),
       text('al 7-lea', [7]),
       text('al 8-lea', [8]),
-      text('Lăt', [5, 6, 8]),
+      text('lăt', [5, 6, 8]),
       modeSign(),
       startingPitch(),
     ],

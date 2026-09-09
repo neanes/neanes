@@ -123,6 +123,43 @@
               </Select>
             </Field>
 
+            <Field v-if="showModeIdentificationMethodFilter">
+              <FieldLabel for="initial-martyria-mode-identification-method">
+                {{
+                  $t(
+                    ($) =>
+                      $.dialog.initialMartyriaStyles.modeIdentificationMethod,
+                    { ns: 'dialog' },
+                  )
+                }}
+              </FieldLabel>
+              <Select
+                :model-value="selectedModeIdentificationMethodFilter"
+                @update:model-value="selectModeIdentificationMethodFilter"
+              >
+                <SelectTrigger id="initial-martyria-mode-identification-method">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem :value="ALL_MODE_IDENTIFICATION_METHODS">
+                    {{
+                      $t(($) => $.dialog.initialMartyriaStyles.all, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </SelectItem>
+                  <SelectItem
+                    v-for="option in modeIdentificationMethodOptions"
+                    :key="option.value"
+                    :value="option.value"
+                    :disabled="option.disabled"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+
             <Field orientation="horizontal">
               <Checkbox
                 id="initial-martyria-plagal-terminology-filter"
@@ -440,12 +477,14 @@ import {
   createInitialMartyriaConfiguration,
   getInitialMartyriaStyleDisplayName,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaAppearanceOverrides,
   type InitialMartyriaConfiguration,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguages,
+  type InitialMartyriaModeIdentificationMethod,
   type InitialMartyriaNumeralKind,
   type InitialMartyriaNumeralStyle,
   resolveInitialMartyriaConfiguration,
@@ -457,6 +496,7 @@ import type { FontVariantProperty } from '@/utils/fontVariants';
 import { getLegacyNeumeFontFamily } from '@/utils/getFontFamilyWithFallback';
 
 const DEFAULT_FONT_VALUE = '__style_default__';
+const ALL_MODE_IDENTIFICATION_METHODS = '__all_mode_identification_methods__';
 const ALL_NUMERAL_KINDS = '__all_numeral_kinds__';
 const ALL_NUMERAL_STYLES = '__all_numeral_styles__';
 const representativeTemplateIds = [100, 500, 700];
@@ -469,6 +509,11 @@ const numeralStyleOrder = [
   INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
   INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
   INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+];
+const modeIdentificationMethodOrder = [
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
 ];
 
 const props = withDefaults(
@@ -517,6 +562,10 @@ const selectedNumeralStyleFilter = ref<
 const selectedNumeralKindFilter = ref<
   InitialMartyriaNumeralKind | typeof ALL_NUMERAL_KINDS
 >(ALL_NUMERAL_KINDS);
+const selectedModeIdentificationMethodFilter = ref<
+  | InitialMartyriaModeIdentificationMethod
+  | typeof ALL_MODE_IDENTIFICATION_METHODS
+>(ALL_MODE_IDENTIFICATION_METHODS);
 const usePlagalTerminologyFilter = ref(
   initialStyle?.usesPlagalTerminology ??
     usesPlagalTerminologyByDefault(selectedLanguageId.value),
@@ -529,9 +578,12 @@ if (
   workingConfiguration.value.transliterateNoteNames = false;
 }
 
-type NumeralFilters = {
+type StyleFilters = {
   numeralKind: InitialMartyriaNumeralKind | typeof ALL_NUMERAL_KINDS;
   numeralStyle: InitialMartyriaNumeralStyle | typeof ALL_NUMERAL_STYLES;
+  modeIdentificationMethod:
+    | InitialMartyriaModeIdentificationMethod
+    | typeof ALL_MODE_IDENTIFICATION_METHODS;
   usesPlagalTerminology: boolean;
 };
 type BuiltInInitialMartyriaStyle =
@@ -542,34 +594,37 @@ const stylesForSelectedLanguage = computed(() =>
     (style) => style.languageId === selectedLanguageId.value,
   ),
 );
-const numeralFilters = computed<NumeralFilters>(() => ({
+const styleFilters = computed<StyleFilters>(() => ({
   numeralKind: selectedNumeralKindFilter.value,
   numeralStyle: selectedNumeralStyleFilter.value,
+  modeIdentificationMethod: selectedModeIdentificationMethodFilter.value,
   usesPlagalTerminology: usePlagalTerminologyFilter.value,
 }));
 
-function matchesNumeralFilters(
+function matchesStyleFilters(
   style: BuiltInInitialMartyriaStyle,
-  filters: NumeralFilters,
+  filters: StyleFilters,
 ) {
   return (
     (filters.numeralKind === ALL_NUMERAL_KINDS ||
       style.numeralKind === filters.numeralKind) &&
     (filters.numeralStyle === ALL_NUMERAL_STYLES ||
       style.numeralStyle === filters.numeralStyle) &&
+    (filters.modeIdentificationMethod === ALL_MODE_IDENTIFICATION_METHODS ||
+      style.modeIdentificationMethod === filters.modeIdentificationMethod) &&
     style.usesPlagalTerminology === filters.usesPlagalTerminology
   );
 }
 
-function hasMatchingStyle(filters = numeralFilters.value) {
+function hasMatchingStyle(filters = styleFilters.value) {
   return stylesForSelectedLanguage.value.some((style) =>
-    matchesNumeralFilters(style, filters),
+    matchesStyleFilters(style, filters),
   );
 }
 
 const filteredStyles = computed(() =>
   stylesForSelectedLanguage.value.filter((style) =>
-    matchesNumeralFilters(style, numeralFilters.value),
+    matchesStyleFilters(style, styleFilters.value),
   ),
 );
 const availableNumeralKinds = computed(() =>
@@ -586,11 +641,21 @@ const availableNumeralStyles = computed(() =>
     ),
   ),
 );
+const availableModeIdentificationMethods = computed(() =>
+  modeIdentificationMethodOrder.filter((method) =>
+    stylesForSelectedLanguage.value.some(
+      (style) => style.modeIdentificationMethod === method,
+    ),
+  ),
+);
 const showNumeralKindFilter = computed(
   () => availableNumeralKinds.value.length > 1,
 );
 const showNumeralStyleFilter = computed(
   () => availableNumeralStyles.value.length > 1,
+);
+const showModeIdentificationMethodFilter = computed(
+  () => availableModeIdentificationMethods.value.length > 1,
 );
 const plagalTerminologyFilterDisabled = computed(
   () =>
@@ -604,7 +669,7 @@ const numeralKindOptions = computed(() =>
     value,
     label: numeralKindLabel(value),
     disabled: !hasMatchingStyle({
-      ...numeralFilters.value,
+      ...styleFilters.value,
       numeralKind: value,
     }),
   })),
@@ -614,8 +679,18 @@ const numeralStyleOptions = computed(() =>
     value,
     label: numeralStyleLabel(value),
     disabled: !hasMatchingStyle({
-      ...numeralFilters.value,
+      ...styleFilters.value,
       numeralStyle: value,
+    }),
+  })),
+);
+const modeIdentificationMethodOptions = computed(() =>
+  availableModeIdentificationMethods.value.map((value) => ({
+    value,
+    label: modeIdentificationMethodLabel(value),
+    disabled: !hasMatchingStyle({
+      ...styleFilters.value,
+      modeIdentificationMethod: value,
     }),
   })),
 );
@@ -783,6 +858,31 @@ function numeralStyleLabel(numeralStyle: InitialMartyriaNumeralStyle) {
   }
 }
 
+function modeIdentificationMethodLabel(
+  method: InitialMartyriaModeIdentificationMethod,
+) {
+  switch (method) {
+    case INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text:
+      return t(
+        ($) => $.dialog.initialMartyriaStyles.modeIdentificationMethods.text,
+        { ns: 'dialog' },
+      );
+    case INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign:
+      return t(
+        ($) =>
+          $.dialog.initialMartyriaStyles.modeIdentificationMethods.modeSign,
+        { ns: 'dialog' },
+      );
+    case INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign:
+      return t(
+        ($) =>
+          $.dialog.initialMartyriaStyles.modeIdentificationMethods
+            .textAndModeSign,
+        { ns: 'dialog' },
+      );
+  }
+}
+
 function alphabeticNumeralStyleLabel() {
   switch (selectedLanguageId.value) {
     case INITIAL_MARTYRIA_LANGUAGE_IDS.Greek:
@@ -879,6 +979,8 @@ function selectLanguage(value: unknown) {
   selectedLanguageId.value = language.id;
   selectedNumeralKindFilter.value = ALL_NUMERAL_KINDS;
   selectedNumeralStyleFilter.value = ALL_NUMERAL_STYLES;
+  selectedModeIdentificationMethodFilter.value =
+    ALL_MODE_IDENTIFICATION_METHODS;
   usePlagalTerminologyFilter.value = usesPlagalTerminologyByDefault(
     language.id,
   );
@@ -915,7 +1017,7 @@ function selectNumeralKindFilter(value: unknown) {
   }
   selectedNumeralKindFilter.value = value as
     InitialMartyriaNumeralKind | typeof ALL_NUMERAL_KINDS;
-  reconcileNumeralFilters('numeralKind');
+  reconcileStyleFilters('numeralKind');
   selectFirstVisibleStyle();
 }
 
@@ -930,36 +1032,79 @@ function selectNumeralStyleFilter(value: unknown) {
   }
   selectedNumeralStyleFilter.value = value as
     InitialMartyriaNumeralStyle | typeof ALL_NUMERAL_STYLES;
-  reconcileNumeralFilters('numeralStyle');
+  reconcileStyleFilters('numeralStyle');
+  selectFirstVisibleStyle();
+}
+
+function selectModeIdentificationMethodFilter(value: unknown) {
+  if (
+    value !== ALL_MODE_IDENTIFICATION_METHODS &&
+    !Object.values(INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS).includes(
+      value as InitialMartyriaModeIdentificationMethod,
+    )
+  ) {
+    return;
+  }
+  selectedModeIdentificationMethodFilter.value = value as
+    | InitialMartyriaModeIdentificationMethod
+    | typeof ALL_MODE_IDENTIFICATION_METHODS;
+  reconcileStyleFilters('modeIdentificationMethod');
   selectFirstVisibleStyle();
 }
 
 function setPlagalTerminologyFilter(value: boolean | 'indeterminate') {
   usePlagalTerminologyFilter.value = value === true;
-  reconcileNumeralFilters('numeralKind');
+  reconcileStyleFilters('plagalTerminology');
   selectFirstVisibleStyle();
 }
 
-function reconcileNumeralFilters(
-  preferredFilter: 'numeralKind' | 'numeralStyle',
+type SelectFilter = 'numeralKind' | 'numeralStyle' | 'modeIdentificationMethod';
+
+function reconcileStyleFilters(
+  preferredFilter: SelectFilter | 'plagalTerminology',
 ) {
   if (hasMatchingStyle()) {
     return;
   }
 
-  const otherFilter =
-    preferredFilter === 'numeralKind' ? 'numeralStyle' : 'numeralKind';
-  clearNumeralFilter(otherFilter);
-  if (!hasMatchingStyle()) {
-    clearNumeralFilter(preferredFilter);
+  for (const filter of styleFilterResetOrder(preferredFilter)) {
+    clearStyleFilter(filter);
+    if (hasMatchingStyle()) {
+      return;
+    }
+  }
+  if (preferredFilter !== 'plagalTerminology') {
+    clearStyleFilter(preferredFilter);
   }
 }
 
-function clearNumeralFilter(filter: 'numeralKind' | 'numeralStyle') {
-  if (filter === 'numeralKind') {
-    selectedNumeralKindFilter.value = ALL_NUMERAL_KINDS;
-  } else {
-    selectedNumeralStyleFilter.value = ALL_NUMERAL_STYLES;
+function styleFilterResetOrder(
+  preferredFilter: SelectFilter | 'plagalTerminology',
+): SelectFilter[] {
+  switch (preferredFilter) {
+    case 'numeralKind':
+      return ['numeralStyle', 'modeIdentificationMethod'];
+    case 'numeralStyle':
+      return ['numeralKind', 'modeIdentificationMethod'];
+    case 'modeIdentificationMethod':
+      return ['numeralStyle', 'numeralKind'];
+    case 'plagalTerminology':
+      return ['modeIdentificationMethod', 'numeralStyle', 'numeralKind'];
+  }
+}
+
+function clearStyleFilter(filter: SelectFilter) {
+  switch (filter) {
+    case 'numeralKind':
+      selectedNumeralKindFilter.value = ALL_NUMERAL_KINDS;
+      break;
+    case 'numeralStyle':
+      selectedNumeralStyleFilter.value = ALL_NUMERAL_STYLES;
+      break;
+    case 'modeIdentificationMethod':
+      selectedModeIdentificationMethodFilter.value =
+        ALL_MODE_IDENTIFICATION_METHODS;
+      break;
   }
 }
 

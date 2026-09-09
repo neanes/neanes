@@ -87,6 +87,12 @@
       "ordinal": "Τακτικό"
     },
     "numeralStyle": "Στυλ αριθμητικού",
+    "modeIdentificationMethod": "Δήλωση ήχου",
+    "modeIdentificationMethods": {
+      "text": "Κείμενο",
+      "modeSign": "Σημάδι ήχου",
+      "textAndModeSign": "Κείμενο και σημάδι ήχου"
+    },
     "all": "Όλα",
     "usePlagalTerminology": "Χρήση ορολογίας πλαγίων",
     "numeralStyleExamples": {

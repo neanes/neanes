@@ -87,6 +87,12 @@
       "ordinal": "Порядковое"
     },
     "numeralStyle": "Стиль числительного",
+    "modeIdentificationMethod": "Обозначение гласа",
+    "modeIdentificationMethods": {
+      "text": "Текстом",
+      "modeSign": "Знаком гласа",
+      "textAndModeSign": "Текстом и знаком гласа"
+    },
     "all": "Все",
     "usePlagalTerminology": "Использовать плагальную терминологию",
     "numeralStyleExamples": {

@@ -87,6 +87,12 @@
       "ordinal": "Ordinal"
     },
     "numeralStyle": "Gaya angka",
+    "modeIdentificationMethod": "Identifikasi mode",
+    "modeIdentificationMethods": {
+      "text": "Teks",
+      "modeSign": "Tanda mode",
+      "textAndModeSign": "Teks dan tanda mode"
+    },
     "all": "Semua",
     "usePlagalTerminology": "Gunakan terminologi plagal",
     "numeralStyleExamples": {

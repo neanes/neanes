@@ -87,6 +87,12 @@
       "ordinal": "Ordinal"
     },
     "numeralStyle": "Stilul numeralului",
+    "modeIdentificationMethod": "Identificarea modului",
+    "modeIdentificationMethods": {
+      "text": "Text",
+      "modeSign": "Semn de glas",
+      "textAndModeSign": "Text și semn de glas"
+    },
     "all": "Toate",
     "usePlagalTerminology": "Folosește terminologia plagală",
     "numeralStyleExamples": {

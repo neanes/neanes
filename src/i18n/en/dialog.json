@@ -87,6 +87,12 @@
       "ordinal": "Ordinal"
     },
     "numeralStyle": "Numeral style",
+    "modeIdentificationMethod": "Mode identification",
+    "modeIdentificationMethods": {
+      "text": "Text",
+      "modeSign": "Mode sign",
+      "textAndModeSign": "Text and mode sign"
+    },
     "all": "All",
     "usePlagalTerminology": "Use plagal terminology",
     "numeralStyleExamples": {

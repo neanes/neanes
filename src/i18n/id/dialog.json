@@ -181,6 +181,7 @@
       "spanishOrdinalTono": "Spanyol - Kata ordinal sebelum nomina (Identifikasi teks dan tanda mode)",
       "churchSlavonicGlasNumber": "Slavonik Gerejawi - Digit kardinal (Identifikasi teks dan tanda mode)",
       "churchSlavonicGlasCyrillicNumeral": "Slavonik Gerejawi - Angka alfabetis kardinal (Identifikasi teks dan tanda mode)",
+      "churchSlavonicGlasCyrillicNumeralText": "Slavonik Gerejawi - Angka alfabetis kardinal (Identifikasi teks)",
       "churchSlavonicGlasOrdinal": "Slavonik Gerejawi - Kata ordinal (Identifikasi teks dan tanda mode)",
       "churchSlavonicGlasOrdinalText": "Slavonik Gerejawi - Kata ordinal (Identifikasi teks)",
       "russianGlasNumber": "Rusia - Digit kardinal (Identifikasi teks dan tanda mode)",

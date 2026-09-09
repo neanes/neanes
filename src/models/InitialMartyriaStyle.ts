@@ -131,6 +131,8 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   ChurchSlavonicGlasNumberV1: 'builtin:church-slavonic-glas-number-v1',
   ChurchSlavonicGlasCyrillicNumeralV1:
     'builtin:church-slavonic-glas-cyrillic-numeral-v1',
+  ChurchSlavonicGlasCyrillicNumeralTextV1:
+    'builtin:church-slavonic-glas-cyrillic-numeral-text-v1',
   ChurchSlavonicGlasOrdinalV1: 'builtin:church-slavonic-glas-ordinal-v1',
   ChurchSlavonicGlasOrdinalTextV1:
     'builtin:church-slavonic-glas-ordinal-text-v1',
@@ -200,6 +202,10 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
   ) =>
     $.dialog.initialMartyriaStyles.builtInStyles
       .churchSlavonicGlasCyrillicNumeral,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasCyrillicNumeralTextV1]:
+    ($) =>
+      $.dialog.initialMartyriaStyles.builtInStyles
+        .churchSlavonicGlasCyrillicNumeralText,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasOrdinalV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.churchSlavonicGlasOrdinal,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasOrdinalTextV1]: ($) =>
@@ -1225,6 +1231,16 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     usesPlagalTerminology: false,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    defaultAppearance: defaultAppearance('Old Standard'),
+    transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasCyrillicNumeralTextV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
+    usesPlagalTerminology: false,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
     defaultAppearance: defaultAppearance('Old Standard'),
     transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
   }),

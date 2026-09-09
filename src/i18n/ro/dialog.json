@@ -181,6 +181,7 @@
       "spanishOrdinalTono": "Spaniolă - Numerale ordinale prenominale în cuvinte (Identificare prin text și semn de glas)",
       "churchSlavonicGlasNumber": "Slavonă bisericească - Numerale cardinale în cifre (Identificare prin text și semn de glas)",
       "churchSlavonicGlasCyrillicNumeral": "Slavonă bisericească - Numerale alfabetice cardinale (Identificare prin text și semn de glas)",
+      "churchSlavonicGlasCyrillicNumeralText": "Slavonă bisericească - Numerale alfabetice cardinale (Identificare prin text)",
       "churchSlavonicGlasOrdinal": "Slavonă bisericească - Numerale ordinale în cuvinte (Identificare prin text și semn de glas)",
       "churchSlavonicGlasOrdinalText": "Slavonă bisericească - Numerale ordinale în cuvinte (Identificare prin text)",
       "russianGlasNumber": "Rusă - Numerale cardinale în cifre (Identificare prin text și semn de glas)",

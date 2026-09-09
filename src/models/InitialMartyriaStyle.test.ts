@@ -400,6 +400,19 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
+    'builtin:church-slavonic-glas-cyrillic-numeral-text-v1',
+    [
+      'Гла́съ | а҃. | <pitch>',
+      'Гла́съ | в҃. | <pitch>',
+      'Гла́съ | г҃. | <pitch>',
+      'Гла́съ | д҃. | <pitch>',
+      'Гла́съ | є҃. | <pitch>',
+      'Гла́съ | ѕ҃. | <pitch>',
+      'Гла́съ | з҃. | <pitch>',
+      'Гла́съ | и҃. | <pitch>',
+    ],
+  ],
+  [
     'builtin:church-slavonic-glas-ordinal-v1',
     [
       'Гла́съ | пе́рвый. | <modeSign> | <pitch>',

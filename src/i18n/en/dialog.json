@@ -181,6 +181,7 @@
       "spanishOrdinalTono": "Spanish - Prenominal Ordinal Words (Text and Mode-Sign Identification)",
       "churchSlavonicGlasNumber": "Church Slavonic - Cardinal Digits (Text and Mode-Sign Identification)",
       "churchSlavonicGlasCyrillicNumeral": "Church Slavonic - Cardinal Alphabetic Numerals (Text and Mode-Sign Identification)",
+      "churchSlavonicGlasCyrillicNumeralText": "Church Slavonic - Cardinal Alphabetic Numerals (Text Identification)",
       "churchSlavonicGlasOrdinal": "Church Slavonic - Ordinal Words (Text and Mode-Sign Identification)",
       "churchSlavonicGlasOrdinalText": "Church Slavonic - Ordinal Words (Text Identification)",
       "russianGlasNumber": "Russian - Cardinal Digits (Text and Mode-Sign Identification)",

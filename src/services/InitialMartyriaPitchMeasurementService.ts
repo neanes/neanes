@@ -20,7 +20,6 @@ export interface InitialMartyriaPitchMeasurementOptions {
   glyphFontSize: number;
   textStrokeWidth?: number;
   glyphStrokeWidth?: number;
-  baselineShift?: number;
 }
 
 function atomBounds(
@@ -95,7 +94,6 @@ export function measureInitialMartyriaPitchGeometry(
     fthora,
     quantitative,
     Math.max(options.textStrokeWidth ?? 0, options.glyphStrokeWidth ?? 0) / 2,
-    options.baselineShift,
   );
 }
 
@@ -182,15 +180,4 @@ export function resolveInitialMartyriaAccessoryLayout(options: {
     fontSize,
     baselineOffset: options.neumeBaselineCorrection - 0.45 * fontSize,
   };
-}
-
-export function getInitialMartyriaPitchTextBounds(
-  note: InitialMartyriaPitchNote | null,
-  noteText: string,
-  options: InitialMartyriaPitchMeasurementOptions,
-) {
-  if (note == null) {
-    return null;
-  }
-  return measureInitialMartyriaPitchGeometry(note, noteText, options);
 }

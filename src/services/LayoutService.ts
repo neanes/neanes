@@ -33,7 +33,6 @@ import {
 } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
-import { INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM } from '@/models/InitialMartyriaStackedTextGeometry';
 import {
   getInitialMartyriaContext,
   getInitialMartyriaFixedSeparatorSize,
@@ -42,7 +41,6 @@ import {
   type InitialMartyriaAppearance,
   type ResolvedInitialMartyriaConfiguration,
   type ResolvedInitialMartyriaRun,
-  resolveInitialMartyriaBaseTextAppearance,
   resolveInitialMartyriaStyle,
   resolveInitialMartyriaStyleSelection,
 } from '@/models/InitialMartyriaStyle';
@@ -678,9 +676,7 @@ export class LayoutService {
 
           const customAppearance =
             initialMartyriaStyleSelection.kind === 'custom'
-              ? resolveInitialMartyriaBaseTextAppearance(
-                  initialMartyriaStyleSelection,
-                )
+              ? initialMartyriaStyleSelection.mainAppearance
               : null;
           modeKeyElement.computedFontSize = usesStandardModeKey
             ? modeKeyElement.useDefaultStyle
@@ -2409,9 +2405,7 @@ export class LayoutService {
       resolvedConfiguration,
       pageSetup,
     });
-    const baseTextAppearance = resolveInitialMartyriaBaseTextAppearance(
-      resolvedConfiguration,
-    );
+    const baseTextAppearance = resolvedConfiguration.mainAppearance;
     const fixedSeparatorFontSize =
       baseTextAppearance.fontSize ?? element.computedFontSize;
     const hasCustomText = resolution.runs.some(
@@ -2537,7 +2531,6 @@ export class LayoutService {
         fontStyle: appearance.fontStyle ?? DEFAULT_FONT_STYLE,
         fontSize,
       });
-      const baselineShift = appearance.baselineShift ?? 0;
       const strokeOverflow = (appearance.strokeWidth ?? 0) / 2;
 
       if (run.kind === 'text' && run.content.layout === 'stacked') {
@@ -2547,10 +2540,6 @@ export class LayoutService {
           fontSize,
           fontVariantCaps: appearance.fontVariantCaps,
           strokeWidth: appearance.strokeWidth,
-          gap: run.content.gap,
-          baselineShift,
-          topRowOffset:
-            fontSize * INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM,
         });
         top = Math.min(top, geometry.top);
         bottom = Math.max(bottom, geometry.bottom);
@@ -2572,8 +2561,6 @@ export class LayoutService {
           neumeFontFamily: element.computedFontFamily,
           neumeFontSize: element.computedFontSize,
         });
-        const effectiveBaselineShift = noteAppearance.baselineShift ?? 0;
-        const wrapperBaselineShift = run.appearance.baselineShift ?? 0;
         for (const note of [run.cluster.primary, run.cluster.secondary]) {
           if (note == null) {
             continue;
@@ -2593,17 +2580,16 @@ export class LayoutService {
               glyphFontSize: fontSizes.glyphFontSize,
               textStrokeWidth: noteAppearance.strokeWidth,
               glyphStrokeWidth: glyphAppearance.strokeWidth,
-              baselineShift: effectiveBaselineShift,
             },
           );
-          top = Math.min(top, geometry.top - wrapperBaselineShift);
-          bottom = Math.max(bottom, geometry.bottom - wrapperBaselineShift);
+          top = Math.min(top, geometry.top);
+          bottom = Math.max(bottom, geometry.bottom);
           flowTop = Math.min(flowTop, geometry.top);
           width += geometry.width;
           if (note === run.cluster.primary && run.cluster.secondary != null) {
             width +=
               getInitialMartyriaFixedSeparatorSize(
-                'plagal',
+                'noteCluster',
                 fixedSeparatorFontSize,
               ) ?? 0;
           }
@@ -2626,14 +2612,12 @@ export class LayoutService {
             top,
             neumeBaselineCorrection -
               trailingMetrics.actualBoundingBoxAscent -
-              wrapperBaselineShift -
               (glyphAppearance.strokeWidth ?? 0) / 2,
           );
           bottom = Math.max(
             bottom,
             neumeBaselineCorrection +
-              trailingMetrics.actualBoundingBoxDescent -
-              wrapperBaselineShift +
+              trailingMetrics.actualBoundingBoxDescent +
               (glyphAppearance.strokeWidth ?? 0) / 2,
           );
           flowTop = Math.min(
@@ -2673,17 +2657,17 @@ export class LayoutService {
         flowTop,
         -TextMeasurementService.getFontBoundingBoxAscent(font),
       );
-      const effectiveBaselineShift =
-        baselineShift - (run.kind === 'glyph' ? neumeBaselineCorrection : 0);
+      const glyphBaselineCorrection =
+        run.kind === 'glyph' ? neumeBaselineCorrection : 0;
       top = Math.min(
         top,
-        -effectiveBaselineShift -
+        glyphBaselineCorrection -
           metrics.actualBoundingBoxAscent -
           strokeOverflow,
       );
       bottom = Math.max(
         bottom,
-        -effectiveBaselineShift +
+        glyphBaselineCorrection +
           metrics.actualBoundingBoxDescent +
           strokeOverflow,
       );

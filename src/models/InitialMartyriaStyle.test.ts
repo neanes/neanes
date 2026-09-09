@@ -20,6 +20,7 @@ import {
   type InitialMartyriaNumeralKind,
   type InitialMartyriaNumeralQualifier,
   type InitialMartyriaNumeralStyle,
+  type InitialMartyriaStartingNoteRun,
   type InitialMartyriaStyle,
   type ResolvedInitialMartyriaRun,
   resolveInitialMartyriaConfiguration,
@@ -100,9 +101,10 @@ function generateEnglishStyleName(style: InitialMartyriaStyle) {
     return `${englishLanguageNames[style.languageId]} - ${annotations.join(', ')}`;
   }
 
-  const qualifier = style.numeralQualifier
-    ? `${englishNumeralQualifierNames[style.numeralQualifier]} `
-    : '';
+  const qualifier =
+    style.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal
+      ? `${englishNumeralQualifierNames[style.numeralQualifier]} `
+      : '';
   const annotationList = ` (${annotations.join(', ')})`;
   return `${englishLanguageNames[style.languageId]} - ${qualifier}${englishNumeralKindNames[style.numeralKind]} ${englishNumeralStyleNames[style.numeralStyle]}${annotationList}`;
 }
@@ -587,7 +589,12 @@ describe('InitialMartyriaStyle', () => {
   });
 
   it('sizes fixed separators from the main text font size', () => {
-    for (const separator of ['plagal', 'modeSign', 'startingNote'] as const) {
+    for (const separator of [
+      'plagalAbbreviation',
+      'modeSign',
+      'startingNote',
+      'noteCluster',
+    ] as const) {
       expect(getInitialMartyriaFixedSeparatorSize(separator, 20)).toBe(8.6);
     }
     expect(getInitialMartyriaFixedSeparatorSize('wordSpace', 20)).toBeNull();
@@ -655,12 +662,31 @@ describe('InitialMartyriaStyle', () => {
   });
 
   it('uses language-specific note-name transliterations', () => {
-    const spanishStyle = builtInInitialMartyriaStyles.find(
-      (item) =>
-        item.id === BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumberV1,
-    )!;
+    const resolveTransliteratedNoteText = (
+      styleId: BuiltInInitialMartyriaStyleId,
+    ) => {
+      const configuration = createInitialMartyriaConfiguration(styleId);
+      configuration.transliterateNoteNames = true;
+      const element = ModeKeyElement.createFromTemplate(
+        modeKeyTemplates.find((template) => template.mode === 1)!,
+      );
+      const startingPitch = resolveInitialMartyriaStyle({
+        context: getInitialMartyriaContext(element),
+        resolvedConfiguration:
+          resolveInitialMartyriaConfiguration(configuration)!,
+        pageSetup: new PageSetup(),
+      }).runs.find(
+        (run): run is InitialMartyriaStartingNoteRun =>
+          run.kind === 'startingPitch',
+      )!;
+      return startingPitch.noteText;
+    };
 
-    expect(spanishStyle.transliteratedNoteNames).toMatchObject({
+    expect(
+      resolveTransliteratedNoteText(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumberV1,
+      ),
+    ).toMatchObject({
       languageTag: 'es',
       names: {
         [ModeSign.Pa]: 'Pa',
@@ -669,13 +695,11 @@ describe('InitialMartyriaStyle', () => {
       },
     });
 
-    const churchSlavonicStyle = builtInInitialMartyriaStyles.find(
-      (item) =>
-        item.id ===
+    expect(
+      resolveTransliteratedNoteText(
         BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasNumberV1,
-    )!;
-
-    expect(churchSlavonicStyle.transliteratedNoteNames).toMatchObject({
+      ),
+    ).toMatchObject({
       languageTag: 'cu',
       names: {
         [ModeSign.Pa]: 'Па',
@@ -694,18 +718,22 @@ describe('InitialMartyriaStyle', () => {
         mainFontFamily: 'Noto Naskh Arabic',
         greekFontFamily: 'GFS Didot',
       },
-      transliteratedNoteNames: {
-        languageTag: 'ar',
-        direction: 'rtl',
-        names: {
-          [ModeSign.Ni]: 'ني',
-          [ModeSign.Pa]: 'با',
-          [ModeSign.Vou]: 'فو',
-          [ModeSign.Ga]: 'غا',
-          [ModeSign.Thi]: 'دي',
-          [ModeSign.Ke]: 'كي',
-          [ModeSign.Zo]: 'زو',
-        },
+    });
+    expect(
+      resolveTransliteratedNoteText(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalV1,
+      ),
+    ).toMatchObject({
+      languageTag: 'ar',
+      direction: 'rtl',
+      names: {
+        [ModeSign.Ni]: 'ني',
+        [ModeSign.Pa]: 'با',
+        [ModeSign.Vou]: 'فو',
+        [ModeSign.Ga]: 'غا',
+        [ModeSign.Thi]: 'دي',
+        [ModeSign.Ke]: 'كي',
+        [ModeSign.Zo]: 'زو',
       },
     });
   });

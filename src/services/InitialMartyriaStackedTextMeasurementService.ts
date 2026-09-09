@@ -6,6 +6,8 @@ import {
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 
+const TOP_ROW_OFFSET_EM = 0.08;
+
 export function measureInitialMartyriaStackedText(
   lines: string[],
   options: {
@@ -14,9 +16,6 @@ export function measureInitialMartyriaStackedText(
     fontSize: number;
     fontVariantCaps?: string | null;
     strokeWidth?: number;
-    gap: number;
-    baselineShift?: number;
-    topRowOffset?: number;
   },
 ): InitialMartyriaStackedTextGeometry {
   const font = resolveFontStyle(options.fontFamily, options.fontStyle);
@@ -44,9 +43,8 @@ export function measureInitialMartyriaStackedText(
   });
 
   return getInitialMartyriaStackedTextGeometry(
-    rows,
-    options.gap,
-    options.baselineShift,
-    options.topRowOffset,
+    rows[0],
+    rows[1],
+    options.fontSize * TOP_ROW_OFFSET_EM,
   );
 }

@@ -82,26 +82,6 @@ describe('initial martyria pitch geometry', () => {
     expect(withStroke.bottom).toBe(withoutStroke.bottom + 2);
   });
 
-  it('moves text and attachments together for a nonzero baseline shift', () => {
-    const unshifted = getInitialMartyriaPitchGeometry(atom(), atom());
-    const shifted = getInitialMartyriaPitchGeometry(
-      atom(),
-      atom(),
-      undefined,
-      0,
-      5,
-    );
-
-    expect(shifted.top - unshifted.top).toBe(-5);
-    expect(shifted.bottom - unshifted.bottom).toBe(-5);
-
-    const textInkTop =
-      shifted.top + shifted.text.top + atom().lineAscent + atom().inkTop;
-    const fthoraInkBottom =
-      shifted.top + shifted.fthora!.top + atom().lineAscent + atom().inkBottom;
-    expect(textInkTop - fthoraInkBottom).toBe(2);
-  });
-
   it('keeps the painted two pixel gap with outlined atoms', () => {
     const geometry = getInitialMartyriaPitchGeometry(
       atom({ strokeWidth: 4 }),

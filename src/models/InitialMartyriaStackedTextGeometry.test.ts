@@ -17,10 +17,10 @@ const row = (overrides: Partial<StackedTextRowBounds> = {}) => ({
 });
 
 describe('initial martyria stacked text geometry', () => {
-  it('anchors the second row painted ink top at zero', () => {
+  it('anchors the bottom row painted ink top at zero', () => {
     const geometry = getInitialMartyriaStackedTextGeometry(
-      [row(), row({ inkTop: -6 })],
-      2,
+      row(),
+      row({ inkTop: -6 }),
     );
 
     expect(geometry.top + geometry.rows[1].top + 10 - 6).toBe(0);
@@ -28,50 +28,40 @@ describe('initial martyria stacked text geometry', () => {
 
   it('uses painted ink and stroke overflow for outer extents', () => {
     const geometry = getInitialMartyriaStackedTextGeometry(
-      [row({ strokeWidth: 4 }), row({ strokeWidth: 4 })],
-      0,
+      row({ strokeWidth: 4 }),
+      row({ strokeWidth: 4 }),
     );
 
     expect(geometry.top).toBe(-14);
     expect(geometry.bottom).toBe(14);
   });
 
-  it('separates adjacent painted ink bounds by the configured gap', () => {
+  it('stacks the top row painted ink directly on the bottom row', () => {
     const geometry = getInitialMartyriaStackedTextGeometry(
-      [row(), row({ lineAscent: 7, lineDescent: 4 })],
-      5,
+      row(),
+      row({ lineAscent: 7, lineDescent: 4 }),
     );
 
-    const firstPaintedBottom = geometry.top + geometry.rows[0].top + 10 + 2;
-    const secondPaintedTop = geometry.top + geometry.rows[1].top + 7 - 8;
+    const topRowPaintedBottom = geometry.top + geometry.rows[0].top + 10 + 2;
+    const bottomRowPaintedTop = geometry.top + geometry.rows[1].top + 7 - 8;
 
-    expect(secondPaintedTop - firstPaintedBottom).toBe(5);
+    expect(bottomRowPaintedTop - topRowPaintedBottom).toBe(0);
   });
 
-  it('handles three rows and asymmetric contents', () => {
+  it('handles asymmetric contents', () => {
     const geometry = getInitialMartyriaStackedTextGeometry(
-      [
-        row({ inkLeft: -3, inkRight: 12, advanceWidth: 8 }),
-        row({ inkLeft: 2, inkRight: 7, advanceWidth: 14 }),
-        row({ inkLeft: -1, inkRight: 20, advanceWidth: 6 }),
-      ],
-      1,
+      row({ inkLeft: -3, inkRight: 12, advanceWidth: 8 }),
+      row({ inkLeft: 2, inkRight: 7, advanceWidth: 14 }),
     );
 
-    expect(geometry.width).toBe(23);
+    expect(geometry.width).toBe(17);
     expect(geometry.rows[0].left).toBe(3);
-    expect(geometry.rows).toHaveLength(3);
     expect(geometry.bottom).toBeGreaterThan(geometry.top);
   });
 
   it('raises only the top row by the requested offset', () => {
-    const baseline = getInitialMartyriaStackedTextGeometry([row(), row()], 2);
-    const raised = getInitialMartyriaStackedTextGeometry(
-      [row(), row()],
-      2,
-      0,
-      0.8,
-    );
+    const baseline = getInitialMartyriaStackedTextGeometry(row(), row());
+    const raised = getInitialMartyriaStackedTextGeometry(row(), row(), 0.8);
 
     expect(raised.top + raised.rows[0].top).toBe(
       baseline.top + baseline.rows[0].top - 0.8,

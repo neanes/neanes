@@ -26,7 +26,7 @@ export interface InitialMartyriaPitchGeometry {
 
 const ATTACHMENT_GAP = 2;
 
-function getPaintedBounds(bounds: PitchAtomBounds): PitchAtomBounds {
+export function getPaintedBounds(bounds: PitchAtomBounds): PitchAtomBounds {
   const overflow = (bounds.strokeWidth ?? 0) / 2;
   return overflow === 0
     ? bounds
@@ -67,41 +67,22 @@ export function getInitialMartyriaPitchGeometry(
   fthora?: PitchAtomBounds,
   quantitative?: PitchAtomBounds,
   strokeOverflow = 0,
-  baselineShift = 0,
 ): InitialMartyriaPitchGeometry {
   const paintedText = getPaintedBounds(text);
-  const paintedFthora = fthora == null ? undefined : getPaintedBounds(fthora);
-  const paintedQuantitative =
-    quantitative == null ? undefined : getPaintedBounds(quantitative);
-  const textPlacement = {
-    left: 0,
-    baseline: -baselineShift,
-    bounds: paintedText,
+  const textPlacement = { left: 0, baseline: 0, bounds: paintedText };
+  const attach = (bounds: PitchAtomBounds | undefined) => {
+    if (bounds == null) {
+      return undefined;
+    }
+    const painted = getPaintedBounds(bounds);
+    return {
+      left: horizontalInkPlacement(paintedText, painted),
+      baseline: paintedText.inkTop - ATTACHMENT_GAP - painted.inkBottom,
+      bounds: painted,
+    };
   };
-  const fthoraPlacement =
-    paintedFthora == null
-      ? undefined
-      : {
-          left: horizontalInkPlacement(paintedText, paintedFthora),
-          baseline:
-            textPlacement.baseline +
-            paintedText.inkTop -
-            ATTACHMENT_GAP -
-            paintedFthora.inkBottom,
-          bounds: paintedFthora,
-        };
-  const quantitativePlacement =
-    paintedQuantitative == null
-      ? undefined
-      : {
-          left: horizontalInkPlacement(paintedText, paintedQuantitative),
-          baseline:
-            textPlacement.baseline +
-            paintedText.inkTop -
-            ATTACHMENT_GAP -
-            paintedQuantitative.inkBottom,
-          bounds: paintedQuantitative,
-        };
+  const fthoraPlacement = attach(fthora);
+  const quantitativePlacement = attach(quantitative);
 
   if (
     fthoraPlacement != null &&
@@ -127,11 +108,11 @@ export function getInitialMartyriaPitchGeometry(
     ...atoms.map((atom) => atom.left + atom.bounds.inkRight),
   );
   const top = Math.min(
-    textPlacement.baseline + text.inkTop - strokeOverflow,
+    text.inkTop - strokeOverflow,
     ...atoms.map((atom) => atom.baseline + atom.bounds.inkTop),
   );
   const bottom = Math.max(
-    textPlacement.baseline + text.inkBottom + strokeOverflow,
+    text.inkBottom + strokeOverflow,
     ...atoms.map((atom) => atom.baseline + atom.bounds.inkBottom),
   );
 

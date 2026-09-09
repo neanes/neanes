@@ -1,14 +1,10 @@
+import {
+  getPaintedBounds,
+  type PitchAtomBounds,
+} from '@/models/InitialMartyriaPitchGeometry';
+
 /** Row bounds are measured relative to each row's alphabetic baseline. */
-export interface StackedTextRowBounds {
-  advanceWidth: number;
-  inkLeft: number;
-  inkRight: number;
-  inkTop: number;
-  inkBottom: number;
-  lineAscent: number;
-  lineDescent: number;
-  strokeWidth?: number;
-}
+export type StackedTextRowBounds = PitchAtomBounds;
 
 export interface InitialMartyriaStackedTextGeometry {
   width: number;
@@ -17,69 +13,35 @@ export interface InitialMartyriaStackedTextGeometry {
   rows: Array<{ left: number; top: number }>;
 }
 
-export const INITIAL_MARTYRIA_STACKED_TEXT_TOP_ROW_OFFSET_EM = 0.08;
-
 export function getInitialMartyriaStackedTextGeometry(
-  rows: StackedTextRowBounds[],
-  gap: number,
-  baselineShift = 0,
+  topRow: StackedTextRowBounds,
+  bottomRow: StackedTextRowBounds,
   topRowOffset = 0,
 ): InitialMartyriaStackedTextGeometry {
-  if (rows.length < 2) {
-    throw new Error('Stacked text requires at least two rows');
-  }
+  const paintedTop = getPaintedBounds(topRow);
+  const paintedBottom = getPaintedBounds(bottomRow);
 
-  const baselines = Array<number>(rows.length);
-  const anchor = rows[1];
-  baselines[1] = -anchor.inkTop + (anchor.strokeWidth ?? 0) / 2 - baselineShift;
+  // The bottom row's painted ink top sits at zero; the top row stacks its
+  // painted ink directly above, raised by topRowOffset.
+  const bottomBaseline = -paintedBottom.inkTop;
+  const topBaseline =
+    bottomBaseline - paintedTop.inkBottom + paintedBottom.inkTop - topRowOffset;
 
-  for (let index = 2; index < rows.length; index++) {
-    const previous = rows[index - 1];
-    const row = rows[index];
-    const previousOverflow = (previous.strokeWidth ?? 0) / 2;
-    const rowOverflow = (row.strokeWidth ?? 0) / 2;
-    baselines[index] =
-      baselines[index - 1] +
-      previous.inkBottom +
-      previousOverflow +
-      gap -
-      row.inkTop +
-      rowOverflow;
-  }
-
-  const preceding = rows[0];
-  const precedingOverflow = (preceding.strokeWidth ?? 0) / 2;
-  const anchorOverflow = (rows[1].strokeWidth ?? 0) / 2;
-  baselines[0] =
-    baselines[1] -
-    preceding.inkBottom -
-    precedingOverflow -
-    gap +
-    rows[1].inkTop -
-    anchorOverflow;
-  baselines[0] -= topRowOffset;
-
-  const left = Math.min(
-    ...rows.map((row) => row.inkLeft - (row.strokeWidth ?? 0) / 2),
-    0,
-  );
+  const overflow = (row: StackedTextRowBounds) => (row.strokeWidth ?? 0) / 2;
+  const left = Math.min(paintedTop.inkLeft, paintedBottom.inkLeft, 0);
   const right = Math.max(
-    ...rows.map(
-      (row) =>
-        Math.max(row.advanceWidth, row.inkRight) + (row.strokeWidth ?? 0) / 2,
-    ),
+    topRow.advanceWidth + overflow(topRow),
+    paintedTop.inkRight,
+    bottomRow.advanceWidth + overflow(bottomRow),
+    paintedBottom.inkRight,
   );
   const top = Math.min(
-    ...rows.map(
-      (row, index) =>
-        baselines[index] + row.inkTop - (row.strokeWidth ?? 0) / 2,
-    ),
+    topBaseline + paintedTop.inkTop,
+    bottomBaseline + paintedBottom.inkTop,
   );
   const bottom = Math.max(
-    ...rows.map(
-      (row, index) =>
-        baselines[index] + row.inkBottom + (row.strokeWidth ?? 0) / 2,
-    ),
+    topBaseline + paintedTop.inkBottom,
+    bottomBaseline + paintedBottom.inkBottom,
   );
   const shift = -left;
 
@@ -87,9 +49,9 @@ export function getInitialMartyriaStackedTextGeometry(
     width: right - left,
     top,
     bottom,
-    rows: rows.map((row, index) => ({
-      left: shift,
-      top: baselines[index] - row.lineAscent - top,
-    })),
+    rows: [
+      { left: shift, top: topBaseline - topRow.lineAscent - top },
+      { left: shift, top: bottomBaseline - bottomRow.lineAscent - top },
+    ],
   };
 }

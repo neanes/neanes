@@ -120,6 +120,7 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   EnglishPlagalNumberWordV1: 'builtin:english-plagal-number-word-v1',
   SpanishTonoNumberV1: 'builtin:spanish-tono-number-v1',
   SpanishTonoRomanNumeralV1: 'builtin:spanish-tono-roman-numeral-v1',
+  SpanishTonoOrdinalNumberV1: 'builtin:spanish-tono-ordinal-number-v1',
   SpanishTonoOrdinalV1: 'builtin:spanish-tono-ordinal-v1',
   SpanishOrdinalTonoV1: 'builtin:spanish-ordinal-tono-v1',
   ChurchSlavonicGlasNumberV1: 'builtin:church-slavonic-glas-number-v1',
@@ -174,6 +175,8 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
     $.dialog.initialMartyriaStyles.builtInStyles.spanishTonoNumber,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoRomanNumeralV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.spanishTonoRomanNumeral,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoOrdinalNumberV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.spanishTonoOrdinalNumber,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoOrdinalV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.spanishTonoOrdinal,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishOrdinalTonoV1]: ($) =>
@@ -559,6 +562,9 @@ export const traditionalGreekInitialMartyriaStyle = builtIn({
   ],
 });
 
+/*
+ * Nea Mousiki Kypseli, Bambas edition (1898)
+ */
 export const greekModeNamesInitialMartyriaStyle = builtIn({
   id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekModeNamesV1,
   languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
@@ -894,6 +900,35 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
       startingPitch(),
     ],
   }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoOrdinalNumberV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    usesPlagalTerminology: false,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    defaultAppearance: sourceSerifAppearance(),
+    transliteratedNoteNames: spanishTransliteratedNoteNames,
+    components: [
+      text('Tono'),
+      text('1º', [1]),
+      text('2º', [2]),
+      text('3º', [3]),
+      text('4º', [4]),
+      text('5º', [5]),
+      text('6º', [6]),
+      text('7º', [7]),
+      text('8º', [8]),
+      plagalAbbreviation(),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  /*
+   * https://analogion.com/forum/index.php?attachments/84206/
+   */
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoOrdinalV1,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,

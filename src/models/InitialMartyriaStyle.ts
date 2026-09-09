@@ -127,8 +127,11 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   ChurchSlavonicGlasCyrillicNumeralV1:
     'builtin:church-slavonic-glas-cyrillic-numeral-v1',
   ChurchSlavonicGlasOrdinalV1: 'builtin:church-slavonic-glas-ordinal-v1',
+  ChurchSlavonicGlasOrdinalTextV1:
+    'builtin:church-slavonic-glas-ordinal-text-v1',
   RussianGlasNumberV1: 'builtin:russian-glas-number-v1',
   RussianGlasOrdinalV1: 'builtin:russian-glas-ordinal-v1',
+  RussianGlasOrdinalTextV1: 'builtin:russian-glas-ordinal-text-v1',
   ArabicOrdinalV1: 'builtin:arabic-ordinal-v1',
   RomanianGlasNumberV1: 'builtin:romanian-glas-number-v1',
   RomanianGlasRomanNumeralV1: 'builtin:romanian-glas-roman-numeral-v1',
@@ -194,10 +197,14 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
       .churchSlavonicGlasCyrillicNumeral,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasOrdinalV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.churchSlavonicGlasOrdinal,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasOrdinalTextV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.churchSlavonicGlasOrdinalText,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasNumberV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.russianGlasNumber,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasOrdinalV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.russianGlasOrdinal,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasOrdinalTextV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.russianGlasOrdinalText,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.arabicOrdinal,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1]: ($) =>
@@ -1077,6 +1084,28 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     ],
   }),
   builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasOrdinalTextV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    usesPlagalTerminology: false,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    defaultAppearance: defaultAppearance('Old Standard'),
+    transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
+    components: [
+      text('Гласъ'),
+      text('пе́рвый.', [1]),
+      text('вторы́й.', [2]),
+      text('тре́тій.', [3]),
+      text('четве́ртый.', [4]),
+      text('пяты́й.', [5]),
+      text('шесты́й.', [6]),
+      text('седьмы́й.', [7]),
+      text('осмы́й.', [8]),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasNumberV1,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
@@ -1123,6 +1152,28 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
       text('восьмой.', [8]),
       plagalAbbreviation(),
       modeSign(),
+      startingPitch(),
+    ],
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasOrdinalTextV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    usesPlagalTerminology: false,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    defaultAppearance: sourceSerifAppearance(),
+    transliteratedNoteNames: russianTransliteratedNoteNames,
+    components: [
+      text('Глас'),
+      text('первый.', [1]),
+      text('второй.', [2]),
+      text('третий.', [3]),
+      text('четвёртый.', [4]),
+      text('пятый.', [5]),
+      text('шестой.', [6]),
+      text('седьмой.', [7]),
+      text('восьмой.', [8]),
       startingPitch(),
     ],
   }),

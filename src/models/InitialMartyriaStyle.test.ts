@@ -18,7 +18,6 @@ import {
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaNumeralKind,
-  type InitialMartyriaNumeralQualifier,
   type InitialMartyriaNumeralStyle,
   type InitialMartyriaStartingNoteRun,
   type InitialMartyriaStyle,
@@ -52,14 +51,6 @@ const englishNumeralStyleNames: Record<InitialMartyriaNumeralStyle, string> = {
 const englishNumeralKindNames: Record<InitialMartyriaNumeralKind, string> = {
   [INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal]: 'Cardinal',
   [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal]: 'Ordinal',
-};
-
-const englishNumeralQualifierNames: Record<
-  InitialMartyriaNumeralQualifier,
-  string
-> = {
-  [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal]: 'Postnominal',
-  [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal]: 'Prenominal',
 };
 
 const englishModeNamingSchemeNames: Record<
@@ -98,12 +89,12 @@ function generateEnglishStyleName(style: InitialMartyriaStyle) {
     style.modeIdentificationMethod ===
     INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
   ) {
-    return `${englishLanguageNames[style.languageId]} - Mode Label with Traditional Sign Group (${annotations.join(', ')})`;
+    return `${englishLanguageNames[style.languageId]} - Traditional Sign Group (${annotations.join(', ')})`;
   }
 
   const qualifier =
-    style.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal
-      ? `${englishNumeralQualifierNames[style.numeralQualifier]} `
+    style.numeralQualifier === INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal
+      ? 'Prenominal '
       : '';
   const annotationList = ` (${annotations.join(', ')})`;
   return `${englishLanguageNames[style.languageId]} - ${qualifier}${englishNumeralKindNames[style.numeralKind]} ${englishNumeralStyleNames[style.numeralStyle]}${annotationList}`;

@@ -593,6 +593,15 @@ type InitialMartyriaModeTexts = [
   string,
 ];
 
+interface InitialMartyriaPronunciationOverrides {
+  label?: string;
+  ordinalWords?: InitialMartyriaModeTexts;
+  plagalWord?: string;
+  plagalCounterpartWord?: string;
+  plagalCounterpartOrdinalWords?: Partial<Record<ModeKeyMode, string>>;
+  graveWord?: string;
+}
+
 /*
  * Language-specific script properties, vocabulary, and phrase conventions.
  * Word choice, casing, ordinal formation, and where the plagal word sits in
@@ -611,6 +620,8 @@ interface InitialMartyriaLexicon {
   transliteratedNoteNames: InitialMartyriaNoteNames;
   /** Whether scores in this language transliterate note names by default. */
   transliteratesNoteNamesByDefault: boolean;
+  /** Spoken forms that differ from the text printed in the score. */
+  pronunciationOverrides?: InitialMartyriaPronunciationOverrides;
   /** The word naming the concept of a mode (Mode, Tono, Glas). */
   label?: string;
   /** Label form used when it trails the mode name (Spanish lowercase). */
@@ -689,6 +700,27 @@ const initialMartyriaLexicons: Record<
     usesGreekScript: true,
     transliteratedNoteNames: transliteratedGreekNoteNames,
     transliteratesNoteNamesByDefault: false,
+    pronunciationOverrides: {
+      label: 'Ήχος',
+      ordinalWords: [
+        'Πρώτος',
+        'Δεύτερος',
+        'Τρίτος',
+        'Τέταρτος',
+        'Πέμπτος',
+        'Έκτος',
+        'Έβδομος',
+        'Όγδοος',
+      ],
+      plagalWord: 'Πλάγιος',
+      plagalCounterpartWord: 'Πλάγιος του',
+      plagalCounterpartOrdinalWords: {
+        5: 'Πρώτου',
+        6: 'Δευτέρου',
+        8: 'Τετάρτου',
+      },
+      graveWord: 'Βαρύς',
+    },
     label: 'Ἦχος',
     ordinalWords: [
       'πρῶτος',
@@ -968,7 +1000,7 @@ function getInitialMartyriaNumeralText(
 
 function getInitialMartyriaNumeralPronunciation(
   semantics: InitialMartyriaModeNameSemantics,
-  lexicon: InitialMartyriaLexicon,
+  lexicon: InitialMartyriaLexicon & InitialMartyriaPronunciationOverrides,
   mode: ModeKeyMode,
 ) {
   const modeNumber = getInitialMartyriaModeNumber(semantics, mode);
@@ -977,6 +1009,15 @@ function getInitialMartyriaNumeralPronunciation(
   }
   if (semantics.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal) {
     return lexicon.cardinalWords![modeNumber - 1];
+  }
+  if (
+    semantics.modeNamingScheme ===
+    INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart
+  ) {
+    const counterpartOrdinal = lexicon.plagalCounterpartOrdinalWords?.[mode];
+    if (counterpartOrdinal != null) {
+      return counterpartOrdinal;
+    }
   }
   const words =
     semantics.numeralQualifier ===
@@ -988,7 +1029,7 @@ function getInitialMartyriaNumeralPronunciation(
 
 function getInitialMartyriaModeSignPronunciation(
   semantics: InitialMartyriaModeNameSemantics,
-  lexicon: InitialMartyriaLexicon,
+  lexicon: InitialMartyriaLexicon & InitialMartyriaPronunciationOverrides,
   mode: ModeKeyMode,
 ) {
   if (
@@ -1096,7 +1137,7 @@ function orderInitialMartyriaModeName<T>(
 
 function getInitialMartyriaStylePronunciation(
   style: InitialMartyriaStyle,
-  lexicon: InitialMartyriaLexicon,
+  lexicon: InitialMartyriaLexicon & InitialMartyriaPronunciationOverrides,
   mode: ModeKeyMode,
 ) {
   const usesPlagalNaming =
@@ -2108,12 +2149,28 @@ function getInitialMartyriaTextComponentPronunciation(
     { kind: 'text' | 'stackedText' }
   >,
   semantics: InitialMartyriaModeNameSemantics,
-  lexicon: InitialMartyriaLexicon,
+  lexicon: InitialMartyriaLexicon & InitialMartyriaPronunciationOverrides,
   mode: ModeKeyMode,
 ) {
   if (component.kind === 'text') {
     if (component.semantic === 'numeral') {
       return getInitialMartyriaNumeralPronunciation(semantics, lexicon, mode)!;
+    }
+    if (component.semantic === 'label') {
+      return getInitialMartyriaLabelText(
+        lexicon,
+        usesTrailingLabel(semantics),
+        semantics.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+      )!;
+    }
+    if (component.semantic === 'graveWord' && lexicon.graveWord != null) {
+      return lexicon.graveWord;
+    }
+    if (component.semantic === 'plagalWord') {
+      return semantics.modeNamingScheme ===
+        INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart
+        ? (lexicon.plagalCounterpartWord ?? lexicon.plagalWord)!
+        : lexicon.plagalWord!;
     }
     return component.content.endsWith('.')
       ? component.content.slice(0, -1)
@@ -2140,6 +2197,10 @@ export function resolveInitialMartyriaStyle(options: {
   const { style, configuration, mainAppearance, greekAppearance } =
     options.resolvedConfiguration;
   const lexicon = initialMartyriaLexicons[style.languageId];
+  const pronunciationLexicon = {
+    ...lexicon,
+    ...lexicon.pronunciationOverrides,
+  };
   const flowDirection =
     style.flowDirection === 'page'
       ? options.pageSetup.direction
@@ -2164,7 +2225,7 @@ export function resolveInitialMartyriaStyle(options: {
       : style;
   const pronunciation = getInitialMartyriaStylePronunciation(
     style,
-    lexicon,
+    pronunciationLexicon,
     options.context.mode,
   );
 
@@ -2190,7 +2251,7 @@ export function resolveInitialMartyriaStyle(options: {
             INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
             ? modeSignPronunciation
             : style,
-          lexicon,
+          pronunciationLexicon,
           options.context.mode,
         ),
         content:
@@ -2210,7 +2271,7 @@ export function resolveInitialMartyriaStyle(options: {
         identificationSource: component.identificationSource,
         pronunciation: getInitialMartyriaModeSignPronunciation(
           modeSignPronunciation,
-          lexicon,
+          pronunciationLexicon,
           options.context.mode,
         ),
       });

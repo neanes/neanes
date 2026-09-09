@@ -682,14 +682,14 @@ type ExpectedModePronunciations = [
 
 const greekAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =
   [
-    'Ἦχος πρῶτος',
-    'Ἦχος δεύτερος',
-    'Ἦχος τρίτος',
-    'Ἦχος τέταρτος',
-    'Ἦχος πλάγιος πρῶτος',
-    'Ἦχος πλάγιος δεύτερος',
-    'Ἦχος βαρύς',
-    'Ἦχος πλάγιος τέταρτος',
+    'Ήχος Πρώτος',
+    'Ήχος Δεύτερος',
+    'Ήχος Τρίτος',
+    'Ήχος Τέταρτος',
+    'Ήχος Πλάγιος του Πρώτου',
+    'Ήχος Πλάγιος του Δευτέρου',
+    'Ήχος Βαρύς',
+    'Ήχος Πλάγιος του Τετάρτου',
   ];
 
 const englishAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =

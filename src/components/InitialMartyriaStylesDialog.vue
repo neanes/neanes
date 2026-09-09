@@ -148,13 +148,25 @@
                 <span
                   class="mt-3 flex min-h-16 flex-col items-start gap-1 overflow-hidden"
                 >
-                  <ModeKeyRenderer
+                  <span
                     v-for="preview in previewsForStyle(style.id)"
-                    :key="String(preview.templateId)"
-                    class="initial-martyria-preview !border-0 [--zoom:1]"
-                    :element="preview"
-                    :page-setup="previewPageSetup"
-                  />
+                    :key="String(preview.element.templateId)"
+                    class="w-full"
+                  >
+                    <ModeKeyRenderer
+                      class="initial-martyria-preview !border-0 [--zoom:1]"
+                      :element="preview.element"
+                      :page-setup="previewPageSetup"
+                    />
+                    <span
+                      class="block text-start text-xs text-muted-foreground"
+                      :lang="preview.pronunciation.languageId"
+                      :dir="preview.pronunciation.flowDirection"
+                      aria-hidden="true"
+                    >
+                      {{ preview.pronunciation.text }}
+                    </span>
+                  </span>
                 </span>
               </button>
             </div>
@@ -319,6 +331,15 @@
                     :element="preview.element"
                     :page-setup="previewPageSetup"
                   />
+                  <p
+                    v-if="preview.pronunciation != null"
+                    class="text-sm"
+                    :lang="preview.pronunciation.languageId"
+                    :dir="preview.pronunciation.flowDirection"
+                    aria-hidden="true"
+                  >
+                    {{ preview.pronunciation.text }}
+                  </p>
                   <p class="text-xs text-muted-foreground">
                     {{ $t(preview.template.description, { ns: 'model' }) }}
                   </p>
@@ -397,6 +418,7 @@ import {
   builtInInitialMartyriaStyles,
   cloneInitialMartyriaConfiguration,
   createInitialMartyriaConfiguration,
+  getInitialMartyriaContext,
   getInitialMartyriaStyleDisplayName,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
@@ -414,6 +436,7 @@ import {
   type InitialMartyriaStyle,
   initialMartyriaStyleHasGreekText,
   resolveInitialMartyriaConfiguration,
+  resolveInitialMartyriaStyle,
   usesGreekScript,
   usesTransliteratedNoteNamesByDefault,
 } from '@/models/InitialMartyriaStyle';
@@ -727,7 +750,10 @@ function representativePreviews(
 
 const standardPreviews = computed(() => representativePreviews(null));
 const stylePreviews = computed(() => {
-  const previews = new Map<BuiltInInitialMartyriaStyleId, ModeKeyElement[]>();
+  const previews = new Map<
+    BuiltInInitialMartyriaStyleId,
+    ReturnType<typeof createPronouncedPreview>[]
+  >();
   for (const style of builtInInitialMartyriaStyles) {
     const configuration =
       workingConfiguration.value == null
@@ -736,16 +762,29 @@ const stylePreviews = computed(() => {
             ...cloneInitialMartyriaConfiguration(workingConfiguration.value),
             styleId: style.id,
           };
-    previews.set(style.id, representativePreviews(configuration));
+    previews.set(
+      style.id,
+      representativeTemplates.map((template) =>
+        createPronouncedPreview(template, configuration),
+      ),
+    );
   }
   return previews;
 });
-const allTemplatePreviews = computed(() =>
-  modeKeyTemplates.map((template) => ({
-    template,
-    element: createPreviewElement(template, workingConfiguration.value),
-  })),
-);
+const allTemplatePreviews = computed(() => {
+  const configuration = workingConfiguration.value;
+  return modeKeyTemplates.map((template) => {
+    const element = createPreviewElement(template, configuration);
+    return {
+      template,
+      element,
+      pronunciation:
+        configuration == null
+          ? null
+          : getPreviewPronunciation(element, configuration),
+    };
+  });
+});
 
 function previewsForStyle(styleId: BuiltInInitialMartyriaStyleId) {
   return stylePreviews.value.get(styleId)!;
@@ -1144,6 +1183,35 @@ function createPreviewElement(
   element.computedFlowTop = -20;
   element.height = 60;
   return element;
+}
+
+function createPronouncedPreview(
+  template: (typeof modeKeyTemplates)[number],
+  configuration: InitialMartyriaConfiguration,
+) {
+  const element = createPreviewElement(template, configuration);
+  return {
+    element,
+    pronunciation: getPreviewPronunciation(element, configuration),
+  };
+}
+
+function getPreviewPronunciation(
+  element: ModeKeyElement,
+  configuration: InitialMartyriaConfiguration,
+) {
+  const resolvedConfiguration =
+    resolveInitialMartyriaConfiguration(configuration)!;
+  const resolution = resolveInitialMartyriaStyle({
+    context: getInitialMartyriaContext(element),
+    resolvedConfiguration,
+    pageSetup: previewPageSetup.value,
+  });
+  return {
+    text: resolution.pronunciation,
+    languageId: resolution.style.languageId,
+    flowDirection: resolution.flowDirection,
+  };
 }
 
 function getWorkingCopy() {

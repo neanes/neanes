@@ -53,6 +53,41 @@
               </Select>
             </Field>
 
+            <Field v-if="showNumeralKindFilter">
+              <FieldLabel for="initial-martyria-numeral-kind">
+                {{
+                  $t(($) => $.dialog.initialMartyriaStyles.numeralKind, {
+                    ns: 'dialog',
+                  })
+                }}
+              </FieldLabel>
+              <Select
+                :model-value="selectedNumeralKindFilter"
+                @update:model-value="selectNumeralKindFilter"
+              >
+                <SelectTrigger id="initial-martyria-numeral-kind">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem :value="ALL_NUMERAL_KINDS">
+                    {{
+                      $t(($) => $.dialog.initialMartyriaStyles.all, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </SelectItem>
+                  <SelectItem
+                    v-for="option in numeralKindOptions"
+                    :key="option.value"
+                    :value="option.value"
+                    :disabled="option.disabled"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+
             <Field v-if="showNumeralStyleFilter">
               <FieldLabel for="initial-martyria-numeral-style">
                 {{
@@ -405,11 +440,13 @@ import {
   createInitialMartyriaConfiguration,
   getInitialMartyriaStyleDisplayName,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaAppearanceOverrides,
   type InitialMartyriaConfiguration,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguages,
+  type InitialMartyriaNumeralKind,
   type InitialMartyriaNumeralStyle,
   resolveInitialMartyriaConfiguration,
 } from '@/models/InitialMartyriaStyle';
@@ -420,16 +457,18 @@ import type { FontVariantProperty } from '@/utils/fontVariants';
 import { getLegacyNeumeFontFamily } from '@/utils/getFontFamilyWithFallback';
 
 const DEFAULT_FONT_VALUE = '__style_default__';
-const ALL_NUMERAL_STYLES = '__all__';
+const ALL_NUMERAL_KINDS = '__all_numeral_kinds__';
+const ALL_NUMERAL_STYLES = '__all_numeral_styles__';
 const representativeTemplateIds = [100, 500, 700];
+const numeralKindOrder = [
+  INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+  INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+];
 const numeralStyleOrder = [
-  INITIAL_MARTYRIA_NUMERAL_STYLES.None,
   INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
   INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-  INITIAL_MARTYRIA_NUMERAL_STYLES.GreekNumerals,
-  INITIAL_MARTYRIA_NUMERAL_STYLES.CyrillicNumerals,
-  INITIAL_MARTYRIA_NUMERAL_STYLES.CardinalWords,
-  INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords,
+  INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
+  INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
 ];
 
 const props = withDefaults(
@@ -475,6 +514,9 @@ function usesPlagalTerminologyByDefault(languageId: InitialMartyriaLanguageId) {
 const selectedNumeralStyleFilter = ref<
   InitialMartyriaNumeralStyle | typeof ALL_NUMERAL_STYLES
 >(ALL_NUMERAL_STYLES);
+const selectedNumeralKindFilter = ref<
+  InitialMartyriaNumeralKind | typeof ALL_NUMERAL_KINDS
+>(ALL_NUMERAL_KINDS);
 const usePlagalTerminologyFilter = ref(
   initialStyle?.usesPlagalTerminology ??
     usesPlagalTerminologyByDefault(selectedLanguageId.value),
@@ -487,45 +529,94 @@ if (
   workingConfiguration.value.transliterateNoteNames = false;
 }
 
-const filteredStyles = computed(() =>
+type NumeralFilters = {
+  numeralKind: InitialMartyriaNumeralKind | typeof ALL_NUMERAL_KINDS;
+  numeralStyle: InitialMartyriaNumeralStyle | typeof ALL_NUMERAL_STYLES;
+  usesPlagalTerminology: boolean;
+};
+type BuiltInInitialMartyriaStyle =
+  (typeof builtInInitialMartyriaStyles)[number];
+
+const stylesForSelectedLanguage = computed(() =>
   builtInInitialMartyriaStyles.filter(
-    (style) =>
-      style.languageId === selectedLanguageId.value &&
-      (selectedNumeralStyleFilter.value === ALL_NUMERAL_STYLES ||
-        style.numeralStyle === selectedNumeralStyleFilter.value) &&
-      style.usesPlagalTerminology === usePlagalTerminologyFilter.value,
+    (style) => style.languageId === selectedLanguageId.value,
+  ),
+);
+const numeralFilters = computed<NumeralFilters>(() => ({
+  numeralKind: selectedNumeralKindFilter.value,
+  numeralStyle: selectedNumeralStyleFilter.value,
+  usesPlagalTerminology: usePlagalTerminologyFilter.value,
+}));
+
+function matchesNumeralFilters(
+  style: BuiltInInitialMartyriaStyle,
+  filters: NumeralFilters,
+) {
+  return (
+    (filters.numeralKind === ALL_NUMERAL_KINDS ||
+      style.numeralKind === filters.numeralKind) &&
+    (filters.numeralStyle === ALL_NUMERAL_STYLES ||
+      style.numeralStyle === filters.numeralStyle) &&
+    style.usesPlagalTerminology === filters.usesPlagalTerminology
+  );
+}
+
+function hasMatchingStyle(filters = numeralFilters.value) {
+  return stylesForSelectedLanguage.value.some((style) =>
+    matchesNumeralFilters(style, filters),
+  );
+}
+
+const filteredStyles = computed(() =>
+  stylesForSelectedLanguage.value.filter((style) =>
+    matchesNumeralFilters(style, numeralFilters.value),
+  ),
+);
+const availableNumeralKinds = computed(() =>
+  numeralKindOrder.filter((numeralKind) =>
+    stylesForSelectedLanguage.value.some(
+      (style) => style.numeralKind === numeralKind,
+    ),
   ),
 );
 const availableNumeralStyles = computed(() =>
   numeralStyleOrder.filter((numeralStyle) =>
-    builtInInitialMartyriaStyles.some(
-      (style) =>
-        style.languageId === selectedLanguageId.value &&
-        style.numeralStyle === numeralStyle,
+    stylesForSelectedLanguage.value.some(
+      (style) => style.numeralStyle === numeralStyle,
     ),
   ),
+);
+const showNumeralKindFilter = computed(
+  () => availableNumeralKinds.value.length > 1,
 );
 const showNumeralStyleFilter = computed(
   () => availableNumeralStyles.value.length > 1,
 );
 const plagalTerminologyFilterDisabled = computed(
   () =>
-    !builtInInitialMartyriaStyles.some(
+    !stylesForSelectedLanguage.value.some(
       (style) =>
-        style.languageId === selectedLanguageId.value &&
         style.usesPlagalTerminology !== usePlagalTerminologyFilter.value,
     ),
+);
+const numeralKindOptions = computed(() =>
+  availableNumeralKinds.value.map((value) => ({
+    value,
+    label: numeralKindLabel(value),
+    disabled: !hasMatchingStyle({
+      ...numeralFilters.value,
+      numeralKind: value,
+    }),
+  })),
 );
 const numeralStyleOptions = computed(() =>
   availableNumeralStyles.value.map((value) => ({
     value,
     label: numeralStyleLabel(value),
-    disabled: !builtInInitialMartyriaStyles.some(
-      (style) =>
-        style.languageId === selectedLanguageId.value &&
-        style.numeralStyle === value &&
-        style.usesPlagalTerminology === usePlagalTerminologyFilter.value,
-    ),
+    disabled: !hasMatchingStyle({
+      ...numeralFilters.value,
+      numeralStyle: value,
+    }),
   })),
 );
 const selectedStyle = computed(
@@ -659,10 +750,21 @@ function languageName(languageId: InitialMartyriaLanguageId) {
   }
 }
 
+function numeralKindLabel(numeralKind: InitialMartyriaNumeralKind) {
+  switch (numeralKind) {
+    case INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal:
+      return t(($) => $.dialog.initialMartyriaStyles.numeralKinds.cardinal, {
+        ns: 'dialog',
+      });
+    case INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal:
+      return t(($) => $.dialog.initialMartyriaStyles.numeralKinds.ordinal, {
+        ns: 'dialog',
+      });
+  }
+}
+
 function numeralStyleLabel(numeralStyle: InitialMartyriaNumeralStyle) {
   switch (numeralStyle) {
-    case INITIAL_MARTYRIA_NUMERAL_STYLES.None:
-      return t(($) => $.dialog.initialMartyriaStyles.none, { ns: 'dialog' });
     case INITIAL_MARTYRIA_NUMERAL_STYLES.Digits:
       return t(
         ($) => $.dialog.initialMartyriaStyles.numeralStyleExamples.digits,
@@ -674,69 +776,98 @@ function numeralStyleLabel(numeralStyle: InitialMartyriaNumeralStyle) {
           $.dialog.initialMartyriaStyles.numeralStyleExamples.romanNumerals,
         { ns: 'dialog' },
       );
-    case INITIAL_MARTYRIA_NUMERAL_STYLES.GreekNumerals:
+    case INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals:
+      return alphabeticNumeralStyleLabel();
+    case INITIAL_MARTYRIA_NUMERAL_STYLES.Words:
+      return wordNumeralStyleLabel();
+  }
+}
+
+function alphabeticNumeralStyleLabel() {
+  switch (selectedLanguageId.value) {
+    case INITIAL_MARTYRIA_LANGUAGE_IDS.Greek:
       return t(
         ($) =>
           $.dialog.initialMartyriaStyles.numeralStyleExamples.greekNumerals,
         { ns: 'dialog' },
       );
-    case INITIAL_MARTYRIA_NUMERAL_STYLES.CyrillicNumerals:
+    case INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic:
       return t(
         ($) =>
           $.dialog.initialMartyriaStyles.numeralStyleExamples
             .churchSlavonicNumerals,
         { ns: 'dialog' },
       );
-    case INITIAL_MARTYRIA_NUMERAL_STYLES.CardinalWords:
+    default:
+      throw new Error(
+        `No alphabetic numeral example for ${selectedLanguageId.value}`,
+      );
+  }
+}
+
+function wordNumeralStyleLabel() {
+  const availableKinds = numeralKindOrder.filter((numeralKind) =>
+    stylesForSelectedLanguage.value.some(
+      (style) =>
+        style.numeralKind === numeralKind &&
+        style.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    ),
+  );
+  const selectedKind = selectedNumeralKindFilter.value;
+  const displayedKinds =
+    selectedKind !== ALL_NUMERAL_KINDS && availableKinds.includes(selectedKind)
+      ? [selectedKind]
+      : availableKinds;
+
+  return displayedKinds.map(numeralKindExampleLabel).join(' / ');
+}
+
+function numeralKindExampleLabel(numeralKind: InitialMartyriaNumeralKind) {
+  if (numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal) {
+    return t(
+      ($) =>
+        $.dialog.initialMartyriaStyles.numeralStyleExamples.englishCardinal,
+      { ns: 'dialog' },
+    );
+  }
+
+  switch (selectedLanguageId.value) {
+    case INITIAL_MARTYRIA_LANGUAGE_IDS.Greek:
       return t(
-        ($) =>
-          $.dialog.initialMartyriaStyles.numeralStyleExamples.englishCardinal,
+        ($) => $.dialog.initialMartyriaStyles.numeralStyleExamples.greekOrdinal,
         { ns: 'dialog' },
       );
-    case INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords:
-      switch (selectedLanguageId.value) {
-        case INITIAL_MARTYRIA_LANGUAGE_IDS.Greek:
-          return t(
-            ($) =>
-              $.dialog.initialMartyriaStyles.numeralStyleExamples.greekOrdinal,
-            { ns: 'dialog' },
-          );
-        case INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish:
-          return t(
-            ($) =>
-              $.dialog.initialMartyriaStyles.numeralStyleExamples
-                .spanishOrdinal,
-            { ns: 'dialog' },
-          );
-        case INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic:
-          return t(
-            ($) =>
-              $.dialog.initialMartyriaStyles.numeralStyleExamples
-                .churchSlavonicOrdinal,
-            { ns: 'dialog' },
-          );
-        case INITIAL_MARTYRIA_LANGUAGE_IDS.Russian:
-          return t(
-            ($) =>
-              $.dialog.initialMartyriaStyles.numeralStyleExamples
-                .russianOrdinal,
-            { ns: 'dialog' },
-          );
-        case INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian:
-          return t(
-            ($) =>
-              $.dialog.initialMartyriaStyles.numeralStyleExamples
-                .romanianOrdinal,
-            { ns: 'dialog' },
-          );
-        default:
-          return t(
-            ($) =>
-              $.dialog.initialMartyriaStyles.numeralStyleExamples
-                .englishOrdinal,
-            { ns: 'dialog' },
-          );
-      }
+    case INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish:
+      return t(
+        ($) =>
+          $.dialog.initialMartyriaStyles.numeralStyleExamples.spanishOrdinal,
+        { ns: 'dialog' },
+      );
+    case INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic:
+      return t(
+        ($) =>
+          $.dialog.initialMartyriaStyles.numeralStyleExamples
+            .churchSlavonicOrdinal,
+        { ns: 'dialog' },
+      );
+    case INITIAL_MARTYRIA_LANGUAGE_IDS.Russian:
+      return t(
+        ($) =>
+          $.dialog.initialMartyriaStyles.numeralStyleExamples.russianOrdinal,
+        { ns: 'dialog' },
+      );
+    case INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian:
+      return t(
+        ($) =>
+          $.dialog.initialMartyriaStyles.numeralStyleExamples.romanianOrdinal,
+        { ns: 'dialog' },
+      );
+    default:
+      return t(
+        ($) =>
+          $.dialog.initialMartyriaStyles.numeralStyleExamples.englishOrdinal,
+        { ns: 'dialog' },
+      );
   }
 }
 
@@ -746,6 +877,7 @@ function selectLanguage(value: unknown) {
     return;
   }
   selectedLanguageId.value = language.id;
+  selectedNumeralKindFilter.value = ALL_NUMERAL_KINDS;
   selectedNumeralStyleFilter.value = ALL_NUMERAL_STYLES;
   usePlagalTerminologyFilter.value = usesPlagalTerminologyByDefault(
     language.id,
@@ -772,6 +904,21 @@ function selectStyle(styleId: BuiltInInitialMartyriaStyleId) {
   }
 }
 
+function selectNumeralKindFilter(value: unknown) {
+  if (
+    value !== ALL_NUMERAL_KINDS &&
+    !Object.values(INITIAL_MARTYRIA_NUMERAL_KINDS).includes(
+      value as InitialMartyriaNumeralKind,
+    )
+  ) {
+    return;
+  }
+  selectedNumeralKindFilter.value = value as
+    InitialMartyriaNumeralKind | typeof ALL_NUMERAL_KINDS;
+  reconcileNumeralFilters('numeralKind');
+  selectFirstVisibleStyle();
+}
+
 function selectNumeralStyleFilter(value: unknown) {
   if (
     value !== ALL_NUMERAL_STYLES &&
@@ -783,24 +930,37 @@ function selectNumeralStyleFilter(value: unknown) {
   }
   selectedNumeralStyleFilter.value = value as
     InitialMartyriaNumeralStyle | typeof ALL_NUMERAL_STYLES;
+  reconcileNumeralFilters('numeralStyle');
   selectFirstVisibleStyle();
 }
 
 function setPlagalTerminologyFilter(value: boolean | 'indeterminate') {
   usePlagalTerminologyFilter.value = value === true;
-  const selectedNumeralStyle = selectedNumeralStyleFilter.value;
-  if (
-    selectedNumeralStyle !== ALL_NUMERAL_STYLES &&
-    !builtInInitialMartyriaStyles.some(
-      (style) =>
-        style.languageId === selectedLanguageId.value &&
-        style.numeralStyle === selectedNumeralStyle &&
-        style.usesPlagalTerminology === usePlagalTerminologyFilter.value,
-    )
-  ) {
+  reconcileNumeralFilters('numeralKind');
+  selectFirstVisibleStyle();
+}
+
+function reconcileNumeralFilters(
+  preferredFilter: 'numeralKind' | 'numeralStyle',
+) {
+  if (hasMatchingStyle()) {
+    return;
+  }
+
+  const otherFilter =
+    preferredFilter === 'numeralKind' ? 'numeralStyle' : 'numeralKind';
+  clearNumeralFilter(otherFilter);
+  if (!hasMatchingStyle()) {
+    clearNumeralFilter(preferredFilter);
+  }
+}
+
+function clearNumeralFilter(filter: 'numeralKind' | 'numeralStyle') {
+  if (filter === 'numeralKind') {
+    selectedNumeralKindFilter.value = ALL_NUMERAL_KINDS;
+  } else {
     selectedNumeralStyleFilter.value = ALL_NUMERAL_STYLES;
   }
-  selectFirstVisibleStyle();
 }
 
 function selectFirstVisibleStyle() {

@@ -81,6 +81,11 @@
     "description": "Configurează stilurile de prezentare pentru martyria inițială în tot documentul.",
     "selectionDescription": "Numele stilurilor descriu forma rostită a numeralului și terminologia. Identificarea redundantă a modului înseamnă că textul identifică complet modul, iar simbolurile notației îl identifică din nou; în caz contrar, simbolurile fac parte din denumirea modului. Alegeți un stil, apoi ajustați-i opțional tipografia.",
     "language": "Limbă",
+    "numeralKind": "Tipul numeralului",
+    "numeralKinds": {
+      "cardinal": "Cardinal",
+      "ordinal": "Ordinal"
+    },
     "numeralStyle": "Stilul numeralului",
     "all": "Toate",
     "usePlagalTerminology": "Folosește terminologia plagală",
@@ -126,7 +131,6 @@
     "invalid": "Nevalid",
     "active": "Activ",
     "terminology": "Terminologie",
-    "none": "Niciuna",
     "terminologyName": "Nume terminologie",
     "writingDirection": "Direcția de scriere",
     "numberingSystem": "Sistem de numerotare",
@@ -148,7 +152,7 @@
     "documentDefault": "Implicit pentru document",
     "builtInStyles": {
       "traditionalGreek": "Greacă - Numerale ordinale în cuvinte (Terminologie plagală)",
-      "greekModeNames": "Greacă - Numerale ordinale (Terminologie plagală)",
+      "greekModeNames": "Greacă - Numerale alfabetice ordinale (Terminologie plagală)",
       "englishPlagalFirst": "Engleză - Numerale ordinale ale modului autentic în cuvinte (Terminologie plagală)",
       "englishSignFirst": "Engleză - Numerale ordinale ale modului plagal în cuvinte (Terminologie plagală)",
       "englishModeBeforeSign": "Engleză - Numerale cardinale în cifre (Terminologie plagală)",
@@ -165,7 +169,7 @@
       "spanishTonoOrdinal": "Spaniolă - Numerale ordinale postnominale în cuvinte (Identificare redundantă a modului)",
       "spanishOrdinalTono": "Spaniolă - Numerale ordinale prenominale în cuvinte (Identificare redundantă a modului)",
       "churchSlavonicGlasNumber": "Slavonă bisericească - Numerale cardinale în cifre (Identificare redundantă a modului)",
-      "churchSlavonicGlasCyrillicNumeral": "Slavonă bisericească - Numerale cardinale (Identificare redundantă a modului)",
+      "churchSlavonicGlasCyrillicNumeral": "Slavonă bisericească - Numerale alfabetice cardinale (Identificare redundantă a modului)",
       "churchSlavonicGlasOrdinal": "Slavonă bisericească - Numerale ordinale în cuvinte (Identificare redundantă a modului)",
       "russianGlasNumber": "Rusă - Numerale cardinale în cifre (Identificare redundantă a modului)",
       "russianGlasOrdinal": "Rusă - Numerale ordinale în cuvinte (Identificare redundantă a modului)",

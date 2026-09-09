@@ -11,6 +11,7 @@ import {
   getInitialMartyriaContext,
   getInitialMartyriaFixedSeparatorSize,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaStyle,
@@ -37,13 +38,18 @@ const englishNumeralStyleNames: Record<
   InitialMartyriaStyle['numeralStyle'],
   string
 > = {
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.None]: 'No Numeral',
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.Digits]: 'Cardinal Digits',
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals]: 'Cardinal Roman Numerals',
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.GreekNumerals]: 'Ordinal Numerals',
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.CyrillicNumerals]: 'Cardinal Numerals',
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.CardinalWords]: 'Cardinal Words',
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords]: 'Ordinal Words',
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.Digits]: 'Digits',
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals]: 'Roman Numerals',
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals]: 'Alphabetic Numerals',
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.Words]: 'Words',
+};
+
+const englishNumeralKindNames: Record<
+  InitialMartyriaStyle['numeralKind'],
+  string
+> = {
+  [INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal]: 'Cardinal',
+  [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal]: 'Ordinal',
 };
 
 const englishNumeralQualifierNames: Record<
@@ -72,7 +78,7 @@ function generateEnglishStyleName(style: InitialMartyriaStyle) {
   const annotationList =
     annotations.length > 0 ? ` (${annotations.join(', ')})` : '';
 
-  return `${englishLanguageNames[style.languageId]} - ${qualifier}${englishNumeralStyleNames[style.numeralStyle]}${annotationList}`;
+  return `${englishLanguageNames[style.languageId]} - ${qualifier}${englishNumeralKindNames[style.numeralKind]} ${englishNumeralStyleNames[style.numeralStyle]}${annotationList}`;
 }
 
 describe('InitialMartyriaStyle', () => {

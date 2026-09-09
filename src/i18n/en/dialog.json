@@ -81,6 +81,11 @@
     "description": "Configure document-wide initial martyria presentation styles.",
     "selectionDescription": "Style names describe the spoken number form and terminology. Redundant Mode Identification means the text identifies the mode completely and the notation symbols identify it again; otherwise, the symbols form part of the mode name. Choose a style, then optionally adjust its typography.",
     "language": "Language",
+    "numeralKind": "Numeral kind",
+    "numeralKinds": {
+      "cardinal": "Cardinal",
+      "ordinal": "Ordinal"
+    },
     "numeralStyle": "Numeral style",
     "all": "All",
     "usePlagalTerminology": "Use plagal terminology",
@@ -126,7 +131,6 @@
     "invalid": "Invalid",
     "active": "Active",
     "terminology": "Terminology",
-    "none": "None",
     "terminologyName": "Terminology name",
     "writingDirection": "Writing direction",
     "numberingSystem": "Numbering system",
@@ -148,7 +152,7 @@
     "documentDefault": "Document default",
     "builtInStyles": {
       "traditionalGreek": "Greek - Ordinal Words (Plagal Terminology)",
-      "greekModeNames": "Greek - Ordinal Numerals (Plagal Terminology)",
+      "greekModeNames": "Greek - Ordinal Alphabetic Numerals (Plagal Terminology)",
       "englishPlagalFirst": "English - Authentic-Mode Ordinal Words (Plagal Terminology)",
       "englishSignFirst": "English - Plagal-Mode Ordinal Words (Plagal Terminology)",
       "englishModeBeforeSign": "English - Cardinal Digits (Plagal Terminology)",
@@ -165,7 +169,7 @@
       "spanishTonoOrdinal": "Spanish - Postnominal Ordinal Words (Redundant Mode Identification)",
       "spanishOrdinalTono": "Spanish - Prenominal Ordinal Words (Redundant Mode Identification)",
       "churchSlavonicGlasNumber": "Church Slavonic - Cardinal Digits (Redundant Mode Identification)",
-      "churchSlavonicGlasCyrillicNumeral": "Church Slavonic - Cardinal Numerals (Redundant Mode Identification)",
+      "churchSlavonicGlasCyrillicNumeral": "Church Slavonic - Cardinal Alphabetic Numerals (Redundant Mode Identification)",
       "churchSlavonicGlasOrdinal": "Church Slavonic - Ordinal Words (Redundant Mode Identification)",
       "russianGlasNumber": "Russian - Cardinal Digits (Redundant Mode Identification)",
       "russianGlasOrdinal": "Russian - Ordinal Words (Redundant Mode Identification)",

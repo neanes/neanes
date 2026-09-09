@@ -81,6 +81,11 @@
     "description": "Atur gaya tampilan martyria awal untuk seluruh dokumen.",
     "selectionDescription": "Nama gaya menjelaskan bentuk angka yang diucapkan dan terminologinya. Identifikasi Modus Redundan berarti teks mengidentifikasi modus secara lengkap dan simbol notasi mengidentifikasinya lagi; jika tidak, simbol menjadi bagian dari nama modus. Pilih gaya, lalu sesuaikan tipografinya bila perlu.",
     "language": "Bahasa",
+    "numeralKind": "Jenis angka",
+    "numeralKinds": {
+      "cardinal": "Kardinal",
+      "ordinal": "Ordinal"
+    },
     "numeralStyle": "Gaya angka",
     "all": "Semua",
     "usePlagalTerminology": "Gunakan terminologi plagal",
@@ -126,7 +131,6 @@
     "invalid": "Tidak valid",
     "active": "Aktif",
     "terminology": "Terminologi",
-    "none": "Tidak ada",
     "terminologyName": "Nama terminologi",
     "writingDirection": "Arah penulisan",
     "numberingSystem": "Sistem penomoran",
@@ -148,7 +152,7 @@
     "documentDefault": "Bawaan dokumen",
     "builtInStyles": {
       "traditionalGreek": "Yunani - Kata ordinal (Terminologi plagal)",
-      "greekModeNames": "Yunani - Angka ordinal (Terminologi plagal)",
+      "greekModeNames": "Yunani - Angka alfabetis ordinal (Terminologi plagal)",
       "englishPlagalFirst": "Inggris - Kata ordinal modus autentik (Terminologi plagal)",
       "englishSignFirst": "Inggris - Kata ordinal modus plagal (Terminologi plagal)",
       "englishModeBeforeSign": "Inggris - Digit kardinal (Terminologi plagal)",
@@ -165,7 +169,7 @@
       "spanishTonoOrdinal": "Spanyol - Kata ordinal setelah nomina (Identifikasi modus redundan)",
       "spanishOrdinalTono": "Spanyol - Kata ordinal sebelum nomina (Identifikasi modus redundan)",
       "churchSlavonicGlasNumber": "Slavonik Gerejawi - Digit kardinal (Identifikasi modus redundan)",
-      "churchSlavonicGlasCyrillicNumeral": "Slavonik Gerejawi - Angka kardinal (Identifikasi modus redundan)",
+      "churchSlavonicGlasCyrillicNumeral": "Slavonik Gerejawi - Angka alfabetis kardinal (Identifikasi modus redundan)",
       "churchSlavonicGlasOrdinal": "Slavonik Gerejawi - Kata ordinal (Identifikasi modus redundan)",
       "russianGlasNumber": "Rusia - Digit kardinal (Identifikasi modus redundan)",
       "russianGlasOrdinal": "Rusia - Kata ordinal (Identifikasi modus redundan)",

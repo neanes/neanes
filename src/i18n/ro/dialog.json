@@ -94,7 +94,10 @@
       "textAndModeSign": "Text și semn de glas"
     },
     "all": "Toate",
-    "usePlagalTerminology": "Folosește terminologia plagală",
+    "plagalTerminologyOptions": {
+      "plagal": "Plagală",
+      "nonPlagal": "Neplagală"
+    },
     "numeralStyleExamples": {
       "digits": "1",
       "romanNumerals": "I",

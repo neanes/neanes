@@ -94,7 +94,10 @@
       "textAndModeSign": "Teks dan tanda mode"
     },
     "all": "Semua",
-    "usePlagalTerminology": "Gunakan terminologi plagal",
+    "plagalTerminologyOptions": {
+      "plagal": "Plagal",
+      "nonPlagal": "Non-plagal"
+    },
     "numeralStyleExamples": {
       "digits": "1",
       "romanNumerals": "I",

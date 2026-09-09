@@ -1176,11 +1176,23 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
 export function createInitialMartyriaConfiguration(
   styleId: BuiltInInitialMartyriaStyleId,
 ): InitialMartyriaConfiguration {
+  const style = getBuiltInInitialMartyriaStyle(styleId)!;
   return {
     styleId,
-    transliterateNoteNames: false,
+    transliterateNoteNames: usesTransliteratedNoteNamesByDefault(
+      style.languageId,
+    ),
     appearanceOverrides: {},
   };
+}
+
+export function usesTransliteratedNoteNamesByDefault(
+  languageId: InitialMartyriaLanguageId,
+) {
+  return (
+    languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic ||
+    languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Russian
+  );
 }
 
 export function cloneInitialMartyriaConfiguration(

@@ -94,7 +94,10 @@
       "textAndModeSign": "Text and mode sign"
     },
     "all": "All",
-    "usePlagalTerminology": "Use plagal terminology",
+    "plagalTerminologyOptions": {
+      "plagal": "Plagal",
+      "nonPlagal": "Non-plagal"
+    },
     "numeralStyleExamples": {
       "digits": "1",
       "romanNumerals": "I",

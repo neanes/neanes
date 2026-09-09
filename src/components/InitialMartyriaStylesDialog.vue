@@ -160,21 +160,39 @@
               </Select>
             </Field>
 
-            <Field orientation="horizontal">
-              <Checkbox
-                id="initial-martyria-plagal-terminology-filter"
-                :model-value="usePlagalTerminologyFilter"
-                :disabled="plagalTerminologyFilterDisabled"
-                @update:model-value="setPlagalTerminologyFilter"
-              />
+            <Field v-if="showPlagalTerminologyFilter">
               <FieldLabel for="initial-martyria-plagal-terminology-filter">
                 {{
-                  $t(
-                    ($) => $.dialog.initialMartyriaStyles.usePlagalTerminology,
-                    { ns: 'dialog' },
-                  )
+                  $t(($) => $.dialog.initialMartyriaStyles.terminology, {
+                    ns: 'dialog',
+                  })
                 }}
               </FieldLabel>
+              <Select
+                :model-value="selectedPlagalTerminologyFilter"
+                @update:model-value="selectPlagalTerminologyFilter"
+              >
+                <SelectTrigger id="initial-martyria-plagal-terminology-filter">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem :value="PLAGAL_TERMINOLOGY_FILTERS.All">
+                    {{
+                      $t(($) => $.dialog.initialMartyriaStyles.all, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </SelectItem>
+                  <SelectItem
+                    v-for="option in plagalTerminologyOptions"
+                    :key="option.value"
+                    :value="option.value"
+                    :disabled="option.disabled"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </Field>
 
             <div class="grid gap-3 sm:grid-cols-2">
@@ -488,6 +506,7 @@ import {
   type InitialMartyriaNumeralKind,
   type InitialMartyriaNumeralStyle,
   resolveInitialMartyriaConfiguration,
+  usesTransliteratedNoteNamesByDefault,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';
@@ -499,6 +518,20 @@ const DEFAULT_FONT_VALUE = '__style_default__';
 const ALL_MODE_IDENTIFICATION_METHODS = '__all_mode_identification_methods__';
 const ALL_NUMERAL_KINDS = '__all_numeral_kinds__';
 const ALL_NUMERAL_STYLES = '__all_numeral_styles__';
+const PLAGAL_TERMINOLOGY_FILTERS = {
+  All: '__all_plagal_terminology__',
+  Plagal: 'plagal',
+  NonPlagal: 'non-plagal',
+} as const;
+type PlagalTerminologyFilter =
+  (typeof PLAGAL_TERMINOLOGY_FILTERS)[keyof typeof PLAGAL_TERMINOLOGY_FILTERS];
+function defaultPlagalTerminologyFilter(
+  languageId: InitialMartyriaLanguageId,
+): PlagalTerminologyFilter {
+  return languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.English
+    ? PLAGAL_TERMINOLOGY_FILTERS.Plagal
+    : PLAGAL_TERMINOLOGY_FILTERS.All;
+}
 const representativeTemplateIds = [100, 500, 700];
 const numeralKindOrder = [
   INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
@@ -541,21 +574,12 @@ const workingConfiguration = ref<InitialMartyriaConfiguration | null>(
     ? null
     : cloneInitialMartyriaConfiguration(initialConfiguration),
 );
-const selectedLanguageId = ref<InitialMartyriaLanguageId>(
-  builtInInitialMartyriaStyles.find(
-    (style) => style.id === workingConfiguration.value?.styleId,
-  )?.languageId ?? initialMartyriaLanguages[0].id,
-);
 const initialStyle = builtInInitialMartyriaStyles.find(
   (style) => style.id === workingConfiguration.value?.styleId,
 );
-function usesPlagalTerminologyByDefault(languageId: InitialMartyriaLanguageId) {
-  return (
-    languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Greek ||
-    languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.English
-  );
-}
-
+const selectedLanguageId = ref<InitialMartyriaLanguageId>(
+  initialStyle?.languageId ?? initialMartyriaLanguages[0].id,
+);
 const selectedNumeralStyleFilter = ref<
   InitialMartyriaNumeralStyle | typeof ALL_NUMERAL_STYLES
 >(ALL_NUMERAL_STYLES);
@@ -566,9 +590,8 @@ const selectedModeIdentificationMethodFilter = ref<
   | InitialMartyriaModeIdentificationMethod
   | typeof ALL_MODE_IDENTIFICATION_METHODS
 >(ALL_MODE_IDENTIFICATION_METHODS);
-const usePlagalTerminologyFilter = ref(
-  initialStyle?.usesPlagalTerminology ??
-    usesPlagalTerminologyByDefault(selectedLanguageId.value),
+const selectedPlagalTerminologyFilter = ref<PlagalTerminologyFilter>(
+  defaultPlagalTerminologyFilter(selectedLanguageId.value),
 );
 
 if (
@@ -584,7 +607,7 @@ type StyleFilters = {
   modeIdentificationMethod:
     | InitialMartyriaModeIdentificationMethod
     | typeof ALL_MODE_IDENTIFICATION_METHODS;
-  usesPlagalTerminology: boolean;
+  plagalTerminology: PlagalTerminologyFilter;
 };
 type BuiltInInitialMartyriaStyle =
   (typeof builtInInitialMartyriaStyles)[number];
@@ -598,7 +621,7 @@ const styleFilters = computed<StyleFilters>(() => ({
   numeralKind: selectedNumeralKindFilter.value,
   numeralStyle: selectedNumeralStyleFilter.value,
   modeIdentificationMethod: selectedModeIdentificationMethodFilter.value,
-  usesPlagalTerminology: usePlagalTerminologyFilter.value,
+  plagalTerminology: selectedPlagalTerminologyFilter.value,
 }));
 
 function matchesStyleFilters(
@@ -612,7 +635,9 @@ function matchesStyleFilters(
       style.numeralStyle === filters.numeralStyle) &&
     (filters.modeIdentificationMethod === ALL_MODE_IDENTIFICATION_METHODS ||
       style.modeIdentificationMethod === filters.modeIdentificationMethod) &&
-    style.usesPlagalTerminology === filters.usesPlagalTerminology
+    (filters.plagalTerminology === PLAGAL_TERMINOLOGY_FILTERS.All ||
+      style.usesPlagalTerminology ===
+        (filters.plagalTerminology === PLAGAL_TERMINOLOGY_FILTERS.Plagal))
   );
 }
 
@@ -657,12 +682,20 @@ const showNumeralStyleFilter = computed(
 const showModeIdentificationMethodFilter = computed(
   () => availableModeIdentificationMethods.value.length > 1,
 );
-const plagalTerminologyFilterDisabled = computed(
-  () =>
-    !stylesForSelectedLanguage.value.some(
+const availablePlagalTerminologyFilters = computed(() =>
+  [
+    PLAGAL_TERMINOLOGY_FILTERS.Plagal,
+    PLAGAL_TERMINOLOGY_FILTERS.NonPlagal,
+  ].filter((value) =>
+    stylesForSelectedLanguage.value.some(
       (style) =>
-        style.usesPlagalTerminology !== usePlagalTerminologyFilter.value,
+        style.usesPlagalTerminology ===
+        (value === PLAGAL_TERMINOLOGY_FILTERS.Plagal),
     ),
+  ),
+);
+const showPlagalTerminologyFilter = computed(
+  () => availablePlagalTerminologyFilters.value.length > 1,
 );
 const numeralKindOptions = computed(() =>
   availableNumeralKinds.value.map((value) => ({
@@ -691,6 +724,16 @@ const modeIdentificationMethodOptions = computed(() =>
     disabled: !hasMatchingStyle({
       ...styleFilters.value,
       modeIdentificationMethod: value,
+    }),
+  })),
+);
+const plagalTerminologyOptions = computed(() =>
+  availablePlagalTerminologyFilters.value.map((value) => ({
+    value,
+    label: plagalTerminologyLabel(value),
+    disabled: !hasMatchingStyle({
+      ...styleFilters.value,
+      plagalTerminology: value,
     }),
   })),
 );
@@ -883,6 +926,23 @@ function modeIdentificationMethodLabel(
   }
 }
 
+function plagalTerminologyLabel(
+  filter: Exclude<
+    PlagalTerminologyFilter,
+    typeof PLAGAL_TERMINOLOGY_FILTERS.All
+  >,
+) {
+  return filter === PLAGAL_TERMINOLOGY_FILTERS.Plagal
+    ? t(($) => $.dialog.initialMartyriaStyles.plagalTerminologyOptions.plagal, {
+        ns: 'dialog',
+      })
+    : t(
+        ($) =>
+          $.dialog.initialMartyriaStyles.plagalTerminologyOptions.nonPlagal,
+        { ns: 'dialog' },
+      );
+}
+
 function alphabeticNumeralStyleLabel() {
   switch (selectedLanguageId.value) {
     case INITIAL_MARTYRIA_LANGUAGE_IDS.Greek:
@@ -981,18 +1041,21 @@ function selectLanguage(value: unknown) {
   selectedNumeralStyleFilter.value = ALL_NUMERAL_STYLES;
   selectedModeIdentificationMethodFilter.value =
     ALL_MODE_IDENTIFICATION_METHODS;
-  usePlagalTerminologyFilter.value = usesPlagalTerminologyByDefault(
+  selectedPlagalTerminologyFilter.value = defaultPlagalTerminologyFilter(
     language.id,
   );
   const firstStyle = builtInInitialMartyriaStyles.find(
     (style) => style.languageId === language.id,
   );
   if (firstStyle != null) {
-    selectStyle(firstStyle.id);
+    selectStyle(firstStyle.id, true);
   }
 }
 
-function selectStyle(styleId: BuiltInInitialMartyriaStyleId) {
+function selectStyle(
+  styleId: BuiltInInitialMartyriaStyleId,
+  applyLanguageDefaults = false,
+) {
   const style = builtInInitialMartyriaStyles.find(
     (item) => item.id === styleId,
   );
@@ -1001,8 +1064,13 @@ function selectStyle(styleId: BuiltInInitialMartyriaStyleId) {
   } else {
     workingConfiguration.value.styleId = styleId;
   }
-  if (style?.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Greek) {
-    workingConfiguration.value.transliterateNoteNames = false;
+  if (
+    style != null &&
+    (applyLanguageDefaults ||
+      style.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Greek)
+  ) {
+    workingConfiguration.value.transliterateNoteNames =
+      usesTransliteratedNoteNamesByDefault(style.languageId);
   }
 }
 
@@ -1052,17 +1120,26 @@ function selectModeIdentificationMethodFilter(value: unknown) {
   selectFirstVisibleStyle();
 }
 
-function setPlagalTerminologyFilter(value: boolean | 'indeterminate') {
-  usePlagalTerminologyFilter.value = value === true;
+function selectPlagalTerminologyFilter(value: unknown) {
+  if (
+    !Object.values(PLAGAL_TERMINOLOGY_FILTERS).includes(
+      value as PlagalTerminologyFilter,
+    )
+  ) {
+    return;
+  }
+  selectedPlagalTerminologyFilter.value = value as PlagalTerminologyFilter;
   reconcileStyleFilters('plagalTerminology');
   selectFirstVisibleStyle();
 }
 
-type SelectFilter = 'numeralKind' | 'numeralStyle' | 'modeIdentificationMethod';
+type StyleFilter =
+  | 'numeralKind'
+  | 'numeralStyle'
+  | 'modeIdentificationMethod'
+  | 'plagalTerminology';
 
-function reconcileStyleFilters(
-  preferredFilter: SelectFilter | 'plagalTerminology',
-) {
+function reconcileStyleFilters(preferredFilter: StyleFilter) {
   if (hasMatchingStyle()) {
     return;
   }
@@ -1073,27 +1150,23 @@ function reconcileStyleFilters(
       return;
     }
   }
-  if (preferredFilter !== 'plagalTerminology') {
-    clearStyleFilter(preferredFilter);
-  }
+  clearStyleFilter(preferredFilter);
 }
 
-function styleFilterResetOrder(
-  preferredFilter: SelectFilter | 'plagalTerminology',
-): SelectFilter[] {
+function styleFilterResetOrder(preferredFilter: StyleFilter): StyleFilter[] {
   switch (preferredFilter) {
     case 'numeralKind':
-      return ['numeralStyle', 'modeIdentificationMethod'];
+      return ['numeralStyle', 'modeIdentificationMethod', 'plagalTerminology'];
     case 'numeralStyle':
-      return ['numeralKind', 'modeIdentificationMethod'];
+      return ['numeralKind', 'modeIdentificationMethod', 'plagalTerminology'];
     case 'modeIdentificationMethod':
-      return ['numeralStyle', 'numeralKind'];
+      return ['numeralStyle', 'numeralKind', 'plagalTerminology'];
     case 'plagalTerminology':
       return ['modeIdentificationMethod', 'numeralStyle', 'numeralKind'];
   }
 }
 
-function clearStyleFilter(filter: SelectFilter) {
+function clearStyleFilter(filter: StyleFilter) {
   switch (filter) {
     case 'numeralKind':
       selectedNumeralKindFilter.value = ALL_NUMERAL_KINDS;
@@ -1104,6 +1177,9 @@ function clearStyleFilter(filter: SelectFilter) {
     case 'modeIdentificationMethod':
       selectedModeIdentificationMethodFilter.value =
         ALL_MODE_IDENTIFICATION_METHODS;
+      break;
+    case 'plagalTerminology':
+      selectedPlagalTerminologyFilter.value = PLAGAL_TERMINOLOGY_FILTERS.All;
       break;
   }
 }

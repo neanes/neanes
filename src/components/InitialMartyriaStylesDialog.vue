@@ -476,7 +476,7 @@ const selectedNumeralStyleFilter = ref<
   InitialMartyriaNumeralStyle | typeof ALL_NUMERAL_STYLES
 >(ALL_NUMERAL_STYLES);
 const usePlagalTerminologyFilter = ref(
-  initialStyle?.filters.usesPlagalTerminology ??
+  initialStyle?.usesPlagalTerminology ??
     usesPlagalTerminologyByDefault(selectedLanguageId.value),
 );
 
@@ -492,8 +492,8 @@ const filteredStyles = computed(() =>
     (style) =>
       style.languageId === selectedLanguageId.value &&
       (selectedNumeralStyleFilter.value === ALL_NUMERAL_STYLES ||
-        style.filters.numeralStyle === selectedNumeralStyleFilter.value) &&
-      style.filters.usesPlagalTerminology === usePlagalTerminologyFilter.value,
+        style.numeralStyle === selectedNumeralStyleFilter.value) &&
+      style.usesPlagalTerminology === usePlagalTerminologyFilter.value,
   ),
 );
 const availableNumeralStyles = computed(() =>
@@ -501,7 +501,7 @@ const availableNumeralStyles = computed(() =>
     builtInInitialMartyriaStyles.some(
       (style) =>
         style.languageId === selectedLanguageId.value &&
-        style.filters.numeralStyle === numeralStyle,
+        style.numeralStyle === numeralStyle,
     ),
   ),
 );
@@ -513,8 +513,7 @@ const plagalTerminologyFilterDisabled = computed(
     !builtInInitialMartyriaStyles.some(
       (style) =>
         style.languageId === selectedLanguageId.value &&
-        style.filters.usesPlagalTerminology !==
-          usePlagalTerminologyFilter.value,
+        style.usesPlagalTerminology !== usePlagalTerminologyFilter.value,
     ),
 );
 const numeralStyleOptions = computed(() =>
@@ -524,9 +523,8 @@ const numeralStyleOptions = computed(() =>
     disabled: !builtInInitialMartyriaStyles.some(
       (style) =>
         style.languageId === selectedLanguageId.value &&
-        style.filters.numeralStyle === value &&
-        style.filters.usesPlagalTerminology ===
-          usePlagalTerminologyFilter.value,
+        style.numeralStyle === value &&
+        style.usesPlagalTerminology === usePlagalTerminologyFilter.value,
     ),
   })),
 );
@@ -796,9 +794,8 @@ function setPlagalTerminologyFilter(value: boolean | 'indeterminate') {
     !builtInInitialMartyriaStyles.some(
       (style) =>
         style.languageId === selectedLanguageId.value &&
-        style.filters.numeralStyle === selectedNumeralStyle &&
-        style.filters.usesPlagalTerminology ===
-          usePlagalTerminologyFilter.value,
+        style.numeralStyle === selectedNumeralStyle &&
+        style.usesPlagalTerminology === usePlagalTerminologyFilter.value,
     )
   ) {
     selectedNumeralStyleFilter.value = ALL_NUMERAL_STYLES;

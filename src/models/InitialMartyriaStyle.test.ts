@@ -10,6 +10,10 @@ import {
   getBuiltInInitialMartyriaStyleNameSelector,
   getInitialMartyriaContext,
   getInitialMartyriaFixedSeparatorSize,
+  INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
+  INITIAL_MARTYRIA_NUMERAL_STYLES,
+  type InitialMartyriaStyle,
   resolveInitialMartyriaConfiguration,
   resolveInitialMartyriaStyle,
   resolveInitialMartyriaStyleSelection,
@@ -17,6 +21,59 @@ import {
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
+
+const englishLanguageNames: Record<InitialMartyriaStyle['languageId'], string> =
+  {
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Greek]: 'Greek',
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: 'English',
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: 'Spanish',
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: 'Church Slavonic',
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: 'Russian',
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: 'Arabic',
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: 'Romanian',
+  };
+
+const englishNumeralStyleNames: Record<
+  InitialMartyriaStyle['numeralStyle'],
+  string
+> = {
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.None]: 'No Numeral',
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.Digits]: 'Cardinal Digits',
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals]: 'Cardinal Roman Numerals',
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.GreekNumerals]: 'Ordinal Numerals',
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.CyrillicNumerals]: 'Cardinal Numerals',
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.CardinalWords]: 'Cardinal Words',
+  [INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords]: 'Ordinal Words',
+};
+
+const englishNumeralQualifierNames: Record<
+  NonNullable<InitialMartyriaStyle['numeralQualifier']>,
+  string
+> = {
+  [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.AuthenticMode]: 'Authentic-Mode',
+  [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.PlagalMode]: 'Plagal-Mode',
+  [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal]: 'Postnominal',
+  [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal]: 'Prenominal',
+};
+
+function generateEnglishStyleName(style: InitialMartyriaStyle) {
+  const qualifier = style.numeralQualifier
+    ? `${englishNumeralQualifierNames[style.numeralQualifier]} `
+    : '';
+  const annotations: string[] = [];
+
+  if (style.usesPlagalTerminology) {
+    annotations.push('Plagal Terminology');
+  }
+  if (style.hasRedundantModeIdentification) {
+    annotations.push('Redundant Mode Identification');
+  }
+
+  const annotationList =
+    annotations.length > 0 ? ` (${annotations.join(', ')})` : '';
+
+  return `${englishLanguageNames[style.languageId]} - ${qualifier}${englishNumeralStyleNames[style.numeralStyle]}${annotationList}`;
+}
 
 describe('InitialMartyriaStyle', () => {
   it('sizes fixed separators from the main text font size', () => {
@@ -26,7 +83,7 @@ describe('InitialMartyriaStyle', () => {
     expect(getInitialMartyriaFixedSeparatorSize('wordSpace', 20)).toBeNull();
   });
 
-  it('defines every built-in ID exactly once with a localized display name', () => {
+  it('defines every built-in ID once with a systematic localized name', () => {
     const styleIds = builtInInitialMartyriaStyles.map((style) => style.id);
 
     expect(new Set(styleIds).size).toBe(styleIds.length);
@@ -35,17 +92,16 @@ describe('InitialMartyriaStyle', () => {
     );
 
     for (const style of builtInInitialMartyriaStyles) {
-      expect(
-        getBuiltInInitialMartyriaStyleNameSelector(style.id),
-      ).not.toBeNull();
-    }
+      const selector = getBuiltInInitialMartyriaStyleNameSelector(style.id);
 
-    const selector = getBuiltInInitialMartyriaStyleNameSelector(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1,
-    );
-    expect(selector?.(resources.ro)).toBe(
-      'Română - Numerale cardinale în cifre (Identificare redundantă a modului)',
-    );
+      expect(selector).not.toBeNull();
+      expect(selector?.(resources.en)).toBe(generateEnglishStyleName(style));
+
+      for (const localeResources of Object.values(resources)) {
+        expect(selector?.(localeResources)).toEqual(expect.any(String));
+        expect(selector?.(localeResources).length).toBeGreaterThan(0);
+      }
+    }
   });
 
   it('resolves inherited, Standard, and explicit element configurations', () => {

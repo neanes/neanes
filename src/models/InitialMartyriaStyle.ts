@@ -638,14 +638,14 @@ const romanNumerals: InitialMartyriaModeTexts = [
 ];
 
 const englishOrdinalSuffixes: InitialMartyriaModeTexts = [
-  'st',
-  'nd',
-  'rd',
-  'th',
-  'th',
-  'th',
-  'th',
-  'th',
+  'ˢᵗ',
+  'ⁿᵈ',
+  'ʳᵈ',
+  'ᵗʰ',
+  'ᵗʰ',
+  'ᵗʰ',
+  'ᵗʰ',
+  'ᵗʰ',
 ];
 
 function formatEnglishOrdinal(

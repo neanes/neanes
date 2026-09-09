@@ -15,6 +15,7 @@ import {
   BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   createInitialMartyriaConfiguration,
 } from '@/models/InitialMartyriaStyle';
+import { Fthora, QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -28,6 +29,7 @@ import {
   DropCapElement as DropCapElement_v1,
   EmptyElement as EmptyElement_v1,
   LineBreakType as LineBreakType_v1,
+  MartyriaElement as MartyriaElement_v1,
   NoteElement as NoteElement_v1,
   RichTextBoxElement as RichTextBoxElement_v1,
   type ScoreElement as ScoreElement_v1,
@@ -35,6 +37,7 @@ import {
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { ParagraphStyle as ParagraphStyle_v1 } from '@/models/save/v1/Style';
+import { ScaleNote } from '@/models/Scales';
 import { Score } from '@/models/Score';
 import { getRichTextLanguage } from '@/utils/richTextLanguage';
 
@@ -108,6 +111,25 @@ function loadLegacyElements(...legacyElements: ScoreElement_v1[]) {
 
   return SaveService.LoadScore_v1(saved);
 }
+
+describe('martyria quantitative-neume fthora serialization', () => {
+  it('round trips the fthora and its chromatic note', () => {
+    const martyria = new MartyriaElement();
+    martyria.alignRight = true;
+    martyria.quantitativeNeume = QuantitativeNeume.OligonPlusKentimaAbove;
+    martyria.quantitativeNeumeFthora = Fthora.SoftChromaticThi_Top;
+    martyria.quantitativeNeumeChromaticFthoraNote = ScaleNote.Thi;
+
+    const saved = new MartyriaElement_v1();
+    SaveService.SaveMartyria(saved, martyria);
+
+    const loaded = new MartyriaElement();
+    SaveService.LoadMartyria_v1(loaded, saved);
+
+    expect(loaded.quantitativeNeumeFthora).toBe(Fthora.SoftChromaticThi_Top);
+    expect(loaded.quantitativeNeumeChromaticFthoraNote).toBe(ScaleNote.Thi);
+  });
+});
 
 function loadLegacyElement(
   legacyElement: DropCapElement_v1 | NoteElement_v1 | TextBoxElement_v1,

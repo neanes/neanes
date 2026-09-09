@@ -18,6 +18,7 @@ export class Page {
 
 export class Line {
   public elements: ScoreElement[] = [];
+  public paragraphEnd: boolean = false;
   public indentation = 0;
   public adjustmentRatio: number | null = null;
   public diagnostics: LineLayoutDiagnostics | null = null;

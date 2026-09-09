@@ -14,6 +14,12 @@ interface Metrics {
   oligonMidpoint: number;
   initialMartyriaBaseline: number;
   capitalHeight: number;
+  elafronBounds: Partial<Record<SbmuflGlyphName, HorizontalBounds>>;
+}
+
+interface HorizontalBounds {
+  left: number;
+  right: number;
 }
 
 interface EngravingGlue {
@@ -41,6 +47,7 @@ interface ContextualSubstitution {
   inputGlyphs: SbmuflGlyphName[][];
   backtrackGlyphs: SbmuflGlyphName[][];
   lookaheadGlyphs: SbmuflGlyphName[][];
+  markAttachmentClass?: string;
   substitutions: Array<{
     index: number;
     from: SbmuflGlyphName;
@@ -63,6 +70,27 @@ class FontService {
 
   getMetrics(fontFamily: string) {
     return this.getMetadata(fontFamily).metrics as Metrics;
+  }
+
+  getLyricsHorizontalOffset(
+    fontFamily: string,
+    glyph: SbmuflGlyphName,
+  ): number {
+    const { left, right } = this.getElafronBounds(fontFamily, glyph);
+    return left + right - this.getAdvanceWidth(fontFamily, glyph);
+  }
+
+  getElafronBounds(
+    fontFamily: string,
+    glyph: SbmuflGlyphName,
+  ): HorizontalBounds {
+    const bounds = this.getMetrics(fontFamily).elafronBounds[glyph];
+
+    if (bounds == null) {
+      throw new Error(`Missing elafron bounds for ${glyph}`);
+    }
+
+    return bounds;
   }
 
   getAdvanceWidth(fontFamily: string, glyph: SbmuflGlyphName) {
@@ -89,21 +117,34 @@ class FontService {
     glyphs: SbmuflGlyphName[],
   ) {
     const resolvedGlyphs = [...glyphs];
+    const markAttachmentClasses = this.getMetadata(fontFamily)
+      .markAttachmentClasses as Record<string, SbmuflGlyphName[]> | undefined;
 
     for (const rule of this.getContextualSubstitutions(fontFamily)) {
+      const markAttachmentGlyphs =
+        rule.markAttachmentClass != null
+          ? markAttachmentClasses?.[rule.markAttachmentClass]
+          : undefined;
+
       for (
         let inputStart = 0;
         inputStart <= resolvedGlyphs.length - rule.inputGlyphs.length;
         inputStart++
       ) {
-        if (
-          !this.contextualSubstitutionMatches(rule, resolvedGlyphs, inputStart)
-        ) {
+        const inputIndexes = this.contextualSubstitutionMatchIndexes(
+          fontFamily,
+          rule,
+          resolvedGlyphs,
+          inputStart,
+          markAttachmentGlyphs,
+        );
+
+        if (inputIndexes == null) {
           continue;
         }
 
         for (const substitution of rule.substitutions) {
-          const glyphIndex = inputStart + substitution.index;
+          const glyphIndex = inputIndexes[substitution.index];
           if (resolvedGlyphs[glyphIndex] === substitution.from) {
             resolvedGlyphs[glyphIndex] = substitution.to;
           }
@@ -114,37 +155,92 @@ class FontService {
     return resolvedGlyphs;
   }
 
-  private contextualSubstitutionMatches(
+  private contextualSubstitutionMatchIndexes(
+    fontFamily: string,
     rule: ContextualSubstitution,
     glyphs: SbmuflGlyphName[],
     inputStart: number,
+    markAttachmentGlyphs: SbmuflGlyphName[] | undefined,
   ) {
-    return (
-      this.glyphClassesMatch(
-        rule.backtrackGlyphs,
-        glyphs,
-        inputStart - rule.backtrackGlyphs.length,
-      ) &&
-      this.glyphClassesMatch(rule.inputGlyphs, glyphs, inputStart) &&
-      this.glyphClassesMatch(
-        rule.lookaheadGlyphs,
-        glyphs,
-        inputStart + rule.inputGlyphs.length,
-      )
+    const inputIndexes = this.glyphClassesMatch(
+      fontFamily,
+      markAttachmentGlyphs,
+      rule.inputGlyphs,
+      glyphs,
+      inputStart,
+      1,
     );
+
+    if (inputIndexes == null || inputIndexes[0] !== inputStart) {
+      return null;
+    }
+
+    const backtrackIndexes = this.glyphClassesMatch(
+      fontFamily,
+      markAttachmentGlyphs,
+      [...rule.backtrackGlyphs].reverse(),
+      glyphs,
+      inputStart - 1,
+      -1,
+    );
+    const lookaheadIndexes = this.glyphClassesMatch(
+      fontFamily,
+      markAttachmentGlyphs,
+      rule.lookaheadGlyphs,
+      glyphs,
+      inputIndexes.at(-1)! + 1,
+      1,
+    );
+
+    return backtrackIndexes != null && lookaheadIndexes != null
+      ? inputIndexes
+      : null;
   }
 
   private glyphClassesMatch(
+    fontFamily: string,
+    markAttachmentGlyphs: SbmuflGlyphName[] | undefined,
     glyphClasses: SbmuflGlyphName[][],
     glyphs: SbmuflGlyphName[],
     start: number,
+    direction: 1 | -1,
   ) {
-    if (start < 0 || start + glyphClasses.length > glyphs.length) {
-      return false;
+    const indexes: number[] = [];
+    let glyphIndex = start;
+
+    for (const glyphClass of glyphClasses) {
+      while (
+        glyphIndex >= 0 &&
+        glyphIndex < glyphs.length &&
+        this.isIgnoredMark(fontFamily, markAttachmentGlyphs, glyphs[glyphIndex])
+      ) {
+        glyphIndex += direction;
+      }
+
+      if (
+        glyphIndex < 0 ||
+        glyphIndex >= glyphs.length ||
+        !glyphClass.includes(glyphs[glyphIndex])
+      ) {
+        return null;
+      }
+
+      indexes.push(glyphIndex);
+      glyphIndex += direction;
     }
 
-    return glyphClasses.every((glyphClass, index) =>
-      glyphClass.includes(glyphs[start + index]),
+    return indexes;
+  }
+
+  private isIgnoredMark(
+    fontFamily: string,
+    markAttachmentGlyphs: SbmuflGlyphName[] | undefined,
+    glyph: SbmuflGlyphName,
+  ) {
+    return (
+      markAttachmentGlyphs != null &&
+      this.getAdvanceWidth(fontFamily, glyph) === 0 &&
+      !markAttachmentGlyphs.includes(glyph)
     );
   }
 

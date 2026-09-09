@@ -8,7 +8,17 @@
     "winDescent": 0.466,
     "oligonMidpoint": 0.309,
     "initialMartyriaBaseline": 0.33,
-    "capitalHeight": 0.547
+    "capitalHeight": 0.547,
+    "elafronBounds": {
+      "runningElafron": {
+        "left": 0.72,
+        "right": 1.772
+      },
+      "petastiRunningElafron": {
+        "left": 0.721,
+        "right": 1.847
+      }
+    }
   },
   "glyphsWithAnchors": {
     "ison": {
@@ -7932,6 +7942,20 @@
       ]
     }
   },
+  "markAttachmentClasses": {
+    "gorgon": [
+      "digorgon",
+      "digorgonDottedLeftAbove",
+      "digorgonDottedLeftBelow",
+      "digorgonDottedRight",
+      "gorgonAbove",
+      "gorgonDottedLeft",
+      "gorgonDottedRight",
+      "trigorgon",
+      "trigorgonDottedLeftAbove",
+      "trigorgonDottedRight"
+    ]
+  },
   "contextualSubstitutions": [
     {
       "inputGlyphs": [
@@ -7998,7 +8022,8 @@
           "from": "yporroi",
           "to": "yporroi.gorgon"
         }
-      ]
+      ],
+      "markAttachmentClass": "gorgon"
     },
     {
       "inputGlyphs": [
@@ -8021,7 +8046,8 @@
           "from": "yporroi",
           "to": "yporroi.digorgon"
         }
-      ]
+      ],
+      "markAttachmentClass": "gorgon"
     },
     {
       "inputGlyphs": [
@@ -8043,7 +8069,8 @@
           "from": "yporroi",
           "to": "yporroi.trigorgon"
         }
-      ]
+      ],
+      "markAttachmentClass": "gorgon"
     },
     {
       "inputGlyphs": [

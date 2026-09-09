@@ -69,6 +69,7 @@ import {
   QuantitativeNeume,
   restNeumes,
   RootSign,
+  runningElaphronNeumes,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
@@ -168,6 +169,8 @@ const kentemataSet = new Set<QuantitativeNeume>([
   QuantitativeNeume.Kentemata,
   QuantitativeNeume.KentemataPlusOligon,
 ]);
+
+const runningElaphronSet = new Set(runningElaphronNeumes);
 
 const beatStealingSet = new Set<QuantitativeNeume>([
   QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
@@ -1900,6 +1903,11 @@ export class LayoutService {
 
         lastElementWasPageBreak = element.pageBreak;
       }
+
+      // Preserve the paragraph boundary after Knuth-Plass has expanded this
+      // completed paragraph into one or more positioned lines. Exporters need
+      // this distinction because a visual line is not necessarily a paragraph.
+      page.lines[page.lines.length - 1].paragraphEnd = true;
     }
 
     this.centerMeasureBars(pages, pageSetup, measureBarWidthMap);
@@ -3868,7 +3876,7 @@ export class LayoutService {
     return (
       martyriaElement.neumeWidth +
       martyriaElement.computedMeasureBarLeftLeadingSpacing +
-      martyriaElement.padding +
+      martyriaElement.quantitativeNeumeSpacing +
       martyriaElement.spaceAfter
     );
   }
@@ -4269,6 +4277,44 @@ export class LayoutService {
       });
     }
 
+    if (martyriaElement.alignRight && martyriaElement.quantitativeNeume) {
+      x += martyriaElement.quantitativeNeumeSpacing;
+
+      const quantitativeNeumeStartX = x;
+      const quantitativeNeumeGlyphName = NeumeMappingService.getMapping(
+        martyriaElement.quantitativeNeume,
+      ).glyphName;
+
+      glyphs.push({
+        glyphName: quantitativeNeumeGlyphName,
+        kind: 'inline',
+        x,
+        y: 0,
+      });
+      x += this.getNeumeWidthFromCache(
+        martyriaElement.quantitativeNeume,
+        pageSetup,
+      );
+
+      if (martyriaElement.quantitativeNeumeFthora) {
+        const fthoraGlyphName = NeumeMappingService.getMapping(
+          martyriaElement.quantitativeNeumeFthora,
+        ).glyphName;
+        const anchorOffset = fontService.getMarkOffset(
+          fontFamily,
+          quantitativeNeumeGlyphName,
+          fthoraGlyphName,
+        );
+
+        glyphs.push({
+          glyphName: fthoraGlyphName,
+          kind: 'mark',
+          x: quantitativeNeumeStartX + anchorOffset.x * fontSize,
+          y: anchorOffset.y * fontSize,
+        });
+      }
+    }
+
     if (martyriaElement.tempoRight) {
       x += martyriaElement.tempoRightSpacing;
       glyphs.push({
@@ -4343,15 +4389,28 @@ export class LayoutService {
       return { deficit: 0, requiredWidth: 0 };
     }
 
-    const requiredWidth =
-      this.getInlineSpacing(pageSetup) +
-      this.getElementRightInkOverhang(left, pageSetup) +
-      this.getElementLeftInkOverhang(right, pageSetup);
+    const requiredWidth = this.getRequiredVisualSpacing(
+      this.getElementRightInkOverhang(left, pageSetup),
+      this.getElementLeftInkOverhang(right, pageSetup),
+      pageSetup,
+    );
 
     return {
       deficit: Math.max(0, requiredWidth - baseGlueWidth),
       requiredWidth,
     };
+  }
+
+  private static getRequiredVisualSpacing(
+    leftRightInkOverhang: number,
+    rightLeftInkOverhang: number,
+    pageSetup: PageSetup,
+  ) {
+    return (
+      this.getInlineSpacing(pageSetup) +
+      leftRightInkOverhang +
+      rightLeftInkOverhang
+    );
   }
 
   private static getLineStartMartyriaShift(
@@ -4460,9 +4519,13 @@ export class LayoutService {
     pageSetup: PageSetup,
   ) {
     const trailingNeume = this.getMartyriaTrailingNeume(martyriaElement);
-    const inkOverhang = trailingNeume
-      ? this.getSingleNeumeRightInkOverhang(trailingNeume, pageSetup)
-      : this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).right;
+    const quantitativeNeume = martyriaElement.alignRight
+      ? martyriaElement.quantitativeNeume
+      : null;
+    const inkOverhang =
+      trailingNeume && trailingNeume !== quantitativeNeume
+        ? this.getSingleNeumeRightInkOverhang(trailingNeume, pageSetup)
+        : this.getMartyriaContentRightInkOverhang(martyriaElement, pageSetup);
 
     return this.getRightInkOverhangAfterSpace(
       inkOverhang,
@@ -5470,6 +5533,7 @@ export class LayoutService {
     if (!element.updated && element.elementType === ElementType.Martyria) {
       const martyria = element as MartyriaElement;
       martyria.updated =
+        martyria.widthPrevious !== martyria.width ||
         martyria.errorPrevious !== martyria.error ||
         martyria.notePrevious !== martyria.note ||
         martyria.rootSignPrevious !== martyria.rootSign ||
@@ -5680,16 +5744,18 @@ export class LayoutService {
       noteElement.neumeWidth += measureBarRightWidth;
     }
 
-    // Handle special case for running elaphron: shift the lyrics toward the
+    // Handle special cases for running elaphron: shift the lyrics toward the
     // elaphron so that they remain centered beneath it.
-    if (noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron) {
-      const offset = this.getRunningElaphronOffset(pageSetup);
-
-      if (pageSetup.melkiteRtl) {
-        noteElement.lyricsHorizontalOffset -= offset;
-      } else {
-        noteElement.lyricsHorizontalOffset += offset;
-      }
+    if (runningElaphronSet.has(noteElement.quantitativeNeume)) {
+      const glyphName = NeumeMappingService.getMapping(
+        noteElement.quantitativeNeume,
+      ).glyphName;
+      noteElement.lyricsHorizontalOffset +=
+        pageSetup.neumeDefaultFontSize *
+        fontService.getLyricsHorizontalOffset(
+          pageSetup.neumeDefaultFontFamily,
+          glyphName,
+        );
     }
 
     return this.getNoteBoxAdvance(noteElement);
@@ -5699,13 +5765,10 @@ export class LayoutService {
     martyriaElement: MartyriaElement,
     pageSetup: PageSetup,
   ) {
-    // The renderer applies padding as marginLeft on the quantitative neume in
-    // NeumeBoxMartyria.vue, so only that case should keep fixed spacing inside
-    // the box.
-    martyriaElement.padding =
-      martyriaElement.alignRight && martyriaElement.quantitativeNeume
-        ? this.getInlineSpacing(pageSetup)
-        : 0;
+    // Match the visual spacing that the same martyria and quantitative neume
+    // would receive as adjacent score elements.
+    martyriaElement.quantitativeNeumeSpacing =
+      this.getMartyriaQuantitativeNeumeSpacing(martyriaElement, pageSetup);
     martyriaElement.tempoLeftSpacing = martyriaElement.tempoLeft
       ? this.getInlineSpacing(pageSetup)
       : 0;
@@ -5784,11 +5847,23 @@ export class LayoutService {
       defaultLyricsFontCss,
     );
 
-    const elaphronWidth = this.getNeumeWidthFromCache(
-      QuantitativeNeume.Elaphron,
-      pageSetup,
-    );
-    const runningElaphronOffset = this.getRunningElaphronOffset(pageSetup);
+    const runningElaphronGeometry = new Map<
+      QuantitativeNeume,
+      { left: number; width: number }
+    >();
+
+    for (const quantitativeNeume of runningElaphronSet) {
+      const glyphName =
+        NeumeMappingService.getMapping(quantitativeNeume).glyphName;
+      const bounds = fontService.getElafronBounds(
+        pageSetup.neumeDefaultFontFamily,
+        glyphName,
+      );
+      runningElaphronGeometry.set(quantitativeNeume, {
+        left: bounds.left * pageSetup.neumeDefaultFontSize,
+        width: (bounds.right - bounds.left) * pageSetup.neumeDefaultFontSize,
+      });
+    }
 
     let melismaSyllables: MelismaSyllables | null = null;
     let melismaLyricsEnd: number | null = null;
@@ -6087,37 +6162,38 @@ export class LayoutService {
               }
             } else if (!pageSetup.melkiteRtl) {
               // Else not a hyphen, so an underscore
-              const nextElementIsRunningElaphron =
-                nextElement &&
-                nextElement.elementType === ElementType.Note &&
-                (nextElement as NoteElement).quantitativeNeume ===
-                  QuantitativeNeume.RunningElaphron;
+              const nextRunningElaphronGeometry =
+                nextNoteElement != null
+                  ? runningElaphronGeometry.get(
+                      nextNoteElement.quantitativeNeume,
+                    )
+                  : undefined;
 
               // Note the special case for when the next neume is a running elaphron.
               // The melisma, which by convention must always be a final melisma,
               // should run all the way to the elaphron, instead of stopping at
               // the apostrophos.
 
-              if (nextNoteElement != null && nextElementIsRunningElaphron) {
-                end = nextNoteElement.x + runningElaphronOffset;
+              if (
+                nextNoteElement != null &&
+                nextRunningElaphronGeometry != null
+              ) {
+                const { left: elaphronLeft, width: elaphronWidth } =
+                  nextRunningElaphronGeometry;
+                const elaphronLeftInNote =
+                  this.getNoteLeftBarReserve(
+                    nextNoteElement,
+                    measureBarWidthMap,
+                  ) + elaphronLeft;
+                end = nextNoteElement.x + elaphronLeftInNote;
 
                 if (nextNoteElement.lyricsWidth > elaphronWidth) {
-                  if (nextNoteElement.alignLeft) {
-                    end = Math.min(
-                      end,
-                      nextNoteElement.x +
-                        runningElaphronOffset -
-                        pageSetup.lyricsMinimumSpacing,
-                    );
-                  } else {
-                    end = Math.min(
-                      end,
-                      nextNoteElement.x +
-                        runningElaphronOffset -
-                        (nextNoteElement.lyricsWidth - elaphronWidth) / 2 -
-                        pageSetup.lyricsMinimumSpacing,
-                    );
-                  }
+                  end = Math.min(
+                    end,
+                    nextNoteElement.x +
+                      this.getLyricTextLeft(nextNoteElement) -
+                      pageSetup.lyricsMinimumSpacing,
+                  );
                 }
               } else {
                 if (finalElement == null) {
@@ -7702,6 +7778,41 @@ export class LayoutService {
           if (martyria.alignRight && martyria.quantitativeNeume) {
             currentNote += getNeumeValue(martyria.quantitativeNeume)!;
             currentNoteVirtual = currentNote + currentShift;
+
+            if (
+              martyria.quantitativeNeumeFthoraCarry &&
+              this.fthoraIsValid(
+                martyria.quantitativeNeumeFthoraCarry,
+                [currentNote],
+                pageSetup,
+              )
+            ) {
+              martyria.quantitativeNeumeFthora =
+                martyria.quantitativeNeumeFthoraCarry;
+              martyria.quantitativeNeumeFthoraCarry = null;
+            }
+
+            if (martyria.quantitativeNeumeFthora) {
+              const fthora = martyria.quantitativeNeumeFthora;
+
+              if (this.fthoraIsValid(fthora, [currentNote], pageSetup)) {
+                currentScale =
+                  this.getScaleFromFthora(fthora, currentNote) || currentScale;
+
+                currentShift = this.getShift(
+                  currentNote,
+                  currentNoteVirtual,
+                  currentScale,
+                  fthora,
+                  martyria.quantitativeNeumeChromaticFthoraNote,
+                );
+
+                martyria.quantitativeNeumeFthoraCarry = null;
+              } else {
+                martyria.quantitativeNeumeFthoraCarry = fthora;
+                martyria.quantitativeNeumeFthora = null;
+              }
+            }
           }
         }
       } else if (
@@ -8052,19 +8163,6 @@ export class LayoutService {
     return this.getNeumeSequenceWidthFromCache([neume], pageSetup);
   }
 
-  // The stand-alone apostrophos is not the same width as the apostrophos in
-  // the running elaphron, but the elaphrons are the same width in both
-  // neumes, so this offset locates the elaphron body inside the composite
-  // glyph.
-  private static getRunningElaphronOffset(pageSetup: PageSetup) {
-    return (
-      this.getNeumeWidthFromCache(
-        QuantitativeNeume.RunningElaphron,
-        pageSetup,
-      ) - this.getNeumeWidthFromCache(QuantitativeNeume.Elaphron, pageSetup)
-    );
-  }
-
   private static getNeumeSequenceWidthFromCache(
     neumes: Array<Neume>,
     pageSetup: PageSetup,
@@ -8142,23 +8240,79 @@ export class LayoutService {
     return bounds;
   }
 
-  private static getMartyriaBodyInkOverhangs(
-    martyriaElement: MartyriaElement,
+  private static getNeumeSequenceInkOverhangs(
+    inkNeumes: Neume[],
+    advanceNeumes: Neume[],
     pageSetup: PageSetup,
   ) {
     const inkBounds = this.getNeumeSequenceInkBoundsFromCache(
-      this.getMartyriaBodyNeumesForInkMeasurement(martyriaElement),
+      inkNeumes,
       pageSetup,
     );
-    const bodyWidth = this.getNeumeSequenceWidthFromCache(
-      this.getMartyriaBodyNeumesForWidthMeasurement(martyriaElement),
+    const advanceWidth = this.getNeumeSequenceWidthFromCache(
+      advanceNeumes,
       pageSetup,
     );
 
     return {
-      left: Math.max(0, -inkBounds.inkLeft),
-      right: Math.max(0, inkBounds.inkRight - bodyWidth),
+      left: inkBounds.leftOverhang,
+      right: Math.max(0, inkBounds.inkRight - advanceWidth),
     };
+  }
+
+  private static getMartyriaBodyInkOverhangs(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+  ) {
+    return this.getNeumeSequenceInkOverhangs(
+      this.getMartyriaBodyNeumesForInkMeasurement(martyriaElement),
+      this.getMartyriaBodyNeumesForWidthMeasurement(martyriaElement),
+      pageSetup,
+    );
+  }
+
+  private static getMartyriaQuantitativeNeumeInkOverhangs(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+  ) {
+    const quantitativeNeume = martyriaElement.quantitativeNeume!;
+    const neumes = [
+      quantitativeNeume,
+      martyriaElement.quantitativeNeumeFthora,
+    ].filter((neume) => neume != null);
+    return this.getNeumeSequenceInkOverhangs(
+      neumes,
+      [quantitativeNeume],
+      pageSetup,
+    );
+  }
+
+  private static getMartyriaQuantitativeNeumeSpacing(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+  ) {
+    if (!martyriaElement.alignRight || !martyriaElement.quantitativeNeume) {
+      return 0;
+    }
+
+    return this.getRequiredVisualSpacing(
+      this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).right,
+      this.getMartyriaQuantitativeNeumeInkOverhangs(martyriaElement, pageSetup)
+        .left,
+      pageSetup,
+    );
+  }
+
+  private static getMartyriaContentRightInkOverhang(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+  ) {
+    return martyriaElement.alignRight && martyriaElement.quantitativeNeume
+      ? this.getMartyriaQuantitativeNeumeInkOverhangs(
+          martyriaElement,
+          pageSetup,
+        ).right
+      : this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).right;
   }
 
   private static getMartyriaTempoLeftSpacingDeficit(
@@ -8169,13 +8323,11 @@ export class LayoutService {
       return 0;
     }
 
-    const requiredWidth =
-      this.getInlineSpacing(pageSetup) +
-      this.getSingleNeumeRightInkOverhang(
-        martyriaElement.tempoLeft,
-        pageSetup,
-      ) +
-      this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).left;
+    const requiredWidth = this.getRequiredVisualSpacing(
+      this.getSingleNeumeRightInkOverhang(martyriaElement.tempoLeft, pageSetup),
+      this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).left,
+      pageSetup,
+    );
 
     return Math.max(0, requiredWidth - martyriaElement.tempoLeftSpacing);
   }
@@ -8188,10 +8340,11 @@ export class LayoutService {
       return 0;
     }
 
-    const requiredWidth =
-      this.getInlineSpacing(pageSetup) +
-      this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).right +
-      this.getSingleNeumeLeftInkOverhang(martyriaElement.tempoRight, pageSetup);
+    const requiredWidth = this.getRequiredVisualSpacing(
+      this.getMartyriaContentRightInkOverhang(martyriaElement, pageSetup),
+      this.getSingleNeumeLeftInkOverhang(martyriaElement.tempoRight, pageSetup),
+      pageSetup,
+    );
 
     return Math.max(0, requiredWidth - martyriaElement.tempoRightSpacing);
   }
@@ -8218,12 +8371,12 @@ export class LayoutService {
   ): Neume[] {
     const neumes: Neume[] = [];
 
-    if (martyriaElement.tempo != null) {
-      neumes.push(martyriaElement.tempo);
-    }
-
     if (!martyriaElement.error && martyriaElement.fthora != null) {
       neumes.push(martyriaElement.fthora);
+    }
+
+    if (martyriaElement.tempo != null) {
+      neumes.push(martyriaElement.tempo);
     }
 
     if (isMeasureBarAboveVariant(martyriaElement.measureBarLeft)) {

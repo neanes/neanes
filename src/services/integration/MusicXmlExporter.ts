@@ -478,12 +478,11 @@ export class MusicXmlExporter {
             measures.push(currentMeasure);
           }
 
-          // Handle the fthora
-          if (martyriaElement.fthora) {
-            const fthoraNode = nodeGroup.find(
-              (x) => x.nodeType === NodeType.FthoraNode,
-            ) as FthoraNode;
-
+          // Handle fthoras in analysis order so an attached quantitative
+          // neume can change the scale after moving the current note.
+          for (const fthoraNode of nodeGroup.filter(
+            (x): x is FthoraNode => x.nodeType === NodeType.FthoraNode,
+          )) {
             this.handleFthora(fthoraNode, workspace);
           }
 

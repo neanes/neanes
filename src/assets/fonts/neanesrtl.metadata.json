@@ -8,7 +8,17 @@
     "winDescent": 0.466,
     "oligonMidpoint": 0.307,
     "initialMartyriaBaseline": 0.366,
-    "capitalHeight": 0.5
+    "capitalHeight": 0.5,
+    "elafronBounds": {
+      "runningElafron": {
+        "left": 0.08,
+        "right": 1.185
+      },
+      "petastiRunningElafron": {
+        "left": 0.085,
+        "right": 1.091
+      }
+    }
   },
   "glyphsWithAnchors": {
     "ison": {

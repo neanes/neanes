@@ -608,7 +608,7 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     defaultAppearance: sourceSerifAppearance(),
     filters: {
       numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.OrdinalWords,
-      usesPlagalTerminology: false,
+      usesPlagalTerminology: true,
     },
     components: [
       text('First', [1]),

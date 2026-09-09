@@ -171,7 +171,7 @@
       "russianGlasOrdinal": "Russian - Ordinal Words (Redundant Mode Identification)",
       "arabicOrdinal": "Arabic - Ordinal Words (Redundant Mode Identification)",
       "romanianGlasNumber": "Romanian - Cardinal Digits (Redundant Mode Identification)",
-      "romanianGlas": "Romanian - Ordinal Words"
+      "romanianGlas": "Romanian - Ordinal Words (Plagal Terminology)"
     },
     "moveUp": "Move component up",
     "moveDown": "Move component down",

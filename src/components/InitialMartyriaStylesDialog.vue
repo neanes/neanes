@@ -167,23 +167,23 @@
               </Select>
             </Field>
 
-            <Field v-if="showPlagalTerminologyFilter">
-              <FieldLabel for="initial-martyria-plagal-terminology-filter">
+            <Field v-if="showModeNamingSchemeFilter">
+              <FieldLabel for="initial-martyria-mode-naming-scheme-filter">
                 {{
-                  $t(($) => $.dialog.initialMartyriaStyles.terminology, {
+                  $t(($) => $.dialog.initialMartyriaStyles.modeNaming, {
                     ns: 'dialog',
                   })
                 }}
               </FieldLabel>
               <Select
-                :model-value="selectedPlagalTerminologyFilter"
-                @update:model-value="selectPlagalTerminologyFilter"
+                :model-value="selectedModeNamingSchemeFilter"
+                @update:model-value="selectModeNamingSchemeFilter"
               >
-                <SelectTrigger id="initial-martyria-plagal-terminology-filter">
+                <SelectTrigger id="initial-martyria-mode-naming-scheme-filter">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem :value="PLAGAL_TERMINOLOGY_FILTERS.All">
+                  <SelectItem :value="ALL_MODE_NAMING_SCHEMES">
                     {{
                       $t(($) => $.dialog.initialMartyriaStyles.all, {
                         ns: 'dialog',
@@ -191,7 +191,7 @@
                     }}
                   </SelectItem>
                   <SelectItem
-                    v-for="option in plagalTerminologyOptions"
+                    v-for="option in modeNamingSchemeOptions"
                     :key="option.value"
                     :value="option.value"
                     :disabled="option.disabled"
@@ -504,6 +504,7 @@ import {
   getInitialMartyriaStyleDisplayName,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
+  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaAppearanceOverrides,
@@ -511,6 +512,7 @@ import {
   type InitialMartyriaLanguageId,
   initialMartyriaLanguages,
   type InitialMartyriaModeIdentificationMethod,
+  type InitialMartyriaModeNamingScheme,
   type InitialMartyriaNumeralKind,
   type InitialMartyriaNumeralStyle,
   initialMartyriaStyleHasGreekText,
@@ -526,22 +528,9 @@ import { getLegacyNeumeFontFamily } from '@/utils/getFontFamilyWithFallback';
 const DEFAULT_FONT_VALUE = '__style_default__';
 const ALL_LANGUAGES = '__all_languages__';
 const ALL_MODE_IDENTIFICATION_METHODS = '__all_mode_identification_methods__';
+const ALL_MODE_NAMING_SCHEMES = '__all_mode_naming_schemes__';
 const ALL_NUMERAL_KINDS = '__all_numeral_kinds__';
 const ALL_NUMERAL_STYLES = '__all_numeral_styles__';
-const PLAGAL_TERMINOLOGY_FILTERS = {
-  All: '__all_plagal_terminology__',
-  Plagal: 'plagal',
-  NonPlagal: 'non-plagal',
-} as const;
-type PlagalTerminologyFilter =
-  (typeof PLAGAL_TERMINOLOGY_FILTERS)[keyof typeof PLAGAL_TERMINOLOGY_FILTERS];
-function defaultPlagalTerminologyFilter(
-  languageId: InitialMartyriaLanguageId | typeof ALL_LANGUAGES,
-): PlagalTerminologyFilter {
-  return languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.English
-    ? PLAGAL_TERMINOLOGY_FILTERS.Plagal
-    : PLAGAL_TERMINOLOGY_FILTERS.All;
-}
 const representativeTemplateIds = [100, 500, 700];
 const numeralKindOrder = [
   INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
@@ -557,6 +546,11 @@ const modeIdentificationMethodOrder = [
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+];
+const modeNamingSchemeOrder = [
+  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
 ];
 
 const props = withDefaults(
@@ -600,9 +594,9 @@ const selectedModeIdentificationMethodFilter = ref<
   | InitialMartyriaModeIdentificationMethod
   | typeof ALL_MODE_IDENTIFICATION_METHODS
 >(ALL_MODE_IDENTIFICATION_METHODS);
-const selectedPlagalTerminologyFilter = ref<PlagalTerminologyFilter>(
-  defaultPlagalTerminologyFilter(selectedLanguageId.value),
-);
+const selectedModeNamingSchemeFilter = ref<
+  InitialMartyriaModeNamingScheme | typeof ALL_MODE_NAMING_SCHEMES
+>(initialStyle?.modeNamingScheme ?? ALL_MODE_NAMING_SCHEMES);
 
 if (
   initialStyle?.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Greek &&
@@ -617,7 +611,8 @@ type StyleFilters = {
   modeIdentificationMethod:
     | InitialMartyriaModeIdentificationMethod
     | typeof ALL_MODE_IDENTIFICATION_METHODS;
-  plagalTerminology: PlagalTerminologyFilter;
+  modeNamingScheme:
+    InitialMartyriaModeNamingScheme | typeof ALL_MODE_NAMING_SCHEMES;
 };
 type BuiltInInitialMartyriaStyle =
   (typeof builtInInitialMartyriaStyles)[number];
@@ -633,7 +628,7 @@ const styleFilters = computed<StyleFilters>(() => ({
   numeralKind: selectedNumeralKindFilter.value,
   numeralStyle: selectedNumeralStyleFilter.value,
   modeIdentificationMethod: selectedModeIdentificationMethodFilter.value,
-  plagalTerminology: selectedPlagalTerminologyFilter.value,
+  modeNamingScheme: selectedModeNamingSchemeFilter.value,
 }));
 
 function matchesStyleFilters(
@@ -642,14 +637,17 @@ function matchesStyleFilters(
 ) {
   return (
     (filters.numeralKind === ALL_NUMERAL_KINDS ||
-      style.numeralKind === filters.numeralKind) &&
+      (style.modeIdentificationMethod !==
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
+        style.numeralKind === filters.numeralKind)) &&
     (filters.numeralStyle === ALL_NUMERAL_STYLES ||
-      style.numeralStyle === filters.numeralStyle) &&
+      (style.modeIdentificationMethod !==
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
+        style.numeralStyle === filters.numeralStyle)) &&
     (filters.modeIdentificationMethod === ALL_MODE_IDENTIFICATION_METHODS ||
       style.modeIdentificationMethod === filters.modeIdentificationMethod) &&
-    (filters.plagalTerminology === PLAGAL_TERMINOLOGY_FILTERS.All ||
-      style.usesPlagalTerminology ===
-        (filters.plagalTerminology === PLAGAL_TERMINOLOGY_FILTERS.Plagal))
+    (filters.modeNamingScheme === ALL_MODE_NAMING_SCHEMES ||
+      style.modeNamingScheme === filters.modeNamingScheme)
   );
 }
 
@@ -667,14 +665,20 @@ const filteredStyles = computed(() =>
 const availableNumeralKinds = computed(() =>
   numeralKindOrder.filter((numeralKind) =>
     stylesForSelectedLanguage.value.some(
-      (style) => style.numeralKind === numeralKind,
+      (style) =>
+        style.modeIdentificationMethod !==
+          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
+        style.numeralKind === numeralKind,
     ),
   ),
 );
 const availableNumeralStyles = computed(() =>
   numeralStyleOrder.filter((numeralStyle) =>
     stylesForSelectedLanguage.value.some(
-      (style) => style.numeralStyle === numeralStyle,
+      (style) =>
+        style.modeIdentificationMethod !==
+          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
+        style.numeralStyle === numeralStyle,
     ),
   ),
 );
@@ -686,28 +690,29 @@ const availableModeIdentificationMethods = computed(() =>
   ),
 );
 const showNumeralKindFilter = computed(
-  () => availableNumeralKinds.value.length > 1,
+  () =>
+    selectedModeIdentificationMethodFilter.value !==
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
+    availableNumeralKinds.value.length > 1,
 );
 const showNumeralStyleFilter = computed(
-  () => availableNumeralStyles.value.length > 1,
+  () =>
+    selectedModeIdentificationMethodFilter.value !==
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
+    availableNumeralStyles.value.length > 1,
 );
 const showModeIdentificationMethodFilter = computed(
   () => availableModeIdentificationMethods.value.length > 1,
 );
-const availablePlagalTerminologyFilters = computed(() =>
-  [
-    PLAGAL_TERMINOLOGY_FILTERS.Plagal,
-    PLAGAL_TERMINOLOGY_FILTERS.NonPlagal,
-  ].filter((value) =>
+const availableModeNamingSchemes = computed(() =>
+  modeNamingSchemeOrder.filter((value) =>
     stylesForSelectedLanguage.value.some(
-      (style) =>
-        style.usesPlagalTerminology ===
-        (value === PLAGAL_TERMINOLOGY_FILTERS.Plagal),
+      (style) => style.modeNamingScheme === value,
     ),
   ),
 );
-const showPlagalTerminologyFilter = computed(
-  () => availablePlagalTerminologyFilters.value.length > 1,
+const showModeNamingSchemeFilter = computed(
+  () => availableModeNamingSchemes.value.length > 1,
 );
 const numeralKindOptions = computed(() =>
   availableNumeralKinds.value.map((value) => ({
@@ -739,13 +744,13 @@ const modeIdentificationMethodOptions = computed(() =>
     }),
   })),
 );
-const plagalTerminologyOptions = computed(() =>
-  availablePlagalTerminologyFilters.value.map((value) => ({
+const modeNamingSchemeOptions = computed(() =>
+  availableModeNamingSchemes.value.map((value) => ({
     value,
-    label: plagalTerminologyLabel(value),
+    label: modeNamingSchemeLabel(value),
     disabled: !hasMatchingStyle({
       ...styleFilters.value,
-      plagalTerminology: value,
+      modeNamingScheme: value,
     }),
   })),
 );
@@ -935,21 +940,27 @@ function modeIdentificationMethodLabel(
   }
 }
 
-function plagalTerminologyLabel(
-  filter: Exclude<
-    PlagalTerminologyFilter,
-    typeof PLAGAL_TERMINOLOGY_FILTERS.All
-  >,
-) {
-  return filter === PLAGAL_TERMINOLOGY_FILTERS.Plagal
-    ? t(($) => $.dialog.initialMartyriaStyles.plagalTerminologyOptions.plagal, {
-        ns: 'dialog',
-      })
-    : t(
+function modeNamingSchemeLabel(scheme: InitialMartyriaModeNamingScheme) {
+  switch (scheme) {
+    case INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute:
+      return t(
+        ($) => $.dialog.initialMartyriaStyles.modeNamingSchemes.absolute,
+        {
+          ns: 'dialog',
+        },
+      );
+    case INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart:
+      return t(
         ($) =>
-          $.dialog.initialMartyriaStyles.plagalTerminologyOptions.nonPlagal,
+          $.dialog.initialMartyriaStyles.modeNamingSchemes.authenticCounterpart,
         { ns: 'dialog' },
       );
+    case INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass:
+      return t(
+        ($) => $.dialog.initialMartyriaStyles.modeNamingSchemes.plagalClass,
+        { ns: 'dialog' },
+      );
+  }
 }
 
 function alphabeticNumeralStyleLabel() {
@@ -992,6 +1003,8 @@ function wordNumeralStyleLabel() {
   const availableKinds = numeralKindOrder.filter((numeralKind) =>
     stylesForSelectedLanguage.value.some(
       (style) =>
+        style.modeIdentificationMethod !==
+          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
         style.numeralKind === numeralKind &&
         style.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     ),
@@ -1061,7 +1074,7 @@ function selectLanguage(value: unknown) {
     selectedNumeralStyleFilter.value = ALL_NUMERAL_STYLES;
     selectedModeIdentificationMethodFilter.value =
       ALL_MODE_IDENTIFICATION_METHODS;
-    selectedPlagalTerminologyFilter.value = PLAGAL_TERMINOLOGY_FILTERS.All;
+    selectedModeNamingSchemeFilter.value = ALL_MODE_NAMING_SCHEMES;
     selectFirstVisibleStyle();
     return;
   }
@@ -1075,9 +1088,7 @@ function selectLanguage(value: unknown) {
   selectedNumeralStyleFilter.value = ALL_NUMERAL_STYLES;
   selectedModeIdentificationMethodFilter.value =
     ALL_MODE_IDENTIFICATION_METHODS;
-  selectedPlagalTerminologyFilter.value = defaultPlagalTerminologyFilter(
-    language.id,
-  );
+  selectedModeNamingSchemeFilter.value = ALL_MODE_NAMING_SCHEMES;
   const firstStyle = builtInInitialMartyriaStyles.find(
     (style) => style.languageId === language.id,
   );
@@ -1156,16 +1167,18 @@ function selectModeIdentificationMethodFilter(value: unknown) {
   selectFirstVisibleStyle();
 }
 
-function selectPlagalTerminologyFilter(value: unknown) {
+function selectModeNamingSchemeFilter(value: unknown) {
   if (
-    !Object.values(PLAGAL_TERMINOLOGY_FILTERS).includes(
-      value as PlagalTerminologyFilter,
+    value !== ALL_MODE_NAMING_SCHEMES &&
+    !Object.values(INITIAL_MARTYRIA_MODE_NAMING_SCHEMES).includes(
+      value as InitialMartyriaModeNamingScheme,
     )
   ) {
     return;
   }
-  selectedPlagalTerminologyFilter.value = value as PlagalTerminologyFilter;
-  reconcileStyleFilters('plagalTerminology');
+  selectedModeNamingSchemeFilter.value = value as
+    InitialMartyriaModeNamingScheme | typeof ALL_MODE_NAMING_SCHEMES;
+  reconcileStyleFilters('modeNamingScheme');
   selectFirstVisibleStyle();
 }
 
@@ -1173,7 +1186,7 @@ type StyleFilter =
   | 'numeralKind'
   | 'numeralStyle'
   | 'modeIdentificationMethod'
-  | 'plagalTerminology';
+  | 'modeNamingScheme';
 
 function reconcileStyleFilters(preferredFilter: StyleFilter) {
   if (hasMatchingStyle()) {
@@ -1192,12 +1205,12 @@ function reconcileStyleFilters(preferredFilter: StyleFilter) {
 function styleFilterResetOrder(preferredFilter: StyleFilter): StyleFilter[] {
   switch (preferredFilter) {
     case 'numeralKind':
-      return ['numeralStyle', 'modeIdentificationMethod', 'plagalTerminology'];
+      return ['numeralStyle', 'modeIdentificationMethod', 'modeNamingScheme'];
     case 'numeralStyle':
-      return ['numeralKind', 'modeIdentificationMethod', 'plagalTerminology'];
+      return ['numeralKind', 'modeIdentificationMethod', 'modeNamingScheme'];
     case 'modeIdentificationMethod':
-      return ['numeralStyle', 'numeralKind', 'plagalTerminology'];
-    case 'plagalTerminology':
+      return ['numeralStyle', 'numeralKind', 'modeNamingScheme'];
+    case 'modeNamingScheme':
       return ['modeIdentificationMethod', 'numeralStyle', 'numeralKind'];
   }
 }
@@ -1214,8 +1227,8 @@ function clearStyleFilter(filter: StyleFilter) {
       selectedModeIdentificationMethodFilter.value =
         ALL_MODE_IDENTIFICATION_METHODS;
       break;
-    case 'plagalTerminology':
-      selectedPlagalTerminologyFilter.value = PLAGAL_TERMINOLOGY_FILTERS.All;
+    case 'modeNamingScheme':
+      selectedModeNamingSchemeFilter.value = ALL_MODE_NAMING_SCHEMES;
       break;
   }
 }

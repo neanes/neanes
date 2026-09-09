@@ -94,9 +94,11 @@
       "textAndModeSign": "Text and mode sign"
     },
     "all": "All",
-    "plagalTerminologyOptions": {
-      "plagal": "Plagal",
-      "nonPlagal": "Non-plagal"
+    "modeNaming": "Mode naming",
+    "modeNamingSchemes": {
+      "absolute": "Modes 1-8",
+      "authenticCounterpart": "Plagal counterpart of an authentic mode",
+      "plagalClass": "Member of the plagal-mode class"
     },
     "numeralStyleExamples": {
       "digits": "1",
@@ -160,20 +162,20 @@
     "standard": "Standard",
     "documentDefault": "Document default",
     "builtInStyles": {
-      "traditionalGreek": "Greek - Ordinal Words (Plagal Terminology, Mode-Sign Identification)",
-      "greekModeNames": "Greek - Ordinal Alphabetic Numerals (Plagal Terminology, Text Identification)",
-      "englishPlagalFirst": "English - Prenominal Ordinal Words (Plagal Terminology, Mode-Sign Identification)",
-      "englishModeNames": "English - Prenominal Ordinal Words (Plagal Terminology, Text Identification)",
-      "englishSignFirst": "English - Prenominal Ordinal Words (Plagal Terminology, Mode-Sign Identification, Plagal Abbreviation After Sign)",
-      "englishModeBeforeSign": "English - Cardinal Digits (Plagal Terminology, Mode-Sign Identification, Plagal Abbreviation Before Mode Word)",
+      "traditionalGreek": "Greek - Authentic-Counterpart Naming, Mode-Sign Identification",
+      "greekModeNames": "Greek - Ordinal Alphabetic Numerals (Authentic-Counterpart Naming, Text Identification)",
+      "englishPlagalFirst": "English - Authentic-Counterpart Naming, Mode-Sign Identification",
+      "englishModeNames": "English - Prenominal Ordinal Words (Authentic-Counterpart Naming, Text Identification)",
+      "englishSignFirst": "English - Plagal-Class Naming, Mode-Sign Identification",
+      "englishOrdinalPlagal": "English - Prenominal Ordinal Digits (Plagal-Class Naming, Text and Mode-Sign Identification)",
       "englishOrdinal": "English - Prenominal Ordinal Words (Text and Mode-Sign Identification)",
       "englishModeNumber": "English - Cardinal Digits (Text and Mode-Sign Identification)",
       "englishModeRomanNumeral": "English - Cardinal Roman Numerals (Text and Mode-Sign Identification)",
       "englishModeNumberWord": "English - Cardinal Words (Text and Mode-Sign Identification)",
-      "englishFullName": "English - Prenominal Ordinal Words (Plagal Terminology, Text and Mode-Sign Identification)",
-      "englishPlagalNumber": "English - Cardinal Digits (Plagal Terminology, Text and Mode-Sign Identification)",
-      "englishPlagalRomanNumeral": "English - Cardinal Roman Numerals (Plagal Terminology, Text and Mode-Sign Identification)",
-      "englishPlagalNumberWord": "English - Cardinal Words (Plagal Terminology, Text and Mode-Sign Identification)",
+      "englishFullName": "English - Prenominal Ordinal Words (Authentic-Counterpart Naming, Text and Mode-Sign Identification)",
+      "englishPlagalNumber": "English - Cardinal Digits (Plagal-Class Naming, Text and Mode-Sign Identification)",
+      "englishPlagalRomanNumeral": "English - Cardinal Roman Numerals (Plagal-Class Naming, Text and Mode-Sign Identification)",
+      "englishPlagalNumberWord": "English - Cardinal Words (Plagal-Class Naming, Text and Mode-Sign Identification)",
       "spanishTonoNumber": "Spanish - Cardinal Digits (Text and Mode-Sign Identification)",
       "spanishTonoRomanNumeral": "Spanish - Cardinal Roman Numerals (Text and Mode-Sign Identification)",
       "spanishTonoOrdinalNumber": "Spanish - Postnominal Ordinal Digits (Text and Mode-Sign Identification)",
@@ -192,7 +194,7 @@
       "romanianGlasRomanNumeral": "Romanian - Cardinal Roman Numerals (Text and Mode-Sign Identification)",
       "romanianGlasOrdinalNumber": "Romanian - Postnominal Ordinal Digits (Text and Mode-Sign Identification)",
       "romanianGlasOrdinalRomanNumeral": "Romanian - Postnominal Ordinal Roman Numerals (Text and Mode-Sign Identification)",
-      "romanianGlas": "Romanian - Ordinal Words (Plagal Terminology, Mode-Sign Identification)"
+      "romanianGlas": "Romanian - Authentic-Counterpart Naming, Mode-Sign Identification"
     },
     "moveUp": "Move component up",
     "moveDown": "Move component down",

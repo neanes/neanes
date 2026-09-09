@@ -94,9 +94,11 @@
       "textAndModeSign": "Teks dan tanda mode"
     },
     "all": "Semua",
-    "plagalTerminologyOptions": {
-      "plagal": "Plagal",
-      "nonPlagal": "Non-plagal"
+    "modeNaming": "Penamaan mode",
+    "modeNamingSchemes": {
+      "absolute": "Mode 1-8",
+      "authenticCounterpart": "Padanan plagal dari mode autentik",
+      "plagalClass": "Anggota kelas mode plagal"
     },
     "numeralStyleExamples": {
       "digits": "1",
@@ -160,20 +162,20 @@
     "standard": "Standar",
     "documentDefault": "Bawaan dokumen",
     "builtInStyles": {
-      "traditionalGreek": "Yunani - Kata ordinal (Terminologi plagal, identifikasi dengan tanda mode)",
-      "greekModeNames": "Yunani - Angka alfabetis ordinal (Terminologi plagal, identifikasi teks)",
-      "englishPlagalFirst": "Inggris - Kata ordinal sebelum nomina (Terminologi plagal, identifikasi dengan tanda mode)",
-      "englishModeNames": "Inggris - Kata ordinal sebelum nomina (Terminologi plagal, identifikasi teks)",
-      "englishSignFirst": "Inggris - Kata ordinal sebelum nomina (Terminologi plagal, identifikasi dengan tanda mode, singkatan plagal setelah tanda mode)",
-      "englishModeBeforeSign": "Inggris - Digit kardinal (Terminologi plagal, identifikasi dengan tanda mode, singkatan plagal sebelum kata mode)",
+      "traditionalGreek": "Yunani - Penamaan padanan autentik-plagal, identifikasi dengan tanda mode",
+      "greekModeNames": "Yunani - Angka alfabetis ordinal (Penamaan padanan autentik-plagal, identifikasi teks)",
+      "englishPlagalFirst": "Inggris - Penamaan padanan autentik-plagal, identifikasi dengan tanda mode",
+      "englishModeNames": "Inggris - Kata ordinal sebelum nomina (Penamaan padanan autentik-plagal, identifikasi teks)",
+      "englishSignFirst": "Inggris - Penamaan kelas mode plagal, identifikasi dengan tanda mode",
+      "englishOrdinalPlagal": "Inggris - Digit ordinal sebelum nomina (Penamaan kelas mode plagal, identifikasi teks dan tanda mode)",
       "englishOrdinal": "Inggris - Kata ordinal sebelum nomina (Identifikasi teks dan tanda mode)",
       "englishModeNumber": "Inggris - Digit kardinal (Identifikasi teks dan tanda mode)",
       "englishModeRomanNumeral": "Inggris - Angka Romawi kardinal (Identifikasi teks dan tanda mode)",
       "englishModeNumberWord": "Inggris - Kata kardinal (Identifikasi teks dan tanda mode)",
-      "englishFullName": "Inggris - Kata ordinal sebelum nomina (Terminologi plagal, identifikasi teks dan tanda mode)",
-      "englishPlagalNumber": "Inggris - Digit kardinal (Terminologi plagal, identifikasi teks dan tanda mode)",
-      "englishPlagalRomanNumeral": "Inggris - Angka Romawi kardinal (Terminologi plagal, identifikasi teks dan tanda mode)",
-      "englishPlagalNumberWord": "Inggris - Kata kardinal (Terminologi plagal, identifikasi teks dan tanda mode)",
+      "englishFullName": "Inggris - Kata ordinal sebelum nomina (Penamaan padanan autentik-plagal, identifikasi teks dan tanda mode)",
+      "englishPlagalNumber": "Inggris - Digit kardinal (Penamaan kelas mode plagal, identifikasi teks dan tanda mode)",
+      "englishPlagalRomanNumeral": "Inggris - Angka Romawi kardinal (Penamaan kelas mode plagal, identifikasi teks dan tanda mode)",
+      "englishPlagalNumberWord": "Inggris - Kata kardinal (Penamaan kelas mode plagal, identifikasi teks dan tanda mode)",
       "spanishTonoNumber": "Spanyol - Digit kardinal (Identifikasi teks dan tanda mode)",
       "spanishTonoRomanNumeral": "Spanyol - Angka Romawi kardinal (Identifikasi teks dan tanda mode)",
       "spanishTonoOrdinalNumber": "Spanyol - Digit ordinal setelah nomina (Identifikasi teks dan tanda mode)",
@@ -192,7 +194,7 @@
       "romanianGlasRomanNumeral": "Rumania - Angka Romawi kardinal (Identifikasi teks dan tanda mode)",
       "romanianGlasOrdinalNumber": "Rumania - Digit ordinal setelah nomina (Identifikasi teks dan tanda mode)",
       "romanianGlasOrdinalRomanNumeral": "Rumania - Angka Romawi ordinal setelah nomina (Identifikasi teks dan tanda mode)",
-      "romanianGlas": "Rumania - Kata ordinal (Terminologi plagal, identifikasi dengan tanda mode)"
+      "romanianGlas": "Rumania - Penamaan padanan autentik-plagal, identifikasi dengan tanda mode"
     },
     "moveUp": "Pindahkan komponen ke atas",
     "removeComponent": "Hapus komponen",

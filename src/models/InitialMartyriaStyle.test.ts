@@ -13,9 +13,13 @@ import {
   getInitialMartyriaFixedSeparatorSize,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
+  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
+  type InitialMartyriaNumeralKind,
+  type InitialMartyriaNumeralQualifier,
+  type InitialMartyriaNumeralStyle,
   type InitialMartyriaStyle,
   type ResolvedInitialMartyriaRun,
   resolveInitialMartyriaConfiguration,
@@ -37,39 +41,34 @@ const englishLanguageNames: Record<InitialMartyriaStyle['languageId'], string> =
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: 'Romanian',
   };
 
-const englishNumeralStyleNames: Record<
-  InitialMartyriaStyle['numeralStyle'],
-  string
-> = {
+const englishNumeralStyleNames: Record<InitialMartyriaNumeralStyle, string> = {
   [INITIAL_MARTYRIA_NUMERAL_STYLES.Digits]: 'Digits',
   [INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals]: 'Roman Numerals',
   [INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals]: 'Alphabetic Numerals',
   [INITIAL_MARTYRIA_NUMERAL_STYLES.Words]: 'Words',
 };
 
-const englishNumeralKindNames: Record<
-  InitialMartyriaStyle['numeralKind'],
-  string
-> = {
+const englishNumeralKindNames: Record<InitialMartyriaNumeralKind, string> = {
   [INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal]: 'Cardinal',
   [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal]: 'Ordinal',
 };
 
 const englishNumeralQualifierNames: Record<
-  NonNullable<InitialMartyriaStyle['numeralQualifier']>,
+  InitialMartyriaNumeralQualifier,
   string
 > = {
   [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal]: 'Postnominal',
   [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal]: 'Prenominal',
 };
 
-const englishPlagalIndicatorPlacementNames: Record<
-  InitialMartyriaStyle['plagalIndicatorPlacement'],
+const englishModeNamingSchemeNames: Record<
+  InitialMartyriaStyle['modeNamingScheme'],
   string | null
 > = {
-  beforeModeSign: null,
-  afterModeSign: 'Plagal Abbreviation After Sign',
-  beforeLabel: 'Plagal Abbreviation Before Mode Word',
+  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute]: null,
+  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart]:
+    'Authentic-Counterpart Naming',
+  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass]: 'Plagal-Class Naming',
 };
 
 const englishModeIdentificationNames: Record<
@@ -84,26 +83,27 @@ const englishModeIdentificationNames: Record<
 };
 
 function generateEnglishStyleName(style: InitialMartyriaStyle) {
-  const qualifier = style.numeralQualifier
-    ? `${englishNumeralQualifierNames[style.numeralQualifier]} `
-    : '';
   const annotations: string[] = [];
 
-  if (style.usesPlagalTerminology) {
-    annotations.push('Plagal Terminology');
+  const modeNamingScheme = englishModeNamingSchemeNames[style.modeNamingScheme];
+  if (modeNamingScheme != null) {
+    annotations.push(modeNamingScheme);
   }
   const modeIdentification =
     englishModeIdentificationNames[style.modeIdentificationMethod];
   annotations.push(modeIdentification);
-  const placement =
-    englishPlagalIndicatorPlacementNames[style.plagalIndicatorPlacement];
-  if (placement != null) {
-    annotations.push(placement);
+
+  if (
+    style.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+  ) {
+    return `${englishLanguageNames[style.languageId]} - ${annotations.join(', ')}`;
   }
 
-  const annotationList =
-    annotations.length > 0 ? ` (${annotations.join(', ')})` : '';
-
+  const qualifier = style.numeralQualifier
+    ? `${englishNumeralQualifierNames[style.numeralQualifier]} `
+    : '';
+  const annotationList = ` (${annotations.join(', ')})`;
   return `${englishLanguageNames[style.languageId]} - ${qualifier}${englishNumeralKindNames[style.numeralKind]} ${englishNumeralStyleNames[style.numeralStyle]}${annotationList}`;
 }
 
@@ -192,16 +192,16 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-mode-before-sign-v1',
+    'builtin:english-ordinal-plagal-v1',
     [
-      'Mode | <modeSign> | <pitch>',
-      'Mode | <modeSign> | <pitch>',
-      'Mode | <modeSign> | <pitch>',
-      'Mode | <modeSign> | <pitch>',
-      'greek:λ/π | Mode | <modeSign> | <pitch>',
-      'greek:λ/π | Mode | <modeSign> | <pitch>',
-      'Mode | <modeSign> | <pitch>',
-      'greek:λ/π | Mode | <modeSign> | <pitch>',
+      '1st | Mode. | <modeSign> | <pitch>',
+      '2nd | Mode. | <modeSign> | <pitch>',
+      '3rd | Mode. | <modeSign> | <pitch>',
+      '4th | Mode. | <modeSign> | <pitch>',
+      '1st | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch>',
+      '2nd | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch>',
+      'Grave | Mode. | <modeSign> | <pitch>',
+      '4th | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [

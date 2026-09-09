@@ -94,9 +94,11 @@
       "textAndModeSign": "Text și semn de glas"
     },
     "all": "Toate",
-    "plagalTerminologyOptions": {
-      "plagal": "Plagală",
-      "nonPlagal": "Neplagală"
+    "modeNaming": "Denumirea glasurilor",
+    "modeNamingSchemes": {
+      "absolute": "Glasurile 1-8",
+      "authenticCounterpart": "Corespondentul plagal al unui glas autentic",
+      "plagalClass": "Membru al clasei glasurilor plagale"
     },
     "numeralStyleExamples": {
       "digits": "1",
@@ -160,20 +162,20 @@
     "standard": "Standard",
     "documentDefault": "Implicit pentru document",
     "builtInStyles": {
-      "traditionalGreek": "Greacă - Numerale ordinale în cuvinte (Terminologie plagală, identificare prin semn de glas)",
-      "greekModeNames": "Greacă - Numerale alfabetice ordinale (Terminologie plagală, identificare prin text)",
-      "englishPlagalFirst": "Engleză - Numerale ordinale prenominale în cuvinte (Terminologie plagală, identificare prin semn de glas)",
-      "englishModeNames": "Engleză - Numerale ordinale prenominale în cuvinte (Terminologie plagală, identificare prin text)",
-      "englishSignFirst": "Engleză - Numerale ordinale prenominale în cuvinte (Terminologie plagală, identificare prin semn de glas, abreviere plagală după semnul de glas)",
-      "englishModeBeforeSign": "Engleză - Numerale cardinale în cifre (Terminologie plagală, identificare prin semn de glas, abreviere plagală înaintea cuvântului de glas)",
+      "traditionalGreek": "Greacă - Denumire prin corespondent autentic-plagal, identificare prin semn de glas",
+      "greekModeNames": "Greacă - Numerale alfabetice ordinale (Denumire prin corespondent autentic-plagal, identificare prin text)",
+      "englishPlagalFirst": "Engleză - Denumire prin corespondent autentic-plagal, identificare prin semn de glas",
+      "englishModeNames": "Engleză - Numerale ordinale prenominale în cuvinte (Denumire prin corespondent autentic-plagal, identificare prin text)",
+      "englishSignFirst": "Engleză - Denumire în clasa glasurilor plagale, identificare prin semn de glas",
+      "englishOrdinalPlagal": "Engleză - Numerale ordinale prenominale în cifre (Denumire în clasa glasurilor plagale, identificare prin text și semn de glas)",
       "englishOrdinal": "Engleză - Numerale ordinale prenominale în cuvinte (Identificare prin text și semn de glas)",
       "englishModeNumber": "Engleză - Numerale cardinale în cifre (Identificare prin text și semn de glas)",
       "englishModeRomanNumeral": "Engleză - Numerale cardinale cu cifre romane (Identificare prin text și semn de glas)",
       "englishModeNumberWord": "Engleză - Numerale cardinale în cuvinte (Identificare prin text și semn de glas)",
-      "englishFullName": "Engleză - Numerale ordinale prenominale în cuvinte (Terminologie plagală, identificare prin text și semn de glas)",
-      "englishPlagalNumber": "Engleză - Numerale cardinale în cifre (Terminologie plagală, identificare prin text și semn de glas)",
-      "englishPlagalRomanNumeral": "Engleză - Numerale cardinale cu cifre romane (Terminologie plagală, identificare prin text și semn de glas)",
-      "englishPlagalNumberWord": "Engleză - Numerale cardinale în cuvinte (Terminologie plagală, identificare prin text și semn de glas)",
+      "englishFullName": "Engleză - Numerale ordinale prenominale în cuvinte (Denumire prin corespondent autentic-plagal, identificare prin text și semn de glas)",
+      "englishPlagalNumber": "Engleză - Numerale cardinale în cifre (Denumire în clasa glasurilor plagale, identificare prin text și semn de glas)",
+      "englishPlagalRomanNumeral": "Engleză - Numerale cardinale cu cifre romane (Denumire în clasa glasurilor plagale, identificare prin text și semn de glas)",
+      "englishPlagalNumberWord": "Engleză - Numerale cardinale în cuvinte (Denumire în clasa glasurilor plagale, identificare prin text și semn de glas)",
       "spanishTonoNumber": "Spaniolă - Numerale cardinale în cifre (Identificare prin text și semn de glas)",
       "spanishTonoRomanNumeral": "Spaniolă - Numerale cardinale cu cifre romane (Identificare prin text și semn de glas)",
       "spanishTonoOrdinalNumber": "Spaniolă - Numerale ordinale postnominale în cifre (Identificare prin text și semn de glas)",
@@ -192,7 +194,7 @@
       "romanianGlasRomanNumeral": "Română - Numerale cardinale cu cifre romane (Identificare prin text și semn de glas)",
       "romanianGlasOrdinalNumber": "Română - Numerale ordinale postnominale în cifre (Identificare prin text și semn de glas)",
       "romanianGlasOrdinalRomanNumeral": "Română - Numerale ordinale postnominale cu cifre romane (Identificare prin text și semn de glas)",
-      "romanianGlas": "Română - Numerale ordinale în cuvinte (Terminologie plagală, identificare prin semn de glas)"
+      "romanianGlas": "Română - Denumire prin corespondent autentic-plagal, identificare prin semn de glas"
     },
     "moveUp": "Mută componenta în sus",
     "removeComponent": "Elimină componenta",

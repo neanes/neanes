@@ -513,6 +513,7 @@ import {
   type InitialMartyriaModeIdentificationMethod,
   type InitialMartyriaNumeralKind,
   type InitialMartyriaNumeralStyle,
+  initialMartyriaStyleHasGreekText,
   resolveInitialMartyriaConfiguration,
   usesTransliteratedNoteNamesByDefault,
 } from '@/models/InitialMartyriaStyle';
@@ -802,13 +803,10 @@ const greekFontValue = computed({
 });
 const showGreekFontControl = computed(
   () =>
-    selectedStyle.value?.languageId !== INITIAL_MARTYRIA_LANGUAGE_IDS.Greek &&
+    selectedStyle.value != null &&
+    selectedStyle.value.languageId !== INITIAL_MARTYRIA_LANGUAGE_IDS.Greek &&
     (workingConfiguration.value?.transliterateNoteNames !== true ||
-      selectedStyle.value?.components.some(
-        (component) =>
-          (component.kind === 'text' || component.kind === 'stackedText') &&
-          component.fontRole === 'greek',
-      ) === true),
+      initialMartyriaStyleHasGreekText(selectedStyle.value)),
 );
 const showTransliterationControl = computed(
   () => selectedStyle.value?.languageId !== INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,

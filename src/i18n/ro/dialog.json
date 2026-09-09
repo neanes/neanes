@@ -186,6 +186,8 @@
       "russianGlasOrdinal": "Rusă - Numerale ordinale în cuvinte (Identificare prin text și semn de glas)",
       "arabicOrdinal": "Arabă - Numerale ordinale în cuvinte (Identificare prin text și semn de glas)",
       "romanianGlasNumber": "Română - Numerale cardinale în cifre (Identificare prin text și semn de glas)",
+      "romanianGlasRomanNumeral": "Română - Numerale cardinale cu cifre romane (Identificare prin text și semn de glas)",
+      "romanianGlasOrdinalNumber": "Română - Numerale ordinale postnominale în cifre (Identificare prin text și semn de glas)",
       "romanianGlas": "Română - Numerale ordinale în cuvinte (Terminologie plagală, identificare prin semn de glas)"
     },
     "moveUp": "Mută componenta în sus",

@@ -186,6 +186,8 @@
       "russianGlasOrdinal": "Rusia - Kata ordinal (Identifikasi teks dan tanda mode)",
       "arabicOrdinal": "Arab - Kata ordinal (Identifikasi teks dan tanda mode)",
       "romanianGlasNumber": "Rumania - Digit kardinal (Identifikasi teks dan tanda mode)",
+      "romanianGlasRomanNumeral": "Rumania - Angka Romawi kardinal (Identifikasi teks dan tanda mode)",
+      "romanianGlasOrdinalNumber": "Rumania - Digit ordinal setelah nomina (Identifikasi teks dan tanda mode)",
       "romanianGlas": "Rumania - Kata ordinal (Terminologi plagal, identifikasi dengan tanda mode)"
     },
     "moveUp": "Pindahkan komponen ke atas",

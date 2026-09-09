@@ -131,6 +131,8 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   RussianGlasOrdinalV1: 'builtin:russian-glas-ordinal-v1',
   ArabicOrdinalV1: 'builtin:arabic-ordinal-v1',
   RomanianGlasNumberV1: 'builtin:romanian-glas-number-v1',
+  RomanianGlasRomanNumeralV1: 'builtin:romanian-glas-roman-numeral-v1',
+  RomanianGlasOrdinalNumberV1: 'builtin:romanian-glas-ordinal-number-v1',
   RomanianGlasV1: 'builtin:romanian-glas-v1',
 } as const;
 
@@ -198,6 +200,10 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
     $.dialog.initialMartyriaStyles.builtInStyles.arabicOrdinal,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.romanianGlasNumber,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasRomanNumeralV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.romanianGlasRomanNumeral,
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasOrdinalNumberV1]: ($) =>
+    $.dialog.initialMartyriaStyles.builtInStyles.romanianGlasOrdinalNumber,
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1]: ($) =>
     $.dialog.initialMartyriaStyles.builtInStyles.romanianGlas,
 };
@@ -1131,6 +1137,12 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
       plagalAbbreviation(),
     ],
   }),
+  /*
+   * Attested in the popular series of books by Hierodeacon John Lacoschitiotul e.g.
+   * Lacoschitiotul, Ioan, ierodiacon, Buchet muzical athonit: Dumnezeiasca Liturghie. Vol. 1. 2nd ed. Bucharest: Evanghelismos, 2009.
+   *
+   * Also the 2002 reprint of the Anastasimatarion by Macarius.
+   */
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumberV1,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
@@ -1155,6 +1167,74 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
       startingPitch(),
     ],
   }),
+  /*
+   * Attested in 1990s editions of Archdeacon Sebastian Barbu-Bucur, e.g.
+   * Dimitrie Suceveanu, Idiomelarul, ed. Sebastian Barbu-Bucur (București: Editura Muzicală, 1996),
+   *
+   * Also attested in 20th century Uniformizat interlinear Western-Byzantine notation editions.
+   */
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasRomanNumeralV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+    usesPlagalTerminology: false,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      text('Glas'),
+      text('I', [1]),
+      text('II', [2]),
+      text('III', [3]),
+      text('IV', [4]),
+      text('V', [5]),
+      text('VI', [6]),
+      text('VII', [7]),
+      text('VIII', [8]),
+      plagalAbbreviation(),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  /*
+   * Attested in 19th century works of Anton Pann
+   */
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasOrdinalNumberV1,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    usesPlagalTerminology: false,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    defaultAppearance: sourceSerifAppearance(),
+    components: [
+      text('Glas'),
+      text('al 1-lea', [1]),
+      text('al 2-lea', [2]),
+      text('al 3-lea', [3]),
+      text('al 4-lea', [4]),
+      text('al 5-lea', [5]),
+      text('al 6-lea', [6]),
+      text('al 7-lea', [7]),
+      text('al 8-lea', [8]),
+      text('Lăt', [5, 6, 8]),
+      modeSign(),
+      startingPitch(),
+    ],
+  }),
+  /*
+   * Attested in 21st-century works by e.g.:
+   *
+   * - Virgil Ioan Nanu, e.g. https://www.stavropoleos.ro/wp-content/uploads/Psaltica/Taine_ierurgii/parastas.pdf
+   * - Re-edition of Anton Pann's Heruvico-Chinonicar. Drobeta-Turnu Severin: Editura Didahia Severin (2012).
+   * - Re-edition of Macarie Ieromonahul's Irmologhion Calofonicon by Cătălin Cernătescu. Bucharest: Editura Universității Naționale de Muzică București, 2023.
+   *
+   * These typically udo not translate the note name.
+   * They may use either 'Glas' or 'Ehul'.
+   */
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,

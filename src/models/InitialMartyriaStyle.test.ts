@@ -85,17 +85,19 @@ function generateEnglishStyleName(style: InitialMartyriaStyle) {
     englishModeIdentificationNames[style.modeIdentificationMethod];
   annotations.push(modeIdentification);
 
-  if (
-    style.modeIdentificationMethod ===
-    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-  ) {
-    return `${englishLanguageNames[style.languageId]} - Traditional Sign Group (${annotations.join(', ')})`;
-  }
-
   const qualifier =
     style.numeralQualifier === INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal
       ? 'Prenominal '
       : '';
+
+  if (
+    style.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+  ) {
+    const pronunciation = `${qualifier}${englishNumeralKindNames[style.numeralKind]} ${englishNumeralStyleNames[style.numeralStyle]}`;
+    return `${englishLanguageNames[style.languageId]} - Traditional Sign Group (Read as ${pronunciation}, ${annotations.join(', ')})`;
+  }
+
   const annotationList = ` (${annotations.join(', ')})`;
   return `${englishLanguageNames[style.languageId]} - ${qualifier}${englishNumeralKindNames[style.numeralKind]} ${englishNumeralStyleNames[style.numeralStyle]}${annotationList}`;
 }
@@ -172,6 +174,58 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
+    'builtin:english-authentic-counterpart-number-sign-v1',
+    [
+      'Mode | <modeSign> | <pitch>',
+      'Mode | <modeSign> | <pitch>',
+      'Mode | <modeSign> | <pitch>',
+      'Mode | <modeSign> | <pitch>',
+      'greek:λ/π | Mode | <modeSign> | <pitch>',
+      'greek:λ/π | Mode | <modeSign> | <pitch>',
+      '<modeSign> | Mode | <pitch>',
+      'greek:λ/π | Mode | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'builtin:english-authentic-counterpart-number-text-v1',
+    [
+      'Mode | 1. | <pitch>',
+      'Mode | 2. | <pitch>',
+      'Mode | 3. | <pitch>',
+      'Mode | 4. | <pitch>',
+      'Plagal of | Mode | 1. | <pitch>',
+      'Plagal of | Mode | 2. | <pitch>',
+      'Grave | Mode. | <pitch>',
+      'Plagal of | Mode | 4. | <pitch>',
+    ],
+  ],
+  [
+    'builtin:english-authentic-counterpart-roman-numeral-text-v1',
+    [
+      'Mode | I. | <pitch>',
+      'Mode | II. | <pitch>',
+      'Mode | III. | <pitch>',
+      'Mode | IV. | <pitch>',
+      'Plagal of | Mode | I. | <pitch>',
+      'Plagal of | Mode | II. | <pitch>',
+      'Grave | Mode. | <pitch>',
+      'Plagal of | Mode | IV. | <pitch>',
+    ],
+  ],
+  [
+    'builtin:english-authentic-counterpart-number-word-text-v1',
+    [
+      'Mode | One. | <pitch>',
+      'Mode | Two. | <pitch>',
+      'Mode | Three. | <pitch>',
+      'Mode | Four. | <pitch>',
+      'Plagal of | Mode | One. | <pitch>',
+      'Plagal of | Mode | Two. | <pitch>',
+      'Grave | Mode. | <pitch>',
+      'Plagal of | Mode | Four. | <pitch>',
+    ],
+  ],
+  [
     'builtin:english-sign-first-v1',
     [
       '<modeSign> | Mode | <pitch>',
@@ -182,6 +236,19 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
       '<modeSign> | greek:λ/π | Mode | <pitch>',
       '<modeSign> | Mode | <pitch>',
       '<modeSign> | greek:λ/π | Mode | <pitch>',
+    ],
+  ],
+  [
+    'builtin:english-ordinal-plagal-text-v1',
+    [
+      '1st | Mode. | <pitch>',
+      '2nd | Mode. | <pitch>',
+      '3rd | Mode. | <pitch>',
+      '4th | Mode. | <pitch>',
+      '1st | Plagal | Mode. | <pitch>',
+      '2nd | Plagal | Mode. | <pitch>',
+      'Grave | Mode. | <pitch>',
+      '4th | Plagal | Mode. | <pitch>',
     ],
   ],
   [
@@ -263,42 +330,42 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-plagal-number-v1',
+    'builtin:english-authentic-counterpart-number-v1',
     [
       'Mode | 1. | <modeSign> | <pitch>',
       'Mode | 2. | <modeSign> | <pitch>',
       'Mode | 3. | <modeSign> | <pitch>',
       'Mode | 4. | <modeSign> | <pitch>',
-      'Plagal | Mode | 1. | greek:λ/π | <modeSign> | <pitch>',
-      'Plagal | Mode | 2. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal of | Mode | 1. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal of | Mode | 2. | greek:λ/π | <modeSign> | <pitch>',
       'Grave | Mode. | <modeSign> | <pitch>',
-      'Plagal | Mode | 4. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal of | Mode | 4. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
-    'builtin:english-plagal-roman-numeral-v1',
+    'builtin:english-authentic-counterpart-roman-numeral-v1',
     [
       'Mode | I. | <modeSign> | <pitch>',
       'Mode | II. | <modeSign> | <pitch>',
       'Mode | III. | <modeSign> | <pitch>',
       'Mode | IV. | <modeSign> | <pitch>',
-      'Plagal | Mode | I. | greek:λ/π | <modeSign> | <pitch>',
-      'Plagal | Mode | II. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal of | Mode | I. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal of | Mode | II. | greek:λ/π | <modeSign> | <pitch>',
       'Grave | Mode. | <modeSign> | <pitch>',
-      'Plagal | Mode | IV. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal of | Mode | IV. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
-    'builtin:english-plagal-number-word-v1',
+    'builtin:english-authentic-counterpart-number-word-v1',
     [
       'Mode | One. | <modeSign> | <pitch>',
       'Mode | Two. | <modeSign> | <pitch>',
       'Mode | Three. | <modeSign> | <pitch>',
       'Mode | Four. | <modeSign> | <pitch>',
-      'Plagal | Mode | One. | greek:λ/π | <modeSign> | <pitch>',
-      'Plagal | Mode | Two. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal of | Mode | One. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal of | Mode | Two. | greek:λ/π | <modeSign> | <pitch>',
       'Grave | Mode. | <modeSign> | <pitch>',
-      'Plagal | Mode | Four. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal of | Mode | Four. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -550,6 +617,338 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
   ],
 ];
 
+type ExpectedModePronunciations = [
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+];
+
+const greekAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =
+  [
+    'Ἦχος πρῶτος',
+    'Ἦχος δεύτερος',
+    'Ἦχος τρίτος',
+    'Ἦχος τέταρτος',
+    'Ἦχος πλάγιος πρῶτος',
+    'Ἦχος πλάγιος δεύτερος',
+    'Ἦχος βαρύς',
+    'Ἦχος πλάγιος τέταρτος',
+  ];
+
+const englishAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =
+  [
+    'First Mode',
+    'Second Mode',
+    'Third Mode',
+    'Fourth Mode',
+    'Plagal of First Mode',
+    'Plagal of Second Mode',
+    'Grave Mode',
+    'Plagal of Fourth Mode',
+  ];
+
+const englishAuthenticCounterpartCardinalPronunciations: ExpectedModePronunciations =
+  [
+    'Mode One',
+    'Mode Two',
+    'Mode Three',
+    'Mode Four',
+    'Plagal of Mode One',
+    'Plagal of Mode Two',
+    'Grave Mode',
+    'Plagal of Mode Four',
+  ];
+
+const englishPlagalClassOrdinalPronunciations: ExpectedModePronunciations = [
+  'First Mode',
+  'Second Mode',
+  'Third Mode',
+  'Fourth Mode',
+  'First Plagal Mode',
+  'Second Plagal Mode',
+  'Grave Mode',
+  'Fourth Plagal Mode',
+];
+
+const englishAbsoluteOrdinalPronunciations: ExpectedModePronunciations = [
+  'First Mode',
+  'Second Mode',
+  'Third Mode',
+  'Fourth Mode',
+  'Fifth Mode',
+  'Sixth Mode',
+  'Seventh Mode',
+  'Eighth Mode',
+];
+
+const englishAbsoluteCardinalPronunciations: ExpectedModePronunciations = [
+  'Mode One',
+  'Mode Two',
+  'Mode Three',
+  'Mode Four',
+  'Mode Five',
+  'Mode Six',
+  'Mode Seven',
+  'Mode Eight',
+];
+
+const spanishAbsoluteCardinalPronunciations: ExpectedModePronunciations = [
+  'Tono uno',
+  'Tono dos',
+  'Tono tres',
+  'Tono cuatro',
+  'Tono cinco',
+  'Tono seis',
+  'Tono siete',
+  'Tono ocho',
+];
+
+const spanishPostnominalOrdinalPronunciations: ExpectedModePronunciations = [
+  'Tono primero',
+  'Tono segundo',
+  'Tono tercero',
+  'Tono cuarto',
+  'Tono quinto',
+  'Tono sexto',
+  'Tono séptimo',
+  'Tono octavo',
+];
+
+const spanishPrenominalOrdinalPronunciations: ExpectedModePronunciations = [
+  'Primer tono',
+  'Segundo tono',
+  'Tercer tono',
+  'Cuarto tono',
+  'Quinto tono',
+  'Sexto tono',
+  'Séptimo tono',
+  'Octavo tono',
+];
+
+const churchSlavonicAbsoluteCardinalPronunciations: ExpectedModePronunciations =
+  [
+    'Гла́съ є҆ди́нъ',
+    'Гла́съ два̀',
+    'Гла́съ трѝ',
+    'Гла́съ четы́ре',
+    'Гла́съ пѧ́ть',
+    'Гла́съ ше́сть',
+    'Гла́съ се́дмь',
+    'Гла́съ ѻ҆́смь',
+  ];
+
+const churchSlavonicAbsoluteOrdinalPronunciations: ExpectedModePronunciations =
+  [
+    'Гла́съ пе́рвый',
+    'Гла́съ вторы́й',
+    'Гла́съ тре́тїй',
+    'Гла́съ четве́ртый',
+    'Гла́съ пѧ́тый',
+    'Гла́съ шесты́й',
+    'Гла́съ седмы́й',
+    'Гла́съ ѻ҆сьмы́й',
+  ];
+
+const russianAbsoluteCardinalPronunciations: ExpectedModePronunciations = [
+  'Глас один',
+  'Глас два',
+  'Глас три',
+  'Глас четыре',
+  'Глас пять',
+  'Глас шесть',
+  'Глас семь',
+  'Глас восемь',
+];
+
+const russianAbsoluteOrdinalPronunciations: ExpectedModePronunciations = [
+  'Глас первый',
+  'Глас второй',
+  'Глас третий',
+  'Глас четвёртый',
+  'Глас пятый',
+  'Глас шестой',
+  'Глас седьмой',
+  'Глас восьмой',
+];
+
+const arabicAbsoluteOrdinalPronunciations: ExpectedModePronunciations = [
+  'اللحن الأول',
+  'اللحن الثاني',
+  'اللحن الثالث',
+  'اللحن الرابع',
+  'اللحن الخامس',
+  'اللحن السادس',
+  'اللحن السابع',
+  'اللحن الثامن',
+];
+
+const romanianAbsoluteCardinalPronunciations: ExpectedModePronunciations = [
+  'Glas unu',
+  'Glas doi',
+  'Glas trei',
+  'Glas patru',
+  'Glas cinci',
+  'Glas șase',
+  'Glas șapte',
+  'Glas opt',
+];
+
+const romanianAbsoluteOrdinalPronunciations: ExpectedModePronunciations = [
+  'Glasul întâi',
+  'Glasul al doilea',
+  'Glasul al treilea',
+  'Glasul al patrulea',
+  'Glasul al cincilea',
+  'Glasul al șaselea',
+  'Glasul al șaptelea',
+  'Glasul al optulea',
+];
+
+const romanianAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =
+  [
+    'Glasul întâi',
+    'Glasul al doilea',
+    'Glasul al treilea',
+    'Glasul al patrulea',
+    'Glasul Lăturaș întâi',
+    'Glasul Lăturaș al doilea',
+    'Glasul al șaptelea',
+    'Glasul Lăturaș al patrulea',
+  ];
+
+const expectedPronunciationsByStyle: [
+  BuiltInInitialMartyriaStyleId,
+  ExpectedModePronunciations,
+][] = [
+  [
+    'builtin:traditional-greek-v1',
+    greekAuthenticCounterpartOrdinalPronunciations,
+  ],
+  [
+    'builtin:greek-mode-names-v1',
+    greekAuthenticCounterpartOrdinalPronunciations,
+  ],
+  [
+    'builtin:english-plagal-first-v1',
+    englishAuthenticCounterpartOrdinalPronunciations,
+  ],
+  [
+    'builtin:english-mode-names-v1',
+    englishAuthenticCounterpartOrdinalPronunciations,
+  ],
+  [
+    'builtin:english-authentic-counterpart-number-sign-v1',
+    englishAuthenticCounterpartCardinalPronunciations,
+  ],
+  [
+    'builtin:english-authentic-counterpart-number-text-v1',
+    englishAuthenticCounterpartCardinalPronunciations,
+  ],
+  [
+    'builtin:english-authentic-counterpart-roman-numeral-text-v1',
+    englishAuthenticCounterpartCardinalPronunciations,
+  ],
+  [
+    'builtin:english-authentic-counterpart-number-word-text-v1',
+    englishAuthenticCounterpartCardinalPronunciations,
+  ],
+  ['builtin:english-sign-first-v1', englishPlagalClassOrdinalPronunciations],
+  [
+    'builtin:english-ordinal-plagal-text-v1',
+    englishPlagalClassOrdinalPronunciations,
+  ],
+  [
+    'builtin:english-ordinal-plagal-v1',
+    englishPlagalClassOrdinalPronunciations,
+  ],
+  ['builtin:english-ordinal-v1', englishAbsoluteOrdinalPronunciations],
+  ['builtin:english-mode-number-v1', englishAbsoluteCardinalPronunciations],
+  [
+    'builtin:english-mode-roman-numeral-v1',
+    englishAbsoluteCardinalPronunciations,
+  ],
+  [
+    'builtin:english-mode-number-word-v1',
+    englishAbsoluteCardinalPronunciations,
+  ],
+  [
+    'builtin:english-full-name-v1',
+    englishAuthenticCounterpartOrdinalPronunciations,
+  ],
+  [
+    'builtin:english-authentic-counterpart-number-v1',
+    englishAuthenticCounterpartCardinalPronunciations,
+  ],
+  [
+    'builtin:english-authentic-counterpart-roman-numeral-v1',
+    englishAuthenticCounterpartCardinalPronunciations,
+  ],
+  [
+    'builtin:english-authentic-counterpart-number-word-v1',
+    englishAuthenticCounterpartCardinalPronunciations,
+  ],
+  ['builtin:spanish-tono-number-v1', spanishAbsoluteCardinalPronunciations],
+  [
+    'builtin:spanish-tono-roman-numeral-v1',
+    spanishAbsoluteCardinalPronunciations,
+  ],
+  [
+    'builtin:spanish-tono-ordinal-number-v1',
+    spanishPostnominalOrdinalPronunciations,
+  ],
+  ['builtin:spanish-tono-ordinal-v1', spanishPostnominalOrdinalPronunciations],
+  ['builtin:spanish-ordinal-tono-v1', spanishPrenominalOrdinalPronunciations],
+  [
+    'builtin:church-slavonic-glas-number-v1',
+    churchSlavonicAbsoluteCardinalPronunciations,
+  ],
+  [
+    'builtin:church-slavonic-glas-cyrillic-numeral-v1',
+    churchSlavonicAbsoluteCardinalPronunciations,
+  ],
+  [
+    'builtin:church-slavonic-glas-cyrillic-numeral-text-v1',
+    churchSlavonicAbsoluteCardinalPronunciations,
+  ],
+  [
+    'builtin:church-slavonic-glas-ordinal-v1',
+    churchSlavonicAbsoluteOrdinalPronunciations,
+  ],
+  [
+    'builtin:church-slavonic-glas-ordinal-text-v1',
+    churchSlavonicAbsoluteOrdinalPronunciations,
+  ],
+  ['builtin:russian-glas-number-v1', russianAbsoluteCardinalPronunciations],
+  ['builtin:russian-glas-ordinal-v1', russianAbsoluteOrdinalPronunciations],
+  [
+    'builtin:russian-glas-ordinal-text-v1',
+    russianAbsoluteOrdinalPronunciations,
+  ],
+  ['builtin:arabic-ordinal-v1', arabicAbsoluteOrdinalPronunciations],
+  ['builtin:romanian-glas-number-v1', romanianAbsoluteCardinalPronunciations],
+  [
+    'builtin:romanian-glas-roman-numeral-v1',
+    romanianAbsoluteCardinalPronunciations,
+  ],
+  [
+    'builtin:romanian-glas-ordinal-number-v1',
+    romanianAbsoluteOrdinalPronunciations,
+  ],
+  [
+    'builtin:romanian-glas-ordinal-roman-numeral-v1',
+    romanianAbsoluteOrdinalPronunciations,
+  ],
+  [
+    'builtin:romanian-glas-v1',
+    romanianAuthenticCounterpartOrdinalPronunciations,
+  ],
+];
+
 describe('InitialMartyriaStyle', () => {
   it('renders the attested run sequence for every built-in style and mode', () => {
     expect(expectedRunsByStyle.map(([id]) => id)).toEqual(
@@ -573,6 +972,38 @@ describe('InitialMartyriaStyle', () => {
           .join(' | ');
 
         expect(`${styleId} mode ${mode}: ${encoded}`).toBe(
+          `${styleId} mode ${mode}: ${expectedByMode[mode - 1]}`,
+        );
+      }
+    }
+  });
+
+  it('pronounces every built-in style in every language for every mode', () => {
+    expect(expectedPronunciationsByStyle.map(([id]) => id)).toEqual(
+      builtInInitialMartyriaStyles.map((style) => style.id),
+    );
+
+    for (const [styleId, expectedByMode] of expectedPronunciationsByStyle) {
+      const resolved = resolveInitialMartyriaConfiguration(
+        createInitialMartyriaConfiguration(styleId),
+      )!;
+      for (let mode = 1; mode <= 8; mode++) {
+        const element = ModeKeyElement.createFromTemplate(
+          modeKeyTemplates.find((template) => template.mode === mode)!,
+        );
+        const resolution = resolveInitialMartyriaStyle({
+          context: getInitialMartyriaContext(element),
+          resolvedConfiguration: resolved,
+          pageSetup: new PageSetup(),
+        });
+
+        for (const run of resolution.runs) {
+          if (run.kind !== 'startingPitch') {
+            expect(run.pronunciation.length).toBeGreaterThan(0);
+          }
+        }
+
+        expect(`${styleId} mode ${mode}: ${resolution.pronunciation}`).toBe(
           `${styleId} mode ${mode}: ${expectedByMode[mode - 1]}`,
         );
       }

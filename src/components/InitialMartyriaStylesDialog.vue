@@ -518,19 +518,7 @@ interface StyleFilter {
   matches: (style: InitialMartyriaStyle, value: string) => boolean;
   /** Which other filters to clear, in order, when this one strands the list. */
   resetOrder: readonly StyleFilterKey[];
-  extraVisibility?: () => boolean;
 }
-
-const hasTextIdentification = (
-  style: InitialMartyriaStyle,
-): style is Exclude<
-  InitialMartyriaStyle,
-  {
-    modeIdentificationMethod: typeof INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign;
-  }
-> =>
-  style.modeIdentificationMethod !==
-  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign;
 
 const styleFilters: StyleFilter[] = [
   {
@@ -543,16 +531,12 @@ const styleFilters: StyleFilter[] = [
       t(($) => $.dialog.initialMartyriaStyles.numeralKind, { ns: 'dialog' }),
     optionLabel: (value) =>
       numeralKindLabel(value as InitialMartyriaNumeralKind),
-    matches: (style, value) =>
-      hasTextIdentification(style) && style.numeralKind === value,
+    matches: (style, value) => style.numeralKind === value,
     resetOrder: [
       'numeralStyle',
       'modeIdentificationMethod',
       'modeNamingScheme',
     ],
-    extraVisibility: () =>
-      selectedModeIdentificationMethodFilter.value !==
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
   },
   {
     key: 'numeralStyle',
@@ -564,12 +548,8 @@ const styleFilters: StyleFilter[] = [
       t(($) => $.dialog.initialMartyriaStyles.numeralStyle, { ns: 'dialog' }),
     optionLabel: (value) =>
       numeralStyleLabel(value as InitialMartyriaNumeralStyle),
-    matches: (style, value) =>
-      hasTextIdentification(style) && style.numeralStyle === value,
+    matches: (style, value) => style.numeralStyle === value,
     resetOrder: ['numeralKind', 'modeIdentificationMethod', 'modeNamingScheme'],
-    extraVisibility: () =>
-      selectedModeIdentificationMethodFilter.value !==
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
   },
   {
     key: 'modeIdentificationMethod',
@@ -639,10 +619,7 @@ function availableFilterValues(filter: StyleFilter) {
 const visibleStyleFilters = computed(() =>
   styleFilters
     .map((filter) => ({ filter, values: availableFilterValues(filter) }))
-    .filter(
-      ({ filter, values }) =>
-        values.length > 1 && (filter.extraVisibility?.() ?? true),
-    )
+    .filter(({ values }) => values.length > 1)
     .map(({ filter, values }) => ({
       filter,
       label: filter.label(),
@@ -907,7 +884,6 @@ function wordNumeralStyleLabel() {
   const availableKinds = numeralKindOrder.filter((numeralKind) =>
     stylesForSelectedLanguage.value.some(
       (style) =>
-        hasTextIdentification(style) &&
         style.numeralKind === numeralKind &&
         style.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     ),

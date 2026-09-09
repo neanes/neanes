@@ -6,6 +6,12 @@
   >
     <span class="mode-key-main" :style="mainStyle">
       <span class="mode-key-signature" :dir="signatureResolution.flowDirection">
+        <span
+          class="sr-only"
+          :lang="signatureResolution.style.languageId"
+          :dir="signatureResolution.flowDirection"
+          >{{ signatureResolution.pronunciation }}</span
+        >
         <template v-for="(run, index) in resolvedRuns" :key="index">
           <span
             v-if="separatorsBefore[index] !== 'none'"
@@ -18,9 +24,10 @@
             v-if="run.kind === 'glyph'"
             class="mode-key-run"
             :style="getRunStyle(run)"
+            aria-hidden="true"
           >
             <template v-for="neume in run.glyphs" :key="neume">
-              <Neume :neume="neume" />
+              <Neume :neume="neume" aria-hidden="true" />
             </template>
           </span>
           <span
@@ -29,6 +36,7 @@
             :lang="run.languageTag"
             :dir="run.direction"
             :style="getRunStyle(run)"
+            aria-hidden="true"
             >{{ run.content.text }}</span
           >
           <span
@@ -106,11 +114,13 @@
             <span
               class="mode-key-run mode-key-stacked-text"
               :style="getStackedTextStyle(run)"
+              aria-hidden="true"
             >
               <span
                 v-for="(line, lineIndex) in run.content.lines"
                 :key="lineIndex"
                 :style="getStackedTextRowStyle(run, lineIndex)"
+                aria-hidden="true"
                 >{{ line }}</span
               >
             </span>

@@ -496,6 +496,17 @@ const attestedStructures: Record<string, InitialMartyriaStructure> = {
     transliterateNoteNames: false,
     flowDirection: 'rtl',
   },
+  'arabic-ordinal-digits': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'rtl',
+  },
   'romanian-glas-number': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
     modeIdentificationMethod:
@@ -512,6 +523,28 @@ const attestedStructures: Record<string, InitialMartyriaStructure> = {
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'romanian-glas-ordinal-number': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'romanian-glas-ordinal-roman-numeral': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
@@ -1008,14 +1041,27 @@ const expectedRunsByStructure: [string, string[]][] = [
   [
     'arabic-ordinal',
     [
-      'اللحن الأول | <pitch> | <modeSign>',
-      'اللحن الثاني | <pitch> | <modeSign>',
-      'اللحن الثالث | <pitch> | <modeSign>',
-      'اللحن الرابع | <pitch> | <modeSign>',
-      'اللحن الخامس | <pitch> | <modeSign> | greek:λ/π',
-      'اللحن السادس | <pitch> | <modeSign> | greek:λ/π',
-      'اللحن السابع | <pitch> | <modeSign>',
-      'اللحن الثامن | <pitch> | <modeSign> | greek:λ/π',
+      'اللحن | الأول | <pitch> | <modeSign>',
+      'اللحن | الثاني | <pitch> | <modeSign>',
+      'اللحن | الثالث | <pitch> | <modeSign>',
+      'اللحن | الرابع | <pitch> | <modeSign>',
+      'اللحن | الخامس | <pitch> | <modeSign> | greek:λ/π',
+      'اللحن | السادس | <pitch> | <modeSign> | greek:λ/π',
+      'اللحن | السابع | <pitch> | <modeSign>',
+      'اللحن | الثامن | <pitch> | <modeSign> | greek:λ/π',
+    ],
+  ],
+  [
+    'arabic-ordinal-digits',
+    [
+      'اللحن | 1 | <pitch> | <modeSign>',
+      'اللحن | 2 | <pitch> | <modeSign>',
+      'اللحن | 3 | <pitch> | <modeSign>',
+      'اللحن | 4 | <pitch> | <modeSign>',
+      'اللحن | 5 | <pitch> | <modeSign> | greek:λ/π',
+      'اللحن | 6 | <pitch> | <modeSign> | greek:λ/π',
+      'اللحن | 7 | <pitch> | <modeSign>',
+      'اللحن | 8 | <pitch> | <modeSign> | greek:λ/π',
     ],
   ],
   [
@@ -1042,6 +1088,32 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Glas | VI. | greek:λ/π | <modeSign> | <pitch>',
       'Glas | VII. | <modeSign> | <pitch>',
       'Glas | VIII. | greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'romanian-glas-ordinal-number',
+    [
+      'Glasul | întâi. | <modeSign> | <pitch>',
+      'Glasul | al 2-lea. | <modeSign> | <pitch>',
+      'Glasul | al 3-lea. | <modeSign> | <pitch>',
+      'Glasul | al 4-lea. | <modeSign> | <pitch>',
+      'Glasul | al 5-lea. | greek:λ/π | <modeSign> | <pitch>',
+      'Glasul | al 6-lea. | greek:λ/π | <modeSign> | <pitch>',
+      'Glasul | al 7-lea. | <modeSign> | <pitch>',
+      'Glasul | al 8-lea. | greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'romanian-glas-ordinal-roman-numeral',
+    [
+      'Glasul | întâi. | <modeSign> | <pitch>',
+      'Glasul | al II-lea. | <modeSign> | <pitch>',
+      'Glasul | al III-lea. | <modeSign> | <pitch>',
+      'Glasul | al IV-lea. | <modeSign> | <pitch>',
+      'Glasul | al V-lea. | greek:λ/π | <modeSign> | <pitch>',
+      'Glasul | al VI-lea. | greek:λ/π | <modeSign> | <pitch>',
+      'Glasul | al VII-lea. | <modeSign> | <pitch>',
+      'Glasul | al VIII-lea. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -1217,6 +1289,17 @@ const romanianAbsoluteCardinalPronunciations: ExpectedModePronunciations = [
   'Glas opt',
 ];
 
+const romanianAbsoluteOrdinalPronunciations: ExpectedModePronunciations = [
+  'Glasul întâi',
+  'Glasul al doilea',
+  'Glasul al treilea',
+  'Glasul al patrulea',
+  'Glasul al cincilea',
+  'Glasul al șaselea',
+  'Glasul al șaptelea',
+  'Glasul al optulea',
+];
+
 const romanianAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =
   [
     'Glasul întâi',
@@ -1388,8 +1471,14 @@ const expectedPronunciationsByStructure: [
   ['russian-glas-ordinal', russianAbsoluteOrdinalPronunciations],
   ['russian-glas-ordinal-text', russianAbsoluteOrdinalPronunciations],
   ['arabic-ordinal', arabicAbsoluteOrdinalPronunciations],
+  ['arabic-ordinal-digits', arabicAbsoluteOrdinalPronunciations],
   ['romanian-glas-number', romanianAbsoluteCardinalPronunciations],
   ['romanian-glas-roman-numeral', romanianAbsoluteCardinalPronunciations],
+  ['romanian-glas-ordinal-number', romanianAbsoluteOrdinalPronunciations],
+  [
+    'romanian-glas-ordinal-roman-numeral',
+    romanianAbsoluteOrdinalPronunciations,
+  ],
   ['romanian-glas', romanianAuthenticCounterpartOrdinalPronunciations],
 ];
 
@@ -1903,6 +1992,7 @@ describe('InitialMartyriaStructure space', () => {
       'words/ordinal/prenominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: [
+      'digits/ordinal/postnominal/absolute',
       'words/ordinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: [
@@ -1942,7 +2032,7 @@ describe('InitialMartyriaStructure space', () => {
       'words/ordinal/prenominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: [
-      'words/ordinal/postnominal/absolute',
+      'digits/ordinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: [
       'digits/cardinal/postnominal/absolute',
@@ -1984,7 +2074,7 @@ describe('InitialMartyriaStructure space', () => {
       ],
       cu: ['digits/ordinal', 'alphabetic-numerals/ordinal', 'words/ordinal'],
       ru: ['digits/ordinal', 'roman-numerals/ordinal', 'words/ordinal'],
-      ar: ['words/ordinal'],
+      ar: ['digits/ordinal', 'words/ordinal'],
       ro: [
         'digits/cardinal',
         'digits/ordinal',
@@ -2187,8 +2277,13 @@ describe('InitialMartyriaStructure space', () => {
         false,
       ],
       [
-        'Arabic fused ordinal phrase',
+        'Arabic postnominal word ordinal',
         attestedStructures['arabic-ordinal'],
+        true,
+      ],
+      [
+        'Arabic postnominal digit ordinal',
+        attestedStructures['arabic-ordinal-digits'],
         true,
       ],
       [
@@ -2315,7 +2410,7 @@ describe('InitialMartyriaStructure space', () => {
       modeIdentificationMethod:
         INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
       numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
       numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
       modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     });
@@ -2622,7 +2717,7 @@ describe('InitialMartyriaStructure space', () => {
           modeIdentificationMethod:
             INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
         }),
-        'اللحن السادس',
+        'اللحن | السادس',
         'اللحن السادس من با',
       ],
       [
@@ -2641,6 +2736,63 @@ describe('InitialMartyriaStructure space', () => {
 
     for (const [structure, expectedText, expectedPronunciation] of examples) {
       const resolution = resolve(styleFor(structure), elementForMode(6));
+      expect(textOf(resolution.runs).join(' | ')).toBe(expectedText);
+      expect(resolution.pronunciation).toBe(expectedPronunciation);
+    }
+  });
+
+  it('handles the exceptional Romanian first ordinal in either position', () => {
+    const cases = [
+      [
+        INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+        1,
+        'Glasul | întâi.',
+        'Glasul întâi de la Pa',
+      ],
+      [
+        INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+        2,
+        'Glasul | al II-lea.',
+        'Glasul al doilea de la Di',
+      ],
+      [
+        INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        1,
+        'Primul | glas.',
+        'Primul glas de la Pa',
+      ],
+      [
+        INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        2,
+        'Al II-lea | glas.',
+        'Al doilea glas de la Di',
+      ],
+    ] as const;
+
+    for (const [
+      numeralStyle,
+      numeralQualifier,
+      mode,
+      expectedText,
+      expectedPronunciation,
+    ] of cases) {
+      const structure = grammarStructure(
+        INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
+        {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+          numeralStyle,
+          numeralQualifier,
+          modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+        },
+      );
+      const resolution = resolve(styleFor(structure), elementForMode(mode));
+
       expect(textOf(resolution.runs).join(' | ')).toBe(expectedText);
       expect(resolution.pronunciation).toBe(expectedPronunciation);
     }

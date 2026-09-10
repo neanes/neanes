@@ -628,6 +628,10 @@ const initialMartyriaLexicons: Record<
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Greek]: {
     // Byzantine Greek uses label-first authentic/plagal names. Alphabetic
     // numerals use the abbreviation; word forms use an inflected full name.
+    // The Greek Ministry grammar places alphabetic signs beside both cardinal
+    // and ordinal words; liturgical headings supply the ordinal reading here.
+    // https://lb1.ebooks.edu.gr/ebooks/d/8547/774/21-0058-02_Grammatiki-Neas-Ellinikis-Glossas_A-B-G-Gymnasiou.pdf
+    // https://byzantine-music.apostoliki-diakonia.gr/Texts/texts.asp?main=Anastasimatarion.htm
     grammar: [
       {
         modeIdentificationMethods: everyModeIdentificationMethod,
@@ -700,6 +704,8 @@ const initialMartyriaLexicons: Record<
     // English cardinals follow the noun and ordinals precede it. Roman
     // numerals represent the conventional postnominal cardinal construction.
     // A sign by itself encodes authentic/plagal relations, not absolute 1-8.
+    // https://dictionary.cambridge.org/grammar/british-grammar/number
+    // https://www.govinfo.gov/content/pkg/GPO-STYLEMANUAL-2016/pdf/GPO-STYLEMANUAL-2016-10.pdf
     grammar: [
       {
         modeIdentificationMethods: textModeIdentificationMethods,
@@ -1010,12 +1016,20 @@ const initialMartyriaLexicons: Record<
     modeSignGroupTrailing: false,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: {
-    // Each word form is already a complete fused noun-adjective phrase.
+    // Arabic ordinals are adjectives: they follow the noun and agree with its
+    // definiteness and gender. Antiochian Orthodox sources attest both the
+    // word form (اللحن الأول) and a postnominal digit form (اللحن 1).
+    // https://www.arabicacademy.gov.eg/ar/محرك-البحث/معجم/dic-19/نعت-معنى
+    // https://antiochpatriarchate.org/ar/page/1662/
+    // https://www.antiochpatriarchate.org/ar/page/909/
     grammar: [
       {
         modeIdentificationMethods: everyModeIdentificationMethod,
         numeralKinds: [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal],
-        numeralStyles: [INITIAL_MARTYRIA_NUMERAL_STYLES.Words],
+        numeralStyles: [
+          INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+          INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+        ],
         numeralQualifiers: [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal],
         modeNamingSchemes: [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute],
       },
@@ -1025,24 +1039,29 @@ const initialMartyriaLexicons: Record<
     transliteratedNoteNames: arabicTransliteratedNoteNames,
     transliterateNoteNames: false,
     startingNotePrefix: 'من',
-    // Arabic fuses the definite label into the mode name, so the ordinal
-    // words are full phrases and there is no separate label.
+    label: 'اللحن',
     ordinalWords: [
-      'اللحن الأول',
-      'اللحن الثاني',
-      'اللحن الثالث',
-      'اللحن الرابع',
-      'اللحن الخامس',
-      'اللحن السادس',
-      'اللحن السابع',
-      'اللحن الثامن',
+      'الأول',
+      'الثاني',
+      'الثالث',
+      'الرابع',
+      'الخامس',
+      'السادس',
+      'السابع',
+      'الثامن',
     ],
     usesTerminalPeriod: false,
     modeSignGroupTrailing: true,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: {
-    // Cardinals follow glas. Ordinals use the al ... -lea construction and
-    // either position; the laturas vocabulary is modeled only for its sign.
+    // Cardinals follow glas. Ordinals 2-8 use the al ... -lea construction;
+    // first is the exceptional primul/intai, not *al unu-lea. DOOM3 attests
+    // al II-lea/al 2-lea and cardinal identifiers such as pagina unu. Church
+    // sources attest Glasul intai and Glasul al II-lea. The laturas vocabulary
+    // is modeled only for its sign.
+    // https://doom.lingv.ro/cautare/q/al%20doilea
+    // https://doom.lingv.ro/cautare/q/%27i/?orderBy=%27i
+    // https://arhiepiscopiabucurestilor.ro/stiri/evenimente-bisericesti/cantarile-sfintei-liturghii-glasurile-i-si-al-vii-lea
     grammar: [
       {
         modeIdentificationMethods: everyModeIdentificationMethod,
@@ -1116,12 +1135,19 @@ const initialMartyriaLexicons: Record<
       'șapte',
       'opt',
     ],
-    formatOrdinal: (base, _numeralStyle, numeralQualifier) =>
-      `${
+    formatOrdinal: (base, _numeralStyle, numeralQualifier) => {
+      if (base === '1' || base === 'I') {
+        return numeralQualifier ===
+          INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal
+          ? 'Primul'
+          : 'întâi';
+      }
+      return `${
         numeralQualifier === INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal
           ? 'Al'
           : 'al'
-      } ${base}-lea`,
+      } ${base}-lea`;
+    },
     plagalWord: 'lăturaș',
     plagalCounterpartMarkerPosition: 'beforeNumeral',
     usesTerminalPeriod: true,

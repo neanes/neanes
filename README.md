@@ -55,6 +55,7 @@ This project is licensed under the [GNU General Public License, version 3](./LIC
 The following bundled fonts are licensed under the [SIL Open Font License (OFL), version 1.1](https://scripts.sil.org/OFL):
 
 - [GFS Didot](https://www.greekfontsociety-gfs.gr/)
+- [GFS Porson](https://www.greekfontsociety-gfs.gr/)
 - [Noto Naskh Arabic](https://github.com/notofonts/arabic)
 - [Old Standard](https://sr.ht/~ralessi/oldstandard/)
 - [Source Serif](https://github.com/adobe-fonts/source-serif)

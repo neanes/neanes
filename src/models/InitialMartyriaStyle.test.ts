@@ -18,6 +18,7 @@ import {
   getInitialMartyriaStructureKey,
   getInitialMartyriaStructureVariations,
   getSupportedInitialMartyriaNumeralForms,
+  INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
@@ -36,6 +37,7 @@ import {
   isInitialMartyriaStructureSupported,
   normalizeInitialMartyriaStructure,
   type ResolvedInitialMartyriaRun,
+  resolveInitialMartyriaFontFamily,
   resolveInitialMartyriaStyle,
   resolveInitialMartyriaStyleAppearances,
   resolveInitialMartyriaStyleSelection,
@@ -81,10 +83,17 @@ function elementForTemplate(templateId: number) {
   );
 }
 
-function resolve(style: InitialMartyriaStyle, element: ModeKeyElement) {
+function resolve(
+  style: InitialMartyriaStyle,
+  element: ModeKeyElement,
+  neumeFontFamily = 'Neanes',
+) {
   return resolveInitialMartyriaStyle({
     context: getInitialMartyriaContext(element),
-    resolvedStyle: resolveInitialMartyriaStyleAppearances(style),
+    resolvedStyle: resolveInitialMartyriaStyleAppearances(
+      style,
+      neumeFontFamily,
+    ),
     pageSetup: new PageSetup(),
   });
 }
@@ -1816,6 +1825,7 @@ describe('InitialMartyriaStyle', () => {
       resolveInitialMartyriaStyleSelection({
         elementStyleId: undefined,
         pageStyleId: null,
+        neumeFontFamily: 'Neanes',
         styles,
       }).kind,
     ).toBe('standard');
@@ -1823,6 +1833,7 @@ describe('InitialMartyriaStyle', () => {
       resolveInitialMartyriaStyleSelection({
         elementStyleId: undefined,
         pageStyleId: builtInId,
+        neumeFontFamily: 'Neanes',
         styles,
       }),
     ).toMatchObject({ kind: 'custom', style: { id: builtInId } });
@@ -1830,6 +1841,7 @@ describe('InitialMartyriaStyle', () => {
       resolveInitialMartyriaStyleSelection({
         elementStyleId: null,
         pageStyleId: builtInId,
+        neumeFontFamily: 'Neanes',
         styles,
       }).kind,
     ).toBe('standard');
@@ -1837,6 +1849,7 @@ describe('InitialMartyriaStyle', () => {
       resolveInitialMartyriaStyleSelection({
         elementStyleId: custom.id,
         pageStyleId: builtInId,
+        neumeFontFamily: 'Neanes',
         styles,
       }),
     ).toMatchObject({ kind: 'custom', style: { id: custom.id } });
@@ -1844,6 +1857,7 @@ describe('InitialMartyriaStyle', () => {
       resolveInitialMartyriaStyleSelection({
         elementStyleId: 'missing',
         pageStyleId: builtInId,
+        neumeFontFamily: 'Neanes',
         styles,
       }).kind,
     ).toBe('standard');
@@ -1981,6 +1995,43 @@ describe('InitialMartyriaStyle', () => {
     }
   });
 
+  it('resolves the default Greek font from the document music font', () => {
+    expect(
+      resolveInitialMartyriaFontFamily(
+        INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
+        'Neanes',
+      ),
+    ).toBe('GFS Didot');
+    expect(
+      resolveInitialMartyriaFontFamily(
+        INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
+        'NeanesStathisSeries',
+      ),
+    ).toBe('GFS Porson');
+    expect(
+      resolveInitialMartyriaFontFamily(
+        INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
+        'NeanesStathisSeriesLegacy',
+      ),
+    ).toBe('GFS Porson');
+    expect(
+      resolveInitialMartyriaFontFamily('GFS Didot', 'NeanesStathisSeries'),
+    ).toBe('GFS Didot');
+
+    const style = styleFor(attestedStructures['traditional-greek']);
+    expect(style.appearance.mainFontFamily).toBe(
+      INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
+    );
+    expect(
+      resolveInitialMartyriaStyleAppearances(style, 'Neanes').mainAppearance
+        .fontFamily,
+    ).toBe('GFS Didot');
+    expect(
+      resolveInitialMartyriaStyleAppearances(style, 'NeanesStathisSeries')
+        .mainAppearance.fontFamily,
+    ).toBe('GFS Porson');
+  });
+
   it('applies the style appearance to text and musical glyphs', () => {
     const style = styleFor(attestedStructures['english-sign-first']);
     style.appearance = {
@@ -1995,7 +2046,7 @@ describe('InitialMartyriaStyle', () => {
       fontVariantAlternates: 'historical-forms',
     };
 
-    const resolved = resolveInitialMartyriaStyleAppearances(style);
+    const resolved = resolveInitialMartyriaStyleAppearances(style, 'Neanes');
     const runs = resolve(style, elementForTemplate(100)).runs;
 
     expect(resolved.mainAppearance).toMatchObject({
@@ -2054,7 +2105,7 @@ describe('InitialMartyriaStyle', () => {
     style.appearance.mainFontFamily = 'Source Serif';
     style.appearance.greekFontFamily = 'GFS Didot';
 
-    const resolved = resolveInitialMartyriaStyleAppearances(style);
+    const resolved = resolveInitialMartyriaStyleAppearances(style, 'Neanes');
     const runs = resolve(style, elementForTemplate(500)).runs;
 
     expect(resolved.mainAppearance.fontFamily).toBe('Source Serif');
@@ -2077,7 +2128,9 @@ describe('InitialMartyriaStyle', () => {
     clone.appearance.mainFontFamily = 'Source Serif';
     clone.structure.numeralStyle = INITIAL_MARTYRIA_NUMERAL_STYLES.Digits;
 
-    expect(source.appearance.mainFontFamily).toBe('GFS Didot');
+    expect(source.appearance.mainFontFamily).toBe(
+      INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
+    );
     expect(source.structure.numeralStyle).toBe(
       INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     );

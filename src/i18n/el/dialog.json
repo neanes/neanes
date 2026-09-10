@@ -121,6 +121,7 @@
     "transliterateNoteNames": "Μεταγραφή αρχικής νότας",
     "transliterateNoteNamesHint": "Pa αντί για Πα",
     "font": "Γραμματοσειρά",
+    "defaultFont": "Προεπιλογή ({{font}})",
     "fontSummary": "{{font}}, {{size}} pt",
     "yes": "Ναι",
     "no": "Όχι",

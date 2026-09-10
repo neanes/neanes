@@ -108,7 +108,7 @@
               <FontCombobox
                 id="initial-martyria-main-font"
                 :model-value="draft.appearance.mainFontFamily"
-                :options="fontOptions"
+                :options="mainFontOptions"
                 @update:model-value="setMainFontFamily"
               />
             </Field>
@@ -124,7 +124,7 @@
               <FontCombobox
                 id="initial-martyria-greek-font"
                 :model-value="draft.appearance.greekFontFamily"
-                :options="fontOptions"
+                :options="greekFontOptions"
                 @update:model-value="setAppearance('greekFontFamily', $event)"
               />
             </Field>
@@ -205,7 +205,7 @@
                   :numeric="draft.appearance.fontVariantNumeric"
                   :ligatures="draft.appearance.fontVariantLigatures"
                   :alternates="draft.appearance.fontVariantAlternates"
-                  :font-family="draft.appearance.mainFontFamily"
+                  :font-family="resolvedMainFontFamily"
                   :font-style="draft.appearance.fontStyle"
                   :caps-clearable="false"
                   :numeric-clearable="false"
@@ -381,6 +381,7 @@ import {
   getInitialMartyriaContext,
   getInitialMartyriaStructureVariations,
   getInitialMartyriaStyleDisplayName,
+  INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   initialMartyriaModeIdentificationMethods,
@@ -393,6 +394,7 @@ import {
   type InitialMartyriaStyle,
   type InitialMartyriaStyleAppearance,
   normalizeInitialMartyriaStructure,
+  resolveInitialMartyriaFontFamily,
   resolveInitialMartyriaStyle,
   resolveInitialMartyriaStyleAppearances,
   usesGreekScript,
@@ -469,8 +471,33 @@ const fontOptions = computed(() => [
   ...fontCatalog.bundledTextFamilies(),
   ...props.fonts,
 ]);
+const defaultFontOption = computed(() => ({
+  label: t(($) => $.dialog.initialMartyriaStyles.defaultFont, {
+    ns,
+    font: resolveInitialMartyriaFontFamily(
+      INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
+      props.pageSetup.neumeDefaultFontFamily,
+    ),
+  }),
+  value: INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
+}));
+const mainFontOptions = computed(() =>
+  languageUsesGreekScript.value
+    ? [defaultFontOption.value, ...fontOptions.value]
+    : fontOptions.value,
+);
+const greekFontOptions = computed(() => [
+  defaultFontOption.value,
+  ...fontOptions.value,
+]);
+const resolvedMainFontFamily = computed(() =>
+  resolveInitialMartyriaFontFamily(
+    draft.value.appearance.mainFontFamily,
+    props.pageSetup.neumeDefaultFontFamily,
+  ),
+);
 const { fontStyleOptions, remapStyleForFamily } = useFontStyleControls(
-  () => draft.value.appearance.mainFontFamily,
+  resolvedMainFontFamily,
   () => draft.value.appearance.fontStyle,
 );
 
@@ -602,11 +629,15 @@ function setAppearance<K extends keyof InitialMartyriaStyleAppearance>(
 }
 
 function setMainFontFamily(value: string) {
+  const fontFamily = resolveInitialMartyriaFontFamily(
+    value,
+    props.pageSetup.neumeDefaultFontFamily,
+  );
   update({
     appearance: {
       ...draft.value.appearance,
       mainFontFamily: value,
-      fontStyle: remapStyleForFamily(value),
+      fontStyle: remapStyleForFamily(fontFamily),
     },
   });
 }
@@ -636,7 +667,10 @@ function pronunciationFor(templateId: number) {
   );
   return resolveInitialMartyriaStyle({
     context: getInitialMartyriaContext(element),
-    resolvedStyle: resolveInitialMartyriaStyleAppearances(draft.value),
+    resolvedStyle: resolveInitialMartyriaStyleAppearances(
+      draft.value,
+      props.pageSetup.neumeDefaultFontFamily,
+    ),
     pageSetup: props.pageSetup,
   }).pronunciation;
 }

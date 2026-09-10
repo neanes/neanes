@@ -95,7 +95,10 @@ const sample = computed(() => {
     };
   }
 
-  const resolvedStyle = resolveInitialMartyriaStyleAppearances(props.style);
+  const resolvedStyle = resolveInitialMartyriaStyleAppearances(
+    props.style,
+    props.pageSetup.neumeDefaultFontFamily,
+  );
   element.initialMartyriaStyleId = props.style.id;
   element.computedFontFamily = props.pageSetup.neumeDefaultFontFamily;
   element.computedFontSize = resolvedStyle.mainAppearance.fontSize!;

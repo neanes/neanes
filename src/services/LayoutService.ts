@@ -664,6 +664,7 @@ export class LayoutService {
             resolveInitialMartyriaStyleSelection({
               elementStyleId: modeKeyElement.initialMartyriaStyleId,
               pageStyleId: pageSetup.initialMartyriaStyleId,
+              neumeFontFamily: pageSetup.neumeDefaultFontFamily,
               styles: score.initialMartyriaStyles,
             });
           const usesStandardModeKey =

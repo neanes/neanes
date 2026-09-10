@@ -70,7 +70,7 @@ function numeralsFor(style: InitialMartyriaStyle) {
     );
     const resolution = resolveInitialMartyriaStyle({
       context: getInitialMartyriaContext(element),
-      resolvedStyle: resolveInitialMartyriaStyleAppearances(style),
+      resolvedStyle: resolveInitialMartyriaStyleAppearances(style, 'Neanes'),
       pageSetup: new PageSetup(),
     });
     const run = resolution.runs.find(
@@ -93,7 +93,7 @@ function pronunciationsFor(style: InitialMartyriaStyle) {
     );
     return resolveInitialMartyriaStyle({
       context: getInitialMartyriaContext(element),
-      resolvedStyle: resolveInitialMartyriaStyleAppearances(style),
+      resolvedStyle: resolveInitialMartyriaStyleAppearances(style, 'Neanes'),
       pageSetup: new PageSetup(),
     }).pronunciation;
   });

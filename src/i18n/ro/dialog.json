@@ -121,6 +121,7 @@
     "transliterateNoteNames": "Transliterează nota de început",
     "transliterateNoteNamesHint": "Pa în loc de Πα",
     "font": "Font",
+    "defaultFont": "Implicit ({{font}})",
     "fontSummary": "{{font}}, {{size}} pt",
     "yes": "Da",
     "no": "Nu",

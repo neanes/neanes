@@ -190,6 +190,7 @@ const usesStandardModeKey = computed(
     resolveInitialMartyriaStyleSelection({
       elementStyleId: props.element.initialMartyriaStyleId,
       pageStyleId: props.pageSetup.initialMartyriaStyleId,
+      neumeFontFamily: props.pageSetup.neumeDefaultFontFamily,
       styles: props.initialMartyriaStyles,
     }).kind === 'standard',
 );

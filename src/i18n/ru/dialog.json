@@ -121,6 +121,7 @@
     "transliterateNoteNames": "Транслитерировать начальную ноту",
     "transliterateNoteNamesHint": "Па вместо Πα",
     "font": "Шрифт",
+    "defaultFont": "По умолчанию ({{font}})",
     "fontSummary": "{{font}}, {{size}} пт",
     "yes": "Да",
     "no": "Нет",

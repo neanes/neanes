@@ -60,6 +60,7 @@ const FONT_FEATURE_VALUES_STYLE_ID = 'neanes-font-feature-values';
 const BUNDLED_FAMILIES = [
   'Source Serif',
   'GFS Didot',
+  'GFS Porson',
   'Noto Naskh Arabic',
   'Old Standard',
   'Neanes',
@@ -70,8 +71,9 @@ const BUNDLED_FAMILIES = [
   'NeanesRTLLegacy',
 ];
 
-// The standard four-face set shared by our bundled text families, matching the
-// font-weight/font-style descriptors of their @font-face rules.
+// The standard four-face set used by bundled text families that ship all four
+// faces, matching the font-weight/font-style descriptors of their @font-face
+// rules.
 const TEXT_FACES: BundledFace[] = [
   { style: DEFAULT_FONT_STYLE },
   { style: 'Bold', cssFontWeight: 'bold' },
@@ -147,6 +149,12 @@ const BUNDLED_FACES: Record<string, BundledFace[]> = {
   'GFS Didot': withFileNames(TEXT_FACES, (style) =>
     style === DEFAULT_FONT_STYLE ? 'GFSDidot.otf' : `GFSDidot${style}.otf`,
   ),
+  'GFS Porson': [
+    {
+      style: DEFAULT_FONT_STYLE,
+      fileName: 'GFSPorson.otf',
+    },
+  ],
   'Old Standard': withFileNames(
     TEXT_FACES,
     (style) => `OldStandard-${style}.otf`,

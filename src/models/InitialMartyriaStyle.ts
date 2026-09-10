@@ -93,6 +93,29 @@ export const INITIAL_MARTYRIA_LANGUAGE_IDS = {
   Indonesian: 'id',
 } as const;
 
+/** Follow the Greek text font paired with the document's music font. */
+export const INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY = 'default';
+
+const INITIAL_MARTYRIA_EZ_PSALTICA_FONT_FAMILY = 'GFS Didot';
+const INITIAL_MARTYRIA_STATHIS_FONT_FAMILY = 'GFS Porson';
+const STATHIS_NEUME_FONT_FAMILIES = new Set([
+  'NeanesStathisSeries',
+  'NeanesStathisSeriesLegacy',
+]);
+
+export function resolveInitialMartyriaFontFamily(
+  fontFamily: string,
+  neumeFontFamily: string,
+) {
+  if (fontFamily !== INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY) {
+    return fontFamily;
+  }
+
+  return STATHIS_NEUME_FONT_FAMILIES.has(neumeFontFamily)
+    ? INITIAL_MARTYRIA_STATHIS_FONT_FAMILY
+    : INITIAL_MARTYRIA_EZ_PSALTICA_FONT_FAMILY;
+}
+
 export type InitialMartyriaLanguageId =
   (typeof INITIAL_MARTYRIA_LANGUAGE_IDS)[keyof typeof INITIAL_MARTYRIA_LANGUAGE_IDS];
 
@@ -1824,7 +1847,9 @@ const initialMartyriaDefaultFonts: Record<
   InitialMartyriaLanguageId,
   { main: string; greek?: string }
 > = {
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Greek]: { main: 'GFS Didot' },
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Greek]: {
+    main: INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
+  },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: { main: 'Source Serif' },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: { main: 'Source Serif' },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: { main: 'Old Standard' },
@@ -2695,13 +2720,15 @@ export function getInitialMartyriaContext(
 function resolveAppearance(
   style: InitialMartyriaStyle,
   fontRole: 'main' | 'greek',
+  neumeFontFamily: string,
 ): InitialMartyriaAppearance {
   const appearance = style.appearance;
+  const fontFamily =
+    fontRole === 'main' || usesGreekScript(style.structure.languageId)
+      ? appearance.mainFontFamily
+      : appearance.greekFontFamily;
   const resolved: InitialMartyriaAppearance = {
-    fontFamily:
-      fontRole === 'main' || usesGreekScript(style.structure.languageId)
-        ? appearance.mainFontFamily
-        : appearance.greekFontFamily,
+    fontFamily: resolveInitialMartyriaFontFamily(fontFamily, neumeFontFamily),
     fontStyle: appearance.fontStyle,
     fontSize: appearance.fontSize,
     color: appearance.color,
@@ -2716,11 +2743,12 @@ function resolveAppearance(
 
 export function resolveInitialMartyriaStyleAppearances(
   style: InitialMartyriaStyle,
+  neumeFontFamily: string,
 ): ResolvedInitialMartyriaStyle {
   return {
     style,
-    mainAppearance: resolveAppearance(style, 'main'),
-    greekAppearance: resolveAppearance(style, 'greek'),
+    mainAppearance: resolveAppearance(style, 'main', neumeFontFamily),
+    greekAppearance: resolveAppearance(style, 'greek', neumeFontFamily),
   };
 }
 
@@ -2742,6 +2770,7 @@ function withOrdinalForms(
 export function resolveInitialMartyriaStyleSelection(options: {
   elementStyleId: string | null | undefined;
   pageStyleId: string | null;
+  neumeFontFamily: string;
   styles: InitialMartyriaStyle[];
 }): InitialMartyriaStyleSelection {
   const styleId =
@@ -2752,7 +2781,13 @@ export function resolveInitialMartyriaStyleSelection(options: {
     styleId == null ? null : findInitialMartyriaStyle(options.styles, styleId);
   return style == null
     ? { kind: 'standard' }
-    : { kind: 'custom', ...resolveInitialMartyriaStyleAppearances(style) };
+    : {
+        kind: 'custom',
+        ...resolveInitialMartyriaStyleAppearances(
+          style,
+          options.neumeFontFamily,
+        ),
+      };
 }
 
 export function resolveInitialMartyriaStyle(options: {

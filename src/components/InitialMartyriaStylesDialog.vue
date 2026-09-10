@@ -510,11 +510,13 @@ import {
   getInitialMartyriaContext,
   getInitialMartyriaStyleDisplayName,
   getInitialMartyriaStyles,
+  INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaStyle,
   isBuiltInInitialMartyriaStyleId,
+  resolveInitialMartyriaFontFamily,
   resolveInitialMartyriaStyle,
   resolveInitialMartyriaStyleAppearances,
   usesGreekScript,
@@ -759,7 +761,17 @@ const summary = computed(() => {
       label: t(($) => $.dialog.initialMartyriaStyles.font, { ns }),
       value: t(($) => $.dialog.initialMartyriaStyles.fontSummary, {
         ns,
-        font: style.appearance.mainFontFamily,
+        font:
+          style.appearance.mainFontFamily ===
+          INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY
+            ? t(($) => $.dialog.initialMartyriaStyles.defaultFont, {
+                ns,
+                font: resolveInitialMartyriaFontFamily(
+                  style.appearance.mainFontFamily,
+                  props.pageSetup.neumeDefaultFontFamily,
+                ),
+              })
+            : style.appearance.mainFontFamily,
         size: Unit.toPt(style.appearance.fontSize),
       }),
     },
@@ -1000,7 +1012,10 @@ function pronunciationFor(style: InitialMartyriaStyle, templateId: number) {
   );
   return resolveInitialMartyriaStyle({
     context: getInitialMartyriaContext(element),
-    resolvedStyle: resolveInitialMartyriaStyleAppearances(style),
+    resolvedStyle: resolveInitialMartyriaStyleAppearances(
+      style,
+      props.pageSetup.neumeDefaultFontFamily,
+    ),
     pageSetup: props.pageSetup,
   }).pronunciation;
 }

@@ -72,7 +72,10 @@ const pronunciation = computed(() => {
   );
   return resolveInitialMartyriaStyle({
     context: getInitialMartyriaContext(element),
-    resolvedStyle: resolveInitialMartyriaStyleAppearances(props.style),
+    resolvedStyle: resolveInitialMartyriaStyleAppearances(
+      props.style,
+      props.pageSetup.neumeDefaultFontFamily,
+    ),
     pageSetup: props.pageSetup,
   }).pronunciation;
 });

@@ -121,6 +121,7 @@
     "transliterateNoteNames": "Transliterate starting note",
     "transliterateNoteNamesHint": "Pa instead of Πα",
     "font": "Font",
+    "defaultFont": "Default ({{font}})",
     "fontSummary": "{{font}}, {{size}} pt",
     "yes": "Yes",
     "no": "No",

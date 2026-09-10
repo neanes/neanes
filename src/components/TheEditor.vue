@@ -10021,6 +10021,7 @@ function usesStandardModeKey(element: ModeKeyElement) {
     resolveInitialMartyriaStyleSelection({
       elementStyleId: element.initialMartyriaStyleId,
       pageStyleId: score.value.pageSetup.initialMartyriaStyleId,
+      neumeFontFamily: score.value.pageSetup.neumeDefaultFontFamily,
       styles: score.value.initialMartyriaStyles,
     }).kind === 'standard'
   );

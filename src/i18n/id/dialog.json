@@ -121,6 +121,7 @@
     "transliterateNoteNames": "Transliterasi nada awal",
     "transliterateNoteNamesHint": "Pa alih-alih Πα",
     "font": "Fon",
+    "defaultFont": "Bawaan ({{font}})",
     "fontSummary": "{{font}}, {{size}} pt",
     "yes": "Ya",
     "no": "Tidak",

@@ -23,6 +23,7 @@ describe('FontCatalog bundled fonts', () => {
     expect(fontCatalog.bundledFamilies()).toEqual([
       'Source Serif',
       'GFS Didot',
+      'GFS Porson',
       'Noto Naskh Arabic',
       'Old Standard',
       'Neanes',
@@ -38,6 +39,7 @@ describe('FontCatalog bundled fonts', () => {
     expect(fontCatalog.bundledTextFamilies()).toEqual([
       'Source Serif',
       'GFS Didot',
+      'GFS Porson',
       'Noto Naskh Arabic',
       'Old Standard',
     ]);
@@ -53,6 +55,7 @@ describe('FontCatalog bundled fonts', () => {
   it('excludes bundled families from system family results', async () => {
     const bundledFaces = await Promise.all([
       loadBundledFontFace('GFSDidot.otf'),
+      loadBundledFontFace('GFSPorson.otf'),
       loadBundledFontFace('Neanes.otf'),
       loadBundledFontFace('OldStandard-Regular.otf'),
     ]);
@@ -106,6 +109,7 @@ describe('FontCatalog bundled fonts', () => {
       'Bold',
       'Bold Italic',
     ]);
+    expect(fontCatalog.getStyles('GFS Porson')).toEqual(['Regular']);
     expect(fontCatalog.getStyles('Noto Naskh Arabic')).toEqual([
       'Regular',
       'Bold',
@@ -152,6 +156,10 @@ describe('FontCatalog bundled fonts', () => {
     expect(fontCatalog.resolveExportFace('GFS Didot', 'Semibold')).toEqual({
       style: 'Semibold',
     });
+    expect(fontCatalog.resolveExportFace('GFS Porson', 'Regular')).toEqual({
+      style: 'Regular',
+      postscriptName: 'GFSPorson-Regular',
+    });
   });
 });
 
@@ -175,6 +183,7 @@ describe('FontCatalog font feature values', () => {
 
     expect(css).toContain('@font-feature-values');
     expect(css).toContain('"Old Standard"');
+    expect(css).toContain('"GFS Porson"');
     expect(css).toContain('"Source Serif Caption"');
     expect(css).toContain(`"${exactFace.cssFamily}"`);
     expect(css).not.toContain(`"${regularSystemFace.cssFamily}"`);

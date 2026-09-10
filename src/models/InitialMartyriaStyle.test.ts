@@ -29,6 +29,7 @@ import {
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
+import { ScaleNote } from '@/models/Scales';
 
 const englishLanguageNames: Record<InitialMartyriaStyle['languageId'], string> =
   {
@@ -873,6 +874,82 @@ const romanianAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciati
     'Glasul Lăturaș al patrulea',
   ];
 
+const expectedStartingNotePhrasesByLanguage: Record<
+  InitialMartyriaStyle['languageId'],
+  ExpectedModePronunciations
+> = {
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Greek]: [
+    'εκ του Πα',
+    'εκ του Δι',
+    'εκ του Γα',
+    'εκ του Δι',
+    'εκ του Πα',
+    'εκ του Πα',
+    'εκ του Γα',
+    'εκ του Νη',
+  ],
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: [
+    'from Pa',
+    'from Di',
+    'from Ga',
+    'from Di',
+    'from Pa',
+    'from Pa',
+    'from Ga',
+    'from Ni',
+  ],
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: [
+    'desde Pa',
+    'desde Di',
+    'desde Ga',
+    'desde Di',
+    'desde Pa',
+    'desde Pa',
+    'desde Ga',
+    'desde Ni',
+  ],
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: [
+    'ѿ Па',
+    'ѿ Ди',
+    'ѿ Га',
+    'ѿ Ди',
+    'ѿ Па',
+    'ѿ Па',
+    'ѿ Га',
+    'ѿ Ни',
+  ],
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: [
+    'от Па',
+    'от Ди',
+    'от Га',
+    'от Ди',
+    'от Па',
+    'от Па',
+    'от Га',
+    'от Ни',
+  ],
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: [
+    'من با',
+    'من دي',
+    'من غا',
+    'من دي',
+    'من با',
+    'من با',
+    'من غا',
+    'من ني',
+  ],
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: [
+    'de la Pa',
+    'de la Di',
+    'de la Ga',
+    'de la Di',
+    'de la Pa',
+    'de la Pa',
+    'de la Ga',
+    'de la Ni',
+  ],
+};
+
 const expectedPronunciationsByStyle: [
   BuiltInInitialMartyriaStyleId,
   ExpectedModePronunciations,
@@ -1071,11 +1148,86 @@ describe('InitialMartyriaStyle', () => {
           }
         }
 
+        const expectedStartingNote =
+          expectedStartingNotePhrasesByLanguage[resolved.style.languageId][
+            mode - 1
+          ];
         expect(`${styleId} mode ${mode}: ${resolution.pronunciation}`).toBe(
-          `${styleId} mode ${mode}: ${expectedByMode[mode - 1]}`,
+          `${styleId} mode ${mode}: ${expectedByMode[mode - 1]} ${expectedStartingNote}`,
         );
       }
     }
+  });
+
+  it('pronounces the physical starting note in every language', () => {
+    const element = ModeKeyElement.createFromTemplate(
+      modeKeyTemplates.find((template) => template.id === 506)!,
+    );
+    const context = getInitialMartyriaContext(element);
+    const expectedByStyle: [BuiltInInitialMartyriaStyleId, string][] = [
+      [
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekModeNamesV1,
+        'Ήχος Πλάγιος του Πρώτου εκ του Κε',
+      ],
+      [
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesV1,
+        'Plagal of First Mode from Ke',
+      ],
+      [
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoOrdinalV1,
+        'Tono quinto desde Ke',
+      ],
+      [
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasOrdinalV1,
+        'Гла́съ пѧ́тый ѿ Ке',
+      ],
+      [
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasOrdinalV1,
+        'Глас пятый от Ке',
+      ],
+      [
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalV1,
+        'اللحن الخامس من كي',
+      ],
+      [
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1,
+        'Glasul Lăturaș întâi de la Ke',
+      ],
+    ];
+
+    expect(context).toMatchObject({
+      physicalNote: ScaleNote.Ke,
+      pitchCluster: { primary: { note: ModeSign.Pa } },
+    });
+
+    for (const [styleId, expected] of expectedByStyle) {
+      const configuration = createInitialMartyriaConfiguration(styleId);
+      const resolution = resolveInitialMartyriaStyle({
+        context,
+        resolvedConfiguration:
+          resolveInitialMartyriaConfiguration(configuration)!,
+        pageSetup: new PageSetup(),
+      });
+
+      expect(resolution.pronunciation).toBe(expected);
+    }
+  });
+
+  it('preserves the physical starting note octave in the pronunciation', () => {
+    const configuration = createInitialMartyriaConfiguration(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesV1,
+    );
+    const element = ModeKeyElement.createFromTemplate(
+      modeKeyTemplates.find((template) => template.id === 803)!,
+    );
+    const resolution = resolveInitialMartyriaStyle({
+      context: getInitialMartyriaContext(element),
+      resolvedConfiguration:
+        resolveInitialMartyriaConfiguration(configuration)!,
+      pageSetup: new PageSetup(),
+    });
+
+    expect(resolution.pronunciation).toBe("Plagal of Fourth Mode from Ni'");
   });
 
   it('sizes fixed separators from the main text font size', () => {

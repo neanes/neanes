@@ -4,6 +4,7 @@ import type { ModeKeyElement } from '@/models/Element';
 import type { Fthora, Neume } from '@/models/Neumes';
 import { ModeSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
+import { getScaleNoteValue, ScaleNote } from '@/models/Scales';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { Unit } from '@/utils/Unit';
 
@@ -426,6 +427,7 @@ export interface InitialMartyriaPitchCluster {
 
 export interface InitialMartyriaContext {
   mode: ModeKeyMode;
+  physicalNote: ScaleNote;
   traditionalModeSign: Neume;
   pitchCluster: InitialMartyriaPitchCluster;
 }
@@ -498,6 +500,17 @@ const initialMartyriaCanonicalNotes: InitialMartyriaCanonicalNote[] = [
   ModeSign.Ke,
   ModeSign.Zo,
 ];
+
+const initialMartyriaCanonicalNotesByScaleDegree: InitialMartyriaCanonicalNote[] =
+  [
+    ModeSign.Pa,
+    ModeSign.Vou,
+    ModeSign.Ga,
+    ModeSign.Thi,
+    ModeSign.Ke,
+    ModeSign.Zo,
+    ModeSign.Ni,
+  ];
 
 /*
  * These note names are score content, deliberately kept independent of the
@@ -620,6 +633,8 @@ interface InitialMartyriaLexicon {
   transliteratedNoteNames: InitialMartyriaNoteNames;
   /** Whether curated styles in this language transliterate note names. */
   transliterateNoteNames: boolean;
+  /** Words introducing the physical starting note in a spoken mode name. */
+  startingNotePrefix: string;
   /** Spoken forms that differ from the text printed in the score. */
   pronunciationOverrides?: InitialMartyriaPronunciationOverrides;
   /** The word naming the concept of a mode (Mode, Tono, Glas). */
@@ -700,6 +715,7 @@ const initialMartyriaLexicons: Record<
     usesGreekScript: true,
     transliteratedNoteNames: transliteratedGreekNoteNames,
     transliterateNoteNames: false,
+    startingNotePrefix: 'εκ του',
     pronunciationOverrides: {
       label: 'Ήχος',
       ordinalWords: [
@@ -746,6 +762,7 @@ const initialMartyriaLexicons: Record<
     usesGreekScript: false,
     transliteratedNoteNames: transliteratedGreekNoteNames,
     transliterateNoteNames: false,
+    startingNotePrefix: 'from',
     label: 'Mode',
     ordinalWords: [
       'First',
@@ -780,6 +797,7 @@ const initialMartyriaLexicons: Record<
     usesGreekScript: false,
     transliteratedNoteNames: spanishTransliteratedNoteNames,
     transliterateNoteNames: false,
+    startingNotePrefix: 'desde',
     label: 'Tono',
     labelMedial: 'tono',
     ordinalWords: [
@@ -822,6 +840,7 @@ const initialMartyriaLexicons: Record<
     usesGreekScript: false,
     transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
     transliterateNoteNames: true,
+    startingNotePrefix: 'ѿ',
     label: 'Гла́съ',
     ordinalWords: [
       'пе́рвый',
@@ -853,6 +872,7 @@ const initialMartyriaLexicons: Record<
     usesGreekScript: false,
     transliteratedNoteNames: russianTransliteratedNoteNames,
     transliterateNoteNames: true,
+    startingNotePrefix: 'от',
     label: 'Глас',
     ordinalWords: [
       'первый',
@@ -883,6 +903,7 @@ const initialMartyriaLexicons: Record<
     usesGreekScript: false,
     transliteratedNoteNames: arabicTransliteratedNoteNames,
     transliterateNoteNames: false,
+    startingNotePrefix: 'من',
     // Arabic fuses the definite label into the mode name, so the ordinal
     // words are full phrases and there is no separate label.
     ordinalWords: [
@@ -904,6 +925,7 @@ const initialMartyriaLexicons: Record<
     usesGreekScript: false,
     transliteratedNoteNames: transliteratedGreekNoteNames,
     transliterateNoteNames: false,
+    startingNotePrefix: 'de la',
     label: 'Glas',
     labelWithOrdinal: 'Glasul',
     ordinalWords: [
@@ -1172,6 +1194,29 @@ function getInitialMartyriaStylePronunciation(
   return orderInitialMartyriaModeName(style, lexicon, identifier, marker, label)
     .filter((component): component is string => component != null)
     .join(' ');
+}
+
+function getInitialMartyriaStartingNotePronunciation(
+  lexicon: InitialMartyriaLexicon,
+  physicalNote: ScaleNote,
+) {
+  const noteNames = lexicon.usesGreekScript
+    ? originalGreekNoteNames
+    : lexicon.transliteratedNoteNames;
+  const physicalNoteValue = getScaleNoteValue(physicalNote);
+  const canonicalNote =
+    initialMartyriaCanonicalNotesByScaleDegree[
+      ((physicalNoteValue % 7) + 7) % 7
+    ];
+  let noteName = noteNames.names[canonicalNote];
+
+  if (physicalNoteValue <= getScaleNoteValue(ScaleNote.KeLow)) {
+    noteName = noteName.toLocaleLowerCase(noteNames.languageTag);
+  } else if (physicalNoteValue >= getScaleNoteValue(ScaleNote.ZoHigh)) {
+    noteName += "'";
+  }
+
+  return `${lexicon.startingNotePrefix} ${noteName}`;
 }
 
 /**
@@ -1989,6 +2034,7 @@ export function getInitialMartyriaContext(
   }
   return {
     mode: element.mode,
+    physicalNote: element.scaleNote,
     traditionalModeSign: element.martyria,
     pitchCluster: {
       primary: isInitialMartyriaCanonicalNote(element.note)
@@ -2221,6 +2267,10 @@ export function resolveInitialMartyriaStyle(options: {
     pronunciationLexicon,
     options.context.mode,
   );
+  const startingNotePronunciation = getInitialMartyriaStartingNotePronunciation(
+    lexicon,
+    options.context.physicalNote,
+  );
 
   const runs: ResolvedInitialMartyriaRun[] = [];
   for (const component of getInitialMartyriaComponents(
@@ -2281,7 +2331,7 @@ export function resolveInitialMartyriaStyle(options: {
   return {
     style,
     flowDirection,
-    pronunciation,
+    pronunciation: `${pronunciation} ${startingNotePronunciation}`,
     runs,
   };
 }

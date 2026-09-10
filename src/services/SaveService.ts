@@ -891,7 +891,6 @@ function saveInitialMartyriaConfiguration(
 ): InitialMartyriaConfiguration_v1 {
   return {
     styleId: configuration.styleId,
-    transliterateNoteNames: configuration.transliterateNoteNames || undefined,
     appearanceOverrides: {
       ...configuration.appearanceOverrides,
     },
@@ -906,7 +905,6 @@ function loadInitialMartyriaConfiguration(
   }
   return {
     styleId: configuration.styleId,
-    transliterateNoteNames: configuration.transliterateNoteNames === true,
     appearanceOverrides: {
       ...configuration.appearanceOverrides,
     },

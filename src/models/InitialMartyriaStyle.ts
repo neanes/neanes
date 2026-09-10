@@ -334,7 +334,6 @@ export type InitialMartyriaAppearanceOverrides =
 
 export interface InitialMartyriaConfiguration {
   styleId: BuiltInInitialMartyriaStyleId;
-  transliterateNoteNames: boolean;
   appearanceOverrides: InitialMartyriaAppearanceOverrides;
 }
 
@@ -355,6 +354,7 @@ interface InitialMartyriaModeNameSemantics extends InitialMartyriaNumeralIdentif
 interface InitialMartyriaStyleBase extends InitialMartyriaModeNameSemantics {
   id: BuiltInInitialMartyriaStyleId;
   languageId: InitialMartyriaLanguageId;
+  transliterateNoteNames: boolean;
   flowDirection: 'page' | 'ltr' | 'rtl';
   defaultAppearance: InitialMartyriaDefaultAppearance;
 }
@@ -616,10 +616,10 @@ interface InitialMartyriaLexicon {
    * separate font and note names are never transliterated.
    */
   usesGreekScript: boolean;
-  /** Note names rendered when a score transliterates them. */
+  /** Note names rendered when a style transliterates them. */
   transliteratedNoteNames: InitialMartyriaNoteNames;
-  /** Whether scores in this language transliterate note names by default. */
-  transliteratesNoteNamesByDefault: boolean;
+  /** Whether curated styles in this language transliterate note names. */
+  transliterateNoteNames: boolean;
   /** Spoken forms that differ from the text printed in the score. */
   pronunciationOverrides?: InitialMartyriaPronunciationOverrides;
   /** The word naming the concept of a mode (Mode, Tono, Glas). */
@@ -699,7 +699,7 @@ const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: true,
     transliteratedNoteNames: transliteratedGreekNoteNames,
-    transliteratesNoteNamesByDefault: false,
+    transliterateNoteNames: false,
     pronunciationOverrides: {
       label: 'Ήχος',
       ordinalWords: [
@@ -745,7 +745,7 @@ const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: transliteratedGreekNoteNames,
-    transliteratesNoteNamesByDefault: false,
+    transliterateNoteNames: false,
     label: 'Mode',
     ordinalWords: [
       'First',
@@ -779,7 +779,7 @@ const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: spanishTransliteratedNoteNames,
-    transliteratesNoteNamesByDefault: false,
+    transliterateNoteNames: false,
     label: 'Tono',
     labelMedial: 'tono',
     ordinalWords: [
@@ -821,7 +821,7 @@ const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
-    transliteratesNoteNamesByDefault: true,
+    transliterateNoteNames: true,
     label: 'Гла́съ',
     ordinalWords: [
       'пе́рвый',
@@ -852,7 +852,7 @@ const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: russianTransliteratedNoteNames,
-    transliteratesNoteNamesByDefault: true,
+    transliterateNoteNames: true,
     label: 'Глас',
     ordinalWords: [
       'первый',
@@ -882,7 +882,7 @@ const initialMartyriaLexicons: Record<
     direction: 'rtl',
     usesGreekScript: false,
     transliteratedNoteNames: arabicTransliteratedNoteNames,
-    transliteratesNoteNamesByDefault: false,
+    transliterateNoteNames: false,
     // Arabic fuses the definite label into the mode name, so the ordinal
     // words are full phrases and there is no separate label.
     ordinalWords: [
@@ -903,7 +903,7 @@ const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: transliteratedGreekNoteNames,
-    transliteratesNoteNamesByDefault: false,
+    transliterateNoteNames: false,
     label: 'Glas',
     labelWithOrdinal: 'Glasul',
     ordinalWords: [
@@ -1404,9 +1404,11 @@ function defaultAppearance(
 
 type BuiltInInitialMartyriaStyleBase = Omit<
   InitialMartyriaStyleBase,
-  'flowDirection'
+  'flowDirection' | 'transliterateNoteNames'
 > &
-  Partial<Pick<InitialMartyriaStyleBase, 'flowDirection'>>;
+  Partial<
+    Pick<InitialMartyriaStyleBase, 'flowDirection' | 'transliterateNoteNames'>
+  >;
 
 interface BuiltInInitialMartyriaModeSignIdentification {
   plagalIndicator?: InitialMartyriaPlagalIndicator;
@@ -1433,7 +1435,11 @@ const traditionalModeSignPronunciation: InitialMartyriaModeSignPronunciation = {
 };
 
 function builtIn(options: BuiltInInitialMartyriaStyle): InitialMartyriaStyle {
-  const base = { flowDirection: 'page' as const };
+  const base = {
+    flowDirection: 'page' as const,
+    transliterateNoteNames:
+      initialMartyriaLexicons[options.languageId].transliterateNoteNames,
+  };
   if (
     options.modeIdentificationMethod ===
     INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text
@@ -1956,20 +1962,10 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
 export function createInitialMartyriaConfiguration(
   styleId: BuiltInInitialMartyriaStyleId,
 ): InitialMartyriaConfiguration {
-  const style = getBuiltInInitialMartyriaStyle(styleId)!;
   return {
     styleId,
-    transliterateNoteNames: usesTransliteratedNoteNamesByDefault(
-      style.languageId,
-    ),
     appearanceOverrides: {},
   };
-}
-
-export function usesTransliteratedNoteNamesByDefault(
-  languageId: InitialMartyriaLanguageId,
-) {
-  return initialMartyriaLexicons[languageId].transliteratesNoteNamesByDefault;
 }
 
 export function usesGreekScript(languageId: InitialMartyriaLanguageId) {
@@ -1981,7 +1977,6 @@ export function cloneInitialMartyriaConfiguration(
 ): InitialMartyriaConfiguration {
   return {
     styleId: configuration.styleId,
-    transliterateNoteNames: configuration.transliterateNoteNames,
     appearanceOverrides: { ...configuration.appearanceOverrides },
   };
 }
@@ -2194,7 +2189,7 @@ export function resolveInitialMartyriaStyle(options: {
   resolvedConfiguration: ResolvedInitialMartyriaConfiguration;
   pageSetup: Pick<PageSetup, 'direction'>;
 }): InitialMartyriaStyleResolution {
-  const { style, configuration, mainAppearance, greekAppearance } =
+  const { style, mainAppearance, greekAppearance } =
     options.resolvedConfiguration;
   const lexicon = initialMartyriaLexicons[style.languageId];
   const pronunciationLexicon = {
@@ -2205,10 +2200,8 @@ export function resolveInitialMartyriaStyle(options: {
     style.flowDirection === 'page'
       ? options.pageSetup.direction
       : style.flowDirection;
-  // Greek-script languages never transliterate their note names; a stray
-  // flag from a hand-edited file must not change the rendered score.
   const transliterate =
-    configuration.transliterateNoteNames && !lexicon.usesGreekScript;
+    style.transliterateNoteNames && !lexicon.usesGreekScript;
   const noteNames = transliterate
     ? lexicon.transliteratedNoteNames
     : originalGreekNoteNames;

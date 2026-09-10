@@ -13,6 +13,5 @@ export interface InitialMartyriaAppearanceOverrides {
 
 export interface InitialMartyriaConfiguration {
   styleId: string;
-  transliterateNoteNames?: boolean;
   appearanceOverrides?: InitialMartyriaAppearanceOverrides;
 }

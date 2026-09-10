@@ -1356,7 +1356,6 @@ describe('SaveService font styles', () => {
     custom.initialMartyriaConfiguration = createInitialMartyriaConfiguration(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1,
     );
-    custom.initialMartyriaConfiguration.transliterateNoteNames = true;
     custom.inline = true;
     score.staff.elements = [inherited, standard, custom];
 
@@ -1370,9 +1369,6 @@ describe('SaveService font styles', () => {
       appearanceOverrides:
         score.pageSetup.initialMartyriaConfiguration.appearanceOverrides,
     });
-    expect(
-      saved.pageSetup.initialMartyriaConfiguration?.transliterateNoteNames,
-    ).toBeUndefined();
     expect(savedModeKeys[0].initialMartyriaConfiguration).toBeUndefined();
     expect(savedModeKeys[1].initialMartyriaConfiguration).toBeNull();
     expect(savedModeKeys[2].initialMartyriaConfiguration).toEqual(

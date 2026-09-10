@@ -1151,12 +1151,9 @@ describe('InitialMartyriaStyle', () => {
     });
   });
 
-  it('uses language-specific note-name transliterations', () => {
-    const resolveTransliteratedNoteText = (
-      styleId: BuiltInInitialMartyriaStyleId,
-    ) => {
+  it('uses the note names defined by each style', () => {
+    const resolveNoteText = (styleId: BuiltInInitialMartyriaStyleId) => {
       const configuration = createInitialMartyriaConfiguration(styleId);
-      configuration.transliterateNoteNames = true;
       const element = ModeKeyElement.createFromTemplate(
         modeKeyTemplates.find((template) => template.mode === 1)!,
       );
@@ -1173,24 +1170,33 @@ describe('InitialMartyriaStyle', () => {
     };
 
     expect(
-      resolveTransliteratedNoteText(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumberV1,
-      ),
+      resolveNoteText(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumberV1),
     ).toMatchObject({
-      languageTag: 'es',
+      languageTag: 'el',
       names: {
-        [ModeSign.Pa]: 'Pa',
-        [ModeSign.Vou]: 'Vu',
-        [ModeSign.Ga]: 'Ga',
+        [ModeSign.Pa]: 'Πα',
+        [ModeSign.Vou]: 'Βου',
+        [ModeSign.Ga]: 'Γα',
       },
     });
 
     expect(
-      resolveTransliteratedNoteText(
+      resolveNoteText(
         BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasNumberV1,
       ),
     ).toMatchObject({
       languageTag: 'cu',
+      names: {
+        [ModeSign.Pa]: 'Па',
+        [ModeSign.Vou]: 'Ву',
+        [ModeSign.Ga]: 'Га',
+      },
+    });
+
+    expect(
+      resolveNoteText(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasNumberV1),
+    ).toMatchObject({
+      languageTag: 'ru',
       names: {
         [ModeSign.Pa]: 'Па',
         [ModeSign.Vou]: 'Ву',
@@ -1210,20 +1216,18 @@ describe('InitialMartyriaStyle', () => {
       },
     });
     expect(
-      resolveTransliteratedNoteText(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalV1,
-      ),
+      resolveNoteText(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalV1),
     ).toMatchObject({
-      languageTag: 'ar',
-      direction: 'rtl',
+      languageTag: 'el',
+      direction: 'ltr',
       names: {
-        [ModeSign.Ni]: 'ني',
-        [ModeSign.Pa]: 'با',
-        [ModeSign.Vou]: 'فو',
-        [ModeSign.Ga]: 'غا',
-        [ModeSign.Thi]: 'دي',
-        [ModeSign.Ke]: 'كي',
-        [ModeSign.Zo]: 'زو',
+        [ModeSign.Ni]: 'Νη',
+        [ModeSign.Pa]: 'Πα',
+        [ModeSign.Vou]: 'Βου',
+        [ModeSign.Ga]: 'Γα',
+        [ModeSign.Thi]: 'Δι',
+        [ModeSign.Ke]: 'Κε',
+        [ModeSign.Zo]: 'Ζω',
       },
     });
   });
@@ -1272,7 +1276,6 @@ describe('InitialMartyriaStyle', () => {
     const configuration = createInitialMartyriaConfiguration(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesV1,
     );
-    configuration.transliterateNoteNames = true;
     const expectedText = new Map([
       [1, ['First', 'Mode.']],
       [2, ['Second', 'Mode.']],
@@ -1308,7 +1311,7 @@ describe('InitialMartyriaStyle', () => {
       expect(runs.some((run) => run.kind === 'glyph')).toBe(false);
       expect(startingPitch?.kind).toBe('startingPitch');
       if (startingPitch?.kind === 'startingPitch') {
-        expect(startingPitch.noteText.names[ModeSign.Pa]).toBe('Pa');
+        expect(startingPitch.noteText.names[ModeSign.Pa]).toBe('Πα');
       }
     }
   });
@@ -1385,23 +1388,7 @@ describe('InitialMartyriaStyle', () => {
       expect(originalPitch.noteText.appearance.fontFamily).toBe('GFS Didot');
     }
 
-    configuration.transliterateNoteNames = true;
-    const transliteratedRuns = resolveInitialMartyriaStyle({
-      context: getInitialMartyriaContext(element),
-      resolvedConfiguration:
-        resolveInitialMartyriaConfiguration(configuration)!,
-      pageSetup: new PageSetup(),
-    }).runs;
-    const transliteratedPitch = transliteratedRuns.find(
-      (run) => run.kind === 'startingPitch',
-    );
-    expect(transliteratedPitch?.kind).toBe('startingPitch');
-    if (transliteratedPitch?.kind === 'startingPitch') {
-      expect(transliteratedPitch.noteText.appearance.fontFamily).toBe(
-        'Source Serif',
-      );
-    }
-    const plagal = transliteratedRuns.find(
+    const plagal = originalRuns.find(
       (run) =>
         run.kind === 'text' &&
         run.content.layout === 'stacked' &&

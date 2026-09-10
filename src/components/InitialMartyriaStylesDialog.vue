@@ -176,23 +176,6 @@
             v-if="workingConfiguration != null && selectedStyle != null"
             class="sticky top-0 self-start space-y-4 rounded-md border bg-background p-4"
           >
-            <Field v-if="showTransliterationControl" orientation="horizontal">
-              <Checkbox
-                id="initial-martyria-transliterate"
-                :model-value="workingConfiguration.transliterateNoteNames"
-                @update:model-value="
-                  workingConfiguration.transliterateNoteNames = $event === true
-                "
-              />
-              <FieldLabel for="initial-martyria-transliterate">
-                {{
-                  $t(($) => $.dialog.initialMartyriaStyles.transliterate, {
-                    ns: 'dialog',
-                  })
-                }}
-              </FieldLabel>
-            </Field>
-
             <Field>
               <FieldLabel for="initial-martyria-main-font">
                 {{
@@ -392,7 +375,6 @@ import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import ModeKeyRenderer from '@/components/ModeKeyRenderer.vue';
 import FontVariantFields from '@/components/properties/FontVariantFields.vue';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogClose,
@@ -438,7 +420,6 @@ import {
   resolveInitialMartyriaConfiguration,
   resolveInitialMartyriaStyle,
   usesGreekScript,
-  usesTransliteratedNoteNamesByDefault,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { PageSetup } from '@/models/PageSetup';
@@ -716,11 +697,8 @@ const showGreekFontControl = computed(
   () =>
     selectedStyle.value != null &&
     !selectedStyleUsesGreekScript.value &&
-    (workingConfiguration.value?.transliterateNoteNames !== true ||
+    (!selectedStyle.value.transliterateNoteNames ||
       initialMartyriaStyleHasGreekText(selectedStyle.value)),
-);
-const showTransliterationControl = computed(
-  () => !selectedStyleUsesGreekScript.value,
 );
 const fontStyleValue = computed({
   get: () => effectiveAppearance.value.fontStyle ?? '',
@@ -1034,29 +1012,15 @@ function selectLanguage(value: unknown) {
     (style) => style.languageId === value,
   );
   if (firstStyle != null) {
-    selectStyle(firstStyle.id, true);
+    selectStyle(firstStyle.id);
   }
 }
 
-function selectStyle(
-  styleId: BuiltInInitialMartyriaStyleId,
-  applyLanguageDefaults = false,
-) {
-  const style = builtInInitialMartyriaStyles.find(
-    (item) => item.id === styleId,
-  );
-  const previousLanguageId = selectedStyle.value?.languageId;
+function selectStyle(styleId: BuiltInInitialMartyriaStyleId) {
   if (workingConfiguration.value == null) {
     workingConfiguration.value = createInitialMartyriaConfiguration(styleId);
   } else {
     workingConfiguration.value.styleId = styleId;
-  }
-  if (
-    style != null &&
-    (applyLanguageDefaults || style.languageId !== previousLanguageId)
-  ) {
-    workingConfiguration.value.transliterateNoteNames =
-      usesTransliteratedNoteNamesByDefault(style.languageId);
   }
 }
 

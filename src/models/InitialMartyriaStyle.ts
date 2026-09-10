@@ -1283,6 +1283,7 @@ const initialMartyriaLexicons: Record<
     // authentic/plagal modes. General music literature also uses modus, but
     // Modus is also the standard technical term in Indonesian music writing.
     // https://ojs.badanbahasa.kemdikbud.go.id/jurnal/index.php/jurnal_ranah/article/download/3563/1597
+    // https://github.com/unicode-org/cldr/blob/main/common/rbnf/id.xml
     // https://journal.unj.ac.id/unj/index.php/pm/article/download/18941/10508/52742
     // https://download.garuda.kemdikbud.go.id/article.php?article=1050321&title=MELIHAT+KEMUNGKINAN+MODUS+GEREJA+SEBAGAI+DASAR+BAGI+PENYUSUNAN+MUSIK+UNTUK+HYMN&val=15733
     grammar: [

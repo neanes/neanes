@@ -124,7 +124,10 @@ import {
 } from '@/components/ui/toolbar';
 import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
-import { resolveInitialMartyriaStyleSelection } from '@/models/InitialMartyriaStyle';
+import {
+  type InitialMartyriaStyle,
+  resolveInitialMartyriaStyleSelection,
+} from '@/models/InitialMartyriaStyle';
 import { TempoSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 
@@ -175,14 +178,19 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
 });
 
 const emit = defineEmits(['open-mode-key-dialog', 'update', 'update:tempo']);
 const usesStandardModeKey = computed(
   () =>
     resolveInitialMartyriaStyleSelection({
-      elementConfiguration: props.element.initialMartyriaConfiguration,
-      pageConfiguration: props.pageSetup.initialMartyriaConfiguration,
+      elementStyleId: props.element.initialMartyriaStyleId,
+      pageStyleId: props.pageSetup.initialMartyriaStyleId,
+      styles: props.initialMartyriaStyles,
     }).kind === 'standard',
 );
 

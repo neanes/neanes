@@ -1,5 +1,4 @@
 import { Unit } from '../utils/Unit';
-import type { InitialMartyriaConfiguration } from './InitialMartyriaStyle';
 
 export type PageSize =
   | 'A3'
@@ -142,8 +141,8 @@ export class PageSetup {
   public modeKeyDefaultStrokeWidth = 0;
   public modeKeyDefaultFontSize = Unit.fromPt(20);
   public modeKeyDefaultHeightAdjustment = 0;
-  public initialMartyriaConfiguration: InitialMartyriaConfiguration | null =
-    null;
+  /** The initial martyria style of the score; null is the Standard glyphs. */
+  public initialMartyriaStyleId: string | null = null;
 
   public accidentalDefaultColor = '#ED0000';
   public accidentalDefaultStrokeWidth = 0;

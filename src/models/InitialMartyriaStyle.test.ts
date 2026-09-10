@@ -6,102 +6,43 @@ import {
   BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   type BuiltInInitialMartyriaStyleId,
   builtInInitialMartyriaStyles,
-  cloneInitialMartyriaConfiguration,
-  createInitialMartyriaConfiguration,
+  cloneInitialMartyriaStyle,
+  createDefaultInitialMartyriaAppearance,
+  createInitialMartyriaStyle,
+  enumerateInitialMartyriaStructures,
+  findInitialMartyriaStyleWithStructure,
+  getBuiltInInitialMartyriaStyle,
   getBuiltInInitialMartyriaStyleNameSelector,
   getInitialMartyriaContext,
   getInitialMartyriaFixedSeparatorSize,
+  getInitialMartyriaStructureKey,
+  getInitialMartyriaStructureVariations,
+  getSupportedInitialMartyriaNumeralForms,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
-  type InitialMartyriaNumeralKind,
-  type InitialMartyriaNumeralStyle,
+  type InitialMartyriaLanguageId,
+  initialMartyriaLanguageIds,
+  initialMartyriaModeIdentificationMethods,
+  initialMartyriaNumeralForms,
   type InitialMartyriaStartingNoteRun,
+  type InitialMartyriaStructure,
+  initialMartyriaStructuresEqual,
   type InitialMartyriaStyle,
+  isInitialMartyriaStructureSupported,
+  normalizeInitialMartyriaStructure,
   type ResolvedInitialMartyriaRun,
-  resolveInitialMartyriaConfiguration,
   resolveInitialMartyriaStyle,
+  resolveInitialMartyriaStyleAppearances,
   resolveInitialMartyriaStyleSelection,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
-
-const englishLanguageNames: Record<InitialMartyriaStyle['languageId'], string> =
-  {
-    [INITIAL_MARTYRIA_LANGUAGE_IDS.Greek]: 'Greek',
-    [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: 'English',
-    [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: 'Spanish',
-    [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: 'Church Slavonic',
-    [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: 'Russian',
-    [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: 'Arabic',
-    [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: 'Romanian',
-  };
-
-const englishNumeralStyleNames: Record<InitialMartyriaNumeralStyle, string> = {
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.Digits]: 'Digits',
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals]: 'Roman Numerals',
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals]: 'Alphabetic Numerals',
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.Words]: 'Words',
-};
-
-const englishNumeralKindNames: Record<InitialMartyriaNumeralKind, string> = {
-  [INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal]: 'Cardinal',
-  [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal]: 'Ordinal',
-};
-
-const englishModeNamingSchemeNames: Record<
-  InitialMartyriaStyle['modeNamingScheme'],
-  string | null
-> = {
-  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute]: null,
-  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart]:
-    'Authentic-Counterpart Naming',
-  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass]: 'Plagal-Class Naming',
-};
-
-const englishModeIdentificationNames: Record<
-  InitialMartyriaStyle['modeIdentificationMethod'],
-  string
-> = {
-  [INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text]: 'Text Identification',
-  [INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign]:
-    'Mode-Sign Identification',
-  [INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign]:
-    'Text and Mode-Sign Identification',
-};
-
-function generateEnglishStyleName(style: InitialMartyriaStyle) {
-  const annotations: string[] = [];
-
-  const modeNamingScheme = englishModeNamingSchemeNames[style.modeNamingScheme];
-  if (modeNamingScheme != null) {
-    annotations.push(modeNamingScheme);
-  }
-  const modeIdentification =
-    englishModeIdentificationNames[style.modeIdentificationMethod];
-  annotations.push(modeIdentification);
-
-  const qualifier =
-    style.numeralQualifier === INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal
-      ? 'Prenominal '
-      : '';
-
-  if (
-    style.modeIdentificationMethod ===
-    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-  ) {
-    const pronunciation = `${qualifier}${englishNumeralKindNames[style.numeralKind]} ${englishNumeralStyleNames[style.numeralStyle]}`;
-    return `${englishLanguageNames[style.languageId]} - Traditional Sign Group (Read as ${pronunciation}, ${annotations.join(', ')})`;
-  }
-
-  const annotationList = ` (${annotations.join(', ')})`;
-  return `${englishLanguageNames[style.languageId]} - ${qualifier}${englishNumeralKindNames[style.numeralKind]} ${englishNumeralStyleNames[style.numeralStyle]}${annotationList}`;
-}
 
 function encodeRun(run: ResolvedInitialMartyriaRun) {
   if (run.kind === 'glyph') {
@@ -116,14 +57,488 @@ function encodeRun(run: ResolvedInitialMartyriaRun) {
     : prefix + run.content.lines.join('/');
 }
 
+/** An unsaved style with the language's default typography. */
+function styleFor(structure: InitialMartyriaStructure): InitialMartyriaStyle {
+  return {
+    id: 'test',
+    displayName: 'Test',
+    basedOn: null,
+    structure,
+    appearance: createDefaultInitialMartyriaAppearance(structure.languageId),
+  };
+}
+
+function elementForMode(mode: number) {
+  return ModeKeyElement.createFromTemplate(
+    modeKeyTemplates.find((template) => template.mode === mode)!,
+  );
+}
+
+function elementForTemplate(templateId: number) {
+  return ModeKeyElement.createFromTemplate(
+    modeKeyTemplates.find((template) => template.id === templateId)!,
+  );
+}
+
+function resolve(style: InitialMartyriaStyle, element: ModeKeyElement) {
+  return resolveInitialMartyriaStyle({
+    context: getInitialMartyriaContext(element),
+    resolvedStyle: resolveInitialMartyriaStyleAppearances(style),
+    pageSetup: new PageSetup(),
+  });
+}
+
+function textOf(runs: ResolvedInitialMartyriaRun[]) {
+  return runs.flatMap((run) => {
+    if (run.kind !== 'text') {
+      return [];
+    }
+    return run.content.layout === 'inline'
+      ? [run.content.text]
+      : run.content.lines;
+  });
+}
+
+const attestedStructures: Record<string, InitialMartyriaStructure> = {
+  'traditional-greek': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'greek-mode-names': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-plagal-first': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-mode-names': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-authentic-counterpart-ordinal-digits-text': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-authentic-counterpart-number-sign': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-authentic-counterpart-number-text': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-authentic-counterpart-roman-numeral-text': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-authentic-counterpart-number-word-text': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-sign-first': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-plagal-class-ordinal-words-text': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-plagal-class-ordinal-words': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-ordinal-plagal-text': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-ordinal-plagal': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-ordinal': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-mode-number': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-mode-roman-numeral': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-mode-number-word': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-full-name': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-authentic-counterpart-ordinal-digits': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-authentic-counterpart-number': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-authentic-counterpart-roman-numeral': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'english-authentic-counterpart-number-word': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'spanish-tono-number': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'spanish-tono-roman-numeral': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'spanish-tono-ordinal-number': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'spanish-tono-ordinal': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'spanish-ordinal-tono': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'church-slavonic-glas-number': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: true,
+    flowDirection: 'page',
+  },
+  'church-slavonic-glas-cyrillic-numeral': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: true,
+    flowDirection: 'page',
+  },
+  'church-slavonic-glas-cyrillic-numeral-text': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: true,
+    flowDirection: 'page',
+  },
+  'church-slavonic-glas-ordinal': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: true,
+    flowDirection: 'page',
+  },
+  'church-slavonic-glas-ordinal-text': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: true,
+    flowDirection: 'page',
+  },
+  'russian-glas-number': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: true,
+    flowDirection: 'page',
+  },
+  'russian-glas-ordinal': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: true,
+    flowDirection: 'page',
+  },
+  'russian-glas-ordinal-text': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: true,
+    flowDirection: 'page',
+  },
+  'arabic-ordinal': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'rtl',
+  },
+  'romanian-glas-number': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'romanian-glas-roman-numeral': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'romanian-glas': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+};
+
 /*
- * The attested look of every built-in style: the exact run sequence for
- * modes 1-8. Changing an entry here changes what published scores look
+ * The attested look of every structure a curated style has ever had: the
+ * exact run sequence for modes 1-8. Changing an entry here changes what published scores look
  * like, so treat edits as deliberate typographic decisions.
  */
-const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
+const expectedRunsByStructure: [string, string[]][] = [
   [
-    'builtin:traditional-greek-v1',
+    'traditional-greek',
     [
       'Ἦχος | <modeSign> | <pitch>',
       'Ἦχος | <modeSign> | <pitch>',
@@ -136,7 +551,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:greek-mode-names-v1',
+    'greek-mode-names',
     [
       'Ἦχος | αʹ. | <pitch>',
       'Ἦχος | βʹ. | <pitch>',
@@ -149,7 +564,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-plagal-first-v1',
+    'english-plagal-first',
     [
       '<modeSign> | Mode | <pitch>',
       '<modeSign> | Mode | <pitch>',
@@ -162,7 +577,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-mode-names-v1',
+    'english-mode-names',
     [
       'First | Mode. | <pitch>',
       'Second | Mode. | <pitch>',
@@ -175,7 +590,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-authentic-counterpart-ordinal-digits-text-v1',
+    'english-authentic-counterpart-ordinal-digits-text',
     [
       '1ˢᵗ | Mode. | <pitch>',
       '2ⁿᵈ | Mode. | <pitch>',
@@ -188,7 +603,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-authentic-counterpart-number-sign-v1',
+    'english-authentic-counterpart-number-sign',
     [
       'Mode | <modeSign> | <pitch>',
       'Mode | <modeSign> | <pitch>',
@@ -201,7 +616,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-authentic-counterpart-number-text-v1',
+    'english-authentic-counterpart-number-text',
     [
       'Mode | 1. | <pitch>',
       'Mode | 2. | <pitch>',
@@ -214,7 +629,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-authentic-counterpart-roman-numeral-text-v1',
+    'english-authentic-counterpart-roman-numeral-text',
     [
       'Mode | I. | <pitch>',
       'Mode | II. | <pitch>',
@@ -227,7 +642,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-authentic-counterpart-number-word-text-v1',
+    'english-authentic-counterpart-number-word-text',
     [
       'Mode | One. | <pitch>',
       'Mode | Two. | <pitch>',
@@ -240,7 +655,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-sign-first-v1',
+    'english-sign-first',
     [
       '<modeSign> | Mode | <pitch>',
       '<modeSign> | Mode | <pitch>',
@@ -253,7 +668,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-plagal-class-ordinal-words-text-v1',
+    'english-plagal-class-ordinal-words-text',
     [
       'First | Mode. | <pitch>',
       'Second | Mode. | <pitch>',
@@ -266,7 +681,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-plagal-class-ordinal-words-v1',
+    'english-plagal-class-ordinal-words',
     [
       'First | Mode. | <modeSign> | <pitch>',
       'Second | Mode. | <modeSign> | <pitch>',
@@ -279,7 +694,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-ordinal-plagal-text-v1',
+    'english-ordinal-plagal-text',
     [
       '1ˢᵗ | Mode. | <pitch>',
       '2ⁿᵈ | Mode. | <pitch>',
@@ -292,7 +707,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-ordinal-plagal-v1',
+    'english-ordinal-plagal',
     [
       '1ˢᵗ | Mode. | <modeSign> | <pitch>',
       '2ⁿᵈ | Mode. | <modeSign> | <pitch>',
@@ -305,7 +720,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-ordinal-v1',
+    'english-ordinal',
     [
       'First | Mode. | <modeSign> | <pitch>',
       'Second | Mode. | <modeSign> | <pitch>',
@@ -318,7 +733,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-mode-number-v1',
+    'english-mode-number',
     [
       'Mode | 1. | <modeSign> | <pitch>',
       'Mode | 2. | <modeSign> | <pitch>',
@@ -331,7 +746,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-mode-roman-numeral-v1',
+    'english-mode-roman-numeral',
     [
       'Mode | I. | <modeSign> | <pitch>',
       'Mode | II. | <modeSign> | <pitch>',
@@ -344,7 +759,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-mode-number-word-v1',
+    'english-mode-number-word',
     [
       'Mode | One. | <modeSign> | <pitch>',
       'Mode | Two. | <modeSign> | <pitch>',
@@ -357,7 +772,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-full-name-v1',
+    'english-full-name',
     [
       'First | Mode. | <modeSign> | <pitch>',
       'Second | Mode. | <modeSign> | <pitch>',
@@ -370,7 +785,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-authentic-counterpart-ordinal-digits-v1',
+    'english-authentic-counterpart-ordinal-digits',
     [
       '1ˢᵗ | Mode. | <modeSign> | <pitch>',
       '2ⁿᵈ | Mode. | <modeSign> | <pitch>',
@@ -383,7 +798,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-authentic-counterpart-number-v1',
+    'english-authentic-counterpart-number',
     [
       'Mode | 1. | <modeSign> | <pitch>',
       'Mode | 2. | <modeSign> | <pitch>',
@@ -396,7 +811,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-authentic-counterpart-roman-numeral-v1',
+    'english-authentic-counterpart-roman-numeral',
     [
       'Mode | I. | <modeSign> | <pitch>',
       'Mode | II. | <modeSign> | <pitch>',
@@ -409,7 +824,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:english-authentic-counterpart-number-word-v1',
+    'english-authentic-counterpart-number-word',
     [
       'Mode | One. | <modeSign> | <pitch>',
       'Mode | Two. | <modeSign> | <pitch>',
@@ -422,7 +837,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:spanish-tono-number-v1',
+    'spanish-tono-number',
     [
       'Tono | 1. | <modeSign> | <pitch>',
       'Tono | 2. | <modeSign> | <pitch>',
@@ -435,7 +850,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:spanish-tono-roman-numeral-v1',
+    'spanish-tono-roman-numeral',
     [
       'Tono | I. | <modeSign> | <pitch>',
       'Tono | II. | <modeSign> | <pitch>',
@@ -448,20 +863,20 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:spanish-tono-ordinal-number-v1',
+    'spanish-tono-ordinal-number',
     [
-      'Tono | 1º. | <modeSign> | <pitch>',
-      'Tono | 2º. | <modeSign> | <pitch>',
-      'Tono | 3º. | <modeSign> | <pitch>',
-      'Tono | 4º. | <modeSign> | <pitch>',
-      'Tono | 5º. | greek:λ/π | <modeSign> | <pitch>',
-      'Tono | 6º. | greek:λ/π | <modeSign> | <pitch>',
-      'Tono | 7º. | <modeSign> | <pitch>',
-      'Tono | 8º. | greek:λ/π | <modeSign> | <pitch>',
+      'Tono | 1.º. | <modeSign> | <pitch>',
+      'Tono | 2.º. | <modeSign> | <pitch>',
+      'Tono | 3.º. | <modeSign> | <pitch>',
+      'Tono | 4.º. | <modeSign> | <pitch>',
+      'Tono | 5.º. | greek:λ/π | <modeSign> | <pitch>',
+      'Tono | 6.º. | greek:λ/π | <modeSign> | <pitch>',
+      'Tono | 7.º. | <modeSign> | <pitch>',
+      'Tono | 8.º. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
-    'builtin:spanish-tono-ordinal-v1',
+    'spanish-tono-ordinal',
     [
       'Tono | primero. | <modeSign> | <pitch>',
       'Tono | segundo. | <modeSign> | <pitch>',
@@ -474,7 +889,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:spanish-ordinal-tono-v1',
+    'spanish-ordinal-tono',
     [
       'Primer | tono. | <modeSign> | <pitch>',
       'Segundo | tono. | <modeSign> | <pitch>',
@@ -487,7 +902,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:church-slavonic-glas-number-v1',
+    'church-slavonic-glas-number',
     [
       'Гла́съ | 1. | <modeSign> | <pitch>',
       'Гла́съ | 2. | <modeSign> | <pitch>',
@@ -500,7 +915,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:church-slavonic-glas-cyrillic-numeral-v1',
+    'church-slavonic-glas-cyrillic-numeral',
     [
       'Гла́съ | а҃. | <modeSign> | <pitch>',
       'Гла́съ | в҃. | <modeSign> | <pitch>',
@@ -513,7 +928,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:church-slavonic-glas-cyrillic-numeral-text-v1',
+    'church-slavonic-glas-cyrillic-numeral-text',
     [
       'Гла́съ | а҃. | <pitch>',
       'Гла́съ | в҃. | <pitch>',
@@ -526,7 +941,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:church-slavonic-glas-ordinal-v1',
+    'church-slavonic-glas-ordinal',
     [
       'Гла́съ | пе́рвый. | <modeSign> | <pitch>',
       'Гла́съ | вторы́й. | <modeSign> | <pitch>',
@@ -539,7 +954,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:church-slavonic-glas-ordinal-text-v1',
+    'church-slavonic-glas-ordinal-text',
     [
       'Гла́съ | пе́рвый. | <pitch>',
       'Гла́съ | вторы́й. | <pitch>',
@@ -552,7 +967,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:russian-glas-number-v1',
+    'russian-glas-number',
     [
       'Глас | 1. | <modeSign> | <pitch>',
       'Глас | 2. | <modeSign> | <pitch>',
@@ -565,7 +980,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:russian-glas-ordinal-v1',
+    'russian-glas-ordinal',
     [
       'Глас | первый. | <modeSign> | <pitch>',
       'Глас | второй. | <modeSign> | <pitch>',
@@ -578,7 +993,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:russian-glas-ordinal-text-v1',
+    'russian-glas-ordinal-text',
     [
       'Глас | первый. | <pitch>',
       'Глас | второй. | <pitch>',
@@ -591,7 +1006,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:arabic-ordinal-v1',
+    'arabic-ordinal',
     [
       'اللحن الأول | <pitch> | <modeSign>',
       'اللحن الثاني | <pitch> | <modeSign>',
@@ -604,7 +1019,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:romanian-glas-number-v1',
+    'romanian-glas-number',
     [
       'Glas | 1. | <modeSign> | <pitch>',
       'Glas | 2. | <modeSign> | <pitch>',
@@ -617,7 +1032,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:romanian-glas-roman-numeral-v1',
+    'romanian-glas-roman-numeral',
     [
       'Glas | I. | <modeSign> | <pitch>',
       'Glas | II. | <modeSign> | <pitch>',
@@ -630,33 +1045,7 @@ const expectedRunsByStyle: [BuiltInInitialMartyriaStyleId, string[]][] = [
     ],
   ],
   [
-    'builtin:romanian-glas-ordinal-number-v1',
-    [
-      'Glasul | al 1-lea. | <modeSign> | <pitch>',
-      'Glasul | al 2-lea. | <modeSign> | <pitch>',
-      'Glasul | al 3-lea. | <modeSign> | <pitch>',
-      'Glasul | al 4-lea. | <modeSign> | <pitch>',
-      'Glasul | al 5-lea. | Lăturaș | <modeSign> | <pitch>',
-      'Glasul | al 6-lea. | Lăturaș | <modeSign> | <pitch>',
-      'Glasul | al 7-lea. | <modeSign> | <pitch>',
-      'Glasul | al 8-lea. | Lăturaș | <modeSign> | <pitch>',
-    ],
-  ],
-  [
-    'builtin:romanian-glas-ordinal-roman-numeral-v1',
-    [
-      'Glasul | al I-lea. | <modeSign> | <pitch>',
-      'Glasul | al II-lea. | <modeSign> | <pitch>',
-      'Glasul | al III-lea. | <modeSign> | <pitch>',
-      'Glasul | al IV-lea. | <modeSign> | <pitch>',
-      'Glasul | al V-lea. | Lăturaș | <modeSign> | <pitch>',
-      'Glasul | al VI-lea. | Lăturaș | <modeSign> | <pitch>',
-      'Glasul | al VII-lea. | <modeSign> | <pitch>',
-      'Glasul | al VIII-lea. | Lăturaș | <modeSign> | <pitch>',
-    ],
-  ],
-  [
-    'builtin:romanian-glas-v1',
+    'romanian-glas',
     [
       'Glas | <modeSign> | <pitch>',
       'Glas | <modeSign> | <pitch>',
@@ -783,18 +1172,6 @@ const spanishPrenominalOrdinalPronunciations: ExpectedModePronunciations = [
   'Octavo tono',
 ];
 
-const churchSlavonicAbsoluteCardinalPronunciations: ExpectedModePronunciations =
-  [
-    'Гла́съ є҆ди́нъ',
-    'Гла́съ два̀',
-    'Гла́съ трѝ',
-    'Гла́съ четы́ре',
-    'Гла́съ пѧ́ть',
-    'Гла́съ ше́сть',
-    'Гла́съ се́дмь',
-    'Гла́съ ѻ҆́смь',
-  ];
-
 const churchSlavonicAbsoluteOrdinalPronunciations: ExpectedModePronunciations =
   [
     'Гла́съ пе́рвый',
@@ -806,17 +1183,6 @@ const churchSlavonicAbsoluteOrdinalPronunciations: ExpectedModePronunciations =
     'Гла́съ седмы́й',
     'Гла́съ ѻ҆сьмы́й',
   ];
-
-const russianAbsoluteCardinalPronunciations: ExpectedModePronunciations = [
-  'Глас один',
-  'Глас два',
-  'Глас три',
-  'Глас четыре',
-  'Глас пять',
-  'Глас шесть',
-  'Глас семь',
-  'Глас восемь',
-];
 
 const russianAbsoluteOrdinalPronunciations: ExpectedModePronunciations = [
   'Глас первый',
@@ -851,31 +1217,20 @@ const romanianAbsoluteCardinalPronunciations: ExpectedModePronunciations = [
   'Glas opt',
 ];
 
-const romanianAbsoluteOrdinalPronunciations: ExpectedModePronunciations = [
-  'Glasul întâi',
-  'Glasul al doilea',
-  'Glasul al treilea',
-  'Glasul al patrulea',
-  'Glasul al cincilea',
-  'Glasul al șaselea',
-  'Glasul al șaptelea',
-  'Glasul al optulea',
-];
-
 const romanianAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =
   [
     'Glasul întâi',
     'Glasul al doilea',
     'Glasul al treilea',
     'Glasul al patrulea',
-    'Glasul Lăturaș întâi',
-    'Glasul Lăturaș al doilea',
+    'Glasul lăturaș întâi',
+    'Glasul lăturaș al doilea',
     'Glasul al șaptelea',
-    'Glasul Lăturaș al patrulea',
+    'Glasul lăturaș al patrulea',
   ];
 
 const expectedStartingNotePhrasesByLanguage: Record<
-  InitialMartyriaStyle['languageId'],
+  InitialMartyriaLanguageId,
   ExpectedModePronunciations
 > = {
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Greek]: [
@@ -950,243 +1305,153 @@ const expectedStartingNotePhrasesByLanguage: Record<
   ],
 };
 
-const expectedPronunciationsByStyle: [
-  BuiltInInitialMartyriaStyleId,
+const expectedPronunciationsByStructure: [
+  string,
   ExpectedModePronunciations,
 ][] = [
+  ['traditional-greek', greekAuthenticCounterpartOrdinalPronunciations],
+  ['greek-mode-names', greekAuthenticCounterpartOrdinalPronunciations],
+  ['english-plagal-first', englishAuthenticCounterpartOrdinalPronunciations],
+  ['english-mode-names', englishAuthenticCounterpartOrdinalPronunciations],
   [
-    'builtin:traditional-greek-v1',
-    greekAuthenticCounterpartOrdinalPronunciations,
-  ],
-  [
-    'builtin:greek-mode-names-v1',
-    greekAuthenticCounterpartOrdinalPronunciations,
-  ],
-  [
-    'builtin:english-plagal-first-v1',
+    'english-authentic-counterpart-ordinal-digits-text',
     englishAuthenticCounterpartOrdinalPronunciations,
   ],
   [
-    'builtin:english-mode-names-v1',
-    englishAuthenticCounterpartOrdinalPronunciations,
-  ],
-  [
-    'builtin:english-authentic-counterpart-ordinal-digits-text-v1',
-    englishAuthenticCounterpartOrdinalPronunciations,
-  ],
-  [
-    'builtin:english-authentic-counterpart-number-sign-v1',
+    'english-authentic-counterpart-number-sign',
     englishAuthenticCounterpartCardinalPronunciations,
   ],
   [
-    'builtin:english-authentic-counterpart-number-text-v1',
+    'english-authentic-counterpart-number-text',
     englishAuthenticCounterpartCardinalPronunciations,
   ],
   [
-    'builtin:english-authentic-counterpart-roman-numeral-text-v1',
+    'english-authentic-counterpart-roman-numeral-text',
     englishAuthenticCounterpartCardinalPronunciations,
   ],
   [
-    'builtin:english-authentic-counterpart-number-word-text-v1',
+    'english-authentic-counterpart-number-word-text',
     englishAuthenticCounterpartCardinalPronunciations,
   ],
-  ['builtin:english-sign-first-v1', englishPlagalClassOrdinalPronunciations],
+  ['english-sign-first', englishPlagalClassOrdinalPronunciations],
   [
-    'builtin:english-plagal-class-ordinal-words-text-v1',
+    'english-plagal-class-ordinal-words-text',
     englishPlagalClassOrdinalPronunciations,
   ],
   [
-    'builtin:english-plagal-class-ordinal-words-v1',
+    'english-plagal-class-ordinal-words',
     englishPlagalClassOrdinalPronunciations,
   ],
+  ['english-ordinal-plagal-text', englishPlagalClassOrdinalPronunciations],
+  ['english-ordinal-plagal', englishPlagalClassOrdinalPronunciations],
+  ['english-ordinal', englishAbsoluteOrdinalPronunciations],
+  ['english-mode-number', englishAbsoluteCardinalPronunciations],
+  ['english-mode-roman-numeral', englishAbsoluteCardinalPronunciations],
+  ['english-mode-number-word', englishAbsoluteCardinalPronunciations],
+  ['english-full-name', englishAuthenticCounterpartOrdinalPronunciations],
   [
-    'builtin:english-ordinal-plagal-text-v1',
-    englishPlagalClassOrdinalPronunciations,
-  ],
-  [
-    'builtin:english-ordinal-plagal-v1',
-    englishPlagalClassOrdinalPronunciations,
-  ],
-  ['builtin:english-ordinal-v1', englishAbsoluteOrdinalPronunciations],
-  ['builtin:english-mode-number-v1', englishAbsoluteCardinalPronunciations],
-  [
-    'builtin:english-mode-roman-numeral-v1',
-    englishAbsoluteCardinalPronunciations,
-  ],
-  [
-    'builtin:english-mode-number-word-v1',
-    englishAbsoluteCardinalPronunciations,
-  ],
-  [
-    'builtin:english-full-name-v1',
+    'english-authentic-counterpart-ordinal-digits',
     englishAuthenticCounterpartOrdinalPronunciations,
   ],
   [
-    'builtin:english-authentic-counterpart-ordinal-digits-v1',
-    englishAuthenticCounterpartOrdinalPronunciations,
-  ],
-  [
-    'builtin:english-authentic-counterpart-number-v1',
+    'english-authentic-counterpart-number',
     englishAuthenticCounterpartCardinalPronunciations,
   ],
   [
-    'builtin:english-authentic-counterpart-roman-numeral-v1',
+    'english-authentic-counterpart-roman-numeral',
     englishAuthenticCounterpartCardinalPronunciations,
   ],
   [
-    'builtin:english-authentic-counterpart-number-word-v1',
+    'english-authentic-counterpart-number-word',
     englishAuthenticCounterpartCardinalPronunciations,
   ],
-  ['builtin:spanish-tono-number-v1', spanishAbsoluteCardinalPronunciations],
+  ['spanish-tono-number', spanishAbsoluteCardinalPronunciations],
+  ['spanish-tono-roman-numeral', spanishPostnominalOrdinalPronunciations],
+  ['spanish-tono-ordinal-number', spanishPostnominalOrdinalPronunciations],
+  ['spanish-tono-ordinal', spanishPostnominalOrdinalPronunciations],
+  ['spanish-ordinal-tono', spanishPrenominalOrdinalPronunciations],
+  ['church-slavonic-glas-number', churchSlavonicAbsoluteOrdinalPronunciations],
   [
-    'builtin:spanish-tono-roman-numeral-v1',
-    spanishAbsoluteCardinalPronunciations,
-  ],
-  [
-    'builtin:spanish-tono-ordinal-number-v1',
-    spanishPostnominalOrdinalPronunciations,
-  ],
-  ['builtin:spanish-tono-ordinal-v1', spanishPostnominalOrdinalPronunciations],
-  ['builtin:spanish-ordinal-tono-v1', spanishPrenominalOrdinalPronunciations],
-  [
-    'builtin:church-slavonic-glas-number-v1',
-    churchSlavonicAbsoluteCardinalPronunciations,
-  ],
-  [
-    'builtin:church-slavonic-glas-cyrillic-numeral-v1',
-    churchSlavonicAbsoluteCardinalPronunciations,
-  ],
-  [
-    'builtin:church-slavonic-glas-cyrillic-numeral-text-v1',
-    churchSlavonicAbsoluteCardinalPronunciations,
-  ],
-  [
-    'builtin:church-slavonic-glas-ordinal-v1',
+    'church-slavonic-glas-cyrillic-numeral',
     churchSlavonicAbsoluteOrdinalPronunciations,
   ],
   [
-    'builtin:church-slavonic-glas-ordinal-text-v1',
+    'church-slavonic-glas-cyrillic-numeral-text',
     churchSlavonicAbsoluteOrdinalPronunciations,
   ],
-  ['builtin:russian-glas-number-v1', russianAbsoluteCardinalPronunciations],
-  ['builtin:russian-glas-ordinal-v1', russianAbsoluteOrdinalPronunciations],
+  ['church-slavonic-glas-ordinal', churchSlavonicAbsoluteOrdinalPronunciations],
   [
-    'builtin:russian-glas-ordinal-text-v1',
-    russianAbsoluteOrdinalPronunciations,
+    'church-slavonic-glas-ordinal-text',
+    churchSlavonicAbsoluteOrdinalPronunciations,
   ],
-  ['builtin:arabic-ordinal-v1', arabicAbsoluteOrdinalPronunciations],
-  ['builtin:romanian-glas-number-v1', romanianAbsoluteCardinalPronunciations],
-  [
-    'builtin:romanian-glas-roman-numeral-v1',
-    romanianAbsoluteCardinalPronunciations,
-  ],
-  [
-    'builtin:romanian-glas-ordinal-number-v1',
-    romanianAbsoluteOrdinalPronunciations,
-  ],
-  [
-    'builtin:romanian-glas-ordinal-roman-numeral-v1',
-    romanianAbsoluteOrdinalPronunciations,
-  ],
-  [
-    'builtin:romanian-glas-v1',
-    romanianAuthenticCounterpartOrdinalPronunciations,
-  ],
+  ['russian-glas-number', russianAbsoluteOrdinalPronunciations],
+  ['russian-glas-ordinal', russianAbsoluteOrdinalPronunciations],
+  ['russian-glas-ordinal-text', russianAbsoluteOrdinalPronunciations],
+  ['arabic-ordinal', arabicAbsoluteOrdinalPronunciations],
+  ['romanian-glas-number', romanianAbsoluteCardinalPronunciations],
+  ['romanian-glas-roman-numeral', romanianAbsoluteCardinalPronunciations],
+  ['romanian-glas', romanianAuthenticCounterpartOrdinalPronunciations],
 ];
 
 describe('InitialMartyriaStyle', () => {
-  it('renders the attested run sequence for every built-in style and mode', () => {
-    expect(expectedRunsByStyle.map(([id]) => id)).toEqual(
-      builtInInitialMartyriaStyles.map((style) => style.id),
+  it('renders the attested run sequence for every attested structure and mode', () => {
+    expect(expectedRunsByStructure.map(([label]) => label)).toEqual(
+      Object.keys(attestedStructures),
     );
 
-    for (const [styleId, expectedByMode] of expectedRunsByStyle) {
-      const resolved = resolveInitialMartyriaConfiguration(
-        createInitialMartyriaConfiguration(styleId),
-      )!;
+    for (const [label, expectedByMode] of expectedRunsByStructure) {
+      const style = styleFor(attestedStructures[label]);
       for (let mode = 1; mode <= 8; mode++) {
-        const element = ModeKeyElement.createFromTemplate(
-          modeKeyTemplates.find((template) => template.mode === mode)!,
-        );
-        const encoded = resolveInitialMartyriaStyle({
-          context: getInitialMartyriaContext(element),
-          resolvedConfiguration: resolved,
-          pageSetup: new PageSetup(),
-        })
+        const encoded = resolve(style, elementForMode(mode))
           .runs.map(encodeRun)
           .join(' | ');
 
-        expect(`${styleId} mode ${mode}: ${encoded}`).toBe(
-          `${styleId} mode ${mode}: ${expectedByMode[mode - 1]}`,
+        expect(`${label} mode ${mode}: ${encoded}`).toBe(
+          `${label} mode ${mode}: ${expectedByMode[mode - 1]}`,
         );
       }
     }
   });
 
-  it('pronounces every built-in style in every language for every mode', () => {
-    expect(expectedPronunciationsByStyle.map(([id]) => id)).toEqual(
-      builtInInitialMartyriaStyles.map((style) => style.id),
+  it('pronounces every attested structure in every language for every mode', () => {
+    expect(expectedPronunciationsByStructure.map(([label]) => label)).toEqual(
+      Object.keys(attestedStructures),
     );
 
-    for (const [styleId, expectedByMode] of expectedPronunciationsByStyle) {
-      const resolved = resolveInitialMartyriaConfiguration(
-        createInitialMartyriaConfiguration(styleId),
-      )!;
+    for (const [label, expectedByMode] of expectedPronunciationsByStructure) {
+      const structure = attestedStructures[label];
+      const style = styleFor(structure);
       for (let mode = 1; mode <= 8; mode++) {
-        const element = ModeKeyElement.createFromTemplate(
-          modeKeyTemplates.find((template) => template.mode === mode)!,
-        );
-        const resolution = resolveInitialMartyriaStyle({
-          context: getInitialMartyriaContext(element),
-          resolvedConfiguration: resolved,
-          pageSetup: new PageSetup(),
-        });
-
+        const resolution = resolve(style, elementForMode(mode));
         const expectedStartingNote =
-          expectedStartingNotePhrasesByLanguage[resolved.style.languageId][
-            mode - 1
-          ];
-        expect(`${styleId} mode ${mode}: ${resolution.pronunciation}`).toBe(
-          `${styleId} mode ${mode}: ${expectedByMode[mode - 1]} ${expectedStartingNote}`,
+          expectedStartingNotePhrasesByLanguage[structure.languageId][mode - 1];
+
+        expect(`${label} mode ${mode}: ${resolution.pronunciation}`).toBe(
+          `${label} mode ${mode}: ${expectedByMode[mode - 1]} ${expectedStartingNote}`,
         );
       }
+    }
+  });
+
+  it('supports every attested structure', () => {
+    for (const [label, structure] of Object.entries(attestedStructures)) {
+      expect(
+        `${label}: ${isInitialMartyriaStructureSupported(structure)}`,
+      ).toBe(`${label}: true`);
     }
   });
 
   it('pronounces the physical starting note in every language', () => {
-    const element = ModeKeyElement.createFromTemplate(
-      modeKeyTemplates.find((template) => template.id === 506)!,
-    );
+    const element = elementForTemplate(506);
     const context = getInitialMartyriaContext(element);
-    const expectedByStyle: [BuiltInInitialMartyriaStyleId, string][] = [
-      [
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekModeNamesV1,
-        'Ήχος Πλάγιος του Πρώτου εκ του Κε',
-      ],
-      [
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesV1,
-        'Plagal of First Mode from Ke',
-      ],
-      [
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoOrdinalV1,
-        'Tono quinto desde Ke',
-      ],
-      [
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasOrdinalV1,
-        'Гла́съ пѧ́тый ѿ Ке',
-      ],
-      [
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasOrdinalV1,
-        'Глас пятый от Ке',
-      ],
-      [
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalV1,
-        'اللحن الخامس من كي',
-      ],
-      [
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1,
-        'Glasul Lăturaș întâi de la Ke',
-      ],
+    const expectedByStructure: [string, string][] = [
+      ['greek-mode-names', 'Ήχος Πλάγιος του Πρώτου εκ του Κε'],
+      ['english-mode-names', 'Plagal of First Mode from Ke'],
+      ['spanish-tono-ordinal', 'Tono quinto desde Ke'],
+      ['church-slavonic-glas-ordinal', 'Гла́съ пѧ́тый ѿ Ке'],
+      ['russian-glas-ordinal', 'Глас пятый от Ке'],
+      ['arabic-ordinal', 'اللحن الخامس من كي'],
+      ['romanian-glas', 'Glasul lăturaș întâi de la Ke'],
     ];
 
     expect(context).toMatchObject({
@@ -1194,32 +1459,18 @@ describe('InitialMartyriaStyle', () => {
       pitchCluster: { primary: { note: ModeSign.Pa } },
     });
 
-    for (const [styleId, expected] of expectedByStyle) {
-      const configuration = createInitialMartyriaConfiguration(styleId);
-      const resolution = resolveInitialMartyriaStyle({
-        context,
-        resolvedConfiguration:
-          resolveInitialMartyriaConfiguration(configuration)!,
-        pageSetup: new PageSetup(),
-      });
-
-      expect(resolution.pronunciation).toBe(expected);
+    for (const [label, expected] of expectedByStructure) {
+      expect(
+        resolve(styleFor(attestedStructures[label]), element).pronunciation,
+      ).toBe(expected);
     }
   });
 
   it('preserves the physical starting note octave in the pronunciation', () => {
-    const configuration = createInitialMartyriaConfiguration(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesV1,
+    const resolution = resolve(
+      styleFor(attestedStructures['english-mode-names']),
+      elementForTemplate(803),
     );
-    const element = ModeKeyElement.createFromTemplate(
-      modeKeyTemplates.find((template) => template.id === 803)!,
-    );
-    const resolution = resolveInitialMartyriaStyle({
-      context: getInitialMartyriaContext(element),
-      resolvedConfiguration:
-        resolveInitialMartyriaConfiguration(configuration)!,
-      pageSetup: new PageSetup(),
-    });
 
     expect(resolution.pronunciation).toBe("Plagal of Fourth Mode from Ni'");
   });
@@ -1236,88 +1487,150 @@ describe('InitialMartyriaStyle', () => {
     expect(getInitialMartyriaFixedSeparatorSize('wordSpace', 20)).toBeNull();
   });
 
-  it('defines every built-in ID once with a systematic localized name', () => {
+  it('curates a few attested, localized built-in styles per language', () => {
     const styleIds = builtInInitialMartyriaStyles.map((style) => style.id);
+    const attestedKeys = new Set(
+      Object.values(attestedStructures).map(getInitialMartyriaStructureKey),
+    );
 
     expect(new Set(styleIds).size).toBe(styleIds.length);
     expect(new Set(styleIds)).toEqual(
       new Set(Object.values(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS)),
     );
+    expect(
+      builtInInitialMartyriaStyles
+        .filter(
+          (style) =>
+            style.structure.languageId ===
+            INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+        )
+        .map((style) => style.id),
+    ).toEqual([
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign,
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNumbersWithSign,
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassWithSign,
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
+    ]);
+    expect(
+      getBuiltInInitialMartyriaStyle(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNumbersWithSign,
+      ).structure,
+    ).toMatchObject({
+      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+      modeNamingScheme:
+        INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    });
+    expect(
+      getBuiltInInitialMartyriaStyle(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassWithSign,
+      ).structure,
+    ).toMatchObject({
+      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    });
+
+    for (const languageId of initialMartyriaLanguageIds) {
+      const count = builtInInitialMartyriaStyles.filter(
+        (style) => style.structure.languageId === languageId,
+      ).length;
+      expect(`${languageId}: ${count}`).toMatch(/: [1-5]$/);
+    }
 
     for (const style of builtInInitialMartyriaStyles) {
-      const selector = getBuiltInInitialMartyriaStyleNameSelector(style.id);
-
-      expect(selector).not.toBeNull();
-      expect(selector?.(resources.en)).toBe(generateEnglishStyleName(style));
-
-      for (const localeResources of Object.values(resources)) {
-        expect(selector?.(localeResources)).toEqual(expect.any(String));
-        expect(selector?.(localeResources).length).toBeGreaterThan(0);
+      expect(style.basedOn).toBeNull();
+      expect(isInitialMartyriaStructureSupported(style.structure)).toBe(true);
+      expect(
+        attestedKeys.has(getInitialMartyriaStructureKey(style.structure)),
+      ).toBe(true);
+      const selector = getBuiltInInitialMartyriaStyleNameSelector(
+        style.id as BuiltInInitialMartyriaStyleId,
+      );
+      for (const [locale, localeResources] of Object.entries(resources)) {
+        const name = selector(localeResources);
+        expect(`${locale} ${style.id}: ${name.length > 0}`).toBe(
+          `${locale} ${style.id}: true`,
+        );
       }
+    }
+
+    // Names only need to be distinct within a language group.
+    for (const languageId of initialMartyriaLanguageIds) {
+      const names = builtInInitialMartyriaStyles
+        .filter((style) => style.structure.languageId === languageId)
+        .map((style) =>
+          getBuiltInInitialMartyriaStyleNameSelector(
+            style.id as BuiltInInitialMartyriaStyleId,
+          )(resources.en),
+        );
+      expect(new Set(names).size).toBe(names.length);
     }
   });
 
-  it('resolves inherited, Standard, and explicit element configurations', () => {
-    const documentConfiguration = createInitialMartyriaConfiguration(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1,
-    );
-    const elementConfiguration = createInitialMartyriaConfiguration(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasV1,
-    );
+  it('resolves inherited, Standard, explicit, and missing style references', () => {
+    const custom = createInitialMartyriaStyle({
+      displayName: 'Parish',
+      basedOn: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
+      structure: attestedStructures['greek-mode-names'],
+      appearance: createDefaultInitialMartyriaAppearance(
+        INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
+      ),
+    });
+    const styles = [custom];
+    const builtInId =
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign;
 
     expect(
       resolveInitialMartyriaStyleSelection({
-        elementConfiguration: undefined,
-        pageConfiguration: null,
+        elementStyleId: undefined,
+        pageStyleId: null,
+        styles,
       }).kind,
     ).toBe('standard');
     expect(
       resolveInitialMartyriaStyleSelection({
-        elementConfiguration: undefined,
-        pageConfiguration: documentConfiguration,
+        elementStyleId: undefined,
+        pageStyleId: builtInId,
+        styles,
       }),
-    ).toMatchObject({
-      kind: 'custom',
-      style: { id: documentConfiguration.styleId },
-    });
+    ).toMatchObject({ kind: 'custom', style: { id: builtInId } });
     expect(
       resolveInitialMartyriaStyleSelection({
-        elementConfiguration: null,
-        pageConfiguration: documentConfiguration,
+        elementStyleId: null,
+        pageStyleId: builtInId,
+        styles,
       }).kind,
     ).toBe('standard');
     expect(
       resolveInitialMartyriaStyleSelection({
-        elementConfiguration,
-        pageConfiguration: documentConfiguration,
+        elementStyleId: custom.id,
+        pageStyleId: builtInId,
+        styles,
       }),
-    ).toMatchObject({
-      kind: 'custom',
-      style: { id: elementConfiguration.styleId },
-    });
+    ).toMatchObject({ kind: 'custom', style: { id: custom.id } });
+    expect(
+      resolveInitialMartyriaStyleSelection({
+        elementStyleId: 'missing',
+        pageStyleId: builtInId,
+        styles,
+      }).kind,
+    ).toBe('standard');
   });
 
-  it('uses the note names defined by each style', () => {
-    const resolveNoteText = (styleId: BuiltInInitialMartyriaStyleId) => {
-      const configuration = createInitialMartyriaConfiguration(styleId);
-      const element = ModeKeyElement.createFromTemplate(
-        modeKeyTemplates.find((template) => template.mode === 1)!,
-      );
-      const startingPitch = resolveInitialMartyriaStyle({
-        context: getInitialMartyriaContext(element),
-        resolvedConfiguration:
-          resolveInitialMartyriaConfiguration(configuration)!,
-        pageSetup: new PageSetup(),
-      }).runs.find(
+  it('uses the note names defined by each structure', () => {
+    const resolveNoteText = (label: string) => {
+      const startingPitch = resolve(
+        styleFor(attestedStructures[label]),
+        elementForMode(1),
+      ).runs.find(
         (run): run is InitialMartyriaStartingNoteRun =>
           run.kind === 'startingPitch',
       )!;
       return startingPitch.noteText;
     };
 
-    expect(
-      resolveNoteText(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumberV1),
-    ).toMatchObject({
+    expect(resolveNoteText('spanish-tono-number')).toMatchObject({
       languageTag: 'el',
       names: {
         [ModeSign.Pa]: 'Πα',
@@ -1326,11 +1639,7 @@ describe('InitialMartyriaStyle', () => {
       },
     });
 
-    expect(
-      resolveNoteText(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasNumberV1,
-      ),
-    ).toMatchObject({
+    expect(resolveNoteText('church-slavonic-glas-number')).toMatchObject({
       languageTag: 'cu',
       names: {
         [ModeSign.Pa]: 'Па',
@@ -1339,9 +1648,7 @@ describe('InitialMartyriaStyle', () => {
       },
     });
 
-    expect(
-      resolveNoteText(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasNumberV1),
-    ).toMatchObject({
+    expect(resolveNoteText('russian-glas-number')).toMatchObject({
       languageTag: 'ru',
       names: {
         [ModeSign.Pa]: 'Па',
@@ -1350,20 +1657,18 @@ describe('InitialMartyriaStyle', () => {
       },
     });
 
-    const arabicStyle = builtInInitialMartyriaStyles.find(
-      (item) => item.id === BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalV1,
-    )!;
+    const arabicStyle = getBuiltInInitialMartyriaStyle(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinal,
+    );
 
     expect(arabicStyle).toMatchObject({
-      flowDirection: 'rtl',
-      defaultAppearance: {
+      structure: { flowDirection: 'rtl' },
+      appearance: {
         mainFontFamily: 'Noto Naskh Arabic',
         greekFontFamily: 'GFS Didot',
       },
     });
-    expect(
-      resolveNoteText(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalV1),
-    ).toMatchObject({
+    expect(resolveNoteText('arabic-ordinal')).toMatchObject({
       languageTag: 'el',
       direction: 'ltr',
       names: {
@@ -1379,9 +1684,7 @@ describe('InitialMartyriaStyle', () => {
   });
 
   it('defines Greek mode names without a mode-sign glyph', () => {
-    const configuration = createInitialMartyriaConfiguration(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekModeNamesV1,
-    );
+    const style = styleFor(attestedStructures['greek-mode-names']);
     const expectedText = new Map([
       [1, ['Ἦχος', 'αʹ.']],
       [2, ['Ἦχος', 'βʹ.']],
@@ -1394,34 +1697,16 @@ describe('InitialMartyriaStyle', () => {
     ]);
 
     for (const [mode, expected] of expectedText) {
-      const element = ModeKeyElement.createFromTemplate(
-        modeKeyTemplates.find((template) => template.mode === mode)!,
-      );
-      const runs = resolveInitialMartyriaStyle({
-        context: getInitialMartyriaContext(element),
-        resolvedConfiguration:
-          resolveInitialMartyriaConfiguration(configuration)!,
-        pageSetup: new PageSetup(),
-      }).runs;
-      const text = runs.flatMap((run) => {
-        if (run.kind !== 'text') {
-          return [];
-        }
-        return run.content.layout === 'inline'
-          ? [run.content.text]
-          : run.content.lines;
-      });
+      const runs = resolve(style, elementForMode(mode)).runs;
 
-      expect(text).toEqual(expected);
+      expect(textOf(runs)).toEqual(expected);
       expect(runs.some((run) => run.kind === 'glyph')).toBe(false);
       expect(runs.some((run) => run.kind === 'startingPitch')).toBe(true);
     }
   });
 
   it('defines English mode names without a mode-sign glyph', () => {
-    const configuration = createInitialMartyriaConfiguration(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesV1,
-    );
+    const style = styleFor(attestedStructures['english-mode-names']);
     const expectedText = new Map([
       [1, ['First', 'Mode.']],
       [2, ['Second', 'Mode.']],
@@ -1434,26 +1719,10 @@ describe('InitialMartyriaStyle', () => {
     ]);
 
     for (const [mode, expected] of expectedText) {
-      const element = ModeKeyElement.createFromTemplate(
-        modeKeyTemplates.find((template) => template.mode === mode)!,
-      );
-      const runs = resolveInitialMartyriaStyle({
-        context: getInitialMartyriaContext(element),
-        resolvedConfiguration:
-          resolveInitialMartyriaConfiguration(configuration)!,
-        pageSetup: new PageSetup(),
-      }).runs;
-      const text = runs.flatMap((run) => {
-        if (run.kind !== 'text') {
-          return [];
-        }
-        return run.content.layout === 'inline'
-          ? [run.content.text]
-          : run.content.lines;
-      });
+      const runs = resolve(style, elementForMode(mode)).runs;
       const startingPitch = runs.find((run) => run.kind === 'startingPitch');
 
-      expect(text).toEqual(expected);
+      expect(textOf(runs)).toEqual(expected);
       expect(runs.some((run) => run.kind === 'glyph')).toBe(false);
       expect(startingPitch?.kind).toBe('startingPitch');
       if (startingPitch?.kind === 'startingPitch') {
@@ -1462,11 +1731,10 @@ describe('InitialMartyriaStyle', () => {
     }
   });
 
-  it('applies one configuration appearance to text and musical glyphs', () => {
-    const configuration = createInitialMartyriaConfiguration(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1,
-    );
-    configuration.appearanceOverrides = {
+  it('applies the style appearance to text and musical glyphs', () => {
+    const style = styleFor(attestedStructures['english-sign-first']);
+    style.appearance = {
+      ...style.appearance,
       mainFontFamily: 'GFS Didot',
       fontSize: 18,
       color: '#123456',
@@ -1477,15 +1745,8 @@ describe('InitialMartyriaStyle', () => {
       fontVariantAlternates: 'historical-forms',
     };
 
-    const resolved = resolveInitialMartyriaConfiguration(configuration)!;
-    const element = ModeKeyElement.createFromTemplate(
-      modeKeyTemplates.find((template) => template.id === 100)!,
-    );
-    const runs = resolveInitialMartyriaStyle({
-      context: getInitialMartyriaContext(element),
-      resolvedConfiguration: resolved,
-      pageSetup: new PageSetup(),
-    }).runs;
+    const resolved = resolveInitialMartyriaStyleAppearances(style);
+    const runs = resolve(style, elementForTemplate(100)).runs;
 
     expect(resolved.mainAppearance).toMatchObject({
       fontFamily: 'GFS Didot',
@@ -1500,32 +1761,21 @@ describe('InitialMartyriaStyle', () => {
     expect(
       runs
         .filter((run) => run.kind === 'glyph')
-        .every((run) => {
-          return (
+        .every(
+          (run) =>
             run.semantic === 'modeSign' &&
             run.appearance.color === '#123456' &&
-            run.appearance.strokeWidth === 0.25
-          );
-        }),
+            run.appearance.strokeWidth === 0.25,
+        ),
     ).toBe(true);
   });
 
   it('uses the Greek font for original note names and permanent Greek text', () => {
-    const configuration = createInitialMartyriaConfiguration(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishSignFirstV1,
-    );
-    configuration.appearanceOverrides.mainFontFamily = 'Source Serif';
-    configuration.appearanceOverrides.greekFontFamily = 'GFS Didot';
-    const element = ModeKeyElement.createFromTemplate(
-      modeKeyTemplates.find((template) => template.id === 500)!,
-    );
+    const style = styleFor(attestedStructures['english-sign-first']);
+    style.appearance.mainFontFamily = 'Source Serif';
+    style.appearance.greekFontFamily = 'GFS Didot';
 
-    const originalRuns = resolveInitialMartyriaStyle({
-      context: getInitialMartyriaContext(element),
-      resolvedConfiguration:
-        resolveInitialMartyriaConfiguration(configuration)!,
-      pageSetup: new PageSetup(),
-    }).runs;
+    const originalRuns = resolve(style, elementForTemplate(500)).runs;
     const originalPitch = originalRuns.find(
       (run) => run.kind === 'startingPitch',
     );
@@ -1550,21 +1800,12 @@ describe('InitialMartyriaStyle', () => {
   });
 
   it('uses one font for every Greek style text role', () => {
-    const configuration = createInitialMartyriaConfiguration(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1,
-    );
-    configuration.appearanceOverrides.mainFontFamily = 'Source Serif';
-    configuration.appearanceOverrides.greekFontFamily = 'GFS Didot';
-    const element = ModeKeyElement.createFromTemplate(
-      modeKeyTemplates.find((template) => template.id === 500)!,
-    );
+    const style = styleFor(attestedStructures['traditional-greek']);
+    style.appearance.mainFontFamily = 'Source Serif';
+    style.appearance.greekFontFamily = 'GFS Didot';
 
-    const resolved = resolveInitialMartyriaConfiguration(configuration)!;
-    const runs = resolveInitialMartyriaStyle({
-      context: getInitialMartyriaContext(element),
-      resolvedConfiguration: resolved,
-      pageSetup: new PageSetup(),
-    }).runs;
+    const resolved = resolveInitialMartyriaStyleAppearances(style);
+    const runs = resolve(style, elementForTemplate(500)).runs;
 
     expect(resolved.mainAppearance.fontFamily).toBe('Source Serif');
     expect(resolved.greekAppearance.fontFamily).toBe('Source Serif');
@@ -1580,15 +1821,842 @@ describe('InitialMartyriaStyle', () => {
     }
   });
 
-  it('clones appearance overrides without sharing mutable state', () => {
-    const source = createInitialMartyriaConfiguration(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.TraditionalGreekV1,
+  it('clones styles without sharing mutable state', () => {
+    const source = styleFor(attestedStructures['traditional-greek']);
+    const clone = cloneInitialMartyriaStyle(source);
+    clone.appearance.mainFontFamily = 'Source Serif';
+    clone.structure.numeralStyle = INITIAL_MARTYRIA_NUMERAL_STYLES.Digits;
+
+    expect(source.appearance.mainFontFamily).toBe('GFS Didot');
+    expect(source.structure.numeralStyle).toBe(
+      INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     );
-    source.appearanceOverrides.mainFontFamily = 'GFS Didot';
+    expect(createInitialMartyriaStyle(source).id).not.toBe(source.id);
+  });
+});
 
-    const clone = cloneInitialMartyriaConfiguration(source);
-    clone.appearanceOverrides.mainFontFamily = 'Source Serif';
+describe('InitialMartyriaStructure space', () => {
+  const greekText = attestedStructures['greek-mode-names'];
+  const englishText = attestedStructures['english-mode-names'];
 
-    expect(source.appearanceOverrides.mainFontFamily).toBe('GFS Didot');
+  const signature = (structure: InitialMartyriaStructure) =>
+    [
+      structure.numeralStyle,
+      structure.numeralKind,
+      structure.numeralQualifier,
+      structure.modeNamingScheme,
+    ].join('/');
+
+  const grammarStructure = (
+    languageId: InitialMartyriaLanguageId,
+    changes: Partial<InitialMartyriaStructure>,
+  ): InitialMartyriaStructure => ({
+    ...builtInInitialMartyriaStyles.find(
+      (style) => style.structure.languageId === languageId,
+    )!.structure,
+    ...changes,
+    languageId,
+  });
+
+  const textStructureSignatures = {
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Greek]: [
+      'alphabetic-numerals/ordinal/postnominal/authentic-counterpart',
+      'words/ordinal/postnominal/authentic-counterpart',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: [
+      'digits/cardinal/postnominal/absolute',
+      'digits/cardinal/postnominal/authentic-counterpart',
+      'digits/cardinal/postnominal/plagal-class',
+      'digits/ordinal/prenominal/absolute',
+      'digits/ordinal/prenominal/authentic-counterpart',
+      'digits/ordinal/prenominal/plagal-class',
+      'roman-numerals/cardinal/postnominal/absolute',
+      'roman-numerals/cardinal/postnominal/authentic-counterpart',
+      'roman-numerals/cardinal/postnominal/plagal-class',
+      'words/cardinal/postnominal/absolute',
+      'words/cardinal/postnominal/authentic-counterpart',
+      'words/cardinal/postnominal/plagal-class',
+      'words/ordinal/prenominal/absolute',
+      'words/ordinal/prenominal/authentic-counterpart',
+      'words/ordinal/prenominal/plagal-class',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: [
+      'digits/cardinal/postnominal/absolute',
+      'digits/ordinal/postnominal/absolute',
+      'digits/ordinal/prenominal/absolute',
+      'roman-numerals/cardinal/postnominal/absolute',
+      'roman-numerals/ordinal/postnominal/absolute',
+      'words/cardinal/postnominal/absolute',
+      'words/ordinal/postnominal/absolute',
+      'words/ordinal/prenominal/absolute',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: [
+      'digits/ordinal/postnominal/absolute',
+      'alphabetic-numerals/ordinal/postnominal/absolute',
+      'words/ordinal/postnominal/absolute',
+      'words/ordinal/prenominal/absolute',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: [
+      'digits/ordinal/postnominal/absolute',
+      'roman-numerals/ordinal/postnominal/absolute',
+      'words/ordinal/postnominal/absolute',
+      'words/ordinal/prenominal/absolute',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: [
+      'words/ordinal/postnominal/absolute',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: [
+      'digits/cardinal/postnominal/absolute',
+      'digits/ordinal/postnominal/absolute',
+      'digits/ordinal/prenominal/absolute',
+      'roman-numerals/cardinal/postnominal/absolute',
+      'roman-numerals/ordinal/postnominal/absolute',
+      'roman-numerals/ordinal/prenominal/absolute',
+      'words/cardinal/postnominal/absolute',
+      'words/ordinal/postnominal/absolute',
+      'words/ordinal/prenominal/absolute',
+    ],
+  } satisfies Record<InitialMartyriaLanguageId, string[]>;
+
+  const modeSignStructureSignatures = {
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Greek]: [
+      'alphabetic-numerals/ordinal/postnominal/authentic-counterpart',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: [
+      'digits/cardinal/postnominal/authentic-counterpart',
+      'digits/cardinal/postnominal/plagal-class',
+      'digits/ordinal/prenominal/authentic-counterpart',
+      'digits/ordinal/prenominal/plagal-class',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: [
+      'digits/cardinal/postnominal/absolute',
+      'digits/ordinal/postnominal/absolute',
+      'digits/ordinal/prenominal/absolute',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: [
+      'digits/ordinal/postnominal/absolute',
+      'words/ordinal/prenominal/absolute',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: [
+      'digits/ordinal/postnominal/absolute',
+      'words/ordinal/prenominal/absolute',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: [
+      'words/ordinal/postnominal/absolute',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: [
+      'digits/cardinal/postnominal/absolute',
+      'digits/ordinal/postnominal/absolute',
+      'digits/ordinal/prenominal/absolute',
+      'words/ordinal/postnominal/authentic-counterpart',
+    ],
+  } satisfies Record<InitialMartyriaLanguageId, string[]>;
+
+  it('derives only numeral forms supported by each mode-name convention', () => {
+    const forms = (languageId: InitialMartyriaLanguageId) =>
+      getSupportedInitialMartyriaNumeralForms(languageId).map(
+        (form) => `${form.numeralStyle}/${form.numeralKind}`,
+      );
+
+    expect(
+      Object.fromEntries(
+        initialMartyriaLanguageIds.map((languageId) => [
+          languageId,
+          forms(languageId),
+        ]),
+      ),
+    ).toEqual({
+      el: ['alphabetic-numerals/ordinal', 'words/ordinal'],
+      en: [
+        'digits/cardinal',
+        'digits/ordinal',
+        'roman-numerals/cardinal',
+        'words/cardinal',
+        'words/ordinal',
+      ],
+      es: [
+        'digits/cardinal',
+        'digits/ordinal',
+        'roman-numerals/cardinal',
+        'roman-numerals/ordinal',
+        'words/cardinal',
+        'words/ordinal',
+      ],
+      cu: ['digits/ordinal', 'alphabetic-numerals/ordinal', 'words/ordinal'],
+      ru: ['digits/ordinal', 'roman-numerals/ordinal', 'words/ordinal'],
+      ar: ['words/ordinal'],
+      ro: [
+        'digits/cardinal',
+        'digits/ordinal',
+        'roman-numerals/cardinal',
+        'roman-numerals/ordinal',
+        'words/cardinal',
+        'words/ordinal',
+      ],
+    });
+  });
+
+  it('accepts and rejects complete supported mode-name constructions', () => {
+    const cases: [string, InitialMartyriaStructure, boolean][] = [
+      ['Greek alphabetic authentic name', greekText, true],
+      [
+        'Greek fully inflected authentic name',
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Greek, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+        }),
+        true,
+      ],
+      [
+        'Greek absolute numbering',
+        {
+          ...greekText,
+          modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+        },
+        false,
+      ],
+      [
+        'Greek prenominal order',
+        {
+          ...greekText,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        },
+        false,
+      ],
+      [
+        'Greek Roman numerals',
+        {
+          ...greekText,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+        },
+        false,
+      ],
+      [
+        'English postnominal cardinal words',
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.English, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+        }),
+        true,
+      ],
+      [
+        'English prenominal ordinal digits',
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.English, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        }),
+        true,
+      ],
+      [
+        'English prenominal cardinals',
+        {
+          ...englishText,
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+        },
+        false,
+      ],
+      [
+        'English postnominal ordinals',
+        {
+          ...englishText,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+        },
+        false,
+      ],
+      [
+        'English ordinal Roman numerals',
+        {
+          ...englishText,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+        },
+        false,
+      ],
+      [
+        'English sign-only absolute numbering',
+        {
+          ...attestedStructures['english-authentic-counterpart-number-sign'],
+          modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+        },
+        false,
+      ],
+      [
+        'English sign-only authentic counterpart',
+        attestedStructures['english-authentic-counterpart-number-sign'],
+        true,
+      ],
+      [
+        'Spanish postnominal cardinal digits',
+        attestedStructures['spanish-tono-number'],
+        true,
+      ],
+      [
+        'Spanish prenominal ordinal words',
+        attestedStructures['spanish-ordinal-tono'],
+        true,
+      ],
+      [
+        'Spanish cardinal Roman reading',
+        {
+          ...attestedStructures['spanish-tono-roman-numeral'],
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+        },
+        true,
+      ],
+      [
+        'Spanish sign-only plagal naming',
+        {
+          ...attestedStructures['spanish-tono-ordinal'],
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+          modeNamingScheme:
+            INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+        },
+        false,
+      ],
+      [
+        'Church Slavonic postnominal alphabetic ordinal',
+        attestedStructures['church-slavonic-glas-cyrillic-numeral-text'],
+        true,
+      ],
+      [
+        'Church Slavonic prenominal word ordinal',
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        }),
+        true,
+      ],
+      [
+        'Church Slavonic cardinal words',
+        {
+          ...attestedStructures['church-slavonic-glas-ordinal-text'],
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+        },
+        false,
+      ],
+      [
+        'Church Slavonic Roman numerals',
+        {
+          ...attestedStructures['church-slavonic-glas-ordinal-text'],
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+        },
+        false,
+      ],
+      [
+        'Russian postnominal Roman ordinal',
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Russian, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+        }),
+        true,
+      ],
+      [
+        'Russian prenominal word ordinal',
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Russian, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        }),
+        true,
+      ],
+      [
+        'Russian bare prenominal digits',
+        {
+          ...attestedStructures['russian-glas-number'],
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        },
+        false,
+      ],
+      [
+        'Russian cardinal words',
+        {
+          ...attestedStructures['russian-glas-ordinal-text'],
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+        },
+        false,
+      ],
+      [
+        'Arabic fused ordinal phrase',
+        attestedStructures['arabic-ordinal'],
+        true,
+      ],
+      [
+        'Arabic artificial prenominal axis',
+        {
+          ...attestedStructures['arabic-ordinal'],
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        },
+        false,
+      ],
+      [
+        'Arabic sign-only plagal naming',
+        {
+          ...attestedStructures['arabic-ordinal'],
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+          modeNamingScheme:
+            INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+        },
+        false,
+      ],
+      [
+        'Romanian postnominal cardinal Roman numeral',
+        attestedStructures['romanian-glas-roman-numeral'],
+        true,
+      ],
+      [
+        'Romanian prenominal ordinal digit',
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+          modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+        }),
+        true,
+      ],
+      [
+        'Romanian sign-only laturas name',
+        attestedStructures['romanian-glas'],
+        true,
+      ],
+      [
+        'Romanian prenominal cardinal',
+        {
+          ...attestedStructures['romanian-glas-number'],
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        },
+        false,
+      ],
+      [
+        'Romanian unmodeled text laturas name',
+        {
+          ...attestedStructures['romanian-glas'],
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+        },
+        false,
+      ],
+    ];
+
+    for (const [label, structure, expected] of cases) {
+      expect(
+        `${label}: ${isInitialMartyriaStructureSupported(structure)}`,
+      ).toBe(`${label}: ${expected}`);
+    }
+  });
+
+  it('normalizes unsupported structures to the nearest supported construction', () => {
+    const spanish = normalizeInitialMartyriaStructure({
+      ...attestedStructures['english-mode-number'],
+      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+      modeNamingScheme:
+        INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
+    });
+    expect(spanish).toMatchObject({
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+      modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    });
+
+    const englishCardinal = normalizeInitialMartyriaStructure({
+      ...attestedStructures['english-mode-number-word'],
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    });
+    expect(englishCardinal).toMatchObject({
+      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    });
+
+    const englishOrdinal = normalizeInitialMartyriaStructure({
+      ...englishText,
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    });
+    expect(englishOrdinal).toMatchObject({
+      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    });
+
+    const greek = normalizeInitialMartyriaStructure({
+      ...greekText,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+      modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    });
+    expect(greek).toMatchObject({
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+      modeNamingScheme:
+        INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    });
+
+    const arabic = normalizeInitialMartyriaStructure({
+      ...attestedStructures['arabic-ordinal'],
+      modeIdentificationMethod:
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+      modeNamingScheme:
+        INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    });
+    expect(arabic).toMatchObject({
+      modeIdentificationMethod:
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+      modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    });
+
+    expect(isInitialMartyriaStructureSupported(spanish)).toBe(true);
+    expect(isInitialMartyriaStructureSupported(englishCardinal)).toBe(true);
+    expect(isInitialMartyriaStructureSupported(englishOrdinal)).toBe(true);
+    expect(isInitialMartyriaStructureSupported(greek)).toBe(true);
+    expect(isInitialMartyriaStructureSupported(arabic)).toBe(true);
+    expect(normalizeInitialMartyriaStructure(englishText)).toBe(englishText);
+
+    const created = createInitialMartyriaStyle({
+      displayName: 'Normalized',
+      basedOn: null,
+      structure: {
+        ...attestedStructures['english-mode-number-word'],
+        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+      },
+      appearance: createDefaultInitialMartyriaAppearance(
+        INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+      ),
+    });
+    expect(created.structure).toMatchObject({
+      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    });
+  });
+
+  it('keys structures by what they render and read, not by their axes', () => {
+    const spanishSignCardinal = {
+      ...attestedStructures['spanish-tono-number'],
+      modeIdentificationMethod:
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    };
+    const spanishSignOrdinal = {
+      ...attestedStructures['spanish-tono-ordinal-number'],
+      modeIdentificationMethod:
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    };
+    // Both signs look alike, but one legal structure is read cardinally and
+    // the other ordinally.
+    expect(
+      initialMartyriaStructuresEqual(spanishSignCardinal, spanishSignOrdinal),
+    ).toBe(false);
+    // Number styles hidden by a sign collapse when their reading is the same.
+    expect(
+      initialMartyriaStructuresEqual(
+        {
+          ...spanishSignCardinal,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+        },
+        spanishSignCardinal,
+      ),
+    ).toBe(true);
+    expect(
+      initialMartyriaStructuresEqual(
+        attestedStructures['english-plagal-first'],
+        attestedStructures['english-authentic-counterpart-number-sign'],
+      ),
+    ).toBe(false);
+    expect(
+      initialMartyriaStructuresEqual(englishText, {
+        ...englishText,
+        transliterateNoteNames: true,
+      }),
+    ).toBe(false);
+    expect(
+      initialMartyriaStructuresEqual(greekText, {
+        ...greekText,
+        transliterateNoteNames: true,
+      }),
+    ).toBe(true);
+  });
+
+  it('finds the style that already renders a structure', () => {
+    const styles = [
+      ...builtInInitialMartyriaStyles,
+      styleFor(
+        attestedStructures['english-authentic-counterpart-roman-numeral-text'],
+      ),
+    ];
+
+    expect(
+      findInitialMartyriaStyleWithStructure(
+        styles,
+        attestedStructures['english-authentic-counterpart-roman-numeral-text'],
+      )?.id,
+    ).toBe('test');
+    expect(findInitialMartyriaStyleWithStructure(styles, greekText)?.id).toBe(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekAlphabeticNumerals,
+    );
+    expect(
+      findInitialMartyriaStyleWithStructure(styles, {
+        ...greekText,
+        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+      }),
+    ).toBeNull();
+  });
+
+  it('builds reachable variations across correlated grammar axes', () => {
+    const englishRoman = {
+      ...attestedStructures['english-mode-roman-numeral'],
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    };
+    const forms = getInitialMartyriaStructureVariations(
+      englishRoman,
+      initialMartyriaNumeralForms,
+      (structure, form) => ({ ...structure, ...form }),
+    );
+
+    expect(
+      forms.map(
+        (variation) =>
+          `${variation.value.numeralStyle}/${variation.value.numeralKind}${
+            variation.current ? '*' : ''
+          }`,
+      ),
+    ).toEqual([
+      'digits/cardinal',
+      'digits/ordinal',
+      'roman-numerals/cardinal*',
+      'words/cardinal',
+      'words/ordinal',
+    ]);
+    expect(new Set(forms.map((variation) => variation.key)).size).toBe(
+      forms.length,
+    );
+
+    const greekForms = getInitialMartyriaStructureVariations(
+      greekText,
+      initialMartyriaNumeralForms,
+      (structure, form) => ({ ...structure, ...form }),
+    );
+    expect(greekForms.map((variation) => variation.value.numeralStyle)).toEqual(
+      [
+        INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
+        INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+      ],
+    );
+    expect(greekForms.filter((variation) => variation.current)).toHaveLength(1);
+
+    const englishPlacements = getInitialMartyriaStructureVariations(
+      attestedStructures['english-mode-number-word'],
+      [
+        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+      ],
+      (structure, numeralQualifier) => ({ ...structure, numeralQualifier }),
+    );
+    expect(
+      englishPlacements.map((variation) => ({
+        value: variation.value,
+        numeralKind: variation.structure.numeralKind,
+        current: variation.current,
+      })),
+    ).toEqual([
+      {
+        value: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+        numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+        current: true,
+      },
+      {
+        value: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+        current: false,
+      },
+    ]);
+
+    const romanianMethods = getInitialMartyriaStructureVariations(
+      attestedStructures['romanian-glas'],
+      initialMartyriaModeIdentificationMethods,
+      (structure, modeIdentificationMethod) => ({
+        ...structure,
+        modeIdentificationMethod,
+      }),
+    );
+    expect(romanianMethods.map((variation) => variation.value)).toEqual(
+      initialMartyriaModeIdentificationMethods,
+    );
+    expect(
+      romanianMethods
+        .filter(
+          (variation) =>
+            variation.value !==
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+        )
+        .every(
+          (variation) =>
+            variation.structure.modeNamingScheme ===
+            INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+        ),
+    ).toBe(true);
+  });
+
+  it('enumerates exactly the grammar-derived structures for every method', () => {
+    for (const languageId of initialMartyriaLanguageIds) {
+      for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
+        const structures = enumerateInitialMartyriaStructures({
+          languageId,
+          modeIdentificationMethod,
+          transliterateNoteNames: false,
+          flowDirection: 'page',
+        });
+        const keys = structures.map((variation) => variation.key);
+        const expected =
+          modeIdentificationMethod ===
+          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+            ? modeSignStructureSignatures[languageId]
+            : textStructureSignatures[languageId];
+
+        expect(
+          structures.map((variation) => signature(variation.structure)),
+        ).toEqual(expected);
+        expect(new Set(keys).size).toBe(keys.length);
+        expect(
+          structures.every((variation) =>
+            isInitialMartyriaStructureSupported(variation.structure),
+          ),
+        ).toBe(true);
+        // Every tile renders for every mode; a structure the lexicon cannot
+        // express would have thrown or produced undefined text.
+        for (const variation of structures) {
+          const style = styleFor(variation.structure);
+          for (let mode = 1; mode <= 8; mode++) {
+            const runs = resolve(style, elementForMode(mode)).runs;
+            expect(textOf(runs).every((text) => text !== 'undefined')).toBe(
+              true,
+            );
+          }
+        }
+      }
+    }
+  });
+
+  it('renders the corrected grammar-specific morphology', () => {
+    const examples: [InitialMartyriaStructure, string, string][] = [
+      [
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Greek, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+        }),
+        'Ἦχος | πλάγιος τοῦ | δευτέρου.',
+        'Ήχος Πλάγιος του Δευτέρου εκ του Πα',
+      ],
+      [
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.English, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+          modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+        }),
+        'Mode | Six.',
+        'Mode Six from Pa',
+      ],
+      [
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+        }),
+        'Tono | VI.',
+        'Tono seis desde Pa',
+      ],
+      [
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        }),
+        '6.º | tono.',
+        'Sexto tono desde Pa',
+      ],
+      [
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        }),
+        'Шесты́й | гла́съ.',
+        'Шесты́й гла́съ ѿ Па',
+      ],
+      [
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Russian, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        }),
+        'Шестой | глас.',
+        'Шестой глас от Па',
+      ],
+      [
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+        }),
+        'اللحن السادس',
+        'اللحن السادس من با',
+      ],
+      [
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+          modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+        }),
+        'Al 6-lea | glas.',
+        'Al șaselea glas de la Pa',
+      ],
+    ];
+
+    for (const [structure, expectedText, expectedPronunciation] of examples) {
+      const resolution = resolve(styleFor(structure), elementForMode(6));
+      expect(textOf(resolution.runs).join(' | ')).toBe(expectedText);
+      expect(resolution.pronunciation).toBe(expectedPronunciation);
+    }
+  });
+
+  it('keeps every curated structure in its grammar-derived gallery', () => {
+    // Every attested structure is a tile in its language's gallery.
+    for (const [label, structure] of Object.entries(attestedStructures)) {
+      const keys = new Set(
+        enumerateInitialMartyriaStructures(structure).map(
+          (variation) => variation.key,
+        ),
+      );
+      expect(
+        `${label}: ${keys.has(getInitialMartyriaStructureKey(structure))}`,
+      ).toBe(`${label}: true`);
+    }
   });
 });

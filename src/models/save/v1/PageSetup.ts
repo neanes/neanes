@@ -1,7 +1,5 @@
 import { Unit } from '@/utils/Unit';
 
-import type { InitialMartyriaConfiguration } from './InitialMartyriaStyle';
-
 export type PageSize =
   | 'A3'
   | 'A4'
@@ -94,8 +92,7 @@ export class PageSetup {
   public modeKeyDefaultStrokeWidth = 0;
   public modeKeyDefaultFontSize = Unit.fromPt(20);
   public modeKeyDefaultHeightAdjustment = 0;
-  public initialMartyriaConfiguration:
-    InitialMartyriaConfiguration | null | undefined = undefined;
+  public initialMartyriaStyleId: string | null | undefined = undefined;
 
   public accidentalDefaultColor = '#ED0000';
   public accidentalDefaultStrokeWidth = 0;

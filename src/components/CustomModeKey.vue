@@ -8,7 +8,7 @@
       <span class="mode-key-signature" :dir="signatureResolution.flowDirection">
         <span
           class="sr-only"
-          :lang="signatureResolution.style.languageId"
+          :lang="signatureResolution.structure.languageId"
           :dir="signatureResolution.flowDirection"
           >{{ signatureResolution.pronunciation }}</span
         >
@@ -199,8 +199,8 @@ import {
   type InitialMartyriaPitchNote,
   type InitialMartyriaSeparator,
   type InitialMartyriaStartingNoteRun,
-  type ResolvedInitialMartyriaConfiguration,
   type ResolvedInitialMartyriaRun,
+  type ResolvedInitialMartyriaStyle,
   resolveInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
@@ -230,8 +230,8 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
-  initialMartyriaConfiguration: {
-    type: Object as PropType<ResolvedInitialMartyriaConfiguration>,
+  resolvedStyle: {
+    type: Object as PropType<ResolvedInitialMartyriaStyle>,
     required: true,
   },
 });
@@ -239,7 +239,7 @@ const props = defineProps({
 const signatureResolution = computed(() =>
   resolveInitialMartyriaStyle({
     context: getInitialMartyriaContext(props.element),
-    resolvedConfiguration: props.initialMartyriaConfiguration,
+    resolvedStyle: props.resolvedStyle,
     pageSetup: props.pageSetup,
   }),
 );
@@ -263,9 +263,7 @@ const neumeFontSize = computed(
   () =>
     props.element.computedFontSize || props.pageSetup.modeKeyDefaultFontSize,
 );
-const baseTextAppearance = computed(
-  () => props.initialMartyriaConfiguration.mainAppearance,
-);
+const baseTextAppearance = computed(() => props.resolvedStyle.mainAppearance);
 const fixedSeparatorFontSize = computed(
   () => baseTextAppearance.value.fontSize ?? neumeFontSize.value,
 );

@@ -39,8 +39,8 @@ import {
   getInitialMartyriaSeparatorAfter,
   getInitialMartyriaSeparatorBefore,
   type InitialMartyriaAppearance,
-  type ResolvedInitialMartyriaConfiguration,
   type ResolvedInitialMartyriaRun,
+  type ResolvedInitialMartyriaStyle,
   resolveInitialMartyriaStyle,
   resolveInitialMartyriaStyleSelection,
 } from '@/models/InitialMartyriaStyle';
@@ -662,8 +662,9 @@ export class LayoutService {
 
           const initialMartyriaStyleSelection =
             resolveInitialMartyriaStyleSelection({
-              elementConfiguration: modeKeyElement.initialMartyriaConfiguration,
-              pageConfiguration: pageSetup.initialMartyriaConfiguration,
+              elementStyleId: modeKeyElement.initialMartyriaStyleId,
+              pageStyleId: pageSetup.initialMartyriaStyleId,
+              styles: score.initialMartyriaStyles,
             });
           const usesStandardModeKey =
             initialMartyriaStyleSelection.kind === 'standard';
@@ -2336,7 +2337,7 @@ export class LayoutService {
       workspace.neumesEndPx + elementWidthPx + lyricEndGlueWidth;
   }
 
-  private static getStandardInitialMartyriaWidth(element: ModeKeyElement) {
+  public static getStandardInitialMartyriaWidth(element: ModeKeyElement) {
     const neumes: Neume[] = [ModeSign.Ekhos];
     if (element.isPlagal) {
       neumes.push(ModeSign.Plagal);
@@ -2395,17 +2396,17 @@ export class LayoutService {
     return width;
   }
 
-  private static getInitialMartyriaGeometry(
+  public static getInitialMartyriaGeometry(
     element: ModeKeyElement,
     pageSetup: PageSetup,
-    resolvedConfiguration: ResolvedInitialMartyriaConfiguration,
+    resolvedStyle: ResolvedInitialMartyriaStyle,
   ) {
     const resolution = resolveInitialMartyriaStyle({
       context: getInitialMartyriaContext(element),
-      resolvedConfiguration,
+      resolvedStyle,
       pageSetup,
     });
-    const baseTextAppearance = resolvedConfiguration.mainAppearance;
+    const baseTextAppearance = resolvedStyle.mainAppearance;
     const fixedSeparatorFontSize =
       baseTextAppearance.fontSize ?? element.computedFontSize;
     const hasCustomText = resolution.runs.some(

@@ -19,8 +19,17 @@ import {
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
 import {
-  type InitialMartyriaConfiguration,
+  findInitialMartyriaStyle,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
+  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
+  INITIAL_MARTYRIA_NUMERAL_KINDS,
+  INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
+  INITIAL_MARTYRIA_NUMERAL_STYLES,
+  type InitialMartyriaLanguageId,
+  initialMartyriaLanguageIds,
+  type InitialMartyriaStyle,
   isBuiltInInitialMartyriaStyleId,
+  isInitialMartyriaStructureSupported,
 } from '@/models/InitialMartyriaStyle';
 import { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -54,7 +63,7 @@ import {
 } from '@/models/save/v1/Element';
 import type { Footer as Footer_v1 } from '@/models/save/v1/Footer';
 import type { Header as Header_v1 } from '@/models/save/v1/Header';
-import type { InitialMartyriaConfiguration as InitialMartyriaConfiguration_v1 } from '@/models/save/v1/InitialMartyriaStyle';
+import type { InitialMartyriaStyle as InitialMartyriaStyle_v1 } from '@/models/save/v1/InitialMartyriaStyle';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import {
   DocumentProperties as DocumentProperties_v1,
@@ -886,29 +895,110 @@ function splitSavedFontFamily(
   };
 }
 
-function saveInitialMartyriaConfiguration(
-  configuration: InitialMartyriaConfiguration,
-): InitialMartyriaConfiguration_v1 {
+function saveInitialMartyriaStyle(
+  style: InitialMartyriaStyle,
+): InitialMartyriaStyle_v1 {
   return {
-    styleId: configuration.styleId,
-    appearanceOverrides: {
-      ...configuration.appearanceOverrides,
+    id: style.id,
+    displayName: style.displayName,
+    basedOn: style.basedOn ?? undefined,
+    ...style.structure,
+    ...style.appearance,
+  };
+}
+
+function isOneOf<T extends string>(
+  values: readonly T[],
+  value: unknown,
+): value is T {
+  return values.includes(value as T);
+}
+
+/*
+ * A saved style whose axes this version does not understand, or whose axis
+ * combination it does not support, is dropped rather than guessed at;
+ * references to it then render as Standard.
+ */
+function loadInitialMartyriaStyle(
+  saved: InitialMartyriaStyle_v1,
+): InitialMartyriaStyle | null {
+  if (
+    isBuiltInInitialMartyriaStyleId(saved.id) ||
+    !isOneOf<InitialMartyriaLanguageId>(
+      initialMartyriaLanguageIds,
+      saved.languageId,
+    ) ||
+    !isOneOf(
+      Object.values(INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS),
+      saved.modeIdentificationMethod,
+    ) ||
+    !isOneOf(
+      Object.values(INITIAL_MARTYRIA_NUMERAL_KINDS),
+      saved.numeralKind,
+    ) ||
+    !isOneOf(
+      Object.values(INITIAL_MARTYRIA_NUMERAL_STYLES),
+      saved.numeralStyle,
+    ) ||
+    !isOneOf(
+      Object.values(INITIAL_MARTYRIA_NUMERAL_QUALIFIERS),
+      saved.numeralQualifier,
+    ) ||
+    !isOneOf(
+      Object.values(INITIAL_MARTYRIA_MODE_NAMING_SCHEMES),
+      saved.modeNamingScheme,
+    ) ||
+    (saved.flowDirection !== undefined &&
+      !isOneOf(['page', 'ltr', 'rtl'], saved.flowDirection))
+  ) {
+    return null;
+  }
+  const structure = {
+    languageId: saved.languageId,
+    modeIdentificationMethod: saved.modeIdentificationMethod,
+    numeralKind: saved.numeralKind,
+    numeralStyle: saved.numeralStyle,
+    numeralQualifier: saved.numeralQualifier,
+    modeNamingScheme: saved.modeNamingScheme,
+    transliterateNoteNames: saved.transliterateNoteNames === true,
+    flowDirection: saved.flowDirection ?? 'page',
+  };
+  if (!isInitialMartyriaStructureSupported(structure)) {
+    return null;
+  }
+  return {
+    id: saved.id,
+    displayName: saved.displayName,
+    basedOn:
+      saved.basedOn != null && isBuiltInInitialMartyriaStyleId(saved.basedOn)
+        ? saved.basedOn
+        : null,
+    structure,
+    appearance: {
+      mainFontFamily: saved.mainFontFamily,
+      greekFontFamily: saved.greekFontFamily,
+      fontStyle: normalizeFontStyle(saved.fontStyle),
+      fontSize: saved.fontSize,
+      color: saved.color,
+      strokeWidth: saved.strokeWidth,
+      fontVariantCaps: saved.fontVariantCaps ?? null,
+      fontVariantNumeric: saved.fontVariantNumeric ?? null,
+      fontVariantLigatures: saved.fontVariantLigatures ?? null,
+      fontVariantAlternates: saved.fontVariantAlternates ?? null,
     },
   };
 }
 
-function loadInitialMartyriaConfiguration(
-  configuration: InitialMartyriaConfiguration_v1,
-): InitialMartyriaConfiguration | null {
-  if (!isBuiltInInitialMartyriaStyleId(configuration.styleId)) {
-    return null;
+function loadInitialMartyriaStyleId(
+  styleId: string | null | undefined,
+  styles: InitialMartyriaStyle[],
+) {
+  if (styleId == null) {
+    return styleId;
   }
-  return {
-    styleId: configuration.styleId,
-    appearanceOverrides: {
-      ...configuration.appearanceOverrides,
-    },
-  };
+  return findInitialMartyriaStyle(styles, styleId) == null
+    ? undefined
+    : styleId;
 }
 
 export class SaveService {
@@ -948,6 +1038,10 @@ export class SaveService {
     score.paragraphStyles = s.paragraphStyles.map((style) =>
       this.SaveParagraphStyle(style),
     );
+    score.initialMartyriaStyles =
+      s.initialMartyriaStyles.length > 0
+        ? s.initialMartyriaStyles.map(saveInitialMartyriaStyle)
+        : undefined;
     this.SaveLyricSetup(score.staff.lyrics, s.staff.lyrics);
 
     this.SaveHeader(score.headers.default, s.headers.default);
@@ -1062,10 +1156,7 @@ export class SaveService {
     pageSetup.modeKeyDefaultStrokeWidth = p.modeKeyDefaultStrokeWidth;
     pageSetup.modeKeyDefaultFontSize = p.modeKeyDefaultFontSize;
     pageSetup.modeKeyDefaultHeightAdjustment = p.modeKeyDefaultHeightAdjustment;
-    pageSetup.initialMartyriaConfiguration =
-      p.initialMartyriaConfiguration == null
-        ? null
-        : saveInitialMartyriaConfiguration(p.initialMartyriaConfiguration);
+    pageSetup.initialMartyriaStyleId = p.initialMartyriaStyleId ?? undefined;
 
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
@@ -1639,10 +1730,7 @@ export class SaveService {
     element.showAmbitus = e.showAmbitus || undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
     element.inline = e.inline || undefined;
-    element.initialMartyriaConfiguration =
-      e.initialMartyriaConfiguration == null
-        ? e.initialMartyriaConfiguration
-        : saveInitialMartyriaConfiguration(e.initialMartyriaConfiguration);
+    element.initialMartyriaStyleId = e.initialMartyriaStyleId;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo || undefined;
   }
 
@@ -1660,6 +1748,14 @@ export class SaveService {
       s.documentProperties ?? new DocumentProperties_v1(),
     );
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
+    score.initialMartyriaStyles = (s.initialMartyriaStyles ?? [])
+      .map(loadInitialMartyriaStyle)
+      .filter((style) => style != null);
+    score.pageSetup.initialMartyriaStyleId =
+      loadInitialMartyriaStyleId(
+        s.pageSetup.initialMartyriaStyleId,
+        score.initialMartyriaStyles,
+      ) ?? null;
     const hasLegacyStyleDefaults = hasLegacyPageSetupStyleDefaults(s.pageSetup);
     score.paragraphStyles = this.LoadParagraphStyles_v1(
       s.paragraphStyles ?? [],
@@ -1758,6 +1854,11 @@ export class SaveService {
             element as ModeKeyElement,
             e as ModeKeyElement_v1,
           );
+          (element as ModeKeyElement).initialMartyriaStyleId =
+            loadInitialMartyriaStyleId(
+              (e as ModeKeyElement_v1).initialMartyriaStyleId,
+              score.initialMartyriaStyles,
+            );
           break;
 
         case ElementType_v1.ImageBox:
@@ -1933,10 +2034,6 @@ export class SaveService {
     pageSetup.modeKeyDefaultHeightAdjustment =
       p.modeKeyDefaultHeightAdjustment ??
       pageSetup.modeKeyDefaultHeightAdjustment;
-    pageSetup.initialMartyriaConfiguration =
-      p.initialMartyriaConfiguration == null
-        ? null
-        : loadInitialMartyriaConfiguration(p.initialMartyriaConfiguration);
 
     pageSetup.accidentalDefaultColor =
       p.accidentalDefaultColor ?? pageSetup.accidentalDefaultColor;
@@ -2652,12 +2749,6 @@ export class SaveService {
     element.showAmbitus = e.showAmbitus === true;
     element.useDefaultStyle = e.useDefaultStyle === true;
     element.inline = e.inline === true;
-    element.initialMartyriaConfiguration =
-      e.initialMartyriaConfiguration === undefined
-        ? undefined
-        : e.initialMartyriaConfiguration === null
-          ? null
-          : loadInitialMartyriaConfiguration(e.initialMartyriaConfiguration);
     element.permanentEnharmonicZo = e.permanentEnharmonicZo === true;
 
     // For backwards compatibility, we check the current mode key templates

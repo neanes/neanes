@@ -71,6 +71,7 @@
                       class="!w-auto !border-0 [--zoom:1]"
                       :element="template"
                       :page-setup="pageSetup"
+                      :initial-martyria-styles="initialMartyriaStyles"
                     />
                   </div>
                   <ItemDescription>
@@ -152,7 +153,10 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
-import { resolveInitialMartyriaStyleSelection } from '@/models/InitialMartyriaStyle';
+import {
+  type InitialMartyriaStyle,
+  resolveInitialMartyriaStyleSelection,
+} from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
@@ -170,6 +174,10 @@ const props = defineProps({
   },
   pageSetup: {
     type: Object as PropType<PageSetup>,
+    required: true,
+  },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
     required: true,
   },
 });
@@ -231,8 +239,9 @@ const modeKeyTemplatesForSelectedMode = computed(() => {
 
 function getModeKeyTemplatesForMode(mode: number) {
   const styleSelection = resolveInitialMartyriaStyleSelection({
-    elementConfiguration: props.element.initialMartyriaConfiguration,
-    pageConfiguration: props.pageSetup.initialMartyriaConfiguration,
+    elementStyleId: props.element.initialMartyriaStyleId,
+    pageStyleId: props.pageSetup.initialMartyriaStyleId,
+    styles: props.initialMartyriaStyles,
   });
   const neumeFontFamily =
     styleSelection.kind === 'standard'
@@ -249,8 +258,7 @@ function getModeKeyTemplatesForMode(mode: number) {
         ),
         {
           descriptionSelector: x.description,
-          initialMartyriaConfiguration:
-            props.element.initialMartyriaConfiguration,
+          initialMartyriaStyleId: props.element.initialMartyriaStyleId,
         },
       ),
     );

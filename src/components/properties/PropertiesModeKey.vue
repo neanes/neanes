@@ -36,19 +36,22 @@
                 })
               }}
             </SelectItem>
-            <SelectItem
-              v-for="style in availableInitialMartyriaStyles"
-              :key="style.id"
-              :value="style.id"
-            >
-              {{ initialMartyriaStyleDisplayName(style) }}
-            </SelectItem>
+            <SelectGroup v-for="group in styleGroups" :key="group.key">
+              <SelectLabel>{{ group.label }}</SelectLabel>
+              <SelectItem
+                v-for="style in group.styles"
+                :key="style.id"
+                :value="style.id"
+              >
+                {{ getInitialMartyriaStyleDisplayName(style, t) }}
+              </SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
       </Field>
       <Button variant="outline" @click="$emit('open-style-dialog')">
         {{
-          $t(($) => $.dialog.initialMartyriaStyles.customize, {
+          $t(($) => $.dialog.initialMartyriaStyles.manageStyles, {
             ns: 'dialog',
           })
         }}
@@ -323,7 +326,9 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -333,12 +338,14 @@ import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import {
   builtInInitialMartyriaStyles,
-  createInitialMartyriaConfiguration,
+  findInitialMartyriaStyle,
   getInitialMartyriaStyleDisplayName,
+  initialMartyriaLanguageIds,
   type InitialMartyriaStyle,
   resolveInitialMartyriaStyleSelection,
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
+import { getInitialMartyriaLanguageName } from '@/utils/initialMartyriaLabels';
 import {
   fraction1FormatOptions,
   fraction2FormatOptions,
@@ -358,6 +365,10 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
 });
 
 const { t } = useTranslation();
@@ -369,15 +380,41 @@ const emit = defineEmits([
 
 const inheritStyleValue = '__inherit__';
 const standardStyleValue = '__standard__';
-const availableInitialMartyriaStyles = builtInInitialMartyriaStyles;
 
-function initialMartyriaStyleDisplayName(style: InitialMartyriaStyle) {
-  return getInitialMartyriaStyleDisplayName(style, t);
-}
+// Grouped as the styles dialog lists them: the score's own styles, then the
+// built-in styles of each language.
+const styleGroups = computed(() => {
+  const groups: {
+    key: string;
+    label: string;
+    styles: InitialMartyriaStyle[];
+  }[] = [];
+  if (props.initialMartyriaStyles.length > 0) {
+    groups.push({
+      key: 'custom',
+      label: t(($) => $.dialog.initialMartyriaStyles.custom, { ns: 'dialog' }),
+      styles: props.initialMartyriaStyles,
+    });
+  }
+  for (const languageId of initialMartyriaLanguageIds) {
+    groups.push({
+      key: languageId,
+      label: t(($) => $.dialog.initialMartyriaStyles.builtInLanguage, {
+        ns: 'dialog',
+        language: getInitialMartyriaLanguageName(t, languageId),
+      }),
+      styles: builtInInitialMartyriaStyles.filter(
+        (style) => style.structure.languageId === languageId,
+      ),
+    });
+  }
+  return groups;
+});
 const styleSelection = computed(() =>
   resolveInitialMartyriaStyleSelection({
-    elementConfiguration: props.element.initialMartyriaConfiguration,
-    pageConfiguration: props.pageSetup.initialMartyriaConfiguration,
+    elementStyleId: props.element.initialMartyriaStyleId,
+    pageStyleId: props.pageSetup.initialMartyriaStyleId,
+    styles: props.initialMartyriaStyles,
   }),
 );
 const usesStandardModeKey = computed(
@@ -385,23 +422,20 @@ const usesStandardModeKey = computed(
 );
 const modeKeyStyleValue = computed({
   get: () =>
-    props.element.initialMartyriaConfiguration === undefined
+    props.element.initialMartyriaStyleId === undefined
       ? inheritStyleValue
-      : (props.element.initialMartyriaConfiguration?.styleId ??
-        standardStyleValue),
+      : (props.element.initialMartyriaStyleId ?? standardStyleValue),
   set: (value: string) => {
-    const style = builtInInitialMartyriaStyles.find(
-      (item) => item.id === value,
-    );
     emit('update', {
-      initialMartyriaConfiguration:
+      initialMartyriaStyleId:
         value === inheritStyleValue
           ? undefined
           : value === standardStyleValue
             ? null
-            : style == null
+            : findInitialMartyriaStyle(props.initialMartyriaStyles, value) ==
+                null
               ? undefined
-              : createInitialMartyriaConfiguration(style.id),
+              : value,
     } as Partial<ModeKeyElement>);
   },
 });

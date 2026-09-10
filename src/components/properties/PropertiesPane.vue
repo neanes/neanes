@@ -115,6 +115,7 @@
       :element="modeKeyElement"
       :open-sections="openSections"
       :page-setup="pageSetup"
+      :initial-martyria-styles="initialMartyriaStyles"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:mode-key', modeKeyElement, $event)"
       @open-style-dialog="
@@ -156,6 +157,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 
@@ -194,6 +196,10 @@ const props = defineProps({
   },
   paragraphStyles: {
     type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
     required: true,
   },
   openSections: {

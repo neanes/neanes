@@ -10,7 +10,7 @@
     v-else
     v-bind="$attrs"
     :element="element"
-    :initial-martyria-configuration="styleSelection"
+    :resolved-style="styleSelection"
     :page-setup="pageSetup"
     @select-single="$emit('select-single')"
   />
@@ -23,7 +23,10 @@ import { computed } from 'vue';
 import CustomModeKey from '@/components/CustomModeKey.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import type { ModeKeyElement } from '@/models/Element';
-import { resolveInitialMartyriaStyleSelection } from '@/models/InitialMartyriaStyle';
+import {
+  type InitialMartyriaStyle,
+  resolveInitialMartyriaStyleSelection,
+} from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 
 defineOptions({ inheritAttrs: false });
@@ -38,12 +41,18 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  /** The score's own styles; built-in styles are always available. */
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
 });
 
 const styleSelection = computed(() =>
   resolveInitialMartyriaStyleSelection({
-    elementConfiguration: props.element.initialMartyriaConfiguration,
-    pageConfiguration: props.pageSetup.initialMartyriaConfiguration,
+    elementStyleId: props.element.initialMartyriaStyleId,
+    pageStyleId: props.pageSetup.initialMartyriaStyleId,
+    styles: props.initialMartyriaStyles,
   }),
 );
 </script>

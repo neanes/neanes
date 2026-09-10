@@ -56,7 +56,7 @@
   "format": {
     "root": "Формат",
     "paragraphStyles": "Стили абзацев…",
-    "initialMartyriaStyles": "Выбор стиля начальной мартирии…"
+    "initialMartyriaStyles": "Стили начальной мартирии…"
   },
   "view": {
     "root": "Вид",

@@ -155,7 +155,8 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import {
-  type InitialMartyriaConfiguration,
+  type InitialMartyriaStyle,
+  isBuiltInInitialMartyriaStyleId,
   resolveInitialMartyriaStyleSelection,
 } from '@/models/InitialMartyriaStyle';
 import type {
@@ -7514,15 +7515,47 @@ function updatePageSetup(pageSetup: PageSetup) {
   save();
 }
 
-function useInitialMartyriaConfiguration(
-  configuration: InitialMartyriaConfiguration | null,
-) {
-  commandService.value.execute(
-    pageSetupCommandFactory.create('update-properties', {
-      target: score.value.pageSetup,
-      newValues: { initialMartyriaConfiguration: configuration },
+function updateInitialMartyriaStyles(styles: InitialMartyriaStyle[]) {
+  const nextStyleIds = new Set(styles.map((style) => style.id));
+  const commands: Command[] = [
+    scoreCommandFactory.create('update-properties', {
+      target: score.value,
+      newValues: { initialMartyriaStyles: styles },
     }),
-  );
+  ];
+  // References to a deleted style fall back: the score to Standard, an
+  // element to the score's style.
+  const pageStyleId = score.value.pageSetup.initialMartyriaStyleId;
+  if (pageStyleId != null && !isBuiltInInitialMartyriaStyleId(pageStyleId)) {
+    if (!nextStyleIds.has(pageStyleId)) {
+      commands.push(
+        pageSetupCommandFactory.create('update-properties', {
+          target: score.value.pageSetup,
+          newValues: { initialMartyriaStyleId: null },
+        }),
+      );
+    }
+  }
+  for (const element of score.value.staff.elements) {
+    if (element.elementType !== ElementType.ModeKey) {
+      continue;
+    }
+    const modeKey = element as ModeKeyElement;
+    const styleId = modeKey.initialMartyriaStyleId;
+    if (
+      styleId != null &&
+      !isBuiltInInitialMartyriaStyleId(styleId) &&
+      !nextStyleIds.has(styleId)
+    ) {
+      commands.push(
+        modeKeyCommandFactory.create('update-properties', {
+          target: modeKey,
+          newValues: { initialMartyriaStyleId: undefined },
+        }),
+      );
+    }
+  }
+  commandService.value.executeAsBatch(commands);
   save();
 }
 
@@ -8397,35 +8430,32 @@ function openInitialMartyriaStyleDialog(element: ModeKeyElement) {
   initialMartyriaStylesDialogIsOpen.value = true;
 }
 
-function updateInitialMartyriaElementConfiguration(
-  configuration: InitialMartyriaConfiguration | null,
-) {
+function applyInitialMartyriaStyleToElement(styleId: string | null) {
   if (initialMartyriaStylesDialogElement.value != null) {
     updateModeKey(initialMartyriaStylesDialogElement.value, {
-      initialMartyriaConfiguration: configuration,
+      initialMartyriaStyleId: styleId,
     });
   }
 }
 
-function useInitialMartyriaConfigurationForDocument(
-  configuration: InitialMartyriaConfiguration | null,
-) {
+function useInitialMartyriaStyleForDocument(styleId: string | null) {
   const element = initialMartyriaStylesDialogElement.value;
-  if (element == null) {
-    useInitialMartyriaConfiguration(configuration);
-    return;
-  }
-
-  commandService.value.executeAsBatch([
+  const commands: Command[] = [
     pageSetupCommandFactory.create('update-properties', {
       target: score.value.pageSetup,
-      newValues: { initialMartyriaConfiguration: configuration },
+      newValues: { initialMartyriaStyleId: styleId },
     }),
-    modeKeyCommandFactory.create('update-properties', {
-      target: element,
-      newValues: { initialMartyriaConfiguration: undefined },
-    }),
-  ]);
+  ];
+  if (element != null) {
+    // The element the dialog was opened from follows the score again.
+    commands.push(
+      modeKeyCommandFactory.create('update-properties', {
+        target: element,
+        newValues: { initialMartyriaStyleId: undefined },
+      }),
+    );
+  }
+  commandService.value.executeAsBatch(commands);
   save();
 }
 
@@ -9989,8 +10019,9 @@ function setContextMenuUseDefaultStyle(
 function usesStandardModeKey(element: ModeKeyElement) {
   return (
     resolveInitialMartyriaStyleSelection({
-      elementConfiguration: element.initialMartyriaConfiguration,
-      pageConfiguration: score.value.pageSetup.initialMartyriaConfiguration,
+      elementStyleId: element.initialMartyriaStyleId,
+      pageStyleId: score.value.pageSetup.initialMartyriaStyleId,
+      styles: score.value.initialMartyriaStyles,
     }).kind === 'standard'
   );
 }
@@ -10130,6 +10161,7 @@ function renderTabLabel(tab: Tab) {
             :open-sections="propertiesPaneOpenSections"
             :page-setup="score.pageSetup"
             :paragraph-styles="score.paragraphStyles"
+            :initial-martyria-styles="score.initialMartyriaStyles"
             @update:annotation="updateAnnotation"
             @update:text-box="updateTextBox"
             @update:rich-text-box="updateRichTextBox"
@@ -10960,6 +10992,9 @@ function renderTabLabel(tab: Tab) {
                               "
                               :element="element as ModeKeyElement"
                               :page-setup="score.pageSetup"
+                              :initial-martyria-styles="
+                                score.initialMartyriaStyles
+                              "
                               :class="[
                                 {
                                   selectedTextbox: isSelected(element),
@@ -11434,6 +11469,7 @@ function renderTabLabel(tab: Tab) {
         <ToolbarModeKey
           :element="inspectorContext.element"
           :page-setup="score.pageSetup"
+          :initial-martyria-styles="score.initialMartyriaStyles"
           @update="updateModeKey(inspectorContext.element, $event)"
           @update:tempo="setModeKeyTempo(inspectorContext.element, $event)"
           @open-mode-key-dialog="openModeKeyDialog"
@@ -11545,6 +11581,7 @@ function renderTabLabel(tab: Tab) {
       v-model:open="modeKeyDialogIsOpen"
       :element="selectedElement as ModeKeyElement"
       :page-setup="score.pageSetup"
+      :initial-martyria-styles="score.initialMartyriaStyles"
       @update="
         updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
       "
@@ -11604,18 +11641,18 @@ function renderTabLabel(tab: Tab) {
     <InitialMartyriaStylesDialog
       v-if="initialMartyriaStylesDialogIsOpen"
       v-model:open="initialMartyriaStylesDialogIsOpen"
-      :configuration="
-        initialMartyriaStylesDialogElement == null
-          ? score.pageSetup.initialMartyriaConfiguration
-          : initialMartyriaStylesDialogElement.initialMartyriaConfiguration
+      :styles="score.initialMartyriaStyles"
+      :element-style-id="
+        initialMartyriaStylesDialogElement?.initialMartyriaStyleId
       "
       :page-setup="score.pageSetup"
       :fonts="fonts"
       :target="
         initialMartyriaStylesDialogElement == null ? 'document' : 'element'
       "
-      @update="updateInitialMartyriaElementConfiguration($event)"
-      @use-for-document="useInitialMartyriaConfigurationForDocument($event)"
+      @update:styles="updateInitialMartyriaStyles($event)"
+      @apply="applyInitialMartyriaStyleToElement($event)"
+      @use-for-document="useInitialMartyriaStyleForDocument($event)"
     />
     <DocumentPropertiesDialog
       v-if="documentPropertiesDialogIsOpen"

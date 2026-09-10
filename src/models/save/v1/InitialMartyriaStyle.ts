@@ -17,6 +17,7 @@ export interface InitialMartyriaStyle {
   fontSize: number;
   color: string;
   strokeWidth: number;
+  useOrdinalForms: boolean;
   fontVariantCaps: string | null | undefined;
   fontVariantNumeric: string | null | undefined;
   fontVariantLigatures: string | null | undefined;

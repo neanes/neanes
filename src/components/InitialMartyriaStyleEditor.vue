@@ -173,6 +173,23 @@
               />
             </Field>
 
+            <Field v-if="hasOrdinalDigits" orientation="horizontal">
+              <Checkbox
+                id="initial-martyria-ordinal-forms"
+                :model-value="draft.appearance.useOrdinalForms"
+                @update:model-value="
+                  setAppearance('useOrdinalForms', $event === true)
+                "
+              />
+              <FieldLabel for="initial-martyria-ordinal-forms">
+                {{
+                  $t(($) => $.dialog.initialMartyriaStyles.useOrdinalForms, {
+                    ns,
+                  })
+                }}
+              </FieldLabel>
+            </Field>
+
             <details class="rounded-md border p-3">
               <summary class="cursor-pointer text-sm font-medium">
                 {{
@@ -194,6 +211,7 @@
                   :numeric-clearable="false"
                   :ligatures-clearable="false"
                   :alternates-clearable="false"
+                  :show-ordinals="false"
                   @change="setFontVariant"
                 />
               </div>
@@ -371,6 +389,7 @@ import {
   initialMartyriaNumeralQualifiers,
   type InitialMartyriaStructure,
   initialMartyriaStructureHasGreekText,
+  initialMartyriaStructureHasOrdinalDigits,
   type InitialMartyriaStyle,
   type InitialMartyriaStyleAppearance,
   normalizeInitialMartyriaStructure,
@@ -436,6 +455,9 @@ const showGreekFontControl = computed(
     !languageUsesGreekScript.value &&
     (!draft.value.structure.transliterateNoteNames ||
       initialMartyriaStructureHasGreekText(draft.value.structure)),
+);
+const hasOrdinalDigits = computed(() =>
+  initialMartyriaStructureHasOrdinalDigits(draft.value.structure),
 );
 const basedOnStyle = computed(() =>
   draft.value.basedOn == null
@@ -538,7 +560,7 @@ const strips = computed<Strip[]>(() => {
 });
 
 function withStructure(structure: InitialMartyriaStructure) {
-  return { ...draft.value, structure };
+  return withInitialMartyriaStyleStructure(draft.value, structure);
 }
 
 function update(changes: Partial<InitialMartyriaStyle>) {

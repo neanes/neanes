@@ -163,6 +163,7 @@
     "textFont": "Шрифт текста",
     "mainFont": "Основной шрифт текста",
     "greekTextFont": "Шрифт греческого текста",
+    "useOrdinalForms": "Использовать порядковые формы",
     "advancedTypography": "Расширенная типографика",
     "languages": {
       "greek": "Греческий",

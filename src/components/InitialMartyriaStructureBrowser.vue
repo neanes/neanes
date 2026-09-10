@@ -194,6 +194,7 @@ import {
   getSampleModeOptions,
   getSampleTemplateId,
   type InitialMartyriaStructureSelection,
+  withInitialMartyriaStyleStructure,
 } from './InitialMartyriaStylesDialog.shared';
 
 const ns = 'dialog';
@@ -291,7 +292,7 @@ const tiles = computed<Tile[]>(() =>
     ({ structure, key }) => ({
       key,
       structure,
-      style: { ...props.seed, structure },
+      style: withInitialMartyriaStyleStructure(props.seed, structure),
       matchingStyle: stylesByKey.value.get(key) ?? null,
     }),
   ),

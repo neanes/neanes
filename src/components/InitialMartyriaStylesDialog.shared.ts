@@ -2,6 +2,7 @@ import {
   cloneInitialMartyriaStyle,
   getDefaultBuiltInInitialMartyriaStyle,
   type InitialMartyriaStructure,
+  initialMartyriaStructureHasOrdinalDigits,
   type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -48,6 +49,13 @@ export function withInitialMartyriaStyleStructure(
 ) {
   const next = cloneInitialMartyriaStyle(style);
   next.structure = { ...structure };
+
+  if (
+    !initialMartyriaStructureHasOrdinalDigits(style.structure) &&
+    initialMartyriaStructureHasOrdinalDigits(structure)
+  ) {
+    next.appearance.useOrdinalForms = true;
+  }
 
   if (structure.languageId === style.structure.languageId) {
     return next;

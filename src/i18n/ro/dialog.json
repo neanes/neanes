@@ -163,6 +163,7 @@
     "textFont": "Font text",
     "mainFont": "Font text principal",
     "greekTextFont": "Font text grecesc",
+    "useOrdinalForms": "Folosește forme ordinale",
     "advancedTypography": "Tipografie avansată",
     "languages": {
       "greek": "Greacă",

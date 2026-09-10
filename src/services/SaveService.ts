@@ -989,6 +989,7 @@ function loadInitialMartyriaStyle(
       fontSize: saved.fontSize,
       color: saved.color,
       strokeWidth: saved.strokeWidth,
+      useOrdinalForms: saved.useOrdinalForms === true,
       fontVariantCaps: saved.fontVariantCaps ?? null,
       fontVariantNumeric: saved.fontVariantNumeric ?? null,
       fontVariantLigatures: saved.fontVariantLigatures ?? null,

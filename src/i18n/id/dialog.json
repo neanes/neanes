@@ -163,6 +163,7 @@
     "textFont": "Fon teks",
     "mainFont": "Fon teks utama",
     "greekTextFont": "Fon teks Yunani",
+    "useOrdinalForms": "Gunakan bentuk ordinal",
     "advancedTypography": "Tipografi lanjutan",
     "languages": {
       "greek": "Yunani",

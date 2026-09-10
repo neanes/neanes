@@ -1389,6 +1389,7 @@ describe('SaveService font styles', () => {
       numeralStyle: 'roman-numerals',
       transliterateNoteNames: true,
       mainFontFamily: 'Source Serif',
+      useOrdinalForms: true,
       fontVariantCaps: 'small-caps',
     });
     expect(saved.pageSetup.initialMartyriaStyleId).toBe(customStyle.id);

@@ -1700,30 +1700,67 @@ describe('InitialMartyriaStyle', () => {
     const englishOrdinalDigits = getBuiltInInitialMartyriaStyle(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassWithSign,
     );
-    expect(englishOrdinalDigits.appearance.fontVariantNumeric).toBe('ordinal');
-    const ordinalNumeralRun = resolve(
-      englishOrdinalDigits,
-      elementForMode(1),
-    ).runs.find((run) => run.kind === 'text' && run.semantic === 'numeral');
+    expect(englishOrdinalDigits.appearance.useOrdinalForms).toBe(true);
+    expect(englishOrdinalDigits.appearance.fontVariantNumeric).toBeNull();
+    const plagalRuns = resolve(englishOrdinalDigits, elementForMode(5)).runs;
+    const ordinalNumeralRun = plagalRuns.find(
+      (run) => run.kind === 'text' && run.semantic === 'numeral',
+    );
     expect(ordinalNumeralRun).toMatchObject({
       appearance: { fontVariantNumeric: 'ordinal' },
       content: { layout: 'inline', text: '1st' },
     });
     expect(
-      builtInInitialMartyriaStyles
-        .filter((style) => style.id !== englishOrdinalDigits.id)
-        .every((style) => style.appearance.fontVariantNumeric == null),
+      plagalRuns
+        .filter((run) => run.kind === 'text' && run.semantic !== 'numeral')
+        .every((run) => run.appearance.fontVariantNumeric === 'normal'),
+    ).toBe(true);
+    const startingPitch = plagalRuns.find(
+      (run) => run.kind === 'startingPitch',
+    );
+    expect(startingPitch?.kind).toBe('startingPitch');
+    if (startingPitch?.kind === 'startingPitch') {
+      expect(startingPitch.noteText.appearance.fontVariantNumeric).toBe(
+        'normal',
+      );
+    }
+    expect(
+      resolve(englishOrdinalDigits, elementForMode(7))
+        .runs.filter((run) => run.kind === 'text')
+        .every((run) => run.appearance.fontVariantNumeric === 'normal'),
     ).toBe(true);
 
     const newEnglishOrdinalDigits = createInitialMartyriaStyle({
       displayName: 'New ordinal style',
       basedOn: null,
-      structure: englishOrdinalDigits.structure,
+      structure: {
+        ...englishOrdinalDigits.structure,
+        modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+      },
       appearance: createDefaultInitialMartyriaAppearance(
         INITIAL_MARTYRIA_LANGUAGE_IDS.English,
       ),
     });
+    expect(newEnglishOrdinalDigits.appearance.useOrdinalForms).toBe(true);
     expect(newEnglishOrdinalDigits.appearance.fontVariantNumeric).toBeNull();
+    expect(
+      resolve(newEnglishOrdinalDigits, elementForMode(5)).runs.find(
+        (run) => run.kind === 'text' && run.semantic === 'numeral',
+      ),
+    ).toMatchObject({
+      appearance: { fontVariantNumeric: 'ordinal' },
+      content: { layout: 'inline', text: '5th' },
+    });
+
+    newEnglishOrdinalDigits.appearance.useOrdinalForms = false;
+    const numeralWithoutOrdinalForms = resolve(
+      newEnglishOrdinalDigits,
+      elementForMode(5),
+    ).runs.find((run) => run.kind === 'text' && run.semantic === 'numeral');
+    expect(numeralWithoutOrdinalForms).toMatchObject({
+      appearance: { fontVariantNumeric: 'normal' },
+      content: { layout: 'inline', text: '5th' },
+    });
 
     for (const languageId of initialMartyriaLanguageIds) {
       const count = builtInInitialMartyriaStyles.filter(

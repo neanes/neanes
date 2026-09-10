@@ -163,6 +163,7 @@
     "textFont": "Text font",
     "mainFont": "Main text font",
     "greekTextFont": "Greek text font",
+    "useOrdinalForms": "Use ordinal forms",
     "advancedTypography": "Advanced typography",
     "languages": {
       "greek": "Greek",

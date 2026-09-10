@@ -7,7 +7,11 @@ import type { PageSetup } from '@/models/PageSetup';
 import { getScaleNoteValue, ScaleNote } from '@/models/Scales';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import type { FontVariantProperty } from '@/utils/fontVariants';
-import { FONT_VARIANT_PROPERTIES } from '@/utils/fontVariants';
+import {
+  composeNumericVariant,
+  FONT_VARIANT_PROPERTIES,
+  parseNumericVariant,
+} from '@/utils/fontVariants';
 import { Unit } from '@/utils/Unit';
 
 export type ModeKeyMode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -262,6 +266,8 @@ export interface InitialMartyriaStyleAppearance extends Record<
   fontSize: number;
   color: string;
   strokeWidth: number;
+  /** Apply the OpenType ordinal feature to digit-ordinal numeral runs only. */
+  useOrdinalForms: boolean;
 }
 
 /** The number form printed by text identification or read from a mode sign. */
@@ -285,6 +291,21 @@ export interface InitialMartyriaStructure extends InitialMartyriaModeNameSemanti
   /** Only used by languages that are not written in Greek script. */
   transliterateNoteNames: boolean;
   flowDirection: InitialMartyriaFlowDirection;
+}
+
+/** Whether the rendered mode name contains a digit ordinal such as "5th". */
+export function initialMartyriaStructureHasOrdinalDigits(
+  structure: Pick<
+    InitialMartyriaStructure,
+    'modeIdentificationMethod' | 'numeralKind' | 'numeralStyle'
+  >,
+) {
+  return (
+    structure.modeIdentificationMethod !==
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
+    structure.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal &&
+    structure.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits
+  );
 }
 
 /**
@@ -1830,6 +1851,7 @@ export function createDefaultInitialMartyriaAppearance(
     fontVariantNumeric: null,
     fontVariantLigatures: null,
     fontVariantAlternates: null,
+    useOrdinalForms: true,
   };
 }
 
@@ -1839,14 +1861,10 @@ type BuiltInInitialMartyriaStyleDefinition = Omit<
 > &
   Partial<
     Pick<InitialMartyriaStructure, 'transliterateNoteNames' | 'flowDirection'>
-  > & {
-    id: BuiltInInitialMartyriaStyleId;
-    appearance?: Partial<InitialMartyriaStyleAppearance>;
-  };
+  > & { id: BuiltInInitialMartyriaStyleId };
 
 function builtIn({
   id,
-  appearance,
   ...structure
 }: BuiltInInitialMartyriaStyleDefinition): InitialMartyriaStyle {
   return {
@@ -1859,10 +1877,7 @@ function builtIn({
       flowDirection: 'page',
       ...structure,
     },
-    appearance: {
-      ...createDefaultInitialMartyriaAppearance(structure.languageId),
-      ...appearance,
-    },
+    appearance: createDefaultInitialMartyriaAppearance(structure.languageId),
   };
 }
 
@@ -1933,7 +1948,6 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
-    appearance: { fontVariantNumeric: 'ordinal' },
   }),
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
@@ -2709,6 +2723,16 @@ export function resolveInitialMartyriaStyleAppearances(
   };
 }
 
+function withOrdinalForms(
+  appearance: InitialMartyriaAppearance,
+): InitialMartyriaAppearance {
+  const numeric = parseNumericVariant(appearance.fontVariantNumeric ?? '');
+  return {
+    ...appearance,
+    fontVariantNumeric: composeNumericVariant({ ...numeric, ordinal: true }),
+  };
+}
+
 /**
  * Which style an element renders with: its own, the score's default, or the
  * Standard glyph-based initial martyria when neither names a style. A
@@ -2773,10 +2797,20 @@ export function resolveInitialMartyriaStyle(options: {
   )) {
     if (component.kind === 'text' || component.kind === 'stackedText') {
       const fontRole = component.fontRole ?? 'main';
+      const appearance =
+        component.semantic === 'numeral' &&
+        style.appearance.useOrdinalForms &&
+        initialMartyriaStructureHasOrdinalDigits(structure)
+          ? withOrdinalForms(
+              fontRole === 'greek' ? greekAppearance : mainAppearance,
+            )
+          : fontRole === 'greek'
+            ? greekAppearance
+            : mainAppearance;
       runs.push({
         kind: 'text',
         semantic: component.semantic,
-        appearance: fontRole === 'greek' ? greekAppearance : mainAppearance,
+        appearance,
         fontRole,
         direction: fontRole === 'greek' ? 'ltr' : lexicon.direction,
         languageTag: fontRole === 'greek' ? 'el' : structure.languageId,

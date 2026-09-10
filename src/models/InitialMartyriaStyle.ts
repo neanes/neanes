@@ -785,8 +785,8 @@ const initialMartyriaLexicons: Record<
     // Cardinals follow tono; ordinal adjectives can precede or follow it.
     // RAE says Roman numerals are ordinarily read as ordinals, but permits a
     // cardinal reading where both readings fit the construction. Orthodox
-    // books likewise attest both "Tono I" and the explicit "Tono Primero".
-    // https://www.rae.es/ortografia/lectura-de-los-numeros-romanos
+    // liturgical sources attest both "Tono I" and explicit "Tono Primero".
+    // https://www.rae.es/ortograf%C3%ADa/lectura-de-los-n%C3%BAmeros-romanos
     // https://www.iglesiaortodoxa.cl/_files/ugd/aa7bfd_74510bb681824b4da936ab661d3b80cf.pdf
     // https://www.iglesiaortodoxa.cl/_files/ugd/aa7bfd_565aa2a8788643afbce34f404100332c.pdf
     grammar: [

@@ -1284,7 +1284,7 @@ describe('InitialMartyriaStyle', () => {
       }),
     ).toMatchObject({
       kind: 'custom',
-      configuration: documentConfiguration,
+      style: { id: documentConfiguration.styleId },
     });
     expect(
       resolveInitialMartyriaStyleSelection({
@@ -1299,7 +1299,7 @@ describe('InitialMartyriaStyle', () => {
       }),
     ).toMatchObject({
       kind: 'custom',
-      configuration: elementConfiguration,
+      style: { id: elementConfiguration.styleId },
     });
   });
 

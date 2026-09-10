@@ -280,17 +280,12 @@ export interface InitialMartyriaNoteNames {
 export type InitialMartyriaTextSemantic =
   'label' | 'numeral' | 'plagalWord' | 'plagalAbbreviation' | 'graveWord';
 
-export type InitialMartyriaIdentificationSource =
-  | typeof INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text
-  | typeof INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign;
-
 export type InitialMartyriaComponent =
   | {
       kind: 'text';
       semantic: InitialMartyriaTextSemantic;
       content: string;
       fontRole?: 'main' | 'greek';
-      identificationSource: InitialMartyriaIdentificationSource;
     }
   | {
       kind: 'stackedText';
@@ -298,11 +293,9 @@ export type InitialMartyriaComponent =
       top: string;
       bottom: string;
       fontRole?: 'main' | 'greek';
-      identificationSource: InitialMartyriaIdentificationSource;
     }
   | {
       kind: 'modeSign';
-      identificationSource: typeof INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign;
     }
   | {
       kind: 'startingNoteCluster';
@@ -427,9 +420,6 @@ export type ResolvedInitialMartyriaRun =
       appearance: InitialMartyriaAppearance;
       direction: 'ltr' | 'rtl';
       glyphs: Neume[];
-      identificationSource: typeof INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign;
-      /** The reading of this glyph, whether primary or redundant. */
-      pronunciation: string;
     }
   | {
       kind: 'text';
@@ -438,9 +428,6 @@ export type ResolvedInitialMartyriaRun =
       fontRole: 'main' | 'greek';
       direction: 'ltr' | 'rtl';
       languageTag: string;
-      identificationSource: InitialMartyriaIdentificationSource;
-      /** The reading of this text, whether primary or redundant. */
-      pronunciation: string;
       content: ResolvedInitialMartyriaTextContent;
     }
   | {
@@ -1067,27 +1054,6 @@ function getInitialMartyriaNumeralPronunciation(
   );
 }
 
-function getInitialMartyriaModeSignPronunciation(
-  semantics: InitialMartyriaModeNameSemantics,
-  lexicon: InitialMartyriaLexicon,
-  mode: ModeKeyMode,
-) {
-  if (usesGraveNaming(semantics, mode)) {
-    if (lexicon.graveWord != null) {
-      return lexicon.graveWord;
-    }
-    return getInitialMartyriaNumeralPronunciation(
-      {
-        ...semantics,
-        modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-      },
-      lexicon,
-      mode,
-    )!;
-  }
-  return getInitialMartyriaNumeralPronunciation(semantics, lexicon, mode)!;
-}
-
 function getInitialMartyriaLabelText(
   lexicon: InitialMartyriaLexicon,
   trailingLabel: boolean,
@@ -1110,19 +1076,15 @@ function usesTrailingLabel(style: InitialMartyriaNumeralIdentification) {
 }
 
 function text(
-  identificationSource: InitialMartyriaIdentificationSource,
   semantic: InitialMartyriaTextSemantic,
   content: string,
 ): InitialMartyriaComponent {
-  return { kind: 'text', identificationSource, semantic, content };
+  return { kind: 'text', semantic, content };
 }
 
-function plagalAbbreviation(
-  identificationSource: InitialMartyriaIdentificationSource,
-): InitialMartyriaComponent {
+function plagalAbbreviation(): InitialMartyriaComponent {
   return {
     kind: 'stackedText',
-    identificationSource,
     semantic: 'plagalAbbreviation',
     top: 'λ',
     bottom: 'π',
@@ -1133,15 +1095,14 @@ function plagalAbbreviation(
 function getPlagalIndicator(
   style: InitialMartyriaModeSignStyle | InitialMartyriaTextAndModeSignStyle,
   lexicon: InitialMartyriaLexicon,
-  identificationSource: InitialMartyriaIdentificationSource,
 ): InitialMartyriaComponent {
   if (style.plagalIndicator === 'word') {
     if (lexicon.plagalWord == null) {
       throw new Error(`Missing plagal word for ${style.languageId}`);
     }
-    return text(identificationSource, 'plagalWord', lexicon.plagalWord);
+    return text('plagalWord', lexicon.plagalWord);
   }
-  return plagalAbbreviation(identificationSource);
+  return plagalAbbreviation();
 }
 
 function orderInitialMartyriaModeName<T>(
@@ -1247,25 +1208,17 @@ function getInitialMartyriaComponents(
 ): InitialMartyriaComponent[] {
   const lexicon = initialMartyriaLexicons[style.languageId];
   const plagal = isPlagalMode(mode);
-  const modeSign: InitialMartyriaComponent = {
-    kind: 'modeSign',
-    identificationSource: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-  };
+  const modeSign: InitialMartyriaComponent = { kind: 'modeSign' };
   const startingPitch: InitialMartyriaComponent = {
     kind: 'startingNoteCluster',
   };
-  const makeLabel = (
-    identificationSource: InitialMartyriaIdentificationSource,
-    withOrdinal: boolean,
-  ) => {
+  const makeLabel = (withOrdinal: boolean) => {
     const labelText = getInitialMartyriaLabelText(
       lexicon,
       usesTrailingLabel(style),
       withOrdinal,
     );
-    return labelText == null
-      ? null
-      : text(identificationSource, 'label', labelText);
+    return labelText == null ? null : text('label', labelText);
   };
 
   let ordered: (InitialMartyriaComponent | null)[];
@@ -1273,30 +1226,19 @@ function getInitialMartyriaComponents(
     style.modeIdentificationMethod ===
     INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
   ) {
-    const label = makeLabel(
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-      false,
-    );
-    // The sign carries the style's numeral pronunciation. Treat it as the
-    // numeral when ordering the mode name: "plagal first mode", "first plagal
-    // mode", and "plagal mode one" place the same sign differently.
+    const label = makeLabel(false);
+    // Treat the sign as the numeral when ordering the mode name: "plagal first
+    // mode", "first plagal mode", and "plagal mode one" place the same sign
+    // differently.
     // The sign group identifies the mode: the stacked plagal abbreviation
     // (or the grave title, where the language spells one out) plus the sign.
     const graveTitle = usesGraveNaming(style, mode)
       ? lexicon.graveWordTitle
       : null;
     const marker = plagal
-      ? getPlagalIndicator(
-          style,
-          lexicon,
-          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-        )
+      ? getPlagalIndicator(style, lexicon)
       : graveTitle != null
-        ? text(
-            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-            'graveWord',
-            graveTitle,
-          )
+        ? text('graveWord', graveTitle)
         : null;
     const orderingSemantics =
       mode === 7 && graveTitle == null && lexicon.graveWord != null
@@ -1315,40 +1257,22 @@ function getInitialMartyriaComponents(
     ordered.push(startingPitch);
   } else {
     const label = makeLabel(
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
       style.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
     );
     // The text phrase identifies the mode.
     const numeralText = getInitialMartyriaNumeralText(style, lexicon, mode);
-    const numeral =
-      numeralText == null
-        ? null
-        : text(
-            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
-            'numeral',
-            numeralText,
-          );
+    const numeral = numeralText == null ? null : text('numeral', numeralText);
 
     let marker: InitialMartyriaComponent | null = null;
     if (usesGraveNaming(style, mode) && lexicon.graveWord != null) {
-      marker = text(
-        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
-        'graveWord',
-        lexicon.graveWord,
-      );
+      marker = text('graveWord', lexicon.graveWord);
     } else if (plagal && usesPlagalNaming(style)) {
       if (lexicon.plagalAbbreviationInText) {
-        marker = plagalAbbreviation(
-          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
-        );
+        marker = plagalAbbreviation();
       } else {
         const plagalMarkerWord = getPlagalMarkerWord(style, lexicon);
         if (plagalMarkerWord != null) {
-          marker = text(
-            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
-            'plagalWord',
-            plagalMarkerWord,
-          );
+          marker = text('plagalWord', plagalMarkerWord);
         }
       }
     }
@@ -1383,13 +1307,7 @@ function getInitialMartyriaComponents(
       // its own conventional reading rather than inheriting the text's number
       // form. For example, the sign beside "Mode 5" is still read as
       // "Plagal First".
-      const indicator = plagal
-        ? getPlagalIndicator(
-            style,
-            lexicon,
-            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-          )
-        : null;
+      const indicator = plagal ? getPlagalIndicator(style, lexicon) : null;
       const group = orderInitialMartyriaModeName(
         style.modeSignPronunciation,
         lexicon,
@@ -2152,45 +2070,6 @@ export function resolveInitialMartyriaStyleSelection(options: {
   return { kind: 'standard', missingStyleId: requested.styleId };
 }
 
-function getInitialMartyriaTextComponentPronunciation(
-  component: Extract<
-    InitialMartyriaComponent,
-    { kind: 'text' | 'stackedText' }
-  >,
-  semantics: InitialMartyriaModeNameSemantics,
-  lexicon: InitialMartyriaLexicon,
-  mode: ModeKeyMode,
-) {
-  if (component.kind === 'text') {
-    if (component.semantic === 'numeral') {
-      return getInitialMartyriaNumeralPronunciation(semantics, lexicon, mode)!;
-    }
-    if (component.semantic === 'label') {
-      return getInitialMartyriaLabelText(
-        lexicon,
-        usesTrailingLabel(semantics),
-        semantics.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-      )!;
-    }
-    if (component.semantic === 'graveWord' && lexicon.graveWord != null) {
-      return lexicon.graveWord;
-    }
-    if (component.semantic === 'plagalWord') {
-      return getPlagalMarkerWord(semantics, lexicon)!;
-    }
-    return component.content.endsWith('.')
-      ? component.content.slice(0, -1)
-      : component.content;
-  }
-  if (component.semantic === 'plagalAbbreviation') {
-    return (
-      getPlagalMarkerWord(semantics, lexicon) ??
-      `${component.top} ${component.bottom}`
-    );
-  }
-  return `${component.top} ${component.bottom}`;
-}
-
 export function resolveInitialMartyriaStyle(options: {
   context: InitialMartyriaContext;
   resolvedConfiguration: ResolvedInitialMartyriaConfiguration;
@@ -2215,11 +2094,6 @@ export function resolveInitialMartyriaStyle(options: {
     strokeWidth: mainAppearance.strokeWidth,
     strokeColor: mainAppearance.strokeColor,
   };
-  const modeSignPronunciation =
-    style.modeIdentificationMethod ===
-    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign
-      ? style.modeSignPronunciation
-      : style;
   const pronunciation = getInitialMartyriaStylePronunciation(
     style,
     pronunciationLexicon,
@@ -2245,16 +2119,6 @@ export function resolveInitialMartyriaStyle(options: {
         fontRole,
         direction: fontRole === 'greek' ? 'ltr' : lexicon.direction,
         languageTag: fontRole === 'greek' ? 'el' : style.languageId,
-        identificationSource: component.identificationSource,
-        pronunciation: getInitialMartyriaTextComponentPronunciation(
-          component,
-          component.identificationSource ===
-            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-            ? modeSignPronunciation
-            : style,
-          pronunciationLexicon,
-          options.context.mode,
-        ),
         content:
           component.kind === 'text'
             ? { layout: 'inline', text: component.content }
@@ -2269,12 +2133,6 @@ export function resolveInitialMartyriaStyle(options: {
         appearance: glyphAppearance,
         direction: flowDirection,
         glyphs: [options.context.traditionalModeSign],
-        identificationSource: component.identificationSource,
-        pronunciation: getInitialMartyriaModeSignPronunciation(
-          modeSignPronunciation,
-          pronunciationLexicon,
-          options.context.mode,
-        ),
       });
       continue;
     }

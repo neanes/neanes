@@ -1142,12 +1142,6 @@ describe('InitialMartyriaStyle', () => {
           pageSetup: new PageSetup(),
         });
 
-        for (const run of resolution.runs) {
-          if (run.kind !== 'startingPitch') {
-            expect(run.pronunciation.length).toBeGreaterThan(0);
-          }
-        }
-
         const expectedStartingNote =
           expectedStartingNotePhrasesByLanguage[resolved.style.languageId][
             mode - 1

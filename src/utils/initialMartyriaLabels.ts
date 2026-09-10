@@ -35,6 +35,8 @@ const languageNameSelectors: Record<InitialMartyriaLanguageId, DialogSelector> =
       $.dialog.initialMartyriaStyles.languages.arabic,
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: ($) =>
       $.dialog.initialMartyriaStyles.languages.romanian,
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: ($) =>
+      $.dialog.initialMartyriaStyles.languages.indonesian,
   };
 
 const modeIdentificationMethodSelectors: Record<

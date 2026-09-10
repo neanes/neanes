@@ -21,6 +21,7 @@ import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
+  INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
@@ -507,6 +508,18 @@ const attestedStructures: Record<string, InitialMartyriaStructure> = {
     transliterateNoteNames: false,
     flowDirection: 'rtl',
   },
+  'arabic-ordinal-arabic-indic-digits': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numberingSystem: INITIAL_MARTYRIA_NUMBERING_SYSTEMS.ArabicIndic,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'rtl',
+  },
   'romanian-glas-number': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
     modeIdentificationMethod:
@@ -555,6 +568,17 @@ const attestedStructures: Record<string, InitialMartyriaStructure> = {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    flowDirection: 'page',
+  },
+  'indonesian-mode-names': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
@@ -1065,6 +1089,19 @@ const expectedRunsByStructure: [string, string[]][] = [
     ],
   ],
   [
+    'arabic-ordinal-arabic-indic-digits',
+    [
+      'اللحن | ١ | <pitch> | <modeSign>',
+      'اللحن | ٢ | <pitch> | <modeSign>',
+      'اللحن | ٣ | <pitch> | <modeSign>',
+      'اللحن | ٤ | <pitch> | <modeSign>',
+      'اللحن | ٥ | <pitch> | <modeSign> | greek:λ/π',
+      'اللحن | ٦ | <pitch> | <modeSign> | greek:λ/π',
+      'اللحن | ٧ | <pitch> | <modeSign>',
+      'اللحن | ٨ | <pitch> | <modeSign> | greek:λ/π',
+    ],
+  ],
+  [
     'romanian-glas-number',
     [
       'Glas | 1. | <modeSign> | <pitch>',
@@ -1127,6 +1164,19 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Glas | greek:λ/π | <modeSign> | <pitch>',
       'Glas | <modeSign> | <pitch>',
       'Glas | greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'indonesian-mode-names',
+    [
+      'Modus | Pertama. | <modeSign> | <pitch>',
+      'Modus | Kedua. | <modeSign> | <pitch>',
+      'Modus | Ketiga. | <modeSign> | <pitch>',
+      'Modus | Keempat. | <modeSign> | <pitch>',
+      'Plagal dari | Modus | Pertama. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal dari | Modus | Kedua. | greek:λ/π | <modeSign> | <pitch>',
+      'Modus | Berat. | <modeSign> | <pitch>',
+      'Plagal dari | Modus | Keempat. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
 ];
@@ -1312,6 +1362,18 @@ const romanianAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciati
     'Glasul lăturaș al patrulea',
   ];
 
+const indonesianAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =
+  [
+    'Modus Pertama',
+    'Modus Kedua',
+    'Modus Ketiga',
+    'Modus Keempat',
+    'Plagal dari Modus Pertama',
+    'Plagal dari Modus Kedua',
+    'Modus Berat',
+    'Plagal dari Modus Keempat',
+  ];
+
 const expectedStartingNotePhrasesByLanguage: Record<
   InitialMartyriaLanguageId,
   ExpectedModePronunciations
@@ -1368,9 +1430,9 @@ const expectedStartingNotePhrasesByLanguage: Record<
   ],
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: [
     'من با',
-    'من دي',
+    'من ذي',
     'من غا',
-    'من دي',
+    'من ذي',
     'من با',
     'من با',
     'من غا',
@@ -1385,6 +1447,16 @@ const expectedStartingNotePhrasesByLanguage: Record<
     'de la Pa',
     'de la Ga',
     'de la Ni',
+  ],
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: [
+    'dari Pa',
+    'dari Di',
+    'dari Ga',
+    'dari Di',
+    'dari Pa',
+    'dari Pa',
+    'dari Ga',
+    'dari Ni',
   ],
 };
 
@@ -1472,6 +1544,7 @@ const expectedPronunciationsByStructure: [
   ['russian-glas-ordinal-text', russianAbsoluteOrdinalPronunciations],
   ['arabic-ordinal', arabicAbsoluteOrdinalPronunciations],
   ['arabic-ordinal-digits', arabicAbsoluteOrdinalPronunciations],
+  ['arabic-ordinal-arabic-indic-digits', arabicAbsoluteOrdinalPronunciations],
   ['romanian-glas-number', romanianAbsoluteCardinalPronunciations],
   ['romanian-glas-roman-numeral', romanianAbsoluteCardinalPronunciations],
   ['romanian-glas-ordinal-number', romanianAbsoluteOrdinalPronunciations],
@@ -1480,6 +1553,10 @@ const expectedPronunciationsByStructure: [
     romanianAbsoluteOrdinalPronunciations,
   ],
   ['romanian-glas', romanianAuthenticCounterpartOrdinalPronunciations],
+  [
+    'indonesian-mode-names',
+    indonesianAuthenticCounterpartOrdinalPronunciations,
+  ],
 ];
 
 describe('InitialMartyriaStyle', () => {
@@ -1539,7 +1616,7 @@ describe('InitialMartyriaStyle', () => {
       ['spanish-tono-ordinal', 'Tono quinto desde Ke'],
       ['church-slavonic-glas-ordinal', 'Гла́съ пѧ́тый ѿ Ке'],
       ['russian-glas-ordinal', 'Глас пятый от Ке'],
-      ['arabic-ordinal', 'اللحن الخامس من كي'],
+      ['arabic-ordinal', 'اللحن الخامس من كه'],
       ['romanian-glas', 'Glasul lăturaș întâi de la Ke'],
     ];
 
@@ -1774,6 +1851,25 @@ describe('InitialMartyriaStyle', () => {
       },
     });
 
+    const romanianTransliterated = resolve(
+      styleFor({
+        ...attestedStructures['romanian-glas-number'],
+        transliterateNoteNames: true,
+      }),
+      elementForMode(1),
+    ).runs.find(
+      (run): run is InitialMartyriaStartingNoteRun =>
+        run.kind === 'startingPitch',
+    )!.noteText;
+    expect(romanianTransliterated).toMatchObject({
+      languageTag: 'ro',
+      names: {
+        [ModeSign.Pa]: 'Pa',
+        [ModeSign.Vou]: 'Vu',
+        [ModeSign.Ga]: 'Ga',
+      },
+    });
+
     const arabicStyle = getBuiltInInitialMartyriaStyle(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinal,
     );
@@ -1956,13 +2052,21 @@ describe('InitialMartyriaStructure space', () => {
   const greekText = attestedStructures['greek-mode-names'];
   const englishText = attestedStructures['english-mode-names'];
 
-  const signature = (structure: InitialMartyriaStructure) =>
-    [
+  const signature = (structure: InitialMartyriaStructure) => {
+    const axes: string[] = [
       structure.numeralStyle,
       structure.numeralKind,
       structure.numeralQualifier,
       structure.modeNamingScheme,
-    ].join('/');
+    ];
+    if (
+      structure.numberingSystem ===
+      INITIAL_MARTYRIA_NUMBERING_SYSTEMS.ArabicIndic
+    ) {
+      axes.push(structure.numberingSystem);
+    }
+    return axes.join('/');
+  };
 
   const grammarStructure = (
     languageId: InitialMartyriaLanguageId,
@@ -2003,6 +2107,7 @@ describe('InitialMartyriaStructure space', () => {
       'digits/ordinal/prenominal/absolute',
       'roman-numerals/cardinal/postnominal/absolute',
       'roman-numerals/ordinal/postnominal/absolute',
+      'roman-numerals/ordinal/prenominal/absolute',
       'words/cardinal/postnominal/absolute',
       'words/ordinal/postnominal/absolute',
       'words/ordinal/prenominal/absolute',
@@ -2015,12 +2120,15 @@ describe('InitialMartyriaStructure space', () => {
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: [
       'digits/ordinal/postnominal/absolute',
+      'digits/ordinal/prenominal/absolute',
       'roman-numerals/ordinal/postnominal/absolute',
+      'roman-numerals/ordinal/prenominal/absolute',
       'words/ordinal/postnominal/absolute',
       'words/ordinal/prenominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: [
       'digits/ordinal/postnominal/absolute',
+      'digits/ordinal/postnominal/absolute/arab',
       'words/ordinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: [
@@ -2033,6 +2141,15 @@ describe('InitialMartyriaStructure space', () => {
       'words/cardinal/postnominal/absolute',
       'words/ordinal/postnominal/absolute',
       'words/ordinal/prenominal/absolute',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: [
+      'digits/cardinal/postnominal/absolute',
+      'digits/ordinal/postnominal/absolute',
+      'digits/ordinal/postnominal/authentic-counterpart',
+      'roman-numerals/cardinal/postnominal/absolute',
+      'words/cardinal/postnominal/absolute',
+      'words/ordinal/postnominal/absolute',
+      'words/ordinal/postnominal/authentic-counterpart',
     ],
   } satisfies Record<InitialMartyriaLanguageId, string[]>;
 
@@ -2067,6 +2184,11 @@ describe('InitialMartyriaStructure space', () => {
       'digits/ordinal/postnominal/absolute',
       'digits/ordinal/prenominal/absolute',
       'words/ordinal/postnominal/authentic-counterpart',
+    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: [
+      'digits/cardinal/postnominal/absolute',
+      'digits/ordinal/postnominal/absolute',
+      'digits/ordinal/postnominal/authentic-counterpart',
     ],
   } satisfies Record<InitialMartyriaLanguageId, string[]>;
 
@@ -2111,7 +2233,42 @@ describe('InitialMartyriaStructure space', () => {
         'words/cardinal',
         'words/ordinal',
       ],
+      id: [
+        'digits/cardinal',
+        'digits/ordinal',
+        'roman-numerals/cardinal',
+        'words/cardinal',
+        'words/ordinal',
+      ],
     });
+  });
+
+  it('renders prenominal Roman ordinals with the language-specific label form', () => {
+    const structures = [
+      [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish, ['II', 'tono.'], 'Segundo tono'],
+      [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian, ['II', 'глас.'], 'Второй глас'],
+    ] as const;
+
+    for (const [
+      languageId,
+      expectedText,
+      expectedPronunciation,
+    ] of structures) {
+      const structure = grammarStructure(languageId, {
+        modeIdentificationMethod:
+          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+        numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+        numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+      });
+      const resolution = resolve(styleFor(structure), elementForMode(2));
+
+      expect(textOf(resolution.runs)).toEqual(expectedText);
+      expect(resolution.pronunciation.startsWith(expectedPronunciation)).toBe(
+        true,
+      );
+    }
   });
 
   it('accepts and rejects complete supported mode-name constructions', () => {
@@ -2228,6 +2385,14 @@ describe('InitialMartyriaStructure space', () => {
         true,
       ],
       [
+        'Spanish prenominal ordinal Roman numeral',
+        {
+          ...attestedStructures['spanish-tono-roman-numeral'],
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        },
+        true,
+      ],
+      [
         'Spanish sign-only plagal naming',
         {
           ...attestedStructures['spanish-tono-ordinal'],
@@ -2289,12 +2454,22 @@ describe('InitialMartyriaStructure space', () => {
         true,
       ],
       [
-        'Russian bare prenominal digits',
+        'Russian prenominal Roman ordinal',
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Russian, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        }),
+        true,
+      ],
+      [
+        'Russian suffixed prenominal digit ordinal',
         {
           ...attestedStructures['russian-glas-number'],
           numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
         },
-        false,
+        true,
       ],
       [
         'Russian cardinal words',
@@ -2312,6 +2487,11 @@ describe('InitialMartyriaStructure space', () => {
       [
         'Arabic postnominal digit ordinal',
         attestedStructures['arabic-ordinal-digits'],
+        true,
+      ],
+      [
+        'Arabic postnominal Arabic-Indic digit ordinal',
+        attestedStructures['arabic-ordinal-arabic-indic-digits'],
         true,
       ],
       [
@@ -2443,11 +2623,37 @@ describe('InitialMartyriaStructure space', () => {
       modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     });
 
+    const arabicIndicToWords = normalizeInitialMartyriaStructure(
+      {
+        ...attestedStructures['arabic-ordinal-arabic-indic-digits'],
+        numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+      },
+      ['numeralStyle'],
+    );
+    expect(arabicIndicToWords).toMatchObject({
+      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+      numberingSystem: undefined,
+    });
+
+    const arabicIndicToIndonesian = normalizeInitialMartyriaStructure({
+      ...attestedStructures['arabic-ordinal-arabic-indic-digits'],
+      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian,
+    });
+    expect(arabicIndicToIndonesian).toMatchObject({
+      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian,
+      numberingSystem: undefined,
+    });
+
     expect(isInitialMartyriaStructureSupported(spanish)).toBe(true);
     expect(isInitialMartyriaStructureSupported(englishCardinal)).toBe(true);
     expect(isInitialMartyriaStructureSupported(englishOrdinal)).toBe(true);
     expect(isInitialMartyriaStructureSupported(greek)).toBe(true);
     expect(isInitialMartyriaStructureSupported(arabic)).toBe(true);
+    expect(isInitialMartyriaStructureSupported(arabicIndicToWords)).toBe(true);
+    expect(isInitialMartyriaStructureSupported(arabicIndicToIndonesian)).toBe(
+      true,
+    );
     expect(normalizeInitialMartyriaStructure(englishText)).toBe(englishText);
 
     const created = createInitialMartyriaStyle({
@@ -2738,6 +2944,16 @@ describe('InitialMartyriaStructure space', () => {
           numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
         }),
         'Шестой | глас.',
+        'Шестой глас от Па',
+      ],
+      [
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Russian, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        }),
+        '6-й | глас.',
         'Шестой глас от Па',
       ],
       [

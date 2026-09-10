@@ -72,7 +72,7 @@
     "ekhos": "Ekhos",
     "plagal": "Plagal",
     "varys": "Varys",
-    "modeSign": "Tanda mode",
+    "modeSign": "Tanda modus",
     "startingNoteCluster": "Kelompok nada awal"
   },
   "initialMartyriaStyles": {
@@ -171,7 +171,8 @@
       "churchSlavonic": "Slavonik Gerejawi",
       "russian": "Rusia",
       "arabic": "Arab",
-      "romanian": "Rumania"
+      "romanian": "Rumania",
+      "indonesian": "Indonesia"
     },
     "builtInStyles": {
       "greekTraditionalSign": "Tanda tradisional",
@@ -197,7 +198,8 @@
       "arabicOrdinal": "Kata ordinal",
       "romanianGlasNumber": "Glas dengan angka",
       "romanianGlasRomanNumeral": "Glas dengan angka Romawi",
-      "romanianTraditionalSign": "Tanda tradisional"
+      "romanianTraditionalSign": "Tanda tradisional",
+      "indonesianModeNamesWithSign": "Nama modus dengan tanda"
     }
   },
   "documentProperties": {
@@ -395,7 +397,7 @@
     "moria": "Moria",
     "reset": "Atur Ulang",
     "classicLegetos": "Legetos Klasik",
-    "classicLegetosDescription": "Jika dicentang, himne dalam mode keempat dengan nada dasar Pa atau Vou akan menggunakan skala legetos klasik dengan Vou diturunkan.",
+    "classicLegetosDescription": "Jika dicentang, himne dalam modus keempat dengan nada dasar Pa atau Vou akan menggunakan skala legetos klasik dengan Vou diturunkan.",
     "intervals": "Interval",
     "diatonic": "Diatonik",
     "legetos": "Legetos",

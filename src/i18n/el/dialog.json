@@ -171,7 +171,8 @@
       "churchSlavonic": "Εκκλησιαστικά Σλαβονικά",
       "russian": "Ρωσικά",
       "arabic": "Αραβικά",
-      "romanian": "Ρουμανικά"
+      "romanian": "Ρουμανικά",
+      "indonesian": "Ινδονησιακά"
     },
     "builtInStyles": {
       "greekTraditionalSign": "Παραδοσιακή μαρτυρία",
@@ -197,7 +198,8 @@
       "arabicOrdinal": "Τακτικά αριθμητικά",
       "romanianGlasNumber": "Glas με ψηφία",
       "romanianGlasRomanNumeral": "Glas με λατινικούς αριθμούς",
-      "romanianTraditionalSign": "Παραδοσιακή μαρτυρία"
+      "romanianTraditionalSign": "Παραδοσιακή μαρτυρία",
+      "indonesianModeNamesWithSign": "Ονομασίες ήχων με μαρτυρία"
     }
   },
   "documentProperties": {

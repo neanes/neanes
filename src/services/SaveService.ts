@@ -22,11 +22,13 @@ import {
   findInitialMartyriaStyle,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
+  INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
+  type InitialMartyriaNumberingSystem,
   type InitialMartyriaStyle,
   isBuiltInInitialMartyriaStyleId,
   isInitialMartyriaStructureSupported,
@@ -940,6 +942,11 @@ function loadInitialMartyriaStyle(
       Object.values(INITIAL_MARTYRIA_NUMERAL_STYLES),
       saved.numeralStyle,
     ) ||
+    (saved.numberingSystem !== undefined &&
+      !isOneOf<InitialMartyriaNumberingSystem>(
+        Object.values(INITIAL_MARTYRIA_NUMBERING_SYSTEMS),
+        saved.numberingSystem,
+      )) ||
     !isOneOf(
       Object.values(INITIAL_MARTYRIA_NUMERAL_QUALIFIERS),
       saved.numeralQualifier,
@@ -958,6 +965,7 @@ function loadInitialMartyriaStyle(
     modeIdentificationMethod: saved.modeIdentificationMethod,
     numeralKind: saved.numeralKind,
     numeralStyle: saved.numeralStyle,
+    numberingSystem: saved.numberingSystem,
     numeralQualifier: saved.numeralQualifier,
     modeNamingScheme: saved.modeNamingScheme,
     transliterateNoteNames: saved.transliterateNoteNames === true,

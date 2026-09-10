@@ -6,6 +6,7 @@ export interface InitialMartyriaStyle {
   modeIdentificationMethod: string;
   numeralKind: string;
   numeralStyle: string;
+  numberingSystem?: string;
   numeralQualifier: string;
   modeNamingScheme: string;
   transliterateNoteNames: boolean | undefined;

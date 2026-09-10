@@ -171,7 +171,8 @@
       "churchSlavonic": "Церковнославянский",
       "russian": "Русский",
       "arabic": "Арабский",
-      "romanian": "Румынский"
+      "romanian": "Румынский",
+      "indonesian": "Индонезийский"
     },
     "builtInStyles": {
       "greekTraditionalSign": "Традиционный знак",
@@ -197,7 +198,8 @@
       "arabicOrdinal": "Порядковые слова",
       "romanianGlasNumber": "Glas с цифрами",
       "romanianGlasRomanNumeral": "Glas с римскими цифрами",
-      "romanianTraditionalSign": "Традиционный знак"
+      "romanianTraditionalSign": "Традиционный знак",
+      "indonesianModeNamesWithSign": "Названия гласов со знаком"
     }
   },
   "documentProperties": {

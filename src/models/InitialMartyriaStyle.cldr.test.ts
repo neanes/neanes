@@ -8,11 +8,13 @@ import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
+  INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaStructure,
   type InitialMartyriaStyle,
+  isInitialMartyriaStructureSupported,
   type ModeKeyMode,
   resolveInitialMartyriaStyle,
   resolveInitialMartyriaStyleAppearances,
@@ -142,6 +144,48 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
     expect(numeralsFor(style)).toEqual(expected);
   });
 
+  it('uses CLDR numerals and readings for prenominal Spanish and Russian Roman ordinals', () => {
+    const expectedNumerals = cldrValues('root', 'renderRomanUpper');
+    const cases = [
+      [
+        INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+        'es',
+        'renderSpelloutOrdinalMasculineAdjective',
+      ],
+      [
+        INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
+        'ru',
+        'renderSpelloutOrdinalMasculine',
+      ],
+    ] as const;
+
+    for (const [languageId, locale, ordinalRule] of cases) {
+      const style = styleFor({
+        languageId,
+        modeIdentificationMethod:
+          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+        numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+        numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+      });
+
+      expect(isInitialMartyriaStructureSupported(style.structure)).toBe(true);
+      expect(numeralsFor(style)).toEqual(expectedNumerals);
+
+      const expectedOrdinals = cldrValues(locale, ordinalRule);
+      if (languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Russian) {
+        // The attested spelling keeps yo where CLDR permits e.
+        expectedOrdinals[3] = 'четвёртый';
+      }
+      expect(
+        pronunciationsFor(style).map((pronunciation) =>
+          pronunciation.split(' ')[0].toLocaleLowerCase(locale),
+        ),
+      ).toEqual(expectedOrdinals);
+    }
+  });
+
   it('uses CLDR English cardinal and ordinal words', () => {
     expect(
       caseFold(
@@ -178,6 +222,33 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
         ),
       ),
     ).toEqual(cldrValues('en', 'renderDigitsOrdinal'));
+  });
+
+  it('uses CLDR Indonesian cardinal words, ordinal words, and digit ordinals', () => {
+    const cardinalStyle = absoluteWordStyle(
+      INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian,
+      INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    );
+    const ordinalStyle = absoluteWordStyle(
+      INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian,
+      INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    );
+    const digitOrdinalStyle = absoluteDigitOrdinalStyle(
+      INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian,
+      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    );
+
+    expect(caseFold(numeralsFor(cardinalStyle), 'id')).toEqual(
+      cldrValues('id', 'renderSpelloutCardinal'),
+    );
+    expect(caseFold(numeralsFor(ordinalStyle), 'id')).toEqual(
+      cldrValues('id', 'renderSpelloutOrdinal'),
+    );
+    expect(numeralsFor(digitOrdinalStyle)).toEqual(
+      cldrValues('id', 'renderDigitsOrdinal'),
+    );
   });
 
   it('preserves attested polytonic Greek ordinals alongside CLDR readings', () => {
@@ -337,6 +408,26 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
         ),
       ),
     ).toEqual(cldrValues('ar', 'renderDigitsOrdinal'));
+  });
+
+  it('uses the CLDR arab numbering-system digits', () => {
+    const numberingSystem = cldr.extractNumberingSystem('arab');
+    expect(numberingSystem.type).toBe('numeric');
+
+    const style = styleFor({
+      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+      modeIdentificationMethod:
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+      numberingSystem: INITIAL_MARTYRIA_NUMBERING_SYSTEMS.ArabicIndic,
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+      modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    });
+
+    expect(numeralsFor(style)).toEqual(
+      [...numberingSystem.digits!].slice(1, 9),
+    );
   });
 
   it('uses CLDR Romanian masculine cardinal words', () => {

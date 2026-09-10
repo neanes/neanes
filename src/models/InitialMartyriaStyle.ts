@@ -30,6 +30,14 @@ export const INITIAL_MARTYRIA_NUMERAL_STYLES = {
 export type InitialMartyriaNumeralStyle =
   (typeof INITIAL_MARTYRIA_NUMERAL_STYLES)[keyof typeof INITIAL_MARTYRIA_NUMERAL_STYLES];
 
+export const INITIAL_MARTYRIA_NUMBERING_SYSTEMS = {
+  Latin: 'latn',
+  ArabicIndic: 'arab',
+} as const;
+
+export type InitialMartyriaNumberingSystem =
+  (typeof INITIAL_MARTYRIA_NUMBERING_SYSTEMS)[keyof typeof INITIAL_MARTYRIA_NUMBERING_SYSTEMS];
+
 /*
  * Where the numeral sits relative to the mode word: prenominal names read
  * 'First Mode' / 'Primer tono', postnominal names read 'Mode 1' / 'Tono
@@ -78,6 +86,7 @@ export const INITIAL_MARTYRIA_LANGUAGE_IDS = {
   Russian: 'ru',
   Arabic: 'ar',
   Romanian: 'ro',
+  Indonesian: 'id',
 } as const;
 
 export type InitialMartyriaLanguageId =
@@ -116,6 +125,7 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   RomanianGlasNumber: 'builtin:romanian-glas-number-v1',
   RomanianGlasRomanNumeral: 'builtin:romanian-glas-roman-numeral-v1',
   RomanianTraditionalSign: 'builtin:romanian-glas-v1',
+  IndonesianModeNamesWithSign: 'builtin:indonesian-mode-names-v1',
 } as const;
 
 export type BuiltInInitialMartyriaStyleId =
@@ -196,6 +206,9 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianTraditionalSign]: styleName(
     'romanianTraditionalSign',
   ),
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.IndonesianModeNamesWithSign]: styleName(
+    'indonesianModeNamesWithSign',
+  ),
 };
 
 export type InitialMartyriaCanonicalNote =
@@ -257,6 +270,8 @@ export interface InitialMartyriaModeNameSemantics {
   numeralStyle: InitialMartyriaNumeralStyle;
   numeralQualifier: InitialMartyriaNumeralQualifier;
   modeNamingScheme: InitialMartyriaModeNamingScheme;
+  /** Digit repertoire; meaningful only when numeralStyle is digits. */
+  numberingSystem?: InitialMartyriaNumberingSystem;
 }
 
 /**
@@ -453,14 +468,37 @@ const russianTransliteratedNoteNames: InitialMartyriaNoteNames = {
   languageTag: 'ru',
 };
 
+const romanianTransliteratedNoteNames: InitialMartyriaNoteNames = {
+  // Romanian psaltic and academic sources consistently spell the note as Vu,
+  // rather than the English transliteration Vou.
+  // https://www.edituraunmb.ro/wp-content/uploads/2024/02/Cernatescu-Catalin-2023-ed.-Petru-Manuil-Efesiul-Antologhion-4.0.pdf
+  // https://edumedia-depot.gei.de/server/api/core/bitstreams/11f769eb-6eed-40c3-a065-e9d46974cdce/content
+  names: {
+    ...transliteratedGreekNoteNames.names,
+    [ModeSign.Vou]: 'Vu',
+  },
+  direction: 'ltr',
+  languageTag: 'ro',
+};
+
+const indonesianTransliteratedNoteNames: InitialMartyriaNoteNames = {
+  names: spanishTransliteratedNoteNames.names,
+  direction: 'ltr',
+  languageTag: 'id',
+};
+
 const arabicTransliteratedNoteNames: InitialMartyriaNoteNames = {
+  // Arabic Byzantine-music teaching materials conventionally write the
+  // solmization sequence Ni Pa Vou Ga Di Ke Zo as ني با فو غا ذي كه زو.
+  // https://psaltika.com/lessons/lesson-01/
+  // https://nicolasmalek.com/Lectures/byzantine-music-2
   names: {
     [ModeSign.Ni]: 'ني',
     [ModeSign.Pa]: 'با',
     [ModeSign.Vou]: 'فو',
     [ModeSign.Ga]: 'غا',
-    [ModeSign.Thi]: 'دي',
-    [ModeSign.Ke]: 'كي',
+    [ModeSign.Thi]: 'ذي',
+    [ModeSign.Ke]: 'كه',
     [ModeSign.Zo]: 'زو',
   },
   direction: 'rtl',
@@ -579,6 +617,8 @@ interface InitialMartyriaLexicon {
   plagalAbbreviationNumeralStyles?: readonly InitialMartyriaNumeralStyle[];
   /** Grave-mode word used inside a text phrase. */
   graveWord?: string;
+  /** Treat the grave word as a postnominal identifier (Modus Berat). */
+  graveWordAfterLabel?: boolean;
   /** Grave-mode word used as a standalone title next to the mode sign. */
   graveWordTitle?: string;
   /** Whether the language ends the mode-name phrase with a period. */
@@ -599,6 +639,17 @@ const romanNumerals: InitialMartyriaModeTexts = [
   'VI',
   'VII',
   'VIII',
+];
+
+const arabicIndicDigits: InitialMartyriaModeTexts = [
+  '١',
+  '٢',
+  '٣',
+  '٤',
+  '٥',
+  '٦',
+  '٧',
+  '٨',
 ];
 
 const englishOrdinalSuffixes: InitialMartyriaModeTexts = [
@@ -790,9 +841,15 @@ const initialMartyriaLexicons: Record<
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: {
     // Cardinals follow tono; ordinal adjectives can precede or follow it.
     // RAE says Roman numerals are ordinarily read as ordinals, but permits a
-    // cardinal reading where both readings fit the construction. Orthodox
-    // liturgical sources attest both "Tono I" and explicit "Tono Primero".
+    // cardinal reading where both readings fit the construction. It also
+    // illustrates ordinal Roman numerals on either side of a noun ("X
+    // Congreso", "tomo VI"); musicological catalogues attest the corresponding
+    // mode headings "II tono" and "VIII tono". Orthodox liturgical sources
+    // attest both "Tono I" and explicit "Tono Primero".
     // https://www.rae.es/ortograf%C3%ADa/lectura-de-los-n%C3%BAmeros-romanos
+    // https://www.rae.es/ortograf%C3%ADa/formaci%C3%B3n
+    // https://diposit.ub.edu/dspace/bitstream/2445/183835/4/TESIS%20S.M.%20Leo%CC%81n%20%28Firmada%20-%20Digital%29.pdf
+    // https://www.historicalsoundscapes.com/pdf/1541/jacaltenango
     // https://www.iglesiaortodoxa.cl/_files/ugd/aa7bfd_74510bb681824b4da936ab661d3b80cf.pdf
     // https://www.iglesiaortodoxa.cl/_files/ugd/aa7bfd_565aa2a8788643afbce34f404100332c.pdf
     grammar: [
@@ -819,6 +876,14 @@ const initialMartyriaLexicons: Record<
         numeralKinds: [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal],
         numeralStyles: [INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals],
         numeralQualifiers: [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal],
+        modeNamingSchemes: [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute],
+      },
+      {
+        // Position is meaningful only when the Roman numeral is printed.
+        modeIdentificationMethods: textModeIdentificationMethods,
+        numeralKinds: [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal],
+        numeralStyles: [INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals],
+        numeralQualifiers: [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal],
         modeNamingSchemes: [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute],
       },
       {
@@ -958,10 +1023,15 @@ const initialMartyriaLexicons: Record<
     // as 1-y, and Moscow Patriarchate directions use that form for modes. Its
     // service books also attest the compact rubrical form "Glas 1.". Both are
     // ordinal mode names. Inflected ordinal adjectives can stand on either
-    // side of the noun.
+    // side of the noun. Roman numerals take no adjectival ending, and Russian
+    // church scholarship also attests the prenominal heading "I glas"; thus
+    // Roman-numeral ordinals can occupy either position without synthesizing
+    // an unattested inflection. Prenominal Arabic digits take the standard
+    // masculine nominative ordinal ending, as in "1-y glas".
     // https://orfo.ruslang.ru/rules/rule/1 (footnote 9)
     // https://patriarchia.ru/bu/2026-06-14
     // https://edinstvo.patriarchia.ru/uploads/Files/2026/Sretenie.pdf
+    // https://www.azbyka.ru/otechnik/bogoslovie/dogmaticheskoe-bogoslovie-kastalskij/1_1_5
     grammar: [
       {
         modeIdentificationMethods: everyModeIdentificationMethod,
@@ -971,6 +1041,24 @@ const initialMartyriaLexicons: Record<
           INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
         ],
         numeralQualifiers: [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal],
+        modeNamingSchemes: [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute],
+      },
+      {
+        // Position is meaningful only when the Roman numeral is printed.
+        modeIdentificationMethods: textModeIdentificationMethods,
+        numeralKinds: [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal],
+        numeralStyles: [INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals],
+        numeralQualifiers: [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal],
+        modeNamingSchemes: [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute],
+      },
+      {
+        // A prenominal digit ordinal carries the masculine nominative -й
+        // ending: 1-й глас. A postnominal identifier remains Глас 1.
+        // https://gramota.ru/biblioteka/spravochniki/pismovnik/kogda-nuzhny-bukvennye-narashcheniya-posle-tsifr
+        modeIdentificationMethods: textModeIdentificationMethods,
+        numeralKinds: [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal],
+        numeralStyles: [INITIAL_MARTYRIA_NUMERAL_STYLES.Digits],
+        numeralQualifiers: [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal],
         modeNamingSchemes: [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute],
       },
       {
@@ -1018,16 +1106,23 @@ const initialMartyriaLexicons: Record<
       'семь',
       'восемь',
     ],
+    formatOrdinal: (base, numeralStyle, numeralQualifier) =>
+      numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits &&
+      numeralQualifier === INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal
+        ? `${base}-й`
+        : base,
     usesTerminalPeriod: true,
     modeSignGroupTrailing: false,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: {
     // Arabic ordinals are adjectives: they follow the noun and agree with its
     // definiteness and gender. Antiochian Orthodox sources attest both the
-    // word form (اللحن الأول) and a postnominal digit form (اللحن 1).
+    // word form (اللحن الأول) and postnominal digits in both the Latin and
+    // Arabic-Indic numbering systems (اللحن 1 and اللحن ٥).
     // https://www.arabicacademy.gov.eg/ar/محرك-البحث/معجم/dic-19/نعت-معنى
     // https://antiochpatriarchate.org/ar/page/1662/
     // https://www.antiochpatriarchate.org/ar/page/909/
+    // https://www.antiochpatriarchate.org/ar/print/page/1068/
     grammar: [
       {
         modeIdentificationMethods: everyModeIdentificationMethod,
@@ -1105,7 +1200,7 @@ const initialMartyriaLexicons: Record<
     ],
     direction: 'ltr',
     usesGreekScript: false,
-    transliteratedNoteNames: transliteratedGreekNoteNames,
+    transliteratedNoteNames: romanianTransliteratedNoteNames,
     transliterateNoteNames: false,
     startingNotePrefix: 'de la',
     label: 'Glas',
@@ -1156,6 +1251,75 @@ const initialMartyriaLexicons: Record<
     },
     plagalWord: 'lăturaș',
     plagalCounterpartMarkerPosition: 'beforeNumeral',
+    usesTerminalPeriod: true,
+    modeSignGroupTrailing: false,
+  },
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: {
+    // Indonesian rank numerals follow the noun and use ke-: Modus Pertama,
+    // Modus Kedua, or Modus ke-1. The local Neanes translation supplies the
+    // complete Byzantine set, including Plagal dari Modus Pertama and Modus
+    // Berat; Indonesian church-music literature independently attests eight
+    // authentic/plagal modes. General music literature also uses modus, but
+    // Modus is also the standard technical term in Indonesian music writing.
+    // https://ojs.badanbahasa.kemdikbud.go.id/jurnal/index.php/jurnal_ranah/article/download/3563/1597
+    // https://journal.unj.ac.id/unj/index.php/pm/article/download/18941/10508/52742
+    // https://download.garuda.kemdikbud.go.id/article.php?article=1050321&title=MELIHAT+KEMUNGKINAN+MODUS+GEREJA+SEBAGAI+DASAR+BAGI+PENYUSUNAN+MUSIK+UNTUK+HYMN&val=15733
+    grammar: [
+      {
+        modeIdentificationMethods: everyModeIdentificationMethod,
+        numeralKinds: [INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal],
+        numeralStyles: [
+          INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+          INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+          INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+        ],
+        numeralQualifiers: [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal],
+        modeNamingSchemes: [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute],
+      },
+      {
+        modeIdentificationMethods: everyModeIdentificationMethod,
+        numeralKinds: [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal],
+        numeralStyles: [
+          INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+          INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+        ],
+        numeralQualifiers: [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal],
+        modeNamingSchemes: [
+          INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+          INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+        ],
+      },
+    ],
+    direction: 'ltr',
+    usesGreekScript: false,
+    transliteratedNoteNames: indonesianTransliteratedNoteNames,
+    transliterateNoteNames: false,
+    startingNotePrefix: 'dari',
+    label: 'Modus',
+    ordinalWords: [
+      'Pertama',
+      'Kedua',
+      'Ketiga',
+      'Keempat',
+      'Kelima',
+      'Keenam',
+      'Ketujuh',
+      'Kedelapan',
+    ],
+    cardinalWords: [
+      'Satu',
+      'Dua',
+      'Tiga',
+      'Empat',
+      'Lima',
+      'Enam',
+      'Tujuh',
+      'Delapan',
+    ],
+    formatOrdinal: (base) => `ke-${base}`,
+    plagalCounterpartWord: 'Plagal dari',
+    graveWord: 'Berat',
+    graveWordAfterLabel: true,
     usesTerminalPeriod: true,
     modeSignGroupTrailing: false,
   },
@@ -1263,7 +1427,10 @@ function getInitialMartyriaNumeralText(
   }
   const base =
     semantics.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits
-      ? String(modeNumber)
+      ? semantics.numberingSystem ===
+        INITIAL_MARTYRIA_NUMBERING_SYSTEMS.ArabicIndic
+        ? arabicIndicDigits[modeNumber - 1]
+        : String(modeNumber)
       : romanNumerals[modeNumber - 1];
   return semantics.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal &&
     lexicon.formatOrdinal
@@ -1398,10 +1565,14 @@ function getInitialMartyriaStylePronunciation(
         }
       : structure;
   const identifier = usesGraveWord
-    ? null
+    ? lexicon.graveWordAfterLabel
+      ? lexicon.graveWord!
+      : null
     : getInitialMartyriaNumeralPronunciation(numeralSemantics, lexicon, mode);
   const marker = usesGraveWord
-    ? lexicon.graveWord
+    ? lexicon.graveWordAfterLabel
+      ? null
+      : lexicon.graveWord
     : isPlagalMode(mode) && usesPlagalNaming(structure)
       ? getPlagalMarkerWord(structure, lexicon)
       : null;
@@ -1534,8 +1705,13 @@ function getInitialMartyriaComponents(
     const numeral = numeralText == null ? null : text('numeral', numeralText);
 
     let marker: InitialMartyriaComponent | null = null;
+    let orderedNumeral = numeral;
     if (usesGraveNaming(structure, mode) && lexicon.graveWord != null) {
-      marker = text('graveWord', lexicon.graveWord);
+      if (lexicon.graveWordAfterLabel) {
+        orderedNumeral = text('graveWord', lexicon.graveWord);
+      } else {
+        marker = text('graveWord', lexicon.graveWord);
+      }
     } else if (plagal && usesPlagalNaming(structure)) {
       if (usesPlagalAbbreviationInText(structure, lexicon)) {
         marker = plagalAbbreviation();
@@ -1550,7 +1726,7 @@ function getInitialMartyriaComponents(
     ordered = orderInitialMartyriaModeName(
       structure,
       lexicon,
-      numeral,
+      orderedNumeral,
       marker,
       label,
     );
@@ -1636,6 +1812,7 @@ const initialMartyriaDefaultFonts: Record<
     greek: 'GFS Didot',
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: { main: 'Source Serif' },
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: { main: 'Source Serif' },
 };
 
 export function createDefaultInitialMartyriaAppearance(
@@ -1960,6 +2137,16 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
   }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.IndonesianModeNamesWithSign,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+  }),
 ];
 
 const builtInInitialMartyriaStylesById = new Map<string, InitialMartyriaStyle>(
@@ -2122,6 +2309,11 @@ export function isInitialMartyriaStructureSupported(
 ) {
   const lexicon = initialMartyriaLexicons[structure.languageId];
   if (
+    (structure.numberingSystem != null &&
+      structure.numeralStyle !== INITIAL_MARTYRIA_NUMERAL_STYLES.Digits) ||
+    (structure.numberingSystem ===
+      INITIAL_MARTYRIA_NUMBERING_SYSTEMS.ArabicIndic &&
+      structure.languageId !== INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic) ||
     !supportsNumeralForm(lexicon, structure) ||
     !lexicon.grammar.some((rule) => grammarRuleMatches(rule, structure))
   ) {
@@ -2165,6 +2357,7 @@ const initialMartyriaGrammarAxes: readonly InitialMartyriaGrammarAxis[] = [
   'modeIdentificationMethod',
   'numeralKind',
   'numeralStyle',
+  'numberingSystem',
   'numeralQualifier',
   'modeNamingScheme',
 ];
@@ -2174,6 +2367,7 @@ const defaultNormalizationAxisPriority: readonly InitialMartyriaGrammarAxis[] =
     'modeIdentificationMethod',
     'numeralKind',
     'numeralStyle',
+    'numberingSystem',
     'numeralQualifier',
     'modeNamingScheme',
   ];
@@ -2195,6 +2389,11 @@ function getInitialMartyriaGrammarStructures(
                 modeIdentificationMethod,
                 numeralKind,
                 numeralStyle,
+                numberingSystem:
+                  numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits &&
+                  structure.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic
+                    ? structure.numberingSystem
+                    : undefined,
                 numeralQualifier,
                 modeNamingScheme,
               };
@@ -2409,23 +2608,36 @@ export function enumerateInitialMartyriaStructures(
   const structures: InitialMartyriaStructureVariation<InitialMartyriaStructure>[] =
     [];
   for (const form of initialMartyriaNumeralForms) {
-    for (const numeralQualifier of initialMartyriaNumeralQualifiers) {
-      for (const modeNamingScheme of initialMartyriaModeNamingSchemes) {
-        const structure: InitialMartyriaStructure = {
-          ...base,
-          ...form,
-          numeralQualifier,
-          modeNamingScheme,
-        };
-        if (!isInitialMartyriaStructureSupported(structure)) {
-          continue;
+    const numberingSystems =
+      base.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic &&
+      form.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits
+        ? Object.values(INITIAL_MARTYRIA_NUMBERING_SYSTEMS)
+        : [undefined];
+    for (const numberingSystem of numberingSystems) {
+      for (const numeralQualifier of initialMartyriaNumeralQualifiers) {
+        for (const modeNamingScheme of initialMartyriaModeNamingSchemes) {
+          const structure: InitialMartyriaStructure = {
+            ...base,
+            ...form,
+            numberingSystem,
+            numeralQualifier,
+            modeNamingScheme,
+          };
+          if (!isInitialMartyriaStructureSupported(structure)) {
+            continue;
+          }
+          const key = getInitialMartyriaStructureKey(structure);
+          if (seen.has(key)) {
+            continue;
+          }
+          seen.add(key);
+          structures.push({
+            value: structure,
+            structure,
+            key,
+            current: false,
+          });
         }
-        const key = getInitialMartyriaStructureKey(structure);
-        if (seen.has(key)) {
-          continue;
-        }
-        seen.add(key);
-        structures.push({ value: structure, structure, key, current: false });
       }
     }
   }

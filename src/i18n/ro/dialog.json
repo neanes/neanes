@@ -171,7 +171,8 @@
       "churchSlavonic": "Slavonă bisericească",
       "russian": "Rusă",
       "arabic": "Arabă",
-      "romanian": "Română"
+      "romanian": "Română",
+      "indonesian": "Indoneziană"
     },
     "builtInStyles": {
       "greekTraditionalSign": "Mărturie tradițională",
@@ -197,7 +198,8 @@
       "arabicOrdinal": "Numerale ordinale",
       "romanianGlasNumber": "Glas cu cifre",
       "romanianGlasRomanNumeral": "Glas cu numerale romane",
-      "romanianTraditionalSign": "Mărturie tradițională"
+      "romanianTraditionalSign": "Mărturie tradițională",
+      "indonesianModeNamesWithSign": "Denumiri de glas cu mărturie"
     }
   },
   "documentProperties": {

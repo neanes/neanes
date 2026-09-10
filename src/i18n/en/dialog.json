@@ -171,7 +171,8 @@
       "churchSlavonic": "Church Slavonic",
       "russian": "Russian",
       "arabic": "Arabic",
-      "romanian": "Romanian"
+      "romanian": "Romanian",
+      "indonesian": "Indonesian"
     },
     "builtInStyles": {
       "greekTraditionalSign": "Traditional sign",
@@ -197,7 +198,8 @@
       "arabicOrdinal": "Ordinal words",
       "romanianGlasNumber": "Glas with digits",
       "romanianGlasRomanNumeral": "Glas with Roman numerals",
-      "romanianTraditionalSign": "Traditional sign"
+      "romanianTraditionalSign": "Traditional sign",
+      "indonesianModeNamesWithSign": "Mode names with sign"
     }
   },
   "documentProperties": {

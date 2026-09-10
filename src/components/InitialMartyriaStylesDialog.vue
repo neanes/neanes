@@ -539,6 +539,7 @@ import {
   GRAVE_SAMPLE_MODE,
   type InitialMartyriaStructureSelection,
   PLAGAL_SAMPLE_MODE,
+  withInitialMartyriaStyleStructure,
 } from './InitialMartyriaStylesDialog.shared';
 
 const ns = 'dialog';
@@ -971,19 +972,23 @@ function openBrowsedStructureInEditor() {
     return;
   }
   if (editor.value != null) {
-    editor.value.draft = {
-      ...cloneInitialMartyriaStyle(editor.value.draft),
-      structure: { ...selection.structure },
-    };
+    editor.value.draft = withInitialMartyriaStyleStructure(
+      editor.value.draft,
+      selection.structure,
+    );
     view.value = 'edit';
     return;
   }
+  const seed = withInitialMartyriaStyleStructure(
+    browseSeed.value,
+    selection.structure,
+  );
   openEditor(
     createInitialMartyriaStyle({
       displayName: '',
       basedOn: null,
       structure: selection.structure,
-      appearance: browseSeed.value.appearance,
+      appearance: seed.appearance,
     }),
     null,
   );

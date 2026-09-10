@@ -1,9 +1,12 @@
-import type {
-  InitialMartyriaStructure,
-  InitialMartyriaStyle,
+import {
+  cloneInitialMartyriaStyle,
+  getDefaultBuiltInInitialMartyriaStyle,
+  type InitialMartyriaStructure,
+  type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
+import { remapFontStyleForFamily } from '@/utils/fontStyle';
 
 /*
  * Sample modes for previews. The plagal first mode exposes the plagal
@@ -33,6 +36,33 @@ export function getSampleModeOptions() {
 /** The first template of a mode stands in for the mode in previews. */
 export function getSampleTemplateId(mode: number) {
   return modeKeyTemplates.find((template) => template.mode === mode)!.id;
+}
+
+/**
+ * Carry a style's presentation to another structure, adopting the new
+ * language's fonts when the structure crosses a language boundary.
+ */
+export function withInitialMartyriaStyleStructure(
+  style: InitialMartyriaStyle,
+  structure: InitialMartyriaStructure,
+) {
+  const next = cloneInitialMartyriaStyle(style);
+  next.structure = { ...structure };
+
+  if (structure.languageId === style.structure.languageId) {
+    return next;
+  }
+
+  const languageAppearance = getDefaultBuiltInInitialMartyriaStyle(
+    structure.languageId,
+  ).appearance;
+  next.appearance.mainFontFamily = languageAppearance.mainFontFamily;
+  next.appearance.greekFontFamily = languageAppearance.greekFontFamily;
+  next.appearance.fontStyle = remapFontStyleForFamily(
+    style.appearance.fontStyle,
+    languageAppearance.mainFontFamily,
+  );
+  return next;
 }
 
 /** A gallery tile the user picked: a structure and the style that already has it, if any. */

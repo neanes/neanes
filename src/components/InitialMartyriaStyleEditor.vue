@@ -395,6 +395,7 @@ import {
   getSampleTemplateId,
   GRAVE_SAMPLE_MODE,
   PLAGAL_SAMPLE_MODE,
+  withInitialMartyriaStyleStructure,
 } from './InitialMartyriaStylesDialog.shared';
 
 const ns = 'dialog';
@@ -545,7 +546,7 @@ function update(changes: Partial<InitialMartyriaStyle>) {
 }
 
 function setStructure(structure: InitialMartyriaStructure) {
-  update({ structure });
+  draft.value = withInitialMartyriaStyleStructure(draft.value, structure);
 }
 
 function setDisplayName(displayName: string) {
@@ -561,14 +562,14 @@ function setLanguage(value: unknown) {
   // rest of the structure carries over where the new language supports it.
   const languageDefault =
     getDefaultBuiltInInitialMartyriaStyle(languageId).structure;
-  update({
-    structure: normalizeInitialMartyriaStructure({
+  setStructure(
+    normalizeInitialMartyriaStructure({
       ...draft.value.structure,
       languageId,
       flowDirection: languageDefault.flowDirection,
       transliterateNoteNames: languageDefault.transliterateNoteNames,
     }),
-  });
+  );
 }
 
 function setAppearance<K extends keyof InitialMartyriaStyleAppearance>(

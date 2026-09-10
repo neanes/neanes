@@ -625,14 +625,14 @@ const expectedRunsByStructure: [string, string[]][] = [
   [
     'english-authentic-counterpart-ordinal-digits-text',
     [
-      '1ˢᵗ | Mode. | <pitch>',
-      '2ⁿᵈ | Mode. | <pitch>',
-      '3ʳᵈ | Mode. | <pitch>',
-      '4ᵗʰ | Mode. | <pitch>',
-      'Plagal of | 1ˢᵗ | Mode. | <pitch>',
-      'Plagal of | 2ⁿᵈ | Mode. | <pitch>',
+      '1st | Mode. | <pitch>',
+      '2nd | Mode. | <pitch>',
+      '3rd | Mode. | <pitch>',
+      '4th | Mode. | <pitch>',
+      'Plagal of | 1st | Mode. | <pitch>',
+      'Plagal of | 2nd | Mode. | <pitch>',
       'Grave | Mode. | <pitch>',
-      'Plagal of | 4ᵗʰ | Mode. | <pitch>',
+      'Plagal of | 4th | Mode. | <pitch>',
     ],
   ],
   [
@@ -729,27 +729,27 @@ const expectedRunsByStructure: [string, string[]][] = [
   [
     'english-ordinal-plagal-text',
     [
-      '1ˢᵗ | Mode. | <pitch>',
-      '2ⁿᵈ | Mode. | <pitch>',
-      '3ʳᵈ | Mode. | <pitch>',
-      '4ᵗʰ | Mode. | <pitch>',
-      '1ˢᵗ | Plagal | Mode. | <pitch>',
-      '2ⁿᵈ | Plagal | Mode. | <pitch>',
+      '1st | Mode. | <pitch>',
+      '2nd | Mode. | <pitch>',
+      '3rd | Mode. | <pitch>',
+      '4th | Mode. | <pitch>',
+      '1st | Plagal | Mode. | <pitch>',
+      '2nd | Plagal | Mode. | <pitch>',
       'Grave | Mode. | <pitch>',
-      '4ᵗʰ | Plagal | Mode. | <pitch>',
+      '4th | Plagal | Mode. | <pitch>',
     ],
   ],
   [
     'english-ordinal-plagal',
     [
-      '1ˢᵗ | Mode. | <modeSign> | <pitch>',
-      '2ⁿᵈ | Mode. | <modeSign> | <pitch>',
-      '3ʳᵈ | Mode. | <modeSign> | <pitch>',
-      '4ᵗʰ | Mode. | <modeSign> | <pitch>',
-      '1ˢᵗ | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch>',
-      '2ⁿᵈ | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch>',
+      '1st | Mode. | <modeSign> | <pitch>',
+      '2nd | Mode. | <modeSign> | <pitch>',
+      '3rd | Mode. | <modeSign> | <pitch>',
+      '4th | Mode. | <modeSign> | <pitch>',
+      '1st | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch>',
+      '2nd | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch>',
       'Grave | Mode. | <modeSign> | <pitch>',
-      '4ᵗʰ | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch>',
+      '4th | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -820,14 +820,14 @@ const expectedRunsByStructure: [string, string[]][] = [
   [
     'english-authentic-counterpart-ordinal-digits',
     [
-      '1ˢᵗ | Mode. | <modeSign> | <pitch>',
-      '2ⁿᵈ | Mode. | <modeSign> | <pitch>',
-      '3ʳᵈ | Mode. | <modeSign> | <pitch>',
-      '4ᵗʰ | Mode. | <modeSign> | <pitch>',
-      'Plagal of | 1ˢᵗ | Mode. | greek:λ/π | <modeSign> | <pitch>',
-      'Plagal of | 2ⁿᵈ | Mode. | greek:λ/π | <modeSign> | <pitch>',
+      '1st | Mode. | <modeSign> | <pitch>',
+      '2nd | Mode. | <modeSign> | <pitch>',
+      '3rd | Mode. | <modeSign> | <pitch>',
+      '4th | Mode. | <modeSign> | <pitch>',
+      'Plagal of | 1st | Mode. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal of | 2nd | Mode. | greek:λ/π | <modeSign> | <pitch>',
       'Grave | Mode. | <modeSign> | <pitch>',
-      'Plagal of | 4ᵗʰ | Mode. | greek:λ/π | <modeSign> | <pitch>',
+      'Plagal of | 4th | Mode. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -1619,6 +1619,34 @@ describe('InitialMartyriaStyle', () => {
       numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
       numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
     });
+
+    const englishOrdinalDigits = getBuiltInInitialMartyriaStyle(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassWithSign,
+    );
+    expect(englishOrdinalDigits.appearance.fontVariantNumeric).toBe('ordinal');
+    const ordinalNumeralRun = resolve(
+      englishOrdinalDigits,
+      elementForMode(1),
+    ).runs.find((run) => run.kind === 'text' && run.semantic === 'numeral');
+    expect(ordinalNumeralRun).toMatchObject({
+      appearance: { fontVariantNumeric: 'ordinal' },
+      content: { layout: 'inline', text: '1st' },
+    });
+    expect(
+      builtInInitialMartyriaStyles
+        .filter((style) => style.id !== englishOrdinalDigits.id)
+        .every((style) => style.appearance.fontVariantNumeric == null),
+    ).toBe(true);
+
+    const newEnglishOrdinalDigits = createInitialMartyriaStyle({
+      displayName: 'New ordinal style',
+      basedOn: null,
+      structure: englishOrdinalDigits.structure,
+      appearance: createDefaultInitialMartyriaAppearance(
+        INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+      ),
+    });
+    expect(newEnglishOrdinalDigits.appearance.fontVariantNumeric).toBeNull();
 
     for (const languageId of initialMartyriaLanguageIds) {
       const count = builtInInitialMartyriaStyles.filter(

@@ -602,14 +602,14 @@ const romanNumerals: InitialMartyriaModeTexts = [
 ];
 
 const englishOrdinalSuffixes: InitialMartyriaModeTexts = [
-  'ˢᵗ',
-  'ⁿᵈ',
-  'ʳᵈ',
-  'ᵗʰ',
-  'ᵗʰ',
-  'ᵗʰ',
-  'ᵗʰ',
-  'ᵗʰ',
+  'st',
+  'nd',
+  'rd',
+  'th',
+  'th',
+  'th',
+  'th',
+  'th',
 ];
 
 function formatEnglishOrdinal(
@@ -866,10 +866,16 @@ const initialMartyriaLexicons: Record<
       'siete',
       'ocho',
     ],
-    formatOrdinal: (base, numeralStyle) =>
-      numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits
-        ? `${base}.º`
-        : base,
+    formatOrdinal: (base, numeralStyle, numeralQualifier) => {
+      if (numeralStyle !== INITIAL_MARTYRIA_NUMERAL_STYLES.Digits) {
+        return base;
+      }
+      return numeralQualifier ===
+        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal &&
+        (base === '1' || base === '3')
+        ? `${base}.ᵉʳ`
+        : `${base}.º`;
+    },
     usesTerminalPeriod: true,
     modeSignGroupTrailing: false,
   },
@@ -1656,10 +1662,14 @@ type BuiltInInitialMartyriaStyleDefinition = Omit<
 > &
   Partial<
     Pick<InitialMartyriaStructure, 'transliterateNoteNames' | 'flowDirection'>
-  > & { id: BuiltInInitialMartyriaStyleId };
+  > & {
+    id: BuiltInInitialMartyriaStyleId;
+    appearance?: Partial<InitialMartyriaStyleAppearance>;
+  };
 
 function builtIn({
   id,
+  appearance,
   ...structure
 }: BuiltInInitialMartyriaStyleDefinition): InitialMartyriaStyle {
   return {
@@ -1672,7 +1682,10 @@ function builtIn({
       flowDirection: 'page',
       ...structure,
     },
-    appearance: createDefaultInitialMartyriaAppearance(structure.languageId),
+    appearance: {
+      ...createDefaultInitialMartyriaAppearance(structure.languageId),
+      ...appearance,
+    },
   };
 }
 
@@ -1743,6 +1756,7 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    appearance: { fontVariantNumeric: 'ordinal' },
   }),
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,

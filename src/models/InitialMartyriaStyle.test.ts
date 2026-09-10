@@ -7,8 +7,9 @@ import {
   type BuiltInInitialMartyriaStyleId,
   builtInInitialMartyriaStyles,
   cloneInitialMartyriaStyle,
-  createDefaultInitialMartyriaAppearance,
+  createDefaultInitialMartyriaTypography,
   createInitialMartyriaStyle,
+  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   enumerateInitialMartyriaStructures,
   findInitialMartyriaStyleWithStructure,
   getBuiltInInitialMartyriaStyle,
@@ -40,12 +41,14 @@ import {
   resolveInitialMartyriaFontFamily,
   resolveInitialMartyriaStyle,
   resolveInitialMartyriaStyleAppearances,
-  resolveInitialMartyriaStyleSelection,
+  resolveModeKeyInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
+import { createDefaultParagraphStyles } from '@/models/ParagraphStyle';
 import { ScaleNote } from '@/models/Scales';
+import { Unit } from '@/utils/Unit';
 
 function encodeRun(run: ResolvedInitialMartyriaRun) {
   if (run.kind === 'glyph') {
@@ -67,9 +70,11 @@ function styleFor(structure: InitialMartyriaStructure): InitialMartyriaStyle {
     displayName: 'Test',
     basedOn: null,
     structure,
-    appearance: createDefaultInitialMartyriaAppearance(structure.languageId),
+    ...createDefaultInitialMartyriaTypography(structure.languageId),
   };
 }
+
+const paragraphStyles = createDefaultParagraphStyles();
 
 function elementForMode(mode: number) {
   return ModeKeyElement.createFromTemplate(
@@ -92,6 +97,7 @@ function resolve(
     context: getInitialMartyriaContext(element),
     resolvedStyle: resolveInitialMartyriaStyleAppearances(
       style,
+      paragraphStyles,
       neumeFontFamily,
     ),
     pageSetup: new PageSetup(),
@@ -1709,8 +1715,10 @@ describe('InitialMartyriaStyle', () => {
     const englishOrdinalDigits = getBuiltInInitialMartyriaStyle(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassWithSign,
     );
-    expect(englishOrdinalDigits.appearance.useOrdinalForms).toBe(true);
-    expect(englishOrdinalDigits.appearance.fontVariantNumeric).toBeNull();
+    expect(englishOrdinalDigits.useOrdinalForms).toBe(true);
+    expect(
+      englishOrdinalDigits.paragraphStyleOverrides.fontVariantNumeric,
+    ).toBeUndefined();
     const plagalRuns = resolve(englishOrdinalDigits, elementForMode(5)).runs;
     const ordinalNumeralRun = plagalRuns.find(
       (run) => run.kind === 'text' && run.semantic === 'numeral',
@@ -1746,12 +1754,14 @@ describe('InitialMartyriaStyle', () => {
         ...englishOrdinalDigits.structure,
         modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
       },
-      appearance: createDefaultInitialMartyriaAppearance(
+      ...createDefaultInitialMartyriaTypography(
         INITIAL_MARTYRIA_LANGUAGE_IDS.English,
       ),
     });
-    expect(newEnglishOrdinalDigits.appearance.useOrdinalForms).toBe(true);
-    expect(newEnglishOrdinalDigits.appearance.fontVariantNumeric).toBeNull();
+    expect(newEnglishOrdinalDigits.useOrdinalForms).toBe(true);
+    expect(
+      newEnglishOrdinalDigits.paragraphStyleOverrides.fontVariantNumeric,
+    ).toBeUndefined();
     expect(
       resolve(newEnglishOrdinalDigits, elementForMode(5)).runs.find(
         (run) => run.kind === 'text' && run.semantic === 'numeral',
@@ -1761,7 +1771,7 @@ describe('InitialMartyriaStyle', () => {
       content: { layout: 'inline', text: '5th' },
     });
 
-    newEnglishOrdinalDigits.appearance.useOrdinalForms = false;
+    newEnglishOrdinalDigits.useOrdinalForms = false;
     const numeralWithoutOrdinalForms = resolve(
       newEnglishOrdinalDigits,
       elementForMode(5),
@@ -1808,59 +1818,107 @@ describe('InitialMartyriaStyle', () => {
     }
   });
 
-  it('resolves inherited, Standard, explicit, and missing style references', () => {
+  it('resolves inherited, explicit, and missing style references', () => {
     const custom = createInitialMartyriaStyle({
       displayName: 'Parish',
       basedOn: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
       structure: attestedStructures['greek-mode-names'],
-      appearance: createDefaultInitialMartyriaAppearance(
+      ...createDefaultInitialMartyriaTypography(
         INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
       ),
     });
-    const styles = [custom];
+    const initialMartyriaStyles = [custom];
     const builtInId =
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign;
+    const pageSetup = new PageSetup();
+    pageSetup.initialMartyriaStyleId = builtInId;
+    const element = new ModeKeyElement();
 
     expect(
-      resolveInitialMartyriaStyleSelection({
-        elementStyleId: undefined,
-        pageStyleId: null,
-        neumeFontFamily: 'Neanes',
-        styles,
-      }).kind,
-    ).toBe('standard');
+      resolveModeKeyInitialMartyriaStyle({
+        element,
+        pageSetup,
+        paragraphStyles,
+        initialMartyriaStyles,
+      }).style.id,
+    ).toBe(builtInId);
+
+    element.initialMartyriaStyleId = custom.id;
     expect(
-      resolveInitialMartyriaStyleSelection({
-        elementStyleId: undefined,
-        pageStyleId: builtInId,
-        neumeFontFamily: 'Neanes',
-        styles,
-      }),
-    ).toMatchObject({ kind: 'custom', style: { id: builtInId } });
+      resolveModeKeyInitialMartyriaStyle({
+        element,
+        pageSetup,
+        paragraphStyles,
+        initialMartyriaStyles,
+      }).style.id,
+    ).toBe(custom.id);
+
+    element.initialMartyriaStyleId = 'missing';
     expect(
-      resolveInitialMartyriaStyleSelection({
-        elementStyleId: null,
-        pageStyleId: builtInId,
-        neumeFontFamily: 'Neanes',
-        styles,
-      }).kind,
-    ).toBe('standard');
+      resolveModeKeyInitialMartyriaStyle({
+        element,
+        pageSetup,
+        paragraphStyles,
+        initialMartyriaStyles,
+      }).style.id,
+    ).toBe(DEFAULT_INITIAL_MARTYRIA_STYLE_ID);
+
+    element.initialMartyriaStyleId = null;
+    pageSetup.initialMartyriaStyleId = 'missing';
     expect(
-      resolveInitialMartyriaStyleSelection({
-        elementStyleId: custom.id,
-        pageStyleId: builtInId,
-        neumeFontFamily: 'Neanes',
-        styles,
-      }),
-    ).toMatchObject({ kind: 'custom', style: { id: custom.id } });
-    expect(
-      resolveInitialMartyriaStyleSelection({
-        elementStyleId: 'missing',
-        pageStyleId: builtInId,
-        neumeFontFamily: 'Neanes',
-        styles,
-      }).kind,
-    ).toBe('standard');
+      resolveModeKeyInitialMartyriaStyle({
+        element,
+        pageSetup,
+        paragraphStyles,
+        initialMartyriaStyles,
+      }).style.id,
+    ).toBe(DEFAULT_INITIAL_MARTYRIA_STYLE_ID);
+  });
+
+  it('folds element overrides into the resolved style appearances', () => {
+    const pageSetup = new PageSetup();
+    pageSetup.initialMartyriaStyleId =
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign;
+    const element = new ModeKeyElement();
+
+    const inherited = resolveModeKeyInitialMartyriaStyle({
+      element,
+      pageSetup,
+      paragraphStyles,
+      initialMartyriaStyles: [],
+    });
+    expect(inherited.mainAppearance).toMatchObject({
+      fontFamily: 'Source Serif',
+      fontSize: Unit.fromPt(14.5),
+      color: '#ED0000',
+      strokeWidth: 0,
+    });
+    expect(inherited.greekAppearance).toMatchObject({
+      fontFamily: 'Source Serif',
+      fontSize: Unit.fromPt(14.5),
+      color: '#ED0000',
+    });
+
+    element.fontSize = 30;
+    element.color = '#123456';
+    element.strokeWidth = 0.5;
+    const overridden = resolveModeKeyInitialMartyriaStyle({
+      element,
+      pageSetup,
+      paragraphStyles,
+      initialMartyriaStyles: [],
+    });
+    expect(overridden.mainAppearance).toMatchObject({
+      fontFamily: 'Source Serif',
+      fontSize: 30,
+      color: '#123456',
+      strokeWidth: 0.5,
+    });
+    expect(overridden.greekAppearance).toMatchObject({
+      fontSize: 30,
+      color: '#123456',
+      strokeWidth: 0.5,
+    });
   });
 
   it('uses the note names defined by each structure', () => {
@@ -1927,10 +1985,8 @@ describe('InitialMartyriaStyle', () => {
 
     expect(arabicStyle).toMatchObject({
       structure: { flowDirection: 'rtl' },
-      appearance: {
-        mainFontFamily: 'Noto Naskh Arabic',
-        greekFontFamily: 'GFS Didot',
-      },
+      paragraphStyleOverrides: { fontFamily: 'Noto Naskh Arabic' },
+      greekFontFamily: 'GFS Didot',
     });
     expect(resolveNoteText('arabic-ordinal')).toMatchObject({
       languageTag: 'el',
@@ -2019,24 +2075,26 @@ describe('InitialMartyriaStyle', () => {
     ).toBe('GFS Didot');
 
     const style = styleFor(attestedStructures['traditional-greek']);
-    expect(style.appearance.mainFontFamily).toBe(
+    expect(style.paragraphStyleOverrides.fontFamily).toBe(
       INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
     );
     expect(
-      resolveInitialMartyriaStyleAppearances(style, 'Neanes').mainAppearance
-        .fontFamily,
+      resolveInitialMartyriaStyleAppearances(style, paragraphStyles, 'Neanes')
+        .mainAppearance.fontFamily,
     ).toBe('GFS Didot');
     expect(
-      resolveInitialMartyriaStyleAppearances(style, 'NeanesStathisSeries')
-        .mainAppearance.fontFamily,
+      resolveInitialMartyriaStyleAppearances(
+        style,
+        paragraphStyles,
+        'NeanesStathisSeries',
+      ).mainAppearance.fontFamily,
     ).toBe('GFS Porson');
   });
 
   it('applies the style appearance to text and musical glyphs', () => {
     const style = styleFor(attestedStructures['english-sign-first']);
-    style.appearance = {
-      ...style.appearance,
-      mainFontFamily: 'GFS Didot',
+    style.paragraphStyleOverrides = {
+      fontFamily: 'GFS Didot',
       fontSize: 18,
       color: '#123456',
       strokeWidth: 0.25,
@@ -2046,7 +2104,11 @@ describe('InitialMartyriaStyle', () => {
       fontVariantAlternates: 'historical-forms',
     };
 
-    const resolved = resolveInitialMartyriaStyleAppearances(style, 'Neanes');
+    const resolved = resolveInitialMartyriaStyleAppearances(
+      style,
+      paragraphStyles,
+      'Neanes',
+    );
     const runs = resolve(style, elementForTemplate(100)).runs;
 
     expect(resolved.mainAppearance).toMatchObject({
@@ -2073,8 +2135,8 @@ describe('InitialMartyriaStyle', () => {
 
   it('uses the Greek font for original note names and permanent Greek text', () => {
     const style = styleFor(attestedStructures['english-sign-first']);
-    style.appearance.mainFontFamily = 'Source Serif';
-    style.appearance.greekFontFamily = 'GFS Didot';
+    style.paragraphStyleOverrides.fontFamily = 'Source Serif';
+    style.greekFontFamily = 'GFS Didot';
 
     const originalRuns = resolve(style, elementForTemplate(500)).runs;
     const originalPitch = originalRuns.find(
@@ -2102,10 +2164,14 @@ describe('InitialMartyriaStyle', () => {
 
   it('uses one font for every Greek style text role', () => {
     const style = styleFor(attestedStructures['traditional-greek']);
-    style.appearance.mainFontFamily = 'Source Serif';
-    style.appearance.greekFontFamily = 'GFS Didot';
+    style.paragraphStyleOverrides.fontFamily = 'Source Serif';
+    style.greekFontFamily = 'GFS Didot';
 
-    const resolved = resolveInitialMartyriaStyleAppearances(style, 'Neanes');
+    const resolved = resolveInitialMartyriaStyleAppearances(
+      style,
+      paragraphStyles,
+      'Neanes',
+    );
     const runs = resolve(style, elementForTemplate(500)).runs;
 
     expect(resolved.mainAppearance.fontFamily).toBe('Source Serif');
@@ -2125,10 +2191,10 @@ describe('InitialMartyriaStyle', () => {
   it('clones styles without sharing mutable state', () => {
     const source = styleFor(attestedStructures['traditional-greek']);
     const clone = cloneInitialMartyriaStyle(source);
-    clone.appearance.mainFontFamily = 'Source Serif';
+    clone.paragraphStyleOverrides.fontFamily = 'Source Serif';
     clone.structure.numeralStyle = INITIAL_MARTYRIA_NUMERAL_STYLES.Digits;
 
-    expect(source.appearance.mainFontFamily).toBe(
+    expect(source.paragraphStyleOverrides.fontFamily).toBe(
       INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
     );
     expect(source.structure.numeralStyle).toBe(
@@ -2753,7 +2819,7 @@ describe('InitialMartyriaStructure space', () => {
         ...attestedStructures['english-mode-number-word'],
         numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
       },
-      appearance: createDefaultInitialMartyriaAppearance(
+      ...createDefaultInitialMartyriaTypography(
         INITIAL_MARTYRIA_LANGUAGE_IDS.English,
       ),
     });

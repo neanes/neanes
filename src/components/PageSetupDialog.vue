@@ -33,14 +33,7 @@
                 class="min-h-9 w-full flex-none justify-start whitespace-normal text-left"
               >
                 <span
-                  v-if="section.value === 'modeKeys'"
-                  class="inline-grid size-4 shrink-0 place-items-center font-['Source_Serif'] text-sm leading-none"
-                  aria-hidden="true"
-                >
-                  Ηχ
-                </span>
-                <span
-                  v-else-if="section.value === 'neumes'"
+                  v-if="section.value === 'neumes'"
                   class="inline-grid size-4 shrink-0 place-items-center font-['Neanes'] text-[0.75rem] leading-none"
                   aria-hidden="true"
                 >
@@ -1182,82 +1175,6 @@
                   </Field>
                 </template>
 
-                <template v-else-if="section.value === 'modeKeys'">
-                  <FieldSet>
-                    <FieldLegend variant="label">
-                      {{
-                        $t(($) => $.dialog.pageSetup.defaultStyling, {
-                          ns: 'dialog',
-                        })
-                      }}
-                    </FieldLegend>
-                    <FieldDescription>
-                      {{
-                        $t(
-                          ($) => $.dialog.pageSetup.initialMartyriaeDescription,
-                          {
-                            ns: 'dialog',
-                          },
-                        )
-                      }}
-                    </FieldDescription>
-                    <FieldGroup class="gap-4">
-                      <Field orientation="horizontal">
-                        <FieldLabel>
-                          {{
-                            $t(($) => $.dialog.pageSetup.color, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <ColorPicker v-model="form.modeKeyDefaultColor" />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel>
-                          {{
-                            $t(($) => $.dialog.pageSetup.size, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <InputFontSize v-model="form.modeKeyDefaultFontSize" />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel>
-                          {{
-                            $t(($) => $.dialog.pageSetup.outline, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <InputStrokeWidth
-                          v-model="form.modeKeyDefaultStrokeWidth"
-                        />
-                      </Field>
-                      <Field orientation="horizontal">
-                        <FieldLabel
-                          for="page-setup-dialog-mode-key-height-adjust"
-                        >
-                          {{
-                            $t(($) => $.dialog.pageSetup.heightAdjust, {
-                              ns: 'dialog',
-                            })
-                          }}
-                        </FieldLabel>
-                        <InputUnit
-                          id="page-setup-dialog-mode-key-height-adjust"
-                          v-model="form.modeKeyDefaultHeightAdjustment"
-                          unit="pt"
-                          :min="heightAdjustmentMin"
-                          :max="heightAdjustmentMax"
-                          :step="0.5"
-                          :format-options="fraction2FormatOptions"
-                        />
-                      </Field>
-                    </FieldGroup>
-                  </FieldSet>
-                </template>
-
                 <template v-else-if="section.value === 'neumes'">
                   <FieldSet>
                     <FieldLegend variant="label">
@@ -1795,11 +1712,6 @@ const sections = [
     icon: PhTextT,
   },
   {
-    value: 'modeKeys',
-    labelSelector: ($) => $.dialog.pageSetup.initialMartyriae,
-    icon: PhMusicNotes,
-  },
-  {
     value: 'neumes',
     labelSelector: ($) => $.dialog.pageSetup.neumes,
     icon: PhMusicNotes,
@@ -1878,12 +1790,6 @@ const neumeFontFamilies = computed(() => {
 });
 const neumeSpacingMax = computed(() =>
   Math.round(toDisplay(form.value.pageWidth, form.value.pageSizeUnit) ?? 0),
-);
-const heightAdjustmentMin = computed(
-  () => -Math.round(Unit.fromPt(props.pageSetup.pageHeight)),
-);
-const heightAdjustmentMax = computed(() =>
-  Unit.toPt(props.pageSetup.pageHeight),
 );
 const pageSize = computed({
   get: () => form.value.pageSize,

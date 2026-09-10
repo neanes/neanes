@@ -48,6 +48,7 @@
         :seed="browseSeed"
         :styles="allStyles"
         :page-setup="pageSetup"
+        :paragraph-styles="paragraphStyles"
       />
 
       <div
@@ -131,7 +132,7 @@
                   :class="row.selected && 'bg-muted'"
                   :aria-pressed="row.selected"
                   @click="selectedStyleId = row.styleId"
-                  @dblclick="row.style != null && editStyle(row.style)"
+                  @dblclick="editStyle(row.style)"
                 >
                   <span class="truncate">{{ row.name }}</span>
                   <PhLock
@@ -140,7 +141,7 @@
                     aria-hidden="true"
                   />
                   <span
-                    v-else-if="row.languageName != null"
+                    v-else
                     class="shrink-0 text-[11px] text-muted-foreground"
                   >
                     {{ row.languageName }}
@@ -156,6 +157,7 @@
           v-model="editor.draft"
           v-model:sample-mode="sampleMode"
           :page-setup="pageSetup"
+          :paragraph-styles="paragraphStyles"
           :fonts="fonts"
           :name-valid="draftNameValid"
           @browse="browse"
@@ -184,7 +186,7 @@
                   </span>
                 </Badge>
               </div>
-              <div v-if="selectedStyle != null" class="flex items-center gap-1">
+              <div class="flex items-center gap-1">
                 <Button
                   type="button"
                   variant="outline"
@@ -228,12 +230,12 @@
               >
                 <InitialMartyriaSample
                   :style="selectedStyle"
+                  :paragraph-styles="paragraphStyles"
                   :template-id="templateId"
                   :page-setup="pageSetup"
                   :max-font-size="32"
                 />
                 <span
-                  v-if="selectedStyle != null"
                   class="text-center text-xs text-muted-foreground"
                   :lang="selectedStyle.structure.languageId"
                   aria-hidden="true"
@@ -243,18 +245,7 @@
               </div>
             </div>
 
-            <p
-              v-if="selectedStyle == null"
-              class="text-sm text-muted-foreground"
-            >
-              {{
-                $t(($) => $.dialog.initialMartyriaStyles.standardDescription, {
-                  ns,
-                })
-              }}
-            </p>
             <dl
-              v-else
               class="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-sm sm:grid-cols-[max-content_minmax(0,1fr)_max-content_minmax(0,1fr)]"
             >
               <template v-for="item in summary" :key="item.label">
@@ -503,6 +494,7 @@ import {
   builtInInitialMartyriaStyles,
   cloneInitialMartyriaStyle,
   createInitialMartyriaStyle,
+  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   findInitialMartyriaStyle,
   findInitialMartyriaStyleWithStructure,
   getBuiltInInitialMartyriaStyle,
@@ -523,6 +515,10 @@ import {
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';
+import {
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import {
   getInitialMartyriaLanguageName,
   getInitialMartyriaModeIdentificationMethodLabel,
@@ -550,19 +546,20 @@ const props = withDefaults(
   defineProps<{
     /** The score's own styles. Edits are emitted as they are saved. */
     styles: InitialMartyriaStyle[];
+    paragraphStyles: ParagraphStyle[];
     pageSetup: PageSetup;
     fonts: string[];
     target?: 'document' | 'element';
     /** The element's own style when the dialog targets an element. */
-    elementStyleId?: string | null | undefined;
+    elementStyleId?: string | null;
   }>(),
-  { target: 'document', elementStyleId: undefined },
+  { target: 'document', elementStyleId: null },
 );
 
 const emit = defineEmits<{
   'update:styles': [styles: InitialMartyriaStyle[]];
-  apply: [styleId: string | null];
-  'use-for-document': [styleId: string | null];
+  apply: [styleId: string];
+  'use-for-document': [styleId: string];
 }>();
 
 const open = defineModel<boolean>('open', { required: true });
@@ -587,34 +584,30 @@ const deleteDialogOpen = ref(false);
 let afterDiscard: (() => void) | null = null;
 
 const initialStyleId =
-  props.target === 'element' && props.elementStyleId !== undefined
-    ? props.elementStyleId
-    : props.pageSetup.initialMartyriaStyleId;
-const selectedStyleId = ref<string | null>(
-  initialStyleId != null &&
-    findInitialMartyriaStyle(props.styles, initialStyleId) != null
+  (props.target === 'element' ? props.elementStyleId : null) ??
+  props.pageSetup.initialMartyriaStyleId;
+const selectedStyleId = ref<string>(
+  findInitialMartyriaStyle(props.styles, initialStyleId) != null
     ? initialStyleId
-    : null,
+    : DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
 );
 
 const allStyles = computed(() => getInitialMartyriaStyles(props.styles));
-const selectedStyle = computed(() =>
-  selectedStyleId.value == null
-    ? null
-    : findInitialMartyriaStyle(props.styles, selectedStyleId.value),
-);
-const selectedIsBuiltIn = computed(
+// The selection is always a style that exists: deletion and the initial
+// selection both fall back to the default built-in style.
+const selectedStyle = computed(
   () =>
-    selectedStyle.value != null &&
-    isBuiltInInitialMartyriaStyleId(selectedStyle.value.id),
+    findInitialMartyriaStyle(props.styles, selectedStyleId.value) ??
+    getBuiltInInitialMartyriaStyle(DEFAULT_INITIAL_MARTYRIA_STYLE_ID),
+);
+const selectedIsBuiltIn = computed(() =>
+  isBuiltInInitialMartyriaStyleId(selectedStyle.value.id),
 );
 const selectedName = computed(() =>
-  selectedStyle.value == null
-    ? t(($) => $.dialog.initialMartyriaStyles.standard, { ns })
-    : getInitialMartyriaStyleDisplayName(selectedStyle.value, t),
+  getInitialMartyriaStyleDisplayName(selectedStyle.value, t),
 );
 const selectedBasedOn = computed(() =>
-  selectedStyle.value?.basedOn == null
+  selectedStyle.value.basedOn == null
     ? null
     : getBuiltInInitialMartyriaStyle(selectedStyle.value.basedOn),
 );
@@ -635,11 +628,11 @@ const uiLanguageId = computed<InitialMartyriaLanguageId>(() => {
 
 interface ListRow {
   key: string;
-  styleId: string | null;
-  style: InitialMartyriaStyle | null;
+  styleId: string;
+  style: InitialMartyriaStyle;
   name: string;
   builtIn: boolean;
-  languageName: string | null;
+  languageName: string;
   selected: boolean;
 }
 
@@ -649,35 +642,20 @@ function matchesSearch(name: string) {
     .includes(search.value.trim().toLocaleLowerCase());
 }
 
-function rowFor(style: InitialMartyriaStyle | null): ListRow {
-  const styleId = style?.id ?? null;
+function rowFor(style: InitialMartyriaStyle): ListRow {
   return {
-    key: styleId ?? 'standard',
-    styleId,
+    key: style.id,
+    styleId: style.id,
     style,
-    name:
-      style == null
-        ? t(($) => $.dialog.initialMartyriaStyles.standard, { ns })
-        : getInitialMartyriaStyleDisplayName(style, t),
-    builtIn: style == null || isBuiltInInitialMartyriaStyleId(style.id),
-    languageName:
-      style == null
-        ? null
-        : getInitialMartyriaLanguageName(t, style.structure.languageId),
-    selected: styleId === selectedStyleId.value,
+    name: getInitialMartyriaStyleDisplayName(style, t),
+    builtIn: isBuiltInInitialMartyriaStyleId(style.id),
+    languageName: getInitialMartyriaLanguageName(t, style.structure.languageId),
+    selected: style.id === selectedStyleId.value,
   };
 }
 
 const listGroups = computed(() => {
   const groups: { key: string; label: string; rows: ListRow[] }[] = [];
-  const standardRow = rowFor(null);
-  if (matchesSearch(standardRow.name)) {
-    groups.push({
-      key: 'standard',
-      label: t(($) => $.dialog.initialMartyriaStyles.builtIn, { ns }),
-      rows: [standardRow],
-    });
-  }
   groups.push({
     key: 'custom',
     label: t(($) => $.dialog.initialMartyriaStyles.custom, { ns }),
@@ -709,10 +687,12 @@ const listGroups = computed(() => {
 
 const summary = computed(() => {
   const style = selectedStyle.value;
-  if (style == null) {
-    return [];
-  }
   const structure = style.structure;
+  const typography = resolveParagraphStyle(
+    props.paragraphStyles,
+    style.paragraphStyleId,
+    style.paragraphStyleOverrides,
+  );
   const items: { label: string; value: string; swatch?: string }[] = [
     {
       label: t(($) => $.dialog.initialMartyriaStyles.language, { ns }),
@@ -762,23 +742,22 @@ const summary = computed(() => {
       value: t(($) => $.dialog.initialMartyriaStyles.fontSummary, {
         ns,
         font:
-          style.appearance.mainFontFamily ===
-          INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY
+          typography.fontFamily === INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY
             ? t(($) => $.dialog.initialMartyriaStyles.defaultFont, {
                 ns,
                 font: resolveInitialMartyriaFontFamily(
-                  style.appearance.mainFontFamily,
+                  typography.fontFamily,
                   props.pageSetup.neumeDefaultFontFamily,
                 ),
               })
-            : style.appearance.mainFontFamily,
-        size: Unit.toPt(style.appearance.fontSize),
+            : typography.fontFamily,
+        size: Unit.toPt(typography.fontSize),
       }),
     },
     {
       label: t(($) => $.dialog.pageSetup.color, { ns }),
-      value: style.appearance.color,
-      swatch: style.appearance.color,
+      value: typography.color,
+      swatch: typography.color,
     },
   );
   return items;
@@ -827,12 +806,7 @@ const duplicateOfDraft = computed(() => {
   );
 });
 
-const browseSeed = computed(
-  () =>
-    editor.value?.draft ??
-    selectedStyle.value ??
-    getDefaultBuiltInInitialMartyriaStyle(uiLanguageId.value),
-);
+const browseSeed = computed(() => editor.value?.draft ?? selectedStyle.value);
 
 function customNames() {
   return props.styles.map((style) => style.displayName);
@@ -853,7 +827,10 @@ function createStyle() {
       ),
       basedOn: null,
       structure: base.structure,
-      appearance: base.appearance,
+      paragraphStyleId: base.paragraphStyleId,
+      paragraphStyleOverrides: base.paragraphStyleOverrides,
+      greekFontFamily: base.greekFontFamily,
+      useOrdinalForms: base.useOrdinalForms,
     }),
     null,
   );
@@ -886,7 +863,10 @@ function duplicateStyle(style: InitialMartyriaStyle) {
         ? style.id
         : style.basedOn,
       structure: style.structure,
-      appearance: style.appearance,
+      paragraphStyleId: style.paragraphStyleId,
+      paragraphStyleOverrides: style.paragraphStyleOverrides,
+      greekFontFamily: style.greekFontFamily,
+      useOrdinalForms: style.useOrdinalForms,
     }),
     null,
   );
@@ -895,14 +875,14 @@ function duplicateStyle(style: InitialMartyriaStyle) {
 function deleteSelectedStyle() {
   const style = selectedStyle.value;
   deleteDialogOpen.value = false;
-  if (style == null || isBuiltInInitialMartyriaStyleId(style.id)) {
+  if (isBuiltInInitialMartyriaStyleId(style.id)) {
     return;
   }
   emit(
     'update:styles',
     props.styles.filter((item) => item.id !== style.id),
   );
-  selectedStyleId.value = null;
+  selectedStyleId.value = DEFAULT_INITIAL_MARTYRIA_STYLE_ID;
 }
 
 function saveDraft() {
@@ -987,6 +967,7 @@ function openBrowsedStructureInEditor() {
     editor.value.draft = withInitialMartyriaStyleStructure(
       editor.value.draft,
       selection.structure,
+      props.paragraphStyles,
     );
     view.value = 'edit';
     return;
@@ -994,13 +975,17 @@ function openBrowsedStructureInEditor() {
   const seed = withInitialMartyriaStyleStructure(
     browseSeed.value,
     selection.structure,
+    props.paragraphStyles,
   );
   openEditor(
     createInitialMartyriaStyle({
       displayName: '',
       basedOn: null,
       structure: selection.structure,
-      appearance: seed.appearance,
+      paragraphStyleId: seed.paragraphStyleId,
+      paragraphStyleOverrides: seed.paragraphStyleOverrides,
+      greekFontFamily: seed.greekFontFamily,
+      useOrdinalForms: seed.useOrdinalForms,
     }),
     null,
   );
@@ -1014,6 +999,7 @@ function pronunciationFor(style: InitialMartyriaStyle, templateId: number) {
     context: getInitialMartyriaContext(element),
     resolvedStyle: resolveInitialMartyriaStyleAppearances(
       style,
+      props.paragraphStyles,
       props.pageSetup.neumeDefaultFontFamily,
     ),
     pageSetup: props.pageSetup,

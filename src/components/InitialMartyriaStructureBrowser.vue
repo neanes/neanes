@@ -121,6 +121,7 @@
               :style="tile.style"
               :template-id="sampleTemplateId"
               :page-setup="pageSetup"
+              :paragraph-styles="paragraphStyles"
               :selected="tile.key === selectedKey"
               @select="selectedKey = tile.key"
             >
@@ -184,6 +185,7 @@ import {
   usesGreekScript,
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import {
   getInitialMartyriaLanguageName,
   getInitialMartyriaModeIdentificationMethodLabel,
@@ -205,6 +207,7 @@ const props = defineProps<{
   /** Every style, built-in and custom, so tiles can show which are saved. */
   styles: InitialMartyriaStyle[];
   pageSetup: PageSetup;
+  paragraphStyles: ParagraphStyle[];
 }>();
 
 const { t } = useTranslation();
@@ -292,7 +295,11 @@ const tiles = computed<Tile[]>(() =>
     ({ structure, key }) => ({
       key,
       structure,
-      style: withInitialMartyriaStyleStructure(props.seed, structure),
+      style: withInitialMartyriaStyleStructure(
+        props.seed,
+        structure,
+        props.paragraphStyles,
+      ),
       matchingStyle: stylesByKey.value.get(key) ?? null,
     }),
   ),

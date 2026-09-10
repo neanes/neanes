@@ -18,7 +18,6 @@
     "clearFormatting": "Hapus Format",
     "spaceAfter": "Ruang Setelah",
     "tempoSign": "Tanda Tempo",
-    "useDefaultStyle": "Gunakan Gaya Default",
     "enharmonicDisabled": "Fthora enharmonik hanya dapat ditempatkan pada Ga, Zo, atau Vou",
     "generalFlatDisabled": "Bemol umum hanya dapat ditempatkan pada Ke",
     "generalSharpDisabled": "Kres umum hanya dapat ditempatkan pada Ga",
@@ -88,7 +87,6 @@
   },
   "initialMartyria": {
     "size": "Ukuran",
-    "heightAdjustment": "Penyesuaian Tinggi",
     "rightAlignTempo": "Rata kanan tempo",
     "showAmbitus": "Tampilkan Ambitus",
     "permanentEnharmonicZo": "Zo Enharmonik Permanen",

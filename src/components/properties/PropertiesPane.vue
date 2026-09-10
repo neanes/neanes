@@ -115,6 +115,7 @@
       :element="modeKeyElement"
       :open-sections="openSections"
       :page-setup="pageSetup"
+      :paragraph-styles="paragraphStyles"
       :initial-martyria-styles="initialMartyriaStyles"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:mode-key', modeKeyElement, $event)"

@@ -59,8 +59,8 @@ import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
 import InitialMartyriaStylesDialog from '@/components/InitialMartyriaStylesDialog.vue';
 import LyricsPane from '@/components/LyricsPane.vue';
+import ModeKey from '@/components/ModeKey.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
-import ModeKeyRenderer from '@/components/ModeKeyRenderer.vue';
 import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
@@ -155,9 +155,10 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import {
+  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   type InitialMartyriaStyle,
   isBuiltInInitialMartyriaStyleId,
-  resolveInitialMartyriaStyleSelection,
+  resolveModeKeyInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
@@ -5751,6 +5752,7 @@ async function load() {
             pages.value,
             score.value.pageSetup,
             score.value.paragraphStyles,
+            score.value.initialMartyriaStyles,
             options,
           ),
           null,
@@ -7523,18 +7525,21 @@ function updateInitialMartyriaStyles(styles: InitialMartyriaStyle[]) {
       newValues: { initialMartyriaStyles: styles },
     }),
   ];
-  // References to a deleted style fall back: the score to Standard, an
-  // element to the score's style.
+  // References to a deleted style fall back: the score to the default
+  // built-in style, an element to the score's style.
   const pageStyleId = score.value.pageSetup.initialMartyriaStyleId;
-  if (pageStyleId != null && !isBuiltInInitialMartyriaStyleId(pageStyleId)) {
-    if (!nextStyleIds.has(pageStyleId)) {
-      commands.push(
-        pageSetupCommandFactory.create('update-properties', {
-          target: score.value.pageSetup,
-          newValues: { initialMartyriaStyleId: null },
-        }),
-      );
-    }
+  if (
+    !isBuiltInInitialMartyriaStyleId(pageStyleId) &&
+    !nextStyleIds.has(pageStyleId)
+  ) {
+    commands.push(
+      pageSetupCommandFactory.create('update-properties', {
+        target: score.value.pageSetup,
+        newValues: {
+          initialMartyriaStyleId: DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
+        },
+      }),
+    );
   }
   for (const element of score.value.staff.elements) {
     if (element.elementType !== ElementType.ModeKey) {
@@ -7550,7 +7555,7 @@ function updateInitialMartyriaStyles(styles: InitialMartyriaStyle[]) {
       commands.push(
         modeKeyCommandFactory.create('update-properties', {
           target: modeKey,
-          newValues: { initialMartyriaStyleId: undefined },
+          newValues: { initialMartyriaStyleId: null },
         }),
       );
     }
@@ -7628,10 +7633,22 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
         ? (deletedStyleFallbacks.get(styleId) ?? fallbackStyleId)
         : null,
   };
+  // Initial martyria styles reference paragraph styles too; a deleted one
+  // moves to the same fallback chain, ending at the built-in style.
+  const initialMartyriaStyles = score.value.initialMartyriaStyles.map(
+    (style) => {
+      const paragraphStyleId = remapResolvers.resolveStyleId(
+        style.paragraphStyleId,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+      );
+
+      return paragraphStyleId == null ? style : { ...style, paragraphStyleId };
+    },
+  );
   const commands: Command[] = [
     scoreCommandFactory.create('update-properties', {
       target: score.value,
-      newValues: { paragraphStyles: clonedStyles },
+      newValues: { paragraphStyles: clonedStyles, initialMartyriaStyles },
     }),
   ];
 
@@ -8430,7 +8447,7 @@ function openInitialMartyriaStyleDialog(element: ModeKeyElement) {
   initialMartyriaStylesDialogIsOpen.value = true;
 }
 
-function applyInitialMartyriaStyleToElement(styleId: string | null) {
+function applyInitialMartyriaStyleToElement(styleId: string) {
   if (initialMartyriaStylesDialogElement.value != null) {
     updateModeKey(initialMartyriaStylesDialogElement.value, {
       initialMartyriaStyleId: styleId,
@@ -8438,7 +8455,7 @@ function applyInitialMartyriaStyleToElement(styleId: string | null) {
   }
 }
 
-function useInitialMartyriaStyleForDocument(styleId: string | null) {
+function useInitialMartyriaStyleForDocument(styleId: string) {
   const element = initialMartyriaStylesDialogElement.value;
   const commands: Command[] = [
     pageSetupCommandFactory.create('update-properties', {
@@ -8451,7 +8468,7 @@ function useInitialMartyriaStyleForDocument(styleId: string | null) {
     commands.push(
       modeKeyCommandFactory.create('update-properties', {
         target: element,
-        newValues: { initialMartyriaStyleId: undefined },
+        newValues: { initialMartyriaStyleId: null },
       }),
     );
   }
@@ -8788,6 +8805,7 @@ async function exportAsLatex(args: ExportAsLatexSettings) {
           pages.value,
           score.value.pageSetup,
           score.value.paragraphStyles,
+          score.value.initialMartyriaStyles,
           args.options,
         ),
         null,
@@ -9205,6 +9223,7 @@ async function onFileMenuCopyAsHtml() {
     copiedElements,
     score.value.pageSetup,
     score.value.paragraphStyles,
+    score.value.initialMartyriaStyles,
     0,
     true,
   );
@@ -9511,16 +9530,10 @@ function onSearchText(args: { query: string; reverse?: boolean }) {
 }
 
 function createDefaultModeKey(pageSetup: PageSetup) {
-  const defaultTemplate = ModeKeyElement.createFromTemplate(
+  return ModeKeyElement.createFromTemplate(
     modeKeyTemplates[0],
-    score.value.pageSetup.useOptionalDiatonicFthoras,
+    pageSetup.useOptionalDiatonicFthoras,
   );
-
-  defaultTemplate.color = pageSetup.modeKeyDefaultColor;
-  defaultTemplate.fontSize = pageSetup.modeKeyDefaultFontSize;
-  defaultTemplate.strokeWidth = pageSetup.modeKeyDefaultStrokeWidth;
-
-  return defaultTemplate;
 }
 
 function createDefaultScore() {
@@ -10003,28 +10016,13 @@ const canSaveContextMenuSelectionAsCombo = computed(
   () => getContextMenuSelectedNoteElements().length >= 2,
 );
 
-function setContextMenuUseDefaultStyle(
-  element: ModeKeyElement,
-  value: boolean,
-) {
-  const wasUsingDefaultStyle = element.useDefaultStyle;
-
-  updateModeKey(element, { useDefaultStyle: value });
-
-  if (wasUsingDefaultStyle && !value) {
-    setPaneVisibility('properties', true);
-  }
-}
-
-function usesStandardModeKey(element: ModeKeyElement) {
-  return (
-    resolveInitialMartyriaStyleSelection({
-      elementStyleId: element.initialMartyriaStyleId,
-      pageStyleId: score.value.pageSetup.initialMartyriaStyleId,
-      neumeFontFamily: score.value.pageSetup.neumeDefaultFontFamily,
-      styles: score.value.initialMartyriaStyles,
-    }).kind === 'standard'
-  );
+function resolveModeKeyStyle(element: ModeKeyElement) {
+  return resolveModeKeyInitialMartyriaStyle({
+    element,
+    pageSetup: score.value.pageSetup,
+    paragraphStyles: score.value.paragraphStyles,
+    initialMartyriaStyles: score.value.initialMartyriaStyles,
+  });
 }
 
 function openContextMenuPositioning(element: NoteElement) {
@@ -10985,7 +10983,7 @@ function renderTabLabel(tab: Tab) {
                             <span v-if="element.lineBreak" class="line-break-2"
                               ><PhParagraph weight="fill"
                             /></span>
-                            <ModeKeyRenderer
+                            <ModeKey
                               :ref="
                                 setTemplateRef(
                                   `element-${getElementIndex(element)}`,
@@ -10993,8 +10991,8 @@ function renderTabLabel(tab: Tab) {
                               "
                               :element="element as ModeKeyElement"
                               :page-setup="score.pageSetup"
-                              :initial-martyria-styles="
-                                score.initialMartyriaStyles
+                              :resolved-style="
+                                resolveModeKeyStyle(element as ModeKeyElement)
                               "
                               :class="[
                                 {
@@ -11291,25 +11289,6 @@ function renderTabLabel(tab: Tab) {
                     }}
                   </ContextMenuCheckboxItem>
                   <ContextMenuCheckboxItem
-                    v-if="
-                      contextMenuModeKey != null &&
-                      usesStandardModeKey(contextMenuModeKey)
-                    "
-                    :model-value="contextMenuModeKey.useDefaultStyle"
-                    @update:model-value="
-                      setContextMenuUseDefaultStyle(
-                        contextMenuModeKey,
-                        $event === true,
-                      )
-                    "
-                  >
-                    {{
-                      $t(($) => $.toolbar.common.useDefaultStyle, {
-                        ns: 'toolbar',
-                      })
-                    }}
-                  </ContextMenuCheckboxItem>
-                  <ContextMenuCheckboxItem
                     v-if="contextMenuModeKey != null"
                     :model-value="contextMenuModeKey.showAmbitus"
                     @update:model-value="
@@ -11470,6 +11449,7 @@ function renderTabLabel(tab: Tab) {
         <ToolbarModeKey
           :element="inspectorContext.element"
           :page-setup="score.pageSetup"
+          :paragraph-styles="score.paragraphStyles"
           :initial-martyria-styles="score.initialMartyriaStyles"
           @update="updateModeKey(inspectorContext.element, $event)"
           @update:tempo="setModeKeyTempo(inspectorContext.element, $event)"
@@ -11582,6 +11562,7 @@ function renderTabLabel(tab: Tab) {
       v-model:open="modeKeyDialogIsOpen"
       :element="selectedElement as ModeKeyElement"
       :page-setup="score.pageSetup"
+      :paragraph-styles="score.paragraphStyles"
       :initial-martyria-styles="score.initialMartyriaStyles"
       @update="
         updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
@@ -11643,6 +11624,7 @@ function renderTabLabel(tab: Tab) {
       v-if="initialMartyriaStylesDialogIsOpen"
       v-model:open="initialMartyriaStylesDialogIsOpen"
       :styles="score.initialMartyriaStyles"
+      :paragraph-styles="score.paragraphStyles"
       :element-style-id="
         initialMartyriaStylesDialogElement?.initialMartyriaStyleId
       "

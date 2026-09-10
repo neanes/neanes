@@ -1,12 +1,16 @@
 import {
   cloneInitialMartyriaStyle,
-  getDefaultBuiltInInitialMartyriaStyle,
+  createDefaultInitialMartyriaTypography,
   type InitialMartyriaStructure,
   initialMartyriaStructureHasOrdinalDigits,
   type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
+import {
+  type ParagraphStyle,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import { remapFontStyleForFamily } from '@/utils/fontStyle';
 
 /*
@@ -46,6 +50,7 @@ export function getSampleTemplateId(mode: number) {
 export function withInitialMartyriaStyleStructure(
   style: InitialMartyriaStyle,
   structure: InitialMartyriaStructure,
+  paragraphStyles: ParagraphStyle[],
 ) {
   const next = cloneInitialMartyriaStyle(style);
   next.structure = { ...structure };
@@ -54,22 +59,35 @@ export function withInitialMartyriaStyleStructure(
     !initialMartyriaStructureHasOrdinalDigits(style.structure) &&
     initialMartyriaStructureHasOrdinalDigits(structure)
   ) {
-    next.appearance.useOrdinalForms = true;
+    next.useOrdinalForms = true;
   }
 
   if (structure.languageId === style.structure.languageId) {
     return next;
   }
 
-  const languageAppearance = getDefaultBuiltInInitialMartyriaStyle(
+  const languageTypography = createDefaultInitialMartyriaTypography(
     structure.languageId,
-  ).appearance;
-  next.appearance.mainFontFamily = languageAppearance.mainFontFamily;
-  next.appearance.greekFontFamily = languageAppearance.greekFontFamily;
-  next.appearance.fontStyle = remapFontStyleForFamily(
-    style.appearance.fontStyle,
-    languageAppearance.mainFontFamily,
   );
+  const languageFontFamily =
+    languageTypography.paragraphStyleOverrides.fontFamily;
+  if (languageFontFamily == null) {
+    delete next.paragraphStyleOverrides.fontFamily;
+  } else {
+    next.paragraphStyleOverrides.fontFamily = languageFontFamily;
+  }
+  next.greekFontFamily = languageTypography.greekFontFamily;
+  if (next.paragraphStyleOverrides.fontStyle != null) {
+    // The face is remapped against the family the style now resolves to.
+    next.paragraphStyleOverrides.fontStyle = remapFontStyleForFamily(
+      next.paragraphStyleOverrides.fontStyle,
+      resolveParagraphStyle(
+        paragraphStyles,
+        next.paragraphStyleId,
+        next.paragraphStyleOverrides,
+      ).fontFamily,
+    );
+  }
   return next;
 }
 

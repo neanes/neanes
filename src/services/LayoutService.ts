@@ -42,7 +42,7 @@ import {
   type ResolvedInitialMartyriaRun,
   type ResolvedInitialMartyriaStyle,
   resolveInitialMartyriaStyle,
-  resolveInitialMartyriaStyleSelection,
+  resolveModeKeyInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
@@ -60,7 +60,6 @@ import {
 import type { Fthora, MeasureBar, Neume } from '@/models/Neumes';
 import {
   GorgonNeume,
-  ModeSign,
   NeumeSelection,
   Note,
   NoteIndicator,
@@ -104,7 +103,6 @@ import { TATWEEL } from '@/utils/constants';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import type { ResolvedFontStyle } from '@/utils/fontStyle';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
-import { getLegacyNeumeFontFamily } from '@/utils/getFontFamilyWithFallback';
 import { lowRootSignMap } from '@/utils/NeumeUtils';
 import type { ResolvedPageMargins } from '@/utils/PageMargins';
 import { resolvePageMargins } from '@/utils/PageMargins';
@@ -660,107 +658,32 @@ export class LayoutService {
           // PROCESS MODEKEY
           const modeKeyElement = elements[i] as ModeKeyElement;
 
-          const initialMartyriaStyleSelection =
-            resolveInitialMartyriaStyleSelection({
-              elementStyleId: modeKeyElement.initialMartyriaStyleId,
-              pageStyleId: pageSetup.initialMartyriaStyleId,
-              neumeFontFamily: pageSetup.neumeDefaultFontFamily,
-              styles: score.initialMartyriaStyles,
-            });
-          const usesStandardModeKey =
-            initialMartyriaStyleSelection.kind === 'standard';
-
-          // The standard Initial Martyria depends on the spacing built into
-          // the legacy font glyphs. Custom styles use engraving font metrics.
-          modeKeyElement.computedFontFamily = usesStandardModeKey
-            ? getLegacyNeumeFontFamily(pageSetup.neumeDefaultFontFamily)
-            : pageSetup.neumeDefaultFontFamily;
-
-          const customAppearance =
-            initialMartyriaStyleSelection.kind === 'custom'
-              ? initialMartyriaStyleSelection.mainAppearance
-              : null;
-          modeKeyElement.computedFontSize = usesStandardModeKey
-            ? modeKeyElement.useDefaultStyle
-              ? pageSetup.modeKeyDefaultFontSize
-              : modeKeyElement.fontSize
-            : customAppearance!.fontSize!;
-
-          modeKeyElement.computedColor = usesStandardModeKey
-            ? modeKeyElement.useDefaultStyle
-              ? pageSetup.modeKeyDefaultColor
-              : modeKeyElement.color
-            : customAppearance!.color!;
-
-          modeKeyElement.computedStrokeWidth = usesStandardModeKey
-            ? modeKeyElement.useDefaultStyle
-              ? pageSetup.modeKeyDefaultStrokeWidth
-              : modeKeyElement.strokeWidth
-            : customAppearance!.strokeWidth!;
-
-          modeKeyElement.computedHeightAdjustment = usesStandardModeKey
-            ? modeKeyElement.useDefaultStyle
-              ? pageSetup.modeKeyDefaultHeightAdjustment
-              : modeKeyElement.heightAdjustment
-            : 0;
-
-          if (usesStandardModeKey) {
-            const font = `${modeKeyElement.computedFontSize}px ${modeKeyElement.computedFontFamily}`;
-            const ascent =
-              TextMeasurementService.getFontBoundingBoxAscent(font);
-            const descent =
-              TextMeasurementService.getFontBoundingBoxDescent(font);
-            const inlineBaselineCorrection = modeKeyElement.inline
-              ? fontService.getMetrics(modeKeyElement.computedFontFamily)
-                  .initialMartyriaBaseline * modeKeyElement.computedFontSize
-              : 0;
-            modeKeyElement.computedTop = -ascent + inlineBaselineCorrection;
-            modeKeyElement.computedBottom =
-              descent +
-              inlineBaselineCorrection +
-              modeKeyElement.computedHeightAdjustment;
-            modeKeyElement.computedFlowTop = -ascent + inlineBaselineCorrection;
-            if (modeKeyElement.inline && modeKeyElement.tempo != null) {
-              const tempoMetrics = TextMeasurementService.getTextMetrics(
-                NeumeMappingService.getMapping(modeKeyElement.tempo).text,
-                font,
-              );
-              const tempoBaseline =
-                inlineBaselineCorrection -
-                0.45 * modeKeyElement.computedFontSize;
-              const tempoStrokeOverflow = pageSetup.tempoDefaultStrokeWidth / 2;
-              modeKeyElement.computedTop = Math.min(
-                modeKeyElement.computedTop,
-                tempoBaseline -
-                  tempoMetrics.actualBoundingBoxAscent -
-                  tempoStrokeOverflow,
-              );
-              modeKeyElement.computedBottom = Math.max(
-                modeKeyElement.computedBottom,
-                tempoBaseline +
-                  tempoMetrics.actualBoundingBoxDescent +
-                  tempoStrokeOverflow,
-              );
-            }
-            modeKeyElement.height =
-              modeKeyElement.computedBottom - modeKeyElement.computedTop;
-            if (modeKeyElement.inline) {
-              modeKeyElement.width =
-                this.getStandardInitialMartyriaWidth(modeKeyElement);
-            }
-          } else {
-            const geometry = this.getInitialMartyriaGeometry(
-              modeKeyElement,
+          const resolvedInitialMartyriaStyle =
+            resolveModeKeyInitialMartyriaStyle({
+              element: modeKeyElement,
               pageSetup,
-              initialMartyriaStyleSelection,
-            );
-            modeKeyElement.computedTop = geometry.top;
-            modeKeyElement.computedBottom = geometry.bottom;
-            modeKeyElement.computedFlowTop = geometry.flowTop;
-            modeKeyElement.height = geometry.bottom - geometry.top;
-            if (modeKeyElement.inline) {
-              modeKeyElement.width = geometry.width;
-            }
+              paragraphStyles: score.paragraphStyles,
+              initialMartyriaStyles: score.initialMartyriaStyles,
+            });
+          const mainAppearance = resolvedInitialMartyriaStyle.mainAppearance;
+
+          modeKeyElement.computedFontFamily = pageSetup.neumeDefaultFontFamily;
+          modeKeyElement.computedFontSize = mainAppearance.fontSize;
+          modeKeyElement.computedColor = mainAppearance.color;
+          modeKeyElement.computedStrokeWidth = mainAppearance.strokeWidth;
+
+          const geometry = this.getInitialMartyriaGeometry(
+            modeKeyElement,
+            pageSetup,
+            resolvedInitialMartyriaStyle,
+          );
+          modeKeyElement.computedNeumeFontSize = geometry.neumeFontSize;
+          modeKeyElement.computedTop = geometry.top;
+          modeKeyElement.computedBottom = geometry.bottom;
+          modeKeyElement.computedFlowTop = geometry.flowTop;
+          modeKeyElement.height = geometry.bottom - geometry.top;
+          if (modeKeyElement.inline) {
+            modeKeyElement.width = geometry.width;
           }
 
           const elementWidthPx = modeKeyElement.inline
@@ -2338,65 +2261,6 @@ export class LayoutService {
       workspace.neumesEndPx + elementWidthPx + lyricEndGlueWidth;
   }
 
-  public static getStandardInitialMartyriaWidth(element: ModeKeyElement) {
-    const neumes: Neume[] = [ModeSign.Ekhos];
-    if (element.isPlagal) {
-      neumes.push(ModeSign.Plagal);
-    }
-    if (element.isVarys) {
-      neumes.push(ModeSign.Varys);
-    }
-    neumes.push(element.martyria);
-    for (const neume of [
-      element.note,
-      element.fthoraAboveNote,
-      element.quantitativeNeumeAboveNote,
-      element.note2,
-      element.fthoraAboveNote2,
-      element.quantitativeNeumeAboveNote2,
-    ]) {
-      if (neume != null) {
-        neumes.push(neume);
-      }
-    }
-    let width = TextMeasurementService.getTextWidth(
-      neumes
-        .map((neume) => NeumeMappingService.getMapping(neume).text)
-        .join(''),
-      `${element.computedFontSize}px ${element.computedFontFamily}`,
-    );
-    if (element.quantitativeNeumeRight != null) {
-      width +=
-        element.computedFontSize *
-        fontService.getStandardGlue(element.computedFontFamily).width;
-      width += TextMeasurementService.getTextWidth(
-        [
-          element.quantitativeNeumeRight,
-          element.fthoraAboveQuantitativeNeumeRight,
-        ]
-          .filter((neume): neume is QuantitativeNeume | Fthora => neume != null)
-          .map((neume) => NeumeMappingService.getMapping(neume).text)
-          .join(''),
-        `${element.computedFontSize}px ${element.computedFontFamily}`,
-      );
-    } else if (element.fthoraAboveQuantitativeNeumeRight != null) {
-      width += TextMeasurementService.getTextWidth(
-        NeumeMappingService.getMapping(
-          element.fthoraAboveQuantitativeNeumeRight,
-        ).text,
-        `${element.computedFontSize}px ${element.computedFontFamily}`,
-      );
-    }
-    if (element.tempo != null) {
-      width += 8;
-      width += TextMeasurementService.getTextWidth(
-        NeumeMappingService.getMapping(element.tempo).text,
-        `${element.computedFontSize}px ${element.computedFontFamily}`,
-      );
-    }
-    return width;
-  }
-
   public static getInitialMartyriaGeometry(
     element: ModeKeyElement,
     pageSetup: PageSetup,
@@ -2753,7 +2617,13 @@ export class LayoutService {
       }
     }
 
-    return { bottom, flowTop, top, width };
+    return {
+      bottom,
+      flowTop,
+      top,
+      width,
+      neumeFontSize: matchedNeumeFontSize ?? element.computedFontSize,
+    };
   }
 
   private static addBox(
@@ -5484,8 +5354,7 @@ export class LayoutService {
       const modeKey = element as ModeKeyElement;
       modeKey.computedFontFamilyPrevious = modeKey.computedFontFamily;
       modeKey.computedFontSizePrevious = modeKey.computedFontSize;
-      modeKey.computedHeightAdjustmentPrevious =
-        modeKey.computedHeightAdjustment;
+      modeKey.computedNeumeFontSizePrevious = modeKey.computedNeumeFontSize;
       modeKey.computedColorPrevious = modeKey.computedColor;
       modeKey.computedStrokeWidthPrevious = modeKey.computedStrokeWidth;
       modeKey.computedTopPrevious = modeKey.computedTop;
@@ -5599,8 +5468,8 @@ export class LayoutService {
         modeKey.widthPrevious !== modeKey.width ||
         modeKey.computedFontFamilyPrevious !== modeKey.computedFontFamily ||
         modeKey.computedFontSizePrevious !== modeKey.computedFontSize ||
-        modeKey.computedHeightAdjustmentPrevious !==
-          modeKey.computedHeightAdjustment ||
+        modeKey.computedNeumeFontSizePrevious !==
+          modeKey.computedNeumeFontSize ||
         modeKey.computedColorPrevious !== modeKey.computedColor ||
         modeKey.computedStrokeWidthPrevious !== modeKey.computedStrokeWidth ||
         modeKey.computedTopPrevious !== modeKey.computedTop ||

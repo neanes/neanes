@@ -12,131 +12,98 @@
       :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
     >
       <Field>
-        <FieldLabel for="properties-mode-key-style">{{
-          $t(($) => $.dialog.initialMartyriaStyles.styleLabel, {
-            ns: 'dialog',
-          })
-        }}</FieldLabel>
-        <Select v-model="modeKeyStyleValue">
-          <SelectTrigger id="properties-mode-key-style">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem :value="inheritStyleValue">
-              {{
-                $t(($) => $.dialog.initialMartyriaStyles.documentDefault, {
-                  ns: 'dialog',
-                })
-              }}
-            </SelectItem>
-            <SelectItem :value="standardStyleValue">
-              {{
-                $t(($) => $.dialog.initialMartyriaStyles.standard, {
-                  ns: 'dialog',
-                })
-              }}
-            </SelectItem>
-            <SelectGroup v-for="group in styleGroups" :key="group.key">
-              <SelectLabel>{{ group.label }}</SelectLabel>
-              <SelectItem
-                v-for="style in group.styles"
-                :key="style.id"
-                :value="style.id"
-              >
-                {{ getInitialMartyriaStyleDisplayName(style, t) }}
-              </SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        <div class="mb-2 flex items-center justify-between gap-2">
+          <FieldLabel for="properties-mode-key-style">{{
+            $t(($) => $.dialog.initialMartyriaStyles.styleLabel, {
+              ns: 'dialog',
+            })
+          }}</FieldLabel>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            @click="$emit('open-style-dialog')"
+          >
+            {{
+              $t(($) => $.dialog.initialMartyriaStyles.manageStyles, {
+                ns: 'dialog',
+              })
+            }}
+          </Button>
+        </div>
+        <InitialMartyriaStyleSelect
+          id="properties-mode-key-style"
+          :model-value="element.initialMartyriaStyleId"
+          :initial-martyria-styles="initialMartyriaStyles"
+          @update:model-value="
+            $emit('update', {
+              initialMartyriaStyleId: $event,
+            } as Partial<ModeKeyElement>)
+          "
+        />
       </Field>
-      <Button variant="outline" @click="$emit('open-style-dialog')">
-        {{
-          $t(($) => $.dialog.initialMartyriaStyles.manageStyles, {
-            ns: 'dialog',
-          })
-        }}
-      </Button>
 
-      <template v-if="usesStandardModeKey">
-        <Field orientation="horizontal">
-          <Switch
-            id="properties-mode-key-use-default-style"
-            :model-value="element.useDefaultStyle"
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-mode-key-font-size">{{
+          $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
+          <InputFontSize
+            id="properties-mode-key-font-size"
+            :model-value="resolvedAppearance.fontSize"
+            @update:model-value="
+              $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
+            "
+          />
+          <ParagraphStyleClearButton
+            :disabled="element.fontSize == null"
+            @clear="
+              $emit('update', { fontSize: null } as Partial<ModeKeyElement>)
+            "
+          />
+        </div>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
+          <ColorPicker
+            :model-value="resolvedAppearance.color"
+            @update:model-value="
+              $emit('update', { color: $event } as Partial<ModeKeyElement>)
+            "
+          />
+          <ParagraphStyleClearButton
+            :disabled="element.color == null"
+            @clear="$emit('update', { color: null } as Partial<ModeKeyElement>)"
+          />
+        </div>
+      </Field>
+
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-mode-key-outline">{{
+          $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
+          <InputStrokeWidth
+            id="properties-mode-key-outline"
+            :model-value="resolvedAppearance.strokeWidth"
             @update:model-value="
               $emit('update', {
-                useDefaultStyle: $event === true,
+                strokeWidth: $event,
               } as Partial<ModeKeyElement>)
             "
           />
-          <FieldLabel for="properties-mode-key-use-default-style">{{
-            $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
-          }}</FieldLabel>
-        </Field>
-
-        <template v-if="!element.useDefaultStyle">
-          <Field orientation="horizontal">
-            <FieldLabel for="properties-mode-key-font-size">{{
-              $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
-            }}</FieldLabel>
-            <InputFontSize
-              id="properties-mode-key-font-size"
-              :model-value="element.fontSize"
-              @update:model-value="
-                $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
-              "
-            />
-          </Field>
-
-          <Field orientation="horizontal">
-            <FieldLabel>{{
-              $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
-            }}</FieldLabel>
-            <ColorPicker
-              :model-value="element.color"
-              @update:model-value="
-                $emit('update', { color: $event } as Partial<ModeKeyElement>)
-              "
-            />
-          </Field>
-
-          <Field orientation="horizontal">
-            <FieldLabel for="properties-mode-key-outline">{{
-              $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-            }}</FieldLabel>
-            <InputStrokeWidth
-              id="properties-mode-key-outline"
-              :model-value="element.strokeWidth"
-              @update:model-value="
-                $emit('update', {
-                  strokeWidth: $event,
-                } as Partial<ModeKeyElement>)
-              "
-            />
-          </Field>
-
-          <Field orientation="horizontal">
-            <FieldLabel for="properties-mode-key-height-adjustment">{{
-              $t(($) => $.toolbar.initialMartyria.heightAdjustment, {
-                ns: 'toolbar',
-              })
-            }}</FieldLabel>
-            <InputUnit
-              id="properties-mode-key-height-adjustment"
-              unit="pt"
-              :min="heightAdjustmentMin"
-              :max="heightAdjustmentMax"
-              :step="0.5"
-              :format-options="fraction2FormatOptions"
-              :model-value="element.heightAdjustment"
-              @update:model-value="
-                $emit('update', {
-                  heightAdjustment: $event,
-                } as Partial<ModeKeyElement>)
-              "
-            />
-          </Field>
-        </template>
-      </template>
+          <ParagraphStyleClearButton
+            :disabled="element.strokeWidth == null"
+            @clear="
+              $emit('update', { strokeWidth: null } as Partial<ModeKeyElement>)
+            "
+          />
+        </div>
+      </Field>
     </PaneSection>
 
     <PaneSection
@@ -309,47 +276,32 @@ import {
   PhTextAlignLeft,
   PhTextAlignRight,
 } from '@phosphor-icons/vue';
-import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
+import InitialMartyriaStyleSelect from '@/components/InitialMartyriaStyleSelect.vue';
 import InputBpm from '@/components/InputBpm.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
+import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import {
-  builtInInitialMartyriaStyles,
-  findInitialMartyriaStyle,
-  getInitialMartyriaStyleDisplayName,
-  initialMartyriaLanguageIds,
   type InitialMartyriaStyle,
-  resolveInitialMartyriaStyleSelection,
+  resolveModeKeyInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
-import { getInitialMartyriaLanguageName } from '@/utils/initialMartyriaLabels';
-import {
-  fraction1FormatOptions,
-  fraction2FormatOptions,
-} from '@/utils/numberFormatOptions';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { fraction1FormatOptions } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
 
 const props = defineProps({
@@ -365,88 +317,34 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
   initialMartyriaStyles: {
     type: Array as PropType<InitialMartyriaStyle[]>,
     required: true,
   },
 });
 
-const { t } = useTranslation();
 const emit = defineEmits([
   'open-style-dialog',
   'update',
   'update:open-sections',
 ]);
 
-const inheritStyleValue = '__inherit__';
-const standardStyleValue = '__standard__';
+// The controls reflect the resolved style (element overrides folded in); a
+// change writes an explicit element value and clear restores inheritance.
+const resolvedAppearance = computed(
+  () =>
+    resolveModeKeyInitialMartyriaStyle({
+      element: props.element,
+      pageSetup: props.pageSetup,
+      paragraphStyles: props.paragraphStyles,
+      initialMartyriaStyles: props.initialMartyriaStyles,
+    }).mainAppearance,
+);
 
-// Grouped as the styles dialog lists them: the score's own styles, then the
-// built-in styles of each language.
-const styleGroups = computed(() => {
-  const groups: {
-    key: string;
-    label: string;
-    styles: InitialMartyriaStyle[];
-  }[] = [];
-  if (props.initialMartyriaStyles.length > 0) {
-    groups.push({
-      key: 'custom',
-      label: t(($) => $.dialog.initialMartyriaStyles.custom, { ns: 'dialog' }),
-      styles: props.initialMartyriaStyles,
-    });
-  }
-  for (const languageId of initialMartyriaLanguageIds) {
-    groups.push({
-      key: languageId,
-      label: t(($) => $.dialog.initialMartyriaStyles.builtInLanguage, {
-        ns: 'dialog',
-        language: getInitialMartyriaLanguageName(t, languageId),
-      }),
-      styles: builtInInitialMartyriaStyles.filter(
-        (style) => style.structure.languageId === languageId,
-      ),
-    });
-  }
-  return groups;
-});
-const styleSelection = computed(() =>
-  resolveInitialMartyriaStyleSelection({
-    elementStyleId: props.element.initialMartyriaStyleId,
-    pageStyleId: props.pageSetup.initialMartyriaStyleId,
-    neumeFontFamily: props.pageSetup.neumeDefaultFontFamily,
-    styles: props.initialMartyriaStyles,
-  }),
-);
-const usesStandardModeKey = computed(
-  () => styleSelection.value.kind === 'standard',
-);
-const modeKeyStyleValue = computed({
-  get: () =>
-    props.element.initialMartyriaStyleId === undefined
-      ? inheritStyleValue
-      : (props.element.initialMartyriaStyleId ?? standardStyleValue),
-  set: (value: string) => {
-    emit('update', {
-      initialMartyriaStyleId:
-        value === inheritStyleValue
-          ? undefined
-          : value === standardStyleValue
-            ? null
-            : findInitialMartyriaStyle(props.initialMartyriaStyles, value) ==
-                null
-              ? undefined
-              : value,
-    } as Partial<ModeKeyElement>);
-  },
-});
-
-const heightAdjustmentMin = computed(
-  () => -Math.round(Unit.fromPt(props.element.height)),
-);
-const heightAdjustmentMax = computed(() =>
-  Unit.toPt(props.pageSetup.pageHeight),
-);
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 
 function onAlignmentChanged(value: unknown) {

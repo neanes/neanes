@@ -68,23 +68,13 @@
     "root": "Выбор начальной мартирии",
     "description": "Выберите начальную мартирию."
   },
-  "initialMartyriaGlyphSources": {
-    "ekhos": "Ихос",
-    "plagal": "Плагальный",
-    "varys": "Варис",
-    "modeSign": "Знак гласа",
-    "startingNoteCluster": "Группа начальных нот"
-  },
   "initialMartyriaStyles": {
     "root": "Стили начальной мартирии",
     "description": "Выберите стиль начальной мартирии или создайте свой.",
     "styleLabel": "Стиль",
     "manageStyles": "Управление стилями…",
     "documentDefault": "По умолчанию для документа",
-    "standard": "Стандартный",
-    "standardDescription": "Традиционная начальная мартирия из глифов.",
     "custom": "Пользовательские",
-    "builtIn": "Встроенные",
     "builtInLanguage": "Встроенные · {{language}}",
     "noCustomStyles": "Пользовательских стилей пока нет",
     "searchStyles": "Поиск стилей",
@@ -233,7 +223,8 @@
       "header": "Верхний колонтитул",
       "footer": "Нижний колонтитул",
       "lyrics": "Текст песнопения",
-      "dropCap": "Буквица"
+      "dropCap": "Буквица",
+      "initialMartyria": "Начальная мартирия"
     }
   },
   "neumePositioning": {
@@ -358,10 +349,7 @@
     "italic": "Курсив",
     "outline": "Обводка",
     "lyrics": "Текст песнопения",
-    "initialMartyriae": "Начальные мартирии",
-    "initialMartyriaeDescription": "Оформление стандартной начальной мартирии по умолчанию.",
     "neumesDescription": "Оформление по умолчанию для всех невм партитуры.",
-    "heightAdjust": "Коррекция высоты",
     "neumeStyles": "Стили невм",
     "type": "Тип",
     "accidentals": "Знаки альтерации",

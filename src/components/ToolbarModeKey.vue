@@ -1,18 +1,23 @@
 <template>
   <Toolbar class="chrome-toolbar" loop>
-    <template v-if="usesStandardModeKey && !element.useDefaultStyle">
-      <Label for="toolbar-mode-key-font-size">{{
-        $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
-      }}</Label>
-      <InputFontSize
-        id="toolbar-mode-key-font-size"
-        :model-value="element.fontSize"
-        @update:model-value="
-          $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
-        "
-      />
-      <ToolbarSeparator />
-    </template>
+    <InitialMartyriaStyleSelect
+      trigger-class="w-48"
+      :model-value="element.initialMartyriaStyleId"
+      :initial-martyria-styles="initialMartyriaStyles"
+      @update:model-value="
+        $emit('update', {
+          initialMartyriaStyleId: $event,
+        } as Partial<ModeKeyElement>)
+      "
+    />
+    <InputFontSize
+      id="toolbar-mode-key-font-size"
+      :model-value="resolvedAppearance.fontSize"
+      @update:model-value="
+        $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
+      "
+    />
+    <ToolbarSeparator />
     <ToggleGroup
       v-if="!element.inline"
       type="single"
@@ -114,8 +119,8 @@ import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
+import InitialMartyriaStyleSelect from '@/components/InitialMartyriaStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
-import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Toolbar,
@@ -126,10 +131,11 @@ import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import {
   type InitialMartyriaStyle,
-  resolveInitialMartyriaStyleSelection,
+  resolveModeKeyInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { TempoSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 
 import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
 import ButtonWithMenu from './ButtonWithMenu.vue';
@@ -178,6 +184,10 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
   initialMartyriaStyles: {
     type: Array as PropType<InitialMartyriaStyle[]>,
     required: true,
@@ -185,14 +195,14 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['open-mode-key-dialog', 'update', 'update:tempo']);
-const usesStandardModeKey = computed(
+const resolvedAppearance = computed(
   () =>
-    resolveInitialMartyriaStyleSelection({
-      elementStyleId: props.element.initialMartyriaStyleId,
-      pageStyleId: props.pageSetup.initialMartyriaStyleId,
-      neumeFontFamily: props.pageSetup.neumeDefaultFontFamily,
-      styles: props.initialMartyriaStyles,
-    }).kind === 'standard',
+    resolveModeKeyInitialMartyriaStyle({
+      element: props.element,
+      pageSetup: props.pageSetup,
+      paragraphStyles: props.paragraphStyles,
+      initialMartyriaStyles: props.initialMartyriaStyles,
+    }).mainAppearance,
 );
 
 function onAlignmentChanged(value: unknown) {

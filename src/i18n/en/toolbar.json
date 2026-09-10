@@ -18,7 +18,6 @@
     "clearFormatting": "Clear Formatting",
     "spaceAfter": "Space After",
     "tempoSign": "Tempo Sign",
-    "useDefaultStyle": "Use Default Style",
     "enharmonicDisabled": "Enharmonic fthora may only be placed on Ga, Zo, or Vou",
     "generalFlatDisabled": "General flat may only be placed on Ke",
     "generalSharpDisabled": "General sharp may only be placed on Ga",
@@ -88,7 +87,6 @@
   },
   "initialMartyria": {
     "size": "Size",
-    "heightAdjustment": "Height Adjustment",
     "rightAlignTempo": "Right-align tempo",
     "showAmbitus": "Show Ambitus",
     "permanentEnharmonicZo": "Permanent Enharmonic Zo",

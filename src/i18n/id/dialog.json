@@ -68,23 +68,13 @@
     "root": "Pilih Martyria Awal",
     "description": "Pilih martyria awal."
   },
-  "initialMartyriaGlyphSources": {
-    "ekhos": "Ekhos",
-    "plagal": "Plagal",
-    "varys": "Varys",
-    "modeSign": "Tanda modus",
-    "startingNoteCluster": "Kelompok nada awal"
-  },
   "initialMartyriaStyles": {
     "root": "Gaya Martyria Awal",
     "description": "Pilih gaya untuk martyria awal, atau buat gaya Anda sendiri.",
     "styleLabel": "Gaya",
     "manageStyles": "Kelola gaya…",
     "documentDefault": "Bawaan dokumen",
-    "standard": "Standar",
-    "standardDescription": "Martyria awal tradisional berbasis glif.",
     "custom": "Kustom",
-    "builtIn": "Bawaan",
     "builtInLanguage": "Bawaan · {{language}}",
     "noCustomStyles": "Belum ada gaya kustom",
     "searchStyles": "Cari gaya",
@@ -233,7 +223,8 @@
       "header": "Header",
       "footer": "Footer",
       "lyrics": "Lirik",
-      "dropCap": "Huruf Awal Besar"
+      "dropCap": "Huruf Awal Besar",
+      "initialMartyria": "Martyria Awal"
     }
   },
   "neumePositioning": {
@@ -358,10 +349,7 @@
     "italic": "Miring",
     "outline": "Garis Luar",
     "lyrics": "Lirik",
-    "initialMartyriae": "Martyria Awal",
-    "initialMartyriaeDescription": "Gaya bawaan untuk Martyria Awal Standar.",
     "neumesDescription": "Gaya default untuk semua neuma dalam partitur.",
-    "heightAdjust": "Penyesuaian Tinggi",
     "neumeStyles": "Gaya Neuma",
     "type": "Tipe",
     "accidentals": "Tanda",

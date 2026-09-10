@@ -67,11 +67,11 @@
               >
                 <ItemContent class="items-start">
                   <div class="mode-key-preview w-full px-2 py-1">
-                    <ModeKeyRenderer
+                    <ModeKey
                       class="!w-auto !border-0 [--zoom:1]"
                       :element="template"
                       :page-setup="pageSetup"
-                      :initial-martyria-styles="initialMartyriaStyles"
+                      :resolved-style="resolvedStyle"
                     />
                   </div>
                   <ItemDescription>
@@ -131,7 +131,7 @@ import {
 import type { Component, PropType } from 'vue';
 import { computed, ref, watch } from 'vue';
 
-import ModeKeyRenderer from '@/components/ModeKeyRenderer.vue';
+import ModeKey from '@/components/ModeKey.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -155,13 +155,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import {
   type InitialMartyriaStyle,
-  resolveInitialMartyriaStyleSelection,
+  resolveModeKeyInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
-import { TextMeasurementService } from '@/services/TextMeasurementService';
-import { getLegacyNeumeFontFamily } from '@/utils/getFontFamilyWithFallback';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { LayoutService } from '@/services/LayoutService';
 
 const emit = defineEmits<{
   update: [modeKey: ModeKeyElement];
@@ -176,6 +176,10 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
   initialMartyriaStyles: {
     type: Array as PropType<InitialMartyriaStyle[]>,
     required: true,
@@ -183,6 +187,16 @@ const props = defineProps({
 });
 
 const open = defineModel<boolean>('open', { required: true });
+
+// Templates preview in the style of the element being replaced.
+const resolvedStyle = computed(() =>
+  resolveModeKeyInitialMartyriaStyle({
+    element: props.element,
+    pageSetup: props.pageSetup,
+    paragraphStyles: props.paragraphStyles,
+    initialMartyriaStyles: props.initialMartyriaStyles,
+  }),
+);
 
 const modeOptions = [
   {
@@ -238,16 +252,7 @@ const modeKeyTemplatesForSelectedMode = computed(() => {
 });
 
 function getModeKeyTemplatesForMode(mode: number) {
-  const styleSelection = resolveInitialMartyriaStyleSelection({
-    elementStyleId: props.element.initialMartyriaStyleId,
-    pageStyleId: props.pageSetup.initialMartyriaStyleId,
-    neumeFontFamily: props.pageSetup.neumeDefaultFontFamily,
-    styles: props.initialMartyriaStyles,
-  });
-  const neumeFontFamily =
-    styleSelection.kind === 'standard'
-      ? getLegacyNeumeFontFamily(props.pageSetup.neumeDefaultFontFamily)
-      : props.pageSetup.neumeDefaultFontFamily;
+  const { mainAppearance } = resolvedStyle.value;
   const elements = modeKeyTemplates
     .filter((x) => x.mode === mode)
     .map((x) =>
@@ -264,36 +269,21 @@ function getModeKeyTemplatesForMode(mode: number) {
       ),
     );
 
-  const fontSize =
-    styleSelection.kind === 'custom'
-      ? styleSelection.mainAppearance.fontSize!
-      : props.pageSetup.modeKeyDefaultFontSize;
-  const color =
-    styleSelection.kind === 'custom'
-      ? styleSelection.mainAppearance.color!
-      : props.pageSetup.modeKeyDefaultColor;
-  const strokeWidth =
-    styleSelection.kind === 'custom'
-      ? styleSelection.mainAppearance.strokeWidth!
-      : props.pageSetup.modeKeyDefaultStrokeWidth;
-  const height =
-    styleSelection.kind === 'custom'
-      ? fontSize * 4
-      : TextMeasurementService.getFontHeight(
-          `${fontSize}px ${neumeFontFamily}`,
-        );
-
   for (const element of elements) {
-    element.height = height;
-    element.computedFontFamily = neumeFontFamily;
-    element.computedFontSize = fontSize;
-    element.computedColor = color;
-    element.computedStrokeWidth = strokeWidth;
-    if (styleSelection.kind === 'custom') {
-      element.computedTop = -fontSize * 2.5;
-      element.computedBottom = fontSize * 1.5;
-      element.computedFlowTop = -fontSize;
-    }
+    element.computedFontFamily = props.pageSetup.neumeDefaultFontFamily;
+    element.computedFontSize = mainAppearance.fontSize;
+    element.computedColor = mainAppearance.color;
+    element.computedStrokeWidth = mainAppearance.strokeWidth;
+    const geometry = LayoutService.getInitialMartyriaGeometry(
+      element,
+      props.pageSetup,
+      resolvedStyle.value,
+    );
+    element.computedNeumeFontSize = geometry.neumeFontSize;
+    element.computedTop = geometry.top;
+    element.computedBottom = geometry.bottom;
+    element.computedFlowTop = geometry.flowTop;
+    element.height = geometry.bottom - geometry.top;
   }
 
   return elements;

@@ -11,15 +11,17 @@ export interface InitialMartyriaStyle {
   modeNamingScheme: string;
   transliterateNoteNames: boolean | undefined;
   flowDirection: string | undefined;
-  mainFontFamily: string;
-  greekFontFamily: string;
-  fontStyle: string;
-  fontSize: number;
-  color: string;
-  strokeWidth: number;
-  useOrdinalForms: boolean;
+  paragraphStyleId: string;
+  fontFamily: string | undefined;
+  fontSize: number | undefined;
+  fontSubfamily: string | undefined;
+  color: string | undefined;
+  strokeWidth: number | undefined;
+  strokeColor: string | undefined;
   fontVariantCaps: string | null | undefined;
   fontVariantNumeric: string | null | undefined;
   fontVariantLigatures: string | null | undefined;
   fontVariantAlternates: string | null | undefined;
+  greekFontFamily: string;
+  useOrdinalForms: boolean | undefined;
 }

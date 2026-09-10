@@ -68,23 +68,13 @@
     "root": "Επιλογή Αρκτικής Μαρτυρίας",
     "description": "Επιλέξτε αρκτική μαρτυρία."
   },
-  "initialMartyriaGlyphSources": {
-    "ekhos": "Ήχος",
-    "plagal": "Πλάγιος",
-    "varys": "Βαρύς",
-    "modeSign": "Σημάδι ήχου",
-    "startingNoteCluster": "Σύμπλεγμα αρχικού φθόγγου"
-  },
   "initialMartyriaStyles": {
     "root": "Στυλ αρχικής μαρτυρίας",
     "description": "Επιλέξτε στυλ για την αρχική μαρτυρία ή δημιουργήστε το δικό σας.",
     "styleLabel": "Στυλ",
     "manageStyles": "Διαχείριση στυλ…",
     "documentDefault": "Προεπιλογή εγγράφου",
-    "standard": "Τυπικό",
-    "standardDescription": "Η παραδοσιακή αρχική μαρτυρία με γλυφές.",
     "custom": "Προσαρμοσμένα",
-    "builtIn": "Ενσωματωμένα",
     "builtInLanguage": "Ενσωματωμένα · {{language}}",
     "noCustomStyles": "Δεν υπάρχουν ακόμη προσαρμοσμένα στυλ",
     "searchStyles": "Αναζήτηση στυλ",
@@ -233,7 +223,8 @@
       "header": "Κεφαλίδα",
       "footer": "Υποσέλιδο",
       "lyrics": "Στίχοι",
-      "dropCap": "Αρχίγραμμα"
+      "dropCap": "Αρχίγραμμα",
+      "initialMartyria": "Αρκτική Μαρτυρία"
     }
   },
   "neumePositioning": {
@@ -358,10 +349,7 @@
     "italic": "Πλάγια",
     "outline": "Περίγραμμα",
     "lyrics": "Στίχοι",
-    "initialMartyriae": "Αρκτικές Μαρτυρίες",
-    "initialMartyriaeDescription": "Η προεπιλεγμένη μορφοποίηση για την Τυπική Αρχική Μαρτυρία.",
     "neumesDescription": "Η προεπιλεγμένη μορφοποίηση για όλα τα μουσικά σημεία στο μουσικό κείμενο.",
-    "heightAdjust": "Ρύθμιση Ύψους",
     "neumeStyles": "Μορφοποίηση Μουσικών Σημείων",
     "type": "Τύπος",
     "accidentals": "Αλλοιώσεις",

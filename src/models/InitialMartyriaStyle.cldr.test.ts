@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ModeKeyElement } from '@/models/Element';
 import {
-  createDefaultInitialMartyriaAppearance,
+  createDefaultInitialMartyriaTypography,
   getInitialMartyriaContext,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
@@ -21,6 +21,7 @@ import {
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { PageSetup } from '@/models/PageSetup';
+import { createDefaultParagraphStyles } from '@/models/ParagraphStyle';
 
 type RbnfFunction = (value: number) => string;
 type RbnfFunctions = Record<string, RbnfFunction>;
@@ -59,9 +60,11 @@ function styleFor(
     displayName: 'CLDR test',
     basedOn: null,
     structure: fullStructure,
-    appearance: createDefaultInitialMartyriaAppearance(structure.languageId),
+    ...createDefaultInitialMartyriaTypography(structure.languageId),
   };
 }
+
+const paragraphStyles = createDefaultParagraphStyles();
 
 function numeralsFor(style: InitialMartyriaStyle) {
   return modes.map((mode) => {
@@ -70,7 +73,11 @@ function numeralsFor(style: InitialMartyriaStyle) {
     );
     const resolution = resolveInitialMartyriaStyle({
       context: getInitialMartyriaContext(element),
-      resolvedStyle: resolveInitialMartyriaStyleAppearances(style, 'Neanes'),
+      resolvedStyle: resolveInitialMartyriaStyleAppearances(
+        style,
+        paragraphStyles,
+        'Neanes',
+      ),
       pageSetup: new PageSetup(),
     });
     const run = resolution.runs.find(
@@ -93,7 +100,11 @@ function pronunciationsFor(style: InitialMartyriaStyle) {
     );
     return resolveInitialMartyriaStyle({
       context: getInitialMartyriaContext(element),
-      resolvedStyle: resolveInitialMartyriaStyleAppearances(style, 'Neanes'),
+      resolvedStyle: resolveInitialMartyriaStyleAppearances(
+        style,
+        paragraphStyles,
+        'Neanes',
+      ),
       pageSetup: new PageSetup(),
     }).pronunciation;
   });

@@ -293,17 +293,18 @@ export class ModeKeyElement extends ScoreElement {
   public quantitativeNeumeRight: QuantitativeNeume | undefined = undefined;
   public quantitativeNeumeAboveNote: ModeSign | undefined = undefined;
   public quantitativeNeumeAboveNote2: ModeSign | undefined = undefined;
-  public color: string = '#000000';
-  public fontSize: number = 16;
-  public strokeWidth: number = 0;
+  public color: string | undefined = undefined;
+  public fontSize: number | undefined = undefined;
+  public strokeWidth: number | undefined = undefined;
   public height: number = 20;
-  public heightAdjustment: number = 0;
+  // Deprecated load-only compatibility for the pre-style initial martyria.
+  public heightAdjustment: number | undefined = undefined;
+  public useDefaultStyle: boolean | undefined = undefined;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
   public bpm: number = 120;
-  public useDefaultStyle: boolean | undefined = undefined;
   public inline: boolean | undefined = undefined;
-  public initialMartyriaStyleId: string | null | undefined = undefined;
+  public initialMartyriaStyleId: string | undefined = undefined;
   public ignoreAttractions: boolean | undefined = undefined;
   public permanentEnharmonicZo: boolean | undefined = undefined;
   public ambitusLowNote: Note = Note.Pa;

@@ -1152,18 +1152,14 @@ export class ModeKeyElement extends ScoreElement {
   public quantitativeNeumeRight: QuantitativeNeume | null = null;
   public quantitativeNeumeAboveNote: ModeSign | null = null;
   public quantitativeNeumeAboveNote2: ModeSign | null = null;
-  public color: string = '#000000';
-  public fontSize: number = Unit.fromPt(20);
-  public strokeWidth: number = 0;
-  public heightAdjustment: number = 0;
+  // Typography overrides on top of the initial martyria style; null inherits.
+  public color: string | null = null;
+  public fontSize: number | null = null;
+  public strokeWidth: number | null = null;
   public bpm: number = 120;
-  public useDefaultStyle: boolean = true;
   public inline: boolean = false;
-  /**
-   * The element's own style: undefined follows the score's style, null is
-   * the Standard glyphs, and a string names a style.
-   */
-  public initialMartyriaStyleId: string | null | undefined = undefined;
+  /** The element's own initial martyria style; null follows the score's. */
+  public initialMartyriaStyleId: string | null = null;
   public ignoreAttractions: boolean = false;
   public permanentEnharmonicZo: boolean = false;
   public ambitusLowNote: Note = Note.Pa;
@@ -1177,23 +1173,25 @@ export class ModeKeyElement extends ScoreElement {
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
-  public computedFontSize: number = Unit.fromPt(20);
+  /** The text size of the resolved style. */
+  public computedFontSize: number = Unit.fromPt(14.5);
+  /** The size the music font glyphs are drawn at to match the text. */
+  public computedNeumeFontSize: number = Unit.fromPt(20);
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
-  public computedHeightAdjustment: number = 0;
   public computedTop: number = 0;
   public computedBottom: number = 0;
   public computedFlowTop: number = 0;
 
   // Re-render helpers
   public computedFontFamilyPrevious: string = '';
-  public computedFontSizePrevious: number = Unit.fromPt(20);
+  public computedFontSizePrevious: number = Unit.fromPt(14.5);
+  public computedNeumeFontSizePrevious: number = Unit.fromPt(20);
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
   public computedTopPrevious: number = 0;
   public computedBottomPrevious: number = 0;
   public computedFlowTopPrevious: number = 0;
-  public computedHeightAdjustmentPrevious: number = 0;
   public ambitusLowNotePrevious: Note = Note.Pa;
   public ambitusLowRootSignPrevious: RootSign = RootSign.Alpha;
   public ambitusHighNotePrevious: Note = Note.Pa;
@@ -1274,16 +1272,22 @@ export class ModeKeyElement extends ScoreElement {
       quantitativeNeumeRight: this.quantitativeNeumeRight,
       fontSize: this.fontSize,
       strokeWidth: this.strokeWidth,
-      heightAdjustment: this.heightAdjustment,
       marginBottom: this.marginBottom,
       marginTop: this.marginTop,
-      useDefaultStyle: this.useDefaultStyle,
       inline: this.inline,
       initialMartyriaStyleId: this.initialMartyriaStyleId,
       ignoreAttractions: this.ignoreAttractions,
       permanentEnharmonicZo: this.permanentEnharmonicZo,
       showAmbitus: this.showAmbitus,
     } as Partial<ModeKeyElement>;
+  }
+
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
+    return {
+      fontSize: this.fontSize ?? undefined,
+      color: this.color ?? undefined,
+      strokeWidth: this.strokeWidth ?? undefined,
+    };
   }
 }
 

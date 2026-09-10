@@ -6,13 +6,6 @@
     aria-hidden="true"
   >
     <ModeKey
-      v-if="sample.resolvedStyle == null"
-      class="initial-martyria-sample-key !w-auto"
-      :element="sample.element"
-      :page-setup="pageSetup"
-    />
-    <CustomModeKey
-      v-else
       class="initial-martyria-sample-key !w-auto"
       :element="sample.element"
       :resolved-style="sample.resolvedStyle"
@@ -24,7 +17,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 
-import CustomModeKey from '@/components/CustomModeKey.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
@@ -34,18 +26,17 @@ import {
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { LayoutService } from '@/services/LayoutService';
-import { TextMeasurementService } from '@/services/TextMeasurementService';
-import { getLegacyNeumeFontFamily } from '@/utils/getFontFamilyWithFallback';
 
 /**
  * One initial martyria rendered for a mode key template, exactly as the
- * score would draw it, scaled down when it would not fit its frame. A null
- * style draws the Standard glyph-based key.
+ * score would draw it, scaled down when it would not fit its frame.
  */
 const props = withDefaults(
   defineProps<{
-    style: InitialMartyriaStyle | null;
+    style: InitialMartyriaStyle;
+    paragraphStyles: ParagraphStyle[];
     templateId: number;
     pageSetup: PageSetup;
     /** Text taller than this (in pixels) is scaled down. */
@@ -76,39 +67,22 @@ const sample = computed(() => {
     TextBoxAlignment.Left,
   );
 
-  if (props.style == null) {
-    const fontFamily = getLegacyNeumeFontFamily(
-      props.pageSetup.neumeDefaultFontFamily,
-    );
-    element.initialMartyriaStyleId = null;
-    element.computedFontFamily = fontFamily;
-    element.computedFontSize = props.pageSetup.modeKeyDefaultFontSize;
-    element.computedColor = props.pageSetup.modeKeyDefaultColor;
-    element.computedStrokeWidth = props.pageSetup.modeKeyDefaultStrokeWidth;
-    const font = `${element.computedFontSize}px ${fontFamily}`;
-    element.height = TextMeasurementService.getFontHeight(font);
-    return {
-      element,
-      resolvedStyle: null,
-      fontSize: element.computedFontSize,
-      width: LayoutService.getStandardInitialMartyriaWidth(element),
-    };
-  }
-
   const resolvedStyle = resolveInitialMartyriaStyleAppearances(
     props.style,
+    props.paragraphStyles,
     props.pageSetup.neumeDefaultFontFamily,
   );
   element.initialMartyriaStyleId = props.style.id;
   element.computedFontFamily = props.pageSetup.neumeDefaultFontFamily;
-  element.computedFontSize = resolvedStyle.mainAppearance.fontSize!;
-  element.computedColor = resolvedStyle.mainAppearance.color!;
-  element.computedStrokeWidth = resolvedStyle.mainAppearance.strokeWidth!;
+  element.computedFontSize = resolvedStyle.mainAppearance.fontSize;
+  element.computedColor = resolvedStyle.mainAppearance.color;
+  element.computedStrokeWidth = resolvedStyle.mainAppearance.strokeWidth;
   const geometry = LayoutService.getInitialMartyriaGeometry(
     element,
     props.pageSetup,
     resolvedStyle,
   );
+  element.computedNeumeFontSize = geometry.neumeFontSize;
   element.computedTop = geometry.top;
   element.computedBottom = geometry.bottom;
   element.computedFlowTop = geometry.flowTop;

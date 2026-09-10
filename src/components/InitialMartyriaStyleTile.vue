@@ -10,6 +10,7 @@
     <span class="mb-1 flex min-h-8 w-full items-center justify-center">
       <InitialMartyriaSample
         :style="style"
+        :paragraph-styles="paragraphStyles"
         :template-id="templateId"
         :page-setup="pageSetup"
         :max-font-size="maxFontSize"
@@ -18,7 +19,7 @@
     <span
       v-if="pronunciation != null"
       class="text-[11px] leading-tight text-muted-foreground"
-      :lang="style?.structure.languageId"
+      :lang="style.structure.languageId"
       aria-hidden="true"
     >
       {{ pronunciation }}
@@ -47,12 +48,14 @@ import {
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 
 defineEmits<{ select: [] }>();
 
 const props = withDefaults(
   defineProps<{
-    style: InitialMartyriaStyle | null;
+    style: InitialMartyriaStyle;
+    paragraphStyles: ParagraphStyle[];
     templateId: number;
     pageSetup: PageSetup;
     selected: boolean;
@@ -64,7 +67,7 @@ const props = withDefaults(
 );
 
 const pronunciation = computed(() => {
-  if (props.style == null || !props.showPronunciation) {
+  if (!props.showPronunciation) {
     return null;
   }
   const element = ModeKeyElement.createFromTemplate(
@@ -74,6 +77,7 @@ const pronunciation = computed(() => {
     context: getInitialMartyriaContext(element),
     resolvedStyle: resolveInitialMartyriaStyleAppearances(
       props.style,
+      props.paragraphStyles,
       props.pageSetup.neumeDefaultFontFamily,
     ),
     pageSetup: props.pageSetup,

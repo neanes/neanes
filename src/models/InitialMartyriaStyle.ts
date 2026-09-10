@@ -13,6 +13,7 @@ import {
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
 import { getScaleNoteValue, ScaleNote } from '@/models/Scales';
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import type { FontVariantProperty } from '@/utils/fontVariants';
 import {
   composeNumericVariant,
@@ -317,9 +318,10 @@ export interface InitialMartyriaStyleTypography {
   paragraphStyleOverrides: InitialMartyriaTypographyOverrides;
   /**
    * Font for Greek-script text in a language that is not written in Greek
-   * (original note names and the plagal abbreviation).
+   * (original note names and the plagal abbreviation). Null follows the
+   * text font, as resolved through the paragraph style and the overrides.
    */
-  greekFontFamily: string;
+  greekFontFamily: string | null;
   /** Apply the OpenType ordinal feature to digit-ordinal numeral runs only. */
   useOrdinalForms: boolean;
 }
@@ -376,26 +378,26 @@ export interface InitialMartyriaStyle extends InitialMartyriaStyleTypography {
   structure: InitialMartyriaStructure;
 }
 
-/** Resolved text and glyph styling used by layout and rendering. */
-export interface InitialMartyriaAppearance extends Partial<
-  Record<FontVariantProperty, string | null>
+/**
+ * Fully resolved text or glyph styling used by layout and rendering: every
+ * property has a value, so consumers never fall back.
+ */
+export interface InitialMartyriaAppearance extends Record<
+  FontVariantProperty,
+  string
 > {
-  fontFamily?: string;
-  fontStyle?: string;
-  fontSize?: number;
-  color?: string;
-  strokeWidth?: number;
-  strokeColor?: string;
+  fontFamily: string;
+  fontStyle: string;
+  fontSize: number;
+  color: string;
+  strokeWidth: number;
+  strokeColor: string;
 }
-
-/** A fully resolved appearance: every property has a value. */
-export type ResolvedInitialMartyriaAppearance =
-  Required<InitialMartyriaAppearance>;
 
 export interface ResolvedInitialMartyriaStyle {
   style: InitialMartyriaStyle;
-  mainAppearance: ResolvedInitialMartyriaAppearance;
-  greekAppearance: ResolvedInitialMartyriaAppearance;
+  mainAppearance: InitialMartyriaAppearance;
+  greekAppearance: InitialMartyriaAppearance;
 }
 
 export interface InitialMartyriaPitchNote {
@@ -1873,28 +1875,27 @@ export function initialMartyriaStructureHasGreekText(
   );
 }
 
-/** Default fonts for the curated styles of each language. */
+/**
+ * Default fonts for the curated styles of each language. Greek-script text
+ * follows the text font unless the language names a font of its own.
+ */
 const initialMartyriaDefaultFonts: Record<
   InitialMartyriaLanguageId,
-  { main?: string; greek: string }
+  { main?: string; greek?: string }
 > = {
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Greek]: {
     main: INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
-    greek: INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
   },
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: { greek: 'Source Serif' },
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: { greek: 'Source Serif' },
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: {
-    main: 'Old Standard',
-    greek: 'Old Standard',
-  },
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: { greek: 'Source Serif' },
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: {},
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: {},
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: { main: 'Old Standard' },
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: {},
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: {
     main: 'Noto Naskh Arabic',
     greek: 'GFS Didot',
   },
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: { greek: 'Source Serif' },
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: { greek: 'Source Serif' },
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: {},
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: {},
 };
 
 /**
@@ -1910,7 +1911,7 @@ export function createDefaultInitialMartyriaTypography(
     paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     paragraphStyleOverrides:
       fonts.main == null ? {} : { fontFamily: fonts.main },
-    greekFontFamily: fonts.greek,
+    greekFontFamily: fonts.greek ?? null,
     useOrdinalForms: true,
   };
 }
@@ -2762,7 +2763,7 @@ function toInitialMartyriaAppearance(
   resolved: ResolvedParagraphStyle,
   fontFamily: string,
   neumeFontFamily: string,
-): ResolvedInitialMartyriaAppearance {
+): InitialMartyriaAppearance {
   return {
     fontFamily: resolveInitialMartyriaFontFamily(fontFamily, neumeFontFamily),
     fontStyle: resolved.fontStyle,
@@ -2793,9 +2794,10 @@ export function resolveInitialMartyriaStyleAppearances(
     style.paragraphStyleOverrides,
   );
   applyParagraphStyleOverrides(resolved, elementOverrides);
-  const greekFontFamily = usesGreekScript(style.structure.languageId)
-    ? resolved.fontFamily
-    : style.greekFontFamily;
+  const greekFontFamily =
+    usesGreekScript(style.structure.languageId) || style.greekFontFamily == null
+      ? resolved.fontFamily
+      : style.greekFontFamily;
   return {
     style,
     mainAppearance: toInitialMartyriaAppearance(
@@ -2814,7 +2816,7 @@ export function resolveInitialMartyriaStyleAppearances(
 function withOrdinalForms(
   appearance: InitialMartyriaAppearance,
 ): InitialMartyriaAppearance {
-  const numeric = parseNumericVariant(appearance.fontVariantNumeric ?? '');
+  const numeric = parseNumericVariant(appearance.fontVariantNumeric);
   return {
     ...appearance,
     fontVariantNumeric: composeNumericVariant({ ...numeric, ordinal: true }),
@@ -2851,16 +2853,36 @@ export function resolveModeKeyInitialMartyriaStyle(options: {
   );
 }
 
+/**
+ * The spoken reading of a style for an element: the mode name selected by
+ * the style's identification method, then the starting note.
+ */
+export function getInitialMartyriaPronunciation(
+  structure: InitialMartyriaStructure,
+  context: Pick<InitialMartyriaContext, 'mode' | 'physicalNote'>,
+) {
+  const modeName = getInitialMartyriaStylePronunciation(
+    structure,
+    initialMartyriaSpokenLexicons[structure.languageId],
+    context.mode,
+  );
+  const startingNote = getInitialMartyriaStartingNotePronunciation(
+    initialMartyriaLexicons[structure.languageId],
+    context.physicalNote,
+  );
+  return `${modeName} ${startingNote}`;
+}
+
 export function resolveInitialMartyriaStyle(options: {
   context: InitialMartyriaContext;
   resolvedStyle: ResolvedInitialMartyriaStyle;
-  pageSetup: Pick<PageSetup, 'direction'>;
+  pageSetup: Pick<PageSetup, 'direction' | 'neumeDefaultFontFamily'>;
+  /** The size music-font glyphs (mode sign, pitch marks) are drawn at. */
+  glyphFontSize: number;
 }): InitialMartyriaStyleResolution {
   const { style, mainAppearance, greekAppearance } = options.resolvedStyle;
   const structure = style.structure;
   const lexicon = initialMartyriaLexicons[structure.languageId];
-  const pronunciationLexicon =
-    initialMartyriaSpokenLexicons[structure.languageId];
   const flowDirection =
     structure.flowDirection === 'page'
       ? options.pageSetup.direction
@@ -2871,20 +2893,20 @@ export function resolveInitialMartyriaStyle(options: {
     ? lexicon.transliteratedNoteNames
     : originalGreekNoteNames;
   const noteAppearance = transliterate ? mainAppearance : greekAppearance;
+  // Glyphs are set in the document's music font at the requested size and
+  // take the main text's color and stroke.
   const glyphAppearance: InitialMartyriaAppearance = {
+    fontFamily: options.pageSetup.neumeDefaultFontFamily,
+    fontStyle: DEFAULT_FONT_STYLE,
+    fontSize: options.glyphFontSize,
     color: mainAppearance.color,
     strokeWidth: mainAppearance.strokeWidth,
     strokeColor: mainAppearance.strokeColor,
+    fontVariantCaps: 'normal',
+    fontVariantNumeric: 'normal',
+    fontVariantLigatures: 'normal',
+    fontVariantAlternates: 'normal',
   };
-  const pronunciation = getInitialMartyriaStylePronunciation(
-    structure,
-    pronunciationLexicon,
-    options.context.mode,
-  );
-  const startingNotePronunciation = getInitialMartyriaStartingNotePronunciation(
-    lexicon,
-    options.context.physicalNote,
-  );
 
   const runs: ResolvedInitialMartyriaRun[] = [];
   for (const component of getInitialMartyriaComponents(
@@ -2939,7 +2961,7 @@ export function resolveInitialMartyriaStyle(options: {
   return {
     structure,
     flowDirection,
-    pronunciation: `${pronunciation} ${startingNotePronunciation}`,
+    pronunciation: getInitialMartyriaPronunciation(structure, options.context),
     runs,
   };
 }

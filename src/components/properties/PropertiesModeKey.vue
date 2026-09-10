@@ -18,18 +18,30 @@
               ns: 'dialog',
             })
           }}</FieldLabel>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            @click="$emit('open-style-dialog')"
-          >
-            {{
-              $t(($) => $.dialog.initialMartyriaStyles.manageStyles, {
-                ns: 'dialog',
-              })
-            }}
-          </Button>
+          <div class="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              @click="$emit('open-style-dialog')"
+            >
+              {{
+                $t(($) => $.dialog.initialMartyriaStyles.manageStyles, {
+                  ns: 'dialog',
+                })
+              }}
+            </Button>
+            <ParagraphStyleClearButton
+              :disabled="!hasOverrides"
+              @clear="
+                $emit('update', {
+                  fontSize: null,
+                  color: null,
+                  strokeWidth: null,
+                } as Partial<ModeKeyElement>)
+              "
+            />
+          </div>
         </div>
         <InitialMartyriaStyleSelect
           id="properties-mode-key-style"
@@ -50,7 +62,7 @@
         <div class="flex items-center gap-1">
           <InputFontSize
             id="properties-mode-key-font-size"
-            :model-value="resolvedAppearance.fontSize"
+            :model-value="mainAppearance.fontSize"
             @update:model-value="
               $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
             "
@@ -70,7 +82,7 @@
         }}</FieldLabel>
         <div class="flex items-center gap-1">
           <ColorPicker
-            :model-value="resolvedAppearance.color"
+            :model-value="mainAppearance.color"
             @update:model-value="
               $emit('update', { color: $event } as Partial<ModeKeyElement>)
             "
@@ -89,7 +101,7 @@
         <div class="flex items-center gap-1">
           <InputStrokeWidth
             id="properties-mode-key-outline"
-            :model-value="resolvedAppearance.strokeWidth"
+            :model-value="mainAppearance.strokeWidth"
             @update:model-value="
               $emit('update', {
                 strokeWidth: $event,
@@ -293,12 +305,10 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useResolvedInitialMartyriaStyle } from '@/composables/useResolvedInitialMartyriaStyle';
 import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
-import {
-  type InitialMartyriaStyle,
-  resolveModeKeyInitialMartyriaStyle,
-} from '@/models/InitialMartyriaStyle';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { fraction1FormatOptions } from '@/utils/numberFormatOptions';
@@ -335,15 +345,12 @@ const emit = defineEmits([
 
 // The controls reflect the resolved style (element overrides folded in); a
 // change writes an explicit element value and clear restores inheritance.
-const resolvedAppearance = computed(
-  () =>
-    resolveModeKeyInitialMartyriaStyle({
-      element: props.element,
-      pageSetup: props.pageSetup,
-      paragraphStyles: props.paragraphStyles,
-      initialMartyriaStyles: props.initialMartyriaStyles,
-    }).mainAppearance,
-);
+const { mainAppearance, hasOverrides } = useResolvedInitialMartyriaStyle({
+  element: () => props.element,
+  pageSetup: () => props.pageSetup,
+  paragraphStyles: () => props.paragraphStyles,
+  initialMartyriaStyles: () => props.initialMartyriaStyles,
+});
 
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 

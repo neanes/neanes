@@ -112,6 +112,7 @@
     "transliterateNoteNamesHint": "Pa instead of Πα",
     "font": "Font",
     "defaultFont": "Default ({{font}})",
+    "sameAsTextFont": "Same as text font ({{font}})",
     "fontSummary": "{{font}}, {{size}} pt",
     "yes": "Yes",
     "no": "No",

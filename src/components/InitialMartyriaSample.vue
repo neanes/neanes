@@ -8,7 +8,6 @@
     <ModeKey
       class="initial-martyria-sample-key !w-auto"
       :element="sample.element"
-      :resolved-style="sample.resolvedStyle"
       :page-setup="pageSetup"
     />
   </span>
@@ -86,10 +85,10 @@ const sample = computed(() => {
   element.computedTop = geometry.top;
   element.computedBottom = geometry.bottom;
   element.computedFlowTop = geometry.flowTop;
+  element.computedInitialMartyriaLayout = geometry.layout;
   element.height = geometry.bottom - geometry.top;
   return {
     element,
-    resolvedStyle,
     fontSize: element.computedFontSize,
     width: geometry.width,
   };

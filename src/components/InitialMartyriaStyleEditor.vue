@@ -158,9 +158,9 @@
               <FontCombobox
                 id="initial-martyria-greek-font"
                 class="w-full max-w-full"
-                :model-value="draft.greekFontFamily"
+                :model-value="draft.greekFontFamily ?? SAME_AS_TEXT_FONT_VALUE"
                 :options="greekFontOptions"
-                @update:model-value="update({ greekFontFamily: $event })"
+                @update:model-value="setGreekFontFamily"
               />
             </Field>
 
@@ -485,6 +485,7 @@ import {
   getBuiltInInitialMartyriaStyle,
   getDefaultBuiltInInitialMartyriaStyle,
   getInitialMartyriaContext,
+  getInitialMartyriaPronunciation,
   getInitialMartyriaStructureVariations,
   getInitialMartyriaStyleDisplayName,
   INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
@@ -501,8 +502,6 @@ import {
   type InitialMartyriaTypographyOverrides,
   normalizeInitialMartyriaStructure,
   resolveInitialMartyriaFontFamily,
-  resolveInitialMartyriaStyle,
-  resolveInitialMartyriaStyleAppearances,
   usesGreekScript,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -621,16 +620,27 @@ const mainFontOptions = computed(() =>
     ? [defaultFontOption.value, ...fontOptions.value]
     : fontOptions.value,
 );
-const greekFontOptions = computed(() => [
-  defaultFontOption.value,
-  ...fontOptions.value,
-]);
 const resolvedMainFontFamily = computed(() =>
   resolveInitialMartyriaFontFamily(
     resolvedTypography.value.fontFamily,
     props.pageSetup.neumeDefaultFontFamily,
   ),
 );
+// The combobox takes strings, so a null Greek font (follow the text font)
+// is shown through a sentinel value that no font is named after.
+const SAME_AS_TEXT_FONT_VALUE = '__same-as-text-font__';
+const sameAsTextFontOption = computed(() => ({
+  label: t(($) => $.dialog.initialMartyriaStyles.sameAsTextFont, {
+    ns,
+    font: resolvedMainFontFamily.value,
+  }),
+  value: SAME_AS_TEXT_FONT_VALUE,
+}));
+const greekFontOptions = computed(() => [
+  sameAsTextFontOption.value,
+  defaultFontOption.value,
+  ...fontOptions.value,
+]);
 const { fontStyleOptions, remapStyleForFamily } = useFontStyleControls(
   resolvedMainFontFamily,
   () => resolvedTypography.value.fontStyle,
@@ -800,6 +810,12 @@ function setMainFontFamily(value: string) {
   });
 }
 
+function setGreekFontFamily(value: string) {
+  update({
+    greekFontFamily: value === SAME_AS_TEXT_FONT_VALUE ? null : value,
+  });
+}
+
 function setFontSize(value: number | null) {
   if (value != null) {
     setOverride('fontSize', value);
@@ -831,14 +847,9 @@ function pronunciationFor(templateId: number) {
   const element = ModeKeyElement.createFromTemplate(
     modeKeyTemplates.find((item) => item.id === templateId)!,
   );
-  return resolveInitialMartyriaStyle({
-    context: getInitialMartyriaContext(element),
-    resolvedStyle: resolveInitialMartyriaStyleAppearances(
-      draft.value,
-      props.paragraphStyles,
-      props.pageSetup.neumeDefaultFontFamily,
-    ),
-    pageSetup: props.pageSetup,
-  }).pronunciation;
+  return getInitialMartyriaPronunciation(
+    draft.value.structure,
+    getInitialMartyriaContext(element),
+  );
 }
 </script>

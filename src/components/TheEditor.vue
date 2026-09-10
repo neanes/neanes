@@ -158,7 +158,6 @@ import {
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   type InitialMartyriaStyle,
   isBuiltInInitialMartyriaStyleId,
-  resolveModeKeyInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
@@ -250,6 +249,11 @@ import {
 } from '@/services/recovery/recoveryCandidates';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
+import {
+  collectClipboardInitialMartyriaStylesFromElements,
+  resolveClipboardInitialMartyriaStyles,
+  rewriteClipboardElementInitialMartyriaStyleId,
+} from '@/utils/clipboardInitialMartyriaStyles';
 import {
   collectClipboardParagraphStyleIdsFromElements,
   collectClipboardParagraphStylesFromElements,
@@ -535,6 +539,7 @@ interface ClipboardState {
   elements: ScoreElement[];
   paragraphStyleIds: string[];
   paragraphStyles: ParagraphStyle[];
+  initialMartyriaStyles: InitialMartyriaStyle[];
 }
 
 interface ClipboardFormatState<T> {
@@ -547,6 +552,7 @@ const clipboard = ref<ClipboardState>({
   elements: [],
   paragraphStyleIds: [],
   paragraphStyles: [],
+  initialMartyriaStyles: [],
 });
 const formatType = ref<ElementType | null>(null);
 const textBoxFormat = ref<ClipboardFormatState<TextBoxElement>>({
@@ -3458,11 +3464,13 @@ function addNeumeCombination(combo: NeumeCombination) {
     elements: clipboard.value.elements.slice(),
     paragraphStyleIds: clipboard.value.paragraphStyleIds.slice(),
     paragraphStyles: clipboard.value.paragraphStyles.slice(),
+    initialMartyriaStyles: clipboard.value.initialMartyriaStyles.slice(),
   };
   clipboard.value = {
     elements: combo.elements,
     paragraphStyleIds: [],
     paragraphStyles: [],
+    initialMartyriaStyles: [],
   };
   onPasteScoreElements(false);
 
@@ -4962,15 +4970,24 @@ function flushAndCloneForClipboard(
 
 function createClipboardState(elementsToCopy: ScoreElement[]): ClipboardState {
   const elements = flushAndCloneForClipboard(elementsToCopy);
+  const initialMartyriaStyles =
+    collectClipboardInitialMartyriaStylesFromElements(
+      elementsToCopy,
+      score.value.initialMartyriaStyles,
+    );
 
   return {
     elements,
-    paragraphStyleIds:
-      collectClipboardParagraphStyleIdsFromElements(elementsToCopy),
+    paragraphStyleIds: collectClipboardParagraphStyleIdsFromElements(
+      elementsToCopy,
+      initialMartyriaStyles,
+    ),
     paragraphStyles: collectClipboardParagraphStylesFromElements(
       elementsToCopy,
+      initialMartyriaStyles,
       score.value.paragraphStyles,
     ),
+    initialMartyriaStyles,
   };
 }
 
@@ -5055,10 +5072,13 @@ function onCopyScoreElements() {
   }
 }
 
+// `initialMartyriaStyles` are the score's custom styles together with the
+// ones this paste imports.
 function cloneScoreElementForPaste(
   element: ScoreElement,
   includeLyrics: boolean,
   styleIdRemap: Map<string, string>,
+  initialMartyriaStyles: InitialMartyriaStyle[],
 ) {
   const clone = element.clone({ includeLyrics });
 
@@ -5067,6 +5087,7 @@ function cloneScoreElementForPaste(
     score.value.paragraphStyles,
     styleIdRemap,
   );
+  rewriteClipboardElementInitialMartyriaStyleId(clone, initialMartyriaStyles);
 
   return clone;
 }
@@ -5074,18 +5095,85 @@ function cloneScoreElementForPaste(
 function cloneClipboardForPaste(
   includeLyrics: boolean,
   styleIdRemap: Map<string, string>,
+  initialMartyriaStyles: InitialMartyriaStyle[],
 ) {
   return clipboard.value.elements.map((element) =>
-    cloneScoreElementForPaste(element, includeLyrics, styleIdRemap),
+    cloneScoreElementForPaste(
+      element,
+      includeLyrics,
+      styleIdRemap,
+      initialMartyriaStyles,
+    ),
   );
 }
 
 function collectClipboardParagraphStylesForPaste(includeLyrics: boolean) {
   return collectClipboardParagraphStylesFromPasteElements(
     clipboard.value.elements,
+    clipboard.value.initialMartyriaStyles,
     includeLyrics,
     clipboard.value.paragraphStyles,
   );
+}
+
+// Resolves every style the clipboard carries against the score: the
+// paragraph styles first, then the initial martyria styles, whose paragraph
+// style references follow the same remap as the pasted elements.
+function resolveClipboardStylesForPaste(includeLyrics: boolean) {
+  const { importedParagraphStyles, styleIdRemap } =
+    resolveClipboardParagraphStyles(
+      collectClipboardParagraphStylesForPaste(includeLyrics),
+      score.value.paragraphStyles,
+      clipboard.value.paragraphStyleIds,
+    );
+  const importedInitialMartyriaStyles = resolveClipboardInitialMartyriaStyles(
+    clipboard.value.initialMartyriaStyles,
+    score.value.initialMartyriaStyles,
+    score.value.paragraphStyles,
+    styleIdRemap,
+  );
+
+  return {
+    importedParagraphStyles,
+    importedInitialMartyriaStyles,
+    pastedElements: cloneClipboardForPaste(includeLyrics, styleIdRemap, [
+      ...score.value.initialMartyriaStyles,
+      ...importedInitialMartyriaStyles,
+    ]),
+  };
+}
+
+function createImportedStylesCommand(
+  importedParagraphStyles: ParagraphStyle[],
+  importedInitialMartyriaStyles: InitialMartyriaStyle[],
+): Command | null {
+  if (
+    importedParagraphStyles.length === 0 &&
+    importedInitialMartyriaStyles.length === 0
+  ) {
+    return null;
+  }
+
+  const newValues: Partial<Score> = {};
+
+  if (importedParagraphStyles.length > 0) {
+    newValues.paragraphStyles = [
+      ...score.value.paragraphStyles,
+      ...importedParagraphStyles,
+    ];
+  }
+
+  if (importedInitialMartyriaStyles.length > 0) {
+    newValues.initialMartyriaStyles = [
+      ...score.value.initialMartyriaStyles,
+      ...importedInitialMartyriaStyles,
+    ];
+  }
+
+  return scoreCommandFactory.create('update-properties', {
+    target: score.value,
+    newValues,
+  });
 }
 
 function onPasteScoreElements(includeLyrics: boolean) {
@@ -5113,29 +5201,19 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
     ? selectedElementIndex.value
     : selectedElementIndex.value + 1;
 
-  const clipboardParagraphStyles =
-    collectClipboardParagraphStylesForPaste(includeLyrics);
-  const { importedParagraphStyles, styleIdRemap } =
-    resolveClipboardParagraphStyles(
-      clipboardParagraphStyles,
-      score.value.paragraphStyles,
-      clipboard.value.paragraphStyleIds,
-    );
-  const newElements = cloneClipboardForPaste(includeLyrics, styleIdRemap);
+  const {
+    importedParagraphStyles,
+    importedInitialMartyriaStyles,
+    pastedElements: newElements,
+  } = resolveClipboardStylesForPaste(includeLyrics);
   const commands: Command[] = [];
+  const importedStylesCommand = createImportedStylesCommand(
+    importedParagraphStyles,
+    importedInitialMartyriaStyles,
+  );
 
-  if (importedParagraphStyles.length > 0) {
-    commands.push(
-      scoreCommandFactory.create('update-properties', {
-        target: score.value,
-        newValues: {
-          paragraphStyles: [
-            ...score.value.paragraphStyles,
-            ...importedParagraphStyles,
-          ],
-        },
-      }),
-    );
+  if (importedStylesCommand != null) {
+    commands.push(importedStylesCommand);
   }
 
   commands.push(
@@ -5162,28 +5240,18 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
   }
 
   const commands: Command[] = [];
-  const clipboardParagraphStyles =
-    collectClipboardParagraphStylesForPaste(includeLyrics);
-  const { importedParagraphStyles, styleIdRemap } =
-    resolveClipboardParagraphStyles(
-      clipboardParagraphStyles,
-      score.value.paragraphStyles,
-      clipboard.value.paragraphStyleIds,
-    );
-  const pastedElements = cloneClipboardForPaste(includeLyrics, styleIdRemap);
+  const {
+    importedParagraphStyles,
+    importedInitialMartyriaStyles,
+    pastedElements,
+  } = resolveClipboardStylesForPaste(includeLyrics);
+  const importedStylesCommand = createImportedStylesCommand(
+    importedParagraphStyles,
+    importedInitialMartyriaStyles,
+  );
 
-  if (importedParagraphStyles.length > 0) {
-    commands.push(
-      scoreCommandFactory.create('update-properties', {
-        target: score.value,
-        newValues: {
-          paragraphStyles: [
-            ...score.value.paragraphStyles,
-            ...importedParagraphStyles,
-          ],
-        },
-      }),
-    );
+  if (importedStylesCommand != null) {
+    commands.push(importedStylesCommand);
   }
 
   let currentIndex = selectedElementIndex.value;
@@ -10016,15 +10084,6 @@ const canSaveContextMenuSelectionAsCombo = computed(
   () => getContextMenuSelectedNoteElements().length >= 2,
 );
 
-function resolveModeKeyStyle(element: ModeKeyElement) {
-  return resolveModeKeyInitialMartyriaStyle({
-    element,
-    pageSetup: score.value.pageSetup,
-    paragraphStyles: score.value.paragraphStyles,
-    initialMartyriaStyles: score.value.initialMartyriaStyles,
-  });
-}
-
 function openContextMenuPositioning(element: NoteElement) {
   // Make sure the dialog targets the right-clicked note (it reads the
   // selected element), then open it as the Properties pane button does.
@@ -10991,9 +11050,6 @@ function renderTabLabel(tab: Tab) {
                               "
                               :element="element as ModeKeyElement"
                               :page-setup="score.pageSetup"
-                              :resolved-style="
-                                resolveModeKeyStyle(element as ModeKeyElement)
-                              "
                               :class="[
                                 {
                                   selectedTextbox: isSelected(element),

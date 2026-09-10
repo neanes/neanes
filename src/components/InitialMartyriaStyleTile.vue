@@ -42,9 +42,8 @@ import InitialMartyriaSample from '@/components/InitialMartyriaSample.vue';
 import { ModeKeyElement } from '@/models/Element';
 import {
   getInitialMartyriaContext,
+  getInitialMartyriaPronunciation,
   type InitialMartyriaStyle,
-  resolveInitialMartyriaStyle,
-  resolveInitialMartyriaStyleAppearances,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';
@@ -73,15 +72,10 @@ const pronunciation = computed(() => {
   const element = ModeKeyElement.createFromTemplate(
     modeKeyTemplates.find((item) => item.id === props.templateId)!,
   );
-  return resolveInitialMartyriaStyle({
-    context: getInitialMartyriaContext(element),
-    resolvedStyle: resolveInitialMartyriaStyleAppearances(
-      props.style,
-      props.paragraphStyles,
-      props.pageSetup.neumeDefaultFontFamily,
-    ),
-    pageSetup: props.pageSetup,
-  }).pronunciation;
+  return getInitialMartyriaPronunciation(
+    props.style.structure,
+    getInitialMartyriaContext(element),
+  );
 });
 
 const ariaLabel = computed(() =>

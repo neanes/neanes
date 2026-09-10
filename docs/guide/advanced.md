@@ -159,9 +159,58 @@ Here are a few common setups.
 - Header/footer variants are global for the whole score. Neanes does not provide separate header/footer sets for different document sections.
 - Tokens are simple placeholders. They do not support conditional logic.
 
+## Initial Martyria Styles
+
+An initial martyria is written according to a style. The style decides the language, whether the mode is identified by text or by the traditional sign, how the mode number is written, and the typography. The mode itself, the starting note, and any fthora are still chosen per initial martyria in the initial martyria dialog, as described in [Updating the initial martyria](./index.md#updating-the-initial-martyria).
+
+To manage styles, open `Format -> Initial Martyria Styles...`, or select an initial martyria and press `Manage styles...` in the Properties pane.
+
+![Initial Martyria Styles Dialog](./images/guide-initial-martyria-styles-dialog.png)
+
+The list on the left contains the built-in styles, grouped by language, followed by any styles you have created. Use the search box to filter the list. The preview on the right shows the selected style applied to the plagal first mode and to the grave mode, with the spoken reading of each written underneath.
+
+Styles are stored in the score. Press `Use for this document` to make the selected style the document default. When the dialog was opened from an initial martyria, an `Apply` button is also available, which sets the selected style on that initial martyria only.
+
+Built-in styles are read-only. Press `Duplicate` to copy one, or press `Edit` to change it; editing a built-in style creates a copy that is marked `Based on` the original and can be returned to it with `Reset to base`. Custom styles can be edited, duplicated, and deleted. When a style is deleted, any initial martyria that used it follows the document default.
+
+### Creating a Style
+
+Press `New style` to start from scratch, or edit an existing style as described above. The `Name` field and the `Language` select sit beside the preview. The rest of the editor is split into two tabs.
+
+#### Structure
+
+The `Structure` tab controls the wording. Each row is a set of tiles; click a tile to use it.
+
+![Initial Martyria Style Editor Structure Tab](./images/guide-initial-martyria-style-editor-structure.png)
+
+- `Mode identification`: `Text only`, `Sign only`, or `Text and sign`.
+- `Number form`: digits, Roman numerals, alphabetic numerals, or words, each as a cardinal or an ordinal number.
+- `Number placement`: whether the number comes before or after the word for "mode".
+- `Plagal wording`: `Numbered 1 to 8` (the plagal modes are modes 5 to 8), `Plagal of the authentic` (for example, "plagal of the first"), or `Plagal as a class` (for example, "plagal first").
+
+The tiles offered depend on the selected language. For a language that is not written in Greek, check `Transliterate starting note` to write the starting note as `Pa` instead of `Πα`.
+
+Press `Browse all structures...` to see every distinct way an initial martyria can be written in the selected language. Select one and press `Open in editor` to continue editing with that structure, or `Apply` if an existing style already uses it.
+
+#### Presentation
+
+The `Presentation` tab controls the typography.
+
+![Initial Martyria Style Editor Presentation Tab](./images/guide-initial-martyria-style-editor-presentation.png)
+
+The text is formatted according to a paragraph style, which by default is the built-in `Initial Martyria` paragraph style: red, 14.5 pt. Choose a different paragraph style from the `Paragraph Style` select, or override individual fields, namely the font, style, size, color, outline, and outline color. Each override has a clear button that returns the field to the paragraph style.
+
+For a language that is not written in Greek, a `Greek text font` select chooses the font used for the Greek parts of the initial martyria, such as the starting note. The default, `Same as text font`, uses the main font. `Default (GFS Didot)` uses GFS Didot, or GFS Porson when the score uses the Stathis Series music font.
+
+When the number form uses ordinal digits, check `Use ordinal forms` to use the font's ordinal glyphs where the font provides them. The `Advanced typography` section exposes the font's OpenType features, in the same way as for text boxes.
+
+### The Initial Martyria Paragraph Style
+
+The `Paragraph Styles` dialog, opened from `Format -> Paragraph Styles...`, includes a built-in `Initial Martyria` style. Changing it, for example to a different color or size, restyles every initial martyria whose style uses that paragraph style and that does not override the field itself. This is the simplest way to change the look of all the initial martyriæ in a score at once.
+
 ## Custom Initial Martyriæ
 
-Any rich text box can function as an initial martyria in the score. To enable this:
+If an initial martyria style does not produce the wording you need, first try creating your own style as described in [Initial Martyria Styles](#initial-martyria-styles). For anything a style cannot express, any rich text box can function as an initial martyria in the score. To enable this:
 
 1. Click the rich text box.
 2. Open `View -> Properties` and check the `Change Mode` option.

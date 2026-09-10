@@ -112,6 +112,7 @@
     "transliterateNoteNamesHint": "Pa αντί για Πα",
     "font": "Γραμματοσειρά",
     "defaultFont": "Προεπιλογή ({{font}})",
+    "sameAsTextFont": "Ίδια με τη γραμματοσειρά κειμένου ({{font}})",
     "fontSummary": "{{font}}, {{size}} pt",
     "yes": "Ναι",
     "no": "Όχι",

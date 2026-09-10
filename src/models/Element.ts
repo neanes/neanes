@@ -21,6 +21,7 @@ import {
 import { isFontVariantNormal } from '@/utils/fontVariants';
 import { Unit } from '@/utils/Unit';
 
+import type { InitialMartyriaLayout } from './InitialMartyriaLayout';
 import type { ModeKeyTemplate } from './ModeKeys';
 import {
   getFthoraReplacements,
@@ -1182,6 +1183,10 @@ export class ModeKeyElement extends ScoreElement {
   public computedTop: number = 0;
   public computedBottom: number = 0;
   public computedFlowTop: number = 0;
+  /** The measured signature the renderer draws from; null until laid out. */
+  public computedInitialMartyriaLayout: InitialMartyriaLayout | null = null;
+  /** computedInitialMartyriaLayout serialized, for re-render detection. */
+  public computedInitialMartyriaLayoutKey: string = '';
 
   // Re-render helpers
   public computedFontFamilyPrevious: string = '';
@@ -1192,6 +1197,7 @@ export class ModeKeyElement extends ScoreElement {
   public computedTopPrevious: number = 0;
   public computedBottomPrevious: number = 0;
   public computedFlowTopPrevious: number = 0;
+  public computedInitialMartyriaLayoutKeyPrevious: string = '';
   public ambitusLowNotePrevious: Note = Note.Pa;
   public ambitusLowRootSignPrevious: RootSign = RootSign.Alpha;
   public ambitusHighNotePrevious: Note = Note.Pa;

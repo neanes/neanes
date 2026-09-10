@@ -500,6 +500,7 @@ import {
   getBuiltInInitialMartyriaStyle,
   getDefaultBuiltInInitialMartyriaStyle,
   getInitialMartyriaContext,
+  getInitialMartyriaPronunciation,
   getInitialMartyriaStyleDisplayName,
   getInitialMartyriaStyles,
   INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
@@ -509,8 +510,6 @@ import {
   type InitialMartyriaStyle,
   isBuiltInInitialMartyriaStyleId,
   resolveInitialMartyriaFontFamily,
-  resolveInitialMartyriaStyle,
-  resolveInitialMartyriaStyleAppearances,
   usesGreekScript,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -995,15 +994,10 @@ function pronunciationFor(style: InitialMartyriaStyle, templateId: number) {
   const element = ModeKeyElement.createFromTemplate(
     modeKeyTemplates.find((item) => item.id === templateId)!,
   );
-  return resolveInitialMartyriaStyle({
-    context: getInitialMartyriaContext(element),
-    resolvedStyle: resolveInitialMartyriaStyleAppearances(
-      style,
-      props.paragraphStyles,
-      props.pageSetup.neumeDefaultFontFamily,
-    ),
-    pageSetup: props.pageSetup,
-  }).pronunciation;
+  return getInitialMartyriaPronunciation(
+    style.structure,
+    getInitialMartyriaContext(element),
+  );
 }
 
 function applyToElement() {

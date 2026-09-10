@@ -112,6 +112,7 @@
     "transliterateNoteNamesHint": "Pa alih-alih Πα",
     "font": "Fon",
     "defaultFont": "Bawaan ({{font}})",
+    "sameAsTextFont": "Sama dengan fon teks ({{font}})",
     "fontSummary": "{{font}}, {{size}} pt",
     "yes": "Ya",
     "no": "Tidak",

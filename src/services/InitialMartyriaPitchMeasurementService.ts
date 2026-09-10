@@ -12,23 +12,23 @@ import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 
 export interface InitialMartyriaPitchMeasurementOptions {
   textFontFamily: string;
-  textFontStyle?: string;
+  textFontStyle: string;
   textFontSize: number;
-  textFontVariantCaps?: string | null;
+  textFontVariantCaps: string;
   glyphFontFamily: string;
-  glyphFontStyle?: string;
+  glyphFontStyle: string;
   glyphFontSize: number;
-  textStrokeWidth?: number;
-  glyphStrokeWidth?: number;
+  textStrokeWidth: number;
+  glyphStrokeWidth: number;
 }
 
 function atomBounds(
   text: string,
   fontFamily: string,
-  fontStyle: string | undefined,
+  fontStyle: string,
   fontSize: number,
-  strokeWidth?: number,
-  fontVariantCaps?: string | null,
+  strokeWidth: number,
+  fontVariantCaps: string,
 ): PitchAtomBounds {
   const font = resolveFontStyle(fontFamily, fontStyle);
   const metrics = TextMeasurementService.getTextMetrics(
@@ -38,7 +38,7 @@ function atomBounds(
       fontStyle: font.cssFontStyle,
       fontSize,
     }),
-    fontVariantCaps ?? 'normal',
+    fontVariantCaps,
   );
   return {
     advanceWidth: metrics.width,
@@ -78,6 +78,7 @@ export function measureInitialMartyriaPitchGeometry(
           options.glyphFontStyle,
           options.glyphFontSize,
           options.glyphStrokeWidth,
+          'normal',
         );
   const quantitative =
     note.quantitativeNeumeAbove == null
@@ -88,35 +89,14 @@ export function measureInitialMartyriaPitchGeometry(
           options.glyphFontStyle,
           options.glyphFontSize,
           options.glyphStrokeWidth,
+          'normal',
         );
   return getInitialMartyriaPitchGeometry(
     text,
     fthora,
     quantitative,
-    Math.max(options.textStrokeWidth ?? 0, options.glyphStrokeWidth ?? 0) / 2,
+    Math.max(options.textStrokeWidth, options.glyphStrokeWidth) / 2,
   );
-}
-
-export function resolveInitialMartyriaPitchFontSizes(options: {
-  textFontFamily: string;
-  textFontStyle?: string;
-  textFontSize?: number;
-  textFontVariantCaps?: string | null;
-  glyphFontSize?: number;
-  matchedNeumeFontSize?: number | null;
-  neumeFontFamily: string;
-  neumeFontSize: number;
-}) {
-  const matchedNeumeFontSize =
-    'matchedNeumeFontSize' in options
-      ? options.matchedNeumeFontSize
-      : getMatchedNeumeFontSize(options);
-  const glyphFontSize =
-    options.glyphFontSize ?? matchedNeumeFontSize ?? options.neumeFontSize;
-  return {
-    textFontSize: options.textFontSize ?? options.neumeFontSize,
-    glyphFontSize,
-  };
 }
 
 export function getInitialMartyriaPitchTrailingGlueWidth(
@@ -126,13 +106,16 @@ export function getInitialMartyriaPitchTrailingGlueWidth(
   return fontService.getStandardGlue(neumeFontFamily).width * glyphFontSize;
 }
 
+/**
+ * The music font size whose capital height matches the text's, or null when
+ * either font has no usable capital height.
+ */
 export function getMatchedNeumeFontSize(options: {
   textFontFamily: string;
-  textFontStyle?: string;
-  textFontSize?: number;
-  textFontVariantCaps?: string | null;
+  textFontStyle: string;
+  textFontSize: number;
+  textFontVariantCaps: string;
   neumeFontFamily: string;
-  neumeFontSize: number;
 }) {
   const textFont = resolveFontStyle(
     options.textFontFamily,
@@ -143,9 +126,9 @@ export function getMatchedNeumeFontSize(options: {
     resolveFontCss({
       fontFamily: textFont.cssFontFamily,
       fontStyle: textFont.cssFontStyle,
-      fontSize: options.textFontSize ?? options.neumeFontSize,
+      fontSize: options.textFontSize,
     }),
-    options.textFontVariantCaps ?? 'normal',
+    options.textFontVariantCaps,
   );
   const capitalHeight = fontService.getMetrics(
     options.neumeFontFamily,
@@ -157,27 +140,22 @@ export function getMatchedNeumeFontSize(options: {
     : null;
 }
 
+/** How far music-font glyphs are raised to sit on the text baseline. */
 export function getInitialMartyriaNeumeBaselineCorrection(options: {
-  hasCustomText: boolean;
   initialMartyriaBaseline: number;
-  matchedNeumeFontSize: number | null;
-  neumeFontSize: number;
+  glyphFontSize: number;
 }) {
-  return options.hasCustomText
-    ? options.initialMartyriaBaseline *
-        (options.matchedNeumeFontSize ?? options.neumeFontSize)
-    : 0;
+  return options.initialMartyriaBaseline * options.glyphFontSize;
 }
 
+/** The tempo and ambitus glyphs share the signature's glyph size. */
 export function resolveInitialMartyriaAccessoryLayout(options: {
-  matchedNeumeFontSize: number | null;
+  glyphFontSize: number;
   neumeBaselineCorrection: number;
-  neumeFontSize: number;
 }) {
-  const fontSize = options.matchedNeumeFontSize ?? options.neumeFontSize;
-
   return {
-    fontSize,
-    baselineOffset: options.neumeBaselineCorrection - 0.45 * fontSize,
+    fontSize: options.glyphFontSize,
+    baselineOffset:
+      options.neumeBaselineCorrection - 0.45 * options.glyphFontSize,
   };
 }

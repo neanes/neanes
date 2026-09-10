@@ -1042,7 +1042,7 @@ function saveInitialMartyriaStyle(
     fontVariantNumeric: overrides.fontVariantNumeric,
     fontVariantLigatures: overrides.fontVariantLigatures,
     fontVariantAlternates: overrides.fontVariantAlternates,
-    greekFontFamily: style.greekFontFamily,
+    greekFontFamily: style.greekFontFamily ?? undefined,
     useOrdinalForms: style.useOrdinalForms,
   };
 }
@@ -1170,7 +1170,7 @@ function loadInitialMartyriaStyle(
       ? saved.paragraphStyleId
       : BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     paragraphStyleOverrides,
-    greekFontFamily: saved.greekFontFamily,
+    greekFontFamily: saved.greekFontFamily ?? null,
     useOrdinalForms: saved.useOrdinalForms !== false,
   };
 }

@@ -1444,6 +1444,30 @@ describe('SaveService font styles', () => {
     expect(loadedModeKeys[2].inline).toBe(true);
   });
 
+  it('round-trips an Initial Martyria style whose Greek font follows the text font', () => {
+    const score = new Score();
+    const base = getBuiltInInitialMartyriaStyle(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
+    );
+    expect(base.greekFontFamily).toBeNull();
+    const customStyle = createInitialMartyriaStyle({
+      displayName: 'Follows text font',
+      basedOn: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
+      structure: base.structure,
+      paragraphStyleId: base.paragraphStyleId,
+      paragraphStyleOverrides: { fontFamily: 'Alegreya' },
+      greekFontFamily: null,
+      useOrdinalForms: true,
+    });
+    score.initialMartyriaStyles = [customStyle];
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(saved.initialMartyriaStyles![0].greekFontFamily).toBeUndefined();
+    expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
+  });
+
   it('drops known but unsupported saved Initial Martyria styles', () => {
     const score = new Score();
     const base = getBuiltInInitialMartyriaStyle(

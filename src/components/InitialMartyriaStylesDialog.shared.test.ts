@@ -48,7 +48,7 @@ describe('withInitialMartyriaStyleStructure', () => {
       fontSize: 20,
       color: '#123456',
     });
-    expect(english.greekFontFamily).toBe('Source Serif');
+    expect(english.greekFontFamily).toBeNull();
   });
 
   it('drops the font override when the new language has none', () => {
@@ -69,7 +69,7 @@ describe('withInitialMartyriaStyleStructure', () => {
     );
 
     expect(changed.paragraphStyleOverrides.fontFamily).toBeUndefined();
-    expect(changed.greekFontFamily).toBe('Source Serif');
+    expect(changed.greekFontFamily).toBeNull();
   });
 
   it('keeps custom fonts when the language does not change', () => {

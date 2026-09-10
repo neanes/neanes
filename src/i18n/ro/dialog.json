@@ -112,6 +112,7 @@
     "transliterateNoteNamesHint": "Pa în loc de Πα",
     "font": "Font",
     "defaultFont": "Implicit ({{font}})",
+    "sameAsTextFont": "La fel ca fontul textului ({{font}})",
     "fontSummary": "{{font}}, {{size}} pt",
     "yes": "Da",
     "no": "Nu",

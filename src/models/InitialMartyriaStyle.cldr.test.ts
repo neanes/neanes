@@ -5,6 +5,7 @@ import { ModeKeyElement } from '@/models/Element';
 import {
   createDefaultInitialMartyriaTypography,
   getInitialMartyriaContext,
+  getInitialMartyriaPronunciation,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
@@ -71,14 +72,16 @@ function numeralsFor(style: InitialMartyriaStyle) {
     const element = ModeKeyElement.createFromTemplate(
       modeKeyTemplates.find((template) => template.mode === mode)!,
     );
+    const pageSetup = new PageSetup();
     const resolution = resolveInitialMartyriaStyle({
       context: getInitialMartyriaContext(element),
       resolvedStyle: resolveInitialMartyriaStyleAppearances(
         style,
         paragraphStyles,
-        'Neanes',
+        pageSetup.neumeDefaultFontFamily,
       ),
-      pageSetup: new PageSetup(),
+      pageSetup,
+      glyphFontSize: 20,
     });
     const run = resolution.runs.find(
       (candidate) =>
@@ -98,15 +101,10 @@ function pronunciationsFor(style: InitialMartyriaStyle) {
     const element = ModeKeyElement.createFromTemplate(
       modeKeyTemplates.find((template) => template.mode === mode)!,
     );
-    return resolveInitialMartyriaStyle({
-      context: getInitialMartyriaContext(element),
-      resolvedStyle: resolveInitialMartyriaStyleAppearances(
-        style,
-        paragraphStyles,
-        'Neanes',
-      ),
-      pageSetup: new PageSetup(),
-    }).pronunciation;
+    return getInitialMartyriaPronunciation(
+      style.structure,
+      getInitialMartyriaContext(element),
+    );
   });
 }
 

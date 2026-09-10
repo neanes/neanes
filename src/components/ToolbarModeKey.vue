@@ -12,7 +12,7 @@
     />
     <InputFontSize
       id="toolbar-mode-key-font-size"
-      :model-value="resolvedAppearance.fontSize"
+      :model-value="mainAppearance.fontSize"
       @update:model-value="
         $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
       "
@@ -116,7 +116,6 @@ import {
   PhTextAlignRight,
 } from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
-import { computed } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
 import InitialMartyriaStyleSelect from '@/components/InitialMartyriaStyleSelect.vue';
@@ -127,12 +126,10 @@ import {
   ToolbarButton,
   ToolbarSeparator,
 } from '@/components/ui/toolbar';
+import { useResolvedInitialMartyriaStyle } from '@/composables/useResolvedInitialMartyriaStyle';
 import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
-import {
-  type InitialMartyriaStyle,
-  resolveModeKeyInitialMartyriaStyle,
-} from '@/models/InitialMartyriaStyle';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import { TempoSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
@@ -195,15 +192,13 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['open-mode-key-dialog', 'update', 'update:tempo']);
-const resolvedAppearance = computed(
-  () =>
-    resolveModeKeyInitialMartyriaStyle({
-      element: props.element,
-      pageSetup: props.pageSetup,
-      paragraphStyles: props.paragraphStyles,
-      initialMartyriaStyles: props.initialMartyriaStyles,
-    }).mainAppearance,
-);
+
+const { mainAppearance } = useResolvedInitialMartyriaStyle({
+  element: () => props.element,
+  pageSetup: () => props.pageSetup,
+  paragraphStyles: () => props.paragraphStyles,
+  initialMartyriaStyles: () => props.initialMartyriaStyles,
+});
 
 function onAlignmentChanged(value: unknown) {
   if (isTextBoxAlignment(value)) {

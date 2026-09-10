@@ -88,11 +88,15 @@ function elementForTemplate(templateId: number) {
   );
 }
 
+const glyphFontSize = 20;
+
 function resolve(
   style: InitialMartyriaStyle,
   element: ModeKeyElement,
   neumeFontFamily = 'Neanes',
 ) {
+  const pageSetup = new PageSetup();
+  pageSetup.neumeDefaultFontFamily = neumeFontFamily;
   return resolveInitialMartyriaStyle({
     context: getInitialMartyriaContext(element),
     resolvedStyle: resolveInitialMartyriaStyleAppearances(
@@ -100,7 +104,8 @@ function resolve(
       paragraphStyles,
       neumeFontFamily,
     ),
-    pageSetup: new PageSetup(),
+    pageSetup,
+    glyphFontSize,
   });
 }
 
@@ -2121,16 +2126,32 @@ describe('InitialMartyriaStyle', () => {
       fontVariantLigatures: 'no-common-ligatures',
       fontVariantAlternates: 'historical-forms',
     });
-    expect(
-      runs
-        .filter((run) => run.kind === 'glyph')
-        .every(
-          (run) =>
-            run.semantic === 'modeSign' &&
-            run.appearance.color === '#123456' &&
-            run.appearance.strokeWidth === 0.25,
-        ),
-    ).toBe(true);
+    const glyphRuns = runs.filter((run) => run.kind === 'glyph');
+    expect(glyphRuns.length).toBeGreaterThan(0);
+    for (const run of glyphRuns) {
+      expect(run.semantic).toBe('modeSign');
+      // Glyphs are set in the music font at the glyph size and take only the
+      // text's color and stroke.
+      expect(run.appearance).toEqual({
+        fontFamily: 'Neanes',
+        fontStyle: 'Regular',
+        fontSize: glyphFontSize,
+        color: '#123456',
+        strokeWidth: 0.25,
+        strokeColor: resolved.mainAppearance.strokeColor,
+        fontVariantCaps: 'normal',
+        fontVariantNumeric: 'normal',
+        fontVariantLigatures: 'normal',
+        fontVariantAlternates: 'normal',
+      });
+    }
+    const pitchRun = runs.find((run) => run.kind === 'startingPitch')!;
+    expect(pitchRun.appearance).toMatchObject({
+      fontFamily: 'Neanes',
+      fontSize: glyphFontSize,
+      color: '#123456',
+      strokeWidth: 0.25,
+    });
   });
 
   it('uses the Greek font for original note names and permanent Greek text', () => {
@@ -2159,6 +2180,42 @@ describe('InitialMartyriaStyle', () => {
       expect(plagal.fontRole).toBe('greek');
       expect(plagal.languageTag).toBe('el');
       expect(plagal.appearance.fontFamily).toBe('GFS Didot');
+    }
+  });
+
+  it('follows the text font for Greek text when no Greek font is set', () => {
+    const style = styleFor(attestedStructures['english-sign-first']);
+    expect(style.greekFontFamily).toBeNull();
+    expect(
+      resolveInitialMartyriaStyleAppearances(style, paragraphStyles, 'Neanes')
+        .greekAppearance.fontFamily,
+    ).toBe(
+      resolveInitialMartyriaStyleAppearances(style, paragraphStyles, 'Neanes')
+        .mainAppearance.fontFamily,
+    );
+
+    style.paragraphStyleOverrides.fontFamily = 'Alegreya';
+
+    const resolved = resolveInitialMartyriaStyleAppearances(
+      style,
+      paragraphStyles,
+      'Neanes',
+    );
+    expect(resolved.mainAppearance.fontFamily).toBe('Alegreya');
+    expect(resolved.greekAppearance.fontFamily).toBe('Alegreya');
+
+    const runs = resolve(style, elementForTemplate(500)).runs;
+    const originalPitch = runs.find((run) => run.kind === 'startingPitch');
+    expect(originalPitch?.kind).toBe('startingPitch');
+    if (originalPitch?.kind === 'startingPitch') {
+      expect(originalPitch.noteText.appearance.fontFamily).toBe('Alegreya');
+    }
+    const plagal = runs.find(
+      (run) => run.kind === 'text' && run.fontRole === 'greek',
+    );
+    expect(plagal?.kind).toBe('text');
+    if (plagal?.kind === 'text') {
+      expect(plagal.appearance.fontFamily).toBe('Alegreya');
     }
   });
 

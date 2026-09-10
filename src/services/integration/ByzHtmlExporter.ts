@@ -18,8 +18,8 @@ import {
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   findInitialMartyriaStyle,
   getBuiltInInitialMartyriaStyle,
+  type InitialMartyriaAppearance,
   type InitialMartyriaStyle,
-  type ResolvedInitialMartyriaAppearance,
   resolveInitialMartyriaStyleAppearances,
 } from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
@@ -234,7 +234,7 @@ export class ByzHtmlExporter {
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
     initialMartyriaStyles: InitialMartyriaStyle[],
-  ): ResolvedInitialMartyriaAppearance {
+  ): InitialMartyriaAppearance {
     const style =
       findInitialMartyriaStyle(
         initialMartyriaStyles,
@@ -1221,7 +1221,7 @@ export class ByzHtmlExporter {
 
   exportModeKey(
     element: ModeKeyElement,
-    defaultAppearance: ResolvedInitialMartyriaAppearance,
+    defaultAppearance: InitialMartyriaAppearance,
     indentation: number,
   ) {
     let inner = '';

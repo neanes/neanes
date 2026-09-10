@@ -22,6 +22,7 @@ export interface InitialMartyriaStyle {
   fontVariantNumeric: string | null | undefined;
   fontVariantLigatures: string | null | undefined;
   fontVariantAlternates: string | null | undefined;
-  greekFontFamily: string;
+  /** Absent when Greek-script text follows the text font. */
+  greekFontFamily: string | undefined;
   useOrdinalForms: boolean | undefined;
 }

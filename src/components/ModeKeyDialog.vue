@@ -71,7 +71,6 @@
                       class="!w-auto !border-0 [--zoom:1]"
                       :element="template"
                       :page-setup="pageSetup"
-                      :resolved-style="resolvedStyle"
                     />
                   </div>
                   <ItemDescription>
@@ -152,11 +151,9 @@ import {
 } from '@/components/ui/item';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useResolvedInitialMartyriaStyle } from '@/composables/useResolvedInitialMartyriaStyle';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
-import {
-  type InitialMartyriaStyle,
-  resolveModeKeyInitialMartyriaStyle,
-} from '@/models/InitialMartyriaStyle';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
@@ -189,14 +186,12 @@ const props = defineProps({
 const open = defineModel<boolean>('open', { required: true });
 
 // Templates preview in the style of the element being replaced.
-const resolvedStyle = computed(() =>
-  resolveModeKeyInitialMartyriaStyle({
-    element: props.element,
-    pageSetup: props.pageSetup,
-    paragraphStyles: props.paragraphStyles,
-    initialMartyriaStyles: props.initialMartyriaStyles,
-  }),
-);
+const { resolvedStyle } = useResolvedInitialMartyriaStyle({
+  element: () => props.element,
+  pageSetup: () => props.pageSetup,
+  paragraphStyles: () => props.paragraphStyles,
+  initialMartyriaStyles: () => props.initialMartyriaStyles,
+});
 
 const modeOptions = [
   {
@@ -283,6 +278,7 @@ function getModeKeyTemplatesForMode(mode: number) {
     element.computedTop = geometry.top;
     element.computedBottom = geometry.bottom;
     element.computedFlowTop = geometry.flowTop;
+    element.computedInitialMartyriaLayout = geometry.layout;
     element.height = geometry.bottom - geometry.top;
   }
 

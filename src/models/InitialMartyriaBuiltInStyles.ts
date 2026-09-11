@@ -540,6 +540,20 @@ export function findInitialMartyriaStyle(
   );
 }
 
+/**
+ * The style a reference names, falling back to the default built-in style
+ * when the reference no longer resolves (a deleted or unknown style).
+ */
+export function getInitialMartyriaStyleOrDefault(
+  customStyles: InitialMartyriaStyle[],
+  styleId: string,
+) {
+  return (
+    findInitialMartyriaStyle(customStyles, styleId) ??
+    getBuiltInInitialMartyriaStyle(DEFAULT_INITIAL_MARTYRIA_STYLE_ID)
+  );
+}
+
 export function getBuiltInInitialMartyriaStyleNameSelector(
   styleId: BuiltInInitialMartyriaStyleId,
 ) {

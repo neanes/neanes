@@ -14,12 +14,7 @@ import {
   isRightAlignedMartyria,
   LineBreakType,
 } from '@/models/Element';
-import {
-  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-  findInitialMartyriaStyle,
-  getBuiltInInitialMartyriaStyle,
-} from '@/models/InitialMartyriaBuiltInStyles';
-import { resolveInitialMartyriaStyleAppearances } from '@/models/InitialMartyriaResolver';
+import { resolveScoreInitialMartyriaStyle } from '@/models/InitialMartyriaResolver';
 import type {
   InitialMartyriaAppearance,
   InitialMartyriaStyle,
@@ -257,17 +252,11 @@ export class ByzHtmlExporter {
       return cached.appearance;
     }
 
-    const style =
-      findInitialMartyriaStyle(
-        initialMartyriaStyles,
-        pageSetup.initialMartyriaStyleId,
-      ) ?? getBuiltInInitialMartyriaStyle(DEFAULT_INITIAL_MARTYRIA_STYLE_ID);
-
-    const appearance = resolveInitialMartyriaStyleAppearances(
-      style,
+    const appearance = resolveScoreInitialMartyriaStyle({
+      pageSetup,
       paragraphStyles,
-      pageSetup.neumeDefaultFontFamily,
-    ).mainAppearance;
+      initialMartyriaStyles,
+    }).mainAppearance;
 
     this.resolvedDefaultModeKeyAppearance = {
       pageSetup,

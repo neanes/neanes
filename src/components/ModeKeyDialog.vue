@@ -247,7 +247,6 @@ const modeKeyTemplatesForSelectedMode = computed(() => {
 });
 
 function getModeKeyTemplatesForMode(mode: number) {
-  const { mainAppearance } = resolvedStyle.value;
   const elements = modeKeyTemplates
     .filter((x) => x.mode === mode)
     .map((x) =>
@@ -265,20 +264,7 @@ function getModeKeyTemplatesForMode(mode: number) {
     );
 
   for (const element of elements) {
-    element.computedFontFamily = props.pageSetup.neumeDefaultFontFamily;
-    element.computedFontSize = mainAppearance.fontSize;
-    element.computedColor = mainAppearance.color;
-    element.computedStrokeWidth = mainAppearance.strokeWidth;
-    const geometry = LayoutService.getInitialMartyriaGeometry(
-      element,
-      props.pageSetup,
-      resolvedStyle.value,
-    );
-    element.computedNeumeFontSize = geometry.neumeFontSize;
-    element.computedTop = geometry.top;
-    element.computedFlowTop = geometry.flowTop;
-    element.computedInitialMartyriaLayout = geometry.layout;
-    element.height = geometry.bottom - geometry.top;
+    LayoutService.layoutModeKey(element, props.pageSetup, resolvedStyle.value);
   }
 
   return elements;

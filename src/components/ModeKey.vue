@@ -207,6 +207,7 @@ import type {
   InitialMartyriaSeparatorLayout,
 } from '@/models/InitialMartyriaLayout';
 import type {
+  InitialMartyriaAppearance,
   InitialMartyriaStartingNoteRun,
   ResolvedInitialMartyriaRun,
 } from '@/models/InitialMartyriaStyle';
@@ -235,14 +236,31 @@ type PitchRole = 'primary' | 'secondary';
 const layout = computed(() => props.element.computedInitialMartyriaLayout!);
 const resolution = computed(() => layout.value.resolution);
 const runLayouts = computed(() => layout.value.runs);
-const neumeFontFamily = computed(() => props.element.computedFontFamily);
 const baseTextAppearance = computed(() => layout.value.mainAppearance);
 const rightContainer = ref<HTMLElement | null>(null);
 const rightAccessoryWidth = ref(0);
 const { observe: observeRightAccessory } = useResizeObserver();
-// Keep the CSS line box anchored by the explicit baseline strut rather than
-// by zoom-dependent font metrics from any visible signature run.
-const baselineFlowGuard = computed(() => props.element.height);
+
+// Every run, accessory, and pitch style sets the same three face properties
+// from the resolved face.
+function faceCss(fontFamily: string, fontStyle: string) {
+  const font = resolveFontStyle(fontFamily, fontStyle);
+  return {
+    fontFamily: font.cssFontFamily,
+    fontStyle: font.cssFontStyle,
+    fontWeight: font.cssFontWeight,
+  };
+}
+
+// The OpenType features a text appearance carries; glyph runs never set them.
+function fontVariantCss(appearance: InitialMartyriaAppearance) {
+  return {
+    fontVariantCaps: appearance.fontVariantCaps,
+    fontVariantNumeric: appearance.fontVariantNumeric,
+    fontVariantLigatures: appearance.fontVariantLigatures,
+    fontVariantAlternates: appearance.fontVariantAlternates,
+  };
+}
 
 const mainStyle = computed(() => {
   const verticalClipMargin = withZoom(-props.element.height);
@@ -260,13 +278,15 @@ const rightContainerStyle = computed(() => ({
   top: withZoom(
     props.element.computedFlowTop -
       props.element.computedTop -
-      baselineFlowGuard.value,
+      props.element.height,
   ),
 }));
 
+// Keep the CSS line box anchored by the explicit baseline strut rather than
+// by zoom-dependent font metrics from any visible signature run.
 const baselineStrutStyle = computed(() => ({
   height: withZoom(
-    Math.max(0, -props.element.computedFlowTop) + baselineFlowGuard.value,
+    Math.max(0, -props.element.computedFlowTop) + props.element.height,
   ),
 }));
 
@@ -302,42 +322,34 @@ const tempoStyle = computed(() => {
     lineHeight: 'normal',
     webkitTextStrokeWidth: withZoom(props.pageSetup.tempoDefaultStrokeWidth),
     top: withZoom(layout.value.accessory.baselineOffset),
-    marginLeft: withZoom(8),
+    marginLeft: withZoom(layout.value.accessory.tempoMarginLeft),
   } as StyleValue;
 
   return style;
 });
 
-const ambitusStyle = computed(() => {
-  const neumeFont = resolveFontStyle(neumeFontFamily.value, DEFAULT_FONT_STYLE);
-  const style = {
-    color: props.pageSetup.martyriaDefaultColor,
-    fontFamily: neumeFont.cssFontFamily,
-    fontSize: withZoom(layout.value.accessory.fontSize),
-    fontStyle: neumeFont.cssFontStyle,
-    fontWeight: neumeFont.cssFontWeight,
-    webkitTextStrokeWidth: withZoom(props.pageSetup.martyriaDefaultStrokeWidth),
-    position: 'relative',
-    top: withZoom(layout.value.accessory.baselineOffset),
-  } as CSSProperties;
-
-  return style;
-});
+const ambitusStyle = computed(
+  () =>
+    ({
+      color: props.pageSetup.martyriaDefaultColor,
+      ...faceCss(props.element.computedFontFamily, DEFAULT_FONT_STYLE),
+      fontSize: withZoom(layout.value.accessory.fontSize),
+      webkitTextStrokeWidth: withZoom(
+        props.pageSetup.martyriaDefaultStrokeWidth,
+      ),
+      position: 'relative',
+      top: withZoom(layout.value.accessory.baselineOffset),
+    }) as CSSProperties,
+);
 
 const ambitusContainerStyle = computed(() => {
   const appearance = baseTextAppearance.value;
-  const font = resolveFontStyle(appearance.fontFamily, appearance.fontStyle);
 
   return {
     color: appearance.color,
-    fontFamily: font.cssFontFamily,
+    ...faceCss(appearance.fontFamily, appearance.fontStyle),
     fontSize: withZoom(appearance.fontSize),
-    fontStyle: font.cssFontStyle,
-    fontWeight: font.cssFontWeight,
-    fontVariantCaps: appearance.fontVariantCaps,
-    fontVariantNumeric: appearance.fontVariantNumeric,
-    fontVariantLigatures: appearance.fontVariantLigatures,
-    fontVariantAlternates: appearance.fontVariantAlternates,
+    ...fontVariantCss(appearance),
     lineHeight: 'normal',
     webkitTextStrokeColor: appearance.strokeColor,
     webkitTextStrokeWidth: withZoom(appearance.strokeWidth),
@@ -370,19 +382,11 @@ function getRunStyle(
   const appearance = run.appearance;
   const isGlyph = run.kind === 'glyph';
   const isText = run.kind === 'text';
-  const font = resolveFontStyle(appearance.fontFamily, appearance.fontStyle);
   return {
     color: isGlyph ? undefined : appearance.color,
-    fontFamily: font.cssFontFamily,
+    ...faceCss(appearance.fontFamily, appearance.fontStyle),
     fontSize: withZoom(runLayout.fontSize),
-    fontStyle: font.cssFontStyle,
-    fontWeight: font.cssFontWeight,
-    fontVariantCaps: isText ? appearance.fontVariantCaps : undefined,
-    fontVariantNumeric: isText ? appearance.fontVariantNumeric : undefined,
-    fontVariantLigatures: isText ? appearance.fontVariantLigatures : undefined,
-    fontVariantAlternates: isText
-      ? appearance.fontVariantAlternates
-      : undefined,
+    ...(isText ? fontVariantCss(appearance) : undefined),
     webkitTextStrokeColor: isGlyph ? undefined : appearance.strokeColor,
     webkitTextStrokeWidth: isGlyph
       ? undefined
@@ -403,14 +407,8 @@ function getSeparatorStyle(
 ) {
   if (separator.kind === 'wordSpace') {
     const wordSpaceFont = separator.wordSpaceFont!;
-    const font = resolveFontStyle(
-      wordSpaceFont.fontFamily,
-      wordSpaceFont.fontStyle,
-    );
     return {
-      fontFamily: font.cssFontFamily,
-      fontStyle: font.cssFontStyle,
-      fontWeight: font.cssFontWeight,
+      ...faceCss(wordSpaceFont.fontFamily, wordSpaceFont.fontStyle),
       fontSize: withZoom(wordSpaceFont.fontSize),
       direction: run.direction,
     } as CSSProperties;
@@ -486,7 +484,6 @@ function getPitchTextStyle(
   const pitch = runLayout.pitch!;
   const geometry = pitch[role]!;
   const appearance = run.noteText.appearance;
-  const font = resolveFontStyle(appearance.fontFamily, appearance.fontStyle);
 
   return {
     color: appearance.color,
@@ -494,14 +491,9 @@ function getPitchTextStyle(
     left: withZoom(geometry.text.left),
     position: 'absolute',
     top: withZoom(geometry.text.top),
-    fontFamily: font.cssFontFamily,
+    ...faceCss(appearance.fontFamily, appearance.fontStyle),
     fontSize: withZoom(pitch.textFontSize),
-    fontStyle: font.cssFontStyle,
-    fontWeight: font.cssFontWeight,
-    fontVariantCaps: appearance.fontVariantCaps,
-    fontVariantNumeric: appearance.fontVariantNumeric,
-    fontVariantLigatures: appearance.fontVariantLigatures,
-    fontVariantAlternates: appearance.fontVariantAlternates,
+    ...fontVariantCss(appearance),
     lineHeight: withZoom(pitch.textLineHeight),
     webkitTextStrokeColor: appearance.strokeColor,
     webkitTextStrokeWidth: withZoom(appearance.strokeWidth),
@@ -527,14 +519,11 @@ function getPitchGlyphStyle(
   runLayout: InitialMartyriaRunLayout,
 ) {
   const appearance = run.appearance;
-  const font = resolveFontStyle(appearance.fontFamily, appearance.fontStyle);
 
   return {
     color: appearance.color,
-    fontFamily: font.cssFontFamily,
+    ...faceCss(appearance.fontFamily, appearance.fontStyle),
     fontSize: withZoom(runLayout.fontSize),
-    fontStyle: font.cssFontStyle,
-    fontWeight: font.cssFontWeight,
     webkitTextStrokeColor: appearance.strokeColor,
     webkitTextStrokeWidth: withZoom(appearance.strokeWidth),
   } as CSSProperties;

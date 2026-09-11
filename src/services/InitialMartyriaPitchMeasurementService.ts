@@ -1,3 +1,4 @@
+import type { InitialMartyriaAccessoryLayout } from '@/models/InitialMartyriaLayout';
 import type {
   InitialMartyriaPitchGeometry,
   PitchAtomBounds,
@@ -8,7 +9,7 @@ import type { Neume } from '@/models/Neumes';
 import { fontService } from '@/services/FontService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
-import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
+import { resolveFontCss } from '@/utils/fontStyle';
 
 export interface InitialMartyriaPitchMeasurementOptions {
   textFontFamily: string;
@@ -22,22 +23,16 @@ export interface InitialMartyriaPitchMeasurementOptions {
   glyphStrokeWidth: number;
 }
 
-function atomBounds(
+/** Ink and advance bounds of one measured run, relative to its baseline. */
+export function measureInitialMartyriaAtomBounds(
   text: string,
-  fontFamily: string,
-  fontStyle: string,
-  fontSize: number,
-  strokeWidth: number,
+  cssFont: string,
   fontVariantCaps: string,
+  strokeWidth: number | undefined,
 ): PitchAtomBounds {
-  const font = resolveFontStyle(fontFamily, fontStyle);
   const metrics = TextMeasurementService.getTextMetrics(
     text,
-    resolveFontCss({
-      fontFamily: font.cssFontFamily,
-      fontStyle: font.cssFontStyle,
-      fontSize,
-    }),
+    cssFont,
     fontVariantCaps,
   );
   return {
@@ -52,7 +47,23 @@ function atomBounds(
   };
 }
 
-function glyphText(neume: Neume) {
+function atomBounds(
+  text: string,
+  fontFamily: string,
+  fontStyle: string,
+  fontSize: number,
+  strokeWidth: number,
+  fontVariantCaps: string,
+): PitchAtomBounds {
+  return measureInitialMartyriaAtomBounds(
+    text,
+    resolveFontCss({ fontFamily, fontStyle, fontSize }),
+    fontVariantCaps,
+    strokeWidth,
+  );
+}
+
+export function glyphText(neume: Neume) {
   return NeumeMappingService.getMapping(neume)?.text ?? '?';
 }
 
@@ -117,15 +128,11 @@ export function getMatchedNeumeFontSize(options: {
   textFontVariantCaps: string;
   neumeFontFamily: string;
 }) {
-  const textFont = resolveFontStyle(
-    options.textFontFamily,
-    options.textFontStyle,
-  );
   const textCapitalHeight = TextMeasurementService.getTextHeight(
     'H',
     resolveFontCss({
-      fontFamily: textFont.cssFontFamily,
-      fontStyle: textFont.cssFontStyle,
+      fontFamily: options.textFontFamily,
+      fontStyle: options.textFontStyle,
       fontSize: options.textFontSize,
     }),
     options.textFontVariantCaps,
@@ -148,14 +155,17 @@ export function getInitialMartyriaNeumeBaselineCorrection(options: {
   return options.initialMartyriaBaseline * options.glyphFontSize;
 }
 
+const TEMPO_MARGIN_LEFT = 8;
+
 /** The tempo and ambitus glyphs share the signature's glyph size. */
 export function resolveInitialMartyriaAccessoryLayout(options: {
   glyphFontSize: number;
   neumeBaselineCorrection: number;
-}) {
+}): InitialMartyriaAccessoryLayout {
   return {
     fontSize: options.glyphFontSize,
     baselineOffset:
       options.neumeBaselineCorrection - 0.45 * options.glyphFontSize,
+    tempoMarginLeft: TEMPO_MARGIN_LEFT,
   };
 }

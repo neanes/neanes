@@ -42,7 +42,7 @@ describe('initial martyria accessory layout', () => {
         glyphFontSize: 60,
         neumeBaselineCorrection: 4,
       }),
-    ).toEqual({ fontSize: 60, baselineOffset: -23 });
+    ).toEqual({ fontSize: 60, baselineOffset: -23, tempoMarginLeft: 8 });
   });
 
   it('lowers the accessory by a fixed fraction of the glyph size', () => {
@@ -51,6 +51,6 @@ describe('initial martyria accessory layout', () => {
         glyphFontSize: 40,
         neumeBaselineCorrection: 0,
       }),
-    ).toEqual({ fontSize: 40, baselineOffset: -18 });
+    ).toEqual({ fontSize: 40, baselineOffset: -18, tempoMarginLeft: 8 });
   });
 });

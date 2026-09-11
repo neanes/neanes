@@ -16,11 +16,7 @@ import {
   parseNumericVariant,
 } from '@/utils/fontVariants';
 
-import {
-  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-  findInitialMartyriaStyle,
-  getBuiltInInitialMartyriaStyle,
-} from './InitialMartyriaBuiltInStyles';
+import { getInitialMartyriaStyleOrDefault } from './InitialMartyriaBuiltInStyles';
 import {
   arabicIndicDigits,
   initialMartyriaCanonicalNotes,
@@ -198,18 +194,6 @@ function getInitialMartyriaNumeralText(
     : base;
 }
 
-/*
- * The spoken numeral is always a word; the counterpart form (Greek genitive)
- * wins where the language has one.
- */
-function getInitialMartyriaNumeralPronunciation(
-  semantics: InitialMartyriaModeNameSemantics,
-  lexicon: InitialMartyriaLexicon,
-  mode: ModeKeyMode,
-) {
-  return getInitialMartyriaNumeralWord(semantics, lexicon, mode);
-}
-
 function getInitialMartyriaLabelText(
   lexicon: InitialMartyriaLexicon,
   trailingLabel: boolean,
@@ -312,7 +296,9 @@ function getInitialMartyriaStylePronunciation(
     ? lexicon.graveWordAfterLabel
       ? lexicon.graveWord!
       : null
-    : getInitialMartyriaNumeralPronunciation(numeralSemantics, lexicon, mode);
+    : // The spoken numeral is always a word; the counterpart form (Greek
+      // genitive) wins where the language has one.
+      getInitialMartyriaNumeralWord(numeralSemantics, lexicon, mode);
   const marker = usesGraveWord
     ? lexicon.graveWordAfterLabel
       ? null
@@ -572,6 +558,34 @@ function encodeInitialMartyriaComponent(component: InitialMartyriaComponent) {
   }
 }
 
+// The key is a pure function of a structure's axes over static lexicon data,
+// and the reachable space is a few hundred structures, so every key is
+// computed at most once for the life of the app. The dialog asks for keys
+// once per style per tile rebuild, which would otherwise rebuild the
+// components and pronunciation of all eight modes each time.
+const structureKeyCache = new Map<string, string>();
+
+function getInitialMartyriaStructureAxisSignature(
+  structure: InitialMartyriaStructure,
+) {
+  return [
+    structure.languageId,
+    structure.modeIdentificationMethod,
+    structure.numeralKind,
+    structure.numeralQualifier,
+    structure.modeNamingScheme,
+    structure.transliterateNoteNames,
+    structure.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+      ? undefined
+      : structure.numeralStyle,
+    structure.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+      ? undefined
+      : structure.numberingSystem,
+  ].join('/');
+}
+
 /**
  * Identifies what a structure produces rather than how it is described: the
  * displayed components and the spoken reading of every mode. Two structures
@@ -581,6 +595,11 @@ function encodeInitialMartyriaComponent(component: InitialMartyriaComponent) {
 export function getInitialMartyriaStructureKey(
   structure: InitialMartyriaStructure,
 ) {
+  const cacheKey = getInitialMartyriaStructureAxisSignature(structure);
+  const cached = structureKeyCache.get(cacheKey);
+  if (cached != null) {
+    return cached;
+  }
   const lexicon = initialMartyriaLexicons[structure.languageId];
   const spokenLexicon = initialMartyriaSpokenLexicons[structure.languageId];
   const transliterate =
@@ -596,11 +615,13 @@ export function getInitialMartyriaStructureKey(
     );
     return `${components} = ${pronunciation}`;
   });
-  return [
+  const key = [
     structure.languageId,
     transliterate ? 'transliterated' : 'original',
     ...lines,
   ].join('\n');
+  structureKeyCache.set(cacheKey, key);
+  return key;
 }
 
 export function getInitialMartyriaContext(
@@ -701,6 +722,30 @@ function withOrdinalForms(
 }
 
 /**
+ * The style every mode key of a score inherits unless it overrides it.
+ */
+export function resolveScoreInitialMartyriaStyle(options: {
+  pageSetup: Pick<
+    PageSetup,
+    'initialMartyriaStyleId' | 'neumeDefaultFontFamily'
+  >;
+  paragraphStyles: ParagraphStyle[];
+  initialMartyriaStyles: InitialMartyriaStyle[];
+  styleId?: string;
+  paragraphStyleOverrides?: ParagraphStyleOverrides;
+}): ResolvedInitialMartyriaStyle {
+  return resolveInitialMartyriaStyleAppearances(
+    getInitialMartyriaStyleOrDefault(
+      options.initialMartyriaStyles,
+      options.styleId ?? options.pageSetup.initialMartyriaStyleId,
+    ),
+    options.paragraphStyles,
+    options.pageSetup.neumeDefaultFontFamily,
+    options.paragraphStyleOverrides,
+  );
+}
+
+/**
  * The style an element renders with: its own, or else the score's, falling
  * back to the default built-in style when a reference no longer resolves.
  */
@@ -716,18 +761,11 @@ export function resolveModeKeyInitialMartyriaStyle(options: {
   paragraphStyles: ParagraphStyle[];
   initialMartyriaStyles: InitialMartyriaStyle[];
 }): ResolvedInitialMartyriaStyle {
-  const styleId =
-    options.element.initialMartyriaStyleId ??
-    options.pageSetup.initialMartyriaStyleId;
-  const style =
-    findInitialMartyriaStyle(options.initialMartyriaStyles, styleId) ??
-    getBuiltInInitialMartyriaStyle(DEFAULT_INITIAL_MARTYRIA_STYLE_ID);
-  return resolveInitialMartyriaStyleAppearances(
-    style,
-    options.paragraphStyles,
-    options.pageSetup.neumeDefaultFontFamily,
-    options.element.getParagraphStyleOverrides(),
-  );
+  return resolveScoreInitialMartyriaStyle({
+    ...options,
+    styleId: options.element.initialMartyriaStyleId ?? undefined,
+    paragraphStyleOverrides: options.element.getParagraphStyleOverrides(),
+  });
 }
 
 /**

@@ -17,7 +17,6 @@
       />
     </span>
     <span
-      v-if="pronunciation != null"
       class="text-[11px] leading-tight text-muted-foreground"
       :lang="martyriaStyle.structure.languageId"
       aria-hidden="true"
@@ -31,7 +30,6 @@
     >
       {{ caption }}
     </span>
-    <slot />
   </button>
 </template>
 
@@ -39,13 +37,8 @@
 import { computed } from 'vue';
 
 import InitialMartyriaSample from '@/components/InitialMartyriaSample.vue';
-import { ModeKeyElement } from '@/models/Element';
-import {
-  getInitialMartyriaContext,
-  getInitialMartyriaPronunciation,
-} from '@/models/InitialMartyriaResolver';
+import { getSamplePronunciation } from '@/components/InitialMartyriaStylesDialog.shared';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
-import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 
@@ -59,24 +52,14 @@ const props = withDefaults(
     pageSetup: PageSetup;
     selected: boolean;
     caption?: string | null;
-    showPronunciation?: boolean;
     maxFontSize?: number | null;
   }>(),
-  { caption: null, showPronunciation: true, maxFontSize: 20 },
+  { caption: null, maxFontSize: 20 },
 );
 
-const pronunciation = computed(() => {
-  if (!props.showPronunciation) {
-    return null;
-  }
-  const element = ModeKeyElement.createFromTemplate(
-    modeKeyTemplates.find((item) => item.id === props.templateId)!,
-  );
-  return getInitialMartyriaPronunciation(
-    props.martyriaStyle.structure,
-    getInitialMartyriaContext(element),
-  );
-});
+const pronunciation = computed(() =>
+  getSamplePronunciation(props.martyriaStyle.structure, props.templateId),
+);
 
 const ariaLabel = computed(() =>
   [props.caption, pronunciation.value]

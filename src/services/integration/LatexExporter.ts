@@ -9,12 +9,7 @@ import type {
   TextBoxElement,
 } from '@/models/Element';
 import { ElementType } from '@/models/Element';
-import {
-  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-  findInitialMartyriaStyle,
-  getBuiltInInitialMartyriaStyle,
-} from '@/models/InitialMartyriaBuiltInStyles';
-import { resolveInitialMartyriaStyleAppearances } from '@/models/InitialMartyriaResolver';
+import { resolveScoreInitialMartyriaStyle } from '@/models/InitialMartyriaResolver';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
 import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
@@ -308,14 +303,11 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
     const textStyleRegistry = new LatexTextStyleRegistry(paragraphStyles);
     // The typography every mode key inherits unless it overrides it: the
     // score's initial martyria style resolved through the paragraph styles.
-    const defaultModeKeyAppearance = resolveInitialMartyriaStyleAppearances(
-      findInitialMartyriaStyle(
-        initialMartyriaStyles,
-        pageSetup.initialMartyriaStyleId,
-      ) ?? getBuiltInInitialMartyriaStyle(DEFAULT_INITIAL_MARTYRIA_STYLE_ID),
+    const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
+      pageSetup,
       paragraphStyles,
-      pageSetup.neumeDefaultFontFamily,
-    ).mainAppearance;
+      initialMartyriaStyles,
+    }).mainAppearance;
 
     const result: LatexScore = {
       appVersion: APP_VERSION,

@@ -127,6 +127,7 @@ import {
   getInitialMartyriaNeumeBaselineCorrection,
   getInitialMartyriaPitchTrailingGlueWidth,
   getMatchedNeumeFontSize,
+  glyphText,
   measureInitialMartyriaPitchGeometry,
   resolveInitialMartyriaAccessoryLayout,
 } from './InitialMartyriaPitchMeasurementService';
@@ -676,23 +677,16 @@ export class LayoutService {
               paragraphStyles: score.paragraphStyles,
               initialMartyriaStyles: score.initialMartyriaStyles,
             });
-          const mainAppearance = resolvedInitialMartyriaStyle.mainAppearance;
-
-          modeKeyElement.computedFontFamily = pageSetup.neumeDefaultFontFamily;
-          modeKeyElement.computedFontSize = mainAppearance.fontSize;
-          modeKeyElement.computedColor = mainAppearance.color;
-          modeKeyElement.computedStrokeWidth = mainAppearance.strokeWidth;
-
-          const geometry = this.getInitialMartyriaGeometry(
+          const geometry = this.layoutModeKey(
             modeKeyElement,
             pageSetup,
             resolvedInitialMartyriaStyle,
           );
-          modeKeyElement.computedNeumeFontSize = geometry.neumeFontSize;
-          modeKeyElement.computedTop = geometry.top;
-          modeKeyElement.computedFlowTop = geometry.flowTop;
-          modeKeyElement.computedInitialMartyriaLayout = geometry.layout;
-          modeKeyElement.height = geometry.bottom - geometry.top;
+          // An inline signature sits on the notation baseline rather than
+          // the top of the line, and extends computedTop above that baseline.
+          modeKeyElement.computedBaselineOffset = modeKeyElement.inline
+            ? notationTextBaseline + modeKeyElement.computedTop
+            : 0;
           if (modeKeyElement.inline) {
             modeKeyElement.width = geometry.width;
           }
@@ -1558,7 +1552,6 @@ export class LayoutService {
               pageSetup.lineHeight,
               neumeLineHeight,
               neumeHeight,
-              notationTextBaseline,
             );
 
             currentPageHeightPx += previousLineHeightPx - lastLineHeightPx;
@@ -1677,13 +1670,7 @@ export class LayoutService {
           marginTop +
           currentPageHeightPx -
           lastLineHeightPx;
-        element.y =
-          element.elementType === ElementType.ModeKey &&
-          (element as ModeKeyElement).inline
-            ? lineTop +
-              notationTextBaseline +
-              (element as ModeKeyElement).computedTop
-            : lineTop;
+        element.y = lineTop + element.computedBaselineOffset;
         element.width = position.width;
 
         // Fill-width elements were encoded using their intrinsic placeholder
@@ -2273,7 +2260,38 @@ export class LayoutService {
       workspace.neumesEndPx + elementWidthPx + lyricEndGlueWidth;
   }
 
-  public static getInitialMartyriaGeometry(
+  /**
+   * Writes the typography and geometry a mode key renders with onto the
+   * element, and returns the geometry for callers that also need its width.
+   */
+  public static layoutModeKey(
+    element: ModeKeyElement,
+    pageSetup: PageSetup,
+    resolvedStyle: ResolvedInitialMartyriaStyle,
+  ) {
+    const { mainAppearance } = resolvedStyle;
+
+    element.computedFontFamily = pageSetup.neumeDefaultFontFamily;
+    element.computedFontSize = mainAppearance.fontSize;
+    element.computedColor = mainAppearance.color;
+    element.computedStrokeWidth = mainAppearance.strokeWidth;
+
+    const geometry = this.getInitialMartyriaGeometry(
+      element,
+      pageSetup,
+      resolvedStyle,
+    );
+
+    element.computedNeumeFontSize = geometry.neumeFontSize;
+    element.computedTop = geometry.top;
+    element.computedFlowTop = geometry.flowTop;
+    element.computedInitialMartyriaLayout = geometry.layout;
+    element.height = geometry.bottom - geometry.top;
+
+    return geometry;
+  }
+
+  private static getInitialMartyriaGeometry(
     element: ModeKeyElement,
     pageSetup: PageSetup,
     resolvedStyle: ResolvedInitialMartyriaStyle,
@@ -2400,11 +2418,7 @@ export class LayoutService {
           stackedText: {
             geometry,
             lineHeight: TextMeasurementService.getFontHeight(
-              resolveFontCss({
-                fontFamily,
-                fontStyle: resolveFontStyle(fontFamily, fontStyle).cssFontStyle,
-                fontSize,
-              }),
+              resolveFontCss({ fontFamily, fontStyle, fontSize }),
             ),
           },
           pitch: null,
@@ -2457,7 +2471,7 @@ export class LayoutService {
         );
         if (run.cluster.trailingGlyphs.length > 0) {
           const trailingGlyphText = run.cluster.trailingGlyphs
-            .map((neume) => NeumeMappingService.getMapping(neume)?.text ?? '?')
+            .map(glyphText)
             .join('');
           const trailingGlyphFont = resolveFontCss(glyphAppearance);
           const trailingMetrics = TextMeasurementService.getTextMetrics(
@@ -2508,11 +2522,7 @@ export class LayoutService {
       const font = resolveFontCss({ fontFamily, fontStyle, fontSize });
       const text =
         run.kind === 'glyph'
-          ? run.glyphs
-              .map(
-                (neume) => NeumeMappingService.getMapping(neume)?.text ?? '?',
-              )
-              .join('')
+          ? run.glyphs.map(glyphText).join('')
           : run.content.layout === 'inline'
             ? run.content.text
             : '';
@@ -2578,7 +2588,7 @@ export class LayoutService {
           tempoMetrics.actualBoundingBoxDescent +
           tempoStrokeOverflow,
       );
-      width += 8 + tempoMetrics.width;
+      width += accessory.tempoMarginLeft + tempoMetrics.width;
     }
 
     let ambitus: InitialMartyriaAmbitusLayout | null = null;
@@ -5113,16 +5123,14 @@ export class LayoutService {
     defaultLineHeight: number,
     neumeLineHeight: number,
     neumeHeight: number,
-    notationTextBaseline: number,
   ) {
     let textBox: TextBoxElement | null = null;
     let richTextBox: RichTextBoxElement | null = null;
     let modeKey: ModeKeyElement | null = null;
     let imageBox: ImageBoxElement | null = null;
     let hasNeumeContent = false;
-    // How far the lowest inline initial martyria ink reaches below the top of
-    // the line. Its box is placed at the notation baseline, so the signature
-    // extends computedTop above that baseline and its height below that.
+    // How far the lowest inline initial martyria ink reaches below the top
+    // of the line, from where layout placed it.
     let inlineModeKeyBottom = 0;
 
     for (const element of line.elements) {
@@ -5142,8 +5150,7 @@ export class LayoutService {
             hasNeumeContent = true;
             inlineModeKeyBottom = Math.max(
               inlineModeKeyBottom,
-              notationTextBaseline +
-                (element as ModeKeyElement).computedTop +
+              element.computedBaselineOffset +
                 (element as ModeKeyElement).height,
             );
           } else if (modeKey === null) {

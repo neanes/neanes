@@ -411,7 +411,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ModeKeyElement } from '@/models/Element';
 import {
   builtInInitialMartyriaStyles,
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
@@ -419,6 +418,7 @@ import {
   getBuiltInInitialMartyriaStyle,
   getDefaultBuiltInInitialMartyriaStyle,
   getInitialMartyriaStyleDisplayName,
+  getInitialMartyriaStyleOrDefault,
   getInitialMartyriaStyles,
   isBuiltInInitialMartyriaStyleId,
 } from '@/models/InitialMartyriaBuiltInStyles';
@@ -427,10 +427,6 @@ import {
   findInitialMartyriaStyleWithStructure,
 } from '@/models/InitialMartyriaGrammar';
 import { usesGreekScript } from '@/models/InitialMartyriaLexicon';
-import {
-  getInitialMartyriaContext,
-  getInitialMartyriaPronunciation,
-} from '@/models/InitialMartyriaResolver';
 import {
   cloneInitialMartyriaStyle,
   INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
@@ -441,7 +437,6 @@ import {
   type InitialMartyriaStyle,
   resolveInitialMartyriaFontFamily,
 } from '@/models/InitialMartyriaStyle';
-import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';
 import {
   type ParagraphStyle,
@@ -463,6 +458,7 @@ import {
 import { Unit } from '@/utils/Unit';
 
 import {
+  getSamplePronunciation,
   getSampleTemplateId,
   GRAVE_SAMPLE_MODE,
   PLAGAL_SAMPLE_MODE,
@@ -523,10 +519,8 @@ const selectedStyleId = ref<string>(
 const allStyles = computed(() => getInitialMartyriaStyles(props.styles));
 // The selection is always a style that exists: deletion and the initial
 // selection both fall back to the default built-in style.
-const selectedStyle = computed(
-  () =>
-    findInitialMartyriaStyle(props.styles, selectedStyleId.value) ??
-    getBuiltInInitialMartyriaStyle(DEFAULT_INITIAL_MARTYRIA_STYLE_ID),
+const selectedStyle = computed(() =>
+  getInitialMartyriaStyleOrDefault(props.styles, selectedStyleId.value),
 );
 const selectedIsBuiltIn = computed(() =>
   isBuiltInInitialMartyriaStyleId(selectedStyle.value.id),
@@ -755,16 +749,12 @@ function createStyle() {
   const base = getDefaultBuiltInInitialMartyriaStyle(uiLanguageId.value);
   openEditor(
     createInitialMartyriaStyle({
+      ...base,
       displayName: getNextAvailableStyleName(
         t(($) => $.dialog.initialMartyriaStyles.newStyleName, { ns }),
         customNames(),
       ),
       basedOn: null,
-      structure: base.structure,
-      paragraphStyleId: base.paragraphStyleId,
-      paragraphStyleOverrides: base.paragraphStyleOverrides,
-      greekFontFamily: base.greekFontFamily,
-      useOrdinalForms: base.useOrdinalForms,
     }),
     null,
   );
@@ -792,15 +782,11 @@ function editStyle(style: InitialMartyriaStyle) {
 function duplicateStyle(style: InitialMartyriaStyle) {
   openEditor(
     createInitialMartyriaStyle({
+      ...style,
       displayName: copyName(style),
       basedOn: isBuiltInInitialMartyriaStyleId(style.id)
         ? style.id
         : style.basedOn,
-      structure: style.structure,
-      paragraphStyleId: style.paragraphStyleId,
-      paragraphStyleOverrides: style.paragraphStyleOverrides,
-      greekFontFamily: style.greekFontFamily,
-      useOrdinalForms: style.useOrdinalForms,
     }),
     null,
   );
@@ -876,13 +862,7 @@ function goBack() {
 }
 
 function pronunciationFor(style: InitialMartyriaStyle, templateId: number) {
-  const element = ModeKeyElement.createFromTemplate(
-    modeKeyTemplates.find((item) => item.id === templateId)!,
-  );
-  return getInitialMartyriaPronunciation(
-    style.structure,
-    getInitialMartyriaContext(element),
-  );
+  return getSamplePronunciation(style.structure, templateId);
 }
 
 function applyToElement() {

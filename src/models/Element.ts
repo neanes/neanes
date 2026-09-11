@@ -92,6 +92,11 @@ export abstract class ScoreElement {
   public y: number = 0;
   public width: number = 0;
 
+  // How far below the top of its line the element is placed. Non-zero for
+  // inline elements that sit on the notation baseline rather than the top of
+  // the line; layout sets it, and only for the element types that need it.
+  public computedBaselineOffset: number = 0;
+
   public index: number = 0;
 
   // This is used to help force components to re-render

@@ -1,4 +1,9 @@
+import { ModeKeyElement } from '@/models/Element';
 import { createDefaultInitialMartyriaTypography } from '@/models/InitialMartyriaBuiltInStyles';
+import {
+  getInitialMartyriaContext,
+  getInitialMartyriaPronunciation,
+} from '@/models/InitialMartyriaResolver';
 import {
   cloneInitialMartyriaStyle,
   type InitialMartyriaStructure,
@@ -41,6 +46,20 @@ export function getSampleModeOptions() {
 /** The first template of a mode stands in for the mode in previews. */
 export function getSampleTemplateId(mode: number) {
   return modeKeyTemplates.find((template) => template.mode === mode)!.id;
+}
+
+/** The spoken reading a structure gives the mode key of a preview tile. */
+export function getSamplePronunciation(
+  structure: InitialMartyriaStructure,
+  templateId: number,
+) {
+  const element = ModeKeyElement.createFromTemplate(
+    modeKeyTemplates.find((template) => template.id === templateId)!,
+  );
+  return getInitialMartyriaPronunciation(
+    structure,
+    getInitialMartyriaContext(element),
+  );
 }
 
 /**

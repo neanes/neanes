@@ -3,7 +3,6 @@ import type { ModeSign } from '@/models/Neumes';
 import type { ParagraphStyleOverrides } from '@/models/ParagraphStyle';
 import type { ScaleNote } from '@/models/Scales';
 import type { FontVariantProperty } from '@/utils/fontVariants';
-import { FONT_VARIANT_PROPERTIES } from '@/utils/fontVariants';
 
 import type { BuiltInInitialMartyriaStyleId } from './InitialMartyriaBuiltInStyles';
 
@@ -146,17 +145,6 @@ export type InitialMartyriaTypographyOverrides = Pick<
   | FontVariantProperty
 >;
 
-export const INITIAL_MARTYRIA_TYPOGRAPHY_OVERRIDE_KEYS: (keyof InitialMartyriaTypographyOverrides)[] =
-  [
-    'fontFamily',
-    'fontSize',
-    'fontStyle',
-    'color',
-    'strokeWidth',
-    'strokeColor',
-    ...FONT_VARIANT_PROPERTIES,
-  ];
-
 /**
  * The typography a style applies to its text and glyphs: a paragraph style,
  * with the style's own overrides on top, exactly as a text element is
@@ -233,21 +221,16 @@ export function withInitialMartyriaModeIdentificationMethod(
   ) {
     return { ...common, modeIdentificationMethod };
   }
-  return {
-    ...common,
-    modeIdentificationMethod,
-    // A sign has no printed form to preserve; words are its direct reading.
-    numeralStyle:
-      structure.modeIdentificationMethod ===
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-        ? INITIAL_MARTYRIA_NUMERAL_STYLES.Words
-        : structure.numeralStyle,
-    numberingSystem:
-      structure.modeIdentificationMethod ===
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-        ? undefined
-        : structure.numberingSystem,
-  };
+  // A sign has no printed form to preserve; words are its direct reading.
+  const written =
+    structure.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+      ? { numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words }
+      : {
+          numeralStyle: structure.numeralStyle,
+          numberingSystem: structure.numberingSystem,
+        };
+  return { ...common, modeIdentificationMethod, ...written };
 }
 
 export function withInitialMartyriaNumeralForm(

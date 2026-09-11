@@ -282,16 +282,22 @@ export const initialMartyriaNumeralQualifiers: InitialMartyriaNumeralQualifier[]
 export const initialMartyriaModeNamingSchemes: InitialMartyriaModeNamingScheme[] =
   [...everyModeNamingScheme];
 
+// The spoken numeral is always a word, whatever is printed, so a language
+// without this word list cannot name modes this way at all.
+function getNumeralWords(
+  lexicon: InitialMartyriaLexicon,
+  numeralKind: InitialMartyriaNumeralKind,
+) {
+  return numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal
+    ? lexicon.cardinalWords
+    : lexicon.ordinalWords;
+}
+
 function supportsNumeralForm(
   lexicon: InitialMartyriaLexicon,
   form: InitialMartyriaNumeralForm,
 ) {
-  // The spoken numeral is always a word, whatever is printed.
-  const words =
-    form.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal
-      ? lexicon.cardinalWords
-      : lexicon.ordinalWords;
-  if (words == null) {
+  if (getNumeralWords(lexicon, form.numeralKind) == null) {
     return false;
   }
   return (
@@ -330,11 +336,7 @@ export function isInitialMartyriaStructureSupported(
   structure: InitialMartyriaStructure,
 ) {
   const lexicon = initialMartyriaLexicons[structure.languageId];
-  const words =
-    structure.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal
-      ? lexicon.cardinalWords
-      : lexicon.ordinalWords;
-  if (words == null) {
+  if (getNumeralWords(lexicon, structure.numeralKind) == null) {
     return false;
   }
   const grammar = initialMartyriaGrammarRules[structure.languageId];
@@ -389,16 +391,6 @@ const initialMartyriaGrammarAxes: readonly InitialMartyriaGrammarAxis[] = [
   'numeralQualifier',
   'modeNamingScheme',
 ];
-
-const defaultNormalizationAxisPriority: readonly InitialMartyriaGrammarAxis[] =
-  [
-    'modeIdentificationMethod',
-    'numeralKind',
-    'numeralStyle',
-    'numberingSystem',
-    'numeralQualifier',
-    'modeNamingScheme',
-  ];
 
 interface InitialMartyriaEnumerationBase {
   languageId: InitialMartyriaLanguageId;
@@ -467,19 +459,37 @@ function getInitialMartyriaStructuresForMethod(
   return structures;
 }
 
+// The candidate set depends only on the language, the transliteration
+// choice, and the numbering system, so the enumeration (which tests roughly
+// a hundred candidates for support) is done once per combination instead of
+// once per unsupported value in every strip the styles dialog builds.
+const grammarStructureCache = new Map<string, InitialMartyriaStructure[]>();
+
 function getInitialMartyriaGrammarStructures(
   structure: InitialMartyriaStructure,
 ) {
+  const numberingSystem =
+    structure.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+      ? undefined
+      : structure.numberingSystem;
+  const cacheKey = [
+    structure.languageId,
+    structure.transliterateNoteNames,
+    numberingSystem,
+  ].join('/');
+  const cached = grammarStructureCache.get(cacheKey);
+  if (cached != null) {
+    return cached;
+  }
+
   const candidates: InitialMartyriaStructure[] = [];
   const seen = new Set<string>();
   const addCandidate = (candidate: InitialMartyriaStructure) => {
     const signature = initialMartyriaGrammarAxes
       .map((axis) => getGrammarAxisValue(candidate, axis))
       .join('/');
-    if (
-      !seen.has(signature) &&
-      isInitialMartyriaStructureSupported(candidate)
-    ) {
+    if (!seen.has(signature)) {
       seen.add(signature);
       candidates.push(candidate);
     }
@@ -489,15 +499,12 @@ function getInitialMartyriaGrammarStructures(
       languageId: structure.languageId,
       modeIdentificationMethod,
       transliterateNoteNames: structure.transliterateNoteNames,
-      numberingSystem:
-        structure.modeIdentificationMethod ===
-        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-          ? undefined
-          : structure.numberingSystem,
+      numberingSystem,
     })) {
       addCandidate(candidate);
     }
   }
+  grammarStructureCache.set(cacheKey, candidates);
   return candidates;
 }
 
@@ -536,7 +543,7 @@ export function normalizeInitialMartyriaStructure(
   if (isInitialMartyriaStructureSupported(structure)) {
     return structure;
   }
-  const candidates = getInitialMartyriaGrammarStructures(structure);
+  const candidates = [...getInitialMartyriaGrammarStructures(structure)];
   candidates.sort((a, b) => {
     const preferredDifference =
       countAxisDifferences(a, structure, preferredAxes) -
@@ -552,7 +559,9 @@ export function normalizeInitialMartyriaStructure(
       return totalDifference;
     }
 
-    for (const axis of defaultNormalizationAxisPriority) {
+    // The axes are listed most significant first, so the first axis where
+    // the candidates differ decides the tie.
+    for (const axis of initialMartyriaGrammarAxes) {
       const aDiffers =
         getGrammarAxisValue(a, axis) !== getGrammarAxisValue(structure, axis);
       const bDiffers =
@@ -569,7 +578,8 @@ export function normalizeInitialMartyriaStructure(
       `No supported initial martyria structure for language ${structure.languageId}`,
     );
   }
-  return nearest;
+  // The candidates are cached and shared, so callers get their own copy.
+  return { ...nearest };
 }
 
 export function initialMartyriaStructuresEqual(
@@ -632,8 +642,7 @@ export function getInitialMartyriaStructureVariations<
         (axis) =>
           getGrammarAxisValue(structure, axis) !==
           getGrammarAxisValue(requested, axis),
-      ) ||
-      !isInitialMartyriaStructureSupported(structure)
+      )
     ) {
       continue;
     }
@@ -667,27 +676,22 @@ function hasSameAxes(a: InitialMartyriaStructure, b: InitialMartyriaStructure) {
  * the space; the axes that only add or swap one element (identification
  * method and transliteration) are fixed by the caller.
  */
+/** Every distinct structure a language and identification method can reach. */
 export function enumerateInitialMartyriaStructures(
   base: Pick<
     InitialMartyriaStructure,
     'languageId' | 'modeIdentificationMethod' | 'transliterateNoteNames'
   >,
-): InitialMartyriaStructureVariation<InitialMartyriaStructure>[] {
+) {
   const seen = new Set<string>();
-  const structures: InitialMartyriaStructureVariation<InitialMartyriaStructure>[] =
-    [];
+  const structures: { structure: InitialMartyriaStructure; key: string }[] = [];
   for (const structure of getInitialMartyriaStructuresForMethod(base, true)) {
     const key = getInitialMartyriaStructureKey(structure);
     if (seen.has(key)) {
       continue;
     }
     seen.add(key);
-    structures.push({
-      value: structure,
-      structure,
-      key,
-      current: false,
-    });
+    structures.push({ structure, key });
   }
   return structures;
 }

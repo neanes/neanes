@@ -3,8 +3,9 @@ import {
   type InitialMartyriaStackedTextGeometry,
   type StackedTextRowBounds,
 } from '@/models/InitialMartyriaStackedTextGeometry';
-import { TextMeasurementService } from '@/services/TextMeasurementService';
-import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
+import { measureInitialMartyriaAtomBounds } from '@/services/InitialMartyriaPitchMeasurementService';
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
+import { resolveFontCss } from '@/utils/fontStyle';
 
 const TOP_ROW_OFFSET_EM = 0.08;
 
@@ -18,29 +19,19 @@ export function measureInitialMartyriaStackedText(
     strokeWidth?: number;
   },
 ): InitialMartyriaStackedTextGeometry {
-  const font = resolveFontStyle(options.fontFamily, options.fontStyle);
   const cssFont = resolveFontCss({
-    fontFamily: font.cssFontFamily,
-    fontStyle: font.cssFontStyle,
+    fontFamily: options.fontFamily,
+    fontStyle: options.fontStyle ?? DEFAULT_FONT_STYLE,
     fontSize: options.fontSize,
   });
-  const rows: StackedTextRowBounds[] = lines.map((line) => {
-    const metrics = TextMeasurementService.getTextMetrics(
+  const rows: StackedTextRowBounds[] = lines.map((line) =>
+    measureInitialMartyriaAtomBounds(
       line,
       cssFont,
       options.fontVariantCaps ?? 'normal',
-    );
-    return {
-      advanceWidth: metrics.width,
-      inkLeft: -metrics.actualBoundingBoxLeft,
-      inkRight: metrics.actualBoundingBoxRight,
-      inkTop: -metrics.actualBoundingBoxAscent,
-      inkBottom: metrics.actualBoundingBoxDescent,
-      lineAscent: metrics.fontBoundingBoxAscent,
-      lineDescent: metrics.fontBoundingBoxDescent,
-      strokeWidth: options.strokeWidth,
-    };
-  });
+      options.strokeWidth,
+    ),
+  );
 
   return getInitialMartyriaStackedTextGeometry(
     rows[0],

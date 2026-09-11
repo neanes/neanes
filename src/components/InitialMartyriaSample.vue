@@ -70,20 +70,11 @@ const sample = computed(() => {
     props.pageSetup.neumeDefaultFontFamily,
   );
   element.initialMartyriaStyleId = props.martyriaStyle.id;
-  element.computedFontFamily = props.pageSetup.neumeDefaultFontFamily;
-  element.computedFontSize = resolvedStyle.mainAppearance.fontSize;
-  element.computedColor = resolvedStyle.mainAppearance.color;
-  element.computedStrokeWidth = resolvedStyle.mainAppearance.strokeWidth;
-  const geometry = LayoutService.getInitialMartyriaGeometry(
+  const geometry = LayoutService.layoutModeKey(
     element,
     props.pageSetup,
     resolvedStyle,
   );
-  element.computedNeumeFontSize = geometry.neumeFontSize;
-  element.computedTop = geometry.top;
-  element.computedFlowTop = geometry.flowTop;
-  element.computedInitialMartyriaLayout = geometry.layout;
-  element.height = geometry.bottom - geometry.top;
   return {
     element,
     fontSize: element.computedFontSize,

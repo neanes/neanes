@@ -35,7 +35,7 @@
                 <InitialMartyriaStyleTile
                   v-for="tile in strip.tiles"
                   :key="tile.key"
-                  :martyria-style="withStructure(tile.structure)"
+                  :martyria-style="tile.martyriaStyle"
                   :template-id="strip.templateId"
                   :page-setup="pageSetup"
                   :paragraph-styles="paragraphStyles"
@@ -466,7 +466,6 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
-import { ModeKeyElement } from '@/models/Element';
 import {
   getBuiltInInitialMartyriaStyle,
   getDefaultBuiltInInitialMartyriaStyle,
@@ -479,16 +478,12 @@ import {
   initialMartyriaNumeralForms,
   initialMartyriaNumeralKinds,
   initialMartyriaNumeralQualifiers,
+  type InitialMartyriaStructureVariation,
   normalizeInitialMartyriaStructure,
 } from '@/models/InitialMartyriaGrammar';
 import { usesGreekScript } from '@/models/InitialMartyriaLexicon';
+import { initialMartyriaStructureHasGreekText } from '@/models/InitialMartyriaResolver';
 import {
-  getInitialMartyriaContext,
-  getInitialMartyriaPronunciation,
-  initialMartyriaStructureHasGreekText,
-} from '@/models/InitialMartyriaResolver';
-import {
-  cloneInitialMartyriaStyle,
   INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   type InitialMartyriaLanguageId,
@@ -501,7 +496,6 @@ import {
   withInitialMartyriaModeIdentificationMethod,
   withInitialMartyriaNumeralForm,
 } from '@/models/InitialMartyriaStyle';
-import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';
 import {
   type ParagraphStyle,
@@ -521,6 +515,7 @@ import {
 
 import {
   getSampleModeOptions,
+  getSamplePronunciation,
   getSampleTemplateId,
   GRAVE_SAMPLE_MODE,
   PLAGAL_SAMPLE_MODE,
@@ -649,9 +644,26 @@ interface Strip {
   tiles: {
     key: string;
     structure: InitialMartyriaStructure;
+    martyriaStyle: InitialMartyriaStyle;
     caption: string;
     current: boolean;
   }[];
+}
+
+/*
+ * The preview style of every tile is built here rather than in the template,
+ * so a re-render that leaves the strips untouched (typing in the name field,
+ * say) does not hand each preview a new style object to re-measure.
+ */
+function toTiles<T>(
+  variations: InitialMartyriaStructureVariation<T>[],
+  caption: (value: T) => string,
+) {
+  return variations.map((variation) => ({
+    ...variation,
+    caption: caption(variation.value),
+    martyriaStyle: withStructure(variation.structure),
+  }));
 }
 
 /*
@@ -669,27 +681,27 @@ const strips = computed<Strip[]>(() => {
           key: 'numeralKind',
           label: t(($) => $.dialog.initialMartyriaStyles.numberForm, { ns }),
           templateId: sampleTemplateId.value,
-          tiles: getInitialMartyriaStructureVariations(
-            structure,
-            initialMartyriaNumeralKinds,
-            (current, numeralKind) => ({ ...current, numeralKind }),
-          ).map((variation) => ({
-            ...variation,
-            caption: getInitialMartyriaNumeralKindLabel(t, variation.value),
-          })),
+          tiles: toTiles(
+            getInitialMartyriaStructureVariations(
+              structure,
+              initialMartyriaNumeralKinds,
+              (current, numeralKind) => ({ ...current, numeralKind }),
+            ),
+            (value) => getInitialMartyriaNumeralKindLabel(t, value),
+          ),
         }
       : {
           key: 'numeralForm',
           label: t(($) => $.dialog.initialMartyriaStyles.numberForm, { ns }),
           templateId: sampleTemplateId.value,
-          tiles: getInitialMartyriaStructureVariations(
-            structure,
-            initialMartyriaNumeralForms,
-            withInitialMartyriaNumeralForm,
-          ).map((variation) => ({
-            ...variation,
-            caption: getInitialMartyriaNumeralFormLabel(t, variation.value),
-          })),
+          tiles: toTiles(
+            getInitialMartyriaStructureVariations(
+              structure,
+              initialMartyriaNumeralForms,
+              withInitialMartyriaNumeralForm,
+            ),
+            (value) => getInitialMartyriaNumeralFormLabel(t, value),
+          ),
         };
   const strips: Strip[] = [
     {
@@ -698,44 +710,41 @@ const strips = computed<Strip[]>(() => {
         ns,
       }),
       templateId: sampleTemplateId.value,
-      tiles: getInitialMartyriaStructureVariations(
-        structure,
-        initialMartyriaModeIdentificationMethods,
-        withInitialMartyriaModeIdentificationMethod,
-      ).map((variation) => ({
-        ...variation,
-        caption: getInitialMartyriaModeIdentificationMethodLabel(
-          t,
-          variation.value,
+      tiles: toTiles(
+        getInitialMartyriaStructureVariations(
+          structure,
+          initialMartyriaModeIdentificationMethods,
+          withInitialMartyriaModeIdentificationMethod,
         ),
-      })),
+        (value) => getInitialMartyriaModeIdentificationMethodLabel(t, value),
+      ),
     },
     numeralFormStrip,
     {
       key: 'numeralQualifier',
       label: t(($) => $.dialog.initialMartyriaStyles.numberPlacement, { ns }),
       templateId: sampleTemplateId.value,
-      tiles: getInitialMartyriaStructureVariations(
-        structure,
-        initialMartyriaNumeralQualifiers,
-        (current, numeralQualifier) => ({ ...current, numeralQualifier }),
-      ).map((variation) => ({
-        ...variation,
-        caption: getInitialMartyriaNumeralQualifierLabel(t, variation.value),
-      })),
+      tiles: toTiles(
+        getInitialMartyriaStructureVariations(
+          structure,
+          initialMartyriaNumeralQualifiers,
+          (current, numeralQualifier) => ({ ...current, numeralQualifier }),
+        ),
+        (value) => getInitialMartyriaNumeralQualifierLabel(t, value),
+      ),
     },
     {
       key: 'modeNamingScheme',
       label: t(($) => $.dialog.initialMartyriaStyles.plagalWording, { ns }),
       templateId: plagalTemplateId,
-      tiles: getInitialMartyriaStructureVariations(
-        structure,
-        initialMartyriaModeNamingSchemes,
-        (current, modeNamingScheme) => ({ ...current, modeNamingScheme }),
-      ).map((variation) => ({
-        ...variation,
-        caption: getInitialMartyriaModeNamingSchemeLabel(t, variation.value),
-      })),
+      tiles: toTiles(
+        getInitialMartyriaStructureVariations(
+          structure,
+          initialMartyriaModeNamingSchemes,
+          (current, modeNamingScheme) => ({ ...current, modeNamingScheme }),
+        ),
+        (value) => getInitialMartyriaModeNamingSchemeLabel(t, value),
+      ),
     },
   ];
   return strips.filter((strip) => strip.tiles.length > 1);
@@ -750,15 +759,14 @@ function withStructure(structure: InitialMartyriaStructure) {
 }
 
 function update(changes: Partial<InitialMartyriaStyle>) {
-  draft.value = { ...cloneInitialMartyriaStyle(draft.value), ...changes };
+  // A shallow merge: every caller that changes a nested value passes a new
+  // object for it, so cloning here would only give the untouched values new
+  // identities and invalidate computeds that did not change.
+  draft.value = { ...draft.value, ...changes };
 }
 
 function setStructure(structure: InitialMartyriaStructure) {
-  draft.value = withInitialMartyriaStyleStructure(
-    draft.value,
-    structure,
-    props.paragraphStyles,
-  );
+  draft.value = withStructure(structure);
 }
 
 function setDisplayName(displayName: string) {
@@ -853,12 +861,6 @@ function resetToBase() {
 }
 
 function pronunciationFor(templateId: number) {
-  const element = ModeKeyElement.createFromTemplate(
-    modeKeyTemplates.find((item) => item.id === templateId)!,
-  );
-  return getInitialMartyriaPronunciation(
-    draft.value.structure,
-    getInitialMartyriaContext(element),
-  );
+  return getSamplePronunciation(draft.value.structure, templateId);
 }
 </script>

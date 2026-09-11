@@ -88,6 +88,7 @@ import { fontCatalog } from '@/services/FontCatalog';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { applyLegacyStyle, normalizeFontStyle } from '@/utils/fontStyle';
 import { applyAxes } from '@/utils/fontStyleAxes';
+import { isOneOf } from '@/utils/isOneOf';
 import { Unit } from '@/utils/Unit';
 
 interface IScore {
@@ -217,12 +218,12 @@ function hasLegacyModeKeyStyleDefaults(pageSetup: PageSetup_v1) {
 // the built-in Initial Martyria paragraph style's size and scales the sign
 // glyphs to match, so a legacy size is carried over by the ratio of the two
 // defaults.
+// A migration is frozen at the sizes that were current when it was written,
+// so later tuning of the Initial Martyria paragraph style does not change
+// how an old score loads.
 const LEGACY_MODE_KEY_DEFAULT_FONT_SIZE = Unit.fromPt(20);
 const LEGACY_MODE_KEY_FONT_SIZE_SCALE =
-  resolveParagraphStyle(
-    createDefaultParagraphStyles(),
-    BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
-  ).fontSize / LEGACY_MODE_KEY_DEFAULT_FONT_SIZE;
+  Unit.fromPt(14.5) / LEGACY_MODE_KEY_DEFAULT_FONT_SIZE;
 
 function scaleLegacyModeKeyFontSize(fontSize: number) {
   return fontSize * LEGACY_MODE_KEY_FONT_SIZE_SCALE;
@@ -1048,13 +1049,6 @@ function saveInitialMartyriaStyle(
     greekFontFamily: style.greekFontFamily ?? undefined,
     useOrdinalForms: style.useOrdinalForms,
   };
-}
-
-function isOneOf<T extends string>(
-  values: readonly T[],
-  value: unknown,
-): value is T {
-  return values.includes(value as T);
 }
 
 /*

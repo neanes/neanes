@@ -70,6 +70,8 @@ export interface InitialMartyriaPitchRunLayout {
 export interface InitialMartyriaAccessoryLayout {
   fontSize: number;
   baselineOffset: number;
+  /** Gap between the signature and the tempo glyph that follows it. */
+  tempoMarginLeft: number;
 }
 
 export interface InitialMartyriaAmbitusLayout {

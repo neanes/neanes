@@ -1,6 +1,9 @@
 import type { ModeKeyElement, ScoreElement } from '@/models/Element';
 import { ElementType } from '@/models/Element';
-import { isBuiltInInitialMartyriaStyleId } from '@/models/InitialMartyriaBuiltInStyles';
+import {
+  findInitialMartyriaStyle,
+  isBuiltInInitialMartyriaStyleId,
+} from '@/models/InitialMartyriaBuiltInStyles';
 import {
   cloneInitialMartyriaStyle,
   type InitialMartyriaStyle,
@@ -105,8 +108,7 @@ export function rewriteClipboardElementInitialMartyriaStyleId(
 
   if (
     styleId != null &&
-    !isBuiltInInitialMartyriaStyleId(styleId) &&
-    !initialMartyriaStyles.some((style) => style.id === styleId)
+    findInitialMartyriaStyle(initialMartyriaStyles, styleId) == null
   ) {
     modeKey.initialMartyriaStyleId = null;
   }

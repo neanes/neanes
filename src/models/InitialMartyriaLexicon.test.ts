@@ -506,6 +506,19 @@ const expectedRunsByStructure: [string, string[]][] = [
     ],
   ],
   [
+    'arabic-ordinal-text',
+    [
+      'اللحن | الأول | <pitch>',
+      'اللحن | الثاني | <pitch>',
+      'اللحن | الثالث | <pitch>',
+      'اللحن | الرابع | <pitch>',
+      'اللحن | الخامس | <pitch>',
+      'اللحن | السادس | <pitch>',
+      'اللحن | السابع | <pitch>',
+      'اللحن | الثامن | <pitch>',
+    ],
+  ],
+  [
     'arabic-ordinal-digits',
     [
       'اللحن | 1 | <pitch> | <modeSign>',
@@ -973,6 +986,7 @@ const expectedPronunciationsByStructure: [
   ['russian-glas-ordinal', russianAbsoluteOrdinalPronunciations],
   ['russian-glas-ordinal-text', russianAbsoluteOrdinalPronunciations],
   ['arabic-ordinal', arabicAbsoluteOrdinalPronunciations],
+  ['arabic-ordinal-text', arabicAbsoluteOrdinalPronunciations],
   ['arabic-ordinal-digits', arabicAbsoluteOrdinalPronunciations],
   ['arabic-ordinal-arabic-indic-digits', arabicAbsoluteOrdinalPronunciations],
   ['romanian-glas-number', romanianAbsoluteCardinalPronunciations],

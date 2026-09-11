@@ -41,6 +41,7 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   RussianGlasOrdinal: 'builtin:russian-glas-ordinal-v1',
   RussianGlasOrdinalText: 'builtin:russian-glas-ordinal-text-v1',
   ArabicOrdinal: 'builtin:arabic-ordinal-v1',
+  ArabicOrdinalText: 'builtin:arabic-ordinal-text-v1',
   RomanianGlasNumber: 'builtin:romanian-glas-number-v1',
   RomanianGlasRomanNumeral: 'builtin:romanian-glas-roman-numeral-v1',
   RomanianTraditionalSign: 'builtin:romanian-glas-v1',
@@ -117,6 +118,8 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
   ),
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinal]:
     styleName('arabicOrdinal'),
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalText]:
+    styleName('arabicOrdinalText'),
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumber]:
     styleName('romanianGlasNumber'),
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasRomanNumeral]: styleName(
@@ -413,6 +416,16 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    flowDirection: 'rtl',
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalText,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
     flowDirection: 'rtl',
   }),
   /*

@@ -16,6 +16,7 @@ import {
 } from '@/models/InitialMartyriaGrammar';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
@@ -68,6 +69,22 @@ describe('InitialMartyriaBuiltInStyles', () => {
     ).toMatchObject({
       numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
       numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    });
+    const arabicStyles = builtInInitialMartyriaStyles.filter(
+      (style) =>
+        style.structure.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+    );
+    expect(arabicStyles.map((style) => style.id)).toEqual([
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinal,
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalText,
+    ]);
+    expect(arabicStyles[0].structure.modeIdentificationMethod).toBe(
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    );
+    expect(arabicStyles[1].structure).toEqual({
+      ...arabicStyles[0].structure,
+      modeIdentificationMethod:
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
     });
 
     const englishOrdinalDigits = getBuiltInInitialMartyriaStyle(

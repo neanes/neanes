@@ -406,6 +406,16 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     transliterateNoteNames: false,
     flowDirection: 'rtl',
   },
+  'arabic-ordinal-text': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    flowDirection: 'rtl',
+  },
   'arabic-ordinal-digits': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
     modeIdentificationMethod:

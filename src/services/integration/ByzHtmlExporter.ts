@@ -167,17 +167,6 @@ export class ByzHtmlExporter {
     defaultDropCapStyle: ResolvedParagraphStyle;
   } | null = null;
 
-  // The page setup's initial martyria style resolved through the paragraph
-  // styles, cached like the default paragraph styles above. The CSS defaults
-  // and the per-element overrides that are suppressed against them must come
-  // from the same resolution, so there is only ever one.
-  private resolvedDefaultModeKeyAppearance: {
-    pageSetup: PageSetup;
-    paragraphStyles: ParagraphStyle[];
-    initialMartyriaStyles: InitialMartyriaStyle[];
-    appearance: InitialMartyriaAppearance;
-  } | null = null;
-
   config: ByzHtmlExporterConfig = {
     classFthora: 'byz--f',
     classGorgon: 'byz--g',
@@ -236,38 +225,6 @@ export class ByzHtmlExporter {
     return this.resolvedDefaultStyles;
   }
 
-  // The typography every mode key inherits unless it overrides it: the
-  // score's initial martyria style resolved through the paragraph styles.
-  private getDefaultModeKeyAppearance(
-    pageSetup: PageSetup,
-    paragraphStyles: ParagraphStyle[],
-    initialMartyriaStyles: InitialMartyriaStyle[],
-  ): InitialMartyriaAppearance {
-    const cached = this.resolvedDefaultModeKeyAppearance;
-    if (
-      cached?.pageSetup === pageSetup &&
-      cached.paragraphStyles === paragraphStyles &&
-      cached.initialMartyriaStyles === initialMartyriaStyles
-    ) {
-      return cached.appearance;
-    }
-
-    const appearance = resolveScoreInitialMartyriaStyle({
-      pageSetup,
-      paragraphStyles,
-      initialMartyriaStyles,
-    }).mainAppearance;
-
-    this.resolvedDefaultModeKeyAppearance = {
-      pageSetup,
-      paragraphStyles,
-      initialMartyriaStyles,
-      appearance,
-    };
-
-    return appearance;
-  }
-
   exportScore(score: Score) {
     const style = this.exportPageSetup(
       score.pageSetup,
@@ -291,11 +248,13 @@ export class ByzHtmlExporter {
     paragraphStyles: ParagraphStyle[],
     initialMartyriaStyles: InitialMartyriaStyle[],
   ) {
-    const defaultModeKeyAppearance = this.getDefaultModeKeyAppearance(
+    // The typography every mode key inherits unless it overrides it: the
+    // score's initial martyria style resolved through the paragraph styles.
+    const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
       pageSetup,
       paragraphStyles,
       initialMartyriaStyles,
-    );
+    }).mainAppearance;
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
     const firstPageMargins = resolvePageMargins(pageSetup, 1);
     const secondPageMargins = resolvePageMargins(pageSetup, 2);
@@ -635,11 +594,13 @@ export class ByzHtmlExporter {
     indentation: number,
     startInsidePage: boolean = false,
   ) {
-    const defaultModeKeyAppearance = this.getDefaultModeKeyAppearance(
+    // The typography every mode key inherits unless it overrides it: the
+    // score's initial martyria style resolved through the paragraph styles.
+    const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
       pageSetup,
       paragraphStyles,
       initialMartyriaStyles,
-    );
+    }).mainAppearance;
     let result = '';
 
     let insidePage = startInsidePage;
@@ -1348,6 +1309,7 @@ export class ByzHtmlExporter {
     // The glyph size is matched to the style's text by layout, so it is
     // always written per element; color and outline only when the element
     // departs from the score's style.
+    let styleAttribute = '';
     let style = `font-size: ${Unit.toPt(element.computedNeumeFontSize)}pt;`;
 
     if (element.computedColor !== defaultAppearance.color) {
@@ -1360,7 +1322,7 @@ export class ByzHtmlExporter {
 
     style += `text-align: ${element.alignment};`;
 
-    const styleAttribute = ` style="${style}"`;
+    styleAttribute = ` style="${style}"`;
 
     const className = element.inline
       ? `${this.config.classModeKey} ${this.config.classTextBoxInline}`

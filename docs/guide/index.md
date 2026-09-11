@@ -28,8 +28,6 @@ The dialog chooses _what_ the initial martyria says: the mode, starting note, an
 
 While the initial martyria is selected, the toolbar at the bottom of the screen provides quick controls: the style, the size, the alignment, and tempo signs.
 
-![Initial Martyria Toolbar](./images/guide-mode-key-toolbar.png)
-
 The Properties pane contains the full initial martyria settings, grouped into sections.
 
 - `Style`: the `Style` select, a `Manage styles...` button that opens the styles dialog, and `Size`, `Color`, and `Outline` overrides. Each override has a clear button that returns the field to the value from the style. The button next to `Manage styles...` clears all three at once.

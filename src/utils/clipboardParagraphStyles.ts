@@ -94,7 +94,7 @@ function collectCustomParagraphStylesFromIds(
 }
 
 // `initialMartyriaStyles` are the custom initial martyria styles that travel
-// with the same elements; each references a paragraph style of its own.
+// with the same elements; each references regular and Greek paragraph styles.
 export function collectClipboardParagraphStyleIdsFromElements(
   elements: ScoreElement[],
   initialMartyriaStyles: InitialMartyriaStyle[],
@@ -107,6 +107,7 @@ export function collectClipboardParagraphStyleIdsFromElements(
 
   for (const style of initialMartyriaStyles) {
     paragraphStyleIds.add(style.paragraphStyleId);
+    paragraphStyleIds.add(style.greekParagraphStyleId);
   }
 
   return [...paragraphStyleIds];

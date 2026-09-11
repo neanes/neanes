@@ -12,7 +12,10 @@ import type {
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { PageSetup } from '@/models/PageSetup';
-import { createDefaultParagraphStyles } from '@/models/ParagraphStyle';
+import {
+  createDefaultParagraphStyles,
+  type ParagraphStyle,
+} from '@/models/ParagraphStyle';
 export function encodeRun(run: ResolvedInitialMartyriaRun) {
   if (run.kind === 'glyph') {
     return '<modeSign>';
@@ -35,7 +38,7 @@ export function styleFor(
     displayName: 'Test',
     basedOn: null,
     structure,
-    ...createDefaultInitialMartyriaTypography(structure.languageId),
+    ...createDefaultInitialMartyriaTypography(),
   };
 }
 
@@ -58,17 +61,14 @@ export const glyphFontSize = 20;
 export function resolve(
   style: InitialMartyriaStyle,
   element: ModeKeyElement,
+  styles: ParagraphStyle[] = paragraphStyles,
   neumeFontFamily = 'Neanes',
 ) {
   const pageSetup = new PageSetup();
   pageSetup.neumeDefaultFontFamily = neumeFontFamily;
   return resolveInitialMartyriaStyle({
     context: getInitialMartyriaContext(element),
-    resolvedStyle: resolveInitialMartyriaStyleAppearances(
-      style,
-      paragraphStyles,
-      neumeFontFamily,
-    ),
+    resolvedStyle: resolveInitialMartyriaStyleAppearances(style, styles),
     pageSetup,
     glyphFontSize,
   });

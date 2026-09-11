@@ -60,6 +60,7 @@ const FONT_FEATURE_VALUES_STYLE_ID = 'neanes-font-feature-values';
 const BUNDLED_FAMILIES = [
   'Source Serif',
   'GFS Didot',
+  'GFS Didot Classic',
   'GFS Porson',
   'Noto Naskh Arabic',
   'Old Standard',
@@ -149,6 +150,12 @@ const BUNDLED_FACES: Record<string, BundledFace[]> = {
   'GFS Didot': withFileNames(TEXT_FACES, (style) =>
     style === DEFAULT_FONT_STYLE ? 'GFSDidot.otf' : `GFSDidot${style}.otf`,
   ),
+  'GFS Didot Classic': [
+    {
+      style: DEFAULT_FONT_STYLE,
+      fileName: 'GFSDidot_Classic.otf',
+    },
+  ],
   'GFS Porson': [
     {
       style: DEFAULT_FONT_STYLE,
@@ -179,6 +186,16 @@ export function normalizeFontFamilyForComparison(family: string): string {
     (character) => character.toLowerCase(),
   );
 }
+
+// Some font binaries spell their internal family differently from the CSS
+// family exposed by the app. Exclude every bundled and internal source family
+// from the system-font list so installing a bundled face locally does not
+// produce a duplicate picker item.
+const NORMALIZED_BUNDLED_SOURCE_FAMILIES = new Set(
+  [...BUNDLED_FAMILIES, 'GFS DidotClassic', 'Source Serif 4'].map(
+    normalizeFontFamilyForComparison,
+  ),
+);
 
 const NORMALIZED_NEUME_FONT_FAMILIES = [...NEUME_FONT_FAMILIES].map(
   normalizeFontFamilyForComparison,
@@ -280,7 +297,12 @@ function heuristicSplitFace(face: string): { family: string; style: string } {
 
 export function listSystemFontFamilies(families: Iterable<string>): string[] {
   return [...families]
-    .filter((family) => BUNDLED_FACES[family] == null)
+    .filter(
+      (family) =>
+        !NORMALIZED_BUNDLED_SOURCE_FAMILIES.has(
+          normalizeFontFamilyForComparison(family),
+        ),
+    )
     .sort((a, b) => a.localeCompare(b));
 }
 

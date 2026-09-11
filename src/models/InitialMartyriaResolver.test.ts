@@ -12,12 +12,13 @@ import {
   resolveInitialMartyriaStyleAppearances,
   resolveModeKeyInitialMartyriaStyle,
 } from '@/models/InitialMartyriaResolver';
-import {
-  INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
-  INITIAL_MARTYRIA_LANGUAGE_IDS,
-  resolveInitialMartyriaFontFamily,
-} from '@/models/InitialMartyriaStyle';
+import { INITIAL_MARTYRIA_NUMERAL_STYLES } from '@/models/InitialMartyriaStyle';
 import { PageSetup } from '@/models/PageSetup';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  ParagraphStyle,
+  type ParagraphStyleOverrides,
+} from '@/models/ParagraphStyle';
 import { Unit } from '@/utils/Unit';
 
 import { attestedStructures } from './InitialMartyriaStyle.testData';
@@ -29,8 +30,19 @@ import {
   styleFor,
 } from './InitialMartyriaStyle.testHelpers';
 
+function createInitialMartyriaParagraphStyle(
+  id: string,
+  overrides: ParagraphStyleOverrides,
+) {
+  const style = new ParagraphStyle();
+  style.id = id;
+  style.parentStyleId = BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria;
+  style.overrides = overrides;
+  return style;
+}
+
 describe('InitialMartyriaResolver', () => {
-  it('sizes fixed separators from the main text font size', () => {
+  it('sizes fixed separators from the primary text font size', () => {
     for (const separator of [
       'plagalAbbreviation',
       'modeSign',
@@ -47,9 +59,7 @@ describe('InitialMartyriaResolver', () => {
       displayName: 'Parish',
       basedOn: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
       structure: attestedStructures['greek-mode-names'],
-      ...createDefaultInitialMartyriaTypography(
-        INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
-      ),
+      ...createDefaultInitialMartyriaTypography(),
     });
     const initialMartyriaStyles = [custom];
     const builtInId =
@@ -113,12 +123,12 @@ describe('InitialMartyriaResolver', () => {
     });
     expect(inherited.mainAppearance).toMatchObject({
       fontFamily: 'Source Serif',
-      fontSize: Unit.fromPt(14.5),
+      fontSize: Unit.fromPt(12),
       color: '#ED0000',
       strokeWidth: 0,
     });
     expect(inherited.greekAppearance).toMatchObject({
-      fontFamily: 'Source Serif',
+      fontFamily: 'GFS Didot Classic',
       fontSize: Unit.fromPt(14.5),
       color: '#ED0000',
     });
@@ -145,49 +155,33 @@ describe('InitialMartyriaResolver', () => {
     });
   });
 
-  it('resolves the default Greek font from the document music font', () => {
-    expect(
-      resolveInitialMartyriaFontFamily(
-        INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
-        'Neanes',
-      ),
-    ).toBe('GFS Didot');
-    expect(
-      resolveInitialMartyriaFontFamily(
-        INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
-        'NeanesStathisSeries',
-      ),
-    ).toBe('GFS Porson');
-    expect(
-      resolveInitialMartyriaFontFamily(
-        INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
-        'NeanesStathisSeriesLegacy',
-      ),
-    ).toBe('GFS Porson');
-    expect(
-      resolveInitialMartyriaFontFamily('GFS Didot', 'NeanesStathisSeries'),
-    ).toBe('GFS Didot');
-
+  it('resolves regular and Greek text through their own paragraph styles', () => {
     const style = styleFor(attestedStructures['traditional-greek']);
-    expect(style.paragraphStyleOverrides.fontFamily).toBe(
-      INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
+    const resolved = resolveInitialMartyriaStyleAppearances(
+      style,
+      paragraphStyles,
     );
-    expect(
-      resolveInitialMartyriaStyleAppearances(style, paragraphStyles, 'Neanes')
-        .mainAppearance.fontFamily,
-    ).toBe('GFS Didot');
-    expect(
-      resolveInitialMartyriaStyleAppearances(
-        style,
-        paragraphStyles,
-        'NeanesStathisSeries',
-      ).mainAppearance.fontFamily,
-    ).toBe('GFS Porson');
+
+    expect(resolved.mainAppearance).toMatchObject({
+      fontFamily: 'Source Serif',
+      fontSize: Unit.fromPt(12),
+    });
+    expect(resolved.greekAppearance).toMatchObject({
+      fontFamily: 'GFS Didot Classic',
+      fontSize: Unit.fromPt(14.5),
+    });
+    expect(resolved.primaryAppearance).toBe(resolved.greekAppearance);
+
+    const english = resolveInitialMartyriaStyleAppearances(
+      styleFor(attestedStructures['english-sign-first']),
+      paragraphStyles,
+    );
+    expect(english.primaryAppearance).toBe(english.mainAppearance);
   });
 
   it('applies the style appearance to text and musical glyphs', () => {
     const style = styleFor(attestedStructures['english-sign-first']);
-    style.paragraphStyleOverrides = {
+    const customMain = createInitialMartyriaParagraphStyle('custom-main', {
       fontFamily: 'GFS Didot',
       fontSize: 18,
       color: '#123456',
@@ -196,14 +190,12 @@ describe('InitialMartyriaResolver', () => {
       fontVariantNumeric: 'oldstyle-nums proportional-nums',
       fontVariantLigatures: 'no-common-ligatures',
       fontVariantAlternates: 'historical-forms',
-    };
+    });
+    style.paragraphStyleId = customMain.id;
+    const styles = [...paragraphStyles, customMain];
 
-    const resolved = resolveInitialMartyriaStyleAppearances(
-      style,
-      paragraphStyles,
-      'Neanes',
-    );
-    const runs = resolve(style, elementForTemplate(100)).runs;
+    const resolved = resolveInitialMartyriaStyleAppearances(style, styles);
+    const runs = resolve(style, elementForTemplate(100), styles).runs;
 
     expect(resolved.mainAppearance).toMatchObject({
       fontFamily: 'GFS Didot',
@@ -245,10 +237,13 @@ describe('InitialMartyriaResolver', () => {
 
   it('uses the Greek font for original note names and permanent Greek text', () => {
     const style = styleFor(attestedStructures['english-sign-first']);
-    style.paragraphStyleOverrides.fontFamily = 'Source Serif';
-    style.greekFontFamily = 'GFS Didot';
+    const customGreek = createInitialMartyriaParagraphStyle('custom-greek', {
+      fontFamily: 'GFS Didot',
+    });
+    style.greekParagraphStyleId = customGreek.id;
+    const styles = [...paragraphStyles, customGreek];
 
-    const originalRuns = resolve(style, elementForTemplate(500)).runs;
+    const originalRuns = resolve(style, elementForTemplate(500), styles).runs;
     const originalPitch = originalRuns.find(
       (run) => run.kind === 'startingPitch',
     );
@@ -271,65 +266,115 @@ describe('InitialMartyriaResolver', () => {
     }
   });
 
-  it('follows the text font for Greek text when no Greek font is set', () => {
+  it('keeps Greek typography independent of regular text typography', () => {
     const style = styleFor(attestedStructures['english-sign-first']);
-    expect(style.greekFontFamily).toBeNull();
-    expect(
-      resolveInitialMartyriaStyleAppearances(style, paragraphStyles, 'Neanes')
-        .greekAppearance.fontFamily,
-    ).toBe(
-      resolveInitialMartyriaStyleAppearances(style, paragraphStyles, 'Neanes')
-        .mainAppearance.fontFamily,
-    );
+    const customMain = createInitialMartyriaParagraphStyle('custom-main', {
+      fontFamily: 'Alegreya',
+    });
+    style.paragraphStyleId = customMain.id;
+    const styles = [...paragraphStyles, customMain];
 
-    style.paragraphStyleOverrides.fontFamily = 'Alegreya';
-
-    const resolved = resolveInitialMartyriaStyleAppearances(
-      style,
-      paragraphStyles,
-      'Neanes',
-    );
+    const resolved = resolveInitialMartyriaStyleAppearances(style, styles);
     expect(resolved.mainAppearance.fontFamily).toBe('Alegreya');
-    expect(resolved.greekAppearance.fontFamily).toBe('Alegreya');
+    expect(resolved.greekAppearance.fontFamily).toBe('GFS Didot Classic');
 
-    const runs = resolve(style, elementForTemplate(500)).runs;
+    const runs = resolve(style, elementForTemplate(500), styles).runs;
     const originalPitch = runs.find((run) => run.kind === 'startingPitch');
     expect(originalPitch?.kind).toBe('startingPitch');
     if (originalPitch?.kind === 'startingPitch') {
-      expect(originalPitch.noteText.appearance.fontFamily).toBe('Alegreya');
+      expect(originalPitch.noteText.appearance.fontFamily).toBe(
+        'GFS Didot Classic',
+      );
     }
     const plagal = runs.find(
       (run) => run.kind === 'text' && run.semantic === 'plagalAbbreviation',
     );
     expect(plagal?.kind).toBe('text');
     if (plagal?.kind === 'text') {
-      expect(plagal.appearance.fontFamily).toBe('Alegreya');
+      expect(plagal.appearance.fontFamily).toBe('GFS Didot Classic');
     }
   });
 
   it('uses one font for every Greek style text role', () => {
     const style = styleFor(attestedStructures['traditional-greek']);
-    style.paragraphStyleOverrides.fontFamily = 'Source Serif';
-    style.greekFontFamily = 'GFS Didot';
+    const customGreek = createInitialMartyriaParagraphStyle('custom-greek', {
+      fontFamily: 'GFS Porson',
+    });
+    style.greekParagraphStyleId = customGreek.id;
+    const styles = [...paragraphStyles, customGreek];
 
-    const resolved = resolveInitialMartyriaStyleAppearances(
-      style,
-      paragraphStyles,
-      'Neanes',
-    );
-    const runs = resolve(style, elementForTemplate(500)).runs;
+    const resolved = resolveInitialMartyriaStyleAppearances(style, styles);
+    const runs = resolve(style, elementForTemplate(500), styles).runs;
 
     expect(resolved.mainAppearance.fontFamily).toBe('Source Serif');
-    expect(resolved.greekAppearance.fontFamily).toBe('Source Serif');
+    expect(resolved.greekAppearance.fontFamily).toBe('GFS Porson');
     expect(
       runs
         .filter((run) => run.kind === 'text')
-        .every((run) => run.appearance.fontFamily === 'Source Serif'),
+        .every((run) => run.appearance.fontFamily === 'GFS Porson'),
     ).toBe(true);
     const startingPitch = runs.find((run) => run.kind === 'startingPitch');
     expect(startingPitch?.kind).toBe('startingPitch');
     if (startingPitch?.kind === 'startingPitch') {
-      expect(startingPitch.noteText.appearance.fontFamily).toBe('Source Serif');
+      expect(startingPitch.noteText.appearance.fontFamily).toBe('GFS Porson');
+    }
+  });
+
+  it('uses Greek typography for a Greek style and its musical glyphs', () => {
+    const style = styleFor(attestedStructures['traditional-greek']);
+    const customGreek = createInitialMartyriaParagraphStyle('custom-greek', {
+      fontFamily: 'GFS Porson',
+      fontSize: 18,
+      color: '#123456',
+      strokeWidth: 0.5,
+      strokeColor: '#654321',
+    });
+    style.greekParagraphStyleId = customGreek.id;
+    const styles = [...paragraphStyles, customGreek];
+
+    const resolved = resolveInitialMartyriaStyleAppearances(style, styles);
+    const runs = resolve(style, elementForTemplate(500), styles).runs;
+    const glyphRuns = runs.filter(
+      (run) => run.kind === 'glyph' || run.kind === 'startingPitch',
+    );
+
+    expect(resolved.primaryAppearance).toBe(resolved.greekAppearance);
+    expect(resolved.primaryAppearance).toMatchObject({
+      fontFamily: 'GFS Porson',
+      fontSize: 18,
+      color: '#123456',
+      strokeWidth: 0.5,
+      strokeColor: '#654321',
+    });
+    expect(glyphRuns.length).toBeGreaterThan(0);
+    for (const run of glyphRuns) {
+      expect(run.appearance).toMatchObject({
+        color: '#123456',
+        strokeWidth: 0.5,
+        strokeColor: '#654321',
+      });
+    }
+  });
+
+  it('does not apply ordinal forms to Greek-script digits', () => {
+    const style = styleFor({
+      ...attestedStructures['greek-mode-names'],
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    });
+    const customGreek = createInitialMartyriaParagraphStyle('custom-greek', {
+      fontVariantNumeric: 'oldstyle-nums',
+    });
+    style.greekParagraphStyleId = customGreek.id;
+    style.useOrdinalForms = true;
+
+    const numeral = resolve(style, elementForTemplate(100), [
+      ...paragraphStyles,
+      customGreek,
+    ]).runs.find((run) => run.kind === 'text' && run.semantic === 'numeral');
+
+    expect(numeral?.kind).toBe('text');
+    if (numeral?.kind === 'text') {
+      expect(numeral.appearance.fontVariantNumeric).toBe('oldstyle-nums');
     }
   });
 });

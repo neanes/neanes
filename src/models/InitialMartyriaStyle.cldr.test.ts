@@ -73,7 +73,7 @@ function styleFor(
     displayName: 'CLDR test',
     basedOn: null,
     structure: fullStructure,
-    ...createDefaultInitialMartyriaTypography(structure.languageId),
+    ...createDefaultInitialMartyriaTypography(),
   };
 }
 
@@ -93,7 +93,6 @@ function numeralsFor(
       resolvedStyle: resolveInitialMartyriaStyleAppearances(
         style,
         paragraphStyles,
-        pageSetup.neumeDefaultFontFamily,
       ),
       pageSetup,
       glyphFontSize: 20,

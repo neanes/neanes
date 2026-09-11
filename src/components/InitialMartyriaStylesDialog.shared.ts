@@ -1,5 +1,4 @@
 import { ModeKeyElement } from '@/models/Element';
-import { createDefaultInitialMartyriaTypography } from '@/models/InitialMartyriaBuiltInStyles';
 import {
   getInitialMartyriaContext,
   getInitialMartyriaPronunciation,
@@ -12,11 +11,6 @@ import {
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
-import {
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
-import { remapFontStyleForFamily } from '@/utils/fontStyle';
 
 /*
  * Sample modes for previews. The plagal first mode exposes the plagal
@@ -63,13 +57,11 @@ export function getSamplePronunciation(
 }
 
 /**
- * Carry a style's presentation to another structure, adopting the new
- * language's fonts when the structure crosses a language boundary.
+ * Carry a style's presentation to another structure.
  */
 export function withInitialMartyriaStyleStructure(
   style: InitialMartyriaStyle,
   structure: InitialMartyriaStructure,
-  paragraphStyles: ParagraphStyle[],
 ) {
   const next = cloneInitialMartyriaStyle(style);
   next.structure = { ...structure };
@@ -81,31 +73,5 @@ export function withInitialMartyriaStyleStructure(
     next.useOrdinalForms = true;
   }
 
-  if (structure.languageId === style.structure.languageId) {
-    return next;
-  }
-
-  const languageTypography = createDefaultInitialMartyriaTypography(
-    structure.languageId,
-  );
-  const languageFontFamily =
-    languageTypography.paragraphStyleOverrides.fontFamily;
-  if (languageFontFamily == null) {
-    delete next.paragraphStyleOverrides.fontFamily;
-  } else {
-    next.paragraphStyleOverrides.fontFamily = languageFontFamily;
-  }
-  next.greekFontFamily = languageTypography.greekFontFamily;
-  if (next.paragraphStyleOverrides.fontStyle != null) {
-    // The face is remapped against the family the style now resolves to.
-    next.paragraphStyleOverrides.fontStyle = remapFontStyleForFamily(
-      next.paragraphStyleOverrides.fontStyle,
-      resolveParagraphStyle(
-        paragraphStyles,
-        next.paragraphStyleId,
-        next.paragraphStyleOverrides,
-      ).fontFamily,
-    );
-  }
   return next;
 }

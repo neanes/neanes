@@ -23,6 +23,7 @@ import {
   type InitialMartyriaStructure,
 } from '@/models/InitialMartyriaStyle';
 import { ModeSign } from '@/models/Neumes';
+import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
 import { ScaleNote } from '@/models/Scales';
 
 import { attestedStructures } from './InitialMartyriaStyle.testData';
@@ -1278,8 +1279,8 @@ describe('InitialMartyriaLexicon', () => {
     );
 
     expect(arabicStyle).toMatchObject({
-      paragraphStyleOverrides: { fontFamily: 'Noto Naskh Arabic' },
-      greekFontFamily: 'GFS Didot',
+      paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+      greekParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
     });
     expect(resolveNoteText('arabic-ordinal')).toMatchObject({
       languageTag: 'el',

@@ -93,8 +93,7 @@
     "name": "Όνομα",
     "styleNamePlaceholder": "Όνομα στυλ",
     "language": "Γλώσσα",
-    "structure": "Δομή",
-    "presentation": "Εμφάνιση",
+    "greekParagraphStyle": "Στυλ ελληνικής παραγράφου",
     "preview": "Προεπισκόπηση",
     "sampleMode": "Ήχος δείγματος",
     "basedOn": "Βασισμένο στο {{name}}",
@@ -106,8 +105,6 @@
     "transliterateNoteNames": "Μεταγραφή αρχικής νότας",
     "transliterateNoteNamesHint": "Pa αντί για Πα",
     "font": "Γραμματοσειρά",
-    "defaultFont": "Προεπιλογή ({{font}})",
-    "sameAsTextFont": "Ίδια με τη γραμματοσειρά κειμένου ({{font}})",
     "fontSummary": "{{font}}, {{size}} pt",
     "yes": "Ναι",
     "no": "Όχι",
@@ -143,11 +140,8 @@
     "discard": "Απόρριψη",
     "deleteStyleTitle": "Διαγραφή στυλ;",
     "deleteStyleDescription": "Οι αρχικές μαρτυρίες που χρησιμοποιούν το «{{name}}» θα ακολουθήσουν την προεπιλογή του εγγράφου.",
-    "textFont": "Γραμματοσειρά κειμένου",
-    "mainFont": "Κύρια γραμματοσειρά κειμένου",
     "greekTextFont": "Γραμματοσειρά ελληνικού κειμένου",
     "useOrdinalForms": "Χρήση τακτικών μορφών",
-    "advancedTypography": "Προηγμένη τυπογραφία",
     "languages": {
       "greek": "Ελληνικά",
       "english": "Αγγλικά",
@@ -217,7 +211,8 @@
       "footer": "Υποσέλιδο",
       "lyrics": "Στίχοι",
       "dropCap": "Αρχίγραμμα",
-      "initialMartyria": "Αρκτική Μαρτυρία"
+      "initialMartyria": "Αρκτική Μαρτυρία",
+      "initialMartyriaGreek": "Αρκτική Μαρτυρία (Ελληνικά)"
     }
   },
   "neumePositioning": {

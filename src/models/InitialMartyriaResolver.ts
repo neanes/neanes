@@ -3,7 +3,6 @@ import type { Neume } from '@/models/Neumes';
 import type { ModeSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import {
-  applyParagraphStyleOverrides,
   type ParagraphStyle,
   type ParagraphStyleOverrides,
   type ResolvedParagraphStyle,
@@ -26,7 +25,6 @@ import {
   initialMartyriaSpokenLexicons,
   originalGreekNoteNames,
   romanNumerals,
-  usesGreekScript,
 } from './InitialMartyriaLexicon';
 import { initialMartyriaRenderingConventions } from './InitialMartyriaRenderingConventions';
 import {
@@ -50,7 +48,6 @@ import {
   type ModeKeyMode,
   type ResolvedInitialMartyriaRun,
   type ResolvedInitialMartyriaStyle,
-  resolveInitialMartyriaFontFamily,
 } from './InitialMartyriaStyle';
 
 type InitialMartyriaComponent =
@@ -514,18 +511,6 @@ function getInitialMartyriaComponents(
 
 const modeKeyModes: ModeKeyMode[] = [1, 2, 3, 4, 5, 6, 7, 8];
 
-export function initialMartyriaStructureHasGreekText(
-  structure: InitialMartyriaStructure,
-) {
-  return modeKeyModes.some((mode) =>
-    getInitialMartyriaComponents(structure, mode).some(
-      (component) =>
-        component.kind === 'stackedText' &&
-        component.semantic === 'plagalAbbreviation',
-    ),
-  );
-}
-
 export function isInitialMartyriaModeNameSupported(
   structure: InitialMartyriaStructure,
 ) {
@@ -659,11 +644,9 @@ export function getInitialMartyriaContext(
 
 function toInitialMartyriaAppearance(
   resolved: ResolvedParagraphStyle,
-  fontFamily: string,
-  neumeFontFamily: string,
 ): InitialMartyriaAppearance {
   return {
-    fontFamily: resolveInitialMartyriaFontFamily(fontFamily, neumeFontFamily),
+    fontFamily: resolved.fontFamily,
     fontStyle: resolved.fontStyle,
     fontSize: resolved.fontSize,
     color: resolved.color,
@@ -677,37 +660,34 @@ function toInitialMartyriaAppearance(
 }
 
 /**
- * The typography of a style resolved through its paragraph style, with the
- * style's own overrides and then any element overrides folded in.
+ * The typography of a style resolved through its regular and Greek paragraph
+ * styles, with any element overrides folded in.
  */
 export function resolveInitialMartyriaStyleAppearances(
   style: InitialMartyriaStyle,
   paragraphStyles: ParagraphStyle[],
-  neumeFontFamily: string,
   elementOverrides?: ParagraphStyleOverrides,
 ): ResolvedInitialMartyriaStyle {
-  const resolved = resolveParagraphStyle(
+  const main = resolveParagraphStyle(
     paragraphStyles,
     style.paragraphStyleId,
-    style.paragraphStyleOverrides,
+    elementOverrides,
   );
-  applyParagraphStyleOverrides(resolved, elementOverrides);
-  const greekFontFamily =
-    usesGreekScript(style.structure.languageId) || style.greekFontFamily == null
-      ? resolved.fontFamily
-      : style.greekFontFamily;
+  const greek = resolveParagraphStyle(
+    paragraphStyles,
+    style.greekParagraphStyleId,
+    elementOverrides,
+  );
+  const mainAppearance = toInitialMartyriaAppearance(main);
+  const greekAppearance = toInitialMartyriaAppearance(greek);
   return {
     style,
-    mainAppearance: toInitialMartyriaAppearance(
-      resolved,
-      resolved.fontFamily,
-      neumeFontFamily,
-    ),
-    greekAppearance: toInitialMartyriaAppearance(
-      resolved,
-      greekFontFamily,
-      neumeFontFamily,
-    ),
+    mainAppearance,
+    greekAppearance,
+    primaryAppearance: initialMartyriaLexicons[style.structure.languageId]
+      .usesGreekScript
+      ? greekAppearance
+      : mainAppearance,
   };
 }
 
@@ -725,10 +705,7 @@ function withOrdinalForms(
  * The style every mode key of a score inherits unless it overrides it.
  */
 export function resolveScoreInitialMartyriaStyle(options: {
-  pageSetup: Pick<
-    PageSetup,
-    'initialMartyriaStyleId' | 'neumeDefaultFontFamily'
-  >;
+  pageSetup: Pick<PageSetup, 'initialMartyriaStyleId'>;
   paragraphStyles: ParagraphStyle[];
   initialMartyriaStyles: InitialMartyriaStyle[];
   styleId?: string;
@@ -740,7 +717,6 @@ export function resolveScoreInitialMartyriaStyle(options: {
       options.styleId ?? options.pageSetup.initialMartyriaStyleId,
     ),
     options.paragraphStyles,
-    options.pageSetup.neumeDefaultFontFamily,
     options.paragraphStyleOverrides,
   );
 }
@@ -754,10 +730,7 @@ export function resolveModeKeyInitialMartyriaStyle(options: {
     ModeKeyElement,
     'initialMartyriaStyleId' | 'getParagraphStyleOverrides'
   >;
-  pageSetup: Pick<
-    PageSetup,
-    'initialMartyriaStyleId' | 'neumeDefaultFontFamily'
-  >;
+  pageSetup: Pick<PageSetup, 'initialMartyriaStyleId'>;
   paragraphStyles: ParagraphStyle[];
   initialMartyriaStyles: InitialMartyriaStyle[];
 }): ResolvedInitialMartyriaStyle {
@@ -795,7 +768,8 @@ export function resolveInitialMartyriaStyle(options: {
   /** The size music-font glyphs (mode sign, pitch marks) are drawn at. */
   glyphFontSize: number;
 }): InitialMartyriaStyleResolution {
-  const { style, mainAppearance, greekAppearance } = options.resolvedStyle;
+  const { style, mainAppearance, greekAppearance, primaryAppearance } =
+    options.resolvedStyle;
   const structure = style.structure;
   const lexicon = initialMartyriaLexicons[structure.languageId];
   const flowDirection =
@@ -808,14 +782,14 @@ export function resolveInitialMartyriaStyle(options: {
   const noteAppearance =
     transliteratedNoteNames == null ? greekAppearance : mainAppearance;
   // Glyphs are set in the document's music font at the requested size and
-  // take the main text's color and stroke.
+  // take the primary text's color and stroke.
   const glyphAppearance: InitialMartyriaAppearance = {
     fontFamily: options.pageSetup.neumeDefaultFontFamily,
     fontStyle: DEFAULT_FONT_STYLE,
     fontSize: options.glyphFontSize,
-    color: mainAppearance.color,
-    strokeWidth: mainAppearance.strokeWidth,
-    strokeColor: mainAppearance.strokeColor,
+    color: primaryAppearance.color,
+    strokeWidth: primaryAppearance.strokeWidth,
+    strokeColor: primaryAppearance.strokeColor,
     fontVariantCaps: 'normal',
     fontVariantNumeric: 'normal',
     fontVariantLigatures: 'normal',
@@ -829,10 +803,12 @@ export function resolveInitialMartyriaStyle(options: {
     flowDirection,
   )) {
     if (component.kind === 'text' || component.kind === 'stackedText') {
-      const usesGreekFont = component.semantic === 'plagalAbbreviation';
+      const usesGreekFont =
+        lexicon.usesGreekScript || component.semantic === 'plagalAbbreviation';
       const appearance =
         component.semantic === 'numeral' &&
         style.useOrdinalForms &&
+        !lexicon.usesGreekScript &&
         initialMartyriaStructureHasOrdinalDigits(structure)
           ? withOrdinalForms(usesGreekFont ? greekAppearance : mainAppearance)
           : usesGreekFont
@@ -893,14 +869,14 @@ export type InitialMartyriaSeparator =
 
 export function getInitialMartyriaFixedSeparatorSize(
   separator: InitialMartyriaSeparator,
-  mainTextFontSize: number,
+  primaryTextFontSize: number,
 ) {
   switch (separator) {
     case 'modeSign':
     case 'plagalAbbreviation':
     case 'startingNote':
     case 'noteCluster':
-      return 0.43 * mainTextFontSize;
+      return 0.43 * primaryTextFontSize;
     default:
       return null;
   }

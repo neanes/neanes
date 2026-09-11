@@ -52,8 +52,8 @@ export function collectClipboardInitialMartyriaStylesFromElements(
 // Merges the clipboard's custom styles into the destination: a style whose id
 // the destination already has is left to the destination, and every other
 // one is imported as its own copy under the same id. An imported style's
-// paragraph style reference is rewritten with the remap produced for the
-// pasted content, so it follows the paragraph style that traveled with it.
+// paragraph style references are rewritten with the remap produced for the
+// pasted content, so they follow the paragraph styles that traveled with it.
 export function resolveClipboardInitialMartyriaStyles(
   clipboardInitialMartyriaStyles: InitialMartyriaStyle[],
   targetInitialMartyriaStyles: InitialMartyriaStyle[],
@@ -83,6 +83,17 @@ export function resolveClipboardInitialMartyriaStyles(
 
     if (paragraphStyleId != null) {
       importedStyle.paragraphStyleId = paragraphStyleId;
+    }
+
+    const greekParagraphStyleId = resolveClipboardParagraphStyleReference(
+      importedStyle.greekParagraphStyleId,
+      targetParagraphStyleIds,
+      paragraphStyleIdRemap,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+    );
+
+    if (greekParagraphStyleId != null) {
+      importedStyle.greekParagraphStyleId = greekParagraphStyleId;
     }
 
     importedInitialMartyriaStyles.push(importedStyle);

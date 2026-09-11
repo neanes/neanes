@@ -254,7 +254,7 @@ export class ByzHtmlExporter {
       pageSetup,
       paragraphStyles,
       initialMartyriaStyles,
-    }).mainAppearance;
+    }).primaryAppearance;
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
     const firstPageMargins = resolvePageMargins(pageSetup, 1);
     const secondPageMargins = resolvePageMargins(pageSetup, 2);
@@ -600,7 +600,7 @@ export class ByzHtmlExporter {
       pageSetup,
       paragraphStyles,
       initialMartyriaStyles,
-    }).mainAppearance;
+    }).primaryAppearance;
     let result = '';
 
     let insidePage = startInsidePage;

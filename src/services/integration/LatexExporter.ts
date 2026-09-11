@@ -307,7 +307,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
       pageSetup,
       paragraphStyles,
       initialMartyriaStyles,
-    }).mainAppearance;
+    }).primaryAppearance;
 
     const result: LatexScore = {
       appVersion: APP_VERSION,

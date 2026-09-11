@@ -13,7 +13,7 @@
     <InputFontSize
       id="toolbar-mode-key-font-size"
       :aria-label="$t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })"
-      :model-value="mainAppearance.fontSize"
+      :model-value="primaryAppearance.fontSize"
       @update:model-value="
         $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
       "
@@ -194,7 +194,7 @@ const props = defineProps({
 
 const emit = defineEmits(['open-mode-key-dialog', 'update', 'update:tempo']);
 
-const { mainAppearance } = useResolvedInitialMartyriaStyle({
+const { primaryAppearance } = useResolvedInitialMartyriaStyle({
   element: () => props.element,
   pageSetup: () => props.pageSetup,
   paragraphStyles: () => props.paragraphStyles,

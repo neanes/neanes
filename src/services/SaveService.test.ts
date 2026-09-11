@@ -17,6 +17,7 @@ import {
   getBuiltInInitialMartyriaStyle,
 } from '@/models/InitialMartyriaBuiltInStyles';
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
+import { resolveScoreInitialMartyriaStyle } from '@/models/InitialMartyriaResolver';
 import {
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
@@ -1366,18 +1367,8 @@ describe('SaveService font styles', () => {
         numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
         transliterateNoteNames: true,
       },
-      paragraphStyleId: base.paragraphStyleId,
-      paragraphStyleOverrides: {
-        fontFamily: 'Source Serif',
-        fontStyle: 'Bold',
-        fontSize: 17,
-        color: '#123456',
-        strokeWidth: 0.2,
-        strokeColor: '#654321',
-        fontVariantCaps: 'small-caps',
-        fontVariantNumeric: null,
-      },
-      greekFontFamily: 'GFS Didot',
+      paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
+      greekParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Subtitle,
       useOrdinalForms: false,
     });
     score.initialMartyriaStyles = [customStyle];
@@ -1405,18 +1396,8 @@ describe('SaveService font styles', () => {
       displayName: 'Parish books',
       basedOn: base.id,
       ...customStyle.structure,
-      paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
-      fontFamily: 'Source Serif',
-      fontSize: 17,
-      fontSubfamily: 'Bold',
-      color: '#123456',
-      strokeWidth: 0.2,
-      strokeColor: '#654321',
-      fontVariantCaps: 'small-caps',
-      fontVariantNumeric: null,
-      fontVariantLigatures: undefined,
-      fontVariantAlternates: undefined,
-      greekFontFamily: 'GFS Didot',
+      paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
+      greekParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Subtitle,
       useOrdinalForms: false,
     });
     expect(saved.pageSetup.initialMartyriaStyleId).toBe(customStyle.id);
@@ -1453,19 +1434,24 @@ describe('SaveService font styles', () => {
     expect(loadedModeKeys[2].inline).toBe(true);
   });
 
-  it('round-trips an Initial Martyria style whose Greek font follows the text font', () => {
+  it('round-trips an Initial Martyria style with an independent Greek paragraph style', () => {
     const score = new Score();
+    const greekParagraphStyle = new ParagraphStyle();
+    greekParagraphStyle.displayName = 'Greek Martyria';
+    greekParagraphStyle.overrides = {
+      fontFamily: 'GFS Porson',
+      fontSize: 16,
+    };
+    score.paragraphStyles.push(greekParagraphStyle);
     const base = getBuiltInInitialMartyriaStyle(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
     );
-    expect(base.greekFontFamily).toBeNull();
     const customStyle = createInitialMartyriaStyle({
-      displayName: 'Follows text font',
+      displayName: 'Greek typography',
       basedOn: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
       structure: base.structure,
       paragraphStyleId: base.paragraphStyleId,
-      paragraphStyleOverrides: { fontFamily: 'Alegreya' },
-      greekFontFamily: null,
+      greekParagraphStyleId: greekParagraphStyle.id,
       useOrdinalForms: true,
     });
     score.initialMartyriaStyles = [customStyle];
@@ -1473,7 +1459,9 @@ describe('SaveService font styles', () => {
     const saved = SaveService.SaveScoreToJson(score);
     const loaded = SaveService.LoadScore_v1(saved);
 
-    expect(saved.initialMartyriaStyles![0].greekFontFamily).toBeUndefined();
+    expect(saved.initialMartyriaStyles![0]).toMatchObject({
+      greekParagraphStyleId: greekParagraphStyle.id,
+    });
     expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
   });
 
@@ -1600,6 +1588,7 @@ describe('SaveService font styles', () => {
       ...base,
       displayName: 'Orphaned',
       paragraphStyleId: 'deleted-paragraph-style',
+      greekParagraphStyleId: 'deleted-greek-paragraph-style',
     });
     score.initialMartyriaStyles = [customStyle];
 
@@ -1607,6 +1596,9 @@ describe('SaveService font styles', () => {
 
     expect(loaded.initialMartyriaStyles[0].paragraphStyleId).toBe(
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+    expect(loaded.initialMartyriaStyles[0].greekParagraphStyleId).toBe(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
     );
   });
 
@@ -1633,17 +1625,51 @@ describe('SaveService font styles', () => {
     );
     expect(loaded.initialMartyriaStyles).toEqual([]);
     expect(
-      loaded.paragraphStyles.find(
-        (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
-      )!.overrides,
-    ).toEqual({ color: '#ED0000', fontSize: Unit.fromPt(14.5) });
+      loaded.paragraphStyles
+        .filter(
+          (style) =>
+            style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria ||
+            style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+        )
+        .map((style) => ({
+          id: style.id,
+          parentStyleId: style.parentStyleId,
+          overrides: style.overrides,
+        })),
+    ).toEqual([
+      {
+        id: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+        parentStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+        overrides: { color: '#ED0000' },
+      },
+      {
+        id: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+        parentStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+        overrides: {
+          fontFamily: 'GFS Didot Classic',
+          fontSize: Unit.fromPt(14.5),
+        },
+      },
+    ]);
     expect(loadedModeKey.initialMartyriaStyleId).toBeNull();
     expect(loadedModeKey.color).toBeNull();
     expect(loadedModeKey.fontSize).toBeNull();
     expect(loadedModeKey.strokeWidth).toBeNull();
   });
 
-  it('migrates legacy mode key defaults into the built-in Initial Martyria style', () => {
+  it.each(['NeanesStathisSeries', 'NeanesStathisSeriesLegacy'])(
+    'migrates the legacy %s music font to GFS Porson for Greek initial martyria text',
+    (neumeDefaultFontFamily) => {
+      const greekInitialMartyriaStyle = loadLegacyBuiltInStyle(
+        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+        { neumeDefaultFontFamily },
+      );
+
+      expect(greekInitialMartyriaStyle.fontFamily).toBe('GFS Porson');
+    },
+  );
+
+  it('migrates legacy color to Initial Martyria and size and outline to its Greek child', () => {
     const initialMartyriaStyle = loadLegacyBuiltInStyle(
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
       {
@@ -1655,11 +1681,26 @@ describe('SaveService font styles', () => {
     );
 
     expect(initialMartyriaStyle.color).toBe('#000000');
-    expect(initialMartyriaStyle.fontSize).toBeCloseTo(
-      (Unit.fromPt(24) * 14.5) / 20,
-    );
-    expect(initialMartyriaStyle.strokeWidth).toBe(2);
+    expect(initialMartyriaStyle.fontSize).toBe(Unit.fromPt(12));
+    expect(initialMartyriaStyle.strokeWidth).toBe(0);
     expect(initialMartyriaStyle.fontFamily).toBe('Source Serif');
+
+    const greekInitialMartyriaStyle = loadLegacyBuiltInStyle(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+      {
+        modeKeyDefaultColor: '#000000',
+        modeKeyDefaultFontSize: Unit.fromPt(24),
+        modeKeyDefaultStrokeWidth: 2,
+        modeKeyDefaultHeightAdjustment: 5,
+      },
+    );
+
+    expect(greekInitialMartyriaStyle).toMatchObject({
+      fontFamily: 'GFS Didot Classic',
+      fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20),
+      color: '#000000',
+      strokeWidth: 2,
+    });
 
     const score = SaveService.LoadScore_v1(
       createLegacyScore({
@@ -1673,8 +1714,26 @@ describe('SaveService font styles', () => {
       score.paragraphStyles.find(
         (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
       )!.overrides,
+    ).toEqual({});
+    expect(
+      score.paragraphStyles.find(
+        (style) =>
+          style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+      )!.overrides,
     ).toEqual({
+      fontFamily: 'GFS Didot Classic',
       fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20),
+      strokeWidth: 2,
+    });
+    expect(
+      resolveScoreInitialMartyriaStyle({
+        pageSetup: score.pageSetup,
+        paragraphStyles: score.paragraphStyles,
+        initialMartyriaStyles: score.initialMartyriaStyles,
+      }).primaryAppearance,
+    ).toMatchObject({
+      fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20),
+      color: '#000000',
       strokeWidth: 2,
     });
   });

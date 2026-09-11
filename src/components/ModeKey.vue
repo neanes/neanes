@@ -236,7 +236,7 @@ type PitchRole = 'primary' | 'secondary';
 const layout = computed(() => props.element.computedInitialMartyriaLayout!);
 const resolution = computed(() => layout.value.resolution);
 const runLayouts = computed(() => layout.value.runs);
-const baseTextAppearance = computed(() => layout.value.mainAppearance);
+const baseTextAppearance = computed(() => layout.value.primaryAppearance);
 const rightContainer = ref<HTMLElement | null>(null);
 const rightAccessoryWidth = ref(0);
 const { observe: observeRightAccessory } = useResizeObserver();

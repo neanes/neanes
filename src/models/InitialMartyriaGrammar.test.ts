@@ -711,9 +711,7 @@ describe('InitialMartyriaGrammar', () => {
         ...attestedStructures['english-mode-number-word'],
         numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
       },
-      ...createDefaultInitialMartyriaTypography(
-        INITIAL_MARTYRIA_LANGUAGE_IDS.English,
-      ),
+      ...createDefaultInitialMartyriaTypography(),
     });
     expect(created.structure).toMatchObject({
       numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,

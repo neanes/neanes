@@ -93,8 +93,7 @@
     "name": "Nume",
     "styleNamePlaceholder": "Numele stilului",
     "language": "Limbă",
-    "structure": "Structură",
-    "presentation": "Prezentare",
+    "greekParagraphStyle": "Stil de paragraf pentru greacă",
     "preview": "Previzualizare",
     "sampleMode": "Glas exemplu",
     "basedOn": "Bazat pe {{name}}",
@@ -106,8 +105,6 @@
     "transliterateNoteNames": "Transliterează nota de început",
     "transliterateNoteNamesHint": "Pa în loc de Πα",
     "font": "Font",
-    "defaultFont": "Implicit ({{font}})",
-    "sameAsTextFont": "La fel ca fontul textului ({{font}})",
     "fontSummary": "{{font}}, {{size}} pt",
     "yes": "Da",
     "no": "Nu",
@@ -143,11 +140,8 @@
     "discard": "Renunță",
     "deleteStyleTitle": "Ștergeți stilul?",
     "deleteStyleDescription": "Mărturiile inițiale care folosesc „{{name}}” vor urma stilul implicit al documentului.",
-    "textFont": "Font text",
-    "mainFont": "Font text principal",
     "greekTextFont": "Font text grecesc",
     "useOrdinalForms": "Folosește forme ordinale",
-    "advancedTypography": "Tipografie avansată",
     "languages": {
       "greek": "Greacă",
       "english": "Engleză",
@@ -217,7 +211,8 @@
       "footer": "Subsol",
       "lyrics": "Versuri",
       "dropCap": "Majusculă decorativă",
-      "initialMartyria": "Mărturie inițială"
+      "initialMartyria": "Mărturie inițială",
+      "initialMartyriaGreek": "Mărturie inițială (greacă)"
     }
   },
   "neumePositioning": {

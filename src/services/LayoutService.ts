@@ -2269,12 +2269,12 @@ export class LayoutService {
     pageSetup: PageSetup,
     resolvedStyle: ResolvedInitialMartyriaStyle,
   ) {
-    const { mainAppearance } = resolvedStyle;
+    const { primaryAppearance } = resolvedStyle;
 
     element.computedFontFamily = pageSetup.neumeDefaultFontFamily;
-    element.computedFontSize = mainAppearance.fontSize;
-    element.computedColor = mainAppearance.color;
-    element.computedStrokeWidth = mainAppearance.strokeWidth;
+    element.computedFontSize = primaryAppearance.fontSize;
+    element.computedColor = primaryAppearance.color;
+    element.computedStrokeWidth = primaryAppearance.strokeWidth;
 
     const geometry = this.getInitialMartyriaGeometry(
       element,
@@ -2298,10 +2298,10 @@ export class LayoutService {
   ) {
     const neumeFontFamily = element.computedFontFamily;
     const neumeFontSize = element.computedFontSize;
-    const baseTextAppearance = resolvedStyle.mainAppearance;
+    const baseTextAppearance = resolvedStyle.primaryAppearance;
     const fixedSeparatorFontSize = baseTextAppearance.fontSize;
     // Music-font glyphs are drawn at the size whose capital height matches
-    // the main text, or at the nominal neume size when no match exists.
+    // the primary text, or at the nominal neume size when no match exists.
     const glyphFontSize =
       getMatchedNeumeFontSize({
         textFontFamily: baseTextAppearance.fontFamily,
@@ -2655,7 +2655,7 @@ export class LayoutService {
 
     const layout: InitialMartyriaLayout = {
       resolution,
-      mainAppearance: baseTextAppearance,
+      primaryAppearance: baseTextAppearance,
       runs: runLayouts,
       trailingSeparator,
       neumeBaselineCorrection,

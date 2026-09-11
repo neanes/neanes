@@ -67,7 +67,6 @@ const sample = computed(() => {
   const resolvedStyle = resolveInitialMartyriaStyleAppearances(
     props.martyriaStyle,
     props.paragraphStyles,
-    props.pageSetup.neumeDefaultFontFamily,
   );
   element.initialMartyriaStyleId = props.martyriaStyle.id;
   const geometry = LayoutService.layoutModeKey(

@@ -3,7 +3,6 @@ import type { Namespace, SelectorParam, TFunction } from 'i18next';
 import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
 
 import {
-  INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
@@ -134,42 +133,12 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
 };
 
 /**
- * Default fonts for the curated styles of each language. Greek-script text
- * follows the text font unless the language names a font of its own.
+ * The paragraph styles and ordinal behavior of a curated style.
  */
-const initialMartyriaDefaultFonts: Record<
-  InitialMartyriaLanguageId,
-  { main?: string; greek?: string }
-> = {
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Greek]: {
-    main: INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
-  },
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: {},
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: {},
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: { main: 'Old Standard' },
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: {},
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: {
-    main: 'Noto Naskh Arabic',
-    greek: 'GFS Didot',
-  },
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: {},
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: {},
-};
-
-/**
- * The typography of a language's curated styles: the built-in Initial
- * Martyria paragraph style, plus a font override where the language needs
- * a particular text font.
- */
-export function createDefaultInitialMartyriaTypography(
-  languageId: InitialMartyriaLanguageId,
-): InitialMartyriaStyleTypography {
-  const fonts = initialMartyriaDefaultFonts[languageId];
+export function createDefaultInitialMartyriaTypography(): InitialMartyriaStyleTypography {
   return {
     paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
-    paragraphStyleOverrides:
-      fonts.main == null ? {} : { fontFamily: fonts.main },
-    greekFontFamily: fonts.greek ?? null,
+    greekParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
     useOrdinalForms: true,
   };
 }
@@ -201,7 +170,7 @@ function builtIn({
       ),
       ...structure,
     },
-    ...createDefaultInitialMartyriaTypography(structure.languageId),
+    ...createDefaultInitialMartyriaTypography(),
   };
 }
 

@@ -62,7 +62,7 @@
         <div class="flex items-center gap-1">
           <InputFontSize
             id="properties-mode-key-font-size"
-            :model-value="mainAppearance.fontSize"
+            :model-value="primaryAppearance.fontSize"
             @update:model-value="
               $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
             "
@@ -82,7 +82,7 @@
         }}</FieldLabel>
         <div class="flex items-center gap-1">
           <ColorPicker
-            :model-value="mainAppearance.color"
+            :model-value="primaryAppearance.color"
             @update:model-value="
               $emit('update', { color: $event } as Partial<ModeKeyElement>)
             "
@@ -101,7 +101,7 @@
         <div class="flex items-center gap-1">
           <InputStrokeWidth
             id="properties-mode-key-outline"
-            :model-value="mainAppearance.strokeWidth"
+            :model-value="primaryAppearance.strokeWidth"
             @update:model-value="
               $emit('update', {
                 strokeWidth: $event,
@@ -345,7 +345,7 @@ const emit = defineEmits([
 
 // The controls reflect the resolved style (element overrides folded in); a
 // change writes an explicit element value and clear restores inheritance.
-const { mainAppearance, hasOverrides } = useResolvedInitialMartyriaStyle({
+const { primaryAppearance, hasOverrides } = useResolvedInitialMartyriaStyle({
   element: () => props.element,
   pageSetup: () => props.pageSetup,
   paragraphStyles: () => props.paragraphStyles,

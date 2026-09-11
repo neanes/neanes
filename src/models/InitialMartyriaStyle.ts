@@ -1,6 +1,5 @@
 import type { Fthora, Neume } from '@/models/Neumes';
 import type { ModeSign } from '@/models/Neumes';
-import type { ParagraphStyleOverrides } from '@/models/ParagraphStyle';
 import type { ScaleNote } from '@/models/Scales';
 import type { FontVariantProperty } from '@/utils/fontVariants';
 
@@ -84,29 +83,6 @@ export const INITIAL_MARTYRIA_LANGUAGE_IDS = {
   Indonesian: 'id',
 } as const;
 
-/** Follow the Greek text font paired with the document's music font. */
-export const INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY = 'default';
-
-const INITIAL_MARTYRIA_EZ_PSALTICA_FONT_FAMILY = 'GFS Didot';
-const INITIAL_MARTYRIA_STATHIS_FONT_FAMILY = 'GFS Porson';
-const STATHIS_NEUME_FONT_FAMILIES = new Set([
-  'NeanesStathisSeries',
-  'NeanesStathisSeriesLegacy',
-]);
-
-export function resolveInitialMartyriaFontFamily(
-  fontFamily: string,
-  neumeFontFamily: string,
-) {
-  if (fontFamily !== INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY) {
-    return fontFamily;
-  }
-
-  return STATHIS_NEUME_FONT_FAMILIES.has(neumeFontFamily)
-    ? INITIAL_MARTYRIA_STATHIS_FONT_FAMILY
-    : INITIAL_MARTYRIA_EZ_PSALTICA_FONT_FAMILY;
-}
-
 export type InitialMartyriaLanguageId =
   (typeof INITIAL_MARTYRIA_LANGUAGE_IDS)[keyof typeof INITIAL_MARTYRIA_LANGUAGE_IDS];
 
@@ -133,32 +109,13 @@ export interface InitialMartyriaNoteNames {
 export type InitialMartyriaTextSemantic =
   'label' | 'numeral' | 'plagalWord' | 'plagalAbbreviation' | 'graveWord';
 
-/** The typography properties an initial martyria style may set itself. */
-export type InitialMartyriaTypographyOverrides = Pick<
-  ParagraphStyleOverrides,
-  | 'fontFamily'
-  | 'fontSize'
-  | 'fontStyle'
-  | 'color'
-  | 'strokeWidth'
-  | 'strokeColor'
-  | FontVariantProperty
->;
-
 /**
- * The typography a style applies to its text and glyphs: a paragraph style,
- * with the style's own overrides on top, exactly as a text element is
- * styled. A font family of 'default' follows the document's music font.
+ * The paragraph styles an initial martyria uses for regular and Greek text.
+ * Typography is configured on those paragraph styles, not duplicated here.
  */
 export interface InitialMartyriaStyleTypography {
   paragraphStyleId: string;
-  paragraphStyleOverrides: InitialMartyriaTypographyOverrides;
-  /**
-   * Font for Greek-script text in a language that is not written in Greek
-   * (original note names and the plagal abbreviation). Null follows the
-   * text font, as resolved through the paragraph style and the overrides.
-   */
-  greekFontFamily: string | null;
+  greekParagraphStyleId: string;
   /** Apply the OpenType ordinal feature to digit-ordinal numeral runs only. */
   useOrdinalForms: boolean;
 }
@@ -296,6 +253,8 @@ export interface ResolvedInitialMartyriaStyle {
   style: InitialMartyriaStyle;
   mainAppearance: InitialMartyriaAppearance;
   greekAppearance: InitialMartyriaAppearance;
+  /** The appearance matching the script of the style's language. */
+  primaryAppearance: InitialMartyriaAppearance;
 }
 
 export interface InitialMartyriaPitchNote {
@@ -365,6 +324,5 @@ export function cloneInitialMartyriaStyle(
   return {
     ...style,
     structure: { ...style.structure },
-    paragraphStyleOverrides: { ...style.paragraphStyleOverrides },
   };
 }

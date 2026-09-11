@@ -2,314 +2,69 @@
   <div
     class="grid min-h-0 gap-4 overflow-hidden lg:grid-cols-[minmax(0,1fr)_17rem]"
   >
-    <Tabs
-      v-model="tab"
-      class="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden"
-    >
-      <TabsList>
-        <TabsTrigger value="structure">
-          {{ $t(($) => $.dialog.initialMartyriaStyles.structure, { ns }) }}
-        </TabsTrigger>
-        <TabsTrigger value="presentation">
-          {{ $t(($) => $.dialog.initialMartyriaStyles.presentation, { ns }) }}
-        </TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="structure" class="min-h-0 overflow-hidden">
-        <ScrollArea class="h-full min-h-0">
-          <div class="space-y-5 p-1 pr-3">
-            <section
-              v-for="strip in strips"
-              :key="strip.key"
-              :aria-label="strip.label"
-            >
-              <p class="mb-2 text-sm font-medium">{{ strip.label }}</p>
-              <div
-                class="grid gap-2"
-                :class="
-                  strip.tiles.length > 3
-                    ? 'grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]'
-                    : 'grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]'
-                "
-              >
-                <InitialMartyriaStyleTile
-                  v-for="tile in strip.tiles"
-                  :key="tile.key"
-                  :martyria-style="tile.martyriaStyle"
-                  :template-id="strip.templateId"
-                  :page-setup="pageSetup"
-                  :paragraph-styles="paragraphStyles"
-                  :selected="tile.current"
-                  :caption="tile.caption"
-                  @select="setStructure(tile.structure)"
-                />
-              </div>
-            </section>
-
-            <Field v-if="!languageUsesGreekScript" orientation="horizontal">
-              <Checkbox
-                id="initial-martyria-transliterate"
-                :model-value="draft.structure.transliterateNoteNames"
-                @update:model-value="
-                  setStructure({
-                    ...draft.structure,
-                    transliterateNoteNames: $event === true,
-                  })
-                "
-              />
-              <FieldContent>
-                <FieldLabel for="initial-martyria-transliterate">
-                  {{
-                    $t(
-                      ($) =>
-                        $.dialog.initialMartyriaStyles.transliterateNoteNames,
-                      { ns },
-                    )
-                  }}
-                </FieldLabel>
-                <FieldDescription>
-                  {{
-                    $t(
-                      ($) =>
-                        $.dialog.initialMartyriaStyles
-                          .transliterateNoteNamesHint,
-                      { ns },
-                    )
-                  }}
-                </FieldDescription>
-              </FieldContent>
-            </Field>
+    <ScrollArea class="min-h-0">
+      <div class="space-y-5 p-1 pr-3">
+        <section
+          v-for="strip in strips"
+          :key="strip.key"
+          :aria-label="strip.label"
+        >
+          <p class="mb-2 text-sm font-medium">{{ strip.label }}</p>
+          <div
+            class="grid gap-2"
+            :class="
+              strip.tiles.length > 3
+                ? 'grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]'
+                : 'grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]'
+            "
+          >
+            <InitialMartyriaStyleTile
+              v-for="tile in strip.tiles"
+              :key="tile.key"
+              :martyria-style="tile.martyriaStyle"
+              :template-id="strip.templateId"
+              :page-setup="pageSetup"
+              :paragraph-styles="paragraphStyles"
+              :selected="tile.current"
+              :caption="tile.caption"
+              @select="setStructure(tile.structure)"
+            />
           </div>
-        </ScrollArea>
-      </TabsContent>
+        </section>
 
-      <TabsContent value="presentation" class="min-h-0 overflow-hidden">
-        <ScrollArea class="h-full min-h-0">
-          <div class="space-y-4 p-1 pr-3">
-            <Field>
-              <div class="mb-2 flex items-center justify-between gap-2">
-                <FieldLabel for="initial-martyria-paragraph-style">
-                  {{
-                    $t(($) => $.toolbar.common.paragraphStyle, {
-                      ns: 'toolbar',
-                    })
-                  }}
-                </FieldLabel>
-                <ParagraphStyleClearButton
-                  :disabled="!hasTypographyOverrides"
-                  @clear="clearTypographyOverrides"
-                />
-              </div>
-              <ParagraphStyleSelect
-                id="initial-martyria-paragraph-style"
-                :model-value="draft.paragraphStyleId"
-                :paragraph-styles="paragraphStyles"
-                @update:model-value="update({ paragraphStyleId: $event })"
-              />
-            </Field>
-
-            <Field>
-              <div class="mb-2 flex items-center justify-between gap-2">
-                <FieldLabel for="initial-martyria-main-font">
-                  {{
-                    languageUsesGreekScript
-                      ? $t(($) => $.dialog.initialMartyriaStyles.textFont, {
-                          ns,
-                        })
-                      : $t(($) => $.dialog.initialMartyriaStyles.mainFont, {
-                          ns,
-                        })
-                  }}
-                </FieldLabel>
-                <ParagraphStyleClearButton
-                  :disabled="draft.paragraphStyleOverrides.fontFamily == null"
-                  @clear="clearOverride('fontFamily')"
-                />
-              </div>
-              <FontCombobox
-                id="initial-martyria-main-font"
-                class="w-full max-w-full"
-                :model-value="resolvedTypography.fontFamily"
-                :options="mainFontOptions"
-                @update:model-value="setMainFontFamily"
-              />
-            </Field>
-
-            <Field v-if="showGreekFontControl">
-              <FieldLabel for="initial-martyria-greek-font">
-                {{
-                  $t(($) => $.dialog.initialMartyriaStyles.greekTextFont, {
-                    ns,
-                  })
-                }}
-              </FieldLabel>
-              <FontCombobox
-                id="initial-martyria-greek-font"
-                class="w-full max-w-full"
-                :model-value="draft.greekFontFamily ?? SAME_AS_TEXT_FONT_VALUE"
-                :options="greekFontOptions"
-                @update:model-value="setGreekFontFamily"
-              />
-            </Field>
-
-            <Field>
-              <div class="mb-2 flex items-center justify-between gap-2">
-                <FieldLabel for="initial-martyria-font-style">
-                  {{ $t(($) => $.dialog.pageSetup.style, { ns }) }}
-                </FieldLabel>
-                <ParagraphStyleClearButton
-                  :disabled="draft.paragraphStyleOverrides.fontStyle == null"
-                  @clear="clearOverride('fontStyle')"
-                />
-              </div>
-              <FontStyleSelect
-                id="initial-martyria-font-style"
-                class="w-full max-w-full"
-                :model-value="resolvedTypography.fontStyle"
-                :options="fontStyleOptions"
-                :disabled="fontStyleOptions.length <= 1"
-                @update:model-value="setOverride('fontStyle', $event)"
-              />
-            </Field>
-
-            <Field orientation="horizontal">
-              <FieldLabel for="initial-martyria-font-size">
-                {{ $t(($) => $.dialog.pageSetup.size, { ns }) }}
-              </FieldLabel>
-              <div class="flex items-center gap-1">
-                <InputFontSize
-                  id="initial-martyria-font-size"
-                  :model-value="resolvedTypography.fontSize"
-                  @update:model-value="setFontSize"
-                />
-                <ParagraphStyleClearButton
-                  :disabled="draft.paragraphStyleOverrides.fontSize == null"
-                  @clear="clearOverride('fontSize')"
-                />
-              </div>
-            </Field>
-
-            <Field orientation="horizontal">
-              <FieldLabel>
-                {{ $t(($) => $.dialog.pageSetup.color, { ns }) }}
-              </FieldLabel>
-              <div class="flex items-center gap-1">
-                <ColorPicker
-                  :model-value="resolvedTypography.color"
-                  @update:model-value="setOverride('color', $event)"
-                />
-                <ParagraphStyleClearButton
-                  :disabled="draft.paragraphStyleOverrides.color == null"
-                  @clear="clearOverride('color')"
-                />
-              </div>
-            </Field>
-
-            <Field orientation="horizontal">
-              <FieldLabel for="initial-martyria-outline">
-                {{ $t(($) => $.dialog.pageSetup.outline, { ns }) }}
-              </FieldLabel>
-              <div class="flex items-center gap-1">
-                <InputStrokeWidth
-                  id="initial-martyria-outline"
-                  :model-value="resolvedTypography.strokeWidth"
-                  @update:model-value="setOverride('strokeWidth', $event)"
-                />
-                <ParagraphStyleClearButton
-                  :disabled="draft.paragraphStyleOverrides.strokeWidth == null"
-                  @clear="clearOverride('strokeWidth')"
-                />
-              </div>
-            </Field>
-
-            <Field orientation="horizontal">
-              <FieldLabel>
-                {{ $t(($) => $.dialog.pageSetup.outlineColor, { ns }) }}
-              </FieldLabel>
-              <div class="flex items-center gap-1">
-                <StrokeColorPicker
-                  :model-value="resolvedTypography.strokeColor"
-                  :preview-color="
-                    strokeColorSameAsText
-                      ? resolvedTypography.color
-                      : resolvedTypography.strokeColor
-                  "
-                  :text-color="resolvedTypography.color"
-                  :same-as-text="strokeColorSameAsText"
-                  :label="$t(($) => $.dialog.pageSetup.outlineColor, { ns })"
-                  :same-as-text-label="
-                    $t(($) => $.dialog.pageSetup.sameAsText, { ns })
-                  "
-                  @update:model-value="setOverride('strokeColor', $event)"
-                />
-                <ParagraphStyleClearButton
-                  :disabled="draft.paragraphStyleOverrides.strokeColor == null"
-                  @clear="clearOverride('strokeColor')"
-                />
-              </div>
-            </Field>
-
-            <Field v-if="hasOrdinalDigits" orientation="horizontal">
-              <Checkbox
-                id="initial-martyria-ordinal-forms"
-                :model-value="draft.useOrdinalForms"
-                @update:model-value="
-                  update({ useOrdinalForms: $event === true })
-                "
-              />
-              <FieldLabel for="initial-martyria-ordinal-forms">
-                {{
-                  $t(($) => $.dialog.initialMartyriaStyles.useOrdinalForms, {
-                    ns,
-                  })
-                }}
-              </FieldLabel>
-            </Field>
-
-            <details class="rounded-md border p-3">
-              <summary class="cursor-pointer text-sm font-medium">
-                {{
-                  $t(($) => $.dialog.initialMartyriaStyles.advancedTypography, {
-                    ns,
-                  })
-                }}
-              </summary>
-              <div class="mt-3 space-y-3">
-                <!--
-                  The controls reflect the resolved typography (the draft's
-                  overrides folded in); a change writes an explicit override
-                  and clear restores inheritance from the paragraph style.
-                -->
-                <FontVariantFields
-                  id-prefix="initial-martyria"
-                  :caps="resolvedTypography.fontVariantCaps"
-                  :numeric="resolvedTypography.fontVariantNumeric"
-                  :ligatures="resolvedTypography.fontVariantLigatures"
-                  :alternates="resolvedTypography.fontVariantAlternates"
-                  :font-family="resolvedMainFontFamily"
-                  :font-style="resolvedTypography.fontStyle"
-                  :caps-clearable="
-                    draft.paragraphStyleOverrides.fontVariantCaps != null
-                  "
-                  :numeric-clearable="
-                    draft.paragraphStyleOverrides.fontVariantNumeric != null
-                  "
-                  :ligatures-clearable="
-                    draft.paragraphStyleOverrides.fontVariantLigatures != null
-                  "
-                  :alternates-clearable="
-                    draft.paragraphStyleOverrides.fontVariantAlternates != null
-                  "
-                  :show-ordinals="false"
-                  @change="setFontVariant"
-                  @clear="clearOverride"
-                />
-              </div>
-            </details>
-          </div>
-        </ScrollArea>
-      </TabsContent>
-    </Tabs>
+        <Field v-if="!languageUsesGreekScript" orientation="horizontal">
+          <Checkbox
+            id="initial-martyria-transliterate"
+            :model-value="draft.structure.transliterateNoteNames"
+            @update:model-value="
+              setStructure({
+                ...draft.structure,
+                transliterateNoteNames: $event === true,
+              })
+            "
+          />
+          <FieldContent>
+            <FieldLabel for="initial-martyria-transliterate">
+              {{
+                $t(
+                  ($) => $.dialog.initialMartyriaStyles.transliterateNoteNames,
+                  { ns },
+                )
+              }}
+            </FieldLabel>
+            <FieldDescription>
+              {{
+                $t(
+                  ($) =>
+                    $.dialog.initialMartyriaStyles.transliterateNoteNamesHint,
+                  { ns },
+                )
+              }}
+            </FieldDescription>
+          </FieldContent>
+        </Field>
+      </div>
+    </ScrollArea>
 
     <ScrollArea class="min-h-0">
       <div class="space-y-4 p-1">
@@ -351,6 +106,56 @@
               </SelectItem>
             </SelectContent>
           </Select>
+        </Field>
+
+        <Field>
+          <FieldLabel for="initial-martyria-paragraph-style">
+            {{
+              $t(($) => $.toolbar.common.paragraphStyle, {
+                ns: 'toolbar',
+              })
+            }}
+          </FieldLabel>
+          <ParagraphStyleSelect
+            id="initial-martyria-paragraph-style"
+            :model-value="draft.paragraphStyleId"
+            :paragraph-styles="paragraphStyles"
+            @update:model-value="update({ paragraphStyleId: $event })"
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel for="initial-martyria-greek-paragraph-style">
+            {{
+              $t(($) => $.dialog.initialMartyriaStyles.greekParagraphStyle, {
+                ns,
+              })
+            }}
+          </FieldLabel>
+          <ParagraphStyleSelect
+            id="initial-martyria-greek-paragraph-style"
+            :model-value="draft.greekParagraphStyleId"
+            :paragraph-styles="paragraphStyles"
+            @update:model-value="update({ greekParagraphStyleId: $event })"
+          />
+        </Field>
+
+        <Field
+          v-if="!languageUsesGreekScript && hasOrdinalDigits"
+          orientation="horizontal"
+        >
+          <Checkbox
+            id="initial-martyria-ordinal-forms"
+            :model-value="draft.useOrdinalForms"
+            @update:model-value="update({ useOrdinalForms: $event === true })"
+          />
+          <FieldLabel for="initial-martyria-ordinal-forms">
+            {{
+              $t(($) => $.dialog.initialMartyriaStyles.useOrdinalForms, {
+                ns,
+              })
+            }}
+          </FieldLabel>
         </Field>
 
         <div class="rounded-md border bg-muted/40">
@@ -434,19 +239,11 @@
 
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 
-import ColorPicker from '@/components/ColorPicker.vue';
-import FontCombobox from '@/components/FontCombobox.vue';
-import FontStyleSelect from '@/components/FontStyleSelect.vue';
 import InitialMartyriaSample from '@/components/InitialMartyriaSample.vue';
 import InitialMartyriaStyleTile from '@/components/InitialMartyriaStyleTile.vue';
-import InputFontSize from '@/components/InputFontSize.vue';
-import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
-import FontVariantFields from '@/components/properties/FontVariantFields.vue';
-import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
-import StrokeColorPicker from '@/components/StrokeColorPicker.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -464,8 +261,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import {
   getBuiltInInitialMartyriaStyle,
   getDefaultBuiltInInitialMartyriaStyle,
@@ -482,28 +277,18 @@ import {
   normalizeInitialMartyriaStructure,
 } from '@/models/InitialMartyriaGrammar';
 import { usesGreekScript } from '@/models/InitialMartyriaLexicon';
-import { initialMartyriaStructureHasGreekText } from '@/models/InitialMartyriaResolver';
 import {
-  INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaStructure,
   initialMartyriaStructureHasOrdinalDigits,
   type InitialMartyriaStyle,
-  type InitialMartyriaTypographyOverrides,
-  resolveInitialMartyriaFontFamily,
   withInitialMartyriaModeIdentificationMethod,
   withInitialMartyriaNumeralForm,
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
-import {
-  type ParagraphStyle,
-  resolveParagraphStyle,
-} from '@/models/ParagraphStyle';
-import { fontCatalog } from '@/services/FontCatalog';
-import type { FontVariantProperty } from '@/utils/fontVariants';
-import { composeExplicitFontVariant } from '@/utils/fontVariants';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import {
   getInitialMartyriaLanguageName,
   getInitialMartyriaModeIdentificationMethodLabel,
@@ -524,10 +309,9 @@ import {
 
 const ns = 'dialog';
 
-const props = defineProps<{
+defineProps<{
   pageSetup: PageSetup;
   paragraphStyles: ParagraphStyle[];
-  fonts: string[];
   nameValid: boolean;
 }>();
 
@@ -535,7 +319,6 @@ const draft = defineModel<InitialMartyriaStyle>({ required: true });
 const sampleMode = defineModel<number>('sampleMode', { required: true });
 const { t } = useTranslation();
 
-const tab = ref<'structure' | 'presentation'>('structure');
 const sampleModeOptions = getSampleModeOptions();
 const sampleModeValue = computed({
   get: () => String(sampleMode.value),
@@ -554,12 +337,6 @@ const previewTemplateIds = computed(() =>
 const languageUsesGreekScript = computed(() =>
   usesGreekScript(draft.value.structure.languageId),
 );
-const showGreekFontControl = computed(
-  () =>
-    !languageUsesGreekScript.value &&
-    (!draft.value.structure.transliterateNoteNames ||
-      initialMartyriaStructureHasGreekText(draft.value.structure)),
-);
 const hasOrdinalDigits = computed(() =>
   initialMartyriaStructureHasOrdinalDigits(draft.value.structure),
 );
@@ -567,74 +344,6 @@ const basedOnStyle = computed(() =>
   draft.value.basedOn == null
     ? null
     : getBuiltInInitialMartyriaStyle(draft.value.basedOn),
-);
-
-// The draft's typography with its overrides folded in; the controls bind to
-// these values. The font family may still be the 'default' sentinel here.
-const resolvedTypography = computed(() =>
-  resolveParagraphStyle(
-    props.paragraphStyles,
-    draft.value.paragraphStyleId,
-    draft.value.paragraphStyleOverrides,
-  ),
-);
-// The paragraph style's own values, used to decide whether "no features"
-// needs an explicit 'normal' or can clear back to inheritance.
-const inheritedTypography = computed(() =>
-  resolveParagraphStyle(props.paragraphStyles, draft.value.paragraphStyleId),
-);
-const hasTypographyOverrides = computed(() =>
-  Object.values(draft.value.paragraphStyleOverrides).some(
-    (value) => value !== undefined,
-  ),
-);
-const strokeColorSameAsText = computed(
-  () => resolvedTypography.value.strokeColor === 'currentcolor',
-);
-
-const fontOptions = computed(() => [
-  ...fontCatalog.bundledTextFamilies(),
-  ...props.fonts,
-]);
-const defaultFontOption = computed(() => ({
-  label: t(($) => $.dialog.initialMartyriaStyles.defaultFont, {
-    ns,
-    font: resolveInitialMartyriaFontFamily(
-      INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
-      props.pageSetup.neumeDefaultFontFamily,
-    ),
-  }),
-  value: INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
-}));
-const mainFontOptions = computed(() =>
-  languageUsesGreekScript.value
-    ? [defaultFontOption.value, ...fontOptions.value]
-    : fontOptions.value,
-);
-const resolvedMainFontFamily = computed(() =>
-  resolveInitialMartyriaFontFamily(
-    resolvedTypography.value.fontFamily,
-    props.pageSetup.neumeDefaultFontFamily,
-  ),
-);
-// The combobox takes strings, so a null Greek font (follow the text font)
-// is shown through a sentinel value that no font is named after.
-const SAME_AS_TEXT_FONT_VALUE = '__same-as-text-font__';
-const sameAsTextFontOption = computed(() => ({
-  label: t(($) => $.dialog.initialMartyriaStyles.sameAsTextFont, {
-    ns,
-    font: resolvedMainFontFamily.value,
-  }),
-  value: SAME_AS_TEXT_FONT_VALUE,
-}));
-const greekFontOptions = computed(() => [
-  sameAsTextFontOption.value,
-  defaultFontOption.value,
-  ...fontOptions.value,
-]);
-const { fontStyleOptions, remapStyleForFamily } = useFontStyleControls(
-  resolvedMainFontFamily,
-  () => resolvedTypography.value.fontStyle,
 );
 
 interface Strip {
@@ -751,11 +460,7 @@ const strips = computed<Strip[]>(() => {
 });
 
 function withStructure(structure: InitialMartyriaStructure) {
-  return withInitialMartyriaStyleStructure(
-    draft.value,
-    structure,
-    props.paragraphStyles,
-  );
+  return withInitialMartyriaStyleStructure(draft.value, structure);
 }
 
 function update(changes: Partial<InitialMartyriaStyle>) {
@@ -791,70 +496,12 @@ function setLanguage(value: unknown) {
   );
 }
 
-function setOverride<K extends keyof InitialMartyriaTypographyOverrides>(
-  property: K,
-  value: InitialMartyriaTypographyOverrides[K],
-) {
-  update({
-    paragraphStyleOverrides: {
-      ...draft.value.paragraphStyleOverrides,
-      [property]: value,
-    },
-  });
-}
-
-function clearOverride(property: keyof InitialMartyriaTypographyOverrides) {
-  const paragraphStyleOverrides = { ...draft.value.paragraphStyleOverrides };
-  delete paragraphStyleOverrides[property];
-  update({ paragraphStyleOverrides });
-}
-
-function clearTypographyOverrides() {
-  update({ paragraphStyleOverrides: {} });
-}
-
-function setMainFontFamily(value: string) {
-  const fontFamily = resolveInitialMartyriaFontFamily(
-    value,
-    props.pageSetup.neumeDefaultFontFamily,
-  );
-  update({
-    paragraphStyleOverrides: {
-      ...draft.value.paragraphStyleOverrides,
-      fontFamily: value,
-      fontStyle: remapStyleForFamily(fontFamily),
-    },
-  });
-}
-
-function setGreekFontFamily(value: string) {
-  update({
-    greekFontFamily: value === SAME_AS_TEXT_FONT_VALUE ? null : value,
-  });
-}
-
-function setFontSize(value: number | null) {
-  if (value != null) {
-    setOverride('fontSize', value);
-  }
-}
-
-function setFontVariant(property: FontVariantProperty, value: string) {
-  setOverride(
-    property,
-    composeExplicitFontVariant(value, inheritedTypography.value[property]),
-  );
-}
-
 function resetToBase() {
   if (basedOnStyle.value != null) {
     update({
       structure: { ...basedOnStyle.value.structure },
       paragraphStyleId: basedOnStyle.value.paragraphStyleId,
-      paragraphStyleOverrides: {
-        ...basedOnStyle.value.paragraphStyleOverrides,
-      },
-      greekFontFamily: basedOnStyle.value.greekFontFamily,
+      greekParagraphStyleId: basedOnStyle.value.greekParagraphStyleId,
       useOrdinalForms: basedOnStyle.value.useOrdinalForms,
     });
   }

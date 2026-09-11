@@ -22,6 +22,7 @@ import {
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   initialMartyriaLanguageIds,
 } from '@/models/InitialMartyriaStyle';
+import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
 
 import { attestedStructures } from './InitialMartyriaStyle.testData';
 import { elementForMode, resolve } from './InitialMartyriaStyle.testHelpers';
@@ -91,9 +92,6 @@ describe('InitialMartyriaBuiltInStyles', () => {
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassWithSign,
     );
     expect(englishOrdinalDigits.useOrdinalForms).toBe(true);
-    expect(
-      englishOrdinalDigits.paragraphStyleOverrides.fontVariantNumeric,
-    ).toBeUndefined();
     const plagalRuns = resolve(englishOrdinalDigits, elementForMode(5)).runs;
     const ordinalNumeralRun = plagalRuns.find(
       (run) => run.kind === 'text' && run.semantic === 'numeral',
@@ -129,14 +127,9 @@ describe('InitialMartyriaBuiltInStyles', () => {
         ...englishOrdinalDigits.structure,
         modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
       },
-      ...createDefaultInitialMartyriaTypography(
-        INITIAL_MARTYRIA_LANGUAGE_IDS.English,
-      ),
+      ...createDefaultInitialMartyriaTypography(),
     });
     expect(newEnglishOrdinalDigits.useOrdinalForms).toBe(true);
-    expect(
-      newEnglishOrdinalDigits.paragraphStyleOverrides.fontVariantNumeric,
-    ).toBeUndefined();
     expect(
       resolve(newEnglishOrdinalDigits, elementForMode(5)).runs.find(
         (run) => run.kind === 'text' && run.semantic === 'numeral',
@@ -165,6 +158,12 @@ describe('InitialMartyriaBuiltInStyles', () => {
 
     for (const style of builtInInitialMartyriaStyles) {
       expect(style.basedOn).toBeNull();
+      expect(style.paragraphStyleId).toBe(
+        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+      );
+      expect(style.greekParagraphStyleId).toBe(
+        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+      );
       expect(isInitialMartyriaStructureSupported(style.structure)).toBe(true);
       expect(
         attestedKeys.has(getInitialMartyriaStructureKey(style.structure)),

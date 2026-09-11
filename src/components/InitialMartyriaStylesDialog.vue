@@ -115,7 +115,6 @@
           v-model:sample-mode="sampleMode"
           :page-setup="pageSetup"
           :paragraph-styles="paragraphStyles"
-          :fonts="fonts"
           :name-valid="draftNameValid"
         />
 
@@ -429,13 +428,11 @@ import {
 import { usesGreekScript } from '@/models/InitialMartyriaLexicon';
 import {
   cloneInitialMartyriaStyle,
-  INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaStyle,
-  resolveInitialMartyriaFontFamily,
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import {
@@ -472,7 +469,6 @@ const props = withDefaults(
     styles: InitialMartyriaStyle[];
     paragraphStyles: ParagraphStyle[];
     pageSetup: PageSetup;
-    fonts: string[];
     target?: 'document' | 'element';
     /** The element's own style when the dialog targets an element. */
     elementStyleId?: string | null;
@@ -610,11 +606,17 @@ const listGroups = computed(() => {
 const summary = computed(() => {
   const style = selectedStyle.value;
   const structure = style.structure;
-  const typography = resolveParagraphStyle(
+  const mainTypography = resolveParagraphStyle(
     props.paragraphStyles,
     style.paragraphStyleId,
-    style.paragraphStyleOverrides,
   );
+  const greekTypography = resolveParagraphStyle(
+    props.paragraphStyles,
+    style.greekParagraphStyleId,
+  );
+  const primaryTypography = usesGreekScript(structure.languageId)
+    ? greekTypography
+    : mainTypography;
   const items: { label: string; value: string; swatch?: string }[] = [
     {
       label: t(($) => $.dialog.initialMartyriaStyles.language, { ns }),
@@ -662,30 +664,29 @@ const summary = computed(() => {
         : t(($) => $.dialog.initialMartyriaStyles.no, { ns }),
     });
   }
-  items.push(
-    {
-      label: t(($) => $.dialog.initialMartyriaStyles.font, { ns }),
+  items.push({
+    label: t(($) => $.dialog.initialMartyriaStyles.font, { ns }),
+    value: t(($) => $.dialog.initialMartyriaStyles.fontSummary, {
+      ns,
+      font: primaryTypography.fontFamily,
+      size: Unit.toPt(primaryTypography.fontSize),
+    }),
+  });
+  if (!usesGreekScript(structure.languageId)) {
+    items.push({
+      label: t(($) => $.dialog.initialMartyriaStyles.greekTextFont, { ns }),
       value: t(($) => $.dialog.initialMartyriaStyles.fontSummary, {
         ns,
-        font:
-          typography.fontFamily === INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY
-            ? t(($) => $.dialog.initialMartyriaStyles.defaultFont, {
-                ns,
-                font: resolveInitialMartyriaFontFamily(
-                  typography.fontFamily,
-                  props.pageSetup.neumeDefaultFontFamily,
-                ),
-              })
-            : typography.fontFamily,
-        size: Unit.toPt(typography.fontSize),
+        font: greekTypography.fontFamily,
+        size: Unit.toPt(greekTypography.fontSize),
       }),
-    },
-    {
-      label: t(($) => $.dialog.pageSetup.color, { ns }),
-      value: typography.color,
-      swatch: typography.color,
-    },
-  );
+    });
+  }
+  items.push({
+    label: t(($) => $.dialog.pageSetup.color, { ns }),
+    value: primaryTypography.color,
+    swatch: primaryTypography.color,
+  });
   return items;
 });
 

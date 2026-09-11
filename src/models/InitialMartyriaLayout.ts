@@ -13,8 +13,8 @@ import type {
  */
 export interface InitialMartyriaLayout {
   resolution: InitialMartyriaStyleResolution;
-  /** The style's main text appearance, which the ambitus punctuation uses. */
-  mainAppearance: InitialMartyriaAppearance;
+  /** The style's primary text appearance, which the ambitus punctuation uses. */
+  primaryAppearance: InitialMartyriaAppearance;
   /** One entry per run in resolution.runs. */
   runs: InitialMartyriaRunLayout[];
   trailingSeparator: InitialMartyriaSeparatorLayout;

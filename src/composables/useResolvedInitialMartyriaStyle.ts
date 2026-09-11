@@ -21,9 +21,7 @@ export function useResolvedInitialMartyriaStyle(options: {
       'initialMartyriaStyleId' | 'getParagraphStyleOverrides'
     >
   >;
-  pageSetup: MaybeRefOrGetter<
-    Pick<PageSetup, 'initialMartyriaStyleId' | 'neumeDefaultFontFamily'>
-  >;
+  pageSetup: MaybeRefOrGetter<Pick<PageSetup, 'initialMartyriaStyleId'>>;
   paragraphStyles: MaybeRefOrGetter<ParagraphStyle[]>;
   initialMartyriaStyles: MaybeRefOrGetter<InitialMartyriaStyle[]>;
 }) {
@@ -36,7 +34,9 @@ export function useResolvedInitialMartyriaStyle(options: {
     }),
   );
 
-  const mainAppearance = computed(() => resolvedStyle.value.mainAppearance);
+  const primaryAppearance = computed(
+    () => resolvedStyle.value.primaryAppearance,
+  );
 
   const hasOverrides = computed(() =>
     hasParagraphStyleOverrides(
@@ -44,5 +44,5 @@ export function useResolvedInitialMartyriaStyle(options: {
     ),
   );
 
-  return { resolvedStyle, mainAppearance, hasOverrides };
+  return { resolvedStyle, primaryAppearance, hasOverrides };
 }

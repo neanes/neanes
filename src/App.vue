@@ -313,6 +313,11 @@ onBeforeUnmount(() => {
 }
 
 @font-face {
+  font-family: 'GFS Didot Classic';
+  src: url('./assets/fonts/GFSDidot_Classic.otf');
+}
+
+@font-face {
   font-family: 'GFS Porson';
   src: url('./assets/fonts/GFSPorson.otf');
 }

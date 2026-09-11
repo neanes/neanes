@@ -93,8 +93,7 @@
     "name": "Название",
     "styleNamePlaceholder": "Название стиля",
     "language": "Язык",
-    "structure": "Структура",
-    "presentation": "Оформление",
+    "greekParagraphStyle": "Стиль абзаца для греческого текста",
     "preview": "Предпросмотр",
     "sampleMode": "Глас для образца",
     "basedOn": "На основе {{name}}",
@@ -106,8 +105,6 @@
     "transliterateNoteNames": "Транслитерировать начальную ноту",
     "transliterateNoteNamesHint": "Па вместо Πα",
     "font": "Шрифт",
-    "defaultFont": "По умолчанию ({{font}})",
-    "sameAsTextFont": "Как шрифт текста ({{font}})",
     "fontSummary": "{{font}}, {{size}} пт",
     "yes": "Да",
     "no": "Нет",
@@ -143,11 +140,8 @@
     "discard": "Отменить изменения",
     "deleteStyleTitle": "Удалить стиль?",
     "deleteStyleDescription": "Начальные мартирии со стилем «{{name}}» перейдут на стиль документа по умолчанию.",
-    "textFont": "Шрифт текста",
-    "mainFont": "Основной шрифт текста",
     "greekTextFont": "Шрифт греческого текста",
     "useOrdinalForms": "Использовать порядковые формы",
-    "advancedTypography": "Расширенная типографика",
     "languages": {
       "greek": "Греческий",
       "english": "Английский",
@@ -217,7 +211,8 @@
       "footer": "Нижний колонтитул",
       "lyrics": "Текст песнопения",
       "dropCap": "Буквица",
-      "initialMartyria": "Начальная мартирия"
+      "initialMartyria": "Начальная мартирия",
+      "initialMartyriaGreek": "Начальная мартирия (греческий)"
     }
   },
   "neumePositioning": {

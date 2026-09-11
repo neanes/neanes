@@ -93,8 +93,7 @@
     "name": "Nama",
     "styleNamePlaceholder": "Nama gaya",
     "language": "Bahasa",
-    "structure": "Struktur",
-    "presentation": "Tampilan",
+    "greekParagraphStyle": "Gaya paragraf Yunani",
     "preview": "Pratinjau",
     "sampleMode": "Modus contoh",
     "basedOn": "Berdasarkan {{name}}",
@@ -106,8 +105,6 @@
     "transliterateNoteNames": "Transliterasi nada awal",
     "transliterateNoteNamesHint": "Pa alih-alih Πα",
     "font": "Fon",
-    "defaultFont": "Bawaan ({{font}})",
-    "sameAsTextFont": "Sama dengan fon teks ({{font}})",
     "fontSummary": "{{font}}, {{size}} pt",
     "yes": "Ya",
     "no": "Tidak",
@@ -143,11 +140,8 @@
     "discard": "Buang",
     "deleteStyleTitle": "Hapus gaya?",
     "deleteStyleDescription": "Martyria awal yang memakai \"{{name}}\" akan mengikuti bawaan dokumen.",
-    "textFont": "Fon teks",
-    "mainFont": "Fon teks utama",
     "greekTextFont": "Fon teks Yunani",
     "useOrdinalForms": "Gunakan bentuk ordinal",
-    "advancedTypography": "Tipografi lanjutan",
     "languages": {
       "greek": "Yunani",
       "english": "Inggris",
@@ -217,7 +211,8 @@
       "footer": "Footer",
       "lyrics": "Lirik",
       "dropCap": "Huruf Awal Besar",
-      "initialMartyria": "Martyria Awal"
+      "initialMartyria": "Martyria Awal",
+      "initialMartyriaGreek": "Martyria Awal (Yunani)"
     }
   },
   "neumePositioning": {

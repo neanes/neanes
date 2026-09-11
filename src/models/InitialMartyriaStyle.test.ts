@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
 import {
   cloneInitialMartyriaStyle,
-  INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
 } from '@/models/InitialMartyriaStyle';
 
@@ -14,7 +13,6 @@ describe('InitialMartyriaStyle', () => {
   it('clones styles without sharing mutable state', () => {
     const source = styleFor(attestedStructures['greek-mode-names']);
     const clone = cloneInitialMartyriaStyle(source);
-    clone.paragraphStyleOverrides.fontFamily = 'Source Serif';
     if (
       source.structure.modeIdentificationMethod === 'mode-sign' ||
       clone.structure.modeIdentificationMethod === 'mode-sign'
@@ -23,9 +21,8 @@ describe('InitialMartyriaStyle', () => {
     }
     clone.structure.numeralStyle = INITIAL_MARTYRIA_NUMERAL_STYLES.Words;
 
-    expect(source.paragraphStyleOverrides.fontFamily).toBe(
-      INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
-    );
+    expect(clone).not.toBe(source);
+    expect(clone.structure).not.toBe(source.structure);
     expect(source.structure.numeralStyle).toBe(
       INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
     );

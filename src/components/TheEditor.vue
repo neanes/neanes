@@ -7701,16 +7701,28 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
         ? (deletedStyleFallbacks.get(styleId) ?? fallbackStyleId)
         : null,
   };
-  // Initial martyria styles reference paragraph styles too; a deleted one
-  // moves to the same fallback chain, ending at the built-in style.
+  // Initial martyria styles reference regular and Greek paragraph styles too;
+  // a deleted one moves to the same fallback chain, ending at its built-in
+  // style.
   const initialMartyriaStyles = score.value.initialMartyriaStyles.map(
     (style) => {
       const paragraphStyleId = remapResolvers.resolveStyleId(
         style.paragraphStyleId,
         BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
       );
+      const greekParagraphStyleId = remapResolvers.resolveStyleId(
+        style.greekParagraphStyleId,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+      );
 
-      return paragraphStyleId == null ? style : { ...style, paragraphStyleId };
+      return paragraphStyleId == null && greekParagraphStyleId == null
+        ? style
+        : {
+            ...style,
+            paragraphStyleId: paragraphStyleId ?? style.paragraphStyleId,
+            greekParagraphStyleId:
+              greekParagraphStyleId ?? style.greekParagraphStyleId,
+          };
     },
   );
   const commands: Command[] = [
@@ -11685,7 +11697,6 @@ function renderTabLabel(tab: Tab) {
         initialMartyriaStylesDialogElement?.initialMartyriaStyleId
       "
       :page-setup="score.pageSetup"
-      :fonts="fonts"
       :target="
         initialMartyriaStylesDialogElement == null ? 'document' : 'element'
       "

@@ -93,8 +93,7 @@
     "name": "Name",
     "styleNamePlaceholder": "Style name",
     "language": "Language",
-    "structure": "Structure",
-    "presentation": "Presentation",
+    "greekParagraphStyle": "Greek paragraph style",
     "preview": "Preview",
     "sampleMode": "Sample mode",
     "basedOn": "Based on {{name}}",
@@ -106,8 +105,6 @@
     "transliterateNoteNames": "Transliterate starting note",
     "transliterateNoteNamesHint": "Pa instead of Πα",
     "font": "Font",
-    "defaultFont": "Default ({{font}})",
-    "sameAsTextFont": "Same as text font ({{font}})",
     "fontSummary": "{{font}}, {{size}} pt",
     "yes": "Yes",
     "no": "No",
@@ -143,11 +140,8 @@
     "discard": "Discard",
     "deleteStyleTitle": "Delete style?",
     "deleteStyleDescription": "Initial martyria using \"{{name}}\" will follow the document default.",
-    "textFont": "Text font",
-    "mainFont": "Main text font",
     "greekTextFont": "Greek text font",
     "useOrdinalForms": "Use ordinal forms",
-    "advancedTypography": "Advanced typography",
     "languages": {
       "greek": "Greek",
       "english": "English",
@@ -217,7 +211,8 @@
       "footer": "Footer",
       "lyrics": "Lyrics",
       "dropCap": "Drop Cap",
-      "initialMartyria": "Initial Martyria"
+      "initialMartyria": "Initial Martyria",
+      "initialMartyriaGreek": "Initial Martyria (Greek)"
     }
   },
   "neumePositioning": {

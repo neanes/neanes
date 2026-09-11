@@ -6,10 +6,7 @@ import {
   createDefaultInitialMartyriaTypography,
   getBuiltInInitialMartyriaStyle,
 } from '@/models/InitialMartyriaBuiltInStyles';
-import {
-  INITIAL_MARTYRIA_LANGUAGE_IDS,
-  type InitialMartyriaStyle,
-} from '@/models/InitialMartyriaStyle';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   createDefaultParagraphStyles,
@@ -31,6 +28,7 @@ function createCustomInitialMartyriaStyle(
   id: string,
   displayName: string,
   paragraphStyleId: string,
+  greekParagraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
 ): InitialMartyriaStyle {
   const basedOn = BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames;
 
@@ -39,10 +37,9 @@ function createCustomInitialMartyriaStyle(
     displayName,
     basedOn,
     structure: { ...getBuiltInInitialMartyriaStyle(basedOn).structure },
-    ...createDefaultInitialMartyriaTypography(
-      INITIAL_MARTYRIA_LANGUAGE_IDS.English,
-    ),
+    ...createDefaultInitialMartyriaTypography(),
     paragraphStyleId,
+    greekParagraphStyleId,
   };
 }
 
@@ -101,7 +98,7 @@ describe('clipboardInitialMartyriaStyles', () => {
     const paragraphStyles = [...createDefaultParagraphStyles(), heading];
 
     expect(collectClipboardParagraphStyleIdsFromElements([], [parish])).toEqual(
-      [heading.id],
+      [heading.id, BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek],
     );
 
     const collected = collectClipboardParagraphStylesFromElements(
@@ -154,17 +151,19 @@ describe('clipboardInitialMartyriaStyles', () => {
     expect(imported).toHaveLength(1);
     expect(imported[0]).toEqual(parish);
     expect(imported[0]).not.toBe(parish);
-    expect(imported[0].paragraphStyleOverrides).not.toBe(
-      parish.paragraphStyleOverrides,
-    );
   });
 
   it('remaps the paragraph style reference of an imported style', () => {
     const heading = createCustomParagraphStyle('heading', 'Heading');
+    const greekHeading = createCustomParagraphStyle(
+      'greek-heading',
+      'Greek Heading',
+    );
     const parish = createCustomInitialMartyriaStyle(
       'parish',
       'Parish',
       heading.id,
+      greekHeading.id,
     );
     const targetParagraphStyles = createDefaultParagraphStyles();
 
@@ -173,7 +172,7 @@ describe('clipboardInitialMartyriaStyles', () => {
         collectClipboardParagraphStylesFromElements(
           [],
           [parish],
-          [...targetParagraphStyles, heading],
+          [...targetParagraphStyles, heading, greekHeading],
         ),
         targetParagraphStyles,
         collectClipboardParagraphStyleIdsFromElements([], [parish]),
@@ -185,11 +184,16 @@ describe('clipboardInitialMartyriaStyles', () => {
       styleIdRemap,
     );
 
-    expect(importedParagraphStyles).toHaveLength(1);
+    expect(importedParagraphStyles).toHaveLength(2);
     expect(importedParagraphStyles[0].displayName).toBe('Heading');
+    expect(importedParagraphStyles[1].displayName).toBe('Greek Heading');
     expect(imported).toHaveLength(1);
     expect(imported[0].paragraphStyleId).toBe(importedParagraphStyles[0].id);
+    expect(imported[0].greekParagraphStyleId).toBe(
+      importedParagraphStyles[1].id,
+    );
     expect(parish.paragraphStyleId).toBe(heading.id);
+    expect(parish.greekParagraphStyleId).toBe(greekHeading.id);
   });
 
   it('reuses a destination paragraph style by name for an imported style', () => {
@@ -228,6 +232,7 @@ describe('clipboardInitialMartyriaStyles', () => {
       'parish',
       'Parish',
       'deleted',
+      'deleted-greek',
     );
 
     const imported = resolveClipboardInitialMartyriaStyles(
@@ -239,6 +244,9 @@ describe('clipboardInitialMartyriaStyles', () => {
 
     expect(imported[0].paragraphStyleId).toBe(
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+    expect(imported[0].greekParagraphStyleId).toBe(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
     );
   });
 

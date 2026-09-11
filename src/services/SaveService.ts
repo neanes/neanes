@@ -36,7 +36,6 @@ import {
   type InitialMartyriaNumberingSystem,
   type InitialMartyriaStructure,
   type InitialMartyriaStyle,
-  type InitialMartyriaTypographyOverrides,
 } from '@/models/InitialMartyriaStyle';
 import { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -204,34 +203,29 @@ function hasLegacyPageSetupStyleDefaults(pageSetup: PageSetup_v1) {
   ].some((value) => value != null);
 }
 
-function hasLegacyModeKeyStyleDefaults(pageSetup: PageSetup_v1) {
-  return [
-    pageSetup.modeKeyDefaultColor,
-    pageSetup.modeKeyDefaultFontSize,
-    pageSetup.modeKeyDefaultStrokeWidth,
-    pageSetup.modeKeyDefaultHeightAdjustment,
-  ].some((value) => value != null);
-}
-
 // The glyph-based initial martyria of earlier versions drew the music font
-// at the mode key size, 20pt by default. Its replacement sets its text at
-// the built-in Initial Martyria paragraph style's size and scales the sign
-// glyphs to match, so a legacy size is carried over by the ratio of the two
-// defaults.
+// at the mode key size, 20pt by default. Its replacement uses 14.5pt for
+// Greek text and scales the sign glyphs to match its text, so a legacy
+// element override is carried over by the ratio of the two defaults.
 // A migration is frozen at the sizes that were current when it was written,
 // so later tuning of the Initial Martyria paragraph style does not change
 // how an old score loads.
 const LEGACY_MODE_KEY_DEFAULT_FONT_SIZE = Unit.fromPt(20);
 const LEGACY_MODE_KEY_FONT_SIZE_SCALE =
   Unit.fromPt(14.5) / LEGACY_MODE_KEY_DEFAULT_FONT_SIZE;
+const LEGACY_STATHIS_NEUME_FONT_FAMILIES = new Set([
+  'NeanesStathisSeries',
+  'NeanesStathisSeriesLegacy',
+]);
 
 function scaleLegacyModeKeyFontSize(fontSize: number) {
   return fontSize * LEGACY_MODE_KEY_FONT_SIZE_SCALE;
 }
 
 /*
- * Folds the pre-style mode key defaults into the built-in Initial Martyria
- * paragraph style. The height adjustment has no equivalent: the replacement
+ * Folds the shared pre-style mode key color into Initial Martyria so Initial
+ * Martyria (Greek) inherits it. The old size and outline belong only to the
+ * Greek appearance. The height adjustment has no equivalent: the replacement
  * measures its own height from font metrics.
  */
 function applyLegacyModeKeyStyleDefaults(
@@ -248,13 +242,43 @@ function applyLegacyModeKeyStyleDefaults(
   );
 
   applyGeneratedParagraphStyleOverrides(initialMartyria, inherited, {
-    fontSize:
-      pageSetup.modeKeyDefaultFontSize == null
-        ? undefined
-        : scaleLegacyModeKeyFontSize(pageSetup.modeKeyDefaultFontSize),
     color: pageSetup.modeKeyDefaultColor,
-    strokeWidth: pageSetup.modeKeyDefaultStrokeWidth,
   });
+
+  const initialMartyriaGreek = getRequiredParagraphStyleById(
+    styles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+  );
+  const greekInherited = resolveParagraphStyle(
+    styles,
+    initialMartyriaGreek.parentStyleId,
+  );
+
+  if (
+    LEGACY_STATHIS_NEUME_FONT_FAMILIES.has(pageSetup.neumeDefaultFontFamily)
+  ) {
+    applyGeneratedParagraphStyleOverride(
+      initialMartyriaGreek,
+      greekInherited,
+      'fontFamily',
+      'GFS Porson',
+    );
+  }
+
+  applyGeneratedParagraphStyleOverride(
+    initialMartyriaGreek,
+    greekInherited,
+    'fontSize',
+    pageSetup.modeKeyDefaultFontSize == null
+      ? undefined
+      : scaleLegacyModeKeyFontSize(pageSetup.modeKeyDefaultFontSize),
+  );
+  applyGeneratedParagraphStyleOverride(
+    initialMartyriaGreek,
+    greekInherited,
+    'strokeWidth',
+    pageSetup.modeKeyDefaultStrokeWidth,
+  );
 }
 
 /*
@@ -266,9 +290,13 @@ function migrateLegacyModeKeyStyleOverrides(
   score: Score_v1,
   paragraphStyles: ParagraphStyle[],
 ) {
-  const fallbackStyle = resolveParagraphStyle(
+  const fallbackSharedStyle = resolveParagraphStyle(
     paragraphStyles,
     BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+  );
+  const fallbackGreekStyle = resolveParagraphStyle(
+    paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
   );
 
   for (const element of score.staff.elements) {
@@ -296,7 +324,11 @@ function migrateLegacyModeKeyStyleOverrides(
 
     if (
       color != null &&
-      shouldKeepMigratedParagraphStyleOverride(fallbackStyle, 'color', color)
+      shouldKeepMigratedParagraphStyleOverride(
+        fallbackSharedStyle,
+        'color',
+        color,
+      )
     ) {
       modeKey.color = color;
     }
@@ -304,7 +336,7 @@ function migrateLegacyModeKeyStyleOverrides(
     if (
       fontSize != null &&
       shouldKeepMigratedParagraphStyleOverride(
-        fallbackStyle,
+        fallbackGreekStyle,
         'fontSize',
         fontSize,
       )
@@ -315,7 +347,7 @@ function migrateLegacyModeKeyStyleOverrides(
     if (
       strokeWidth != null &&
       shouldKeepMigratedParagraphStyleOverride(
-        fallbackStyle,
+        fallbackGreekStyle,
         'strokeWidth',
         strokeWidth,
       )
@@ -1028,25 +1060,13 @@ function splitSavedFontFamily(
 function saveInitialMartyriaStyle(
   style: InitialMartyriaStyle,
 ): InitialMartyriaStyle_v1 {
-  const overrides = style.paragraphStyleOverrides;
-
   return {
     id: style.id,
     displayName: style.displayName,
     basedOn: style.basedOn ?? undefined,
     ...style.structure,
     paragraphStyleId: style.paragraphStyleId,
-    fontFamily: overrides.fontFamily,
-    fontSize: overrides.fontSize,
-    fontSubfamily: overrides.fontStyle,
-    color: overrides.color,
-    strokeWidth: overrides.strokeWidth,
-    strokeColor: overrides.strokeColor,
-    fontVariantCaps: overrides.fontVariantCaps,
-    fontVariantNumeric: overrides.fontVariantNumeric,
-    fontVariantLigatures: overrides.fontVariantLigatures,
-    fontVariantAlternates: overrides.fontVariantAlternates,
-    greekFontFamily: style.greekFontFamily ?? undefined,
+    greekParagraphStyleId: style.greekParagraphStyleId,
     useOrdinalForms: style.useOrdinalForms,
   };
 }
@@ -1126,48 +1146,6 @@ function loadInitialMartyriaStyle(
     return null;
   }
 
-  const paragraphStyleOverrides: InitialMartyriaTypographyOverrides = {};
-
-  if (saved.fontFamily != null) {
-    paragraphStyleOverrides.fontFamily = saved.fontFamily;
-  }
-
-  if (saved.fontSize != null) {
-    paragraphStyleOverrides.fontSize = saved.fontSize;
-  }
-
-  if (saved.fontSubfamily != null) {
-    paragraphStyleOverrides.fontStyle = normalizeFontStyle(saved.fontSubfamily);
-  }
-
-  if (saved.color != null) {
-    paragraphStyleOverrides.color = saved.color;
-  }
-
-  if (saved.strokeWidth != null) {
-    paragraphStyleOverrides.strokeWidth = saved.strokeWidth;
-  }
-
-  if (saved.strokeColor != null) {
-    paragraphStyleOverrides.strokeColor = saved.strokeColor;
-  }
-
-  if (saved.fontVariantCaps !== undefined) {
-    paragraphStyleOverrides.fontVariantCaps = saved.fontVariantCaps;
-  }
-
-  if (saved.fontVariantNumeric !== undefined) {
-    paragraphStyleOverrides.fontVariantNumeric = saved.fontVariantNumeric;
-  }
-
-  if (saved.fontVariantLigatures !== undefined) {
-    paragraphStyleOverrides.fontVariantLigatures = saved.fontVariantLigatures;
-  }
-
-  if (saved.fontVariantAlternates !== undefined) {
-    paragraphStyleOverrides.fontVariantAlternates = saved.fontVariantAlternates;
-  }
-
   return {
     id: saved.id,
     displayName: saved.displayName,
@@ -1181,8 +1159,11 @@ function loadInitialMartyriaStyle(
     )
       ? saved.paragraphStyleId
       : BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
-    paragraphStyleOverrides,
-    greekFontFamily: saved.greekFontFamily ?? null,
+    greekParagraphStyleId: paragraphStyles.some(
+      (style) => style.id === saved.greekParagraphStyleId,
+    )
+      ? saved.greekParagraphStyleId
+      : BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
     useOrdinalForms: saved.useOrdinalForms !== false,
   };
 }
@@ -1939,7 +1920,6 @@ export class SaveService {
     );
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
     const hasLegacyStyleDefaults = hasLegacyPageSetupStyleDefaults(s.pageSetup);
-    const hasLegacyModeKeyDefaults = hasLegacyModeKeyStyleDefaults(s.pageSetup);
     // Initial martyria styles replaced the per-element mode key styling. A
     // score that names no style predates them, whether or not it also carries
     // the old page setup defaults.
@@ -1947,7 +1927,7 @@ export class SaveService {
     const defaultParagraphStyles = hasLegacyStyleDefaults
       ? createParagraphStylesFromLegacyPageSetupDefaults(s.pageSetup)
       : createDefaultParagraphStyles();
-    if (hasLegacyModeKeyDefaults) {
+    if (hasLegacyModeKeyElements) {
       applyLegacyModeKeyStyleDefaults(defaultParagraphStyles, s.pageSetup);
     }
     score.paragraphStyles = this.LoadParagraphStyles_v1(

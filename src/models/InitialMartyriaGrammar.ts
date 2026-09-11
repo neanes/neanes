@@ -294,14 +294,10 @@ function supportsNumeralForm(
   if (words == null) {
     return false;
   }
-  switch (form.numeralStyle) {
-    case INITIAL_MARTYRIA_NUMERAL_STYLES.Words:
-      return true;
-    case INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals:
-      return lexicon.alphabeticNumerals != null;
-    default:
-      return true;
-  }
+  return (
+    form.numeralStyle !== INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals ||
+    lexicon.alphabeticNumerals != null
+  );
 }
 
 function modeNameGrammarRuleMatches(
@@ -567,7 +563,13 @@ export function normalizeInitialMartyriaStructure(
     }
     return 0;
   });
-  return candidates[0];
+  const nearest = candidates[0];
+  if (nearest == null) {
+    throw new Error(
+      `No supported initial martyria structure for language ${structure.languageId}`,
+    );
+  }
+  return nearest;
 }
 
 export function initialMartyriaStructuresEqual(

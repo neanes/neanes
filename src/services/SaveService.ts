@@ -1946,6 +1946,10 @@ export class SaveService {
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
     const hasLegacyStyleDefaults = hasLegacyPageSetupStyleDefaults(s.pageSetup);
     const hasLegacyModeKeyDefaults = hasLegacyModeKeyStyleDefaults(s.pageSetup);
+    // Initial martyria styles replaced the per-element mode key styling. A
+    // score that names no style predates them, whether or not it also carries
+    // the old page setup defaults.
+    const hasLegacyModeKeyElements = s.pageSetup.initialMartyriaStyleId == null;
     const defaultParagraphStyles = hasLegacyStyleDefaults
       ? createParagraphStylesFromLegacyPageSetupDefaults(s.pageSetup)
       : createDefaultParagraphStyles();
@@ -1959,7 +1963,7 @@ export class SaveService {
     if (hasLegacyStyleDefaults) {
       migrateLegacyParagraphStyleOverrides(s, score.paragraphStyles);
     }
-    if (hasLegacyModeKeyDefaults) {
+    if (hasLegacyModeKeyElements) {
       migrateLegacyModeKeyStyleOverrides(s, score.paragraphStyles);
     }
     score.initialMartyriaStyles = (s.initialMartyriaStyles ?? [])

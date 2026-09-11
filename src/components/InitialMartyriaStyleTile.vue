@@ -9,7 +9,7 @@
   >
     <span class="mb-1 flex min-h-8 w-full items-center justify-center">
       <InitialMartyriaSample
-        :style="style"
+        :martyria-style="martyriaStyle"
         :paragraph-styles="paragraphStyles"
         :template-id="templateId"
         :page-setup="pageSetup"
@@ -19,7 +19,7 @@
     <span
       v-if="pronunciation != null"
       class="text-[11px] leading-tight text-muted-foreground"
-      :lang="style.structure.languageId"
+      :lang="martyriaStyle.structure.languageId"
       aria-hidden="true"
     >
       {{ pronunciation }}
@@ -53,7 +53,7 @@ defineEmits<{ select: [] }>();
 
 const props = withDefaults(
   defineProps<{
-    style: InitialMartyriaStyle;
+    martyriaStyle: InitialMartyriaStyle;
     paragraphStyles: ParagraphStyle[];
     templateId: number;
     pageSetup: PageSetup;
@@ -73,7 +73,7 @@ const pronunciation = computed(() => {
     modeKeyTemplates.find((item) => item.id === props.templateId)!,
   );
   return getInitialMartyriaPronunciation(
-    props.style.structure,
+    props.martyriaStyle.structure,
     getInitialMartyriaContext(element),
   );
 });

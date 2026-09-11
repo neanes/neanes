@@ -42,8 +42,6 @@ Every initial martyria in a score is written according to a style. Built-in styl
 
 To choose the style for the whole document, open `Format -> Initial Martyria Styles...`, select a style, and press `Use for this document`. You can also press `Manage styles...` in the Properties pane while an initial martyria is selected.
 
-![Initial Martyria Styles Dialog](./images/guide-initial-martyria-styles-dialog.png)
-
 To give a single initial martyria a different style, select it and choose the style from the `Style` select in the Properties pane or in the toolbar at the bottom of the screen. `Document default` follows the style chosen for the document.
 
 To create your own style, or to change the wording or typography of a built-in one, see [Initial Martyria Styles](./advanced.md#initial-martyria-styles) in the advanced guide. For initial martyriæ that no style can express, see [Custom Initial Martyriæ](./advanced.md#custom-initial-martyriæ).
@@ -54,8 +52,6 @@ To create your own style, or to change the wording or typography of a built-in o
 ### Inline initial martyriæ
 
 By default, an initial martyria occupies its own line. To place it in the line of neumes instead, for example before a short hymn or between two hymns on the same line, select the initial martyria and turn on the `Inline` switch in the `Positioning` section of the Properties pane. An inline initial martyria has no alignment or margins of its own, since it flows with the neumes around it.
-
-![Inline Initial Martyria Example](./images/guide-initial-martyria-inline-example-1.png)
 
 ## Entering Neumes
 

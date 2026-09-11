@@ -1181,12 +1181,9 @@ export class ModeKeyElement extends ScoreElement {
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
   public computedTop: number = 0;
-  public computedBottom: number = 0;
   public computedFlowTop: number = 0;
   /** The measured signature the renderer draws from; null until laid out. */
   public computedInitialMartyriaLayout: InitialMartyriaLayout | null = null;
-  /** computedInitialMartyriaLayout serialized, for re-render detection. */
-  public computedInitialMartyriaLayoutKey: string = '';
 
   // Re-render helpers
   public computedFontFamilyPrevious: string = '';
@@ -1195,9 +1192,10 @@ export class ModeKeyElement extends ScoreElement {
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
   public computedTopPrevious: number = 0;
-  public computedBottomPrevious: number = 0;
   public computedFlowTopPrevious: number = 0;
-  public computedInitialMartyriaLayoutKeyPrevious: string = '';
+  public heightPrevious: number = 0;
+  public computedInitialMartyriaLayoutPrevious: InitialMartyriaLayout | null =
+    null;
   public ambitusLowNotePrevious: Note = Note.Pa;
   public ambitusLowRootSignPrevious: RootSign = RootSign.Alpha;
   public ambitusHighNotePrevious: Note = Note.Pa;
@@ -1482,7 +1480,8 @@ export function isBlockElement(element: ScoreElement | null): boolean {
       !(element as RichTextBoxElement).inline) ||
     (element?.elementType === ElementType.ImageBox &&
       !(element as ImageBoxElement).inline) ||
-    element?.elementType === ElementType.ModeKey
+    (element?.elementType === ElementType.ModeKey &&
+      !(element as ModeKeyElement).inline)
   );
 }
 

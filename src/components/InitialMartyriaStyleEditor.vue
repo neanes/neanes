@@ -35,7 +35,7 @@
                 <InitialMartyriaStyleTile
                   v-for="tile in strip.tiles"
                   :key="tile.key"
-                  :style="withStructure(tile.structure)"
+                  :martyria-style="withStructure(tile.structure)"
                   :template-id="strip.templateId"
                   :page-setup="pageSetup"
                   :paragraph-styles="paragraphStyles"
@@ -388,7 +388,7 @@
               class="flex flex-col items-center gap-1 overflow-hidden"
             >
               <InitialMartyriaSample
-                :style="draft"
+                :martyria-style="draft"
                 :paragraph-styles="paragraphStyles"
                 :template-id="templateId"
                 :page-setup="pageSetup"

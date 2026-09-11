@@ -12,6 +12,7 @@
     />
     <InputFontSize
       id="toolbar-mode-key-font-size"
+      :aria-label="$t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })"
       :model-value="mainAppearance.fontSize"
       @update:model-value="
         $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)

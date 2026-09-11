@@ -185,7 +185,7 @@
                 class="flex max-w-full flex-col items-center gap-1"
               >
                 <InitialMartyriaSample
-                  :style="selectedStyle"
+                  :martyria-style="selectedStyle"
                   :paragraph-styles="paragraphStyles"
                   :template-id="templateId"
                   :page-setup="pageSetup"
@@ -447,6 +447,7 @@ import {
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { deepEquals } from '@/utils/deepEquals';
 import {
   getInitialMartyriaLanguageName,
   getInitialMartyriaModeIdentificationMethodLabel,
@@ -498,7 +499,8 @@ interface EditorState {
   draft: InitialMartyriaStyle;
   /** The saved style being edited, or null for a style not yet saved. */
   originalId: string | null;
-  snapshot: string;
+  /** The draft as it was opened, to compare the edited draft against. */
+  snapshot: InitialMartyriaStyle;
 }
 
 const view = ref<View>('list');
@@ -720,7 +722,7 @@ const draftNameValid = computed(() => {
 const draftDirty = computed(
   () =>
     editor.value != null &&
-    JSON.stringify(editor.value.draft) !== editor.value.snapshot,
+    !deepEquals(editor.value.draft, editor.value.snapshot),
 );
 
 // Judged on what the structure renders, not on its axes, so two styles that
@@ -741,7 +743,11 @@ function customNames() {
 }
 
 function openEditor(draft: InitialMartyriaStyle, originalId: string | null) {
-  editor.value = { draft, originalId, snapshot: JSON.stringify(draft) };
+  editor.value = {
+    draft,
+    originalId,
+    snapshot: cloneInitialMartyriaStyle(draft),
+  };
   view.value = 'edit';
 }
 

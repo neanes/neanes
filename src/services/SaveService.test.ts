@@ -1727,6 +1727,27 @@ describe('SaveService font styles', () => {
     expect(resaved.pageSetup.modeKeyDefaultColor).toBeUndefined();
   });
 
+  it('migrates legacy mode key element styling without legacy page setup defaults', () => {
+    const custom = new ModeKeyElement_v1();
+    custom.color = '#123456';
+    custom.fontSize = Unit.fromPt(30);
+    const usingDefaults = new ModeKeyElement_v1();
+    usingDefaults.useDefaultStyle = true;
+    usingDefaults.color = '#123456';
+    usingDefaults.fontSize = Unit.fromPt(40);
+    const saved = createLegacyScore();
+    saved.staff.elements = [custom, usingDefaults];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const [loadedCustom, loadedUsingDefaults] = loaded.staff
+      .elements as ModeKeyElement[];
+
+    expect(loadedCustom.color).toBe('#123456');
+    expect(loadedCustom.fontSize).toBeCloseTo((Unit.fromPt(30) * 14.5) / 20);
+    expect(loadedUsingDefaults.color).toBeNull();
+    expect(loadedUsingDefaults.fontSize).toBeNull();
+  });
+
   it('saves rich text language fields instead of legacy rtl', () => {
     const element = new RichTextBoxElement();
     const saved = new RichTextBoxElement_v1();

@@ -32,7 +32,7 @@ import { LayoutService } from '@/services/LayoutService';
  */
 const props = withDefaults(
   defineProps<{
-    style: InitialMartyriaStyle;
+    martyriaStyle: InitialMartyriaStyle;
     paragraphStyles: ParagraphStyle[];
     templateId: number;
     pageSetup: PageSetup;
@@ -65,11 +65,11 @@ const sample = computed(() => {
   );
 
   const resolvedStyle = resolveInitialMartyriaStyleAppearances(
-    props.style,
+    props.martyriaStyle,
     props.paragraphStyles,
     props.pageSetup.neumeDefaultFontFamily,
   );
-  element.initialMartyriaStyleId = props.style.id;
+  element.initialMartyriaStyleId = props.martyriaStyle.id;
   element.computedFontFamily = props.pageSetup.neumeDefaultFontFamily;
   element.computedFontSize = resolvedStyle.mainAppearance.fontSize;
   element.computedColor = resolvedStyle.mainAppearance.color;
@@ -81,7 +81,6 @@ const sample = computed(() => {
   );
   element.computedNeumeFontSize = geometry.neumeFontSize;
   element.computedTop = geometry.top;
-  element.computedBottom = geometry.bottom;
   element.computedFlowTop = geometry.flowTop;
   element.computedInitialMartyriaLayout = geometry.layout;
   element.height = geometry.bottom - geometry.top;

@@ -6,6 +6,7 @@ import {
   EmptyElement,
   ImageBoxElement,
   isAutomaticBreakProhibited,
+  isBlockElement,
   LineBreakType,
   MartyriaElement,
   ModeKeyElement,
@@ -22,6 +23,37 @@ import {
   type ParagraphStyleOverrides,
   resolveParagraphStyle,
 } from './ParagraphStyle';
+
+describe('isBlockElement', () => {
+  it('treats the full-width elements as blocks', () => {
+    expect(isBlockElement(new TextBoxElement())).toBe(true);
+    expect(isBlockElement(new RichTextBoxElement())).toBe(true);
+    expect(isBlockElement(new ImageBoxElement())).toBe(true);
+    expect(isBlockElement(new ModeKeyElement())).toBe(true);
+  });
+
+  it('treats an inline element as part of the line it flows in', () => {
+    const textBox = new TextBoxElement();
+    textBox.inline = true;
+    const richTextBox = new RichTextBoxElement();
+    richTextBox.inline = true;
+    const imageBox = new ImageBoxElement();
+    imageBox.inline = true;
+    const modeKey = new ModeKeyElement();
+    modeKey.inline = true;
+
+    expect(isBlockElement(textBox)).toBe(false);
+    expect(isBlockElement(richTextBox)).toBe(false);
+    expect(isBlockElement(imageBox)).toBe(false);
+    expect(isBlockElement(modeKey)).toBe(false);
+  });
+
+  it('treats the neume elements as inline content', () => {
+    expect(isBlockElement(new NoteElement())).toBe(false);
+    expect(isBlockElement(new MartyriaElement())).toBe(false);
+    expect(isBlockElement(null)).toBe(false);
+  });
+});
 
 describe('canKeepWithNext', () => {
   it('allows an optional break after notes', () => {
@@ -65,6 +97,13 @@ describe('canKeepWithNext', () => {
     const block = new ModeKeyElement();
 
     expect(canKeepWithNext(new NoteElement(), block)).toBe(false);
+  });
+
+  it('allows a keep before an inline initial martyria', () => {
+    const inlineModeKey = new ModeKeyElement();
+    inlineModeKey.inline = true;
+
+    expect(canKeepWithNext(new NoteElement(), inlineModeKey)).toBe(true);
   });
 
   it('rejects a keep on or before the terminal empty element', () => {

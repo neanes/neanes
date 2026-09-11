@@ -276,7 +276,6 @@ function getModeKeyTemplatesForMode(mode: number) {
     );
     element.computedNeumeFontSize = geometry.neumeFontSize;
     element.computedTop = geometry.top;
-    element.computedBottom = geometry.bottom;
     element.computedFlowTop = geometry.flowTop;
     element.computedInitialMartyriaLayout = geometry.layout;
     element.height = geometry.bottom - geometry.top;

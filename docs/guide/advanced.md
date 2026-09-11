@@ -165,8 +165,6 @@ An initial martyria is written according to a style. The style decides the langu
 
 To manage styles, open `Format -> Initial Martyria Styles...`, or select an initial martyria and press `Manage styles...` in the Properties pane.
 
-![Initial Martyria Styles Dialog](./images/guide-initial-martyria-styles-dialog.png)
-
 The list on the left contains the built-in styles, grouped by language, followed by any styles you have created. Use the search box to filter the list. The preview on the right shows the selected style applied to the plagal first mode and to the grave mode, with the spoken reading of each written underneath.
 
 Styles are stored in the score. Press `Use for this document` to make the selected style the document default. When the dialog was opened from an initial martyria, an `Apply` button is also available, which sets the selected style on that initial martyria only.
@@ -181,8 +179,6 @@ Press `New style` to start from scratch, or edit an existing style as described 
 
 The `Structure` tab controls the wording. Each row is a set of tiles; click a tile to use it.
 
-![Initial Martyria Style Editor Structure Tab](./images/guide-initial-martyria-style-editor-structure.png)
-
 - `Mode identification`: `Text only`, `Sign only`, or `Text and sign`.
 - `Number form`: digits, Roman numerals, alphabetic numerals, or words, each as a cardinal or an ordinal number.
 - `Number placement`: whether the number comes before or after the word for "mode".
@@ -193,8 +189,6 @@ The tiles offered depend on the selected language. For a language that is not wr
 #### Presentation
 
 The `Presentation` tab controls the typography.
-
-![Initial Martyria Style Editor Presentation Tab](./images/guide-initial-martyria-style-editor-presentation.png)
 
 The text is formatted according to a paragraph style, which by default is the built-in `Initial Martyria` paragraph style: red, 14.5 pt. Choose a different paragraph style from the `Paragraph Style` select, or override individual fields, namely the font, style, size, color, outline, and outline color. Each override has a clear button that returns the field to the paragraph style.
 

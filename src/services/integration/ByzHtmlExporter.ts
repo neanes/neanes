@@ -172,6 +172,17 @@ export class ByzHtmlExporter {
     defaultDropCapStyle: ResolvedParagraphStyle;
   } | null = null;
 
+  // The page setup's initial martyria style resolved through the paragraph
+  // styles, cached like the default paragraph styles above. The CSS defaults
+  // and the per-element overrides that are suppressed against them must come
+  // from the same resolution, so there is only ever one.
+  private resolvedDefaultModeKeyAppearance: {
+    pageSetup: PageSetup;
+    paragraphStyles: ParagraphStyle[];
+    initialMartyriaStyles: InitialMartyriaStyle[];
+    appearance: InitialMartyriaAppearance;
+  } | null = null;
+
   config: ByzHtmlExporterConfig = {
     classFthora: 'byz--f',
     classGorgon: 'byz--g',
@@ -237,17 +248,35 @@ export class ByzHtmlExporter {
     paragraphStyles: ParagraphStyle[],
     initialMartyriaStyles: InitialMartyriaStyle[],
   ): InitialMartyriaAppearance {
+    const cached = this.resolvedDefaultModeKeyAppearance;
+    if (
+      cached?.pageSetup === pageSetup &&
+      cached.paragraphStyles === paragraphStyles &&
+      cached.initialMartyriaStyles === initialMartyriaStyles
+    ) {
+      return cached.appearance;
+    }
+
     const style =
       findInitialMartyriaStyle(
         initialMartyriaStyles,
         pageSetup.initialMartyriaStyleId,
       ) ?? getBuiltInInitialMartyriaStyle(DEFAULT_INITIAL_MARTYRIA_STYLE_ID);
 
-    return resolveInitialMartyriaStyleAppearances(
+    const appearance = resolveInitialMartyriaStyleAppearances(
       style,
       paragraphStyles,
       pageSetup.neumeDefaultFontFamily,
     ).mainAppearance;
+
+    this.resolvedDefaultModeKeyAppearance = {
+      pageSetup,
+      paragraphStyles,
+      initialMartyriaStyles,
+      appearance,
+    };
+
+    return appearance;
   }
 
   exportScore(score: Score) {

@@ -111,6 +111,7 @@ import {
   type SbmuflGlyphName,
 } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
+import { deepEquals } from '@/utils/deepEquals';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import type { ResolvedFontStyle } from '@/utils/fontStyle';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
@@ -689,12 +690,8 @@ export class LayoutService {
           );
           modeKeyElement.computedNeumeFontSize = geometry.neumeFontSize;
           modeKeyElement.computedTop = geometry.top;
-          modeKeyElement.computedBottom = geometry.bottom;
           modeKeyElement.computedFlowTop = geometry.flowTop;
           modeKeyElement.computedInitialMartyriaLayout = geometry.layout;
-          modeKeyElement.computedInitialMartyriaLayoutKey = JSON.stringify(
-            geometry.layout,
-          );
           modeKeyElement.height = geometry.bottom - geometry.top;
           if (modeKeyElement.inline) {
             modeKeyElement.width = geometry.width;
@@ -1561,6 +1558,7 @@ export class LayoutService {
               pageSetup.lineHeight,
               neumeLineHeight,
               neumeHeight,
+              notationTextBaseline,
             );
 
             currentPageHeightPx += previousLineHeightPx - lastLineHeightPx;
@@ -2303,7 +2301,7 @@ export class LayoutService {
     const runs = resolution.runs;
     const neumeBaselineCorrection = getInitialMartyriaNeumeBaselineCorrection({
       initialMartyriaBaseline:
-        fontService.getMetrics(neumeFontFamily).initialMartyriaBaseline ?? 0,
+        fontService.getMetrics(neumeFontFamily).initialMartyriaBaseline,
       glyphFontSize,
     });
     const accessory = resolveInitialMartyriaAccessoryLayout({
@@ -5115,12 +5113,17 @@ export class LayoutService {
     defaultLineHeight: number,
     neumeLineHeight: number,
     neumeHeight: number,
+    notationTextBaseline: number,
   ) {
     let textBox: TextBoxElement | null = null;
     let richTextBox: RichTextBoxElement | null = null;
     let modeKey: ModeKeyElement | null = null;
     let imageBox: ImageBoxElement | null = null;
     let hasNeumeContent = false;
+    // How far the lowest inline initial martyria ink reaches below the top of
+    // the line. Its box is placed at the notation baseline, so the signature
+    // extends computedTop above that baseline and its height below that.
+    let inlineModeKeyBottom = 0;
 
     for (const element of line.elements) {
       switch (element.elementType) {
@@ -5137,6 +5140,12 @@ export class LayoutService {
         case ElementType.ModeKey:
           if ((element as ModeKeyElement).inline) {
             hasNeumeContent = true;
+            inlineModeKeyBottom = Math.max(
+              inlineModeKeyBottom,
+              notationTextBaseline +
+                (element as ModeKeyElement).computedTop +
+                (element as ModeKeyElement).height,
+            );
           } else if (modeKey === null) {
             modeKey = element as ModeKeyElement;
           }
@@ -5181,7 +5190,7 @@ export class LayoutService {
     }
 
     if (hasNeumeContent) {
-      return neumeLineHeight;
+      return Math.max(neumeLineHeight, inlineModeKeyBottom);
     }
 
     return defaultLineHeight;
@@ -5397,10 +5406,10 @@ export class LayoutService {
       modeKey.computedColorPrevious = modeKey.computedColor;
       modeKey.computedStrokeWidthPrevious = modeKey.computedStrokeWidth;
       modeKey.computedTopPrevious = modeKey.computedTop;
-      modeKey.computedBottomPrevious = modeKey.computedBottom;
       modeKey.computedFlowTopPrevious = modeKey.computedFlowTop;
-      modeKey.computedInitialMartyriaLayoutKeyPrevious =
-        modeKey.computedInitialMartyriaLayoutKey;
+      modeKey.heightPrevious = modeKey.height;
+      modeKey.computedInitialMartyriaLayoutPrevious =
+        modeKey.computedInitialMartyriaLayout;
       modeKey.ambitusHighNotePrevious = modeKey.ambitusHighNote;
       modeKey.ambitusHighRootSignPrevious = modeKey.ambitusHighRootSign;
       modeKey.ambitusLowNotePrevious = modeKey.ambitusLowNote;
@@ -5514,10 +5523,12 @@ export class LayoutService {
         modeKey.computedColorPrevious !== modeKey.computedColor ||
         modeKey.computedStrokeWidthPrevious !== modeKey.computedStrokeWidth ||
         modeKey.computedTopPrevious !== modeKey.computedTop ||
-        modeKey.computedBottomPrevious !== modeKey.computedBottom ||
         modeKey.computedFlowTopPrevious !== modeKey.computedFlowTop ||
-        modeKey.computedInitialMartyriaLayoutKeyPrevious !==
-          modeKey.computedInitialMartyriaLayoutKey ||
+        modeKey.heightPrevious !== modeKey.height ||
+        !deepEquals(
+          modeKey.computedInitialMartyriaLayoutPrevious,
+          modeKey.computedInitialMartyriaLayout,
+        ) ||
         modeKey.ambitusHighNote !== modeKey.ambitusHighNotePrevious ||
         modeKey.ambitusHighRootSign !== modeKey.ambitusHighRootSignPrevious ||
         modeKey.ambitusLowNote !== modeKey.ambitusLowNotePrevious ||

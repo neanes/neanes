@@ -5,12 +5,11 @@ export interface InitialMartyriaStyle {
   languageId: string;
   modeIdentificationMethod: string;
   numeralKind: string;
-  numeralStyle: string;
+  numeralStyle?: string;
   numberingSystem?: string;
   numeralQualifier: string;
   modeNamingScheme: string;
   transliterateNoteNames: boolean | undefined;
-  flowDirection: string | undefined;
   paragraphStyleId: string;
   fontFamily: string | undefined;
   fontSize: number | undefined;

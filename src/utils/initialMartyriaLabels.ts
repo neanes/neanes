@@ -120,6 +120,13 @@ export function getInitialMartyriaNumeralFormLabel(
   });
 }
 
+export function getInitialMartyriaNumeralKindLabel(
+  t: Translate,
+  numeralKind: InitialMartyriaNumeralKind,
+) {
+  return t(numeralKindSelectors[numeralKind], { ns: 'dialog' });
+}
+
 export function getInitialMartyriaNumeralStyleLabel(
   t: Translate,
   numeralStyle: InitialMartyriaNumeralStyle,

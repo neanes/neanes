@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   getBuiltInInitialMartyriaStyle,
-  getDefaultBuiltInInitialMartyriaStyle,
 } from '@/models/InitialMartyriaBuiltInStyles';
 import {
   enumerateInitialMartyriaStructures,
@@ -40,8 +39,6 @@ function getLegalInitialMartyriaStructures() {
   const structures: InitialMartyriaStructure[] = [];
 
   for (const languageId of initialMartyriaLanguageIds) {
-    const languageDefault =
-      getDefaultBuiltInInitialMartyriaStyle(languageId).structure;
     for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
       for (const form of initialMartyriaNumeralForms) {
         for (const numberingSystem of [
@@ -51,15 +48,22 @@ function getLegalInitialMartyriaStructures() {
           for (const numeralQualifier of initialMartyriaNumeralQualifiers) {
             for (const modeNamingScheme of initialMartyriaModeNamingSchemes) {
               for (const transliterateNoteNames of [false, true]) {
-                const structure: InitialMartyriaStructure = {
-                  ...languageDefault,
-                  modeIdentificationMethod,
-                  ...form,
-                  numberingSystem,
+                const common = {
+                  languageId,
+                  numeralKind: form.numeralKind,
                   numeralQualifier,
                   modeNamingScheme,
                   transliterateNoteNames,
                 };
+                const structure: InitialMartyriaStructure =
+                  modeIdentificationMethod === 'mode-sign'
+                    ? { ...common, modeIdentificationMethod }
+                    : {
+                        ...common,
+                        modeIdentificationMethod,
+                        numeralStyle: form.numeralStyle,
+                        numberingSystem,
+                      };
                 if (isInitialMartyriaStructureSupported(structure)) {
                   structures.push(structure);
                 }
@@ -78,15 +82,12 @@ function getBrowseInitialMartyriaStructures() {
   const structuresByKey = new Map<string, InitialMartyriaStructure>();
 
   for (const languageId of initialMartyriaLanguageIds) {
-    const languageDefault =
-      getDefaultBuiltInInitialMartyriaStyle(languageId).structure;
     for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
       for (const transliterateNoteNames of [false, true]) {
         const variations = enumerateInitialMartyriaStructures({
           languageId,
           modeIdentificationMethod,
           transliterateNoteNames,
-          flowDirection: languageDefault.flowDirection,
         });
         for (const variation of variations) {
           if (!structuresByKey.has(variation.key)) {
@@ -101,19 +102,30 @@ function getBrowseInitialMartyriaStructures() {
 }
 
 function describeStructure(structure: InitialMartyriaStructure) {
+  const numeralStyle =
+    structure.modeIdentificationMethod === 'mode-sign'
+      ? []
+      : [structure.numeralStyle];
+  const numberingSystem =
+    structure.modeIdentificationMethod === 'mode-sign'
+      ? []
+      : [structure.numberingSystem];
   return [
     structure.languageId,
     structure.modeIdentificationMethod,
-    structure.numeralStyle,
+    ...numeralStyle,
     structure.numeralKind,
-    structure.numberingSystem,
+    ...numberingSystem,
     structure.numeralQualifier,
     structure.modeNamingScheme,
     structure.transliterateNoteNames ? 'transliterated' : 'original',
-    structure.flowDirection,
   ]
     .filter((part) => part != null)
     .join('/');
+}
+
+function getAttestedStructure(label: string): InitialMartyriaStructure {
+  return attestedStructures[label as keyof typeof attestedStructures];
 }
 
 function encodeBrowseRun(run: ReturnType<typeof resolve>['runs'][number]) {
@@ -1136,7 +1148,7 @@ describe('InitialMartyriaLexicon', () => {
     );
 
     for (const [label, expectedByMode] of expectedRunsByStructure) {
-      const style = styleFor(attestedStructures[label]);
+      const style = styleFor(getAttestedStructure(label));
       for (let mode = 1; mode <= 8; mode++) {
         const encoded = resolve(style, elementForMode(mode))
           .runs.map(encodeRun)
@@ -1155,7 +1167,7 @@ describe('InitialMartyriaLexicon', () => {
     );
 
     for (const [label, expectedByMode] of expectedPronunciationsByStructure) {
-      const structure = attestedStructures[label];
+      const structure = getAttestedStructure(label);
       const style = styleFor(structure);
       for (let mode = 1; mode <= 8; mode++) {
         const resolution = resolve(style, elementForMode(mode));
@@ -1189,7 +1201,7 @@ describe('InitialMartyriaLexicon', () => {
 
     for (const [label, expected] of expectedByStructure) {
       expect(
-        resolve(styleFor(attestedStructures[label]), element).pronunciation,
+        resolve(styleFor(getAttestedStructure(label)), element).pronunciation,
       ).toBe(expected);
     }
   });
@@ -1206,7 +1218,7 @@ describe('InitialMartyriaLexicon', () => {
   it('uses the note names defined by each structure', () => {
     const resolveNoteText = (label: string) => {
       const startingPitch = resolve(
-        styleFor(attestedStructures[label]),
+        styleFor(getAttestedStructure(label)),
         elementForMode(1),
       ).runs.find(
         (run): run is InitialMartyriaStartingNoteRun =>
@@ -1266,7 +1278,6 @@ describe('InitialMartyriaLexicon', () => {
     );
 
     expect(arabicStyle).toMatchObject({
-      structure: { flowDirection: 'rtl' },
       paragraphStyleOverrides: { fontFamily: 'Noto Naskh Arabic' },
       greekFontFamily: 'GFS Didot',
     });

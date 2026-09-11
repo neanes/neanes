@@ -266,7 +266,6 @@ describe('InitialMartyriaResolver', () => {
     );
     expect(plagal?.kind).toBe('text');
     if (plagal?.kind === 'text') {
-      expect(plagal.fontRole).toBe('greek');
       expect(plagal.languageTag).toBe('el');
       expect(plagal.appearance.fontFamily).toBe('GFS Didot');
     }
@@ -300,7 +299,7 @@ describe('InitialMartyriaResolver', () => {
       expect(originalPitch.noteText.appearance.fontFamily).toBe('Alegreya');
     }
     const plagal = runs.find(
-      (run) => run.kind === 'text' && run.fontRole === 'greek',
+      (run) => run.kind === 'text' && run.semantic === 'plagalAbbreviation',
     );
     expect(plagal?.kind).toBe('text');
     if (plagal?.kind === 'text') {

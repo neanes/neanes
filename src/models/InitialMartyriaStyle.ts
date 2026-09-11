@@ -28,7 +28,6 @@ export type InitialMartyriaNumeralStyle =
   (typeof INITIAL_MARTYRIA_NUMERAL_STYLES)[keyof typeof INITIAL_MARTYRIA_NUMERAL_STYLES];
 
 export const INITIAL_MARTYRIA_NUMBERING_SYSTEMS = {
-  Latin: 'latn',
   ArabicIndic: 'arab',
 } as const;
 
@@ -116,8 +115,6 @@ export const initialMartyriaLanguageIds = Object.values(
   INITIAL_MARTYRIA_LANGUAGE_IDS,
 );
 
-export type InitialMartyriaFlowDirection = 'page' | 'ltr' | 'rtl';
-
 export type InitialMartyriaCanonicalNote =
   | ModeSign.Ni
   | ModeSign.Pa
@@ -136,27 +133,6 @@ export interface InitialMartyriaNoteNames {
 /** The role a piece of text plays inside the mode-name phrase. */
 export type InitialMartyriaTextSemantic =
   'label' | 'numeral' | 'plagalWord' | 'plagalAbbreviation' | 'graveWord';
-
-export type InitialMartyriaComponent =
-  | {
-      kind: 'text';
-      semantic: InitialMartyriaTextSemantic;
-      content: string;
-      fontRole?: 'main' | 'greek';
-    }
-  | {
-      kind: 'stackedText';
-      semantic: InitialMartyriaTextSemantic;
-      top: string;
-      bottom: string;
-      fontRole?: 'main' | 'greek';
-    }
-  | {
-      kind: 'modeSign';
-    }
-  | {
-      kind: 'startingNoteCluster';
-    };
 
 /** The typography properties an initial martyria style may set itself. */
 export type InitialMartyriaTypographyOverrides = Pick<
@@ -199,12 +175,16 @@ export interface InitialMartyriaStyleTypography {
   useOrdinalForms: boolean;
 }
 
-/** The number form printed by text identification or read from a mode sign. */
+/** The grammatical reading of a mode name, whether written as text or a sign. */
 export interface InitialMartyriaModeNameSemantics {
   numeralKind: InitialMartyriaNumeralKind;
-  numeralStyle: InitialMartyriaNumeralStyle;
   numeralQualifier: InitialMartyriaNumeralQualifier;
   modeNamingScheme: InitialMartyriaModeNamingScheme;
+}
+
+/** The additional choices that apply when a mode number is printed. */
+export interface InitialMartyriaWrittenModeNameSemantics extends InitialMartyriaModeNameSemantics {
+  numeralStyle: InitialMartyriaNumeralStyle;
   /** Digit repertoire; meaningful only when numeralStyle is digits. */
   numberingSystem?: InitialMartyriaNumberingSystem;
 }
@@ -214,20 +194,82 @@ export interface InitialMartyriaModeNameSemantics {
  * the app can produce. The displayed components and the spoken reading are
  * derived from these semantics and the language's lexicon, never stored.
  */
-export interface InitialMartyriaStructure extends InitialMartyriaModeNameSemantics {
+interface InitialMartyriaStructureBase extends InitialMartyriaModeNameSemantics {
   languageId: InitialMartyriaLanguageId;
-  modeIdentificationMethod: InitialMartyriaModeIdentificationMethod;
   /** Only used by languages that are not written in Greek script. */
   transliterateNoteNames: boolean;
-  flowDirection: InitialMartyriaFlowDirection;
+}
+
+export interface InitialMartyriaTextStructure
+  extends
+    InitialMartyriaStructureBase,
+    InitialMartyriaWrittenModeNameSemantics {
+  modeIdentificationMethod:
+    | typeof INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text
+    | typeof INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign;
+}
+
+export interface InitialMartyriaModeSignStructure extends InitialMartyriaStructureBase {
+  modeIdentificationMethod: typeof INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign;
+}
+
+export type InitialMartyriaStructure =
+  InitialMartyriaTextStructure | InitialMartyriaModeSignStructure;
+
+export function withInitialMartyriaModeIdentificationMethod(
+  structure: InitialMartyriaStructure,
+  modeIdentificationMethod: InitialMartyriaModeIdentificationMethod,
+): InitialMartyriaStructure {
+  const common = {
+    languageId: structure.languageId,
+    numeralKind: structure.numeralKind,
+    numeralQualifier: structure.numeralQualifier,
+    modeNamingScheme: structure.modeNamingScheme,
+    transliterateNoteNames: structure.transliterateNoteNames,
+  };
+  if (
+    modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+  ) {
+    return { ...common, modeIdentificationMethod };
+  }
+  return {
+    ...common,
+    modeIdentificationMethod,
+    // A sign has no printed form to preserve; words are its direct reading.
+    numeralStyle:
+      structure.modeIdentificationMethod ===
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+        ? INITIAL_MARTYRIA_NUMERAL_STYLES.Words
+        : structure.numeralStyle,
+    numberingSystem:
+      structure.modeIdentificationMethod ===
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+        ? undefined
+        : structure.numberingSystem,
+  };
+}
+
+export function withInitialMartyriaNumeralForm(
+  structure: InitialMartyriaTextStructure,
+  form: Pick<
+    InitialMartyriaWrittenModeNameSemantics,
+    'numeralKind' | 'numeralStyle'
+  >,
+): InitialMartyriaTextStructure {
+  return {
+    ...structure,
+    ...form,
+    numberingSystem:
+      form.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits
+        ? structure.numberingSystem
+        : undefined,
+  };
 }
 
 /** Whether the rendered mode name contains a digit ordinal such as "5th". */
 export function initialMartyriaStructureHasOrdinalDigits(
-  structure: Pick<
-    InitialMartyriaStructure,
-    'modeIdentificationMethod' | 'numeralKind' | 'numeralStyle'
-  >,
+  structure: InitialMartyriaStructure,
 ) {
   return (
     structure.modeIdentificationMethod !==
@@ -307,7 +349,6 @@ export type ResolvedInitialMartyriaRun =
       kind: 'text';
       semantic: InitialMartyriaTextSemantic;
       appearance: InitialMartyriaAppearance;
-      fontRole: 'main' | 'greek';
       direction: 'ltr' | 'rtl';
       languageTag: string;
       content: ResolvedInitialMartyriaTextContent;

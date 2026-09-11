@@ -20,6 +20,7 @@ import {
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaStructure,
   type InitialMartyriaStyle,
+  type InitialMartyriaTextStructure,
   type ModeKeyMode,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -48,15 +49,11 @@ function caseFold(values: (string | null)[], locale: string) {
 }
 
 function styleFor(
-  structure: Omit<
-    InitialMartyriaStructure,
-    'transliterateNoteNames' | 'flowDirection'
-  >,
+  structure: Omit<InitialMartyriaTextStructure, 'transliterateNoteNames'>,
 ): InitialMartyriaStyle {
   const fullStructure: InitialMartyriaStructure = {
     ...structure,
     transliterateNoteNames: false,
-    flowDirection: 'ltr',
   };
   return {
     id: 'cldr-test',
@@ -262,12 +259,17 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
     );
   });
 
-  it('preserves attested polytonic Greek ordinals alongside CLDR readings', () => {
-    const style = absoluteWordStyle(
-      INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
-      INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-    );
+  it('preserves reachable polytonic Greek ordinals alongside CLDR readings', () => {
+    const style = styleFor({
+      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
+      modeIdentificationMethod:
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+      modeNamingScheme:
+        INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    });
     const spokenOrdinals = pronunciationsFor(style).map((pronunciation) =>
       pronunciation
         .slice('Ήχος '.length)
@@ -275,26 +277,21 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
         .toLocaleLowerCase('el'),
     );
 
-    expect(caseFold(spokenOrdinals, 'el')).toEqual(
-      cldrValues('el', 'renderSpelloutOrdinalMasculine'),
+    expect(caseFold(spokenOrdinals.slice(0, 4), 'el')).toEqual(
+      cldrValues('el', 'renderSpelloutOrdinalMasculine').slice(0, 4),
     );
-    expect(numeralsFor(style)).toEqual([
+    expect(numeralsFor(style).slice(0, 4)).toEqual([
       'πρῶτος',
       'δεύτερος',
       'τρίτος',
       'τέταρτος',
-      'πέμπτος',
-      'ἕκτος',
-      'ἕβδομος',
-      'ὄγδοος',
     ]);
   });
 
-  it('uses CLDR Greek numerals with attested typography and stigma', () => {
+  it('uses reachable CLDR Greek numerals with attested typography', () => {
     const expected = cldrValues('root', 'renderGreekLower').map((value) =>
       value.replace('´', 'ʹ'),
     );
-    expected[5] = 'ϛʹ';
     const style = styleFor({
       languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
       modeIdentificationMethod:
@@ -302,10 +299,11 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
       numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
       numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
       numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-      modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+      modeNamingScheme:
+        INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     });
 
-    expect(numeralsFor(style)).toEqual(expected);
+    expect(numeralsFor(style).slice(0, 4)).toEqual(expected.slice(0, 4));
   });
 
   it('uses CLDR Spanish ordinals, including prenominal apocope', () => {
@@ -384,18 +382,6 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
         ),
       ).toEqual(expected);
     }
-  });
-
-  it('uses CLDR Russian masculine cardinal words', () => {
-    expect(
-      numeralsFor(
-        absoluteWordStyle(
-          INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
-          INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
-          INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-        ),
-      ),
-    ).toEqual(cldrValues('ru', 'renderSpelloutNumbering'));
   });
 
   it('uses CLDR Arabic masculine ordinal words', () => {

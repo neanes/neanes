@@ -513,6 +513,7 @@ import {
   cloneInitialMartyriaStyle,
   INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaStyle,
@@ -529,6 +530,7 @@ import {
   getInitialMartyriaModeIdentificationMethodLabel,
   getInitialMartyriaModeNamingSchemeLabel,
   getInitialMartyriaNumeralFormLabel,
+  getInitialMartyriaNumeralKindLabel,
   getInitialMartyriaNumeralQualifierLabel,
 } from '@/utils/initialMartyriaLabels';
 import {
@@ -714,7 +716,11 @@ const summary = computed(() => {
     },
     {
       label: t(($) => $.dialog.initialMartyriaStyles.numberForm, { ns }),
-      value: getInitialMartyriaNumeralFormLabel(t, structure),
+      value:
+        structure.modeIdentificationMethod ===
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+          ? getInitialMartyriaNumeralKindLabel(t, structure.numeralKind)
+          : getInitialMartyriaNumeralFormLabel(t, structure),
     },
     {
       label: t(($) => $.dialog.initialMartyriaStyles.numberPlacement, { ns }),

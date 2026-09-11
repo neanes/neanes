@@ -103,7 +103,7 @@
         </p>
         <section
           v-for="group in groups"
-          :key="group.numeralStyle"
+          :key="group.key"
           :aria-label="group.label"
         >
           <p
@@ -181,6 +181,7 @@ import {
 } from '@/models/InitialMartyriaGrammar';
 import { usesGreekScript } from '@/models/InitialMartyriaLexicon';
 import {
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaModeIdentificationMethod,
@@ -223,7 +224,6 @@ const modeIdentificationMethod = ref<InitialMartyriaModeIdentificationMethod>(
   props.seed.structure.modeIdentificationMethod,
 );
 const transliterateNoteNames = ref(props.seed.structure.transliterateNoteNames);
-const flowDirection = ref(props.seed.structure.flowDirection);
 const sampleMode = defineModel<number>('sampleMode', { required: true });
 const hideSaved = ref(false);
 const selection = defineModel<InitialMartyriaStructureSelection | null>(
@@ -249,7 +249,6 @@ const languageValue = computed({
     const languageDefault =
       getDefaultBuiltInInitialMartyriaStyle(nextLanguageId).structure;
     languageId.value = nextLanguageId;
-    flowDirection.value = languageDefault.flowDirection;
     transliterateNoteNames.value = languageDefault.transliterateNoteNames;
   },
 });
@@ -269,7 +268,6 @@ function baseStructure() {
     languageId: languageId.value,
     modeIdentificationMethod: modeIdentificationMethod.value,
     transliterateNoteNames: transliterateNoteNames.value,
-    flowDirection: flowDirection.value,
   };
 }
 
@@ -319,14 +317,27 @@ const visibleTiles = computed(() =>
 const visibleTileCount = computed(() => visibleTiles.value.length);
 
 const groups = computed(() => {
+  if (
+    modeIdentificationMethod.value ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+  ) {
+    return [{ key: 'mode-sign', label: '', tiles: visibleTiles.value }];
+  }
   const byNumeralStyle = new Map<InitialMartyriaNumeralStyle, Tile[]>();
   for (const tile of visibleTiles.value) {
-    const group = byNumeralStyle.get(tile.structure.numeralStyle) ?? [];
+    if (
+      tile.structure.modeIdentificationMethod ===
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+    ) {
+      continue;
+    }
+    const numeralStyle = tile.structure.numeralStyle;
+    const group = byNumeralStyle.get(numeralStyle) ?? [];
     group.push(tile);
-    byNumeralStyle.set(tile.structure.numeralStyle, group);
+    byNumeralStyle.set(numeralStyle, group);
   }
   return [...byNumeralStyle.entries()].map(([numeralStyle, tiles]) => ({
-    numeralStyle,
+    key: numeralStyle,
     label: getInitialMartyriaNumeralStyleLabel(t, numeralStyle),
     tiles,
   }));

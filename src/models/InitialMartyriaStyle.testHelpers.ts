@@ -20,7 +20,7 @@ export function encodeRun(run: ResolvedInitialMartyriaRun) {
   if (run.kind === 'startingPitch') {
     return '<pitch>';
   }
-  const prefix = run.fontRole === 'greek' ? 'greek:' : '';
+  const prefix = run.semantic === 'plagalAbbreviation' ? 'greek:' : '';
   return run.content.layout === 'inline'
     ? prefix + run.content.text
     : prefix + run.content.lines.join('/');

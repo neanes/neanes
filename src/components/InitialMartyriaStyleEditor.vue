@@ -490,6 +490,7 @@ import {
   initialMartyriaModeIdentificationMethods,
   initialMartyriaModeNamingSchemes,
   initialMartyriaNumeralForms,
+  initialMartyriaNumeralKinds,
   initialMartyriaNumeralQualifiers,
   normalizeInitialMartyriaStructure,
 } from '@/models/InitialMartyriaGrammar';
@@ -502,6 +503,7 @@ import {
 import {
   cloneInitialMartyriaStyle,
   INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaStructure,
@@ -509,6 +511,8 @@ import {
   type InitialMartyriaStyle,
   type InitialMartyriaTypographyOverrides,
   resolveInitialMartyriaFontFamily,
+  withInitialMartyriaModeIdentificationMethod,
+  withInitialMartyriaNumeralForm,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';
@@ -524,6 +528,7 @@ import {
   getInitialMartyriaModeIdentificationMethodLabel,
   getInitialMartyriaModeNamingSchemeLabel,
   getInitialMartyriaNumeralFormLabel,
+  getInitialMartyriaNumeralKindLabel,
   getInitialMartyriaNumeralQualifierLabel,
 } from '@/utils/initialMartyriaLabels';
 
@@ -672,6 +677,35 @@ interface Strip {
  */
 const strips = computed<Strip[]>(() => {
   const structure = draft.value.structure;
+  const numeralFormStrip: Strip =
+    structure.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+      ? {
+          key: 'numeralKind',
+          label: t(($) => $.dialog.initialMartyriaStyles.numberForm, { ns }),
+          templateId: sampleTemplateId.value,
+          tiles: getInitialMartyriaStructureVariations(
+            structure,
+            initialMartyriaNumeralKinds,
+            (current, numeralKind) => ({ ...current, numeralKind }),
+          ).map((variation) => ({
+            ...variation,
+            caption: getInitialMartyriaNumeralKindLabel(t, variation.value),
+          })),
+        }
+      : {
+          key: 'numeralForm',
+          label: t(($) => $.dialog.initialMartyriaStyles.numberForm, { ns }),
+          templateId: sampleTemplateId.value,
+          tiles: getInitialMartyriaStructureVariations(
+            structure,
+            initialMartyriaNumeralForms,
+            withInitialMartyriaNumeralForm,
+          ).map((variation) => ({
+            ...variation,
+            caption: getInitialMartyriaNumeralFormLabel(t, variation.value),
+          })),
+        };
   const strips: Strip[] = [
     {
       key: 'modeIdentificationMethod',
@@ -682,10 +716,7 @@ const strips = computed<Strip[]>(() => {
       tiles: getInitialMartyriaStructureVariations(
         structure,
         initialMartyriaModeIdentificationMethods,
-        (current, modeIdentificationMethod) => ({
-          ...current,
-          modeIdentificationMethod,
-        }),
+        withInitialMartyriaModeIdentificationMethod,
       ).map((variation) => ({
         ...variation,
         caption: getInitialMartyriaModeIdentificationMethodLabel(
@@ -694,19 +725,7 @@ const strips = computed<Strip[]>(() => {
         ),
       })),
     },
-    {
-      key: 'numeralForm',
-      label: t(($) => $.dialog.initialMartyriaStyles.numberForm, { ns }),
-      templateId: sampleTemplateId.value,
-      tiles: getInitialMartyriaStructureVariations(
-        structure,
-        initialMartyriaNumeralForms,
-        (current, form) => ({ ...current, ...form }),
-      ).map((variation) => ({
-        ...variation,
-        caption: getInitialMartyriaNumeralFormLabel(t, variation.value),
-      })),
-    },
+    numeralFormStrip,
     {
       key: 'numeralQualifier',
       label: t(($) => $.dialog.initialMartyriaStyles.numberPlacement, { ns }),
@@ -766,15 +785,14 @@ function setLanguage(value: unknown) {
   if (languageId === draft.value.structure.languageId) {
     return;
   }
-  // Direction and the transliteration habit are language decisions; the
-  // rest of the structure carries over where the new language supports it.
+  // The transliteration habit is a language default; the rest of the
+  // structure carries over where the new language supports it.
   const languageDefault =
     getDefaultBuiltInInitialMartyriaStyle(languageId).structure;
   setStructure(
     normalizeInitialMartyriaStructure({
       ...draft.value.structure,
       languageId,
-      flowDirection: languageDefault.flowDirection,
       transliterateNoteNames: languageDefault.transliterateNoteNames,
     }),
   );

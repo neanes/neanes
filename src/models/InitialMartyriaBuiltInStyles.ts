@@ -2,7 +2,6 @@ import type { Namespace, SelectorParam, TFunction } from 'i18next';
 
 import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
 
-import { initialMartyriaLexicons } from './InitialMartyriaLexicon';
 import {
   INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
@@ -12,9 +11,10 @@ import {
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaLanguageId,
-  type InitialMartyriaStructure,
+  type InitialMartyriaModeSignStructure,
   type InitialMartyriaStyle,
   type InitialMartyriaStyleTypography,
+  type InitialMartyriaTextStructure,
 } from './InitialMartyriaStyle';
 
 export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
@@ -174,13 +174,18 @@ export function createDefaultInitialMartyriaTypography(
   };
 }
 
-type BuiltInInitialMartyriaStyleDefinition = Omit<
-  InitialMartyriaStructure,
-  'transliterateNoteNames' | 'flowDirection'
-> &
-  Partial<
-    Pick<InitialMartyriaStructure, 'transliterateNoteNames' | 'flowDirection'>
-  > & { id: BuiltInInitialMartyriaStyleId };
+const languagesThatTransliterateNoteNames = new Set<InitialMartyriaLanguageId>([
+  INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+  INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
+]);
+
+type BuiltInInitialMartyriaStyleDefinition = (
+  | Omit<InitialMartyriaTextStructure, 'transliterateNoteNames'>
+  | Omit<InitialMartyriaModeSignStructure, 'transliterateNoteNames'>
+) & {
+  transliterateNoteNames?: boolean;
+  id: BuiltInInitialMartyriaStyleId;
+};
 
 function builtIn({
   id,
@@ -191,9 +196,9 @@ function builtIn({
     displayName: '',
     basedOn: null,
     structure: {
-      transliterateNoteNames:
-        initialMartyriaLexicons[structure.languageId].transliterateNoteNames,
-      flowDirection: 'page',
+      transliterateNoteNames: languagesThatTransliterateNoteNames.has(
+        structure.languageId,
+      ),
       ...structure,
     },
     ...createDefaultInitialMartyriaTypography(structure.languageId),
@@ -210,7 +215,6 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     modeIdentificationMethod:
@@ -232,7 +236,6 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     modeIdentificationMethod:
@@ -416,7 +419,6 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
-    flowDirection: 'rtl',
   }),
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalText,
@@ -426,7 +428,6 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
-    flowDirection: 'rtl',
   }),
   /*
    * Attested in the popular series of books by Hierodeacon John Lacoschitiotul e.g.
@@ -474,7 +475,6 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianTraditionalSign,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     modeIdentificationMethod:

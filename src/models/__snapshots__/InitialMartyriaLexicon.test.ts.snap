@@ -13,7 +13,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Ἦχος | βαρύς. | <modeSign> | <pitch:Γα> = Ήχος Βαρύς εκ του Γα",
       "8: Ἦχος | greek:λ/π | δʹ. | greek:λ/π | <modeSign> | <pitch:Νη> = Ήχος Πλάγιος του Τετάρτου εκ του Νη",
     ],
-    "structure": "el/text-and-mode-sign/alphabetic-numerals/ordinal/postnominal/authentic-counterpart/original/page",
+    "structure": "el/text-and-mode-sign/alphabetic-numerals/ordinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -26,7 +26,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Ἦχος | βαρύς. | <modeSign> | <pitch:Γα> = Ήχος Βαρύς εκ του Γα",
       "8: Ἦχος | πλάγιος τοῦ | τετάρτου. | greek:λ/π | <modeSign> | <pitch:Νη> = Ήχος Πλάγιος του Τετάρτου εκ του Νη",
     ],
-    "structure": "el/text-and-mode-sign/words/ordinal/postnominal/authentic-counterpart/original/page",
+    "structure": "el/text-and-mode-sign/words/ordinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -39,7 +39,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Ἦχος | βαρύς. | <pitch:Γα> = Ήχος Βαρύς εκ του Γα",
       "8: Ἦχος | greek:λ/π | δʹ. | <pitch:Νη> = Ήχος Πλάγιος του Τετάρτου εκ του Νη",
     ],
-    "structure": "el/text/alphabetic-numerals/ordinal/postnominal/authentic-counterpart/original/page",
+    "structure": "el/text/alphabetic-numerals/ordinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -52,7 +52,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Ἦχος | βαρύς. | <pitch:Γα> = Ήχος Βαρύς εκ του Γα",
       "8: Ἦχος | πλάγιος τοῦ | τετάρτου. | <pitch:Νη> = Ήχος Πλάγιος του Τετάρτου εκ του Νη",
     ],
-    "structure": "el/text/words/ordinal/postnominal/authentic-counterpart/original/page",
+    "structure": "el/text/words/ordinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -65,7 +65,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Ἦχος | Βαρύς | <modeSign> | <pitch:Γα> = Ήχος Βαρύς εκ του Γα",
       "8: Ἦχος | greek:λ/π | <modeSign> | <pitch:Νη> = Ήχος Πλάγιος του Τετάρτου εκ του Νη",
     ],
-    "structure": "el/mode-sign/alphabetic-numerals/ordinal/postnominal/authentic-counterpart/original/page",
+    "structure": "el/mode-sign/ordinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -78,7 +78,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Mode | 7. | <modeSign> | <pitch:Γα> = Mode Seven from Ga",
       "8: Mode | 8. | greek:λ/π | <modeSign> | <pitch:Νη> = Mode Eight from Ni",
     ],
-    "structure": "en/text-and-mode-sign/digits/cardinal/postnominal/absolute/original/page",
+    "structure": "en/text-and-mode-sign/digits/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -91,7 +91,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal of | Mode | 4. | greek:λ/π | <modeSign> | <pitch:Νη> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/text-and-mode-sign/digits/cardinal/postnominal/authentic-counterpart/original/page",
+    "structure": "en/text-and-mode-sign/digits/cardinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -104,7 +104,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal | Mode | 4. | greek:λ/π | <modeSign> | <pitch:Νη> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/text-and-mode-sign/digits/cardinal/postnominal/plagal-class/original/page",
+    "structure": "en/text-and-mode-sign/digits/cardinal/postnominal/plagal-class/original",
   },
   {
     "modes": [
@@ -117,7 +117,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: 7th | Mode. | <modeSign> | <pitch:Γα> = Seventh Mode from Ga",
       "8: 8th | Mode. | greek:λ/π | <modeSign> | <pitch:Νη> = Eighth Mode from Ni",
     ],
-    "structure": "en/text-and-mode-sign/digits/ordinal/prenominal/absolute/original/page",
+    "structure": "en/text-and-mode-sign/digits/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -130,7 +130,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal of | 4th | Mode. | greek:λ/π | <modeSign> | <pitch:Νη> = Plagal of Fourth Mode from Ni",
     ],
-    "structure": "en/text-and-mode-sign/digits/ordinal/prenominal/authentic-counterpart/original/page",
+    "structure": "en/text-and-mode-sign/digits/ordinal/prenominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -143,7 +143,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Γα> = Grave Mode from Ga",
       "8: 4th | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch:Νη> = Fourth Plagal Mode from Ni",
     ],
-    "structure": "en/text-and-mode-sign/digits/ordinal/prenominal/plagal-class/original/page",
+    "structure": "en/text-and-mode-sign/digits/ordinal/prenominal/plagal-class/original",
   },
   {
     "modes": [
@@ -156,7 +156,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Mode | VII. | <modeSign> | <pitch:Γα> = Mode Seven from Ga",
       "8: Mode | VIII. | greek:λ/π | <modeSign> | <pitch:Νη> = Mode Eight from Ni",
     ],
-    "structure": "en/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/original/page",
+    "structure": "en/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -169,7 +169,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal of | Mode | IV. | greek:λ/π | <modeSign> | <pitch:Νη> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/text-and-mode-sign/roman-numerals/cardinal/postnominal/authentic-counterpart/original/page",
+    "structure": "en/text-and-mode-sign/roman-numerals/cardinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -182,7 +182,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal | Mode | IV. | greek:λ/π | <modeSign> | <pitch:Νη> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/text-and-mode-sign/roman-numerals/cardinal/postnominal/plagal-class/original/page",
+    "structure": "en/text-and-mode-sign/roman-numerals/cardinal/postnominal/plagal-class/original",
   },
   {
     "modes": [
@@ -195,7 +195,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Mode | Seven. | <modeSign> | <pitch:Γα> = Mode Seven from Ga",
       "8: Mode | Eight. | greek:λ/π | <modeSign> | <pitch:Νη> = Mode Eight from Ni",
     ],
-    "structure": "en/text-and-mode-sign/words/cardinal/postnominal/absolute/original/page",
+    "structure": "en/text-and-mode-sign/words/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -208,7 +208,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal of | Mode | Four. | greek:λ/π | <modeSign> | <pitch:Νη> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/text-and-mode-sign/words/cardinal/postnominal/authentic-counterpart/original/page",
+    "structure": "en/text-and-mode-sign/words/cardinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -221,7 +221,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal | Mode | Four. | greek:λ/π | <modeSign> | <pitch:Νη> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/text-and-mode-sign/words/cardinal/postnominal/plagal-class/original/page",
+    "structure": "en/text-and-mode-sign/words/cardinal/postnominal/plagal-class/original",
   },
   {
     "modes": [
@@ -234,7 +234,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Seventh | Mode. | <modeSign> | <pitch:Γα> = Seventh Mode from Ga",
       "8: Eighth | Mode. | greek:λ/π | <modeSign> | <pitch:Νη> = Eighth Mode from Ni",
     ],
-    "structure": "en/text-and-mode-sign/words/ordinal/prenominal/absolute/original/page",
+    "structure": "en/text-and-mode-sign/words/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -247,7 +247,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal of | Fourth | Mode. | greek:λ/π | <modeSign> | <pitch:Νη> = Plagal of Fourth Mode from Ni",
     ],
-    "structure": "en/text-and-mode-sign/words/ordinal/prenominal/authentic-counterpart/original/page",
+    "structure": "en/text-and-mode-sign/words/ordinal/prenominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -260,7 +260,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Γα> = Grave Mode from Ga",
       "8: Fourth | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch:Νη> = Fourth Plagal Mode from Ni",
     ],
-    "structure": "en/text-and-mode-sign/words/ordinal/prenominal/plagal-class/original/page",
+    "structure": "en/text-and-mode-sign/words/ordinal/prenominal/plagal-class/original",
   },
   {
     "modes": [
@@ -273,7 +273,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Mode | 7. | <modeSign> | <pitch:Ga> = Mode Seven from Ga",
       "8: Mode | 8. | greek:λ/π | <modeSign> | <pitch:Ni> = Mode Eight from Ni",
     ],
-    "structure": "en/text-and-mode-sign/digits/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "en/text-and-mode-sign/digits/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -286,7 +286,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal of | Mode | 4. | greek:λ/π | <modeSign> | <pitch:Ni> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/text-and-mode-sign/digits/cardinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "en/text-and-mode-sign/digits/cardinal/postnominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -299,7 +299,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal | Mode | 4. | greek:λ/π | <modeSign> | <pitch:Ni> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/text-and-mode-sign/digits/cardinal/postnominal/plagal-class/transliterated/page",
+    "structure": "en/text-and-mode-sign/digits/cardinal/postnominal/plagal-class/transliterated",
   },
   {
     "modes": [
@@ -312,7 +312,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: 7th | Mode. | <modeSign> | <pitch:Ga> = Seventh Mode from Ga",
       "8: 8th | Mode. | greek:λ/π | <modeSign> | <pitch:Ni> = Eighth Mode from Ni",
     ],
-    "structure": "en/text-and-mode-sign/digits/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "en/text-and-mode-sign/digits/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -325,7 +325,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal of | 4th | Mode. | greek:λ/π | <modeSign> | <pitch:Ni> = Plagal of Fourth Mode from Ni",
     ],
-    "structure": "en/text-and-mode-sign/digits/ordinal/prenominal/authentic-counterpart/transliterated/page",
+    "structure": "en/text-and-mode-sign/digits/ordinal/prenominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -338,7 +338,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Ga> = Grave Mode from Ga",
       "8: 4th | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch:Ni> = Fourth Plagal Mode from Ni",
     ],
-    "structure": "en/text-and-mode-sign/digits/ordinal/prenominal/plagal-class/transliterated/page",
+    "structure": "en/text-and-mode-sign/digits/ordinal/prenominal/plagal-class/transliterated",
   },
   {
     "modes": [
@@ -351,7 +351,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Mode | VII. | <modeSign> | <pitch:Ga> = Mode Seven from Ga",
       "8: Mode | VIII. | greek:λ/π | <modeSign> | <pitch:Ni> = Mode Eight from Ni",
     ],
-    "structure": "en/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "en/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -364,7 +364,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal of | Mode | IV. | greek:λ/π | <modeSign> | <pitch:Ni> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/text-and-mode-sign/roman-numerals/cardinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "en/text-and-mode-sign/roman-numerals/cardinal/postnominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -377,7 +377,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal | Mode | IV. | greek:λ/π | <modeSign> | <pitch:Ni> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/text-and-mode-sign/roman-numerals/cardinal/postnominal/plagal-class/transliterated/page",
+    "structure": "en/text-and-mode-sign/roman-numerals/cardinal/postnominal/plagal-class/transliterated",
   },
   {
     "modes": [
@@ -390,7 +390,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Mode | Seven. | <modeSign> | <pitch:Ga> = Mode Seven from Ga",
       "8: Mode | Eight. | greek:λ/π | <modeSign> | <pitch:Ni> = Mode Eight from Ni",
     ],
-    "structure": "en/text-and-mode-sign/words/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "en/text-and-mode-sign/words/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -403,7 +403,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal of | Mode | Four. | greek:λ/π | <modeSign> | <pitch:Ni> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/text-and-mode-sign/words/cardinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "en/text-and-mode-sign/words/cardinal/postnominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -416,7 +416,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal | Mode | Four. | greek:λ/π | <modeSign> | <pitch:Ni> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/text-and-mode-sign/words/cardinal/postnominal/plagal-class/transliterated/page",
+    "structure": "en/text-and-mode-sign/words/cardinal/postnominal/plagal-class/transliterated",
   },
   {
     "modes": [
@@ -429,7 +429,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Seventh | Mode. | <modeSign> | <pitch:Ga> = Seventh Mode from Ga",
       "8: Eighth | Mode. | greek:λ/π | <modeSign> | <pitch:Ni> = Eighth Mode from Ni",
     ],
-    "structure": "en/text-and-mode-sign/words/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "en/text-and-mode-sign/words/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -442,7 +442,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal of | Fourth | Mode. | greek:λ/π | <modeSign> | <pitch:Ni> = Plagal of Fourth Mode from Ni",
     ],
-    "structure": "en/text-and-mode-sign/words/ordinal/prenominal/authentic-counterpart/transliterated/page",
+    "structure": "en/text-and-mode-sign/words/ordinal/prenominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -455,7 +455,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <modeSign> | <pitch:Ga> = Grave Mode from Ga",
       "8: Fourth | Plagal | Mode. | greek:λ/π | <modeSign> | <pitch:Ni> = Fourth Plagal Mode from Ni",
     ],
-    "structure": "en/text-and-mode-sign/words/ordinal/prenominal/plagal-class/transliterated/page",
+    "structure": "en/text-and-mode-sign/words/ordinal/prenominal/plagal-class/transliterated",
   },
   {
     "modes": [
@@ -468,7 +468,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Mode | 7. | <pitch:Γα> = Mode Seven from Ga",
       "8: Mode | 8. | <pitch:Νη> = Mode Eight from Ni",
     ],
-    "structure": "en/text/digits/cardinal/postnominal/absolute/original/page",
+    "structure": "en/text/digits/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -481,7 +481,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal of | Mode | 4. | <pitch:Νη> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/text/digits/cardinal/postnominal/authentic-counterpart/original/page",
+    "structure": "en/text/digits/cardinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -494,7 +494,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal | Mode | 4. | <pitch:Νη> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/text/digits/cardinal/postnominal/plagal-class/original/page",
+    "structure": "en/text/digits/cardinal/postnominal/plagal-class/original",
   },
   {
     "modes": [
@@ -507,7 +507,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: 7th | Mode. | <pitch:Γα> = Seventh Mode from Ga",
       "8: 8th | Mode. | <pitch:Νη> = Eighth Mode from Ni",
     ],
-    "structure": "en/text/digits/ordinal/prenominal/absolute/original/page",
+    "structure": "en/text/digits/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -520,7 +520,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal of | 4th | Mode. | <pitch:Νη> = Plagal of Fourth Mode from Ni",
     ],
-    "structure": "en/text/digits/ordinal/prenominal/authentic-counterpart/original/page",
+    "structure": "en/text/digits/ordinal/prenominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -533,7 +533,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Γα> = Grave Mode from Ga",
       "8: 4th | Plagal | Mode. | <pitch:Νη> = Fourth Plagal Mode from Ni",
     ],
-    "structure": "en/text/digits/ordinal/prenominal/plagal-class/original/page",
+    "structure": "en/text/digits/ordinal/prenominal/plagal-class/original",
   },
   {
     "modes": [
@@ -546,7 +546,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Mode | VII. | <pitch:Γα> = Mode Seven from Ga",
       "8: Mode | VIII. | <pitch:Νη> = Mode Eight from Ni",
     ],
-    "structure": "en/text/roman-numerals/cardinal/postnominal/absolute/original/page",
+    "structure": "en/text/roman-numerals/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -559,7 +559,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal of | Mode | IV. | <pitch:Νη> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/text/roman-numerals/cardinal/postnominal/authentic-counterpart/original/page",
+    "structure": "en/text/roman-numerals/cardinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -572,7 +572,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal | Mode | IV. | <pitch:Νη> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/text/roman-numerals/cardinal/postnominal/plagal-class/original/page",
+    "structure": "en/text/roman-numerals/cardinal/postnominal/plagal-class/original",
   },
   {
     "modes": [
@@ -585,7 +585,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Mode | Seven. | <pitch:Γα> = Mode Seven from Ga",
       "8: Mode | Eight. | <pitch:Νη> = Mode Eight from Ni",
     ],
-    "structure": "en/text/words/cardinal/postnominal/absolute/original/page",
+    "structure": "en/text/words/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -598,7 +598,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal of | Mode | Four. | <pitch:Νη> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/text/words/cardinal/postnominal/authentic-counterpart/original/page",
+    "structure": "en/text/words/cardinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -611,7 +611,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal | Mode | Four. | <pitch:Νη> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/text/words/cardinal/postnominal/plagal-class/original/page",
+    "structure": "en/text/words/cardinal/postnominal/plagal-class/original",
   },
   {
     "modes": [
@@ -624,7 +624,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Seventh | Mode. | <pitch:Γα> = Seventh Mode from Ga",
       "8: Eighth | Mode. | <pitch:Νη> = Eighth Mode from Ni",
     ],
-    "structure": "en/text/words/ordinal/prenominal/absolute/original/page",
+    "structure": "en/text/words/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -637,7 +637,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Γα> = Grave Mode from Ga",
       "8: Plagal of | Fourth | Mode. | <pitch:Νη> = Plagal of Fourth Mode from Ni",
     ],
-    "structure": "en/text/words/ordinal/prenominal/authentic-counterpart/original/page",
+    "structure": "en/text/words/ordinal/prenominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -650,7 +650,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Γα> = Grave Mode from Ga",
       "8: Fourth | Plagal | Mode. | <pitch:Νη> = Fourth Plagal Mode from Ni",
     ],
-    "structure": "en/text/words/ordinal/prenominal/plagal-class/original/page",
+    "structure": "en/text/words/ordinal/prenominal/plagal-class/original",
   },
   {
     "modes": [
@@ -663,7 +663,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Mode | 7. | <pitch:Ga> = Mode Seven from Ga",
       "8: Mode | 8. | <pitch:Ni> = Mode Eight from Ni",
     ],
-    "structure": "en/text/digits/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "en/text/digits/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -676,7 +676,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal of | Mode | 4. | <pitch:Ni> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/text/digits/cardinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "en/text/digits/cardinal/postnominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -689,7 +689,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal | Mode | 4. | <pitch:Ni> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/text/digits/cardinal/postnominal/plagal-class/transliterated/page",
+    "structure": "en/text/digits/cardinal/postnominal/plagal-class/transliterated",
   },
   {
     "modes": [
@@ -702,7 +702,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: 7th | Mode. | <pitch:Ga> = Seventh Mode from Ga",
       "8: 8th | Mode. | <pitch:Ni> = Eighth Mode from Ni",
     ],
-    "structure": "en/text/digits/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "en/text/digits/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -715,7 +715,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal of | 4th | Mode. | <pitch:Ni> = Plagal of Fourth Mode from Ni",
     ],
-    "structure": "en/text/digits/ordinal/prenominal/authentic-counterpart/transliterated/page",
+    "structure": "en/text/digits/ordinal/prenominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -728,7 +728,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Ga> = Grave Mode from Ga",
       "8: 4th | Plagal | Mode. | <pitch:Ni> = Fourth Plagal Mode from Ni",
     ],
-    "structure": "en/text/digits/ordinal/prenominal/plagal-class/transliterated/page",
+    "structure": "en/text/digits/ordinal/prenominal/plagal-class/transliterated",
   },
   {
     "modes": [
@@ -741,7 +741,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Mode | VII. | <pitch:Ga> = Mode Seven from Ga",
       "8: Mode | VIII. | <pitch:Ni> = Mode Eight from Ni",
     ],
-    "structure": "en/text/roman-numerals/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "en/text/roman-numerals/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -754,7 +754,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal of | Mode | IV. | <pitch:Ni> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/text/roman-numerals/cardinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "en/text/roman-numerals/cardinal/postnominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -767,7 +767,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal | Mode | IV. | <pitch:Ni> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/text/roman-numerals/cardinal/postnominal/plagal-class/transliterated/page",
+    "structure": "en/text/roman-numerals/cardinal/postnominal/plagal-class/transliterated",
   },
   {
     "modes": [
@@ -780,7 +780,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Mode | Seven. | <pitch:Ga> = Mode Seven from Ga",
       "8: Mode | Eight. | <pitch:Ni> = Mode Eight from Ni",
     ],
-    "structure": "en/text/words/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "en/text/words/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -793,7 +793,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal of | Mode | Four. | <pitch:Ni> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/text/words/cardinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "en/text/words/cardinal/postnominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -806,7 +806,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal | Mode | Four. | <pitch:Ni> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/text/words/cardinal/postnominal/plagal-class/transliterated/page",
+    "structure": "en/text/words/cardinal/postnominal/plagal-class/transliterated",
   },
   {
     "modes": [
@@ -819,7 +819,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Seventh | Mode. | <pitch:Ga> = Seventh Mode from Ga",
       "8: Eighth | Mode. | <pitch:Ni> = Eighth Mode from Ni",
     ],
-    "structure": "en/text/words/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "en/text/words/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -832,7 +832,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Ga> = Grave Mode from Ga",
       "8: Plagal of | Fourth | Mode. | <pitch:Ni> = Plagal of Fourth Mode from Ni",
     ],
-    "structure": "en/text/words/ordinal/prenominal/authentic-counterpart/transliterated/page",
+    "structure": "en/text/words/ordinal/prenominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -845,7 +845,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Grave | Mode. | <pitch:Ga> = Grave Mode from Ga",
       "8: Fourth | Plagal | Mode. | <pitch:Ni> = Fourth Plagal Mode from Ni",
     ],
-    "structure": "en/text/words/ordinal/prenominal/plagal-class/transliterated/page",
+    "structure": "en/text/words/ordinal/prenominal/plagal-class/transliterated",
   },
   {
     "modes": [
@@ -858,7 +858,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Mode | <pitch:Γα> = Grave Mode from Ga",
       "8: greek:λ/π | Mode | <modeSign> | <pitch:Νη> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/mode-sign/digits/cardinal/postnominal/authentic-counterpart/original/page",
+    "structure": "en/mode-sign/cardinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -871,7 +871,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Mode | <pitch:Γα> = Grave Mode from Ga",
       "8: greek:λ/π | Mode | <modeSign> | <pitch:Νη> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/mode-sign/digits/cardinal/postnominal/plagal-class/original/page",
+    "structure": "en/mode-sign/cardinal/postnominal/plagal-class/original",
   },
   {
     "modes": [
@@ -884,7 +884,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Mode | <pitch:Γα> = Grave Mode from Ga",
       "8: greek:λ/π | <modeSign> | Mode | <pitch:Νη> = Plagal of Fourth Mode from Ni",
     ],
-    "structure": "en/mode-sign/digits/ordinal/prenominal/authentic-counterpart/original/page",
+    "structure": "en/mode-sign/ordinal/prenominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -897,7 +897,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Mode | <pitch:Γα> = Grave Mode from Ga",
       "8: <modeSign> | greek:λ/π | Mode | <pitch:Νη> = Fourth Plagal Mode from Ni",
     ],
-    "structure": "en/mode-sign/digits/ordinal/prenominal/plagal-class/original/page",
+    "structure": "en/mode-sign/ordinal/prenominal/plagal-class/original",
   },
   {
     "modes": [
@@ -910,7 +910,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Mode | <pitch:Ga> = Grave Mode from Ga",
       "8: greek:λ/π | Mode | <modeSign> | <pitch:Ni> = Plagal of Mode Four from Ni",
     ],
-    "structure": "en/mode-sign/digits/cardinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "en/mode-sign/cardinal/postnominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -923,7 +923,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Mode | <pitch:Ga> = Grave Mode from Ga",
       "8: greek:λ/π | Mode | <modeSign> | <pitch:Ni> = Plagal Mode Four from Ni",
     ],
-    "structure": "en/mode-sign/digits/cardinal/postnominal/plagal-class/transliterated/page",
+    "structure": "en/mode-sign/cardinal/postnominal/plagal-class/transliterated",
   },
   {
     "modes": [
@@ -936,7 +936,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Mode | <pitch:Ga> = Grave Mode from Ga",
       "8: greek:λ/π | <modeSign> | Mode | <pitch:Ni> = Plagal of Fourth Mode from Ni",
     ],
-    "structure": "en/mode-sign/digits/ordinal/prenominal/authentic-counterpart/transliterated/page",
+    "structure": "en/mode-sign/ordinal/prenominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -949,7 +949,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Mode | <pitch:Ga> = Grave Mode from Ga",
       "8: <modeSign> | greek:λ/π | Mode | <pitch:Ni> = Fourth Plagal Mode from Ni",
     ],
-    "structure": "en/mode-sign/digits/ordinal/prenominal/plagal-class/transliterated/page",
+    "structure": "en/mode-sign/ordinal/prenominal/plagal-class/transliterated",
   },
   {
     "modes": [
@@ -962,7 +962,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | 7. | <modeSign> | <pitch:Γα> = Tono siete desde Ga",
       "8: Tono | 8. | greek:λ/π | <modeSign> | <pitch:Νη> = Tono ocho desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/digits/cardinal/postnominal/absolute/original/page",
+    "structure": "es/text-and-mode-sign/digits/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -975,7 +975,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | 7.º. | <modeSign> | <pitch:Γα> = Tono séptimo desde Ga",
       "8: Tono | 8.º. | greek:λ/π | <modeSign> | <pitch:Νη> = Tono octavo desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "es/text-and-mode-sign/digits/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -988,7 +988,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: 7.º | tono. | <modeSign> | <pitch:Γα> = Séptimo tono desde Ga",
       "8: 8.º | tono. | greek:λ/π | <modeSign> | <pitch:Νη> = Octavo tono desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/digits/ordinal/prenominal/absolute/original/page",
+    "structure": "es/text-and-mode-sign/digits/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1001,7 +1001,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | VII. | <modeSign> | <pitch:Γα> = Tono siete desde Ga",
       "8: Tono | VIII. | greek:λ/π | <modeSign> | <pitch:Νη> = Tono ocho desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/original/page",
+    "structure": "es/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1014,7 +1014,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | VII. | <modeSign> | <pitch:Γα> = Tono séptimo desde Ga",
       "8: Tono | VIII. | greek:λ/π | <modeSign> | <pitch:Νη> = Tono octavo desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/roman-numerals/ordinal/postnominal/absolute/original/page",
+    "structure": "es/text-and-mode-sign/roman-numerals/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1027,7 +1027,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: VII | tono. | <modeSign> | <pitch:Γα> = Séptimo tono desde Ga",
       "8: VIII | tono. | greek:λ/π | <modeSign> | <pitch:Νη> = Octavo tono desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/roman-numerals/ordinal/prenominal/absolute/original/page",
+    "structure": "es/text-and-mode-sign/roman-numerals/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1040,7 +1040,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | siete. | <modeSign> | <pitch:Γα> = Tono siete desde Ga",
       "8: Tono | ocho. | greek:λ/π | <modeSign> | <pitch:Νη> = Tono ocho desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/words/cardinal/postnominal/absolute/original/page",
+    "structure": "es/text-and-mode-sign/words/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1053,7 +1053,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | séptimo. | <modeSign> | <pitch:Γα> = Tono séptimo desde Ga",
       "8: Tono | octavo. | greek:λ/π | <modeSign> | <pitch:Νη> = Tono octavo desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/words/ordinal/postnominal/absolute/original/page",
+    "structure": "es/text-and-mode-sign/words/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1066,7 +1066,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Séptimo | tono. | <modeSign> | <pitch:Γα> = Séptimo tono desde Ga",
       "8: Octavo | tono. | greek:λ/π | <modeSign> | <pitch:Νη> = Octavo tono desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/words/ordinal/prenominal/absolute/original/page",
+    "structure": "es/text-and-mode-sign/words/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1079,7 +1079,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | 7. | <modeSign> | <pitch:Ga> = Tono siete desde Ga",
       "8: Tono | 8. | greek:λ/π | <modeSign> | <pitch:Ni> = Tono ocho desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/digits/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "es/text-and-mode-sign/digits/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1092,7 +1092,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | 7.º. | <modeSign> | <pitch:Ga> = Tono séptimo desde Ga",
       "8: Tono | 8.º. | greek:λ/π | <modeSign> | <pitch:Ni> = Tono octavo desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "es/text-and-mode-sign/digits/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1105,7 +1105,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: 7.º | tono. | <modeSign> | <pitch:Ga> = Séptimo tono desde Ga",
       "8: 8.º | tono. | greek:λ/π | <modeSign> | <pitch:Ni> = Octavo tono desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/digits/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "es/text-and-mode-sign/digits/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1118,7 +1118,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | VII. | <modeSign> | <pitch:Ga> = Tono siete desde Ga",
       "8: Tono | VIII. | greek:λ/π | <modeSign> | <pitch:Ni> = Tono ocho desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "es/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1131,7 +1131,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | VII. | <modeSign> | <pitch:Ga> = Tono séptimo desde Ga",
       "8: Tono | VIII. | greek:λ/π | <modeSign> | <pitch:Ni> = Tono octavo desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/roman-numerals/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "es/text-and-mode-sign/roman-numerals/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1144,7 +1144,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: VII | tono. | <modeSign> | <pitch:Ga> = Séptimo tono desde Ga",
       "8: VIII | tono. | greek:λ/π | <modeSign> | <pitch:Ni> = Octavo tono desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/roman-numerals/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "es/text-and-mode-sign/roman-numerals/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1157,7 +1157,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | siete. | <modeSign> | <pitch:Ga> = Tono siete desde Ga",
       "8: Tono | ocho. | greek:λ/π | <modeSign> | <pitch:Ni> = Tono ocho desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/words/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "es/text-and-mode-sign/words/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1170,7 +1170,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | séptimo. | <modeSign> | <pitch:Ga> = Tono séptimo desde Ga",
       "8: Tono | octavo. | greek:λ/π | <modeSign> | <pitch:Ni> = Tono octavo desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "es/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1183,7 +1183,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Séptimo | tono. | <modeSign> | <pitch:Ga> = Séptimo tono desde Ga",
       "8: Octavo | tono. | greek:λ/π | <modeSign> | <pitch:Ni> = Octavo tono desde Ni",
     ],
-    "structure": "es/text-and-mode-sign/words/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "es/text-and-mode-sign/words/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1196,7 +1196,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | 7. | <pitch:Γα> = Tono siete desde Ga",
       "8: Tono | 8. | <pitch:Νη> = Tono ocho desde Ni",
     ],
-    "structure": "es/text/digits/cardinal/postnominal/absolute/original/page",
+    "structure": "es/text/digits/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1209,7 +1209,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | 7.º. | <pitch:Γα> = Tono séptimo desde Ga",
       "8: Tono | 8.º. | <pitch:Νη> = Tono octavo desde Ni",
     ],
-    "structure": "es/text/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "es/text/digits/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1222,7 +1222,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: 7.º | tono. | <pitch:Γα> = Séptimo tono desde Ga",
       "8: 8.º | tono. | <pitch:Νη> = Octavo tono desde Ni",
     ],
-    "structure": "es/text/digits/ordinal/prenominal/absolute/original/page",
+    "structure": "es/text/digits/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1235,7 +1235,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | VII. | <pitch:Γα> = Tono siete desde Ga",
       "8: Tono | VIII. | <pitch:Νη> = Tono ocho desde Ni",
     ],
-    "structure": "es/text/roman-numerals/cardinal/postnominal/absolute/original/page",
+    "structure": "es/text/roman-numerals/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1248,7 +1248,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | VII. | <pitch:Γα> = Tono séptimo desde Ga",
       "8: Tono | VIII. | <pitch:Νη> = Tono octavo desde Ni",
     ],
-    "structure": "es/text/roman-numerals/ordinal/postnominal/absolute/original/page",
+    "structure": "es/text/roman-numerals/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1261,7 +1261,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: VII | tono. | <pitch:Γα> = Séptimo tono desde Ga",
       "8: VIII | tono. | <pitch:Νη> = Octavo tono desde Ni",
     ],
-    "structure": "es/text/roman-numerals/ordinal/prenominal/absolute/original/page",
+    "structure": "es/text/roman-numerals/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1274,7 +1274,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | siete. | <pitch:Γα> = Tono siete desde Ga",
       "8: Tono | ocho. | <pitch:Νη> = Tono ocho desde Ni",
     ],
-    "structure": "es/text/words/cardinal/postnominal/absolute/original/page",
+    "structure": "es/text/words/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1287,7 +1287,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | séptimo. | <pitch:Γα> = Tono séptimo desde Ga",
       "8: Tono | octavo. | <pitch:Νη> = Tono octavo desde Ni",
     ],
-    "structure": "es/text/words/ordinal/postnominal/absolute/original/page",
+    "structure": "es/text/words/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1300,7 +1300,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Séptimo | tono. | <pitch:Γα> = Séptimo tono desde Ga",
       "8: Octavo | tono. | <pitch:Νη> = Octavo tono desde Ni",
     ],
-    "structure": "es/text/words/ordinal/prenominal/absolute/original/page",
+    "structure": "es/text/words/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1313,7 +1313,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | 7. | <pitch:Ga> = Tono siete desde Ga",
       "8: Tono | 8. | <pitch:Ni> = Tono ocho desde Ni",
     ],
-    "structure": "es/text/digits/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "es/text/digits/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1326,7 +1326,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | 7.º. | <pitch:Ga> = Tono séptimo desde Ga",
       "8: Tono | 8.º. | <pitch:Ni> = Tono octavo desde Ni",
     ],
-    "structure": "es/text/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "es/text/digits/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1339,7 +1339,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: 7.º | tono. | <pitch:Ga> = Séptimo tono desde Ga",
       "8: 8.º | tono. | <pitch:Ni> = Octavo tono desde Ni",
     ],
-    "structure": "es/text/digits/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "es/text/digits/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1352,7 +1352,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | VII. | <pitch:Ga> = Tono siete desde Ga",
       "8: Tono | VIII. | <pitch:Ni> = Tono ocho desde Ni",
     ],
-    "structure": "es/text/roman-numerals/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "es/text/roman-numerals/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1365,7 +1365,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | VII. | <pitch:Ga> = Tono séptimo desde Ga",
       "8: Tono | VIII. | <pitch:Ni> = Tono octavo desde Ni",
     ],
-    "structure": "es/text/roman-numerals/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "es/text/roman-numerals/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1378,7 +1378,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: VII | tono. | <pitch:Ga> = Séptimo tono desde Ga",
       "8: VIII | tono. | <pitch:Ni> = Octavo tono desde Ni",
     ],
-    "structure": "es/text/roman-numerals/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "es/text/roman-numerals/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1391,7 +1391,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | siete. | <pitch:Ga> = Tono siete desde Ga",
       "8: Tono | ocho. | <pitch:Ni> = Tono ocho desde Ni",
     ],
-    "structure": "es/text/words/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "es/text/words/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1404,7 +1404,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | séptimo. | <pitch:Ga> = Tono séptimo desde Ga",
       "8: Tono | octavo. | <pitch:Ni> = Tono octavo desde Ni",
     ],
-    "structure": "es/text/words/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "es/text/words/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1417,7 +1417,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Séptimo | tono. | <pitch:Ga> = Séptimo tono desde Ga",
       "8: Octavo | tono. | <pitch:Ni> = Octavo tono desde Ni",
     ],
-    "structure": "es/text/words/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "es/text/words/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1430,7 +1430,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | <modeSign> | <pitch:Γα> = Tono siete desde Ga",
       "8: greek:λ/π | Tono | <modeSign> | <pitch:Νη> = Tono ocho desde Ni",
     ],
-    "structure": "es/mode-sign/digits/cardinal/postnominal/absolute/original/page",
+    "structure": "es/mode-sign/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1443,7 +1443,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | <modeSign> | <pitch:Γα> = Tono séptimo desde Ga",
       "8: greek:λ/π | Tono | <modeSign> | <pitch:Νη> = Tono octavo desde Ni",
     ],
-    "structure": "es/mode-sign/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "es/mode-sign/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1456,7 +1456,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | tono | <pitch:Γα> = Séptimo tono desde Ga",
       "8: greek:λ/π | <modeSign> | tono | <pitch:Νη> = Octavo tono desde Ni",
     ],
-    "structure": "es/mode-sign/digits/ordinal/prenominal/absolute/original/page",
+    "structure": "es/mode-sign/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1469,7 +1469,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | <modeSign> | <pitch:Ga> = Tono siete desde Ga",
       "8: greek:λ/π | Tono | <modeSign> | <pitch:Ni> = Tono ocho desde Ni",
     ],
-    "structure": "es/mode-sign/digits/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "es/mode-sign/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1482,7 +1482,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Tono | <modeSign> | <pitch:Ga> = Tono séptimo desde Ga",
       "8: greek:λ/π | Tono | <modeSign> | <pitch:Ni> = Tono octavo desde Ni",
     ],
-    "structure": "es/mode-sign/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "es/mode-sign/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1495,7 +1495,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | tono | <pitch:Ga> = Séptimo tono desde Ga",
       "8: greek:λ/π | <modeSign> | tono | <pitch:Ni> = Octavo tono desde Ni",
     ],
-    "structure": "es/mode-sign/digits/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "es/mode-sign/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1508,7 +1508,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | 7. | <modeSign> | <pitch:Γα> = Гла́съ седмы́й ѿ Га",
       "8: Гла́съ | 8. | greek:λ/π | <modeSign> | <pitch:Νη> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/text-and-mode-sign/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "cu/text-and-mode-sign/digits/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1521,7 +1521,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | з҃. | <modeSign> | <pitch:Γα> = Гла́съ седмы́й ѿ Га",
       "8: Гла́съ | и҃. | greek:λ/π | <modeSign> | <pitch:Νη> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/text-and-mode-sign/alphabetic-numerals/ordinal/postnominal/absolute/original/page",
+    "structure": "cu/text-and-mode-sign/alphabetic-numerals/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1534,7 +1534,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | седмы́й. | <modeSign> | <pitch:Γα> = Гла́съ седмы́й ѿ Га",
       "8: Гла́съ | ѻ҆сьмы́й. | greek:λ/π | <modeSign> | <pitch:Νη> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/text-and-mode-sign/words/ordinal/postnominal/absolute/original/page",
+    "structure": "cu/text-and-mode-sign/words/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1547,7 +1547,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Седмы́й | гла́съ. | <modeSign> | <pitch:Γα> = Седмы́й гла́съ ѿ Га",
       "8: Ѻ҆сьмы́й | гла́съ. | greek:λ/π | <modeSign> | <pitch:Νη> = Ѻ҆сьмы́й гла́съ ѿ Ни",
     ],
-    "structure": "cu/text-and-mode-sign/words/ordinal/prenominal/absolute/original/page",
+    "structure": "cu/text-and-mode-sign/words/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1560,7 +1560,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | 7. | <modeSign> | <pitch:Га> = Гла́съ седмы́й ѿ Га",
       "8: Гла́съ | 8. | greek:λ/π | <modeSign> | <pitch:Ни> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/text-and-mode-sign/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "cu/text-and-mode-sign/digits/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1573,7 +1573,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | з҃. | <modeSign> | <pitch:Га> = Гла́съ седмы́й ѿ Га",
       "8: Гла́съ | и҃. | greek:λ/π | <modeSign> | <pitch:Ни> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/text-and-mode-sign/alphabetic-numerals/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "cu/text-and-mode-sign/alphabetic-numerals/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1586,7 +1586,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | седмы́й. | <modeSign> | <pitch:Га> = Гла́съ седмы́й ѿ Га",
       "8: Гла́съ | ѻ҆сьмы́й. | greek:λ/π | <modeSign> | <pitch:Ни> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "cu/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1599,7 +1599,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Седмы́й | гла́съ. | <modeSign> | <pitch:Га> = Седмы́й гла́съ ѿ Га",
       "8: Ѻ҆сьмы́й | гла́съ. | greek:λ/π | <modeSign> | <pitch:Ни> = Ѻ҆сьмы́й гла́съ ѿ Ни",
     ],
-    "structure": "cu/text-and-mode-sign/words/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "cu/text-and-mode-sign/words/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1612,7 +1612,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | 7. | <pitch:Γα> = Гла́съ седмы́й ѿ Га",
       "8: Гла́съ | 8. | <pitch:Νη> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/text/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "cu/text/digits/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1625,7 +1625,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | з҃. | <pitch:Γα> = Гла́съ седмы́й ѿ Га",
       "8: Гла́съ | и҃. | <pitch:Νη> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/text/alphabetic-numerals/ordinal/postnominal/absolute/original/page",
+    "structure": "cu/text/alphabetic-numerals/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1638,7 +1638,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | седмы́й. | <pitch:Γα> = Гла́съ седмы́й ѿ Га",
       "8: Гла́съ | ѻ҆сьмы́й. | <pitch:Νη> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/text/words/ordinal/postnominal/absolute/original/page",
+    "structure": "cu/text/words/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1651,7 +1651,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Седмы́й | гла́съ. | <pitch:Γα> = Седмы́й гла́съ ѿ Га",
       "8: Ѻ҆сьмы́й | гла́съ. | <pitch:Νη> = Ѻ҆сьмы́й гла́съ ѿ Ни",
     ],
-    "structure": "cu/text/words/ordinal/prenominal/absolute/original/page",
+    "structure": "cu/text/words/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1664,7 +1664,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | 7. | <pitch:Га> = Гла́съ седмы́й ѿ Га",
       "8: Гла́съ | 8. | <pitch:Ни> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/text/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "cu/text/digits/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1677,7 +1677,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | з҃. | <pitch:Га> = Гла́съ седмы́й ѿ Га",
       "8: Гла́съ | и҃. | <pitch:Ни> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/text/alphabetic-numerals/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "cu/text/alphabetic-numerals/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1690,7 +1690,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | седмы́й. | <pitch:Га> = Гла́съ седмы́й ѿ Га",
       "8: Гла́съ | ѻ҆сьмы́й. | <pitch:Ни> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/text/words/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "cu/text/words/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1703,7 +1703,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Седмы́й | гла́съ. | <pitch:Га> = Седмы́й гла́съ ѿ Га",
       "8: Ѻ҆сьмы́й | гла́съ. | <pitch:Ни> = Ѻ҆сьмы́й гла́съ ѿ Ни",
     ],
-    "structure": "cu/text/words/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "cu/text/words/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1716,7 +1716,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | <modeSign> | <pitch:Γα> = Гла́съ седмы́й ѿ Га",
       "8: greek:λ/π | Гла́съ | <modeSign> | <pitch:Νη> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/mode-sign/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "cu/mode-sign/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1729,7 +1729,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | гла́съ | <pitch:Γα> = Седмы́й гла́съ ѿ Га",
       "8: greek:λ/π | <modeSign> | гла́съ | <pitch:Νη> = Ѻ҆сьмы́й гла́съ ѿ Ни",
     ],
-    "structure": "cu/mode-sign/words/ordinal/prenominal/absolute/original/page",
+    "structure": "cu/mode-sign/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1742,7 +1742,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Гла́съ | <modeSign> | <pitch:Га> = Гла́съ седмы́й ѿ Га",
       "8: greek:λ/π | Гла́съ | <modeSign> | <pitch:Ни> = Гла́съ ѻ҆сьмы́й ѿ Ни",
     ],
-    "structure": "cu/mode-sign/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "cu/mode-sign/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1755,7 +1755,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | гла́съ | <pitch:Га> = Седмы́й гла́съ ѿ Га",
       "8: greek:λ/π | <modeSign> | гла́съ | <pitch:Ни> = Ѻ҆сьмы́й гла́съ ѿ Ни",
     ],
-    "structure": "cu/mode-sign/words/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "cu/mode-sign/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1768,7 +1768,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | 7. | <modeSign> | <pitch:Γα> = Глас седьмой от Га",
       "8: Глас | 8. | greek:λ/π | <modeSign> | <pitch:Νη> = Глас восьмой от Ни",
     ],
-    "structure": "ru/text-and-mode-sign/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "ru/text-and-mode-sign/digits/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1781,7 +1781,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: 7-й | глас. | <modeSign> | <pitch:Γα> = Седьмой глас от Га",
       "8: 8-й | глас. | greek:λ/π | <modeSign> | <pitch:Νη> = Восьмой глас от Ни",
     ],
-    "structure": "ru/text-and-mode-sign/digits/ordinal/prenominal/absolute/original/page",
+    "structure": "ru/text-and-mode-sign/digits/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1794,7 +1794,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | VII. | <modeSign> | <pitch:Γα> = Глас седьмой от Га",
       "8: Глас | VIII. | greek:λ/π | <modeSign> | <pitch:Νη> = Глас восьмой от Ни",
     ],
-    "structure": "ru/text-and-mode-sign/roman-numerals/ordinal/postnominal/absolute/original/page",
+    "structure": "ru/text-and-mode-sign/roman-numerals/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1807,7 +1807,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: VII | глас. | <modeSign> | <pitch:Γα> = Седьмой глас от Га",
       "8: VIII | глас. | greek:λ/π | <modeSign> | <pitch:Νη> = Восьмой глас от Ни",
     ],
-    "structure": "ru/text-and-mode-sign/roman-numerals/ordinal/prenominal/absolute/original/page",
+    "structure": "ru/text-and-mode-sign/roman-numerals/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1820,7 +1820,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | седьмой. | <modeSign> | <pitch:Γα> = Глас седьмой от Га",
       "8: Глас | восьмой. | greek:λ/π | <modeSign> | <pitch:Νη> = Глас восьмой от Ни",
     ],
-    "structure": "ru/text-and-mode-sign/words/ordinal/postnominal/absolute/original/page",
+    "structure": "ru/text-and-mode-sign/words/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1833,7 +1833,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Седьмой | глас. | <modeSign> | <pitch:Γα> = Седьмой глас от Га",
       "8: Восьмой | глас. | greek:λ/π | <modeSign> | <pitch:Νη> = Восьмой глас от Ни",
     ],
-    "structure": "ru/text-and-mode-sign/words/ordinal/prenominal/absolute/original/page",
+    "structure": "ru/text-and-mode-sign/words/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1846,7 +1846,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | 7. | <modeSign> | <pitch:Га> = Глас седьмой от Га",
       "8: Глас | 8. | greek:λ/π | <modeSign> | <pitch:Ни> = Глас восьмой от Ни",
     ],
-    "structure": "ru/text-and-mode-sign/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ru/text-and-mode-sign/digits/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1859,7 +1859,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: 7-й | глас. | <modeSign> | <pitch:Га> = Седьмой глас от Га",
       "8: 8-й | глас. | greek:λ/π | <modeSign> | <pitch:Ни> = Восьмой глас от Ни",
     ],
-    "structure": "ru/text-and-mode-sign/digits/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ru/text-and-mode-sign/digits/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1872,7 +1872,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | VII. | <modeSign> | <pitch:Га> = Глас седьмой от Га",
       "8: Глас | VIII. | greek:λ/π | <modeSign> | <pitch:Ни> = Глас восьмой от Ни",
     ],
-    "structure": "ru/text-and-mode-sign/roman-numerals/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ru/text-and-mode-sign/roman-numerals/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1885,7 +1885,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: VII | глас. | <modeSign> | <pitch:Га> = Седьмой глас от Га",
       "8: VIII | глас. | greek:λ/π | <modeSign> | <pitch:Ни> = Восьмой глас от Ни",
     ],
-    "structure": "ru/text-and-mode-sign/roman-numerals/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ru/text-and-mode-sign/roman-numerals/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1898,7 +1898,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | седьмой. | <modeSign> | <pitch:Га> = Глас седьмой от Га",
       "8: Глас | восьмой. | greek:λ/π | <modeSign> | <pitch:Ни> = Глас восьмой от Ни",
     ],
-    "structure": "ru/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ru/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1911,7 +1911,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Седьмой | глас. | <modeSign> | <pitch:Га> = Седьмой глас от Га",
       "8: Восьмой | глас. | greek:λ/π | <modeSign> | <pitch:Ни> = Восьмой глас от Ни",
     ],
-    "structure": "ru/text-and-mode-sign/words/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ru/text-and-mode-sign/words/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -1924,7 +1924,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | 7. | <pitch:Γα> = Глас седьмой от Га",
       "8: Глас | 8. | <pitch:Νη> = Глас восьмой от Ни",
     ],
-    "structure": "ru/text/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "ru/text/digits/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1937,7 +1937,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: 7-й | глас. | <pitch:Γα> = Седьмой глас от Га",
       "8: 8-й | глас. | <pitch:Νη> = Восьмой глас от Ни",
     ],
-    "structure": "ru/text/digits/ordinal/prenominal/absolute/original/page",
+    "structure": "ru/text/digits/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1950,7 +1950,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | VII. | <pitch:Γα> = Глас седьмой от Га",
       "8: Глас | VIII. | <pitch:Νη> = Глас восьмой от Ни",
     ],
-    "structure": "ru/text/roman-numerals/ordinal/postnominal/absolute/original/page",
+    "structure": "ru/text/roman-numerals/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1963,7 +1963,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: VII | глас. | <pitch:Γα> = Седьмой глас от Га",
       "8: VIII | глас. | <pitch:Νη> = Восьмой глас от Ни",
     ],
-    "structure": "ru/text/roman-numerals/ordinal/prenominal/absolute/original/page",
+    "structure": "ru/text/roman-numerals/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -1976,7 +1976,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | седьмой. | <pitch:Γα> = Глас седьмой от Га",
       "8: Глас | восьмой. | <pitch:Νη> = Глас восьмой от Ни",
     ],
-    "structure": "ru/text/words/ordinal/postnominal/absolute/original/page",
+    "structure": "ru/text/words/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -1989,7 +1989,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Седьмой | глас. | <pitch:Γα> = Седьмой глас от Га",
       "8: Восьмой | глас. | <pitch:Νη> = Восьмой глас от Ни",
     ],
-    "structure": "ru/text/words/ordinal/prenominal/absolute/original/page",
+    "structure": "ru/text/words/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -2002,7 +2002,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | 7. | <pitch:Га> = Глас седьмой от Га",
       "8: Глас | 8. | <pitch:Ни> = Глас восьмой от Ни",
     ],
-    "structure": "ru/text/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ru/text/digits/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2015,7 +2015,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: 7-й | глас. | <pitch:Га> = Седьмой глас от Га",
       "8: 8-й | глас. | <pitch:Ни> = Восьмой глас от Ни",
     ],
-    "structure": "ru/text/digits/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ru/text/digits/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2028,7 +2028,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | VII. | <pitch:Га> = Глас седьмой от Га",
       "8: Глас | VIII. | <pitch:Ни> = Глас восьмой от Ни",
     ],
-    "structure": "ru/text/roman-numerals/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ru/text/roman-numerals/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2041,7 +2041,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: VII | глас. | <pitch:Га> = Седьмой глас от Га",
       "8: VIII | глас. | <pitch:Ни> = Восьмой глас от Ни",
     ],
-    "structure": "ru/text/roman-numerals/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ru/text/roman-numerals/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2054,7 +2054,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | седьмой. | <pitch:Га> = Глас седьмой от Га",
       "8: Глас | восьмой. | <pitch:Ни> = Глас восьмой от Ни",
     ],
-    "structure": "ru/text/words/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ru/text/words/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2067,7 +2067,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Седьмой | глас. | <pitch:Га> = Седьмой глас от Га",
       "8: Восьмой | глас. | <pitch:Ни> = Восьмой глас от Ни",
     ],
-    "structure": "ru/text/words/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ru/text/words/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2080,7 +2080,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | <modeSign> | <pitch:Γα> = Глас седьмой от Га",
       "8: greek:λ/π | Глас | <modeSign> | <pitch:Νη> = Глас восьмой от Ни",
     ],
-    "structure": "ru/mode-sign/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "ru/mode-sign/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2093,7 +2093,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | глас | <pitch:Γα> = Седьмой глас от Га",
       "8: greek:λ/π | <modeSign> | глас | <pitch:Νη> = Восьмой глас от Ни",
     ],
-    "structure": "ru/mode-sign/words/ordinal/prenominal/absolute/original/page",
+    "structure": "ru/mode-sign/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -2106,7 +2106,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Глас | <modeSign> | <pitch:Га> = Глас седьмой от Га",
       "8: greek:λ/π | Глас | <modeSign> | <pitch:Ни> = Глас восьмой от Ни",
     ],
-    "structure": "ru/mode-sign/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ru/mode-sign/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2119,7 +2119,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | глас | <pitch:Га> = Седьмой глас от Га",
       "8: greek:λ/π | <modeSign> | глас | <pitch:Ни> = Восьмой глас от Ни",
     ],
-    "structure": "ru/mode-sign/words/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ru/mode-sign/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2132,7 +2132,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | 7 | <pitch:Γα> | <modeSign> = اللحن السابع من غا",
       "8: اللحن | 8 | <pitch:Νη> | <modeSign> | greek:λ/π = اللحن الثامن من ني",
     ],
-    "structure": "ar/text-and-mode-sign/digits/ordinal/latn/postnominal/absolute/original/rtl",
+    "structure": "ar/text-and-mode-sign/digits/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2145,7 +2145,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | ٧ | <pitch:Γα> | <modeSign> = اللحن السابع من غا",
       "8: اللحن | ٨ | <pitch:Νη> | <modeSign> | greek:λ/π = اللحن الثامن من ني",
     ],
-    "structure": "ar/text-and-mode-sign/digits/ordinal/arab/postnominal/absolute/original/rtl",
+    "structure": "ar/text-and-mode-sign/digits/ordinal/arab/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2158,7 +2158,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | السابع | <pitch:Γα> | <modeSign> = اللحن السابع من غا",
       "8: اللحن | الثامن | <pitch:Νη> | <modeSign> | greek:λ/π = اللحن الثامن من ني",
     ],
-    "structure": "ar/text-and-mode-sign/words/ordinal/postnominal/absolute/original/rtl",
+    "structure": "ar/text-and-mode-sign/words/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2171,7 +2171,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | 7 | <pitch:غا> | <modeSign> = اللحن السابع من غا",
       "8: اللحن | 8 | <pitch:ني> | <modeSign> | greek:λ/π = اللحن الثامن من ني",
     ],
-    "structure": "ar/text-and-mode-sign/digits/ordinal/latn/postnominal/absolute/transliterated/rtl",
+    "structure": "ar/text-and-mode-sign/digits/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2184,7 +2184,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | ٧ | <pitch:غا> | <modeSign> = اللحن السابع من غا",
       "8: اللحن | ٨ | <pitch:ني> | <modeSign> | greek:λ/π = اللحن الثامن من ني",
     ],
-    "structure": "ar/text-and-mode-sign/digits/ordinal/arab/postnominal/absolute/transliterated/rtl",
+    "structure": "ar/text-and-mode-sign/digits/ordinal/arab/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2197,7 +2197,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | السابع | <pitch:غا> | <modeSign> = اللحن السابع من غا",
       "8: اللحن | الثامن | <pitch:ني> | <modeSign> | greek:λ/π = اللحن الثامن من ني",
     ],
-    "structure": "ar/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated/rtl",
+    "structure": "ar/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2210,7 +2210,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | 7 | <pitch:Γα> = اللحن السابع من غا",
       "8: اللحن | 8 | <pitch:Νη> = اللحن الثامن من ني",
     ],
-    "structure": "ar/text/digits/ordinal/latn/postnominal/absolute/original/rtl",
+    "structure": "ar/text/digits/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2223,7 +2223,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | ٧ | <pitch:Γα> = اللحن السابع من غا",
       "8: اللحن | ٨ | <pitch:Νη> = اللحن الثامن من ني",
     ],
-    "structure": "ar/text/digits/ordinal/arab/postnominal/absolute/original/rtl",
+    "structure": "ar/text/digits/ordinal/arab/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2236,7 +2236,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | السابع | <pitch:Γα> = اللحن السابع من غا",
       "8: اللحن | الثامن | <pitch:Νη> = اللحن الثامن من ني",
     ],
-    "structure": "ar/text/words/ordinal/postnominal/absolute/original/rtl",
+    "structure": "ar/text/words/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2249,7 +2249,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | 7 | <pitch:غا> = اللحن السابع من غا",
       "8: اللحن | 8 | <pitch:ني> = اللحن الثامن من ني",
     ],
-    "structure": "ar/text/digits/ordinal/latn/postnominal/absolute/transliterated/rtl",
+    "structure": "ar/text/digits/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2262,7 +2262,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | ٧ | <pitch:غا> = اللحن السابع من غا",
       "8: اللحن | ٨ | <pitch:ني> = اللحن الثامن من ني",
     ],
-    "structure": "ar/text/digits/ordinal/arab/postnominal/absolute/transliterated/rtl",
+    "structure": "ar/text/digits/ordinal/arab/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2275,7 +2275,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | السابع | <pitch:غا> = اللحن السابع من غا",
       "8: اللحن | الثامن | <pitch:ني> = اللحن الثامن من ني",
     ],
-    "structure": "ar/text/words/ordinal/postnominal/absolute/transliterated/rtl",
+    "structure": "ar/text/words/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2288,7 +2288,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | <modeSign> | <pitch:Γα> = اللحن السابع من غا",
       "8: greek:λ/π | اللحن | <modeSign> | <pitch:Νη> = اللحن الثامن من ني",
     ],
-    "structure": "ar/mode-sign/digits/ordinal/latn/postnominal/absolute/original/rtl",
+    "structure": "ar/mode-sign/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2301,7 +2301,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: اللحن | <modeSign> | <pitch:غا> = اللحن السابع من غا",
       "8: greek:λ/π | اللحن | <modeSign> | <pitch:ني> = اللحن الثامن من ني",
     ],
-    "structure": "ar/mode-sign/digits/ordinal/latn/postnominal/absolute/transliterated/rtl",
+    "structure": "ar/mode-sign/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2314,7 +2314,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | 7. | <modeSign> | <pitch:Γα> = Glas șapte de la Ga",
       "8: Glas | 8. | greek:λ/π | <modeSign> | <pitch:Νη> = Glas opt de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/digits/cardinal/postnominal/absolute/original/page",
+    "structure": "ro/text-and-mode-sign/digits/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2327,7 +2327,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glasul | al 7-lea. | <modeSign> | <pitch:Γα> = Glasul al șaptelea de la Ga",
       "8: Glasul | al 8-lea. | greek:λ/π | <modeSign> | <pitch:Νη> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "ro/text-and-mode-sign/digits/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2340,7 +2340,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Al 7-lea | glas. | <modeSign> | <pitch:Γα> = Al șaptelea glas de la Ga",
       "8: Al 8-lea | glas. | greek:λ/π | <modeSign> | <pitch:Νη> = Al optulea glas de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/digits/ordinal/prenominal/absolute/original/page",
+    "structure": "ro/text-and-mode-sign/digits/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -2353,7 +2353,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | VII. | <modeSign> | <pitch:Γα> = Glas șapte de la Ga",
       "8: Glas | VIII. | greek:λ/π | <modeSign> | <pitch:Νη> = Glas opt de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/original/page",
+    "structure": "ro/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2366,7 +2366,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glasul | al VII-lea. | <modeSign> | <pitch:Γα> = Glasul al șaptelea de la Ga",
       "8: Glasul | al VIII-lea. | greek:λ/π | <modeSign> | <pitch:Νη> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/roman-numerals/ordinal/postnominal/absolute/original/page",
+    "structure": "ro/text-and-mode-sign/roman-numerals/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2379,7 +2379,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Al VII-lea | glas. | <modeSign> | <pitch:Γα> = Al șaptelea glas de la Ga",
       "8: Al VIII-lea | glas. | greek:λ/π | <modeSign> | <pitch:Νη> = Al optulea glas de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/roman-numerals/ordinal/prenominal/absolute/original/page",
+    "structure": "ro/text-and-mode-sign/roman-numerals/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -2392,7 +2392,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | șapte. | <modeSign> | <pitch:Γα> = Glas șapte de la Ga",
       "8: Glas | opt. | greek:λ/π | <modeSign> | <pitch:Νη> = Glas opt de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/words/cardinal/postnominal/absolute/original/page",
+    "structure": "ro/text-and-mode-sign/words/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2405,7 +2405,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glasul | al șaptelea. | <modeSign> | <pitch:Γα> = Glasul al șaptelea de la Ga",
       "8: Glasul | al optulea. | greek:λ/π | <modeSign> | <pitch:Νη> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/words/ordinal/postnominal/absolute/original/page",
+    "structure": "ro/text-and-mode-sign/words/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2418,7 +2418,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Al șaptelea | glas. | <modeSign> | <pitch:Γα> = Al șaptelea glas de la Ga",
       "8: Al optulea | glas. | greek:λ/π | <modeSign> | <pitch:Νη> = Al optulea glas de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/words/ordinal/prenominal/absolute/original/page",
+    "structure": "ro/text-and-mode-sign/words/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -2431,7 +2431,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | 7. | <modeSign> | <pitch:Ga> = Glas șapte de la Ga",
       "8: Glas | 8. | greek:λ/π | <modeSign> | <pitch:Ni> = Glas opt de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/digits/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/text-and-mode-sign/digits/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2444,7 +2444,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glasul | al 7-lea. | <modeSign> | <pitch:Ga> = Glasul al șaptelea de la Ga",
       "8: Glasul | al 8-lea. | greek:λ/π | <modeSign> | <pitch:Ni> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/text-and-mode-sign/digits/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2457,7 +2457,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Al 7-lea | glas. | <modeSign> | <pitch:Ga> = Al șaptelea glas de la Ga",
       "8: Al 8-lea | glas. | greek:λ/π | <modeSign> | <pitch:Ni> = Al optulea glas de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/digits/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ro/text-and-mode-sign/digits/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2470,7 +2470,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | VII. | <modeSign> | <pitch:Ga> = Glas șapte de la Ga",
       "8: Glas | VIII. | greek:λ/π | <modeSign> | <pitch:Ni> = Glas opt de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2483,7 +2483,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glasul | al VII-lea. | <modeSign> | <pitch:Ga> = Glasul al șaptelea de la Ga",
       "8: Glasul | al VIII-lea. | greek:λ/π | <modeSign> | <pitch:Ni> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/roman-numerals/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/text-and-mode-sign/roman-numerals/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2496,7 +2496,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Al VII-lea | glas. | <modeSign> | <pitch:Ga> = Al șaptelea glas de la Ga",
       "8: Al VIII-lea | glas. | greek:λ/π | <modeSign> | <pitch:Ni> = Al optulea glas de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/roman-numerals/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ro/text-and-mode-sign/roman-numerals/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2509,7 +2509,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | șapte. | <modeSign> | <pitch:Ga> = Glas șapte de la Ga",
       "8: Glas | opt. | greek:λ/π | <modeSign> | <pitch:Ni> = Glas opt de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/words/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/text-and-mode-sign/words/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2522,7 +2522,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glasul | al șaptelea. | <modeSign> | <pitch:Ga> = Glasul al șaptelea de la Ga",
       "8: Glasul | al optulea. | greek:λ/π | <modeSign> | <pitch:Ni> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2535,7 +2535,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Al șaptelea | glas. | <modeSign> | <pitch:Ga> = Al șaptelea glas de la Ga",
       "8: Al optulea | glas. | greek:λ/π | <modeSign> | <pitch:Ni> = Al optulea glas de la Ni",
     ],
-    "structure": "ro/text-and-mode-sign/words/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ro/text-and-mode-sign/words/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2548,7 +2548,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | 7. | <pitch:Γα> = Glas șapte de la Ga",
       "8: Glas | 8. | <pitch:Νη> = Glas opt de la Ni",
     ],
-    "structure": "ro/text/digits/cardinal/postnominal/absolute/original/page",
+    "structure": "ro/text/digits/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2561,7 +2561,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glasul | al 7-lea. | <pitch:Γα> = Glasul al șaptelea de la Ga",
       "8: Glasul | al 8-lea. | <pitch:Νη> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/text/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "ro/text/digits/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2574,7 +2574,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Al 7-lea | glas. | <pitch:Γα> = Al șaptelea glas de la Ga",
       "8: Al 8-lea | glas. | <pitch:Νη> = Al optulea glas de la Ni",
     ],
-    "structure": "ro/text/digits/ordinal/prenominal/absolute/original/page",
+    "structure": "ro/text/digits/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -2587,7 +2587,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | VII. | <pitch:Γα> = Glas șapte de la Ga",
       "8: Glas | VIII. | <pitch:Νη> = Glas opt de la Ni",
     ],
-    "structure": "ro/text/roman-numerals/cardinal/postnominal/absolute/original/page",
+    "structure": "ro/text/roman-numerals/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2600,7 +2600,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glasul | al VII-lea. | <pitch:Γα> = Glasul al șaptelea de la Ga",
       "8: Glasul | al VIII-lea. | <pitch:Νη> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/text/roman-numerals/ordinal/postnominal/absolute/original/page",
+    "structure": "ro/text/roman-numerals/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2613,7 +2613,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Al VII-lea | glas. | <pitch:Γα> = Al șaptelea glas de la Ga",
       "8: Al VIII-lea | glas. | <pitch:Νη> = Al optulea glas de la Ni",
     ],
-    "structure": "ro/text/roman-numerals/ordinal/prenominal/absolute/original/page",
+    "structure": "ro/text/roman-numerals/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -2626,7 +2626,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | șapte. | <pitch:Γα> = Glas șapte de la Ga",
       "8: Glas | opt. | <pitch:Νη> = Glas opt de la Ni",
     ],
-    "structure": "ro/text/words/cardinal/postnominal/absolute/original/page",
+    "structure": "ro/text/words/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2639,7 +2639,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glasul | al șaptelea. | <pitch:Γα> = Glasul al șaptelea de la Ga",
       "8: Glasul | al optulea. | <pitch:Νη> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/text/words/ordinal/postnominal/absolute/original/page",
+    "structure": "ro/text/words/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2652,7 +2652,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Al șaptelea | glas. | <pitch:Γα> = Al șaptelea glas de la Ga",
       "8: Al optulea | glas. | <pitch:Νη> = Al optulea glas de la Ni",
     ],
-    "structure": "ro/text/words/ordinal/prenominal/absolute/original/page",
+    "structure": "ro/text/words/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -2665,7 +2665,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | 7. | <pitch:Ga> = Glas șapte de la Ga",
       "8: Glas | 8. | <pitch:Ni> = Glas opt de la Ni",
     ],
-    "structure": "ro/text/digits/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/text/digits/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2678,7 +2678,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glasul | al 7-lea. | <pitch:Ga> = Glasul al șaptelea de la Ga",
       "8: Glasul | al 8-lea. | <pitch:Ni> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/text/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/text/digits/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2691,7 +2691,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Al 7-lea | glas. | <pitch:Ga> = Al șaptelea glas de la Ga",
       "8: Al 8-lea | glas. | <pitch:Ni> = Al optulea glas de la Ni",
     ],
-    "structure": "ro/text/digits/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ro/text/digits/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2704,7 +2704,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | VII. | <pitch:Ga> = Glas șapte de la Ga",
       "8: Glas | VIII. | <pitch:Ni> = Glas opt de la Ni",
     ],
-    "structure": "ro/text/roman-numerals/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/text/roman-numerals/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2717,7 +2717,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glasul | al VII-lea. | <pitch:Ga> = Glasul al șaptelea de la Ga",
       "8: Glasul | al VIII-lea. | <pitch:Ni> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/text/roman-numerals/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/text/roman-numerals/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2730,7 +2730,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Al VII-lea | glas. | <pitch:Ga> = Al șaptelea glas de la Ga",
       "8: Al VIII-lea | glas. | <pitch:Ni> = Al optulea glas de la Ni",
     ],
-    "structure": "ro/text/roman-numerals/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ro/text/roman-numerals/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2743,7 +2743,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | șapte. | <pitch:Ga> = Glas șapte de la Ga",
       "8: Glas | opt. | <pitch:Ni> = Glas opt de la Ni",
     ],
-    "structure": "ro/text/words/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/text/words/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2756,7 +2756,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glasul | al șaptelea. | <pitch:Ga> = Glasul al șaptelea de la Ga",
       "8: Glasul | al optulea. | <pitch:Ni> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/text/words/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/text/words/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2769,7 +2769,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Al șaptelea | glas. | <pitch:Ga> = Al șaptelea glas de la Ga",
       "8: Al optulea | glas. | <pitch:Ni> = Al optulea glas de la Ni",
     ],
-    "structure": "ro/text/words/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ro/text/words/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2782,7 +2782,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | <modeSign> | <pitch:Γα> = Glas șapte de la Ga",
       "8: Glas | greek:λ/π | <modeSign> | <pitch:Νη> = Glas opt de la Ni",
     ],
-    "structure": "ro/mode-sign/digits/cardinal/postnominal/absolute/original/page",
+    "structure": "ro/mode-sign/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2795,20 +2795,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | <modeSign> | <pitch:Γα> = Glasul al șaptelea de la Ga",
       "8: Glas | greek:λ/π | <modeSign> | <pitch:Νη> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/mode-sign/digits/ordinal/postnominal/absolute/original/page",
-  },
-  {
-    "modes": [
-      "1: <modeSign> | glas | <pitch:Πα> = Primul glas de la Pa",
-      "2: <modeSign> | glas | <pitch:Δι> = Al doilea glas de la Di",
-      "3: <modeSign> | glas | <pitch:Γα> = Al treilea glas de la Ga",
-      "4: <modeSign> | glas | <pitch:Δι> = Al patrulea glas de la Di",
-      "5: greek:λ/π | <modeSign> | glas | <pitch:Πα> = Al cincilea glas de la Pa",
-      "6: greek:λ/π | <modeSign> | glas | <pitch:Πα> = Al șaselea glas de la Pa",
-      "7: <modeSign> | glas | <pitch:Γα> = Al șaptelea glas de la Ga",
-      "8: greek:λ/π | <modeSign> | glas | <pitch:Νη> = Al optulea glas de la Ni",
-    ],
-    "structure": "ro/mode-sign/digits/ordinal/prenominal/absolute/original/page",
+    "structure": "ro/mode-sign/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2821,7 +2808,20 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | <modeSign> | <pitch:Γα> = Glasul al șaptelea de la Ga",
       "8: Glas | greek:λ/π | <modeSign> | <pitch:Νη> = Glasul lăturaș al patrulea de la Ni",
     ],
-    "structure": "ro/mode-sign/words/ordinal/postnominal/authentic-counterpart/original/page",
+    "structure": "ro/mode-sign/ordinal/postnominal/authentic-counterpart/original",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | glas | <pitch:Πα> = Primul glas de la Pa",
+      "2: <modeSign> | glas | <pitch:Δι> = Al doilea glas de la Di",
+      "3: <modeSign> | glas | <pitch:Γα> = Al treilea glas de la Ga",
+      "4: <modeSign> | glas | <pitch:Δι> = Al patrulea glas de la Di",
+      "5: greek:λ/π | <modeSign> | glas | <pitch:Πα> = Al cincilea glas de la Pa",
+      "6: greek:λ/π | <modeSign> | glas | <pitch:Πα> = Al șaselea glas de la Pa",
+      "7: <modeSign> | glas | <pitch:Γα> = Al șaptelea glas de la Ga",
+      "8: greek:λ/π | <modeSign> | glas | <pitch:Νη> = Al optulea glas de la Ni",
+    ],
+    "structure": "ro/mode-sign/ordinal/prenominal/absolute/original",
   },
   {
     "modes": [
@@ -2834,7 +2834,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | <modeSign> | <pitch:Ga> = Glas șapte de la Ga",
       "8: Glas | greek:λ/π | <modeSign> | <pitch:Ni> = Glas opt de la Ni",
     ],
-    "structure": "ro/mode-sign/digits/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "ro/mode-sign/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2847,20 +2847,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | <modeSign> | <pitch:Ga> = Glasul al șaptelea de la Ga",
       "8: Glas | greek:λ/π | <modeSign> | <pitch:Ni> = Glasul al optulea de la Ni",
     ],
-    "structure": "ro/mode-sign/digits/ordinal/postnominal/absolute/transliterated/page",
-  },
-  {
-    "modes": [
-      "1: <modeSign> | glas | <pitch:Pa> = Primul glas de la Pa",
-      "2: <modeSign> | glas | <pitch:Di> = Al doilea glas de la Di",
-      "3: <modeSign> | glas | <pitch:Ga> = Al treilea glas de la Ga",
-      "4: <modeSign> | glas | <pitch:Di> = Al patrulea glas de la Di",
-      "5: greek:λ/π | <modeSign> | glas | <pitch:Pa> = Al cincilea glas de la Pa",
-      "6: greek:λ/π | <modeSign> | glas | <pitch:Pa> = Al șaselea glas de la Pa",
-      "7: <modeSign> | glas | <pitch:Ga> = Al șaptelea glas de la Ga",
-      "8: greek:λ/π | <modeSign> | glas | <pitch:Ni> = Al optulea glas de la Ni",
-    ],
-    "structure": "ro/mode-sign/digits/ordinal/prenominal/absolute/transliterated/page",
+    "structure": "ro/mode-sign/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2873,7 +2860,20 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Glas | <modeSign> | <pitch:Ga> = Glasul al șaptelea de la Ga",
       "8: Glas | greek:λ/π | <modeSign> | <pitch:Ni> = Glasul lăturaș al patrulea de la Ni",
     ],
-    "structure": "ro/mode-sign/words/ordinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "ro/mode-sign/ordinal/postnominal/authentic-counterpart/transliterated",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | glas | <pitch:Pa> = Primul glas de la Pa",
+      "2: <modeSign> | glas | <pitch:Di> = Al doilea glas de la Di",
+      "3: <modeSign> | glas | <pitch:Ga> = Al treilea glas de la Ga",
+      "4: <modeSign> | glas | <pitch:Di> = Al patrulea glas de la Di",
+      "5: greek:λ/π | <modeSign> | glas | <pitch:Pa> = Al cincilea glas de la Pa",
+      "6: greek:λ/π | <modeSign> | glas | <pitch:Pa> = Al șaselea glas de la Pa",
+      "7: <modeSign> | glas | <pitch:Ga> = Al șaptelea glas de la Ga",
+      "8: greek:λ/π | <modeSign> | glas | <pitch:Ni> = Al optulea glas de la Ni",
+    ],
+    "structure": "ro/mode-sign/ordinal/prenominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2886,7 +2886,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | 7. | <modeSign> | <pitch:Γα> = Modus Tujuh dari Ga",
       "8: Modus | 8. | greek:λ/π | <modeSign> | <pitch:Νη> = Modus Delapan dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/digits/cardinal/postnominal/absolute/original/page",
+    "structure": "id/text-and-mode-sign/digits/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2899,7 +2899,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | ke-7. | <modeSign> | <pitch:Γα> = Modus Ketujuh dari Ga",
       "8: Modus | ke-8. | greek:λ/π | <modeSign> | <pitch:Νη> = Modus Kedelapan dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "id/text-and-mode-sign/digits/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2912,7 +2912,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Berat. | <modeSign> | <pitch:Γα> = Modus Berat dari Ga",
       "8: Plagal dari | Modus | ke-4. | greek:λ/π | <modeSign> | <pitch:Νη> = Plagal dari Modus Keempat dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/digits/ordinal/postnominal/authentic-counterpart/original/page",
+    "structure": "id/text-and-mode-sign/digits/ordinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -2925,7 +2925,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | VII. | <modeSign> | <pitch:Γα> = Modus Tujuh dari Ga",
       "8: Modus | VIII. | greek:λ/π | <modeSign> | <pitch:Νη> = Modus Delapan dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/original/page",
+    "structure": "id/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2938,7 +2938,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Tujuh. | <modeSign> | <pitch:Γα> = Modus Tujuh dari Ga",
       "8: Modus | Delapan. | greek:λ/π | <modeSign> | <pitch:Νη> = Modus Delapan dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/words/cardinal/postnominal/absolute/original/page",
+    "structure": "id/text-and-mode-sign/words/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2951,7 +2951,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Ketujuh. | <modeSign> | <pitch:Γα> = Modus Ketujuh dari Ga",
       "8: Modus | Kedelapan. | greek:λ/π | <modeSign> | <pitch:Νη> = Modus Kedelapan dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/words/ordinal/postnominal/absolute/original/page",
+    "structure": "id/text-and-mode-sign/words/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -2964,7 +2964,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Berat. | <modeSign> | <pitch:Γα> = Modus Berat dari Ga",
       "8: Plagal dari | Modus | Keempat. | greek:λ/π | <modeSign> | <pitch:Νη> = Plagal dari Modus Keempat dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/words/ordinal/postnominal/authentic-counterpart/original/page",
+    "structure": "id/text-and-mode-sign/words/ordinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -2977,7 +2977,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | 7. | <modeSign> | <pitch:Ga> = Modus Tujuh dari Ga",
       "8: Modus | 8. | greek:λ/π | <modeSign> | <pitch:Ni> = Modus Delapan dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/digits/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "id/text-and-mode-sign/digits/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2990,7 +2990,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | ke-7. | <modeSign> | <pitch:Ga> = Modus Ketujuh dari Ga",
       "8: Modus | ke-8. | greek:λ/π | <modeSign> | <pitch:Ni> = Modus Kedelapan dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "id/text-and-mode-sign/digits/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -3003,7 +3003,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Berat. | <modeSign> | <pitch:Ga> = Modus Berat dari Ga",
       "8: Plagal dari | Modus | ke-4. | greek:λ/π | <modeSign> | <pitch:Ni> = Plagal dari Modus Keempat dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/digits/ordinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "id/text-and-mode-sign/digits/ordinal/postnominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -3016,7 +3016,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | VII. | <modeSign> | <pitch:Ga> = Modus Tujuh dari Ga",
       "8: Modus | VIII. | greek:λ/π | <modeSign> | <pitch:Ni> = Modus Delapan dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "id/text-and-mode-sign/roman-numerals/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -3029,7 +3029,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Tujuh. | <modeSign> | <pitch:Ga> = Modus Tujuh dari Ga",
       "8: Modus | Delapan. | greek:λ/π | <modeSign> | <pitch:Ni> = Modus Delapan dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/words/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "id/text-and-mode-sign/words/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -3042,7 +3042,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Ketujuh. | <modeSign> | <pitch:Ga> = Modus Ketujuh dari Ga",
       "8: Modus | Kedelapan. | greek:λ/π | <modeSign> | <pitch:Ni> = Modus Kedelapan dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "id/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -3055,7 +3055,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Berat. | <modeSign> | <pitch:Ga> = Modus Berat dari Ga",
       "8: Plagal dari | Modus | Keempat. | greek:λ/π | <modeSign> | <pitch:Ni> = Plagal dari Modus Keempat dari Ni",
     ],
-    "structure": "id/text-and-mode-sign/words/ordinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "id/text-and-mode-sign/words/ordinal/postnominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -3068,7 +3068,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | 7. | <pitch:Γα> = Modus Tujuh dari Ga",
       "8: Modus | 8. | <pitch:Νη> = Modus Delapan dari Ni",
     ],
-    "structure": "id/text/digits/cardinal/postnominal/absolute/original/page",
+    "structure": "id/text/digits/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -3081,7 +3081,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | ke-7. | <pitch:Γα> = Modus Ketujuh dari Ga",
       "8: Modus | ke-8. | <pitch:Νη> = Modus Kedelapan dari Ni",
     ],
-    "structure": "id/text/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "id/text/digits/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -3094,7 +3094,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Berat. | <pitch:Γα> = Modus Berat dari Ga",
       "8: Plagal dari | Modus | ke-4. | <pitch:Νη> = Plagal dari Modus Keempat dari Ni",
     ],
-    "structure": "id/text/digits/ordinal/postnominal/authentic-counterpart/original/page",
+    "structure": "id/text/digits/ordinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -3107,7 +3107,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | VII. | <pitch:Γα> = Modus Tujuh dari Ga",
       "8: Modus | VIII. | <pitch:Νη> = Modus Delapan dari Ni",
     ],
-    "structure": "id/text/roman-numerals/cardinal/postnominal/absolute/original/page",
+    "structure": "id/text/roman-numerals/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -3120,7 +3120,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Tujuh. | <pitch:Γα> = Modus Tujuh dari Ga",
       "8: Modus | Delapan. | <pitch:Νη> = Modus Delapan dari Ni",
     ],
-    "structure": "id/text/words/cardinal/postnominal/absolute/original/page",
+    "structure": "id/text/words/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -3133,7 +3133,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Ketujuh. | <pitch:Γα> = Modus Ketujuh dari Ga",
       "8: Modus | Kedelapan. | <pitch:Νη> = Modus Kedelapan dari Ni",
     ],
-    "structure": "id/text/words/ordinal/postnominal/absolute/original/page",
+    "structure": "id/text/words/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -3146,7 +3146,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Berat. | <pitch:Γα> = Modus Berat dari Ga",
       "8: Plagal dari | Modus | Keempat. | <pitch:Νη> = Plagal dari Modus Keempat dari Ni",
     ],
-    "structure": "id/text/words/ordinal/postnominal/authentic-counterpart/original/page",
+    "structure": "id/text/words/ordinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -3159,7 +3159,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | 7. | <pitch:Ga> = Modus Tujuh dari Ga",
       "8: Modus | 8. | <pitch:Ni> = Modus Delapan dari Ni",
     ],
-    "structure": "id/text/digits/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "id/text/digits/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -3172,7 +3172,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | ke-7. | <pitch:Ga> = Modus Ketujuh dari Ga",
       "8: Modus | ke-8. | <pitch:Ni> = Modus Kedelapan dari Ni",
     ],
-    "structure": "id/text/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "id/text/digits/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -3185,7 +3185,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Berat. | <pitch:Ga> = Modus Berat dari Ga",
       "8: Plagal dari | Modus | ke-4. | <pitch:Ni> = Plagal dari Modus Keempat dari Ni",
     ],
-    "structure": "id/text/digits/ordinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "id/text/digits/ordinal/postnominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -3198,7 +3198,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | VII. | <pitch:Ga> = Modus Tujuh dari Ga",
       "8: Modus | VIII. | <pitch:Ni> = Modus Delapan dari Ni",
     ],
-    "structure": "id/text/roman-numerals/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "id/text/roman-numerals/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -3211,7 +3211,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Tujuh. | <pitch:Ga> = Modus Tujuh dari Ga",
       "8: Modus | Delapan. | <pitch:Ni> = Modus Delapan dari Ni",
     ],
-    "structure": "id/text/words/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "id/text/words/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -3224,7 +3224,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Ketujuh. | <pitch:Ga> = Modus Ketujuh dari Ga",
       "8: Modus | Kedelapan. | <pitch:Ni> = Modus Kedelapan dari Ni",
     ],
-    "structure": "id/text/words/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "id/text/words/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -3237,7 +3237,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: Modus | Berat. | <pitch:Ga> = Modus Berat dari Ga",
       "8: Plagal dari | Modus | Keempat. | <pitch:Ni> = Plagal dari Modus Keempat dari Ni",
     ],
-    "structure": "id/text/words/ordinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "id/text/words/ordinal/postnominal/authentic-counterpart/transliterated",
   },
   {
     "modes": [
@@ -3250,7 +3250,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Modus | <pitch:Γα> = Modus Tujuh dari Ga",
       "8: greek:λ/π | Modus | <modeSign> | <pitch:Νη> = Modus Delapan dari Ni",
     ],
-    "structure": "id/mode-sign/digits/cardinal/postnominal/absolute/original/page",
+    "structure": "id/mode-sign/cardinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -3263,7 +3263,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Modus | <pitch:Γα> = Modus Ketujuh dari Ga",
       "8: greek:λ/π | Modus | <modeSign> | <pitch:Νη> = Modus Kedelapan dari Ni",
     ],
-    "structure": "id/mode-sign/digits/ordinal/postnominal/absolute/original/page",
+    "structure": "id/mode-sign/ordinal/postnominal/absolute/original",
   },
   {
     "modes": [
@@ -3276,7 +3276,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Modus | <pitch:Γα> = Modus Berat dari Ga",
       "8: greek:λ/π | Modus | <modeSign> | <pitch:Νη> = Plagal dari Modus Keempat dari Ni",
     ],
-    "structure": "id/mode-sign/digits/ordinal/postnominal/authentic-counterpart/original/page",
+    "structure": "id/mode-sign/ordinal/postnominal/authentic-counterpart/original",
   },
   {
     "modes": [
@@ -3289,7 +3289,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Modus | <pitch:Ga> = Modus Tujuh dari Ga",
       "8: greek:λ/π | Modus | <modeSign> | <pitch:Ni> = Modus Delapan dari Ni",
     ],
-    "structure": "id/mode-sign/digits/cardinal/postnominal/absolute/transliterated/page",
+    "structure": "id/mode-sign/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -3302,7 +3302,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Modus | <pitch:Ga> = Modus Ketujuh dari Ga",
       "8: greek:λ/π | Modus | <modeSign> | <pitch:Ni> = Modus Kedelapan dari Ni",
     ],
-    "structure": "id/mode-sign/digits/ordinal/postnominal/absolute/transliterated/page",
+    "structure": "id/mode-sign/ordinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -3315,7 +3315,7 @@ exports[`InitialMartyriaLexicon > renders and pronounces every legal structure e
       "7: <modeSign> | Modus | <pitch:Ga> = Modus Berat dari Ga",
       "8: greek:λ/π | Modus | <modeSign> | <pitch:Ni> = Plagal dari Modus Keempat dari Ni",
     ],
-    "structure": "id/mode-sign/digits/ordinal/postnominal/authentic-counterpart/transliterated/page",
+    "structure": "id/mode-sign/ordinal/postnominal/authentic-counterpart/transliterated",
   },
 ]
 `;

@@ -133,53 +133,32 @@ const arabicTransliteratedNoteNames: InitialMartyriaNoteNames = {
   languageTag: 'ar',
 };
 
-type InitialMartyriaModeTexts = [
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-];
+type InitialMartyriaModeTexts = Readonly<Record<ModeKeyMode, string>>;
 
-type InitialMartyriaPronunciationOverrides = Partial<
-  Pick<
-    InitialMartyriaLexicon,
-    | 'label'
-    | 'ordinalWords'
-    | 'plagalWord'
-    | 'plagalCounterpartWord'
-    | 'plagalCounterpartOrdinalWords'
-    | 'graveWord'
-  >
->;
+type InitialMartyriaPronunciationOverrides = Partial<{
+  label: string;
+  ordinalWords: InitialMartyriaModeTexts;
+  plagalWord: string;
+  plagalCounterpartWord: string;
+  plagalCounterpartOrdinalWords: Partial<Record<ModeKeyMode, string>>;
+  graveWord: string;
+}>;
 
-export interface InitialMartyriaLexicon {
+interface InitialMartyriaLexiconBase {
   /** Reading direction of the language's mode-name phrases. */
   direction: 'ltr' | 'rtl';
-  /**
-   * The language is written in Greek script, so greek-role text needs no
-   * separate font and note names are never transliterated.
-   */
-  usesGreekScript: boolean;
-  /** Note names rendered when a style transliterates them. */
-  transliteratedNoteNames: InitialMartyriaNoteNames;
-  /** Whether curated styles in this language transliterate note names. */
-  transliterateNoteNames: boolean;
   /** Words introducing the physical starting note in a spoken mode name. */
   startingNotePrefix: string;
   /** Spoken forms that differ from the text printed in the score. */
   pronunciationOverrides?: InitialMartyriaPronunciationOverrides;
   /** The word naming the concept of a mode (Mode, Tono, Glas). */
-  label?: string;
-  /** Label form used when it trails the mode name (Spanish lowercase). */
-  labelMedial?: string;
+  label: string;
+  /** Lowercase the label when an ordinal precedes it. */
+  lowercaseTrailingLabel?: true;
   /** Label form used with an ordinal numeral (Romanian definite article). */
   labelWithOrdinal?: string;
   /** Ordinal words, in the form used after the label. */
-  ordinalWords?: InitialMartyriaModeTexts;
+  ordinalWords: InitialMartyriaModeTexts;
   /** Ordinal words in the form used before the label (Spanish apocope). */
   ordinalWordsPrenominal?: InitialMartyriaModeTexts;
   cardinalWords?: InitialMartyriaModeTexts;
@@ -198,62 +177,65 @@ export interface InitialMartyriaLexicon {
   plagalCounterpartOrdinalWords?: Partial<Record<ModeKeyMode, string>>;
   /** Where a plagal-counterpart marker sits inside the mode-name phrase. */
   plagalCounterpartMarkerPosition?: 'phraseStart' | 'beforeNumeral';
-  /** Number styles whose text phrases use the stacked Greek abbreviation. */
-  plagalAbbreviationNumeralStyles?: readonly InitialMartyriaNumeralStyle[];
   /** Grave-mode word used inside a text phrase. */
   graveWord?: string;
   /** Treat the grave word as a postnominal identifier (Modus Berat). */
   graveWordAfterLabel?: boolean;
-  /** Grave-mode word used as a standalone title next to the mode sign. */
-  graveWordTitle?: string;
-  /** Whether the language ends the mode-name phrase with a period. */
-  usesTerminalPeriod: boolean;
-  /**
-   * The traditional sign group trails the whole key, after the starting
-   * pitch (Arabic).
-   */
-  modeSignGroupTrailing: boolean;
 }
 
-export const romanNumerals: InitialMartyriaModeTexts = [
-  'I',
-  'II',
-  'III',
-  'IV',
-  'V',
-  'VI',
-  'VII',
-  'VIII',
-];
+export type InitialMartyriaLexicon = InitialMartyriaLexiconBase &
+  (
+    | {
+        /** Greek-script languages always use the original note names. */
+        usesGreekScript: true;
+        transliteratedNoteNames?: never;
+      }
+    | {
+        usesGreekScript: false;
+        /** Note names used when transliteration is enabled. */
+        transliteratedNoteNames: InitialMartyriaNoteNames;
+      }
+  );
 
-export const arabicIndicDigits: InitialMartyriaModeTexts = [
-  '١',
-  '٢',
-  '٣',
-  '٤',
-  '٥',
-  '٦',
-  '٧',
-  '٨',
-];
+export const romanNumerals: InitialMartyriaModeTexts = {
+  1: 'I',
+  2: 'II',
+  3: 'III',
+  4: 'IV',
+  5: 'V',
+  6: 'VI',
+  7: 'VII',
+  8: 'VIII',
+};
 
-const englishOrdinalSuffixes: InitialMartyriaModeTexts = [
-  'st',
-  'nd',
-  'rd',
-  'th',
-  'th',
-  'th',
-  'th',
-  'th',
-];
+export const arabicIndicDigits: InitialMartyriaModeTexts = {
+  1: '١',
+  2: '٢',
+  3: '٣',
+  4: '٤',
+  5: '٥',
+  6: '٦',
+  7: '٧',
+  8: '٨',
+};
+
+const englishOrdinalSuffixes: InitialMartyriaModeTexts = {
+  1: 'st',
+  2: 'nd',
+  3: 'rd',
+  4: 'th',
+  5: 'th',
+  6: 'th',
+  7: 'th',
+  8: 'th',
+};
 
 function formatEnglishOrdinal(
   base: string,
   numeralStyle: InitialMartyriaNumeralStyle,
 ) {
   return numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits
-    ? `${base}${englishOrdinalSuffixes[Number(base) - 1]}`
+    ? `${base}${englishOrdinalSuffixes[Number(base) as ModeKeyMode]}`
     : base;
 }
 
@@ -270,21 +252,19 @@ export const initialMartyriaLexicons: Record<
     // https://byzantine-music.apostoliki-diakonia.gr/Texts/texts.asp?main=Anastasimatarion.htm
     direction: 'ltr',
     usesGreekScript: true,
-    transliteratedNoteNames: transliteratedGreekNoteNames,
-    transliterateNoteNames: false,
     startingNotePrefix: 'εκ του',
     pronunciationOverrides: {
       label: 'Ήχος',
-      ordinalWords: [
-        'Πρώτος',
-        'Δεύτερος',
-        'Τρίτος',
-        'Τέταρτος',
-        'Πέμπτος',
-        'Έκτος',
-        'Έβδομος',
-        'Όγδοος',
-      ],
+      ordinalWords: {
+        1: 'Πρώτος',
+        2: 'Δεύτερος',
+        3: 'Τρίτος',
+        4: 'Τέταρτος',
+        5: 'Πέμπτος',
+        6: 'Έκτος',
+        7: 'Έβδομος',
+        8: 'Όγδοος',
+      },
       plagalWord: 'Πλάγιος',
       plagalCounterpartWord: 'Πλάγιος του',
       plagalCounterpartOrdinalWords: {
@@ -295,17 +275,26 @@ export const initialMartyriaLexicons: Record<
       graveWord: 'Βαρύς',
     },
     label: 'Ἦχος',
-    ordinalWords: [
-      'πρῶτος',
-      'δεύτερος',
-      'τρίτος',
-      'τέταρτος',
-      'πέμπτος',
-      'ἕκτος',
-      'ἕβδομος',
-      'ὄγδοος',
-    ],
-    alphabeticNumerals: ['αʹ', 'βʹ', 'γʹ', 'δʹ', 'εʹ', 'ϛʹ', 'ζʹ', 'ηʹ'],
+    ordinalWords: {
+      1: 'πρῶτος',
+      2: 'δεύτερος',
+      3: 'τρίτος',
+      4: 'τέταρτος',
+      5: 'πέμπτος',
+      6: 'ἕκτος',
+      7: 'ἕβδομος',
+      8: 'ὄγδοος',
+    },
+    alphabeticNumerals: {
+      1: 'αʹ',
+      2: 'βʹ',
+      3: 'γʹ',
+      4: 'δʹ',
+      5: 'εʹ',
+      6: 'ϛʹ',
+      7: 'ζʹ',
+      8: 'ηʹ',
+    },
     plagalWord: 'πλάγιος',
     plagalCounterpartWord: 'πλάγιος τοῦ',
     plagalCounterpartOrdinalWords: {
@@ -314,13 +303,7 @@ export const initialMartyriaLexicons: Record<
       8: 'τετάρτου',
     },
     plagalCounterpartMarkerPosition: 'beforeNumeral',
-    plagalAbbreviationNumeralStyles: [
-      INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
-    ],
     graveWord: 'βαρύς',
-    graveWordTitle: 'Βαρύς',
-    usesTerminalPeriod: true,
-    modeSignGroupTrailing: false,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: {
     // English cardinals follow the noun and ordinals precede it. Roman
@@ -331,35 +314,32 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: transliteratedGreekNoteNames,
-    transliterateNoteNames: false,
     startingNotePrefix: 'from',
     label: 'Mode',
-    ordinalWords: [
-      'First',
-      'Second',
-      'Third',
-      'Fourth',
-      'Fifth',
-      'Sixth',
-      'Seventh',
-      'Eighth',
-    ],
-    cardinalWords: [
-      'One',
-      'Two',
-      'Three',
-      'Four',
-      'Five',
-      'Six',
-      'Seven',
-      'Eight',
-    ],
+    ordinalWords: {
+      1: 'First',
+      2: 'Second',
+      3: 'Third',
+      4: 'Fourth',
+      5: 'Fifth',
+      6: 'Sixth',
+      7: 'Seventh',
+      8: 'Eighth',
+    },
+    cardinalWords: {
+      1: 'One',
+      2: 'Two',
+      3: 'Three',
+      4: 'Four',
+      5: 'Five',
+      6: 'Six',
+      7: 'Seven',
+      8: 'Eight',
+    },
     formatOrdinal: formatEnglishOrdinal,
     plagalWord: 'Plagal',
     plagalCounterpartWord: 'Plagal of',
     graveWord: 'Grave',
-    usesTerminalPeriod: true,
-    modeSignGroupTrailing: false,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: {
     // Cardinals follow tono; ordinal adjectives can precede or follow it.
@@ -378,40 +358,39 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: spanishTransliteratedNoteNames,
-    transliterateNoteNames: false,
     startingNotePrefix: 'desde',
     label: 'Tono',
-    labelMedial: 'tono',
-    ordinalWords: [
-      'primero',
-      'segundo',
-      'tercero',
-      'cuarto',
-      'quinto',
-      'sexto',
-      'séptimo',
-      'octavo',
-    ],
-    ordinalWordsPrenominal: [
-      'Primer',
-      'Segundo',
-      'Tercer',
-      'Cuarto',
-      'Quinto',
-      'Sexto',
-      'Séptimo',
-      'Octavo',
-    ],
-    cardinalWords: [
-      'uno',
-      'dos',
-      'tres',
-      'cuatro',
-      'cinco',
-      'seis',
-      'siete',
-      'ocho',
-    ],
+    lowercaseTrailingLabel: true,
+    ordinalWords: {
+      1: 'primero',
+      2: 'segundo',
+      3: 'tercero',
+      4: 'cuarto',
+      5: 'quinto',
+      6: 'sexto',
+      7: 'séptimo',
+      8: 'octavo',
+    },
+    ordinalWordsPrenominal: {
+      1: 'Primer',
+      2: 'Segundo',
+      3: 'Tercer',
+      4: 'Cuarto',
+      5: 'Quinto',
+      6: 'Sexto',
+      7: 'Séptimo',
+      8: 'Octavo',
+    },
+    cardinalWords: {
+      1: 'uno',
+      2: 'dos',
+      3: 'tres',
+      4: 'cuatro',
+      5: 'cinco',
+      6: 'seis',
+      7: 'siete',
+      8: 'ocho',
+    },
     formatOrdinal: (base, numeralStyle, numeralQualifier) => {
       if (numeralStyle !== INITIAL_MARTYRIA_NUMERAL_STYLES.Digits) {
         return base;
@@ -422,8 +401,6 @@ export const initialMartyriaLexicons: Record<
         ? `${base}.ᵉʳ`
         : `${base}.º`;
     },
-    usesTerminalPeriod: true,
-    modeSignGroupTrailing: false,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: {
     // Gamanovich distinguishes quantity from order and lists the same
@@ -442,43 +419,49 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
-    transliterateNoteNames: true,
     startingNotePrefix: 'ѿ',
     label: 'Гла́съ',
-    labelMedial: 'гла́съ',
-    ordinalWords: [
-      'пе́рвый',
-      'вторы́й',
-      'тре́тїй',
-      'четве́ртый',
-      'пѧ́тый',
-      'шесты́й',
-      'седмы́й',
-      'ѻ҆сьмы́й',
-    ],
-    ordinalWordsPrenominal: [
-      'Пе́рвый',
-      'Вторы́й',
-      'Тре́тїй',
-      'Четве́ртый',
-      'Пѧ́тый',
-      'Шесты́й',
-      'Седмы́й',
-      'Ѻ҆сьмы́й',
-    ],
-    cardinalWords: [
-      'є҆ди́нъ',
-      'два̀',
-      'трѝ',
-      'четы́ре',
-      'пѧ́ть',
-      'ше́сть',
-      'се́дмь',
-      'ѻ҆́смь',
-    ],
-    alphabeticNumerals: ['а҃', 'в҃', 'г҃', 'д҃', 'є҃', 'ѕ҃', 'з҃', 'и҃'],
-    usesTerminalPeriod: true,
-    modeSignGroupTrailing: false,
+    lowercaseTrailingLabel: true,
+    ordinalWords: {
+      1: 'пе́рвый',
+      2: 'вторы́й',
+      3: 'тре́тїй',
+      4: 'четве́ртый',
+      5: 'пѧ́тый',
+      6: 'шесты́й',
+      7: 'седмы́й',
+      8: 'ѻ҆сьмы́й',
+    },
+    ordinalWordsPrenominal: {
+      1: 'Пе́рвый',
+      2: 'Вторы́й',
+      3: 'Тре́тїй',
+      4: 'Четве́ртый',
+      5: 'Пѧ́тый',
+      6: 'Шесты́й',
+      7: 'Седмы́й',
+      8: 'Ѻ҆сьмы́й',
+    },
+    cardinalWords: {
+      1: 'є҆ди́нъ',
+      2: 'два̀',
+      3: 'трѝ',
+      4: 'четы́ре',
+      5: 'пѧ́ть',
+      6: 'ше́сть',
+      7: 'се́дмь',
+      8: 'ѻ҆́смь',
+    },
+    alphabeticNumerals: {
+      1: 'а҃',
+      2: 'в҃',
+      3: 'г҃',
+      4: 'д҃',
+      5: 'є҃',
+      6: 'ѕ҃',
+      7: 'з҃',
+      8: 'и҃',
+    },
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: {
     // General Russian orthography writes an Arabic ordinal with a suffix such
@@ -497,47 +480,44 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: russianTransliteratedNoteNames,
-    transliterateNoteNames: true,
     startingNotePrefix: 'от',
     label: 'Глас',
-    labelMedial: 'глас',
-    ordinalWords: [
-      'первый',
-      'второй',
-      'третий',
-      'четвёртый',
-      'пятый',
-      'шестой',
-      'седьмой',
-      'восьмой',
-    ],
-    ordinalWordsPrenominal: [
-      'Первый',
-      'Второй',
-      'Третий',
-      'Четвёртый',
-      'Пятый',
-      'Шестой',
-      'Седьмой',
-      'Восьмой',
-    ],
-    cardinalWords: [
-      'один',
-      'два',
-      'три',
-      'четыре',
-      'пять',
-      'шесть',
-      'семь',
-      'восемь',
-    ],
+    lowercaseTrailingLabel: true,
+    ordinalWords: {
+      1: 'первый',
+      2: 'второй',
+      3: 'третий',
+      4: 'четвёртый',
+      5: 'пятый',
+      6: 'шестой',
+      7: 'седьмой',
+      8: 'восьмой',
+    },
+    ordinalWordsPrenominal: {
+      1: 'Первый',
+      2: 'Второй',
+      3: 'Третий',
+      4: 'Четвёртый',
+      5: 'Пятый',
+      6: 'Шестой',
+      7: 'Седьмой',
+      8: 'Восьмой',
+    },
+    cardinalWords: {
+      1: 'один',
+      2: 'два',
+      3: 'три',
+      4: 'четыре',
+      5: 'пять',
+      6: 'шесть',
+      7: 'семь',
+      8: 'восемь',
+    },
     formatOrdinal: (base, numeralStyle, numeralQualifier) =>
       numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits &&
       numeralQualifier === INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal
         ? `${base}-й`
         : base,
-    usesTerminalPeriod: true,
-    modeSignGroupTrailing: false,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: {
     // Arabic ordinals are adjectives: they follow the noun and agree with its
@@ -551,21 +531,18 @@ export const initialMartyriaLexicons: Record<
     direction: 'rtl',
     usesGreekScript: false,
     transliteratedNoteNames: arabicTransliteratedNoteNames,
-    transliterateNoteNames: false,
     startingNotePrefix: 'من',
     label: 'اللحن',
-    ordinalWords: [
-      'الأول',
-      'الثاني',
-      'الثالث',
-      'الرابع',
-      'الخامس',
-      'السادس',
-      'السابع',
-      'الثامن',
-    ],
-    usesTerminalPeriod: false,
-    modeSignGroupTrailing: true,
+    ordinalWords: {
+      1: 'الأول',
+      2: 'الثاني',
+      3: 'الثالث',
+      4: 'الرابع',
+      5: 'الخامس',
+      6: 'السادس',
+      7: 'السابع',
+      8: 'الثامن',
+    },
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: {
     // Cardinals follow glas. Ordinals 2-8 use the al ... -lea construction;
@@ -579,41 +556,40 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: romanianTransliteratedNoteNames,
-    transliterateNoteNames: false,
     startingNotePrefix: 'de la',
     label: 'Glas',
-    labelMedial: 'glas',
+    lowercaseTrailingLabel: true,
     labelWithOrdinal: 'Glasul',
-    ordinalWords: [
-      'întâi',
-      'al doilea',
-      'al treilea',
-      'al patrulea',
-      'al cincilea',
-      'al șaselea',
-      'al șaptelea',
-      'al optulea',
-    ],
-    ordinalWordsPrenominal: [
-      'Primul',
-      'Al doilea',
-      'Al treilea',
-      'Al patrulea',
-      'Al cincilea',
-      'Al șaselea',
-      'Al șaptelea',
-      'Al optulea',
-    ],
-    cardinalWords: [
-      'unu',
-      'doi',
-      'trei',
-      'patru',
-      'cinci',
-      'șase',
-      'șapte',
-      'opt',
-    ],
+    ordinalWords: {
+      1: 'întâi',
+      2: 'al doilea',
+      3: 'al treilea',
+      4: 'al patrulea',
+      5: 'al cincilea',
+      6: 'al șaselea',
+      7: 'al șaptelea',
+      8: 'al optulea',
+    },
+    ordinalWordsPrenominal: {
+      1: 'Primul',
+      2: 'Al doilea',
+      3: 'Al treilea',
+      4: 'Al patrulea',
+      5: 'Al cincilea',
+      6: 'Al șaselea',
+      7: 'Al șaptelea',
+      8: 'Al optulea',
+    },
+    cardinalWords: {
+      1: 'unu',
+      2: 'doi',
+      3: 'trei',
+      4: 'patru',
+      5: 'cinci',
+      6: 'șase',
+      7: 'șapte',
+      8: 'opt',
+    },
     formatOrdinal: (base, _numeralStyle, numeralQualifier) => {
       if (base === '1' || base === 'I') {
         return numeralQualifier ===
@@ -629,8 +605,6 @@ export const initialMartyriaLexicons: Record<
     },
     plagalWord: 'lăturaș',
     plagalCounterpartMarkerPosition: 'beforeNumeral',
-    usesTerminalPeriod: true,
-    modeSignGroupTrailing: false,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: {
     // Indonesian rank numerals follow the noun and use ke-: Modus Pertama,
@@ -646,35 +620,32 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: indonesianTransliteratedNoteNames,
-    transliterateNoteNames: false,
     startingNotePrefix: 'dari',
     label: 'Modus',
-    ordinalWords: [
-      'Pertama',
-      'Kedua',
-      'Ketiga',
-      'Keempat',
-      'Kelima',
-      'Keenam',
-      'Ketujuh',
-      'Kedelapan',
-    ],
-    cardinalWords: [
-      'Satu',
-      'Dua',
-      'Tiga',
-      'Empat',
-      'Lima',
-      'Enam',
-      'Tujuh',
-      'Delapan',
-    ],
+    ordinalWords: {
+      1: 'Pertama',
+      2: 'Kedua',
+      3: 'Ketiga',
+      4: 'Keempat',
+      5: 'Kelima',
+      6: 'Keenam',
+      7: 'Ketujuh',
+      8: 'Kedelapan',
+    },
+    cardinalWords: {
+      1: 'Satu',
+      2: 'Dua',
+      3: 'Tiga',
+      4: 'Empat',
+      5: 'Lima',
+      6: 'Enam',
+      7: 'Tujuh',
+      8: 'Delapan',
+    },
     formatOrdinal: (base) => `ke-${base}`,
     plagalCounterpartWord: 'Plagal dari',
     graveWord: 'Berat',
     graveWordAfterLabel: true,
-    usesTerminalPeriod: true,
-    modeSignGroupTrailing: false,
   },
 };
 

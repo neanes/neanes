@@ -34,6 +34,7 @@ import {
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaNumberingSystem,
+  type InitialMartyriaStructure,
   type InitialMartyriaStyle,
   type InitialMartyriaTypographyOverrides,
 } from '@/models/InitialMartyriaStyle';
@@ -1079,10 +1080,6 @@ function loadInitialMartyriaStyle(
       Object.values(INITIAL_MARTYRIA_NUMERAL_KINDS),
       saved.numeralKind,
     ) ||
-    !isOneOf(
-      Object.values(INITIAL_MARTYRIA_NUMERAL_STYLES),
-      saved.numeralStyle,
-    ) ||
     (saved.numberingSystem !== undefined &&
       !isOneOf<InitialMartyriaNumberingSystem>(
         Object.values(INITIAL_MARTYRIA_NUMBERING_SYSTEMS),
@@ -1095,23 +1092,42 @@ function loadInitialMartyriaStyle(
     !isOneOf(
       Object.values(INITIAL_MARTYRIA_MODE_NAMING_SCHEMES),
       saved.modeNamingScheme,
-    ) ||
-    (saved.flowDirection !== undefined &&
-      !isOneOf(['page', 'ltr', 'rtl'], saved.flowDirection))
+    )
   ) {
     return null;
   }
-  const structure = {
+  const common = {
     languageId: saved.languageId,
-    modeIdentificationMethod: saved.modeIdentificationMethod,
     numeralKind: saved.numeralKind,
-    numeralStyle: saved.numeralStyle,
-    numberingSystem: saved.numberingSystem,
     numeralQualifier: saved.numeralQualifier,
     modeNamingScheme: saved.modeNamingScheme,
     transliterateNoteNames: saved.transliterateNoteNames === true,
-    flowDirection: saved.flowDirection ?? 'page',
   };
+  let structure: InitialMartyriaStructure;
+  if (
+    saved.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+  ) {
+    structure = {
+      ...common,
+      modeIdentificationMethod: saved.modeIdentificationMethod,
+    };
+  } else {
+    if (
+      !isOneOf(
+        Object.values(INITIAL_MARTYRIA_NUMERAL_STYLES),
+        saved.numeralStyle,
+      )
+    ) {
+      return null;
+    }
+    structure = {
+      ...common,
+      modeIdentificationMethod: saved.modeIdentificationMethod,
+      numeralStyle: saved.numeralStyle,
+      numberingSystem: saved.numberingSystem,
+    };
+  }
   if (!isInitialMartyriaStructureSupported(structure)) {
     return null;
   }

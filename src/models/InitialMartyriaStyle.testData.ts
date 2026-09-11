@@ -9,17 +9,15 @@ import {
   type InitialMartyriaStructure,
 } from '@/models/InitialMartyriaStyle';
 
-export const attestedStructures: Record<string, InitialMartyriaStructure> = {
+export const attestedStructures = {
   'traditional-greek': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'greek-mode-names': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
@@ -29,18 +27,15 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-plagal-first': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-mode-names': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -50,7 +45,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-authentic-counterpart-ordinal-digits-text': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -60,18 +54,15 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-authentic-counterpart-number-sign': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-authentic-counterpart-number-text': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -81,7 +72,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-authentic-counterpart-roman-numeral-text': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -91,7 +81,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-authentic-counterpart-number-word-text': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -101,18 +90,15 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-sign-first': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-plagal-class-ordinal-words-text': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -122,7 +108,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-plagal-class-ordinal-words': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -133,7 +118,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-ordinal-plagal-text': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -143,7 +127,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-ordinal-plagal': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -154,7 +137,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-ordinal': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -165,7 +147,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-mode-number': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -176,7 +157,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-mode-roman-numeral': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -187,7 +167,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-mode-number-word': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -198,7 +177,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-full-name': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -209,7 +187,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-authentic-counterpart-ordinal-digits': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -220,7 +197,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-authentic-counterpart-number': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -231,7 +207,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-authentic-counterpart-roman-numeral': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -242,7 +217,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'english-authentic-counterpart-number-word': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -253,7 +227,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'spanish-tono-number': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
@@ -264,7 +237,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'spanish-tono-roman-numeral': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
@@ -275,7 +247,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'spanish-tono-ordinal-number': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
@@ -286,7 +257,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'spanish-tono-ordinal': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
@@ -297,7 +267,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'spanish-ordinal-tono': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
@@ -308,7 +277,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'church-slavonic-glas-number': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
@@ -319,7 +287,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: true,
-    flowDirection: 'page',
   },
   'church-slavonic-glas-cyrillic-numeral': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
@@ -330,7 +297,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: true,
-    flowDirection: 'page',
   },
   'church-slavonic-glas-cyrillic-numeral-text': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
@@ -340,7 +306,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: true,
-    flowDirection: 'page',
   },
   'church-slavonic-glas-ordinal': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
@@ -351,7 +316,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: true,
-    flowDirection: 'page',
   },
   'church-slavonic-glas-ordinal-text': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
@@ -361,7 +325,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: true,
-    flowDirection: 'page',
   },
   'russian-glas-number': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
@@ -372,7 +335,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: true,
-    flowDirection: 'page',
   },
   'russian-glas-ordinal': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
@@ -383,7 +345,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: true,
-    flowDirection: 'page',
   },
   'russian-glas-ordinal-text': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
@@ -393,7 +354,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: true,
-    flowDirection: 'page',
   },
   'arabic-ordinal': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
@@ -404,7 +364,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'rtl',
   },
   'arabic-ordinal-text': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
@@ -414,7 +373,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'rtl',
   },
   'arabic-ordinal-digits': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
@@ -425,7 +383,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'rtl',
   },
   'arabic-ordinal-arabic-indic-digits': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
@@ -437,7 +394,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'rtl',
   },
   'romanian-glas-number': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
@@ -448,7 +404,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'romanian-glas-roman-numeral': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
@@ -459,7 +414,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'romanian-glas-ordinal-number': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
@@ -470,7 +424,6 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'romanian-glas-ordinal-roman-numeral': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
@@ -481,18 +434,15 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'romanian-glas': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
   'indonesian-mode-names': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian,
@@ -503,9 +453,8 @@ export const attestedStructures: Record<string, InitialMartyriaStructure> = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
-    flowDirection: 'page',
   },
-};
+} satisfies Record<string, InitialMartyriaStructure>;
 
 /*
  * The attested look of every structure a curated style has ever had: the

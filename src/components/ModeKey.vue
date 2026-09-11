@@ -59,6 +59,7 @@
               >
                 <span
                   :dir="run.noteText.direction"
+                  :lang="run.noteText.languageTag"
                   :style="getPitchTextStyle(run, runLayouts[index], role)"
                   >{{ run.noteText.names[pitchNote.note] }}</span
                 >

@@ -18,6 +18,7 @@ import {
 } from '@/models/InitialMartyriaBuiltInStyles';
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
 import {
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
@@ -1349,6 +1350,12 @@ describe('SaveService font styles', () => {
     const base = getBuiltInInitialMartyriaStyle(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
     );
+    if (
+      base.structure.modeIdentificationMethod ===
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+    ) {
+      throw new Error('Expected a text style');
+    }
     const customStyle = createInitialMartyriaStyle({
       displayName: 'Parish books',
       basedOn: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
@@ -1467,6 +1474,27 @@ describe('SaveService font styles', () => {
     const loaded = SaveService.LoadScore_v1(saved);
 
     expect(saved.initialMartyriaStyles![0].greekFontFamily).toBeUndefined();
+    expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
+  });
+
+  it('round-trips sign-only Initial Martyria styles without printed-number fields', () => {
+    const score = new Score();
+    const base = getBuiltInInitialMartyriaStyle(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianTraditionalSign,
+    );
+    const customStyle = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Parish sign',
+      basedOn: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianTraditionalSign,
+    });
+    score.initialMartyriaStyles = [customStyle];
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+    const savedStyle = saved.initialMartyriaStyles![0];
+
+    expect(savedStyle).not.toHaveProperty('numeralStyle');
+    expect(savedStyle).not.toHaveProperty('numberingSystem');
     expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
   });
 

@@ -306,6 +306,7 @@ const editorConfig = computed((): EditorConfig => {
         'Old Standard' + ',' + props.pageSetup.neumeDefaultFontFamily,
         'Neanes',
         'NeanesStathisSeries',
+        'Almouzios',
         ...fonts,
       ],
     },

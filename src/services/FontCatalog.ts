@@ -68,6 +68,7 @@ const BUNDLED_FAMILIES = [
   'NeanesLegacy',
   'NeanesStathisSeriesLegacy',
   'NeanesRTLLegacy',
+  'Almouzios',
 ];
 
 // The standard four-face set shared by our bundled text families, matching the
@@ -161,6 +162,7 @@ const BUNDLED_FACES: Record<string, BundledFace[]> = {
   NeanesLegacy: [{ style: DEFAULT_FONT_STYLE }],
   NeanesStathisSeriesLegacy: [{ style: DEFAULT_FONT_STYLE }],
   NeanesRTLLegacy: [{ style: DEFAULT_FONT_STYLE }],
+  Almouzios: [{ style: DEFAULT_FONT_STYLE }],
 };
 
 // CSS font family names are case-insensitive. Normalize the spelling used for

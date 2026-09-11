@@ -7,6 +7,7 @@ import {
   TempoSign,
 } from '@/models/Neumes';
 
+import { DEFAULT_ATTRIBUTES_ALMOUZIOS } from './insertneumeutil.Almouzios';
 import { DEFAULT_ATTRIBUTES_PSALTICA } from './insertneumeutil.Neanes';
 import { DEFAULT_ATTRIBUTES_STATHIS } from './insertneumeutil.NeanesStathisSeries';
 
@@ -130,6 +131,10 @@ export const INSERT_NEUME_DEFAULT_ATTRIBUTES_MARTYRIA: InsertNeumeDefaultAttribu
       top: -0.29,
       kerningLeft: -0.3,
     },
+    Almouzios: {
+      neumeFontSize: 1.7,
+      top: -0.8,
+    },
   };
 
 export const INSERT_NEUME_DEFAULT_ATTRIBUTES: InsertNeumeDefaultAttributesType =
@@ -137,4 +142,5 @@ export const INSERT_NEUME_DEFAULT_ATTRIBUTES: InsertNeumeDefaultAttributesType =
     Neanes: DEFAULT_ATTRIBUTES_PSALTICA,
     NeanesRTL: DEFAULT_ATTRIBUTES_PSALTICA,
     NeanesStathisSeries: DEFAULT_ATTRIBUTES_STATHIS,
+    Almouzios: DEFAULT_ATTRIBUTES_ALMOUZIOS,
   };

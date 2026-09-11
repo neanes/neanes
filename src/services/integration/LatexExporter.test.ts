@@ -21,7 +21,7 @@ describe('LatexExporter typography schema', () => {
     expect(LATEX_SCHEMA_VERSION).toBe(3);
   });
 
-  it.each(['Neanes', 'NeanesRTL', 'NeanesStathisSeries'])(
+  it.each(['Neanes', 'NeanesRTL', 'NeanesStathisSeries', 'Almouzios'])(
     'exports the logical neume font family %s',
     (family) => {
       expect(getLatexNeumeFont(family)).toEqual({

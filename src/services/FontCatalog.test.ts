@@ -31,6 +31,7 @@ describe('FontCatalog bundled fonts', () => {
       'NeanesLegacy',
       'NeanesStathisSeriesLegacy',
       'NeanesRTLLegacy',
+      'Almouzios',
     ]);
   });
 
@@ -47,6 +48,7 @@ describe('FontCatalog bundled fonts', () => {
     expect(fontCatalog.isBundledFamily('Neanes')).toBe(true);
     expect(fontCatalog.isBundledFamily('NeanesLegacy')).toBe(true);
     expect(fontCatalog.isBundledFamily('NeanesStathisSeriesLegacy')).toBe(true);
+    expect(fontCatalog.isBundledFamily('Almouzios')).toBe(true);
     expect(fontCatalog.isBundledFamily('Minion Pro')).toBe(false);
   });
 
@@ -193,6 +195,7 @@ describe('FontCatalog font feature values', () => {
     expect(css).not.toContain('"NeanesStathisSeriesLegacy"');
     expect(css).not.toContain('NeanesRTL');
     expect(css).not.toContain('NeanesRTLLegacy');
+    expect(css).not.toContain('Almouzios');
   });
 
   it('selects real font faces by matching style axes', async () => {

@@ -131,7 +131,7 @@ import {
   measureInitialMartyriaPitchGeometry,
   resolveInitialMartyriaAccessoryLayout,
 } from './InitialMartyriaPitchMeasurementService';
-import { measureInitialMartyriaStackedText } from './InitialMartyriaStackedTextMeasurementService';
+import { measureInitialMartyriaStackedCharacters } from './InitialMartyriaStackedCharactersMeasurementService';
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
 import {
@@ -2399,14 +2399,18 @@ export class LayoutService {
       const { fontFamily, fontStyle, fontSize } = appearance;
       const strokeOverflow = appearance.strokeWidth / 2;
 
-      if (run.kind === 'text' && run.content.layout === 'stacked') {
-        const geometry = measureInitialMartyriaStackedText(run.content.lines, {
-          fontFamily,
-          fontStyle,
-          fontSize,
-          fontVariantCaps: appearance.fontVariantCaps,
-          strokeWidth: appearance.strokeWidth,
-        });
+      if (run.kind === 'text' && run.content.layout === 'stackedCharacters') {
+        const geometry = measureInitialMartyriaStackedCharacters(
+          run.content.topCharacter,
+          run.content.bottomCharacter,
+          {
+            fontFamily,
+            fontStyle,
+            fontSize,
+            fontVariantCaps: appearance.fontVariantCaps,
+            strokeWidth: appearance.strokeWidth,
+          },
+        );
         top = Math.min(top, geometry.top);
         bottom = Math.max(bottom, geometry.bottom);
         flowTop = Math.min(flowTop, geometry.top);
@@ -2415,7 +2419,7 @@ export class LayoutService {
           separatorBefore,
           fontSize,
           baselineShift: 0,
-          stackedText: {
+          stackedCharacters: {
             geometry,
             lineHeight: TextMeasurementService.getFontHeight(
               resolveFontCss({ fontFamily, fontStyle, fontSize }),
@@ -2504,7 +2508,7 @@ export class LayoutService {
           separatorBefore,
           fontSize: glyphAppearance.fontSize,
           baselineShift: 0,
-          stackedText: null,
+          stackedCharacters: null,
           pitch: {
             textFontSize: fontSize,
             textLineHeight: TextMeasurementService.getFontHeight(
@@ -2554,7 +2558,7 @@ export class LayoutService {
         separatorBefore,
         fontSize,
         baselineShift: -glyphBaselineCorrection,
-        stackedText: null,
+        stackedCharacters: null,
         pitch: null,
       });
     }

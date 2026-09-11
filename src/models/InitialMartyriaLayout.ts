@@ -1,6 +1,6 @@
 import type { InitialMartyriaPitchGeometry } from '@/models/InitialMartyriaPitchGeometry';
 import type { InitialMartyriaSeparator } from '@/models/InitialMartyriaResolver';
-import type { InitialMartyriaStackedTextGeometry } from '@/models/InitialMartyriaStackedTextGeometry';
+import type { InitialMartyriaStackedCharactersGeometry } from '@/models/InitialMartyriaStackedCharactersGeometry';
 import type {
   InitialMartyriaAppearance,
   InitialMartyriaStyleResolution,
@@ -44,14 +44,14 @@ export interface InitialMartyriaRunLayout {
   fontSize: number;
   /** How far the run's baseline is raised; non-zero for glyph runs only. */
   baselineShift: number;
-  /** Set for stacked text runs. */
-  stackedText: InitialMartyriaStackedTextLayout | null;
+  /** Set for stacked-character runs. */
+  stackedCharacters: InitialMartyriaStackedCharactersLayout | null;
   /** Set for starting pitch runs. */
   pitch: InitialMartyriaPitchRunLayout | null;
 }
 
-export interface InitialMartyriaStackedTextLayout {
-  geometry: InitialMartyriaStackedTextGeometry;
+export interface InitialMartyriaStackedCharactersLayout {
+  geometry: InitialMartyriaStackedCharactersGeometry;
   /** CSS line-height of each row. */
   lineHeight: number;
 }

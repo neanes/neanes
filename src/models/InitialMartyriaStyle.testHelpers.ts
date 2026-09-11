@@ -26,7 +26,7 @@ export function encodeRun(run: ResolvedInitialMartyriaRun) {
   const prefix = run.semantic === 'plagalAbbreviation' ? 'greek:' : '';
   return run.content.layout === 'inline'
     ? prefix + run.content.text
-    : prefix + run.content.lines.join('/');
+    : `${prefix}${run.content.topCharacter}/${run.content.bottomCharacter}`;
 }
 
 /** An unsaved style with the language's default typography. */
@@ -81,6 +81,6 @@ export function textOf(runs: ResolvedInitialMartyriaRun[]) {
     }
     return run.content.layout === 'inline'
       ? [run.content.text]
-      : run.content.lines;
+      : [run.content.topCharacter, run.content.bottomCharacter];
   });
 }

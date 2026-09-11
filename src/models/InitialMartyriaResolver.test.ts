@@ -255,9 +255,9 @@ describe('InitialMartyriaResolver', () => {
     const plagal = originalRuns.find(
       (run) =>
         run.kind === 'text' &&
-        run.content.layout === 'stacked' &&
-        run.content.lines[0] === 'λ' &&
-        run.content.lines[1] === 'π',
+        run.content.layout === 'stackedCharacters' &&
+        run.content.topCharacter === 'λ' &&
+        run.content.bottomCharacter === 'π',
     );
     expect(plagal?.kind).toBe('text');
     if (plagal?.kind === 'text') {

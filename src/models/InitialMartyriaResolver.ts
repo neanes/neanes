@@ -57,7 +57,7 @@ type InitialMartyriaComponent =
       content: string;
     }
   | {
-      kind: 'stackedText';
+      kind: 'stackedCharacters';
       semantic: InitialMartyriaTextSemantic;
       top: string;
       bottom: string;
@@ -240,7 +240,7 @@ function text(
 
 function plagalAbbreviation(): InitialMartyriaComponent {
   return {
-    kind: 'stackedText',
+    kind: 'stackedCharacters',
     semantic: 'plagalAbbreviation',
     top: 'λ',
     bottom: 'π',
@@ -536,7 +536,7 @@ function encodeInitialMartyriaComponent(component: InitialMartyriaComponent) {
       return '<pitch>';
     case 'text':
       return `main:${component.content}`;
-    case 'stackedText':
+    case 'stackedCharacters':
       return `${
         component.semantic === 'plagalAbbreviation' ? 'greek' : 'main'
       }:${component.top}/${component.bottom}`;
@@ -802,7 +802,7 @@ export function resolveInitialMartyriaStyle(options: {
     options.context.mode,
     flowDirection,
   )) {
-    if (component.kind === 'text' || component.kind === 'stackedText') {
+    if (component.kind === 'text' || component.kind === 'stackedCharacters') {
       const usesGreekFont =
         lexicon.usesGreekScript || component.semantic === 'plagalAbbreviation';
       const appearance =
@@ -823,7 +823,11 @@ export function resolveInitialMartyriaStyle(options: {
         content:
           component.kind === 'text'
             ? { layout: 'inline', text: component.content }
-            : { layout: 'stacked', lines: [component.top, component.bottom] },
+            : {
+                layout: 'stackedCharacters',
+                topCharacter: component.top,
+                bottomCharacter: component.bottom,
+              },
       });
       continue;
     }

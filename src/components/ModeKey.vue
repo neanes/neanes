@@ -119,19 +119,24 @@
             />
           </span>
           <template
-            v-else-if="run.kind === 'text' && run.content.layout === 'stacked'"
+            v-else-if="
+              run.kind === 'text' && run.content.layout === 'stackedCharacters'
+            "
           >
             <span
-              class="mode-key-run mode-key-stacked-text"
-              :style="getStackedTextStyle(run, runLayouts[index])"
+              class="mode-key-run mode-key-stacked-characters"
+              :style="getStackedCharactersStyle(run, runLayouts[index])"
               aria-hidden="true"
             >
               <span
-                v-for="(line, lineIndex) in run.content.lines"
-                :key="lineIndex"
-                :style="getStackedTextRowStyle(runLayouts[index], lineIndex)"
+                :style="getStackedCharacterStyle(runLayouts[index], 'top')"
                 aria-hidden="true"
-                >{{ line }}</span
+                >{{ run.content.topCharacter }}</span
+              >
+              <span
+                :style="getStackedCharacterStyle(runLayouts[index], 'bottom')"
+                aria-hidden="true"
+                >{{ run.content.bottomCharacter }}</span
               >
             </span>
           </template>
@@ -393,7 +398,7 @@ function getRunStyle(
       : withZoom(appearance.strokeWidth),
     top:
       runLayout.baselineShift === 0 ||
-      (run.kind === 'text' && run.content.layout === 'stacked')
+      (run.kind === 'text' && run.content.layout === 'stackedCharacters')
         ? undefined
         : withZoom(-runLayout.baselineShift),
     direction: run.direction,
@@ -427,11 +432,11 @@ function getFixedSeparatorStyle(
   } as CSSProperties;
 }
 
-function getStackedTextStyle(
+function getStackedCharactersStyle(
   run: TextRun,
   runLayout: InitialMartyriaRunLayout,
 ) {
-  const { geometry } = runLayout.stackedText!;
+  const { geometry } = runLayout.stackedCharacters!;
   const style = getRunStyle(run, runLayout);
   const height = geometry.bottom - geometry.top;
 
@@ -445,20 +450,22 @@ function getStackedTextStyle(
   } as CSSProperties;
 }
 
-function getStackedTextRowStyle(
+function getStackedCharacterStyle(
   runLayout: InitialMartyriaRunLayout,
-  index: number,
+  position: 'top' | 'bottom',
 ) {
-  const { geometry, lineHeight } = runLayout.stackedText!;
-  const row = geometry.rows[index];
+  const { geometry, lineHeight } = runLayout.stackedCharacters!;
+  const row = position === 'top' ? geometry.topRow : geometry.bottomRow;
 
   return {
     display: 'block',
-    left: withZoom(row.left),
+    left: 0,
     lineHeight: withZoom(lineHeight),
     position: 'absolute',
+    textAlign: 'center',
     top: withZoom(row.top),
     whiteSpace: 'nowrap',
+    width: '100%',
   } as CSSProperties;
 }
 
@@ -590,10 +597,6 @@ function getPitchTrailingGlueStyle(runLayout: InitialMartyriaRunLayout) {
 
 .mode-key-signature {
   unicode-bidi: isolate;
-}
-
-.mode-key-stacked-text {
-  position: relative;
 }
 
 .starting-pitch-note {

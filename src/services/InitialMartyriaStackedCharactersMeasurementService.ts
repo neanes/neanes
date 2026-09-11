@@ -1,16 +1,17 @@
 import {
-  getInitialMartyriaStackedTextGeometry,
-  type InitialMartyriaStackedTextGeometry,
-  type StackedTextRowBounds,
-} from '@/models/InitialMartyriaStackedTextGeometry';
+  getInitialMartyriaStackedCharactersGeometry,
+  type InitialMartyriaStackedCharactersGeometry,
+  type StackedCharacterBounds,
+} from '@/models/InitialMartyriaStackedCharactersGeometry';
 import { measureInitialMartyriaAtomBounds } from '@/services/InitialMartyriaPitchMeasurementService';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { resolveFontCss } from '@/utils/fontStyle';
 
 const TOP_ROW_OFFSET_EM = 0.08;
 
-export function measureInitialMartyriaStackedText(
-  lines: string[],
+export function measureInitialMartyriaStackedCharacters(
+  topCharacter: string,
+  bottomCharacter: string,
   options: {
     fontFamily: string;
     fontStyle?: string;
@@ -18,24 +19,23 @@ export function measureInitialMartyriaStackedText(
     fontVariantCaps?: string | null;
     strokeWidth?: number;
   },
-): InitialMartyriaStackedTextGeometry {
+): InitialMartyriaStackedCharactersGeometry {
   const cssFont = resolveFontCss({
     fontFamily: options.fontFamily,
     fontStyle: options.fontStyle ?? DEFAULT_FONT_STYLE,
     fontSize: options.fontSize,
   });
-  const rows: StackedTextRowBounds[] = lines.map((line) =>
+  const measureCharacter = (character: string): StackedCharacterBounds =>
     measureInitialMartyriaAtomBounds(
-      line,
+      character,
       cssFont,
       options.fontVariantCaps ?? 'normal',
       options.strokeWidth,
-    ),
-  );
+    );
 
-  return getInitialMartyriaStackedTextGeometry(
-    rows[0],
-    rows[1],
+  return getInitialMartyriaStackedCharactersGeometry(
+    measureCharacter(topCharacter),
+    measureCharacter(bottomCharacter),
     options.fontSize * TOP_ROW_OFFSET_EM,
   );
 }

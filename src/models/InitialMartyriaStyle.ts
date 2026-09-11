@@ -277,7 +277,12 @@ export interface InitialMartyriaContext {
 }
 
 type ResolvedInitialMartyriaTextContent =
-  { layout: 'inline'; text: string } | { layout: 'stacked'; lines: string[] };
+  | { layout: 'inline'; text: string }
+  | {
+      layout: 'stackedCharacters';
+      topCharacter: string;
+      bottomCharacter: string;
+    };
 
 export type ResolvedInitialMartyriaRun =
   | {

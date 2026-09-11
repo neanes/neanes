@@ -355,13 +355,29 @@ interface LineBreakSolution {
   requestedMaxAdjustmentRatio: number | null;
 }
 
+interface ProcessPagesPassResult {
+  centeredMelismaLyrics: Map<NoteElement, CenteredMelismaGeometry>;
+  layoutWorkspace: LayoutWorkspace;
+  pages: Page[];
+}
+
+interface CenteredMelismaGeometry {
+  lastNote: NoteElement;
+  // Relative to the start quantitative neume, excluding any left measure-bar
+  // reservation and vareia prefix added to the containing note box.
+  lyricTextLeftFromStartQuantitativeNeume: number;
+  startNote: NoteElement;
+}
+
+const centeredMelismaOffsetTolerance = 0.01;
+const maxCenteredMelismaLayoutPasses = 8;
+
 export class LayoutService {
   public static processPages(
     workspace: Workspace,
     options?: LayoutDiagnosticsOptions,
   ): Page[] {
     const score = workspace.score;
-    const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
 
     elements.forEach((element, index) => {
@@ -378,14 +394,74 @@ export class LayoutService {
       this.saveElementState(element);
     });
 
-    this.calculateMartyriae(elements, pageSetup);
-
     // Always make sure this is an empty element at the end of the score.
     // If this case is true, we have a bug, but this will prevent
     // users corrupting their score.
     if (elements[elements.length - 1].elementType !== ElementType.Empty) {
       elements.push(new EmptyElement());
     }
+
+    let centeredMelismaLyrics = new Map<NoteElement, CenteredMelismaGeometry>();
+    let result: ProcessPagesPassResult;
+
+    // Centered melisma bounds are discovered from positioned elements, while
+    // those bounds also affect Phase 1 collision spacing. Repeat the internal
+    // pass until the geometry used for line breaking matches the geometry
+    // produced by positioning.
+    for (let pass = 0; ; pass++) {
+      result = this.processPagesPass(workspace, options, centeredMelismaLyrics);
+
+      if (
+        this.centeredMelismaOffsetsAreStable(
+          centeredMelismaLyrics,
+          result.centeredMelismaLyrics,
+        )
+      ) {
+        break;
+      }
+
+      if (pass + 1 >= maxCenteredMelismaLayoutPasses) {
+        // A discrete line-break change can theoretically make centered
+        // geometry oscillate. Never return pages positioned with geometry
+        // discovered from a different layout. Fall back to the established
+        // left-aligned behavior with a clean pass instead.
+        result = this.processPagesPass(workspace, options, new Map());
+        break;
+      }
+
+      centeredMelismaLyrics = result.centeredMelismaLyrics;
+    }
+
+    elements.forEach((element) => {
+      this.checkElementState(element);
+    });
+
+    score.headersAndFooters.forEach((element) => {
+      this.checkElementState(element);
+    });
+
+    if (result.layoutWorkspace.loggingEnabled) {
+      console.log(
+        'avg ratio',
+        result.layoutWorkspace.completedParagraphs
+          .flatMap((p) => p.ratios)
+          .reduce((sum, ratio, _, arr) => sum + ratio / arr.length, 0),
+      );
+    }
+
+    return result.pages;
+  }
+
+  private static processPagesPass(
+    workspace: Workspace,
+    options: LayoutDiagnosticsOptions | undefined,
+    centeredMelismaLyrics: ReadonlyMap<NoteElement, CenteredMelismaGeometry>,
+  ): ProcessPagesPassResult {
+    const score = workspace.score;
+    const pageSetup = score.pageSetup;
+    const elements = score.staff.elements;
+
+    this.calculateMartyriae(elements, pageSetup);
 
     const layoutWorkspace: LayoutWorkspace = {
       pageSetup,
@@ -459,7 +535,12 @@ export class LayoutService {
       paragraphStyles: score.paragraphStyles,
     };
 
-    this.precomputeNoteGeometry(elements, pageSetup, noteWidthArgs);
+    this.precomputeNoteGeometry(
+      elements,
+      pageSetup,
+      noteWidthArgs,
+      centeredMelismaLyrics,
+    );
 
     // Process Header and Footers
     // Only a single text box is supported right now
@@ -1788,36 +1869,49 @@ export class LayoutService {
     }
 
     this.centerMeasureBars(pages, pageSetup, measureBarWidthMap);
-    this.addMelismas(
+    const newlyCenteredMelismaLyrics = this.addMelismas(
       pages,
       pageSetup,
       defaultLyricsFontCss,
       measureBarWidthMap,
+      centeredMelismaLyrics,
     );
 
     if (pageSetup.alignIsonIndicators) {
       this.alignIsonIndicators(pages, pageSetup);
     }
 
-    // Record element updates
-    elements.forEach((element) => {
-      this.checkElementState(element);
-    });
+    return {
+      centeredMelismaLyrics: newlyCenteredMelismaLyrics,
+      layoutWorkspace,
+      pages,
+    };
+  }
 
-    score.headersAndFooters.forEach((element) => {
-      this.checkElementState(element);
-    });
-
-    if (layoutWorkspace.loggingEnabled) {
-      console.log(
-        'avg ratio',
-        layoutWorkspace.completedParagraphs
-          .flatMap((p) => p.ratios)
-          .reduce((sum, ratio, _, arr) => sum + ratio / arr.length, 0),
-      );
+  private static centeredMelismaOffsetsAreStable(
+    previous: ReadonlyMap<NoteElement, CenteredMelismaGeometry>,
+    next: ReadonlyMap<NoteElement, CenteredMelismaGeometry>,
+  ) {
+    if (previous.size !== next.size) {
+      return false;
     }
 
-    return pages;
+    for (const [element, geometry] of previous) {
+      const nextGeometry = next.get(element);
+      if (
+        nextGeometry == null ||
+        geometry.startNote !== nextGeometry.startNote ||
+        geometry.lastNote !== nextGeometry.lastNote ||
+        Math.abs(
+          geometry.lyricTextLeftFromStartQuantitativeNeume -
+            nextGeometry.lyricTextLeftFromStartQuantitativeNeume,
+        ) > centeredMelismaOffsetTolerance
+      ) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   public static getElementOverlayDiagnostics(
@@ -2728,6 +2822,7 @@ export class LayoutService {
     elements: ScoreElement[],
     pageSetup: PageSetup,
     noteWidthArgs: GetNoteWidthArgs,
+    centeredMelismaLyrics: ReadonlyMap<NoteElement, CenteredMelismaGeometry>,
   ) {
     for (const element of elements) {
       if (element.elementType !== ElementType.Note) {
@@ -2777,6 +2872,21 @@ export class LayoutService {
       );
 
       this.applyPunctuationHorizontalOffset(noteElement, pageSetup);
+
+      const centeredMelismaGeometry = centeredMelismaLyrics.get(noteElement);
+      if (centeredMelismaGeometry != null) {
+        // During line breaking, represent the centered lyric by its actual
+        // left edge while retaining melisma-spanning alignment semantics.
+        // This keeps the lyric out of the internal glue between continuation
+        // neumes while still reserving its true outer bounds.
+        noteElement.alignLeft = true;
+        noteElement.lyricsHorizontalOffset =
+          this.getStartQuantitativeNeumeOffset(
+            noteElement,
+            pageSetup,
+            noteWidthArgs.measureBarWidthMap,
+          ) + centeredMelismaGeometry.lyricTextLeftFromStartQuantitativeNeume;
+      }
     }
   }
 
@@ -2957,6 +3067,54 @@ export class LayoutService {
           noteElement.lyricsWidth +
           noteElement.lyricsHorizontalOffset) /
           2;
+  }
+
+  private static getStartQuantitativeNeumeOffset(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    return (
+      this.getNoteLeftBarReserve(noteElement, measureBarWidthMap) +
+      this.getVareiaPrefixWidth(noteElement, pageSetup)
+    );
+  }
+
+  private static createCenteredMelismaGeometry(
+    startNote: NoteElement,
+    lastNote: NoteElement,
+    startQuantitativeNeumeX: number,
+    lastQuantitativeNeumeEndX: number,
+  ) {
+    return {
+      lastNote,
+      lyricTextLeftFromStartQuantitativeNeume:
+        (lastQuantitativeNeumeEndX -
+          startQuantitativeNeumeX -
+          startNote.lyricsWidth -
+          startNote.lyricsLeadingPunctuationWidth +
+          startNote.lyricsTrailingPunctuationWidth) /
+        2,
+      startNote,
+    } satisfies CenteredMelismaGeometry;
+  }
+
+  private static applyCenteredMelismaGeometry(
+    geometry: CenteredMelismaGeometry,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const noteElement = geometry.startNote;
+    const lyricTextLeft =
+      this.getStartQuantitativeNeumeOffset(
+        noteElement,
+        pageSetup,
+        measureBarWidthMap,
+      ) + geometry.lyricTextLeftFromStartQuantitativeNeume;
+
+    noteElement.alignLeft = false;
+    noteElement.lyricsHorizontalOffset =
+      2 * lyricTextLeft - noteElement.neumeWidth + noteElement.lyricsWidth;
   }
 
   // The right edge of the rendered lyric text relative to the note box. In
@@ -5278,6 +5436,10 @@ export class LayoutService {
     pageSetup: PageSetup,
     defaultLyricsFontCss: string,
     measureBarWidthMap: Map<MeasureBar, number>,
+    centeredMelismaLyrics: ReadonlyMap<
+      NoteElement,
+      CenteredMelismaGeometry
+    > = new Map(),
   ) {
     // First calculate some constants
 
@@ -5308,6 +5470,10 @@ export class LayoutService {
     let melismaLyricsEnd: number | null = null;
     let phase2GreekMelismaIsActive = false;
     let previousLineEndingMayShowLeadingLyricHyphen = false;
+    const newlyCenteredMelismaLyrics = new Map<
+      NoteElement,
+      CenteredMelismaGeometry
+    >();
 
     for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
       const page = pages[pageIndex];
@@ -5600,6 +5766,23 @@ export class LayoutService {
                 }
               }
             } else if (!pageSetup.melkiteRtl) {
+              const finalElementIndex =
+                finalElement == null
+                  ? index
+                  : line.elements.indexOf(finalElement, index);
+              let lastQuantitativeNote = element;
+              for (let i = index + 1; i <= finalElementIndex; i++) {
+                if (line.elements[i].elementType === ElementType.Note) {
+                  lastQuantitativeNote = line.elements[i] as NoteElement;
+                }
+              }
+              const neumeGroupEnd =
+                lastQuantitativeNote.x +
+                lastQuantitativeNote.neumeWidth -
+                this.getFinalElementMeasureBarRightWidth(
+                  lastQuantitativeNote,
+                  measureBarWidthMap,
+                );
               // Else not a hyphen, so an underscore
               const nextRunningElaphronGeometry =
                 nextNoteElement != null
@@ -5668,6 +5851,43 @@ export class LayoutService {
 
               if (element.melismaWidth < pageSetup.lyricsMelismaCutoffWidth) {
                 element.melismaWidth = 0;
+
+                if (
+                  !isIntermediateMelismaAtStartOfLine &&
+                  (element.alignLeft || centeredMelismaLyrics.has(element))
+                ) {
+                  const neumeGroupStart =
+                    element.x +
+                    this.getStartQuantitativeNeumeOffset(
+                      element,
+                      pageSetup,
+                      measureBarWidthMap,
+                    );
+
+                  // A long melismatic lyric can consume the entire available
+                  // underscore span. In that case, center it beneath the
+                  // complete quantitative-neume group. The vareia prefix is
+                  // excluded just as it is for ordinary centered lyric
+                  // alignment. A subsequent layout pass applies this geometry
+                  // during line breaking so adjacent spacing is recalculated.
+                  const geometry = this.createCenteredMelismaGeometry(
+                    element,
+                    lastQuantitativeNote,
+                    neumeGroupStart,
+                    neumeGroupEnd,
+                  );
+
+                  newlyCenteredMelismaLyrics.set(element, geometry);
+
+                  const appliedGeometry = centeredMelismaLyrics.get(element);
+                  if (appliedGeometry != null) {
+                    this.applyCenteredMelismaGeometry(
+                      appliedGeometry,
+                      pageSetup,
+                      measureBarWidthMap,
+                    );
+                  }
+                }
               }
 
               // Calculate the distance from the alphabetic baseline to the bottom of the font bounding box
@@ -5728,6 +5948,8 @@ export class LayoutService {
           lineEndingMayShowLeadingLyricHyphen;
       }
     }
+
+    return newlyCenteredMelismaLyrics;
   }
 
   private static centerMeasureBars(

@@ -6,7 +6,17 @@
     "descent": 0.2,
     "winAscent": 0.88,
     "winDescent": 0.44,
-    "oligonMidpoint": 0.113
+    "oligonMidpoint": 0.113,
+    "elafronBounds": {
+      "runningElafron": {
+        "left": 0.738,
+        "right": 1.996
+      },
+      "petastiRunningElafron": {
+        "left": 0.703,
+        "right": 1.944
+      }
+    }
   },
   "glyphsWithAnchors": {
     "ison": {
@@ -7742,6 +7752,308 @@
       ]
     }
   },
+  "markAttachmentClasses": {
+    "gorgon": [
+      "digorgon",
+      "digorgonDottedLeftAbove",
+      "digorgonDottedLeftBelow",
+      "digorgonDottedRight",
+      "gorgonAbove",
+      "gorgonDottedLeft",
+      "gorgonDottedRight",
+      "trigorgon",
+      "trigorgonDottedLeftAbove",
+      "trigorgonDottedRight"
+    ]
+  },
+  "contextualSubstitutions": [
+    {
+      "inputGlyphs": [
+        [
+          "antikenoma"
+        ]
+      ],
+      "backtrackGlyphs": [
+        [
+          "petasti",
+          "petastiApostrofos",
+          "petastiChamili",
+          "petastiChamiliApostrofos",
+          "petastiChamiliElafron",
+          "petastiChamiliElafronApostrofos",
+          "petastiDoubleChamili",
+          "petastiDoubleChamiliApostrofos",
+          "petastiDoubleYpsili",
+          "petastiElafron",
+          "petastiElafronApostrofos",
+          "petastiIson",
+          "petastiKentima",
+          "petastiKentimaDoubleYpsiliLeft",
+          "petastiKentimaDoubleYpsiliRight",
+          "petastiKentimaTripleYpsili",
+          "petastiKentimaYpsiliMiddle",
+          "petastiKentimaYpsiliRight",
+          "petastiKentimataDoubleYpsili",
+          "petastiKentimataTripleYpsili",
+          "petastiOligon",
+          "petastiRunningElafron",
+          "petastiTripleYpsili",
+          "petastiYporroi",
+          "petastiYpsiliLeft",
+          "petastiYpsiliRight"
+        ]
+      ],
+      "lookaheadGlyphs": [],
+      "substitutions": [
+        {
+          "index": 0,
+          "from": "antikenoma",
+          "to": "antikenoma.alt01"
+        }
+      ]
+    },
+    {
+      "inputGlyphs": [
+        [
+          "yporroi"
+        ]
+      ],
+      "backtrackGlyphs": [],
+      "lookaheadGlyphs": [
+        [
+          "gorgonAbove",
+          "gorgonDottedLeft",
+          "gorgonDottedRight"
+        ]
+      ],
+      "substitutions": [
+        {
+          "index": 0,
+          "from": "yporroi",
+          "to": "yporroi.gorgon"
+        }
+      ],
+      "markAttachmentClass": "gorgon"
+    },
+    {
+      "inputGlyphs": [
+        [
+          "yporroi"
+        ]
+      ],
+      "backtrackGlyphs": [],
+      "lookaheadGlyphs": [
+        [
+          "digorgon",
+          "digorgonDottedLeftAbove",
+          "digorgonDottedLeftBelow",
+          "digorgonDottedRight"
+        ]
+      ],
+      "substitutions": [
+        {
+          "index": 0,
+          "from": "yporroi",
+          "to": "yporroi.digorgon"
+        }
+      ],
+      "markAttachmentClass": "gorgon"
+    },
+    {
+      "inputGlyphs": [
+        [
+          "yporroi"
+        ]
+      ],
+      "backtrackGlyphs": [],
+      "lookaheadGlyphs": [
+        [
+          "trigorgon",
+          "trigorgonDottedLeftAbove",
+          "trigorgonDottedRight"
+        ]
+      ],
+      "substitutions": [
+        {
+          "index": 0,
+          "from": "yporroi",
+          "to": "yporroi.trigorgon"
+        }
+      ],
+      "markAttachmentClass": "gorgon"
+    },
+    {
+      "inputGlyphs": [
+        [
+          "oligonKentimataBelow"
+        ],
+        [
+          "psifiston"
+        ]
+      ],
+      "backtrackGlyphs": [],
+      "lookaheadGlyphs": [],
+      "substitutions": [
+        {
+          "index": 0,
+          "from": "oligonKentimataBelow",
+          "to": "oligonKentimataBelow.alt01"
+        }
+      ]
+    },
+    {
+      "inputGlyphs": [
+        [
+          "apostrofos"
+        ],
+        [
+          "antikenoma"
+        ]
+      ],
+      "backtrackGlyphs": [],
+      "lookaheadGlyphs": [],
+      "substitutions": [
+        {
+          "index": 1,
+          "from": "antikenoma",
+          "to": "antikenoma.alt01"
+        }
+      ]
+    },
+    {
+      "inputGlyphs": [
+        [
+          "yporroi"
+        ],
+        [
+          "antikenoma"
+        ]
+      ],
+      "backtrackGlyphs": [],
+      "lookaheadGlyphs": [],
+      "substitutions": [
+        {
+          "index": 1,
+          "from": "antikenoma",
+          "to": "antikenoma.alt01"
+        }
+      ]
+    },
+    {
+      "inputGlyphs": [
+        [
+          "oligonIsonKentimata"
+        ],
+        [
+          "psifiston"
+        ]
+      ],
+      "backtrackGlyphs": [],
+      "lookaheadGlyphs": [],
+      "substitutions": [
+        {
+          "index": 1,
+          "from": "psifiston",
+          "to": "psifiston.alt01"
+        }
+      ]
+    },
+    {
+      "inputGlyphs": [
+        [
+          "oligonElafronKentimata"
+        ],
+        [
+          "psifiston"
+        ]
+      ],
+      "backtrackGlyphs": [],
+      "lookaheadGlyphs": [],
+      "substitutions": [
+        {
+          "index": 1,
+          "from": "psifiston",
+          "to": "psifiston.alt01"
+        }
+      ]
+    },
+    {
+      "inputGlyphs": [
+        [
+          "oligonRunningElafronKentimata"
+        ],
+        [
+          "psifiston"
+        ]
+      ],
+      "backtrackGlyphs": [],
+      "lookaheadGlyphs": [],
+      "substitutions": [
+        {
+          "index": 1,
+          "from": "psifiston",
+          "to": "psifiston.alt01"
+        }
+      ]
+    },
+    {
+      "inputGlyphs": [
+        [
+          "oligonElafronApostrofosKentimata"
+        ],
+        [
+          "psifiston"
+        ]
+      ],
+      "backtrackGlyphs": [],
+      "lookaheadGlyphs": [],
+      "substitutions": [
+        {
+          "index": 1,
+          "from": "psifiston",
+          "to": "psifiston.alt01"
+        }
+      ]
+    },
+    {
+      "inputGlyphs": [
+        [
+          "oligonElafronApostrofosKentimata"
+        ],
+        [
+          "psifiston"
+        ]
+      ],
+      "backtrackGlyphs": [],
+      "lookaheadGlyphs": [],
+      "substitutions": [
+        {
+          "index": 1,
+          "from": "psifiston",
+          "to": "psifiston.alt01"
+        }
+      ]
+    },
+    {
+      "inputGlyphs": [
+        [
+          "oligonChamiliKentimata"
+        ],
+        [
+          "psifiston"
+        ]
+      ],
+      "backtrackGlyphs": [],
+      "lookaheadGlyphs": [],
+      "substitutions": [
+        {
+          "index": 1,
+          "from": "psifiston",
+          "to": "psifiston.alt01"
+        }
+      ]
+    }
+  ],
   "glyphAdvanceWidths": {
     "ison": 1.268,
     "oligonKentimaBelow": 1.298,

@@ -1,5 +1,5 @@
 import { Unit } from '../utils/Unit';
-import { DEFAULT_INITIAL_MARTYRIA_STYLE_ID } from './InitialMartyriaStyle';
+import { DEFAULT_INITIAL_MARTYRIA_STYLE_ID } from './InitialMartyriaBuiltInStyles';
 
 export type PageSize =
   | 'A3'

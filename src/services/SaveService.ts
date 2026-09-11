@@ -21,6 +21,10 @@ import type { Header } from '@/models/Header';
 import {
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   findInitialMartyriaStyle,
+  isBuiltInInitialMartyriaStyleId,
+} from '@/models/InitialMartyriaBuiltInStyles';
+import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGrammar';
+import {
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
@@ -32,8 +36,6 @@ import {
   type InitialMartyriaNumberingSystem,
   type InitialMartyriaStyle,
   type InitialMartyriaTypographyOverrides,
-  isBuiltInInitialMartyriaStyleId,
-  isInitialMartyriaStructureSupported,
 } from '@/models/InitialMartyriaStyle';
 import { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';

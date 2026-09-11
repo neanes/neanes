@@ -19,10 +19,8 @@ import { computed, onMounted, ref } from 'vue';
 import ModeKey from '@/components/ModeKey.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
-import {
-  type InitialMartyriaStyle,
-  resolveInitialMartyriaStyleAppearances,
-} from '@/models/InitialMartyriaStyle';
+import { resolveInitialMartyriaStyleAppearances } from '@/models/InitialMartyriaResolver';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';

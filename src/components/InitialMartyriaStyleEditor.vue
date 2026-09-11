@@ -481,28 +481,34 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFontStyleControls } from '@/composables/useFontStyleControls';
 import { ModeKeyElement } from '@/models/Element';
 import {
-  cloneInitialMartyriaStyle,
   getBuiltInInitialMartyriaStyle,
   getDefaultBuiltInInitialMartyriaStyle,
-  getInitialMartyriaContext,
-  getInitialMartyriaPronunciation,
-  getInitialMartyriaStructureVariations,
   getInitialMartyriaStyleDisplayName,
-  INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
-  type InitialMartyriaLanguageId,
-  initialMartyriaLanguageIds,
+} from '@/models/InitialMartyriaBuiltInStyles';
+import {
+  getInitialMartyriaStructureVariations,
   initialMartyriaModeIdentificationMethods,
   initialMartyriaModeNamingSchemes,
   initialMartyriaNumeralForms,
   initialMartyriaNumeralQualifiers,
-  type InitialMartyriaStructure,
+  normalizeInitialMartyriaStructure,
+} from '@/models/InitialMartyriaGrammar';
+import { usesGreekScript } from '@/models/InitialMartyriaLexicon';
+import {
+  getInitialMartyriaContext,
+  getInitialMartyriaPronunciation,
   initialMartyriaStructureHasGreekText,
+} from '@/models/InitialMartyriaResolver';
+import {
+  cloneInitialMartyriaStyle,
+  INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
+  type InitialMartyriaLanguageId,
+  initialMartyriaLanguageIds,
+  type InitialMartyriaStructure,
   initialMartyriaStructureHasOrdinalDigits,
   type InitialMartyriaStyle,
   type InitialMartyriaTypographyOverrides,
-  normalizeInitialMartyriaStructure,
   resolveInitialMartyriaFontFamily,
-  usesGreekScript,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';

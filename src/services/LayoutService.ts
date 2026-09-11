@@ -45,13 +45,15 @@ import {
   getInitialMartyriaFixedSeparatorSize,
   getInitialMartyriaSeparatorAfter,
   getInitialMartyriaSeparatorBefore,
-  type InitialMartyriaAppearance,
-  type InitialMartyriaPitchNote,
   type InitialMartyriaSeparator,
-  type ResolvedInitialMartyriaRun,
-  type ResolvedInitialMartyriaStyle,
   resolveInitialMartyriaStyle,
   resolveModeKeyInitialMartyriaStyle,
+} from '@/models/InitialMartyriaResolver';
+import type {
+  InitialMartyriaAppearance,
+  InitialMartyriaPitchNote,
+  ResolvedInitialMartyriaRun,
+  ResolvedInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,

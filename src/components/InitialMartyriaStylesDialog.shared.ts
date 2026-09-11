@@ -1,6 +1,6 @@
+import { createDefaultInitialMartyriaTypography } from '@/models/InitialMartyriaBuiltInStyles';
 import {
   cloneInitialMartyriaStyle,
-  createDefaultInitialMartyriaTypography,
   type InitialMartyriaStructure,
   initialMartyriaStructureHasOrdinalDigits,
   type InitialMartyriaStyle,

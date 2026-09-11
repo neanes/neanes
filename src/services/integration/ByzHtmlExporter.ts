@@ -18,9 +18,11 @@ import {
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   findInitialMartyriaStyle,
   getBuiltInInitialMartyriaStyle,
-  type InitialMartyriaAppearance,
-  type InitialMartyriaStyle,
-  resolveInitialMartyriaStyleAppearances,
+} from '@/models/InitialMartyriaBuiltInStyles';
+import { resolveInitialMartyriaStyleAppearances } from '@/models/InitialMartyriaResolver';
+import type {
+  InitialMartyriaAppearance,
+  InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
 import {

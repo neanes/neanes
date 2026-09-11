@@ -1,5 +1,6 @@
 import type { Namespace, SelectorParam, TFunction } from 'i18next';
 
+import type { InitialMartyriaNumeralForm } from '@/models/InitialMartyriaGrammar';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
@@ -10,7 +11,6 @@ import {
   type InitialMartyriaLanguageId,
   type InitialMartyriaModeIdentificationMethod,
   type InitialMartyriaModeNamingScheme,
-  type InitialMartyriaNumeralForm,
   type InitialMartyriaNumeralKind,
   type InitialMartyriaNumeralQualifier,
   type InitialMartyriaNumeralStyle,

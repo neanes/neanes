@@ -1,8 +1,8 @@
 import type { InitialMartyriaPitchGeometry } from '@/models/InitialMartyriaPitchGeometry';
+import type { InitialMartyriaSeparator } from '@/models/InitialMartyriaResolver';
 import type { InitialMartyriaStackedTextGeometry } from '@/models/InitialMartyriaStackedTextGeometry';
 import type {
   InitialMartyriaAppearance,
-  InitialMartyriaSeparator,
   InitialMartyriaStyleResolution,
 } from '@/models/InitialMartyriaStyle';
 

@@ -43,8 +43,8 @@ import { ModeKeyElement } from '@/models/Element';
 import {
   getInitialMartyriaContext,
   getInitialMartyriaPronunciation,
-  type InitialMartyriaStyle,
-} from '@/models/InitialMartyriaStyle';
+} from '@/models/InitialMartyriaResolver';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';

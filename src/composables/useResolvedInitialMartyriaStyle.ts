@@ -1,11 +1,11 @@
 import { computed, type MaybeRefOrGetter, toValue } from 'vue';
 
 import type { ModeKeyElement } from '@/models/Element';
+import { resolveModeKeyInitialMartyriaStyle } from '@/models/InitialMartyriaResolver';
 import type {
   InitialMartyriaStyle,
   ResolvedInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
-import { resolveModeKeyInitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { hasParagraphStyleOverrides } from '@/models/ParagraphStyle';

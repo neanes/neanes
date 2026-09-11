@@ -13,9 +13,9 @@ import {
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   findInitialMartyriaStyle,
   getBuiltInInitialMartyriaStyle,
-  type InitialMartyriaStyle,
-  resolveInitialMartyriaStyleAppearances,
-} from '@/models/InitialMartyriaStyle';
+} from '@/models/InitialMartyriaBuiltInStyles';
+import { resolveInitialMartyriaStyleAppearances } from '@/models/InitialMartyriaResolver';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
 import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import type { Page } from '@/models/Page';

@@ -1,9 +1,9 @@
 import type { ModeKeyElement, ScoreElement } from '@/models/Element';
 import { ElementType } from '@/models/Element';
+import { isBuiltInInitialMartyriaStyleId } from '@/models/InitialMartyriaBuiltInStyles';
 import {
   cloneInitialMartyriaStyle,
   type InitialMartyriaStyle,
-  isBuiltInInitialMartyriaStyleId,
 } from '@/models/InitialMartyriaStyle';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,

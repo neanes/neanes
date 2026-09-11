@@ -2,10 +2,15 @@ import cldr from 'cldr';
 import { describe, expect, it } from 'vitest';
 
 import { ModeKeyElement } from '@/models/Element';
+import { createDefaultInitialMartyriaTypography } from '@/models/InitialMartyriaBuiltInStyles';
+import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGrammar';
 import {
-  createDefaultInitialMartyriaTypography,
   getInitialMartyriaContext,
   getInitialMartyriaPronunciation,
+  resolveInitialMartyriaStyle,
+  resolveInitialMartyriaStyleAppearances,
+} from '@/models/InitialMartyriaResolver';
+import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
@@ -15,10 +20,7 @@ import {
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaStructure,
   type InitialMartyriaStyle,
-  isInitialMartyriaStructureSupported,
   type ModeKeyMode,
-  resolveInitialMartyriaStyle,
-  resolveInitialMartyriaStyleAppearances,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { PageSetup } from '@/models/PageSetup';

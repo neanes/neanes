@@ -156,9 +156,9 @@ import {
 import { EntryMode } from '@/models/EntryMode';
 import {
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-  type InitialMartyriaStyle,
   isBuiltInInitialMartyriaStyleId,
-} from '@/models/InitialMartyriaStyle';
+} from '@/models/InitialMartyriaBuiltInStyles';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
   ElementOverlayBox,

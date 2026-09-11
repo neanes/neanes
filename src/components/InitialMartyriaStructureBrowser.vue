@@ -170,19 +170,23 @@ import {
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
-  enumerateInitialMartyriaStructures,
   getDefaultBuiltInInitialMartyriaStyle,
-  getInitialMartyriaStructureKey,
   getInitialMartyriaStyleDisplayName,
+  isBuiltInInitialMartyriaStyleId,
+} from '@/models/InitialMartyriaBuiltInStyles';
+import {
+  enumerateInitialMartyriaStructures,
+  getInitialMartyriaStructureKey,
+  initialMartyriaModeIdentificationMethods,
+} from '@/models/InitialMartyriaGrammar';
+import { usesGreekScript } from '@/models/InitialMartyriaLexicon';
+import {
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaModeIdentificationMethod,
-  initialMartyriaModeIdentificationMethods,
   type InitialMartyriaNumeralStyle,
   type InitialMartyriaStructure,
   type InitialMartyriaStyle,
-  isBuiltInInitialMartyriaStyleId,
-  usesGreekScript,
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';

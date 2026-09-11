@@ -13,9 +13,11 @@ import {
 } from '@/models/Element';
 import {
   BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
-  createInitialMartyriaStyle,
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   getBuiltInInitialMartyriaStyle,
+} from '@/models/InitialMartyriaBuiltInStyles';
+import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
+import {
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,

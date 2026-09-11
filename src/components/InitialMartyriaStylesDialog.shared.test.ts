@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { getDefaultBuiltInInitialMartyriaStyle } from '@/models/InitialMartyriaBuiltInStyles';
 import {
   cloneInitialMartyriaStyle,
-  getDefaultBuiltInInitialMartyriaStyle,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,

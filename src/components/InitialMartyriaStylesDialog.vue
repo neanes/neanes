@@ -492,25 +492,31 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ModeKeyElement } from '@/models/Element';
 import {
   builtInInitialMartyriaStyles,
-  cloneInitialMartyriaStyle,
-  createInitialMartyriaStyle,
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   findInitialMartyriaStyle,
-  findInitialMartyriaStyleWithStructure,
   getBuiltInInitialMartyriaStyle,
   getDefaultBuiltInInitialMartyriaStyle,
-  getInitialMartyriaContext,
-  getInitialMartyriaPronunciation,
   getInitialMartyriaStyleDisplayName,
   getInitialMartyriaStyles,
+  isBuiltInInitialMartyriaStyleId,
+} from '@/models/InitialMartyriaBuiltInStyles';
+import {
+  createInitialMartyriaStyle,
+  findInitialMartyriaStyleWithStructure,
+} from '@/models/InitialMartyriaGrammar';
+import { usesGreekScript } from '@/models/InitialMartyriaLexicon';
+import {
+  getInitialMartyriaContext,
+  getInitialMartyriaPronunciation,
+} from '@/models/InitialMartyriaResolver';
+import {
+  cloneInitialMartyriaStyle,
   INITIAL_MARTYRIA_DEFAULT_FONT_FAMILY,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaStyle,
-  isBuiltInInitialMartyriaStyleId,
   resolveInitialMartyriaFontFamily,
-  usesGreekScript,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { PageSetup } from '@/models/PageSetup';

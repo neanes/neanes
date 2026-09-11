@@ -663,8 +663,7 @@ function hasSameAxes(a: InitialMartyriaStructure, b: InitialMartyriaStructure) {
  * Every distinct structure a language can produce, de-duplicated by what it
  * renders. The wording axes (number form, placement, plagal wording) span
  * the space; the axes that only add or swap one element (identification
- * method and transliteration) are fixed by the caller. This is the gallery:
- * computed on demand, never stored.
+ * method and transliteration) are fixed by the caller.
  */
 export function enumerateInitialMartyriaStructures(
   base: Pick<

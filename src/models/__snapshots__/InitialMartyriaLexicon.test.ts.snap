@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`InitialMartyriaLexicon > renders and pronounces every legal structure exposed by the browse view 1`] = `
+exports[`InitialMartyriaLexicon > renders and pronounces every legal structure 1`] = `
 [
   {
     "modes": [

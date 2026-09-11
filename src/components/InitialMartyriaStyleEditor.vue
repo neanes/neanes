@@ -79,18 +79,6 @@
                 </FieldDescription>
               </FieldContent>
             </Field>
-
-            <Button
-              variant="link"
-              class="h-auto px-0"
-              type="button"
-              @click="$emit('browse')"
-            >
-              <PhSquaresFour />
-              {{
-                $t(($) => $.dialog.initialMartyriaStyles.browseAllLink, { ns })
-              }}
-            </Button>
           </div>
         </ScrollArea>
       </TabsContent>
@@ -445,7 +433,6 @@
 </template>
 
 <script setup lang="ts">
-import { PhSquaresFour } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
 import { computed, ref } from 'vue';
 
@@ -548,8 +535,6 @@ const props = defineProps<{
   fonts: string[];
   nameValid: boolean;
 }>();
-
-defineEmits<{ browse: [] }>();
 
 const draft = defineModel<InitialMartyriaStyle>({ required: true });
 const sampleMode = defineModel<number>('sampleMode', { required: true });

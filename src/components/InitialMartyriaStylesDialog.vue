@@ -5,7 +5,7 @@
       @escape-key-down="onEscapeKeyDown"
     >
       <DialogHeader>
-        <Breadcrumb v-if="view !== 'list'">
+        <Breadcrumb v-if="view === 'edit'">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink as="button" type="button" @click="goBack">
@@ -13,23 +13,8 @@
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            <BreadcrumbItem v-if="view === 'browse' && editor != null">
-              <BreadcrumbLink as="button" type="button" @click="view = 'edit'">
-                {{ editorBreadcrumb }}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator v-if="view === 'browse' && editor != null" />
             <BreadcrumbItem>
-              <BreadcrumbPage>
-                {{
-                  view === 'edit'
-                    ? editorBreadcrumb
-                    : $t(
-                        ($) => $.dialog.initialMartyriaStyles.browseStructures,
-                        { ns },
-                      )
-                }}
-              </BreadcrumbPage>
+              <BreadcrumbPage>{{ editorBreadcrumb }}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -41,18 +26,7 @@
         </DialogDescription>
       </DialogHeader>
 
-      <InitialMartyriaStructureBrowser
-        v-if="view === 'browse'"
-        v-model:selection="browseSelection"
-        v-model:sample-mode="sampleMode"
-        :seed="browseSeed"
-        :styles="allStyles"
-        :page-setup="pageSetup"
-        :paragraph-styles="paragraphStyles"
-      />
-
       <div
-        v-else
         class="grid min-h-0 gap-4 overflow-hidden"
         :class="view === 'list' && 'sm:grid-cols-[14rem_minmax(0,1fr)]'"
       >
@@ -85,23 +59,6 @@
                 @click="createStyle"
               >
                 <PhPlus />
-              </Button>
-            </AppTooltip>
-            <AppTooltip
-              :tooltip="
-                $t(($) => $.dialog.initialMartyriaStyles.browseAll, { ns })
-              "
-            >
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                :aria-label="
-                  $t(($) => $.dialog.initialMartyriaStyles.browseAll, { ns })
-                "
-                @click="browse"
-              >
-                <PhSquaresFour />
               </Button>
             </AppTooltip>
           </div>
@@ -160,7 +117,6 @@
           :paragraph-styles="paragraphStyles"
           :fonts="fonts"
           :name-valid="draftNameValid"
-          @browse="browse"
         />
 
         <ScrollArea v-else class="min-h-0">
@@ -303,16 +259,6 @@
               </Button>
             </AlertDescription>
           </Alert>
-          <p
-            v-else-if="view === 'browse'"
-            class="text-xs text-muted-foreground"
-          >
-            {{
-              $t(($) => $.dialog.initialMartyriaStyles.tilesUseCurrentFont, {
-                ns,
-              })
-            }}
-          </p>
         </div>
 
         <div class="flex flex-wrap items-center justify-end gap-2">
@@ -343,7 +289,7 @@
               }}
             </Button>
           </template>
-          <template v-else-if="view === 'edit'">
+          <template v-else>
             <Button type="button" variant="outline" @click="cancelEdit">
               {{ $t(($) => $.dialog.common.cancel, { ns }) }}
             </Button>
@@ -353,28 +299,6 @@
               @click="saveDraft"
             >
               {{ $t(($) => $.dialog.initialMartyriaStyles.save, { ns }) }}
-            </Button>
-          </template>
-          <template v-else>
-            <Button type="button" variant="outline" @click="goBack">
-              {{ $t(($) => $.dialog.initialMartyriaStyles.back, { ns }) }}
-            </Button>
-            <Button
-              v-if="browseSelection?.matchingStyle != null"
-              type="button"
-              @click="chooseBrowsedStyle(browseSelection.matchingStyle)"
-            >
-              {{ $t(($) => $.dialog.initialMartyriaStyles.apply, { ns }) }}
-            </Button>
-            <Button
-              v-else
-              type="button"
-              :disabled="browseSelection == null"
-              @click="openBrowsedStructureInEditor"
-            >
-              {{
-                $t(($) => $.dialog.initialMartyriaStyles.openInEditor, { ns })
-              }}
             </Button>
           </template>
         </div>
@@ -448,7 +372,6 @@ import {
   PhLock,
   PhPencilSimple,
   PhPlus,
-  PhSquaresFour,
   PhTrash,
 } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
@@ -456,7 +379,6 @@ import { computed, ref } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
 import InitialMartyriaSample from '@/components/InitialMartyriaSample.vue';
-import InitialMartyriaStructureBrowser from '@/components/InitialMartyriaStructureBrowser.vue';
 import InitialMartyriaStyleEditor from '@/components/InitialMartyriaStyleEditor.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -542,9 +464,7 @@ import { Unit } from '@/utils/Unit';
 import {
   getSampleTemplateId,
   GRAVE_SAMPLE_MODE,
-  type InitialMartyriaStructureSelection,
   PLAGAL_SAMPLE_MODE,
-  withInitialMartyriaStyleStructure,
 } from './InitialMartyriaStylesDialog.shared';
 
 const ns = 'dialog';
@@ -572,7 +492,7 @@ const emit = defineEmits<{
 const open = defineModel<boolean>('open', { required: true });
 const { t, i18next } = useTranslation();
 
-type View = 'list' | 'edit' | 'browse';
+type View = 'list' | 'edit';
 
 interface EditorState {
   draft: InitialMartyriaStyle;
@@ -585,7 +505,6 @@ const view = ref<View>('list');
 const editor = ref<EditorState | null>(null);
 const search = ref('');
 const sampleMode = ref(PLAGAL_SAMPLE_MODE);
-const browseSelection = ref<InitialMartyriaStructureSelection | null>(null);
 const discardDialogOpen = ref(false);
 const deleteDialogOpen = ref(false);
 let afterDiscard: (() => void) | null = null;
@@ -817,8 +736,6 @@ const duplicateOfDraft = computed(() => {
   );
 });
 
-const browseSeed = computed(() => editor.value?.draft ?? selectedStyle.value);
-
 function customNames() {
   return props.styles.map((style) => style.displayName);
 }
@@ -946,60 +863,10 @@ function useStyleInstead(style: InitialMartyriaStyle) {
   });
 }
 
-function browse() {
-  browseSelection.value = null;
-  view.value = 'browse';
-}
-
 function goBack() {
-  if (view.value === 'browse') {
-    view.value = editor.value == null ? 'list' : 'edit';
-    return;
-  }
   if (view.value === 'edit') {
     cancelEdit();
   }
-}
-
-function chooseBrowsedStyle(style: InitialMartyriaStyle) {
-  guardDiscard(() => {
-    editor.value = null;
-    selectedStyleId.value = style.id;
-    view.value = 'list';
-  });
-}
-
-function openBrowsedStructureInEditor() {
-  const selection = browseSelection.value;
-  if (selection == null) {
-    return;
-  }
-  if (editor.value != null) {
-    editor.value.draft = withInitialMartyriaStyleStructure(
-      editor.value.draft,
-      selection.structure,
-      props.paragraphStyles,
-    );
-    view.value = 'edit';
-    return;
-  }
-  const seed = withInitialMartyriaStyleStructure(
-    browseSeed.value,
-    selection.structure,
-    props.paragraphStyles,
-  );
-  openEditor(
-    createInitialMartyriaStyle({
-      displayName: '',
-      basedOn: null,
-      structure: selection.structure,
-      paragraphStyleId: seed.paragraphStyleId,
-      paragraphStyleOverrides: seed.paragraphStyleOverrides,
-      greekFontFamily: seed.greekFontFamily,
-      useOrdinalForms: seed.useOrdinalForms,
-    }),
-    null,
-  );
 }
 
 function pronunciationFor(style: InitialMartyriaStyle, templateId: number) {

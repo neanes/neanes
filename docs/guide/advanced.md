@@ -190,8 +190,6 @@ The `Structure` tab controls the wording. Each row is a set of tiles; click a ti
 
 The tiles offered depend on the selected language. For a language that is not written in Greek, check `Transliterate starting note` to write the starting note as `Pa` instead of `Πα`.
 
-Press `Browse all structures...` to see every distinct way an initial martyria can be written in the selected language. Select one and press `Open in editor` to continue editing with that structure, or `Apply` if an existing style already uses it.
-
 #### Presentation
 
 The `Presentation` tab controls the typography.

@@ -78,7 +78,7 @@ function getLegalInitialMartyriaStructures() {
   return structures;
 }
 
-function getBrowseInitialMartyriaStructures() {
+function getUniqueLegalInitialMartyriaStructures() {
   const structuresByKey = new Map<string, InitialMartyriaStructure>();
 
   for (const languageId of initialMartyriaLanguageIds) {
@@ -128,7 +128,7 @@ function getAttestedStructure(label: string): InitialMartyriaStructure {
   return attestedStructures[label as keyof typeof attestedStructures];
 }
 
-function encodeBrowseRun(run: ReturnType<typeof resolve>['runs'][number]) {
+function encodeCorpusRun(run: ReturnType<typeof resolve>['runs'][number]) {
   if (run.kind !== 'startingPitch') {
     return encodeRun(run);
   }
@@ -1117,22 +1117,22 @@ const expectedPronunciationsByStructure: [
 ];
 
 describe('InitialMartyriaLexicon', () => {
-  it('renders and pronounces every legal structure exposed by the browse view', () => {
+  it('renders and pronounces every legal structure', () => {
     const legalKeys = new Set(
       getLegalInitialMartyriaStructures().map(getInitialMartyriaStructureKey),
     );
-    const browseStructures = getBrowseInitialMartyriaStructures();
+    const uniqueStructures = getUniqueLegalInitialMartyriaStructures();
 
-    // The browse view de-duplicates structures that render and read alike.
-    // Its tiles must nevertheless cover every legal combination of axes.
-    expect(new Set(browseStructures.keys())).toEqual(legalKeys);
+    // Structures that render and read alike are represented once, while the
+    // corpus still covers every legal combination of axes.
+    expect(new Set(uniqueStructures.keys())).toEqual(legalKeys);
 
-    const corpus = [...browseStructures.values()].map((structure) => ({
+    const corpus = [...uniqueStructures.values()].map((structure) => ({
       structure: describeStructure(structure),
       modes: Array.from({ length: 8 }, (_, index) => {
         const mode = index + 1;
         const resolution = resolve(styleFor(structure), elementForMode(mode));
-        const runs = resolution.runs.map(encodeBrowseRun).join(' | ');
+        const runs = resolution.runs.map(encodeCorpusRun).join(' | ');
         return `${mode}: ${runs} = ${resolution.pronunciation}`;
       }),
     }));

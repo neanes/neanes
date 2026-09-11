@@ -90,9 +90,3 @@ export function withInitialMartyriaStyleStructure(
   }
   return next;
 }
-
-/** A gallery tile the user picked: a structure and the style that already has it, if any. */
-export interface InitialMartyriaStructureSelection {
-  structure: InitialMartyriaStructure;
-  matchingStyle: InitialMartyriaStyle | null;
-}

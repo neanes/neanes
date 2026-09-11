@@ -127,13 +127,6 @@ export function getInitialMartyriaNumeralKindLabel(
   return t(numeralKindSelectors[numeralKind], { ns: 'dialog' });
 }
 
-export function getInitialMartyriaNumeralStyleLabel(
-  t: Translate,
-  numeralStyle: InitialMartyriaNumeralStyle,
-) {
-  return t(numeralStyleSelectors[numeralStyle], { ns: 'dialog' });
-}
-
 export function getInitialMartyriaNumeralQualifierLabel(
   t: Translate,
   qualifier: InitialMartyriaNumeralQualifier,

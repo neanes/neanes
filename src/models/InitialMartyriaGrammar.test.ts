@@ -1099,8 +1099,7 @@ describe('InitialMartyriaGrammar', () => {
     }
   });
 
-  it('keeps every curated structure in its grammar-derived gallery', () => {
-    // Every attested structure is a tile in its language's gallery.
+  it('keeps every curated structure in its grammar-derived set', () => {
     for (const [label, structure] of Object.entries(attestedStructures)) {
       const keys = new Set(
         enumerateInitialMartyriaStructures(structure).map(

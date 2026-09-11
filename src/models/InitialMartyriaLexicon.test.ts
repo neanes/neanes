@@ -3,12 +3,25 @@ import { describe, expect, it } from 'vitest';
 import {
   BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   getBuiltInInitialMartyriaStyle,
+  getDefaultBuiltInInitialMartyriaStyle,
 } from '@/models/InitialMartyriaBuiltInStyles';
+import {
+  enumerateInitialMartyriaStructures,
+  getInitialMartyriaStructureKey,
+  initialMartyriaModeIdentificationMethods,
+  initialMartyriaModeNamingSchemes,
+  initialMartyriaNumeralForms,
+  initialMartyriaNumeralQualifiers,
+  isInitialMartyriaStructureSupported,
+} from '@/models/InitialMartyriaGrammar';
 import { getInitialMartyriaContext } from '@/models/InitialMartyriaResolver';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
   type InitialMartyriaLanguageId,
+  initialMartyriaLanguageIds,
   type InitialMartyriaStartingNoteRun,
+  type InitialMartyriaStructure,
 } from '@/models/InitialMartyriaStyle';
 import { ModeSign } from '@/models/Neumes';
 import { ScaleNote } from '@/models/Scales';
@@ -22,6 +35,94 @@ import {
   styleFor,
   textOf,
 } from './InitialMartyriaStyle.testHelpers';
+
+function getLegalInitialMartyriaStructures() {
+  const structures: InitialMartyriaStructure[] = [];
+
+  for (const languageId of initialMartyriaLanguageIds) {
+    const languageDefault =
+      getDefaultBuiltInInitialMartyriaStyle(languageId).structure;
+    for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
+      for (const form of initialMartyriaNumeralForms) {
+        for (const numberingSystem of [
+          undefined,
+          ...Object.values(INITIAL_MARTYRIA_NUMBERING_SYSTEMS),
+        ]) {
+          for (const numeralQualifier of initialMartyriaNumeralQualifiers) {
+            for (const modeNamingScheme of initialMartyriaModeNamingSchemes) {
+              for (const transliterateNoteNames of [false, true]) {
+                const structure: InitialMartyriaStructure = {
+                  ...languageDefault,
+                  modeIdentificationMethod,
+                  ...form,
+                  numberingSystem,
+                  numeralQualifier,
+                  modeNamingScheme,
+                  transliterateNoteNames,
+                };
+                if (isInitialMartyriaStructureSupported(structure)) {
+                  structures.push(structure);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return structures;
+}
+
+function getBrowseInitialMartyriaStructures() {
+  const structuresByKey = new Map<string, InitialMartyriaStructure>();
+
+  for (const languageId of initialMartyriaLanguageIds) {
+    const languageDefault =
+      getDefaultBuiltInInitialMartyriaStyle(languageId).structure;
+    for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
+      for (const transliterateNoteNames of [false, true]) {
+        const variations = enumerateInitialMartyriaStructures({
+          languageId,
+          modeIdentificationMethod,
+          transliterateNoteNames,
+          flowDirection: languageDefault.flowDirection,
+        });
+        for (const variation of variations) {
+          if (!structuresByKey.has(variation.key)) {
+            structuresByKey.set(variation.key, variation.structure);
+          }
+        }
+      }
+    }
+  }
+
+  return structuresByKey;
+}
+
+function describeStructure(structure: InitialMartyriaStructure) {
+  return [
+    structure.languageId,
+    structure.modeIdentificationMethod,
+    structure.numeralStyle,
+    structure.numeralKind,
+    structure.numberingSystem,
+    structure.numeralQualifier,
+    structure.modeNamingScheme,
+    structure.transliterateNoteNames ? 'transliterated' : 'original',
+    structure.flowDirection,
+  ]
+    .filter((part) => part != null)
+    .join('/');
+}
+
+function encodeBrowseRun(run: ReturnType<typeof resolve>['runs'][number]) {
+  if (run.kind !== 'startingPitch') {
+    return encodeRun(run);
+  }
+  const note = run.cluster.primary?.note;
+  return note == null ? '<pitch>' : `<pitch:${run.noteText.names[note]}>`;
+}
 
 const expectedRunsByStructure: [string, string[]][] = [
   [
@@ -1004,6 +1105,31 @@ const expectedPronunciationsByStructure: [
 ];
 
 describe('InitialMartyriaLexicon', () => {
+  it('renders and pronounces every legal structure exposed by the browse view', () => {
+    const legalKeys = new Set(
+      getLegalInitialMartyriaStructures().map(getInitialMartyriaStructureKey),
+    );
+    const browseStructures = getBrowseInitialMartyriaStructures();
+
+    // The browse view de-duplicates structures that render and read alike.
+    // Its tiles must nevertheless cover every legal combination of axes.
+    expect(new Set(browseStructures.keys())).toEqual(legalKeys);
+
+    const corpus = [...browseStructures.values()].map((structure) => ({
+      structure: describeStructure(structure),
+      modes: Array.from({ length: 8 }, (_, index) => {
+        const mode = index + 1;
+        const resolution = resolve(styleFor(structure), elementForMode(mode));
+        const runs = resolution.runs.map(encodeBrowseRun).join(' | ');
+        return `${mode}: ${runs} = ${resolution.pronunciation}`;
+      }),
+    }));
+    expect(new Set(corpus.map((entry) => entry.structure)).size).toBe(
+      corpus.length,
+    );
+    expect(corpus).toMatchSnapshot();
+  });
+
   it('renders the attested run sequence for every attested structure and mode', () => {
     expect(expectedRunsByStructure.map(([label]) => label)).toEqual(
       Object.keys(attestedStructures),

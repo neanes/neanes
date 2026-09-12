@@ -355,17 +355,10 @@ interface LineBreakSolution {
   requestedMaxAdjustmentRatio: number | null;
 }
 
-interface CenteredMelismaGeometry {
-  // Relative to the start quantitative neume, excluding any left measure-bar
-  // reservation and vareia prefix added to the containing note box.
-  lyricTextLeftFromStartQuantitativeNeume: number;
-  startNote: NoteElement;
-}
-
 interface AtomicMelismaLayout {
   boundaryWidths: Map<NoteElement, number>;
-  centeredGroupEndNotes: Set<NoteElement>;
-  centeredStartNotes: Set<NoteElement>;
+  centeringEligibleStartNotes: Set<NoteElement>;
+  potentiallyCenteredGroupEndNotes: Set<NoteElement>;
   prefixNotes: Set<NoteElement>;
 }
 
@@ -375,6 +368,7 @@ export class LayoutService {
     options?: LayoutDiagnosticsOptions,
   ): Page[] {
     const score = workspace.score;
+    const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
 
     elements.forEach((element, index) => {
@@ -391,16 +385,14 @@ export class LayoutService {
       this.saveElementState(element);
     });
 
+    this.calculateMartyriae(elements, pageSetup);
+
     // Always make sure this is an empty element at the end of the score.
     // If this case is true, we have a bug, but this will prevent
     // users corrupting their score.
     if (elements[elements.length - 1].elementType !== ElementType.Empty) {
       elements.push(new EmptyElement());
     }
-
-    const pageSetup = score.pageSetup;
-
-    this.calculateMartyriae(elements, pageSetup);
 
     const layoutWorkspace: LayoutWorkspace = {
       pageSetup,
@@ -859,7 +851,9 @@ export class LayoutService {
               phase1GreekMelismaIsActive,
             );
 
-          const m_i = atomicMelismaLayout.prefixNotes.has(noteElement)
+          const isInsideAtomicMelismaPrefix =
+            atomicMelismaLayout.prefixNotes.has(noteElement);
+          const m_i = isInsideAtomicMelismaPrefix
             ? atomicMelismaLayout.boundaryWidths.get(noteElement)!
             : this.calculateInterNoteSpacing(
                 noteElement,
@@ -867,8 +861,12 @@ export class LayoutService {
                 nextElement,
                 nextNoteElement,
                 nextNoteElement != null &&
-                  atomicMelismaLayout.centeredStartNotes.has(nextNoteElement),
-                atomicMelismaLayout.centeredGroupEndNotes.has(noteElement),
+                  atomicMelismaLayout.centeringEligibleStartNotes.has(
+                    nextNoteElement,
+                  ),
+                atomicMelismaLayout.potentiallyCenteredGroupEndNotes.has(
+                  noteElement,
+                ),
                 layoutWorkspace,
                 minimumLyricGap,
                 measureBarWidthMap,
@@ -877,7 +875,7 @@ export class LayoutService {
           // Combine the graded automatic penalties with the resolved absolute
           // constraint for this boundary, then clamp the total to MAX_COST.
           const breakConstraint =
-            atomicMelismaLayout.prefixNotes.has(noteElement) &&
+            isInsideAtomicMelismaPrefix &&
             !noteElement.lineBreak &&
             !noteElement.pageBreak
               ? { cost: MAX_COST, label: 'atomic-melisma-prefix' }
@@ -913,8 +911,7 @@ export class LayoutService {
             nextElement?.elementType === ElementType.Martyria;
 
           const postBreakGlue =
-            atomicMelismaLayout.prefixNotes.has(noteElement) ||
-            martyriaOwnsBoundaryGlue
+            isInsideAtomicMelismaPrefix || martyriaOwnsBoundaryGlue
               ? this.fixedGlue(m_i - nextLeadingLyricHyphenReservation)
               : {
                   ...standardGlue,
@@ -1825,13 +1822,14 @@ export class LayoutService {
       pageSetup,
       defaultLyricsFontCss,
       measureBarWidthMap,
-      atomicMelismaLayout.centeredStartNotes,
+      atomicMelismaLayout.centeringEligibleStartNotes,
     );
 
     if (pageSetup.alignIsonIndicators) {
       this.alignIsonIndicators(pages, pageSetup);
     }
 
+    // Record element updates
     elements.forEach((element) => {
       this.checkElementState(element);
     });
@@ -2762,15 +2760,15 @@ export class LayoutService {
     measureBarWidthMap: Map<MeasureBar, number>,
   ): AtomicMelismaLayout {
     const boundaryWidths = new Map<NoteElement, number>();
-    const centeredGroupEndNotes = new Set<NoteElement>();
-    const centeredStartNotes = new Set<NoteElement>();
+    const centeringEligibleStartNotes = new Set<NoteElement>();
+    const potentiallyCenteredGroupEndNotes = new Set<NoteElement>();
     const prefixNotes = new Set<NoteElement>();
 
     if (pageSetup.melkiteRtl) {
       return {
         boundaryWidths,
-        centeredGroupEndNotes,
-        centeredStartNotes,
+        centeringEligibleStartNotes,
+        potentiallyCenteredGroupEndNotes,
         prefixNotes,
       };
     }
@@ -2814,7 +2812,7 @@ export class LayoutService {
         continue;
       }
 
-      centeredStartNotes.add(startNote);
+      centeringEligibleStartNotes.add(startNote);
 
       const effectiveLyricWidth =
         startNote.lyricsWidth -
@@ -2916,14 +2914,14 @@ export class LayoutService {
         fullQuantitativeNeumeSpan - lyricRightFromStartQuantitativeNeume <
           pageSetup.lyricsMelismaCutoffWidth
       ) {
-        centeredGroupEndNotes.add(last.note);
+        potentiallyCenteredGroupEndNotes.add(last.note);
       }
     }
 
     return {
       boundaryWidths,
-      centeredGroupEndNotes,
-      centeredStartNotes,
+      centeringEligibleStartNotes,
+      potentiallyCenteredGroupEndNotes,
       prefixNotes,
     };
   }
@@ -3175,39 +3173,30 @@ export class LayoutService {
     );
   }
 
-  private static createCenteredMelismaGeometry(
+  private static centerLyricUnderMelismaGroup(
     startNote: NoteElement,
     startQuantitativeNeumeX: number,
     lastQuantitativeNeumeEndX: number,
-  ) {
-    return {
-      lyricTextLeftFromStartQuantitativeNeume:
-        (lastQuantitativeNeumeEndX -
-          startQuantitativeNeumeX -
-          startNote.lyricsWidth -
-          startNote.lyricsLeadingPunctuationWidth +
-          startNote.lyricsTrailingPunctuationWidth) /
-        2,
-      startNote,
-    } satisfies CenteredMelismaGeometry;
-  }
-
-  private static applyCenteredMelismaGeometry(
-    geometry: CenteredMelismaGeometry,
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
   ) {
-    const noteElement = geometry.startNote;
+    const lyricTextLeftFromStartQuantitativeNeume =
+      (lastQuantitativeNeumeEndX -
+        startQuantitativeNeumeX -
+        startNote.lyricsWidth -
+        startNote.lyricsLeadingPunctuationWidth +
+        startNote.lyricsTrailingPunctuationWidth) /
+      2;
     const lyricTextLeft =
       this.getStartQuantitativeNeumeOffset(
-        noteElement,
+        startNote,
         pageSetup,
         measureBarWidthMap,
-      ) + geometry.lyricTextLeftFromStartQuantitativeNeume;
+      ) + lyricTextLeftFromStartQuantitativeNeume;
 
-    noteElement.alignLeft = false;
-    noteElement.lyricsHorizontalOffset =
-      2 * lyricTextLeft - noteElement.neumeWidth + noteElement.lyricsWidth;
+    startNote.alignLeft = false;
+    startNote.lyricsHorizontalOffset =
+      2 * lyricTextLeft - startNote.neumeWidth + startNote.lyricsWidth;
   }
 
   // The right edge of the rendered lyric text relative to the note box. In
@@ -5600,7 +5589,7 @@ export class LayoutService {
     pageSetup: PageSetup,
     defaultLyricsFontCss: string,
     measureBarWidthMap: Map<MeasureBar, number>,
-    centeredStartNotes: ReadonlySet<NoteElement> = new Set(),
+    centeringEligibleStartNotes: ReadonlySet<NoteElement>,
   ) {
     // First calculate some constants
 
@@ -5821,7 +5810,7 @@ export class LayoutService {
               !pageSetup.melkiteRtl &&
               !isIntermediateMelismaAtStartOfLine &&
               element.alignLeft &&
-              centeredStartNotes.has(element)
+              centeringEligibleStartNotes.has(element)
             ) {
               const neumeGroupStart =
                 element.x +
@@ -5836,14 +5825,10 @@ export class LayoutService {
               // underscore melisma. Apply it before measuring the available
               // hyphen span so every visible hyphen starts after the centered
               // lyric rather than its former left-aligned edge.
-              const geometry = this.createCenteredMelismaGeometry(
+              this.centerLyricUnderMelismaGroup(
                 element,
                 neumeGroupStart,
                 neumeGroupEnd,
-              );
-
-              this.applyCenteredMelismaGeometry(
-                geometry,
                 pageSetup,
                 measureBarWidthMap,
               );
@@ -6045,7 +6030,7 @@ export class LayoutService {
                 if (
                   !isIntermediateMelismaAtStartOfLine &&
                   element.alignLeft &&
-                  centeredStartNotes.has(element)
+                  centeringEligibleStartNotes.has(element)
                 ) {
                   const neumeGroupStart =
                     element.x +
@@ -6060,16 +6045,13 @@ export class LayoutService {
                   // complete quantitative-neume group. The vareia prefix is
                   // excluded just as it is for ordinary centered lyric
                   // alignment. Phase 1 has already kept the lyric-covered
-                  // prefix together and reserved its left-aligned envelope,
-                  // so this positioning does not require another layout pass.
-                  const geometry = this.createCenteredMelismaGeometry(
+                  // prefix together and reserved its required collision
+                  // envelope, so this positioning does not require another
+                  // layout pass.
+                  this.centerLyricUnderMelismaGroup(
                     element,
                     neumeGroupStart,
                     neumeGroupEnd,
-                  );
-
-                  this.applyCenteredMelismaGeometry(
-                    geometry,
                     pageSetup,
                     measureBarWidthMap,
                   );

@@ -805,7 +805,9 @@ export class LayoutService {
           // m_i usually starts from
           // s_0 + R_i - T_i^left - T_i^right + ell_i, then is raised to any
           // larger preferred visual, measure-bar, lyric, or carried-melisma
-          // width. The carried-melisma-to-centered-lyric case starts at 0; see
+          // width. The carried-melisma-to-ordinary-centered-lyric case starts
+          // at 0; a centered melisma following another melisma instead
+          // preserves the previous line through its final neume. See
           // calculateInterNoteSpacing.
           // R_i is the right projection, ell_i is the lyric-collision
           // correction, T_i^left is the absorbed portion of L_{i+1}, and
@@ -922,6 +924,8 @@ export class LayoutService {
             rightProjection,
             nextElement,
             nextNoteElement,
+            nextNoteElement != null &&
+              centeredMelismaLyrics.has(nextNoteElement),
             layoutWorkspace,
             minimumLyricGap,
             measureBarWidthMap,
@@ -3224,6 +3228,7 @@ export class LayoutService {
     rightProjection: number,
     nextElement: ScoreElement | null,
     nextNoteElement: NoteElement | null,
+    nextNoteStartsCenteredMelisma: boolean,
     workspace: LayoutWorkspace,
     minimumLyricGap: number,
     measureBarWidthMap: Map<MeasureBar, number>,
@@ -3282,6 +3287,11 @@ export class LayoutService {
       !nextNoteElement.isMelisma &&
       !nextNoteElement.alignLeft &&
       leftProjection > 0;
+    const exitsIntoCenteredMelismaAfterMelisma =
+      workspace.melismaLyricsEndPx != null &&
+      noteElement.isMelisma &&
+      nextNoteStartsCenteredMelisma &&
+      leftProjection > 0;
     // On the same line, T_i^left absorbs whatever left projection the
     // next note actually has. At a break that width reappears via
     // glue(L_{i+1}).
@@ -3322,10 +3332,19 @@ export class LayoutService {
     const ordinaryBaseWidth =
       inlineSpacing + rightProjection - leftTuck - rightTuck;
 
-    // When a carried melisma ends at a centered lyric, align that lyric's
-    // left edge with the current cursor. The current cursor is already after
-    // noteElement.spaceAfter, so user-defined extra spacing is preserved.
-    const baseWidth = exitsMelismaIntoCenteredLyric ? 0 : ordinaryBaseWidth;
+    // A centered melisma lyric is represented as left-aligned during line
+    // breaking, so recognize it from its discovered geometry rather than its
+    // temporary alignLeft value. When it follows another melisma, keep its
+    // left edge far enough beyond the preceding neume for that melisma's line
+    // to reach the neume's full right edge before the ordinary lyric gap.
+    // Otherwise, when a carried melisma ends at an ordinarily centered lyric,
+    // align that lyric's left edge with the current cursor. The cursor is
+    // already after noteElement.spaceAfter, preserving user-defined spacing.
+    const baseWidth = exitsIntoCenteredMelismaAfterMelisma
+      ? workspace.pageSetup.lyricsMinimumSpacing
+      : exitsMelismaIntoCenteredLyric
+        ? 0
+        : ordinaryBaseWidth;
 
     // Lyric collision check: the visual gap between lyrics on the
     // same line includes the neume overhangs (room inside the neume

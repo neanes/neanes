@@ -84,15 +84,15 @@ In addition to the strongly discouraged cases, we identify several breaks that a
 
 1. A line that begins with a neume carrying a time mark that takes time from the neume before it, such as a gorgon or an argon, shortens the neume at the end of the previous line. Although such breaks are not uncommon in the classical 19th-century publications, they require the reader to look one line ahead. This is manageable within a page, but more annoying at a page boundary, so it is better to avoid such breaks when possible.
 2. Between a running elaphron and the preceding neume. Like the gorgon, a running elaphron steals a beat from the preceding neume, so a break before it is awkward.
-3. Immediately after a melisma start, before its first continuation neume, that is, between notes 0 and 1 of the melisma, 0-indexed, when that boundary is not already prohibited by the atomic lyric-covered prefix. The melisma-start syllable extends to the right under subsequent neumes, and breaking here can isolate it on a line where the lyric may overflow. Long melismas may legitimately break after the atomic prefix, so the penalty-width mechanism described below continues to handle overflow at those later breakpoints.
+3. Immediately after a melisma start, before its first continuation neume, that is, between notes 0 and 1 of the melisma, 0-indexed, when that boundary is not already prohibited by the atomic lyric-covered prefix. The melisma-start syllable extends to the right under subsequent neumes, and breaking here can isolate it on a line where the lyric may overflow. For an atomic prefix spanning multiple neumes, the same penalty applies to the first permitted break after that prefix if another continuation neume follows. Later interior breaks remain free.
 4. Between the second-to-last and last notes of a melisma, that is, between notes $n-2$ and $n-1$, 0-indexed. This is the converse of the previous rule: just as the melisma start should stay with its first continuation, the penultimate note should stay with the final note that closes the melisma. Breaking here would strand a single melisma note at the start of a line. Interior melisma breaks, between notes 1 and $n-2$, remain free.
 
 We assign a penalty of 0.1 of `MAX_COST` to beat-stealing breaks, because these are awkward but not uncommon in the classical 19th-century publications.
 `getBreakCost` recognizes the time-mark case for a configured set of quantitative neumes paired with a supported primary or secondary gorgon-family mark, and the running elaphron case from the quantitative neume alone; digorgon and trigorgon are not yet covered.
 For melisma-edge breaks, we use larger penalties:
-0.2 of `MAX_COST` immediately after a melisma start, and 0.15 of `MAX_COST` between the penultimate and final melisma notes.
-These cases are closer to $\TeX$'s `\clubpenalty` and `\widowpenalty`, because they orphan a single note at the start or end of a melisma;
-the melisma-start case is weighted slightly more heavily because it can also isolate the syllable whose lyric extends rightward and may overflow.
+0.2 of `MAX_COST` immediately after a melisma start or after a multi-neume atomic lyric-covered prefix, and 0.15 of `MAX_COST` between the penultimate and final melisma notes.
+These cases are closer to $\TeX$'s `\clubpenalty` and `\widowpenalty`, because they can strand the opening lyric-bearing group or a final continuation note;
+the opening-group case is weighted slightly more heavily because the lyric extends rightward and a short line can leave little room for it.
 The 19th-century publications, being typeset by hand, necessarily permit such undesirable breaks;
 an optimum-fit algorithm can usually find a better solution in milliseconds.
 

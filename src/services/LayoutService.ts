@@ -359,6 +359,7 @@ interface AtomicMelismaLayout {
   boundaryWidths: Map<NoteElement, number>;
   centeringEligibleStartNotes: Set<NoteElement>;
   potentiallyCenteredGroupEndNotes: Set<NoteElement>;
+  postPrefixPenaltyNotes: Set<NoteElement>;
   prefixNotes: Set<NoteElement>;
 }
 
@@ -883,6 +884,9 @@ export class LayoutService {
           const breakCost = Math.min(
             MAX_COST,
             this.getBreakCost(noteElement, nextElement, afterNextNoteElement) +
+              (atomicMelismaLayout.postPrefixPenaltyNotes.has(noteElement)
+                ? MAX_COST * 0.2
+                : 0) +
               breakConstraint.cost,
           );
 
@@ -2762,6 +2766,7 @@ export class LayoutService {
     const boundaryWidths = new Map<NoteElement, number>();
     const centeringEligibleStartNotes = new Set<NoteElement>();
     const potentiallyCenteredGroupEndNotes = new Set<NoteElement>();
+    const postPrefixPenaltyNotes = new Set<NoteElement>();
     const prefixNotes = new Set<NoteElement>();
 
     if (pageSetup.melkiteRtl) {
@@ -2769,6 +2774,7 @@ export class LayoutService {
         boundaryWidths,
         centeringEligibleStartNotes,
         potentiallyCenteredGroupEndNotes,
+        postPrefixPenaltyNotes,
         prefixNotes,
       };
     }
@@ -2867,6 +2873,7 @@ export class LayoutService {
         });
       }
 
+      let protectedBoundaryCount = 0;
       for (let i = 0; i + 1 < group.length; i++) {
         const current = group[i];
         const quantitativeNeumeSpan =
@@ -2883,6 +2890,18 @@ export class LayoutService {
         }
 
         prefixNotes.add(current.note);
+        protectedBoundaryCount++;
+      }
+
+      // Once the lyric fits, the first legal break inside the melisma can
+      // still strand its opening group. Discourage that break with the same
+      // cost used after an unprotected melisma start, but not when the group
+      // already reaches the final continuation note.
+      if (
+        protectedBoundaryCount > 0 &&
+        protectedBoundaryCount + 1 < group.length
+      ) {
+        postPrefixPenaltyNotes.add(group[protectedBoundaryCount].note);
       }
 
       const last = group[group.length - 1];
@@ -2925,6 +2944,7 @@ export class LayoutService {
       boundaryWidths,
       centeringEligibleStartNotes,
       potentiallyCenteredGroupEndNotes,
+      postPrefixPenaltyNotes,
       prefixNotes,
     };
   }

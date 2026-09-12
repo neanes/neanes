@@ -69,6 +69,7 @@ A line break is prohibited in the following cases:
 
 1. Between a note and a following martyria. We add a penalty of `MAX_COST`.
 2. Between two neumes tied by a connecting heteron, connecting homalon, or yfen. We add a penalty of `MAX_COST`.
+3. Inside the shortest prefix of a long left-to-right, note-only underscore melisma whose quantitative-neume span is needed to contain its lyric. The prefix is treated as an atomic run for automatic line breaking. An explicit line or page break still takes precedence.
 
 ### Strongly discouraged breaks
 
@@ -83,15 +84,15 @@ In addition to the strongly discouraged cases, we identify several breaks that a
 
 1. A line that begins with a neume carrying a time mark that takes time from the neume before it, such as a gorgon or an argon, shortens the neume at the end of the previous line. Although such breaks are not uncommon in the classical 19th-century publications, they require the reader to look one line ahead. This is manageable within a page, but more annoying at a page boundary, so it is better to avoid such breaks when possible.
 2. Between a running elaphron and the preceding neume. Like the gorgon, a running elaphron steals a beat from the preceding neume, so a break before it is awkward.
-3. Immediately after a melisma start, before its first continuation neume, that is, between notes 0 and 1 of the melisma, 0-indexed. The melisma-start syllable extends to the right under subsequent neumes, and breaking here can isolate it on a line where the lyric may overflow. Long melismas may legitimately break later on, so only the break immediately after the start is discouraged. The penalty-width mechanism described below handles overflow at any breakpoint inside the melisma.
+3. Immediately after a melisma start, before its first continuation neume, that is, between notes 0 and 1 of the melisma, 0-indexed, when that boundary is not already prohibited by the atomic lyric-covered prefix. The melisma-start syllable extends to the right under subsequent neumes, and breaking here can isolate it on a line where the lyric may overflow. For an atomic prefix spanning multiple neumes, the same penalty applies to the first permitted break after that prefix if another continuation neume follows. Later interior breaks remain free.
 4. Between the second-to-last and last notes of a melisma, that is, between notes $n-2$ and $n-1$, 0-indexed. This is the converse of the previous rule: just as the melisma start should stay with its first continuation, the penultimate note should stay with the final note that closes the melisma. Breaking here would strand a single melisma note at the start of a line. Interior melisma breaks, between notes 1 and $n-2$, remain free.
 
 We assign a penalty of 0.1 of `MAX_COST` to beat-stealing breaks, because these are awkward but not uncommon in the classical 19th-century publications.
 `getBreakCost` recognizes the time-mark case for a configured set of quantitative neumes paired with a supported primary or secondary gorgon-family mark, and the running elaphron case from the quantitative neume alone; digorgon and trigorgon are not yet covered.
 For melisma-edge breaks, we use larger penalties:
-0.2 of `MAX_COST` immediately after a melisma start, and 0.15 of `MAX_COST` between the penultimate and final melisma notes.
-These cases are closer to $\TeX$'s `\clubpenalty` and `\widowpenalty`, because they orphan a single note at the start or end of a melisma;
-the melisma-start case is weighted slightly more heavily because it can also isolate the syllable whose lyric extends rightward and may overflow.
+0.2 of `MAX_COST` immediately after a melisma start or after a multi-neume atomic lyric-covered prefix, and 0.15 of `MAX_COST` between the penultimate and final melisma notes.
+These cases are closer to $\TeX$'s `\clubpenalty` and `\widowpenalty`, because they can strand the opening lyric-bearing group or a final continuation note;
+the opening-group case is weighted slightly more heavily because the lyric extends rightward and a short line can leave little room for it.
 The 19th-century publications, being typeset by hand, necessarily permit such undesirable breaks;
 an optimum-fit algorithm can usually find a better solution in milliseconds.
 
@@ -147,6 +148,8 @@ The 19th-century publications also use several techniques to improve the quality
 ## Box/glue/penalty algebra
 
 Layout proceeds in two phases. In Phase 1, the code builds the box/glue/penalty encoding described in this section -- inserting spacers and adjusting glue widths -- and the line breaker chooses the breakpoints. In Phase 2, once the breakpoints have been chosen, the code positions the items for rendering: shifting a note left to absorb a transferred measure bar, adding line-start indentation, or placing a right-aligned martyria flush right.
+
+Long underscore melisma lyrics use the same single line-breaking pass. For left-to-right melismas made entirely from adjacent notes, Phase 1 calculates each internal boundary from the same preferred glyph- and measure-bar-aware width used by the Knuth-Plass stream. It prohibits automatic breaks inside the shortest quantitative-neume prefix needed to contain the lyric, including its punctuation, and fixes that prefix's internal glue at those widths. If the complete melisma is still narrower than the lyric, its centered outer bounds are therefore known and used for collision layout immediately. Otherwise the protected prefix contains the lyric, so Phase 2 can center it beneath whichever longer melisma segment the chosen break produces without changing the segment's outer bounds. Hyphenated melismas retain their existing layout. Melkite RTL underscore melismas and underscore melismas that cross a martyria, tempo, or inline text box remain left-aligned.
 
 ### Lyricless scores
 

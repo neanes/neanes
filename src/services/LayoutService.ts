@@ -2784,6 +2784,10 @@ export class LayoutService {
         continue;
       }
 
+      if (startNote.isHyphen) {
+        continue;
+      }
+
       // Phase 2 permits melismas to cross a martyria, tempo, or inline text
       // box. Those elements have boundary geometry that is resolved while the
       // Knuth-Plass stream is built, including elastic glue and measure-bar
@@ -2910,9 +2914,8 @@ export class LayoutService {
       }
 
       if (
-        startNote.isHyphen ||
         fullQuantitativeNeumeSpan - lyricRightFromStartQuantitativeNeume <
-          pageSetup.lyricsMelismaCutoffWidth
+        pageSetup.lyricsMelismaCutoffWidth
       ) {
         potentiallyCenteredGroupEndNotes.add(last.note);
       }
@@ -2975,8 +2978,7 @@ export class LayoutService {
       const noteElement = element as NoteElement;
       noteElement.alignLeft = this.shouldAlignLeft(
         noteElement,
-        this.findNextNoteThroughMelismaContinuationElements(elements, i + 1)
-          ?.note ?? null,
+        this.getNoteIfPresentAt(elements, i + 1),
       );
 
       this.applyPunctuationHorizontalOffset(noteElement, pageSetup);
@@ -5787,53 +5789,6 @@ export class LayoutService {
               nextNoteElement = nextElement as NoteElement;
             }
 
-            const finalElementIndex =
-              finalElement == null
-                ? index
-                : line.elements.indexOf(finalElement, index);
-            let lastQuantitativeNote = element;
-            for (let i = index + 1; i <= finalElementIndex; i++) {
-              if (line.elements[i].elementType === ElementType.Note) {
-                lastQuantitativeNote = line.elements[i] as NoteElement;
-              }
-            }
-            const neumeGroupEnd =
-              lastQuantitativeNote.x +
-              lastQuantitativeNote.neumeWidth -
-              this.getFinalElementMeasureBarRightWidth(
-                lastQuantitativeNote,
-                measureBarWidthMap,
-              );
-
-            if (
-              element.isHyphen &&
-              !pageSetup.melkiteRtl &&
-              !isIntermediateMelismaAtStartOfLine &&
-              element.alignLeft &&
-              centeringEligibleStartNotes.has(element)
-            ) {
-              const neumeGroupStart =
-                element.x +
-                this.getStartQuantitativeNeumeOffset(
-                  element,
-                  pageSetup,
-                  measureBarWidthMap,
-                );
-
-              // A hyphenated melisma whose lyric is wider than its starting
-              // neume uses the same group centering as a qualifying
-              // underscore melisma. Apply it before measuring the available
-              // hyphen span so every visible hyphen starts after the centered
-              // lyric rather than its former left-aligned edge.
-              this.centerLyricUnderMelismaGroup(
-                element,
-                neumeGroupStart,
-                neumeGroupEnd,
-                pageSetup,
-                measureBarWidthMap,
-              );
-            }
-
             // Calculate the start of the melisma
             if (isIntermediateMelismaAtStartOfLine) {
               // Special case. No lyrics, so start at the
@@ -5959,6 +5914,23 @@ export class LayoutService {
               }
             } else if (!pageSetup.melkiteRtl) {
               // Else not a hyphen, so an underscore
+              const finalElementIndex =
+                finalElement == null
+                  ? index
+                  : line.elements.indexOf(finalElement, index);
+              let lastQuantitativeNote = element;
+              for (let i = index + 1; i <= finalElementIndex; i++) {
+                if (line.elements[i].elementType === ElementType.Note) {
+                  lastQuantitativeNote = line.elements[i] as NoteElement;
+                }
+              }
+              const neumeGroupEnd =
+                lastQuantitativeNote.x +
+                lastQuantitativeNote.neumeWidth -
+                this.getFinalElementMeasureBarRightWidth(
+                  lastQuantitativeNote,
+                  measureBarWidthMap,
+                );
               const nextRunningElaphronGeometry =
                 nextNoteElement != null
                   ? runningElaphronGeometry.get(

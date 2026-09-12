@@ -69,7 +69,7 @@ A line break is prohibited in the following cases:
 
 1. Between a note and a following martyria. We add a penalty of `MAX_COST`.
 2. Between two neumes tied by a connecting heteron, connecting homalon, or yfen. We add a penalty of `MAX_COST`.
-3. Inside the shortest prefix of a long left-to-right, note-only melisma whose quantitative-neume span is needed to contain its lyric. The prefix is treated as an atomic run for automatic line breaking. An explicit line or page break still takes precedence.
+3. Inside the shortest prefix of a long left-to-right, note-only underscore melisma whose quantitative-neume span is needed to contain its lyric. The prefix is treated as an atomic run for automatic line breaking. An explicit line or page break still takes precedence.
 
 ### Strongly discouraged breaks
 
@@ -149,7 +149,7 @@ The 19th-century publications also use several techniques to improve the quality
 
 Layout proceeds in two phases. In Phase 1, the code builds the box/glue/penalty encoding described in this section -- inserting spacers and adjusting glue widths -- and the line breaker chooses the breakpoints. In Phase 2, once the breakpoints have been chosen, the code positions the items for rendering: shifting a note left to absorb a transferred measure bar, adding line-start indentation, or placing a right-aligned martyria flush right.
 
-Long melisma lyrics use the same single line-breaking pass. For left-to-right melismas made entirely from adjacent notes, Phase 1 calculates each internal boundary from the same preferred glyph- and measure-bar-aware width used by the Knuth-Plass stream. It prohibits automatic breaks inside the shortest quantitative-neume prefix needed to contain the lyric, including its punctuation, and fixes that prefix's internal glue at those widths. If the complete melisma is still narrower than the lyric, its centered outer bounds are therefore known and used for collision layout immediately. Otherwise the protected prefix contains the lyric, so Phase 2 can center it beneath whichever longer melisma segment the chosen break produces without changing the segment's outer bounds. Hyphen placement is then measured from the centered lyric edge. Melkite RTL melismas and any melisma that crosses a martyria, tempo, or inline text box intentionally remain left-aligned.
+Long underscore melisma lyrics use the same single line-breaking pass. For left-to-right melismas made entirely from adjacent notes, Phase 1 calculates each internal boundary from the same preferred glyph- and measure-bar-aware width used by the Knuth-Plass stream. It prohibits automatic breaks inside the shortest quantitative-neume prefix needed to contain the lyric, including its punctuation, and fixes that prefix's internal glue at those widths. If the complete melisma is still narrower than the lyric, its centered outer bounds are therefore known and used for collision layout immediately. Otherwise the protected prefix contains the lyric, so Phase 2 can center it beneath whichever longer melisma segment the chosen break produces without changing the segment's outer bounds. Hyphenated melismas retain their existing layout. Melkite RTL underscore melismas and underscore melismas that cross a martyria, tempo, or inline text box remain left-aligned.
 
 ### Lyricless scores
 

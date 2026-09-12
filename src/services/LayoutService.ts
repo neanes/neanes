@@ -355,11 +355,6 @@ interface LineBreakSolution {
   requestedMaxAdjustmentRatio: number | null;
 }
 
-interface ProcessPagesResult {
-  layoutWorkspace: LayoutWorkspace;
-  pages: Page[];
-}
-
 interface CenteredMelismaGeometry {
   // Relative to the start quantitative neume, excluding any left measure-bar
   // reservation and vareia prefix added to the containing note box.
@@ -403,35 +398,7 @@ export class LayoutService {
       elements.push(new EmptyElement());
     }
 
-    const result = this.processPagesPass(workspace, options);
-
-    elements.forEach((element) => {
-      this.checkElementState(element);
-    });
-
-    score.headersAndFooters.forEach((element) => {
-      this.checkElementState(element);
-    });
-
-    if (result.layoutWorkspace.loggingEnabled) {
-      console.log(
-        'avg ratio',
-        result.layoutWorkspace.completedParagraphs
-          .flatMap((p) => p.ratios)
-          .reduce((sum, ratio, _, arr) => sum + ratio / arr.length, 0),
-      );
-    }
-
-    return result.pages;
-  }
-
-  private static processPagesPass(
-    workspace: Workspace,
-    options: LayoutDiagnosticsOptions | undefined,
-  ): ProcessPagesResult {
-    const score = workspace.score;
     const pageSetup = score.pageSetup;
-    const elements = score.staff.elements;
 
     this.calculateMartyriae(elements, pageSetup);
 
@@ -1865,10 +1832,24 @@ export class LayoutService {
       this.alignIsonIndicators(pages, pageSetup);
     }
 
-    return {
-      layoutWorkspace,
-      pages,
-    };
+    elements.forEach((element) => {
+      this.checkElementState(element);
+    });
+
+    score.headersAndFooters.forEach((element) => {
+      this.checkElementState(element);
+    });
+
+    if (layoutWorkspace.loggingEnabled) {
+      console.log(
+        'avg ratio',
+        layoutWorkspace.completedParagraphs
+          .flatMap((p) => p.ratios)
+          .reduce((sum, ratio, _, arr) => sum + ratio / arr.length, 0),
+      );
+    }
+
+    return pages;
   }
 
   public static getElementOverlayDiagnostics(

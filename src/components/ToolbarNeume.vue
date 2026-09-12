@@ -605,6 +605,7 @@ import {
 import type { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
 import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import { isOneOf } from '@/utils/isOneOf';
 
 import Neume from './NeumeGlyph.vue';
 import NeumeIcon from './NeumeIcon.vue';
@@ -621,13 +622,6 @@ type ToolbarNeumeTooltipNeume =
   | Accidental.Flat_2_Right
   | Accidental.Sharp_2_Left
   | MeasureNumber.Two;
-
-function enumHas<T extends string>(
-  values: readonly T[],
-  value: string,
-): value is T {
-  return values.includes(value as T);
-}
 
 const fthoraValues = Object.values(Fthora);
 const timeNeumeValues = Object.values(TimeNeume);
@@ -920,7 +914,7 @@ const neumeSelectLabelId = useId();
 const { t } = useTranslation();
 
 function updateInnerNeume(value: unknown) {
-  if (typeof value === 'string' && enumHas(neumeSelectionValues, value)) {
+  if (typeof value === 'string' && isOneOf(neumeSelectionValues, value)) {
     emit('update:innerNeume', value);
   }
 }
@@ -1085,33 +1079,33 @@ function translateNeumeDisplayName(neume: ToolbarNeumeTooltipNeume) {
       });
   }
 
-  if (enumHas(fthoraValues, neume)) {
+  if (isOneOf(fthoraValues, neume)) {
     return t(getFthoraLabelSelector(neume), { ns: 'model' });
   }
 
-  if (enumHas(timeNeumeValues, neume)) {
+  if (isOneOf(timeNeumeValues, neume)) {
     return t(getTimeNeumeLabelSelector(neume), { ns: 'model' });
   }
 
-  if (enumHas(vocalExpressionNeumeValues, neume)) {
+  if (isOneOf(vocalExpressionNeumeValues, neume)) {
     return t(getVocalExpressionNeumeLabelSelector(neume), {
       ns: 'model',
     });
   }
 
-  if (enumHas(gorgonNeumeValues, neume)) {
+  if (isOneOf(gorgonNeumeValues, neume)) {
     return t(getGorgonNeumeLabelSelector(neume), { ns: 'model' });
   }
 
-  if (enumHas(measureBarValues, neume)) {
+  if (isOneOf(measureBarValues, neume)) {
     return t(getMeasureBarLabelSelector(neume), { ns: 'model' });
   }
 
-  if (enumHas(noteIndicatorValues, neume)) {
+  if (isOneOf(noteIndicatorValues, neume)) {
     return t(getNoteIndicatorLabelSelector(neume), { ns: 'model' });
   }
 
-  if (enumHas(isonValues, neume)) {
+  if (isOneOf(isonValues, neume)) {
     const displayName = getIsonLabelSelector(neume);
     return displayName == null
       ? String(neume)

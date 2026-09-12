@@ -25,6 +25,8 @@ export const BUILT_IN_PARAGRAPH_STYLE_IDS = {
   Footer: 'footer',
   Lyrics: 'lyrics',
   DropCap: 'drop-cap',
+  InitialMartyria: 'initial-martyria',
+  InitialMartyriaGreek: 'initial-martyria-greek',
 } as const;
 
 export type BuiltInParagraphStyleId =
@@ -56,6 +58,10 @@ const BUILT_IN_PARAGRAPH_STYLE_NAME_SELECTORS: Record<
     $.dialog.paragraphStyles.builtIn.lyrics,
   [BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap]: ($) =>
     $.dialog.paragraphStyles.builtIn.dropCap,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria]: ($) =>
+    $.dialog.paragraphStyles.builtIn.initialMartyria,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek]: ($) =>
+    $.dialog.paragraphStyles.builtIn.initialMartyriaGreek,
 };
 
 const builtInParagraphStyleIds = new Set<string>(
@@ -379,6 +385,23 @@ export function createDefaultParagraphStyles() {
       fontSize: Unit.fromPt(60),
     },
   );
+  const initialMartyria = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    'Initial Martyria',
+    BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    {
+      color: '#ED0000',
+    },
+  );
+  const initialMartyriaGreek = createBuiltInStyle(
+    BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+    'Initial Martyria (Greek)',
+    BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    {
+      fontFamily: 'GFS Didot Classic',
+      fontSize: Unit.fromPt(14.5),
+    },
+  );
 
   return [
     defaultText,
@@ -391,10 +414,12 @@ export function createDefaultParagraphStyles() {
     footer,
     lyrics,
     dropCap,
+    initialMartyria,
+    initialMartyriaGreek,
   ];
 }
 
-function applyParagraphStyleOverrides(
+export function applyParagraphStyleOverrides(
   target: ResolvedParagraphStyle,
   overrides?: ParagraphStyleOverrides,
 ) {

@@ -18,16 +18,38 @@ While editing the title, a toolbar will appear at the bottom of the window with 
 
 ## Updating the initial martyria
 
-To update the initial martyria, double click the current initial martyria to open the initial martyria dialog. You can also right-click the initial martyria and choose `Change Initial Martyria`, or open `View -> Properties`, select the initial martyria, and press `Change Initial Martyria`.
+To change the mode of the initial martyria, double click it to open the initial martyria dialog. You can also right-click the initial martyria and choose `Change Initial Martyria`, or select it and press the `Change Initial Martyria` button in the toolbar at the bottom of the screen.
 
 ![Initial Martyria Dialog](./images/guide-mode-key-dialog.png)
 
 In the initial martyria dialog, select the mode on the left, and then pick the appropriate initial martyria on the right. Most common initial martyriæ should be present in the dialog. Many initial martyriæ can be written in several different ways, and not all variations have been included. If an initial martyria is missing, request it by [opening an issue](https://github.com/neanes/neanes/issues/new).
 
-While the initial martyria is selected, a toolbar at the bottom of the screen provides quick controls such as alignment and tempo signs. The Properties pane contains the full initial martyria settings, including size, color, BPM, margins, `Ignore Attractions`, and `Permanent Enharmonic Zo`.
+The dialog chooses _what_ the initial martyria says: the mode, starting note, and any fthora. _How_ it is written, such as the language, whether the mode is given as text or as a sign, and the font and color, is controlled by an initial martyria style. See [Choosing a style](#choosing-a-style) below.
+
+While the initial martyria is selected, the toolbar at the bottom of the screen provides quick controls: the style, the size, the alignment, and tempo signs.
+
+The Properties pane contains the full initial martyria settings, grouped into sections.
+
+- `Style`: the `Style` select, a `Manage styles...` button that opens the styles dialog, and `Size`, `Color`, and `Outline` overrides. Each override has a clear button that returns the field to the value from the style. The button next to `Manage styles...` clears all three at once.
+- `Positioning`: the `Inline` switch, alignment, `BPM`, and the top and bottom margins.
+- `Initial Martyria`: `Show Ambitus`, `Ignore Attractions`, and `Permanent Enharmonic Zo`.
+
+### Choosing a style
+
+Every initial martyria in a score is written according to a style. Built-in styles exist for Greek, English, Spanish, Church Slavonic, Russian, Arabic, Romanian, and Indonesian. For example, the Greek `Traditional sign` style writes the mode with the traditional sign, while the English `Mode names` style writes it in words.
+
+To choose the style for the whole document, open `Format -> Initial Martyria Styles...`, select a style, and press `Use for this document`. You can also press `Manage styles...` in the Properties pane while an initial martyria is selected.
+
+To give a single initial martyria a different style, select it and choose the style from the `Style` select in the Properties pane or in the toolbar at the bottom of the screen. `Document default` follows the style chosen for the document.
+
+To create your own style, or to change the wording or typography of a built-in one, see [Initial Martyria Styles](./advanced.md#initial-martyria-styles) in the advanced guide. For initial martyriæ that no style can express, see [Custom Initial Martyriæ](./advanced.md#custom-initial-martyriæ).
 
 > [!NOTE]
-> For more complex configurations, see the [Custom Initial Martyriæ](./advanced.md#custom-initial-martyriæ) section in the advanced guide.
+> Scores saved by earlier versions of Neanes are converted when opened. Their initial martyriæ use the Greek `Traditional sign` style, the old initial martyria settings from Page Setup become the `Initial Martyria` paragraph style, and any per-element color, size, or outline become overrides on that element.
+
+### Inline initial martyriæ
+
+By default, an initial martyria occupies its own line. To place it in the line of neumes instead, for example before a short hymn or between two hymns on the same line, select the initial martyria and turn on the `Inline` switch in the `Positioning` section of the Properties pane. An inline initial martyria has no alignment or margins of its own, since it flows with the neumes around it.
 
 ## Entering Neumes
 
@@ -258,7 +280,7 @@ The amount of space between the hyphens that are automatically drawn between mel
 
 ### Fonts
 
-The default font is Source Serif, which (along with Old Standard) supports the Adobe Latin-4 character set, as well as Cyrillic and Greek writing systems. GFS Didot is bundled for use with Greek texts, and Noto Naskh Arabic is bundled for use with Arabic texts.
+The default font is Source Serif, which (along with Old Standard) supports the Adobe Latin-4 character set, as well as Cyrillic and Greek writing systems. GFS Didot, GFS Didot Classic, and GFS Porson are bundled for use with Greek texts, and Noto Naskh Arabic is bundled for use with Arabic texts.
 
 ## Audio Playback
 

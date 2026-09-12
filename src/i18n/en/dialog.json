@@ -68,6 +68,124 @@
     "root": "Select Initial Martyria",
     "description": "Choose an initial martyria."
   },
+  "initialMartyriaStyles": {
+    "root": "Initial Martyria Styles",
+    "description": "Choose a style for the initial martyria, or create your own.",
+    "styleLabel": "Style",
+    "manageStyles": "Manage styles…",
+    "documentDefault": "Document default",
+    "documentDefaultStatus": "Document default: {{name}}",
+    "defaultBadge": "Default",
+    "custom": "Custom",
+    "builtInLanguage": "Built in · {{language}}",
+    "builtIn": "Built in",
+    "builtInHint": "Built-in style. Changes are made to a copy.",
+    "noCustomStyles": "No custom styles yet",
+    "new": "New style",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "apply": "Apply",
+    "useForDocument": "Use for this document",
+    "newStyleName": "New style",
+    "copyStyleName": "{{name}} copy",
+    "name": "Name",
+    "styleNamePlaceholder": "Style name",
+    "nameInvalid": "Enter a unique name for this style.",
+    "language": "Language",
+    "greekParagraphStyle": "Greek paragraph style",
+    "typography": "Typography",
+    "sampleMode": "Sample mode",
+    "basedOn": "Based on {{name}}",
+    "resetToBase": "Reset to base",
+    "modeIdentification": "Mode identification",
+    "numberForm": "Number form",
+    "digitForm": "Digit form",
+    "numberPlacement": "Number placement",
+    "plagalWording": "Plagal wording",
+    "transliterateNoteNames": "Transliterate starting note",
+    "transliterateNoteNamesHint": "Pa instead of Πα",
+    "modeIdentificationMethods": {
+      "text": "Text only",
+      "modeSign": "Sign only",
+      "textAndModeSign": "Text and sign"
+    },
+    "numeralKinds": {
+      "cardinal": "Cardinal",
+      "ordinal": "Ordinal"
+    },
+    "numeralForms": {
+      "digits": {
+        "cardinal": "Digits, cardinal",
+        "ordinal": "Digits, ordinal"
+      },
+      "romanNumerals": {
+        "cardinal": "Roman numerals, cardinal",
+        "ordinal": "Roman numerals, ordinal"
+      },
+      "alphabeticNumerals": {
+        "cardinal": "Alphabetic numerals, cardinal",
+        "ordinal": "Alphabetic numerals, ordinal"
+      },
+      "words": {
+        "cardinal": "Words, cardinal",
+        "ordinal": "Words, ordinal"
+      }
+    },
+    "numberingSystems": {
+      "western": "Western",
+      "arabicIndic": "Arabic-Indic"
+    },
+    "numeralQualifiers": {
+      "postnominal": "Number after",
+      "prenominal": "Number before"
+    },
+    "modeNamingSchemes": {
+      "absolute": "Numbered 1 to 8",
+      "authenticCounterpart": "Plagal of the authentic",
+      "plagalClass": "Plagal as a class"
+    },
+    "duplicateOfStyle": "This style is written exactly like \"{{name}}\".",
+    "useStyleInstead": "Use \"{{name}}\" instead",
+    "useOrdinalForms": "Use ordinal forms",
+    "languages": {
+      "greek": "Greek",
+      "english": "English",
+      "spanish": "Spanish",
+      "churchSlavonic": "Church Slavonic",
+      "russian": "Russian",
+      "arabic": "Arabic",
+      "romanian": "Romanian",
+      "indonesian": "Indonesian"
+    },
+    "builtInStyles": {
+      "greekTraditionalSign": "Traditional sign",
+      "greekAlphabeticNumerals": "Alphabetic numerals",
+      "englishTraditionalSign": "Traditional sign",
+      "englishModeNames": "Mode names",
+      "englishModeNamesWithSign": "Mode names with sign",
+      "englishModeNumbersWithSign": "Mode numbers with sign",
+      "englishPlagalClassWithSign": "Plagal class with sign",
+      "spanishTonoNumber": "Tono with digits",
+      "spanishTonoRomanNumeral": "Tono with Roman numerals",
+      "spanishTonoOrdinalNumber": "Tono with ordinal digits",
+      "spanishTonoOrdinal": "Tono with ordinal words",
+      "spanishOrdinalTono": "Ordinal before tono",
+      "churchSlavonicGlasNumber": "Glas with digits",
+      "churchSlavonicGlasCyrillicNumeral": "Glas with Cyrillic numerals",
+      "churchSlavonicGlasCyrillicNumeralText": "Glas with Cyrillic numerals, text only",
+      "churchSlavonicGlasOrdinal": "Glas with ordinal words",
+      "churchSlavonicGlasOrdinalText": "Glas with ordinal words, text only",
+      "russianGlasNumber": "Glas with digits",
+      "russianGlasOrdinal": "Glas with ordinal words",
+      "russianGlasOrdinalText": "Glas with ordinal words, text only",
+      "arabicOrdinal": "Ordinal words",
+      "arabicOrdinalText": "Ordinal words, text only",
+      "romanianGlasNumber": "Glas with digits",
+      "romanianGlasRomanNumeral": "Glas with Roman numerals",
+      "romanianTraditionalSign": "Traditional sign",
+      "indonesianModeNamesWithSign": "Mode names with sign"
+    }
+  },
   "documentProperties": {
     "root": "Document Properties",
     "description": "Set document metadata for running heads and other tokens.",
@@ -97,7 +215,9 @@
       "header": "Header",
       "footer": "Footer",
       "lyrics": "Lyrics",
-      "dropCap": "Drop Cap"
+      "dropCap": "Drop Cap",
+      "initialMartyria": "Initial Martyria",
+      "initialMartyriaGreek": "Initial Martyria (Greek)"
     }
   },
   "neumePositioning": {
@@ -222,10 +342,7 @@
     "italic": "Italic",
     "outline": "Outline",
     "lyrics": "Lyrics",
-    "initialMartyriae": "Initial Martyriæ",
-    "initialMartyriaeDescription": "The default styling for all initial martyriæ in the score.",
     "neumesDescription": "The default styling for all neumes in the score.",
-    "heightAdjust": "Height Adjust",
     "neumeStyles": "Neume Styles",
     "type": "Type",
     "accidentals": "Accidentals",

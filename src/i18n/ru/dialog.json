@@ -68,6 +68,124 @@
     "root": "Выбор начальной мартирии",
     "description": "Выберите начальную мартирию."
   },
+  "initialMartyriaStyles": {
+    "root": "Стили начальной мартирии",
+    "description": "Выберите стиль начальной мартирии или создайте свой.",
+    "styleLabel": "Стиль",
+    "manageStyles": "Управление стилями…",
+    "documentDefault": "По умолчанию для документа",
+    "documentDefaultStatus": "По умолчанию для документа: {{name}}",
+    "defaultBadge": "По умолчанию",
+    "custom": "Пользовательские",
+    "builtInLanguage": "Встроенные · {{language}}",
+    "builtIn": "Встроенный",
+    "builtInHint": "Встроенный стиль. Изменения вносятся в копию.",
+    "noCustomStyles": "Пользовательских стилей пока нет",
+    "new": "Новый стиль",
+    "duplicate": "Дублировать",
+    "delete": "Удалить",
+    "apply": "Применить",
+    "useForDocument": "Использовать для этого документа",
+    "newStyleName": "Новый стиль",
+    "copyStyleName": "Копия {{name}}",
+    "name": "Название",
+    "styleNamePlaceholder": "Название стиля",
+    "nameInvalid": "Введите уникальное имя для этого стиля.",
+    "language": "Язык",
+    "greekParagraphStyle": "Стиль абзаца для греческого текста",
+    "typography": "Типографика",
+    "sampleMode": "Глас для образца",
+    "basedOn": "На основе {{name}}",
+    "resetToBase": "Сбросить к основе",
+    "modeIdentification": "Обозначение гласа",
+    "numberForm": "Форма числа",
+    "digitForm": "Форма цифр",
+    "numberPlacement": "Положение числа",
+    "plagalWording": "Обозначение плагальных",
+    "transliterateNoteNames": "Транслитерировать начальную ноту",
+    "transliterateNoteNamesHint": "Па вместо Πα",
+    "modeIdentificationMethods": {
+      "text": "Только текст",
+      "modeSign": "Только знак",
+      "textAndModeSign": "Текст и знак"
+    },
+    "numeralKinds": {
+      "cardinal": "Количественное",
+      "ordinal": "Порядковое"
+    },
+    "numeralForms": {
+      "digits": {
+        "cardinal": "Цифры, количественные",
+        "ordinal": "Цифры, порядковые"
+      },
+      "romanNumerals": {
+        "cardinal": "Римские цифры, количественные",
+        "ordinal": "Римские цифры, порядковые"
+      },
+      "alphabeticNumerals": {
+        "cardinal": "Буквенные числа, количественные",
+        "ordinal": "Буквенные числа, порядковые"
+      },
+      "words": {
+        "cardinal": "Слова, количественные",
+        "ordinal": "Слова, порядковые"
+      }
+    },
+    "numberingSystems": {
+      "western": "Западные",
+      "arabicIndic": "Арабо-индийские"
+    },
+    "numeralQualifiers": {
+      "postnominal": "Число после",
+      "prenominal": "Число перед"
+    },
+    "modeNamingSchemes": {
+      "absolute": "Нумерация от 1 до 8",
+      "authenticCounterpart": "Плагальный от автентического",
+      "plagalClass": "Плагальные как класс"
+    },
+    "duplicateOfStyle": "Этот стиль записывается точно так же, как «{{name}}».",
+    "useStyleInstead": "Использовать «{{name}}»",
+    "useOrdinalForms": "Использовать порядковые формы",
+    "languages": {
+      "greek": "Греческий",
+      "english": "Английский",
+      "spanish": "Испанский",
+      "churchSlavonic": "Церковнославянский",
+      "russian": "Русский",
+      "arabic": "Арабский",
+      "romanian": "Румынский",
+      "indonesian": "Индонезийский"
+    },
+    "builtInStyles": {
+      "greekTraditionalSign": "Традиционный знак",
+      "greekAlphabeticNumerals": "Буквенные числа",
+      "englishTraditionalSign": "Традиционный знак",
+      "englishModeNames": "Названия гласов",
+      "englishModeNamesWithSign": "Названия гласов со знаком",
+      "englishModeNumbersWithSign": "Номера гласов со знаком",
+      "englishPlagalClassWithSign": "Плагальный класс со знаком",
+      "spanishTonoNumber": "Tono с цифрами",
+      "spanishTonoRomanNumeral": "Tono с римскими цифрами",
+      "spanishTonoOrdinalNumber": "Tono с порядковыми цифрами",
+      "spanishTonoOrdinal": "Tono с порядковыми словами",
+      "spanishOrdinalTono": "Порядковое перед tono",
+      "churchSlavonicGlasNumber": "Глас с цифрами",
+      "churchSlavonicGlasCyrillicNumeral": "Глас с кириллическими числами",
+      "churchSlavonicGlasCyrillicNumeralText": "Глас с кириллическими числами, только текст",
+      "churchSlavonicGlasOrdinal": "Глас с порядковыми словами",
+      "churchSlavonicGlasOrdinalText": "Глас с порядковыми словами, только текст",
+      "russianGlasNumber": "Глас с цифрами",
+      "russianGlasOrdinal": "Глас с порядковыми словами",
+      "russianGlasOrdinalText": "Глас с порядковыми словами, только текст",
+      "arabicOrdinal": "Порядковые слова",
+      "arabicOrdinalText": "Порядковые слова, только текст",
+      "romanianGlasNumber": "Glas с цифрами",
+      "romanianGlasRomanNumeral": "Glas с римскими цифрами",
+      "romanianTraditionalSign": "Традиционный знак",
+      "indonesianModeNamesWithSign": "Названия гласов со знаком"
+    }
+  },
   "documentProperties": {
     "root": "Свойства документа",
     "description": "Задайте метаданные документа для колонтитулов и других подстановочных полей.",
@@ -97,7 +215,9 @@
       "header": "Верхний колонтитул",
       "footer": "Нижний колонтитул",
       "lyrics": "Текст песнопения",
-      "dropCap": "Буквица"
+      "dropCap": "Буквица",
+      "initialMartyria": "Начальная мартирия",
+      "initialMartyriaGreek": "Начальная мартирия (греческий)"
     }
   },
   "neumePositioning": {
@@ -222,10 +342,7 @@
     "italic": "Курсив",
     "outline": "Обводка",
     "lyrics": "Текст песнопения",
-    "initialMartyriae": "Начальные мартирии",
-    "initialMartyriaeDescription": "Оформление по умолчанию для всех начальных мартирий партитуры.",
     "neumesDescription": "Оформление по умолчанию для всех невм партитуры.",
-    "heightAdjust": "Коррекция высоты",
     "neumeStyles": "Стили невм",
     "type": "Тип",
     "accidentals": "Знаки альтерации",

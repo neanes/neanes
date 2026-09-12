@@ -4,44 +4,178 @@
     :style="style"
     @click="$emit('select-single')"
   >
-    <Neume :neume="ModeSign.Ekhos" />
-    <Neume v-if="element.isPlagal" :neume="ModeSign.Plagal" />
-    <Neume v-if="element.isVarys" :neume="ModeSign.Varys" />
-    <Neume :neume="element.martyria" />
-    <Neume v-if="element.note != null" :neume="element.note" />
-    <Neume
-      v-if="element.fthoraAboveNote != null"
-      :neume="element.fthoraAboveNote"
-    />
-    <Neume
-      v-if="element.quantitativeNeumeAboveNote != null"
-      :neume="element.quantitativeNeumeAboveNote"
-    />
-    <Neume v-if="element.note2 != null" :neume="element.note2" />
-    <Neume
-      v-if="element.fthoraAboveNote2 != null"
-      :neume="element.fthoraAboveNote2"
-    />
-    <Neume
-      v-if="element.quantitativeNeumeAboveNote2 != null"
-      :neume="element.quantitativeNeumeAboveNote2"
-    />
-    <Neume
-      v-if="element.quantitativeNeumeRight != null"
-      :neume="element.quantitativeNeumeRight"
-      :style="quantitativeNeumeRightStyle"
-    />
-    <Neume
-      v-if="element.fthoraAboveQuantitativeNeumeRight != null"
-      :neume="element.fthoraAboveQuantitativeNeumeRight"
-    />
-    <Neume
-      v-if="element.tempo != null && !element.tempoAlignRight"
-      :neume="element.tempo"
-      :style="tempoStyle"
-    />
-    <span class="right-container">
-      <span v-if="element.showAmbitus" class="ambitus">
+    <span class="mode-key-main" :style="mainStyle">
+      <span class="mode-key-signature" :dir="resolution.flowDirection">
+        <span
+          class="sr-only"
+          :lang="resolution.structure.languageId"
+          :dir="resolution.flowDirection"
+          >{{ resolution.pronunciation }}</span
+        >
+        <template v-for="(run, index) in resolution.runs" :key="index">
+          <span
+            v-if="runLayouts[index].separatorBefore.kind !== 'none'"
+            class="mode-key-separator"
+            :style="getSeparatorStyle(run, runLayouts[index].separatorBefore)"
+            aria-hidden="true"
+            >{{
+              runLayouts[index].separatorBefore.kind === 'wordSpace' ? ' ' : ''
+            }}</span
+          >
+          <span
+            v-if="run.kind === 'glyph'"
+            class="mode-key-run"
+            :style="getRunStyle(run, runLayouts[index])"
+            aria-hidden="true"
+          >
+            <template v-for="neume in run.glyphs" :key="neume">
+              <Neume :neume="neume" aria-hidden="true" />
+            </template>
+          </span>
+          <span
+            v-else-if="run.kind === 'text' && run.content.layout === 'inline'"
+            class="mode-key-run"
+            :lang="run.languageTag"
+            :dir="run.direction"
+            :style="getRunStyle(run, runLayouts[index])"
+            aria-hidden="true"
+            >{{ run.content.text }}</span
+          >
+          <span
+            v-else-if="run.kind === 'startingPitch'"
+            class="mode-key-run starting-pitch"
+            :style="getRunStyle(run, runLayouts[index])"
+            ><template
+              v-for="[role, pitchNote] in [
+                ['primary', run.cluster.primary],
+                ['secondary', run.cluster.secondary],
+              ] as const"
+              :key="role"
+            >
+              <span
+                v-if="pitchNote != null"
+                class="starting-pitch-note"
+                :style="getPitchCellStyle(runLayouts[index], role)"
+              >
+                <span
+                  :dir="run.noteText.direction"
+                  :lang="run.noteText.languageTag"
+                  :style="getPitchTextStyle(run, runLayouts[index], role)"
+                  >{{ run.noteText.names[pitchNote.note] }}</span
+                >
+                <span
+                  v-if="pitchNote.fthoraAbove != null"
+                  class="pitch-mark"
+                  :style="getPitchMarkStyle(runLayouts[index], role, 'fthora')"
+                >
+                  <Neume
+                    :neume="pitchNote.fthoraAbove"
+                    :style="getPitchGlyphStyle(run, runLayouts[index])"
+                  />
+                </span>
+                <span
+                  v-if="pitchNote.quantitativeNeumeAbove != null"
+                  class="pitch-mark"
+                  :style="
+                    getPitchMarkStyle(runLayouts[index], role, 'quantitative')
+                  "
+                >
+                  <Neume
+                    :neume="pitchNote.quantitativeNeumeAbove"
+                    :style="getPitchGlyphStyle(run, runLayouts[index])"
+                  />
+                </span>
+              </span>
+              <span
+                v-if="
+                  role === 'primary' &&
+                  run.cluster.primary != null &&
+                  run.cluster.secondary != null
+                "
+                class="pitch-cluster-separator"
+                :style="
+                  getFixedSeparatorStyle(
+                    run,
+                    runLayouts[index].pitch!.clusterSeparatorWidth,
+                  )
+                "
+                aria-hidden="true"
+              />
+            </template>
+            <span
+              v-if="
+                hasPitchNote(run.cluster) &&
+                run.cluster.trailingGlyphs.length > 0
+              "
+              class="pitch-trailing-glue"
+              :style="getPitchTrailingGlueStyle(runLayouts[index])"
+              aria-hidden="true"
+            />
+            <Neume
+              v-for="neume in run.cluster.trailingGlyphs"
+              :key="neume"
+              :neume="neume"
+              :style="getTrailingPitchGlyphStyle(run, runLayouts[index])"
+            />
+          </span>
+          <template
+            v-else-if="
+              run.kind === 'text' && run.content.layout === 'stackedCharacters'
+            "
+          >
+            <span
+              class="mode-key-run mode-key-stacked-characters"
+              :style="getStackedCharactersStyle(run, runLayouts[index])"
+              aria-hidden="true"
+            >
+              <span
+                :style="getStackedCharacterStyle(runLayouts[index], 'top')"
+                aria-hidden="true"
+                >{{ run.content.topCharacter }}</span
+              >
+              <span
+                :style="getStackedCharacterStyle(runLayouts[index], 'bottom')"
+                aria-hidden="true"
+                >{{ run.content.bottomCharacter }}</span
+              >
+            </span>
+          </template>
+        </template>
+        <span
+          v-if="layout.trailingSeparator.kind !== 'none'"
+          class="mode-key-separator"
+          :style="
+            getFixedSeparatorStyle(
+              resolution.runs[resolution.runs.length - 1],
+              layout.trailingSeparator.width,
+            )
+          "
+          aria-hidden="true"
+        />
+      </span>
+      <Neume
+        v-if="
+          element.tempo != null && (!element.tempoAlignRight || element.inline)
+        "
+        :neume="element.tempo"
+        :style="tempoStyle"
+      />
+    </span>
+    <span
+      ref="rightContainer"
+      class="right-container"
+      :style="rightContainerStyle"
+    >
+      <span
+        class="mode-key-baseline-strut"
+        :style="baselineStrutStyle"
+        aria-hidden="true"
+      />
+      <span
+        v-if="element.showAmbitus && !element.inline"
+        class="ambitus"
+        :style="ambitusContainerStyle"
+      >
         <span class="ambitus-text">(</span>
         <span class="ambitus-low" :style="ambitusStyleLow">
           <Neume :neume="element.ambitusLowNote" />
@@ -56,7 +190,9 @@
       </span>
 
       <Neume
-        v-if="element.tempo != null && element.tempoAlignRight"
+        v-if="
+          element.tempo != null && element.tempoAlignRight && !element.inline
+        "
         :neume="element.tempo"
         :style="tempoStyle"
       />
@@ -66,15 +202,23 @@
 
 <script setup lang="ts">
 import type { CSSProperties, PropType, StyleValue } from 'vue';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
-import type { ModeKeyElement } from '@/models/Element';
-import { ModeSign } from '@/models/Neumes';
+import { useResizeObserver } from '@/composables/useResizeObserver';
+import { type ModeKeyElement, TextBoxAlignment } from '@/models/Element';
+import type {
+  InitialMartyriaRunLayout,
+  InitialMartyriaSeparatorLayout,
+} from '@/models/InitialMartyriaLayout';
+import type {
+  InitialMartyriaAppearance,
+  InitialMartyriaStartingNoteRun,
+  ResolvedInitialMartyriaRun,
+} from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
-import { fontService } from '@/services/FontService';
-import { NeumeMappingService } from '@/services/NeumeMappingService';
-import { TextMeasurementService } from '@/services/TextMeasurementService';
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
+import { resolveFontStyle } from '@/utils/fontStyle';
 import { withZoom } from '@/utils/withZoom';
 
 defineEmits(['select-single']);
@@ -87,6 +231,81 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+});
+
+type TextRun = Extract<ResolvedInitialMartyriaRun, { kind: 'text' }>;
+type PitchRole = 'primary' | 'secondary';
+
+// The layout service measures every element before it is rendered; this
+// component only applies zoom to what it stored.
+const layout = computed(() => props.element.computedInitialMartyriaLayout!);
+const resolution = computed(() => layout.value.resolution);
+const runLayouts = computed(() => layout.value.runs);
+const baseTextAppearance = computed(() => layout.value.primaryAppearance);
+const rightContainer = ref<HTMLElement | null>(null);
+const rightAccessoryWidth = ref(0);
+const { observe: observeRightAccessory } = useResizeObserver();
+
+// Every run, accessory, and pitch style sets the same three face properties
+// from the resolved face.
+function faceCss(fontFamily: string, fontStyle: string) {
+  const font = resolveFontStyle(fontFamily, fontStyle);
+  return {
+    fontFamily: font.cssFontFamily,
+    fontStyle: font.cssFontStyle,
+    fontWeight: font.cssFontWeight,
+  };
+}
+
+// The OpenType features a text appearance carries; glyph runs never set them.
+function fontVariantCss(appearance: InitialMartyriaAppearance) {
+  return {
+    fontVariantCaps: appearance.fontVariantCaps,
+    fontVariantNumeric: appearance.fontVariantNumeric,
+    fontVariantLigatures: appearance.fontVariantLigatures,
+    fontVariantAlternates: appearance.fontVariantAlternates,
+  };
+}
+
+const mainStyle = computed(() => {
+  const verticalClipMargin = withZoom(-props.element.height);
+  return {
+    position: 'relative',
+    top: withZoom(props.element.computedFlowTop - props.element.computedTop),
+    clipPath:
+      props.element.alignment === TextBoxAlignment.Right
+        ? undefined
+        : `inset(${verticalClipMargin} ${rightAccessoryWidth.value}px ${verticalClipMargin} 0)`,
+  } as CSSProperties;
+});
+
+const rightContainerStyle = computed(() => ({
+  top: withZoom(
+    props.element.computedFlowTop -
+      props.element.computedTop -
+      props.element.height,
+  ),
+}));
+
+// Keep the CSS line box anchored by the explicit baseline strut rather than
+// by zoom-dependent font metrics from any visible signature run.
+const baselineStrutStyle = computed(() => ({
+  height: withZoom(
+    Math.max(0, -props.element.computedFlowTop) + props.element.height,
+  ),
+}));
+
+onMounted(() => {
+  if (rightContainer.value == null) {
+    return;
+  }
+
+  const updateRightAccessoryWidth = () => {
+    rightAccessoryWidth.value = rightContainer.value?.offsetWidth ?? 0;
+  };
+
+  observeRightAccessory(rightContainer.value, updateRightAccessoryWidth);
+  updateRightAccessoryWidth();
 });
 
 const style = computed(() => {
@@ -102,81 +321,247 @@ const style = computed(() => {
 });
 
 const tempoStyle = computed(() => {
-  // TODO figure out a way to remove the hard-coded -.45em
-  // maybe put it in the font metadata json?
   const style = {
     color: props.pageSetup.tempoDefaultColor,
+    fontSize: withZoom(layout.value.accessory.fontSize),
+    lineHeight: 'normal',
     webkitTextStrokeWidth: withZoom(props.pageSetup.tempoDefaultStrokeWidth),
-    top: '-0.45em',
-    marginLeft: withZoom(8),
+    top: withZoom(layout.value.accessory.baselineOffset),
+    marginLeft: withZoom(layout.value.accessory.tempoMarginLeft),
   } as StyleValue;
 
   return style;
 });
 
-const quantitativeNeumeRightStyle = computed(() => {
+const ambitusStyle = computed(
+  () =>
+    ({
+      color: props.pageSetup.martyriaDefaultColor,
+      ...faceCss(props.element.computedFontFamily, DEFAULT_FONT_STYLE),
+      fontSize: withZoom(layout.value.accessory.fontSize),
+      webkitTextStrokeWidth: withZoom(
+        props.pageSetup.martyriaDefaultStrokeWidth,
+      ),
+      position: 'relative',
+      top: withZoom(layout.value.accessory.baselineOffset),
+    }) as CSSProperties,
+);
+
+const ambitusContainerStyle = computed(() => {
+  const appearance = baseTextAppearance.value;
+
   return {
-    marginLeft: withZoom(
-      props.element.computedFontSize *
-        fontService.getStandardGlue(props.element.computedFontFamily).width,
-    ),
+    color: appearance.color,
+    ...faceCss(appearance.fontFamily, appearance.fontStyle),
+    fontSize: withZoom(appearance.fontSize),
+    ...fontVariantCss(appearance),
+    lineHeight: 'normal',
+    webkitTextStrokeColor: appearance.strokeColor,
+    webkitTextStrokeWidth: withZoom(appearance.strokeWidth),
   } as CSSProperties;
 });
 
-const ambitusStyle = computed(() => {
-  // TODO figure out a way to remove the hard-coded -.45em
-  // maybe put it in the font metadata json?
-  const style = {
-    color: props.pageSetup.martyriaDefaultColor,
-    webkitTextStrokeWidth: withZoom(props.pageSetup.martyriaDefaultStrokeWidth),
+// The ambitus layout is only stored when the ambitus is drawn.
+const ambitusStyleLow = computed(
+  () =>
+    ({
+      ...ambitusStyle.value,
+      marginLeft: withZoom(layout.value.ambitus!.lowMarginLeft),
+      marginRight: withZoom(10),
+    }) as CSSProperties,
+);
+
+const ambitusStyleHigh = computed(
+  () =>
+    ({
+      ...ambitusStyle.value,
+      marginLeft: withZoom(10),
+      marginRight: withZoom(layout.value.ambitus!.highMarginRight),
+    }) as CSSProperties,
+);
+
+function getRunStyle(
+  run: ResolvedInitialMartyriaRun,
+  runLayout: InitialMartyriaRunLayout,
+) {
+  const appearance = run.appearance;
+  const isGlyph = run.kind === 'glyph';
+  const isText = run.kind === 'text';
+  return {
+    color: isGlyph ? undefined : appearance.color,
+    ...faceCss(appearance.fontFamily, appearance.fontStyle),
+    fontSize: withZoom(runLayout.fontSize),
+    ...(isText ? fontVariantCss(appearance) : undefined),
+    webkitTextStrokeColor: isGlyph ? undefined : appearance.strokeColor,
+    webkitTextStrokeWidth: isGlyph
+      ? undefined
+      : withZoom(appearance.strokeWidth),
+    top:
+      runLayout.baselineShift === 0 ||
+      (run.kind === 'text' && run.content.layout === 'stackedCharacters')
+        ? undefined
+        : withZoom(-runLayout.baselineShift),
+    direction: run.direction,
+    unicodeBidi: 'isolate',
+  } as CSSProperties;
+}
+
+function getSeparatorStyle(
+  run: ResolvedInitialMartyriaRun,
+  separator: InitialMartyriaSeparatorLayout,
+) {
+  if (separator.kind === 'wordSpace') {
+    const wordSpaceFont = separator.wordSpaceFont!;
+    return {
+      ...faceCss(wordSpaceFont.fontFamily, wordSpaceFont.fontStyle),
+      fontSize: withZoom(wordSpaceFont.fontSize),
+      direction: run.direction,
+    } as CSSProperties;
+  }
+  return getFixedSeparatorStyle(run, separator.width);
+}
+
+function getFixedSeparatorStyle(
+  run: ResolvedInitialMartyriaRun,
+  width: number,
+) {
+  return {
+    display: 'inline-block',
+    width: withZoom(width),
+    direction: run.direction,
+  } as CSSProperties;
+}
+
+function getStackedCharactersStyle(
+  run: TextRun,
+  runLayout: InitialMartyriaRunLayout,
+) {
+  const { geometry } = runLayout.stackedCharacters!;
+  const style = getRunStyle(run, runLayout);
+  const height = geometry.bottom - geometry.top;
+
+  return {
+    ...style,
+    display: 'inline-block',
+    height: withZoom(height),
     position: 'relative',
-    top: '-0.45em',
+    verticalAlign: withZoom(-geometry.bottom),
+    width: withZoom(geometry.width),
   } as CSSProperties;
+}
 
-  return style;
-});
+function getStackedCharacterStyle(
+  runLayout: InitialMartyriaRunLayout,
+  position: 'top' | 'bottom',
+) {
+  const { geometry, lineHeight } = runLayout.stackedCharacters!;
+  const row = position === 'top' ? geometry.topRow : geometry.bottomRow;
 
-const ambitusStyleLow = computed(() => {
-  const text = [props.element.ambitusLowNote, props.element.ambitusLowRootSign]
-    .map((neume) => NeumeMappingService.getMapping(neume).text)
-    .join('');
-  const font = `${props.element.computedFontSize}px ${props.element.computedFontFamily}`;
-
-  const bounds = TextMeasurementService.getInkBounds(text, font);
-
-  const style = {
-    ...ambitusStyle.value,
-    marginLeft: withZoom(4 - bounds.inkLeft),
-    marginRight: withZoom(10),
+  return {
+    display: 'block',
+    left: 0,
+    lineHeight: withZoom(lineHeight),
+    position: 'absolute',
+    textAlign: 'center',
+    top: withZoom(row.top),
+    whiteSpace: 'nowrap',
+    width: '100%',
   } as CSSProperties;
+}
 
-  return style;
-});
-
-const ambitusStyleHigh = computed(() => {
-  const text = [
-    props.element.ambitusHighNote,
-    props.element.ambitusHighRootSign,
-  ]
-    .map((neume) => NeumeMappingService.getMapping(neume).text)
-    .join('');
-  const font = `${props.element.computedFontSize}px ${props.element.computedFontFamily}`;
-
-  const bounds = TextMeasurementService.getInkBounds(text, font);
-
-  const style = {
-    ...ambitusStyle.value,
-    marginLeft: withZoom(10),
-    marginRight: withZoom(4 - (bounds.advanceWidth - bounds.inkRight)),
+function getPitchCellStyle(
+  runLayout: InitialMartyriaRunLayout,
+  role: PitchRole,
+) {
+  const geometry = runLayout.pitch![role]!;
+  return {
+    display: 'inline-block',
+    height: withZoom(geometry.bottom - geometry.top),
+    position: 'relative',
+    verticalAlign: withZoom(-geometry.bottom),
+    width: withZoom(geometry.width),
   } as CSSProperties;
+}
 
-  return style;
-});
+function getPitchTextStyle(
+  run: InitialMartyriaStartingNoteRun,
+  runLayout: InitialMartyriaRunLayout,
+  role: PitchRole,
+) {
+  const pitch = runLayout.pitch!;
+  const geometry = pitch[role]!;
+  const appearance = run.noteText.appearance;
+
+  return {
+    color: appearance.color,
+    display: 'block',
+    left: withZoom(geometry.text.left),
+    position: 'absolute',
+    top: withZoom(geometry.text.top),
+    ...faceCss(appearance.fontFamily, appearance.fontStyle),
+    fontSize: withZoom(pitch.textFontSize),
+    ...fontVariantCss(appearance),
+    lineHeight: withZoom(pitch.textLineHeight),
+    webkitTextStrokeColor: appearance.strokeColor,
+    webkitTextStrokeWidth: withZoom(appearance.strokeWidth),
+    whiteSpace: 'nowrap',
+  } as CSSProperties;
+}
+
+function getPitchMarkStyle(
+  runLayout: InitialMartyriaRunLayout,
+  role: PitchRole,
+  kind: 'fthora' | 'quantitative',
+) {
+  const placement = runLayout.pitch![role]![kind]!;
+  return {
+    left: withZoom(placement.left),
+    position: 'absolute',
+    top: withZoom(placement.top),
+  } as CSSProperties;
+}
+
+function getPitchGlyphStyle(
+  run: InitialMartyriaStartingNoteRun,
+  runLayout: InitialMartyriaRunLayout,
+) {
+  const appearance = run.appearance;
+
+  return {
+    color: appearance.color,
+    ...faceCss(appearance.fontFamily, appearance.fontStyle),
+    fontSize: withZoom(runLayout.fontSize),
+    webkitTextStrokeColor: appearance.strokeColor,
+    webkitTextStrokeWidth: withZoom(appearance.strokeWidth),
+  } as CSSProperties;
+}
+
+function getTrailingPitchGlyphStyle(
+  run: InitialMartyriaStartingNoteRun,
+  runLayout: InitialMartyriaRunLayout,
+) {
+  return {
+    ...getPitchGlyphStyle(run, runLayout),
+    position: 'relative',
+    top: withZoom(layout.value.neumeBaselineCorrection),
+  } as CSSProperties;
+}
+
+function hasPitchNote(cluster: InitialMartyriaStartingNoteRun['cluster']) {
+  return cluster.primary != null || cluster.secondary != null;
+}
+
+function getPitchTrailingGlueStyle(runLayout: InitialMartyriaRunLayout) {
+  return {
+    display: 'inline-block',
+    width: withZoom(runLayout.pitch!.trailingGlueWidth),
+  } as CSSProperties;
+}
 </script>
 
 <style scoped>
 .mode-key-container {
-  border: 1px dotted black;
+  outline: 1px dotted black;
   box-sizing: border-box;
   line-height: normal;
   user-select: none;
@@ -185,16 +570,45 @@ const ambitusStyleHigh = computed(() => {
 }
 
 .right-container {
+  line-height: 0;
   position: absolute;
+  top: 0;
   right: 0;
+  white-space: nowrap;
+}
+
+.mode-key-main {
+  display: block;
+  overflow-x: clip;
+  overflow-y: visible;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mode-key-baseline-strut {
+  display: inline-block;
+  width: 0;
+  vertical-align: baseline;
+}
+
+.mode-key-run {
+  position: relative;
+}
+
+.mode-key-signature {
+  unicode-bidi: isolate;
+}
+
+.starting-pitch-note {
+  display: inline-block;
+  position: relative;
+}
+
+.pitch-mark {
+  position: absolute;
 }
 
 .ambitus {
   position: relative;
-  top: calc(-4px * var(--zoom));
-}
-
-.ambitus-text {
-  font-family: Arial, Helvetica, sans-serif;
 }
 </style>

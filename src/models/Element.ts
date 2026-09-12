@@ -21,6 +21,7 @@ import {
 import { isFontVariantNormal } from '@/utils/fontVariants';
 import { Unit } from '@/utils/Unit';
 
+import type { InitialMartyriaLayout } from './InitialMartyriaLayout';
 import type { ModeKeyTemplate } from './ModeKeys';
 import {
   getFthoraReplacements,
@@ -90,6 +91,11 @@ export abstract class ScoreElement {
   public x: number = 0;
   public y: number = 0;
   public width: number = 0;
+
+  // How far below the top of its line the element is placed. Non-zero for
+  // inline elements that sit on the notation baseline rather than the top of
+  // the line; layout sets it, and only for the element types that need it.
+  public computedBaselineOffset: number = 0;
 
   public index: number = 0;
 
@@ -1152,12 +1158,14 @@ export class ModeKeyElement extends ScoreElement {
   public quantitativeNeumeRight: QuantitativeNeume | null = null;
   public quantitativeNeumeAboveNote: ModeSign | null = null;
   public quantitativeNeumeAboveNote2: ModeSign | null = null;
-  public color: string = '#000000';
-  public fontSize: number = Unit.fromPt(20);
-  public strokeWidth: number = 0;
-  public heightAdjustment: number = 0;
+  // Typography overrides on top of the initial martyria style; null inherits.
+  public color: string | null = null;
+  public fontSize: number | null = null;
+  public strokeWidth: number | null = null;
   public bpm: number = 120;
-  public useDefaultStyle: boolean = true;
+  public inline: boolean = false;
+  /** The element's own initial martyria style; null follows the score's. */
+  public initialMartyriaStyleId: string | null = null;
   public ignoreAttractions: boolean = false;
   public permanentEnharmonicZo: boolean = false;
   public ambitusLowNote: Note = Note.Pa;
@@ -1171,17 +1179,28 @@ export class ModeKeyElement extends ScoreElement {
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
-  public computedFontSize: number = Unit.fromPt(20);
+  /** The text size of the resolved style. */
+  public computedFontSize: number = Unit.fromPt(14.5);
+  /** The size the music font glyphs are drawn at to match the text. */
+  public computedNeumeFontSize: number = Unit.fromPt(20);
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
-  public computedHeightAdjustment: number = 0;
+  public computedTop: number = 0;
+  public computedFlowTop: number = 0;
+  /** The measured signature the renderer draws from; null until laid out. */
+  public computedInitialMartyriaLayout: InitialMartyriaLayout | null = null;
 
   // Re-render helpers
   public computedFontFamilyPrevious: string = '';
-  public computedFontSizePrevious: number = Unit.fromPt(20);
+  public computedFontSizePrevious: number = Unit.fromPt(14.5);
+  public computedNeumeFontSizePrevious: number = Unit.fromPt(20);
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
-  public computedHeightAdjustmentPrevious: number = 0;
+  public computedTopPrevious: number = 0;
+  public computedFlowTopPrevious: number = 0;
+  public heightPrevious: number = 0;
+  public computedInitialMartyriaLayoutPrevious: InitialMartyriaLayout | null =
+    null;
   public ambitusLowNotePrevious: Note = Note.Pa;
   public ambitusLowRootSignPrevious: RootSign = RootSign.Alpha;
   public ambitusHighNotePrevious: Note = Note.Pa;
@@ -1262,14 +1281,22 @@ export class ModeKeyElement extends ScoreElement {
       quantitativeNeumeRight: this.quantitativeNeumeRight,
       fontSize: this.fontSize,
       strokeWidth: this.strokeWidth,
-      heightAdjustment: this.heightAdjustment,
       marginBottom: this.marginBottom,
       marginTop: this.marginTop,
-      useDefaultStyle: this.useDefaultStyle,
+      inline: this.inline,
+      initialMartyriaStyleId: this.initialMartyriaStyleId,
       ignoreAttractions: this.ignoreAttractions,
       permanentEnharmonicZo: this.permanentEnharmonicZo,
       showAmbitus: this.showAmbitus,
     } as Partial<ModeKeyElement>;
+  }
+
+  public getParagraphStyleOverrides(): ParagraphStyleOverrides {
+    return {
+      fontSize: this.fontSize ?? undefined,
+      color: this.color ?? undefined,
+      strokeWidth: this.strokeWidth ?? undefined,
+    };
   }
 }
 
@@ -1458,7 +1485,8 @@ export function isBlockElement(element: ScoreElement | null): boolean {
       !(element as RichTextBoxElement).inline) ||
     (element?.elementType === ElementType.ImageBox &&
       !(element as ImageBoxElement).inline) ||
-    element?.elementType === ElementType.ModeKey
+    (element?.elementType === ElementType.ModeKey &&
+      !(element as ModeKeyElement).inline)
   );
 }
 

@@ -55,7 +55,8 @@
   },
   "format": {
     "root": "Format",
-    "paragraphStyles": "Paragraph Styles…"
+    "paragraphStyles": "Paragraph Styles…",
+    "initialMartyriaStyles": "Initial Martyria Styles…"
   },
   "view": {
     "root": "View",

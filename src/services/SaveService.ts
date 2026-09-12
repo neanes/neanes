@@ -18,6 +18,25 @@ import {
 } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
+import {
+  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
+  findInitialMartyriaStyle,
+  isBuiltInInitialMartyriaStyleId,
+} from '@/models/InitialMartyriaBuiltInStyles';
+import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGrammar';
+import {
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
+  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
+  INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
+  INITIAL_MARTYRIA_NUMERAL_KINDS,
+  INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
+  INITIAL_MARTYRIA_NUMERAL_STYLES,
+  type InitialMartyriaLanguageId,
+  initialMartyriaLanguageIds,
+  type InitialMartyriaNumberingSystem,
+  type InitialMartyriaStructure,
+  type InitialMartyriaStyle,
+} from '@/models/InitialMartyriaStyle';
 import { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { QuantitativeNeume } from '@/models/Neumes';
@@ -50,6 +69,7 @@ import {
 } from '@/models/save/v1/Element';
 import type { Footer as Footer_v1 } from '@/models/save/v1/Footer';
 import type { Header as Header_v1 } from '@/models/save/v1/Header';
+import type { InitialMartyriaStyle as InitialMartyriaStyle_v1 } from '@/models/save/v1/InitialMartyriaStyle';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import {
   DocumentProperties as DocumentProperties_v1,
@@ -67,6 +87,8 @@ import { fontCatalog } from '@/services/FontCatalog';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { applyLegacyStyle, normalizeFontStyle } from '@/utils/fontStyle';
 import { applyAxes } from '@/utils/fontStyleAxes';
+import { isOneOf } from '@/utils/isOneOf';
+import { Unit } from '@/utils/Unit';
 
 interface IScore {
   version: string;
@@ -179,6 +201,160 @@ function hasLegacyPageSetupStyleDefaults(pageSetup: PageSetup_v1) {
     pageSetup.dropCapDefaultStrokeWidth,
     pageSetup.dropCapDefaultLineHeight,
   ].some((value) => value != null);
+}
+
+// The glyph-based initial martyria of earlier versions drew the music font
+// at the mode key size, 20pt by default. Its replacement uses 14.5pt for
+// Greek text and scales the sign glyphs to match its text, so a legacy
+// element override is carried over by the ratio of the two defaults.
+// A migration is frozen at the sizes that were current when it was written,
+// so later tuning of the Initial Martyria paragraph style does not change
+// how an old score loads.
+const LEGACY_MODE_KEY_DEFAULT_FONT_SIZE = Unit.fromPt(20);
+const LEGACY_MODE_KEY_FONT_SIZE_SCALE =
+  Unit.fromPt(14.5) / LEGACY_MODE_KEY_DEFAULT_FONT_SIZE;
+const LEGACY_STATHIS_NEUME_FONT_FAMILIES = new Set([
+  'NeanesStathisSeries',
+  'NeanesStathisSeriesLegacy',
+]);
+
+function scaleLegacyModeKeyFontSize(fontSize: number) {
+  return fontSize * LEGACY_MODE_KEY_FONT_SIZE_SCALE;
+}
+
+/*
+ * Folds the shared pre-style mode key color into Initial Martyria so Initial
+ * Martyria (Greek) inherits it. The old size and outline belong only to the
+ * Greek appearance. The height adjustment has no equivalent: the replacement
+ * measures its own height from font metrics.
+ */
+function applyLegacyModeKeyStyleDefaults(
+  styles: ParagraphStyle[],
+  pageSetup: PageSetup_v1,
+) {
+  const initialMartyria = getRequiredParagraphStyleById(
+    styles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+  );
+  const inherited = resolveParagraphStyle(
+    styles,
+    initialMartyria.parentStyleId,
+  );
+
+  applyGeneratedParagraphStyleOverrides(initialMartyria, inherited, {
+    color: pageSetup.modeKeyDefaultColor,
+  });
+
+  const initialMartyriaGreek = getRequiredParagraphStyleById(
+    styles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+  );
+  const greekInherited = resolveParagraphStyle(
+    styles,
+    initialMartyriaGreek.parentStyleId,
+  );
+
+  if (
+    LEGACY_STATHIS_NEUME_FONT_FAMILIES.has(pageSetup.neumeDefaultFontFamily)
+  ) {
+    applyGeneratedParagraphStyleOverride(
+      initialMartyriaGreek,
+      greekInherited,
+      'fontFamily',
+      'GFS Porson',
+    );
+  }
+
+  applyGeneratedParagraphStyleOverride(
+    initialMartyriaGreek,
+    greekInherited,
+    'fontSize',
+    pageSetup.modeKeyDefaultFontSize == null
+      ? undefined
+      : scaleLegacyModeKeyFontSize(pageSetup.modeKeyDefaultFontSize),
+  );
+  applyGeneratedParagraphStyleOverride(
+    initialMartyriaGreek,
+    greekInherited,
+    'strokeWidth',
+    pageSetup.modeKeyDefaultStrokeWidth,
+  );
+}
+
+/*
+ * A pre-style mode key either followed the page setup defaults or carried
+ * its own color, size, and outline. The latter become element overrides on
+ * top of the default initial martyria style, kept only where they differ.
+ */
+function migrateLegacyModeKeyStyleOverrides(
+  score: Score_v1,
+  paragraphStyles: ParagraphStyle[],
+) {
+  const fallbackSharedStyle = resolveParagraphStyle(
+    paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+  );
+  const fallbackGreekStyle = resolveParagraphStyle(
+    paragraphStyles,
+    BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+  );
+
+  for (const element of score.staff.elements) {
+    if (element.elementType !== ElementType_v1.ModeKey) {
+      continue;
+    }
+
+    const modeKey = element as ModeKeyElement_v1;
+    const color = modeKey.color;
+    const fontSize =
+      modeKey.fontSize == null
+        ? undefined
+        : scaleLegacyModeKeyFontSize(modeKey.fontSize);
+    const strokeWidth = modeKey.strokeWidth;
+
+    modeKey.color = undefined;
+    modeKey.fontSize = undefined;
+    modeKey.strokeWidth = undefined;
+    modeKey.heightAdjustment = undefined;
+
+    if (modeKey.useDefaultStyle === true) {
+      modeKey.useDefaultStyle = undefined;
+      continue;
+    }
+
+    if (
+      color != null &&
+      shouldKeepMigratedParagraphStyleOverride(
+        fallbackSharedStyle,
+        'color',
+        color,
+      )
+    ) {
+      modeKey.color = color;
+    }
+
+    if (
+      fontSize != null &&
+      shouldKeepMigratedParagraphStyleOverride(
+        fallbackGreekStyle,
+        'fontSize',
+        fontSize,
+      )
+    ) {
+      modeKey.fontSize = fontSize;
+    }
+
+    if (
+      strokeWidth != null &&
+      shouldKeepMigratedParagraphStyleOverride(
+        fallbackGreekStyle,
+        'strokeWidth',
+        strokeWidth,
+      )
+    ) {
+      modeKey.strokeWidth = strokeWidth;
+    }
+  }
 }
 
 function loadFontFaceFromWeightFields({
@@ -881,6 +1057,144 @@ function splitSavedFontFamily(
   };
 }
 
+function saveInitialMartyriaStyle(
+  style: InitialMartyriaStyle,
+): InitialMartyriaStyle_v1 {
+  return {
+    id: style.id,
+    displayName: style.displayName,
+    basedOn: style.basedOn ?? undefined,
+    ...style.structure,
+    paragraphStyleId: style.paragraphStyleId,
+    greekParagraphStyleId: style.greekParagraphStyleId,
+    useOrdinalForms: style.useOrdinalForms,
+  };
+}
+
+/*
+ * A saved style whose axes this version does not understand, or whose axis
+ * combination it does not support, is dropped rather than guessed at;
+ * references to it then fall back to the score's style.
+ */
+function loadInitialMartyriaStyle(
+  saved: InitialMartyriaStyle_v1,
+  paragraphStyles: ParagraphStyle[],
+): InitialMartyriaStyle | null {
+  if (
+    isBuiltInInitialMartyriaStyleId(saved.id) ||
+    !isOneOf<InitialMartyriaLanguageId>(
+      initialMartyriaLanguageIds,
+      saved.languageId,
+    ) ||
+    !isOneOf(
+      Object.values(INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS),
+      saved.modeIdentificationMethod,
+    ) ||
+    !isOneOf(
+      Object.values(INITIAL_MARTYRIA_NUMERAL_KINDS),
+      saved.numeralKind,
+    ) ||
+    (saved.numberingSystem !== undefined &&
+      !isOneOf<InitialMartyriaNumberingSystem>(
+        Object.values(INITIAL_MARTYRIA_NUMBERING_SYSTEMS),
+        saved.numberingSystem,
+      )) ||
+    !isOneOf(
+      Object.values(INITIAL_MARTYRIA_NUMERAL_QUALIFIERS),
+      saved.numeralQualifier,
+    ) ||
+    !isOneOf(
+      Object.values(INITIAL_MARTYRIA_MODE_NAMING_SCHEMES),
+      saved.modeNamingScheme,
+    )
+  ) {
+    return null;
+  }
+  const common = {
+    languageId: saved.languageId,
+    numeralKind: saved.numeralKind,
+    numeralQualifier: saved.numeralQualifier,
+    modeNamingScheme: saved.modeNamingScheme,
+    transliterateNoteNames: saved.transliterateNoteNames === true,
+  };
+  let structure: InitialMartyriaStructure;
+  if (
+    saved.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+  ) {
+    structure = {
+      ...common,
+      modeIdentificationMethod: saved.modeIdentificationMethod,
+    };
+  } else {
+    if (
+      !isOneOf(
+        Object.values(INITIAL_MARTYRIA_NUMERAL_STYLES),
+        saved.numeralStyle,
+      )
+    ) {
+      return null;
+    }
+    structure = {
+      ...common,
+      modeIdentificationMethod: saved.modeIdentificationMethod,
+      numeralStyle: saved.numeralStyle,
+      numberingSystem: saved.numberingSystem,
+    };
+  }
+  if (!isInitialMartyriaStructureSupported(structure)) {
+    return null;
+  }
+
+  return {
+    id: saved.id,
+    displayName: saved.displayName,
+    basedOn:
+      saved.basedOn != null && isBuiltInInitialMartyriaStyleId(saved.basedOn)
+        ? saved.basedOn
+        : null,
+    structure,
+    paragraphStyleId: paragraphStyles.some(
+      (style) => style.id === saved.paragraphStyleId,
+    )
+      ? saved.paragraphStyleId
+      : BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    greekParagraphStyleId: paragraphStyles.some(
+      (style) => style.id === saved.greekParagraphStyleId,
+    )
+      ? saved.greekParagraphStyleId
+      : BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+    useOrdinalForms: saved.useOrdinalForms !== false,
+  };
+}
+
+function loadInitialMartyriaStyles(
+  savedStyles: InitialMartyriaStyle_v1[],
+  paragraphStyles: ParagraphStyle[],
+) {
+  const styles = new Map<string, InitialMartyriaStyle>();
+
+  for (const savedStyle of savedStyles) {
+    const style = loadInitialMartyriaStyle(savedStyle, paragraphStyles);
+
+    if (style != null && !styles.has(style.id)) {
+      styles.set(style.id, style);
+    }
+  }
+
+  return [...styles.values()];
+}
+
+/** A saved style reference, or null when it no longer resolves. */
+function loadInitialMartyriaStyleId(
+  styleId: string | undefined,
+  styles: InitialMartyriaStyle[],
+) {
+  return styleId != null && findInitialMartyriaStyle(styles, styleId) != null
+    ? styleId
+    : null;
+}
+
 export class SaveService {
   public static LoadScoreFromJson(s: IScore) {
     let score: Score = new Score();
@@ -918,6 +1232,10 @@ export class SaveService {
     score.paragraphStyles = s.paragraphStyles.map((style) =>
       this.SaveParagraphStyle(style),
     );
+    score.initialMartyriaStyles =
+      s.initialMartyriaStyles.length > 0
+        ? s.initialMartyriaStyles.map(saveInitialMartyriaStyle)
+        : undefined;
     this.SaveLyricSetup(score.staff.lyrics, s.staff.lyrics);
 
     this.SaveHeader(score.headers.default, s.headers.default);
@@ -1028,10 +1346,7 @@ export class SaveService {
     pageSetup.alternateLineDefaultColor = p.alternateLineDefaultColor;
     pageSetup.alternateLineDefaultFontSize = p.alternateLineDefaultFontSize;
 
-    pageSetup.modeKeyDefaultColor = p.modeKeyDefaultColor;
-    pageSetup.modeKeyDefaultStrokeWidth = p.modeKeyDefaultStrokeWidth;
-    pageSetup.modeKeyDefaultFontSize = p.modeKeyDefaultFontSize;
-    pageSetup.modeKeyDefaultHeightAdjustment = p.modeKeyDefaultHeightAdjustment;
+    pageSetup.initialMartyriaStyleId = p.initialMartyriaStyleId;
 
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
@@ -1593,17 +1908,17 @@ export class SaveService {
       e.quantitativeNeumeAboveNote2 || undefined;
     element.quantitativeNeumeRight = e.quantitativeNeumeRight || undefined;
     element.martyria = e.martyria;
-    element.color = e.color;
-    element.fontSize = e.fontSize;
-    element.strokeWidth = e.strokeWidth;
+    element.color = e.color ?? undefined;
+    element.fontSize = e.fontSize ?? undefined;
+    element.strokeWidth = e.strokeWidth ?? undefined;
     element.height = e.height;
-    element.heightAdjustment = e.heightAdjustment;
     element.marginTop = e.marginTop ?? undefined;
     element.marginBottom = e.marginBottom ?? undefined;
     element.bpm = e.bpm;
     element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.showAmbitus = e.showAmbitus || undefined;
-    element.useDefaultStyle = e.useDefaultStyle || undefined;
+    element.inline = e.inline || undefined;
+    element.initialMartyriaStyleId = e.initialMartyriaStyleId ?? undefined;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo || undefined;
   }
 
@@ -1622,15 +1937,35 @@ export class SaveService {
     );
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
     const hasLegacyStyleDefaults = hasLegacyPageSetupStyleDefaults(s.pageSetup);
+    // Initial martyria styles replaced the per-element mode key styling. A
+    // score that names no style predates them, whether or not it also carries
+    // the old page setup defaults.
+    const hasLegacyModeKeyElements = s.pageSetup.initialMartyriaStyleId == null;
+    const defaultParagraphStyles = hasLegacyStyleDefaults
+      ? createParagraphStylesFromLegacyPageSetupDefaults(s.pageSetup)
+      : createDefaultParagraphStyles();
+    if (hasLegacyModeKeyElements) {
+      applyLegacyModeKeyStyleDefaults(defaultParagraphStyles, s.pageSetup);
+    }
     score.paragraphStyles = this.LoadParagraphStyles_v1(
       s.paragraphStyles ?? [],
-      hasLegacyStyleDefaults
-        ? createParagraphStylesFromLegacyPageSetupDefaults(s.pageSetup)
-        : createDefaultParagraphStyles(),
+      defaultParagraphStyles,
     );
     if (hasLegacyStyleDefaults) {
       migrateLegacyParagraphStyleOverrides(s, score.paragraphStyles);
     }
+    if (hasLegacyModeKeyElements) {
+      migrateLegacyModeKeyStyleOverrides(s, score.paragraphStyles);
+    }
+    score.initialMartyriaStyles = loadInitialMartyriaStyles(
+      s.initialMartyriaStyles ?? [],
+      score.paragraphStyles,
+    );
+    score.pageSetup.initialMartyriaStyleId =
+      loadInitialMartyriaStyleId(
+        s.pageSetup.initialMartyriaStyleId,
+        score.initialMartyriaStyles,
+      ) ?? DEFAULT_INITIAL_MARTYRIA_STYLE_ID;
     this.LoadLyricSetup_v1(
       score.staff.lyrics,
       s.staff.lyrics ?? new LyricSetup(),
@@ -1719,6 +2054,11 @@ export class SaveService {
             element as ModeKeyElement,
             e as ModeKeyElement_v1,
           );
+          (element as ModeKeyElement).initialMartyriaStyleId =
+            loadInitialMartyriaStyleId(
+              (e as ModeKeyElement_v1).initialMartyriaStyleId,
+              score.initialMartyriaStyles,
+            );
           break;
 
         case ElementType_v1.ImageBox:
@@ -1885,15 +2225,13 @@ export class SaveService {
     pageSetup.alternateLineDefaultFontSize =
       p.alternateLineDefaultFontSize ?? pageSetup.alternateLineDefaultFontSize;
 
-    pageSetup.modeKeyDefaultColor =
-      p.modeKeyDefaultColor ?? pageSetup.modeKeyDefaultColor;
-    pageSetup.modeKeyDefaultStrokeWidth =
-      p.modeKeyDefaultStrokeWidth ?? pageSetup.modeKeyDefaultStrokeWidth;
-    pageSetup.modeKeyDefaultFontSize =
-      p.modeKeyDefaultFontSize ?? pageSetup.modeKeyDefaultFontSize;
-    pageSetup.modeKeyDefaultHeightAdjustment =
-      p.modeKeyDefaultHeightAdjustment ??
-      pageSetup.modeKeyDefaultHeightAdjustment;
+    // Custom styles are only known once the score's styles are loaded; the
+    // score loader re-validates the reference against them.
+    pageSetup.initialMartyriaStyleId =
+      p.initialMartyriaStyleId != null &&
+      isBuiltInInitialMartyriaStyleId(p.initialMartyriaStyleId)
+        ? p.initialMartyriaStyleId
+        : DEFAULT_INITIAL_MARTYRIA_STYLE_ID;
 
     pageSetup.accidentalDefaultColor =
       p.accidentalDefaultColor ?? pageSetup.accidentalDefaultColor;
@@ -2598,16 +2936,15 @@ export class SaveService {
     element.quantitativeNeumeAboveNote2 = e.quantitativeNeumeAboveNote2 ?? null;
     element.quantitativeNeumeRight = e.quantitativeNeumeRight ?? null;
     element.martyria = e.martyria;
-    element.color = e.color;
-    element.fontSize = e.fontSize;
-    element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
-    element.heightAdjustment = e.heightAdjustment ?? 0;
+    element.color = e.color ?? null;
+    element.fontSize = e.fontSize ?? null;
+    element.strokeWidth = e.strokeWidth ?? null;
     element.marginTop = e.marginTop ?? 0;
     element.marginBottom = e.marginBottom ?? 0;
     element.bpm = e.bpm ?? 120;
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.showAmbitus = e.showAmbitus === true;
-    element.useDefaultStyle = e.useDefaultStyle === true;
+    element.inline = e.inline === true;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo === true;
 
     // For backwards compatibility, we check the current mode key templates

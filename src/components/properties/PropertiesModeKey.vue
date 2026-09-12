@@ -11,84 +11,111 @@
       value="style"
       :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
     >
-      <Field orientation="horizontal">
-        <Switch
-          id="properties-mode-key-use-default-style"
-          :model-value="element.useDefaultStyle"
+      <Field>
+        <div class="mb-2 flex items-center justify-between gap-2">
+          <FieldLabel for="properties-mode-key-style">{{
+            $t(($) => $.dialog.initialMartyriaStyles.styleLabel, {
+              ns: 'dialog',
+            })
+          }}</FieldLabel>
+          <div class="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              @click="$emit('open-style-dialog')"
+            >
+              {{
+                $t(($) => $.dialog.initialMartyriaStyles.manageStyles, {
+                  ns: 'dialog',
+                })
+              }}
+            </Button>
+            <ParagraphStyleClearButton
+              :disabled="!hasOverrides"
+              @clear="
+                $emit('update', {
+                  fontSize: null,
+                  color: null,
+                  strokeWidth: null,
+                } as Partial<ModeKeyElement>)
+              "
+            />
+          </div>
+        </div>
+        <InitialMartyriaStyleSelect
+          id="properties-mode-key-style"
+          :model-value="element.initialMartyriaStyleId"
+          :initial-martyria-styles="initialMartyriaStyles"
           @update:model-value="
             $emit('update', {
-              useDefaultStyle: $event === true,
+              initialMartyriaStyleId: $event,
             } as Partial<ModeKeyElement>)
           "
         />
-        <FieldLabel for="properties-mode-key-use-default-style">{{
-          $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
-        }}</FieldLabel>
       </Field>
 
-      <template v-if="!element.useDefaultStyle">
-        <Field orientation="horizontal">
-          <FieldLabel for="properties-mode-key-font-size">{{
-            $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
-          }}</FieldLabel>
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-mode-key-font-size">{{
+          $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
           <InputFontSize
             id="properties-mode-key-font-size"
-            :model-value="element.fontSize"
+            :model-value="primaryAppearance.fontSize"
             @update:model-value="
               $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
             "
           />
-        </Field>
+          <ParagraphStyleClearButton
+            :disabled="element.fontSize == null"
+            @clear="
+              $emit('update', { fontSize: null } as Partial<ModeKeyElement>)
+            "
+          />
+        </div>
+      </Field>
 
-        <Field orientation="horizontal">
-          <FieldLabel>{{
-            $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
-          }}</FieldLabel>
+      <Field orientation="horizontal">
+        <FieldLabel>{{
+          $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
           <ColorPicker
-            :model-value="element.color"
+            :model-value="primaryAppearance.color"
             @update:model-value="
               $emit('update', { color: $event } as Partial<ModeKeyElement>)
             "
           />
-        </Field>
+          <ParagraphStyleClearButton
+            :disabled="element.color == null"
+            @clear="$emit('update', { color: null } as Partial<ModeKeyElement>)"
+          />
+        </div>
+      </Field>
 
-        <Field orientation="horizontal">
-          <FieldLabel for="properties-mode-key-outline">{{
-            $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-          }}</FieldLabel>
+      <Field orientation="horizontal">
+        <FieldLabel for="properties-mode-key-outline">{{
+          $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
+        }}</FieldLabel>
+        <div class="flex items-center gap-1">
           <InputStrokeWidth
             id="properties-mode-key-outline"
-            :model-value="element.strokeWidth"
+            :model-value="primaryAppearance.strokeWidth"
             @update:model-value="
               $emit('update', {
                 strokeWidth: $event,
               } as Partial<ModeKeyElement>)
             "
           />
-        </Field>
-
-        <Field orientation="horizontal">
-          <FieldLabel for="properties-mode-key-height-adjustment">{{
-            $t(($) => $.toolbar.initialMartyria.heightAdjustment, {
-              ns: 'toolbar',
-            })
-          }}</FieldLabel>
-          <InputUnit
-            id="properties-mode-key-height-adjustment"
-            unit="pt"
-            :min="heightAdjustmentMin"
-            :max="heightAdjustmentMax"
-            :step="0.5"
-            :format-options="fraction2FormatOptions"
-            :model-value="element.heightAdjustment"
-            @update:model-value="
-              $emit('update', {
-                heightAdjustment: $event,
-              } as Partial<ModeKeyElement>)
+          <ParagraphStyleClearButton
+            :disabled="element.strokeWidth == null"
+            @clear="
+              $emit('update', { strokeWidth: null } as Partial<ModeKeyElement>)
             "
           />
-        </Field>
-      </template>
+        </div>
+      </Field>
     </PaneSection>
 
     <PaneSection
@@ -96,6 +123,21 @@
       :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
     >
       <Field orientation="horizontal">
+        <Switch
+          id="properties-mode-key-inline"
+          :model-value="element.inline"
+          @update:model-value="
+            $emit('update', {
+              inline: $event === true,
+            } as Partial<ModeKeyElement>)
+          "
+        />
+        <FieldLabel for="properties-mode-key-inline">
+          {{ $t(($) => $.toolbar.common.inline, { ns: 'toolbar' }) }}
+        </FieldLabel>
+      </Field>
+
+      <Field v-if="!element.inline" orientation="horizontal">
         <FieldLabel>{{
           $t(($) => $.toolbar.common.alignment, { ns: 'toolbar' })
         }}</FieldLabel>
@@ -144,7 +186,7 @@
         />
       </Field>
 
-      <Field orientation="horizontal">
+      <Field v-if="!element.inline" orientation="horizontal">
         <FieldLabel for="properties-mode-key-margin-top">{{
           $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
         }}</FieldLabel>
@@ -163,7 +205,7 @@
         />
       </Field>
 
-      <Field orientation="horizontal">
+      <Field v-if="!element.inline" orientation="horizontal">
         <FieldLabel for="properties-mode-key-margin-bottom">{{
           $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
         }}</FieldLabel>
@@ -187,7 +229,7 @@
       value="initial-martyria"
       :title="$t(($) => $.menu.insert.initialMartyria, { ns: 'menu' })"
     >
-      <Field orientation="horizontal">
+      <Field v-if="!element.inline" orientation="horizontal">
         <Switch
           id="properties-mode-key-show-ambitus"
           :model-value="element.showAmbitus"
@@ -251,22 +293,25 @@ import { computed } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
+import InitialMartyriaStyleSelect from '@/components/InitialMartyriaStyleSelect.vue';
 import InputBpm from '@/components/InputBpm.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
+import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
+import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useResolvedInitialMartyriaStyle } from '@/composables/useResolvedInitialMartyriaStyle';
 import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
-import {
-  fraction1FormatOptions,
-  fraction2FormatOptions,
-} from '@/utils/numberFormatOptions';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { fraction1FormatOptions } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
 
 const props = defineProps({
@@ -282,16 +327,31 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
 });
 
-const emit = defineEmits(['update', 'update:open-sections']);
+const emit = defineEmits([
+  'open-style-dialog',
+  'update',
+  'update:open-sections',
+]);
 
-const heightAdjustmentMin = computed(
-  () => -Math.round(Unit.fromPt(props.element.height)),
-);
-const heightAdjustmentMax = computed(() =>
-  Unit.toPt(props.pageSetup.pageHeight),
-);
+// The controls reflect the resolved style (element overrides folded in); a
+// change writes an explicit element value and clear restores inheritance.
+const { primaryAppearance, hasOverrides } = useResolvedInitialMartyriaStyle({
+  element: () => props.element,
+  pageSetup: () => props.pageSetup,
+  paragraphStyles: () => props.paragraphStyles,
+  initialMartyriaStyles: () => props.initialMartyriaStyles,
+});
+
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 
 function onAlignmentChanged(value: unknown) {

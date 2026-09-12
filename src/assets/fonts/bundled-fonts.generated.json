@@ -47,6 +47,30 @@
       "hasHistoricalForms": true
     }
   },
+  "GFSDidot_Classic.otf": {
+    "postscriptName": "GFSDidotClassic",
+    "alternates": {
+      "stylisticSets": [],
+      "characterVariants": [],
+      "hasSwash": false,
+      "hasStylistic": false,
+      "hasOrnaments": false,
+      "hasAnnotation": false,
+      "hasHistoricalForms": false
+    }
+  },
+  "GFSPorson.otf": {
+    "postscriptName": "GFSPorson-Regular",
+    "alternates": {
+      "stylisticSets": [],
+      "characterVariants": [],
+      "hasSwash": false,
+      "hasStylistic": false,
+      "hasOrnaments": false,
+      "hasAnnotation": false,
+      "hasHistoricalForms": false
+    }
+  },
   "NotoNaskhArabic-Bold.otf": {
     "postscriptName": "NotoNaskhArabic-Bold",
     "alternates": {

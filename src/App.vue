@@ -313,6 +313,16 @@ onBeforeUnmount(() => {
 }
 
 @font-face {
+  font-family: 'GFS Didot Classic';
+  src: url('./assets/fonts/GFSDidot_Classic.otf');
+}
+
+@font-face {
+  font-family: 'GFS Porson';
+  src: url('./assets/fonts/GFSPorson.otf');
+}
+
+@font-face {
   font-family: 'Old Standard';
   src: url('./assets/fonts/OldStandard-Bold.otf');
   font-weight: bold;

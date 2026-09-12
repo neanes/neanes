@@ -14,6 +14,11 @@ import {
   isRightAlignedMartyria,
   LineBreakType,
 } from '@/models/Element';
+import { resolveScoreInitialMartyriaStyle } from '@/models/InitialMartyriaResolver';
+import type {
+  InitialMartyriaAppearance,
+  InitialMartyriaStyle,
+} from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
 import {
   MeasureBar,
@@ -221,19 +226,35 @@ export class ByzHtmlExporter {
   }
 
   exportScore(score: Score) {
-    const style = this.exportPageSetup(score.pageSetup, score.paragraphStyles);
+    const style = this.exportPageSetup(
+      score.pageSetup,
+      score.paragraphStyles,
+      score.initialMartyriaStyles,
+    );
 
     const body = this.exportElements(
       score.staff.elements,
       score.pageSetup,
       score.paragraphStyles,
+      score.initialMartyriaStyles,
       4,
     );
 
     return createByzHtmlDocument(style, body, score.pageSetup.melkiteRtl);
   }
 
-  exportPageSetup(pageSetup: PageSetup, paragraphStyles: ParagraphStyle[]) {
+  exportPageSetup(
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    initialMartyriaStyles: InitialMartyriaStyle[],
+  ) {
+    // The typography every mode key inherits unless it overrides it: the
+    // score's initial martyria style resolved through the paragraph styles.
+    const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
+      pageSetup,
+      paragraphStyles,
+      initialMartyriaStyles,
+    }).primaryAppearance;
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
     const firstPageMargins = resolvePageMargins(pageSetup, 1);
     const secondPageMargins = resolvePageMargins(pageSetup, 2);
@@ -457,9 +478,8 @@ export class ByzHtmlExporter {
 
       .${this.config.classModeKey} {
         position: relative;
-        font-size: ${Unit.toPt(pageSetup.modeKeyDefaultFontSize)}pt;
-        color: ${pageSetup.modeKeyDefaultColor};
-        -webkit-text-stroke-width: ${pageSetup.modeKeyDefaultStrokeWidth};
+        color: ${defaultModeKeyAppearance.color};
+        -webkit-text-stroke-width: ${defaultModeKeyAppearance.strokeWidth};
       }
 
       .${this.config.classModeKeyRightContainer} {
@@ -570,9 +590,17 @@ export class ByzHtmlExporter {
     elements: ScoreElement[],
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
+    initialMartyriaStyles: InitialMartyriaStyle[],
     indentation: number,
     startInsidePage: boolean = false,
   ) {
+    // The typography every mode key inherits unless it overrides it: the
+    // score's initial martyria style resolved through the paragraph styles.
+    const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
+      pageSetup,
+      paragraphStyles,
+      initialMartyriaStyles,
+    }).primaryAppearance;
     let result = '';
 
     let insidePage = startInsidePage;
@@ -666,12 +694,16 @@ export class ByzHtmlExporter {
           );
           break;
         case ElementType.ModeKey:
-          if (insidePage) {
+          if (insidePage && !(element as ModeKeyElement).inline) {
             result += this.endPage(indentation + 2, needLineBreak);
             insidePage = false;
           }
 
-          result += this.exportModeKey(element as ModeKeyElement, indentation);
+          result += this.exportModeKey(
+            element as ModeKeyElement,
+            defaultModeKeyAppearance,
+            indentation,
+          );
           break;
         case ElementType.ImageBox:
           if (insidePage && !(element as ImageBoxElement).inline) {
@@ -1168,7 +1200,11 @@ export class ByzHtmlExporter {
     }</div\n${this.getIndentationString(indentation)}>`;
   }
 
-  exportModeKey(element: ModeKeyElement, indentation: number) {
+  exportModeKey(
+    element: ModeKeyElement,
+    defaultAppearance: InitialMartyriaAppearance,
+    indentation: number,
+  ) {
     let inner = '';
 
     inner += this.exportNeume(ModeSign.Ekhos, indentation + 2);
@@ -1212,7 +1248,7 @@ export class ByzHtmlExporter {
 
     let rightContainer = false;
 
-    if (element.showAmbitus) {
+    if (element.showAmbitus && !element.inline) {
       inner += `<span class="${this.config.classModeKeyRightContainer}">`;
       rightContainer = true;
 
@@ -1249,7 +1285,12 @@ export class ByzHtmlExporter {
       inner += '</span>';
     }
 
-    if (element.tempo && element.tempoAlignRight && !rightContainer) {
+    if (
+      element.tempo &&
+      element.tempoAlignRight &&
+      !element.inline &&
+      !rightContainer
+    ) {
       inner += `<span class="${this.config.classModeKeyRightContainer}">`;
       rightContainer = true;
     }
@@ -1265,15 +1306,17 @@ export class ByzHtmlExporter {
       inner += `</span>`;
     }
 
+    // The glyph size is matched to the style's text by layout, so it is
+    // always written per element; color and outline only when the element
+    // departs from the score's style.
     let styleAttribute = '';
-    let style = '';
+    let style = `font-size: ${Unit.toPt(element.computedNeumeFontSize)}pt;`;
 
-    if (!element.useDefaultStyle) {
+    if (element.computedColor !== defaultAppearance.color) {
       style += `color: ${element.computedColor};`;
-      style += `font-family: ${getFontFamilyWithFallback(
-        element.computedFontFamily,
-      ).replaceAll('"', "'")};`;
-      style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
+    }
+
+    if (element.computedStrokeWidth !== defaultAppearance.strokeWidth) {
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
     }
 
@@ -1281,9 +1324,11 @@ export class ByzHtmlExporter {
 
     styleAttribute = ` style="${style}"`;
 
-    return `<div class="${
-      this.config.classModeKey
-    }"${styleAttribute}\n${this.getIndentationString(
+    const className = element.inline
+      ? `${this.config.classModeKey} ${this.config.classTextBoxInline}`
+      : this.config.classModeKey;
+
+    return `<div class="${className}"${styleAttribute}\n${this.getIndentationString(
       indentation + 2,
     )}>${inner}</div\n${this.getIndentationString(indentation)}>`;
   }
@@ -1396,7 +1441,8 @@ export class ByzHtmlExporter {
       if (
         element.lineBreak ||
         element.pageBreak ||
-        element.elementType === ElementType.ModeKey
+        (element.elementType === ElementType.ModeKey &&
+          !(element as ModeKeyElement).inline)
       ) {
         return false;
       }

@@ -74,6 +74,18 @@ describe('FontAlternatesService', () => {
     });
   });
 
+  it('reads the empty capability from GFS Didot Classic', async () => {
+    expect(
+      readFontAlternates(await loadBundledFont('GFSDidot_Classic.otf')),
+    ).toEqual(EMPTY_FONT_ALTERNATES);
+  });
+
+  it('reads the empty capability from GFS Porson', async () => {
+    expect(readFontAlternates(await loadBundledFont('GFSPorson.otf'))).toEqual(
+      EMPTY_FONT_ALTERNATES,
+    );
+  });
+
   it('reads the empty capability from a font without alternates', async () => {
     expect(
       readFontAlternates(await loadBundledFont('NotoNaskhArabic-Regular.otf')),

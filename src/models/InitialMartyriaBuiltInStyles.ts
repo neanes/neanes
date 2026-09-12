@@ -156,10 +156,15 @@ type BuiltInInitialMartyriaStyleDefinition = (
   id: BuiltInInitialMartyriaStyleId;
 };
 
+/** A curated style, whose id names one of the built-in styles. */
+export interface BuiltInInitialMartyriaStyle extends InitialMartyriaStyle {
+  id: BuiltInInitialMartyriaStyleId;
+}
+
 function builtIn({
   id,
   ...structure
-}: BuiltInInitialMartyriaStyleDefinition): InitialMartyriaStyle {
+}: BuiltInInitialMartyriaStyleDefinition): BuiltInInitialMartyriaStyle {
   return {
     id,
     displayName: '',
@@ -179,7 +184,7 @@ function builtIn({
 // above, then one entry here describing its semantics. Every other point in
 // the space is reachable through the styles dialog, where users save their
 // own styles.
-export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
+export const builtInInitialMartyriaStyles: BuiltInInitialMartyriaStyle[] = [
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
@@ -461,9 +466,10 @@ export const builtInInitialMartyriaStyles: InitialMartyriaStyle[] = [
   }),
 ];
 
-const builtInInitialMartyriaStylesById = new Map<string, InitialMartyriaStyle>(
-  builtInInitialMartyriaStyles.map((style) => [style.id, style]),
-);
+const builtInInitialMartyriaStylesById = new Map<
+  string,
+  BuiltInInitialMartyriaStyle
+>(builtInInitialMartyriaStyles.map((style) => [style.id, style]));
 
 /**
  * The style of a new score, and the style that replaces the glyph-based

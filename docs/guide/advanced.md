@@ -165,22 +165,27 @@ An initial martyria is written according to a style. The style decides the langu
 
 To manage styles, open `Format -> Initial Martyria Styles...`, or select an initial martyria and press `Manage styles...` in the Properties pane.
 
-The list on the left contains the built-in styles, grouped by language, followed by any styles you have created. Use the search box to filter the list. The preview on the right shows the selected style applied to the plagal first mode and to the grave mode, with the spoken reading of each written underneath.
+The list on the left contains the styles you have created, under `Custom`, followed by the built-in styles grouped by language. The style the document uses is marked `Default`. Selecting a style opens it in the panel on the right, where everything about it can be changed in place. The preview at the top of the panel shows the style applied to the plagal first mode and to the grave mode, with the spoken reading of each written underneath. Choose a different `Sample mode` to preview another mode.
 
-Styles are stored in the score. Press `Use for this document` to make the selected style the document default. When the dialog was opened from an initial martyria, an `Apply` button is also available, which sets the selected style on that initial martyria only.
+The buttons under the list are `New style` and `Duplicate` on the left, and `Reset to base` and `Delete` on the right.
 
-Built-in styles are read-only. Press `Duplicate` to copy one, or press `Edit` to change it; editing a built-in style creates a copy that is marked `Based on` the original and can be returned to it with `Reset to base`. Custom styles can be edited, duplicated, and deleted. When a style is deleted, any initial martyria that used it follows the document default.
+Styles are stored in the score. Nothing is written to the score until you press `Use for this document`, which makes the selected style the document default, or, when the dialog was opened from an initial martyria, `Apply`, which sets the selected style on that initial martyria only. `Cancel` discards every change made in the dialog. When a style is deleted, any initial martyria that used it follows the document default.
+
+Built-in styles are read-only. Changing anything while one is selected continues the change in a copy of it, named `<style> copy` and marked `Based on` the original; press `Reset to base` to return the copy to the style it came from. Press `Duplicate` if you would rather make the copy and name it first.
 
 ### Creating a Style
 
-Press `New style` to start from scratch, or edit an existing style as described above. The structure choices occupy the main area. Each row is a set of tiles; click a tile to use it.
+Press `New style` to start from the default style of your language, or change an existing style as described above. The structure choices occupy the scrolling area of the panel. Each row is a set of tiles; click a tile to use it.
 
 - `Mode identification`: `Text only`, `Sign only`, or `Text and sign`.
 - `Number form`: digits, Roman numerals, alphabetic numerals, or words, each as a cardinal or an ordinal number.
+- `Digit form`: which digits are used, for a language that has more than one repertoire. Arabic writes the number with either Western digits (اللحن 1) or Arabic-Indic digits (اللحن ١). The row appears only when the number is written in digits.
 - `Number placement`: whether the number comes before or after the word for "mode".
 - `Plagal wording`: `Numbered 1 to 8` (the plagal modes are modes 5 to 8), `Plagal of the authentic` (for example, "plagal of the first"), or `Plagal as a class` (for example, "plagal first").
 
-The `Name`, `Language`, `Paragraph style`, and `Greek paragraph style` fields sit beside the preview. The regular paragraph style formats non-Greek text. The Greek paragraph style formats Greek mode names, original Greek starting-note names, and the Greek plagal abbreviation. The paragraph style matching the selected language also supplies the size used to match the mode-sign and pitch glyphs, the fixed separator spacing, the ambitus parentheses, and the shared glyph color and outline. Typography can be changed by selecting a different paragraph style or editing one in the Paragraph Styles dialog; Initial Martyria styles do not store their own typography overrides.
+The `Name` and `Language` fields sit above the preview, and `Paragraph style` and `Greek paragraph style` under `Typography`, below the tiles. The regular paragraph style formats non-Greek text. The Greek paragraph style formats Greek mode names, original Greek starting-note names, and the Greek plagal abbreviation. The paragraph style matching the selected language also supplies the size used to match the mode-sign and pitch glyphs, the fixed separator spacing, the ambitus parentheses, and the shared glyph color and outline. Typography can be changed by selecting a different paragraph style or editing one in the Paragraph Styles dialog; Initial Martyria styles do not store their own typography overrides.
+
+A tile shows what the option actually prints, so only the options the language can express are offered, and choosing one may move another row when the wording demands it. If the style ends up written exactly like another style, the panel says so and offers to use that style instead.
 
 The tiles offered depend on the selected language. For a language that is not written in Greek, check `Transliterate starting note` to write the starting note as `Pa` instead of `Πα`. When a non-Greek style's number form uses ordinal digits, check `Use ordinal forms` to use the font's ordinal glyphs where the font provides them.
 

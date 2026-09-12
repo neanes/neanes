@@ -74,56 +74,67 @@
     "styleLabel": "Stil",
     "manageStyles": "Gestionare stiluri…",
     "documentDefault": "Implicit pentru document",
+    "documentDefaultStatus": "Implicit pentru document: {{name}}",
+    "defaultBadge": "Implicit",
     "custom": "Personalizate",
     "builtInLanguage": "Încorporate · {{language}}",
+    "builtIn": "Încorporat",
+    "builtInHint": "Stil încorporat. Modificările se fac într-o copie.",
     "noCustomStyles": "Niciun stil personalizat încă",
-    "searchStyles": "Căutare stiluri",
-    "styles": "Stiluri",
     "new": "Stil nou",
-    "edit": "Editare",
     "duplicate": "Duplicare",
     "delete": "Ștergere",
-    "save": "Salvare",
     "apply": "Aplicare",
     "useForDocument": "Folosește pentru acest document",
-    "newStyleBreadcrumb": "Stil nou",
-    "editStyleBreadcrumb": "Editare: {{name}}",
     "newStyleName": "Stil nou",
     "copyStyleName": "Copie {{name}}",
     "name": "Nume",
     "styleNamePlaceholder": "Numele stilului",
+    "nameInvalid": "Introduceți un nume unic pentru acest stil.",
     "language": "Limbă",
     "greekParagraphStyle": "Stil de paragraf pentru greacă",
-    "preview": "Previzualizare",
+    "typography": "Tipografie",
     "sampleMode": "Glas exemplu",
     "basedOn": "Bazat pe {{name}}",
     "resetToBase": "Revenire la bază",
     "modeIdentification": "Identificarea glasului",
     "numberForm": "Forma numărului",
+    "digitForm": "Forma cifrelor",
     "numberPlacement": "Poziția numărului",
     "plagalWording": "Exprimarea plagalului",
     "transliterateNoteNames": "Transliterează nota de început",
     "transliterateNoteNamesHint": "Pa în loc de Πα",
-    "font": "Font",
-    "fontSummary": "{{font}}, {{size}} pt",
-    "yes": "Da",
-    "no": "Nu",
     "modeIdentificationMethods": {
       "text": "Doar text",
       "modeSign": "Doar mărturie",
       "textAndModeSign": "Text și mărturie"
     },
     "numeralKinds": {
-      "cardinal": "cardinal",
-      "ordinal": "ordinal"
+      "cardinal": "Cardinal",
+      "ordinal": "Ordinal"
     },
-    "numeralStyles": {
-      "digits": "Cifre",
-      "romanNumerals": "Numerale romane",
-      "alphabeticNumerals": "Numerale alfabetice",
-      "words": "Cuvinte"
+    "numeralForms": {
+      "digits": {
+        "cardinal": "Cifre, cardinale",
+        "ordinal": "Cifre, ordinale"
+      },
+      "romanNumerals": {
+        "cardinal": "Numerale romane, cardinale",
+        "ordinal": "Numerale romane, ordinale"
+      },
+      "alphabeticNumerals": {
+        "cardinal": "Numerale alfabetice, cardinale",
+        "ordinal": "Numerale alfabetice, ordinale"
+      },
+      "words": {
+        "cardinal": "Cuvinte, cardinale",
+        "ordinal": "Cuvinte, ordinale"
+      }
     },
-    "numeralForm": "{{style}}, {{kind}}",
+    "numberingSystems": {
+      "western": "Occidentale",
+      "arabicIndic": "Arabo-indiene"
+    },
     "numeralQualifiers": {
       "postnominal": "Numărul după",
       "prenominal": "Numărul înainte"
@@ -133,14 +144,8 @@
       "authenticCounterpart": "Plagalul autenticului",
       "plagalClass": "Plagalele ca o clasă"
     },
-    "duplicateOfStyle": "Această structură coincide cu stilul „{{name}}”. Salvarea păstrează o copie separată.",
+    "duplicateOfStyle": "Acest stil se scrie exact ca „{{name}}”.",
     "useStyleInstead": "Folosește „{{name}}”",
-    "discardChangesTitle": "Renunțați la modificări?",
-    "discardChangesDescription": "Modificările aduse stilului „{{name}}” se vor pierde.",
-    "discard": "Renunță",
-    "deleteStyleTitle": "Ștergeți stilul?",
-    "deleteStyleDescription": "Mărturiile inițiale care folosesc „{{name}}” vor urma stilul implicit al documentului.",
-    "greekTextFont": "Font text grecesc",
     "useOrdinalForms": "Folosește forme ordinale",
     "languages": {
       "greek": "Greacă",

@@ -13,8 +13,10 @@ import {
   getInitialMartyriaStructureVariations,
   getSupportedInitialMartyriaNumeralForms,
   initialMartyriaModeIdentificationMethods,
+  initialMartyriaNumberingSystems,
   initialMartyriaNumeralForms,
   initialMartyriaNumeralKinds,
+  initialMartyriaNumeralQualifiers,
   initialMartyriaStructuresEqual,
   isInitialMartyriaStructureSupported,
   normalizeInitialMartyriaStructure,
@@ -32,6 +34,7 @@ import {
   type InitialMartyriaModeIdentificationMethod,
   type InitialMartyriaModeNameSemantics,
   type InitialMartyriaStructure,
+  type InitialMartyriaTextStructure,
   type InitialMartyriaWrittenModeNameSemantics,
   withInitialMartyriaModeIdentificationMethod,
 } from '@/models/InitialMartyriaStyle';
@@ -132,46 +135,46 @@ describe('InitialMartyriaGrammar', () => {
       'words/ordinal/postnominal/authentic-counterpart',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: [
-      'digits/cardinal/postnominal/absolute',
-      'digits/cardinal/postnominal/authentic-counterpart',
-      'digits/cardinal/postnominal/plagal-class',
-      'digits/ordinal/prenominal/absolute',
       'digits/ordinal/prenominal/authentic-counterpart',
       'digits/ordinal/prenominal/plagal-class',
-      'roman-numerals/cardinal/postnominal/absolute',
+      'digits/ordinal/prenominal/absolute',
+      'digits/cardinal/postnominal/authentic-counterpart',
+      'digits/cardinal/postnominal/plagal-class',
+      'digits/cardinal/postnominal/absolute',
       'roman-numerals/cardinal/postnominal/authentic-counterpart',
       'roman-numerals/cardinal/postnominal/plagal-class',
-      'words/cardinal/postnominal/absolute',
-      'words/cardinal/postnominal/authentic-counterpart',
-      'words/cardinal/postnominal/plagal-class',
-      'words/ordinal/prenominal/absolute',
+      'roman-numerals/cardinal/postnominal/absolute',
       'words/ordinal/prenominal/authentic-counterpart',
       'words/ordinal/prenominal/plagal-class',
+      'words/ordinal/prenominal/absolute',
+      'words/cardinal/postnominal/authentic-counterpart',
+      'words/cardinal/postnominal/plagal-class',
+      'words/cardinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: [
-      'digits/cardinal/postnominal/absolute',
-      'digits/ordinal/postnominal/absolute',
       'digits/ordinal/prenominal/absolute',
-      'roman-numerals/cardinal/postnominal/absolute',
-      'roman-numerals/ordinal/postnominal/absolute',
+      'digits/ordinal/postnominal/absolute',
+      'digits/cardinal/postnominal/absolute',
       'roman-numerals/ordinal/prenominal/absolute',
-      'words/cardinal/postnominal/absolute',
-      'words/ordinal/postnominal/absolute',
+      'roman-numerals/ordinal/postnominal/absolute',
+      'roman-numerals/cardinal/postnominal/absolute',
       'words/ordinal/prenominal/absolute',
+      'words/ordinal/postnominal/absolute',
+      'words/cardinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: [
       'digits/ordinal/postnominal/absolute',
       'alphabetic-numerals/ordinal/postnominal/absolute',
-      'words/ordinal/postnominal/absolute',
       'words/ordinal/prenominal/absolute',
+      'words/ordinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: [
-      'digits/ordinal/postnominal/absolute',
       'digits/ordinal/prenominal/absolute',
-      'roman-numerals/ordinal/postnominal/absolute',
+      'digits/ordinal/postnominal/absolute',
       'roman-numerals/ordinal/prenominal/absolute',
-      'words/ordinal/postnominal/absolute',
+      'roman-numerals/ordinal/postnominal/absolute',
       'words/ordinal/prenominal/absolute',
+      'words/ordinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: [
       'digits/ordinal/postnominal/absolute',
@@ -179,24 +182,24 @@ describe('InitialMartyriaGrammar', () => {
       'words/ordinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: [
-      'digits/cardinal/postnominal/absolute',
-      'digits/ordinal/postnominal/absolute',
       'digits/ordinal/prenominal/absolute',
-      'roman-numerals/cardinal/postnominal/absolute',
-      'roman-numerals/ordinal/postnominal/absolute',
+      'digits/ordinal/postnominal/absolute',
+      'digits/cardinal/postnominal/absolute',
       'roman-numerals/ordinal/prenominal/absolute',
-      'words/cardinal/postnominal/absolute',
-      'words/ordinal/postnominal/absolute',
+      'roman-numerals/ordinal/postnominal/absolute',
+      'roman-numerals/cardinal/postnominal/absolute',
       'words/ordinal/prenominal/absolute',
+      'words/ordinal/postnominal/absolute',
+      'words/cardinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: [
-      'digits/cardinal/postnominal/absolute',
-      'digits/ordinal/postnominal/absolute',
       'digits/ordinal/postnominal/authentic-counterpart',
+      'digits/ordinal/postnominal/absolute',
+      'digits/cardinal/postnominal/absolute',
       'roman-numerals/cardinal/postnominal/absolute',
-      'words/cardinal/postnominal/absolute',
-      'words/ordinal/postnominal/absolute',
       'words/ordinal/postnominal/authentic-counterpart',
+      'words/ordinal/postnominal/absolute',
+      'words/cardinal/postnominal/absolute',
     ],
   } satisfies Record<InitialMartyriaLanguageId, string[]>;
 
@@ -205,35 +208,35 @@ describe('InitialMartyriaGrammar', () => {
       'ordinal/postnominal/authentic-counterpart',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: [
-      'cardinal/postnominal/authentic-counterpart',
-      'cardinal/postnominal/plagal-class',
       'ordinal/prenominal/authentic-counterpart',
       'ordinal/prenominal/plagal-class',
+      'cardinal/postnominal/authentic-counterpart',
+      'cardinal/postnominal/plagal-class',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: [
-      'cardinal/postnominal/absolute',
-      'ordinal/postnominal/absolute',
       'ordinal/prenominal/absolute',
+      'ordinal/postnominal/absolute',
+      'cardinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: [
-      'ordinal/postnominal/absolute',
       'ordinal/prenominal/absolute',
+      'ordinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: [
-      'ordinal/postnominal/absolute',
       'ordinal/prenominal/absolute',
+      'ordinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: ['ordinal/postnominal/absolute'],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: [
-      'cardinal/postnominal/absolute',
-      'ordinal/postnominal/absolute',
-      'ordinal/postnominal/authentic-counterpart',
       'ordinal/prenominal/absolute',
+      'ordinal/postnominal/authentic-counterpart',
+      'ordinal/postnominal/absolute',
+      'cardinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: [
-      'cardinal/postnominal/absolute',
-      'ordinal/postnominal/absolute',
       'ordinal/postnominal/authentic-counterpart',
+      'ordinal/postnominal/absolute',
+      'cardinal/postnominal/absolute',
     ],
   } satisfies Record<InitialMartyriaLanguageId, string[]>;
 
@@ -253,37 +256,37 @@ describe('InitialMartyriaGrammar', () => {
     ).toEqual({
       el: ['alphabetic-numerals/ordinal', 'words/ordinal'],
       en: [
-        'digits/cardinal',
         'digits/ordinal',
+        'digits/cardinal',
         'roman-numerals/cardinal',
-        'words/cardinal',
         'words/ordinal',
+        'words/cardinal',
       ],
       es: [
-        'digits/cardinal',
         'digits/ordinal',
-        'roman-numerals/cardinal',
+        'digits/cardinal',
         'roman-numerals/ordinal',
-        'words/cardinal',
+        'roman-numerals/cardinal',
         'words/ordinal',
+        'words/cardinal',
       ],
       cu: ['digits/ordinal', 'alphabetic-numerals/ordinal', 'words/ordinal'],
       ru: ['digits/ordinal', 'roman-numerals/ordinal', 'words/ordinal'],
       ar: ['digits/ordinal', 'words/ordinal'],
       ro: [
-        'digits/cardinal',
         'digits/ordinal',
-        'roman-numerals/cardinal',
+        'digits/cardinal',
         'roman-numerals/ordinal',
-        'words/cardinal',
+        'roman-numerals/cardinal',
         'words/ordinal',
+        'words/cardinal',
       ],
       id: [
-        'digits/cardinal',
         'digits/ordinal',
+        'digits/cardinal',
         'roman-numerals/cardinal',
-        'words/cardinal',
         'words/ordinal',
+        'words/cardinal',
       ],
     });
   });
@@ -780,6 +783,24 @@ describe('InitialMartyriaGrammar', () => {
     ).toBeNull();
   });
 
+  it('offers a digit repertoire only where one is attested', () => {
+    const repertoires = (structure: InitialMartyriaTextStructure) =>
+      getInitialMartyriaStructureVariations(
+        structure,
+        initialMartyriaNumberingSystems,
+        (current, numberingSystem) => ({ ...current, numberingSystem }),
+      ).map((variation) => variation.value);
+
+    expect(repertoires(attestedStructures['arabic-ordinal-digits'])).toEqual([
+      undefined,
+      INITIAL_MARTYRIA_NUMBERING_SYSTEMS.ArabicIndic,
+    ]);
+    // No other language has a second repertoire.
+    expect(repertoires(attestedStructures['english-mode-number'])).toEqual([
+      undefined,
+    ]);
+  });
+
   it('builds reachable variations across correlated grammar axes', () => {
     const englishRoman = {
       ...attestedStructures['english-mode-roman-numeral'],
@@ -800,11 +821,11 @@ describe('InitialMartyriaGrammar', () => {
           }`,
       ),
     ).toEqual([
-      'digits/cardinal',
       'digits/ordinal',
+      'digits/cardinal',
       'roman-numerals/cardinal*',
-      'words/cardinal',
       'words/ordinal',
+      'words/cardinal',
     ]);
     expect(new Set(forms.map((variation) => variation.key)).size).toBe(
       forms.length,
@@ -825,10 +846,7 @@ describe('InitialMartyriaGrammar', () => {
 
     const englishPlacements = getInitialMartyriaStructureVariations(
       attestedStructures['english-mode-number-word'],
-      [
-        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-      ],
+      initialMartyriaNumeralQualifiers,
       (structure, numeralQualifier) => ({ ...structure, numeralQualifier }),
     );
     expect(
@@ -839,14 +857,14 @@ describe('InitialMartyriaGrammar', () => {
       })),
     ).toEqual([
       {
-        value: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-        numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
-        current: true,
-      },
-      {
         value: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
         numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
         current: false,
+      },
+      {
+        value: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+        numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+        current: true,
       },
     ]);
 
@@ -881,7 +899,7 @@ describe('InitialMartyriaGrammar', () => {
       signKinds.map(
         (variation) => `${variation.value}${variation.current ? '*' : ''}`,
       ),
-    ).toEqual(['cardinal', 'ordinal*']);
+    ).toEqual(['ordinal*', 'cardinal']);
     expect(
       signKinds.every((variation) => !('numeralStyle' in variation.structure)),
     ).toBe(true);

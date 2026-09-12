@@ -18,17 +18,18 @@ export function getNextAvailableStyleName(
   baseName: string,
   existingNames: Iterable<string>,
 ) {
-  const names = new Set(existingNames);
+  const name = baseName.trim();
+  const names = new Set([...existingNames].map((value) => value.trim()));
 
-  if (!names.has(baseName)) {
-    return baseName;
+  if (!names.has(name)) {
+    return name;
   }
 
   let suffix = 2;
 
-  while (names.has(`${baseName} ${suffix}`)) {
+  while (names.has(`${name} ${suffix}`)) {
     suffix++;
   }
 
-  return `${baseName} ${suffix}`;
+  return `${name} ${suffix}`;
 }

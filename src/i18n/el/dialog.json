@@ -74,56 +74,67 @@
     "styleLabel": "Στυλ",
     "manageStyles": "Διαχείριση στυλ…",
     "documentDefault": "Προεπιλογή εγγράφου",
+    "documentDefaultStatus": "Προεπιλογή εγγράφου: {{name}}",
+    "defaultBadge": "Προεπιλογή",
     "custom": "Προσαρμοσμένα",
     "builtInLanguage": "Ενσωματωμένα · {{language}}",
+    "builtIn": "Ενσωματωμένο",
+    "builtInHint": "Ενσωματωμένο στυλ. Οι αλλαγές γίνονται σε αντίγραφο.",
     "noCustomStyles": "Δεν υπάρχουν ακόμη προσαρμοσμένα στυλ",
-    "searchStyles": "Αναζήτηση στυλ",
-    "styles": "Στυλ",
     "new": "Νέο στυλ",
-    "edit": "Επεξεργασία",
     "duplicate": "Αντίγραφο",
     "delete": "Διαγραφή",
-    "save": "Αποθήκευση",
     "apply": "Εφαρμογή",
     "useForDocument": "Χρήση για αυτό το έγγραφο",
-    "newStyleBreadcrumb": "Νέο στυλ",
-    "editStyleBreadcrumb": "Επεξεργασία: {{name}}",
     "newStyleName": "Νέο στυλ",
     "copyStyleName": "Αντίγραφο {{name}}",
     "name": "Όνομα",
     "styleNamePlaceholder": "Όνομα στυλ",
+    "nameInvalid": "Δώστε ένα μοναδικό όνομα για αυτό το στυλ.",
     "language": "Γλώσσα",
     "greekParagraphStyle": "Στυλ ελληνικής παραγράφου",
-    "preview": "Προεπισκόπηση",
+    "typography": "Τυπογραφία",
     "sampleMode": "Ήχος δείγματος",
     "basedOn": "Βασισμένο στο {{name}}",
     "resetToBase": "Επαναφορά στη βάση",
     "modeIdentification": "Προσδιορισμός ήχου",
     "numberForm": "Μορφή αριθμού",
+    "digitForm": "Μορφή ψηφίων",
     "numberPlacement": "Θέση αριθμού",
     "plagalWording": "Διατύπωση πλαγίων",
     "transliterateNoteNames": "Μεταγραφή αρχικής νότας",
     "transliterateNoteNamesHint": "Pa αντί για Πα",
-    "font": "Γραμματοσειρά",
-    "fontSummary": "{{font}}, {{size}} pt",
-    "yes": "Ναι",
-    "no": "Όχι",
     "modeIdentificationMethods": {
       "text": "Μόνο κείμενο",
       "modeSign": "Μόνο μαρτυρία",
       "textAndModeSign": "Κείμενο και μαρτυρία"
     },
     "numeralKinds": {
-      "cardinal": "απόλυτο",
-      "ordinal": "τακτικό"
+      "cardinal": "Απόλυτο",
+      "ordinal": "Τακτικό"
     },
-    "numeralStyles": {
-      "digits": "Ψηφία",
-      "romanNumerals": "Λατινικοί αριθμοί",
-      "alphabeticNumerals": "Αλφαβητικοί αριθμοί",
-      "words": "Λέξεις"
+    "numeralForms": {
+      "digits": {
+        "cardinal": "Ψηφία, απόλυτα",
+        "ordinal": "Ψηφία, τακτικά"
+      },
+      "romanNumerals": {
+        "cardinal": "Λατινικοί αριθμοί, απόλυτοι",
+        "ordinal": "Λατινικοί αριθμοί, τακτικοί"
+      },
+      "alphabeticNumerals": {
+        "cardinal": "Αλφαβητικοί αριθμοί, απόλυτοι",
+        "ordinal": "Αλφαβητικοί αριθμοί, τακτικοί"
+      },
+      "words": {
+        "cardinal": "Λέξεις, απόλυτες",
+        "ordinal": "Λέξεις, τακτικές"
+      }
     },
-    "numeralForm": "{{style}}, {{kind}}",
+    "numberingSystems": {
+      "western": "Δυτικά",
+      "arabicIndic": "Αραβοϊνδικά"
+    },
     "numeralQualifiers": {
       "postnominal": "Αριθμός μετά",
       "prenominal": "Αριθμός πριν"
@@ -133,14 +144,8 @@
       "authenticCounterpart": "Πλάγιος του κυρίου",
       "plagalClass": "Πλάγιοι ως τάξη"
     },
-    "duplicateOfStyle": "Αυτή η δομή ταυτίζεται με το στυλ «{{name}}». Η αποθήκευση διατηρεί ξεχωριστό αντίγραφο.",
+    "duplicateOfStyle": "Αυτό το στυλ γράφεται ακριβώς όπως το «{{name}}».",
     "useStyleInstead": "Χρήση του «{{name}}»",
-    "discardChangesTitle": "Απόρριψη αλλαγών;",
-    "discardChangesDescription": "Οι αλλαγές στο «{{name}}» θα χαθούν.",
-    "discard": "Απόρριψη",
-    "deleteStyleTitle": "Διαγραφή στυλ;",
-    "deleteStyleDescription": "Οι αρχικές μαρτυρίες που χρησιμοποιούν το «{{name}}» θα ακολουθήσουν την προεπιλογή του εγγράφου.",
-    "greekTextFont": "Γραμματοσειρά ελληνικού κειμένου",
     "useOrdinalForms": "Χρήση τακτικών μορφών",
     "languages": {
       "greek": "Ελληνικά",

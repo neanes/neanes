@@ -74,56 +74,67 @@
     "styleLabel": "Стиль",
     "manageStyles": "Управление стилями…",
     "documentDefault": "По умолчанию для документа",
+    "documentDefaultStatus": "По умолчанию для документа: {{name}}",
+    "defaultBadge": "По умолчанию",
     "custom": "Пользовательские",
     "builtInLanguage": "Встроенные · {{language}}",
+    "builtIn": "Встроенный",
+    "builtInHint": "Встроенный стиль. Изменения вносятся в копию.",
     "noCustomStyles": "Пользовательских стилей пока нет",
-    "searchStyles": "Поиск стилей",
-    "styles": "Стили",
     "new": "Новый стиль",
-    "edit": "Изменить",
     "duplicate": "Дублировать",
     "delete": "Удалить",
-    "save": "Сохранить",
     "apply": "Применить",
     "useForDocument": "Использовать для этого документа",
-    "newStyleBreadcrumb": "Новый стиль",
-    "editStyleBreadcrumb": "Изменение: {{name}}",
     "newStyleName": "Новый стиль",
     "copyStyleName": "Копия {{name}}",
     "name": "Название",
     "styleNamePlaceholder": "Название стиля",
+    "nameInvalid": "Введите уникальное имя для этого стиля.",
     "language": "Язык",
     "greekParagraphStyle": "Стиль абзаца для греческого текста",
-    "preview": "Предпросмотр",
+    "typography": "Типографика",
     "sampleMode": "Глас для образца",
     "basedOn": "На основе {{name}}",
     "resetToBase": "Сбросить к основе",
     "modeIdentification": "Обозначение гласа",
     "numberForm": "Форма числа",
+    "digitForm": "Форма цифр",
     "numberPlacement": "Положение числа",
     "plagalWording": "Обозначение плагальных",
     "transliterateNoteNames": "Транслитерировать начальную ноту",
     "transliterateNoteNamesHint": "Па вместо Πα",
-    "font": "Шрифт",
-    "fontSummary": "{{font}}, {{size}} пт",
-    "yes": "Да",
-    "no": "Нет",
     "modeIdentificationMethods": {
       "text": "Только текст",
       "modeSign": "Только знак",
       "textAndModeSign": "Текст и знак"
     },
     "numeralKinds": {
-      "cardinal": "количественное",
-      "ordinal": "порядковое"
+      "cardinal": "Количественное",
+      "ordinal": "Порядковое"
     },
-    "numeralStyles": {
-      "digits": "Цифры",
-      "romanNumerals": "Римские цифры",
-      "alphabeticNumerals": "Буквенные числа",
-      "words": "Слова"
+    "numeralForms": {
+      "digits": {
+        "cardinal": "Цифры, количественные",
+        "ordinal": "Цифры, порядковые"
+      },
+      "romanNumerals": {
+        "cardinal": "Римские цифры, количественные",
+        "ordinal": "Римские цифры, порядковые"
+      },
+      "alphabeticNumerals": {
+        "cardinal": "Буквенные числа, количественные",
+        "ordinal": "Буквенные числа, порядковые"
+      },
+      "words": {
+        "cardinal": "Слова, количественные",
+        "ordinal": "Слова, порядковые"
+      }
     },
-    "numeralForm": "{{style}}, {{kind}}",
+    "numberingSystems": {
+      "western": "Западные",
+      "arabicIndic": "Арабо-индийские"
+    },
     "numeralQualifiers": {
       "postnominal": "Число после",
       "prenominal": "Число перед"
@@ -133,14 +144,8 @@
       "authenticCounterpart": "Плагальный от автентического",
       "plagalClass": "Плагальные как класс"
     },
-    "duplicateOfStyle": "Эта структура совпадает со стилем «{{name}}». При сохранении будет создана отдельная копия.",
+    "duplicateOfStyle": "Этот стиль записывается точно так же, как «{{name}}».",
     "useStyleInstead": "Использовать «{{name}}»",
-    "discardChangesTitle": "Отменить изменения?",
-    "discardChangesDescription": "Изменения в стиле «{{name}}» будут потеряны.",
-    "discard": "Отменить изменения",
-    "deleteStyleTitle": "Удалить стиль?",
-    "deleteStyleDescription": "Начальные мартирии со стилем «{{name}}» перейдут на стиль документа по умолчанию.",
-    "greekTextFont": "Шрифт греческого текста",
     "useOrdinalForms": "Использовать порядковые формы",
     "languages": {
       "greek": "Греческий",

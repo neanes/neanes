@@ -74,56 +74,67 @@
     "styleLabel": "Gaya",
     "manageStyles": "Kelola gaya…",
     "documentDefault": "Bawaan dokumen",
+    "documentDefaultStatus": "Bawaan dokumen: {{name}}",
+    "defaultBadge": "Bawaan",
     "custom": "Kustom",
     "builtInLanguage": "Bawaan · {{language}}",
+    "builtIn": "Bawaan",
+    "builtInHint": "Gaya bawaan. Perubahan dibuat pada salinan.",
     "noCustomStyles": "Belum ada gaya kustom",
-    "searchStyles": "Cari gaya",
-    "styles": "Gaya",
     "new": "Gaya baru",
-    "edit": "Sunting",
     "duplicate": "Gandakan",
     "delete": "Hapus",
-    "save": "Simpan",
     "apply": "Terapkan",
     "useForDocument": "Gunakan untuk dokumen ini",
-    "newStyleBreadcrumb": "Gaya baru",
-    "editStyleBreadcrumb": "Sunting: {{name}}",
     "newStyleName": "Gaya baru",
     "copyStyleName": "Salinan {{name}}",
     "name": "Nama",
     "styleNamePlaceholder": "Nama gaya",
+    "nameInvalid": "Masukkan nama unik untuk gaya ini.",
     "language": "Bahasa",
     "greekParagraphStyle": "Gaya paragraf Yunani",
-    "preview": "Pratinjau",
+    "typography": "Tipografi",
     "sampleMode": "Modus contoh",
     "basedOn": "Berdasarkan {{name}}",
     "resetToBase": "Setel ulang ke dasar",
     "modeIdentification": "Identifikasi modus",
     "numberForm": "Bentuk angka",
+    "digitForm": "Bentuk angka",
     "numberPlacement": "Letak angka",
     "plagalWording": "Penyebutan plagal",
     "transliterateNoteNames": "Transliterasi nada awal",
     "transliterateNoteNamesHint": "Pa alih-alih Πα",
-    "font": "Fon",
-    "fontSummary": "{{font}}, {{size}} pt",
-    "yes": "Ya",
-    "no": "Tidak",
     "modeIdentificationMethods": {
       "text": "Teks saja",
       "modeSign": "Tanda saja",
       "textAndModeSign": "Teks dan tanda"
     },
     "numeralKinds": {
-      "cardinal": "kardinal",
-      "ordinal": "ordinal"
+      "cardinal": "Kardinal",
+      "ordinal": "Ordinal"
     },
-    "numeralStyles": {
-      "digits": "Angka",
-      "romanNumerals": "Angka Romawi",
-      "alphabeticNumerals": "Angka alfabetis",
-      "words": "Kata"
+    "numeralForms": {
+      "digits": {
+        "cardinal": "Angka, kardinal",
+        "ordinal": "Angka, ordinal"
+      },
+      "romanNumerals": {
+        "cardinal": "Angka Romawi, kardinal",
+        "ordinal": "Angka Romawi, ordinal"
+      },
+      "alphabeticNumerals": {
+        "cardinal": "Angka alfabetis, kardinal",
+        "ordinal": "Angka alfabetis, ordinal"
+      },
+      "words": {
+        "cardinal": "Kata, kardinal",
+        "ordinal": "Kata, ordinal"
+      }
     },
-    "numeralForm": "{{style}}, {{kind}}",
+    "numberingSystems": {
+      "western": "Barat",
+      "arabicIndic": "Arab-India"
+    },
     "numeralQualifiers": {
       "postnominal": "Angka setelahnya",
       "prenominal": "Angka sebelumnya"
@@ -133,14 +144,8 @@
       "authenticCounterpart": "Plagal dari yang autentik",
       "plagalClass": "Plagal sebagai kelas"
     },
-    "duplicateOfStyle": "Struktur ini sama dengan gaya \"{{name}}\". Menyimpan akan membuat salinan terpisah.",
+    "duplicateOfStyle": "Gaya ini ditulis persis seperti \"{{name}}\".",
     "useStyleInstead": "Gunakan \"{{name}}\" saja",
-    "discardChangesTitle": "Buang perubahan?",
-    "discardChangesDescription": "Perubahan pada \"{{name}}\" akan hilang.",
-    "discard": "Buang",
-    "deleteStyleTitle": "Hapus gaya?",
-    "deleteStyleDescription": "Martyria awal yang memakai \"{{name}}\" akan mengikuti bawaan dokumen.",
-    "greekTextFont": "Fon teks Yunani",
     "useOrdinalForms": "Gunakan bentuk ordinal",
     "languages": {
       "greek": "Yunani",

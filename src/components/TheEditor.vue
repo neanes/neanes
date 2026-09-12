@@ -265,6 +265,7 @@ import {
   rewriteClipboardTextBoxFormatParagraphStyleId,
 } from '@/utils/clipboardParagraphStyles';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
+import { deepEquals } from '@/utils/deepEquals';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
@@ -5077,32 +5078,39 @@ function onCopyScoreElements() {
 function cloneScoreElementForPaste(
   element: ScoreElement,
   includeLyrics: boolean,
-  styleIdRemap: Map<string, string>,
+  paragraphStyleIdRemap: Map<string, string>,
   initialMartyriaStyles: InitialMartyriaStyle[],
+  initialMartyriaStyleIdRemap: Map<string, string>,
 ) {
   const clone = element.clone({ includeLyrics });
 
   rewriteClipboardElementParagraphStyleIds(
     clone,
     score.value.paragraphStyles,
-    styleIdRemap,
+    paragraphStyleIdRemap,
   );
-  rewriteClipboardElementInitialMartyriaStyleId(clone, initialMartyriaStyles);
+  rewriteClipboardElementInitialMartyriaStyleId(
+    clone,
+    initialMartyriaStyles,
+    initialMartyriaStyleIdRemap,
+  );
 
   return clone;
 }
 
 function cloneClipboardForPaste(
   includeLyrics: boolean,
-  styleIdRemap: Map<string, string>,
+  paragraphStyleIdRemap: Map<string, string>,
   initialMartyriaStyles: InitialMartyriaStyle[],
+  initialMartyriaStyleIdRemap: Map<string, string>,
 ) {
   return clipboard.value.elements.map((element) =>
     cloneScoreElementForPaste(
       element,
       includeLyrics,
-      styleIdRemap,
+      paragraphStyleIdRemap,
       initialMartyriaStyles,
+      initialMartyriaStyleIdRemap,
     ),
   );
 }
@@ -5126,20 +5134,23 @@ function resolveClipboardStylesForPaste(includeLyrics: boolean) {
       score.value.paragraphStyles,
       clipboard.value.paragraphStyleIds,
     );
-  const importedInitialMartyriaStyles = resolveClipboardInitialMartyriaStyles(
-    clipboard.value.initialMartyriaStyles,
-    score.value.initialMartyriaStyles,
-    score.value.paragraphStyles,
-    styleIdRemap,
-  );
+  const { importedInitialMartyriaStyles, initialMartyriaStyleIdRemap } =
+    resolveClipboardInitialMartyriaStyles(
+      clipboard.value.initialMartyriaStyles,
+      score.value.initialMartyriaStyles,
+      score.value.paragraphStyles,
+      styleIdRemap,
+    );
 
   return {
     importedParagraphStyles,
     importedInitialMartyriaStyles,
-    pastedElements: cloneClipboardForPaste(includeLyrics, styleIdRemap, [
-      ...score.value.initialMartyriaStyles,
-      ...importedInitialMartyriaStyles,
-    ]),
+    pastedElements: cloneClipboardForPaste(
+      includeLyrics,
+      styleIdRemap,
+      [...score.value.initialMartyriaStyles, ...importedInitialMartyriaStyles],
+      initialMartyriaStyleIdRemap,
+    ),
   };
 }
 
@@ -7585,35 +7596,71 @@ function updatePageSetup(pageSetup: PageSetup) {
   save();
 }
 
-function updateInitialMartyriaStyles(styles: InitialMartyriaStyle[]) {
-  const nextStyleIds = new Set(styles.map((style) => style.id));
-  const commands: Command[] = [
-    scoreCommandFactory.create('update-properties', {
-      target: score.value,
-      newValues: { initialMartyriaStyles: styles },
-    }),
-  ];
-  // References to a deleted style fall back: the score to the default
-  // built-in style, an element to the score's style.
-  const pageStyleId = score.value.pageSetup.initialMartyriaStyleId;
-  if (
-    !isBuiltInInitialMartyriaStyleId(pageStyleId) &&
-    !nextStyleIds.has(pageStyleId)
-  ) {
+function confirmInitialMartyriaStyles(payload: {
+  styles: InitialMartyriaStyle[];
+  styleId: string;
+  action: 'update' | 'use-for-document' | 'apply-to-element';
+}) {
+  const nextStyleIds = new Set(payload.styles.map((style) => style.id));
+  // Update commits the edited styles and nothing else, so the element the
+  // dialog was opened from is left to follow the rules every other element
+  // follows below.
+  const element =
+    payload.action === 'update'
+      ? null
+      : initialMartyriaStylesDialogElement.value;
+  const commands: Command[] = [];
+
+  if (!deepEquals(score.value.initialMartyriaStyles, payload.styles)) {
     commands.push(
-      pageSetupCommandFactory.create('update-properties', {
-        target: score.value.pageSetup,
-        newValues: {
-          initialMartyriaStyleId: DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-        },
+      scoreCommandFactory.create('update-properties', {
+        target: score.value,
+        newValues: { initialMartyriaStyles: payload.styles },
       }),
     );
   }
-  for (const element of score.value.staff.elements) {
-    if (element.elementType !== ElementType.ModeKey) {
+
+  // A reference to a deleted style falls back: the score to the default
+  // built-in style, an element to the score's style.
+  const pageStyleId = score.value.pageSetup.initialMartyriaStyleId;
+  const nextPageStyleId =
+    payload.action === 'use-for-document'
+      ? payload.styleId
+      : !isBuiltInInitialMartyriaStyleId(pageStyleId) &&
+          !nextStyleIds.has(pageStyleId)
+        ? DEFAULT_INITIAL_MARTYRIA_STYLE_ID
+        : pageStyleId;
+
+  if (nextPageStyleId !== pageStyleId) {
+    commands.push(
+      pageSetupCommandFactory.create('update-properties', {
+        target: score.value.pageSetup,
+        newValues: { initialMartyriaStyleId: nextPageStyleId },
+      }),
+    );
+  }
+
+  if (element != null) {
+    // The element takes the style, or follows the score again when the style
+    // is used for the whole document.
+    const nextElementStyleId =
+      payload.action === 'apply-to-element' ? payload.styleId : null;
+
+    if (nextElementStyleId !== element.initialMartyriaStyleId) {
+      commands.push(
+        modeKeyCommandFactory.create('update-properties', {
+          target: element,
+          newValues: { initialMartyriaStyleId: nextElementStyleId },
+        }),
+      );
+    }
+  }
+
+  for (const item of score.value.staff.elements) {
+    if (item.elementType !== ElementType.ModeKey || item === element) {
       continue;
     }
-    const modeKey = element as ModeKeyElement;
+    const modeKey = item as ModeKeyElement;
     const styleId = modeKey.initialMartyriaStyleId;
     if (
       styleId != null &&
@@ -7628,6 +7675,11 @@ function updateInitialMartyriaStyles(styles: InitialMartyriaStyle[]) {
       );
     }
   }
+
+  if (commands.length === 0) {
+    return;
+  }
+
   commandService.value.executeAsBatch(commands);
   save();
 }
@@ -8525,35 +8577,6 @@ function onFileMenuInitialMartyriaStyles() {
 function openInitialMartyriaStyleDialog(element: ModeKeyElement) {
   initialMartyriaStylesDialogElement.value = element;
   initialMartyriaStylesDialogIsOpen.value = true;
-}
-
-function applyInitialMartyriaStyleToElement(styleId: string) {
-  if (initialMartyriaStylesDialogElement.value != null) {
-    updateModeKey(initialMartyriaStylesDialogElement.value, {
-      initialMartyriaStyleId: styleId,
-    });
-  }
-}
-
-function useInitialMartyriaStyleForDocument(styleId: string) {
-  const element = initialMartyriaStylesDialogElement.value;
-  const commands: Command[] = [
-    pageSetupCommandFactory.create('update-properties', {
-      target: score.value.pageSetup,
-      newValues: { initialMartyriaStyleId: styleId },
-    }),
-  ];
-  if (element != null) {
-    // The element the dialog was opened from follows the score again.
-    commands.push(
-      modeKeyCommandFactory.create('update-properties', {
-        target: element,
-        newValues: { initialMartyriaStyleId: null },
-      }),
-    );
-  }
-  commandService.value.executeAsBatch(commands);
-  save();
 }
 
 function onFileMenuDocumentProperties() {
@@ -11700,9 +11723,7 @@ function renderTabLabel(tab: Tab) {
       :target="
         initialMartyriaStylesDialogElement == null ? 'document' : 'element'
       "
-      @update:styles="updateInitialMartyriaStyles($event)"
-      @apply="applyInitialMartyriaStyleToElement($event)"
-      @use-for-document="useInitialMartyriaStyleForDocument($event)"
+      @confirm="confirmInitialMartyriaStyles($event)"
     />
     <DocumentPropertiesDialog
       v-if="documentPropertiesDialogIsOpen"

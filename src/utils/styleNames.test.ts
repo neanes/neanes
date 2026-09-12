@@ -25,4 +25,10 @@ describe('style names', () => {
       ]),
     ).toBe('Style Copy 3');
   });
+
+  it('normalizes names before choosing an available name', () => {
+    expect(getNextAvailableStyleName(' Style ', ['Style', 'Style 2 '])).toBe(
+      'Style 3',
+    );
+  });
 });

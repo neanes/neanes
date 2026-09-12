@@ -1168,6 +1168,23 @@ function loadInitialMartyriaStyle(
   };
 }
 
+function loadInitialMartyriaStyles(
+  savedStyles: InitialMartyriaStyle_v1[],
+  paragraphStyles: ParagraphStyle[],
+) {
+  const styles = new Map<string, InitialMartyriaStyle>();
+
+  for (const savedStyle of savedStyles) {
+    const style = loadInitialMartyriaStyle(savedStyle, paragraphStyles);
+
+    if (style != null && !styles.has(style.id)) {
+      styles.set(style.id, style);
+    }
+  }
+
+  return [...styles.values()];
+}
+
 /** A saved style reference, or null when it no longer resolves. */
 function loadInitialMartyriaStyleId(
   styleId: string | undefined,
@@ -1940,9 +1957,10 @@ export class SaveService {
     if (hasLegacyModeKeyElements) {
       migrateLegacyModeKeyStyleOverrides(s, score.paragraphStyles);
     }
-    score.initialMartyriaStyles = (s.initialMartyriaStyles ?? [])
-      .map((style) => loadInitialMartyriaStyle(style, score.paragraphStyles))
-      .filter((style) => style != null);
+    score.initialMartyriaStyles = loadInitialMartyriaStyles(
+      s.initialMartyriaStyles ?? [],
+      score.paragraphStyles,
+    );
     score.pageSetup.initialMartyriaStyleId =
       loadInitialMartyriaStyleId(
         s.pageSetup.initialMartyriaStyleId,

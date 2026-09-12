@@ -74,56 +74,67 @@
     "styleLabel": "Style",
     "manageStyles": "Manage styles…",
     "documentDefault": "Document default",
+    "documentDefaultStatus": "Document default: {{name}}",
+    "defaultBadge": "Default",
     "custom": "Custom",
     "builtInLanguage": "Built in · {{language}}",
+    "builtIn": "Built in",
+    "builtInHint": "Built-in style. Changes are made to a copy.",
     "noCustomStyles": "No custom styles yet",
-    "searchStyles": "Search styles",
-    "styles": "Styles",
     "new": "New style",
-    "edit": "Edit",
     "duplicate": "Duplicate",
     "delete": "Delete",
-    "save": "Save",
     "apply": "Apply",
     "useForDocument": "Use for this document",
-    "newStyleBreadcrumb": "New style",
-    "editStyleBreadcrumb": "Edit: {{name}}",
     "newStyleName": "New style",
     "copyStyleName": "{{name}} copy",
     "name": "Name",
     "styleNamePlaceholder": "Style name",
+    "nameInvalid": "Enter a unique name for this style.",
     "language": "Language",
     "greekParagraphStyle": "Greek paragraph style",
-    "preview": "Preview",
+    "typography": "Typography",
     "sampleMode": "Sample mode",
     "basedOn": "Based on {{name}}",
     "resetToBase": "Reset to base",
     "modeIdentification": "Mode identification",
     "numberForm": "Number form",
+    "digitForm": "Digit form",
     "numberPlacement": "Number placement",
     "plagalWording": "Plagal wording",
     "transliterateNoteNames": "Transliterate starting note",
     "transliterateNoteNamesHint": "Pa instead of Πα",
-    "font": "Font",
-    "fontSummary": "{{font}}, {{size}} pt",
-    "yes": "Yes",
-    "no": "No",
     "modeIdentificationMethods": {
       "text": "Text only",
       "modeSign": "Sign only",
       "textAndModeSign": "Text and sign"
     },
     "numeralKinds": {
-      "cardinal": "cardinal",
-      "ordinal": "ordinal"
+      "cardinal": "Cardinal",
+      "ordinal": "Ordinal"
     },
-    "numeralStyles": {
-      "digits": "Digits",
-      "romanNumerals": "Roman numerals",
-      "alphabeticNumerals": "Alphabetic numerals",
-      "words": "Words"
+    "numeralForms": {
+      "digits": {
+        "cardinal": "Digits, cardinal",
+        "ordinal": "Digits, ordinal"
+      },
+      "romanNumerals": {
+        "cardinal": "Roman numerals, cardinal",
+        "ordinal": "Roman numerals, ordinal"
+      },
+      "alphabeticNumerals": {
+        "cardinal": "Alphabetic numerals, cardinal",
+        "ordinal": "Alphabetic numerals, ordinal"
+      },
+      "words": {
+        "cardinal": "Words, cardinal",
+        "ordinal": "Words, ordinal"
+      }
     },
-    "numeralForm": "{{style}}, {{kind}}",
+    "numberingSystems": {
+      "western": "Western",
+      "arabicIndic": "Arabic-Indic"
+    },
     "numeralQualifiers": {
       "postnominal": "Number after",
       "prenominal": "Number before"
@@ -133,14 +144,8 @@
       "authenticCounterpart": "Plagal of the authentic",
       "plagalClass": "Plagal as a class"
     },
-    "duplicateOfStyle": "This structure matches the style \"{{name}}\". Saving keeps a separate copy.",
+    "duplicateOfStyle": "This style is written exactly like \"{{name}}\".",
     "useStyleInstead": "Use \"{{name}}\" instead",
-    "discardChangesTitle": "Discard changes?",
-    "discardChangesDescription": "Changes to \"{{name}}\" will be lost.",
-    "discard": "Discard",
-    "deleteStyleTitle": "Delete style?",
-    "deleteStyleDescription": "Initial martyria using \"{{name}}\" will follow the document default.",
-    "greekTextFont": "Greek text font",
     "useOrdinalForms": "Use ordinal forms",
     "languages": {
       "greek": "Greek",

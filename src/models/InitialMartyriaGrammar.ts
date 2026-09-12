@@ -46,15 +46,15 @@ interface InitialMartyriaLanguageGrammar {
 }
 
 const everyModeIdentificationMethod = [
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
-  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
 ] as const;
 
 const everyModeNamingScheme = [
-  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
+  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
 ] as const;
 
 const relationalModeNamingSchemes = [
@@ -63,8 +63,8 @@ const relationalModeNamingSchemes = [
 ] as const;
 
 const everyNumeralQualifier = [
-  INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+  INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
 ] as const;
 
 /*
@@ -257,8 +257,8 @@ export interface InitialMartyriaNumeralForm {
 }
 
 export const initialMartyriaNumeralKinds: InitialMartyriaNumeralKind[] = [
-  INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
   INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+  INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
 ];
 
 export const initialMartyriaNumeralForms: InitialMartyriaNumeralForm[] = [
@@ -272,6 +272,11 @@ export const initialMartyriaNumeralForms: InitialMartyriaNumeralForm[] = [
     numeralStyle,
   })),
 );
+
+/** The digit repertoires, starting with the language's own digits. */
+export const initialMartyriaNumberingSystems: (
+  InitialMartyriaNumberingSystem | undefined
+)[] = [undefined, INITIAL_MARTYRIA_NUMBERING_SYSTEMS.ArabicIndic];
 
 export const initialMartyriaModeIdentificationMethods: InitialMartyriaModeIdentificationMethod[] =
   [...everyModeIdentificationMethod];

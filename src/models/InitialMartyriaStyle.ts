@@ -8,8 +8,8 @@ import type { BuiltInInitialMartyriaStyleId } from './InitialMartyriaBuiltInStyl
 export type ModeKeyMode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export const INITIAL_MARTYRIA_NUMERAL_KINDS = {
-  Cardinal: 'cardinal',
   Ordinal: 'ordinal',
+  Cardinal: 'cardinal',
 } as const;
 
 export type InitialMartyriaNumeralKind =
@@ -40,17 +40,17 @@ export type InitialMartyriaNumberingSystem =
  * traditional sign identifies the mode.
  */
 export const INITIAL_MARTYRIA_NUMERAL_QUALIFIERS = {
-  Postnominal: 'postnominal',
   Prenominal: 'prenominal',
+  Postnominal: 'postnominal',
 } as const;
 
 export type InitialMartyriaNumeralQualifier =
   (typeof INITIAL_MARTYRIA_NUMERAL_QUALIFIERS)[keyof typeof INITIAL_MARTYRIA_NUMERAL_QUALIFIERS];
 
 export const INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS = {
-  Text: 'text',
   ModeSign: 'mode-sign',
   TextAndModeSign: 'text-and-mode-sign',
+  Text: 'text',
 } as const;
 
 export type InitialMartyriaModeIdentificationMethod =
@@ -64,23 +64,23 @@ export type InitialMartyriaModeIdentificationMethod =
  * describes a member of the class of plagal modes ("First Plagal Mode").
  */
 export const INITIAL_MARTYRIA_MODE_NAMING_SCHEMES = {
-  Absolute: 'absolute',
   AuthenticCounterpart: 'authentic-counterpart',
   PlagalClass: 'plagal-class',
+  Absolute: 'absolute',
 } as const;
 
 export type InitialMartyriaModeNamingScheme =
   (typeof INITIAL_MARTYRIA_MODE_NAMING_SCHEMES)[keyof typeof INITIAL_MARTYRIA_MODE_NAMING_SCHEMES];
 
 export const INITIAL_MARTYRIA_LANGUAGE_IDS = {
-  Greek: 'el',
-  English: 'en',
-  Spanish: 'es',
-  ChurchSlavonic: 'cu',
-  Russian: 'ru',
   Arabic: 'ar',
-  Romanian: 'ro',
+  ChurchSlavonic: 'cu',
+  English: 'en',
+  Greek: 'el',
   Indonesian: 'id',
+  Romanian: 'ro',
+  Russian: 'ru',
+  Spanish: 'es',
 } as const;
 
 export type InitialMartyriaLanguageId =

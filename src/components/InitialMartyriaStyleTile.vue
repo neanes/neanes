@@ -1,8 +1,8 @@
 <template>
   <button
     type="button"
-    class="flex min-w-0 flex-col items-center justify-start gap-1 rounded-md border bg-background px-2 py-2 text-center transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-    :class="selected && 'ring-2 ring-foreground'"
+    class="flex min-w-0 flex-col items-center justify-start gap-1 rounded-none border bg-background px-2 py-2 text-center transition-colors hover:bg-muted focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+    :class="selected && 'border-foreground ring-1 ring-foreground'"
     :aria-pressed="selected"
     :aria-label="ariaLabel"
     @click="$emit('select')"

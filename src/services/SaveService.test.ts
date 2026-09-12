@@ -1513,6 +1513,28 @@ describe('SaveService font styles', () => {
     );
   });
 
+  it('loads only the first Initial Martyria style with a given id', () => {
+    const score = new Score();
+    const base = getBuiltInInitialMartyriaStyle(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
+    );
+    const first = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Parish books',
+    });
+    const duplicateId = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Other books',
+    });
+    duplicateId.id = first.id;
+    score.initialMartyriaStyles = [first, duplicateId];
+    const saved = SaveService.SaveScoreToJson(score);
+
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(loaded.initialMartyriaStyles).toEqual([first]);
+  });
+
   it('does not save built-in Initial Martyria styles or an empty style list', () => {
     const score = new Score();
     score.pageSetup.initialMartyriaStyleId =

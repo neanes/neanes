@@ -124,14 +124,42 @@ describe('clipboardInitialMartyriaStyles', () => {
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     );
 
-    expect(
-      resolveClipboardInitialMartyriaStyles(
-        [clipboardParish],
-        [targetParish],
-        createDefaultParagraphStyles(),
-        new Map(),
-      ),
-    ).toEqual([]);
+    const result = resolveClipboardInitialMartyriaStyles(
+      [clipboardParish],
+      [targetParish],
+      createDefaultParagraphStyles(),
+      new Map(),
+    );
+
+    expect(result.importedInitialMartyriaStyles).toEqual([]);
+    expect(result.initialMartyriaStyleIdRemap.get(clipboardParish.id)).toBe(
+      targetParish.id,
+    );
+  });
+
+  it('reuses a destination style by name', () => {
+    const clipboardParish = createCustomInitialMartyriaStyle(
+      'clipboard-parish',
+      ' Parish ',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+    const targetParish = createCustomInitialMartyriaStyle(
+      'target-parish',
+      'Parish',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+
+    const result = resolveClipboardInitialMartyriaStyles(
+      [clipboardParish],
+      [targetParish],
+      createDefaultParagraphStyles(),
+      new Map(),
+    );
+
+    expect(result.importedInitialMartyriaStyles).toEqual([]);
+    expect(result.initialMartyriaStyleIdRemap.get(clipboardParish.id)).toBe(
+      targetParish.id,
+    );
   });
 
   it('imports unknown styles as copies under the same id', () => {
@@ -141,12 +169,13 @@ describe('clipboardInitialMartyriaStyles', () => {
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     );
 
-    const imported = resolveClipboardInitialMartyriaStyles(
-      [parish],
-      [],
-      createDefaultParagraphStyles(),
-      new Map(),
-    );
+    const { importedInitialMartyriaStyles: imported } =
+      resolveClipboardInitialMartyriaStyles(
+        [parish],
+        [],
+        createDefaultParagraphStyles(),
+        new Map(),
+      );
 
     expect(imported).toHaveLength(1);
     expect(imported[0]).toEqual(parish);
@@ -177,12 +206,13 @@ describe('clipboardInitialMartyriaStyles', () => {
         targetParagraphStyles,
         collectClipboardParagraphStyleIdsFromElements([], [parish]),
       );
-    const imported = resolveClipboardInitialMartyriaStyles(
-      [parish],
-      [],
-      targetParagraphStyles,
-      styleIdRemap,
-    );
+    const { importedInitialMartyriaStyles: imported } =
+      resolveClipboardInitialMartyriaStyles(
+        [parish],
+        [],
+        targetParagraphStyles,
+        styleIdRemap,
+      );
 
     expect(importedParagraphStyles).toHaveLength(2);
     expect(importedParagraphStyles[0].displayName).toBe('Heading');
@@ -216,12 +246,13 @@ describe('clipboardInitialMartyriaStyles', () => {
       resolveClipboardParagraphStyles([heading], targetParagraphStyles, [
         heading.id,
       ]);
-    const imported = resolveClipboardInitialMartyriaStyles(
-      [parish],
-      [],
-      targetParagraphStyles,
-      styleIdRemap,
-    );
+    const { importedInitialMartyriaStyles: imported } =
+      resolveClipboardInitialMartyriaStyles(
+        [parish],
+        [],
+        targetParagraphStyles,
+        styleIdRemap,
+      );
 
     expect(importedParagraphStyles).toEqual([]);
     expect(imported[0].paragraphStyleId).toBe(targetHeading.id);
@@ -235,12 +266,13 @@ describe('clipboardInitialMartyriaStyles', () => {
       'deleted-greek',
     );
 
-    const imported = resolveClipboardInitialMartyriaStyles(
-      [parish],
-      [],
-      createDefaultParagraphStyles(),
-      new Map(),
-    );
+    const { importedInitialMartyriaStyles: imported } =
+      resolveClipboardInitialMartyriaStyles(
+        [parish],
+        [],
+        createDefaultParagraphStyles(),
+        new Map(),
+      );
 
     expect(imported[0].paragraphStyleId).toBe(
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
@@ -264,7 +296,11 @@ describe('clipboardInitialMartyriaStyles', () => {
     const unknown = createModeKey('deleted');
 
     for (const modeKey of [known, builtIn, followsScore, unknown]) {
-      rewriteClipboardElementInitialMartyriaStyleId(modeKey, [parish]);
+      rewriteClipboardElementInitialMartyriaStyleId(
+        modeKey,
+        [parish],
+        new Map(),
+      );
     }
 
     expect(known.initialMartyriaStyleId).toBe(parish.id);
@@ -273,5 +309,22 @@ describe('clipboardInitialMartyriaStyles', () => {
     );
     expect(followsScore.initialMartyriaStyleId).toBeNull();
     expect(unknown.initialMartyriaStyleId).toBeNull();
+  });
+
+  it('remaps a pasted mode key to the destination style reused by name', () => {
+    const parish = createCustomInitialMartyriaStyle(
+      'target-parish',
+      'Parish',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+    const modeKey = createModeKey('clipboard-parish');
+
+    rewriteClipboardElementInitialMartyriaStyleId(
+      modeKey,
+      [parish],
+      new Map([['clipboard-parish', parish.id]]),
+    );
+
+    expect(modeKey.initialMartyriaStyleId).toBe(parish.id);
   });
 });

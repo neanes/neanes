@@ -5661,6 +5661,24 @@ export class LayoutService {
               nextNoteElement = nextElement as NoteElement;
             }
 
+            const finalElementIndex =
+              finalElement == null
+                ? index
+                : line.elements.indexOf(finalElement, index);
+            let lastQuantitativeNote = element;
+            for (let i = index + 1; i <= finalElementIndex; i++) {
+              if (line.elements[i].elementType === ElementType.Note) {
+                lastQuantitativeNote = line.elements[i] as NoteElement;
+              }
+            }
+            const neumeGroupEnd =
+              lastQuantitativeNote.x +
+              lastQuantitativeNote.neumeWidth -
+              this.getFinalElementMeasureBarRightWidth(
+                lastQuantitativeNote,
+                measureBarWidthMap,
+              );
+
             // Calculate the start of the melisma
             if (isIntermediateMelismaAtStartOfLine) {
               // Special case. No lyrics, so start at the
@@ -5784,24 +5802,44 @@ export class LayoutService {
                   element.hyphenOffsets.push(startOffset + i * P);
                 }
               }
-            } else if (!pageSetup.melkiteRtl) {
-              const finalElementIndex =
-                finalElement == null
-                  ? index
-                  : line.elements.indexOf(finalElement, index);
-              let lastQuantitativeNote = element;
-              for (let i = index + 1; i <= finalElementIndex; i++) {
-                if (line.elements[i].elementType === ElementType.Note) {
-                  lastQuantitativeNote = line.elements[i] as NoteElement;
+
+              if (
+                !pageSetup.melkiteRtl &&
+                !isIntermediateMelismaAtStartOfLine &&
+                (element.alignLeft || centeredMelismaLyrics.has(element))
+              ) {
+                const neumeGroupStart =
+                  element.x +
+                  this.getStartQuantitativeNeumeOffset(
+                    element,
+                    pageSetup,
+                    measureBarWidthMap,
+                  );
+
+                // A hyphenated melisma whose lyric is wider than its starting
+                // neume uses the same group centering as a qualifying
+                // underscore melisma. Hyphen rendering remains independent:
+                // any hyphens that fit, including a forced line-final hyphen,
+                // are retained.
+                const geometry = this.createCenteredMelismaGeometry(
+                  element,
+                  lastQuantitativeNote,
+                  neumeGroupStart,
+                  neumeGroupEnd,
+                );
+
+                newlyCenteredMelismaLyrics.set(element, geometry);
+
+                const appliedGeometry = centeredMelismaLyrics.get(element);
+                if (appliedGeometry != null) {
+                  this.applyCenteredMelismaGeometry(
+                    appliedGeometry,
+                    pageSetup,
+                    measureBarWidthMap,
+                  );
                 }
               }
-              const neumeGroupEnd =
-                lastQuantitativeNote.x +
-                lastQuantitativeNote.neumeWidth -
-                this.getFinalElementMeasureBarRightWidth(
-                  lastQuantitativeNote,
-                  measureBarWidthMap,
-                );
+            } else if (!pageSetup.melkiteRtl) {
               // Else not a hyphen, so an underscore
               const nextRunningElaphronGeometry =
                 nextNoteElement != null

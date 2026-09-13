@@ -193,7 +193,7 @@ The tiles offered depend on the selected language. For a language that is not wr
 
 The `Paragraph Styles` dialog, opened from `Format -> Paragraph Styles...`, includes the built-in `Initial Martyria` and `Initial Martyria (Greek)` styles. Changing `Initial Martyria` restyles regular text and also flows through to Greek text for properties that the Greek child does not override. Changing `Initial Martyria (Greek)` affects only Greek text. An Initial Martyria style can select any paragraph style for either role.
 
-When an older document is imported, its Initial Martyria color is migrated to `Initial Martyria`, while its size and outline are migrated to `Initial Martyria (Greek)`. If the document uses the Stathis Series music font, the migrated Greek paragraph style uses GFS Porson instead of GFS Didot Classic.
+When an older document is imported, its Initial Martyria color is migrated to `Initial Martyria`, while its size and outline are migrated to `Initial Martyria (Greek)`. If the document uses the Stathis Series music font, the migrated Greek paragraph style uses GFS Porson instead of GFS Didot.
 
 ## Custom Initial Martyriæ
 

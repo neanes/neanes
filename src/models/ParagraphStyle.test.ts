@@ -59,7 +59,7 @@ describe('ParagraphStyle', () => {
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     );
     expect(styles[11].overrides).toEqual({
-      fontFamily: 'GFS Didot Classic',
+      fontFamily: 'GFS Didot',
       fontSize: Unit.fromPt(14.5),
     });
   });

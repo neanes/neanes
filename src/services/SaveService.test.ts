@@ -1668,7 +1668,7 @@ describe('SaveService font styles', () => {
         id: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
         parentStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
         overrides: {
-          fontFamily: 'GFS Didot Classic',
+          fontFamily: 'GFS Didot',
           fontSize: Unit.fromPt(14.5),
         },
       },
@@ -1718,7 +1718,7 @@ describe('SaveService font styles', () => {
     );
 
     expect(greekInitialMartyriaStyle).toMatchObject({
-      fontFamily: 'GFS Didot Classic',
+      fontFamily: 'GFS Didot',
       fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20),
       color: '#000000',
       strokeWidth: 2,
@@ -1743,7 +1743,7 @@ describe('SaveService font styles', () => {
           style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
       )!.overrides,
     ).toEqual({
-      fontFamily: 'GFS Didot Classic',
+      fontFamily: 'GFS Didot',
       fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20),
       strokeWidth: 2,
     });

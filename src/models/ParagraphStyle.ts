@@ -398,7 +398,7 @@ export function createDefaultParagraphStyles() {
     'Initial Martyria (Greek)',
     BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     {
-      fontFamily: 'GFS Didot Classic',
+      fontFamily: 'GFS Didot',
       fontSize: Unit.fromPt(14.5),
     },
   );

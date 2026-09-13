@@ -128,7 +128,7 @@ describe('InitialMartyriaResolver', () => {
       strokeWidth: 0,
     });
     expect(inherited.greekAppearance).toMatchObject({
-      fontFamily: 'GFS Didot Classic',
+      fontFamily: 'GFS Didot',
       fontSize: Unit.fromPt(14.5),
       color: '#ED0000',
     });
@@ -167,7 +167,7 @@ describe('InitialMartyriaResolver', () => {
       fontSize: Unit.fromPt(12),
     });
     expect(resolved.greekAppearance).toMatchObject({
-      fontFamily: 'GFS Didot Classic',
+      fontFamily: 'GFS Didot',
       fontSize: Unit.fromPt(14.5),
     });
     expect(resolved.primaryAppearance).toBe(resolved.greekAppearance);
@@ -276,22 +276,20 @@ describe('InitialMartyriaResolver', () => {
 
     const resolved = resolveInitialMartyriaStyleAppearances(style, styles);
     expect(resolved.mainAppearance.fontFamily).toBe('Alegreya');
-    expect(resolved.greekAppearance.fontFamily).toBe('GFS Didot Classic');
+    expect(resolved.greekAppearance.fontFamily).toBe('GFS Didot');
 
     const runs = resolve(style, elementForTemplate(500), styles).runs;
     const originalPitch = runs.find((run) => run.kind === 'startingPitch');
     expect(originalPitch?.kind).toBe('startingPitch');
     if (originalPitch?.kind === 'startingPitch') {
-      expect(originalPitch.noteText.appearance.fontFamily).toBe(
-        'GFS Didot Classic',
-      );
+      expect(originalPitch.noteText.appearance.fontFamily).toBe('GFS Didot');
     }
     const plagal = runs.find(
       (run) => run.kind === 'text' && run.semantic === 'plagalAbbreviation',
     );
     expect(plagal?.kind).toBe('text');
     if (plagal?.kind === 'text') {
-      expect(plagal.appearance.fontFamily).toBe('GFS Didot Classic');
+      expect(plagal.appearance.fontFamily).toBe('GFS Didot');
     }
   });
 

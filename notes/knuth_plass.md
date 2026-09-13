@@ -360,10 +360,11 @@ where:
 - $\ell_i$ is the collision correction needed to keep the actual visible lyric gap large enough on the same line: normally at least `lyricsMinimumSpacing`, but for a hyphenated melisma start at least $\texttt{lyricsMinimumSpacing} + \textit{hyphenWidth}$ when the hyphen is absorbed inside the current neume.
 
 There is one deliberate exception to the ordinary base expression.
-When `exitsMelismaIntoCenteredLyric` is true, a carried melisma is ending at a non-melisma note whose centered lyric has a positive left projection.
-In that case the current cursor is already after the previous note's `spaceAfter`, so the code starts from base width 0 instead of $s_0 + R_i - T_i^\text{left} - T_i^\text{right}$.
+When a carried melisma ends at a centered lyric with a positive left projection, whether or not that lyric begins another melisma, the code starts from base width 0 instead of $s_0 + R_i - T_i^\text{left} - T_i^\text{right}$.
+The current cursor is already after the previous note's `spaceAfter`.
 This aligns the next centered lyric's left edge with that cursor while preserving the user-defined extra spacing already included in the cursor position.
 The collision correction $\ell_i$ still runs afterward, including the carried-melisma check against `melismaLyricsEndPx`, and the final result is still raised to the preferred visible-note and measure-bar widths.
+The preceding melisma line is separately clamped to stop at least `lyricsMinimumSpacing` before the next lyric; aligning that lyric with the neume edge does not extend the line into the gap.
 
 The collision check is geometry-based.
 When both notes carry lyrics, the code computes the actual visual gap between them from the neume overhangs relative to their lyrics, then adds back only the missing amount.

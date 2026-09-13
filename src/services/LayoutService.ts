@@ -738,9 +738,8 @@ export class LayoutService {
           // m_i usually starts from
           // s_0 + R_i - T_i^left - T_i^right + ell_i, then is raised to any
           // larger preferred visual, measure-bar, lyric, or carried-melisma
-          // width. The carried-melisma-to-ordinary-centered-lyric case starts
-          // at 0; a centered melisma following another melisma instead
-          // preserves the previous line through its final neume. See
+          // width. When a carried melisma ends at a centered lyric, the base
+          // starts at 0 whether or not that lyric begins another melisma. See
           // calculateInterNoteSpacing.
           // R_i is the right projection, ell_i is the lyric-collision
           // correction, T_i^left is the absorbed portion of L_{i+1}, and
@@ -3478,15 +3477,12 @@ export class LayoutService {
     const ordinaryBaseWidth =
       inlineSpacing + rightProjection - leftTuck - rightTuck;
 
-    // When a long melisma lyric follows another melisma, keep its left edge
-    // far enough beyond the preceding neume for that melisma's line to reach
-    // the neume's full right edge before the ordinary lyric gap.
-    // Otherwise, when a carried melisma ends at an ordinarily centered lyric,
-    // align that lyric's left edge with the current cursor. The cursor is
+    // A centered lyric after a carried melisma starts at the current cursor,
+    // whether or not the new lyric starts another melisma. The cursor is
     // already after noteElement.spaceAfter, preserving user-defined spacing.
-    const baseWidth = exitsIntoCenteredMelismaAfterMelisma
-      ? workspace.pageSetup.lyricsMinimumSpacing
-      : exitsMelismaIntoCenteredLyric
+    // Collision and visual minima below can still increase this width.
+    const baseWidth =
+      exitsIntoCenteredMelismaAfterMelisma || exitsMelismaIntoCenteredLyric
         ? 0
         : ordinaryBaseWidth;
 
@@ -5999,7 +5995,9 @@ export class LayoutService {
 
                 // Clamp to the next syllable's rendered text start when that
                 // text is left-aligned (selected by shouldAlignLeft) or
-                // projects left of its neume.
+                // projects left of its neume. This keeps the minimum gap
+                // between the end of the melisma line and the next lyric,
+                // even when that lyric begins another centered melisma.
                 if (
                   nextNoteElement != null &&
                   (nextNoteElement.alignLeft ||

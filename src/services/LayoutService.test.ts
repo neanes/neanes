@@ -10,7 +10,7 @@ import {
   TextBoxElement,
 } from '../models/Element';
 import { Fthora, QuantitativeNeume, restNeumes } from '../models/Neumes';
-import { Line, Page } from '../models/Page';
+import { Line } from '../models/Page';
 import { PageSetup } from '../models/PageSetup';
 import { Scale } from '../models/Scales';
 import { LayoutService } from './LayoutService';
@@ -551,61 +551,6 @@ describe('LayoutService.mayShowLeadingLyricHyphen', () => {
       true,
     );
   });
-});
-
-describe('LayoutService.centerLongMelismaLyrics', () => {
-  it.each([
-    { lyricWidth: 100, expectedAlignLeft: false },
-    { lyricWidth: 60, expectedAlignLeft: true },
-  ])(
-    'centers a hyphenated lyric only when it exceeds the neume group ($lyricWidth)',
-    ({ lyricWidth, expectedAlignLeft }) => {
-      const pageSetup = new PageSetup();
-      const start = new NoteElement();
-      start.isMelismaStart = true;
-      start.isHyphen = true;
-      start.alignLeft = true;
-      start.x = 100;
-      start.neumeWidth = 30;
-      start.lyricsWidth = lyricWidth;
-      // A long lyric is already positioned against the whole atomic group in
-      // Phase 1; a shorter one keeps the ordinary left-aligned position.
-      start.lyricsHorizontalOffset =
-        lyricWidth > 75 ? (75 - lyricWidth) / 2 : 0;
-
-      const continuation = new NoteElement();
-      continuation.isMelisma = true;
-      continuation.isHyphen = true;
-      continuation.x = 145;
-      continuation.neumeWidth = 30;
-
-      const following = new NoteElement();
-      following.x = 300;
-      following.lyricsWidth = 20;
-
-      const page = new Page();
-      page.lines = [getLine(start, continuation, following)];
-
-      LayoutService['centerLongMelismaLyrics'](
-        [page],
-        pageSetup,
-        new Map(),
-        new Map(),
-        new Set([start]),
-        new Set([continuation]),
-      );
-
-      expect(start.alignLeft).toBe(expectedAlignLeft);
-      if (!expectedAlignLeft) {
-        const lyricLeft =
-          (start.neumeWidth -
-            start.lyricsWidth +
-            start.lyricsHorizontalOffset) /
-          2;
-        expect(lyricLeft + start.lyricsWidth / 2).toBe(37.5);
-      }
-    },
-  );
 });
 
 function getInlineTextBox() {

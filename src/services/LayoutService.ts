@@ -2824,7 +2824,6 @@ export class LayoutService {
       let noteX = 0;
       let fullQuantitativeNeumeSpan = 0;
       let protectedBoundaryCount = 0;
-      let mixedContinuation = false;
 
       while (true) {
         groupNotes.push(note);
@@ -2839,19 +2838,11 @@ export class LayoutService {
 
         // An explicit break ends the group, so no prefix boundary carries one.
         if (note.lineBreak || note.pageBreak) {
-          mixedContinuation = this.hasNonNoteMelismaContinuation(
-            elements,
-            noteIndex + 1,
-          );
           break;
         }
 
         const nextElement = this.getElementAt(elements, noteIndex + 1);
         if (!this.isPartOfSameMelisma(nextElement)) {
-          mixedContinuation = this.hasNonNoteMelismaContinuation(
-            elements,
-            noteIndex + 1,
-          );
           break;
         }
 
@@ -2868,7 +2859,7 @@ export class LayoutService {
         noteIndex++;
       }
 
-      if (mixedContinuation) {
+      if (this.hasNonNoteMelismaContinuation(elements, noteIndex + 1)) {
         continue;
       }
       const centeringPlan = { phase1Centered: false };
@@ -5620,10 +5611,7 @@ export class LayoutService {
       defaultLyricsFontCss,
     );
 
-    const runningElaphronGeometry = new Map<
-      QuantitativeNeume,
-      { left: number; width: number }
-    >();
+    const runningElaphronLeftOffsets = new Map<QuantitativeNeume, number>();
 
     for (const quantitativeNeume of runningElaphronSet) {
       const glyphName =
@@ -5632,10 +5620,10 @@ export class LayoutService {
         pageSetup.neumeDefaultFontFamily,
         glyphName,
       );
-      runningElaphronGeometry.set(quantitativeNeume, {
-        left: bounds.left * pageSetup.neumeDefaultFontSize,
-        width: (bounds.right - bounds.left) * pageSetup.neumeDefaultFontSize,
-      });
+      runningElaphronLeftOffsets.set(
+        quantitativeNeume,
+        bounds.left * pageSetup.neumeDefaultFontSize,
+      );
     }
 
     // Hyphens and underscores end at the following lyric, so center long
@@ -5644,7 +5632,7 @@ export class LayoutService {
       pages,
       pageSetup,
       measureBarWidthMap,
-      runningElaphronGeometry,
+      runningElaphronLeftOffsets,
       centeringPlans,
     );
 
@@ -5945,7 +5933,7 @@ export class LayoutService {
                   nextNoteElement,
                   pageSetup,
                   measureBarWidthMap,
-                  runningElaphronGeometry,
+                  runningElaphronLeftOffsets,
                 );
               end =
                 nextLyricLimit == null
@@ -8319,40 +8307,34 @@ export class LayoutService {
     nextNoteElement: NoteElement | null,
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
-    runningElaphronGeometry: ReadonlyMap<
-      QuantitativeNeume,
-      { left: number; width: number }
-    >,
+    runningElaphronLeftOffsets: ReadonlyMap<QuantitativeNeume, number>,
   ) {
+    // Preserve the minimum gap to all visible text, including centered lyrics.
     const nextLyricLimit =
-      nextNoteElement == null
-        ? null
-        : nextNoteElement.x +
+      nextNoteElement != null && nextNoteElement.lyricsWidth > 0
+        ? nextNoteElement.x +
           this.getLyricTextLeft(nextNoteElement) -
-          pageSetup.lyricsMinimumSpacing;
-    const nextRunningElaphronGeometry =
+          pageSetup.lyricsMinimumSpacing
+        : null;
+    const elaphronLeft =
       nextNoteElement == null
         ? undefined
-        : runningElaphronGeometry.get(nextNoteElement.quantitativeNeume);
+        : runningElaphronLeftOffsets.get(nextNoteElement.quantitativeNeume);
 
     // Note the special case for when the next neume is a running elaphron.
     // The melisma, which by convention must always be a final melisma,
     // should run all the way to the elaphron, instead of stopping at
     // the apostrophos.
-    if (nextNoteElement != null && nextRunningElaphronGeometry != null) {
-      const { left: elaphronLeft } = nextRunningElaphronGeometry;
-
+    if (nextNoteElement != null && elaphronLeft != null) {
       return {
         end:
           nextNoteElement.x +
           this.getNoteLeftBarReserve(nextNoteElement, measureBarWidthMap) +
           elaphronLeft,
-        nextLyricLimit: nextNoteElement.lyricsWidth > 0 ? nextLyricLimit : null,
+        nextLyricLimit,
       };
     }
 
-    // Always preserve the minimum gap to visible text, including a short
-    // lyric that Phase 2 has centered under its melisma.
     return {
       end:
         finalElement == null
@@ -8363,10 +8345,7 @@ export class LayoutService {
               finalElement,
               measureBarWidthMap,
             ),
-      nextLyricLimit:
-        nextNoteElement != null && nextNoteElement.lyricsWidth > 0
-          ? nextLyricLimit
-          : null,
+      nextLyricLimit,
     };
   }
 
@@ -8378,10 +8357,7 @@ export class LayoutService {
     pages: Page[],
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
-    runningElaphronGeometry: ReadonlyMap<
-      QuantitativeNeume,
-      { left: number; width: number }
-    >,
+    runningElaphronLeftOffsets: ReadonlyMap<QuantitativeNeume, number>,
     centeringPlans: ReadonlyMap<NoteElement, MelismaCenteringPlan>,
   ) {
     if (centeringPlans.size === 0) {
@@ -8450,7 +8426,7 @@ export class LayoutService {
                 : null,
               pageSetup,
               measureBarWidthMap,
-              runningElaphronGeometry,
+              runningElaphronLeftOffsets,
             );
             if (
               end - (note.x + this.getLyricTextRight(note, false)) >=

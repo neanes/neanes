@@ -126,12 +126,14 @@ An author-set keep always prohibits the break, independently of the automatic pe
 
 |               Cost | Break location                                    | $\TeX$ analogue |
 | -----------------: | ------------------------------------------------- | --------------- |
+|         `MAX_COST` | Inside an atomic melisma prefix                   | none            |
 |         `MAX_COST` | From a note to a following martyria               | none            |
 |         `MAX_COST` | Across a tie (heteron, homalon, yfen)             | none            |
 |  0.5 of `MAX_COST` | After a vareia                                    | `\relpenalty`   |
 |  0.5 of `MAX_COST` | Before kentēmata                                  | `\relpenalty`   |
 |  0.1 of `MAX_COST` | Before configured beat-stealing neumes/time marks | none            |
 |  0.2 of `MAX_COST` | Melisma start to first continuation (0 to 1)      | `\clubpenalty`  |
+|  0.2 of `MAX_COST` | First permitted break after a multi-neume prefix  | `\clubpenalty`  |
 | 0.15 of `MAX_COST` | Penultimate to last melisma note ($n-2$ to $n-1$) | `\widowpenalty` |
 |         `MAX_COST` | After a note with an active keep                  | none            |
 |                  0 | All other inter-note breaks                       | none            |
@@ -153,9 +155,11 @@ Long melisma lyrics use the same line-breaking pipeline, with no second solve fo
 
 Phase 1 measures each internal boundary using the same preferred glyph- and measure-bar-aware width used by the Knuth-Plass stream. The measured group runs to the melisma's end or its first explicit break, whichever comes first. It prohibits automatic breaks through the boundary after the last note whose quantitative-neume span is too narrow to contain the centered lyric, including punctuation, and fixes the protected prefix's internal glue at those widths. The atomic run therefore also includes the following note when there is one. Negative spacing can narrow the span again after it first contains the lyric, so the first containing note is not enough. If the whole measured group is still too narrow, all internal boundaries are protected and its centered lyric bounds are used for collision layout immediately, while retaining `alignLeft` for the Phase 1 encoding.
 
-Phase 2 centers eligible lyrics before laying out any hyphens or underscores, so those that end at a centered lyric see its final position. An underscore lyric qualifies only when the segment's underscore, measured before it is shortened to clear the next lyric, is narrower than `lyricsMelismaCutoffWidth`; an underscore hidden only by that shortening does not trigger centering. A hyphenated lyric qualifies only when its centered text, including punctuation, exceeds the segment's quantitative-neume span. Phase 2 accepts only positions at or to the right of the lyric's Phase 1 position, keeping it clear of the preceding lyric and any line-start hyphen. This includes a zero shift for a lyric already centered in Phase 1.
+Phase 1 records a centering plan for each eligible start. Phase 2 finalizes lyrics already centered in Phase 1 using their existing text bounds, without re-evaluating thresholds or reconstructing their offsets from positioned neumes. This preserves the decision across floating-point rounding differences.
 
-When a lyric follows the segment on the same line, Phase 2 also requires that the group's final note was flagged in Phase 1 to reserve `lyricsMinimumSpacing` before that lyric. Phase 1 flags groups that are too narrow to contain the centered lyric, and underscore groups whose end is less than `lyricsMelismaCutoffWidth` beyond the original left-aligned lyric's right edge. This reservation raises the preferred boundary width; outside the protected prefix, glue remains elastic during justification.
+Other eligible lyrics can be centered after justification. An underscore lyric qualifies only when the segment's underscore, measured before it is shortened to clear the next lyric, is narrower than `lyricsMelismaCutoffWidth`; an underscore hidden only by that shortening does not trigger centering. A hyphenated lyric qualifies only when its centered text, including punctuation, exceeds the segment's quantitative-neume span. Phase 2 accepts only positions at or to the right of the lyric's Phase 1 position, keeping it clear of the preceding lyric and any line-start hyphen. The complete text, including punctuation, must stay within the already reserved envelope of the original lyric and the positioned neume segment, and at least `lyricsMinimumSpacing` before the next visible lyric on the same line, even across lyricless notes. Geometry comparisons allow a small rounding tolerance.
+
+Phase 1 raises the preferred spacing after groups likely to be centered. This is a spacing preference, not permission to overflow it after justification. The centering pass visits each line backwards so clearance checks use the following lyric's final position. It runs before drawing any hyphens or underscores, which depend on those final positions.
 
 ### Lyricless scores
 
@@ -373,8 +377,8 @@ The centered lyric may also begin a melisma, after a hyphenated or non-hyphenate
 The current cursor is already after the previous note's `spaceAfter`.
 This aligns the next centered lyric's left edge with that cursor while preserving the user-defined extra spacing already included in the cursor position.
 The collision correction $\ell_i$ still runs afterward, including the carried-melisma check against `melismaLyricsEndPx`, and the final result is still raised to the preferred visible-note and measure-bar widths.
-The preceding underscore is separately clamped to stop at least `lyricsMinimumSpacing` before the next lyric when that lyric is left-aligned or wider than its neume, so aligning that lyric with the neume edge does not extend the underscore into the gap.
-The exception is a following running elaphron: the line runs to the elaphron and is clamped only when the next lyric is wider than the elaphron.
+The preceding underscore is separately clamped to stop at least `lyricsMinimumSpacing` before the next visible lyric on the same line, regardless of its alignment or width.
+For a following running elaphron on the same line, the underscore runs to the elaphron subject to the same lyric clamp. Notes on another line never supply endpoint coordinates.
 
 The collision check is geometry-based.
 When both notes carry lyrics, the code computes the actual visual gap between them from the neume overhangs relative to their lyrics, then adds back only the missing amount.

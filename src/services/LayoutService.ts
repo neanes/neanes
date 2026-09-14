@@ -121,6 +121,8 @@ const maxAdjustmentRatioSearchIterations = 24;
 // this amount. A relaxed cap can multiply the contribution.
 const minGlueStretch = 0.1;
 const minGlueShrink = 0;
+// Pixel tolerance for geometry reconstructed after line positioning.
+const melismaGeometryTolerance = 1e-9;
 // Vertical slop when testing vareia collision boxes against measure bar
 // boxes, so hairline gaps between adjacent glyph regions still count as
 // overlapping.
@@ -355,10 +357,13 @@ interface LineBreakSolution {
   requestedMaxAdjustmentRatio: number | null;
 }
 
+interface MelismaCenteringPlan {
+  phase1Centered: boolean;
+}
+
 interface AtomicMelismaLayout {
-  boundaryWidths: Map<NoteElement, number>;
-  centeringEligibleStartNotes: Set<NoteElement>;
-  phase1CenteredStartNotes: Set<NoteElement>;
+  boundaries: Map<NoteElement, { width: number; protected: boolean }>;
+  centeringPlans: Map<NoteElement, MelismaCenteringPlan>;
   potentiallyCenteredGroupEndNotes: Set<NoteElement>;
   postPrefixPenaltyNotes: Set<NoteElement>;
 }
@@ -469,7 +474,7 @@ export class LayoutService {
 
     this.precomputeNoteGeometry(elements, pageSetup, noteWidthArgs);
 
-    const atomicMelismaLayout = this.getAtomicMelismaLayout(
+    const atomicMelismaLayout = this.prepareAtomicMelismaLayout(
       elements,
       pageSetup,
       measureBarWidthMap,
@@ -853,26 +858,28 @@ export class LayoutService {
               phase1GreekMelismaIsActive,
             );
 
+          const melismaBoundary =
+            atomicMelismaLayout.boundaries.get(noteElement);
           const isInsideAtomicMelismaPrefix =
-            atomicMelismaLayout.boundaryWidths.has(noteElement);
-          const m_i = isInsideAtomicMelismaPrefix
-            ? atomicMelismaLayout.boundaryWidths.get(noteElement)!
-            : this.calculateInterNoteSpacing(
+            melismaBoundary?.protected ?? false;
+          const m_i =
+            melismaBoundary?.width ??
+            this.calculateInterNoteSpacing(
+              noteElement,
+              rightProjection,
+              nextElement,
+              nextNoteElement,
+              nextNoteElement != null &&
+                (atomicMelismaLayout.centeringPlans.get(nextNoteElement)
+                  ?.phase1Centered ??
+                  false),
+              atomicMelismaLayout.potentiallyCenteredGroupEndNotes.has(
                 noteElement,
-                rightProjection,
-                nextElement,
-                nextNoteElement,
-                nextNoteElement != null &&
-                  atomicMelismaLayout.phase1CenteredStartNotes.has(
-                    nextNoteElement,
-                  ),
-                atomicMelismaLayout.potentiallyCenteredGroupEndNotes.has(
-                  noteElement,
-                ),
-                layoutWorkspace,
-                minimumLyricGap,
-                measureBarWidthMap,
-              );
+              ),
+              layoutWorkspace,
+              minimumLyricGap,
+              measureBarWidthMap,
+            );
 
           // Combine the graded automatic penalties with the resolved absolute
           // constraint for this boundary, then clamp the total to MAX_COST.
@@ -1827,8 +1834,7 @@ export class LayoutService {
       pageSetup,
       defaultLyricsFontCss,
       measureBarWidthMap,
-      atomicMelismaLayout.centeringEligibleStartNotes,
-      atomicMelismaLayout.potentiallyCenteredGroupEndNotes,
+      atomicMelismaLayout.centeringPlans,
     );
 
     if (pageSetup.alignIsonIndicators) {
@@ -2749,9 +2755,7 @@ export class LayoutService {
 
     return (
       noteElement.isMelismaStart &&
-      noteElement.lyricsWidth -
-        noteElement.lyricsLeadingPunctuationWidth -
-        noteElement.lyricsTrailingPunctuationWidth >
+      this.getUnpunctuatedLyricWidth(noteElement) >
         noteElement.neumeWidth - noteElement.lyricsHorizontalOffset &&
       (!noteElement.isHyphen ||
         (nextNoteElement != null &&
@@ -2760,15 +2764,14 @@ export class LayoutService {
     );
   }
 
-  private static getAtomicMelismaLayout(
+  private static prepareAtomicMelismaLayout(
     elements: ScoreElement[],
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
   ): AtomicMelismaLayout {
     const layout: AtomicMelismaLayout = {
-      boundaryWidths: new Map(),
-      centeringEligibleStartNotes: new Set(),
-      phase1CenteredStartNotes: new Set(),
+      boundaries: new Map(),
+      centeringPlans: new Map(),
       potentiallyCenteredGroupEndNotes: new Set(),
       postPrefixPenaltyNotes: new Set(),
     };
@@ -2802,18 +2805,12 @@ export class LayoutService {
       // Knuth-Plass stream is built, including elastic glue and measure-bar
       // transfer. Mixed-element melismas intentionally remain left-aligned,
       // so do not apply the atomic centering rule to any segment of one.
-      if (this.hasNonNoteMelismaContinuation(elements, startIndex + 1)) {
-        continue;
-      }
-
-      layout.centeringEligibleStartNotes.add(startNote);
-
       const containedLyricWidth =
         this.getCenteredMelismaContainedLyricWidth(startNote);
       const startQuantitativeNeumeOffset = this.getStartQuantitativeNeumeOffset(
         startNote,
         pageSetup,
-        measureBarWidthMap,
+        this.getNoteLeftBarReserve(startNote, measureBarWidthMap),
       );
 
       const lyricRightFromStartQuantitativeNeume =
@@ -2827,6 +2824,7 @@ export class LayoutService {
       let noteX = 0;
       let fullQuantitativeNeumeSpan = 0;
       let protectedBoundaryCount = 0;
+      let mixedContinuation = false;
 
       while (true) {
         groupNotes.push(note);
@@ -2841,11 +2839,19 @@ export class LayoutService {
 
         // An explicit break ends the group, so no prefix boundary carries one.
         if (note.lineBreak || note.pageBreak) {
+          mixedContinuation = this.hasNonNoteMelismaContinuation(
+            elements,
+            noteIndex + 1,
+          );
           break;
         }
 
         const nextElement = this.getElementAt(elements, noteIndex + 1);
         if (!this.isPartOfSameMelisma(nextElement)) {
+          mixedContinuation = this.hasNonNoteMelismaContinuation(
+            elements,
+            noteIndex + 1,
+          );
           break;
         }
 
@@ -2862,6 +2868,12 @@ export class LayoutService {
         noteIndex++;
       }
 
+      if (mixedContinuation) {
+        continue;
+      }
+      const centeringPlan = { phase1Centered: false };
+      layout.centeringPlans.set(startNote, centeringPlan);
+
       // Protect the boundary after each note whose span is still narrower
       // than the lyric, so the atomic run also includes the note after the
       // last such note. At preferred spacing, every permitted segment end
@@ -2876,8 +2888,11 @@ export class LayoutService {
         groupBoundaryWidths.length,
       );
 
-      for (let i = 0; i < protectedBoundaryCount; i++) {
-        layout.boundaryWidths.set(groupNotes[i], groupBoundaryWidths[i]);
+      for (let i = 0; i < groupBoundaryWidths.length; i++) {
+        layout.boundaries.set(groupNotes[i], {
+          width: groupBoundaryWidths[i],
+          protected: i < protectedBoundaryCount,
+        });
       }
 
       // Once the lyric fits, the first legal break inside the melisma can
@@ -2893,9 +2908,8 @@ export class LayoutService {
 
       const lastNote = groupNotes[groupNotes.length - 1];
 
-      // When a lyric follows on the same line, Phase 2 requires the group to
-      // be flagged here before centering. Its final note then reserves
-      // lyricsMinimumSpacing in the preferred width before that lyric.
+      // Reserve preferred clearance after groups likely to be centered.
+      // Phase 2 still checks the actual space after justification.
       if (fullQuantitativeNeumeSpan < containedLyricWidth) {
         // The whole group is narrower than its lyric, so every internal
         // boundary is protected and fixed at its precomputed preferred
@@ -2908,7 +2922,7 @@ export class LayoutService {
             startNote,
             fullQuantitativeNeumeSpan,
           );
-        layout.phase1CenteredStartNotes.add(startNote);
+        centeringPlan.phase1Centered = true;
         layout.potentiallyCenteredGroupEndNotes.add(lastNote);
       } else if (
         !startNote.isHyphen &&
@@ -3162,11 +3176,21 @@ export class LayoutService {
   private static getStartQuantitativeNeumeOffset(
     noteElement: NoteElement,
     pageSetup: PageSetup,
-    measureBarWidthMap: Map<MeasureBar, number>,
+    leftBarReserve: number,
   ) {
     return (
-      this.getNoteLeftBarReserve(noteElement, measureBarWidthMap) +
-      this.getVareiaPrefixWidth(noteElement, pageSetup)
+      leftBarReserve +
+      (!pageSetup.melkiteRtl
+        ? this.getVareiaPrefixWidth(noteElement, pageSetup)
+        : 0)
+    );
+  }
+
+  private static getUnpunctuatedLyricWidth(note: NoteElement) {
+    return (
+      note.lyricsWidth -
+      note.lyricsLeadingPunctuationWidth -
+      note.lyricsTrailingPunctuationWidth
     );
   }
 
@@ -3178,22 +3202,15 @@ export class LayoutService {
     quantitativeNeumeSpan: number,
   ) {
     return (
-      (quantitativeNeumeSpan -
-        startNote.lyricsWidth -
-        startNote.lyricsLeadingPunctuationWidth +
-        startNote.lyricsTrailingPunctuationWidth) /
-      2
+      (quantitativeNeumeSpan - this.getUnpunctuatedLyricWidth(startNote)) / 2 -
+      startNote.lyricsLeadingPunctuationWidth
     );
   }
 
   // The span needed to contain centered text and its uncentered punctuation.
   private static getCenteredMelismaContainedLyricWidth(note: NoteElement) {
-    const effectiveLyricWidth =
-      note.lyricsWidth -
-      note.lyricsLeadingPunctuationWidth -
-      note.lyricsTrailingPunctuationWidth;
     return (
-      effectiveLyricWidth +
+      this.getUnpunctuatedLyricWidth(note) +
       2 *
         Math.max(
           note.lyricsLeadingPunctuationWidth,
@@ -3748,11 +3765,11 @@ export class LayoutService {
       measureBarWidthMap,
       leftBarReserveOverride,
     );
-    const bodyLeft =
-      leftBarReserve +
-      (!pageSetup.melkiteRtl
-        ? this.getVareiaPrefixWidth(noteElement, pageSetup)
-        : 0);
+    const bodyLeft = this.getStartQuantitativeNeumeOffset(
+      noteElement,
+      pageSetup,
+      leftBarReserve,
+    );
 
     if (noteElement.vareia && !pageSetup.melkiteRtl) {
       glyphs.push(
@@ -5594,8 +5611,7 @@ export class LayoutService {
     pageSetup: PageSetup,
     defaultLyricsFontCss: string,
     measureBarWidthMap: Map<MeasureBar, number>,
-    centeringEligibleStartNotes: ReadonlySet<NoteElement>,
-    potentiallyCenteredGroupEndNotes: ReadonlySet<NoteElement>,
+    centeringPlans: ReadonlyMap<NoteElement, MelismaCenteringPlan>,
   ) {
     // First calculate some constants
 
@@ -5629,8 +5645,7 @@ export class LayoutService {
       pageSetup,
       measureBarWidthMap,
       runningElaphronGeometry,
-      centeringEligibleStartNotes,
-      potentiallyCenteredGroupEndNotes,
+      centeringPlans,
     );
 
     let melismaSyllables: MelismaSyllables | null = null;
@@ -5791,7 +5806,10 @@ export class LayoutService {
 
             let nextNoteElement: NoteElement | null = null;
 
-            if (nextElement?.elementType === ElementType.Note) {
+            if (
+              nextElement !== firstElementOnNextLine &&
+              nextElement?.elementType === ElementType.Note
+            ) {
               nextNoteElement = nextElement as NoteElement;
             }
 
@@ -7911,14 +7929,16 @@ export class LayoutService {
     const measureBarLeft = this.getVisibleMeasureBarLeft(noteElement);
     // Ink bounds are relative to the main glyph run. Translate its right edge
     // into note-box coordinates before comparing it with the layout advance.
-    const bodyLeft =
-      (measureBarLeft != null
+    const leftBarReserve =
+      measureBarLeft != null
         ? this.getNeumeWidthFromCache(measureBarLeft, pageSetup) +
           noteElement.computedMeasureBarLeftLeadingSpacing
-        : 0) +
-      (!pageSetup.melkiteRtl && noteElement.vareia
-        ? this.getVareiaPrefixWidth(noteElement, pageSetup)
-        : 0);
+        : 0;
+    const bodyLeft = this.getStartQuantitativeNeumeOffset(
+      noteElement,
+      pageSetup,
+      leftBarReserve,
+    );
 
     return Math.max(
       0,
@@ -8320,26 +8340,19 @@ export class LayoutService {
     // should run all the way to the elaphron, instead of stopping at
     // the apostrophos.
     if (nextNoteElement != null && nextRunningElaphronGeometry != null) {
-      const { left: elaphronLeft, width: elaphronWidth } =
-        nextRunningElaphronGeometry;
+      const { left: elaphronLeft } = nextRunningElaphronGeometry;
 
       return {
         end:
           nextNoteElement.x +
           this.getNoteLeftBarReserve(nextNoteElement, measureBarWidthMap) +
           elaphronLeft,
-        nextLyricLimit:
-          nextNoteElement.lyricsWidth > elaphronWidth ? nextLyricLimit : null,
+        nextLyricLimit: nextNoteElement.lyricsWidth > 0 ? nextLyricLimit : null,
       };
     }
 
-    // Clamp to the next syllable's rendered text start when that text is
-    // left-aligned or wider than its neume. This keeps the minimum gap
-    // between the end of the melisma line and the next lyric, even when that
-    // lyric begins another centered melisma. A lyric centered by
-    // centerLongMelismaLyrics is no longer left-aligned but has moved only
-    // right of its left-aligned start, so it cannot project left of its
-    // neume even when this clamp does not apply.
+    // Always preserve the minimum gap to visible text, including a short
+    // lyric that Phase 2 has centered under its melisma.
     return {
       end:
         finalElement == null
@@ -8351,22 +8364,16 @@ export class LayoutService {
               measureBarWidthMap,
             ),
       nextLyricLimit:
-        nextNoteElement != null &&
-        (nextNoteElement.alignLeft ||
-          nextNoteElement.lyricsWidth > nextNoteElement.neumeWidth)
+        nextNoteElement != null && nextNoteElement.lyricsWidth > 0
           ? nextLyricLimit
           : null,
     };
   }
 
-  // A long melismatic lyric can consume the entire available underscore span
-  // or exceed the quantitative-neume span of a hyphenated melisma. In that
-  // case, center it beneath its quantitative-neume segment on the line. The
-  // vareia prefix and leading measure-bar reserve are excluded from the
-  // span. Phase 1 has already kept the lyric-covered prefix together and
-  // positioned lyrics wider than the whole group against its centered bounds.
-  // Phase 2 permits no leftward shift and requires a Phase 1 spacing
-  // reservation when another lyric follows on the same line.
+  // Resolve eligible lyrics before drawing underscores and hyphens, whose
+  // endpoints depend on the final lyric positions. Walk each line backwards
+  // so clearance checks see the following lyric's final position, even with
+  // lyricless notes between the groups.
   private static centerLongMelismaLyrics(
     pages: Page[],
     pageSetup: PageSetup,
@@ -8375,10 +8382,9 @@ export class LayoutService {
       QuantitativeNeume,
       { left: number; width: number }
     >,
-    centeringEligibleStartNotes: ReadonlySet<NoteElement>,
-    potentiallyCenteredGroupEndNotes: ReadonlySet<NoteElement>,
+    centeringPlans: ReadonlyMap<NoteElement, MelismaCenteringPlan>,
   ) {
-    if (centeringEligibleStartNotes.size === 0) {
+    if (centeringPlans.size === 0) {
       return;
     }
 
@@ -8392,24 +8398,37 @@ export class LayoutService {
           pageIndex,
           lineIndex,
         );
+        let followingLyric: NoteElement | null = null;
 
-        for (let index = 0; index < line.elements.length; index++) {
+        for (let index = line.elements.length - 1; index >= 0; index--) {
           const element = line.elements[index];
-          if (
-            element.elementType !== ElementType.Note ||
-            !centeringEligibleStartNotes.has(element as NoteElement)
-          ) {
+          if (element.elementType !== ElementType.Note) {
+            continue;
+          }
+          const note = element as NoteElement;
+          const nextLyric = followingLyric;
+          if (note.lyricsWidth > 0) {
+            followingLyric = note;
+          }
+          const plan = centeringPlans.get(note);
+          if (plan == null) {
             continue;
           }
 
-          const note = element as NoteElement;
+          // Phase 1 already reserved and applied these exact text bounds.
+          // Finalize the alignment representation without measuring again:
+          // rounding or cutoff checks must not undo that decision.
+          if (plan.phase1Centered) {
+            this.applyCenteredMelismaLyric(note, this.getLyricTextLeft(note));
+            continue;
+          }
+
           const { finalElement, nextElement } = this.findFinalAndNextElement(
             line,
             note,
             firstElementOnNextLine,
             index + 1,
           );
-
           const finalElementIndex =
             finalElement == null
               ? index
@@ -8420,10 +8439,8 @@ export class LayoutService {
           ) as NoteElement;
 
           if (!note.isHyphen) {
-            // Decide from the unclamped end, which does not depend on whether
-            // the following lyric is itself centered. Where only the clamp
-            // brings the span under the cutoff, the lyric stays left-aligned
-            // without an underscore.
+            // A clamp against the following lyric alone must not trigger
+            // centering. Never use coordinates from the next line.
             const { end } = this.getUnderscoreMelismaEnd(
               note,
               finalElement,
@@ -8437,33 +8454,17 @@ export class LayoutService {
             );
             if (
               end - (note.x + this.getLyricTextRight(note, false)) >=
-              pageSetup.lyricsMelismaCutoffWidth
+              pageSetup.lyricsMelismaCutoffWidth - melismaGeometryTolerance
             ) {
               continue;
             }
-          }
-
-          // Centering moves the lyric toward the following syllable. When a
-          // lyric follows on the same line, require the lyricsMinimumSpacing
-          // that Phase 1 reserved before it for groups in
-          // potentiallyCenteredGroupEndNotes. A following lyric on another
-          // line cannot collide with this one.
-          const isFollowedBySameLineLyric =
-            nextElement !== firstElementOnNextLine &&
-            nextElement?.elementType === ElementType.Note &&
-            (nextElement as NoteElement).lyricsWidth > 0;
-          if (
-            isFollowedBySameLineLyric &&
-            !potentiallyCenteredGroupEndNotes.has(lastQuantitativeNote)
-          ) {
-            continue;
           }
 
           const startQuantitativeNeumeOffset =
             this.getStartQuantitativeNeumeOffset(
               note,
               pageSetup,
-              measureBarWidthMap,
+              this.getNoteLeftBarReserve(note, measureBarWidthMap),
             );
           const lastQuantitativeNeumeEnd =
             lastQuantitativeNote.x +
@@ -8474,31 +8475,57 @@ export class LayoutService {
             );
           const quantitativeNeumeSpan =
             lastQuantitativeNeumeEnd - note.x - startQuantitativeNeumeOffset;
-          if (note.isHyphen) {
-            const containedLyricWidth =
-              this.getCenteredMelismaContainedLyricWidth(note);
-            if (quantitativeNeumeSpan >= containedLyricWidth) {
-              continue;
-            }
+          if (
+            note.isHyphen &&
+            quantitativeNeumeSpan >=
+              this.getCenteredMelismaContainedLyricWidth(note) -
+                melismaGeometryTolerance
+          ) {
+            continue;
           }
+          const currentTextLeft = this.getLyricTextLeft(note);
           const lyricTextLeft =
             startQuantitativeNeumeOffset +
             this.getCenteredMelismaLyricTextLeft(note, quantitativeNeumeSpan);
-          const lyricTextShift = lyricTextLeft - this.getLyricTextLeft(note);
-
-          // Phase 1 kept the preceding lyric and any line-start hyphen clear
-          // of the left-aligned lyric. Only a rightward move stays clear.
-          if (lyricTextShift < 0) {
+          if (lyricTextLeft < currentTextLeft - melismaGeometryTolerance) {
             continue;
           }
 
-          note.alignLeft = false;
-          note.lyricsHorizontalOffset =
-            2 * lyricTextLeft - note.neumeWidth + note.lyricsWidth;
-          note.leadingLyricHyphenOffset += lyricTextShift;
+          // Phase 1 reserved the existing lyric and the neume segment. A
+          // rightward move must fit that envelope after justification,
+          // including punctuation, and preserve clearance to the next lyric.
+          const reservedRight = Math.max(
+            note.x + currentTextLeft + note.lyricsWidth,
+            lastQuantitativeNeumeEnd,
+          );
+          const nextLyricLimit =
+            nextLyric == null
+              ? Infinity
+              : nextLyric.x +
+                this.getLyricTextLeft(nextLyric) -
+                pageSetup.lyricsMinimumSpacing;
+          const textLeft = Math.max(currentTextLeft, lyricTextLeft);
+          if (
+            note.x + textLeft + note.lyricsWidth >
+            Math.min(reservedRight, nextLyricLimit) + melismaGeometryTolerance
+          ) {
+            continue;
+          }
+          this.applyCenteredMelismaLyric(note, textLeft);
         }
       }
     }
+  }
+
+  private static applyCenteredMelismaLyric(
+    note: NoteElement,
+    textLeft: number,
+  ) {
+    const shift = textLeft - this.getLyricTextLeft(note);
+    note.alignLeft = false;
+    note.lyricsHorizontalOffset =
+      2 * textLeft - note.neumeWidth + note.lyricsWidth;
+    note.leadingLyricHyphenOffset += shift;
   }
 
   private static hasNonNoteMelismaContinuation(
@@ -8583,12 +8610,18 @@ export class LayoutService {
 
     let nextElement: ScoreElement | null = null;
 
+    let nextNoteElement: ScoreElement | null = null;
+    let needsNoteLookahead = true;
     for (let i = startIndex; i < line.elements.length; i++) {
-      const nextNoteElement = this.nextNoteElement(
-        line,
-        i,
-        firstElementOnNextLine,
-      );
+      if (line.elements[i].elementType === ElementType.Note) {
+        needsNoteLookahead = true;
+      } else if (
+        needsNoteLookahead &&
+        this.isMelismaContinuationElement(line.elements[i])
+      ) {
+        nextNoteElement = this.nextNoteElement(line, i, firstElementOnNextLine);
+        needsNoteLookahead = false;
+      }
 
       // Break if we find an element that is not part of the same melisma
       // or we find a group of continuation elements followed by a note that is not part of the same melisma

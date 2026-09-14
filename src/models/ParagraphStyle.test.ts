@@ -54,14 +54,14 @@ describe('ParagraphStyle', () => {
     expect(styles[10].parentStyleId).toBe(
       BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     );
-    expect(styles[10].overrides).toEqual({ color: '#ED0000' });
+    expect(styles[10].overrides).toEqual({
+      color: '#ED0000',
+      fontSize: Unit.fromPt(14.5),
+    });
     expect(styles[11].parentStyleId).toBe(
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     );
-    expect(styles[11].overrides).toEqual({
-      fontFamily: 'GFS Didot',
-      fontSize: Unit.fromPt(14.5),
-    });
+    expect(styles[11].overrides).toEqual({ fontFamily: 'GFS Didot' });
   });
 
   it('resolves inheritance through parent styles and element overrides', () => {

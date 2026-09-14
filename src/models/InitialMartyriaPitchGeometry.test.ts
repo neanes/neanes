@@ -41,24 +41,25 @@ describe('initial martyria pitch geometry', () => {
       atom({ inkTop: -20, inkBottom: -20 }),
     );
 
-    expect(geometry.fthora?.top).toBe(-2);
-    expect(geometry.quantitative?.top).toBe(16);
+    expect(geometry.fthora?.baseline).toBe(-8);
+    expect(geometry.quantitative?.baseline).toBe(10);
   });
 
   it('moves a colliding quantitative attachment above the fthora', () => {
     const geometry = getInitialMartyriaPitchGeometry(atom(), atom(), atom());
 
-    expect(geometry.quantitative!.top).toBeLessThan(geometry.fthora!.top);
+    expect(geometry.quantitative!.baseline).toBeLessThan(
+      geometry.fthora!.baseline,
+    );
   });
 
-  it('converts each atom baseline to its line-box top', () => {
+  it('places attachments relative to the text baseline regardless of line metrics', () => {
     const geometry = getInitialMartyriaPitchGeometry(
       atom({ lineAscent: 10 }),
       atom({ lineAscent: 20 }),
     );
 
-    expect(geometry.text.top).toBe(10);
-    expect(geometry.fthora!.top).toBe(-12);
+    expect(geometry.fthora!.baseline).toBe(-12);
   });
 
   it('uses painted ink rather than the full line box for outer extents', () => {
@@ -87,8 +88,9 @@ describe('initial martyria pitch geometry', () => {
       atom({ strokeWidth: 4 }),
       atom({ strokeWidth: 4 }),
     );
-    const paintedTextInkTop = geometry.top + geometry.text.top + 10 - 10;
-    const paintedFthoraInkBottom = geometry.top + geometry.fthora!.top + 10 + 4;
+    // The text sits on baseline 0.
+    const paintedTextInkTop = -8 - 2;
+    const paintedFthoraInkBottom = geometry.fthora!.baseline + 2 + 2;
 
     expect(paintedTextInkTop - paintedFthoraInkBottom).toBe(2);
   });

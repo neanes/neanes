@@ -38,7 +38,6 @@ import {
   type InitialMartyriaCanonicalNote,
   type InitialMartyriaContext,
   type InitialMartyriaModeNameSemantics,
-  type InitialMartyriaStartingNoteRun,
   type InitialMartyriaStructure,
   initialMartyriaStructureHasOrdinalDigits,
   type InitialMartyriaStyle,
@@ -857,78 +856,73 @@ export function resolveInitialMartyriaStyle(options: {
   };
 }
 
-function isInitialMartyriaStartingNoteRun(
-  run: ResolvedInitialMartyriaRun,
-): run is InitialMartyriaStartingNoteRun {
-  return run.kind === 'startingPitch';
-}
-
-export type InitialMartyriaSeparator =
-  | 'none'
-  | 'wordSpace'
-  | 'modeSign'
-  | 'plagalAbbreviation'
-  | 'startingNote'
-  | 'noteCluster';
+export type InitialMartyriaSeparator = 'none' | 'wordSpace' | 'fixed';
 
 export function getInitialMartyriaFixedSeparatorSize(
-  separator: InitialMartyriaSeparator,
   primaryTextFontSize: number,
 ) {
-  switch (separator) {
-    case 'modeSign':
-    case 'plagalAbbreviation':
-    case 'startingNote':
-    case 'noteCluster':
-      return 0.43 * primaryTextFontSize;
-    default:
-      return null;
-  }
-}
-
-function isModeSignRun(run: ResolvedInitialMartyriaRun) {
-  return run.kind === 'glyph' && run.semantic === 'modeSign';
+  return 0.43 * primaryTextFontSize;
 }
 
 function isPlagalAbbreviationRun(run: ResolvedInitialMartyriaRun) {
   return run.kind === 'text' && run.semantic === 'plagalAbbreviation';
 }
 
+/*
+ * Whether runs[index] is spaced like a word. Words and note names are; the
+ * stacked plagal abbreviation is not. The mode sign is only where it stands
+ * in for the numeral of a sign-only name, and then only after a word, so it
+ * never has a word space on one side and a fixed gap on the other.
+ */
+function isWordLikeRun(
+  resolution: Pick<InitialMartyriaStyleResolution, 'structure' | 'runs'>,
+  index: number,
+): boolean {
+  const run = resolution.runs[index];
+  switch (run.kind) {
+    case 'text':
+      return !isPlagalAbbreviationRun(run);
+    case 'startingPitch':
+      return true;
+    case 'glyph':
+      return (
+        resolution.structure.modeIdentificationMethod ===
+          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
+        index > 0 &&
+        isWordLikeRun(resolution, index - 1)
+      );
+  }
+}
+
+/**
+ * The gap before runs[index]: a word space between two word-like runs, and
+ * a fixed gap beside anything else.
+ */
 export function getInitialMartyriaSeparatorBefore(
-  runs: ResolvedInitialMartyriaRun[],
+  resolution: Pick<InitialMartyriaStyleResolution, 'structure' | 'runs'>,
   index: number,
 ): InitialMartyriaSeparator {
-  if (index <= 0 || index >= runs.length) {
+  if (index <= 0 || index >= resolution.runs.length) {
     return 'none';
   }
-  const before = runs[index - 1];
-  const after = runs[index];
-  if (isInitialMartyriaStartingNoteRun(after)) {
-    return 'startingNote';
-  }
-  if (isInitialMartyriaStartingNoteRun(before) && after.kind === 'text') {
-    return 'startingNote';
-  }
-  if (isModeSignRun(before) || isModeSignRun(after)) {
-    return 'modeSign';
-  }
-  if (isPlagalAbbreviationRun(before) || isPlagalAbbreviationRun(after)) {
-    return 'plagalAbbreviation';
-  }
-  return 'wordSpace';
+  return isWordLikeRun(resolution, index - 1) &&
+    isWordLikeRun(resolution, index)
+    ? 'wordSpace'
+    : 'fixed';
 }
 
 export function getInitialMartyriaSeparatorAfter(
-  runs: ResolvedInitialMartyriaRun[],
+  resolution: Pick<InitialMartyriaStyleResolution, 'structure' | 'runs'>,
   index: number,
 ): InitialMartyriaSeparator {
+  const { runs } = resolution;
   if (index < 0 || index >= runs.length) {
     return 'none';
   }
   if (index !== runs.length - 1) {
-    return getInitialMartyriaSeparatorBefore(runs, index + 1);
+    return getInitialMartyriaSeparatorBefore(resolution, index + 1);
   }
-  return isPlagalAbbreviationRun(runs[index]) ? 'plagalAbbreviation' : 'none';
+  return isPlagalAbbreviationRun(runs[index]) ? 'fixed' : 'none';
 }
 
 function isModeKeyMode(value: number): value is ModeKeyMode {

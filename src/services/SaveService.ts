@@ -205,7 +205,7 @@ function hasLegacyPageSetupStyleDefaults(pageSetup: PageSetup_v1) {
 
 // The glyph-based initial martyria of earlier versions drew the music font
 // at the mode key size, 20pt by default. Its replacement uses 14.5pt for
-// Greek text and scales the sign glyphs to match its text, so a legacy
+// its text and scales the sign glyphs to match it, so a legacy
 // element override is carried over by the ratio of the two defaults.
 // A migration is frozen at the sizes that were current when it was written,
 // so later tuning of the Initial Martyria paragraph style does not change
@@ -223,8 +223,8 @@ function scaleLegacyModeKeyFontSize(fontSize: number) {
 }
 
 /*
- * Folds the shared pre-style mode key color into Initial Martyria so Initial
- * Martyria (Greek) inherits it. The old size and outline belong only to the
+ * Folds the shared pre-style mode key color and size into Initial Martyria so
+ * Initial Martyria (Greek) inherits them. The old outline belongs only to the
  * Greek appearance. The height adjustment has no equivalent: the replacement
  * measures its own height from font metrics.
  */
@@ -243,6 +243,10 @@ function applyLegacyModeKeyStyleDefaults(
 
   applyGeneratedParagraphStyleOverrides(initialMartyria, inherited, {
     color: pageSetup.modeKeyDefaultColor,
+    fontSize:
+      pageSetup.modeKeyDefaultFontSize == null
+        ? undefined
+        : scaleLegacyModeKeyFontSize(pageSetup.modeKeyDefaultFontSize),
   });
 
   const initialMartyriaGreek = getRequiredParagraphStyleById(
@@ -265,14 +269,6 @@ function applyLegacyModeKeyStyleDefaults(
     );
   }
 
-  applyGeneratedParagraphStyleOverride(
-    initialMartyriaGreek,
-    greekInherited,
-    'fontSize',
-    pageSetup.modeKeyDefaultFontSize == null
-      ? undefined
-      : scaleLegacyModeKeyFontSize(pageSetup.modeKeyDefaultFontSize),
-  );
   applyGeneratedParagraphStyleOverride(
     initialMartyriaGreek,
     greekInherited,

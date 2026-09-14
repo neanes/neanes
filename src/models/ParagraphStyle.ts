@@ -391,6 +391,7 @@ export function createDefaultParagraphStyles() {
     BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
     {
       color: '#ED0000',
+      fontSize: Unit.fromPt(14.5),
     },
   );
   const initialMartyriaGreek = createBuiltInStyle(
@@ -399,7 +400,6 @@ export function createDefaultParagraphStyles() {
     BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     {
       fontFamily: 'GFS Didot',
-      fontSize: Unit.fromPt(14.5),
     },
   );
 

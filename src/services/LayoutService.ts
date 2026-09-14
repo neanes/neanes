@@ -2380,9 +2380,7 @@ export class LayoutService {
       }
       return {
         kind,
-        width:
-          getInitialMartyriaFixedSeparatorSize(kind, fixedSeparatorFontSize) ??
-          0,
+        width: getInitialMartyriaFixedSeparatorSize(fixedSeparatorFontSize),
         wordSpaceFont: null,
       };
     };
@@ -2390,7 +2388,7 @@ export class LayoutService {
     const runLayouts: InitialMartyriaRunLayout[] = [];
     for (const [runIndex, run] of runs.entries()) {
       const separatorBefore = getSeparatorLayout(
-        getInitialMartyriaSeparatorBefore(runs, runIndex),
+        getInitialMartyriaSeparatorBefore(resolution, runIndex),
         runIndex,
       );
       width += separatorBefore.width;
@@ -2432,6 +2430,20 @@ export class LayoutService {
 
       if (run.kind === 'startingPitch') {
         const glyphAppearance = run.appearance;
+        // The run is drawn in the glyph font, so its line box contributes to
+        // the flow even when it holds no glyphs. The note names sit in flow on
+        // the same baseline, so their text font's line box contributes too.
+        const glyphFont = resolveFontCss(glyphAppearance);
+        const noteTextFont = resolveFontCss({
+          fontFamily,
+          fontStyle,
+          fontSize,
+        });
+        flowTop = Math.min(
+          flowTop,
+          -TextMeasurementService.getFontBoundingBoxAscent(glyphFont),
+          -TextMeasurementService.getFontBoundingBoxAscent(noteTextFont),
+        );
         const measureNote = (note: InitialMartyriaPitchNote | null) =>
           note == null
             ? null
@@ -2461,11 +2473,9 @@ export class LayoutService {
           flowTop = Math.min(flowTop, geometry.top);
           width += geometry.width;
         }
-        const clusterSeparatorWidth =
-          getInitialMartyriaFixedSeparatorSize(
-            'noteCluster',
-            fixedSeparatorFontSize,
-          ) ?? 0;
+        const clusterSeparatorWidth = getInitialMartyriaFixedSeparatorSize(
+          fixedSeparatorFontSize,
+        );
         if (primary != null && secondary != null) {
           width += clusterSeparatorWidth;
         }
@@ -2477,10 +2487,9 @@ export class LayoutService {
           const trailingGlyphText = run.cluster.trailingGlyphs
             .map(glyphText)
             .join('');
-          const trailingGlyphFont = resolveFontCss(glyphAppearance);
           const trailingMetrics = TextMeasurementService.getTextMetrics(
             trailingGlyphText,
-            trailingGlyphFont,
+            glyphFont,
           );
           const glyphStrokeOverflow = glyphAppearance.strokeWidth / 2;
           top = Math.min(
@@ -2495,10 +2504,6 @@ export class LayoutService {
               trailingMetrics.actualBoundingBoxDescent +
               glyphStrokeOverflow,
           );
-          flowTop = Math.min(
-            flowTop,
-            -TextMeasurementService.getFontBoundingBoxAscent(trailingGlyphFont),
-          );
           if (primary != null || secondary != null) {
             width += trailingGlueWidth;
           }
@@ -2511,9 +2516,6 @@ export class LayoutService {
           stackedCharacters: null,
           pitch: {
             textFontSize: fontSize,
-            textLineHeight: TextMeasurementService.getFontHeight(
-              resolveFontCss({ fontFamily, fontStyle, fontSize }),
-            ),
             primary,
             secondary,
             clusterSeparatorWidth,
@@ -2564,7 +2566,7 @@ export class LayoutService {
     }
 
     const trailingSeparator = getSeparatorLayout(
-      getInitialMartyriaSeparatorAfter(runs, runs.length - 1),
+      getInitialMartyriaSeparatorAfter(resolution, runs.length - 1),
       runs.length,
     );
     width += trailingSeparator.width;

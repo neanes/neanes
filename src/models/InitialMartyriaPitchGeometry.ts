@@ -12,14 +12,16 @@ export interface PitchAtomBounds {
 
 export interface PitchAtomPlacement {
   left: number;
-  top: number;
+  /** Offset of the atom baseline from the text baseline. Raised is negative. */
+  baseline: number;
 }
 
 export interface InitialMartyriaPitchGeometry {
   width: number;
   top: number;
   bottom: number;
-  text: PitchAtomPlacement;
+  /** The note name always sits on the cell baseline. */
+  text: { left: number };
   fthora?: PitchAtomPlacement;
   quantitative?: PitchAtomPlacement;
 }
@@ -116,20 +118,23 @@ export function getInitialMartyriaPitchGeometry(
     ...atoms.map((atom) => atom.baseline + atom.bounds.inkBottom),
   );
 
+  // Placements stay relative to the text baseline rather than to a line-box
+  // top: the browser rounds line metrics per rendered size, so a top derived
+  // from measured ascent drifts off the baseline at some zoom levels.
   const shift = -left;
   const place = (atom: typeof textPlacement | undefined) =>
     atom == null
       ? undefined
       : {
           left: atom.left + shift,
-          top: atom.baseline - top - atom.bounds.lineAscent,
+          baseline: atom.baseline,
         };
 
   return {
     width: right - left,
     top,
     bottom,
-    text: place(textPlacement)!,
+    text: { left: textPlacement.left + shift },
     fthora: place(fthoraPlacement),
     quantitative: place(quantitativePlacement),
   };

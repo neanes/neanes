@@ -43,15 +43,7 @@ function createInitialMartyriaParagraphStyle(
 
 describe('InitialMartyriaResolver', () => {
   it('sizes fixed separators from the primary text font size', () => {
-    for (const separator of [
-      'plagalAbbreviation',
-      'modeSign',
-      'startingNote',
-      'noteCluster',
-    ] as const) {
-      expect(getInitialMartyriaFixedSeparatorSize(separator, 20)).toBe(8.6);
-    }
-    expect(getInitialMartyriaFixedSeparatorSize('wordSpace', 20)).toBeNull();
+    expect(getInitialMartyriaFixedSeparatorSize(20)).toBe(8.6);
   });
 
   it('resolves inherited, explicit, and missing style references', () => {
@@ -123,7 +115,7 @@ describe('InitialMartyriaResolver', () => {
     });
     expect(inherited.mainAppearance).toMatchObject({
       fontFamily: 'Source Serif',
-      fontSize: Unit.fromPt(12),
+      fontSize: Unit.fromPt(14.5),
       color: '#ED0000',
       strokeWidth: 0,
     });
@@ -164,7 +156,7 @@ describe('InitialMartyriaResolver', () => {
 
     expect(resolved.mainAppearance).toMatchObject({
       fontFamily: 'Source Serif',
-      fontSize: Unit.fromPt(12),
+      fontSize: Unit.fromPt(14.5),
     });
     expect(resolved.greekAppearance).toMatchObject({
       fontFamily: 'GFS Didot',

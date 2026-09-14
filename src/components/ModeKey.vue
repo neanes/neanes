@@ -57,12 +57,8 @@
                 class="starting-pitch-note"
                 :style="getPitchCellStyle(runLayouts[index], role)"
               >
-                <span
-                  :dir="run.noteText.direction"
-                  :lang="run.noteText.languageTag"
-                  :style="getPitchTextStyle(run, runLayouts[index], role)"
-                  >{{ run.noteText.names[pitchNote.note] }}</span
-                >
+                <!-- The zero-width marks come first so that every placement
+                     is measured from the cell's left edge. -->
                 <span
                   v-if="pitchNote.fthoraAbove != null"
                   class="pitch-mark"
@@ -85,6 +81,12 @@
                     :style="getPitchGlyphStyle(run, runLayouts[index])"
                   />
                 </span>
+                <span
+                  :dir="run.noteText.direction"
+                  :lang="run.noteText.languageTag"
+                  :style="getPitchTextStyle(run, runLayouts[index], role)"
+                  >{{ run.noteText.names[pitchNote.note] }}</span
+                >
               </span>
               <span
                 v-if="
@@ -473,13 +475,8 @@ function getPitchCellStyle(
   runLayout: InitialMartyriaRunLayout,
   role: PitchRole,
 ) {
-  const geometry = runLayout.pitch![role]!;
   return {
-    display: 'inline-block',
-    height: withZoom(geometry.bottom - geometry.top),
-    position: 'relative',
-    verticalAlign: withZoom(-geometry.bottom),
-    width: withZoom(geometry.width),
+    width: withZoom(runLayout.pitch![role]!.width),
   } as CSSProperties;
 }
 
@@ -494,14 +491,11 @@ function getPitchTextStyle(
 
   return {
     color: appearance.color,
-    display: 'block',
     left: withZoom(geometry.text.left),
-    position: 'absolute',
-    top: withZoom(geometry.text.top),
+    position: 'relative',
     ...faceCss(appearance.fontFamily, appearance.fontStyle),
     fontSize: withZoom(pitch.textFontSize),
     ...fontVariantCss(appearance),
-    lineHeight: withZoom(pitch.textLineHeight),
     webkitTextStrokeColor: appearance.strokeColor,
     webkitTextStrokeWidth: withZoom(appearance.strokeWidth),
     whiteSpace: 'nowrap',
@@ -516,8 +510,7 @@ function getPitchMarkStyle(
   const placement = runLayout.pitch![role]![kind]!;
   return {
     left: withZoom(placement.left),
-    position: 'absolute',
-    top: withZoom(placement.top),
+    top: withZoom(placement.baseline),
   } as CSSProperties;
 }
 
@@ -599,13 +592,20 @@ function getPitchTrailingGlueStyle(runLayout: InitialMartyriaRunLayout) {
   unicode-bidi: isolate;
 }
 
+/* The note name and its marks sit in flow on the line baseline, so they align
+   with the neighboring runs exactly at every zoom. Marks are shifted by
+   relative offsets, which never depend on font metrics. */
 .starting-pitch-note {
   display: inline-block;
   position: relative;
+  direction: ltr;
+  text-align: left;
 }
 
 .pitch-mark {
-  position: absolute;
+  display: inline-block;
+  position: relative;
+  width: 0;
 }
 
 .ambitus {

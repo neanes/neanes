@@ -1662,15 +1662,12 @@ describe('SaveService font styles', () => {
       {
         id: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
         parentStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
-        overrides: { color: '#ED0000' },
+        overrides: { color: '#ED0000', fontSize: Unit.fromPt(14.5) },
       },
       {
         id: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
         parentStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
-        overrides: {
-          fontFamily: 'GFS Didot',
-          fontSize: Unit.fromPt(14.5),
-        },
+        overrides: { fontFamily: 'GFS Didot' },
       },
     ]);
     expect(loadedModeKey.initialMartyriaStyleId).toBeNull();
@@ -1691,7 +1688,7 @@ describe('SaveService font styles', () => {
     },
   );
 
-  it('migrates legacy color to Initial Martyria and size and outline to its Greek child', () => {
+  it('migrates legacy color and size to Initial Martyria and outline to its Greek child', () => {
     const initialMartyriaStyle = loadLegacyBuiltInStyle(
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
       {
@@ -1703,7 +1700,9 @@ describe('SaveService font styles', () => {
     );
 
     expect(initialMartyriaStyle.color).toBe('#000000');
-    expect(initialMartyriaStyle.fontSize).toBe(Unit.fromPt(12));
+    expect(initialMartyriaStyle.fontSize).toBeCloseTo(
+      (Unit.fromPt(24) * 14.5) / 20,
+    );
     expect(initialMartyriaStyle.strokeWidth).toBe(0);
     expect(initialMartyriaStyle.fontFamily).toBe('Source Serif');
 
@@ -1736,7 +1735,7 @@ describe('SaveService font styles', () => {
       score.paragraphStyles.find(
         (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
       )!.overrides,
-    ).toEqual({});
+    ).toEqual({ fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20) });
     expect(
       score.paragraphStyles.find(
         (style) =>
@@ -1744,7 +1743,6 @@ describe('SaveService font styles', () => {
       )!.overrides,
     ).toEqual({
       fontFamily: 'GFS Didot',
-      fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20),
       strokeWidth: 2,
     });
     expect(

@@ -117,6 +117,11 @@ export function getInitialMartyriaPitchTrailingGlueWidth(
   return fontService.getStandardGlue(neumeFontFamily).width * glyphFontSize;
 }
 
+// Canvas reports ink bounds in whole pixels, which at text sizes is off by up
+// to a pixel. Measuring at a large size and scaling down keeps the error to a
+// small fraction of a pixel.
+const CAPITAL_HEIGHT_MEASUREMENT_FONT_SIZE = 1000;
+
 /**
  * The music font size whose capital height matches the text's, or null when
  * either font has no usable capital height.
@@ -128,15 +133,18 @@ export function getMatchedNeumeFontSize(options: {
   textFontVariantCaps: string;
   neumeFontFamily: string;
 }) {
-  const textCapitalHeight = TextMeasurementService.getTextHeight(
-    'H',
-    resolveFontCss({
-      fontFamily: options.textFontFamily,
-      fontStyle: options.textFontStyle,
-      fontSize: options.textFontSize,
-    }),
-    options.textFontVariantCaps,
-  );
+  const textCapitalHeight =
+    (TextMeasurementService.getTextHeight(
+      'H',
+      resolveFontCss({
+        fontFamily: options.textFontFamily,
+        fontStyle: options.textFontStyle,
+        fontSize: CAPITAL_HEIGHT_MEASUREMENT_FONT_SIZE,
+      }),
+      options.textFontVariantCaps,
+    ) *
+      options.textFontSize) /
+    CAPITAL_HEIGHT_MEASUREMENT_FONT_SIZE;
   const capitalHeight = fontService.getMetrics(
     options.neumeFontFamily,
   ).capitalHeight;

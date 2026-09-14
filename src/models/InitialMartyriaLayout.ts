@@ -58,8 +58,6 @@ export interface InitialMartyriaStackedCharactersLayout {
 
 export interface InitialMartyriaPitchRunLayout {
   textFontSize: number;
-  /** CSS line-height of the note name text. */
-  textLineHeight: number;
   primary: InitialMartyriaPitchGeometry | null;
   secondary: InitialMartyriaPitchGeometry | null;
   clusterSeparatorWidth: number;

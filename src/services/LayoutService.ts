@@ -2790,10 +2790,6 @@ export class LayoutService {
         continue;
       }
 
-      if (startNote.isHyphen) {
-        continue;
-      }
-
       // addMelismas renders Greek melismas as repeated vowels rather than an
       // underscore, so their lyrics keep their existing layout.
       if (
@@ -2948,8 +2944,9 @@ export class LayoutService {
         layout.phase1CenteredStartNotes.add(startNote);
         layout.potentiallyCenteredGroupEndNotes.add(lastNote);
       } else if (
+        !startNote.isHyphen &&
         fullQuantitativeNeumeSpan - lyricRightFromStartQuantitativeNeume <
-        pageSetup.lyricsMelismaCutoffWidth
+          pageSetup.lyricsMelismaCutoffWidth
       ) {
         layout.potentiallyCenteredGroupEndNotes.add(lastNote);
       }
@@ -8387,11 +8384,12 @@ export class LayoutService {
     };
   }
 
-  // A long melismatic lyric can consume the entire available underscore span.
-  // In that case, center it beneath its quantitative-neume segment on the
-  // line. The vareia prefix is excluded just as it is for ordinary centered
-  // lyric alignment. Phase 1 has already kept the lyric-covered prefix
-  // together, so this does not change the segment's outer bounds.
+  // A long melismatic lyric can consume the entire available underscore span
+  // or exceed the quantitative-neume span of a hyphenated melisma. In that
+  // case, center it beneath its quantitative-neume segment on the line. The
+  // vareia prefix is excluded just as it is for ordinary centered lyric
+  // alignment. Phase 1 has already kept the lyric-covered prefix together,
+  // so this does not change the segment's outer bounds.
   private static centerLongMelismaLyrics(
     pages: Page[],
     pageSetup: PageSetup,
@@ -8431,27 +8429,6 @@ export class LayoutService {
             index + 1,
           );
 
-          // Decide from the unclamped end, which does not depend on whether
-          // the following lyric is itself centered. Where only the clamp
-          // brings the span under the cutoff, the lyric stays left-aligned
-          // without an underscore.
-          const { end } = this.getUnderscoreMelismaEnd(
-            note,
-            finalElement,
-            nextElement?.elementType === ElementType.Note
-              ? (nextElement as NoteElement)
-              : null,
-            pageSetup,
-            measureBarWidthMap,
-            runningElaphronGeometry,
-          );
-          if (
-            end - (note.x + this.getLyricTextRight(note, false)) >=
-            pageSetup.lyricsMelismaCutoffWidth
-          ) {
-            continue;
-          }
-
           const finalElementIndex =
             finalElement == null
               ? index
@@ -8461,6 +8438,29 @@ export class LayoutService {
             if (line.elements[i].elementType === ElementType.Note) {
               lastQuantitativeNote = line.elements[i] as NoteElement;
               break;
+            }
+          }
+
+          if (!note.isHyphen) {
+            // Decide from the unclamped end, which does not depend on whether
+            // the following lyric is itself centered. Where only the clamp
+            // brings the span under the cutoff, the lyric stays left-aligned
+            // without an underscore.
+            const { end } = this.getUnderscoreMelismaEnd(
+              note,
+              finalElement,
+              nextElement?.elementType === ElementType.Note
+                ? (nextElement as NoteElement)
+                : null,
+              pageSetup,
+              measureBarWidthMap,
+              runningElaphronGeometry,
+            );
+            if (
+              end - (note.x + this.getLyricTextRight(note, false)) >=
+              pageSetup.lyricsMelismaCutoffWidth
+            ) {
+              continue;
             }
           }
 
@@ -8493,12 +8493,27 @@ export class LayoutService {
               lastQuantitativeNote,
               measureBarWidthMap,
             );
+          const quantitativeNeumeSpan =
+            lastQuantitativeNeumeEnd - note.x - startQuantitativeNeumeOffset;
+          if (note.isHyphen) {
+            const effectiveLyricWidth =
+              note.lyricsWidth -
+              note.lyricsLeadingPunctuationWidth -
+              note.lyricsTrailingPunctuationWidth;
+            const containedLyricWidth =
+              effectiveLyricWidth +
+              2 *
+                Math.max(
+                  note.lyricsLeadingPunctuationWidth,
+                  note.lyricsTrailingPunctuationWidth,
+                );
+            if (quantitativeNeumeSpan >= containedLyricWidth) {
+              continue;
+            }
+          }
           const lyricTextLeft =
             startQuantitativeNeumeOffset +
-            this.getCenteredMelismaLyricTextLeft(
-              note,
-              lastQuantitativeNeumeEnd - note.x - startQuantitativeNeumeOffset,
-            );
+            this.getCenteredMelismaLyricTextLeft(note, quantitativeNeumeSpan);
           const lyricTextShift = lyricTextLeft - this.getLyricTextLeft(note);
 
           // Phase 1 kept the preceding lyric and any line-start hyphen clear

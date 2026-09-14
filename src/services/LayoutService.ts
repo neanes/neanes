@@ -3501,6 +3501,7 @@ export class LayoutService {
     const centeredMelismaFollowingLyricMinimumWidth =
       noteEndsPotentiallyCenteredMelisma && nextNoteElement.lyricsWidth > 0
         ? workspace.pageSetup.lyricsMinimumSpacing -
+          noteElement.spaceAfter -
           leftTuck -
           this.getLyricTextLeft(nextNoteElement)
         : null;

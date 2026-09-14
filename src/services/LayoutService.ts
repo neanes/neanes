@@ -8427,7 +8427,8 @@ export class LayoutService {
             const { end } = this.getUnderscoreMelismaEnd(
               note,
               finalElement,
-              nextElement?.elementType === ElementType.Note
+              nextElement !== firstElementOnNextLine &&
+                nextElement?.elementType === ElementType.Note
                 ? (nextElement as NoteElement)
                 : null,
               pageSetup,

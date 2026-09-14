@@ -2892,8 +2892,9 @@ export class LayoutService {
 
       // Protect the boundary after each note whose span is still narrower
       // than the lyric, so the atomic run also includes the note after the
-      // last such note, and every segment end the line breaker can choose
-      // contains the lyric. Negative spacing can narrow the span after it
+      // last such note. At preferred spacing, every permitted segment end
+      // contains the centered lyric, including punctuation, unless the whole
+      // group is too narrow. Negative spacing can narrow the span after it
       // first contains the lyric, so the first containing note is not enough.
       // When the whole group, which ends at the melisma's end or first
       // explicit break, is narrower than its lyric, every boundary is
@@ -2925,10 +2926,9 @@ export class LayoutService {
       const fullQuantitativeNeumeSpan =
         quantitativeNeumeSpans[quantitativeNeumeSpans.length - 1];
 
-      // When the element after a segment does not continue the melisma,
-      // Phase 2 centers the segment's lyric only for groups flagged here,
-      // whose final note reserves lyricsMinimumSpacing before the following
-      // lyric.
+      // When a lyric follows on the same line, Phase 2 requires the group to
+      // be flagged here before centering. Its final note then reserves
+      // lyricsMinimumSpacing in the preferred width before that lyric.
       if (fullQuantitativeNeumeSpan < containedLyricWidth) {
         // The whole group is narrower than its lyric, so every internal
         // boundary is protected and fixed at its precomputed preferred
@@ -3167,8 +3167,10 @@ export class LayoutService {
       // shouldAlignLeft selects eligible melisma starts that pass its
       // lyric-vs-neume width test. The lyric extends to the right under
       // subsequent melisma neumes, so rightProjection is 0: those neumes
-      // provide the space. The melisma-to-non-melisma collision check handles
-      // the rare case where the lyric overflows past the melisma.
+      // provide the space. Phase 1 may already have centered the lyric under
+      // an atomic group while retaining alignLeft for this encoding. The
+      // carried-melisma collision check handles overflow into the next lyric,
+      // including one that begins another melisma.
       return {
         leftProjection: Math.max(0, -h),
         rightProjection: 0,
@@ -4347,9 +4349,9 @@ export class LayoutService {
     // Penalties are additive. Combinations of softer penalties can saturate to
     // MAX_COST and become prohibited. The three weaker penalties can stack to
     // at most 0.45 * MAX_COST, which stays below the strongly discouraged
-    // threshold. Outright prohibitions are resolved in getBreakConstraint; the
-    // caller adds that constraint to this total and clamps the result to
-    // MAX_COST.
+    // threshold. The caller resolves outright prohibitions from the atomic
+    // melisma prefix or getBreakConstraint, adds that constraint to this
+    // total, and clamps the result to MAX_COST.
     let breakCost = 0;
 
     if (nextElement?.elementType === ElementType.Note) {
@@ -8387,9 +8389,11 @@ export class LayoutService {
   // A long melismatic lyric can consume the entire available underscore span
   // or exceed the quantitative-neume span of a hyphenated melisma. In that
   // case, center it beneath its quantitative-neume segment on the line. The
-  // vareia prefix is excluded just as it is for ordinary centered lyric
-  // alignment. Phase 1 has already kept the lyric-covered prefix together,
-  // so this does not change the segment's outer bounds.
+  // vareia prefix and leading measure-bar reserve are excluded from the
+  // span. Phase 1 has already kept the lyric-covered prefix together and
+  // positioned lyrics wider than the whole group against its centered bounds.
+  // Phase 2 permits no leftward shift and requires a Phase 1 spacing
+  // reservation when another lyric follows on the same line.
   private static centerLongMelismaLyrics(
     pages: Page[],
     pageSetup: PageSetup,

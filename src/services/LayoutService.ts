@@ -362,10 +362,12 @@ interface MelismaCenteringPlan {
 }
 
 interface AtomicMelismaLayout {
-  boundaries: Map<NoteElement, { width: number; protected: boolean }>;
+  boundaries: Map<
+    NoteElement,
+    { width: number; protected: boolean; followsAtomicPrefix: boolean }
+  >;
   centeringPlans: Map<NoteElement, MelismaCenteringPlan>;
   potentiallyCenteredGroupEndNotes: Set<NoteElement>;
-  postPrefixPenaltyNotes: Set<NoteElement>;
 }
 
 export class LayoutService {
@@ -895,7 +897,7 @@ export class LayoutService {
               noteElement,
               nextElement,
               afterNextNoteElement,
-              atomicMelismaLayout.postPrefixPenaltyNotes.has(noteElement),
+              melismaBoundary?.followsAtomicPrefix ?? false,
             ) + breakConstraint.cost,
           );
 
@@ -2806,7 +2808,6 @@ export class LayoutService {
       boundaries: new Map(),
       centeringPlans: new Map(),
       potentiallyCenteredGroupEndNotes: new Set(),
-      postPrefixPenaltyNotes: new Set(),
     };
 
     if (pageSetup.melkiteRtl) {
@@ -2916,18 +2917,11 @@ export class LayoutService {
         layout.boundaries.set(groupNotes[i], {
           width: groupBoundaryWidths[i],
           protected: i < protectedBoundaryCount,
+          // Discourage the first legal break after the atomic prefix when
+          // another continuation note follows, keeping the opening group together.
+          followsAtomicPrefix:
+            protectedBoundaryCount > 0 && i === protectedBoundaryCount,
         });
-      }
-
-      // Once the lyric fits, the first legal break inside the melisma can
-      // still strand its opening group. Discourage that break with the same
-      // cost used after an unprotected melisma start, but not when the group
-      // already reaches the final continuation note.
-      if (
-        protectedBoundaryCount > 0 &&
-        protectedBoundaryCount < groupBoundaryWidths.length
-      ) {
-        layout.postPrefixPenaltyNotes.add(groupNotes[protectedBoundaryCount]);
       }
 
       const lastNote = groupNotes[groupNotes.length - 1];

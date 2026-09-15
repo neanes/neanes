@@ -351,8 +351,8 @@
                         id="page-setup-dialog-martyria-vertical-offset"
                         v-model="form.martyriaVerticalOffset"
                         :unit="form.pageSizeUnit"
-                        :min="-neumeSpacingMax"
-                        :max="neumeSpacingMax"
+                        :min="-martyriaVerticalOffsetMax"
+                        :max="martyriaVerticalOffsetMax"
                         :step="spacingStep"
                         :format-options="fraction3FormatOptions"
                       />
@@ -1791,6 +1791,9 @@ const neumeFontFamilies = computed(() => {
 });
 const neumeSpacingMax = computed(() =>
   Math.round(toDisplay(form.value.pageWidth, form.value.pageSizeUnit) ?? 0),
+);
+const martyriaVerticalOffsetMax = computed(() =>
+  Math.round(toDisplay(form.value.pageHeight, form.value.pageSizeUnit) ?? 0),
 );
 const pageSize = computed({
   get: () => form.value.pageSize,

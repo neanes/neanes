@@ -69,6 +69,7 @@ A line break is prohibited in the following cases:
 
 1. Between a note and a following martyria. We add a penalty of `MAX_COST`.
 2. Between two neumes tied by a connecting heteron, connecting homalon, or yfen. We add a penalty of `MAX_COST`.
+3. Inside the protected prefix of an eligible long left-to-right, note-only melisma, whether underscored or hyphenated. At preferred spacing, every permitted segment end's quantitative-neume span must contain the centered lyric, including punctuation; if the whole measured group is too narrow, all its internal boundaries are protected and Phase 1 reserves the centered lyric's outer bounds. The prefix is treated as an atomic run for automatic line breaking. An explicit line or page break still takes precedence.
 
 ### Strongly discouraged breaks
 
@@ -83,15 +84,15 @@ In addition to the strongly discouraged cases, we identify several breaks that a
 
 1. A line that begins with a neume carrying a time mark that takes time from the neume before it, such as a gorgon or an argon, shortens the neume at the end of the previous line. Although such breaks are not uncommon in the classical 19th-century publications, they require the reader to look one line ahead. This is manageable within a page, but more annoying at a page boundary, so it is better to avoid such breaks when possible.
 2. Between a running elaphron and the preceding neume. Like the gorgon, a running elaphron steals a beat from the preceding neume, so a break before it is awkward.
-3. Immediately after a melisma start, before its first continuation neume, that is, between notes 0 and 1 of the melisma, 0-indexed. The melisma-start syllable extends to the right under subsequent neumes, and breaking here can isolate it on a line where the lyric may overflow. Long melismas may legitimately break later on, so only the break immediately after the start is discouraged. The penalty-width mechanism described below handles overflow at any breakpoint inside the melisma.
-4. Between the second-to-last and last notes of a melisma, that is, between notes $n-2$ and $n-1$, 0-indexed. This is the converse of the previous rule: just as the melisma start should stay with its first continuation, the penultimate note should stay with the final note that closes the melisma. Breaking here would strand a single melisma note at the start of a line. Interior melisma breaks, between notes 1 and $n-2$, remain free.
+3. Immediately after a melisma start, before its first continuation neume, that is, between notes 0 and 1 of the melisma, 0-indexed, when that boundary is not already prohibited by the atomic lyric-covered prefix. The melisma-start syllable extends to the right under subsequent neumes, and breaking here can isolate it on a line where the lyric may overflow. For an atomic prefix spanning multiple neumes, the same penalty applies to the first permitted break after that prefix if another continuation neume follows. Later interior breaks remain free.
+4. Between the second-to-last and last notes of a melisma, that is, between notes $n-2$ and $n-1$, 0-indexed. This is the converse of the previous rule: just as the melisma start should stay with its first continuation, the penultimate note should stay with the final note that closes the melisma. Breaking here would strand a single melisma note at the start of a line. Other interior melisma breaks, between notes 1 and $n-2$, remain free, except inside an atomic lyric-covered prefix, where they are prohibited, and at the first permitted break after a multi-neume prefix, which is discouraged as described in the previous rule.
 
 We assign a penalty of 0.1 of `MAX_COST` to beat-stealing breaks, because these are awkward but not uncommon in the classical 19th-century publications.
 `getBreakCost` recognizes the time-mark case for a configured set of quantitative neumes paired with a supported primary or secondary gorgon-family mark, and the running elaphron case from the quantitative neume alone; digorgon and trigorgon are not yet covered.
 For melisma-edge breaks, we use larger penalties:
-0.2 of `MAX_COST` immediately after a melisma start, and 0.15 of `MAX_COST` between the penultimate and final melisma notes.
-These cases are closer to $\TeX$'s `\clubpenalty` and `\widowpenalty`, because they orphan a single note at the start or end of a melisma;
-the melisma-start case is weighted slightly more heavily because it can also isolate the syllable whose lyric extends rightward and may overflow.
+0.2 of `MAX_COST` immediately after a melisma start or after a multi-neume atomic lyric-covered prefix, and 0.15 of `MAX_COST` between the penultimate and final melisma notes.
+These cases are closer to $\TeX$'s `\clubpenalty` and `\widowpenalty`, because they can strand the opening lyric-bearing group or a final continuation note;
+the opening-group case is weighted slightly more heavily because the lyric extends rightward and a short line can leave little room for it.
 The 19th-century publications, being typeset by hand, necessarily permit such undesirable breaks;
 an optimum-fit algorithm can usually find a better solution in milliseconds.
 
@@ -125,12 +126,14 @@ An author-set keep always prohibits the break, independently of the automatic pe
 
 |               Cost | Break location                                    | $\TeX$ analogue |
 | -----------------: | ------------------------------------------------- | --------------- |
+|         `MAX_COST` | Inside an atomic melisma prefix                   | none            |
 |         `MAX_COST` | From a note to a following martyria               | none            |
 |         `MAX_COST` | Across a tie (heteron, homalon, yfen)             | none            |
 |  0.5 of `MAX_COST` | After a vareia                                    | `\relpenalty`   |
 |  0.5 of `MAX_COST` | Before kentēmata                                  | `\relpenalty`   |
 |  0.1 of `MAX_COST` | Before configured beat-stealing neumes/time marks | none            |
 |  0.2 of `MAX_COST` | Melisma start to first continuation (0 to 1)      | `\clubpenalty`  |
+|  0.2 of `MAX_COST` | First permitted break after a multi-neume prefix  | `\clubpenalty`  |
 | 0.15 of `MAX_COST` | Penultimate to last melisma note ($n-2$ to $n-1$) | `\widowpenalty` |
 |         `MAX_COST` | After a note with an active keep                  | none            |
 |                  0 | All other inter-note breaks                       | none            |
@@ -147,6 +150,16 @@ The 19th-century publications also use several techniques to improve the quality
 ## Box/glue/penalty algebra
 
 Layout proceeds in two phases. In Phase 1, the code builds the box/glue/penalty encoding described in this section -- inserting spacers and adjusting glue widths -- and the line breaker chooses the breakpoints. In Phase 2, once the breakpoints have been chosen, the code positions the items for rendering: shifting a note left to absorb a transferred measure bar, adding line-start indentation, or placing a right-aligned martyria flush right.
+
+Long melisma lyrics use the same line-breaking pipeline, with no second solve for centering. This applies to left-to-right underscore and hyphenated melismas whose starts pass `shouldAlignLeft` and whose continuations are entirely adjacent notes. Greek melismas retain their existing layout when Greek melismata are enabled. Melkite RTL melismas and melismas with continuations across a martyria, tempo, or inline text box are excluded from this centering rule.
+
+Phase 1 measures each internal boundary using the same preferred glyph- and measure-bar-aware width used by the Knuth-Plass stream. The measured group runs to the melisma's end or its first explicit break, whichever comes first. It prohibits automatic breaks through the boundary after the last note whose quantitative-neume span is too narrow to contain the centered lyric, including punctuation, and fixes the protected prefix's internal glue at those widths. The atomic run therefore also includes the following note when there is one. Negative spacing can narrow the span again after it first contains the lyric, so the first containing note is not enough. If the whole measured group is still too narrow, all internal boundaries are protected and its centered lyric bounds are used for collision layout immediately, while retaining `alignLeft` for the Phase 1 encoding.
+
+Phase 1 records a centering plan for each eligible start. Phase 2 finalizes lyrics already centered in Phase 1 using their existing text bounds, without re-evaluating thresholds or reconstructing their offsets from positioned neumes. This preserves the decision across floating-point rounding differences.
+
+Other eligible lyrics can be centered after justification. An underscore lyric qualifies only when the segment's underscore, measured before it is shortened to clear the next lyric, is narrower than `lyricsMelismaCutoffWidth`; an underscore hidden only by that shortening does not trigger centering. A hyphenated lyric qualifies only when its centered text, including punctuation, exceeds the segment's quantitative-neume span. Phase 2 accepts only positions at or to the right of the lyric's Phase 1 position, keeping it clear of the preceding lyric and any line-start hyphen. The complete text, including punctuation, must stay within the already reserved envelope of the original lyric and the positioned neume segment, and at least `lyricsMinimumSpacing` before the next visible lyric on the same line, even across lyricless notes. Geometry comparisons allow a small rounding tolerance.
+
+Phase 1 raises the preferred spacing after groups likely to be centered. This is a spacing preference, not permission to overflow it after justification. The centering pass visits each line backwards so clearance checks use the following lyric's final position. It runs before drawing any hyphens or underscores, which depend on those final positions.
 
 ### Lyricless scores
 
@@ -296,6 +309,7 @@ Here:
 On the same line, each inter-note gap starts at $m_i$ and may use $s^+$ of stretch or $s^-$ of shrink during distributed justification.
 The candidate penalty sits immediately after the neume; the post-break glue $\text{glue}(m_i, s^+, s^-)$ carries both the preferred distance and its elasticity.
 Ordinary note-to-note spacing retains the full standard-glue shrink budget.
+Inside an atomic melisma prefix, the break penalty is instead `MAX_COST` and the post-break glue has zero stretch and shrink, preserving the measured internal geometry.
 Visual collision, measure-bar, lyric, and melisma clearance affect the preferred width $m_i$ but remain compressible during justification.
 The current implementation keeps stretch and shrink non-negative, but item widths may be negative.
 Negative glue widths can come from tuck absorption, user-requested negative inline spacing, or glue reductions paired with line-start reservation boxes.
@@ -360,10 +374,14 @@ where:
 - $\ell_i$ is the collision correction needed to keep the actual visible lyric gap large enough on the same line: normally at least `lyricsMinimumSpacing`, but for a hyphenated melisma start at least $\texttt{lyricsMinimumSpacing} + \textit{hyphenWidth}$ when the hyphen is absorbed inside the current neume; while a carried melisma lyric is still running, it also keeps the next syllable at least `lyricsMinimumSpacing` past the carried lyric end tracked by `melismaLyricsEndPx`.
 
 There is one deliberate exception to the ordinary base expression.
-When `exitsMelismaIntoCenteredLyric` is true, a carried melisma is ending at a non-melisma note whose centered lyric has a positive left projection.
-In that case the code starts from base width 0 instead of $s_0 + R_i - T_i^\text{left} - T_i^\text{right}$.
+When a carried melisma ends at a centered lyric with a positive left projection, the code starts from base width 0 instead of $s_0 + R_i - T_i^\text{left} - T_i^\text{right}$.
+If the centered lyric begins no melisma, the carried melisma must not be hyphenated.
+The centered lyric may also begin a melisma, after a hyphenated or non-hyphenated melisma, provided Phase 1 has already centered it beneath its group, which runs to the melisma's end or first explicit break.
+This aligns the next centered lyric's left edge with the current cursor.
 The previous note's fixed `spaceAfter` glue is appended after that automatically computed boundary, so it still shifts the next centered lyric by the requested amount.
 The collision correction $\ell_i$ still runs afterward, including the carried-melisma check against `melismaLyricsEndPx`, and the final result is still raised to the preferred visible-note and measure-bar widths.
+The preceding underscore is separately clamped to stop at least `lyricsMinimumSpacing` before the next visible lyric on the same line, regardless of its alignment or width.
+For a following running elaphron on the same line, the underscore runs to the elaphron subject to the same lyric clamp. Notes on another line never supply endpoint coordinates.
 
 The collision check is geometry-based.
 When both notes carry lyrics, the code computes the actual visual gap between them from the neume overhangs relative to their lyrics, then adds back only the missing amount.

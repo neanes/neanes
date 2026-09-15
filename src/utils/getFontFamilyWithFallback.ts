@@ -6,7 +6,11 @@ export function getFontFamilyWithFallback(
 }
 
 export function getLegacyNeumeFontFamily(family: string) {
-  return family + 'Legacy';
+  return family === 'Neanes' ||
+    family === 'NeanesRTL' ||
+    family === 'NeanesStathisSeries'
+    ? family + 'Legacy'
+    : family;
 }
 
 // The bundled neume fonts are registered a second time under a

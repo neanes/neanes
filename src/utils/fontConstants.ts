@@ -12,4 +12,5 @@ export const NEUME_FONT_FAMILIES: ReadonlySet<string> = new Set([
   'NeanesRTLLegacy',
   'NeanesStathisSeries',
   'NeanesStathisSeriesLegacy',
+  'Almouzios',
 ]);

@@ -349,7 +349,7 @@ Second, if the resulting lyric gap is still too small, a collision correction is
 So the code does not reserve lyric overshoot mechanically.
 It reserves only the preferred natural width needed on the same line after tuck opportunities have been taken into account.
 
-Before applying visual-ink and measure-bar floors, the same-line width is computed as
+Before raising the result to the visual-ink and measure-bar minimum widths, the same-line width is computed as
 
 $$m_i = s_0 + R_i - T_i^\text{left} - T_i^\text{right} + \ell_i,$$
 
@@ -357,7 +357,7 @@ where:
 
 - $T_i^\text{left}$ is the amount of the next note's left projection that can be absorbed on the same line.
 - $T_i^\text{right}$ is the amount of the current note's right projection that can tuck under the next neume.
-- $\ell_i$ is the collision correction needed to keep the actual visible lyric gap large enough on the same line: normally at least `lyricsMinimumSpacing`, but for a hyphenated melisma start at least $\texttt{lyricsMinimumSpacing} + \textit{hyphenWidth}$ when the hyphen is absorbed inside the current neume.
+- $\ell_i$ is the collision correction needed to keep the actual visible lyric gap large enough on the same line: normally at least `lyricsMinimumSpacing`, but for a hyphenated melisma start at least $\texttt{lyricsMinimumSpacing} + \textit{hyphenWidth}$ when the hyphen is absorbed inside the current neume; while a carried melisma lyric is still running, it also keeps the next syllable at least `lyricsMinimumSpacing` past the carried lyric end tracked by `melismaLyricsEndPx`.
 
 There is one deliberate exception to the ordinary base expression.
 When `exitsMelismaIntoCenteredLyric` is true, a carried melisma is ending at a non-melisma note whose centered lyric has a positive left projection.
@@ -434,7 +434,7 @@ If the upward search fails to find any finite feasible cap at or below the hard 
 This formulation cleanly separates the two use cases we care about:
 
 - when the paragraph has a feasible layout at or below $r = 1$, the solver fully uses the ordinary demerits and breakpoint penalties to choose among all layouts under that cap;
-- once every solution requires some looseness, the primary objective becomes keeping the maximum ratio as small as possible, so a breakpoint that yields $r = 1.1$ can beat one that yields $r = 1.3$ even if the former is discouraged.
+- once every solution requires some looseness, the primary objective becomes keeping the maximum ratio as small as possible, up to the bucket rounding described above, so a breakpoint that yields $r = 1.1$ can beat one that yields $r = 1.3$ even if the former is discouraged.
 
 Within a fixed cap, the ordinary Knuth-Plass scoring applies across all layouts that satisfy the cap; it does not separately prefer the smallest maximum ratio inside that feasible set.
 Breakpoint penalties therefore can select a semantically preferable layout with a slightly larger ratio inside the same bucket, and `adjacentLooseTightPenalty` still discourages abrupt fitness-class jumps between neighboring lines.
@@ -553,7 +553,11 @@ then every later segment floor satisfies $F_a(c) > L$, so every such line remain
 In that case no future breakpoint can rescue $a$, and pruning is safe.
 
 For ordinary active nodes, this is what the implementation computes: the suffix minimum of $F(b)$ over strictly later breakpoints, followed by a comparison with the node-dependent threshold.
-There is one conservative exception: if the paragraph contains any negative width, fallback active nodes are not pruned with this test.
+When the active set empties out, `breakLines` first checks whether any rejected candidate line exceeded the effective ratio cap.
+If one did, it throws `MaxAdjustmentExceededError` when `maxAdjustmentRatio` equals the effective cap (which is how the ratio-cap search above detects an infeasible cap), and otherwise retries with `initialMaxAdjustmentRatio` set to twice the smallest ratio that exceeded the cap.
+Only when no candidate exceeded the cap, for example because every candidate was overfull or the cap is infinite, does it synthesize a fallback active node (`isFallback`) at the current breakpoint so the search can continue.
+Fallback nodes are pruned with the same test, except that they are not pruned by it when the paragraph contains any negative width.
+Independently, as described below, the test is disabled for all active nodes when any glue has negative stretch or shrink.
 
 ### What can go wrong
 

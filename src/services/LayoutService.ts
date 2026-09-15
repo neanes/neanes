@@ -3675,11 +3675,10 @@ export class LayoutService {
     const fontSize = pageSetup.neumeDefaultFontSize;
     let x = 0;
 
-    if (this.hasInlineMeasureBarLeft(martyriaElement)) {
-      x += this.getNeumeWidthFromCache(
-        martyriaElement.measureBarLeft!,
-        pageSetup,
-      );
+    const measureBarLeft = this.getVisibleMeasureBarLeft(martyriaElement);
+
+    if (measureBarLeft != null) {
+      x += this.getNeumeWidthFromCache(measureBarLeft, pageSetup);
       x += martyriaElement.computedMeasureBarLeftLeadingSpacing;
     }
 
@@ -3969,15 +3968,15 @@ export class LayoutService {
     martyriaElement: MartyriaElement,
     pageSetup: PageSetup,
   ) {
-    const measureBarLeftWidth = this.hasInlineMeasureBarLeft(martyriaElement)
-      ? this.getNeumeWidthFromCache(martyriaElement.measureBarLeft!, pageSetup)
-      : 0;
-    const measureBarLeftOverhang = this.hasInlineMeasureBarLeft(martyriaElement)
-      ? this.getSingleNeumeLeftInkOverhang(
-          martyriaElement.measureBarLeft!,
-          pageSetup,
-        )
-      : 0;
+    const measureBarLeft = this.getVisibleMeasureBarLeft(martyriaElement);
+    const measureBarLeftWidth =
+      measureBarLeft != null
+        ? this.getNeumeWidthFromCache(measureBarLeft, pageSetup)
+        : 0;
+    const measureBarLeftOverhang =
+      measureBarLeft != null
+        ? this.getSingleNeumeLeftInkOverhang(measureBarLeft, pageSetup)
+        : 0;
     const tempoLeftOverhang = martyriaElement.tempoLeft
       ? Math.max(
           0,
@@ -3990,7 +3989,7 @@ export class LayoutService {
         )
       : 0;
 
-    if (this.hasInlineMeasureBarLeft(martyriaElement)) {
+    if (measureBarLeft != null) {
       return Math.max(measureBarLeftOverhang, tempoLeftOverhang);
     }
 
@@ -4015,13 +4014,6 @@ export class LayoutService {
         : this.getMartyriaContentRightInkOverhang(martyriaElement, pageSetup);
 
     return inkOverhang;
-  }
-
-  private static hasInlineMeasureBarLeft(martyriaElement: MartyriaElement) {
-    return (
-      martyriaElement.measureBarLeft != null &&
-      !isMeasureBarAboveVariant(martyriaElement.measureBarLeft)
-    );
   }
 
   private static getMartyriaTrailingNeume(
@@ -5273,12 +5265,11 @@ export class LayoutService {
       );
     }
 
-    const hasInlineMeasureBarLeft =
-      this.hasInlineMeasureBarLeft(martyriaElement);
+    const measureBarLeft = this.getVisibleMeasureBarLeft(martyriaElement);
 
-    if (hasInlineMeasureBarLeft) {
+    if (measureBarLeft != null) {
       martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
-        martyriaElement.measureBarLeft!,
+        measureBarLeft,
         pageSetup,
       );
     }
@@ -6039,15 +6030,12 @@ export class LayoutService {
       element.elementType === ElementType.Martyria
     ) {
       const owner = element as NoteElement | MartyriaElement;
-      const measureBarRight = this.getVisibleMeasureBarRight(owner);
       const left =
         owner.x + this.getMeasureBarLeftReserve(owner, measureBarWidthMap);
       const right =
         owner.x +
         this.getMeasureBarOwnerWidth(owner) -
-        (measureBarRight != null
-          ? (measureBarWidthMap.get(measureBarRight) ?? 0)
-          : 0);
+        this.getVisibleMeasureBarRightWidth(owner, measureBarWidthMap);
 
       if (element.elementType === ElementType.Note) {
         return measureBar == null || edge == null

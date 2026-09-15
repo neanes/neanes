@@ -1,5 +1,11 @@
 import { Unit } from '../utils/Unit';
 
+export enum MelismaStyle {
+  Auto = 'auto',
+  Western = 'western',
+  Vocalic = 'vocalic',
+}
+
 export type PageSize =
   | 'A3'
   | 'A4'
@@ -178,7 +184,7 @@ export class PageSetup {
 
   public chrysanthineAccidentals: boolean = true;
   public noFthoraRestrictions: boolean = false;
-  public disableGreekMelismata: boolean = false;
+  public melismaStyle: MelismaStyle = MelismaStyle.Auto;
   public alignIsonIndicators: boolean = true;
   public ignorePunctuationWhenPositioningLyrics: boolean = true;
 

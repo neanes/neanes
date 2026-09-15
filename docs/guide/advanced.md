@@ -355,8 +355,87 @@ In this example, the prosomoion matches the automelon perfectly, but for other h
 
 ### Greek
 
-When working with Greek lyrics, the hyphen is not used. Syllables should be separated by a single space and melismata should be indicated by an underscore. If a syllable ends in a consonant, the underscore should be placed at the end of the syllable.
+Greek lyrics are entered like any other text: separate the syllables of a word with hyphens (`-`), repeat the hyphen to continue a melisma before the next syllable, and use underscores (`_`) for a melisma at the end of the word.
+
+With `Melisma Style` set to `Auto` (the default) or `Vocalic`, the hyphens and underscores are not themselves displayed. Instead, each melisma repeats the vowel or vowels that are sung, and a syllable's closing consonants are displayed on the last note of the melisma.
 
 For example, `των___` will be interpreted as the following.
 
 ![Greek Lyrics Example 1](./images/guide-lyrics-greek-example-1.png)
+
+| Type                   | Displayed                                                            |
+| ---------------------- | -------------------------------------------------------------------- |
+| <kbd>των\_\_\_</kbd>   | <kbd>τω</kbd> <kbd>ω</kbd> <kbd>ων</kbd>                             |
+| <kbd>και\_\_\_</kbd>   | <kbd>και</kbd> <kbd>αι</kbd> <kbd>αι</kbd>                           |
+| <kbd>ε--παρ--σις</kbd> | <kbd>ε</kbd> <kbd>ε</kbd> <kbd>πα</kbd> <kbd>αρ</kbd> <kbd>σις</kbd> |
+
+Because the same text works in every melisma style, you can switch `Melisma Style` at any time; with `Western`, the hyphens and underscores are displayed literally.
+
+### Romanian
+
+To use vocalic melismas with Romanian lyrics, set `Melisma Style` to `Vocalic` in the Page Setup dialog. The melisma repeats the vowel that is sung, which is not always the last written vowel.
+
+In falling diphthongs, such as `greu`, the first vowel is repeated. In rising diphthongs, such as `grea` and `mea`, the last vowel is repeated. Triphthongs follow the same idea.
+
+| Type                   | Displayed                                  |
+| ---------------------- | ------------------------------------------ |
+| <kbd>greu\_\_\_</kbd>  | <kbd>gre</kbd> <kbd>e</kbd> <kbd>eu</kbd>  |
+| <kbd>vreau\_\_\_</kbd> | <kbd>vrea</kbd> <kbd>a</kbd> <kbd>au</kbd> |
+| <kbd>scriu\_\_\_</kbd> | <kbd>scri</kbd> <kbd>i</kbd> <kbd>iu</kbd> |
+
+A final devocalized `i` is treated as part of the ending rather than the repeated vowel.
+
+| Type                    | Displayed                                   |
+| ----------------------- | ------------------------------------------- |
+| <kbd>sfinți\_\_\_</kbd> | <kbd>sfi</kbd> <kbd>i</kbd> <kbd>inți</kbd> |
+| <kbd>ochi\_\_\_</kbd>   | <kbd>o</kbd> <kbd>o</kbd> <kbd>ochi</kbd>   |
+
+For words with multiple syllables, separate the syllables with hyphens (`-`). Repeat the hyphen to continue the melisma before the next syllable, and use underscores (`_`) for a melisma at the end of the word. As in Greek, the hyphens and underscores are not themselves displayed: the syllables of a word are placed under their notes without a connecting hyphen.
+
+| Type                            | Displayed                                                                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| <kbd>le---oai---că\_\_\_</kbd>  | <kbd>le</kbd> <kbd>e</kbd> <kbd>e</kbd> <kbd>oa</kbd> <kbd>a</kbd> <kbd>ai</kbd> <kbd>că</kbd> <kbd>ă</kbd> <kbd>ă</kbd>  |
+| <kbd>cre---ioa---ne\_\_\_</kbd> | <kbd>cre</kbd> <kbd>e</kbd> <kbd>e</kbd> <kbd>ioa</kbd> <kbd>a</kbd> <kbd>a</kbd> <kbd>ne</kbd> <kbd>e</kbd> <kbd>e</kbd> |
+| <kbd>lu---meas---că\_\_\_</kbd> | <kbd>lu</kbd> <kbd>u</kbd> <kbd>u</kbd> <kbd>mea</kbd> <kbd>a</kbd> <kbd>as</kbd> <kbd>că</kbd> <kbd>ă</kbd> <kbd>ă</kbd> |
+| <kbd>În---ge---rul\_\_\_</kbd>  | <kbd>Î</kbd> <kbd>î</kbd> <kbd>în</kbd> <kbd>ge</kbd> <kbd>e</kbd> <kbd>e</kbd> <kbd>ru</kbd> <kbd>u</kbd> <kbd>ul</kbd>  |
+
+> [!NOTE]
+> The spelling `iu` is ambiguous in Romanian. Neanes repeats the `i` by default, which is correct for words such as `scriu`, `fiu`, and `pustiu`, and it repeats the `u` where the spelling makes this clear: word-initial `iu` (`iu-bi-re`) and `iu` closed by a consonant in the same syllable (`Fiul`, `Mân-tu-i-to-riul`). A few forms are still interpreted incorrectly by default: bare Latinate endings such as `premiu` and `studiu`, and archaic forms found in 19th-century chant books such as `Mântuitoriu`, `Mântuitoriule`, and `ceriu`, are sung by sustaining the `u`. In these cases, edit the affected lyric boxes manually; the definite forms (`premiul`, `Mântuitoriul`) are interpreted correctly, as are the modern spellings (`Mântuitorul`, `Mântuitorule`) used in current service books.
+>
+> When a syllable in hiatus begins with the same vowel that ends the previous syllable and is closed by a consonant, as in `fi-ind` and `ști-in-ță`, the notation is indistinguishable from a melisma of the contracted word, and the Lyrics pane adopts the melisma spelling (`find__`, `știn--ță`). The score itself displays the correct syllables (`fi` `ind` and `ști` `in` `ță`), and the lyrics stay aligned with their notes.
+
+### Church Slavonic
+
+With `Melisma Style` set to `Auto` (the default) or `Vocalic`, Church Slavonic lyrics use vocalic melismas.
+
+Church Slavonic has no diphthongs, so the melisma repeats the last vowel of the syllable. Accents, breathings, and titla stay on the first note and are not repeated. Syllables ending in a silent `ъ` or `ь` display the ending on the last note of the melisma, like a consonant ending.
+
+| Type                   | Displayed                                  |
+| ---------------------- | ------------------------------------------ |
+| <kbd>тѧ̀\_\_\_</kbd>    | <kbd>тѧ̀</kbd> <kbd>ѧ</kbd> <kbd>ѧ</kbd>    |
+| <kbd>гла́съ\_\_\_</kbd> | <kbd>гла́</kbd> <kbd>а</kbd> <kbd>асъ</kbd> |
+| <kbd>дꙋшѐ\_\_\_</kbd>  | <kbd>дꙋшѐ</kbd> <kbd>е</kbd> <kbd>е</kbd>  |
+
+Because adjacent vowels belong to separate syllables, the last vowel is repeated even after another vowel. Compare Romanian, where `moi` repeats the `o`.
+
+| Type                   | Displayed                                  |
+| ---------------------- | ------------------------------------------ |
+| <kbd>мои́хъ\_\_\_</kbd> | <kbd>мои́</kbd> <kbd>и</kbd> <kbd>ихъ</kbd> |
+| <kbd>твоеѧ̀\_\_\_</kbd> | <kbd>твоеѧ̀</kbd> <kbd>ѧ</kbd> <kbd>ѧ</kbd> |
+
+The digraph `оу` is treated as a single vowel in all of its spellings (`оу`, `ᲂу`, `ѹ`, `ꙋ`), and the izhitsa `ѵ` is treated as the consonant `в` directly after `а` or `е` and as the vowel `и` elsewhere.
+
+| Type                    | Displayed                                   |
+| ----------------------- | ------------------------------------------- |
+| <kbd>па́ѵелъ\_\_\_</kbd> | <kbd>па́ѵе</kbd> <kbd>е</kbd> <kbd>елъ</kbd> |
+| <kbd>мѵ́ро\_\_\_</kbd>   | <kbd>мѵ́ро</kbd> <kbd>о</kbd> <kbd>о</kbd>   |
+
+For words with multiple syllables, separate the syllables with hyphens (`-`), repeat the hyphen to continue the melisma before the next syllable, and use underscores (`_`) for a melisma at the end of the word, exactly as for Romanian. The hyphens and underscores are not themselves displayed: the syllables of a word are placed under their notes without a connecting hyphen.
+
+| Type                         | Displayed                                                                                                   |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| <kbd>Го́---спо---ди\_\_</kbd> | <kbd>Го́</kbd> <kbd>о</kbd> <kbd>о</kbd> <kbd>спо</kbd> <kbd>о</kbd> <kbd>о</kbd> <kbd>ди</kbd> <kbd>и</kbd> |
+| <kbd>по́й--те</kbd>           | <kbd>по́</kbd> <kbd>ой</kbd> <kbd>те</kbd>                                                                   |
+
+> [!NOTE]
+> Abbreviations written under titla with no vowel letter, such as `гдⷭ҇ь` and `бг҃ъ`, have no written vowel to repeat, so they fall back to western-style melismas with hyphens and underscores. To repeat the sung vowel, write the word out in full.

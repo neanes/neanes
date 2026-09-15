@@ -369,7 +369,10 @@
         "id": 6,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaAbove",
-        "lyrics": "λι"
+        "lyrics": "λι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 7,
@@ -381,19 +384,28 @@
         "id": 8,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "σφρα"
+        "lyrics": "σφρα",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 9,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "γι"
+        "lyrics": "γι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 10,
         "elementType": "Note",
         "quantitativeNeume": "Petasti",
-        "lyrics": "σθεν"
+        "lyrics": "σθεν",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 11,
@@ -405,7 +417,10 @@
         "id": 12,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "υ"
+        "lyrics": "υ",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 13,
@@ -423,19 +438,28 @@
         "id": 15,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "Ι"
+        "lyrics": "Ι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 16,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ου"
+        "lyrics": "ου",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 17,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
-        "lyrics": "δαι"
+        "lyrics": "δαι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 18,
@@ -454,19 +478,28 @@
         "id": 20,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "στρα"
+        "lyrics": "στρα",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 21,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "τι"
+        "lyrics": "τι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 22,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "ω"
+        "lyrics": "ω",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 23,
@@ -478,20 +511,29 @@
         "id": 24,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "φυ"
+        "lyrics": "φυ",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 25,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "λασ"
+        "lyrics": "λασ",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 26,
         "elementType": "Note",
         "quantitativeNeume": "Petasti",
         "timeNeume": "Klasma_Bottom",
-        "lyrics": "σον"
+        "lyrics": "σον",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 27,
@@ -510,13 +552,19 @@
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "α"
+        "lyrics": "α",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 30,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "χραν"
+        "lyrics": "χραν",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 31,
@@ -534,13 +582,17 @@
         "id": 33,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "Σω"
+        "lyrics": "Σω",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 34,
         "elementType": "Note",
         "quantitativeNeume": "Kentemata",
-        "lyrics": "ω"
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "id": 35,
@@ -561,20 +613,27 @@
         "id": 37,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "α"
+        "lyrics": "α",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 38,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaAbove",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "νε"
+        "lyrics": "νε",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 39,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ε"
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "id": 40,
@@ -586,20 +645,29 @@
         "id": 41,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "τρι"
+        "lyrics": "τρι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 42,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "η"
+        "lyrics": "η",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 43,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "με"
+        "lyrics": "με",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 44,
@@ -611,38 +679,52 @@
         "id": 45,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "Σω"
+        "lyrics": "Σω",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 46,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
         "timeNeume": "Klasma_Top",
-        "lyrics": "τηρ"
+        "lyrics": "τηρ,"
       },
       {
         "id": 47,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "δω"
+        "lyrics": "δω",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 48,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "ρου"
+        "lyrics": "ρου",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 49,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "με"
+        "lyrics": "με",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 50,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "νος"
+        "lyrics": "νος",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "id": 51,
@@ -654,7 +736,10 @@
         "id": 52,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentima",
-        "lyrics": "κο"
+        "lyrics": "κο",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 53,
@@ -672,7 +757,10 @@
         "id": 55,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ζω"
+        "lyrics": "ζω",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 56,
@@ -685,7 +773,10 @@
         "id": 57,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentima",
-        "lyrics": "δι"
+        "lyrics": "δι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 58,
@@ -697,7 +788,10 @@
         "id": 59,
         "elementType": "Note",
         "quantitativeNeume": "Petasti",
-        "lyrics": "του"
+        "lyrics": "του",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 60,
@@ -715,13 +809,19 @@
         "id": 62,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "Δυ"
+        "lyrics": "Δυ",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 63,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "να"
+        "lyrics": "να",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 64,
@@ -729,7 +829,8 @@
         "quantitativeNeume": "KentemataPlusOligon",
         "gorgonNeume": "Gorgon_Top",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "α"
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "id": 65,
@@ -747,32 +848,44 @@
         "id": 67,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "Ου"
+        "lyrics": "Ου",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 68,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ρα"
+        "lyrics": "ρα",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 69,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
         "timeNeume": "Klasma_Top",
-        "lyrics": "νων"
+        "lyrics": "νων,"
       },
       {
         "id": 70,
         "elementType": "Note",
         "quantitativeNeume": "Hamili",
-        "lyrics": "ε"
+        "lyrics": "ε",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 71,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusHypsiliRight",
-        "lyrics": "βο"
+        "lyrics": "βο",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 72,
@@ -790,26 +903,36 @@
         "id": 74,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "Ζω"
+        "lyrics": "Ζω",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 75,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ο"
+        "lyrics": "ο",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 76,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "δο"
+        "lyrics": "δο",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 77,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ο"
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "id": 78,
@@ -832,13 +955,17 @@
         "quantitativeNeume": "OligonPlusHypsiliRight",
         "vocalExpressionNeume": "HomalonConnecting",
         "vareia": true,
-        "lyrics": "δο"
+        "lyrics": "δο",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 81,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "ο"
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "id": 82,
@@ -856,20 +983,29 @@
         "id": 84,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "Α"
+        "lyrics": "Α",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 85,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "να"
+        "lyrics": "να",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 86,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "στα"
+        "lyrics": "στα",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 87,
@@ -887,7 +1023,10 @@
         "id": 89,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "Χρι"
+        "lyrics": "Χρι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 90,
@@ -900,13 +1039,17 @@
         "id": 91,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "δο"
+        "lyrics": "δο",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 92,
         "elementType": "Note",
         "quantitativeNeume": "Kentemata",
-        "lyrics": "ο"
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "id": 93,
@@ -924,20 +1067,29 @@
         "id": 95,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "Βα"
+        "lyrics": "Βα",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 96,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "σι"
+        "lyrics": "σι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 97,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "λει"
+        "lyrics": "λει",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 98,
@@ -956,7 +1108,10 @@
         "id": 100,
         "elementType": "Note",
         "quantitativeNeume": "Petasti",
-        "lyrics": "δο"
+        "lyrics": "δο",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 101,
@@ -974,26 +1129,38 @@
         "id": 103,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "οι"
+        "lyrics": "οι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 104,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "κο"
+        "lyrics": "κο",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 105,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "νο"
+        "lyrics": "νο",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 106,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "μι"
+        "lyrics": "μι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 107,
@@ -1012,7 +1179,10 @@
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "μο"
+        "lyrics": "μο",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 110,
@@ -1024,33 +1194,46 @@
         "id": 111,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "φι"
+        "lyrics": "φι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 112,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaBelow",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "λα"
+        "lyrics": "λα",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 113,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "αν"
+        "lyrics": "αν",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 114,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "vareia": true,
-        "lyrics": "θρω"
+        "lyrics": "θρω",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "id": 115,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ω"
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "id": 116,
@@ -1073,7 +1256,7 @@
       }
     ],
     "lyrics": {
-      "text": "Του λι θου σφρα γι σθεν τος υ πο των Ι ου δαι ων και στρα τι ω των φυ λασ σον των το α χραν τον σου Σω ω μα α νε ε στης τρι η με ρος Σω τηρ δω ρου με νος τω κο σμω την ζω ην δι α του το αι Δυ να α μεις των Ου ρα νων ε βο ων σοι Ζω ο δο ο τα δο ο ξα τη Α να στα σει σου Χρι στε δο ο ξα τη Βα σι λει α σου δο ξα τη οι κο νο μι α σου μο νε φι λα αν θρω ω πε"
+      "text": "Του λι-θου σφρα-γι-σθεν-τος υ-πο των Ι-ου-δαι-ων και στρα-τι-ω-των φυ-λασ-σον-των το α-χραν-τον σου Σω-μα α-νε--στης τρι-η-με-ρος Σω-τηρ, δω-ρου-με-νος τω κο-σμω την ζω-ην δι-α του-το αι Δυ-να--μεις των Ου-ρα-νων, ε-βο-ων σοι Ζω-ο-δο--τα δο--ξα τη Α-να-στα-σει σου Χρι-στε δο-ξα τη Βα-σι-λει-α σου δο-ξα τη οι-κο-νο-μι-α σου μο-νε φι-λαν--θρω--πε"
     }
   }
 }

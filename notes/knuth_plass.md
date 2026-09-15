@@ -152,8 +152,10 @@ Layout proceeds in two phases. In Phase 1, the code builds the box/glue/penalty 
 
 Consider first a lyricless score of Byzantine music.
 Each neume group, for example a simple oligon or an ison with kentēmata over a supporting oligon, and each martyria is modeled as a box.
-A note box uses the layout advance `neumeWidth + spaceAfter`; `neumeWidth` already includes owned prefixes and inline measure bars.
-A martyria box similarly includes the notated group, its `spaceAfter`, and any horizontal spacing owned inside the element.
+A note box uses `neumeWidth`, which already includes owned prefixes and inline measure bars.
+A martyria box similarly includes the notated group and any horizontal spacing owned inside the element.
+For notes, martyrias, and tempi, `spaceAfter` is emitted after the ordinary boundary glue as a separate fixed glue with zero stretch and shrink.
+It therefore behaves like TeX `\hskip`: it changes the same-line distance by exactly its positive or negative width, but is discarded with the other post-break glue when the boundary becomes a line break or ends a paragraph.
 The space between ordinary neumes is modeled as glue.
 Its natural width is `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, where `standardGlue` comes from the active font's `engravingDefaults`.
 The font-size-scaled engraving default supplies the default gap, and `neumeDefaultSpacing` remains a user-configurable adjustment.
@@ -272,23 +274,24 @@ Rewriting the centered projections to apply $h_i$ at full width (for example $L_
 
 ### Paragraph encoding
 
-Let $a_i$ be note $i$'s `spaceAfter` and $B_i = W^n_i + a_i$ be its layout advance.
+Let $a_i$ be note $i$'s `spaceAfter` and $B_i = W^n_i$ be its box width.
 Let $c_i$ be the break cost, $w_i$ the break-only reservation at breakpoint $i$, and $m_i$ the preferred same-line width between notes $i$ and $i{+}1$.
 Let $s_0$ be the fixed inline spacing between successive notes, `neumeDefaultFontSize * standardGlue.width + neumeDefaultSpacing`, and let $s^+$ and $s^-$ be the stretch and shrink budgets for an inter-note gap.
 
 For an ordinary note-to-note boundary, note $i$ is encoded in the paragraph as
 
-$$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(B_i) \quad \text{penalty}(c_i, w_i) \quad \text{glue}(m_i, s^+, s^-).$$
+$$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(B_i) \quad \text{penalty}(c_i, w_i) \quad \text{glue}(m_i, s^+, s^-) \quad \text{glue}(a_i, 0, 0).$$
 
 Here:
 
-- $B_i$ is the note's layout advance, including `spaceAfter`. An anonymous spacer box may be inserted before $B_i$ to hold a break-only leading reservation: the bar width plus collision-aware leading clearance when the preceding martyria has a transferable bar (see above), and a leading-hyphen reservation when the preceding note is hyphenated (see below). $B_i$ itself is unchanged.
+- $B_i$ is the note's actual box width. An anonymous spacer box may be inserted before $B_i$ to hold a break-only leading reservation: the bar width plus collision-aware leading clearance when the preceding martyria has a transferable bar (see above), and a leading-hyphen reservation when the preceding note is hyphenated (see below). $B_i$ itself is unchanged.
 - $L_i$ is the left projection, fixed and unbreakable, and omitted when zero.
 - The leading $\text{penalty}(\infty)$ is an unbreakable barrier that protects $L_i$ at a line start. `positionItems` discards leading glue after a break only up to the first box or forbidden ($\infty$) penalty, so the leading penalty keeps $\text{glue}(L_i, 0, 0)$ out of the discarded region and it is counted rather than skipped. It is emitted together with $L_i$ and omitted when $L_i$ is zero; the note's first box then stops the discard scan instead.
 - $s^+$ and $s^-$ are the standard stretch and shrink budgets for an inter-note gap.
 - $c_i$ is the break cost: 0 for a normal break, $\infty$ to prohibit a break, or an intermediate value to discourage one.
 - $w_i$ is the penalty width, a conditional width counted only when a break occurs at this point. It reserves space for the current note's right projection, any melisma overhang that would extend past the right margin, terminal right-barline clearance, and a following note's left measure-bar transfer.
 - $m_i$ is the preferred same-line width between notes $i$ and $i{+}1$.
+- $a_i$ is the user-defined fixed `spaceAfter` adjustment. It has no stretch or shrink and is omitted when zero.
 
 On the same line, each inter-note gap starts at $m_i$ and may use $s^+$ of stretch or $s^-$ of shrink during distributed justification.
 The candidate penalty sits immediately after the neume; the post-break glue $\text{glue}(m_i, s^+, s^-)$ carries both the preferred distance and its elasticity.
@@ -297,11 +300,11 @@ Visual collision, measure-bar, lyric, and melisma clearance affect the preferred
 The current implementation keeps stretch and shrink non-negative, but item widths may be negative.
 Negative glue widths can come from tuck absorption, user-requested negative inline spacing, or glue reductions paired with line-start reservation boxes.
 A negative user spacing adjustment survives at an ordinary note pair when the visual helper reports only its generic zero clamp rather than a real positive collision requirement; lyric and measure-bar preferences still take precedence when computing $m_i$.
-Because `spaceAfter` is part of a note, martyria, or tempo box advance and may itself be negative, an extreme value can also make that box width negative.
-In other words, all stretchability lives in the same glue that carries the same-line boundary width.
+Because `spaceAfter` is separate glue, a negative value moves the following item left without making the note, martyria, or tempo box itself negative.
+All stretchability remains in the glue that carries $m_i$; the following $a_i$ glue is fixed.
 The implementation does not use a second glue of the form $\text{glue}(m_i, -s^+, -s^-)$.
 
-At a break, the post-break glue becomes leading glue on the next line. It lies before the next note's leading $\text{penalty}(\infty)$ barrier, so it falls within the discarded region and is skipped by `positionItems`, and both $m_i$ and its elasticity vanish.
+At a break, the post-break glues become leading glue on the next line. They lie before the next note's leading $\text{penalty}(\infty)$ barrier, so they fall within the discarded region and are skipped by `positionItems`: $m_i$, its elasticity, and $a_i$ all vanish.
 This prevents positive adjustment ratio from being spent as invisible stretch after the last visible note on the previous line.
 The next note's left projection $\text{glue}(L_{i+1}, 0, 0)$ lies past that barrier, so it is not discarded and protects the left edge of the new line.
 The penalty width $w_i$ remains the break-only quantity: it cannot live in the post-break glue, because that glue disappears at breaks.
@@ -358,8 +361,8 @@ where:
 
 There is one deliberate exception to the ordinary base expression.
 When `exitsMelismaIntoCenteredLyric` is true, a carried melisma is ending at a non-melisma note whose centered lyric has a positive left projection.
-In that case the current cursor is already after the previous note's `spaceAfter`, so the code starts from base width 0 instead of $s_0 + R_i - T_i^\text{left} - T_i^\text{right}$.
-This aligns the next centered lyric's left edge with that cursor while preserving the user-defined extra spacing already included in the cursor position.
+In that case the code starts from base width 0 instead of $s_0 + R_i - T_i^\text{left} - T_i^\text{right}$.
+The previous note's fixed `spaceAfter` glue is appended after that automatically computed boundary, so it still shifts the next centered lyric by the requested amount.
 The collision correction $\ell_i$ still runs afterward, including the carried-melisma check against `melismaLyricsEndPx`, and the final result is still raised to the preferred visible-note and measure-bar widths.
 
 The collision check is geometry-based.

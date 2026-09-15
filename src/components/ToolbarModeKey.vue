@@ -1,19 +1,26 @@
 <template>
   <Toolbar class="chrome-toolbar" loop>
-    <template v-if="!element.useDefaultStyle">
-      <Label for="toolbar-mode-key-font-size">{{
-        $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
-      }}</Label>
-      <InputFontSize
-        id="toolbar-mode-key-font-size"
-        :model-value="element.fontSize"
-        @update:model-value="
-          $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
-        "
-      />
-      <ToolbarSeparator />
-    </template>
+    <InitialMartyriaStyleSelect
+      trigger-class="w-48"
+      :model-value="element.initialMartyriaStyleId"
+      :initial-martyria-styles="initialMartyriaStyles"
+      @update:model-value="
+        $emit('update', {
+          initialMartyriaStyleId: $event,
+        } as Partial<ModeKeyElement>)
+      "
+    />
+    <InputFontSize
+      id="toolbar-mode-key-font-size"
+      :aria-label="$t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })"
+      :model-value="primaryAppearance.fontSize"
+      @update:model-value="
+        $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
+      "
+    />
+    <ToolbarSeparator />
     <ToggleGroup
+      v-if="!element.inline"
       type="single"
       variant="outline"
       :model-value="element.alignment"
@@ -53,13 +60,14 @@
         </ToggleGroupItem>
       </AppTooltip>
     </ToggleGroup>
-    <ToolbarSeparator />
+    <ToolbarSeparator v-if="!element.inline" />
     <ButtonWithMenu
       :options="tempoMenuOptions"
       :tooltip="$t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' })"
       @select="$emit('update:tempo', $event)"
     />
     <AppTooltip
+      v-if="!element.inline"
       :tooltip="
         $t(($) => $.toolbar.initialMartyria.rightAlignTempo, { ns: 'toolbar' })
       "
@@ -111,17 +119,21 @@ import {
 import type { PropType } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
+import InitialMartyriaStyleSelect from '@/components/InitialMartyriaStyleSelect.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
-import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Toolbar,
   ToolbarButton,
   ToolbarSeparator,
 } from '@/components/ui/toolbar';
+import { useResolvedInitialMartyriaStyle } from '@/composables/useResolvedInitialMartyriaStyle';
 import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import { TempoSign } from '@/models/Neumes';
+import type { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
 
 import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
 import ButtonWithMenu from './ButtonWithMenu.vue';
@@ -161,14 +173,33 @@ const tempoMenuOptions: ButtonWithMenuOption[] = [
   },
 ];
 
-defineProps({
+const props = defineProps({
   element: {
     type: Object as PropType<ModeKeyElement>,
+    required: true,
+  },
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
+  },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
     required: true,
   },
 });
 
 const emit = defineEmits(['open-mode-key-dialog', 'update', 'update:tempo']);
+
+const { primaryAppearance } = useResolvedInitialMartyriaStyle({
+  element: () => props.element,
+  pageSetup: () => props.pageSetup,
+  paragraphStyles: () => props.paragraphStyles,
+  initialMartyriaStyles: () => props.initialMartyriaStyles,
+});
 
 function onAlignmentChanged(value: unknown) {
   if (isTextBoxAlignment(value)) {

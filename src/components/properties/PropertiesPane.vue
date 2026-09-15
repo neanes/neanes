@@ -115,8 +115,13 @@
       :element="modeKeyElement"
       :open-sections="openSections"
       :page-setup="pageSetup"
+      :paragraph-styles="paragraphStyles"
+      :initial-martyria-styles="initialMartyriaStyles"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:mode-key', modeKeyElement, $event)"
+      @open-style-dialog="
+        emit('open-initial-martyria-style-dialog', modeKeyElement)
+      "
     />
 
     <PropertiesNeume
@@ -153,6 +158,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 
@@ -193,6 +199,10 @@ const props = defineProps({
     type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
   openSections: {
     type: Array as PropType<string[]>,
     required: true,
@@ -200,6 +210,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
+  'open-initial-martyria-style-dialog',
   'open-paragraph-styles-dialog',
   'update:open-sections',
   'update:annotation',

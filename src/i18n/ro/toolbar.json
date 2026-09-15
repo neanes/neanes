@@ -18,7 +18,6 @@
     "clearFormatting": "Elimină formatarea",
     "spaceAfter": "Spațiu după",
     "tempoSign": "Semn de tempo",
-    "useDefaultStyle": "Folosește stilul implicit",
     "enharmonicDisabled": "Ftoraua agem poate fi plasată doar pe Ga, Zo sau Vu",
     "generalFlatDisabled": "Ifesul general poate fi plasat doar pe Ke",
     "generalSharpDisabled": "Diezul general poate fi plasat doar pe Ga",
@@ -88,7 +87,6 @@
   },
   "initialMartyria": {
     "size": "Mărime",
-    "heightAdjustment": "Ajustare înălțime",
     "rightAlignTempo": "Aliniază tempoul la dreapta",
     "showAmbitus": "Afișează ambitus",
     "permanentEnharmonicZo": "Zo enarmonic permanent",

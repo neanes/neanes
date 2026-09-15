@@ -18,7 +18,6 @@
     "clearFormatting": "Αφαίρεση μορφοποίησης",
     "spaceAfter": "Διάστημα Μετά",
     "tempoSign": "Σημείο Χρονικής Αγωγής",
-    "useDefaultStyle": "Χρήση Προεπιλεγμένης Μορφοποίησης",
     "enharmonicDisabled": "Η εναρμόνια φθορά μπορεί να τοποθετηθεί μόνο σε Γα, Ζω ή Βου",
     "generalFlatDisabled": "Η γενική ύφεση μπορεί να τοποθετηθεί μόνο σε Κε",
     "generalSharpDisabled": "Η γενική δίεση μπορεί να τοποθετηθεί μόνο σε Γα",
@@ -88,7 +87,6 @@
   },
   "initialMartyria": {
     "size": "Μέγεθος",
-    "heightAdjustment": "Ρύθμιση Ύψους",
     "rightAlignTempo": "Στοίχιση Χρονικής Αγωγής Δεξιά",
     "showAmbitus": "Εμφάνιση Έκτασης",
     "permanentEnharmonicZo": "Μόνιμο Εναρμόνιο Ζω",

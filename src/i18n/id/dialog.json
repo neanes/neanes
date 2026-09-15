@@ -68,6 +68,124 @@
     "root": "Pilih Martyria Awal",
     "description": "Pilih martyria awal."
   },
+  "initialMartyriaStyles": {
+    "root": "Gaya Martyria Awal",
+    "description": "Pilih gaya untuk martyria awal, atau buat gaya Anda sendiri.",
+    "styleLabel": "Gaya",
+    "manageStyles": "Kelola gaya…",
+    "documentDefault": "Bawaan dokumen",
+    "documentDefaultStatus": "Bawaan dokumen: {{name}}",
+    "defaultBadge": "Bawaan",
+    "custom": "Kustom",
+    "builtInLanguage": "Bawaan · {{language}}",
+    "builtIn": "Bawaan",
+    "builtInHint": "Gaya bawaan. Perubahan dibuat pada salinan.",
+    "noCustomStyles": "Belum ada gaya kustom",
+    "new": "Gaya baru",
+    "duplicate": "Gandakan",
+    "delete": "Hapus",
+    "apply": "Terapkan",
+    "useForDocument": "Gunakan untuk dokumen ini",
+    "newStyleName": "Gaya baru",
+    "copyStyleName": "Salinan {{name}}",
+    "name": "Nama",
+    "styleNamePlaceholder": "Nama gaya",
+    "nameInvalid": "Masukkan nama unik untuk gaya ini.",
+    "language": "Bahasa",
+    "greekParagraphStyle": "Gaya paragraf Yunani",
+    "typography": "Tipografi",
+    "sampleMode": "Modus contoh",
+    "basedOn": "Berdasarkan {{name}}",
+    "resetToBase": "Setel ulang ke dasar",
+    "modeIdentification": "Identifikasi modus",
+    "numberForm": "Bentuk angka",
+    "digitForm": "Bentuk angka",
+    "numberPlacement": "Letak angka",
+    "plagalWording": "Penyebutan plagal",
+    "transliterateNoteNames": "Transliterasi nada awal",
+    "transliterateNoteNamesHint": "Pa alih-alih Πα",
+    "modeIdentificationMethods": {
+      "text": "Teks saja",
+      "modeSign": "Tanda saja",
+      "textAndModeSign": "Teks dan tanda"
+    },
+    "numeralKinds": {
+      "cardinal": "Kardinal",
+      "ordinal": "Ordinal"
+    },
+    "numeralForms": {
+      "digits": {
+        "cardinal": "Angka, kardinal",
+        "ordinal": "Angka, ordinal"
+      },
+      "romanNumerals": {
+        "cardinal": "Angka Romawi, kardinal",
+        "ordinal": "Angka Romawi, ordinal"
+      },
+      "alphabeticNumerals": {
+        "cardinal": "Angka alfabetis, kardinal",
+        "ordinal": "Angka alfabetis, ordinal"
+      },
+      "words": {
+        "cardinal": "Kata, kardinal",
+        "ordinal": "Kata, ordinal"
+      }
+    },
+    "numberingSystems": {
+      "western": "Barat",
+      "arabicIndic": "Arab-India"
+    },
+    "numeralQualifiers": {
+      "postnominal": "Angka setelahnya",
+      "prenominal": "Angka sebelumnya"
+    },
+    "modeNamingSchemes": {
+      "absolute": "Bernomor 1 sampai 8",
+      "authenticCounterpart": "Plagal dari yang autentik",
+      "plagalClass": "Plagal sebagai kelas"
+    },
+    "duplicateOfStyle": "Gaya ini ditulis persis seperti \"{{name}}\".",
+    "useStyleInstead": "Gunakan \"{{name}}\" saja",
+    "useOrdinalForms": "Gunakan bentuk ordinal",
+    "languages": {
+      "greek": "Yunani",
+      "english": "Inggris",
+      "spanish": "Spanyol",
+      "churchSlavonic": "Slavonik Gerejawi",
+      "russian": "Rusia",
+      "arabic": "Arab",
+      "romanian": "Rumania",
+      "indonesian": "Indonesia"
+    },
+    "builtInStyles": {
+      "greekTraditionalSign": "Tanda tradisional",
+      "greekAlphabeticNumerals": "Angka alfabetis",
+      "englishTraditionalSign": "Tanda tradisional",
+      "englishModeNames": "Nama modus",
+      "englishModeNamesWithSign": "Nama modus dengan tanda",
+      "englishModeNumbersWithSign": "Nomor modus dengan tanda",
+      "englishPlagalClassWithSign": "Kelas plagal dengan tanda",
+      "spanishTonoNumber": "Tono dengan angka",
+      "spanishTonoRomanNumeral": "Tono dengan angka Romawi",
+      "spanishTonoOrdinalNumber": "Tono dengan angka ordinal",
+      "spanishTonoOrdinal": "Tono dengan kata ordinal",
+      "spanishOrdinalTono": "Ordinal sebelum tono",
+      "churchSlavonicGlasNumber": "Glas dengan angka",
+      "churchSlavonicGlasCyrillicNumeral": "Glas dengan angka Kiril",
+      "churchSlavonicGlasCyrillicNumeralText": "Glas dengan angka Kiril, teks saja",
+      "churchSlavonicGlasOrdinal": "Glas dengan kata ordinal",
+      "churchSlavonicGlasOrdinalText": "Glas dengan kata ordinal, teks saja",
+      "russianGlasNumber": "Glas dengan angka",
+      "russianGlasOrdinal": "Glas dengan kata ordinal",
+      "russianGlasOrdinalText": "Glas dengan kata ordinal, teks saja",
+      "arabicOrdinal": "Kata ordinal",
+      "arabicOrdinalText": "Kata ordinal, teks saja",
+      "romanianGlasNumber": "Glas dengan angka",
+      "romanianGlasRomanNumeral": "Glas dengan angka Romawi",
+      "romanianTraditionalSign": "Tanda tradisional",
+      "indonesianModeNamesWithSign": "Nama modus dengan tanda"
+    }
+  },
   "documentProperties": {
     "root": "Properti Dokumen",
     "description": "Atur metadata dokumen untuk kepala berjalan dan token lainnya.",
@@ -97,7 +215,9 @@
       "header": "Header",
       "footer": "Footer",
       "lyrics": "Lirik",
-      "dropCap": "Huruf Awal Besar"
+      "dropCap": "Huruf Awal Besar",
+      "initialMartyria": "Martyria Awal",
+      "initialMartyriaGreek": "Martyria Awal (Yunani)"
     }
   },
   "neumePositioning": {
@@ -222,10 +342,7 @@
     "italic": "Miring",
     "outline": "Garis Luar",
     "lyrics": "Lirik",
-    "initialMartyriae": "Martyria Awal",
-    "initialMartyriaeDescription": "Gaya default untuk semua martyria awal dalam partitur.",
     "neumesDescription": "Gaya default untuk semua neuma dalam partitur.",
-    "heightAdjust": "Penyesuaian Tinggi",
     "neumeStyles": "Gaya Neuma",
     "type": "Tipe",
     "accidentals": "Tanda",
@@ -263,7 +380,7 @@
     "moria": "Moria",
     "reset": "Atur Ulang",
     "classicLegetos": "Legetos Klasik",
-    "classicLegetosDescription": "Jika dicentang, himne dalam mode keempat dengan nada dasar Pa atau Vou akan menggunakan skala legetos klasik dengan Vou diturunkan.",
+    "classicLegetosDescription": "Jika dicentang, himne dalam modus keempat dengan nada dasar Pa atau Vou akan menggunakan skala legetos klasik dengan Vou diturunkan.",
     "intervals": "Interval",
     "diatonic": "Diatonik",
     "legetos": "Legetos",

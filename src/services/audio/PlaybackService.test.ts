@@ -734,8 +734,84 @@ describe('PlaybackService', () => {
           getDiatonicFrequency(ScaleNote.Thi),
         ],
       ],
+      [
+        // The first zo is an ascending peak (di-ke-zo then back down to ke), so
+        // it is flat and the following ke is not sharpened, even though the line
+        // later climbs di-ke-zo-ni through a natural zo. The second zo descends
+        // out of the upper register, so it is flat too.
+        'dkzkznzkd',
+        Note.Thi,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+      ],
+      [
+        // Reported bug: the line rests on ke and then LEAPS up to pa'
+        // (ni zo ke zo ke ke ke pa'). The jump from ke up to pa' is not a
+        // stepwise ascent into a natural zo, so the kes stay natural; and the
+        // zos, which never ascend past zo into ni, are flat. Mirrors the
+        // reported "pa' ni zo ke zo ke ke ke pa'".
+        'nzkzkkkp',
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.OligonPlusKentimaAbove,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.PaHigh),
+        ],
+      ],
+      [
+        // Symmetric case ("cuts both ways"): the line leaps from zo straight
+        // DOWN to thi, skipping ke (ni zo thi). Attraction follows stepwise
+        // motion, so a leap down past ke does not flatten zo -- it stays natural.
+        'nzd',
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Elaphron,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+      ],
     ])(
-      'should calculate the correct zo attractions (%# - %s)',
+      'should calculate the correct agia zo attractions (%# - %s)',
       (
         name: string,
         startingNote: Note,
@@ -763,140 +839,159 @@ describe('PlaybackService', () => {
       },
     );
 
-    // it.each([
-    //   [
-    //     'nzkz',
-    //     Note.NiHigh,
-    //     [
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Oligon,
-    //     ],
-    //     [
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.Ke, 5),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //     ],
-    //   ],
-    //   [
-    //     'nzkzn',
-    //     Note.NiHigh,
-    //     [
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Oligon,
-    //       QuantitativeNeume.Oligon,
-    //     ],
-    //     [
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.Ke, 5),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //     ],
-    //   ],
-    //   [
-    //     // This is an unlikely case where zo was never hit
-    //     // before ni, so the attraction is not triggered.
-    //     // Perhaps additional logic should handle this case to sharpen ke?
-    //     'nkzn',
-    //     Note.NiHigh,
-    //     [
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Elaphron,
-    //       QuantitativeNeume.Oligon,
-    //       QuantitativeNeume.Oligon,
-    //     ],
-    //     [
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //       getDiatonicFrequency(ScaleNote.Ke),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //     ],
-    //   ],
-    //   [
-    //     'znkzn',
-    //     Note.ZoHigh,
-    //     [
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Oligon,
-    //       QuantitativeNeume.Elaphron,
-    //       QuantitativeNeume.Oligon,
-    //       QuantitativeNeume.Oligon,
-    //     ],
-    //     [
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //       getDiatonicFrequency(ScaleNote.Ke, 5),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //     ],
-    //   ],
-    //   [
-    //     'nzkkz',
-    //     Note.NiHigh,
-    //     [
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Oligon,
-    //     ],
-    //     [
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.Ke, 5),
-    //       getDiatonicFrequency(ScaleNote.Ke, 5),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //     ],
-    //   ],
-    //   [
-    //     'nzkn',
-    //     Note.NiHigh,
-    //     [
-    //       QuantitativeNeume.Ison,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.Apostrophos,
-    //       QuantitativeNeume.PetastiPlusOligon,
-    //     ],
-    //     [
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //       getDiatonicFrequency(ScaleNote.ZoHigh),
-    //       getDiatonicFrequency(ScaleNote.Ke, 5),
-    //       getDiatonicFrequency(ScaleNote.NiHigh),
-    //     ],
-    //   ],
-    // ])(
-    //   'should calculate the correct ke attractions (%# - %s)',
-    //   (
-    //     name: string,
-    //     startingNote: Note,
-    //     notes: QuantitativeNeume[],
-    //     expectedFrequencies: number[],
-    //   ) => {
-    //     const service = new PlaybackService();
+    it.each([
+      [
+        'nzkz',
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+        ],
+      ],
+      [
+        'nzkzn',
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+      [
+        // This is an unlikely case where zo was never hit
+        // before ni, so the attraction is not triggered.
+        // Perhaps additional logic should handle this case to sharpen ke?
+        'nkzn',
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Elaphron,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+      [
+        'znkzn',
+        Note.ZoHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Elaphron,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+      [
+        'nzkkz',
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+        ],
+      ],
+      [
+        'nzkn',
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.PetastiPlusOligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+      [
+        // ke is preceded by a natural zo (zo steps up to ni), but then LEAPS up
+        // to pa' rather than stepping back into the zo neighborhood. A jump past
+        // ni is not a leading tone to zo, so ke stays natural.
+        'znkp',
+        Note.ZoHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Elaphron,
+          QuantitativeNeume.OligonPlusKentimaAbove,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.PaHigh),
+        ],
+      ],
+    ])(
+      'should calculate the correct agia ke attractions (%# - %s)',
+      (
+        name: string,
+        startingNote: Note,
+        notes: QuantitativeNeume[],
+        expectedFrequencies: number[],
+      ) => {
+        const service = new PlaybackService();
 
-    //     const options = getDefaultWorkspaceOptions();
-    //     options.diatonicIntervals = [12, 10, 8];
+        const options = getDefaultWorkspaceOptions();
+        options.diatonicIntervals = [12, 10, 8];
 
-    //     const elements: ScoreElement[] = [];
+        const elements: ScoreElement[] = [];
 
-    //     elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
-    //     elements.push(getMartyria({ auto: false, note: startingNote }));
+        elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+        elements.push(getMartyria({ auto: false, note: startingNote }));
 
-    //     notes.forEach((x) => elements.push(getNote(x)));
+        notes.forEach((x) => elements.push(getNote(x)));
 
-    //     const events = service.computePlaybackSequence(elements, options, true);
+        const events = service.computePlaybackSequence(elements, options, true);
 
-    //     expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
-    //       expectedFrequencies,
-    //       2,
-    //     );
-    //   },
-    // );
+        expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+          expectedFrequencies,
+          2,
+        );
+      },
+    );
   });
 
   it(`should not change frequency when on an ison`, () => {
@@ -964,7 +1059,7 @@ const defaultFrequencyDi = 196;
 function getDefaultWorkspaceOptions() {
   return {
     useLegetos: false,
-    useDefaultAttractionZo: true,
+    useAgiaAttraction: true,
     frequencyDi: defaultFrequencyDi,
     speed: 1,
 
@@ -977,8 +1072,8 @@ function getDefaultWorkspaceOptions() {
     spathiIntervals: [20, 4, 4, 14],
     klitonIntervals: [14, 12, 4],
 
-    defaultAttractionZoMoria: -4,
-    defaultAttractionKeMoria: 5,
+    agiaAttractionZoMoria: -4,
+    agiaAttractionKeMoria: 5,
 
     volumeIson: -4,
     volumeMelody: 0,

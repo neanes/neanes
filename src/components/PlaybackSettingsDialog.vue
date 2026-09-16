@@ -158,20 +158,18 @@
                 <FieldGroup>
                   <Field orientation="horizontal">
                     <Checkbox
-                      id="playback-settings-dialog-diatonic-zo"
-                      :model-value="form.useDefaultAttractionZo"
-                      @update:model-value="onUseDefaultAttractionZoChanged"
+                      id="playback-settings-dialog-agia-attraction"
+                      :model-value="form.useAgiaAttraction"
+                      @update:model-value="onUseAgiaAttractionChanged"
                     />
                     <FieldContent>
-                      <FieldLabel for="playback-settings-dialog-diatonic-zo">
+                      <FieldLabel
+                        for="playback-settings-dialog-agia-attraction"
+                      >
                         {{
-                          $t(
-                            ($) =>
-                              $.dialog.playbackSettings.diatonicZoAttraction,
-                            {
-                              ns: 'dialog',
-                            },
-                          )
+                          $t(($) => $.dialog.playbackSettings.agiaAttraction, {
+                            ns: 'dialog',
+                          })
                         }}
                       </FieldLabel>
                       <FieldDescription>
@@ -179,7 +177,7 @@
                           $t(
                             ($) =>
                               $.dialog.playbackSettings
-                                .diatonicZoAttractionDescription,
+                                .agiaAttractionDescription,
                             {
                               ns: 'dialog',
                             },
@@ -188,10 +186,10 @@
                       </FieldDescription>
                       <div class="flex flex-wrap items-center gap-2 pt-1">
                         <FieldLabel
-                          for="playback-settings-dialog-diatonic-zo-moria"
+                          for="playback-settings-dialog-agia-attraction-zo-moria"
                         >
                           {{
-                            $t(($) => $.dialog.playbackSettings.moria, {
+                            $t(($) => $.dialog.playbackSettings.zoMoria, {
                               ns: 'dialog',
                             })
                           }}
@@ -201,15 +199,13 @@
                           :max="0"
                           :step="1"
                           :format-options="fraction0FormatOptions"
-                          :model-value="form.defaultAttractionZoMoria"
-                          @update:model-value="
-                            onDefaultAttractionZoMoriaChanged
-                          "
+                          :model-value="form.agiaAttractionZoMoria"
+                          @update:model-value="onAgiaAttractionZoMoriaChanged"
                         >
                           <NumberFieldContent>
                             <NumberFieldDecrement />
                             <NumberFieldInput
-                              id="playback-settings-dialog-diatonic-zo-moria"
+                              id="playback-settings-dialog-agia-attraction-zo-moria"
                             />
                             <NumberFieldIncrement />
                           </NumberFieldContent>
@@ -217,7 +213,46 @@
                         <Button
                           variant="outline"
                           type="button"
-                          @click="resetDefaultAttractionZoMoria"
+                          @click="resetAgiaAttractionZoMoria"
+                        >
+                          <PhArrowCounterClockwise />
+                          {{
+                            $t(($) => $.dialog.playbackSettings.reset, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </Button>
+                      </div>
+                      <div class="flex flex-wrap items-center gap-2 pt-1">
+                        <FieldLabel
+                          for="playback-settings-dialog-agia-attraction-ke-moria"
+                        >
+                          {{
+                            $t(($) => $.dialog.playbackSettings.keMoria, {
+                              ns: 'dialog',
+                            })
+                          }}
+                        </FieldLabel>
+                        <NumberField
+                          :min="0"
+                          :max="72"
+                          :step="1"
+                          :format-options="fraction0FormatOptions"
+                          :model-value="form.agiaAttractionKeMoria"
+                          @update:model-value="onAgiaAttractionKeMoriaChanged"
+                        >
+                          <NumberFieldContent>
+                            <NumberFieldDecrement />
+                            <NumberFieldInput
+                              id="playback-settings-dialog-agia-attraction-ke-moria"
+                            />
+                            <NumberFieldIncrement />
+                          </NumberFieldContent>
+                        </NumberField>
+                        <Button
+                          variant="outline"
+                          type="button"
+                          @click="resetAgiaAttractionKeMoria"
                         >
                           <PhArrowCounterClockwise />
                           {{
@@ -860,8 +895,8 @@ function getTuningFromFrequency(frequency: number) {
   return Math.round(1200 * Math.log2(frequency / FREQUENCY_G3));
 }
 
-function onUseDefaultAttractionZoChanged(value: boolean | 'indeterminate') {
-  form.value.useDefaultAttractionZo = value === true;
+function onUseAgiaAttractionChanged(value: boolean | 'indeterminate') {
+  form.value.useAgiaAttraction = value === true;
   emitPlaybackOptionsChanged();
 }
 
@@ -973,8 +1008,13 @@ function resetAlterationMoria() {
   emitPlaybackOptionsChanged();
 }
 
-function resetDefaultAttractionZoMoria() {
-  form.value.defaultAttractionZoMoria = -4;
+function resetAgiaAttractionZoMoria() {
+  form.value.agiaAttractionZoMoria = -4;
+  emitPlaybackOptionsChanged();
+}
+
+function resetAgiaAttractionKeMoria() {
+  form.value.agiaAttractionKeMoria = 5;
   emitPlaybackOptionsChanged();
 }
 
@@ -1011,13 +1051,23 @@ function onYfesisChanged(neume: Accidental, moria: number | undefined) {
   emitPlaybackOptionsChanged();
 }
 
-function onDefaultAttractionZoMoriaChanged(value: number | undefined) {
+function onAgiaAttractionZoMoriaChanged(value: number | undefined) {
   value = normalizeNumberFieldValue(value);
   value = Math.max(-72, value);
   value = Math.min(0, value);
   value = Math.round(value);
 
-  form.value.defaultAttractionZoMoria = value;
+  form.value.agiaAttractionZoMoria = value;
+  emitPlaybackOptionsChanged();
+}
+
+function onAgiaAttractionKeMoriaChanged(value: number | undefined) {
+  value = normalizeNumberFieldValue(value);
+  value = Math.max(0, value);
+  value = Math.min(72, value);
+  value = Math.round(value);
+
+  form.value.agiaAttractionKeMoria = value;
   emitPlaybackOptionsChanged();
 }
 

@@ -107,7 +107,6 @@ import {
 } from './TextMeasurementService';
 
 const fontHeightCache = new Map<string, number>();
-const fontBoundingBoxDescentCache = new Map<string, number>();
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
 const noteInkBoundsCache = new Map<string, InkBounds>();
@@ -5947,10 +5946,6 @@ export class LayoutService {
               if (element.melismaWidth < pageSetup.lyricsMelismaCutoffWidth) {
                 element.melismaWidth = 0;
               }
-
-              // Calculate the distance from the alphabetic baseline to the bottom of the font bounding box
-              element.melismaOffsetTop =
-                -this.getLyricsFontBoundingBoxDescentFromCache(element);
             } else {
               const nextNoteElement = nextElement as NoteElement;
 
@@ -8171,24 +8166,6 @@ export class LayoutService {
     }
 
     return width;
-  }
-
-  private static getLyricsFontBoundingBoxDescentFromCache(
-    element: NoteElement,
-  ) {
-    const font = element.lyricsFontCss;
-
-    const key = font;
-
-    let descent = fontBoundingBoxDescentCache.get(key);
-
-    if (descent == null) {
-      descent = TextMeasurementService.getFontBoundingBoxDescent(font);
-
-      fontBoundingBoxDescentCache.set(key, descent);
-    }
-
-    return descent;
   }
 
   private static getLyricsFontHeightFromCache(font: string) {

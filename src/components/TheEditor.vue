@@ -2409,14 +2409,6 @@ function getMelismaStyle(element: NoteElement) {
   } as StyleValue;
 }
 
-function getMelismaUnderscoreStyleOuter(element: NoteElement) {
-  return {
-    top: withZoom(element.melismaOffsetTop),
-    height: withZoom(element.lyricsFontHeight),
-    width: withZoom(element.melismaWidth),
-  };
-}
-
 function getMelismaUnderscoreStyleInner(element: NoteElement) {
   const thickness = score.value.pageSetup.lyricsMelismaThickness;
   const resolvedLyricsStyle = getResolvedLyricsStyle(element);
@@ -2427,8 +2419,10 @@ function getMelismaUnderscoreStyleInner(element: NoteElement) {
 
   return {
     borderBottom: `${withZoom(thickness)} solid ${resolvedLyricsStyle.color}`,
-    left: withZoom(spacing),
-    width: `calc(100% - ${withZoom(spacing)})`,
+    // A full melisma starts at the left edge of the lyrics container.
+    left: element.isFullMelisma ? 0 : undefined,
+    marginLeft: withZoom(spacing),
+    width: withZoom(element.melismaWidth - spacing),
   };
 }
 
@@ -10648,27 +10642,19 @@ function renderTabLabel(tab: Tab) {
                                     (element as NoteElement).melismaText === ''
                                   "
                                 >
-                                  <div
+                                  <span
                                     class="melisma-underscore"
-                                    :class="{
-                                      full: (element as NoteElement)
-                                        .isFullMelisma,
-                                    }"
-                                    :style="
-                                      getMelismaUnderscoreStyleOuter(
-                                        element as NoteElement,
-                                      )
-                                    "
+                                    aria-hidden="true"
                                   >
-                                    <div
+                                    <span
                                       class="melisma-inner"
                                       :style="
                                         getMelismaUnderscoreStyleInner(
                                           element as NoteElement,
                                         )
                                       "
-                                    ></div>
-                                  </div>
+                                    ></span>
+                                  </span>
                                 </template>
                                 <template
                                   v-else-if="
@@ -12016,16 +12002,13 @@ function renderTabLabel(tab: Tab) {
 }
 
 .melisma-underscore {
-  position: absolute;
-  display: inline;
-  white-space: pre;
+  /* Anchor to the rendered baseline without changing lyric alignment. */
+  display: inline-block;
+  width: 0;
+  height: 0;
 }
 
 .melisma.full {
-  left: 0;
-}
-
-.melisma-underscore.full {
   left: 0;
 }
 
@@ -12038,9 +12021,11 @@ function renderTabLabel(tab: Tab) {
 }
 
 .melisma-inner {
-  height: 100%;
-  position: relative;
-  box-sizing: border-box;
+  /* The static position follows the baseline anchor. Keep the containing
+     block at lyrics-container so full melismas can start at its left edge. */
+  position: absolute;
+  height: 0;
+  transform: translateY(-100%);
 }
 
 .melisma-text {

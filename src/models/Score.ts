@@ -4,6 +4,7 @@ import type { Footer } from './Footer';
 import { Footers } from './Footers';
 import type { Header } from './Header';
 import { Headers } from './Headers';
+import type { InitialMartyriaStyle } from './InitialMartyriaStyle';
 import { PageSetup } from './PageSetup';
 import {
   createDefaultParagraphStyles,
@@ -20,6 +21,8 @@ export class Score {
   public documentProperties: DocumentProperties = new DocumentProperties();
   public pageSetup: PageSetup = new PageSetup();
   public paragraphStyles: ParagraphStyle[] = createDefaultParagraphStyles();
+  /** The score's own initial martyria styles; built-in styles are not stored. */
+  public initialMartyriaStyles: InitialMartyriaStyle[] = [];
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();

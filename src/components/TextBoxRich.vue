@@ -302,6 +302,7 @@ const editorConfig = computed((): EditorConfig => {
         'default',
         'Source Serif' + ',' + props.pageSetup.neumeDefaultFontFamily,
         'GFS Didot' + ',' + props.pageSetup.neumeDefaultFontFamily,
+        'GFS Porson' + ',' + props.pageSetup.neumeDefaultFontFamily,
         'Noto Naskh Arabic' + ',' + props.pageSetup.neumeDefaultFontFamily,
         'Old Standard' + ',' + props.pageSetup.neumeDefaultFontFamily,
         'Neanes',

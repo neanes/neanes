@@ -9,6 +9,8 @@ import type {
   TextBoxElement,
 } from '@/models/Element';
 import { ElementType } from '@/models/Element';
+import { resolveScoreInitialMartyriaStyle } from '@/models/InitialMartyriaResolver';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
 import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import type { Page } from '@/models/Page';
@@ -247,6 +249,7 @@ export class LatexExporter {
     pages: Page[],
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
+    initialMartyriaStyles: InitialMartyriaStyle[],
     options: LatexExporterOptions,
   ) {
     const neumeDescent = TextMeasurementService.getFontBoundingBoxDescent(
@@ -298,6 +301,13 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
       pageSetup.lyricsVerticalOffset + neumeDescent + lyricAscent;
     const neumeFont = getLatexNeumeFont(pageSetup.neumeDefaultFontFamily);
     const textStyleRegistry = new LatexTextStyleRegistry(paragraphStyles);
+    // The typography every mode key inherits unless it overrides it: the
+    // score's initial martyria style resolved through the paragraph styles.
+    const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
+      pageSetup,
+      paragraphStyles,
+      initialMartyriaStyles,
+    }).primaryAppearance;
 
     const result: LatexScore = {
       appVersion: APP_VERSION,
@@ -317,7 +327,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           neume: neumeFont.fontFamily,
         },
         fontSizes: {
-          modeKey: toPt(pageSetup.modeKeyDefaultFontSize),
+          modeKey: toPt(defaultModeKeyAppearance.fontSize),
           neume: toPt(pageSetup.neumeDefaultFontSize),
         },
         lyricsVerticalOffset: toPt(lyricsVerticalOffset),
@@ -335,7 +345,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           martyria: convertColor(pageSetup.martyriaDefaultColor),
           measureBar: convertColor(pageSetup.measureBarDefaultColor),
           measureNumber: convertColor(pageSetup.measureNumberDefaultColor),
-          modeKey: convertColor(pageSetup.modeKeyDefaultColor),
+          modeKey: convertColor(defaultModeKeyAppearance.color),
           neume: convertColor(pageSetup.neumeDefaultColor),
           noteIndicator: convertColor(pageSetup.noteIndicatorDefaultColor),
           tempo: convertColor(pageSetup.tempoDefaultColor),
@@ -714,15 +724,12 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                   : undefined,
               alignment: modeKey.alignment,
               color:
-                !modeKey.useDefaultStyle &&
-                modeKey.color != pageSetup.modeKeyDefaultColor
-                  ? convertColor(modeKey.color)
+                modeKey.computedColor !== defaultModeKeyAppearance.color
+                  ? convertColor(modeKey.computedColor)
                   : undefined,
-              fontSize:
-                !modeKey.useDefaultStyle &&
-                modeKey.fontSize != pageSetup.modeKeyDefaultFontSize
-                  ? toPt(modeKey.fontSize)
-                  : undefined,
+              // The glyph size is matched to the style's text by layout, so
+              // it is always written per element.
+              fontSize: toPt(modeKey.computedNeumeFontSize),
               isPlagal: modeKey.isPlagal || undefined,
               isVarys: modeKey.isVarys || undefined,
               martyria: glyphName(modeKey.martyria),

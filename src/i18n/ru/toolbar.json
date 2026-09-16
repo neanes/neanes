@@ -18,7 +18,6 @@
     "clearFormatting": "Очистить форматирование",
     "spaceAfter": "Интервал после",
     "tempoSign": "Знак темпа",
-    "useDefaultStyle": "Использовать стиль по умолчанию",
     "enharmonicDisabled": "Энгармоническую фтору можно поставить только на Га, Зо или Ву",
     "generalFlatDisabled": "Ладовый ифез можно поставить только на Ке",
     "generalSharpDisabled": "Ладовый диез можно поставить только на Га",
@@ -88,7 +87,6 @@
   },
   "initialMartyria": {
     "size": "Размер",
-    "heightAdjustment": "Коррекция высоты",
     "rightAlignTempo": "Выровнять темп по правому краю",
     "showAmbitus": "Показывать диапазон",
     "permanentEnharmonicZo": "Постоянный энгармонический Зо",

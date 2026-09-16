@@ -6,6 +6,7 @@ import {
   EmptyElement,
   ImageBoxElement,
   isAutomaticBreakProhibited,
+  isBlockElement,
   LineBreakType,
   MartyriaElement,
   ModeKeyElement,
@@ -22,6 +23,16 @@ import {
   type ParagraphStyleOverrides,
   resolveParagraphStyle,
 } from './ParagraphStyle';
+
+describe('isBlockElement', () => {
+  it('treats an initial martyria as a block unless it is inline', () => {
+    const modeKey = new ModeKeyElement();
+    expect(isBlockElement(modeKey)).toBe(true);
+
+    modeKey.inline = true;
+    expect(isBlockElement(modeKey)).toBe(false);
+  });
+});
 
 describe('canKeepWithNext', () => {
   it('allows an optional break after notes', () => {
@@ -65,6 +76,13 @@ describe('canKeepWithNext', () => {
     const block = new ModeKeyElement();
 
     expect(canKeepWithNext(new NoteElement(), block)).toBe(false);
+  });
+
+  it('allows a keep before an inline initial martyria', () => {
+    const inlineModeKey = new ModeKeyElement();
+    inlineModeKey.inline = true;
+
+    expect(canKeepWithNext(new NoteElement(), inlineModeKey)).toBe(true);
   });
 
   it('rejects a keep on or before the terminal empty element', () => {

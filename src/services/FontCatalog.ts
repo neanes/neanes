@@ -60,6 +60,7 @@ const FONT_FEATURE_VALUES_STYLE_ID = 'neanes-font-feature-values';
 const BUNDLED_FAMILIES = [
   'Source Serif',
   'GFS Didot',
+  'GFS Porson',
   'Noto Naskh Arabic',
   'Old Standard',
   'Neanes',
@@ -70,8 +71,9 @@ const BUNDLED_FAMILIES = [
   'NeanesRTLLegacy',
 ];
 
-// The standard four-face set shared by our bundled text families, matching the
-// font-weight/font-style descriptors of their @font-face rules.
+// The standard four-face set used by bundled text families that ship all four
+// faces, matching the font-weight/font-style descriptors of their @font-face
+// rules.
 const TEXT_FACES: BundledFace[] = [
   { style: DEFAULT_FONT_STYLE },
   { style: 'Bold', cssFontWeight: 'bold' },
@@ -147,6 +149,12 @@ const BUNDLED_FACES: Record<string, BundledFace[]> = {
   'GFS Didot': withFileNames(TEXT_FACES, (style) =>
     style === DEFAULT_FONT_STYLE ? 'GFSDidot.otf' : `GFSDidot${style}.otf`,
   ),
+  'GFS Porson': [
+    {
+      style: DEFAULT_FONT_STYLE,
+      fileName: 'GFSPorson.otf',
+    },
+  ],
   'Old Standard': withFileNames(
     TEXT_FACES,
     (style) => `OldStandard-${style}.otf`,
@@ -171,6 +179,14 @@ export function normalizeFontFamilyForComparison(family: string): string {
     (character) => character.toLowerCase(),
   );
 }
+
+// Some font binaries spell their internal family differently from the CSS
+// family exposed by the app. Exclude every bundled and internal source family
+// from the system-font list so installing a bundled face locally does not
+// produce a duplicate picker item.
+const NORMALIZED_BUNDLED_SOURCE_FAMILIES = new Set(
+  [...BUNDLED_FAMILIES, 'Source Serif 4'].map(normalizeFontFamilyForComparison),
+);
 
 const NORMALIZED_NEUME_FONT_FAMILIES = [...NEUME_FONT_FAMILIES].map(
   normalizeFontFamilyForComparison,
@@ -272,7 +288,12 @@ function heuristicSplitFace(face: string): { family: string; style: string } {
 
 export function listSystemFontFamilies(families: Iterable<string>): string[] {
   return [...families]
-    .filter((family) => BUNDLED_FACES[family] == null)
+    .filter(
+      (family) =>
+        !NORMALIZED_BUNDLED_SOURCE_FAMILIES.has(
+          normalizeFontFamilyForComparison(family),
+        ),
+    )
     .sort((a, b) => a.localeCompare(b));
 }
 

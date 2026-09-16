@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from './fontConstants';
 import {
   firstFontFamilyToken,
-  fontFamilyListContains,
   fromRichTextFontFamilyModelValue,
   quoteFontFamily,
   splitFontFamilyList,
@@ -28,15 +27,6 @@ describe('font-family list parsing', () => {
     expect(firstFontFamilyToken('Source Serif,Neanes')).toBe('Source Serif');
     expect(firstFontFamilyToken("'O\\'Brien', serif")).toBe("O'Brien");
   });
-
-  it('matches family-list entries after quote normalization', () => {
-    expect(fontFamilyListContains("'GFS Didot', Neanes", 'GFS Didot')).toBe(
-      true,
-    );
-    expect(fontFamilyListContains("'GFS Didot', Neanes", 'Old Standard')).toBe(
-      false,
-    );
-  });
 });
 
 describe('font-family serialization', () => {
@@ -56,13 +46,11 @@ describe('font-family serialization', () => {
     );
   });
 
-  it('composes rich-text font-family model values with the neume fallback', () => {
-    expect(
-      toRichTextFontFamilyModelValue(RICH_TEXT_DEFAULT_FONT_FAMILY, 'Neanes'),
-    ).toBeUndefined();
-    expect(toRichTextFontFamilyModelValue('Neanes', 'Neanes')).toBe('Neanes');
-    expect(toRichTextFontFamilyModelValue('Source Serif', 'Neanes')).toBe(
-      'Source Serif,Neanes',
+  it('normalizes rich-text font-family model values', () => {
+    expect(toRichTextFontFamilyModelValue(RICH_TEXT_DEFAULT_FONT_FAMILY)).toBe(
+      undefined,
     );
+    expect(toRichTextFontFamilyModelValue('Neanes')).toBe('Neanes');
+    expect(toRichTextFontFamilyModelValue('Source Serif')).toBe('Source Serif');
   });
 });

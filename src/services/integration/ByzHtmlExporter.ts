@@ -45,7 +45,10 @@ import {
   getRichTextLanguage,
   getRichTextLanguageAttributes,
 } from '@/utils/richTextLanguage';
-import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
+import {
+  buildRichTextNeumeCss,
+  buildRichTextParagraphStyleCss,
+} from '@/utils/richTextParagraphStyleCss';
 import { Unit } from '@/utils/Unit';
 
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
@@ -276,11 +279,9 @@ export class ByzHtmlExporter {
     ).replaceAll('"', "'");
     const defaultRichTextBoxFontFamily = getFontFamilyWithFallback(
       defaultTextBoxStyle.fontFamily,
-      pageSetup.neumeDefaultFontFamily,
     ).replaceAll('"', "'");
     const defaultInlineRichTextBoxFontFamily = getFontFamilyWithFallback(
       lyricsStyle.fontFamily,
-      pageSetup.neumeDefaultFontFamily,
     ).replaceAll('"', "'");
 
     const style = `:root {
@@ -448,7 +449,12 @@ export class ByzHtmlExporter {
         color: ${lyricsStyle.color};
       }
 
-      ${this.getRichTextStyleCss(paragraphStyles, pageSetup)}
+      ${buildRichTextNeumeCss(
+        `.${this.config.classRichTextBox}`,
+        'var(--byz-neume-font-family)',
+      )}
+
+      ${this.getRichTextStyleCss(paragraphStyles)}
 
       .${this.config.classImageBox} {
         display: flex;
@@ -519,13 +525,9 @@ export class ByzHtmlExporter {
     return style;
   }
 
-  private getRichTextStyleCss(
-    paragraphStyles: ParagraphStyle[],
-    pageSetup: PageSetup,
-  ) {
+  private getRichTextStyleCss(paragraphStyles: ParagraphStyle[]) {
     return buildRichTextParagraphStyleCss(
       paragraphStyles,
-      pageSetup,
       `.${this.config.classRichTextBox}`,
     );
   }

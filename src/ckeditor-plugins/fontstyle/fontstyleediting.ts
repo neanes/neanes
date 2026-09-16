@@ -193,11 +193,7 @@ export default class FontStyleEditing extends Plugin {
       fontStyle: string | null | undefined,
       writer: ViewDowncastWriter,
     ): ViewAttributeElement[] => {
-      const neumeFallback = editor.config.get(
-        'insertNeume.neumeDefaultFontFamily',
-      ) as string | undefined;
-
-      const style = composeFontStyleCss(family, fontStyle, neumeFallback);
+      const style = composeFontStyleCss(family, fontStyle);
 
       if (style === '') {
         return [];

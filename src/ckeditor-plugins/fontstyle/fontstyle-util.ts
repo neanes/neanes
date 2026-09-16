@@ -4,8 +4,6 @@ import { fontCatalog } from '@/services/FontCatalog';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import {
   firstFontFamilyToken,
-  fontFamilyListContains,
-  isNeumeFontFamily,
   normalizeFontFamily,
   quoteFontFamily,
   splitFontFamilyList,
@@ -25,17 +23,8 @@ export function getEditorDefaultFontFamily(editor: Editor): string | null {
   return family != null && family.trim() !== '' ? family : null;
 }
 
-export function toEditorFontFamilyModelValue(
-  editor: Editor,
-  family: string,
-): string | null {
-  const neumeFallback = editor.config.get(
-    'insertNeume.neumeDefaultFontFamily',
-  ) as string | undefined;
-
-  return neumeFallback != null && neumeFallback.trim() !== ''
-    ? (toRichTextFontFamilyModelValue(family, neumeFallback) ?? null)
-    : normalizeFontFamily(family);
+export function toEditorFontFamilyModelValue(family: string): string | null {
+  return toRichTextFontFamilyModelValue(family) ?? null;
 }
 
 export function getEditorDefaultFontFamilyModelValue(
@@ -43,7 +32,7 @@ export function getEditorDefaultFontFamilyModelValue(
 ): string | null {
   const family = getEditorDefaultFontFamily(editor);
 
-  return family == null ? null : toEditorFontFamilyModelValue(editor, family);
+  return family == null ? null : toEditorFontFamilyModelValue(family);
 }
 
 function explicitFontStyleCss(
@@ -63,7 +52,6 @@ function explicitFontStyleCss(
 export function composeFontFamilyCss(
   family: string | null | undefined,
   fontStyle: string | null | undefined,
-  neumeFallback: string | null | undefined,
 ): string {
   if (family == null || family === '') {
     return '';
@@ -81,12 +69,7 @@ export function composeFontFamilyCss(
   // Resolve every explicit style rather than limiting this to optical and
   // other non-weight styles.
   const face = fontCatalog.resolveFace(baseFamily, explicitFontStyle);
-  const familyList = composeStyleFamilyList(
-    face.cssFamily,
-    family,
-    baseFamily,
-    neumeFallback,
-  );
+  const familyList = composeStyleFamilyList(face.cssFamily, family, baseFamily);
 
   return `font-family:${familyList};`;
 }
@@ -121,14 +104,13 @@ export function composeFontStyleCssDeclaration(
 export function composeFontStyleCss(
   family: string | null | undefined,
   fontStyle: string | null | undefined,
-  neumeFallback: string | null | undefined,
 ): string {
   if (family == null || family === '') {
     return composeFontStyleCssDeclaration(family, fontStyle);
   }
 
   return (
-    composeFontFamilyCss(family, fontStyle, neumeFallback) +
+    composeFontFamilyCss(family, fontStyle) +
     composeFontStyleCssDeclaration(family, fontStyle)
   );
 }
@@ -137,24 +119,10 @@ function composeStyleFamilyList(
   cssFamily: string,
   family: string,
   baseFamily: string,
-  neumeFallback: string | null | undefined,
 ) {
-  let familyList =
-    cssFamily === baseFamily
-      ? family
-      : `${quoteFontFamily(cssFamily)}, ${family}`;
-
-  if (
-    neumeFallback != null &&
-    neumeFallback !== '' &&
-    !fontFamilyListContains(familyList, neumeFallback) &&
-    baseFamily !== neumeFallback &&
-    !isNeumeFontFamily(baseFamily)
-  ) {
-    familyList += `, ${quoteFontFamily(neumeFallback)}`;
-  }
-
-  return familyList;
+  return cssFamily === baseFamily
+    ? family
+    : `${quoteFontFamily(cssFamily)}, ${family}`;
 }
 
 // Fold a downcast-produced family list back to its model form: the inverse of

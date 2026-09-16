@@ -7362,11 +7362,7 @@ const resolvedDefaultLyricsStyle = computed(() =>
 // rather than per editor instance; the CSS depends only on score-level state
 // and applies to every .ck-content in the document, including print.
 const richTextParagraphStyleCss = computed(() =>
-  buildRichTextParagraphStyleCss(
-    score.value.paragraphStyles,
-    score.value.pageSetup,
-    '.ck-content',
-  ),
+  buildRichTextParagraphStyleCss(score.value.paragraphStyles, '.ck-content'),
 );
 
 function getResolvedLyricsStyle(element: NoteElement) {

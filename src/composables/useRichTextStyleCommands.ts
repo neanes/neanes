@@ -406,10 +406,7 @@ export function useRichTextStyleCommands(
       return;
     }
 
-    const modelValue = toRichTextFontFamilyModelValue(
-      family,
-      props.pageSetup.neumeDefaultFontFamily,
-    );
+    const modelValue = toRichTextFontFamilyModelValue(family);
 
     // Carry the current font style to the new family where it exists, preserving
     // the bold/italic axes when an exact match is unavailable.
@@ -428,10 +425,7 @@ export function useRichTextStyleCommands(
       fontStyleNeedsExplicitFamily(value)
     ) {
       runCommand('fontFamily', {
-        value: toRichTextFontFamilyModelValue(
-          fontStyleFamilyValue.value,
-          props.pageSetup.neumeDefaultFontFamily,
-        ),
+        value: toRichTextFontFamilyModelValue(fontStyleFamilyValue.value),
       });
     }
 

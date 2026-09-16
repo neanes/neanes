@@ -218,7 +218,7 @@ export class FontStyleToggleCommand extends Command {
         );
 
         if (family != null) {
-          const modelValue = toEditorFontFamilyModelValue(this.editor, family);
+          const modelValue = toEditorFontFamilyModelValue(family);
 
           if (modelValue != null) {
             this.editor.execute(FONT_FAMILY, { value: modelValue });

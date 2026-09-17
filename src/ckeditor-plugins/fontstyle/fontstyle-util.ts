@@ -23,16 +23,14 @@ export function getEditorDefaultFontFamily(editor: Editor): string | null {
   return family != null && family.trim() !== '' ? family : null;
 }
 
-export function toEditorFontFamilyModelValue(family: string): string | null {
-  return toRichTextFontFamilyModelValue(family) ?? null;
-}
-
 export function getEditorDefaultFontFamilyModelValue(
   editor: Editor,
 ): string | null {
   const family = getEditorDefaultFontFamily(editor);
 
-  return family == null ? null : toEditorFontFamilyModelValue(family);
+  return family == null
+    ? null
+    : (toRichTextFontFamilyModelValue(family) ?? null);
 }
 
 function explicitFontStyleCss(

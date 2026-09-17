@@ -11,7 +11,7 @@ import {
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from './fontConstants';
 
 // Quote a CSS font-family token only when it is not a bare identifier, matching
-// the app's existing rich-text serialization (e.g. `'GFS Didot', Neanes`).
+// the app's existing rich-text serialization (e.g. `'GFS Didot'`).
 export function quoteFontFamily(name: string): string {
   return /^[A-Za-z][A-Za-z0-9-]*$/.test(name)
     ? name

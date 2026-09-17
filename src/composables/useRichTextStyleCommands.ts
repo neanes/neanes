@@ -9,7 +9,6 @@ import {
   useActiveEditorForOwner,
   useEditorCommandStates,
 } from '@/composables/useRichTextEditorRegistry';
-import type { PageSetup } from '@/models/PageSetup';
 import type {
   ParagraphStyle,
   ResolvedParagraphStyle,
@@ -106,7 +105,6 @@ export function resolveRichTextParagraphStyleState(
 export function useRichTextStyleCommands(
   props: {
     element: object;
-    pageSetup: PageSetup;
     fonts: string[];
     paragraphStyles: ParagraphStyle[];
     fallbackParagraphStyle: ResolvedParagraphStyle;

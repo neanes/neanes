@@ -2171,16 +2171,18 @@ const displayedLyricMetricsContext = computed(() => {
     fontSize: defaultLyricsStyle.fontSize * displayedZoom,
   });
   const fontMetrics = new Map<string, FontVerticalMetrics>();
+  const canonicalDefaultAscent = getCachedFontVerticalMetrics(
+    fontMetrics,
+    defaultLyricsFont,
+  ).ascent;
+  const displayedDefaultAscent = getCachedFontVerticalMetrics(
+    fontMetrics,
+    displayedDefaultLyricsFont,
+  ).ascent;
 
   return {
-    canonicalDefaultAscent: getCachedFontVerticalMetrics(
-      fontMetrics,
-      defaultLyricsFont,
-    ).ascent,
-    displayedDefaultAscent: getCachedFontVerticalMetrics(
-      fontMetrics,
-      displayedDefaultLyricsFont,
-    ).ascent,
+    defaultBaselineCorrection:
+      displayedDefaultAscent - canonicalDefaultAscent * displayedZoom,
     fontMetrics,
     zoom: displayedZoom,
   };
@@ -2206,8 +2208,7 @@ function getDisplayedLyricGeometry(
   // align every override to the resulting displayed default-font baseline.
   const baseline =
     (element.lyricsVerticalOffset + element.lyricsFontAscent) * context.zoom +
-    context.displayedDefaultAscent -
-    context.canonicalDefaultAscent * context.zoom;
+    context.defaultBaselineCorrection;
 
   return {
     baseline,
@@ -2216,57 +2217,10 @@ function getDisplayedLyricGeometry(
   };
 }
 
-function getLineBoxBaselineOffset(
-  metrics: FontVerticalMetrics,
-  lineBoxHeight: number,
-) {
-  return metrics.ascent + (lineBoxHeight - metrics.height) / 2;
-}
-
-function getDropCapFont(element: DropCapElement, fontSize: number) {
-  const fontFamily = getFontFamilyWithFallback(element.computedFontFamily);
-
-  return `${element.computedFontStyle} normal ${element.computedFontWeight} ${fontSize}px ${fontFamily}`;
-}
-
 function getDisplayedDropCapTop(element: DropCapElement) {
   const context = displayedLyricMetricsContext.value;
-  const canonicalFont = getDropCapFont(element, element.computedFontSize);
-  const displayedFont = getDropCapFont(
-    element,
-    element.computedFontSize * context.zoom,
-  );
-  const canonicalMetrics = getCachedFontVerticalMetrics(
-    context.fontMetrics,
-    canonicalFont,
-  );
-  const displayedMetrics = getCachedFontVerticalMetrics(
-    context.fontMetrics,
-    displayedFont,
-  );
-  const canonicalLineBoxHeight =
-    element.computedLineHeight! * element.computedFontSize;
-  const canonicalBaselineOffset = getLineBoxBaselineOffset(
-    canonicalMetrics,
-    canonicalLineBoxHeight,
-  );
-  const displayedBaselineOffset = getLineBoxBaselineOffset(
-    displayedMetrics,
-    canonicalLineBoxHeight * context.zoom,
-  );
-  const displayedLyricsBaselineCorrection =
-    context.displayedDefaultAscent -
-    context.canonicalDefaultAscent * context.zoom;
 
-  // Preserve the baseline rendered at 100% while measuring the drop cap at
-  // its displayed size. Apply the same screen-space correction as lyrics so
-  // the last lyric line and the drop cap remain on the same baseline.
-  return (
-    element.y * context.zoom +
-    canonicalBaselineOffset * context.zoom -
-    displayedBaselineOffset +
-    displayedLyricsBaselineCorrection
-  );
+  return element.y * context.zoom + context.defaultBaselineCorrection;
 }
 
 function getLyricStyleBase(element: NoteElement): CSSProperties {
@@ -11857,6 +11811,7 @@ function renderTabLabel(tab: Tab) {
   z-index: 30;
   pointer-events: none;
   border-top: 1px solid #d946ef;
+  transform: translateY(-100%);
 }
 
 .developer-glue-overlay {

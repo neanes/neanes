@@ -1,4 +1,3 @@
-import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { resolveParagraphStyle } from '@/models/ParagraphStyle';
 import { resolveFontStyle } from '@/utils/fontStyle';
@@ -6,12 +5,21 @@ import {
   FONT_VARIANT_CSS_NAMES,
   FONT_VARIANT_PROPERTIES,
 } from '@/utils/fontVariants';
-import { getFontFamilyWithNeumeFallback } from '@/utils/getFontFamilyWithFallback';
+import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleClasses';
+
+export function buildRichTextNeumeCss(
+  selectorPrefix: string,
+  neumeFontFamily: string,
+) {
+  return `${selectorPrefix}{position:relative;}
+${selectorPrefix} .neanes-ck-neume{display:inline-block;position:relative;font-family:${neumeFontFamily};}
+${selectorPrefix} .neanes-ck-neume-align-right{position:absolute!important;left:initial!important;}
+${selectorPrefix} .neanes-ck-neume-plagal{display:inline-flex;flex-direction:column;vertical-align:middle;align-items:center;font-family:inherit;}`;
+}
 
 export function buildRichTextParagraphStyleCss(
   paragraphStyles: ParagraphStyle[],
-  pageSetup: PageSetup,
   selectorPrefix: string,
 ) {
   return paragraphStyles
@@ -32,10 +40,7 @@ export function buildRichTextParagraphStyleCss(
             `${FONT_VARIANT_CSS_NAMES[property]}:${resolved[property]};`,
         )
         .join('');
-      const fontFamily = getFontFamilyWithNeumeFallback(
-        font.cssFontFamily,
-        pageSetup.neumeDefaultFontFamily,
-      );
+      const fontFamily = getFontFamilyWithFallback(font.cssFontFamily);
 
       return `${selectorPrefix} p.${richTextParagraphStyleClassName(style.id)}{font-family:${fontFamily};font-weight:${font.cssFontWeight};font-style:${font.cssFontStyle};font-size:${resolved.fontSize}px;color:${resolved.color};-webkit-text-stroke-width:${resolved.strokeWidth}px;-webkit-text-stroke-color:${resolved.strokeColor};line-height:${resolved.lineHeight ?? 'normal'};text-align:${resolved.alignment};${textDecoration}${fontVariants}}`;
     })

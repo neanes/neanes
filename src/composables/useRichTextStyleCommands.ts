@@ -9,7 +9,6 @@ import {
   useActiveEditorForOwner,
   useEditorCommandStates,
 } from '@/composables/useRichTextEditorRegistry';
-import type { PageSetup } from '@/models/PageSetup';
 import type {
   ParagraphStyle,
   ResolvedParagraphStyle,
@@ -106,7 +105,6 @@ export function resolveRichTextParagraphStyleState(
 export function useRichTextStyleCommands(
   props: {
     element: object;
-    pageSetup: PageSetup;
     fonts: string[];
     paragraphStyles: ParagraphStyle[];
     fallbackParagraphStyle: ResolvedParagraphStyle;
@@ -406,10 +404,7 @@ export function useRichTextStyleCommands(
       return;
     }
 
-    const modelValue = toRichTextFontFamilyModelValue(
-      family,
-      props.pageSetup.neumeDefaultFontFamily,
-    );
+    const modelValue = toRichTextFontFamilyModelValue(family);
 
     // Carry the current font style to the new family where it exists, preserving
     // the bold/italic axes when an exact match is unavailable.
@@ -428,10 +423,7 @@ export function useRichTextStyleCommands(
       fontStyleNeedsExplicitFamily(value)
     ) {
       runCommand('fontFamily', {
-        value: toRichTextFontFamilyModelValue(
-          fontStyleFamilyValue.value,
-          props.pageSetup.neumeDefaultFontFamily,
-        ),
+        value: toRichTextFontFamilyModelValue(fontStyleFamilyValue.value),
       });
     }
 

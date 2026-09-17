@@ -236,6 +236,7 @@ import {
   LayoutService,
   type OverlayDiagnosticsContext,
 } from '@/services/LayoutService';
+import { getLyricsBaseline } from '@/services/LyricsLayout';
 import {
   classifyRecoveryCandidates,
   getRecoveryCandidateGroupRecoveryIds,
@@ -286,7 +287,7 @@ import {
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
-import { withZoom } from '@/utils/withZoom';
+import { withZoom, withZoomOffset } from '@/utils/withZoom';
 
 interface Vue3TabsChromeComponent {
   addTab: (...newTabs: Array<Tab>) => void;
@@ -489,7 +490,12 @@ const editorPreferencesHydrated = ref(false);
 const isDevelopment = ref(import.meta.env.DEV);
 const isBrowser = ref(!isElectron());
 const isLoading = ref(true);
-const printMode = ref(false);
+// How the pages are being rendered while an export or print job runs. The
+// browser applies @media print, which forces --zoom to 1, when it renders for
+// the printer or for PDF. The image export captures the live DOM instead, so
+// the current zoom still applies there.
+const printRenderTarget = ref<'print-media' | 'image' | null>(null);
+const printMode = computed(() => printRenderTarget.value != null);
 const canUndo = ref(false);
 const canRedo = ref(false);
 const developerPaneOpenSections = computed({
@@ -1196,6 +1202,14 @@ function getDeveloperBoxOverlays(page: Page, line: Line, lineIndex: number) {
 
 function getDeveloperLyricBaselines(page: Page) {
   const resolvedMargins = getResolvedMarginsForPage(page);
+  const context = displayedLyricMetricsContext.value;
+  // Every lyric on the page sits on the same baseline, measured from the top
+  // of its line.
+  const lyricsBaseline = getLyricsBaseline(
+    overlayDiagnosticsContext.value.neumeFontHeight,
+    score.value.pageSetup.lyricsVerticalOffset,
+    context.defaultCanonicalAscent,
+  );
 
   return page.lines.flatMap((line, lineIndex) => {
     const note = line.elements.find(
@@ -1212,11 +1226,10 @@ function getDeveloperLyricBaselines(page: Page) {
         key: lineIndex,
         style: {
           left: withZoom(resolvedMargins.left),
-          top: `${
-            note.y * (printMode.value ? 1 : zoom.value) +
-            getDisplayedLyricGeometry(note, getResolvedLyricsStyle(note))
-              .baseline
-          }px`,
+          top: withZoomOffset(
+            note.y + lyricsBaseline,
+            context.defaultAscentShift,
+          ),
           width: withZoom(resolvedMargins.contentWidth),
         } as StyleValue,
       },
@@ -2146,8 +2159,6 @@ function getFooterHorizontalRuleStyle(page: Page, footerHeight: number) {
   } as StyleValue;
 }
 
-// The style properties the lyrics span and the leading-hyphen span share: the
-// resolved lyrics style plus the element's vertical metrics.
 function getCachedFontVerticalMetrics(
   fontMetrics: Map<string, FontVerticalMetrics>,
   font: string,
@@ -2162,28 +2173,91 @@ function getCachedFontVerticalMetrics(
   return metrics;
 }
 
-const displayedLyricMetricsContext = computed(() => {
-  const displayedZoom = printMode.value ? 1 : zoom.value;
-  const defaultLyricsStyle = resolvedDefaultLyricsStyle.value;
-  const defaultLyricsFont = resolveFontCss(defaultLyricsStyle);
-  const displayedDefaultLyricsFont = resolveFontCss({
-    ...defaultLyricsStyle,
-    fontSize: defaultLyricsStyle.fontSize * displayedZoom,
-  });
-  const fontMetrics = new Map<string, FontVerticalMetrics>();
-  const canonicalDefaultAscent = getCachedFontVerticalMetrics(
-    fontMetrics,
-    defaultLyricsFont,
-  ).ascent;
-  const displayedDefaultAscent = getCachedFontVerticalMetrics(
-    fontMetrics,
-    displayedDefaultLyricsFont,
-  ).ascent;
+// Measuring the displayed font size avoids multiplying canvas metrics by a
+// fractional zoom. Chromium can round a rendered font baseline differently
+// from that scaled prediction, and any rounding already in the canonical
+// measurement is multiplied by the zoom, so the two can differ by more than
+// a pixel as the zoom grows. The shifts below are that residue: what the
+// browser actually does minus what scaling the canonical metrics would
+// predict. Only the residue is applied as a fixed offset, so the canonical
+// length keeps tracking --zoom.
+interface FontMetricShifts {
+  canonical: FontVerticalMetrics;
+  ascentShift: number;
+  heightShift: number;
+}
+
+interface LyricMetricsCaches {
+  fontMetrics: Map<string, FontVerticalMetrics>;
+  styleShifts: Map<string, FontMetricShifts>;
+}
+
+function getFontMetricShifts(
+  fontMetrics: Map<string, FontVerticalMetrics>,
+  font: string,
+  displayedFont: string,
+  zoomValue: number,
+): FontMetricShifts {
+  const canonical = getCachedFontVerticalMetrics(fontMetrics, font);
+  const displayed = getCachedFontVerticalMetrics(fontMetrics, displayedFont);
 
   return {
-    defaultBaselineCorrection:
-      displayedDefaultAscent - canonicalDefaultAscent * displayedZoom,
-    fontMetrics,
+    canonical,
+    ascentShift: displayed.ascent - canonical.ascent * zoomValue,
+    heightShift: displayed.height - canonical.height * zoomValue,
+  };
+}
+
+// The shifts depend only on the font and the zoom, so they are resolved once
+// per distinct lyrics style instead of once per note per render. The key is
+// the style's font identity, which is cheaper to build than the CSS font
+// shorthand it resolves to.
+function getParagraphStyleMetricShifts(
+  caches: LyricMetricsCaches,
+  style: ResolvedParagraphStyle,
+  zoomValue: number,
+) {
+  const key = `${style.fontFamily} | ${style.fontStyle} | ${style.fontSize}`;
+
+  let shifts = caches.styleShifts.get(key);
+
+  if (shifts == null) {
+    shifts = getFontMetricShifts(
+      caches.fontMetrics,
+      resolveFontCss(style),
+      resolveFontCss({ ...style, fontSize: style.fontSize * zoomValue }),
+      zoomValue,
+    );
+
+    caches.styleShifts.set(key, shifts);
+  }
+
+  return shifts;
+}
+
+const displayedLyricMetricsContext = computed(() => {
+  // @media print resets --zoom to 1, so text is laid out at its canonical
+  // font size when the browser renders for the printer or for PDF. The image
+  // export captures the live DOM instead, where the current zoom applies.
+  const displayedZoom =
+    printRenderTarget.value === 'print-media' ? 1 : zoom.value;
+  const caches: LyricMetricsCaches = {
+    fontMetrics: new Map<string, FontVerticalMetrics>(),
+    styleShifts: new Map<string, FontMetricShifts>(),
+  };
+  const defaultShifts = getParagraphStyleMetricShifts(
+    caches,
+    resolvedDefaultLyricsStyle.value,
+    displayedZoom,
+  );
+
+  return {
+    // Every lyric on the page shares one displayed baseline, no matter which
+    // font it uses: the canonical baseline scaled by the zoom, plus the
+    // default lyrics font's residue.
+    defaultAscentShift: defaultShifts.ascentShift,
+    defaultCanonicalAscent: defaultShifts.canonical.ascent,
+    ...caches,
     zoom: displayedZoom,
   };
 });
@@ -2193,36 +2267,46 @@ function getDisplayedLyricGeometry(
   resolvedLyricsStyle: ResolvedParagraphStyle,
 ) {
   const context = displayedLyricMetricsContext.value;
-  const displayedLyricsFont = resolveFontCss({
-    ...resolvedLyricsStyle,
-    fontSize: resolvedLyricsStyle.fontSize * context.zoom,
-  });
-  const displayedLyricsMetrics = getCachedFontVerticalMetrics(
-    context.fontMetrics,
-    displayedLyricsFont,
+  const shifts = getParagraphStyleMetricShifts(
+    context,
+    resolvedLyricsStyle,
+    context.zoom,
   );
 
-  // Measuring the displayed font size avoids multiplying canvas metrics by a
-  // fractional zoom. Chromium can round a rendered font baseline differently
-  // from that scaled prediction. Keep the default lyric top unchanged, then
-  // align every override to the resulting displayed default-font baseline.
-  const baseline =
-    (element.lyricsVerticalOffset + element.lyricsFontAscent) * context.zoom +
-    context.defaultBaselineCorrection;
-
   return {
-    baseline,
-    height: displayedLyricsMetrics.height,
-    top: baseline - displayedLyricsMetrics.ascent,
+    // A lyric in the default lyrics font cancels the two residues out and so
+    // keeps exactly the position it would have had without any correction.
+    top: withZoomOffset(
+      element.lyricsVerticalOffset,
+      context.defaultAscentShift - shifts.ascentShift,
+    ),
+    // Matching the line height to the measured font height leaves no
+    // half-leading, so the baseline sits one displayed ascent below the top.
+    lineHeight: withZoomOffset(shifts.canonical.height, shifts.heightShift),
   };
 }
 
 function getDisplayedDropCapTop(element: DropCapElement) {
   const context = displayedLyricMetricsContext.value;
+  const shifts = getFontMetricShifts(
+    context.fontMetrics,
+    element.computedFont,
+    element.getComputedFont(element.computedFontSize * context.zoom),
+    context.zoom,
+  );
 
-  return element.y * context.zoom + context.defaultBaselineCorrection;
+  // The drop cap sits on the lyrics baseline, so it follows the displayed
+  // lyric baseline, but the glyph moves within its own line box: its ascent
+  // pushes the baseline down, and half of its height residue is taken by the
+  // line box's half-leading.
+  return withZoomOffset(
+    element.y,
+    context.defaultAscentShift - shifts.ascentShift + shifts.heightShift / 2,
+  );
 }
 
+// The style properties the lyrics span and the leading-hyphen span share: the
+// resolved lyrics style plus the element's vertical metrics.
 function getLyricStyleBase(element: NoteElement): CSSProperties {
   const resolvedLyricsStyle = getResolvedLyricsStyle(element);
   const resolvedLyricsFont = resolveFontStyle(
@@ -2235,7 +2319,7 @@ function getLyricStyleBase(element: NoteElement): CSSProperties {
   );
 
   return {
-    top: `${displayedGeometry.top}px`,
+    top: displayedGeometry.top,
     fontSize: withZoom(resolvedLyricsStyle.fontSize),
     fontFamily: getFontFamilyWithFallback(
       resolvedLyricsFont.cssFontFamily,
@@ -2252,7 +2336,7 @@ function getLyricStyleBase(element: NoteElement): CSSProperties {
     color: resolvedLyricsStyle.color,
     webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
     webkitTextStrokeColor: resolvedLyricsStyle.strokeColor,
-    lineHeight: `${displayedGeometry.height}px`,
+    lineHeight: displayedGeometry.lineHeight,
   } as CSSProperties;
 }
 
@@ -2489,7 +2573,7 @@ function getElementStyle(element: ScoreElement) {
     left: !rtl.value ? withZoom(element.x) : undefined,
     right: rtl.value ? withZoom(element.x) : undefined,
     top: isDropCapElement(element)
-      ? `${getDisplayedDropCapTop(element)}px`
+      ? getDisplayedDropCapTop(element)
       : withZoom(element.y),
   } as StyleValue;
 }
@@ -8475,7 +8559,7 @@ function onFileMenuDocumentProperties() {
 async function onFileMenuPrint() {
   prepareWorkspaceForSerialization(selectedWorkspace.value);
 
-  printMode.value = true;
+  printRenderTarget.value = 'print-media';
 
   // Blur the active element so that focus outlines and
   // blinking cursors don't show up in the printed page
@@ -8486,7 +8570,7 @@ async function onFileMenuPrint() {
 
   nextTick(async () => {
     await ipcService.printWorkspace(selectedWorkspace.value);
-    printMode.value = false;
+    printRenderTarget.value = null;
     window.document.title = previousTitle;
 
     // Re-focus the active element
@@ -8497,7 +8581,7 @@ async function onFileMenuPrint() {
 async function onFileMenuExportAsPdf() {
   prepareWorkspaceForSerialization(selectedWorkspace.value);
 
-  printMode.value = true;
+  printRenderTarget.value = 'print-media';
 
   // Blur the active element so that focus outlines and
   // blinking cursors don't show up in the printed page
@@ -8530,7 +8614,7 @@ async function onFileMenuExportAsPdf() {
       },
     );
   } finally {
-    printMode.value = false;
+    printRenderTarget.value = null;
     window.document.title = previousTitle;
 
     // Re-focus the active element
@@ -8580,7 +8664,7 @@ async function exportAsPng(args: ExportAsPngSettings) {
     return;
   }
 
-  printMode.value = true;
+  printRenderTarget.value = 'image';
   exportInProgress.value = true;
   const toastId = toast.loading(
     t(($) => $.toast.export.pngLoading, { ns: 'toast' }),
@@ -8702,7 +8786,7 @@ async function exportAsPng(args: ExportAsPngSettings) {
       },
     );
   } finally {
-    printMode.value = false;
+    printRenderTarget.value = null;
     exportInProgress.value = false;
     closeExportDialog();
     // Re-focus the active element

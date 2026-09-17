@@ -505,7 +505,6 @@ export class NoteElement extends ScoreElement {
 
   // Used for display
   public melismaText: string = '';
-  public lyricsFontAscent: number = 0;
   public lyricsFontHeight: number = 0;
   public lyricsFontCss: string = '';
   // Resolved alongside lyricsFontCss because the CSS font shorthand cannot
@@ -1367,7 +1366,13 @@ export class DropCapElement extends ScoreElement {
   public computedFontVariantAlternatesPrevious: string = 'normal';
 
   public get computedFont() {
-    return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
+    return this.getComputedFont(this.computedFontSize);
+  }
+
+  // The same font at an arbitrary size, so that the rendered (zoomed) font can
+  // be measured instead of scaling metrics measured at the canonical size.
+  public getComputedFont(fontSize: number) {
+    return `${this.computedFontStyle} normal ${this.computedFontWeight} ${fontSize}px "${this.computedFontFamily}"`;
   }
 
   public clone() {

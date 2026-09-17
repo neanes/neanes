@@ -107,12 +107,12 @@ import {
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
 import {
+  type FontVerticalMetrics,
   type InkBounds,
   TextMeasurementService,
 } from './TextMeasurementService';
 
-const fontHeightCache = new Map<string, number>();
-const fontAscentCache = new Map<string, number>();
+const fontVerticalMetricsCache = new Map<string, FontVerticalMetrics>();
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
 const noteInkBoundsCache = new Map<string, InkBounds>();
@@ -457,11 +457,12 @@ export class LayoutService {
       pageSetup.neumeDefaultFontFamily,
     ).oligonMidpoint;
 
-    const lyricHeight =
-      TextMeasurementService.getFontHeight(defaultLyricsFontCss);
+    const defaultLyricsFontMetrics =
+      this.getFontVerticalMetricsFromCache(defaultLyricsFontCss);
 
-    const lyricAscent =
-      TextMeasurementService.getFontBoundingBoxAscent(defaultLyricsFontCss);
+    const lyricHeight = defaultLyricsFontMetrics.height;
+
+    const lyricAscent = defaultLyricsFontMetrics.ascent;
 
     const lyricsBaseline = getLyricsBaseline(
       neumeHeight,
@@ -609,8 +610,7 @@ export class LayoutService {
             // immediately before the inline text box. However, currently it's not possible to mix
             // and match neume fonts, so it doesn't matter. If it were possible, it would be necessary to put the
             // information on each text box because it could be different for each box.
-            richTextBoxElement.defaultLyricsFontHeight =
-              this.getLyricsFontHeightFromCache(defaultLyricsFontCss);
+            richTextBoxElement.defaultLyricsFontHeight = lyricHeight;
 
             richTextBoxElement.defaultNeumeFontAscent = neumeAscent;
 
@@ -2992,12 +2992,9 @@ export class LayoutService {
       noteElement.lyricsFontCss = resolveFontCss(resolvedLyricsStyle);
       noteElement.computedLyricsFontVariantCaps =
         resolvedLyricsStyle.fontVariantCaps ?? 'normal';
-      noteElement.lyricsFontHeight = this.getLyricsFontHeightFromCache(
+      noteElement.lyricsFontHeight = this.getFontVerticalMetricsFromCache(
         noteElement.lyricsFontCss,
-      );
-      noteElement.lyricsFontAscent = this.getLyricsFontAscentFromCache(
-        noteElement.lyricsFontCss,
-      );
+      ).height;
       this.getNoteWidth(noteElement, pageSetup, noteWidthArgs);
     }
 
@@ -3136,18 +3133,14 @@ export class LayoutService {
     const distanceFromTopToBottomOfLyrics =
       (dropCapElement.computedLineSpan - 1) * neumeLineHeight + lyricsBaseline;
 
-    const fontHeight = TextMeasurementService.getFontHeight(
+    const fontMetrics = this.getFontVerticalMetricsFromCache(
       dropCapElement.computedFont,
     );
-    const fontBoundingBoxAscent =
-      TextMeasurementService.getFontBoundingBoxAscent(
-        dropCapElement.computedFont,
-      );
-    const adjustment = fontBoundingBoxAscent - distanceFromTopToBottomOfLyrics;
+    const adjustment = fontMetrics.ascent - distanceFromTopToBottomOfLyrics;
 
     if (dropCapElement.computedLineHeight == null) {
       dropCapElement.computedLineHeight =
-        fontHeight / dropCapElement.computedFontSize;
+        fontMetrics.height / dropCapElement.computedFontSize;
     }
 
     element.y -= adjustment;
@@ -5441,7 +5434,7 @@ export class LayoutService {
 
     noteElement.lyricsVerticalOffset = getLyricsTop(
       lyricsBaseline,
-      noteElement.lyricsFontAscent,
+      this.getFontVerticalMetricsFromCache(noteElement.lyricsFontCss).ascent,
     );
 
     // Measure the full note run so the browser applies any contextual
@@ -8189,29 +8182,16 @@ export class LayoutService {
     return width;
   }
 
-  private static getLyricsFontHeightFromCache(font: string) {
-    const key = font;
+  private static getFontVerticalMetricsFromCache(font: string) {
+    let metrics = fontVerticalMetricsCache.get(font);
 
-    let height = fontHeightCache.get(key);
+    if (metrics == null) {
+      metrics = TextMeasurementService.getFontVerticalMetrics(font);
 
-    if (height == null) {
-      height = TextMeasurementService.getFontHeight(font);
-
-      fontHeightCache.set(key, height);
+      fontVerticalMetricsCache.set(font, metrics);
     }
 
-    return height;
-  }
-
-  private static getLyricsFontAscentFromCache(font: string) {
-    let ascent = fontAscentCache.get(font);
-
-    if (ascent == null) {
-      ascent = TextMeasurementService.getFontBoundingBoxAscent(font);
-      fontAscentCache.set(font, ascent);
-    }
-
-    return ascent;
+    return metrics;
   }
 
   private static getFinalElementWidth(

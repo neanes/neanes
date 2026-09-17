@@ -936,6 +936,10 @@ const showInkBoundingBoxes = computed(
 
 const showGlueWidths = computed(() => editorPreferences.value.showGlueWidths);
 
+const showLyricBaselines = computed(
+  () => editorPreferences.value.showLyricBaselines,
+);
+
 const showLyricBoundingBoxes = computed(
   () => editorPreferences.value.showLyricBoundingBoxes,
 );
@@ -1185,6 +1189,34 @@ function getDeveloperBoxOverlays(page: Page, line: Line, lineIndex: number) {
       ),
     ),
   }));
+}
+
+function getDeveloperLyricBaselines(page: Page) {
+  const resolvedMargins = getResolvedMarginsForPage(page);
+
+  return page.lines.flatMap((line, lineIndex) => {
+    const note = line.elements.find(
+      (element): element is NoteElement =>
+        element.elementType === ElementType.Note,
+    );
+
+    if (note == null) {
+      return [];
+    }
+
+    return [
+      {
+        key: lineIndex,
+        style: {
+          left: withZoom(resolvedMargins.left),
+          top: withZoom(
+            note.y + note.lyricsVerticalOffset + note.lyricsFontAscent,
+          ),
+          width: withZoom(resolvedMargins.contentWidth),
+        } as StyleValue,
+      },
+    ];
+  });
 }
 
 const overlayDiagnosticsContext = computed<OverlayDiagnosticsContext>(() =>
@@ -3094,6 +3126,7 @@ function updateDeveloperToggle(
     | 'showGuides'
     | 'showGlueWidths'
     | 'showInkBoundingBoxes'
+    | 'showLyricBaselines'
     | 'showLyricBoundingBoxes'
     | 'showNeumeBoundingBoxes',
   value: boolean,
@@ -10089,6 +10122,7 @@ function renderTabLabel(tab: Tab) {
               showGuides,
               showGlueWidths,
               showInkBoundingBoxes,
+              showLyricBaselines,
               showLyricBoundingBoxes,
               showElementBoxes,
               showNeumeBoundingBoxes,
@@ -10226,6 +10260,21 @@ function renderTabLabel(tab: Tab) {
                         />
                         <span class="guide-line-ht" :style="guideStyleTop" />
                         <span class="guide-line-hb" :style="guideStyleBottom" />
+                      </template>
+                      <template
+                        v-if="
+                          showDeveloperPanels &&
+                          overlaysEnabled &&
+                          showLyricBaselines &&
+                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
+                        "
+                      >
+                        <span
+                          v-for="baseline in getDeveloperLyricBaselines(page)"
+                          :key="`developer-lyric-baseline-${pageIndex}-${baseline.key}`"
+                          class="developer-lyric-baseline"
+                          :style="baseline.style"
+                        />
                       </template>
                       <template
                         v-if="
@@ -11669,6 +11718,13 @@ function renderTabLabel(tab: Tab) {
   position: absolute;
   pointer-events: none;
   border: 1px dashed #2563eb;
+}
+
+.developer-lyric-baseline {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  border-top: 1px solid #d946ef;
 }
 
 .developer-glue-overlay {

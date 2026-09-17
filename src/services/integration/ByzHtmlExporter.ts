@@ -45,7 +45,10 @@ import {
   getRichTextLanguage,
   getRichTextLanguageAttributes,
 } from '@/utils/richTextLanguage';
-import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
+import {
+  buildRichTextNeumeCss,
+  buildRichTextParagraphStyleCss,
+} from '@/utils/richTextParagraphStyleCss';
 import { Unit } from '@/utils/Unit';
 
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
@@ -80,6 +83,12 @@ interface ByzHtmlExporterConfig {
   classNeumeParagraphCenter: string;
   classTextBox: string;
   classTextBoxInline: string;
+  classTextBoxInlineBottom: string;
+  classTextBoxInlineTop: string;
+  classTextBoxMultipanel: string;
+  classTextBoxMultipanelCenter: string;
+  classTextBoxMultipanelLeft: string;
+  classTextBoxMultipanelRight: string;
   classRichTextBox: string;
   classImageBox: string;
   classImageBoxInline: string;
@@ -176,6 +185,12 @@ export class ByzHtmlExporter {
     classTextBox: 'byz--text-box',
     classRichTextBox: 'byz---rich-text-box',
     classTextBoxInline: 'byz--text-box-inline',
+    classTextBoxInlineBottom: 'byz--text-box-inline-bottom',
+    classTextBoxInlineTop: 'byz--text-box-inline-top',
+    classTextBoxMultipanel: 'byz--text-box-multipanel',
+    classTextBoxMultipanelCenter: 'byz--text-box-multipanel-center',
+    classTextBoxMultipanelLeft: 'byz--text-box-multipanel-left',
+    classTextBoxMultipanelRight: 'byz--text-box-multipanel-right',
     classImageBox: 'byz--image-box',
     classImageBoxInline: 'byz--image-box-inline',
     classModeKey: 'byz--mode-key',
@@ -276,11 +291,9 @@ export class ByzHtmlExporter {
     ).replaceAll('"', "'");
     const defaultRichTextBoxFontFamily = getFontFamilyWithFallback(
       defaultTextBoxStyle.fontFamily,
-      pageSetup.neumeDefaultFontFamily,
     ).replaceAll('"', "'");
     const defaultInlineRichTextBoxFontFamily = getFontFamilyWithFallback(
       lyricsStyle.fontFamily,
-      pageSetup.neumeDefaultFontFamily,
     ).replaceAll('"', "'");
 
     const style = `:root {
@@ -417,7 +430,50 @@ export class ByzHtmlExporter {
 
       .${this.config.classTextBoxInline} {
         display: flex;
-        align-items: center;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .${this.config.classTextBoxInlineTop} {
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        justify-content: center;
+        white-space: nowrap;
+      }
+
+      .${this.config.classTextBoxInlineBottom} {
+        position: relative;
+        white-space: nowrap;
+      }
+
+      .${this.config.classRichTextBox}.${this.config.classTextBoxInline} > .${this.config.classTextBoxInlineTop},
+      .${this.config.classRichTextBox}.${this.config.classTextBoxInline} > .${this.config.classTextBoxInlineBottom} {
+        display: block;
+        position: absolute;
+        transform: translateY(-100%);
+      }
+
+      .${this.config.classTextBoxMultipanel} {
+        display: flex;
+        position: relative;
+      }
+
+      .${this.config.classTextBoxMultipanelCenter} {
+        flex: 1;
+        text-align: center;
+      }
+
+      .${this.config.classTextBoxMultipanelLeft} {
+        left: 0;
+        position: absolute;
+        text-align: left;
+      }
+
+      .${this.config.classTextBoxMultipanelRight} {
+        position: absolute;
+        right: 0;
+        text-align: right;
       }
 
       .${this.config.classTextBox}.${this.config.classTextBoxInline} {
@@ -448,7 +504,12 @@ export class ByzHtmlExporter {
         color: ${lyricsStyle.color};
       }
 
-      ${this.getRichTextStyleCss(paragraphStyles, pageSetup)}
+      ${buildRichTextNeumeCss(
+        `.${this.config.classRichTextBox}`,
+        'var(--byz-neume-font-family)',
+      )}
+
+      ${this.getRichTextStyleCss(paragraphStyles)}
 
       .${this.config.classImageBox} {
         display: flex;
@@ -519,13 +580,9 @@ export class ByzHtmlExporter {
     return style;
   }
 
-  private getRichTextStyleCss(
-    paragraphStyles: ParagraphStyle[],
-    pageSetup: PageSetup,
-  ) {
+  private getRichTextStyleCss(paragraphStyles: ParagraphStyle[]) {
     return buildRichTextParagraphStyleCss(
       paragraphStyles,
-      pageSetup,
       `.${this.config.classRichTextBox}`,
     );
   }
@@ -641,29 +698,64 @@ export class ByzHtmlExporter {
           needLineBreak = true;
           break;
         case ElementType.TextBox:
-          if (insidePage && !(element as TextBoxElement).inline) {
+          const textBox = element as TextBoxElement;
+
+          if (textBox.inline && !textBox.multipanel && !insidePage) {
+            result += this.startPage(indentation + 2, i, elements);
+            insidePage = true;
+          } else if (insidePage && (!textBox.inline || textBox.multipanel)) {
             result += this.endPage(indentation + 2, needLineBreak);
             insidePage = false;
             needLineBreak = false;
           }
 
           result += this.exportTextBox(
-            element as TextBoxElement,
+            textBox,
+            pageSetup,
             paragraphStyles,
-            indentation,
+            insidePage ? indentation + 2 : indentation,
           );
+
+          if (
+            textBox.inline &&
+            textBox.fillWidth &&
+            !isRightAlignedMartyria(elements[i + 1])
+          ) {
+            result += this.endPage(indentation + 2, false);
+            insidePage = false;
+            needLineBreak = false;
+          }
           break;
         case ElementType.RichTextBox:
-          if (insidePage) {
+          const richTextBox = element as RichTextBoxElement;
+
+          if (richTextBox.inline && !richTextBox.multipanel && !insidePage) {
+            result += this.startPage(indentation + 2, i, elements);
+            insidePage = true;
+          } else if (
+            insidePage &&
+            (!richTextBox.inline || richTextBox.multipanel)
+          ) {
             result += this.endPage(indentation + 2, needLineBreak);
             insidePage = false;
             needLineBreak = false;
           }
 
           result += this.exportRichTextBox(
-            element as RichTextBoxElement,
-            indentation,
+            richTextBox,
+            pageSetup,
+            insidePage ? indentation + 2 : indentation,
           );
+
+          if (
+            richTextBox.inline &&
+            richTextBox.customWidth == null &&
+            !isRightAlignedMartyria(elements[i + 1])
+          ) {
+            result += this.endPage(indentation + 2, false);
+            insidePage = false;
+            needLineBreak = false;
+          }
           break;
         case ElementType.ModeKey:
           if (insidePage) {
@@ -1089,11 +1181,10 @@ export class ByzHtmlExporter {
 
   exportTextBox(
     element: TextBoxElement,
+    pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
     indentation: number,
   ) {
-    let styleAttribute = '';
-
     let className = this.config.classTextBox;
 
     const { defaultTextBoxStyle, lyricsStyle } =
@@ -1141,31 +1232,66 @@ export class ByzHtmlExporter {
 
     style += `text-align: ${element.computedAlignment};`;
 
-    styleAttribute = ` style="${style}"`;
-
-    if (element.inline) {
+    if (element.multipanel) {
+      className += ` ${this.config.classTextBoxMultipanel}`;
+      style += `width: ${Unit.toPt(element.width)}pt;`;
+    } else if (element.inline) {
       className += ` ${this.config.classTextBoxInline}`;
+      style += `width: ${Unit.toPt(element.width)}pt;`;
+      style += `height: ${Unit.toPt(element.height)}pt;`;
     }
 
-    return `<div dir="auto" class="${className}"${styleAttribute}>${
-      element.content
-    }</div\n${this.getIndentationString(indentation)}>`;
+    const styleAttribute = ` style="${style}"`;
+
+    let content = element.content;
+
+    if (element.multipanel) {
+      content = `<div class="${this.config.classTextBoxMultipanelLeft}">${element.contentLeft}</div><div class="${this.config.classTextBoxMultipanelCenter}">${element.contentCenter}</div><div class="${this.config.classTextBoxMultipanelRight}">${element.contentRight}</div>`;
+    } else if (element.inline) {
+      content = `<div class="${this.config.classTextBoxInlineTop}" style="height: ${Unit.toPt(element.height)}pt;">${element.content}</div><div class="${this.config.classTextBoxInlineBottom}" style="top: ${Unit.toPt(pageSetup.lyricsVerticalOffset)}pt;">${element.contentBottom}</div>`;
+    }
+
+    return `<div dir="auto" class="${className}"${styleAttribute}>${content}</div\n${this.getIndentationString(indentation)}>`;
   }
 
-  exportRichTextBox(element: RichTextBoxElement, indentation: number) {
+  exportRichTextBox(
+    element: RichTextBoxElement,
+    pageSetup: PageSetup,
+    indentation: number,
+  ) {
     let className = this.config.classRichTextBox;
+    let style = '';
+    let content = element.content;
 
-    if (element.inline) {
+    if (element.multipanel) {
+      className += ` ${this.config.classTextBoxMultipanel}`;
+      style += `width: ${Unit.toPt(element.width)}pt;`;
+      content = `<div class="${this.config.classTextBoxMultipanelLeft}">${element.contentLeft}</div><div class="${this.config.classTextBoxMultipanelCenter}">${element.contentCenter}</div><div class="${this.config.classTextBoxMultipanelRight}">${element.contentRight}</div>`;
+    } else if (element.inline) {
       className += ` ${this.config.classTextBoxInline}`;
+      style += `width: ${Unit.toPt(element.width)}pt;`;
+      style += `height: ${Unit.toPt(element.height)}pt;`;
+
+      const topAnchor =
+        element.defaultNeumeFontAscent -
+        pageSetup.neumeDefaultFontSize * element.oligonMidpoint +
+        element.defaultLyricsFontHeight / 2 +
+        element.offsetYTop;
+      const bottomAnchor =
+        element.height +
+        pageSetup.lyricsVerticalOffset +
+        element.defaultLyricsFontHeight +
+        element.offsetYBottom;
+
+      content = `<div class="${this.config.classTextBoxInlineTop}" style="top: ${Unit.toPt(topAnchor)}pt;">${element.content}</div><div class="${this.config.classTextBoxInlineBottom}" style="top: ${Unit.toPt(bottomAnchor)}pt;">${element.contentBottom}</div>`;
     }
 
     const languageAttributes = getRichTextLanguageAttributes(
       getRichTextLanguage(element),
     );
+    const styleAttribute = style === '' ? '' : ` style="${style}"`;
 
-    return `<div class="${className}"${languageAttributes}>${
-      element.content
-    }</div\n${this.getIndentationString(indentation)}>`;
+    return `<div class="${className}"${languageAttributes}${styleAttribute}>${content}</div\n${this.getIndentationString(indentation)}>`;
   }
 
   exportModeKey(element: ModeKeyElement, indentation: number) {

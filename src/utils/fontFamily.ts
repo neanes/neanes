@@ -8,13 +8,10 @@ import {
   parseCssComponentValues,
   significantCssComponentValues,
 } from './cssValues';
-import {
-  NEUME_FONT_FAMILIES,
-  RICH_TEXT_DEFAULT_FONT_FAMILY,
-} from './fontConstants';
+import { RICH_TEXT_DEFAULT_FONT_FAMILY } from './fontConstants';
 
 // Quote a CSS font-family token only when it is not a bare identifier, matching
-// the app's existing rich-text serialization (e.g. `'GFS Didot', Neanes`).
+// the app's existing rich-text serialization (e.g. `'GFS Didot'`).
 export function quoteFontFamily(name: string): string {
   return /^[A-Za-z][A-Za-z0-9-]*$/.test(name)
     ? name
@@ -65,21 +62,6 @@ export function firstFontFamilyToken(value: string): string {
   return first != null ? normalizeFontFamily(first) : '';
 }
 
-export function fontFamilyListContains(
-  value: string,
-  fontFamily: string,
-): boolean {
-  const normalized = normalizeFontFamily(fontFamily);
-
-  return splitFontFamilyList(value).some(
-    (entry) => normalizeFontFamily(entry) === normalized,
-  );
-}
-
-export function isNeumeFontFamily(fontFamily: string): boolean {
-  return NEUME_FONT_FAMILIES.has(normalizeFontFamily(fontFamily));
-}
-
 export function fromRichTextFontFamilyModelValue(value: unknown): string {
   if (typeof value !== 'string' || value.trim() === '') {
     return RICH_TEXT_DEFAULT_FONT_FAMILY;
@@ -94,7 +76,6 @@ export function fromRichTextFontFamilyModelValue(value: unknown): string {
 
 export function toRichTextFontFamilyModelValue(
   fontFamily: string,
-  neumeFallback: string,
 ): string | undefined {
   const normalizedFontFamily = normalizeFontFamily(fontFamily);
 
@@ -102,12 +83,5 @@ export function toRichTextFontFamilyModelValue(
     return undefined;
   }
 
-  if (
-    isNeumeFontFamily(normalizedFontFamily) ||
-    normalizedFontFamily === normalizeFontFamily(neumeFallback)
-  ) {
-    return normalizedFontFamily;
-  }
-
-  return `${normalizedFontFamily},${neumeFallback}`;
+  return normalizedFontFamily;
 }

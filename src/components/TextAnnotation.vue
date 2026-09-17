@@ -45,7 +45,7 @@ import {
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
 import {
-  getFontFamilyWithNeumeFallback,
+  getFontFamilyWithFallback,
   getLegacyNeumeFontFamily,
 } from '@/utils/getFontFamilyWithFallback';
 import {
@@ -138,9 +138,8 @@ const style = computed(() => {
   return {
     left: withZoom(elementX.value),
     top: withZoom(elementY.value),
-    '--ck-content-font-family': getFontFamilyWithNeumeFallback(
+    '--ck-content-font-family': getFontFamilyWithFallback(
       annotationStyle.value.fontFamily,
-      props.pageSetup.neumeDefaultFontFamily,
     ),
     '--ck-content-neume-font-family': getLegacyNeumeFontFamily(
       props.pageSetup.neumeDefaultFontFamily,
@@ -161,22 +160,17 @@ const editorConfig = computed((): EditorConfig => {
     });
   }
 
-  // Add a fall back font to each font so that neumes "just work"
-  const fonts = props.fonts.map(
-    (x) => x + ',' + props.pageSetup.neumeDefaultFontFamily,
-  );
-
   return {
     fontFamily: {
       options: [
         'default',
-        'Source Serif' + ',' + props.pageSetup.neumeDefaultFontFamily,
-        'GFS Didot' + ',' + props.pageSetup.neumeDefaultFontFamily,
-        'Noto Naskh Arabic' + ',' + props.pageSetup.neumeDefaultFontFamily,
-        'Old Standard' + ',' + props.pageSetup.neumeDefaultFontFamily,
+        'Source Serif',
+        'GFS Didot',
+        'Noto Naskh Arabic',
+        'Old Standard',
         'Neanes',
         'NeanesStathisSeries',
-        ...fonts,
+        ...props.fonts,
       ],
     },
     fontSize: {

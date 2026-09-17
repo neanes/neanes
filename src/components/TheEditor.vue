@@ -8559,21 +8559,18 @@ async function onFileMenuPrint() {
   const previousTitle = window.document.title;
   window.document.title = getFileName(selectedWorkspace.value, false);
 
-  nextTick(async () => {
-    try {
-      await ipcService.printWorkspace(selectedWorkspace.value);
-    } catch (error) {
-      // Nothing awaits this callback, so a rejection would otherwise be
-      // unhandled and leave the editor stuck in print mode.
-      console.error(error);
-    } finally {
-      printMode.value = false;
-      window.document.title = previousTitle;
+  try {
+    await nextTick();
+    await ipcService.printWorkspace(selectedWorkspace.value);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    printMode.value = false;
+    window.document.title = previousTitle;
 
-      // Re-focus the active element
-      focusElement(activeElement);
-    }
-  });
+    // Re-focus the active element
+    focusElement(activeElement);
+  }
 }
 
 async function onFileMenuExportAsPdf() {

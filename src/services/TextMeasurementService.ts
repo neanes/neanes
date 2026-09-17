@@ -19,11 +19,10 @@ export interface FontVerticalMetrics {
   height: number;
 }
 
-// A font's vertical metrics depend only on the font shorthand, which already
-// carries the size, so they are memoized for the life of the session. Every
-// face the layout can measure is loaded before the first document is laid out
-// (see initialize() in TheEditor.vue), so a cached entry can never be a
-// fallback face's metrics.
+// Share vertical metrics by font shorthand (including size) for the session.
+// initialize() in TheEditor.vue preloads bundled faces before loading documents.
+// System-font aliases are registered on demand, so this cache assumes the
+// resolved face is available when first measured and does not change afterward.
 const fontVerticalMetricsCache = new Map<string, FontVerticalMetrics>();
 
 // The canvas font shorthand cannot express font-variant-caps values other

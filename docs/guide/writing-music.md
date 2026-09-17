@@ -64,6 +64,24 @@ If a sign appears on the wrong component, undo it, choose the intended component
 
 ## Mark musical structure
 
+### Insert another initial martyria
+
+A score can contain more than the initial martyria created with a new score. Use another standard initial martyria when a later hymn or section begins in a new mode:
+
+1. Select the element that should follow the new initial martyria.
+2. Choose `Insert > Initial Martyria`.
+3. In the Initial Martyria dialog, choose a mode on the left and one of its supplied martyriæ on the right.
+
+Neanes inserts the initial martyria before the selected element and uses it to establish the note and scale for the music that follows. To change it later, double-click it, right-click it and choose `Change Initial Martyria`, or use **Change Initial Martyria** in its bottom toolbar.
+
+This workflow uses one of Neanes's standard initial martyriæ. To construct an initial martyria from text and individual symbols instead, see [Create a custom initial martyria](/guide/advanced.html#create-a-custom-initial-martyria).
+
+#### Show the ambitus
+
+The ambitus displays the lowest and highest notes of the passage governed by an initial martyria. Select the initial martyria, open `View > Properties`, and enable **Show Ambitus** under **Initial Martyria**. You can also right-click the initial martyria and enable **Show Ambitus**.
+
+Neanes calculates the range from the notes after that initial martyria up to the next initial martyria, another element that changes the mode, or the end of the score.
+
 ### Insert a martyria
 
 Select the element that should precede the martyria, then choose **Martyria** <img :src="martyriaIcon" class="guide-action-icon guide-neume-action-icon" alt="" aria-hidden="true" /> in the main toolbar. The active entry mode controls whether Neanes advances and replaces the next element, inserts a new martyria, or changes only the selected element.
@@ -115,6 +133,15 @@ To discourage an automatic line break without forcing the next element onto a pa
 ::: tip Prefer automatic layout
 Forced breaks are useful for meaningful phrase boundaries and deliberate page turns. If many lines need manual breaks, adjust the spacing and line-width settings in [Page Layout and Books](/guide/page-layout.html) before placing more of them.
 :::
+
+## Adjust horizontal spacing
+
+Use **Space After** when a note, martyria, or separate tempo sign needs a small one-off horizontal correction. Select the element, open `View > Properties`, expand **Positioning**, and change **Space After**:
+
+- A positive value adds space before the next element.
+- A negative value pulls the next element closer.
+
+The value is measured in points and participates in line layout, so check the surrounding line after making a large adjustment. For spacing problems that repeat throughout the score, change the spacing settings in [Page Layout and Books](/guide/page-layout.html) instead.
 
 ## Fine-tune positions
 

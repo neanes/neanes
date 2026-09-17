@@ -106,9 +106,12 @@ The formatting panel includes controls for:
 - **Font:** family, style, and size
 - **Paragraph layout:** alignment and line height
 - **Text appearance:** decoration, color, and outline
-- **OpenType features:** advanced typography supported by the selected font
+- **Case:** small caps and all small caps
+- **Numbers:** lining or oldstyle figures, tabular or proportional spacing, fractions, slashed zero, and ordinals
+- **Ligatures:** common, discretionary, and historical ligatures, plus contextual alternates
+- **Alternates:** historical forms and any stylistic sets, character variants, swashes, ornaments, or annotation forms supplied by the font
 
-Available OpenType features vary by font.
+Available typographic features vary by font. Use the controls in a paragraph style for formatting that should be shared; the same controls in an element's Properties pane create a local override instead.
 
 ### Clear, reset, or delete a style
 

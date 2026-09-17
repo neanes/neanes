@@ -41,6 +41,16 @@ HTML does not preserve the score's page layout. Instead, the neumes dynamically 
 
 The exported HTML is for viewing rather than further editing in Neanes. It loads supporting web resources from the internet, so an internet connection is required for it to display correctly.
 
+### Copy part of a score as HTML
+
+Use **Copy as HTML** when you need the web markup for selected score elements rather than a complete HTML file:
+
+1. Select one element or a range of elements.
+2. Choose `Edit > Copy as HTML`, or press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd>.
+3. Paste the markup into an HTML or source-code editor.
+
+The copied fragment contains the selected notation, lyrics, and formatting markup. It is intended for a page that already loads the [ByzHtml](https://neanes.github.io/byzhtml) styles and script; use `File > Export > Export as HTML` when you need a complete, ready-to-open document. Use ordinary **Copy** when you want to paste elements back into Neanes.
+
 ## Export page images
 
 Choose `File > Export > Export as Image` to create a separate PNG image for each selected page. Images are useful when placing score pages in a document, presentation, website, or graphics application.

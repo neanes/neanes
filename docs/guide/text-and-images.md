@@ -31,6 +31,26 @@ Use `Insert > Drop Cap Before` or `Insert > Drop Cap After` to add a drop cap, t
 
 For formatting that several text elements should share, see [Paragraph Styles](/guide/text-and-styles.html).
 
+## Arrange advanced text boxes
+
+Select a text box and open `View > Properties`. **Multipanel** and **Fill Width** are under **Positioning**; a rich text box has a separate **Scrollable** section.
+
+### Create a three-panel text box
+
+Enable **Multipanel** on a non-inline **Text Box** to divide it into left, center, and right panels. Click each panel to enter its text. This is useful for a single line whose outer labels and centered text must keep their positions, such as a heading or a custom header or footer.
+
+Multipanel text boxes occupy their own block. Turn off **Inline** first if **Multipanel** is not available.
+
+### Fill the rest of a musical line
+
+Enable **Fill Width** on an **Inline Text Box** to extend it from its insertion point to the next element or to the end of the line. Use this for text that should consume the remaining horizontal space without calculating an exact **Width**. Turn on **Inline** first to make **Fill Width** available.
+
+For an inline **Rich Text Box**, leave **Width** at `fill` for the equivalent behavior. Enter a width when the box should use a fixed amount of space instead.
+
+### Keep a rich-text box within the page
+
+For a **Rich Text Box** with more content than the remaining page height, enable **Scrollable** in Properties. The box stays within the page and gains a vertical scrollbar instead of continuing beyond the bottom margin. This is most useful for scores read on screen; review a PDF or printout carefully because a static page cannot reproduce scrolling.
+
 ## Work with images
 
 ### Insert and select an image
@@ -131,6 +151,24 @@ To remove the entire alternate line, click it to select it and press <kbd>Delete
 ## Format rich text
 
 Use the rich-text toolbar to change the selected text or the paragraph containing the cursor. Character formatting, such as bold or color applied to a selection, can coexist with the paragraph's style.
+
+### Set language and text direction
+
+Select text in a rich text box or annotation, open `View > Properties`, and choose its **Language** under **Style**. The language choice also sets the appropriate left-to-right or right-to-left direction. With no text selected, the choice applies to text typed at the cursor.
+
+Use **System default** to remove an explicit language and direction. This setting belongs to the score content; it is separate from the application language chosen in `Edit > Preferences`.
+
+### Use detailed typography controls
+
+The **Style** section in Properties provides individual controls for typography supported by the selected font:
+
+- **Case** offers small caps and all small caps.
+- **Numbers** offers lining or oldstyle figures with tabular or proportional spacing.
+- **Fractions**, **Slashed Zero**, and **Ordinals** enable specialized number forms.
+- **Ligatures** controls common, discretionary, and historical ligatures, plus contextual alternates.
+- **Alternates** can include historical forms, stylistic sets, character variants, swashes, ornaments, and annotation forms.
+
+Available alternates vary by font. Select the text first for a local change, or put the setting in a paragraph style when it should be reused consistently.
 
 ### Link to another place in the score
 

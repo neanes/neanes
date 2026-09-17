@@ -70,6 +70,8 @@ Select the element that should precede the martyria, then choose **Martyria** <i
 
 With **Auto** enabled, Neanes sets the martyria's note and scale from the initial martyria, the preceding melody, and any fthoræ. This usually gives the appropriate martyria for the music that came before it.
 
+If the calculated note falls outside the range supported by Neanes, the martyria displays a question mark (`?`). Check the preceding melody and fthoræ, or turn off **Auto** and choose the martyria's **Note** and **Scale** manually.
+
 Choose the martyria manually when it needs to introduce what follows instead. For example, if one hymn ends on Di and the next hymn begins on Pa, the martyria between them may need to show Pa rather than the final note of the preceding hymn. A manual choice can also be useful for a scale such as Spathi, whose martyria is not well defined within the tradition.
 
 Select the martyria and open `View > Properties`. Turn off **Auto**, then choose its **Note** and **Scale**. Use **Martyria Sign Override** when the displayed martyria sign itself needs a different form.

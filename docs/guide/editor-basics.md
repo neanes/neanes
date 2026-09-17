@@ -43,6 +43,17 @@ The main areas are:
 
 You do not need to keep every pane open. Use `View > Neume Selector`, `View > Common Combinations`, `View > Properties`, and `View > Lyrics` to show or hide them. Drag a pane's tab to dock it elsewhere or make it float. Use `View > Reset Layout` if you want to restore the original arrangement, pane sections, status bar, and zoom.
 
+## Set application preferences
+
+Choose `Edit > Preferences` to change settings that apply throughout Neanes, then choose **Update** to save them.
+
+- **Language** changes the language of the Neanes interface. Choose **System default** to follow your operating system or browser language. This setting does not change the language or direction of lyrics and other text in a score.
+- **Color Mode** sets the interface to **Light** or **Dark**. Choose **System** to follow your operating system's appearance setting.
+- **Menu Interaction** controls toolbar buttons that contain a family of related signs. With **Press and hold to select**, hold the button, move to the desired sign, and release. With **Click to open menu**, click the button and then click a sign.
+- **Tempo Defaults** sets the BPM used when you add each kind of tempo sign, including a tempo attached to a martyria. To give one tempo sign a different speed, select it in the score and change **BPM** in Properties. Changing a default does not alter tempo signs already in the score.
+
+Preferences are remembered between sessions. Choose **Use System Default** in the dialog to restore the application defaults, including the system language and appearance.
+
 ## Understand the current selection
 
 Most commands apply to the selected element. Click a neume, martyria, tempo sign, text box, or other element to select it. The Properties pane and bottom toolbar then change to show the controls for that kind of element.

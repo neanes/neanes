@@ -1002,7 +1002,7 @@ export class AnalysisService {
       this.handleFthora(
         getScaleNoteFromValue(workspace.currentNote),
         martyriaElement.fthora,
-        null,
+        martyriaElement.chromaticFthoraNote,
         martyriaElement.index,
         workspace,
       );
@@ -1012,6 +1012,16 @@ export class AnalysisService {
       workspace.currentNote += getNeumeValue(
         martyriaElement.quantitativeNeume,
       )!;
+
+      if (martyriaElement.quantitativeNeumeFthora) {
+        this.handleFthora(
+          getScaleNoteFromValue(workspace.currentNote),
+          martyriaElement.quantitativeNeumeFthora,
+          martyriaElement.quantitativeNeumeChromaticFthoraNote,
+          martyriaElement.index,
+          workspace,
+        );
+      }
     }
 
     if (martyriaElement.tempo) {

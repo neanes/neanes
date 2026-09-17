@@ -208,8 +208,8 @@
         <InputUnit
           id="properties-martyria-vertical-offset"
           unit="pt"
-          :min="-spaceAfterMax"
-          :max="spaceAfterMax"
+          :min="-verticalOffsetMax"
+          :max="verticalOffsetMax"
           :step="0.5"
           :format-options="fraction2FormatOptions"
           :model-value="element.verticalOffset"
@@ -343,6 +343,10 @@ const props = defineProps({
 
 const emit = defineEmits(['update', 'update:open-sections']);
 const SELECT_NONE_VALUE = '__none__';
+
+const verticalOffsetMax = computed(() =>
+  Math.round(Unit.toPt(props.pageSetup.pageHeight)),
+);
 
 const spaceAfterMax = computed(() =>
   Math.round(Unit.toPt(props.pageSetup.pageWidth)),

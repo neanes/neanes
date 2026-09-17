@@ -556,6 +556,7 @@ const textBoxCalculation = ref(false);
 const textBoxCalculationCount = ref(0);
 const fonts = ref<string[]>([]);
 const toolbarInnerNeume = ref<NeumeSelection>(NeumeSelection.Primary);
+const toolbarMartyriaLayoutRevision = ref(0);
 const keyboardModifier = ref<string | null>(null);
 const audioElement = ref<ScoreElement | null>(null);
 const playbackEvents = ref<PlaybackSequenceEvent[]>([]);
@@ -2408,14 +2409,6 @@ function getMelismaStyle(element: NoteElement) {
   } as StyleValue;
 }
 
-function getMelismaUnderscoreStyleOuter(element: NoteElement) {
-  return {
-    top: withZoom(element.melismaOffsetTop),
-    height: withZoom(element.lyricsFontHeight),
-    width: withZoom(element.melismaWidth),
-  };
-}
-
 function getMelismaUnderscoreStyleInner(element: NoteElement) {
   const thickness = score.value.pageSetup.lyricsMelismaThickness;
   const resolvedLyricsStyle = getResolvedLyricsStyle(element);
@@ -2426,8 +2419,10 @@ function getMelismaUnderscoreStyleInner(element: NoteElement) {
 
   return {
     borderBottom: `${withZoom(thickness)} solid ${resolvedLyricsStyle.color}`,
-    left: withZoom(spacing),
-    width: `calc(100% - ${withZoom(spacing)})`,
+    // A full melisma starts at the left edge of the lyrics container.
+    left: element.isFullMelisma ? 0 : undefined,
+    marginLeft: withZoom(spacing),
+    width: withZoom(element.melismaWidth - spacing),
   };
 }
 
@@ -4515,7 +4510,7 @@ function onKeydownNeume(event: KeyboardEvent) {
         handled = true;
         throttled.setFthoraMartyria(
           martyriaElement,
-          fthoraMapping.neumes![0] as Fthora,
+          fthoraMapping.neumes as Fthora[],
         );
       }
 
@@ -5594,6 +5589,13 @@ function save(markUnsavedChanges: boolean = true) {
       : undefined,
   );
 
+  if (
+    inspectorContext.value.kind === 'martyria' &&
+    inspectorContext.value.element.updated
+  ) {
+    toolbarMartyriaLayoutRevision.value++;
+  }
+
   // Set page visibility for the newly processed pages
   processedPages.forEach(
     (x, index) => (x.isVisible = visiblePages.includes(index)),
@@ -6138,28 +6140,19 @@ function setSecondaryGorgon(element: NoteElement, neume: GorgonNeume) {
   }
 }
 
+function getNextFthora(
+  current: Fthora | null,
+  variations: Fthora[],
+): Fthora | null {
+  const currentIndex = current == null ? -1 : variations.indexOf(current);
+
+  return currentIndex === -1
+    ? variations[0]
+    : (variations[currentIndex + 1] ?? null);
+}
+
 function setFthoraNote(element: NoteElement, neumes: Fthora[]) {
-  let equivalent = false;
-
-  for (const neume of neumes) {
-    // If previous neume was matched, set to the next neume in the cycle
-    if (equivalent) {
-      updateNoteFthora(element, neume);
-      return;
-    }
-
-    equivalent = element.fthora === neume;
-  }
-
-  // We've cycled through all the neumes.
-  // If we got to the end of the cycle, remove all
-  // fthora neumes. Otherwise set fthora to the first neume
-  // in the cycle.
-  if (equivalent) {
-    updateNoteFthora(element, null);
-  } else {
-    updateNoteFthora(element, neumes[0]);
-  }
+  updateNoteFthora(element, getNextFthora(element.fthora, neumes));
 }
 
 function setSecondaryFthora(element: NoteElement, neume: Fthora) {
@@ -6178,7 +6171,21 @@ function setTertiaryFthora(element: NoteElement, neume: Fthora) {
   }
 }
 
-function setFthoraMartyria(element: MartyriaElement, neume: Fthora) {
+function setFthoraMartyria(element: MartyriaElement, neumes: Fthora[]) {
+  if (
+    toolbarInnerNeume.value === NeumeSelection.Secondary &&
+    element.alignRight &&
+    element.quantitativeNeume != null
+  ) {
+    updateMartyriaQuantitativeNeumeFthora(
+      element,
+      getNextFthora(element.quantitativeNeumeFthora, neumes),
+    );
+    return;
+  }
+
+  const neume = neumes[0];
+
   if (element.fthora === neume) {
     updateMartyriaFthora(element, null);
   } else {
@@ -6223,7 +6230,13 @@ function setMartyriaQuantitativeNeume(
   neume: QuantitativeNeume,
 ) {
   if (element.quantitativeNeume === neume) {
-    updateMartyria(element, { quantitativeNeume: null });
+    toolbarInnerNeume.value = NeumeSelection.Primary;
+    updateMartyria(element, {
+      quantitativeNeume: null,
+      quantitativeNeumeFthora: null,
+      quantitativeNeumeChromaticFthoraNote: null,
+      quantitativeNeumeFthoraCarry: null,
+    });
   } else {
     updateMartyria(element, { quantitativeNeume: neume });
   }
@@ -7078,6 +7091,28 @@ function updateMartyriaFthora(element: MartyriaElement, fthora: Fthora | null) {
   updateMartyria(element, { fthora, chromaticFthoraNote });
 }
 
+function updateMartyriaQuantitativeNeumeFthora(
+  element: MartyriaElement,
+  quantitativeNeumeFthora: Fthora | null,
+) {
+  let quantitativeNeumeChromaticFthoraNote: ScaleNote | null = null;
+
+  if (quantitativeNeumeFthora?.startsWith('SoftChromaticThi')) {
+    quantitativeNeumeChromaticFthoraNote = ScaleNote.Thi;
+  } else if (quantitativeNeumeFthora?.startsWith('SoftChromaticPa')) {
+    quantitativeNeumeChromaticFthoraNote = ScaleNote.Ga;
+  } else if (quantitativeNeumeFthora?.startsWith('HardChromaticThi')) {
+    quantitativeNeumeChromaticFthoraNote = ScaleNote.Thi;
+  } else if (quantitativeNeumeFthora?.startsWith('HardChromaticPa')) {
+    quantitativeNeumeChromaticFthoraNote = ScaleNote.Pa;
+  }
+
+  updateMartyria(element, {
+    quantitativeNeumeFthora,
+    quantitativeNeumeChromaticFthoraNote,
+  });
+}
+
 function updateMartyriaTempoLeft(
   element: MartyriaElement,
   tempoLeft: TempoSign | null,
@@ -7321,11 +7356,7 @@ const resolvedDefaultLyricsStyle = computed(() =>
 // rather than per editor instance; the CSS depends only on score-level state
 // and applies to every .ck-content in the document, including print.
 const richTextParagraphStyleCss = computed(() =>
-  buildRichTextParagraphStyleCss(
-    score.value.paragraphStyles,
-    score.value.pageSetup,
-    '.ck-content',
-  ),
+  buildRichTextParagraphStyleCss(score.value.paragraphStyles, '.ck-content'),
 );
 
 function getResolvedLyricsStyle(element: NoteElement) {
@@ -10607,27 +10638,19 @@ function renderTabLabel(tab: Tab) {
                                     (element as NoteElement).melismaText === ''
                                   "
                                 >
-                                  <div
+                                  <span
                                     class="melisma-underscore"
-                                    :class="{
-                                      full: (element as NoteElement)
-                                        .isFullMelisma,
-                                    }"
-                                    :style="
-                                      getMelismaUnderscoreStyleOuter(
-                                        element as NoteElement,
-                                      )
-                                    "
+                                    aria-hidden="true"
                                   >
-                                    <div
+                                    <span
                                       class="melisma-inner"
                                       :style="
                                         getMelismaUnderscoreStyleInner(
                                           element as NoteElement,
                                         )
                                       "
-                                    ></div>
-                                  </div>
+                                    ></span>
+                                  </span>
                                 </template>
                                 <template
                                   v-else-if="
@@ -11286,7 +11309,10 @@ function renderTabLabel(tab: Tab) {
           :element="inspectorContext.element"
           :page-setup="score.pageSetup"
           :neume-keyboard="neumeKeyboard"
+          :inner-neume="toolbarInnerNeume"
+          :layout-revision="toolbarMartyriaLayoutRevision"
           @update="updateMartyria(inspectorContext.element, $event)"
+          @update:inner-neume="toolbarInnerNeume = $event"
           @update:fthora="setFthoraMartyria(inspectorContext.element, $event)"
           @update:tempo-left="
             setMartyriaTempoLeft(inspectorContext.element, $event)
@@ -11972,16 +11998,13 @@ function renderTabLabel(tab: Tab) {
 }
 
 .melisma-underscore {
-  position: absolute;
-  display: inline;
-  white-space: pre;
+  /* Anchor to the rendered baseline without changing lyric alignment. */
+  display: inline-block;
+  width: 0;
+  height: 0;
 }
 
 .melisma.full {
-  left: 0;
-}
-
-.melisma-underscore.full {
   left: 0;
 }
 
@@ -11994,9 +12017,11 @@ function renderTabLabel(tab: Tab) {
 }
 
 .melisma-inner {
-  height: 100%;
-  position: relative;
-  box-sizing: border-box;
+  /* The static position follows the baseline anchor. Keep the containing
+     block at lyrics-container so full melismas can start at its left edge. */
+  position: absolute;
+  height: 0;
+  transform: translateY(-100%);
 }
 
 .melisma-text {

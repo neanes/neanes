@@ -235,7 +235,13 @@ describe('LyricService (English)', () => {
     ).toMatchSnapshot();
   });
 
-  it('should assign running elafron correctly', () => {
+  it.each([
+    ['running elafron', QuantitativeNeume.RunningElaphron],
+    [
+      'petasti plus running elafron',
+      QuantitativeNeume.PetastiPlusRunningElaphron,
+    ],
+  ] as const)('should assign %s correctly', (_, runningElaphron) => {
     const lyricService = new LyricService();
 
     const scoreElements: ScoreElement[] = [];
@@ -244,13 +250,13 @@ describe('LyricService (English)', () => {
     ison1.quantitativeNeume = QuantitativeNeume.Ison;
 
     const runningElafron1 = new NoteElement();
-    runningElafron1.quantitativeNeume = QuantitativeNeume.RunningElaphron;
+    runningElafron1.quantitativeNeume = runningElaphron;
 
     const ison2 = new NoteElement();
     ison2.quantitativeNeume = QuantitativeNeume.Ison;
 
     const runningElafron2 = new NoteElement();
-    runningElafron2.quantitativeNeume = QuantitativeNeume.RunningElaphron;
+    runningElafron2.quantitativeNeume = runningElaphron;
 
     scoreElements.push(ison1);
     scoreElements.push(runningElafron1);

@@ -505,7 +505,6 @@ export class NoteElement extends ScoreElement {
 
   // Used for display
   public melismaText: string = '';
-  public melismaOffsetTop: number = 0;
   public lyricsFontHeight: number = 0;
   public lyricsFontCss: string = '';
   // Resolved alongside lyricsFontCss because the CSS font shorthand cannot
@@ -737,6 +736,8 @@ export class MartyriaElement extends ScoreElement {
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | null = null;
   public chromaticFthoraNote: ScaleNote | null = null;
+  public quantitativeNeumeFthora: Fthora | null = null;
+  public quantitativeNeumeChromaticFthoraNote: ScaleNote | null = null;
   public tempoLeft: TempoSign | null = null;
   public tempo: TempoSign | null = null;
   public tempoRight: TempoSign | null = null;
@@ -747,6 +748,9 @@ export class MartyriaElement extends ScoreElement {
   public verticalOffset: number = 0;
 
   public error: boolean = false;
+
+  // Fthora helper
+  public quantitativeNeumeFthoraCarry: Fthora | null = null;
 
   public get measureBarLeft() {
     return this._measureBarLeft;
@@ -768,7 +772,7 @@ export class MartyriaElement extends ScoreElement {
 
   // Used for display
   public neumeWidth: number = 0;
-  public padding: number = 0;
+  public quantitativeNeumeSpacing: number = 0;
   public tempoLeftSpacing: number = 0;
   public tempoRightSpacing: number = 0;
   public computedTempoLeftOffsetX: number = 0;
@@ -831,6 +835,10 @@ export class MartyriaElement extends ScoreElement {
       measureBarRight: this.measureBarRight,
       fthora: this.fthora,
       chromaticFthoraNote: this.chromaticFthoraNote,
+      quantitativeNeume: this.quantitativeNeume,
+      quantitativeNeumeFthora: this.quantitativeNeumeFthora,
+      quantitativeNeumeChromaticFthoraNote:
+        this.quantitativeNeumeChromaticFthoraNote,
       tempo: this.tempo,
       bpm: this.bpm,
     } as Partial<MartyriaElement>;

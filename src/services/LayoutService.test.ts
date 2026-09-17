@@ -9,12 +9,31 @@ import {
   TempoElement,
   TextBoxElement,
 } from '../models/Element';
-import { QuantitativeNeume, restNeumes } from '../models/Neumes';
+import { Fthora, QuantitativeNeume, restNeumes } from '../models/Neumes';
 import { Line } from '../models/Page';
 import { PageSetup } from '../models/PageSetup';
+import { Scale } from '../models/Scales';
 import { LayoutService } from './LayoutService';
 
 const itif = (condition: boolean) => (condition ? it : it.skip);
+
+describe('LayoutService.calculateMartyriae', () => {
+  it('applies an attached quantitative-neume fthora after its interval', () => {
+    const martyria = new MartyriaElement();
+    martyria.auto = false;
+    martyria.alignRight = true;
+    martyria.quantitativeNeume = QuantitativeNeume.OligonPlusKentimaAbove;
+    martyria.quantitativeNeumeFthora = Fthora.Zygos_Top;
+
+    const nextMartyria = new MartyriaElement();
+
+    LayoutService.calculateMartyriae([martyria, nextMartyria], new PageSetup());
+
+    expect(martyria.quantitativeNeumeFthora).toBe(Fthora.Zygos_Top);
+    expect(martyria.quantitativeNeumeFthoraCarry).toBeNull();
+    expect(nextMartyria.scale).toBe(Scale.Zygos);
+  });
+});
 
 describe.each([true, false])(
   'LayoutService.findFinalAndNextElement',

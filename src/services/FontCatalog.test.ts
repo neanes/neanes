@@ -372,89 +372,75 @@ describe('FontCatalog.splitFace', () => {
 
 describe('composeFontStyleCss', () => {
   it('serializes basic axes as explicit CSS', () => {
-    expect(composeFontStyleCss('Source Serif,Neanes', 'Bold', 'Neanes')).toBe(
-      'font-family:Source Serif,Neanes;font-weight:700;font-style:normal;',
+    expect(composeFontStyleCss('Source Serif', 'Bold')).toBe(
+      'font-family:Source Serif;font-weight:700;font-style:normal;',
     );
-    expect(composeFontStyleCss('Source Serif,Neanes', 'Italic', 'Neanes')).toBe(
-      'font-family:Source Serif,Neanes;font-weight:400;font-style:italic;',
+    expect(composeFontStyleCss('Source Serif', 'Italic')).toBe(
+      'font-family:Source Serif;font-weight:400;font-style:italic;',
     );
-    expect(
-      composeFontStyleCss('Source Serif,Neanes', 'Bold Italic', 'Neanes'),
-    ).toBe(
-      'font-family:Source Serif,Neanes;font-weight:700;font-style:italic;',
+    expect(composeFontStyleCss('Source Serif', 'Bold Italic')).toBe(
+      'font-family:Source Serif;font-weight:700;font-style:italic;',
     );
-    expect(composeFontStyleCss(null, 'Bold', 'Neanes')).toBe(
+    expect(composeFontStyleCss(null, 'Bold')).toBe(
       'font-weight:700;font-style:normal;',
     );
   });
 
   it('distinguishes explicit Regular from inherited style', () => {
-    expect(composeFontStyleCss('GFS Didot,Neanes', 'Regular', 'Neanes')).toBe(
-      'font-family:GFS Didot,Neanes;font-weight:400;font-style:normal;',
+    expect(composeFontStyleCss('GFS Didot', 'Regular')).toBe(
+      'font-family:GFS Didot;font-weight:400;font-style:normal;',
     );
-    expect(composeFontStyleCss('GFS Didot,Neanes', undefined, 'Neanes')).toBe(
-      'font-family:GFS Didot,Neanes;',
+    expect(composeFontStyleCss('GFS Didot', undefined)).toBe(
+      'font-family:GFS Didot;',
     );
-    expect(composeFontStyleCss(null, 'Regular', 'Neanes')).toBe(
+    expect(composeFontStyleCss(null, 'Regular')).toBe(
       'font-weight:400;font-style:normal;',
     );
-    expect(composeFontStyleCss(null, undefined, 'Neanes')).toBe('');
+    expect(composeFontStyleCss(null, undefined)).toBe('');
   });
 
-  it('does not append the neume fallback to a neume family', () => {
-    expect(composeFontStyleCss('Neanes', 'Regular', 'Neanes')).toBe(
+  it('serializes a neume family like any other family', () => {
+    expect(composeFontStyleCss('Neanes', 'Regular')).toBe(
       'font-family:Neanes;font-weight:400;font-style:normal;',
     );
   });
 
   it('uses the base family plus weight/style for weight-only system styles', () => {
-    expect(composeFontStyleCss('Minion Pro,Neanes', 'Semibold', 'Neanes')).toBe(
-      'font-family:Minion Pro,Neanes;font-weight:600;font-style:normal;',
+    expect(composeFontStyleCss('Minion Pro', 'Semibold')).toBe(
+      'font-family:Minion Pro;font-weight:600;font-style:normal;',
     );
-    expect(
-      composeFontStyleCss('Minion Pro,Neanes', 'Light Italic', 'Neanes'),
-    ).toBe('font-family:Minion Pro,Neanes;font-weight:300;font-style:italic;');
+    expect(composeFontStyleCss('Minion Pro', 'Light Italic')).toBe(
+      'font-family:Minion Pro;font-weight:300;font-style:italic;',
+    );
   });
 
   it('uses an exact face name when the style has non-weight tokens', () => {
-    expect(
-      composeFontStyleCss('Minion Pro,Neanes', 'Bold Italic Caption', 'Neanes'),
-    ).toBe(
-      "font-family:'Minion Pro Bold Italic Caption', Minion Pro,Neanes;font-weight:700;font-style:italic;",
+    expect(composeFontStyleCss('Minion Pro', 'Bold Italic Caption')).toBe(
+      "font-family:'Minion Pro Bold Italic Caption', Minion Pro;font-weight:700;font-style:italic;",
     );
-    expect(composeFontStyleCss('Minion Pro,Neanes', 'Display', 'Neanes')).toBe(
-      "font-family:'Minion Pro Display', Minion Pro,Neanes;font-weight:400;font-style:normal;",
+    expect(composeFontStyleCss('Minion Pro', 'Display')).toBe(
+      "font-family:'Minion Pro Display', Minion Pro;font-weight:400;font-style:normal;",
     );
-    expect(
-      composeFontStyleCss(
-        'Source Serif,Neanes',
-        'Caption Bold Italic',
-        'Neanes',
-      ),
-    ).toBe(
-      "font-family:'Source Serif Caption', Source Serif,Neanes;font-weight:700;font-style:italic;",
+    expect(composeFontStyleCss('Source Serif', 'Caption Bold Italic')).toBe(
+      "font-family:'Source Serif Caption', Source Serif;font-weight:700;font-style:italic;",
     );
   });
 
   it('does not serialize familyless non-basic styles', () => {
-    expect(composeFontStyleCss(null, 'Semibold', 'Neanes')).toBe('');
-    expect(composeFontStyleCss(null, 'Caption', 'Neanes')).toBe('');
+    expect(composeFontStyleCss(null, 'Semibold')).toBe('');
+    expect(composeFontStyleCss(null, 'Caption')).toBe('');
   });
 
   it('keeps family and non-basic style CSS separately composable', () => {
-    expect(
-      composeFontFamilyCss('Minion Pro,Neanes', 'Semibold', 'Neanes'),
-    ).toBe('font-family:Minion Pro,Neanes;');
-    expect(composeFontFamilyCss('Minion Pro,Neanes', 'Caption', 'Neanes')).toBe(
-      "font-family:'Minion Pro Caption', Minion Pro,Neanes;",
+    expect(composeFontFamilyCss('Minion Pro', 'Semibold')).toBe(
+      'font-family:Minion Pro;',
     );
-    expect(
-      composeFontFamilyCss(
-        'Source Serif,Neanes',
-        'Caption Bold Italic',
-        'Neanes',
-      ),
-    ).toBe("font-family:'Source Serif Caption', Source Serif,Neanes;");
+    expect(composeFontFamilyCss('Minion Pro', 'Caption')).toBe(
+      "font-family:'Minion Pro Caption', Minion Pro;",
+    );
+    expect(composeFontFamilyCss('Source Serif', 'Caption Bold Italic')).toBe(
+      "font-family:'Source Serif Caption', Source Serif;",
+    );
     expect(
       composeFontStyleCssDeclaration('Minion Pro,Neanes', 'Semibold'),
     ).toBe('font-weight:600;font-style:normal;');

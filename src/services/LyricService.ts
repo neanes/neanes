@@ -6,7 +6,7 @@ import type {
   ScoreElement,
 } from '@/models/Element';
 import { AcceptsLyricsOption, ElementType } from '@/models/Element';
-import { QuantitativeNeume } from '@/models/Neumes';
+import { QuantitativeNeume, runningElaphronNeumes } from '@/models/Neumes';
 import { TATWEEL } from '@/utils/constants';
 
 import type { MelismaSyllables } from './MelismaHelperGreek';
@@ -350,7 +350,7 @@ export class LyricService {
               : false;
           const nextNoteIsRunningElaphron =
             nextNote != null
-              ? nextNote.quantitativeNeume === QuantitativeNeume.RunningElaphron
+              ? runningElaphronNeumes.includes(nextNote.quantitativeNeume)
               : false;
 
           // Finally, we check the next note to handle some special cases.

@@ -35,6 +35,9 @@ import type { SbmuflGlyphName } from '../NeumeMappingService';
 import { NeumeMappingService } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
+// Only increment this version for breaking changes that require consumers to
+// change how they interpret the schema. Additive optional fields do not require
+// a version bump.
 export const LATEX_SCHEMA_VERSION = 3;
 
 // Schema changes
@@ -596,7 +599,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 martyria.neumeWidth +
                   martyria.computedMeasureBarLeftLeadingSpacing +
                   martyria.computedMeasureBarRightTrailingSpacing +
-                  martyria.padding,
+                  martyria.quantitativeNeumeSpacing,
               ),
               verticalOffset:
                 martyria.verticalOffset != 0
@@ -642,8 +645,14 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 martyria.alignRight && martyria.quantitativeNeume != null
                   ? glyphName(martyria.quantitativeNeume)
                   : undefined,
+              quantitativeNeumeFthora:
+                martyria.alignRight && martyria.quantitativeNeume != null
+                  ? glyphName(martyria.quantitativeNeumeFthora)
+                  : undefined,
               quantitativeNeumeSpacing:
-                martyria.padding != 0 ? toPt(martyria.padding) : undefined,
+                martyria.quantitativeNeumeSpacing != 0
+                  ? toPt(martyria.quantitativeNeumeSpacing)
+                  : undefined,
             } as LatexMartyriaElement);
           } else if (element.elementType === ElementType.Tempo) {
             const tempo = element as TempoElement;
@@ -964,6 +973,7 @@ interface LatexMartyriaElement extends LatexBaseElement {
   tempoRight?: SbmuflGlyphName;
   tempoRightSpacing?: number;
   quantitativeNeume?: SbmuflGlyphName;
+  quantitativeNeumeFthora?: SbmuflGlyphName;
   quantitativeNeumeSpacing?: number;
 }
 

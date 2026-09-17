@@ -108,10 +108,7 @@ export class TextMeasurementService {
   }
 
   public static getFontHeight(font: string) {
-    const context = this.prepareContext(font);
-
-    const metrics = context.measureText('');
-    return metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
+    return this.getFontVerticalMetrics(font).height;
   }
 
   public static getFontVerticalMetrics(font: string): FontVerticalMetrics {
@@ -128,16 +125,10 @@ export class TextMeasurementService {
   }
 
   public static getFontBoundingBoxDescent(font: string) {
-    const context = this.prepareContext(font);
-
-    const metrics = context.measureText('');
-    return metrics.fontBoundingBoxDescent;
+    return this.getFontVerticalMetrics(font).descent;
   }
 
   public static getFontBoundingBoxAscent(font: string) {
-    const context = this.prepareContext(font);
-
-    const metrics = context.measureText('');
-    return metrics.fontBoundingBoxAscent;
+    return this.getFontVerticalMetrics(font).ascent;
   }
 }

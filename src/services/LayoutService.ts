@@ -267,6 +267,7 @@ interface CompletedParagraph {
   paragraph: InputItem[];
   positions: PositionedItem[];
   ratios: number[];
+  lineHeights: number[];
   dropCapWidthPx: number;
   dropCapContinuationLines: number;
 }
@@ -1465,7 +1466,13 @@ export class LayoutService {
       // and the paragraph is about to end. In the latter case, endParagraph()
       // removes that trailing glue and replaces it with finishing glue.
       if (lineBreak) {
-        this.endParagraph(justifyLastLine, layoutWorkspace, measureBarWidthMap);
+        this.endParagraph(
+          justifyLastLine,
+          layoutWorkspace,
+          measureBarWidthMap,
+          neumeLineHeight,
+          neumeHeight,
+        );
       }
 
       if (layoutWorkspace.diagnostics != null) {
@@ -1555,6 +1562,7 @@ export class LayoutService {
         paragraph,
         positions,
         ratios,
+        lineHeights,
         dropCapWidthPx,
         dropCapContinuationLines,
       } = completedParagraph;
@@ -1569,21 +1577,10 @@ export class LayoutService {
           continue;
         }
 
+        const startsNewLine = position.line > paragraphLineIndex;
+
         // Check if we need a new line
-        if (position.line > paragraphLineIndex) {
-          if (page.lines.length > 0) {
-            const previousLine = page.lines[page.lines.length - 1];
-            const previousLineHeightPx = this.getLineHeight(
-              previousLine,
-              pageSetup.lineHeight,
-              neumeLineHeight,
-              neumeHeight,
-            );
-
-            currentPageHeightPx += previousLineHeightPx - lastLineHeightPx;
-            lastLineHeightPx = previousLineHeightPx;
-          }
-
+        if (startsNewLine) {
           const newLine = new Line();
           const nextLineIndex = paragraphLineIndex + 1;
           const adjustmentRatio = ratios[nextLineIndex];
@@ -1598,9 +1595,7 @@ export class LayoutService {
 
           paragraphLineIndex += 1;
 
-          // New lines start with the default allocation until their content
-          // determines the final line height.
-          lastLineHeightPx = pageSetup.lineHeight;
+          lastLineHeightPx = lineHeights[nextLineIndex]!;
           currentPageHeightPx += lastLineHeightPx;
         }
 
@@ -1611,12 +1606,18 @@ export class LayoutService {
         const innerPageHeight =
           pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
         const additionalHeight =
-          paragraphLineIndex === 0
-            ? neumeLineHeight * dropCapContinuationLines
+          startsNewLine && paragraphLineIndex === 0
+            ? this.getLineSpanHeight(
+                lineHeights,
+                1,
+                dropCapContinuationLines,
+                neumeLineHeight,
+              )
             : 0;
         const requiresNewPage =
-          currentPageHeightPx + additionalHeight > innerPageHeight ||
-          lastElementWasPageBreak;
+          startsNewLine &&
+          (currentPageHeightPx + additionalHeight > innerPageHeight ||
+            lastElementWasPageBreak);
 
         // Keep multiline drop caps on the same page as their continuation lines
         // when possible.
@@ -1725,7 +1726,12 @@ export class LayoutService {
         element.line = page.lines.length;
         element.page = pages.length;
 
-        this.adjustDropCapPosition(element, neumeLineHeight, lyricsBaseline);
+        this.adjustDropCapPosition(
+          element,
+          lineHeights,
+          neumeLineHeight,
+          lyricsBaseline,
+        );
 
         // Measure bar transfer logic between lines
         let prevLine =
@@ -3119,6 +3125,7 @@ export class LayoutService {
 
   private static adjustDropCapPosition(
     element: ScoreElement,
+    lineHeights: number[],
     neumeLineHeight: number,
     lyricsBaseline: number,
   ) {
@@ -3131,7 +3138,12 @@ export class LayoutService {
     const dropCapElement = element as DropCapElement;
 
     const distanceFromTopToBottomOfLyrics =
-      (dropCapElement.computedLineSpan - 1) * neumeLineHeight + lyricsBaseline;
+      this.getLineSpanHeight(
+        lineHeights,
+        0,
+        dropCapElement.computedLineSpan - 1,
+        neumeLineHeight,
+      ) + lyricsBaseline;
 
     const fontMetrics = TextMeasurementService.getCachedFontVerticalMetrics(
       dropCapElement.computedFont,
@@ -4840,6 +4852,8 @@ export class LayoutService {
     justifyLastLine: boolean,
     workspace: LayoutWorkspace,
     measureBarWidthMap: Map<MeasureBar, number>,
+    neumeLineHeight: number,
+    neumeHeight: number,
   ) {
     const { pageSetup, pendingParagraph, completedParagraphs } = workspace;
 
@@ -4945,6 +4959,25 @@ export class LayoutService {
       console.log('Adjustment ratios', ratios);
     }
 
+    // Line assignments are now fixed, and every element's vertical metrics
+    // were resolved during Phase 1. Plan exact heights before pagination so a
+    // line never has to be corrected after its successor has been placed.
+    const lineElements = ratios.map(() => [] as ScoreElement[]);
+    for (const position of positions) {
+      const item = pendingParagraph[position.item];
+      if (item.type === 'box' && 'element' in item) {
+        lineElements[position.line].push((item as ElementBox).element);
+      }
+    }
+    const lineHeights = lineElements.map((elements) =>
+      this.getLineHeight(
+        elements,
+        pageSetup.lineHeight,
+        neumeLineHeight,
+        neumeHeight,
+      ),
+    );
+
     completedParagraphs.push({
       diagnostics:
         workspace.diagnostics != null
@@ -4961,6 +4994,7 @@ export class LayoutService {
       paragraph: pendingParagraph,
       positions,
       ratios,
+      lineHeights,
       dropCapWidthPx: workspace.pendingDropCapWidthPx,
       dropCapContinuationLines: workspace.pendingDropCapContinuationLines,
     });
@@ -4985,7 +5019,7 @@ export class LayoutService {
   }
 
   private static getLineHeight(
-    line: Line,
+    elements: ScoreElement[],
     defaultLineHeight: number,
     neumeLineHeight: number,
     neumeHeight: number,
@@ -4997,7 +5031,7 @@ export class LayoutService {
     let hasNeumeContent = false;
     let resolvedNeumeLineHeight = neumeLineHeight;
 
-    for (const element of line.elements) {
+    for (const element of elements) {
       switch (element.elementType) {
         case ElementType.TextBox:
           if (!(element as TextBoxElement).inline) {
@@ -5069,6 +5103,21 @@ export class LayoutService {
     }
 
     return defaultLineHeight;
+  }
+
+  private static getLineSpanHeight(
+    lineHeights: number[],
+    startLine: number,
+    lineCount: number,
+    fallbackLineHeight: number,
+  ) {
+    let height = 0;
+
+    for (let i = startLine; i < startLine + lineCount; i++) {
+      height += lineHeights[i] ?? fallbackLineHeight;
+    }
+
+    return height;
   }
 
   private static processHeaderFooter(

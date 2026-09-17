@@ -13,6 +13,12 @@ export interface InkBounds {
   rightOverhang: number;
 }
 
+export interface FontVerticalMetrics {
+  ascent: number;
+  descent: number;
+  height: number;
+}
+
 // The canvas font shorthand cannot express font-variant-caps values other
 // than small-caps, so caps are applied through the context's fontVariantCaps
 // property instead. The owned CSS keywords are all valid canvas values;
@@ -106,6 +112,19 @@ export class TextMeasurementService {
 
     const metrics = context.measureText('');
     return metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
+  }
+
+  public static getFontVerticalMetrics(font: string): FontVerticalMetrics {
+    const context = this.prepareContext(font);
+    const metrics = context.measureText('');
+    const ascent = metrics.fontBoundingBoxAscent;
+    const descent = metrics.fontBoundingBoxDescent;
+
+    return {
+      ascent,
+      descent,
+      height: ascent + descent,
+    };
   }
 
   public static getFontBoundingBoxDescent(font: string) {

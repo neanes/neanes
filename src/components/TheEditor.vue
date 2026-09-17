@@ -242,7 +242,10 @@ import {
   getRecoveryCandidateSiblingRecoveryIds,
 } from '@/services/recovery/recoveryCandidates';
 import { SaveService } from '@/services/SaveService';
-import { TextMeasurementService } from '@/services/TextMeasurementService';
+import {
+  type FontVerticalMetrics,
+  TextMeasurementService,
+} from '@/services/TextMeasurementService';
 import {
   collectClipboardParagraphStyleIdsFromElements,
   collectClipboardParagraphStylesFromElements,
@@ -1209,9 +1212,11 @@ function getDeveloperLyricBaselines(page: Page) {
         key: lineIndex,
         style: {
           left: withZoom(resolvedMargins.left),
-          top: withZoom(
-            note.y + note.lyricsVerticalOffset + note.lyricsFontAscent,
-          ),
+          top: `${
+            note.y * (printMode.value ? 1 : zoom.value) +
+            getDisplayedLyricGeometry(note, getResolvedLyricsStyle(note))
+              .baseline
+          }px`,
           width: withZoom(resolvedMargins.contentWidth),
         } as StyleValue,
       },
@@ -2143,15 +2148,87 @@ function getFooterHorizontalRuleStyle(page: Page, footerHeight: number) {
 
 // The style properties the lyrics span and the leading-hyphen span share: the
 // resolved lyrics style plus the element's vertical metrics.
+function getDisplayedLyricFontMetrics(
+  fontMetrics: Map<string, FontVerticalMetrics>,
+  font: string,
+) {
+  let metrics = fontMetrics.get(font);
+
+  if (metrics == null) {
+    metrics = TextMeasurementService.getFontVerticalMetrics(font);
+    fontMetrics.set(font, metrics);
+  }
+
+  return metrics;
+}
+
+const displayedLyricMetricsContext = computed(() => {
+  const displayedZoom = printMode.value ? 1 : zoom.value;
+  const defaultLyricsStyle = resolvedDefaultLyricsStyle.value;
+  const defaultLyricsFont = resolveFontCss(defaultLyricsStyle);
+  const displayedDefaultLyricsFont = resolveFontCss({
+    ...defaultLyricsStyle,
+    fontSize: defaultLyricsStyle.fontSize * displayedZoom,
+  });
+  const fontMetrics = new Map<string, FontVerticalMetrics>();
+
+  return {
+    canonicalDefaultAscent: getDisplayedLyricFontMetrics(
+      fontMetrics,
+      defaultLyricsFont,
+    ).ascent,
+    displayedDefaultAscent: getDisplayedLyricFontMetrics(
+      fontMetrics,
+      displayedDefaultLyricsFont,
+    ).ascent,
+    fontMetrics,
+    zoom: displayedZoom,
+  };
+});
+
+function getDisplayedLyricGeometry(
+  element: NoteElement,
+  resolvedLyricsStyle: ResolvedParagraphStyle,
+) {
+  const context = displayedLyricMetricsContext.value;
+  const displayedLyricsFont = resolveFontCss({
+    ...resolvedLyricsStyle,
+    fontSize: resolvedLyricsStyle.fontSize * context.zoom,
+  });
+  const displayedLyricsMetrics = getDisplayedLyricFontMetrics(
+    context.fontMetrics,
+    displayedLyricsFont,
+  );
+
+  // Measuring the displayed font size avoids multiplying canvas metrics by a
+  // fractional zoom. Chromium can round a rendered font baseline differently
+  // from that scaled prediction. Keep the default lyric top unchanged, then
+  // align every override to the resulting displayed default-font baseline.
+  const baseline =
+    (element.lyricsVerticalOffset + element.lyricsFontAscent) * context.zoom +
+    context.displayedDefaultAscent -
+    context.canonicalDefaultAscent * context.zoom;
+
+  return {
+    baseline,
+    height: displayedLyricsMetrics.height,
+    top: baseline - displayedLyricsMetrics.ascent,
+  };
+}
+
 function getLyricStyleBase(element: NoteElement): CSSProperties {
   const resolvedLyricsStyle = getResolvedLyricsStyle(element);
   const resolvedLyricsFont = resolveFontStyle(
     resolvedLyricsStyle.fontFamily,
     resolvedLyricsStyle.fontStyle,
   );
+  const displayedGeometry = getDisplayedLyricGeometry(
+    element,
+    resolvedLyricsStyle,
+  );
 
   return {
-    top: withZoom(element.lyricsVerticalOffset),
+    top: `${displayedGeometry.top}px`,
     fontSize: withZoom(resolvedLyricsStyle.fontSize),
     fontFamily: getFontFamilyWithFallback(
       resolvedLyricsFont.cssFontFamily,
@@ -2168,7 +2245,7 @@ function getLyricStyleBase(element: NoteElement): CSSProperties {
     color: resolvedLyricsStyle.color,
     webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
     webkitTextStrokeColor: resolvedLyricsStyle.strokeColor,
-    lineHeight: withZoom(element.lyricsFontHeight),
+    lineHeight: `${displayedGeometry.height}px`,
   } as CSSProperties;
 }
 

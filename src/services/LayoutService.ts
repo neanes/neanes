@@ -107,12 +107,10 @@ import {
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
 import {
-  type FontVerticalMetrics,
   type InkBounds,
   TextMeasurementService,
 } from './TextMeasurementService';
 
-const fontVerticalMetricsCache = new Map<string, FontVerticalMetrics>();
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
 const noteInkBoundsCache = new Map<string, InkBounds>();
@@ -458,7 +456,7 @@ export class LayoutService {
     ).oligonMidpoint;
 
     const defaultLyricsFontMetrics =
-      this.getFontVerticalMetricsFromCache(defaultLyricsFontCss);
+      TextMeasurementService.getCachedFontVerticalMetrics(defaultLyricsFontCss);
 
     const lyricHeight = defaultLyricsFontMetrics.height;
 
@@ -471,9 +469,10 @@ export class LayoutService {
     );
 
     // The expected height of a line containing only neumes
-    const neumeLineHeight = Math.max(
-      getLyricsTop(lyricsBaseline, lyricAscent) + lyricHeight,
+    const neumeLineHeight = includeLyricsInLineHeight(
       pageSetup.lineHeight,
+      getLyricsTop(lyricsBaseline, lyricAscent),
+      lyricHeight,
     );
 
     const measureBarWidthMap = this.getMeasureBarWidthMap(pageSetup);
@@ -2992,9 +2991,10 @@ export class LayoutService {
       noteElement.lyricsFontCss = resolveFontCss(resolvedLyricsStyle);
       noteElement.computedLyricsFontVariantCaps =
         resolvedLyricsStyle.fontVariantCaps ?? 'normal';
-      noteElement.lyricsFontHeight = this.getFontVerticalMetricsFromCache(
-        noteElement.lyricsFontCss,
-      ).height;
+      noteElement.lyricsFontHeight =
+        TextMeasurementService.getCachedFontVerticalMetrics(
+          noteElement.lyricsFontCss,
+        ).height;
       this.getNoteWidth(noteElement, pageSetup, noteWidthArgs);
     }
 
@@ -3133,7 +3133,7 @@ export class LayoutService {
     const distanceFromTopToBottomOfLyrics =
       (dropCapElement.computedLineSpan - 1) * neumeLineHeight + lyricsBaseline;
 
-    const fontMetrics = this.getFontVerticalMetricsFromCache(
+    const fontMetrics = TextMeasurementService.getCachedFontVerticalMetrics(
       dropCapElement.computedFont,
     );
     const adjustment = fontMetrics.ascent - distanceFromTopToBottomOfLyrics;
@@ -5019,13 +5019,10 @@ export class LayoutService {
             imageBox = element as ImageBoxElement;
           }
           break;
-        case ElementType.Note:
+        case ElementType.Note: {
           hasNeumeContent = true;
-          if (
-            (element as NoteElement).lyrics.length > 0 ||
-            (element as NoteElement).isMelisma
-          ) {
-            const note = element as NoteElement;
+          const note = element as NoteElement;
+          if (note.lyrics.length > 0 || note.isMelisma) {
             resolvedNeumeLineHeight = includeLyricsInLineHeight(
               resolvedNeumeLineHeight,
               note.lyricsVerticalOffset,
@@ -5033,6 +5030,7 @@ export class LayoutService {
             );
           }
           break;
+        }
         case ElementType.Martyria:
         case ElementType.Tempo:
         case ElementType.DropCap:
@@ -5434,7 +5432,9 @@ export class LayoutService {
 
     noteElement.lyricsVerticalOffset = getLyricsTop(
       lyricsBaseline,
-      this.getFontVerticalMetricsFromCache(noteElement.lyricsFontCss).ascent,
+      TextMeasurementService.getCachedFontVerticalMetrics(
+        noteElement.lyricsFontCss,
+      ).ascent,
     );
 
     // Measure the full note run so the browser applies any contextual
@@ -8180,18 +8180,6 @@ export class LayoutService {
     }
 
     return width;
-  }
-
-  private static getFontVerticalMetricsFromCache(font: string) {
-    let metrics = fontVerticalMetricsCache.get(font);
-
-    if (metrics == null) {
-      metrics = TextMeasurementService.getFontVerticalMetrics(font);
-
-      fontVerticalMetricsCache.set(font, metrics);
-    }
-
-    return metrics;
   }
 
   private static getFinalElementWidth(

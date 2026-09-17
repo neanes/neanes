@@ -19,6 +19,13 @@ export interface FontVerticalMetrics {
   height: number;
 }
 
+// A font's vertical metrics depend only on the font shorthand, which already
+// carries the size, so they are memoized for the life of the session. Every
+// face the layout can measure is loaded before the first document is laid out
+// (see initialize() in TheEditor.vue), so a cached entry can never be a
+// fallback face's metrics.
+const fontVerticalMetricsCache = new Map<string, FontVerticalMetrics>();
+
 // The canvas font shorthand cannot express font-variant-caps values other
 // than small-caps, so caps are applied through the context's fontVariantCaps
 // property instead. The owned CSS keywords are all valid canvas values;
@@ -130,5 +137,19 @@ export class TextMeasurementService {
 
   public static getFontBoundingBoxAscent(font: string) {
     return this.getFontVerticalMetrics(font).ascent;
+  }
+
+  public static getCachedFontVerticalMetrics(
+    font: string,
+  ): FontVerticalMetrics {
+    let metrics = fontVerticalMetricsCache.get(font);
+
+    if (metrics == null) {
+      metrics = this.getFontVerticalMetrics(font);
+
+      fontVerticalMetricsCache.set(font, metrics);
+    }
+
+    return metrics;
   }
 }

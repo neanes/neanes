@@ -2159,20 +2159,6 @@ function getFooterHorizontalRuleStyle(page: Page, footerHeight: number) {
   } as StyleValue;
 }
 
-function getCachedFontVerticalMetrics(
-  fontMetrics: Map<string, FontVerticalMetrics>,
-  font: string,
-) {
-  let metrics = fontMetrics.get(font);
-
-  if (metrics == null) {
-    metrics = TextMeasurementService.getFontVerticalMetrics(font);
-    fontMetrics.set(font, metrics);
-  }
-
-  return metrics;
-}
-
 // Measuring the displayed font size avoids multiplying canvas metrics by a
 // fractional zoom. Chromium can round a rendered font baseline differently
 // from that scaled prediction, and any rounding already in the canonical
@@ -2188,18 +2174,18 @@ interface FontMetricShifts {
 }
 
 interface LyricMetricsCaches {
-  fontMetrics: Map<string, FontVerticalMetrics>;
   styleShifts: Map<string, FontMetricShifts>;
+  dropCapShifts: Map<string, FontMetricShifts>;
 }
 
 function getFontMetricShifts(
-  fontMetrics: Map<string, FontVerticalMetrics>,
   font: string,
   displayedFont: string,
   zoomValue: number,
 ): FontMetricShifts {
-  const canonical = getCachedFontVerticalMetrics(fontMetrics, font);
-  const displayed = getCachedFontVerticalMetrics(fontMetrics, displayedFont);
+  const canonical = TextMeasurementService.getCachedFontVerticalMetrics(font);
+  const displayed =
+    TextMeasurementService.getCachedFontVerticalMetrics(displayedFont);
 
   return {
     canonical,
@@ -2223,7 +2209,6 @@ function getParagraphStyleMetricShifts(
 
   if (shifts == null) {
     shifts = getFontMetricShifts(
-      caches.fontMetrics,
       resolveFontCss(style),
       resolveFontCss({ ...style, fontSize: style.fontSize * zoomValue }),
       zoomValue,
@@ -2242,8 +2227,8 @@ const displayedLyricMetricsContext = computed(() => {
   const displayedZoom =
     printRenderTarget.value === 'print-media' ? 1 : zoom.value;
   const caches: LyricMetricsCaches = {
-    fontMetrics: new Map<string, FontVerticalMetrics>(),
     styleShifts: new Map<string, FontMetricShifts>(),
+    dropCapShifts: new Map<string, FontMetricShifts>(),
   };
   const defaultShifts = getParagraphStyleMetricShifts(
     caches,
@@ -2274,8 +2259,10 @@ function getDisplayedLyricGeometry(
   );
 
   return {
-    // A lyric in the default lyrics font cancels the two residues out and so
-    // keeps exactly the position it would have had without any correction.
+    // A lyric in the default lyrics font cancels the two residues out, so its
+    // top is exactly the uncorrected zoomed offset. Its rendered baseline
+    // still moves, because the line height below drops the half-leading that
+    // a purely zoomed line height would have left.
     top: withZoomOffset(
       element.lyricsVerticalOffset,
       context.defaultAscentShift - shifts.ascentShift,
@@ -2288,12 +2275,21 @@ function getDisplayedLyricGeometry(
 
 function getDisplayedDropCapTop(element: DropCapElement) {
   const context = displayedLyricMetricsContext.value;
-  const shifts = getFontMetricShifts(
-    context.fontMetrics,
-    element.computedFont,
-    element.getComputedFont(element.computedFontSize * context.zoom),
-    context.zoom,
-  );
+  // The computed font carries the canonical size, and the zoom is fixed for
+  // the whole context, so it identifies both measurements on its own.
+  const font = element.computedFont;
+
+  let shifts = context.dropCapShifts.get(font);
+
+  if (shifts == null) {
+    shifts = getFontMetricShifts(
+      font,
+      element.getComputedFont(element.computedFontSize * context.zoom),
+      context.zoom,
+    );
+
+    context.dropCapShifts.set(font, shifts);
+  }
 
   // The drop cap sits on the lyrics baseline, so it follows the displayed
   // lyric baseline, but the glyph moves within its own line box: its ascent
@@ -8569,12 +8565,19 @@ async function onFileMenuPrint() {
   window.document.title = getFileName(selectedWorkspace.value, false);
 
   nextTick(async () => {
-    await ipcService.printWorkspace(selectedWorkspace.value);
-    printRenderTarget.value = null;
-    window.document.title = previousTitle;
+    try {
+      await ipcService.printWorkspace(selectedWorkspace.value);
+    } catch (error) {
+      // Nothing awaits this callback, so a rejection would otherwise be
+      // unhandled and leave the editor stuck in print mode.
+      console.error(error);
+    } finally {
+      printRenderTarget.value = null;
+      window.document.title = previousTitle;
 
-    // Re-focus the active element
-    focusElement(activeElement);
+      // Re-focus the active element
+      focusElement(activeElement);
+    }
   });
 }
 

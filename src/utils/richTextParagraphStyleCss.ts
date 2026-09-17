@@ -12,7 +12,7 @@ export function buildRichTextNeumeCss(
   selectorPrefix: string,
   neumeFontFamily: string,
 ) {
-  return `${selectorPrefix} .neanes-ck-neume{display:inline-block;font-family:${neumeFontFamily};}
+  return `${selectorPrefix} .neanes-ck-neume{display:inline-block;position:relative;font-family:${neumeFontFamily};}
 ${selectorPrefix} .neanes-ck-neume-align-right{position:absolute!important;left:initial!important;}
 ${selectorPrefix} .neanes-ck-neume-plagal{display:inline-flex;flex-direction:column;vertical-align:middle;align-items:center;font-family:inherit;}`;
 }

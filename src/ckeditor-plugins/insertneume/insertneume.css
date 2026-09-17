@@ -1,5 +1,6 @@
 .neanes-ck-neume {
   display: inline-block;
+  position: relative;
   font-family: var(--ck-content-neume-font-family);
 }
 

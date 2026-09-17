@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD041 -->
+
 <script setup>
 import {
   PhArrowClockwise,

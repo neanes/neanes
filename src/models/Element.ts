@@ -505,6 +505,7 @@ export class NoteElement extends ScoreElement {
 
   // Used for display
   public melismaText: string = '';
+  public lyricsFontAscent: number = 0;
   public lyricsFontHeight: number = 0;
   public lyricsFontCss: string = '';
   // Resolved alongside lyricsFontCss because the CSS font shorthand cannot

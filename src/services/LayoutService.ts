@@ -99,6 +99,11 @@ import { resolveNextRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
+import {
+  getLyricsBaseline,
+  getLyricsTop,
+  includeLyricsInLineHeight,
+} from './LyricsLayout';
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
 import {
@@ -107,6 +112,7 @@ import {
 } from './TextMeasurementService';
 
 const fontHeightCache = new Map<string, number>();
+const fontAscentCache = new Map<string, number>();
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
 const noteInkBoundsCache = new Map<string, InkBounds>();
@@ -243,7 +249,7 @@ const secondaryGorgonNeumeSet = new Set<GorgonNeume>([
 ]);
 
 interface GetNoteWidthArgs {
-  lyricsVerticalOffset: number;
+  lyricsBaseline: number;
   measureBarWidthMap: Map<MeasureBar, number>;
   paragraphStyles: ParagraphStyle[];
 }
@@ -451,24 +457,28 @@ export class LayoutService {
       pageSetup.neumeDefaultFontFamily,
     ).oligonMidpoint;
 
-    const lyricsVerticalOffset = neumeHeight + pageSetup.lyricsVerticalOffset;
-
     const lyricHeight =
       TextMeasurementService.getFontHeight(defaultLyricsFontCss);
-
-    // The expected height of a line containing only neumes
-    const neumeLineHeight = Math.max(
-      lyricsVerticalOffset + lyricHeight,
-      pageSetup.lineHeight,
-    );
 
     const lyricAscent =
       TextMeasurementService.getFontBoundingBoxAscent(defaultLyricsFontCss);
 
+    const lyricsBaseline = getLyricsBaseline(
+      neumeHeight,
+      pageSetup.lyricsVerticalOffset,
+      lyricAscent,
+    );
+
+    // The expected height of a line containing only neumes
+    const neumeLineHeight = Math.max(
+      getLyricsTop(lyricsBaseline, lyricAscent) + lyricHeight,
+      pageSetup.lineHeight,
+    );
+
     const measureBarWidthMap = this.getMeasureBarWidthMap(pageSetup);
 
     const noteWidthArgs: GetNoteWidthArgs = {
-      lyricsVerticalOffset,
+      lyricsBaseline,
       measureBarWidthMap,
       paragraphStyles: score.paragraphStyles,
     };
@@ -1716,12 +1726,7 @@ export class LayoutService {
         element.line = page.lines.length;
         element.page = pages.length;
 
-        this.adjustDropCapPosition(
-          element,
-          neumeLineHeight,
-          lyricsVerticalOffset,
-          lyricAscent,
-        );
+        this.adjustDropCapPosition(element, neumeLineHeight, lyricsBaseline);
 
         // Measure bar transfer logic between lines
         let prevLine =
@@ -2990,6 +2995,9 @@ export class LayoutService {
       noteElement.lyricsFontHeight = this.getLyricsFontHeightFromCache(
         noteElement.lyricsFontCss,
       );
+      noteElement.lyricsFontAscent = this.getLyricsFontAscentFromCache(
+        noteElement.lyricsFontCss,
+      );
       this.getNoteWidth(noteElement, pageSetup, noteWidthArgs);
     }
 
@@ -3115,12 +3123,10 @@ export class LayoutService {
   private static adjustDropCapPosition(
     element: ScoreElement,
     neumeLineHeight: number,
-    lyricsVerticalOffset: number,
-    lyricAscent: number,
+    lyricsBaseline: number,
   ) {
-    // Special logic to adjust drop caps.
-    // This aligns the bottom of the drop cap with
-    // the bottom of the lyrics.
+    // Special logic to adjust drop caps. This aligns the bottom of the drop
+    // cap with the lyrics baseline.
     if (element.elementType !== ElementType.DropCap) {
       return;
     }
@@ -3128,9 +3134,7 @@ export class LayoutService {
     const dropCapElement = element as DropCapElement;
 
     const distanceFromTopToBottomOfLyrics =
-      (dropCapElement.computedLineSpan - 1) * neumeLineHeight +
-      lyricsVerticalOffset +
-      lyricAscent;
+      (dropCapElement.computedLineSpan - 1) * neumeLineHeight + lyricsBaseline;
 
     const fontHeight = TextMeasurementService.getFontHeight(
       dropCapElement.computedFont,
@@ -4998,6 +5002,7 @@ export class LayoutService {
     let modeKey: ModeKeyElement | null = null;
     let imageBox: ImageBoxElement | null = null;
     let hasNeumeContent = false;
+    let resolvedNeumeLineHeight = neumeLineHeight;
 
     for (const element of line.elements) {
       switch (element.elementType) {
@@ -5021,8 +5026,21 @@ export class LayoutService {
             imageBox = element as ImageBoxElement;
           }
           break;
-        case ElementType.Martyria:
         case ElementType.Note:
+          hasNeumeContent = true;
+          if (
+            (element as NoteElement).lyrics.length > 0 ||
+            (element as NoteElement).isMelisma
+          ) {
+            const note = element as NoteElement;
+            resolvedNeumeLineHeight = includeLyricsInLineHeight(
+              resolvedNeumeLineHeight,
+              note.lyricsVerticalOffset,
+              note.lyricsFontHeight,
+            );
+          }
+          break;
+        case ElementType.Martyria:
         case ElementType.Tempo:
         case ElementType.DropCap:
         case ElementType.Empty:
@@ -5056,7 +5074,7 @@ export class LayoutService {
     }
 
     if (hasNeumeContent) {
-      return neumeLineHeight;
+      return resolvedNeumeLineHeight;
     }
 
     return defaultLineHeight;
@@ -5419,9 +5437,12 @@ export class LayoutService {
     pageSetup: PageSetup,
     args: GetNoteWidthArgs,
   ) {
-    const { lyricsVerticalOffset, measureBarWidthMap } = args;
+    const { lyricsBaseline, measureBarWidthMap } = args;
 
-    noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
+    noteElement.lyricsVerticalOffset = getLyricsTop(
+      lyricsBaseline,
+      noteElement.lyricsFontAscent,
+    );
 
     // Measure the full note run so the browser applies any contextual
     // substitutions before we use the width for layout.
@@ -8180,6 +8201,17 @@ export class LayoutService {
     }
 
     return height;
+  }
+
+  private static getLyricsFontAscentFromCache(font: string) {
+    let ascent = fontAscentCache.get(font);
+
+    if (ascent == null) {
+      ascent = TextMeasurementService.getFontBoundingBoxAscent(font);
+      fontAscentCache.set(font, ascent);
+    }
+
+    return ascent;
   }
 
   private static getFinalElementWidth(

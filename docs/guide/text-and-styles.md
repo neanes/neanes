@@ -8,49 +8,11 @@ import {
 } from '@phosphor-icons/vue';
 </script>
 
-# Text, Images, and Paragraph Styles
+# Paragraph Styles
 
-Neanes supports simple text, rich text, images, and reusable paragraph styles. Use direct formatting for a one-off exception and paragraph styles for formatting that should remain consistent throughout a score.
+Paragraph styles keep repeated text consistent throughout a score. Use direct formatting for a one-off exception and a paragraph style for formatting that titles, headings, lyrics, annotations, or other text should share.
 
-## Insert text and images
-
-The `Insert` menu provides several ways to add material besides notes:
-
-| Element             | Best use                                                                | Formatting scope                          |
-| ------------------- | ----------------------------------------------------------------------- | ----------------------------------------- |
-| **Text Box**        | Short, simply formatted text                                            | The whole text box                        |
-| **Rich Text Box**   | Several paragraphs, links, lists, rules, images, or inserted neumes     | Individual paragraphs and text selections |
-| **Inline Text Box** | Text that sits in the musical flow and aligns with the neumes or lyrics | The whole text box                        |
-| **Image**           | An image from your computer                                             | Size and position                         |
-| **Annotation**      | Additional text attached to a selected note                             | The whole annotation                      |
-| **Alternate Line**  | An alternate musical line attached to a selected note                   | The alternate line and its annotations    |
-
-Select a text element to show its contextual formatting toolbar. The Properties pane contains its complete layout and formatting options.
-
-Use `Insert > Drop Cap Before` or `Insert > Drop Cap After` to add a drop cap, then type its letter. The shortcut is <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>D</kbd> for before and <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd> for after.
-
-![The drop-cap controls in the main toolbar](./images/guide-main-toolbar-drop-caps.png)
-
-![A drop cap at the beginning of a musical passage](./images/guide-drop-caps-example-1.png)
-
-## Format rich text
-
-Use the rich-text toolbar to change the selected text or the paragraph containing the cursor. Character formatting, such as bold or color applied to a selection, can coexist with the paragraph's style.
-
-### Link to another place in the score
-
-You can create a link that jumps to a score element in an exported PDF:
-
-1. Select the destination element.
-2. Choose `Edit > Copy Element Link`.
-3. Select the text that should become the link.
-4. Choose the link control in the rich-text toolbar and paste the copied value into `Link URL`.
-
-### Add lists and horizontal lines
-
-Use the bulleted-list or numbered-list control to create a list. Numbered lists can begin at a custom number, run in reverse, and use different numbering styles.
-
-Use the horizontal-line control to add a divider between sections of a rich text box.
+For instructions on inserting and editing text boxes, drop caps, images, annotations, and alternate musical lines, see [Text, Images, Annotations, and Alternate Lines](/guide/text-and-images.html).
 
 ## Use paragraph styles
 

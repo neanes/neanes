@@ -125,7 +125,7 @@ For the musical content or playback behavior of one initial martyria, select it 
 
 Use **Drop Caps** to set **Lines to Drop**, the initial line span for newly inserted drop caps. To change an existing drop cap, select it and change **Lines to Drop** in Properties.
 
-You can change the appearance of drop caps through the built-in Drop Cap paragraph style. See [Text, Images, and Paragraph Styles](/guide/text-and-styles.html#use-paragraph-styles).
+You can change the appearance of drop caps through the built-in Drop Cap paragraph style. See [Paragraph Styles](/guide/text-and-styles.html#use-paragraph-styles).
 
 ### Choose text fonts
 

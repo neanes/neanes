@@ -47,6 +47,6 @@ Use `File > Save` to save the editable score. Then choose `File > Export > Expor
 - [Learn the editor](/guide/editor-basics.html), including selection, panes, and entry modes.
 - [Write music](/guide/writing-music.html), including martyriæ, supporting signs, and line control.
 - [Work with lyrics](/guide/lyrics.html), including the Lyrics pane and prosomoia.
-- [Add text, images, and paragraph styles](/guide/text-and-styles.html).
+- [Add text, images, annotations, and alternate lines](/guide/text-and-images.html), then [keep text consistent with paragraph styles](/guide/text-and-styles.html).
 - [Set up pages](/guide/page-layout.html) and [choose file formats](/guide/saving-and-exporting.html).
 - [Configure playback](/guide/playback.html) or explore [advanced workflows](/guide/advanced.html).

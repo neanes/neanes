@@ -123,7 +123,7 @@ Choose `Save Current Melismas` in the Lyrics pane to set `Accepts Lyrics` throug
 
 Select a lyric beneath a neume to use the text controls in the bottom toolbar. You can apply a paragraph style, choose a font and size, add bold, italic, or underline formatting, and insert the supplied special characters. The Properties pane contains additional settings for the selected lyric.
 
-For consistent formatting throughout the score, choose `Format > Paragraph Styles` and modify the built-in **Lyrics** style instead of formatting each neume separately. See [Apply a paragraph style](/guide/text-and-styles.html#apply-a-paragraph-style).
+For consistent formatting throughout the score, choose `Format > Paragraph Styles` and modify the built-in **Lyrics** style instead of formatting each neume separately. See [Apply a style](/guide/text-and-styles.html#apply-a-style).
 
 ## Create a prosomoion from an automelon
 

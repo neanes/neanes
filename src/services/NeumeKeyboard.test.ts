@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+
 import { describe, expect, it } from 'vitest';
 
 import type { Neume } from '../models/Neumes';
@@ -15,8 +17,53 @@ import {
   VocalExpressionNeume,
 } from '../models/Neumes';
 import { NeumeKeyboard } from './NeumeKeyboard';
+import { generateNeumeKeyboardDocumentation } from './NeumeKeyboardDocumentation';
 
 describe('NeumeKeyboard', () => {
+  it('keeps the keyboard reference synchronized with the mappings', async () => {
+    const startMarker = '<!-- BEGIN GENERATED KEYBOARD REFERENCE -->';
+    const endMarker = '<!-- END GENERATED KEYBOARD REFERENCE -->';
+    const keyboard = new NeumeKeyboard();
+    const generated = generateNeumeKeyboardDocumentation(
+      keyboard.getDocumentationSource(),
+    );
+    const documentation = await readFile(
+      new URL('../../docs/guide/keyboard.md', import.meta.url),
+      'utf8',
+    );
+    const documented = documentation
+      .slice(
+        documentation.indexOf(startMarker) + startMarker.length,
+        documentation.indexOf(endMarker),
+      )
+      .trim();
+    const normalizeMarkdown = (value: string) =>
+      value
+        .trim()
+        .split('\n')
+        .map((line) =>
+          line.startsWith('|')
+            ? line
+                .split('|')
+                .map((cell) => {
+                  const value = cell.trim();
+
+                  if (/^:?-+:?$/.test(value)) {
+                    return `${value.startsWith(':') ? ':' : ''}-${value.endsWith(':') ? ':' : ''}`;
+                  }
+
+                  return value;
+                })
+                .join('|')
+            : line.trimEnd(),
+        )
+        .join('\n');
+
+    expect(documentation).toContain(startMarker);
+    expect(documentation).toContain(endMarker);
+    expect(normalizeMarkdown(documented)).toBe(normalizeMarkdown(generated));
+  });
+
   it('should have a mapping for every neume that is not in the list of exceptions', () => {
     const exceptions: Neume[] = [
       Note.NiLow,

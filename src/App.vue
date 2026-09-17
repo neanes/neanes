@@ -212,6 +212,10 @@ onBeforeUnmount(() => {
 <style>
 :root {
   --zoom: 1;
+  /* Scales the fixed, unzoomed part of a withZoomOffset() length. It is the
+     residue of a measurement taken at the current --zoom, so it only applies
+     where that zoom applies. */
+  --zoom-residue: 1;
 }
 
 #app {
@@ -225,6 +229,9 @@ onBeforeUnmount(() => {
 @media print {
   :root {
     --zoom: 1 !important;
+    /* Text is laid out at its canonical font size here, so there is no
+       rounding residue to correct. */
+    --zoom-residue: 0 !important;
   }
 
   body {

@@ -490,12 +490,8 @@ const editorPreferencesHydrated = ref(false);
 const isDevelopment = ref(import.meta.env.DEV);
 const isBrowser = ref(!isElectron());
 const isLoading = ref(true);
-// How the pages are being rendered while an export or print job runs. The
-// browser applies @media print, which forces --zoom to 1, when it renders for
-// the printer or for PDF. The image export captures the live DOM instead, so
-// the current zoom still applies there.
-const printRenderTarget = ref<'print-media' | 'image' | null>(null);
-const printMode = computed(() => printRenderTarget.value != null);
+// Whether an export or print job is rendering the pages.
+const printMode = ref(false);
 const canUndo = ref(false);
 const canRedo = ref(false);
 const developerPaneOpenSections = computed({
@@ -2221,11 +2217,10 @@ function getParagraphStyleMetricShifts(
 }
 
 const displayedLyricMetricsContext = computed(() => {
-  // @media print resets --zoom to 1, so text is laid out at its canonical
-  // font size when the browser renders for the printer or for PDF. The image
-  // export captures the live DOM instead, where the current zoom applies.
-  const displayedZoom =
-    printRenderTarget.value === 'print-media' ? 1 : zoom.value;
+  // The residues below describe what the browser does at this zoom. Print and
+  // PDF render at the canonical size instead, and --zoom-residue drops them
+  // there, so this does not have to anticipate the render target.
+  const displayedZoom = zoom.value;
   const caches: LyricMetricsCaches = {
     styleShifts: new Map<string, FontMetricShifts>(),
     dropCapShifts: new Map<string, FontMetricShifts>(),
@@ -8555,7 +8550,7 @@ function onFileMenuDocumentProperties() {
 async function onFileMenuPrint() {
   prepareWorkspaceForSerialization(selectedWorkspace.value);
 
-  printRenderTarget.value = 'print-media';
+  printMode.value = true;
 
   // Blur the active element so that focus outlines and
   // blinking cursors don't show up in the printed page
@@ -8572,7 +8567,7 @@ async function onFileMenuPrint() {
       // unhandled and leave the editor stuck in print mode.
       console.error(error);
     } finally {
-      printRenderTarget.value = null;
+      printMode.value = false;
       window.document.title = previousTitle;
 
       // Re-focus the active element
@@ -8584,7 +8579,7 @@ async function onFileMenuPrint() {
 async function onFileMenuExportAsPdf() {
   prepareWorkspaceForSerialization(selectedWorkspace.value);
 
-  printRenderTarget.value = 'print-media';
+  printMode.value = true;
 
   // Blur the active element so that focus outlines and
   // blinking cursors don't show up in the printed page
@@ -8617,7 +8612,7 @@ async function onFileMenuExportAsPdf() {
       },
     );
   } finally {
-    printRenderTarget.value = null;
+    printMode.value = false;
     window.document.title = previousTitle;
 
     // Re-focus the active element
@@ -8667,7 +8662,7 @@ async function exportAsPng(args: ExportAsPngSettings) {
     return;
   }
 
-  printRenderTarget.value = 'image';
+  printMode.value = true;
   exportInProgress.value = true;
   const toastId = toast.loading(
     t(($) => $.toast.export.pngLoading, { ns: 'toast' }),
@@ -8789,7 +8784,7 @@ async function exportAsPng(args: ExportAsPngSettings) {
       },
     );
   } finally {
-    printRenderTarget.value = null;
+    printMode.value = false;
     exportInProgress.value = false;
     closeExportDialog();
     // Re-focus the active element

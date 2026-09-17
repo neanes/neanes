@@ -39,6 +39,9 @@ export default defineConfig({
   ],
   themeConfig: {
     logo: '/favicon.ico',
+    search: {
+      provider: 'local',
+    },
     footer: {
       message: 'GPL 3.0 Licensed',
       copyright: 'Copyright © 2020-present danielgarthur',

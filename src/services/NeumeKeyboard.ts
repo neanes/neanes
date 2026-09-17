@@ -16,9 +16,9 @@ import {
 } from '@/models/Neumes';
 import { Scale } from '@/models/Scales';
 
-import { NeumeMappingService } from './NeumeMappingService';
+import type { NeumeKeyboardDocumentationSource } from './NeumeKeyboardDocumentation';
 
-interface KeyboardMapping {
+export interface KeyboardMapping {
   code: string;
   modifier?: string;
   shiftKey?: boolean;
@@ -99,8 +99,6 @@ export class NeumeKeyboard {
     this.initMartyriaTempoKeyboardMap();
     this.initMeasureBarKeyboardMap();
     this.initMartyriaConfigKeyboardMap();
-
-    // this.__generateDocumentation();
   }
 
   private initQuantitativeNeumeKeyboardMap() {
@@ -1483,180 +1481,42 @@ export class NeumeKeyboard {
     return result;
   }
 
-  private __generateDocumentation() {
-    const result: string[] = [];
-
-    result.push('| Key | Description |\n');
-    result.push('| --- | ----------- |\n');
-    result.push(
-      `| <kbd> ${this.__formatKeyForDocs(
-        this.noteIndicatorKey,
-      )} </kbd> | Ison Indicators |\n`,
-    );
-    result.push(
-      `| <kbd> ${this.__formatKeyForDocs(
-        this.accidentalKey,
-      )} </kbd> | Signs of Alteration |\n`,
-    );
-    result.push(
-      `| <kbd> ${this.__formatKeyForDocs(
-        this.kentimataKey,
-      )} </kbd> | Kentimata |\n`,
-    );
-    result.push(
-      `| <kbd> ${this.__formatKeyForDocs(this.fthoraKey)} </kbd> | Fthoræ |\n`,
-    );
-
-    result.push(
-      `| <kbd> ${this.__formatKeyForDocs(
-        this.isonKey,
-      )} </kbd> | Ison Indicators |\n`,
-    );
-
-    result.push(
-      `| <kbd> ${this.__formatKeyForDocs(
-        this.modifier1,
-      )} </kbd> | Quantity Modifier 1 |\n`,
-    );
-
-    result.push(
-      `| <kbd> ${this.__formatKeyForDocs(
-        this.modifier2,
-      )} </kbd> | Quantity Modifier 2 |\n`,
-    );
-
-    result.push(
-      `| <kbd> ${this.__formatKeyForDocs(
-        this.modifier3,
-      )} </kbd> | Quantity Modifier 3 |\n`,
-    );
-
-    result.push(
-      `| <kbd> ${this.__formatKeyForDocs(this.gorgonKey)} </kbd> | Gorgons |\n`,
-    );
-
-    result.push(
-      `| <kbd> ${this.__formatKeyForDocs(this.tempoKey)} </kbd> | Tempo |\n`,
-    );
-
-    result.push(
-      `| <kbd> ${this.__formatKeyForDocs(
-        this.vocalExpressionKey,
-      )} </kbd> | Quality |\n`,
-    );
-
-    result.push(
-      `| <kbd> ${this.__formatKeyForDocs(this.hapliKey)} </kbd> | Apli |\n`,
-    );
-
-    result.push('\n');
-
-    this.__generateMappingTableForDocs(
-      result,
-      'Characters of Quantity',
-      this.quantitativeNeumeKeyboardMap,
-    );
-
-    this.__generateMappingTableForDocs(
-      result,
-      'Characters of Quality',
-      this.vocalExpressionKeyboardMap,
-    );
-
-    this.__generateMappingTableForDocs(
-      result,
-      'Characters of Temporal Augmentation',
-      this.hapliKeyboardMap,
-    );
-
-    // Add klasma to previous table
-    result.push(
-      `| <span class="neume"> ${
-        NeumeMappingService.getMapping(TimeNeume.Klasma_Top).text
-      } </span> | <kbd> ${this.__formatKeyForDocs(this.klasmaKey)} </kbd> |\n`,
-    );
-
-    this.__generateMappingTableForDocs(
-      result,
-      'Characters of Temporal Division',
-      this.gorgonKeyboardMap,
-    );
-
-    this.__generateMappingTableForDocs(
-      result,
-      'Characters of Tempo',
-      this.tempoKeyboardMap,
-    );
-
-    result.push('## Martyriæ of the Notes\n\n');
-    result.push('| Neume | Keyboard Shortcut |\n');
-    result.push('| ----- | ----------------- |\n');
-    result.push(
-      `| Auto-calculated Martyria | <kbd> ${this.__formatKeyForDocs(
-        this.martyriaKey,
-      )} </kbd> |\n`,
-    );
-
-    this.__generateMappingTableForDocs(
-      result,
-      'Fthoræ',
-      this.fthoraKeyboardMap,
-    );
-
-    this.__generateMappingTableForDocs(
-      result,
-      'Signs of Alteration',
-      this.accidentalKeyboardMap,
-    );
-
-    this.__generateMappingTableForDocs(
-      result,
-      'Ison Indicators',
-      this.isonKeyboardMap,
-    );
-
-    this.__generateMappingTableForDocs(
-      result,
-      'Measures',
-      this.measureNumberKeyboardMap.concat(this.measureBarKeyboardMap),
-    );
-
-    (window as any).keyboardDocs = result.join('');
-  }
-
-  private __generateMappingTableForDocs(
-    result: string[],
-    title: string,
-    mappings: KeyboardMapping[],
-  ) {
-    result.push(`## ${title}\n\n`);
-    result.push('| Neume | Keyboard Shortcut |\n');
-    result.push('| ----- | ----------------- |\n');
-
-    for (const mapping of mappings) {
-      result.push('|');
-
-      result.push(
-        `<span class="neume">${
-          NeumeMappingService.getMapping(mapping.neume || mapping.neumes![0])
-            .text
-        }</span>`,
-      );
-      result.push('|');
-
-      if (mapping.shiftKey) {
-        result.push('<kbd>Shift</kbd> +');
-      }
-
-      if (mapping.modifier != null && mapping.modifier !== mapping.code) {
-        result.push(
-          `<kbd>${this.__formatKeyForDocs(mapping.modifier)}</kbd> +`,
-        );
-      }
-
-      result.push(`<kbd>${this.__formatKeyForDocs(mapping.code)}</kbd>`);
-      result.push('|\n');
-    }
+  public getDocumentationSource(): NeumeKeyboardDocumentationSource {
+    return {
+      modifiers: [
+        { code: this.noteIndicatorKey, description: 'Note Indicators' },
+        { code: this.measureBarKey, description: 'Measure Bars' },
+        { code: this.accidentalKey, description: 'Signs of Alteration' },
+        { code: this.kentimataKey, description: 'Kentemata' },
+        { code: this.fthoraKey, description: 'Fthoras' },
+        { code: this.isonKey, description: 'Ison Indicators' },
+        { code: this.modifier1, description: 'Quantity Modifier 1' },
+        { code: this.modifier2, description: 'Quantity Modifier 2' },
+        { code: this.modifier3, description: 'Quantity Modifier 3' },
+        { code: this.gorgonKey, description: 'Gorgons' },
+        { code: this.martyriaScaleKey, description: 'Martyria Scales' },
+        { code: this.tempoKey, description: 'Tempo' },
+        { code: this.martyriaConfigKey, description: 'Martyria Notes' },
+        { code: this.vocalExpressionKey, description: 'Quality' },
+        { code: this.hapliKey, description: 'Temporal Augmentation' },
+      ],
+      noteIndicatorKey: this.noteIndicatorKey,
+      martyriaKey: this.martyriaKey,
+      klasmaKey: this.klasmaKey,
+      quantitativeMappings: this.quantitativeNeumeKeyboardMap,
+      vocalExpressionMappings: this.vocalExpressionKeyboardMap,
+      tieMappings: this.tieKeyboardMap,
+      hapliMappings: this.hapliKeyboardMap,
+      gorgonMappings: this.gorgonKeyboardMap,
+      tempoMappings: this.tempoKeyboardMap,
+      martyriaTempoMappings: this.martyriaTempoKeyboardMap,
+      martyriaConfigMappings: this.martyriaConfigKeyboardMap,
+      fthoraMappings: this.fthoraKeyboardMap,
+      accidentalMappings: this.accidentalKeyboardMap,
+      isonMappings: this.isonKeyboardMap,
+      measureBarMappings: this.measureBarKeyboardMap,
+      measureNumberMappings: this.measureNumberKeyboardMap,
+    };
   }
 
   private __formatKeyForDocs(input: string) {

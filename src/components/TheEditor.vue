@@ -2148,7 +2148,7 @@ function getFooterHorizontalRuleStyle(page: Page, footerHeight: number) {
 
 // The style properties the lyrics span and the leading-hyphen span share: the
 // resolved lyrics style plus the element's vertical metrics.
-function getDisplayedLyricFontMetrics(
+function getCachedFontVerticalMetrics(
   fontMetrics: Map<string, FontVerticalMetrics>,
   font: string,
 ) {
@@ -2173,11 +2173,11 @@ const displayedLyricMetricsContext = computed(() => {
   const fontMetrics = new Map<string, FontVerticalMetrics>();
 
   return {
-    canonicalDefaultAscent: getDisplayedLyricFontMetrics(
+    canonicalDefaultAscent: getCachedFontVerticalMetrics(
       fontMetrics,
       defaultLyricsFont,
     ).ascent,
-    displayedDefaultAscent: getDisplayedLyricFontMetrics(
+    displayedDefaultAscent: getCachedFontVerticalMetrics(
       fontMetrics,
       displayedDefaultLyricsFont,
     ).ascent,
@@ -2195,7 +2195,7 @@ function getDisplayedLyricGeometry(
     ...resolvedLyricsStyle,
     fontSize: resolvedLyricsStyle.fontSize * context.zoom,
   });
-  const displayedLyricsMetrics = getDisplayedLyricFontMetrics(
+  const displayedLyricsMetrics = getCachedFontVerticalMetrics(
     context.fontMetrics,
     displayedLyricsFont,
   );
@@ -2214,6 +2214,59 @@ function getDisplayedLyricGeometry(
     height: displayedLyricsMetrics.height,
     top: baseline - displayedLyricsMetrics.ascent,
   };
+}
+
+function getLineBoxBaselineOffset(
+  metrics: FontVerticalMetrics,
+  lineBoxHeight: number,
+) {
+  return metrics.ascent + (lineBoxHeight - metrics.height) / 2;
+}
+
+function getDropCapFont(element: DropCapElement, fontSize: number) {
+  const fontFamily = getFontFamilyWithFallback(element.computedFontFamily);
+
+  return `${element.computedFontStyle} normal ${element.computedFontWeight} ${fontSize}px ${fontFamily}`;
+}
+
+function getDisplayedDropCapTop(element: DropCapElement) {
+  const context = displayedLyricMetricsContext.value;
+  const canonicalFont = getDropCapFont(element, element.computedFontSize);
+  const displayedFont = getDropCapFont(
+    element,
+    element.computedFontSize * context.zoom,
+  );
+  const canonicalMetrics = getCachedFontVerticalMetrics(
+    context.fontMetrics,
+    canonicalFont,
+  );
+  const displayedMetrics = getCachedFontVerticalMetrics(
+    context.fontMetrics,
+    displayedFont,
+  );
+  const canonicalLineBoxHeight =
+    element.computedLineHeight! * element.computedFontSize;
+  const canonicalBaselineOffset = getLineBoxBaselineOffset(
+    canonicalMetrics,
+    canonicalLineBoxHeight,
+  );
+  const displayedBaselineOffset = getLineBoxBaselineOffset(
+    displayedMetrics,
+    canonicalLineBoxHeight * context.zoom,
+  );
+  const displayedLyricsBaselineCorrection =
+    context.displayedDefaultAscent -
+    context.canonicalDefaultAscent * context.zoom;
+
+  // Preserve the baseline rendered at 100% while measuring the drop cap at
+  // its displayed size. Apply the same screen-space correction as lyrics so
+  // the last lyric line and the drop cap remain on the same baseline.
+  return (
+    element.y * context.zoom +
+    canonicalBaselineOffset * context.zoom -
+    displayedBaselineOffset +
+    displayedLyricsBaselineCorrection
+  );
 }
 
 function getLyricStyleBase(element: NoteElement): CSSProperties {
@@ -2481,7 +2534,9 @@ function getElementStyle(element: ScoreElement) {
   return {
     left: !rtl.value ? withZoom(element.x) : undefined,
     right: rtl.value ? withZoom(element.x) : undefined,
-    top: withZoom(element.y),
+    top: isDropCapElement(element)
+      ? `${getDisplayedDropCapTop(element)}px`
+      : withZoom(element.y),
   } as StyleValue;
 }
 

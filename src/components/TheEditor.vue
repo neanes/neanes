@@ -2180,8 +2180,10 @@ function getFontMetricShifts(
   zoomValue: number,
 ): FontMetricShifts {
   const canonical = TextMeasurementService.getCachedFontVerticalMetrics(font);
+  // Not cached for the session: every zoom value would add an entry. The
+  // caller's per-zoom caches already avoid repeat measurements.
   const displayed =
-    TextMeasurementService.getCachedFontVerticalMetrics(displayedFont);
+    TextMeasurementService.getFontVerticalMetrics(displayedFont);
 
   return {
     canonical,

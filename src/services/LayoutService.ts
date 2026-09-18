@@ -1614,9 +1614,12 @@ export class LayoutService {
                 neumeLineHeight,
               )
             : 0;
+        // A line alone on its page stays there even if it overflows, since
+        // moving it would leave the page empty.
         const requiresNewPage =
           startsNewLine &&
-          (currentPageHeightPx + additionalHeight > innerPageHeight ||
+          ((page.lines.length > 1 &&
+            currentPageHeightPx + additionalHeight > innerPageHeight) ||
             lastElementWasPageBreak);
 
         // Keep multiline drop caps on the same page as their continuation lines

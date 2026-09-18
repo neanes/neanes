@@ -13,6 +13,18 @@ export interface InkBounds {
   rightOverhang: number;
 }
 
+export interface FontVerticalMetrics {
+  ascent: number;
+  descent: number;
+  height: number;
+}
+
+// Share vertical metrics by font shorthand (including size) for the session.
+// initialize() in TheEditor.vue preloads bundled faces before loading documents.
+// System-font aliases are registered on demand, so this cache assumes the
+// resolved face is available when first measured and does not change afterward.
+const fontVerticalMetricsCache = new Map<string, FontVerticalMetrics>();
+
 // The canvas font shorthand cannot express font-variant-caps values other
 // than small-caps, so caps are applied through the context's fontVariantCaps
 // property instead. The owned CSS keywords are all valid canvas values;
@@ -102,23 +114,41 @@ export class TextMeasurementService {
   }
 
   public static getFontHeight(font: string) {
-    const context = this.prepareContext(font);
+    return this.getFontVerticalMetrics(font).height;
+  }
 
+  public static getFontVerticalMetrics(font: string): FontVerticalMetrics {
+    const context = this.prepareContext(font);
     const metrics = context.measureText('');
-    return metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
+    const ascent = metrics.fontBoundingBoxAscent;
+    const descent = metrics.fontBoundingBoxDescent;
+
+    return {
+      ascent,
+      descent,
+      height: ascent + descent,
+    };
   }
 
   public static getFontBoundingBoxDescent(font: string) {
-    const context = this.prepareContext(font);
-
-    const metrics = context.measureText('');
-    return metrics.fontBoundingBoxDescent;
+    return this.getFontVerticalMetrics(font).descent;
   }
 
   public static getFontBoundingBoxAscent(font: string) {
-    const context = this.prepareContext(font);
+    return this.getFontVerticalMetrics(font).ascent;
+  }
 
-    const metrics = context.measureText('');
-    return metrics.fontBoundingBoxAscent;
+  public static getCachedFontVerticalMetrics(
+    font: string,
+  ): FontVerticalMetrics {
+    let metrics = fontVerticalMetricsCache.get(font);
+
+    if (metrics == null) {
+      metrics = this.getFontVerticalMetrics(font);
+
+      fontVerticalMetricsCache.set(font, metrics);
+    }
+
+    return metrics;
   }
 }

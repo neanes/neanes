@@ -1,3 +1,7 @@
+import {
+  createModeKeyElementFromAttributes,
+  deserializeModeKeyAttributes,
+} from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import type {
   DropCapElement,
   ImageBoxElement,
@@ -14,7 +18,10 @@ import {
   isRightAlignedMartyria,
   LineBreakType,
 } from '@/models/Element';
-import { resolveScoreInitialMartyriaStyle } from '@/models/InitialMartyriaResolver';
+import {
+  resolveModeKeyInitialMartyriaStyle,
+  resolveScoreInitialMartyriaStyle,
+} from '@/models/InitialMartyriaResolver';
 import type {
   InitialMartyriaAppearance,
   InitialMartyriaStyle,
@@ -53,6 +60,7 @@ import {
 import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import { Unit } from '@/utils/Unit';
 
+import { LayoutService } from '../LayoutService';
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
 import type { SbmuflGlyphName } from '../NeumeMappingService';
 import { NeumeMappingService } from '../NeumeMappingService';
@@ -691,10 +699,14 @@ export class ByzHtmlExporter {
           result += this.exportRichTextBox(
             element as RichTextBoxElement,
             indentation,
+            pageSetup,
+            paragraphStyles,
+            initialMartyriaStyles,
+            defaultModeKeyAppearance,
           );
           break;
         case ElementType.ModeKey:
-          if (insidePage && !(element as ModeKeyElement).inline) {
+          if (insidePage) {
             result += this.endPage(indentation + 2, needLineBreak);
             insidePage = false;
           }
@@ -1184,7 +1196,14 @@ export class ByzHtmlExporter {
     }</div\n${this.getIndentationString(indentation)}>`;
   }
 
-  exportRichTextBox(element: RichTextBoxElement, indentation: number) {
+  exportRichTextBox(
+    element: RichTextBoxElement,
+    indentation: number,
+    pageSetup?: PageSetup,
+    paragraphStyles: ParagraphStyle[] = [],
+    initialMartyriaStyles: InitialMartyriaStyle[] = [],
+    defaultModeKeyAppearance?: InitialMartyriaAppearance,
+  ) {
     let className = this.config.classRichTextBox;
 
     if (element.inline) {
@@ -1195,15 +1214,65 @@ export class ByzHtmlExporter {
       getRichTextLanguage(element),
     );
 
-    return `<div class="${className}"${languageAttributes}>${
-      element.content
-    }</div\n${this.getIndentationString(indentation)}>`;
+    const content =
+      pageSetup == null || defaultModeKeyAppearance == null
+        ? element.content
+        : this.exportEmbeddedModeKeys(
+            element.content,
+            pageSetup,
+            paragraphStyles,
+            initialMartyriaStyles,
+            defaultModeKeyAppearance,
+            indentation,
+          );
+
+    return `<div class="${className}"${languageAttributes}>${content}</div\n${this.getIndentationString(indentation)}>`;
+  }
+
+  private exportEmbeddedModeKeys(
+    html: string,
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    initialMartyriaStyles: InitialMartyriaStyle[],
+    defaultAppearance: InitialMartyriaAppearance,
+    indentation: number,
+  ) {
+    return html.replace(
+      /<span\b(?=[^>]*\bclass="[^"]*\bneanes-ck-mode-key\b[^"]*")([^>]*)><\/span>/gu,
+      (source, attributes: string) => {
+        const payload = attributes.match(
+          /data-neanes-mode-key=(['"])(.*?)\1/u,
+        )?.[2];
+        const modeKeyAttributes = deserializeModeKeyAttributes(payload);
+
+        if (modeKeyAttributes == null) {
+          return source;
+        }
+
+        const modeKey = createModeKeyElementFromAttributes(modeKeyAttributes);
+        const resolvedStyle = resolveModeKeyInitialMartyriaStyle({
+          element: modeKey,
+          pageSetup,
+          paragraphStyles,
+          initialMartyriaStyles,
+        });
+        LayoutService.layoutModeKey(modeKey, pageSetup, resolvedStyle);
+
+        return this.exportModeKey(
+          modeKey,
+          defaultAppearance,
+          indentation,
+          true,
+        );
+      },
+    );
   }
 
   exportModeKey(
     element: ModeKeyElement,
     defaultAppearance: InitialMartyriaAppearance,
     indentation: number,
+    embedded = false,
   ) {
     let inner = '';
 
@@ -1248,7 +1317,7 @@ export class ByzHtmlExporter {
 
     let rightContainer = false;
 
-    if (element.showAmbitus && !element.inline) {
+    if (element.showAmbitus) {
       inner += `<span class="${this.config.classModeKeyRightContainer}">`;
       rightContainer = true;
 
@@ -1285,12 +1354,7 @@ export class ByzHtmlExporter {
       inner += '</span>';
     }
 
-    if (
-      element.tempo &&
-      element.tempoAlignRight &&
-      !element.inline &&
-      !rightContainer
-    ) {
+    if (element.tempo && element.tempoAlignRight && !rightContainer) {
       inner += `<span class="${this.config.classModeKeyRightContainer}">`;
       rightContainer = true;
     }
@@ -1324,13 +1388,13 @@ export class ByzHtmlExporter {
 
     styleAttribute = ` style="${style}"`;
 
-    const className = element.inline
-      ? `${this.config.classModeKey} ${this.config.classTextBoxInline}`
-      : this.config.classModeKey;
+    const className = this.config.classModeKey;
 
-    return `<div class="${className}"${styleAttribute}\n${this.getIndentationString(
+    const tag = embedded ? 'span' : 'div';
+
+    return `<${tag} class="${className}"${styleAttribute}\n${this.getIndentationString(
       indentation + 2,
-    )}>${inner}</div\n${this.getIndentationString(indentation)}>`;
+    )}>${inner}</${tag}\n${this.getIndentationString(indentation)}>`;
   }
 
   exportImageBox(element: ImageBoxElement, indentation: number) {
@@ -1441,8 +1505,7 @@ export class ByzHtmlExporter {
       if (
         element.lineBreak ||
         element.pageBreak ||
-        (element.elementType === ElementType.ModeKey &&
-          !(element as ModeKeyElement).inline)
+        element.elementType === ElementType.ModeKey
       ) {
         return false;
       }

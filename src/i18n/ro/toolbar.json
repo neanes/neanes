@@ -110,7 +110,7 @@
   "textbox": {
     "multipanel": "Multipanou",
     "scrollable": "Derulabil",
-    "modeChange": "Schimbă glasul",
+    "modeChange": "Suprascrierea schimbării glasului",
     "virtualNote": "Notă de paralaghie",
     "centerOnPage": "Centrează pe pagină",
     "offsetYTop": "Offset Y sus",

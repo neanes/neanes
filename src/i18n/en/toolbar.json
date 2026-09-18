@@ -110,7 +110,7 @@
   "textbox": {
     "multipanel": "Multipanel",
     "scrollable": "Scrollable",
-    "modeChange": "Change Mode",
+    "modeChange": "Mode Change Override",
     "virtualNote": "Parallagē Note",
     "centerOnPage": "Center on Page",
     "offsetYTop": "Top Y Offset",

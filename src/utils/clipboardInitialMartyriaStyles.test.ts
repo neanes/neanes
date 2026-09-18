@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { ModeKeyElement, TextBoxElement } from '@/models/Element';
+import {
+  extractModeKeyElementsFromHtml,
+  serializeModeKeyAttributes,
+} from '@/ckeditor-plugins/insertmodekey/modekeydata';
+import {
+  ModeKeyElement,
+  RichTextBoxElement,
+  TextBoxElement,
+} from '@/models/Element';
 import {
   BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   createDefaultInitialMartyriaTypography,
@@ -57,6 +65,13 @@ function createModeKey(initialMartyriaStyleId: string | null) {
   return modeKey;
 }
 
+function createRichTextBoxWithModeKey(initialMartyriaStyleId: string) {
+  const richTextBox = new RichTextBoxElement();
+  const payload = serializeModeKeyAttributes({ initialMartyriaStyleId });
+  richTextBox.content = `<p><span class="neanes-ck-mode-key" data-neanes-mode-key="${payload}"></span></p>`;
+  return richTextBox;
+}
+
 describe('clipboardInitialMartyriaStyles', () => {
   it('collects the custom styles copied mode keys reference, as copies', () => {
     const parish = createCustomInitialMartyriaStyle(
@@ -86,6 +101,21 @@ describe('clipboardInitialMartyriaStyles', () => {
     expect(collected[0]).toEqual(parish);
     expect(collected[0]).not.toBe(parish);
     expect(collected[0].structure).not.toBe(parish.structure);
+  });
+
+  it('collects styles referenced by embedded mode keys', () => {
+    const parish = createCustomInitialMartyriaStyle(
+      'parish',
+      'Parish',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+
+    expect(
+      collectClipboardInitialMartyriaStylesFromElements(
+        [createRichTextBoxWithModeKey(parish.id)],
+        [parish],
+      ),
+    ).toEqual([parish]);
   });
 
   it('walks the collected styles when collecting paragraph styles', () => {
@@ -326,5 +356,25 @@ describe('clipboardInitialMartyriaStyles', () => {
     );
 
     expect(modeKey.initialMartyriaStyleId).toBe(parish.id);
+  });
+
+  it('remaps embedded mode keys to the destination style', () => {
+    const parish = createCustomInitialMartyriaStyle(
+      'target-parish',
+      'Parish',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+    const richTextBox = createRichTextBoxWithModeKey('clipboard-parish');
+
+    rewriteClipboardElementInitialMartyriaStyleId(
+      richTextBox,
+      [parish],
+      new Map([['clipboard-parish', parish.id]]),
+    );
+
+    expect(
+      extractModeKeyElementsFromHtml(richTextBox.content)[0]
+        .initialMartyriaStyleId,
+    ).toBe(parish.id);
   });
 });

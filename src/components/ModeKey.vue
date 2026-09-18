@@ -1,6 +1,8 @@
 <template>
-  <div
+  <component
+    :is="embedded ? 'span' : 'div'"
     class="mode-key-container"
+    :class="{ embedded }"
     :style="style"
     @click="$emit('select-single')"
   >
@@ -156,9 +158,7 @@
         />
       </span>
       <Neume
-        v-if="
-          element.tempo != null && (!element.tempoAlignRight || element.inline)
-        "
+        v-if="element.tempo != null && (!element.tempoAlignRight || embedded)"
         :neume="element.tempo"
         :style="tempoStyle"
       />
@@ -174,7 +174,7 @@
         aria-hidden="true"
       />
       <span
-        v-if="element.showAmbitus && !element.inline"
+        v-if="element.showAmbitus && !embedded"
         class="ambitus"
         :style="ambitusContainerStyle"
       >
@@ -192,14 +192,12 @@
       </span>
 
       <Neume
-        v-if="
-          element.tempo != null && element.tempoAlignRight && !element.inline
-        "
+        v-if="element.tempo != null && element.tempoAlignRight && !embedded"
         :neume="element.tempo"
         :style="tempoStyle"
       />
     </span>
-  </div>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -232,6 +230,10 @@ const props = defineProps({
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
+  },
+  embedded: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -273,7 +275,13 @@ const mainStyle = computed(() => {
   const verticalClipMargin = withZoom(-props.element.height);
   return {
     position: 'relative',
-    top: withZoom(props.element.computedFlowTop - props.element.computedTop),
+    // A standalone mode key is positioned inside a score-layout box whose top
+    // is independent of its text baseline. In CKEditor's inline formatting
+    // context, the browser already aligns this line box's alphabetic baseline
+    // with adjacent text, so applying the score-box offset would lift it twice.
+    top: props.embedded
+      ? 0
+      : withZoom(props.element.computedFlowTop - props.element.computedTop),
     clipPath:
       props.element.alignment === TextBoxAlignment.Right
         ? undefined
@@ -312,6 +320,10 @@ onMounted(() => {
 
 const style = computed(() => {
   return {
+    // Rich text editors zoom their complete editing surface with a transform.
+    // Let that transform scale an embedded key exactly once instead of also
+    // applying the document zoom to every internal ModeKey measurement.
+    '--zoom': props.embedded ? 1 : undefined,
     color: props.element.computedColor,
     fontFamily: props.element.computedFontFamily,
     fontSize: withZoom(props.element.computedFontSize),

@@ -20,7 +20,6 @@
     />
     <ToolbarSeparator />
     <ToggleGroup
-      v-if="!element.inline"
       type="single"
       variant="outline"
       :model-value="element.alignment"
@@ -60,14 +59,13 @@
         </ToggleGroupItem>
       </AppTooltip>
     </ToggleGroup>
-    <ToolbarSeparator v-if="!element.inline" />
+    <ToolbarSeparator />
     <ButtonWithMenu
       :options="tempoMenuOptions"
       :tooltip="$t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' })"
       @select="$emit('update:tempo', $event)"
     />
     <AppTooltip
-      v-if="!element.inline"
       :tooltip="
         $t(($) => $.toolbar.initialMartyria.rightAlignTempo, { ns: 'toolbar' })
       "

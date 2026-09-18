@@ -22,6 +22,8 @@
         @blur="onBlur"
         @ready="onEditorReadyMultipanelSide"
         @select-neume="emit('select-neume')"
+        @edit-mode-key="onEditModeKey"
+        @mode-key-change="update"
       />
       <RichTextEditor
         :key="`center-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
@@ -33,6 +35,8 @@
         @blur="onBlur"
         @ready="onEditorReady"
         @select-neume="emit('select-neume')"
+        @edit-mode-key="onEditModeKey"
+        @mode-key-change="update"
       />
       <RichTextEditor
         :key="`right-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
@@ -44,6 +48,8 @@
         @blur="onBlur"
         @ready="onEditorReadyMultipanelSide"
         @select-neume="emit('select-neume')"
+        @edit-mode-key="onEditModeKey"
+        @mode-key-change="update"
       />
     </div>
     <div v-else-if="element.inline" class="inline-container">
@@ -63,6 +69,8 @@
             @blur="onBlur"
             @ready="onEditorReadyInline"
             @select-neume="emit('select-neume')"
+            @edit-mode-key="onEditModeKey"
+            @mode-key-change="update"
           />
         </div>
       </div>
@@ -78,6 +86,8 @@
           @blur="onBlur"
           @ready="onEditorReadyInlineBottom"
           @select-neume="emit('select-neume')"
+          @edit-mode-key="onEditModeKey"
+          @mode-key-change="update"
         />
       </div>
     </div>
@@ -93,6 +103,8 @@
       @blur="onBlur"
       @ready="onEditorReady"
       @select-neume="emit('select-neume')"
+      @edit-mode-key="onEditModeKey"
+      @mode-key-change="update"
     />
     <RichTextEditor
       v-else
@@ -106,6 +118,8 @@
       @blur="onBlur"
       @ready="onEditorReady"
       @select-neume="emit('select-neume')"
+      @edit-mode-key="onEditModeKey"
+      @mode-key-change="update"
     />
   </div>
 </template>
@@ -124,15 +138,18 @@ import {
 } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
+import InsertModeKeyEditing from '@/ckeditor-plugins/insertmodekey/insertmodekeyediting';
 import RichTextEditor from '@/components/RichTextEditor.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
 import { useRichTextParagraphStyleDefinitions } from '@/composables/useRichTextParagraphStyleDefinitions';
 import type InlineEditor from '@/customEditor';
 import type {
+  ModeKeyElement,
   RichTextBoxContentKey,
   RichTextBoxElement,
 } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import {
   getTextBoxParagraphStyleFallbackId,
@@ -163,6 +180,7 @@ const emit = defineEmits([
   'update:height',
   'select-single',
   'select-neume',
+  'edit-mode-key',
 ]);
 const props = defineProps({
   element: {
@@ -179,6 +197,10 @@ const props = defineProps({
   },
   paragraphStyles: {
     type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
     required: true,
   },
   editMode: {
@@ -206,6 +228,10 @@ const props = defineProps({
     default: 'en',
   },
 });
+
+function onEditModeKey(editor: InlineEditor, element: ModeKeyElement) {
+  emit('edit-mode-key', editor, element);
+}
 
 const container = useTemplateRef<HTMLElement>('container');
 const editorRef =
@@ -328,8 +354,27 @@ const editorConfig = computed((): EditorConfig => {
       defaultFontSize: resolvedParagraphStyle.value.fontSize,
       defaultFontFamily: resolvedParagraphStyle.value.fontFamily,
     },
+    insertModeKey: {
+      getPageSetup: () => props.pageSetup,
+      getParagraphStyles: () => props.paragraphStyles,
+      getInitialMartyriaStyles: () => props.initialMartyriaStyles,
+    },
   };
 });
+
+watch(
+  [
+    () => props.pageSetup,
+    () => props.paragraphStyles,
+    () => props.initialMartyriaStyles,
+  ],
+  () => {
+    for (const editor of getActiveEditorInstances()) {
+      editor?.plugins.get(InsertModeKeyEditing).refreshMountedModeKeys();
+    }
+  },
+  { deep: true },
+);
 
 const content = computed(() => {
   return props.editMode || props.metadata == null

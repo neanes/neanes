@@ -1913,7 +1913,6 @@ export class SaveService {
     element.bpm = e.bpm;
     element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.showAmbitus = e.showAmbitus || undefined;
-    element.inline = e.inline || undefined;
     element.initialMartyriaStyleId = e.initialMartyriaStyleId ?? undefined;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo || undefined;
   }
@@ -2940,7 +2939,6 @@ export class SaveService {
     element.bpm = e.bpm ?? 120;
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.showAmbitus = e.showAmbitus === true;
-    element.inline = e.inline === true;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo === true;
 
     // For backwards compatibility, we check the current mode key templates

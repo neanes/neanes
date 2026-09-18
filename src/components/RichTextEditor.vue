@@ -18,12 +18,19 @@ import type { EditorConfig } from 'ckeditor5';
 import { computed, onBeforeUnmount, useTemplateRef, watch } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
+import { MODE_KEY_ELEMENT } from '@/ckeditor-plugins/insertmodekey/insertmodekeyediting';
+import {
+  createModeKeyElementFromModel,
+  extractModeKeyElementsFromHtml,
+  getModeKeyModelAttributes,
+} from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import { NEUME_ELEMENT } from '@/ckeditor-plugins/insertneume/insertneumeediting';
 import {
   registerEditor,
   unregisterEditor,
 } from '@/composables/useRichTextEditorRegistry';
 import InlineEditor from '@/customEditor';
+import type { ModeKeyElement } from '@/models/Element';
 import { inferRichTextEditorDirection } from '@/utils/richTextLanguage';
 
 defineOptions({
@@ -40,6 +47,8 @@ const emit = defineEmits<{
   blur: [editor: InlineEditor];
   ready: [editor: InlineEditor];
   'select-neume': [];
+  'edit-mode-key': [editor: InlineEditor, element: ModeKeyElement];
+  'mode-key-change': [editor: InlineEditor];
 }>();
 
 const editorRef =
@@ -74,6 +83,7 @@ watch([() => props.modelValue, instance], ([next, editor]) => {
 let registeredEditor: InlineEditor | null = null;
 let unregisterFocusTracker: (() => void) | null = null;
 let unregisterViewClick: (() => void) | null = null;
+let unregisterEditableDoubleClick: (() => void) | null = null;
 let editorIsFocused = false;
 
 watch(
@@ -118,7 +128,17 @@ function onReady(editor: InlineEditor) {
   editorIsFocused = editor.ui.focusTracker.isFocused;
 
   refreshBaseDirection(editor);
-  editor.model.document.on('change:data', () => refreshBaseDirection(editor));
+  let modeKeySignature = getModeKeySignature(editor);
+  editor.model.document.on('change:data', () => {
+    refreshBaseDirection(editor);
+
+    const nextModeKeySignature = getModeKeySignature(editor);
+
+    if (nextModeKeySignature !== modeKeySignature) {
+      modeKeySignature = nextModeKeySignature;
+      emit('mode-key-change', editor);
+    }
+  });
 
   const onFocusChanged = (
     _event: unknown,
@@ -157,7 +177,47 @@ function onReady(editor: InlineEditor) {
     editor.editing.view.document.off('click', onViewClick);
   };
 
+  const editableElement = editor.ui.getEditableElement();
+  const onEditableDoubleClick = (event: MouseEvent) => {
+    if (
+      !(event.target instanceof Element) ||
+      event.target.closest('.neanes-ck-mode-key') == null
+    ) {
+      return;
+    }
+
+    window.setTimeout(() => {
+      if (registeredEditor !== editor) {
+        return;
+      }
+
+      const selectedElement =
+        editor.model.document.selection.getSelectedElement();
+
+      if (selectedElement?.name === MODE_KEY_ELEMENT) {
+        emit(
+          'edit-mode-key',
+          editor,
+          createModeKeyElementFromModel(selectedElement),
+        );
+      }
+    });
+  };
+
+  editableElement?.addEventListener('dblclick', onEditableDoubleClick);
+  unregisterEditableDoubleClick = () => {
+    editableElement?.removeEventListener('dblclick', onEditableDoubleClick);
+  };
+
   emit('ready', editor);
+}
+
+function getModeKeySignature(editor: InlineEditor) {
+  return JSON.stringify(
+    extractModeKeyElementsFromHtml(editor.getData()).map((element) =>
+      getModeKeyModelAttributes(element),
+    ),
+  );
 }
 
 function onDestroy(editor: InlineEditor) {
@@ -167,6 +227,8 @@ function onDestroy(editor: InlineEditor) {
 }
 
 function unregisterRichTextEditor() {
+  unregisterEditableDoubleClick?.();
+  unregisterEditableDoubleClick = null;
   unregisterViewClick?.();
   unregisterViewClick = null;
   unregisterFocusTracker?.();

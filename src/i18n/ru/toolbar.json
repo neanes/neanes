@@ -110,7 +110,7 @@
   "textbox": {
     "multipanel": "Три панели",
     "scrollable": "С прокруткой",
-    "modeChange": "Смена гласа",
+    "modeChange": "Переопределение смены гласа",
     "virtualNote": "Нота параллаги",
     "centerOnPage": "По центру страницы",
     "offsetYTop": "Смещение сверху по вертикали",

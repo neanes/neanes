@@ -110,7 +110,7 @@
   "textbox": {
     "multipanel": "Multipanel",
     "scrollable": "Dapat Digulir",
-    "modeChange": "Ubah Modus",
+    "modeChange": "Override Perubahan Modus",
     "virtualNote": "Nada Parallage",
     "centerOnPage": "Tengah di Halaman",
     "offsetYTop": "Offset Y Atas",

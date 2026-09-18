@@ -303,7 +303,6 @@ export class ModeKeyElement extends ScoreElement {
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
   public bpm: number = 120;
-  public inline: boolean | undefined = undefined;
   public initialMartyriaStyleId: string | undefined = undefined;
   public ignoreAttractions: boolean | undefined = undefined;
   public permanentEnharmonicZo: boolean | undefined = undefined;

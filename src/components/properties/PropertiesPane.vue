@@ -62,11 +62,16 @@
       :open-sections="openSections"
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
+      :initial-martyria-styles="initialMartyriaStyles"
       :source="richTextBoxSource"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:rich-text-box', richTextBoxElement, $event)"
       @open-paragraph-styles-dialog="
         emit('open-paragraph-styles-dialog', $event)
+      "
+      @open-mode-key-dialog="onOpenRichTextModeKeyDialog"
+      @open-initial-martyria-style-dialog="
+        emit('open-initial-martyria-style-dialog', null)
       "
     />
 
@@ -149,6 +154,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Editor } from 'ckeditor5';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
@@ -158,6 +164,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import type { ModeKeyElement } from '@/models/Element';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
@@ -211,6 +218,7 @@ const props = defineProps({
 
 const emit = defineEmits([
   'open-initial-martyria-style-dialog',
+  'open-rich-text-mode-key-dialog',
   'open-paragraph-styles-dialog',
   'update:open-sections',
   'update:annotation',
@@ -224,6 +232,10 @@ const emit = defineEmits([
   'update:tempo',
   'update:text-box',
 ]);
+
+function onOpenRichTextModeKeyDialog(editor: Editor, element: ModeKeyElement) {
+  emit('open-rich-text-mode-key-dialog', editor, element);
+}
 
 const textBoxElement = computed(() =>
   props.context.kind === 'text-box' ? props.context.element : null,

@@ -13,10 +13,15 @@
       :fonts="fonts"
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
+      :initial-martyria-styles="initialMartyriaStyles"
       :fallback-paragraph-style-id="fallbackParagraphStyleId"
       :fallback-paragraph-style="resolvedParagraphStyle"
       @open-paragraph-styles-dialog="
         emit('open-paragraph-styles-dialog', $event)
+      "
+      @open-mode-key-dialog="onOpenModeKeyDialog"
+      @open-initial-martyria-style-dialog="
+        emit('open-initial-martyria-style-dialog')
       "
     />
 
@@ -373,6 +378,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Editor } from 'ckeditor5';
 import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
@@ -392,7 +398,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import type { RichTextBoxElement } from '@/models/Element';
+import type { ModeKeyElement, RichTextBoxElement } from '@/models/Element';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import {
   getNoteLabelSelector,
   getScaleLabelSelector,
@@ -451,6 +458,10 @@ const props = defineProps({
     type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
   source: {
     type: String as PropType<'score' | 'header-footer'>,
     required: true,
@@ -459,12 +470,18 @@ const props = defineProps({
 
 const emit = defineEmits<{
   'open-paragraph-styles-dialog': [styleId: string];
+  'open-mode-key-dialog': [editor: Editor, element: ModeKeyElement];
+  'open-initial-martyria-style-dialog': [];
   'update:open-sections': [value: string[]];
   update: [value: Partial<RichTextBoxElement>];
 }>();
 
 const SELECT_NONE_VALUE = '__none__';
 const RUNNING_MARKER_NONE_VALUE = '__none__';
+
+function onOpenModeKeyDialog(editor: Editor, element: ModeKeyElement) {
+  emit('open-mode-key-dialog', editor, element);
+}
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));

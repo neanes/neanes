@@ -1163,7 +1163,6 @@ export class ModeKeyElement extends ScoreElement {
   public fontSize: number | null = null;
   public strokeWidth: number | null = null;
   public bpm: number = 120;
-  public inline: boolean = false;
   /** The element's own initial martyria style; null follows the score's. */
   public initialMartyriaStyleId: string | null = null;
   public ignoreAttractions: boolean = false;
@@ -1283,7 +1282,6 @@ export class ModeKeyElement extends ScoreElement {
       strokeWidth: this.strokeWidth,
       marginBottom: this.marginBottom,
       marginTop: this.marginTop,
-      inline: this.inline,
       initialMartyriaStyleId: this.initialMartyriaStyleId,
       ignoreAttractions: this.ignoreAttractions,
       permanentEnharmonicZo: this.permanentEnharmonicZo,
@@ -1485,8 +1483,7 @@ export function isBlockElement(element: ScoreElement | null): boolean {
       !(element as RichTextBoxElement).inline) ||
     (element?.elementType === ElementType.ImageBox &&
       !(element as ImageBoxElement).inline) ||
-    (element?.elementType === ElementType.ModeKey &&
-      !(element as ModeKeyElement).inline)
+    element?.elementType === ElementType.ModeKey
   );
 }
 

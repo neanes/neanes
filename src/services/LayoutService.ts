@@ -118,6 +118,7 @@ import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { lowRootSignMap } from '@/utils/NeumeUtils';
 import type { ResolvedPageMargins } from '@/utils/PageMargins';
 import { resolvePageMargins } from '@/utils/PageMargins';
+import { getLastEmbeddedModeKey } from '@/utils/richTextModeKeys';
 import type { RunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { resolveNextRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
@@ -483,12 +484,6 @@ export class LayoutService {
 
     const lyricAscent =
       TextMeasurementService.getFontBoundingBoxAscent(defaultLyricsFontCss);
-    const notationTextBaseline =
-      neumeAscent -
-      pageSetup.neumeDefaultFontSize * oligonMidpoint -
-      lyricHeight / 2 +
-      lyricAscent;
-
     const measureBarWidthMap = this.getMeasureBarWidthMap(pageSetup);
 
     const noteWidthArgs: GetNoteWidthArgs = {
@@ -677,30 +672,14 @@ export class LayoutService {
               paragraphStyles: score.paragraphStyles,
               initialMartyriaStyles: score.initialMartyriaStyles,
             });
-          const geometry = this.layoutModeKey(
+          this.layoutModeKey(
             modeKeyElement,
             pageSetup,
             resolvedInitialMartyriaStyle,
           );
-          // An inline signature sits on the notation baseline rather than
-          // the top of the line, and extends computedTop above that baseline.
-          modeKeyElement.computedBaselineOffset = modeKeyElement.inline
-            ? notationTextBaseline + modeKeyElement.computedTop
-            : 0;
-          if (modeKeyElement.inline) {
-            modeKeyElement.width = geometry.width;
-          }
+          modeKeyElement.computedBaselineOffset = 0;
 
-          const elementWidthPx = modeKeyElement.inline
-            ? modeKeyElement.width
-            : pageSetup.innerPageWidth;
-          if (modeKeyElement.inline) {
-            this.addLyricReservation(
-              elementWidthPx,
-              modeKeyElement,
-              layoutWorkspace,
-            );
-          }
+          const elementWidthPx = pageSetup.innerPageWidth;
           this.addBox(elementWidthPx, modeKeyElement, layoutWorkspace);
           this.addGlue(standardGlue, layoutWorkspace, 'standard');
 
@@ -1672,10 +1651,7 @@ export class LayoutService {
         } else if (element.elementType === ElementType.RichTextBox) {
           marginTop = (element as RichTextBoxElement).marginTop;
         } else if (element.elementType === ElementType.ModeKey) {
-          const modeKey = element as ModeKeyElement;
-          if (!modeKey.inline) {
-            marginTop = modeKey.marginTop;
-          }
+          marginTop = (element as ModeKeyElement).marginTop;
         }
 
         const lineTop =
@@ -2612,7 +2588,7 @@ export class LayoutService {
     }
 
     let ambitus: InitialMartyriaAmbitusLayout | null = null;
-    if (element.showAmbitus && !element.inline) {
+    if (element.showAmbitus) {
       const punctuationMetrics = TextMeasurementService.getTextMetrics(
         '(-)',
         baseFont,
@@ -5157,9 +5133,6 @@ export class LayoutService {
     let modeKey: ModeKeyElement | null = null;
     let imageBox: ImageBoxElement | null = null;
     let hasNeumeContent = false;
-    // How far the lowest inline initial martyria ink reaches below the top
-    // of the line, from where layout placed it.
-    let inlineModeKeyBottom = 0;
 
     for (const element of line.elements) {
       switch (element.elementType) {
@@ -5174,14 +5147,7 @@ export class LayoutService {
           }
           break;
         case ElementType.ModeKey:
-          if ((element as ModeKeyElement).inline) {
-            hasNeumeContent = true;
-            inlineModeKeyBottom = Math.max(
-              inlineModeKeyBottom,
-              element.computedBaselineOffset +
-                (element as ModeKeyElement).height,
-            );
-          } else if (modeKey === null) {
+          if (modeKey === null) {
             modeKey = element as ModeKeyElement;
           }
           break;
@@ -5225,7 +5191,7 @@ export class LayoutService {
     }
 
     if (hasNeumeContent) {
-      return Math.max(neumeLineHeight, inlineModeKeyBottom);
+      return neumeLineHeight;
     }
 
     return defaultLineHeight;
@@ -6497,9 +6463,7 @@ export class LayoutService {
       (element.elementType === ElementType.RichTextBox &&
         (element as RichTextBoxElement).inline) ||
       (element.elementType === ElementType.ImageBox &&
-        (element as ImageBoxElement).inline) ||
-      (element.elementType === ElementType.ModeKey &&
-        (element as ModeKeyElement).inline)
+        (element as ImageBoxElement).inline)
     );
   }
 
@@ -7751,11 +7715,15 @@ export class LayoutService {
             }
           }
         }
-      } else if (
-        element.elementType === ElementType.RichTextBox &&
-        (element as RichTextBoxElement).modeChange
-      ) {
-        const modeKey = element as RichTextBoxElement;
+      } else if (element.elementType === ElementType.RichTextBox) {
+        const richTextBox = element as RichTextBoxElement;
+        const embeddedModeKey = richTextBox.modeChange
+          ? null
+          : getLastEmbeddedModeKey(richTextBox);
+
+        if (!richTextBox.modeChange && embeddedModeKey == null) {
+          continue;
+        }
 
         if (currentModeKey) {
           this.assignAmbitus({
@@ -7773,18 +7741,39 @@ export class LayoutService {
         ambitusHigh = Number.MIN_SAFE_INTEGER;
 
         currentModeKey = null;
-        currentNote = getScaleNoteValue(modeKey.modeChangePhysicalNote);
-        currentScale = modeKey.modeChangeScale;
-        currentShift = 0;
+        if (richTextBox.modeChange) {
+          currentNote = getScaleNoteValue(richTextBox.modeChangePhysicalNote);
+          currentScale = richTextBox.modeChangeScale;
+          currentShift = 0;
 
-        if (modeKey.modeChangeVirtualNote) {
-          currentNoteVirtual = getScaleNoteValue(modeKey.modeChangeVirtualNote);
+          if (richTextBox.modeChangeVirtualNote) {
+            currentNoteVirtual = getScaleNoteValue(
+              richTextBox.modeChangeVirtualNote,
+            );
 
-          currentShift = getShiftWithoutFthora(
-            currentNote,
-            currentNoteVirtual,
-            currentScale,
-          );
+            currentShift = getShiftWithoutFthora(
+              currentNote,
+              currentNoteVirtual,
+              currentScale,
+            );
+          }
+        } else {
+          currentNote = getScaleNoteValue(embeddedModeKey!.scaleNote);
+          currentScale = embeddedModeKey!.scale;
+          currentShift = 0;
+
+          if (embeddedModeKey!.fthora) {
+            currentScale =
+              this.getScaleFromFthora(embeddedModeKey!.fthora, currentNote) ||
+              currentScale;
+            currentShift = this.getShift(
+              currentNote,
+              currentNote,
+              currentScale,
+              embeddedModeKey!.fthora,
+              null,
+            );
+          }
         }
       }
     }

@@ -1382,7 +1382,6 @@ describe('SaveService font styles', () => {
     const builtIn = new ModeKeyElement();
     builtIn.initialMartyriaStyleId =
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianTraditionalSign;
-    builtIn.inline = true;
     score.staff.elements = [inherited, overridden, builtIn];
 
     const saved = SaveService.SaveScoreToJson(score);
@@ -1415,7 +1414,6 @@ describe('SaveService font styles', () => {
     expect(savedModeKeys[2].initialMartyriaStyleId).toBe(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianTraditionalSign,
     );
-    expect(savedModeKeys[2].inline).toBe(true);
 
     expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
     expect(loaded.pageSetup.initialMartyriaStyleId).toBe(customStyle.id);
@@ -1431,7 +1429,6 @@ describe('SaveService font styles', () => {
     expect(loadedModeKeys[2].initialMartyriaStyleId).toBe(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianTraditionalSign,
     );
-    expect(loadedModeKeys[2].inline).toBe(true);
   });
 
   it('round-trips an Initial Martyria style with an independent Greek paragraph style', () => {

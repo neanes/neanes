@@ -18,13 +18,19 @@ import {
   isRightAlignedMartyria,
   LineBreakType,
 } from '@/models/Element';
+import type {
+  InitialMartyriaRunLayout,
+  InitialMartyriaSeparatorLayout,
+} from '@/models/InitialMartyriaLayout';
 import {
   resolveModeKeyInitialMartyriaStyle,
   resolveScoreInitialMartyriaStyle,
 } from '@/models/InitialMartyriaResolver';
 import type {
   InitialMartyriaAppearance,
+  InitialMartyriaStartingNoteRun,
   InitialMartyriaStyle,
+  ResolvedInitialMartyriaRun,
 } from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
 import {
@@ -74,6 +80,15 @@ interface NeumeOffset {
 const NoOffset: NeumeOffset = { x: null, y: null };
 const byzhtmlVersion = import.meta.env.VITE_BYZHTML_VERSION;
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 interface TagInfo {
   tag: string;
   glyphName: string;
@@ -94,6 +109,11 @@ interface ByzHtmlExporterConfig {
   classTextBox: string;
   classTextBoxInline: string;
   classRichTextBox: string;
+  classRichTextBoxMultipanel: string;
+  classRichTextBoxPanel: string;
+  classRichTextBoxInlineContainer: string;
+  classRichTextBoxInlineTop: string;
+  classRichTextBoxInlineBottom: string;
   classImageBox: string;
   classImageBoxInline: string;
   classModeKey: string;
@@ -188,6 +208,11 @@ export class ByzHtmlExporter {
     classNeumeParagraphCenter: 'byz--neume-paragraph-center',
     classTextBox: 'byz--text-box',
     classRichTextBox: 'byz---rich-text-box',
+    classRichTextBoxMultipanel: 'byz--rich-text-box-multipanel',
+    classRichTextBoxPanel: 'byz--rich-text-box-panel',
+    classRichTextBoxInlineContainer: 'byz--rich-text-box-inline-container',
+    classRichTextBoxInlineTop: 'byz--rich-text-box-inline-top',
+    classRichTextBoxInlineBottom: 'byz--rich-text-box-inline-bottom',
     classTextBoxInline: 'byz--text-box-inline',
     classImageBox: 'byz--image-box',
     classImageBoxInline: 'byz--image-box-inline',
@@ -475,6 +500,25 @@ export class ByzHtmlExporter {
         font-weight: 400;
         font-style: normal;
         color: ${lyricsStyle.color};
+      }
+
+      .${this.config.classRichTextBoxMultipanel} {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: start;
+      }
+
+      .${this.config.classRichTextBoxPanel}:nth-child(2) {
+        text-align: center;
+      }
+
+      .${this.config.classRichTextBoxPanel}:nth-child(3) {
+        text-align: right;
+      }
+
+      .${this.config.classRichTextBoxInlineContainer} {
+        display: flex;
+        flex-direction: column;
       }
 
       ${this.getRichTextStyleCss(paragraphStyles, pageSetup)}
@@ -1214,17 +1258,43 @@ export class ByzHtmlExporter {
       getRichTextLanguage(element),
     );
 
-    const content =
+    const exportContent = (content: string) =>
       pageSetup == null || defaultModeKeyAppearance == null
-        ? element.content
+        ? content
         : this.exportEmbeddedModeKeys(
-            element.content,
+            content,
             pageSetup,
             paragraphStyles,
             initialMartyriaStyles,
             defaultModeKeyAppearance,
             indentation,
           );
+
+    let content: string;
+
+    if (element.multipanel) {
+      const panels = [
+        ['left', element.contentLeft],
+        ['center', element.contentCenter],
+        ['right', element.contentRight],
+      ] as const;
+      content = `<div class="${this.config.classRichTextBoxMultipanel}">${panels
+        .map(
+          ([panel, panelContent]) =>
+            `<div class="${this.config.classRichTextBoxPanel}" data-panel="${panel}">${exportContent(panelContent)}</div>`,
+        )
+        .join('')}</div>`;
+    } else if (element.inline) {
+      content = `<div class="${
+        this.config.classRichTextBoxInlineContainer
+      }"><div class="${
+        this.config.classRichTextBoxInlineTop
+      }">${exportContent(element.content)}</div><div class="${
+        this.config.classRichTextBoxInlineBottom
+      }">${exportContent(element.contentBottom)}</div></div>`;
+    } else {
+      content = exportContent(element.content);
+    }
 
     return `<div class="${className}"${languageAttributes}>${content}</div\n${this.getIndentationString(indentation)}>`;
   }
@@ -1268,52 +1338,237 @@ export class ByzHtmlExporter {
     );
   }
 
+  private exportInitialMartyriaSignature(
+    element: ModeKeyElement,
+    indentation: number,
+  ) {
+    const layout = element.computedInitialMartyriaLayout;
+
+    if (layout == null) {
+      return this.exportLegacyModeKeySignature(element, indentation);
+    }
+
+    const { resolution } = layout;
+    let html = `<span class="byz--initial-martyria-signature" dir="${resolution.flowDirection}" aria-label="${escapeHtml(resolution.pronunciation)}">`;
+
+    for (const [index, run] of resolution.runs.entries()) {
+      const runLayout = layout.runs[index];
+      html += this.exportInitialMartyriaSeparator(
+        run,
+        runLayout.separatorBefore,
+      );
+      html += this.exportInitialMartyriaRun(
+        run,
+        runLayout,
+        layout.neumeBaselineCorrection,
+        indentation,
+      );
+    }
+
+    const lastRun = resolution.runs.at(-1);
+    if (lastRun != null) {
+      html += this.exportInitialMartyriaSeparator(
+        lastRun,
+        layout.trailingSeparator,
+      );
+    }
+
+    return `${html}</span>`;
+  }
+
+  private exportInitialMartyriaSeparator(
+    run: ResolvedInitialMartyriaRun,
+    separator: InitialMartyriaSeparatorLayout,
+  ) {
+    if (separator.kind === 'none') {
+      return '';
+    }
+
+    if (separator.kind === 'wordSpace') {
+      const font = separator.wordSpaceFont!;
+      const resolvedFont = resolveFontStyle(font.fontFamily, font.fontStyle);
+      const family = getFontFamilyWithFallback(
+        resolvedFont.cssFontFamily,
+      ).replaceAll('"', "'");
+      return `<span class="byz--initial-martyria-separator" aria-hidden="true" style="font-family: ${family};font-size: ${Unit.toPt(font.fontSize)}pt;direction: ${run.direction};">&nbsp;</span>`;
+    }
+
+    return `<span class="byz--initial-martyria-separator" aria-hidden="true" style="display: inline-block;width: ${Unit.toPt(separator.width)}pt;direction: ${run.direction};"></span>`;
+  }
+
+  private exportInitialMartyriaRun(
+    run: ResolvedInitialMartyriaRun,
+    runLayout: InitialMartyriaRunLayout,
+    neumeBaselineCorrection: number,
+    indentation: number,
+  ) {
+    if (run.kind === 'glyph') {
+      const top =
+        runLayout.baselineShift === 0
+          ? ''
+          : `position: relative;top: ${Unit.toPt(-runLayout.baselineShift)}pt;`;
+      const glyphs = run.glyphs
+        .map((glyph) => this.exportNeume(glyph, indentation + 2))
+        .join('');
+      return `<span class="byz--initial-martyria-run byz--initial-martyria-glyph" dir="${run.direction}" aria-hidden="true" style="${this.getInitialMartyriaAppearanceCss(run.appearance, runLayout.fontSize)}${top}">${glyphs}</span>`;
+    }
+
+    if (run.kind === 'startingPitch') {
+      return this.exportInitialMartyriaStartingPitch(
+        run,
+        runLayout,
+        neumeBaselineCorrection,
+        indentation,
+      );
+    }
+
+    const languageAttributes = ` lang="${escapeHtml(run.languageTag)}" dir="${run.direction}"`;
+    const appearanceCss = this.getInitialMartyriaAppearanceCss(
+      run.appearance,
+      runLayout.fontSize,
+    );
+
+    if (run.content.layout === 'inline') {
+      return `<span class="byz--initial-martyria-run byz--initial-martyria-text"${languageAttributes} aria-hidden="true" style="${appearanceCss}">${escapeHtml(run.content.text)}</span>`;
+    }
+
+    const stacked = runLayout.stackedCharacters!;
+    const height = stacked.geometry.bottom - stacked.geometry.top;
+    const containerStyle = `${appearanceCss}display: inline-block;height: ${Unit.toPt(height)}pt;position: relative;vertical-align: ${Unit.toPt(-stacked.geometry.bottom)}pt;width: ${Unit.toPt(stacked.geometry.width)}pt;`;
+    const rowStyle = (top: number) =>
+      `display: block;left: 0;line-height: ${Unit.toPt(stacked.lineHeight)}pt;position: absolute;text-align: center;top: ${Unit.toPt(top)}pt;white-space: nowrap;width: 100%;`;
+
+    return `<span class="byz--initial-martyria-run byz--initial-martyria-stacked"${languageAttributes} aria-hidden="true" style="${containerStyle}"><span style="${rowStyle(stacked.geometry.topRow.top)}">${escapeHtml(run.content.topCharacter)}</span><span style="${rowStyle(stacked.geometry.bottomRow.top)}">${escapeHtml(run.content.bottomCharacter)}</span></span>`;
+  }
+
+  private exportInitialMartyriaStartingPitch(
+    run: InitialMartyriaStartingNoteRun,
+    runLayout: InitialMartyriaRunLayout,
+    neumeBaselineCorrection: number,
+    indentation: number,
+  ) {
+    const pitchLayout = runLayout.pitch!;
+    let inner = '';
+
+    for (const role of ['primary', 'secondary'] as const) {
+      const pitchNote = run.cluster[role];
+      const geometry = pitchLayout[role];
+
+      if (pitchNote == null || geometry == null) {
+        continue;
+      }
+
+      let cell = '';
+      const glyphCss = this.getInitialMartyriaAppearanceCss(
+        run.appearance,
+        runLayout.fontSize,
+      );
+
+      if (pitchNote.fthoraAbove != null && geometry.fthora != null) {
+        cell += `<span class="byz--initial-martyria-pitch-mark ${this.config.classFthora}" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(geometry.fthora.left)}pt;top: ${Unit.toPt(geometry.fthora.baseline)}pt;${glyphCss}">${this.exportNeume(pitchNote.fthoraAbove, indentation + 2)}</span>`;
+      }
+
+      if (
+        pitchNote.quantitativeNeumeAbove != null &&
+        geometry.quantitative != null
+      ) {
+        cell += `<span class="byz--initial-martyria-pitch-mark" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(geometry.quantitative.left)}pt;top: ${Unit.toPt(geometry.quantitative.baseline)}pt;${glyphCss}">${this.exportNeume(pitchNote.quantitativeNeumeAbove, indentation + 2)}</span>`;
+      }
+
+      const noteCss = this.getInitialMartyriaAppearanceCss(
+        run.noteText.appearance,
+        pitchLayout.textFontSize,
+      );
+      cell += `<span lang="${escapeHtml(run.noteText.languageTag)}" dir="${run.noteText.direction}" style="${noteCss}left: ${Unit.toPt(geometry.text.left)}pt;position: relative;white-space: nowrap;">${escapeHtml(run.noteText.names[pitchNote.note])}</span>`;
+      inner += `<span class="byz--initial-martyria-pitch-note" style="display: inline-block;position: relative;width: ${Unit.toPt(geometry.width)}pt;">${cell}</span>`;
+
+      if (
+        role === 'primary' &&
+        run.cluster.primary != null &&
+        run.cluster.secondary != null
+      ) {
+        inner += `<span style="display: inline-block;width: ${Unit.toPt(pitchLayout.clusterSeparatorWidth)}pt;"></span>`;
+      }
+    }
+
+    if (
+      (run.cluster.primary != null || run.cluster.secondary != null) &&
+      run.cluster.trailingGlyphs.length > 0
+    ) {
+      inner += `<span style="display: inline-block;width: ${Unit.toPt(pitchLayout.trailingGlueWidth)}pt;"></span>`;
+    }
+
+    const trailingCss = this.getInitialMartyriaAppearanceCss(
+      run.appearance,
+      runLayout.fontSize,
+    );
+    for (const glyph of run.cluster.trailingGlyphs) {
+      inner += `<span style="${trailingCss}position: relative;top: ${Unit.toPt(neumeBaselineCorrection)}pt;">${this.exportNeume(glyph, indentation + 2)}</span>`;
+    }
+
+    return `<span class="byz--initial-martyria-run byz--initial-martyria-starting-pitch" dir="${run.direction}">${inner}</span>`;
+  }
+
+  private getInitialMartyriaAppearanceCss(
+    appearance: InitialMartyriaAppearance,
+    fontSize: number,
+  ) {
+    const font = resolveFontStyle(appearance.fontFamily, appearance.fontStyle);
+    const family = getFontFamilyWithFallback(font.cssFontFamily).replaceAll(
+      '"',
+      "'",
+    );
+
+    return `color: ${appearance.color};font-family: ${family};font-size: ${Unit.toPt(fontSize)}pt;font-weight: ${font.cssFontWeight};font-style: ${font.cssFontStyle};${fontVariantCssDeclarations(appearance).join('')}line-height: normal;-webkit-text-stroke-color: ${appearance.strokeColor};-webkit-text-stroke-width: ${Unit.toPt(appearance.strokeWidth)}pt;unicode-bidi: isolate;`;
+  }
+
+  private exportLegacyModeKeySignature(
+    element: ModeKeyElement,
+    indentation: number,
+  ) {
+    let inner = this.exportNeume(ModeSign.Ekhos, indentation);
+
+    if (element.isPlagal) {
+      inner += this.exportNeume(ModeSign.Plagal, indentation);
+    }
+
+    if (element.isVarys) {
+      inner += this.exportNeume(ModeSign.Varys, indentation);
+    }
+
+    inner += this.exportNeume(element.martyria, indentation);
+    inner += this.exportNeume(element.note, indentation);
+    inner += this.exportNeume(
+      element.fthoraAboveNote,
+      indentation,
+      NoOffset,
+      this.config.classFthora,
+    );
+    inner += this.exportNeume(element.quantitativeNeumeAboveNote, indentation);
+    inner += this.exportNeume(element.note2, indentation);
+    inner += this.exportNeume(
+      element.fthoraAboveNote2,
+      indentation,
+      NoOffset,
+      this.config.classFthora,
+    );
+    inner += this.exportNeume(element.quantitativeNeumeAboveNote2, indentation);
+    inner += this.exportNeume(element.quantitativeNeumeRight, indentation);
+    inner += this.exportNeume(
+      element.fthoraAboveQuantitativeNeumeRight,
+      indentation,
+    );
+
+    return inner;
+  }
+
   exportModeKey(
     element: ModeKeyElement,
     defaultAppearance: InitialMartyriaAppearance,
     indentation: number,
     embedded = false,
   ) {
-    let inner = '';
-
-    inner += this.exportNeume(ModeSign.Ekhos, indentation + 2);
-
-    if (element.isPlagal) {
-      inner += this.exportNeume(ModeSign.Plagal, indentation + 2);
-    }
-
-    if (element.isVarys) {
-      inner += this.exportNeume(ModeSign.Varys, indentation + 2);
-    }
-
-    inner += this.exportNeume(element.martyria, indentation + 2);
-    inner += this.exportNeume(element.note, indentation + 2);
-    inner += this.exportNeume(
-      element.fthoraAboveNote,
-      indentation + 2,
-      NoOffset,
-      this.config.classFthora,
-    );
-    inner += this.exportNeume(
-      element.quantitativeNeumeAboveNote,
-      indentation + 2,
-    );
-    inner += this.exportNeume(element.note2, indentation + 2);
-    inner += this.exportNeume(
-      element.fthoraAboveNote2,
-      indentation + 2,
-      NoOffset,
-      this.config.classFthora,
-    );
-    inner += this.exportNeume(
-      element.quantitativeNeumeAboveNote2,
-      indentation + 2,
-    );
-    inner += this.exportNeume(element.quantitativeNeumeRight, indentation + 2);
-    inner += this.exportNeume(
-      element.fthoraAboveQuantitativeNeumeRight,
-      indentation + 2,
-    );
+    let inner = this.exportInitialMartyriaSignature(element, indentation + 2);
 
     let rightContainer = false;
 

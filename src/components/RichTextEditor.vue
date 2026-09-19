@@ -132,6 +132,10 @@ function onReady(editor: InlineEditor) {
   editor.model.document.on('change:data', () => {
     refreshBaseDirection(editor);
 
+    // This deliberately serializes the editor data after every change. Manual
+    // testing found no typing-performance issue. Do not replace this with
+    // differ-only detection without a measured regression; comparing the full
+    // signature reliably persists every embedded-key mutation.
     const nextModeKeySignature = getModeKeySignature(editor);
 
     if (nextModeKeySignature !== modeKeySignature) {

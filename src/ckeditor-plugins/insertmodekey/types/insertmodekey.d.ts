@@ -7,6 +7,7 @@ import type { ParagraphStyle } from '@/models/ParagraphStyle';
 declare module 'ckeditor5' {
   interface EditorConfig {
     insertModeKey?: {
+      label?: string;
       pageSetup?: PageSetup;
       paragraphStyles?: ParagraphStyle[];
       initialMartyriaStyles?: InitialMartyriaStyle[];

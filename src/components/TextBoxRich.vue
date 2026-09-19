@@ -126,6 +126,7 @@
 
 <script setup lang="ts">
 import type { Editor, EditorConfig, FontSizeOption } from 'ckeditor5';
+import { useTranslation } from 'i18next-vue';
 import { debounce, throttle } from 'throttle-debounce';
 import type { PropType, StyleValue } from 'vue';
 import {
@@ -182,6 +183,7 @@ const emit = defineEmits([
   'select-neume',
   'edit-mode-key',
 ]);
+const { t } = useTranslation();
 const props = defineProps({
   element: {
     type: Object as PropType<RichTextBoxElement>,
@@ -355,6 +357,7 @@ const editorConfig = computed((): EditorConfig => {
       defaultFontFamily: resolvedParagraphStyle.value.fontFamily,
     },
     insertModeKey: {
+      label: t(($) => $.menu.insert.initialMartyria, { ns: 'menu' }),
       getPageSetup: () => props.pageSetup,
       getParagraphStyles: () => props.paragraphStyles,
       getInitialMartyriaStyles: () => props.initialMartyriaStyles,

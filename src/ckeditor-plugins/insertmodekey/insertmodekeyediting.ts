@@ -23,6 +23,7 @@ export const MODE_KEY_DATA_ATTRIBUTE = 'data-neanes-mode-key';
 const MODE_KEY_MOUNT_CLASS = 'neanes-ck-mode-key-mount';
 
 export type InsertModeKeyConfig = {
+  label?: string;
   pageSetup?: PageSetup;
   paragraphStyles?: ParagraphStyle[];
   initialMartyriaStyles?: InitialMartyriaStyle[];
@@ -68,6 +69,9 @@ export default class InsertModeKeyEditing extends Plugin {
     editor.conversion.for('editingDowncast').elementToElement({
       model: MODE_KEY_ELEMENT,
       view: (modelElement, { writer }) => {
+        const config = editor.config.get(
+          'insertModeKey',
+        ) as InsertModeKeyConfig;
         const mount = writer.createRawElement(
           'span',
           { class: MODE_KEY_MOUNT_CLASS },
@@ -80,7 +84,7 @@ export default class InsertModeKeyEditing extends Plugin {
         );
 
         return toWidget(widget, writer, {
-          label: 'Initial martyria',
+          label: config.label ?? '',
         });
       },
     });
@@ -105,6 +109,10 @@ export default class InsertModeKeyEditing extends Plugin {
     });
 
     editor.model.document.on('change:data', () => {
+      // Intentionally refresh every mounted key on each data change. Manual
+      // testing with realistic documents found no typing lag. Do not replace
+      // this with differ-based filtering without a measured regression; the
+      // full refresh is the reliable correctness path for indirect changes.
       this.refreshMountedModeKeys();
       this.schedulePrune();
     });

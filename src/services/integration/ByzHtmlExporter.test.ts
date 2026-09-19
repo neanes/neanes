@@ -42,7 +42,11 @@ import { Unit } from '@/utils/Unit';
 
 import glyphnames from '../../assets/fonts/sbmufl/glyphnames.json';
 import type { SbmuflGlyphName } from './../NeumeMappingService';
-import { ByzHtmlExporter, createByzHtmlDocument } from './ByzHtmlExporter';
+import {
+  ByzHtmlExporter,
+  createByzHtmlDocument,
+  replaceEmbeddedModeKeyMarkers,
+} from './ByzHtmlExporter';
 
 function createComputedTextBox(overrides: Partial<TextBoxElement> = {}) {
   const element = new TextBoxElement();
@@ -59,11 +63,11 @@ function createComputedTextBox(overrides: Partial<TextBoxElement> = {}) {
   return Object.assign(element, overrides);
 }
 
-function embeddedModeKeyHtml(element = new ModeKeyElement()) {
+function embeddedModeKeyHtml(element = new ModeKeyElement(), content = '') {
   const payload = serializeModeKeyAttributes(
     getModeKeyModelAttributes(element),
   );
-  return `<span class="neanes-ck-mode-key" data-neanes-mode-key="${payload}"></span>`;
+  return `<span class="neanes-ck-mode-key" data-neanes-mode-key="${payload}">${content}</span>`;
 }
 
 describe('ByzHtmlExporter', () => {
@@ -133,6 +137,20 @@ describe('ByzHtmlExporter', () => {
 
     expect(exporter.exportRichTextBox(element, 0)).toBe(
       '<div class="byz---rich-text-box" lang="ar" dir="rtl"><p><span lang="ar" dir="rtl">Hello</span></p></div\n>',
+    );
+  });
+
+  it('replaces an embedded mode key containing the CKEditor filler', () => {
+    const modeKey = ModeKeyElement.createFromTemplate(modeKeyTemplates[0]);
+    const html = `<p>Before ${embeddedModeKeyHtml(modeKey, '&nbsp;')} after</p>`;
+
+    const replaced = replaceEmbeddedModeKeyMarkers(
+      html,
+      (attributes) => `<converted data-mode="${attributes.mode}"></converted>`,
+    );
+
+    expect(replaced).toBe(
+      `<p>Before <converted data-mode="${modeKey.mode}"></converted> after</p>`,
     );
   });
 

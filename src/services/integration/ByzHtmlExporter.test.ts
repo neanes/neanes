@@ -41,7 +41,10 @@ import { setRichTextLanguage } from '@/utils/richTextLanguage';
 import { Unit } from '@/utils/Unit';
 
 import glyphnames from '../../assets/fonts/sbmufl/glyphnames.json';
-import type { SbmuflGlyphName } from './../NeumeMappingService';
+import {
+  NeumeMappingService,
+  type SbmuflGlyphName,
+} from './../NeumeMappingService';
 import {
   ByzHtmlExporter,
   createByzHtmlDocument,
@@ -278,10 +281,22 @@ describe('ByzHtmlExporter', () => {
     expect(html).toContain('First');
     expect(html).toContain('Mode');
     expect(html).toContain(
-      `byz--initial-martyria-pitch-mark byz--f" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(4)}pt;top: ${Unit.toPt(-12)}pt;`,
+      `byz--initial-martyria-pitch-mark byz--f" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(4)}pt;top: ${Unit.toPt(-12)}pt;--byz-neume-font-family:`,
     );
     expect(html).toContain(
-      `byz--initial-martyria-pitch-mark" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(6)}pt;top: ${Unit.toPt(-20)}pt;`,
+      `byz--initial-martyria-pitch-mark" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(6)}pt;top: ${Unit.toPt(-20)}pt;--byz-neume-font-family:`,
+    );
+    expect(html).toContain(`--byz-neume-font-size: ${Unit.toPt(20)}pt;`);
+    expect(html).toContain(
+      `<span style="position: relative;">${NeumeMappingService.getMapping(Fthora.DiatonicPa_Top).text}</span`,
+    );
+    expect(html).not.toContain('<x-neume');
+    expect(html).not.toContain('<x-f-pa');
+    expect(html).toContain(
+      'style="direction: ltr;position: relative;text-align: left;width:',
+    );
+    expect(html).not.toContain(
+      'byz--initial-martyria-pitch-note" style="direction: ltr;display: inline-block;',
     );
     expect(html).not.toContain(
       'byz--initial-martyria-pitch-mark" style="position: absolute;',

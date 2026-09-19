@@ -1481,7 +1481,7 @@ export class ByzHtmlExporter {
         pitchLayout.textFontSize,
       );
       cell += `<span lang="${escapeHtml(run.noteText.languageTag)}" dir="${run.noteText.direction}" style="${noteCss}left: ${Unit.toPt(geometry.text.left)}pt;position: relative;white-space: nowrap;">${escapeHtml(run.noteText.names[pitchNote.note])}</span>`;
-      inner += `<span class="byz--initial-martyria-pitch-note" style="display: inline-block;position: relative;width: ${Unit.toPt(geometry.width)}pt;">${cell}</span>`;
+      inner += `<span class="byz--initial-martyria-pitch-note" style="direction: ltr;position: relative;text-align: left;width: ${Unit.toPt(geometry.width)}pt;">${cell}</span>`;
 
       if (
         role === 'primary' &&
@@ -1520,7 +1520,9 @@ export class ByzHtmlExporter {
       "'",
     );
 
-    return `color: ${appearance.color};font-family: ${family};font-size: ${Unit.toPt(fontSize)}pt;font-weight: ${font.cssFontWeight};font-style: ${font.cssFontStyle};${fontVariantCssDeclarations(appearance).join('')}line-height: normal;-webkit-text-stroke-color: ${appearance.strokeColor};-webkit-text-stroke-width: ${Unit.toPt(appearance.strokeWidth)}pt;unicode-bidi: isolate;`;
+    const size = Unit.toPt(fontSize);
+
+    return `--byz-neume-font-family: ${family};--byz-neume-font-size: ${size}pt;color: ${appearance.color};font-family: ${family};font-size: ${size}pt;font-weight: ${font.cssFontWeight};font-style: ${font.cssFontStyle};${fontVariantCssDeclarations(appearance).join('')}line-height: normal;-webkit-text-stroke-color: ${appearance.strokeColor};-webkit-text-stroke-width: ${Unit.toPt(appearance.strokeWidth)}pt;unicode-bidi: isolate;`;
   }
 
   private exportLegacyModeKeySignature(

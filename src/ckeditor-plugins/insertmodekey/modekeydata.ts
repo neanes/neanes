@@ -70,6 +70,24 @@ export function getModeKeyModelAttributes(
   });
 }
 
+/**
+ * Produces a complete model update. Null entries intentionally remove
+ * attributes that were present on the previous mode key.
+ */
+export function getModeKeyReplacementAttributes(
+  element: Readonly<ModeKeyElement>,
+): ModeKeyModelAttributes {
+  const attributes = getModeKeyModelAttributes(element);
+
+  for (const key of MODE_KEY_MODEL_ATTRIBUTES) {
+    if (!(key in attributes)) {
+      attributes[key] = null;
+    }
+  }
+
+  return attributes;
+}
+
 export function toModeKeyEditorAttributes(
   attributes: ModeKeyModelAttributes,
 ): ModeKeyModelAttributes {

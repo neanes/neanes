@@ -3,9 +3,13 @@
     :open-sections="openSections"
     @update:open-sections="$emit('update:open-sections', $event)"
   >
-    <template #legend>{{
-      $t(($) => $.menu.insert.richTextBox, { ns: 'menu' })
-    }}</template>
+    <template #legend>
+      {{
+        isEmbeddedModeKeySelected
+          ? $t(($) => $.menu.insert.initialMartyria, { ns: 'menu' })
+          : $t(($) => $.menu.insert.richTextBox, { ns: 'menu' })
+      }}
+    </template>
 
     <PropertiesRichTextStyle
       id-prefix="properties-rich-text-box"
@@ -26,6 +30,7 @@
     />
 
     <PaneSection
+      v-if="!isEmbeddedModeKeySelected"
       value="positioning"
       :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
     >
@@ -151,6 +156,7 @@
     </PaneSection>
 
     <PaneSection
+      v-if="!isEmbeddedModeKeySelected"
       value="mode-change"
       :title="$t(($) => $.toolbar.textbox.modeChange, { ns: 'toolbar' })"
     >
@@ -299,7 +305,7 @@
     </PaneSection>
 
     <PaneSection
-      v-if="source === 'score'"
+      v-if="!isEmbeddedModeKeySelected && source === 'score'"
       value="running-marker"
       :title="$t(($) => $.toolbar.textbox.runningMarker, { ns: 'toolbar' })"
     >
@@ -360,6 +366,7 @@
     </PaneSection>
 
     <PaneSection
+      v-if="!isEmbeddedModeKeySelected"
       value="scrollable"
       :title="$t(($) => $.toolbar.textbox.scrollable, { ns: 'toolbar' })"
     >
@@ -383,6 +390,7 @@ import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
+import { UPDATE_MODE_KEY_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertmodekey/updatemodekeyattributescommand';
 import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
@@ -398,6 +406,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import {
+  useActiveEditorForOwner,
+  useEditorCommandObservableState,
+} from '@/composables/useRichTextEditorRegistry';
 import type { ModeKeyElement, RichTextBoxElement } from '@/models/Element';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import {
@@ -478,6 +490,18 @@ const emit = defineEmits<{
 
 const SELECT_NONE_VALUE = '__none__';
 const RUNNING_MARKER_NONE_VALUE = '__none__';
+
+const scopedEditor = useActiveEditorForOwner(() => props.element);
+const embeddedModeKeyState = useEditorCommandObservableState(
+  scopedEditor,
+  UPDATE_MODE_KEY_ATTRIBUTES_COMMAND,
+  ['element'],
+);
+const isEmbeddedModeKeySelected = computed(
+  () =>
+    embeddedModeKeyState.isEnabled &&
+    embeddedModeKeyState.properties.element != null,
+);
 
 function onOpenModeKeyDialog(editor: Editor, element: ModeKeyElement) {
   emit('open-mode-key-dialog', editor, element);

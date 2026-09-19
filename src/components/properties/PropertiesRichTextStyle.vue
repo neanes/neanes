@@ -1,6 +1,7 @@
 <template>
   <div ref="panelRoot" class="contents">
     <PaneSection
+      v-if="selectedModeKey == null"
       value="style"
       :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
     >
@@ -376,6 +377,7 @@
       :paragraph-styles="paragraphStyles"
       :initial-martyria-styles="initialMartyriaStyles ?? []"
       @update="updateModeKeyAttributes"
+      @update:style-selector-open="onModeKeyStyleSelectorOpenChanged"
       @open-selector="openModeKeySelector"
       @open-style-dialog="emit('open-initial-martyria-style-dialog')"
     />
@@ -814,6 +816,14 @@ function openModeKeySelector() {
 
   if (editor != null && element != null) {
     emit('open-mode-key-dialog', editor, element);
+  }
+}
+
+function onModeKeyStyleSelectorOpenChanged(isOpen: boolean) {
+  if (isOpen) {
+    beginSelectionGuard(props.element);
+  } else {
+    endSelectionGuard(props.element, { refocus: true });
   }
 }
 

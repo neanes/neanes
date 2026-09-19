@@ -3,8 +3,17 @@
     value="embedded-initial-martyria"
     :title="$t(($) => $.menu.insert.initialMartyria, { ns: 'menu' })"
   >
-    <Button type="button" variant="outline" @click="emit('open-selector')">
-      {{ $t(($) => $.menu.insert.initialMartyria, { ns: 'menu' }) }}
+    <Button
+      type="button"
+      class="w-full"
+      variant="outline"
+      @click="emit('open-selector')"
+    >
+      {{
+        $t(($) => $.toolbar.initialMartyria.changeInitialMartyria, {
+          ns: 'toolbar',
+        })
+      }}
     </Button>
 
     <Field>
@@ -31,7 +40,9 @@
         id="properties-embedded-mode-key-style"
         :model-value="element.initialMartyriaStyleId"
         :initial-martyria-styles="initialMartyriaStyles"
+        rich-text-portal
         @update:model-value="update({ initialMartyriaStyleId: $event })"
+        @update:open="emit('update:style-selector-open', $event)"
       />
     </Field>
 
@@ -185,6 +196,7 @@ const emit = defineEmits<{
   update: [values: Partial<ModeKeyElement>];
   'open-selector': [];
   'open-style-dialog': [];
+  'update:style-selector-open': [value: boolean];
 }>();
 
 const tempoMenuOptions: ButtonWithMenuOption[] = [

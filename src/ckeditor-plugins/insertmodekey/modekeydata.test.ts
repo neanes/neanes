@@ -6,6 +6,7 @@ import {
   deserializeModeKeyAttributes,
   extractModeKeyElementsFromHtml,
   getModeKeyModelAttributes,
+  getModeKeyReplacementAttributes,
   rewriteModeKeyAttributesInHtml,
   serializeModeKeyAttributes,
   toModeKeyEditorAttributes,
@@ -84,5 +85,17 @@ describe('embedded mode key data', () => {
     expect(toModeKeyEditorAttributes({ fontSize: null })).toEqual({
       fontSize: null,
     });
+  });
+
+  it('clears attributes omitted by a replacement mode key', () => {
+    const element = new ModeKeyElement();
+    element.note = null;
+    element.fthoraAboveNote = null;
+
+    const attributes = getModeKeyReplacementAttributes(element);
+
+    expect(attributes.note).toBeNull();
+    expect(attributes.fthoraAboveNote).toBeNull();
+    expect(attributes.mode).toBe(element.mode);
   });
 });

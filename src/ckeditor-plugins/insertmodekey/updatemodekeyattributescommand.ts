@@ -6,7 +6,7 @@ import { ModeKeyElement } from '@/models/Element';
 import { MODE_KEY_ELEMENT } from './insertmodekeyediting';
 import {
   createModeKeyElementFromModel,
-  getModeKeyModelAttributes,
+  getModeKeyReplacementAttributes,
   MODE_KEY_MODEL_ATTRIBUTES,
   type ModeKeyModelAttributes,
   toModeKeyEditorAttributes,
@@ -31,7 +31,7 @@ export default class UpdateModeKeyAttributesCommand extends Command {
 
     const attributes = toModeKeyEditorAttributes(
       element instanceof ModeKeyElement
-        ? getModeKeyModelAttributes(element)
+        ? getModeKeyReplacementAttributes(element)
         : element,
     );
 

@@ -1,9 +1,20 @@
 <template>
-  <Select :model-value="selectValue" @update:model-value="onUpdate">
-    <SelectTrigger :id="id" :class="cn('bg-background', triggerClass)">
+  <Select
+    :model-value="selectValue"
+    @update:model-value="onUpdate"
+    @update:open="emit('update:open', $event)"
+  >
+    <SelectTrigger
+      :id="id"
+      :class="cn('bg-background', triggerClass)"
+      @mousedown="onTriggerMousedown"
+    >
       <SelectValue />
     </SelectTrigger>
-    <SelectContent>
+    <component
+      :is="contentComponent"
+      @close-auto-focus="onContentCloseAutoFocus"
+    >
       <SelectItem :value="DOCUMENT_DEFAULT_VALUE">
         {{
           $t(($) => $.dialog.initialMartyriaStyles.documentDefault, {
@@ -21,7 +32,7 @@
           {{ getInitialMartyriaStyleDisplayName(style, t) }}
         </SelectItem>
       </SelectGroup>
-    </SelectContent>
+    </component>
   </Select>
 </template>
 
@@ -31,6 +42,7 @@ import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
+import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import {
   Select,
   SelectContent,
@@ -70,10 +82,15 @@ const props = defineProps({
     type: String,
     default: 'w-full',
   },
+  richTextPortal: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits<{
   'update:modelValue': [value: string | null];
+  'update:open': [value: boolean];
 }>();
 
 const { t } = useTranslation();
@@ -81,6 +98,9 @@ const { t } = useTranslation();
 const DOCUMENT_DEFAULT_VALUE = '__document-default__';
 
 const selectValue = computed(() => props.modelValue ?? DOCUMENT_DEFAULT_VALUE);
+const contentComponent = computed(() =>
+  props.richTextPortal ? RichTextSelectContent : SelectContent,
+);
 
 // Grouped as the styles dialog lists them: the score's own styles, then the
 // built-in styles of each language.
@@ -115,6 +135,18 @@ const styleGroups = computed(() => {
 function onUpdate(value: AcceptableValue) {
   if (typeof value === 'string') {
     emit('update:modelValue', value === DOCUMENT_DEFAULT_VALUE ? null : value);
+  }
+}
+
+function onTriggerMousedown(event: MouseEvent) {
+  if (props.richTextPortal) {
+    event.preventDefault();
+  }
+}
+
+function onContentCloseAutoFocus(event: Event) {
+  if (props.richTextPortal) {
+    event.preventDefault();
   }
 }
 </script>

@@ -41,10 +41,7 @@ import { setRichTextLanguage } from '@/utils/richTextLanguage';
 import { Unit } from '@/utils/Unit';
 
 import glyphnames from '../../assets/fonts/sbmufl/glyphnames.json';
-import {
-  NeumeMappingService,
-  type SbmuflGlyphName,
-} from './../NeumeMappingService';
+import type { SbmuflGlyphName } from './../NeumeMappingService';
 import {
   ByzHtmlExporter,
   createByzHtmlDocument,
@@ -211,6 +208,8 @@ describe('ByzHtmlExporter', () => {
     modeKey.initialMartyriaStyleId = customStyle.id;
     modeKey.fthoraAboveNote = Fthora.DiatonicPa_Top;
     modeKey.quantitativeNeumeAboveNote = ModeSign.OligonPlusKentima;
+    modeKey.quantitativeNeumeRight = QuantitativeNeume.OligonPlusKentimaAbove;
+    modeKey.fthoraAboveQuantitativeNeumeRight = Fthora.Zygos_Top;
     const pageSetup = new PageSetup();
     const paragraphStyles = createDefaultParagraphStyles();
     const resolvedStyle = resolveModeKeyInitialMartyriaStyle({
@@ -287,11 +286,7 @@ describe('ByzHtmlExporter', () => {
       `byz--initial-martyria-pitch-mark" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(6)}pt;top: ${Unit.toPt(-20)}pt;--byz-neume-font-family:`,
     );
     expect(html).toContain(`--byz-neume-font-size: ${Unit.toPt(20)}pt;`);
-    expect(html).toContain(
-      `<span style="position: relative;">${NeumeMappingService.getMapping(Fthora.DiatonicPa_Top).text}</span`,
-    );
-    expect(html).not.toContain('<x-neume');
-    expect(html).not.toContain('<x-f-pa');
+    expect(html).toContain('<x-f-d-pa');
     expect(html).toContain(
       'style="direction: ltr;position: relative;text-align: left;width:',
     );
@@ -301,6 +296,16 @@ describe('ByzHtmlExporter', () => {
     expect(html).not.toContain(
       'byz--initial-martyria-pitch-mark" style="position: absolute;',
     );
+    const trailingQuantitativeIndex = html.lastIndexOf('<x-o3');
+    const trailingFthoraIndex = html.indexOf(
+      '<x-f-zygos',
+      trailingQuantitativeIndex,
+    );
+    expect(trailingQuantitativeIndex).toBeGreaterThan(-1);
+    expect(trailingFthoraIndex).toBeGreaterThan(trailingQuantitativeIndex);
+    expect(
+      html.slice(trailingQuantitativeIndex, trailingFthoraIndex),
+    ).not.toContain('</span>');
   });
 
   it('exports paragraph-style text boxes with inline underline text decoration', () => {

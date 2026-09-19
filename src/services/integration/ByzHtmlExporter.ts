@@ -1503,8 +1503,11 @@ export class ByzHtmlExporter {
       run.appearance,
       runLayout.fontSize,
     );
-    for (const glyph of run.cluster.trailingGlyphs) {
-      inner += `<span style="${trailingCss}position: relative;top: ${Unit.toPt(neumeBaselineCorrection)}pt;">${this.exportNeume(glyph, indentation + 2)}</span>`;
+    if (run.cluster.trailingGlyphs.length > 0) {
+      const glyphs = run.cluster.trailingGlyphs
+        .map((glyph) => this.exportNeume(glyph, indentation + 2))
+        .join('');
+      inner += `<span style="${trailingCss}position: relative;top: ${Unit.toPt(neumeBaselineCorrection)}pt;">${glyphs}</span>`;
     }
 
     return `<span class="byz--initial-martyria-run byz--initial-martyria-starting-pitch" dir="${run.direction}">${inner}</span>`;

@@ -14,6 +14,7 @@ import {
   deserializeModeKeyAttributes,
   MODE_KEY_MODEL_ATTRIBUTES,
   serializeModeKeyAttributes,
+  toModeKeyEditorAttributes,
 } from './modekeydata';
 
 export const MODE_KEY_ELEMENT = 'modeKey';
@@ -96,7 +97,10 @@ export default class InsertModeKeyEditing extends Plugin {
 
         return attributes == null
           ? null
-          : writer.createElement(MODE_KEY_ELEMENT, attributes);
+          : writer.createElement(
+              MODE_KEY_ELEMENT,
+              toModeKeyEditorAttributes(attributes),
+            );
       },
     });
 

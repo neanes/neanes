@@ -3,7 +3,10 @@ import { Command } from 'ckeditor5';
 import type { ModeKeyElement } from '@/models/Element';
 
 import { MODE_KEY_ELEMENT } from './insertmodekeyediting';
-import { getModeKeyModelAttributes } from './modekeydata';
+import {
+  getModeKeyModelAttributes,
+  toModeKeyEditorAttributes,
+} from './modekeydata';
 
 export const INSERT_MODE_KEY_COMMAND = 'insertModeKey';
 
@@ -23,7 +26,7 @@ export default class InsertModeKeyCommand extends Command {
     this.editor.model.change((writer) => {
       const modelElement = writer.createElement(
         MODE_KEY_ELEMENT,
-        getModeKeyModelAttributes(element),
+        toModeKeyEditorAttributes(getModeKeyModelAttributes(element)),
       );
 
       this.editor.model.insertObject(modelElement, null, null, {

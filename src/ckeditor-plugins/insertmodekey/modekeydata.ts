@@ -1,6 +1,7 @@
 import type { ModelElement } from 'ckeditor5';
 
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
+import { Unit } from '@/utils/Unit';
 
 export const MODE_KEY_DATA_VERSION = 1;
 
@@ -69,6 +70,27 @@ export function getModeKeyModelAttributes(
   });
 }
 
+export function toModeKeyEditorAttributes(
+  attributes: ModeKeyModelAttributes,
+): ModeKeyModelAttributes {
+  const editorAttributes = { ...attributes };
+
+  if ('fontSize' in editorAttributes) {
+    const value = editorAttributes.fontSize;
+    const fontSize = getModeKeyFontSizeInPixels(value);
+
+    if (value == null) {
+      editorAttributes.fontSize = value;
+    } else if (fontSize == null) {
+      delete editorAttributes.fontSize;
+    } else {
+      editorAttributes.fontSize = `${fontSize}px`;
+    }
+  }
+
+  return editorAttributes;
+}
+
 export function createModeKeyElementFromModel(
   modelElement: ModelElement,
 ): ModeKeyElement {
@@ -100,7 +122,13 @@ export function createModeKeyElementFromAttributes(
       continue;
     }
 
-    if (key === 'fontColor') {
+    if (key === 'fontSize') {
+      const fontSize = getModeKeyFontSizeInPixels(value);
+
+      if (fontSize != null) {
+        element.fontSize = fontSize;
+      }
+    } else if (key === 'fontColor') {
       element.color = typeof value === 'string' ? value : null;
     } else {
       Object.assign(element, { [key]: value });
@@ -113,12 +141,47 @@ export function createModeKeyElementFromAttributes(
 export function serializeModeKeyAttributes(
   attributes: ModeKeyModelAttributes,
 ): string {
+  const sanitized = sanitizeAttributes(attributes);
+  const fontSize = getModeKeyFontSizeInPixels(sanitized.fontSize);
+
+  if ('fontSize' in sanitized) {
+    if (fontSize == null) {
+      delete sanitized.fontSize;
+    } else {
+      sanitized.fontSize = fontSize;
+    }
+  }
+
   const payload: SerializedModeKey = {
     version: MODE_KEY_DATA_VERSION,
-    attributes: sanitizeAttributes(attributes),
+    attributes: sanitized,
   };
 
   return encodeURIComponent(JSON.stringify(payload));
+}
+
+export function getModeKeyFontSizeInPixels(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const match = value.trim().match(/^([\d.]+)(pt|px)$/u);
+
+  if (match == null) {
+    return null;
+  }
+
+  const size = Number(match[1]);
+
+  if (!Number.isFinite(size) || size <= 0) {
+    return null;
+  }
+
+  return match[2] === 'pt' ? Unit.fromPt(size) : size;
 }
 
 export function deserializeModeKeyAttributes(

@@ -9,6 +9,7 @@ import {
   getModeKeyModelAttributes,
   MODE_KEY_MODEL_ATTRIBUTES,
   type ModeKeyModelAttributes,
+  toModeKeyEditorAttributes,
 } from './modekeydata';
 
 export const UPDATE_MODE_KEY_ATTRIBUTES_COMMAND = 'updateModeKeyAttributes';
@@ -28,10 +29,11 @@ export default class UpdateModeKeyAttributesCommand extends Command {
       return;
     }
 
-    const attributes =
+    const attributes = toModeKeyEditorAttributes(
       element instanceof ModeKeyElement
         ? getModeKeyModelAttributes(element)
-        : element;
+        : element,
+    );
 
     this.editor.model.change((writer) => {
       for (const key of MODE_KEY_MODEL_ATTRIBUTES) {

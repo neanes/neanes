@@ -8,6 +8,7 @@ import {
   getModeKeyModelAttributes,
   rewriteModeKeyAttributesInHtml,
   serializeModeKeyAttributes,
+  toModeKeyEditorAttributes,
 } from './modekeydata';
 
 describe('embedded mode key data', () => {
@@ -60,5 +61,28 @@ describe('embedded mode key data', () => {
     expect(rewritten).toMatch(/^<p>x<span data-neanes-mode-key='/u);
     expect(element.initialMartyriaStyleId).toBeNull();
     expect(element.fontSize).toBe(14);
+  });
+
+  it('converts CKEditor CSS sizes to finite pixel geometry', () => {
+    const serialized = serializeModeKeyAttributes({ fontSize: '20pt' });
+    const attributes = deserializeModeKeyAttributes(serialized);
+
+    expect(attributes?.fontSize).toBeCloseTo(26.6667, 3);
+    expect(
+      getModeKeyModelAttributes(
+        extractModeKeyElementsFromHtml(
+          `<span data-neanes-mode-key="${serialized}"></span>`,
+        )[0],
+      ).fontSize,
+    ).toBeCloseTo(26.6667, 3);
+  });
+
+  it('writes pixel CSS values into the CKEditor model', () => {
+    expect(toModeKeyEditorAttributes({ fontSize: 24 })).toEqual({
+      fontSize: '24px',
+    });
+    expect(toModeKeyEditorAttributes({ fontSize: null })).toEqual({
+      fontSize: null,
+    });
   });
 });

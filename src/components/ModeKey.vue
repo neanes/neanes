@@ -574,6 +574,10 @@ function getPitchTrailingGlueStyle(runLayout: InitialMartyriaRunLayout) {
   position: relative;
 }
 
+.mode-key-container.embedded {
+  outline: none;
+}
+
 .right-container {
   line-height: 0;
   position: absolute;

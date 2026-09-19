@@ -377,7 +377,8 @@
       :paragraph-styles="paragraphStyles"
       :initial-martyria-styles="initialMartyriaStyles ?? []"
       @update="updateModeKeyAttributes"
-      @update:style-selector-open="onModeKeyStyleSelectorOpenChanged"
+      @update:style-selector-open="onModeKeySelectorOpenChanged"
+      @update:tempo-selector-open="onModeKeySelectorOpenChanged"
       @open-selector="openModeKeySelector"
       @open-style-dialog="emit('open-initial-martyria-style-dialog')"
     />
@@ -819,7 +820,7 @@ function openModeKeySelector() {
   }
 }
 
-function onModeKeyStyleSelectorOpenChanged(isOpen: boolean) {
+function onModeKeySelectorOpenChanged(isOpen: boolean) {
   if (isOpen) {
     beginSelectionGuard(props.element);
   } else {

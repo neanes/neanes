@@ -236,7 +236,10 @@ import {
   LayoutService,
   type OverlayDiagnosticsContext,
 } from '@/services/LayoutService';
-import { getLyricsBaseline } from '@/services/LyricsLayout';
+import {
+  getEffectiveLyricsInkDescent,
+  getLyricsBaseline,
+} from '@/services/LyricsLayout';
 import {
   classifyRecoveryCandidates,
   getRecoveryCandidateGroupRecoveryIds,
@@ -931,6 +934,10 @@ const showAnonymousBoxes = computed(
   () => editorPreferences.value.showAnonymousBoxes,
 );
 
+const showNeumeAscenders = computed(
+  () => editorPreferences.value.showNeumeAscenders,
+);
+
 const showElementBoxes = computed(
   () => editorPreferences.value.showElementBoxes,
 );
@@ -943,6 +950,10 @@ const showGlueWidths = computed(() => editorPreferences.value.showGlueWidths);
 
 const showLyricBaselines = computed(
   () => editorPreferences.value.showLyricBaselines,
+);
+
+const showLyricDescenders = computed(
+  () => editorPreferences.value.showLyricDescenders,
 );
 
 const showLyricBoundingBoxes = computed(
@@ -1196,7 +1207,7 @@ function getDeveloperBoxOverlays(page: Page, line: Line, lineIndex: number) {
   }));
 }
 
-function getDeveloperLyricBaselines(page: Page) {
+function getDeveloperLyricGuides(page: Page, kind: 'baseline' | 'descender') {
   const resolvedMargins = getResolvedMarginsForPage(page);
   const context = displayedLyricMetricsContext.value;
   // Every lyric on the page sits on the same baseline, measured from the top
@@ -1213,7 +1224,66 @@ function getDeveloperLyricBaselines(page: Page) {
         element.elementType === ElementType.Note,
     );
 
-    if (note == null) {
+    if (
+      note == null ||
+      (kind === 'descender' && line.lyricDescenderElements.length === 0)
+    ) {
+      return [];
+    }
+
+    const canonicalDescent =
+      kind === 'descender'
+        ? getEffectiveLyricsInkDescent(
+            line.lyricDescenderElements,
+            (element) => getTextInkDescents(element).canonical,
+          )
+        : 0;
+    const displayedDescent =
+      kind === 'descender'
+        ? getEffectiveLyricsInkDescent(
+            line.lyricDescenderElements,
+            (element) => getTextInkDescents(element).displayed,
+          )
+        : 0;
+
+    return [
+      {
+        key: lineIndex,
+        style: {
+          left: withZoom(resolvedMargins.left),
+          top: withZoomOffset(
+            note.y + lyricsBaseline + canonicalDescent,
+            context.defaultAscentShift +
+              displayedDescent -
+              canonicalDescent * context.zoom,
+          ),
+          width: withZoom(resolvedMargins.contentWidth),
+        } as StyleValue,
+      },
+    ];
+  });
+}
+
+function getDeveloperNeumeAscenders(page: Page) {
+  const resolvedMargins = getResolvedMarginsForPage(page);
+  const context = overlayDiagnosticsContext.value;
+  const shifts = displayedNeumeMetricShifts.value;
+  const metricShift = shifts.heightShift / 2 - shifts.ascentShift;
+
+  return page.lines.flatMap((line, lineIndex) => {
+    // The element types LayoutService counts as music content, so the guide
+    // appears on the same lines that are laid out from the ascender. Drop caps
+    // are excluded because adjustDropCapPosition() moves their y off the line
+    // origin; every line that can hold one also holds notes.
+    const musicElement = line.elements.find(
+      (element) =>
+        element.elementType === ElementType.Note ||
+        element.elementType === ElementType.Martyria ||
+        element.elementType === ElementType.Tempo ||
+        element.elementType === ElementType.Empty,
+    );
+
+    if (musicElement == null) {
       return [];
     }
 
@@ -1223,8 +1293,10 @@ function getDeveloperLyricBaselines(page: Page) {
         style: {
           left: withZoom(resolvedMargins.left),
           top: withZoomOffset(
-            note.y + lyricsBaseline,
-            context.defaultAscentShift,
+            musicElement.y +
+              context.neumeBaselineOffset -
+              shifts.canonical.ascent,
+            metricShift,
           ),
           width: withZoom(resolvedMargins.contentWidth),
         } as StyleValue,
@@ -2169,9 +2241,19 @@ interface FontMetricShifts {
   heightShift: number;
 }
 
+// The ink descent measured at the canonical font size, and at the displayed
+// (zoomed) size the browser actually renders. Only the difference between them
+// is a zoom residue, so the two are applied to the two halves of
+// withZoomOffset() and the guide stays correct when --zoom-residue is cleared.
+interface TextInkDescents {
+  canonical: number;
+  displayed: number;
+}
+
 interface LyricMetricsCaches {
   styleShifts: Map<string, FontMetricShifts>;
   dropCapShifts: Map<string, FontMetricShifts>;
+  textInkDescents: Map<string, TextInkDescents>;
 }
 
 function getFontMetricShifts(
@@ -2218,6 +2300,65 @@ function getParagraphStyleMetricShifts(
   return shifts;
 }
 
+const displayedNeumeMetricShifts = computed(() => {
+  const pageSetup = score.value.pageSetup;
+  const displayedZoom = zoom.value;
+
+  return getFontMetricShifts(
+    pageSetup.neumeDefaultFontCss,
+    `${pageSetup.neumeDefaultFontSize * displayedZoom}px ${pageSetup.neumeDefaultFontFamily}`,
+    displayedZoom,
+  );
+});
+
+function getTextInkDescents(element: ScoreElement): TextInkDescents {
+  const context = displayedLyricMetricsContext.value;
+  let text: string;
+  let font: string;
+  let displayedFont: string;
+  let fontVariantCaps: string;
+
+  if (element.elementType === ElementType.Note) {
+    const style = getResolvedLyricsStyle(element as NoteElement);
+    text = (element as NoteElement).lyrics;
+    font = resolveFontCss(style);
+    displayedFont = resolveFontCss({
+      ...style,
+      fontSize: style.fontSize * context.zoom,
+    });
+    fontVariantCaps = style.fontVariantCaps ?? 'normal';
+  } else {
+    const dropCap = element as DropCapElement;
+    text = dropCap.content;
+    font = dropCap.computedFont;
+    displayedFont = dropCap.getComputedFont(
+      dropCap.computedFontSize * context.zoom,
+    );
+    fontVariantCaps = dropCap.computedFontVariantCaps;
+  }
+
+  const key = `${text} | ${displayedFont} | ${fontVariantCaps}`;
+  let descents = context.textInkDescents.get(key);
+
+  if (descents == null) {
+    descents = {
+      canonical: TextMeasurementService.getInkBounds(
+        text,
+        font,
+        fontVariantCaps,
+      ).inkDescent,
+      displayed: TextMeasurementService.getInkBounds(
+        text,
+        displayedFont,
+        fontVariantCaps,
+      ).inkDescent,
+    };
+    context.textInkDescents.set(key, descents);
+  }
+
+  return descents;
+}
+
 const displayedLyricMetricsContext = computed(() => {
   // The residues below describe what the browser does at this zoom. Print and
   // PDF render at the canonical size instead, and --zoom-residue drops them
@@ -2226,6 +2367,7 @@ const displayedLyricMetricsContext = computed(() => {
   const caches: LyricMetricsCaches = {
     styleShifts: new Map<string, FontMetricShifts>(),
     dropCapShifts: new Map<string, FontMetricShifts>(),
+    textInkDescents: new Map<string, TextInkDescents>(),
   };
   const defaultShifts = getParagraphStyleMetricShifts(
     caches,
@@ -3290,7 +3432,9 @@ function updateDeveloperToggle(
     | 'showGlueWidths'
     | 'showInkBoundingBoxes'
     | 'showLyricBaselines'
+    | 'showLyricDescenders'
     | 'showLyricBoundingBoxes'
+    | 'showNeumeAscenders'
     | 'showNeumeBoundingBoxes',
   value: boolean,
 ) {
@@ -10290,8 +10434,10 @@ function renderTabLabel(tab: Tab) {
               showGlueWidths,
               showInkBoundingBoxes,
               showLyricBaselines,
+              showLyricDescenders,
               showLyricBoundingBoxes,
               showElementBoxes,
+              showNeumeAscenders,
               showNeumeBoundingBoxes,
             }"
             @reload-diagnostics="reloadDeveloperPaneDiagnostics"
@@ -10432,15 +10578,51 @@ function renderTabLabel(tab: Tab) {
                         v-if="
                           showDeveloperPanels &&
                           overlaysEnabled &&
+                          showNeumeAscenders &&
+                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
+                        "
+                      >
+                        <span
+                          v-for="guide in getDeveloperNeumeAscenders(page)"
+                          :key="`developer-neume-ascender-${pageIndex}-${guide.key}`"
+                          class="developer-neume-ascender"
+                          :style="guide.style"
+                        />
+                      </template>
+                      <template
+                        v-if="
+                          showDeveloperPanels &&
+                          overlaysEnabled &&
                           showLyricBaselines &&
                           (!printMode || shouldRenderDeveloperOverlaysInPrint)
                         "
                       >
                         <span
-                          v-for="baseline in getDeveloperLyricBaselines(page)"
+                          v-for="baseline in getDeveloperLyricGuides(
+                            page,
+                            'baseline',
+                          )"
                           :key="`developer-lyric-baseline-${pageIndex}-${baseline.key}`"
                           class="developer-lyric-baseline"
                           :style="baseline.style"
+                        />
+                      </template>
+                      <template
+                        v-if="
+                          showDeveloperPanels &&
+                          overlaysEnabled &&
+                          showLyricDescenders &&
+                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
+                        "
+                      >
+                        <span
+                          v-for="descender in getDeveloperLyricGuides(
+                            page,
+                            'descender',
+                          )"
+                          :key="`developer-lyric-descender-${pageIndex}-${descender.key}`"
+                          class="developer-lyric-descender"
+                          :style="descender.style"
                         />
                       </template>
                       <template
@@ -11892,6 +12074,22 @@ function renderTabLabel(tab: Tab) {
   z-index: 30;
   pointer-events: none;
   border-top: 1px solid #d946ef;
+  transform: translateY(-100%);
+}
+
+.developer-lyric-descender {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  border-top: 1px solid #f97316;
+  transform: translateY(-100%);
+}
+
+.developer-neume-ascender {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  border-top: 1px solid #7c3aed;
   transform: translateY(-100%);
 }
 

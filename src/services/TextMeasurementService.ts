@@ -80,8 +80,12 @@ export class TextMeasurementService {
     return metrics.width;
   }
 
-  public static getInkBounds(text: string, font: string): InkBounds {
-    const context = this.prepareContext(font);
+  public static getInkBounds(
+    text: string,
+    font: string,
+    fontVariantCaps: string = 'normal',
+  ): InkBounds {
+    const context = this.prepareContext(font, fontVariantCaps);
 
     const metrics = context.measureText(text);
     const inkLeft = -metrics.actualBoundingBoxLeft;

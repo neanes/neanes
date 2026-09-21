@@ -1,10 +1,3 @@
-import type {
-  DropCapElement,
-  NoteElement,
-  ScoreElement,
-} from '@/models/Element';
-import { ElementType } from '@/models/Element';
-
 export function getLyricsBaseline(
   neumeHeight: number,
   lyricsVerticalOffset: number,
@@ -37,53 +30,27 @@ export function getFixedLineVerticalMetrics(
   };
 }
 
-export type LyricDescenderElement = NoteElement | DropCapElement;
-
-export function getLyricDescenderElementsByLine(
-  lines: ScoreElement[][],
-): LyricDescenderElement[][] {
-  const result = lines.map(() => [] as LyricDescenderElement[]);
-
-  for (const [lineIndex, elements] of lines.entries()) {
-    for (const element of elements) {
-      if (element.elementType === ElementType.Note) {
-        const note = element as NoteElement;
-        if (note.lyrics.length > 0) {
-          result[lineIndex].push(note);
-        }
-      } else if (element.elementType === ElementType.DropCap) {
-        const dropCap = element as DropCapElement;
-        const alignedLineIndex = lineIndex + dropCap.computedLineSpan - 1;
-
-        if (dropCap.content.length > 0 && alignedLineIndex < result.length) {
-          result[alignedLineIndex].push(dropCap);
-        }
-      }
-    }
-  }
-
-  return result;
+// The nominal box height of a line, leading included.
+export function getLineBoxHeight(metrics: LineVerticalMetrics) {
+  return metrics.leadingBefore + metrics.contentHeight + metrics.leadingAfter;
 }
 
-export function getEffectiveLyricsInkDescent<T>(
-  elements: T[],
-  measure: (element: T) => number,
-) {
-  return elements.reduce(
-    (effectiveDescent, element) => Math.max(effectiveDescent, measure(element)),
-    0,
-  );
+// The part of an already placed line that the next line on the same page is
+// positioned from. Null means the next line starts the page, in which case its
+// own top leading is trimmed away.
+export interface PlacedLine {
+  contentBottom: number;
+  leadingAfter: number;
 }
 
 export function placeLineOnPage(
   metrics: LineVerticalMetrics,
-  previousContentBottom: number | null,
-  previousLeadingAfter: number,
+  previousLine: PlacedLine | null,
 ) {
   const lineTop =
-    previousContentBottom == null
+    previousLine == null
       ? -metrics.leadingBefore
-      : previousContentBottom + previousLeadingAfter;
+      : previousLine.contentBottom + previousLine.leadingAfter;
 
   return {
     lineTop,
@@ -91,31 +58,21 @@ export function placeLineOnPage(
   };
 }
 
-// `minContentBottomOffset` extends the content below the element origin for
-// content that is anchored there rather than on the lyrics baseline, such as
-// an inline image. It has to reach the content, not just the line height: the
-// difference between the line height and the content becomes leading, which is
-// split evenly above and below, so only half of it would sit under the anchor.
 export function getMusicLineVerticalMetrics(
   lineHeight: number,
-  neumeAscenderOffset: number,
   lyricsBaseline: number,
-  effectiveLyricsInkDescent: number,
-  minContentBottomOffset: number,
-) {
-  const contentBottomOffset = Math.max(
-    lyricsBaseline + effectiveLyricsInkDescent,
-    minContentBottomOffset,
-  );
-  const contentHeight = contentBottomOffset - neumeAscenderOffset;
+): LineVerticalMetrics {
+  // Use the baseline, not the letters' ink descent, so lyric content cannot
+  // change half-leading or pagination.
+  const contentHeight = lyricsBaseline;
   const resolvedLineHeight = Math.max(lineHeight, contentHeight);
   const halfLeading = (resolvedLineHeight - contentHeight) / 2;
 
-  // Score elements are positioned from the music font's line-box origin,
-  // which is not the same as the ascender. Offset that origin so the
-  // ascender itself begins after the top half-leading.
+  // Score neumes render with `line-height: normal`, so an element's line-box
+  // origin is its own font ascender. Offsetting the origin by the top
+  // half-leading puts that ascender directly below the leading.
   return {
-    elementOffset: halfLeading - neumeAscenderOffset,
+    elementOffset: halfLeading,
     contentHeight,
     leadingBefore: halfLeading,
     leadingAfter: halfLeading,

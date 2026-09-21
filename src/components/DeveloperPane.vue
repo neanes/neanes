@@ -191,8 +191,8 @@ type DeveloperToggleKey =
   | 'showGlueWidths'
   | 'showInkBoundingBoxes'
   | 'showLyricBaselines'
-  | 'showLyricDescenders'
   | 'showLyricBoundingBoxes'
+  | 'showHalfLeading'
   | 'showNeumeAscenders'
   | 'showNeumeBoundingBoxes';
 
@@ -234,9 +234,12 @@ const displayToggles: Array<{ key: DeveloperToggleKey; label: string }> = [
   { key: 'showAnonymousBoxes', label: 'Show anonymous boxes' },
   { key: 'showGlueWidths', label: 'Show glue widths' },
   { key: 'showInkBoundingBoxes', label: 'Show ink bounding boxes' },
+  {
+    key: 'showHalfLeading',
+    label: 'Show half-leading boundaries',
+  },
   { key: 'showNeumeAscenders', label: 'Show neume ascenders' },
   { key: 'showLyricBaselines', label: 'Show lyric baselines' },
-  { key: 'showLyricDescenders', label: 'Show lyric descenders' },
   { key: 'showLyricBoundingBoxes', label: 'Show lyric bounding boxes' },
   { key: 'showNeumeBoundingBoxes', label: 'Show neume bounding boxes' },
   { key: 'showCollisionRegions', label: 'Show collision regions' },

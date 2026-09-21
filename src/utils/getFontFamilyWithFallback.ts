@@ -5,20 +5,8 @@ export function getFontFamilyWithFallback(
   return family === fallback ? `"${family}"` : `"${family}", "${fallback}"`;
 }
 
+// Bundled neume fonts are also registered under a <family>Legacy name in
+// App.vue; neume widgets use that name.
 export function getLegacyNeumeFontFamily(family: string) {
   return family + 'Legacy';
-}
-
-// The bundled neume fonts are registered a second time under a
-// "<family>Legacy" face (see the font-face declarations in App.vue), so rich
-// text falls back to it to keep legacy-encoded neume glyphs rendering inside
-// styled text.
-export function getFontFamilyWithNeumeFallback(
-  family: string,
-  neumeDefaultFontFamily: string,
-) {
-  return getFontFamilyWithFallback(
-    family,
-    getLegacyNeumeFontFamily(neumeDefaultFontFamily),
-  );
 }

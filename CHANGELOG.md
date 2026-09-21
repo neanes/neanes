@@ -2884,7 +2884,7 @@ Update to export to byzhtml 1.0.9
 
 **New**
 
-- Export as [byzhtml](https://danielgarthur.github.io/byzhtml)
+- Export as [byzhtml](https://neanes.github.io/byzhtml)
 - Copy elements as byzhtml
 
 ---

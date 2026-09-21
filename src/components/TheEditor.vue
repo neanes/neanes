@@ -248,13 +248,17 @@ import {
   LayoutService,
   type OverlayDiagnosticsContext,
 } from '@/services/LayoutService';
+import { getLyricsBaseline } from '@/services/LyricsLayout';
 import {
   classifyRecoveryCandidates,
   getRecoveryCandidateGroupRecoveryIds,
   getRecoveryCandidateSiblingRecoveryIds,
 } from '@/services/recovery/recoveryCandidates';
 import { SaveService } from '@/services/SaveService';
-import { TextMeasurementService } from '@/services/TextMeasurementService';
+import {
+  type FontVerticalMetrics,
+  TextMeasurementService,
+} from '@/services/TextMeasurementService';
 import {
   collectClipboardInitialMartyriaStylesFromElements,
   resolveClipboardInitialMartyriaStyles,
@@ -301,7 +305,7 @@ import {
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
-import { withZoom } from '@/utils/withZoom';
+import { withZoom, withZoomOffset } from '@/utils/withZoom';
 
 interface Vue3TabsChromeComponent {
   addTab: (...newTabs: Array<Tab>) => void;
@@ -504,6 +508,7 @@ const editorPreferencesHydrated = ref(false);
 const isDevelopment = ref(import.meta.env.DEV);
 const isBrowser = ref(!isElectron());
 const isLoading = ref(true);
+// Whether an export or print job is rendering the pages.
 const printMode = ref(false);
 const canUndo = ref(false);
 const canRedo = ref(false);
@@ -969,6 +974,10 @@ const showInkBoundingBoxes = computed(
 
 const showGlueWidths = computed(() => editorPreferences.value.showGlueWidths);
 
+const showLyricBaselines = computed(
+  () => editorPreferences.value.showLyricBaselines,
+);
+
 const showLyricBoundingBoxes = computed(
   () => editorPreferences.value.showLyricBoundingBoxes,
 );
@@ -1218,6 +1227,43 @@ function getDeveloperBoxOverlays(page: Page, line: Line, lineIndex: number) {
       ),
     ),
   }));
+}
+
+function getDeveloperLyricBaselines(page: Page) {
+  const resolvedMargins = getResolvedMarginsForPage(page);
+  const context = displayedLyricMetricsContext.value;
+  // Every lyric on the page sits on the same baseline, measured from the top
+  // of its line.
+  const lyricsBaseline = getLyricsBaseline(
+    overlayDiagnosticsContext.value.neumeFontHeight,
+    score.value.pageSetup.lyricsVerticalOffset,
+    context.defaultCanonicalAscent,
+  );
+
+  return page.lines.flatMap((line, lineIndex) => {
+    const note = line.elements.find(
+      (element): element is NoteElement =>
+        element.elementType === ElementType.Note,
+    );
+
+    if (note == null) {
+      return [];
+    }
+
+    return [
+      {
+        key: lineIndex,
+        style: {
+          left: withZoom(resolvedMargins.left),
+          top: withZoomOffset(
+            note.y + lyricsBaseline,
+            context.defaultAscentShift,
+          ),
+          width: withZoom(resolvedMargins.contentWidth),
+        } as StyleValue,
+      },
+    ];
+  });
 }
 
 const overlayDiagnosticsContext = computed<OverlayDiagnosticsContext>(() =>
@@ -2151,6 +2197,149 @@ function getFooterHorizontalRuleStyle(page: Page, footerHeight: number) {
   } as StyleValue;
 }
 
+// Measuring the displayed font size avoids multiplying canvas metrics by a
+// fractional zoom. Chromium can round a rendered font baseline differently
+// from that scaled prediction, and any rounding already in the canonical
+// measurement is multiplied by the zoom, so the two can differ by more than
+// a pixel as the zoom grows. The shifts below are that residue: what the
+// browser actually does minus what scaling the canonical metrics would
+// predict. Only the residue is applied as a fixed offset, so the canonical
+// length keeps tracking --zoom.
+interface FontMetricShifts {
+  canonical: FontVerticalMetrics;
+  ascentShift: number;
+  heightShift: number;
+}
+
+interface LyricMetricsCaches {
+  styleShifts: Map<string, FontMetricShifts>;
+  dropCapShifts: Map<string, FontMetricShifts>;
+}
+
+function getFontMetricShifts(
+  font: string,
+  displayedFont: string,
+  zoomValue: number,
+): FontMetricShifts {
+  const canonical = TextMeasurementService.getCachedFontVerticalMetrics(font);
+  // Not cached for the session: every zoom value would add an entry. The
+  // caller's per-zoom caches already avoid repeat measurements.
+  const displayed =
+    TextMeasurementService.getFontVerticalMetrics(displayedFont);
+
+  return {
+    canonical,
+    ascentShift: displayed.ascent - canonical.ascent * zoomValue,
+    heightShift: displayed.height - canonical.height * zoomValue,
+  };
+}
+
+// The shifts depend only on the font and the zoom, so they are resolved once
+// per distinct lyrics style instead of once per note per render. The key is
+// the style's font identity, which is cheaper to build than the CSS font
+// shorthand it resolves to.
+function getParagraphStyleMetricShifts(
+  caches: LyricMetricsCaches,
+  style: ResolvedParagraphStyle,
+  zoomValue: number,
+) {
+  const key = `${style.fontFamily} | ${style.fontStyle} | ${style.fontSize}`;
+
+  let shifts = caches.styleShifts.get(key);
+
+  if (shifts == null) {
+    shifts = getFontMetricShifts(
+      resolveFontCss(style),
+      resolveFontCss({ ...style, fontSize: style.fontSize * zoomValue }),
+      zoomValue,
+    );
+
+    caches.styleShifts.set(key, shifts);
+  }
+
+  return shifts;
+}
+
+const displayedLyricMetricsContext = computed(() => {
+  // The residues below describe what the browser does at this zoom. Print and
+  // PDF render at the canonical size instead, and --zoom-residue drops them
+  // there, so this does not have to anticipate the render target.
+  const displayedZoom = zoom.value;
+  const caches: LyricMetricsCaches = {
+    styleShifts: new Map<string, FontMetricShifts>(),
+    dropCapShifts: new Map<string, FontMetricShifts>(),
+  };
+  const defaultShifts = getParagraphStyleMetricShifts(
+    caches,
+    resolvedDefaultLyricsStyle.value,
+    displayedZoom,
+  );
+
+  return {
+    // Every lyric on the page shares one displayed baseline, no matter which
+    // font it uses: the canonical baseline scaled by the zoom, plus the
+    // default lyrics font's residue.
+    defaultAscentShift: defaultShifts.ascentShift,
+    defaultCanonicalAscent: defaultShifts.canonical.ascent,
+    ...caches,
+    zoom: displayedZoom,
+  };
+});
+
+function getDisplayedLyricGeometry(
+  element: NoteElement,
+  resolvedLyricsStyle: ResolvedParagraphStyle,
+) {
+  const context = displayedLyricMetricsContext.value;
+  const shifts = getParagraphStyleMetricShifts(
+    context,
+    resolvedLyricsStyle,
+    context.zoom,
+  );
+
+  return {
+    // A lyric in the default lyrics font cancels the two residues out, so its
+    // top is exactly the uncorrected zoomed offset. Its rendered baseline
+    // still moves, because the line height below drops the half-leading that
+    // a purely zoomed line height would have left.
+    top: withZoomOffset(
+      element.lyricsVerticalOffset,
+      context.defaultAscentShift - shifts.ascentShift,
+    ),
+    // Matching the line height to the measured font height leaves no
+    // half-leading, so the baseline sits one displayed ascent below the top.
+    lineHeight: withZoomOffset(shifts.canonical.height, shifts.heightShift),
+  };
+}
+
+function getDisplayedDropCapTop(element: DropCapElement) {
+  const context = displayedLyricMetricsContext.value;
+  // The computed font carries the canonical size, and the zoom is fixed for
+  // the whole context, so it identifies both measurements on its own.
+  const font = element.computedFont;
+
+  let shifts = context.dropCapShifts.get(font);
+
+  if (shifts == null) {
+    shifts = getFontMetricShifts(
+      font,
+      element.getComputedFont(element.computedFontSize * context.zoom),
+      context.zoom,
+    );
+
+    context.dropCapShifts.set(font, shifts);
+  }
+
+  // The drop cap sits on the lyrics baseline, so it follows the displayed
+  // lyric baseline, but the glyph moves within its own line box: its ascent
+  // pushes the baseline down, and half of its height residue is taken by the
+  // line box's half-leading.
+  return withZoomOffset(
+    element.y,
+    context.defaultAscentShift - shifts.ascentShift + shifts.heightShift / 2,
+  );
+}
+
 // The style properties the lyrics span and the leading-hyphen span share: the
 // resolved lyrics style plus the element's vertical metrics.
 function getLyricStyleBase(element: NoteElement): CSSProperties {
@@ -2159,9 +2348,13 @@ function getLyricStyleBase(element: NoteElement): CSSProperties {
     resolvedLyricsStyle.fontFamily,
     resolvedLyricsStyle.fontStyle,
   );
+  const displayedGeometry = getDisplayedLyricGeometry(
+    element,
+    resolvedLyricsStyle,
+  );
 
   return {
-    top: withZoom(element.lyricsVerticalOffset),
+    top: displayedGeometry.top,
     fontSize: withZoom(resolvedLyricsStyle.fontSize),
     fontFamily: getFontFamilyWithFallback(
       resolvedLyricsFont.cssFontFamily,
@@ -2178,7 +2371,7 @@ function getLyricStyleBase(element: NoteElement): CSSProperties {
     color: resolvedLyricsStyle.color,
     webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
     webkitTextStrokeColor: resolvedLyricsStyle.strokeColor,
-    lineHeight: withZoom(element.lyricsFontHeight),
+    lineHeight: displayedGeometry.lineHeight,
   } as CSSProperties;
 }
 
@@ -2414,7 +2607,9 @@ function getElementStyle(element: ScoreElement) {
   return {
     left: !rtl.value ? withZoom(element.x) : undefined,
     right: rtl.value ? withZoom(element.x) : undefined,
-    top: withZoom(element.y),
+    top: isDropCapElement(element)
+      ? getDisplayedDropCapTop(element)
+      : withZoom(element.y),
   } as StyleValue;
 }
 
@@ -2451,14 +2646,6 @@ function getMelismaStyle(element: NoteElement) {
   } as StyleValue;
 }
 
-function getMelismaUnderscoreStyleOuter(element: NoteElement) {
-  return {
-    top: withZoom(element.melismaOffsetTop),
-    height: withZoom(element.lyricsFontHeight),
-    width: withZoom(element.melismaWidth),
-  };
-}
-
 function getMelismaUnderscoreStyleInner(element: NoteElement) {
   const thickness = score.value.pageSetup.lyricsMelismaThickness;
   const resolvedLyricsStyle = getResolvedLyricsStyle(element);
@@ -2469,8 +2656,10 @@ function getMelismaUnderscoreStyleInner(element: NoteElement) {
 
   return {
     borderBottom: `${withZoom(thickness)} solid ${resolvedLyricsStyle.color}`,
-    left: withZoom(spacing),
-    width: `calc(100% - ${withZoom(spacing)})`,
+    // A full melisma starts at the left edge of the lyrics container.
+    left: element.isFullMelisma ? 0 : undefined,
+    marginLeft: withZoom(spacing),
+    width: withZoom(element.melismaWidth - spacing),
   };
 }
 
@@ -3186,6 +3375,7 @@ function updateDeveloperToggle(
     | 'showGuides'
     | 'showGlueWidths'
     | 'showInkBoundingBoxes'
+    | 'showLyricBaselines'
     | 'showLyricBoundingBoxes'
     | 'showNeumeBoundingBoxes',
   value: boolean,
@@ -7554,11 +7744,7 @@ const resolvedDefaultLyricsStyle = computed(() =>
 // rather than per editor instance; the CSS depends only on score-level state
 // and applies to every .ck-content in the document, including print.
 const richTextParagraphStyleCss = computed(() =>
-  buildRichTextParagraphStyleCss(
-    score.value.paragraphStyles,
-    score.value.pageSetup,
-    '.ck-content',
-  ),
+  buildRichTextParagraphStyleCss(score.value.paragraphStyles, '.ck-content'),
 );
 
 function getResolvedLyricsStyle(element: NoteElement) {
@@ -8730,14 +8916,18 @@ async function onFileMenuPrint() {
   const previousTitle = window.document.title;
   window.document.title = getFileName(selectedWorkspace.value, false);
 
-  nextTick(async () => {
+  try {
+    await nextTick();
     await ipcService.printWorkspace(selectedWorkspace.value);
+  } catch (error) {
+    console.error(error);
+  } finally {
     printMode.value = false;
     window.document.title = previousTitle;
 
     // Re-focus the active element
     focusElement(activeElement);
-  });
+  }
 }
 
 async function onFileMenuExportAsPdf() {
@@ -10440,6 +10630,7 @@ function renderTabLabel(tab: Tab) {
               showGuides,
               showGlueWidths,
               showInkBoundingBoxes,
+              showLyricBaselines,
               showLyricBoundingBoxes,
               showElementBoxes,
               showNeumeBoundingBoxes,
@@ -10577,6 +10768,21 @@ function renderTabLabel(tab: Tab) {
                         />
                         <span class="guide-line-ht" :style="guideStyleTop" />
                         <span class="guide-line-hb" :style="guideStyleBottom" />
+                      </template>
+                      <template
+                        v-if="
+                          showDeveloperPanels &&
+                          overlaysEnabled &&
+                          showLyricBaselines &&
+                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
+                        "
+                      >
+                        <span
+                          v-for="baseline in getDeveloperLyricBaselines(page)"
+                          :key="`developer-lyric-baseline-${pageIndex}-${baseline.key}`"
+                          class="developer-lyric-baseline"
+                          :style="baseline.style"
+                        />
                       </template>
                       <template
                         v-if="
@@ -10998,27 +11204,19 @@ function renderTabLabel(tab: Tab) {
                                     (element as NoteElement).melismaText === ''
                                   "
                                 >
-                                  <div
+                                  <span
                                     class="melisma-underscore"
-                                    :class="{
-                                      full: (element as NoteElement)
-                                        .isFullMelisma,
-                                    }"
-                                    :style="
-                                      getMelismaUnderscoreStyleOuter(
-                                        element as NoteElement,
-                                      )
-                                    "
+                                    aria-hidden="true"
                                   >
-                                    <div
+                                    <span
                                       class="melisma-inner"
                                       :style="
                                         getMelismaUnderscoreStyleInner(
                                           element as NoteElement,
                                         )
                                       "
-                                    ></div>
-                                  </div>
+                                    ></span>
+                                  </span>
                                 </template>
                                 <template
                                   v-else-if="
@@ -12063,6 +12261,14 @@ function renderTabLabel(tab: Tab) {
   border: 1px dashed #2563eb;
 }
 
+.developer-lyric-baseline {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  border-top: 1px solid #d946ef;
+  transform: translateY(-100%);
+}
+
 .developer-glue-overlay {
   position: absolute;
   pointer-events: none;
@@ -12390,16 +12596,13 @@ function renderTabLabel(tab: Tab) {
 }
 
 .melisma-underscore {
-  position: absolute;
-  display: inline;
-  white-space: pre;
+  /* Anchor to the rendered baseline without changing lyric alignment. */
+  display: inline-block;
+  width: 0;
+  height: 0;
 }
 
 .melisma.full {
-  left: 0;
-}
-
-.melisma-underscore.full {
   left: 0;
 }
 
@@ -12412,9 +12615,11 @@ function renderTabLabel(tab: Tab) {
 }
 
 .melisma-inner {
-  height: 100%;
-  position: relative;
-  box-sizing: border-box;
+  /* The static position follows the baseline anchor. Keep the containing
+     block at lyrics-container so full melismas can start at its left edge. */
+  position: absolute;
+  height: 0;
+  transform: translateY(-100%);
 }
 
 .melisma-text {

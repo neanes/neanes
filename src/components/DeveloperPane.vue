@@ -190,6 +190,7 @@ type DeveloperToggleKey =
   | 'showGuides'
   | 'showGlueWidths'
   | 'showInkBoundingBoxes'
+  | 'showLyricBaselines'
   | 'showLyricBoundingBoxes'
   | 'showNeumeBoundingBoxes';
 
@@ -231,6 +232,7 @@ const displayToggles: Array<{ key: DeveloperToggleKey; label: string }> = [
   { key: 'showAnonymousBoxes', label: 'Show anonymous boxes' },
   { key: 'showGlueWidths', label: 'Show glue widths' },
   { key: 'showInkBoundingBoxes', label: 'Show ink bounding boxes' },
+  { key: 'showLyricBaselines', label: 'Show lyric baselines' },
   { key: 'showLyricBoundingBoxes', label: 'Show lyric bounding boxes' },
   { key: 'showNeumeBoundingBoxes', label: 'Show neume bounding boxes' },
   { key: 'showCollisionRegions', label: 'Show collision regions' },

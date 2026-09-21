@@ -19,6 +19,7 @@ export interface IEditorPreferences {
   showAnonymousBoxes: boolean;
   showElementBoxes: boolean;
   showInkBoundingBoxes: boolean;
+  showLyricBaselines: boolean;
   showLyricBoundingBoxes: boolean;
   showNeumeBoundingBoxes: boolean;
   showCollisionRegions: boolean;
@@ -37,6 +38,7 @@ export class EditorPreferences implements IEditorPreferences {
   showAnonymousBoxes = false;
   showElementBoxes = false;
   showInkBoundingBoxes = false;
+  showLyricBaselines = false;
   showLyricBoundingBoxes = false;
   showNeumeBoundingBoxes = false;
   showCollisionRegions = false;

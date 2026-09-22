@@ -691,10 +691,13 @@ export class LayoutService {
               ? pageSetup.modeKeyDefaultHeightAdjustment
               : modeKeyElement.heightAdjustment;
 
+          // Trim excess bottom whitespace in the initial martyria's font box.
           modeKeyElement.height =
             TextMeasurementService.getFontHeight(
               `${modeKeyElement.computedFontSize}px ${modeKeyElement.computedFontFamily}`,
-            ) + modeKeyElement.computedHeightAdjustment;
+            ) -
+            0.45 * modeKeyElement.computedFontSize +
+            modeKeyElement.computedHeightAdjustment;
 
           this.addBox(
             pageSetup.innerPageWidth,

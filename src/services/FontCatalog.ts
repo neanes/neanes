@@ -6,11 +6,13 @@ import {
   compareFontStyles,
   cssFontWeight,
   fontStyleKey,
+  fontStyleTokenKey,
   hasNonWeightStyleToken,
   isRegularStyle,
   normalizeDocumentFontStyle,
   parseStyleAxes,
   styleWeight,
+  synthesizeFontStyleOptions,
 } from '@/utils/fontStyleAxes';
 import { fontFeatureValuesCss } from '@/utils/fontVariants';
 import { isElectron } from '@/utils/isElectron';
@@ -28,6 +30,13 @@ export interface ResolvedFace {
   cssFamily: string;
   cssFontWeight?: string;
   cssFontStyle?: string;
+}
+
+export interface ResolvedExportFace {
+  style: string;
+  postscriptName?: string;
+  syntheticBold?: boolean;
+  syntheticItalic?: boolean;
 }
 
 interface BundledFace {
@@ -361,12 +370,11 @@ export function resolveSystemFontFace<T extends FontFaceValue>(
   face: T | undefined;
   canonicalStyle: string;
   needsFaceAlias: boolean;
+  syntheticBold: boolean;
+  syntheticItalic: boolean;
 } {
-  // Only a Regular request falls back. A specifically named style the family
-  // lacks stays unresolved rather than silently rendering as something else.
-  const face =
-    matchFontFaceByStyle(faces, style) ??
-    (isRegularStyle(style) ? matchDefaultFontFace(faces) : undefined);
+  const resolved = resolveFontFaceWithSynthesis(faces, style);
+  const face = resolved?.face;
 
   return {
     face,
@@ -376,7 +384,149 @@ export function resolveSystemFontFace<T extends FontFaceValue>(
     // font enumeration is unavailable. Basic styles are aliased only when the
     // exact installed face and its unique local names are known.
     needsFaceAlias: face != null || hasNonWeightStyleToken(style),
+    syntheticBold: resolved?.syntheticBold ?? false,
+    syntheticItalic: resolved?.syntheticItalic ?? false,
   };
+}
+
+function resolveFontFaceWithSynthesis<T extends FontFaceValue>(
+  faces: readonly T[],
+  style: string,
+):
+  | {
+      face: T;
+      syntheticBold: boolean;
+      syntheticItalic: boolean;
+    }
+  | undefined {
+  const requested = parseStyleAxes(style);
+  const exact = matchFontFaceByStyle(faces, style);
+
+  if (exact != null) {
+    return { face: exact, syntheticBold: false, syntheticItalic: false };
+  }
+
+  const defaultFace = matchDefaultFontFace(faces);
+
+  if (defaultFace == null) {
+    return undefined;
+  }
+
+  const defaultAxes = parseStyleAxes(defaultFace.style);
+  const requestedNonWeightKey = nonWeightStyleKey(requested);
+  const compatibleNonWeightKey =
+    requestedNonWeightKey !== ''
+      ? requestedNonWeightKey
+      : nonWeightStyleKey(defaultAxes);
+  const requestedNamedWeight = namedStyleWeight(requested);
+  const targetWeight = requested.bold
+    ? 700
+    : (requestedNamedWeight ??
+      (requested.rest.length === 0 ? styleWeight(defaultAxes) : 400));
+  let best:
+    | {
+        face: T;
+        axes: ReturnType<typeof parseStyleAxes>;
+        score: number;
+      }
+    | undefined;
+
+  for (const face of faces) {
+    const axes = parseStyleAxes(face.style);
+
+    if (nonWeightStyleKey(axes) !== compatibleNonWeightKey) {
+      continue;
+    }
+
+    const weight = styleWeight(axes);
+
+    // A specifically named weight is a real-face request, not permission to
+    // substitute another weight. Only the missing slant may be synthesized.
+    if (requestedNamedWeight != null && weight !== requestedNamedWeight) {
+      continue;
+    }
+
+    // CSS face selection matches style before weight. Keep that priority when
+    // choosing which requested axis must be synthesized.
+    const score =
+      (axes.italic === requested.italic ? 0 : 1000000) +
+      fontWeightMatchScore(targetWeight, weight);
+
+    if (best == null || score < best.score) {
+      best = { face, axes, score };
+    }
+  }
+
+  return best == null
+    ? undefined
+    : {
+        face: best.face,
+        syntheticBold: requested.bold && styleWeight(best.axes) < targetWeight,
+        syntheticItalic: requested.italic && !best.axes.italic,
+      };
+}
+
+function namedStyleWeight(axes: ReturnType<typeof parseStyleAxes>) {
+  for (const token of axes.rest) {
+    const weight = styleWeight({ bold: false, italic: false, rest: [token] });
+
+    if (weight !== 400) {
+      return weight;
+    }
+  }
+
+  return null;
+}
+
+function nonWeightStyleKey(axes: ReturnType<typeof parseStyleAxes>) {
+  return axes.rest
+    .filter(
+      (token) =>
+        styleWeight({ bold: false, italic: false, rest: [token] }) === 400,
+    )
+    .map(fontStyleTokenKey)
+    .sort()
+    .join('\0');
+}
+
+function fontWeightMatchScore(requested: number, candidate: number) {
+  if (requested >= 400 && requested <= 500) {
+    if (candidate >= requested && candidate <= 500) {
+      return candidate - requested;
+    }
+
+    if (candidate < requested) {
+      return 100 + requested - candidate;
+    }
+
+    return 1000 + candidate - 500;
+  }
+
+  if (requested < 400) {
+    return candidate <= requested
+      ? requested - candidate
+      : 1000 + candidate - requested;
+  }
+
+  return candidate >= requested
+    ? candidate - requested
+    : 1000 + requested - candidate;
+}
+
+function resolveBundledFontFace(
+  family: string,
+  faces: readonly BundledFace[],
+  style: string,
+) {
+  if (!NEUME_FONT_FAMILIES.has(family)) {
+    return resolveFontFaceWithSynthesis(faces, style);
+  }
+
+  const face = selectFontFaceByStyle(faces, style);
+
+  return face == null
+    ? undefined
+    : { face, syntheticBold: false, syntheticItalic: false };
 }
 
 export function createSystemFontFaceRule(
@@ -542,6 +692,17 @@ class FontCatalog {
     return [DEFAULT_FONT_STYLE];
   }
 
+  // Styles users may select. Text families gain the Bold/Italic combinations
+  // Chromium can synthesize; notation fonts remain restricted to their real
+  // faces because changing their glyph outlines would damage the score.
+  getSelectableStyles(family: string): string[] {
+    const styles = this.getStyles(family);
+
+    return NEUME_FONT_FAMILIES.has(family)
+      ? styles
+      : synthesizeFontStyleOptions(styles);
+  }
+
   // Resolve a document family and style to the exact face an exporter should
   // name. postscriptName is what makes the selection exact outside the browser:
   // a font system cannot reliably pick a face from a family plus a multi-word
@@ -551,17 +712,18 @@ class FontCatalog {
   resolveExportFace(
     family: string,
     fontStyle: string | null | undefined,
-  ): { style: string; postscriptName?: string } {
+  ): ResolvedExportFace {
     const style = normalizeDocumentFontStyle(fontStyle);
     const bundledFaces = BUNDLED_FACES[family];
 
     if (bundledFaces != null) {
-      const bundled = matchFontFaceByStyle(bundledFaces, style);
+      const resolved = resolveBundledFontFace(family, bundledFaces, style);
 
-      if (bundled == null) {
+      if (resolved == null) {
         return { style };
       }
 
+      const bundled = resolved.face;
       const { fileName } = bundled;
 
       return {
@@ -570,6 +732,8 @@ class FontCatalog {
           fileName != null
             ? bundledFontEntry(fileName).postscriptName
             : undefined,
+        syntheticBold: resolved.syntheticBold || undefined,
+        syntheticItalic: resolved.syntheticItalic || undefined,
       };
     }
 
@@ -581,6 +745,8 @@ class FontCatalog {
     return {
       style: resolved.canonicalStyle,
       postscriptName: resolved.face?.postscriptName,
+      syntheticBold: resolved.syntheticBold || undefined,
+      syntheticItalic: resolved.syntheticItalic || undefined,
     };
   }
 
@@ -644,7 +810,7 @@ class FontCatalog {
     const bundled = BUNDLED_FACES[family];
 
     return bundled != null
-      ? (selectFontFaceByStyle(bundled, style) ?? null)
+      ? (resolveBundledFontFace(family, bundled, style)?.face ?? null)
       : null;
   }
 
@@ -666,13 +832,20 @@ class FontCatalog {
     fontStyle: string | null | undefined,
   ): ResolvedFace {
     const style = normalizeDocumentFontStyle(fontStyle);
-    const face = this.matchBundledFace(family, style);
+    const bundled = BUNDLED_FACES[family];
+    const resolved =
+      bundled != null
+        ? resolveBundledFontFace(family, bundled, style)
+        : undefined;
+    if (resolved != null) {
+      const face = resolved.face;
 
-    if (face != null) {
       return {
         cssFamily: face.cssFamily ?? family,
-        cssFontWeight: face.cssFontWeight,
-        cssFontStyle: face.cssFontStyle,
+        cssFontWeight: resolved.syntheticBold
+          ? cssFontWeight(style)
+          : face.cssFontWeight,
+        cssFontStyle: resolved.syntheticItalic ? 'italic' : face.cssFontStyle,
       };
     }
 

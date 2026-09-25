@@ -36,7 +36,7 @@ describe('useFontStyleControls', () => {
     expect(isFontStyleAxisActive('bold')).toBe(false);
   });
 
-  it('enables an axis toggle only when the family offers the face', () => {
+  it('enables synthetic axes for text fonts but not notation fonts', () => {
     const neanes = useFontStyleControls(
       () => 'Neanes', // only Regular
       () => 'Regular',
@@ -50,6 +50,13 @@ describe('useFontStyleControls', () => {
     );
     expect(serif.isFontStyleAxisToggleEnabled('bold')).toBe(true);
     expect(serif.isFontStyleAxisToggleEnabled('italic')).toBe(true);
+
+    const arabic = useFontStyleControls(
+      () => 'Noto Naskh Arabic', // has no real italic face
+      () => 'Regular',
+    );
+    expect(arabic.isFontStyleAxisToggleEnabled('italic')).toBe(true);
+    expect(arabic.applyStyleAxisToggles(['italic'])).toBe('Italic');
   });
 
   it('applies only the axes that changed in the new selection', () => {

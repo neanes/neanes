@@ -189,7 +189,7 @@ export class FontStyleToggleCommand extends Command {
       this.resolvedParagraphStyleFallback,
     );
     const available = family
-      ? fontCatalog.getStyles(family)
+      ? fontCatalog.getSelectableStyles(family)
       : [DEFAULT_FONT_STYLE, 'Bold', 'Italic', 'Bold Italic'];
 
     this.target = resolveAxisToggle(fontStyle, this.axis, available);

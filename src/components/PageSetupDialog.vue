@@ -1467,7 +1467,9 @@
         <FieldTitle>
           {{ $t(($) => $.dialog.pageSetup.preview, { ns: 'dialog' }) }}
         </FieldTitle>
-        <div class="flex justify-center">
+        <!-- Match the score: neumes are spaced by their font metrics, not by
+             Tailwind preflight leading. -->
+        <div class="flex justify-center leading-[normal]">
           <div
             v-for="(element, index) in previewNeumes"
             :key="index"

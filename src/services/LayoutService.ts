@@ -99,10 +99,14 @@ import { resolveNextRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
+import type { LineVerticalMetrics, PlacedLine } from './LyricsLayout';
 import {
+  getFixedLineVerticalMetrics,
+  getLineBoxHeight,
   getLyricsBaseline,
   getLyricsTop,
-  includeLyricsInLineHeight,
+  getMusicLineVerticalMetrics,
+  placeLineOnPage,
 } from './LyricsLayout';
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
@@ -254,7 +258,8 @@ interface GetNoteWidthArgs {
 
 export interface OverlayDiagnosticsContext {
   measureBarWidthMap: Map<MeasureBar, number>;
-  neumeFontAscent: number;
+  // Distance from an element's line-box origin down to the neume baseline.
+  neumeBaselineOffset: number;
   neumeFontHeight: number;
 }
 
@@ -267,7 +272,7 @@ interface CompletedParagraph {
   paragraph: InputItem[];
   positions: PositionedItem[];
   ratios: number[];
-  lineHeights: number[];
+  lineVerticalMetrics: LineVerticalMetrics[];
   dropCapWidthPx: number;
   dropCapContinuationLines: number;
 }
@@ -406,6 +411,8 @@ export class LayoutService {
       elements.push(new EmptyElement());
     }
 
+    const collectDiagnostics = options?.collectDiagnostics === true;
+
     const layoutWorkspace: LayoutWorkspace = {
       pageSetup,
       pendingParagraph: [],
@@ -417,10 +424,9 @@ export class LayoutService {
       pendingDropCapContinuationLines: 0,
       pendingMartyriaBarTransferWidth: 0,
       pendingLeadingLyricHyphenReservationWidth: 0,
-      diagnostics:
-        options?.collectDiagnostics === true
-          ? { currentOwner: null, items: [] }
-          : null,
+      diagnostics: collectDiagnostics
+        ? { currentOwner: null, items: [] }
+        : null,
       loggingEnabled:
         import.meta.env.VITE_LAYOUT_SERVICE_LOGGING_ENABLED === 'true',
     };
@@ -432,9 +438,12 @@ export class LayoutService {
 
     pages.push(page);
 
-    let currentPageHeightPx = 0;
+    // Page usage ends at the current line's content bottom. Its trailing
+    // leading is added only if another line follows on the same page, so this
+    // is null while the current page has no lines yet.
+    let lastPlacedLineOnPage: PlacedLine | null = null;
 
-    let lastLineHeightPx = 0;
+    let currentLineTopPx = 0;
 
     let lastElementWasPageBreak = false;
 
@@ -469,11 +478,11 @@ export class LayoutService {
       lyricAscent,
     );
 
-    // The expected height of a line containing only neumes
-    const neumeLineHeight = includeLyricsInLineHeight(
-      pageSetup.lineHeight,
-      getLyricsTop(lyricsBaseline, lyricAscent),
-      lyricHeight,
+    // The nominal box height of a line that holds only music content. Used
+    // wherever a multiline drop cap reaches past the last line its paragraph
+    // actually produced, so there are no metrics to read.
+    const musicLineHeight = getLineBoxHeight(
+      getMusicLineVerticalMetrics(pageSetup.lineHeight, lyricsBaseline),
     );
 
     const measureBarWidthMap = this.getMeasureBarWidthMap(pageSetup);
@@ -682,10 +691,13 @@ export class LayoutService {
               ? pageSetup.modeKeyDefaultHeightAdjustment
               : modeKeyElement.heightAdjustment;
 
+          // Trim excess bottom whitespace in the initial martyria's font box.
           modeKeyElement.height =
             TextMeasurementService.getFontHeight(
               `${modeKeyElement.computedFontSize}px ${modeKeyElement.computedFontFamily}`,
-            ) + modeKeyElement.computedHeightAdjustment;
+            ) -
+            0.45 * modeKeyElement.computedFontSize +
+            modeKeyElement.computedHeightAdjustment;
 
           this.addBox(
             pageSetup.innerPageWidth,
@@ -1470,8 +1482,8 @@ export class LayoutService {
           justifyLastLine,
           layoutWorkspace,
           measureBarWidthMap,
-          neumeLineHeight,
           neumeHeight,
+          lyricsBaseline,
         );
       }
 
@@ -1562,7 +1574,7 @@ export class LayoutService {
         paragraph,
         positions,
         ratios,
-        lineHeights,
+        lineVerticalMetrics,
         dropCapWidthPx,
         dropCapContinuationLines,
       } = completedParagraph;
@@ -1583,6 +1595,7 @@ export class LayoutService {
         if (startsNewLine) {
           const newLine = new Line();
           const nextLineIndex = paragraphLineIndex + 1;
+          const nextLineVerticalMetrics = lineVerticalMetrics[nextLineIndex]!;
           const adjustmentRatio = ratios[nextLineIndex];
           if (adjustmentRatio == null) {
             throw new Error(
@@ -1591,59 +1604,79 @@ export class LayoutService {
           }
           newLine.adjustmentRatio = adjustmentRatio;
           newLine.diagnostics = diagnostics?.[nextLineIndex] ?? null;
+
+          let nextLinePlacement = placeLineOnPage(
+            nextLineVerticalMetrics,
+            lastPlacedLineOnPage,
+          );
+
+          const { extraHeaderHeightPx, extraFooterHeightPx } =
+            getCachedExtraHeaderFooterHeight();
+          const innerPageHeight =
+            pageSetup.innerPageHeight -
+            extraHeaderHeightPx -
+            extraFooterHeightPx;
+          const additionalHeight =
+            nextLineIndex === 0
+              ? this.getLineContinuationHeight(
+                  lineVerticalMetrics,
+                  nextLineIndex,
+                  dropCapContinuationLines,
+                  musicLineHeight,
+                )
+              : 0;
+
+          // A line alone on its page stays there even if it overflows, since
+          // moving it would leave the page empty.
+          const requiresNewPage =
+            (lastPlacedLineOnPage != null &&
+              nextLinePlacement.contentBottom + additionalHeight >
+                innerPageHeight) ||
+            lastElementWasPageBreak;
+
+          // Keep multiline drop caps on the same page as their continuation
+          // lines when possible.
+          if (requiresNewPage) {
+            page = new Page();
+            page.physicalPageNumber = pages.length + 1;
+            pages.push(page);
+            nextLinePlacement = placeLineOnPage(nextLineVerticalMetrics, null);
+
+            // Consume the page-break trigger. Subsequent positioned items
+            // belonging to the same break (glues, penalties without an
+            // associated element) hit the `continue` below and skip the
+            // `lastElementWasPageBreak` update, so without this reset the
+            // flag re-fires this branch and leaves an empty page behind.
+            lastElementWasPageBreak = false;
+          }
+
           page.lines.push(newLine);
+          paragraphLineIndex = nextLineIndex;
+          currentLineTopPx = nextLinePlacement.lineTop;
+          lastPlacedLineOnPage = {
+            contentBottom: nextLinePlacement.contentBottom,
+            leadingAfter: nextLineVerticalMetrics.leadingAfter,
+          };
 
-          paragraphLineIndex += 1;
-
-          lastLineHeightPx = lineHeights[nextLineIndex]!;
-          currentPageHeightPx += lastLineHeightPx;
+          if (
+            collectDiagnostics &&
+            (nextLineVerticalMetrics.leadingBefore > 0 ||
+              nextLineVerticalMetrics.leadingAfter > 0)
+          ) {
+            // Include the nominal half-leading even where pagination trims it.
+            const top =
+              pageSetup.topMargin +
+              getCachedExtraHeaderFooterHeight().extraHeaderHeightPx +
+              currentLineTopPx;
+            newLine.halfLeadingBounds = [
+              top,
+              top + getLineBoxHeight(nextLineVerticalMetrics),
+            ];
+          }
         }
 
         // Calculate the height of the headers/footers of the current page
-        let { extraHeaderHeightPx, extraFooterHeightPx } =
-          getCachedExtraHeaderFooterHeight();
-
-        const innerPageHeight =
-          pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
-        const additionalHeight =
-          startsNewLine && paragraphLineIndex === 0
-            ? this.getLineSpanHeight(
-                lineHeights,
-                1,
-                dropCapContinuationLines,
-                neumeLineHeight,
-              )
-            : 0;
-        // A line alone on its page stays there even if it overflows, since
-        // moving it would leave the page empty.
-        const requiresNewPage =
-          startsNewLine &&
-          ((page.lines.length > 1 &&
-            currentPageHeightPx + additionalHeight > innerPageHeight) ||
-            lastElementWasPageBreak);
-
-        // Keep multiline drop caps on the same page as their continuation lines
-        // when possible.
-        if (requiresNewPage) {
-          const lastLine = page.lines.pop()!;
-
-          page = new Page();
-          page.physicalPageNumber = pages.length + 1;
-          page.lines.push(lastLine);
-          pages.push(page);
-          currentPageHeightPx = lastLineHeightPx;
-
-          // Consume the page-break trigger. Subsequent positioned items
-          // belonging to the same break (glues, penalties without an
-          // associated element) hit the `continue` below and skip the
-          // `lastElementWasPageBreak` update, so without this reset the
-          // flag re-fires this branch and leaves an empty page behind.
-          lastElementWasPageBreak = false;
-
-          // Recalculate the height of the headers/footers of the new page
-          ({ extraHeaderHeightPx, extraFooterHeightPx } =
-            getCachedExtraHeaderFooterHeight());
-        }
+        const { extraHeaderHeightPx } = getCachedExtraHeaderFooterHeight();
 
         if (!('element' in item)) {
           continue;
@@ -1695,8 +1728,8 @@ export class LayoutService {
           pageSetup.topMargin +
           extraHeaderHeightPx +
           marginTop +
-          currentPageHeightPx -
-          lastLineHeightPx;
+          lineVerticalMetrics[paragraphLineIndex]!.elementOffset +
+          currentLineTopPx;
         element.width = position.width;
 
         // Fill-width elements were encoded using their intrinsic placeholder
@@ -1731,8 +1764,8 @@ export class LayoutService {
 
         this.adjustDropCapPosition(
           element,
-          lineHeights,
-          neumeLineHeight,
+          lineVerticalMetrics,
+          musicLineHeight,
           lyricsBaseline,
         );
 
@@ -1896,7 +1929,8 @@ export class LayoutService {
     pageSetup: PageSetup,
     context: OverlayDiagnosticsContext,
   ): ElementOverlayDiagnostics {
-    const { measureBarWidthMap, neumeFontAscent, neumeFontHeight } = context;
+    const { measureBarWidthMap, neumeBaselineOffset, neumeFontHeight } =
+      context;
 
     if (element.elementType === ElementType.Note) {
       const noteElement = element as NoteElement;
@@ -1930,12 +1964,8 @@ export class LayoutService {
         neumeFontHeight,
       );
 
-      const baselineOffset =
-        neumeFontAscent +
-        (neumeFontHeight - pageSetup.neumeDefaultFontSize) / 2;
-
       if (noteInkBox) {
-        noteInkBox.top += baselineOffset;
+        noteInkBox.top += neumeBaselineOffset;
       }
 
       return {
@@ -1944,7 +1974,7 @@ export class LayoutService {
           height: box.bottom - box.top,
           kind: box.collisionKind,
           left: box.left,
-          top: box.top + baselineOffset,
+          top: box.top + neumeBaselineOffset,
           width: box.right - box.left,
         })),
         glyph: noteElement.quantitativeNeume,
@@ -1984,12 +2014,8 @@ export class LayoutService {
         neumeFontHeight,
       );
 
-      const baselineOffset =
-        neumeFontAscent +
-        (neumeFontHeight - pageSetup.neumeDefaultFontSize) / 2;
-
       if (martyriaInkBox) {
-        martyriaInkBox.top += baselineOffset;
+        martyriaInkBox.top += neumeBaselineOffset;
       }
 
       return {
@@ -1997,7 +2023,7 @@ export class LayoutService {
         collisionBoxes: collisionBoxes.map((box) => ({
           height: box.bottom - box.top,
           left: box.left,
-          top: box.top + baselineOffset,
+          top: box.top + neumeBaselineOffset,
           width: box.right - box.left,
         })),
         glyph: martyriaElement.note,
@@ -2072,12 +2098,12 @@ export class LayoutService {
   ): OverlayDiagnosticsContext {
     const font = this.getNeumeFont(pageSetup);
 
+    const metrics = TextMeasurementService.getFontVerticalMetrics(font);
+
     return {
       measureBarWidthMap: this.getMeasureBarWidthMap(pageSetup),
-      neumeFontAscent:
-        fontService.getMetrics(pageSetup.neumeDefaultFontFamily).ascent *
-        pageSetup.neumeDefaultFontSize,
-      neumeFontHeight: TextMeasurementService.getFontHeight(font),
+      neumeBaselineOffset: metrics.ascent,
+      neumeFontHeight: metrics.height,
     };
   }
 
@@ -3128,8 +3154,8 @@ export class LayoutService {
 
   private static adjustDropCapPosition(
     element: ScoreElement,
-    lineHeights: number[],
-    neumeLineHeight: number,
+    lineVerticalMetrics: LineVerticalMetrics[],
+    fallbackLineHeight: number,
     lyricsBaseline: number,
   ) {
     // Special logic to adjust drop caps. This aligns the bottom of the drop
@@ -3139,14 +3165,21 @@ export class LayoutService {
     }
 
     const dropCapElement = element as DropCapElement;
+    const firstLineElementOffset = lineVerticalMetrics[0]!.elementOffset;
+    const baselineLineElementOffset =
+      lineVerticalMetrics[dropCapElement.computedLineSpan - 1]?.elementOffset ??
+      firstLineElementOffset;
 
     const distanceFromTopToBottomOfLyrics =
       this.getLineSpanHeight(
-        lineHeights,
+        lineVerticalMetrics,
         0,
         dropCapElement.computedLineSpan - 1,
-        neumeLineHeight,
-      ) + lyricsBaseline;
+        fallbackLineHeight,
+      ) +
+      baselineLineElementOffset +
+      lyricsBaseline -
+      firstLineElementOffset;
 
     const fontMetrics = TextMeasurementService.getCachedFontVerticalMetrics(
       dropCapElement.computedFont,
@@ -4855,8 +4888,8 @@ export class LayoutService {
     justifyLastLine: boolean,
     workspace: LayoutWorkspace,
     measureBarWidthMap: Map<MeasureBar, number>,
-    neumeLineHeight: number,
     neumeHeight: number,
+    lyricsBaseline: number,
   ) {
     const { pageSetup, pendingParagraph, completedParagraphs } = workspace;
 
@@ -4972,12 +5005,12 @@ export class LayoutService {
         lineElements[position.line].push((item as ElementBox).element);
       }
     }
-    const lineHeights = lineElements.map((elements) =>
-      this.getLineHeight(
+    const lineVerticalMetrics = lineElements.map((elements) =>
+      this.getLineVerticalMetrics(
         elements,
         pageSetup.lineHeight,
-        neumeLineHeight,
         neumeHeight,
+        lyricsBaseline,
       ),
     );
 
@@ -4997,7 +5030,7 @@ export class LayoutService {
       paragraph: pendingParagraph,
       positions,
       ratios,
-      lineHeights,
+      lineVerticalMetrics,
       dropCapWidthPx: workspace.pendingDropCapWidthPx,
       dropCapContinuationLines: workspace.pendingDropCapContinuationLines,
     });
@@ -5021,18 +5054,17 @@ export class LayoutService {
     this.pushAnonymousParagraphItem(forcedBreak(), workspace, 'forced-break');
   }
 
-  private static getLineHeight(
+  private static getLineVerticalMetrics(
     elements: ScoreElement[],
-    defaultLineHeight: number,
-    neumeLineHeight: number,
+    lineHeight: number,
     neumeHeight: number,
+    lyricsBaseline: number,
   ) {
     let textBox: TextBoxElement | null = null;
     let richTextBox: RichTextBoxElement | null = null;
     let modeKey: ModeKeyElement | null = null;
     let imageBox: ImageBoxElement | null = null;
     let hasNeumeContent = false;
-    let resolvedNeumeLineHeight = neumeLineHeight;
 
     for (const element of elements) {
       switch (element.elementType) {
@@ -5056,18 +5088,7 @@ export class LayoutService {
             imageBox = element as ImageBoxElement;
           }
           break;
-        case ElementType.Note: {
-          hasNeumeContent = true;
-          const note = element as NoteElement;
-          if (note.lyrics.length > 0 || note.isMelisma) {
-            resolvedNeumeLineHeight = includeLyricsInLineHeight(
-              resolvedNeumeLineHeight,
-              note.lyricsVerticalOffset,
-              note.lyricsFontHeight,
-            );
-          }
-          break;
-        }
+        case ElementType.Note:
         case ElementType.Martyria:
         case ElementType.Tempo:
         case ElementType.DropCap:
@@ -5082,34 +5103,40 @@ export class LayoutService {
     }
 
     if (textBox !== null) {
-      return textBox.height + textBox.marginTop + textBox.marginBottom;
+      return getFixedLineVerticalMetrics(
+        textBox.height + textBox.marginTop + textBox.marginBottom,
+      );
     }
 
     if (richTextBox !== null) {
-      return (
-        richTextBox.height + richTextBox.marginTop + richTextBox.marginBottom
+      return getFixedLineVerticalMetrics(
+        richTextBox.height + richTextBox.marginTop + richTextBox.marginBottom,
       );
     }
 
     if (modeKey !== null) {
-      return modeKey.height + modeKey.marginTop + modeKey.marginBottom;
+      return getFixedLineVerticalMetrics(
+        modeKey.height + modeKey.marginTop + modeKey.marginBottom,
+      );
     }
 
     if (imageBox !== null) {
-      return imageBox.inline
-        ? Math.max(imageBox.imageHeight, neumeHeight)
-        : imageBox.imageHeight;
+      return getFixedLineVerticalMetrics(
+        imageBox.inline
+          ? Math.max(imageBox.imageHeight, neumeHeight)
+          : imageBox.imageHeight,
+      );
     }
 
     if (hasNeumeContent) {
-      return resolvedNeumeLineHeight;
+      return getMusicLineVerticalMetrics(lineHeight, lyricsBaseline);
     }
 
-    return defaultLineHeight;
+    return getFixedLineVerticalMetrics(lineHeight);
   }
 
   private static getLineSpanHeight(
-    lineHeights: number[],
+    lineVerticalMetrics: LineVerticalMetrics[],
     startLine: number,
     lineCount: number,
     fallbackLineHeight: number,
@@ -5117,7 +5144,33 @@ export class LayoutService {
     let height = 0;
 
     for (let i = startLine; i < startLine + lineCount; i++) {
-      height += lineHeights[i] ?? fallbackLineHeight;
+      const metrics = lineVerticalMetrics[i];
+      height +=
+        metrics == null ? fallbackLineHeight : getLineBoxHeight(metrics);
+    }
+
+    return height;
+  }
+
+  private static getLineContinuationHeight(
+    lineVerticalMetrics: LineVerticalMetrics[],
+    startLine: number,
+    continuationLineCount: number,
+    fallbackLineHeight: number,
+  ) {
+    let height = 0;
+    let previousMetrics: LineVerticalMetrics | undefined =
+      lineVerticalMetrics[startLine];
+
+    for (let i = 1; i <= continuationLineCount; i++) {
+      const metrics = lineVerticalMetrics[startLine + i];
+
+      height += previousMetrics?.leadingAfter ?? 0;
+      height +=
+        metrics == null
+          ? fallbackLineHeight
+          : metrics.leadingBefore + metrics.contentHeight;
+      previousMetrics = metrics;
     }
 
     return height;

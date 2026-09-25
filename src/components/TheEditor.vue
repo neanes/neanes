@@ -931,6 +931,12 @@ const showAnonymousBoxes = computed(
   () => editorPreferences.value.showAnonymousBoxes,
 );
 
+const showHalfLeading = computed(() => editorPreferences.value.showHalfLeading);
+
+const showNeumeAscenders = computed(
+  () => editorPreferences.value.showNeumeAscenders,
+);
+
 const showElementBoxes = computed(
   () => editorPreferences.value.showElementBoxes,
 );
@@ -1226,6 +1232,60 @@ function getDeveloperLyricBaselines(page: Page) {
             note.y + lyricsBaseline,
             context.defaultAscentShift,
           ),
+          width: withZoom(resolvedMargins.contentWidth),
+        } as StyleValue,
+      },
+    ];
+  });
+}
+
+function getDeveloperHalfLeading(page: Page) {
+  const resolvedMargins = getResolvedMarginsForPage(page);
+  // Adjacent music lines share a boundary. Round only for deduplication to
+  // avoid drawing the same dashed guide twice due to floating-point error.
+  const boundaries = new Map<number, number>();
+  for (const line of page.lines) {
+    for (const top of line.halfLeadingBounds ?? []) {
+      boundaries.set(Math.round(top * 1000), top);
+    }
+  }
+
+  return Array.from(boundaries, ([key, top]) => ({
+    key,
+    style: {
+      left: withZoom(resolvedMargins.left),
+      top: withZoom(top),
+      width: withZoom(resolvedMargins.contentWidth),
+    } as StyleValue,
+  }));
+}
+
+function getDeveloperNeumeAscenders(page: Page) {
+  const resolvedMargins = getResolvedMarginsForPage(page);
+
+  return page.lines.flatMap((line, lineIndex) => {
+    // The element types LayoutService counts as music content, so the guide
+    // appears on the same lines that are laid out from the ascender. Drop caps
+    // are excluded because adjustDropCapPosition() moves their y off the line
+    // origin; every line that can hold one also holds notes.
+    const musicElement = line.elements.find(
+      (element) =>
+        element.elementType === ElementType.Note ||
+        element.elementType === ElementType.Martyria ||
+        element.elementType === ElementType.Tempo ||
+        element.elementType === ElementType.Empty,
+    );
+
+    if (musicElement == null) {
+      return [];
+    }
+
+    return [
+      {
+        key: lineIndex,
+        style: {
+          left: withZoom(resolvedMargins.left),
+          top: withZoom(musicElement.y),
           width: withZoom(resolvedMargins.contentWidth),
         } as StyleValue,
       },
@@ -3291,6 +3351,8 @@ function updateDeveloperToggle(
     | 'showInkBoundingBoxes'
     | 'showLyricBaselines'
     | 'showLyricBoundingBoxes'
+    | 'showHalfLeading'
+    | 'showNeumeAscenders'
     | 'showNeumeBoundingBoxes',
   value: boolean,
 ) {
@@ -10292,6 +10354,8 @@ function renderTabLabel(tab: Tab) {
               showLyricBaselines,
               showLyricBoundingBoxes,
               showElementBoxes,
+              showHalfLeading,
+              showNeumeAscenders,
               showNeumeBoundingBoxes,
             }"
             @reload-diagnostics="reloadDeveloperPaneDiagnostics"
@@ -10427,6 +10491,36 @@ function renderTabLabel(tab: Tab) {
                         />
                         <span class="guide-line-ht" :style="guideStyleTop" />
                         <span class="guide-line-hb" :style="guideStyleBottom" />
+                      </template>
+                      <template
+                        v-if="
+                          showDeveloperPanels &&
+                          overlaysEnabled &&
+                          showHalfLeading &&
+                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
+                        "
+                      >
+                        <span
+                          v-for="guide in getDeveloperHalfLeading(page)"
+                          :key="`developer-half-leading-${pageIndex}-${guide.key}`"
+                          class="developer-half-leading"
+                          :style="guide.style"
+                        />
+                      </template>
+                      <template
+                        v-if="
+                          showDeveloperPanels &&
+                          overlaysEnabled &&
+                          showNeumeAscenders &&
+                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
+                        "
+                      >
+                        <span
+                          v-for="guide in getDeveloperNeumeAscenders(page)"
+                          :key="`developer-neume-ascender-${pageIndex}-${guide.key}`"
+                          class="developer-neume-ascender"
+                          :style="guide.style"
+                        />
                       </template>
                       <template
                         v-if="
@@ -11895,6 +11989,22 @@ function renderTabLabel(tab: Tab) {
   transform: translateY(-100%);
 }
 
+.developer-half-leading {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  border-top: 1px dashed #7c3aed;
+  transform: translateY(-100%);
+}
+
+.developer-neume-ascender {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  border-top: 1px solid #0d9488;
+  transform: translateY(-100%);
+}
+
 .developer-glue-overlay {
   position: absolute;
   pointer-events: none;
@@ -11999,6 +12109,8 @@ function renderTabLabel(tab: Tab) {
 }
 
 .neume-box {
+  /* Preserve font-based score spacing instead of Tailwind preflight leading. */
+  line-height: normal;
   display: flex;
   flex-direction: column;
   align-items: center;

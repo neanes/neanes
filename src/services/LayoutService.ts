@@ -5218,10 +5218,17 @@ export class LayoutService {
       } else if (textBoxElement.customWidth != null) {
         elementWidthPx = textBoxElement.customWidth;
       } else {
-        elementWidthPx = this.measurePlainTextWidth(
-          textBoxElement.content,
-          textBoxElement.computedFont,
-          textBoxElement.computedFontVariantCaps,
+        elementWidthPx = Math.max(
+          this.measurePlainTextWidth(
+            textBoxElement.content,
+            textBoxElement.computedFont,
+            textBoxElement.computedFontVariantCaps,
+          ),
+          this.measurePlainTextWidth(
+            textBoxElement.contentBottom,
+            textBoxElement.computedFont,
+            textBoxElement.computedFontVariantCaps,
+          ),
         );
       }
     } else {

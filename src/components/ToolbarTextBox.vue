@@ -17,6 +17,7 @@
     <FontStyleSelect
       class="w-40"
       :model-value="resolvedParagraphStyle.fontStyle"
+      :font-family="resolvedParagraphStyle.fontFamily"
       :options="fontStyleOptions"
       :disabled="fontStyleOptions.length <= 1"
       @update:model-value="

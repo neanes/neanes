@@ -220,6 +220,8 @@
     "style": "Style",
     "bold": "Bold",
     "italic": "Italic",
+    "syntheticBold": "bold",
+    "syntheticItalic": "italic",
     "outline": "Outline",
     "lyrics": "Lyrics",
     "initialMartyriae": "Initial Martyriæ",

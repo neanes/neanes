@@ -166,6 +166,7 @@
                   id="paragraph-styles-dialog-font-style"
                   class="w-full min-w-0"
                   :model-value="resolvedStyle.fontStyle"
+                  :font-family="resolvedStyle.fontFamily"
                   :options="fontStyleOptions"
                   :disabled="isOverrideDisabled('fontStyle')"
                   @update:model-value="

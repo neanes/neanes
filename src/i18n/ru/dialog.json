@@ -220,6 +220,8 @@
     "style": "Начертание",
     "bold": "Полужирный",
     "italic": "Курсив",
+    "syntheticBold": "полужирный",
+    "syntheticItalic": "курсив",
     "outline": "Обводка",
     "lyrics": "Текст песнопения",
     "initialMartyriae": "Начальные мартирии",

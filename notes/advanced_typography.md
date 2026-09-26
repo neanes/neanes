@@ -209,6 +209,7 @@ The bundled catalog is not a single four-face shape:
 - Source Serif provides regular text weights plus Caption, Display, SmText, and
   Subhead optical families across the available weights and slants.
 - GFS Didot and Old Standard provide Regular/Bold/Italic/Bold Italic.
+- GFS Porson provides Regular.
 - Noto Naskh Arabic provides Regular/Bold.
 - Music fonts provide Regular.
 

@@ -67,7 +67,7 @@
     </div>
   </Field>
 
-  <Field v-for="flag in NUMERIC_FLAGS" :key="flag.id" orientation="horizontal">
+  <Field v-for="flag in numericFlags" :key="flag.id" orientation="horizontal">
     <Switch
       :id="`${idPrefix}-${flag.id}`"
       :model-value="flag.value(numericVariant)"
@@ -137,6 +137,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+
 import AppTooltip from '@/components/AppTooltip.vue';
 import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
@@ -183,6 +185,7 @@ const props = withDefaults(
     numericEnabled?: boolean;
     ligaturesEnabled?: boolean;
     alternatesEnabled?: boolean;
+    showOrdinals?: boolean;
     capsClearable: boolean;
     numericClearable: boolean;
     ligaturesClearable: boolean;
@@ -193,6 +196,7 @@ const props = withDefaults(
     numericEnabled: true,
     ligaturesEnabled: true,
     alternatesEnabled: true,
+    showOrdinals: true,
   },
 );
 
@@ -202,6 +206,11 @@ const emit = defineEmits<{
 }>();
 
 const { capsOptions, numericOptions } = useFontVariantOptions();
+const numericFlags = computed(() =>
+  props.showOrdinals
+    ? NUMERIC_FLAGS
+    : NUMERIC_FLAGS.filter((flag) => flag.id !== 'ordinals'),
+);
 
 const {
   capsValue,

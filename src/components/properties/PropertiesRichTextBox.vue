@@ -3,9 +3,13 @@
     :open-sections="openSections"
     @update:open-sections="$emit('update:open-sections', $event)"
   >
-    <template #legend>{{
-      $t(($) => $.menu.insert.richTextBox, { ns: 'menu' })
-    }}</template>
+    <template #legend>
+      {{
+        isEmbeddedModeKeySelected
+          ? $t(($) => $.menu.insert.initialMartyria, { ns: 'menu' })
+          : $t(($) => $.menu.insert.richTextBox, { ns: 'menu' })
+      }}
+    </template>
 
     <PropertiesRichTextStyle
       id-prefix="properties-rich-text-box"
@@ -13,14 +17,20 @@
       :fonts="fonts"
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
+      :initial-martyria-styles="initialMartyriaStyles"
       :fallback-paragraph-style-id="fallbackParagraphStyleId"
       :fallback-paragraph-style="resolvedParagraphStyle"
       @open-paragraph-styles-dialog="
         emit('open-paragraph-styles-dialog', $event)
       "
+      @open-mode-key-dialog="onOpenModeKeyDialog"
+      @open-initial-martyria-style-dialog="
+        emit('open-initial-martyria-style-dialog')
+      "
     />
 
     <PaneSection
+      v-if="!isEmbeddedModeKeySelected"
       value="positioning"
       :title="$t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })"
     >
@@ -146,6 +156,7 @@
     </PaneSection>
 
     <PaneSection
+      v-if="!isEmbeddedModeKeySelected"
       value="mode-change"
       :title="$t(($) => $.toolbar.textbox.modeChange, { ns: 'toolbar' })"
     >
@@ -294,7 +305,7 @@
     </PaneSection>
 
     <PaneSection
-      v-if="source === 'score'"
+      v-if="!isEmbeddedModeKeySelected && source === 'score'"
       value="running-marker"
       :title="$t(($) => $.toolbar.textbox.runningMarker, { ns: 'toolbar' })"
     >
@@ -355,6 +366,7 @@
     </PaneSection>
 
     <PaneSection
+      v-if="!isEmbeddedModeKeySelected"
       value="scrollable"
       :title="$t(($) => $.toolbar.textbox.scrollable, { ns: 'toolbar' })"
     >
@@ -373,10 +385,12 @@
 </template>
 
 <script setup lang="ts">
+import type { Editor } from 'ckeditor5';
 import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
+import { UPDATE_MODE_KEY_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertmodekey/updatemodekeyattributescommand';
 import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
@@ -392,7 +406,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import type { RichTextBoxElement } from '@/models/Element';
+import {
+  useActiveEditorForOwner,
+  useEditorCommandObservableState,
+} from '@/composables/useRichTextEditorRegistry';
+import type { ModeKeyElement, RichTextBoxElement } from '@/models/Element';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import {
   getNoteLabelSelector,
   getScaleLabelSelector,
@@ -451,6 +470,10 @@ const props = defineProps({
     type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
   source: {
     type: String as PropType<'score' | 'header-footer'>,
     required: true,
@@ -459,12 +482,30 @@ const props = defineProps({
 
 const emit = defineEmits<{
   'open-paragraph-styles-dialog': [styleId: string];
+  'open-mode-key-dialog': [editor: Editor, element: ModeKeyElement];
+  'open-initial-martyria-style-dialog': [];
   'update:open-sections': [value: string[]];
   update: [value: Partial<RichTextBoxElement>];
 }>();
 
 const SELECT_NONE_VALUE = '__none__';
 const RUNNING_MARKER_NONE_VALUE = '__none__';
+
+const scopedEditor = useActiveEditorForOwner(() => props.element);
+const embeddedModeKeyState = useEditorCommandObservableState(
+  scopedEditor,
+  UPDATE_MODE_KEY_ATTRIBUTES_COMMAND,
+  ['element'],
+);
+const isEmbeddedModeKeySelected = computed(
+  () =>
+    embeddedModeKeyState.isEnabled &&
+    embeddedModeKeyState.properties.element != null,
+);
+
+function onOpenModeKeyDialog(editor: Editor, element: ModeKeyElement) {
+  emit('open-mode-key-dialog', editor, element);
+}
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));

@@ -68,6 +68,124 @@
     "root": "Επιλογή Αρκτικής Μαρτυρίας",
     "description": "Επιλέξτε αρκτική μαρτυρία."
   },
+  "initialMartyriaStyles": {
+    "root": "Στυλ αρχικής μαρτυρίας",
+    "description": "Επιλέξτε στυλ για την αρχική μαρτυρία ή δημιουργήστε το δικό σας.",
+    "styleLabel": "Στυλ",
+    "manageStyles": "Διαχείριση στυλ…",
+    "documentDefault": "Προεπιλογή εγγράφου",
+    "documentDefaultStatus": "Προεπιλογή εγγράφου: {{name}}",
+    "defaultBadge": "Προεπιλογή",
+    "custom": "Προσαρμοσμένα",
+    "builtInLanguage": "Ενσωματωμένα · {{language}}",
+    "builtIn": "Ενσωματωμένο",
+    "builtInHint": "Ενσωματωμένο στυλ. Οι αλλαγές γίνονται σε αντίγραφο.",
+    "noCustomStyles": "Δεν υπάρχουν ακόμη προσαρμοσμένα στυλ",
+    "new": "Νέο στυλ",
+    "duplicate": "Αντίγραφο",
+    "delete": "Διαγραφή",
+    "apply": "Εφαρμογή",
+    "useForDocument": "Χρήση για αυτό το έγγραφο",
+    "newStyleName": "Νέο στυλ",
+    "copyStyleName": "Αντίγραφο {{name}}",
+    "name": "Όνομα",
+    "styleNamePlaceholder": "Όνομα στυλ",
+    "nameInvalid": "Δώστε ένα μοναδικό όνομα για αυτό το στυλ.",
+    "language": "Γλώσσα",
+    "greekParagraphStyle": "Στυλ ελληνικής παραγράφου",
+    "typography": "Τυπογραφία",
+    "sampleMode": "Ήχος δείγματος",
+    "basedOn": "Βασισμένο στο {{name}}",
+    "resetToBase": "Επαναφορά στη βάση",
+    "modeIdentification": "Προσδιορισμός ήχου",
+    "numberForm": "Μορφή αριθμού",
+    "digitForm": "Μορφή ψηφίων",
+    "numberPlacement": "Θέση αριθμού",
+    "plagalWording": "Διατύπωση πλαγίων",
+    "transliterateNoteNames": "Μεταγραφή αρχικής νότας",
+    "transliterateNoteNamesHint": "Pa αντί για Πα",
+    "modeIdentificationMethods": {
+      "text": "Μόνο κείμενο",
+      "modeSign": "Μόνο μαρτυρία",
+      "textAndModeSign": "Κείμενο και μαρτυρία"
+    },
+    "numeralKinds": {
+      "cardinal": "Απόλυτο",
+      "ordinal": "Τακτικό"
+    },
+    "numeralForms": {
+      "digits": {
+        "cardinal": "Ψηφία, απόλυτα",
+        "ordinal": "Ψηφία, τακτικά"
+      },
+      "romanNumerals": {
+        "cardinal": "Λατινικοί αριθμοί, απόλυτοι",
+        "ordinal": "Λατινικοί αριθμοί, τακτικοί"
+      },
+      "alphabeticNumerals": {
+        "cardinal": "Αλφαβητικοί αριθμοί, απόλυτοι",
+        "ordinal": "Αλφαβητικοί αριθμοί, τακτικοί"
+      },
+      "words": {
+        "cardinal": "Λέξεις, απόλυτες",
+        "ordinal": "Λέξεις, τακτικές"
+      }
+    },
+    "numberingSystems": {
+      "western": "Δυτικά",
+      "arabicIndic": "Αραβοϊνδικά"
+    },
+    "numeralQualifiers": {
+      "postnominal": "Αριθμός μετά",
+      "prenominal": "Αριθμός πριν"
+    },
+    "modeNamingSchemes": {
+      "absolute": "Αρίθμηση 1 έως 8",
+      "authenticCounterpart": "Πλάγιος του κυρίου",
+      "plagalClass": "Πλάγιοι ως τάξη"
+    },
+    "duplicateOfStyle": "Αυτό το στυλ γράφεται ακριβώς όπως το «{{name}}».",
+    "useStyleInstead": "Χρήση του «{{name}}»",
+    "useOrdinalForms": "Χρήση τακτικών μορφών",
+    "languages": {
+      "greek": "Ελληνικά",
+      "english": "Αγγλικά",
+      "spanish": "Ισπανικά",
+      "churchSlavonic": "Εκκλησιαστικά Σλαβονικά",
+      "russian": "Ρωσικά",
+      "arabic": "Αραβικά",
+      "romanian": "Ρουμανικά",
+      "indonesian": "Ινδονησιακά"
+    },
+    "builtInStyles": {
+      "greekTraditionalSign": "Παραδοσιακή μαρτυρία",
+      "greekAlphabeticNumerals": "Αλφαβητικοί αριθμοί",
+      "englishTraditionalSign": "Παραδοσιακή μαρτυρία",
+      "englishModeNames": "Ονόματα ήχων",
+      "englishModeNamesWithSign": "Ονόματα ήχων με μαρτυρία",
+      "englishModeNumbersWithSign": "Αριθμοί ήχων με μαρτυρία",
+      "englishPlagalClassWithSign": "Πλάγιοι ως τάξη με μαρτυρία",
+      "spanishTonoNumber": "Tono με ψηφία",
+      "spanishTonoRomanNumeral": "Tono με λατινικούς αριθμούς",
+      "spanishTonoOrdinalNumber": "Tono με τακτικά ψηφία",
+      "spanishTonoOrdinal": "Tono με τακτικά αριθμητικά",
+      "spanishOrdinalTono": "Τακτικό πριν το tono",
+      "churchSlavonicGlasNumber": "Glas με ψηφία",
+      "churchSlavonicGlasCyrillicNumeral": "Glas με κυριλλικούς αριθμούς",
+      "churchSlavonicGlasCyrillicNumeralText": "Glas με κυριλλικούς αριθμούς, μόνο κείμενο",
+      "churchSlavonicGlasOrdinal": "Glas με τακτικά αριθμητικά",
+      "churchSlavonicGlasOrdinalText": "Glas με τακτικά αριθμητικά, μόνο κείμενο",
+      "russianGlasNumber": "Glas με ψηφία",
+      "russianGlasOrdinal": "Glas με τακτικά αριθμητικά",
+      "russianGlasOrdinalText": "Glas με τακτικά αριθμητικά, μόνο κείμενο",
+      "arabicOrdinal": "Τακτικά αριθμητικά",
+      "arabicOrdinalText": "Τακτικά αριθμητικά, μόνο κείμενο",
+      "romanianGlasNumber": "Glas με ψηφία",
+      "romanianGlasRomanNumeral": "Glas με λατινικούς αριθμούς",
+      "romanianTraditionalSign": "Παραδοσιακή μαρτυρία",
+      "indonesianModeNamesWithSign": "Ονομασίες ήχων με μαρτυρία"
+    }
+  },
   "documentProperties": {
     "root": "Ιδιότητες Εγγράφου",
     "description": "Ορίστε μεταδεδομένα εγγράφου για τρέχουσες κεφαλίδες και άλλα σύμβολα.",
@@ -97,7 +215,9 @@
       "header": "Κεφαλίδα",
       "footer": "Υποσέλιδο",
       "lyrics": "Στίχοι",
-      "dropCap": "Αρχίγραμμα"
+      "dropCap": "Αρχίγραμμα",
+      "initialMartyria": "Αρκτική Μαρτυρία",
+      "initialMartyriaGreek": "Αρκτική Μαρτυρία (Ελληνικά)"
     }
   },
   "neumePositioning": {
@@ -222,10 +342,7 @@
     "italic": "Πλάγια",
     "outline": "Περίγραμμα",
     "lyrics": "Στίχοι",
-    "initialMartyriae": "Αρκτικές Μαρτυρίες",
-    "initialMartyriaeDescription": "Η προεπιλεγμένη μορφοποίηση για όλες τις αρκτικές μαρτυρίες στο μουσικό κείμενο.",
     "neumesDescription": "Η προεπιλεγμένη μορφοποίηση για όλα τα μουσικά σημεία στο μουσικό κείμενο.",
-    "heightAdjust": "Ρύθμιση Ύψους",
     "neumeStyles": "Μορφοποίηση Μουσικών Σημείων",
     "type": "Τύπος",
     "accidentals": "Αλλοιώσεις",

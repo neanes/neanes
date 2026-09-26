@@ -1,0 +1,12 @@
+.neanes-ck-mode-key {
+  display: inline-block;
+  line-height: normal;
+  margin-inline: 0.15em;
+  vertical-align: baseline;
+}
+
+.neanes-ck-mode-key-mount,
+.neanes-ck-mode-key-mount > .mode-key-container.embedded {
+  display: inline-block;
+  vertical-align: baseline;
+}

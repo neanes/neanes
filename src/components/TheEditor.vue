@@ -19,6 +19,7 @@ import {
   PhX,
   PhXCircle,
 } from '@phosphor-icons/vue';
+import type { Editor } from 'ckeditor5';
 import { getFontEmbedCSS, toPng } from 'html-to-image';
 import i18next from 'i18next';
 import { useTranslation } from 'i18next-vue';
@@ -32,6 +33,7 @@ import {
   provide,
   reactive,
   ref,
+  shallowRef,
   type StyleValue,
   toRaw,
   useTemplateRef,
@@ -41,6 +43,9 @@ import { toast } from 'vue-sonner';
 import type { Tab } from 'vue3-tabs-chrome';
 import Vue3TabsChrome from 'vue3-tabs-chrome';
 
+import { INSERT_MODE_KEY_COMMAND } from '@/ckeditor-plugins/insertmodekey/insertmodekeycommand';
+import { rewriteModeKeyAttributesInHtml } from '@/ckeditor-plugins/insertmodekey/modekeydata';
+import { UPDATE_MODE_KEY_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertmodekey/updatemodekeyattributescommand';
 import AboutDialog from '@/components/AboutDialog.vue';
 import AlternateLine from '@/components/AlternateLine.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
@@ -57,6 +62,7 @@ import { ExportFormat } from '@/components/ExportDialog.types';
 import ExportDialog from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
+import InitialMartyriaStylesDialog from '@/components/InitialMartyriaStylesDialog.vue';
 import LyricsPane from '@/components/LyricsPane.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
@@ -148,11 +154,17 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RICH_TEXT_BOX_CONTENT_KEYS,
   RichTextBoxElement,
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
+import {
+  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
+  isBuiltInInitialMartyriaStyleId,
+} from '@/models/InitialMartyriaBuiltInStyles';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
   ElementOverlayBox,
@@ -248,6 +260,11 @@ import {
   TextMeasurementService,
 } from '@/services/TextMeasurementService';
 import {
+  collectClipboardInitialMartyriaStylesFromElements,
+  resolveClipboardInitialMartyriaStyles,
+  rewriteClipboardElementInitialMartyriaStyleId,
+} from '@/utils/clipboardInitialMartyriaStyles';
+import {
   collectClipboardParagraphStyleIdsFromElements,
   collectClipboardParagraphStylesFromElements,
   collectClipboardParagraphStylesFromPasteElements,
@@ -258,6 +275,7 @@ import {
   rewriteClipboardTextBoxFormatParagraphStyleId,
 } from '@/utils/clipboardParagraphStyles';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
+import { deepEquals } from '@/utils/deepEquals';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
@@ -515,10 +533,23 @@ const scoreMenuPointerDownInside = ref(false);
 const pages = ref<Page[]>([]);
 const currentPageNumber = ref(0);
 const modeKeyDialogIsOpen = ref(false);
+type ModeKeyDialogTarget =
+  | { kind: 'standalone'; element: ModeKeyElement }
+  | {
+      kind: 'rich-text-insert' | 'rich-text-edit';
+      editor: Editor;
+      element: ModeKeyElement;
+    };
+const modeKeyDialogTarget = shallowRef<ModeKeyDialogTarget | null>(null);
+const modeKeyDialogElement = computed(
+  () => modeKeyDialogTarget.value?.element ?? null,
+);
 const syllablePositioningDialogIsOpen = ref(false);
 const playbackSettingsDialogIsOpen = ref(false);
 const pageSetupDialogIsOpen = ref(false);
 const paragraphStylesDialogIsOpen = ref(false);
+const initialMartyriaStylesDialogIsOpen = ref(false);
+const initialMartyriaStylesDialogElement = ref<ModeKeyElement | null>(null);
 const paragraphStylesDialogSelectedStyleId = ref<string>(
   BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
 );
@@ -531,6 +562,7 @@ interface ClipboardState {
   elements: ScoreElement[];
   paragraphStyleIds: string[];
   paragraphStyles: ParagraphStyle[];
+  initialMartyriaStyles: InitialMartyriaStyle[];
 }
 
 interface ClipboardFormatState<T> {
@@ -543,6 +575,7 @@ const clipboard = ref<ClipboardState>({
   elements: [],
   paragraphStyleIds: [],
   paragraphStyles: [],
+  initialMartyriaStyles: [],
 });
 const formatType = ref<ElementType | null>(null);
 const textBoxFormat = ref<ClipboardFormatState<TextBoxElement>>({
@@ -1531,6 +1564,7 @@ const dialogOpen = computed(() => {
     modeKeyDialogIsOpen.value ||
     pageSetupDialogIsOpen.value ||
     paragraphStylesDialogIsOpen.value ||
+    initialMartyriaStylesDialogIsOpen.value ||
     documentPropertiesDialogIsOpen.value ||
     playbackSettingsDialogIsOpen.value ||
     syllablePositioningDialogIsOpen.value ||
@@ -1833,6 +1867,10 @@ onMounted(() => {
     onFileMenuParagraphStyles,
   );
   EventBus.$on(
+    IpcMainChannels.FileMenuInitialMartyriaStyles,
+    onFileMenuInitialMartyriaStyles,
+  );
+  EventBus.$on(
     IpcMainChannels.FileMenuDocumentProperties,
     onFileMenuDocumentProperties,
   );
@@ -1951,6 +1989,10 @@ onBeforeUnmount(() => {
   EventBus.$off(
     IpcMainChannels.FileMenuParagraphStyles,
     onFileMenuParagraphStyles,
+  );
+  EventBus.$off(
+    IpcMainChannels.FileMenuInitialMartyriaStyles,
+    onFileMenuInitialMartyriaStyles,
   );
   EventBus.$off(
     IpcMainChannels.FileMenuDocumentProperties,
@@ -3221,8 +3263,52 @@ function isMelisma(element: NoteElement) {
 }
 
 function openModeKeyDialog() {
+  if (selectedElement.value?.elementType !== ElementType.ModeKey) {
+    return;
+  }
+
+  modeKeyDialogTarget.value = {
+    kind: 'standalone',
+    element: selectedElement.value as ModeKeyElement,
+  };
   modeKeyDialogIsOpen.value = true;
 }
+
+function openRichTextModeKeyInsertDialog(editor: Editor, fontSize: number) {
+  const element = createDefaultModeKey(score.value.pageSetup);
+  element.fontSize = fontSize;
+  modeKeyDialogTarget.value = {
+    kind: 'rich-text-insert',
+    editor,
+    element,
+  };
+  modeKeyDialogIsOpen.value = true;
+}
+
+function openRichTextModeKeyEditDialog(
+  editor: Editor,
+  element: ModeKeyElement,
+) {
+  modeKeyDialogTarget.value = {
+    kind: 'rich-text-edit',
+    editor,
+    element,
+  };
+  modeKeyDialogIsOpen.value = true;
+}
+
+watch(modeKeyDialogIsOpen, (isOpen) => {
+  if (isOpen) {
+    return;
+  }
+
+  const target = modeKeyDialogTarget.value;
+  modeKeyDialogTarget.value = null;
+
+  if (target?.kind !== 'standalone' && target != null) {
+    nextTick(() => target.editor.editing.view.focus());
+  }
+});
 
 function openSyllablePositioningDialog() {
   syllablePositioningDialogIsOpen.value = true;
@@ -3630,11 +3716,13 @@ function addNeumeCombination(combo: NeumeCombination) {
     elements: clipboard.value.elements.slice(),
     paragraphStyleIds: clipboard.value.paragraphStyleIds.slice(),
     paragraphStyles: clipboard.value.paragraphStyles.slice(),
+    initialMartyriaStyles: clipboard.value.initialMartyriaStyles.slice(),
   };
   clipboard.value = {
     elements: combo.elements,
     paragraphStyleIds: [],
     paragraphStyles: [],
+    initialMartyriaStyles: [],
   };
   onPasteScoreElements(false);
 
@@ -5134,15 +5222,24 @@ function flushAndCloneForClipboard(
 
 function createClipboardState(elementsToCopy: ScoreElement[]): ClipboardState {
   const elements = flushAndCloneForClipboard(elementsToCopy);
+  const initialMartyriaStyles =
+    collectClipboardInitialMartyriaStylesFromElements(
+      elementsToCopy,
+      score.value.initialMartyriaStyles,
+    );
 
   return {
     elements,
-    paragraphStyleIds:
-      collectClipboardParagraphStyleIdsFromElements(elementsToCopy),
+    paragraphStyleIds: collectClipboardParagraphStyleIdsFromElements(
+      elementsToCopy,
+      initialMartyriaStyles,
+    ),
     paragraphStyles: collectClipboardParagraphStylesFromElements(
       elementsToCopy,
+      initialMartyriaStyles,
       score.value.paragraphStyles,
     ),
+    initialMartyriaStyles,
   };
 }
 
@@ -5227,17 +5324,26 @@ function onCopyScoreElements() {
   }
 }
 
+// `initialMartyriaStyles` are the score's custom styles together with the
+// ones this paste imports.
 function cloneScoreElementForPaste(
   element: ScoreElement,
   includeLyrics: boolean,
-  styleIdRemap: Map<string, string>,
+  paragraphStyleIdRemap: Map<string, string>,
+  initialMartyriaStyles: InitialMartyriaStyle[],
+  initialMartyriaStyleIdRemap: Map<string, string>,
 ) {
   const clone = element.clone({ includeLyrics });
 
   rewriteClipboardElementParagraphStyleIds(
     clone,
     score.value.paragraphStyles,
-    styleIdRemap,
+    paragraphStyleIdRemap,
+  );
+  rewriteClipboardElementInitialMartyriaStyleId(
+    clone,
+    initialMartyriaStyles,
+    initialMartyriaStyleIdRemap,
   );
 
   return clone;
@@ -5245,19 +5351,91 @@ function cloneScoreElementForPaste(
 
 function cloneClipboardForPaste(
   includeLyrics: boolean,
-  styleIdRemap: Map<string, string>,
+  paragraphStyleIdRemap: Map<string, string>,
+  initialMartyriaStyles: InitialMartyriaStyle[],
+  initialMartyriaStyleIdRemap: Map<string, string>,
 ) {
   return clipboard.value.elements.map((element) =>
-    cloneScoreElementForPaste(element, includeLyrics, styleIdRemap),
+    cloneScoreElementForPaste(
+      element,
+      includeLyrics,
+      paragraphStyleIdRemap,
+      initialMartyriaStyles,
+      initialMartyriaStyleIdRemap,
+    ),
   );
 }
 
 function collectClipboardParagraphStylesForPaste(includeLyrics: boolean) {
   return collectClipboardParagraphStylesFromPasteElements(
     clipboard.value.elements,
+    clipboard.value.initialMartyriaStyles,
     includeLyrics,
     clipboard.value.paragraphStyles,
   );
+}
+
+// Resolves every style the clipboard carries against the score: the
+// paragraph styles first, then the initial martyria styles, whose paragraph
+// style references follow the same remap as the pasted elements.
+function resolveClipboardStylesForPaste(includeLyrics: boolean) {
+  const { importedParagraphStyles, styleIdRemap } =
+    resolveClipboardParagraphStyles(
+      collectClipboardParagraphStylesForPaste(includeLyrics),
+      score.value.paragraphStyles,
+      clipboard.value.paragraphStyleIds,
+    );
+  const { importedInitialMartyriaStyles, initialMartyriaStyleIdRemap } =
+    resolveClipboardInitialMartyriaStyles(
+      clipboard.value.initialMartyriaStyles,
+      score.value.initialMartyriaStyles,
+      score.value.paragraphStyles,
+      styleIdRemap,
+    );
+
+  return {
+    importedParagraphStyles,
+    importedInitialMartyriaStyles,
+    pastedElements: cloneClipboardForPaste(
+      includeLyrics,
+      styleIdRemap,
+      [...score.value.initialMartyriaStyles, ...importedInitialMartyriaStyles],
+      initialMartyriaStyleIdRemap,
+    ),
+  };
+}
+
+function createImportedStylesCommand(
+  importedParagraphStyles: ParagraphStyle[],
+  importedInitialMartyriaStyles: InitialMartyriaStyle[],
+): Command | null {
+  if (
+    importedParagraphStyles.length === 0 &&
+    importedInitialMartyriaStyles.length === 0
+  ) {
+    return null;
+  }
+
+  const newValues: Partial<Score> = {};
+
+  if (importedParagraphStyles.length > 0) {
+    newValues.paragraphStyles = [
+      ...score.value.paragraphStyles,
+      ...importedParagraphStyles,
+    ];
+  }
+
+  if (importedInitialMartyriaStyles.length > 0) {
+    newValues.initialMartyriaStyles = [
+      ...score.value.initialMartyriaStyles,
+      ...importedInitialMartyriaStyles,
+    ];
+  }
+
+  return scoreCommandFactory.create('update-properties', {
+    target: score.value,
+    newValues,
+  });
 }
 
 function onPasteScoreElements(includeLyrics: boolean) {
@@ -5285,29 +5463,19 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
     ? selectedElementIndex.value
     : selectedElementIndex.value + 1;
 
-  const clipboardParagraphStyles =
-    collectClipboardParagraphStylesForPaste(includeLyrics);
-  const { importedParagraphStyles, styleIdRemap } =
-    resolveClipboardParagraphStyles(
-      clipboardParagraphStyles,
-      score.value.paragraphStyles,
-      clipboard.value.paragraphStyleIds,
-    );
-  const newElements = cloneClipboardForPaste(includeLyrics, styleIdRemap);
+  const {
+    importedParagraphStyles,
+    importedInitialMartyriaStyles,
+    pastedElements: newElements,
+  } = resolveClipboardStylesForPaste(includeLyrics);
   const commands: Command[] = [];
+  const importedStylesCommand = createImportedStylesCommand(
+    importedParagraphStyles,
+    importedInitialMartyriaStyles,
+  );
 
-  if (importedParagraphStyles.length > 0) {
-    commands.push(
-      scoreCommandFactory.create('update-properties', {
-        target: score.value,
-        newValues: {
-          paragraphStyles: [
-            ...score.value.paragraphStyles,
-            ...importedParagraphStyles,
-          ],
-        },
-      }),
-    );
+  if (importedStylesCommand != null) {
+    commands.push(importedStylesCommand);
   }
 
   commands.push(
@@ -5334,28 +5502,18 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
   }
 
   const commands: Command[] = [];
-  const clipboardParagraphStyles =
-    collectClipboardParagraphStylesForPaste(includeLyrics);
-  const { importedParagraphStyles, styleIdRemap } =
-    resolveClipboardParagraphStyles(
-      clipboardParagraphStyles,
-      score.value.paragraphStyles,
-      clipboard.value.paragraphStyleIds,
-    );
-  const pastedElements = cloneClipboardForPaste(includeLyrics, styleIdRemap);
+  const {
+    importedParagraphStyles,
+    importedInitialMartyriaStyles,
+    pastedElements,
+  } = resolveClipboardStylesForPaste(includeLyrics);
+  const importedStylesCommand = createImportedStylesCommand(
+    importedParagraphStyles,
+    importedInitialMartyriaStyles,
+  );
 
-  if (importedParagraphStyles.length > 0) {
-    commands.push(
-      scoreCommandFactory.create('update-properties', {
-        target: score.value,
-        newValues: {
-          paragraphStyles: [
-            ...score.value.paragraphStyles,
-            ...importedParagraphStyles,
-          ],
-        },
-      }),
-    );
+  if (importedStylesCommand != null) {
+    commands.push(importedStylesCommand);
   }
 
   let currentIndex = selectedElementIndex.value;
@@ -5924,6 +6082,7 @@ async function load() {
             pages.value,
             score.value.pageSetup,
             score.value.paragraphStyles,
+            score.value.initialMartyriaStyles,
             options,
           ),
           null,
@@ -7062,8 +7221,16 @@ function updateRichTextBox(
   );
 
   const modeChangeProp: keyof RichTextBoxElement = 'modeChange';
+  const richTextContentProps = new Set<keyof RichTextBoxElement>(
+    RICH_TEXT_BOX_CONTENT_KEYS,
+  );
 
-  if (modeChangeProp in newValues) {
+  if (
+    modeChangeProp in newValues ||
+    Object.keys(newValues).some((key) =>
+      richTextContentProps.has(key as keyof RichTextBoxElement),
+    )
+  ) {
     refreshStaffLyrics();
   }
 
@@ -7200,6 +7367,10 @@ function updateModeKeyFromTemplate(
   element: ModeKeyElement,
   template: ModeKeyElement,
 ) {
+  updateModeKey(element, getModeKeyTemplateUpdates(template));
+}
+
+function getModeKeyTemplateUpdates(template: ModeKeyElement) {
   const {
     templateId,
     mode,
@@ -7234,9 +7405,30 @@ function updateModeKeyFromTemplate(
     quantitativeNeumeRight,
   };
 
-  updateModeKey(element, newValues);
+  return newValues;
+}
 
-  save();
+function applyModeKeyDialogTemplate(template: ModeKeyElement) {
+  const target = modeKeyDialogTarget.value;
+
+  if (target == null) {
+    return;
+  }
+
+  if (target.kind === 'standalone') {
+    updateModeKeyFromTemplate(target.element, template);
+    return;
+  }
+
+  Object.assign(target.element, getModeKeyTemplateUpdates(template));
+  target.editor.execute(
+    target.kind === 'rich-text-insert'
+      ? INSERT_MODE_KEY_COMMAND
+      : UPDATE_MODE_KEY_ATTRIBUTES_COMMAND,
+    target.kind === 'rich-text-insert'
+      ? { element: target.element }
+      : target.element,
+  );
 }
 
 function updateMartyria(
@@ -7684,6 +7876,135 @@ function updatePageSetup(pageSetup: PageSetup) {
   save();
 }
 
+function confirmInitialMartyriaStyles(payload: {
+  styles: InitialMartyriaStyle[];
+  styleId: string;
+  action: 'update' | 'use-for-document' | 'apply-to-element';
+}) {
+  const nextStyleIds = new Set(payload.styles.map((style) => style.id));
+  // Update commits the edited styles and nothing else, so the element the
+  // dialog was opened from is left to follow the rules every other element
+  // follows below.
+  const element =
+    payload.action === 'update'
+      ? null
+      : initialMartyriaStylesDialogElement.value;
+  const commands: Command[] = [];
+
+  if (!deepEquals(score.value.initialMartyriaStyles, payload.styles)) {
+    commands.push(
+      scoreCommandFactory.create('update-properties', {
+        target: score.value,
+        newValues: { initialMartyriaStyles: payload.styles },
+      }),
+    );
+  }
+
+  // A reference to a deleted style falls back: the score to the default
+  // built-in style, an element to the score's style.
+  const pageStyleId = score.value.pageSetup.initialMartyriaStyleId;
+  const nextPageStyleId =
+    payload.action === 'use-for-document'
+      ? payload.styleId
+      : !isBuiltInInitialMartyriaStyleId(pageStyleId) &&
+          !nextStyleIds.has(pageStyleId)
+        ? DEFAULT_INITIAL_MARTYRIA_STYLE_ID
+        : pageStyleId;
+
+  if (nextPageStyleId !== pageStyleId) {
+    commands.push(
+      pageSetupCommandFactory.create('update-properties', {
+        target: score.value.pageSetup,
+        newValues: { initialMartyriaStyleId: nextPageStyleId },
+      }),
+    );
+  }
+
+  if (element != null) {
+    // The element takes the style, or follows the score again when the style
+    // is used for the whole document.
+    const nextElementStyleId =
+      payload.action === 'apply-to-element' ? payload.styleId : null;
+
+    if (nextElementStyleId !== element.initialMartyriaStyleId) {
+      commands.push(
+        modeKeyCommandFactory.create('update-properties', {
+          target: element,
+          newValues: { initialMartyriaStyleId: nextElementStyleId },
+        }),
+      );
+    }
+  }
+
+  for (const item of score.value.staff.elements) {
+    if (item.elementType !== ElementType.ModeKey || item === element) {
+      continue;
+    }
+    const modeKey = item as ModeKeyElement;
+    const styleId = modeKey.initialMartyriaStyleId;
+    if (
+      styleId != null &&
+      !isBuiltInInitialMartyriaStyleId(styleId) &&
+      !nextStyleIds.has(styleId)
+    ) {
+      commands.push(
+        modeKeyCommandFactory.create('update-properties', {
+          target: modeKey,
+          newValues: { initialMartyriaStyleId: null },
+        }),
+      );
+    }
+  }
+
+  for (const item of [
+    ...score.value.staff.elements,
+    ...score.value.headersAndFooters,
+  ]) {
+    if (item.elementType !== ElementType.RichTextBox) {
+      continue;
+    }
+
+    const richTextBox = item as RichTextBoxElement;
+    const newValues: Partial<RichTextBoxElement> = {};
+
+    for (const key of RICH_TEXT_BOX_CONTENT_KEYS) {
+      const content = richTextBox[key];
+      const rewritten = rewriteModeKeyAttributesInHtml(
+        content,
+        (attributes) => {
+          const styleId = attributes.initialMartyriaStyleId;
+
+          return typeof styleId === 'string' &&
+            !isBuiltInInitialMartyriaStyleId(styleId) &&
+            !nextStyleIds.has(styleId)
+            ? { ...attributes, initialMartyriaStyleId: null }
+            : attributes;
+        },
+      );
+
+      if (rewritten !== content) {
+        newValues[key] = rewritten;
+      }
+    }
+
+    if (Object.keys(newValues).length > 0) {
+      commands.push(
+        richTextBoxCommandFactory.create('update-properties', {
+          target: richTextBox,
+          newValues,
+        }),
+      );
+    }
+  }
+
+  if (commands.length === 0) {
+    return;
+  }
+
+  commandService.value.executeAsBatch(commands);
+  save();
+}
+
 function updateDocumentProperties(documentProperties: DocumentProperties) {
   commandService.value.execute(
     documentPropertiesCommandFactory.create('update-properties', {
@@ -7753,10 +8074,34 @@ function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
         ? (deletedStyleFallbacks.get(styleId) ?? fallbackStyleId)
         : null,
   };
+  // Initial martyria styles reference regular and Greek paragraph styles too;
+  // a deleted one moves to the same fallback chain, ending at its built-in
+  // style.
+  const initialMartyriaStyles = score.value.initialMartyriaStyles.map(
+    (style) => {
+      const paragraphStyleId = remapResolvers.resolveStyleId(
+        style.paragraphStyleId,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+      );
+      const greekParagraphStyleId = remapResolvers.resolveStyleId(
+        style.greekParagraphStyleId,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+      );
+
+      return paragraphStyleId == null && greekParagraphStyleId == null
+        ? style
+        : {
+            ...style,
+            paragraphStyleId: paragraphStyleId ?? style.paragraphStyleId,
+            greekParagraphStyleId:
+              greekParagraphStyleId ?? style.greekParagraphStyleId,
+          };
+    },
+  );
   const commands: Command[] = [
     scoreCommandFactory.create('update-properties', {
       target: score.value,
-      newValues: { paragraphStyles: clonedStyles },
+      newValues: { paragraphStyles: clonedStyles, initialMartyriaStyles },
     }),
   ];
 
@@ -8545,6 +8890,16 @@ function onFileMenuParagraphStyles() {
   openParagraphStylesDialog();
 }
 
+function onFileMenuInitialMartyriaStyles() {
+  initialMartyriaStylesDialogElement.value = null;
+  initialMartyriaStylesDialogIsOpen.value = true;
+}
+
+function openInitialMartyriaStyleDialog(element: ModeKeyElement | null) {
+  initialMartyriaStylesDialogElement.value = element;
+  initialMartyriaStylesDialogIsOpen.value = true;
+}
+
 function onFileMenuDocumentProperties() {
   documentPropertiesDialogIsOpen.value = true;
 }
@@ -8878,6 +9233,7 @@ async function exportAsLatex(args: ExportAsLatexSettings) {
           pages.value,
           score.value.pageSetup,
           score.value.paragraphStyles,
+          score.value.initialMartyriaStyles,
           args.options,
         ),
         null,
@@ -9295,6 +9651,7 @@ async function onFileMenuCopyAsHtml() {
     copiedElements,
     score.value.pageSetup,
     score.value.paragraphStyles,
+    score.value.initialMartyriaStyles,
     0,
     true,
   );
@@ -9601,16 +9958,10 @@ function onSearchText(args: { query: string; reverse?: boolean }) {
 }
 
 function createDefaultModeKey(pageSetup: PageSetup) {
-  const defaultTemplate = ModeKeyElement.createFromTemplate(
+  return ModeKeyElement.createFromTemplate(
     modeKeyTemplates[0],
-    score.value.pageSetup.useOptionalDiatonicFthoras,
+    pageSetup.useOptionalDiatonicFthoras,
   );
-
-  defaultTemplate.color = pageSetup.modeKeyDefaultColor;
-  defaultTemplate.fontSize = pageSetup.modeKeyDefaultFontSize;
-  defaultTemplate.strokeWidth = pageSetup.modeKeyDefaultStrokeWidth;
-
-  return defaultTemplate;
 }
 
 function createDefaultScore() {
@@ -10093,19 +10444,6 @@ const canSaveContextMenuSelectionAsCombo = computed(
   () => getContextMenuSelectedNoteElements().length >= 2,
 );
 
-function setContextMenuUseDefaultStyle(
-  element: ModeKeyElement,
-  value: boolean,
-) {
-  const wasUsingDefaultStyle = element.useDefaultStyle;
-
-  updateModeKey(element, { useDefaultStyle: value });
-
-  if (wasUsingDefaultStyle && !value) {
-    setPaneVisibility('properties', true);
-  }
-}
-
 function openContextMenuPositioning(element: NoteElement) {
   // Make sure the dialog targets the right-clicked note (it reads the
   // selected element), then open it as the Properties pane button does.
@@ -10241,6 +10579,7 @@ function renderTabLabel(tab: Tab) {
             :open-sections="propertiesPaneOpenSections"
             :page-setup="score.pageSetup"
             :paragraph-styles="score.paragraphStyles"
+            :initial-martyria-styles="score.initialMartyriaStyles"
             @update:annotation="updateAnnotation"
             @update:text-box="updateTextBox"
             @update:rich-text-box="updateRichTextBox"
@@ -10252,6 +10591,8 @@ function renderTabLabel(tab: Tab) {
             @update:martyria="updateMartyria"
             @update:open-sections="propertiesPaneOpenSections = $event"
             @update:tempo="updateTempo"
+            @open-initial-martyria-style-dialog="openInitialMartyriaStyleDialog"
+            @open-rich-text-mode-key-dialog="openRichTextModeKeyEditDialog"
             @open-paragraph-styles-dialog="openParagraphStylesDialog"
           />
         </template>
@@ -10556,6 +10897,9 @@ function renderTabLabel(tab: Tab) {
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
                             :paragraph-styles="score.paragraphStyles"
+                            :initial-martyria-styles="
+                              score.initialMartyriaStyles
+                            "
                             :editor-language="ckeditorLanguage"
                             :selected="
                               getHeaderForPageIndex(pageIndex) ==
@@ -10566,6 +10910,12 @@ function renderTabLabel(tab: Tab) {
                             @select-neume="
                               selectHeaderRichTextBox(pageIndex);
                               showPropertiesPaneForRichTextNeume();
+                            "
+                            @edit-mode-key="
+                              (editor, modeKey) => {
+                                selectHeaderRichTextBox(pageIndex);
+                                openRichTextModeKeyEditDialog(editor, modeKey);
+                              }
                             "
                             @update="
                               updateRichTextBox(
@@ -11042,12 +11392,24 @@ function renderTabLabel(tab: Tab) {
                               :page-setup="score.pageSetup"
                               :fonts="fonts"
                               :paragraph-styles="score.paragraphStyles"
+                              :initial-martyria-styles="
+                                score.initialMartyriaStyles
+                              "
                               :editor-language="ckeditorLanguage"
                               :selected="isSelected(element)"
                               @select-single="selectedElement = element"
                               @select-neume="
                                 selectedElement = element;
                                 showPropertiesPaneForRichTextNeume();
+                              "
+                              @edit-mode-key="
+                                (editor, modeKey) => {
+                                  selectedElement = element;
+                                  openRichTextModeKeyEditDialog(
+                                    editor,
+                                    modeKey,
+                                  );
+                                }
                               "
                               @update="
                                 updateRichTextBox(
@@ -11234,6 +11596,9 @@ function renderTabLabel(tab: Tab) {
                             :page-setup="score.pageSetup"
                             :fonts="fonts"
                             :paragraph-styles="score.paragraphStyles"
+                            :initial-martyria-styles="
+                              score.initialMartyriaStyles
+                            "
                             :editor-language="ckeditorLanguage"
                             :selected="
                               getFooterForPageIndex(pageIndex) ==
@@ -11244,6 +11609,12 @@ function renderTabLabel(tab: Tab) {
                             @select-neume="
                               selectFooterRichTextBox(pageIndex);
                               showPropertiesPaneForRichTextNeume();
+                            "
+                            @edit-mode-key="
+                              (editor, modeKey) => {
+                                selectFooterRichTextBox(pageIndex);
+                                openRichTextModeKeyEditDialog(editor, modeKey);
+                              }
                             "
                             @update="
                               updateRichTextBox(
@@ -11370,22 +11741,6 @@ function renderTabLabel(tab: Tab) {
                     <PhAlignRight class="h-4 w-4" weight="duotone" />
                     {{
                       $t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })
-                    }}
-                  </ContextMenuCheckboxItem>
-                  <ContextMenuCheckboxItem
-                    v-if="contextMenuModeKey != null"
-                    :model-value="contextMenuModeKey.useDefaultStyle"
-                    @update:model-value="
-                      setContextMenuUseDefaultStyle(
-                        contextMenuModeKey,
-                        $event === true,
-                      )
-                    "
-                  >
-                    {{
-                      $t(($) => $.toolbar.common.useDefaultStyle, {
-                        ns: 'toolbar',
-                      })
                     }}
                   </ContextMenuCheckboxItem>
                   <ContextMenuCheckboxItem
@@ -11548,6 +11903,9 @@ function renderTabLabel(tab: Tab) {
       <template v-else-if="inspectorContext.kind === 'mode-key'">
         <ToolbarModeKey
           :element="inspectorContext.element"
+          :page-setup="score.pageSetup"
+          :paragraph-styles="score.paragraphStyles"
+          :initial-martyria-styles="score.initialMartyriaStyles"
           @update="updateModeKey(inspectorContext.element, $event)"
           @update:tempo="setModeKeyTempo(inspectorContext.element, $event)"
           @open-mode-key-dialog="openModeKeyDialog"
@@ -11583,6 +11941,7 @@ function renderTabLabel(tab: Tab) {
               ? resolvedDefaultLyricsStyle
               : resolvedDefaultParagraphStyle
           "
+          @open-mode-key-dialog="openRichTextModeKeyInsertDialog"
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'annotation'">
@@ -11655,13 +12014,13 @@ function renderTabLabel(tab: Tab) {
       </ButtonGroup>
     </div>
     <ModeKeyDialog
-      v-if="modeKeyDialogIsOpen"
+      v-if="modeKeyDialogIsOpen && modeKeyDialogElement != null"
       v-model:open="modeKeyDialogIsOpen"
-      :element="selectedElement as ModeKeyElement"
+      :element="modeKeyDialogElement"
       :page-setup="score.pageSetup"
-      @update="
-        updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
-      "
+      :paragraph-styles="score.paragraphStyles"
+      :initial-martyria-styles="score.initialMartyriaStyles"
+      @update="applyModeKeyDialogTemplate"
       @update:use-optional-diatonic-fthoras="
         updatePageSetupUseOptionalDiatonicFthoras($event)
       "
@@ -11715,6 +12074,20 @@ function renderTabLabel(tab: Tab) {
       :fonts="fonts"
       @update="updateParagraphStyles($event)"
     />
+    <InitialMartyriaStylesDialog
+      v-if="initialMartyriaStylesDialogIsOpen"
+      v-model:open="initialMartyriaStylesDialogIsOpen"
+      :styles="score.initialMartyriaStyles"
+      :paragraph-styles="score.paragraphStyles"
+      :element-style-id="
+        initialMartyriaStylesDialogElement?.initialMartyriaStyleId
+      "
+      :page-setup="score.pageSetup"
+      :target="
+        initialMartyriaStylesDialogElement == null ? 'document' : 'element'
+      "
+      @confirm="confirmInitialMartyriaStyles($event)"
+    />
     <DocumentPropertiesDialog
       v-if="documentPropertiesDialogIsOpen"
       v-model:open="documentPropertiesDialogIsOpen"
@@ -11742,6 +12115,7 @@ function renderTabLabel(tab: Tab) {
         :page-setup="score.pageSetup"
         :fonts="fonts"
         :paragraph-styles="score.paragraphStyles"
+        :initial-martyria-styles="score.initialMartyriaStyles"
         :editor-language="ckeditorLanguage"
         :recalc="true"
         @update:height="

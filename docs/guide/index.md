@@ -20,6 +20,8 @@ Double-click the initial martyria, right-click it and choose `Change Initial Mar
 
 ![The initial martyria dialog, showing modes on the left and available martyriæ on the right](./images/guide-mode-key-dialog.png)
 
+To choose the language and appearance, see [Choosing a style](./writing-music.md#choosing-a-style).
+
 ## 4. Add three neumes
 
 In the Neume Selector pane, click a quantitative neume. In Auto mode, the neume is entered and the cursor moves to the next position. Add two more neumes the same way.

@@ -68,6 +68,124 @@
     "root": "Selectează mărturia inițială",
     "description": "Alege mărturia inițială."
   },
+  "initialMartyriaStyles": {
+    "root": "Stiluri de mărturie inițială",
+    "description": "Alegeți un stil pentru mărturia inițială sau creați unul propriu.",
+    "styleLabel": "Stil",
+    "manageStyles": "Gestionare stiluri…",
+    "documentDefault": "Implicit pentru document",
+    "documentDefaultStatus": "Implicit pentru document: {{name}}",
+    "defaultBadge": "Implicit",
+    "custom": "Personalizate",
+    "builtInLanguage": "Încorporate · {{language}}",
+    "builtIn": "Încorporat",
+    "builtInHint": "Stil încorporat. Modificările se fac într-o copie.",
+    "noCustomStyles": "Niciun stil personalizat încă",
+    "new": "Stil nou",
+    "duplicate": "Duplicare",
+    "delete": "Ștergere",
+    "apply": "Aplicare",
+    "useForDocument": "Folosește pentru acest document",
+    "newStyleName": "Stil nou",
+    "copyStyleName": "Copie {{name}}",
+    "name": "Nume",
+    "styleNamePlaceholder": "Numele stilului",
+    "nameInvalid": "Introduceți un nume unic pentru acest stil.",
+    "language": "Limbă",
+    "greekParagraphStyle": "Stil de paragraf pentru greacă",
+    "typography": "Tipografie",
+    "sampleMode": "Glas exemplu",
+    "basedOn": "Bazat pe {{name}}",
+    "resetToBase": "Revenire la bază",
+    "modeIdentification": "Identificarea glasului",
+    "numberForm": "Forma numărului",
+    "digitForm": "Forma cifrelor",
+    "numberPlacement": "Poziția numărului",
+    "plagalWording": "Exprimarea plagalului",
+    "transliterateNoteNames": "Transliterează nota de început",
+    "transliterateNoteNamesHint": "Pa în loc de Πα",
+    "modeIdentificationMethods": {
+      "text": "Doar text",
+      "modeSign": "Doar mărturie",
+      "textAndModeSign": "Text și mărturie"
+    },
+    "numeralKinds": {
+      "cardinal": "Cardinal",
+      "ordinal": "Ordinal"
+    },
+    "numeralForms": {
+      "digits": {
+        "cardinal": "Cifre, cardinale",
+        "ordinal": "Cifre, ordinale"
+      },
+      "romanNumerals": {
+        "cardinal": "Numerale romane, cardinale",
+        "ordinal": "Numerale romane, ordinale"
+      },
+      "alphabeticNumerals": {
+        "cardinal": "Numerale alfabetice, cardinale",
+        "ordinal": "Numerale alfabetice, ordinale"
+      },
+      "words": {
+        "cardinal": "Cuvinte, cardinale",
+        "ordinal": "Cuvinte, ordinale"
+      }
+    },
+    "numberingSystems": {
+      "western": "Occidentale",
+      "arabicIndic": "Arabo-indiene"
+    },
+    "numeralQualifiers": {
+      "postnominal": "Numărul după",
+      "prenominal": "Numărul înainte"
+    },
+    "modeNamingSchemes": {
+      "absolute": "Numerotare 1-8",
+      "authenticCounterpart": "Plagalul autenticului",
+      "plagalClass": "Plagalele ca o clasă"
+    },
+    "duplicateOfStyle": "Acest stil se scrie exact ca „{{name}}”.",
+    "useStyleInstead": "Folosește „{{name}}”",
+    "useOrdinalForms": "Folosește forme ordinale",
+    "languages": {
+      "greek": "Greacă",
+      "english": "Engleză",
+      "spanish": "Spaniolă",
+      "churchSlavonic": "Slavonă bisericească",
+      "russian": "Rusă",
+      "arabic": "Arabă",
+      "romanian": "Română",
+      "indonesian": "Indoneziană"
+    },
+    "builtInStyles": {
+      "greekTraditionalSign": "Mărturie tradițională",
+      "greekAlphabeticNumerals": "Numerale alfabetice",
+      "englishTraditionalSign": "Mărturie tradițională",
+      "englishModeNames": "Numele glasurilor",
+      "englishModeNamesWithSign": "Numele glasurilor cu mărturie",
+      "englishModeNumbersWithSign": "Numerele glasurilor cu mărturie",
+      "englishPlagalClassWithSign": "Clasa plagală cu mărturie",
+      "spanishTonoNumber": "Tono cu cifre",
+      "spanishTonoRomanNumeral": "Tono cu numerale romane",
+      "spanishTonoOrdinalNumber": "Tono cu cifre ordinale",
+      "spanishTonoOrdinal": "Tono cu numerale ordinale",
+      "spanishOrdinalTono": "Ordinal înaintea lui tono",
+      "churchSlavonicGlasNumber": "Glas cu cifre",
+      "churchSlavonicGlasCyrillicNumeral": "Glas cu numerale chirilice",
+      "churchSlavonicGlasCyrillicNumeralText": "Glas cu numerale chirilice, doar text",
+      "churchSlavonicGlasOrdinal": "Glas cu numerale ordinale",
+      "churchSlavonicGlasOrdinalText": "Glas cu numerale ordinale, doar text",
+      "russianGlasNumber": "Glas cu cifre",
+      "russianGlasOrdinal": "Glas cu numerale ordinale",
+      "russianGlasOrdinalText": "Glas cu numerale ordinale, doar text",
+      "arabicOrdinal": "Numerale ordinale",
+      "arabicOrdinalText": "Numerale ordinale, doar text",
+      "romanianGlasNumber": "Glas cu cifre",
+      "romanianGlasRomanNumeral": "Glas cu numerale romane",
+      "romanianTraditionalSign": "Mărturie tradițională",
+      "indonesianModeNamesWithSign": "Denumiri de glas cu mărturie"
+    }
+  },
   "documentProperties": {
     "root": "Proprietăți document",
     "description": "Setează metadatele documentului pentru antete curente și alte tokenuri.",
@@ -97,7 +215,9 @@
       "header": "Antet",
       "footer": "Subsol",
       "lyrics": "Versuri",
-      "dropCap": "Majusculă decorativă"
+      "dropCap": "Majusculă decorativă",
+      "initialMartyria": "Mărturie inițială",
+      "initialMartyriaGreek": "Mărturie inițială (greacă)"
     }
   },
   "neumePositioning": {
@@ -222,10 +342,7 @@
     "italic": "Italic",
     "outline": "Contur",
     "lyrics": "Versuri",
-    "initialMartyriae": "Mărturii inițiale",
-    "initialMartyriaeDescription": "Stilizarea implicită pentru toate mărturiile inițiale din partitură.",
     "neumesDescription": "Stilizarea implicită pentru toate neumele din partitură.",
-    "heightAdjust": "Ajustare înălțime",
     "neumeStyles": "Stiluri neume",
     "type": "Tip",
     "accidentals": "Alterații",

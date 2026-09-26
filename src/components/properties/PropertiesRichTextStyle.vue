@@ -1,6 +1,7 @@
 <template>
   <div ref="panelRoot" class="contents">
     <PaneSection
+      v-if="selectedModeKey == null"
       value="style"
       :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
     >
@@ -369,6 +370,19 @@
       />
     </PaneSection>
 
+    <PropertiesEmbeddedModeKey
+      v-if="selectedModeKey != null"
+      :element="selectedModeKey"
+      :page-setup="pageSetup"
+      :paragraph-styles="paragraphStyles"
+      :initial-martyria-styles="initialMartyriaStyles ?? []"
+      @update="updateModeKeyAttributes"
+      @update:style-selector-open="onModeKeySelectorOpenChanged"
+      @update:tempo-selector-open="onModeKeySelectorOpenChanged"
+      @open-selector="openModeKeySelector"
+      @open-style-dialog="emit('open-initial-martyria-style-dialog')"
+    />
+
     <PaneSection
       v-if="isNeumeSelected"
       value="neume-attributes"
@@ -635,9 +649,11 @@ import {
   PhTextSuperscript,
   PhTextUnderline,
 } from '@phosphor-icons/vue';
+import type { Editor } from 'ckeditor5';
 import type { AcceptableValue } from 'reka-ui';
 import { computed, ref } from 'vue';
 
+import { UPDATE_MODE_KEY_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertmodekey/updatemodekeyattributescommand';
 import type { InsertNeumeType } from '@/ckeditor-plugins/insertneume/insertneumeediting';
 import { UPDATE_NEUME_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertneume/updateneumeattributescommand';
 import AppTooltip from '@/components/AppTooltip.vue';
@@ -650,6 +666,7 @@ import PaneSection from '@/components/pane/PaneSection.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import FontVariantFields from '@/components/properties/FontVariantFields.vue';
 import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
+import PropertiesEmbeddedModeKey from '@/components/properties/PropertiesEmbeddedModeKey.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
@@ -678,7 +695,12 @@ import {
   useRichTextStyleCommands,
 } from '@/composables/useRichTextStyleCommands';
 import { supportedLocales } from '@/i18n';
-import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
+import type {
+  AnnotationElement,
+  ModeKeyElement,
+  RichTextBoxElement,
+} from '@/models/Element';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import {
   getNoteLabelSelector,
   ROOT_SIGN_LABEL_SELECTORS,
@@ -709,12 +731,15 @@ const props = defineProps<{
   fonts: string[];
   pageSetup: PageSetup;
   paragraphStyles: ParagraphStyle[];
+  initialMartyriaStyles?: InitialMartyriaStyle[];
   fallbackParagraphStyleId: string;
   fallbackParagraphStyle: ResolvedParagraphStyle;
 }>();
 
 const emit = defineEmits<{
   'open-paragraph-styles-dialog': [styleId: string];
+  'open-mode-key-dialog': [editor: Editor, element: ModeKeyElement];
+  'open-initial-martyria-style-dialog': [];
 }>();
 
 const {
@@ -762,6 +787,46 @@ const {
 ]);
 
 const scopedEditor = useActiveEditorForOwner(() => props.element);
+
+const modeKeyAttributeState = useEditorCommandObservableState(
+  scopedEditor,
+  UPDATE_MODE_KEY_ATTRIBUTES_COMMAND,
+  ['element'],
+);
+const selectedModeKey = computed(() => {
+  const element = modeKeyAttributeState.properties.element;
+
+  return modeKeyAttributeState.isEnabled && element != null
+    ? (element as ModeKeyElement)
+    : null;
+});
+
+function updateModeKeyAttributes(values: Partial<ModeKeyElement>) {
+  const attributes = Object.fromEntries(
+    Object.entries(values).map(([key, value]) => [
+      key === 'color' ? 'fontColor' : key,
+      value,
+    ]),
+  );
+  execForOwner(props.element, UPDATE_MODE_KEY_ATTRIBUTES_COMMAND, attributes);
+}
+
+function openModeKeySelector() {
+  const editor = scopedEditor.value;
+  const element = selectedModeKey.value;
+
+  if (editor != null && element != null) {
+    emit('open-mode-key-dialog', editor, element);
+  }
+}
+
+function onModeKeySelectorOpenChanged(isOpen: boolean) {
+  if (isOpen) {
+    beginSelectionGuard(props.element);
+  } else {
+    endSelectionGuard(props.element, { refocus: true });
+  }
+}
 
 // Keep the editor logically focused while focus is in this panel or the shared
 // dropdown portal, and show the selection marker while a styling control is

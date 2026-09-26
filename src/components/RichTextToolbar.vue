@@ -340,6 +340,27 @@
           <span class="plagal-toolbar-glyph">&pi;&lambda;</span>
         </ToolbarButton>
       </AppTooltip>
+      <AppTooltip
+        v-if="element.elementType === ElementType.RichTextBox"
+        :tooltip="
+          $t(($) => $.toolbar.main.insertInitialMartyria, { ns: 'toolbar' })
+        "
+      >
+        <ToolbarButton
+          variant="secondary"
+          class="chrome-button"
+          :disabled="!isCommandEnabled(INSERT_MODE_KEY_COMMAND)"
+          @mousedown.prevent
+          @click="openModeKeyDialog"
+        >
+          <span
+            class="inline-grid size-4 place-items-center font-['Source_Serif'] text-sm leading-none text-destructive"
+            aria-hidden="true"
+          >
+            Ηχ
+          </span>
+        </ToolbarButton>
+      </AppTooltip>
       <ToolbarSeparator />
       <RichTextToolbarItem name="bulletedList" :owner="element" />
       <RichTextToolbarItem name="numberedList" :owner="element" />
@@ -368,9 +389,11 @@ import {
   PhTextTSlash,
   PhTextUnderline,
 } from '@phosphor-icons/vue';
+import type { Editor } from 'ckeditor5';
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 
+import { INSERT_MODE_KEY_COMMAND } from '@/ckeditor-plugins/insertmodekey/insertmodekeycommand';
 import {
   INSERT_NEUME_COMMAND,
   type InsertNeumeCommandParams,
@@ -416,7 +439,11 @@ import {
   PARAGRAPH_STYLE_MIXED_VALUE,
   useRichTextStyleCommands,
 } from '@/composables/useRichTextStyleCommands';
-import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
+import {
+  type AnnotationElement,
+  ElementType,
+  type RichTextBoxElement,
+} from '@/models/Element';
 import type { Neume } from '@/models/Neumes';
 import { Note, RootSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
@@ -434,6 +461,7 @@ const EXTRA_COMMAND_NAMES = [
   'undo',
   'redo',
   'removeFormat',
+  INSERT_MODE_KEY_COMMAND,
   INSERT_NEUME_COMMAND,
 ];
 
@@ -459,6 +487,10 @@ const props = defineProps({
     required: true,
   },
 });
+
+const emit = defineEmits<{
+  'open-mode-key-dialog': [editor: Editor, fontSize: number];
+}>();
 
 const {
   paragraphStyleValue,
@@ -488,6 +520,18 @@ const {
 } = useRichTextStyleCommands(props, EXTRA_COMMAND_NAMES);
 
 const scopedEditor = useActiveEditorForOwner(() => props.element);
+
+function openModeKeyDialog() {
+  const editor = scopedEditor.value;
+
+  if (editor != null) {
+    emit(
+      'open-mode-key-dialog',
+      editor,
+      fontSizeValue.value ?? resolvedActiveParagraphStyle.value.fontSize,
+    );
+  }
+}
 
 // Keep the editor logically focused while focus is in the toolbar or the
 // shared dropdown portal, and show the selection marker while a styling control

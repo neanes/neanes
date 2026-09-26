@@ -121,17 +121,17 @@ Some fonts do not include separate bold or italic faces. Neanes can synthesize t
 
 In a **Style** dropdown, the text before parentheses is the real font face. Formatting in parentheses is synthesized:
 
-| Style shown             | Meaning                                      |
-| ----------------------- | -------------------------------------------- |
-| `Regular`               | A real regular face                          |
-| `Bold`                  | A real bold face                             |
-| `Italic`                | A real italic face                           |
-| `Bold Italic`           | A real bold italic face                      |
-| `Regular (bold)`        | Bold synthesized from the regular face       |
-| `Regular (italic)`      | Italic synthesized from the regular face     |
-| `Regular (bold italic)` | Bold and italic synthesized from regular     |
-| `Bold (italic)`         | A real bold face with synthesized italic     |
-| `Italic (bold)`         | A real italic face with synthesized bold     |
+| Style shown             | Meaning                                  |
+| ----------------------- | ---------------------------------------- |
+| `Regular`               | A real regular face                      |
+| `Bold`                  | A real bold face                         |
+| `Italic`                | A real italic face                       |
+| `Bold Italic`           | A real bold italic face                  |
+| `Regular (bold)`        | Bold synthesized from the regular face   |
+| `Regular (italic)`      | Italic synthesized from the regular face |
+| `Regular (bold italic)` | Bold and italic synthesized from regular |
+| `Bold (italic)`         | A real bold face with synthesized italic |
+| `Italic (bold)`         | A real italic face with synthesized bold |
 
 When available, prefer a real face because it was designed by the font's creator. Synthesized styles remain available when a font does not provide the face you need.
 

@@ -220,6 +220,8 @@
     "style": "Gaya",
     "bold": "Tebal",
     "italic": "Miring",
+    "syntheticBold": "tebal",
+    "syntheticItalic": "miring",
     "outline": "Garis Luar",
     "lyrics": "Lirik",
     "initialMartyriae": "Martyria Awal",

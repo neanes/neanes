@@ -39,6 +39,12 @@ export interface ResolvedExportFace {
   syntheticItalic?: boolean;
 }
 
+export interface ResolvedSelectableStyle {
+  baseStyle: string;
+  syntheticBold: boolean;
+  syntheticItalic: boolean;
+}
+
 interface BundledFace {
   style: string;
   cssFamily?: string;
@@ -389,6 +395,20 @@ export function resolveSystemFontFace<T extends FontFaceValue>(
   };
 }
 
+export function resolveSelectableStyleFromFaces<T extends FontFaceValue>(
+  faces: readonly T[],
+  fontStyle: string,
+): ResolvedSelectableStyle {
+  const style = normalizeDocumentFontStyle(fontStyle);
+  const resolved = resolveSystemFontFace(faces, style);
+
+  return {
+    baseStyle: resolved.canonicalStyle,
+    syntheticBold: resolved.syntheticBold,
+    syntheticItalic: resolved.syntheticItalic,
+  };
+}
+
 function resolveFontFaceWithSynthesis<T extends FontFaceValue>(
   faces: readonly T[],
   style: string,
@@ -701,6 +721,33 @@ class FontCatalog {
     return NEUME_FONT_FAMILIES.has(family)
       ? styles
       : synthesizeFontStyleOptions(styles);
+  }
+
+  resolveSelectableStyle(
+    family: string,
+    fontStyle: string,
+  ): ResolvedSelectableStyle {
+    const style = normalizeDocumentFontStyle(fontStyle);
+    const bundled = BUNDLED_FACES[family];
+
+    if (bundled != null) {
+      const resolved = resolveBundledFontFace(family, bundled, style);
+
+      return {
+        baseStyle: resolved?.face.style ?? style,
+        syntheticBold: resolved?.syntheticBold ?? false,
+        syntheticItalic: resolved?.syntheticItalic ?? false,
+      };
+    }
+
+    // Unknown families still need useful labels for legacy documents opened on
+    // a machine where their font is unavailable. Treat Regular as the only
+    // known face in that case, matching the selectable-style fallback.
+    const faces: readonly FontFaceValue[] = this.systemFaces.get(family) ?? [
+      { style: DEFAULT_FONT_STYLE },
+    ];
+
+    return resolveSelectableStyleFromFaces(faces, style);
   }
 
   // Resolve a document family and style to the exact face an exporter should

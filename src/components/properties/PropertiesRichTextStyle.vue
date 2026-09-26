@@ -101,6 +101,7 @@
           :id="`${idPrefix}-font-style`"
           class="w-full max-w-full"
           :model-value="fontStyleValue"
+          :font-family="fontStyleFamilyValue"
           :options="fontStyleOptions"
           :disabled="fontStyleDisabled"
           rich-text-portal

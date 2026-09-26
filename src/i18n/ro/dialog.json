@@ -220,6 +220,8 @@
     "style": "Stil",
     "bold": "Îngroșat",
     "italic": "Italic",
+    "syntheticBold": "îngroșat",
+    "syntheticItalic": "italic",
     "outline": "Contur",
     "lyrics": "Versuri",
     "initialMartyriae": "Mărturii inițiale",

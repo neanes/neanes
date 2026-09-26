@@ -220,6 +220,8 @@
     "style": "Μορφή",
     "bold": "Έντονα",
     "italic": "Πλάγια",
+    "syntheticBold": "έντονα",
+    "syntheticItalic": "πλάγια",
     "outline": "Περίγραμμα",
     "lyrics": "Στίχοι",
     "initialMartyriae": "Αρκτικές Μαρτυρίες",

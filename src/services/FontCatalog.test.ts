@@ -12,6 +12,7 @@ import {
   listSystemFontFamilies,
   matchFontFaceByStyle,
   normalizeFontFamilyForComparison,
+  resolveSelectableStyleFromFaces,
   resolveSystemFontFace,
   selectFontFaceByStyle,
 } from '@/services/FontCatalog';
@@ -121,6 +122,57 @@ describe('FontCatalog bundled fonts', () => {
       'Bold Italic',
     ]);
     expect(fontCatalog.getSelectableStyles('Neanes')).toEqual(['Regular']);
+  });
+
+  it('resolves the real face and synthetic axes behind selectable styles', () => {
+    expect(
+      fontCatalog.resolveSelectableStyle('Noto Naskh Arabic', 'Bold'),
+    ).toEqual({
+      baseStyle: 'Bold',
+      syntheticBold: false,
+      syntheticItalic: false,
+    });
+    expect(
+      fontCatalog.resolveSelectableStyle('Noto Naskh Arabic', 'Italic'),
+    ).toEqual({
+      baseStyle: 'Regular',
+      syntheticBold: false,
+      syntheticItalic: true,
+    });
+    expect(
+      fontCatalog.resolveSelectableStyle('Noto Naskh Arabic', 'Bold Italic'),
+    ).toEqual({
+      baseStyle: 'Bold',
+      syntheticBold: false,
+      syntheticItalic: true,
+    });
+    expect(
+      fontCatalog.resolveSelectableStyle('Unknown', 'Bold Italic'),
+    ).toEqual({
+      baseStyle: 'Regular',
+      syntheticBold: true,
+      syntheticItalic: true,
+    });
+  });
+
+  it('uses the real CSS-default system face in selectable style labels', () => {
+    const faces = [
+      { style: 'Book Italic Swashed' },
+      { style: 'Light' },
+      { style: 'Book' },
+      { style: 'Bold' },
+    ];
+
+    expect(resolveSelectableStyleFromFaces(faces, 'Regular')).toEqual({
+      baseStyle: 'Book',
+      syntheticBold: false,
+      syntheticItalic: false,
+    });
+    expect(resolveSelectableStyleFromFaces(faces, 'Bold Italic')).toEqual({
+      baseStyle: 'Bold',
+      syntheticBold: false,
+      syntheticItalic: true,
+    });
   });
 
   it('resolves missing bundled faces through native synthesis', () => {

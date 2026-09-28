@@ -81,7 +81,7 @@
     "mitt": "^3.0.1",
     "prettier": "^3.9.8",
     "register-service-worker": "^1.7.2",
-    "reka-ui": "^2.10.4",
+    "reka-ui": "^2.10.5",
     "shadcn-vue": "^2.8.2",
     "tailwind-merge": "^3.7.0",
     "tailwindcss": "^4.3.3",

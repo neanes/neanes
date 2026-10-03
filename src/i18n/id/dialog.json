@@ -340,6 +340,8 @@
     "style": "Gaya",
     "bold": "Tebal",
     "italic": "Miring",
+    "syntheticBold": "tebal",
+    "syntheticItalic": "miring",
     "outline": "Garis Luar",
     "lyrics": "Lirik",
     "neumesDescription": "Gaya default untuk semua neuma dalam partitur.",

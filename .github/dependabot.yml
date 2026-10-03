@@ -13,6 +13,10 @@ updates:
     labels:
       - 'Type: Dependencies'
     groups:
+      csstools:
+        patterns:
+          - '@csstools/css-parser-algorithms'
+          - '@csstools/css-tokenizer'
       tailwindcss:
         patterns:
           - 'tailwindcss'

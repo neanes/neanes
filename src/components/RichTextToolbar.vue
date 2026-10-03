@@ -61,6 +61,7 @@
       <FontStyleSelect
         class="w-40"
         :model-value="fontStyleValue"
+        :font-family="fontStyleFamilyValue"
         :options="fontStyleOptions"
         :disabled="fontStyleDisabled"
         rich-text-portal
@@ -498,6 +499,7 @@ const {
   fontFamilyValue,
   fontFamilyOptions,
   fontStyleValue,
+  fontStyleFamilyValue,
   fontStyleOptions,
   fontStyleDisabled,
   fontStyleValues,

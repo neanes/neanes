@@ -142,6 +142,28 @@ describe('LatexExporter typography schema', () => {
     });
   });
 
+  it('exports synthesis flags with the closest real face', () => {
+    const styles = createDefaultParagraphStyles();
+    const lyrics = styles.find(
+      (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+    )!;
+    lyrics.overrides.fontFamily = 'Noto Naskh Arabic';
+    lyrics.overrides.fontStyle = 'Bold Italic';
+
+    const registry = new LatexTextStyleRegistry(styles);
+    registry.getStyleId(lyrics.id, {});
+
+    expect(
+      registry.styles.find(
+        (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
+      ),
+    ).toMatchObject({
+      fontStyle: 'Bold',
+      postscriptName: 'NotoNaskhArabic-Bold',
+      syntheticItalic: true,
+    });
+  });
+
   it('fails export when an exact PostScript face cannot be resolved', () => {
     const styles = createDefaultParagraphStyles();
     const dropCap = styles.find(

@@ -115,6 +115,26 @@ The formatting panel includes controls for:
 
 Available typographic features vary by font. Use the controls in a paragraph style for formatting that should be shared; the same controls in an element's Properties pane create a local override instead.
 
+### Understand synthesized font styles
+
+Some fonts do not include separate bold or italic faces. Neanes can synthesize the missing formatting so that older scores and fonts with a limited set of styles remain usable.
+
+In a **Style** dropdown, the text before parentheses is the real font face. Formatting in parentheses is synthesized:
+
+| Style shown             | Meaning                                  |
+| ----------------------- | ---------------------------------------- |
+| `Regular`               | A real regular face                      |
+| `Bold`                  | A real bold face                         |
+| `Italic`                | A real italic face                       |
+| `Bold Italic`           | A real bold italic face                  |
+| `Regular (bold)`        | Bold synthesized from the regular face   |
+| `Regular (italic)`      | Italic synthesized from the regular face |
+| `Regular (bold italic)` | Bold and italic synthesized from regular |
+| `Bold (italic)`         | A real bold face with synthesized italic |
+| `Italic (bold)`         | A real italic face with synthesized bold |
+
+When available, prefer a real face because it was designed by the font's creator. Synthesized styles remain available when a font does not provide the face you need.
+
 ### Clear, reset, or delete a style
 
 - Choose **Clear Formatting** <PhTextTSlash class="paragraph-style-action-icon" aria-hidden="true" /> when the style should keep its name and parent but follow the parent's formatting completely.

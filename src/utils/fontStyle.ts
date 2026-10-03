@@ -114,7 +114,7 @@ export function resolveFontCss(style: {
 export function getFontStyleOptions(fontFamily: string) {
   return fontFamily.trim() === ''
     ? [DEFAULT_FONT_STYLE]
-    : fontCatalog.getStyles(fontFamily);
+    : fontCatalog.getSelectableStyles(fontFamily);
 }
 
 export function remapFontStyleForFamily(

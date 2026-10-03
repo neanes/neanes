@@ -64,6 +64,7 @@
           id="properties-lyrics-font-style"
           class="w-full max-w-full"
           :model-value="resolvedParagraphStyle.fontStyle"
+          :font-family="resolvedParagraphStyle.fontFamily"
           :options="fontStyleOptions"
           :disabled="fontStyleOptions.length <= 1"
           @update:model-value="

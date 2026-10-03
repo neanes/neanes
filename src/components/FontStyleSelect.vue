@@ -13,8 +13,13 @@
       @close-auto-focus="onContentCloseAutoFocus"
     >
       <SelectGroup>
-        <SelectItem v-for="option in options" :key="option" :value="option">
-          {{ option }}
+        <SelectItem
+          v-for="option in displayOptions"
+          :key="`${fontFamily}\0${option.value}\0${option.label}`"
+          :value="option.value"
+          :text-value="option.label"
+        >
+          {{ option.label }}
         </SelectItem>
       </SelectGroup>
     </component>
@@ -22,7 +27,9 @@
 </template>
 
 <script setup lang="ts">
+import { useTranslation } from 'i18next-vue';
 import type { HTMLAttributes, PropType } from 'vue';
+import { computed } from 'vue';
 
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import {
@@ -34,10 +41,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({
   options: {
     type: Array as PropType<string[]>,
+    required: true,
+  },
+  fontFamily: {
+    type: String,
     required: true,
   },
   disabled: {
@@ -68,6 +80,32 @@ const props = defineProps({
 
 const selectedValue = defineModel<string>({ required: true });
 const open = defineModel<boolean>('open', { default: false });
+const { t } = useTranslation();
+
+const displayOptions = computed(() =>
+  props.options.map((value) => ({ value, label: optionLabel(value) })),
+);
+
+function optionLabel(option: string) {
+  const resolved = fontCatalog.resolveSelectableStyle(props.fontFamily, option);
+  const syntheticAxes: string[] = [];
+
+  if (resolved.syntheticBold) {
+    syntheticAxes.push(
+      t(($) => $.dialog.pageSetup.syntheticBold, { ns: 'dialog' }),
+    );
+  }
+
+  if (resolved.syntheticItalic) {
+    syntheticAxes.push(
+      t(($) => $.dialog.pageSetup.syntheticItalic, { ns: 'dialog' }),
+    );
+  }
+
+  return syntheticAxes.length === 0
+    ? resolved.baseStyle
+    : `${resolved.baseStyle} (${syntheticAxes.join(' ')})`;
+}
 
 // In rich-text mode the selection guard owns focus: keep the editable focused
 // when opening, and let the guard (not Reka Select) decide where focus goes on

@@ -217,7 +217,7 @@ export function useRichTextStyleCommands(
   const fontStyleOptions = computed(() =>
     fontStyleFamilyValue.value === ''
       ? []
-      : fontCatalog.getStyles(fontStyleFamilyValue.value),
+      : fontCatalog.getSelectableStyles(fontStyleFamilyValue.value),
   );
 
   const fontStyleDisabled = computed(
@@ -391,7 +391,9 @@ export function useRichTextStyleCommands(
       );
       const inheritedStyle = remapFontStyleAxesForOptions(
         fontStyleValue.value,
-        inheritedFamily === '' ? [] : fontCatalog.getStyles(inheritedFamily),
+        inheritedFamily === ''
+          ? []
+          : fontCatalog.getSelectableStyles(inheritedFamily),
       );
 
       runCommand('fontFamily');
@@ -410,7 +412,7 @@ export function useRichTextStyleCommands(
     // the bold/italic axes when an exact match is unavailable.
     const remapped = remapFontStyleForOptions(
       fontStyleValue.value,
-      fontCatalog.getStyles(family),
+      fontCatalog.getSelectableStyles(family),
     );
 
     runCommand('fontFamily', { value: modelValue });

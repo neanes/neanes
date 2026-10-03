@@ -11,7 +11,30 @@ import {
   normalizeDocumentFontStyle,
   parseStyleAxes,
   resolveAxisToggle,
+  synthesizeFontStyleOptions,
 } from './fontStyleAxes';
+
+describe('synthesizeFontStyleOptions', () => {
+  it('adds missing basic bold and italic combinations', () => {
+    expect(synthesizeFontStyleOptions(['Regular'])).toEqual([
+      'Regular',
+      'Italic',
+      'Bold',
+      'Bold Italic',
+    ]);
+  });
+
+  it('preserves named weights and optical styles for italic synthesis', () => {
+    expect(synthesizeFontStyleOptions(['Caption Semibold'])).toEqual([
+      'Caption',
+      'Caption Italic',
+      'Caption Semibold',
+      'Caption Semibold Italic',
+      'Caption Bold',
+      'Caption Bold Italic',
+    ]);
+  });
+});
 
 describe('parseStyleAxes', () => {
   it('treats Regular and empty input as no axes', () => {

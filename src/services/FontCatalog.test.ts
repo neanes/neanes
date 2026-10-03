@@ -12,6 +12,7 @@ import {
   listSystemFontFamilies,
   matchFontFaceByStyle,
   normalizeFontFamilyForComparison,
+  resolveSelectableStyleFromFaces,
   resolveSystemFontFace,
   selectFontFaceByStyle,
 } from '@/services/FontCatalog';
@@ -117,6 +118,83 @@ describe('FontCatalog bundled fonts', () => {
       'Bold',
     ]);
     expect(fontCatalog.getStyles('Neanes')).toEqual(['Regular']);
+  });
+
+  it('adds selectable synthetic styles only for text families', () => {
+    expect(fontCatalog.getSelectableStyles('Noto Naskh Arabic')).toEqual([
+      'Regular',
+      'Italic',
+      'Bold',
+      'Bold Italic',
+    ]);
+    expect(fontCatalog.getSelectableStyles('Neanes')).toEqual(['Regular']);
+  });
+
+  it('resolves the real face and synthetic axes behind selectable styles', () => {
+    expect(
+      fontCatalog.resolveSelectableStyle('Noto Naskh Arabic', 'Bold'),
+    ).toEqual({
+      baseStyle: 'Bold',
+      syntheticBold: false,
+      syntheticItalic: false,
+    });
+    expect(
+      fontCatalog.resolveSelectableStyle('Noto Naskh Arabic', 'Italic'),
+    ).toEqual({
+      baseStyle: 'Regular',
+      syntheticBold: false,
+      syntheticItalic: true,
+    });
+    expect(
+      fontCatalog.resolveSelectableStyle('Noto Naskh Arabic', 'Bold Italic'),
+    ).toEqual({
+      baseStyle: 'Bold',
+      syntheticBold: false,
+      syntheticItalic: true,
+    });
+    expect(
+      fontCatalog.resolveSelectableStyle('Unknown', 'Bold Italic'),
+    ).toEqual({
+      baseStyle: 'Regular',
+      syntheticBold: true,
+      syntheticItalic: true,
+    });
+  });
+
+  it('uses the real CSS-default system face in selectable style labels', () => {
+    const faces = [
+      { style: 'Book Italic Swashed' },
+      { style: 'Light' },
+      { style: 'Book' },
+      { style: 'Bold' },
+    ];
+
+    expect(resolveSelectableStyleFromFaces(faces, 'Regular')).toEqual({
+      baseStyle: 'Book',
+      syntheticBold: false,
+      syntheticItalic: false,
+    });
+    expect(resolveSelectableStyleFromFaces(faces, 'Bold Italic')).toEqual({
+      baseStyle: 'Bold',
+      syntheticBold: false,
+      syntheticItalic: true,
+    });
+  });
+
+  it('resolves missing bundled faces through native synthesis', () => {
+    expect(fontCatalog.resolveFace('Noto Naskh Arabic', 'Italic')).toEqual({
+      cssFamily: 'Noto Naskh Arabic',
+      cssFontWeight: undefined,
+      cssFontStyle: 'italic',
+    });
+    expect(
+      fontCatalog.resolveExportFace('Noto Naskh Arabic', 'Bold Italic'),
+    ).toEqual({
+      style: 'Bold',
+      postscriptName: 'NotoNaskhArabic-Bold',
+      syntheticBold: undefined,
+      syntheticItalic: true,
+    });
   });
 
   it('resolves bundled faces to weight/style on the same family', () => {
@@ -279,6 +357,88 @@ describe('FontCatalog font feature values', () => {
 
     expect(resolved.face).toBeUndefined();
     expect(resolved.canonicalStyle).toBe('Semibold');
+  });
+
+  it('uses the closest real face for synthetic axes', () => {
+    const regular = { style: 'Regular' };
+    const bold = { style: 'Bold' };
+
+    expect(resolveSystemFontFace([regular], 'Bold Italic')).toMatchObject({
+      face: regular,
+      syntheticBold: true,
+      syntheticItalic: true,
+    });
+    expect(resolveSystemFontFace([regular, bold], 'Bold Italic')).toMatchObject(
+      {
+        face: bold,
+        syntheticBold: false,
+        syntheticItalic: true,
+      },
+    );
+  });
+
+  it.each(['Book', 'Medium', 'Roman'])(
+    'resolves generic Italic to the real %s Italic counterpart',
+    (defaultStyle) => {
+      const italicStyle = `${defaultStyle} Italic`;
+      const italic = { style: italicStyle };
+      const resolved = resolveSystemFontFace(
+        [{ style: defaultStyle }, italic],
+        'Italic',
+      );
+
+      expect(resolved).toMatchObject({
+        face: italic,
+        canonicalStyle: italicStyle,
+        syntheticBold: false,
+        syntheticItalic: false,
+      });
+    },
+  );
+
+  it('prefers a real italic face when Bold Italic needs one synthetic axis', () => {
+    const italic = { style: 'Italic' };
+    const resolved = resolveSystemFontFace(
+      [{ style: 'Regular' }, { style: 'Bold' }, italic],
+      'Bold Italic',
+    );
+
+    expect(resolved).toMatchObject({
+      face: italic,
+      canonicalStyle: 'Italic',
+      syntheticBold: true,
+      syntheticItalic: false,
+    });
+  });
+
+  it('does not synthesize bold over a real heavier face', () => {
+    const extraBold = { style: 'Extra Bold' };
+    const resolved = resolveSystemFontFace(
+      [{ style: 'Regular' }, extraBold],
+      'Bold',
+    );
+
+    expect(resolved).toMatchObject({
+      face: extraBold,
+      canonicalStyle: 'Extra Bold',
+      syntheticBold: false,
+      syntheticItalic: false,
+    });
+  });
+
+  it('does not synthesize either axis over a real heavier italic face', () => {
+    const blackItalic = { style: 'Black Italic' };
+    const resolved = resolveSystemFontFace(
+      [{ style: 'Regular' }, blackItalic],
+      'Bold Italic',
+    );
+
+    expect(resolved).toMatchObject({
+      face: blackItalic,
+      canonicalStyle: 'Black Italic',
+      syntheticBold: false,
+      syntheticItalic: false,
+    });
   });
 });
 

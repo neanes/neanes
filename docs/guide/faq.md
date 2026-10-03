@@ -45,3 +45,21 @@ See [Choose the initial martyria](/guide/#_3-choose-the-initial-martyria) for th
 ## Why doesn't Neanes include the extended notation associated with Simon Karas?
 
 Adding another notation system would require significant development effort. The extended notation associated with Simon Karas would substantially expand the scope of Neanes and includes conventions that are not uniformly adopted. For now, the project is focused on improving its engraving and editing capabilities for the well-established modern notation. There is currently no timeline for supporting extended notation.
+
+## What fonts can I use instead of EZ Omega or Athonite?
+
+If you have older Byzantine chant documents, you may be familiar with **EZ Omega** and **Athonite**. Several freely available fonts provide similar styles and are good choices for new documents.
+
+For **EZ Omega**, consider:
+
+- [**URW Classico**](https://fontlibrary.org/en/font/urw-classico) on Windows or Linux. Classico was designed by Hermann Zapf as a revision of his Optima typeface and is the closest freely available alternative to EZ Omega.
+- **Optima** on macOS. Optima is included with macOS and is the typeface on which CG Omega and EZ Omega are based.
+- [**Linux Biolinum**](https://fontlibrary.org/en/font/linux-biolinum) was designed as a free alternative to Optima and supports a wide range of languages, including polytonic Greek.
+- [**Libertinus Sans**](https://fontlibrary.org/en/font/libertinus-sans) is a newer fork of Linux Biolinum with bug fixes and other improvements, although its design differs somewhat more from EZ Omega.
+
+> [!NOTE]
+> EZ Omega is an older font and does not include true bold or italic styles. Neanes can simulate bold and italic when needed, but the alternatives above include styles specifically designed for bold and italic text.
+
+For **Athonite**, consider [**Agion Oros X**](https://www.anagrafi.com/fonts/AgionOrosX), a freely available typeface in a similar traditional Athonite style.
+
+These are only suggestions. Neanes can use any font installed on your computer, so you are free to choose whatever typeface best suits your publication.

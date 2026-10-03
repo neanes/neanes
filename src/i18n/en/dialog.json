@@ -340,6 +340,8 @@
     "style": "Style",
     "bold": "Bold",
     "italic": "Italic",
+    "syntheticBold": "bold",
+    "syntheticItalic": "italic",
     "outline": "Outline",
     "lyrics": "Lyrics",
     "neumesDescription": "The default styling for all neumes in the score.",

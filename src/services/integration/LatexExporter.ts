@@ -138,6 +138,8 @@ export function convertResolvedTextStyle(
     fontSize: toPt(style.fontSize),
     fontStyle: face.style,
     postscriptName: face.postscriptName,
+    syntheticBold: face.syntheticBold,
+    syntheticItalic: face.syntheticItalic,
     color: convertColor(style.color),
     strokeWidth: toPt(style.strokeWidth),
     strokeColor: convertColor(style.strokeColor),
@@ -1017,6 +1019,8 @@ export interface LatexTextStyle {
   fontSize: number;
   fontStyle: string;
   postscriptName: string;
+  syntheticBold?: boolean;
+  syntheticItalic?: boolean;
   color: string;
   strokeWidth: number;
   strokeColor: string;

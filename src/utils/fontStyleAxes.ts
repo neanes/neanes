@@ -190,6 +190,47 @@ export function resolveAxisToggle(
   return null;
 }
 
+// Expand the real faces a text family provides with the Bold/Italic styles
+// that CSS can synthesize. Start from every real face so named weights and
+// optical styles retain their other axes when Italic is toggled. Bold follows
+// the toolbar's existing semantics: it replaces a named weight rather than
+// producing impossible styles such as "Semibold Bold".
+export function synthesizeFontStyleOptions(
+  availableStyles: readonly string[],
+): string[] {
+  const styles = new Map<string, string>();
+  const pending = [...availableStyles];
+
+  while (pending.length > 0) {
+    const style = pending.pop()!;
+    const key = fontStyleKey(style);
+
+    if (styles.has(key)) {
+      continue;
+    }
+
+    styles.set(key, normalizeDocumentFontStyle(style));
+
+    for (const axis of ['bold', 'italic'] as const) {
+      const target = parseStyleAxes(style);
+
+      if (axis === 'bold') {
+        target.bold = !target.bold;
+
+        if (target.bold) {
+          target.rest = target.rest.filter((token) => !isWeightToken(token));
+        }
+      } else {
+        target.italic = !target.italic;
+      }
+
+      pending.push(buildStyleFromAxes(target));
+    }
+  }
+
+  return [...styles.values()].sort(compareFontStyles);
+}
+
 // True when a style has no explicit weight/italic/optical tokens (it is the
 // family's default face).
 export function isRegularStyle(style: string | null | undefined): boolean {

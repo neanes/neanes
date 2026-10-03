@@ -21,6 +21,8 @@ export interface IEditorPreferences {
   showInkBoundingBoxes: boolean;
   showLyricBaselines: boolean;
   showLyricBoundingBoxes: boolean;
+  showHalfLeading: boolean;
+  showNeumeAscenders: boolean;
   showNeumeBoundingBoxes: boolean;
   showCollisionRegions: boolean;
   showGlueWidths: boolean;
@@ -40,6 +42,8 @@ export class EditorPreferences implements IEditorPreferences {
   showInkBoundingBoxes = false;
   showLyricBaselines = false;
   showLyricBoundingBoxes = false;
+  showHalfLeading = false;
+  showNeumeAscenders = false;
   showNeumeBoundingBoxes = false;
   showCollisionRegions = false;
   showGlueWidths = false;

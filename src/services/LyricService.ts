@@ -8,6 +8,7 @@ import type {
 import { AcceptsLyricsOption, ElementType } from '@/models/Element';
 import { QuantitativeNeume, runningElaphronNeumes } from '@/models/Neumes';
 import { TATWEEL } from '@/utils/constants';
+import { getLastEmbeddedModeKey } from '@/utils/richTextModeKeys';
 
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
@@ -214,7 +215,10 @@ export class LyricService {
         const textBox = filteredElements[i] as RichTextBoxElement;
         // Start a new paragraph when a mode-changing text box is encountered since this
         // typically separates a hymn.
-        if (textBox.modeChange && lyrics.trim() !== '') {
+        if (
+          (textBox.modeChange || getLastEmbeddedModeKey(textBox) != null) &&
+          lyrics.trim() !== ''
+        ) {
           lyrics += '\n\n';
           needSpace = false;
         }

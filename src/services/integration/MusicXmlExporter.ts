@@ -16,6 +16,7 @@ import {
   ScaleNote,
 } from '@/models/Scales';
 import type { Score } from '@/models/Score';
+import { getLastEmbeddedModeKey } from '@/utils/richTextModeKeys';
 
 import type {
   AnalysisNode,
@@ -413,8 +414,11 @@ export class MusicXmlExporter {
         }
         case ElementType.RichTextBox: {
           const richTextElement = element as RichTextBoxElement;
+          const embeddedModeKey = richTextElement.modeChange
+            ? null
+            : getLastEmbeddedModeKey(richTextElement);
 
-          if (!richTextElement.modeChange) {
+          if (!richTextElement.modeChange && embeddedModeKey == null) {
             break;
           }
 
@@ -446,7 +450,9 @@ export class MusicXmlExporter {
 
           // Set the tempo
           const sound = new MusicXmlSound();
-          sound.tempo = richTextElement.modeChangeBpm;
+          sound.tempo = richTextElement.modeChange
+            ? richTextElement.modeChangeBpm
+            : embeddedModeKey!.bpm;
           currentMeasure.contents.push(sound);
 
           // Reset workspace flags
@@ -459,7 +465,18 @@ export class MusicXmlExporter {
           workspace.pitch = new MusicXmlPitch('G', 4);
           workspace.physicalNote = ScaleNote.Thi;
 
-          workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
+          if (embeddedModeKey?.fthora) {
+            const fthoraNode = nodeGroup.find(
+              (x) => x.nodeType === NodeType.FthoraNode,
+            ) as FthoraNode;
+
+            this.handleFthora(fthoraNode, workspace);
+          } else {
+            workspace.scale = this.getPlaybackScale(
+              modeKeyNode.scale,
+              workspace,
+            );
+          }
 
           break;
         }

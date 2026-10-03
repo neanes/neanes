@@ -88,10 +88,13 @@ export class PageSetup {
   public alternateLineDefaultFontSize = Unit.fromPt(12);
   public alternateLineDefaultColor = '#ED0000';
 
-  public modeKeyDefaultColor = '#ED0000';
-  public modeKeyDefaultStrokeWidth = 0;
-  public modeKeyDefaultFontSize = Unit.fromPt(20);
-  public modeKeyDefaultHeightAdjustment = 0;
+  // Deprecated load-only compatibility for the pre-style initial martyria.
+  public modeKeyDefaultColor: string | undefined = undefined;
+  public modeKeyDefaultStrokeWidth: number | undefined = undefined;
+  public modeKeyDefaultFontSize: number | undefined = undefined;
+  public modeKeyDefaultHeightAdjustment: number | undefined = undefined;
+
+  public initialMartyriaStyleId: string | undefined = undefined;
 
   public accidentalDefaultColor = '#ED0000';
   public accidentalDefaultStrokeWidth = 0;

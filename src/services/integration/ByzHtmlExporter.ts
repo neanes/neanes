@@ -1,3 +1,8 @@
+import {
+  createModeKeyElementFromAttributes,
+  deserializeModeKeyAttributes,
+  type ModeKeyModelAttributes,
+} from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import type {
   DropCapElement,
   ImageBoxElement,
@@ -14,6 +19,20 @@ import {
   isRightAlignedMartyria,
   LineBreakType,
 } from '@/models/Element';
+import type {
+  InitialMartyriaRunLayout,
+  InitialMartyriaSeparatorLayout,
+} from '@/models/InitialMartyriaLayout';
+import {
+  resolveModeKeyInitialMartyriaStyle,
+  resolveScoreInitialMartyriaStyle,
+} from '@/models/InitialMartyriaResolver';
+import type {
+  InitialMartyriaAppearance,
+  InitialMartyriaStartingNoteRun,
+  InitialMartyriaStyle,
+  ResolvedInitialMartyriaRun,
+} from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
 import {
   MeasureBar,
@@ -51,6 +70,7 @@ import {
 } from '@/utils/richTextParagraphStyleCss';
 import { Unit } from '@/utils/Unit';
 
+import { LayoutService } from '../LayoutService';
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
 import type { SbmuflGlyphName } from '../NeumeMappingService';
 import { NeumeMappingService } from '../NeumeMappingService';
@@ -63,6 +83,32 @@ interface NeumeOffset {
 
 const NoOffset: NeumeOffset = { x: null, y: null };
 const byzhtmlVersion = import.meta.env.VITE_BYZHTML_VERSION;
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+export function replaceEmbeddedModeKeyMarkers(
+  html: string,
+  replace: (attributes: ModeKeyModelAttributes) => string,
+) {
+  return html.replace(
+    /<span\b(?=[^>]*\bclass="[^"]*\bneanes-ck-mode-key\b[^"]*")([^>]*)>(?:&nbsp;|&#160;|&#x[aA]0;|\u00a0)?<\/span>/gu,
+    (source, attributes: string) => {
+      const payload = attributes.match(
+        /data-neanes-mode-key=(['"])(.*?)\1/u,
+      )?.[2];
+      const modeKeyAttributes = deserializeModeKeyAttributes(payload);
+
+      return modeKeyAttributes == null ? source : replace(modeKeyAttributes);
+    },
+  );
+}
 
 interface TagInfo {
   tag: string;
@@ -236,19 +282,35 @@ export class ByzHtmlExporter {
   }
 
   exportScore(score: Score) {
-    const style = this.exportPageSetup(score.pageSetup, score.paragraphStyles);
+    const style = this.exportPageSetup(
+      score.pageSetup,
+      score.paragraphStyles,
+      score.initialMartyriaStyles,
+    );
 
     const body = this.exportElements(
       score.staff.elements,
       score.pageSetup,
       score.paragraphStyles,
+      score.initialMartyriaStyles,
       4,
     );
 
     return createByzHtmlDocument(style, body, score.pageSetup.melkiteRtl);
   }
 
-  exportPageSetup(pageSetup: PageSetup, paragraphStyles: ParagraphStyle[]) {
+  exportPageSetup(
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    initialMartyriaStyles: InitialMartyriaStyle[],
+  ) {
+    // The typography every mode key inherits unless it overrides it: the
+    // score's initial martyria style resolved through the paragraph styles.
+    const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
+      pageSetup,
+      paragraphStyles,
+      initialMartyriaStyles,
+    }).primaryAppearance;
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
     const firstPageMargins = resolvePageMargins(pageSetup, 1);
     const secondPageMargins = resolvePageMargins(pageSetup, 2);
@@ -518,9 +580,8 @@ export class ByzHtmlExporter {
 
       .${this.config.classModeKey} {
         position: relative;
-        font-size: ${Unit.toPt(pageSetup.modeKeyDefaultFontSize)}pt;
-        color: ${pageSetup.modeKeyDefaultColor};
-        -webkit-text-stroke-width: ${pageSetup.modeKeyDefaultStrokeWidth};
+        color: ${defaultModeKeyAppearance.color};
+        -webkit-text-stroke-width: ${defaultModeKeyAppearance.strokeWidth};
       }
 
       .${this.config.classModeKeyRightContainer} {
@@ -627,9 +688,17 @@ export class ByzHtmlExporter {
     elements: ScoreElement[],
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
+    initialMartyriaStyles: InitialMartyriaStyle[],
     indentation: number,
     startInsidePage: boolean = false,
   ) {
+    // The typography every mode key inherits unless it overrides it: the
+    // score's initial martyria style resolved through the paragraph styles.
+    const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
+      pageSetup,
+      paragraphStyles,
+      initialMartyriaStyles,
+    }).primaryAppearance;
     let result = '';
 
     let insidePage = startInsidePage;
@@ -745,6 +814,9 @@ export class ByzHtmlExporter {
             richTextBox,
             pageSetup,
             insidePage ? indentation + 2 : indentation,
+            paragraphStyles,
+            initialMartyriaStyles,
+            defaultModeKeyAppearance,
           );
 
           if (
@@ -763,7 +835,11 @@ export class ByzHtmlExporter {
             insidePage = false;
           }
 
-          result += this.exportModeKey(element as ModeKeyElement, indentation);
+          result += this.exportModeKey(
+            element as ModeKeyElement,
+            defaultModeKeyAppearance,
+            indentation,
+          );
           break;
         case ElementType.ImageBox:
           if (insidePage && !(element as ImageBoxElement).inline) {
@@ -1258,15 +1334,29 @@ export class ByzHtmlExporter {
     element: RichTextBoxElement,
     pageSetup: PageSetup,
     indentation: number,
+    paragraphStyles: ParagraphStyle[] = [],
+    initialMartyriaStyles: InitialMartyriaStyle[] = [],
+    defaultModeKeyAppearance?: InitialMartyriaAppearance,
   ) {
     let className = this.config.classRichTextBox;
     let style = '';
-    let content = element.content;
+    const exportContent = (content: string) =>
+      defaultModeKeyAppearance == null
+        ? content
+        : this.exportEmbeddedModeKeys(
+            content,
+            pageSetup,
+            paragraphStyles,
+            initialMartyriaStyles,
+            defaultModeKeyAppearance,
+            indentation,
+          );
+    let content: string;
 
     if (element.multipanel) {
       className += ` ${this.config.classTextBoxMultipanel}`;
       style += `width: ${Unit.toPt(element.width)}pt;`;
-      content = `<div class="${this.config.classTextBoxMultipanelLeft}">${element.contentLeft}</div><div class="${this.config.classTextBoxMultipanelCenter}">${element.contentCenter}</div><div class="${this.config.classTextBoxMultipanelRight}">${element.contentRight}</div>`;
+      content = `<div class="${this.config.classTextBoxMultipanelLeft}">${exportContent(element.contentLeft)}</div><div class="${this.config.classTextBoxMultipanelCenter}">${exportContent(element.contentCenter)}</div><div class="${this.config.classTextBoxMultipanelRight}">${exportContent(element.contentRight)}</div>`;
     } else if (element.inline) {
       className += ` ${this.config.classTextBoxInline}`;
       style += `width: ${Unit.toPt(element.width)}pt;`;
@@ -1283,7 +1373,9 @@ export class ByzHtmlExporter {
         element.defaultLyricsFontHeight +
         element.offsetYBottom;
 
-      content = `<div class="${this.config.classTextBoxInlineTop}" style="top: ${Unit.toPt(topAnchor)}pt;">${element.content}</div><div class="${this.config.classTextBoxInlineBottom}" style="top: ${Unit.toPt(bottomAnchor)}pt;">${element.contentBottom}</div>`;
+      content = `<div class="${this.config.classTextBoxInlineTop}" style="top: ${Unit.toPt(topAnchor)}pt;">${exportContent(element.content)}</div><div class="${this.config.classTextBoxInlineBottom}" style="top: ${Unit.toPt(bottomAnchor)}pt;">${exportContent(element.contentBottom)}</div>`;
+    } else {
+      content = exportContent(element.content);
     }
 
     const languageAttributes = getRichTextLanguageAttributes(
@@ -1294,47 +1386,264 @@ export class ByzHtmlExporter {
     return `<div class="${className}"${languageAttributes}${styleAttribute}>${content}</div\n${this.getIndentationString(indentation)}>`;
   }
 
-  exportModeKey(element: ModeKeyElement, indentation: number) {
+  private exportEmbeddedModeKeys(
+    html: string,
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    initialMartyriaStyles: InitialMartyriaStyle[],
+    defaultAppearance: InitialMartyriaAppearance,
+    indentation: number,
+  ) {
+    return replaceEmbeddedModeKeyMarkers(html, (modeKeyAttributes) => {
+      const modeKey = createModeKeyElementFromAttributes(modeKeyAttributes);
+      const resolvedStyle = resolveModeKeyInitialMartyriaStyle({
+        element: modeKey,
+        pageSetup,
+        paragraphStyles,
+        initialMartyriaStyles,
+      });
+      LayoutService.layoutModeKey(modeKey, pageSetup, resolvedStyle);
+
+      return this.exportModeKey(modeKey, defaultAppearance, indentation, true);
+    });
+  }
+
+  private exportInitialMartyriaSignature(
+    element: ModeKeyElement,
+    indentation: number,
+  ) {
+    const layout = element.computedInitialMartyriaLayout;
+
+    if (layout == null) {
+      return this.exportLegacyModeKeySignature(element, indentation);
+    }
+
+    const { resolution } = layout;
+    let html = `<span class="byz--initial-martyria-signature" dir="${resolution.flowDirection}" aria-label="${escapeHtml(resolution.pronunciation)}">`;
+
+    for (const [index, run] of resolution.runs.entries()) {
+      const runLayout = layout.runs[index];
+      html += this.exportInitialMartyriaSeparator(
+        run,
+        runLayout.separatorBefore,
+      );
+      html += this.exportInitialMartyriaRun(
+        run,
+        runLayout,
+        layout.neumeBaselineCorrection,
+        indentation,
+      );
+    }
+
+    const lastRun = resolution.runs.at(-1);
+    if (lastRun != null) {
+      html += this.exportInitialMartyriaSeparator(
+        lastRun,
+        layout.trailingSeparator,
+      );
+    }
+
+    return `${html}</span>`;
+  }
+
+  private exportInitialMartyriaSeparator(
+    run: ResolvedInitialMartyriaRun,
+    separator: InitialMartyriaSeparatorLayout,
+  ) {
+    if (separator.kind === 'none') {
+      return '';
+    }
+
+    if (separator.kind === 'wordSpace') {
+      const font = separator.wordSpaceFont!;
+      const resolvedFont = resolveFontStyle(font.fontFamily, font.fontStyle);
+      const family = getFontFamilyWithFallback(
+        resolvedFont.cssFontFamily,
+      ).replaceAll('"', "'");
+      return `<span class="byz--initial-martyria-separator" aria-hidden="true" style="font-family: ${family};font-size: ${Unit.toPt(font.fontSize)}pt;direction: ${run.direction};">&nbsp;</span>`;
+    }
+
+    return `<span class="byz--initial-martyria-separator" aria-hidden="true" style="display: inline-block;width: ${Unit.toPt(separator.width)}pt;direction: ${run.direction};"></span>`;
+  }
+
+  private exportInitialMartyriaRun(
+    run: ResolvedInitialMartyriaRun,
+    runLayout: InitialMartyriaRunLayout,
+    neumeBaselineCorrection: number,
+    indentation: number,
+  ) {
+    if (run.kind === 'glyph') {
+      const top =
+        runLayout.baselineShift === 0
+          ? ''
+          : `position: relative;top: ${Unit.toPt(-runLayout.baselineShift)}pt;`;
+      const glyphs = run.glyphs
+        .map((glyph) => this.exportNeume(glyph, indentation + 2))
+        .join('');
+      return `<span class="byz--initial-martyria-run byz--initial-martyria-glyph" dir="${run.direction}" aria-hidden="true" style="${this.getInitialMartyriaAppearanceCss(run.appearance, runLayout.fontSize)}${top}">${glyphs}</span>`;
+    }
+
+    if (run.kind === 'startingPitch') {
+      return this.exportInitialMartyriaStartingPitch(
+        run,
+        runLayout,
+        neumeBaselineCorrection,
+        indentation,
+      );
+    }
+
+    const languageAttributes = ` lang="${escapeHtml(run.languageTag)}" dir="${run.direction}"`;
+    const appearanceCss = this.getInitialMartyriaAppearanceCss(
+      run.appearance,
+      runLayout.fontSize,
+    );
+
+    if (run.content.layout === 'inline') {
+      return `<span class="byz--initial-martyria-run byz--initial-martyria-text"${languageAttributes} aria-hidden="true" style="${appearanceCss}">${escapeHtml(run.content.text)}</span>`;
+    }
+
+    const stacked = runLayout.stackedCharacters!;
+    const height = stacked.geometry.bottom - stacked.geometry.top;
+    const containerStyle = `${appearanceCss}display: inline-block;height: ${Unit.toPt(height)}pt;position: relative;vertical-align: ${Unit.toPt(-stacked.geometry.bottom)}pt;width: ${Unit.toPt(stacked.geometry.width)}pt;`;
+    const rowStyle = (top: number) =>
+      `display: block;left: 0;line-height: ${Unit.toPt(stacked.lineHeight)}pt;position: absolute;text-align: center;top: ${Unit.toPt(top)}pt;white-space: nowrap;width: 100%;`;
+
+    return `<span class="byz--initial-martyria-run byz--initial-martyria-stacked"${languageAttributes} aria-hidden="true" style="${containerStyle}"><span style="${rowStyle(stacked.geometry.topRow.top)}">${escapeHtml(run.content.topCharacter)}</span><span style="${rowStyle(stacked.geometry.bottomRow.top)}">${escapeHtml(run.content.bottomCharacter)}</span></span>`;
+  }
+
+  private exportInitialMartyriaStartingPitch(
+    run: InitialMartyriaStartingNoteRun,
+    runLayout: InitialMartyriaRunLayout,
+    neumeBaselineCorrection: number,
+    indentation: number,
+  ) {
+    const pitchLayout = runLayout.pitch!;
     let inner = '';
 
-    inner += this.exportNeume(ModeSign.Ekhos, indentation + 2);
+    for (const role of ['primary', 'secondary'] as const) {
+      const pitchNote = run.cluster[role];
+      const geometry = pitchLayout[role];
+
+      if (pitchNote == null || geometry == null) {
+        continue;
+      }
+
+      let cell = '';
+      const glyphCss = this.getInitialMartyriaAppearanceCss(
+        run.appearance,
+        runLayout.fontSize,
+      );
+
+      if (pitchNote.fthoraAbove != null && geometry.fthora != null) {
+        cell += `<span class="byz--initial-martyria-pitch-mark ${this.config.classFthora}" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(geometry.fthora.left)}pt;top: ${Unit.toPt(geometry.fthora.baseline)}pt;${glyphCss}">${this.exportNeume(pitchNote.fthoraAbove, indentation + 2)}</span>`;
+      }
+
+      if (
+        pitchNote.quantitativeNeumeAbove != null &&
+        geometry.quantitative != null
+      ) {
+        cell += `<span class="byz--initial-martyria-pitch-mark" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(geometry.quantitative.left)}pt;top: ${Unit.toPt(geometry.quantitative.baseline)}pt;${glyphCss}">${this.exportNeume(pitchNote.quantitativeNeumeAbove, indentation + 2)}</span>`;
+      }
+
+      const noteCss = this.getInitialMartyriaAppearanceCss(
+        run.noteText.appearance,
+        pitchLayout.textFontSize,
+      );
+      cell += `<span lang="${escapeHtml(run.noteText.languageTag)}" dir="${run.noteText.direction}" style="${noteCss}left: ${Unit.toPt(geometry.text.left)}pt;position: relative;white-space: nowrap;">${escapeHtml(run.noteText.names[pitchNote.note])}</span>`;
+      inner += `<span class="byz--initial-martyria-pitch-note" style="direction: ltr;position: relative;text-align: left;width: ${Unit.toPt(geometry.width)}pt;">${cell}</span>`;
+
+      if (
+        role === 'primary' &&
+        run.cluster.primary != null &&
+        run.cluster.secondary != null
+      ) {
+        inner += `<span style="display: inline-block;width: ${Unit.toPt(pitchLayout.clusterSeparatorWidth)}pt;"></span>`;
+      }
+    }
+
+    if (
+      (run.cluster.primary != null || run.cluster.secondary != null) &&
+      run.cluster.trailingGlyphs.length > 0
+    ) {
+      inner += `<span style="display: inline-block;width: ${Unit.toPt(pitchLayout.trailingGlueWidth)}pt;"></span>`;
+    }
+
+    const trailingCss = this.getInitialMartyriaAppearanceCss(
+      run.appearance,
+      runLayout.fontSize,
+    );
+    if (run.cluster.trailingGlyphs.length > 0) {
+      const glyphs = run.cluster.trailingGlyphs
+        .map((glyph) => this.exportNeume(glyph, indentation + 2))
+        .join('');
+      inner += `<span style="${trailingCss}position: relative;top: ${Unit.toPt(neumeBaselineCorrection)}pt;">${glyphs}</span>`;
+    }
+
+    return `<span class="byz--initial-martyria-run byz--initial-martyria-starting-pitch" dir="${run.direction}">${inner}</span>`;
+  }
+
+  private getInitialMartyriaAppearanceCss(
+    appearance: InitialMartyriaAppearance,
+    fontSize: number,
+  ) {
+    const font = resolveFontStyle(appearance.fontFamily, appearance.fontStyle);
+    const family = getFontFamilyWithFallback(font.cssFontFamily).replaceAll(
+      '"',
+      "'",
+    );
+
+    const size = Unit.toPt(fontSize);
+
+    return `--byz-neume-font-family: ${family};--byz-neume-font-size: ${size}pt;color: ${appearance.color};font-family: ${family};font-size: ${size}pt;font-weight: ${font.cssFontWeight};font-style: ${font.cssFontStyle};${fontVariantCssDeclarations(appearance).join('')}line-height: normal;-webkit-text-stroke-color: ${appearance.strokeColor};-webkit-text-stroke-width: ${Unit.toPt(appearance.strokeWidth)}pt;unicode-bidi: isolate;`;
+  }
+
+  private exportLegacyModeKeySignature(
+    element: ModeKeyElement,
+    indentation: number,
+  ) {
+    let inner = this.exportNeume(ModeSign.Ekhos, indentation);
 
     if (element.isPlagal) {
-      inner += this.exportNeume(ModeSign.Plagal, indentation + 2);
+      inner += this.exportNeume(ModeSign.Plagal, indentation);
     }
 
     if (element.isVarys) {
-      inner += this.exportNeume(ModeSign.Varys, indentation + 2);
+      inner += this.exportNeume(ModeSign.Varys, indentation);
     }
 
-    inner += this.exportNeume(element.martyria, indentation + 2);
-    inner += this.exportNeume(element.note, indentation + 2);
+    inner += this.exportNeume(element.martyria, indentation);
+    inner += this.exportNeume(element.note, indentation);
     inner += this.exportNeume(
       element.fthoraAboveNote,
-      indentation + 2,
+      indentation,
       NoOffset,
       this.config.classFthora,
     );
-    inner += this.exportNeume(
-      element.quantitativeNeumeAboveNote,
-      indentation + 2,
-    );
-    inner += this.exportNeume(element.note2, indentation + 2);
+    inner += this.exportNeume(element.quantitativeNeumeAboveNote, indentation);
+    inner += this.exportNeume(element.note2, indentation);
     inner += this.exportNeume(
       element.fthoraAboveNote2,
-      indentation + 2,
+      indentation,
       NoOffset,
       this.config.classFthora,
     );
-    inner += this.exportNeume(
-      element.quantitativeNeumeAboveNote2,
-      indentation + 2,
-    );
-    inner += this.exportNeume(element.quantitativeNeumeRight, indentation + 2);
+    inner += this.exportNeume(element.quantitativeNeumeAboveNote2, indentation);
+    inner += this.exportNeume(element.quantitativeNeumeRight, indentation);
     inner += this.exportNeume(
       element.fthoraAboveQuantitativeNeumeRight,
-      indentation + 2,
+      indentation,
     );
+
+    return inner;
+  }
+
+  exportModeKey(
+    element: ModeKeyElement,
+    defaultAppearance: InitialMartyriaAppearance,
+    indentation: number,
+    embedded = false,
+  ) {
+    let inner = this.exportInitialMartyriaSignature(element, indentation + 2);
 
     let rightContainer = false;
 
@@ -1391,15 +1700,17 @@ export class ByzHtmlExporter {
       inner += `</span>`;
     }
 
+    // The glyph size is matched to the style's text by layout, so it is
+    // always written per element; color and outline only when the element
+    // departs from the score's style.
     let styleAttribute = '';
-    let style = '';
+    let style = `font-size: ${Unit.toPt(element.computedNeumeFontSize)}pt;`;
 
-    if (!element.useDefaultStyle) {
+    if (element.computedColor !== defaultAppearance.color) {
       style += `color: ${element.computedColor};`;
-      style += `font-family: ${getFontFamilyWithFallback(
-        element.computedFontFamily,
-      ).replaceAll('"', "'")};`;
-      style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
+    }
+
+    if (element.computedStrokeWidth !== defaultAppearance.strokeWidth) {
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
     }
 
@@ -1407,11 +1718,13 @@ export class ByzHtmlExporter {
 
     styleAttribute = ` style="${style}"`;
 
-    return `<div class="${
-      this.config.classModeKey
-    }"${styleAttribute}\n${this.getIndentationString(
+    const className = this.config.classModeKey;
+
+    const tag = embedded ? 'span' : 'div';
+
+    return `<${tag} class="${className}"${styleAttribute}\n${this.getIndentationString(
       indentation + 2,
-    )}>${inner}</div\n${this.getIndentationString(indentation)}>`;
+    )}>${inner}</${tag}\n${this.getIndentationString(indentation)}>`;
   }
 
   exportImageBox(element: ImageBoxElement, indentation: number) {

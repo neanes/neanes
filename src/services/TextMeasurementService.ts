@@ -80,6 +80,15 @@ export class TextMeasurementService {
     return metrics.width;
   }
 
+  public static getTextMetrics(
+    text: string,
+    font: string,
+    fontVariantCaps: string = 'normal',
+  ) {
+    const context = this.prepareContext(font, fontVariantCaps);
+    return context.measureText(text);
+  }
+
   public static getInkBounds(text: string, font: string): InkBounds {
     const context = this.prepareContext(font);
 
@@ -106,8 +115,12 @@ export class TextMeasurementService {
     };
   }
 
-  public static getTextHeight(text: string, font: string) {
-    const context = this.prepareContext(font);
+  public static getTextHeight(
+    text: string,
+    font: string,
+    fontVariantCaps: string = 'normal',
+  ) {
+    const context = this.prepareContext(font, fontVariantCaps);
 
     const metrics = context.measureText(text);
     return metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;

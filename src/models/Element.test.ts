@@ -6,6 +6,7 @@ import {
   EmptyElement,
   ImageBoxElement,
   isAutomaticBreakProhibited,
+  isBlockElement,
   LineBreakType,
   MartyriaElement,
   ModeKeyElement,
@@ -22,6 +23,13 @@ import {
   type ParagraphStyleOverrides,
   resolveParagraphStyle,
 } from './ParagraphStyle';
+
+describe('isBlockElement', () => {
+  it('treats an initial martyria as a block', () => {
+    const modeKey = new ModeKeyElement();
+    expect(isBlockElement(modeKey)).toBe(true);
+  });
+});
 
 describe('canKeepWithNext', () => {
   it('allows an optional break after notes', () => {

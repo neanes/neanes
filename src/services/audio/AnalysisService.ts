@@ -26,6 +26,7 @@ import {
   Scale,
   ScaleNote,
 } from '@/models/Scales';
+import { getLastEmbeddedModeKey } from '@/utils/richTextModeKeys';
 
 import { LayoutService } from '../LayoutService';
 
@@ -149,14 +150,18 @@ export class AnalysisService {
         this.handleNote(element as NoteElement, workspace);
       } else if (element.elementType === ElementType.ModeKey) {
         this.handleModeKey(element as ModeKeyElement, workspace);
-      } else if (
-        element.elementType === ElementType.RichTextBox &&
-        (element as RichTextBoxElement).modeChange
-      ) {
-        this.handleRichTextBoxAsModeKey(
-          element as RichTextBoxElement,
-          workspace,
-        );
+      } else if (element.elementType === ElementType.RichTextBox) {
+        const richTextBox = element as RichTextBoxElement;
+
+        if (richTextBox.modeChange) {
+          this.handleRichTextBoxAsModeKey(richTextBox, workspace);
+        } else {
+          const modeKey = getLastEmbeddedModeKey(richTextBox);
+
+          if (modeKey != null) {
+            this.handleModeKey(modeKey, workspace);
+          }
+        }
       } else if (element.elementType === ElementType.Martyria) {
         this.handleMartyria(element as MartyriaElement, workspace);
       } else if (element.elementType === ElementType.Tempo) {

@@ -54,6 +54,7 @@ import ruTranslations from 'ckeditor5/translations/ru.js';
 
 import AlignmentOverride from './ckeditor-plugins/alignmentoverride/alignmentoverride';
 import FontStyle from './ckeditor-plugins/fontstyle/fontstyle';
+import InsertModeKey from './ckeditor-plugins/insertmodekey/insertmodekey';
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
 import OpenType from './ckeditor-plugins/opentype/opentype';
 import NeanesFakeSelectionEditing from './ckeditor-plugins/richtextselection/richtextselection';
@@ -105,6 +106,7 @@ InlineEditor.builtinPlugins = [
   AlignmentOverride,
   FontStyle,
   OpenType,
+  InsertModeKey,
   InsertNeume,
   Link,
   ListEditing,

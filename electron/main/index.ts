@@ -2500,9 +2500,37 @@ async function createWindow() {
     sendPendingUpdateState();
   });
 
+  let devRendererUnavailable = false;
+
+  if (isDevelopment) {
+    win.webContents.on('did-start-navigation', (details) => {
+      if (details.isMainFrame && !details.isSameDocument) {
+        devRendererUnavailable = false;
+      }
+    });
+    win.webContents.on(
+      'did-fail-load',
+      (_event, code, _description, _url, isMainFrame) => {
+        // Aborted navigations are expected during reloads.
+        if (isMainFrame && code !== -3) {
+          devRendererUnavailable = true;
+        }
+      },
+    );
+    win.webContents.on('render-process-gone', () => {
+      devRendererUnavailable = true;
+    });
+  }
+
   // Prevent the user from accidentally
   // closing the app with unsaved changes
   win.on('close', (event) => {
+    if (isDevelopment && devRendererUnavailable) {
+      // A failed dev page cannot answer the unsaved-changes request.
+      app.exit();
+      return;
+    }
+
     if (!readyToExit) {
       win?.webContents.send(IpcMainChannels.CloseApplication);
       event.preventDefault();
@@ -2981,17 +3009,16 @@ app.on('ready', async () => {
   }
 });
 
-// Exit cleanly on request from parent process in development mode.
+// Dev restarts must not wait for the renderer's unsaved-changes handshake.
+// Keep recovery snapshots available for the next launch.
 if (isDevelopment) {
-  if (process.platform === 'win32') {
-    process.on('message', (data) => {
-      if (data === 'graceful-exit') {
-        app.quit();
-      }
-    });
-  } else {
-    process.on('SIGTERM', () => {
-      app.quit();
-    });
-  }
+  process.on('message', (data) => {
+    if (data === 'graceful-exit') {
+      app.exit();
+    }
+  });
+  // Also exit if the dev launcher disappears before its message is delivered.
+  process.on('disconnect', () => {
+    app.exit();
+  });
 }

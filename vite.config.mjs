@@ -5,11 +5,12 @@ import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
-import electron from 'vite-plugin-electron';
+import electron, { startup } from 'vite-plugin-electron';
 import { VitePWA } from 'vite-plugin-pwa';
 import VueDevTools from 'vite-plugin-vue-devtools';
 
 import pkg from './package.json' with { type: 'json' };
+import { stopElectronDevApp } from './scripts/electron-dev.mjs';
 
 // lib-font probes for Node's fs and zlib at module load, behind runtime
 // guards that never fire in the renderer: the fetch shim only activates when
@@ -49,6 +50,13 @@ export default defineConfig(({ command, mode }) => {
 
   Object.assign(process.env, loadEnv(mode, process.cwd()));
   const isElectron = process.env.VITE_IS_ELECTRON === 'true';
+
+  if (isElectron && isServe) {
+    // Replace the plugin's SIGTERM shutdown with an explicit IPC request.
+    startup.exit = stopElectronDevApp;
+  }
+
+  let electronStartup = Promise.resolve();
 
   if (isElectron) {
     rmSync('dist-electron', { recursive: true, force: true });
@@ -156,7 +164,12 @@ export default defineConfig(({ command, mode }) => {
                     /* For `.vscode/.debug.script.mjs` */ '[startup] Electron App',
                   );
                 } else {
-                  options.startup();
+                  electronStartup = electronStartup.then(async () => {
+                    // Release the single-instance lock before launching again.
+                    await stopElectronDevApp();
+                    await options.startup();
+                  });
+                  return electronStartup;
                 }
               },
               vite: {

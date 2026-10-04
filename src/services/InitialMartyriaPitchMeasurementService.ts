@@ -63,8 +63,25 @@ function atomBounds(
   );
 }
 
-export function glyphText(neume: Neume) {
-  return NeumeMappingService.getMapping(neume)?.text ?? '?';
+/** Measure the same salt alternate that NeumeGlyph renders with CSS. */
+export function glyphText(neume: Neume, fontFamily: string) {
+  const mapping = NeumeMappingService.getMapping(neume);
+  if (mapping == null) {
+    return '?';
+  }
+  if (mapping.salt == null) {
+    return mapping.text;
+  }
+  const alternateName = `${mapping.glyphName}.salt${String(mapping.salt).padStart(2, '0')}`;
+  const alternate = fontService
+    .getMetadata(fontFamily)
+    .glyphsWithAlternates[mapping.glyphName]?.alternates.find(
+      (glyph: { name: string; codepoint: string }) =>
+        glyph.name === alternateName,
+    );
+  return alternate == null
+    ? mapping.text
+    : String.fromCodePoint(Number.parseInt(alternate.codepoint.slice(2), 16));
 }
 
 export function measureInitialMartyriaPitchGeometry(
@@ -84,7 +101,7 @@ export function measureInitialMartyriaPitchGeometry(
     note.fthoraAbove == null
       ? undefined
       : atomBounds(
-          glyphText(note.fthoraAbove),
+          glyphText(note.fthoraAbove, options.glyphFontFamily),
           options.glyphFontFamily,
           options.glyphFontStyle,
           options.glyphFontSize,
@@ -95,7 +112,7 @@ export function measureInitialMartyriaPitchGeometry(
     note.quantitativeNeumeAbove == null
       ? undefined
       : atomBounds(
-          glyphText(note.quantitativeNeumeAbove),
+          glyphText(note.quantitativeNeumeAbove, options.glyphFontFamily),
           options.glyphFontFamily,
           options.glyphFontStyle,
           options.glyphFontSize,

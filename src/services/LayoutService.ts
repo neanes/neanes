@@ -2532,7 +2532,7 @@ export class LayoutService {
         );
         if (run.cluster.trailingGlyphs.length > 0) {
           const trailingGlyphText = run.cluster.trailingGlyphs
-            .map(glyphText)
+            .map((neume) => glyphText(neume, glyphAppearance.fontFamily))
             .join('');
           const trailingMetrics = TextMeasurementService.getTextMetrics(
             trailingGlyphText,
@@ -2575,7 +2575,7 @@ export class LayoutService {
       const font = resolveFontCss({ fontFamily, fontStyle, fontSize });
       const text =
         run.kind === 'glyph'
-          ? run.glyphs.map(glyphText).join('')
+          ? run.glyphs.map((neume) => glyphText(neume, fontFamily)).join('')
           : run.content.layout === 'inline'
             ? run.content.text
             : '';
@@ -2625,7 +2625,7 @@ export class LayoutService {
         fontSize: accessory.fontSize,
       });
       const tempoMetrics = TextMeasurementService.getTextMetrics(
-        NeumeMappingService.getMapping(element.tempo).text,
+        glyphText(element.tempo, neumeFontFamily),
         tempoFont,
       );
       const tempoStrokeOverflow = pageSetup.tempoDefaultStrokeWidth / 2;
@@ -2670,9 +2670,7 @@ export class LayoutService {
       const ambitusBaseline = accessory.baselineOffset;
       const measureAmbitus = (neumes: Neume[]) =>
         TextMeasurementService.getTextMetrics(
-          neumes
-            .map((neume) => NeumeMappingService.getMapping(neume).text)
-            .join(''),
+          neumes.map((neume) => glyphText(neume, neumeFontFamily)).join(''),
           ambitusFont,
         );
       const lowMetrics = measureAmbitus([

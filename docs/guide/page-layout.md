@@ -117,7 +117,7 @@ The preview helps compare the specialized colors with the principal neume color 
 
 ### Style initial martyriæ
 
-Use **Initial Martyriæ** to set their default color, size, outline, and height adjustment. **Height Adjustment** adds or removes vertical space occupied by initial martyriæ. Use it when the following music sits too close to or too far from them.
+Use **Initial Martyriæ** to set their height adjustment. Set their default typography through [Initial Martyria Styles](/guide/advanced.html#initial-martyria-styles) and paragraph styles. **Height Adjustment** adds or removes vertical space occupied by initial martyriæ. Use it when the following music sits too close to or too far from them.
 
 For the musical content or playback behavior of one initial martyria, select it in the score and use its bottom toolbar or Properties.
 
@@ -129,7 +129,7 @@ You can change the appearance of drop caps through the built-in Drop Cap paragra
 
 ### Choose text fonts
 
-Text fonts are controlled by paragraph styles rather than Page Setup. Neanes includes fonts for several writing systems: Source Serif and Old Standard cover Latin, Cyrillic, and Greek; GFS Didot is included for Greek; and Noto Naskh Arabic is included for Arabic.
+Text fonts are controlled by paragraph styles rather than Page Setup. Neanes includes fonts for several writing systems: Source Serif and Old Standard cover Latin, Cyrillic, and Greek; GFS Didot and GFS Porson are included for Greek; and Noto Naskh Arabic is included for Arabic.
 
 Modify the built-in styles when titles, lyrics, headers, footers, and other repeated text should use a consistent font.
 

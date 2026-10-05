@@ -193,14 +193,14 @@
     "spathiGa": "Spathi dari Ga"
   },
   "mode": {
-    "first": "Mode Pertama",
-    "second": "Mode Kedua",
-    "third": "Mode Ketiga",
-    "fourth": "Mode Keempat",
-    "plagalFirst": "Plagal dari Mode Pertama",
-    "plagalSecond": "Plagal dari Mode Kedua",
-    "grave": "Mode Berat",
-    "plagalFourth": "Plagal dari Mode Keempat"
+    "first": "Modus Pertama",
+    "second": "Modus Kedua",
+    "third": "Modus Ketiga",
+    "fourth": "Modus Keempat",
+    "plagalFirst": "Plagal dari Modus Pertama",
+    "plagalSecond": "Plagal dari Modus Kedua",
+    "grave": "Modus Berat",
+    "plagalFourth": "Plagal dari Modus Keempat"
   },
   "initialMartyria": {
     "heirmologicAndSticheraric": "Heirmologic dan Sticheraric",

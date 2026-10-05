@@ -1,16 +1,40 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  getModeKeyModelAttributes,
+  serializeModeKeyAttributes,
+} from '@/ckeditor-plugins/insertmodekey/modekeydata';
+import {
   MartyriaElement,
+  ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
-import { Fthora, QuantitativeNeume, TempoSign } from '@/models/Neumes';
+import {
+  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
+  builtInInitialMartyriaStyles,
+} from '@/models/InitialMartyriaBuiltInStyles';
+import type { InitialMartyriaLayout } from '@/models/InitialMartyriaLayout';
+import {
+  getInitialMartyriaContext,
+  resolveInitialMartyriaStyle,
+  resolveModeKeyInitialMartyriaStyle,
+  resolveScoreInitialMartyriaStyle,
+} from '@/models/InitialMartyriaResolver';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
+import { modeKeyTemplates } from '@/models/ModeKeys';
+import {
+  Fthora,
+  ModeSign,
+  QuantitativeNeume,
+  TempoSign,
+} from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
+  createDefaultParagraphStyles,
   ParagraphStyle,
 } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
@@ -19,7 +43,11 @@ import { Unit } from '@/utils/Unit';
 
 import glyphnames from '../../assets/fonts/sbmufl/glyphnames.json';
 import type { SbmuflGlyphName } from './../NeumeMappingService';
-import { ByzHtmlExporter, createByzHtmlDocument } from './ByzHtmlExporter';
+import {
+  ByzHtmlExporter,
+  createByzHtmlDocument,
+  replaceEmbeddedModeKeyMarkers,
+} from './ByzHtmlExporter';
 
 function createComputedTextBox(overrides: Partial<TextBoxElement> = {}) {
   const element = new TextBoxElement();
@@ -34,6 +62,13 @@ function createComputedTextBox(overrides: Partial<TextBoxElement> = {}) {
   element.computedLineHeight = null;
 
   return Object.assign(element, overrides);
+}
+
+function embeddedModeKeyHtml(element = new ModeKeyElement(), content = '') {
+  const payload = serializeModeKeyAttributes(
+    getModeKeyModelAttributes(element),
+  );
+  return `<span class="neanes-ck-mode-key" data-neanes-mode-key="${payload}">${content}</span>`;
 }
 
 describe('ByzHtmlExporter', () => {
@@ -104,6 +139,180 @@ describe('ByzHtmlExporter', () => {
     expect(exporter.exportRichTextBox(element, new PageSetup(), 0)).toBe(
       '<div class="byz---rich-text-box" lang="ar" dir="rtl"><p><span lang="ar" dir="rtl">Hello</span></p></div\n>',
     );
+  });
+
+  it('replaces an embedded mode key containing the CKEditor filler', () => {
+    const modeKey = ModeKeyElement.createFromTemplate(modeKeyTemplates[0]);
+    const html = `<p>Before ${embeddedModeKeyHtml(modeKey, '&nbsp;')} after</p>`;
+
+    const replaced = replaceEmbeddedModeKeyMarkers(
+      html,
+      (attributes) => `<converted data-mode="${attributes.mode}"></converted>`,
+    );
+
+    expect(replaced).toBe(
+      `<p>Before <converted data-mode="${modeKey.mode}"></converted> after</p>`,
+    );
+  });
+
+  it('exports both active fields of an inline rich text box', () => {
+    const exporter = new ByzHtmlExporter();
+    const element = new RichTextBoxElement();
+
+    element.inline = true;
+    element.content = '<p>Top content</p>';
+    element.contentBottom = `<p>Bottom content ${embeddedModeKeyHtml()}</p>`;
+
+    const html = exporter.exportRichTextBox(element, new PageSetup(), 0);
+
+    expect(html).toContain('byz--text-box-inline-top');
+    expect(html).toContain('<p>Top content</p>');
+    expect(html).toContain('byz--text-box-inline-bottom');
+    expect(html).toContain('<p>Bottom content');
+    expect(html).toContain('data-neanes-mode-key=');
+  });
+
+  it('exports all active fields of a multipanel rich text box', () => {
+    const exporter = new ByzHtmlExporter();
+    const element = new RichTextBoxElement();
+
+    element.multipanel = true;
+    element.contentLeft = `<p>Left content ${embeddedModeKeyHtml()}</p>`;
+    element.contentCenter = `<p>Center content ${embeddedModeKeyHtml()}</p>`;
+    element.contentRight = `<p>Right content ${embeddedModeKeyHtml()}</p>`;
+
+    const html = exporter.exportRichTextBox(element, new PageSetup(), 0);
+
+    expect(html).toContain('byz--text-box-multipanel');
+    expect(html).toContain(
+      'class="byz--text-box-multipanel-left"><p>Left content',
+    );
+    expect(html).toContain(
+      'class="byz--text-box-multipanel-center"><p>Center content',
+    );
+    expect(html).toContain(
+      'class="byz--text-box-multipanel-right"><p>Right content',
+    );
+    expect(html.match(/data-neanes-mode-key=/gu)).toHaveLength(3);
+  });
+
+  it('exports an embedded mode key from its resolved custom style runs', () => {
+    const exporter = new ByzHtmlExporter();
+    const builtIn = builtInInitialMartyriaStyles.find(
+      (style) =>
+        style.id === BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
+    )!;
+    const customStyle: InitialMartyriaStyle = {
+      ...builtIn,
+      id: 'custom-text-only',
+      displayName: 'Custom text only',
+      basedOn: builtIn.id,
+      structure: { ...builtIn.structure },
+    };
+    const modeKey = ModeKeyElement.createFromTemplate(
+      modeKeyTemplates.find((template) => template.mode === 1)!,
+    );
+    modeKey.initialMartyriaStyleId = customStyle.id;
+    modeKey.fthoraAboveNote = Fthora.DiatonicPa_Top;
+    modeKey.quantitativeNeumeAboveNote = ModeSign.OligonPlusKentima;
+    modeKey.quantitativeNeumeRight = QuantitativeNeume.OligonPlusKentimaAbove;
+    modeKey.fthoraAboveQuantitativeNeumeRight = Fthora.Zygos_Top;
+    const pageSetup = new PageSetup();
+    const paragraphStyles = createDefaultParagraphStyles();
+    const resolvedStyle = resolveModeKeyInitialMartyriaStyle({
+      element: modeKey,
+      pageSetup,
+      paragraphStyles,
+      initialMartyriaStyles: [customStyle],
+    });
+    const resolution = resolveInitialMartyriaStyle({
+      context: getInitialMartyriaContext(modeKey),
+      resolvedStyle,
+      pageSetup,
+      glyphFontSize: 20,
+    });
+    const pitchGeometry = {
+      width: 20,
+      top: -10,
+      bottom: 5,
+      text: { left: 0 },
+      fthora: { left: 4, baseline: -12 },
+      quantitative: { left: 6, baseline: -20 },
+    };
+    modeKey.computedInitialMartyriaLayout = {
+      resolution,
+      primaryAppearance: resolvedStyle.primaryAppearance,
+      runs: resolution.runs.map((run) => ({
+        separatorBefore: {
+          kind: 'none',
+          width: 0,
+          wordSpaceFont: null,
+        },
+        fontSize: run.appearance.fontSize,
+        baselineShift: 0,
+        stackedCharacters: null,
+        pitch:
+          run.kind === 'startingPitch'
+            ? {
+                textFontSize: run.noteText.appearance.fontSize,
+                primary: run.cluster.primary == null ? null : pitchGeometry,
+                secondary: run.cluster.secondary == null ? null : pitchGeometry,
+                clusterSeparatorWidth: 4,
+                trailingGlueWidth: 4,
+              }
+            : null,
+      })),
+      trailingSeparator: {
+        kind: 'none',
+        width: 0,
+        wordSpaceFont: null,
+      },
+      neumeBaselineCorrection: 0,
+      accessory: {
+        fontSize: 20,
+        baselineOffset: 0,
+        tempoMarginLeft: 8,
+      },
+      ambitus: null,
+    } satisfies InitialMartyriaLayout;
+    const defaultAppearance = resolveScoreInitialMartyriaStyle({
+      pageSetup,
+      paragraphStyles,
+      initialMartyriaStyles: [customStyle],
+    }).primaryAppearance;
+
+    const html = exporter.exportModeKey(modeKey, defaultAppearance, 0, true);
+
+    expect(html).toContain('byz--initial-martyria-text');
+    expect(html).toContain('First');
+    expect(html).toContain('Mode');
+    expect(html).toContain(
+      `byz--initial-martyria-pitch-mark byz--f" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(4)}pt;top: ${Unit.toPt(-12)}pt;--byz-neume-font-family:`,
+    );
+    expect(html).toContain(
+      `byz--initial-martyria-pitch-mark" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(6)}pt;top: ${Unit.toPt(-20)}pt;--byz-neume-font-family:`,
+    );
+    expect(html).toContain(`--byz-neume-font-size: ${Unit.toPt(20)}pt;`);
+    expect(html).toContain('<x-f-d-pa');
+    expect(html).toContain(
+      'style="direction: ltr;position: relative;text-align: left;width:',
+    );
+    expect(html).not.toContain(
+      'byz--initial-martyria-pitch-note" style="direction: ltr;display: inline-block;',
+    );
+    expect(html).not.toContain(
+      'byz--initial-martyria-pitch-mark" style="position: absolute;',
+    );
+    const trailingQuantitativeIndex = html.lastIndexOf('<x-o3');
+    const trailingFthoraIndex = html.indexOf(
+      '<x-f-zygos',
+      trailingQuantitativeIndex,
+    );
+    expect(trailingQuantitativeIndex).toBeGreaterThan(-1);
+    expect(trailingFthoraIndex).toBeGreaterThan(trailingQuantitativeIndex);
+    expect(
+      html.slice(trailingQuantitativeIndex, trailingFthoraIndex),
+    ).not.toContain('</span>');
   });
 
   it('exports paragraph-style text boxes with inline underline text decoration', () => {
@@ -219,6 +428,7 @@ describe('ByzHtmlExporter', () => {
       [new NoteElement(), inline, new NoteElement()],
       new PageSetup(),
       [],
+      [],
       0,
     );
 
@@ -239,6 +449,7 @@ describe('ByzHtmlExporter', () => {
       [inline, new NoteElement()],
       new PageSetup(),
       [],
+      [],
       0,
     );
 
@@ -257,6 +468,7 @@ describe('ByzHtmlExporter', () => {
     const html = exporter.exportElements(
       [new NoteElement(), inline, martyria, new NoteElement()],
       new PageSetup(),
+      [],
       [],
       0,
     );

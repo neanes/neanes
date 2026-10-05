@@ -3,6 +3,7 @@ import type {
   ScoreElement,
   TextBoxElement,
 } from '@/models/Element';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   getTextBoxParagraphStyleFallbackId,
@@ -92,8 +93,11 @@ function collectCustomParagraphStylesFromIds(
   return [...collectedParagraphStyles.values()];
 }
 
+// `initialMartyriaStyles` are the custom initial martyria styles that travel
+// with the same elements; each references regular and Greek paragraph styles.
 export function collectClipboardParagraphStyleIdsFromElements(
   elements: ScoreElement[],
+  initialMartyriaStyles: InitialMartyriaStyle[],
 ) {
   const paragraphStyleIds = new Set<string>();
 
@@ -101,26 +105,37 @@ export function collectClipboardParagraphStyleIdsFromElements(
     collectParagraphStyleIdsFromElement(element, paragraphStyleIds);
   }
 
+  for (const style of initialMartyriaStyles) {
+    paragraphStyleIds.add(style.paragraphStyleId);
+    paragraphStyleIds.add(style.greekParagraphStyleId);
+  }
+
   return [...paragraphStyleIds];
 }
 
 export function collectClipboardParagraphStylesFromElements(
   elements: ScoreElement[],
+  initialMartyriaStyles: InitialMartyriaStyle[],
   paragraphStyles: ParagraphStyle[],
 ) {
   return collectCustomParagraphStylesFromIds(
-    collectClipboardParagraphStyleIdsFromElements(elements),
+    collectClipboardParagraphStyleIdsFromElements(
+      elements,
+      initialMartyriaStyles,
+    ),
     paragraphStyles,
   );
 }
 
 export function collectClipboardParagraphStylesFromPasteElements(
   elements: ScoreElement[],
+  initialMartyriaStyles: InitialMartyriaStyle[],
   includeLyrics: boolean,
   paragraphStyles: ParagraphStyle[],
 ) {
   return collectClipboardParagraphStylesFromElements(
     elements.map((element) => element.clone({ includeLyrics })),
+    initialMartyriaStyles,
     paragraphStyles,
   );
 }
@@ -137,7 +152,11 @@ export interface ResolvedClipboardParagraphStyles {
   styleIdRemap: Map<string, string>;
 }
 
-function resolveClipboardParagraphStyleReference(
+// Resolves one paragraph style reference in pasted content: the remapped id
+// when the style was imported or reused, the id itself when the destination
+// already has it, and otherwise the surface's fallback. Returns null when the
+// reference can stay as it is.
+export function resolveClipboardParagraphStyleReference(
   styleId: string,
   targetParagraphStyleIds: Set<string>,
   styleIdRemap: Map<string, string>,

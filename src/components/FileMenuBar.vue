@@ -254,6 +254,10 @@
             <PhTextAa />
             {{ $t(($) => $.menu.format.paragraphStyles, { ns: 'menu' }) }}
           </MenubarItem>
+          <MenubarItem @select="onClickInitialMartyriaStyles">
+            <span class="font-['Source_Serif']" aria-hidden="true">Ηχ</span>
+            {{ $t(($) => $.menu.format.initialMartyriaStyles, { ns: 'menu' }) }}
+          </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
 
@@ -759,6 +763,10 @@ function onClickPageSetup() {
 
 function onClickParagraphStyles() {
   EventBus.$emit(IpcMainChannels.FileMenuParagraphStyles);
+}
+
+function onClickInitialMartyriaStyles() {
+  EventBus.$emit(IpcMainChannels.FileMenuInitialMartyriaStyles);
 }
 
 function onClickDocumentProperties() {

@@ -580,7 +580,11 @@ export class LyricService {
         QuantitativeNeume.VareiaDotted4,
       ];
 
-      const melismaOnly = [QuantitativeNeume.Kentemata];
+      const melismaOnly = [
+        QuantitativeNeume.Kentemata,
+        QuantitativeNeume.Hyporoe,
+        QuantitativeNeume.KentemataPlusOligon,
+      ];
 
       if (noLyricsAccepted.includes(note.quantitativeNeume)) {
         acceptsLyrics = AcceptsLyricsOption.No;

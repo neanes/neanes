@@ -1024,11 +1024,15 @@ export class AnalysisService {
       }
     }
 
-    if (martyriaElement.tempo) {
+    const tempo =
+      martyriaElement.tempo ??
+      martyriaElement.tempoLeft ??
+      martyriaElement.tempoRight;
+
+    if (tempo) {
       const tempoNode: TempoNode = new TempoNode();
       tempoNode.elementIndex = martyriaElement.index;
-      tempoNode.bpm =
-        martyriaElement.bpm || tempoToBpmMap.get(martyriaElement.tempo)!;
+      tempoNode.bpm = martyriaElement.bpm || tempoToBpmMap.get(tempo)!;
       workspace.nodes.push(tempoNode);
     }
   }

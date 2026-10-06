@@ -451,6 +451,11 @@ export class LyricService {
         acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
       } else if (note.lyrics.trim() === '') {
         acceptsLyrics = AcceptsLyricsOption.No;
+      } else if (
+        this.getDefaultAcceptsLyrics(note, previousNote) !==
+        AcceptsLyricsOption.Yes
+      ) {
+        acceptsLyrics = AcceptsLyricsOption.Yes;
       }
 
       if (note.acceptsLyrics != acceptsLyrics) {
@@ -568,37 +573,40 @@ export class LyricService {
     note: NoteElement,
     previousNote: NoteElement | null,
   ) {
-    let acceptsLyrics = note.acceptsLyrics;
+    return note.acceptsLyrics === AcceptsLyricsOption.Default
+      ? this.getDefaultAcceptsLyrics(note, previousNote)
+      : note.acceptsLyrics;
+  }
 
-    if (note.acceptsLyrics === AcceptsLyricsOption.Default) {
-      const noLyricsAccepted = [
-        QuantitativeNeume.Cross,
-        QuantitativeNeume.Breath,
-        QuantitativeNeume.VareiaDotted,
-        QuantitativeNeume.VareiaDotted2,
-        QuantitativeNeume.VareiaDotted3,
-        QuantitativeNeume.VareiaDotted4,
-      ];
+  private getDefaultAcceptsLyrics(
+    note: NoteElement,
+    previousNote: NoteElement | null,
+  ) {
+    const noLyricsAccepted = [
+      QuantitativeNeume.Cross,
+      QuantitativeNeume.Breath,
+      QuantitativeNeume.VareiaDotted,
+      QuantitativeNeume.VareiaDotted2,
+      QuantitativeNeume.VareiaDotted3,
+      QuantitativeNeume.VareiaDotted4,
+    ];
 
-      const melismaOnly = [
-        QuantitativeNeume.Kentemata,
-        QuantitativeNeume.Hyporoe,
-        QuantitativeNeume.KentemataPlusOligon,
-      ];
+    const melismaOnly = [
+      QuantitativeNeume.Kentemata,
+      QuantitativeNeume.Hyporoe,
+      QuantitativeNeume.KentemataPlusOligon,
+    ];
 
-      if (noLyricsAccepted.includes(note.quantitativeNeume)) {
-        acceptsLyrics = AcceptsLyricsOption.No;
-      } else if (
-        melismaOnly.includes(note.quantitativeNeume) ||
-        previousNote?.tie != null
-      ) {
-        acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
-      } else {
-        acceptsLyrics = AcceptsLyricsOption.Yes;
-      }
+    if (noLyricsAccepted.includes(note.quantitativeNeume)) {
+      return AcceptsLyricsOption.No;
+    } else if (
+      melismaOnly.includes(note.quantitativeNeume) ||
+      previousNote?.tie != null
+    ) {
+      return AcceptsLyricsOption.MelismaOnly;
+    } else {
+      return AcceptsLyricsOption.Yes;
     }
-
-    return acceptsLyrics;
   }
 
   /**

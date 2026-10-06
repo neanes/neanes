@@ -7,7 +7,7 @@ import {
   ElementType,
   NoteElement,
 } from '../models/Element';
-import { QuantitativeNeume } from '../models/Neumes';
+import { QuantitativeNeume, Tie } from '../models/Neumes';
 import { LyricService } from './LyricService';
 import { SaveService } from './SaveService';
 
@@ -505,6 +505,135 @@ describe('LyricService (Arab phonetics)', () => {
 
     expect(lyricService.extractLyrics(scoreElements, false)).toEqual(lyrics);
   });
+});
+
+describe('Save current melismas', () => {
+  it.each([
+    QuantitativeNeume.Hyporoe,
+    QuantitativeNeume.KentemataPlusOligon,
+    QuantitativeNeume.Kentemata,
+    QuantitativeNeume.Cross,
+    QuantitativeNeume.Breath,
+    QuantitativeNeume.VareiaDotted,
+    QuantitativeNeume.VareiaDotted2,
+    QuantitativeNeume.VareiaDotted3,
+    QuantitativeNeume.VareiaDotted4,
+  ])('preserves syllables on %s when replacing lyrics', (neume) => {
+    const service = new LyricService();
+    const notes = [createNote('one'), createNote('two'), createNote('three')];
+    notes[1].quantitativeNeume = neume;
+    notes[1].acceptsLyrics = AcceptsLyricsOption.Yes;
+
+    service.assignAcceptsLyricsFromCurrentLyrics(
+      notes,
+      false,
+      (note, value) => {
+        note.acceptsLyrics = value;
+      },
+    );
+
+    expect(notes.map((note) => note.acceptsLyrics)).toEqual([
+      AcceptsLyricsOption.Default,
+      AcceptsLyricsOption.Yes,
+      AcceptsLyricsOption.Default,
+    ]);
+
+    service.assignLyrics(
+      'new words here',
+      notes,
+      false,
+      false,
+      (note, lyrics) => {
+        note.lyrics = lyrics;
+      },
+      (note, values) => {
+        Object.assign(note, values);
+      },
+      () => {},
+    );
+
+    expect(notes.map((note) => note.lyrics)).toEqual(['new', 'words', 'here']);
+    expect(service.extractLyrics(notes, false)).toBe('new words here');
+  });
+
+  it.each([Tie.YfenAbove, Tie.YfenBelow])(
+    'preserves syllables after %s when replacing lyrics',
+    (tie) => {
+      const service = new LyricService();
+      const notes = [createNote('one'), createNote('two'), createNote('three')];
+      notes[0].tie = tie;
+
+      expect(service.getEffectiveAcceptsLyrics(notes[1], notes[0])).toBe(
+        AcceptsLyricsOption.MelismaOnly,
+      );
+
+      service.assignAcceptsLyricsFromCurrentLyrics(
+        notes,
+        false,
+        (note, value) => {
+          note.acceptsLyrics = value;
+        },
+      );
+
+      expect(notes.map((note) => note.acceptsLyrics)).toEqual([
+        AcceptsLyricsOption.Default,
+        AcceptsLyricsOption.Yes,
+        AcceptsLyricsOption.Default,
+      ]);
+
+      service.assignLyrics(
+        'new words here',
+        notes,
+        false,
+        false,
+        (note, lyrics) => {
+          note.lyrics = lyrics;
+        },
+        (note, values) => {
+          Object.assign(note, values);
+        },
+        () => {},
+      );
+
+      expect(notes.map((note) => note.lyrics)).toEqual([
+        'new',
+        'words',
+        'here',
+      ]);
+      expect(service.extractLyrics(notes, false)).toBe('new words here');
+    },
+  );
+
+  it.each([QuantitativeNeume.Hyporoe, QuantitativeNeume.KentemataPlusOligon])(
+    'preserves continuations and blank notes on %s',
+    (neume) => {
+      const service = new LyricService();
+      const notes = [
+        createNote('one', true, true),
+        createNote('', true),
+        createNote(''),
+      ];
+      notes[1].quantitativeNeume = neume;
+      notes[2].quantitativeNeume = neume;
+
+      expect(service.getEffectiveAcceptsLyrics(notes[1], notes[0])).toBe(
+        AcceptsLyricsOption.MelismaOnly,
+      );
+      service.assignAcceptsLyricsFromCurrentLyrics(
+        notes,
+        false,
+        (note, value) => {
+          note.acceptsLyrics = value;
+        },
+      );
+
+      expect(notes.map((note) => note.acceptsLyrics)).toEqual([
+        AcceptsLyricsOption.Default,
+        AcceptsLyricsOption.MelismaOnly,
+        AcceptsLyricsOption.No,
+      ]);
+    },
+  );
 });
 
 function createNote(

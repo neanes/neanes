@@ -106,14 +106,17 @@ const ending1: NeumeCombination = {
     createNote({
       quantitativeNeume: QuantitativeNeume.Hyporoe,
       gorgonNeume: GorgonNeume.Gorgon_Top,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Oligon,
       gorgonNeume: GorgonNeume.Gorgon_Top,
       vocalExpressionNeume: VocalExpressionNeume.Antikenoma,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Apostrophos,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Ison,
@@ -136,14 +139,17 @@ const ending2: NeumeCombination = {
     createNote({
       quantitativeNeume: QuantitativeNeume.Hyporoe,
       gorgonNeume: GorgonNeume.Gorgon_Top,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Oligon,
       gorgonNeume: GorgonNeume.Gorgon_Top,
       vocalExpressionNeume: VocalExpressionNeume.Antikenoma,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Apostrophos,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Ison,
@@ -165,10 +171,12 @@ const ornament1: NeumeCombination = {
     createNote({
       vareia: true,
       quantitativeNeume: QuantitativeNeume.Ison,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Apostrophos,
       gorgonNeume: GorgonNeume.Gorgon_Top,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Ison,
@@ -190,10 +198,12 @@ const ornament1Alt: NeumeCombination = {
     createNote({
       vareia: true,
       quantitativeNeume: QuantitativeNeume.Ison,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Apostrophos,
       gorgonNeume: GorgonNeume.Gorgon_Top,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Ison,

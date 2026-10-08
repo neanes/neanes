@@ -66,7 +66,7 @@
     "ckeditor5": "^48.5.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "dockview-vue": "^8.3.1",
+    "dockview-vue": "^8.4.0",
     "electron": "^44.5.1",
     "electron-builder": "^26.15.3",
     "eslint": "^10.11.0",

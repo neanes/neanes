@@ -192,6 +192,8 @@ type DeveloperToggleKey =
   | 'showInkBoundingBoxes'
   | 'showLyricBaselines'
   | 'showLyricBoundingBoxes'
+  | 'showHalfLeading'
+  | 'showNeumeAscenders'
   | 'showNeumeBoundingBoxes';
 
 type DeveloperToggles = Record<DeveloperToggleKey, boolean>;
@@ -232,6 +234,11 @@ const displayToggles: Array<{ key: DeveloperToggleKey; label: string }> = [
   { key: 'showAnonymousBoxes', label: 'Show anonymous boxes' },
   { key: 'showGlueWidths', label: 'Show glue widths' },
   { key: 'showInkBoundingBoxes', label: 'Show ink bounding boxes' },
+  {
+    key: 'showHalfLeading',
+    label: 'Show half-leading boundaries',
+  },
+  { key: 'showNeumeAscenders', label: 'Show neume ascenders' },
   { key: 'showLyricBaselines', label: 'Show lyric baselines' },
   { key: 'showLyricBoundingBoxes', label: 'Show lyric bounding boxes' },
   { key: 'showNeumeBoundingBoxes', label: 'Show neume bounding boxes' },

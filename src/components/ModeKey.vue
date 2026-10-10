@@ -272,7 +272,14 @@ function fontVariantCss(appearance: InitialMartyriaAppearance) {
 }
 
 const mainStyle = computed(() => {
-  const verticalClipMargin = withZoom(-props.element.height);
+  const verticalClipMargin = withZoom(
+    -Math.max(
+      props.element.height,
+      props.embedded
+        ? 0
+        : layout.value.inkBounds.bottom - layout.value.inkBounds.top,
+    ),
+  );
   return {
     position: 'relative',
     // A standalone mode key is positioned inside a score-layout box whose top

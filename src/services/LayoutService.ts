@@ -14,7 +14,6 @@ import type {
   DropCapElement,
   ImageBoxElement,
   MartyriaElement,
-  ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
   ScoreElement,
@@ -30,6 +29,7 @@ import {
   isRightAlignedMartyria,
   isTieNeume,
   LineBreakType,
+  ModeKeyElement,
 } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
@@ -140,6 +140,7 @@ import {
 } from './LyricsLayout';
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
+import { ModeKeyMetricsService } from './ModeKeyMetricsService';
 import {
   type InkBounds,
   TextMeasurementService,
@@ -2310,11 +2311,14 @@ export class LayoutService {
   /**
    * Writes the typography and geometry a mode key renders with onto the
    * element, and returns the geometry for callers that also need its width.
+   * Standalone keys share a compact allocation; embedded keys retain their
+   * native font/ink allocation for the surrounding inline formatting context.
    */
   public static layoutModeKey(
     element: ModeKeyElement,
     pageSetup: PageSetup,
     resolvedStyle: ResolvedInitialMartyriaStyle,
+    embedded = false,
   ) {
     const { primaryAppearance } = resolvedStyle;
 
@@ -2328,6 +2332,30 @@ export class LayoutService {
       pageSetup,
       resolvedStyle,
     );
+
+    if (!embedded) {
+      const metrics = ModeKeyMetricsService.getMetrics(
+        {
+          resolvedStyle,
+          neumeFontFamily: element.computedFontFamily,
+          accessoryFontSize: geometry.layout.accessory.fontSize,
+          accessoryBaselineOffset: geometry.layout.accessory.baselineOffset,
+          tempoStrokeWidth: pageSetup.tempoDefaultStrokeWidth,
+        },
+        (template, optional) => {
+          const sample = ModeKeyElement.createFromTemplate(template, optional);
+          sample.computedFontFamily = element.computedFontFamily;
+          sample.computedFontSize = primaryAppearance.fontSize;
+          return this.getInitialMartyriaGeometry(
+            sample,
+            pageSetup,
+            resolvedStyle,
+          ).layout.inkBounds;
+        },
+      );
+      geometry.top = -metrics.ascent;
+      geometry.bottom = metrics.descent;
+    }
 
     element.computedNeumeFontSize = geometry.neumeFontSize;
     element.computedTop = geometry.top;
@@ -2376,6 +2404,13 @@ export class LayoutService {
     const baseFont = resolveFontCss(baseTextAppearance);
     let top = -TextMeasurementService.getFontBoundingBoxAscent(baseFont);
     let bottom = TextMeasurementService.getFontBoundingBoxDescent(baseFont);
+    const inkBounds = { top: 0, bottom: 0 };
+    const includeInk = (inkTop: number, inkBottom: number) => {
+      inkBounds.top = Math.min(inkBounds.top, inkTop);
+      inkBounds.bottom = Math.max(inkBounds.bottom, inkBottom);
+      top = Math.min(top, inkTop);
+      bottom = Math.max(bottom, inkBottom);
+    };
     const flowFont = resolveFontCss({
       fontFamily: neumeFontFamily,
       fontStyle: DEFAULT_FONT_STYLE,
@@ -2456,8 +2491,7 @@ export class LayoutService {
             strokeWidth: appearance.strokeWidth,
           },
         );
-        top = Math.min(top, geometry.top);
-        bottom = Math.max(bottom, geometry.bottom);
+        includeInk(geometry.top, geometry.bottom);
         flowTop = Math.min(flowTop, geometry.top);
         width += geometry.width;
         runLayouts.push({
@@ -2515,8 +2549,7 @@ export class LayoutService {
           if (geometry == null) {
             continue;
           }
-          top = Math.min(top, geometry.top);
-          bottom = Math.max(bottom, geometry.bottom);
+          includeInk(geometry.top, geometry.bottom);
           flowTop = Math.min(flowTop, geometry.top);
           width += geometry.width;
         }
@@ -2539,14 +2572,10 @@ export class LayoutService {
             glyphFont,
           );
           const glyphStrokeOverflow = glyphAppearance.strokeWidth / 2;
-          top = Math.min(
-            top,
+          includeInk(
             neumeBaselineCorrection -
               trailingMetrics.actualBoundingBoxAscent -
               glyphStrokeOverflow,
-          );
-          bottom = Math.max(
-            bottom,
             neumeBaselineCorrection +
               trailingMetrics.actualBoundingBoxDescent +
               glyphStrokeOverflow,
@@ -2591,14 +2620,10 @@ export class LayoutService {
       );
       const glyphBaselineCorrection =
         run.kind === 'glyph' ? neumeBaselineCorrection : 0;
-      top = Math.min(
-        top,
+      includeInk(
         glyphBaselineCorrection -
           metrics.actualBoundingBoxAscent -
           strokeOverflow,
-      );
-      bottom = Math.max(
-        bottom,
         glyphBaselineCorrection +
           metrics.actualBoundingBoxDescent +
           strokeOverflow,
@@ -2629,14 +2654,10 @@ export class LayoutService {
         tempoFont,
       );
       const tempoStrokeOverflow = pageSetup.tempoDefaultStrokeWidth / 2;
-      top = Math.min(
-        top,
+      includeInk(
         accessory.baselineOffset -
           tempoMetrics.actualBoundingBoxAscent -
           tempoStrokeOverflow,
-      );
-      bottom = Math.max(
-        bottom,
         accessory.baselineOffset +
           tempoMetrics.actualBoundingBoxDescent +
           tempoStrokeOverflow,
@@ -2652,12 +2673,8 @@ export class LayoutService {
         baseTextAppearance.fontVariantCaps,
       );
       const punctuationStrokeOverflow = baseTextAppearance.strokeWidth / 2;
-      top = Math.min(
-        top,
+      includeInk(
         -punctuationMetrics.actualBoundingBoxAscent - punctuationStrokeOverflow,
-      );
-      bottom = Math.max(
-        bottom,
         punctuationMetrics.actualBoundingBoxDescent + punctuationStrokeOverflow,
       );
 
@@ -2682,14 +2699,10 @@ export class LayoutService {
         element.ambitusHighRootSign,
       ]);
       for (const metrics of [lowMetrics, highMetrics]) {
-        top = Math.min(
-          top,
+        includeInk(
           ambitusBaseline -
             metrics.actualBoundingBoxAscent -
             ambitusStrokeOverflow,
-        );
-        bottom = Math.max(
-          bottom,
           ambitusBaseline +
             metrics.actualBoundingBoxDescent +
             ambitusStrokeOverflow,
@@ -2705,6 +2718,7 @@ export class LayoutService {
     }
 
     const layout: InitialMartyriaLayout = {
+      inkBounds,
       resolution,
       primaryAppearance: baseTextAppearance,
       runs: runLayouts,

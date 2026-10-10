@@ -1820,6 +1820,7 @@ watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
 });
 
 onMounted(() => {
+  document.fonts.addEventListener('loadingdone', onModeKeyFontsLoaded);
   const savedAudioOptions = localStorage.getItem('audioOptionsDefault');
 
   if (savedAudioOptions != null) {
@@ -1958,6 +1959,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  document.fonts.removeEventListener('loadingdone', onModeKeyFontsLoaded);
   // Remove the debugging variable from window
   (window as any)._editor = undefined;
 
@@ -5922,6 +5924,21 @@ function calculatePageNumber() {
   if (maxPercentageIndex >= 0) {
     currentPageNumber.value = maxPercentageIndex + 1;
   }
+}
+
+function onModeKeyFontsLoaded() {
+  // System-face aliases can finish loading after a typography change. Let
+  // the metrics service invalidate its profiles before recomputing layout.
+  queueMicrotask(() => {
+    if (
+      !isLoading.value &&
+      elements.value.some(
+        (element) => element.elementType === ElementType.ModeKey,
+      )
+    ) {
+      save(false);
+    }
+  });
 }
 
 function save(markUnsavedChanges: boolean = true) {

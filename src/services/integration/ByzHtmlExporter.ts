@@ -1402,7 +1402,7 @@ export class ByzHtmlExporter {
         paragraphStyles,
         initialMartyriaStyles,
       });
-      LayoutService.layoutModeKey(modeKey, pageSetup, resolvedStyle);
+      LayoutService.layoutModeKey(modeKey, pageSetup, resolvedStyle, true);
 
       return this.exportModeKey(modeKey, defaultAppearance, indentation, true);
     });

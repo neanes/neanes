@@ -172,6 +172,7 @@ export default class InsertModeKeyEditing extends Plugin {
       element,
       pageSetup,
       resolvedStyle,
+      true,
     );
     element.width = geometry.width;
 

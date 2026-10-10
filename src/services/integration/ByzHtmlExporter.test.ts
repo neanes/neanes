@@ -240,6 +240,7 @@ describe('ByzHtmlExporter', () => {
       quantitative: { left: 6, baseline: -20 },
     };
     modeKey.computedInitialMartyriaLayout = {
+      inkBounds: { top: -30, bottom: 12 },
       resolution,
       primaryAppearance: resolvedStyle.primaryAppearance,
       runs: resolution.runs.map((run) => ({

@@ -5,6 +5,7 @@ import type {
   InitialMartyriaAppearance,
   InitialMartyriaStyleResolution,
 } from '@/models/InitialMartyriaStyle';
+import type { ModeKeyInkBounds } from '@/models/ModeKeyMetrics';
 
 /**
  * Everything the renderer needs to draw an initial martyria beyond the
@@ -12,6 +13,8 @@ import type {
  * service in unzoomed pixels; the renderer only applies zoom.
  */
 export interface InitialMartyriaLayout {
+  /** Actual ink, independent of the standalone key's fixed flow allocation. */
+  inkBounds: ModeKeyInkBounds;
   resolution: InitialMartyriaStyleResolution;
   /** The style's primary text appearance, which the ambitus punctuation uses. */
   primaryAppearance: InitialMartyriaAppearance;

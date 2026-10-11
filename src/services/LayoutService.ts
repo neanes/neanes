@@ -5708,9 +5708,11 @@ export class LayoutService {
       runningElaphronLeftOffsets,
       centeringPlans,
     );
-
-    let melismaSyllables: MelismaSyllables | null = null;
-    let melismaLyricsEnd: number | null = null;
+    const greekMelismaTexts = this.layoutGreekMelismaText(
+      pages,
+      pageSetup,
+      measureBarWidthMap,
+    );
     let phase2GreekMelismaIsActive = false;
     let previousLineEndingMayShowLeadingLyricHyphen = false;
     for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
@@ -5718,9 +5720,6 @@ export class LayoutService {
 
       for (let lineIndex = 0; lineIndex < page.lines.length; lineIndex++) {
         const line = page.lines[lineIndex];
-
-        melismaLyricsEnd = null;
-        const followingLyricStarts = this.getFollowingLyricStarts(line);
 
         const firstElementOnNextLine = this.getFirstElementOnNextLine(
           pages,
@@ -5737,7 +5736,6 @@ export class LayoutService {
           const currentElement = line.elements[index];
 
           if (this.isBreakElement(currentElement)) {
-            melismaSyllables = null;
             phase2GreekMelismaIsActive = false;
             previousLineEndingMayShowLeadingLyricHyphen = false;
             lineEndingMayShowLeadingLyricHyphen = false;
@@ -5795,53 +5793,12 @@ export class LayoutService {
             !pageSetup.disableGreekMelismata &&
             MelismaHelperGreek.isGreek(element.lyrics)
           ) {
-            if (element.isMelismaStart) {
-              let text = element.lyrics;
-
-              // If the previous element is a drop cap, we need to
-              // prepend the drop cap content to the melisma text
-              if (index > 0) {
-                const previousElement = line.elements[index - 1];
-                if (previousElement.elementType === ElementType.DropCap) {
-                  text = `${(previousElement as DropCapElement).content}${text}`;
-                }
-              }
-
-              melismaSyllables = MelismaHelperGreek.getMelismaSyllable(text);
-
-              melismaLyricsEnd =
-                element.x + this.getLyricTextRight(element, false);
-            } else {
-              melismaSyllables = null;
-            }
-
             continue;
-          } else if (element.lyrics.length > 0) {
-            melismaSyllables = null;
           }
 
-          if (melismaSyllables != null) {
-            if (element.isMelisma) {
-              element.melismaText = melismaSyllables.middle;
-
-              const textEnd = this.getGreekMelismaTextEnd(
-                element,
-                this.getTextWidthFromCache(element, element.melismaText),
-                melismaLyricsEnd,
-                followingLyricStarts.get(element)!,
-                pageSetup.lyricsMinimumSpacing,
-              );
-
-              if (textEnd == null) {
-                element.melismaText = '';
-              } else {
-                // Only visible repetitions reserve space for later ones.
-                melismaLyricsEnd = textEnd;
-              }
-              continue;
-            } else {
-              melismaSyllables = null;
-            }
+          if (greekMelismaTexts.has(element)) {
+            element.melismaText = greekMelismaTexts.get(element)!;
+            continue;
           }
 
           if (element.isMelismaStart || isIntermediateMelismaAtStartOfLine) {
@@ -8548,6 +8505,208 @@ export class LayoutService {
         }
       }
     }
+  }
+
+  private static layoutGreekMelismaText(
+    pages: Page[],
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const texts = new Map<NoteElement, string>();
+    if (pageSetup.disableGreekMelismata) {
+      return texts;
+    }
+
+    let syllables: MelismaSyllables | null = null;
+    for (const page of pages) {
+      const resolvedMargins = resolvePageMargins(
+        pageSetup,
+        page.physicalPageNumber,
+      );
+      for (const line of page.lines) {
+        const repetitions = new Map<
+          NoteElement,
+          { text: string; width: number }
+        >();
+        for (let index = 0; index < line.elements.length; index++) {
+          const element = line.elements[index];
+          if (this.isBreakElement(element)) {
+            syllables = null;
+          } else if (element.elementType === ElementType.Note) {
+            const note = element as NoteElement;
+            if (note.lyrics.length > 0) {
+              let text = note.lyrics;
+              const previous = line.elements[index - 1];
+              if (previous?.elementType === ElementType.DropCap) {
+                text = `${(previous as DropCapElement).content}${text}`;
+              }
+              syllables =
+                note.isMelismaStart && MelismaHelperGreek.isGreek(note.lyrics)
+                  ? MelismaHelperGreek.getMelismaSyllable(text)
+                  : null;
+            } else if (note.isMelisma && syllables != null) {
+              repetitions.set(note, {
+                text: syllables.middle,
+                width: this.getTextWidthFromCache(note, syllables.middle),
+              });
+            } else {
+              syllables = null;
+            }
+          }
+        }
+
+        for (const [note, text] of this.layoutGreekMelismaTextOnLine(
+          line,
+          pageSetup,
+          measureBarWidthMap,
+          repetitions,
+          resolvedMargins,
+        )) {
+          texts.set(note, text);
+        }
+      }
+    }
+    return texts;
+  }
+
+  private static layoutGreekMelismaTextOnLine(
+    line: Line,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    repetitions: ReadonlyMap<NoteElement, { text: string; width: number }>,
+    resolvedMargins: ResolvedPageMargins,
+  ) {
+    const texts = new Map<NoteElement, string>();
+    const groups: Array<{
+      start: NoteElement;
+      end: NoteElement;
+      width: number;
+      left: number;
+      previousEnd: number;
+      canCenter: boolean;
+      generated: boolean;
+    }> = [];
+    const gap = pageSetup.lyricsMinimumSpacing;
+    const leftLimit = resolvedMargins.contentLeft + line.indentation;
+    const rightLimit = resolvedMargins.contentRight;
+    const followingStarts = this.getFollowingLyricStarts(line);
+    let previousEnd: number | null = null;
+    let group: (typeof groups)[number] | null = null;
+
+    // Decide visibility once. Each displayed text owns the immediately
+    // following notes whose repetitions were omitted.
+    for (let index = 0; index < line.elements.length; index++) {
+      const element = line.elements[index];
+      if (element.elementType !== ElementType.Note) {
+        group = null;
+        if (this.isBreakElement(element)) {
+          previousEnd = null;
+        }
+        continue;
+      }
+      const note = element as NoteElement;
+      if (note.lyricsWidth > 0) {
+        group = {
+          start: note,
+          end: note,
+          width: note.lyricsWidth,
+          left: note.x + this.getLyricTextLeft(note),
+          previousEnd: previousEnd ?? leftLimit - gap,
+          canCenter:
+            note.isMelismaStart &&
+            MelismaHelperGreek.isGreek(note.lyrics) &&
+            line.elements[index - 1]?.elementType !== ElementType.DropCap,
+          generated: false,
+        };
+        groups.push(group);
+        previousEnd = Math.max(
+          previousEnd ?? -Infinity,
+          group.left + group.width,
+        );
+      } else if (repetitions.has(note)) {
+        const repetition = repetitions.get(note)!;
+        const end = this.getGreekMelismaTextEnd(
+          note,
+          repetition.width,
+          previousEnd,
+          followingStarts.get(note)!,
+          gap,
+        );
+        texts.set(note, end == null ? '' : repetition.text);
+        if (end != null) {
+          group = {
+            start: note,
+            end: note,
+            width: repetition.width,
+            left: end - repetition.width,
+            previousEnd: previousEnd ?? leftLimit - gap,
+            canCenter: true,
+            generated: true,
+          };
+          groups.push(group);
+          previousEnd = end;
+        } else if (group != null && group.canCenter) {
+          group.end = note;
+        }
+      } else {
+        group = null;
+      }
+    }
+
+    // Use final note positions, as for English melismas. Preserve visibility
+    // and the reserved envelope; an unsafe move keeps the original position.
+    let nextStart = rightLimit + gap;
+    for (let index = groups.length - 1; index >= 0; index--) {
+      const current = groups[index];
+      if (
+        !pageSetup.melkiteRtl &&
+        current.canCenter &&
+        current.end !== current.start
+      ) {
+        const bodyLeft =
+          current.start.x +
+          this.getNoteBodyLeft(
+            current.start,
+            pageSetup,
+            this.getMeasureBarLeftReserve(current.start, measureBarWidthMap),
+          );
+        const bodyRight =
+          current.end.x +
+          current.end.neumeWidth -
+          this.getFinalElementMeasureBarRightWidth(
+            current.end,
+            measureBarWidthMap,
+          );
+        const span = bodyRight - bodyLeft;
+        const left =
+          bodyLeft +
+          (current.generated
+            ? (span - current.width) / 2
+            : this.getCenteredMelismaLyricTextLeft(current.start, span));
+        if (
+          span > 0 &&
+          left >= Math.max(leftLimit, current.previousEnd + gap) &&
+          left + current.width <=
+            Math.max(current.left + current.width, bodyRight) &&
+          left + current.width + gap <= nextStart
+        ) {
+          if (current.generated) {
+            current.start.lyricsHorizontalOffset =
+              2 * (left - current.start.x) -
+              current.start.neumeWidth +
+              current.width;
+          } else {
+            this.applyCenteredMelismaLyric(
+              current.start,
+              left - current.start.x,
+            );
+          }
+          current.left = left;
+        }
+      }
+      nextStart = Math.min(nextStart, current.left);
+    }
+    return texts;
   }
 
   private static applyCenteredMelismaLyric(

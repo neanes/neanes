@@ -5720,6 +5720,7 @@ export class LayoutService {
         const line = page.lines[lineIndex];
 
         melismaLyricsEnd = null;
+        const followingLyricStarts = this.getFollowingLyricStarts(line);
 
         const firstElementOnNextLine = this.getFirstElementOnNextLine(
           pages,
@@ -5809,10 +5810,7 @@ export class LayoutService {
               melismaSyllables = MelismaHelperGreek.getMelismaSyllable(text);
 
               melismaLyricsEnd =
-                element.x +
-                element.lyricsHorizontalOffset / 2 +
-                element.neumeWidth / 2 +
-                element.lyricsWidth / 2;
+                element.x + this.getLyricTextRight(element, false);
             } else {
               melismaSyllables = null;
             }
@@ -5826,23 +5824,19 @@ export class LayoutService {
             if (element.isMelisma) {
               element.melismaText = melismaSyllables.middle;
 
-              // Check the width of the melisma text and hide it if it's
-              //  too close to previous the lyrics
-              if (melismaLyricsEnd != null) {
-                const lyricsWidth = this.getTextWidthFromCache(
-                  element,
-                  element.melismaText,
-                );
+              const textEnd = this.getGreekMelismaTextEnd(
+                element,
+                this.getTextWidthFromCache(element, element.melismaText),
+                melismaLyricsEnd,
+                followingLyricStarts.get(element)!,
+                pageSetup.lyricsMinimumSpacing,
+              );
 
-                const melismaLyricsStart =
-                  element.x +
-                  element.lyricsHorizontalOffset / 2 +
-                  element.neumeWidth / 2 -
-                  lyricsWidth / 2;
-
-                if (melismaLyricsEnd > melismaLyricsStart) {
-                  element.melismaText = '';
-                }
+              if (textEnd == null) {
+                element.melismaText = '';
+              } else {
+                // Only visible repetitions reserve space for later ones.
+                melismaLyricsEnd = textEnd;
               }
               continue;
             } else {
@@ -8273,6 +8267,48 @@ export class LayoutService {
     }
 
     return 0;
+  }
+
+  private static getFollowingLyricStarts(line: Line) {
+    const starts = new Map<NoteElement, number>();
+    let nextStart = Infinity;
+
+    for (let index = line.elements.length - 1; index >= 0; index--) {
+      const element = line.elements[index];
+      if (this.isBreakElement(element)) {
+        nextStart = Infinity;
+      } else if (element.elementType === ElementType.Note) {
+        const note = element as NoteElement;
+        starts.set(note, nextStart);
+        if (note.lyricsWidth > 0) {
+          nextStart = Math.min(nextStart, note.x + this.getLyricTextLeft(note));
+        }
+      }
+    }
+
+    return starts;
+  }
+
+  private static getGreekMelismaTextEnd(
+    note: NoteElement,
+    textWidth: number,
+    previousEnd: number | null,
+    nextStart: number,
+    minimumSpacing: number,
+  ): number | null {
+    // Generated Greek vowels are centered in the continuation's lyric box.
+    const start =
+      note.x + (note.neumeWidth + note.lyricsHorizontalOffset - textWidth) / 2;
+    const end = start + textWidth;
+
+    if (
+      (previousEnd != null && start < previousEnd + minimumSpacing) ||
+      end + minimumSpacing > nextStart
+    ) {
+      return null;
+    }
+
+    return end;
   }
 
   private static isPartOfSameMelisma(element: ScoreElement | null) {

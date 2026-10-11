@@ -553,6 +553,153 @@ describe('LayoutService.mayShowLeadingLyricHyphen', () => {
   });
 });
 
+describe('Greek melisma collision geometry', () => {
+  it('suppresses a vowel overlapping a left-aligned starting syllable', () => {
+    const start = new NoteElement();
+    start.alignLeft = true;
+    start.neumeWidth = 20;
+    start.lyricsWidth = 40;
+
+    const continuation = new NoteElement();
+    continuation.x = 38;
+    continuation.neumeWidth = 10;
+
+    const previousEnd =
+      start.x + LayoutService['getLyricTextRight'](start, false);
+    expect(previousEnd).toBe(40);
+    expect(
+      LayoutService['getGreekMelismaTextEnd'](
+        continuation,
+        10,
+        previousEnd,
+        Infinity,
+        4,
+      ),
+    ).toBeNull();
+  });
+
+  it('uses the full offset for a left-aligned syllable with a vareia', () => {
+    const start = new NoteElement();
+    start.alignLeft = true;
+    start.x = 100;
+    start.neumeWidth = 30;
+    start.lyricsWidth = 40;
+    start.lyricsHorizontalOffset = 10;
+
+    expect(start.x + LayoutService['getLyricTextRight'](start, false)).toBe(
+      150,
+    );
+  });
+
+  it('retains the centered starting syllable geometry', () => {
+    const start = new NoteElement();
+    start.x = 100;
+    start.neumeWidth = 30;
+    start.lyricsWidth = 20;
+    start.lyricsHorizontalOffset = 10;
+
+    expect(start.x + LayoutService['getLyricTextRight'](start, false)).toBe(
+      130,
+    );
+  });
+
+  it('requires clearance from the previous visible repetition', () => {
+    const first = new NoteElement();
+    first.x = 40;
+    first.neumeWidth = 10;
+    const firstEnd = LayoutService['getGreekMelismaTextEnd'](
+      first,
+      20,
+      30,
+      Infinity,
+      4,
+    );
+    expect(firstEnd).toBe(55);
+
+    const second = new NoteElement();
+    second.x = 58;
+    second.neumeWidth = 10;
+    expect(
+      LayoutService['getGreekMelismaTextEnd'](
+        second,
+        20,
+        firstEnd,
+        Infinity,
+        4,
+      ),
+    ).toBeNull();
+
+    // A hidden repetition does not move the last visible text's boundary.
+    second.x = 64;
+    expect(
+      LayoutService['getGreekMelismaTextEnd'](
+        second,
+        20,
+        firstEnd,
+        Infinity,
+        4,
+      ),
+    ).toBe(79);
+  });
+
+  it('requires clearance before a following real syllable at a line start', () => {
+    const continuation = new NoteElement();
+    continuation.neumeWidth = 10;
+
+    expect(
+      LayoutService['getGreekMelismaTextEnd'](continuation, 20, null, 18, 4),
+    ).toBeNull();
+    expect(
+      LayoutService['getGreekMelismaTextEnd'](continuation, 20, null, 19, 4),
+    ).toBe(15);
+  });
+
+  it('includes a continuation offset when accepting exact clearance', () => {
+    const continuation = new NoteElement();
+    continuation.x = 40;
+    continuation.neumeWidth = 10;
+    continuation.lyricsHorizontalOffset = 10;
+
+    expect(
+      LayoutService['getGreekMelismaTextEnd'](continuation, 20, 36, 64, 4),
+    ).toBe(60);
+  });
+
+  it('finds the following real lyric through inline elements', () => {
+    const continuation = new NoteElement();
+    const next = new NoteElement();
+    next.x = 100;
+    next.neumeWidth = 20;
+    next.lyricsWidth = 40;
+    next.lyricsHorizontalOffset = 10;
+    const line = getLine(continuation, getInlineTextBox(), next);
+
+    expect(
+      LayoutService['getFollowingLyricStarts'](line).get(continuation),
+    ).toBe(95);
+    next.alignLeft = true;
+    expect(
+      LayoutService['getFollowingLyricStarts'](line).get(continuation),
+    ).toBe(110);
+  });
+
+  it('does not carry following lyric bounds across block elements', () => {
+    const continuation = new NoteElement();
+    const next = new NoteElement();
+    next.lyricsWidth = 40;
+    const line = getLine(continuation, new TextBoxElement(), next);
+
+    expect(
+      LayoutService['getFollowingLyricStarts'](line).get(continuation),
+    ).toBe(Infinity);
+    expect(
+      LayoutService['getFollowingLyricStarts'](getLine(continuation)).get(
+        continuation,
+      ),
+    ).toBe(Infinity);
+  });
+});
+
 function getInlineTextBox() {
   const inlineTextBox = new TextBoxElement();
   inlineTextBox.inline = true;

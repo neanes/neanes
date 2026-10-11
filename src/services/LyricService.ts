@@ -162,10 +162,10 @@ export class LyricService {
             // If this note's acceptsLyrics is not MelismaOnly,
             // then we append a hyphen for non-Greek lyrics,
             // and an underscore for Greek lyrics.
+            // mergeVowels tracks the source syllable even when layout hides vowels.
             if (
               !disableGreekMelismata &&
-              (MelismaHelperGreek.isGreek(note.lyrics) ||
-                MelismaHelperGreek.isGreek(note.melismaText))
+              (MelismaHelperGreek.isGreek(note.lyrics) || mergeVowels != null)
             ) {
               mergeUnderscores += '_';
             } else {

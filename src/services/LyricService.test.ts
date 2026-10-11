@@ -353,6 +353,23 @@ describe('LyricService (Greek)', () => {
     expect(lyricService.extractLyrics(scoreElements, false)).toEqual('των___');
   });
 
+  it.each(['ω', ''])(
+    'should extract Greek continuations with melismaText %j',
+    (melismaText) => {
+      const lyricService = new LyricService();
+      const scoreElements = [
+        createNote('τω', true, true, true),
+        createNote('', true, false, true, melismaText),
+        createNote('ων'),
+      ];
+
+      expect(lyricService.extractLyrics(scoreElements, false)).toEqual(
+        'των___',
+      );
+      expect(lyricService.extractLyrics(scoreElements, true)).toEqual('τω--ων');
+    },
+  );
+
   it('should extract word after melisma', () => {
     const lyricService = new LyricService();
 
@@ -394,10 +411,6 @@ describe('LyricService (Greek)', () => {
       },
       () => {},
     );
-
-    // The layout service should assign melismaText so we do that here.
-    // This process should probably be improved to be more testable.
-    (scoreElements[8] as NoteElement).melismaText = 'α';
 
     expect(lyricService.extractLyrics(scoreElements, false)).toEqual(lyrics);
   });

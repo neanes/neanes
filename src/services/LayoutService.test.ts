@@ -816,6 +816,80 @@ describe('Greek apostrophos-hyporoe pairs', () => {
     ).toBe(157);
   });
 
+  it.each([false, true])(
+    'centers a complete consonant-ending lyric without splitting it (isHyphen=%s)',
+    (isHyphen) => {
+      const data = setup();
+      Object.assign(data.apostrophos, {
+        lyrics: 'μην',
+        lyricsWidth: 30,
+        isMelismaStart: true,
+        isHyphen,
+      });
+      data.hyporoe.isHyphen = isHyphen;
+      data.line.elements = [data.apostrophos, data.hyporoe, data.next];
+      const pairs = LayoutService['prepareGreekMelismaPairs'](
+        data.line.elements,
+        data.setup,
+        new Map(),
+      );
+      expect(pairs.get(data.apostrophos)).toBe(data.hyporoe);
+      expect(
+        LayoutService['getMelismaBreakConstraint'](
+          data.apostrophos,
+          data.hyporoe,
+          false,
+          pairs.has(data.apostrophos),
+        ).cost,
+      ).toBe(MAX_COST);
+      const texts = LayoutService['layoutGreekMelismaTextOnLine'](
+        data.line,
+        data.setup,
+        new Map(),
+        data.repetitions,
+        resolvePageMargins(data.setup, 1),
+      );
+      expect(texts.get(data.hyporoe)).toBe('');
+      expect(
+        data.apostrophos.x +
+          LayoutService['getLyricTextLeft'](data.apostrophos),
+      ).toBe(147);
+      expect(data.apostrophos.lyrics).toBe('μην');
+      expect(data.hyporoe.lyrics).toBe('');
+    },
+  );
+
+  it('keeps separately entered opening and closing fragments separate', () => {
+    const data = setup();
+    Object.assign(data.apostrophos, {
+      lyrics: 'μη',
+      lyricsWidth: 10,
+      isMelismaStart: true,
+      isHyphen: true,
+    });
+    Object.assign(data.hyporoe, {
+      lyrics: 'ην',
+      lyricsWidth: 10,
+      isMelisma: false,
+    });
+    data.line.elements = [data.apostrophos, data.hyporoe, data.next];
+    expect(
+      LayoutService['getGreekMelismaPairs'](data.line.elements, data.setup)
+        .size,
+    ).toBe(0);
+    LayoutService['layoutGreekMelismaTextOnLine'](
+      data.line,
+      data.setup,
+      new Map(),
+      new Map(),
+      resolvePageMargins(data.setup, 1),
+    );
+    expect(data.apostrophos.lyrics).toBe('μη');
+    expect(data.hyporoe.lyrics).toBe('ην');
+    expect(data.apostrophos.lyricsHorizontalOffset).toBe(0);
+    expect(data.hyporoe.lyricsHorizontalOffset).toBe(0);
+  });
+
   it('keeps a drop-cap syllable in place during both pair layout phases', () => {
     const data = setup();
     const dropCap = new DropCapElement();

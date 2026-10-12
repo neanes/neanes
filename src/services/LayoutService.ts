@@ -1008,12 +1008,12 @@ export class LayoutService {
             ordinaryBoundaryWidth,
             greekBoundaryMinimumWidth ?? -Infinity,
           );
-          if (greekBoundaryMinimumWidth != null) {
+          if (greekRepetitionEndPx != null) {
             // Reserve the vowel's overhang at a line end without adding its
             // clearance twice to the same-line boundary above.
             layoutWorkspace.melismaLyricsEndPx = Math.max(
               layoutWorkspace.melismaLyricsEndPx ?? -Infinity,
-              greekRepetitionEndPx!,
+              greekRepetitionEndPx,
             );
           }
 
@@ -8884,8 +8884,6 @@ export class LayoutService {
       left: number;
       previousEnd: number;
       canCenter: boolean;
-      generated: boolean;
-      paired: boolean;
     }> = [];
     const gap = pageSetup.lyricsMinimumSpacing;
     const leftLimit = resolvedMargins.contentLeft + line.indentation;
@@ -8900,14 +8898,12 @@ export class LayoutService {
       firstNote != null && repetitions.has(firstNote),
     );
     let previousEnd: number | null = null;
-    let group: (typeof groups)[number] | null = null;
 
-    // Decide visibility once. Each displayed text owns the immediately
-    // following notes whose repetitions were omitted.
+    // Decide repetition visibility without moving text over omitted vowels.
+    // Only apostrophos-hyporoe pairs share a centered lyric span.
     for (let index = 0; index < line.elements.length; index++) {
       const element = line.elements[index];
       if (element.elementType !== ElementType.Note) {
-        group = null;
         if (this.isBreakElement(element)) {
           previousEnd = null;
         }
@@ -8916,18 +8912,17 @@ export class LayoutService {
       const note = element as NoteElement;
       const pairEnd = pairs.get(note);
       if (note.lyricsWidth > 0) {
-        group = {
+        const group = {
           start: note,
           end: pairEnd ?? note,
           width: note.lyricsWidth,
           left: note.x + this.getLyricTextLeft(note),
           previousEnd: previousEnd ?? leftLimit - gap,
           canCenter:
+            pairEnd != null &&
             note.isMelismaStart &&
             MelismaHelperGreek.isGreek(note.lyrics) &&
             line.elements[index - 1]?.elementType !== ElementType.DropCap,
-          generated: false,
-          paired: pairEnd != null,
         };
         groups.push(group);
         previousEnd = Math.max(
@@ -8965,50 +8960,47 @@ export class LayoutService {
           if (visible) {
             note.lyricsHorizontalOffset =
               2 * (bounds.left - note.x) - note.neumeWidth + repetition.width;
-            group = {
+            const group = {
               start: note,
               end: pairEnd,
               width: repetition.width,
               left: bounds.left,
               previousEnd: previousEnd ?? leftLimit - gap,
               canCenter: false,
-              generated: true,
-              paired: true,
             };
             groups.push(group);
             previousEnd = bounds.right;
-          } else {
-            group = null;
           }
           index++;
           continue;
         }
-        const end = this.getGreekMelismaTextEnd(
+        const candidateEnd = this.getGreekMelismaTextEnd(
           note,
           repetition.width,
           previousEnd,
           followingStarts.get(note)!,
           gap,
         );
+        const end =
+          candidateEnd != null &&
+          candidateEnd - repetition.width >=
+            leftLimit - melismaGeometryTolerance &&
+          candidateEnd <= rightLimit + melismaGeometryTolerance
+            ? candidateEnd
+            : null;
         texts.set(note, end == null ? '' : repetition.text);
         if (end != null) {
-          group = {
+          const group = {
             start: note,
             end: note,
             width: repetition.width,
             left: end - repetition.width,
             previousEnd: previousEnd ?? leftLimit - gap,
-            canCenter: true,
-            generated: true,
-            paired: false,
+            canCenter: false,
           };
           groups.push(group);
           previousEnd = end;
-        } else if (group != null && group.canCenter && !group.paired) {
-          group.end = note;
         }
-      } else {
-        group = null;
       }
     }
 
@@ -9038,10 +9030,7 @@ export class LayoutService {
           );
         const span = bodyRight - bodyLeft;
         const left =
-          bodyLeft +
-          (current.generated
-            ? (span - current.width) / 2
-            : this.getCenteredMelismaLyricTextLeft(current.start, span));
+          bodyLeft + this.getCenteredMelismaLyricTextLeft(current.start, span);
         if (
           span > 0 &&
           left >= Math.max(leftLimit, current.previousEnd + gap) &&
@@ -9049,17 +9038,7 @@ export class LayoutService {
             Math.max(current.left + current.width, bodyRight) &&
           left + current.width + gap <= nextStart
         ) {
-          if (current.generated) {
-            current.start.lyricsHorizontalOffset =
-              2 * (left - current.start.x) -
-              current.start.neumeWidth +
-              current.width;
-          } else {
-            this.applyCenteredMelismaLyric(
-              current.start,
-              left - current.start.x,
-            );
-          }
+          this.applyCenteredMelismaLyric(current.start, left - current.start.x);
           current.left = left;
         }
       }

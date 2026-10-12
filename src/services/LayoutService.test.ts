@@ -15,10 +15,10 @@ import {
   TempoElement,
   TextBoxElement,
 } from '../models/Element';
+import type { MeasureBar } from '../models/Neumes';
 import {
   Fthora,
   GorgonNeume,
-  MeasureBar,
   QuantitativeNeume,
   restNeumes,
 } from '../models/Neumes';
@@ -1154,7 +1154,7 @@ describe('Greek melisma syllable-boundary spacing', () => {
   });
 });
 
-describe('Greek melisma span centering', () => {
+describe('Greek melisma placement without general span centering', () => {
   function setup(lyricWidth = 20) {
     const start = new NoteElement();
     start.x = 100;
@@ -1182,7 +1182,7 @@ describe('Greek melisma span centering', () => {
     return { start, continuation, pageSetup, line, widths, bars };
   }
 
-  function center(data: ReturnType<typeof setup>, physicalPageNumber = 1) {
+  function layout(data: ReturnType<typeof setup>, physicalPageNumber = 1) {
     return LayoutService['layoutGreekMelismaTextOnLine'](
       data.line,
       data.pageSetup,
@@ -1192,281 +1192,95 @@ describe('Greek melisma span centering', () => {
     );
   }
 
-  it('centers the only displayed syllable over two apostrophos signs', () => {
-    const data = setup();
-    center(data);
-    expect(data.start.alignLeft).toBe(false);
-    expect(data.start.x + LayoutService['getLyricTextLeft'](data.start)).toBe(
-      102,
-    );
-    expect(
-      data.start.x + LayoutService['getLyricTextRight'](data.start, false),
-    ).toBe(122);
-  });
-
-  it('centers a syllable wider than the group when surrounding space permits', () => {
-    const data = setup(28);
-    center(data);
-    expect(data.start.alignLeft).toBe(false);
-    expect(data.start.x + LayoutService['getLyricTextLeft'](data.start)).toBe(
-      98,
-    );
-  });
-
-  it('does not center a group with a visible repeated vowel', () => {
-    const data = setup();
-    data.continuation.x = 140;
-    center(data);
-    expect(data.start.alignLeft).toBe(true);
-    expect(data.start.lyricsHorizontalOffset).toBe(0);
-  });
-
-  it('centers τη over its opening span before the next visible η', () => {
-    const data = setup();
-    data.start.lyrics = 'τη';
-    const next = new NoteElement();
-    next.x = 140;
-    next.neumeWidth = 10;
-    next.isMelisma = true;
-    data.line.elements.push(next);
-    data.widths.set(next, { text: 'η', width: 6 });
-    const texts = center(data);
-
-    expect(texts.get(data.continuation)).toBe('');
-    expect(texts.get(next)).toBe('η');
-    expect(data.start.x + LayoutService['getLyricTextLeft'](data.start)).toBe(
-      102,
-    );
-    expect(next.lyricsHorizontalOffset).toBe(0);
-    expect(data.line.elements.map((note) => note.x)).toEqual([100, 114, 140]);
-  });
-
-  it('centers an initially centered syllable when its continuation is omitted', () => {
-    const data = setup(6);
-    data.start.alignLeft = false;
-    data.widths.set(data.continuation, { text: 'η', width: 12 });
-    const next = new NoteElement();
-    next.x = 132;
-    next.neumeWidth = 10;
-    next.lyricsWidth = 20;
-    next.lyrics = 'σας';
-    data.line.elements.push(next);
-    const texts = center(data);
-
-    expect(texts.get(data.continuation)).toBe('');
-    expect(data.start.x + LayoutService['getLyricTextLeft'](data.start)).toBe(
-      109,
-    );
-  });
-
-  it('centers a surviving ο over its own note and the omitted repetition', () => {
-    const data = setup();
-    data.continuation.x = 140;
-    data.widths.set(data.continuation, { text: 'ο', width: 12 });
-    const omitted = new NoteElement();
-    omitted.x = 152;
-    omitted.neumeWidth = 10;
-    omitted.isMelisma = true;
-    const next = new NoteElement();
-    next.x = 180;
-    next.neumeWidth = 10;
-    next.isMelisma = true;
-    data.line.elements.push(omitted, next);
-    data.widths.set(omitted, { text: 'ο', width: 12 });
-    data.widths.set(next, { text: 'ο', width: 12 });
-    const texts = center(data);
-
-    expect([...texts.values()]).toEqual(['ο', '', 'ο']);
-    const displayedLeft =
-      data.continuation.x +
-      (data.continuation.neumeWidth +
-        data.continuation.lyricsHorizontalOffset -
-        12) /
-        2;
-    expect(displayedLeft).toBe(145);
-    expect(next.lyricsHorizontalOffset).toBe(0);
-  });
-
-  it('keeps a generated vowel in place if centering would crowd a real lyric', () => {
-    const data = setup();
-    data.continuation.x = 140;
-    data.widths.set(data.continuation, { text: 'ο', width: 12 });
-    const omitted = new NoteElement();
-    omitted.x = 152;
-    omitted.neumeWidth = 10;
-    omitted.isMelisma = true;
-    const next = new NoteElement();
-    next.x = 160;
-    next.neumeWidth = 10;
-    next.lyricsWidth = 10;
-    next.lyrics = 'ος';
-    data.line.elements.push(omitted, next);
-    data.widths.set(omitted, { text: 'ο', width: 12 });
-    const texts = center(data);
-
-    expect([...texts.values()]).toEqual(['ο', '']);
-    expect(data.continuation.lyricsHorizontalOffset).toBe(0);
-    expect(next.lyricsHorizontalOffset).toBe(0);
-  });
-
-  it('keeps an omitted vowel hidden after centering', () => {
-    const data = setup(28);
-    data.continuation.lyricsHorizontalOffset = 30;
-    // Visibility stays fixed even if the centered position would free space.
-    const texts = center(data);
-    expect(data.start.alignLeft).toBe(false);
-    expect(texts.get(data.continuation)).toBe('');
-  });
-
-  it('preserves clearance to the preceding syllable', () => {
-    const data = setup(28);
-    const previous = new NoteElement();
-    previous.x = 80;
-    previous.neumeWidth = 10;
-    previous.lyricsWidth = 28;
-    data.line.elements.unshift(previous);
-    center(data);
-    expect(data.start.alignLeft).toBe(true);
-  });
-
-  it('preserves clearance to the following syllable', () => {
-    const data = setup();
-    const next = new NoteElement();
-    next.x = 124;
-    next.neumeWidth = 10;
-    next.lyricsWidth = 10;
-    data.line.elements.push(next);
-    center(data);
-    expect(data.start.alignLeft).toBe(true);
-  });
-
-  it('preserves clearance to a preceding visible Greek repetition', () => {
-    const data = setup(28);
-    const previous = new NoteElement();
-    previous.x = 50;
-    previous.neumeWidth = 10;
-    previous.lyricsWidth = 10;
-    const repetition = new NoteElement();
-    repetition.x = 84;
-    repetition.neumeWidth = 10;
-    repetition.isMelisma = true;
-    data.line.elements.unshift(previous, repetition);
-    data.widths.set(repetition, { text: 'ο', width: 12 });
-    center(data);
-    expect(data.start.alignLeft).toBe(true);
-  });
-
-  it('centers only the local span on the current line', () => {
-    const data = setup();
-    center(data);
-    expect(data.start.x + LayoutService['getLyricTextLeft'](data.start)).toBe(
-      102,
-    );
-  });
-
-  it('does not group separately entered continuation lyrics', () => {
-    const data = setup();
-    data.continuation.lyrics = 'η';
-    data.continuation.lyricsWidth = 6;
-    center(data);
-    expect(data.start.alignLeft).toBe(true);
-  });
-
-  it('ends the local span at a trailing martyria', () => {
-    const data = setup();
-    data.line.elements.push(new MartyriaElement());
-    center(data);
-    expect(data.start.x + LayoutService['getLyricTextLeft'](data.start)).toBe(
-      102,
-    );
-  });
-
-  it("uses the following group's centered position for clearance", () => {
-    const data = setup();
-    const following = setup(28);
-    following.start.x = 128;
-    following.continuation.x = 142;
-    data.line.elements.push(following.start, following.continuation);
-    data.widths.set(following.continuation, { text: 'η', width: 6 });
-    center(data);
-    // The following group moves left to 126. The first group's centered
-    // end at 122 still leaves the required four-pixel gap.
-    expect(
-      following.start.x + LayoutService['getLyricTextLeft'](following.start),
-    ).toBe(126);
-    expect(
-      data.start.x + LayoutService['getLyricTextRight'](data.start, false),
-    ).toBe(122);
-    expect(data.start.alignLeft).toBe(false);
-  });
-
-  it('does not center mixed-element melismas', () => {
-    const data = setup();
-    data.line.elements.splice(1, 0, getInlineTextBox());
-    center(data);
-    expect(data.start.alignLeft).toBe(true);
-  });
-
-  it('respects the line indentation when centering would move left', () => {
-    const data = setup(28);
-    data.line.indentation = 100;
-    center(data);
-    expect(data.start.alignLeft).toBe(true);
-  });
-
   it.each([
-    { inside: 20, outside: 100, x: 100, width: 28, centered: false, left: 100 },
-    { inside: 100, outside: 20, x: 40, width: 28, centered: true, left: 38 },
-    { inside: 20, outside: 100, x: 150, width: 20, centered: true, left: 152 },
-    { inside: 100, outside: 20, x: 80, width: 20, centered: false, left: 80 },
+    { facing: false, page: 1, right: 160 },
+    { facing: true, page: 1, right: 160 },
+    { facing: true, page: 2, right: 180 },
   ])(
-    'uses facing-page bounds with inside=$inside, outside=$outside, x=$x',
-    ({ inside, outside, x, width, centered, left }) => {
-      const data = setup(width);
-      data.pageSetup.facingPages = true;
+    'keeps generated vowels within the right margin (facing=$facing, page=$page)',
+    ({ facing, page, right }) => {
+      const data = setup();
       data.pageSetup.pageWidth = 200;
-      data.pageSetup.leftMargin = inside;
-      data.pageSetup.rightMargin = outside;
-      data.start.x = x;
-      data.continuation.x = x + 14;
-      center(data, 2);
+      data.pageSetup.leftMargin = 20;
+      data.pageSetup.rightMargin = 40;
+      data.pageSetup.facingPages = facing;
+      data.widths.set(data.continuation, { text: 'ου', width: 12 });
+      data.continuation.x = right - 11;
 
-      expect(data.start.alignLeft).toBe(!centered);
+      // A vowel ending exactly at the margin remains visible; no extra
+      // lyric clearance is required beyond the page's content boundary.
+      expect(layout(data, page).get(data.continuation)).toBe('ου');
+      data.continuation.x += 0.1;
+      expect(layout(data, page).get(data.continuation)).toBe('');
+      expect(data.continuation.lyricsHorizontalOffset).toBe(0);
+    },
+  );
+
+  it('keeps a line-initial generated vowel inside the left margin and indentation', () => {
+    const data = setup();
+    data.line.elements = [data.continuation];
+    data.line.indentation = 100;
+    data.widths.set(data.continuation, { text: 'ου', width: 12 });
+    data.continuation.x = 100;
+    expect(layout(data).get(data.continuation)).toBe('');
+    data.continuation.x = 101;
+    expect(layout(data).get(data.continuation)).toBe('ου');
+  });
+
+  it.each(['μου', 'σσα'])(
+    'keeps %s on its original neume when a vowel is omitted',
+    (lyric) => {
+      const data = setup();
+      data.start.lyrics = lyric;
+      const texts = layout(data);
+      expect(texts.get(data.continuation)).toBe('');
+      expect(data.start.alignLeft).toBe(true);
+      expect(data.start.lyricsHorizontalOffset).toBe(0);
       expect(data.start.x + LayoutService['getLyricTextLeft'](data.start)).toBe(
-        left,
+        100,
       );
     },
   );
 
-  it('resolves facing-page parity using the displayed first page number', () => {
-    const data = setup(28);
-    data.pageSetup.facingPages = true;
-    data.pageSetup.firstPageNumber = 2;
-    data.pageSetup.leftMargin = 20;
-    data.pageSetup.rightMargin = 100;
-    center(data, 1);
-
-    expect(data.start.alignLeft).toBe(true);
+  it('preserves an initially centered syllable when its continuation is omitted', () => {
+    const data = setup(6);
+    data.start.alignLeft = false;
+    data.widths.set(data.continuation, { text: 'η', width: 12 });
+    const next = new NoteElement();
+    Object.assign(next, {
+      x: 132,
+      neumeWidth: 10,
+      lyricsWidth: 20,
+      lyrics: 'σας',
+    });
+    data.line.elements.push(next);
+    const texts = layout(data);
+    expect(texts.get(data.continuation)).toBe('');
+    expect(data.start.alignLeft).toBe(false);
+    expect(data.start.lyricsHorizontalOffset).toBe(0);
     expect(data.start.x + LayoutService['getLyricTextLeft'](data.start)).toBe(
-      100,
+      102,
     );
   });
 
-  it('excludes left and right measure bars from the centered span', () => {
+  it('keeps a surviving vowel on its original neume when the next repetition is omitted', () => {
     const data = setup();
-    data.start.measureBarLeft = MeasureBar.MeasureBarRight;
-    data.continuation.measureBarRight = MeasureBar.MeasureBarDouble;
-    data.start.neumeWidth = 14;
-    data.start.lyricsHorizontalOffset = 4;
-    data.continuation.x = 118;
-    data.continuation.neumeWidth = 18;
-    data.continuation.lyricsHorizontalOffset = -8;
-    data.bars.set(MeasureBar.MeasureBarRight, 4);
-    data.bars.set(MeasureBar.MeasureBarDouble, 8);
-    center(data);
-    expect(data.start.x + LayoutService['getLyricTextLeft'](data.start)).toBe(
-      106,
-    );
+    data.continuation.x = 140;
+    data.widths.set(data.continuation, { text: 'ο', width: 12 });
+    const omitted = new NoteElement();
+    Object.assign(omitted, { x: 152, neumeWidth: 10, isMelisma: true });
+    const next = new NoteElement();
+    Object.assign(next, { x: 180, neumeWidth: 10, isMelisma: true });
+    data.line.elements.push(omitted, next);
+    data.widths.set(omitted, { text: 'ο', width: 12 });
+    data.widths.set(next, { text: 'ο', width: 12 });
+    const texts = layout(data);
+    expect([...texts.values()]).toEqual(['ο', '', 'ο']);
+    expect(data.continuation.lyricsHorizontalOffset).toBe(0);
+    expect(next.lyricsHorizontalOffset).toBe(0);
+    expect(data.line.elements.map((note) => note.x)).toEqual([
+      100, 140, 152, 180,
+    ]);
   });
 
   it('does not apply when Greek melismata are disabled', () => {
@@ -1481,11 +1295,11 @@ describe('Greek melisma span centering', () => {
     expect(data.start.alignLeft).toBe(true);
   });
 
-  it('preserves Greek vowel generation without centering in RTL scores', () => {
+  it('preserves Greek vowel generation in RTL scores', () => {
     const data = setup();
     data.pageSetup.melkiteRtl = true;
     data.continuation.x = 140;
-    const texts = center(data);
+    const texts = layout(data);
     expect(texts.get(data.continuation)).toBe('η');
     expect(data.start.alignLeft).toBe(true);
   });

@@ -1,9 +1,15 @@
 import type { Box, Glue, InputItem, Penalty } from 'tex-linebreak';
-import { MAX_COST } from 'tex-linebreak';
+import {
+  breakLines,
+  forcedBreak,
+  MAX_COST,
+  positionItems,
+} from 'tex-linebreak';
 import { describe, expect, it } from 'vitest';
 
 import type { ScoreElement } from '../models/Element';
 import {
+  DropCapElement,
   MartyriaElement,
   NoteElement,
   TempoElement,
@@ -11,6 +17,7 @@ import {
 } from '../models/Element';
 import {
   Fthora,
+  GorgonNeume,
   MeasureBar,
   QuantitativeNeume,
   restNeumes,
@@ -703,6 +710,275 @@ describe('Greek melisma collision geometry', () => {
         continuation,
       ),
     ).toBe(Infinity);
+  });
+});
+
+describe('Greek apostrophos-hyporoe pairs', () => {
+  function setup() {
+    const setup = new PageSetup();
+    setup.leftMargin = 0;
+    setup.rightMargin = 0;
+    setup.lyricsMinimumSpacing = 4;
+    const start = new NoteElement();
+    Object.assign(start, {
+      x: 100,
+      neumeWidth: 20,
+      lyrics: 'ρου',
+      lyricsWidth: 20,
+      isMelismaStart: true,
+      isMelisma: true,
+    });
+    const first = new NoteElement();
+    Object.assign(first, {
+      x: 130,
+      neumeWidth: 10,
+      isMelisma: true,
+      quantitativeNeume: QuantitativeNeume.Apostrophos,
+    });
+    const apostrophos = new NoteElement();
+    Object.assign(apostrophos, {
+      x: 150,
+      neumeWidth: 10,
+      isMelisma: true,
+      quantitativeNeume: QuantitativeNeume.Apostrophos,
+    });
+    const hyporoe = new NoteElement();
+    Object.assign(hyporoe, {
+      x: 164,
+      neumeWidth: 10,
+      isMelisma: true,
+      quantitativeNeume: QuantitativeNeume.Hyporoe,
+      gorgonNeume: GorgonNeume.Gorgon_Top,
+    });
+    const next = new NoteElement();
+    Object.assign(next, {
+      x: 188,
+      neumeWidth: 10,
+      lyrics: 'με',
+      lyricsWidth: 10,
+    });
+    const line = getLine(start, first, apostrophos, hyporoe, next);
+    const repetitions = new Map(
+      [first, apostrophos, hyporoe].map(
+        (note) => [note, { text: 'ου', width: 12 }] as const,
+      ),
+    );
+    return {
+      setup,
+      start,
+      first,
+      apostrophos,
+      hyporoe,
+      next,
+      line,
+      repetitions,
+    };
+  }
+
+  it('centers ου on apostrophos-hyporoe, not the preceding two apostrophos signs', () => {
+    const data = setup();
+    const texts = LayoutService['layoutGreekMelismaTextOnLine'](
+      data.line,
+      data.setup,
+      new Map(),
+      data.repetitions,
+      resolvePageMargins(data.setup, 1),
+    );
+    expect(texts.get(data.first)).toBe('ου');
+    expect(texts.get(data.apostrophos)).toBe('ου');
+    expect(texts.get(data.hyporoe)).toBe('');
+    expect(data.first.lyricsHorizontalOffset).toBe(0);
+    const left =
+      data.apostrophos.x +
+      (data.apostrophos.neumeWidth +
+        data.apostrophos.lyricsHorizontalOffset -
+        12) /
+        2;
+    expect(left).toBe(156);
+  });
+
+  it('centers a starting syllable on the pair even when a second vowel fits', () => {
+    const data = setup();
+    data.apostrophos.lyrics = 'τη';
+    data.apostrophos.lyricsWidth = 10;
+    data.apostrophos.isMelismaStart = true;
+    data.line.elements = [data.apostrophos, data.hyporoe, data.next];
+    const texts = LayoutService['layoutGreekMelismaTextOnLine'](
+      data.line,
+      data.setup,
+      new Map(),
+      data.repetitions,
+      resolvePageMargins(data.setup, 1),
+    );
+    expect(texts.get(data.hyporoe)).toBe('');
+    expect(
+      data.apostrophos.x + LayoutService['getLyricTextLeft'](data.apostrophos),
+    ).toBe(157);
+  });
+
+  it('keeps a drop-cap syllable in place during both pair layout phases', () => {
+    const data = setup();
+    const dropCap = new DropCapElement();
+    dropCap.content = 'Κ';
+    data.apostrophos.lyrics = 'υ';
+    data.apostrophos.lyricsWidth = 10;
+    data.apostrophos.isMelismaStart = true;
+    data.line.elements = [dropCap, data.apostrophos, data.hyporoe];
+
+    // Without the drop-cap exclusion, Phase 1 would shift υ by seven pixels.
+    const centered = LayoutService['getGreekMelismaPairTextBounds'](
+      data.apostrophos,
+      data.hyporoe,
+      0,
+      14,
+      10,
+      data.setup,
+      new Map(),
+    );
+    expect(centered.left).toBe(7);
+    const pairs = LayoutService['prepareGreekMelismaPairs'](
+      data.line.elements,
+      data.setup,
+      new Map(),
+    );
+    expect(pairs.get(data.apostrophos)).toBe(data.hyporoe);
+    expect(data.apostrophos.alignLeft).toBe(false);
+    expect(data.apostrophos.lyricsHorizontalOffset).toBe(0);
+
+    LayoutService['layoutGreekMelismaTextOnLine'](
+      data.line,
+      data.setup,
+      new Map(),
+      data.repetitions,
+      resolvePageMargins(data.setup, 1),
+    );
+    expect(data.apostrophos.alignLeft).toBe(false);
+    expect(data.apostrophos.lyricsHorizontalOffset).toBe(0);
+  });
+
+  it('does not extend the pair to further omitted repetitions', () => {
+    const data = setup();
+    const omitted = new NoteElement();
+    Object.assign(omitted, { x: 170, neumeWidth: 4, isMelisma: true });
+    data.line.elements.splice(4, 0, omitted);
+    data.repetitions.set(omitted, { text: 'ου', width: 12 });
+    const texts = LayoutService['layoutGreekMelismaTextOnLine'](
+      data.line,
+      data.setup,
+      new Map(),
+      data.repetitions,
+      resolvePageMargins(data.setup, 1),
+    );
+    expect(texts.get(omitted)).toBe('');
+    expect(data.apostrophos.lyricsHorizontalOffset).toBe(14);
+  });
+
+  it('prohibits an automatic line break inside the pair', () => {
+    const data = setup();
+    const pairs = LayoutService['getGreekMelismaPairs'](
+      data.line.elements,
+      data.setup,
+    );
+    const constraint = LayoutService['getMelismaBreakConstraint'](
+      data.apostrophos,
+      data.hyporoe,
+      false,
+      pairs.has(data.apostrophos),
+    );
+    expect(constraint.cost).toBe(MAX_COST);
+    const items: InputItem[] = [
+      { type: 'box', width: 20 },
+      glueItem(0, 100, 0),
+      { type: 'box', width: 20 },
+      penaltyItem(constraint.cost),
+      glueItem(0, 0, 0),
+      { type: 'box', width: 20 },
+      glueItem(0, 100, 0),
+      { type: 'box', width: 20 },
+      glueItem(0, 100, 0),
+      forcedBreak(),
+    ];
+    const breaks = breakLines(items, 40);
+    expect(breaks).not.toContain(3);
+    const positions = positionItems(items, 40, breaks);
+    expect(positions.find((position) => position.item === 2)!.line).toBe(
+      positions.find((position) => position.item === 5)!.line,
+    );
+    expect(positions.find((position) => position.item === 7)!.line).not.toBe(
+      positions.find((position) => position.item === 2)!.line,
+    );
+  });
+
+  it.each(['lineBreak', 'pageBreak'] as const)('honors explicit %s', (flag) => {
+    const data = setup();
+    data.apostrophos[flag] = true;
+    expect(
+      LayoutService['getGreekMelismaPairs'](data.line.elements, data.setup)
+        .size,
+    ).toBe(0);
+  });
+
+  it('preserves explicit lyrics on the hyporoe', () => {
+    const data = setup();
+    data.hyporoe.lyrics = 'με';
+    data.hyporoe.lyricsWidth = 10;
+    expect(
+      LayoutService['getGreekMelismaPairs'](data.line.elements, data.setup)
+        .size,
+    ).toBe(0);
+  });
+
+  it('does not pair across an inline element', () => {
+    const data = setup();
+    data.line.elements.splice(3, 0, getInlineTextBox());
+    expect(
+      LayoutService['getGreekMelismaPairs'](data.line.elements, data.setup)
+        .size,
+    ).toBe(0);
+  });
+
+  it('does not apply to an English melisma', () => {
+    const data = setup();
+    data.start.lyrics = 'word';
+    expect(
+      LayoutService['getGreekMelismaPairs'](data.line.elements, data.setup)
+        .size,
+    ).toBe(0);
+  });
+
+  it.each(['disableGreekMelismata', 'melkiteRtl'] as const)(
+    'does not apply when %s is enabled',
+    (flag) => {
+      const data = setup();
+      data.setup[flag] = true;
+      expect(
+        LayoutService['getGreekMelismaPairs'](data.line.elements, data.setup)
+          .size,
+      ).toBe(0);
+    },
+  );
+
+  it('uses the same centered bounds for Phase 1 reservation and Phase 2 display', () => {
+    const data = setup();
+    const bounds = LayoutService['getGreekMelismaPairTextBounds'](
+      data.apostrophos,
+      data.hyporoe,
+      150,
+      164,
+      12,
+      data.setup,
+      new Map(),
+    );
+    expect(bounds).toEqual({ left: 156, right: 168 });
+    expect(
+      LayoutService['getGreekMelismaBoundaryMinimumWidth'](
+        bounds.right,
+        data.next,
+        174,
+        4,
+        0,
+      ),
+    ).toBe(-2);
   });
 });
 

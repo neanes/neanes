@@ -556,7 +556,13 @@ export class LayoutService {
 
     // Phase 1: Build paragraphs as sequences of boxes, glue, and penalties
     let phase1GreekMelismaIsActive = false;
+    let phase1GreekMelismaSyllables: MelismaSyllables | null = null;
+    let phase1GreekLyricsEndPx: number | null = null;
     for (let i = 0; i < elements.length; i++) {
+      if (this.isBreakElement(elements[i])) {
+        phase1GreekMelismaSyllables = null;
+        phase1GreekLyricsEndPx = null;
+      }
       if (layoutWorkspace.diagnostics != null) {
         layoutWorkspace.diagnostics.currentOwner = elements[i];
       }
@@ -741,8 +747,9 @@ export class LayoutService {
           // it and supplies the boundary elasticity.
           //
           // m_i is the preferred same-line width. For ordinary note-to-note
-          // boundaries, visual, measure-bar, lyric, and melisma minima are all
-          // preferred widths and do not cap the standard shrink budget s^-.
+          // boundaries, visual, measure-bar, lyric, and melisma minima are
+          // preferred widths. Greek vowel clearance at a syllable transition
+          // also caps shrink so justification cannot remove that clearance.
           //
           // At a break, both post-break glues become leading glue on the next
           // line and are skipped by positionItems, so m_i, its elasticity, and
@@ -799,6 +806,46 @@ export class LayoutService {
             layoutWorkspace.neumesEndPx +
             this.getLyricTextRight(noteElement, false);
 
+          let greekRepetitionEndPx: number | null = null;
+          if (noteElement.lyrics.length > 0) {
+            const previousElement = elements[i - 1];
+            const text =
+              previousElement?.elementType === ElementType.DropCap
+                ? `${(previousElement as DropCapElement).content}${noteElement.lyrics}`
+                : noteElement.lyrics;
+            phase1GreekMelismaSyllables =
+              !pageSetup.disableGreekMelismata &&
+              noteElement.isMelismaStart &&
+              MelismaHelperGreek.isGreek(noteElement.lyrics)
+                ? MelismaHelperGreek.getMelismaSyllable(text)
+                : null;
+            phase1GreekLyricsEndPx =
+              phase1GreekMelismaSyllables == null ? null : lyricsEnd;
+          } else if (
+            noteElement.isMelisma &&
+            phase1GreekMelismaSyllables != null
+          ) {
+            // Predict whether a repetition fits after preceding text at
+            // preferred spacing. The following syllable must not hide it.
+            greekRepetitionEndPx = this.getGreekMelismaTextEnd(
+              noteElement,
+              this.getTextWidthFromCache(
+                noteElement,
+                phase1GreekMelismaSyllables.middle,
+              ),
+              phase1GreekLyricsEndPx,
+              Infinity,
+              pageSetup.lyricsMinimumSpacing,
+              layoutWorkspace.neumesEndPx,
+            );
+            if (greekRepetitionEndPx != null) {
+              phase1GreekLyricsEndPx = greekRepetitionEndPx;
+            }
+          } else {
+            phase1GreekMelismaSyllables = null;
+            phase1GreekLyricsEndPx = null;
+          }
+
           const neumeEnd =
             layoutWorkspace.neumesEndPx +
             noteElement.neumeWidth +
@@ -829,6 +876,14 @@ export class LayoutService {
 
           const nextNoteElement = this.getNoteIfPresentAt(elements, i + 1);
           const afterNextNoteElement = this.getNoteIfPresentAt(elements, i + 2);
+          const greekBoundaryMinimumWidth =
+            this.getGreekMelismaBoundaryMinimumWidth(
+              greekRepetitionEndPx,
+              nextNoteElement,
+              layoutWorkspace.neumesEndPx,
+              pageSetup.lyricsMinimumSpacing,
+              noteElement.spaceAfter,
+            );
           let nextLeadingLyricHyphenReservation = 0;
           if (nextNoteElement != null) {
             nextNoteElement.leadingLyricHyphenOffset = 0;
@@ -874,7 +929,7 @@ export class LayoutService {
             atomicMelismaLayout.boundaries.get(noteElement);
           const isInsideAtomicMelismaPrefix =
             melismaBoundary?.protected ?? false;
-          const m_i =
+          const ordinaryBoundaryWidth =
             melismaBoundary?.width ??
             this.calculateInterNoteSpacing(
               noteElement,
@@ -892,6 +947,18 @@ export class LayoutService {
               minimumLyricGap,
               measureBarWidthMap,
             );
+          const m_i = Math.max(
+            ordinaryBoundaryWidth,
+            greekBoundaryMinimumWidth ?? -Infinity,
+          );
+          if (greekBoundaryMinimumWidth != null) {
+            // Reserve the vowel's overhang at a line end without adding its
+            // clearance twice to the same-line boundary above.
+            layoutWorkspace.melismaLyricsEndPx = Math.max(
+              layoutWorkspace.melismaLyricsEndPx ?? -Infinity,
+              greekRepetitionEndPx!,
+            );
+          }
 
           // Combine the graded automatic penalties with the resolved absolute
           // constraint for this boundary, then clamp the total to MAX_COST.
@@ -937,10 +1004,14 @@ export class LayoutService {
           const postBreakGlue =
             isInsideAtomicMelismaPrefix || martyriaOwnsBoundaryGlue
               ? this.fixedGlue(m_i - nextLeadingLyricHyphenReservation)
-              : {
-                  ...standardGlue,
-                  width: m_i - nextLeadingLyricHyphenReservation,
-                };
+              : this.createNotePostBreakGlue(
+                  standardGlue,
+                  m_i - nextLeadingLyricHyphenReservation,
+                  greekBoundaryMinimumWidth == null
+                    ? null
+                    : greekBoundaryMinimumWidth -
+                        nextLeadingLyricHyphenReservation,
+                );
 
           // Break opportunity after the neume. The candidate penalty sits
           // immediately after the box, and the post-break glue contributes
@@ -1473,6 +1544,7 @@ export class LayoutService {
           neumeLineHeight,
           neumeHeight,
         );
+        phase1GreekLyricsEndPx = null;
       }
 
       if (layoutWorkspace.diagnostics != null) {
@@ -8252,20 +8324,65 @@ export class LayoutService {
     previousEnd: number | null,
     nextStart: number,
     minimumSpacing: number,
+    noteX: number = note.x,
   ): number | null {
     // Generated Greek vowels are centered in the continuation's lyric box.
     const start =
-      note.x + (note.neumeWidth + note.lyricsHorizontalOffset - textWidth) / 2;
+      noteX + (note.neumeWidth + note.lyricsHorizontalOffset - textWidth) / 2;
     const end = start + textWidth;
 
     if (
-      (previousEnd != null && start < previousEnd + minimumSpacing) ||
-      end + minimumSpacing > nextStart
+      (previousEnd != null &&
+        start < previousEnd + minimumSpacing - melismaGeometryTolerance) ||
+      end + minimumSpacing > nextStart + melismaGeometryTolerance
     ) {
       return null;
     }
 
     return end;
+  }
+
+  private static getGreekMelismaBoundaryMinimumWidth(
+    repetitionEnd: number | null,
+    nextNote: NoteElement | null,
+    cursor: number,
+    minimumSpacing: number,
+    spaceAfter: number,
+  ) {
+    if (
+      repetitionEnd == null ||
+      nextNote == null ||
+      nextNote.lyricsWidth === 0
+    ) {
+      return null;
+    }
+    const { leftProjection } = this.getLyricProjections(
+      nextNote,
+      nextNote.alignLeft,
+    );
+    return (
+      repetitionEnd +
+      minimumSpacing -
+      cursor -
+      spaceAfter -
+      leftProjection -
+      this.getLyricTextLeft(nextNote)
+    );
+  }
+
+  private static createNotePostBreakGlue(
+    baseGlue: Glue,
+    width: number,
+    minimumWidth: number | null,
+  ): Glue {
+    return {
+      ...baseGlue,
+      width,
+      shrink:
+        minimumWidth == null
+          ? baseGlue.shrink
+          : Math.min(baseGlue.shrink, Math.max(0, width - minimumWidth)),
+    };
   }
 
   private static isPartOfSameMelisma(element: ScoreElement | null) {

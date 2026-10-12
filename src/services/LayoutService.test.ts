@@ -1,4 +1,4 @@
-import type { Box, InputItem, Penalty } from 'tex-linebreak';
+import type { Box, Glue, InputItem, Penalty } from 'tex-linebreak';
 import { MAX_COST } from 'tex-linebreak';
 import { describe, expect, it } from 'vitest';
 
@@ -703,6 +703,178 @@ describe('Greek melisma collision geometry', () => {
         continuation,
       ),
     ).toBe(Infinity);
+  });
+});
+
+describe('Greek melisma syllable-boundary spacing', () => {
+  const standardGlue: Glue = { type: 'glue', width: 0, stretch: 2, shrink: 2 };
+
+  it.each([
+    ['γλω', 'ω', 'σσα', true],
+    ['κα', 'α', 'λλει', false],
+    ['σμε', 'ε', 'νων', false],
+  ] as const)(
+    'keeps the final %s repetition before %s / %s visible',
+    (lyric, vowel, followingLyric, followingStartsMelisma) => {
+      const start = new NoteElement();
+      Object.assign(start, {
+        x: 100,
+        neumeWidth: 10,
+        lyrics: lyric,
+        lyricsWidth: 20,
+        alignLeft: true,
+        isMelisma: true,
+        isMelismaStart: true,
+      });
+      const tail = new NoteElement();
+      Object.assign(tail, { x: 999, neumeWidth: 10, isMelisma: true });
+      const next = new NoteElement();
+      Object.assign(next, {
+        neumeWidth: 10,
+        lyrics: followingLyric,
+        lyricsWidth: 20,
+        alignLeft: followingStartsMelisma,
+        isMelismaStart: followingStartsMelisma,
+        isMelisma: followingStartsMelisma,
+      });
+
+      // Phase 1 uses its current cursor, not coordinates from a prior layout.
+      const end = LayoutService['getGreekMelismaTextEnd'](
+        tail,
+        12,
+        120,
+        Infinity,
+        4,
+        140,
+      );
+      expect(end).toBe(151);
+      const minimum = LayoutService['getGreekMelismaBoundaryMinimumWidth'](
+        end,
+        next,
+        150,
+        4,
+        0,
+      );
+      expect(minimum).toBe(5);
+      const glue = LayoutService['createNotePostBreakGlue'](
+        standardGlue,
+        5,
+        minimum,
+      );
+      expect(glue.shrink).toBe(0);
+
+      tail.x = 140;
+      const projection = LayoutService['getLyricProjections'](
+        next,
+        next.alignLeft,
+      ).leftProjection;
+      next.x = 150 + glue.width - glue.shrink + projection;
+      const setup = new PageSetup();
+      setup.leftMargin = 0;
+      setup.lyricsMinimumSpacing = 4;
+      const line = getLine(start, tail, next);
+      const texts = LayoutService['layoutGreekMelismaTextOnLine'](
+        line,
+        setup,
+        new Map(),
+        new Map([[tail, { text: vowel, width: 12 }]]),
+        resolvePageMargins(setup, 1),
+      );
+      expect(texts.get(tail)).toBe(vowel);
+      expect(start.lyricsHorizontalOffset).toBe(0);
+      expect(next.x + LayoutService['getLyricTextLeft'](next) - end!).toBe(4);
+    },
+  );
+
+  it('does not reserve space for a vowel covered by preceding text', () => {
+    const tail = new NoteElement();
+    tail.neumeWidth = 10;
+    const end = LayoutService['getGreekMelismaTextEnd'](
+      tail,
+      12,
+      140,
+      Infinity,
+      4,
+      140,
+    );
+    expect(end).toBeNull();
+    const next = new NoteElement();
+    next.lyricsWidth = 20;
+    expect(
+      LayoutService['getGreekMelismaBoundaryMinimumWidth'](
+        end,
+        next,
+        150,
+        4,
+        0,
+      ),
+    ).toBeNull();
+  });
+
+  it('does not reserve space between pure continuations or at score end', () => {
+    const next = new NoteElement();
+    next.isMelisma = true;
+    expect(
+      LayoutService['getGreekMelismaBoundaryMinimumWidth'](
+        151,
+        next,
+        150,
+        4,
+        0,
+      ),
+    ).toBeNull();
+    expect(
+      LayoutService['getGreekMelismaBoundaryMinimumWidth'](
+        151,
+        null,
+        150,
+        4,
+        0,
+      ),
+    ).toBeNull();
+  });
+
+  it('counts existing fixed spacing toward the required clearance', () => {
+    const next = new NoteElement();
+    next.neumeWidth = 10;
+    next.lyricsWidth = 20;
+    next.alignLeft = true;
+    expect(
+      LayoutService['getGreekMelismaBoundaryMinimumWidth'](
+        151,
+        next,
+        150,
+        4,
+        3,
+      ),
+    ).toBe(2);
+    expect(
+      LayoutService['getGreekMelismaBoundaryMinimumWidth'](
+        151,
+        next,
+        150,
+        4,
+        -3,
+      ),
+    ).toBe(8);
+  });
+
+  it('allows shrink only in excess of the vowel clearance', () => {
+    const glue = LayoutService['createNotePostBreakGlue'](standardGlue, 6, 5);
+    expect(glue.width - glue.shrink).toBe(5);
+    expect(glue.stretch).toBe(2);
+    expect(
+      LayoutService['createNotePostBreakGlue'](standardGlue, 6, null).shrink,
+    ).toBe(2);
+  });
+
+  it('accepts exact fractional clearance despite floating-point rounding', () => {
+    const tail = new NoteElement();
+    tail.x = 144.3;
+    tail.neumeWidth = 10;
+    expect(
+      LayoutService['getGreekMelismaTextEnd'](tail, 10, null, 159.1, 4.8),
+    ).toBeCloseTo(154.3);
   });
 });
 

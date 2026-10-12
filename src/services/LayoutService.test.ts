@@ -1136,32 +1136,125 @@ describe('Greek melisma syllable-boundary spacing', () => {
     },
   );
 
-  it('does not reserve space for a vowel covered by preceding text', () => {
-    const tail = new NoteElement();
-    tail.neumeWidth = 10;
-    const end = LayoutService['getGreekMelismaTextEnd'](
-      tail,
-      12,
-      140,
-      Infinity,
-      4,
-      140,
-    );
-    expect(end).toBeNull();
-    const next = new NoteElement();
-    next.lyricsWidth = 20;
-    expect(
-      LayoutService['getGreekMelismaBoundaryMinimumWidth'](
-        end,
-        next,
-        150,
+  it('reserves clearance for every generated vowel, including one initially crowded by the starting syllable', () => {
+    const setup = new PageSetup();
+    setup.leftMargin = 0;
+    setup.rightMargin = 0;
+    setup.lyricsMinimumSpacing = 4;
+    const start = new NoteElement();
+    Object.assign(start, {
+      x: 100,
+      neumeWidth: 10,
+      lyrics: 'σου',
+      lyricsWidth: 22,
+      alignLeft: true,
+      isMelisma: true,
+      isMelismaStart: true,
+    });
+    const notes = Array.from({ length: 7 }, () => {
+      const note = new NoteElement();
+      Object.assign(note, {
+        neumeWidth: 10,
+        isMelisma: true,
+        quantitativeNeume: QuantitativeNeume.Apostrophos,
+      });
+      return note;
+    });
+    const following = new NoteElement();
+    Object.assign(following, { neumeWidth: 10, lyrics: 'με', lyricsWidth: 14 });
+    let previous = start;
+    let previousEnd = 122;
+    for (const note of notes) {
+      const bounds = LayoutService['getGreekRepetitionBounds'](
+        note,
+        undefined,
+        12,
+        setup,
+        new Map(),
+      );
+      const minimum = LayoutService['getGreekMelismaBoundaryMinimumWidth'](
+        previousEnd,
+        note,
+        previous.x + previous.neumeWidth,
         4,
         0,
-      ),
-    ).toBeNull();
+        bounds.left,
+      )!;
+      const glue = LayoutService['createNotePostBreakGlue'](
+        standardGlue,
+        Math.max(0, minimum),
+        minimum,
+      );
+      // Even maximum permitted shrink must leave every vowel visible.
+      note.x =
+        previous.x +
+        previous.neumeWidth +
+        glue.width -
+        glue.shrink +
+        Math.max(0, -bounds.left);
+      expect(note.x + bounds.left - previousEnd).toBeCloseTo(4);
+      previousEnd = note.x + bounds.right;
+      previous = note;
+    }
+    const minimum = LayoutService['getGreekMelismaBoundaryMinimumWidth'](
+      previousEnd,
+      following,
+      previous.x + previous.neumeWidth,
+      4,
+      0,
+    )!;
+    following.x =
+      previous.x +
+      previous.neumeWidth +
+      minimum +
+      LayoutService['getLyricProjections'](following, false).leftProjection;
+    const texts = LayoutService['layoutGreekMelismaTextOnLine'](
+      getLine(start, ...notes, following),
+      setup,
+      new Map(),
+      new Map(notes.map((note) => [note, { text: 'ου', width: 12 }])),
+      resolvePageMargins(setup, 1),
+    );
+    expect([...texts.values()]).toEqual(Array(7).fill('ου'));
+    expect(
+      following.x + LayoutService['getLyricTextLeft'](following) - previousEnd,
+    ).toBeCloseTo(4);
+    expect(notes.every((note) => note.lyricsHorizontalOffset === 0)).toBe(true);
   });
 
-  it('does not reserve space between pure continuations or at score end', () => {
+  it('reserves incoming clearance for the single text of an apostrophos-hyporoe pair', () => {
+    const setup = new PageSetup();
+    const apostrophos = new NoteElement();
+    const hyporoe = new NoteElement();
+    Object.assign(apostrophos, {
+      neumeWidth: 10,
+      quantitativeNeume: QuantitativeNeume.Apostrophos,
+    });
+    Object.assign(hyporoe, {
+      neumeWidth: 10,
+      quantitativeNeume: QuantitativeNeume.Hyporoe,
+    });
+    const bounds = LayoutService['getGreekRepetitionBounds'](
+      apostrophos,
+      hyporoe,
+      12,
+      setup,
+      new Map(),
+    );
+    const minimum = LayoutService['getGreekMelismaBoundaryMinimumWidth'](
+      130,
+      apostrophos,
+      120,
+      4,
+      0,
+      bounds.left,
+    )!;
+    const x = 120 + minimum + Math.max(0, -bounds.left);
+    expect(x + bounds.left - 130).toBeCloseTo(4);
+    expect(bounds.right - bounds.left).toBe(12);
+  });
+
+  it('does not reserve vowel clearance without generated geometry or at score end', () => {
     const next = new NoteElement();
     next.isMelisma = true;
     expect(

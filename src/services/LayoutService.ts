@@ -2914,7 +2914,19 @@ export class LayoutService {
   private static shouldAlignLeft(
     noteElement: NoteElement,
     nextNoteElement: NoteElement | null,
+    pageSetup: PageSetup,
+    previousElement: ScoreElement | null,
   ): boolean {
+    // Greek syllables stay centered on their own note. Shared pairs receive
+    // their alignment separately; preserve the existing drop-cap placement.
+    if (
+      !pageSetup.disableGreekMelismata &&
+      !pageSetup.melkiteRtl &&
+      MelismaHelperGreek.isGreek(noteElement.lyrics) &&
+      previousElement?.elementType !== ElementType.DropCap
+    ) {
+      return false;
+    }
     // At an eligible melisma start, align the syllable left when its effective
     // lyric span exceeds the adjusted neume span.
     // NOTE: a syllable ending with a hyphen is only considered a melismatic note
@@ -3138,6 +3150,8 @@ export class LayoutService {
       noteElement.alignLeft = this.shouldAlignLeft(
         noteElement,
         this.getNoteIfPresentAt(elements, i + 1),
+        pageSetup,
+        i === 0 ? null : elements[i - 1],
       );
 
       this.applyPunctuationHorizontalOffset(noteElement, pageSetup);

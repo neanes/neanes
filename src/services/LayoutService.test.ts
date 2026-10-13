@@ -1321,6 +1321,110 @@ describe('Greek melisma syllable-boundary spacing', () => {
   });
 });
 
+describe('Greek melisma starts centered on their own note', () => {
+  function setup(lyrics = 'ρρε') {
+    const start = new NoteElement();
+    Object.assign(start, {
+      lyrics,
+      lyricsWidth: 24,
+      neumeWidth: 10,
+      quantitativeNeume: QuantitativeNeume.Hyporoe,
+      isMelisma: true,
+      isMelismaStart: true,
+    });
+    const continuation = new NoteElement();
+    continuation.isMelisma = true;
+    const pageSetup = new PageSetup();
+    const align = (previous: ScoreElement | null = null) => {
+      start.alignLeft = LayoutService['shouldAlignLeft'](
+        start,
+        continuation,
+        pageSetup,
+        previous,
+      );
+    };
+    return { start, continuation, pageSetup, align };
+  }
+
+  it('centers ρρε on the hyporoe and reserves both lyric projections', () => {
+    const data = setup();
+    data.align();
+    expect(data.start.alignLeft).toBe(false);
+    expect(LayoutService['getLyricTextLeft'](data.start)).toBe(-7);
+    expect(LayoutService['getLyricTextRight'](data.start, false)).toBe(17);
+    expect(LayoutService['getLyricProjections'](data.start, false)).toEqual({
+      leftProjection: 7,
+      rightProjection: 7,
+    });
+  });
+
+  it('centers the syllable without centering its punctuation', () => {
+    const data = setup('ρρε,');
+    data.start.lyricsWidth = 28;
+    data.start.lyricsTrailingPunctuationWidth = 4;
+    data.align();
+    LayoutService['applyPunctuationHorizontalOffset'](
+      data.start,
+      data.pageSetup,
+    );
+    expect(LayoutService['getLyricTextLeft'](data.start)).toBe(-7);
+    expect(LayoutService['getLyricTextRight'](data.start, false)).toBe(21);
+  });
+
+  it('preserves the existing drop-cap syllable alignment', () => {
+    const data = setup();
+    data.align(new DropCapElement());
+    expect(data.start.alignLeft).toBe(true);
+  });
+
+  it.each(['disableGreekMelismata', 'melkiteRtl'] as const)(
+    'preserves existing alignment when %s is enabled',
+    (option) => {
+      const data = setup();
+      data.pageSetup[option] = true;
+      data.align();
+      expect(data.start.alignLeft).toBe(true);
+    },
+  );
+
+  it('preserves the English melisma alignment decision', () => {
+    const data = setup('word');
+    data.align();
+    expect(data.start.alignLeft).toBe(true);
+  });
+
+  it('allows the shared apostrophos-hyporoe rule to override single-note centering', () => {
+    const data = setup('μην');
+    data.start.quantitativeNeume = QuantitativeNeume.Apostrophos;
+    data.continuation.quantitativeNeume = QuantitativeNeume.Hyporoe;
+    data.continuation.neumeWidth = 10;
+    data.align();
+    const pairs = LayoutService['prepareGreekMelismaPairs'](
+      [data.start, data.continuation],
+      data.pageSetup,
+      new Map(),
+    );
+    expect(pairs.get(data.start)).toBe(data.continuation);
+    expect(data.start.alignLeft).toBe(true);
+    const bounds = LayoutService['getGreekMelismaPairTextBounds'](
+      data.start,
+      data.continuation,
+      0,
+      10 +
+        LayoutService['getMelismaContinuationBoundaryWidth'](
+          data.start,
+          data.continuation,
+          data.pageSetup,
+          new Map(),
+        ),
+      24,
+      data.pageSetup,
+      new Map(),
+    );
+    expect(data.start.lyricsHorizontalOffset).toBe(bounds.left);
+  });
+});
+
 describe('Greek melisma placement without general span centering', () => {
   function setup(lyricWidth = 20) {
     const start = new NoteElement();

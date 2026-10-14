@@ -255,6 +255,9 @@ export class LyricService {
     let previousToken = '';
     let previousNote: NoteElement | null = null;
     let melismaSyllables: MelismaSyllables | null = null;
+    const followingElements = new Map(
+      elements.map((element, index) => [element, elements[index + 1]]),
+    );
 
     // Only assign lyrics to notes and drop caps
     const filteredElements = elements.filter(
@@ -352,12 +355,41 @@ export class LyricService {
             nextNote != null
               ? runningElaphronNeumes.includes(nextNote.quantitativeNeume)
               : false;
+          const nextNoteAcceptsLyrics =
+            nextNote == null
+              ? AcceptsLyricsOption.No
+              : this.getEffectiveAcceptsLyrics(nextNote, note);
+          const afterPair = this.findNextNote(filteredElements, i + 1);
+          const sharedGreekPair =
+            !disableGreekMelismata &&
+            !rtl &&
+            MelismaHelperGreek.isGreek(token) &&
+            !token.endsWith('-') &&
+            note.quantitativeNeume === QuantitativeNeume.Apostrophos &&
+            !note.lineBreak &&
+            !note.pageBreak &&
+            followingElements.get(note) === nextNote &&
+            nextNote?.quantitativeNeume === QuantitativeNeume.Hyporoe &&
+            (afterPair == null ||
+              this.getEffectiveAcceptsLyrics(afterPair, nextNote) !==
+                AcceptsLyricsOption.MelismaOnly) &&
+            (nextNoteAcceptsLyrics === AcceptsLyricsOption.MelismaOnly
+              ? tokenizer.peekNextToken() !== '_'
+              : nextNoteAcceptsLyrics === AcceptsLyricsOption.Yes &&
+                token.endsWith('_') &&
+                tokenizer.peekNextToken() === '_' &&
+                tokenizer.peekNextToken(2) !== '_');
 
           // Finally, we check the next note to handle some special cases.
           // (Greek) Calculate melisma syllables.
           // If the lyrics are Greek and the next note is a melisma,
           // then calculate the melismatic syllables.
-          if (
+          if (sharedGreekPair) {
+            // Keep the complete syllable on the shared two-neume span rather
+            // than moving its consonant ending onto the hyporoe.
+            token = token.replace(/_$/, '') + '_';
+            melismaSyllables = null;
+          } else if (
             !disableGreekMelismata &&
             (nextNoteIsMelisma || token.endsWith('_')) &&
             MelismaHelperGreek.isGreek(token)
@@ -710,12 +742,16 @@ export class LyricTokenizer {
 
   /**
    * Peeks ahead at the next token without changing the tokenizer's index.
+   * @param offset One-based token position to inspect.
    * @returns The next token
    */
-  peekNextToken() {
+  peekNextToken(offset = 1) {
     const previousIndex = this.index;
 
-    const token = this.getNextToken();
+    let token = '';
+    for (let i = 0; i < offset; i++) {
+      token = this.getNextToken();
+    }
 
     this.index = previousIndex;
 

@@ -485,6 +485,11 @@ export class LayoutService {
     };
 
     this.precomputeNoteGeometry(elements, pageSetup, noteWidthArgs);
+    const greekMelismaPairs = this.prepareGreekMelismaPairs(
+      elements,
+      pageSetup,
+      measureBarWidthMap,
+    );
 
     const atomicMelismaLayout = this.prepareAtomicMelismaLayout(
       elements,
@@ -556,7 +561,13 @@ export class LayoutService {
 
     // Phase 1: Build paragraphs as sequences of boxes, glue, and penalties
     let phase1GreekMelismaIsActive = false;
+    let phase1GreekMelismaSyllables: MelismaSyllables | null = null;
+    let pendingGreekPairEndPx: number | null = null;
     for (let i = 0; i < elements.length; i++) {
+      if (this.isBreakElement(elements[i])) {
+        phase1GreekMelismaSyllables = null;
+        pendingGreekPairEndPx = null;
+      }
       if (layoutWorkspace.diagnostics != null) {
         layoutWorkspace.diagnostics.currentOwner = elements[i];
       }
@@ -741,8 +752,9 @@ export class LayoutService {
           // it and supplies the boundary elasticity.
           //
           // m_i is the preferred same-line width. For ordinary note-to-note
-          // boundaries, visual, measure-bar, lyric, and melisma minima are all
-          // preferred widths and do not cap the standard shrink budget s^-.
+          // boundaries, visual, measure-bar, lyric, and melisma minima are
+          // preferred widths. Greek vowel clearance
+          // also caps shrink so justification cannot remove that clearance.
           //
           // At a break, both post-break glues become leading glue on the next
           // line and are skipped by positionItems, so m_i, its elasticity, and
@@ -778,11 +790,35 @@ export class LayoutService {
           // overhang and required terminal barline clearance there instead.
           // Ordinary note-to-martyria lyric collision still goes through
           // addLyricReservation.
-          const { leftProjection, rightProjection } =
-            LayoutService.getLyricProjections(
-              noteElement,
-              noteElement.alignLeft,
-            );
+          const greekPairEnd = greekMelismaPairs.get(noteElement);
+          const isGreekPairEnd =
+            greekMelismaPairs.get(elements[i - 1] as NoteElement) ===
+            noteElement;
+          const generatedBounds =
+            noteElement.lyrics.length === 0 &&
+            noteElement.isMelisma &&
+            !isGreekPairEnd &&
+            phase1GreekMelismaSyllables != null
+              ? this.getGreekRepetitionBounds(
+                  noteElement,
+                  greekPairEnd,
+                  this.getTextWidthFromCache(
+                    noteElement,
+                    phase1GreekMelismaSyllables.middle,
+                  ),
+                  pageSetup,
+                  measureBarWidthMap,
+                )
+              : null;
+          const projections = this.getLyricProjections(
+            noteElement,
+            noteElement.alignLeft,
+          );
+          const leftProjection = Math.max(
+            projections.leftProjection,
+            -(generatedBounds?.left ?? 0),
+          );
+          const rightProjection = projections.rightProjection;
 
           // Left projection (protected by infinity penalty)
           if (leftProjection > 0) {
@@ -798,6 +834,36 @@ export class LayoutService {
           const lyricsEnd =
             layoutWorkspace.neumesEndPx +
             this.getLyricTextRight(noteElement, false);
+
+          let greekRepetitionEndPx: number | null = null;
+          if (noteElement.lyrics.length > 0) {
+            const previousElement = elements[i - 1];
+            const text =
+              previousElement?.elementType === ElementType.DropCap
+                ? `${(previousElement as DropCapElement).content}${noteElement.lyrics}`
+                : noteElement.lyrics;
+            phase1GreekMelismaSyllables =
+              !pageSetup.disableGreekMelismata &&
+              noteElement.isMelismaStart &&
+              MelismaHelperGreek.isGreek(noteElement.lyrics)
+                ? MelismaHelperGreek.getMelismaSyllable(text)
+                : null;
+            if (greekPairEnd != null) {
+              pendingGreekPairEndPx = lyricsEnd;
+            }
+          } else if (isGreekPairEnd) {
+            greekRepetitionEndPx = pendingGreekPairEndPx;
+            pendingGreekPairEndPx = null;
+          } else if (generatedBounds != null) {
+            const end = layoutWorkspace.neumesEndPx + generatedBounds.right;
+            if (greekPairEnd != null) {
+              pendingGreekPairEndPx = end;
+            } else {
+              greekRepetitionEndPx = end;
+            }
+          } else {
+            phase1GreekMelismaSyllables = null;
+          }
 
           const neumeEnd =
             layoutWorkspace.neumesEndPx +
@@ -829,6 +895,33 @@ export class LayoutService {
 
           const nextNoteElement = this.getNoteIfPresentAt(elements, i + 1);
           const afterNextNoteElement = this.getNoteIfPresentAt(elements, i + 2);
+          const nextGeneratedBounds =
+            greekPairEnd == null &&
+            nextNoteElement != null &&
+            nextNoteElement.lyrics.length === 0 &&
+            nextNoteElement.isMelisma &&
+            phase1GreekMelismaSyllables != null
+              ? this.getGreekRepetitionBounds(
+                  nextNoteElement,
+                  greekMelismaPairs.get(nextNoteElement),
+                  this.getTextWidthFromCache(
+                    nextNoteElement,
+                    phase1GreekMelismaSyllables.middle,
+                  ),
+                  pageSetup,
+                  measureBarWidthMap,
+                )
+              : null;
+          const greekBoundaryMinimumWidth =
+            this.getGreekMelismaBoundaryMinimumWidth(
+              greekRepetitionEndPx ??
+                (nextGeneratedBounds != null ? lyricsEnd : null),
+              nextNoteElement,
+              layoutWorkspace.neumesEndPx,
+              pageSetup.lyricsMinimumSpacing,
+              noteElement.spaceAfter,
+              nextGeneratedBounds?.left,
+            );
           let nextLeadingLyricHyphenReservation = 0;
           if (nextNoteElement != null) {
             nextNoteElement.leadingLyricHyphenOffset = 0;
@@ -874,32 +967,54 @@ export class LayoutService {
             atomicMelismaLayout.boundaries.get(noteElement);
           const isInsideAtomicMelismaPrefix =
             melismaBoundary?.protected ?? false;
-          const m_i =
-            melismaBoundary?.width ??
-            this.calculateInterNoteSpacing(
-              noteElement,
-              rightProjection,
-              nextElement,
-              nextNoteElement,
-              nextNoteElement != null &&
-                (atomicMelismaLayout.centeringPlans.get(nextNoteElement)
-                  ?.phase1Centered ??
-                  false),
-              atomicMelismaLayout.potentiallyCenteredGroupEndNotes.has(
-                noteElement,
-              ),
-              layoutWorkspace,
-              minimumLyricGap,
-              measureBarWidthMap,
+          const ordinaryBoundaryWidth =
+            greekPairEnd != null
+              ? this.getMelismaContinuationBoundaryWidth(
+                  noteElement,
+                  greekPairEnd,
+                  pageSetup,
+                  measureBarWidthMap,
+                )
+              : (melismaBoundary?.width ??
+                this.calculateInterNoteSpacing(
+                  noteElement,
+                  rightProjection,
+                  nextElement,
+                  nextNoteElement,
+                  nextNoteElement != null &&
+                    (atomicMelismaLayout.centeringPlans.get(nextNoteElement)
+                      ?.phase1Centered ??
+                      false),
+                  atomicMelismaLayout.potentiallyCenteredGroupEndNotes.has(
+                    noteElement,
+                  ),
+                  layoutWorkspace,
+                  minimumLyricGap,
+                  measureBarWidthMap,
+                ));
+          const m_i = Math.max(
+            ordinaryBoundaryWidth,
+            greekBoundaryMinimumWidth ?? -Infinity,
+          );
+          if (greekRepetitionEndPx != null) {
+            // Reserve the vowel's overhang at a line end without adding its
+            // clearance twice to the same-line boundary above.
+            layoutWorkspace.melismaLyricsEndPx = Math.max(
+              layoutWorkspace.melismaLyricsEndPx ?? -Infinity,
+              greekRepetitionEndPx,
             );
+          }
 
           // Combine the graded automatic penalties with the resolved absolute
           // constraint for this boundary, then clamp the total to MAX_COST.
           // An explicit break ends an atomic melisma group, so a prefix
           // boundary never carries one.
-          const breakConstraint = isInsideAtomicMelismaPrefix
-            ? { cost: MAX_COST, label: 'atomic-melisma-prefix' }
-            : this.getBreakConstraint(noteElement, nextElement);
+          const breakConstraint = this.getMelismaBreakConstraint(
+            noteElement,
+            nextElement,
+            isInsideAtomicMelismaPrefix,
+            greekPairEnd != null,
+          );
           const breakCost = Math.min(
             MAX_COST,
             this.getBreakCost(
@@ -935,12 +1050,18 @@ export class LayoutService {
             nextElement?.elementType === ElementType.Martyria;
 
           const postBreakGlue =
-            isInsideAtomicMelismaPrefix || martyriaOwnsBoundaryGlue
+            greekPairEnd != null ||
+            isInsideAtomicMelismaPrefix ||
+            martyriaOwnsBoundaryGlue
               ? this.fixedGlue(m_i - nextLeadingLyricHyphenReservation)
-              : {
-                  ...standardGlue,
-                  width: m_i - nextLeadingLyricHyphenReservation,
-                };
+              : this.createNotePostBreakGlue(
+                  standardGlue,
+                  m_i - nextLeadingLyricHyphenReservation,
+                  greekBoundaryMinimumWidth == null
+                    ? null
+                    : greekBoundaryMinimumWidth -
+                        nextLeadingLyricHyphenReservation,
+                );
 
           // Break opportunity after the neume. The candidate penalty sits
           // immediately after the box, and the post-break glue contributes
@@ -2793,7 +2914,19 @@ export class LayoutService {
   private static shouldAlignLeft(
     noteElement: NoteElement,
     nextNoteElement: NoteElement | null,
+    pageSetup: PageSetup,
+    previousElement: ScoreElement | null,
   ): boolean {
+    // Greek syllables stay centered on their own note. Shared pairs receive
+    // their alignment separately; preserve the existing drop-cap placement.
+    if (
+      !pageSetup.disableGreekMelismata &&
+      !pageSetup.melkiteRtl &&
+      MelismaHelperGreek.isGreek(noteElement.lyrics) &&
+      previousElement?.elementType !== ElementType.DropCap
+    ) {
+      return false;
+    }
     // At an eligible melisma start, align the syllable left when its effective
     // lyric span exceeds the adjusted neume span.
     // NOTE: a syllable ending with a hyphen is only considered a melismatic note
@@ -3017,6 +3150,8 @@ export class LayoutService {
       noteElement.alignLeft = this.shouldAlignLeft(
         noteElement,
         this.getNoteIfPresentAt(elements, i + 1),
+        pageSetup,
+        i === 0 ? null : elements[i - 1],
       );
 
       this.applyPunctuationHorizontalOffset(noteElement, pageSetup);
@@ -5708,9 +5843,11 @@ export class LayoutService {
       runningElaphronLeftOffsets,
       centeringPlans,
     );
-
-    let melismaSyllables: MelismaSyllables | null = null;
-    let melismaLyricsEnd: number | null = null;
+    const greekMelismaTexts = this.layoutGreekMelismaText(
+      pages,
+      pageSetup,
+      measureBarWidthMap,
+    );
     let phase2GreekMelismaIsActive = false;
     let previousLineEndingMayShowLeadingLyricHyphen = false;
     for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
@@ -5718,9 +5855,6 @@ export class LayoutService {
 
       for (let lineIndex = 0; lineIndex < page.lines.length; lineIndex++) {
         const line = page.lines[lineIndex];
-
-        melismaLyricsEnd = null;
-        const followingLyricStarts = this.getFollowingLyricStarts(line);
 
         const firstElementOnNextLine = this.getFirstElementOnNextLine(
           pages,
@@ -5737,7 +5871,6 @@ export class LayoutService {
           const currentElement = line.elements[index];
 
           if (this.isBreakElement(currentElement)) {
-            melismaSyllables = null;
             phase2GreekMelismaIsActive = false;
             previousLineEndingMayShowLeadingLyricHyphen = false;
             lineEndingMayShowLeadingLyricHyphen = false;
@@ -5795,53 +5928,12 @@ export class LayoutService {
             !pageSetup.disableGreekMelismata &&
             MelismaHelperGreek.isGreek(element.lyrics)
           ) {
-            if (element.isMelismaStart) {
-              let text = element.lyrics;
-
-              // If the previous element is a drop cap, we need to
-              // prepend the drop cap content to the melisma text
-              if (index > 0) {
-                const previousElement = line.elements[index - 1];
-                if (previousElement.elementType === ElementType.DropCap) {
-                  text = `${(previousElement as DropCapElement).content}${text}`;
-                }
-              }
-
-              melismaSyllables = MelismaHelperGreek.getMelismaSyllable(text);
-
-              melismaLyricsEnd =
-                element.x + this.getLyricTextRight(element, false);
-            } else {
-              melismaSyllables = null;
-            }
-
             continue;
-          } else if (element.lyrics.length > 0) {
-            melismaSyllables = null;
           }
 
-          if (melismaSyllables != null) {
-            if (element.isMelisma) {
-              element.melismaText = melismaSyllables.middle;
-
-              const textEnd = this.getGreekMelismaTextEnd(
-                element,
-                this.getTextWidthFromCache(element, element.melismaText),
-                melismaLyricsEnd,
-                followingLyricStarts.get(element)!,
-                pageSetup.lyricsMinimumSpacing,
-              );
-
-              if (textEnd == null) {
-                element.melismaText = '';
-              } else {
-                // Only visible repetitions reserve space for later ones.
-                melismaLyricsEnd = textEnd;
-              }
-              continue;
-            } else {
-              melismaSyllables = null;
-            }
+          if (greekMelismaTexts.has(element)) {
+            element.melismaText = greekMelismaTexts.get(element)!;
+            continue;
           }
 
           if (element.isMelismaStart || isIntermediateMelismaAtStartOfLine) {
@@ -8289,26 +8381,104 @@ export class LayoutService {
     return starts;
   }
 
+  private static getGreekRepetitionBounds(
+    note: NoteElement,
+    pairEnd: NoteElement | undefined,
+    textWidth: number,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    if (pairEnd != null) {
+      return this.getGreekMelismaPairTextBounds(
+        note,
+        pairEnd,
+        0,
+        note.neumeWidth +
+          note.spaceAfter +
+          this.getMelismaContinuationBoundaryWidth(
+            note,
+            pairEnd,
+            pageSetup,
+            measureBarWidthMap,
+          ),
+        textWidth,
+        pageSetup,
+        measureBarWidthMap,
+      );
+    }
+    const left =
+      (note.neumeWidth + note.lyricsHorizontalOffset - textWidth) / 2;
+    return { left, right: left + textWidth };
+  }
+
   private static getGreekMelismaTextEnd(
     note: NoteElement,
     textWidth: number,
     previousEnd: number | null,
     nextStart: number,
     minimumSpacing: number,
+    noteX: number = note.x,
   ): number | null {
     // Generated Greek vowels are centered in the continuation's lyric box.
     const start =
-      note.x + (note.neumeWidth + note.lyricsHorizontalOffset - textWidth) / 2;
+      noteX + (note.neumeWidth + note.lyricsHorizontalOffset - textWidth) / 2;
     const end = start + textWidth;
 
     if (
-      (previousEnd != null && start < previousEnd + minimumSpacing) ||
-      end + minimumSpacing > nextStart
+      (previousEnd != null &&
+        start < previousEnd + minimumSpacing - melismaGeometryTolerance) ||
+      end + minimumSpacing > nextStart + melismaGeometryTolerance
     ) {
       return null;
     }
 
     return end;
+  }
+
+  private static getGreekMelismaBoundaryMinimumWidth(
+    repetitionEnd: number | null,
+    nextNote: NoteElement | null,
+    cursor: number,
+    minimumSpacing: number,
+    spaceAfter: number,
+    generatedTextLeft?: number,
+  ) {
+    if (
+      repetitionEnd == null ||
+      nextNote == null ||
+      (nextNote.lyricsWidth === 0 && generatedTextLeft == null)
+    ) {
+      return null;
+    }
+    const { leftProjection } = this.getLyricProjections(
+      nextNote,
+      nextNote.alignLeft,
+    );
+    return (
+      repetitionEnd +
+      minimumSpacing -
+      cursor -
+      spaceAfter -
+      (generatedTextLeft == null
+        ? leftProjection
+        : Math.max(0, -generatedTextLeft)) -
+      (generatedTextLeft ?? this.getLyricTextLeft(nextNote))
+    );
+  }
+
+  private static createNotePostBreakGlue(
+    baseGlue: Glue,
+    width: number,
+    minimumWidth: number | null,
+  ): Glue {
+    return {
+      ...baseGlue,
+      width,
+      shrink:
+        minimumWidth == null
+          ? baseGlue.shrink
+          : Math.min(baseGlue.shrink, Math.max(0, width - minimumWidth)),
+    };
   }
 
   private static isPartOfSameMelisma(element: ScoreElement | null) {
@@ -8548,6 +8718,367 @@ export class LayoutService {
         }
       }
     }
+  }
+
+  private static getMelismaBreakConstraint(
+    note: NoteElement,
+    next: ScoreElement | null,
+    atomicPrefix: boolean,
+    greekPair: boolean,
+  ) {
+    if (greekPair) {
+      return { cost: MAX_COST, label: 'greek-melisma-pair' };
+    }
+    return atomicPrefix
+      ? { cost: MAX_COST, label: 'atomic-melisma-prefix' }
+      : this.getBreakConstraint(note, next);
+  }
+
+  private static prepareGreekMelismaPairs(
+    elements: ScoreElement[],
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const pairs = this.getGreekMelismaPairs(elements, pageSetup);
+    for (let index = 0; index < elements.length; index++) {
+      const element = elements[index];
+      if (element.elementType !== ElementType.Note) {
+        continue;
+      }
+      const start = element as NoteElement;
+      const end = pairs.get(start);
+      if (
+        end != null &&
+        start.lyricsWidth > 0 &&
+        elements[index - 1]?.elementType !== ElementType.DropCap
+      ) {
+        const bounds = this.getGreekMelismaPairTextBounds(
+          start,
+          end,
+          0,
+          start.neumeWidth +
+            start.spaceAfter +
+            this.getMelismaContinuationBoundaryWidth(
+              start,
+              end,
+              pageSetup,
+              measureBarWidthMap,
+            ),
+          start.lyricsWidth,
+          pageSetup,
+          measureBarWidthMap,
+        );
+        // Encode the shared lyric before line breaking, as for an atomic
+        // English melisma. Internal pair spacing stays fixed.
+        start.alignLeft = true;
+        start.lyricsHorizontalOffset = bounds.left;
+      }
+    }
+    return pairs;
+  }
+
+  private static getGreekMelismaPairs(
+    elements: ScoreElement[],
+    pageSetup: PageSetup,
+    greekIsActive = false,
+  ) {
+    const pairs = new Map<NoteElement, NoteElement>();
+    if (pageSetup.disableGreekMelismata || pageSetup.melkiteRtl) {
+      return pairs;
+    }
+    for (let index = 0; index < elements.length; index++) {
+      const element = elements[index];
+      if (this.isBreakElement(element)) {
+        greekIsActive = false;
+      } else if (element.elementType === ElementType.Note) {
+        const note = element as NoteElement;
+        greekIsActive =
+          note.lyrics.length > 0
+            ? note.isMelismaStart && MelismaHelperGreek.isGreek(note.lyrics)
+            : note.isMelisma && greekIsActive;
+        const next = this.getNoteIfPresentAt(elements, index + 1);
+        if (
+          greekIsActive &&
+          note.quantitativeNeume === QuantitativeNeume.Apostrophos &&
+          !note.lineBreak &&
+          !note.pageBreak &&
+          next?.quantitativeNeume === QuantitativeNeume.Hyporoe &&
+          this.isPartOfSameMelisma(next) &&
+          next.lyrics.length === 0
+        ) {
+          pairs.set(note, next);
+        }
+      }
+    }
+    return pairs;
+  }
+
+  private static getGreekMelismaPairTextBounds(
+    start: NoteElement,
+    end: NoteElement,
+    startX: number,
+    endX: number,
+    textWidth: number,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const left =
+      startX +
+      this.getNoteBodyLeft(
+        start,
+        pageSetup,
+        this.getMeasureBarLeftReserve(start, measureBarWidthMap),
+      );
+    const right =
+      endX +
+      end.neumeWidth -
+      this.getFinalElementMeasureBarRightWidth(end, measureBarWidthMap);
+    const textLeft =
+      left +
+      (start.lyricsWidth > 0
+        ? this.getCenteredMelismaLyricTextLeft(start, right - left)
+        : (right - left - textWidth) / 2);
+    return { left: textLeft, right: textLeft + textWidth };
+  }
+
+  private static layoutGreekMelismaText(
+    pages: Page[],
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const texts = new Map<NoteElement, string>();
+    if (pageSetup.disableGreekMelismata) {
+      return texts;
+    }
+
+    let syllables: MelismaSyllables | null = null;
+    for (const page of pages) {
+      const resolvedMargins = resolvePageMargins(
+        pageSetup,
+        page.physicalPageNumber,
+      );
+      for (const line of page.lines) {
+        const repetitions = new Map<
+          NoteElement,
+          { text: string; width: number }
+        >();
+        for (let index = 0; index < line.elements.length; index++) {
+          const element = line.elements[index];
+          if (this.isBreakElement(element)) {
+            syllables = null;
+          } else if (element.elementType === ElementType.Note) {
+            const note = element as NoteElement;
+            if (note.lyrics.length > 0) {
+              let text = note.lyrics;
+              const previous = line.elements[index - 1];
+              if (previous?.elementType === ElementType.DropCap) {
+                text = `${(previous as DropCapElement).content}${text}`;
+              }
+              syllables =
+                note.isMelismaStart && MelismaHelperGreek.isGreek(note.lyrics)
+                  ? MelismaHelperGreek.getMelismaSyllable(text)
+                  : null;
+            } else if (note.isMelisma && syllables != null) {
+              repetitions.set(note, {
+                text: syllables.middle,
+                width: this.getTextWidthFromCache(note, syllables.middle),
+              });
+            } else {
+              syllables = null;
+            }
+          }
+        }
+
+        for (const [note, text] of this.layoutGreekMelismaTextOnLine(
+          line,
+          pageSetup,
+          measureBarWidthMap,
+          repetitions,
+          resolvedMargins,
+        )) {
+          texts.set(note, text);
+        }
+      }
+    }
+    return texts;
+  }
+
+  private static layoutGreekMelismaTextOnLine(
+    line: Line,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    repetitions: ReadonlyMap<NoteElement, { text: string; width: number }>,
+    resolvedMargins: ResolvedPageMargins,
+  ) {
+    const texts = new Map<NoteElement, string>();
+    const groups: Array<{
+      start: NoteElement;
+      end: NoteElement;
+      width: number;
+      left: number;
+      previousEnd: number;
+      canCenter: boolean;
+    }> = [];
+    const gap = pageSetup.lyricsMinimumSpacing;
+    const leftLimit = resolvedMargins.contentLeft + line.indentation;
+    const rightLimit = resolvedMargins.contentRight;
+    const followingStarts = this.getFollowingLyricStarts(line);
+    const firstNote = line.elements.find(
+      (element) => element.elementType === ElementType.Note,
+    ) as NoteElement | undefined;
+    const pairs = this.getGreekMelismaPairs(
+      line.elements,
+      pageSetup,
+      firstNote != null && repetitions.has(firstNote),
+    );
+    let previousEnd: number | null = null;
+
+    // Decide repetition visibility without moving text over omitted vowels.
+    // Only apostrophos-hyporoe pairs share a centered lyric span.
+    for (let index = 0; index < line.elements.length; index++) {
+      const element = line.elements[index];
+      if (element.elementType !== ElementType.Note) {
+        if (this.isBreakElement(element)) {
+          previousEnd = null;
+        }
+        continue;
+      }
+      const note = element as NoteElement;
+      const pairEnd = pairs.get(note);
+      if (note.lyricsWidth > 0) {
+        const group = {
+          start: note,
+          end: pairEnd ?? note,
+          width: note.lyricsWidth,
+          left: note.x + this.getLyricTextLeft(note),
+          previousEnd: previousEnd ?? leftLimit - gap,
+          canCenter:
+            pairEnd != null &&
+            note.isMelismaStart &&
+            MelismaHelperGreek.isGreek(note.lyrics) &&
+            line.elements[index - 1]?.elementType !== ElementType.DropCap,
+        };
+        groups.push(group);
+        previousEnd = Math.max(
+          previousEnd ?? -Infinity,
+          group.left + group.width,
+        );
+        if (pairEnd != null) {
+          texts.set(pairEnd, '');
+          index++;
+        }
+      } else if (repetitions.has(note)) {
+        const repetition = repetitions.get(note)!;
+        if (pairEnd != null) {
+          const bounds = this.getGreekMelismaPairTextBounds(
+            note,
+            pairEnd,
+            note.x,
+            pairEnd.x,
+            repetition.width,
+            pageSetup,
+            measureBarWidthMap,
+          );
+          const visible =
+            bounds.left >=
+              Math.max(
+                leftLimit,
+                previousEnd == null ? -Infinity : previousEnd + gap,
+              ) -
+                melismaGeometryTolerance &&
+            bounds.right + gap <=
+              followingStarts.get(pairEnd)! + melismaGeometryTolerance &&
+            bounds.right <= rightLimit + melismaGeometryTolerance;
+          texts.set(note, visible ? repetition.text : '');
+          texts.set(pairEnd, '');
+          if (visible) {
+            note.lyricsHorizontalOffset =
+              2 * (bounds.left - note.x) - note.neumeWidth + repetition.width;
+            const group = {
+              start: note,
+              end: pairEnd,
+              width: repetition.width,
+              left: bounds.left,
+              previousEnd: previousEnd ?? leftLimit - gap,
+              canCenter: false,
+            };
+            groups.push(group);
+            previousEnd = bounds.right;
+          }
+          index++;
+          continue;
+        }
+        const candidateEnd = this.getGreekMelismaTextEnd(
+          note,
+          repetition.width,
+          previousEnd,
+          followingStarts.get(note)!,
+          gap,
+        );
+        const end =
+          candidateEnd != null &&
+          candidateEnd - repetition.width >=
+            leftLimit - melismaGeometryTolerance &&
+          candidateEnd <= rightLimit + melismaGeometryTolerance
+            ? candidateEnd
+            : null;
+        texts.set(note, end == null ? '' : repetition.text);
+        if (end != null) {
+          const group = {
+            start: note,
+            end: note,
+            width: repetition.width,
+            left: end - repetition.width,
+            previousEnd: previousEnd ?? leftLimit - gap,
+            canCenter: false,
+          };
+          groups.push(group);
+          previousEnd = end;
+        }
+      }
+    }
+
+    // Use final note positions, as for English melismas. Preserve visibility
+    // and the reserved envelope; an unsafe move keeps the original position.
+    let nextStart = rightLimit + gap;
+    for (let index = groups.length - 1; index >= 0; index--) {
+      const current = groups[index];
+      if (
+        !pageSetup.melkiteRtl &&
+        current.canCenter &&
+        current.end !== current.start
+      ) {
+        const bodyLeft =
+          current.start.x +
+          this.getNoteBodyLeft(
+            current.start,
+            pageSetup,
+            this.getMeasureBarLeftReserve(current.start, measureBarWidthMap),
+          );
+        const bodyRight =
+          current.end.x +
+          current.end.neumeWidth -
+          this.getFinalElementMeasureBarRightWidth(
+            current.end,
+            measureBarWidthMap,
+          );
+        const span = bodyRight - bodyLeft;
+        const left =
+          bodyLeft + this.getCenteredMelismaLyricTextLeft(current.start, span);
+        if (
+          span > 0 &&
+          left >= Math.max(leftLimit, current.previousEnd + gap) &&
+          left + current.width <=
+            Math.max(current.left + current.width, bodyRight) &&
+          left + current.width + gap <= nextStart
+        ) {
+          this.applyCenteredMelismaLyric(current.start, left - current.start.x);
+          current.left = left;
+        }
+      }
+      nextStart = Math.min(nextStart, current.left);
+    }
+    return texts;
   }
 
   private static applyCenteredMelismaLyric(

@@ -34,6 +34,8 @@ For a syllable that ends in a consonant, use a hyphen to continue the vowel insi
 
 These forms distinguish the single syllable `των` from the two words `τω ων`, even though their melismata can look alike in the score. In the Lyrics pane, the consonant-ending example is written `των___`; the two-word form is written `τω__ ων`. Neanes converts the compact pane text to the appropriate fragments beneath the neumes.
 
+To center a complete syllable beneath an apostrophos followed by a hyporroe, enter it directly on the apostrophos with a continuation marker, then enter the continuation marker alone on the hyporroe. For example, `μην_` followed by `_` displays `μην` once, centered beneath the pair. An explicit line or page break between the two neumes prevents this grouping. Separately entered fragments such as `μη-` and `ην` remain separate.
+
 To use the non-Greek behavior instead, enable `Disable Greek Melismata` in `File > Page Setup`.
 
 ## Edit lyrics in the Lyrics pane

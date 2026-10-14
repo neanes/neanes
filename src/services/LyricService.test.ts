@@ -1,9 +1,10 @@
 import { readFile } from 'fs/promises';
 import { describe, expect, it } from 'vitest';
 
-import type { DropCapElement, ScoreElement } from '../models/Element';
+import type { ScoreElement } from '../models/Element';
 import {
   AcceptsLyricsOption,
+  DropCapElement,
   ElementType,
   NoteElement,
 } from '../models/Element';
@@ -647,6 +648,127 @@ describe('Save current melismas', () => {
       ]);
     },
   );
+});
+
+describe('Greek shared apostrophos-hyporoe assignment', () => {
+  function setup(acceptsLyrics = AcceptsLyricsOption.Yes) {
+    const service = new LyricService();
+    const start = createNote('μην', true, true);
+    start.quantitativeNeume = QuantitativeNeume.Apostrophos;
+    const end = createNote('', true);
+    end.quantitativeNeume = QuantitativeNeume.Hyporoe;
+    end.acceptsLyrics = acceptsLyrics;
+    const following = createNote('σου');
+    const notes: ScoreElement[] = [start, end, following];
+    const assign = (text: string, disabled = false) =>
+      service.assignLyrics(
+        text,
+        notes,
+        false,
+        disabled,
+        () => {},
+        (note, values) => Object.assign(note, values),
+        () => {},
+      );
+    return { service, start, end, following, notes, assign };
+  }
+
+  it('preserves μην__ through repeated panel round trips and an unrelated edit', () => {
+    const data = setup();
+    expect(data.service.extractLyrics(data.notes, false)).toBe('μην__ σου');
+    for (const text of ['μην__ σου', 'μην__ μου', 'μην__ μου']) {
+      data.assign(text);
+      expect(data.start.lyrics).toBe('μην');
+      expect(data.start.isMelismaStart).toBe(true);
+      expect(data.start.isHyphen).toBe(false);
+      expect(data.end.lyrics).toBe('');
+      expect(data.end.isMelisma).toBe(true);
+      expect(data.end.isMelismaStart).toBe(false);
+      expect(data.service.extractLyrics(data.notes, false)).toBe(text);
+    }
+    data.assign('των__ μου');
+    expect(data.notes.map((note) => (note as NoteElement).lyrics)).toEqual([
+      'των',
+      '',
+      'μου',
+    ]);
+  });
+
+  it('preserves the pair when the hyporoe takes an implicit continuation', () => {
+    const data = setup(AcceptsLyricsOption.Default);
+    const text = data.service.extractLyrics(data.notes, false);
+    expect(text).toBe('μην σου');
+    data.assign(text);
+    expect(data.notes.map((note) => (note as NoteElement).lyrics)).toEqual([
+      'μην',
+      '',
+      'σου',
+    ]);
+    expect(data.end.isMelisma).toBe(true);
+  });
+
+  it.each(['lineBreak', 'pageBreak'] as const)(
+    'does not share across an explicit %s',
+    (property) => {
+      const data = setup();
+      data.start[property] = true;
+      data.assign('μην__ σου');
+      expect(data.notes.map((note) => (note as NoteElement).lyrics)).toEqual([
+        'μη',
+        'ην',
+        'σου',
+      ]);
+    },
+  );
+
+  it('preserves separately entered syllables on the hyporoe', () => {
+    const data = setup();
+    data.assign('μη ην σου');
+    expect(data.notes.map((note) => (note as NoteElement).lyrics)).toEqual([
+      'μη',
+      'ην',
+      'σου',
+    ]);
+    expect(data.end.isMelisma).toBe(false);
+  });
+
+  it('does not use the shared span when the melisma continues beyond the pair', () => {
+    const data = setup();
+    const continuation = createNote('');
+    data.notes.splice(2, 0, continuation);
+    data.assign('μην___ σου');
+    expect(data.notes.map((note) => (note as NoteElement).lyrics)).toEqual([
+      'μη',
+      '',
+      'ην',
+      'σου',
+    ]);
+  });
+
+  it('keeps the existing treatment of a hyphenated consonant ending', () => {
+    const data = setup(AcceptsLyricsOption.Default);
+    data.assign('μη-ην σου');
+    expect(data.start.lyrics).toBe('μη');
+    expect(data.start.isHyphen).toBe(true);
+  });
+
+  it('does not share across an intervening element', () => {
+    const data = setup();
+    const dropCap = new DropCapElement();
+    data.notes.splice(1, 0, dropCap);
+    data.assign('μην__ σου');
+    expect(data.start.lyrics).toBe('μη');
+  });
+
+  it('keeps literal Greek syllables when Greek melismas are disabled', () => {
+    const data = setup();
+    data.assign('μην__ σου', true);
+    expect(data.notes.map((note) => (note as NoteElement).lyrics)).toEqual([
+      'μην',
+      '',
+      'σου',
+    ]);
+  });
 });
 
 function createNote(

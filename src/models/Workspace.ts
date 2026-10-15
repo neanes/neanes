@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import { EntryMode } from '@/models/EntryMode';
+import type { ScoreFileFormat } from '@/services/documents/fileTypes';
 import { CommandService } from '@/services/history/CommandService';
 
 import type {
@@ -61,6 +62,7 @@ export class Workspace {
   public tempFileName: string = '';
   public hasUnsavedChanges: boolean = false;
   public isRecovered: boolean = false;
+  public sourceFormat: ScoreFileFormat | null = null;
   public sourceMtimeMs: number | null = null;
   public sourceSize: number | null = null;
   public commandService: CommandService = new CommandService();

@@ -23,32 +23,75 @@ import type {
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
+import type { Score as SavedScore } from '@/models/save/v1/Score';
 import type { Workspace } from '@/models/Workspace';
+import { unwrapAutomationOutcome } from '@/services/automation/errors';
+import type {
+  OpenScoreFileResult,
+  PdfExportOptions,
+  ReadScoreFileResult,
+  WorkspaceFile,
+  WriteScoreFileArgs,
+} from '@/services/documents/fileTypes';
 import { Unit } from '@/utils/Unit';
 
 import { SaveService } from '../SaveService';
 import type { IIpcService } from './IIpcService';
 
 export class IpcService implements IIpcService {
+  public async automationReadScore(
+    filePath: string,
+    workspaces: WorkspaceFile[],
+  ): Promise<OpenScoreFileResult> {
+    return unwrapAutomationOutcome(
+      await window.ipcRenderer.invoke(
+        IpcRendererChannels.AutomationReadScore,
+        filePath,
+        workspaces,
+      ),
+    );
+  }
+  public async automationWriteScore(
+    args: WriteScoreFileArgs,
+  ): Promise<Omit<ReadScoreFileResult, 'data'>> {
+    return unwrapAutomationOutcome(
+      await window.ipcRenderer.invoke(
+        IpcRendererChannels.AutomationWriteScore,
+        args,
+      ),
+    );
+  }
+  public async automationExportPdf(args: PdfExportOptions): Promise<void> {
+    unwrapAutomationOutcome(
+      await window.ipcRenderer.invoke(
+        IpcRendererChannels.AutomationExportPdf,
+        args,
+      ),
+    );
+  }
+
   public async saveWorkspace(
     workspace: Workspace,
+    data?: SavedScore,
   ): Promise<SaveWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.SaveWorkspace, {
       filePath: workspace.filePath,
+      sourceFormat: workspace.sourceFormat,
       tempFileName: workspace.tempFileName,
-      data: SaveService.SaveScoreToJson(workspace.score),
+      data: data ?? SaveService.SaveScoreToJson(workspace.score),
     } as SaveWorkspaceArgs);
   }
 
   public async saveWorkspaceAs(
     workspace: Workspace,
+    data?: SavedScore,
   ): Promise<SaveWorkspaceAsReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.SaveWorkspaceAs,
       {
         filePath: workspace.filePath,
         tempFileName: workspace.tempFileName,
-        data: SaveService.SaveScoreToJson(workspace.score),
+        data: data ?? SaveService.SaveScoreToJson(workspace.score),
       } as SaveWorkspaceAsArgs,
     );
   }

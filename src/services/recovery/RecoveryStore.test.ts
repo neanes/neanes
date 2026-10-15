@@ -77,6 +77,29 @@ async function readEnvelope(filePath: string) {
 }
 
 describe('RecoveryStore', () => {
+  it('retains source encoding separately from an extensionless path through recovery', async () => {
+    const { recoveryDir, store } = await createTempStore();
+    try {
+      const result = await store.saveRecoverySnapshot({
+        workspaceId: '11111111-1111-4111-8111-111111111111',
+        filePath: path.join(recoveryDir, 'extensionless'),
+        tempFileName: 'draft.byz',
+        hasUnsavedChanges: true,
+        score: '{"version":"1.1"}',
+        sourceFormat: 'byz',
+        sourceMtimeMs: 1,
+        sourceSize: 2,
+      });
+      expect(result.success).toBe(true);
+      const recovered = await store.listRecoveryCandidates();
+      expect(recovered.candidates[0]).toMatchObject({
+        sourceFormat: 'byz',
+        filePath: path.join(recoveryDir, 'extensionless'),
+      });
+    } finally {
+      await fs.rm(recoveryDir, { recursive: true, force: true });
+    }
+  });
   it('writes current snapshots atomically and rolls the old snapshot into .prev', async () => {
     const { recoveryDir, store } = await createTempStore();
     const workspaceId = '11111111-1111-4111-8111-111111111111';

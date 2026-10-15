@@ -32,6 +32,7 @@ import {
   provide,
   reactive,
   ref,
+  shallowRef,
   type StyleValue,
   toRaw,
   useTemplateRef,
@@ -97,6 +98,7 @@ import {
 } from '@/components/ui/context-menu';
 import { Spinner } from '@/components/ui/spinner';
 import WorkspaceDockLayout from '@/components/WorkspaceDockLayout.vue';
+import WorkspaceTextBoxMeasurement from '@/components/WorkspaceTextBoxMeasurement.vue';
 import { useEditorServices } from '@/composables/useEditorServices';
 import { useNeumeCombinations } from '@/composables/useNeumeCombinations';
 import { useResizeObserver } from '@/composables/useResizeObserver';
@@ -224,6 +226,18 @@ import type {
   PlaybackOptions,
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
+import { automationError } from '@/services/automation/errors';
+import { McpDocumentAdapter } from '@/services/automation/McpDocumentAdapter';
+import type {
+  AutomationMessage,
+  AutomationReply,
+} from '@/services/automation/protocol';
+import { parseAutomationRequest } from '@/services/automation/protocol';
+import { DocumentService } from '@/services/documents/DocumentService';
+import {
+  getResizableTextBoxes,
+  type TextBoxHeightMeasurement,
+} from '@/services/documents/textBoxMeasurement';
 import { fontCatalog } from '@/services/FontCatalog';
 import type { Command } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
@@ -269,10 +283,6 @@ import {
   isDisplayedPageNumberOdd,
   isRightHandPage,
 } from '@/utils/PageNumbering';
-import {
-  type ParagraphStyleReferenceResolvers,
-  planParagraphStyleReferenceRemap,
-} from '@/utils/paragraphStyleReferences';
 import type { TokenMetadata } from '@/utils/replaceTokens';
 import {
   hasMeaningfulRichTextHtmlContent,
@@ -287,6 +297,7 @@ import {
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
+import { Unit } from '@/utils/Unit';
 import { withZoom, withZoomOffset } from '@/utils/withZoom';
 
 interface Vue3TabsChromeComponent {
@@ -332,9 +343,6 @@ const scoreElementCommandFactory: CommandFactory<ScoreElement> =
 
 const pageSetupCommandFactory: CommandFactory<PageSetup> =
   new CommandFactory<PageSetup>();
-
-const documentPropertiesCommandFactory: CommandFactory<DocumentProperties> =
-  new CommandFactory<DocumentProperties>();
 
 function createFontLoadDescriptor(
   fontFamily: string,
@@ -492,6 +500,7 @@ const isBrowser = ref(!isElectron());
 const isLoading = ref(true);
 // Whether an export or print job is rendering the pages.
 const printMode = ref(false);
+const automationExporting = ref(false);
 const canUndo = ref(false);
 const canRedo = ref(false);
 const developerPaneOpenSections = computed({
@@ -505,6 +514,7 @@ const propertiesPaneOpenSections = computed({
 const workspaces = ref<Workspace[]>([]);
 const selectedWorkspaceValue = ref(new Workspace());
 const pendingLyricsAssignmentTimers = new Map<string, number>();
+const closingWorkspaceIds = new Set<string>();
 const recoverySnapshotTimers = new Map<string, number>();
 const recoveryCandidates = ref<RecoveryCandidateArgs[]>([]);
 const recoveryDialogIsOpen = ref(false);
@@ -559,6 +569,15 @@ const richTextBoxCalculation = ref(false);
 const richTextBoxCalculationCount = ref(0);
 const textBoxCalculation = ref(false);
 const textBoxCalculationCount = ref(0);
+const dirtyTextBoxWorkspaces = new Set<string>();
+const pendingTextBoxMeasurements = new Map<string, Promise<void>>();
+let textBoxMeasurementQueue = Promise.resolve();
+let editorUnmounted = false;
+const workspaceTextBoxMeasurement = shallowRef<{
+  workspace: Workspace;
+  resolve(): void;
+  reject(error: Error): void;
+} | null>(null);
 const fonts = ref<string[]>([]);
 const toolbarInnerNeume = ref<NeumeSelection>(NeumeSelection.Primary);
 const toolbarMartyriaLayoutRevision = ref(0);
@@ -706,9 +725,11 @@ const selectedWorkspaceId = computed({
     return selectedWorkspace.value.id;
   },
   set: (value: string) => {
-    selectedWorkspace.value =
-      (workspaces.value.find((x) => x.id === value) as Workspace) ??
-      new Workspace();
+    const workspace = workspaces.value.find((x) => x.id === value);
+    // The tab strip can emit an absent ID while removing its last tab.
+    if (workspace != null) {
+      selectedWorkspace.value = workspace as Workspace;
+    }
   },
 });
 
@@ -1817,6 +1838,7 @@ onMounted(() => {
     scheduleWorkspaceTabLayout();
   }
 
+  EventBus.$on(IpcMainChannels.AutomationRequest, onAutomationRequest);
   EventBus.$on(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$on(IpcMainChannels.CloseApplication, onCloseApplication);
   EventBus.$on(IpcRendererChannels.SetCanUndo, onSetCanUndo);
@@ -1920,6 +1942,12 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  editorUnmounted = true;
+  if (workspaceTextBoxMeasurement.value != null) {
+    failWorkspaceTextBoxMeasurement(new Error('TEXT_BOX_MEASUREMENT_FAILED'));
+  }
+  pendingTextBoxMeasurements.clear();
+  dirtyTextBoxWorkspaces.clear();
   // Remove the debugging variable from window
   (window as any)._editor = undefined;
 
@@ -1937,6 +1965,7 @@ onBeforeUnmount(() => {
   clearZoomWheelDeltaReset();
   saveEditorEnvironment();
 
+  EventBus.$off(IpcMainChannels.AutomationRequest, onAutomationRequest);
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
   EventBus.$off(IpcRendererChannels.SetCanUndo, onSetCanUndo);
@@ -2070,11 +2099,156 @@ async function initialize() {
     ]);
 
     await load();
+    if (!isBrowser.value) {
+      EventBus.$emit(IpcRendererChannels.AutomationReady);
+    }
   } catch (error) {
     console.error(error);
   } finally {
     isLoading.value = false;
   }
+}
+
+const documents = new DocumentService({
+  workspaces: () => workspaces.value as Workspace[],
+  selectedWorkspace: () => selectedWorkspace.value,
+  createScore: createDefaultScore,
+  addWorkspace(workspace) {
+    workspace.tempFileName = getTempFilename();
+    addWorkspace(workspace);
+  },
+  selectWorkspace(workspace) {
+    selectedWorkspace.value = workspace;
+  },
+  prepare: prepareWorkspaceForSerialization,
+  async settle(workspace) {
+    await settleWorkspaceTextBoxes(workspace);
+    await nextTick();
+    await document.fonts.ready;
+    if (workspace.id === selectedWorkspace.value.id) {
+      save(false);
+      await nextTick();
+    }
+  },
+  changeStyles(workspace, operation) {
+    const previousStyles = getResizableParagraphStyleSnapshot(workspace.score);
+    operation();
+    if (
+      resizableParagraphStylesChanged(
+        previousStyles,
+        getResizableParagraphStyleSnapshot(workspace.score),
+      )
+    ) {
+      queueWorkspaceTextBoxMeasurement(workspace);
+    }
+  },
+  changed(workspace) {
+    if (workspace.id === selectedWorkspace.value.id) {
+      save(false);
+    } else {
+      scheduleRecoverySnapshot(workspace);
+      selectedWorkspace.value.commandService.notify();
+    }
+  },
+  fonts: () => [
+    ...fontCatalog.bundledFamilies(),
+    ...fontCatalog.systemFamilies(),
+  ],
+  async saved(workspace) {
+    await discardRecoverySnapshot(workspace.id);
+  },
+  close: (workspace) => finishClosingWorkspace(workspace, true),
+});
+const documentTools = new McpDocumentAdapter(
+  documents,
+  ipcService,
+  exportAutomationPdf,
+);
+
+async function onAutomationRequest(message: AutomationMessage) {
+  let reply: AutomationReply;
+  try {
+    if (
+      isLoading.value ||
+      closingWorkspaceIds.size > 0 ||
+      dialogOpen.value ||
+      recoveryDialogIsOpen.value ||
+      printMode.value
+    ) {
+      throw new Error('EDITOR_BUSY');
+    }
+    const request = parseAutomationRequest(message.request);
+    reply = {
+      requestId: message.requestId,
+      success: true,
+      result: await documentTools.execute(request),
+    };
+  } catch (error) {
+    reply = {
+      requestId: message.requestId,
+      success: false,
+      error: automationError(error),
+    };
+  }
+  EventBus.$emit(IpcRendererChannels.AutomationReply, reply);
+}
+
+async function renderWorkspacePdf<T>(
+  workspace: Workspace,
+  render: (workspace: Workspace) => Promise<T>,
+  lockInput = false,
+) {
+  const previousWorkspace = selectedWorkspace.value;
+  const previousTitle = window.document.title;
+  const activeElement = blurActiveElement();
+  if (lockInput) {
+    automationExporting.value = true;
+    keyboardModifier.value = null;
+  }
+  try {
+    if (workspace.id !== selectedWorkspace.value.id) {
+      selectedWorkspace.value = workspace;
+    }
+    save(false);
+    printMode.value = true;
+    await nextTick();
+    await document.fonts.ready;
+    save(false);
+    await nextTick();
+    window.document.title = getFileName(workspace, false);
+    return await render(workspace);
+  } finally {
+    printMode.value = false;
+    if (workspace.id !== previousWorkspace.id) {
+      selectedWorkspace.value = previousWorkspace;
+    }
+    automationExporting.value = false;
+    await nextTick();
+    window.document.title = previousTitle;
+    focusElement(activeElement);
+  }
+}
+
+async function exportAutomationPdf(
+  workspace: Workspace,
+  filePath: string,
+  overwrite: boolean,
+) {
+  return renderWorkspacePdf(
+    workspace,
+    async (workspace) => {
+      const setup = workspace.score.pageSetup;
+      await ipcService.automationExportPdf({
+        filePath,
+        overwrite,
+        pageSize: setup.pageSize,
+        pageWidthInches: Unit.toInch(setup.pageWidth),
+        pageHeightInches: Unit.toInch(setup.pageHeight),
+        landscape: setup.landscape,
+      });
+    },
+    true,
+  );
 }
 
 void initialize();
@@ -4295,6 +4469,11 @@ function onPageBackgroundWheel(event: WheelEvent) {
 }
 
 function onKeydown(event: KeyboardEvent) {
+  if (automationExporting.value) {
+    event.preventDefault();
+    return;
+  }
+
   if (event.defaultPrevented) {
     return;
   }
@@ -5979,12 +6158,7 @@ async function load() {
     return;
   }
 
-  const workspace = new Workspace();
-  workspace.tempFileName = getTempFilename();
-  workspace.score = createDefaultScore();
-
-  addWorkspace(workspace);
-  selectedWorkspace.value = workspace;
+  documents.create();
 
   selectedElement.value =
     score.value.staff.elements[score.value.staff.elements.length - 1];
@@ -6016,6 +6190,7 @@ function getRecoverySnapshotArgs(workspace: Workspace): RecoverySnapshotArgs {
     hasUnsavedChanges: workspace.hasUnsavedChanges,
     preserveCurrentSnapshot: workspace.isRecovered,
     score: JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+    sourceFormat: workspace.sourceFormat,
     sourceMtimeMs: workspace.sourceMtimeMs,
     sourceSize: workspace.sourceSize,
   };
@@ -6047,6 +6222,12 @@ function clearRecoverySnapshotTimer(workspaceId: string) {
 }
 
 async function persistRecoverySnapshot(workspace: Workspace) {
+  try {
+    await settleWorkspaceTextBoxes(workspace);
+  } catch (error) {
+    console.error(error);
+    return;
+  }
   if (isBrowser.value) {
     return;
   }
@@ -6067,7 +6248,7 @@ async function persistRecoverySnapshot(workspace: Workspace) {
 
 async function discardRecoverySnapshot(workspaceId: string) {
   if (isBrowser.value) {
-    return;
+    return true;
   }
 
   clearRecoverySnapshotTimer(workspaceId);
@@ -6079,130 +6260,142 @@ async function discardRecoverySnapshot(workspaceId: string) {
       result.errorMessage ?? 'Unable to discard recovery snapshot.',
     );
   }
+  return result.success;
 }
 
 async function saveWorkspace(workspace: Workspace) {
-  prepareWorkspaceForSerialization(workspace);
-  const result = await ipcService.saveWorkspace(workspace);
-
-  if (result.success) {
-    workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
-    workspace.sourceSize = result.sourceSize ?? null;
-  }
-
-  return result;
+  return documents.save(workspace, (data) =>
+    ipcService.saveWorkspace(workspace, data),
+  );
 }
 
 async function saveWorkspaceAs(workspace: Workspace) {
-  prepareWorkspaceForSerialization(workspace);
-  const result = await ipcService.saveWorkspaceAs(workspace);
-
-  if (result.success) {
-    workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
-    workspace.sourceSize = result.sourceSize ?? null;
-  }
-
-  return result;
+  return documents.save(workspace, (data) =>
+    ipcService.saveWorkspaceAs(workspace, data),
+  );
 }
 
 async function closeWorkspace(workspace: Workspace) {
-  let shouldClose = true;
-  let shouldDiscardRecoverySnapshot = false;
-
-  flushPendingRichTextEditors(workspace);
-
-  if (workspace.hasUnsavedChanges) {
-    prepareWorkspaceForSerialization(workspace);
-    await persistRecoverySnapshot(workspace);
+  if (closingWorkspaceIds.has(workspace.id)) {
+    return false;
   }
+  closingWorkspaceIds.add(workspace.id);
+  try {
+    let shouldClose = true;
+    let shouldDiscardRecoverySnapshot = false;
 
-  if (workspace.hasUnsavedChanges) {
-    const fileName =
-      workspace.filePath != null
-        ? getFileNameFromPath(workspace.filePath)
-        : workspace.tempFileName;
+    flushPendingRichTextEditors(workspace);
 
-    let dialogResult: ShowMessageBoxReplyArgs;
-
-    if (ipcService.isShowMessageBoxSupported()) {
-      dialogResult = await ipcService.showMessageBox({
-        title: import.meta.env.VITE_TITLE,
-        message: `Do you want to save the changes you made to ${fileName}?`,
-        detail: "Your changes will be lost if you don't save them.",
-        type: 'warning',
-        buttons: ['Save', "Don't Save", 'Cancel'],
-      });
-    } else {
-      dialogResult = {
-        response: confirm(
-          `${fileName} has unsaved changes. Are you sure you want to close it?`,
-        )
-          ? 1
-          : 2,
-        checkboxChecked: false,
-      };
+    if (workspace.hasUnsavedChanges) {
+      prepareWorkspaceForSerialization(workspace);
+      await persistRecoverySnapshot(workspace);
     }
 
-    if (dialogResult.response === 0) {
-      // User chose "Save"
-      try {
-        const saveResult =
-          workspace.filePath != null
-            ? await saveWorkspace(workspace)
-            : await saveWorkspaceAs(workspace);
+    if (workspace.hasUnsavedChanges) {
+      const fileName =
+        workspace.filePath != null
+          ? getFileNameFromPath(workspace.filePath)
+          : workspace.tempFileName;
 
-        // If they successfully saved, then we can close the workspace
-        shouldClose = saveResult.success;
-        shouldDiscardRecoverySnapshot = saveResult.success;
+      let dialogResult: ShowMessageBoxReplyArgs;
 
-        if (!saveResult.success && !saveResult.canceled) {
-          showReplyErrorToast(
+      if (ipcService.isShowMessageBoxSupported()) {
+        dialogResult = await ipcService.showMessageBox({
+          title: import.meta.env.VITE_TITLE,
+          message: `Do you want to save the changes you made to ${fileName}?`,
+          detail: "Your changes will be lost if you don't save them.",
+          type: 'warning',
+          buttons: ['Save', "Don't Save", 'Cancel'],
+        });
+      } else {
+        dialogResult = {
+          response: confirm(
+            `${fileName} has unsaved changes. Are you sure you want to close it?`,
+          )
+            ? 1
+            : 2,
+          checkboxChecked: false,
+        };
+      }
+
+      if (dialogResult.response === 0) {
+        // User chose "Save"
+        try {
+          const saveResult =
+            workspace.filePath != null
+              ? await saveWorkspace(workspace)
+              : await saveWorkspaceAs(workspace);
+
+          // If they successfully saved, then we can close the workspace
+          shouldClose = saveResult.success && !workspace.hasUnsavedChanges;
+          shouldDiscardRecoverySnapshot = shouldClose;
+
+          if (!saveResult.success && !saveResult.canceled) {
+            showReplyErrorToast(
+              t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
+              saveResult,
+              t(($) => $.toast.editor.saveFailedDescription, { ns: 'toast' }),
+            );
+          }
+        } catch (error) {
+          console.error(error);
+          shouldClose = false;
+          showErrorToast(
             t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
-            saveResult,
-            t(($) => $.toast.editor.saveFailedDescription, { ns: 'toast' }),
+            error,
+            {
+              fallback: t(($) => $.toast.editor.saveFailedDescription, {
+                ns: 'toast',
+              }),
+            },
           );
         }
-      } catch (error) {
-        console.error(error);
+      } else if (dialogResult.response === 1) {
+        // User chose "Don't Save", so discard any recovery snapshot.
+        shouldDiscardRecoverySnapshot = true;
+      } else if (dialogResult.response === 2) {
+        // User chose "Cancel", so don't close the workspace.
         shouldClose = false;
-        showErrorToast(
-          t(($) => $.toast.editor.saveFailed, { ns: 'toast' }),
-          error,
-          {
-            fallback: t(($) => $.toast.editor.saveFailedDescription, {
-              ns: 'toast',
-            }),
-          },
-        );
       }
-    } else if (dialogResult.response === 1) {
-      // User chose "Don't Save", so discard any recovery snapshot.
-      shouldDiscardRecoverySnapshot = true;
-    } else if (dialogResult.response === 2) {
-      // User chose "Cancel", so don't close the workspace.
-      shouldClose = false;
     }
+
+    if (shouldClose) {
+      await finishClosingWorkspace(
+        workspace,
+        shouldDiscardRecoverySnapshot || !workspace.isRecovered,
+        true,
+      );
+    }
+
+    return shouldClose;
+  } finally {
+    closingWorkspaceIds.delete(workspace.id);
   }
+}
 
-  if (shouldClose) {
-    if (shouldDiscardRecoverySnapshot || !workspace.isRecovered) {
-      await discardRecoverySnapshot(workspace.id);
-    }
-
-    // If using the browser, remove the item from local storage
-    if (isBrowser.value) {
-      localStorage.removeItem(`workspace-${workspace.id}`);
-    }
-
-    // If the last tab has closed, then exit
-    if (workspaces.value.length == 1) {
-      await ipcService.exitApplication();
-    }
-
+// Shared close completion. Interactive closing retains its exit-on-last-tab policy;
+// automation removes immediately, before asynchronous recovery cleanup can accept edits.
+async function finishClosingWorkspace(
+  workspace: Workspace,
+  discardRecovery: boolean,
+  exitOnLastTab = false,
+) {
+  const lastWorkspace = workspaces.value.length === 1;
+  if (!exitOnLastTab) {
     removeWorkspace(workspace);
   }
-
-  return shouldClose;
+  const cleanupSucceeded =
+    !discardRecovery || (await discardRecoverySnapshot(workspace.id));
+  if (isBrowser.value) {
+    localStorage.removeItem(`workspace-${workspace.id}`);
+  }
+  if (exitOnLastTab) {
+    if (lastWorkspace) {
+      await ipcService.exitApplication();
+    }
+    removeWorkspace(workspace);
+  }
+  return cleanupSucceeded;
 }
 
 async function onCloseWorkspaces(args: CloseWorkspacesArgs) {
@@ -7548,11 +7741,13 @@ const resolvedDefaultLyricsStyle = computed(() =>
   ),
 );
 
-// Global stylesheet for the rich text paragraph classes. Rendered once here
-// rather than per editor instance; the CSS depends only on score-level state
-// and applies to every .ck-content in the document, including print.
+// Scope selected-workspace styles to its visible and recalculation containers,
+// including print, so they cannot reach background workspace measurements.
 const richTextParagraphStyleCss = computed(() =>
-  buildRichTextParagraphStyleCss(score.value.paragraphStyles, '.ck-content'),
+  buildRichTextParagraphStyleCss(
+    score.value.paragraphStyles,
+    '.foreground-workspace .ck-content',
+  ),
 );
 
 function getResolvedLyricsStyle(element: NoteElement) {
@@ -7623,6 +7818,89 @@ function runWithResizableParagraphStyleRecalc(operation: () => void) {
   }
 }
 
+function queueWorkspaceTextBoxMeasurement(workspace: Workspace) {
+  dirtyTextBoxWorkspaces.add(workspace.id);
+  const pending = textBoxMeasurementQueue.then(async () => {
+    if (
+      editorUnmounted ||
+      !workspaces.value.some((item) => item.id === workspace.id)
+    ) {
+      return;
+    }
+    await document.fonts.ready;
+    // Compute target widths and inherited legacy text styles before mounting measurements.
+    LayoutService.processPages(toRaw(workspace));
+    if (getResizableTextBoxes(workspace.score).length > 0) {
+      await new Promise<void>((resolve, reject) => {
+        workspaceTextBoxMeasurement.value = { workspace, resolve, reject };
+      });
+      await nextTick();
+      LayoutService.processPages(toRaw(workspace));
+    }
+    if (workspace.id === selectedWorkspace.value.id) {
+      save(false);
+    } else {
+      scheduleRecoverySnapshot(workspace);
+    }
+  });
+  pendingTextBoxMeasurements.set(workspace.id, pending);
+  textBoxMeasurementQueue = pending
+    .catch(() => undefined)
+    .then(() => nextTick());
+  void pending.then(
+    () => {
+      if (pendingTextBoxMeasurements.get(workspace.id) === pending) {
+        pendingTextBoxMeasurements.delete(workspace.id);
+        dirtyTextBoxWorkspaces.delete(workspace.id);
+      }
+    },
+    () => {
+      // Keep the workspace dirty so the next save retries instead of persisting stale heights.
+      if (pendingTextBoxMeasurements.get(workspace.id) === pending) {
+        pendingTextBoxMeasurements.delete(workspace.id);
+      }
+    },
+  );
+  return pending;
+}
+
+async function settleWorkspaceTextBoxes(workspace: Workspace) {
+  if (
+    dirtyTextBoxWorkspaces.has(workspace.id) &&
+    !pendingTextBoxMeasurements.has(workspace.id)
+  ) {
+    queueWorkspaceTextBoxMeasurement(workspace);
+  }
+  let pending;
+  while ((pending = pendingTextBoxMeasurements.get(workspace.id)) != null) {
+    await pending;
+  }
+}
+
+function completeWorkspaceTextBoxMeasurement(
+  heights: TextBoxHeightMeasurement[],
+) {
+  const request = workspaceTextBoxMeasurement.value;
+  // A removed workspace can cancel the request before its component unmounts.
+  if (request == null) {
+    return;
+  }
+  for (const { element, height } of heights) {
+    element.height = height;
+  }
+  workspaceTextBoxMeasurement.value = null;
+  request.resolve();
+}
+
+function failWorkspaceTextBoxMeasurement(error: Error) {
+  const request = workspaceTextBoxMeasurement.value;
+  if (request == null) {
+    return;
+  }
+  workspaceTextBoxMeasurement.value = null;
+  request.reject(error);
+}
+
 function updatePageSetup(pageSetup: PageSetup) {
   const currentPageSetup = score.value.pageSetup;
 
@@ -7685,103 +7963,14 @@ function updatePageSetup(pageSetup: PageSetup) {
 }
 
 function updateDocumentProperties(documentProperties: DocumentProperties) {
-  commandService.value.execute(
-    documentPropertiesCommandFactory.create('update-properties', {
-      target: score.value.documentProperties,
-      newValues: documentProperties,
-    }),
+  documents.replaceDocumentProperties(
+    selectedWorkspace.value,
+    documentProperties,
   );
-
-  save();
-}
-
-function getDeletedStyleFallbacks(
-  previousStylesById: Map<string, ParagraphStyle>,
-  nextStyleIds: Set<string>,
-) {
-  const deletedStyleFallbacks = new Map<string, string | null>();
-
-  for (const [styleId, style] of previousStylesById.entries()) {
-    if (nextStyleIds.has(styleId)) {
-      continue;
-    }
-
-    const visited = new Set<string>();
-    let parentStyleId = style.parentStyleId;
-
-    while (parentStyleId != null && !visited.has(parentStyleId)) {
-      if (nextStyleIds.has(parentStyleId)) {
-        deletedStyleFallbacks.set(styleId, parentStyleId);
-        break;
-      }
-
-      visited.add(parentStyleId);
-      parentStyleId =
-        previousStylesById.get(parentStyleId)?.parentStyleId ?? null;
-    }
-
-    if (!deletedStyleFallbacks.has(styleId)) {
-      deletedStyleFallbacks.set(styleId, null);
-    }
-  }
-
-  return deletedStyleFallbacks;
 }
 
 function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
-  flushPendingRichTextEditors(selectedWorkspace.value);
-
-  const previousStylesById = new Map(
-    score.value.paragraphStyles.map((style) => [style.id, style]),
-  );
-  const clonedStyles = paragraphStyles.map((style) => style.clone());
-  const nextStyleIds = new Set(clonedStyles.map((style) => style.id));
-  const deletedStyleFallbacks = getDeletedStyleFallbacks(
-    previousStylesById,
-    nextStyleIds,
-  );
-  // References to a deleted style move to its nearest surviving ancestor,
-  // then to the surface default. Rich text classes whose ids this deletion
-  // did not remove are left untouched.
-  const remapResolvers: ParagraphStyleReferenceResolvers = {
-    resolveStyleId: (styleId, fallbackStyleId) =>
-      nextStyleIds.has(styleId)
-        ? null
-        : (deletedStyleFallbacks.get(styleId) ?? fallbackStyleId),
-    resolveRichTextStyleId: (styleId, fallbackStyleId) =>
-      deletedStyleFallbacks.has(styleId)
-        ? (deletedStyleFallbacks.get(styleId) ?? fallbackStyleId)
-        : null,
-  };
-  const commands: Command[] = [
-    scoreCommandFactory.create('update-properties', {
-      target: score.value,
-      newValues: { paragraphStyles: clonedStyles },
-    }),
-  ];
-
-  for (const element of [
-    ...score.value.staff.elements,
-    ...score.value.headersAndFooters,
-  ]) {
-    for (const remap of planParagraphStyleReferenceRemap(
-      element,
-      remapResolvers,
-    )) {
-      commands.push(
-        scoreElementCommandFactory.create('update-properties', {
-          target: remap.target,
-          newValues: remap.newValues,
-        }),
-      );
-    }
-  }
-
-  runWithResizableParagraphStyleRecalc(() =>
-    commandService.value.executeAsBatch(commands),
-  );
-
-  save();
+  documents.replaceParagraphStyles(selectedWorkspace.value, paragraphStyles);
 }
 
 function updatePageSetupUseOptionalDiatonicFthoras(
@@ -8487,17 +8676,9 @@ function recalculateTextBoxHeights() {
 }
 
 function onFileMenuNewScore() {
-  const workspace = new Workspace();
-  workspace.tempFileName = getTempFilename();
-  workspace.score = createDefaultScore();
-
-  addWorkspace(workspace);
-
-  selectedWorkspace.value = workspace;
-
+  documents.create();
   selectedElement.value =
     score.value.staff.elements[score.value.staff.elements.length - 1];
-  save(false);
 }
 
 async function onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
@@ -8576,23 +8757,13 @@ async function onFileMenuPrint() {
 }
 
 async function onFileMenuExportAsPdf() {
-  prepareWorkspaceForSerialization(selectedWorkspace.value);
-
-  printMode.value = true;
-
-  // Blur the active element so that focus outlines and
-  // blinking cursors don't show up in the printed page
-  const activeElement = blurActiveElement();
-
-  const previousTitle = window.document.title;
-  window.document.title = getFileName(selectedWorkspace.value, false);
-
+  const workspace = selectedWorkspace.value;
   try {
-    await nextTick();
-    const reply = await ipcService.exportWorkspaceAsPdf(
-      selectedWorkspace.value,
+    const reply = await documents.exportPdf(workspace, (workspace) =>
+      renderWorkspacePdf(workspace, (workspace) =>
+        ipcService.exportWorkspaceAsPdf(workspace),
+      ),
     );
-
     showExportReplyToast(
       reply,
       t(($) => $.toast.export.pdfSuccess, { ns: 'toast' }),
@@ -8610,12 +8781,6 @@ async function onFileMenuExportAsPdf() {
         }),
       },
     );
-  } finally {
-    printMode.value = false;
-    window.document.title = previousTitle;
-
-    // Re-focus the active element
-    focusElement(activeElement);
   }
 }
 
@@ -9083,9 +9248,6 @@ async function onFileMenuSave() {
     if (workspace.filePath != null) {
       const result = await saveWorkspace(workspace);
       if (result.success) {
-        workspace.hasUnsavedChanges = false;
-        workspace.isRecovered = false;
-        await discardRecoverySnapshot(workspace.id);
         toast.success(
           t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
           {
@@ -9102,10 +9264,6 @@ async function onFileMenuSave() {
     } else {
       const result = await saveWorkspaceAs(workspace);
       if (result.success) {
-        workspace.filePath = result.filePath;
-        workspace.hasUnsavedChanges = false;
-        workspace.isRecovered = false;
-        await discardRecoverySnapshot(workspace.id);
         toast.success(
           t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
           {
@@ -9140,10 +9298,6 @@ async function onFileMenuSaveAs() {
   try {
     const result = await saveWorkspaceAs(workspace);
     if (result.success) {
-      workspace.filePath = result.filePath;
-      workspace.hasUnsavedChanges = false;
-      workspace.isRecovered = false;
-      await discardRecoverySnapshot(workspace.id);
       toast.success(
         t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
         {
@@ -9661,41 +9815,15 @@ function openScore(args: FileMenuOpenScoreArgs) {
   if (!args.success) {
     return;
   }
-
-  // First make sure we don't already have the score open
-  const existingWorkspace = workspaces.value.find(
-    (x) => x.filePath === args.filePath,
-  ) as Workspace;
-  if (existingWorkspace != null) {
-    selectedWorkspace.value = existingWorkspace;
-    return;
-  }
-
   try {
-    const score: Score = SaveService.LoadScoreFromJson(JSON.parse(args.data));
-
-    // if (score.version !== ScoreVersion) {
-    //   alert('This score was created by an older version of the application. It may not work properly');
-    // }
-
-    const workspace = new Workspace();
-    workspace.filePath = args.filePath;
-    workspace.tempFileName = getTempFilename();
-    workspace.sourceMtimeMs = args.sourceMtimeMs ?? null;
-    workspace.sourceSize = args.sourceSize ?? null;
-    workspace.score = score;
-
-    addWorkspace(workspace);
-
-    selectedWorkspace.value = workspace;
-
-    selectedElement.value = null;
-
-    save(false);
+    const { created } = documents.open(args);
+    if (created) {
+      selectedElement.value = null;
+      save(false);
+    }
   } catch (error) {
     args.success = false;
     console.error(error);
-
     showErrorToast(
       t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
       error,
@@ -9721,6 +9849,7 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
     if (existingWorkspace != null) {
       existingWorkspace.isRecovered = true;
       existingWorkspace.hasUnsavedChanges = candidate.hasUnsavedChanges;
+      existingWorkspace.sourceFormat = candidate.sourceFormat ?? null;
       existingWorkspace.sourceMtimeMs = candidate.sourceMtimeMs;
       existingWorkspace.sourceSize = candidate.sourceSize;
       existingWorkspace.score = SaveService.LoadScoreFromJson(
@@ -9742,6 +9871,7 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
     workspace.tempFileName = candidate.tempFileName;
     workspace.hasUnsavedChanges = candidate.hasUnsavedChanges;
     workspace.isRecovered = true;
+    workspace.sourceFormat = candidate.sourceFormat ?? null;
     workspace.sourceMtimeMs = candidate.sourceMtimeMs;
     workspace.sourceSize = candidate.sourceSize;
     workspace.score = score;
@@ -9861,10 +9991,19 @@ function addWorkspace(workspace: Workspace) {
 }
 
 function removeWorkspace(workspace: Workspace) {
+  dirtyTextBoxWorkspaces.delete(workspace.id);
+  pendingTextBoxMeasurements.delete(workspace.id);
+  if (workspaceTextBoxMeasurement.value?.workspace.id === workspace.id) {
+    failWorkspaceTextBoxMeasurement(new Error('DOCUMENT_NOT_FOUND'));
+  }
   cancelLyricsAssignment(workspace);
   clearRecoverySnapshotTimer(workspace.id);
 
   const index = workspaces.value.indexOf(workspace);
+  if (index < 0) {
+    return;
+  }
+  const wasSelected = selectedWorkspace.value.id === workspace.id;
 
   workspaces.value.splice(index, 1);
 
@@ -9878,15 +10017,12 @@ function removeWorkspace(workspace: Workspace) {
     }
   }
 
-  if (selectedWorkspace.value === workspace) {
-    if (workspaces.value.length > 0) {
-      selectedWorkspace.value = workspaces.value[
-        Math.min(index, workspaces.value.length - 1)
-      ] as Workspace;
-    } else {
-      // TODO support closing all workspaces
-      onFileMenuNewScore();
-    }
+  if (workspaces.value.length === 0) {
+    onFileMenuNewScore();
+  } else if (wasSelected) {
+    selectedWorkspace.value = workspaces.value[
+      Math.min(index, workspaces.value.length - 1)
+    ] as Workspace;
   }
 }
 
@@ -9908,7 +10044,11 @@ function onTabClosed(tab: Tab) {
 }
 
 function selectWorkspaceTab(direction: WorkspaceTabNavigationDirection) {
-  if (dialogOpen.value || !canNavigateWorkspaceTabs.value) {
+  if (
+    automationExporting.value ||
+    dialogOpen.value ||
+    !canNavigateWorkspaceTabs.value
+  ) {
     return;
   }
 
@@ -10149,7 +10289,7 @@ function renderTabLabel(tab: Tab) {
 </script>
 
 <template>
-  <div class="editor">
+  <div class="editor" :inert="automationExporting">
     <div v-if="isLoading" class="loading-overlay">
       <Spinner class="size-16" />
     </div>
@@ -10301,7 +10441,7 @@ function renderTabLabel(tab: Tab) {
         </template>
 
         <template #center>
-          <div class="page-container chrome-paper-canvas">
+          <div class="page-container chrome-paper-canvas foreground-workspace">
             <div ref="workspaceTabStripRef" class="workspace-tab-strip-host">
               <ContextMenu>
                 <ContextMenuTrigger
@@ -11733,7 +11873,15 @@ function renderTabLabel(tab: Tab) {
       @export-as-music-xml="exportAsMusicXml"
       @export-as-latex="exportAsLatex"
     />
-    <template v-if="richTextBoxCalculation">
+    <WorkspaceTextBoxMeasurement
+      v-if="workspaceTextBoxMeasurement"
+      :workspace="workspaceTextBoxMeasurement.workspace"
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @complete="completeWorkspaceTextBoxMeasurement"
+      @failed="failWorkspaceTextBoxMeasurement"
+    />
+    <div v-if="richTextBoxCalculation" class="foreground-workspace">
       <TextBoxRich
         v-for="element in resizableRichTextBoxElements"
         :key="element.id!"
@@ -11748,7 +11896,7 @@ function renderTabLabel(tab: Tab) {
           updateRichTextBoxHeight(element as RichTextBoxElement, $event)
         "
       />
-    </template>
+    </div>
     <template v-if="textBoxCalculation">
       <TextBox
         v-for="element in resizableTextBoxElements"

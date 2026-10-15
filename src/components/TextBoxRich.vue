@@ -565,6 +565,32 @@ function getEditorInstanceRight() {
   return editorRight.value?.instance;
 }
 
+// Measurement instances are mounted for one target/style snapshot at a time.
+const measurementReady = Promise.withResolvers<void>();
+const readyEditors = new WeakSet<InlineEditor>();
+function markEditorReady(editor: InlineEditor) {
+  readyEditors.add(editor);
+  if (
+    getActiveEditorInstances().every(
+      (instance) => instance != null && readyEditors.has(instance),
+    )
+  ) {
+    measurementReady.resolve();
+  }
+}
+
+async function measureHeight() {
+  await measurementReady.promise;
+  await document.fonts.ready;
+  refreshCkContentFontSize();
+  await nextTick();
+  const height = getHeight();
+  if (height == null || !Number.isFinite(height)) {
+    throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+  }
+  return height;
+}
+
 function getActiveEditorInstances() {
   if (props.element.multipanel) {
     return [
@@ -640,6 +666,7 @@ function observeCkContentFontSize(editor: InlineEditor) {
 async function onEditorReady(editor: InlineEditor) {
   applyInitialLanguage(editor);
   await initializeCkContentFontSize();
+  markEditorReady(editor);
 
   emitRecalculatedHeightIfNeeded();
 
@@ -685,6 +712,7 @@ async function onEditorReady(editor: InlineEditor) {
 async function onEditorReadyMultipanelSide(editor: InlineEditor) {
   applyInitialLanguage(editor);
   await initializeCkContentFontSize();
+  markEditorReady(editor);
   emitRecalculatedHeightIfNeeded();
   observeCkContentFontSize(editor);
 }
@@ -862,15 +890,20 @@ function addPendingEditorData(
 }
 
 function getHeight() {
-  const element = container.value?.querySelector('.ck-content');
-
-  if (element == null) {
+  const elements = [
+    ...(container.value?.querySelectorAll<HTMLElement>('.ck-content') ?? []),
+  ];
+  if (elements.length === 0) {
     return null;
   }
-
-  const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
-
-  return element.getBoundingClientRect().height / zoom;
+  const zoom = Number(getComputedStyle(elements[0]).getPropertyValue('--zoom'));
+  return (
+    (props.element.inline
+      ? elements[0].getBoundingClientRect().height
+      : Math.max(
+          ...elements.map((element) => element.getBoundingClientRect().height),
+        )) / zoom
+  );
 }
 
 function getHeightBottom() {
@@ -939,6 +972,7 @@ function focus() {
 }
 
 defineExpose({
+  measureHeight,
   focus,
   getPendingUpdates,
   htmlElement,

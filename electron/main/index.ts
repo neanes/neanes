@@ -15,7 +15,6 @@ import { autoUpdater } from 'electron-updater';
 import { promises as fs } from 'fs';
 import i18next from 'i18next';
 import { imageSizeFromFile } from 'image-size/fromFile';
-import JSZip from 'jszip';
 import mimetypes from 'mime-types';
 import path from 'path';
 import { debounce } from 'throttle-debounce';
@@ -59,7 +58,6 @@ import {
   IpcMainChannels,
   IpcRendererChannels,
 } from '../../src/ipc/ipcChannels';
-import type { Score } from '../../src/models/save/v1/Score';
 import type { ZoomFitMode } from '../../src/models/Workspace';
 import {
   createDefaultPaneVisibility,
@@ -67,6 +65,13 @@ import {
   type WorkspacePaneVisibility,
 } from '../../src/models/WorkspacePane';
 import { TestFileType } from '../../src/utils/TestFileType';
+import { startAutomationHost } from './automation/host';
+import {
+  scoreFileFormat,
+  ScoreFiles,
+  writeScoreFile,
+} from './files/ScoreFiles';
+import { OperationQueue } from './OperationQueue';
 import { RecoveryStore } from './recovery';
 
 // The built directory structure
@@ -140,7 +145,12 @@ const silent = silentPdf || silentLatex || silentHtml;
 const disableUpdates = process.argv.includes('--no-update');
 const fakeUpdateMode = process.env.FAKE_UPDATE_AVAILABLE === '1';
 
+const editorOperationQueue = new OperationQueue();
+const scoreFiles = new ScoreFiles();
+
 let win: BrowserWindow | null = null;
+let automationHost: Awaited<ReturnType<typeof startAutomationHost>> | null =
+  null;
 let readyToExit = false;
 let pendingUpdateInstall = false;
 let creatingWindow = false;
@@ -518,51 +528,8 @@ async function addToRecentFiles(filePath: string) {
   await saveStore();
 }
 
-async function writeScoreFile(filePath: string, score: Score) {
-  // If using the compressed file format, zip first
-  if (path.extname(filePath) === '.byz') {
-    const zip = new JSZip();
-
-    const unzippedFileName = `${path.basename(filePath, '.byz')}.byzx`;
-
-    const data = JSON.stringify(score);
-
-    zip.file(unzippedFileName, data);
-
-    const file = await zip.generateAsync({
-      type: 'nodebuffer',
-      compression: 'DEFLATE',
-    });
-
-    await fs.writeFile(filePath, file);
-  } else {
-    // For uncompressed files, and white space and indentation
-    // to make the file easier to read
-    const data = JSON.stringify(score, null, 2);
-    await fs.writeFile(filePath, data);
-  }
-}
-
-async function readScoreFile(filePath: string) {
-  let data: string;
-
-  // If using the compressed file format, zip first
-  if (path.extname(filePath) === '.byz') {
-    const file = await fs.readFile(filePath);
-    const zip = await JSZip.loadAsync(file);
-    data = await zip.file(/\.(byzx)$/)[0].async('text');
-  } else if (path.extname(filePath) === '.byzx') {
-    data = await fs.readFile(filePath, 'utf8');
-  } else {
-    throw `Unsupported file type: ${path.extname(filePath)}`;
-  }
-
-  return data;
-}
-
 async function openFile(filePath: string) {
-  const data = await readScoreFile(filePath);
-  const stats = await fs.stat(filePath);
+  const file = await scoreFiles.read(filePath);
 
   if (!silent) {
     await addToRecentFiles(filePath);
@@ -571,9 +538,10 @@ async function openFile(filePath: string) {
   }
 
   return {
-    data,
-    sourceMtimeMs: stats.mtimeMs,
-    sourceSize: stats.size,
+    data: file.data,
+    sourceFormat: file.sourceFormat,
+    sourceMtimeMs: file.sourceMtimeMs,
+    sourceSize: file.sourceSize,
   };
 }
 
@@ -603,6 +571,7 @@ async function openFileFromArgs(argv: string[]) {
       result.push({
         data: openedFile.data,
         filePath: parameter,
+        sourceFormat: openedFile.sourceFormat,
         sourceMtimeMs: openedFile.sourceMtimeMs,
         sourceSize: openedFile.sourceSize,
         success: true,
@@ -641,7 +610,9 @@ async function saveWorkspace(args: SaveWorkspaceArgs) {
   try {
     saving = true;
 
-    await writeScoreFile(args.filePath, args.data);
+    const format = args.sourceFormat ?? scoreFileFormat(args.filePath);
+    await writeScoreFile(args.filePath, args.data, format);
+    result.sourceFormat = format;
     const stats = await fs.stat(args.filePath);
 
     result.sourceMtimeMs = stats.mtimeMs;
@@ -709,6 +680,7 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
         createMenu();
 
         result.success = true;
+        result.sourceFormat = scoreFileFormat(result.filePath);
         result.sourceMtimeMs = stats.mtimeMs;
         result.sourceSize = stats.size;
 
@@ -801,6 +773,16 @@ async function openImage() {
   }
 
   return result;
+}
+
+async function insertImageFromDialog() {
+  await editorOperationQueue.run(async () => {
+    const data = await openImage();
+
+    if (data.success) {
+      win?.webContents.send(IpcMainChannels.FileMenuInsertImage, data);
+    }
+  });
 }
 
 async function openOcrFile() {
@@ -1462,6 +1444,7 @@ async function openWorkspaces() {
         workspaces.push({
           data: openedFile.data,
           filePath: filePath,
+          sourceFormat: openedFile.sourceFormat,
           sourceMtimeMs: openedFile.sourceMtimeMs,
           sourceSize: openedFile.sourceSize,
           success: true,
@@ -1481,6 +1464,24 @@ async function openWorkspaces() {
   }
 
   return workspaces;
+}
+
+async function openScoresFromDialog() {
+  // Keep the dialog and result delivery together so an export cannot overtake them.
+  await editorOperationQueue.run(async () => {
+    const workspaces = await openWorkspaces();
+    for (const workspace of workspaces) {
+      if (!workspace.success) {
+        continue;
+      }
+      if (!win) {
+        darwinPath = workspace.filePath;
+        createWindow();
+      } else {
+        win.webContents.send(IpcMainChannels.FileMenuOpenScore, workspace);
+      }
+    }
+  });
 }
 
 const getCurrentPosition = () => {
@@ -1617,6 +1618,10 @@ type WorkspaceTabNavigationDirection = 'previous' | 'next';
 function sendWindowTabNavigationCommand(
   direction: WorkspaceTabNavigationDirection,
 ) {
+  if (automationHost?.exporting) {
+    return;
+  }
+
   win?.webContents.send(
     direction === 'previous'
       ? IpcMainChannels.FileMenuWindowPreviousTab
@@ -1829,19 +1834,7 @@ function createMenu() {
           label: i18next.t(($) => $.menu.file.open),
           accelerator: 'CmdOrCtrl+O',
           async click() {
-            const workspaces: FileMenuOpenScoreArgs[] = await openWorkspaces();
-
-            for (const workspace of workspaces) {
-              if (!win && workspace.success) {
-                darwinPath = workspace.filePath;
-                createWindow();
-              } else {
-                win?.webContents.send(
-                  IpcMainChannels.FileMenuOpenScore,
-                  workspace,
-                );
-              }
-            }
+            await openScoresFromDialog();
           },
         },
         {
@@ -1850,32 +1843,35 @@ function createMenu() {
           submenu: store.recentFiles.map((x, index) => ({
             label: `${index + 1}: ${x}`,
             async click() {
-              try {
-                const openedFile = await openFile(x);
+              await editorOperationQueue.run(async () => {
+                try {
+                  const openedFile = await openFile(x);
 
-                if (!win) {
-                  darwinPath = x;
-                  createWindow();
-                } else {
-                  win?.webContents.send(IpcMainChannels.FileMenuOpenScore, {
-                    filePath: x,
-                    data: openedFile.data,
-                    sourceMtimeMs: openedFile.sourceMtimeMs,
-                    sourceSize: openedFile.sourceSize,
-                    success: true,
-                  } as FileMenuOpenScoreArgs);
-                }
-              } catch (error) {
-                console.error(error);
+                  if (!win) {
+                    darwinPath = x;
+                    createWindow();
+                  } else {
+                    win?.webContents.send(IpcMainChannels.FileMenuOpenScore, {
+                      filePath: x,
+                      data: openedFile.data,
+                      sourceFormat: openedFile.sourceFormat,
+                      sourceMtimeMs: openedFile.sourceMtimeMs,
+                      sourceSize: openedFile.sourceSize,
+                      success: true,
+                    } as FileMenuOpenScoreArgs);
+                  }
+                } catch (error) {
+                  console.error(error);
 
-                if (error instanceof Error) {
-                  dialog.showMessageBox(win!, {
-                    type: 'error',
-                    title: 'Open failed',
-                    message: error.message,
-                  });
+                  if (error instanceof Error) {
+                    dialog.showMessageBox(win!, {
+                      type: 'error',
+                      title: 'Open failed',
+                      message: error.message,
+                    });
+                  }
                 }
-              }
+              });
             },
           })),
         },
@@ -1885,14 +1881,16 @@ function createMenu() {
             {
               label: i18next.t(($) => $.menu.file.importFromOcr),
               async click() {
-                const data = await openOcrFile();
+                await editorOperationQueue.run(async () => {
+                  const data = await openOcrFile();
 
-                if (data.success) {
-                  win?.webContents.send(
-                    IpcMainChannels.FileMenuImportOcr,
-                    data,
-                  );
-                }
+                  if (data.success) {
+                    win?.webContents.send(
+                      IpcMainChannels.FileMenuImportOcr,
+                      data,
+                    );
+                  }
+                });
               },
             },
           ],
@@ -2201,11 +2199,7 @@ function createMenu() {
         {
           label: i18next.t(($) => $.menu.insert.image),
           async click() {
-            const data = await openImage();
-
-            if (data.success) {
-              win?.webContents.send(IpcMainChannels.FileMenuInsertImage, data);
-            }
+            await insertImageFromDialog();
           },
         },
         { type: 'separator' },
@@ -2474,6 +2468,8 @@ async function createWindow() {
     win.maximize();
   }
 
+  automationHost?.attach(win);
+
   win.on('resize', debouncedSaveWindowState);
   win.on('move', debouncedSaveWindowState);
   win.webContents.setWindowOpenHandler((details) => {
@@ -2503,6 +2499,10 @@ async function createWindow() {
   // Prevent the user from accidentally
   // closing the app with unsaved changes
   win.on('close', (event) => {
+    if (automationHost?.exporting) {
+      event.preventDefault();
+      return;
+    }
     if (!readyToExit) {
       win?.webContents.send(IpcMainChannels.CloseApplication);
       event.preventDefault();
@@ -2596,21 +2596,11 @@ ipcMain.on(
 );
 
 ipcMain.on(IpcRendererChannels.OpenImageDialog, async () => {
-  const data = await openImage();
-
-  if (data.success) {
-    win?.webContents.send(IpcMainChannels.FileMenuInsertImage, data);
-  }
+  await insertImageFromDialog();
 });
 
 ipcMain.on(IpcRendererChannels.OpenScoreDialog, async () => {
-  const workspaces = await openWorkspaces();
-
-  for (const workspace of workspaces) {
-    if (workspace.success) {
-      win?.webContents.send(IpcMainChannels.FileMenuOpenScore, workspace);
-    }
-  }
+  await openScoresFromDialog();
 });
 
 ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
@@ -2807,6 +2797,7 @@ ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
     const result = {
       data: openedFile.data,
       filePath: darwinPath,
+      sourceFormat: openedFile.sourceFormat,
       sourceMtimeMs: openedFile.sourceMtimeMs,
       sourceSize: openedFile.sourceSize,
       success: true,
@@ -2878,66 +2869,71 @@ ipcMain.handle(
 // If the app isn't loaded yet, then save the path and wait for the web app
 // to tell us it's ready to load the file via the OpenWorkspaceFromArgv channel
 app.on('open-file', async (event, path) => {
-  darwinPath = path;
+  await editorOperationQueue.run(async () => {
+    darwinPath = path;
 
-  try {
-    if (!win) {
-      createWindow();
-    } else if (loaded) {
-      const openedFile = await openFile(path);
-      const result = {
-        data: openedFile.data,
-        filePath: path,
-        sourceMtimeMs: openedFile.sourceMtimeMs,
-        sourceSize: openedFile.sourceSize,
-        success: true,
-      };
-
+    try {
       if (!win) {
         createWindow();
+      } else if (loaded) {
+        const openedFile = await openFile(path);
+        const result = {
+          data: openedFile.data,
+          filePath: path,
+          sourceFormat: openedFile.sourceFormat,
+          sourceMtimeMs: openedFile.sourceMtimeMs,
+          sourceSize: openedFile.sourceSize,
+          success: true,
+        };
+
+        if (!win) {
+          createWindow();
+        }
+
+        win?.webContents.send(IpcMainChannels.FileMenuOpenScore, result);
+
+        win?.show();
       }
+    } catch (error) {
+      console.error(error);
 
-      win?.webContents.send(IpcMainChannels.FileMenuOpenScore, result);
-
-      win?.show();
+      if (error instanceof Error) {
+        dialog.showMessageBox(win!, {
+          type: 'error',
+          title: 'Open failed',
+          message: error.message,
+        });
+      }
     }
-  } catch (error) {
-    console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Open failed',
-        message: error.message,
-      });
-    }
-  }
+  });
 });
 
 app.on(
   'second-instance',
   async (event, argv, workingDirectory, additionalData: any) => {
-    const results = await openFileFromArgs(
-      (additionalData as SecondInstanceData).argv,
-    );
+    await editorOperationQueue.run(async () => {
+      const results = await openFileFromArgs(
+        (additionalData as SecondInstanceData).argv,
+      );
 
-    if (loaded) {
-      results.files
-        .filter((x) => x.success)
-        .forEach((x) =>
-          win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
-        );
-
-      win?.show();
-    } else {
-      win?.webContents.once('did-finish-load', () => {
+      if (loaded) {
         results.files
           .filter((x) => x.success)
           .forEach((x) =>
             win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
           );
-      });
-    }
+
+        win?.show();
+      } else {
+        win?.webContents.once('did-finish-load', () => {
+          results.files
+            .filter((x) => x.success)
+            .forEach((x) =>
+              win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
+            );
+        });
+      }
+    });
   },
 );
 
@@ -2952,6 +2948,10 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   quitting = true;
+});
+
+app.on('will-quit', () => {
+  void automationHost?.close();
 });
 
 app.on('activate', () => {
@@ -2975,6 +2975,43 @@ app.on('ready', async () => {
   });
 
   setupAutoUpdater();
+
+  if (process.env.NEANES_MCP === '1' || process.argv.includes('--mcp')) {
+    try {
+      automationHost = await startAutomationHost({
+        getWindow: () => win,
+        version: app.getVersion(),
+        runExclusive: (operation) => editorOperationQueue.run(operation),
+        async withFileLock(operation) {
+          if (saving) {
+            throw new Error('EDITOR_BUSY');
+          }
+          try {
+            saving = true;
+            return await operation();
+          } finally {
+            saving = false;
+          }
+        },
+        async printPdf(args) {
+          if (win == null) {
+            throw new Error('EDITOR_NOT_READY');
+          }
+          return win.webContents.printToPDF({
+            pageSize: getPageSize(
+              args.pageSize,
+              args.pageWidthInches,
+              args.pageHeightInches,
+            ),
+            landscape: args.landscape,
+            printBackground: false,
+          });
+        },
+      });
+    } catch (error) {
+      console.error('Could not start Neanes MCP server', error);
+    }
+  }
 
   if (!win) {
     createWindow();

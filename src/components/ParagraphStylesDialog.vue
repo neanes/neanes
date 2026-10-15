@@ -613,6 +613,7 @@ import {
   pruneParentlessParagraphStyleRootFallbackOverrides,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { normalizeParagraphStyles } from '@/services/documents/paragraphStyles';
 import { fontCatalog } from '@/services/FontCatalog';
 import { SaveService } from '@/services/SaveService';
 import { fraction2FormatOptions } from '@/utils/numberFormatOptions';
@@ -727,6 +728,11 @@ const alternateFlags = useAlternateFlags(
 );
 
 const canSubmit = computed(() => {
+  try {
+    normalizeParagraphStyles(props.paragraphStyles, styles.value);
+  } catch {
+    return false;
+  }
   const names = new Set<string>();
 
   return styles.value.every((style) => {
@@ -1025,29 +1031,15 @@ function paragraphStyleOverridesEqual(
   return true;
 }
 
-function prepareParagraphStyleForSubmit(style: ParagraphStyle) {
-  const updated = style.clone();
-
-  if (!updated.builtIn) {
-    updated.displayName = updated.displayName.trim();
-    if (updated.parentStyleId == null) {
-      updated.parentStyleId = defaultParagraphStyleId;
-    }
-  }
-
-  pruneParentlessParagraphStyleRootFallbackOverrides(updated);
-
-  return updated;
-}
-
 function saveAsDefault() {
   if (!canSubmit.value) {
     return;
   }
 
-  const defaults = styles.value.map((style) =>
-    SaveService.SaveParagraphStyle(prepareParagraphStyleForSubmit(style)),
-  );
+  const defaults = normalizeParagraphStyles(
+    props.paragraphStyles,
+    styles.value,
+  ).map((style) => SaveService.SaveParagraphStyle(style));
 
   localStorage.setItem('paragraphStylesDefault', JSON.stringify(defaults));
 }
@@ -1057,7 +1049,7 @@ function submit() {
     return;
   }
 
-  emit('update', styles.value.map(prepareParagraphStyleForSubmit));
+  emit('update', normalizeParagraphStyles(props.paragraphStyles, styles.value));
   open.value = false;
 }
 </script>

@@ -1,7 +1,7 @@
 import type { PageSize } from '@/models/PageSetup';
 import type { Score } from '@/models/save/v1/Score';
 
-import type { PdfSnapshot } from './pdfSnapshot';
+import type { ScoreRenderSnapshot } from './scoreRenderSnapshot';
 
 export type ScoreFileFormat = 'byz' | 'byzx';
 
@@ -34,7 +34,7 @@ export interface WriteScoreFileArgs {
 }
 
 export interface PdfExportOptions {
-  snapshot: PdfSnapshot;
+  snapshot: ScoreRenderSnapshot;
   filePath: string;
   overwrite: boolean;
   pageSize: PageSize;

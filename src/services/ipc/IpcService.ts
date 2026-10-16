@@ -4,6 +4,8 @@ import type {
   DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageArgs,
   ExportPageAsImageReplyArgs,
+  ExportSnapshotAsPngArgs,
+  ExportSnapshotAsPngReplyArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsLatexArgs,
@@ -33,7 +35,7 @@ import type {
   WorkspaceFile,
   WriteScoreFileArgs,
 } from '@/services/documents/fileTypes';
-import type { PdfSnapshot } from '@/services/documents/pdfSnapshot';
+import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
 import { Unit } from '@/utils/Unit';
 
 import { SaveService } from '../SaveService';
@@ -99,7 +101,7 @@ export class IpcService implements IIpcService {
 
   public async exportWorkspaceAsPdf(
     workspace: Workspace,
-    snapshot: PdfSnapshot,
+    snapshot: ScoreRenderSnapshot,
   ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsPdf,
@@ -190,8 +192,21 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public async printWorkspace(workspace: Workspace) {
+  public async exportSnapshotAsPng(
+    args: ExportSnapshotAsPngArgs,
+  ): Promise<ExportSnapshotAsPngReplyArgs> {
+    return window.ipcRenderer.invoke(
+      IpcRendererChannels.ExportSnapshotAsPng,
+      args,
+    );
+  }
+
+  public async printWorkspace(
+    workspace: Workspace,
+    snapshot: ScoreRenderSnapshot,
+  ) {
     return await window.ipcRenderer.invoke(IpcRendererChannels.PrintWorkspace, {
+      snapshot,
       landscape: workspace.score.pageSetup.landscape,
       pageSize: workspace.score.pageSetup.pageSize,
       pageWidthInches: Unit.toInch(workspace.score.pageSetup.pageWidthCustom),

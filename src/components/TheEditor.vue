@@ -224,6 +224,7 @@ import type {
 import { parseAutomationRequest } from '@/services/automation/protocol';
 import { DocumentService } from '@/services/documents/DocumentService';
 import { getBundledFontLoadDescriptors } from '@/services/documents/fontReadiness';
+import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
 import {
   getResizableTextBoxes,
   type TextBoxHeightMeasurement,
@@ -1969,7 +1970,7 @@ async function onAutomationRequest(message: AutomationMessage) {
   EventBus.$emit(IpcRendererChannels.AutomationReply, reply);
 }
 
-function createPdfSnapshot(workspace: Workspace) {
+function createScoreRenderSnapshot(workspace: Workspace) {
   return {
     score: documents.serialize(workspace),
     filePath: workspace.filePath,
@@ -1994,7 +1995,7 @@ async function exportAutomationPdf(
     pageWidthInches: Unit.toInch(setup.pageWidthCustom),
     pageHeightInches: Unit.toInch(setup.pageHeightCustom),
     landscape: setup.landscape,
-    snapshot: createPdfSnapshot(workspace),
+    snapshot: createScoreRenderSnapshot(workspace),
   });
 }
 
@@ -7846,6 +7847,19 @@ function onFileMenuDocumentProperties() {
 }
 
 async function onFileMenuPrint() {
+  if (!isBrowser.value) {
+    const workspace = selectedWorkspace.value;
+    try {
+      await documents.settle(workspace);
+      await ipcService.printWorkspace(
+        workspace,
+        createScoreRenderSnapshot(workspace),
+      );
+    } catch (error) {
+      console.error(error);
+    }
+    return;
+  }
   prepareWorkspaceForSerialization(selectedWorkspace.value);
 
   printMode.value = true;
@@ -7859,7 +7873,10 @@ async function onFileMenuPrint() {
 
   try {
     await nextTick();
-    await ipcService.printWorkspace(selectedWorkspace.value);
+    await ipcService.printWorkspace(
+      selectedWorkspace.value,
+      createScoreRenderSnapshot(selectedWorkspace.value),
+    );
   } catch (error) {
     console.error(error);
   } finally {
@@ -7876,7 +7893,10 @@ async function onFileMenuExportAsPdf() {
   try {
     await documents.settle(workspace);
     const reply = await documents.exportPdf(workspace, (workspace) =>
-      ipcService.exportWorkspaceAsPdf(workspace, createPdfSnapshot(workspace)),
+      ipcService.exportWorkspaceAsPdf(
+        workspace,
+        createScoreRenderSnapshot(workspace),
+      ),
     );
     showExportReplyToast(
       reply,
@@ -7905,14 +7925,13 @@ async function onFileMenuExportAsImage() {
 
 async function exportAsPng(args: ExportAsPngSettings) {
   let reply: ExportWorkspaceAsImageReplyArgs;
-
-  prepareWorkspaceForSerialization(selectedWorkspace.value);
+  const workspace = selectedWorkspace.value;
+  let snapshot: ScoreRenderSnapshot;
 
   try {
-    reply = await ipcService.exportWorkspaceAsImage(
-      selectedWorkspace.value,
-      'png',
-    );
+    await documents.settle(workspace);
+    snapshot = createScoreRenderSnapshot(workspace);
+    reply = await ipcService.exportWorkspaceAsImage(workspace, 'png');
 
     if (!reply.success) {
       if (!reply.canceled) {
@@ -7940,7 +7959,7 @@ async function exportAsPng(args: ExportAsPngSettings) {
     return;
   }
 
-  printMode.value = true;
+  printMode.value = isBrowser.value;
   exportInProgress.value = true;
   const toastId = toast.loading(
     t(($) => $.toast.export.pngLoading, { ns: 'toast' }),
@@ -7953,71 +7972,79 @@ async function exportAsPng(args: ExportAsPngSettings) {
 
   // Blur the active element so that focus outlines and
   // blinking cursors don't show up in the printed page
-  const activeElement = blurActiveElement();
+  const activeElement = isBrowser.value ? blurActiveElement() : null;
 
   try {
-    await nextTick();
-
-    const pageElements = pagesRef.value as HTMLElement[];
-    const selectedPages = pageElements
-      .map((page, index) => ({ page, pageNumber: index + 1 }))
-      .filter(
-        ({ pageNumber }) =>
-          args.pageNumbers == null || args.pageNumbers.includes(pageNumber),
-      );
     let exportedPageCount = 0;
     let firstExportedPagePath = '';
+    if (!isBrowser.value) {
+      ({ exportedPageCount, firstExportedPagePath } =
+        await ipcService.exportSnapshotAsPng({
+          snapshot,
+          filePath: reply.filePath,
+          options: args,
+        }));
+    } else {
+      await nextTick();
 
-    if (selectedPages.length > 0) {
-      const fontEmbedCSS =
-        (await getFontEmbedCSS(selectedPages[0].page)) +
-        fontCatalog.getExportFontFeatureValuesCss();
-
-      for (const { page, pageNumber } of selectedPages) {
-        const options = {
-          fontEmbedCSS,
-          pixelRatio: args.dpi / 96,
-          style: { margin: '0' },
-        } as any;
-
-        if (args.transparentBackground) {
-          options.style.backgroundColor = 'transparent';
-        }
-
-        const fileName = reply.filePath.replace(
-          /\.png$/i,
-          `-${pageNumber}.png`,
+      const pageElements = pagesRef.value as HTMLElement[];
+      const selectedPages = pageElements
+        .map((page, index) => ({ page, pageNumber: index + 1 }))
+        .filter(
+          ({ pageNumber }) =>
+            args.pageNumbers == null || args.pageNumbers.includes(pageNumber),
         );
+      if (selectedPages.length > 0) {
+        const fontEmbedCSS =
+          (await getFontEmbedCSS(selectedPages[0].page)) +
+          fontCatalog.getExportFontFeatureValuesCss();
 
-        const data = (await toPng(page, options)).replace(
-          /^data:image\/png;base64,/,
-          '',
-        );
+        for (const { page, pageNumber } of selectedPages) {
+          const options = {
+            fontEmbedCSS,
+            pixelRatio: args.dpi / 96,
+            style: { margin: '0' },
+          } as any;
 
-        const pageReply = await ipcService.exportPageAsImage(fileName, data);
-
-        if (!pageReply.success) {
-          if (pageReply.skipped) {
-            continue;
+          if (args.transparentBackground) {
+            options.style.backgroundColor = 'transparent';
           }
 
-          if (pageReply.canceled) {
-            break;
-          }
-
-          throw new Error(
-            pageReply.errorMessage ??
-              t(($) => $.toast.export.pngFileFailedDescription, {
-                ns: 'toast',
-              }),
+          const fileName = reply.filePath.replace(
+            /\.png$/i,
+            `-${pageNumber}.png`,
           );
-        }
 
-        if (!firstExportedPagePath) {
-          firstExportedPagePath = fileName;
-        }
+          const data = (await toPng(page, options)).replace(
+            /^data:image\/png;base64,/,
+            '',
+          );
 
-        exportedPageCount++;
+          const pageReply = await ipcService.exportPageAsImage(fileName, data);
+
+          if (!pageReply.success) {
+            if (pageReply.skipped) {
+              continue;
+            }
+
+            if (pageReply.canceled) {
+              break;
+            }
+
+            throw new Error(
+              pageReply.errorMessage ??
+                t(($) => $.toast.export.pngFileFailedDescription, {
+                  ns: 'toast',
+                }),
+            );
+          }
+
+          if (!firstExportedPagePath) {
+            firstExportedPagePath = fileName;
+          }
+
+          exportedPageCount++;
+        }
       }
     }
 
@@ -8066,7 +8093,9 @@ async function exportAsPng(args: ExportAsPngSettings) {
     exportInProgress.value = false;
     closeExportDialog();
     // Re-focus the active element
-    focusElement(activeElement);
+    if (activeElement) {
+      focusElement(activeElement);
+    }
   }
 }
 

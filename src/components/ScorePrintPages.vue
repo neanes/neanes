@@ -94,6 +94,9 @@ function getTokenMetadata(index: number): TokenMetadata {
     section: runningMarkers.value[index].section,
   };
 }
+defineExpose({
+  getPages: () => [...root.value!.querySelectorAll<HTMLElement>('.page')],
+});
 onMounted(async () => {
   try {
     await nextTick();

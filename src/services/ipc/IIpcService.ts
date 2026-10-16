@@ -3,6 +3,8 @@ import type {
   DiscardRecoverySnapshotReplyArgs,
   DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageReplyArgs,
+  ExportSnapshotAsPngArgs,
+  ExportSnapshotAsPngReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceReplyArgs,
   ListRecoveryCandidatesReplyArgs,
@@ -23,7 +25,7 @@ import type {
   WorkspaceFile,
   WriteScoreFileArgs,
 } from '@/services/documents/fileTypes';
-import type { PdfSnapshot } from '@/services/documents/pdfSnapshot';
+import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
 
 export interface IIpcService {
   automationReadScore(
@@ -47,7 +49,7 @@ export interface IIpcService {
 
   exportWorkspaceAsPdf(
     workspace: Workspace,
-    snapshot: PdfSnapshot,
+    snapshot: ScoreRenderSnapshot,
   ): Promise<ExportWorkspaceReplyArgs>;
 
   exportWorkspaceAsHtml(
@@ -77,7 +79,14 @@ export interface IIpcService {
     data: string,
   ): Promise<ExportPageAsImageReplyArgs>;
 
-  printWorkspace(workspace: Workspace): Promise<void>;
+  exportSnapshotAsPng(
+    args: ExportSnapshotAsPngArgs,
+  ): Promise<ExportSnapshotAsPngReplyArgs>;
+
+  printWorkspace(
+    workspace: Workspace,
+    snapshot: ScoreRenderSnapshot,
+  ): Promise<void>;
 
   openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs>;
 

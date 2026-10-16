@@ -2,6 +2,7 @@
   <ScorePrintPages
     v-if="pages"
     :key="renderPass"
+    ref="printPages"
     :workspace="workspace"
     :pages="pages"
     :fonts="fonts"
@@ -12,7 +13,8 @@
   />
 </template>
 <script setup lang="ts">
-import { onMounted, ref, shallowRef } from 'vue';
+import { getFontEmbedCSS, toPng } from 'html-to-image';
+import { onMounted, ref, shallowRef, useTemplateRef } from 'vue';
 
 import ScorePrintPages from '@/components/ScorePrintPages.vue';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
@@ -22,13 +24,19 @@ import {
   getBundledFontLoadDescriptors,
   getScoreFontLoadDescriptors,
 } from '@/services/documents/fontReadiness';
-import type { PdfSnapshot } from '@/services/documents/pdfSnapshot';
+import type {
+  PngRenderOptions,
+  ScoreRenderSnapshot,
+} from '@/services/documents/scoreRenderSnapshot';
 import type { TextBoxHeightMeasurement } from '@/services/documents/textBoxMeasurement';
 import { fontCatalog } from '@/services/FontCatalog';
 import { LayoutService } from '@/services/LayoutService';
 import { SaveService } from '@/services/SaveService';
 
-const props = defineProps<{ snapshot: PdfSnapshot }>();
+const props = defineProps<{
+  snapshot: ScoreRenderSnapshot;
+  png?: PngRenderOptions;
+}>();
 const workspace = new Workspace();
 const fonts = ref<string[]>([]);
 const renderPass = ref(0);
@@ -43,7 +51,52 @@ function failed(error: Error) {
     });
   }
 }
-function complete() {
+const printPages =
+  useTemplateRef<InstanceType<typeof ScorePrintPages>>('printPages');
+async function complete() {
+  if (props.png) {
+    try {
+      const selected = printPages
+        .value!.getPages()
+        .map((page, index) => ({ page, pageNumber: index + 1 }))
+        .filter(
+          ({ pageNumber }) =>
+            props.png!.pageNumbers == null ||
+            props.png!.pageNumbers.includes(pageNumber),
+        );
+      if (selected.length) {
+        const fontEmbedCSS =
+          (await getFontEmbedCSS(selected[0].page)) +
+          fontCatalog.getExportFontFeatureValuesCss();
+        for (const { page, pageNumber } of selected) {
+          const data = (
+            await toPng(page, {
+              fontEmbedCSS,
+              pixelRatio: props.png.dpi / 96,
+              style: {
+                margin: '0',
+                ...(props.png.transparentBackground
+                  ? { backgroundColor: 'transparent' }
+                  : {}),
+              },
+            })
+          ).replace(/^data:image\/png;base64,/, '');
+          if (
+            !(await window.ipcRenderer.invoke(
+              IpcRendererChannels.ExportRendererImage,
+              pageNumber,
+              data,
+            ))
+          ) {
+            break;
+          }
+        }
+      }
+    } catch (error) {
+      failed(error instanceof Error ? error : new Error(String(error)));
+      return;
+    }
+  }
   if (!finished) {
     finished = true;
     window.ipcRenderer.send(IpcRendererChannels.ExportRendererResult, {
@@ -90,7 +143,7 @@ function measured(heights: TextBoxHeightMeasurement[]) {
       }
     }
     if (!changed) {
-      complete();
+      void complete();
       return;
     }
     if (++renderPass.value >= 12) {

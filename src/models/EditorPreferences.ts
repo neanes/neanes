@@ -26,7 +26,7 @@ export interface IEditorPreferences {
   showGlueWidths: boolean;
 }
 
-// Only rendering preferences cross into a detached PDF snapshot.
+// Only rendering preferences cross into a detached score snapshot.
 export type ScoreOverlaySettings = Pick<
   IEditorPreferences,
   | 'showDeveloperPanels'

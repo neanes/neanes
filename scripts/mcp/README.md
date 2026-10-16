@@ -1,6 +1,6 @@
-# Neanes MCP (stage 1)
+# Neanes MCP
 
-The Electron app can expose an opt-in MCP Streamable HTTP endpoint while it is running. The web build does not host a server. Stage 1 operates on visible interactive workspaces; isolated sessions, folder jobs, element editing, and temporary export transformations are planned separately.
+The Electron app can expose an opt-in MCP Streamable HTTP endpoint while it is running. The web build does not host a server. Document tools operate on interactive workspaces. MCP PDF export renders a detached snapshot in a dedicated hidden window. Isolated sessions, folder jobs, element editing, and temporary export transformations remain planned separately.
 
 ## Start locally
 
@@ -35,7 +35,7 @@ Configure your MCP client with that URL and an `Authorization: Bearer <NEANES_MC
 - `edit_paragraph_styles`: an atomic batch of `create`, `replace`, and `delete` actions. Each create/replace supplies a complete definition (`id`, `parentStyleId`, `overrides`, and `displayName` for custom styles). Built-in names are read-only metadata and must be omitted. Missing overrides inherit; supported null values explicitly reset. Each ID can appear once per batch. Action order does not matter: a child may refer to a parent created later in the payload. Validation checks the final graph for missing parents, cycles, duplicate IDs/names, and protected built-ins before applying anything. Built-in styles cannot be created, deleted, or renamed. Custom null parents normalize to `default-text`. Deleted styles' untouched children inherit from their nearest surviving ancestor or `default-text`; content references use their nearest surviving ancestor or surface default. Explicit references to a parent deleted in the same batch are rejected. Newly assigned font families must exist; unchanged unavailable families are preserved. The entire edit is one undo step and preserves per-element overrides. Before returning, it measures the target workspace's resizable body text boxes and enabled headers/footers with the updated styles, even when that workspace is in the background. Measurement preserves the selected workspace. Saves and recovery snapshots wait for pending measurements; failed measurement reports `TEXT_BOX_MEASUREMENT_FAILED` rather than saving stale heights. Does not save.
 - `replace_document_properties`: replaces the complete metadata object, requiring both `title` and `author`. One undo step; does not save.
 - `save_document`: save to `filePath`, or to the document's source if omitted. Save-as changes the workspace's source path. Existing unrelated destinations require `overwrite: true`. Saving back to the source checks its last known modification time and size, even when overwrite is true. Writes use a temporary file followed by an atomic commit. Same-source saves preserve the format used to open the score, including extensionless or differently suffixed symlink targets, and preserve the alias itself. Save-as to a different identity uses the destination suffix. Unrelated symlink outputs remain forbidden. The result includes `savedRevision` (the revision written) and `savedContentUnchanged` (whether that saved snapshot is still current). `revision` describes the current workspace, which can include newer interactive edits or the new source path.
-- `export_pdf`: render to an explicit absolute PDF path without a save dialog or external PDF viewer. Existing destinations require `overwrite: true`. Does not save the score. Export briefly blocks editor input and native menus and restores the selected workspace afterward. External file opens wait until export completes; an already-running external open finishes before export starts.
+- `export_pdf`: render to an explicit absolute PDF path without a save dialog or external PDF viewer. Existing destinations require `overwrite: true`. Does not save the score. Export uses a dedicated hidden renderer and leaves tabs, selection, editor input, and undo history available. The result includes `exportedRevision`, identifying the snapshot written to the PDF; `revision` describes the workspace at completion and may include newer interactive edits. Snapshot metadata and file-name tokens are captured together. No workspace, recovery state, or save is created by the hidden renderer. Rendering failure uses `EXPORT_RENDER_FAILED`; an aborted HTTP request cancels pending rendering and disposes its window. Cancellation uses `EXPORT_CANCELLED` when a response can still be delivered. Existing destination checks and atomic output commits still apply; cancellation racing with a completed commit can have an unknown outcome.
 
 All document-targeting tools require `documentId`. Close, edit, replace, save, and export also require `expectedRevision` from the latest read or successful operation. A revision conflict requires reading again; do not automatically retry a stale write. Revisions are opaque per-workspace numbers that can advance after user or agent edits and after changing the source path.
 
@@ -108,7 +108,7 @@ With the development app running and ready, run the real MCP client smoke test f
 NEANES_MCP_TOKEN=<same-token> node scripts/mcp/smoke.mjs /tmp/neanes-mcp/files
 ```
 
-The smoke test creates an interactive workspace and unique output files, updates lyrics defaults, saves/reopens both formats, exports a PDF, and checks revision conflicts, external changes, output collisions, authentication, and Origin rejection. It closes the workspaces introduced by the run and leaves output files available for inspection. Run it with an isolated development profile.
+The smoke test creates an interactive workspace and unique output files, updates lyrics defaults, saves/reopens both formats, exports PDFs (including custom 6 x 9-inch portrait and landscape paper dimensions), and checks revision conflicts, external changes, output collisions, authentication, and Origin rejection. It closes the workspaces introduced by the run and leaves output files available for inspection. Run it with an isolated development profile.
 
 To verify reuse of an interactively opened workspace through a path alias, run the additional smoke test with the same token, URL, and isolated development profile:
 
@@ -134,6 +134,26 @@ NEANES_MCP_TOKEN=<same-token> node scripts/mcp/background-style-smoke.mjs /tmp/n
 
 This uses matching scores with plain, rich, multipanel, header, and footer text boxes. It changes inherited typography in a background workspace, saves immediately, and compares persisted heights with a foreground control while checking that selection and the active workspace's heights stay unchanged. It closes only workspaces introduced by the run.
 
+## Hidden export regression
+
+Run the development Electron app with a dedicated profile and `--remote-debugging-port=9334`, or launch a production build with that flag, `--no-update`, and an explicit disposable `--user-data-dir=/tmp/neanes-mcp/export-profile`. The `NEANES_DEV_USER_DATA_DIR` override applies only to development builds. The debugging endpoint must be restricted to a disposable test instance; this test intentionally changes tabs and edits a document through the real renderer.
+
+```sh
+NEANES_MCP_TOKEN=<same-token> node scripts/mcp/hidden-export-smoke.mjs /tmp/neanes-mcp/files
+```
+
+Set `NEANES_DEBUG_URL` for another local debugging endpoint. The test constructs a multi-page score with notes, lyrics, melismas, a drop cap, martyria, tempo, rich text, and headers/footers. It first exercises selection, range selection, lyric focus/editing/undo, flushing pending inline-rich-text edits on tab switches, and page-specific focus for repeated headers. It also checks style undo/redo with unchanged heights while switching tabs, and exports long title, chapter, and filename tokens in headers/footers with horizontal rules. It then exports a background document while changing tabs and editing the source, checks the exported and current revisions, verifies unchanged control content and undo history, and checks disposal after success, a broken-image failure, and HTTP cancellation. It closes its introduced workspaces. The resulting PDF remains available for visual inspection.
+
+To verify Print Overlays against actual PDF drawing and text content, use the same isolated app and debugging endpoint:
+
+```sh
+NEANES_MCP_TOKEN=<same-token> node scripts/mcp/print-overlays-smoke.mjs /tmp/neanes-mcp/files
+```
+
+This test reloads the disposable editor with each overlay preference, exports a real PDF, and checks that guides, all bounding-box options, lyric baselines, glue widths, and adjustment ratios add PDF content. It also checks that disabling Print Overlays, Overlays, or Developer Panels suppresses them. It restores the original preferences and closes its documents. Run it separately from other smoke tests because it reloads the renderer.
+
+The snapshot protocol uses a separate `export.html` entry, without the normal editor, router, preferences persistence, recovery hooks, or service worker. Main creates one hidden window per export and accepts readiness/results only from that window. The renderer receives the save-format score, source/name metadata, language, and system-font face metadata. All Electron PDF exports (menu, command line, and MCP) use this renderer. It loads referenced fonts before canvas layout, waits for rich-text editors and image decoding, and measures the resolved text on each page. Height changes trigger another layout/render pass before readiness. Shared header/footer templates reserve their largest observed height across pages and passes; a bounded reconciliation loop fails explicitly if layout does not settle. Main destroys the window and removes its listeners after every outcome; a 45-second rendering deadline bounds initialization/printing failures. The editor's existing 60-second request timeout remains the outer limit.
+
 ## Code organization
 
 Shared document operations live in `src/services/documents/`: workspace creation and opening, metadata and paragraph-style edits, serialization, save completion, and export preparation. Both the editor UI and MCP call `DocumentService`. Editor hooks supply rendering, focus, recovery, and layout behavior; persistence callbacks supply either dialog-based or explicit-path file writes.
@@ -141,3 +161,5 @@ Shared document operations live in `src/services/documents/`: workspace creation
 `electron/main/files/ScoreFiles.ts` owns shared score encoding, reads and writes, canonical file identity, conflict checks, and atomic output. Dialog-driven saves retain their existing write behavior; explicit-path saves use overwrite and conflict options. `electron/main/automation/files.ts` adds the configured folder-access policy. General file types live in `src/services/documents/fileTypes.ts`.
 
 The automation folders contain MCP schemas, tool dispatch, revisions and pagination, transport/IPC request handling, and access policy. Shared document and file services do not import automation types or tool contracts.
+
+The editor and hidden export renderer both use `ScorePageContent.vue` for headers, footers, notation, lyrics, and element rendering. The editor retains its page DOM wrappers, visibility tracking, focus handling, and mutation handlers. Each page owns its child refs and exposes methods for element, lyric, annotation, and page-specific header/footer lookup; the editor holds only page-component refs. Page content forwards typed interaction events; editor-only badges and developer overlays are supplied through slots. Print pages use local component refs to await rich-text readiness. Overlay markup, geometry, and styles also live in the shared page component. Snapshots capture overlay preferences, and the detached renderer regenerates layout diagnostics so enabled Print Overlays settings apply to every PDF route.

@@ -200,6 +200,57 @@ try {
     'FILE_EXISTS',
   );
   assert.deepEqual(await fs.readFile(pdfPath), pdf);
+  // Custom dimensions describe the unrotated paper; Electron applies landscape.
+  for (const landscape of [false, true]) {
+    const customScore = structuredClone(persisted);
+    Object.assign(customScore.pageSetup, {
+      pageSize: 'Custom',
+      pageWidthCustom: 6 * 96,
+      pageHeightCustom: 9 * 96,
+      pageWidth: (landscape ? 9 : 6) * 96,
+      pageHeight: (landscape ? 6 : 9) * 96,
+      landscape,
+    });
+    const orientation = landscape ? 'landscape' : 'portrait';
+    const customPath = path.join(
+      directory,
+      `smoke-${suffix}-${orientation}.byzx`,
+    );
+    const customPdfPath = path.join(
+      directory,
+      `smoke-${suffix}-${orientation}.pdf`,
+    );
+    await fs.writeFile(customPath, JSON.stringify(customScore));
+    const custom = await call('open_document', { filePath: customPath });
+    try {
+      const current = await settledDocument(custom.documentId);
+      await call('export_pdf', {
+        documentId: current.documentId,
+        expectedRevision: current.revision,
+        filePath: customPdfPath,
+      });
+      const customPdf = (await fs.readFile(customPdfPath)).toString('latin1');
+      const mediaBoxes = [...customPdf.matchAll(/\/MediaBox\s*\[([^\]]+)\]/g)];
+      assert.ok(
+        mediaBoxes.length > 0,
+        'Export must specify PDF paper dimensions.',
+      );
+      for (const [, dimensions] of mediaBoxes) {
+        assert.deepEqual(
+          dimensions.trim().split(/\s+/).map(Number),
+          landscape ? [0, 0, 648, 432] : [0, 0, 432, 648],
+          `Custom 6 x 9 ${orientation} paper must be oriented exactly once.`,
+        );
+      }
+    } finally {
+      const current = await settledDocument(custom.documentId);
+      await call('close_document', {
+        documentId: current.documentId,
+        expectedRevision: current.revision,
+        discardUnsavedChanges: true,
+      });
+    }
+  }
   const other = await call('create_document', { title: 'Other document' });
   await call('save_document', {
     documentId: other.documentId,

@@ -55,7 +55,7 @@ export interface McpServerOptions {
   token: string;
   port: number;
   version: string;
-  execute(request: AutomationRequest): Promise<unknown>;
+  execute(request: AutomationRequest, signal: AbortSignal): Promise<unknown>;
 }
 
 export async function startMcpServer(options: McpServerOptions) {
@@ -103,6 +103,7 @@ export async function startMcpServer(options: McpServerOptions) {
       res.writeHead(405, { Allow: 'POST' }).end();
       return;
     }
+    const connection = new AbortController();
     const server = new McpServer(
       { name: 'neanes', version: options.version },
       { capabilities: { tools: {} } },
@@ -149,7 +150,7 @@ export async function startMcpServer(options: McpServerOptions) {
     // error contract, including invalid arguments. JSON-RPC framing errors remain protocol errors.
     server.server.setRequestHandler(
       CallToolRequestSchema,
-      async ({ params }) => {
+      async ({ params }, extra) => {
         let outcome;
         try {
           if (!Object.hasOwn(automationSchemas, params.name)) {
@@ -163,7 +164,12 @@ export async function startMcpServer(options: McpServerOptions) {
             tool: params.name,
             arguments: params.arguments ?? {},
           });
-          const pending = queue.then(() => options.execute(request));
+          const pending = queue.then(() =>
+            options.execute(
+              request,
+              AbortSignal.any([connection.signal, extra.signal]),
+            ),
+          );
           queue = pending.then(
             () => undefined,
             () => undefined,
@@ -193,6 +199,9 @@ export async function startMcpServer(options: McpServerOptions) {
     );
     active.add(server);
     res.once('close', () => {
+      if (!res.writableEnded) {
+        connection.abort(new Error('EXPORT_CANCELLED'));
+      }
       active.delete(server);
       void server.close();
     });

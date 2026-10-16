@@ -33,6 +33,7 @@ import type {
   WorkspaceFile,
   WriteScoreFileArgs,
 } from '@/services/documents/fileTypes';
+import type { PdfSnapshot } from '@/services/documents/pdfSnapshot';
 import { Unit } from '@/utils/Unit';
 
 import { SaveService } from '../SaveService';
@@ -98,10 +99,12 @@ export class IpcService implements IIpcService {
 
   public async exportWorkspaceAsPdf(
     workspace: Workspace,
+    snapshot: PdfSnapshot,
   ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsPdf,
       {
+        snapshot,
         filePath: workspace.filePath,
         tempFileName: workspace.tempFileName,
         landscape: workspace.score.pageSetup.landscape,

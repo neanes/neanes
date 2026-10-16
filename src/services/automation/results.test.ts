@@ -75,4 +75,18 @@ describe('automation result contracts', () => {
       savedContentUnchanged: false,
     });
   });
+  it('identifies the exported revision independently of later interactive edits', () => {
+    const result = {
+      ...summary,
+      revision: 4,
+      exportedRevision: 2,
+      outputFilePath: '/scores/export.pdf',
+      format: 'pdf',
+    };
+    expect(automationResultSchemas.export_pdf.parse(result)).toEqual(result);
+    const missingSnapshot = { ...result, exportedRevision: undefined };
+    expect(
+      automationResultSchemas.export_pdf.safeParse(missingSnapshot).success,
+    ).toBe(false);
+  });
 });

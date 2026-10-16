@@ -26,6 +26,24 @@ export interface IEditorPreferences {
   showGlueWidths: boolean;
 }
 
+// Only rendering preferences cross into a detached PDF snapshot.
+export type ScoreOverlaySettings = Pick<
+  IEditorPreferences,
+  | 'showDeveloperPanels'
+  | 'overlaysEnabled'
+  | 'printOverlays'
+  | 'showGuides'
+  | 'showAdjustmentRatios'
+  | 'showAnonymousBoxes'
+  | 'showElementBoxes'
+  | 'showInkBoundingBoxes'
+  | 'showGlueWidths'
+  | 'showLyricBaselines'
+  | 'showLyricBoundingBoxes'
+  | 'showNeumeBoundingBoxes'
+  | 'showCollisionRegions'
+>;
+
 export class EditorPreferences implements IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
   buttonMenuMode = ButtonMenuMode.Hold;

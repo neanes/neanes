@@ -253,6 +253,7 @@ export class McpDocumentAdapter {
     );
     return {
       ...this.summary(workspace),
+      exportedRevision: request.arguments.expectedRevision,
       outputFilePath: request.arguments.filePath,
       format: 'pdf',
     };

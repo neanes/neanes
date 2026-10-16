@@ -64,8 +64,10 @@ import {
   type WorkspacePaneId,
   type WorkspacePaneVisibility,
 } from '../../src/models/WorkspacePane';
+import type { PdfExportOptions } from '../../src/services/documents/fileTypes';
 import { TestFileType } from '../../src/utils/TestFileType';
 import { startAutomationHost } from './automation/host';
+import { renderPdf } from './export/renderPdf';
 import {
   scoreFileFormat,
   ScoreFiles,
@@ -855,6 +857,24 @@ function getPageSize(pageSize: PageSize, width: number, height: number) {
 let silentPdfSuccessCount = 0;
 let silentPdfFailCount = 0;
 
+function renderWorkspacePdfSnapshot(
+  args: ExportWorkspaceAsPdfArgs | PdfExportOptions,
+  signal = new AbortController().signal,
+) {
+  return renderPdf({
+    args,
+    signal,
+    preload,
+    entry: path.join(process.env.DIST!, 'export.html'),
+    devServerUrl: url,
+    pageSize: getPageSize(
+      args.pageSize,
+      args.pageWidthInches,
+      args.pageHeightInches,
+    ),
+  });
+}
+
 async function exportWorkspaceAsPdf(
   args: ExportWorkspaceAsPdfArgs,
 ): Promise<ExportWorkspaceReplyArgs> {
@@ -874,17 +894,7 @@ async function exportWorkspaceAsPdf(
 
     if (silentPdf) {
       try {
-        const data = await win.webContents.printToPDF({
-          pageSize: getPageSize(
-            args.pageSize,
-            args.pageWidthInches,
-            args.pageHeightInches,
-          ),
-          landscape: args.landscape,
-          // Keep app chrome backgrounds out of the PDF. Score color fidelity
-          // is controlled by print-color-adjust: exact in the print stylesheet.
-          printBackground: false,
-        });
+        const data = await renderWorkspacePdfSnapshot(args);
         const newPath = replaceExtension(args.filePath!, 'pdf');
 
         await fs.writeFile(newPath, data);
@@ -927,17 +937,7 @@ async function exportWorkspaceAsPdf(
       }
 
       if (doWrite) {
-        const data = await win.webContents.printToPDF({
-          pageSize: getPageSize(
-            args.pageSize,
-            args.pageWidthInches,
-            args.pageHeightInches,
-          ),
-          landscape: args.landscape,
-          // Keep app chrome backgrounds out of the PDF. Score color fidelity
-          // is controlled by print-color-adjust: exact in the print stylesheet.
-          printBackground: false,
-        });
+        const data = await renderWorkspacePdfSnapshot(args);
         await fs.writeFile(filePath, data);
 
         // On Linux, shell.openPath() may not resolve until the external viewer
@@ -1618,10 +1618,6 @@ type WorkspaceTabNavigationDirection = 'previous' | 'next';
 function sendWindowTabNavigationCommand(
   direction: WorkspaceTabNavigationDirection,
 ) {
-  if (automationHost?.exporting) {
-    return;
-  }
-
   win?.webContents.send(
     direction === 'previous'
       ? IpcMainChannels.FileMenuWindowPreviousTab
@@ -2499,10 +2495,6 @@ async function createWindow() {
   // Prevent the user from accidentally
   // closing the app with unsaved changes
   win.on('close', (event) => {
-    if (automationHost?.exporting) {
-      event.preventDefault();
-      return;
-    }
     if (!readyToExit) {
       win?.webContents.send(IpcMainChannels.CloseApplication);
       event.preventDefault();
@@ -2993,19 +2985,8 @@ app.on('ready', async () => {
             saving = false;
           }
         },
-        async printPdf(args) {
-          if (win == null) {
-            throw new Error('EDITOR_NOT_READY');
-          }
-          return win.webContents.printToPDF({
-            pageSize: getPageSize(
-              args.pageSize,
-              args.pageWidthInches,
-              args.pageHeightInches,
-            ),
-            landscape: args.landscape,
-            printBackground: false,
-          });
+        async printPdf(args, signal) {
+          return renderWorkspacePdfSnapshot(args, signal);
         },
       });
     } catch (error) {

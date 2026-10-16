@@ -1,6 +1,6 @@
 # Neanes MCP implementation plan
 
-Implementation handoff, updated 2026-10-15. Stage 1 is complete. This document records the agreed direction and current boundaries; exact contracts for later stages remain to be designed.
+Implementation handoff, updated 2026-10-15. Stage 1 is complete. Stage 2 is in progress: detached PDF rendering and shared page rendering are complete; isolated sessions, element editing, jobs, and export transformations remain unimplemented. Stage 2.5 (native printing and PNG migration) is the immediate next task, before isolated document lifecycle work. The session changes are uncommitted in the working tree.
 
 ## Overview
 
@@ -12,7 +12,7 @@ Neanes hosts an opt-in MCP server while the Electron app is running. The goals a
 
 The intended architecture supports interactive workspaces and isolated automation documents. Electron main owns transport, filesystem access, and job coordination; validated IPC requests reach renderer-side document operations, layout, and rendering. UI and MCP share application behavior. The browser PWA does not host an MCP server.
 
-Stage 1 uses interactive workspaces. It does not yet provide isolated sessions, folder jobs, musical element editing, or temporary export transformations. A client can already loop over known paths to edit styles, save, export, and close documents, but those documents appear in the editor.
+Document tools still use interactive workspaces. A client can loop over known paths to edit styles, save, export, and close documents, but those documents appear in the editor. PDF rendering alone is detached; this is not yet isolated document processing or a headless startup mode.
 
 ## Settled architectural decisions
 
@@ -23,7 +23,11 @@ Stage 1 uses interactive workspaces. It does not yet provide isolated sessions, 
 - **Deliberate representations.** Writable styles use nested `overrides` and `fontStyle`; inspected score JSON retains the existing save-format contract. Do not duplicate that entire format in a second MCP schema. Tool inputs and outputs have schemas; structured success/error envelopes and stable error codes also survive IPC. Timeouts/disconnects can have an unknown outcome, requiring inspection before retry.
 - **File identity differs from encoding.** Compare canonical identities to reuse open workspaces and enforce source conflicts, preserving unsaved content. Decode by the requested suffix and retain source format separately for same-source saves and recovery. Save As to another identity uses the destination suffix. Explicit-path writes use atomic commits, overwrite rules, and source checks based on modification time and size, including aliases. These checks do not lock out other applications.
 - **Safe cleanup.** `open_document.created` distinguishes new workspaces from reused ones. Close requires a revision and explicit discard for unsaved or recovered drafts, cleans recovery state, and never saves implicitly or deletes score files. Closing the last workspace creates a blank one so MCP remains available. Clients should close only documents they introduced unless instructed otherwise.
-- **Stage 1 rendering correctness.** PDF export temporarily selects its document, blocks input/navigation/native menus, then restores selection. Native/external opens, including dialogs already in progress, share its operation queue. Target-specific offscreen text-box measurement waits for fonts/editors and completes before style edits settle, saves, or recovery snapshots. Foreground and background paragraph CSS are scoped separately. This measurement component is not an isolated export renderer.
+- **One snapshot renderer for Electron PDFs.** Menu, command-line/silent, and MCP PDF exports all use `electron/main/export/renderPdf.ts` and the separate `export.html`/`src/export.ts` entry. A snapshot contains save-format score data, source/name/title metadata, language, system-font metadata, and overlay preferences. The disposable renderer creates no interactive workspace, recovery state, router, preferences persistence, or service worker. Dialogs, destination handling, and file-access policy stay outside it. Native printing and PNG export retain their existing editor paths.
+- **Shared page structure, page-owned refs.** `ScorePageContent.vue` owns headers, footers, notation, lyrics, overlays, and child refs. The editor retains page DOM wrappers, visibility, selection, focus timing, mutation handlers, and editor-only badge slots. Its page-component refs expose `getElementRef`, `getLyricsRef`, `getAnnotationRef`, `getHeaderFooterRef`, and `getPageIndex`; header/footer instances are identified by page and region. There is no injected ref-setter or editor-wide child-ref registry. Print pages also use `whenReady` and `measureTextBoxes`.
+- **Explicit rendering completion.** Load referenced fonts before canvas layout; await every rich-text variant (including both inline editors), annotations, and image decoding. Measure resolved page-specific token content and reconcile heights/pagination before readiness, with a 12-pass bound and explicit failure. Shared header/footer templates conservatively reserve their largest observed height across pages/passes to avoid chapter-movement cycles. Regenerate layout diagnostics for Print Overlays. Pass unrotated `pageWidthCustom`/`pageHeightCustom` to Electron; apply landscape exactly once.
+- **Snapshot isolation and disposal.** PDF export leaves interactive tabs/input available. `exportedRevision` identifies the captured snapshot; the current `revision` can advance during export. Main validates renderer sender identity, removes listeners, and destroys the hidden window on success, failure, or cancellation. HTTP disconnects, editor disconnects, and request timeouts abort pending MCP rendering. Rendering has a 45-second deadline inside the 60-second MCP request limit; cancellation racing with an output commit can still have an unknown outcome.
+- **One text-box measurement lifecycle.** Style edits, style undo/redo, saves, recovery, and document settlement share the workspace-specific measurement queue. Explicit completion covers unchanged heights; global counters/polling and their temporary editor paths were removed. Foreground/background paragraph CSS stays scoped separately.
 
 ## Implementation stages
 
@@ -37,13 +41,46 @@ Stage 1 uses interactive workspaces. It does not yet provide isolated sessions, 
 
 **Evidence:** 699 unit tests passed (6 skipped), lint and type checking passed, Electron/web production builds passed, and real-app MCP smoke tests covered the principal lifecycle and regression cases. The final CSS-isolation regression failed with the old global rules and passed with scoped rules. Regression scripts and execution instructions are in `scripts/mcp/`.
 
-### Stage 2: Development and batch workflows - next
+### Stage 2: Development and batch workflows - in progress
 
 **Objective:** Add structured element editing and validated transactions, isolated sessions, folder jobs, and temporary export transformations.
 
-**Dependencies and sequence:** Build on Stage 1's document services and safety contracts. Start by separating export rendering from the interactive editor, then establish isolated document ownership/lifecycle. Design element references and transaction semantics before exposing editing tools; build folder orchestration on those operations.
+**Completed this session:**
+
+- [x] Dedicated snapshot PDF renderer, IPC handoff, readiness, errors, cancellation, and disposal.
+- [x] Route all Electron PDF exports through it while preserving dialog and explicit-path output behavior.
+- [x] Share page structure and overlay rendering with the editor; move child-ref ownership behind page methods.
+- [x] Fix inline rich-text readiness, resolved-token measurement/repagination, style-history measurement lifecycle, Print Overlays, and custom landscape dimensions.
+- [x] Add real-app regressions for background export during interactive edits, ref/focus/remount behavior, unchanged-height style undo/redo with tab switches, rendering failure/cancellation, all overlay options/gates, and custom portrait/landscape paper dimensions.
+
+**Still required:**
+
+- [ ] Isolated document/session ownership and lifecycle.
+- [ ] Typed element/range discovery and validated edit transactions.
+- [ ] Folder discovery and job orchestration.
+- [ ] Temporary export-copy transformations.
+
+**Evidence:** 701 unit tests passed (6 skipped); type checking, lint, and Electron/web production builds passed. Real Electron MCP lifecycle, background typography, hidden-export, and Print Overlays smoke tests passed. Command-line/MCP PDFs from the same source had identical glyph positions. The custom-landscape regression failed before the fix (portrait paper, 2/3 text scale) and passed afterward (9 x 6-inch paper, full scale); portrait output also passed. Commands and disposable-profile requirements are in `scripts/mcp/README.md`.
+
+**Dependencies and sequence:** Complete the Stage 2.5 rendering prerequisite below, then resume Stage 2 with isolated ownership/lifecycle. Design element references and transaction semantics before exposing editing tools; build folder orchestration and transformations on those operations. Stage 2 as a whole is not complete.
 
 **Acceptance criteria:** Agents can construct representative scores without clicks; invalid edit batches leave no partial musical edits and successful batches form one undo step. Isolated processing does not alter user tabs, selection, unsaved content, or undo history. Folder jobs support discovery, progress, cancellation, per-file results, explicit overwrite behavior, and source conflicts. A lyrics-font batch preserves explicit element overrides. An export-only transformation, including failure/cancellation, leaves the original untouched.
+
+### Stage 2.5: Finish the rendering migration - next
+
+This is a rendering prerequisite within the current Stage 2 work, not a task to postpone until all Stage 2 features are complete. PDF migration and shared page/ref/overlay rendering are already complete; the remaining routes still depend on the live editor.
+
+**Objective:** Move Electron native printing and PNG export onto detached snapshot rendering before implementing isolated documents.
+
+- [ ] Inspect existing native printing and image-export preparation, IPC, and output behavior before changing them.
+- [ ] Reuse shared page rendering, font/editor/image readiness, token measurement/repagination, and renderer cleanup. Extend the snapshot protocol only where needed; avoid another editor instance or a second preparation implementation.
+- [ ] Migrate native printing while preserving printer selection, print options, cancellation, orientation, overlays, and existing dialog ownership.
+- [ ] Migrate PNG export while preserving page ranges, image dimensions/scale, transparency/background behavior, destination handling, and related image-format behavior. Inspect any shared SVG path and preserve it without broadening this stage unnecessarily.
+- [ ] Verify output parity and cleanup after success, failure, and cancellation, including multi-page scores, rich text, images, tokens, overlays, and custom landscape paper. Confirm user tabs, selection, pending edits, undo, and recovery remain intact.
+
+**Acceptance:** Native printing and PNG export no longer require mounting or printing the live editor's pages. All three rendering routes use the same completion guarantees, with route-specific dialogs and output handling outside score rendering. Existing PDF regressions, MCP-disabled UI behavior, and the web build remain supported.
+
+**Scope:** Rendering migration only. Do not add isolated sessions, element-editing tools, folder jobs, or export transformations in this stage.
 
 ### Stage 3: Composition assistance - planned
 
@@ -55,15 +92,18 @@ Stage 1 uses interactive workspaces. It does not yet provide isolated sessions, 
 
 ## Remaining work and open design questions
 
-- **Hidden export renderer:** The recommended first Stage 2 change was discussed and deferred as a separate architectural task. Extract rendering with font/layout readiness; loading another full editor unchanged would run unwanted workspace/recovery/persistence behavior. Define snapshot handoff, errors, cancellation, and disposal. A snapshot-based hidden renderer is the proposed approach, not an implemented contract.
-- **Isolated sessions:** Decide session ownership, IDs, lifetime, cleanup, resource limits, and how isolation interacts with a file already open with unsaved edits. A startup mode without the normal editor was proposed but is not committed functionality.
-- **Editing:** Define stable element references, range queries, complete supported element/neume/property discovery, lyric operations, and transaction validation/failure semantics. Do not expose arbitrary Vue access or an unvalidated score-JSON mutation escape hatch.
-- **Jobs and transformations:** Design folder discovery, dry-run/change previews, per-file reports, progress/cancellation, and export-copy transformations. Separate multi-file job outcomes from a single document's atomic edit transaction.
-- **Known limitations:** Export still occupies the visible renderer; isolated/headless processing is absent. External conflict checks use time/size rather than filesystem locking. A timed-out operation may have completed. Newly mounted rich-text editors can normalize imported content asynchronously and advance revisions; clients must use fresh reads. Stage 1 review findings concerning alias handling, export interruptions, modifier cleanup, source encoding, background heights, and CSS leakage were fixed, not deferred.
-- Continue pure unit coverage and real Electron smoke tests; repository policy prohibits mocks, spies, fakes, and DOM emulation. Recheck normal UI behavior with MCP disabled and the web build when changing shared operations.
+- **Rendering migration first:** Stage 2.5 above is the immediate next task. Native printing and PNG export are not yet migrated; shared page rendering alone does not complete this stage.
+- **Isolated sessions:** Define ownership, IDs, lifetime, cleanup, resource limits, and behavior when the same file is already open with unsaved edits. Reuse document/file services and the snapshot renderer without registering automation documents as user tabs or recovery drafts. A startup mode without the normal editor is not committed functionality.
+- **Editing:** Define stable element references, range queries, complete supported element/neume/property discovery, lyric operations, and transaction validation/failure semantics. Invalid batches must leave no partial edits; successful interactive batches form one undo step. Do not expose arbitrary Vue access or unvalidated score-JSON mutation.
+- **Jobs and transformations:** Define folder discovery, dry-run/change previews, per-file reports, progress/cancellation, and temporary export-copy transformations. Separate multi-file job outcomes from a document's atomic edit transaction.
+- **Known limits:** Documents still belong to interactive workspaces. Native printing/PNG preparation is not unified with snapshot PDF readiness. Source conflict checks use time/size rather than filesystem locking; timeout/cancellation can have an uncertain outcome. Newly mounted rich-text editors can normalize imported content and advance revisions; clients must reread before writes. A pre-existing rich-text undo-after-tab-switch issue was observed before the page refactor (saving can reapply stale editor data); recheck separately rather than treating it as fixed by the measurement-queue change.
+- **Verification:** Continue pure unit tests and real Electron smoke tests; no mocks, spies, fakes, or DOM emulation. Preserve the current focus, pending-input flush, repeated-header instance, overlay, token, and paper-size regressions. Recheck MCP-disabled UI and the web build when changing shared operations.
 
-## Next stage entry point
+## Next two sessions
 
-Begin Stage 2 with a scoped design for a dedicated hidden export renderer. Identify the page-rendering extraction from `TheEditor.vue`, snapshot and readiness protocol, and failure cleanup before implementing it. Prove that export remains correct while the user changes tabs or edits, and that it has no workspace/recovery side effects. Then extend that foundation to isolated sessions and deliberate element-editing/job contracts.
+1. **Stage 2.5: Native printing and PNG export.** Inspect their current paths in `TheEditor.vue`, IPC services, and Electron main; migrate preparation to detached snapshot rendering and verify the acceptance criteria above. Reuse `renderPdf.ts` lifecycle patterns while preserving each route's behavior. Complete this boundary before starting isolation.
+2. **Resume Stage 2: Isolated document lifecycle.** Inspect `DocumentService` and its editor hooks, then settle ownership, lifetime, resource limits, and the unsaved-file policy. Implement bounded isolated sessions using shared document/file/rendering services, with explicit cleanup and no tab, focus, undo, or recovery side effects. Verify success, failure, cancellation, and file conflicts. A detached rendering window is not itself an isolated document host.
 
-For current behavior and verification commands, use the MCP guide in `scripts/mcp/README.md`. Start code exploration at `DocumentService`, `McpDocumentAdapter`, the main-process automation host, `ScoreFiles`, and the editor's integration hooks; detailed tool schemas and algorithms belong in those sources rather than this plan.
+**After those sessions:** Typed element/range discovery and validated transactions, then folder jobs and temporary export-copy transformations. These remain Stage 2 work; composition assistance remains Stage 3. If Stage 2.5 needs more than one session to meet its acceptance criteria, finish it before advancing to isolation.
+
+For setup and verification commands, use `scripts/mcp/README.md`. Start code exploration at `DocumentService`, `McpDocumentAdapter`, the automation host, and `ScoreFiles`. Rendering entry points are `PdfSnapshot`, `renderPdf.ts`, `ExportRenderer.vue`, `ScorePrintPages.vue`, and `ScorePageContent.vue`; shared font/layout helpers live in `src/services/documents/` and `useScoreRendering.ts`. Detailed contracts belong in source and schemas rather than this plan.

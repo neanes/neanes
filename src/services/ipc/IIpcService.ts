@@ -23,6 +23,7 @@ import type {
   WorkspaceFile,
   WriteScoreFileArgs,
 } from '@/services/documents/fileTypes';
+import type { PdfSnapshot } from '@/services/documents/pdfSnapshot';
 
 export interface IIpcService {
   automationReadScore(
@@ -44,7 +45,10 @@ export interface IIpcService {
     data?: SavedScore,
   ): Promise<SaveWorkspaceAsReplyArgs>;
 
-  exportWorkspaceAsPdf(workspace: Workspace): Promise<ExportWorkspaceReplyArgs>;
+  exportWorkspaceAsPdf(
+    workspace: Workspace,
+    snapshot: PdfSnapshot,
+  ): Promise<ExportWorkspaceReplyArgs>;
 
   exportWorkspaceAsHtml(
     workspace: Workspace,

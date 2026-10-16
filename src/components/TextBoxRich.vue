@@ -565,8 +565,8 @@ function getEditorInstanceRight() {
   return editorRight.value?.instance;
 }
 
-// Measurement instances are mounted for one target/style snapshot at a time.
-const measurementReady = Promise.withResolvers<void>();
+// Snapshot consumers wait for all editors, independently of height measurement.
+const editorsReady = Promise.withResolvers<void>();
 const readyEditors = new WeakSet<InlineEditor>();
 function markEditorReady(editor: InlineEditor) {
   readyEditors.add(editor);
@@ -575,12 +575,17 @@ function markEditorReady(editor: InlineEditor) {
       (instance) => instance != null && readyEditors.has(instance),
     )
   ) {
-    measurementReady.resolve();
+    editorsReady.resolve();
   }
 }
 
+async function whenReady() {
+  await editorsReady.promise;
+  await nextTick();
+}
+
 async function measureHeight() {
-  await measurementReady.promise;
+  await whenReady();
   await document.fonts.ready;
   refreshCkContentFontSize();
   await nextTick();
@@ -732,6 +737,7 @@ function onEditorReadyInline(editor: InlineEditor) {
   );
 
   setPadding(editor);
+  markEditorReady(editor);
 }
 
 function onEditorReadyInlineBottom(editor: InlineEditor) {
@@ -754,6 +760,7 @@ function onEditorReadyInlineBottom(editor: InlineEditor) {
   );
 
   setPadding(editor);
+  markEditorReady(editor);
 }
 
 function applyInitialLanguage(editor: InlineEditor) {
@@ -972,6 +979,7 @@ function focus() {
 }
 
 defineExpose({
+  whenReady,
   measureHeight,
   focus,
   getPendingUpdates,

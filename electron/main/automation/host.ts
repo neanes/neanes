@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron';
-import { ipcMain, Menu } from 'electron';
+import { ipcMain } from 'electron';
 
 import {
   IpcMainChannels,
@@ -27,7 +27,7 @@ import { startMcpServer } from './server';
 export async function startAutomationHost(options: {
   getWindow(): BrowserWindow | null;
   version: string;
-  printPdf(args: PdfExportOptions): Promise<Buffer>;
+  printPdf(args: PdfExportOptions, signal: AbortSignal): Promise<Buffer>;
   withFileLock<T>(operation: () => Promise<T>): Promise<T>;
   runExclusive<T>(operation: () => Promise<T>): Promise<T>;
 }) {
@@ -41,7 +41,7 @@ export async function startAutomationHost(options: {
     resolve(value: unknown): void;
     reject(error: Error): void;
   } | null = null;
-  let exporting = false;
+  let exportController: AbortController | null = null;
 
   function isSender(event: { sender: Electron.WebContents }) {
     return event.sender === options.getWindow()?.webContents;
@@ -96,7 +96,9 @@ export async function startAutomationHost(options: {
         requireRequest(event, 'export_pdf');
         await options.withFileLock(async () => {
           const filePath = await files.resolve(args.filePath, 'pdf', true);
-          const data = await options.printPdf(args);
+          const signal = exportController!.signal;
+          const data = await options.printPdf(args, signal);
+          signal.throwIfAborted();
           await files.writeOutput(filePath, data, args.overwrite);
         });
         return null;
@@ -105,6 +107,7 @@ export async function startAutomationHost(options: {
 
   function invalidate() {
     ready = false;
+    exportController?.abort(new Error('EDITOR_DISCONNECTED'));
     pending?.reject(
       new AutomationError({
         code: 'EDITOR_DISCONNECTED',
@@ -119,7 +122,7 @@ export async function startAutomationHost(options: {
     token: process.env.NEANES_MCP_TOKEN ?? '',
     port: Number(process.env.NEANES_MCP_PORT ?? 38765),
     version: options.version,
-    async execute(request) {
+    async execute(request, signal) {
       if (!ready) {
         throw new Error('EDITOR_NOT_READY');
       }
@@ -133,17 +136,17 @@ export async function startAutomationHost(options: {
           throw new Error('EDITOR_NOT_READY');
         }
         const requestId = randomUUID();
-        const menuItems =
-          request.tool === 'export_pdf'
-            ? (Menu.getApplicationMenu()?.items ?? [])
-            : [];
-        const menuState = menuItems.map((item) => item.enabled);
-        exporting = request.tool === 'export_pdf';
-        menuItems.forEach((item) => {
-          item.enabled = false;
-        });
+        if (request.tool === 'export_pdf' && signal.aborted) {
+          throw new Error('EXPORT_CANCELLED');
+        }
+        exportController =
+          request.tool === 'export_pdf' ? new AbortController() : null;
+        const onCancel = () =>
+          exportController?.abort(new Error('EXPORT_CANCELLED'));
+        signal.addEventListener('abort', onCancel, { once: true });
         const timer = setTimeout(() => {
           ready = false;
+          exportController?.abort(new Error('AUTOMATION_TIMEOUT'));
           rejectTimeout(
             new AutomationError({
               code: 'AUTOMATION_TIMEOUT',
@@ -163,21 +166,18 @@ export async function startAutomationHost(options: {
           });
         } finally {
           clearTimeout(timer);
+          signal.removeEventListener('abort', onCancel);
           pending = null;
-          exporting = false;
-          menuItems.forEach((item, index) => {
-            item.enabled = menuState[index];
-          });
+          exportController = null;
         }
       };
-      // A client timeout does not release the export lock while the renderer is
-      // still printing. A reply or renderer disconnect completes the operation.
+      // Interactive close still shares the native file-operation queue.
       const runOperation = () =>
         request.tool === 'close_document'
           ? options.withFileLock(operation)
           : operation();
       const result =
-        request.tool === 'export_pdf' || request.tool === 'close_document'
+        request.tool === 'close_document'
           ? options.runExclusive(runOperation)
           : runOperation();
       return Promise.race([result, timeout]);
@@ -186,9 +186,6 @@ export async function startAutomationHost(options: {
 
   console.log(`Neanes MCP listening at http://127.0.0.1:${server.port}/mcp`);
   return {
-    get exporting() {
-      return exporting;
-    },
     attach(win: BrowserWindow) {
       ready = false;
       win.webContents.on(

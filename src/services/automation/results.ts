@@ -77,6 +77,7 @@ export const automationResultSchemas = {
     savedContentUnchanged: z.boolean(),
   }),
   export_pdf: documentSummarySchema.extend({
+    exportedRevision: revision,
     outputFilePath: z.string(),
     format: z.literal('pdf'),
   }),

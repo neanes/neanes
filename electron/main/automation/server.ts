@@ -27,18 +27,22 @@ import {
 } from '../../../src/services/automation/results';
 
 const descriptions: Record<AutomationTool, string> = {
+  create_session:
+    'Create an isolated session. Its ID is a bearer capability; pass sessionId to document tools. Sessions expire after 15 idle minutes and discard unsaved drafts. At most 4 sessions and 16 documents per session. HTTP disconnect does not close a session.',
+  close_session:
+    'Close an isolated session atomically. Unsaved documents require explicit discardUnsavedChanges. Does not save or delete files.',
   get_capabilities:
     'Describe supported operations, font families, file formats, and style units. Requires the editor to be ready.',
   list_documents:
-    'List open interactive workspaces with IDs and revisions. Does not open files.',
+    'List interactive workspaces, or only documents owned by the supplied sessionId, with IDs and revisions. Does not open files.',
   get_document:
     'Read document metadata and a paginated serialized score. Dimensions are CSS pixels. Use get_paragraph_styles for writable style definitions; serialized score styles use the save-format shape.',
   create_document:
-    'Create and select an unsaved interactive document using the user defaults.',
+    'Create an unsaved document using user defaults. With sessionId it belongs only to that isolated session; otherwise selects a new interactive tab.',
   open_document:
-    'Open and select a .byzx or .byz file within configured roots. Reuses an existing workspace and preserves unsaved edits. Returns created: true only when a new workspace was added.',
+    'With sessionId, read saved contents independently of interactive unsaved edits; never reuse an interactive tab. Without sessionId, open and select a .byzx or .byz file within configured roots. Reuses an existing workspace and preserves unsaved edits. Returns created: true only when a new workspace was added.',
   close_document:
-    'Close a workspace without saving or deleting score files. Requires the last read revision, even when discarding. Unsaved or recovered documents require explicit discardUnsavedChanges: true; otherwise UNSAVED_CHANGES is returned. Removes recovery data. Closing the last workspace creates a blank workspace and keeps the server running. Return includes the closed ID and resulting selected ID. Close only workspaces you introduced unless the user requests otherwise; open_document.created distinguishes new workspaces from reused ones.',
+    'With sessionId, close only that session document; selectedDocumentId is null, no replacement document or recovery entry is created. Without sessionId, close a workspace without saving or deleting score files. Requires the last read revision, even when discarding. Unsaved or recovered documents require explicit discardUnsavedChanges: true; otherwise UNSAVED_CHANGES is returned. Removes recovery data. Closing the last workspace creates a blank workspace and keeps the server running. Return includes the closed ID and resulting selected ID. Close only workspaces you introduced unless the user requests otherwise; open_document.created distinguishes new workspaces from reused ones.',
   get_paragraph_styles:
     'Read all writable style definitions and separate read-only resolved values. Dimensions are CSS pixels; lineHeight is a multiplier. Built-in labels are read-only metadata.',
   edit_paragraph_styles:
@@ -138,6 +142,7 @@ export async function startMcpServer(options: McpServerOptions) {
               'list_documents',
               'get_document',
               'get_paragraph_styles',
+              'create_session',
               'create_document',
               'open_document',
             ].includes(tool),
@@ -164,12 +169,14 @@ export async function startMcpServer(options: McpServerOptions) {
             tool: params.name,
             arguments: params.arguments ?? {},
           });
-          const pending = queue.then(() =>
-            options.execute(
+          const pending = queue.then(() => {
+            connection.signal.throwIfAborted();
+            extra.signal.throwIfAborted();
+            return options.execute(
               request,
               AbortSignal.any([connection.signal, extra.signal]),
-            ),
-          );
+            );
+          });
           queue = pending.then(
             () => undefined,
             () => undefined,

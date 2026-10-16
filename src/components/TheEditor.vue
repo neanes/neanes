@@ -216,6 +216,7 @@ import type {
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
 import { automationError } from '@/services/automation/errors';
+import { IsolatedSessions } from '@/services/automation/isolatedSessions';
 import { McpDocumentAdapter } from '@/services/automation/McpDocumentAdapter';
 import type {
   AutomationMessage,
@@ -223,7 +224,10 @@ import type {
 } from '@/services/automation/protocol';
 import { parseAutomationRequest } from '@/services/automation/protocol';
 import { DocumentService } from '@/services/documents/DocumentService';
-import { getBundledFontLoadDescriptors } from '@/services/documents/fontReadiness';
+import {
+  getBundledFontLoadDescriptors,
+  getScoreFontLoadDescriptors,
+} from '@/services/documents/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
 import {
   getResizableTextBoxes,
@@ -1936,6 +1940,44 @@ const documents = new DocumentService({
   },
   close: (workspace) => finishClosingWorkspace(workspace, true),
 });
+const isolatedSessions = new IsolatedSessions({
+  createScore: createDefaultScore,
+  prepare(workspace) {
+    if (!workspace.score.staff.lyrics.locked) {
+      extractStaffLyrics(workspace);
+    }
+  },
+  dispose(workspace) {
+    dirtyTextBoxWorkspaces.delete(workspace.id);
+    pendingTextBoxMeasurements.delete(workspace.id);
+    if (workspaceTextBoxMeasurement.value?.workspace.id === workspace.id) {
+      failWorkspaceTextBoxMeasurement(new Error('DOCUMENT_NOT_FOUND'));
+    }
+  },
+  fonts: () => documents.fonts(),
+  async settle(workspace) {
+    await Promise.all(
+      getScoreFontLoadDescriptors(documents.serialize(workspace)).map(
+        (descriptor) => document.fonts.load(descriptor),
+      ),
+    );
+    await queueWorkspaceTextBoxMeasurement(workspace);
+  },
+});
+const isolatedTools = new Map<DocumentService, McpDocumentAdapter>();
+const isolatedSessionTimer = setInterval(() => {
+  isolatedSessions.expire();
+  for (const service of isolatedTools.keys()) {
+    if (!service.list().some((workspace) => isolatedSessions.owns(workspace))) {
+      isolatedTools.delete(service);
+    }
+  }
+}, 30_000);
+onBeforeUnmount(() => {
+  clearInterval(isolatedSessionTimer);
+  isolatedSessions.clear();
+  isolatedTools.clear();
+});
 const documentTools = new McpDocumentAdapter(
   documents,
   ipcService,
@@ -1955,11 +1997,35 @@ async function onAutomationRequest(message: AutomationMessage) {
       throw new Error('EDITOR_BUSY');
     }
     const request = parseAutomationRequest(message.request);
-    reply = {
-      requestId: message.requestId,
-      success: true,
-      result: await documentTools.execute(request),
-    };
+    let result: unknown;
+    if (request.tool === 'create_session') {
+      result = isolatedSessions.create();
+    } else if (request.tool === 'close_session') {
+      const service = isolatedSessions.get(request.arguments.sessionId);
+      result = isolatedSessions.close(
+        request.arguments.sessionId,
+        request.arguments.discardUnsavedChanges,
+      );
+      isolatedTools.delete(service);
+    } else {
+      let adapter = documentTools;
+      if ('sessionId' in request.arguments && request.arguments.sessionId) {
+        const service = isolatedSessions.get(request.arguments.sessionId);
+        const existing = isolatedTools.get(service);
+        if (existing) {
+          adapter = existing;
+        } else {
+          adapter = new McpDocumentAdapter(
+            service,
+            ipcService,
+            exportAutomationPdf,
+          );
+          isolatedTools.set(service, adapter);
+        }
+      }
+      result = await adapter.execute(request);
+    }
+    reply = { requestId: message.requestId, success: true, result };
   } catch (error) {
     reply = {
       requestId: message.requestId,
@@ -7013,7 +7079,8 @@ function queueWorkspaceTextBoxMeasurement(workspace: Workspace) {
   const pending = textBoxMeasurementQueue.then(async () => {
     if (
       editorUnmounted ||
-      !workspaces.value.some((item) => item.id === workspace.id)
+      (!workspaces.value.some((item) => item.id === workspace.id) &&
+        !isolatedSessions.owns(workspace))
     ) {
       return;
     }
@@ -7029,7 +7096,7 @@ function queueWorkspaceTextBoxMeasurement(workspace: Workspace) {
     }
     if (workspace.id === selectedWorkspace.value.id) {
       save(false);
-    } else {
+    } else if (!isolatedSessions.owns(workspace)) {
       scheduleRecoverySnapshot(workspace);
     }
   });

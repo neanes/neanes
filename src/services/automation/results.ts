@@ -36,7 +36,18 @@ const styleResultSchema = documentSummarySchema.extend({
 });
 
 export const automationResultSchemas = {
+  create_session: z.strictObject({
+    sessionId: z.string().uuid(),
+    idleTimeoutMs: z.number(),
+    maxDocuments: z.number(),
+  }),
+  close_session: z.strictObject({ sessionId: z.string().uuid() }),
   get_capabilities: z.strictObject({
+    isolatedSessions: z.strictObject({
+      maxSessions: z.number(),
+      maxDocuments: z.number(),
+      idleTimeoutMs: z.number(),
+    }),
     mode: z.literal('interactive'),
     paragraphStyles: z.strictObject({
       actions: z.array(z.enum(['create', 'replace', 'delete'])),
@@ -55,7 +66,7 @@ export const automationResultSchemas = {
   open_document: documentSummarySchema.extend({ created: z.boolean() }),
   close_document: z.strictObject({
     documentId: z.string().min(1),
-    selectedDocumentId: z.string().min(1),
+    selectedDocumentId: z.string().min(1).nullable(),
   }),
   get_document: documentSummarySchema.extend({
     // This is the existing .byzx save-format document, not a second writable model.

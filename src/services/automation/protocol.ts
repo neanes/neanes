@@ -6,41 +6,53 @@ import type { AutomationOutcome } from './errors';
 
 const documentId = z.string().min(1);
 const revision = z.number().int().nonnegative();
+const sessionId = z.string().uuid().optional();
 const filePath = z.string().min(1);
 
 export const automationSchemas = {
-  list_documents: z.strictObject({}),
+  create_session: z.strictObject({}),
+  close_session: z.strictObject({
+    sessionId: z.string().uuid(),
+    discardUnsavedChanges: z.boolean().default(false),
+  }),
+  list_documents: z.strictObject({ sessionId }),
   get_capabilities: z.strictObject({}),
   get_document: z.strictObject({
+    sessionId,
     documentId,
     offset: z.number().int().nonnegative().default(0),
     limit: z.number().int().min(1).max(1000).default(100),
   }),
-  create_document: z.strictObject({ title: z.string().optional() }),
-  open_document: z.strictObject({ filePath }),
+  create_document: z.strictObject({ sessionId, title: z.string().optional() }),
+  open_document: z.strictObject({ sessionId, filePath }),
   close_document: z.strictObject({
+    sessionId,
     documentId,
     expectedRevision: revision,
     discardUnsavedChanges: z.boolean().default(false),
   }),
-  get_paragraph_styles: z.strictObject({ documentId }),
+  get_paragraph_styles: z.strictObject({ sessionId, documentId }),
   edit_paragraph_styles: z.strictObject({
+    sessionId,
     documentId,
     expectedRevision: revision,
     changes: z.array(paragraphStyleChangeSchema).min(1),
   }),
   replace_document_properties: z.strictObject({
+    sessionId,
     documentId,
     expectedRevision: revision,
     properties: documentPropertiesSchema,
   }),
   save_document: z.strictObject({
+    sessionId,
     documentId,
     expectedRevision: revision,
     filePath: filePath.optional(),
     overwrite: z.boolean().default(false),
   }),
   export_pdf: z.strictObject({
+    sessionId,
     documentId,
     expectedRevision: revision,
     filePath,

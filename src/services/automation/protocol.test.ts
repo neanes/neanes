@@ -17,6 +17,36 @@ const edit = (overrides: unknown) => ({
 });
 
 describe('automation protocol validation', () => {
+  it('scopes document operations explicitly and rejects malformed session IDs', () => {
+    const sessionId = '00000000-0000-4000-8000-000000000001';
+    expect(
+      parseAutomationRequest({
+        tool: 'list_documents',
+        arguments: { sessionId },
+      }),
+    ).toEqual({ tool: 'list_documents', arguments: { sessionId } });
+    expect(
+      parseAutomationRequest({
+        tool: 'close_session',
+        arguments: { sessionId },
+      }),
+    ).toEqual({
+      tool: 'close_session',
+      arguments: { sessionId, discardUnsavedChanges: false },
+    });
+    for (const sessionId of ['', 'not-a-session', null]) {
+      expect(() =>
+        parseAutomationRequest({
+          tool: 'list_documents',
+          arguments: { sessionId },
+        }),
+      ).toThrow();
+    }
+    expect(() =>
+      parseAutomationRequest({ tool: 'close_session', arguments: {} }),
+    ).toThrow();
+  });
+
   it.each([NaN, Infinity, -Infinity, 0, -1])(
     'rejects invalid font size %s',
     (fontSize) => {

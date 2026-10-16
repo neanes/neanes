@@ -65,7 +65,7 @@ export class Workspace {
   public sourceFormat: ScoreFileFormat | null = null;
   public sourceMtimeMs: number | null = null;
   public sourceSize: number | null = null;
-  public commandService: CommandService = new CommandService();
+  public commandService: CommandService;
   public selectedElement: ScoreElement | null = null;
   public selectedAnnotationElement: AnnotationElement | null = null;
   public selectedAlternateLineElement: AlternateLineElement | null = null;
@@ -80,6 +80,10 @@ export class Workspace {
   public playbackTime: number = 0;
   public playbackBpm: number = 0;
   public exportPageRange: string = '';
+
+  constructor(notifyHistoryChanges = true) {
+    this.commandService = new CommandService(notifyHistoryChanges);
+  }
 
   private _nextId: number | null = null;
 

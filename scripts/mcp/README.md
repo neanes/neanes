@@ -1,6 +1,6 @@
 # Neanes MCP
 
-The Electron app can expose an opt-in MCP Streamable HTTP endpoint while it is running. The web build does not host a server. Document tools operate on interactive workspaces. MCP PDF export renders a detached snapshot in a dedicated hidden window. Isolated sessions, folder jobs, element editing, and temporary export transformations remain planned separately.
+The Electron app can expose an opt-in MCP Streamable HTTP endpoint while it is running. The web build does not host a server. Document tools operate on interactive workspaces by default, or private documents when passed an isolated session ID. MCP PDF export renders a detached snapshot in a dedicated hidden window. Folder jobs, element editing, and temporary export transformations remain planned separately.
 
 ## Start locally
 
@@ -22,6 +22,46 @@ The endpoint defaults to `http://127.0.0.1:38765/mcp`. Set `NEANES_MCP_PORT` to 
 Configure your MCP client with that URL and an `Authorization: Bearer <NEANES_MCP_TOKEN>` header. The token must have at least 32 characters; use a random secret and keep it out of source control. The endpoint binds to IPv4 loopback, validates the Host header, and rejects browser Origin headers. It uses stateless JSON responses; it does not offer a standalone SSE stream.
 
 `NEANES_MCP_ROOTS` is a JSON array of existing absolute directories allowed for reads and writes. Output parent directories must already exist. Symlink escapes and symlink output files are rejected. No filesystem access is granted by the MCP client's own roots list.
+
+## Isolated sessions
+
+Call `create_session` and pass the returned `sessionId` to document tools (including
+`list_documents`, `create_document`, and `open_document`). Omitting it retains the
+interactive behavior. A document is accessible only in its owning session; an
+interactive ID cannot be used inside a session, and isolated IDs cannot be used
+outside it. `selected` is always false and closing an isolated document returns
+`selectedDocumentId: null`.
+
+Session IDs are bearer capabilities within the authenticated server, not separate
+client identities. Keep them private. The stateless HTTP connection does not own
+the session: disconnecting a client leaves its session available for inspection
+and cleanup after an uncertain request. Sessions expire after 15 minutes without
+a tool call, discarding unsaved drafts. At most 4 sessions may exist with 16 open
+documents each. `get_capabilities.isolatedSessions` advertises these bounds.
+`SESSION_NOT_FOUND` covers expired/closed/unknown sessions; capacity failures use
+`SESSION_LIMIT_REACHED` or `DOCUMENT_LIMIT_REACHED`.
+
+`close_session` requires the session ID and explicit `discardUnsavedChanges: true`
+if any owned document is dirty. It checks all documents before removing any.
+Session expiry, editor reload/disconnect, and app exit release all private drafts.
+No tabs, selection, recovery drafts, recent-file entries, or interactive undo
+history are created or changed. The normal editor must still be running.
+
+Opening a file in a session reads its saved contents, independently of interactive
+unsaved edits or other sessions. Repeated opens within one session reuse its own
+copy by canonical identity and preserve that copy's edits. Explicit saves may
+change disk contents, including files open interactively; they never update the
+interactive copy. Existing source modification-time/size conflict and overwrite
+rules apply. Save to a separate destination to preserve the original disk file.
+PDF export uses the shared detached snapshot renderer.
+
+Run the isolated lifecycle regression with a disposable development profile and
+`--remote-debugging-port=9334` (see the hidden export instructions below). Pass
+`NEANES_DEV_USER_DATA_DIR` to the script as well to check recovery files on disk:
+
+```sh
+NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node scripts/mcp/isolated-session-smoke.mjs /tmp/neanes-mcp/files
+```
 
 ## Tools
 

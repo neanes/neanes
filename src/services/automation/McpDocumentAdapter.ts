@@ -4,6 +4,7 @@ import { getParagraphStyles } from '@/services/documents/paragraphStyles';
 import type { IIpcService } from '@/services/ipc/IIpcService';
 
 import { AutomationError, automationError } from './errors';
+import { ISOLATED_SESSION_LIMITS } from './isolatedSessions';
 import type { AutomationRequest } from './protocol';
 
 // Adapts MCP tool requests to shared document operations.
@@ -19,6 +20,18 @@ export class McpDocumentAdapter {
       overwrite: boolean,
     ) => Promise<void>,
   ) {}
+
+  private async settleOpened(workspace: Workspace, created: boolean) {
+    try {
+      await this.documents.settle(workspace);
+    } catch (error) {
+      // A failed isolated open must not retain an unreachable draft or use capacity.
+      if (created && this.documents.selected() == null) {
+        await this.documents.close(workspace, { discardUnsavedChanges: true });
+      }
+      throw error;
+    }
+  }
 
   private revision(workspace: Workspace) {
     const snapshot = this.documents.snapshot(workspace);
@@ -42,12 +55,17 @@ export class McpDocumentAdapter {
       sourceFormat: workspace.sourceFormat,
       title: workspace.score.documentProperties.title,
       hasUnsavedChanges: workspace.hasUnsavedChanges,
-      selected: workspace.id === this.documents.selected().id,
+      selected: workspace.id === this.documents.selected()?.id,
       elementCount: workspace.score.staff.elements.length,
     };
   }
 
-  async execute(request: AutomationRequest): Promise<unknown> {
+  async execute(
+    request: Exclude<
+      AutomationRequest,
+      { tool: 'create_session' | 'close_session' }
+    >,
+  ): Promise<unknown> {
     const openIds = new Set(
       this.documents.list().map((workspace) => workspace.id),
     );
@@ -59,6 +77,7 @@ export class McpDocumentAdapter {
     if (request.tool === 'get_capabilities') {
       return {
         mode: 'interactive',
+        isolatedSessions: ISOLATED_SESSION_LIMITS,
         paragraphStyles: {
           actions: ['create', 'replace', 'delete'],
           dimensions: 'css-px',
@@ -83,7 +102,7 @@ export class McpDocumentAdapter {
         title: request.arguments.title,
         markUnsaved: true,
       });
-      await this.documents.settle(workspace);
+      await this.settleOpened(workspace, true);
       return this.summary(workspace);
     }
     if (request.tool === 'open_document') {
@@ -98,7 +117,7 @@ export class McpDocumentAdapter {
           ),
       );
       const { workspace, created } = this.documents.open(file);
-      await this.documents.settle(workspace);
+      await this.settleOpened(workspace, created);
       return { ...this.summary(workspace), created };
     }
     const workspace = this.documents
@@ -188,7 +207,7 @@ export class McpDocumentAdapter {
       }
       return {
         documentId: workspace.id,
-        selectedDocumentId: this.documents.selected().id,
+        selectedDocumentId: this.documents.selected()?.id ?? null,
       };
     }
     if (request.tool === 'edit_paragraph_styles') {

@@ -61,7 +61,7 @@ async function settledDocument(documentId) {
 }
 try {
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 11);
+  assert.equal(tools.tools.length, 13);
   assert.ok(tools.tools.every((tool) => tool.outputSchema?.type === 'object'));
   await fails(
     'get_document',

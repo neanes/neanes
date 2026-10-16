@@ -21,6 +21,22 @@ const summary = {
   elementCount: workspace.score.staff.elements.length,
 };
 describe('automation result contracts', () => {
+  it('publishes isolated session bounds and permits closing without a selected tab', () => {
+    expect(
+      automationResultSchemas.create_session.parse({
+        sessionId: '00000000-0000-4000-8000-000000000001',
+        idleTimeoutMs: 900000,
+        maxDocuments: 16,
+      }),
+    ).toMatchObject({ maxDocuments: 16 });
+    expect(
+      automationResultSchemas.close_document.parse({
+        documentId: workspace.id,
+        selectedDocumentId: null,
+      }),
+    ).toEqual({ documentId: workspace.id, selectedDocumentId: null });
+  });
+
   it('validates actual serialized scores and complete style definitions', () => {
     const score = JSON.parse(
       JSON.stringify(SaveService.SaveScoreToJson(new Score())),

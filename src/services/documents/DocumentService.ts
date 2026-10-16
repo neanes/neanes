@@ -23,8 +23,9 @@ import type { ParagraphStyleChange } from './paragraphStyleSchema';
 
 export interface DocumentEditor {
   workspaces(): Workspace[];
-  selectedWorkspace(): Workspace;
+  selectedWorkspace(): Workspace | null;
   createScore(): Score;
+  createWorkspace?(): Workspace;
   addWorkspace(workspace: Workspace): void;
   selectWorkspace(workspace: Workspace): void;
   prepare(workspace: Workspace): void;
@@ -75,7 +76,7 @@ export class DocumentService {
   }
 
   create(options: { title?: string; markUnsaved?: boolean } = {}) {
-    const workspace = new Workspace();
+    const workspace = this.editor.createWorkspace?.() ?? new Workspace();
     workspace.score = this.editor.createScore();
     if (options.title !== undefined) {
       workspace.score.documentProperties.title = options.title;
@@ -105,7 +106,7 @@ export class DocumentService {
       if (existing != null) {
         workspace = existing;
       } else {
-        workspace = new Workspace();
+        workspace = this.editor.createWorkspace?.() ?? new Workspace();
         try {
           workspace.score = SaveService.LoadScoreFromJson(
             JSON.parse(file.data),

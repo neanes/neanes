@@ -1,0 +1,371 @@
+import assert from 'node:assert/strict';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+
+const directory = process.argv[2];
+const token = process.env.NEANES_MCP_TOKEN;
+if (!directory || !path.isAbsolute(directory) || !token) {
+  throw new Error(
+    'Usage: NEANES_MCP_TOKEN=... node scripts/mcp/element-discovery-smoke.mjs /absolute/allowed/directory',
+  );
+}
+const client = new Client({
+  name: 'neanes-element-discovery-smoke',
+  version: '1.0.0',
+});
+await client.connect(
+  new StreamableHTTPClientTransport(
+    new URL(process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp'),
+    { requestInit: { headers: { Authorization: `Bearer ${token}` } } },
+  ),
+);
+async function call(name, args = {}, error) {
+  const reply = await client.callTool({ name, arguments: args });
+  const outcome = reply.structuredContent;
+  assert.deepEqual(outcome, JSON.parse(reply.content[0].text));
+  if (error) {
+    assert.equal(outcome.success, false, JSON.stringify(outcome));
+    assert.equal(outcome.error.code, error);
+  } else {
+    assert.equal(outcome.success, true, JSON.stringify(outcome));
+    return outcome.result;
+  }
+}
+// Optional renderer access exercises live edits that the save format omits.
+// Restrict this to a disposable Electron profile.
+let debugSocket;
+let debugRequestId = 0;
+async function mutateChildren(documentId, operation) {
+  if (!debugSocket) {
+    const targets = await (
+      await fetch(`${process.env.NEANES_DEBUG_URL}/json/list`)
+    ).json();
+    const target = targets.find(
+      (target) =>
+        target.type === 'page' &&
+        !target.url.includes('export.html') &&
+        !target.url.startsWith('devtools:'),
+    );
+    assert.ok(target, 'No disposable editor debugging target found.');
+    debugSocket = new WebSocket(target.webSocketDebuggerUrl);
+    await new Promise((resolve) =>
+      debugSocket.addEventListener('open', resolve, { once: true }),
+    );
+  }
+  const result = await new Promise((resolve, reject) => {
+    const id = ++debugRequestId;
+    const onMessage = (event) => {
+      const reply = JSON.parse(event.data);
+      if (reply.id !== id) {
+        return;
+      }
+      debugSocket.removeEventListener('message', onMessage);
+      if (reply.error || reply.result?.exceptionDetails) {
+        reject(new Error(JSON.stringify(reply)));
+      } else {
+        resolve(reply.result);
+      }
+    };
+    debugSocket.addEventListener('message', onMessage);
+    debugSocket.send(
+      JSON.stringify({
+        id,
+        method: 'Runtime.evaluate',
+        params: {
+          expression: `(() => {
+        const workspace = window._editor.workspaces.value.find(w => w.id === ${JSON.stringify(documentId)});
+        const note = workspace.score.staff.elements[0];
+        ${operation}
+      })()`,
+          returnByValue: true,
+          awaitPromise: true,
+        },
+      }),
+    );
+  });
+  return result;
+}
+
+const documents = [];
+let sessionId;
+const fixture = path.join(directory, `element-discovery-${Date.now()}.byzx`);
+try {
+  const tools = await client.listTools();
+  for (const name of ['get_element_catalog', 'get_elements']) {
+    assert.equal(
+      tools.tools.find((t) => t.name === name)?.annotations.readOnlyHint,
+      true,
+    );
+  }
+  const catalog = await call('get_element_catalog');
+  assert.equal(catalog.elementTypes.length, 11);
+  assert.ok(catalog.neumes.QuantitativeNeume.includes('Oligon'));
+  sessionId = (await call('create_session')).sessionId;
+  const seed = await call('create_document', { sessionId });
+  const { score } = await call('get_document', {
+    sessionId,
+    documentId: seed.documentId,
+  });
+  await call('close_document', {
+    sessionId,
+    documentId: seed.documentId,
+    expectedRevision: seed.revision,
+    discardUnsavedChanges: true,
+  });
+  score.staff.elements = [
+    {
+      elementType: 'Note',
+      quantitativeNeume: 'Oligon',
+      lyrics: 'word',
+      lyricsFontSize: 19,
+      annotations: [
+        { elementType: 'Annotation', text: 'annotation', x: 5, y: -6 },
+      ],
+      alternateLines: [
+        {
+          elementType: 'AlternateLine',
+          x: 0,
+          y: 10,
+          elements: [{ elementType: 'Note', quantitativeNeume: 'Ison' }],
+        },
+      ],
+    },
+    {
+      elementType: 'Martyria',
+      note: 'Pa',
+      rootSign: 'Alpha',
+      scale: 'Diatonic',
+    },
+    { elementType: 'Tempo', neume: 'Moderate', bpm: 100 },
+    ...['TextBox', 'DropCap'].flatMap((elementType) => {
+      const element = {
+        elementType,
+        content: 'Line height',
+        ...(elementType === 'TextBox' ? { height: 20 } : {}),
+      };
+      return [
+        { ...element, lineHeight: null },
+        { ...element },
+        { ...element, lineHeight: 1.2 },
+      ];
+    }),
+    { elementType: 'Empty' },
+  ];
+  await fs.writeFile(fixture, JSON.stringify(score));
+  for (const scope of [{}, { sessionId }]) {
+    const opened = await call('open_document', { ...scope, filePath: fixture });
+    assert.equal(opened.created, true);
+    const args = { ...scope, documentId: opened.documentId };
+    documents.push(args);
+    const before = await call('get_document', args);
+    const first = await call('get_elements', {
+      ...args,
+      start: 0,
+      end: 3,
+      limit: 1,
+    });
+    assert.equal(first.elements[0].properties.lyrics, 'word');
+    assert.equal(first.elements[0].properties.lyricsFontSize, 19);
+    assert.equal(
+      Object.hasOwn(first.elements[0].properties, 'accidental'),
+      false,
+    );
+    assert.equal(first.elements[0].properties.noteIndicator, false);
+    assert.equal(first.elements[0].properties.spaceAfter, 0);
+    assert.ok(
+      Object.values(first.elements[0].properties).every(
+        (value) => value != null,
+      ),
+    );
+    assert.equal(first.elements[0].properties.computedColor, undefined);
+    assert.deepEqual(first.elements[0].children, {
+      annotations: 1,
+      alternateLines: 1,
+    });
+    const ref = first.elements[0].elementRef;
+    const next = await call('get_elements', {
+      ...args,
+      expectedRevision: first.revision,
+      start: 0,
+      end: 3,
+      offset: first.nextOffset,
+      limit: 2,
+    });
+    assert.deepEqual(
+      next.elements.map((e) => e.elementType),
+      ['Martyria', 'Tempo'],
+    );
+    assert.equal(next.nextOffset, null);
+    const children = (collection) => ({
+      kind: 'children',
+      parentRef: ref,
+      collection,
+    });
+    const annotations = await call('get_elements', {
+      ...args,
+      collection: children('annotations'),
+    });
+    assert.equal(annotations.elements[0].properties.text, 'annotation');
+    const alternates = await call('get_elements', {
+      ...args,
+      collection: children('alternateLines'),
+    });
+    const nested = await call('get_elements', {
+      ...args,
+      collection: {
+        kind: 'children',
+        parentRef: alternates.elements[0].elementRef,
+        collection: 'elements',
+      },
+    });
+    assert.equal(nested.elements[0].properties.quantitativeNeume, 'Ison');
+    for (const kind of ['headers', 'footers']) {
+      for (const variant of catalog.headerFooterVariants) {
+        const template = await call('get_elements', {
+          ...args,
+          collection: { kind, variant },
+        });
+        assert.equal(template.elements[0].elementType, 'TextBox');
+      }
+    }
+    const lineHeights = await call('get_elements', {
+      ...args,
+      start: 3,
+      end: 9,
+    });
+    for (const offset of [0, 3]) {
+      assert.equal(lineHeights.elements[offset].properties.lineHeight, null);
+      assert.equal(
+        Object.hasOwn(
+          lineHeights.elements[offset + 1].properties,
+          'lineHeight',
+        ),
+        false,
+      );
+      assert.equal(lineHeights.elements[offset + 2].properties.lineHeight, 1.2);
+    }
+    const after = await call('get_document', args);
+    assert.deepEqual(after, before);
+    await call('get_elements', { ...args, end: 999 }, 'INVALID_ELEMENT_RANGE');
+    await call(
+      'get_elements',
+      { ...args, collection: children('elements') },
+      'INVALID_ELEMENT_COLLECTION',
+    );
+    await call(
+      'get_elements',
+      { ...args, expectedRevision: after.revision + 1 },
+      'REVISION_CONFLICT',
+    );
+    const changed = await call('replace_document_properties', {
+      ...args,
+      expectedRevision: after.revision,
+      properties: { title: 'Updated metadata', author: '' },
+    });
+    assert.ok(changed.revision > after.revision);
+    await call(
+      'get_elements',
+      { ...args, expectedRevision: after.revision },
+      'REVISION_CONFLICT',
+    );
+    assert.equal(
+      (await call('get_elements', args)).elements[0].elementRef,
+      ref,
+    );
+    await call(
+      'get_elements',
+      { ...args, sessionId: scope.sessionId ? undefined : sessionId },
+      'DOCUMENT_NOT_FOUND',
+    );
+    if (!scope.sessionId && process.env.NEANES_DEBUG_URL) {
+      // Keep blank annotation editors unmounted: focusing/blurring them can
+      // legitimately delete blank drafts before the revision check runs.
+      const foreground = await call('create_document', {
+        title: 'Revision regression control',
+      });
+      documents.push({ documentId: foreground.documentId });
+      await mutateChildren(
+        args.documentId,
+        `
+        const blank = note.annotations[0].clone();
+        blank.text = '';
+        note.annotations.push(blank, blank.clone());
+      `,
+      );
+      const collection = children('annotations');
+      for (const operation of [
+        'note.annotations.reverse();',
+        'note.annotations[0].x += 10;',
+        'note.annotations.splice(0, 1);',
+        'note.annotations[0] = note.annotations[0].clone();',
+      ]) {
+        const savedBefore = await call('get_document', args);
+        const page = await call('get_elements', {
+          ...args,
+          collection,
+          limit: 1,
+        });
+        await mutateChildren(args.documentId, operation);
+        const savedAfter = await call('get_document', args);
+        assert.deepEqual(savedAfter.score, savedBefore.score);
+        assert.ok(
+          savedAfter.revision > page.revision,
+          JSON.stringify({
+            operation,
+            before: page,
+            after: await call('get_elements', { ...args, collection }),
+          }),
+        );
+        await call(
+          'get_elements',
+          {
+            ...args,
+            collection,
+            offset: page.nextOffset,
+            expectedRevision: page.revision,
+          },
+          'REVISION_CONFLICT',
+        );
+      }
+      console.log(
+        'Live child edits with identical save data invalidate stale discovery revisions.',
+      );
+    }
+    if (scope.sessionId) {
+      const other = await call('get_elements', documents[0]);
+      await call(
+        'get_elements',
+        {
+          ...args,
+          collection: {
+            kind: 'children',
+            parentRef: other.elements[0].elementRef,
+            collection: 'annotations',
+          },
+        },
+        'ELEMENT_NOT_FOUND',
+      );
+    }
+  }
+  console.log(
+    'Element discovery passed for interactive and isolated documents.',
+  );
+} finally {
+  for (const args of documents.reverse()) {
+    const current = await call('get_document', args);
+    await call('close_document', {
+      ...args,
+      expectedRevision: current.revision,
+      discardUnsavedChanges: true,
+    });
+  }
+  if (sessionId) {
+    await call('close_session', { sessionId, discardUnsavedChanges: true });
+  }
+  await fs.rm(fixture, { force: true });
+  debugSocket?.close();
+  await client.close();
+}

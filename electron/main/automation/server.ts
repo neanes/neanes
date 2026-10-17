@@ -35,6 +35,10 @@ const descriptions: Record<AutomationTool, string> = {
     'Describe supported operations, font families, file formats, and style units. Requires the editor to be ready.',
   list_documents:
     'List interactive workspaces, or only documents owned by the supplied sessionId, with IDs and revisions. Does not open files.',
+  get_element_catalog:
+    'Describe every live element content property and neume enum. Read-only inspection schemas, not edit validation or a writable score format. Lists nested collections and header/footer variants. Text-box and drop-cap lineHeight is special: omission inherits the paragraph style, null explicitly resets to normal, and a number overrides its multiplier.',
+  get_elements:
+    'Read typed elements in a collection (staff by default). Ranges use zero-based start inclusive/end exclusive; offset is relative to that range. Follow nextOffset with expectedRevision to prevent mixed-revision pages. Child collections use a returned parentRef. References are opaque, scoped to one open document, and survive movement and undo restoration of the same object; removal makes them unavailable and reopen assigns new references. Element properties omit null and undefined values except lineHeight: null, which explicitly resets text-box or drop-cap line height to normal. Omitted lineHeight inherits the paragraph style; other missing properties are unset. False, zero and empty strings remain present. Includes the terminal Empty sentinel. Header/footer collections are stored templates, not resolved page instances. Does not edit or save.',
   get_document:
     'Read document metadata and a paginated serialized score. Dimensions are CSS pixels. Use get_paragraph_styles for writable style definitions; serialized score styles use the save-format shape.',
   create_document:
@@ -135,12 +139,16 @@ export async function startMcpServer(options: McpServerOptions) {
               'get_capabilities',
               'list_documents',
               'get_document',
+              'get_element_catalog',
+              'get_elements',
               'get_paragraph_styles',
             ].includes(tool),
             destructiveHint: ![
               'get_capabilities',
               'list_documents',
               'get_document',
+              'get_element_catalog',
+              'get_elements',
               'get_paragraph_styles',
               'create_session',
               'create_document',

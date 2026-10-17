@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { documentPropertiesSchema } from '../documents/documentPropertiesSchema';
 import { paragraphStyleChangeSchema } from '../documents/paragraphStyleSchema';
+import { elementQueryShape } from './elementSchemas';
 import type { AutomationOutcome } from './errors';
 
 const documentId = z.string().min(1);
@@ -17,6 +18,13 @@ export const automationSchemas = {
   }),
   list_documents: z.strictObject({ sessionId }),
   get_capabilities: z.strictObject({}),
+  get_element_catalog: z.strictObject({}),
+  get_elements: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision.optional(),
+    ...elementQueryShape,
+  }),
   get_document: z.strictObject({
     sessionId,
     documentId,

@@ -5,6 +5,7 @@ import {
   paragraphStyleDefinitionSchema,
   paragraphStyleOverridesSchema,
 } from '../documents/paragraphStyleSchema';
+import { elementCatalogSchema, elementPageShape } from './elementSchemas';
 import { automationErrorSchema } from './errors';
 import type { AutomationTool } from './protocol';
 
@@ -68,6 +69,8 @@ export const automationResultSchemas = {
     documentId: z.string().min(1),
     selectedDocumentId: z.string().min(1).nullable(),
   }),
+  get_element_catalog: elementCatalogSchema,
+  get_elements: documentSummarySchema.extend(elementPageShape),
   get_document: documentSummarySchema.extend({
     // This is the existing .byzx save-format document, not a second writable model.
     score: z

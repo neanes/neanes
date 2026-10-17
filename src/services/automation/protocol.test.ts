@@ -47,6 +47,48 @@ describe('automation protocol validation', () => {
     ).toThrow();
   });
 
+  it('validates typed discovery selectors, revisions and bounded pagination', () => {
+    const read = (args: object) =>
+      parseAutomationRequest({
+        tool: 'get_elements',
+        arguments: { documentId: 'id', ...args },
+      });
+    expect(read({}).arguments).toMatchObject({
+      collection: { kind: 'staff' },
+      start: 0,
+      offset: 0,
+      limit: 100,
+    });
+    for (const args of [
+      { start: -1 },
+      { end: 1.5 },
+      { offset: -1 },
+      { limit: 1001 },
+      { expectedRevision: -1 },
+      { collection: { kind: 'headers' } },
+      { collection: { kind: 'staff', parentRef: 'unexpected' } },
+      {
+        collection: {
+          kind: 'children',
+          parentRef: 'not-a-ref',
+          collection: 'annotations',
+        },
+      },
+      { arbitrary: true },
+    ]) {
+      expect(() => read(args)).toThrow();
+    }
+    expect(
+      read({
+        expectedRevision: 0,
+        collection: { kind: 'footers', variant: 'odd' },
+      }).arguments,
+    ).toMatchObject({
+      expectedRevision: 0,
+      collection: { kind: 'footers', variant: 'odd' },
+    });
+  });
+
   it.each([NaN, Infinity, -Infinity, 0, -1])(
     'rejects invalid font size %s',
     (fontSize) => {

@@ -1,15 +1,21 @@
 import type { Workspace } from '@/models/Workspace';
 import type { DocumentService } from '@/services/documents/DocumentService';
+import { ElementDiscovery } from '@/services/documents/elementDiscovery';
 import { getParagraphStyles } from '@/services/documents/paragraphStyles';
 import type { IIpcService } from '@/services/ipc/IIpcService';
 
+import { getElementCatalog } from './elementSchemas';
 import { AutomationError, automationError } from './errors';
 import { ISOLATED_SESSION_LIMITS } from './isolatedSessions';
 import type { AutomationRequest } from './protocol';
 
 // Adapts MCP tool requests to shared document operations.
 export class McpDocumentAdapter {
-  private states = new Map<string, { snapshot: string; revision: number }>();
+  private discoveries = new Map<string, ElementDiscovery>();
+  private states = new Map<
+    string,
+    { snapshot: string; discoverySnapshot: string; revision: number }
+  >();
 
   constructor(
     private documents: DocumentService,
@@ -33,15 +39,35 @@ export class McpDocumentAdapter {
     }
   }
 
+  private discovery(workspace: Workspace) {
+    let discovery = this.discoveries.get(workspace.id);
+    if (discovery === undefined) {
+      discovery = new ElementDiscovery();
+      this.discoveries.set(workspace.id, discovery);
+    }
+    return discovery;
+  }
+
   private revision(workspace: Workspace) {
     const snapshot = this.documents.snapshot(workspace);
+    const discoverySnapshot = this.discovery(workspace).snapshot(
+      workspace.score,
+    );
     const state = this.states.get(workspace.id);
     if (state == null) {
-      this.states.set(workspace.id, { snapshot, revision: 0 });
+      this.states.set(workspace.id, {
+        snapshot,
+        discoverySnapshot,
+        revision: 0,
+      });
       return 0;
     }
-    if (snapshot !== state.snapshot) {
+    if (
+      snapshot !== state.snapshot ||
+      discoverySnapshot !== state.discoverySnapshot
+    ) {
       state.snapshot = snapshot;
+      state.discoverySnapshot = discoverySnapshot;
       state.revision++;
     }
     return state.revision;
@@ -72,7 +98,11 @@ export class McpDocumentAdapter {
     for (const id of this.states.keys()) {
       if (!openIds.has(id)) {
         this.states.delete(id);
+        this.discoveries.delete(id);
       }
+    }
+    if (request.tool === 'get_element_catalog') {
+      return getElementCatalog();
     }
     if (request.tool === 'get_capabilities') {
       return {
@@ -127,6 +157,28 @@ export class McpDocumentAdapter {
       throw new Error('DOCUMENT_NOT_FOUND');
     }
     await this.documents.settle(workspace);
+    if (request.tool === 'get_elements') {
+      const summary = this.summary(workspace);
+      if (
+        request.arguments.expectedRevision !== undefined &&
+        request.arguments.expectedRevision !== summary.revision
+      ) {
+        throw new AutomationError({
+          code: 'REVISION_CONFLICT',
+          message:
+            'Read the document again before continuing element discovery.',
+          details: {
+            documentId: workspace.id,
+            expectedRevision: request.arguments.expectedRevision,
+            actualRevision: summary.revision,
+          },
+        });
+      }
+      return {
+        ...summary,
+        ...this.discovery(workspace).read(workspace.score, request.arguments),
+      };
+    }
     if (request.tool === 'get_document') {
       const data = this.documents.serialize(workspace);
       const { offset, limit } = request.arguments;
@@ -186,6 +238,7 @@ export class McpDocumentAdapter {
           throw error;
         }
         this.states.delete(workspace.id);
+        this.discoveries.delete(workspace.id);
         throw new AutomationError({
           code: 'RECOVERY_CLEANUP_FAILED',
           message: 'The document closed, but its recovery cleanup failed.',
@@ -197,6 +250,7 @@ export class McpDocumentAdapter {
         });
       }
       this.states.delete(workspace.id);
+      this.discoveries.delete(workspace.id);
       if (!cleanupSucceeded) {
         throw new AutomationError({
           code: 'RECOVERY_CLEANUP_FAILED',

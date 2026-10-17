@@ -17,6 +17,7 @@ import {
   elementSearchResultShape,
 } from './elementSearchSchema';
 import { automationErrorSchema } from './errors';
+import { pageElementsResultShape, pageListResultShape } from './pageSchemas';
 import type { AutomationTool } from './protocol';
 import { selectionResultShape } from './selectionSchema';
 
@@ -88,6 +89,8 @@ export const automationResultSchemas = {
   find_elements: documentSummarySchema.extend(elementSearchResultShape),
   get_element: documentSummarySchema.extend(elementLookupResultShape),
   get_selection: documentSummarySchema.extend(selectionResultShape),
+  get_pages: documentSummarySchema.extend(pageListResultShape),
+  get_page_elements: documentSummarySchema.extend(pageElementsResultShape),
   edit_elements: documentSummarySchema.extend({
     applied: z.boolean(),
     created: z.array(

@@ -2,6 +2,7 @@ import { onBeforeUnmount, onMounted } from 'vue';
 
 import { EventBus } from '@/eventBus';
 import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
+import type { Page } from '@/models/Page';
 import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import type { DocumentService } from '@/services/documents/DocumentService';
@@ -27,6 +28,7 @@ export function useEditorAutomation(options: {
   dispose(workspace: Workspace): void;
   settle(workspace: Workspace): Promise<void>;
   snapshot(workspace: Workspace): ScoreRenderSnapshot;
+  renderPages(workspace: Workspace): Promise<Page[]>;
 }) {
   if (!options.enabled) {
     return { ready() {}, ownsPrivateWorkspace: () => false };
@@ -60,6 +62,7 @@ export function useEditorAutomation(options: {
     options.documents,
     ipc,
     exportAutomationPdf,
+    options.renderPages,
   );
 
   async function onAutomationRequest(message: AutomationMessage) {
@@ -87,7 +90,12 @@ export function useEditorAutomation(options: {
           if (existing) {
             adapter = existing;
           } else {
-            adapter = new McpDocumentAdapter(service, ipc, exportAutomationPdf);
+            adapter = new McpDocumentAdapter(
+              service,
+              ipc,
+              exportAutomationPdf,
+              options.renderPages,
+            );
             isolatedTools.set(service, adapter);
           }
         }

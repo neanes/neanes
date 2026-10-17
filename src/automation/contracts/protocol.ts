@@ -7,6 +7,7 @@ import { assertElementPredicateBounds } from './elementPredicates';
 import { elementCatalogQuerySchema, elementQueryShape } from './elementSchemas';
 import { elementLookupShape, elementSearchShape } from './elementSearchSchema';
 import type { AutomationOutcome } from './errors';
+import { layoutReadShape, pageElementQueryShape } from './pageSchemas';
 import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
 
 const documentId = z.string().min(1);
@@ -47,6 +48,18 @@ export const automationSchemas = {
     sessionId,
     documentId,
     expectedRevision: revision.optional(),
+  }),
+  get_pages: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision.optional(),
+    ...layoutReadShape,
+  }),
+  get_page_elements: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision.optional(),
+    ...pageElementQueryShape,
   }),
   edit_elements: z.strictObject({
     sessionId,
@@ -123,7 +136,8 @@ export function parseAutomationRequest(value: unknown): AutomationRequest {
     })
     .parse(value);
   if (
-    envelope.tool === 'find_elements' &&
+    (envelope.tool === 'find_elements' ||
+      envelope.tool === 'get_page_elements') &&
     envelope.arguments !== null &&
     typeof envelope.arguments === 'object'
   ) {

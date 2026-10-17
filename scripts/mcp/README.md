@@ -73,6 +73,8 @@ NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile n
 - `get_element`: retrieve an existing `elementRef` at its current location, with optional `before`/`after` counts (0 to 499 each). Returns the anchor reference, its collection, collection size, half-open `start`/`end`, and elements in collection order, including the anchor. Windows clip at collection boundaries and count actual elements without filtering. Defaults to all readable properties excluding large content. Supports `properties`, `includeContent`, and optional `expectedRevision`. Removed/foreign references return `ELEMENT_NOT_FOUND`.
 - `get_document`: metadata and serialized score, with staff elements paginated by `offset` and `limit` (default 100, maximum 1000). `nextOffset` is null on the final page. Optional `sections` selects any of `documentProperties`, `pageSetup`, `paragraphStyles`, `headers`, `footers`, `staffElements`, and `staffLyrics`. Omission preserves the complete view; `[]` returns only score version/app-version fields plus the document summary. Use `["staffElements"]` for subsequent pages without repeating styles, headers/footers, or staff lyric-manager text. `nextOffset` is null when elements are not selected. Selected views retain save-format field names but are not complete loadable scores. Pass `expectedRevision` on subsequent reads to reject mixed revisions. Serialized dimensions use CSS pixels.
 - `get_selection`: inspect the selection for an explicit `documentId`, with optional `expectedRevision` and `sessionId`. Returns `status: "active"` for the selected interactive tab, `"remembered"` for a background tab, or `"unavailable"` for an isolated document. `selection` is null when none is reachable. See the selection contract below.
+- `get_pages`: settled page summaries with `pageCount`, `layoutId`, and paginated `pages`. Each summary contains one-based physical `pageNumber`, numeric `displayedPageNumber`, `lineCount`, and `occurrenceCount`. Supports optional `expectedRevision` and `expectedLayoutId`; `offset`/`limit` paginate pages (default 100, max 1000).
+- `get_page_elements`: compact occurrences on a required one-based physical `pageNumber`. Filter `regions` (`staff`, `header`, `footer`, all by default), `elementTypes`, and `where` with the existing stored-field predicate grammar. `offset`/`limit` paginate matching occurrences. Each has `elementRef`, `elementType`, `collection`, `index`, `region`, and zero-based `lineIndex` for staff/descendants. The response also includes the page summary, `pageCount`, and `layoutId`. Use `get_element` for properties/content.
 - `edit_elements`: apply an ordered, validated transaction to one document using its latest `expectedRevision`. Actions run on detached live-model drafts; schema, reference, font/style, musical component, and collection validation completes before commands mutate the document. Invalid batches leave no partial musical edits or history entries. Successful changes form one undo step, preserve existing element identities and collection arrays, and do not save. A no-op returns `applied: false` without adding history. The result includes current document metadata/revision and `created` entries (`clientId`, `elementRef`, `elementType`) for inserted/replacement objects still present. See the transaction contract below.
 - `create_document`: create and select a document using the user's current defaults. Optional `title` sets its metadata title.
 - `open_document`: open an absolute `.byzx` or `.byz` path. An already-open file is selected by canonical identity without replacing unsaved changes, including when its interactive path uses a directory alias. The requested suffix selects decoding; canonical identity does not change that format. Returns `created: true` only when a workspace was added; reused workspaces return false.
@@ -117,8 +119,8 @@ Dimensions, including font sizes, use CSS pixels.
 Use `get_element` with a returned reference to retrieve details or nearby context
 without another collection scan by the client. Neighbors stay in the anchor's
 own collection; an annotation's neighbors are annotations, and an alternate-line
-note's neighbors are notes in that alternate line. Spatial proximity, page
-queries, resolved typography, and UI selection are separate future features.
+note's neighbors are notes in that alternate line. Spatial proximity and resolved typography remain separate future features.
+Use the page tools for layout-based discovery and get_selection for UI context.
 
 Run the search regression against a disposable app profile:
 
@@ -129,6 +131,69 @@ NEANES_MCP_TOKEN=<same-token> node scripts/mcp/element-search-smoke.mjs
 It checks interactive and isolated searches, nested collections, predicates,
 compact projections, reference windows, read-only state, revision conflicts,
 validation bounds, and cleanup. Published input/output schemas are validated.
+
+### Settled page queries
+
+Both page tools work with interactive documents and isolated sessions. They use
+the same full-page renderer as Electron PDF/PNG/printing: load fonts, await rich
+text and image decoding, measure page-specific content, and repeat layout until
+heights converge (maximum 12 passes). Shared header/footer templates reserve the
+largest observed height across pages/passes. Query rendering uses a private live
+model copy, retaining blank children and mapping occurrences back to the original
+live references. It creates no tab, history, recovery draft, or output file and
+does not modify the source with page-specific measurements. A hidden offscreen
+component is removed on success or failure, with a 45-second rendering deadline.
+Neanes must be running; no human interaction or selected tab is required.
+
+```json
+{
+  "documentId": "...",
+  "pageNumber": 3,
+  "regions": ["staff"],
+  "elementTypes": ["TextBox"],
+  "where": { "field": "paragraphStyleId", "op": "eq", "value": "default-text" },
+  "expectedRevision": 7,
+  "expectedLayoutId": "<layoutId from get_pages>"
+}
+```
+
+Physical page numbers select the actual rendered sheets, starting at 1.
+Displayed numbering reflects the document's numbering offset; it does not select
+a sheet. Layout-only empty trailing pages are omitted like export. A fully empty
+score can have zero rendered pages. Header/footer occurrences include only the
+chosen enabled template on that page, not all stored variants. The same template
+reference can occur on multiple pages; distinguish occurrences by document,
+layoutId, pageNumber, region, and elementRef. The template reference remains the
+editing target. Staff notes include their rendered annotations, alternate-line
+containers, and alternate-line notes. `lineIndex` is their owning staff line,
+not a text-wrapped line inside a text box. Layout members can include the terminal
+`Empty` sentinel when it shares a nonempty rendered page. Counts are unfiltered;
+occurrence pagination counts filtered matches. Order is header, then staff in
+line/collection order (parent, annotations, alternate-line containers and their
+notes), then footer.
+
+Each request renders again and returns a SHA-256 `layoutId` fingerprint of page
+membership, numbering, line placement, and geometry. Use the same `expectedRevision`
+and `expectedLayoutId` across page and occurrence reads. Concurrent content changes
+return `REVISION_CONFLICT`; a changed fingerprint returns `LAYOUT_CONFLICT` even
+when content revisions match (for example, changed font metrics). Restart discovery
+after either conflict. Layout IDs are not saved IDs or retained server sessions.
+Newly opened documents have new element references and therefore new layout IDs.
+Pagination can change across machines with different fonts. Results describe the
+settled Neanes rendering, not a permanent page assignment.
+
+Out-of-range pages return `INVALID_PAGE_NUMBER`; offsets beyond the page/match
+count return `INVALID_ELEMENT_RANGE`. Invalid queries return `VALIDATION_ERROR`.
+Rendering failures and nonconvergence return `LAYOUT_SETTLEMENT_FAILED` with a
+reason. Ordinary preparation/measurement errors can also occur before page
+rendering. Client timeout/disconnect can leave bounded read-only rendering in
+progress until its completion or deadline. No page query saves or exports.
+
+Run `scripts/mcp/page-discovery-smoke.mjs` with an allowed absolute output
+directory, `NEANES_MCP_TOKEN`, and optionally `NEANES_DEBUG_URL` for concurrent
+interactive-edit and offscreen-cleanup checks. It covers both document modes,
+repeated templates, numbering, pagination, references, conflicts, failure/retry,
+and PDF compatibility. Use a disposable application profile.
 
 ### UI selection contract
 

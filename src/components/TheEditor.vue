@@ -87,6 +87,7 @@ import {
 } from '@/components/ui/context-menu';
 import { Spinner } from '@/components/ui/spinner';
 import WorkspaceDockLayout from '@/components/WorkspaceDockLayout.vue';
+import WorkspacePageMeasurement from '@/components/WorkspacePageMeasurement.vue';
 import WorkspaceTextBoxMeasurement from '@/components/WorkspaceTextBoxMeasurement.vue';
 import { useEditorServices } from '@/composables/useEditorServices';
 import { useNeumeCombinations } from '@/composables/useNeumeCombinations';
@@ -535,6 +536,23 @@ const workspaceTextBoxMeasurement = shallowRef<{
   resolve(): void;
   reject(error: Error): void;
 } | null>(null);
+const workspacePageMeasurement = shallowRef<{
+  workspace: Workspace;
+  resolve(pages: Page[]): void;
+  reject(error: Error): void;
+} | null>(null);
+function completePageMeasurement(pages: Page[]) {
+  const request = workspacePageMeasurement.value!;
+  workspacePageMeasurement.value = null;
+  request.resolve(pages);
+}
+function failPageMeasurement(error: Error) {
+  const request = workspacePageMeasurement.value;
+  if (request !== null) {
+    workspacePageMeasurement.value = null;
+    request.reject(error);
+  }
+}
 const fonts = ref<string[]>([]);
 const toolbarInnerNeume = ref<NeumeSelection>(NeumeSelection.Primary);
 const toolbarMartyriaLayoutRevision = ref(0);
@@ -1719,6 +1737,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   editorUnmounted = true;
+  failPageMeasurement(new Error('EDITOR_DISCONNECTED'));
   if (workspaceTextBoxMeasurement.value != null) {
     failWorkspaceTextBoxMeasurement(new Error('TEXT_BOX_MEASUREMENT_FAILED'));
   }
@@ -1970,6 +1989,10 @@ const editorAutomation = useEditorAutomation({
   },
   settle: (workspace) => queueWorkspaceTextBoxMeasurement(workspace),
   snapshot: createScoreRenderSnapshot,
+  renderPages: (workspace) =>
+    new Promise<Page[]>((resolve, reject) => {
+      workspacePageMeasurement.value = { workspace, resolve, reject };
+    }),
 });
 const workspacePolicy = {
   isActive: (workspace: Workspace) =>
@@ -10081,6 +10104,14 @@ function renderTabLabel(tab: Tab) {
       @export-as-png="exportAsPng"
       @export-as-music-xml="exportAsMusicXml"
       @export-as-latex="exportAsLatex"
+    />
+    <WorkspacePageMeasurement
+      v-if="workspacePageMeasurement"
+      :workspace="workspacePageMeasurement.workspace"
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @ready="completePageMeasurement"
+      @failed="failPageMeasurement"
     />
     <WorkspaceTextBoxMeasurement
       v-if="workspaceTextBoxMeasurement"

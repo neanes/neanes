@@ -1,7 +1,9 @@
 import { readDocumentSections } from '@/automation/documents/documentRead';
 import { ElementDiscovery } from '@/automation/documents/elementDiscovery';
-import type { Workspace } from '@/models/Workspace';
+import type { Page } from '@/models/Page';
+import { Workspace } from '@/models/Workspace';
 import type { DocumentService } from '@/services/documents/DocumentService';
+import { cloneScoreForLayout } from '@/services/documents/layoutSnapshot';
 import { paragraphStyleDefinition } from '@/services/documents/paragraphStyles';
 
 import { getElementCatalog } from '../contracts/elementSchemas';
@@ -14,6 +16,12 @@ import type { AutomationRequest } from '../contracts/protocol';
 import type { AutomationIpcClient } from '../ipc/AutomationIpcClient';
 import { ISOLATED_SESSION_LIMITS } from '../sessions/isolatedSessions';
 import { applyElementEdits, planElementEdits } from './elementEdits';
+import {
+  discoverPages,
+  fingerprintLayout,
+  readPageElements,
+  readPages,
+} from './pageDiscovery';
 import { planParagraphStyleEdits } from './paragraphStyleEdits';
 import { getParagraphStyles } from './paragraphStyleRead';
 import { readSelection } from './selectionRead';
@@ -34,6 +42,7 @@ export class McpDocumentAdapter {
       filePath: string,
       overwrite: boolean,
     ) => Promise<void>,
+    private renderPages: (workspace: Workspace) => Promise<Page[]>,
   ) {}
 
   private async settleOpened(workspace: Workspace, created: boolean) {
@@ -174,7 +183,9 @@ export class McpDocumentAdapter {
       request.tool === 'get_document' ||
       request.tool === 'find_elements' ||
       request.tool === 'get_element' ||
-      request.tool === 'get_selection'
+      request.tool === 'get_selection' ||
+      request.tool === 'get_pages' ||
+      request.tool === 'get_page_elements'
     ) {
       const summary = this.summary(workspace);
       if (
@@ -190,6 +201,92 @@ export class McpDocumentAdapter {
             actualRevision: summary.revision,
           },
         });
+      }
+      if (
+        request.tool === 'get_pages' ||
+        request.tool === 'get_page_elements'
+      ) {
+        const { score, sources } = cloneScoreForLayout(workspace.score);
+        const copy = new Workspace(false);
+        copy.score = score;
+        copy.filePath = workspace.filePath;
+        copy.tempFileName = workspace.tempFileName;
+        let pages: Page[];
+        try {
+          pages = await this.renderPages(copy);
+        } catch (error) {
+          throw new AutomationError({
+            code: 'LAYOUT_SETTLEMENT_FAILED',
+            message: 'The page layout could not be settled.',
+            details: {
+              reason: error instanceof Error ? error.message : String(error),
+            },
+          });
+        }
+        // Interactive content or document ownership can change during rendering.
+        if (!this.documents.list().some((item) => item.id === workspace.id)) {
+          throw new Error('DOCUMENT_NOT_FOUND');
+        }
+        this.documents.prepare(workspace);
+        const measuredRevision = this.revision(workspace);
+        if (measuredRevision !== summary.revision) {
+          throw new AutomationError({
+            code: 'REVISION_CONFLICT',
+            message:
+              'The document changed while measuring pages. Read it again.',
+            details: {
+              documentId: workspace.id,
+              expectedRevision: summary.revision,
+              actualRevision: measuredRevision,
+            },
+          });
+        }
+        const layout = discoverPages(
+          workspace.score,
+          score,
+          pages,
+          sources,
+          this.discovery(workspace),
+        );
+        const layoutId = await fingerprintLayout(layout);
+        if (!this.documents.list().some((item) => item.id === workspace.id)) {
+          throw new Error('DOCUMENT_NOT_FOUND');
+        }
+        this.documents.prepare(workspace);
+        const current = this.summary(workspace);
+        if (current.revision !== summary.revision) {
+          throw new AutomationError({
+            code: 'REVISION_CONFLICT',
+            message:
+              'The document changed while measuring pages. Read it again.',
+            details: {
+              documentId: workspace.id,
+              expectedRevision: summary.revision,
+              actualRevision: current.revision,
+            },
+          });
+        }
+        if (
+          request.arguments.expectedLayoutId !== undefined &&
+          request.arguments.expectedLayoutId !== layoutId
+        ) {
+          throw new AutomationError({
+            code: 'LAYOUT_CONFLICT',
+            message: 'The page layout changed. Restart page discovery.',
+            details: {
+              expectedLayoutId: request.arguments.expectedLayoutId,
+              actualLayoutId: layoutId,
+            },
+          });
+        }
+        return {
+          ...current,
+          layoutId,
+          pageCount: layout.pages.length,
+          ...(request.tool === 'get_pages'
+            ? readPages(layout, request.arguments)
+            : readPageElements(layout, request.arguments)),
+        };
       }
       if (request.tool === 'get_selection') {
         return {

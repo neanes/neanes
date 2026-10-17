@@ -193,7 +193,7 @@ export class ElementDiscovery {
     }
   }
 
-  private *documentElements(score: Score) {
+  *entries(score: Score) {
     yield* this.walk(score.staff.elements, { kind: 'staff' }, true);
     for (const kind of ['headers', 'footers'] as const) {
       for (const variant of headerFooterVariants) {
@@ -228,7 +228,7 @@ export class ElementDiscovery {
   find(score: Score, query: ElementSearchQuery) {
     const candidates =
       query.scope.kind === 'document'
-        ? this.documentElements(score)
+        ? this.entries(score)
         : this.walk(
             this.collection(score, query.scope.collection),
             query.scope.collection,
@@ -266,7 +266,7 @@ export class ElementDiscovery {
 
   location(score: Score, target: ScoreElement) {
     const raw = toRaw(target);
-    for (const { element, collection, index } of this.documentElements(score)) {
+    for (const { element, collection, index } of this.entries(score)) {
       if (toRaw(element) === raw) {
         return {
           elementRef: this.reference(element),
@@ -280,7 +280,7 @@ export class ElementDiscovery {
   }
 
   lookup(score: Score, query: ElementLookupQuery) {
-    for (const { element, collection, index } of this.documentElements(score)) {
+    for (const { element, collection, index } of this.entries(score)) {
       if (this.refs.get(toRaw(element)) !== query.elementRef) {
         continue;
       }

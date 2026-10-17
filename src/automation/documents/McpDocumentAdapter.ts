@@ -168,7 +168,12 @@ export class McpDocumentAdapter {
       throw new Error('DOCUMENT_NOT_FOUND');
     }
     await this.documents.settle(workspace);
-    if (request.tool === 'get_elements' || request.tool === 'get_document') {
+    if (
+      request.tool === 'get_elements' ||
+      request.tool === 'get_document' ||
+      request.tool === 'find_elements' ||
+      request.tool === 'get_element'
+    ) {
       const summary = this.summary(workspace);
       if (
         request.arguments.expectedRevision !== undefined &&
@@ -188,10 +193,17 @@ export class McpDocumentAdapter {
         ...summary,
         ...(request.tool === 'get_elements'
           ? this.discovery(workspace).read(workspace.score, request.arguments)
-          : readDocumentSections(
-              this.documents.serialize(workspace),
-              request.arguments,
-            )),
+          : request.tool === 'find_elements'
+            ? this.discovery(workspace).find(workspace.score, request.arguments)
+            : request.tool === 'get_element'
+              ? this.discovery(workspace).lookup(
+                  workspace.score,
+                  request.arguments,
+                )
+              : readDocumentSections(
+                  this.documents.serialize(workspace),
+                  request.arguments,
+                )),
       };
     }
     if (request.tool === 'get_paragraph_styles') {

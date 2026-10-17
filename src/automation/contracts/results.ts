@@ -7,7 +7,15 @@ import {
   paragraphStyleDefinitionSchema,
   paragraphStyleOverridesSchema,
 } from '../../services/documents/paragraphStyleSchema';
-import { elementCatalogSchema, elementPageShape } from './elementSchemas';
+import {
+  elementCatalogSchema,
+  elementCollectionSchema,
+  elementPageShape,
+} from './elementSchemas';
+import {
+  elementLookupResultShape,
+  elementSearchResultShape,
+} from './elementSearchSchema';
 import { automationErrorSchema } from './errors';
 import type { AutomationTool } from './protocol';
 
@@ -76,6 +84,8 @@ export const automationResultSchemas = {
   }),
   get_element_catalog: elementCatalogSchema,
   get_elements: documentSummarySchema.extend(elementPageShape),
+  find_elements: documentSummarySchema.extend(elementSearchResultShape),
+  get_element: documentSummarySchema.extend(elementLookupResultShape),
   edit_elements: documentSummarySchema.extend({
     applied: z.boolean(),
     created: z.array(
@@ -130,24 +140,33 @@ export function automationOutputSchema(tool: AutomationTool) {
 }
 
 // Publication stays compact; runtime results above retain typed property validation.
+const publishedElement = z.strictObject({
+  elementRef: z.string().uuid(),
+  elementType: z.enum(ElementType),
+  index: z.number().int().nonnegative(),
+  properties: z
+    .record(z.string(), z.json())
+    .describe(
+      'Typed live properties, optionally projected. Use get_element_catalog with elementTypes/properties and view:read for constraints.',
+    ),
+  children: z.partialRecord(
+    z.enum(['annotations', 'alternateLines', 'elements']),
+    z.number().int().nonnegative(),
+  ),
+});
 const publishedElementResult = documentSummarySchema.extend({
   ...elementPageShape,
+  elements: z.array(publishedElement),
+});
+const publishedSearchResult = documentSummarySchema.extend({
+  ...elementSearchResultShape,
   elements: z.array(
-    z.strictObject({
-      elementRef: z.string().uuid(),
-      elementType: z.enum(ElementType),
-      index: z.number().int().nonnegative(),
-      properties: z
-        .record(z.string(), z.json())
-        .describe(
-          'Typed live properties, optionally projected. Use get_element_catalog with elementTypes/properties and view:read for constraints.',
-        ),
-      children: z.partialRecord(
-        z.enum(['annotations', 'alternateLines', 'elements']),
-        z.number().int().nonnegative(),
-      ),
-    }),
+    publishedElement.extend({ collection: elementCollectionSchema }),
   ),
+});
+const publishedLookupResult = documentSummarySchema.extend({
+  ...elementLookupResultShape,
+  elements: z.array(publishedElement),
 });
 
 export function publishedAutomationOutputSchema(tool: AutomationTool) {
@@ -157,7 +176,11 @@ export function publishedAutomationOutputSchema(tool: AutomationTool) {
       result:
         tool === 'get_elements'
           ? publishedElementResult
-          : automationResultSchemas[tool],
+          : tool === 'find_elements'
+            ? publishedSearchResult
+            : tool === 'get_element'
+              ? publishedLookupResult
+              : automationResultSchemas[tool],
     }),
     z.strictObject({
       success: z.literal(false),

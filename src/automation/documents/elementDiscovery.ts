@@ -9,7 +9,12 @@ import {
 } from '@/models/Element';
 import type { Score } from '@/models/Score';
 
+import { matchesElement } from '../contracts/elementPredicates';
 import { elementPropertySchemas } from '../contracts/elementPropertySchemas';
+import type {
+  ElementLookupQuery,
+  ElementSearchQuery,
+} from '../contracts/elementSearchSchema';
 
 export const headerFooterVariants = [
   'default',
@@ -110,6 +115,11 @@ export class ElementDiscovery {
         elementRef: this.reference(element),
         elementType: element.elementType,
         properties: this.properties(element),
+        // Exact null predicates distinguish null from undefined even when read
+        // projections omit both. Include that distinction in revision identity.
+        nullProperties: Object.keys(
+          elementPropertySchemas[element.elementType].shape,
+        ).filter((key) => Reflect.get(element, key) === null),
         children: Object.fromEntries(
           Object.entries(childCollections(element)).map(([name, children]) => [
             name,
@@ -154,6 +164,130 @@ export class ElementDiscovery {
     throw new Error('ELEMENT_NOT_FOUND');
   }
 
+  private *walk(
+    elements: ScoreElement[],
+    collection: ElementCollection,
+    descendants: boolean,
+  ): Generator<{
+    element: ScoreElement;
+    collection: ElementCollection;
+    index: number;
+  }> {
+    for (const [index, element] of elements.entries()) {
+      yield { element, collection, index };
+      if (descendants) {
+        for (const [name, children] of Object.entries(
+          childCollections(element),
+        )) {
+          yield* this.walk(
+            children,
+            {
+              kind: 'children',
+              parentRef: this.reference(element),
+              collection: name as 'annotations' | 'alternateLines' | 'elements',
+            },
+            true,
+          );
+        }
+      }
+    }
+  }
+
+  private *documentElements(score: Score) {
+    yield* this.walk(score.staff.elements, { kind: 'staff' }, true);
+    for (const kind of ['headers', 'footers'] as const) {
+      for (const variant of headerFooterVariants) {
+        yield* this.walk(
+          score[kind][variant].elements,
+          { kind, variant },
+          true,
+        );
+      }
+    }
+  }
+
+  private project(
+    element: ScoreElement,
+    index: number,
+    query: { properties?: string[]; includeContent?: boolean },
+  ) {
+    return {
+      elementRef: this.reference(element),
+      elementType: element.elementType,
+      index,
+      properties: this.properties(element, query),
+      children: Object.fromEntries(
+        Object.entries(childCollections(element)).map(([name, elements]) => [
+          name,
+          elements.length,
+        ]),
+      ),
+    };
+  }
+
+  find(score: Score, query: ElementSearchQuery) {
+    const candidates =
+      query.scope.kind === 'document'
+        ? this.documentElements(score)
+        : this.walk(
+            this.collection(score, query.scope.collection),
+            query.scope.collection,
+            query.scope.includeDescendants,
+          );
+    const elements = [];
+    let matched = 0;
+    for (const { element, collection, index } of candidates) {
+      if (
+        query.elementTypes !== undefined &&
+        !query.elementTypes.includes(element.elementType)
+      ) {
+        continue;
+      }
+      if (query.where !== undefined && !matchesElement(element, query.where)) {
+        continue;
+      }
+      if (matched++ < query.offset) {
+        continue;
+      }
+      if (elements.length === query.limit) {
+        return {
+          offset: query.offset,
+          nextOffset: query.offset + elements.length,
+          elements,
+        };
+      }
+      elements.push({ ...this.project(element, index, query), collection });
+    }
+    if (query.offset > matched) {
+      throw new Error('INVALID_ELEMENT_RANGE');
+    }
+    return { offset: query.offset, nextOffset: null, elements };
+  }
+
+  lookup(score: Score, query: ElementLookupQuery) {
+    for (const { element, collection, index } of this.documentElements(score)) {
+      if (this.refs.get(toRaw(element)) !== query.elementRef) {
+        continue;
+      }
+      const elements = this.collection(score, collection);
+      const start = Math.max(0, index - query.before);
+      const end = Math.min(elements.length, index + query.after + 1);
+      return {
+        elementRef: query.elementRef,
+        collection,
+        collectionSize: elements.length,
+        start,
+        end,
+        elements: elements
+          .slice(start, end)
+          .map((element, offset) =>
+            this.project(element, start + offset, query),
+          ),
+      };
+    }
+    throw new Error('ELEMENT_NOT_FOUND');
+  }
+
   read(
     score: Score,
     query: {
@@ -184,18 +318,9 @@ export class ElementDiscovery {
       end,
       offset: query.offset,
       nextOffset: stop < end ? query.offset + stop - start : null,
-      elements: collection.slice(start, stop).map((element, index) => ({
-        elementRef: this.reference(element),
-        elementType: element.elementType,
-        index: start + index,
-        properties: this.properties(element, query),
-        children: Object.fromEntries(
-          Object.entries(childCollections(element)).map(([name, elements]) => [
-            name,
-            elements.length,
-          ]),
-        ),
-      })),
+      elements: collection
+        .slice(start, stop)
+        .map((element, index) => this.project(element, start + index, query)),
     };
   }
 }

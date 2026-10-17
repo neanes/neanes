@@ -54,6 +54,19 @@ function elementResult<T extends ElementType>(type: T) {
     ),
   });
 }
+export const discoveredElementSchema = z.discriminatedUnion('elementType', [
+  elementResult(ElementType.Note),
+  elementResult(ElementType.Martyria),
+  elementResult(ElementType.Tempo),
+  elementResult(ElementType.Empty),
+  elementResult(ElementType.TextBox),
+  elementResult(ElementType.RichTextBox),
+  elementResult(ElementType.DropCap),
+  elementResult(ElementType.ModeKey),
+  elementResult(ElementType.ImageBox),
+  elementResult(ElementType.Annotation),
+  elementResult(ElementType.AlternateLine),
+]);
 export const elementPageShape = {
   collection: elementCollectionSchema,
   collectionSize: index,
@@ -61,21 +74,7 @@ export const elementPageShape = {
   end: index,
   offset: index,
   nextOffset: index.nullable(),
-  elements: z.array(
-    z.discriminatedUnion('elementType', [
-      elementResult(ElementType.Note),
-      elementResult(ElementType.Martyria),
-      elementResult(ElementType.Tempo),
-      elementResult(ElementType.Empty),
-      elementResult(ElementType.TextBox),
-      elementResult(ElementType.RichTextBox),
-      elementResult(ElementType.DropCap),
-      elementResult(ElementType.ModeKey),
-      elementResult(ElementType.ImageBox),
-      elementResult(ElementType.Annotation),
-      elementResult(ElementType.AlternateLine),
-    ]),
-  ),
+  elements: z.array(discoveredElementSchema),
 };
 
 export const elementCatalogQuerySchema = z.strictObject({

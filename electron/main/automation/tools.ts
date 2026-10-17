@@ -24,6 +24,10 @@ const descriptions: Record<AutomationTool, string> = {
     'Get a small element-type inventory by default. Supply elementTypes and/or properties to retrieve focused property schemas; view selects read, edit, or both. includeProperties retrieves all schemas; includeNeumes includes the full enum vocabulary. Schemas use local $defs/$ref. tempoBpmDefaults maps each tempo sign to its creation/replacement default BPM; partial updates preserve omitted BPM. Dimensions are CSS pixels, lineHeight is a multiplier, and lineHeight:null explicitly resets to normal while omission inherits.',
   get_elements:
     'Read typed elements in a collection (staff by default). Ranges use zero-based start inclusive/end exclusive; offset is relative to that range. Follow nextOffset with expectedRevision to prevent mixed-revision pages. Child collections use a returned parentRef. References are opaque, scoped to one open document, and survive movement and undo restoration of the same object; removal makes them unavailable and reopen assigns new references. Element properties omit null and undefined values except lineHeight: null, which explicitly resets text-box or drop-cap line height to normal. Omitted lineHeight inherits the paragraph style; other missing properties are unset. False, zero and empty strings remain present. Includes the terminal Empty sentinel. Header/footer collections are stored templates, not resolved page instances. Use properties to select fields ([] returns identities/counts only); inapplicable fields are omitted. includeContent:false omits data, content/contentBottom/contentLeft/contentCenter/contentRight, and annotation text, even if selected. Defaults preserve the full view. Projected omissions may be unrequested; retrieve complete fields before replacement. Use get_element_catalog for detailed property constraints. Does not edit or save.',
+  find_elements:
+    'Search stored element fields across a document (default: staff and descendants, then stored header/footer variants, including disabled variants), or one collection with optional descendants. Filter elementTypes and combine where predicates with and/or; leaves use field and op:eq (value), in (values), isNull, isNotNull. isNull matches null/undefined; isNotNull includes false/0/empty strings. Inapplicable fields match neither. Equality is exact; eq:null matches only explicit null. No inherited typography or layout caches. At most 100 predicate nodes, depth 8, 100 in values. Returns matches in depth-first order, with collection/index locations. offset/nextOffset count matches; use expectedRevision across pages. Defaults to properties:[] and includeContent:false; filtering is independent of projection. Does not edit or save.',
+  get_element:
+    'Read an element by opaque elementRef, optionally with before/after neighbors (0-499 each) in the same collection. The window includes the anchor and counts actual elements, without filtering or crossing collection boundaries. Returns the current collection/indexes; removed or foreign references fail with ELEMENT_NOT_FOUND. Defaults to all readable properties excluding large content; select properties or includeContent:true explicitly. Optional expectedRevision rejects stale reads. Does not edit or save.',
   edit_elements:
     'Apply a validated element/lyric transaction in one undo step. Requires expectedRevision; never saves. Actions run in order on detached drafts before mutation. Insert typed elements, update properties (omitted fields unchanged, null clears nullable fields, lineHeight null resets to normal), reset named properties to constructor defaults, replace/remove by reference, remove half-open ranges, assign lyrics over a range using the shared lyric parser, or set the complete staff lyrics manager state (text and locked). Insert/replace definitions may declare clientId; later actions reference @clientId. Ranges/indexes refer to the draft after earlier actions. get_element_catalog.editProperties describes writable values. Collections follow get_elements; staff inserts default before the Empty sentinel, others append. Headers/footers must finish with exactly one TextBox or RichTextBox. Alternate lines contain only notes. Empty cannot be inserted, replaced, edited or removed. Only main-staff lyric assignments and direct note/drop-cap lyric edits are governed by the staff lyrics lock; alternate lines remain independent; set_staff_lyrics changes that complete state. Returns created references still present at completion. A settlement failure can occur after commit and reports details.editsApplied; inspect before retry. ' +
     lyricParserDescription +
@@ -70,6 +74,8 @@ export function automationTools(): Tool[] {
           'get_document',
           'get_element_catalog',
           'get_elements',
+          'find_elements',
+          'get_element',
           'get_paragraph_styles',
         ].includes(tool),
         destructiveHint: ![
@@ -78,6 +84,8 @@ export function automationTools(): Tool[] {
           'get_document',
           'get_element_catalog',
           'get_elements',
+          'find_elements',
+          'get_element',
           'get_paragraph_styles',
           'create_session',
           'create_document',

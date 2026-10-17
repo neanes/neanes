@@ -3,7 +3,9 @@ import { z } from 'zod';
 import { documentPropertiesSchema } from '../../services/documents/documentPropertiesSchema';
 import { documentReadSections } from '../documents/documentRead';
 import { elementEditBatchSchema } from './elementEditSchema';
+import { assertElementPredicateBounds } from './elementPredicates';
 import { elementCatalogQuerySchema, elementQueryShape } from './elementSchemas';
+import { elementLookupShape, elementSearchShape } from './elementSearchSchema';
 import type { AutomationOutcome } from './errors';
 import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
 
@@ -28,6 +30,18 @@ export const automationSchemas = {
     documentId,
     expectedRevision: revision.optional(),
     ...elementQueryShape,
+  }),
+  find_elements: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision.optional(),
+    ...elementSearchShape,
+  }),
+  get_element: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision.optional(),
+    ...elementLookupShape,
   }),
   edit_elements: z.strictObject({
     sessionId,
@@ -103,6 +117,13 @@ export function parseAutomationRequest(value: unknown): AutomationRequest {
       arguments: z.unknown(),
     })
     .parse(value);
+  if (
+    envelope.tool === 'find_elements' &&
+    envelope.arguments !== null &&
+    typeof envelope.arguments === 'object'
+  ) {
+    assertElementPredicateBounds(Reflect.get(envelope.arguments, 'where'));
+  }
   return {
     tool: envelope.tool,
     arguments: automationSchemas[envelope.tool].parse(envelope.arguments),

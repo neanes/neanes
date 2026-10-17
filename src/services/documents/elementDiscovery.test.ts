@@ -223,6 +223,102 @@ describe('typed element discovery', () => {
     expect(page.elements[0].properties).not.toHaveProperty('alignment');
   });
 
+  it('projects mixed element properties without losing explicit values or changing revisions', () => {
+    const score = new Score();
+    const note = new NoteElement();
+    const box = new TextBoxElement();
+    box.lineHeight = null;
+    score.staff.elements.unshift(note, box);
+    const reader = new ElementDiscovery();
+    const before = reader.snapshot(score);
+    const full = reader.read(score, query());
+    const selected = reader.read(score, {
+      ...query(),
+      properties: [
+        'lyrics',
+        'noteIndicator',
+        'spaceAfter',
+        'lineHeight',
+        'accidental',
+      ],
+    });
+    expect(selected.elements[0].properties).toEqual({
+      lyrics: '',
+      noteIndicator: false,
+      spaceAfter: 0,
+    });
+    expect(selected.elements[1].properties).toEqual({ lineHeight: null });
+    expect(selected.elements[2].properties).toEqual({});
+    expect(z.strictObject(elementPageShape).parse(selected)).toEqual(selected);
+    expect(selected.elements.map((e) => e.elementRef)).toEqual(
+      full.elements.map((e) => e.elementRef),
+    );
+    expect(
+      reader
+        .read(score, { ...query(), properties: [] })
+        .elements.every((e) => Object.keys(e.properties).length === 0),
+    ).toBe(true);
+    expect(reader.snapshot(score)).toBe(before);
+    box.content = 'changed outside the projection';
+    expect(reader.snapshot(score)).not.toBe(before);
+  });
+
+  it('bounds image and rich-text discovery when content is excluded and retains full retrieval', () => {
+    const score = new Score();
+    const image = new ImageBoxElement();
+    image.data = 'data:image/png;base64,' + 'A'.repeat(350000);
+    const box = new RichTextBoxElement();
+    box.content = '<p>' + 'text'.repeat(10000) + '</p>';
+    box.contentCenter = box.content;
+    const annotation = new AnnotationElement();
+    annotation.text = 'annotation'.repeat(10000);
+    score.staff.elements.unshift(image, box, annotation);
+    const reader = new ElementDiscovery();
+    const small = reader.read(score, { ...query(), includeContent: false });
+    expect(JSON.stringify(small).length).toBeLessThan(3000);
+    for (const element of small.elements) {
+      expect(element.properties).not.toHaveProperty('data');
+      expect(element.properties).not.toHaveProperty('content');
+      expect(element.properties).not.toHaveProperty('contentCenter');
+      expect(element.properties).not.toHaveProperty('text');
+    }
+    expect(
+      reader.read(score, {
+        ...query(),
+        properties: ['data'],
+        includeContent: false,
+      }).elements[0].properties,
+    ).toEqual({});
+    expect(
+      reader.read(score, { ...query(), properties: ['data'] }).elements[0]
+        .properties,
+    ).toEqual({ data: image.data });
+    expect(reader.read(score, query()).elements[1].properties).toHaveProperty(
+      'contentCenter',
+      box.contentCenter,
+    );
+    expect(z.strictObject(elementPageShape).parse(small)).toEqual(small);
+  });
+
+  it('keeps 100-note projected responses within a representative size budget', () => {
+    const score = new Score();
+    score.staff.elements = Array.from({ length: 100 }, () => new NoteElement());
+    const reader = new ElementDiscovery();
+    const full = JSON.stringify(reader.read(score, query())).length;
+    const projected = JSON.stringify(
+      reader.read(score, {
+        ...query(),
+        properties: ['quantitativeNeume', 'lyrics'],
+      }),
+    ).length;
+    expect(projected).toBeLessThan(20000);
+    expect(projected / full).toBeLessThan(0.45);
+    console.info('MCP 100-note response sizes (characters)', {
+      full,
+      projected,
+    });
+  });
+
   it('keeps references through insertion, proxies and undo, and rejects removed parents', () => {
     const score = new Score();
     const note = new NoteElement();

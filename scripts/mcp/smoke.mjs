@@ -102,6 +102,7 @@ try {
   const lyrics = styleResult.styles.find((style) => style.id === 'lyrics');
   const fontSize = (12.5 * 96) / 72;
   const styled = await call('edit_paragraph_styles', {
+    includeStyles: true,
     documentId: created.documentId,
     expectedRevision: styleResult.revision,
     changes: [
@@ -316,10 +317,16 @@ try {
     'STYLE_INHERITANCE_CYCLE',
   );
   const deleted = await call('edit_paragraph_styles', {
+    includeStyles: true,
     documentId: opened.documentId,
     expectedRevision: currentStyles.revision,
     changes: [{ action: 'delete', id: 'smoke-parent' }],
   });
+  assert.deepEqual(deleted.affectedStyleIds.slice().sort(), [
+    'lyrics',
+    'smoke-child',
+    'smoke-parent',
+  ]);
   assert.equal(
     deleted.styles.find((style) => style.id === 'lyrics').parentStyleId,
     'default-text',

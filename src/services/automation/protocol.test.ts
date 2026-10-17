@@ -75,6 +75,8 @@ describe('automation protocol validation', () => {
         },
       },
       { arbitrary: true },
+      { properties: ['misspelled'] },
+      { includeContent: 'false' },
     ]) {
       expect(() => read(args)).toThrow();
     }

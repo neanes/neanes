@@ -1,6 +1,6 @@
 # Neanes MCP implementation plan
 
-Implementation handoff, updated 2026-10-16. Stages 1 and 2.5 are complete. Stage 2 includes isolated lifecycle, typed element/range discovery, and validated element/lyric transactions. Folder jobs and temporary export transformations remain unimplemented. Transaction implementation, review fixes, and this handoff remain uncommitted; inspect the working tree before continuing.
+Implementation handoff, updated 2026-10-16. Stages 1 and 2.5 are complete. Stage 2 includes isolated lifecycle, typed element/range discovery, and validated element/lyric transactions. Folder jobs and temporary export transformations remain unimplemented and are paused for the token-efficiency checkpoint below. Inspect the working tree before continuing.
 
 ## Overview
 
@@ -122,6 +122,35 @@ Document tools default to interactive workspaces. With an explicit `sessionId`, 
 - **Composition beyond current transactions:** Context-preserving edits inside tied/Greek melisma groups, musical/layout diagnostics, and previews remain Stage 3 candidates. Current range assignment intentionally rejects unsupported boundaries; do not describe this as transparent context-aware parsing. Exact APIs remain open.
 - **Known limits:** Isolated sessions still depend on the normal editor and share the global MCP request queue. A headless startup mode is not committed functionality. Native custom-paper blank sheets remain a separate baseline-reproduced issue (see Stage 2.5). Source conflict checks use time/size rather than filesystem locking; timeout/cancellation can have an uncertain outcome. Newly mounted rich-text editors can normalize imported content and advance revisions; clients must reread before writes. A pre-existing rich-text undo-after-tab-switch issue was observed before the page refactor (saving can reapply stale editor data); recheck separately rather than treating it as fixed by the measurement-queue change.
 - **Verification:** Continue pure unit tests and real Electron smoke tests; no mocks, spies, fakes, or DOM emulation. Preserve the current focus, pending-input flush, repeated-header instance, overlay, token, and paper-size regressions. Recheck MCP-disabled UI and the web build when changing shared operations.
+
+## Token-efficiency checkpoint
+
+The 2026-10-16 size audit prompted a pause before folder orchestration. The four
+main reductions are implemented: property/content projection for `get_elements`,
+compact published output schemas with typed runtime validation, focused style
+reads and compact style-edit acknowledgements, and section-aware `get_document`
+reads with optional revision checks. Existing full reads remain the default;
+style edits now return summary/affected IDs unless full state is requested.
+Detailed usage and compatibility notes are in `scripts/mcp/README.md`.
+
+The served tool-definition builder measures 66,677 minified JSON characters,
+compared with 104,153 in the audit (36.0% smaller). Published output schemas total
+37,933 characters; `get_elements` output is 4,032. A 100-note discovery page falls
+from 47,404 to 18,904 characters when selecting neume/lyrics while preserving
+references and child counts (60.1% smaller). These are character counts, not
+model-specific tokens or a measurement of actual client context. Budget tests
+cover the exact tool definitions and representative pure read results.
+
+Text and structured responses are retained. Client context traces and focused
+font discovery remain follow-ups; neither blocks the four main reductions.
+Verification: 789 unit tests passed (6 skipped), lint and type checking passed,
+and Electron production compilation/packaging, web production, and docs builds
+passed. Real MCP transaction smoke passed in interactive/isolated documents,
+including the new focused reads, compact style results, revision conflicts,
+save/reopen, PDF export, and UI undo/redo. The existing lifecycle/style smoke
+also passed with explicit full-state style results, including deletion/reparented
+IDs. The disposable test app was stopped. Folder orchestration remains the next
+planned implementation work.
 
 ## Next two sessions
 

@@ -130,6 +130,30 @@ describe('atomic paragraph style batches', () => {
     ).toBe('Lyrics');
   });
 
+  it('filters complete definitions while resolving against all ancestors', () => {
+    const workspace = new Workspace();
+    const styles = workspace.score.paragraphStyles;
+    styles.find((style) => style.id === 'default-text')!.overrides.fontSize =
+      27;
+    const full = getParagraphStyles(styles);
+    const focused = getParagraphStyles(styles, {
+      ids: ['lyrics'],
+      includeResolved: false,
+    });
+    expect(focused.styles).toEqual(
+      full.styles.filter((style) => style.id === 'lyrics'),
+    );
+    expect(focused).not.toHaveProperty('resolvedStyles');
+    expect(
+      getParagraphStyles(styles, { ids: ['lyrics'] }).resolvedStyles,
+    ).toEqual(full.resolvedStyles!.filter((style) => style.id === 'lyrics'));
+    expect(getParagraphStyles(styles, { ids: [] }).styles).toEqual([]);
+    expect(() => getParagraphStyles(styles, { ids: ['missing'] })).toThrow(
+      'STYLE_NOT_FOUND',
+    );
+    expect(JSON.stringify(focused).length).toBeLessThan(600);
+  });
+
   it('returns definitions that round-trip without making built-in names writable', () => {
     const workspace = new Workspace();
     const result = getParagraphStyles(workspace.score.paragraphStyles);

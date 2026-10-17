@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 import { ElementType, TempoElement } from '@/models/Element';
 import * as Neumes from '@/models/Neumes';
-import { headerFooterVariants } from '@/services/documents/elementDiscovery';
+import {
+  elementPropertyNames,
+  headerFooterVariants,
+} from '@/services/documents/elementDiscovery';
 import { elementEditPropertySchemas } from '@/services/documents/elementEditSchema';
 import { elementPropertySchemas } from '@/services/documents/elementProperties';
 
@@ -22,6 +25,17 @@ export const elementCollectionSchema = z.discriminatedUnion('kind', [
   }),
 ]);
 export const elementQueryShape = {
+  properties: z
+    .array(
+      z
+        .string()
+        .refine(
+          (name) => elementPropertyNames.has(name),
+          'Unknown element property. Use get_element_catalog for property names.',
+        ),
+    )
+    .optional(),
+  includeContent: z.boolean().default(true),
   collection: elementCollectionSchema.default({ kind: 'staff' }),
   start: index.default(0),
   end: index.optional(),
@@ -33,7 +47,7 @@ function elementResult<T extends ElementType>(type: T) {
     elementRef: z.string().uuid(),
     elementType: z.literal(type),
     index,
-    properties: elementPropertySchemas[type],
+    properties: elementPropertySchemas[type].partial(),
     children: z.partialRecord(
       z.enum(['annotations', 'alternateLines', 'elements']),
       index,

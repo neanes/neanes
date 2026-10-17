@@ -44,6 +44,23 @@ export function childCollections(
   return {};
 }
 
+// Content can be large even for a single element. Lyrics remain ordinary
+// properties so musical discovery can omit embedded content independently.
+export const elementContentProperties = new Set([
+  'data',
+  'content',
+  'contentBottom',
+  'contentLeft',
+  'contentCenter',
+  'contentRight',
+  'text',
+]);
+export const elementPropertyNames = new Set(
+  Object.values(elementPropertySchemas).flatMap((schema) =>
+    Object.keys(schema.shape),
+  ),
+);
+
 // Owned by one open document. Object identity survives insertion, movement and
 // history restoration, without assigning IDs or retaining removed elements.
 export class ElementDiscovery {
@@ -59,10 +76,19 @@ export class ElementDiscovery {
     return ref;
   }
 
-  private properties(element: ScoreElement) {
+  private properties(
+    element: ScoreElement,
+    query: { properties?: string[]; includeContent?: boolean } = {},
+  ) {
     const schema = elementPropertySchemas[element.elementType];
     const properties = Object.fromEntries(
       Object.keys(schema.shape).flatMap((key) => {
+        if (
+          (query.properties !== undefined && !query.properties.includes(key)) ||
+          (query.includeContent === false && elementContentProperties.has(key))
+        ) {
+          return [];
+        }
         const value: unknown = Reflect.get(element, key);
         // A null line height explicitly resets to normal; undefined inherits.
         if (value === undefined || (value === null && key !== 'lineHeight')) {
@@ -71,7 +97,9 @@ export class ElementDiscovery {
         return [[key, value]];
       }),
     );
-    return schema.parse(properties);
+    return query.properties === undefined && query.includeContent !== false
+      ? schema.parse(properties)
+      : schema.partial().parse(properties);
   }
 
   // Save serialization can omit blank children and does not retain object
@@ -134,6 +162,8 @@ export class ElementDiscovery {
       end?: number;
       offset: number;
       limit: number;
+      properties?: string[];
+      includeContent?: boolean;
     },
   ) {
     const collection = this.collection(score, query.collection);
@@ -158,7 +188,7 @@ export class ElementDiscovery {
         elementRef: this.reference(element),
         elementType: element.elementType,
         index: start + index,
-        properties: this.properties(element),
+        properties: this.properties(element, query),
         children: Object.fromEntries(
           Object.entries(childCollections(element)).map(([name, elements]) => [
             name,

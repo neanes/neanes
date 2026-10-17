@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { documentPropertiesSchema } from '../documents/documentPropertiesSchema';
+import { documentReadSections } from '../documents/documentRead';
 import { elementEditBatchSchema } from '../documents/elementEditSchema';
 import { paragraphStyleChangeSchema } from '../documents/paragraphStyleSchema';
 import { elementCatalogQuerySchema, elementQueryShape } from './elementSchemas';
@@ -18,7 +19,9 @@ export const automationSchemas = {
     discardUnsavedChanges: z.boolean().default(false),
   }),
   list_documents: z.strictObject({ sessionId }),
-  get_capabilities: z.strictObject({}),
+  get_capabilities: z.strictObject({
+    includeErrorCodes: z.boolean().default(false),
+  }),
   get_element_catalog: elementCatalogQuerySchema,
   get_elements: z.strictObject({
     sessionId,
@@ -35,6 +38,8 @@ export const automationSchemas = {
   get_document: z.strictObject({
     sessionId,
     documentId,
+    expectedRevision: revision.optional(),
+    sections: z.array(z.enum(documentReadSections)).optional(),
     offset: z.number().int().nonnegative().default(0),
     limit: z.number().int().min(1).max(1000).default(100),
   }),
@@ -46,12 +51,18 @@ export const automationSchemas = {
     expectedRevision: revision,
     discardUnsavedChanges: z.boolean().default(false),
   }),
-  get_paragraph_styles: z.strictObject({ sessionId, documentId }),
+  get_paragraph_styles: z.strictObject({
+    sessionId,
+    documentId,
+    ids: z.array(z.string().min(1)).optional(),
+    includeResolved: z.boolean().default(true),
+  }),
   edit_paragraph_styles: z.strictObject({
     sessionId,
     documentId,
     expectedRevision: revision,
     changes: z.array(paragraphStyleChangeSchema).min(1),
+    includeStyles: z.boolean().default(false),
   }),
   replace_document_properties: z.strictObject({
     sessionId,

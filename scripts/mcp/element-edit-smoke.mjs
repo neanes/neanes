@@ -98,6 +98,11 @@ try {
   assert.ok(JSON.stringify(inventory).length < 2000);
   assert.ok(inventory.elementTypes.every((type) => !('properties' in type)));
   const tools = await client.listTools();
+  assert.ok(JSON.stringify(tools).length < 68000);
+  const capabilities = await call('get_capabilities', {
+    includeErrorCodes: true,
+  });
+  assert.ok(capabilities.errorCodes.includes('REVISION_CONFLICT'));
   const validator = new AjvJsonSchemaValidator();
   inputValidators = new Map(
     tools.tools.map((tool) => [
@@ -146,6 +151,20 @@ try {
     const args = { ...scope, documentId: created.documentId };
     introduced.set(created.documentId, args);
     const before = await call('get_document', args);
+    const metadataOnly = await call('get_document', { ...args, sections: [] });
+    assert.equal(metadataOnly.revision, before.revision);
+    assert.deepEqual(Object.keys(metadataOnly.score).sort(), [
+      'appVersion',
+      'version',
+    ]);
+    assert.equal(metadataOnly.nextOffset, null);
+    const elementSection = await call('get_document', {
+      ...args,
+      sections: ['staffElements'],
+      limit: 1,
+      expectedRevision: before.revision,
+    });
+    assert.deepEqual(Object.keys(elementSection.score.staff), ['elements']);
     await call(
       'edit_elements',
       {
@@ -356,9 +375,62 @@ try {
       },
       'STYLE_NOT_FOUND',
     );
+    const allElements = await call('get_elements', args);
+    const projected = await call('get_elements', {
+      ...args,
+      properties: ['lyrics', 'quantitativeNeume'],
+      includeContent: false,
+      expectedRevision: allElements.revision,
+    });
+    assert.equal(projected.revision, allElements.revision);
+    assert.deepEqual(
+      projected.elements.map((element) => element.elementRef),
+      allElements.elements.map((element) => element.elementRef),
+    );
+    for (const element of projected.elements) {
+      assert.ok(
+        Object.keys(element.properties).every((key) =>
+          ['lyrics', 'quantitativeNeume'].includes(key),
+        ),
+      );
+    }
+    const withoutContent = await call('get_elements', {
+      ...args,
+      includeContent: false,
+    });
+    assert.ok(
+      withoutContent.elements.every(
+        (element) =>
+          !('data' in element.properties) && !('content' in element.properties),
+      ),
+    );
+    await call(
+      'get_document',
+      {
+        ...args,
+        sections: ['staffElements'],
+        expectedRevision: before.revision,
+      },
+      'REVISION_CONFLICT',
+    );
     const styles = await call('get_paragraph_styles', args);
+    const focusedStyles = await call('get_paragraph_styles', {
+      ...args,
+      ids: ['lyrics'],
+      includeResolved: false,
+    });
+    assert.deepEqual(
+      focusedStyles.styles,
+      styles.styles.filter((style) => style.id === 'lyrics'),
+    );
+    assert.ok(!('resolvedStyles' in focusedStyles));
+    await call(
+      'get_paragraph_styles',
+      { ...args, ids: ['missing'] },
+      'STYLE_NOT_FOUND',
+    );
     const lyricsStyle = styles.styles.find((style) => style.id === 'lyrics');
-    await call('edit_paragraph_styles', {
+    const compactStyleEdit = await call('edit_paragraph_styles', {
       ...args,
       expectedRevision: styles.revision,
       changes: [
@@ -371,6 +443,9 @@ try {
         },
       ],
     });
+    assert.deepEqual(compactStyleEdit.affectedStyleIds, ['lyrics']);
+    assert.ok(!('styles' in compactStyleEdit));
+    assert.ok(!('resolvedStyles' in compactStyleEdit));
     current = await call('get_document', args);
     assert.equal(current.score.staff.elements[1].lyricsFontSize, 21);
     await call('edit_elements', {

@@ -1,11 +1,19 @@
 import type { Workspace } from '@/models/Workspace';
+import { readDocumentSections } from '@/services/documents/documentRead';
 import type { DocumentService } from '@/services/documents/DocumentService';
 import { ElementDiscovery } from '@/services/documents/elementDiscovery';
-import { getParagraphStyles } from '@/services/documents/paragraphStyles';
+import {
+  getParagraphStyles,
+  paragraphStyleDefinition,
+} from '@/services/documents/paragraphStyles';
 import type { IIpcService } from '@/services/ipc/IIpcService';
 
 import { getElementCatalog } from './elementSchemas';
-import { AutomationError, automationError } from './errors';
+import {
+  AutomationError,
+  automationError,
+  automationErrorCodes,
+} from './errors';
 import { ISOLATED_SESSION_LIMITS } from './isolatedSessions';
 import type { AutomationRequest } from './protocol';
 
@@ -107,6 +115,9 @@ export class McpDocumentAdapter {
     if (request.tool === 'get_capabilities') {
       return {
         mode: 'interactive',
+        ...(request.arguments.includeErrorCodes
+          ? { errorCodes: [...automationErrorCodes] }
+          : {}),
         isolatedSessions: ISOLATED_SESSION_LIMITS,
         paragraphStyles: {
           actions: ['create', 'replace', 'delete'],
@@ -157,7 +168,7 @@ export class McpDocumentAdapter {
       throw new Error('DOCUMENT_NOT_FOUND');
     }
     await this.documents.settle(workspace);
-    if (request.tool === 'get_elements') {
+    if (request.tool === 'get_elements' || request.tool === 'get_document') {
       const summary = this.summary(workspace);
       if (
         request.arguments.expectedRevision !== undefined &&
@@ -165,8 +176,7 @@ export class McpDocumentAdapter {
       ) {
         throw new AutomationError({
           code: 'REVISION_CONFLICT',
-          message:
-            'Read the document again before continuing element discovery.',
+          message: 'Read the document again before continuing discovery.',
           details: {
             documentId: workspace.id,
             expectedRevision: request.arguments.expectedRevision,
@@ -176,30 +186,21 @@ export class McpDocumentAdapter {
       }
       return {
         ...summary,
-        ...this.discovery(workspace).read(workspace.score, request.arguments),
-      };
-    }
-    if (request.tool === 'get_document') {
-      const data = this.documents.serialize(workspace);
-      const { offset, limit } = request.arguments;
-      return {
-        ...this.summary(workspace),
-        score: {
-          ...data,
-          staff: {
-            ...data.staff,
-            elements: data.staff.elements.slice(offset, offset + limit),
-          },
-        },
-        offset,
-        nextOffset:
-          offset + limit < data.staff.elements.length ? offset + limit : null,
+        ...(request.tool === 'get_elements'
+          ? this.discovery(workspace).read(workspace.score, request.arguments)
+          : readDocumentSections(
+              this.documents.serialize(workspace),
+              request.arguments,
+            )),
       };
     }
     if (request.tool === 'get_paragraph_styles') {
       return {
         ...this.summary(workspace),
-        ...getParagraphStyles(workspace.score.paragraphStyles),
+        ...getParagraphStyles(
+          workspace.score.paragraphStyles,
+          request.arguments,
+        ),
       };
     }
     if (this.revision(workspace) !== request.arguments.expectedRevision) {
@@ -312,11 +313,28 @@ export class McpDocumentAdapter {
       };
     }
     if (request.tool === 'edit_paragraph_styles') {
+      const before = new Map(
+        workspace.score.paragraphStyles.map((style) => [
+          style.id,
+          JSON.stringify(paragraphStyleDefinition(style)),
+        ]),
+      );
       this.documents.editParagraphStyles(workspace, request.arguments.changes);
       await this.documents.settle(workspace);
+      const after = new Map(
+        workspace.score.paragraphStyles.map((style) => [
+          style.id,
+          JSON.stringify(paragraphStyleDefinition(style)),
+        ]),
+      );
       return {
         ...this.summary(workspace),
-        ...getParagraphStyles(workspace.score.paragraphStyles),
+        affectedStyleIds: [
+          ...new Set([...before.keys(), ...after.keys()]),
+        ].filter((id) => before.get(id) !== after.get(id)),
+        ...(request.arguments.includeStyles
+          ? getParagraphStyles(workspace.score.paragraphStyles)
+          : {}),
       };
     }
     if (request.tool === 'replace_document_properties') {

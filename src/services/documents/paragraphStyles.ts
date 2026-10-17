@@ -35,15 +35,28 @@ export function paragraphStyleDefinition(
   };
 }
 
-export function getParagraphStyles(styles: ParagraphStyle[]) {
+export function getParagraphStyles(
+  styles: ParagraphStyle[],
+  options: { ids?: string[]; includeResolved?: boolean } = {},
+) {
+  if (options.ids?.some((id) => !styles.some((style) => style.id === id))) {
+    throw new Error('STYLE_NOT_FOUND');
+  }
+  const selected = styles.filter(
+    (style) => options.ids === undefined || options.ids.includes(style.id),
+  );
   return {
-    styles: styles.map(paragraphStyleDefinition),
-    resolvedStyles: styles.map((style) => ({
-      id: style.id,
-      builtIn: style.builtIn,
-      displayName: style.displayName,
-      values: resolveParagraphStyle(styles, style.id),
-    })),
+    styles: selected.map(paragraphStyleDefinition),
+    ...(options.includeResolved !== false
+      ? {
+          resolvedStyles: selected.map((style) => ({
+            id: style.id,
+            builtIn: style.builtIn,
+            displayName: style.displayName,
+            values: resolveParagraphStyle(styles, style.id),
+          })),
+        }
+      : {}),
     units: { dimensions: 'css-px', lineHeight: 'multiplier' },
   };
 }

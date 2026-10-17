@@ -24,14 +24,16 @@ export const documentSummarySchema = z.strictObject({
 });
 const styleResultSchema = documentSummarySchema.extend({
   styles: z.array(paragraphStyleDefinitionSchema),
-  resolvedStyles: z.array(
-    z.strictObject({
-      id: z.string(),
-      builtIn: z.boolean(),
-      displayName: z.string(),
-      values: paragraphStyleOverridesSchema.required(),
-    }),
-  ),
+  resolvedStyles: z
+    .array(
+      z.strictObject({
+        id: z.string(),
+        builtIn: z.boolean(),
+        displayName: z.string(),
+        values: paragraphStyleOverridesSchema.required(),
+      }),
+    )
+    .optional(),
   units: z.strictObject({
     dimensions: z.literal('css-px'),
     lineHeight: z.literal('multiplier'),
@@ -52,6 +54,7 @@ export const automationResultSchemas = {
       idleTimeoutMs: z.number(),
     }),
     mode: z.literal('interactive'),
+    errorCodes: z.array(z.string()).optional(),
     paragraphStyles: z.strictObject({
       actions: z.array(z.enum(['create', 'replace', 'delete'])),
       dimensions: z.literal('css-px'),
@@ -88,13 +91,17 @@ export const automationResultSchemas = {
     score: z
       .record(z.string(), z.json())
       .describe(
-        'The serialized .byzx score, with staff.elements paginated. Uses the existing Neanes save-format contract.',
+        'The serialized .byzx score, optionally section-filtered, with staff.elements paginated. Selected views are not complete loadable scores. Uses the existing Neanes save-format contract.',
       ),
     offset: z.number().int().nonnegative(),
     nextOffset: z.number().int().nonnegative().nullable(),
   }),
   get_paragraph_styles: styleResultSchema,
-  edit_paragraph_styles: styleResultSchema,
+  edit_paragraph_styles: styleResultSchema
+    .partial({ styles: true, resolvedStyles: true, units: true })
+    .extend({
+      affectedStyleIds: z.array(z.string()),
+    }),
   replace_document_properties: documentSummarySchema.extend({
     properties: documentPropertiesSchema,
   }),
@@ -119,5 +126,48 @@ export function automationOutputSchema(tool: AutomationTool) {
       result: automationResultSchemas[tool],
     }),
     z.strictObject({ success: z.literal(false), error: automationErrorSchema }),
+  ]);
+}
+
+// Publication stays compact; runtime results above retain typed property validation.
+const publishedElementResult = documentSummarySchema.extend({
+  ...elementPageShape,
+  elements: z.array(
+    z.strictObject({
+      elementRef: z.string().uuid(),
+      elementType: z.enum(ElementType),
+      index: z.number().int().nonnegative(),
+      properties: z
+        .record(z.string(), z.json())
+        .describe(
+          'Typed live properties, optionally projected. Use get_element_catalog with elementTypes/properties and view:read for constraints.',
+        ),
+      children: z.partialRecord(
+        z.enum(['annotations', 'alternateLines', 'elements']),
+        z.number().int().nonnegative(),
+      ),
+    }),
+  ),
+});
+
+export function publishedAutomationOutputSchema(tool: AutomationTool) {
+  return z.discriminatedUnion('success', [
+    z.strictObject({
+      success: z.literal(true),
+      result:
+        tool === 'get_elements'
+          ? publishedElementResult
+          : automationResultSchemas[tool],
+    }),
+    z.strictObject({
+      success: z.literal(false),
+      error: automationErrorSchema.extend({
+        code: z
+          .string()
+          .describe(
+            'Stable error code. Request get_capabilities with includeErrorCodes:true for the vocabulary.',
+          ),
+      }),
+    }),
   ]);
 }

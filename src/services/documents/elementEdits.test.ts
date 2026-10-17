@@ -159,6 +159,62 @@ describe('validated element transactions', () => {
     expect(note.secondaryFthora).toBe(Fthora.DiatonicNiLow_TopSecondary);
   });
 
+  it('plans nested setter side effects atomically and restores them in one undo step', () => {
+    const { workspace, discovery, edit } = document();
+    edit([
+      insert([{ elementType: 'Note', clientId: 'main' }]),
+      {
+        action: 'insert',
+        collection: {
+          kind: 'children',
+          parentRef: '@main',
+          collection: 'alternateLines',
+        },
+        elements: [{ elementType: 'AlternateLine', clientId: 'alt' }],
+      },
+      {
+        action: 'insert',
+        collection: {
+          kind: 'children',
+          parentRef: '@alt',
+          collection: 'elements',
+        },
+        elements: [
+          {
+            elementType: 'Note',
+            properties: {
+              quantitativeNeume: 'OligonPlusKentemata',
+              secondaryFthora: 'SoftChromaticPa_TopSecondary',
+              secondaryChromaticFthoraNote: 'Thi',
+            },
+          },
+        ],
+      },
+    ]);
+    const main = workspace.score.staff.elements[0] as NoteElement;
+    const nested = main.alternateLines[0].elements[0] as NoteElement;
+    const changes = [
+      update(discovery.reference(nested), { quantitativeNeume: 'Ison' }),
+      update(discovery.reference(main), { lyrics: 'changed' }),
+    ];
+    const before = saved(workspace);
+    expect(() =>
+      edit([...changes, insert([{ elementType: 'Annotation' }])]),
+    ).toThrow('INVALID_ELEMENT_COLLECTION');
+    expect(saved(workspace)).toBe(before);
+    const plan = planElementEdits(workspace, discovery, changes, []);
+    expect(saved(workspace)).toBe(before);
+    applyElementEdits(workspace, plan);
+    expect(nested.secondaryFthora).toBeNull();
+    expect(main.lyrics).toBe('changed');
+    const after = saved(workspace);
+    workspace.commandService.undo();
+    expect(saved(workspace)).toBe(before);
+    expect(nested.secondaryChromaticFthoraNote).toBe('Thi');
+    workspace.commandService.redo();
+    expect(saved(workspace)).toBe(after);
+  });
+
   it('uses the same default chromatic interpretation as UI fthora selection', () => {
     const { workspace, edit } = document();
     edit([
@@ -169,6 +225,69 @@ describe('validated element transactions', () => {
     expect(
       (workspace.score.staff.elements[0] as NoteElement).chromaticFthoraNote,
     ).toBe('Ga');
+  });
+
+  it('preserves explicit null interpretations and applies fthora resets reversibly', () => {
+    const { workspace, discovery, edit } = document();
+    edit([
+      insert([
+        {
+          elementType: 'Note',
+          properties: {
+            fthora: 'SoftChromaticPa_Top',
+            chromaticFthoraNote: 'Thi',
+          },
+        },
+      ]),
+    ]);
+    const note = workspace.score.staff.elements[0] as NoteElement;
+    const ref = discovery.reference(note);
+    edit([
+      update(ref, { fthora: 'HardChromaticPa_Top', chromaticFthoraNote: null }),
+    ]);
+    expect(note.chromaticFthoraNote).toBeNull();
+    workspace.commandService.undo();
+    expect(note.chromaticFthoraNote).toBe('Thi');
+    edit([update(ref, {}, ['fthora'])]);
+    expect(note.fthora).toBeNull();
+    expect(note.chromaticFthoraNote).toBeNull();
+    workspace.commandService.undo();
+    expect(note.fthora).toBe('SoftChromaticPa_Top');
+    expect(note.chromaticFthoraNote).toBe('Thi');
+  });
+
+  it('clears martyria neumes on alignment changes but honors explicit API overrides', () => {
+    const { workspace, discovery, edit } = document();
+    edit([
+      insert([
+        {
+          elementType: 'Martyria',
+          properties: { quantitativeNeume: 'Oligon' },
+        },
+      ]),
+    ]);
+    const element = workspace.score.staff.elements[0];
+    const change = (properties: object, reset: string[] = []) => ({
+      action: 'update',
+      elementType: 'Martyria',
+      elementRef: discovery.reference(element),
+      properties,
+      reset,
+    });
+    edit([change({ alignRight: true })]);
+    expect(Reflect.get(element, 'quantitativeNeume')).toBeNull();
+    workspace.commandService.undo();
+    expect(Reflect.get(element, 'quantitativeNeume')).toBe('Oligon');
+    edit([change({ alignRight: true, quantitativeNeume: 'Ison' })]);
+    expect(Reflect.get(element, 'quantitativeNeume')).toBe('Ison');
+    edit([change({}, ['alignRight'])]);
+    expect(Reflect.get(element, 'alignRight')).toBe(false);
+    expect(Reflect.get(element, 'quantitativeNeume')).toBeNull();
+    workspace.commandService.undo();
+    expect(Reflect.get(element, 'alignRight')).toBe(true);
+    expect(Reflect.get(element, 'quantitativeNeume')).toBe('Ison');
+    workspace.commandService.redo();
+    expect(Reflect.get(element, 'quantitativeNeume')).toBeNull();
   });
 
   it('preserves explicit overrides, distinguishes normal line height from inheritance, and resets defaults', () => {

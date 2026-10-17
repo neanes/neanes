@@ -17,12 +17,16 @@ import {
 } from '@/models/Element';
 import type { LyricSetup } from '@/models/LyricSetup';
 import {
-  getDefaultChromaticFthoraNote,
   getSecondaryNeume,
   getTertiaryNeume,
 } from '@/models/NeumeReplacements';
 import type { Fthora } from '@/models/Neumes';
 import type { Workspace } from '@/models/Workspace';
+import {
+  fthoraInterpretationKeys,
+  getFthoraChange,
+  getMartyriaAlignmentChange,
+} from '@/services/elementEditing';
 import {
   type Command,
   CommandFactory,
@@ -239,12 +243,12 @@ export function planElementEdits(
       update[key] = Reflect.get(defaults!, key);
     }
     Object.assign(update, properties);
-    for (const [fthoraKey, noteKey] of [
-      ['fthora', 'chromaticFthoraNote'],
-      ['secondaryFthora', 'secondaryChromaticFthoraNote'],
-      ['tertiaryFthora', 'tertiaryChromaticFthoraNote'],
-      ['quantitativeNeumeFthora', 'quantitativeNeumeChromaticFthoraNote'],
-    ]) {
+    // UI selection always chooses a default. A partial API update preserves
+    // custom interpretations when the fthora is unchanged, and explicit nulls.
+    for (const fthoraKey of Object.keys(
+      fthoraInterpretationKeys,
+    ) as (keyof typeof fthoraInterpretationKeys)[]) {
+      const noteKey = fthoraInterpretationKeys[fthoraKey];
       if (
         (element.elementType === ElementType.Note ||
           element.elementType === ElementType.Martyria) &&
@@ -253,19 +257,25 @@ export function planElementEdits(
         (options.creating ||
           update[fthoraKey] !== Reflect.get(element, fthoraKey))
       ) {
-        update[noteKey] = getDefaultChromaticFthoraNote(
-          update[fthoraKey] as Fthora | null,
+        Object.assign(
+          update,
+          getFthoraChange(fthoraKey, update[fthoraKey] as Fthora | null),
         );
       }
     }
-    // Match the UI's right-aligned martyria behavior.
+    // Unlike UI alignment actions, API patches may explicitly supply a neume.
     if (
       element.elementType === ElementType.Martyria &&
       update.alignRight !== undefined &&
-      update.alignRight !== (element as MartyriaElement).alignRight &&
       !Object.hasOwn(update, 'quantitativeNeume')
     ) {
-      update.quantitativeNeume = null;
+      Object.assign(
+        update,
+        getMartyriaAlignmentChange(
+          (element as MartyriaElement).alignRight,
+          update.alignRight as boolean,
+        ),
+      );
     }
     // Apply setters in model-schema order, regardless of JSON key order.
     for (const key of Object.keys(schema.shape)) {
@@ -287,6 +297,8 @@ export function planElementEdits(
       creating: true,
       staffManaged,
     });
+    // UI tempo selection also honors user preferences and resets BPM. API
+    // creation uses model defaults; partial updates preserve omitted BPM.
     if (
       !Object.hasOwn(definition.properties, 'bpm') &&
       (element instanceof TempoElement ||

@@ -154,7 +154,6 @@ import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
 import {
   areVocalExpressionsEquivalent,
-  getDefaultChromaticFthoraNote,
   getSecondaryGorgonNeume,
   getSecondaryNeume,
   measureBarAboveToLeft,
@@ -234,6 +233,10 @@ import {
   getResizableTextBoxes,
   type TextBoxHeightMeasurement,
 } from '@/services/documents/textBoxMeasurement';
+import {
+  getFthoraChange,
+  getMartyriaAlignmentChange,
+} from '@/services/elementEditing';
 import { fontCatalog } from '@/services/FontCatalog';
 import type { Command } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
@@ -6141,9 +6144,7 @@ function updateNote(element: NoteElement, newValues: Partial<NoteElement>) {
 }
 
 function updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
-  const chromaticFthoraNote = getDefaultChromaticFthoraNote(fthora);
-
-  updateNote(element, { fthora, chromaticFthoraNote });
+  updateNote(element, getFthoraChange('fthora', fthora));
   save();
 }
 
@@ -6151,13 +6152,7 @@ function updateNoteFthoraSecondary(
   element: NoteElement,
   secondaryFthora: Fthora | null,
 ) {
-  const secondaryChromaticFthoraNote =
-    getDefaultChromaticFthoraNote(secondaryFthora);
-
-  updateNote(element, {
-    secondaryFthora,
-    secondaryChromaticFthoraNote,
-  });
+  updateNote(element, getFthoraChange('secondaryFthora', secondaryFthora));
   save();
 }
 
@@ -6165,10 +6160,7 @@ function updateNoteFthoraTertiary(
   element: NoteElement,
   tertiaryFthora: Fthora | null,
 ) {
-  const tertiaryChromaticFthoraNote =
-    getDefaultChromaticFthoraNote(tertiaryFthora);
-
-  updateNote(element, { tertiaryFthora, tertiaryChromaticFthoraNote });
+  updateNote(element, getFthoraChange('tertiaryFthora', tertiaryFthora));
   save();
 }
 
@@ -6669,11 +6661,17 @@ function updateMartyria(
   element: MartyriaElement,
   newValues: Partial<MartyriaElement>,
 ) {
+  // UI alignment actions always clear the neume; API patches can override it.
   const values =
-    newValues.alignRight !== undefined &&
-    newValues.alignRight !== element.alignRight
-      ? { ...newValues, quantitativeNeume: null }
-      : newValues;
+    newValues.alignRight === undefined
+      ? newValues
+      : {
+          ...newValues,
+          ...getMartyriaAlignmentChange(
+            element.alignRight,
+            newValues.alignRight,
+          ),
+        };
 
   commandService.value.execute(
     martyriaCommandFactory.create('update-properties', {
@@ -6686,23 +6684,17 @@ function updateMartyria(
 }
 
 function updateMartyriaFthora(element: MartyriaElement, fthora: Fthora | null) {
-  const chromaticFthoraNote = getDefaultChromaticFthoraNote(fthora);
-
-  updateMartyria(element, { fthora, chromaticFthoraNote });
+  updateMartyria(element, getFthoraChange('fthora', fthora));
 }
 
 function updateMartyriaQuantitativeNeumeFthora(
   element: MartyriaElement,
   quantitativeNeumeFthora: Fthora | null,
 ) {
-  const quantitativeNeumeChromaticFthoraNote = getDefaultChromaticFthoraNote(
-    quantitativeNeumeFthora,
+  updateMartyria(
+    element,
+    getFthoraChange('quantitativeNeumeFthora', quantitativeNeumeFthora),
   );
-
-  updateMartyria(element, {
-    quantitativeNeumeFthora,
-    quantitativeNeumeChromaticFthoraNote,
-  });
 }
 
 function updateMartyriaTempoLeft(

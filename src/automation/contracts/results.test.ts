@@ -4,7 +4,7 @@ import { Score } from '@/models/Score';
 import { Workspace } from '@/models/Workspace';
 import { SaveService } from '@/services/SaveService';
 
-import { getParagraphStyles } from '../documents/paragraphStyles';
+import { getParagraphStyles } from '../documents/paragraphStyleRead';
 import { automationOutputSchema, automationResultSchemas } from './results';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';

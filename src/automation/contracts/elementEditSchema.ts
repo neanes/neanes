@@ -2,13 +2,13 @@ import { z } from 'zod';
 
 import { ElementType } from '@/models/Element';
 
-import { headerFooterVariants } from './elementDiscovery';
-import { elementPropertySchemas } from './elementProperties';
+import { paragraphStyleOverridesSchema } from '../../services/documents/paragraphStyleSchema';
+import { headerFooterVariants } from '../documents/elementDiscovery';
+import { elementPropertySchemas } from './elementPropertySchemas';
 import {
   literalLyricsDescription,
   lyricParserDescription,
 } from './lyricSyntax';
-import { paragraphStyleOverridesSchema } from './paragraphStyleSchema';
 
 export const editReferenceSchema = z
   .union([

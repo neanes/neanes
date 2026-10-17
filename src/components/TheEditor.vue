@@ -38,6 +38,7 @@ import { toast } from 'vue-sonner';
 import type { Tab } from 'vue3-tabs-chrome';
 import Vue3TabsChrome from 'vue3-tabs-chrome';
 
+import { useEditorAutomation } from '@/automation/renderer/useEditorAutomation';
 import AboutDialog from '@/components/AboutDialog.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
 import DocumentPropertiesDialog from '@/components/DocumentPropertiesDialog.vue';
@@ -214,14 +215,6 @@ import type {
   PlaybackOptions,
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
-import { automationError } from '@/services/automation/errors';
-import { IsolatedSessions } from '@/services/automation/isolatedSessions';
-import { McpDocumentAdapter } from '@/services/automation/McpDocumentAdapter';
-import type {
-  AutomationMessage,
-  AutomationReply,
-} from '@/services/automation/protocol';
-import { parseAutomationRequest } from '@/services/automation/protocol';
 import { DocumentService } from '@/services/documents/DocumentService';
 import {
   getBundledFontLoadDescriptors,
@@ -301,7 +294,6 @@ import {
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
-import { Unit } from '@/utils/Unit';
 import { withZoom } from '@/utils/withZoom';
 
 interface Vue3TabsChromeComponent {
@@ -1623,7 +1615,6 @@ onMounted(() => {
     scheduleWorkspaceTabLayout();
   }
 
-  EventBus.$on(IpcMainChannels.AutomationRequest, onAutomationRequest);
   EventBus.$on(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$on(IpcMainChannels.CloseApplication, onCloseApplication);
   EventBus.$on(IpcRendererChannels.SetCanUndo, onSetCanUndo);
@@ -1750,7 +1741,6 @@ onBeforeUnmount(() => {
   clearZoomWheelDeltaReset();
   saveEditorEnvironment();
 
-  EventBus.$off(IpcMainChannels.AutomationRequest, onAutomationRequest);
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
   EventBus.$off(IpcRendererChannels.SetCanUndo, onSetCanUndo);
@@ -1885,7 +1875,7 @@ async function initialize() {
 
     await load();
     if (!isBrowser.value) {
-      EventBus.$emit(IpcRendererChannels.AutomationReady);
+      editorAutomation.ready();
     }
   } catch (error) {
     console.error(error);
@@ -1956,7 +1946,15 @@ const documents = new DocumentService({
   },
   close: (workspace) => finishClosingWorkspace(workspace, true),
 });
-const isolatedSessions = new IsolatedSessions({
+const editorAutomation = useEditorAutomation({
+  documents,
+  enabled: !isBrowser.value,
+  isBusy: () =>
+    isLoading.value ||
+    closingWorkspaceIds.size > 0 ||
+    dialogOpen.value ||
+    recoveryDialogIsOpen.value ||
+    printMode.value,
   createScore: createDefaultScore,
   prepare(workspace) {
     if (!workspace.score.staff.lyrics.locked) {
@@ -1970,83 +1968,16 @@ const isolatedSessions = new IsolatedSessions({
       failWorkspaceTextBoxMeasurement(new Error('DOCUMENT_NOT_FOUND'));
     }
   },
-  fonts: () => documents.fonts(),
-  ensureFonts: ensureDocumentFonts,
-  async settle(workspace) {
-    await queueWorkspaceTextBoxMeasurement(workspace);
-  },
+  settle: (workspace) => queueWorkspaceTextBoxMeasurement(workspace),
+  snapshot: createScoreRenderSnapshot,
 });
-const isolatedTools = new Map<DocumentService, McpDocumentAdapter>();
-const isolatedSessionTimer = setInterval(() => {
-  isolatedSessions.expire();
-  for (const service of isolatedTools.keys()) {
-    if (!service.list().some((workspace) => isolatedSessions.owns(workspace))) {
-      isolatedTools.delete(service);
-    }
-  }
-}, 30_000);
-onBeforeUnmount(() => {
-  clearInterval(isolatedSessionTimer);
-  isolatedSessions.clear();
-  isolatedTools.clear();
-});
-const documentTools = new McpDocumentAdapter(
-  documents,
-  ipcService,
-  exportAutomationPdf,
-);
-
-async function onAutomationRequest(message: AutomationMessage) {
-  let reply: AutomationReply;
-  try {
-    if (
-      isLoading.value ||
-      closingWorkspaceIds.size > 0 ||
-      dialogOpen.value ||
-      recoveryDialogIsOpen.value ||
-      printMode.value
-    ) {
-      throw new Error('EDITOR_BUSY');
-    }
-    const request = parseAutomationRequest(message.request);
-    let result: unknown;
-    if (request.tool === 'create_session') {
-      result = isolatedSessions.create();
-    } else if (request.tool === 'close_session') {
-      const service = isolatedSessions.get(request.arguments.sessionId);
-      result = isolatedSessions.close(
-        request.arguments.sessionId,
-        request.arguments.discardUnsavedChanges,
-      );
-      isolatedTools.delete(service);
-    } else {
-      let adapter = documentTools;
-      if ('sessionId' in request.arguments && request.arguments.sessionId) {
-        const service = isolatedSessions.get(request.arguments.sessionId);
-        const existing = isolatedTools.get(service);
-        if (existing) {
-          adapter = existing;
-        } else {
-          adapter = new McpDocumentAdapter(
-            service,
-            ipcService,
-            exportAutomationPdf,
-          );
-          isolatedTools.set(service, adapter);
-        }
-      }
-      result = await adapter.execute(request);
-    }
-    reply = { requestId: message.requestId, success: true, result };
-  } catch (error) {
-    reply = {
-      requestId: message.requestId,
-      success: false,
-      error: automationError(error),
-    };
-  }
-  EventBus.$emit(IpcRendererChannels.AutomationReply, reply);
-}
+const workspacePolicy = {
+  isActive: (workspace: Workspace) =>
+    workspaces.value.some((item) => item.id === workspace.id) ||
+    editorAutomation.ownsPrivateWorkspace(workspace),
+  shouldRecover: (workspace: Workspace) =>
+    !editorAutomation.ownsPrivateWorkspace(workspace),
+};
 
 function createScoreRenderSnapshot(workspace: Workspace) {
   return {
@@ -2058,23 +1989,6 @@ function createScoreRenderSnapshot(workspace: Workspace) {
     systemFonts: fontCatalog.snapshotSystemFonts(),
     overlays: { ...pageOverlaySettings.value },
   };
-}
-
-async function exportAutomationPdf(
-  workspace: Workspace,
-  filePath: string,
-  overwrite: boolean,
-) {
-  const setup = workspace.score.pageSetup;
-  await ipcService.automationExportPdf({
-    filePath,
-    overwrite,
-    pageSize: setup.pageSize,
-    pageWidthInches: Unit.toInch(setup.pageWidthCustom),
-    pageHeightInches: Unit.toInch(setup.pageHeightCustom),
-    landscape: setup.landscape,
-    snapshot: createScoreRenderSnapshot(workspace),
-  });
 }
 
 void initialize();
@@ -7015,11 +6929,7 @@ function runWithTextBoxRecalc(operation: () => void) {
 function queueWorkspaceTextBoxMeasurement(workspace: Workspace) {
   dirtyTextBoxWorkspaces.add(workspace.id);
   const pending = textBoxMeasurementQueue.then(async () => {
-    if (
-      editorUnmounted ||
-      (!workspaces.value.some((item) => item.id === workspace.id) &&
-        !isolatedSessions.owns(workspace))
-    ) {
+    if (editorUnmounted || !workspacePolicy.isActive(workspace)) {
       return;
     }
     await Promise.all(
@@ -7039,7 +6949,7 @@ function queueWorkspaceTextBoxMeasurement(workspace: Workspace) {
     }
     if (workspace.id === selectedWorkspace.value.id) {
       save(false);
-    } else if (!isolatedSessions.owns(workspace)) {
+    } else if (workspacePolicy.shouldRecover(workspace)) {
       scheduleRecoverySnapshot(workspace);
     }
   });

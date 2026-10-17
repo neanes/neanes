@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Values are interpolated into stylesheet declarations and selectors.
-const styleId = z.string().regex(/^[A-Za-z0-9_-]+$/);
+export const paragraphStyleIdSchema = z.string().regex(/^[A-Za-z0-9_-]+$/);
 const cssValue = z
   .string()
   .trim()
@@ -26,25 +26,13 @@ export const paragraphStyleOverridesSchema = z.strictObject({
 });
 
 export const paragraphStyleDefinitionSchema = z.strictObject({
-  id: styleId,
+  id: paragraphStyleIdSchema,
   // Only custom styles have a writable displayName. Built-in names are metadata.
   displayName: z.string().trim().min(1).optional(),
-  parentStyleId: styleId.nullable(),
+  parentStyleId: paragraphStyleIdSchema.nullable(),
   overrides: paragraphStyleOverridesSchema,
 });
 
-export const paragraphStyleChangeSchema = z.discriminatedUnion('action', [
-  z.strictObject({
-    action: z.literal('create'),
-    style: paragraphStyleDefinitionSchema,
-  }),
-  z.strictObject({
-    action: z.literal('replace'),
-    style: paragraphStyleDefinitionSchema,
-  }),
-  z.strictObject({ action: z.literal('delete'), id: styleId }),
-]);
 export type ParagraphStyleDefinition = z.infer<
   typeof paragraphStyleDefinitionSchema
 >;
-export type ParagraphStyleChange = z.infer<typeof paragraphStyleChangeSchema>;

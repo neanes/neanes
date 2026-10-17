@@ -18,10 +18,6 @@ import type {
 } from '@/ipc/ipcChannels';
 import type { Score as SavedScore } from '@/models/save/v1/Score';
 import type { Workspace } from '@/models/Workspace';
-import type {
-  OpenScoreFileResult,
-  ReadScoreFileResult,
-} from '@/services/documents/fileTypes';
 import { SaveService } from '@/services/SaveService';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 
@@ -51,18 +47,6 @@ function getExportDownloadFileName(
 }
 
 export class BrowserIpcService implements IIpcService {
-  public async automationReadScore(): Promise<OpenScoreFileResult> {
-    throw new Error('AUTOMATION_REQUIRES_ELECTRON');
-  }
-  public async automationWriteScore(): Promise<
-    Omit<ReadScoreFileResult, 'data'>
-  > {
-    throw new Error('AUTOMATION_REQUIRES_ELECTRON');
-  }
-  public async automationExportPdf(): Promise<void> {
-    throw new Error('AUTOMATION_REQUIRES_ELECTRON');
-  }
-
   public async saveWorkspace(
     workspace: Workspace,
     data?: SavedScore,

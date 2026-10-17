@@ -14,19 +14,8 @@ import {
   snapshotDocument,
 } from './documentPersistence';
 import { replaceDocumentProperties } from './documentProperties';
-import type { ElementDiscovery } from './elementDiscovery';
-import {
-  applyElementEdits,
-  type ElementEditPlan,
-  planElementEdits,
-} from './elementEdits';
-import type { ElementEditAction } from './elementEditSchema';
 import type { ScoreFileFormat } from './fileTypes';
-import {
-  planParagraphStyleEdits,
-  replaceParagraphStyles,
-} from './paragraphStyles';
-import type { ParagraphStyleChange } from './paragraphStyleSchema';
+import { replaceParagraphStyles } from './paragraphStyles';
 
 export interface DocumentEditor {
   workspaces(): Workspace[];
@@ -153,14 +142,6 @@ export class DocumentService {
     this.editor.changed(workspace);
   }
 
-  editParagraphStyles(workspace: Workspace, changes: ParagraphStyleChange[]) {
-    const styles = planParagraphStyleEdits(
-      workspace.score.paragraphStyles,
-      changes,
-    );
-    this.replaceParagraphStyles(workspace, styles);
-  }
-
   replaceParagraphStyles(workspace: Workspace, styles: ParagraphStyle[]) {
     this.prepare(workspace);
     for (const style of styles) {
@@ -182,24 +163,17 @@ export class DocumentService {
     this.editor.changed(workspace);
   }
 
-  async planElementEdits(
-    workspace: Workspace,
-    discovery: ElementDiscovery,
-    actions: ElementEditAction[],
-  ) {
-    this.prepare(workspace);
-    const plan = planElementEdits(workspace, discovery, actions, this.fonts());
-    await this.editor.ensureFonts(plan.fontFamilies);
-    return plan;
+  async ensureFonts(families: string[]) {
+    await this.editor.ensureFonts(families);
   }
 
-  editElements(workspace: Workspace, plan: ElementEditPlan) {
-    const applied = applyElementEdits(workspace, plan);
+  changeElements(workspace: Workspace, operation: () => boolean) {
+    const applied = operation();
     if (applied) {
       this.editor.elementsChanged(workspace);
       this.editor.changed(workspace);
     }
-    return { applied, created: plan.created };
+    return applied;
   }
 
   async save<T extends DocumentSaveResult>(

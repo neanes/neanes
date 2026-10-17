@@ -27,14 +27,6 @@ import type {
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
 import type { Score as SavedScore } from '@/models/save/v1/Score';
 import type { Workspace } from '@/models/Workspace';
-import { unwrapAutomationOutcome } from '@/services/automation/errors';
-import type {
-  OpenScoreFileResult,
-  PdfExportOptions,
-  ReadScoreFileResult,
-  WorkspaceFile,
-  WriteScoreFileArgs,
-} from '@/services/documents/fileTypes';
 import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
 import { Unit } from '@/utils/Unit';
 
@@ -42,37 +34,6 @@ import { SaveService } from '../SaveService';
 import type { IIpcService } from './IIpcService';
 
 export class IpcService implements IIpcService {
-  public async automationReadScore(
-    filePath: string,
-    workspaces: WorkspaceFile[],
-  ): Promise<OpenScoreFileResult> {
-    return unwrapAutomationOutcome(
-      await window.ipcRenderer.invoke(
-        IpcRendererChannels.AutomationReadScore,
-        filePath,
-        workspaces,
-      ),
-    );
-  }
-  public async automationWriteScore(
-    args: WriteScoreFileArgs,
-  ): Promise<Omit<ReadScoreFileResult, 'data'>> {
-    return unwrapAutomationOutcome(
-      await window.ipcRenderer.invoke(
-        IpcRendererChannels.AutomationWriteScore,
-        args,
-      ),
-    );
-  }
-  public async automationExportPdf(args: PdfExportOptions): Promise<void> {
-    unwrapAutomationOutcome(
-      await window.ipcRenderer.invoke(
-        IpcRendererChannels.AutomationExportPdf,
-        args,
-      ),
-    );
-  }
-
   public async saveWorkspace(
     workspace: Workspace,
     data?: SavedScore,

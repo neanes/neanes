@@ -28,7 +28,7 @@ import {
   elementCatalogSchema,
   elementPageShape,
   getElementCatalog,
-} from '../automation/elementSchemas';
+} from '../contracts/elementSchemas';
 import { type ElementCollection, ElementDiscovery } from './elementDiscovery';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';

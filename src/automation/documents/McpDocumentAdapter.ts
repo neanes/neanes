@@ -1,21 +1,21 @@
+import { readDocumentSections } from '@/automation/documents/documentRead';
+import { ElementDiscovery } from '@/automation/documents/elementDiscovery';
 import type { Workspace } from '@/models/Workspace';
-import { readDocumentSections } from '@/services/documents/documentRead';
 import type { DocumentService } from '@/services/documents/DocumentService';
-import { ElementDiscovery } from '@/services/documents/elementDiscovery';
-import {
-  getParagraphStyles,
-  paragraphStyleDefinition,
-} from '@/services/documents/paragraphStyles';
-import type { IIpcService } from '@/services/ipc/IIpcService';
+import { paragraphStyleDefinition } from '@/services/documents/paragraphStyles';
 
-import { getElementCatalog } from './elementSchemas';
+import { getElementCatalog } from '../contracts/elementSchemas';
 import {
   AutomationError,
   automationError,
   automationErrorCodes,
-} from './errors';
-import { ISOLATED_SESSION_LIMITS } from './isolatedSessions';
-import type { AutomationRequest } from './protocol';
+} from '../contracts/errors';
+import type { AutomationRequest } from '../contracts/protocol';
+import type { AutomationIpcClient } from '../ipc/AutomationIpcClient';
+import { ISOLATED_SESSION_LIMITS } from '../sessions/isolatedSessions';
+import { applyElementEdits, planElementEdits } from './elementEdits';
+import { planParagraphStyleEdits } from './paragraphStyleEdits';
+import { getParagraphStyles } from './paragraphStyleRead';
 
 // Adapts MCP tool requests to shared document operations.
 export class McpDocumentAdapter {
@@ -27,7 +27,7 @@ export class McpDocumentAdapter {
 
   constructor(
     private documents: DocumentService,
-    private ipc: IIpcService,
+    private ipc: AutomationIpcClient,
     private renderPdf: (
       workspace: Workspace,
       filePath: string,
@@ -217,11 +217,14 @@ export class McpDocumentAdapter {
     }
     if (request.tool === 'edit_elements') {
       const discovery = this.discovery(workspace);
-      const plan = await this.documents.planElementEdits(
+      this.documents.prepare(workspace);
+      const plan = planElementEdits(
         workspace,
         discovery,
         request.arguments.actions,
+        this.documents.fonts(),
       );
+      await this.documents.ensureFonts(plan.fontFamilies);
       const revision = this.revision(workspace);
       if (revision !== request.arguments.expectedRevision) {
         throw new AutomationError({
@@ -237,7 +240,12 @@ export class McpDocumentAdapter {
       }
       let edit;
       try {
-        edit = this.documents.editElements(workspace, plan);
+        edit = {
+          applied: this.documents.changeElements(workspace, () =>
+            applyElementEdits(workspace, plan),
+          ),
+          created: plan.created,
+        };
         await this.documents.settle(workspace);
       } catch (error) {
         const failure = automationError(error);
@@ -319,7 +327,13 @@ export class McpDocumentAdapter {
           JSON.stringify(paragraphStyleDefinition(style)),
         ]),
       );
-      this.documents.editParagraphStyles(workspace, request.arguments.changes);
+      this.documents.replaceParagraphStyles(
+        workspace,
+        planParagraphStyleEdits(
+          workspace.score.paragraphStyles,
+          request.arguments.changes,
+        ),
+      );
       await this.documents.settle(workspace);
       const after = new Map(
         workspace.score.paragraphStyles.map((style) => [

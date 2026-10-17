@@ -269,7 +269,7 @@ Results validate at the server boundary. `get_document.result.score` remains the
 Pure unit tests cover style graph and metadata validation, undo/redo, serialization, filesystem scope, overwrite behavior, and file conflicts:
 
 ```sh
-npx vitest run src/services/documents src/services/automation electron/main/files electron/main/automation/files.test.ts electron/main/OperationQueue.test.ts
+npx vitest run src/services/documents src/automation electron/main/files electron/main/automation/files.test.ts electron/main/OperationQueue.test.ts
 ```
 
 Run the read-only element discovery regression against a disposable profile. It checks interactive and isolated reads, nested collections, header/footer templates, pagination, reference ownership, revision conflicts, explicit overrides, and unchanged source content after reads:
@@ -331,7 +331,7 @@ This uses matching scores with plain, rich, multipanel, header, and footer text 
 Run the development Electron app with a dedicated profile and `--remote-debugging-port=9334`, or launch a production build with that flag, `--no-update`, and an explicit disposable `--user-data-dir=/tmp/neanes-mcp/export-profile`. The `NEANES_DEV_USER_DATA_DIR` override applies only to development builds. The debugging endpoint must be restricted to a disposable test instance; this test intentionally changes tabs and edits a document through the real renderer.
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node scripts/mcp/hidden-export-smoke.mjs /tmp/neanes-mcp/files
+NEANES_MCP_TOKEN=<same-token> node scripts/rendering/hidden-export-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 Set `NEANES_DEBUG_URL` for another local debugging endpoint. The test constructs a multi-page score with notes, lyrics, melismas, a drop cap, martyria, tempo, rich text, and headers/footers. It first exercises selection, range selection, lyric focus/editing/undo, flushing pending inline-rich-text edits on tab switches, and page-specific focus for repeated headers. It also checks style undo/redo with unchanged heights while switching tabs, and exports long title, chapter, and filename tokens in headers/footers with horizontal rules. It then exports a background document while changing tabs and editing the source, checks the exported and current revisions, verifies unchanged control content and undo history, and checks disposal after success, a broken-image failure, and HTTP cancellation. It closes its introduced workspaces. The resulting PDF remains available for visual inspection.
@@ -339,7 +339,7 @@ Set `NEANES_DEBUG_URL` for another local debugging endpoint. The test constructs
 To verify Print Overlays against actual PDF drawing and text content, use the same isolated app and debugging endpoint:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node scripts/mcp/print-overlays-smoke.mjs /tmp/neanes-mcp/files
+NEANES_MCP_TOKEN=<same-token> node scripts/rendering/print-overlays-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 This test reloads the disposable editor with each overlay preference, exports a real PDF, and checks that guides, all bounding-box options, lyric baselines, glue widths, and adjustment ratios add PDF content. It also checks that disabling Print Overlays, Overlays, or Developer Panels suppresses them. It restores the original preferences and closes its documents. Run it separately from other smoke tests because it reloads the renderer.
@@ -351,7 +351,7 @@ The snapshot protocol uses a separate `export.html` entry, without the normal ed
 With the same disposable profile, debugging endpoint, and MCP configuration:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node scripts/mcp/rendering-migration-smoke.mjs /tmp/neanes-mcp/files
+NEANES_MCP_TOKEN=<same-token> node scripts/rendering/rendering-migration-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 This exercises actual detached PNG rendering and filesystem output. It checks a two-page custom landscape score with rich text, an embedded image, resolved header/footer tokens, and overlays. It verifies dimensions at 96 and 192 DPI, page selection, transparent/opaque backgrounds, source content/revision/selection/undo preservation, empty page selection, broken-image failure, and disposal when a rendering window is closed. It intentionally supplies stale heights in the detached snapshot to exercise measurement and repagination. Output images remain available for visual inspection. Do not run it concurrently with other smoke tests.
@@ -366,7 +366,9 @@ Shared document operations live in `src/services/documents/`: workspace creation
 
 `electron/main/files/ScoreFiles.ts` owns shared score encoding, reads and writes, canonical file identity, conflict checks, and atomic output. Dialog-driven saves retain their existing write behavior; explicit-path saves use overwrite and conflict options. `electron/main/automation/files.ts` adds the configured folder-access policy. General file types live in `src/services/documents/fileTypes.ts`.
 
-The automation folders contain MCP schemas, tool dispatch, revisions and pagination, transport/IPC request handling, and access policy. Shared document and file services do not import automation types or tool contracts.
+`src/automation/` owns automation-only contracts, discovery, edit planning, read projections, revisions, sessions, renderer dispatch, and its Electron IPC client. See [the automation architecture](../../src/automation/README.md) for the directory map and dependency rule. `TheEditor.vue` attaches `useEditorAutomation` through explicit application hooks. Shared document and file services do not import automation types or tool contracts; ESLint enforces this boundary.
+
+The shared paragraph-style service owns graph validation, replacement, and deleted-style reference repair. API create/replace/delete batches and read projections live under automation. Shared rendering regression scripts live in `scripts/rendering/`; they still use MCP as a test driver.
 
 The editor and hidden export renderer both use `ScorePageContent.vue` for headers, footers, notation, lyrics, and element rendering. The editor retains its page DOM wrappers, visibility tracking, focus handling, and mutation handlers. Each page owns its child refs and exposes methods for element, lyric, annotation, and page-specific header/footer lookup; the editor holds only page-component refs. Page content forwards typed interaction events; editor-only badges and developer overlays are supplied through slots. Print pages use local component refs to await rich-text readiness. Overlay markup, geometry, and styles also live in the shared page component. Snapshots capture overlay preferences, and the detached renderer regenerates layout diagnostics so enabled Print Overlays settings apply to every PDF route.
 
@@ -388,7 +390,7 @@ include identical text and structured representations for client compatibility.
 Wire characters do not measure model-specific tokens or establish what a client
 places in its context.
 
-`src/services/automation/tokenEfficiency.test.ts` budgets the exact served
+`src/automation/contracts/tokenEfficiency.test.ts` budgets the exact served
 `tools/list` definitions (including descriptions and annotations), separate input
 and output views, and validates published schemas. Pure discovery/document/style
 regressions cover representative response sizes; the transaction smoke script

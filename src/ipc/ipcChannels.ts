@@ -10,6 +10,7 @@ import type {
 
 export enum IpcMainChannels {
   ExportRendererSnapshot = 'ExportRendererSnapshot',
+  // Automation-only bridge; names stay centralized for preload validation.
   AutomationRequest = 'AutomationRequest',
   UpdateAvailable = 'UpdateAvailable',
   UpdateDownloadStarted = 'UpdateDownloadStarted',
@@ -85,6 +86,7 @@ export enum IpcRendererChannels {
   ExportRendererImage = 'ExportRendererImage',
   ExportRendererReady = 'ExportRendererReady',
   ExportRendererResult = 'ExportRendererResult',
+  // Automation-only bridge; implemented under src/automation/ and main/automation/.
   AutomationReady = 'AutomationReady',
   AutomationReply = 'AutomationReply',
   AutomationReadScore = 'AutomationReadScore',

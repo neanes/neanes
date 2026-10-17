@@ -1,13 +1,13 @@
 import { z } from 'zod';
 
-import { ElementType, TempoElement } from '@/models/Element';
-import * as Neumes from '@/models/Neumes';
+import { elementEditPropertySchemas } from '@/automation/contracts/elementEditSchema';
+import { elementPropertySchemas } from '@/automation/contracts/elementPropertySchemas';
 import {
   elementPropertyNames,
   headerFooterVariants,
-} from '@/services/documents/elementDiscovery';
-import { elementEditPropertySchemas } from '@/services/documents/elementEditSchema';
-import { elementPropertySchemas } from '@/services/documents/elementProperties';
+} from '@/automation/documents/elementDiscovery';
+import { ElementType, TempoElement } from '@/models/Element';
+import * as Neumes from '@/models/Neumes';
 
 import { compactJsonSchema } from './jsonSchema';
 

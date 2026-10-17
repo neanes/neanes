@@ -1,15 +1,15 @@
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 
-import { compactJsonSchema } from '../../../src/services/automation/jsonSchema';
-import {
-  automationSchemas,
-  type AutomationTool,
-} from '../../../src/services/automation/protocol';
-import { publishedAutomationOutputSchema } from '../../../src/services/automation/results';
+import { compactJsonSchema } from '../../../src/automation/contracts/jsonSchema';
 import {
   literalLyricsDescription,
   lyricParserDescription,
-} from '../../../src/services/documents/lyricSyntax';
+} from '../../../src/automation/contracts/lyricSyntax';
+import {
+  automationSchemas,
+  type AutomationTool,
+} from '../../../src/automation/contracts/protocol';
+import { publishedAutomationOutputSchema } from '../../../src/automation/contracts/results';
 
 const descriptions: Record<AutomationTool, string> = {
   create_session:

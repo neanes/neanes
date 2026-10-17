@@ -33,17 +33,17 @@ import {
 } from '@/services/history/CommandService';
 import { LyricService } from '@/services/LyricService';
 
+import {
+  type ElementDefinition,
+  elementEditBatchSchema,
+  elementEditPropertySchemas,
+} from '../contracts/elementEditSchema';
 import type { ElementDiscovery } from './elementDiscovery';
 import {
   childCollections,
   type ElementCollection,
   headerFooterVariants,
 } from './elementDiscovery';
-import {
-  type ElementDefinition,
-  elementEditBatchSchema,
-  elementEditPropertySchemas,
-} from './elementEditSchema';
 
 const constructors = {
   [ElementType.Note]: NoteElement,

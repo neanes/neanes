@@ -18,25 +18,9 @@ import type {
 } from '@/ipc/ipcChannels';
 import type { Score as SavedScore } from '@/models/save/v1/Score';
 import type { Workspace } from '@/models/Workspace';
-import type {
-  OpenScoreFileResult,
-  PdfExportOptions,
-  ReadScoreFileResult,
-  WorkspaceFile,
-  WriteScoreFileArgs,
-} from '@/services/documents/fileTypes';
 import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
 
 export interface IIpcService {
-  automationReadScore(
-    filePath: string,
-    workspaces: WorkspaceFile[],
-  ): Promise<OpenScoreFileResult>;
-  automationWriteScore(
-    args: WriteScoreFileArgs,
-  ): Promise<Omit<ReadScoreFileResult, 'data'>>;
-  automationExportPdf(args: PdfExportOptions): Promise<void>;
-
   saveWorkspace(
     workspace: Workspace,
     data?: SavedScore,

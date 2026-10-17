@@ -12,13 +12,13 @@ import {
 import {
   AutomationError,
   automationError,
-} from '../../../src/services/automation/errors';
+} from '../../../src/automation/contracts/errors';
 import {
   type AutomationRequest,
   automationSchemas,
   parseAutomationRequest,
-} from '../../../src/services/automation/protocol';
-import { automationResultSchemas } from '../../../src/services/automation/results';
+} from '../../../src/automation/contracts/protocol';
+import { automationResultSchemas } from '../../../src/automation/contracts/results';
 import { automationTools } from './tools';
 
 export interface McpServerOptions {

@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
-import { documentPropertiesSchema } from '../documents/documentPropertiesSchema';
+import { documentPropertiesSchema } from '../../services/documents/documentPropertiesSchema';
 import { documentReadSections } from '../documents/documentRead';
-import { elementEditBatchSchema } from '../documents/elementEditSchema';
-import { paragraphStyleChangeSchema } from '../documents/paragraphStyleSchema';
+import { elementEditBatchSchema } from './elementEditSchema';
 import { elementCatalogQuerySchema, elementQueryShape } from './elementSchemas';
 import type { AutomationOutcome } from './errors';
+import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
 
 const documentId = z.string().min(1);
 const revision = z.number().int().nonnegative();

@@ -2,11 +2,11 @@ import { z } from 'zod';
 
 import { ElementType } from '@/models/Element';
 
-import { documentPropertiesSchema } from '../documents/documentPropertiesSchema';
+import { documentPropertiesSchema } from '../../services/documents/documentPropertiesSchema';
 import {
   paragraphStyleDefinitionSchema,
   paragraphStyleOverridesSchema,
-} from '../documents/paragraphStyleSchema';
+} from '../../services/documents/paragraphStyleSchema';
 import { elementCatalogSchema, elementPageShape } from './elementSchemas';
 import { automationErrorSchema } from './errors';
 import type { AutomationTool } from './protocol';

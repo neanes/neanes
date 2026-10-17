@@ -9,7 +9,7 @@ import {
 } from '@/models/Element';
 import type { Score } from '@/models/Score';
 
-import { elementPropertySchemas } from './elementProperties';
+import { elementPropertySchemas } from '../contracts/elementPropertySchemas';
 
 export const headerFooterVariants = [
   'default',

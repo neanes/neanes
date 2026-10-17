@@ -4,18 +4,18 @@ import type { BrowserWindow, IpcMainInvokeEvent } from 'electron';
 import { ipcMain } from 'electron';
 
 import {
-  IpcMainChannels,
-  IpcRendererChannels,
-} from '../../../src/ipc/ipcChannels';
-import {
   AutomationError,
   automationOutcome,
-} from '../../../src/services/automation/errors';
+} from '../../../src/automation/contracts/errors';
 import type {
   AutomationMessage,
   AutomationReply,
   AutomationRequest,
-} from '../../../src/services/automation/protocol';
+} from '../../../src/automation/contracts/protocol';
+import {
+  IpcMainChannels,
+  IpcRendererChannels,
+} from '../../../src/ipc/ipcChannels';
 import type {
   PdfExportOptions,
   WorkspaceFile,

@@ -72,6 +72,7 @@ NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile n
 - `find_elements`: search stored element fields with `eq`, `in`, `isNull`, and `isNotNull`, nested inside `and`/`or` groups. Optional `elementTypes` restricts types. Defaults to document scope (staff and descendants, then stored header/footer variants, including disabled variants), compact `properties: []`, and `includeContent: false`. Results carry a `collection` and zero-based `index` per match. See the search contract below.
 - `get_element`: retrieve an existing `elementRef` at its current location, with optional `before`/`after` counts (0 to 499 each). Returns the anchor reference, its collection, collection size, half-open `start`/`end`, and elements in collection order, including the anchor. Windows clip at collection boundaries and count actual elements without filtering. Defaults to all readable properties excluding large content. Supports `properties`, `includeContent`, and optional `expectedRevision`. Removed/foreign references return `ELEMENT_NOT_FOUND`.
 - `get_document`: metadata and serialized score, with staff elements paginated by `offset` and `limit` (default 100, maximum 1000). `nextOffset` is null on the final page. Optional `sections` selects any of `documentProperties`, `pageSetup`, `paragraphStyles`, `headers`, `footers`, `staffElements`, and `staffLyrics`. Omission preserves the complete view; `[]` returns only score version/app-version fields plus the document summary. Use `["staffElements"]` for subsequent pages without repeating styles, headers/footers, or staff lyric-manager text. `nextOffset` is null when elements are not selected. Selected views retain save-format field names but are not complete loadable scores. Pass `expectedRevision` on subsequent reads to reject mixed revisions. Serialized dimensions use CSS pixels.
+- `get_selection`: inspect the selection for an explicit `documentId`, with optional `expectedRevision` and `sessionId`. Returns `status: "active"` for the selected interactive tab, `"remembered"` for a background tab, or `"unavailable"` for an isolated document. `selection` is null when none is reachable. See the selection contract below.
 - `edit_elements`: apply an ordered, validated transaction to one document using its latest `expectedRevision`. Actions run on detached live-model drafts; schema, reference, font/style, musical component, and collection validation completes before commands mutate the document. Invalid batches leave no partial musical edits or history entries. Successful changes form one undo step, preserve existing element identities and collection arrays, and do not save. A no-op returns `applied: false` without adding history. The result includes current document metadata/revision and `created` entries (`clientId`, `elementRef`, `elementType`) for inserted/replacement objects still present. See the transaction contract below.
 - `create_document`: create and select a document using the user's current defaults. Optional `title` sets its metadata title.
 - `open_document`: open an absolute `.byzx` or `.byz` path. An already-open file is selected by canonical identity without replacing unsaved changes, including when its interactive path uses a directory alias. The requested suffix selects decoding; canonical identity does not change that format. Returns `created: true` only when a workspace was added; reused workspaces return false.
@@ -128,6 +129,48 @@ NEANES_MCP_TOKEN=<same-token> node scripts/mcp/element-search-smoke.mjs
 It checks interactive and isolated searches, nested collections, predicates,
 compact projections, reference windows, read-only state, revision conflicts,
 validation bounds, and cleanup. Published input/output schemas are validated.
+
+### UI selection contract
+
+Use `list_documents` and its `selected: true` entry to identify the interactive
+document, then call `get_selection` with that ID. Check `status: "active"` before
+interpreting a response as the user's current selection: tabs can change between
+requests. Active means the selected Neanes tab, regardless of OS window focus.
+The tool does not activate tabs or change selection. Background tabs return their
+remembered selection. Isolated documents always return `status: "unavailable"`
+and `selection: null`; fully automated workflows should use explicit discovery,
+search, and element references instead.
+
+A single selection returns `kind` (`element`, `lyrics`, `annotation`,
+`alternateLine`, or `headerFooter`) and a compact `target` containing `elementRef`,
+`elementType`, `collection`, and zero-based `index`. Nested selections identify
+the selected annotation or alternate-line container, rather than its staff
+parent. The child collection's `parentRef` supplies that context. An alternate
+line's final note may drive the toolbar, but it is not reported as a separate
+caret selection. Lyrics identify the owning note. Headers/footers identify the
+stored template and variant, without identifying a repeated page occurrence.
+Use `get_element` for properties or neighboring context.
+
+A staff range returns `kind: "range"`, `collection: { "kind": "staff" }`,
+normalized half-open `start`/`end`, and directional `anchorRef`/`focusRef`. The UI's
+inclusive endpoints are converted to the API's existing half-open convention.
+Ranges do not expand into an unbounded reference list; use `get_elements` to
+retrieve their contents. Removed or unreachable selected objects return null.
+
+Selection is a snapshot of editor state, not a promise that the user will keep
+it selected. Moving the selection does not advance the document-content revision
+or create an undo step. `expectedRevision` checks content only; use the returned
+references and revision for subsequent edits rather than following later UI
+selection changes. Caret offsets and highlighted text inside lyrics or rich-text
+editors are not exposed. Existing editor-readiness/busy and document/session
+access rules apply.
+
+Run the regression against a disposable app started with
+`--remote-debugging-port=9334`:
+
+```sh
+NEANES_MCP_TOKEN=<same-token> NEANES_DEBUG_URL=http://127.0.0.1:9334 node scripts/mcp/selection-smoke.mjs
+```
 
 ### Element transaction contract
 

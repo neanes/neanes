@@ -18,6 +18,7 @@ import {
 } from './elementSearchSchema';
 import { automationErrorSchema } from './errors';
 import type { AutomationTool } from './protocol';
+import { selectionResultShape } from './selectionSchema';
 
 const revision = z.number().int().nonnegative();
 export const documentSummarySchema = z.strictObject({
@@ -86,6 +87,7 @@ export const automationResultSchemas = {
   get_elements: documentSummarySchema.extend(elementPageShape),
   find_elements: documentSummarySchema.extend(elementSearchResultShape),
   get_element: documentSummarySchema.extend(elementLookupResultShape),
+  get_selection: documentSummarySchema.extend(selectionResultShape),
   edit_elements: documentSummarySchema.extend({
     applied: z.boolean(),
     created: z.array(

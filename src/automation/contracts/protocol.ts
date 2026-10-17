@@ -43,6 +43,11 @@ export const automationSchemas = {
     expectedRevision: revision.optional(),
     ...elementLookupShape,
   }),
+  get_selection: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision.optional(),
+  }),
   edit_elements: z.strictObject({
     sessionId,
     documentId,

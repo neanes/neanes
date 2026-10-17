@@ -264,6 +264,21 @@ export class ElementDiscovery {
     return { offset: query.offset, nextOffset: null, elements };
   }
 
+  location(score: Score, target: ScoreElement) {
+    const raw = toRaw(target);
+    for (const { element, collection, index } of this.documentElements(score)) {
+      if (toRaw(element) === raw) {
+        return {
+          elementRef: this.reference(element),
+          elementType: element.elementType,
+          collection,
+          index,
+        };
+      }
+    }
+    return null;
+  }
+
   lookup(score: Score, query: ElementLookupQuery) {
     for (const { element, collection, index } of this.documentElements(score)) {
       if (this.refs.get(toRaw(element)) !== query.elementRef) {

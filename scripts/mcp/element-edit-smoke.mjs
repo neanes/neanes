@@ -98,7 +98,7 @@ try {
   assert.ok(JSON.stringify(inventory).length < 2000);
   assert.ok(inventory.elementTypes.every((type) => !('properties' in type)));
   const tools = await client.listTools();
-  assert.ok(JSON.stringify(tools).length < 81000);
+  assert.ok(JSON.stringify(tools).length < 86000);
   const capabilities = await call('get_capabilities', {
     includeErrorCodes: true,
   });

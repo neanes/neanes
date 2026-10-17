@@ -16,6 +16,7 @@ import { ISOLATED_SESSION_LIMITS } from '../sessions/isolatedSessions';
 import { applyElementEdits, planElementEdits } from './elementEdits';
 import { planParagraphStyleEdits } from './paragraphStyleEdits';
 import { getParagraphStyles } from './paragraphStyleRead';
+import { readSelection } from './selectionRead';
 
 // Adapts MCP tool requests to shared document operations.
 export class McpDocumentAdapter {
@@ -172,7 +173,8 @@ export class McpDocumentAdapter {
       request.tool === 'get_elements' ||
       request.tool === 'get_document' ||
       request.tool === 'find_elements' ||
-      request.tool === 'get_element'
+      request.tool === 'get_element' ||
+      request.tool === 'get_selection'
     ) {
       const summary = this.summary(workspace);
       if (
@@ -188,6 +190,16 @@ export class McpDocumentAdapter {
             actualRevision: summary.revision,
           },
         });
+      }
+      if (request.tool === 'get_selection') {
+        return {
+          ...summary,
+          ...readSelection(
+            workspace,
+            this.discovery(workspace),
+            this.documents.selected()?.id ?? null,
+          ),
+        };
       }
       return {
         ...summary,

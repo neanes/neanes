@@ -154,6 +154,7 @@ import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
 import {
   areVocalExpressionsEquivalent,
+  getDefaultChromaticFthoraNote,
   getSecondaryGorgonNeume,
   getSecondaryNeume,
   measureBarAboveToLeft,
@@ -162,6 +163,7 @@ import {
   onlyTakesTopKlasma,
 } from '@/models/NeumeReplacements';
 import type {
+  Fthora,
   Ison,
   MeasureBar,
   MeasureNumber,
@@ -171,7 +173,6 @@ import type {
 } from '@/models/Neumes';
 import {
   Accidental,
-  Fthora,
   GorgonNeume,
   NeumeSelection,
   QuantitativeNeume,
@@ -190,7 +191,6 @@ import {
   getTextBoxParagraphStyleFallbackId,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import { ScaleNote } from '@/models/Scales';
 import type { DocumentProperties } from '@/models/Score';
 import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
@@ -226,6 +226,7 @@ import { parseAutomationRequest } from '@/services/automation/protocol';
 import { DocumentService } from '@/services/documents/DocumentService';
 import {
   getBundledFontLoadDescriptors,
+  getFontFamilyLoadDescriptors,
   getScoreFontLoadDescriptors,
 } from '@/services/documents/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
@@ -1890,6 +1891,14 @@ async function initialize() {
   }
 }
 
+async function ensureDocumentFonts(families: string[]) {
+  await Promise.all(
+    getFontFamilyLoadDescriptors(families).map((descriptor) =>
+      document.fonts.load(descriptor),
+    ),
+  );
+}
+
 const documents = new DocumentService({
   workspaces: () => workspaces.value as Workspace[],
   selectedWorkspace: () => selectedWorkspace.value,
@@ -1910,6 +1919,10 @@ const documents = new DocumentService({
       save(false);
       await nextTick();
     }
+  },
+  ensureFonts: ensureDocumentFonts,
+  elementsChanged(workspace) {
+    dirtyTextBoxWorkspaces.add(workspace.id);
   },
   changeStyles(workspace, operation) {
     const previousStyles = getResizableParagraphStyleSnapshot(workspace.score);
@@ -1955,12 +1968,8 @@ const isolatedSessions = new IsolatedSessions({
     }
   },
   fonts: () => documents.fonts(),
+  ensureFonts: ensureDocumentFonts,
   async settle(workspace) {
-    await Promise.all(
-      getScoreFontLoadDescriptors(documents.serialize(workspace)).map(
-        (descriptor) => document.fonts.load(descriptor),
-      ),
-    );
     await queueWorkspaceTextBoxMeasurement(workspace);
   },
 });
@@ -4784,7 +4793,7 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
     }),
   );
 
-  runWithResizableParagraphStyleRecalc(() => {
+  runWithTextBoxRecalc(() => {
     commandService.value.executeAsBatch(commands);
   });
 
@@ -4962,7 +4971,7 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
   }
 
   if (commands.length > 0) {
-    runWithResizableParagraphStyleRecalc(() => {
+    runWithTextBoxRecalc(() => {
       if (commands.length > 1) {
         commandService.value.executeAsBatch(commands);
       } else {
@@ -6132,29 +6141,7 @@ function updateNote(element: NoteElement, newValues: Partial<NoteElement>) {
 }
 
 function updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
-  let chromaticFthoraNote: ScaleNote | null = null;
-
-  if (
-    fthora === Fthora.SoftChromaticThi_Top ||
-    fthora === Fthora.SoftChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.SoftChromaticPa_Top ||
-    fthora === Fthora.SoftChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Ga;
-  } else if (
-    fthora === Fthora.HardChromaticThi_Top ||
-    fthora === Fthora.HardChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.HardChromaticPa_Top ||
-    fthora === Fthora.HardChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Pa;
-  }
+  const chromaticFthoraNote = getDefaultChromaticFthoraNote(fthora);
 
   updateNote(element, { fthora, chromaticFthoraNote });
   save();
@@ -6164,17 +6151,8 @@ function updateNoteFthoraSecondary(
   element: NoteElement,
   secondaryFthora: Fthora | null,
 ) {
-  let secondaryChromaticFthoraNote: ScaleNote | null = null;
-
-  if (secondaryFthora === Fthora.SoftChromaticThi_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (secondaryFthora === Fthora.SoftChromaticPa_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Ga;
-  } else if (secondaryFthora === Fthora.HardChromaticThi_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (secondaryFthora === Fthora.HardChromaticPa_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Pa;
-  }
+  const secondaryChromaticFthoraNote =
+    getDefaultChromaticFthoraNote(secondaryFthora);
 
   updateNote(element, {
     secondaryFthora,
@@ -6187,17 +6165,8 @@ function updateNoteFthoraTertiary(
   element: NoteElement,
   tertiaryFthora: Fthora | null,
 ) {
-  let tertiaryChromaticFthoraNote: ScaleNote | null = null;
-
-  if (tertiaryFthora === Fthora.SoftChromaticThi_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (tertiaryFthora === Fthora.SoftChromaticPa_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Ga;
-  } else if (tertiaryFthora === Fthora.HardChromaticThi_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (tertiaryFthora === Fthora.HardChromaticPa_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Pa;
-  }
+  const tertiaryChromaticFthoraNote =
+    getDefaultChromaticFthoraNote(tertiaryFthora);
 
   updateNote(element, { tertiaryFthora, tertiaryChromaticFthoraNote });
   save();
@@ -6717,29 +6686,7 @@ function updateMartyria(
 }
 
 function updateMartyriaFthora(element: MartyriaElement, fthora: Fthora | null) {
-  let chromaticFthoraNote: ScaleNote | null = null;
-
-  if (
-    fthora === Fthora.SoftChromaticThi_Top ||
-    fthora === Fthora.SoftChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.SoftChromaticPa_Top ||
-    fthora === Fthora.SoftChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Ga;
-  } else if (
-    fthora === Fthora.HardChromaticThi_Top ||
-    fthora === Fthora.HardChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.HardChromaticPa_Top ||
-    fthora === Fthora.HardChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Pa;
-  }
+  const chromaticFthoraNote = getDefaultChromaticFthoraNote(fthora);
 
   updateMartyria(element, { fthora, chromaticFthoraNote });
 }
@@ -6748,17 +6695,9 @@ function updateMartyriaQuantitativeNeumeFthora(
   element: MartyriaElement,
   quantitativeNeumeFthora: Fthora | null,
 ) {
-  let quantitativeNeumeChromaticFthoraNote: ScaleNote | null = null;
-
-  if (quantitativeNeumeFthora?.startsWith('SoftChromaticThi')) {
-    quantitativeNeumeChromaticFthoraNote = ScaleNote.Thi;
-  } else if (quantitativeNeumeFthora?.startsWith('SoftChromaticPa')) {
-    quantitativeNeumeChromaticFthoraNote = ScaleNote.Ga;
-  } else if (quantitativeNeumeFthora?.startsWith('HardChromaticThi')) {
-    quantitativeNeumeChromaticFthoraNote = ScaleNote.Thi;
-  } else if (quantitativeNeumeFthora?.startsWith('HardChromaticPa')) {
-    quantitativeNeumeChromaticFthoraNote = ScaleNote.Pa;
-  }
+  const quantitativeNeumeChromaticFthoraNote = getDefaultChromaticFthoraNote(
+    quantitativeNeumeFthora,
+  );
 
   updateMartyria(element, {
     quantitativeNeumeFthora,
@@ -7054,13 +6993,19 @@ function resizableParagraphStylesChanged(
   return false;
 }
 
-// Brackets an operation that may change paragraph styles and recalculates the
-// text box heights that depend on the resolved styles when they changed.
-function runWithResizableParagraphStyleRecalc(operation: () => void) {
+// Recalculate text boxes after history or editing changes their content or styles.
+function runWithTextBoxRecalc(operation: () => void) {
   const workspace = selectedWorkspace.value;
   const previousResizableParagraphStyles = getResizableParagraphStyleSnapshot(
     workspace.score,
   );
+  const textBoxSnapshot = () =>
+    JSON.stringify(
+      getResizableTextBoxes(workspace.score).map((box) =>
+        box.getClipboardProperties(),
+      ),
+    );
+  const previousTextBoxes = textBoxSnapshot();
 
   operation();
 
@@ -7068,7 +7013,8 @@ function runWithResizableParagraphStyleRecalc(operation: () => void) {
     resizableParagraphStylesChanged(
       previousResizableParagraphStyles,
       getResizableParagraphStyleSnapshot(workspace.score),
-    )
+    ) ||
+    previousTextBoxes !== textBoxSnapshot()
   ) {
     queueWorkspaceTextBoxMeasurement(workspace);
   }
@@ -7084,6 +7030,11 @@ function queueWorkspaceTextBoxMeasurement(workspace: Workspace) {
     ) {
       return;
     }
+    await Promise.all(
+      getScoreFontLoadDescriptors(documents.serialize(workspace)).map(
+        (descriptor) => document.fonts.load(descriptor),
+      ),
+    );
     await document.fonts.ready;
     // Compute target widths and inherited legacy text styles before mounting measurements.
     LayoutService.processPages(toRaw(workspace));
@@ -8536,7 +8487,7 @@ async function onFileMenuSaveAs() {
 }
 
 function onFileMenuUndo() {
-  runWithResizableParagraphStyleRecalc(() => {
+  runWithTextBoxRecalc(() => {
     const currentIndex = selectedElementIndex.value;
 
     commandService.value.undo();
@@ -8562,7 +8513,7 @@ function onFileMenuUndo() {
 }
 
 function onFileMenuRedo() {
-  runWithResizableParagraphStyleRecalc(() => {
+  runWithTextBoxRecalc(() => {
     const currentIndex = selectedElementIndex.value;
 
     commandService.value.redo();
@@ -8784,7 +8735,7 @@ function onFileMenuPasteFormat() {
 
     commands.push(...targetCommands);
 
-    runWithResizableParagraphStyleRecalc(() => {
+    runWithTextBoxRecalc(() => {
       if (commands.length > 1) {
         commandService.value.executeAsBatch(commands);
       } else {

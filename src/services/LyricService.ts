@@ -240,6 +240,7 @@ export class LyricService {
    * @param setLyrics A callback that is invoked whenever lyrics should be immediately changed
    * @param updateNote A callback that is called when lyrics should be updated
    * @param updateDropCap A callback that is called when drop caps should be updated
+   * @returns Text that the available elements did not consume, excluding surrounding whitespace.
    */
   assignLyrics(
     lyrics: string,
@@ -453,6 +454,8 @@ export class LyricService {
       previousToken = token;
       previousNote = note;
     }
+
+    return { unassignedText: tokenizer.getRemainingText() };
   }
 
   /**
@@ -705,6 +708,10 @@ export class LyricTokenizer {
 
   constructor(lyrics: string) {
     this.lyrics = lyrics;
+  }
+
+  getRemainingText() {
+    return this.lyrics.slice(this.index).trim();
   }
 
   /**

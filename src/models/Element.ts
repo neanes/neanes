@@ -1429,7 +1429,7 @@ export class ImageBoxElement extends ScoreElement {
   public imageWidth: number = 100;
   public inline: boolean = false;
   public lockAspectRatio: boolean = true;
-  public alignment: TextBoxAlignment = TextBoxAlignment.Center;
+  public alignment: TextBoxAlignment | null = TextBoxAlignment.Center;
 
   public get aspectRatio() {
     return this.imageWidth / this.imageHeight;

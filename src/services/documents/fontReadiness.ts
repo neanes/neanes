@@ -50,6 +50,10 @@ export function getScoreFontLoadDescriptors(score: Score) {
     }
   }
   visit(score);
+  return getFontFamilyLoadDescriptors(families);
+}
+
+export function getFontFamilyLoadDescriptors(families: Iterable<string>) {
   return [...families].flatMap((family) =>
     fontCatalog
       .getStyles(family)

@@ -25,6 +25,7 @@ export class IsolatedSessions {
       prepare(workspace: Workspace): void;
       dispose(workspace: Workspace): void;
       fonts(): string[];
+      ensureFonts(families: string[]): Promise<void>;
       settle(workspace: Workspace): Promise<void>;
     },
   ) {}
@@ -68,6 +69,8 @@ export class IsolatedSessions {
       selectWorkspace() {},
       prepare: (workspace) => this.hooks.prepare(workspace),
       changed() {},
+      elementsChanged() {},
+      ensureFonts: (families) => this.hooks.ensureFonts(families),
       changeStyles(_workspace, operation) {
         operation();
       },

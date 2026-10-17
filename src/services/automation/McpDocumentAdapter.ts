@@ -102,7 +102,7 @@ export class McpDocumentAdapter {
       }
     }
     if (request.tool === 'get_element_catalog') {
-      return getElementCatalog();
+      return getElementCatalog(request.arguments);
     }
     if (request.tool === 'get_capabilities') {
       return {
@@ -213,6 +213,53 @@ export class McpDocumentAdapter {
           actualRevision: this.revision(workspace),
         },
       });
+    }
+    if (request.tool === 'edit_elements') {
+      const discovery = this.discovery(workspace);
+      const plan = await this.documents.planElementEdits(
+        workspace,
+        discovery,
+        request.arguments.actions,
+      );
+      const revision = this.revision(workspace);
+      if (revision !== request.arguments.expectedRevision) {
+        throw new AutomationError({
+          code: 'REVISION_CONFLICT',
+          message:
+            'The document changed while preparing fonts. Read it again before editing.',
+          details: {
+            documentId: workspace.id,
+            expectedRevision: request.arguments.expectedRevision,
+            actualRevision: revision,
+          },
+        });
+      }
+      let edit;
+      try {
+        edit = this.documents.editElements(workspace, plan);
+        await this.documents.settle(workspace);
+      } catch (error) {
+        const failure = automationError(error);
+        throw new AutomationError({
+          ...failure,
+          details: {
+            ...failure.details,
+            documentId: workspace.id,
+            editsApplied:
+              edit?.applied ?? this.revision(workspace) !== revision,
+            revision: this.revision(workspace),
+          },
+        });
+      }
+      return {
+        ...this.summary(workspace),
+        applied: edit.applied,
+        created: edit.created.map(({ clientId, element }) => ({
+          clientId,
+          elementRef: discovery.reference(element),
+          elementType: element.elementType,
+        })),
+      };
     }
     if (request.tool === 'close_document') {
       let cleanupSucceeded;

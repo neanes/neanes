@@ -9,12 +9,12 @@ import {
   ListToolsRequestSchema,
   type Tool,
 } from '@modelcontextprotocol/sdk/types.js';
-import { z } from 'zod';
 
 import {
   AutomationError,
   automationError,
 } from '../../../src/services/automation/errors';
+import { compactJsonSchema } from '../../../src/services/automation/jsonSchema';
 import {
   type AutomationRequest,
   automationSchemas,
@@ -25,6 +25,10 @@ import {
   automationOutputSchema,
   automationResultSchemas,
 } from '../../../src/services/automation/results';
+import {
+  literalLyricsDescription,
+  lyricParserDescription,
+} from '../../../src/services/documents/lyricSyntax';
 
 const descriptions: Record<AutomationTool, string> = {
   create_session:
@@ -36,9 +40,14 @@ const descriptions: Record<AutomationTool, string> = {
   list_documents:
     'List interactive workspaces, or only documents owned by the supplied sessionId, with IDs and revisions. Does not open files.',
   get_element_catalog:
-    'Describe every live element content property and neume enum. Read-only inspection schemas, not edit validation or a writable score format. Lists nested collections and header/footer variants. Text-box and drop-cap lineHeight is special: omission inherits the paragraph style, null explicitly resets to normal, and a number overrides its multiplier.',
+    'Get a small element-type inventory by default. Supply elementTypes and/or properties to retrieve focused property schemas; view selects read, edit, or both. includeProperties retrieves all schemas; includeNeumes includes the full enum vocabulary. Schemas use local $defs/$ref. tempoBpmDefaults maps each tempo sign to its creation/replacement default BPM; partial updates preserve omitted BPM. Dimensions are CSS pixels, lineHeight is a multiplier, and lineHeight:null explicitly resets to normal while omission inherits.',
   get_elements:
     'Read typed elements in a collection (staff by default). Ranges use zero-based start inclusive/end exclusive; offset is relative to that range. Follow nextOffset with expectedRevision to prevent mixed-revision pages. Child collections use a returned parentRef. References are opaque, scoped to one open document, and survive movement and undo restoration of the same object; removal makes them unavailable and reopen assigns new references. Element properties omit null and undefined values except lineHeight: null, which explicitly resets text-box or drop-cap line height to normal. Omitted lineHeight inherits the paragraph style; other missing properties are unset. False, zero and empty strings remain present. Includes the terminal Empty sentinel. Header/footer collections are stored templates, not resolved page instances. Does not edit or save.',
+  edit_elements:
+    'Apply a validated element/lyric transaction in one undo step. Requires expectedRevision; never saves. Actions run in order on detached drafts before mutation. Insert typed elements, update properties (omitted fields unchanged, null clears nullable fields, lineHeight null resets to normal), reset named properties to constructor defaults, replace/remove by reference, remove half-open ranges, assign lyrics over a range using the shared lyric parser, or set the complete staff lyrics manager state (text and locked). Insert/replace definitions may declare clientId; later actions reference @clientId. Ranges/indexes refer to the draft after earlier actions. get_element_catalog.editProperties describes writable values. Collections follow get_elements; staff inserts default before the Empty sentinel, others append. Headers/footers must finish with exactly one TextBox or RichTextBox. Alternate lines contain only notes. Empty cannot be inserted, replaced, edited or removed. Only main-staff lyric assignments and direct note/drop-cap lyric edits are governed by the staff lyrics lock; alternate lines remain independent; set_staff_lyrics changes that complete state. Returns created references still present at completion. A settlement failure can occur after commit and reports details.editsApplied; inspect before retry. ' +
+    lyricParserDescription +
+    ' ' +
+    literalLyricsDescription,
   get_document:
     'Read document metadata and a paginated serialized score. Dimensions are CSS pixels. Use get_paragraph_styles for writable style definitions; serialized score styles use the save-format shape.',
   create_document:
@@ -127,11 +136,11 @@ export async function startMcpServer(options: McpServerOptions) {
           name: tool,
           description: descriptions[tool],
           inputSchema: {
-            ...z.toJSONSchema(automationSchemas[tool]),
+            ...compactJsonSchema(automationSchemas[tool], 'input'),
             type: 'object',
           } as Tool['inputSchema'],
           outputSchema: {
-            ...z.toJSONSchema(automationOutputSchema(tool)),
+            ...compactJsonSchema(automationOutputSchema(tool)),
             type: 'object',
           } as Tool['outputSchema'],
           annotations: {

@@ -1,9 +1,12 @@
 import { z } from 'zod';
 
-import { ElementType } from '@/models/Element';
+import { ElementType, TempoElement } from '@/models/Element';
 import * as Neumes from '@/models/Neumes';
 import { headerFooterVariants } from '@/services/documents/elementDiscovery';
+import { elementEditPropertySchemas } from '@/services/documents/elementEditSchema';
 import { elementPropertySchemas } from '@/services/documents/elementProperties';
+
+import { compactJsonSchema } from './jsonSchema';
 
 const index = z.number().int().nonnegative();
 export const elementCollectionSchema = z.discriminatedUnion('kind', [
@@ -61,28 +64,83 @@ export const elementPageShape = {
   ),
 };
 
-export function getElementCatalog() {
+export const elementCatalogQuerySchema = z.strictObject({
+  elementTypes: z.array(z.enum(ElementType)).min(1).optional(),
+  properties: z.array(z.string().min(1)).min(1).optional(),
+  view: z.enum(['read', 'edit', 'both']).default('both'),
+  includeProperties: z.boolean().default(false),
+  includeNeumes: z.boolean().default(false),
+});
+
+export function getElementCatalog(
+  options: z.input<typeof elementCatalogQuerySchema> = {},
+) {
+  const query = elementCatalogQuerySchema.parse(options);
+  const includeProperties =
+    query.includeProperties ||
+    query.elementTypes !== undefined ||
+    query.properties !== undefined;
+  const schemas = (type: ElementType) => {
+    const read = elementPropertySchemas[type];
+    const names = Object.keys(read.shape).filter(
+      (key) => query.properties === undefined || query.properties.includes(key),
+    );
+    const pick = (schema: z.ZodObject) =>
+      z.strictObject(
+        Object.fromEntries(names.map((key) => [key, schema.shape[key]])),
+      );
+    return {
+      ...(query.view !== 'edit'
+        ? { properties: compactJsonSchema(pick(read)) }
+        : {}),
+      ...(query.view !== 'read'
+        ? {
+            editProperties:
+              type === ElementType.Empty
+                ? null
+                : compactJsonSchema(
+                    pick(elementEditPropertySchemas[type]),
+                    'input',
+                  ),
+          }
+        : {}),
+    };
+  };
   return {
     readOnly: true as const,
     dimensions: 'css-px' as const,
     lineHeight: 'multiplier' as const,
-    elementTypes: Object.values(ElementType).map((elementType) => ({
-      elementType,
-      properties: z.toJSONSchema(elementPropertySchemas[elementType]),
-      childCollections:
-        elementType === ElementType.Note
-          ? ['annotations', 'alternateLines']
-          : elementType === ElementType.AlternateLine
-            ? ['elements']
-            : [],
-    })),
-    neumes: Object.fromEntries(
-      Object.entries(Neumes)
-        .filter(
-          ([, value]) => !Array.isArray(value) && typeof value === 'object',
-        )
-        .map(([name, value]) => [name, Object.values(value)]),
-    ),
+    tempoBpmDefaults: Object.fromEntries(TempoElement.tempoToBpmMap),
+    elementTypes: (query.elementTypes ?? Object.values(ElementType))
+      .filter(
+        (type) =>
+          query.properties === undefined ||
+          query.properties.some((key) =>
+            Object.hasOwn(elementPropertySchemas[type].shape, key),
+          ),
+      )
+      .map((elementType) => ({
+        elementType,
+        ...(includeProperties ? schemas(elementType) : {}),
+        childCollections:
+          elementType === ElementType.Note
+            ? ['annotations', 'alternateLines']
+            : elementType === ElementType.AlternateLine
+              ? ['elements']
+              : [],
+      })),
+    ...(query.includeNeumes
+      ? {
+          neumes: Object.fromEntries(
+            Object.entries(Neumes)
+              .filter(
+                ([, value]) =>
+                  !Array.isArray(value) && typeof value === 'object',
+              )
+              .map(([name, value]) => [name, Object.values(value)]),
+          ),
+        }
+      : {}),
     headerFooterVariants: [...headerFooterVariants],
   };
 }
@@ -90,15 +148,17 @@ export const elementCatalogSchema = z.strictObject({
   readOnly: z.literal(true),
   dimensions: z.literal('css-px'),
   lineHeight: z.literal('multiplier'),
+  tempoBpmDefaults: z.record(z.enum(Neumes.TempoSign), z.number().positive()),
   elementTypes: z.array(
     z.strictObject({
       elementType: z.enum(ElementType),
-      properties: z.record(z.string(), z.json()),
+      properties: z.record(z.string(), z.json()).optional(),
+      editProperties: z.record(z.string(), z.json()).nullable().optional(),
       childCollections: z.array(
         z.enum(['annotations', 'alternateLines', 'elements']),
       ),
     }),
   ),
-  neumes: z.record(z.string(), z.array(z.string())),
+  neumes: z.record(z.string(), z.array(z.string())).optional(),
   headerFooterVariants: z.array(z.enum(headerFooterVariants)),
 });

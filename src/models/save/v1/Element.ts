@@ -361,7 +361,7 @@ export class ImageBoxElement extends ScoreElement {
   public imageWidth: number = 0;
   public inline: boolean | undefined = undefined;
   public lockAspectRatio: boolean | undefined = undefined;
-  public alignment: TextBoxAlignment = TextBoxAlignment.Left;
+  public alignment: TextBoxAlignment | null = TextBoxAlignment.Left;
 }
 
 export class ScoreElementOffset {

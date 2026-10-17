@@ -264,7 +264,7 @@ export const elementPropertySchemas = {
     imageWidth: z.number(),
     inline: z.boolean(),
     lockAspectRatio: z.boolean(),
-    alignment: z.enum(TextBoxAlignment),
+    alignment: z.enum(TextBoxAlignment).optional(),
   }),
   [ElementType.Annotation]: z.strictObject({
     ...breaks,

@@ -100,7 +100,7 @@ try {
       true,
     );
   }
-  const catalog = await call('get_element_catalog');
+  const catalog = await call('get_element_catalog', { includeNeumes: true });
   assert.equal(catalog.elementTypes.length, 11);
   assert.ok(catalog.neumes.QuantitativeNeume.includes('Oligon'));
   sessionId = (await call('create_session')).sessionId;

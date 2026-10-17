@@ -1,6 +1,6 @@
 # Neanes MCP
 
-The Electron app can expose an opt-in MCP Streamable HTTP endpoint while it is running. The web build does not host a server. Document tools operate on interactive workspaces by default, or private documents when passed an isolated session ID. MCP PDF export renders a detached snapshot in a dedicated hidden window. Folder jobs, element editing, and temporary export transformations remain planned separately.
+The Electron app can expose an opt-in MCP Streamable HTTP endpoint while it is running. The web build does not host a server. Document tools operate on interactive workspaces by default, or private documents when passed an isolated session ID. MCP PDF export renders a detached snapshot in a dedicated hidden window. Typed element and lyric transactions are available in both document modes. Folder jobs and temporary export transformations remain planned separately.
 
 ## Start locally
 
@@ -67,9 +67,10 @@ NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile n
 
 - `get_capabilities`: supported style actions, units, formats, and installed/bundled font families.
 - `list_documents`: open workspace IDs, revisions, canonical source paths, source format (`byz`, `byzx`, or null), selection, and unsaved state.
-- `get_element_catalog`: read-only live content-property schemas for all element types, all neume enums, nested collection names, and stored header/footer variants. These inspection schemas describe values, not validation rules for future edits. Dimensions are CSS pixels; line height is a multiplier.
-- `get_elements`: typed, read-only elements from `collection` (default `{ kind: "staff" }`). Ranges are zero-based, `start` inclusive and `end` exclusive; omitted `end` means the collection size. `offset` and `nextOffset` are relative to that range; `limit` defaults to 100, maximum 1000. Empty ranges and an offset at the range end return no elements. Out-of-bounds or reversed ranges return `INVALID_ELEMENT_RANGE`. Pass the first page's `revision` as `expectedRevision` on subsequent pages to reject mixed-revision reads. Each element has an opaque `elementRef`, its collection index, typed live `properties`, and child-collection counts. Discover children with `{ kind: "children", parentRef: elementRef, collection: "annotations" | "alternateLines" | "elements" }`. Unknown/removed/cross-document references return `ELEMENT_NOT_FOUND`; an unsupported child collection returns `INVALID_ELEMENT_COLLECTION`. References survive movement, content changes, and undo restoration of the same live object, but only within one open document; closing/reopening assigns fresh references. They are not saved IDs or layout indexes. Staff reads include the terminal `Empty` sentinel. Read stored templates with `{ kind: "headers" | "footers", variant: "default" | "firstPage" | "odd" | "even" | "chapterOpening" }`, including disabled variants; these are not page-resolved instances. Element properties omit null and undefined values except `lineHeight: null` for text boxes and drop caps, which explicitly resets line height to normal. Omitted `lineHeight` inherits the paragraph style; a numeric value overrides its multiplier. Other missing properties are unset. Values such as `false`, `0`, and `""` remain present. The catalog and output schemas mark unsettable properties optional. Properties omit layout caches; annotations/alternate lines expose their stored x/y offsets. No editing tool is introduced.
+- `get_element_catalog`: defaults to a small inventory of element types, child collections, units, and stored header/footer variants. Request `elementTypes: ["Note"]` and/or `properties: ["lyrics", "isMelisma"]` for focused schemas; `view: "read" | "edit" | "both"` defaults to both. Read schemas are in `properties`, writable validation schemas in `editProperties` (null for `Empty`). A property filter omits types without matching properties. `includeProperties: true` requests all property schemas; `includeNeumes: true` adds the full enum vocabulary. Schemas use self-contained local `$defs`/`$ref`; clients must resolve references within each schema. The shared `tempoBpmDefaults` map exposes all tempo-sign BPM defaults. Dimensions are CSS pixels; line height is a multiplier. Tool input schemas use JSON Schema input semantics, so defaulted fields may be omitted; response schemas describe settled output. Tool schemas advertise compact property maps; the server still validates every supplied property against its complete element-specific schema.
+- `get_elements`: typed, read-only elements from `collection` (default `{ kind: "staff" }`). Ranges are zero-based, `start` inclusive and `end` exclusive; omitted `end` means the collection size. `offset` and `nextOffset` are relative to that range; `limit` defaults to 100, maximum 1000. Empty ranges and an offset at the range end return no elements. Out-of-bounds or reversed ranges return `INVALID_ELEMENT_RANGE`. Pass the first page's `revision` as `expectedRevision` on subsequent pages to reject mixed-revision reads. Each element has an opaque `elementRef`, its collection index, typed live `properties`, and child-collection counts. Discover children with `{ kind: "children", parentRef: elementRef, collection: "annotations" | "alternateLines" | "elements" }`. Unknown/removed/cross-document references return `ELEMENT_NOT_FOUND`; an unsupported child collection returns `INVALID_ELEMENT_COLLECTION`. References survive movement, content changes, and undo restoration of the same live object, but only within one open document; closing/reopening assigns fresh references. They are not saved IDs or layout indexes. Staff reads include the terminal `Empty` sentinel. Read stored templates with `{ kind: "headers" | "footers", variant: "default" | "firstPage" | "odd" | "even" | "chapterOpening" }`, including disabled variants; these are not page-resolved instances. Element properties omit null and undefined values except `lineHeight: null` for text boxes and drop caps, which explicitly resets line height to normal. Omitted `lineHeight` inherits the paragraph style; a numeric value overrides its multiplier. Other missing properties are unset. Values such as `false`, `0`, and `""` remain present. The catalog and output schemas mark unsettable properties optional. Properties omit layout caches; annotations/alternate lines expose their stored x/y offsets.
 - `get_document`: metadata and serialized score, with staff elements paginated by `offset` and `limit` (default 100, maximum 1000). `nextOffset` is null on the final page. Serialized dimensions use CSS pixels.
+- `edit_elements`: apply an ordered, validated transaction to one document using its latest `expectedRevision`. Actions run on detached live-model drafts; schema, reference, font/style, musical component, and collection validation completes before commands mutate the document. Invalid batches leave no partial musical edits or history entries. Successful changes form one undo step, preserve existing element identities and collection arrays, and do not save. A no-op returns `applied: false` without adding history. The result includes current document metadata/revision and `created` entries (`clientId`, `elementRef`, `elementType`) for inserted/replacement objects still present. See the transaction contract below.
 - `create_document`: create and select a document using the user's current defaults. Optional `title` sets its metadata title.
 - `open_document`: open an absolute `.byzx` or `.byz` path. An already-open file is selected by canonical identity without replacing unsaved changes, including when its interactive path uses a directory alias. The requested suffix selects decoding; canonical identity does not change that format. Returns `created: true` only when a workspace was added; reused workspaces return false.
 - `close_document`: closes one workspace without saving or deleting score files. Requires `documentId` and `expectedRevision`. Unsaved or recovered workspaces return `UNSAVED_CHANGES` unless `discardUnsavedChanges: true` is explicit. Stale revisions are rejected even when discarding. Recovered drafts require saving or explicit discard even if their dirty flag is clear; error details include `hasUnsavedChanges` and `isRecovered`. Recovery snapshots and pending recovery timers are removed. Closing a background workspace preserves the selection; closing the selected one selects a neighbor. Closing the last workspace creates a blank workspace and keeps MCP running. Returns `{ documentId, selectedDocumentId }`. Cleanup failure after removal reports `RECOVERY_CLEANUP_FAILED` with `details.closed: true`; inspect the document list instead of retrying that close. A pending native save or interactive close returns `EDITOR_BUSY`; close waits for exports and native file opens.
@@ -78,6 +79,133 @@ NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile n
 - `replace_document_properties`: replaces the complete metadata object, requiring both `title` and `author`. One undo step; does not save.
 - `save_document`: save to `filePath`, or to the document's source if omitted. Save-as changes the workspace's source path. Existing unrelated destinations require `overwrite: true`. Saving back to the source checks its last known modification time and size, even when overwrite is true. Writes use a temporary file followed by an atomic commit. Same-source saves preserve the format used to open the score, including extensionless or differently suffixed symlink targets, and preserve the alias itself. Save-as to a different identity uses the destination suffix. Unrelated symlink outputs remain forbidden. The result includes `savedRevision` (the revision written) and `savedContentUnchanged` (whether that saved snapshot is still current). `revision` describes the current workspace, which can include newer interactive edits or the new source path.
 - `export_pdf`: render to an explicit absolute PDF path without a save dialog or external PDF viewer. Existing destinations require `overwrite: true`. Does not save the score. Export uses a dedicated hidden renderer and leaves tabs, selection, editor input, and undo history available. The result includes `exportedRevision`, identifying the snapshot written to the PDF; `revision` describes the workspace at completion and may include newer interactive edits. Snapshot metadata and file-name tokens are captured together. No workspace, recovery state, or save is created by the hidden renderer. Rendering failure uses `EXPORT_RENDER_FAILED`; an aborted HTTP request cancels pending rendering and disposes its window. Cancellation uses `EXPORT_CANCELLED` when a response can still be delivered. Existing destination checks and atomic output commits still apply; cancellation racing with a completed commit can have an unknown outcome.
+
+### Element transaction contract
+
+`edit_elements` accepts `actions` (1 to 1000). All element definitions use
+`{ elementType, properties?, clientId? }`; omitted insertion properties use the
+live element constructor defaults and the document's paragraph styles. `clientId`
+is a batch-local name matching `[A-Za-z][A-Za-z0-9_-]{0,63}`. Later actions may
+use `@clientId` wherever an element reference is accepted, including a child
+collection's `parentRef`. Forward references and duplicate names are rejected.
+References from discovery remain scoped to the owning open document/session.
+
+Actions:
+
+- `insert`: `collection` defaults to staff. `elements` supplies 1 to 1000 typed definitions. Optional `index` is zero-based; omission inserts before the staff's terminal `Empty`, or appends to another collection.
+- `update`: supplies `elementRef`, its expected `elementType`, optional `properties`, and optional `reset` property names. Omitted properties stay unchanged. Explicit null clears nullable fields; `lineHeight: null` means normal. `reset` restores constructor defaults, including undefined/inherited `lineHeight`. A property cannot appear in both `properties` and `reset`. At least one property/reset is required. IDs, element types, nested collections, and layout caches cannot be assigned as properties. Use `get_element_catalog.editProperties` for permitted names and value schemas.
+- `replace`: supplies `elementRef` and a new `element` definition. Positional break state transfers, unless explicitly overridden. The replacement gets a new reference; omitted content and formatting use constructor defaults. Child collections are not carried across replacement.
+- `remove`: supplies `elementRef`.
+- `remove_range`: supplies `collection`, `start`, and `end` (inclusive/exclusive). Ranges and insertion indexes refer to the current draft after earlier actions, not the original document.
+- `assign_lyrics`: supplies `text` and optional `collection`, `start` (default zero), and `end` (default collection size). It uses the same lyric tokenizer, melisma/hyphen handling, RTL rules, and Greek handling as the editor. Supports staff or alternate-line note collections; preserves explicit element formatting. Locked staff lyrics reject assignments to the main staff; alternate-line assignments remain independent.
+- `set_staff_lyrics`: supplies the complete lyrics-manager state, `text` and `locked`. Assigns that text across the staff using the shared lyric service in the same undo step. When locked, later structural changes reassign the authoritative text; direct main-staff note lyric/melisma and drop-cap content edits are rejected. Alternate-line notes remain independently editable. Unlock with this action before editing individual main-staff lyrics. Unlocked staff text is derived from element lyrics during normal settlement.
+
+On creation/replacement of `Tempo`, `Martyria`, or `ModeKey`, a supplied tempo
+sign derives its BPM from `get_element_catalog.tempoBpmDefaults` when `bpm` is
+omitted. For example, `{ elementType: "Tempo", properties: { neume: "Quick" } }`
+uses 168 BPM. Explicit `bpm` overrides this default. Partial updates preserve an
+omitted BPM even when the sign changes; supply `bpm` when changing both.
+
+Martyria `tempo`, `tempoLeft`, and `tempoRight` are mutually exclusive in the
+final transaction state. Switching positions requires explicitly clearing the
+previous field with `null` or `reset`; omitted properties remain unchanged.
+Conflicts reject the whole batch with `INVALID_NEUME_COMBINATION`.
+
+Lyric ranges must include complete tied, melismatic, or hyphenated groups.
+`assign_lyrics` rejects a boundary cutting such a group with
+`INVALID_ELEMENT_RANGE` and guidance to expand `start`/`end`, or use explicit
+note text and flags. This also applies to Greek melismas, whose initial vowel
+and final consonant depend on the complete group. Rejected ranges make no
+changes, including outside the passage. A drop cap resets preceding-note context.
+
+`assign_lyrics` also rejects unconsumed input with `INVALID_ELEMENT_RANGE`,
+including nonempty text assigned to an empty range. Extend the range or shorten
+the text; no partial assignment is committed. Whitespace-only remainder is
+ignored. Consumption follows the shared tokenizer, including drop caps,
+`acceptsLyrics`, implicit continuations, and Greek handling. The separate
+`set_staff_lyrics` action may retain excess text when locked, so later structural
+changes can assign it to future notes.
+
+Fthora selection has an intentional coupled change: creating an element with a
+fthora, or changing its fthora, defaults the corresponding chromatic interpretation
+as the editor does unless it is explicitly supplied. Resending the same fthora
+preserves an omitted custom interpretation. This applies to primary, secondary,
+tertiary, and martyria quantitative-neume fthoras. Other model setters can clear
+components that are incompatible with a newly selected quantitative neume.
+
+Lyric parser syntax applies to `assign_lyrics.text` and `set_staff_lyrics.text`.
+Spaces separate syllables, `-` marks a hyphenated syllable, and `_` marks an
+extension. With three notes set to `acceptsLyrics: "Yes"`:
+
+| Parser input | Stored lyric text on the three notes | Effect                                                          |
+| ------------ | ------------------------------------ | --------------------------------------------------------------- |
+| `Al-le-lu`   | `Al`, `le`, `lu`                     | Hyphenated syllables                                            |
+| `Al___`      | `Al`, `""`, `""`                     | Extension across three notes                                    |
+| `τω___`      | `τω`, `""`, `""`                     | Greek vowel continues across the melisma                        |
+| `των___`     | `τω`, `""`, `ων`                     | Final consonant moves to the last note; the split is hyphenated |
+
+Each `_` in an extension accounts for one eligible note, including its start.
+A standalone `_` surrounded by spaces leaves a note blank. Greek examples assume
+`pageSetup.disableGreekMelismata: false`; when true, automatic Greek vowel and
+final-consonant redistribution is disabled (`των___` stores `των`, `""`, `""`),
+while marker syntax still works. Continuing vowels are rendered by layout rather
+than copied into every note's stored `lyrics`.
+
+`acceptsLyrics` controls parser consumption: `Yes` accepts syllables and
+continuations; `No` skips the note; `MelismaOnly` continues the preceding syllable
+without consuming a new one. `Default` derives behavior from the quantitative
+neume and preceding tie. Set `Yes` when constructing examples that require
+predictable note-by-note assignment.
+
+Direct `update.properties.lyrics` is literal text. `lyrics: "Al-"` stores the
+hyphen and does not infer flags. Prefer the parser actions for marker syntax.
+For a direct hyphen start, supply `lyrics: "Al"`, `isMelisma: true`,
+`isMelismaStart: true`, and `isHyphen: true`. For an extension start use
+`isHyphen: false`. Continuations use `lyrics: ""`, `isMelisma: true`,
+`isMelismaStart: false`, and the matching `isHyphen`. For a plain syllable, clear
+all three flags. Omitted flags stay unchanged.
+
+The final staff must retain its single terminal `Empty` element. It cannot be
+created, updated, removed, or replaced. Staff accepts notes, martyriae, tempo,
+text/rich-text boxes, drop caps, mode keys, and images. Notes own annotations and
+alternate lines; alternate lines contain notes. Each stored header/footer
+variant must finish with exactly one text or rich-text box. New images require
+embedded base64 image data; file paths and remote image URLs are not accepted.
+New font assignments must name an available family; unchanged missing families
+are retained. Style references must exist. Note setters normalize musical
+combinations in canonical property order; secondary/tertiary marks require a
+corresponding quantitative component. Nesting is bounded to 16 levels.
+
+For example, construct a note and its annotation in one undo step:
+
+```js
+{
+  documentId,
+  expectedRevision,
+  actions: [
+    {
+      action: 'insert',
+      elements: [{ elementType: 'Note', clientId: 'note', properties: { quantitativeNeume: 'Oligon' } }]
+    },
+    {
+      action: 'insert',
+      collection: { kind: 'children', parentRef: '@note', collection: 'annotations' },
+      elements: [{ elementType: 'Annotation', properties: { text: '<p>Comment</p>' } }]
+    },
+    { action: 'assign_lyrics', start: 0, end: 1, text: 'Al-' }
+  ]
+}
+```
+
+The target document's stale selections are cleared after removal; property edits
+preserve selection, and staff structure edits clear its index-based selection
+range. Other documents' content, selection, and history are untouched. The normal
+font/layout/text-measurement lifecycle runs after commit, including background
+and isolated documents. A subsequent settlement failure is not rolled back over
+possible interactive edits: error details include `editsApplied` and `revision`.
+Inspect the document before retrying. Timeouts/disconnects retain the existing
+unknown-outcome contract. Rich-text normalization can advance revisions; always
+use the latest returned/read revision.
 
 All document-targeting tools require `documentId`. Close, edit, replace, save, and export also require `expectedRevision` from the latest read or successful operation. A revision conflict requires reading again; do not automatically retry a stale write. Revisions are opaque per-workspace numbers that can advance after user or agent edits and after changing the source path. They also cover discovery-visible properties and ordered element identities in all collections, including blank children omitted by score serialization. Replacing or reordering identical live objects can therefore advance a revision without changing saved score data.
 
@@ -155,6 +283,16 @@ start that disposable Electron instance with `--remote-debugging-port=9334` and
 set `NEANES_DEBUG_URL=http://127.0.0.1:9334` when running the script. This optional
 check changes blank annotations in its own interactive test document, verifies
 that saved data stays identical, and requires stale pagination to be rejected.
+
+Run the element transaction regression against the same disposable app. It
+constructs nested scores through MCP, checks rejected batches, lyric locks,
+style override preservation, saves/reopens, PDF export, and interactive isolation.
+With the app's disposable debugging endpoint enabled, `NEANES_DEBUG_URL` also
+checks one-step UI undo/redo and the unrelated interactive workspace's live state.
+
+```sh
+NEANES_MCP_TOKEN=<same-token> NEANES_DEBUG_URL=http://127.0.0.1:9334 node scripts/mcp/element-edit-smoke.mjs /tmp/neanes-mcp/files
+```
 
 With the development app running and ready, run the real MCP client smoke test from another terminal with the same token:
 

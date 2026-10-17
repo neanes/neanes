@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { ElementType } from '@/models/Element';
+
 import { documentPropertiesSchema } from '../documents/documentPropertiesSchema';
 import {
   paragraphStyleDefinitionSchema,
@@ -71,6 +73,16 @@ export const automationResultSchemas = {
   }),
   get_element_catalog: elementCatalogSchema,
   get_elements: documentSummarySchema.extend(elementPageShape),
+  edit_elements: documentSummarySchema.extend({
+    applied: z.boolean(),
+    created: z.array(
+      z.strictObject({
+        clientId: z.string().nullable(),
+        elementRef: z.string().uuid(),
+        elementType: z.enum(ElementType),
+      }),
+    ),
+  }),
   get_document: documentSummarySchema.extend({
     // This is the existing .byzx save-format document, not a second writable model.
     score: z

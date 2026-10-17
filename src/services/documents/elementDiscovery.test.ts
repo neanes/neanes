@@ -110,13 +110,16 @@ describe('typed element discovery', () => {
     );
     expect(result.elements[0].properties).not.toHaveProperty('id');
     expect(JSON.stringify(SaveService.SaveScoreToJson(score))).toBe(before);
-    const catalog = getElementCatalog();
+    const catalog = getElementCatalog({
+      includeProperties: true,
+      includeNeumes: true,
+    });
     expect(elementCatalogSchema.parse(catalog)).toEqual(catalog);
-    expect(catalog.neumes.QuantitativeNeume).toContain('Oligon');
+    expect(catalog.neumes!.QuantitativeNeume).toContain('Oligon');
     expect(catalog.elementTypes).toHaveLength(11);
     const noteSchema = catalog.elementTypes.find(
       (type) => type.elementType === 'Note',
-    )!.properties;
+    )!.properties!;
     expect(noteSchema.required).not.toContain('accidental');
     expect(noteSchema.required).toContain('quantitativeNeume');
   });
@@ -160,18 +163,65 @@ describe('typed element discovery', () => {
       const before = reader.snapshot(score);
       inherited.lineHeight = null;
       expect(reader.snapshot(score)).not.toBe(before);
-      const catalog = getElementCatalog().elementTypes.find(
+      const catalog = getElementCatalog({
+        includeProperties: true,
+        includeNeumes: true,
+      }).elementTypes.find(
         (type) => type.elementType === inherited.elementType,
-      )!.properties;
+      )!.properties!;
       expect(catalog.required).not.toContain('lineHeight');
-      expect(catalog.properties?.lineHeight).toMatchObject({
-        type: ['number', 'null'],
+      expect(
+        (catalog.properties as Record<string, unknown>).lineHeight,
+      ).toMatchObject({
         description: expect.stringContaining(
           'Null explicitly resets line height to normal.',
         ),
       });
     },
   );
+
+  it('reads imported multipanel boxes with omitted unused content and dimensions', () => {
+    const data = JSON.parse(
+      JSON.stringify(SaveService.SaveScoreToJson(new Score())),
+    );
+    data.staff.elements.unshift(
+      {
+        elementType: 'RichTextBox',
+        multipanel: true,
+        contentCenter: '<p>Center</p>',
+      },
+      { elementType: 'TextBox', multipanel: true, contentCenter: 'Center' },
+    );
+    const score = SaveService.LoadScoreFromJson(data);
+    const reader = new ElementDiscovery();
+    const page = reader.read(score, query());
+    expect(z.strictObject(elementPageShape).parse(page)).toEqual(page);
+    for (const element of page.elements.slice(0, 2)) {
+      expect(element.properties).toMatchObject({
+        content: '',
+        contentLeft: '',
+        contentRight: '',
+        height: 20,
+      });
+    }
+  });
+
+  it('preserves unset image alignment from imported scores', () => {
+    const data = JSON.parse(
+      JSON.stringify(SaveService.SaveScoreToJson(new Score())),
+    );
+    data.staff.elements.unshift({
+      elementType: 'ImageBox',
+      data: 'data:image/png;base64,broken',
+      imageWidth: 50,
+      imageHeight: 50,
+    });
+    const score = SaveService.LoadScoreFromJson(data);
+    const page = new ElementDiscovery().read(score, query());
+    expect(z.strictObject(elementPageShape).parse(page)).toEqual(page);
+    expect((score.staff.elements[0] as ImageBoxElement).alignment).toBeNull();
+    expect(page.elements[0].properties).not.toHaveProperty('alignment');
+  });
 
   it('keeps references through insertion, proxies and undo, and rejects removed parents', () => {
     const score = new Score();

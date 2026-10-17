@@ -14,6 +14,13 @@ import {
   snapshotDocument,
 } from './documentPersistence';
 import { replaceDocumentProperties } from './documentProperties';
+import type { ElementDiscovery } from './elementDiscovery';
+import {
+  applyElementEdits,
+  type ElementEditPlan,
+  planElementEdits,
+} from './elementEdits';
+import type { ElementEditAction } from './elementEditSchema';
 import type { ScoreFileFormat } from './fileTypes';
 import {
   planParagraphStyleEdits,
@@ -30,6 +37,8 @@ export interface DocumentEditor {
   selectWorkspace(workspace: Workspace): void;
   prepare(workspace: Workspace): void;
   changed(workspace: Workspace): void;
+  elementsChanged(workspace: Workspace): void;
+  ensureFonts(families: string[]): Promise<void>;
   changeStyles(workspace: Workspace, operation: () => void): void;
   settle(workspace: Workspace): Promise<void>;
   fonts(): string[];
@@ -171,6 +180,26 @@ export class DocumentService {
       replaceParagraphStyles(workspace, styles),
     );
     this.editor.changed(workspace);
+  }
+
+  async planElementEdits(
+    workspace: Workspace,
+    discovery: ElementDiscovery,
+    actions: ElementEditAction[],
+  ) {
+    this.prepare(workspace);
+    const plan = planElementEdits(workspace, discovery, actions, this.fonts());
+    await this.editor.ensureFonts(plan.fontFamilies);
+    return plan;
+  }
+
+  editElements(workspace: Workspace, plan: ElementEditPlan) {
+    const applied = applyElementEdits(workspace, plan);
+    if (applied) {
+      this.editor.elementsChanged(workspace);
+      this.editor.changed(workspace);
+    }
+    return { applied, created: plan.created };
   }
 
   async save<T extends DocumentSaveResult>(

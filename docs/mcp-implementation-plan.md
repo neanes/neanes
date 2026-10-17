@@ -36,6 +36,59 @@ Document tools default to interactive workspaces. With an explicit `sessionId`, 
 - **Snapshot isolation and disposal.** PDF export leaves interactive tabs/input available. `exportedRevision` identifies the captured snapshot; the current `revision` can advance during export. Main validates renderer sender identity, removes listeners, and destroys the hidden window on success, failure, or cancellation. HTTP disconnects, editor disconnects, and request timeouts abort pending MCP rendering. PDF rendering has a 45-second deadline inside the 60-second MCP request limit; cancellation racing with an output commit can still have an unknown outcome. Native printing/PNG share `renderSnapshot` lifecycle handling in `renderSnapshot.ts`, including owner disconnect/reload cleanup. Native print dialogs are outside the rendering deadline. PNG conversion sends one page at a time through window-scoped IPC to main for writing; overwrite dialogs/writes pause the deadline, which restarts for the next page. Overwrite choices belong to each detached PNG job, and cancellation is checked before writing.
 - **One text-box measurement lifecycle.** Element/style edits, their undo/redo, saves, recovery, and document settlement share the workspace-specific measurement queue. Explicit completion covers unchanged heights; global counters/polling and their temporary editor paths were removed. Foreground/background paragraph CSS stays scoped separately.
 
+## Client connection and startup - planned
+
+Support both launch orders: a user opens Neanes and then asks a local Codex or
+Claude Code client to edit a score, or starts an agent task while Neanes is closed
+(for example, changing lyric fonts across a folder). Users should not need to
+launch Neanes manually before every automated task.
+
+**Current behavior:** Clients connect directly to the Streamable HTTP endpoint
+(`http://127.0.0.1:38765/mcp` by default) with the matching bearer token. Neanes
+must already be running with `--mcp` or `NEANES_MCP=1`, a token, and allowed
+filesystem roots. Configuring an HTTP URL in a client does not launch Neanes.
+Isolated documents still require the normal editor; folder/job tools remain
+planned. A local endpoint is reachable by clients on that computer, not directly
+by agents running in the cloud.
+
+**Preferred startup approach:** Provide a small stdio-to-HTTP bridge that Codex
+or Claude Code starts through its MCP command configuration. The bridge connects
+to an existing enabled Neanes server, or launches Neanes when it is closed,
+waits for editor/tool readiness, and forwards MCP requests to its HTTP endpoint.
+Neanes remains the owner of document operations and access policy. This adds
+automatic startup, not headless processing. Pointing a stdio configuration at the
+current Neanes executable alone would not work: it currently serves MCP over
+HTTP, not stdin/stdout.
+
+Prefer a JavaScript bridge distributed as a Node.js/npm package to avoid shipping
+a separately signed native bridge application. Users would need a suitable Node.js
+runtime. The script does not need a separate Apple application signature when
+run by Node.js; distributing a standalone native executable would introduce
+macOS signing/notarization considerations. Neanes' existing application signing
+and distribution requirements remain separate.
+
+**Persistent UI control:** Eventually expose MCP in Neanes settings with a Switch
+that starts or stops the server immediately and remembers the enabled state
+across application restarts. Users should be able to enable MCP through the UI
+without launching with a flag. Keep first-use access opt-in and retain bearer
+authentication and explicitly permitted folders. Show actual server status and
+actionable startup errors; a remembered preference alone does not establish that
+the endpoint is ready. Provide a way to configure the connection credentials and
+allowed folders without requiring launch-time environment variables for normal
+UI setup.
+
+**Design and verification still needed:** Define how explicit CLI/environment
+options interact with saved settings, how clients obtain the URL/token, and how
+the bridge handles simultaneous launches, startup timeouts, and an existing app
+with MCP disabled. Do not silently override a user's disabled setting or restart
+an interactive app. Ending an agent connection must not close a user-owned
+Neanes instance. Define shutdown behavior for bridge-launched instances and
+in-flight requests when the UI disables the server. Verify both launch orders,
+remembered on/off state, failed startup, and multiple clients. Shell instructions
+that ask an agent to launch Neanes are an interim alternative, but depend on
+client permissions and reconnection behavior. The bridge and UI controls are
+future work; they do not change the next two implementation sessions below.
+
 ## Implementation stages
 
 ### Stage 1: Foundation - complete

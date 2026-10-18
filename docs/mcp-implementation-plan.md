@@ -1,6 +1,6 @@
 # Neanes MCP implementation plan
 
-Implementation handoff, updated 2026-10-17. Stages 1 and 2.5 are complete. Stage 2 includes isolated lifecycle, typed element/range discovery, search, selection and settled-page reads, and validated element/lyric transactions. Headless launch, the stdio bridge, and persistent UI access settings are implemented. Bounded PNG page previews are implemented. Private copying of unsaved editor content is deferred: users can save first, then open saved content privately for temporary edits and exports. Folder jobs are deferred until deemed necessary; other composition assistance and musical contract/test follow-ups are backlog. Inspect the working tree before continuing.
+Implementation handoff, updated 2026-10-18. Stages 1 and 2.5 are complete. Stage 2 includes isolated lifecycle, typed element/range discovery, search, selection and settled-page reads, and validated element/lyric transactions. Headless launch, the stdio bridge, and persistent UI access settings are implemented. Bounded PNG page previews are implemented. Private copying of unsaved editor content is deferred: users can save first, then open saved content privately for temporary edits and exports. Folder jobs are deferred until deemed necessary; other composition assistance and musical contract/test follow-ups are backlog. Inspect the working tree before continuing.
 
 ## Agent access control
 
@@ -317,6 +317,14 @@ layout errors, concurrent edits, cancellation, broken-image failure, and rendere
 disposal. The headless bridge regression also obtained a PNG preview with matching
 page-discovery metadata. Generated PNGs were visually inspected. Test apps and
 workers were stopped.
+
+Follow-up: preview geometry comparison excludes empty alternate lines and blank
+annotations omitted by save snapshots. Save/load regressions and real Electron
+previews cover affected and unrelated pages, preserve live children, and retain
+geometry checks for populated children. Verification passed 832 unit tests
+(6 skipped), lint/type checks, production compilation, and the preview smoke
+regression. The smoke test uses an edited control tab to avoid pristine-startup
+remount normalization; application lifecycle and settling behavior are unchanged.
 
 Private copying remains the deferred Stage 2 item. Folder jobs, passage crops,
 musical contract/test follow-ups, richer composition operations, and native

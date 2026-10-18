@@ -1,7 +1,14 @@
 import { z } from 'zod';
 
 import { documentPropertiesSchema } from '../../services/documents/documentPropertiesSchema';
-import { documentReadSections } from '../documents/documentRead';
+import {
+  headerFooterChangesSchema,
+  headerFooterSettingsSchema,
+  pageSetupChangesSchema,
+  pageSetupSchema,
+} from '../../services/documents/pageSetupSchema';
+import { contentChunkQueryShape } from './contentChunkSchema';
+import { elementContentQueryShape } from './elementContentSchema';
 import { elementEditBatchSchema } from './elementEditSchema';
 import { assertElementPredicateBounds } from './elementPredicates';
 import { elementCatalogQuerySchema, elementQueryShape } from './elementSchemas';
@@ -44,6 +51,18 @@ export const automationSchemas = {
     expectedRevision: revision.optional(),
     ...elementLookupShape,
   }),
+  get_element_content: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision.optional(),
+    ...elementContentQueryShape,
+  }),
+  get_staff_lyrics: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision.optional(),
+    ...contentChunkQueryShape,
+  }),
   get_selection: z.strictObject({
     sessionId,
     documentId,
@@ -67,13 +86,34 @@ export const automationSchemas = {
     expectedRevision: revision,
     actions: elementEditBatchSchema,
   }),
-  get_document: z.strictObject({
+  get_document_properties: z.strictObject({
     sessionId,
     documentId,
     expectedRevision: revision.optional(),
-    sections: z.array(z.enum(documentReadSections)).optional(),
-    offset: z.number().int().nonnegative().default(0),
-    limit: z.number().int().min(1).max(1000).default(100),
+  }),
+  get_page_setup: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision.optional(),
+    properties: z.array(pageSetupSchema.keyof()).optional(),
+  }),
+  update_page_setup: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision,
+    changes: pageSetupChangesSchema,
+  }),
+  get_header_footer_settings: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision.optional(),
+    properties: z.array(headerFooterSettingsSchema.keyof()).optional(),
+  }),
+  update_header_footer_settings: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision,
+    changes: headerFooterChangesSchema,
   }),
   create_document: z.strictObject({ sessionId, title: z.string().optional() }),
   open_document: z.strictObject({ sessionId, filePath }),

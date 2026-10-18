@@ -61,7 +61,9 @@ try {
     snapshotExists,
     'The real recovery snapshot should exist before close.',
   );
-  const current = await call('get_document', { documentId: draft.documentId });
+  const current = await call('get_document_properties', {
+    documentId: draft.documentId,
+  });
   const closedDraft = await call('close_document', {
     documentId: draft.documentId,
     expectedRevision: current.revision,

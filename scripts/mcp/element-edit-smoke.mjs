@@ -6,6 +6,8 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 
+import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+
 const directory = process.argv[2];
 const token = process.env.NEANES_MCP_TOKEN;
 assert.ok(
@@ -98,7 +100,7 @@ try {
   assert.ok(JSON.stringify(inventory).length < 2000);
   assert.ok(inventory.elementTypes.every((type) => !('properties' in type)));
   const tools = await client.listTools();
-  assert.ok(JSON.stringify(tools).length < 97500);
+  assert.ok(JSON.stringify(tools).length < 125000);
   const capabilities = await call('get_capabilities', {
     includeErrorCodes: true,
   });
@@ -138,7 +140,7 @@ try {
   });
   sessionId = (await call('create_session')).sessionId;
   for (const scope of [{}, { sessionId }]) {
-    const unrelatedBefore = await call('get_document', controlArgs);
+    const unrelatedBefore = await readScoreSnapshot(call, controlArgs);
     const controlState = process.env.NEANES_DEBUG_URL
       ? await evaluate(
           `JSON.stringify(window._editor.workspaces.value.find(w => w.id === ${JSON.stringify(control.documentId)}))`,
@@ -150,21 +152,21 @@ try {
     });
     const args = { ...scope, documentId: created.documentId };
     introduced.set(created.documentId, args);
-    const before = await call('get_document', args);
-    const metadataOnly = await call('get_document', { ...args, sections: [] });
+    const before = await readScoreSnapshot(call, args);
+    const metadataOnly = await call('get_document_properties', args);
     assert.equal(metadataOnly.revision, before.revision);
-    assert.deepEqual(Object.keys(metadataOnly.score).sort(), [
-      'appVersion',
-      'version',
-    ]);
-    assert.equal(metadataOnly.nextOffset, null);
-    const elementSection = await call('get_document', {
+    assert.deepEqual(metadataOnly.properties, {
+      title: 'Transactions',
+      author: '',
+    });
+    const elementSection = await call('get_elements', {
       ...args,
-      sections: ['staffElements'],
       limit: 1,
+      properties: [],
       expectedRevision: before.revision,
     });
-    assert.deepEqual(Object.keys(elementSection.score.staff), ['elements']);
+    assert.equal(elementSection.elements.length, 1);
+    assert.deepEqual(elementSection.elements[0].properties, {});
     await call(
       'edit_elements',
       {
@@ -185,7 +187,7 @@ try {
       },
       'VALIDATION_ERROR',
     );
-    assert.deepEqual(await call('get_document', args), before);
+    assert.deepEqual(await readScoreSnapshot(call, args), before);
     const header = await call('get_elements', {
       ...args,
       collection: { kind: 'headers', variant: 'default' },
@@ -287,7 +289,7 @@ try {
     const refs = Object.fromEntries(
       inserted.created.map((element) => [element.clientId, element.elementRef]),
     );
-    let current = await call('get_document', args);
+    let current = await readScoreSnapshot(call, args);
     assert.equal(current.score.staff.elements[1].lyrics, 'Al');
     assert.equal(current.score.staff.elements[1].lyricsFontSize, 21);
     assert.equal(current.score.staff.elements[1].annotations.length, 1);
@@ -299,7 +301,7 @@ try {
       await evaluate(
         `document.querySelector('.main-toolbar button[aria-label^="Undo"]').click()`,
       );
-      const undone = await call('get_document', args);
+      const undone = await readScoreSnapshot(call, args);
       assert.deepEqual(
         undone.score,
         before.score,
@@ -308,7 +310,7 @@ try {
       await evaluate(
         `document.querySelector('.main-toolbar button[aria-label^="Redo"]').click()`,
       );
-      current = await call('get_document', args);
+      current = await readScoreSnapshot(call, args);
       assert.equal(current.score.staff.elements[1].lyrics, 'Al');
       assert.equal(
         (await call('get_elements', args)).elements[1].elementRef,
@@ -324,7 +326,7 @@ try {
       },
       'REVISION_CONFLICT',
     );
-    const invalidBefore = await call('get_document', args);
+    const invalidBefore = await readScoreSnapshot(call, args);
     for (const action of [
       { action: 'assign_lyrics', text: 'one two three four five six' },
       { action: 'assign_lyrics', text: 'nonempty', start: 0, end: 0 },
@@ -338,7 +340,7 @@ try {
         },
         'INVALID_ELEMENT_RANGE',
       );
-      assert.deepEqual(await call('get_document', args), invalidBefore);
+      assert.deepEqual(await readScoreSnapshot(call, args), invalidBefore);
     }
 
     await call(
@@ -358,7 +360,7 @@ try {
       },
       'INVALID_ELEMENT_EDIT',
     );
-    assert.deepEqual(await call('get_document', args), invalidBefore);
+    assert.deepEqual(await readScoreSnapshot(call, args), invalidBefore);
     await call(
       'edit_elements',
       {
@@ -401,14 +403,21 @@ try {
     assert.ok(
       withoutContent.elements.every(
         (element) =>
-          !('data' in element.properties) && !('content' in element.properties),
+          !('data' in element.properties) &&
+          (element.elementType === 'DropCap' ||
+            !('content' in element.properties)),
       ),
     );
+    assert.equal(
+      withoutContent.elements.find(
+        (element) => element.elementType === 'DropCap',
+      ).properties.content,
+      'A',
+    );
     await call(
-      'get_document',
+      'get_document_properties',
       {
         ...args,
-        sections: ['staffElements'],
         expectedRevision: before.revision,
       },
       'REVISION_CONFLICT',
@@ -446,7 +455,7 @@ try {
     assert.deepEqual(compactStyleEdit.affectedStyleIds, ['lyrics']);
     assert.ok(!('styles' in compactStyleEdit));
     assert.ok(!('resolvedStyles' in compactStyleEdit));
-    current = await call('get_document', args);
+    current = await readScoreSnapshot(call, args);
     assert.equal(current.score.staff.elements[1].lyricsFontSize, 21);
     await call('edit_elements', {
       ...args,
@@ -460,7 +469,7 @@ try {
         },
       ],
     });
-    current = await call('get_document', args);
+    current = await readScoreSnapshot(call, args);
     const notes = await call('get_elements', args);
     assert.equal(notes.elements[1].properties.chromaticFthoraNote, 'Thi');
     const locked = await call('edit_elements', {
@@ -470,6 +479,31 @@ try {
         { action: 'set_staff_lyrics', text: 'Ky- ri- e', locked: true },
       ],
     });
+    let managerText = '';
+    let lyricsOffset = 0;
+    while (true) {
+      const chunk = await call('get_staff_lyrics', {
+        ...args,
+        offset: lyricsOffset,
+        limit: 2,
+        expectedRevision: locked.revision,
+      });
+      assert.equal(chunk.locked, true);
+      managerText += chunk.text;
+      if (chunk.nextOffset === null) {
+        break;
+      }
+      lyricsOffset = chunk.nextOffset;
+    }
+    assert.equal(managerText, 'Ky- ri- e');
+    await call(
+      'get_staff_lyrics',
+      {
+        ...args,
+        expectedRevision: locked.revision + 1,
+      },
+      'REVISION_CONFLICT',
+    );
     await call(
       'edit_elements',
       {
@@ -535,7 +569,7 @@ try {
     });
     assert.ok((await fs.stat(pdf)).size > 1000);
     const sourcePath = exported.filePath;
-    const savedScore = (await call('get_document', args)).score;
+    const savedScore = (await readScoreSnapshot(call, args)).score;
     await call('close_document', {
       ...args,
       expectedRevision: exported.revision,
@@ -548,7 +582,7 @@ try {
     });
     const reopenArgs = { ...scope, documentId: reopened.documentId };
     introduced.set(reopened.documentId, reopenArgs);
-    const reloaded = await call('get_document', reopenArgs);
+    const reloaded = await readScoreSnapshot(call, reopenArgs);
     assert.deepEqual(
       reloaded.score.staff.elements.map((element) => element.elementType),
       savedScore.staff.elements.map((element) => element.elementType),
@@ -561,7 +595,7 @@ try {
     });
     introduced.delete(reopened.documentId);
     assert.deepEqual(
-      (await call('get_document', controlArgs)).score,
+      (await readScoreSnapshot(call, controlArgs)).score,
       unrelatedBefore.score,
     );
     if (scope.sessionId && process.env.NEANES_DEBUG_URL) {
@@ -582,7 +616,7 @@ try {
 } finally {
   try {
     for (const args of [...introduced.values()].reverse()) {
-      const current = await call('get_document', args);
+      const current = await readScoreSnapshot(call, args);
       await call('close_document', {
         ...args,
         expectedRevision: current.revision,

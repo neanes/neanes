@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const automationErrorCodes = [
   'VALIDATION_ERROR',
+  'RESPONSE_TOO_LARGE',
   'TOOL_NOT_FOUND',
   'INTERNAL_ERROR',
   'EDITOR_NOT_READY',
@@ -13,9 +14,11 @@ export const automationErrorCodes = [
   'DOCUMENT_NOT_FOUND',
   'ELEMENT_NOT_FOUND',
   'INVALID_PAGE_NUMBER',
+  'INVALID_PAGE_SETUP',
   'LAYOUT_CONFLICT',
   'LAYOUT_SETTLEMENT_FAILED',
   'INVALID_ELEMENT_COLLECTION',
+  'INVALID_ELEMENT_CONTENT',
   'INVALID_ELEMENT_RANGE',
   'INVALID_ELEMENT_EDIT',
   'ELEMENT_TYPE_MISMATCH',
@@ -78,14 +81,49 @@ export function automationError(error: unknown): AutomationErrorData {
     return error.error;
   }
   if (error instanceof z.ZodError) {
+    const issues: { path: string[]; message: string; count: number }[] = [];
+    const groups = new Map<string, (typeof issues)[number]>();
+    let omittedIssueCount = 0;
+    for (const issue of error.issues) {
+      const message =
+        issue.code === 'invalid_value'
+          ? 'Invalid value. Consult the tool schema or focused element catalog for permitted values.'
+          : issue.message.slice(0, 240);
+      const path = issue.path
+        .slice(0, 8)
+        .map((part) => String(part).slice(0, 64));
+      // Group repeated failures in batches while retaining the first location.
+      const key = JSON.stringify([
+        issue.code,
+        issue.path
+          .slice(0, 8)
+          .map((part) =>
+            typeof part === 'number' ? '*' : String(part).slice(0, 64),
+          ),
+        message,
+      ]);
+      const group = groups.get(key);
+      if (group) {
+        group.count++;
+      } else if (issues.length < 8) {
+        const entry = { path, message, count: 1 };
+        if (JSON.stringify([...issues, entry]).length <= 6000) {
+          groups.set(key, entry);
+          issues.push(entry);
+        } else {
+          omittedIssueCount++;
+        }
+      } else {
+        omittedIssueCount++;
+      }
+    }
     return {
       code: 'VALIDATION_ERROR',
       message: 'The tool arguments are invalid.',
       details: {
-        issues: error.issues.map((issue) => ({
-          path: issue.path.map(String),
-          message: issue.message,
-        })),
+        issues,
+        issueCount: error.issues.length,
+        omittedIssueCount,
       },
     };
   }

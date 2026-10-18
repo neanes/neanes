@@ -1,9 +1,13 @@
-import { readDocumentSections } from '@/automation/documents/documentRead';
 import { ElementDiscovery } from '@/automation/documents/elementDiscovery';
 import type { Page } from '@/models/Page';
 import { Workspace } from '@/models/Workspace';
 import type { DocumentService } from '@/services/documents/DocumentService';
 import { cloneScoreForLayout } from '@/services/documents/layoutSnapshot';
+import {
+  readHeaderFooterSettings,
+  readPageSetup,
+} from '@/services/documents/pageSetup';
+import { projectSettings } from '@/services/documents/pageSetupSchema';
 import { paragraphStyleDefinition } from '@/services/documents/paragraphStyles';
 import { renderGeometry } from '@/services/documents/renderGeometry';
 
@@ -17,6 +21,7 @@ import type { PreviewImage } from '../contracts/preview';
 import type { AutomationRequest } from '../contracts/protocol';
 import type { AutomationIpcClient } from '../ipc/AutomationIpcClient';
 import { ISOLATED_SESSION_LIMITS } from '../sessions/isolatedSessions';
+import { readStaffLyrics } from './contentRead';
 import { applyElementEdits, planElementEdits } from './elementEdits';
 import {
   discoverPages,
@@ -189,9 +194,13 @@ export class McpDocumentAdapter {
     await this.documents.settle(workspace);
     if (
       request.tool === 'get_elements' ||
-      request.tool === 'get_document' ||
+      request.tool === 'get_document_properties' ||
+      request.tool === 'get_page_setup' ||
+      request.tool === 'get_header_footer_settings' ||
       request.tool === 'find_elements' ||
       request.tool === 'get_element' ||
+      request.tool === 'get_element_content' ||
+      request.tool === 'get_staff_lyrics' ||
       request.tool === 'get_selection' ||
       request.tool === 'get_pages' ||
       request.tool === 'get_page_elements' ||
@@ -335,6 +344,43 @@ export class McpDocumentAdapter {
             : readPageElements(layout, request.arguments)),
         };
       }
+      if (request.tool === 'get_document_properties') {
+        return {
+          ...summary,
+          properties: { ...workspace.score.documentProperties },
+        };
+      }
+      if (
+        request.tool === 'get_page_setup' ||
+        request.tool === 'get_header_footer_settings'
+      ) {
+        return {
+          ...summary,
+          settings: projectSettings(
+            request.tool === 'get_page_setup'
+              ? readPageSetup(workspace.score.pageSetup)
+              : readHeaderFooterSettings(workspace.score.pageSetup),
+            request.arguments.properties,
+          ),
+        };
+      }
+      if (request.tool === 'get_staff_lyrics') {
+        return {
+          documentId: summary.documentId,
+          revision: summary.revision,
+          ...readStaffLyrics(workspace.score.staff.lyrics, request.arguments),
+        };
+      }
+      if (request.tool === 'get_element_content') {
+        return {
+          documentId: summary.documentId,
+          revision: summary.revision,
+          ...this.discovery(workspace).readContent(
+            workspace.score,
+            request.arguments,
+          ),
+        };
+      }
       if (request.tool === 'get_selection') {
         return {
           ...summary,
@@ -351,15 +397,10 @@ export class McpDocumentAdapter {
           ? this.discovery(workspace).read(workspace.score, request.arguments)
           : request.tool === 'find_elements'
             ? this.discovery(workspace).find(workspace.score, request.arguments)
-            : request.tool === 'get_element'
-              ? this.discovery(workspace).lookup(
-                  workspace.score,
-                  request.arguments,
-                )
-              : readDocumentSections(
-                  this.documents.serialize(workspace),
-                  request.arguments,
-                )),
+            : this.discovery(workspace).lookup(
+                workspace.score,
+                request.arguments,
+              )),
       };
     }
     if (request.tool === 'get_paragraph_styles') {
@@ -382,6 +423,48 @@ export class McpDocumentAdapter {
           actualRevision: this.revision(workspace),
         },
       });
+    }
+    if (
+      request.tool === 'update_page_setup' ||
+      request.tool === 'update_header_footer_settings'
+    ) {
+      if (
+        request.tool === 'update_page_setup' &&
+        request.arguments.changes.neumeDefaultFontFamily !== undefined
+      ) {
+        const family = request.arguments.changes.neumeDefaultFontFamily;
+        if (!this.documents.fonts().includes(family)) {
+          throw new Error(`FONT_NOT_FOUND: ${family}`);
+        }
+        await this.documents.ensureFonts([family]);
+        if (this.revision(workspace) !== request.arguments.expectedRevision) {
+          throw new Error(
+            'REVISION_CONFLICT: The document changed while preparing fonts.',
+          );
+        }
+      }
+      const revision = request.arguments.expectedRevision;
+      let applied = false;
+      try {
+        applied = this.documents.updatePageSetup(
+          workspace,
+          request.arguments.changes,
+          request.tool === 'update_page_setup' ? 'page' : 'headerFooter',
+        );
+        await this.documents.settle(workspace);
+      } catch (error) {
+        const failure = automationError(error);
+        throw new AutomationError({
+          ...failure,
+          details: {
+            ...failure.details,
+            documentId: workspace.id,
+            editsApplied: applied || this.revision(workspace) !== revision,
+            revision: this.revision(workspace),
+          },
+        });
+      }
+      return this.summary(workspace);
     }
     if (request.tool === 'edit_elements') {
       const discovery = this.discovery(workspace);

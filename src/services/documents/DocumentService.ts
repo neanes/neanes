@@ -15,6 +15,8 @@ import {
 } from './documentPersistence';
 import { replaceDocumentProperties } from './documentProperties';
 import type { ScoreFileFormat } from './fileTypes';
+import { updatePageSetup } from './pageSetup';
+import type { HeaderFooterChanges, PageSetupChanges } from './pageSetupSchema';
 import { replaceParagraphStyles } from './paragraphStyles';
 
 export interface DocumentEditor {
@@ -140,6 +142,20 @@ export class DocumentService {
     this.prepare(workspace);
     replaceDocumentProperties(workspace, properties);
     this.editor.changed(workspace);
+  }
+
+  updatePageSetup(
+    workspace: Workspace,
+    changes: PageSetupChanges | HeaderFooterChanges,
+    kind: 'page' | 'headerFooter',
+  ) {
+    this.prepare(workspace);
+    const applied = updatePageSetup(workspace, changes, kind);
+    if (applied) {
+      this.editor.elementsChanged(workspace);
+      this.editor.changed(workspace);
+    }
+    return applied;
   }
 
   replaceParagraphStyles(workspace: Workspace, styles: ParagraphStyle[]) {

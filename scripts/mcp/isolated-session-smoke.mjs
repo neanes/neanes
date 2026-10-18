@@ -6,6 +6,8 @@ import { setTimeout } from 'node:timers/promises';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
+import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+
 const directory = process.argv[2];
 const token = process.env.NEANES_MCP_TOKEN;
 assert.ok(directory && path.isAbsolute(directory) && token);
@@ -111,7 +113,7 @@ try {
     expectedRevision: interactive.revision,
     filePath: sourcePath,
   });
-  let current = await call('get_document', {
+  let current = await readScoreSnapshot(call, {
     documentId: interactive.documentId,
   });
   await call('replace_document_properties', {
@@ -160,17 +162,17 @@ try {
     [],
   );
   await fails(
-    'get_document',
+    'get_document_properties',
     { documentId: isolated.documentId },
     'DOCUMENT_NOT_FOUND',
   );
   await fails(
-    'get_document',
+    'get_document_properties',
     { sessionId, documentId: interactive.documentId },
     'DOCUMENT_NOT_FOUND',
   );
   await fails(
-    'get_document',
+    'get_document_properties',
     { sessionId: second.sessionId, documentId: isolated.documentId },
     'DOCUMENT_NOT_FOUND',
   );
@@ -180,7 +182,7 @@ try {
   const reused = await call('open_document', { sessionId, filePath: alias });
   assert.equal(reused.documentId, isolated.documentId);
   assert.equal(reused.created, false);
-  current = await call('get_document', {
+  current = await readScoreSnapshot(call, {
     sessionId,
     documentId: isolated.documentId,
   });
@@ -256,7 +258,10 @@ try {
   assert.equal((await call('list_documents', { sessionId })).length, 1);
   // Rendering failures and HTTP cancellation retain the private source and lease.
   const brokenScore = (
-    await call('get_document', { sessionId, documentId: isolated.documentId })
+    await readScoreSnapshot(call, {
+      sessionId,
+      documentId: isolated.documentId,
+    })
   ).score;
   brokenScore.pageSetup.showHeader = false;
   brokenScore.pageSetup.showFooter = false;
@@ -275,7 +280,7 @@ try {
     sessionId: second.sessionId,
     filePath: brokenPath,
   });
-  const brokenBefore = await call('get_document', {
+  const brokenBefore = await readScoreSnapshot(call, {
     sessionId: second.sessionId,
     documentId: broken.documentId,
   });
@@ -292,7 +297,7 @@ try {
   );
   await assert.rejects(fs.access(failurePath), { code: 'ENOENT' });
   assert.deepEqual(
-    await call('get_document', {
+    await readScoreSnapshot(call, {
       sessionId: second.sessionId,
       documentId: broken.documentId,
     }),
@@ -345,8 +350,12 @@ try {
   await waitFor(async () => (await hiddenTargets()).length === 0);
   await assert.rejects(fs.access(cancelledPath), { code: 'ENOENT' });
   assert.equal(
-    (await call('get_document', { sessionId, documentId: isolated.documentId }))
-      .revision,
+    (
+      await readScoreSnapshot(call, {
+        sessionId,
+        documentId: isolated.documentId,
+      })
+    ).revision,
     saved.revision,
   );
   // Capacity failures must preserve the documents already owned by the session.
@@ -407,7 +416,7 @@ try {
   }
   for (const documentId of introduced) {
     try {
-      const current = await call('get_document', { documentId });
+      const current = await readScoreSnapshot(call, { documentId });
       await call('close_document', {
         documentId,
         expectedRevision: current.revision,

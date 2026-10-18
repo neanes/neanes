@@ -329,7 +329,7 @@ async function forward(message, signal) {
   }
   if (message.method === 'initialize' && reply?.result) {
     reply.result.instructions =
-      'Document tools default to private documents, regardless of launch order. Set scope:"editor" on list_documents to discover open editor tabs, and on subsequent tools to work with them. Explicit sessionId addresses an existing private session. Save explicitly. Connection loss never retries edits automatically.';
+      'Document tools default to private documents, regardless of launch order. Set documentScope:"editor" on list_documents to discover open editor tabs, and on subsequent tools to work with them. Explicit sessionId addresses an existing private session. Save explicitly. Connection loss never retries edits automatically.';
   }
   return reply;
 }

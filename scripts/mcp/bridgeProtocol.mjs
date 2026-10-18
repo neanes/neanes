@@ -11,16 +11,14 @@ export function bridgeTools(tools) {
     isDocumentTool(tool)
       ? {
           ...tool,
-          description: `${tool.description} Through this connection, omitted scope uses private documents. Set scope:"editor" to discover or work with open editor tabs. Explicit sessionId addresses that private session.`,
           inputSchema: {
             ...tool.inputSchema,
             properties: {
               ...tool.inputSchema.properties,
-              scope: {
+              documentScope: {
                 type: 'string',
                 enum: ['private', 'editor'],
-                description:
-                  'Defaults to private documents. Use editor explicitly for open editor tabs.',
+                description: 'Default: private. Use editor for open tabs.',
               },
             },
           },
@@ -30,7 +28,7 @@ export function bridgeTools(tools) {
 }
 
 export function documentScope(args) {
-  const { scope = 'private', ...argumentsWithoutScope } = args;
+  const { documentScope: scope = 'private', ...argumentsWithoutScope } = args;
   if (!['private', 'editor'].includes(scope)) {
     throw new Error('Invalid document scope.');
   }

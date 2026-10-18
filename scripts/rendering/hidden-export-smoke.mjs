@@ -109,7 +109,12 @@ async function call(name, args = {}) {
 async function settled(documentId) {
   let previous;
   for (let attempt = 0; attempt < 100; attempt++) {
-    const current = await call('get_document', { documentId });
+    const current = await call('get_document_properties', { documentId });
+    // Rendering regressions need the internal save snapshot, including DOM IDs.
+    // Keep that inspection on the existing debugger surface, outside MCP.
+    current.score = await evaluate(
+      `JSON.parse(JSON.stringify(window._editor.serializeScore(window._editor.workspaces.value.find(w => w.id === ${JSON.stringify(documentId)}).score)))`,
+    );
     if (previous?.revision === current.revision) {
       return current;
     }

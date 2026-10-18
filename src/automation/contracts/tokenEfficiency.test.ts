@@ -45,11 +45,11 @@ describe('MCP token efficiency contracts', () => {
       ),
     };
     console.info('MCP published inventory sizes (characters)', sizes);
-    expect(tools).toHaveLength(22);
-    expect(sizes.inventory).toBeLessThan(101500);
-    expect(sizes.inputs).toBeLessThan(26500);
-    expect(sizes.outputs).toBeLessThan(59000);
-    expect(sizes.inputView).toBeLessThan(41500);
+    expect(tools).toHaveLength(28);
+    expect(sizes.inventory).toBeLessThan(125000);
+    expect(sizes.inputs).toBeLessThan(37000);
+    expect(sizes.outputs).toBeLessThan(69000);
+    expect(sizes.inputView).toBeLessThan(52000);
     expect(sizes.elementOutput).toBeLessThan(4500);
   });
 
@@ -114,14 +114,25 @@ describe('MCP token efficiency contracts', () => {
     for (const [name, args] of [
       ['get_capabilities', { includeErrorCodes: true }],
       [
-        'get_document',
+        'get_staff_lyrics',
+        { documentId: 'test', offset: 0, limit: 8000, expectedRevision: 0 },
+      ],
+      [
+        'get_element_content',
         {
           documentId: 'test',
-          sections: ['staffElements'],
+          elementRef: '00000000-0000-4000-8000-000000000001',
+          property: 'content',
+          offset: 0,
+          limit: 8000,
           expectedRevision: 0,
         },
       ],
-      ['get_document', { documentId: 'test', sections: [] }],
+      [
+        'get_page_setup',
+        { documentId: 'test', properties: ['topMargin'], expectedRevision: 0 },
+      ],
+      ['get_header_footer_settings', { documentId: 'test', properties: [] }],
       [
         'get_elements',
         { documentId: 'test', properties: [], includeContent: false },

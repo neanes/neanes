@@ -6,6 +6,8 @@ import { setTimeout } from 'node:timers/promises';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
+import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+
 const directory = process.argv[2];
 const token = process.env.NEANES_MCP_TOKEN;
 assert.ok(directory && path.isAbsolute(directory) && token);
@@ -27,7 +29,7 @@ async function call(name, args = {}) {
 async function settledDocument(documentId) {
   let previous;
   for (let attempt = 0; attempt < 100; attempt++) {
-    const current = await call('get_document', { documentId });
+    const current = await readScoreSnapshot(call, { documentId });
     if (current.revision === previous?.revision) {
       return current;
     }
@@ -147,7 +149,7 @@ try {
   });
   const beforeForeground = await settledDocument(foreground.documentId);
   const foregroundHeights = heights(beforeForeground.score);
-  const beforeBackground = await call('get_document', {
+  const beforeBackground = await readScoreSnapshot(call, {
     documentId: background.documentId,
   });
   const backgroundChanged = await enlarge(background.documentId);

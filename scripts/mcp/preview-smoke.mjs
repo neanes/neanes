@@ -12,6 +12,8 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 import electron from 'electron';
 
+import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+
 const directory = await mkdtemp(path.join(tmpdir(), 'neanes-preview-'));
 const policyPath = path.join(directory, 'agent-access.json');
 await writeFile(
@@ -161,23 +163,23 @@ try {
   const controls = (
     await client.callTool({
       name: 'list_documents',
-      arguments: { scope: 'editor' },
+      arguments: { documentScope: 'editor' },
     })
   ).structuredContent.result;
   for (const control of controls) {
-    const settled = await call('get_document', {
-      scope: 'editor',
+    const settled = await readScoreSnapshot(call, {
+      documentScope: 'editor',
       documentId: control.documentId,
     });
     await call('replace_document_properties', {
-      scope: 'editor',
+      documentScope: 'editor',
       documentId: control.documentId,
       expectedRevision: settled.revision,
       properties: { title: 'Preview regression control', author: '' },
     });
   }
   const baseline = await state();
-  for (const scope of [{ scope: 'editor' }, {}]) {
+  for (const scope of [{ documentScope: 'editor' }, {}]) {
     let doc = await call('create_document', {
       ...scope,
       title: 'Unsaved PNG preview',
@@ -257,7 +259,7 @@ try {
         },
       ],
     });
-    const before = await call('get_document', args);
+    const before = await readScoreSnapshot(call, args);
     const uiBefore = await state();
     const pages = await call('get_pages', {
       ...args,
@@ -295,7 +297,10 @@ try {
       assert.equal(buffer.readUInt32BE(20), preview.height);
       assert.ok(!JSON.stringify(preview.content[0]).includes(image.data));
       await writeFile(
-        path.join(directory, `${scope.scope ?? 'private'}-${pageNumber}.png`),
+        path.join(
+          directory,
+          `${scope.documentScope ?? 'private'}-${pageNumber}.png`,
+        ),
         buffer,
       );
       const pixels = await evaluate(
@@ -341,7 +346,7 @@ try {
     assert.equal(children.elements.length, 2);
     assert.equal(children.elements[0].children.elements, 0);
     assert.equal(children.elements[1].children.elements, 1);
-    const after = await call('get_document', args);
+    const after = await readScoreSnapshot(call, args);
     assert.deepEqual(after.score, before.score);
     assert.equal(after.revision, before.revision);
     assert.equal(after.hasUnsavedChanges, true);
@@ -360,7 +365,7 @@ try {
     await eventually(async () => assert.equal(await exportWindows(), 0));
     assert.equal(await state(), uiBefore);
     // Concurrent editor edits must not receive a misleading preview revision.
-    if (scope.scope === 'editor') {
+    if (scope.documentScope === 'editor') {
       const pending = call(
         'preview_page',
         { ...stable, pageNumber: 1 },
@@ -373,7 +378,7 @@ try {
       await pending;
       await eventually(async () => assert.equal(await exportWindows(), 0));
     }
-    if (!scope.scope) {
+    if (!scope.documentScope) {
       const failed = call(
         'preview_page',
         { ...stable, pageNumber: 1 },
@@ -387,7 +392,7 @@ try {
       await eventually(async () => assert.equal(await exportWindows(), 0));
       assert.equal(await state(), uiBefore);
     }
-    doc = await call('get_document', args);
+    doc = await readScoreSnapshot(call, args);
     await call('close_document', {
       ...args,
       expectedRevision: doc.revision,
@@ -398,7 +403,7 @@ try {
   // Saved custom landscape content, rich text, filename tokens, and embedded images.
   let seed = await call('create_document');
   const fixtureArgs = { documentId: seed.documentId };
-  const landscape = (await call('get_document', fixtureArgs)).score;
+  const landscape = (await readScoreSnapshot(call, fixtureArgs)).score;
   Object.assign(landscape.pageSetup, {
     pageSize: 'Custom',
     pageWidthCustom: 576,
@@ -446,7 +451,7 @@ try {
   await writeFile(landscapePath, sourceBytes);
   const opened = await call('open_document', { filePath: landscapePath });
   const argsSaved = { documentId: opened.documentId };
-  const savedBefore = await call('get_document', argsSaved);
+  const savedBefore = await readScoreSnapshot(call, argsSaved);
   const layoutSaved = await call('get_pages', argsSaved);
   const landscapePreview = await call('preview_page', {
     ...argsSaved,
@@ -457,7 +462,7 @@ try {
   assert.ok(landscapePreview.width > landscapePreview.height);
   assert.equal(await readFile(landscapePath, 'utf8'), sourceBytes);
   assert.deepEqual(
-    (await call('get_document', argsSaved)).score,
+    (await readScoreSnapshot(call, argsSaved)).score,
     savedBefore.score,
   );
   await writeFile(
@@ -477,7 +482,7 @@ try {
   // An undecodable image fails settlement without retaining a renderer or changing source state.
   let broken = await call('create_document');
   const args = { documentId: broken.documentId };
-  const score = (await call('get_document', args)).score;
+  const score = (await readScoreSnapshot(call, args)).score;
   score.staff.elements.unshift({
     elementType: 'ImageBox',
     data: 'data:image/png;base64,broken',

@@ -5,6 +5,8 @@ import path from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
+import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+
 const directory = process.argv[2];
 const token = process.env.NEANES_MCP_TOKEN;
 if (!directory || !path.isAbsolute(directory) || !token) {
@@ -105,7 +107,7 @@ try {
   assert.ok(catalog.neumes.QuantitativeNeume.includes('Oligon'));
   sessionId = (await call('create_session')).sessionId;
   const seed = await call('create_document', { sessionId });
-  const { score } = await call('get_document', {
+  const { score } = await readScoreSnapshot(call, {
     sessionId,
     documentId: seed.documentId,
   });
@@ -160,7 +162,7 @@ try {
     assert.equal(opened.created, true);
     const args = { ...scope, documentId: opened.documentId };
     documents.push(args);
-    const before = await call('get_document', args);
+    const before = await readScoreSnapshot(call, args);
     const first = await call('get_elements', {
       ...args,
       start: 0,
@@ -209,6 +211,35 @@ try {
       collection: children('annotations'),
     });
     assert.equal(annotations.elements[0].properties.text, 'annotation');
+    const contentArgs = {
+      ...args,
+      elementRef: annotations.elements[0].elementRef,
+      property: 'text',
+      limit: 2,
+    };
+    let contentOffset = 0;
+    let annotationText = '';
+    while (true) {
+      const chunk = await call('get_element_content', {
+        ...contentArgs,
+        offset: contentOffset,
+        expectedRevision: annotations.revision,
+      });
+      annotationText += chunk.content;
+      if (chunk.nextOffset === null) {
+        break;
+      }
+      contentOffset = chunk.nextOffset;
+    }
+    assert.equal(annotationText, 'annotation');
+    await call(
+      'get_element_content',
+      {
+        ...contentArgs,
+        expectedRevision: annotations.revision + 1,
+      },
+      'REVISION_CONFLICT',
+    );
     const alternates = await call('get_elements', {
       ...args,
       collection: children('alternateLines'),
@@ -247,7 +278,7 @@ try {
       );
       assert.equal(lineHeights.elements[offset + 2].properties.lineHeight, 1.2);
     }
-    const after = await call('get_document', args);
+    const after = await readScoreSnapshot(call, args);
     assert.deepEqual(after, before);
     await call('get_elements', { ...args, end: 999 }, 'INVALID_ELEMENT_RANGE');
     await call(
@@ -302,15 +333,13 @@ try {
         'note.annotations.splice(0, 1);',
         'note.annotations[0] = note.annotations[0].clone();',
       ]) {
-        const savedBefore = await call('get_document', args);
         const page = await call('get_elements', {
           ...args,
           collection,
           limit: 1,
         });
         await mutateChildren(args.documentId, operation);
-        const savedAfter = await call('get_document', args);
-        assert.deepEqual(savedAfter.score, savedBefore.score);
+        const savedAfter = await call('get_document_properties', args);
         assert.ok(
           savedAfter.revision > page.revision,
           JSON.stringify({
@@ -330,9 +359,7 @@ try {
           'REVISION_CONFLICT',
         );
       }
-      console.log(
-        'Live child edits with identical save data invalidate stale discovery revisions.',
-      );
+      console.log('Live child edits invalidate stale discovery revisions.');
     }
     if (scope.sessionId) {
       const other = await call('get_elements', documents[0]);
@@ -355,7 +382,7 @@ try {
   );
 } finally {
   for (const args of documents.reverse()) {
-    const current = await call('get_document', args);
+    const current = await readScoreSnapshot(call, args);
     await call('close_document', {
       ...args,
       expectedRevision: current.revision,

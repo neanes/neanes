@@ -4,9 +4,18 @@ import { ElementType } from '@/models/Element';
 
 import { documentPropertiesSchema } from '../../services/documents/documentPropertiesSchema';
 import {
+  headerFooterSettingsSchema,
+  pageSetupSchema,
+} from '../../services/documents/pageSetupSchema';
+import {
   paragraphStyleDefinitionSchema,
   paragraphStyleOverridesSchema,
 } from '../../services/documents/paragraphStyleSchema';
+import { contentChunkPageShape } from './contentChunkSchema';
+import {
+  elementContentPropertySchema,
+  elementContentResultShape,
+} from './elementContentSchema';
 import {
   elementCatalogSchema,
   elementCollectionSchema,
@@ -88,6 +97,18 @@ export const automationResultSchemas = {
   get_elements: documentSummarySchema.extend(elementPageShape),
   find_elements: documentSummarySchema.extend(elementSearchResultShape),
   get_element: documentSummarySchema.extend(elementLookupResultShape),
+  get_element_content: z.strictObject({
+    documentId: z.string().min(1),
+    revision,
+    ...elementContentResultShape,
+  }),
+  get_staff_lyrics: z.strictObject({
+    documentId: z.string().min(1),
+    revision,
+    ...contentChunkPageShape,
+    text: z.string(),
+    locked: z.boolean(),
+  }),
   get_selection: documentSummarySchema.extend(selectionResultShape),
   get_pages: documentSummarySchema.extend(pageListResultShape),
   get_page_elements: documentSummarySchema.extend(pageElementsResultShape),
@@ -101,16 +122,17 @@ export const automationResultSchemas = {
       }),
     ),
   }),
-  get_document: documentSummarySchema.extend({
-    // This is the existing .byzx save-format document, not a second writable model.
-    score: z
-      .record(z.string(), z.json())
-      .describe(
-        'The serialized .byzx score, optionally section-filtered, with staff.elements paginated. Selected views are not complete loadable scores. Uses the existing Neanes save-format contract.',
-      ),
-    offset: z.number().int().nonnegative(),
-    nextOffset: z.number().int().nonnegative().nullable(),
+  get_document_properties: documentSummarySchema.extend({
+    properties: documentPropertiesSchema,
   }),
+  get_page_setup: documentSummarySchema.extend({
+    settings: pageSetupSchema.partial(),
+  }),
+  update_page_setup: documentSummarySchema,
+  get_header_footer_settings: documentSummarySchema.extend({
+    settings: headerFooterSettingsSchema.partial(),
+  }),
+  update_header_footer_settings: documentSummarySchema,
   get_paragraph_styles: styleResultSchema,
   edit_paragraph_styles: styleResultSchema
     .partial({ styles: true, resolvedStyles: true, units: true })
@@ -163,6 +185,7 @@ const publishedElement = z.strictObject({
     .describe(
       'Typed live properties, optionally projected. Use get_element_catalog with elementTypes/properties and view:read for constraints.',
     ),
+  omittedContent: z.array(elementContentPropertySchema).optional(),
   children: z.partialRecord(
     z.enum(['annotations', 'alternateLines', 'elements']),
     z.number().int().nonnegative(),
@@ -183,6 +206,14 @@ const publishedLookupResult = documentSummarySchema.extend({
   elements: z.array(publishedElement),
 });
 
+const publishedSettingsResult = documentSummarySchema.extend({
+  settings: z
+    .record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
+    .describe(
+      'Live settings, optionally projected. Field names and constraints are defined by the corresponding update tool; pageWidth/pageHeight are read-only derived dimensions.',
+    ),
+});
+
 export function publishedAutomationOutputSchema(tool: AutomationTool) {
   return z.discriminatedUnion('success', [
     z.strictObject({
@@ -194,7 +225,10 @@ export function publishedAutomationOutputSchema(tool: AutomationTool) {
             ? publishedSearchResult
             : tool === 'get_element'
               ? publishedLookupResult
-              : automationResultSchemas[tool],
+              : tool === 'get_page_setup' ||
+                  tool === 'get_header_footer_settings'
+                ? publishedSettingsResult
+                : automationResultSchemas[tool],
     }),
     z.strictObject({
       success: z.literal(false),

@@ -29,6 +29,7 @@ import {
   elementPageShape,
   getElementCatalog,
 } from '../contracts/elementSchemas';
+import { parseAutomationRequest } from '../contracts/protocol';
 import { type ElementCollection, ElementDiscovery } from './elementDiscovery';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
@@ -37,9 +38,72 @@ const query = (collection: ElementCollection = { kind: 'staff' }) => ({
   start: 0,
   offset: 0,
   limit: 100,
+  includeContent: true,
 });
 
 describe('typed element discovery', () => {
+  it('excludes embedded content by default while supporting explicit small content reads', () => {
+    const score = new Score();
+    const image = new ImageBoxElement();
+    image.data = 'data:image/png;base64,' + 'A'.repeat(1024 * 1024);
+    const box = new TextBoxElement();
+    box.content = 'Requested text';
+    score.staff.elements.unshift(image, box);
+    const request = parseAutomationRequest({
+      tool: 'get_elements',
+      arguments: { documentId: 'test' },
+    });
+    if (request.tool !== 'get_elements') {
+      throw new Error('Unexpected tool');
+    }
+    const reader = new ElementDiscovery();
+    const page = reader.read(score, request.arguments);
+    expect(JSON.stringify(page).length).toBeLessThan(3000);
+    expect(page.elements[0].properties).not.toHaveProperty('data');
+    expect(page.elements[1].properties).not.toHaveProperty('content');
+    expect(
+      reader.read(score, {
+        ...request.arguments,
+        start: 1,
+        limit: 1,
+        includeContent: true,
+      }).elements[0].properties,
+    ).toHaveProperty('content', box.content);
+  });
+
+  it('continues size-limited read and search pages without skipping elements', () => {
+    const score = new Score();
+    score.staff.elements = Array.from({ length: 200 }, () => new NoteElement());
+    const reader = new ElementDiscovery();
+    for (const read of [
+      (offset: number) =>
+        reader.read(score, { ...query(), offset, limit: 1000 }),
+      (offset: number) =>
+        reader.find(score, {
+          scope: {
+            kind: 'collection',
+            collection: { kind: 'staff' },
+            includeDescendants: false,
+          },
+          offset,
+          limit: 1000,
+          properties: ['quantitativeNeume', 'lyrics'],
+          includeContent: false,
+        }),
+    ]) {
+      const references: string[] = [];
+      let offset: number | null = 0;
+      while (offset !== null) {
+        const page: ReturnType<typeof read> = read(offset);
+        expect(JSON.stringify(page).length).toBeLessThan(24000);
+        expect(page.elements.length).toBeGreaterThan(0);
+        references.push(...page.elements.map((element) => element.elementRef));
+        offset = page.nextOffset;
+      }
+      expect(references).toHaveLength(200);
+      expect(new Set(references).size).toBe(200);
+    }
+  });
   it('reads every element kind and publishes a JSON catalog without changing score data', () => {
     const score = new Score();
     const note = new NoteElement();
@@ -289,14 +353,18 @@ describe('typed element discovery', () => {
         includeContent: false,
       }).elements[0].properties,
     ).toEqual({});
+    expect(() =>
+      reader.read(score, { ...query(), properties: ['data'] }),
+    ).toThrow('One element exceeds the page budget');
+    box.contentCenter = '<p>Small explicit content</p>';
     expect(
-      reader.read(score, { ...query(), properties: ['data'] }).elements[0]
-        .properties,
-    ).toEqual({ data: image.data });
-    expect(reader.read(score, query()).elements[1].properties).toHaveProperty(
-      'contentCenter',
-      box.contentCenter,
-    );
+      reader.read(score, {
+        ...query(),
+        start: 1,
+        limit: 1,
+        properties: ['contentCenter'],
+      }).elements[0].properties,
+    ).toHaveProperty('contentCenter', box.contentCenter);
     expect(z.strictObject(elementPageShape).parse(small)).toEqual(small);
   });
 
@@ -304,7 +372,13 @@ describe('typed element discovery', () => {
     const score = new Score();
     score.staff.elements = Array.from({ length: 100 }, () => new NoteElement());
     const reader = new ElementDiscovery();
-    const full = JSON.stringify(reader.read(score, query())).length;
+    let full = 0;
+    let offset: number | null = 0;
+    while (offset !== null) {
+      const page = reader.read(score, { ...query(), offset });
+      full += JSON.stringify(page).length;
+      offset = page.nextOffset;
+    }
     const projected = JSON.stringify(
       reader.read(score, {
         ...query(),

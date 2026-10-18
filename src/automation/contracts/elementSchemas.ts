@@ -9,6 +9,7 @@ import {
 import { ElementType, TempoElement } from '@/models/Element';
 import * as Neumes from '@/models/Neumes';
 
+import { elementContentPropertySchema } from './elementContentSchema';
 import { compactJsonSchema } from './jsonSchema';
 
 const index = z.number().int().nonnegative();
@@ -35,7 +36,7 @@ export const elementQueryShape = {
         ),
     )
     .optional(),
-  includeContent: z.boolean().default(true),
+  includeContent: z.boolean().default(false),
   collection: elementCollectionSchema.default({ kind: 'staff' }),
   start: index.default(0),
   end: index.optional(),
@@ -48,6 +49,7 @@ function elementResult<T extends ElementType>(type: T) {
     elementType: z.literal(type),
     index,
     properties: elementPropertySchemas[type].partial(),
+    omittedContent: z.array(elementContentPropertySchema).optional(),
     children: z.partialRecord(
       z.enum(['annotations', 'alternateLines', 'elements']),
       index,

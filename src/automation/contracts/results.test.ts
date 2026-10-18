@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Score } from '@/models/Score';
 import { Workspace } from '@/models/Workspace';
-import { SaveService } from '@/services/SaveService';
 
 import { getParagraphStyles } from '../documents/paragraphStyleRead';
 import { automationOutputSchema, automationResultSchemas } from './results';
@@ -37,18 +35,13 @@ describe('automation result contracts', () => {
     ).toEqual({ documentId: workspace.id, selectedDocumentId: null });
   });
 
-  it('validates actual serialized scores and complete style definitions', () => {
-    const score = JSON.parse(
-      JSON.stringify(SaveService.SaveScoreToJson(new Score())),
-    );
+  it('validates document properties and complete style definitions', () => {
     expect(
-      automationResultSchemas.get_document.parse({
+      automationResultSchemas.get_document_properties.parse({
         ...summary,
-        score,
-        offset: 0,
-        nextOffset: null,
-      }).score,
-    ).toEqual(score);
+        properties: { title: '', author: '' },
+      }).properties,
+    ).toEqual({ title: '', author: '' });
     const styles = {
       ...summary,
       ...getParagraphStyles(workspace.score.paragraphStyles),

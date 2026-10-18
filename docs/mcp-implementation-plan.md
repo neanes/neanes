@@ -269,9 +269,10 @@ Saved-score transformations already compose from existing APIs: create a fresh s
 The 2026-10-16 size audit prompted a pause before folder orchestration. The four
 main reductions are implemented: property/content projection for `get_elements`,
 compact published output schemas with typed runtime validation, focused style
-reads and compact style-edit acknowledgements, and section-aware `get_document`
-reads with optional revision checks. Existing full reads remain the default;
-style edits now return summary/affected IDs unless full state is requested.
+reads and compact style-edit acknowledgements, and focused document-properties,
+page-setup, and header/footer settings readers and partial settings writers with
+revision checks. The serialized `get_document` reader has been removed. Style
+edits now return summary/affected IDs unless full state is requested.
 Detailed usage and compatibility notes are in `scripts/mcp/README.md`.
 
 At the original checkpoint, the served tool-definition builder measured 66,677 minified JSON characters,

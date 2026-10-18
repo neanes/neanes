@@ -7,6 +7,9 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import JSZip from 'jszip';
 
+import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+import { checkSettings } from './settingsChecks.mjs';
+
 const directory = process.argv[2];
 const token = process.env.NEANES_MCP_TOKEN;
 if (!directory || !path.isAbsolute(directory) || !token) {
@@ -50,7 +53,7 @@ async function fails(name, args, code) {
 async function settledDocument(documentId) {
   let previous;
   for (let attempt = 0; attempt < 100; attempt++) {
-    const document = await call('get_document', { documentId });
+    const document = await readScoreSnapshot(call, { documentId });
     if (previous?.revision === document.revision) {
       return document;
     }
@@ -61,11 +64,11 @@ async function settledDocument(documentId) {
 }
 try {
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 21);
+  assert.equal(tools.tools.length, 28);
   assert.ok(tools.tools.every((tool) => tool.outputSchema?.type === 'object'));
   await fails(
-    'get_document',
-    { documentId: 'missing', limit: -1 },
+    'get_page_setup',
+    { documentId: 'missing', properties: ['unknown'] },
     'VALIDATION_ERROR',
   );
   await fails('unknown_tool', {}, 'TOOL_NOT_FOUND');
@@ -86,15 +89,25 @@ try {
     { filePath: path.join(directory, 'missing.byzx') },
     'FILE_NOT_FOUND',
   );
+  await checkSettings(client);
+  const settingsSession = await call('create_session');
+  try {
+    await checkSettings(client, { sessionId: settingsSession.sessionId });
+  } finally {
+    await call('close_session', {
+      sessionId: settingsSession.sessionId,
+      discardUnsavedChanges: true,
+    });
+  }
   const capabilities = await call('get_capabilities');
   assert.ok(capabilities.fonts.includes('Source Serif'));
   const initial = await call('list_documents');
   const created = await call('create_document', { title: 'MCP smoke' });
-  let document = await call('get_document', {
+  let document = await call('get_elements', {
     documentId: created.documentId,
     limit: 1,
   });
-  assert.equal(document.score.staff.elements.length, 1);
+  assert.equal(document.elements.length, 1);
   assert.ok(document.nextOffset > 0);
   const styleResult = await call('get_paragraph_styles', {
     documentId: created.documentId,
@@ -172,7 +185,7 @@ try {
   await fs.copyFile(scorePath, reopenedPath);
   const reopened = await call('open_document', { filePath: reopenedPath });
   assert.equal(reopened.created, true);
-  const inspected = await call('get_document', {
+  const inspected = await readScoreSnapshot(call, {
     documentId: reopened.documentId,
   });
   assert.equal(
@@ -345,7 +358,7 @@ try {
     documentId: opened.documentId,
     expectedRevision: deleted.revision,
   });
-  document = await call('get_document', { documentId: opened.documentId });
+  document = await readScoreSnapshot(call, { documentId: opened.documentId });
   await fs.appendFile(scorePath, '\nexternal change');
   await fails(
     'save_document',

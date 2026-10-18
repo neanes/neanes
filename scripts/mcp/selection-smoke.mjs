@@ -5,6 +5,8 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 
+import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+
 const token = process.env.NEANES_MCP_TOKEN;
 assert.ok(
   token,
@@ -177,7 +179,7 @@ try {
   const refs = Object.fromEntries(
     inserted.created.map((element) => [element.clientId, element.elementRef]),
   );
-  let baseline = await call('get_document', args);
+  let baseline = await readScoreSnapshot(call, args);
   let state = await evaluate(
     'JSON.stringify({dirty:window._editor.selectedWorkspace.value.hasUnsavedChanges,history:window._editor.selectedWorkspace.value.commandService.commandHistory.length})',
   );
@@ -186,7 +188,7 @@ try {
   );
   await click(`#element-${ids[0]} > .neume-box > .syllable-box`);
   const selected = await call('get_selection', args);
-  baseline = await call('get_document', args);
+  baseline = await readScoreSnapshot(call, args);
   state = await evaluate(
     'JSON.stringify({dirty:window._editor.selectedWorkspace.value.hasUnsavedChanges,history:window._editor.selectedWorkspace.value.commandService.commandHistory.length})',
   );
@@ -252,7 +254,7 @@ try {
       result.selection.target.elementRef,
     );
   }
-  assert.deepEqual(await call('get_document', args), baseline);
+  assert.deepEqual(await readScoreSnapshot(call, args), baseline);
   assert.equal(
     await evaluate(
       'JSON.stringify({dirty:window._editor.selectedWorkspace.value.hasUnsavedChanges,history:window._editor.selectedWorkspace.value.commandService.commandHistory.length})',
@@ -283,7 +285,7 @@ try {
     'DOCUMENT_NOT_FOUND',
   );
   await call('get_selection', { ...args, sessionId }, 'DOCUMENT_NOT_FOUND');
-  const current = await call('get_document', { ...args, sections: [] });
+  const current = await readScoreSnapshot(call, { ...args, sections: [] });
   await call('replace_document_properties', {
     ...args,
     expectedRevision: current.revision,
@@ -299,7 +301,7 @@ try {
   );
 } finally {
   for (const args of introduced.reverse()) {
-    const current = await call('get_document', { ...args, sections: [] });
+    const current = await readScoreSnapshot(call, { ...args, sections: [] });
     await call('close_document', {
       ...args,
       expectedRevision: current.revision,

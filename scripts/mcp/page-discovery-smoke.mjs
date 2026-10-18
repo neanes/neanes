@@ -6,6 +6,8 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 
+import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+
 const directory = process.argv[2];
 const token = process.env.NEANES_MCP_TOKEN;
 assert.ok(
@@ -176,7 +178,7 @@ try {
       },
     ],
   });
-  const initial = await call('get_document', seedArgs);
+  const initial = await readScoreSnapshot(call, seedArgs);
   const score = initial.score;
   Object.assign(score.pageSetup, {
     showHeader: true,
@@ -200,7 +202,7 @@ try {
     const opened = await call('open_document', { ...scope, filePath: fixture });
     const args = { ...scope, documentId: opened.documentId };
     introduced.set(opened.documentId, args);
-    const before = await call('get_document', args);
+    const before = await readScoreSnapshot(call, args);
     const controlState = process.env.NEANES_DEBUG_URL
       ? await evaluate(
           'JSON.stringify(window._editor.workspaces.value.map(w=>({id:w.id,dirty:w.hasUnsavedChanges,history:w.commandService.commandHistory.length,selection:w.selectedElement?.id})))',
@@ -288,7 +290,7 @@ try {
       { ...args, expectedLayoutId: '0'.repeat(64) },
       'LAYOUT_CONFLICT',
     );
-    const after = await call('get_document', args);
+    const after = await readScoreSnapshot(call, args);
     assert.deepEqual(after, before);
     if (controlState) {
       assert.equal(
@@ -326,7 +328,7 @@ try {
       });
       await call('get_pages', stable, 'REVISION_CONFLICT');
     }
-    const current = await call('get_document', { ...args, sections: [] });
+    const current = await readScoreSnapshot(call, { ...args, sections: [] });
     const broken = await call('edit_elements', {
       ...args,
       expectedRevision: current.revision,
@@ -376,7 +378,7 @@ try {
   }
 } finally {
   for (const args of [...introduced.values()].reverse()) {
-    const current = await call('get_document', { ...args, sections: [] });
+    const current = await readScoreSnapshot(call, { ...args, sections: [] });
     await call('close_document', {
       ...args,
       expectedRevision: current.revision,

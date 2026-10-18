@@ -18,6 +18,8 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import electron from 'electron';
 
+import { checkSettings } from './settingsChecks.mjs';
+
 const directory = await mkdtemp(path.join(tmpdir(), 'neanes-headless-smoke-'));
 const policyPath = path.join(directory, 'agent-access.json');
 const files = path.join(directory, 'files');
@@ -60,7 +62,7 @@ try {
   assert.equal(capabilities.mode, 'headless');
   assert.deepEqual(await call(first, 'list_documents'), []);
   await assert.rejects(
-    () => call(first, 'list_documents', { scope: 'editor' }),
+    () => call(first, 'list_documents', { documentScope: 'editor' }),
     /No editor is open/,
   );
   const privateDocument = await call(first, 'create_document', {
@@ -72,10 +74,12 @@ try {
   const definitions = await first.listTools();
   assert.deepEqual(
     definitions.tools.find((tool) => tool.name === 'list_documents').inputSchema
-      .properties.scope.enum,
+      .properties.documentScope.enum,
     ['private', 'editor'],
   );
   const { sessionId } = await call(first, 'create_session');
+  await checkSettings(first);
+  await checkSettings(first, { sessionId });
   const foreign = await second.callTool({
     name: 'list_documents',
     arguments: { sessionId },

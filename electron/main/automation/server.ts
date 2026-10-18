@@ -19,6 +19,7 @@ import {
   automationSchemas,
   parseAutomationRequest,
 } from '../../../src/automation/contracts/protocol';
+import { assertResultBudget } from '../../../src/automation/contracts/responseBudget';
 import { automationResultSchemas } from '../../../src/automation/contracts/results';
 import { automationTools } from './tools';
 
@@ -143,6 +144,7 @@ export async function startMcpServer(options: McpServerOptions) {
             result = metadata;
           }
           // Serialize once to the wire representation before validating optional save-format fields.
+          assertResultBudget(result, request.tool);
           const parsed = automationResultSchemas[request.tool].safeParse(
             JSON.parse(JSON.stringify(result)),
           );

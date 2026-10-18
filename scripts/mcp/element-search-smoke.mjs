@@ -4,6 +4,8 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 
+import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+
 const token = process.env.NEANES_MCP_TOKEN;
 if (!token) {
   throw new Error(
@@ -132,7 +134,7 @@ try {
     const refs = Object.fromEntries(
       inserted.created.map((element) => [element.clientId, element.elementRef]),
     );
-    const before = await call('get_document', args);
+    const before = await readScoreSnapshot(call, args);
     const searchArgs = { ...args, expectedRevision: before.revision };
     const bars = await call('find_elements', {
       ...searchArgs,
@@ -163,7 +165,10 @@ try {
       drops.elements.map((element) => element.elementRef),
       [refs.drop],
     );
-    assert.deepEqual(drops.elements[0].properties, { fontSize: 80 });
+    assert.deepEqual(drops.elements[0].properties, {
+      fontSize: 80,
+      content: 'A',
+    });
     const notes = await call('find_elements', {
       ...searchArgs,
       elementTypes: ['Note'],
@@ -252,7 +257,7 @@ try {
       ).collection,
       header.elements[0].collection,
     );
-    assert.deepEqual(await call('get_document', args), before);
+    assert.deepEqual(await readScoreSnapshot(call, args), before);
     await call(
       'find_elements',
       { ...args, where: { field: 'fontSize', op: 'eq', value: 'invalid' } },
@@ -285,7 +290,7 @@ try {
   }
 } finally {
   for (const args of introduced.reverse()) {
-    const current = await call('get_document', { ...args, sections: [] });
+    const current = await readScoreSnapshot(call, { ...args, sections: [] });
     await call('close_document', {
       ...args,
       expectedRevision: current.revision,

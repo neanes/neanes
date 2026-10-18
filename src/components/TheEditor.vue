@@ -1872,6 +1872,7 @@ async function initialize() {
     selectedElement,
     selectedWorkspace,
     workspaces,
+    serializeScore: (score: Score) => SaveService.SaveScoreToJson(score),
   };
 
   try {

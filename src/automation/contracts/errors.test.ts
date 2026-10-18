@@ -7,8 +7,69 @@ import {
   automationOutcome,
   unwrapAutomationOutcome,
 } from './errors';
+import { parseAutomationRequest } from './protocol';
 
 describe('structured automation errors', () => {
+  it('bounds and groups enum failures from a real 1000-action edit batch', () => {
+    try {
+      parseAutomationRequest({
+        tool: 'edit_elements',
+        arguments: {
+          documentId: 'test',
+          expectedRevision: 0,
+          actions: Array.from({ length: 1000 }, () => ({
+            action: 'update',
+            elementRef: '00000000-0000-4000-8000-000000000001',
+            elementType: 'Note',
+            properties: { quantitativeNeume: 'INVALID' },
+          })),
+        },
+      });
+      expect.fail('Invalid neumes must be rejected');
+    } catch (error) {
+      const result = automationError(error);
+      expect(result).toMatchObject({
+        code: 'VALIDATION_ERROR',
+        details: {
+          issueCount: 1000,
+          omittedIssueCount: 0,
+          issues: [
+            {
+              path: ['actions', '0', 'properties', 'quantitativeNeume'],
+              count: 1000,
+            },
+          ],
+        },
+      });
+      expect(JSON.stringify(result).length).toBeLessThan(1000);
+    }
+  });
+
+  it('caps distinct issues, messages and escaped property paths', () => {
+    const result = z
+      .record(z.string(), z.number())
+      .safeParse(
+        Object.fromEntries(
+          Array.from({ length: 100 }, (_, index) => [
+            index + '\u0000'.repeat(1000),
+            'invalid',
+          ]),
+        ),
+      );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const error = automationError(result.error);
+      expect(JSON.stringify(error).length).toBeLessThan(8000);
+      expect(error.details.issueCount).toBe(100);
+      expect(error.details.omittedIssueCount).toBeGreaterThan(0);
+    }
+    const distinct = z
+      .array(z.number())
+      .safeParse(Array.from({ length: 100 }, () => 'invalid'));
+    if (!distinct.success) {
+      expect(automationError(distinct.error).details.issues).toHaveLength(1);
+    }
+  });
   it('preserves domain codes and details across serialized IPC boundaries', async () => {
     const error = {
       code: 'REVISION_CONFLICT' as const,

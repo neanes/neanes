@@ -2,14 +2,11 @@ import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 
 import { compactJsonSchema } from '../../../src/automation/contracts/jsonSchema';
 import {
-  literalLyricsDescription,
-  lyricParserDescription,
-} from '../../../src/automation/contracts/lyricSyntax';
-import {
   automationSchemas,
   type AutomationTool,
 } from '../../../src/automation/contracts/protocol';
 import { publishedAutomationOutputSchema } from '../../../src/automation/contracts/results';
+import { isReadOnlyAutomationTool } from '../../../src/automation/contracts/toolBehavior';
 
 const descriptions: Record<AutomationTool, string> = {
   create_session:
@@ -21,13 +18,17 @@ const descriptions: Record<AutomationTool, string> = {
   list_documents:
     'List interactive workspaces, or only documents owned by the supplied sessionId, with IDs and revisions. Does not open files.',
   get_element_catalog:
-    'Get a small element-type inventory by default. Supply elementTypes and/or properties to retrieve focused property schemas; view selects read, edit, or both. includeProperties retrieves all schemas; includeNeumes includes the full enum vocabulary. Schemas use local $defs/$ref. tempoBpmDefaults maps each tempo sign to its creation/replacement default BPM; partial updates preserve omitted BPM. Dimensions are CSS pixels, lineHeight is a multiplier, and lineHeight:null explicitly resets to normal while omission inherits.',
+    'Get a small element-type inventory by default. Supply elementTypes and/or properties to retrieve focused property schemas; view selects read, edit, or both. includeProperties retrieves all schemas; includeNeumes includes the full enum vocabulary. Full opt-in catalogs use a separate 128000-character budget and are not paginated. Schemas use local $defs/$ref. tempoBpmDefaults maps each tempo sign to its creation/replacement default BPM; partial updates preserve omitted BPM. Dimensions are CSS pixels, lineHeight is a multiplier, and lineHeight:null explicitly resets to normal while omission inherits.',
   get_elements:
-    'Read typed elements in a collection (staff by default). Ranges use zero-based start inclusive/end exclusive; offset is relative to that range. Follow nextOffset with expectedRevision to prevent mixed-revision pages. Child collections use a returned parentRef. References are opaque, scoped to one open document, and survive movement and undo restoration of the same object; removal makes them unavailable and reopen assigns new references. Element properties omit null and undefined values except lineHeight: null, which explicitly resets text-box or drop-cap line height to normal. Omitted lineHeight inherits the paragraph style; other missing properties are unset. False, zero and empty strings remain present. Includes the terminal Empty sentinel. Header/footer collections are stored templates, not resolved page instances. Use properties to select fields ([] returns identities/counts only); inapplicable fields are omitted. includeContent:false omits data, content/contentBottom/contentLeft/contentCenter/contentRight, and annotation text, even if selected. Defaults preserve the full view. Projected omissions may be unrequested; retrieve complete fields before replacement. Use get_element_catalog for detailed property constraints. Does not edit or save.',
+    'Read typed elements in a collection (staff by default). Ranges use zero-based start inclusive/end exclusive; offset is relative to that range. Follow nextOffset with expectedRevision to prevent mixed-revision pages. Child collections use a returned parentRef. References are opaque, scoped to one open document, and survive movement and undo restoration of the same object; removal makes them unavailable and reopen assigns new references. Element properties omit null and undefined values except lineHeight: null, which explicitly resets text-box or drop-cap line height to normal. Omitted lineHeight inherits the paragraph style; other missing properties are unset. False, zero and empty strings remain present. Includes the terminal Empty sentinel. Header/footer collections are stored templates, not resolved page instances. Use properties to select fields ([] returns identities/counts only); inapplicable fields are omitted. includeContent:false omits image data and text-box content/panel fields, even if selected. Annotation text and drop-cap content are included when projected, unless over budget; omittedContent identifies such omitted fields. Large content is excluded by default; request includeContent:true explicitly. Pages may end before limit to fit the JSON budget; follow nextOffset. Projected omissions may be unrequested; retrieve complete fields before replacement. Use get_element_content for exact oversized content; get_element_catalog for property constraints. Does not edit or save.',
   find_elements:
     'Search stored element fields across a document (default: staff and descendants, then stored header/footer variants, including disabled variants), or one collection with optional descendants. Filter elementTypes and combine where predicates with and/or; leaves use field and op:eq (value), in (values), isNull, isNotNull. isNull matches null/undefined; isNotNull includes false/0/empty strings. Inapplicable fields match neither. Equality is exact; eq:null matches only explicit null. No inherited typography or layout caches. At most 100 predicate nodes, depth 8, 100 in values. Returns matches in depth-first order, with collection/index locations. offset/nextOffset count matches; use expectedRevision across pages. Defaults to properties:[] and includeContent:false; filtering is independent of projection. Does not edit or save.',
   get_element:
-    'Read an element by opaque elementRef, optionally with before/after neighbors (0-499 each) in the same collection. The window includes the anchor and counts actual elements, without filtering or crossing collection boundaries. Returns the current collection/indexes; removed or foreign references fail with ELEMENT_NOT_FOUND. Defaults to all readable properties excluding large content; select properties or includeContent:true explicitly. Optional expectedRevision rejects stale reads. Does not edit or save.',
+    'Read an element by opaque elementRef, optionally with before/after neighbors (0-499 each) in the same collection. The window includes the anchor and counts actual elements, without filtering or crossing collection boundaries. Returns the current collection/indexes; removed or foreign references fail with ELEMENT_NOT_FOUND. Defaults to readable properties excluding image/text-box content; small annotation/drop-cap text is included. omittedContent identifies over-budget annotation/drop-cap fields. Use get_element_content for exact chunks, or includeContent:true for small complete values. Optional expectedRevision rejects stale reads. Does not edit or save.',
+  get_element_content:
+    'Read exact chunks from a selected text-box/panel/drop-cap content field, annotation text, or image data URL. offset/limit use UTF-16 units (default/max limit:8000); chunks preserve surrogate pairs. Follow nextOffset with returned revision as expectedRevision. No text/HTML/base64 transformation. Does not edit or save.',
+  get_staff_lyrics:
+    'Read exact staff lyrics manager text and locked state in chunks (default/max limit:8000 UTF-16 units). Follow nextOffset with returned revision as expectedRevision. Chunks preserve surrogate pairs. Does not edit or save.',
   get_selection:
     'Read score selection for documentId. status:active means the selected interactive tab; remembered means a background tab; unavailable means an isolated document. selection:null means no reachable selection. Single targets return kind (element, lyrics, annotation, alternateLine, headerFooter), reference, type and collection/index; alternateLine identifies its container, headerFooter its stored template. Ranges return normalized half-open staff start/end plus directional anchorRef/focusRef, without expanding elements. Use get_element for details/context or get_elements for a range. No text highlights, caret positions, page instances or OS focus. Selection changes do not advance content revisions; expectedRevision checks content only. Snapshot only; later edits use returned references. Does not select, edit or save.',
   get_pages:
@@ -35,12 +36,17 @@ const descriptions: Record<AutomationTool, string> = {
   get_page_elements:
     'Read compact occurrences on a one-based physical pageNumber, from a settled detached layout. Each has elementRef/type, collection/index, region (staff/header/footer), and zero-based lineIndex for staff and its rendered descendants. Repeated headers/footers share their live template reference but occur on separate pages; disabled templates are excluded. Includes rendered annotation/alternate-line containers and notes. Filter regions, elementTypes or where with the find_elements stored-field predicate grammar. offset/limit count matching occurrences (default 100, max 1000). Use get_element for properties/content. Pass expectedRevision and expectedLayoutId across reads. Same settlement, isolation and error rules as get_pages. Does not edit or save.',
   edit_elements:
-    'Apply a validated element/lyric transaction in one undo step. Requires expectedRevision; never saves. Actions run in order on detached drafts before mutation. Insert typed elements, update properties (omitted fields unchanged, null clears nullable fields, lineHeight null resets to normal), reset named properties to constructor defaults, replace/remove by reference, remove half-open ranges, assign lyrics over a range using the shared lyric parser, or set the complete staff lyrics manager state (text and locked). Insert/replace definitions may declare clientId; later actions reference @clientId. Ranges/indexes refer to the draft after earlier actions. get_element_catalog.editProperties describes writable values. Collections follow get_elements; staff inserts default before the Empty sentinel, others append. Headers/footers must finish with exactly one TextBox or RichTextBox. Alternate lines contain only notes. Empty cannot be inserted, replaced, edited or removed. Only main-staff lyric assignments and direct note/drop-cap lyric edits are governed by the staff lyrics lock; alternate lines remain independent; set_staff_lyrics changes that complete state. Returns created references still present at completion. A settlement failure can occur after commit and reports details.editsApplied; inspect before retry. ' +
-    lyricParserDescription +
-    ' ' +
-    literalLyricsDescription,
-  get_document:
-    'Read document metadata and a paginated serialized score. Optional sections selects documentProperties, pageSetup, paragraphStyles, headers, footers, staffElements, staffLyrics; [] returns only score version metadata. Omission returns all sections. Selected views are not complete loadable scores. Follow nextOffset with expectedRevision to avoid mixed revisions. Dimensions are CSS pixels. Use get_paragraph_styles for writable style definitions; serialized score styles use the save-format shape.',
+    'Apply a validated element/lyric transaction in one undo step. Requires expectedRevision; never saves. Actions run in order on detached drafts before mutation. Insert typed elements, update properties (omitted fields unchanged, null clears nullable fields, lineHeight null resets to normal), reset named properties to constructor defaults, replace/remove by reference, remove half-open ranges, assign lyrics over a range using the shared lyric parser, or set the complete staff lyrics manager state (text and locked). Insert/replace definitions may declare clientId; later actions reference @clientId. Ranges/indexes refer to the draft after earlier actions. get_element_catalog.editProperties describes writable values. Collections follow get_elements; staff inserts default before the Empty sentinel, others append. Headers/footers must finish with exactly one TextBox or RichTextBox. Alternate lines contain only notes. Empty cannot be inserted, replaced, edited or removed. Only main-staff lyric assignments and direct note/drop-cap lyric edits are governed by the staff lyrics lock; alternate lines remain independent; set_staff_lyrics changes that complete state. Returns created references still present at completion. A settlement failure can occur after commit and reports details.editsApplied; inspect before retry. Parser syntax and literal lyric rules are described on the action fields.',
+  get_document_properties:
+    'Read title and author. Optional expectedRevision rejects stale reads. Does not edit or save.',
+  get_page_setup:
+    'Read page geometry, notation defaults, and layout settings. Optional properties selects fields ([] returns only document summary). Dimensions are CSS pixels. pageWidth/pageHeight are derived from pageSize, landscape, and custom dimensions. Header/footer configuration uses get_header_footer_settings; typography uses get_paragraph_styles. Does not edit or save.',
+  update_page_setup:
+    'Update supplied page/layout settings in one undo step; omitted fields stay unchanged. Dimensions are CSS pixels. pageSize and landscape determine pageWidth/pageHeight; Custom uses pageWidthCustom/pageHeightCustom before orientation. Margins must leave positive content area. Does not rewrite header/footer templates. Requires expectedRevision; never saves. Settlement errors may report details.editsApplied; inspect before retrying.',
+  get_header_footer_settings:
+    'Read header/footer visibility, template selection flags, margins, horizontal rules, page numbering and richHeaderFooter preference. Optional properties selects fields ([] returns only document summary). Dimensions are CSS pixels. Read template content with get_elements using headers/footers collections. Does not edit or save.',
+  update_header_footer_settings:
+    'Update supplied header/footer settings in one undo step; omitted fields stay unchanged. Dimensions are CSS pixels. Preserves all template content, including when richHeaderFooter changes (a generation preference); edit_elements replaces/edits templates explicitly. Requires expectedRevision; never saves. Settlement errors may report details.editsApplied; inspect before retrying.',
   create_document:
     'Create an unsaved document using user defaults. With sessionId it belongs only to that isolated session; otherwise selects a new interactive tab.',
   open_document:
@@ -76,37 +82,12 @@ export function automationTools(): Tool[] {
         type: 'object',
       } as Tool['outputSchema'],
       annotations: {
-        readOnlyHint: [
-          'get_capabilities',
-          'list_documents',
-          'get_document',
-          'get_element_catalog',
-          'get_elements',
-          'find_elements',
-          'get_element',
-          'get_selection',
-          'get_pages',
-          'preview_page',
-          'get_page_elements',
-          'get_paragraph_styles',
-        ].includes(tool),
-        destructiveHint: ![
-          'get_capabilities',
-          'list_documents',
-          'get_document',
-          'get_element_catalog',
-          'get_elements',
-          'find_elements',
-          'get_element',
-          'get_selection',
-          'get_pages',
-          'preview_page',
-          'get_page_elements',
-          'get_paragraph_styles',
-          'create_session',
-          'create_document',
-          'open_document',
-        ].includes(tool),
+        readOnlyHint: isReadOnlyAutomationTool(tool),
+        destructiveHint:
+          !isReadOnlyAutomationTool(tool) &&
+          !['create_session', 'create_document', 'open_document'].includes(
+            tool,
+          ),
         openWorldHint: false,
       },
     }),

@@ -94,7 +94,7 @@ const fixturePath = path.join(directory, `overlay-fixture-${suffix}.byzx`);
 let openDocument;
 async function closeDocument() {
   if (openDocument != null) {
-    const current = await call('get_document', {
+    const current = await call('get_document_properties', {
       documentId: openDocument.documentId,
     });
     await call('close_document', {
@@ -162,7 +162,7 @@ function pdfOperators(data) {
 async function exportCase(name, preferences) {
   await setPreferences(preferences);
   openDocument = await call('open_document', { filePath: fixturePath });
-  const current = await call('get_document', {
+  const current = await call('get_document_properties', {
     documentId: openDocument.documentId,
   });
   const output = path.join(directory, `overlay-${name}-${suffix}.pdf`);

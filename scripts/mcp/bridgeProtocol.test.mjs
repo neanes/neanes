@@ -15,15 +15,15 @@ describe('one bridge connection', () => {
     const decorated = bridgeTools(originals);
     for (const tool of decorated) {
       if (isDocumentTool(tool)) {
-        expect(tool.inputSchema.properties.scope.enum).toEqual([
+        expect(tool.inputSchema.properties.documentScope.enum).toEqual([
           'private',
           'editor',
         ]);
-        expect(tool.description).toContain(
-          'omitted scope uses private documents',
+        expect(tool.description).toBe(
+          originals.find((original) => original.name === tool.name).description,
         );
       } else {
-        expect(tool.inputSchema.properties).not.toHaveProperty('scope');
+        expect(tool.inputSchema.properties).not.toHaveProperty('documentScope');
       }
     }
     expect(JSON.stringify(originals)).toBe(before);
@@ -40,14 +40,47 @@ describe('one bridge connection', () => {
       scope: 'private',
       arguments: { sessionId: 'session' },
     });
-    expect(documentScope({ scope: 'editor', documentId: 'score' })).toEqual({
+    expect(
+      documentScope({ documentScope: 'editor', documentId: 'score' }),
+    ).toEqual({
       scope: 'editor',
       arguments: { documentId: 'score' },
     });
     expect(() =>
-      documentScope({ scope: 'editor', sessionId: 'session' }),
+      documentScope({ documentScope: 'editor', sessionId: 'session' }),
     ).toThrow('either');
-    expect(() => documentScope({ scope: 'other' })).toThrow('Invalid');
+    expect(() => documentScope({ documentScope: 'other' })).toThrow('Invalid');
+  });
+
+  it('preserves search scope through publication and editor/private routing', () => {
+    const tool = automationTools().find(
+      (tool) => tool.name === 'find_elements',
+    );
+    const published = bridgeTools([tool])[0];
+    expect(published.inputSchema.properties.scope).toEqual(
+      tool.inputSchema.properties.scope,
+    );
+    for (const documentTarget of ['private', 'editor']) {
+      const scope = { kind: 'collection', collection: { kind: 'staff' } };
+      expect(documentScope({ documentScope: documentTarget, scope })).toEqual({
+        scope: documentTarget,
+        arguments: { scope },
+      });
+    }
+  });
+
+  it('budgets the inventory delivered to clients, including bridge arguments', () => {
+    const tools = bridgeTools(automationTools());
+    expect(JSON.stringify({ tools }).length).toBeLessThan(128000);
+    expect(
+      JSON.stringify(
+        tools.map(({ name, description, inputSchema }) => ({
+          name,
+          description,
+          inputSchema,
+        })),
+      ).length,
+    ).toBeLessThan(55000);
   });
 });
 

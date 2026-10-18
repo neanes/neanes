@@ -196,14 +196,14 @@ try {
       () =>
         first.callTool({
           name: 'list_documents',
-          arguments: { scope: 'editor' },
+          arguments: { documentScope: 'editor' },
         }),
       /could not start agent access/,
     );
   } else {
     const liveFromWorker = await first.callTool({
       name: 'list_documents',
-      arguments: { scope: 'editor' },
+      arguments: { documentScope: 'editor' },
     });
     assert.ok(!liveFromWorker.isError, JSON.stringify(liveFromWorker));
     assert.equal(liveFromWorker.structuredContent.result.length, 1);
@@ -299,7 +299,7 @@ try {
   const live = await connect(configuration);
   const result = await live.callTool({
     name: 'list_documents',
-    arguments: { scope: 'editor' },
+    arguments: { documentScope: 'editor' },
   });
   assert.ok(!result.isError, JSON.stringify(result));
   assert.equal(result.structuredContent.result.length, 1);

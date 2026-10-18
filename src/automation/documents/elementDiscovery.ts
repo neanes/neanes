@@ -9,12 +9,19 @@ import {
 } from '@/models/Element';
 import type { Score } from '@/models/Score';
 
+import type { ElementContentQuery } from '../contracts/elementContentSchema';
 import { matchesElement } from '../contracts/elementPredicates';
 import { elementPropertySchemas } from '../contracts/elementPropertySchemas';
 import type {
   ElementLookupQuery,
   ElementSearchQuery,
 } from '../contracts/elementSearchSchema';
+import { AutomationError } from '../contracts/errors';
+import {
+  elementPageEntrySize,
+  MAX_ELEMENT_PAGE_CHARACTERS,
+} from '../contracts/responseBudget';
+import { readContentChunk } from './contentRead';
 
 export const headerFooterVariants = [
   'default',
@@ -90,7 +97,12 @@ export class ElementDiscovery {
       Object.keys(schema.shape).flatMap((key) => {
         if (
           (query.properties !== undefined && !query.properties.includes(key)) ||
-          (query.includeContent === false && elementContentProperties.has(key))
+          (query.includeContent !== true &&
+            elementContentProperties.has(key) &&
+            !(
+              element.elementType === ElementType.Annotation && key === 'text'
+            ) &&
+            !(element.elementType === ElementType.DropCap && key === 'content'))
         ) {
           return [];
         }
@@ -102,7 +114,7 @@ export class ElementDiscovery {
         return [[key, value]];
       }),
     );
-    return query.properties === undefined && query.includeContent !== false
+    return query.properties === undefined && query.includeContent === true
       ? schema.parse(properties)
       : schema.partial().parse(properties);
   }
@@ -114,7 +126,7 @@ export class ElementDiscovery {
       elements.map((element) => ({
         elementRef: this.reference(element),
         elementType: element.elementType,
-        properties: this.properties(element),
+        properties: this.properties(element, { includeContent: true }),
         // Exact null predicates distinguish null from undefined even when read
         // projections omit both. Include that distinction in revision identity.
         nullProperties: Object.keys(
@@ -211,7 +223,7 @@ export class ElementDiscovery {
     index: number,
     query: { properties?: string[]; includeContent?: boolean },
   ) {
-    return {
+    const result = {
       elementRef: this.reference(element),
       elementType: element.elementType,
       index,
@@ -223,6 +235,52 @@ export class ElementDiscovery {
         ]),
       ),
     };
+    const smallContent =
+      element.elementType === ElementType.Annotation
+        ? 'text'
+        : element.elementType === ElementType.DropCap
+          ? 'content'
+          : null;
+    if (
+      query.includeContent !== true &&
+      smallContent !== null &&
+      Object.hasOwn(result.properties, smallContent) &&
+      JSON.stringify(result).length > MAX_ELEMENT_PAGE_CHARACTERS - 1000
+    ) {
+      Reflect.deleteProperty(result.properties, smallContent);
+      return { ...result, omittedContent: [smallContent] };
+    }
+    return result;
+  }
+
+  readContent(score: Score, query: ElementContentQuery) {
+    for (const { element } of this.entries(score)) {
+      if (this.refs.get(toRaw(element)) !== query.elementRef) {
+        continue;
+      }
+      const value: unknown = Reflect.get(element, query.property);
+      if (
+        !elementContentProperties.has(query.property) ||
+        !Object.hasOwn(
+          elementPropertySchemas[element.elementType].shape,
+          query.property,
+        ) ||
+        typeof value !== 'string'
+      ) {
+        throw new AutomationError({
+          code: 'INVALID_ELEMENT_CONTENT',
+          message:
+            'The selected element does not have that string content field.',
+          details: { elementRef: query.elementRef, property: query.property },
+        });
+      }
+      return {
+        elementRef: query.elementRef,
+        property: query.property,
+        ...readContentChunk(value, query),
+      };
+    }
+    throw new Error('ELEMENT_NOT_FOUND');
   }
 
   find(score: Score, query: ElementSearchQuery) {
@@ -235,6 +293,7 @@ export class ElementDiscovery {
             query.scope.includeDescendants,
           );
     const elements = [];
+    let characters = 1000;
     let matched = 0;
     for (const { element, collection, index } of candidates) {
       if (
@@ -256,7 +315,17 @@ export class ElementDiscovery {
           elements,
         };
       }
-      elements.push({ ...this.project(element, index, query), collection });
+      const projected = { ...this.project(element, index, query), collection };
+      const size = elementPageEntrySize(projected, characters, elements.length);
+      if (size === null) {
+        return {
+          offset: query.offset,
+          nextOffset: query.offset + elements.length,
+          elements,
+        };
+      }
+      characters += size;
+      elements.push(projected);
     }
     if (query.offset > matched) {
       throw new Error('INVALID_ELEMENT_RANGE');
@@ -326,16 +395,26 @@ export class ElementDiscovery {
     }
     const start = query.start + query.offset;
     const stop = Math.min(start + query.limit, end);
+    const elements = [];
+    let characters = 1000;
+    for (let index = start; index < stop; index++) {
+      const projected = this.project(collection[index], index, query);
+      const size = elementPageEntrySize(projected, characters, elements.length);
+      if (size === null) {
+        break;
+      }
+      characters += size;
+      elements.push(projected);
+    }
+    const next = start + elements.length;
     return {
       collection: query.collection,
       collectionSize: collection.length,
       start: query.start,
       end,
       offset: query.offset,
-      nextOffset: stop < end ? query.offset + stop - start : null,
-      elements: collection
-        .slice(start, stop)
-        .map((element, index) => this.project(element, start + index, query)),
+      nextOffset: next < end ? query.offset + elements.length : null,
+      elements,
     };
   }
 }

@@ -163,7 +163,7 @@ describe('element search and reference lookup', () => {
     expect(content.elements).toHaveLength(1);
     expect(content.elements[0].properties).toEqual({});
     expect(JSON.stringify(content).length).toBeLessThan(500);
-    expect(
+    expect(() =>
       reader.find(
         score,
         search({
@@ -172,8 +172,8 @@ describe('element search and reference lookup', () => {
           properties: ['content'],
           includeContent: true,
         }),
-      ).elements[0].properties,
-    ).toEqual({ content: box.content });
+      ),
+    ).toThrow('One element exceeds the page budget');
   });
 
   it('distinguishes applicability, null, undefined, false, zero and empty strings', () => {

@@ -340,15 +340,6 @@ try {
     { filePath: '/etc/hosts' },
     'UNSUPPORTED_FILE_TYPE',
   );
-  await fails(
-    'save_document',
-    {
-      documentId: opened.documentId,
-      expectedRevision: deleted.revision,
-      filePath: path.join(directory, '..', 'outside.byzx'),
-    },
-    'PATH_OUTSIDE_ALLOWED_ROOTS',
-  );
   // Save back to the unchanged source without an overwrite flag.
   await call('save_document', {
     documentId: opened.documentId,

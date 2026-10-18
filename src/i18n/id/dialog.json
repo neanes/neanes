@@ -309,7 +309,7 @@
   },
   "preferences": {
     "root": "Preferensi",
-    "description": "Atur bahasa, mode warna, interaksi menu, dan tempo default.",
+    "description": "Atur tampilan, preferensi penyuntingan, dan akses agen.",
     "language": "Bahasa",
     "languageSystemDefault": "Bawaan sistem",
     "helpTranslate": "Bantu terjemahkan Neanes",
@@ -322,6 +322,32 @@
     "menuInteractionClick": "Klik untuk membuka menu",
     "enableDeveloperPanel": "Aktifkan Panel Pengembang",
     "tempoDefaults": "Default Tempo",
-    "bpm": "BPM"
+    "bpm": "BPM",
+    "sections": {
+      "general": "Umum",
+      "appearance": "Tampilan",
+      "editing": "Penyuntingan",
+      "agent": "Akses agen (MCP)",
+      "advanced": "Lanjutan"
+    },
+    "agentAccess": {
+      "description": "Neanes menyediakan koneksi agen secara otomatis saat berjalan. Agen memiliki akses berkas yang sama seperti Neanes; autentikasi ditangani secara otomatis.",
+      "status": "Status koneksi",
+      "starting": "Memulai",
+      "ready": "Siap",
+      "error": "Tidak tersedia",
+      "startupError": "Koneksi tidak dapat dimulai. Periksa detail koneksi.",
+      "connect": "Hubungkan agen",
+      "connectDescription": "Salin konfigurasi ini ke pengaturan klien MCP, lalu hubungkan ulang klien. Neanes dimulai otomatis saat diperlukan.",
+      "copyConfiguration": "Salin konfigurasi",
+      "runtime": "Memerlukan Node.js 22 atau lebih baru. Konfigurasikan server MCP berbasis perintah; jalur aplikasi dan penghubung sudah disertakan.",
+      "copied": "Disalin",
+      "details": "Detail koneksi",
+      "endpoint": "Alamat editor",
+      "failed": "Operasi gagal. Periksa pengaturan akses dan coba lagi.",
+      "retry": "Coba ulang koneksi",
+      "unavailable": "Tidak tersedia"
+    },
+    "close": "Tutup"
   }
 }

@@ -12,7 +12,7 @@ import { writeScoreFile } from '../files/ScoreFiles';
 
 import { AutomationFiles } from './files';
 
-describe('automation file scope', () => {
+describe('automation file access', () => {
   let directory: string;
   let root: string;
   let files: AutomationFiles;
@@ -22,7 +22,7 @@ describe('automation file scope', () => {
     );
     root = path.join(directory, 'allowed');
     await fs.mkdir(root);
-    files = await AutomationFiles.create([root]);
+    files = await AutomationFiles.create();
   });
   afterEach(async () => {
     await fs.rm(directory, { recursive: true, force: true });
@@ -45,34 +45,31 @@ describe('automation file scope', () => {
     }
   });
 
-  it('blocks traversal, adjacent directories, symlink escapes, and symlink outputs', async () => {
+  it('allows paths outside the former root while preserving path and symlink-output validation', async () => {
     const outside = path.join(directory, 'outside.byzx');
-    await fs.writeFile(outside, 'outside');
+    await fs.writeFile(outside, '{"version":"1.0"}');
     await fs.symlink(outside, path.join(root, 'link.byzx'));
     await fs.symlink(directory, path.join(root, 'escape'), 'dir');
-    await expect(
-      files.read(path.join(root, '..', 'outside.byzx')),
-    ).rejects.toThrow('PATH_OUTSIDE_ALLOWED_ROOTS');
-    await expect(files.read(path.join(root, 'link.byzx'))).rejects.toThrow(
-      'PATH_OUTSIDE_ALLOWED_ROOTS',
-    );
-    await expect(
-      files.resolve(path.join(root, 'escape', 'new.pdf'), 'pdf', true),
-    ).rejects.toThrow('PATH_OUTSIDE_ALLOWED_ROOTS');
+    for (const requested of [
+      outside,
+      path.join(root, '..', 'outside.byzx'),
+      path.join(root, 'link.byzx'),
+    ]) {
+      expect((await files.read(requested)).filePath).toBe(outside);
+    }
+    expect(
+      await files.resolve(path.join(root, 'escape', 'new.pdf'), 'pdf', true),
+    ).toBe(path.join(directory, 'new.pdf'));
     await expect(
       files.resolve(path.join(root, 'link.byzx'), 'score', true),
     ).rejects.toThrow('SYMLINK_OUTPUT_NOT_ALLOWED');
-    await fs.mkdir(`${root}-adjacent`);
-    await expect(
-      files.resolve(path.join(`${root}-adjacent`, 'score.byzx'), 'score', true),
-    ).rejects.toThrow('PATH_OUTSIDE_ALLOWED_ROOTS');
     await expect(files.read('relative.byzx')).rejects.toThrow(
       'ABSOLUTE_PATH_REQUIRED',
     );
   });
 });
 
-describe('source format and scope', () => {
+describe('source format and file validation', () => {
   it.each(['byzx', 'byz'] as const)(
     'preserves %s sources through extensionless and differently named targets',
     async (format) => {
@@ -80,7 +77,7 @@ describe('source format and scope', () => {
         await fs.mkdtemp(path.join(os.tmpdir(), 'neanes-source-format-')),
       );
       try {
-        const files = await AutomationFiles.create([directory]);
+        const files = await AutomationFiles.create();
         const score = SaveService.SaveScoreToJson(new Score());
         for (const suffix of ['', format === 'byz' ? '.byzx' : '.byz']) {
           const target = path.join(directory, `target${suffix}`);
@@ -138,14 +135,14 @@ describe('source format and scope', () => {
     },
   );
 
-  it('does not use source format to authorize unrelated suffixes, out-of-root paths, or symlink outputs', async () => {
+  it('validates suffixes and symlink outputs while permitting saves in other folders', async () => {
     const directory = await fs.realpath(
       await fs.mkdtemp(path.join(os.tmpdir(), 'neanes-source-scope-')),
     );
     try {
       const root = path.join(directory, 'allowed');
       await fs.mkdir(root);
-      const files = await AutomationFiles.create([root]);
+      const files = await AutomationFiles.create();
       const score = SaveService.SaveScoreToJson(new Score());
       const source = path.join(root, 'source.byzx');
       await writeScoreFile(source, score);
@@ -172,16 +169,14 @@ describe('source format and scope', () => {
           expectedSource,
         }),
       ).rejects.toThrow('ABSOLUTE_PATH_REQUIRED');
-      const outside = path.join(directory, 'outside');
-      await fs.writeFile(outside, 'outside');
-      await expect(
-        files.write({
-          filePath: outside,
-          data: score,
-          overwrite: true,
-          expectedSource: { ...expectedSource, filePath: outside },
-        }),
-      ).rejects.toThrow('PATH_OUTSIDE_ALLOWED_ROOTS');
+      const outside = path.join(directory, 'outside.byzx');
+      await files.write({
+        filePath: outside,
+        data: score,
+        overwrite: false,
+        expectedSource,
+      });
+      expect(JSON.parse((await files.read(outside)).data)).toEqual(score);
       const link = path.join(root, 'other.byzx');
       await fs.symlink(outside, link);
       await expect(

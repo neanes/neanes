@@ -63,7 +63,7 @@ export const automationResultSchemas = {
       maxDocuments: z.number(),
       idleTimeoutMs: z.number(),
     }),
-    mode: z.literal('interactive'),
+    mode: z.enum(['interactive', 'headless']),
     errorCodes: z.array(z.string()).optional(),
     paragraphStyles: z.strictObject({
       actions: z.array(z.enum(['create', 'replace', 'delete'])),

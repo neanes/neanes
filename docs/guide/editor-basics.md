@@ -47,14 +47,14 @@ You do not need to keep every pane open. Use `View > Neume Selector`, `View > Co
 
 ## Set application preferences
 
-Choose `Edit > Preferences` to change settings that apply throughout Neanes, then choose **Update** to save them.
+Choose `Edit > Preferences` to change settings that apply throughout Neanes. Use the sections on the left to find a setting. Changes take effect immediately; choose **Close** when finished.
 
 - **Language** changes the language of the Neanes interface. Choose **System default** to follow your operating system or browser language. This setting does not change the language or direction of lyrics and other text in a score.
 - **Color Mode** sets the interface to **Light** or **Dark**. Choose **System** to follow your operating system's appearance setting.
 - **Menu Interaction** controls toolbar buttons that contain a family of related signs. With **Press and hold to select**, hold the button, move to the desired sign, and release. With **Click to open menu**, click the button and then click a sign.
 - **Tempo Defaults** sets the BPM used when you add each kind of tempo sign, including a tempo attached to a martyria. To give one tempo sign a different speed, select it in the score and change **BPM** in Properties. Changing a default does not alter tempo signs already in the score.
 
-Preferences are remembered between sessions. Choose **Use System Default** in the dialog to restore the application defaults, including the system language and appearance.
+Preferences are remembered between sessions. Choose **Use System Default** to restore defaults for the current section. Desktop users can configure [Agent access (MCP)](./agent-access.md) to connect an agent with automatic startup.
 
 ## Understand the current selection
 

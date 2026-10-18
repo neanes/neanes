@@ -44,7 +44,7 @@ const descriptions: Record<AutomationTool, string> = {
   create_document:
     'Create an unsaved document using user defaults. With sessionId it belongs only to that isolated session; otherwise selects a new interactive tab.',
   open_document:
-    'With sessionId, read saved contents independently of interactive unsaved edits; never reuse an interactive tab. Without sessionId, open and select a .byzx or .byz file within configured roots. Reuses an existing workspace and preserves unsaved edits. Returns created: true only when a new workspace was added.',
+    'With sessionId, read saved contents independently of interactive unsaved edits; never reuse an interactive tab. Without sessionId, open and select a .byzx or .byz file. Reuses an existing workspace and preserves unsaved edits. Returns created: true only when a new workspace was added.',
   close_document:
     'With sessionId, close only that session document; selectedDocumentId is null, no replacement document or recovery entry is created. Without sessionId, close a workspace without saving or deleting score files. Requires the last read revision, even when discarding. Unsaved or recovered documents require explicit discardUnsavedChanges: true; otherwise UNSAVED_CHANGES is returned. Removes recovery data. Closing the last workspace creates a blank workspace and keeps the server running. Return includes the closed ID and resulting selected ID. Close only workspaces you introduced unless the user requests otherwise; open_document.created distinguishes new workspaces from reused ones.',
   get_paragraph_styles:

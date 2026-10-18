@@ -43,6 +43,7 @@ export class McpDocumentAdapter {
       overwrite: boolean,
     ) => Promise<void>,
     private renderPages: (workspace: Workspace) => Promise<Page[]>,
+    private mode: 'interactive' | 'headless' = 'interactive',
   ) {}
 
   private async settleOpened(workspace: Workspace, created: boolean) {
@@ -124,7 +125,7 @@ export class McpDocumentAdapter {
     }
     if (request.tool === 'get_capabilities') {
       return {
-        mode: 'interactive',
+        mode: this.mode,
         ...(request.arguments.includeErrorCodes
           ? { errorCodes: [...automationErrorCodes] }
           : {}),

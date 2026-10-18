@@ -82,12 +82,15 @@ export enum IpcMainChannels {
 }
 
 export enum IpcRendererChannels {
+  AgentAccessGet = 'AgentAccessGet',
+  AgentAccessRetry = 'AgentAccessRetry',
   ExportSnapshotAsPng = 'ExportSnapshotAsPng',
   ExportRendererImage = 'ExportRendererImage',
   ExportRendererReady = 'ExportRendererReady',
   ExportRendererResult = 'ExportRendererResult',
   // Automation-only bridge; implemented under src/automation/ and main/automation/.
   AutomationReady = 'AutomationReady',
+  AutomationAuthorizeRequest = 'AutomationAuthorizeRequest',
   AutomationReply = 'AutomationReply',
   AutomationReadScore = 'AutomationReadScore',
   AutomationWriteScore = 'AutomationWriteScore',

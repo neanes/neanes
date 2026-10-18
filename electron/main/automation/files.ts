@@ -8,17 +8,7 @@ import type {
 } from '../../../src/services/documents/fileTypes';
 import { canonicalFileIdentity, ScoreFiles } from '../files/ScoreFiles';
 
-function contains(root: string, target: string) {
-  const relative = path.relative(root, target);
-  return (
-    relative === '' ||
-    (!relative.startsWith(`..${path.sep}`) &&
-      relative !== '..' &&
-      !path.isAbsolute(relative))
-  );
-}
-
-// Canonical paths keep symlinks from expanding the configured filesystem scope.
+// File access uses the application's OS permissions.
 export class AutomationFiles {
   private files = new ScoreFiles((filePath, source) =>
     this.resolve(
@@ -28,21 +18,8 @@ export class AutomationFiles {
       source?.format,
     ),
   );
-  private constructor(private roots: string[]) {}
-
-  static async create(roots: string[]) {
-    if (roots.length === 0 || roots.some((root) => !path.isAbsolute(root))) {
-      throw new Error(
-        'MCP_ROOTS_REQUIRED: Configure absolute allowed directories.',
-      );
-    }
-    const canonical = await Promise.all(roots.map((root) => fs.realpath(root)));
-    for (const root of canonical) {
-      if (!(await fs.stat(root)).isDirectory()) {
-        throw new Error('MCP_ROOT_NOT_DIRECTORY');
-      }
-    }
-    return new AutomationFiles(canonical);
+  static async create() {
+    return new AutomationFiles();
   }
 
   async resolve(
@@ -78,9 +55,6 @@ export class AutomationFiles {
       }
     } else {
       canonical = await fs.realpath(filePath);
-    }
-    if (!this.roots.some((root) => contains(root, canonical))) {
-      throw new Error('PATH_OUTSIDE_ALLOWED_ROOTS');
     }
     return canonical;
   }

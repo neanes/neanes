@@ -201,6 +201,7 @@ export default defineConfig(({ command, mode }) => {
             input: {
               main: path.resolve(import.meta.dirname, 'index.html'),
               export: path.resolve(import.meta.dirname, 'export.html'),
+              automation: path.resolve(import.meta.dirname, 'automation.html'),
             },
           },
         }

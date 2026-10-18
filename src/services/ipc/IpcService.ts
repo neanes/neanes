@@ -1,3 +1,4 @@
+import type { AgentAccessState } from '@/ipc/agentAccess';
 import type {
   ClipboardReplyArgs,
   DiscardRecoverySnapshotReplyArgs,
@@ -34,6 +35,13 @@ import { SaveService } from '../SaveService';
 import type { IIpcService } from './IIpcService';
 
 export class IpcService implements IIpcService {
+  getAgentAccess(): Promise<AgentAccessState> {
+    return window.ipcRenderer.invoke(IpcRendererChannels.AgentAccessGet);
+  }
+  retryAgentAccess(): Promise<AgentAccessState> {
+    return window.ipcRenderer.invoke(IpcRendererChannels.AgentAccessRetry);
+  }
+
   public async saveWorkspace(
     workspace: Workspace,
     data?: SavedScore,

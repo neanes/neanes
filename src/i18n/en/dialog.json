@@ -309,7 +309,7 @@
   },
   "preferences": {
     "root": "Preferences",
-    "description": "Configure language, color mode, menu interaction, and default tempos.",
+    "description": "Configure appearance, editing preferences, and agent access.",
     "language": "Language",
     "languageSystemDefault": "System default",
     "helpTranslate": "Help translate Neanes",
@@ -322,6 +322,32 @@
     "menuInteractionClick": "Click to open menu",
     "enableDeveloperPanel": "Enable Developer Panel",
     "tempoDefaults": "Tempo Defaults",
-    "bpm": "BPM"
+    "bpm": "BPM",
+    "sections": {
+      "general": "General",
+      "appearance": "Appearance",
+      "editing": "Editing",
+      "agent": "Agent access (MCP)",
+      "advanced": "Advanced"
+    },
+    "agentAccess": {
+      "description": "Neanes automatically makes agent connections available while running. Agents use the same file access as Neanes; authentication is handled automatically.",
+      "status": "Connection status",
+      "starting": "Starting",
+      "ready": "Ready",
+      "error": "Unavailable",
+      "startupError": "Could not start the connection. Check the connection details.",
+      "connect": "Connect an agent",
+      "connectDescription": "Copy this configuration into your MCP client settings, then reconnect the client. Neanes starts automatically when needed.",
+      "copyConfiguration": "Copy configuration",
+      "runtime": "Requires Node.js 22 or later. Configure a command-based MCP server; the executable and bridge paths are included.",
+      "copied": "Copied",
+      "details": "Connection details",
+      "endpoint": "Editor endpoint",
+      "failed": "The operation failed. Check access settings and try again.",
+      "retry": "Retry connection",
+      "unavailable": "Unavailable"
+    },
+    "close": "Close"
   }
 }

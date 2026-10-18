@@ -26,15 +26,19 @@ import { startMcpServer } from './server';
 
 export async function startAutomationHost(options: {
   getWindow(): BrowserWindow | null;
+  config?: { token: string; port: number };
+  initiallyReady?: boolean;
+  onStateChange?(): void;
   version: string;
   printPdf(args: PdfExportOptions, signal: AbortSignal): Promise<Buffer>;
   withFileLock<T>(operation: () => Promise<T>): Promise<T>;
   runExclusive<T>(operation: () => Promise<T>): Promise<T>;
 }) {
-  const files = await AutomationFiles.create(
-    JSON.parse(process.env.NEANES_MCP_ROOTS ?? '[]'),
-  );
-  let ready = false;
+  const files = await AutomationFiles.create();
+  let ready = options.initiallyReady ?? false;
+  let closed = false;
+  let failure: string | null = null;
+  const detach = new Set<() => void>();
   let pending: {
     requestId: string;
     tool: AutomationRequest['tool'];
@@ -49,51 +53,68 @@ export async function startAutomationHost(options: {
   function requireRequest(
     event: IpcMainInvokeEvent,
     tool: AutomationRequest['tool'],
+    requestId: string,
   ) {
-    if (!isSender(event) || pending?.tool !== tool) {
+    if (
+      closed ||
+      !isSender(event) ||
+      pending?.tool !== tool ||
+      pending.requestId !== requestId
+    ) {
       throw new Error('AUTOMATION_REQUEST_REQUIRED');
     }
   }
 
-  ipcMain.on(IpcRendererChannels.AutomationReady, (event) => {
+  const onReady = (event: Electron.IpcMainEvent) => {
     if (isSender(event)) {
       ready = true;
+      failure = null;
+      options.onStateChange?.();
     }
-  });
-  ipcMain.on(
-    IpcRendererChannels.AutomationReply,
-    (event, reply: AutomationReply) => {
-      if (!isSender(event) || pending?.requestId !== reply.requestId) {
-        return;
-      }
-      if (reply.success) {
-        pending.resolve(reply.result);
-      } else {
-        pending.reject(new AutomationError(reply.error));
-      }
-    },
+  };
+  ipcMain.on(IpcRendererChannels.AutomationReady, onReady);
+  const onReply = (event: Electron.IpcMainEvent, reply: AutomationReply) => {
+    if (!isSender(event) || pending?.requestId !== reply.requestId) {
+      return;
+    }
+    if (reply.success) {
+      pending.resolve(reply.result);
+    } else {
+      pending.reject(new AutomationError(reply.error));
+    }
+  };
+  ipcMain.on(IpcRendererChannels.AutomationReply, onReply);
+  ipcMain.handle(
+    IpcRendererChannels.AutomationAuthorizeRequest,
+    (event, requestId: string) =>
+      automationOutcome(async () => {
+        if (closed || !isSender(event) || pending?.requestId !== requestId) {
+          throw new Error('AUTOMATION_REQUEST_REQUIRED');
+        }
+        return null;
+      }),
   );
   ipcMain.handle(
     IpcRendererChannels.AutomationReadScore,
-    (event, filePath: string, workspaces: WorkspaceFile[]) =>
+    (event, requestId: string, filePath: string, workspaces: WorkspaceFile[]) =>
       automationOutcome(() => {
-        requireRequest(event, 'open_document');
+        requireRequest(event, 'open_document', requestId);
         return files.open(filePath, workspaces);
       }),
   );
   ipcMain.handle(
     IpcRendererChannels.AutomationWriteScore,
-    (event, args: WriteScoreFileArgs) =>
+    (event, requestId: string, args: WriteScoreFileArgs) =>
       automationOutcome(() => {
-        requireRequest(event, 'save_document');
+        requireRequest(event, 'save_document', requestId);
         return options.withFileLock(() => files.write(args));
       }),
   );
   ipcMain.handle(
     IpcRendererChannels.AutomationExportPdf,
-    (event, args: PdfExportOptions) =>
+    (event, requestId: string, args: PdfExportOptions) =>
       automationOutcome(async () => {
-        requireRequest(event, 'export_pdf');
+        requireRequest(event, 'export_pdf', requestId);
         await options.withFileLock(async () => {
           const filePath = await files.resolve(args.filePath, 'pdf', true);
           const signal = exportController!.signal;
@@ -107,6 +128,8 @@ export async function startAutomationHost(options: {
 
   function invalidate() {
     ready = false;
+    failure = 'EDITOR_DISCONNECTED';
+    options.onStateChange?.();
     exportController?.abort(new Error('EDITOR_DISCONNECTED'));
     pending?.reject(
       new AutomationError({
@@ -118,12 +141,24 @@ export async function startAutomationHost(options: {
     );
   }
 
+  function removeHandlers() {
+    ipcMain.removeListener(IpcRendererChannels.AutomationReady, onReady);
+    ipcMain.removeListener(IpcRendererChannels.AutomationReply, onReply);
+    for (const channel of [
+      IpcRendererChannels.AutomationAuthorizeRequest,
+      IpcRendererChannels.AutomationReadScore,
+      IpcRendererChannels.AutomationWriteScore,
+      IpcRendererChannels.AutomationExportPdf,
+    ]) {
+      ipcMain.removeHandler(channel);
+    }
+  }
   const server = await startMcpServer({
-    token: process.env.NEANES_MCP_TOKEN ?? '',
-    port: Number(process.env.NEANES_MCP_PORT ?? 38765),
+    token: options.config?.token ?? process.env.NEANES_MCP_TOKEN ?? '',
+    port: options.config?.port ?? Number(process.env.NEANES_MCP_PORT ?? 38765),
     version: options.version,
     async execute(request, signal) {
-      if (!ready) {
+      if (closed || !ready) {
         throw new Error('EDITOR_NOT_READY');
       }
       let rejectTimeout: (error: Error) => void;
@@ -132,7 +167,7 @@ export async function startAutomationHost(options: {
       });
       const operation = async () => {
         const win = options.getWindow();
-        if (!ready || win == null || win.isDestroyed()) {
+        if (closed || !ready || win == null || win.isDestroyed()) {
           throw new Error('EDITOR_NOT_READY');
         }
         const requestId = randomUUID();
@@ -146,6 +181,8 @@ export async function startAutomationHost(options: {
         signal.addEventListener('abort', onCancel, { once: true });
         const timer = setTimeout(() => {
           ready = false;
+          failure = 'AUTOMATION_TIMEOUT';
+          options.onStateChange?.();
           exportController?.abort(new Error('AUTOMATION_TIMEOUT'));
           rejectTimeout(
             new AutomationError({
@@ -182,25 +219,45 @@ export async function startAutomationHost(options: {
           : runOperation();
       return Promise.race([result, timeout]);
     },
+  }).catch((error) => {
+    removeHandlers();
+    throw error;
   });
 
   console.log(`Neanes MCP listening at http://127.0.0.1:${server.port}/mcp`);
   return {
+    port: server.port,
+    isReady: () => ready,
+    error: () => failure,
     attach(win: BrowserWindow) {
-      ready = false;
-      win.webContents.on(
-        'did-start-navigation',
-        (_event, _url, isInPlace, isMainFrame) => {
-          if (isMainFrame && !isInPlace) {
-            invalidate();
-          }
-        },
-      );
+      ready = options.initiallyReady ?? false;
+      const onNavigation = (
+        _event: Electron.Event,
+        _url: string,
+        isInPlace: boolean,
+        isMainFrame: boolean,
+      ) => {
+        if (isMainFrame && !isInPlace) {
+          invalidate();
+        }
+      };
+      win.webContents.on('did-start-navigation', onNavigation);
+      detach.add(() => {
+        win.webContents.removeListener('did-start-navigation', onNavigation);
+        win.webContents.removeListener('render-process-gone', invalidate);
+        win.webContents.removeListener('destroyed', invalidate);
+      });
       win.webContents.on('render-process-gone', invalidate);
       win.webContents.on('destroyed', invalidate);
     },
     async close() {
+      closed = true;
       invalidate();
+      for (const remove of detach) {
+        remove();
+      }
+      detach.clear();
+      removeHandlers();
       await server.close();
     },
   };

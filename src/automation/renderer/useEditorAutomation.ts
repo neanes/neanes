@@ -9,7 +9,7 @@ import type { DocumentService } from '@/services/documents/DocumentService';
 import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
 import { Unit } from '@/utils/Unit';
 
-import { automationError } from '../contracts/errors';
+import { AutomationError, automationError } from '../contracts/errors';
 import {
   type AutomationMessage,
   type AutomationReply,
@@ -21,6 +21,7 @@ import { IsolatedSessions } from '../sessions/isolatedSessions';
 
 export function useEditorAutomation(options: {
   enabled: boolean;
+  requireSessions?: boolean;
   documents: DocumentService;
   isBusy(): boolean;
   createScore(): Score;
@@ -63,11 +64,14 @@ export function useEditorAutomation(options: {
     ipc,
     exportAutomationPdf,
     options.renderPages,
+    options.requireSessions ? 'headless' : 'interactive',
   );
 
   async function onAutomationRequest(message: AutomationMessage) {
+    ipc.requestId = message.requestId;
     let reply: AutomationReply;
     try {
+      await ipc.authorizeRequest();
       if (options.isBusy()) {
         throw new Error('EDITOR_BUSY');
       }
@@ -83,6 +87,19 @@ export function useEditorAutomation(options: {
         );
         isolatedTools.delete(service);
       } else {
+        if (
+          options.requireSessions &&
+          request.tool !== 'get_capabilities' &&
+          request.tool !== 'get_element_catalog' &&
+          (!('sessionId' in request.arguments) || !request.arguments.sessionId)
+        ) {
+          throw new AutomationError({
+            code: 'SESSION_REQUIRED',
+            message:
+              'Headless documents require a session. Call create_session and pass sessionId to document tools.',
+            details: {},
+          });
+        }
         let adapter = documentTools;
         if ('sessionId' in request.arguments && request.arguments.sessionId) {
           const service = isolatedSessions.get(request.arguments.sessionId);
@@ -95,6 +112,7 @@ export function useEditorAutomation(options: {
               ipc,
               exportAutomationPdf,
               options.renderPages,
+              options.requireSessions ? 'headless' : 'interactive',
             );
             isolatedTools.set(service, adapter);
           }
@@ -129,11 +147,16 @@ export function useEditorAutomation(options: {
     });
   }
 
-  onMounted(() =>
-    EventBus.$on(IpcMainChannels.AutomationRequest, onAutomationRequest),
-  );
+  // Keep renderer operations serialized across server disable/re-enable cycles.
+  let requestQueue = Promise.resolve();
+  const enqueue = (message: AutomationMessage) => {
+    requestQueue = requestQueue
+      .then(() => onAutomationRequest(message))
+      .catch((error) => console.error(error));
+  };
+  onMounted(() => EventBus.$on(IpcMainChannels.AutomationRequest, enqueue));
   onBeforeUnmount(() =>
-    EventBus.$off(IpcMainChannels.AutomationRequest, onAutomationRequest),
+    EventBus.$off(IpcMainChannels.AutomationRequest, enqueue),
   );
   return {
     ready: () => EventBus.$emit(IpcRendererChannels.AutomationReady),

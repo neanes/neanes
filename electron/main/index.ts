@@ -1,5 +1,8 @@
 'use strict';
 
+import { randomBytes, randomUUID } from 'node:crypto';
+import { writeSync } from 'node:fs';
+
 import type { Input, MenuItemConstructorOptions } from 'electron';
 import {
   app,
@@ -20,6 +23,10 @@ import path from 'path';
 import { debounce } from 'throttle-debounce';
 
 import { initializeI18n, resolveLanguagePreference } from '../../src/i18n';
+import type {
+  AgentAccessPolicy,
+  AgentAccessState,
+} from '../../src/ipc/agentAccess';
 import type {
   ClipboardReplyArgs,
   CloseWorkspacesArgs,
@@ -66,6 +73,7 @@ import {
 } from '../../src/models/WorkspacePane';
 import type { PdfExportOptions } from '../../src/services/documents/fileTypes';
 import { TestFileType } from '../../src/utils/TestFileType';
+import { initializeAccessPolicy } from './automation/access';
 import { startAutomationHost } from './automation/host';
 import { getNativePrintPageSize, getPageSize } from './export/pageSize';
 import { renderPdf } from './export/renderPdf';
@@ -104,8 +112,25 @@ const indexHtml = path.join(process.env.DIST, 'index.html');
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
 const isDevelopment = import.meta.env.DEV;
+const headless = process.argv.includes('--headless-mcp');
+const normalUserData =
+  ((isDevelopment || process.env.IS_TEST === '1') &&
+    process.env.NEANES_DEV_USER_DATA_DIR) ||
+  app.getPath('userData');
+const installedBridge = path.join(normalUserData, 'mcp', 'bridge.mjs');
+const accessPolicyFile =
+  process.env.NEANES_HEADLESS_POLICY ||
+  path.join(normalUserData, 'agent-access.json');
+if (headless) {
+  const profile = process.env.NEANES_HEADLESS_PROFILE;
+  if (!profile || !path.isAbsolute(profile)) {
+    throw new Error('HEADLESS_PROFILE_REQUIRED');
+  }
+  app.setPath('userData', profile);
+  app.setPath('sessionData', profile);
+}
 
-if (isDevelopment) {
+if ((isDevelopment || process.env.IS_TEST === '1') && !headless) {
   const devUserDataDir = process.env.NEANES_DEV_USER_DATA_DIR;
 
   if (devUserDataDir) {
@@ -2485,6 +2510,16 @@ async function createWindow() {
     win.maximize();
   }
 
+  automationRendererReady = false;
+  win.webContents.on(
+    'did-start-navigation',
+    (_event, _url, inPlace, mainFrame) => {
+      if (mainFrame && !inPlace) {
+        automationRendererReady = false;
+        void publishEditorEndpoint();
+      }
+    },
+  );
   automationHost?.attach(win);
 
   win.on('resize', debouncedSaveWindowState);
@@ -2523,6 +2558,8 @@ async function createWindow() {
   });
 
   win.on('closed', () => {
+    automationRendererReady = false;
+    void publishEditorEndpoint();
     win = null;
     loaded = false;
     darwinPath = null;
@@ -2887,6 +2924,10 @@ ipcMain.handle(
 // If the app isn't loaded yet, then save the path and wait for the web app
 // to tell us it's ready to load the file via the OpenWorkspaceFromArgv channel
 app.on('open-file', async (event, path) => {
+  if (headless) {
+    event.preventDefault();
+    return;
+  }
   await editorOperationQueue.run(async () => {
     darwinPath = path;
 
@@ -2929,6 +2970,9 @@ app.on('open-file', async (event, path) => {
 app.on(
   'second-instance',
   async (event, argv, workingDirectory, additionalData: any) => {
+    if (headless) {
+      return;
+    }
     await editorOperationQueue.run(async () => {
       const results = await openFileFromArgs(
         (additionalData as SecondInstanceData).argv,
@@ -2973,12 +3017,238 @@ app.on('will-quit', () => {
 });
 
 app.on('activate', () => {
+  if (headless) {
+    return;
+  }
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 });
+
+let accessPolicy: AgentAccessPolicy | null = null;
+let automationRendererReady = false;
+let accessError: string | null = null;
+let accessQueue = Promise.resolve();
+ipcMain.on(IpcRendererChannels.AutomationReady, (event) => {
+  if (event.sender === win?.webContents) {
+    automationRendererReady = true;
+    if (!headless) {
+      void publishEditorEndpoint();
+    }
+  }
+});
+
+let endpointPublication = Promise.resolve();
+function publishEditorEndpoint() {
+  endpointPublication = endpointPublication
+    .then(async () => {
+      if (headless || !accessPolicy) {
+        return;
+      }
+      const file = `${accessPolicyFile}.endpoint`;
+      const temporary = `${file}.${randomUUID()}.tmp`;
+      try {
+        await fs.writeFile(
+          temporary,
+          JSON.stringify({
+            pid: process.pid,
+            error: accessError ?? automationHost?.error() ?? null,
+            token: process.env.NEANES_MCP_TOKEN ?? accessPolicy.token,
+            endpoint: automationHost?.isReady()
+              ? `http://127.0.0.1:${automationHost.port}/mcp`
+              : null,
+          }),
+          { mode: 0o600, flag: 'wx' },
+        );
+        await fs.rename(temporary, file);
+      } finally {
+        await fs.rm(temporary, { force: true });
+      }
+    })
+    .catch((error) => {
+      accessError = getErrorMessage(error) ?? 'MCP_START_FAILED';
+      console.error(error);
+    });
+  return endpointPublication;
+}
+
+async function createAutomationHost(config: { token: string; port: number }) {
+  return startAutomationHost({
+    onStateChange: () => {
+      if (!headless) {
+        void publishEditorEndpoint();
+      }
+    },
+    config,
+    initiallyReady: automationRendererReady,
+    getWindow: () => win,
+    version: app.getVersion(),
+    runExclusive: (operation) => editorOperationQueue.run(operation),
+    async withFileLock(operation) {
+      if (saving) {
+        throw new Error('EDITOR_BUSY');
+      }
+      saving = true;
+      try {
+        return await operation();
+      } finally {
+        saving = false;
+      }
+    },
+    printPdf: (args, signal) => renderWorkspacePdfSnapshot(args, signal),
+  });
+}
+
+async function syncAgentAccess() {
+  if (automationHost) {
+    await automationHost.close();
+    automationHost = null;
+  }
+  accessError = null;
+  try {
+    automationHost = await createAutomationHost({
+      token: process.env.NEANES_MCP_TOKEN ?? accessPolicy!.token,
+      port: Number(process.env.NEANES_MCP_PORT ?? 0),
+    });
+    if (win) {
+      automationHost.attach(win);
+    }
+  } catch (error) {
+    accessError = getErrorMessage(error) ?? 'MCP_START_FAILED';
+    console.error(error);
+  }
+  await publishEditorEndpoint();
+}
+
+function agentAccessState(): AgentAccessState {
+  const bridge = app.isPackaged
+    ? installedBridge
+    : path.resolve('scripts/mcp/bridge.mjs');
+  const configuration = JSON.stringify(
+    {
+      mcpServers: {
+        neanes: {
+          command: 'node',
+          args: [
+            bridge,
+            '--executable',
+            process.env.APPIMAGE || process.execPath,
+            ...(!app.isPackaged ? ['--app', app.getAppPath()] : []),
+            '--policy',
+            accessPolicyFile,
+          ],
+        },
+      },
+    },
+    null,
+    2,
+  );
+  return {
+    status:
+      accessError || automationHost?.error()
+        ? 'error'
+        : automationHost
+          ? automationHost.isReady()
+            ? 'ready'
+            : 'starting'
+          : 'starting',
+    error: accessError ?? automationHost?.error() ?? null,
+    endpoint: automationHost
+      ? `http://127.0.0.1:${automationHost.port}/mcp`
+      : null,
+    configuration,
+  };
+}
+function requireEditorSender(event: Electron.IpcMainInvokeEvent) {
+  if (headless || event.sender !== win?.webContents) {
+    throw new Error('PERMISSION_DENIED');
+  }
+}
+ipcMain.handle(IpcRendererChannels.AgentAccessGet, (event) => {
+  requireEditorSender(event);
+  return agentAccessState();
+});
+ipcMain.handle(IpcRendererChannels.AgentAccessRetry, (event) => {
+  requireEditorSender(event);
+  const operation = accessQueue.then(async () => {
+    try {
+      accessPolicy = await initializeAccessPolicy(accessPolicyFile);
+      await syncAgentAccess();
+    } catch (error) {
+      accessError = getErrorMessage(error) ?? 'MCP_START_FAILED';
+    }
+    return agentAccessState();
+  });
+  accessQueue = operation.then(
+    () => undefined,
+    () => undefined,
+  );
+  return operation;
+});
+
+async function launchHeadless() {
+  if (isMac) {
+    app.dock!.hide();
+  }
+  const credentials = await initializeAccessPolicy(accessPolicyFile);
+  automationHost = await createAutomationHost({
+    token: process.env.NEANES_WORKER_TOKEN || credentials.token,
+    port: 0,
+  });
+  win = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      preload,
+      spellcheck: false,
+      backgroundThrottling: false,
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  automationHost.attach(win);
+  const startup = setTimeout(() => app.exit(1), 60_000);
+  const onReady = (event: Electron.IpcMainEvent) => {
+    if (event.sender !== win?.webContents) {
+      return;
+    }
+    clearTimeout(startup);
+    // The bridge owns this private pipe; stdout is never a startup protocol.
+    writeSync(
+      3,
+      JSON.stringify({
+        endpoint: `http://127.0.0.1:${automationHost!.port}/mcp`,
+        pid: process.pid,
+      }) + '\n',
+    );
+    ipcMain.removeListener(IpcRendererChannels.AutomationReady, onReady);
+  };
+  ipcMain.on(IpcRendererChannels.AutomationReady, onReady);
+  let stopping = false;
+  async function stop() {
+    if (stopping) {
+      return;
+    }
+    stopping = true;
+    const force = setTimeout(() => app.exit(0), 2000);
+    await automationHost?.close();
+    clearTimeout(force);
+    app.exit(0);
+  }
+  process.stdin.resume();
+  process.stdin.once('end', () => {
+    setTimeout(() => void stop(), 60_000).unref();
+  });
+  process.on('SIGTERM', () => void stop());
+  win.webContents.on('render-process-gone', () => void stop());
+  if (url) {
+    await win.loadURL(new URL('automation.html', url).href);
+  } else {
+    await win.loadFile(path.join(process.env.DIST!, 'automation.html'));
+  }
+}
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -2992,32 +3262,42 @@ app.on('ready', async () => {
     lng: resolveLanguagePreference(store.language, app.getLocale()),
   });
 
-  setupAutoUpdater();
-
-  if (process.env.NEANES_MCP === '1' || process.argv.includes('--mcp')) {
+  if (headless) {
     try {
-      automationHost = await startAutomationHost({
-        getWindow: () => win,
-        version: app.getVersion(),
-        runExclusive: (operation) => editorOperationQueue.run(operation),
-        async withFileLock(operation) {
-          if (saving) {
-            throw new Error('EDITOR_BUSY');
-          }
-          try {
-            saving = true;
-            return await operation();
-          } finally {
-            saving = false;
-          }
-        },
-        async printPdf(args, signal) {
-          return renderWorkspacePdfSnapshot(args, signal);
-        },
-      });
+      await launchHeadless();
     } catch (error) {
-      console.error('Could not start Neanes MCP server', error);
+      console.error(error);
+      app.exit(1);
     }
+    return;
+  }
+  setupAutoUpdater();
+  try {
+    accessPolicy = await initializeAccessPolicy(accessPolicyFile);
+    if (app.isPackaged) {
+      await fs.mkdir(path.dirname(installedBridge), { recursive: true });
+      for (const name of ['bridgeProtocol.mjs', 'bridge.mjs']) {
+        const destination = path.join(path.dirname(installedBridge), name);
+        const temporary = `${destination}.${randomUUID()}.tmp`;
+        try {
+          await fs.writeFile(
+            temporary,
+            await fs.readFile(path.join(process.resourcesPath, 'mcp', name)),
+            { mode: 0o600, flag: 'wx' },
+          );
+          await fs.rename(temporary, destination);
+        } finally {
+          await fs.rm(temporary, { force: true });
+        }
+      }
+    }
+    await syncAgentAccess();
+  } catch (error) {
+    accessPolicy ??= {
+      token: randomBytes(32).toString('hex'),
+    };
+    accessError = getErrorMessage(error) ?? 'MCP_START_FAILED';
+    console.error('Could not load agent access settings', error);
   }
 
   if (!win) {

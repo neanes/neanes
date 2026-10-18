@@ -23,6 +23,12 @@ Enable the pinned npm first with `corepack enable npm`.
 
 Useful development environment variables (put in `.env.local`, or `.env.web.local` for web): `FAKE_UPDATE_AVAILABLE=1` simulates the updater flow without publishing; `VITE_ENABLE_DEV_TOOLS=true` enables Vue Devtools; `VITE_PSEUDOLOCALIZATION=true` pseudolocalizes all strings; `VITE_AUDIO_SERVICE_LOGGING_ENABLED`, `VITE_PLAYBACK_SERVICE_LOGGING_ENABLED`, and `VITE_LAYOUT_SERVICE_LOGGING_ENABLED` enable audio/playback/layout logs.
 
+### Agent-run Electron tests on macOS
+
+Run Electron integration and smoke tests outside the agent's command sandbox, using the available approval mechanism. Sandboxed launches have repeatedly aborted during macOS application registration (`HIServices` / `_RegisterApplication` / `NSApplication`), before the app starts; the same tests passed outside the sandbox. This includes hidden MCP workers.
+
+If a launch fails with this signature, check the crash report and rerun outside the command sandbox before attributing it to application code. Other crash signatures still require investigation. This guidance concerns the agent's command sandbox; do not disable Electron's own security sandbox or add `--no-sandbox`.
+
 ## Architecture
 
 ### One codebase, two runtime targets

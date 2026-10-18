@@ -1,27 +1,104 @@
 # Neanes MCP
 
-The Electron app can expose an opt-in MCP Streamable HTTP endpoint while it is running. The web build does not host a server. Document tools operate on interactive workspaces by default, or private documents when passed an isolated session ID. MCP PDF export renders a detached snapshot in a dedicated hidden window. Typed element and lyric transactions are available in both document modes. Folder jobs and temporary export transformations remain planned separately.
+The Electron app automatically starts an authenticated local MCP Streamable HTTP endpoint while running. The web build does not host a server. Document tools operate on interactive workspaces by default, or private documents when passed an isolated session ID. MCP PDF export renders a detached snapshot in a dedicated hidden window. Typed element and lyric transactions are available in both document modes. Folder jobs and temporary export transformations remain planned separately.
 
-## Start locally
+## Normal setup: one connection
 
-Use a dedicated development profile to keep automation work separate from your normal documents:
+Open Edit > Preferences > Agent access (MCP) and copy the
+configuration into your MCP client. Node.js 22+ runs the dependency-free bridge.
+There are no enable switches, user-managed tokens, folder permissions, or connection modes to configure. The copied JSON
+uses the common `mcpServers` shape; clients using another configuration format need
+its command and args values.
+
+The bridge uses a ready running editor, or launches a private headless Electron
+worker when the editor is closed or its MCP endpoint is unavailable. An in-progress connection stays with its original
+host and never retries edits automatically or migrates drafts after a disconnect.
+A connection owns only the worker it launched; disconnecting never closes an
+existing editor. Multiple bridges can use the editor with separate private sessions.
+When closed, each bridge launches its own worker/profile/random loopback port.
+
+Document tools through the bridge default to an automatically owned private
+session, regardless of launch order. Agents need not call `create_session` first.
+To discover live tabs use `list_documents` with `scope: "editor"`, then pass
+`scope: "editor"` to document tools operating on those IDs. No editor is launched
+for that explicit scope; an editor must be open. A bridge that started a worker
+can discover the editor after the user opens it, while keeping its private task
+in the worker. Explicit `sessionId` still addresses a session on the original host.
+Combining editor scope and sessionId is rejected. The bridge advertises scope in
+tool input schemas and supplies initialization guidance.
+
+On graceful bridge shutdown, its automatic private session is discarded; explicitly
+created sessions retain their normal lease. HTTP timeouts/disconnects while the
+bridge remains alive preserve its session for inspection. A crashed bridge leaves
+its worker a 60-second orphan grace period; private drafts are not recovered.
+
+The bridge ships at `resources/mcp/bridge.mjs` with `bridgeProtocol.mjs`; packaged
+startup installs both in the normal profile. The stable profile path works after
+a Linux AppImage unmounts, and executable configuration uses the original APPIMAGE
+path. No separate npm install is needed. Arguments are `--executable <absolute app
+executable>` and `--policy <absolute agent-access.json>`; development also uses
+`--app <absolute repository path>`. Startup waits for renderer readiness on a
+private pipe. Diagnostics go to stderr, stdout carries only MCP JSON-RPC, and
+credentials stay out of command arguments.
+
+Headless capabilities report `mode: "headless"`. Raw HTTP headless document calls
+still require explicit sessions; the bridge supplies the convenient default.
+The hidden host shares document operations, fonts, rich-text measurement, layout,
+and PDF output without mounting the editor, recovery, router, or service worker.
+New worker documents use built-in defaults. This is desktop Electron without
+visible windows; display-server-free Linux operation is not established.
+
+MCP starts automatically; no enable flag or saved consent setting is required.
+Internal credentials are generated once in the normal profile's private
+agent-access.json. Older enabled/root/generation fields are ignored, preserving
+existing credentials. Missing credentials are created automatically, including
+when the bridge starts a worker before the editor. Each worker also has a private
+random bearer token passed through its environment. Tokens never appear in the
+settings response, copied configuration, or settings controls.
+
+Editor startup failures are caught, recorded, and leave the editor usable. The
+settings section exposes status, Copy configuration, endpoint details, and Retry
+connection only after a failure. Retry restarts the transport without changing
+credentials. Ordinary bridge tasks fall back to a worker when the editor's server
+fails; explicit editor scope reports that failure. Worker startup failures still
+exit the worker because it has no other purpose. Interrupted requests are never
+automatically replayed. Workers stop with their owning bridge (or after the existing
+orphan grace period), independently of the editor's internal credential file.
+
+Verify after `npx vite build`:
 
 ```sh
-mkdir -p /tmp/neanes-mcp/files
-export NEANES_MCP=1
+node scripts/mcp/headless-launch-smoke.mjs
+node scripts/mcp/agent-access-smoke.mjs
+```
+
+Tests use disposable profiles and folders. Set NEANES_TEST_EXECUTABLE to a built
+app executable for packaging checks. The editor test uses debug ports 9346/9347;
+NEANES_TEST_MCP_FAILURE=1 occupies the configured port to verify nonfatal editor startup, private-worker fallback, and retry after the port is released.
+
+## Direct HTTP development setup
+
+```sh
+export NEANES_MCP_PORT=38765
 export NEANES_MCP_TOKEN="$(openssl rand -hex 32)"
-export NEANES_MCP_ROOTS='["/tmp/neanes-mcp/files"]'
 export NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile
 npm run dev
 ```
 
-For a packaged app, pass `--mcp` or set `NEANES_MCP=1` when launching its executable. The token and roots environment variables are required in either case. `NEANES_DEV_USER_DATA_DIR` only applies to development builds.
+The default port is OS-assigned, and the internal token is generated automatically.
+The environment overrides above are optional developer controls for existing direct
+HTTP test clients; normal users and bridge clients do not set them. Settings show
+the actual endpoint, but never disclose credentials. Raw HTTP document tools retain
+their original interactive default; only the bridge supplies automatic private
+sessions and scope. NEANES_DEV_USER_DATA_DIR applies to development builds, or
+production smoke runs explicitly marked IS_TEST=1.
 
-The endpoint defaults to `http://127.0.0.1:38765/mcp`. Set `NEANES_MCP_PORT` to select a different port. The startup log prints the actual address without the token. Invalid configuration or an occupied port logs an error and leaves the editor running without MCP.
-
-Configure your MCP client with that URL and an `Authorization: Bearer <NEANES_MCP_TOKEN>` header. The token must have at least 32 characters; use a random secret and keep it out of source control. The endpoint binds to IPv4 loopback, validates the Host header, and rejects browser Origin headers. It uses stateless JSON responses; it does not offer a standalone SSE stream.
-
-`NEANES_MCP_ROOTS` is a JSON array of existing absolute directories allowed for reads and writes. Output parent directories must already exist. Symlink escapes and symlink output files are rejected. No filesystem access is granted by the MCP client's own roots list.
+Authentication uses a bearer token of at least 32 characters. HTTP binds to IPv4
+loopback, validates Host, rejects browser Origin headers, and uses stateless JSON
+responses. MCP file operations use normal OS permissions with explicit absolute
+paths. Existing suffix validation, overwrite protection, source-conflict checks,
+atomic commits, and symlink-output rules remain. MCP client roots do not restrict
+file access.
 
 ## Isolated sessions
 
@@ -45,7 +122,7 @@ documents each. `get_capabilities.isolatedSessions` advertises these bounds.
 if any owned document is dirty. It checks all documents before removing any.
 Session expiry, editor reload/disconnect, and app exit release all private drafts.
 No tabs, selection, recovery drafts, recent-file entries, or interactive undo
-history are created or changed. The normal editor must still be running.
+history are created or changed. Sessions can run in the editor or a dedicated headless worker.
 
 Opening a file in a session reads its saved contents, independently of interactive
 unsaved edits or other sessions. Repeated opens within one session reuse its own
@@ -521,7 +598,7 @@ Alternatively, add `--native-print-save`, choose the native dialog's PDF output,
 
 Shared document operations live in `src/services/documents/`: workspace creation and opening, metadata and paragraph-style edits, serialization, save completion, and export preparation. Both the editor UI and MCP call `DocumentService`. Editor hooks supply rendering, focus, recovery, and layout behavior; persistence callbacks supply either dialog-based or explicit-path file writes.
 
-`electron/main/files/ScoreFiles.ts` owns shared score encoding, reads and writes, canonical file identity, conflict checks, and atomic output. Dialog-driven saves retain their existing write behavior; explicit-path saves use overwrite and conflict options. `electron/main/automation/files.ts` adds the configured folder-access policy. General file types live in `src/services/documents/fileTypes.ts`.
+`electron/main/files/ScoreFiles.ts` owns shared score encoding, reads and writes, canonical file identity, conflict checks, and atomic output. Dialog-driven saves retain their existing write behavior; explicit-path saves use overwrite and conflict options. `electron/main/automation/files.ts` validates explicit paths and formats without imposing folder restrictions. General file types live in `src/services/documents/fileTypes.ts`.
 
 `src/automation/` owns automation-only contracts, discovery, edit planning, read projections, revisions, sessions, renderer dispatch, and its Electron IPC client. See [the automation architecture](../../src/automation/README.md) for the directory map and dependency rule. `TheEditor.vue` attaches `useEditorAutomation` through explicit application hooks. Shared document and file services do not import automation types or tool contracts; ESLint enforces this boundary.
 

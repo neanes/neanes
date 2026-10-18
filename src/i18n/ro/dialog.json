@@ -309,7 +309,7 @@
   },
   "preferences": {
     "root": "Preferințe",
-    "description": "Configurează limba, modul de culoare, interacțiunea meniului și tempourile implicite.",
+    "description": "Configurați aspectul, preferințele de editare și accesul agenților.",
     "language": "Limbă",
     "languageSystemDefault": "Implicit (sistem)",
     "helpTranslate": "Ajută la traducerea Neanes",
@@ -322,6 +322,32 @@
     "menuInteractionClick": "Click pentru a deschide meniul",
     "enableDeveloperPanel": "Activează panoul pentru dezvoltatori",
     "tempoDefaults": "Tempouri implicite",
-    "bpm": "BPM"
+    "bpm": "BPM",
+    "sections": {
+      "general": "General",
+      "appearance": "Aspect",
+      "editing": "Editare",
+      "agent": "Acces pentru agenți (MCP)",
+      "advanced": "Avansat"
+    },
+    "agentAccess": {
+      "description": "Neanes pune automat la dispoziție conexiuni pentru agenți cât timp rulează. Agenții au același acces la fișiere ca Neanes; autentificarea este gestionată automat.",
+      "status": "Starea conexiunii",
+      "starting": "Pornire",
+      "ready": "Pregătită",
+      "error": "Indisponibilă",
+      "startupError": "Conexiunea nu a putut fi pornită. Verificați detaliile conexiunii.",
+      "connect": "Conectează un agent",
+      "connectDescription": "Copiați această configurație în setările clientului MCP, apoi reconectați clientul. Neanes pornește automat când este necesar.",
+      "copyConfiguration": "Copiază configurația",
+      "runtime": "Necesită Node.js 22 sau ulterior. Configurați un server MCP pornit prin comandă; căile executabilului și punții sunt incluse.",
+      "copied": "Copiat",
+      "details": "Detaliile conexiunii",
+      "endpoint": "Adresa editorului",
+      "failed": "Operația a eșuat. Verificați setările de acces și încercați din nou.",
+      "retry": "Reîncearcă conexiunea",
+      "unavailable": "Indisponibilă"
+    },
+    "close": "Închide"
   }
 }

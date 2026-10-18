@@ -1,3 +1,4 @@
+import type { AgentAccessState } from '@/ipc/agentAccess';
 import type {
   ClipboardReplyArgs,
   DiscardRecoverySnapshotReplyArgs,
@@ -21,6 +22,8 @@ import type { Workspace } from '@/models/Workspace';
 import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
 
 export interface IIpcService {
+  getAgentAccess(): Promise<AgentAccessState>;
+  retryAgentAccess(): Promise<AgentAccessState>;
   saveWorkspace(
     workspace: Workspace,
     data?: SavedScore,

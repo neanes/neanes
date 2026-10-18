@@ -13,8 +13,8 @@ model, history, lyric, layout, and rendering services.
   lifecycle, and explicit-path PDF dispatch.
 - `ipc/`: the Electron-only client for automation file and export requests.
 
-`electron/main/automation/` owns HTTP/MCP transport, authentication, allowed-root
-policy, request coordination, and tool publication. Its entry point is `host.ts`.
+`electron/main/automation/` owns HTTP/MCP transport, authentication, file validation,
+request coordination, and tool publication. Its entry point is `host.ts`.
 The editor attaches `useEditorAutomation` with explicit application hooks; it
 retains interactive selection, focus, dialogs, recovery, and rendering.
 

@@ -10,6 +10,15 @@ import type {
 import { unwrapAutomationOutcome } from '../contracts/errors';
 
 export class AutomationIpcClient {
+  requestId = '';
+  async authorizeRequest() {
+    unwrapAutomationOutcome(
+      await window.ipcRenderer.invoke(
+        IpcRendererChannels.AutomationAuthorizeRequest,
+        this.requestId,
+      ),
+    );
+  }
   public async automationReadScore(
     filePath: string,
     workspaces: WorkspaceFile[],
@@ -17,6 +26,7 @@ export class AutomationIpcClient {
     return unwrapAutomationOutcome(
       await window.ipcRenderer.invoke(
         IpcRendererChannels.AutomationReadScore,
+        this.requestId,
         filePath,
         workspaces,
       ),
@@ -28,6 +38,7 @@ export class AutomationIpcClient {
     return unwrapAutomationOutcome(
       await window.ipcRenderer.invoke(
         IpcRendererChannels.AutomationWriteScore,
+        this.requestId,
         args,
       ),
     );
@@ -36,6 +47,7 @@ export class AutomationIpcClient {
     unwrapAutomationOutcome(
       await window.ipcRenderer.invoke(
         IpcRendererChannels.AutomationExportPdf,
+        this.requestId,
         args,
       ),
     );

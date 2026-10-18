@@ -2865,8 +2865,6 @@ function updateEditorPreferences(form: EditorPreferences) {
     );
     EventBus.$emit(IpcRendererChannels.SetLanguage, form.language);
   }
-
-  editorPreferencesDialogIsOpen.value = false;
 }
 
 function saveEditorPreferences() {

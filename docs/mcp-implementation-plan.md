@@ -1,10 +1,10 @@
 # Neanes MCP implementation plan
 
-Implementation handoff, updated 2026-10-16. Stages 1 and 2.5 are complete. Stage 2 includes isolated lifecycle, typed element/range discovery, and validated element/lyric transactions. Folder jobs and temporary export transformations remain unimplemented and are paused for the token-efficiency checkpoint below. Inspect the working tree before continuing.
+Implementation handoff, updated 2026-10-17. Stages 1 and 2.5 are complete. Stage 2 includes isolated lifecycle, typed element/range discovery, and validated element/lyric transactions. Folder jobs and temporary export transformations remain unimplemented and paused. The current milestone adds headless launch, a stdio bridge, and persistent UI access settings. Inspect the working tree before continuing.
 
 ## Overview
 
-Neanes hosts an opt-in MCP server while the Electron app is running. The goals are:
+Neanes automatically starts an authenticated local MCP server while the Electron app is running. The goals are:
 
 - Let development agents construct and inspect test scores without UI automation.
 - Process folders of scores: change typography, save, and export PDFs with explicit output paths.
@@ -12,12 +12,12 @@ Neanes hosts an opt-in MCP server while the Electron app is running. The goals a
 
 The intended architecture supports interactive workspaces and isolated automation documents. Electron main owns transport, filesystem access, and job coordination; validated IPC requests reach renderer-side document operations, layout, and rendering. UI and MCP share application behavior. The browser PWA does not host an MCP server.
 
-Document tools default to interactive workspaces. With an explicit `sessionId`, clients can create/open, inspect, edit elements/lyrics/styles/metadata, save, export PDF, and close private documents without creating user tabs or recovery drafts. Both paths require the normal editor to be running; there is no headless startup mode.
+The standard bridge automatically connects to a running editor or launches a headless worker. Document tools default to private documents in both cases; agents explicitly request `scope: "editor"` to work with open tabs. Explicit sessions remain available. Direct HTTP retains its interactive default and requires explicit sessions in headless mode.
 
 ## Settled architectural decisions
 
 - **Shared operations, separate adapters.** `src/services/documents/` owns reusable lifecycle, metadata, style validation/replacement, persistence, and change/settlement hooks. `src/automation/` owns reference-based element/lyric transaction planning, API projections/contracts, revisions, sessions, and renderer/IPC dispatch. `electron/main/files/ScoreFiles.ts` owns shared score file I/O. These were extracted from the editor, Electron entry point, and initial automation implementation. Automation folders contain transport, tool contracts, dispatch, revisions, and access policy. Shared services do not depend on MCP contracts. `TheEditor.vue` still supplies rendering, selection, focus, recovery, and layout hooks.
-- **Local, explicitly enabled access.** Use the official MCP SDK and Streamable HTTP on authenticated IPv4 loopback. Require configured filesystem roots; enforce canonical-path boundaries, reject browser origins, and validate the Host header. The server is off by default. See the setup and contract guide in `scripts/mcp/README.md` for configuration.
+- **Automatic local access.** Use the official MCP SDK and Streamable HTTP on authenticated IPv4 loopback. Use normal OS file permissions without MCP folder restrictions; preserve canonical file identity, overwrite/source checks, reject browser origins, and validate the Host header. The server starts automatically; authentication and credential exchange stay internal. See the setup and contract guide in `scripts/mcp/README.md` for configuration.
 - **Explicit documents and concurrency.** Tools address document IDs. Mutations, close, save, and export require the latest `expectedRevision`; clients reread after conflicts rather than automatically retrying stale writes. Edits are undoable and saving is explicit. All MCP requests share one serialized queue across clients and sessions; sessions provide ownership/isolation, not parallel execution. Serialized requests do not eliminate concurrent interactive edits.
 - **Isolated session ownership and lifetime.** `create_session` returns a random UUID bearer capability under the existing server authentication; pass `sessionId` to document tools to restrict access to that session. Omitting it preserves interactive behavior. Up to 4 sessions may hold 16 documents each; leases expire after 15 idle minutes and discard private drafts. HTTP disconnects retain leases for inspection after uncertain requests. `close_session` validates every owned document before removal and requires explicit discard if any is dirty. Editor reload/process loss and app exit release private state. Closing the last isolated document creates no replacement; `selected` is false and `selectedDocumentId` is null.
 - **Isolated documents reuse shared operations.** `IsolatedSessions` owns private, non-tab document collections served by `DocumentService` and per-session `McpDocumentAdapter` instances. Editor hooks load referenced fonts and reuse the text-box measurement queue without recovery writes; isolated command histories suppress global undo/redo notifications. PDF export uses the existing detached renderer. Failed initial settlement removes a newly introduced private document. Opening reads disk independently of interactive unsaved edits and other sessions, while canonical reuse stays within the owning session. Explicit saves may change a file open interactively, but never replace its live contents; existing source-conflict and overwrite rules apply.
@@ -83,58 +83,73 @@ Measure-bar cycling and repeated UI tempo-selection code are separate UI cleanup
 opportunities, not missing shared API rules. This audit does not change the
 folder/job and export-transformation sequence below.
 
-## Client connection and startup - planned
+## Client connection and startup - 2026-10-17
 
-Support both launch orders: a user opens Neanes and then asks a local Codex or
-Claude Code client to edit a score, or starts an agent task while Neanes is closed
-(for example, changing lyric fonts across a folder). Users should not need to
-launch Neanes manually before every automated task.
+The server now starts automatically with Neanes. Settings provide connection
+status, Copy configuration, endpoint details, and Retry connection on failure.
+There are no enable switches, folder permissions, connection-mode selectors, or
+user-facing credential controls. Tokens remain internal and are absent from
+renderer settings responses and copied configurations.
 
-**Current behavior:** Clients connect directly to the Streamable HTTP endpoint
-(`http://127.0.0.1:38765/mcp` by default) with the matching bearer token. Neanes
-must already be running with `--mcp` or `NEANES_MCP=1`, a token, and allowed
-filesystem roots. Configuring an HTTP URL in a client does not launch Neanes.
-Isolated documents still require the normal editor; folder/job tools remain
-planned. A local endpoint is reachable by clients on that computer, not directly
-by agents running in the cloud.
+- **Automatic connection:** The dependency-free Node.js 22+ bridge authenticates
+  against the running editor's ready endpoint. If the editor is closed or its server is unavailable, it launches
+  a private headless Electron worker/profile/random port and awaits readiness on a
+  private pipe. A task stays on its original host; no automatic mutation retries
+  or draft migration occur when the editor opens/closes. A bridge owns only the
+  worker it launched, and never closes a user-owned editor.
+- **Private defaults, explicit live work:** The bridge supplies an automatic
+  private session for document tools with omitted scope/sessionId. It advertises
+  `scope: "editor"` for discovery and work on live tabs. A bridge initially using
+  a worker can discover an editor opened later through this explicit scope.
+  Explicit session IDs continue to address the original host. Graceful shutdown
+  discards only the bridge's automatic session; explicit sessions keep their
+  existing leases. Unexpected HTTP disconnects preserve inspection semantics.
+- **Normal file access:** MCP-specific filesystem roots and folder permissions are
+  removed, including configuration requirements. Existing saved root lists are
+  ignored on read and omitted on write. File I/O retains absolute-path and suffix
+  validation, canonical identity, symlink-output rules, overwrite/source conflicts,
+  and atomic commits. Folder job source/output selection remains future work.
+- **Internal authentication:** The normal profile's private agent-access.json
+  stores a generated token. Obsolete enabled/root/generation fields are ignored.
+  Missing credentials are generated even for bridge-first worker startup. Private
+  workers use their own random bearer tokens. Normal clients require no credential
+  setup. Explicit port/token environment overrides remain developer controls.
+- **Nonfatal startup:** Server errors are caught and shown in settings while the
+  editor opens normally. Retry restarts the transport without changing credentials.
+  Private tasks can fall back to a worker; explicit editor requests report the
+  editor error. A worker whose server cannot start exits, and the bridge reports
+  the failure. No failed request is automatically replayed.
+- **Runtime and distribution:** The hidden renderer shares documents, sessions,
+  fonts, rich-text measurement, layout, and PDF output without mounting the editor,
+  recovery, router, or service worker. The two bridge modules ship as external
+  resources and are installed into a stable profile location; AppImage executable
+  configuration uses its original APPIMAGE path. Diagnostics stay on stderr and
+  stdout carries only MCP JSON-RPC. Bridge crashes leave a 60-second orphan grace
+  period; private drafts are not recovered. Display-server-free deployment is not
+  established.
+- **Lifecycle and UI:** Renderer requests remain serialized across server
+  restarts, and nested IPC is bound to request IDs. Preferences uses General,
+  Appearance, Editing, Agent access (MCP), and Advanced sections with immediate
+  changes and section-specific resets. Browser builds omit agent access. Every
+  new UI label is translated in all supported locales.
 
-**Preferred startup approach:** Provide a small stdio-to-HTTP bridge that Codex
-or Claude Code starts through its MCP command configuration. The bridge connects
-to an existing enabled Neanes server, or launches Neanes when it is closed,
-waits for editor/tool readiness, and forwards MCP requests to its HTTP endpoint.
-Neanes remains the owner of document operations and access policy. This adds
-automatic startup, not headless processing. Pointing a stdio configuration at the
-current Neanes executable alone would not work: it currently serves MCP over
-HTTP, not stdin/stdout.
+Pure tests cover policy persistence/legacy roots, unrestricted file paths with
+preserved file validation, and real tool-schema scope decoration/routing. Real
+headless and editor smoke scripts cover automatic private defaults, both launch
+orders, live editor reuse/discovery, save/reopen/PDF, automatic credentials, startup failure/retry, worker crash, and preserved editor content/history.
+Setup and test commands are in scripts/mcp/README.md; the user guide is
+`docs/guide/agent-access.md`. Folder jobs and temporary transformations remain
+paused. macOS is the platform exercised for runtime/packaging; Windows/Linux
+runtime parity and physical printing remain unverified.
 
-Prefer a JavaScript bridge distributed as a Node.js/npm package to avoid shipping
-a separately signed native bridge application. Users would need a suitable Node.js
-runtime. The script does not need a separate Apple application signature when
-run by Node.js; distributing a standalone native executable would introduce
-macOS signing/notarization considerations. Neanes' existing application signing
-and distribution requirements remain separate.
-
-**Persistent UI control:** Eventually expose MCP in Neanes settings with a Switch
-that starts or stops the server immediately and remembers the enabled state
-across application restarts. Users should be able to enable MCP through the UI
-without launching with a flag. Keep first-use access opt-in and retain bearer
-authentication and explicitly permitted folders. Show actual server status and
-actionable startup errors; a remembered preference alone does not establish that
-the endpoint is ready. Provide a way to configure the connection credentials and
-allowed folders without requiring launch-time environment variables for normal
-UI setup.
-
-**Design and verification still needed:** Define how explicit CLI/environment
-options interact with saved settings, how clients obtain the URL/token, and how
-the bridge handles simultaneous launches, startup timeouts, and an existing app
-with MCP disabled. Do not silently override a user's disabled setting or restart
-an interactive app. Ending an agent connection must not close a user-owned
-Neanes instance. Define shutdown behavior for bridge-launched instances and
-in-flight requests when the UI disables the server. Verify both launch orders,
-remembered on/off state, failed startup, and multiple clients. Shell instructions
-that ask an agent to launch Neanes are an interim alternative, but depend on
-client permissions and reconnection behavior. The bridge and UI controls are
-future work; they do not change the next two implementation sessions below.
+Always-on verification: 825 unit tests passed (6 skipped); lint/type checking,
+production Electron packaging, web production, and docs builds passed. Real
+repository and packaged macOS smoke checks covered automatic startup with legacy
+disabled settings, automatic credential creation, no token in renderer settings or
+copied configuration, unauthenticated HTTP rejection, both launch orders, private
+document defaults, live-tab access, and editor survival after bridge disconnect.
+An actual occupied port verified nonfatal editor startup, private-worker fallback,
+and Retry after releasing the port. Test apps were stopped.
 
 ## Implementation stages
 
@@ -217,11 +232,11 @@ future work; they do not change the next two implementation sessions below.
 
 ## Remaining work and open design questions
 
-- **Folder discovery/jobs:** Define allowed-root folder enumeration, recursion/symlink policy, explicit source/output selection, dry-run/change previews, per-file reports, progress/cancellation, and overwrite/source-conflict behavior. Reuse isolated ownership and shared operations. Keep multi-file outcomes separate from document atomicity; define how polling/cancellation remains responsive with the shared request queue. No folder/job tools exist yet.
+- **Folder discovery/jobs:** Define bounded folder enumeration, recursion/symlink policy, explicit source/output selection, dry-run/change previews, per-file reports, progress/cancellation, and overwrite/source-conflict behavior. Reuse isolated ownership and shared operations. Keep multi-file outcomes separate from document atomicity; define how polling/cancellation remains responsive with the shared request queue. No folder/job tools exist yet.
 - **Temporary export transformations:** Define a small validated transformation contract and apply it only to private export copies. Start with hiding ison indicators; preserve source files and live content/selection/history/revisions on success, failure, and cancellation. Reuse font/layout/measurement and detached export; no transformation tools exist yet.
 - **Composition beyond current transactions:** Context-preserving edits inside tied/Greek melisma groups, musical/layout diagnostics, and previews remain Stage 3 candidates. Current range assignment intentionally rejects unsupported boundaries; do not describe this as transparent context-aware parsing. Exact APIs remain open.
-- **Known limits:** Isolated sessions still depend on the normal editor and share the global MCP request queue. A headless startup mode is not committed functionality. Native custom-paper blank sheets remain a separate baseline-reproduced issue (see Stage 2.5). Source conflict checks use time/size rather than filesystem locking; timeout/cancellation can have an uncertain outcome. Newly mounted rich-text editors can normalize imported content and advance revisions; clients must reread before writes. A pre-existing rich-text undo-after-tab-switch issue was observed before the page refactor (saving can reapply stale editor data); recheck separately rather than treating it as fixed by the measurement-queue change.
-- **Verification:** Continue pure unit tests and real Electron smoke tests; no mocks, spies, fakes, or DOM emulation. Preserve the current focus, pending-input flush, repeated-header instance, overlay, token, and paper-size regressions. Recheck MCP-disabled UI and the web build when changing shared operations.
+- **Known limits:** Isolated sessions run in the editor or a private headless worker; each host retains its serialized MCP request queue. Workers use built-in document defaults and do not expose unsaved editor contents. macOS is the platform exercised for real startup/packaging; Windows/Linux parity and display-server-free deployment remain unverified. Native custom-paper blank sheets remain a separate baseline-reproduced issue (see Stage 2.5). Source conflict checks use time/size rather than filesystem locking; timeout/cancellation can have an uncertain outcome. Newly mounted rich-text editors can normalize imported content and advance revisions; clients must reread before writes. A pre-existing rich-text undo-after-tab-switch issue was observed before the page refactor (saving can reapply stale editor data); recheck separately rather than treating it as fixed by the measurement-queue change.
+- **Verification:** Continue pure unit tests and real Electron smoke tests; no mocks, spies, fakes, or DOM emulation. Preserve the current focus, pending-input flush, repeated-header instance, overlay, token, and paper-size regressions. Recheck normal editor operation, nonfatal MCP startup failure/retry, and the web build when changing shared operations.
 
 ## Token-efficiency checkpoint
 
@@ -252,7 +267,9 @@ also passed with explicit full-state style results, including deletion/reparente
 IDs. The disposable test app was stopped. Folder orchestration remains the next
 planned implementation work.
 
-## Next two sessions
+## After the startup readiness milestone
+
+Resume the following planned work after startup acceptance:
 
 1. **Folder discovery and job orchestration.** Review current contracts and working-tree changes, then design a focused job API around existing isolated documents and shared style/save/PDF operations. Implement bounded discovery, dry-run/reporting, explicit destinations/overwrite policy, per-file outcomes, progress, and cancellation without blocking status/cancel behind the job. Verify a lyrics-font folder batch preserves explicit element overrides and interactive state, handles source conflicts and partial failures, and cleans up private documents. Resolve API/lifetime choices before exposing tools.
 2. **Temporary export-copy transformations.** Build on job/session infrastructure to export transformed private copies, beginning with hiding ison indicators. Validate transformations, settle fonts/layout/text measurement, export through the existing snapshot renderer, and dispose copies on every exit path. Verify single-document and folder use, source/interactive state preservation, failure/cancellation, and output-conflict behavior. Keep composition diagnostics/previews out of this scope.

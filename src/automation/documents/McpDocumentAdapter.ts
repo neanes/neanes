@@ -22,7 +22,11 @@ import type { AutomationRequest } from '../contracts/protocol';
 import type { AutomationIpcClient } from '../ipc/AutomationIpcClient';
 import { ISOLATED_SESSION_LIMITS } from '../sessions/isolatedSessions';
 import { readStaffLyrics } from './contentRead';
-import { applyElementEdits, planElementEdits } from './elementEdits';
+import {
+  applyElementEdits,
+  createdElementResult,
+  planElementEdits,
+} from './elementEdits';
 import {
   discoverPages,
   fingerprintLayout,
@@ -514,11 +518,11 @@ export class McpDocumentAdapter {
       return {
         ...this.summary(workspace),
         applied: edit.applied,
-        created: edit.created.map(({ clientId, element }) => ({
-          clientId,
-          elementRef: discovery.reference(element),
-          elementType: element.elementType,
-        })),
+        ...createdElementResult(
+          edit.created,
+          discovery,
+          request.arguments.includeCreated,
+        ),
       };
     }
     if (request.tool === 'close_document') {

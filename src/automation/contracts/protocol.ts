@@ -85,6 +85,7 @@ export const automationSchemas = {
     documentId,
     expectedRevision: revision,
     actions: elementEditBatchSchema,
+    includeCreated: z.boolean().default(true),
   }),
   get_document_properties: z.strictObject({
     sessionId,

@@ -114,6 +114,15 @@ describe('MCP token efficiency contracts', () => {
     for (const [name, args] of [
       ['get_capabilities', { includeErrorCodes: true }],
       [
+        'edit_elements',
+        {
+          documentId: 'test',
+          expectedRevision: 0,
+          includeCreated: false,
+          actions: [{ action: 'insert', elements: [{ elementType: 'Note' }] }],
+        },
+      ],
+      [
         'get_staff_lyrics',
         { documentId: 'test', offset: 0, limit: 8000, expectedRevision: 0 },
       ],

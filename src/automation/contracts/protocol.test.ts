@@ -17,6 +17,25 @@ const edit = (overrides: unknown) => ({
 });
 
 describe('automation protocol validation', () => {
+  it('keeps created references by default and supports compact edit acknowledgments', () => {
+    const args = {
+      documentId: 'id',
+      expectedRevision: 0,
+      actions: [{ action: 'insert', elements: [{ elementType: 'Note' }] }],
+    };
+    for (const includeCreated of [undefined, false, true]) {
+      expect(
+        parseAutomationRequest({
+          tool: 'edit_elements',
+          arguments: {
+            ...args,
+            ...(includeCreated === undefined ? {} : { includeCreated }),
+          },
+        }).arguments,
+      ).toMatchObject({ includeCreated: includeCreated ?? true });
+    }
+  });
+
   it('scopes document operations explicitly and rejects malformed session IDs', () => {
     const sessionId = '00000000-0000-4000-8000-000000000001';
     expect(

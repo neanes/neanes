@@ -15,6 +15,10 @@ import {
   automationSchemas,
   parseAutomationRequest,
 } from '../contracts/protocol';
+import {
+  assertResultBudget,
+  MAX_ELEMENT_PAGE_CHARACTERS,
+} from '../contracts/responseBudget';
 import { automationOutputSchema } from '../contracts/results';
 import { ElementDiscovery } from './elementDiscovery';
 import {
@@ -57,6 +61,71 @@ const args = (overrides: object = {}) =>
   });
 
 describe('settled page discovery', () => {
+  it.each(['pages', 'occurrences'] as const)(
+    'paginates large %s by serialized size without skipping or repeating entries',
+    (kind) => {
+      const source = new Score();
+      source.pageSetup.showHeader = false;
+      source.pageSetup.showFooter = false;
+      source.staff.elements.unshift(
+        ...Array.from({ length: 999 }, () => new NoteElement()),
+      );
+      const copy = cloneScoreForLayout(source);
+      const pages = Array.from(
+        { length: kind === 'pages' ? 1000 : 1 },
+        (_, index) => {
+          const page = new Page();
+          page.physicalPageNumber = index + 1;
+          const line = new Line();
+          line.elements =
+            kind === 'pages'
+              ? [copy.score.staff.elements[index]]
+              : copy.score.staff.elements;
+          page.lines.push(line);
+          return page;
+        },
+      );
+      const discovery = new ElementDiscovery();
+      const layout = discoverPages(
+        source,
+        copy.score,
+        pages,
+        copy.sources,
+        discovery,
+      );
+      const seen: (string | number)[] = [];
+      let offset: number | null = 0;
+      let calls = 0;
+      while (offset !== null) {
+        const result:
+          ReturnType<typeof readPages> | ReturnType<typeof readPageElements> =
+          kind === 'pages'
+            ? readPages(layout, { offset, limit: 1000 })
+            : readPageElements(layout, args({ offset, limit: 1000 }));
+        expect(JSON.stringify(result).length).toBeLessThan(
+          MAX_ELEMENT_PAGE_CHARACTERS,
+        );
+        expect(() => assertResultBudget(result)).not.toThrow();
+        const entries =
+          'pages' in result
+            ? result.pages.map((page) => page.pageNumber)
+            : result.occurrences.map((entry) => entry.elementRef);
+        expect(entries.length).toBeGreaterThan(0);
+        seen.push(...entries);
+        offset = result.nextOffset;
+        calls++;
+      }
+      expect(calls).toBeGreaterThan(1);
+      expect(seen).toEqual(
+        kind === 'pages'
+          ? pages.map((page) => page.physicalPageNumber)
+          : source.staff.elements.map((element) =>
+              discovery.reference(element),
+            ),
+      );
+    },
+  );
+
   it('maps repeated template occurrences and nested children to live references with physical and displayed numbering', () => {
     const { source, build, discovery } = fixture();
     const layout = build();

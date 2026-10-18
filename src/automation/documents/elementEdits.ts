@@ -67,6 +67,25 @@ export interface ElementEditPlan {
   created: { clientId: string | null; element: ScoreElement }[];
 }
 
+export function createdElementResult(
+  created: ElementEditPlan['created'],
+  discovery: ElementDiscovery,
+  includeCreated: boolean,
+) {
+  return {
+    createdCount: created.length,
+    ...(includeCreated
+      ? {
+          created: created.map(({ clientId, element }) => ({
+            clientId,
+            elementRef: discovery.reference(element),
+            elementType: element.elementType,
+          })),
+        }
+      : {}),
+  };
+}
+
 // Plan entirely against detached live-model objects. Setters normalize musical
 // combinations here, before commands touch the document or its history.
 export function planElementEdits(

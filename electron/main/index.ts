@@ -22,6 +22,7 @@ import mimetypes from 'mime-types';
 import path from 'path';
 import { debounce } from 'throttle-debounce';
 
+import { editorBusyError } from '../../src/automation/contracts/editorBusy';
 import { initializeI18n, resolveLanguagePreference } from '../../src/i18n';
 import type {
   AgentAccessPolicy,
@@ -3103,7 +3104,7 @@ async function createAutomationHost(
     runExclusive: (operation) => editorOperationQueue.run(operation),
     async withFileLock(operation) {
       if (saving) {
-        throw new Error('EDITOR_BUSY');
+        throw editorBusyError({ reason: 'native_save' });
       }
       saving = true;
       try {

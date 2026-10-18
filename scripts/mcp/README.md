@@ -10,25 +10,26 @@ One switch controls editor and background access. There are no user-managed toke
 uses the common `mcpServers` shape; clients using another configuration format need
 its command and args values.
 
-The bridge uses a ready running editor, or launches a private headless Electron
-worker when the editor is closed or its MCP endpoint is unavailable. An in-progress connection stays with its original
-host and never retries edits automatically or migrates drafts after a disconnect.
-A connection owns only the worker it launched; disconnecting never closes an
-existing editor. Multiple bridges can use the editor with separate private sessions.
-When closed, each bridge launches its own worker/profile/random loopback port.
+Each bridge launches its own private headless Electron worker, profile, and random
+loopback port, even when the editor is running. Private operations, capability
+queries, and session creation use that worker without connecting to the editor;
+editor dialogs and loading state do not block them. An in-progress connection
+never retries edits automatically or migrates drafts after a disconnect.
+Disconnecting stops the bridge's worker and never closes an existing editor.
 
 Document tools through the bridge default to an automatically owned private
 session, regardless of launch order. Agents need not call `create_session` first.
 To discover live tabs use `list_documents` with `documentScope: "editor"`, then pass
 `documentScope: "editor"` to document tools operating on those IDs. No editor is launched
-for that explicit scope; an editor must be open. A bridge that started a worker
-can discover the editor after the user opens it, while keeping its private task
-in the worker. Explicit `sessionId` still addresses a session on the original host.
+for that explicit scope; an editor must be open. The bridge discovers the editor
+only for explicit editor requests, including after the user opens it later,
+while keeping private tasks in the worker. Explicit `sessionId` addresses a
+session on the bridge's worker.
 Combining editor scope and sessionId is rejected. The bridge advertises `documentScope` in
 tool input schemas and supplies initialization guidance.
 
-On graceful bridge shutdown, its automatic private session is discarded; explicitly
-created sessions retain their normal lease. HTTP timeouts/disconnects while the
+On graceful bridge shutdown, its worker stops and all its private sessions are
+discarded. HTTP timeouts/disconnects while the
 bridge remains alive preserve its session for inspection. A crashed bridge leaves
 its worker a 60-second orphan grace period; private drafts are not recovered.
 
@@ -71,8 +72,8 @@ After enabling again, reconnect clients to start new sessions.
 Editor startup failures are caught, recorded, and leave the editor usable. The
 settings section exposes status, Copy configuration, endpoint details, and Retry
 connection only after a failure. Retry restarts the transport without changing
-credentials. Ordinary bridge tasks fall back to a worker when the editor's server
-fails; explicit editor scope reports that failure. Worker startup failures still
+credentials. Private bridge tasks use their worker regardless of editor server
+failures; explicit editor scope reports that failure. Worker startup failures still
 exit the worker because it has no other purpose. Interrupted requests are never
 automatically replayed. Workers stop with their owning bridge (or after the existing
 orphan grace period), independently of the editor's internal credential file.
@@ -86,7 +87,7 @@ node scripts/mcp/agent-access-smoke.mjs
 
 Tests use disposable profiles and folders. Set NEANES_TEST_EXECUTABLE to a built
 app executable for packaging checks. The editor test uses debug ports 9346/9347;
-NEANES_TEST_MCP_FAILURE=1 occupies the configured port to verify nonfatal editor startup, private-worker fallback, and retry after the port is released.
+NEANES_TEST_MCP_FAILURE=1 occupies the configured port to verify nonfatal editor startup, independent private workers, and retry after the port is released.
 
 ## Direct HTTP development setup
 
@@ -555,7 +556,7 @@ For a font change, read `get_paragraph_styles`, take the complete `lyrics` defin
 
 Use the returned revision for subsequent edits, saves, or exports. Read definitions through `get_paragraph_styles`, or request `includeStyles: true` on the edit to include full state. `styles` is writable; `resolvedStyles` and `units` are read-only metadata. Omitting a style from a batch leaves it unchanged; deletion always requires an explicit action.
 
-Calls are serialized across clients. Requests report `EDITOR_NOT_READY` during startup or after a renderer disconnect, and `EDITOR_BUSY` while a dialog or print operation is active. If a request times out, its outcome may be unknown: inspect documents/files before retrying, and reload the editor to reconnect. File conflict detection uses modification time and size; it does not lock files against other applications.
+Calls are serialized across clients. Requests report `EDITOR_NOT_READY` during startup or after a renderer disconnect. Editor document operations report `EDITOR_BUSY` during loading, document closing, open dialogs, or print rendering; the message explains what must finish before retrying. Error details include `reason` (`loading`, `workspace_closing`, `dialog_open`, `printing`, or `native_save`), plus `dialog` for open dialogs (including `preferences` and `recovery`) or `documentIds` for closing workspaces. Native save contention can also return `EDITOR_BUSY`. Capability and element catalog queries bypass the editor busy check, but still require authorization and a ready renderer. Document reads remain subject to the busy check. If a request times out, its outcome may be unknown: inspect documents/files before retrying, and reload the editor to reconnect. File conflict detection uses modification time and size; it does not lock files against other applications.
 
 ## Result and error contract
 

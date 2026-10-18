@@ -178,7 +178,7 @@ try {
   assert.equal(
     (await second.callTool({ name: 'get_capabilities', arguments: {} }))
       .structuredContent.result.mode,
-    startupFailure ? 'headless' : 'interactive',
+    'headless',
   );
   assert.deepEqual(
     (await second.callTool({ name: 'list_documents', arguments: {} }))
@@ -221,6 +221,70 @@ try {
   await eventually(async () =>
     assert.ok(await evaluate("document.querySelector('[role=dialog]')")),
   );
+  // A new bridge and its private sessions must work while Preferences blocks the editor.
+  const whileBusy = await connect(configuration);
+  assert.equal((await call(whileBusy, 'get_capabilities')).mode, 'headless');
+  const busySession = await call(whileBusy, 'create_session');
+  await call(whileBusy, 'create_document', {
+    sessionId: busySession.sessionId,
+    title: 'Explicit private session while Preferences is open',
+  });
+  await call(whileBusy, 'create_document', {
+    title: 'Automatic private session while Preferences is open',
+  });
+  assert.equal((await call(whileBusy, 'list_documents')).length, 1);
+  assert.equal(
+    (
+      await call(whileBusy, 'list_documents', {
+        sessionId: busySession.sessionId,
+      })
+    ).length,
+    1,
+  );
+  if (!startupFailure) {
+    const busyEditor = await whileBusy.callTool({
+      name: 'list_documents',
+      arguments: { documentScope: 'editor' },
+    });
+    assert.equal(busyEditor.structuredContent.error.code, 'EDITOR_BUSY');
+    assert.deepEqual(busyEditor.structuredContent.error.details, {
+      reason: 'dialog_open',
+      dialog: 'preferences',
+    });
+    assert.match(
+      busyEditor.structuredContent.error.message,
+      /Close the dialog/,
+    );
+    const blockedCreate = await whileBusy.callTool({
+      name: 'create_document',
+      arguments: { documentScope: 'editor' },
+    });
+    assert.equal(blockedCreate.structuredContent.error.code, 'EDITOR_BUSY');
+    // These queries use the worker through the bridge; exercise the editor directly.
+    for (const name of ['get_capabilities', 'get_element_catalog']) {
+      const response = await fetch(configured.endpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${originalToken}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json, text/event-stream',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: name,
+          method: 'tools/call',
+          params: { name, arguments: {} },
+        }),
+      });
+      assert.equal(response.status, 200);
+      const reply = await response.json();
+      assert.equal(reply.result.structuredContent.success, true);
+      if (name === 'get_capabilities') {
+        assert.equal(reply.result.structuredContent.result.mode, 'interactive');
+      }
+    }
+  }
+  await whileBusy.close();
   const labels = await evaluate(
     "Array.from(document.querySelectorAll('[role=dialog] [role=tab]')).map(e=>e.textContent.trim())",
   );

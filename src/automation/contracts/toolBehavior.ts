@@ -1,5 +1,9 @@
 import type { AutomationTool } from './protocol';
 
+export function canRunWhileEditorBusy(tool: AutomationTool) {
+  return tool === 'get_capabilities' || tool === 'get_element_catalog';
+}
+
 const readOnlyTools = new Set<AutomationTool>([
   'get_capabilities',
   'list_documents',

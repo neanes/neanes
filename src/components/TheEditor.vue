@@ -1342,19 +1342,27 @@ const pageVisibilityIntersection = computed(() => {
   } as IntersectionObserver;
 });
 
-const dialogOpen = computed(() => {
-  return (
-    modeKeyDialogIsOpen.value ||
-    pageSetupDialogIsOpen.value ||
-    paragraphStylesDialogIsOpen.value ||
-    documentPropertiesDialogIsOpen.value ||
-    playbackSettingsDialogIsOpen.value ||
-    syllablePositioningDialogIsOpen.value ||
-    exportDialogIsOpen.value ||
-    editorPreferencesDialogIsOpen.value ||
-    aboutDialogIsOpen.value
-  );
-});
+const activeDialog = computed(
+  () =>
+    [
+      { name: 'mode_key', open: modeKeyDialogIsOpen.value },
+      { name: 'page_setup', open: pageSetupDialogIsOpen.value },
+      { name: 'paragraph_styles', open: paragraphStylesDialogIsOpen.value },
+      {
+        name: 'document_properties',
+        open: documentPropertiesDialogIsOpen.value,
+      },
+      { name: 'playback_settings', open: playbackSettingsDialogIsOpen.value },
+      {
+        name: 'syllable_positioning',
+        open: syllablePositioningDialogIsOpen.value,
+      },
+      { name: 'export', open: exportDialogIsOpen.value },
+      { name: 'preferences', open: editorPreferencesDialogIsOpen.value },
+      { name: 'about', open: aboutDialogIsOpen.value },
+    ].find((dialog) => dialog.open)?.name ?? null,
+);
+const dialogOpen = computed(() => activeDialog.value !== null);
 
 const filteredPages = computed(() => {
   return printMode.value ? pages.value.filter((x) => !x.isEmpty) : pages.value;
@@ -1969,12 +1977,27 @@ const documents = new DocumentService({
 const editorAutomation = useEditorAutomation({
   documents,
   enabled: !isBrowser.value,
-  isBusy: () =>
-    isLoading.value ||
-    closingWorkspaceIds.size > 0 ||
-    dialogOpen.value ||
-    recoveryDialogIsOpen.value ||
-    printMode.value,
+  busyState() {
+    if (isLoading.value) {
+      return { reason: 'loading' };
+    }
+    if (closingWorkspaceIds.size > 0) {
+      return {
+        reason: 'workspace_closing',
+        documentIds: [...closingWorkspaceIds],
+      };
+    }
+    if (activeDialog.value) {
+      return { reason: 'dialog_open', dialog: activeDialog.value };
+    }
+    if (recoveryDialogIsOpen.value) {
+      return { reason: 'dialog_open', dialog: 'recovery' };
+    }
+    if (printMode.value) {
+      return { reason: 'printing' };
+    }
+    return null;
+  },
   createScore: createDefaultScore,
   prepare(workspace) {
     if (!workspace.score.staff.lyrics.locked) {

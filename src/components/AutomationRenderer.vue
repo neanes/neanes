@@ -130,7 +130,7 @@ const automation = useEditorAutomation({
   enabled: true,
   requireSessions: true,
   documents,
-  isBusy: () => false,
+  busyState: () => null,
   createScore: () => new Score(),
   prepare,
   dispose() {},

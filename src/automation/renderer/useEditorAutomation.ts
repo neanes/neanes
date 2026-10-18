@@ -9,12 +9,14 @@ import type { DocumentService } from '@/services/documents/DocumentService';
 import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
 import { Unit } from '@/utils/Unit';
 
+import { editorBusyError, type EditorBusyState } from '../contracts/editorBusy';
 import { AutomationError, automationError } from '../contracts/errors';
 import {
   type AutomationMessage,
   type AutomationReply,
   parseAutomationRequest,
 } from '../contracts/protocol';
+import { canRunWhileEditorBusy } from '../contracts/toolBehavior';
 import { McpDocumentAdapter } from '../documents/McpDocumentAdapter';
 import { AutomationIpcClient } from '../ipc/AutomationIpcClient';
 import { IsolatedSessions } from '../sessions/isolatedSessions';
@@ -23,7 +25,7 @@ export function useEditorAutomation(options: {
   enabled: boolean;
   requireSessions?: boolean;
   documents: DocumentService;
-  isBusy(): boolean;
+  busyState(): EditorBusyState | null;
   createScore(): Score;
   prepare(workspace: Workspace): void;
   dispose(workspace: Workspace): void;
@@ -85,10 +87,13 @@ export function useEditorAutomation(options: {
     let reply: AutomationReply;
     try {
       await ipc.authorizeRequest();
-      if (options.isBusy()) {
-        throw new Error('EDITOR_BUSY');
-      }
       const request = parseAutomationRequest(message.request);
+      if (!canRunWhileEditorBusy(request.tool)) {
+        const busy = options.busyState();
+        if (busy) {
+          throw editorBusyError(busy);
+        }
+      }
       let result: unknown;
       if (request.tool === 'create_session') {
         result = isolatedSessions.create();

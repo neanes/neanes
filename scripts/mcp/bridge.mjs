@@ -102,7 +102,7 @@ const initialize = (connection) =>
     },
     AbortSignal.timeout(3000),
   );
-async function discoverEditor(required = false) {
+async function discoverEditor() {
   const deadline = Date.now() + 60_000;
   while (true) {
     let state;
@@ -134,33 +134,20 @@ async function discoverEditor(required = false) {
       return null;
     }
     if (state.error) {
-      if (required) {
-        throw new Error(`Neanes could not start agent access: ${state.error}`);
-      }
-      return null;
+      throw new Error(`Neanes could not start agent access: ${state.error}`);
     }
     if (state.endpoint) {
-      try {
-        const connection = validateConnection(state);
-        const reply = await initialize(connection);
-        if (reply?.result?.serverInfo?.name !== 'neanes') {
-          throw new Error('The editor endpoint is not Neanes.');
-        }
-        return connection;
-      } catch (error) {
-        if (required) {
-          throw error;
-        }
-        return null;
+      const connection = validateConnection(state);
+      const reply = await initialize(connection);
+      if (reply?.result?.serverInfo?.name !== 'neanes') {
+        throw new Error('The editor endpoint is not Neanes.');
       }
+      return connection;
     }
     if (Date.now() > deadline) {
-      if (required) {
-        throw new Error(
-          'Neanes is still starting. Check its connection status and reconnect.',
-        );
-      }
-      return null;
+      throw new Error(
+        'Neanes is still starting. Check its connection status and reconnect.',
+      );
     }
     await delay(100);
   }
@@ -172,26 +159,6 @@ async function stop(code = 0) {
   stopping = true;
   for (const controller of requests.values()) {
     controller.abort();
-  }
-  if (!child && primary && privateSession) {
-    try {
-      const sessionId = await privateSession;
-      await rpc(
-        primary,
-        {
-          jsonrpc: '2.0',
-          id: 'bridge-close',
-          method: 'tools/call',
-          params: {
-            name: 'close_session',
-            arguments: { sessionId, discardUnsavedChanges: true },
-          },
-        },
-        AbortSignal.timeout(2000),
-      );
-    } catch {
-      /* The server may already be stopped or the session expired. */
-    }
   }
   if (child && child.exitCode === null && child.signalCode === null) {
     const exited = new Promise((resolve) => child.once('exit', resolve));
@@ -301,7 +268,7 @@ async function forward(message, signal) {
     if (tool && isDocumentTool(tool)) {
       const routed = documentScope(message.params.arguments ?? {});
       if (routed.scope === 'editor') {
-        connection = await discoverEditor(true);
+        connection = await discoverEditor();
         if (!connection) {
           throw new Error(
             'No editor is open. Open Neanes to work with editor tabs.',
@@ -340,7 +307,8 @@ async function main() {
     );
   }
   await requireAccess();
-  primary = (await discoverEditor()) ?? (await launchWorker());
+  // Private work never inherits the interactive editor's modal or loading state.
+  primary = await launchWorker();
   const policyTimer = setInterval(() => {
     void requireAccess().catch(async (error) => {
       log(error.message);
